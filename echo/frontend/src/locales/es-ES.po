@@ -1512,7 +1512,7 @@ msgstr "Añadir a este chat"
 msgid "Add to workspaces"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1249
+#: src/components/project/ProjectPortalEditor.tsx:1253
 msgid "Add Topic"
 msgstr "Añadir Tema"
 
@@ -1702,7 +1702,7 @@ msgstr ""
 msgid "Advanced"
 msgstr "Avanzado"
 
-#: src/components/project/ProjectPortalEditor.tsx:780
+#: src/components/project/ProjectPortalEditor.tsx:784
 msgid "Advanced (Tips and best practices)"
 msgstr "Avanzado (Consejos y best practices)"
 
@@ -1710,7 +1710,7 @@ msgstr "Avanzado (Consejos y best practices)"
 #~ msgid "Advanced (Tips and tricks)"
 #~ msgstr "Avanzado (Consejos y trucos)"
 
-#: src/components/project/ProjectPortalEditor.tsx:1453
+#: src/components/project/ProjectPortalEditor.tsx:1457
 #: src/components/project/PortalSettingsOverview.tsx:43
 msgid "Advanced Settings"
 msgstr "Configuración Avanzada"
@@ -1951,7 +1951,7 @@ msgstr ""
 msgid "Anonymize transcript"
 msgstr "Anonimizar transcripción"
 
-#: src/components/project/ProjectPortalEditor.tsx:1476
+#: src/components/project/ProjectPortalEditor.tsx:1480
 #: src/components/project/PortalSettingsOverview.tsx:168
 msgid "Anonymize Transcripts"
 msgstr "Anonimizar transcripciones"
@@ -2122,7 +2122,7 @@ msgstr "¿Está seguro de que desea eliminar este chat? Esta acción no se puede
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
 msgstr "¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer."
 
-#: src/components/project/ProjectPortalEditor.tsx:1741
+#: src/components/project/ProjectPortalEditor.tsx:1745
 msgid "Are you sure you want to delete this custom topic? This cannot be undone."
 msgstr "¿Estás seguro de que quieres eliminar este tema personalizado? Esta acción no se puede deshacer."
 
@@ -2252,12 +2252,12 @@ msgstr ""
 msgid "Ask about your conversations..."
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:696
+#: src/components/project/ProjectPortalEditor.tsx:700
 #: src/components/project/PortalSettingsOverview.tsx:149
 msgid "Ask for Email?"
 msgstr "¿Preguntar por el email?"
 
-#: src/components/project/ProjectPortalEditor.tsx:667
+#: src/components/project/ProjectPortalEditor.tsx:671
 #: src/components/project/PortalSettingsOverview.tsx:142
 msgid "Ask for Name?"
 msgstr "¿Preguntar por el nombre?"
@@ -2328,7 +2328,7 @@ msgstr ""
 #~ msgid "At least one topic must be selected to enable Make it concrete"
 #~ msgstr "Tienes que seleccionar al menos un tema para activar Hacerlo concreto"
 
-#: src/components/project/ProjectPortalEditor.tsx:1129
+#: src/components/project/ProjectPortalEditor.tsx:1133
 msgid "At least one topic must be selected to enable Verify"
 msgstr "Tienes que seleccionar al menos un tema para activar Verificar"
 
@@ -2420,11 +2420,11 @@ msgstr "Registros de auditoría exportados a JSON"
 msgid "Authenticator code"
 msgstr "Código de autenticación"
 
-#: src/components/project/ProjectPortalEditor.tsx:1583
+#: src/components/project/ProjectPortalEditor.tsx:1587
 msgid "Auto-generate titles"
 msgstr "Generar títulos automáticamente"
 
-#: src/components/project/ProjectPortalEditor.tsx:1560
+#: src/components/project/ProjectPortalEditor.tsx:1564
 msgid "Auto-generate Titles"
 msgstr "Generar títulos automáticamente"
 
@@ -2455,7 +2455,7 @@ msgstr ""
 #~ msgid "Automatic titles and tags"
 #~ msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1568
+#: src/components/project/ProjectPortalEditor.tsx:1572
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Generar automáticamente un título corto basado en temas para cada conversación después de la resumen. El título describe lo que se discutió, no quién participó. El nombre original del participante se conserva por separado, si lo proporcionaron."
 
@@ -2554,7 +2554,7 @@ msgstr ""
 msgid "Base"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:776
+#: src/components/project/ProjectPortalEditor.tsx:780
 msgid "Basic (Essential tutorial slides)"
 msgstr "Básico (Diapositivas esenciales del tutorial)"
 
@@ -2583,8 +2583,8 @@ msgstr "Configuración Básica"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:89
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:235
-#: src/components/project/ProjectPortalEditor.tsx:1483
-#: src/components/project/ProjectPortalEditor.tsx:1564
+#: src/components/project/ProjectPortalEditor.tsx:1487
+#: src/components/project/ProjectPortalEditor.tsx:1568
 #: src/components/project/ProjectExperimentalSection.tsx:48
 #: src/components/conversation/RetranscribeConversation.tsx:156
 #: src/components/chat/ChatModeSelector.tsx:152
@@ -2594,12 +2594,12 @@ msgid "Beta"
 msgstr "Beta"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:805
+#: src/components/project/ProjectPortalEditor.tsx:809
 msgid "dashboard.dembrane.concrete.beta"
 msgstr "Beta"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1015
+#: src/components/project/ProjectPortalEditor.tsx:1019
 msgid "dashboard.dembrane.verify.beta"
 msgstr "Beta"
 
@@ -2716,7 +2716,7 @@ msgstr "Reserve una llamada con nosotros"
 msgid "Book a certified training to keep using dembrane in high-risk settings."
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:928
+#: src/components/project/ProjectPortalEditor.tsx:932
 msgid "Brainstorm Ideas"
 msgstr "Ideas de brainstorming"
 
@@ -3012,7 +3012,7 @@ msgstr ""
 msgid "Change in workspace settings"
 msgstr ""
 
-#: src/components/language/LanguagePicker.tsx:154
+#: src/components/language/LanguagePicker.tsx:155
 msgid "Change language"
 msgstr "Cambiar idioma"
 
@@ -3073,7 +3073,7 @@ msgstr ""
 msgid "Changes will be saved automatically"
 msgstr "Los cambios se guardarán automáticamente"
 
-#: src/components/language/LanguagePicker.tsx:156
+#: src/components/language/LanguagePicker.tsx:157
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Cambiar el idioma durante una conversación activa puede provocar resultados inesperados. Se recomienda iniciar una nueva conversación después de cambiar el idioma. ¿Estás seguro de que quieres continuar?"
 
@@ -3510,7 +3510,7 @@ msgstr "Sugerencias contextuales"
 #: src/routes/onboarding/OnboardingRoute.tsx:662
 #: src/routes/auth/Register.tsx:212
 #: src/components/organisation/CreateOrganisationModal.tsx:207
-#: src/components/language/LanguagePicker.tsx:157
+#: src/components/language/LanguagePicker.tsx:158
 #: src/components/billing/BillingManager.tsx:1537
 msgid "Continue"
 msgstr "Continuar"
@@ -4108,7 +4108,7 @@ msgstr ""
 #~ msgstr "personalizado"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:216
-#: src/components/project/ProjectPortalEditor.tsx:958
+#: src/components/project/ProjectPortalEditor.tsx:962
 msgid "Custom"
 msgstr "Personalizado"
 
@@ -4124,7 +4124,7 @@ msgstr ""
 msgid "Custom Logo"
 msgstr "Logo personalizado"
 
-#: src/components/project/ProjectPortalEditor.tsx:1608
+#: src/components/project/ProjectPortalEditor.tsx:1612
 msgid "Custom title prompt"
 msgstr "Prompt de título personalizado"
 
@@ -4140,6 +4140,10 @@ msgstr ""
 #: src/components/report/CreateReportForm.tsx:235
 #~ msgid "Customize how your report is structured. This feature is coming soon."
 #~ msgstr "Personalice la estructura de su informe. Esta función estará disponible pronto."
+
+#: src/components/project/ProjectPortalEditor.tsx:655
+msgid "Czech (only ECHO features, Transcription and Summaries)"
+msgstr ""
 
 #: src/routes/organisation/OrganisationRoute.tsx:1152
 msgid "Danger"
@@ -4240,12 +4244,12 @@ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3158
 #: src/routes/admin/AdminSettingsRoute.tsx:3178
-#: src/components/project/ProjectPortalEditor.tsx:894
+#: src/components/project/ProjectPortalEditor.tsx:898
 #: src/components/chat/CanvasSuggestionCard.tsx:104
 msgid "Default"
 msgstr "Predeterminado"
 
-#: src/components/project/ProjectPortalEditor.tsx:772
+#: src/components/project/ProjectPortalEditor.tsx:776
 msgid "Default - No tutorial (Only privacy statements)"
 msgstr "Predeterminado - Sin tutorial (Solo declaraciones de privacidad)"
 
@@ -4260,7 +4264,7 @@ msgstr "Delegación de análisis multi-paso con ejecución de herramientas en vi
 #: src/routes/project/report/ProjectReportRoute.tsx:1477
 #: src/components/workspace/OrganisationProjectsTable.tsx:158
 #: src/components/project/ProjectTagsInput.tsx:118
-#: src/components/project/ProjectPortalEditor.tsx:1742
+#: src/components/project/ProjectPortalEditor.tsx:1746
 #: src/components/project/ProjectDangerZone.tsx:167
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:652
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:691
@@ -4297,7 +4301,7 @@ msgstr "Eliminar conversación"
 msgid "Delete Conversation"
 msgstr "Eliminar Conversación"
 
-#: src/components/project/ProjectPortalEditor.tsx:1740
+#: src/components/project/ProjectPortalEditor.tsx:1744
 msgid "Delete custom topic"
 msgstr "Eliminar tema personalizado"
 
@@ -4501,7 +4505,7 @@ msgstr ""
 msgid "Determines under which GDPR legal basis personal data is processed. This affects the information shown to participants and data subject rights."
 msgstr "Determina bajo qué base legal de GDPR se procesan los datos personales. Esto afecta a la información que se muestra a los participantes y a los derechos de los sujetos de datos."
 
-#: src/components/project/ProjectPortalEditor.tsx:727
+#: src/components/project/ProjectPortalEditor.tsx:731
 msgid "Determines under which GDPR legal basis personal data is processed. This setting applies to all your projects and can be changed in your account settings."
 msgstr "Determina bajo qué base legal de GDPR se procesan los datos personales. Esta configuración se aplica a todos tus proyectos y puede cambiarse en tus ajustes de cuenta."
 
@@ -4774,7 +4778,7 @@ msgstr ""
 msgid "e.g. \"Focus on sustainability themes\" or \"What do participants think about the new policy?\""
 msgstr "p. ej. \"Enfoque en temas de sostenibilidad\" o \"¿Qué piensan los participantes sobre la nueva política?\""
 
-#: src/components/project/ProjectPortalEditor.tsx:1626
+#: src/components/project/ProjectPortalEditor.tsx:1630
 msgid "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 msgstr "por ejemplo, \"Usar frases de sustantivos cortas como 'Espacios verdes urbanos' o 'Empleo juvenil'. Evitar títulos genéricos.\""
 
@@ -5014,7 +5018,7 @@ msgstr "Activar 2FA"
 #~ msgid "Enable dembrane Verify"
 #~ msgstr "Activar Verify"
 
-#: src/components/project/ProjectPortalEditor.tsx:829
+#: src/components/project/ProjectPortalEditor.tsx:833
 msgid "Enable Explore"
 msgstr "Habilitar Explorar"
 
@@ -5030,7 +5034,7 @@ msgstr "Habilitar Explorar"
 msgid "Enable participation"
 msgstr "Habilitar participación"
 
-#: src/components/project/ProjectPortalEditor.tsx:1312
+#: src/components/project/ProjectPortalEditor.tsx:1316
 msgid "Enable Report Notifications"
 msgstr "Habilitar Notificaciones de Reportes"
 
@@ -5044,7 +5048,7 @@ msgstr "Habilitar Notificaciones de Reportes"
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"ECHO\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 #~ msgstr "Habilita esta función para permitir a los participantes solicitar respuestas impulsadas por IA durante su conversación. Los participantes pueden hacer clic en \"ECHO\" después de grabar sus pensamientos para recibir retroalimentación contextual, fomentando una reflexión más profunda y mayor participación. Se aplica un período de enfriamiento entre solicitudes."
 
-#: src/components/project/ProjectPortalEditor.tsx:812
+#: src/components/project/ProjectPortalEditor.tsx:816
 msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Explore\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 msgstr "Habilita esta función para permitir a los participantes solicitar respuestas impulsadas por IA durante su conversación. Los participantes pueden hacer clic en \"Explorar\" después de grabar sus pensamientos para recibir retroalimentación contextual, alentando una reflexión más profunda y una participación más intensa. Se aplica un período de enfriamiento entre solicitudes."
 
@@ -5056,11 +5060,11 @@ msgstr "Habilita esta función para permitir a los participantes solicitar respu
 #~ msgstr "Activa esta función para que los participantes puedan pedir respuestas con IA durante su conversación. Después de grabar lo que piensan, pueden hacer clic en \"Profundizar\" para recibir feedback contextual que invita a reflexionar más y a implicarse más. Hay un tiempo de espera entre peticiones."
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1022
+#: src/components/project/ProjectPortalEditor.tsx:1026
 msgid "dashboard.dembrane.feature.verify.description"
 msgstr "Active esta función para permitir que los participantes verifiquen y aprueben \"resultados\" de sus envíos. Esto ayuda a cristalizar ideas clave, preocupaciones o resúmenes. Después de la conversación, puede filtrar las discusiones con resultados verificados y revisarlas en la descripción general."
 
-#: src/components/project/ProjectPortalEditor.tsx:1503
+#: src/components/project/ProjectPortalEditor.tsx:1507
 msgid "Enable transcript anonymization"
 msgstr "Habilitar anonimización de transcripciones"
 
@@ -5068,7 +5072,7 @@ msgstr "Habilitar anonimización de transcripciones"
 msgid "Enable two-factor authentication"
 msgstr "Activar autenticación de dos factores"
 
-#: src/components/project/ProjectPortalEditor.tsx:1039
+#: src/components/project/ProjectPortalEditor.tsx:1043
 msgid "Enable Verify"
 msgstr "Habilitar Verificar"
 
@@ -5357,7 +5361,7 @@ msgstr ""
 msgid "Expiring soon"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:802
+#: src/components/project/ProjectPortalEditor.tsx:806
 #: src/components/project/PortalSettingsOverview.tsx:159
 msgid "Explore"
 msgstr "Explorar"
@@ -6176,7 +6180,7 @@ msgstr ""
 msgid "Go to settings"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:741
+#: src/components/project/ProjectPortalEditor.tsx:745
 msgid "Go to Settings"
 msgstr "Ir a Ajustes"
 
@@ -6249,7 +6253,7 @@ msgstr ""
 #~ msgid "Guests"
 #~ msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1620
+#: src/components/project/ProjectPortalEditor.tsx:1624
 msgid "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
 msgstr "Guía sobre cómo se generan los títulos. Los títulos describen el tema de la conversación, no el participante."
 
@@ -7222,7 +7226,7 @@ msgid "Left"
 msgstr ""
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:87
-#: src/components/project/ProjectPortalEditor.tsx:722
+#: src/components/project/ProjectPortalEditor.tsx:726
 msgid "Legal Basis"
 msgstr "Base Legal"
 
@@ -7392,7 +7396,7 @@ msgstr ""
 msgid "Live participant funnel: scanned, setting up, on recording page, live, and finished counts"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1690
+#: src/components/project/ProjectPortalEditor.tsx:1694
 msgid "Live Preview"
 msgstr "Vista Previa en Vivo"
 
@@ -7499,7 +7503,7 @@ msgstr "Cargando transcripción..."
 #~ msgid "Loading verification topics…"
 #~ msgstr "Loading verification topics…"
 
-#: src/components/project/ProjectPortalEditor.tsx:1079
+#: src/components/project/ProjectPortalEditor.tsx:1083
 msgid "Loading verify topics…"
 msgstr "Cargando temas de verificación…"
 
@@ -7876,7 +7880,7 @@ msgstr "El acceso al micrófono sigue denegado. Por favor verifica tu configurac
 msgid "mo"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:853
+#: src/components/project/ProjectPortalEditor.tsx:857
 msgid "Mode"
 msgstr "Modo"
 
@@ -8665,7 +8669,7 @@ msgstr "No hay temas de verificación configurados para este proyecto."
 #~ msgid "No verification topics available."
 #~ msgstr "No verification topics available."
 
-#: src/components/project/ProjectPortalEditor.tsx:1083
+#: src/components/project/ProjectPortalEditor.tsx:1087
 msgid "No verify topics available."
 msgstr "No hay temas de verificación disponibles."
 
@@ -8836,7 +8840,7 @@ msgstr ""
 msgid "Nothing saved yet. The assistant adds notes here as you chat."
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1299
+#: src/components/project/ProjectPortalEditor.tsx:1303
 msgid "Notify participants when a report is published."
 msgstr "Notificar a los participantes cuando se publique un informe."
 
@@ -9256,11 +9260,11 @@ msgstr "Opcional"
 msgid "Optional (falls back to English)"
 msgstr "Opcional (recurre al inglés)"
 
-#: src/components/project/ProjectPortalEditor.tsx:680
+#: src/components/project/ProjectPortalEditor.tsx:684
 msgid "Optional field on the start page"
 msgstr "Campo opcional en la página de inicio"
 
-#: src/components/project/ProjectPortalEditor.tsx:709
+#: src/components/project/ProjectPortalEditor.tsx:713
 msgid "Optional field on the thank you page"
 msgstr "Campo opcional en la página de agradecimientos"
 
@@ -9479,7 +9483,7 @@ msgstr ""
 msgid "Owning organisation"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1382
+#: src/components/project/ProjectPortalEditor.tsx:1386
 msgid "Page Content"
 msgstr "Contenido de la Página"
 
@@ -9488,7 +9492,7 @@ msgstr "Contenido de la Página"
 msgid "Page not found"
 msgstr "Página no encontrada"
 
-#: src/components/project/ProjectPortalEditor.tsx:1358
+#: src/components/project/ProjectPortalEditor.tsx:1362
 msgid "Page Title"
 msgstr "Título de la Página"
 
@@ -9516,7 +9520,7 @@ msgstr "Correo electrónico del participante"
 msgid "Participant Emails"
 msgstr "Correos electrónicos del participante"
 
-#: src/components/project/ProjectPortalEditor.tsx:796
+#: src/components/project/ProjectPortalEditor.tsx:800
 #: src/components/project/PortalSettingsOverview.tsx:38
 msgid "Participant Features"
 msgstr "Funciones para participantes"
@@ -10154,7 +10158,7 @@ msgstr "PNG, JPEG o WebP. Se recortará en un círculo."
 msgid "Popular"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1348
+#: src/components/project/ProjectPortalEditor.tsx:1352
 msgid "Portal Content"
 msgstr "Contenido del Portal"
 
@@ -10890,7 +10894,7 @@ msgstr "Referencias"
 #~ msgid "Referrals"
 #~ msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1698
+#: src/components/project/ProjectPortalEditor.tsx:1702
 #: src/components/common/UsageFreshness.tsx:32
 #: src/components/chat/CanvasSuggestionCard.tsx:102
 msgid "Refresh"
@@ -11001,7 +11005,7 @@ msgstr "Recargar página"
 #~ msgid "Reload Page"
 #~ msgstr "Recargar Página"
 
-#: src/components/project/ProjectPortalEditor.tsx:1265
+#: src/components/project/ProjectPortalEditor.tsx:1269
 msgid "Remind users to verify before finishing"
 msgstr "Recordar a los usuarios que verifiquen antes de finalizar"
 
@@ -11157,7 +11161,7 @@ msgstr ""
 msgid "Reply mode"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:973
+#: src/components/project/ProjectPortalEditor.tsx:977
 msgid "Reply Prompt"
 msgstr "Prompt de Respuesta"
 
@@ -11217,7 +11221,7 @@ msgstr "La generación del informe fue cancelada. Puedes iniciar un nuevo inform
 msgid "Report limit reached"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1294
+#: src/components/project/ProjectPortalEditor.tsx:1298
 msgid "Report Notifications"
 msgstr "Notificaciones de Reportes"
 
@@ -11369,7 +11373,7 @@ msgstr "Por favor, espera mientras verificamos el acceso al micrófono."
 msgid "Required"
 msgstr "Requerido"
 
-#: src/components/project/ProjectPortalEditor.tsx:1326
+#: src/components/project/ProjectPortalEditor.tsx:1330
 msgid "Requires \"Ask for Email?\" to be enabled"
 msgstr "Requiere que \"Solicitar correo electrónico?\" esté habilitado"
 
@@ -12063,7 +12067,7 @@ msgstr ""
 msgid "Select at least one event"
 msgstr "Selecciona al menos un evento"
 
-#: src/components/project/ProjectPortalEditor.tsx:1180
+#: src/components/project/ProjectPortalEditor.tsx:1184
 msgid "Select at least one other topic before deleting this one"
 msgstr "Selecciona al menos un otro tema antes de eliminar este"
 
@@ -12115,15 +12119,15 @@ msgstr "Seleccionar Proyecto"
 msgid "Select tags"
 msgstr "Seleccionar etiquetas"
 
-#: src/components/project/ProjectPortalEditor.tsx:765
+#: src/components/project/ProjectPortalEditor.tsx:769
 msgid "Select the instructions that will be shown to participants when they start a conversation"
 msgstr "Selecciona las instrucciones que se mostrarán a los participantes cuando inicien una conversación"
 
-#: src/components/project/ProjectPortalEditor.tsx:858
+#: src/components/project/ProjectPortalEditor.tsx:862
 msgid "Select the type of feedback or engagement you want to encourage."
 msgstr "Selecciona el tipo de retroalimentación o participación que quieres fomentar."
 
-#: src/components/project/ProjectPortalEditor.tsx:753
+#: src/components/project/ProjectPortalEditor.tsx:757
 msgid "Select tutorial"
 msgstr "Seleccionar tutorial"
 
@@ -12132,7 +12136,7 @@ msgid "Select up to 2 focus areas for your report"
 msgstr "Seleccione hasta 2 areas de enfoque para su informe"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1072
+#: src/components/project/ProjectPortalEditor.tsx:1076
 msgid "dashboard.dembrane.feature.verify.topic.select"
 msgstr "Seleccione qué temas pueden usar los participantes para \"Verificar\"."
 
@@ -13304,7 +13308,7 @@ msgstr "Texto"
 msgid "Thank you for participating!"
 msgstr "¡Gracias por participar!"
 
-#: src/components/project/ProjectPortalEditor.tsx:1414
+#: src/components/project/ProjectPortalEditor.tsx:1418
 msgid "Thank You Page Content"
 msgstr "Contenido de la Página de Gracias"
 
@@ -13679,7 +13683,7 @@ msgstr ""
 msgid "This invite spans {0} billing contexts, each invoiced on its own:"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1702
+#: src/components/project/ProjectPortalEditor.tsx:1706
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "Esta es una vista previa en vivo del portal del participante. Necesitarás actualizar la página para ver los cambios más recientes."
 
@@ -13759,11 +13763,11 @@ msgstr ""
 msgid "This organisation no longer exists"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1424
+#: src/components/project/ProjectPortalEditor.tsx:1428
 msgid "This page is shown after the participant has completed the conversation."
 msgstr "Esta página se muestra después de que el participante haya completado la conversación."
 
-#: src/components/project/ProjectPortalEditor.tsx:1392
+#: src/components/project/ProjectPortalEditor.tsx:1396
 msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 msgstr "Esta página se muestra a los participantes cuando inician una conversación después de completar correctamente el tutorial."
 
@@ -13798,7 +13802,7 @@ msgstr ""
 #~ msgid "This project library was generated on"
 #~ msgstr "Esta biblioteca del proyecto se generó el"
 
-#: src/components/project/ProjectPortalEditor.tsx:984
+#: src/components/project/ProjectPortalEditor.tsx:988
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 msgstr "Esta prompt guía cómo la IA responde a los participantes. Personaliza la prompt para formar el tipo de retroalimentación o participación que quieres fomentar."
 
@@ -13847,7 +13851,7 @@ msgstr ""
 #~ msgid "This summary is AI-generated and brief, for thorough analysis, use the Chat or Library."
 #~ msgstr "Este resumen es generado por IA y es breve, para un análisis detallado, usa el Chat o la Biblioteca."
 
-#: src/components/project/ProjectPortalEditor.tsx:1369
+#: src/components/project/ProjectPortalEditor.tsx:1373
 msgid "This title is shown to participants when they start a conversation"
 msgstr "Este título se muestra a los participantes cuando inician una conversación"
 
@@ -14315,16 +14319,16 @@ msgid "Trying to join an existing organization?"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1538
+#: src/components/project/ProjectPortalEditor.tsx:1542
 msgid "portal.anonymization.disable.confirm"
 msgstr "Desactivar"
 
-#: src/components/project/ProjectPortalEditor.tsx:1528
+#: src/components/project/ProjectPortalEditor.tsx:1532
 msgid "Turn off anonymization?"
 msgstr "¿Desactivar la anonimización?"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1530
+#: src/components/project/ProjectPortalEditor.tsx:1534
 msgid "portal.anonymization.disable.warning"
 msgstr "Desactivar la anonimización mientras hay grabaciones en curso puede tener consecuencias no deseadas. Las conversaciones activas también se verán afectadas durante la grabación. Por favor, use esto con precaución."
 
@@ -14988,7 +14992,7 @@ msgid "Verified artifacts"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1006
+#: src/components/project/ProjectPortalEditor.tsx:1010
 msgid "dashboard.dembrane.verify.title"
 msgstr "Verificar"
 
@@ -15014,7 +15018,7 @@ msgstr "Verificar código"
 msgid "Verify email"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1063
+#: src/components/project/ProjectPortalEditor.tsx:1067
 msgid "Verify Topics"
 msgstr "Temas de verificación"
 
@@ -15515,7 +15519,7 @@ msgstr "Cuando todo el audio ha sido convertido a texto y la transcripción comp
 msgid "When are webhooks triggered?"
 msgstr "¿Cuándo se activan los webhooks?"
 
-#: src/components/project/ProjectPortalEditor.tsx:1487
+#: src/components/project/ProjectPortalEditor.tsx:1491
 msgid "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. Anonymized conversations also disable audio playback, audio download, and retranscription to protect participant privacy. This cannot be undone for already-processed conversations."
 msgstr "Cuando esté activado, todas las nuevas transcripciones tendrán información personal (nombres, emails, números de teléfono, direcciones) reemplazadas por marcadores de posición. Las conversaciones anónimas también desactivan la reproducción de audio, el descarga de audio y la retranscripción para proteger la privacidad de los participantes. Esto no se puede deshacer para conversaciones ya procesadas."
 
@@ -15523,7 +15527,7 @@ msgstr "Cuando esté activado, todas las nuevas transcripciones tendrán informa
 #~ msgid "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. This cannot be undone for already-processed conversations."
 #~ msgstr "Cuando esté activado, todas las nuevas transcripciones tendrán información personal (nombres, emails, números de teléfono, direcciones) reemplazadas por marcadores de posición. Esto no se puede deshacer para conversaciones ya procesadas."
 
-#: src/components/project/ProjectPortalEditor.tsx:1276
+#: src/components/project/ProjectPortalEditor.tsx:1280
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "Cuando finalices la conversación, los participantes que no han verificado aún serán solicitados para verificar o saltar"
 
