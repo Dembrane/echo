@@ -24,6 +24,7 @@ import {
 	IconAlertCircle,
 	IconChevronDown,
 	IconChevronRight,
+	IconPlayerStopFilled,
 	IconSend,
 	IconSparkles,
 } from "@tabler/icons-react";
@@ -58,6 +59,12 @@ import {
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { GoalSuggestionCard } from "@/components/goal/GoalSuggestionCard";
+import { useProjectById } from "@/components/project/hooks";
+import { useVoiceTranscription } from "@/components/voice/useVoiceTranscription";
+import { VoiceInputButton } from "@/components/voice/VoiceInputButton";
+import { VoiceInputError } from "@/components/voice/VoiceInputError";
+import { VoiceRecordingBar } from "@/components/voice/VoiceRecordingBar";
+import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -87,6 +94,7 @@ import {
 import { testId } from "@/lib/testUtils";
 import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
+import { toast } from "../common/Toaster";
 import { focusedConversationIdsFromPayload } from "./agenticFocus";
 import {
 	extractTopLevelToolActivity,
@@ -813,6 +821,49 @@ export const AgenticChatPanel = ({
 	>({});
 	const [conversationPickerOpened, conversationPickerHandlers] =
 		useDisclosure(false);
+	// Proper nouns for the transcription pass. This is the same field the
+	// recording pipeline splits into hotwords (transcribe._build_hotwords), so a
+	// project that already teaches the model its names teaches it here too.
+	// Narrow fields on purpose: the panel needs one string, not the whole row.
+	const projectTranscriptHintsQuery = useProjectById({
+		projectId,
+		query: { fields: ["id", "default_conversation_transcript_prompt"] },
+	});
+	const voiceHotwords =
+		(
+			projectTranscriptHintsQuery.data as
+				| { default_conversation_transcript_prompt?: string | null }
+				| undefined
+		)?.default_conversation_transcript_prompt ?? undefined;
+	const composerRef = useRef<HTMLTextAreaElement>(null);
+	const voice = useVoiceTranscription({
+		hotwords: voiceHotwords,
+		language: iso639_1 ?? "en",
+		onDurationLimit: () =>
+			toast.info(
+				t`Recording stopped at the five minute limit. Turning what you recorded into text.`,
+			),
+		// The transcript lands in the composer rather than being sent. A
+		// mishearing that goes out on its own is worse than one the host can fix
+		// in two seconds, and the composer is already where a message gets read
+		// back before sending.
+		onTranscript: (transcript) => {
+			setInput((current) => mergeTranscriptIntoDraft(current, transcript));
+			// Hand the caret back to the text the host now has to read over.
+			window.requestAnimationFrame(() => composerRef.current?.focus());
+		},
+		projectId,
+	});
+	const isVoiceActive = voice.status !== "idle";
+	// The control the host just pressed is unmounted by the swap, which drops
+	// keyboard focus to the body. Hand it to whatever replaced it.
+	const voiceStopButtonRef = useRef<HTMLButtonElement>(null);
+	useEffect(() => {
+		if (voice.status === "recording") voiceStopButtonRef.current?.focus();
+	}, [voice.status]);
+	const returnFocusToComposer = useCallback(() => {
+		window.requestAnimationFrame(() => composerRef.current?.focus());
+	}, []);
 	const streamAbortRef = useRef<AbortController | null>(null);
 	const streamRunIdRef = useRef<string | null>(null);
 	const stopArmedRunIdRef = useRef<string | null>(null);
@@ -2006,6 +2057,12 @@ export const AgenticChatPanel = ({
 					{atTurnLimit && (
 						<ChatTurnLimitCard onUpgrade={upgradeHandlers.open} />
 					)}
+					{voice.errorKind && (
+						<VoiceInputError
+							kind={voice.errorKind}
+							onDismiss={voice.dismissError}
+						/>
+					)}
 					<form
 						onSubmit={(event) => {
 							event.preventDefault();
@@ -2045,50 +2102,105 @@ export const AgenticChatPanel = ({
 								) : undefined
 							}
 							footerLeft={
-								<ConversationPickerButton
-									ariaLabel={t`Focus on conversations`}
-									label={<Trans>Focus on conversations</Trans>}
-									onClick={conversationPickerHandlers.open}
-									testId="agentic-select-conversations-button"
-								/>
+								isVoiceActive ? (
+									<Button
+										className="tap-target"
+										onClick={() => {
+											voice.cancel();
+											returnFocusToComposer();
+										}}
+										size="compact-sm"
+										type="button"
+										variant="subtle"
+										{...testId("chat-voice-cancel-button")}
+									>
+										<Trans>Cancel</Trans>
+									</Button>
+								) : (
+									<ConversationPickerButton
+										ariaLabel={t`Focus on conversations`}
+										label={<Trans>Focus on conversations</Trans>}
+										onClick={conversationPickerHandlers.open}
+										testId="agentic-select-conversations-button"
+									/>
+								)
 							}
 							footerRight={
-								<Button
-									type="submit"
-									size="md"
-									radius="md"
-									rightSection={
-										isSubmitting ? <Loader size={18} /> : <IconSend size={18} />
-									}
-									disabled={
-										isSubmitting || input.trim().length === 0 || atTurnLimit
-									}
-									{...testId("chat-send-button")}
-								>
-									<Trans>Send</Trans>
-								</Button>
+								voice.status === "recording" ? (
+									<Button
+										aria-label={t`Stop recording and turn it into text`}
+										className="tap-target"
+										onClick={voice.stop}
+										radius="md"
+										ref={voiceStopButtonRef}
+										rightSection={<IconPlayerStopFilled size={18} />}
+										size="md"
+										type="button"
+										{...testId("chat-voice-stop-button")}
+									>
+										<Trans>Stop</Trans>
+									</Button>
+								) : voice.status === "transcribing" ? null : (
+									<>
+										<VoiceInputButton
+											ariaLabel={t`Record a voice message`}
+											disabled={atTurnLimit || voice.isStarting}
+											onClick={voice.start}
+											testId="chat-voice-record-button"
+										/>
+										<Button
+											type="submit"
+											size="md"
+											radius="md"
+											rightSection={
+												isSubmitting ? (
+													<Loader size={18} />
+												) : (
+													<IconSend size={18} />
+												)
+											}
+											disabled={
+												isSubmitting || input.trim().length === 0 || atTurnLimit
+											}
+											{...testId("chat-send-button")}
+										>
+											<Trans>Send</Trans>
+										</Button>
+									</>
+								)
 							}
 						>
-							<Textarea
-								variant="unstyled"
-								styles={{
-									input: { backgroundColor: "transparent", resize: "none" },
-								}}
-								autosize
-								minRows={2}
-								maxRows={10}
-								value={input}
-								onChange={(event) => setInput(event.currentTarget.value)}
-								placeholder={t`Ask about your conversations...`}
-								disabled={atTurnLimit}
-								onKeyDown={(event) => {
-									if (event.key === "Enter" && !event.shiftKey) {
-										event.preventDefault();
-										void handleSubmit();
-									}
-								}}
-								{...testId("chat-input-textarea")}
-							/>
+							{isVoiceActive ? (
+								// The input is closed while the mic is open, not merely
+								// disabled: one composer, one way in at a time.
+								<VoiceRecordingBar
+									elapsedMs={voice.elapsedMs}
+									isTranscribing={voice.status === "transcribing"}
+									levels={voice.levels}
+								/>
+							) : (
+								<Textarea
+									variant="unstyled"
+									styles={{
+										input: { backgroundColor: "transparent", resize: "none" },
+									}}
+									autosize
+									minRows={2}
+									maxRows={10}
+									ref={composerRef}
+									value={input}
+									onChange={(event) => setInput(event.currentTarget.value)}
+									placeholder={t`Ask about your conversations...`}
+									disabled={atTurnLimit}
+									onKeyDown={(event) => {
+										if (event.key === "Enter" && !event.shiftKey) {
+											event.preventDefault();
+											void handleSubmit();
+										}
+									}}
+									{...testId("chat-input-textarea")}
+								/>
+							)}
 						</ChatComposerShell>
 						<Group
 							justify="space-between"
@@ -2096,9 +2208,11 @@ export const AgenticChatPanel = ({
 							wrap="wrap"
 							className="mt-1"
 						>
-							<Text size="xs" className="hidden italic md:block">
-								<Trans>Use Shift + Enter to add a new line</Trans>
-							</Text>
+							{!isVoiceActive && (
+								<Text size="xs" className="hidden italic md:block">
+									<Trans>Use Shift + Enter to add a new line</Trans>
+								</Text>
+							)}
 							<Text size="xs" className="italic">
 								<Trans>
 									dembrane can make mistakes. Please double-check responses.
