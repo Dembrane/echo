@@ -201,6 +201,111 @@ class TestPrimaryReportId:
             assert await resolve_workspace_primary_report_id("w1") == "rep-old"
 
 
+def _project_report_rows(rows: list[dict]):
+    """A `project_report` handler that honours the `kind` clause the way
+    Directus would, so a dropped filter fails the test instead of passing.
+    Supports the two query shapes free_tier issues: an aggregate count and an
+    oldest-first single row."""
+
+    def _handler(query: dict):
+        filt = query.get("filter") or {}
+        kept = list(rows)
+        kind = filt.get("kind")
+        if kind is not None:
+            kept = [r for r in kept if r.get("kind") == kind["_eq"]]
+        if query.get("aggregate"):
+            return [{"count": {"id": len(kept)}}]
+        kept.sort(key=lambda r: r["date_created"])
+        return [{"id": r["id"]} for r in kept[: (query.get("limit") or len(kept))]]
+
+    return _handler
+
+
+class TestCanvasesDoNotCountAsReports:
+    """A canvas is a project_report row with kind='canvas'. If the free-tier
+    counters don't say which kind they mean, a host who opens a canvas spends
+    the single lifetime report a free workspace gets, without ever generating
+    a report."""
+
+    @pytest.mark.asyncio
+    async def test_canvas_alone_does_not_consume_the_free_report(self):
+        mock = _mock_directus(
+            {
+                "project": lambda _q: [{"id": "p1"}],
+                "project_report": _project_report_rows(
+                    [{"id": "canvas-1", "kind": "canvas", "date_created": "2026-01-01"}]
+                ),
+            }
+        )
+        with patch("dembrane.directus_async.async_directus", mock):
+            assert await count_workspace_reports("w1") == 0
+
+    @pytest.mark.asyncio
+    async def test_only_real_reports_are_counted(self):
+        mock = _mock_directus(
+            {
+                "project": lambda _q: [{"id": "p1"}],
+                "project_report": _project_report_rows(
+                    [
+                        {"id": "canvas-1", "kind": "canvas", "date_created": "2026-01-01"},
+                        {"id": "rep-1", "kind": "report", "date_created": "2026-01-02"},
+                        {"id": "canvas-2", "kind": "canvas", "date_created": "2026-01-03"},
+                    ]
+                ),
+            }
+        )
+        with patch("dembrane.directus_async.async_directus", mock):
+            assert await count_workspace_reports("w1") == 1
+
+    @pytest.mark.asyncio
+    async def test_primary_report_skips_an_older_canvas(self):
+        # The canvas is the oldest row, so an unfiltered "oldest" resolver
+        # would point the upgrade prompt at a canvas.
+        mock = _mock_directus(
+            {
+                "project": lambda _q: [{"id": "p1"}],
+                "project_report": _project_report_rows(
+                    [
+                        {"id": "canvas-1", "kind": "canvas", "date_created": "2026-01-01"},
+                        {"id": "rep-1", "kind": "report", "date_created": "2026-01-02"},
+                    ]
+                ),
+            }
+        )
+        with patch("dembrane.directus_async.async_directus", mock):
+            assert await resolve_workspace_primary_report_id("w1") == "rep-1"
+
+    @pytest.mark.asyncio
+    async def test_count_filter_names_the_kind(self):
+        captured: dict = {}
+
+        def _handler(q):
+            captured["filter"] = q.get("filter")
+            return [{"count": {"id": 0}}]
+
+        mock = _mock_directus(
+            {"project": lambda _q: [{"id": "p1"}], "project_report": _handler}
+        )
+        with patch("dembrane.directus_async.async_directus", mock):
+            await count_workspace_reports("w1")
+        assert captured["filter"].get("kind") == {"_eq": "report"}
+
+    @pytest.mark.asyncio
+    async def test_primary_report_filter_names_the_kind(self):
+        captured: dict = {}
+
+        def _handler(q):
+            captured["filter"] = q.get("filter")
+            return []
+
+        mock = _mock_directus(
+            {"project": lambda _q: [{"id": "p1"}], "project_report": _handler}
+        )
+        with patch("dembrane.directus_async.async_directus", mock):
+            await resolve_workspace_primary_report_id("w1")
+        assert captured["filter"].get("kind") == {"_eq": "report"}
+
+
 class TestCountOrgWorkspaces:
     @pytest.mark.asyncio
     async def test_counts_workspaces(self):
