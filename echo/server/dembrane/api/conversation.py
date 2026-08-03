@@ -802,7 +802,10 @@ async def summarize_conversation(
             await async_directus.update_item(
                 "conversation",
                 conversation_id,
-                {"summary": "[No transcript available]"},
+                {
+                    "summary": "[No transcript available]",
+                    "has_empty_transcript": True,
+                },
             )
         return {
             "status": "success",

@@ -134,7 +134,7 @@ def collect_unsummarized_conversations(limit: int = 50) -> List[str]:
     """
     Collect conversations that are fully transcribed but missing a summary.
     
-    Simple check: is_all_chunks_transcribed = True AND summary = null.
+    Simple check: is_all_chunks_transcribed = True AND summary = null AND has_empty_transcript != True.
     The transcribed flag is the source of truth for "ready for summarization".
     
     Args:
@@ -149,6 +149,7 @@ def collect_unsummarized_conversations(limit: int = 50) -> List[str]:
             "query": {
                 "filter": {
                     "is_all_chunks_transcribed": True,
+                    "has_empty_transcript": {"_neq": True},
                     "_or": [
                         {"summary": {"_null": True}},
                         {"summary": {"_empty": True}},
