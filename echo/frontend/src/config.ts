@@ -167,11 +167,14 @@ export const CHANGELOG_DOCS_URL =
 export const COMMUNITY_SLACK_URL =
 	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
 
-// Info Hub (documentation): published Notion pages, locale-aware.
-export const DOCS_URL_EN =
-	"https://dembrane.notion.site/Info-Hub-Welcome-to-dembrane-26f9cd84270580049be7cb1e7a472162" as const;
-export const DOCS_URL_NL =
-	"https://dembrane.notion.site/Welkom-bij-het-info-portaal-van-dembrane-2959cd842705804c815ac315464b6fa0" as const;
+// Documentation, locale-aware. Points at docs.dembrane.com, the one published
+// corpus since #907 cut it over to docs/ on GitHub Pages. The Notion Info Hub
+// these used to point at is the old home; the deep links above (ASK_DOCS_URL,
+// TRANSCRIPT_TROUBLESHOOTING_DOCS_URL) already moved and this one did not, so
+// the sidebar sent people somewhere the rest of the app had left.
+// Dutch lives at index.nl-NL.html, not README.nl-NL.html; both verified live.
+export const DOCS_URL_EN = "https://docs.dembrane.com/" as const;
+export const DOCS_URL_NL = "https://docs.dembrane.com/index.nl-NL.html" as const;
 
 export const getDocumentationUrl = (locale = "en-US") =>
 	locale === "nl-NL" ? DOCS_URL_NL : DOCS_URL_EN;
