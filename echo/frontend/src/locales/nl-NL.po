@@ -1229,7 +1229,7 @@ msgstr "Voeg eerst gesprekken toe aan je project"
 msgid "Add Custom Topic"
 msgstr "Aangepast onderwerp toevoegen"
 
-#: src/components/goal/GoalSuggestionCard.tsx:42
+#: src/components/goal/GoalSuggestionCard.tsx:46
 msgid "Add goal text before applying."
 msgstr "Voeg doeltekst toe voordat je dit toepast."
 
@@ -1813,7 +1813,7 @@ msgstr "Past deze formulering en het verversgedrag toe op het bestaande canvas."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:658
 #: src/components/view/CreateViewForm.tsx:153
-#: src/components/goal/GoalSuggestionCard.tsx:122
+#: src/components/goal/GoalSuggestionCard.tsx:140
 #: src/components/common/ImageCropModal.tsx:148
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:225
 #: src/components/chat/CanvasSuggestionCard.tsx:361
@@ -4318,14 +4318,14 @@ msgstr "Vindbaar in deze organisatie"
 #~ msgid "Discoverable in this team"
 #~ msgstr ""
 
-#: src/components/goal/GoalSuggestionCard.tsx:104
+#: src/components/goal/GoalSuggestionCard.tsx:122
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:782
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:155
 #: src/components/chat/CanvasSuggestionCard.tsx:328
 msgid "Dismiss"
 msgstr "Negeren"
 
-#: src/components/goal/GoalSuggestionCard.tsx:86
+#: src/components/goal/GoalSuggestionCard.tsx:104
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:175
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:113
 #: src/components/chat/CanvasSuggestionCard.tsx:256
@@ -11042,7 +11042,7 @@ msgstr "Controleren"
 msgid "Review activity for your workspace. Filter by collection or action, and export the current view for further investigation."
 msgstr "Bekijk de activiteiten van je werkruimte. Filter op collectie of actie en exporteer de huidige weergave voor verder onderzoek."
 
-#: src/components/goal/GoalSuggestionCard.tsx:112
+#: src/components/goal/GoalSuggestionCard.tsx:130
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:572
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:164
 #: src/components/chat/CanvasSuggestionCard.tsx:336
@@ -11220,7 +11220,7 @@ msgstr "Template opslaan"
 msgid "Saved"
 msgstr "Opgeslagen"
 
-#: src/components/goal/GoalSuggestionCard.tsx:70
+#: src/components/goal/GoalSuggestionCard.tsx:74
 msgid "Saved as this project's goal."
 msgstr "Opgeslagen als doel van dit project."
 
@@ -12452,7 +12452,7 @@ msgstr "Dynamische suggesties voorstellen op basis van uw gesprek."
 #~ msgid "Suggested project changes"
 #~ msgstr ""
 
-#: src/components/goal/GoalSuggestionCard.tsx:82
+#: src/components/goal/GoalSuggestionCard.tsx:100
 msgid "Suggested project goal"
 msgstr "Voorgesteld projectdoel"
 
@@ -14469,6 +14469,7 @@ msgstr "Erg stil op dit moment. Check of de microfoon niet uitstaat."
 #: src/routes/project/library/ProjectLibraryAspect.tsx:47
 #: src/components/view/View.tsx:62
 #: src/components/report/ConversationStatusTable.tsx:95
+#: src/components/goal/GoalSuggestionCard.tsx:87
 msgid "View"
 msgstr "Weergave"
 

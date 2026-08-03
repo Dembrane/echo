@@ -1445,7 +1445,7 @@ msgstr "Agregue conversaciones a su proyecto primero"
 msgid "Add Custom Topic"
 msgstr "Añadir Tema Personalizado"
 
-#: src/components/goal/GoalSuggestionCard.tsx:42
+#: src/components/goal/GoalSuggestionCard.tsx:46
 msgid "Add goal text before applying."
 msgstr ""
 
@@ -2046,7 +2046,7 @@ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:658
 #: src/components/view/CreateViewForm.tsx:153
-#: src/components/goal/GoalSuggestionCard.tsx:122
+#: src/components/goal/GoalSuggestionCard.tsx:140
 #: src/components/common/ImageCropModal.tsx:148
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:225
 #: src/components/chat/CanvasSuggestionCard.tsx:361
@@ -4600,14 +4600,14 @@ msgstr ""
 #~ msgid "Discoverable in this team"
 #~ msgstr ""
 
-#: src/components/goal/GoalSuggestionCard.tsx:104
+#: src/components/goal/GoalSuggestionCard.tsx:122
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:782
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:155
 #: src/components/chat/CanvasSuggestionCard.tsx:328
 msgid "Dismiss"
 msgstr ""
 
-#: src/components/goal/GoalSuggestionCard.tsx:86
+#: src/components/goal/GoalSuggestionCard.tsx:104
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:175
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:113
 #: src/components/chat/CanvasSuggestionCard.tsx:256
@@ -11523,7 +11523,7 @@ msgstr ""
 msgid "Review activity for your workspace. Filter by collection or action, and export the current view for further investigation."
 msgstr "Revisa la actividad de tu espacio de trabajo. Filtra por colección o acción, y exporta la vista actual para una investigación más detallada."
 
-#: src/components/goal/GoalSuggestionCard.tsx:112
+#: src/components/goal/GoalSuggestionCard.tsx:130
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:572
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:164
 #: src/components/chat/CanvasSuggestionCard.tsx:336
@@ -11704,7 +11704,7 @@ msgstr "Guardar plantilla"
 msgid "Saved"
 msgstr ""
 
-#: src/components/goal/GoalSuggestionCard.tsx:70
+#: src/components/goal/GoalSuggestionCard.tsx:74
 msgid "Saved as this project's goal."
 msgstr ""
 
@@ -12981,7 +12981,7 @@ msgstr "Sugerir sugerencias dinámicas basadas en su conversación."
 #~ msgid "Suggested project changes"
 #~ msgstr ""
 
-#: src/components/goal/GoalSuggestionCard.tsx:82
+#: src/components/goal/GoalSuggestionCard.tsx:100
 msgid "Suggested project goal"
 msgstr ""
 
@@ -15046,6 +15046,7 @@ msgstr ""
 #: src/routes/project/library/ProjectLibraryAspect.tsx:47
 #: src/components/view/View.tsx:62
 #: src/components/report/ConversationStatusTable.tsx:95
+#: src/components/goal/GoalSuggestionCard.tsx:87
 msgid "View"
 msgstr "Vista"
 
