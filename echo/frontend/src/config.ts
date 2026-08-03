@@ -204,6 +204,12 @@ export const ENABLE_AGENTATION = byEnv({ next: true }, false);
 export const ENABLE_MONITOR = true;
 // Project Library / dynamic canvases. Off in production this release; on elsewhere.
 export const ENABLE_CANVAS = byEnv({ production: false }, true);
+// The release-video modal. Off in production for this release by Sameer's call:
+// the video is being recorded and the changelog page it links to is not written
+// yet, so a modal pointing at a 404 would reach every host at once. A patch
+// release turns it on once both exist. Everywhere else it stays on, which is
+// how the flow gets tested before it ships.
+export const ENABLE_RELEASE_VIDEO_MODAL = byEnv({ production: false }, true);
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
 	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;
