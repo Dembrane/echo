@@ -3,7 +3,13 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import {
 	afterEach,
 	beforeAll,
@@ -133,6 +139,33 @@ describe("the release video gate", () => {
 });
 
 describe("dismissing", () => {
+	it("closes when the blurred backdrop is clicked, which is the way in", async () => {
+		const { baseElement } = renderModal();
+		const overlay = baseElement.querySelector(".mantine-Modal-overlay");
+		expect(overlay).not.toBeNull();
+
+		fireEvent.click(overlay as Element);
+
+		await waitFor(() => {
+			expect(modalIsOpen()).toBe(false);
+		});
+		await waitFor(() => {
+			expect(vi.mocked(globalThis.fetch)).toHaveBeenCalled();
+		});
+	});
+
+	it("closes on escape", async () => {
+		const { baseElement } = renderModal();
+		fireEvent.keyDown(baseElement.querySelector('[role="dialog"]') as Element, {
+			code: "Escape",
+			key: "Escape",
+		});
+
+		await waitFor(() => {
+			expect(modalIsOpen()).toBe(false);
+		});
+	});
+
 	it("closes at once and records the newest version under a flat key", async () => {
 		const { getByLabelText } = renderModal();
 		getByLabelText("Close and go to dembrane").click();
