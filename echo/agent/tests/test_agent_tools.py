@@ -1,6 +1,7 @@
 import pytest
 from langchain_core.messages import AIMessage
 
+import agent
 from agent import SYSTEM_PROMPT, UI_TOOLS, create_agent_graph
 
 
@@ -32,7 +33,6 @@ class _FakeEchoClient:
         chat_messages_payload: list[dict] | None = None,
         memory_payload: dict | None = None,
         write_memory_response: dict | None = None,
-        goal_payload: dict | None = None,
         methodologies_payload: dict | None = None,
         project_tags_payload: list[dict] | None = None,
         canvases_payload: list[dict] | None = None,
@@ -62,7 +62,6 @@ class _FakeEchoClient:
         self.agent_insight_calls: list[dict[str, object]] = []
         self.memory_payload = memory_payload or {}
         self.write_memory_response = write_memory_response or {}
-        self.goal_payload = goal_payload or {}
         self.methodologies_payload = methodologies_payload or {}
         self.project_tags_payload = project_tags_payload or []
         self.canvases_payload = canvases_payload or []
@@ -76,7 +75,6 @@ class _FakeEchoClient:
         self.focused_conversations_calls: list[dict[str, object]] = []
         self.list_memory_calls: list[str] = []
         self.write_memory_calls: list[dict[str, object]] = []
-        self.read_goal_calls: list[str] = []
         self.list_methodologies_calls: list[str] = []
         self.list_project_tags_calls: list[str] = []
         self.edit_project_tags_calls: list[dict[str, object]] = []
@@ -264,10 +262,6 @@ class _FakeEchoClient:
         self.list_memory_calls.append(project_id)
         return self.memory_payload
 
-    async def get_project_goal(self, project_id: str) -> dict:
-        self.read_goal_calls.append(project_id)
-        return self.goal_payload
-
     async def list_methodologies(self, project_id: str) -> dict:
         self.list_methodologies_calls.append(project_id)
         return self.methodologies_payload
@@ -392,7 +386,6 @@ class _FakeEchoClientFactory:
         chat_messages_payload: list[dict] | None = None,
         memory_payload: dict | None = None,
         write_memory_response: dict | None = None,
-        goal_payload: dict | None = None,
         methodologies_payload: dict | None = None,
         project_tags_payload: list[dict] | None = None,
         canvases_payload: list[dict] | None = None,
@@ -414,7 +407,6 @@ class _FakeEchoClientFactory:
         self.chat_messages_payload = chat_messages_payload
         self.memory_payload = memory_payload
         self.write_memory_response = write_memory_response
-        self.goal_payload = goal_payload
         self.methodologies_payload = methodologies_payload
         self.project_tags_payload = project_tags_payload
         self.canvases_payload = canvases_payload
@@ -438,7 +430,6 @@ class _FakeEchoClientFactory:
             chat_messages_payload=self.chat_messages_payload,
             memory_payload=self.memory_payload,
             write_memory_response=self.write_memory_response,
-            goal_payload=self.goal_payload,
             methodologies_payload=self.methodologies_payload,
             project_tags_payload=self.project_tags_payload,
             canvases_payload=self.canvases_payload,
@@ -487,11 +478,13 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "worked from summaries only" in prompt
     assert "read the full transcript" in prompt
     assert "never fabricate quotes" in prompt
-    # Project + workspace context awareness
+    # Project + workspace context awareness. Project context is now the single
+    # thing setup establishes, and the goal is gone from the agent's surface,
+    # so the word must not come back into the prompt with it.
     assert "project context" in prompt
     assert "workspace context" in prompt
-    assert "project goal" in prompt
     assert "guidance and background" in prompt
+    assert "goal" not in prompt
     # Memories are host-visible and host-deletable
     assert "hosts can delete them" in prompt
     assert "remembered corrections, names" in prompt
@@ -533,13 +526,13 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "small host-defined tag vocabulary" in prompt
     assert "draft organization for the host to review" in prompt
     assert "getProjectTags" in SYSTEM_PROMPT
-    assert "proposeGoal" in SYSTEM_PROMPT
-    assert "proposegoal is the" in prompt
-    assert "closing move" in prompt
-    assert "must come before" in prompt
+    # Setup lands on project context, and nothing else rides along with it.
     assert "proposeProjectUpdate" in SYSTEM_PROMPT
-    assert "suggest context/settings" in prompt
-    assert "updates only after a goal exists" in prompt
+    assert "proposeprojectupdate on the context field" in prompt
+    assert "project context is the one thing" in prompt
+    assert "closing move of setup, and it goes out alone" in prompt
+    assert "no navigation shortcut, and no question in the same turn" in prompt
+    assert "any other settings come later, one turn at a time" in prompt
     assert "docs mention" in prompt
     assert "must not be the final sentence" in prompt
     assert "do not ask the host" in prompt
@@ -553,6 +546,28 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "would you like me to show a navigation" in prompt
     # Steer batched lookups over one-at-a-time calls
     assert "batch your lookups" in prompt
+    # A turn gives the host one thing to act on: one card, or a question, never
+    # both, and never two cards stacked.
+    assert "one thing per turn" in prompt
+    assert "at most one card per turn" in prompt
+    assert "never pair a card with a question" in prompt
+    assert "setup is a sequence, not a dump" in prompt
+    # The model cannot know where a card renders, so it never says. #843 tried
+    # to fix this by deleting one hardcoded "below" and the model kept doing it,
+    # so the rule is a ban and these assertions are the fence around it.
+    assert "never say where a card is" in prompt
+    assert "positional words about a card are forbidden" in prompt
+    for positional_word in ("below", "above", "beneath", "underneath", "at the bottom"):
+        assert positional_word in prompt, f"{positional_word} must be named as banned"
+    # No instruction anywhere may place a card relative to the message again.
+    for licensed_phrase in (
+        "below your message",
+        "above your message",
+        "apply it below",
+        "the card below",
+        "proposal below",
+    ):
+        assert licensed_phrase not in prompt, f"prompt still places a card: {licensed_phrase}"
 
 
 def _make_doc_tools():
@@ -930,16 +945,11 @@ async def test_propose_canvas_rejects_invalid_inputs():
 
 
 @pytest.mark.asyncio
-async def test_goal_tools_read_and_return_pure_proposal():
+async def test_setup_tools_read_methodologies_and_retire_the_goal_tools():
     llm = _CaptureLLM()
     factory = _FakeEchoClientFactory(
         search_payload={"conversations": []},
         transcripts={},
-        goal_payload={
-            "project_id": "project-1",
-            "current": {"id": "g1", "content": "Find neighbourhood concerns."},
-            "revisions": [{"id": "g1", "content": "Find neighbourhood concerns."}],
-        },
         methodologies_payload={
             "project_id": "project-1",
             "methodologies": [{"id": "m1", "name": "dembrane"}],
@@ -953,22 +963,16 @@ async def test_goal_tools_read_and_return_pure_proposal():
     )
     tools = _tool_map(llm.bound_tools)
 
-    goal = await tools["readGoal"].ainvoke({})
     methodologies = await tools["listMethodologies"].ainvoke({})
-    proposal = await tools["proposeGoal"].ainvoke(
-        {"content": "Surface concerns and suggestions per neighbourhood."}
-    )
 
-    assert goal["current"]["id"] == "g1"
     assert methodologies["methodologies"][0]["name"] == "dembrane"
-    assert proposal == {
-        "type": "goal_proposal",
-        "content": "Surface concerns and suggestions per neighbourhood.",
-        "project_id": "project-1",
-        "visible_to_user": True,
-    }
-    assert factory.instances[0].read_goal_calls == ["project-1"]
-    assert factory.instances[1].list_methodologies_calls == ["project-1"]
+    assert factory.instances[0].list_methodologies_calls == ["project-1"]
+    # Project context is the single thing setup establishes now, so the goal
+    # tools are gone from the model's surface entirely.
+    assert "readGoal" not in tools
+    assert "proposeGoal" not in tools
+    assert "proposeGoal" not in UI_TOOLS
+    assert {"readGoal", "proposeGoal"} == set(agent.RETIRED_TOOL_NAMES)
 
 
 @pytest.mark.asyncio

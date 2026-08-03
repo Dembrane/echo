@@ -1,14 +1,14 @@
 ---
 name: interviewing
-description: Short host setup conversations for project goals and feature-gap capture.
-when_to_use: Use when a host wants help setting a project goal or when they ask for something dembrane cannot do yet.
+description: Short host setup conversations for project context and feature-gap capture.
+when_to_use: Use when a host wants help working out what their project is, or when they ask for something dembrane cannot do yet.
 ---
 
 # Guided Questions
 
 Use one guided-question muscle for two jobs:
 
-1. Help a host turn an unclear project into a concrete goal.
+1. Help a host turn an unclear project into concrete project context.
 2. Capture a feature gap clearly enough that the dembrane team can understand what is needed.
 
 ## Shape
@@ -22,7 +22,7 @@ Use one guided-question muscle for two jobs:
 - Close by confirming your understanding in the host's words.
 - Keep every step independently skippable: the host can skip, answer in their own words, or ask for the docs.
 
-## Goal Setting
+## Setting Project Context
 
 Find:
 
@@ -34,7 +34,8 @@ Find:
 - What a useful report or canvas should be shaped around.
 - Tone, language, or format constraints that matter.
 
-Then propose one goal that is specific enough to steer reports and artifacts.
+Then propose the project context in one update, specific enough to steer
+reports and artifacts, written in the host's own words.
 If a group needs to define the project together, suggest opening that discussion
 and recording it with a phone or dembrane Go, with everyone's consent. Explain
 that the recorded discussion can become project material and you can continue

@@ -48,12 +48,6 @@ class AgentProjectConversationsResponse(TypedDict, total=False):
     conversations: list[AgentProjectConversation]
 
 
-class ProjectGoalResponse(TypedDict, total=False):
-    project_id: str
-    current: Optional[dict[str, Any]]
-    revisions: list[dict[str, Any]]
-
-
 def portal_base_url_for_cors_origins(agent_cors_origins: str) -> str | None:
     for origin in agent_cors_origins.split(","):
         candidate = origin.strip()
@@ -188,12 +182,6 @@ class EchoClient:
     async def list_memory(self, project_id: str) -> dict[str, Any]:
         payload = await self.get(f"/agentic/projects/{project_id}/memory")
         return payload if isinstance(payload, dict) else {}
-
-    async def get_project_goal(self, project_id: str) -> ProjectGoalResponse:
-        payload = await self.get(f"/agentic/projects/{project_id}/goal")
-        if not isinstance(payload, dict):
-            raise ValueError("Unexpected project goal response shape")
-        return cast(ProjectGoalResponse, payload)
 
     async def list_methodologies(self, project_id: str) -> dict[str, Any]:
         payload = await self.get(f"/agentic/projects/{project_id}/methodologies")

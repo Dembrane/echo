@@ -629,3 +629,123 @@ def test_replayed_history_old_tool_names_are_normalized_to_new_names():
     )
     normalized_tool = _normalize_message_tool_names(tool_message, recognized)
     assert normalized_tool.name == "reachOutToDembraneSupport"
+
+
+def test_retired_tool_calls_and_results_are_stripped_from_replayed_history():
+    # proposeGoal and readGoal were retired, not renamed, so TOOL_NAME_RENAMES
+    # has nothing to map them onto. A replayed call naming a function Vertex no
+    # longer knows is the failure the rename map exists to prevent, so the
+    # replay boundary drops the call and the result paired with it.
+    from langchain_core.messages import ToolMessage
+
+    from agent import _strip_retired_tool_calls
+
+    history = [
+        HumanMessage(content="help me set this project up"),
+        AIMessage.model_construct(
+            content="",
+            tool_calls=[
+                {"id": "call-goal", "name": "proposeGoal", "args": {"content": "x"}},
+            ],
+        ),
+        ToolMessage(content="{}", name="proposeGoal", tool_call_id="call-goal"),
+        AIMessage.model_construct(
+            content="here is what I found",
+            tool_calls=[
+                {"id": "call-read", "name": "readGoal", "args": {}},
+                {"id": "call-keep", "name": "getProjectSettings", "args": {}},
+            ],
+        ),
+        ToolMessage(content="{}", name="readGoal", tool_call_id="call-read"),
+        ToolMessage(content="{}", name="getProjectSettings", tool_call_id="call-keep"),
+    ]
+
+    stripped = _strip_retired_tool_calls(history)
+
+    names = [
+        call["name"]
+        for message in stripped
+        if getattr(message, "type", None) == "ai"
+        for call in (message.tool_calls or [])
+    ]
+    assert names == ["getProjectSettings"]
+    tool_names = [m.name for m in stripped if getattr(m, "type", None) == "tool"]
+    assert tool_names == ["getProjectSettings"]
+    # An assistant turn whose only call was retired keeps a body, because an
+    # empty model turn is its own Vertex problem.
+    emptied = stripped[1]
+    assert emptied.content == agent.RETIRED_TOOL_TURN_PLACEHOLDER
+    assert not emptied.tool_calls
+    # Untouched turns are the same objects, not rebuilt copies.
+    assert stripped[0] is history[0]
+
+
+def test_retired_tool_result_is_dropped_when_only_its_call_id_matches():
+    # A persisted tool result may carry no name. Dropping by the id of the call
+    # we removed keeps the history from ending up with an orphaned result.
+    from langchain_core.messages import ToolMessage
+
+    from agent import _strip_retired_tool_calls
+
+    history = [
+        AIMessage.model_construct(
+            content="thinking",
+            tool_calls=[{"id": "call-goal", "name": "readGoal", "args": {}}],
+        ),
+        ToolMessage(content="{}", tool_call_id="call-goal"),
+    ]
+
+    stripped = _strip_retired_tool_calls(history)
+
+    assert len(stripped) == 1
+    assert stripped[0].content == "thinking"
+    assert not stripped[0].tool_calls
+
+
+@pytest.mark.asyncio
+async def test_model_never_sees_a_retired_tool_name_in_replayed_history():
+    from langchain_core.messages import ToolMessage
+
+    llm = SequenceLLM(responses=[AIMessage(content="done")])
+    graph = create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+    )
+    await graph.ainvoke(
+        {
+            "messages": [
+                HumanMessage(content="set my project up"),
+                AIMessage.model_construct(
+                    content="",
+                    tool_calls=[
+                        {"id": "call-goal", "name": "proposeGoal", "args": {"content": "x"}}
+                    ],
+                ),
+                ToolMessage(content="{}", name="proposeGoal", tool_call_id="call-goal"),
+                HumanMessage(content="what now?"),
+            ]
+        },
+        config={"configurable": {"thread_id": "thread-retired"}},
+    )
+
+    invocation = llm.invocations[-1]
+    for message in invocation:
+        assert getattr(message, "name", None) not in agent.RETIRED_TOOL_NAMES
+        for call in getattr(message, "tool_calls", None) or []:
+            assert call.get("name") not in agent.RETIRED_TOOL_NAMES
+    assert all(
+        getattr(message, "content", None) or getattr(message, "tool_calls", None)
+        for message in invocation
+    )
+
+
+def test_retired_tool_names_are_not_registered_and_not_renamed():
+    llm = SequenceLLM(responses=[AIMessage(content="done")])
+    create_agent_graph(project_id="project-1", bearer_token="token-1", llm=llm)
+    tool_names = {tool.name for tool in llm.bound_tools}
+
+    assert not (agent.RETIRED_TOOL_NAMES & tool_names)
+    assert not (agent.RETIRED_TOOL_NAMES & set(agent.TOOL_NAME_RENAMES))
+    assert not (agent.RETIRED_TOOL_NAMES & set(agent.TOOL_NAME_RENAMES.values()))

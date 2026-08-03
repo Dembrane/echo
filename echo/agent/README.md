@@ -37,7 +37,7 @@ Tools defined in `agent.py` fall into three buckets:
 
 - **UI tools** render a card in the chat timeline. The `UI_TOOLS` frozenset in
   `agent.py` is the source of truth: `navigateTo`, `proposeCanvas`,
-  `proposeGoal`, `proposeProjectUpdate`, `proposeTagsUpdate`, `noteInsight`,
+  `proposeProjectUpdate`, `proposeTagsUpdate`, `noteInsight`,
   `editInsight`, `retractInsight`, `sendProgressUpdate`. Each of these also carries a "renders a
   card in the chat UI" docstring line. `editInsight` and `retractInsight`
   re-render the insight card by id: an amended note gains an "updated" chip, a
@@ -48,7 +48,7 @@ Tools defined in `agent.py` fall into three buckets:
   `listProjectConversations`, `getProjectSettings`, `getProjectTags`,
   `getPortalLink`, `listDocs`, `readDoc`, `grepDocs`, `readSkill`,
   `listProjectChats`, `readChat`, `getLiveConversationStatus`, `readMemory`,
-  `readGoal`, `listMethodologies`, `listCanvases`, `get_project_scope`.
+  `listMethodologies`, `listCanvases`, `get_project_scope`.
 - **Write tools** change durable state: `editCanvas`,
   `addToCanvas`, `removeFromCanvas`, `pauseCanvasLoop`, `resumeCanvasLoop`,
   `stopCanvasLoop`, `remember`, `amendMemory`, `forgetMemory`,
@@ -73,6 +73,16 @@ old names are never registered as visible tools.
 | `grepConvoSnippets` | `grepConversationSnippets` |
 | `reachOutToDembrane` | `reachOutToDembraneSupport` |
 | `recordInsight` | `noteInsight` |
+
+### Retired tools
+
+A retired tool has no successor to be renamed onto, so `TOOL_NAME_RENAMES`
+cannot save it. `RETIRED_TOOL_NAMES` in `agent.py` lists those names, and
+`_strip_retired_tool_calls` drops their replayed calls and paired results at the
+same history boundary, so Vertex never sees a function name it does not know.
+The stored chat is untouched and the frontend still renders the old card from
+what it persisted. Currently retired: `proposeGoal`, `readGoal` (project context
+is now the single thing setup establishes).
 
 ## Notes
 
