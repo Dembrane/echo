@@ -144,7 +144,8 @@ function TierCard({
 	const wrapClasses = [
 		isWide ? classes.wideWrap : classes.wrap,
 		selected ? classes.selected : "",
-		highlighted ? classes.highlighted : "",
+		highlighted && !comingSoon ? classes.highlighted : "",
+		comingSoon ? classes.comingSoonCard : "",
 	]
 		.filter(Boolean)
 		.join(" ");
@@ -165,12 +166,19 @@ function TierCard({
 			popularLabel={highlightLabel}
 		/>
 	);
+	// Coming-soon cards mute content per element instead of fading the card,
+	// so the "Coming soon" badge keeps full contrast.
+	const mutedText = comingSoon ? "gray.6" : undefined;
 	const specRows = card.specs.map((spec) => (
 		<Group key={spec} gap={7} wrap="nowrap" className={classes.specRow}>
 			<IconCheck
 				size={isWide ? 13 : 14}
 				stroke={1.5}
-				color="var(--mantine-color-primary-6)"
+				color={
+					comingSoon
+						? "var(--mantine-color-gray-5)"
+						: "var(--mantine-color-primary-6)"
+				}
 			/>
 			<Text size={isWide ? "xs" : "sm"} c="dimmed">
 				{spec}
@@ -189,11 +197,10 @@ function TierCard({
 				aria-checked={selected}
 				aria-disabled={comingSoon}
 				tabIndex={comingSoon ? -1 : 0}
-				style={comingSoon ? { opacity: 0.6 } : undefined}
 			>
 				<Stack gap={0} className={classes.wideInner}>
 					<Group gap={8} wrap="nowrap">
-						<Text size="lg" className={classes.tierName}>
+						<Text size="lg" className={classes.tierName} c={mutedText}>
 							{card.tier}
 						</Text>
 						{badge}
@@ -216,7 +223,7 @@ function TierCard({
 							<Text
 								size="xl"
 								className={classes.priceAmount}
-								c="var(--app-text)"
+								c={mutedText ?? "var(--app-text)"}
 							>
 								{card.priceAmount}
 							</Text>
@@ -247,7 +254,6 @@ function TierCard({
 			aria-checked={selected}
 			aria-disabled={comingSoon}
 			tabIndex={comingSoon ? -1 : 0}
-			style={comingSoon ? { opacity: 0.6 } : undefined}
 		>
 			<Stack gap={0} className={classes.mobileInner}>
 				<Group
@@ -257,7 +263,7 @@ function TierCard({
 					gap={12}
 				>
 					<Group gap={8} wrap="nowrap">
-						<Text size="md" fw={500} className={classes.tierName}>
+						<Text size="md" fw={500} className={classes.tierName} c={mutedText}>
 							{card.tier}
 						</Text>
 						{badge}
@@ -267,7 +273,7 @@ function TierCard({
 							<Text
 								size="lg"
 								className={classes.priceAmount}
-								c="var(--app-text)"
+								c={mutedText ?? "var(--app-text)"}
 							>
 								{card.priceAmount}
 							</Text>
@@ -352,23 +358,38 @@ export const TierPricingCards = ({
 	const badgePopularTier = PURCHASABLE_TIERS.length >= 2 ? highlightTier : null;
 
 	return (
-		<div
-			className={useWideLayout ? classes.groupWide : classes.group}
-			role="radiogroup"
-		>
-			{cards.map((card) => (
-				<TierCard
-					key={card.tier}
-					card={card}
-					layout={useWideLayout ? "wide" : "mobile"}
-					selected={value === card.tier}
-					highlighted={card.tier === highlightTier}
-					highlightTier={badgePopularTier}
-					highlightLabel={resolvedHighlightLabel}
-					comingSoon={isComingSoon(card.tier)}
-					onSelect={() => onChange(card.tier)}
-				/>
-			))}
-		</div>
+		<Stack gap={16}>
+			<div
+				className={useWideLayout ? classes.groupWide : classes.group}
+				role="radiogroup"
+			>
+				{cards.map((card) => (
+					<TierCard
+						key={card.tier}
+						card={card}
+						layout={useWideLayout ? "wide" : "mobile"}
+						selected={value === card.tier}
+						highlighted={card.tier === highlightTier}
+						highlightTier={badgePopularTier}
+						highlightLabel={resolvedHighlightLabel}
+						comingSoon={isComingSoon(card.tier)}
+						onSelect={() => onChange(card.tier)}
+					/>
+				))}
+			</div>
+			<Text size="xs" c="dimmed" ta="center">
+				<Trans>
+					Interested in innovator or guardian? Let us know via{" "}
+					<a
+						href="http://forms.dembrane.com/contact"
+						target="_blank"
+						rel="noopener noreferrer"
+						style={{ color: "inherit", textDecoration: "underline" }}
+					>
+						forms.dembrane.com/contact
+					</a>
+				</Trans>
+			</Text>
+		</Stack>
 	);
 };
