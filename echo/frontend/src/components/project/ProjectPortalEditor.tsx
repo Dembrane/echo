@@ -81,7 +81,7 @@ const FormSchema = z.object({
 	is_project_notification_subscription_allowed: z.boolean(),
 	is_verify_enabled: z.boolean(),
 	is_verify_on_finish_enabled: z.boolean(),
-	language: z.enum(["en", "nl", "de", "fr", "es", "it", "uk"]),
+	language: z.enum(["en", "nl", "de", "fr", "es", "it", "uk", "cs"]),
 	verification_topics: z.array(z.string()),
 });
 
@@ -650,6 +650,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														{
 															label: t`Ukrainian (only ECHO features, Transcription and Summaries)`,
 															value: "uk",
+														},
+														{
+															label: t`Czech (only ECHO features, Transcription and Summaries)`,
+															value: "cs",
 														},
 													]}
 													{...field}
