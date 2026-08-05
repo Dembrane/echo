@@ -1,6 +1,6 @@
 import d3Bundle from "../../../node_modules/d3/dist/d3.min.js?raw";
 import dembraneLogoRaw from "../../assets/dembrane-logo-new.svg?raw";
-import dmSansFontDataUrl from "../../fonts/DMSans-Light.woff2?inline";
+import dmSansFontDataUrl from "../../fonts/DMSans-Variable.woff2?inline";
 import kitCss from "./kit.css?raw";
 import qrcode from "qrcode-generator";
 
