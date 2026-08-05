@@ -798,6 +798,55 @@ def _normalize_message_tool_names(message: Any, tool_names: set[str]) -> Any:
     return _normalize_fused_tool_calls(message, tool_names)
 
 
+# Blocks that produce no Vertex Part on their own. Verified against the
+# connector's serializer in tests/test_vertex_part_contract.py: a signature
+# block only rides along with a tool call, it never becomes a part itself.
+_PARTLESS_CONTENT_BLOCK_TYPES = {"function_call_signature"}
+
+
+def _message_has_tool_calls(message: Any) -> bool:
+    tool_calls = getattr(message, "tool_calls", None)
+    return isinstance(tool_calls, list) and len(tool_calls) > 0
+
+
+def _is_blank_content_block(item: Any) -> bool:
+    """True when this content block contributes no Vertex Part.
+
+    Unknown block types return False (assume they render), so widening this
+    can only ever keep a turn, never silently delete a real one."""
+    if isinstance(item, str):
+        return not item.strip()
+    if isinstance(item, dict):
+        block_type = item.get("type")
+        if block_type in _PARTLESS_CONTENT_BLOCK_TYPES:
+            return True
+        if block_type == "text":
+            text = item.get("text")
+            return not isinstance(text, str) or not text.strip()
+    return False
+
+
+def _is_empty_ai_turn(message: Any) -> bool:
+    """True when this AI turn would serialize to a Vertex Content with zero
+    parts, which the API rejects outright with "must include at least one parts
+    field", killing the stream. Gemini answers the automatic nudge that way
+    sometimes. Such a turn carries nothing, so drop it rather than invent
+    placeholder text. Turns with tool calls always produce parts, so they are
+    never dropped."""
+    if getattr(message, "type", None) != "ai":
+        return False
+    if _message_has_tool_calls(message):
+        return False
+    content = getattr(message, "content", None)
+    if not content:
+        return True
+    if isinstance(content, str):
+        return not content.strip()
+    if isinstance(content, list):
+        return all(_is_blank_content_block(item) for item in content)
+    return False
+
+
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 6
 AUTOMATIC_NUDGE_TEMPLATE = (
     "<Automatic Nudge> This is a system reminder, not a message from the host. "
@@ -927,10 +976,6 @@ def create_agent_graph(
 
         automatic_nudge_milestones.add(milestone)
         return AUTOMATIC_NUDGE_TEMPLATE.format(tool_call_count=milestone), milestone
-
-    def _message_has_tool_calls(message: Any) -> bool:
-        tool_calls = getattr(message, "tool_calls", None)
-        return isinstance(tool_calls, list) and len(tool_calls) > 0
 
     def _keyword_guardrail_result(
         *,
@@ -2454,6 +2499,7 @@ def create_agent_graph(
                 _with_placeholder_content(message), recognized_tool_names
             )
             for message in raw_messages
+            if not _is_empty_ai_turn(message)
         ]
         memory_section = await _load_ambient_memory_section()
         canvas_activity_section = await _load_canvas_activity_section()
@@ -2488,7 +2534,8 @@ def create_agent_graph(
         if should_retry_after_nudge:
             nudge_retry_milestones.add(nudge_milestone)
             retry_messages = list(invocation_messages)
-            retry_messages.append(response)
+            if not _is_empty_ai_turn(response):
+                retry_messages.append(response)
             retry_messages.append(SystemMessage(content=POST_NUDGE_CONTINUATION_SYSTEM_PROMPT))
             response = _normalize_fused_tool_calls(
                 await llm_with_tools.ainvoke(retry_messages),

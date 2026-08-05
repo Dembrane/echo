@@ -378,6 +378,167 @@ async def test_model_never_sees_its_own_empty_tool_call_turns():
         assert turn.tool_calls, "tool_calls must be preserved on the placeholder turn"
 
 
+def _empty_ai_turns(invocation: list[object]) -> list[object]:
+    return [
+        message
+        for message in invocation
+        if getattr(message, "type", None) == "ai"
+        and not getattr(message, "tool_calls", None)
+        and not getattr(message, "content", None)
+    ]
+
+
+@pytest.mark.asyncio
+async def test_empty_nudge_reply_is_not_sent_back_in_the_retry_invocation():
+    """Regression: an AI turn with no content and no tool calls serializes to a
+    Vertex Content with zero parts, which 400s and kills the stream. Gemini
+    returns exactly that shape to the automatic nudge sometimes."""
+    llm = SequenceLLM(
+        responses=[
+            _tool_call_response(1),
+            _tool_call_response(2),
+            _tool_call_response(3),
+            _tool_call_response(4),
+            _tool_call_response(5),
+            _tool_call_response(6),
+            AIMessage(content=""),
+            AIMessage(content="done"),
+        ]
+    )
+    graph = create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+    )
+
+    await graph.ainvoke(
+        {"messages": [HumanMessage(content="hello")]},
+        config={"configurable": {"thread_id": "thread-empty-nudge-reply"}},
+    )
+
+    assert _count_corrective_retry_invocations(llm.invocations) == 1
+    for invocation in llm.invocations:
+        assert not _empty_ai_turns(invocation), "empty AI turn reached the model"
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "",
+        "   ",
+        [],
+        [""],
+        [{"type": "text", "text": ""}],
+        [{"type": "function_call_signature", "signature": "YWJj", "index": 0}],
+    ],
+    ids=[
+        "empty-str",
+        "blank-str",
+        "empty-list",
+        "list-of-empty-str",
+        "empty-text-block",
+        "signature-only-block",
+    ],
+)
+@pytest.mark.asyncio
+async def test_every_zero_part_content_shape_is_kept_out_of_the_model_input(content):
+    """Each of these shapes serializes to a Vertex Content with zero parts
+    (verified against langchain_google_vertexai), so each is the same 400."""
+    llm = SequenceLLM(responses=[AIMessage(content="done")])
+    graph = create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+    )
+
+    await graph.ainvoke(
+        {
+            "messages": [
+                HumanMessage(content="hello"),
+                AIMessage(content=content),
+                HumanMessage(content="are you there?"),
+            ]
+        },
+        config={"configurable": {"thread_id": f"thread-zero-parts-{content!r}"}},
+    )
+
+    # History holds exactly one AI turn, the zero-part one. It must be gone,
+    # so the model input carries no AI turn at all.
+    assert llm.invocations
+    replayed_ai_turns = [
+        message for message in llm.invocations[0] if getattr(message, "type", None) == "ai"
+    ]
+    assert not replayed_ai_turns, f"zero-part AI turn {content!r} reached the model"
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        [{"type": "text", "text": "real answer"}],
+        ["", {"type": "text", "text": "still says something"}],
+        [{"type": "some_future_block"}],
+    ],
+    ids=["text-block", "mixed-blank-and-text", "unknown-block"],
+)
+@pytest.mark.asyncio
+async def test_ai_turns_that_still_carry_a_part_are_not_dropped(content):
+    """The drop must be narrow: anything that serializes to at least one part
+    has to survive, or replayed history loses real turns."""
+    llm = SequenceLLM(responses=[AIMessage(content="done")])
+    graph = create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+    )
+
+    await graph.ainvoke(
+        {
+            "messages": [
+                HumanMessage(content="hello"),
+                AIMessage(content=content),
+                HumanMessage(content="are you there?"),
+            ]
+        },
+        config={"configurable": {"thread_id": f"thread-keeps-parts-{content!r}"}},
+    )
+
+    replayed_ai_turns = [
+        message for message in llm.invocations[0] if getattr(message, "type", None) == "ai"
+    ]
+    assert len(replayed_ai_turns) == 1, f"dropped an AI turn that still had parts: {content!r}"
+
+
+@pytest.mark.asyncio
+async def test_empty_ai_turn_in_replayed_history_never_reaches_the_model():
+    """Same 400, other entry point: an empty AI turn already in the thread's
+    history must be dropped when the next turn replays it."""
+    llm = SequenceLLM(responses=[AIMessage(content="done")])
+    graph = create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+    )
+
+    await graph.ainvoke(
+        {
+            "messages": [
+                HumanMessage(content="hello"),
+                AIMessage(content=""),
+                HumanMessage(content="are you there?"),
+            ]
+        },
+        config={"configurable": {"thread_id": "thread-empty-history-turn"}},
+    )
+
+    assert llm.invocations
+    for invocation in llm.invocations:
+        assert not _empty_ai_turns(invocation), "empty AI turn reached the model"
+
+
 @pytest.mark.asyncio
 async def test_ambient_memory_is_injected_into_first_model_invocation():
     llm = SequenceLLM(responses=[AIMessage(content="done")])
