@@ -98,6 +98,11 @@ body {
 	font-feature-settings: var(--app-font-feature-settings) !important;
 }
 
+/* Ensure bold elements render at weight 700 */
+strong, b {
+	font-weight: 700 !important;
+}
+
 [aria-label="editable markdown"] {
 	font-family: var(--app-font-family) !important;
 	font-feature-settings: var(--app-font-feature-settings) !important;
