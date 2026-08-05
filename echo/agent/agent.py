@@ -2536,7 +2536,7 @@ def create_agent_graph(
             retry_messages = list(invocation_messages)
             if not _is_empty_ai_turn(response):
                 retry_messages.append(response)
-            retry_messages.append(SystemMessage(content=POST_NUDGE_CONTINUATION_SYSTEM_PROMPT))
+            retry_messages.append(HumanMessage(content=POST_NUDGE_CONTINUATION_SYSTEM_PROMPT))
             response = _normalize_fused_tool_calls(
                 await llm_with_tools.ainvoke(retry_messages),
                 recognized_tool_names,

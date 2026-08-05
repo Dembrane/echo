@@ -127,7 +127,7 @@ def _count_corrective_retry_invocations(invocations: list[list[object]]) -> int:
     count = 0
     for invocation in invocations:
         if any(
-            getattr(message, "type", None) == "system"
+            getattr(message, "type", None) in ("system", "human")
             and getattr(message, "content", None) == POST_NUDGE_CONTINUATION_SYSTEM_PROMPT
             for message in invocation
         ):
