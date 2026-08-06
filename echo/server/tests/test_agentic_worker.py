@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from tests.agentic.fakes import InMemoryDirectus
@@ -6,7 +8,11 @@ from dembrane.agentic_worker import (
     TOOL_LIMIT_SAFETY_MESSAGE,
     AGENT_CANCELLED_ERROR_CODE,
     RUN_TOOL_LIMIT_SAFETY_MESSAGE,
+    DRAFT_PUBLISH_INTERVAL_SECONDS,
+    DRAFT_PUBLISH_LONG_INTERVAL_SECONDS,
+    DRAFT_PUBLISH_MEDIUM_INTERVAL_SECONDS,
     process_agentic_run,
+    _draft_publish_interval,
     _sanitize_host_visible_assistant_content,
 )
 from dembrane.service.agentic import AgenticRunService
@@ -14,6 +20,14 @@ from dembrane.service.agentic import AgenticRunService
 
 def _build_service() -> AgenticRunService:
     return AgenticRunService(directus_client=InMemoryDirectus())
+
+
+def test_draft_publish_interval_backs_off_as_text_grows() -> None:
+    assert _draft_publish_interval(0) == DRAFT_PUBLISH_INTERVAL_SECONDS
+    assert _draft_publish_interval(1_999) == DRAFT_PUBLISH_INTERVAL_SECONDS
+    assert _draft_publish_interval(2_000) == DRAFT_PUBLISH_MEDIUM_INTERVAL_SECONDS
+    assert _draft_publish_interval(7_999) == DRAFT_PUBLISH_MEDIUM_INTERVAL_SECONDS
+    assert _draft_publish_interval(8_000) == DRAFT_PUBLISH_LONG_INTERVAL_SECONDS
 
 
 def test_sanitize_host_visible_content_strips_stray_token_and_successfully() -> None:
@@ -272,7 +286,7 @@ async def test_process_agentic_run_handles_cancel_request(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthesis(
+async def test_process_agentic_run_persists_planning_prose_and_final_synthesis(
     monkeypatch,
 ) -> None:
     service = _build_service()
@@ -360,14 +374,20 @@ async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthes
 
     assert stored_run["status"] == "completed"
     assert stored_run["latest_output"] == "Final synthesis message."
-    # Pre-tool planning prose is no longer surfaced as its own bubble; only the
-    # final synthesis reaches the host. The aggregated tool activity carries the
-    # "what's happening" story instead.
-    assert len(assistant_events) == 1
-    assert assistant_events[0]["payload"]["content"] == "Final synthesis message."
+    # Pre-tool prose streams as a draft, so its durable copy must exist too:
+    # everything shown is persisted (no flicker).
+    assert len(assistant_events) == 2
+    assert assistant_events[0]["payload"]["content"] == planning_content
+    assert assistant_events[1]["payload"]["content"] == "Final synthesis message."
     assert fake_chat_service.created_messages == [
         {
             "id": "msg-1",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": planning_content,
+        },
+        {
+            "id": "msg-2",
             "project_chat_id": "chat-1",
             "message_from": "assistant",
             "text": "Final synthesis message.",
@@ -557,6 +577,7 @@ async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_upd
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {
             "type": "on_chat_model_end",
+            "run_id": "model-run-progress",
             "data": {
                 "output": {
                     "kwargs": {
@@ -633,6 +654,8 @@ async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_upd
         "Final answer only.",
     ]
     assert not any(text.startswith("I'll first gather evidence") for text in assistant_texts)
+    # Carries the model turn's message_id so a streamed draft resolves into it.
+    assert assistant_events[0]["payload"]["message_id"] == "model-run-progress"
     assert fake_chat_service.created_messages == [
         {
             "id": "msg-1",
@@ -751,7 +774,7 @@ async def test_process_agentic_run_uses_progress_tool_output_from_toolmessage_sh
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_suppresses_midpoint_planning_prose(monkeypatch) -> None:
+async def test_process_agentic_run_persists_midpoint_planning_prose(monkeypatch) -> None:
     service = _build_service()
     run = service.create_run(
         project_id="project-1",
@@ -854,19 +877,14 @@ async def test_process_agentic_run_suppresses_midpoint_planning_prose(monkeypatc
     assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
     assistant_texts = [event["payload"]["content"] for event in assistant_events]
 
-    # Model prose that rides alongside a tool call (pre-tool "planning" or a
-    # mid-run "quick update" that is NOT an explicit sendProgressUpdate) is
-    # suppressed: it fragmented the aggregated activity strip. Only the final
-    # tool-free synthesis surfaces as a host-visible message.
-    assert assistant_texts == ["Final answer only."]
-    assert fake_chat_service.created_messages == [
-        {
-            "id": "msg-1",
-            "project_chat_id": "chat-1",
-            "message_from": "assistant",
-            "text": "Final answer only.",
-        },
+    # Mid-run prose is persisted (it streamed as a draft); only
+    # sendProgressUpdate narration stays suppressed.
+    assert assistant_texts == [
+        "I will start by scanning project summaries.",
+        "Quick update: I have enough signal to focus on two transcripts.",
+        "Final answer only.",
     ]
+    assert [message["text"] for message in fake_chat_service.created_messages] == assistant_texts
 
 
 @pytest.mark.asyncio
@@ -1220,14 +1238,12 @@ async def test_process_agentic_run_tool_limit_does_not_repeat_last_update(monkey
     assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
     assistant_texts = [event["payload"]["content"] for event in assistant_events]
 
-    # The turn ends with the single limit message. The model's pre-tool prose
-    # ("Current synthesis draft.") rode alongside a tool call, so it is
-    # suppressed rather than surfaced or repeated.
-    assert len(assistant_texts) == 1
-    assert assistant_texts[0] != "Current synthesis draft."
-    assert 'request: "hello"' in assistant_texts[0]
-    assert "fresh pass" in assistant_texts[0]
-    assert assistant_texts.count("Current synthesis draft.") == 0
+    # Pre-tool prose persists once, then the single limit message; no repeats.
+    assert len(assistant_texts) == 2
+    assert assistant_texts[0] == "Current synthesis draft."
+    assert 'request: "hello"' in assistant_texts[1]
+    assert "fresh pass" in assistant_texts[1]
+    assert assistant_texts.count("Current synthesis draft.") == 1
 
 
 @pytest.mark.asyncio
@@ -1887,3 +1903,393 @@ async def test_process_agentic_run_sanitizes_host_visible_assistant_artifacts(mo
 
     assert assistant_texts == ["Let's start here!"]
     assert persisted_texts == ["Let's start here!"]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_streams_drafts_without_persisting_chunks(
+    monkeypatch,
+) -> None:
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    fake_chat_service = _FakeChatService()
+    published_events: list[str] = []
+
+    model_run_id = "model-run-1"
+
+    def _chunk(text: str) -> dict:
+        return {
+            "event": "on_chat_model_stream",
+            "run_id": model_run_id,
+            "data": {"chunk": {"kwargs": {"content": text}}},
+        }
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+        **_context: object,
+    ):
+        _ = (project_id, user_message, bearer_token, message_history)
+        assert thread_id == run["id"]
+        yield _chunk("Here is what ")
+        yield _chunk("the transcripts show.")
+        yield _chunk("")  # final empty chunk (chunk_position: last)
+        yield {
+            "event": "on_chat_model_end",
+            "run_id": model_run_id,
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": "Here is what the transcripts show.",
+                        "additional_kwargs": {},
+                    }
+                }
+            },
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:
+        assert run_id == run["id"]
+        published_events.append(event_json)
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", fake_chat_service)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    # Chunk events are never persisted (no Directus rows, no seq consumed).
+    assert all(event["event_type"] != "on_chat_model_stream" for event in events)
+    assert all(event["event_type"] != "assistant.draft" for event in events)
+
+    drafts = [
+        json.loads(raw)
+        for raw in published_events
+        if json.loads(raw).get("event_type") == "assistant.draft"
+    ]
+    # Snapshots, not increments: each draft carries the full text so far.
+    assert [draft["payload"]["text"] for draft in drafts] == [
+        "Here is what",
+        "Here is what the transcripts show.",
+    ]
+    assert all(draft["payload"]["message_id"] == model_run_id for draft in drafts)
+
+    # The durable message carries the same message_id so the frontend can
+    # swap the draft bubble atomically.
+    assistant_events = [e for e in events if e["event_type"] == "assistant.message"]
+    assert len(assistant_events) == 1
+    assert assistant_events[0]["payload"]["content"] == "Here is what the transcripts show."
+    assert assistant_events[0]["payload"]["message_id"] == model_run_id
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_throttles_draft_snapshots(monkeypatch) -> None:
+    """A chunk burst yields two snapshots: first chunk and final full-text flush."""
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    published_events: list[str] = []
+    model_run_id = "model-run-throttle"
+    words = [f"word{i} " for i in range(10)]
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+        **_context: object,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        for word in words:
+            yield {
+                "event": "on_chat_model_stream",
+                "run_id": model_run_id,
+                "data": {"chunk": {"kwargs": {"content": word}}},
+            }
+        yield {
+            "event": "on_chat_model_end",
+            "run_id": model_run_id,
+            "data": {
+                "output": {
+                    "kwargs": {"content": "".join(words), "additional_kwargs": {}}
+                }
+            },
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        published_events.append(event_json)
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.DRAFT_PUBLISH_INTERVAL_SECONDS", 3600.0)
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", _FakeChatService())
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    drafts = [
+        json.loads(raw)
+        for raw in published_events
+        if json.loads(raw).get("event_type") == "assistant.draft"
+    ]
+    assert [draft["payload"]["text"] for draft in drafts] == [
+        "word0",
+        "".join(words).strip(),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_progress_turn_draft_resolves_into_tool_output(
+    monkeypatch,
+) -> None:
+    """Narration streams as a draft but the durable message is the tool output,
+    carrying the model turn's message_id so the draft resolves into it."""
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    fake_chat_service = _FakeChatService()
+    published_events: list[str] = []
+    model_run_id = "model-run-progress-divergence"
+    narration = "The halftime interviews look promising so far."
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+        **_context: object,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        yield {
+            "event": "on_chat_model_stream",
+            "run_id": model_run_id,
+            "data": {"chunk": {"kwargs": {"content": narration}}},
+        }
+        yield {
+            "event": "on_chat_model_end",
+            "run_id": model_run_id,
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": narration,
+                        "additional_kwargs": {
+                            "function_call": {
+                                "name": "sendProgressUpdate",
+                                "arguments": "{}",
+                            }
+                        },
+                    }
+                }
+            },
+        }
+        yield {"type": "on_tool_start", "name": "sendProgressUpdate"}
+        yield {
+            "type": "on_tool_end",
+            "name": "sendProgressUpdate",
+            "data": {
+                "output": {
+                    "kind": "progress_update",
+                    "update": "Halftime themes located.",
+                    "next_steps": "I will verify two quotes.",
+                    "visible_to_user": True,
+                }
+            },
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        published_events.append(event_json)
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", fake_chat_service)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
+    drafts = [
+        json.loads(raw)
+        for raw in published_events
+        if json.loads(raw).get("event_type") == "assistant.draft"
+    ]
+
+    # The narration streamed as a draft under the model turn's id...
+    assert drafts
+    assert all(draft["payload"]["message_id"] == model_run_id for draft in drafts)
+    assert drafts[-1]["payload"]["text"] == narration
+    # ...but the durable message is the tool output with the same id, so the
+    # frontend swaps the draft for it. The narration itself is never persisted.
+    assert len(assistant_events) == 1
+    assert assistant_events[0]["payload"]["content"] == (
+        "Halftime themes located.\n\nI will verify two quotes."
+    )
+    assert assistant_events[0]["payload"]["message_id"] == model_run_id
+    assert all(narration != event["payload"]["content"] for event in assistant_events)
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_never_streams_placeholder_prefixes(monkeypatch) -> None:
+    """Placeholder prefixes ("(calling") are held back; a real answer starting
+    with the same letters publishes once it diverges."""
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    published_events: list[str] = []
+
+    def _chunk(run_id: str, text: str) -> dict:
+        return {
+            "event": "on_chat_model_stream",
+            "run_id": run_id,
+            "data": {"chunk": {"kwargs": {"content": text}}},
+        }
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+        **_context: object,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        # Turn 1: the model mimics the placeholder while calling a tool.
+        yield _chunk("model-run-mimic", "(calling")
+        yield _chunk("model-run-mimic", " tools)")
+        yield {
+            "event": "on_chat_model_end",
+            "run_id": "model-run-mimic",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": "(calling tools)",
+                        "additional_kwargs": {
+                            "function_call": {"name": "grepDocs", "arguments": "{}"}
+                        },
+                    }
+                }
+            },
+        }
+        yield {"type": "on_tool_start", "name": "grepDocs"}
+        yield {"type": "on_tool_end", "name": "grepDocs", "data": {"output": {}}}
+        # Turn 2: a real answer that shares the placeholder's first letters.
+        yield _chunk("model-run-answer", "(calling")
+        yield _chunk("model-run-answer", " all participants early is key.)")
+        yield {
+            "event": "on_chat_model_end",
+            "run_id": "model-run-answer",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": "(calling all participants early is key.)",
+                        "additional_kwargs": {},
+                    }
+                }
+            },
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        published_events.append(event_json)
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", _FakeChatService())
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    drafts = [
+        json.loads(raw)
+        for raw in published_events
+        if json.loads(raw).get("event_type") == "assistant.draft"
+    ]
+    # No draft from the mimic turn, not even a prefix of the placeholder.
+    assert all(draft["payload"]["message_id"] != "model-run-mimic" for draft in drafts)
+    assert all(not draft["payload"]["text"].startswith("(calling t") for draft in drafts)
+    assert all(draft["payload"]["text"] != "(calling" for draft in drafts)
+    # The real answer still streams once it diverges from the placeholder.
+    answer_drafts = [d for d in drafts if d["payload"]["message_id"] == "model-run-answer"]
+    assert answer_drafts
+    assert answer_drafts[-1]["payload"]["text"] == "(calling all participants early is key.)"

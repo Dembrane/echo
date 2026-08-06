@@ -796,6 +796,13 @@ export const AgenticChatPanel = ({
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isHydratingStoredRun, setIsHydratingStoredRun] = useState(false);
 	const [streamFailureCount, setStreamFailureCount] = useState(0);
+	// Snapshot of the message being written; the durable assistant.message
+	// with the same message_id replaces it in place.
+	const [liveDraft, setLiveDraft] = useState<{
+		messageId: string;
+		text: string;
+		timestamp: string;
+	} | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [expandedGroupIds, setExpandedGroupIds] = useState<
 		Record<string, boolean>
@@ -818,6 +825,10 @@ export const AgenticChatPanel = ({
 	useEffect(() => {
 		currentRunIdRef.current = runId;
 	}, [runId]);
+
+	useEffect(() => {
+		if (!isRunInFlight) setLiveDraft(null);
+	}, [isRunInFlight]);
 
 	useEffect(() => {
 		if (queryPrefillStartedRef.current) return;
@@ -845,6 +856,30 @@ export const AgenticChatPanel = ({
 		}
 		return names;
 	}, [conversationsQuery.data]);
+
+	// Renders only until its durable copy is in the event log.
+	const liveDraftMessage = useMemo(() => {
+		if (!liveDraft) return null;
+		const durable = events.some(
+			(event) =>
+				event.event_type === "assistant.message" &&
+				asObject(event.payload)?.message_id === liveDraft.messageId,
+		);
+		if (durable) return null;
+		return {
+			content: enrichAgenticContent({
+				content: liveDraft.text,
+				conversationNames,
+				language,
+				projectId,
+				workspaceId: workspaceId ?? "",
+			}),
+			id: "live-draft",
+			role: "assistant" as const,
+			sortSeq: Number.MAX_SAFE_INTEGER,
+			timestamp: liveDraft.timestamp,
+		};
+	}, [liveDraft, events, conversationNames, language, projectId, workspaceId]);
 
 	const timeline = useMemo(() => {
 		const sorted = [...events].sort((a, b) => a.seq - b.seq);
@@ -1150,11 +1185,35 @@ export const AgenticChatPanel = ({
 			try {
 				await streamAgenticRun(targetRunId, {
 					afterSeq: fromSeq,
+					onDraft: (draft) => {
+						if (currentRunIdRef.current !== targetRunId) return;
+						setLiveDraft((previous) => ({
+							messageId: draft.message_id,
+							text: draft.text,
+							timestamp:
+								previous?.messageId === draft.message_id
+									? previous.timestamp
+									: new Date().toISOString(),
+						}));
+					},
 					onEvent: (event) => {
 						if (currentRunIdRef.current !== targetRunId) return;
 						mergeEvents([event]);
 						setAfterSeq((previous) => Math.max(previous, event.seq));
 						setStreamFailureCount(0);
+						if (event.event_type === "assistant.message") {
+							// Same React batch as the merge: draft and durable swap in one paint.
+							const payload = asObject(event.payload);
+							const durableMessageId =
+								typeof payload?.message_id === "string"
+									? payload.message_id
+									: null;
+							setLiveDraft((previous) =>
+								previous && previous.messageId === durableMessageId
+									? null
+									: previous,
+							);
+						}
 						if (event.event_type === "run.failed") {
 							setRunStatus("failed");
 						}
@@ -1213,6 +1272,7 @@ export const AgenticChatPanel = ({
 		setIsSubmitting(false);
 		setIsHydratingStoredRun(false);
 		setStreamFailureCount(0);
+		setLiveDraft(null);
 	}, [chatId, stopStream]);
 
 	useEffect(() => {
@@ -1360,7 +1420,11 @@ export const AgenticChatPanel = ({
 			: tail.kind === "message"
 				? `m:${tail.id}:${tail.content.length}`
 				: `t:${tail.id}:${tail.status}`;
-	// biome-ignore lint/correctness/useExhaustiveDependencies: tailKey and isRunInFlight are triggers, not reads. They exist so a growing tail and the live indicator re-fire this effect.
+	// The draft renders outside the timeline, so it needs its own growth key.
+	const draftKey = liveDraftMessage
+		? `d:${liveDraftMessage.timestamp}:${liveDraftMessage.content.length}`
+		: "";
+	// biome-ignore lint/correctness/useExhaustiveDependencies: tailKey, draftKey and isRunInFlight are triggers, not reads. They exist so a growing tail (timeline or draft) and the live indicator re-fire this effect.
 	useEffect(() => {
 		if (timeline.length === 0) return;
 		if (!hasScrolledInitiallyRef.current) {
@@ -1375,7 +1439,14 @@ export const AgenticChatPanel = ({
 			// run finishes, a single smooth scroll is the nicer motion.
 			scrollToBottom(isStreaming ? "auto" : "smooth");
 		}
-	}, [timeline.length, tailKey, isRunInFlight, isStreaming, scrollToBottom]);
+	}, [
+		timeline.length,
+		tailKey,
+		draftKey,
+		isRunInFlight,
+		isStreaming,
+		scrollToBottom,
+	]);
 
 	useEffect(() => {
 		return () => {
@@ -1404,6 +1475,7 @@ export const AgenticChatPanel = ({
 		setError(null);
 		setIsSubmitting(true);
 		setInput("");
+		setLiveDraft(null);
 		setPendingUserMessage({
 			content: message,
 			focusedConversations: focusedContextConversations,
@@ -1881,11 +1953,19 @@ export const AgenticChatPanel = ({
 							</div>
 						)}
 
-					{/* Last node in the thread, after the newest user message, for as
-					    long as the run is in flight. There is no second indicator by
-					    the composer: one live thing, in the place the eye already is.
-					    Not while the chat is still loading, so the skeleton and the
-					    live line never claim the same space. */}
+					{liveDraftMessage && isRunInFlight && (
+						<div key="live-draft">
+							<ChatHistoryMessage
+								message={toHistoryMessage(liveDraftMessage)}
+								chatMode="agentic"
+							/>
+						</div>
+					)}
+
+					{/* Last node in the thread, below the draft bubble when one is
+					    streaming; hosts the stop control. Not while the chat is still
+					    loading, so the skeleton and the live line never claim the
+					    same space. */}
 					{!showExistingChatLoading && isRunInFlight && (
 						<LiveRunIndicator
 							headline={liveRunStatusText}

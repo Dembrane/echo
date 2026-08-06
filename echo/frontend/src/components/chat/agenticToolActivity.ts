@@ -203,6 +203,9 @@ const parseToolEvent = (event: AgenticRunEvent): ParsedToolEvent | null => {
 			data?.name,
 			outputKwargs?.name,
 		) ?? "tool";
+	// Its output already appears in the thread as a message; a step row
+	// would say the same thing twice.
+	if (toolName === "sendProgressUpdate") return null;
 	const callId = firstString(
 		payload?.run_id,
 		payload?.runId,
