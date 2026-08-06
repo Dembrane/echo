@@ -1198,7 +1198,7 @@ msgstr "Voeg een projectdoel toe voordat je opslaat."
 msgid "Add additional context (Optional)"
 msgstr "Voeg extra context toe (Optioneel)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:230
+#: src/components/participant/ParticipantInitiateForm.tsx:208
 msgid "Add all that apply"
 msgstr "Vink aan wat van toepassing is"
 
@@ -3259,6 +3259,11 @@ msgstr "Doorgaan"
 #: src/components/participant/ParticipantOnboardingCards.tsx:502
 #: src/components/participant/MicrophoneTest.tsx:414
 msgid "participant.button.continue"
+msgstr "Doorgaan"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantInitiateForm.tsx:236
+msgid "participant.ready.to.begin.button.text"
 msgstr "Doorgaan"
 
 #: src/components/billing/BillingManager.tsx:665
@@ -7819,11 +7824,6 @@ msgid "participant.button.next"
 msgstr "Volgende"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:258
-msgid "participant.ready.to.begin.button.text"
-msgstr "Klaar om te beginnen"
-
-#. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:287
 msgid "participant.verify.selection.button.next"
 msgstr "Volgende"
@@ -9040,8 +9040,8 @@ msgid "partially completed"
 msgstr "deels afgerond"
 
 #: src/components/report/ConversationStatusTable.tsx:56
-#: src/components/participant/ParticipantInitiateForm.tsx:87
-#: src/components/participant/ParticipantInitiateForm.tsx:115
+#: src/components/participant/ParticipantInitiateForm.tsx:86
+#: src/components/participant/ParticipantInitiateForm.tsx:110
 msgid "Participant"
 msgstr "Deelnemer"
 
@@ -11762,7 +11762,7 @@ msgstr "Apart (klant)"
 msgid "Separate with commas, spaces, or new lines."
 msgstr "Scheid met komma's, spaties of nieuwe regels."
 
-#: src/components/participant/ParticipantInitiateForm.tsx:218
+#: src/components/participant/ParticipantInitiateForm.tsx:196
 msgid "Session Name"
 msgstr "Sessienaam"
 
@@ -12148,7 +12148,7 @@ msgstr "Iets blokkeert je verbinding. Je audio wordt niet opgeslagen tenzij dit 
 #: src/routes/onboarding/OnboardingRoute.tsx:189
 #: src/routes/auth/Login.tsx:241
 #: src/components/project/ProjectAccessGuard.tsx:87
-#: src/components/participant/ParticipantInitiateForm.tsx:205
+#: src/components/participant/ParticipantInitiateForm.tsx:183
 #: src/components/error/ErrorPage.tsx:55
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:298
@@ -12316,8 +12316,8 @@ msgid "Start over"
 msgstr "Opnieuw beginnen"
 
 #: src/components/participant/ParticipantInitiateForm.tsx:183
-msgid "Start recording"
-msgstr "Start met opnemen"
+#~ msgid "Start recording"
+#~ msgstr "Start met opnemen"
 
 #~ msgid "Start Recording"
 #~ msgstr "Opname starten"
@@ -12603,7 +12603,7 @@ msgid "Tag deleted"
 msgstr "Tag verwijderd"
 
 #: src/components/project/ProjectTagsInput.tsx:256
-#: src/components/participant/ParticipantInitiateForm.tsx:229
+#: src/components/participant/ParticipantInitiateForm.tsx:207
 #: src/components/conversation/ProjectConversationsPanel.tsx:852
 #: src/components/conversation/ConversationEdit.tsx:415
 #: src/components/conversation/ConversationDrilldownModal.tsx:205
