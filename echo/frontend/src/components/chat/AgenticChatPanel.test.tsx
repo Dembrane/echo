@@ -4,6 +4,7 @@ import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+	act,
 	cleanup,
 	fireEvent,
 	render,
@@ -36,7 +37,7 @@ const RUN_ID = "run-1";
 
 // vi.mock factories are hoisted above every top-level binding, so the state
 // they close over has to be hoisted with them.
-const { runState, stopAgenticRunMock } = vi.hoisted(() => ({
+const { runState, stopAgenticRunMock, streamOptionsRef } = vi.hoisted(() => ({
 	runState: { events: [], status: "running" } as {
 		events: AgenticRunEvent[];
 		status: AgenticRunStatus;
@@ -46,6 +47,14 @@ const { runState, stopAgenticRunMock } = vi.hoisted(() => ({
 		status: "stopping" as const,
 		turn_seq: 1,
 	})),
+	// The live stream's callbacks, captured so tests can drive draft
+	// snapshots and durable events into the panel by hand.
+	streamOptionsRef: {
+		current: null as null | {
+			onEvent: (event: AgenticRunEvent) => void;
+			onDraft?: (draft: { message_id: string; text: string }) => void;
+		},
+	},
 }));
 
 vi.mock("@/lib/api", async (importOriginal) => {
@@ -76,7 +85,13 @@ vi.mock("@/lib/api", async (importOriginal) => {
 		stopAgenticRun: stopAgenticRunMock,
 		// Never resolves: an in-flight run is one whose stream is still open, and
 		// resolving would let the panel re-read the status and settle.
-		streamAgenticRun: vi.fn(() => new Promise(() => {})),
+		streamAgenticRun: vi.fn(
+			(...args: Parameters<typeof actual.streamAgenticRun>) => {
+				streamOptionsRef.current =
+					args[1] as unknown as typeof streamOptionsRef.current;
+				return new Promise(() => {});
+			},
+		),
 	};
 });
 
@@ -225,6 +240,7 @@ beforeAll(() => {
 beforeEach(() => {
 	window.localStorage.clear();
 	stopAgenticRunMock.mockClear();
+	streamOptionsRef.current = null;
 	runState.events = [];
 	runState.status = "running";
 });
@@ -375,5 +391,57 @@ describe("AgenticChatPanel, tool groups and the live indicator", () => {
 		expect(group.textContent).toContain("Worked through 3 steps");
 		expect(screen.queryByTestId("agentic-run-indicator")).toBeNull();
 		expect(screen.queryByTestId("chat-stop-button")).toBeNull();
+	});
+});
+
+describe("AgenticChatPanel, live draft streaming", () => {
+	it("renders a growing draft bubble and swaps it for the durable message", async () => {
+		runState.status = "running";
+		runState.events = [messageEvent(1, "user", "hello")];
+
+		renderPanel();
+
+		await waitFor(() => expect(streamOptionsRef.current).not.toBeNull());
+
+		// First snapshot appears as an assistant bubble.
+		act(() => {
+			streamOptionsRef.current?.onDraft?.({
+				message_id: "m-1",
+				text: "Working through",
+			});
+		});
+		expect(await screen.findByText(/Working through/)).toBeTruthy();
+
+		// A later snapshot replaces the bubble's text, it does not append one.
+		act(() => {
+			streamOptionsRef.current?.onDraft?.({
+				message_id: "m-1",
+				text: "Working through the transcripts now.",
+			});
+		});
+		expect(
+			await screen.findByText(/Working through the transcripts now\./),
+		).toBeTruthy();
+		expect(screen.queryAllByText(/Working through/)).toHaveLength(1);
+
+		// The durable copy replaces the draft: same text, exactly one bubble.
+		act(() => {
+			streamOptionsRef.current?.onEvent({
+				event_type: "assistant.message",
+				id: 2,
+				payload: {
+					content: "Working through the transcripts now.",
+					message_id: "m-1",
+				},
+				project_agentic_run_id: RUN_ID,
+				seq: 2,
+				timestamp: at(2),
+			});
+		});
+		await waitFor(() =>
+			expect(
+				screen.queryAllByText(/Working through the transcripts now\./),
+			).toHaveLength(1),
+		);
 	});
 });

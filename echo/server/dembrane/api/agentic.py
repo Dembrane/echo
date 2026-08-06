@@ -2641,6 +2641,10 @@ async def _stream_live_events(run_id: str, after_seq: int) -> AsyncIterator[str]
                         event = None
 
                     if isinstance(event, dict):
+                        if event.get("event_type") == "assistant.draft":
+                            # Ephemeral: forwarded live, never replayed, no cursor.
+                            yield f"event: assistant.draft\ndata: {live_payload}\n\n"
+                            continue
                         seq = int(event.get("seq") or 0)
                         if seq > cursor:
                             cursor = seq

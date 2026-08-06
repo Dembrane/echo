@@ -1201,6 +1201,12 @@ export type AgenticRunEvent = {
 	timestamp: string;
 };
 
+// Streaming snapshot of the assistant message being written; ephemeral, no seq.
+export type AgenticDraftPayload = {
+	message_id: string;
+	text: string;
+};
+
 export type AgenticRunEventsResponse = {
 	run_id: string;
 	status: AgenticRunStatus;
@@ -1260,6 +1266,7 @@ type StreamAgenticRunOptions = {
 	afterSeq?: number;
 	signal?: AbortSignal;
 	onEvent: (event: AgenticRunEvent) => void;
+	onDraft?: (draft: AgenticDraftPayload) => void;
 	onHeartbeat?: () => void;
 };
 
@@ -1333,6 +1340,23 @@ export const streamAgenticRun = async (
 				if (parsed) {
 					if (parsed.eventType === "heartbeat") {
 						options.onHeartbeat?.();
+					} else if (parsed.eventType === "assistant.draft") {
+						// Drafts have no seq and must never reach the onEvent merge map.
+						if (parsed.data) {
+							try {
+								const frame = JSON.parse(parsed.data) as {
+									payload?: AgenticDraftPayload;
+								};
+								if (
+									typeof frame.payload?.message_id === "string" &&
+									typeof frame.payload?.text === "string"
+								) {
+									options.onDraft?.(frame.payload);
+								}
+							} catch {
+								// Ignore malformed frames and continue streaming.
+							}
+						}
 					} else if (parsed.data) {
 						try {
 							const event = JSON.parse(parsed.data) as AgenticRunEvent;
