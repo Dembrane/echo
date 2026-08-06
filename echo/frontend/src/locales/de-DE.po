@@ -1416,7 +1416,7 @@ msgstr ""
 msgid "Add additional context (Optional)"
 msgstr "Zusätzlichen Kontext hinzufügen (Optional)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:230
+#: src/components/participant/ParticipantInitiateForm.tsx:208
 msgid "Add all that apply"
 msgstr "Alle zutreffenden hinzufügen"
 
@@ -3516,6 +3516,11 @@ msgstr "Weiter"
 #: src/components/participant/ParticipantOnboardingCards.tsx:502
 #: src/components/participant/MicrophoneTest.tsx:414
 msgid "participant.button.continue"
+msgstr "Weiter"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantInitiateForm.tsx:236
+msgid "participant.ready.to.begin.button.text"
 msgstr "Weiter"
 
 #: src/components/billing/BillingManager.tsx:665
@@ -8225,11 +8230,6 @@ msgid "participant.button.next"
 msgstr "Weiter"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:258
-msgid "participant.ready.to.begin.button.text"
-msgstr "Bereit zum Beginn"
-
-#. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:287
 msgid "participant.verify.selection.button.next"
 msgstr "Weiter"
@@ -9504,8 +9504,8 @@ msgid "partially completed"
 msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:56
-#: src/components/participant/ParticipantInitiateForm.tsx:87
-#: src/components/participant/ParticipantInitiateForm.tsx:115
+#: src/components/participant/ParticipantInitiateForm.tsx:86
+#: src/components/participant/ParticipantInitiateForm.tsx:110
 msgid "Participant"
 msgstr "Teilnehmer"
 
@@ -12246,7 +12246,7 @@ msgstr ""
 msgid "Separate with commas, spaces, or new lines."
 msgstr ""
 
-#: src/components/participant/ParticipantInitiateForm.tsx:218
+#: src/components/participant/ParticipantInitiateForm.tsx:196
 msgid "Session Name"
 msgstr "Sitzungsname"
 
@@ -12659,7 +12659,7 @@ msgstr "Etwas blockiert Ihre Verbindung. Ihr Audio wird nicht gespeichert, solan
 #: src/routes/onboarding/OnboardingRoute.tsx:189
 #: src/routes/auth/Login.tsx:241
 #: src/components/project/ProjectAccessGuard.tsx:87
-#: src/components/participant/ParticipantInitiateForm.tsx:205
+#: src/components/participant/ParticipantInitiateForm.tsx:183
 #: src/components/error/ErrorPage.tsx:55
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:298
@@ -12833,8 +12833,8 @@ msgid "Start over"
 msgstr "Neu beginnen"
 
 #: src/components/participant/ParticipantInitiateForm.tsx:183
-msgid "Start recording"
-msgstr ""
+#~ msgid "Start recording"
+#~ msgstr ""
 
 #~ msgid "Start Recording"
 #~ msgstr "Aufnahme starten"
@@ -13130,7 +13130,7 @@ msgid "Tag deleted"
 msgstr ""
 
 #: src/components/project/ProjectTagsInput.tsx:256
-#: src/components/participant/ParticipantInitiateForm.tsx:229
+#: src/components/participant/ParticipantInitiateForm.tsx:207
 #: src/components/conversation/ProjectConversationsPanel.tsx:852
 #: src/components/conversation/ConversationEdit.tsx:415
 #: src/components/conversation/ConversationDrilldownModal.tsx:205
