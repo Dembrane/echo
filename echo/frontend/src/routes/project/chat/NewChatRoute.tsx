@@ -56,6 +56,7 @@ import {
 import { consumeChatPrefill } from "@/components/chat/prefill";
 import { BaseSkeleton } from "@/components/common/BaseSkeleton";
 import { NavigationButton } from "@/components/common/NavigationButton";
+import { toast } from "@/components/common/Toaster";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
@@ -306,6 +307,7 @@ export const NewChatRoute = () => {
 	const [draftChatId, setDraftChatId] = useState<string | null>(null);
 	const draftChatIdRef = useRef<string | null>(null);
 	const draftHandedOffRef = useRef(false);
+	const creatingDraftRef = useRef(false);
 	const deleteChatMutation = useDeleteChatMutation();
 	const draftContextQuery = useProjectChatContext(draftChatId ?? "");
 	const pickedCount = draftChatId
@@ -397,20 +399,29 @@ export const NewChatRoute = () => {
 			pickerHandlers.open();
 			return;
 		}
+		// isPending only flips on the next render; two clicks in one tick would
+		// both pass it and create two drafts.
+		if (creatingDraftRef.current) return;
 		// Free tier: one chat per workspace. Route to upgrade before creating
 		// the draft, same as starting a chat would.
 		if (atChatLimit) {
 			upgradeHandlers.open();
 			return;
 		}
+		creatingDraftRef.current = true;
 		try {
 			const chat = await createChatMutation.mutateAsync({
 				navigateToNewChat: false,
 				project_id: { id: projectId },
+				silent: true,
 			});
 			if (!chat?.id) {
 				throw new Error("Failed to create chat");
 			}
+			// Adopt before anything else can throw, so a failed attach leaves a
+			// draft that cleanup deletes and the next open reuses.
+			draftChatIdRef.current = chat.id;
+			setDraftChatId(chat.id);
 			// Carry over anything picked before the draft existed (e.g. "Ask
 			// about these" router state) so the picker shows it as context.
 			if (selectedConversationIds.length > 0) {
@@ -420,15 +431,21 @@ export const NewChatRoute = () => {
 					projectId,
 				});
 			}
-			draftChatIdRef.current = chat.id;
-			setDraftChatId(chat.id);
 			pickerHandlers.open();
 		} catch (error) {
 			if (isFreeTierLimitError(error) === "chats") {
 				upgradeHandlers.open();
+			} else if (draftChatIdRef.current) {
+				// Only the carry-over failed, so let the host pick by hand.
+				console.error("Failed to carry over the current selection:", error);
+				toast.error(t`Could not carry over your selection. Pick again below.`);
+				pickerHandlers.open();
 			} else {
 				console.error("Failed to prepare the conversation picker:", error);
+				toast.error(t`Could not open the conversation list. Try again.`);
 			}
+		} finally {
+			creatingDraftRef.current = false;
 		}
 	};
 
@@ -441,6 +458,7 @@ export const NewChatRoute = () => {
 				deleteChatMutation.mutate({
 					chatId: draftChatIdRef.current,
 					projectId,
+					silent: true,
 				});
 			}
 		};
@@ -575,6 +593,7 @@ export const NewChatRoute = () => {
 												deleteChatMutation.mutate({
 													chatId: draftChatIdRef.current,
 													projectId,
+													silent: true,
 												});
 												draftChatIdRef.current = null;
 												setDraftChatId(null);
