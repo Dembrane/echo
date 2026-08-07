@@ -667,7 +667,11 @@ const LiveRunIndicator = ({
 					"color-mix(in srgb, var(--app-background) 88%, var(--mantine-color-primary-1))",
 			}}
 		>
-			<Group justify="space-between" gap="lg" wrap="nowrap">
+			{/* flex-start, not space-between: on wide screens space-between
+			    strands Cancel at the far edge of the row, visually orphaned
+			    from the status it cancels. Left-aligned also matches the
+			    settled ToolActivityGroup this row swaps into (#938, #945). */}
+			<Group justify="flex-start" gap="md" wrap="nowrap">
 				<Group gap={8} wrap="nowrap" className="min-w-0">
 					<Box
 						aria-hidden="true"
