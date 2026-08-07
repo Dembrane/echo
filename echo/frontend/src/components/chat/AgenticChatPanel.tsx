@@ -186,6 +186,8 @@ const AGENTIC_REFERENCE_LIST_PATTERN = /\[conversation_ids?:\s*([^\]]+)\]/g;
 
 const LOOKS_LIKE_ID_PATTERN = /^[0-9a-f][0-9a-f-]{7,}$/i;
 
+export const MAX_AGENTIC_MESSAGE_LENGTH = 32000;
+
 // A failed run tells us a code, never prose: the server deliberately withholds
 // upstream error text, which is unbounded, untranslated and can echo the prompt
 // back at us. The wording is ours and lives here so it is localised.
@@ -1526,14 +1528,18 @@ export const AgenticChatPanel = ({
 		});
 	}, [chatId, projectId, queryClient]);
 
-	const handleSubmit = async (overrideMessage?: string) => {
-		const message = (overrideMessage ?? input).trim();
-		if (!message || !projectId || !chatId) return;
+		const handleSubmit = async (overrideMessage?: string) => {
+			const message = (overrideMessage ?? input).trim();
+			if (!message || !projectId || !chatId) return;
 
-		if (atTurnLimit) {
-			upgradeHandlers.open();
-			return;
-		}
+			if (message.length > MAX_AGENTIC_MESSAGE_LENGTH) {
+				return;
+			}
+
+			if (atTurnLimit) {
+				upgradeHandlers.open();
+				return;
+			}
 
 		setError(null);
 		setIsSubmitting(true);
@@ -2156,22 +2162,25 @@ export const AgenticChatPanel = ({
 											onClick={voice.start}
 											testId="chat-voice-record-button"
 										/>
-										<Button
-											type="submit"
-											size="md"
-											radius="md"
-											rightSection={
-												isSubmitting ? (
-													<Loader size={18} />
-												) : (
-													<IconSend size={18} />
-												)
-											}
-											disabled={
-												isSubmitting || input.trim().length === 0 || atTurnLimit
-											}
-											{...testId("chat-send-button")}
-										>
+											<Button
+												type="submit"
+												size="md"
+												radius="md"
+												rightSection={
+													isSubmitting ? (
+														<Loader size={18} />
+													) : (
+														<IconSend size={18} />
+													)
+												}
+												disabled={
+													isSubmitting ||
+													input.trim().length === 0 ||
+													input.length > MAX_AGENTIC_MESSAGE_LENGTH ||
+													atTurnLimit
+												}
+												{...testId("chat-send-button")}
+											>
 											<Trans>Send</Trans>
 										</Button>
 									</>
@@ -2209,13 +2218,26 @@ export const AgenticChatPanel = ({
 									{...testId("chat-input-textarea")}
 								/>
 							)}
-						</ChatComposerShell>
-						<Group
-							justify="space-between"
-							gap="sm"
-							wrap="wrap"
-							className="mt-1"
-						>
+							</ChatComposerShell>
+							{input.length > 25000 && (
+								<Text size="xs" c={input.length > MAX_AGENTIC_MESSAGE_LENGTH ? "red" : "orange"} fw={500} className="mt-1">
+									{input.length > MAX_AGENTIC_MESSAGE_LENGTH ? (
+										<Trans>
+											Message is too long (maximum 32,000 characters). Please attach conversations or shorten your message.
+										</Trans>
+									) : (
+										<Trans>
+											Approaching limit: {input.length.toLocaleString()} / 32,000 characters
+										</Trans>
+									)}
+								</Text>
+							)}
+							<Group
+								justify="space-between"
+								gap="sm"
+								wrap="wrap"
+								className="mt-1"
+							>
 							{!isVoiceActive && (
 								<Text size="xs" className="hidden italic md:block">
 									<Trans>Use Shift + Enter to add a new line</Trans>
