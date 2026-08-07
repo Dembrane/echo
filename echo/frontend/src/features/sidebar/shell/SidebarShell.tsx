@@ -53,7 +53,9 @@ export const SidebarShell = ({
 				}}
 			>
 				{header ?? null}
-				<div className="flex flex-1 flex-col overflow-hidden">{children}</div>
+				<div className="flex-1 overflow-x-hidden overflow-y-auto">
+					<div className="flex min-h-full flex-col">{children}</div>
+				</div>
 				{footer ? (
 					<div
 						className="flex flex-col gap-0.5 border-t p-1.5"
