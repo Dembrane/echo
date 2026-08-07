@@ -353,6 +353,8 @@ export const useCreateChatMutation = () => {
 			project_id: {
 				id: string;
 			};
+			/** Draft behind the conversation picker: no "Chat created" toast. */
+			silent?: boolean;
 		}) => {
 			const res = await fetch(`${API_BASE_URL}/v2/bff/chats`, {
 				body: JSON.stringify({
@@ -380,6 +382,7 @@ export const useCreateChatMutation = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.project_id.id, "chats"],
 			});
+			if (variables.silent) return;
 			toast.success(t`Chat created`);
 		},
 	});

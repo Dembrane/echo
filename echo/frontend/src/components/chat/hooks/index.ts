@@ -64,21 +64,27 @@ export const useLockConversationsMutation = () => {
 export const useDeleteChatMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (payload: { chatId: string; projectId: string }) =>
-			deleteChatById(payload.chatId),
-		onError: (error: Error) => {
+		mutationFn: (payload: {
+			chatId: string;
+			projectId: string;
+			/** Throwaway drafts: no toast, no analytics event. */
+			silent?: boolean;
+		}) => deleteChatById(payload.chatId),
+		onError: (error: Error, vars) => {
+			if (vars.silent) return;
 			toast.error(error.message || t`Failed to delete chat`);
 		},
 		onSuccess: (_, vars) => {
-			posthog.capture("chat_deleted", {
-				chat_id: vars.chatId,
-				project_id: vars.projectId,
-			});
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "chats"],
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["chats", vars.chatId],
+			});
+			if (vars.silent) return;
+			posthog.capture("chat_deleted", {
+				chat_id: vars.chatId,
+				project_id: vars.projectId,
 			});
 			toast.success(t`Chat deleted`);
 		},
