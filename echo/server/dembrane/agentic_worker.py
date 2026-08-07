@@ -124,14 +124,45 @@ def _sanitize_host_visible_assistant_content(content: str) -> Optional[str]:
     return normalized or None
 
 
-def _summarize_request_for_safety_message(user_message: str) -> str:
+def _summarize_request_for_safety_message(user_message: Optional[str]) -> str:
+    """Condense the host's own message for quoting back at them.
+
+    This only ever receives the host's raw message, never the assembled agent
+    prompt. Keep it that way: the prompt carries the focus block and project
+    context, which are not the host's words and must not be echoed.
+    """
+    if not user_message:
+        return ""
     normalized = " ".join(user_message.split())
     if len(normalized) > 140:
         return f"{normalized[:137].rstrip()}..."
     return normalized
 
 
-def _build_turn_tool_limit_message(user_message: str) -> str:
+def build_run_failure_payload(
+    error_code: str,
+    *,
+    status_code: Optional[int] = None,
+) -> dict[str, Any]:
+    """Build a host-visible run failure payload: the error code, never the text.
+
+    Upstream and exception messages are unbounded text we do not control. They
+    can carry provider internals and, when an upstream echoes its input, the
+    prompt itself, which for an agentic run includes transcript context. Only
+    `error_code` is a value we produce, so only `error_code` crosses to the
+    host. The raw text still reaches `logger` and the run's `latest_error`
+    field, so developers lose nothing.
+
+    The host-facing wording lives in the frontend, keyed by this code, so it is
+    localised. A server-sent English sentence would not be.
+    """
+    payload: dict[str, Any] = {"error_code": error_code}
+    if status_code is not None:
+        payload["status_code"] = status_code
+    return payload
+
+
+def _build_turn_tool_limit_message(user_message: Optional[str]) -> str:
     request_summary = _summarize_request_for_safety_message(user_message)
     if not request_summary:
         return TOOL_LIMIT_SAFETY_MESSAGE
@@ -711,8 +742,14 @@ async def process_agentic_run(
     bearer_token: str,
     turn_seq: int,
     owner_token: str,
+    host_user_message: Optional[str] = None,
     run_service: Optional[AgenticRunService] = None,
 ) -> None:
+    # `user_message` is model input: the assembled prompt, carrying project
+    # context and the focus block. `host_user_message` is what the host
+    # actually typed, and is the only thing we may quote back at them. When a
+    # caller does not supply it we quote nothing rather than guess, so a
+    # missing argument degrades to a generic message instead of leaking.
     svc = run_service or agentic_run_service
     run = await run_in_thread_pool(svc.get_by_id_or_raise, run_id)
     project_chat_id = str(run.get("project_chat_id") or "")
@@ -724,7 +761,10 @@ async def process_agentic_run(
         turn_seq=turn_seq,
     )
 
-    async def _emit_chat_error(error_code: str, message: str) -> None:
+    async def _emit_chat_error(error_code: str) -> None:
+        # Code only. Free-form upstream text is the same risk in analytics as
+        # it is in the chat: it can carry prompt input, which here includes
+        # transcript context. The code is the dimension worth grouping on.
         await capture_event(
             chat_distinct_id,
             "server_chat_error",
@@ -732,7 +772,6 @@ async def process_agentic_run(
                 "run_id": run_id,
                 "project_id": project_id,
                 "error_code": error_code,
-                "message": message[:300],
                 "mode": "agentic",
             },
         )
@@ -907,7 +946,7 @@ async def process_agentic_run(
                     persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
-                        content=_build_turn_tool_limit_message(user_message),
+                        content=_build_turn_tool_limit_message(host_user_message),
                         project_chat_id=project_chat_id,
                     )
                     # One honest message only. The last substantive assistant
@@ -990,15 +1029,12 @@ async def process_agentic_run(
         )
     except (AgenticRunCancelledError, asyncio.CancelledError):
         logger.info("Run %s cancelled for turn %s", run_id, turn_seq)
-        await _emit_chat_error(AGENT_CANCELLED_ERROR_CODE, AGENT_CANCELLED_MESSAGE)
+        await _emit_chat_error(AGENT_CANCELLED_ERROR_CODE)
         await _append_event_and_publish(
             svc,
             run_id,
             "run.failed",
-            {
-                "error_code": AGENT_CANCELLED_ERROR_CODE,
-                "message": AGENT_CANCELLED_MESSAGE,
-            },
+            build_run_failure_payload(AGENT_CANCELLED_ERROR_CODE),
         )
         await run_in_thread_pool(
             svc.set_status,
@@ -1009,12 +1045,12 @@ async def process_agentic_run(
         )
     except AgenticTimeoutError as exc:
         logger.warning("Run %s timed out: %s", run_id, exc)
-        await _emit_chat_error("AGENT_TIMEOUT", str(exc))
+        await _emit_chat_error("AGENT_TIMEOUT")
         await _append_event_and_publish(
             svc,
             run_id,
             "run.timeout",
-            {"error_code": "AGENT_TIMEOUT", "message": str(exc)},
+            build_run_failure_payload("AGENT_TIMEOUT"),
         )
         await run_in_thread_pool(
             svc.set_status,
@@ -1025,16 +1061,12 @@ async def process_agentic_run(
         )
     except AgenticUpstreamError as exc:
         logger.warning("Run %s failed upstream: %s", run_id, exc)
-        await _emit_chat_error(exc.error_code, exc.message)
+        await _emit_chat_error(exc.error_code)
         await _append_event_and_publish(
             svc,
             run_id,
             "run.failed",
-            {
-                "error_code": exc.error_code,
-                "message": exc.message,
-                "status_code": exc.status_code,
-            },
+            build_run_failure_payload(exc.error_code, status_code=exc.status_code),
         )
         await run_in_thread_pool(
             svc.set_status,
@@ -1045,21 +1077,19 @@ async def process_agentic_run(
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception("Run %s failed unexpectedly", run_id)
-        await _emit_chat_error("AGENT_UNEXPECTED_ERROR", str(exc))
+        exc_str = str(exc)
+        await _emit_chat_error("AGENT_UNEXPECTED_ERROR")
         await _append_event_and_publish(
             svc,
             run_id,
             "run.failed",
-            {
-                "error_code": "AGENT_UNEXPECTED_ERROR",
-                "message": str(exc),
-            },
+            build_run_failure_payload("AGENT_UNEXPECTED_ERROR"),
         )
         await run_in_thread_pool(
             svc.set_status,
             run_id,
             "failed",
-            latest_error=str(exc),
+            latest_error=exc_str,
             latest_error_code="AGENT_UNEXPECTED_ERROR",
         )
     finally:

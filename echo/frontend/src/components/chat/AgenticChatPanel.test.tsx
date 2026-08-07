@@ -37,7 +37,14 @@ const RUN_ID = "run-1";
 
 // vi.mock factories are hoisted above every top-level binding, so the state
 // they close over has to be hoisted with them.
-const { runState, stopAgenticRunMock, streamOptionsRef } = vi.hoisted(() => ({
+const {
+	createAgenticRunMock,
+	runState,
+	stopAgenticRunMock,
+	streamOptionsRef,
+	transcribeMock,
+} = vi.hoisted(() => ({
+	createAgenticRunMock: vi.fn(),
 	runState: { events: [], status: "running" } as {
 		events: AgenticRunEvent[];
 		status: AgenticRunStatus;
@@ -55,6 +62,10 @@ const { runState, stopAgenticRunMock, streamOptionsRef } = vi.hoisted(() => ({
 			onDraft?: (draft: { message_id: string; text: string }) => void;
 		},
 	},
+	transcribeMock: vi.fn(async () => ({
+		note: "",
+		transcript: "what I said out loud",
+	})),
 }));
 
 vi.mock("@/lib/api", async (importOriginal) => {
@@ -63,7 +74,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
 		...actual,
 		appendAgenticRunMessage: vi.fn(),
 		createAgentInsight: vi.fn(),
-		createAgenticRun: vi.fn(),
+		createAgenticRun: createAgenticRunMock,
 		dismissAgentInsight: vi.fn(),
 		getAgentInsights: vi.fn(async () => []),
 		getAgenticRun: vi.fn(async () => ({
@@ -83,6 +94,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
 			status: runState.status,
 		})),
 		stopAgenticRun: stopAgenticRunMock,
+		transcribeStateless: transcribeMock,
 		// Never resolves: an in-flight run is one whose stream is still open, and
 		// resolving would let the panel re-read the status and settle.
 		streamAgenticRun: vi.fn(
@@ -114,6 +126,18 @@ vi.mock("@/components/conversation/hooks", async (importOriginal) => {
 		...actual,
 		useClearChatContextMutation: () => ({ isPending: false, mutate: vi.fn() }),
 		useConversationsByProjectId: () => ({ data: [] }),
+	};
+});
+
+vi.mock("@/components/project/hooks", async (importOriginal) => {
+	const actual =
+		await importOriginal<typeof import("@/components/project/hooks")>();
+	return {
+		...actual,
+		// The composer reads one field off the project for transcription hints.
+		useProjectById: () => ({
+			data: { default_conversation_transcript_prompt: "dembrane, Eindhoven" },
+		}),
 	};
 });
 
@@ -241,6 +265,8 @@ beforeEach(() => {
 	window.localStorage.clear();
 	stopAgenticRunMock.mockClear();
 	streamOptionsRef.current = null;
+	createAgenticRunMock.mockClear();
+	transcribeMock.mockClear();
 	runState.events = [];
 	runState.status = "running";
 });
@@ -443,5 +469,149 @@ describe("AgenticChatPanel, live draft streaming", () => {
 				screen.queryAllByText(/Working through the transcripts now\./),
 			).toHaveLength(1),
 		);
+	});
+});
+
+/** jsdom has no microphone. The smallest recorder that behaves like the real
+ * one where the composer depends on it: one blob, produced at stop. */
+class FakeMediaRecorder {
+	static isTypeSupported = () => true;
+	state: "inactive" | "recording" = "inactive";
+	mimeType = "audio/webm";
+	ondataavailable: ((event: { data: Blob }) => void) | null = null;
+	onstop: (() => void) | null = null;
+	start() {
+		this.state = "recording";
+	}
+	stop() {
+		this.state = "inactive";
+		this.ondataavailable?.({
+			data: new Blob([new Uint8Array(2048)], { type: this.mimeType }),
+		});
+		this.onstop?.();
+	}
+}
+
+describe("AgenticChatPanel, voice input", () => {
+	let clock = 0;
+
+	beforeEach(() => {
+		clock = 0;
+		vi.spyOn(Date, "now").mockImplementation(() => clock);
+		vi.stubGlobal("MediaRecorder", FakeMediaRecorder);
+		Object.defineProperty(globalThis.navigator, "mediaDevices", {
+			configurable: true,
+			value: {
+				getUserMedia: vi.fn(async () => ({
+					getTracks: () => [{ stop: vi.fn() }],
+				})),
+			},
+		});
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+	});
+
+	const startRecording = async () => {
+		const mic = await screen.findByTestId("chat-voice-record-button");
+		await act(async () => {
+			fireEvent.click(mic);
+		});
+	};
+
+	it("closes the text input while the microphone is open", async () => {
+		runState.status = "completed";
+		renderPanel();
+
+		expect(await screen.findByTestId("chat-input-textarea")).toBeTruthy();
+		await startRecording();
+
+		// Closed, not merely disabled: the textarea is gone and the bar is in its
+		// place, so there is one way in at a time.
+		await waitFor(() => {
+			expect(screen.queryByTestId("chat-input-textarea")).toBeNull();
+		});
+		expect(screen.getByTestId("chat-voice-recording-bar")).toBeTruthy();
+		expect(screen.getByTestId("chat-voice-stop-button")).toBeTruthy();
+		expect(screen.queryByTestId("chat-send-button")).toBeNull();
+	});
+
+	it("puts the transcript in the composer rather than sending it", async () => {
+		runState.status = "completed";
+		renderPanel();
+		await startRecording();
+
+		clock = 4000;
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("chat-voice-stop-button"));
+		});
+
+		const textarea = (await screen.findByTestId(
+			"chat-input-textarea",
+		)) as HTMLTextAreaElement;
+		await waitFor(() => {
+			expect(textarea.value).toBe("what I said out loud");
+		});
+		// A mishearing the host cannot see is worse than one they can fix, so
+		// nothing was sent.
+		expect(createAgenticRunMock).not.toHaveBeenCalled();
+	});
+
+	it("bills the transcription to the project and carries its key terms", async () => {
+		runState.status = "completed";
+		renderPanel();
+		await startRecording();
+
+		clock = 4000;
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("chat-voice-stop-button"));
+		});
+
+		await waitFor(() => {
+			expect(transcribeMock).toHaveBeenCalled();
+		});
+		const call = (
+			transcribeMock.mock.calls[0] as unknown as [
+				{ hotwords?: string; language?: string; projectId: string },
+			]
+		)[0];
+		expect(call.projectId).toBe("project-1");
+		expect(call.language).toBe("en");
+		expect(call.hotwords).toBe("dembrane, Eindhoven");
+	});
+
+	it("gives the composer back and sends nothing when the host cancels", async () => {
+		runState.status = "completed";
+		renderPanel();
+		await startRecording();
+
+		clock = 4000;
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("chat-voice-cancel-button"));
+		});
+
+		expect(await screen.findByTestId("chat-input-textarea")).toBeTruthy();
+		expect(transcribeMock).not.toHaveBeenCalled();
+	});
+
+	it("says the microphone is blocked rather than failing quietly", async () => {
+		Object.defineProperty(globalThis.navigator, "mediaDevices", {
+			configurable: true,
+			value: {
+				getUserMedia: vi.fn(async () => {
+					throw new DOMException("no", "NotAllowedError");
+				}),
+			},
+		});
+		runState.status = "completed";
+		renderPanel();
+		await startRecording();
+
+		const alert = await screen.findByTestId("chat-voice-error");
+		expect(alert.textContent).toContain("blocking the microphone");
+		// A denial leaves the composer exactly as it was.
+		expect(screen.getByTestId("chat-input-textarea")).toBeTruthy();
 	});
 });

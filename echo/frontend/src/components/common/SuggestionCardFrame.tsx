@@ -9,17 +9,20 @@ export const SuggestionCardFrame = ({
 }: {
 	children: ReactNode;
 	compact?: boolean;
-	/** Hug the content instead of filling the column. For small cards like a
-	 * drafted insight, where the default 80% width reads as loose and empty. */
+	/** A narrower ceiling (36rem instead of 80%) and tighter padding, for small
+	 * cards like a drafted insight that would read as loose at full width. */
 	tight?: boolean;
 	testId?: string;
 }) => (
 	<Box className="flex justify-start">
 		<Paper
+			// No w-full: blocks in the chat column size to their content and the
+			// max-w is only a ceiling, so a short card ends where its text ends
+			// rather than trailing an empty border across the column.
 			className={
 				tight
-					? "w-full max-w-full rounded-md shadow-none md:w-fit md:max-w-[36rem]"
-					: "w-full max-w-full rounded-md shadow-none md:max-w-[80%]"
+					? "max-w-full rounded-md shadow-none md:max-w-[36rem]"
+					: "max-w-full rounded-md shadow-none md:max-w-[80%]"
 			}
 			px={tight ? "sm" : "md"}
 			py={compact ? "xs" : "md"}

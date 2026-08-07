@@ -596,14 +596,13 @@ msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# workspace} other {# workspaces}}"
 
 #. placeholder {0}: focusedContextConversations.length
-#: src/components/chat/AgenticChatPanel.tsx:2018
+#: src/components/chat/AgenticChatPanel.tsx:2087
 msgid "{0, plural, one {Focusing on # conversation:} other {Focusing on # conversations:}}"
 msgstr ""
 
-#. placeholder {0}: selectedConversationIds.length
 #: src/routes/project/chat/NewChatRoute.tsx:483
-msgid "{0, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
-msgstr ""
+#~ msgid "{0, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
+#~ msgstr ""
 
 #: src/components/conversation/BulkMoveConversationsModal.tsx:117
 #~ msgid "{0, plural, one {Move # conversation to another project.} other {Move # conversations to another project.}}"
@@ -634,10 +633,9 @@ msgstr "{0, plural, one {Tag:} other {Tags:}}"
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr ""
 
-#. placeholder {0}: selectedConversationIds.length
 #: src/routes/project/chat/NewChatRoute.tsx:489
-msgid "{0, plural, one {Using # conversation} other {Using # conversations}}"
-msgstr ""
+#~ msgid "{0, plural, one {Using # conversation} other {Using # conversations}}"
+#~ msgstr ""
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionDescription
@@ -894,7 +892,7 @@ msgstr "{conversationCount} Conversations • Edited {0}"
 #~ msgid "{conversationCount} conversations selected for this chat"
 #~ msgstr "{conversationCount} conversations selected for this chat"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:917
+#: src/components/conversation/ProjectConversationsPanel.tsx:918
 #: src/components/chat/ChatModeBanner.tsx:56
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} selected"
@@ -969,11 +967,11 @@ msgstr "{liveProjectCount, plural, one {Delete the # project in this workspace b
 msgid "{MONTHLY_BILLING_PREMIUM_PCT}% off"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:238
+#: src/components/chat/AgenticChatPanel.tsx:260
 msgid "{name}'s conversation"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:237
+#: src/components/chat/AgenticChatPanel.tsx:259
 msgid "{name}'s transcript excerpt"
 msgstr ""
 
@@ -1009,6 +1007,14 @@ msgstr "{person} will lose access to every workspace in this organisation. Direc
 #: src/routes/team/TeamRoute.tsx:1023
 #~ msgid "{person} will lose access to every workspace in this team. Direct-only workspace invites stay intact."
 #~ msgstr "{person} will lose access to every workspace in this team. Direct-only workspace invites stay intact."
+
+#: src/routes/project/chat/NewChatRoute.tsx:557
+msgid "{pickedCount, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
+msgstr ""
+
+#: src/routes/project/chat/NewChatRoute.tsx:563
+msgid "{pickedCount, plural, one {Using # conversation} other {Using # conversations}}"
+msgstr ""
 
 #: src/components/report/ReportRenderer.tsx:81
 msgid "{readingNow} reading now"
@@ -1908,8 +1914,7 @@ msgstr "Advanced Settings"
 #~ msgid "Agent is working..."
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:335
-#: src/components/chat/AgenticChatPanel.tsx:362
+#: src/components/chat/AgenticChatPanel.tsx:378
 msgid "Agent run failed"
 msgstr ""
 
@@ -2001,7 +2006,7 @@ msgstr "All Templates"
 msgid "All tiers"
 msgstr "All tiers"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:901
+#: src/components/conversation/ProjectConversationsPanel.tsx:902
 msgid "All visible conversations selected"
 msgstr "All visible conversations selected"
 
@@ -2416,7 +2421,7 @@ msgstr "Are you sure you want to remove your custom logo? The default dembrane l
 msgid "Ask"
 msgstr "Ask"
 
-#: src/routes/project/chat/NewChatRoute.tsx:255
+#: src/routes/project/chat/NewChatRoute.tsx:257
 msgid "Ask | dembrane"
 msgstr "Ask | dembrane"
 
@@ -2424,7 +2429,7 @@ msgstr "Ask | dembrane"
 msgid "Ask a organisation admin to request this upgrade."
 msgstr "Ask a organisation admin to request this upgrade."
 
-#: src/components/chat/AgenticChatPanel.tsx:1736
+#: src/components/chat/AgenticChatPanel.tsx:1799
 msgid "Ask a question about the conversations in this project, or get help setting it up. Any change is proposed for review first, and nothing is saved until it's approved."
 msgstr ""
 
@@ -2440,7 +2445,7 @@ msgstr "Ask a workspace admin for an invite, or pick a different workspace from 
 msgid "Ask about the app."
 msgstr ""
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:925
+#: src/components/conversation/ProjectConversationsPanel.tsx:926
 msgid "Ask about these"
 msgstr ""
 
@@ -2452,8 +2457,8 @@ msgstr ""
 #~ msgid "Ask about your conversations, or type to find an earlier chat"
 #~ msgstr ""
 
-#: src/routes/project/chat/NewChatRoute.tsx:542
-#: src/components/chat/AgenticChatPanel.tsx:2078
+#: src/routes/project/chat/NewChatRoute.tsx:629
+#: src/components/chat/AgenticChatPanel.tsx:2201
 msgid "Ask about your conversations..."
 msgstr ""
 
@@ -2790,7 +2795,7 @@ msgstr "Basic Settings"
 #~ msgstr "Best for smaller teams running individual projects."
 
 #: src/routes/project/ProjectMonitorRoute.tsx:85
-#: src/routes/project/chat/NewChatRoute.tsx:569
+#: src/routes/project/chat/NewChatRoute.tsx:656
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:89
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:235
@@ -3059,7 +3064,8 @@ msgstr "can read"
 #: src/components/common/FeedbackPortalModal.tsx:124
 #: src/components/common/ConfirmModal.tsx:44
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:722
-#: src/components/chat/AgenticChatPanel.tsx:707
+#: src/components/chat/AgenticChatPanel.tsx:727
+#: src/components/chat/AgenticChatPanel.tsx:2125
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -3092,7 +3098,7 @@ msgstr "Cancel"
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:695
+#: src/components/chat/AgenticChatPanel.tsx:715
 msgid "Cancel current run"
 msgstr ""
 
@@ -3116,7 +3122,7 @@ msgstr ""
 msgid "Cancel schedule"
 msgstr "Cancel schedule"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:948
+#: src/components/conversation/ProjectConversationsPanel.tsx:949
 msgid "Cancel selection"
 msgstr ""
 
@@ -3298,7 +3304,7 @@ msgstr "Changing language during an active chat may lead to unexpected results. 
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:262
-#: src/components/chat/AgenticChatPanel.tsx:1580
+#: src/components/chat/AgenticChatPanel.tsx:1643
 msgid "Chat"
 msgstr "Chat"
 
@@ -3315,7 +3321,7 @@ msgid "Chat deleted"
 msgstr "Chat deleted"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:595
-#: src/routes/project/chat/NewChatRoute.tsx:439
+#: src/routes/project/chat/NewChatRoute.tsx:513
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr ""
 
@@ -3332,7 +3338,7 @@ msgstr ""
 msgid "Chat name"
 msgstr "Chat name"
 
-#: src/routes/project/chat/NewChatRoute.tsx:151
+#: src/routes/project/chat/NewChatRoute.tsx:153
 msgid "Chats"
 msgstr "Chats"
 
@@ -3346,14 +3352,14 @@ msgstr "Chats"
 msgid "project.sidebar.chat.title"
 msgstr "Chats"
 
+#: src/components/voice/VoiceInputError.tsx:99
+msgid "Check microphone access"
+msgstr "Check microphone access"
+
 #. js-lingui-explicit-id
 #: src/components/participant/PermissionErrorModal.tsx:71
 msgid "participant.button.check.microphone.access"
 msgstr "Check microphone access"
-
-#: src/routes/participant/ParticipantConversation.tsx:374
-#~ msgid "Check microphone access"
-#~ msgstr "Check microphone access"
 
 #: src/routes/auth/Register.tsx:259
 #: src/routes/auth/CheckYourEmail.tsx:19
@@ -3426,7 +3432,7 @@ msgstr "Choose your preferred theme for the interface"
 msgid "City"
 msgstr ""
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:933
+#: src/components/conversation/ProjectConversationsPanel.tsx:934
 msgid "Clear"
 msgstr ""
 
@@ -3439,13 +3445,13 @@ msgstr ""
 #~ msgid "Clear filter"
 #~ msgstr ""
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:978
+#: src/components/conversation/ProjectConversationsPanel.tsx:979
 msgid "Clear filters"
 msgstr "Clear filters"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:274
 #: src/routes/project/ProjectsHome.tsx:362
-#: src/routes/project/chat/NewChatRoute.tsx:168
+#: src/routes/project/chat/NewChatRoute.tsx:170
 #: src/features/sidebar/blocks/SearchBlock.tsx:136
 #: src/components/invite/WorkspaceSelectList.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:829
@@ -4619,7 +4625,7 @@ msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:982
 #: src/routes/project/chat/ProjectChatRoute.tsx:992
-#: src/components/chat/AgenticChatPanel.tsx:2099
+#: src/components/chat/AgenticChatPanel.tsx:2225
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane can make mistakes. Please double-check responses."
 
@@ -4896,7 +4902,7 @@ msgstr ""
 #: src/components/project/ProjectSharingModal.tsx:268
 #: src/components/invite/InviteModal.tsx:811
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:645
-#: src/components/chat/AgenticChatPanel.tsx:381
+#: src/components/chat/AgenticChatPanel.tsx:397
 msgid "Done"
 msgstr "Done"
 
@@ -5423,8 +5429,8 @@ msgstr ""
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
 #: src/components/conversation/LiveMonitorSection.tsx:269
-#: src/components/chat/AgenticChatPanel.tsx:386
-#: src/components/chat/AgenticChatPanel.tsx:1682
+#: src/components/chat/AgenticChatPanel.tsx:402
+#: src/components/chat/AgenticChatPanel.tsx:1745
 msgid "Error"
 msgstr "Error"
 
@@ -5887,11 +5893,11 @@ msgstr "Failed to revise outcome. Please try again."
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Failed to stop recording on device change. Please try again."
 
-#: src/components/chat/AgenticChatPanel.tsx:1573
+#: src/components/chat/AgenticChatPanel.tsx:1636
 msgid "Failed to stop run"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1532
+#: src/components/chat/AgenticChatPanel.tsx:1595
 msgid "Failed to submit agentic message"
 msgstr ""
 
@@ -6083,9 +6089,9 @@ msgstr ""
 msgid "Focus"
 msgstr "Focus"
 
-#: src/components/chat/AgenticChatPanel.tsx:2045
-#: src/components/chat/AgenticChatPanel.tsx:2046
-#: src/components/chat/AgenticChatPanel.tsx:2109
+#: src/components/chat/AgenticChatPanel.tsx:2129
+#: src/components/chat/AgenticChatPanel.tsx:2130
+#: src/components/chat/AgenticChatPanel.tsx:2235
 msgid "Focus on conversations"
 msgstr ""
 
@@ -6093,7 +6099,7 @@ msgstr ""
 #~ msgid "Focus your report (optional)"
 #~ msgstr "Focus your report (optional)"
 
-#: src/components/chat/AgenticChatPanel.tsx:211
+#: src/components/chat/AgenticChatPanel.tsx:233
 msgid "Focusing on:"
 msgstr ""
 
@@ -6636,7 +6642,7 @@ msgstr "Hide projects"
 msgid "Hide revision data"
 msgstr "Hide revision data"
 
-#: src/components/chat/AgenticChatPanel.tsx:593
+#: src/components/chat/AgenticChatPanel.tsx:610
 msgid "Hide steps"
 msgstr ""
 
@@ -6729,11 +6735,11 @@ msgstr ""
 #~ msgid "I accept the <0>terms</0>"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1850
+#: src/components/chat/AgenticChatPanel.tsx:1913
 msgid "I applied the canvas."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1866
+#: src/components/chat/AgenticChatPanel.tsx:1929
 msgid "I applied the goal."
 msgstr ""
 
@@ -6821,7 +6827,7 @@ msgstr "If you're trying to join an existing organization, you should not create
 msgid "Image style"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1760
+#: src/components/chat/AgenticChatPanel.tsx:1823
 msgid "Improve my setup"
 msgstr ""
 
@@ -7608,7 +7614,7 @@ msgstr "Link to your organisation's privacy policy that will be shown to partici
 #~ msgid "LinkedIn Post (Experimental)"
 #~ msgstr "LinkedIn Post (Experimental)"
 
-#: src/components/chat/AgenticChatPanel.tsx:1750
+#: src/components/chat/AgenticChatPanel.tsx:1813
 msgid "List my conversations"
 msgstr ""
 
@@ -7616,7 +7622,7 @@ msgstr ""
 #~ msgid "List project conversations"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1751
+#: src/components/chat/AgenticChatPanel.tsx:1814
 msgid "List the conversations in this project."
 msgstr ""
 
@@ -7683,7 +7689,7 @@ msgstr ""
 msgid "Live stream disconnected. Updating on a slower poll until it reconnects."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1234
+#: src/components/chat/AgenticChatPanel.tsx:1297
 msgid "Live stream interrupted. Falling back to polling."
 msgstr ""
 
@@ -7766,7 +7772,7 @@ msgstr "Loading projects..."
 #~ msgid "Loading projects…"
 #~ msgstr "Loading projects…"
 
-#: src/components/chat/AgenticChatPanel.tsx:1693
+#: src/components/chat/AgenticChatPanel.tsx:1756
 msgid "Loading this chat..."
 msgstr ""
 
@@ -8590,7 +8596,7 @@ msgstr "No chats found. Start a chat using the \"Ask\" button."
 #~ msgid "No chats found. Start a chat using the \"Ask\" button."
 #~ msgstr "No chats found. Start a chat using the \"Ask\" button."
 
-#: src/routes/project/chat/NewChatRoute.tsx:181
+#: src/routes/project/chat/NewChatRoute.tsx:183
 msgid "No chats match your search."
 msgstr ""
 
@@ -8598,7 +8604,7 @@ msgstr ""
 #~ msgid "No chats match. Press Enter to ask this as a new chat."
 #~ msgstr ""
 
-#: src/routes/project/chat/NewChatRoute.tsx:186
+#: src/routes/project/chat/NewChatRoute.tsx:188
 msgid "No chats yet."
 msgstr ""
 
@@ -8639,7 +8645,7 @@ msgstr "No conversations found."
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:971
+#: src/components/conversation/ProjectConversationsPanel.tsx:972
 msgid "No conversations match these filters."
 msgstr "No conversations match these filters."
 
@@ -8656,7 +8662,7 @@ msgstr "No conversations were processed. This may happen if all conversations ar
 #~ msgid "No conversations yet"
 #~ msgstr "No conversations yet"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:973
+#: src/components/conversation/ProjectConversationsPanel.tsx:974
 msgid "No conversations yet."
 msgstr "No conversations yet."
 
@@ -8733,6 +8739,10 @@ msgstr ""
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:190
 msgid "No methodologies yet."
+msgstr ""
+
+#: src/components/voice/VoiceInputError.tsx:31
+msgid "No microphone was available. Check that one is connected and not in use elsewhere."
 msgstr ""
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:255
@@ -8874,7 +8884,7 @@ msgstr "No reports yet"
 msgid "No results"
 msgstr "No results"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:903
+#: src/components/conversation/ProjectConversationsPanel.tsx:904
 msgid "No selectable conversations"
 msgstr "No selectable conversations"
 
@@ -9477,6 +9487,10 @@ msgstr ""
 #: src/routes/invite/AcceptInviteRoute.tsx:172
 msgid "Open the original invitation email and click the link from there, or ask the inviter to send a new invite."
 msgstr "Open the original invitation email and click the link from there, or ask the inviter to send a new invite."
+
+#: src/components/voice/VoiceInputError.tsx:90
+msgid "Open the troubleshooting guide"
+msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1747
 #~ msgid "Open to the organisation"
@@ -10711,7 +10725,7 @@ msgstr "Project name and ID"
 msgid "Project name must be at least 4 characters long"
 msgstr "Project name must be at least 4 characters long"
 
-#: src/routes/project/chat/NewChatRoute.tsx:422
+#: src/routes/project/chat/NewChatRoute.tsx:496
 msgid "Project not found"
 msgstr "Project not found"
 
@@ -10899,7 +10913,7 @@ msgstr ""
 #~ msgstr "Quotes"
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:564
+#: src/components/chat/AgenticChatPanel.tsx:580
 msgid "Ran {0} steps at once"
 msgstr ""
 
@@ -11053,10 +11067,15 @@ msgstr "Record"
 #~ msgid "Record"
 #~ msgstr "Record"
 
+#: src/components/chat/AgenticChatPanel.tsx:2154
+msgid "Record a voice message"
+msgstr ""
+
 #: src/routes/participant/ParticipantPostConversation.tsx:139
 msgid "Record another conversation"
 msgstr "Record another conversation"
 
+#: src/components/voice/VoiceRecordingBar.tsx:38
 #: src/components/conversation/StatePill.tsx:19
 #: src/components/conversation/FunnelCanvas.tsx:345
 msgid "Recording"
@@ -11083,6 +11102,10 @@ msgstr ""
 #: src/components/participant/StopRecordingConfirmationModal.tsx:77
 msgid "participant.modal.pause.title"
 msgstr "Recording Paused"
+
+#: src/components/chat/AgenticChatPanel.tsx:852
+msgid "Recording stopped at the five minute limit. Turning what you recorded into text."
+msgstr ""
 
 #: src/components/conversation/LiveMonitorSection.tsx:258
 #~ msgid "Recording, but no audio has come in for a while — the participant may have lost connection."
@@ -11354,7 +11377,7 @@ msgstr "Rename"
 #~ msgstr "Rename"
 
 #: src/components/chat/ChatAccordion.tsx:153
-#: src/components/chat/AgenticChatPanel.tsx:1643
+#: src/components/chat/AgenticChatPanel.tsx:1706
 msgid "Rename chat"
 msgstr "Rename chat"
 
@@ -11783,7 +11806,7 @@ msgstr ""
 msgid "Review files before uploading"
 msgstr "Review files before uploading"
 
-#: src/components/chat/AgenticChatPanel.tsx:1761
+#: src/components/chat/AgenticChatPanel.tsx:1824
 msgid "Review my project settings and suggest improvements."
 msgstr ""
 
@@ -11863,7 +11886,7 @@ msgstr "Rows per page"
 #~ msgid "Run status:"
 #~ msgstr "Run status:"
 
-#: src/components/chat/AgenticChatPanel.tsx:391
+#: src/components/chat/AgenticChatPanel.tsx:407
 msgid "Running"
 msgstr ""
 
@@ -12046,8 +12069,8 @@ msgstr "Search and select the conversations for this chat."
 msgid "Search by organisation"
 msgstr ""
 
-#: src/routes/project/chat/NewChatRoute.tsx:160
-#: src/routes/project/chat/NewChatRoute.tsx:161
+#: src/routes/project/chat/NewChatRoute.tsx:162
+#: src/routes/project/chat/NewChatRoute.tsx:163
 msgid "Search chats"
 msgstr ""
 
@@ -12290,7 +12313,7 @@ msgstr "Select all ({remainingCount})"
 msgid "select.all.modal.title.results"
 msgstr "Select All Results"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:899
+#: src/components/conversation/ProjectConversationsPanel.tsx:900
 msgid "Select all visible ({remainingCount})"
 msgstr "Select all visible ({remainingCount})"
 
@@ -12314,10 +12337,10 @@ msgstr ""
 #: src/routes/project/chat/ProjectChatRoute.tsx:917
 #: src/routes/project/chat/ProjectChatRoute.tsx:918
 #: src/routes/project/chat/ProjectChatRoute.tsx:1003
-#: src/routes/project/chat/NewChatRoute.tsx:502
-#: src/routes/project/chat/NewChatRoute.tsx:504
-#: src/routes/project/chat/NewChatRoute.tsx:602
-#: src/components/conversation/ProjectConversationsPanel.tsx:950
+#: src/routes/project/chat/NewChatRoute.tsx:589
+#: src/routes/project/chat/NewChatRoute.tsx:591
+#: src/routes/project/chat/NewChatRoute.tsx:689
+#: src/components/conversation/ProjectConversationsPanel.tsx:951
 msgid "Select conversations"
 msgstr "Select conversations"
 
@@ -12408,8 +12431,8 @@ msgid "Self-serve"
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:942
-#: src/routes/project/chat/NewChatRoute.tsx:521
-#: src/components/chat/AgenticChatPanel.tsx:2064
+#: src/routes/project/chat/NewChatRoute.tsx:608
+#: src/components/chat/AgenticChatPanel.tsx:2175
 msgid "Send"
 msgstr "Send"
 
@@ -12774,7 +12797,7 @@ msgstr "Show references"
 msgid "Show revision data"
 msgstr "Show revision data"
 
-#: src/components/chat/AgenticChatPanel.tsx:593
+#: src/components/chat/AgenticChatPanel.tsx:610
 msgid "Show steps"
 msgstr ""
 
@@ -12801,7 +12824,7 @@ msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 
 #. placeholder {0}: listedChats.length
-#: src/routes/project/chat/NewChatRoute.tsx:191
+#: src/routes/project/chat/NewChatRoute.tsx:193
 msgid "Showing the first {0} of {shownCount} matches. Narrow the search to see the rest."
 msgstr ""
 
@@ -12938,6 +12961,10 @@ msgstr "Something went wrong generating your report."
 #~ msgid "Something went wrong generating your report. You can try again below."
 #~ msgstr "Something went wrong generating your report. You can try again below."
 
+#: src/components/chat/AgenticChatPanel.tsx:199
+msgid "Something went wrong on my side. Send your message again and I'll retry."
+msgstr ""
+
 #: src/components/settings/AuditLogsCard.tsx:379
 msgid "Something went wrong while exporting audit logs."
 msgstr "Something went wrong while exporting audit logs."
@@ -12945,6 +12972,10 @@ msgstr "Something went wrong while exporting audit logs."
 #: src/components/settings/TwoFactorSettingsCard.tsx:164
 msgid "Something went wrong while generating the secret."
 msgstr "Something went wrong while generating the secret."
+
+#: src/components/voice/VoiceInputError.tsx:47
+msgid "Something went wrong while transcribing. Try again."
+msgstr ""
 
 #: src/components/dropzone/UploadResourceDropzone.tsx:28
 #~ msgid "Something went wrong while uploading the file: {0}"
@@ -13144,6 +13175,7 @@ msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Still stuck? Email <0>support@dembrane.com</0>."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:756
+#: src/components/chat/AgenticChatPanel.tsx:2149
 msgid "Stop"
 msgstr "Stop"
 
@@ -13151,6 +13183,10 @@ msgstr "Stop"
 #: src/components/participant/ParticipantConversationAudio.tsx:1087
 msgid "participant.button.stop"
 msgstr "Stop"
+
+#: src/components/chat/AgenticChatPanel.tsx:2139
+msgid "Stop recording and turn it into text"
+msgstr ""
 
 #: src/components/chat/AgenticChatPanel.tsx:1556
 #: src/components/chat/AgenticChatPanel.tsx:1563
@@ -13572,6 +13608,14 @@ msgstr "Thank you!"
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "That code didn't work. Try again with a fresh code from your authenticator app."
 
+#: src/components/voice/VoiceInputError.tsx:37
+msgid "That recording is too long to send. Record a shorter note."
+msgstr ""
+
+#: src/components/voice/VoiceInputError.tsx:33
+msgid "That was too short to transcribe. Hold the recording a little longer."
+msgstr ""
+
 #: src/routes/invite/AcceptInviteRoute.tsx:199
 msgid "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
 msgstr "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
@@ -13670,6 +13714,10 @@ msgstr "The link may have been removed, or it was sent to a different email addr
 msgid "The methodology is the way this project is set up and guided."
 msgstr ""
 
+#: src/components/voice/VoiceInputError.tsx:66
+msgid "The microphone is still blocked. Change it in your browser settings, then check again."
+msgstr ""
+
 #: src/routes/invite/AcceptInviteRoute.tsx:250
 #: src/routes/invite/AcceptInviteRoute.tsx:432
 msgid "The organisation this invite was for has been deleted. There's nothing to join."
@@ -13716,9 +13764,17 @@ msgstr "The summary is being regenerated. Please wait for it to be available."
 #~ msgid "The summary is being regenerated. Please wait upto 2 minutes for the new summary to be available."
 #~ msgstr "The summary is being regenerated. Please wait upto 2 minutes for the new summary to be available."
 
+#: src/components/voice/VoiceInputError.tsx:45
+msgid "The transcript did not come back. Check your connection and try again."
+msgstr ""
+
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:319
 #~ msgid "The transcript for this conversation is being processed. Please check back later."
 #~ msgstr "The transcript for this conversation is being processed. Please check back later."
+
+#: src/components/voice/VoiceInputError.tsx:43
+msgid "The transcription did not finish. Try again."
+msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:350
 msgid "The webhook URL and events will be cloned. You'll need to re-enter the secret if one was configured."
@@ -13783,6 +13839,10 @@ msgstr "There was an error creating your report. Please try again or contact sup
 #~ msgid "There was an error verifying your email. Please try again."
 #~ msgstr "There was an error verifying your email. Please try again."
 
+#: src/components/voice/VoiceInputError.tsx:35
+msgid "There was no speech in that recording."
+msgstr ""
+
 #: src/components/chat/ChatTemplatesMenu.tsx:112
 #~ msgid "These are some helpful preset templates to get you started."
 #~ msgstr "These are some helpful preset templates to get you started."
@@ -13839,6 +13899,10 @@ msgstr ""
 #: src/routes/admin/AdminSettingsRoute.tsx:3234
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 msgstr "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
+
+#: src/components/voice/VoiceInputError.tsx:29
+msgid "This browser cannot record audio. Chrome, Edge and Safari can."
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:783
@@ -14062,6 +14126,10 @@ msgstr "this person"
 #~ msgid "This person is"
 #~ msgstr "This person is"
 
+#: src/components/voice/VoiceInputError.tsx:41
+msgid "This project could not be reached."
+msgstr ""
+
 #: src/components/methodology/ProjectMethodologySection.tsx:93
 msgid "This project is not attached to a workspace."
 msgstr ""
@@ -14111,6 +14179,10 @@ msgstr "This report is not yet available. "
 #: src/routes/project/report/ProjectReportRoute.tsx:220
 msgid "This report was opened by {0} people"
 msgstr "This report was opened by {0} people"
+
+#: src/components/chat/AgenticChatPanel.tsx:197
+msgid "This request took too long, so I stopped it. Send it again and I'll retry."
+msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:686
 msgid "This returns the account to standard free billing."
@@ -14322,7 +14394,7 @@ msgstr "Too large"
 msgid "Too long"
 msgstr "Too long"
 
-#: src/components/chat/AgenticChatPanel.tsx:2034
+#: src/components/chat/AgenticChatPanel.tsx:2103
 msgid "Too many to list here. The assistant reads through them in batches."
 msgstr ""
 
@@ -14428,7 +14500,7 @@ msgstr ""
 msgid "Transcribing..."
 msgstr "Transcribing..."
 
-#: src/components/chat/AgenticChatPanel.tsx:241
+#: src/components/chat/AgenticChatPanel.tsx:263
 msgid "transcript"
 msgstr ""
 
@@ -14444,7 +14516,7 @@ msgstr "Transcript"
 msgid "Transcript copied to clipboard"
 msgstr "Transcript copied to clipboard"
 
-#: src/components/chat/AgenticChatPanel.tsx:240
+#: src/components/chat/AgenticChatPanel.tsx:262
 msgid "transcript excerpt"
 msgstr ""
 
@@ -14588,7 +14660,7 @@ msgstr "Try again"
 msgid "Try again in a moment."
 msgstr ""
 
-#: src/routes/project/chat/NewChatRoute.tsx:566
+#: src/routes/project/chat/NewChatRoute.tsx:653
 msgid "Try Agentic instead"
 msgstr ""
 
@@ -14621,6 +14693,10 @@ msgstr "Turn off anonymization?"
 #: src/components/project/ProjectPortalEditor.tsx:1534
 msgid "portal.anonymization.disable.warning"
 msgstr "Turning off anonymization while recordings are ongoing may have unintended consequences. Active conversations will also be affected mid-recording. Please use this with caution."
+
+#: src/components/voice/VoiceRecordingBar.tsx:32
+msgid "Turning your voice note into text"
+msgstr ""
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:70
 msgid "Tutorial"
@@ -15180,7 +15256,7 @@ msgstr "Usage this cycle"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:979
 #: src/routes/project/chat/ProjectChatRoute.tsx:989
-#: src/components/chat/AgenticChatPanel.tsx:2096
+#: src/components/chat/AgenticChatPanel.tsx:2221
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
@@ -15428,6 +15504,10 @@ msgstr ""
 
 #: src/components/conversation/LiveFunnelSection.tsx:303
 msgid "Visitor details"
+msgstr ""
+
+#: src/components/voice/VoiceInputButton.tsx:32
+msgid "Voice"
 msgstr ""
 
 #: src/routes/participant/ParticipantConversation.tsx:969
@@ -15779,11 +15859,11 @@ msgstr "What should ECHO analyse or generate from the conversations?"
 #~ msgid "What should this report focus on?"
 #~ msgstr "What should this report focus on?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1756
+#: src/components/chat/AgenticChatPanel.tsx:1819
 msgid "What themes came up across the conversations in this project?"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1755
+#: src/components/chat/AgenticChatPanel.tsx:1818
 msgid "What themes came up?"
 msgstr ""
 
@@ -15868,8 +15948,8 @@ msgstr "When the summary is ready (includes both transcript and summary)"
 msgid "Where would you like to go?"
 msgstr "Where would you like to go?"
 
-#: src/routes/project/chat/NewChatRoute.tsx:471
-#: src/components/chat/AgenticChatPanel.tsx:1733
+#: src/routes/project/chat/NewChatRoute.tsx:545
+#: src/components/chat/AgenticChatPanel.tsx:1796
 msgid "Where would you like to start?"
 msgstr ""
 
@@ -15940,11 +16020,11 @@ msgid "Within my organisation"
 msgstr ""
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:565
+#: src/components/chat/AgenticChatPanel.tsx:581
 msgid "Worked through {0} steps"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1605
+#: src/components/chat/AgenticChatPanel.tsx:1668
 msgid "Working on your answer..."
 msgstr ""
 
@@ -16184,6 +16264,10 @@ msgstr "You can't invite yourself."
 #~ msgid "You can't request a workspace yet"
 #~ msgstr "You can't request a workspace yet"
 
+#: src/components/voice/VoiceInputError.tsx:39
+msgid "You do not have permission to transcribe in this project."
+msgstr ""
+
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:802
 #~ msgid "You don't have access to any workspace right now."
 #~ msgstr "You don't have access to any workspace right now."
@@ -16276,6 +16360,10 @@ msgstr "You need an invitation from a colleague"
 #: src/components/participant/ParticipantBody.tsx:148
 msgid "You seem to be offline, please check your internet connection"
 msgstr "You seem to be offline, please check your internet connection"
+
+#: src/components/chat/AgenticChatPanel.tsx:195
+msgid "You stopped this run."
+msgstr ""
 
 #. placeholder {0}: selectedIds.length
 #: src/components/workspace/DiscoverableWorkspaces.tsx:409
@@ -16461,6 +16549,10 @@ msgstr ""
 #: src/lib/tiers.ts:120
 #~ msgid "your brand, your integrations."
 #~ msgstr "your brand, your integrations."
+
+#: src/components/voice/VoiceInputError.tsx:27
+msgid "Your browser is blocking the microphone. Allow access, then try again."
+msgstr ""
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:735
 #~ msgid "Your conversation is currently being transcribed. Please check back in a few moments."

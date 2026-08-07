@@ -701,10 +701,10 @@ export const ProjectConversationsPanel = ({
 			verifiedOnly: showOnlyVerified || undefined,
 		},
 		{
+			// New chats have no chat_mode until the first message lands, so gate
+			// on the one mode that must not multi-select instead of a whitelist.
 			enabled:
-				selectionMode &&
-				(chatMode === "deep_dive" || chatMode === "agentic") &&
-				!!selectionChatId,
+				selectionMode && chatMode !== "overview" && !!selectionChatId,
 		},
 	);
 	const remainingCount =
@@ -882,7 +882,8 @@ export const ProjectConversationsPanel = ({
 				</Paper>
 
 				{selectionMode &&
-					(chatMode === "deep_dive" || chatMode === "agentic") &&
+					!!selectionChatId &&
+					chatMode !== "overview" &&
 					allConversations.length > 0 && (
 						<Button
 							variant="outline"
