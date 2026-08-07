@@ -60,6 +60,7 @@ import { ConversationDangerZone } from "./ConversationDangerZone";
 import { ConversationEdit } from "./ConversationEdit";
 import { CopyConversationTranscriptActionIcon } from "./CopyConversationTranscript";
 import {
+	fetchAllConversationIds,
 	useAddChatContextMutation,
 	useConversationsCountByProjectId,
 	useDeleteChatContextMutation,
@@ -701,15 +702,23 @@ export const ProjectConversationsPanel = ({
 			verifiedOnly: showOnlyVerified || undefined,
 		},
 		{
+			// New chats have no chat_mode until the first message lands, so gate
+			// on the one mode that must not multi-select instead of a whitelist.
 			enabled:
-				selectionMode &&
-				(chatMode === "deep_dive" || chatMode === "agentic") &&
-				!!selectionChatId,
+				selectionMode && chatMode !== "overview" && !!selectionChatId,
 		},
 	);
-	const remainingCount =
-		remainingCountQuery.data ??
-		allConversations.filter((c) => !selectedConversationIds.has(c.id)).length;
+	// Chat-less flow: the filtered total comes from the count query, because
+	// the infinite list has only loaded a page or two of the filtered set.
+	const remainingCount = isLocalSelectionMode
+		? Math.max(
+				(conversationsCountQuery.data ?? allConversations.length) -
+					conversationCount,
+				0,
+			)
+		: (remainingCountQuery.data ??
+			allConversations.filter((c) => !selectedConversationIds.has(c.id))
+				.length);
 
 	const openConversation = (conversation: Conversation) => {
 		if (!resolvedWorkspaceId) return;
@@ -733,6 +742,21 @@ export const ProjectConversationsPanel = ({
 		setSelectedTagIds([]);
 		setShowOnlyVerified(false);
 		setSortBy("-created_at");
+	};
+
+	// Chat-less flow: nothing exists server-side to write through, so pull
+	// every id matching the current filters and hand them to the parent.
+	const handleLocalSelectAll = async () => {
+		setSelectAllLoading(true);
+		try {
+			const ids = await fetchAllConversationIds(projectId, conversationQuery);
+			const merged = new Set([...(selection ?? []), ...ids]);
+			onSelectionChange?.([...merged]);
+		} catch (_error) {
+			toast.error(t`Failed to add conversations to context`);
+		} finally {
+			setSelectAllLoading(false);
+		}
 	};
 
 	const handleSelectAllConfirm = async () => {
@@ -882,17 +906,26 @@ export const ProjectConversationsPanel = ({
 				</Paper>
 
 				{selectionMode &&
-					(chatMode === "deep_dive" || chatMode === "agentic") &&
+					(isLocalSelectionMode ||
+						(!!selectionChatId && chatMode !== "overview")) &&
 					allConversations.length > 0 && (
 						<Button
 							variant="outline"
 							leftSection={<IconSelectAll size={16} />}
 							onClick={() => {
+								if (isLocalSelectionMode) {
+									void handleLocalSelectAll();
+									return;
+								}
 								setSelectAllResult(null);
 								setSelectAllModalOpened(true);
 							}}
-							disabled={remainingCount === 0 || selectAllMutation.isPending}
-							loading={selectAllMutation.isPending}
+							disabled={
+								remainingCount === 0 ||
+								selectAllMutation.isPending ||
+								selectAllLoading
+							}
+							loading={selectAllMutation.isPending || selectAllLoading}
 							{...testId("conversation-select-all-button")}
 						>
 							{remainingCount > 0 ? (
