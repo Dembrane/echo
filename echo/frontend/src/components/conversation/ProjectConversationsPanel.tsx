@@ -60,7 +60,6 @@ import { ConversationDangerZone } from "./ConversationDangerZone";
 import { ConversationEdit } from "./ConversationEdit";
 import { CopyConversationTranscriptActionIcon } from "./CopyConversationTranscript";
 import {
-	fetchAllConversationIds,
 	useAddChatContextMutation,
 	useConversationsCountByProjectId,
 	useDeleteChatContextMutation,
@@ -708,17 +707,9 @@ export const ProjectConversationsPanel = ({
 				selectionMode && chatMode !== "overview" && !!selectionChatId,
 		},
 	);
-	// Chat-less flow: the filtered total comes from the count query, because
-	// the infinite list has only loaded a page or two of the filtered set.
-	const remainingCount = isLocalSelectionMode
-		? Math.max(
-				(conversationsCountQuery.data ?? allConversations.length) -
-					conversationCount,
-				0,
-			)
-		: (remainingCountQuery.data ??
-			allConversations.filter((c) => !selectedConversationIds.has(c.id))
-				.length);
+	const remainingCount =
+		remainingCountQuery.data ??
+		allConversations.filter((c) => !selectedConversationIds.has(c.id)).length;
 
 	const openConversation = (conversation: Conversation) => {
 		if (!resolvedWorkspaceId) return;
@@ -742,21 +733,6 @@ export const ProjectConversationsPanel = ({
 		setSelectedTagIds([]);
 		setShowOnlyVerified(false);
 		setSortBy("-created_at");
-	};
-
-	// Chat-less flow: nothing exists server-side to write through, so pull
-	// every id matching the current filters and hand them to the parent.
-	const handleLocalSelectAll = async () => {
-		setSelectAllLoading(true);
-		try {
-			const ids = await fetchAllConversationIds(projectId, conversationQuery);
-			const merged = new Set([...(selection ?? []), ...ids]);
-			onSelectionChange?.([...merged]);
-		} catch (_error) {
-			toast.error(t`Failed to add conversations to context`);
-		} finally {
-			setSelectAllLoading(false);
-		}
 	};
 
 	const handleSelectAllConfirm = async () => {
@@ -906,26 +882,18 @@ export const ProjectConversationsPanel = ({
 				</Paper>
 
 				{selectionMode &&
-					(isLocalSelectionMode ||
-						(!!selectionChatId && chatMode !== "overview")) &&
+					!!selectionChatId &&
+					chatMode !== "overview" &&
 					allConversations.length > 0 && (
 						<Button
 							variant="outline"
 							leftSection={<IconSelectAll size={16} />}
 							onClick={() => {
-								if (isLocalSelectionMode) {
-									void handleLocalSelectAll();
-									return;
-								}
 								setSelectAllResult(null);
 								setSelectAllModalOpened(true);
 							}}
-							disabled={
-								remainingCount === 0 ||
-								selectAllMutation.isPending ||
-								selectAllLoading
-							}
-							loading={selectAllMutation.isPending || selectAllLoading}
+							disabled={remainingCount === 0 || selectAllMutation.isPending}
+							loading={selectAllMutation.isPending}
 							{...testId("conversation-select-all-button")}
 						>
 							{remainingCount > 0 ? (

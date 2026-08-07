@@ -871,31 +871,6 @@ export const useInfiniteConversationsByProjectId = (
 	});
 };
 
-/** Every conversation id matching the filter set, paged server-side. Used by
- * the picker's chat-less Select All, where no chat context exists to write
- * through and the loaded pages may be a fraction of the filtered set. */
-export const fetchAllConversationIds = async (
-	projectId: string,
-	query?: Partial<Query<CustomDirectusTypes, Conversation>>,
-): Promise<string[]> => {
-	const params = conversationQueryToBffParams(query);
-	const limit = 200;
-	const ids: string[] = [];
-	for (let page = 0; ; page++) {
-		const batch = await bff.get<Conversation[]>("/conversations", {
-			include_chunks: false,
-			include_tags: false,
-			limit,
-			offset: page * limit,
-			project_id: projectId,
-			...params,
-		});
-		ids.push(...batch.map((c) => c.id));
-		if (batch.length < limit) break;
-	}
-	return ids;
-};
-
 export const useConversationsCountByProjectId = (
 	projectId: string,
 	query?: Partial<Query<CustomDirectusTypes, Conversation>>,
