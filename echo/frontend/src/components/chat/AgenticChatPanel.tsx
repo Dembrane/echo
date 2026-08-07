@@ -186,6 +186,20 @@ const AGENTIC_REFERENCE_LIST_PATTERN = /\[conversation_ids?:\s*([^\]]+)\]/g;
 
 const LOOKS_LIKE_ID_PATTERN = /^[0-9a-f][0-9a-f-]{7,}$/i;
 
+// A failed run tells us a code, never prose: the server deliberately withholds
+// upstream error text, which is unbounded, untranslated and can echo the prompt
+// back at us. The wording is ours and lives here so it is localised.
+const runFailureMessage = (errorCode: unknown): string => {
+	switch (errorCode) {
+		case "AGENT_CANCELLED":
+			return t`You stopped this run.`;
+		case "AGENT_TIMEOUT":
+			return t`This request took too long, so I stopped it. Send it again and I'll retry.`;
+		default:
+			return t`Something went wrong on my side. Send your message again and I'll retry.`;
+	}
+};
+
 const buildTranscriptLink = ({
 	chunkId,
 	conversationId,
@@ -339,13 +353,7 @@ const toMessage = ({
 
 	if (event.event_type === "run.failed" || event.event_type === "run.timeout") {
 		return {
-			content: enrichAgenticContent({
-				content: content ?? t`Agent run failed`,
-				conversationNames,
-				language,
-				projectId,
-				workspaceId,
-			}),
+			content: runFailureMessage(payload?.error_code),
 			id: `a-${event.seq}`,
 			role: "assistant",
 			sortSeq: event.seq,

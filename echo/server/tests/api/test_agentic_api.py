@@ -1561,7 +1561,42 @@ async def test_post_stream_uses_hidden_agent_prompt_content_when_available(monke
 
     assert response.status_code == 200
     assert len(start_calls) == 1
+    # Two values, two jobs: the prompt drives the model, the host's own text is
+    # the only thing that may be shown back to them.
     assert start_calls[0]["user_message"] == "hidden-agent-prompt-content"
+    assert start_calls[0]["host_user_message"] == "visible-user-message"
+
+
+@pytest.mark.asyncio
+async def test_post_stream_falls_back_to_content_for_legacy_runs(monkeypatch) -> None:
+    """Runs created before the assembled prompt existed still execute."""
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    run = run_service.create_run(project_id="project-1", directus_user_id="user-1", status="queued")
+    run_service.append_event(run["id"], "user.message", {"content": "legacy-user-message"})
+
+    start_calls: list[dict[str, Any]] = []
+    session = _make_session(user_id="user-1")
+
+    async def _fake_start_claimed_turn(**kwargs: Any) -> None:
+        start_calls.append(kwargs)
+        run_service.append_event(kwargs["run_id"], "assistant.message", {"content": "done"})
+        run_service.set_status(kwargs["run_id"], "completed", latest_output="done")
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+        lease_result=True,
+        start_calls=start_calls,
+        start_impl=_fake_start_claimed_turn,
+    ) as client:
+        response = await client.post(f"/api/agentic/runs/{run['id']}/stream")
+
+    assert response.status_code == 200
+    assert len(start_calls) == 1
+    assert start_calls[0]["user_message"] == "legacy-user-message"
+    assert start_calls[0]["host_user_message"] == "legacy-user-message"
 
 
 @pytest.mark.asyncio
