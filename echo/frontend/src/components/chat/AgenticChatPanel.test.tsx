@@ -43,6 +43,7 @@ const {
 	stopAgenticRunMock,
 	streamOptionsRef,
 	transcribeMock,
+	usageState,
 } = vi.hoisted(() => ({
 	createAgenticRunMock: vi.fn(),
 	runState: { events: [], status: "running" } as {
@@ -66,6 +67,8 @@ const {
 		note: "",
 		transcript: "what I said out loud",
 	})),
+	// Mutable so a test can put the workspace over its recording cap.
+	usageState: { uploadsLocked: false },
 }));
 
 vi.mock("@/lib/api", async (importOriginal) => {
@@ -163,7 +166,17 @@ vi.mock("@/hooks/useWorkspace", async (importOriginal) => {
 vi.mock("@/hooks/useWorkspaceUsage", async (importOriginal) => {
 	const actual =
 		await importOriginal<typeof import("@/hooks/useWorkspaceUsage")>();
-	return { ...actual, useWorkspaceUsage: () => ({ freeTier: null }) };
+	return {
+		...actual,
+		useWorkspaceUsage: () => ({
+			freeTier: null,
+			usageGates: {
+				over_cap_active: usageState.uploadsLocked,
+				upgrade_cta_tier: "changemaker",
+				uploads_locked: usageState.uploadsLocked,
+			},
+		}),
+	};
 });
 
 // Children that carry their own data layer and nothing to do with run state.
@@ -497,6 +510,7 @@ describe("AgenticChatPanel, voice input", () => {
 
 	beforeEach(() => {
 		clock = 0;
+		usageState.uploadsLocked = false;
 		vi.spyOn(Date, "now").mockImplementation(() => clock);
 		vi.stubGlobal("MediaRecorder", FakeMediaRecorder);
 		Object.defineProperty(globalThis.navigator, "mediaDevices", {
@@ -594,6 +608,27 @@ describe("AgenticChatPanel, voice input", () => {
 
 		expect(await screen.findByTestId("chat-input-textarea")).toBeTruthy();
 		expect(transcribeMock).not.toHaveBeenCalled();
+	});
+
+	it("refuses to record past the recording cap and offers the upgrade instead", async () => {
+		usageState.uploadsLocked = true;
+		runState.status = "completed";
+		renderPanel();
+
+		const mic = await screen.findByTestId("chat-voice-record-button");
+		expect(mic.hasAttribute("data-disabled")).toBe(true);
+		await act(async () => {
+			fireEvent.click(mic);
+		});
+
+		// Up front: the mic never opens, so nothing is recorded that cannot be sent.
+		expect(
+			globalThis.navigator.mediaDevices.getUserMedia,
+		).not.toHaveBeenCalled();
+		expect(screen.queryByTestId("chat-voice-recording-bar")).toBeNull();
+		expect(transcribeMock).not.toHaveBeenCalled();
+		// The dead-looking button still has somewhere to send the host.
+		expect(await screen.findByText(/Recording limit reached/)).toBeTruthy();
 	});
 
 	it("says the microphone is blocked rather than failing quietly", async () => {
