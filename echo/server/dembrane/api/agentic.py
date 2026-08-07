@@ -5,7 +5,7 @@ import json
 import time
 import asyncio
 from uuid import uuid4
-from typing import Any, Literal, Optional, AsyncIterator
+from typing import Any, Literal, Optional, NamedTuple, AsyncIterator
 from logging import getLogger
 from datetime import datetime, timezone
 from contextlib import suppress
@@ -26,6 +26,7 @@ from dembrane.agentic_worker import (
     AGENT_CANCELLED_MESSAGE,
     AGENT_CANCELLED_ERROR_CODE,
     process_agentic_run,
+    build_run_failure_payload,
 )
 from dembrane.canvas.history import build_canvas_history
 from dembrane.canvas.service import (
@@ -945,7 +946,22 @@ async def _list_events_after(run_id: str, after_seq: int) -> list[dict[str, Any]
     return await run_in_thread_pool(agentic_run_service.list_events, run_id, after_seq=after_seq)
 
 
-async def _latest_user_turn(run_id: str) -> Optional[tuple[int, str]]:
+class LatestUserTurn(NamedTuple):
+    """The newest user turn, with model input and host text kept apart.
+
+    `agent_prompt_content` is the assembled prompt: project context plus the
+    focus block, which is built from participant-controlled names. It is model
+    input only. `host_content` is what the host typed, and is the only part
+    that may ever be shown back to the host. Collapsing the two into one string
+    is what let a participant name leak into a safety notice.
+    """
+
+    seq: int
+    agent_message: str
+    host_message: str
+
+
+async def _latest_user_turn(run_id: str) -> Optional[LatestUserTurn]:
     event = await run_in_thread_pool(
         agentic_run_service.get_latest_event, run_id, event_type="user.message"
     )
@@ -953,16 +969,22 @@ async def _latest_user_turn(run_id: str) -> Optional[tuple[int, str]]:
         return None
 
     payload = _payload_to_dict(event.get("payload"))
-    content = payload.get("agent_prompt_content")
-    if not isinstance(content, str) or not content.strip():
-        content = payload.get("content")
-    if not isinstance(content, str) or not content.strip():
+    host_content = payload.get("content")
+    if not isinstance(host_content, str) or not host_content.strip():
+        host_content = ""
+
+    agent_message = payload.get("agent_prompt_content")
+    if not isinstance(agent_message, str) or not agent_message.strip():
+        # Legacy runs predate the assembled prompt: the host's own text was the
+        # model input.
+        agent_message = host_content
+    if not agent_message:
         return None
 
     seq = int(event.get("seq") or 0)
     if seq <= 0:
         return None
-    return seq, content
+    return LatestUserTurn(seq=seq, agent_message=agent_message, host_message=host_content)
 
 
 def _project_id_from_run(run: dict[str, Any]) -> str:
@@ -1008,6 +1030,7 @@ async def _start_claimed_turn(
     project_id: str,
     turn_seq: int,
     user_message: str,
+    host_user_message: str,
     bearer_token: str,
     owner_token: str,
 ) -> None:
@@ -1017,6 +1040,7 @@ async def _start_claimed_turn(
                 run_id=run_id,
                 project_id=project_id,
                 user_message=user_message,
+                host_user_message=host_user_message,
                 bearer_token=bearer_token,
                 turn_seq=turn_seq,
                 owner_token=owner_token,
@@ -2468,7 +2492,7 @@ async def stream_run(
     if run.get("status") == "queued":
         latest_turn = await _latest_user_turn(run_id)
         if latest_turn is not None:
-            turn_seq, user_message = latest_turn
+            turn_seq = latest_turn.seq
             project_id = _project_id_from_run(run)
             if not project_id:
                 raise HTTPException(status_code=500, detail="Run is missing project reference")
@@ -2485,7 +2509,8 @@ async def stream_run(
                     run_id=run_id,
                     project_id=project_id,
                     turn_seq=turn_seq,
-                    user_message=user_message,
+                    user_message=latest_turn.agent_message,
+                    host_user_message=latest_turn.host_message,
                     bearer_token=token,
                     owner_token=owner_token,
                 )
@@ -2511,7 +2536,7 @@ async def stop_run(run_id: str, auth: DependencyDirectusSession) -> dict[str, An
     if latest_turn is None:
         raise HTTPException(status_code=409, detail="No active turn to stop")
 
-    turn_seq, _ = latest_turn
+    turn_seq = latest_turn.seq
     await request_cancel(run_id, turn_seq)
 
     task = await _get_active_task(run_id, turn_seq)
@@ -2534,10 +2559,7 @@ async def stop_run(run_id: str, auth: DependencyDirectusSession) -> dict[str, An
             agentic_run_service.append_event,
             run_id,
             "run.failed",
-            {
-                "error_code": AGENT_CANCELLED_ERROR_CODE,
-                "message": AGENT_CANCELLED_MESSAGE,
-            },
+            build_run_failure_payload(AGENT_CANCELLED_ERROR_CODE),
         )
         try:
             await publish_live_event(run_id, json.dumps(event, default=str))
