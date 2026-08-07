@@ -91,6 +91,7 @@ import {
 	FREE_TIER_MAX_CHAT_USER_TURNS,
 	isFreeTierLimitError,
 } from "@/lib/freeTier";
+import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 import { testId } from "@/lib/testUtils";
 import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
@@ -113,7 +114,11 @@ import { ChatHistoryMessage } from "./ChatHistoryMessage";
 import { ChatTemplatesMenuConnected } from "./ChatTemplatesMenuConnected";
 import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopicSuggestionCard";
 import { formatMessage } from "./chatUtils";
-import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
+import {
+	ChatTurnLimitCard,
+	ChatUpgradeModal,
+	VoiceCapUpgradeModal,
+} from "./FreeTierChatGate";
 import { useChat as useProjectChat } from "./hooks";
 import { InsightNoteCard } from "./InsightNoteCard";
 import { NavigationSuggestionCard } from "./NavigationSuggestionCard";
@@ -1116,8 +1121,11 @@ export const AgenticChatPanel = ({
 	}, [timeline, pendingUserMessage]);
 
 	// Free tier: max 3 user turns per chat. The 4th routes to upgrade.
-	const { freeTier } = useWorkspaceUsage(workspace?.id);
+	const { freeTier, usageGates } = useWorkspaceUsage(workspace?.id);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	// A voice note bills audio hours, so the gate that locks uploads locks the mic.
+	const voiceCapReached = Boolean(usageGates?.uploads_locked);
+	const [voiceCapOpened, voiceCapHandlers] = useDisclosure(false);
 	const userTurnCount = useMemo(
 		() =>
 			timeline.filter((item) => item.kind === "message" && item.role === "user")
@@ -2159,8 +2167,21 @@ export const AgenticChatPanel = ({
 										<VoiceInputButton
 											ariaLabel={t`Record a voice message`}
 											disabled={atTurnLimit || voice.isStarting}
-											onClick={voice.start}
+											locked={voiceCapReached && !atTurnLimit}
+											onClick={
+												voiceCapReached && !atTurnLimit
+													? () => {
+															emitFrozenFeatureAttempt();
+															voiceCapHandlers.open();
+														}
+													: voice.start
+											}
 											testId="chat-voice-record-button"
+											tooltip={
+												voiceCapReached && !atTurnLimit
+													? t`This workspace has used its recording hours. Upgrade to keep using voice.`
+													: undefined
+											}
 										/>
 											<Button
 												type="submit"
@@ -2270,6 +2291,11 @@ export const AgenticChatPanel = ({
 				opened={upgradeOpened}
 				onClose={upgradeHandlers.close}
 				reason="chat_turns"
+			/>
+			<VoiceCapUpgradeModal
+				opened={voiceCapOpened}
+				onClose={voiceCapHandlers.close}
+				upgradeTier={usageGates?.upgrade_cta_tier ?? null}
 			/>
 		</Stack>
 	);
