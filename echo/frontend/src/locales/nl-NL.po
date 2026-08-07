@@ -252,14 +252,13 @@ msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# werkruimte} other {# werkruimtes}}"
 
 #. placeholder {0}: focusedContextConversations.length
-#: src/components/chat/AgenticChatPanel.tsx:2018
+#: src/components/chat/AgenticChatPanel.tsx:2022
 msgid "{0, plural, one {Focusing on # conversation:} other {Focusing on # conversations:}}"
 msgstr "{0, plural, one {Focus op # gesprek:} other {Focus op # gesprekken:}}"
 
-#. placeholder {0}: selectedConversationIds.length
 #: src/routes/project/chat/NewChatRoute.tsx:483
-msgid "{0, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
-msgstr "{0, plural, one {Focus op # gesprek} other {Focus op # gesprekken}}"
+#~ msgid "{0, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
+#~ msgstr "{0, plural, one {Focus op # gesprek} other {Focus op # gesprekken}}"
 
 #~ msgid "{0, plural, one {Move # conversation to another project.} other {Move # conversations to another project.}}"
 #~ msgstr ""
@@ -289,10 +288,9 @@ msgstr "{0, plural, one {Tag:} other {Tags:}}"
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr "{0, plural, one {# gesprek in gebruik:} other {# gesprekken in gebruik:}}"
 
-#. placeholder {0}: selectedConversationIds.length
 #: src/routes/project/chat/NewChatRoute.tsx:489
-msgid "{0, plural, one {Using # conversation} other {Using # conversations}}"
-msgstr "{0, plural, one {Gebruikt # gesprek} other {Gebruikt # gesprekken}}"
+#~ msgid "{0, plural, one {Using # conversation} other {Using # conversations}}"
+#~ msgstr "{0, plural, one {Gebruikt # gesprek} other {Gebruikt # gesprekken}}"
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionDescription
@@ -534,7 +532,7 @@ msgstr "{conversationCount} gesprekken • Bewerkt {0}"
 #~ msgid "{conversationCount} conversations selected for this chat"
 #~ msgstr "{conversationCount} gesprekken geselecteerd voor deze chat"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:917
+#: src/components/conversation/ProjectConversationsPanel.tsx:918
 #: src/components/chat/ChatModeBanner.tsx:56
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} geselecteerd"
@@ -639,6 +637,14 @@ msgstr "{person} verliest toegang tot elke werkruimte in deze organisatie. Direc
 
 #~ msgid "{person} will lose access to every workspace in this team. Direct-only workspace invites stay intact."
 #~ msgstr ""
+
+#: src/routes/project/chat/NewChatRoute.tsx:557
+msgid "{pickedCount, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
+msgstr ""
+
+#: src/routes/project/chat/NewChatRoute.tsx:563
+msgid "{pickedCount, plural, one {Using # conversation} other {Using # conversations}}"
+msgstr ""
 
 #: src/components/report/ReportRenderer.tsx:81
 msgid "{readingNow} reading now"
@@ -1579,7 +1585,7 @@ msgstr "Alle sjablonen"
 msgid "All tiers"
 msgstr "Alle niveaus"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:901
+#: src/components/conversation/ProjectConversationsPanel.tsx:902
 msgid "All visible conversations selected"
 msgstr "Alle zichtbare gesprekken geselecteerd"
 
@@ -1977,7 +1983,7 @@ msgstr "Weet je zeker dat je je aangepaste logo wilt verwijderen? Het standaard 
 msgid "Ask"
 msgstr "Stel vraag"
 
-#: src/routes/project/chat/NewChatRoute.tsx:255
+#: src/routes/project/chat/NewChatRoute.tsx:257
 msgid "Ask | dembrane"
 msgstr "Vragen | dembrane"
 
@@ -1988,7 +1994,7 @@ msgstr "Vragen | dembrane"
 msgid "Ask a organisation admin to request this upgrade."
 msgstr "Vraag een organisatie-admin om deze upgrade aan te vragen."
 
-#: src/components/chat/AgenticChatPanel.tsx:1736
+#: src/components/chat/AgenticChatPanel.tsx:1740
 msgid "Ask a question about the conversations in this project, or get help setting it up. Any change is proposed for review first, and nothing is saved until it's approved."
 msgstr "Stel een vraag over de gesprekken in dit project, of vraag hulp bij het opzetten ervan. Elke wijziging wordt eerst ter beoordeling voorgesteld en er wordt niets opgeslagen totdat je het goedkeurt."
 
@@ -2006,7 +2012,7 @@ msgstr "Vraag een admin van de werkruimte om een uitnodiging, of kies een andere
 msgid "Ask about the app."
 msgstr "Stel vragen over de app."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:925
+#: src/components/conversation/ProjectConversationsPanel.tsx:926
 msgid "Ask about these"
 msgstr "Hierover vragen"
 
@@ -2018,8 +2024,8 @@ msgstr "Hierover vragen"
 #~ msgid "Ask about your conversations, or type to find an earlier chat"
 #~ msgstr "Vraag iets over je gesprekken, of typ om een eerdere chat te vinden"
 
-#: src/routes/project/chat/NewChatRoute.tsx:542
-#: src/components/chat/AgenticChatPanel.tsx:2078
+#: src/routes/project/chat/NewChatRoute.tsx:629
+#: src/components/chat/AgenticChatPanel.tsx:2082
 msgid "Ask about your conversations..."
 msgstr "Vraag iets over je gesprekken..."
 
@@ -2351,7 +2357,7 @@ msgstr "Basis instellingen"
 #~ msgstr ""
 
 #: src/routes/project/ProjectMonitorRoute.tsx:85
-#: src/routes/project/chat/NewChatRoute.tsx:569
+#: src/routes/project/chat/NewChatRoute.tsx:656
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:89
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:235
@@ -2604,7 +2610,7 @@ msgstr "kan lezen"
 #: src/components/common/FeedbackPortalModal.tsx:124
 #: src/components/common/ConfirmModal.tsx:44
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:722
-#: src/components/chat/AgenticChatPanel.tsx:707
+#: src/components/chat/AgenticChatPanel.tsx:711
 msgid "Cancel"
 msgstr "Annuleren"
 
@@ -2637,7 +2643,7 @@ msgstr "Annuleren"
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr "Annuleer wanneer je wilt. Je houdt toegang tot het einde van de periode."
 
-#: src/components/chat/AgenticChatPanel.tsx:695
+#: src/components/chat/AgenticChatPanel.tsx:699
 msgid "Cancel current run"
 msgstr "Huidige run stoppen"
 
@@ -2657,7 +2663,7 @@ msgstr "Verzoek intrekken"
 msgid "Cancel schedule"
 msgstr "Planning annuleren"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:948
+#: src/components/conversation/ProjectConversationsPanel.tsx:949
 msgid "Cancel selection"
 msgstr "Selectie annuleren"
 
@@ -2834,7 +2840,7 @@ msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resulta
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:262
-#: src/components/chat/AgenticChatPanel.tsx:1580
+#: src/components/chat/AgenticChatPanel.tsx:1584
 msgid "Chat"
 msgstr "Chat"
 
@@ -2851,7 +2857,7 @@ msgid "Chat deleted"
 msgstr "Chat verwijderd"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:595
-#: src/routes/project/chat/NewChatRoute.tsx:439
+#: src/routes/project/chat/NewChatRoute.tsx:513
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Chat is niet beschikbaar op jouw toegangsniveau. Neem contact op met je werkruimtebeheerder om een upgrade aan te vragen."
 
@@ -2868,7 +2874,7 @@ msgstr "Chatlimiet bereikt"
 msgid "Chat name"
 msgstr "Chatnaam"
 
-#: src/routes/project/chat/NewChatRoute.tsx:151
+#: src/routes/project/chat/NewChatRoute.tsx:153
 msgid "Chats"
 msgstr "Chats"
 
@@ -2959,7 +2965,7 @@ msgstr "Kies je favoriete thema voor de interface"
 msgid "City"
 msgstr "Plaats"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:933
+#: src/components/conversation/ProjectConversationsPanel.tsx:934
 msgid "Clear"
 msgstr "Wissen"
 
@@ -2972,13 +2978,13 @@ msgstr "Alles wissen"
 #~ msgid "Clear filter"
 #~ msgstr "Filter wissen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:978
+#: src/components/conversation/ProjectConversationsPanel.tsx:979
 msgid "Clear filters"
 msgstr "Filters wissen"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:274
 #: src/routes/project/ProjectsHome.tsx:362
-#: src/routes/project/chat/NewChatRoute.tsx:168
+#: src/routes/project/chat/NewChatRoute.tsx:170
 #: src/features/sidebar/blocks/SearchBlock.tsx:136
 #: src/components/invite/WorkspaceSelectList.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:829
@@ -4141,7 +4147,7 @@ msgstr "dembrane B.V. {0}, alle rechten voorbehouden."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:982
 #: src/routes/project/chat/ProjectChatRoute.tsx:992
-#: src/components/chat/AgenticChatPanel.tsx:2099
+#: src/components/chat/AgenticChatPanel.tsx:2103
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane kan fouten maken. Controleer antwoorden altijd even."
 
@@ -4900,7 +4906,7 @@ msgstr "Gegevens ingevuld"
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
 #: src/components/conversation/LiveMonitorSection.tsx:269
 #: src/components/chat/AgenticChatPanel.tsx:386
-#: src/components/chat/AgenticChatPanel.tsx:1682
+#: src/components/chat/AgenticChatPanel.tsx:1686
 msgid "Error"
 msgstr "Fout"
 
@@ -5335,11 +5341,11 @@ msgstr "Fout bij het herzien van het resultaat. Probeer het opnieuw."
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fout bij het stoppen van de opname bij wijziging van het apparaat. Probeer het opnieuw."
 
-#: src/components/chat/AgenticChatPanel.tsx:1573
+#: src/components/chat/AgenticChatPanel.tsx:1577
 msgid "Failed to stop run"
 msgstr "De run stoppen is mislukt"
 
-#: src/components/chat/AgenticChatPanel.tsx:1532
+#: src/components/chat/AgenticChatPanel.tsx:1536
 msgid "Failed to submit agentic message"
 msgstr "Bericht versturen is mislukt"
 
@@ -5526,9 +5532,9 @@ msgstr "Fixture"
 msgid "Focus"
 msgstr "Focus"
 
-#: src/components/chat/AgenticChatPanel.tsx:2045
-#: src/components/chat/AgenticChatPanel.tsx:2046
-#: src/components/chat/AgenticChatPanel.tsx:2109
+#: src/components/chat/AgenticChatPanel.tsx:2049
+#: src/components/chat/AgenticChatPanel.tsx:2050
+#: src/components/chat/AgenticChatPanel.tsx:2113
 msgid "Focus on conversations"
 msgstr "Focus op gesprekken"
 
@@ -6134,11 +6140,11 @@ msgstr ""
 #~ msgid "I accept the <0>terms</0>"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1850
+#: src/components/chat/AgenticChatPanel.tsx:1854
 msgid "I applied the canvas."
 msgstr "Ik heb het canvas toegepast."
 
-#: src/components/chat/AgenticChatPanel.tsx:1866
+#: src/components/chat/AgenticChatPanel.tsx:1870
 msgid "I applied the goal."
 msgstr "Ik heb het doel toegepast."
 
@@ -6214,7 +6220,7 @@ msgstr "Als je je bij een bestaande organisatie wilt aansluiten, maak dan geen n
 msgid "Image style"
 msgstr "Beeldstijl"
 
-#: src/components/chat/AgenticChatPanel.tsx:1760
+#: src/components/chat/AgenticChatPanel.tsx:1764
 msgid "Improve my setup"
 msgstr "Verbeter mijn instellingen"
 
@@ -6968,7 +6974,7 @@ msgstr "Link naar de privacyverklaring van uw organisatie die aan deelnemers wor
 #~ msgid "LinkedIn Post (Experimental)"
 #~ msgstr "LinkedIn Post (Experimenteel)"
 
-#: src/components/chat/AgenticChatPanel.tsx:1750
+#: src/components/chat/AgenticChatPanel.tsx:1754
 msgid "List my conversations"
 msgstr "Toon mijn gesprekken"
 
@@ -6976,7 +6982,7 @@ msgstr "Toon mijn gesprekken"
 #~ msgid "List project conversations"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1751
+#: src/components/chat/AgenticChatPanel.tsx:1755
 msgid "List the conversations in this project."
 msgstr "Toon de gesprekken in dit project."
 
@@ -7042,7 +7048,7 @@ msgstr "Live opnames, voortgang van transcriptie en fouten verschijnen hier zodr
 msgid "Live stream disconnected. Updating on a slower poll until it reconnects."
 msgstr "Live verbinding verbroken. We werken minder vaak bij tot de verbinding terug is."
 
-#: src/components/chat/AgenticChatPanel.tsx:1234
+#: src/components/chat/AgenticChatPanel.tsx:1238
 msgid "Live stream interrupted. Falling back to polling."
 msgstr "Live verbinding onderbroken. We halen updates nu periodiek op."
 
@@ -7123,7 +7129,7 @@ msgstr "Projecten laden..."
 #~ msgid "Loading projects…"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1693
+#: src/components/chat/AgenticChatPanel.tsx:1697
 msgid "Loading this chat..."
 msgstr "Deze chat laden..."
 
@@ -7904,7 +7910,7 @@ msgstr "Geen chats gevonden. Start een chat met behulp van de \"Vraag\" knop."
 #~ msgid "No chats found. Start a chat using the \"Ask\" button."
 #~ msgstr "Geen chats gevonden. Start een chat met behulp van de \"Vraag\" knop."
 
-#: src/routes/project/chat/NewChatRoute.tsx:181
+#: src/routes/project/chat/NewChatRoute.tsx:183
 msgid "No chats match your search."
 msgstr "Geen chats gevonden voor je zoekopdracht."
 
@@ -7912,7 +7918,7 @@ msgstr "Geen chats gevonden voor je zoekopdracht."
 #~ msgid "No chats match. Press Enter to ask this as a new chat."
 #~ msgstr "Geen chats gevonden. Druk op Enter om dit als nieuwe chat te vragen."
 
-#: src/routes/project/chat/NewChatRoute.tsx:186
+#: src/routes/project/chat/NewChatRoute.tsx:188
 msgid "No chats yet."
 msgstr "Nog geen chats."
 
@@ -7950,7 +7956,7 @@ msgstr "Geen gesprekken gevonden."
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Geen gesprekken gevonden. Start een gesprek met behulp van de deelname-uitnodigingslink uit het <0><1>projectoverzicht.</1></0>"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:971
+#: src/components/conversation/ProjectConversationsPanel.tsx:972
 msgid "No conversations match these filters."
 msgstr "Geen gesprekken voldoen aan deze filters."
 
@@ -7966,7 +7972,7 @@ msgstr "Er zijn geen gesprekken verwerkt. Dit kan gebeuren als alle gesprekken a
 #~ msgid "No conversations yet"
 #~ msgstr "Nog geen gesprekken"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:973
+#: src/components/conversation/ProjectConversationsPanel.tsx:974
 msgid "No conversations yet."
 msgstr "Nog geen gesprekken."
 
@@ -8176,7 +8182,7 @@ msgstr "Nog geen rapporten"
 msgid "No results"
 msgstr "Geen resultaten"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:903
+#: src/components/conversation/ProjectConversationsPanel.tsx:904
 msgid "No selectable conversations"
 msgstr "Geen selecteerbare gesprekken"
 
@@ -10067,7 +10073,7 @@ msgstr "Projectnaam en ID"
 msgid "Project name must be at least 4 characters long"
 msgstr "Projectnaam moet minstens 4 tekens lang zijn"
 
-#: src/routes/project/chat/NewChatRoute.tsx:422
+#: src/routes/project/chat/NewChatRoute.tsx:496
 msgid "Project not found"
 msgstr "Project niet gevonden"
 
@@ -10671,7 +10677,7 @@ msgstr "Naam wijzigen"
 #~ msgstr "Naam wijzigen"
 
 #: src/components/chat/ChatAccordion.tsx:153
-#: src/components/chat/AgenticChatPanel.tsx:1643
+#: src/components/chat/AgenticChatPanel.tsx:1647
 msgid "Rename chat"
 msgstr "Chat hernoemen"
 
@@ -11072,7 +11078,7 @@ msgstr "Controleer voordat je aanmaakt."
 msgid "Review files before uploading"
 msgstr "Bestanden bekijken voordat u uploadt"
 
-#: src/components/chat/AgenticChatPanel.tsx:1761
+#: src/components/chat/AgenticChatPanel.tsx:1765
 msgid "Review my project settings and suggest improvements."
 msgstr "Bekijk mijn projectinstellingen en stel verbeteringen voor."
 
@@ -11328,8 +11334,8 @@ msgstr "Zoek en selecteer de gesprekken voor deze chat."
 msgid "Search by organisation"
 msgstr "Zoeken op organisatie"
 
-#: src/routes/project/chat/NewChatRoute.tsx:160
-#: src/routes/project/chat/NewChatRoute.tsx:161
+#: src/routes/project/chat/NewChatRoute.tsx:162
+#: src/routes/project/chat/NewChatRoute.tsx:163
 msgid "Search chats"
 msgstr "Zoek chats"
 
@@ -11563,7 +11569,7 @@ msgstr "Alles selecteren ({remainingCount})"
 msgid "select.all.modal.title.results"
 msgstr "Alle resultaten selecteren"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:899
+#: src/components/conversation/ProjectConversationsPanel.tsx:900
 msgid "Select all visible ({remainingCount})"
 msgstr "Selecteer alle zichtbare ({remainingCount})"
 
@@ -11587,10 +11593,10 @@ msgstr "Gesprek selecteren"
 #: src/routes/project/chat/ProjectChatRoute.tsx:917
 #: src/routes/project/chat/ProjectChatRoute.tsx:918
 #: src/routes/project/chat/ProjectChatRoute.tsx:1003
-#: src/routes/project/chat/NewChatRoute.tsx:502
-#: src/routes/project/chat/NewChatRoute.tsx:504
-#: src/routes/project/chat/NewChatRoute.tsx:602
-#: src/components/conversation/ProjectConversationsPanel.tsx:950
+#: src/routes/project/chat/NewChatRoute.tsx:589
+#: src/routes/project/chat/NewChatRoute.tsx:591
+#: src/routes/project/chat/NewChatRoute.tsx:689
+#: src/components/conversation/ProjectConversationsPanel.tsx:951
 msgid "Select conversations"
 msgstr "Gesprekken selecteren"
 
@@ -11689,8 +11695,8 @@ msgid "Self-serve"
 msgstr "Self-serve"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:942
-#: src/routes/project/chat/NewChatRoute.tsx:521
-#: src/components/chat/AgenticChatPanel.tsx:2064
+#: src/routes/project/chat/NewChatRoute.tsx:608
+#: src/components/chat/AgenticChatPanel.tsx:2068
 msgid "Send"
 msgstr "Verzenden"
 
@@ -12056,7 +12062,7 @@ msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Toont {displayFrom}–{displayTo} van {totalItems} items"
 
 #. placeholder {0}: listedChats.length
-#: src/routes/project/chat/NewChatRoute.tsx:191
+#: src/routes/project/chat/NewChatRoute.tsx:193
 msgid "Showing the first {0} of {shownCount} matches. Narrow the search to see the rest."
 msgstr "De eerste {0} van {shownCount} resultaten worden getoond. Verfijn je zoekopdracht om de rest te zien."
 
@@ -13485,7 +13491,7 @@ msgstr "Te groot"
 msgid "Too long"
 msgstr "Te lang"
 
-#: src/components/chat/AgenticChatPanel.tsx:2034
+#: src/components/chat/AgenticChatPanel.tsx:2038
 msgid "Too many to list here. The assistant reads through them in batches."
 msgstr "Te veel om hier te tonen. De assistent leest ze in delen door."
 
@@ -13744,7 +13750,7 @@ msgstr "Opnieuw proberen"
 msgid "Try again in a moment."
 msgstr "Probeer het zo meteen opnieuw."
 
-#: src/routes/project/chat/NewChatRoute.tsx:566
+#: src/routes/project/chat/NewChatRoute.tsx:653
 msgid "Try Agentic instead"
 msgstr "Probeer Agentic"
 
@@ -14309,7 +14315,7 @@ msgstr "Gebruik deze cyclus"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:979
 #: src/routes/project/chat/ProjectChatRoute.tsx:989
-#: src/components/chat/AgenticChatPanel.tsx:2096
+#: src/components/chat/AgenticChatPanel.tsx:2100
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 
@@ -14866,11 +14872,11 @@ msgstr "Wat moet ECHO analyseren of genereren uit de gesprekken?"
 #~ msgid "What should this report focus on?"
 #~ msgstr "Waar moet dit rapport zich op richten?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1756
+#: src/components/chat/AgenticChatPanel.tsx:1760
 msgid "What themes came up across the conversations in this project?"
 msgstr "Welke thema's kwamen naar voren in de gesprekken in dit project?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1755
+#: src/components/chat/AgenticChatPanel.tsx:1759
 msgid "What themes came up?"
 msgstr "Welke thema's kwamen naar voren?"
 
@@ -14951,8 +14957,8 @@ msgstr "Wanneer de samenvatting klaar is (bevat zowel transcript als samenvattin
 msgid "Where would you like to go?"
 msgstr "Waar wil je naartoe?"
 
-#: src/routes/project/chat/NewChatRoute.tsx:471
-#: src/components/chat/AgenticChatPanel.tsx:1733
+#: src/routes/project/chat/NewChatRoute.tsx:545
+#: src/components/chat/AgenticChatPanel.tsx:1737
 msgid "Where would you like to start?"
 msgstr "Waar wil je beginnen?"
 
@@ -15021,7 +15027,7 @@ msgstr "Binnen mijn organisatie"
 msgid "Worked through {0} steps"
 msgstr "{0} stappen doorlopen"
 
-#: src/components/chat/AgenticChatPanel.tsx:1605
+#: src/components/chat/AgenticChatPanel.tsx:1609
 msgid "Working on your answer..."
 msgstr "Bezig met je antwoord..."
 

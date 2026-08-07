@@ -46,8 +46,10 @@ import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
 import { ChatUpgradeModal } from "@/components/chat/FreeTierChatGate";
 import {
 	useInfiniteProjectChats,
+	useDeleteChatMutation,
 	useInitializeChatModeMutation,
 	usePrefetchSuggestions,
+	useProjectChatContext,
 	useProjectChatSearch,
 	useProjectChatsCount,
 } from "@/components/chat/hooks";
@@ -297,6 +299,18 @@ export const NewChatRoute = () => {
 	});
 	const [pickerOpened, pickerHandlers] = useDisclosure(false);
 	const [agenticIntroOpened, agenticIntroHandlers] = useDisclosure(false);
+	// Draft chat behind the picker: created the moment the picker first
+	// opens, so ticks and Select All write through the server like any other
+	// chat, and the server keeps owning limits and counts. Handed off on
+	// start; deleted on leaving this screen if no message was ever sent.
+	const [draftChatId, setDraftChatId] = useState<string | null>(null);
+	const draftChatIdRef = useRef<string | null>(null);
+	const draftHandedOffRef = useRef(false);
+	const deleteChatMutation = useDeleteChatMutation();
+	const draftContextQuery = useProjectChatContext(draftChatId ?? "");
+	const pickedCount = draftChatId
+		? (draftContextQuery.data?.conversations?.length ?? 0)
+		: selectedConversationIds.length;
 
 	const handleModeSelected = async (
 		mode: ChatMode,
@@ -313,25 +327,29 @@ export const NewChatRoute = () => {
 		setIsInitializing(true);
 
 		try {
-			// Step 1: Create the chat. It has no mode yet.
-			const chat = await createChatMutation.mutateAsync({
-				navigateToNewChat: false, // Don't navigate yet
-				project_id: { id: projectId },
-			});
-
-			if (!chat?.id) {
-				throw new Error("Failed to create chat");
+			// Step 1: Reuse the draft chat the picker created (its context is
+			// already server-side), or create a fresh one. It has no mode yet.
+			let chatId = draftChatId;
+			if (!chatId) {
+				const chat = await createChatMutation.mutateAsync({
+					navigateToNewChat: false, // Don't navigate yet
+					project_id: { id: projectId },
+				});
+				if (!chat?.id) {
+					throw new Error("Failed to create chat");
+				}
+				chatId = chat.id;
 			}
 
 			posthog.capture("chat_started", {
-				chat_id: chat.id,
+				chat_id: chatId,
 				mode,
 				project_id: projectId,
 			});
 
 			// Step 2: Initialize the mode (this attaches conversations for overview mode)
 			await initializeModeMutation.mutateAsync({
-				chatId: chat.id,
+				chatId,
 				mode,
 				projectId,
 			});
@@ -342,9 +360,9 @@ export const NewChatRoute = () => {
 			// can see that the chat is agentic, so attaching first would make a
 			// long selection fail with "Conversation is too long" even for
 			// agentic.
-			if (selectedConversationIds.length > 0) {
+			if (!draftChatId && selectedConversationIds.length > 0) {
 				await attachConversationsMutation.mutateAsync({
-					chatId: chat.id,
+					chatId,
 					conversationIds: selectedConversationIds,
 					projectId,
 				});
@@ -353,12 +371,13 @@ export const NewChatRoute = () => {
 			// Step 4: For overview mode, prefetch suggestions (wait up to 5s for better UX)
 			// For deep_dive mode, navigate immediately - suggestions will be fetched when context changes
 			if (mode === "overview") {
-				await prefetchSuggestions(chat.id, language, 5000);
+				await prefetchSuggestions(chatId, language, 5000);
 			}
 
 			// Step 5: Navigate to the new chat; the panel sends the typed
 			// question as the first message (router state, consumed once).
-			navigate(`/w/${workspaceId}/projects/${projectId}/chats/${chat.id}`, {
+			draftHandedOffRef.current = true;
+			navigate(`/w/${workspaceId}/projects/${projectId}/chats/${chatId}`, {
 				state: initialMessage ? { initialMessage } : undefined,
 			});
 		} catch (error) {
@@ -371,6 +390,61 @@ export const NewChatRoute = () => {
 			setIsInitializing(false);
 		}
 	};
+
+	const openPicker = async () => {
+		if (!projectId || isPending) return;
+		if (draftChatId) {
+			pickerHandlers.open();
+			return;
+		}
+		// Free tier: one chat per workspace. Route to upgrade before creating
+		// the draft, same as starting a chat would.
+		if (atChatLimit) {
+			upgradeHandlers.open();
+			return;
+		}
+		try {
+			const chat = await createChatMutation.mutateAsync({
+				navigateToNewChat: false,
+				project_id: { id: projectId },
+			});
+			if (!chat?.id) {
+				throw new Error("Failed to create chat");
+			}
+			// Carry over anything picked before the draft existed (e.g. "Ask
+			// about these" router state) so the picker shows it as context.
+			if (selectedConversationIds.length > 0) {
+				await attachConversationsMutation.mutateAsync({
+					chatId: chat.id,
+					conversationIds: selectedConversationIds,
+					projectId,
+				});
+			}
+			draftChatIdRef.current = chat.id;
+			setDraftChatId(chat.id);
+			pickerHandlers.open();
+		} catch (error) {
+			if (isFreeTierLimitError(error) === "chats") {
+				upgradeHandlers.open();
+			} else {
+				console.error("Failed to prepare the conversation picker:", error);
+			}
+		}
+	};
+
+	// Throwaway cleanup: leaving this screen without starting the chat
+	// deletes the draft, so abandoned pickers do not litter the chat list.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: unmount-only cleanup over refs
+	useEffect(() => {
+		return () => {
+			if (draftChatIdRef.current && !draftHandedOffRef.current && projectId) {
+				deleteChatMutation.mutate({
+					chatId: draftChatIdRef.current,
+					projectId,
+				});
+			}
+		};
+	}, []);
 
 	// Two ways to land here with the choice already made:
 	//   - "Open the old chat experience" inside an agentic chat passes
@@ -474,26 +548,39 @@ export const NewChatRoute = () => {
 						    screen is where a host narrows the chat before it exists. */}
 						<ChatComposerShell
 							chips={
-								selectedConversationIds.length > 0 ? (
+								pickedCount > 0 ? (
 									<ConversationFocusChips
-										count={selectedConversationIds.length}
+										count={pickedCount}
 										disabled={isPending}
 										label={
 											modeToStart === "agentic" ? (
 												<Plural
-													value={selectedConversationIds.length}
+													value={pickedCount}
 													one="Focusing on # conversation"
 													other="Focusing on # conversations"
 												/>
 											) : (
 												<Plural
-													value={selectedConversationIds.length}
+													value={pickedCount}
 													one="Using # conversation"
 													other="Using # conversations"
 												/>
 											)
 										}
-										onClearAll={() => setSelectedConversationIds([])}
+										onClearAll={() => {
+											// Clearing a draft's context means throwing the
+											// draft away; a fresh one appears when the picker
+											// next opens.
+											if (draftChatIdRef.current && projectId) {
+												deleteChatMutation.mutate({
+													chatId: draftChatIdRef.current,
+													projectId,
+												});
+												draftChatIdRef.current = null;
+												setDraftChatId(null);
+											}
+											setSelectedConversationIds([]);
+										}}
 									/>
 								) : undefined
 							}
@@ -502,7 +589,7 @@ export const NewChatRoute = () => {
 									ariaLabel={t`Select conversations`}
 									disabled={isPending}
 									label={<Trans>Select conversations</Trans>}
-									onClick={pickerHandlers.open}
+									onClick={() => void openPicker()}
 									testId="ask-home-choose-conversations"
 								/>
 							}
@@ -603,13 +690,12 @@ export const NewChatRoute = () => {
 				size="xl"
 				padding="lg"
 			>
-				{projectId && (
+				{projectId && draftChatId && (
 					<ProjectConversationsPanel
 						projectId={projectId}
 						workspaceId={workspaceId}
 						selectionMode
-						selection={selectedConversationIds}
-						onSelectionChange={setSelectedConversationIds}
+						selectionChatId={draftChatId}
 					/>
 				)}
 			</Modal>
