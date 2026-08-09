@@ -553,7 +553,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = "==2.6.1" },
     { name = "pydub", specifier = "==0.25.1" },
     { name = "pylance", specifier = ">=0.30.0" },
-    { name = "pypdf", specifier = "==4.0.*" },
+    { name = "pypdf", specifier = "==6.15.*" },
     { name = "pytest" },
     { name = "pytest", specifier = "==8.3.4" },
     { name = "pytest-asyncio" },
@@ -1858,11 +1858,11 @@ wheels = [
 
 [[package]]
 name = "pypdf"
-version = "4.0.2"
+version = "6.15.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/5f/de/5ee74158c3090ec99eae9f90c9e9c18f207fa5c722b0e95d6fa7faebcdf8/pypdf-4.0.2.tar.gz", hash = "sha256:3316d9ddfcff5df67ae3cdfe8b945c432aa43e7f970bae7c2a4ab4fe129cd937", size = 280173, upload-time = "2024-02-18T15:45:10.729Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/17/17/ee75a92718ec7212de831e71454d702225aa5e474a805cce169806044453/pypdf-6.15.0.tar.gz", hash = "sha256:d39c4d955a76409284a905e2d65b40076d77ab76129e0faaeeb6612403ecfc79", size = 6993794, upload-time = "2026-08-06T13:06:49.929Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d7/87/30f8a2963247fd7b1267e600379c5e3f51c9849a07d042398e4485b7415c/pypdf-4.0.2-py3-none-any.whl", hash = "sha256:a62daa2a24d5a608ba1b6284dde185317ce3644f89b9ebe5314d0c5d1c9f257d", size = 283953, upload-time = "2024-02-18T15:45:07.857Z" },
+    { url = "https://files.pythonhosted.org/packages/af/72/ce3067ac31e214a66388159f8462ddb8c13dd00170f24d555a1f1ae8ee91/pypdf-6.15.0-py3-none-any.whl", hash = "sha256:14e001d6504822cb1ca9c7ed9a69bccb320f59b320730f55af804361abe4d5ee", size = 378123, upload-time = "2026-08-06T13:06:47.709Z" },
 ]
 
 [[package]]

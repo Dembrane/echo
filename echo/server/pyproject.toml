@@ -9,7 +9,7 @@ dependencies = [
     "uvicorn[standard]==0.27.*",
     "gunicorn==22.0.*",
     "python-multipart==0.0.*",
-    "pypdf==4.0.*",
+    "pypdf==6.15.*",
     # SDKs for Models
     # Data
     "pandas==2.2.*",
