@@ -254,17 +254,53 @@ async def update_me(
         cleaned = body.display_name.replace("\r", " ").replace("\n", " ").strip()
         payload["display_name"] = cleaned
 
+    db_updated = False
     if body.settings is not None:
-        existing_settings = app_user.get("settings") or {}
-        if not isinstance(existing_settings, dict):
-            existing_settings = {}
-        merged_settings = {**existing_settings, **body.settings}
-        payload["settings"] = merged_settings
+        # Server-side flatness enforcement: reject any nested dictionaries
+        for k, v in body.settings.items():
+            if isinstance(v, dict):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Nested settings objects are not supported. Settings must be flat."
+                )
 
-    if not payload:
+        # Try atomic database-level concatenation using psycopg
+        try:
+            import psycopg
+            import json
+            from dembrane.settings import get_settings
+
+            settings_config = get_settings()
+            db_url = settings_config.database.database_url
+            if db_url.startswith("postgresql+psycopg://"):
+                db_url = db_url.replace("postgresql+psycopg://", "postgresql://", 1)
+
+            async with await psycopg.AsyncConnection.connect(db_url, connect_timeout=5) as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute(
+                        "UPDATE app_user SET settings = COALESCE(settings, '{}'::jsonb) || %s::jsonb WHERE id = %s",
+                        (json.dumps(body.settings), app_user["id"])
+                    )
+            db_updated = True
+        except Exception as exc:
+            logger.warning(
+                "Atomic DB settings update failed, falling back to read-merge-write via Directus: %s",
+                exc,
+                exc_info=True
+            )
+
+        if not db_updated:
+            existing_settings = app_user.get("settings") or {}
+            if not isinstance(existing_settings, dict):
+                existing_settings = {}
+            merged_settings = {**existing_settings, **body.settings}
+            payload["settings"] = merged_settings
+
+    if not payload and not db_updated:
         raise HTTPException(status_code=400, detail="Nothing to update")
 
-    await async_directus.update_item("app_user", app_user["id"], payload)
+    if payload:
+        await async_directus.update_item("app_user", app_user["id"], payload)
     return {"status": "success"}
 
 
