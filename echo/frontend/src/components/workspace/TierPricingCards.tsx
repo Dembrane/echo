@@ -377,7 +377,7 @@ export const TierPricingCards = ({
 					/>
 				))}
 			</div>
-			<Text size="xs" c="dimmed" ta="center">
+			<Text size="xs" c="dimmed">
 				<Trans>
 					Interested in innovator or guardian? Let us know via{" "}
 					<a
