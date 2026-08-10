@@ -234,6 +234,52 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
     )
 
 
+def deep_merge(dict1: dict[str, Any], dict2: dict[str, Any]) -> dict[str, Any]:
+    """Recursively merge dict2 into dict1."""
+    result = dict1.copy()
+    for key, value in dict2.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+async def update_user_settings_atomic(app_user_id: str, new_settings: dict[str, Any]) -> dict[str, Any]:
+    """Update settings atomically at the PostgreSQL level using row-level FOR UPDATE locks."""
+    import json
+    import psycopg
+    from dembrane.settings import get_settings
+
+    settings_obj = get_settings()
+    db_url = settings_obj.database.database_url
+    if db_url.startswith("postgresql+psycopg://"):
+        db_url = db_url.replace("postgresql+psycopg://", "postgresql://", 1)
+
+    async with await psycopg.AsyncConnection.connect(db_url) as conn:
+        async with conn.transaction():
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "SELECT settings FROM app_user WHERE id = %s FOR UPDATE",
+                    (app_user_id,)
+                )
+                row = await cur.fetchone()
+                if not row:
+                    raise HTTPException(status_code=404, detail="User not found")
+                
+                existing_settings = row[0]
+                if not isinstance(existing_settings, dict):
+                    existing_settings = {}
+                
+                merged = deep_merge(existing_settings, new_settings)
+                
+                await cur.execute(
+                    "UPDATE app_user SET settings = %s WHERE id = %s",
+                    (json.dumps(merged), app_user_id)
+                )
+                return merged
+
+
 class UpdateMeRequest(BaseModel):
     display_name: Optional[str] = Field(default=None, min_length=1, max_length=80)
     settings: Optional[dict[str, Any]] = None
@@ -245,26 +291,21 @@ async def update_me(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Update the current user's profile (display_name and settings)."""
+    if body.display_name is None and body.settings is None:
+        raise HTTPException(status_code=400, detail="Nothing to update")
+
     app_user = await get_app_user_or_raise(auth.user_id)
 
-    payload: dict[str, Any] = {}
     if body.display_name is not None:
         # Strip control chars — display_name lands in email subject lines
         # (invite "{inviter_name} invited you...") so CR/LF must not pass.
         cleaned = body.display_name.replace("\r", " ").replace("\n", " ").strip()
-        payload["display_name"] = cleaned
+        payload = {"display_name": cleaned}
+        await async_directus.update_item("app_user", app_user["id"], payload)
 
     if body.settings is not None:
-        existing_settings = app_user.get("settings") or {}
-        if not isinstance(existing_settings, dict):
-            existing_settings = {}
-        merged_settings = {**existing_settings, **body.settings}
-        payload["settings"] = merged_settings
+        await update_user_settings_atomic(app_user["id"], body.settings)
 
-    if not payload:
-        raise HTTPException(status_code=400, detail="Nothing to update")
-
-    await async_directus.update_item("app_user", app_user["id"], payload)
     return {"status": "success"}
 
 
