@@ -484,6 +484,7 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert '"[participant name]: quoted text"' in prompt
     assert "[conversation_id:<id>;chunk_id:<chunk_id>]" in SYSTEM_PROMPT
     assert "[conversation_id:<id>]" in SYSTEM_PROMPT
+    assert "footnote" in prompt
     assert "worked from summaries only" in prompt
     assert "read the full transcript" in prompt
     assert "never fabricate quotes" in prompt
