@@ -933,7 +933,7 @@ msgstr ""
 msgid "Add additional context (Optional)"
 msgstr "Ajouter un contexte supplémentaire (Optionnel)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:208
+#: src/components/participant/ParticipantInitiateForm.tsx:215
 msgid "Add all that apply"
 msgstr "Ajouter tout ce qui s'applique"
 
@@ -2553,7 +2553,7 @@ msgid "participant.button.continue"
 msgstr "Continuer"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:236
+#: src/components/participant/ParticipantInitiateForm.tsx:243
 msgid "participant.ready.to.begin.button.text"
 msgstr "Continuer"
 
@@ -7016,8 +7016,8 @@ msgid "partially completed"
 msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:56
-#: src/components/participant/ParticipantInitiateForm.tsx:86
-#: src/components/participant/ParticipantInitiateForm.tsx:110
+#: src/components/participant/ParticipantInitiateForm.tsx:93
+#: src/components/participant/ParticipantInitiateForm.tsx:117
 msgid "Participant"
 msgstr "Participant"
 
@@ -8985,7 +8985,7 @@ msgstr ""
 msgid "Separate with commas, spaces, or new lines."
 msgstr ""
 
-#: src/components/participant/ParticipantInitiateForm.tsx:196
+#: src/components/participant/ParticipantInitiateForm.tsx:203
 msgid "Session Name"
 msgstr "Nom de la Séance"
 
@@ -9286,7 +9286,7 @@ msgstr "Quelque chose bloque votre connexion. Votre audio ne sera pas sauvegard�
 #: src/routes/onboarding/OnboardingRoute.tsx:189
 #: src/routes/auth/Login.tsx:241
 #: src/components/project/ProjectAccessGuard.tsx:87
-#: src/components/participant/ParticipantInitiateForm.tsx:183
+#: src/components/participant/ParticipantInitiateForm.tsx:190
 #: src/components/error/ErrorPage.tsx:55
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:298
@@ -9656,7 +9656,7 @@ msgid "Tag deleted"
 msgstr ""
 
 #: src/components/project/ProjectTagsInput.tsx:256
-#: src/components/participant/ParticipantInitiateForm.tsx:207
+#: src/components/participant/ParticipantInitiateForm.tsx:214
 #: src/components/conversation/ProjectConversationsPanel.tsx:852
 #: src/components/conversation/ConversationEdit.tsx:415
 #: src/components/conversation/ConversationDrilldownModal.tsx:205
