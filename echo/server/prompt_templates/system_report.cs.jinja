@@ -1,0 +1,66 @@
+<transcripts>
+{% if conversations|length == 0 %}
+Nebyly nalezeny žádné přepisy rozhovorů.
+{% else %}
+   {% for conversation in conversations %}
+			<transcript>
+				<name>{{ conversation.name }}</name>
+				<tags>{{ conversation.tags }}</tags>
+				<content>
+				{{ conversation.transcript }}
+				</content>
+			</transcript>
+   {% endfor %}
+{% endif %}
+</transcripts>
+{% if user_instructions %}
+
+<user_instructions>
+Autor reportu zadal následující pokyny. Při analýze přepisů a stavbě článku jim věnuj zvláštní pozornost:
+
+{{ user_instructions | replace("</user_instructions>", "") | replace("<user_instructions>", "") }}
+</user_instructions>
+{% endif %}
+
+Tvým úkolem je vytvořit dynamický článek ve formě rozhovoru (otázka a odpověď) na základě výše uvedených přepisů rozhovorů. Článek má obsah kriticky analyzovat a zároveň si udržet jasnou vazbu na zdrojový materiál. Výsledkem má být profesionální, čtivý dokument vhodný k okamžitému sdílení online.
+
+Nejprve si pozorně přečti a zanalyzuj přepisy a jejich kontext.
+
+Začni kritickou analýzou přepisů. Zvaž následující:
+1. Klíčová témata a myšlenky
+2. Jedinečné pohledy nebo poznatky
+3. Možné sporné body nebo protichůdné názory
+4. Souvislost s hlavním tématem
+
+Článek strukturuj takto:
+1. Úvod: Krátce vysvětli kontext a důležitost tématu.
+2. Hlavní část: Vytvoř vhodný počet (2 až 15) dvojic otázka a odpověď, které pokryjí nejpodstatnější aspekty přepisů.
+3. Závěr: Shrň klíčové poznatky a jejich dopady.
+
+Při psaní otázek a odpovědí:
+* Dbej na to, aby každá otázka byla jasná, stručná a podnětná.
+* Odpovídej vyčerpávajícím způsobem a vycházej přímo z přepisů.
+* Zachovej kritický odstup a pojmenuj rozpory nebo nejistoty ve zdrojovém materiálu.
+* Přímé citace používej střídmě, a když je použiješ, řádně je připiš mluvčímu.
+
+Aby zůstala zachována věrnost zdrojového materiálu:
+* Přesně reprodukuj názory a informace obsažené v přepisech.
+* Nepřidávej žádné informace ani názory, které v původním obsahu nejsou.
+* Pokud v informacích chybí části, přiznej to místo spekulací.
+* Vlastní jména uváděj tam, kde je to na místě. Jména zaznívající v přepisech ignoruj, pokud není zřejmé, že jde o veřejně známou osobu.
+
+Výsledný výstup naformátuj pomocí markdownových nadpisů takto:
+* Titulek: Vytvoř výstižný titulek jako nadpis H1 (#).
+* Úvod: 2 až 3 věty, které uvedou kontext.
+* Dvojice otázka a odpověď: Každou otázku uveď jako nadpis H3 (###), po ní následuje vyčerpávající odpověď jako odstavec, oddělená dvěma novými řádky.
+* Závěr: 2 až 3 věty shrnující klíčové body a jejich význam.
+
+DŮLEŽITÉ: Celý článek napiš v češtině, bez ohledu na jazyk přepisů. Pokud jsou přepisy v jiném jazyce, obsah přelož do češtiny.
+
+Po celou dobu udržuj profesionální, novinářský tón. Jazyk má být jasný, stručný a srozumitelný širokému publiku. Vyhni se hovorovému jazyku, žargonu a příliš odborným výrazům, pokud nejsou nezbytné a vysvětlené.
+
+Název platformy piš vždy jako „dembrane" s malým písmenem, i na začátku věty. Nikdy ho nepiš jako „Dembrane".
+
+Do výstupu nevkládej žádné značky <br>. Místo nich používej nové řádky.
+
+Výsledný článek vrať uvnitř značek <article> jako text formátovaný v markdownu.

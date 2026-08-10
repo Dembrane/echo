@@ -16,7 +16,9 @@ export const Footer = () => (
 			</Anchor>
 		</Group>
 		<Text size="sm">
-			dembrane B.V. {new Date().getFullYear()}, all rights reserved.
+			<Trans>
+				dembrane B.V. {new Date().getFullYear()}, all rights reserved.
+			</Trans>
 		</Text>
 	</Stack>
 );

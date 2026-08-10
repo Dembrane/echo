@@ -1,5 +1,12 @@
-import { describe, expect, it } from "vitest";
-import { parseInsightNote, type ToolActivity } from "./agenticToolActivity";
+import { i18n } from "@lingui/core";
+import { beforeAll, describe, expect, it } from "vitest";
+import type { AgenticRunEvent } from "@/lib/api";
+
+import {
+	extractTopLevelToolActivity,
+	parseInsightNote,
+	type ToolActivity,
+} from "./agenticToolActivity";
 
 const baseActivity = (
 	overrides: Partial<ToolActivity> = {},
@@ -144,5 +151,38 @@ describe("parseInsightNote", () => {
 		});
 		const note = parseInsightNote(baseActivity({ rawOutput }));
 		expect(note?.suggestedCapability).toBeNull();
+	});
+});
+
+describe("extractTopLevelToolActivity", () => {
+	// buildHeadline goes through Lingui, which needs an active locale.
+	beforeAll(() => {
+		i18n.load("en", {});
+		i18n.activate("en");
+	});
+
+	const toolEvent = (
+		seq: number,
+		phase: "end" | "start",
+		toolName: string,
+	): AgenticRunEvent => ({
+		event_type: phase === "start" ? "on_tool_start" : "on_tool_end",
+		id: seq,
+		payload: { name: toolName, run_id: `call-${toolName}` },
+		project_agentic_run_id: "run-1",
+		seq,
+		timestamp: "2026-07-09T00:00:00Z",
+	});
+
+	it("hides sendProgressUpdate steps; its output is already a chat message", () => {
+		const activities = extractTopLevelToolActivity([
+			toolEvent(1, "start", "listProjectConversations"),
+			toolEvent(2, "end", "listProjectConversations"),
+			toolEvent(3, "start", "sendProgressUpdate"),
+			toolEvent(4, "end", "sendProgressUpdate"),
+		]);
+
+		expect(activities).toHaveLength(1);
+		expect(activities[0]?.toolName).toBe("listProjectConversations");
 	});
 });

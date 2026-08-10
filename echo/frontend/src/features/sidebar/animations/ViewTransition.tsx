@@ -29,7 +29,7 @@ export const ViewTransition = ({ children }: ViewTransitionProps) => {
 	const slide = direction.current === "push" ? VIEW_SLIDE_PX : -VIEW_SLIDE_PX;
 
 	return (
-		<div className="relative flex-1 overflow-hidden">
+		<div className="relative flex-1 overflow-x-clip">
 			<motion.div
 				key={view}
 				initial={reduced ? false : { opacity: 0, x: slide }}

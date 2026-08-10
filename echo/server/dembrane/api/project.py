@@ -525,6 +525,7 @@ async def create_report(
                 "query": {
                     "filter": {
                         "project_id": {"_eq": project_id},
+                        "kind": {"_eq": "report"},
                         "status": {"_eq": "draft"},
                         "deleted_at": {"_null": True},
                     },
@@ -660,6 +661,7 @@ async def list_project_reports(
             "query": {
                 "filter": {
                     "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
                     "status": {"_in": ["archived", "published", "scheduled", "draft"]},
                     "deleted_at": {"_null": True},
                 },
@@ -708,6 +710,7 @@ async def get_latest_report(
             "query": {
                 "filter": {
                     "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
                     "deleted_at": {"_null": True},
                 },
                 "fields": [
@@ -816,7 +819,9 @@ async def update_report(
     if not payload:
         raise HTTPException(status_code=400, detail="No fields to update")
 
-    # Auto-unpublish other reports when publishing this one
+    # Auto-unpublish other reports when publishing this one. Canvases are
+    # created status='published' too, so without the kind filter this archives
+    # every canvas in the project as a side effect of publishing a report.
     if payload.get("status") == "published":
         other_published = await run_in_thread_pool(
             directus.get_items,
@@ -825,6 +830,7 @@ async def update_report(
                 "query": {
                     "filter": {
                         "project_id": {"_eq": project_id},
+                        "kind": {"_eq": "report"},
                         "status": {"_eq": "published"},
                         "id": {"_neq": report_id},
                         "deleted_at": {"_null": True},

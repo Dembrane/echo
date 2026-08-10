@@ -26,7 +26,7 @@ explainable and testable.
 
 | Piece | Path |
 |---|---|
-| The published corpus | `docs/` (repo root), deployed to docs.echo-next.dembrane.com on every main push touching `docs/**` |
+| The published corpus | `docs/` (repo root), deployed to docs.dembrane.com on every main push touching `docs/**` |
 | What is true | `docs/_authoring/FACTS.md` - the accuracy anchor every page must agree with |
 | How to write it | `docs/_authoring/STYLE.md` - voice, language, links, structure |
 | The code → docs process | `.claude/skills/code-to-docs/SKILL.md` - the operational skill an agent (or you) runs |

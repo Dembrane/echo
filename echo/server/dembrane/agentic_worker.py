@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import json
+import time
 import asyncio
 from uuid import UUID
 from typing import Any, Optional, AsyncGenerator
@@ -9,6 +10,7 @@ from logging import getLogger
 
 from dembrane.service import chat_service, agentic_run_service
 from dembrane.analytics import capture_event
+from dembrane.agentic_focus import strip_focus_blocks
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.agentic_client import (
     AgenticTimeoutError,
@@ -24,6 +26,21 @@ logger = getLogger("dembrane.agentic_worker")
 AGENT_CANCELLED_ERROR_CODE = "AGENT_CANCELLED"
 AGENT_CANCELLED_MESSAGE = "Run cancelled by user"
 MAX_TOOL_CALLS_PER_TURN = 20
+# Full-text snapshots are quadratic in message length, so throttle and back
+# off as the text grows; on_chat_model_end always flushes the final snapshot.
+DRAFT_PUBLISH_INTERVAL_SECONDS = 0.15
+DRAFT_PUBLISH_MEDIUM_TEXT_CHARS = 2_000
+DRAFT_PUBLISH_MEDIUM_INTERVAL_SECONDS = 0.5
+DRAFT_PUBLISH_LONG_TEXT_CHARS = 8_000
+DRAFT_PUBLISH_LONG_INTERVAL_SECONDS = 1.0
+
+
+def _draft_publish_interval(text_length: int) -> float:
+    if text_length >= DRAFT_PUBLISH_LONG_TEXT_CHARS:
+        return DRAFT_PUBLISH_LONG_INTERVAL_SECONDS
+    if text_length >= DRAFT_PUBLISH_MEDIUM_TEXT_CHARS:
+        return DRAFT_PUBLISH_MEDIUM_INTERVAL_SECONDS
+    return DRAFT_PUBLISH_INTERVAL_SECONDS
 MAX_TOOL_CALLS_PER_RUN = MAX_TOOL_CALLS_PER_TURN * 10
 TOOL_LIMIT_EXEMPT_TOOL_NAMES = {"sendProgressUpdate"}
 # Host-facing, in the agent's own voice. "Tool calls" are an internal concept
@@ -107,19 +124,50 @@ def _sanitize_host_visible_assistant_content(content: str) -> Optional[str]:
     return normalized or None
 
 
-def _summarize_request_for_safety_message(user_message: str) -> str:
+def _summarize_request_for_safety_message(user_message: Optional[str]) -> str:
+    """Condense the host's own message for quoting back at them.
+
+    This only ever receives the host's raw message, never the assembled agent
+    prompt. Keep it that way: the prompt carries the focus block and project
+    context, which are not the host's words and must not be echoed.
+    """
+    if not user_message:
+        return ""
     normalized = " ".join(user_message.split())
     if len(normalized) > 140:
         return f"{normalized[:137].rstrip()}..."
     return normalized
 
 
-def _build_turn_tool_limit_message(user_message: str) -> str:
+def build_run_failure_payload(
+    error_code: str,
+    *,
+    status_code: Optional[int] = None,
+) -> dict[str, Any]:
+    """Build a host-visible run failure payload: the error code, never the text.
+
+    Upstream and exception messages are unbounded text we do not control. They
+    can carry provider internals and, when an upstream echoes its input, the
+    prompt itself, which for an agentic run includes transcript context. Only
+    `error_code` is a value we produce, so only `error_code` crosses to the
+    host. The raw text still reaches `logger` and the run's `latest_error`
+    field, so developers lose nothing.
+
+    The host-facing wording lives in the frontend, keyed by this code, so it is
+    localised. A server-sent English sentence would not be.
+    """
+    payload: dict[str, Any] = {"error_code": error_code}
+    if status_code is not None:
+        payload["status_code"] = status_code
+    return payload
+
+
+def _build_turn_tool_limit_message(user_message: Optional[str]) -> str:
     request_summary = _summarize_request_for_safety_message(user_message)
     if not request_summary:
         return TOOL_LIMIT_SAFETY_MESSAGE
     return (
-        f"I need to pause this pass on your request: \"{request_summary}\". "
+        f'I need to pause this pass on your request: "{request_summary}". '
         "Send it again and I'll retry with a fresh pass."
     )
 
@@ -188,6 +236,40 @@ def _extract_tool_call_name(value: Any) -> Optional[str]:
             if isinstance(nested_name, str) and nested_name.strip():
                 return nested_name.strip()
     return None
+
+
+def _coerce_chunk_text(value: Any) -> str:
+    """Whitespace-preserving _coerce_text: chunk boundaries fall on spaces."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        parts: list[str] = []
+        for item in value:
+            if isinstance(item, str):
+                parts.append(item)
+                continue
+            if isinstance(item, dict):
+                text = item.get("text")
+                if isinstance(text, str):
+                    parts.append(text)
+        return "".join(parts)
+    return ""
+
+
+def _extract_stream_chunk(event: dict[str, Any]) -> tuple[Optional[str], Optional[str]]:
+    """Return (chunk_text, model_invocation_id) for an on_chat_model_stream event."""
+    data = event.get("data")
+    if not isinstance(data, dict):
+        return None, None
+    chunk = data.get("chunk")
+    if not isinstance(chunk, dict):
+        return None, None
+    kwargs = chunk.get("kwargs")
+    if not isinstance(kwargs, dict):
+        return None, None
+    text = _coerce_chunk_text(kwargs.get("content"))
+    message_id = str(event.get("run_id") or "") or None
+    return (text or None), message_id
 
 
 def _extract_model_text_and_tool_calls(event: dict[str, Any]) -> tuple[Optional[str], set[str]]:
@@ -342,6 +424,16 @@ async def _build_message_history(
     svc: AgenticRunService,
     run_id: str,
 ) -> list[dict[str, str]]:
+    """Replay this run's turns as model history.
+
+    User turns prefer the stored `agent_prompt_content` because it carries the
+    project framing the raw message lacks. That stored text also baked in the
+    focus selection that was current at the time, so every replayed turn used to
+    re-assert "prioritize these conversations" with nothing superseding it: after
+    the host cleared the focus, the agent kept narrowing to the old selection.
+    The current turn's focus governs the current turn, so stale focus blocks are
+    dropped from every earlier user turn.
+    """
     history: list[dict[str, str]] = []
     after_seq = 0
 
@@ -390,6 +482,20 @@ async def _build_message_history(
 
         if len(events) < HISTORY_PAGE_SIZE:
             break
+
+    # The last user turn is the one being answered now, so its focus block is
+    # current and stays. Anything earlier is history: keep the turn, drop its
+    # focus block.
+    latest_user_index = next(
+        (index for index in range(len(history) - 1, -1, -1) if history[index]["role"] == "user"),
+        None,
+    )
+    for index, message in enumerate(history):
+        if message["role"] != "user" or index == latest_user_index:
+            continue
+        stripped = strip_focus_blocks(message["content"]).strip()
+        if stripped:
+            message["content"] = stripped
 
     return history
 
@@ -476,6 +582,18 @@ async def _append_event_and_publish(
         logger.warning("Failed to publish live event for run %s: %s", run_id, exc)
 
 
+async def _publish_draft_snapshot(run_id: str, message_id: str, text: str) -> None:
+    """Ephemeral streaming snapshot: Redis pub/sub only, never persisted."""
+    payload = json.dumps(
+        {"event_type": "assistant.draft", "payload": {"message_id": message_id, "text": text}},
+        default=str,
+    )
+    try:
+        await publish_live_event(run_id, payload)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to publish draft snapshot for run %s: %s", run_id, exc)
+
+
 async def _raise_if_cancelled(run_id: str, turn_seq: int) -> None:
     if await is_cancel_requested(run_id, turn_seq):
         raise AgenticRunCancelledError(AGENT_CANCELLED_MESSAGE)
@@ -487,17 +605,21 @@ async def _append_assistant_message(
     run_id: str,
     content: str,
     project_chat_id: str,
+    message_id: Optional[str] = None,
 ) -> Optional[str]:
     # Never emit or persist internal placeholders / empty turns as host-facing
     # messages — they only fragment the chat and leak the Gemini crutch text.
     sanitized_content = _sanitize_host_visible_assistant_content(content)
     if sanitized_content is None:
         return None
+    event_payload: dict[str, Any] = {"content": sanitized_content}
+    if message_id:
+        event_payload["message_id"] = message_id
     await _append_event_and_publish(
         svc,
         run_id,
         "assistant.message",
-        {"content": sanitized_content},
+        event_payload,
     )
     if not project_chat_id:
         return sanitized_content
@@ -588,9 +710,7 @@ async def _latest_user_turn_seq(*, svc: AgenticRunService, run_id: str) -> int |
     return seq if seq > 0 else None
 
 
-async def _count_persisted_non_exempt_tool_starts(
-    *, svc: AgenticRunService, run_id: str
-) -> int:
+async def _count_persisted_non_exempt_tool_starts(*, svc: AgenticRunService, run_id: str) -> int:
     total = 0
     after_seq = 0
     while True:
@@ -622,8 +742,14 @@ async def process_agentic_run(
     bearer_token: str,
     turn_seq: int,
     owner_token: str,
+    host_user_message: Optional[str] = None,
     run_service: Optional[AgenticRunService] = None,
 ) -> None:
+    # `user_message` is model input: the assembled prompt, carrying project
+    # context and the focus block. `host_user_message` is what the host
+    # actually typed, and is the only thing we may quote back at them. When a
+    # caller does not supply it we quote nothing rather than guess, so a
+    # missing argument degrades to a generic message instead of leaking.
     svc = run_service or agentic_run_service
     run = await run_in_thread_pool(svc.get_by_id_or_raise, run_id)
     project_chat_id = str(run.get("project_chat_id") or "")
@@ -635,7 +761,10 @@ async def process_agentic_run(
         turn_seq=turn_seq,
     )
 
-    async def _emit_chat_error(error_code: str, message: str) -> None:
+    async def _emit_chat_error(error_code: str) -> None:
+        # Code only. Free-form upstream text is the same risk in analytics as
+        # it is in the chat: it can carry prompt input, which here includes
+        # transcript context. The code is the dimension worth grouping on.
         await capture_event(
             chat_distinct_id,
             "server_chat_error",
@@ -643,7 +772,6 @@ async def process_agentic_run(
                 "run_id": run_id,
                 "project_id": project_id,
                 "error_code": error_code,
-                "message": message[:300],
                 "mode": "agentic",
             },
         )
@@ -669,6 +797,36 @@ async def process_agentic_run(
             run_id=run_id,
         )
         canvas_enabled = await project_canvas_enabled(project_id)
+        # Streamed text per model invocation; its run_id doubles as message_id.
+        draft_texts: dict[str, str] = {}
+        draft_last_publish_at: dict[str, float] = {}
+        draft_published_texts: dict[str, str] = {}
+        # Model turn whose narration a pending sendProgressUpdate result replaces.
+        pending_progress_message_id: Optional[str] = None
+
+        async def _maybe_publish_draft(message_id: str, *, flush: bool = False) -> None:
+            now = time.monotonic()
+            last_publish_at = draft_last_publish_at.get(message_id)
+            if (
+                not flush
+                and last_publish_at is not None
+                and now - last_publish_at
+                < _draft_publish_interval(len(draft_texts[message_id]))
+            ):
+                return
+            sanitized = _sanitize_host_visible_assistant_content(draft_texts[message_id])
+            if not sanitized or sanitized == draft_published_texts.get(message_id):
+                return
+            if any(
+                placeholder.startswith(sanitized)
+                for placeholder in INTERNAL_PLACEHOLDER_CONTENTS
+            ):
+                # A growing draft hits placeholder prefixes ("(calling") before
+                # the sanitizer can match the full string; hold those back.
+                return
+            draft_last_publish_at[message_id] = now
+            draft_published_texts[message_id] = sanitized
+            await _publish_draft_snapshot(run_id, message_id, sanitized)
 
         async for event in _stream_with_overflow_retry(
             project_id=project_id,
@@ -684,26 +842,43 @@ async def process_agentic_run(
             await _raise_if_cancelled(run_id, turn_seq)
             event_type = str(event.get("type") or event.get("event") or "agent.event")
 
+            if event_type == "on_chat_model_stream":
+                # Redis only, never persisted: one Directus row per chunk is bloat.
+                chunk_text, stream_message_id = _extract_stream_chunk(event)
+                if chunk_text and stream_message_id:
+                    draft_texts[stream_message_id] = (
+                        draft_texts.get(stream_message_id, "") + chunk_text
+                    )
+                    await _maybe_publish_draft(stream_message_id)
+                continue
+
             model_text, model_tool_calls = _extract_model_text_and_tool_calls(event)
-            model_has_tool_calls = len(model_tool_calls) > 0
+            model_message_id = (
+                str(event.get("run_id") or "") or None
+                if event_type == "on_chat_model_end"
+                else None
+            )
+            if model_message_id and model_message_id in draft_texts:
+                # Flush the throttled tail; the final snapshot carries the full text.
+                await _maybe_publish_draft(model_message_id, flush=True)
             model_has_progress_tool_call = "sendProgressUpdate" in model_tool_calls
+            if model_has_progress_tool_call:
+                # The tool's output is this turn's visible message; sharing the
+                # message_id lets the streamed narration draft resolve into it.
+                pending_progress_message_id = model_message_id
             if model_text:
-                if model_has_tool_calls:
-                    # The model's pre-tool "planning" prose used to be persisted
-                    # as its own bubble, which fragmented the aggregated activity
-                    # strip (and, with the placeholder crutch, spammed the thread
-                    # with "(calling tools)"). Suppress it: the host sees the
-                    # aggregated tool activity plus the final summary. We do NOT
-                    # reset the nudge counter here, so visible-progress nudges
-                    # (sendProgressUpdate) still fire on long runs.
-                    if model_has_progress_tool_call:
-                        has_sent_progress_intro = True
+                if model_has_progress_tool_call:
+                    # The narration repeats the tool's words; keeping both double-posts.
+                    has_sent_progress_intro = True
                 else:
+                    # Text shown as a draft must get a durable copy (no flicker),
+                    # even when the turn ends in tool calls.
                     persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
                         content=model_text,
                         project_chat_id=project_chat_id,
+                        message_id=model_message_id,
                     )
                     if persisted_content is not None:
                         latest_output = persisted_content
@@ -752,7 +927,10 @@ async def process_agentic_run(
                             },
                         )
 
-                if persisted_non_exempt_tool_starts + counted_tool_start_count >= MAX_TOOL_CALLS_PER_RUN:
+                if (
+                    persisted_non_exempt_tool_starts + counted_tool_start_count
+                    >= MAX_TOOL_CALLS_PER_RUN
+                ):
                     persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
@@ -768,7 +946,7 @@ async def process_agentic_run(
                     persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
-                        content=_build_turn_tool_limit_message(user_message),
+                        content=_build_turn_tool_limit_message(host_user_message),
                         project_chat_id=project_chat_id,
                     )
                     # One honest message only. The last substantive assistant
@@ -797,7 +975,9 @@ async def process_agentic_run(
                         run_id=run_id,
                         content=progress_message,
                         project_chat_id=project_chat_id,
+                        message_id=pending_progress_message_id,
                     )
+                    pending_progress_message_id = None
                     if persisted_content is not None:
                         tool_calls_without_assistant_message = 0
                         nudged_tool_call_milestones.clear()
@@ -849,15 +1029,12 @@ async def process_agentic_run(
         )
     except (AgenticRunCancelledError, asyncio.CancelledError):
         logger.info("Run %s cancelled for turn %s", run_id, turn_seq)
-        await _emit_chat_error(AGENT_CANCELLED_ERROR_CODE, AGENT_CANCELLED_MESSAGE)
+        await _emit_chat_error(AGENT_CANCELLED_ERROR_CODE)
         await _append_event_and_publish(
             svc,
             run_id,
             "run.failed",
-            {
-                "error_code": AGENT_CANCELLED_ERROR_CODE,
-                "message": AGENT_CANCELLED_MESSAGE,
-            },
+            build_run_failure_payload(AGENT_CANCELLED_ERROR_CODE),
         )
         await run_in_thread_pool(
             svc.set_status,
@@ -868,12 +1045,12 @@ async def process_agentic_run(
         )
     except AgenticTimeoutError as exc:
         logger.warning("Run %s timed out: %s", run_id, exc)
-        await _emit_chat_error("AGENT_TIMEOUT", str(exc))
+        await _emit_chat_error("AGENT_TIMEOUT")
         await _append_event_and_publish(
             svc,
             run_id,
             "run.timeout",
-            {"error_code": "AGENT_TIMEOUT", "message": str(exc)},
+            build_run_failure_payload("AGENT_TIMEOUT"),
         )
         await run_in_thread_pool(
             svc.set_status,
@@ -884,16 +1061,12 @@ async def process_agentic_run(
         )
     except AgenticUpstreamError as exc:
         logger.warning("Run %s failed upstream: %s", run_id, exc)
-        await _emit_chat_error(exc.error_code, exc.message)
+        await _emit_chat_error(exc.error_code)
         await _append_event_and_publish(
             svc,
             run_id,
             "run.failed",
-            {
-                "error_code": exc.error_code,
-                "message": exc.message,
-                "status_code": exc.status_code,
-            },
+            build_run_failure_payload(exc.error_code, status_code=exc.status_code),
         )
         await run_in_thread_pool(
             svc.set_status,
@@ -904,21 +1077,19 @@ async def process_agentic_run(
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception("Run %s failed unexpectedly", run_id)
-        await _emit_chat_error("AGENT_UNEXPECTED_ERROR", str(exc))
+        exc_str = str(exc)
+        await _emit_chat_error("AGENT_UNEXPECTED_ERROR")
         await _append_event_and_publish(
             svc,
             run_id,
             "run.failed",
-            {
-                "error_code": "AGENT_UNEXPECTED_ERROR",
-                "message": str(exc),
-            },
+            build_run_failure_payload("AGENT_UNEXPECTED_ERROR"),
         )
         await run_in_thread_pool(
             svc.set_status,
             run_id,
             "failed",
-            latest_error=str(exc),
+            latest_error=exc_str,
             latest_error_code="AGENT_UNEXPECTED_ERROR",
         )
     finally:

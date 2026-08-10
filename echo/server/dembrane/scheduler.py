@@ -144,6 +144,14 @@ scheduler.add_job(
     replace_existing=True,
 )
 
+scheduler.add_job(
+    func="dembrane.tasks:task_fail_abandoned_agentic_runs.send",
+    trigger=CronTrigger(minute="*/5"),
+    id="task_fail_abandoned_agentic_runs",
+    name="Fail agentic runs whose executor died mid-turn (stuck in running)",
+    replace_existing=True,
+)
+
 logger = getLogger("dembrane.scheduler")
 
 # Start the scheduler when this module is run directly

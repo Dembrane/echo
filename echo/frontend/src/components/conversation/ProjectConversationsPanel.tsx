@@ -49,7 +49,6 @@ import { UploadConversationDropzone } from "@/components/dropzone/UploadConversa
 import { useProjectById } from "@/components/project/hooks";
 import { UploadLockedCard } from "@/components/project/UploadLockedCard";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
-import { ENABLE_CHAT_SELECT_ALL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -87,6 +86,15 @@ type ProjectConversationsPanelProps = {
 	selectionChatId?: string;
 	selectionMode?: boolean;
 	showUpload?: boolean;
+	/** Selection before a chat exists. With `onSelectionChange` set, the ticked
+	 * ids live in the parent's state and nothing is written to a chat: pass
+	 * `selectionChatId` instead to write straight through to an existing chat. */
+	selection?: string[];
+	onSelectionChange?: (conversationIds: string[]) => void;
+	/** Renders the "Ask about these" action in the row above the list. */
+	onAskAboutSelection?: () => void;
+	/** Renders the selection on/off toggle in that same row. */
+	onToggleSelectionMode?: () => void;
 };
 
 const lineClampStyle = {
@@ -224,6 +232,8 @@ type ConversationRowProps = {
 	onLockedClick?: (conversation: Conversation) => void;
 	selectionChatId?: string;
 	selectionMode?: boolean;
+	/** Set when selection is held in the parent's state (no chat yet). */
+	onToggleChecked?: (conversationId: string) => void;
 };
 
 const ConversationRow = ({
@@ -236,6 +246,7 @@ const ConversationRow = ({
 	onLockedClick,
 	selectionChatId,
 	selectionMode,
+	onToggleChecked,
 }: ConversationRowProps) => {
 	const primary =
 		conversation.title?.trim() ||
@@ -255,6 +266,19 @@ const ConversationRow = ({
 		!conversation.is_anonymized &&
 		!conversation.has_only_text_chunks;
 
+	// Empty and gated conversations can never join a chat context, so they can't
+	// be ticked either. Same rule as the write-through checkbox above.
+	const localCheckbox = onToggleChecked ? (
+		<Checkbox
+			aria-label={t`Select conversation`}
+			checked={!!isSelected}
+			disabled={isLocked || conversation.has_transcript === false}
+			onChange={() => onToggleChecked(conversation.id)}
+			color="primary"
+			{...testId(`conversation-select-checkbox-${conversation.id}`)}
+		/>
+	) : null;
+
 	const body = (
 		<Group align="flex-start" gap="md" wrap="nowrap">
 			{selectionMode && selectionChatId && (
@@ -264,6 +288,9 @@ const ConversationRow = ({
 						chatId={selectionChatId}
 					/>
 				</Box>
+			)}
+			{selectionMode && !selectionChatId && localCheckbox && (
+				<Box pt={4}>{localCheckbox}</Box>
 			)}
 
 			<Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
@@ -508,6 +535,10 @@ export const ProjectConversationsPanel = ({
 	selectionChatId,
 	selectionMode = false,
 	showUpload = false,
+	selection,
+	onSelectionChange,
+	onAskAboutSelection,
+	onToggleSelectionMode,
 }: ProjectConversationsPanelProps) => {
 	const navigate = useI18nNavigate();
 	const { ref: loadMoreRef, inView } = useInView();
@@ -630,15 +661,28 @@ export const ProjectConversationsPanel = ({
 	]);
 
 	const chatContextQuery = useProjectChatContext(selectionChatId ?? "");
-	const selectedConversationIds = useMemo(
-		() =>
-			new Set(
-				(chatContextQuery.data?.conversations ?? []).map(
-					(c) => c.conversation_id,
-				),
+	// chatId-less mode (no chat exists yet): the ticked set lives in the
+	// parent's state and is reported back via onSelectionChange, instead of
+	// being written straight through addChatContext.
+	const isLocalSelectionMode = selectionMode && !selectionChatId;
+	const selectedConversationIds = useMemo(() => {
+		if (isLocalSelectionMode) return new Set(selection ?? []);
+		return new Set(
+			(chatContextQuery.data?.conversations ?? []).map(
+				(c) => c.conversation_id,
 			),
-		[chatContextQuery.data?.conversations],
-	);
+		);
+	}, [isLocalSelectionMode, selection, chatContextQuery.data?.conversations]);
+	const toggleLocalSelection = (conversationId: string) => {
+		const current = selection ?? [];
+		const next = current.includes(conversationId)
+			? current.filter((id) => id !== conversationId)
+			: [...current, conversationId];
+		onSelectionChange?.(next);
+	};
+	// Named to match ChatModeBanner's "{conversationCount} selected" so both
+	// reuse the same translated string.
+	const conversationCount = selectedConversationIds.size;
 	const chatMode = chatContextQuery.data?.chat_mode;
 	const hasActiveFilters =
 		selectedTagIds.length > 0 || showOnlyVerified || debouncedSearch !== "";
@@ -657,11 +701,10 @@ export const ProjectConversationsPanel = ({
 			verifiedOnly: showOnlyVerified || undefined,
 		},
 		{
+			// New chats have no chat_mode until the first message lands, so gate
+			// on the one mode that must not multi-select instead of a whitelist.
 			enabled:
-				selectionMode &&
-				ENABLE_CHAT_SELECT_ALL &&
-				(chatMode === "deep_dive" || chatMode === "agentic") &&
-				!!selectionChatId,
+				selectionMode && chatMode !== "overview" && !!selectionChatId,
 		},
 	);
 	const remainingCount =
@@ -839,8 +882,8 @@ export const ProjectConversationsPanel = ({
 				</Paper>
 
 				{selectionMode &&
-					ENABLE_CHAT_SELECT_ALL &&
-					(chatMode === "deep_dive" || chatMode === "agentic") &&
+					!!selectionChatId &&
+					chatMode !== "overview" &&
 					allConversations.length > 0 && (
 						<Button
 							variant="outline"
@@ -865,6 +908,52 @@ export const ProjectConversationsPanel = ({
 			</Stack>
 
 			<Divider />
+
+			{(onToggleSelectionMode ||
+				(isLocalSelectionMode && onAskAboutSelection)) && (
+				<Group gap="sm" align="center" justify="space-between">
+					{isLocalSelectionMode && onAskAboutSelection ? (
+						<Group gap="sm" align="center">
+							<Text size="sm" fw={500}>
+								<Trans>{conversationCount} selected</Trans>
+							</Text>
+							<Button
+								size="xs"
+								disabled={selectedConversationIds.size === 0}
+								onClick={onAskAboutSelection}
+								{...testId("conversations-ask-about-selection")}
+							>
+								<Trans>Ask about these</Trans>
+							</Button>
+							{selectedConversationIds.size > 0 && (
+								<Button
+									variant="subtle"
+									size="xs"
+									onClick={() => onSelectionChange?.([])}
+								>
+									<Trans>Clear</Trans>
+								</Button>
+							)}
+						</Group>
+					) : (
+						<Box />
+					)}
+					{onToggleSelectionMode && (
+						<Button
+							variant="outline"
+							size="xs"
+							onClick={onToggleSelectionMode}
+							{...testId("conversations-toggle-selection-mode")}
+						>
+							{selectionMode ? (
+								<Trans>Cancel selection</Trans>
+							) : (
+								<Trans>Select conversations</Trans>
+							)}
+						</Button>
+					)}
+				</Group>
+			)}
 
 			<Stack gap="sm">
 				{conversationsQuery.isLoading && (
@@ -909,6 +998,9 @@ export const ProjectConversationsPanel = ({
 							onLockedClick={upgradeHandlers.open}
 							selectionChatId={selectionChatId}
 							selectionMode={selectionMode}
+							onToggleChecked={
+								isLocalSelectionMode ? toggleLocalSelection : undefined
+							}
 						/>
 					);
 					const isLast = index === allConversations.length - 1;
@@ -951,7 +1043,7 @@ export const ProjectConversationsPanel = ({
 				)}
 			</Modal>
 
-			{selectionMode && ENABLE_CHAT_SELECT_ALL && (
+			{selectionMode && (
 				<SelectAllConfirmationModal
 					opened={selectAllModalOpened}
 					onClose={() => setSelectAllModalOpened(false)}

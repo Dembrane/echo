@@ -1,6 +1,6 @@
 {{ workspace_name }} moved from {{ from_tier }} to {{ to_tier }} on {{ downgraded_at_human }}.
 
-{% if freeze_items %}Frozen — existing state stays; no new use until upgrade:
+{% if freeze_items %}Frozen. Existing state stays, with no new use until upgrade:
 {% for item in freeze_items %}- {{ item }}
 {% endfor %}
 {% endif %}
@@ -13,4 +13,4 @@ Everything else keeps working as it did.
 Open the workspace:
 {{ workspace_url }}
 
-— the dembrane team
+The dembrane team

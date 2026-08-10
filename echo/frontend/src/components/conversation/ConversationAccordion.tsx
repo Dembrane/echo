@@ -71,7 +71,6 @@ import {
 	useInfiniteProjects,
 	useProjectById,
 } from "@/components/project/hooks";
-import { ENABLE_CHAT_SELECT_ALL } from "@/config";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { testId } from "@/lib/testUtils";
 import { BaseSkeleton } from "../common/BaseSkeleton";
@@ -468,7 +467,7 @@ const ConversationProjectTagPill = ({
 		return null;
 	}
 
-	const isClickable = ENABLE_CHAT_SELECT_ALL && onClick;
+	const isClickable = onClick;
 
 	return (
 		<Pill
@@ -918,7 +917,7 @@ export const ConversationAccordion = ({
 			verifiedOnly: showOnlyVerified || undefined,
 		},
 		{
-			enabled: ENABLE_CHAT_SELECT_ALL && inChatMode && chatMode === "deep_dive",
+			enabled: inChatMode && chatMode === "deep_dive",
 		},
 	);
 
@@ -1422,8 +1421,7 @@ export const ConversationAccordion = ({
 					</Box>
 
 					{/* Select All - show in deep dive mode, disable when all relevant conversations are in context */}
-					{ENABLE_CHAT_SELECT_ALL &&
-						inChatMode &&
+					{inChatMode &&
 						chatMode === "deep_dive" &&
 						allConversations.length > 0 && (
 							<Tooltip
@@ -1543,43 +1541,39 @@ export const ConversationAccordion = ({
 				</Stack>
 
 				{/* Select All Confirmation Modal */}
-				{ENABLE_CHAT_SELECT_ALL && (
-					<SelectAllConfirmationModal
-						opened={selectAllModalOpened}
-						onClose={handleSelectAllModalClose}
-						onExitTransitionEnd={handleModalExitTransitionEnd}
-						onConfirm={handleSelectAllConfirm}
-						totalCount={remainingCount}
-						hasFilters={hasActiveFilters}
-						isLoading={selectAllLoading}
-						existingContextCount={conversationsInContext.size}
-						filterNames={selectedTagNames}
-						hasVerifiedOutcomesFilter={showOnlyVerified}
-						searchText={debouncedConversationSearchValue || undefined}
-						result={
-							selectAllResult
-								? {
-										added: selectAllResult.added,
-										contextLimitReached: selectAllResult.context_limit_reached,
-										skipped: selectAllResult.skipped,
-									}
-								: null
-						}
-					/>
-				)}
+				<SelectAllConfirmationModal
+					opened={selectAllModalOpened}
+					onClose={handleSelectAllModalClose}
+					onExitTransitionEnd={handleModalExitTransitionEnd}
+					onConfirm={handleSelectAllConfirm}
+					totalCount={remainingCount}
+					hasFilters={hasActiveFilters}
+					isLoading={selectAllLoading}
+					existingContextCount={conversationsInContext.size}
+					filterNames={selectedTagNames}
+					hasVerifiedOutcomesFilter={showOnlyVerified}
+					searchText={debouncedConversationSearchValue || undefined}
+					result={
+						selectAllResult
+							? {
+									added: selectAllResult.added,
+									contextLimitReached: selectAllResult.context_limit_reached,
+									skipped: selectAllResult.skipped,
+								}
+							: null
+					}
+				/>
 
 				{/* Add Tag Filter Modal */}
-				{ENABLE_CHAT_SELECT_ALL && (
-					<AddTagFilterModal
-						opened={addTagFilterModalOpened}
-						onClose={addTagFilterModalHandlers.close}
-						onExitTransitionEnd={handleTagFilterModalExitTransitionEnd}
-						onConfirm={handleAddTagFilter}
-						tagName={
-							(selectedTagForFilter?.project_tag_id as ProjectTag)?.text ?? ""
-						}
-					/>
-				)}
+				<AddTagFilterModal
+					opened={addTagFilterModalOpened}
+					onClose={addTagFilterModalHandlers.close}
+					onExitTransitionEnd={handleTagFilterModalExitTransitionEnd}
+					onConfirm={handleAddTagFilter}
+					tagName={
+						(selectedTagForFilter?.project_tag_id as ProjectTag)?.text ?? ""
+					}
+				/>
 			</Accordion.Panel>
 		</Accordion.Item>
 	);

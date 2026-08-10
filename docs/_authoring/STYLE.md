@@ -4,8 +4,10 @@ Read `FACTS.md` first for what is true. This file is HOW to write it.
 
 ## Brand voice
 - Always lowercase *dembrane* - even at the start of a sentence/heading.
-- "ECHO" is the old platform-feature name. *Avoid it.* Say "dembrane", "the dashboard",
-  "the portal", "the recorder". Only mention ECHO once, in passing, if disambiguating.
+- "ECHO" is the legacy platform name. *Avoid it.* Say "dembrane", "the dashboard",
+  "the portal", "the recorder". The single "formerly ECHO" note lives on `docs/README.md`;
+  don't add more. Exception: the participant record button is still labelled "ECHO" in the
+  portal UI, so a page describing that button matches the UI.
 - Tone: approachable, grounded, human. 80% Everyman, 20% Explorer (IKEA meets Patagonia).
   Plain language, short sentences. Respect the reader's intelligence; never hype.
 - Core belief to echo where natural: *PEOPLE KNOW HOW* - dembrane surfaces the

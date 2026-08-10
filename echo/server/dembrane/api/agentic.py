@@ -5,7 +5,7 @@ import json
 import time
 import asyncio
 from uuid import uuid4
-from typing import Any, Literal, Optional, AsyncIterator
+from typing import Any, Literal, Optional, NamedTuple, AsyncIterator
 from logging import getLogger
 from datetime import datetime, timezone
 from contextlib import suppress
@@ -18,6 +18,7 @@ from dembrane.service import chat_service, project_service, agentic_run_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.chat_utils import generate_title
+from dembrane.agentic_focus import format_focus_block
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.methodologies import list_visible_methodologies
 from dembrane.project_goals import list_project_goal_revisions, get_current_project_goal_content
@@ -25,6 +26,7 @@ from dembrane.agentic_worker import (
     AGENT_CANCELLED_MESSAGE,
     AGENT_CANCELLED_ERROR_CODE,
     process_agentic_run,
+    build_run_failure_payload,
 )
 from dembrane.canvas.history import build_canvas_history
 from dembrane.canvas.service import (
@@ -66,15 +68,22 @@ _ACTIVE_RUN_TASKS: dict[tuple[str, int], asyncio.Task[None]] = {}
 _ACTIVE_RUN_TASKS_LOCK = asyncio.Lock()
 
 
+# A turn is a typed question, not a document upload: hosts attach conversations
+# for bulk text. Bounding it keeps a single request from dominating the prompt
+# and caps the work every later turn does replaying it. Generous enough that no
+# real question comes close.
+MAX_AGENTIC_MESSAGE_LENGTH = 32_000
+
+
 class AgenticCreateRunSchema(BaseModel):
     project_id: str = Field(..., min_length=1)
     project_chat_id: Optional[str] = None
-    message: str = Field(..., min_length=1)
+    message: str = Field(..., min_length=1, max_length=MAX_AGENTIC_MESSAGE_LENGTH)
     language: str = Field(default="en", min_length=1)
 
 
 class AgenticAppendMessageSchema(BaseModel):
-    message: str = Field(..., min_length=1)
+    message: str = Field(..., min_length=1, max_length=MAX_AGENTIC_MESSAGE_LENGTH)
     language: str = Field(default="en", min_length=1)
 
 
@@ -356,41 +365,91 @@ async def _get_workspace_context_for_project(project: dict[str, Any]) -> Optiona
     return _to_non_empty_string(workspace.get("context"))
 
 
-def _format_focused_conversations(focused: list[dict[str, str]]) -> str:
-    labels = ", ".join(
-        f"{item['name']} ({item['id']})" if item.get("name") else item["id"]
-        for item in focused
-    )
-    return (
-        "The user wants you to focus on these conversations: "
-        f"{labels}. Prioritize them when gathering context."
-    )
-
-
 def _build_followup_agent_prompt_content(
     user_message: str,
     focused_conversations: list[dict[str, str]],
 ) -> str:
-    return (
-        f"{_format_focused_conversations(focused_conversations)}\n\n"
-        f"User Message: {user_message.strip()}"
-    )
+    return f"{format_focus_block(focused_conversations)}\n\nUser Message: {user_message.strip()}"
 
 
-def _get_focused_conversations(project_chat_id: Optional[str]) -> list[dict[str, str]]:
+def _raise_if_chat_project_mismatch(chat: dict[str, Any], project_id: Optional[str]) -> None:
+    """Reject a caller-supplied chat that isn't in the project we authorized.
+
+    Same guard (and same 400 shape) as chat.py::_raise_if_project_mismatch, for
+    the same reason: every chat read here runs on the ADMIN Directus client, so
+    row ACL cannot catch a chat id from another tenant. Without this, a caller
+    authorized for project A can pass project B's chat id and have B's
+    participant names and conversation ids interpolated into their own run
+    prompt, then read them back from that run's events."""
+    if not project_id:
+        # Fail closed. A caller-supplied chat id reaches this function, so
+        # "no project to compare against" is not a reason to skip the check,
+        # it is a reason to refuse: the run row's project_id is nullable, and
+        # treating null as "allow" would hand back the hole this closes.
+        raise HTTPException(
+            status_code=400,
+            detail="project_id is required to read this chat",
+        )
+    if _to_related_id(chat.get("project_id")) != project_id:
+        raise HTTPException(
+            status_code=400,
+            detail="project_id does not match this chat",
+        )
+
+
+def _assert_chat_belongs_to_project(project_chat_id: Optional[str], project_id: str) -> None:
+    """Verify a chat id that came from the request body, before anything is
+    written against it.
+
+    This is the one place the check has to fail closed. create_run goes on to
+    persist the host's message into this chat and to rename it, so letting an
+    unreadable chat through would leave those writes running against an id
+    nobody has authorized. Reads that happen later (the focus hint) can degrade
+    quietly, because by then the id has been through here."""
+    if not project_chat_id:
+        return
+    try:
+        chat = chat_service.get_by_id_or_raise(project_chat_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Could not load chat %s to verify it for this run", project_chat_id)
+        raise HTTPException(
+            status_code=503,
+            detail="Could not verify the chat for this request. Please try again.",
+        ) from exc
+
+    _raise_if_chat_project_mismatch(chat, project_id)
+
+
+def _get_focused_conversations(
+    project_chat_id: Optional[str],
+    *,
+    project_id: str,
+) -> list[dict[str, str]]:
     """Conversations the host selected for this chat, as focus hints.
 
+    `project_id` binds the chat to the project the caller was already authorized
+    for (see _raise_if_chat_project_mismatch); a mismatch fails the request
+    closed. It is required rather than optional so a new call site cannot get an
+    unguarded read by leaving it out.
+
     Agentic never preloads transcripts or locks context rows; the selection is
-    only folded into the prompt. Failures degrade to no hint, never a failed run."""
+    only folded into the prompt."""
     if not project_chat_id:
         return []
     try:
         chat = chat_service.get_by_id_or_raise(project_chat_id, with_used_conversations=True)
     except Exception:  # noqa: BLE001
+        # Safe to degrade here: every caller-supplied chat id is verified up
+        # front by _assert_chat_belongs_to_project, so an id that reaches this
+        # point is already known to belong to the caller's project. Losing the
+        # hint is better than failing a turn the host can otherwise complete.
         logger.warning("Could not load chat %s for focus hint", project_chat_id)
         return []
 
+    _raise_if_chat_project_mismatch(chat, project_id)
+
     focused: list[dict[str, str]] = []
+    seen_conversation_ids: set[str] = set()
     for link in chat.get("used_conversations") or []:
         ref = link.get("conversation_id") if isinstance(link, dict) else None
         if not isinstance(ref, dict):
@@ -398,6 +457,17 @@ def _get_focused_conversations(project_chat_id: Optional[str]) -> list[dict[str,
         conversation_id = _to_non_empty_string(ref.get("id"))
         if not conversation_id:
             continue
+        # The chat/conversation junction has no unique constraint (see
+        # service/chat.py get_by_id_or_raise), and duplicate rows have happened,
+        # which rendered as "Alice (c1), Alice (c1), Alice (c1)". Dedupe by id,
+        # keeping the host's original order.
+        if conversation_id in seen_conversation_ids:
+            continue
+        # Soft-deleted conversations are invisible to the agent's own list tool,
+        # so telling it to prioritize one sends it after context it cannot read.
+        if ref.get("deleted_at"):
+            continue
+        seen_conversation_ids.add(conversation_id)
         focused.append(
             {
                 "id": conversation_id,
@@ -422,9 +492,7 @@ def _build_initial_agent_prompt_content(
     normalized_workspace_context = _to_non_empty_string(workspace_context) or "(none)"
     normalized_message = user_message.strip()
     focus_block = (
-        f"{_format_focused_conversations(focused_conversations)}\n\n"
-        if focused_conversations
-        else ""
+        f"{format_focus_block(focused_conversations)}\n\n" if focused_conversations else ""
     )
 
     return (
@@ -623,11 +691,16 @@ def _list_project_conversations_for_agent(
     *,
     project_id: str,
     limit: int,
+    offset: int = 0,
     conversation_id: Optional[str] = None,
     transcript_query: Optional[str] = None,
     directus_client: Any,
 ) -> dict[str, Any]:
+    # `limit` stays a per-call cap; `offset` is what turns it into a page.
+    # Without it the cap was a ceiling and rows past it were unreachable, which
+    # made any "call the list tool for the rest" guidance untrue.
     normalized_limit = max(1, min(limit, 100))
+    normalized_offset = max(0, offset)
     normalized_conversation_id = _to_non_empty_string(conversation_id)
     normalized_transcript_query = _to_non_empty_string(transcript_query)
 
@@ -647,6 +720,11 @@ def _list_project_conversations_for_agent(
 
         transcript_and_filters: list[dict[str, Any]] = [
             {"conversation_id": {"project_id": {"_eq": project_id}}},
+            # Pre-existing gap (not introduced by the focus feature): the
+            # transcript search filtered only on project, so a soft-deleted
+            # conversation's transcript stayed reachable by id even though the
+            # plain listing path below excludes it.
+            {"conversation_id": {"deleted_at": {"_null": True}}},
             {"_or": transcript_or_filters},
         ]
         if normalized_conversation_id:
@@ -654,7 +732,8 @@ def _list_project_conversations_for_agent(
                 {"conversation_id": {"id": {"_eq": normalized_conversation_id}}}
             )
 
-        chunk_limit = min(max(normalized_limit * 25, 25), 250)
+        wanted = normalized_limit + normalized_offset
+        chunk_limit = min(max(wanted * 25, 25), 1000)
         chunk_rows = directus_client.get_items(
             "conversation_chunk",
             {
@@ -693,7 +772,7 @@ def _list_project_conversations_for_agent(
                 if conversation_identifier is None:
                     continue
                 is_new_conversation = conversation_identifier not in conversations_by_id
-                if is_new_conversation and len(conversations_by_id) >= normalized_limit:
+                if is_new_conversation and len(conversations_by_id) >= wanted:
                     continue
                 existing_matches = conversations_by_id.get(conversation_identifier, {}).get(
                     "matches"
@@ -715,10 +794,13 @@ def _list_project_conversations_for_agent(
                     continue
                 conversations_by_id[conversation_identifier] = card
 
-        conversations = list(conversations_by_id.values())
+        matched = list(conversations_by_id.values())
+        conversations = matched[normalized_offset : normalized_offset + normalized_limit]
         return {
             "project_id": project_id,
             "count": len(conversations),
+            "offset": normalized_offset,
+            "has_more": len(matched) > normalized_offset + len(conversations),
             "conversations": conversations,
         }
 
@@ -745,27 +827,34 @@ def _list_project_conversations_for_agent(
                     "updated_at",
                 ],
                 "sort": "-updated_at",
-                "limit": normalized_limit,
+                # One extra row is a cheap, exact has_more: no second COUNT
+                # query, and the agent can stop paging without guessing.
+                "limit": normalized_limit + 1,
+                "offset": normalized_offset,
             }
         },
     )
 
+    normalized_rows = rows if isinstance(rows, list) else []
+    has_more = len(normalized_rows) > normalized_limit
+
     conversation_cards: list[dict[str, Any]] = []
-    if isinstance(rows, list):
-        for row in rows:
-            if not isinstance(row, dict):
-                continue
-            card = _to_agent_conversation_card(
-                row,
-                project_id=project_id,
-                fallback_project_id=project_id,
-            )
-            if card is not None:
-                conversation_cards.append(card)
+    for row in normalized_rows[:normalized_limit]:
+        if not isinstance(row, dict):
+            continue
+        card = _to_agent_conversation_card(
+            row,
+            project_id=project_id,
+            fallback_project_id=project_id,
+        )
+        if card is not None:
+            conversation_cards.append(card)
 
     return {
         "project_id": project_id,
         "count": len(conversation_cards),
+        "offset": normalized_offset,
+        "has_more": has_more,
         "conversations": conversation_cards,
     }
 
@@ -857,7 +946,22 @@ async def _list_events_after(run_id: str, after_seq: int) -> list[dict[str, Any]
     return await run_in_thread_pool(agentic_run_service.list_events, run_id, after_seq=after_seq)
 
 
-async def _latest_user_turn(run_id: str) -> Optional[tuple[int, str]]:
+class LatestUserTurn(NamedTuple):
+    """The newest user turn, with model input and host text kept apart.
+
+    `agent_prompt_content` is the assembled prompt: project context plus the
+    focus block, which is built from participant-controlled names. It is model
+    input only. `host_content` is what the host typed, and is the only part
+    that may ever be shown back to the host. Collapsing the two into one string
+    is what let a participant name leak into a safety notice.
+    """
+
+    seq: int
+    agent_message: str
+    host_message: str
+
+
+async def _latest_user_turn(run_id: str) -> Optional[LatestUserTurn]:
     event = await run_in_thread_pool(
         agentic_run_service.get_latest_event, run_id, event_type="user.message"
     )
@@ -865,16 +969,22 @@ async def _latest_user_turn(run_id: str) -> Optional[tuple[int, str]]:
         return None
 
     payload = _payload_to_dict(event.get("payload"))
-    content = payload.get("agent_prompt_content")
-    if not isinstance(content, str) or not content.strip():
-        content = payload.get("content")
-    if not isinstance(content, str) or not content.strip():
+    host_content = payload.get("content")
+    if not isinstance(host_content, str) or not host_content.strip():
+        host_content = ""
+
+    agent_message = payload.get("agent_prompt_content")
+    if not isinstance(agent_message, str) or not agent_message.strip():
+        # Legacy runs predate the assembled prompt: the host's own text was the
+        # model input.
+        agent_message = host_content
+    if not agent_message:
         return None
 
     seq = int(event.get("seq") or 0)
     if seq <= 0:
         return None
-    return seq, content
+    return LatestUserTurn(seq=seq, agent_message=agent_message, host_message=host_content)
 
 
 def _project_id_from_run(run: dict[str, Any]) -> str:
@@ -920,6 +1030,7 @@ async def _start_claimed_turn(
     project_id: str,
     turn_seq: int,
     user_message: str,
+    host_user_message: str,
     bearer_token: str,
     owner_token: str,
 ) -> None:
@@ -929,6 +1040,7 @@ async def _start_claimed_turn(
                 run_id=run_id,
                 project_id=project_id,
                 user_message=user_message,
+                host_user_message=host_user_message,
                 bearer_token=bearer_token,
                 turn_seq=turn_seq,
                 owner_token=owner_token,
@@ -978,6 +1090,23 @@ async def create_run(
 
     await _assert_project_access(body.project_id, auth)
 
+    # The chat id is caller-supplied and every read/write below it uses the admin
+    # client, so bind it to the project we just authorized before this request
+    # creates a run, writes a message, or renames anything. Fails closed: a
+    # foreign chat 400s, and a chat we cannot read at all 503s rather than
+    # proceeding unverified.
+    await run_in_thread_pool(
+        _assert_chat_belongs_to_project,
+        body.project_chat_id,
+        body.project_id,
+    )
+
+    focused_conversations = await run_in_thread_pool(
+        _get_focused_conversations,
+        body.project_chat_id,
+        project_id=body.project_id,
+    )
+
     # Matrix §8: agentic analysis is a host-side operation → Pilot hard-block.
     from dembrane.api.v2.middleware import check_no_pilot_block_for_project
 
@@ -1008,9 +1137,6 @@ async def create_run(
     project_context = _to_non_empty_string(project.get("context"))
     workspace_context = await _get_workspace_context_for_project(project)
     project_goal = await get_current_project_goal_content(body.project_id)
-    focused_conversations = await run_in_thread_pool(
-        _get_focused_conversations, body.project_chat_id
-    )
     agent_prompt_content = _build_initial_agent_prompt_content(
         project_name=project_name,
         project_context=project_context,
@@ -1025,9 +1151,7 @@ async def create_run(
         "agent_prompt_content": agent_prompt_content,
     }
     if focused_conversations:
-        event_payload["focused_conversation_ids"] = [
-            item["id"] for item in focused_conversations
-        ]
+        event_payload["focused_conversation_ids"] = [item["id"] for item in focused_conversations]
 
     await run_in_thread_pool(
         agentic_run_service.append_event,
@@ -1052,6 +1176,17 @@ async def append_message(
     run = await run_in_thread_pool(_get_run_or_404, run_id)
     _assert_run_authorized(run, auth)
 
+    # This path is authorized by run ownership alone and then reads/writes the
+    # run's chat with the admin client, so re-bind that chat to the run's own
+    # project before anything touches it. New runs can no longer be created with
+    # a foreign chat (see create_run), but runs created before that guard can
+    # still carry one.
+    focused_conversations = await run_in_thread_pool(
+        _get_focused_conversations,
+        _to_non_empty_string(run.get("project_chat_id")),
+        project_id=_to_non_empty_string(_project_id_from_run(run)),
+    )
+
     # Matrix §8: continuing an agentic analysis is a host-side operation.
     project_id = run.get("project_id")
     if project_id:
@@ -1075,18 +1210,12 @@ async def append_message(
         ):
             raise free_tier_limit_error("chat_turns")
 
-    focused_conversations = await run_in_thread_pool(
-        _get_focused_conversations,
-        _to_non_empty_string(run.get("project_chat_id")),
-    )
     event_payload: dict[str, Any] = {"content": body.message}
     if focused_conversations:
         event_payload["agent_prompt_content"] = _build_followup_agent_prompt_content(
             body.message, focused_conversations
         )
-        event_payload["focused_conversation_ids"] = [
-            item["id"] for item in focused_conversations
-        ]
+        event_payload["focused_conversation_ids"] = [item["id"] for item in focused_conversations]
 
     await run_in_thread_pool(
         agentic_run_service.append_event,
@@ -1227,9 +1356,7 @@ async def edit_project_tags_for_agent(
                     try:
                         await async_directus.delete_item("conversation_project_tag", jid)
                     except Exception:  # noqa: BLE001
-                        logger.exception(
-                            "conversation_project_tag cleanup failed id=%s", jid
-                        )
+                        logger.exception("conversation_project_tag cleanup failed id=%s", jid)
         await async_directus.delete_item("project_tag", tag_id)
         removed.append(str(row.get("text") or text))
 
@@ -1248,6 +1375,7 @@ async def list_project_conversations(
     project_id: str,
     auth: DependencyDirectusSession,
     limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     conversation_id: Optional[str] = Query(default=None),
     transcript_query: Optional[str] = Query(default=None),
 ) -> dict[str, Any]:
@@ -1264,10 +1392,57 @@ async def list_project_conversations(
         _list_project_conversations_for_agent,
         project_id=project_id,
         limit=limit,
+        offset=offset,
         conversation_id=conversation_id,
         transcript_query=transcript_query,
         directus_client=directus,
     )
+
+
+@AgenticRouter.get("/projects/{project_id}/focused-conversations")
+async def list_focused_conversations_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+    project_chat_id: str = Query(...),
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> dict[str, Any]:
+    """The conversations the host focused THIS chat on, paginated.
+
+    The focus block in the prompt is size-bounded, so on a large selection it
+    lists a head and points here for the rest. The project-wide conversation
+    list cannot answer this: it returns everything in the project and has no
+    idea which rows the host picked.
+
+    Authorization is unchanged from every other agent read: the agent token,
+    project access, and then the chat/project binding, which is enforced inside
+    _get_focused_conversations rather than around it so this route cannot get
+    an unguarded read.
+    """
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    await run_in_thread_pool(
+        _assert_chat_belongs_to_project,
+        project_chat_id,
+        project_id,
+    )
+
+    focused = await run_in_thread_pool(
+        _get_focused_conversations,
+        project_chat_id,
+        project_id=project_id,
+    )
+
+    page = focused[offset : offset + limit]
+    return {
+        "project_id": project_id,
+        "project_chat_id": project_chat_id,
+        "total": len(focused),
+        "count": len(page),
+        "offset": offset,
+        "has_more": len(focused) > offset + len(page),
+        "conversations": page,
+    }
 
 
 @AgenticRouter.get("/projects/{project_id}/monitor")
@@ -1543,6 +1718,197 @@ async def retract_agent_insight(
     )
     updated = await _get_agent_insight_or_404(insight_id)
     return _agent_insight_payload(updated)
+
+
+@AgenticRouter.post("/insights/{insight_id}/dismiss")
+async def dismiss_agent_insight(
+    insight_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Hide a noted insight from the host's chat. Host-callable (no agent token):
+    this is the host clearing their own view, not the assistant withdrawing a
+    note. The row is never deleted, status moves to archived, because the
+    dembrane team may already have read it."""
+    insight = await _get_agent_insight_or_404(insight_id)
+    project_id = _to_related_id(insight.get("project_id"))
+    if not project_id:
+        raise HTTPException(status_code=404, detail="Insight not found")
+    await _assert_project_access(project_id, auth)
+
+    await async_directus.update_item("agent_insight", insight_id, {"status": "archived"})
+    updated = await _get_agent_insight_or_404(insight_id)
+    return _agent_insight_payload(updated)
+
+
+@AgenticRouter.get("/projects/{project_id}/dismissed-insights")
+async def list_dismissed_agent_insights(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Ids of insights the host dismissed in this project, so a reloaded chat
+    keeps showing them as removed. Insight cards are rendered from replayed run
+    events, which never carry the row's current status."""
+    await _assert_project_access(project_id, auth)
+
+    rows = await async_directus.get_items(
+        "agent_insight",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                    "status": {"_eq": "archived"},
+                },
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    )
+    ids = (
+        [row["id"] for row in rows if isinstance(row, dict) and row.get("id")]
+        if isinstance(rows, list)
+        else []
+    )
+    return {"project_id": project_id, "insight_ids": ids}
+
+
+@AgenticRouter.get("/projects/{project_id}/insights")
+async def list_agent_insights(
+    project_id: str,
+    auth: DependencyDirectusSession,
+    chat_id: Optional[str] = None,
+) -> dict[str, Any]:
+    """Insights already sent to the dembrane team in this project, optionally
+    scoped to one chat.
+
+    The assistant only drafts an insight; the host sends it. Cards replay from
+    run events that carry no row, so without this a reloaded card cannot tell a
+    draft from something already sent, and the host could send it twice."""
+    await _assert_project_access(project_id, auth)
+
+    query_filter: dict[str, Any] = {"project_id": {"_eq": project_id}}
+    if chat_id:
+        query_filter["chat_id"] = {"_eq": chat_id}
+
+    rows = await async_directus.get_items(
+        "agent_insight",
+        {
+            "query": {
+                "filter": query_filter,
+                "fields": [
+                    "id",
+                    "kind",
+                    "content",
+                    "suggested_capability",
+                    "chat_id",
+                    "message_id",
+                    "status",
+                ],
+                "limit": -1,
+            }
+        },
+    )
+    insights = (
+        [row for row in rows if isinstance(row, dict) and row.get("id")]
+        if isinstance(rows, list)
+        else []
+    )
+    return {"project_id": project_id, "insights": insights}
+
+
+# Reports are a host's deliverable, and until now the assistant could not see one.
+# It would describe the Report page while being unable to say what was on it, and
+# would happily propose work the host had already published. These two reads close
+# that gap. Both are read-only; nothing here creates or regenerates a report.
+#
+# `kind` is filtered explicitly because a canvas is also a project_report row
+# (kind='canvas'), and the host-facing list endpoints omit that filter, so canvases
+# surface there as untitled reports. Do not copy that omission.
+REPORT_LIST_FIELDS = [
+    "id",
+    "status",
+    "date_created",
+    "language",
+    "user_instructions",
+]
+
+REPORT_VISIBLE_STATUSES = ["published", "scheduled", "draft", "archived"]
+
+
+def _report_title(content: Optional[str]) -> Optional[str]:
+    """First markdown H1, which is how the dashboard titles a report."""
+    for line in (content or "").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            return stripped[2:].strip() or None
+    return None
+
+
+@AgenticRouter.get("/projects/{project_id}/reports")
+async def list_project_reports_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Reports in this project, newest first, without their content.
+
+    Content is deliberately omitted: a report is long, and listing five of them
+    would crowd out everything else in the turn. Read one by id when the host is
+    actually talking about it."""
+    await _assert_project_access(project_id, auth)
+
+    rows = await async_directus.get_items(
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
+                    "status": {"_in": REPORT_VISIBLE_STATUSES},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": REPORT_LIST_FIELDS,
+                "sort": "-date_created",
+                "limit": 20,
+            }
+        },
+    )
+    reports = (
+        [row for row in rows if isinstance(row, dict) and row.get("id") is not None]
+        if isinstance(rows, list)
+        else []
+    )
+    return {"project_id": project_id, "reports": reports}
+
+
+@AgenticRouter.get("/projects/{project_id}/reports/{report_id}")
+async def get_project_report_for_agent(
+    project_id: str,
+    report_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """One report, with its content and the instructions that shaped it."""
+    await _assert_project_access(project_id, auth)
+
+    rows = await async_directus.get_items(
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "id": {"_eq": report_id},
+                    "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": [*REPORT_LIST_FIELDS, "content"],
+                "limit": 1,
+            }
+        },
+    )
+    report = rows[0] if isinstance(rows, list) and rows else None
+    if not isinstance(report, dict):
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    report["title"] = _report_title(report.get("content"))
+    return report
 
 
 async def _resolve_workspace_id_for_project(project_id: str) -> Optional[str]:
@@ -2126,7 +2492,7 @@ async def stream_run(
     if run.get("status") == "queued":
         latest_turn = await _latest_user_turn(run_id)
         if latest_turn is not None:
-            turn_seq, user_message = latest_turn
+            turn_seq = latest_turn.seq
             project_id = _project_id_from_run(run)
             if not project_id:
                 raise HTTPException(status_code=500, detail="Run is missing project reference")
@@ -2143,7 +2509,8 @@ async def stream_run(
                     run_id=run_id,
                     project_id=project_id,
                     turn_seq=turn_seq,
-                    user_message=user_message,
+                    user_message=latest_turn.agent_message,
+                    host_user_message=latest_turn.host_message,
                     bearer_token=token,
                     owner_token=owner_token,
                 )
@@ -2169,7 +2536,7 @@ async def stop_run(run_id: str, auth: DependencyDirectusSession) -> dict[str, An
     if latest_turn is None:
         raise HTTPException(status_code=409, detail="No active turn to stop")
 
-    turn_seq, _ = latest_turn
+    turn_seq = latest_turn.seq
     await request_cancel(run_id, turn_seq)
 
     task = await _get_active_task(run_id, turn_seq)
@@ -2192,10 +2559,7 @@ async def stop_run(run_id: str, auth: DependencyDirectusSession) -> dict[str, An
             agentic_run_service.append_event,
             run_id,
             "run.failed",
-            {
-                "error_code": AGENT_CANCELLED_ERROR_CODE,
-                "message": AGENT_CANCELLED_MESSAGE,
-            },
+            build_run_failure_payload(AGENT_CANCELLED_ERROR_CODE),
         )
         try:
             await publish_live_event(run_id, json.dumps(event, default=str))
@@ -2299,6 +2663,10 @@ async def _stream_live_events(run_id: str, after_seq: int) -> AsyncIterator[str]
                         event = None
 
                     if isinstance(event, dict):
+                        if event.get("event_type") == "assistant.draft":
+                            # Ephemeral: forwarded live, never replayed, no cursor.
+                            yield f"event: assistant.draft\ndata: {live_payload}\n\n"
+                            continue
                         seq = int(event.get("seq") or 0)
                         if seq > cursor:
                             cursor = seq

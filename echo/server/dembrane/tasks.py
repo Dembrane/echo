@@ -1,4 +1,5 @@
 # ruff: noqa: E402
+import json
 import logging
 from typing import Any, Optional
 from logging import getLogger
@@ -24,6 +25,7 @@ from dramatiq.results.backends.redis import RedisBackend as ResultsRedisBackend
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.sentry import init_sentry
+from dembrane.service import agentic_run_service
 from dembrane.directus import (
     DirectusBadRequest,
     DirectusServerError,
@@ -32,6 +34,7 @@ from dembrane.directus import (
 from dembrane.settings import get_settings
 from dembrane.transcribe import transcribe_conversation_chunk
 from dembrane.async_helpers import run_async_in_new_loop
+from dembrane.agentic_runtime import publish_live_event, get_turn_lease_owner
 from dembrane.conversation_utils import (
     collect_unfinished_conversations,
     collect_unsummarized_conversations,
@@ -315,6 +318,7 @@ def task_finalize_conversation(conversation_id: str) -> None:
         mark_finalize_in_progress,
         cleanup_conversation_coordination,
     )
+    from dembrane.service.conversation import ConversationNotFoundException
 
     try:
         logger.info(f"Finalizing conversation: {conversation_id}")
@@ -393,6 +397,13 @@ def task_finalize_conversation(conversation_id: str) -> None:
         logger.info(f"Conversation {conversation_id} finalization complete")
         return
 
+    except ConversationNotFoundException:
+        logger.info(f"Conversation not found: {conversation_id}, skipping finalization")
+        try:
+            cleanup_conversation_coordination(conversation_id)
+        except Exception:
+            pass
+        return
     except Exception as e:
         logger.error(f"Error finalizing conversation {conversation_id}: {e}")
         raise
@@ -579,8 +590,13 @@ def _stamp_over_cap(conversation_id: str, logger: Any) -> None:
     from dembrane.service import project_service, conversation_service
     from dembrane.directus import directus, directus_client_context
     from dembrane.tier_capacity import compute_is_over_cap
+    from dembrane.service.conversation import ConversationNotFoundException
 
-    conversation = conversation_service.get_by_id_or_raise(conversation_id)
+    try:
+        conversation = conversation_service.get_by_id_or_raise(conversation_id)
+    except ConversationNotFoundException:
+        logger.warning(f"Conversation {conversation_id} not found, skipping over-cap stamp")
+        return
     project_id = conversation.get("project_id")
     if not project_id:
         logger.warning(f"Conversation {conversation_id} has no project_id, skipping stamp")
@@ -766,6 +782,7 @@ def task_process_conversation_chunk(
     try:
         from dembrane.service import conversation_service
         from dembrane.coordination import increment_pending_chunks
+        from dembrane.service.conversation import ConversationNotFoundException
 
         chunk = conversation_service.get_chunk_by_id_or_raise(chunk_id)
         conversation_id = chunk["conversation_id"]
@@ -818,6 +835,11 @@ def task_process_conversation_chunk(
 
         return
 
+    except ConversationNotFoundException:
+        logger.info(
+            f"Conversation not found for chunk {chunk_id} (likely deleted), skipping chunk processing"
+        )
+        return
     except Exception as e:
         from dembrane.audio_utils import FileTooSmallError
 
@@ -966,6 +988,7 @@ def task_compute_conversation_token_count(conversation_id: str) -> None:
     from dembrane.service import conversation_service
     from dembrane.api.conversation import get_conversation_token_count
     from dembrane.api.dependency_auth import DirectusSession
+    from dembrane.service.conversation import ConversationNotFoundException
 
     try:
         conversation = conversation_service.get_by_id_or_raise(conversation_id)
@@ -975,6 +998,9 @@ def task_compute_conversation_token_count(conversation_id: str) -> None:
         session = DirectusSession(user_id="task_compute_conversation_token_count", is_admin=True)
         count = run_async_in_new_loop(get_conversation_token_count(conversation_id, session))
         logger.info(f"Warmed token_count={count} for conversation {conversation_id}")
+    except ConversationNotFoundException:
+        logger.info(f"Conversation not found: {conversation_id}, skipping token count warm-up")
+        return
     except Exception as e:  # noqa: BLE001 - warm-up must never break the pipeline
         logger.warning(f"Failed to warm token_count for {conversation_id}: {e}")
 
@@ -3016,6 +3042,105 @@ def _resolve_app_user_id_for_directus_user_id(directus_user_id: object) -> Optio
         return None
     app_user_id = rows[0].get("id")
     return str(app_user_id) if app_user_id else None
+
+
+ABANDONED_AGENTIC_RUN_QUIET_SECONDS = 5 * 60
+AGENT_ABANDONED_ERROR_CODE = "AGENT_ABANDONED"
+AGENT_ABANDONED_MESSAGE = "This run stopped before it finished. Please send your message again."
+
+
+def _agentic_run_looks_alive(run_id: str, quiet_cutoff: datetime) -> bool:
+    """Two independent liveness signals, cheapest first.
+
+    Age is deliberately not one of them: nothing caps a turn's wall-clock time,
+    so an hour-old run can still be healthy.
+    """
+    latest_event = agentic_run_service.get_latest_event(run_id)
+    if latest_event is not None:
+        timestamp = _parse_iso(latest_event.get("timestamp"))
+        if timestamp is not None and timestamp > quiet_cutoff:
+            return True
+
+    # Quiet for a while: a long tool call persists nothing, so fall back to the
+    # turn lease, which the executor refreshes for as long as it lives.
+    turn = agentic_run_service.get_latest_event(run_id, event_type="user.message")
+    turn_seq = int(turn.get("seq") or 0) if turn else 0
+    if turn_seq <= 0:
+        return False
+
+    owner = run_async_in_new_loop(lambda: get_turn_lease_owner(run_id, turn_seq))
+    return owner is not None
+
+
+def _fail_abandoned_agentic_run(run_id: str) -> bool:
+    """Force the same terminal shape the worker's own failure path produces, so
+    the chat settles instead of showing "working" until a reload."""
+    run = agentic_run_service.get_by_id_or_raise(run_id)
+    if run.get("status") != "running":
+        return False
+
+    event = agentic_run_service.append_event(
+        run_id,
+        "run.failed",
+        {
+            "error_code": AGENT_ABANDONED_ERROR_CODE,
+            "message": AGENT_ABANDONED_MESSAGE,
+        },
+    )
+    try:
+        run_async_in_new_loop(
+            lambda: publish_live_event(run_id, json.dumps(event, default=str))
+        )
+    except Exception:
+        logger.warning("failed to publish abandon event for run %s", run_id, exc_info=True)
+
+    agentic_run_service.set_status(
+        run_id,
+        "failed",
+        latest_error=AGENT_ABANDONED_MESSAGE,
+        latest_error_code=AGENT_ABANDONED_ERROR_CODE,
+    )
+    return True
+
+
+@dramatiq.actor(queue_name="network", priority=40)
+def task_fail_abandoned_agentic_runs() -> None:
+    """Terminate agentic runs whose executor died mid-turn.
+
+    A turn runs in-process on the API pod, not in a worker. Every exception path
+    in process_agentic_run sets a terminal status, but a pod restart or OOM kill
+    runs none of them, and reconnects only re-drive `queued` runs. Without this
+    sweep the row stays `running` forever and the chat never settles.
+    """
+    task_logger = getLogger("dembrane.tasks.task_fail_abandoned_agentic_runs")
+    quiet_cutoff = get_utc_timestamp() - timedelta(seconds=ABANDONED_AGENTIC_RUN_QUIET_SECONDS)
+
+    with directus_client_context() as client:
+        running = client.get_items(
+            "project_agentic_run",
+            {
+                "query": {
+                    "filter": {"status": {"_eq": "running"}},
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
+
+    if not isinstance(running, list) or not running:
+        return
+
+    for row in running:
+        run_id = str(row.get("id") or "")
+        if not run_id:
+            continue
+        try:
+            if _agentic_run_looks_alive(run_id, quiet_cutoff):
+                continue
+            if _fail_abandoned_agentic_run(run_id):
+                task_logger.info("failed abandoned agentic run %s", run_id)
+        except Exception:
+            task_logger.warning("could not sweep agentic run %s", run_id, exc_info=True)
 
 
 @dramatiq.actor(queue_name="network", priority=100)
