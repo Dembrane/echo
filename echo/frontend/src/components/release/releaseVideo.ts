@@ -1,4 +1,4 @@
-import { RELEASES, type Release } from "./releases";
+import { getReleases, type Release } from "./releases";
 
 /**
  * Flat key under `app_user.settings` holding the last release the user
@@ -12,9 +12,14 @@ import { RELEASES, type Release } from "./releases";
  */
 export const RELEASE_VIDEO_SEEN_KEY = "release_video_seen";
 
-/** The release the modal shows, or undefined if the history is empty. */
+/**
+ * The release the modal shows, or undefined if the history is empty.
+ *
+ * The default evaluates per call (default params re-run each time), which is
+ * what lets getReleases() resolve its `t` strings against the active locale.
+ */
 export const latestRelease = (
-	releases: Release[] = RELEASES,
+	releases: Release[] = getReleases(),
 ): Release | undefined => releases[0];
 
 /**

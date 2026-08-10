@@ -1,5 +1,4 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
 import { Modal, Stack } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useId, useState } from "react";
@@ -7,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
-import { API_BASE_URL, CHANGELOG_DOCS_URL } from "@/config";
+import { API_BASE_URL } from "@/config";
 import { usePrefersReducedMotion } from "@/features/sidebar/animations/motion";
 import { useV2Me } from "@/hooks/useV2Me";
 import styles from "./ReleaseVideoModal.module.css";
@@ -22,9 +21,12 @@ import {
  * The release video modal: one video, one title, one description, shown once
  * per release.
  *
- * It renders RELEASES[0] and nothing else. Earlier releases are reachable from
- * the changelog on docs.dembrane.com rather than by scrolling here, so the
- * modal stays a single thing to look at and then dismiss.
+ * It renders getReleases()[0] and nothing else. There is no history to scroll,
+ * so the modal stays a single thing to look at and then dismiss.
+ *
+ * Every line of copy comes off that release object (header line, title,
+ * description, closing note); none of it is written here. Shipping a release is
+ * an edit to releases.ts plus the usual translation pass.
  *
  * Mounted in HelpBlock, next to the "What's new" button that reopens it, so the
  * one piece of shared state stays local. HelpBlock renders for every signed-in
@@ -44,8 +46,9 @@ import {
  * that it only comes back when the user asks for it from the sidebar's
  * "What's new".
  *
- * Typography is held to exactly two combinations, both defined in the adjacent
- * stylesheet. Nothing here sets a font size, weight, colour or style.
+ * Typography is held to two combinations, both defined in the adjacent
+ * stylesheet: the two titles at one size, the copy below them at the other.
+ * Nothing here sets a font size, weight, colour or style.
  */
 interface ReleaseVideoModalProps {
 	/** Set by the sidebar's "What's new", which ignores the seen gate. */
@@ -126,14 +129,22 @@ export const ReleaseVideoModal = ({
 				aria-labelledby={titleId}
 				styles={{ content: { backgroundColor: "var(--app-background)" } }}
 			>
-				<Modal.Header style={{ backgroundColor: "var(--app-background)" }}>
+				<Modal.Header
+					style={{
+						backgroundColor: "var(--app-background)",
+						padding: "1.5rem 2rem 1rem",
+					}}
+				>
+					<Modal.Title className={styles.headerTitle}>
+						{release.headerTitle}
+					</Modal.Title>
 					<Modal.CloseButton
 						aria-label={t`Close and go to dembrane`}
 						className={styles.closeButton}
 						size="lg"
 					/>
 				</Modal.Header>
-				<Modal.Body>
+				<Modal.Body style={{ padding: "0 2rem 2rem" }}>
 					<Stack gap="lg">
 						{embedUrl ? (
 							<div className={styles.videoFrame}>
@@ -166,14 +177,9 @@ export const ReleaseVideoModal = ({
 							</ReactMarkdown>
 						</div>
 
-						<a
-							className={`${styles.body} ${styles.link}`}
-							href={CHANGELOG_DOCS_URL}
-							rel="noopener noreferrer"
-							target="_blank"
-						>
-							<Trans>see earlier releases</Trans>
-						</a>
+						<p className={styles.note}>
+							{release.note}
+						</p>
 					</Stack>
 				</Modal.Body>
 			</Modal.Content>
