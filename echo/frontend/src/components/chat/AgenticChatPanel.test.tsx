@@ -672,44 +672,4 @@ describe("enrichAgenticContent, footnote citations", () => {
 		expect(enriched).toContain("#chunk-chunk-9");
 		expect(enriched).not.toContain("conversation_id:");
 	});
-
-	// The markdown renderer moves footnote definitions into its own trailing
-	// section with its own localised header, so a model-written header would
-	// stay behind as an empty duplicate above it. "*Sources*" is verbatim what
-	// production stored (chat 57493241, 2026-08-10); the rest are the forms
-	// the prompt's wording could plausibly produce.
-	it.each([
-		"*Sources*",
-		"## Sources",
-		"**Sources**",
-		"Sources:",
-		"### Footnotes",
-	])(
-		"strips a redundant %s header above the footnote definitions",
-		(header) => {
-			const enriched = enrich(
-				`Parking came up often[^1].\n\n${header}\n\n[^1]: [conversation_id:${CONVERSATION_ID}]`,
-			);
-
-			expect(enriched).not.toMatch(/sources|footnotes/i);
-			// The definition keeps a blank line above it: a footnote definition
-			// cannot interrupt a paragraph, so gluing would demote it to text.
-			expect(enriched).toContain("\n\n[^1]: [Maria's conversation](");
-		},
-	);
-
-	it("strips the header even when the model skips the blank line under it", () => {
-		const enriched = enrich(
-			`Parking came up often[^1].\n## Sources\n[^1]: [conversation_id:${CONVERSATION_ID}]`,
-		);
-
-		expect(enriched).not.toContain("Sources");
-		expect(enriched).toContain("\n\n[^1]: [Maria's conversation](");
-	});
-
-	it("leaves a Sources heading alone when no footnote definitions follow", () => {
-		const content = "## Sources\n\nWe drew on three interviews.";
-
-		expect(enrich(content)).toBe(content);
-	});
 });

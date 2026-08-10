@@ -191,18 +191,6 @@ const AGENTIC_REFERENCE_LIST_PATTERN = /\[conversation_ids?:\s*([^\]]+)\]/g;
 
 const LOOKS_LIKE_ID_PATTERN = /^[0-9a-f][0-9a-f-]{7,}$/i;
 
-// A "Sources"/"Footnotes" heading the model wrote above its footnote
-// definitions. The markdown renderer moves the definitions into its own
-// trailing section with its own heading, so the model's heading would remain
-// behind as an empty duplicate. Matched only when footnote definitions follow,
-// so an ordinary paragraph titled "Sources" is left alone. Messages persisted
-// before the prompt stopped asking for this header still carry it.
-// Replaced with "\n\n" so the definitions keep a blank line above them: a
-// footnote definition cannot interrupt a paragraph, so gluing it to the
-// previous line would demote it to literal text.
-const REDUNDANT_FOOTNOTE_HEADER_PATTERN =
-	/(?:^|\n)[ \t]*(?:#{1,6}[ \t]+)?\*{0,2}(?:sources|footnotes)\*{0,2}:?[ \t]*\n(?:[ \t]*\n)*(?=[ \t]*\[\^[^\]]+\]:)/gi;
-
 export const MAX_AGENTIC_MESSAGE_LENGTH = 32000;
 
 // A failed run tells us a code, never prose: the server deliberately withholds
@@ -290,7 +278,6 @@ export const enrichAgenticContent = ({
 	};
 
 	return content
-		.replace(REDUNDANT_FOOTNOTE_HEADER_PATTERN, "\n\n")
 		.replace(
 			AGENTIC_REFERENCE_PATTERN,
 			(_match, conversationIdRaw: string, chunkIdRaw?: string) =>
