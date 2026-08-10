@@ -26,21 +26,37 @@ import {
  * the changelog on docs.dembrane.com rather than by scrolling here, so the
  * modal stays a single thing to look at and then dismiss.
  *
- * Mounted in BaseLayout as a sibling of the Toaster, inside the layout's
- * TransitionCurtainProvider. It refuses to paint while that curtain is active,
- * which covers the in-app transitions (theme change, sign out) that run in this
- * provider. Note that the LOGIN curtain belongs to a different provider
- * instance inside AuthLayout, and AuthLayout unmounts on the post-login
- * navigate, so there is no overlap to guard against there.
+ * Mounted in HelpBlock, next to the "What's new" button that reopens it, so the
+ * one piece of shared state stays local. HelpBlock renders for every signed-in
+ * user and survives a collapsed sidebar (SidebarShell keeps its children
+ * mounted at width 0), which is what the automatic showing needs.
+ *
+ * It sits inside BaseLayout's TransitionCurtainProvider and refuses to paint
+ * while that curtain is active, which covers the in-app transitions (theme
+ * change, sign out) that run in this provider. Note that the LOGIN curtain
+ * belongs to a different provider instance inside AuthLayout, and AuthLayout
+ * unmounts on the post-login navigate, so there is no overlap to guard against
+ * there.
  *
  * Dismissing is the whole interaction: click the backdrop, press escape, or hit
  * the close button, and the newest version is written to app_user.settings.
- * Seen means dismissed, not watched, so no YouTube Player API is loaded.
+ * Seen means dismissed, not watched, so no YouTube Player API is loaded. After
+ * that it only comes back when the user asks for it from the sidebar's
+ * "What's new".
  *
  * Typography is held to exactly two combinations, both defined in the adjacent
  * stylesheet. Nothing here sets a font size, weight, colour or style.
  */
-export const ReleaseVideoModal = () => {
+interface ReleaseVideoModalProps {
+	/** Set by the sidebar's "What's new", which ignores the seen gate. */
+	requested?: boolean;
+	onRequestedClose?: () => void;
+}
+
+export const ReleaseVideoModal = ({
+	requested = false,
+	onRequestedClose,
+}: ReleaseVideoModalProps) => {
 	const { isAuthenticated } = useAuthenticated();
 	const { isActive: curtainIsActive } = useTransitionCurtain();
 	const { data: me, isSuccess } = useV2Me({ enabled: isAuthenticated });
@@ -76,18 +92,20 @@ export const ReleaseVideoModal = () => {
 	});
 
 	const opened =
-		isAuthenticated &&
-		isSuccess &&
-		!curtainIsActive &&
-		!dismissed &&
 		release !== undefined &&
-		shouldShowReleaseVideo(
-			me?.settings?.[RELEASE_VIDEO_SEEN_KEY],
-			release.version,
-		);
+		!curtainIsActive &&
+		(requested ||
+			(isAuthenticated &&
+				isSuccess &&
+				!dismissed &&
+				shouldShowReleaseVideo(
+					me?.settings?.[RELEASE_VIDEO_SEEN_KEY],
+					release.version,
+				)));
 
 	const close = () => {
 		setDismissed(true);
+		onRequestedClose?.();
 		if (release) markSeen.mutate(release.version);
 	};
 
@@ -103,13 +121,10 @@ export const ReleaseVideoModal = () => {
 			size="lg"
 			transitionProps={{ duration: prefersReducedMotion ? 0 : 200 }}
 		>
-			<Modal.Overlay
-				backgroundOpacity={0.55}
-				blur={prefersReducedMotion ? 0 : 8}
-			/>
+			<Modal.Overlay backgroundOpacity={0.6} />
 			<Modal.Content
 				aria-labelledby={titleId}
-				style={{ backgroundColor: "var(--app-background)" }}
+				styles={{ content: { backgroundColor: "var(--app-background)" } }}
 			>
 				<Modal.Header style={{ backgroundColor: "var(--app-background)" }}>
 					<Modal.CloseButton

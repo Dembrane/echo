@@ -36,15 +36,8 @@ export interface Release {
 }
 
 export const RELEASES: Release[] = [
-	// ---------------------------------------------------------------------
-	// PLACEHOLDER ENTRY. The video below is Blender's Big Buck Bunny, not a
-	// dembrane video. It is here so the whole flow can be exercised before the
-	// real recording exists.
-	//
-	// TO SWAP: replace `videoUrl` with the real YouTube link, and edit `title`
-	// and `description`. Leave `version` alone unless you want everyone who has
-	// already dismissed this modal to see it again.
-	// ---------------------------------------------------------------------
+	// Leave `version` alone unless you want everyone who has already dismissed
+	// this modal to see it again.
 	{
 		description: [
 			"A short walkthrough of what changed in dembrane this month.",
@@ -57,6 +50,6 @@ export const RELEASES: Release[] = [
 		].join("\n"),
 		title: "what's new in dembrane",
 		version: "2026-08",
-		videoUrl: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+		videoUrl: "https://www.youtube.com/watch?v=XSFAF3uSvMg",
 	},
 ];
