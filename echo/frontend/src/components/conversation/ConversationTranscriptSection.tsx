@@ -211,8 +211,12 @@ export const ConversationTranscriptSection = ({
 							{...testId("transcript-scroll-to-bottom")}
 						>
 							<ScrollToBottomButton
-								elementRef={bottomTargetRef}
-								isVisible={isBottomVisible}
+								visible={!isBottomVisible}
+								onClick={() =>
+									bottomTargetRef.current?.scrollIntoView({
+										behavior: "smooth",
+									})
+								}
 							/>
 						</Group>
 					) : null}

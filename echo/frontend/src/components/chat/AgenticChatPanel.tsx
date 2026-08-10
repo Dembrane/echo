@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Alert,
 	Box,
@@ -8,6 +8,7 @@ import {
 	Divider,
 	Group,
 	Loader,
+	Modal,
 	Paper,
 	Skeleton,
 	Stack,
@@ -23,10 +24,11 @@ import {
 	IconAlertCircle,
 	IconChevronDown,
 	IconChevronRight,
+	IconPlayerStopFilled,
 	IconSend,
 	IconSparkles,
 } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
 import {
 	type CSSProperties,
@@ -37,14 +39,32 @@ import {
 	useState,
 } from "react";
 import { useLocation } from "react-router";
-import { useChatHistory, useUpdateChatMutation } from "@/components/chat/hooks";
-import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
+import {
+	ChatComposerShell,
+	ConversationFocusChips,
+	ConversationPickerButton,
+} from "@/components/chat/ChatComposer";
+import {
+	useChatHistory,
+	useProjectChatContext,
+	useUpdateChatMutation,
+} from "@/components/chat/hooks";
 import { consumeChatPrefill } from "@/components/chat/prefill";
-import { useConversationsByProjectId } from "@/components/conversation/hooks";
+import { useStickToBottom } from "@/components/common/useStickToBottom";
+import { ConversationLinks } from "@/components/conversation/ConversationLinks";
+import {
+	useClearChatContextMutation,
+	useConversationsByProjectId,
+} from "@/components/conversation/hooks";
+import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { GoalSuggestionCard } from "@/components/goal/GoalSuggestionCard";
-import { useElementOnScreen } from "@/hooks/useElementOnScreen";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useProjectById } from "@/components/project/hooks";
+import { useVoiceTranscription } from "@/components/voice/useVoiceTranscription";
+import { VoiceInputButton } from "@/components/voice/VoiceInputButton";
+import { VoiceInputError } from "@/components/voice/VoiceInputError";
+import { VoiceRecordingBar } from "@/components/voice/VoiceRecordingBar";
+import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -57,8 +77,12 @@ import type {
 import {
 	appendAgenticRunMessage,
 	createAgenticRun,
+	createAgentInsight,
+	dismissAgentInsight,
+	getAgentInsights,
 	getAgenticRun,
 	getAgenticRunEvents,
+	getDismissedAgentInsightIds,
 	getLatestAgenticRunForChat,
 	stopAgenticRun,
 	streamAgenticRun,
@@ -67,9 +91,12 @@ import {
 	FREE_TIER_MAX_CHAT_USER_TURNS,
 	isFreeTierLimitError,
 } from "@/lib/freeTier";
+import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 import { testId } from "@/lib/testUtils";
 import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
+import { toast } from "../common/Toaster";
+import { focusedConversationIdsFromPayload } from "./agenticFocus";
 import {
 	extractTopLevelToolActivity,
 	parseCanvasSuggestion,
@@ -78,18 +105,25 @@ import {
 	parseInsightNote,
 	parseNavigationSuggestion,
 	parseProjectUpdateSuggestion,
+	parseTagsUpdateSuggestion,
 	type ToolActivity,
 } from "./agenticToolActivity";
 import { CanvasSuggestionCard } from "./CanvasSuggestionCard";
 import { ChatAccordionItemMenu } from "./ChatAccordion";
 import { ChatHistoryMessage } from "./ChatHistoryMessage";
+import { ChatTemplatesMenuConnected } from "./ChatTemplatesMenuConnected";
 import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopicSuggestionCard";
 import { formatMessage } from "./chatUtils";
-import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
+import {
+	ChatTurnLimitCard,
+	ChatUpgradeModal,
+	VoiceCapUpgradeModal,
+} from "./FreeTierChatGate";
 import { useChat as useProjectChat } from "./hooks";
 import { InsightNoteCard } from "./InsightNoteCard";
 import { NavigationSuggestionCard } from "./NavigationSuggestionCard";
 import { ProjectUpdateSuggestionCard } from "./ProjectUpdateSuggestionCard";
+import { TagsUpdateSuggestionCard } from "./TagsUpdateSuggestionCard";
 
 type AgenticChatPanelProps = {
 	chatId: string;
@@ -102,6 +136,7 @@ type RenderMessage = {
 	content: string;
 	timestamp: string;
 	sortSeq: number;
+	focusedConversationIds?: string[];
 };
 
 type TimelineItem =
@@ -121,6 +156,12 @@ const storageKeyForChat = (chatId: string) => `agentic-run:${chatId}`;
 // Internal placeholders the agent/worker may have persisted before the
 // server-side guard landed. They are never meant to be shown to a host.
 const INTERNAL_ASSISTANT_PLACEHOLDERS = new Set(["(calling tools)"]);
+
+// Past this, naming every conversation above the composer is a wall of chips
+// that also implies the whole list reaches the assistant in one go. It does
+// not: the prompt carries a size-bounded head and the assistant pages through
+// the rest, so say that instead of listing them.
+const FOCUS_CHIP_LIMIT = 12;
 
 const isTerminalStatus = (status: AgenticRunStatus | null) =>
 	status === "completed" || status === "failed" || status === "timeout";
@@ -150,6 +191,22 @@ const AGENTIC_REFERENCE_LIST_PATTERN = /\[conversation_ids?:\s*([^\]]+)\]/g;
 
 const LOOKS_LIKE_ID_PATTERN = /^[0-9a-f][0-9a-f-]{7,}$/i;
 
+export const MAX_AGENTIC_MESSAGE_LENGTH = 32000;
+
+// A failed run tells us a code, never prose: the server deliberately withholds
+// upstream error text, which is unbounded, untranslated and can echo the prompt
+// back at us. The wording is ours and lives here so it is localised.
+const runFailureMessage = (errorCode: unknown): string => {
+	switch (errorCode) {
+		case "AGENT_CANCELLED":
+			return t`You stopped this run.`;
+		case "AGENT_TIMEOUT":
+			return t`This request took too long, so I stopped it. Send it again and I'll retry.`;
+		default:
+			return t`Something went wrong on my side. Send your message again and I'll retry.`;
+	}
+};
+
 const buildTranscriptLink = ({
 	chunkId,
 	conversationId,
@@ -168,6 +225,25 @@ const buildTranscriptLink = ({
 	// Dashboard routes are workspace-scoped; the conversation page handles the
 	// #chunk-<id> deep link (ConversationTranscriptSection).
 	return `/${language}/w/${workspaceId}/projects/${projectId}/conversations/${encodedConversationId}${hash}`;
+};
+
+const FocusedOnLine = ({
+	conversations,
+}: {
+	conversations: { id: string; participant_name?: string }[];
+}) => {
+	if (conversations.length === 0) return null;
+
+	return (
+		<Group gap="xs" align="baseline" justify="flex-end" className="mb-2 italic">
+			<Text size="xs" c="dimmed" fw={500}>
+				<Trans>Focusing on:</Trans>
+			</Text>
+			<ConversationLinks
+				conversations={conversations as unknown as Conversation[]}
+			/>
+		</Group>
+	);
 };
 
 const enrichAgenticContent = ({
@@ -252,6 +328,7 @@ const toMessage = ({
 				projectId,
 				workspaceId,
 			}),
+			focusedConversationIds: focusedConversationIdsFromPayload(payload),
 			id: `u-${event.seq}`,
 			role: "user",
 			sortSeq: event.seq,
@@ -283,13 +360,7 @@ const toMessage = ({
 
 	if (event.event_type === "run.failed" || event.event_type === "run.timeout") {
 		return {
-			content: enrichAgenticContent({
-				content: content ?? t`Agent run failed`,
-				conversationNames,
-				language,
-				projectId,
-				workspaceId,
-			}),
+			content: runFailureMessage(payload?.error_code),
 			id: `a-${event.seq}`,
 			role: "assistant",
 			sortSeq: event.seq,
@@ -351,7 +422,6 @@ const AGENTIC_TOOL_STATUS_VARS = {
 	"--agentic-tool-status-error-dot": "var(--mantine-color-red-6)",
 	"--agentic-tool-status-error-text": "var(--mantine-color-red-8)",
 	"--agentic-tool-status-running-dot": "var(--mantine-color-yellow-6)",
-	"--agentic-tool-status-running-ping-dot": "var(--mantine-color-yellow-4)",
 	"--agentic-tool-status-running-text": "var(--mantine-color-yellow-8)",
 } as CSSProperties;
 
@@ -433,6 +503,7 @@ const tryParseTimelineSuggestion = (
 			insight: parseInsightNote(item),
 			navigation: parseNavigationSuggestion(item),
 			projectUpdate: parseProjectUpdateSuggestion(item),
+			tagsUpdate: parseTagsUpdateSuggestion(item),
 		};
 	} catch (error) {
 		console.warn("Failed to parse agentic timeline suggestion", error);
@@ -443,6 +514,7 @@ const tryParseTimelineSuggestion = (
 			insight: null,
 			navigation: null,
 			projectUpdate: null,
+			tagsUpdate: null,
 		};
 	}
 };
@@ -487,9 +559,14 @@ const ToolActivityGroup = ({
 	expanded: boolean;
 	onToggle: () => void;
 }) => {
-	const running = items.some((i) => i.status === "running");
-	const errored = items.some((i) => i.status === "error");
+	// A group speaks only for its own steps. It has no idea whether a run is in
+	// flight, and it must not: twice now a group was handed run state and twice
+	// a finished turn reverted to the present tense when a later turn started.
+	// The live part of the thread is LiveRunIndicator, which renders once, at
+	// the end, and disappears when the run ends. See #938 and #945.
 	const runningItem = items.find((i) => i.status === "running");
+	const running = runningItem !== undefined;
+	const errored = items.some((i) => i.status === "error");
 	const isSingle = items.length === 1;
 	// Steps whose start/end ranges overlap ran at the same time; say so
 	// instead of pretending they were sequential.
@@ -502,8 +579,8 @@ const ToolActivityGroup = ({
 					(item.startSeq < other.endSeq && other.startSeq < item.endSeq),
 			),
 		);
-	const summary = running
-		? (runningItem?.headline ?? t`Working...`)
+	const summary = runningItem
+		? runningItem.headline
 		: isSingle
 			? items[0].headline
 			: ranAllAtOnce
@@ -520,9 +597,10 @@ const ToolActivityGroup = ({
 		<Box className="flex justify-start">
 			<Paper
 				// The theme defaults Paper to withBorder; tool activity is ambient,
-				// not a card, so it stays borderless.
+				// not a card, so it stays borderless. No w-full either: the row
+				// ends where its text ends, and max-w is only a ceiling.
 				withBorder={false}
-				className="w-full max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
+				className="max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
 				style={{
 					backgroundColor:
 						"color-mix(in srgb, var(--app-background) 88%, var(--mantine-color-primary-1))",
@@ -540,14 +618,14 @@ const ToolActivityGroup = ({
 					}
 					onClick={isSingle ? undefined : onToggle}
 				>
-					<Group justify="space-between" gap="xs" wrap="nowrap">
-						<Group gap={8} wrap="nowrap" className="min-w-0 flex-1">
+					<Group justify="flex-start" gap="lg" wrap="nowrap">
+						<Group gap={8} wrap="nowrap" className="min-w-0">
 							<Box
 								aria-hidden="true"
 								className={`h-1.5 w-1.5 shrink-0 rounded-full ${running ? "animate-pulse" : ""}`}
 								style={{ backgroundColor: dotColor }}
 							/>
-							<Text size="xs" fs="italic" className="min-w-0 flex-1 truncate">
+							<Text size="xs" fs="italic" className="min-w-0 truncate">
 								{summary}
 							</Text>
 						</Group>
@@ -585,6 +663,81 @@ const ToolActivityGroup = ({
 	);
 };
 
+/** The one live thing in the thread. It is appended at the end of the timeline
+ * while a run is in flight, after the newest user message, so the wait sits in
+ * chronological position instead of floating by the composer. It says what the
+ * current step is when a tool is running, and stays honestly present tense in
+ * the gaps between steps and while the model writes. When the run reaches a
+ * terminal state it disappears, and the completed tool group renders in its
+ * place, which is why it borrows the group's shape: the swap is a settling, not
+ * a jump. Cancel lives here because this is the only place still working. */
+const LiveRunIndicator = ({
+	headline,
+	isStopping,
+	onArmStop,
+	onStop,
+}: {
+	headline: string;
+	isStopping: boolean;
+	onArmStop: () => void;
+	onStop: () => void;
+}) => (
+	<Box className="flex justify-start" {...testId("agentic-run-indicator")}>
+		<Paper
+			withBorder={false}
+			className="max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
+			style={{
+				backgroundColor:
+					"color-mix(in srgb, var(--app-background) 88%, var(--mantine-color-primary-1))",
+			}}
+		>
+			{/* Cancel sits next to the headline it cancels, not flung to a far
+			    column edge: the row hugs its content, so there is no gap to
+			    space-between across. */}
+			<Group justify="flex-start" gap="md" wrap="nowrap">
+				<Group gap={8} wrap="nowrap" className="min-w-0">
+					<Box
+						aria-hidden="true"
+						className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full"
+						style={{
+							backgroundColor: "var(--agentic-tool-status-running-dot)",
+						}}
+					/>
+					<Text
+						size="xs"
+						fs="italic"
+						className="min-w-0 truncate"
+						aria-live="polite"
+					>
+						{headline}
+					</Text>
+				</Group>
+				<Button
+					type="button"
+					size="compact-xs"
+					radius="xl"
+					variant="subtle"
+					color="red"
+					className="shrink-0"
+					aria-label={t`Cancel current run`}
+					onPointerDown={onArmStop}
+					onKeyDown={(event) => {
+						if (event.key === "Enter" || event.key === " ") {
+							onArmStop();
+						}
+					}}
+					onClick={onStop}
+					disabled={isStopping}
+					leftSection={isStopping ? <Loader size={12} /> : undefined}
+					{...testId("chat-stop-button")}
+				>
+					<Trans>Cancel</Trans>
+				</Button>
+			</Group>
+		</Paper>
+	</Box>
+);
+
 export const AgenticChatPanel = ({
 	chatId,
 	projectId,
@@ -592,7 +745,6 @@ export const AgenticChatPanel = ({
 	const { iso639_1, language } = useLanguage();
 	const { workspace, workspaceId } = useWorkspace();
 	const location = useLocation();
-	const navigate = useI18nNavigate();
 	// Seed question from the Ask home page (router state), consumed exactly once.
 	const initialMessageRef = useRef<string | null>(
 		typeof (location.state as { initialMessage?: unknown } | null)
@@ -603,6 +755,56 @@ export const AgenticChatPanel = ({
 	const queryClient = useQueryClient();
 	const chatQuery = useProjectChat(chatId);
 	const persistedHistoryQuery = useChatHistory(chatId);
+	const chatContextQuery = useProjectChatContext(chatId);
+	const focusedContextConversations = useMemo(
+		() =>
+			(chatContextQuery.data?.conversations ?? []).map((item) => ({
+				id: item.conversation_id,
+				participant_name: item.conversation_participant_name,
+			})),
+		[chatContextQuery.data?.conversations],
+	);
+	const clearChatContextMutation = useClearChatContextMutation();
+	// Insight cards replay from run events, which carry no current status, so
+	// the dismissed ids come from the project.
+	const dismissedInsightsQuery = useQuery({
+		queryKey: ["agentic", "dismissed-insights", projectId],
+		queryFn: () => getDismissedAgentInsightIds(projectId),
+	});
+	const dismissInsightMutation = useMutation({
+		mutationFn: (insightId: string) => dismissAgentInsight(insightId),
+		onSuccess: () =>
+			queryClient.invalidateQueries({
+				queryKey: ["agentic", "dismissed-insights", projectId],
+			}),
+	});
+	const dismissedInsightIds = useMemo(
+		() => new Set(dismissedInsightsQuery.data ?? []),
+		[dismissedInsightsQuery.data],
+	);
+	// The assistant only drafts an insight; the host sends it. A replayed draft
+	// card cannot know whether it was already sent, so it checks the live list.
+	const sentInsightsQuery = useQuery({
+		queryKey: ["agentic", "insights", projectId],
+		queryFn: () => getAgentInsights(projectId),
+	});
+	const sendInsightMutation = useMutation({
+		// chat_id and message_id are what let the team see which conversation
+		// produced a piece of feedback. The old auto-write carried them from the
+		// tool's closure; sending from the card has to pass them explicitly or
+		// the row lands unlinked.
+		mutationFn: (body: {
+			kind: string;
+			content: string;
+			suggested_capability?: string | null;
+			chat_id?: string | null;
+			message_id?: string | null;
+		}) => createAgentInsight(projectId, body),
+		onSuccess: () =>
+			queryClient.invalidateQueries({
+				queryKey: ["agentic", "insights", projectId],
+			}),
+	});
 	const [runId, setRunId] = useState<string | null>(null);
 	const [runStatus, setRunStatus] = useState<AgenticRunStatus | null>(null);
 	const [afterSeq, setAfterSeq] = useState(0);
@@ -613,6 +815,7 @@ export const AgenticChatPanel = ({
 	// hit send, before the run persists and streams it back.
 	const [pendingUserMessage, setPendingUserMessage] = useState<{
 		content: string;
+		focusedConversations: { id: string; participant_name?: string }[];
 		timestamp: string;
 	} | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -620,24 +823,82 @@ export const AgenticChatPanel = ({
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isHydratingStoredRun, setIsHydratingStoredRun] = useState(false);
 	const [streamFailureCount, setStreamFailureCount] = useState(0);
+	// Snapshot of the message being written; the durable assistant.message
+	// with the same message_id replaces it in place.
+	const [liveDraft, setLiveDraft] = useState<{
+		messageId: string;
+		text: string;
+		timestamp: string;
+	} | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [expandedGroupIds, setExpandedGroupIds] = useState<
 		Record<string, boolean>
 	>({});
+	const [conversationPickerOpened, conversationPickerHandlers] =
+		useDisclosure(false);
+	// Proper nouns for the transcription pass. This is the same field the
+	// recording pipeline splits into hotwords (transcribe._build_hotwords), so a
+	// project that already teaches the model its names teaches it here too.
+	// Narrow fields on purpose: the panel needs one string, not the whole row.
+	const projectTranscriptHintsQuery = useProjectById({
+		projectId,
+		query: { fields: ["id", "default_conversation_transcript_prompt"] },
+	});
+	const voiceHotwords =
+		(
+			projectTranscriptHintsQuery.data as
+				| { default_conversation_transcript_prompt?: string | null }
+				| undefined
+		)?.default_conversation_transcript_prompt ?? undefined;
+	const composerRef = useRef<HTMLTextAreaElement>(null);
+	const voice = useVoiceTranscription({
+		hotwords: voiceHotwords,
+		language: iso639_1 ?? "en",
+		onDurationLimit: () =>
+			toast.info(
+				t`Recording stopped at the five minute limit. Turning what you recorded into text.`,
+			),
+		// The transcript lands in the composer rather than being sent. A
+		// mishearing that goes out on its own is worse than one the host can fix
+		// in two seconds, and the composer is already where a message gets read
+		// back before sending.
+		onTranscript: (transcript) => {
+			setInput((current) => mergeTranscriptIntoDraft(current, transcript));
+			// Hand the caret back to the text the host now has to read over.
+			window.requestAnimationFrame(() => composerRef.current?.focus());
+		},
+		projectId,
+	});
+	const isVoiceActive = voice.status !== "idle";
+	// The control the host just pressed is unmounted by the swap, which drops
+	// keyboard focus to the body. Hand it to whatever replaced it.
+	const voiceStopButtonRef = useRef<HTMLButtonElement>(null);
+	useEffect(() => {
+		if (voice.status === "recording") voiceStopButtonRef.current?.focus();
+	}, [voice.status]);
+	const returnFocusToComposer = useCallback(() => {
+		window.requestAnimationFrame(() => composerRef.current?.focus());
+	}, []);
 	const streamAbortRef = useRef<AbortController | null>(null);
 	const streamRunIdRef = useRef<string | null>(null);
 	const stopArmedRunIdRef = useRef<string | null>(null);
 	const requestedStreamKeyRef = useRef<string | null>(null);
 	const currentRunIdRef = useRef<string | null>(null);
-	const [scrollTargetRef, isVisible] = useElementOnScreen({
-		root: null,
-		rootMargin: "-83px",
-		threshold: 0.1,
-	});
+	const threadScrollRef = useRef<HTMLDivElement>(null);
+	const { isAtBottomRef, scrollToBottom, showScrollButton } =
+		useStickToBottom(threadScrollRef);
+	// Declared here rather than next to the render because the stick-to-bottom
+	// effect below depends on it: the live indicator is a timeline node, so its
+	// arrival and departure change the thread's height.
+	const isRunInFlight = isInFlightStatus(runStatus);
 
 	useEffect(() => {
 		currentRunIdRef.current = runId;
 	}, [runId]);
+
+	useEffect(() => {
+		if (!isRunInFlight) setLiveDraft(null);
+	}, [isRunInFlight]);
 
 	useEffect(() => {
 		if (queryPrefillStartedRef.current) return;
@@ -665,6 +926,30 @@ export const AgenticChatPanel = ({
 		}
 		return names;
 	}, [conversationsQuery.data]);
+
+	// Renders only until its durable copy is in the event log.
+	const liveDraftMessage = useMemo(() => {
+		if (!liveDraft) return null;
+		const durable = events.some(
+			(event) =>
+				event.event_type === "assistant.message" &&
+				asObject(event.payload)?.message_id === liveDraft.messageId,
+		);
+		if (durable) return null;
+		return {
+			content: enrichAgenticContent({
+				content: liveDraft.text,
+				conversationNames,
+				language,
+				projectId,
+				workspaceId: workspaceId ?? "",
+			}),
+			id: "live-draft",
+			role: "assistant" as const,
+			sortSeq: Number.MAX_SAFE_INTEGER,
+			timestamp: liveDraft.timestamp,
+		};
+	}, [liveDraft, events, conversationNames, language, projectId, workspaceId]);
 
 	const timeline = useMemo(() => {
 		const sorted = [...events].sort((a, b) => a.seq - b.seq);
@@ -740,6 +1025,11 @@ export const AgenticChatPanel = ({
 					item: Extract<TimelineItem, { kind: "tool" }>;
 			  }
 			| {
+					kind: "tags_suggestion";
+					id: string;
+					item: Extract<TimelineItem, { kind: "tool" }>;
+			  }
+			| {
 					kind: "verification_suggestion";
 					id: string;
 					item: Extract<TimelineItem, { kind: "tool" }>;
@@ -778,6 +1068,10 @@ export const AgenticChatPanel = ({
 			const suggestions = tryParseTimelineSuggestion(item);
 			if (suggestions.projectUpdate) {
 				nodes.push({ id: item.id, item, kind: "suggestion" });
+				continue;
+			}
+			if (suggestions.tagsUpdate) {
+				nodes.push({ id: item.id, item, kind: "tags_suggestion" });
 				continue;
 			}
 			if (suggestions.customVerificationTopic) {
@@ -827,8 +1121,11 @@ export const AgenticChatPanel = ({
 	}, [timeline, pendingUserMessage]);
 
 	// Free tier: max 3 user turns per chat. The 4th routes to upgrade.
-	const { freeTier } = useWorkspaceUsage(workspace?.id);
+	const { freeTier, usageGates } = useWorkspaceUsage(workspace?.id);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	// A voice note bills audio hours, so the gate that locks uploads locks the mic.
+	const voiceCapReached = Boolean(usageGates?.uploads_locked);
+	const [voiceCapOpened, voiceCapHandlers] = useDisclosure(false);
 	const userTurnCount = useMemo(
 		() =>
 			timeline.filter((item) => item.kind === "message" && item.role === "user")
@@ -961,11 +1258,35 @@ export const AgenticChatPanel = ({
 			try {
 				await streamAgenticRun(targetRunId, {
 					afterSeq: fromSeq,
+					onDraft: (draft) => {
+						if (currentRunIdRef.current !== targetRunId) return;
+						setLiveDraft((previous) => ({
+							messageId: draft.message_id,
+							text: draft.text,
+							timestamp:
+								previous?.messageId === draft.message_id
+									? previous.timestamp
+									: new Date().toISOString(),
+						}));
+					},
 					onEvent: (event) => {
 						if (currentRunIdRef.current !== targetRunId) return;
 						mergeEvents([event]);
 						setAfterSeq((previous) => Math.max(previous, event.seq));
 						setStreamFailureCount(0);
+						if (event.event_type === "assistant.message") {
+							// Same React batch as the merge: draft and durable swap in one paint.
+							const payload = asObject(event.payload);
+							const durableMessageId =
+								typeof payload?.message_id === "string"
+									? payload.message_id
+									: null;
+							setLiveDraft((previous) =>
+								previous && previous.messageId === durableMessageId
+									? null
+									: previous,
+							);
+						}
 						if (event.event_type === "run.failed") {
 							setRunStatus("failed");
 						}
@@ -1024,6 +1345,7 @@ export const AgenticChatPanel = ({
 		setIsSubmitting(false);
 		setIsHydratingStoredRun(false);
 		setStreamFailureCount(0);
+		setLiveDraft(null);
 	}, [chatId, stopStream]);
 
 	useEffect(() => {
@@ -1135,18 +1457,6 @@ export const AgenticChatPanel = ({
 		}
 	}, [runStatus, stopStream]);
 
-	const scrollToBottom = useCallback(
-		(behavior: ScrollBehavior = "smooth") => {
-			window.requestAnimationFrame(() => {
-				scrollTargetRef.current?.scrollIntoView({
-					behavior,
-					block: "end",
-				});
-			});
-		},
-		[scrollTargetRef],
-	);
-
 	// Stick to the bottom only when the reader is already there (or just sent a
 	// message). Someone scrolled up to read must never be yanked back down by a
 	// streaming event; the scroll-to-bottom button is their way back. Bottomness
@@ -1155,14 +1465,39 @@ export const AgenticChatPanel = ({
 	// bounced against the stream.
 	const hasScrolledInitiallyRef = useRef(false);
 	const forceNextScrollRef = useRef(false);
-	const isAtBottomRef = useRef(true);
-	useEffect(() => {
-		isAtBottomRef.current = isVisible;
-	}, [isVisible]);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: chatId is the trigger, not a read — switching chats re-arms the initial jump
 	useEffect(() => {
 		hasScrolledInitiallyRef.current = false;
 	}, [chatId]);
+	// Streaming grows the LAST item without changing timeline.length, so keying
+	// the effect on length alone left the view pinned while the answer wrote
+	// itself off the bottom of the screen.
+	//
+	// The key identifies the tail AND how far along it is, rather than a bare
+	// size. A size alone collapses two different states into 0 (the tail is a
+	// tool activity, and the tail is a message that has not written a character
+	// yet), so neither one fires, and it cannot tell one message from the next
+	// that happens to be the same length. Including the id makes each of those
+	// a distinct key. A tool's own progress is its status, not a length.
+	//
+	// The reader protection above is unchanged: this still only scrolls when
+	// isAtBottomRef says they are already at the bottom.
+	//
+	// isRunInFlight is a trigger too, because the live indicator is a node at the
+	// end of the thread: it appears when a run starts and is removed when the run
+	// ends, and both change the thread's height without changing the timeline.
+	const tail = timeline.at(-1);
+	const tailKey =
+		tail === undefined
+			? ""
+			: tail.kind === "message"
+				? `m:${tail.id}:${tail.content.length}`
+				: `t:${tail.id}:${tail.status}`;
+	// The draft renders outside the timeline, so it needs its own growth key.
+	const draftKey = liveDraftMessage
+		? `d:${liveDraftMessage.timestamp}:${liveDraftMessage.content.length}`
+		: "";
+	// biome-ignore lint/correctness/useExhaustiveDependencies: tailKey, draftKey and isRunInFlight are triggers, not reads. They exist so a growing tail (timeline or draft) and the live indicator re-fire this effect.
 	useEffect(() => {
 		if (timeline.length === 0) return;
 		if (!hasScrolledInitiallyRef.current) {
@@ -1172,9 +1507,19 @@ export const AgenticChatPanel = ({
 		}
 		if (forceNextScrollRef.current || isAtBottomRef.current) {
 			forceNextScrollRef.current = false;
-			scrollToBottom("smooth");
+			// "auto" mid-stream: a smooth animation per token queues up and
+			// stutters, which reads worse on camera than not scrolling. Once the
+			// run finishes, a single smooth scroll is the nicer motion.
+			scrollToBottom(isStreaming ? "auto" : "smooth");
 		}
-	}, [timeline.length, scrollToBottom]);
+	}, [
+		timeline.length,
+		tailKey,
+		draftKey,
+		isRunInFlight,
+		isStreaming,
+		scrollToBottom,
+	]);
 
 	useEffect(() => {
 		return () => {
@@ -1191,20 +1536,26 @@ export const AgenticChatPanel = ({
 		});
 	}, [chatId, projectId, queryClient]);
 
-	const handleSubmit = async (overrideMessage?: string) => {
-		const message = (overrideMessage ?? input).trim();
-		if (!message || !projectId || !chatId) return;
+		const handleSubmit = async (overrideMessage?: string) => {
+			const message = (overrideMessage ?? input).trim();
+			if (!message || !projectId || !chatId) return;
 
-		if (atTurnLimit) {
-			upgradeHandlers.open();
-			return;
-		}
+			if (message.length > MAX_AGENTIC_MESSAGE_LENGTH) {
+				return;
+			}
+
+			if (atTurnLimit) {
+				upgradeHandlers.open();
+				return;
+			}
 
 		setError(null);
 		setIsSubmitting(true);
 		setInput("");
+		setLiveDraft(null);
 		setPendingUserMessage({
 			content: message,
+			focusedConversations: focusedContextConversations,
 			timestamp: new Date().toISOString(),
 		});
 		// Sending is the one moment the host always wants the bottom.
@@ -1303,7 +1654,6 @@ export const AgenticChatPanel = ({
 		}
 	};
 
-	const isRunInFlight = isInFlightStatus(runStatus);
 	const chatTitle = chatQuery.data?.name ?? t`Chat`;
 	const updateChatMutation = useUpdateChatMutation();
 	const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -1397,29 +1747,11 @@ export const AgenticChatPanel = ({
 						</ErrorBoundary>
 					</Group>
 				</Group>
-				<Group justify="flex-end" gap="sm">
-					<Tooltip
-						label={<Trans>This is the new chat experience</Trans>}
-						openDelay={300}
-					>
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() =>
-								navigate(`/w/${workspaceId}/projects/${projectId}/chats/new`, {
-									state: { preferMode: "deep_dive" },
-								})
-							}
-						>
-							<Trans>Open the old chat experience</Trans>
-						</Button>
-					</Tooltip>
-				</Group>
 				<Divider />
 			</Stack>
 
-			<Box className="min-h-0 flex-1 overflow-y-auto">
-				<Stack py="sm" pb="xl" className="relative min-h-full w-full">
+			<Box className="min-h-0 flex-1 overflow-y-auto" ref={threadScrollRef}>
+				<Stack className="relative min-h-full w-full pt-3 pb-6">
 					{error && (
 						<Alert
 							color="red"
@@ -1522,8 +1854,19 @@ export const AgenticChatPanel = ({
 
 					{timelineNodes.map((node) => {
 						if (node.kind === "message") {
+							const focusedConversations = (
+								node.item.role === "user"
+									? (node.item.focusedConversationIds ?? [])
+									: []
+							)
+								.filter((id) => conversationNames.has(id))
+								.map((id) => ({
+									id,
+									participant_name: conversationNames.get(id) ?? "",
+								}));
 							return (
 								<div key={node.id}>
+									<FocusedOnLine conversations={focusedConversations} />
 									<ChatHistoryMessage
 										message={toHistoryMessage(node.item)}
 										chatMode="agentic"
@@ -1536,7 +1879,24 @@ export const AgenticChatPanel = ({
 							const suggestion = parseProjectUpdateSuggestion(node.item);
 							return suggestion ? (
 								<div key={node.id}>
-									<ProjectUpdateSuggestionCard suggestion={suggestion} />
+									<ProjectUpdateSuggestionCard
+										suggestion={suggestion}
+										onSendNote={(message) => handleSubmit(message)}
+									/>
+								</div>
+							) : null;
+						}
+
+						if (node.kind === "tags_suggestion") {
+							const suggestion = parseTagsUpdateSuggestion(node.item);
+							return suggestion ? (
+								<div key={node.id}>
+									<TagsUpdateSuggestionCard
+										suggestion={{
+											...suggestion,
+											projectId: suggestion.projectId || projectId,
+										}}
+									/>
 								</div>
 							) : null;
 						}
@@ -1604,7 +1964,34 @@ export const AgenticChatPanel = ({
 							const note = parseInsightNote(node.item);
 							return note ? (
 								<div key={node.id}>
-									<InsightNoteCard note={note} />
+									<InsightNoteCard
+										note={note}
+										sentInsights={sentInsightsQuery.data ?? []}
+										isSending={sendInsightMutation.isPending}
+										onSend={(content, suggestedCapability) =>
+											sendInsightMutation.mutate({
+												kind: note.kind,
+												content,
+												suggested_capability: suggestedCapability,
+												chat_id: chatId ?? null,
+												message_id: node.id ?? null,
+											})
+										}
+										dismissed={
+											note.insightId
+												? dismissedInsightIds.has(note.insightId)
+												: false
+										}
+										isDismissing={
+											dismissInsightMutation.isPending &&
+											dismissInsightMutation.variables === note.insightId
+										}
+										onDismiss={
+											note.insightId
+												? () => dismissInsightMutation.mutate(note.insightId!)
+												: undefined
+										}
+									/>
 								</div>
 							) : null;
 						}
@@ -1627,6 +2014,9 @@ export const AgenticChatPanel = ({
 								item.content === pendingUserMessage.content,
 						) && (
 							<div key="pending-user-message">
+								<FocusedOnLine
+									conversations={pendingUserMessage.focusedConversations}
+								/>
 								<ChatHistoryMessage
 									message={toHistoryMessage({
 										content: pendingUserMessage.content,
@@ -1639,8 +2029,29 @@ export const AgenticChatPanel = ({
 								/>
 							</div>
 						)}
+
+					{liveDraftMessage && isRunInFlight && (
+						<div key="live-draft">
+							<ChatHistoryMessage
+								message={toHistoryMessage(liveDraftMessage)}
+								chatMode="agentic"
+							/>
+						</div>
+					)}
+
+					{/* Last node in the thread, below the draft bubble when one is
+					    streaming; hosts the stop control. Not while the chat is still
+					    loading, so the skeleton and the live line never claim the
+					    same space. */}
+					{!showExistingChatLoading && isRunInFlight && (
+						<LiveRunIndicator
+							headline={liveRunStatusText}
+							isStopping={isStopping}
+							onArmStop={armStopControl}
+							onStop={() => void handleStop()}
+						/>
+					)}
 				</Stack>
-				<div ref={scrollTargetRef} aria-hidden="true" />
 			</Box>
 
 			<Box
@@ -1653,138 +2064,238 @@ export const AgenticChatPanel = ({
 						className="absolute bottom-[105%] right-4 z-50 hidden md:flex"
 					>
 						<ScrollToBottomButton
-							elementRef={scrollTargetRef}
-							isVisible={isVisible}
+							visible={showScrollButton}
+							onClick={() => scrollToBottom("smooth")}
 						/>
 					</Group>
 
-					{isRunInFlight && (
-						<Paper
-							className="self-start rounded-full px-3 py-1.5 shadow-none"
-							style={{ borderColor: "var(--mantine-color-primary-light)" }}
-							{...testId("agentic-run-indicator")}
-						>
-							<Group gap={8} wrap="nowrap">
-								<Box className="relative h-2 w-2 shrink-0">
-									<Box
-										className="absolute inset-0 rounded-full animate-ping"
-										style={{
-											backgroundColor:
-												"var(--agentic-tool-status-running-ping-dot)",
-										}}
-									/>
-									<Box
-										className="relative h-2 w-2 rounded-full"
-										style={{
-											backgroundColor: "var(--agentic-tool-status-running-dot)",
-										}}
-									/>
-								</Box>
-								<Text
-									size="xs"
-									fw={500}
-									className="max-w-[min(70vw,32rem)] truncate"
-								>
-									{liveRunStatusText}
-								</Text>
-								<Button
-									type="button"
-									size="compact-xs"
-									radius="xl"
-									variant="subtle"
-									color="red"
-									aria-label={t`Cancel current run`}
-									onPointerDown={armStopControl}
-									onKeyDown={(event) => {
-										if (event.key === "Enter" || event.key === " ") {
-											armStopControl();
-										}
-									}}
-									onClick={() => void handleStop()}
-									disabled={isStopping}
-									leftSection={isStopping ? <Loader size={12} /> : undefined}
-									{...testId("chat-stop-button")}
-								>
-									<Trans>Cancel</Trans>
-								</Button>
-							</Group>
-						</Paper>
-					)}
+					<ChatTemplatesMenuConnected
+						chatId={chatId}
+						chatMode="agentic"
+						projectId={projectId}
+						onTemplateSelect={({ content }) => setInput(content)}
+					/>
 
 					{atTurnLimit && (
 						<ChatTurnLimitCard onUpgrade={upgradeHandlers.open} />
 					)}
-					<Divider />
+					{voice.errorKind && (
+						<VoiceInputError
+							kind={voice.errorKind}
+							onDismiss={voice.dismissError}
+						/>
+					)}
 					<form
 						onSubmit={(event) => {
 							event.preventDefault();
 							void handleSubmit();
 						}}
 					>
-						<Box
-							className="rounded-xl border px-3 pb-2 pt-2 shadow-sm transition-colors"
-							style={{
-								backgroundColor: "var(--app-background)",
-								borderColor: "var(--mantine-color-primary-light)",
-							}}
-						>
-							<Textarea
-								variant="unstyled"
-								styles={{ input: { backgroundColor: "transparent" } }}
-								autosize
-								minRows={2}
-								maxRows={10}
-								value={input}
-								onChange={(event) => setInput(event.currentTarget.value)}
-								placeholder={t`Ask about your conversations...`}
-								disabled={atTurnLimit}
-								onKeyDown={(event) => {
-									if (event.key === "Enter" && !event.shiftKey) {
-										event.preventDefault();
-										void handleSubmit();
-									}
-								}}
-								{...testId("chat-input-textarea")}
-							/>
-							<Group justify="space-between" align="center" gap="xs">
-								<Group gap="xs">
-									<InsertTemplateMenu
-										workspaceId={workspaceId}
-										onInsert={(content) => setInput(content)}
+						<ChatComposerShell
+							chips={
+								focusedContextConversations.length > 0 ? (
+									<ConversationFocusChips
+										conversations={focusedContextConversations}
+										isClearing={clearChatContextMutation.isPending}
+										label={
+											<Plural
+												value={focusedContextConversations.length}
+												one="Focusing on # conversation:"
+												other="Focusing on # conversations:"
+											/>
+										}
+										onClearAll={() =>
+											clearChatContextMutation.mutate({
+												chatId,
+												conversationIds: focusedContextConversations.map(
+													(conversation) => conversation.id,
+												),
+											})
+										}
+										overflowNotice={
+											focusedContextConversations.length > FOCUS_CHIP_LIMIT ? (
+												<Trans>
+													Too many to list here. The assistant reads through
+													them in batches.
+												</Trans>
+											) : undefined
+										}
 									/>
-									<Text size="xs" className="select-none">
-										<Trans>Enter to send, Shift+Enter for a new line</Trans>
-									</Text>
-								</Group>
-								<Group gap="xs" wrap="nowrap">
+								) : undefined
+							}
+							footerLeft={
+								isVoiceActive ? (
 									<Button
-										type="submit"
-										size="sm"
-										radius="md"
-										leftSection={
-											isSubmitting ? (
-												<Loader size={14} />
-											) : (
-												<IconSend size={14} />
-											)
-										}
-										disabled={
-											isSubmitting || input.trim().length === 0 || atTurnLimit
-										}
-										{...testId("chat-send-button")}
+										className="tap-target"
+										onClick={() => {
+											voice.cancel();
+											returnFocusToComposer();
+										}}
+										size="compact-sm"
+										type="button"
+										variant="subtle"
+										{...testId("chat-voice-cancel-button")}
 									>
-										<Trans>Send</Trans>
+										<Trans>Cancel</Trans>
 									</Button>
-								</Group>
-							</Group>
-						</Box>
+								) : (
+									<ConversationPickerButton
+										ariaLabel={t`Focus on conversations`}
+										label={<Trans>Focus on conversations</Trans>}
+										onClick={conversationPickerHandlers.open}
+										testId="agentic-select-conversations-button"
+									/>
+								)
+							}
+							footerRight={
+								voice.status === "recording" ? (
+									<Button
+										aria-label={t`Stop recording and turn it into text`}
+										className="tap-target"
+										onClick={voice.stop}
+										radius="md"
+										ref={voiceStopButtonRef}
+										rightSection={<IconPlayerStopFilled size={18} />}
+										size="md"
+										type="button"
+										{...testId("chat-voice-stop-button")}
+									>
+										<Trans>Stop</Trans>
+									</Button>
+								) : voice.status === "transcribing" ? null : (
+									<>
+										<VoiceInputButton
+											ariaLabel={t`Record a voice message`}
+											disabled={atTurnLimit || voice.isStarting}
+											locked={voiceCapReached && !atTurnLimit}
+											onClick={
+												voiceCapReached && !atTurnLimit
+													? () => {
+															emitFrozenFeatureAttempt();
+															voiceCapHandlers.open();
+														}
+													: voice.start
+											}
+											testId="chat-voice-record-button"
+											tooltip={
+												voiceCapReached && !atTurnLimit
+													? t`This workspace has used its recording hours. Upgrade to keep using voice.`
+													: undefined
+											}
+										/>
+											<Button
+												type="submit"
+												size="md"
+												radius="md"
+												rightSection={
+													isSubmitting ? (
+														<Loader size={18} />
+													) : (
+														<IconSend size={18} />
+													)
+												}
+												disabled={
+													isSubmitting ||
+													input.trim().length === 0 ||
+													input.length > MAX_AGENTIC_MESSAGE_LENGTH ||
+													atTurnLimit
+												}
+												{...testId("chat-send-button")}
+											>
+											<Trans>Send</Trans>
+										</Button>
+									</>
+								)
+							}
+						>
+							{isVoiceActive ? (
+								// The input is closed while the mic is open, not merely
+								// disabled: one composer, one way in at a time.
+								<VoiceRecordingBar
+									elapsedMs={voice.elapsedMs}
+									isTranscribing={voice.status === "transcribing"}
+									levels={voice.levels}
+								/>
+							) : (
+								<Textarea
+									variant="unstyled"
+									styles={{
+										input: { backgroundColor: "transparent", resize: "none" },
+									}}
+									autosize
+									minRows={2}
+									maxRows={10}
+									ref={composerRef}
+									value={input}
+									onChange={(event) => setInput(event.currentTarget.value)}
+									placeholder={t`Ask about your conversations...`}
+									disabled={atTurnLimit}
+									onKeyDown={(event) => {
+										if (event.key === "Enter" && !event.shiftKey) {
+											event.preventDefault();
+											void handleSubmit();
+										}
+									}}
+									{...testId("chat-input-textarea")}
+								/>
+							)}
+							</ChatComposerShell>
+							{input.length > 25000 && (
+								<Text size="xs" c={input.length > MAX_AGENTIC_MESSAGE_LENGTH ? "red" : "orange"} fw={500} className="mt-1">
+									{input.length > MAX_AGENTIC_MESSAGE_LENGTH ? (
+										<Trans>
+											Message is too long (maximum 32,000 characters). Please attach conversations or shorten your message.
+										</Trans>
+									) : (
+										<Trans>
+											Approaching limit: {input.length.toLocaleString()} / 32,000 characters
+										</Trans>
+									)}
+								</Text>
+							)}
+							<Group
+								justify="space-between"
+								gap="sm"
+								wrap="wrap"
+								className="mt-1"
+							>
+							{!isVoiceActive && (
+								<Text size="xs" className="hidden italic md:block">
+									<Trans>Use Shift + Enter to add a new line</Trans>
+								</Text>
+							)}
+							<Text size="xs" className="italic">
+								<Trans>
+									dembrane can make mistakes. Please double-check responses.
+								</Trans>
+							</Text>
+						</Group>
 					</form>
 				</Stack>
+				<Modal
+					opened={conversationPickerOpened}
+					onClose={conversationPickerHandlers.close}
+					title={t`Focus on conversations`}
+					size="xl"
+					padding="lg"
+				>
+					<ProjectConversationsPanel
+						projectId={projectId}
+						workspaceId={workspaceId}
+						selectionChatId={chatId}
+						selectionMode
+					/>
+				</Modal>
 			</Box>
 			<ChatUpgradeModal
 				opened={upgradeOpened}
 				onClose={upgradeHandlers.close}
 				reason="chat_turns"
+			/>
+			<VoiceCapUpgradeModal
+				opened={voiceCapOpened}
+				onClose={voiceCapHandlers.close}
+				upgradeTier={usageGates?.upgrade_cta_tier ?? null}
 			/>
 		</Stack>
 	);

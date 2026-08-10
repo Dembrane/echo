@@ -149,7 +149,10 @@ def collect_unsummarized_conversations(limit: int = 50) -> List[str]:
             "query": {
                 "filter": {
                     "is_all_chunks_transcribed": True,
-                    "summary": {"_null": True},
+                    "_or": [
+                        {"summary": {"_null": True}},
+                        {"summary": {"_empty": True}},
+                    ],
                     "deleted_at": {"_null": True},
                     "created_at": {
                         "_lte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()

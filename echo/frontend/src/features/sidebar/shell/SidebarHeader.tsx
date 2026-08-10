@@ -1,7 +1,7 @@
 import { I18nLink } from "@/components/common/i18nLink";
 import { Logo } from "@/components/common/Logo";
 import { ActionIcon } from "@mantine/core";
-import { CaretLeft } from "@phosphor-icons/react";
+import { SidebarSimple } from "@phosphor-icons/react";
 import { useSidebarState } from "../hooks/useSidebarState";
 
 export const SidebarHeader = () => {
@@ -27,7 +27,7 @@ export const SidebarHeader = () => {
 				aria-label="Collapse sidebar"
 				size={28}
 			>
-				<CaretLeft size={18} />
+				<SidebarSimple size={18} />
 			</ActionIcon>
 		</div>
 	);

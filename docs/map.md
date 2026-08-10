@@ -23,6 +23,7 @@ it's for, and how it works.
 - [Organisations & workspaces](./features/organisations-and-workspaces.md)
 - [Projects](./features/projects.md)
 - [Recording](./features/recording.md)
+- [Live monitor](./features/live-monitor.md)
 - [Transcription](./features/transcription.md)
 - [Conversations & transcripts](./features/conversations-and-transcripts.md)
 - [Chat & Ask](./features/chat-and-ask.md)
@@ -31,6 +32,7 @@ it's for, and how it works.
 - [The participant portal](./features/portal-and-participant-experience.md)
 - [The portal editor](./features/portal-editor.md)
 - [Invites & access](./features/invites-and-access.md)
+- [Staff support access](./features/staff-support-access.md)
 - [Visibility & discovery](./features/visibility-and-discovery.md)
 - [Data ownership & compliance](./features/data-ownership-and-compliance.md)
 - [The partner program](./features/partner-program.md)
@@ -55,6 +57,7 @@ it's for, and how it works.
 - [Collecting conversations](./users/host/collecting-conversations.md)
 - [Setting up the portal](./users/host/portal-editor.md)
 - [Transcripts & conversations](./users/host/transcripts-and-conversations.md)
+- [Troubleshooting transcripts & summaries](./users/host/troubleshooting-transcripts-and-summaries.md)
 - [Chat & Ask](./users/host/chat-and-ask.md)
 - [Library & analysis](./users/host/library-and-analysis.md)
 - [Reports](./users/host/reports.md)
@@ -73,6 +76,7 @@ it's for, and how it works.
 
 ### Staff - dembrane internal operations
 - [Staff overview](./users/staff/index.md)
+- [Staff support access](./features/staff-support-access.md)
 - [The admin panel](./users/staff/admin-panel-overview.md)
 - [Usage & billing rollup](./users/staff/usage-and-billing-rollup.md)
 - [Account health & at-risk](./users/staff/at-risk-and-account-health.md)

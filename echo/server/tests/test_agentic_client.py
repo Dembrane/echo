@@ -325,13 +325,16 @@ def test_docs_base_url_for_env_maps_admin_host(monkeypatch) -> None:
         urls = _Urls()
 
     monkeypatch.setattr("dembrane.agentic_client.get_settings", lambda: _Settings())
-    assert docs_base_url_for_env() == "https://docs.echo-next.dembrane.com"
+    assert docs_base_url_for_env() == "https://docs.dembrane.com"
 
-    # Unpublished environments cite bare paths: no base url.
+    # Every *.dembrane.com admin host resolves to the one published site.
     _Urls.admin_base_url = "https://dashboard.dembrane.com"
-    assert docs_base_url_for_env() == ""
+    assert docs_base_url_for_env() == "https://docs.dembrane.com"
     _Urls.admin_base_url = "https://dashboard.echo-testing.dembrane.com"
-    assert docs_base_url_for_env() == ""
+    assert docs_base_url_for_env() == "https://docs.dembrane.com"
+
+    # Local dev's bare host has no dembrane.com suffix: bare doc paths, no
+    # base url.
     _Urls.admin_base_url = "http://localhost:3000"
     assert docs_base_url_for_env() == ""
 
@@ -352,7 +355,7 @@ async def test_stream_agent_events_forwards_docs_base_url_header(monkeypatch) ->
     monkeypatch.setattr("dembrane.agentic_client.httpx.AsyncClient", _build_client)
     monkeypatch.setattr(
         "dembrane.agentic_client.docs_base_url_for_env",
-        lambda: "https://docs.echo-next.dembrane.com",
+        lambda: "https://docs.dembrane.com",
     )
 
     async for _ in stream_agent_events(
@@ -364,4 +367,4 @@ async def test_stream_agent_events_forwards_docs_base_url_header(monkeypatch) ->
     ):
         pass
 
-    assert capture["headers"]["X-Dembrane-Docs-Base-Url"] == "https://docs.echo-next.dembrane.com"
+    assert capture["headers"]["X-Dembrane-Docs-Base-Url"] == "https://docs.dembrane.com"

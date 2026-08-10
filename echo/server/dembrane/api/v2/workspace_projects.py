@@ -1,5 +1,6 @@
 """Workspace-scoped project endpoints: list and create."""
 
+import asyncio
 from typing import Optional, Annotated
 from logging import getLogger
 
@@ -201,37 +202,36 @@ async def _shared_private_project_ids(user_id: str) -> set[str]:
 async def _project_audio_hours(project_ids: list[str]) -> dict[str, float]:
     """Sum conversation.duration (seconds) per project, return hours.
 
-    Single batched fetch for all `project_ids`. Used by the projects
-    list so card rows can show "Xh · N conversations" without a second
-    request per row. Returns an empty map when given no ids.
+    One DB-side aggregate grouped by project_id; no conversation rows
+    cross the wire. Returns an empty map when given no ids.
     """
     if not project_ids:
         return {}
-    convs = (
-        await async_directus.get_items(
-            "conversation",
-            {
-                "query": {
-                    "filter": {
-                        "project_id": {"_in": project_ids},
-                        "deleted_at": {"_null": True},
-                    },
-                    "fields": ["project_id", "duration"],
-                    "limit": -1,
-                }
-            },
-        )
-        or []
+    rows = await async_directus.get_items(
+        "conversation",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_in": project_ids},
+                    "deleted_at": {"_null": True},
+                },
+                "aggregate": {"sum": ["duration"]},
+                "groupBy": ["project_id"],
+                # Directus caps grouped rows at its default limit (100).
+                "limit": -1,
+            }
+        },
     )
-    if not isinstance(convs, list):
+    if not isinstance(rows, list):
         return {}
-    seconds: dict[str, float] = {}
-    for row in convs:
+    hours: dict[str, float] = {}
+    for row in rows:
         pid = row.get("project_id")
         if not pid:
             continue
-        seconds[pid] = seconds.get(pid, 0.0) + float(row.get("duration") or 0)
-    return {pid: round(s / 3600, 1) for pid, s in seconds.items()}
+        seconds = float((row.get("sum") or {}).get("duration") or 0)
+        hours[pid] = round(seconds / 3600, 1)
+    return hours
 
 
 class V2ProjectSummary(BaseModel):
@@ -341,21 +341,75 @@ async def list_workspace_projects(
         "offset": offset,
     }
 
-    projects_raw = await async_directus.get_items("project", {"query": query})
+    # Pinned list uses the same visibility filter so members don't see a
+    # pinned private project they can't reach.
+    pinned_query: dict = {
+        "fields": [
+            "id",
+            "name",
+            "updated_at",
+            "language",
+            "pin_order",
+            "visibility",
+            "directus_user_id",
+            "count(conversations)",
+        ],
+        "filter": {**effective_filter, "pin_order": {"_nnull": True}},
+        "sort": ["pin_order"],
+        "limit": 3,
+    }
+
+    # Independent Directus reads: fire page + pinned (+ count, when no
+    # search) concurrently instead of sequentially.
+    if not search:
+        count_query: dict = {
+            "aggregate": {"count": ["id"]},
+            "filter": effective_filter,
+        }
+        projects_raw, pinned_raw, count_result = await asyncio.gather(
+            async_directus.get_items("project", {"query": query}),
+            async_directus.get_items("project", {"query": pinned_query}),
+            async_directus.get_items("project", {"query": count_query}),
+        )
+    else:
+        projects_raw, pinned_raw = await asyncio.gather(
+            async_directus.get_items("project", {"query": query}),
+            async_directus.get_items("project", {"query": pinned_query}),
+        )
+        count_result = None
+
     if not isinstance(projects_raw, list):
         projects_raw = []
 
     has_more = len(projects_raw) > limit
     page_rows = projects_raw[:limit]
 
+    pinned_rows = pinned_raw if isinstance(pinned_raw, list) else []
+
+    total_count = 0
+    if not search:
+        if isinstance(count_result, list) and len(count_result) > 0:
+            total_count = int(count_result[0].get("count", {}).get("id", 0))
+    else:
+        total_count = offset + len(page_rows) + (1 if has_more else 0)
+
+    # Enrich once over the union of page + pinned ids. Per-project outputs
+    # of _build_access_previews / _project_audio_hours depend only on
+    # workspace-level data and the project's own rows, so union results are
+    # byte-identical to computing them separately per block.
     page_ids = [p["id"] for p in page_rows]
-    page_visibilities = {p["id"]: (p.get("visibility") or "workspace") for p in page_rows}
-    preview_map = await _build_access_previews(
-        workspace_id=ctx.workspace_id,
-        project_ids=page_ids,
-        project_visibilities=page_visibilities,
+    union_rows = page_rows + [p for p in pinned_rows if p["id"] not in set(page_ids)]
+    union_ids = [p["id"] for p in union_rows]
+    union_visibilities = {p["id"]: (p.get("visibility") or "workspace") for p in union_rows}
+
+    preview_map, hours_map = await asyncio.gather(
+        _build_access_previews(
+            workspace_id=ctx.workspace_id,
+            project_ids=union_ids,
+            project_visibilities=union_visibilities,
+        ),
+        _project_audio_hours(union_ids),
     )
-    hours_map = await _project_audio_hours(page_ids)
 
     projects = [
         V2ProjectSummary(
@@ -373,53 +427,6 @@ async def list_workspace_projects(
         for p in page_rows
     ]
 
-    total_count = 0
-    if not search:
-        count_result = await async_directus.get_items(
-            "project",
-            {
-                "query": {
-                    "aggregate": {"count": ["id"]},
-                    "filter": effective_filter,
-                }
-            },
-        )
-        if isinstance(count_result, list) and len(count_result) > 0:
-            total_count = int(count_result[0].get("count", {}).get("id", 0))
-    else:
-        total_count = offset + len(projects) + (1 if has_more else 0)
-
-    # Pinned list uses the same visibility filter so members don't see a
-    # pinned private project they can't reach.
-    pinned_raw = await async_directus.get_items(
-        "project",
-        {
-            "query": {
-                "fields": [
-                    "id",
-                    "name",
-                    "updated_at",
-                    "language",
-                    "pin_order",
-                    "visibility",
-                    "directus_user_id",
-                    "count(conversations)",
-                ],
-                "filter": {**effective_filter, "pin_order": {"_nnull": True}},
-                "sort": ["pin_order"],
-                "limit": 3,
-            }
-        },
-    )
-    pinned_rows = pinned_raw if isinstance(pinned_raw, list) else []
-    pinned_ids = [p["id"] for p in pinned_rows]
-    pinned_visibilities = {p["id"]: (p.get("visibility") or "workspace") for p in pinned_rows}
-    pinned_preview_map = await _build_access_previews(
-        workspace_id=ctx.workspace_id,
-        project_ids=pinned_ids,
-        project_visibilities=pinned_visibilities,
-    )
-    pinned_hours_map = await _project_audio_hours(pinned_ids)
     pinned = [
         V2ProjectSummary(
             id=p["id"],
@@ -428,10 +435,10 @@ async def list_workspace_projects(
             language=p.get("language"),
             pin_order=p.get("pin_order"),
             conversations_count=int(p.get("conversations_count", 0) or 0),
-            audio_hours=pinned_hours_map.get(p["id"], 0.0),
+            audio_hours=hours_map.get(p["id"], 0.0),
             visibility=p.get("visibility") or "workspace",
-            access_preview=pinned_preview_map.get(p["id"], ([], 0))[0],
-            access_count=pinned_preview_map.get(p["id"], ([], 0))[1],
+            access_preview=preview_map.get(p["id"], ([], 0))[0],
+            access_count=preview_map.get(p["id"], ([], 0))[1],
         )
         for p in pinned_rows
     ]

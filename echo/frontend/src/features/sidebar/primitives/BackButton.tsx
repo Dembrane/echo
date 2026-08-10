@@ -14,28 +14,28 @@ interface BackButtonProps {
 export const BackButton = ({ to, label, center }: BackButtonProps) => {
 	if (center) {
 		return (
-			<I18nLink
-				to={to}
-				className="group relative flex h-[30px] items-center rounded-md px-2 text-sm leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
-				style={{ color: "#2d2d2c" }}
-			>
-				<ArrowLeft
-					size={14}
-					className="absolute left-2 shrink-0 transition-transform group-hover:-translate-x-0.5"
-					aria-hidden="true"
-				/>
-				<span className="flex-1 truncate px-5 text-center font-medium">
-					{label}
-				</span>
-			</I18nLink>
+			<div className="sticky top-0 z-10 -mx-1.5 -mt-1.5 bg-parchment px-1.5 pt-1.5">
+				<I18nLink
+					to={to}
+					className="group relative flex h-[30px] items-center rounded-md px-2 text-sm leading-tight text-graphite transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+				>
+					<ArrowLeft
+						size={14}
+						className="absolute left-2 shrink-0 transition-transform group-hover:-translate-x-0.5"
+						aria-hidden="true"
+					/>
+					<span className="flex-1 truncate px-5 text-center font-medium">
+						{label}
+					</span>
+				</I18nLink>
+			</div>
 		);
 	}
 
 	return (
 		<I18nLink
 			to={to}
-			className="group flex h-[30px] items-center gap-1.5 rounded-md px-2 text-sm leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
-			style={{ color: "#2d2d2c" }}
+			className="group flex h-[30px] items-center gap-1.5 rounded-md px-2 text-sm leading-tight text-graphite transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
 		>
 			<ArrowLeft
 				size={14}

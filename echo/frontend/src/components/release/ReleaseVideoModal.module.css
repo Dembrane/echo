@@ -1,0 +1,115 @@
+/* The whole type system of the release modal lives in this file, and there are
+   exactly TWO combinations of (size, weight, colour, style):
+
+     1. .title  28px / 400 / var(--app-text) / normal
+     2. .body   20px / 400 / var(--app-text) / normal
+
+   Both sizes come from the app's own ramp in index.css, both are the app's
+   black, both are weight 400, neither is italic. Every piece of text in the
+   modal carries one of these two classes and nothing in the component sets a
+   font size, weight, colour or style of its own.
+
+   The reset under .body is what keeps that true once markdown is involved: an
+   author writing **bold**, _italic_ or a heading inside a release description
+   would otherwise introduce a third and fourth combination. Emphasis is
+   flattened on purpose. Links keep an underline, which is a decoration rather
+   than a colour, so a link is still visibly a link while staying black. */
+
+.title {
+	color: var(--app-text);
+	font-size: var(--app-font-size-xl);
+	font-style: normal;
+	font-weight: 400;
+	line-height: 1.25;
+	margin: 0;
+}
+
+.body {
+	color: var(--app-text);
+	font-size: var(--app-font-size-md);
+	font-style: normal;
+	font-weight: 400;
+	line-height: 1.55;
+}
+
+/* Markdown yields to the two combinations above rather than adding more. */
+.body :is(p, ul, ol, li, a, strong, b, em, i, h1, h2, h3, h4, h5, h6, code) {
+	color: inherit;
+	font-family: inherit;
+	font-size: inherit;
+	font-style: normal;
+	font-weight: inherit;
+}
+
+.body p {
+	margin: 0 0 0.75em;
+}
+
+.body p:last-child {
+	margin-bottom: 0;
+}
+
+.body ul,
+.body ol {
+	margin: 0 0 0.75em;
+	padding-left: 1.25em;
+}
+
+.body ul {
+	list-style: disc;
+}
+
+.body ol {
+	list-style: decimal;
+}
+
+.body li {
+	margin-bottom: 0.25em;
+}
+
+.body a {
+	text-decoration: underline;
+}
+
+/* The video keeps a 16:9 box while it loads so the modal does not jump. */
+.video {
+	aspect-ratio: 16 / 9;
+	border: 0;
+	border-radius: 8px;
+	display: block;
+	height: 100%;
+	overflow: hidden;
+	width: 100%;
+}
+
+.videoFrame {
+	background-color: rgba(45, 45, 44, 0.06);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+/* The changelog link navigates, so it is an anchor rather than a button. */
+.link {
+	align-items: center;
+	align-self: flex-start;
+	cursor: pointer;
+	display: inline-flex;
+	gap: 0.4em;
+	text-align: left;
+	text-decoration: underline;
+}
+
+.link:focus-visible {
+	border-radius: 2px;
+	outline: 2px solid var(--app-text);
+	outline-offset: 3px;
+}
+
+/* Touch and stylus get 44px targets; a mouse keeps the tighter defaults. */
+@media (pointer: coarse) {
+	.link,
+	.closeButton {
+		min-height: 44px;
+		min-width: 44px;
+	}
+}

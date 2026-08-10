@@ -97,6 +97,8 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 	switch (toolName) {
 		case "proposeProjectUpdate":
 			return t`Suggesting project changes`;
+		case "proposeTagsUpdate":
+			return t`Suggesting tag changes`;
 		case "proposeCustomVerificationTopic":
 			return t`Suggesting a verification prompt`;
 		case "proposeCanvas":
@@ -142,11 +144,12 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 			return context.query
 				? t`Searching transcripts for "${context.query}"`
 				: t`Searching transcripts`;
+		// Retired direct-write tool; replayed histories still carry it.
 		case "editProjectTags":
 			return t`Updating project tags`;
 		case "noteInsight":
 		case "recordInsight":
-			return t`Noting this for the dembrane team`;
+			return t`Drafting a note you can send to the dembrane team`;
 		case "editInsight":
 			return t`Updating a note for the dembrane team`;
 		case "retractInsight":
@@ -200,6 +203,9 @@ const parseToolEvent = (event: AgenticRunEvent): ParsedToolEvent | null => {
 			data?.name,
 			outputKwargs?.name,
 		) ?? "tool";
+	// Its output already appears in the thread as a message; a step row
+	// would say the same thing twice.
+	if (toolName === "sendProgressUpdate") return null;
 	const callId = firstString(
 		payload?.run_id,
 		payload?.runId,
@@ -372,6 +378,47 @@ export const parseProjectUpdateSuggestion = (
 	}
 };
 
+export type ParsedTagsUpdateSuggestion = {
+	projectId: string;
+	summary: string;
+	add: string[];
+	remove: string[];
+	currentTags: string[];
+};
+
+const asStringArray = (value: unknown): string[] =>
+	Array.isArray(value)
+		? value
+				.filter((entry): entry is string => typeof entry === "string")
+				.map((entry) => entry.trim())
+				.filter(Boolean)
+		: [];
+
+/** Returns the structured suggestion when a completed tool activity is a
+ * proposeTagsUpdate result, else null. */
+export const parseTagsUpdateSuggestion = (
+	activity: ToolActivity,
+): ParsedTagsUpdateSuggestion | null => {
+	if (activity.toolName !== "proposeTagsUpdate") return null;
+	if (activity.status !== "completed" || !activity.rawOutput) return null;
+	try {
+		const payload = JSON.parse(activity.rawOutput);
+		if (payload?.kind !== "tags_update_suggestion") return null;
+		const add = asStringArray(payload.add);
+		const remove = asStringArray(payload.remove);
+		if (add.length === 0 && remove.length === 0) return null;
+		return {
+			add,
+			currentTags: asStringArray(payload.current_tags),
+			projectId: String(payload.project_id ?? ""),
+			remove,
+			summary: String(payload.summary ?? ""),
+		};
+	} catch {
+		return null;
+	}
+};
+
 export type ParsedCustomVerificationTopicSuggestion = {
 	projectId: string;
 	label: string;
@@ -524,7 +571,7 @@ export type AgentInsightKind =
 
 /** How the host last touched this insight: freshly noted, amended by id, or
  * withdrawn. The card mutes for "retracted". */
-export type InsightNoteMode = "noted" | "edited" | "retracted";
+export type InsightNoteMode = "proposed" | "noted" | "edited" | "retracted";
 
 export type ParsedInsightNote = {
 	kind: AgentInsightKind;
@@ -543,6 +590,7 @@ const INSIGHT_KINDS = new Set<AgentInsightKind>([
 ]);
 
 const INSIGHT_MODES = new Set<InsightNoteMode>([
+	"proposed",
 	"noted",
 	"edited",
 	"retracted",
@@ -569,7 +617,14 @@ export const parseInsightNote = (
 	if (activity.status !== "completed" || !activity.rawOutput) return null;
 	try {
 		const payload = JSON.parse(activity.rawOutput);
-		if (payload?.type !== "agent_insight_note") return null;
+		// agent_insight_proposal is the current marker (the tool proposes and
+		// writes nothing); agent_insight_note is the pre-consent marker that
+		// historical chats replay, and it must keep rendering.
+		if (
+			payload?.type !== "agent_insight_note" &&
+			payload?.type !== "agent_insight_proposal"
+		)
+			return null;
 		const kind = String(payload.insight_kind ?? "").trim();
 		if (!INSIGHT_KINDS.has(kind as AgentInsightKind)) return null;
 		const content = String(payload.content ?? "").trim();

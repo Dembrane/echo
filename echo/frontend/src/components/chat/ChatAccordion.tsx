@@ -44,8 +44,11 @@ export const ChatModeIndicator = ({
 	size = "sm",
 }: {
 	mode: "overview" | "deep_dive" | "agentic" | null | undefined;
-	size?: "xs" | "sm";
+	size?: "xs" | "compact-sm" | "sm";
 }) => {
+	// circle / glyph px per size token
+	const [circleSize, glyphSize] =
+		size === "xs" ? [20, 12] : size === "compact-sm" ? [26, 16] : [32, 20];
 	// Default to deep_dive if mode not set
 	const effectiveMode = mode ?? "deep_dive";
 	const isOverview = effectiveMode === "overview";
@@ -68,25 +71,17 @@ export const ChatModeIndicator = ({
 		>
 			<Box className="flex items-center justify-center">
 				{isOverview || isAgentic ? (
-					<ActionIcon
-						radius={100}
-						size={size === "xs" ? 20 : 32}
-						color={colors.primary}
-					>
+					<ActionIcon radius={100} size={circleSize} color={colors.primary}>
 						<IconSparkles
-							size={size === "xs" ? 12 : 20}
+							size={glyphSize}
 							color="var(--app-text)"
 							stroke={2}
 						/>
 					</ActionIcon>
 				) : (
-					<ActionIcon
-						radius={100}
-						size={size === "xs" ? 20 : 32}
-						color={colors.primary}
-					>
+					<ActionIcon radius={100} size={circleSize} color={colors.primary}>
 						<IconMessageCircle
-							size={size === "xs" ? 12 : 20}
+							size={glyphSize}
 							color="var(--app-text)"
 							stroke={2}
 						/>

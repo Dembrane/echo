@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { AxiosError } from "axios";
 import posthog from "posthog-js";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { z } from "zod";
@@ -33,7 +33,6 @@ type FormValues = z.infer<typeof FormSchema>;
 export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 	const navigate = useI18nNavigate();
 	const [searchParams] = useSearchParams();
-	const [readyValues, setReadyValues] = useState<FormValues | null>(null);
 
 	const defaultName =
 		searchParams.get("participant_name") || searchParams.get("name") || "";
@@ -92,10 +91,6 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 			tagIdList: data.tagIdList,
 			visitorId: getVisitorId(project.id),
 		});
-	};
-
-	const onSubmit = (data: FormValues) => {
-		setReadyValues(data);
 	};
 
 	// Auto-submit if skipOnboarding is requested and we have required fields prefilled
@@ -165,36 +160,13 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 
 	useEffect(() => {
 		if (isError) {
-			setReadyValues(null);
 			reset();
 		}
 	}, [isError, reset]);
 
-	if (readyValues) {
-		return (
-			<Stack className="w-full" {...testId("portal-ready-to-record")}>
-				<Title order={2}>
-					<Trans>Ready to record</Trans>
-				</Title>
-				<Text size="lg">
-					<Trans>Start when you are ready.</Trans>
-				</Text>
-				<Button
-					size="lg"
-					loading={initiateConversationMutation.isPending}
-					fullWidth
-					onClick={() => startConversation(readyValues)}
-					{...testId("portal-ready-start-button")}
-				>
-					<Trans>Start recording</Trans>
-				</Button>
-			</Stack>
-		);
-	}
-
 	return (
 		<form
-			onSubmit={handleSubmit(onSubmit)}
+			onSubmit={handleSubmit(startConversation)}
 			className="w-full"
 			{...testId("portal-initiate-form")}
 		>
@@ -261,7 +233,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 					fullWidth
 					{...testId("portal-initiate-next-button")}
 				>
-					<Trans id="participant.ready.to.begin.button.text">Next</Trans>
+					<Trans id="participant.ready.to.begin.button.text">Continue</Trans>
 				</Button>
 			</Stack>
 		</form>

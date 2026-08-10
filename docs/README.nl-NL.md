@@ -17,6 +17,9 @@ hun eigen uitdagingen op te lossen. dembrane voegt geen intelligentie toe aan ee
 het brengt de intelligentie naar boven die er al is, en houdt de mensen in de kamer stevig
 aan het roer.
 
+dembrane heette vroeger ECHO. Die oude naam duikt hier en daar nog op, in bestandspaden,
+image-namen en ouder materiaal.
+
 > [!NOTE]
 > Nieuw hier? De snelste route is de *[Snelstart voor hosts](./users/host/getting-started.md)*.
 > Alleen hier om op te nemen op uitnodiging? Zie *[voor deelnemers](./users/participant/index.md)*.

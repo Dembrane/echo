@@ -26,7 +26,7 @@ from dotenv import load_dotenv
 from pydantic import Field, BaseModel, AliasChoices, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-TranscriptionProvider = Literal["LiteLLM", "AssemblyAI", "Dembrane-25-09"]
+TranscriptionProvider = Literal["LiteLLM", "Dembrane-26-07"]
 
 _MODULE_BASE_DIR = Path(__file__).resolve().parent.parent
 _DEFAULT_ENV_PATH = _MODULE_BASE_DIR / ".env"
@@ -250,13 +250,6 @@ class FeatureFlagSettings(BaseSettings):
             "DISABLE_CHAT_TITLE_GENERATION", "FEATURE_FLAGS__DISABLE_CHAT_TITLE_GENERATION"
         ),
     )
-    enable_chat_select_all: bool = Field(
-        default=False,
-        alias="ENABLE_CHAT_SELECT_ALL",
-        validation_alias=AliasChoices(
-            "ENABLE_CHAT_SELECT_ALL", "FEATURE_FLAGS__ENABLE_CHAT_SELECT_ALL"
-        ),
-    )
     serve_api_docs: bool = Field(
         default=False,
         alias="SERVE_API_DOCS",
@@ -271,6 +264,19 @@ class FeatureFlagSettings(BaseSettings):
         default=False,
         alias="ENABLE_WEBHOOKS",
         validation_alias=AliasChoices("ENABLE_WEBHOOKS", "FEATURE_FLAGS__ENABLE_WEBHOOKS"),
+    )
+    enable_monitor: bool = Field(
+        default=True,
+        alias="ENABLE_MONITOR",
+        validation_alias=AliasChoices("ENABLE_MONITOR", "FEATURE_FLAGS__ENABLE_MONITOR"),
+    )
+    # Global kill switch. Even when on, canvas is opt-in per project via the
+    # experimental toggle (project.is_canvas_enabled, default false).
+    # Production sets ENABLE_CANVAS=0 this release (gitops values-prod.yaml).
+    enable_canvas: bool = Field(
+        default=True,
+        alias="ENABLE_CANVAS",
+        validation_alias=AliasChoices("ENABLE_CANVAS", "FEATURE_FLAGS__ENABLE_CANVAS"),
     )
 
 
@@ -334,9 +340,7 @@ class EmailSettings(BaseSettings):
     upgrade_request_inbox: str = Field(
         default="upgrades@dembrane.com",
         alias="UPGRADE_REQUEST_INBOX",
-        validation_alias=AliasChoices(
-            "UPGRADE_REQUEST_INBOX", "EMAIL__UPGRADE_REQUEST_INBOX"
-        ),
+        validation_alias=AliasChoices("UPGRADE_REQUEST_INBOX", "EMAIL__UPGRADE_REQUEST_INBOX"),
     )
     # Where onboarding training follow-ups route (ISSUE-012). Pauline owns
     # training verification/scheduling. FOLLOW-UP: confirm Pauline's address;
@@ -519,32 +523,6 @@ class TranscriptionSettings(BaseSettings):
         alias="GCP_SA_JSON",
         validation_alias=AliasChoices("GCP_SA_JSON", "TRANSCRIPTION__GCP_SA_JSON"),
     )
-    assemblyai_api_key: Optional[str] = Field(
-        default=None,
-        alias="ASSEMBLYAI_API_KEY",
-        validation_alias=AliasChoices("ASSEMBLYAI_API_KEY", "TRANSCRIPTION__ASSEMBLYAI__API_KEY"),
-    )
-    assemblyai_base_url: str = Field(
-        default="https://api.eu.assemblyai.com",
-        alias="ASSEMBLYAI_BASE_URL",
-        validation_alias=AliasChoices("ASSEMBLYAI_BASE_URL", "TRANSCRIPTION__ASSEMBLYAI__BASE_URL"),
-    )
-    assemblyai_webhook_url: Optional[str] = Field(
-        default=None,
-        alias="ASSEMBLYAI_WEBHOOK_URL",
-        validation_alias=AliasChoices(
-            "ASSEMBLYAI_WEBHOOK_URL",
-            "TRANSCRIPTION__ASSEMBLYAI__WEBHOOK_URL",
-        ),
-    )
-    assemblyai_webhook_secret: Optional[str] = Field(
-        default=None,
-        alias="ASSEMBLYAI_WEBHOOK_SECRET",
-        validation_alias=AliasChoices(
-            "ASSEMBLYAI_WEBHOOK_SECRET",
-            "TRANSCRIPTION__ASSEMBLYAI__WEBHOOK_SECRET",
-        ),
-    )
     litellm_model: Optional[str] = Field(
         default=None,
         alias="LITELLM_TRANSCRIPTION_MODEL",
@@ -580,12 +558,7 @@ class TranscriptionSettings(BaseSettings):
         return _coerce_service_account(value)
 
     def ensure_valid(self) -> None:
-        if self.provider == "AssemblyAI":
-            if not self.assemblyai_api_key:
-                raise ValueError(
-                    "ASSEMBLYAI_API_KEY must be set when TRANSCRIPTION_PROVIDER=AssemblyAI"
-                )
-        elif self.provider == "LiteLLM":
+        if self.provider == "LiteLLM":
             missing = [
                 name
                 for name, value in [
@@ -598,15 +571,10 @@ class TranscriptionSettings(BaseSettings):
                 raise ValueError(
                     "Missing required LiteLLM transcription configuration: " + ", ".join(missing)
                 )
-        elif self.provider == "Dembrane-25-09":
+        elif self.provider == "Dembrane-26-07":
             if self.gcp_sa_json is None:
                 raise ValueError(
-                    "GCP_SA_JSON must be provided when TRANSCRIPTION_PROVIDER=Dembrane-25-09"
-                )
-            if self.assemblyai_webhook_url and not self.assemblyai_webhook_secret:
-                raise ValueError(
-                    "ASSEMBLYAI_WEBHOOK_SECRET must be set when "
-                    "ASSEMBLYAI_WEBHOOK_URL is configured for TRANSCRIPTION_PROVIDER=Dembrane-25-09"
+                    "GCP_SA_JSON must be provided when TRANSCRIPTION_PROVIDER=Dembrane-26-07"
                 )
 
 
@@ -656,6 +624,33 @@ class BillingSettings(BaseSettings):
         return self.mollie_test_mode and self.mollie_force_reconcile_failure
 
 
+class SupportSettings(BaseSettings):
+    """Support-request forwarding to sam, the engineering coworker bot
+    (ISSUE-034). The forwarder task no-ops unless BOTH are set — the local
+    default. The URL is sam's public edge function; the token is the shared
+    static secret sam validates (sent as `X-Echo-Support-Token`, since on
+    sam's ingress `Authorization` carries the GCP IAM identity token)."""
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
+
+    forward_webhook_url: Optional[str] = Field(
+        default=None,
+        alias="SUPPORT_WEBHOOK_URL",
+        validation_alias=AliasChoices("SUPPORT_WEBHOOK_URL", "SUPPORT__FORWARD_WEBHOOK_URL"),
+    )
+    forward_webhook_token: Optional[str] = Field(
+        default=None,
+        alias="ECHO_SUPPORT_WEBHOOK_TOKEN",
+        validation_alias=AliasChoices(
+            "ECHO_SUPPORT_WEBHOOK_TOKEN", "SUPPORT__FORWARD_WEBHOOK_TOKEN"
+        ),
+    )
+
+    @property
+    def forwarding_enabled(self) -> bool:
+        return bool(self.forward_webhook_url and self.forward_webhook_token)
+
+
 class AppSettings:
     """
     Aggregate application settings composed from modular sections.
@@ -678,6 +673,7 @@ class AppSettings:
         self.embedding = EmbeddingSettings()
         self.agentic = AgenticSettings()
         self.billing = BillingSettings()
+        self.support = SupportSettings()
 
         self.transcription.ensure_valid()
 
@@ -731,7 +727,10 @@ def get_settings() -> AppSettings:
             (re.compile(r'"password":\s*"[^"]*"'), '"password": "[REDACTED]"'),
             (re.compile(r"'private_key':\s*'[^']*'"), "'private_key': '[REDACTED]'"),
             (re.compile(r"'api_key':\s*'[^']*'"), "'api_key': '[REDACTED]'"),
-            (re.compile(r"-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----", re.DOTALL), "[REDACTED_PRIVATE_KEY]"),
+            (
+                re.compile(r"-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----", re.DOTALL),
+                "[REDACTED_PRIVATE_KEY]",
+            ),
         ]
 
         def filter(self, record: logging.LogRecord) -> bool:

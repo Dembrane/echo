@@ -34,6 +34,8 @@ When fixing or extending Dramatiq flows:
    - L3 `task_catch_up_unsummarized_conversations` (~5 min) → `is_all_chunks_transcribed=True AND summary=null` → summarize
 4. **TEXT and AUDIO conversations share the same state machine**; both must converge to the same flags
 
+The event-loop rules for actors live in @../AGENTS.md, "Dramatiq & Async Rules". The production failures behind them (closed-loop httpx pools, sniffio under gevent, the `nest_asyncio` fallback misfiring across greenlets) are written up in [../docs/incidents/dramatiq-actor-event-loops.md](../docs/incidents/dramatiq-actor-event-loops.md). Read it before touching `dembrane/async_helpers.py`.
+
 ## Worker tuning
 
 - CPU Dramatiq worker uses **1 thread per process** to cap memory (FFmpeg can be hungry). Scale via processes/replicas, not threads

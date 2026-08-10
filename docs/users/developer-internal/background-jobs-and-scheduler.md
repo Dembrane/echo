@@ -76,8 +76,7 @@ These drive the [pipeline](./processing-pipeline.md):
 
 | Actor | Queue / priority | Role |
 |---|---|---|
-| `task_transcribe_chunk` | network / 0 | Transcribe one chunk (AssemblyAI or LiteLLM). |
-| `task_correct_transcript` | network / 0 | Gemini correction + PII redaction; decrements the pending-chunks counter. |
+| `task_transcribe_chunk` | network / 0 | Transcribe one chunk (Gemini Vertex AI or LiteLLM), normalize hotwords, perform optional PII redaction, and decrement the pending-chunks counter. |
 | `task_finalize_conversation` | network / 20 | Fan-in when the counter hits 0; idempotent via Redis lock. |
 | `task_merge_conversation_chunks` | *cpu* / 10 | Stitch chunks into the full transcript (`store_results=True`). |
 | `task_summarize_conversation` | network / 30 | Gemini summary. |

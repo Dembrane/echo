@@ -29,17 +29,14 @@ MessageHistoryEntry = dict[str, str]
 
 
 def docs_base_url_for_env() -> str:
-    """The published docs site for this environment, derived in code from the
-    per-env ADMIN_BASE_URL that is already configured (same idea as the
-    frontend's byEnv(): no dedicated env var to wire through gitops).
-
-    Only echo-next publishes the docs/ corpus today (GitHub Pages, dembrane/echo
-    main). docs.dembrane.com still serves the old echo-user-docs site with
-    different paths, so prod, testing, and local resolve to empty and the agent
-    cites bare doc paths instead of links."""
+    """The published docs site, same for every environment now that
+    docs.dembrane.com (GitHub Pages, dembrane/echo main, docs/) is the one
+    corpus everyone reads, prod included. Local dev's ADMIN_BASE_URL is a bare
+    host with no dembrane.com suffix, so it still resolves to empty and cites
+    bare doc paths instead of links."""
     admin_host = httpx.URL(get_settings().urls.admin_base_url).host
-    if admin_host.endswith(".echo-next.dembrane.com"):
-        return "https://docs.echo-next.dembrane.com"
+    if admin_host.endswith("dembrane.com"):
+        return "https://docs.dembrane.com"
     return ""
 
 
@@ -113,6 +110,7 @@ async def stream_agent_events(
     chat_id: Optional[str] = None,
     app_user_id: Optional[str] = None,
     message_id: Optional[str] = None,
+    canvas_enabled: bool = False,
     agent_service_url: Optional[str] = None,
     timeout_seconds: Optional[float] = None,
 ) -> AsyncGenerator[dict[str, Any], None]:
@@ -133,6 +131,9 @@ async def stream_agent_events(
         headers["X-Dembrane-App-User-Id"] = app_user_id
     if message_id:
         headers["X-Dembrane-Message-Id"] = message_id
+    # Always explicit so the agent never guesses: canvas tools and prompt
+    # sections exist only when the project's beta toggle is on.
+    headers["X-Dembrane-Canvas-Enabled"] = "1" if canvas_enabled else "0"
 
     payload: dict[str, Any] = {
         "threadId": thread_id,

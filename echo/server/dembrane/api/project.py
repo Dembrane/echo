@@ -136,6 +136,20 @@ async def delete_project(
         {"deleted_at": datetime.utcnow().isoformat()},
     )
 
+    # Bust cached usage so the deleted project's hours/counts drop immediately.
+    try:
+        from dembrane.cache_utils import invalidate_workspace_and_org_usage
+        from dembrane.directus_async import async_directus
+
+        proj = await async_directus.get_item(
+            "project", project_id, params={"fields": "workspace_id.id,workspace_id.org_id"}
+        )
+        workspace = (proj or {}).get("workspace_id") if isinstance(proj, dict) else None
+        if isinstance(workspace, dict) and workspace.get("id"):
+            await invalidate_workspace_and_org_usage(workspace["id"], workspace.get("org_id"))
+    except Exception:
+        logger.warning(f"usage cache invalidation failed for deleted project {project_id}")
+
     logger.info(f"Soft-deleted project {project_id} by user {auth.user_id}")
     return {"status": "success"}
 
@@ -511,6 +525,7 @@ async def create_report(
                 "query": {
                     "filter": {
                         "project_id": {"_eq": project_id},
+                        "kind": {"_eq": "report"},
                         "status": {"_eq": "draft"},
                         "deleted_at": {"_null": True},
                     },
@@ -646,6 +661,7 @@ async def list_project_reports(
             "query": {
                 "filter": {
                     "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
                     "status": {"_in": ["archived", "published", "scheduled", "draft"]},
                     "deleted_at": {"_null": True},
                 },
@@ -694,6 +710,7 @@ async def get_latest_report(
             "query": {
                 "filter": {
                     "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
                     "deleted_at": {"_null": True},
                 },
                 "fields": [
@@ -802,7 +819,9 @@ async def update_report(
     if not payload:
         raise HTTPException(status_code=400, detail="No fields to update")
 
-    # Auto-unpublish other reports when publishing this one
+    # Auto-unpublish other reports when publishing this one. Canvases are
+    # created status='published' too, so without the kind filter this archives
+    # every canvas in the project as a side effect of publishing a report.
     if payload.get("status") == "published":
         other_published = await run_in_thread_pool(
             directus.get_items,
@@ -811,6 +830,7 @@ async def update_report(
                 "query": {
                     "filter": {
                         "project_id": {"_eq": project_id},
+                        "kind": {"_eq": "report"},
                         "status": {"_eq": "published"},
                         "id": {"_neq": report_id},
                         "deleted_at": {"_null": True},

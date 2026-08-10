@@ -1,6 +1,6 @@
 # Usage Tracker
 
-A customer usage reporting tool for Dembrane ECHO. Generates insights and reports for sales teams.
+A customer usage reporting tool for dembrane. Generates insights and reports for sales teams.
 
 ## Features
 

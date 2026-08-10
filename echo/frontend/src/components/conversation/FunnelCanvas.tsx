@@ -5,31 +5,76 @@ import type {
 	FunnelVisitor,
 	MonitorConversation,
 } from "@/hooks/useConversationMonitor";
+import { isFinishedSession, isOnRecordingPage } from "./monitorGrouping";
 
-// A particle funnel that scales to thousands of dots: three stage columns
-// (Scanned -> Setting up -> Recording), each a bottom-packed pile like a
+// A particle funnel that scales to thousands of dots: one pile per stage
+// column (scanned -> setting up -> recording page -> live -> finished), a pile like a
 // gravity machine. Dots lerp toward their target slot, so a participant
 // visibly flows to the next column when their stage changes. Drawing is
 // batched by colour (one fill per colour per frame), so a few thousand dots
 // stay smooth. Clicks hit-test to the nearest dot for the drilldown.
 
-const COLORS = {
-	scanned: "#adb5bd",
-	setup: "#4c6ef5",
-	blocked: "#fa5252",
-	recording: "#fa5252",
-	stalled: "#e8590c",
+// Fallback hexes only kick in before the theme's CSS variables exist (SSR,
+// or a stylesheet that hasn't loaded yet). Live colours are sourced from the
+// Mantine theme so the funnel stays in sync with the rest of the monitor.
+const FALLBACK_COLORS = {
 	backgrounded: "#868e96",
+	blocked: "#fa5252",
+	finished: "#868e96",
+	recording: "#fa5252",
+	// Matches the yellow StatePill for paused / away / left.
+	recordingPage: "#fab005",
+	scanned: "#adb5bd",
+	setup: "#4169e1",
+	stalled: "#e8590c",
 };
 
+let cachedColors: typeof FALLBACK_COLORS | null = null;
+
+const readCssVar = (name: string, fallback: string): string => {
+	if (typeof document === "undefined") return fallback;
+	const value = getComputedStyle(document.documentElement)
+		.getPropertyValue(name)
+		.trim();
+	return value || fallback;
+};
+
+// Reads the Mantine theme's CSS variables once and caches the result, so we
+// never touch getComputedStyle from the animation loop. Left uncached until
+// `document` exists so SSR doesn't freeze the fallback hexes permanently.
+const resolveColors = (): typeof FALLBACK_COLORS => {
+	if (cachedColors) return cachedColors;
+	if (typeof document === "undefined") return FALLBACK_COLORS;
+	const colors = {
+		backgrounded: readCssVar(
+			"--mantine-color-gray-6",
+			FALLBACK_COLORS.backgrounded,
+		),
+		blocked: readCssVar("--mantine-color-red-6", FALLBACK_COLORS.blocked),
+		finished: readCssVar("--mantine-color-gray-6", FALLBACK_COLORS.finished),
+		recording: readCssVar("--mantine-color-red-6", FALLBACK_COLORS.recording),
+		recordingPage: readCssVar(
+			"--mantine-color-yellow-6",
+			FALLBACK_COLORS.recordingPage,
+		),
+		scanned: readCssVar("--mantine-color-gray-5", FALLBACK_COLORS.scanned),
+		setup: readCssVar("--mantine-color-primary-6", FALLBACK_COLORS.setup),
+		stalled: readCssVar("--mantine-color-orange-7", FALLBACK_COLORS.stalled),
+	};
+	cachedColors = colors;
+	return colors;
+};
+
+/** `column` is the stage column this node piles into, assigned by the caller
+ * (the canvas stays agnostic about what the stages mean). */
 export type NodeDatum =
-	| { kind: "visitor"; data: FunnelVisitor }
-	| { kind: "conversation"; data: MonitorConversation };
+	| { kind: "visitor"; data: FunnelVisitor; column: number }
+	| { kind: "conversation"; data: MonitorConversation; column: number };
 
 type Particle = {
 	id: string;
 	kind: "visitor" | "conversation";
-	col: number; // 0,1,2
+	col: number;
 	color: string;
 	pulse: boolean;
 	x: number;
@@ -41,35 +86,40 @@ type Particle = {
 	dead: boolean;
 };
 
-const columnOf = (node: NodeDatum): number => {
-	if (node.kind === "conversation") return 2;
-	return node.data.stage === "scanned" ? 0 : 1;
-};
-
 const colorOf = (node: NodeDatum): string => {
+	const colors = resolveColors();
 	if (node.kind === "conversation") {
-		if (node.data.recording_health === "stalled") return COLORS.stalled;
+		if (isOnRecordingPage(node.data)) return colors.recordingPage;
+		// The finished column holds two outcomes. One count reads fine, but the
+		// dot keeps the state pill's colour, so a session that just stopped is
+		// still legible inside the column at no extra cost.
+		if (isFinishedSession(node.data)) {
+			return node.data.state === "left"
+				? colors.recordingPage
+				: colors.finished;
+		}
+		if (node.data.recording_health === "stalled") return colors.stalled;
 		if (node.data.recording_health === "backgrounded")
-			return COLORS.backgrounded;
-		return COLORS.recording;
+			return colors.backgrounded;
+		return colors.recording;
 	}
-	if (node.data.stage === "mic_blocked") return COLORS.blocked;
-	if (node.data.stage === "scanned") return COLORS.scanned;
-	return COLORS.setup;
+	if (node.data.stage === "mic_blocked") return colors.blocked;
+	if (node.data.stage === "scanned") return colors.scanned;
+	return colors.setup;
 };
 
 export const FunnelCanvas = ({
 	nodes,
 	height = 150,
-	weights = [1, 1, 1],
+	weights = [1, 1, 1, 1, 1],
 	onSelect,
 	onHover,
 }: {
 	nodes: NodeDatum[];
 	height?: number;
-	/** Relative widths of the three columns, so empty stages shrink and the
-	 * busy ones grow (e.g. only-recording -> ~25/25/50). */
-	weights?: [number, number, number];
+	/** Relative width per column, so empty stages shrink and busy ones grow.
+	 * Its length defines how many columns the canvas draws. */
+	weights?: number[];
 	onSelect: (node: NodeDatum) => void;
 	onHover?: (node: NodeDatum | null) => void;
 }) => {
@@ -77,8 +127,9 @@ export const FunnelCanvas = ({
 	const wrapRef = useRef<HTMLDivElement | null>(null);
 	const particles = useRef<Map<string, Particle>>(new Map());
 	const nodesRef = useRef<NodeDatum[]>(nodes);
-	const weightsRef = useRef<[number, number, number]>(weights);
-	const sizeRef = useRef<{ w: number; h: number }>({ w: 0, h: height });
+	const weightsRef = useRef<number[]>(weights);
+	const sizeRef = useRef<{ w: number; h: number }>({ h: height, w: 0 });
+	const lastHitTestRef = useRef(0);
 	nodesRef.current = nodes;
 	weightsRef.current = weights;
 
@@ -96,7 +147,7 @@ export const FunnelCanvas = ({
 		const resize = () => {
 			const w = wrap.clientWidth;
 			const h = height;
-			sizeRef.current = { w, h };
+			sizeRef.current = { h, w };
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 			canvas.width = Math.floor(w * dpr);
 			canvas.height = Math.floor(h * dpr);
@@ -112,16 +163,22 @@ export const FunnelCanvas = ({
 			const { w, h } = sizeRef.current;
 			// Weighted columns: empty stages shrink, busy ones grow.
 			const wts = weightsRef.current;
-			const wtTotal = wts[0] + wts[1] + wts[2] || 1;
-			const colX = [
-				0,
-				(wts[0] / wtTotal) * w,
-				((wts[0] + wts[1]) / wtTotal) * w,
-			];
+			const wtTotal = wts.reduce((sum, weight) => sum + weight, 0) || 1;
+			// Running left edge of each column.
+			let cursor = 0;
+			const colX = wts.map((weight) => {
+				const x = cursor;
+				cursor += (weight / wtTotal) * w;
+				return x;
+			});
 			const colWArr = wts.map((weight) => (weight / wtTotal) * w);
 			// Group current nodes by column and assign a slot.
-			const byCol: NodeDatum[][] = [[], [], []];
-			for (const node of nodesRef.current) byCol[columnOf(node)].push(node);
+			const byCol: NodeDatum[][] = wts.map(() => []);
+			for (const node of nodesRef.current) {
+				// Clamp so a caller can never index off the end of the canvas.
+				const col = Math.min(Math.max(node.column, 0), byCol.length - 1);
+				byCol[col].push(node);
+			}
 			const live = new Set<string>();
 
 			byCol.forEach((colNodes, col) => {
@@ -146,7 +203,9 @@ export const FunnelCanvas = ({
 				const top = Math.max(spacing / 2, (h - rows * spacing) / 2);
 				const dotR = Math.max(2.5, Math.min(5, spacing * 0.4));
 				colNodes.forEach((node, i) => {
-					const id = node.data.id;
+					// Prefix with kind: visitors and conversations can share an
+					// underlying id, and the map key must not collide between them.
+					const id = `${node.kind}:${node.data.id}`;
 					live.add(id);
 					const row = Math.floor(i / perRow);
 					const column = i % perRow;
@@ -164,8 +223,8 @@ export const FunnelCanvas = ({
 							id,
 							kind: node.kind,
 							pulse:
-							node.kind === "conversation" &&
-							node.data.recording_health === "receiving",
+								node.kind === "conversation" &&
+								node.data.recording_health === "receiving",
 							r: dotR,
 							tx,
 							ty,
@@ -192,10 +251,32 @@ export const FunnelCanvas = ({
 			}
 		};
 
+		// Layout only needs to rerun when its inputs actually change (a new
+		// nodes/weights array from the data hook, or a resize) -- not on every
+		// animation frame. `nodes`/`weights` are memoized upstream, so a
+		// reference check is enough to catch real changes cheaply.
+		let dirtyNodes: NodeDatum[] | null = null;
+		let dirtyWeights: number[] | null = null;
+		let dirtyW = -1;
+		let dirtyH = -1;
+
 		let last = 0;
 		const frame = (time: number) => {
-			layout();
 			const { w, h } = sizeRef.current;
+			const currentNodes = nodesRef.current;
+			const currentWeights = weightsRef.current;
+			if (
+				currentNodes !== dirtyNodes ||
+				currentWeights !== dirtyWeights ||
+				w !== dirtyW ||
+				h !== dirtyH
+			) {
+				layout();
+				dirtyNodes = currentNodes;
+				dirtyWeights = currentWeights;
+				dirtyW = w;
+				dirtyH = h;
+			}
 			ctx.clearRect(0, 0, w, h);
 			const dt = last ? Math.min((time - last) / 16.67, 3) : 1;
 			last = time;
@@ -238,9 +319,11 @@ export const FunnelCanvas = ({
 		};
 	}, [height]);
 
-	const [hover, setHover] = useState<{ label: string; x: number; y: number } | null>(
-		null,
-	);
+	const [hover, setHover] = useState<{
+		label: string;
+		x: number;
+		y: number;
+	} | null>(null);
 
 	const nearest = (mx: number, my: number): NodeDatum | null => {
 		let best: { id: string; d: number } | null = null;
@@ -251,7 +334,10 @@ export const FunnelCanvas = ({
 		}
 		// Generous radius so tiny dots are still easy to hit.
 		if (!best || best.d > 18 * 18) return null;
-		return nodesRef.current.find((n) => n.data.id === best?.id) ?? null;
+		return (
+			nodesRef.current.find((n) => `${n.kind}:${n.data.id}` === best?.id) ??
+			null
+		);
 	};
 
 	const labelFor = (node: NodeDatum): string => {
@@ -270,12 +356,19 @@ export const FunnelCanvas = ({
 		<div ref={wrapRef} className="relative w-full">
 			<canvas
 				ref={canvasRef}
+				role="img"
+				aria-label={t`Live participant funnel: scanned, setting up, on recording page, live, and finished counts`}
 				onClick={(event) => {
 					const { x, y } = mouseXY(event);
 					const node = nearest(x, y);
 					if (node) onSelect(node);
 				}}
 				onMouseMove={(event) => {
+					// Throttle the hit-test: it scans every live particle, so
+					// running it on every native mousemove event is wasted work.
+					const now = performance.now();
+					if (now - lastHitTestRef.current < 40) return;
+					lastHitTestRef.current = now;
 					const { x, y } = mouseXY(event);
 					const node = nearest(x, y);
 					onHover?.(node);
@@ -290,7 +383,7 @@ export const FunnelCanvas = ({
 			/>
 			{hover && (
 				<div
-					className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded bg-slate-800 px-2 py-1 text-xs text-white shadow"
+					className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded bg-graphite px-2 py-1 text-xs text-parchment shadow"
 					style={{ left: hover.x, top: hover.y - 6 }}
 				>
 					{hover.label}

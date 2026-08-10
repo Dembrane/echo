@@ -21,7 +21,7 @@ doesn't use recording time.
 | *Portal: QR or direct link* | The people themselves, on their own phones | Many people at once; self-service; in person or remote |
 | *Record yourself (browser)* | You, on a laptop | You're holding the conversation or interviewing |
 | *Upload text* | No one - you already have it | Migrating data, or audio captured elsewhere |
-| *dembrane Go (iOS)* | You, on your phone | Mobile, walking, or flaky-laptop situations |
+| *dembrane Go (iOS, beta)* | You, on your phone | Mobile, walking, or flaky-laptop situations |
 
 ## The portal: QR or direct link
 
@@ -53,7 +53,7 @@ meter so you can see audio is actually arriving, and a live transcript snippet; 
 audio stops coming in you get an *Audio stopped?* warning, and a locked phone shows as
 *Screen locked*. Transcription progress and errors show
 per conversation, with a rough *catch up* estimate when a backlog builds. The project home
-shows the same thing in brief under *Live & recent*.
+shows the same thing in brief under *Live & recent*. For a detailed walkthrough of all stages, indicators, and warnings, see [the live monitor](../../features/live-monitor.md) feature guide.
 
 > [!TIP]
 > Put the Monitor on your laptop while the room records. The two warnings worth acting on in
@@ -99,6 +99,9 @@ away from a desk: local-first recording in 30-second chunks that survives a cras
 being killed, background recording, a Live Activity in the Dynamic Island, and a microphone
 selector. Sign in with your dembrane account, pick the project, and record - conversations
 sync to the same project and transcribe like browser recordings.
+
+dembrane Go is in *beta* - it isn't on the App Store yet. Email
+[sameer@dembrane.com](mailto:sameer@dembrane.com) to join the TestFlight beta.
 
 > [!IMPORTANT]
 > dembrane Go is a *recording* companion. Analysis, reports, the library, and project

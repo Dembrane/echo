@@ -1,6 +1,7 @@
 import type { Query } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import {
+	keepPreviousData,
 	useMutation,
 	useQuery,
 	useQueryClient,
@@ -63,23 +64,29 @@ export const useLockConversationsMutation = () => {
 export const useDeleteChatMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (payload: { chatId: string; projectId: string }) =>
-			deleteChatById(payload.chatId),
+		mutationFn: (payload: {
+			chatId: string;
+			projectId: string;
+			/** Throwaway drafts: no toast, no analytics event. */
+			silent?: boolean;
+		}) => deleteChatById(payload.chatId),
+		onError: (error: Error, vars) => {
+			if (vars.silent) return;
+			toast.error(error.message || t`Failed to delete chat`);
+		},
 		onSuccess: (_, vars) => {
-			posthog.capture("chat_deleted", {
-				chat_id: vars.chatId,
-				project_id: vars.projectId,
-			});
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "chats"],
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["chats", vars.chatId],
 			});
+			if (vars.silent) return;
+			posthog.capture("chat_deleted", {
+				chat_id: vars.chatId,
+				project_id: vars.projectId,
+			});
 			toast.success(t`Chat deleted`);
-		},
-		onError: (error: Error) => {
-			toast.error(error.message || t`Failed to delete chat`);
 		},
 	});
 };
@@ -166,7 +173,7 @@ export const useProjectChats = (
 			void query; // advanced query filter not forwarded to BFF
 			const { chats } = await bff.get<{ chats: ProjectChat[]; total: number }>(
 				"/chats",
-				{ project_id: projectId, limit: 200 },
+				{ limit: 200, project_id: projectId },
 			);
 			return chats;
 		},
@@ -193,17 +200,16 @@ export const useInfiniteProjectChats = (
 			const { chats } = await bff.get<{ chats: ProjectChat[]; total: number }>(
 				"/chats",
 				{
-					project_id: projectId,
 					limit: initialLimit,
 					offset: pageParam * initialLimit,
+					project_id: projectId,
 					...(hasMessages ? { has_messages: true } : {}),
 				},
 			);
 
 			return {
 				chats,
-				nextOffset:
-					chats.length === initialLimit ? pageParam + 1 : undefined,
+				nextOffset: chats.length === initialLimit ? pageParam + 1 : undefined,
 			};
 		},
 		queryKey: [
@@ -211,7 +217,7 @@ export const useInfiniteProjectChats = (
 			projectId,
 			"chats",
 			"infinite",
-			{ query, hasMessages },
+			{ hasMessages, query },
 		],
 		refetchInterval: 30000,
 	});
@@ -222,25 +228,25 @@ const projectChatsCountQueryOptions = (
 	query: Partial<Query<CustomDirectusTypes, ProjectChat>> | undefined,
 	hasMessages: boolean,
 ) => ({
-	queryKey: [
-		"projects",
-		projectId,
-		"chats",
-		"count",
-		{ query, hasMessages },
-	] as const,
 	queryFn: async () => {
 		void query;
 		const { total } = await bff.get<{ chats: ProjectChat[]; total: number }>(
 			"/chats",
 			{
-				project_id: projectId,
 				limit: 1,
+				project_id: projectId,
 				...(hasMessages ? { has_messages: true } : {}),
 			},
 		);
 		return total;
 	},
+	queryKey: [
+		"projects",
+		projectId,
+		"chats",
+		"count",
+		{ hasMessages, query },
+	] as const,
 });
 
 export const useProjectChatsCount = (
@@ -293,6 +299,26 @@ export const useChatSuggestions = (
 		refetchOnWindowFocus: false,
 		retry: 1, // Retry once on failure, then give up gracefully
 		staleTime: 30_000, // 30 seconds - avoid rapid re-fetches
+	});
+};
+
+const CHAT_SEARCH_LIMIT = 50;
+
+/** Server-backed title search. Deliberately not the infinite/suspense hook:
+ * suspending on every keystroke would flash the list back to a skeleton. */
+export const useProjectChatSearch = (projectId: string, q: string) => {
+	const search = q.trim();
+	return useQuery({
+		enabled: search.length > 0,
+		placeholderData: keepPreviousData,
+		queryFn: () =>
+			bff.get<{ chats: ProjectChat[]; total: number }>("/chats", {
+				has_messages: true,
+				limit: CHAT_SEARCH_LIMIT,
+				project_id: projectId,
+				q: search,
+			}),
+		queryKey: ["projects", projectId, "chats", "search", search],
 	});
 };
 

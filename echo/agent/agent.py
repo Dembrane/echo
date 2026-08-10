@@ -47,8 +47,8 @@ AgentInsightKind = Literal["capability_gap", "friction", "wish", "praise"]
 #   listProjectConversations, getProjectSettings, getProjectTags, getPortalLink,
 #   listDocs, readDoc, grepDocs, readSkill, listProjectChats, readChat,
 #   getLiveConversationStatus, readMemory, readGoal, listMethodologies,
-#   listCanvases, get_project_scope).
-# - Write tools change durable state (editProjectTags, editCanvas, addToCanvas,
+#   listCanvases, listReports, readReport, get_project_scope).
+# - Write tools change durable state (editCanvas, addToCanvas,
 #   removeFromCanvas, pauseCanvasLoop, resumeCanvasLoop, stopCanvasLoop,
 #   remember, amendMemory, forgetMemory, reachOutToDembraneSupport, noteInsight,
 #   editInsight, retractInsight). noteInsight, editInsight, and retractInsight
@@ -63,10 +63,27 @@ UI_TOOLS = frozenset(
         "proposeCanvas",
         "proposeGoal",
         "proposeProjectUpdate",
+        "proposeTagsUpdate",
         "noteInsight",
         "editInsight",
         "retractInsight",
         "sendProgressUpdate",
+    }
+)
+
+# Unregistered (with their prompt section stripped) when the chat's project has
+# canvas off (the per-project beta toggle, project.is_canvas_enabled).
+CANVAS_TOOL_NAMES = frozenset(
+    {
+        "proposeCanvas",
+        "listCanvases",
+        "readCanvasHistory",
+        "editCanvas",
+        "addToCanvas",
+        "removeFromCanvas",
+        "pauseCanvasLoop",
+        "resumeCanvasLoop",
+        "stopCanvasLoop",
     }
 )
 
@@ -104,7 +121,7 @@ NAVIGATION_LABELS: dict[str, str] = {
 # Note: the citation tag format below ([conversation_id:<id>;chunk_id:<id>]) is
 # parsed by the frontend (AgenticChatPanel.tsx). Do not change it without
 # updating that regex.
-SYSTEM_PROMPT = """You are the dembrane assistant. You help hosts explore and understand the
+SYSTEM_PROMPT_HEAD = """You are the dembrane assistant. You help hosts explore and understand the
 conversations in their project, and help them set the project up well.
 
 dembrane is a platform for collective sense-making through recorded conversations.
@@ -184,7 +201,13 @@ When intent is unclear, ask one focused question instead of guessing.
 - Monitor: live participant recording and transcription health.
 - Library: conversations, canvases, reports, and analysis materials.
 - Host guide: guidance for sharing the portal and running collection.
-- Report: report creation, editing, and sharing.
+- Report: report creation, editing, and sharing. You can read what is there:
+  listReports for what exists and what the host asked each one to focus on, and
+  readReport for one in full. Do that before discussing reports, so you are
+  talking about their actual deliverable rather than reports in general, and so
+  you never redo analysis a published report already covers. You cannot create or
+  regenerate one; the host does that from the Report page, where "Guide the
+  report" is where they steer what it focuses on.
 - Conversations: the conversation list, transcripts, tags, and status.
 - Settings: project configuration and access controls.
 Never describe dashboard navigation beyond these surfaces. When sharing the
@@ -208,6 +231,13 @@ emailing support@dembrane.com. Be honest above all: a failed send is never
 "sent".
 
 ## Noticing what dembrane cannot do yet
+Nothing in this section is ever recorded by you. noteInsight DRAFTS a note and
+shows it to the host on a card; only the host can send it, and they can edit the
+wording first or leave it. So never say you have noted, logged, recorded or sent
+anything here, and never imply the dembrane team has already received it. If you
+mention it at all, the honest phrasing is that you have drafted something they
+can send.
+
 When you notice a product-learning signal, quietly call noteInsight once in the
 same turn:
 - The host asks for something you cannot fulfill directly.
@@ -217,15 +247,16 @@ same turn:
 Use kind capability_gap, friction, wish, or praise. `content` is the host's need
 restated plainly in one to three sentences, never transcript verbatims or
 participant content. `suggested_capability` says what tool, navigation, setting,
-or product ability would have served the need, when there is one. Record one row
+or product ability would have served the need, when there is one. Draft one card
 per distinct need per chat and do not repeat the same need in later turns.
-Logging is quiet: do not narrate that you logged an insight on every turn. When
-the host explicitly wishes for a feature, you may say once, "I've noted this for
-the dembrane team." The support request path stays the loud, host-facing path
-for broken things and account questions. noteInsight is the quieter
-product-learning path: it drops a small "noted for the dembrane team" card in
-the chat rather than opening a support thread. Both can happen in the same turn
-when appropriate.
+Drafting is quiet: do not narrate it on every turn. When the host explicitly
+wishes for a feature, you may say once, "I've drafted that for you to send to
+the dembrane team if you want to." Never say "I've noted this", because you have
+not: the note does not exist until they send it. The support request path stays
+the loud, host-facing path for broken things and account questions. noteInsight
+is the quieter product-learning path: it drops a small draft card in the chat
+rather than opening a support thread. Both can happen in the same turn when
+appropriate.
 Examples:
 - If the host says a canvas is hard to read and asks why you cannot change the
   styling yourself, use kind capability_gap with content "The host needs generated
@@ -236,16 +267,23 @@ Examples:
   wish with content "The host wants chat to provide direct navigation to a
   specific dashboard surface." and suggested_capability "A dashboard navigation
   suggestion that can deep-link to internal tabs."
-When the host corrects or withdraws a note you already made in this chat, amend
-it BY ID in the same turn. Each noteInsight card shows a short id suffix (for
-example "insight a1b2") the host can point at. Use editInsight(insight_id, ...)
-to fix the content, kind, or suggested capability when the host refines what you
-noted, and retractInsight(insight_id, reason) when they say the note is wrong or
-to scrap it ("that's not right", "actually scrap that note"). Never re-note a
-corrected insight as a new row when an edit will do: id continuity preserves the
-dembrane team's thread. Confirm in one sentence WHAT changed. A retracted note is
-never hard-deleted; the team may already have read it, so the retraction and its
-reason are themselves signal, and the card mutes to show it was withdrawn.
+Corrections depend on whether the host has sent the draft yet.
+
+BEFORE they send it, there is no id and nothing to amend, because nothing exists.
+The host can edit the wording on the card themselves. If they tell you the draft
+is wrong, call noteInsight again with the corrected wording and say you have
+redrafted it. Never call editInsight or retractInsight on an unsent draft, and
+never invent an id.
+
+AFTER they send it, the card shows a short id suffix (for example "insight a1b2")
+they can point at. Use editInsight(insight_id, ...) to fix the content, kind, or
+suggested capability when the host refines what they sent, and
+retractInsight(insight_id, reason) when they say it was wrong or want it scrapped
+("that's not right", "actually scrap that note"). Never re-note a corrected
+insight as a new row when an edit will do: id continuity preserves the dembrane
+team's thread. Confirm in one sentence WHAT changed. A retracted note is never
+hard-deleted; the team may already have read it, so the retraction and its reason
+are themselves signal, and the card mutes to show it was withdrawn.
 
 ## Conversation scope
 Some runs are limited to conversations the host selected. When the context
@@ -296,14 +334,40 @@ ask one focused question first.
   The setting can draft short titles and attach existing project tags after
   summarization, but tags remain draft organization for the host to review.
 - Tags are the host-visible portal vocabulary. When the host asks to add or
-  remove tags, read getProjectTags first, then use editProjectTags(add, remove)
-  and confirm in one sentence what changed. Only remove a tag the host names
-  explicitly; never clear tags participants may already be using on their own.
-- Use proposeProjectUpdate: group related fields, one short reason per field,
-  proposed copy in the project's language, a one-sentence summary.
+  remove tags, read getProjectTags first, then use proposeTagsUpdate(add,
+  remove, summary). The host sees the tag proposal below your message and
+  applies it themselves. Say "I've suggested tag changes", never "I've updated
+  your tags". Only propose removing a tag the host names explicitly; never
+  clear tags participants may already be using on their own.
+- Use proposeProjectUpdate, and change at most two or three fields in one
+  proposal. If more should change, propose them in separate steps so the host can
+  weigh each one instead of waving a block through.
+- Every change carries a reason, and the reason answers one question: why this,
+  for this host, now. Ground it in what they told you or what you found in their
+  project. "You said these sessions are with residents rather than staff, so the
+  portal should ask for a first name and nothing else." Never name a genre:
+  "improves clarity", "better structure", "more descriptive" say nothing and cost
+  the host their attention. If you cannot say what in their situation makes this
+  worth doing, do not propose it.
+- When a change reaches past its own field, say so in one plain clause. Project
+  context is the clearest case: it shapes how conversations are transcribed, what
+  the chat can answer, and anything generated from the project. A host deserves to
+  know that before they accept, not after.
+- Project context accumulates. Propose it as what is already there plus what is
+  new, never as a replacement that quietly drops what the host wrote before. The
+  same is true of any field holding a list the host has been building, such as key
+  terms: read the current value first and carry it forward.
+- The card carries the detail, so your message must not repeat it. Do not list
+  the fields, do not restate the proposed values, and do not tell the host where
+  the card is or what to click. One or two sentences saying why, then stop. A
+  message that reprints the card is the card twice, and it is the fastest way to
+  make a calm proposal feel heavy.
 - The host sees a diff and applies or rejects it themselves. You never apply
   changes. Say "I've suggested these changes", never "I've updated your project".
   If the host says they applied it, re-read settings before advising next steps.
+- Write the reason and the summary the way you would say them out loud to a
+  colleague who is busy. Warm, direct, no jargon, no selling. If it reads like a
+  release note, rewrite it.
 - The host guide is editable through host_guide. When the host wants
   participants or facilitators guided differently, offer a host_guide update
   proposal with short copy in the project's language.
@@ -312,8 +376,11 @@ ask one focused question first.
   instruction to run, in the project's language. Mention that verification has
   to be enabled for it to run, and offer a proposeProjectUpdate to switch
   is_verify_enabled on if getProjectSettings shows it off.
+"""
 
-## Canvases
+# Appended to the system prompt only when the chat's project has canvas enabled
+# (the per-project beta toggle, project.is_canvas_enabled).
+CANVAS_PROMPT_SECTION = """## Canvases
 A canvas is a living page in the project Library. It regenerates on a loop until
 its expiry. Propose one when the host asks for a recurring or live artifact,
 such as a wall, pulse, dashboard, or page that keeps itself fresh. Always say the
@@ -368,7 +435,7 @@ receipts, or a weak canvas audit trail, quietly call recordInsight.
 After proposing a canvas, do not ask the host to tell you when it is applied.
 The chat records that automatically.
 When you propose a canvas or an update, the proposal card appears RIGHT HERE in
-this chat, directly below your message. Say "review and apply it below" or
+this chat, directly above or below your message depending on the interface layout. Say "review and apply it" or
 similar. Never tell the host the proposal is in their Library or dashboard: the
 Library holds live canvases, not proposals, and sending the host there to find
 a proposal is a dead end ("The update proposal is ready in your Library" is the
@@ -386,8 +453,9 @@ recorder still on?"). Counterexamples: never ask permission to do something you
 can already do; never ask more than one question; never ask when there is no
 fork, silence is correct then. Ground any question in the injected run details
 only. Never invent canvas activity.
+"""
 
-## Project setup
+SYSTEM_PROMPT_TAIL = """## Project setup
 When the first message signals setup, or when readGoal shows this project has no
 goal, help with one lightweight question at a time. Read interviewing.md first
 and use that shape: no "interview" wording, no announced question count,
@@ -457,6 +525,32 @@ intent for reports and artifacts. Follow them, but they are not a research
 request. Hosts edit context in workspace settings and project settings; goals
 are applied by the host from goal proposals.
 """
+
+# Reconstructed so canvas-enabled chats see the exact prompt as before.
+SYSTEM_PROMPT = SYSTEM_PROMPT_HEAD + "\n" + CANVAS_PROMPT_SECTION + "\n" + SYSTEM_PROMPT_TAIL
+
+# Stripped alongside the canvas section when canvas is off for the project.
+CANVAS_INSIGHT_EXAMPLE = """- If the host says a canvas is hard to read and asks why you cannot change the
+  styling yourself, use kind capability_gap with content "The host needs generated
+  canvas styling to be easier to adjust from chat." and suggested_capability
+  "A canvas styling control or direct canvas-style proposal that can adjust
+  readability, contrast, and color."
+"""
+
+CANVAS_LIBRARY_LINE = "- Library: conversations, canvases, reports, and analysis materials."
+NO_CANVAS_LIBRARY_LINE = "- Library: conversations, reports, and analysis materials."
+
+
+def system_prompt_for(canvas_enabled: bool) -> str:
+    """The system prompt, with all canvas guidance stripped when the project's
+    canvas beta toggle is off so the model never learns canvas exists."""
+    if canvas_enabled:
+        return SYSTEM_PROMPT
+    prompt = SYSTEM_PROMPT_HEAD + "\n" + SYSTEM_PROMPT_TAIL
+    if CANVAS_INSIGHT_EXAMPLE not in prompt or CANVAS_LIBRARY_LINE not in prompt:
+        raise RuntimeError("Canvas prompt markers drifted; update system_prompt_for()")
+    prompt = prompt.replace(CANVAS_INSIGHT_EXAMPLE, "")
+    return prompt.replace(CANVAS_LIBRARY_LINE, NO_CANVAS_LIBRARY_LINE)
 
 
 def _memory_sort_key(memory: dict[str, Any]) -> str:
@@ -704,6 +798,55 @@ def _normalize_message_tool_names(message: Any, tool_names: set[str]) -> Any:
     return _normalize_fused_tool_calls(message, tool_names)
 
 
+# Blocks that produce no Vertex Part on their own. Verified against the
+# connector's serializer in tests/test_vertex_part_contract.py: a signature
+# block only rides along with a tool call, it never becomes a part itself.
+_PARTLESS_CONTENT_BLOCK_TYPES = {"function_call_signature"}
+
+
+def _message_has_tool_calls(message: Any) -> bool:
+    tool_calls = getattr(message, "tool_calls", None)
+    return isinstance(tool_calls, list) and len(tool_calls) > 0
+
+
+def _is_blank_content_block(item: Any) -> bool:
+    """True when this content block contributes no Vertex Part.
+
+    Unknown block types return False (assume they render), so widening this
+    can only ever keep a turn, never silently delete a real one."""
+    if isinstance(item, str):
+        return not item.strip()
+    if isinstance(item, dict):
+        block_type = item.get("type")
+        if block_type in _PARTLESS_CONTENT_BLOCK_TYPES:
+            return True
+        if block_type == "text":
+            text = item.get("text")
+            return not isinstance(text, str) or not text.strip()
+    return False
+
+
+def _is_empty_ai_turn(message: Any) -> bool:
+    """True when this AI turn would serialize to a Vertex Content with zero
+    parts, which the API rejects outright with "must include at least one parts
+    field", killing the stream. Gemini answers the automatic nudge that way
+    sometimes. Such a turn carries nothing, so drop it rather than invent
+    placeholder text. Turns with tool calls always produce parts, so they are
+    never dropped."""
+    if getattr(message, "type", None) != "ai":
+        return False
+    if _message_has_tool_calls(message):
+        return False
+    content = getattr(message, "content", None)
+    if not content:
+        return True
+    if isinstance(content, str):
+        return not content.strip()
+    if isinstance(content, list):
+        return all(_is_blank_content_block(item) for item in content)
+    return False
+
+
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 6
 AUTOMATIC_NUDGE_TEMPLATE = (
     "<Automatic Nudge> This is a system reminder, not a message from the host. "
@@ -755,6 +898,7 @@ def create_agent_graph(
     chat_id: str = "",
     app_user_id: str = "",
     message_id: str = "",
+    canvas_enabled: bool = True,
 ):
     if not bearer_token:
         raise ValueError("bearer_token is required")
@@ -832,10 +976,6 @@ def create_agent_graph(
 
         automatic_nudge_milestones.add(milestone)
         return AUTOMATIC_NUDGE_TEMPLATE.format(tool_call_count=milestone), milestone
-
-    def _message_has_tool_calls(message: Any) -> bool:
-        tool_calls = getattr(message, "tool_calls", None)
-        return isinstance(tool_calls, list) and len(tool_calls) > 0
 
     def _keyword_guardrail_result(
         *,
@@ -1100,12 +1240,22 @@ def create_agent_graph(
         }
 
     @tool
-    async def listProjectConversations(limit: int = 20) -> dict[str, Any]:
-        """List conversations for the current project scope."""
+    async def listProjectConversations(limit: int = 20, offset: int = 0) -> dict[str, Any]:
+        """List conversations for the current project scope.
+
+        `limit` caps one call at 100. Use `offset` to page: pass the number of
+        conversations you have already seen. `has_more` says whether another
+        page exists, so you never have to guess.
+        """
         normalized_limit = max(1, min(limit, 100))
+        normalized_offset = max(0, offset)
         client = _create_echo_client()
         try:
-            payload = await client.list_project_conversations(project_id, normalized_limit)
+            payload = await client.list_project_conversations(
+                project_id,
+                normalized_limit,
+                offset=normalized_offset,
+            )
         finally:
             await client.close()
 
@@ -1118,7 +1268,52 @@ def create_agent_graph(
         return {
             "project_id": project_id,
             "count": int(payload.get("count") or len(conversations)),
+            "offset": normalized_offset,
+            "has_more": bool(payload.get("has_more")),
             "conversations": conversations,
+        }
+
+    @tool
+    async def listFocusedConversations(limit: int = 50, offset: int = 0) -> dict[str, Any]:
+        """List the conversations the host focused THIS chat on, paginated.
+
+        Use this when the focus block says it was truncated. It returns only
+        the host's selection, which the project-wide conversation list cannot
+        tell you. Pass `offset` from the truncation line, then keep paging
+        while `has_more` is true.
+        """
+        if not chat_id:
+            return {
+                "project_id": project_id,
+                "total": 0,
+                "count": 0,
+                "offset": 0,
+                "has_more": False,
+                "conversations": [],
+                "note": "This run has no chat, so there is no focus selection.",
+            }
+
+        normalized_limit = max(1, min(limit, 100))
+        normalized_offset = max(0, offset)
+        client = _create_echo_client()
+        try:
+            payload = await client.list_focused_conversations(
+                project_id,
+                chat_id,
+                limit=normalized_limit,
+                offset=normalized_offset,
+            )
+        finally:
+            await client.close()
+
+        conversations = payload.get("conversations")
+        return {
+            "project_id": project_id,
+            "total": int(payload.get("total") or 0),
+            "count": int(payload.get("count") or 0),
+            "offset": normalized_offset,
+            "has_more": bool(payload.get("has_more")),
+            "conversations": conversations if isinstance(conversations, list) else [],
         }
 
     @tool
@@ -1227,6 +1422,40 @@ def create_agent_graph(
         return knowledge.read_skill(path)
 
     @tool
+    async def listReports() -> dict[str, Any]:
+        """List the reports in this project, newest first, without their text.
+
+        Use this before saying anything about reports: whether one exists, what
+        the host already asked for, whether one is still generating. Each entry
+        carries its id, status, when it was made, its language, and the
+        instructions that shaped it. Read one by id when the host is discussing
+        it. You cannot create or regenerate a report; the host does that from the
+        Report page."""
+        client = _create_echo_client()
+        try:
+            reports = await client.list_project_reports(project_id)
+        finally:
+            await client.close()
+        return {"reports": reports, "count": len(reports)}
+
+    @tool
+    async def readReport(report_id: str) -> dict[str, Any]:
+        """Read one report in full: its content, and the instructions behind it.
+
+        Use this when the host asks what a report says, wants it summarized, or
+        wants to build on it. Quote it as their report, not as your own finding.
+        If the host is asking for something the report already covers, say so
+        instead of redoing the work."""
+        normalized_id = str(report_id).strip()
+        if not normalized_id:
+            raise ValueError("report_id is required")
+        client = _create_echo_client()
+        try:
+            return await client.get_project_report(project_id, normalized_id)
+        finally:
+            await client.close()
+
+    @tool
     async def getProjectSettings() -> dict[str, Any]:
         """Read the project's current editable settings (portal, language, context).
 
@@ -1269,31 +1498,70 @@ def create_agent_graph(
         }
 
     @tool
-    async def editProjectTags(
+    async def proposeTagsUpdate(
         add: list[str] | None = None,
         remove: list[str] | None = None,
+        summary: str = "",
     ) -> dict[str, Any]:
-        """Edit the project's host-visible tag vocabulary and return the updated
-        list. `add` creates tags that do not already exist; `remove` deletes
-        tags by exact text (case-insensitive). Read getProjectTags first, then
-        confirm in one sentence what changed. Tags are the portal vocabulary
-        hosts and participants see, so only remove a tag when the host asks for
-        that tag by name."""
-        add_list = [t.strip() for t in (add or []) if isinstance(t, str) and t.strip()]
-        remove_list = [t.strip() for t in (remove or []) if isinstance(t, str) and t.strip()]
+        """Propose tag vocabulary changes for the host to approve. Renders a
+        card in the chat UI.
+
+        `add` lists new tags to create; `remove` lists existing tags to delete
+        by exact text (case-insensitive). `summary` is one short sentence on
+        why. Read getProjectTags first. Tags are the portal vocabulary hosts
+        and participants see, so only propose removing a tag the host names
+        explicitly. The host sees the proposal in the chat and applies or
+        dismisses it; this tool never changes anything itself.
+        """
+        def _normalize(entries: list[str] | None) -> list[str]:
+            normalized: list[str] = []
+            seen: set[str] = set()
+            for entry in entries or []:
+                if not isinstance(entry, str):
+                    continue
+                text = entry.strip()
+                if not text or text.lower() in seen:
+                    continue
+                seen.add(text.lower())
+                normalized.append(text)
+            return normalized
+
+        add_list = _normalize(add)
+        remove_list = _normalize(remove)
         if not add_list and not remove_list:
             raise ValueError("Provide at least one tag to add or remove.")
 
         client = _create_echo_client()
         try:
-            result = await client.edit_project_tags(
-                project_id,
-                add=add_list,
-                remove=remove_list,
-            )
+            current = await client.list_project_tags(project_id)
         finally:
             await client.close()
-        return result
+
+        current_texts = [
+            str(tag.get("text", "")).strip()
+            for tag in current
+            if isinstance(tag, dict) and str(tag.get("text", "")).strip()
+        ]
+        current_lookup = {text.lower() for text in current_texts}
+
+        accepted_removals = [t for t in remove_list if t.lower() in current_lookup]
+        rejected_removals = [t for t in remove_list if t.lower() not in current_lookup]
+        if not add_list and not accepted_removals:
+            raise ValueError(
+                "None of the tags to remove exist in this project. "
+                f"Current tags: {sorted(current_texts)}"
+            )
+
+        return {
+            "kind": "tags_update_suggestion",
+            "project_id": project_id,
+            "summary": summary.strip(),
+            "add": add_list,
+            "remove": accepted_removals,
+            "current_tags": current_texts,
+            "rejected_removals": rejected_removals,
+            "visible_to_user": True,
+        }
 
     @tool
     async def getPortalLink() -> dict[str, Any]:
@@ -1363,12 +1631,25 @@ def create_agent_graph(
         changes: list[dict[str, Any]],
         summary: str,
     ) -> dict[str, Any]:
-        """Propose project settings changes for the user to approve. Renders a
+        """Propose project settings changes for the host to approve. Renders a
         card in the chat UI.
 
         Each change is {"field": <editable field name>, "value": <proposed value>,
-        "reason": <one short sentence>}. The user sees a diff in the chat and
-        applies or rejects it; this tool never writes anything itself.
+        "reason": <why this matters for this host, right now>}.
+
+        The reason is read by a person deciding whether to accept, so ground it in
+        what they told you or what you found in their project: "You said these
+        sessions are with residents rather than staff, so the portal should ask for
+        a first name and nothing else." Never a genre like "improves clarity" or
+        "better structure"; those say nothing and cost the host their attention.
+
+        Change at most two or three fields at once. For a field that accumulates,
+        such as context or key terms, read the current value and propose it plus
+        the addition, never a replacement that drops what the host wrote before.
+
+        The card shows the host a full before-and-after diff, so your own message
+        must not repeat the fields or the values. The user applies or rejects it;
+        this tool never writes anything itself.
         """
         client = _create_echo_client()
         try:
@@ -1596,14 +1877,17 @@ def create_agent_graph(
         content: str,
         suggested_capability: str = "",
     ) -> dict[str, Any]:
-        """Note a product-learning insight for the dembrane team. Renders a card
-        in the chat UI so the host can see what was noted.
+        """Draft a product-learning insight for the host to review. Renders a
+        card in the chat UI with the drafted note. NOTHING IS SENT until the
+        host presses send on that card.
 
         Use this when the host exposes a capability gap, friction, wish, or
         praise. `content` restates the host's need plainly in one to three
         sentences. Do not include transcript verbatims or participant content.
-        This does not create a visible support request. It shows a small card
-        reading "noted for the dembrane team", so keep any spoken mention light.
+        This does not create a support request, and it does not record anything
+        on its own: the host can edit the wording, send it, or ignore it. Never
+        tell the host you have noted, logged or sent something here. The
+        truthful phrasing is that you have drafted it for them to send.
         """
         normalized_kind = str(kind).strip()
         if normalized_kind not in {"capability_gap", "friction", "wish", "praise"}:
@@ -1614,25 +1898,14 @@ def create_agent_graph(
         if not normalized_content:
             raise ValueError("content is required")
 
-        client = _create_echo_client()
-        try:
-            result = await client.create_agent_insight(
-                project_id,
-                kind=normalized_kind,
-                content=normalized_content,
-                suggested_capability=suggested_capability.strip() or None,
-                chat_id=chat_id or None,
-                message_id=message_id or None,
-            )
-        finally:
-            await client.close()
         normalized_capability = suggested_capability.strip()
-        # The card in the chat reads these fields; keep the marker stable.
+        # Consent is structural: this tool deliberately performs NO write. The
+        # card renders from these fields and the host's own session creates the
+        # row if they choose to send it. Keep the marker stable.
         return {
-            "type": "agent_insight_note",
-            "mode": "noted",
-            "recorded": True,
-            "agent_insight_id": result.get("id"),
+            "type": "agent_insight_proposal",
+            "mode": "proposed",
+            "recorded": False,
             "insight_kind": normalized_kind,
             "content": normalized_content,
             "suggested_capability": normalized_capability or None,
@@ -2100,6 +2373,7 @@ def create_agent_graph(
         get_project_scope,
         findConversationsByKeywords,
         listProjectConversations,
+        listFocusedConversations,
         listConversationSummary,
         listConversationFullTranscript,
         grepConversationSnippets,
@@ -2107,12 +2381,14 @@ def create_agent_graph(
         readDoc,
         grepDocs,
         readSkill,
+        listReports,
+        readReport,
         getProjectSettings,
         getProjectTags,
-        editProjectTags,
         getPortalLink,
         navigateTo,
         proposeProjectUpdate,
+        proposeTagsUpdate,
         proposeCustomVerificationTopic,
         proposeCanvas,
         sendProgressUpdate,
@@ -2139,7 +2415,11 @@ def create_agent_graph(
         amendMemory,
         forgetMemory,
     ]
-    system_prompt = SYSTEM_PROMPT + knowledge.prompt_section(docs_base_url=docs_base_url)
+    if not canvas_enabled:
+        tools = [tool for tool in tools if tool.name not in CANVAS_TOOL_NAMES]
+    system_prompt = system_prompt_for(canvas_enabled) + knowledge.prompt_section(
+        docs_base_url=docs_base_url
+    )
     configured_llm = llm or _build_llm()
     llm_with_tools = configured_llm.bind_tools(tools)
     tool_names = {tool.name for tool in tools}
@@ -2170,7 +2450,7 @@ def create_agent_graph(
         return ambient_memory_section
 
     async def _load_canvas_activity_section() -> str:
-        if not chat_id:
+        if not canvas_enabled or not chat_id:
             return ""
 
         client = _create_echo_client()
@@ -2219,6 +2499,7 @@ def create_agent_graph(
                 _with_placeholder_content(message), recognized_tool_names
             )
             for message in raw_messages
+            if not _is_empty_ai_turn(message)
         ]
         memory_section = await _load_ambient_memory_section()
         canvas_activity_section = await _load_canvas_activity_section()
@@ -2253,8 +2534,9 @@ def create_agent_graph(
         if should_retry_after_nudge:
             nudge_retry_milestones.add(nudge_milestone)
             retry_messages = list(invocation_messages)
-            retry_messages.append(response)
-            retry_messages.append(SystemMessage(content=POST_NUDGE_CONTINUATION_SYSTEM_PROMPT))
+            if not _is_empty_ai_turn(response):
+                retry_messages.append(response)
+            retry_messages.append(HumanMessage(content=POST_NUDGE_CONTINUATION_SYSTEM_PROMPT))
             response = _normalize_fused_tool_calls(
                 await llm_with_tools.ainvoke(retry_messages),
                 recognized_tool_names,

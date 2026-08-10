@@ -18,8 +18,7 @@ backstop the pipeline.
 
 ```
 upload chunk → S3 (presigned)
-   → task_transcribe_chunk        (AssemblyAI webhook/poll, or LiteLLM)
-   → task_correct_transcript      (Gemini: hotwords + PII redaction)
+   → task_transcribe_chunk        (Gemini 2.5 Pro via Vertex AI, or LiteLLM fallback)
    → decrement pending-chunks counter
         … when counter hits 0 AND conversation is finished:
    → task_finalize_conversation
@@ -40,37 +39,28 @@ conversation (`increment_pending_chunks`).
 
 Each chunk is transcribed independently. Two backends:
 
-- *AssemblyAI* - the chunk audio is submitted with `keyterms_prompt` hotwords (up to 1000). Results come back either by *webhook* (`ASSEMBLYAI_WEBHOOK_URL`, secured with the `X-AssemblyAI-Webhook-Secret` header → handled in `api/webhooks.py`) or by *polling* the transcript endpoint (3 s interval, 30 min cap). The raw response and word-level timestamps are stored on the chunk's `diarization` field under schema `Dembrane-25-09` (or `Dembrane-25-09-assemblyai-partial`).
-- *LiteLLM* - the multimodal fallback path, routed through the `MULTI_MODAL_*` groups.
-
-### 3. Correct - `task_correct_transcript` (priority 0, `network`)
-
-A Gemini pass that cleans the raw transcript: applies hotwords/key-terms context and performs
-*PII redaction*. The output is written with a diarisation *schema tag* so downstream code
-knows what shape it's reading:
-
-- `Dembrane-26-01-redaction` - the redaction-aware schema (when anonymisation/redaction is on).
-- `Dembrane-25-09` - the prior schema (no redaction).
+- *Gemini Vertex AI EU* - The chunk audio is transcribed directly on Gemini 2.5 Pro (via `MULTI_MODAL_PRO`) deployed in Google Cloud Vertex AI `europe-west1` (EU) region using the `transcript_from_audio_workflow` prompt workflow. This single-pass workflow performs transcription, hotword normalisation, and optional PII redaction. This guarantees that all audio data and processing remain strictly within EU boundaries while dramatically reducing transcription latency. The output (corrected transcript and note only) is stored in the chunk's `diarization` field under schema `Dembrane-26-07-gemini`. Note that word-level timestamps and speaker labelling are not returned.
+- *LiteLLM* - The fallback multimodal translation and transcription path, routed through the `MULTI_MODAL_*` model groups when required.
 
 The "key terms" / hotwords come from the project's `default_conversation_transcript_prompt`
 field (set in [the portal editor](../../features/portal-editor.md)). When a chunk finishes
 (success or recoverable error) the pipeline *decrements* the pending-chunks counter, guarded
 so a single chunk can only decrement once (`_chunk_decremented_key`).
 
-### 4. Finalize - `task_finalize_conversation` (priority 20, `network`)
+### 3. Finalize - `task_finalize_conversation` (priority 20, `network`)
 
 When the pending-chunks counter reaches *0* *and* the conversation is marked finished, the
 conversation is finalised. This step is *idempotent*: it takes a Redis finalize lock
 (`mark_finalize_in_progress`) so two workers racing on the last chunk don't both finalise.
 Finalize dispatches the join steps.
 
-### 5. Merge - `task_merge_conversation_chunks` (priority 10, `cpu`)
+### 4. Merge - `task_merge_conversation_chunks` (priority 10, `cpu`)
 
 The CPU-bound step: stitch the per-chunk transcripts into the full conversation transcript.
 This runs on the `cpu` queue (single-threaded) rather than `network`, because it's
 compute-bound, not I/O-bound. It stores its result (`store_results=True`).
 
-### 6. Summarise - `task_summarize_conversation` (priority 30, `network`)
+### 5. Summarise - `task_summarize_conversation` (priority 30, `network`)
 
 A Gemini pass that produces the conversation summary. Completion is signalled by `summary`
 becoming non-null - that's the single source of truth for "summarisation done", which the
@@ -158,7 +148,7 @@ reference is `echo/docs/litellm_config.md`; for the operator's view see
 
 ## EU data residency
 
-Transcription and the language models can be pinned to EU regions: AssemblyAI EU, Vertex
+Transcription and the language models can be pinned to EU regions: Vertex
 `europe-west*`, an EU S3 endpoint, and EU SendGrid. The `Guardian` tier's sovereign stack
 builds on this (*coming soon*). See [self-hosting](../developer-external/self-hosting.md).
 

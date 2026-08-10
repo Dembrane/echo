@@ -183,6 +183,15 @@ async def count_chat_user_turns(chat_id: str) -> int:
     )
 
 
+# A canvas is stored as a project_report row with kind='canvas', so every
+# report count and resolver here must say which kind it means. Without the
+# filter a free workspace spends its single lifetime report allowance the
+# moment the host opens a canvas, and the "primary" report the upgrade
+# prompt points at can be a canvas the host never thinks of as a report.
+# `kind` is NOT NULL with default 'report', so _eq hides nothing.
+REPORT_KIND_FILTER = {"kind": {"_eq": "report"}}
+
+
 async def count_workspace_reports(
     workspace_id: Optional[str], project_ids: Optional[list[str]] = None
 ) -> int:
@@ -191,7 +200,11 @@ async def count_workspace_reports(
         return 0
     return await _agg_count(
         "project_report",
-        {"project_id": {"_in": project_ids}, "deleted_at": {"_null": True}},
+        {
+            "project_id": {"_in": project_ids},
+            "deleted_at": {"_null": True},
+            **REPORT_KIND_FILTER,
+        },
     )
 
 
@@ -203,7 +216,11 @@ async def resolve_workspace_primary_report_id(
         return None
     return await _oldest_id(
         "project_report",
-        {"project_id": {"_in": project_ids}, "deleted_at": {"_null": True}},
+        {
+            "project_id": {"_in": project_ids},
+            "deleted_at": {"_null": True},
+            **REPORT_KIND_FILTER,
+        },
         "date_created",
     )
 
@@ -242,18 +259,92 @@ def build_free_tier_usage_block(
     }
 
 
-async def resolve_project_tier(project_id: str) -> Optional[str]:
-    """Resolve a project's tier through its workspace's billing account.
-    Returns None when the project, its workspace, or the account is missing."""
+async def _resolve_project_workspace_and_tier(
+    project_id: str,
+) -> tuple[Optional[str], Optional[str]]:
+    """Resolve (workspace_id, tier) for a project in one project read.
+    Returns (None, None) when the project or workspace is missing."""
     if not project_id:
-        return None
+        return None, None
     from dembrane.billing_account import resolve_workspace_tier
 
     project = await directus_async.async_directus.get_item("project", project_id)
     workspace_id = (project or {}).get("workspace_id")
     if not workspace_id:
-        return None
-    return await resolve_workspace_tier(workspace_id)
+        return None, None
+    return workspace_id, await resolve_workspace_tier(workspace_id)
+
+
+async def resolve_project_tier(project_id: str) -> Optional[str]:
+    """Resolve a project's tier through its workspace's billing account.
+    Returns None when the project, its workspace, or the account is missing."""
+    _, tier = await _resolve_project_workspace_and_tier(project_id)
+    return tier
+
+
+# Short TTL: the answer changes slowly and a few seconds of lag on a content gate
+# is harmless.
+_OVER_CAP_ACTIVE_TTL_SECONDS = 60
+
+
+def _over_cap_active_cache_key(workspace_id: str) -> str:
+    return f"overcap:active:{workspace_id}"
+
+
+async def _workspace_lifetime_audio_hours(workspace_id: str) -> float:
+    """Sum of every conversation's duration in the workspace, in hours.
+    Includes soft-deleted rows (PRD §270: delete preserves billable duration)."""
+    project_ids = await _workspace_project_ids(workspace_id)
+    if not project_ids:
+        return 0.0
+    rows = await directus_async.async_directus.get_items(
+        "conversation",
+        {
+            "query": {
+                "filter": {"project_id": {"_in": project_ids}},
+                "fields": ["duration"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return 0.0
+    return sum(r.get("duration") or 0 for r in rows) / 3600
+
+
+async def workspace_over_cap_active(
+    workspace_id: Optional[str], tier: Optional[str]
+) -> bool:
+    """Whether the workspace is past its lifetime hour cap right now (Free's
+    1-hour cap). A live signal, unlike the finish-time `is_over_cap` stamp, so it
+    also gates conversations still recording. Paid/legacy tiers never cap."""
+    from dembrane.tier_capacity import get_capacity, tier_allows_overage
+
+    if not workspace_id or tier is None or tier_allows_overage(tier):
+        return False
+    cap = get_capacity(tier)
+    if cap is None or cap.included_hours is None:
+        return False
+
+    from dembrane.cache_utils import cache_get_json, cache_set_json
+
+    key = _over_cap_active_cache_key(workspace_id)
+    cached = await cache_get_json(key)
+    if isinstance(cached, bool):
+        return cached
+
+    active = await _workspace_lifetime_audio_hours(workspace_id) >= cap.included_hours
+    await cache_set_json(key, active, _OVER_CAP_ACTIVE_TTL_SECONDS)
+    return active
+
+
+async def resolve_project_gate(project_id: str) -> tuple[Optional[str], bool]:
+    """Resolve (tier, over_cap_active) for a project in one project read, for
+    callers that need both and haven't resolved the tier yet (the monitor)."""
+    workspace_id, tier = await _resolve_project_workspace_and_tier(project_id)
+    if not workspace_id:
+        return None, False
+    return tier, await workspace_over_cap_active(workspace_id, tier)
 
 
 def conversation_is_locked(conv: dict, tier: Optional[str]) -> bool:

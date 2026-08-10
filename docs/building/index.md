@@ -6,9 +6,10 @@ audience: all
 
 # Building now
 
-These pages describe features that are *being built* - they are not available yet, not even
-on [dembrane next](../features/dembrane-next.md). Each one is written as a user story before
-the first line of code, and the build isn't done until the story works end to end.
+These pages describe features that are *being built* - most are not available yet, not even
+on [dembrane next](../features/dembrane-next.md); where an early piece has reached beta, the
+page says so. Each one is written as a user story before the first line of code, and the
+build isn't done until the story works end to end.
 
 Why publish them? Three reasons:
 
@@ -21,8 +22,11 @@ Why publish them? Three reasons:
 
 ## In progress
 
-- [The SMART loop](./smart-loop.md) - a dynamic canvas the assistant regenerates through
-  your session: live frames and answers on a rhythm, versions kept, improved by chat.
+- [The SMART loop](./smart-loop.md) - a living canvas the assistant regenerates through
+  your session: live frames and answers on a rhythm, versions kept, improved by chat. The
+  canvas is now in *beta* on dembrane next - off by default, and a host opts a project in
+  with the *Living canvas* switch under *Experimental* in project settings. Not in
+  production yet.
 
 ## Related
 

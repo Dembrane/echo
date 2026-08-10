@@ -6,6 +6,14 @@ Use your gut. If something serves the brand better by bending a guideline, bend 
 
 When in doubt, ask: Does this feel approachable, grounded, and human? Does it invite people in?
 
+### Which guide wins
+
+Three files carry brand rules. When they disagree:
+
+1. `skills/brand-guidelines.md` (repo root) is the broader brand authority: the name, voice, claims and positioning, palette, type.
+2. `docs/_authoring/STYLE.md` (repo root) is the authority for pages in the published docs corpus.
+3. This file is the older, narrower one. It goes deepest on UI copy, components, and localisation. Where it contradicts either file above, they win, and this file should be corrected.
+
 ---
 
 ## Brand foundation
@@ -42,9 +50,11 @@ Always lowercase. Even at the start of a sentence.
 - "Dembrane helps groups..." (incorrect)
 - "DEMBRANE" (never)
 
-### ECHO
+### ECHO (legacy)
 
-The platform feature. Not the brand. Use sparingly in external contexts.
+"ECHO" is a legacy platform name. The platform is "dembrane", or "the dashboard" / "the portal" / "the recorder" when you mean a part of it. Older documents and emails show "Dembrane" and "ECHO"; that is drift, not the standard.
+
+One live exception: the participant record button is still labelled ECHO in the portal UI. Copy that describes that button matches the label the participant sees.
 
 ### Vocabulary
 
@@ -315,7 +325,8 @@ Logo files live in `logos/`. SVG preferred.
 
 ### Core rules
 
-- Use "je/jij/jou" - never "u/uw" (always informal)
+- Use "je/jij/jou" - never "u/uw" (always informal). Formal "u/uw" is always wrong in dembrane copy; if you find it on an existing page, flag it as drift
+- Within the informal register, use the stressed possessive *jouw* when the sentence is about the reader's own thing and wants to lean on that ("jouw evenementen", "jouw gekozen rechtsgrondslag"); use plain *je* for unstressed subjects and throwaway possessives
 - Natural phrasing, not word-for-word translation
 - Compound words: audiobestand (not "audio bestand")
 - Keep English terms when they sound better: Dashboard, Upload, Chat
@@ -343,6 +354,9 @@ Logo files live in `logos/`. SVG preferred.
 
 - Bad: "We zijn verheugd u te informeren dat de functionaliteit hersteld is"
 - Good: "Chat doet het weer"
+
+- Unstressed possessive: "Upload je bestand"
+- Stressed possessive: "jouw evenementen", "jouw gekozen rechtsgrondslag"
 
 ---
 
@@ -401,7 +415,7 @@ Target reading level: A2 (general public, basic Italian). Short sentences, commo
 
 ## Platform context
 
-ECHO is event-driven, not daily-use software. Hosts run discrete engagement sessions: workshops, consultations, civic forums, employee feedback rounds.
+dembrane is event-driven, not daily-use software. Hosts run discrete engagement sessions: workshops, consultations, civic forums, employee feedback rounds.
 
 Typical flow: Prepare event > Run session > Analyze conversations > Generate report > Return for next event
 

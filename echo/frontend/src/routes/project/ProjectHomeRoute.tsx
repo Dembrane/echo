@@ -21,15 +21,16 @@ import {
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
-import { LiveMonitorSection } from "@/components/conversation/LiveMonitorSection";
-import { useConversationMonitor } from "@/hooks/useConversationMonitor";
-import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { useInfiniteConversationsByProjectId } from "@/components/conversation/hooks";
+import { LiveMonitorSection } from "@/components/conversation/LiveMonitorSection";
+import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectById } from "@/components/project/hooks";
 import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { ENABLE_MONITOR } from "@/config";
+import { useConversationMonitor } from "@/hooks/useConversationMonitor";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
@@ -99,7 +100,7 @@ export const ProjectHomeRoute = () => {
 	// those from the recent-cards so nothing appears twice in "Live & recent".
 	const { conversations: monitorConversations } = useConversationMonitor(
 		projectId ?? "",
-		!!projectId,
+		!!projectId && ENABLE_MONITOR,
 	);
 	const monitorIds = new Set(monitorConversations.map((c) => c.id));
 	const recentConversations = allRecentConversations.filter(
@@ -179,121 +180,120 @@ export const ProjectHomeRoute = () => {
 				{(monitorConversations.length > 0 ||
 					recentConversationsQuery.isLoading ||
 					recentConversations.length > 0) && (
-				<Stack gap="sm">
-					<Group justify="space-between" align="center" gap="sm">
-						<Text size="xs" c="dimmed" tt="uppercase">
-							<Trans>Live & recent</Trans>
-						</Text>
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => navigate(`${base}/conversations`)}
-						>
-							<Trans>Open all</Trans>
-						</Button>
-					</Group>
+					<Stack gap="sm">
+						<Group justify="space-between" align="center" gap="sm">
+							<Text size="xs" c="dimmed" tt="uppercase">
+								<Trans>Live & recent</Trans>
+							</Text>
+							<Button
+								variant="subtle"
+								size="xs"
+								onClick={() => navigate(`${base}/conversations`)}
+							>
+								<Trans>Open all</Trans>
+							</Button>
+						</Group>
 
-					{projectId && (
-						<LiveMonitorSection projectId={projectId} hideHeader />
-					)}
+						{projectId && ENABLE_MONITOR && (
+							<LiveMonitorSection projectId={projectId} hideHeader />
+						)}
 
-					{recentConversationsQuery.isLoading ? (
-						<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-							<Skeleton height={128} radius="sm" />
-							<Skeleton height={128} radius="sm" />
-						</SimpleGrid>
-				) : (
-					<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-						{recentConversations.slice(0, 2).map((conversation) => {
-							const tags =
-								(conversation.tags as ConversationProjectTag[] | undefined) ??
-								[];
-							const isLocked = !!conversation.locked;
+						{recentConversationsQuery.isLoading ? (
+							<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+								<Skeleton height={128} radius="sm" />
+								<Skeleton height={128} radius="sm" />
+							</SimpleGrid>
+						) : (
+							<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+								{recentConversations.slice(0, 2).map((conversation) => {
+									const tags =
+										(conversation.tags as
+											| ConversationProjectTag[]
+											| undefined) ?? [];
+									const isLocked = !!conversation.locked;
 
-							const card = (
-								<Card
-									withBorder
-									p="md"
-									radius="sm"
-									className={`h-full transition-colors ${isLocked ? "cursor-pointer" : ""} hover:!border-primary-400`}
-									onClick={
-										isLocked
-											? () => upgradeHandlers.open()
-											: undefined
+									const card = (
+										<Card
+											withBorder
+											p="md"
+											radius="sm"
+											className={`h-full transition-colors ${isLocked ? "cursor-pointer" : ""} hover:!border-primary-400`}
+											onClick={
+												isLocked ? () => upgradeHandlers.open() : undefined
+											}
+										>
+											<Stack gap="xs">
+												<Stack gap={2} style={{ minWidth: 0 }}>
+													<Text size="sm" fw={500} truncate>
+														{conversationTitle(conversation)}
+													</Text>
+													<Group gap="xs" align="center" wrap="nowrap">
+														<Text size="xs" c="dimmed">
+															{conversation.created_at
+																? new Date(
+																		conversation.created_at,
+																	).toLocaleDateString()
+																: ""}
+														</Text>
+														{conversation.live && (
+															<Badge size="xs" color="red" variant="light">
+																<Trans>Ongoing</Trans>
+															</Badge>
+														)}
+													</Group>
+												</Stack>
+
+												{isLocked ? (
+													<LockedTranscriptOverlay compact variant="summary" />
+												) : (
+													<Text size="sm" c="dimmed" style={lineClampStyle}>
+														{conversation.summary?.trim() || (
+															<Trans>No summary yet</Trans>
+														)}
+													</Text>
+												)}
+
+												{tags.length > 0 && (
+													<Group gap={6} wrap="wrap">
+														{tags.slice(0, 4).map((tag) => {
+															const label = tagText(tag);
+															if (!label) return null;
+															return (
+																<Badge
+																	key={tag.id}
+																	size="xs"
+																	variant="light"
+																	color="gray"
+																	radius="sm"
+																>
+																	{label}
+																</Badge>
+															);
+														})}
+													</Group>
+												)}
+											</Stack>
+										</Card>
+									);
+
+									if (isLocked) {
+										return <div key={conversation.id}>{card}</div>;
 									}
-								>
-									<Stack gap="xs">
-										<Stack gap={2} style={{ minWidth: 0 }}>
-											<Text size="sm" fw={500} truncate>
-												{conversationTitle(conversation)}
-											</Text>
-											<Group gap="xs" align="center" wrap="nowrap">
-												<Text size="xs" c="dimmed">
-													{conversation.created_at
-														? new Date(
-																conversation.created_at,
-															).toLocaleDateString()
-														: ""}
-												</Text>
-												{conversation.live && (
-													<Badge size="xs" color="red" variant="light">
-														<Trans>Ongoing</Trans>
-													</Badge>
-												)}
-											</Group>
-										</Stack>
 
-										{isLocked ? (
-											<LockedTranscriptOverlay compact variant="summary" />
-										) : (
-											<Text size="sm" c="dimmed" style={lineClampStyle}>
-												{conversation.summary?.trim() || (
-													<Trans>No summary yet</Trans>
-												)}
-											</Text>
-										)}
-
-										{tags.length > 0 && (
-											<Group gap={6} wrap="wrap">
-												{tags.slice(0, 4).map((tag) => {
-													const label = tagText(tag);
-													if (!label) return null;
-													return (
-														<Badge
-															key={tag.id}
-															size="xs"
-															variant="light"
-															color="gray"
-															radius="sm"
-														>
-															{label}
-														</Badge>
-													);
-												})}
-											</Group>
-										)}
-									</Stack>
-								</Card>
-							);
-
-							if (isLocked) {
-								return <div key={conversation.id}>{card}</div>;
-							}
-
-							return (
-								<I18nLink
-									key={conversation.id}
-									to={`${base}/conversations/${conversation.id}`}
-									className="no-underline block h-full"
-								>
-									{card}
-								</I18nLink>
-							);
-						})}
-					</SimpleGrid>
+									return (
+										<I18nLink
+											key={conversation.id}
+											to={`${base}/conversations/${conversation.id}`}
+											className="no-underline block h-full"
+										>
+											{card}
+										</I18nLink>
+									);
+								})}
+							</SimpleGrid>
+						)}
+					</Stack>
 				)}
-				</Stack>
-			)}
 
 				{report && reportTitle && (
 					<Stack gap="sm">

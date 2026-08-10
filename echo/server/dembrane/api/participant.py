@@ -4,7 +4,7 @@ from typing import List, Optional, Annotated
 from logging import getLogger
 from datetime import datetime
 
-from fastapi import Form, APIRouter, UploadFile, HTTPException
+from fastapi import Form, Request, APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
 
 from dembrane.s3 import get_sanitized_s3_key, get_file_size_bytes_from_s3
@@ -12,7 +12,9 @@ from dembrane.utils import generate_uuid
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
+from dembrane.analytics import capture_event
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.monitor_stream import (
     publish_monitor_dirty,
     register_active_conversation,
@@ -166,6 +168,36 @@ def check_rate_limit(conversation_id: str) -> bool:
     return True
 
 
+# Per-IP guard for the public, unauthenticated ping endpoints. Soft-limited: over
+# the limit we drop the beacon and still return ok, so recording is never affected.
+_PING_RATE_LIMIT_WINDOW_SECONDS = 60.0
+# Sized well above a large single-IP venue (phones ping every ~3s / ~10s).
+_conversation_ping_rate_limiter = create_rate_limiter(
+    name="participant_conversation_ping",
+    capacity=6000,
+    window_seconds=_PING_RATE_LIMIT_WINDOW_SECONDS,
+)
+_visitor_ping_rate_limiter = create_rate_limiter(
+    name="participant_visitor_ping",
+    capacity=3000,
+    window_seconds=_PING_RATE_LIMIT_WINDOW_SECONDS,
+)
+# Reject absurd id lengths so a crafted id can't bloat Redis (real ids are UUIDs).
+_MAX_PING_ID_LEN = 64
+
+
+def _participant_client_ip(request: Optional[Request]) -> str:
+    """Best-effort client IP, respecting X-Forwarded-For behind the proxy."""
+    if request is None:
+        return "unknown"
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    if request.client:
+        return request.client.host
+    return "unknown"
+
+
 @ParticipantRouter.post(
     "/projects/{project_id}/conversations/initiate",
     tags=["conversation"],
@@ -190,6 +222,15 @@ async def initiate_conversation(
         # from the pre-conversation lanes immediately (best-effort).
         if body.visitor_id and isinstance(conversation, dict):
             await link_visitor_conversation(body.visitor_id, conversation.get("id"))
+
+        # Bust cached usage so conversation counts don't lag the cache TTL.
+        if isinstance(conversation, dict) and conversation.get("id"):
+            from dembrane.api.conversation import _invalidate_usage_cache_for_conversation
+
+            try:
+                await _invalidate_usage_cache_for_conversation(conversation["id"])
+            except Exception:
+                logger.warning("usage cache invalidation failed for new conversation")
 
         return conversation
     except ConversationNotOpenForParticipationException as e:
@@ -238,7 +279,9 @@ async def get_project(
                     if ws.get("privacy_policy_url"):
                         project["privacy_policy_url"] = ws["privacy_policy_url"]
             except Exception as e:
-                logger.warning(f"Failed to resolve workspace settings for project {project_id}: {e}")
+                logger.warning(
+                    f"Failed to resolve workspace settings for project {project_id}: {e}"
+                )
 
         # Fallback to owner's user settings if workspace didn't provide legal_basis
         if not resolved_from_workspace:
@@ -263,7 +306,9 @@ async def get_project(
                         if not project.get("privacy_policy_url"):
                             project["privacy_policy_url"] = owner.get("privacy_policy_url")
                 except Exception as e:
-                    logger.warning(f"Failed to resolve owner settings for project {project_id}: {e}")
+                    logger.warning(
+                        f"Failed to resolve owner settings for project {project_id}: {e}"
+                    )
 
         return project
 
@@ -362,12 +407,14 @@ async def upload_conversation_text(
 
         return chunk
 
-    except ConversationServiceException as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+    except ConversationNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Conversation not found") from e
     except ConversationNotOpenForParticipationException as e:
         raise HTTPException(
             status_code=403, detail="Conversation not open for participation"
         ) from e
+    except ConversationServiceException as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @ParticipantRouter.post(
@@ -388,6 +435,8 @@ async def upload_conversation_chunk(
             source=source,
             file_obj=chunk,
         )
+    except ConversationNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Conversation not found") from e
     except ConversationNotOpenForParticipationException as e:
         raise HTTPException(
             status_code=403, detail="Conversation not open for participation"
@@ -426,6 +475,14 @@ class ConversationPingRequest(BaseModel):
     # Live mic input level (0..1 RMS), sampled from the recorder. Lets the host
     # see audio is really flowing and spot a silent/muted mic.
     audio_level: Optional[float] = None
+    # Accumulated recording seconds, excluding paused gaps (host timer reads it).
+    recorded_seconds: Optional[float] = None
+    # Seconds into the current recording run (resets on resume), so the monitor
+    # can grant a ramp-up grace before flagging "audio stopped".
+    segment_seconds: Optional[float] = None
+    # Client send time (epoch ms), stamped when the ping is initiated. Lets the
+    # server drop an out-of-order ping so a late one can't clobber a newer state.
+    client_ts: Optional[int] = None
     network: Optional[ConversationNetworkTelemetry] = None
     battery: Optional[ConversationBatteryTelemetry] = None
 
@@ -448,6 +505,18 @@ def _build_ping_telemetry(body: Optional[ConversationPingRequest]) -> dict:
         level = body.audio_level
         if isinstance(level, (int, float)) and level == level and abs(level) != float("inf"):
             telemetry["audio_level"] = round(max(0.0, min(1.0, float(level))), 2)
+    if isinstance(body.client_ts, int) and body.client_ts > 0:
+        telemetry["client_ts"] = body.client_ts
+    # Recorder timers: non-negative seconds, ignore NaN/inf from a bad client.
+    for field in ("recorded_seconds", "segment_seconds"):
+        value = getattr(body, field)
+        if (
+            isinstance(value, (int, float))
+            and value == value
+            and abs(value) != float("inf")
+            and value >= 0
+        ):
+            telemetry[field] = round(float(value), 1)
     if body.network is not None:
         network = body.network.model_dump(exclude_none=True)
         if isinstance(network.get("effective_type"), str):
@@ -463,7 +532,9 @@ def _build_ping_telemetry(body: Optional[ConversationPingRequest]) -> dict:
 
 @ParticipantRouter.post("/conversations/{conversation_id}/ping", response_model=dict)
 async def ping_conversation(
-    conversation_id: str, body: Optional[ConversationPingRequest] = None
+    conversation_id: str,
+    request: Request,
+    body: Optional[ConversationPingRequest] = None,
 ) -> dict:
     """Participant liveness + telemetry beacon, called every few seconds.
 
@@ -474,20 +545,24 @@ async def ping_conversation(
     includes its project_id, we also nudge any open monitor streams so they
     refresh in near-real-time instead of waiting for the next poll tick.
     """
+    # Monitor off server-side: no host reads these, so no-op (never disturb recording).
+    if not settings.feature_flags.enable_monitor:
+        return {"ok": True}
+    # Over-limit or absurd id: drop the beacon but report ok (never disturb recording).
+    if not await _conversation_ping_rate_limiter.allow(_participant_client_ip(request)):
+        return {"ok": True}
+    if len(conversation_id) > _MAX_PING_ID_LEN:
+        return {"ok": True}
     try:
-        await mark_conversation_seen(
-            conversation_id, telemetry=_build_ping_telemetry(body) or None
-        )
+        await mark_conversation_seen(conversation_id, telemetry=_build_ping_telemetry(body) or None)
     except Exception as exc:  # noqa: BLE001
         logger.warning("Liveness ping failed for %s: %s", conversation_id, exc)
         return {"ok": False}
-    if body is not None and body.project_id:
+    if body is not None and body.project_id and len(body.project_id) <= _MAX_PING_ID_LEN:
         # Index the conversation as active so the monitor can show it the
         # instant it is initiated, before any audio chunk exists, then nudge
         # open streams to recompute.
-        await register_active_conversation(
-            body.project_id, conversation_id, score=time()
-        )
+        await register_active_conversation(body.project_id, conversation_id, score=time())
         await publish_monitor_dirty(body.project_id)
     return {"ok": True}
 
@@ -535,18 +610,25 @@ def _build_visitor_telemetry(body: Optional[VisitorPingRequest]) -> dict:
     return telemetry
 
 
-@ParticipantRouter.post(
-    "/projects/{project_id}/visitors/{visitor_id}/ping", response_model=dict
-)
+@ParticipantRouter.post("/projects/{project_id}/visitors/{visitor_id}/ping", response_model=dict)
 async def ping_visitor(
     project_id: str,
     visitor_id: str,
+    request: Request,
     body: Optional[VisitorPingRequest] = None,
 ) -> dict:
     """Pre-conversation funnel beacon (public), keyed by a client-minted
     visitor_id. Cheap: stamps a short-lived Redis key + per-project index and
     nudges open monitor streams. Swallows Redis errors so onboarding is never
     disrupted."""
+    # Monitor off server-side: no host reads these, so no-op (never disturb onboarding).
+    if not settings.feature_flags.enable_monitor:
+        return {"ok": True}
+    # Over-limit or absurd id: drop the beacon but report ok (never disturb onboarding).
+    if not await _visitor_ping_rate_limiter.allow(_participant_client_ip(request)):
+        return {"ok": True}
+    if len(project_id) > _MAX_PING_ID_LEN or len(visitor_id) > _MAX_PING_ID_LEN:
+        return {"ok": True}
     try:
         await mark_visitor_seen(
             project_id,
@@ -745,6 +827,11 @@ async def confirm_chunk_upload(
                         f"Upload may have failed or S3 is experiencing issues. Error: {e}",
                         exc_info=True,
                     )
+                    await capture_event(
+                        conversation_id,
+                        "server_chunk_missing_in_s3",
+                        {"chunk_id": body.chunk_id},
+                    )
                     raise HTTPException(
                         status_code=400,
                         detail="File not found in S3. Upload may have failed. Please try again.",
@@ -782,6 +869,11 @@ async def confirm_chunk_upload(
             logger.info(
                 f"Chunk {body.chunk_id} marked with error 'Audio not playable' "
                 f"due to small file size ({file_size} bytes)"
+            )
+            await capture_event(
+                conversation_id,
+                "server_chunk_upload_rejected",
+                {"chunk_id": body.chunk_id, "file_size": file_size},
             )
             # Update the returned chunk to include the error
             chunk["error"] = "Audio not playable"
@@ -875,6 +967,9 @@ async def get_public_report_latest(
     project_id: str,
 ) -> Optional[PublicReportLatestResponse]:
     """Get the latest published report for a project. No auth required."""
+    # kind matters here: a canvas is a project_report row created
+    # status='published', so the newest one would shadow the host's actual
+    # published report and the portal would offer participants an empty page.
     reports = await run_in_thread_pool(
         directus.get_items,
         "project_report",
@@ -882,6 +977,7 @@ async def get_public_report_latest(
             "query": {
                 "filter": {
                     "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
                     "status": {"_eq": "published"},
                 },
                 "fields": ["id", "status", "project_id", "show_portal_link"],
@@ -907,6 +1003,7 @@ async def get_public_report_detail(
                 "filter": {
                     "id": {"_eq": report_id},
                     "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
                     "status": {"_eq": "published"},
                 },
                 "fields": ["id", "content", "status", "project_id", "show_portal_link"],
@@ -965,6 +1062,7 @@ async def create_public_report_metric(
                 "filter": {
                     "id": {"_eq": body.project_report_id},
                     "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
                     "status": {"_eq": "published"},
                 },
                 "fields": ["id"],

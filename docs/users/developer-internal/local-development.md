@@ -64,7 +64,7 @@ Two services each need their own env file, both copied from a checked-in sample:
 Key things to set in `server/.env`:
 
 - *LLM model groups* - `LLM__<GROUP>__*` for `MULTI_MODAL_PRO`, `MULTI_MODAL_FAST`, `TEXT_FAST`, with numbered fallbacks `LLM__<GROUP>_1__*`. Full reference: `echo/docs/litellm_config.md` and [configuration & LLM providers](../developer-external/configuration-and-llm-providers.md).
-- *Transcription* - `ASSEMBLYAI_*` (key, base URL, and the webhook URL/secret if you want webhook-mode transcription rather than polling).
+- *Transcription* - `TRANSCRIPTION_PROVIDER` (set to `Dembrane-26-07` for direct Vertex AI single-pass transcription, or `LiteLLM` for the fallback path) and the matching credentials/API config (such as `GCP_SA_JSON` for Vertex AI or `LITELLM_TRANSCRIPTION_*` for the fallback model).
 - *S3* - your bucket creds, or the MinIO endpoint if you're using `docker-compose-s3.yml`.
 - *Embeddings* - `EMBEDDING_*` (model, key, base URL, version) before anything calls `dembrane.embedding.embed_text`.
 - *Email* - `SENDGRID_API_KEY` for the app's transactional email (`email.py`, the HTTP API). Directus's own email is a *separate* SMTP path keyed by `EMAIL_SMTP_PASSWORD` - don't conflate them.

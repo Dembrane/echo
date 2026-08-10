@@ -51,6 +51,38 @@ export function ChatUpgradeModal({
 	);
 }
 
+/** The recording-hours cap, reached from the composer's microphone. Separate
+ * from ChatUpgradeModal because that copy names a per-chat limit. */
+export function VoiceCapUpgradeModal({
+	opened,
+	onClose,
+	upgradeTier,
+}: {
+	opened: boolean;
+	onClose: () => void;
+	upgradeTier: string | null;
+}) {
+	const { workspace } = useWorkspace();
+	const isAdmin = workspace?.role === "admin" || workspace?.role === "owner";
+	return (
+		<UpgradeModal
+			opened={opened}
+			onClose={onClose}
+			currentTier={(workspace?.tier ?? "free") as Tier}
+			requiredTier={(upgradeTier ?? UPGRADE_TIER) as Tier}
+			featureName={t`Recording limit reached`}
+			benefit={
+				isAdmin
+					? t`This workspace has used its included recording hours. Upgrade to keep using voice.`
+					: t`This workspace has used its included recording hours. Ask an organisation admin to upgrade.`
+			}
+			canRequestUpgrade={isAdmin}
+			workspaceId={workspace?.id ?? ""}
+			source="chat_voice_cap"
+		/>
+	);
+}
+
 /**
  * Inline card rendered in the chat thread in place of the 4th turn's reply.
  * Clicking it opens the upgrade path.

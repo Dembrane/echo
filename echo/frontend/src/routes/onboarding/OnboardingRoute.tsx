@@ -24,6 +24,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useMyInvites } from "@/hooks/useMyInvites";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { isOutsiderRole } from "@/lib/roles";
 
 async function completeOnboarding(orgName: string) {
 	const response = await fetch(`${API_BASE_URL}/v2/onboarding/complete`, {
@@ -71,13 +72,17 @@ export const OnboardingRoute = () => {
 	});
 	const displayName = (user.data as Record<string, string>)?.first_name || "";
 	const hasInvites = meV2?.has_pending_invites === true;
-	const inviteOrganisations = Array.from(
-		new Set(
-			(pendingInvites ?? [])
-				.map((i) => i.org_name?.trim())
-				.filter((name): name is string => Boolean(name)),
-		),
-	);
+		const inviteOrganisations = Array.from(
+			new Set(
+				(pendingInvites ?? [])
+					.map((i) => i.org_name?.trim())
+					.filter((name): name is string => Boolean(name)),
+			),
+		);
+		const isOnlyOutsiderInvite =
+			pendingInvites &&
+			pendingInvites.length > 0 &&
+			pendingInvites.every((i) => isOutsiderRole(i.role));
 	// The designer's onboarding split (docs/workspaces/designer-return.html):
 	// users with projects from before workspaces existed see the "migration"
 	// copy; users with no legacy projects see the fresh-setup copy. hasInvites
@@ -587,26 +592,44 @@ export const OnboardingRoute = () => {
 									<Trans>Set up your organisation</Trans>
 								)}
 							</Title>
-							<Text size="sm" lh={1.6}>
-								{hasInvites ? (
-									inviteOrganisations.length === 1 ? (
-										<Trans>
-											You've been invited to join{" "}
-											<em>{inviteOrganisations[0]}</em>. We'll take you there in
-											a moment.
-										</Trans>
-									) : inviteOrganisations.length > 1 ? (
-										<Trans>
-											You've been invited to join {inviteOrganisations.length}{" "}
-											organisations. We'll take you in once you continue.
-										</Trans>
-									) : (
-										<Trans>
-											Your organisation is waiting for you. Click continue to
-											join.
-										</Trans>
-									)
-								) : isLegacyUser ? (
+								<Text size="sm" lh={1.6}>
+									{hasInvites ? (
+										isOnlyOutsiderInvite ? (
+											inviteOrganisations.length === 1 ? (
+												<Trans>
+													You've been invited to collaborate with{" "}
+													<em>{inviteOrganisations[0]}</em>. We'll take you there in
+													a moment.
+												</Trans>
+											) : inviteOrganisations.length > 1 ? (
+												<Trans>
+													You've been invited to collaborate with {inviteOrganisations.length}{" "}
+													organisations. We'll take you in once you continue.
+												</Trans>
+											) : (
+												<Trans>
+													Your workspace is waiting for you. Click continue to
+													collaborate.
+												</Trans>
+											)
+										) : inviteOrganisations.length === 1 ? (
+											<Trans>
+												You've been invited to join{" "}
+												<em>{inviteOrganisations[0]}</em>. We'll take you there in
+												a moment.
+											</Trans>
+										) : inviteOrganisations.length > 1 ? (
+											<Trans>
+												You've been invited to join {inviteOrganisations.length}{" "}
+												organisations. We'll take you in once you continue.
+											</Trans>
+										) : (
+											<Trans>
+												Your organisation is waiting for you. Click continue to
+												join.
+											</Trans>
+										)
+									) : isLegacyUser ? (
 									<Trans>
 										We've added organisations so you can organize projects and
 										share them with colleagues. Everything you had before is

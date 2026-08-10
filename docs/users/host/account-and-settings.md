@@ -54,7 +54,7 @@ save repeating yourself and keep projects consistent for compliance. See
 ## Assistant
 
 *[dembrane next only](../../features/dembrane-next.md).* If you use
-[Ask's agentic mode](./chat-and-ask.md#agentic-mode), the assistant can save notes about how
+[Ask](./chat-and-ask.md#more-than-analysis), the assistant can save notes about how
 you like to work. The *Assistant* section shows everything it remembers about you - only you
 see these notes - and *Remove* makes it forget one for good. It writes the notes during your
 chats; you can't edit them here, only remove them.
@@ -70,10 +70,13 @@ engagement, or tracing a change nobody remembers making.
 
 ## Deleting your account
 
-You can close your account (the account itself, not just a workspace). First check what it
-means for any projects you own and for
-[data ownership](../../features/data-ownership-and-compliance.md) - hand over or move work
-others rely on before you do it.
+To comply with App Store and privacy guidelines, you can delete your account directly in the dembrane Go mobile app.
+
+Before you do, check what it means for any projects you own and for [data ownership](../../features/data-ownership-and-compliance.md). Make sure to hand over or move work others rely on before proceeding.
+
+When you initiate account deletion:
+- Your account is suspended immediately, which blocks logins and token refreshes.
+- This marks the account for permanent removal, which is processed out-of-band by dembrane administrators within 30 days.
 
 ## Related
 

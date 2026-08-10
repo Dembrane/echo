@@ -3,12 +3,14 @@ import { Trans } from "@lingui/react/macro";
 import { Badge, Button, Group, Stack, Text } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
+import { useParams } from "react-router";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { toast } from "@/components/common/Toaster";
 import {
 	useProjectGoal,
 	useSaveProjectGoalMutation,
 } from "@/components/goal/hooks";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 
 export type GoalSuggestion = {
@@ -25,6 +27,8 @@ export const GoalSuggestionCard = ({
 	chatId?: string;
 	onApplied?: () => void | Promise<void>;
 }) => {
+	const { workspaceId } = useParams<{ workspaceId: string }>();
+	const navigate = useI18nNavigate();
 	const goalQuery = useProjectGoal(suggestion.projectId);
 	const saveGoalMutation = useSaveProjectGoalMutation(suggestion.projectId);
 	const [dismissed, setDismissed] = useState(false);
@@ -59,7 +63,7 @@ export const GoalSuggestionCard = ({
 
 	if (applied) {
 		return (
-			<SuggestionCardFrame compact testId="agentic-goal-suggestion-applied">
+			<SuggestionCardFrame compact tight testId="agentic-goal-suggestion-applied">
 				<Group gap="xs" wrap="nowrap">
 					<IconCheck
 						size={16}
@@ -69,6 +73,20 @@ export const GoalSuggestionCard = ({
 					<Text size="sm">
 						<Trans>Saved as this project's goal.</Trans>
 					</Text>
+					{workspaceId ? (
+						<Button
+							variant="subtle"
+							size="compact-xs"
+							onClick={() =>
+								navigate(
+									`/w/${workspaceId}/projects/${suggestion.projectId}/overview`,
+								)
+							}
+							{...testId("agentic-goal-suggestion-view")}
+						>
+							<Trans>View</Trans>
+						</Button>
+					) : null}
 				</Group>
 			</SuggestionCardFrame>
 		);

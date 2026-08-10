@@ -62,7 +62,7 @@ own boxes, or as managed cloud services.
   bucket (AWS S3, DigitalOcean Spaces, OVHcloud, …) or run *MinIO* locally.
 - *Language-model providers* - at minimum a set of keys for the model groups dembrane uses.
   See [configuration & LLM providers](./configuration-and-llm-providers.md).
-- *A transcription provider* - AssemblyAI, or a transcription model routed through LiteLLM.
+- *A transcription provider* - Gemini (Vertex AI), or a transcription model routed through LiteLLM.
 
 ## Running it locally: the dev container + mprocs
 

@@ -128,3 +128,40 @@ class TestConversationLockHelper:
             {"id": "c2", "is_over_cap": True}, "changemaker"
         )
         assert (locked, reason) == (False, None)
+
+
+class TestLiveOverCapGate:
+    """The live workspace over-cap gate locks conversations that are still
+    recording (no is_over_cap stamp yet) on an over-cap free workspace, while
+    leaving finished conversations to the stamp (so grandfathering holds)."""
+
+    def test_live_unstamped_conversation_locked_when_over_cap_active(self):
+        conv = {"id": "c1", "is_over_cap": False, "is_finished": False}
+        locked, reason = _conversation_lock(conv, "free", over_cap_active=True)
+        assert (locked, reason) == (True, "hours_cap")
+
+    def test_finished_grandfathered_conversation_not_locked_by_live_gate(self):
+        # Finished, started under cap (is_over_cap False) -> the live gate must
+        # not lock it; the stamp is the sole authority for finished ones.
+        conv = {"id": "c1", "is_over_cap": False, "is_finished": True}
+        locked, reason = _conversation_lock(conv, "free", over_cap_active=True)
+        assert (locked, reason) == (False, None)
+
+    def test_live_gate_not_applied_when_workspace_under_cap(self):
+        conv = {"id": "c1", "is_over_cap": False, "is_finished": False}
+        locked, reason = _conversation_lock(conv, "free", over_cap_active=False)
+        assert (locked, reason) == (False, None)
+
+    def test_live_gate_scrubs_summary_and_transcript(self):
+        conv = {
+            "id": "c1",
+            "is_over_cap": False,
+            "is_finished": False,
+            "summary": "secret",
+            "merged_transcript": "full text",
+        }
+        out = _enrich_conversation(conv, "free", over_cap_active=True)
+        assert out["locked"] is True
+        assert out["summary"] is None
+        assert out["summary_locked"] is True
+        assert out["merged_transcript"] is None

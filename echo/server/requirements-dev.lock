@@ -169,6 +169,7 @@ click==8.1.8 \
     #   click-didyoumean
     #   click-plugins
     #   click-repl
+    #   dembrane
     #   litellm
     #   uvicorn
 click-didyoumean==0.3.1 \
@@ -288,7 +289,9 @@ dramatiq-workflow==0.2.0 \
 ecdsa==0.19.2 \
     --hash=sha256:62635b0ac1ca2e027f82122b5b81cb706edc38cd91c63dda28e4f3455a2bf930 \
     --hash=sha256:840f5dc5e375c68f36c1a7a5b9caad28f95daa65185c9253c0c08dd952bb7399
-    # via python-jose
+    # via
+    #   dembrane
+    #   python-jose
 email-validator==2.3.0 \
     --hash=sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4 \
     --hash=sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426
@@ -480,9 +483,9 @@ grpcio-status==1.81.0 \
     --hash=sha256:10eb4c2309db902dc26c1873e80a821bf794be772c10dfd83030f7f59f165fab \
     --hash=sha256:b6fe9788cfdd1f0f63c0528a1e0bfdb41e8ff0583e920d2d8e8888598c01bb69
     # via google-api-core
-gunicorn==21.2.0 \
-    --hash=sha256:3213aa5e8c24949e792bcacfc176fef362e7aac80b76c56f6b5122bf350722f0 \
-    --hash=sha256:88ec8bff1d634f98e61b9f65bc4bf3cd918a90806c6f5c48bc5603849ec81033
+gunicorn==22.0.0 \
+    --hash=sha256:350679f91b24062c86e386e198a15438d53a7a8207235a78ba1b53df4c4378d9 \
+    --hash=sha256:4a0b436239ff76fb33f11c07a16482c521a7e09c1ce3cc293c2330afe01bec63
     # via dembrane
 h11==0.16.0 \
     --hash=sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1 \
@@ -625,9 +628,9 @@ librt==0.11.0 ; platform_python_implementation != 'PyPy' \
     --hash=sha256:993f028be9e96a08d31df3479ac80d99be374d17f3b78e4796b3fd3c913d4e89 \
     --hash=sha256:f230cb1cbc9faaa616f9a678f530ebcf186e414b6bcbd88b960e4ba1b92428d5
     # via mypy
-litellm==1.83.10 \
-    --hash=sha256:55203a7b5551efec8f2fccde29ee045ba057e768591e0b6b9fe1d12f00685ff8 \
-    --hash=sha256:d54eaa98f93a1eb02decf593dbb525fa1ddd4cf03686c1d5c7bb69c2a9ba2a41
+litellm==1.84.0 \
+    --hash=sha256:2a58d6041e6aa27d1a28dc8d8828ab500fef1a00ef74ca65e60899035010c2f2 \
+    --hash=sha256:b8ad0cbea11a5941b18d5af973017a340abd3d3ab41cb86e5401b970626d71a6
     # via dembrane
 lz4==4.4.5 \
     --hash=sha256:12233624f1bc2cebc414f9efb3113a03e89acce3ab6f72035577bc61b270d24d \
@@ -842,6 +845,7 @@ pyasn1==0.6.3 \
     --hash=sha256:697a8ecd6d98891189184ca1fa05d1bb00e2f84b5977c481452050549c8a72cf \
     --hash=sha256:a80184d120f0864a52a073acc6fc642847d0be408e7c7252f31390c0f4eadcde
     # via
+    #   dembrane
     #   pyasn1-modules
     #   python-jose
     #   rsa
@@ -1100,13 +1104,13 @@ s3transfer==0.11.5 \
     --hash=sha256:757af0f2ac150d3c75bc4177a32355c3862a98d20447b69a0161812992fe0bd4 \
     --hash=sha256:8c8aad92784779ab8688a61aefff3e28e9ebdce43142808eaa3f0b0f402f68b7
     # via boto3
-scikit-learn==1.4.2 \
-    --hash=sha256:1d0b25d9c651fd050555aadd57431b53d4cf664e749069da77f3d52c5ad14b3b \
-    --hash=sha256:44c62f2b124848a28fd695db5bc4da019287abf390bfce602ddc8aa1ec186aae \
-    --hash=sha256:45dee87ac5309bb82e3ea633955030df9bbcb8d2cdb30383c6cd483691c546cc \
-    --hash=sha256:5cd7b524115499b18b63f0c96f4224eb885564937a0b3477531b2b63ce331904 \
-    --hash=sha256:b0203c368058ab92efc6168a1507d388d41469c873e96ec220ca8e74079bf62e \
-    --hash=sha256:daa1c471d95bad080c6e44b4946c9390a4842adc3082572c20e4f8884e39e959
+scikit-learn==1.5.0 \
+    --hash=sha256:118a8d229a41158c9f90093e46b3737120a165181a1b58c03461447aa4657415 \
+    --hash=sha256:1f77547165c00625551e5c250cefa3f03f2fc92c5e18668abd90bfc4be2e0bff \
+    --hash=sha256:2a65af2d8a6cce4e163a7951a4cfbfa7fceb2d5c013a4b593686c7f16445cf9d \
+    --hash=sha256:4c0c56c3005f2ec1db3787aeaabefa96256580678cec783986836fc64f8ff622 \
+    --hash=sha256:789e3db01c750ed6d496fa2db7d50637857b451e57bcae863bff707c1247bef7 \
+    --hash=sha256:a03b09f9f7f09ffe8c5efffe2e9de1196c696d811be6798ad5eddf323c6f4d40
     # via dembrane
 scipy==1.17.1 \
     --hash=sha256:1f95b894f13729334fb990162e911c9e5dc1ab390c58aa6cbecb389c5b5e28ec \

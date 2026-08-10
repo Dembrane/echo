@@ -1,8 +1,10 @@
 import { useChat } from "@ai-sdk/react";
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
+import { ChatCircleText as ChatCircleTextIcon } from "@phosphor-icons/react";
 import {
 	Alert,
+	Badge,
 	Box,
 	Button,
 	Divider,
@@ -18,28 +20,26 @@ import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import {
 	IconAlertCircle,
-	IconListDetails,
 	IconRefresh,
 	IconSend,
 	IconSquare,
 } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
-import { useCurrentUser } from "@/components/auth/hooks";
 import { AgenticChatPanel } from "@/components/chat/AgenticChatPanel";
 import {
 	ChatAccordionItemMenu,
 	ChatModeIndicator,
 } from "@/components/chat/ChatAccordion";
+import {
+	ChatComposerShell,
+	ConversationFocusChips,
+	ConversationPickerButton,
+} from "@/components/chat/ChatComposer";
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
-import { ChatMessage } from "@/components/chat/ChatMessage";
-import {
-	ChatModeSelector,
-	MODE_COLORS,
-} from "@/components/chat/ChatModeSelector";
-import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
+import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
+import { ChatTemplatesMenuConnected } from "@/components/chat/ChatTemplatesMenuConnected";
 import { formatMessage } from "@/components/chat/chatUtils";
 import {
 	ChatTurnLimitCard,
@@ -48,36 +48,30 @@ import {
 import {
 	useAddChatMessageMutation,
 	useChatHistory,
-	useChatSuggestions,
 	useInitializeChatModeMutation,
 	useLockConversationsMutation,
 	usePrefetchSuggestions,
 	useChat as useProjectChat,
 	useProjectChatContext,
 } from "@/components/chat/hooks";
-import {
-	useCreateUserTemplate,
-	useDeleteUserTemplate,
-	useQuickAccessPreferences,
-	useSaveQuickAccessPreferences,
-	useToggleAiSuggestions,
-	useUpdateUserTemplate,
-	useUserTemplates,
-} from "@/components/chat/hooks/useUserTemplates";
 import { consumeChatPrefill } from "@/components/chat/prefill";
-import type { QuickAccessItem } from "@/components/chat/templateKey";
-import { Templates } from "@/components/chat/templates";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { Logo } from "@/components/common/Logo";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { toast } from "@/components/common/Toaster";
-import { ConversationLinks } from "@/components/conversation/ConversationLinks";
-import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
+import { useStickToBottom } from "@/components/common/useStickToBottom";
+import {
+	useClearChatContextMutation,
+	useConversationsCountByProjectId,
+} from "@/components/conversation/hooks";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { useProjectById } from "@/components/project/hooks";
-import { API_BASE_URL, ENABLE_AGENTIC_CHAT } from "@/config";
-import { useElementOnScreen } from "@/hooks/useElementOnScreen";
+import {
+	AGENTIC_CHAT_IS_DEFAULT,
+	API_BASE_URL,
+	ENABLE_AGENTIC_CHAT,
+} from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -85,6 +79,7 @@ import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { FREE_TIER_MAX_CHAT_USER_TURNS } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
+import { resolveChatScreen } from "./chatModeRouting";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
@@ -99,12 +94,6 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
 	const lastInput = useRef("");
 	const lastMessageRef = useRef<HTMLDivElement>(null);
-
-	const [scrollTargetRef, isVisible] = useElementOnScreen({
-		root: null,
-		rootMargin: "-83px",
-		threshold: 0.1,
-	});
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
 	const contextToBeAdded = useMemo(() => {
@@ -218,7 +207,14 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		try {
 			// Lock conversations first
 			await lockConversationsMutation.mutateAsync({ chatId });
-			await chatContextQuery.refetch();
+			const [, refreshedHistory] = await Promise.all([
+				chatContextQuery.refetch(),
+				chatHistoryQuery.refetch({ cancelRefetch: false }),
+			]);
+			if (refreshedHistory.data) {
+				// @ts-expect-error chatHistoryQuery.data is not typed
+				setMessages(refreshedHistory.data);
+			}
 
 			// Submit the chat
 			handleSubmit();
@@ -269,12 +265,10 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		isInitializing: chatHistoryQuery.isLoading,
 		isLoading,
 		isSubmitting,
-		isVisible,
 		lastInputRef: lastInput,
 		lastMessageRef,
 		messages,
 		reload,
-		scrollTargetRef,
 		setInput,
 		setTemplateKey,
 		status,
@@ -325,9 +319,9 @@ export const ProjectChatRoute = () => {
 	// Observers are free, read-only: chat is the upgrade wall. Server denies
 	// chat:use (403); the UI blocks here with a clear path to upgrade.
 	const isObserver = isReadOnlyRole(workspace?.role);
-	const queryClient = useQueryClient();
 	const chatQuery = useProjectChat(chatId ?? "");
 	const chatContextQuery = useProjectChatContext(chatId ?? "");
+	const clearChatContextMutation = useClearChatContextMutation();
 	const [referenceIds, setReferenceIds] = useState<string[]>([]);
 	const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
 	const [saveAsTemplateContent, setSaveAsTemplateContent] = useState<
@@ -335,6 +329,18 @@ export const ProjectChatRoute = () => {
 	>(null);
 	const [conversationPickerOpen, setConversationPickerOpen] = useState(false);
 	const queryPrefillStartedRef = useRef(false);
+	// A question typed on the Ask home page arrives as router state. The
+	// agentic panel consumes this itself; this route consumes it for every
+	// other mode (deep_dive, legacy overview), so Specific Details (the new
+	// default) never silently drops what the host typed. Read once at mount,
+	// exactly like AgenticChatPanel's own initialMessageRef.
+	const initialMessageRef = useRef<string | null>(
+		typeof (location.state as { initialMessage?: unknown } | null)
+			?.initialMessage === "string"
+			? (location.state as { initialMessage: string }).initialMessage
+			: null,
+	);
+	const pendingInitialMessageRef = useRef<string | null>(null);
 
 	const handleSaveAsTemplate = (content: string) => {
 		setSaveAsTemplateContent(content);
@@ -347,20 +353,24 @@ export const ProjectChatRoute = () => {
 	const rawChatMode = chatContextQuery.data?.chat_mode;
 	const hasLockedConversations =
 		(chatContextQuery.data?.locked_conversation_id_list?.length ?? 0) > 0;
+	// Same legacy rule the screen resolver applies (see ./chatModeRouting):
+	// a mode-less chat that locked context predates chat_mode and renders as
+	// Specific Details.
 	const isLegacyChat = rawChatMode == null && hasLockedConversations;
 	const chatMode = isLegacyChat ? "deep_dive" : rawChatMode;
 	const isModeSelected = chatMode !== null && chatMode !== undefined;
-	const isDeepDiveMode = chatMode === "deep_dive";
 	const isAgenticMode = chatMode === "agentic";
+
+	// Locked + not-yet-locked, so this stays visible after conversations lock.
+	const conversationCount = chatContextQuery.data?.conversations?.length ?? 0;
 
 	// Get total conversations count for overview mode
 	const _totalConversationsQuery = useConversationsCountByProjectId(
 		projectId ?? "",
 	);
 
-	// User templates & preferences. Fetch the project's workspace_id so
-	// the templates hook can return BOTH personal (scope='user') and
-	// workspace-shared (scope='workspace') templates for this workspace.
+	// Fetch the project's workspace_id: needed for the conversation picker
+	// modal below (workspace-scoped conversation list).
 	const projectForWorkspace = useProjectById({
 		projectId: projectId ?? "",
 		query: { fields: ["id", "workspace_id"] },
@@ -368,114 +378,10 @@ export const ProjectChatRoute = () => {
 	const projectWorkspaceId =
 		(projectForWorkspace.data as { workspace_id?: string | null } | undefined)
 			?.workspace_id ?? null;
-	const currentUserQuery = useCurrentUser();
-	const userTemplatesQuery = useUserTemplates(projectWorkspaceId);
-	const createUserTemplateMutation = useCreateUserTemplate(projectWorkspaceId);
-	const updateUserTemplateMutation = useUpdateUserTemplate(projectWorkspaceId);
-	const deleteUserTemplateMutation = useDeleteUserTemplate(projectWorkspaceId);
-	const quickAccessQuery = useQuickAccessPreferences();
-	const saveQuickAccessMutation = useSaveQuickAccessPreferences();
-	const toggleAiSuggestionsMutation = useToggleAiSuggestions();
-
-	const hideAiSuggestions = currentUserQuery.data?.hide_ai_suggestions ?? false;
-
-	// Resolve quick access items — default to first 3 built-in templates
-	const quickAccessItems: QuickAccessItem[] = useMemo(() => {
-		if (!quickAccessQuery.data || quickAccessQuery.data.length === 0)
-			return Templates.slice(0, 3).map((t) => ({
-				id: t.id,
-				title: t.title,
-				type: "static" as const,
-			}));
-		return quickAccessQuery.data
-			.map((pref) => {
-				if (pref.type === "static") {
-					const found = Templates.find((t) => t.id === pref.id);
-					if (found)
-						return {
-							id: found.id,
-							title: found.title,
-							type: "static" as const,
-						};
-				} else if (pref.type === "user") {
-					const found = userTemplatesQuery.data?.find((t) => t.id === pref.id);
-					if (found)
-						return {
-							id: found.id,
-							title: found.title,
-							type: "user" as const,
-						};
-				}
-				return null;
-			})
-			.filter(Boolean) as QuickAccessItem[];
-	}, [quickAccessQuery.data, userTemplatesQuery.data]);
-
-	const handleSaveQuickAccess = (items: QuickAccessItem[]) => {
-		saveQuickAccessMutation.mutate(
-			items.map((item) => ({
-				id: item.id,
-				type: item.type,
-			})),
-		);
-	};
 
 	// Language for suggestions
 	const { language } = useLanguage();
 	const prefetchSuggestions = usePrefetchSuggestions();
-
-	// Track conversation count for deep_dive mode to trigger suggestions refetch
-	const conversationCount = chatContextQuery.data?.conversations?.length ?? 0;
-	const prevConversationCountRef = useRef<number | null>(null);
-
-	// Fetch suggestions:
-	// - Overview mode: Fetch immediately when mode is selected
-	// - Deep dive mode: Only fetch after conversations are added (not on initial load)
-	const shouldFetchSuggestions =
-		isModeSelected &&
-		!isAgenticMode &&
-		!hideAiSuggestions &&
-		(!isDeepDiveMode || // overview mode: always fetch
-			conversationCount > 0); // deep_dive mode: only when conversations exist
-
-	const suggestionsQuery = useChatSuggestions(chatId ?? "", {
-		enabled: shouldFetchSuggestions,
-		language,
-	});
-
-	// Refetch suggestions when conversation context changes in deep_dive mode
-	// Cancel previous query and start a new one
-	useEffect(() => {
-		if (!isDeepDiveMode || !chatId) return;
-
-		// Skip on initial mount
-		if (prevConversationCountRef.current === null) {
-			prevConversationCountRef.current = conversationCount;
-			return;
-		}
-
-		// Only refetch if count actually changed
-		if (prevConversationCountRef.current !== conversationCount) {
-			prevConversationCountRef.current = conversationCount;
-
-			// Cancel any in-flight suggestions query
-			queryClient.cancelQueries({
-				queryKey: ["chats", chatId, "suggestions", language],
-			});
-
-			// Refetch suggestions if we have conversations
-			if (conversationCount > 0) {
-				suggestionsQuery.refetch();
-			}
-		}
-	}, [
-		conversationCount,
-		isDeepDiveMode,
-		chatId,
-		language,
-		queryClient,
-		suggestionsQuery,
-	]);
 
 	const {
 		isInitializing,
@@ -486,8 +392,6 @@ export const ProjectChatRoute = () => {
 		error,
 		contextToBeAdded,
 		lastMessageRef,
-		scrollTargetRef,
-		isVisible,
 		setInput,
 		handleInputChange,
 		handleSubmit,
@@ -498,6 +402,28 @@ export const ProjectChatRoute = () => {
 		statusMessage,
 	} = useDembraneChat({ chatId: chatId ?? "" });
 	const normalizedInput = typeof input === "string" ? input : "";
+
+	const threadAnchorRef = useRef<HTMLDivElement>(null);
+	const { showScrollButton, scrollToBottom } =
+		useStickToBottom(threadAnchorRef);
+
+	// Which screen this chat opens on. Pure and unit-tested in
+	// ./chatModeRouting, because setting a mode is one-way: the server refuses
+	// to change chat_mode once set, so a wrong call here cannot be walked back.
+	const { screen: chatScreen } = resolveChatScreen({
+		agenticIsDefault: AGENTIC_CHAT_IS_DEFAULT,
+		hasLockedConversations,
+		messageCount: messages.length,
+		rawChatMode,
+	});
+
+	// Specific Details answers out of the conversations attached to the chat.
+	// Mirrors the "Select conversations to continue" alert further down.
+	const noConversationsSelected =
+		contextToBeAdded?.conversations?.length === 0 &&
+		contextToBeAdded?.locked_conversations?.length === 0;
+	const needsConversations =
+		chatMode !== "overview" && Boolean(noConversationsSelected);
 
 	useEffect(() => {
 		if (chatContextQuery.isLoading) return;
@@ -539,16 +465,51 @@ export const ProjectChatRoute = () => {
 		handleSubmit();
 	};
 
+	// Step 1: once the chat is ready and its mode resolved, type the seeded
+	// question into the input, same as a host would. Runs once.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: setInput identity changes per render; the ref guards a single run
+	useEffect(() => {
+		if (!initialMessageRef.current) return;
+		if (isInitializing || chatQuery.isLoading || chatContextQuery.isLoading)
+			return;
+		if (isAgenticMode) return; // AgenticChatPanel seeds its own first message
+		if (!isModeSelected) return;
+		if (messages.length > 0) return;
+		const seed = initialMessageRef.current;
+		initialMessageRef.current = null;
+		window.history.replaceState({}, "");
+		pendingInitialMessageRef.current = seed;
+		setInput(seed);
+	}, [
+		isInitializing,
+		chatQuery.isLoading,
+		chatContextQuery.isLoading,
+		isAgenticMode,
+		isModeSelected,
+		messages.length,
+	]);
+
+	// Step 2: once the input reflects the seeded text, send it through the
+	// same path a manual Enter/Send would use (turn-limit guard, conversation
+	// lock, posthog capture). Consumed exactly once via the ref.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: guardedSubmit is recreated per render; the ref guards a single run
+	useEffect(() => {
+		if (!pendingInitialMessageRef.current) return;
+		if (normalizedInput !== pendingInitialMessageRef.current) return;
+		pendingInitialMessageRef.current = null;
+		// With nothing attached, Specific Details has no conversations to answer
+		// from. Leave the question in the box and let the alert below ask for a
+		// selection first, instead of firing an answerless turn.
+		if (needsConversations) return;
+		guardedSubmit();
+	}, [normalizedInput, needsConversations]);
+
 	// check if assistant is typing by determining if the last message is an assistant message and has a text part
 	const isAssistantTyping =
 		messages &&
 		messages.length > 0 &&
 		messages[messages.length - 1].role === "assistant" &&
 		messages[messages.length - 1].parts?.some((part) => part.type === "text");
-
-	const noConversationsSelected =
-		contextToBeAdded?.conversations?.length === 0 &&
-		contextToBeAdded?.locked_conversations?.length === 0;
 
 	const computedChatForCopy = useMemo(() => {
 		const messagesList = messages.map((message) =>
@@ -593,11 +554,12 @@ export const ProjectChatRoute = () => {
 		}
 	}, [normalizedInput, templateKey, setTemplateKey]);
 
-	// Track if we need to refetch suggestions after assistant response
+	// Bump this whenever the assistant finishes responding, so
+	// ChatTemplatesMenuConnected knows to refetch suggestions.
+	const [assistantResponseTick, setAssistantResponseTick] = useState(0);
 	const prevIsLoadingRef = useRef(isLoading);
 	const lastMessageRole = messages?.[messages.length - 1]?.role;
 
-	// Refetch suggestions when assistant finishes responding
 	useEffect(() => {
 		// Detect transition from loading to not loading with assistant message
 		if (
@@ -605,11 +567,10 @@ export const ProjectChatRoute = () => {
 			!isLoading &&
 			lastMessageRole === "assistant"
 		) {
-			// Refetch suggestions after assistant response completes
-			suggestionsQuery.refetch();
+			setAssistantResponseTick((n) => n + 1);
 		}
 		prevIsLoadingRef.current = isLoading;
-	}, [isLoading, lastMessageRole, suggestionsQuery]);
+	}, [isLoading, lastMessageRole]);
 
 	if (isInitializing || chatQuery.isLoading || chatContextQuery.isLoading) {
 		return (
@@ -641,9 +602,11 @@ export const ProjectChatRoute = () => {
 		);
 	}
 
-	// Agentic-only experience: a chat without a mode (and without legacy
-	// markers) becomes agentic automatically; hosts never pick a mode.
-	if (!isModeSelected && ENABLE_AGENTIC_CHAT) {
+	// Only auto-assign a mode when agentic is the default, and only for a chat
+	// with nothing in it. Availability is not default-ness: thousands of chats
+	// still carry chat_mode NULL, and converting one on open would hide its
+	// existing thread behind the agentic panel with no way back.
+	if (chatScreen === "agentic-auto") {
 		return (
 			<AutoInitializeAgentic
 				chatId={chatId ?? ""}
@@ -653,8 +616,10 @@ export const ProjectChatRoute = () => {
 		);
 	}
 
-	// Legacy mode selector (environments where agentic chat is off)
-	if (!isModeSelected) {
+	// A mode-less chat with no messages has nothing to lose, so let the host
+	// pick. One that already has a thread falls through to it below and is
+	// never offered the choice.
+	if (chatScreen === "mode-picker") {
 		return (
 			<Box className="flex min-h-full items-center justify-center px-2 pr-4">
 				<ChatModeSelector
@@ -711,7 +676,7 @@ export const ProjectChatRoute = () => {
 				<Divider />
 			</Stack>
 			{/* Body */}
-			<Box className="flex-grow">
+			<Box className="flex-grow" ref={threadAnchorRef}>
 				<Stack py="sm" pb="xl" className="relative h-full w-full">
 					<ChatHistoryMessage
 						// @ts-expect-error chatHistoryQuery.data is not typed
@@ -768,7 +733,7 @@ export const ProjectChatRoute = () => {
 						<Stack gap="xs">
 							<Group>
 								<Box className="animate-spin">
-									<Logo hideTitle alwaysDembrane h="20px" my={4} />
+									<Logo hideTitle hideEnvBadge alwaysDembrane h="20px" my={4} />
 								</Box>
 								<Text
 									size="sm"
@@ -838,9 +803,6 @@ export const ProjectChatRoute = () => {
 				</Stack>
 			</Box>
 
-			{/* Scroll target for scroll to bottom button */}
-			<div ref={scrollTargetRef} aria-hidden="true" />
-
 			{/* Footer */}
 			<Box
 				className="bottom-0 w-full pb-2 pt-4 md:sticky"
@@ -853,96 +815,53 @@ export const ProjectChatRoute = () => {
 						className="absolute bottom-[105%] right-4 z-50 hidden md:flex"
 					>
 						<ScrollToBottomButton
-							elementRef={scrollTargetRef}
-							isVisible={isVisible}
+							visible={showScrollButton}
+							onClick={() => scrollToBottom("smooth")}
 						/>
 					</Group>
 
-					<ChatTemplatesMenu
+					<ChatTemplatesMenuConnected
+						chatId={chatId}
+						chatMode={chatMode}
+						projectId={projectId}
 						externalOpen={templatesModalOpen}
 						onExternalClose={() => setTemplatesModalOpen(false)}
 						onTemplateSelect={handleTemplateSelect}
 						selectedTemplateKey={templateKey}
-						suggestions={
-							hideAiSuggestions ? [] : suggestionsQuery.data?.suggestions
-						}
-						chatMode={chatMode}
-						userTemplates={userTemplatesQuery.data ?? []}
-						canCreateWorkspaceTemplate={Boolean(projectWorkspaceId)}
-						onCreateUserTemplate={(payload) =>
-							createUserTemplateMutation.mutateAsync(payload)
-						}
-						onUpdateUserTemplate={(payload) =>
-							updateUserTemplateMutation.mutateAsync(payload)
-						}
-						onDeleteUserTemplate={(id) =>
-							deleteUserTemplateMutation.mutateAsync(id)
-						}
-						isCreatingTemplate={createUserTemplateMutation.isPending}
-						isUpdatingTemplate={updateUserTemplateMutation.isPending}
-						isDeletingTemplate={deleteUserTemplateMutation.isPending}
-						quickAccessItems={quickAccessItems}
-						onSaveQuickAccess={handleSaveQuickAccess}
-						isSavingQuickAccess={saveQuickAccessMutation.isPending}
-						hideAiSuggestions={hideAiSuggestions}
-						onToggleAiSuggestions={(hide) =>
-							toggleAiSuggestionsMutation.mutate(hide)
-						}
 						saveAsTemplateContent={saveAsTemplateContent}
 						onClearSaveAsTemplate={() => setSaveAsTemplateContent(null)}
+						refetchSuggestionsKey={assistantResponseTick}
 					/>
 
 					<Divider />
-					{chatMode !== "overview" && (
-						<Group justify="space-between" gap="sm" wrap="wrap">
-							<Text size="xs" c="dimmed" fw={500}>
-								<Trans>
-									{conversationCount} conversations selected for this chat
-								</Trans>
-							</Text>
-							<Button
-								variant="light"
-								size="xs"
-								leftSection={<IconListDetails size={16} />}
-								onClick={() => setConversationPickerOpen(true)}
-								{...testId("chat-select-conversations-button")}
-							>
-								<Trans>Select conversations</Trans>
-							</Button>
-						</Group>
-					)}
-					{chatMode !== "overview" && noConversationsSelected && (
+					{needsConversations && (
 						<Alert
 							icon={<IconAlertCircle size="1rem" />}
-							title={t`Select conversations to continue`}
+							p="xs"
+							styles={{
+								wrapper: { alignItems: "center" },
+								title: { marginBottom: 0 },
+							}}
+							title={
+								<Group gap="xl" wrap="nowrap" align="center">
+									<Text component="span" inherit c="graphite">
+										<Trans>Select a conversation to continue</Trans>
+									</Text>
+									<Button
+										variant="subtle"
+										size="compact-sm"
+										leftSection={<ChatCircleTextIcon size={18} />}
+										onClick={() => setConversationPickerOpen(true)}
+										{...testId("chat-no-conversations-alert-select-button")}
+									>
+										<Trans>Select conversations</Trans>
+									</Button>
+								</Group>
+							}
 							color="orange"
 							variant="light"
 							{...testId("chat-no-conversations-alert")}
-						>
-							<Text size="sm">
-								<Trans>Specific Details needs at least one conversation.</Trans>
-							</Text>
-						</Alert>
-					)}
-
-					{contextToBeAdded && contextToBeAdded.conversations.length > 0 && (
-						// biome-ignore lint/a11y/useValidAriaRole: this is not an ARIA attribute
-						<ChatMessage role="dembrane">
-							<Group gap="xs" align="baseline">
-								<Text size="xs" c="dimmed" fw={500} px="sm">
-									<Trans>Conversations:</Trans>
-								</Text>
-								<ConversationLinks
-									// @ts-expect-error conversation_id is not typed
-									conversations={contextToBeAdded.conversations.map((c) => ({
-										id: c.conversation_id,
-										participant_name: c.conversation_participant_name,
-									}))}
-									color="var(--app-text)"
-									hoverUnderlineColor={MODE_COLORS.deep_dive.primary}
-								/>
-							</Group>
-						</ChatMessage>
+						/>
 					)}
 
 					{/* Only show context progress in deep dive mode - Big Picture uses dynamic summaries */}
@@ -962,69 +881,108 @@ export const ProjectChatRoute = () => {
 							guardedSubmit();
 						}}
 					>
-						<Group className="flex-nowrap">
-							<Box className="grow">
-								<Textarea
-									placeholder={t`Type a message or press / for templates...`}
-									minRows={4}
-									maxRows={10}
-									autosize
-									value={normalizedInput}
-									onChange={handleInputChange}
-									disabled={isLoading || isSubmitting || atTurnLimit}
-									onKeyDown={(e) => {
-										if (e.key === "/" && normalizedInput.trim() === "") {
-											e.preventDefault();
-											setTemplatesModalOpen(true);
-											return;
+						<ChatComposerShell
+							chips={
+								chatMode !== "overview" &&
+								contextToBeAdded &&
+								contextToBeAdded.conversations.length > 0 ? (
+									<ConversationFocusChips
+										conversations={contextToBeAdded.conversations.map((c) => ({
+											id: c.conversation_id,
+											participant_name: c.conversation_participant_name,
+										}))}
+										isClearing={clearChatContextMutation.isPending}
+										label={
+											<Plural
+												value={contextToBeAdded.conversations.length}
+												one="Using # conversation:"
+												other="Using # conversations:"
+											/>
 										}
-										if (e.key === "Enter" && !e.shiftKey) {
-											e.preventDefault();
-											e.stopPropagation();
-											guardedSubmit();
+										onClearAll={() =>
+											clearChatContextMutation.mutate({
+												chatId: chatId ?? "",
+												conversationIds: contextToBeAdded.conversations.map(
+													(c) => c.conversation_id,
+												),
+											})
 										}
-									}}
-									color="gray"
-									{...testId("chat-input-textarea")}
-								/>
-								<Group
-									justify="space-between"
-									gap="sm"
-									className="mt-1 hidden lg:flex"
+									/>
+								) : undefined
+							}
+							footerLeft={
+								chatMode !== "overview" ? (
+									<Group gap={4} wrap="nowrap" align="center">
+										<ConversationPickerButton
+											ariaLabel={t`Select conversations`}
+											label={<Trans>Select conversations</Trans>}
+											onClick={() => setConversationPickerOpen(true)}
+											testId="chat-select-conversations-button"
+										/>
+										{conversationCount > 0 && (
+											<Badge variant="light">{conversationCount}</Badge>
+										)}
+									</Group>
+								) : undefined
+							}
+							footerRight={
+								<Button
+									type="submit"
+									size="md"
+									radius="md"
+									rightSection={<IconSend size={18} />}
+									disabled={
+										normalizedInput.trim() === "" ||
+										isLoading ||
+										isSubmitting ||
+										atTurnLimit
+									}
+									{...testId("chat-send-button")}
 								>
-									<Text size="xs" className="italic" c="dimmed">
-										<Trans>Use Shift + Enter to add a new line</Trans>
-									</Text>
-									<Text size="xs" className="italic" c="dimmed">
-										<Trans>
-											dembrane can make mistakes. Please double-check responses.
-										</Trans>
-									</Text>
-								</Group>
-							</Box>
-							<Stack className="h-full self-start" gap="xs">
-								<Box>
-									<Button
-										size="lg"
-										type="submit"
-										onClick={(e) => {
-											e.preventDefault();
-											e.stopPropagation();
-											guardedSubmit();
-										}}
-										rightSection={<IconSend size={24} />}
-										disabled={
-											normalizedInput.trim() === "" ||
-											isLoading ||
-											isSubmitting ||
-											atTurnLimit
-										}
-										{...testId("chat-send-button")}
-									>
-										<Trans>Send</Trans>
-									</Button>
-								</Box>
-							</Stack>
+									<Trans>Send</Trans>
+								</Button>
+							}
+						>
+							<Textarea
+								variant="unstyled"
+								styles={{
+									input: { backgroundColor: "transparent", resize: "none" },
+								}}
+								placeholder={t`Type a message or press / for templates...`}
+								minRows={2}
+								maxRows={10}
+								autosize
+								value={normalizedInput}
+								onChange={handleInputChange}
+								disabled={isLoading || isSubmitting || atTurnLimit}
+								onKeyDown={(e) => {
+									if (e.key === "/" && normalizedInput.trim() === "") {
+										e.preventDefault();
+										setTemplatesModalOpen(true);
+										return;
+									}
+									if (e.key === "Enter" && !e.shiftKey) {
+										e.preventDefault();
+										e.stopPropagation();
+										guardedSubmit();
+									}
+								}}
+								{...testId("chat-input-textarea")}
+							/>
+						</ChatComposerShell>
+						<Group
+							justify="space-between"
+							gap="sm"
+							className="mt-1 hidden lg:flex"
+						>
+							<Text size="xs" className="italic" c="dimmed">
+								<Trans>Use Shift + Enter to add a new line</Trans>
+							</Text>
+							<Text size="xs" className="italic" c="dimmed">
+								<Trans>
+									dembrane can make mistakes. Please double-check responses.
+								</Trans>
+							</Text>
 						</Group>
 						<Stack gap="sm" className="mt-1 flex lg:hidden">
 							<Text size="xs" className="italic" c="dimmed">

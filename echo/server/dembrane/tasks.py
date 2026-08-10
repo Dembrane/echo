@@ -1,4 +1,5 @@
 # ruff: noqa: E402
+import json
 import logging
 from typing import Any, Optional
 from logging import getLogger
@@ -24,6 +25,7 @@ from dramatiq.results.backends.redis import RedisBackend as ResultsRedisBackend
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.sentry import init_sentry
+from dembrane.service import agentic_run_service
 from dembrane.directus import (
     DirectusBadRequest,
     DirectusServerError,
@@ -32,6 +34,7 @@ from dembrane.directus import (
 from dembrane.settings import get_settings
 from dembrane.transcribe import transcribe_conversation_chunk
 from dembrane.async_helpers import run_async_in_new_loop
+from dembrane.agentic_runtime import publish_live_event, get_turn_lease_owner
 from dembrane.conversation_utils import (
     collect_unfinished_conversations,
     collect_unsummarized_conversations,
@@ -218,61 +221,6 @@ def task_transcribe_chunk(
             event_prefix="task_transcribe_chunk",
             message=f"for chunk {conversation_chunk_id}",
         ):
-            from dembrane.s3 import get_signed_url
-            from dembrane.transcribe import (
-                ASSEMBLYAI_WEBHOOK_URL,
-                TRANSCRIPTION_PROVIDER,
-                ASSEMBLYAI_WEBHOOK_SECRET,
-                _fetch_chunk,
-                _build_hotwords,
-                _fetch_conversation,
-                transcribe_audio_assemblyai,
-            )
-            from dembrane.coordination import store_assemblyai_webhook_metadata
-
-            if TRANSCRIPTION_PROVIDER == "Dembrane-25-09" and ASSEMBLYAI_WEBHOOK_URL:
-                chunk = _fetch_chunk(conversation_chunk_id)
-                conversation = _fetch_conversation(chunk["conversation_id"])
-                language = conversation["project_id"]["language"] or "en"
-                hotwords = _build_hotwords(conversation)
-                custom_guidance_prompt = conversation["project_id"].get(
-                    "default_conversation_transcript_prompt"
-                )
-                signed_url = get_signed_url(chunk["path"], expires_in_seconds=3 * 24 * 60 * 60)
-
-                _, response = transcribe_audio_assemblyai(
-                    signed_url,
-                    language=language,
-                    hotwords=hotwords,
-                    webhook_url=ASSEMBLYAI_WEBHOOK_URL,
-                    webhook_secret=ASSEMBLYAI_WEBHOOK_SECRET,
-                )
-
-                transcript_id = response.get("transcript_id")
-                if not transcript_id:
-                    raise ValueError(
-                        "AssemblyAI webhook submission succeeded but transcript_id was missing."
-                    )
-
-                store_assemblyai_webhook_metadata(
-                    transcript_id=transcript_id,
-                    chunk_id=conversation_chunk_id,
-                    conversation_id=conversation_id,
-                    audio_file_uri=signed_url,
-                    language=language,
-                    hotwords=hotwords,
-                    use_pii_redaction=use_pii_redaction,
-                    custom_guidance_prompt=custom_guidance_prompt,
-                    anonymize_transcripts=anonymize_transcripts,
-                )
-
-                logger.info(
-                    "Webhook mode: submitted transcript %s for chunk %s and freed worker",
-                    transcript_id,
-                    conversation_chunk_id,
-                )
-                return
-
             transcribe_conversation_chunk(
                 conversation_chunk_id, use_pii_redaction, anonymize_transcripts
             )
@@ -347,108 +295,6 @@ def _on_chunk_transcription_done(
             logger.error(f"Error checking conversation state for {conversation_id}: {e}")
 
 
-@dramatiq.actor(queue_name="network", priority=0)
-def task_correct_transcript(
-    chunk_id: str,
-    conversation_id: str,
-    audio_file_uri: str,
-    candidate_transcript: str,
-    hotwords: list[str] | None,
-    use_pii_redaction: bool,
-    custom_guidance_prompt: str | None,
-    assemblyai_response: dict[str, Any],
-    anonymize_transcripts: bool = False,
-) -> None:
-    """Run transcript correction and persist the final transcript for webhook mode."""
-    task_logger = getLogger("dembrane.tasks.task_correct_transcript")
-
-    from dembrane.transcribe import (
-        _save_transcript,
-        _save_chunk_error,
-        _transcript_correction_workflow,
-    )
-
-    fallback_transcript = candidate_transcript or "[Nothing to transcribe]"
-
-    try:
-        if anonymize_transcripts:
-            from dembrane.pii_regex import regex_redact_pii
-
-            fallback_transcript = regex_redact_pii(fallback_transcript) or "[Nothing to transcribe]"
-
-        with ProcessingStatusContext(
-            conversation_id=conversation_id,
-            event_prefix="task_correct_transcript",
-            message=f"for chunk {chunk_id}",
-        ):
-            corrected_transcript, note = _transcript_correction_workflow(
-                audio_file_uri=audio_file_uri,
-                candidate_transcript=fallback_transcript,
-                hotwords=hotwords,
-                use_pii_redaction=True if anonymize_transcripts else use_pii_redaction,
-                custom_guidance_prompt=custom_guidance_prompt,
-            )
-
-        final_transcript = corrected_transcript or "[Nothing to transcribe]"
-        if anonymize_transcripts:
-            diarization = {
-                "schema": "Dembrane-26-01-redaction",
-                "data": {
-                    "note": note,
-                    "raw": {},
-                    "error": None,
-                },
-            }
-        else:
-            diarization = {
-                "schema": "Dembrane-25-09",
-                "data": {
-                    "note": note,
-                    "raw": assemblyai_response,
-                    "error": None,
-                },
-            }
-
-        _save_transcript(chunk_id, final_transcript, diarization=diarization)
-    except Exception as e:
-        task_logger.error("Gemini correction failed for chunk %s: %s", chunk_id, e)
-
-        try:
-            if anonymize_transcripts:
-                fallback_diarization = {
-                    "schema": "Dembrane-26-01-redaction",
-                    "data": {
-                        "note": None,
-                        "raw": {},
-                        "error": str(e),
-                    },
-                }
-            else:
-                fallback_diarization = {
-                    "schema": "Dembrane-25-09",
-                    "data": {
-                        "note": None,
-                        "raw": assemblyai_response,
-                        "error": str(e),
-                    },
-                }
-
-            _save_transcript(
-                chunk_id,
-                fallback_transcript or "[Nothing to transcribe]",
-                diarization=fallback_diarization,
-            )
-        except Exception as save_error:
-            task_logger.error(
-                "Failed to save fallback transcript for chunk %s: %s",
-                chunk_id,
-                save_error,
-            )
-            _save_chunk_error(chunk_id, f"Failed to save fallback transcript: {save_error}")
-    finally:
-        _on_chunk_transcription_done(conversation_id, chunk_id, task_logger)
-
-
 @dramatiq.actor(queue_name="network", priority=20)
 def task_finalize_conversation(conversation_id: str) -> None:
     """
@@ -472,6 +318,7 @@ def task_finalize_conversation(conversation_id: str) -> None:
         mark_finalize_in_progress,
         cleanup_conversation_coordination,
     )
+    from dembrane.service.conversation import ConversationNotFoundException
 
     try:
         logger.info(f"Finalizing conversation: {conversation_id}")
@@ -542,6 +389,7 @@ def task_finalize_conversation(conversation_id: str) -> None:
         # Trigger downstream tasks
         task_merge_conversation_chunks.send(conversation_id)
         task_summarize_conversation.send(conversation_id)
+        task_compute_conversation_token_count.send(conversation_id)
 
         # Clean up coordination data
         cleanup_conversation_coordination(conversation_id)
@@ -549,6 +397,13 @@ def task_finalize_conversation(conversation_id: str) -> None:
         logger.info(f"Conversation {conversation_id} finalization complete")
         return
 
+    except ConversationNotFoundException:
+        logger.info(f"Conversation not found: {conversation_id}, skipping finalization")
+        try:
+            cleanup_conversation_coordination(conversation_id)
+        except Exception:
+            pass
+        return
     except Exception as e:
         logger.error(f"Error finalizing conversation {conversation_id}: {e}")
         raise
@@ -579,7 +434,7 @@ def task_summarize_conversation(conversation_id: str) -> None:
 
         conversation = conversation_service.get_by_id_or_raise(conversation_id)
 
-        if conversation["is_finished"] and conversation["summary"] is not None:
+        if conversation["is_finished"] and conversation.get("summary"):
             logger.info(f"Conversation {conversation_id} already summarized, skipping")
             return
 
@@ -735,8 +590,13 @@ def _stamp_over_cap(conversation_id: str, logger: Any) -> None:
     from dembrane.service import project_service, conversation_service
     from dembrane.directus import directus, directus_client_context
     from dembrane.tier_capacity import compute_is_over_cap
+    from dembrane.service.conversation import ConversationNotFoundException
 
-    conversation = conversation_service.get_by_id_or_raise(conversation_id)
+    try:
+        conversation = conversation_service.get_by_id_or_raise(conversation_id)
+    except ConversationNotFoundException:
+        logger.warning(f"Conversation {conversation_id} not found, skipping over-cap stamp")
+        return
     project_id = conversation.get("project_id")
     if not project_id:
         logger.warning(f"Conversation {conversation_id} has no project_id, skipping stamp")
@@ -922,6 +782,7 @@ def task_process_conversation_chunk(
     try:
         from dembrane.service import conversation_service
         from dembrane.coordination import increment_pending_chunks
+        from dembrane.service.conversation import ConversationNotFoundException
 
         chunk = conversation_service.get_chunk_by_id_or_raise(chunk_id)
         conversation_id = chunk["conversation_id"]
@@ -974,6 +835,11 @@ def task_process_conversation_chunk(
 
         return
 
+    except ConversationNotFoundException:
+        logger.info(
+            f"Conversation not found for chunk {chunk_id} (likely deleted), skipping chunk processing"
+        )
+        return
     except Exception as e:
         from dembrane.audio_utils import FileTooSmallError
 
@@ -1106,6 +972,85 @@ def task_catch_up_unsummarized_conversations() -> None:
         return
     except Exception as e:
         logger.error(f"Error catching up unsummarized conversations: {e}")
+        raise e from e
+
+
+@dramatiq.actor(queue_name="network", priority=40)
+def task_compute_conversation_token_count(conversation_id: str) -> None:
+    """Warm conversation.token_count off the request path.
+
+    Reuses the read endpoint (Redis -> column -> compute -> persist) with an
+    admin session so the number matches what any reader would compute. Best
+    effort: failures are logged, the catch-up sweep retries next tick.
+    """
+    logger = getLogger("dembrane.tasks.task_compute_conversation_token_count")
+
+    from dembrane.service import conversation_service
+    from dembrane.api.conversation import get_conversation_token_count
+    from dembrane.api.dependency_auth import DirectusSession
+    from dembrane.service.conversation import ConversationNotFoundException
+
+    try:
+        conversation = conversation_service.get_by_id_or_raise(conversation_id)
+        if conversation.get("token_count") is not None:
+            logger.debug(f"Conversation {conversation_id} already counted, skipping")
+            return
+        session = DirectusSession(user_id="task_compute_conversation_token_count", is_admin=True)
+        count = run_async_in_new_loop(get_conversation_token_count(conversation_id, session))
+        logger.info(f"Warmed token_count={count} for conversation {conversation_id}")
+    except ConversationNotFoundException:
+        logger.info(f"Conversation not found: {conversation_id}, skipping token count warm-up")
+        return
+    except Exception as e:  # noqa: BLE001 - warm-up must never break the pipeline
+        logger.warning(f"Failed to warm token_count for {conversation_id}: {e}")
+
+
+@dramatiq.actor(queue_name="network")
+def task_catch_up_uncounted_conversations() -> None:
+    """Catch-up task for transcribed conversations missing a token count.
+
+    Simple check: is_all_chunks_transcribed = True AND token_count = null.
+    Backfills pre-column rows on its first runs, then permanently self-heals
+    stragglers (failed finalize warm-ups, post-edit/redaction clears).
+    Bounded per tick; the 5-minute cron drains any backlog incrementally.
+    """
+    logger = getLogger("dembrane.tasks.task_catch_up_uncounted_conversations")
+
+    try:
+        logger.info("running task_catch_up_uncounted_conversations @ %s", get_utc_timestamp())
+
+        with directus_client_context() as client:
+            rows = client.get_items(
+                "conversation",
+                {
+                    "query": {
+                        "filter": {
+                            "is_all_chunks_transcribed": {"_eq": True},
+                            "token_count": {"_null": True},
+                            "deleted_at": {"_null": True},
+                        },
+                        "fields": ["id"],
+                        "sort": ["-created_at"],
+                        "limit": 200,
+                    }
+                },
+            )
+
+        uncounted_ids = [r["id"] for r in rows if r.get("id")] if isinstance(rows, list) else []
+        if not uncounted_ids:
+            logger.debug("No uncounted conversations found")
+            return
+
+        logger.info(f"Found {len(uncounted_ids)} uncounted conversations")
+        group(
+            [
+                task_compute_conversation_token_count.message(conversation_id)
+                for conversation_id in uncounted_ids
+            ]
+        ).run()
+        return
+    except Exception as e:
+        logger.error(f"Error catching up uncounted conversations: {e}")
         raise e from e
 
 
@@ -2179,6 +2124,170 @@ def task_expire_staff_support_memberships() -> None:
             task_logger.exception("failed to expire staff support membership %s", row.get("id"))
 
 
+def _support_forward_environment() -> str:
+    """Name the environment this deployment is, for the support payload.
+
+    Same exact-host derivation as analytics._resolve_posthog_token — the
+    admin dashboard URL is the one per-env value every deployment already
+    has, so no new env var (ISSUE-034 design). Unknown hosts (previews,
+    local with a configured webhook) report the host itself — sam's
+    receiver forwards what it gets, so an honest odd label beats a wrong
+    known one.
+    """
+    from urllib.parse import urlparse
+
+    raw = (get_settings().urls.admin_base_url or "").lower().strip()
+    host = urlparse(raw if "://" in raw else f"https://{raw}").hostname or ""
+    if host == "dashboard.dembrane.com":
+        return "production"
+    if host == "dashboard.echo-next.dembrane.com":
+        return "echo-next"
+    return host or "development"
+
+
+def build_support_request_forward_payload(
+    row: dict, org_id: Optional[str], environment: str
+) -> dict:
+    """The webhook payload for one support_request row.
+
+    Contract (mirrored in Dembrane/sam `src/recipes/product-support/
+    recipe.md` — keep both ends in sync): every field optional except
+    `id`, `environment`, `message`; absent fields are omitted, not sent
+    as null/empty. No transcript content, ever.
+    """
+    payload = {
+        "id": str(row["id"]),
+        "environment": environment,
+        # message is required on sam's side; a placeholder keeps a
+        # degenerate row deliverable instead of wedging the outbox.
+        "message": row.get("message") or "(empty message)",
+    }
+    for key in (
+        "page_context",
+        "created_at",
+        "chat_id",
+        "project_id",
+        "workspace_id",
+        "app_user_id",
+        "directus_user_id",
+    ):
+        value = row.get(key)
+        if value:
+            payload[key] = str(value)
+    if org_id:
+        payload["org_id"] = str(org_id)
+    workspace_id, project_id = row.get("workspace_id"), row.get("project_id")
+    if workspace_id and project_id:
+        admin_base_url = (get_settings().urls.admin_base_url or "").rstrip("/")
+        if admin_base_url:
+            payload["origin_link"] = (
+                f"{admin_base_url}/en-US/w/{workspace_id}/projects/{project_id}"
+            )
+    return payload
+
+
+@dramatiq.actor(queue_name="network", priority=40)
+def task_forward_support_requests() -> None:
+    """Outbox forwarder for assistant support requests (ISSUE-034).
+
+    The agentic chat's reachOutToDembraneSupport tool writes support_request
+    rows and tells the host "logged for the team". This catch-up makes that
+    true: rows with status=new and forwarded_at NULL are POSTed to sam's
+    webhook (sam posts them into #gen-engineering and triages in-thread),
+    and forwarded_at is stamped only on 2xx — at-least-once, with sam
+    deduping by id, so redelivery after a crash or non-2xx is safe.
+
+    No-op when SUPPORT_WEBHOOK_URL / ECHO_SUPPORT_WEBHOOK_TOKEN are unset
+    (the local default). Receiver semantics: 2xx delivered-or-duplicate →
+    stamp; 4xx payload bug → log loudly, leave unstamped, keep going (the
+    row re-forwards once the bug is fixed); 5xx/network → receiver is down,
+    stop the batch and let the next cron run retry.
+    """
+    import requests
+
+    task_logger = getLogger("dembrane.tasks.task_forward_support_requests")
+    support = get_settings().support
+    webhook_url, webhook_token = support.forward_webhook_url, support.forward_webhook_token
+    if not webhook_url or not webhook_token:
+        return
+
+    with directus_client_context() as client:
+        rows = client.get_items(
+            "support_request",
+            {
+                "query": {
+                    "filter": {
+                        "status": {"_eq": "new"},
+                        "forwarded_at": {"_null": True},
+                    },
+                    "fields": [
+                        "id",
+                        "message",
+                        "page_context",
+                        "created_at",
+                        "chat_id",
+                        "project_id",
+                        "workspace_id",
+                        "app_user_id",
+                        "directus_user_id",
+                    ],
+                    "sort": ["created_at"],
+                    "limit": 50,
+                }
+            },
+        )
+
+    if not isinstance(rows, list) or not rows:
+        return
+
+    environment = _support_forward_environment()
+    task_logger.info("forwarding %d support request(s) to sam", len(rows))
+    for row in rows:
+        # One workspace→org hop; support_request has no org_id column.
+        org_id = None
+        ws_id = row.get("workspace_id")
+        if ws_id:
+            with directus_client_context() as client:
+                ws = client.get_item("workspace", str(ws_id))
+            org_id = ws.get("org_id") if ws else None
+
+        payload = build_support_request_forward_payload(row, org_id, environment)
+        try:
+            response = requests.post(
+                webhook_url,
+                json=payload,
+                headers={"X-Echo-Support-Token": webhook_token},
+                timeout=(10, 30),
+            )
+        except requests.RequestException as e:
+            task_logger.warning(
+                "support forward: POST failed (%s); stopping batch, next run retries", e
+            )
+            break
+
+        if 200 <= response.status_code < 300:
+            with directus_client_context() as client:
+                client.update_item(
+                    "support_request",
+                    str(row["id"]),
+                    {"forwarded_at": get_utc_timestamp().isoformat()},
+                )
+        elif 400 <= response.status_code < 500:
+            task_logger.error(
+                "support forward: %s rejected with %s (%s) — payload/config bug, "
+                "row stays unstamped until it's fixed",
+                row.get("id"),
+                response.status_code,
+                response.text[:200],
+            )
+        else:
+            task_logger.warning(
+                "support forward: receiver returned %s; stopping batch, next run retries",
+                response.status_code,
+            )
+            break
+
+
 @dramatiq.actor(queue_name="network", priority=30)
 def task_send_downgrade_email(
     audience_app_user_ids: list[str],
@@ -2933,6 +3042,105 @@ def _resolve_app_user_id_for_directus_user_id(directus_user_id: object) -> Optio
         return None
     app_user_id = rows[0].get("id")
     return str(app_user_id) if app_user_id else None
+
+
+ABANDONED_AGENTIC_RUN_QUIET_SECONDS = 5 * 60
+AGENT_ABANDONED_ERROR_CODE = "AGENT_ABANDONED"
+AGENT_ABANDONED_MESSAGE = "This run stopped before it finished. Please send your message again."
+
+
+def _agentic_run_looks_alive(run_id: str, quiet_cutoff: datetime) -> bool:
+    """Two independent liveness signals, cheapest first.
+
+    Age is deliberately not one of them: nothing caps a turn's wall-clock time,
+    so an hour-old run can still be healthy.
+    """
+    latest_event = agentic_run_service.get_latest_event(run_id)
+    if latest_event is not None:
+        timestamp = _parse_iso(latest_event.get("timestamp"))
+        if timestamp is not None and timestamp > quiet_cutoff:
+            return True
+
+    # Quiet for a while: a long tool call persists nothing, so fall back to the
+    # turn lease, which the executor refreshes for as long as it lives.
+    turn = agentic_run_service.get_latest_event(run_id, event_type="user.message")
+    turn_seq = int(turn.get("seq") or 0) if turn else 0
+    if turn_seq <= 0:
+        return False
+
+    owner = run_async_in_new_loop(lambda: get_turn_lease_owner(run_id, turn_seq))
+    return owner is not None
+
+
+def _fail_abandoned_agentic_run(run_id: str) -> bool:
+    """Force the same terminal shape the worker's own failure path produces, so
+    the chat settles instead of showing "working" until a reload."""
+    run = agentic_run_service.get_by_id_or_raise(run_id)
+    if run.get("status") != "running":
+        return False
+
+    event = agentic_run_service.append_event(
+        run_id,
+        "run.failed",
+        {
+            "error_code": AGENT_ABANDONED_ERROR_CODE,
+            "message": AGENT_ABANDONED_MESSAGE,
+        },
+    )
+    try:
+        run_async_in_new_loop(
+            lambda: publish_live_event(run_id, json.dumps(event, default=str))
+        )
+    except Exception:
+        logger.warning("failed to publish abandon event for run %s", run_id, exc_info=True)
+
+    agentic_run_service.set_status(
+        run_id,
+        "failed",
+        latest_error=AGENT_ABANDONED_MESSAGE,
+        latest_error_code=AGENT_ABANDONED_ERROR_CODE,
+    )
+    return True
+
+
+@dramatiq.actor(queue_name="network", priority=40)
+def task_fail_abandoned_agentic_runs() -> None:
+    """Terminate agentic runs whose executor died mid-turn.
+
+    A turn runs in-process on the API pod, not in a worker. Every exception path
+    in process_agentic_run sets a terminal status, but a pod restart or OOM kill
+    runs none of them, and reconnects only re-drive `queued` runs. Without this
+    sweep the row stays `running` forever and the chat never settles.
+    """
+    task_logger = getLogger("dembrane.tasks.task_fail_abandoned_agentic_runs")
+    quiet_cutoff = get_utc_timestamp() - timedelta(seconds=ABANDONED_AGENTIC_RUN_QUIET_SECONDS)
+
+    with directus_client_context() as client:
+        running = client.get_items(
+            "project_agentic_run",
+            {
+                "query": {
+                    "filter": {"status": {"_eq": "running"}},
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
+
+    if not isinstance(running, list) or not running:
+        return
+
+    for row in running:
+        run_id = str(row.get("id") or "")
+        if not run_id:
+            continue
+        try:
+            if _agentic_run_looks_alive(run_id, quiet_cutoff):
+                continue
+            if _fail_abandoned_agentic_run(run_id):
+                task_logger.info("failed abandoned agentic run %s", run_id)
+        except Exception:
+            task_logger.warning("could not sweep agentic run %s", run_id, exc_info=True)
 
 
 @dramatiq.actor(queue_name="network", priority=100)

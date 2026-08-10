@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
+	Anchor,
 	Badge,
 	Button,
 	Group,
@@ -19,6 +20,7 @@ import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "sonner";
+import { TRANSCRIPT_TROUBLESHOOTING_DOCS_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 import { ExponentialProgress } from "../common/ExponentialProgress";
@@ -86,39 +88,42 @@ export const RetranscribeConversationModal = ({
 	const projectQuery = useProjectById({ projectId: projectId ?? "" });
 	const projectAnonymize = projectQuery.data?.anonymize_transcripts ?? false;
 
-		const retranscribeMutation = useRetranscribeConversationMutation();
-	
-		const [newConversationName, setNewConversationName] = useState(
-			conversationName ?? "",
-		);
-		const [usePiiRedaction, setUsePiiRedaction] = useState(false);
-		const [attachVerifiedArtifacts, setAttachVerifiedArtifacts] = useState(true);
+	const retranscribeMutation = useRetranscribeConversationMutation();
 
-		const { data: artefacts } = useQuery({
-			enabled: opened && !!conversationId,
-			queryFn: () => getVerificationArtefacts(conversationId),
-			queryKey: ["verify", "conversation_artifacts", conversationId],
+	const [newConversationName, setNewConversationName] = useState(
+		conversationName ?? "",
+	);
+	const [usePiiRedaction, setUsePiiRedaction] = useState(false);
+	const [attachVerifiedArtifacts, setAttachVerifiedArtifacts] = useState(true);
+
+	const { data: artefacts } = useQuery({
+		enabled: opened && !!conversationId,
+		queryFn: () => getVerificationArtefacts(conversationId),
+		queryKey: ["verify", "conversation_artifacts", conversationId],
+	});
+
+	const hasVerifiedArtifacts =
+		artefacts?.some((art) => !!art.approved_at) ?? false;
+
+	useEffect(() => {
+		setUsePiiRedaction(projectAnonymize);
+	}, [projectAnonymize]);
+
+	const navigate = useI18nNavigate();
+
+	const handleRetranscribe = async () => {
+		if (!conversationId || !newConversationName.trim()) return;
+
+		posthog.capture("conversation_retranscribed");
+
+		const { new_conversation_id } = await retranscribeMutation.mutateAsync({
+			conversationId,
+			newConversationName: newConversationName.trim(),
+			usePiiRedaction,
+			attachVerifiedArtifacts: hasVerifiedArtifacts
+				? attachVerifiedArtifacts
+				: false,
 		});
-
-		const hasVerifiedArtifacts = artefacts?.some((art) => !!art.approved_at) ?? false;
-	
-		useEffect(() => {
-			setUsePiiRedaction(projectAnonymize);
-		}, [projectAnonymize]);
-	
-		const navigate = useI18nNavigate();
-	
-		const handleRetranscribe = async () => {
-			if (!conversationId || !newConversationName.trim()) return;
-	
-			posthog.capture("conversation_retranscribed");
-	
-			const { new_conversation_id } = await retranscribeMutation.mutateAsync({
-				conversationId,
-				newConversationName: newConversationName.trim(),
-				usePiiRedaction,
-				attachVerifiedArtifacts: hasVerifiedArtifacts ? attachVerifiedArtifacts : false,
-			});
 		if (new_conversation_id) {
 			onClose();
 			toast.success(
@@ -167,11 +172,24 @@ export const RetranscribeConversationModal = ({
 			) : (
 				<Stack>
 					<Alert>
-						<Trans>
-							This will create a new conversation with the same audio but a
-							fresh transcription. The original conversation will remain
-							unchanged.
-						</Trans>
+						<Stack gap="xs">
+							<Text size="sm">
+								<Trans>
+									This will create a new conversation with the same audio but a
+									fresh transcription. The original conversation will remain
+									unchanged.
+								</Trans>
+							</Text>
+							<Anchor
+								size="sm"
+								target="_blank"
+								href={TRANSCRIPT_TROUBLESHOOTING_DOCS_URL}
+							>
+								<Trans>
+									Read the troubleshooting guide for transcripts and summaries
+								</Trans>
+							</Anchor>
+						</Stack>
 					</Alert>
 					<TextInput
 						label={t`New Conversation Name`}
@@ -181,27 +199,29 @@ export const RetranscribeConversationModal = ({
 						required
 						{...testId("transcript-retranscribe-name-input")}
 					/>
+					<Switch
+						label={t`Anonymize transcript`}
+						description={
+							projectAnonymize
+								? t`Project default: enabled. Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation.`
+								: t`Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation.`
+						}
+						checked={usePiiRedaction}
+						onChange={(e) => setUsePiiRedaction(e.currentTarget.checked)}
+						{...testId("transcript-retranscribe-pii-toggle")}
+					/>
+					{hasVerifiedArtifacts && (
 						<Switch
-							label={t`Anonymize transcript`}
-							description={
-								projectAnonymize
-									? t`Project default: enabled. Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation.`
-									: t`Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation.`
+							label={t`Attach verified artifacts`}
+							description={t`Copy approved outcomes to the new conversation so they aren't lost when the original is deleted.`}
+							checked={attachVerifiedArtifacts}
+							onChange={(e) =>
+								setAttachVerifiedArtifacts(e.currentTarget.checked)
 							}
-							checked={usePiiRedaction}
-							onChange={(e) => setUsePiiRedaction(e.currentTarget.checked)}
-							{...testId("transcript-retranscribe-pii-toggle")}
+							{...testId("transcript-retranscribe-attach-artifacts-toggle")}
 						/>
-						{hasVerifiedArtifacts && (
-							<Switch
-								label={t`Attach verified artifacts`}
-								description={t`Copy approved outcomes to the new conversation so they aren't lost when the original is deleted.`}
-								checked={attachVerifiedArtifacts}
-								onChange={(e) => setAttachVerifiedArtifacts(e.currentTarget.checked)}
-								{...testId("transcript-retranscribe-attach-artifacts-toggle")}
-							/>
-						)}
-						<Button
+					)}
+					<Button
 						onClick={handleRetranscribe}
 						rightSection={<IconRefresh size="1rem" />}
 						disabled={!newConversationName.trim()}

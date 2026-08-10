@@ -11,7 +11,8 @@ import dembrane.visitor_session as vs
 
 class _FakeRedis:
     """Async Redis stand-in supporting the string + sorted-set ops the
-    visitor session uses (set/mget/zadd/expire/zrangebyscore/zremrangebyscore)."""
+    visitor session uses
+    (set/mget/zadd/expire/zrangebyscore/zremrangebyscore/zremrangebyrank)."""
 
     def __init__(self) -> None:
         self.kv: dict[str, bytes] = {}
@@ -41,6 +42,19 @@ class _FakeRedis:
         lo = float(mn)
         return sorted((m for m, s in z.items() if s >= lo), key=lambda m: z[m])
 
+    async def zremrangebyrank(self, key: str, start: int, stop: int) -> None:
+        # Mirror Redis: ranks ascending by score, inclusive range, negative
+        # indices count from the end; a resolved stop < start removes nothing.
+        z = self.zsets.get(key, {})
+        members = sorted(z, key=lambda m: z[m])
+        n = len(members)
+        lo = max(start + n if start < 0 else start, 0)
+        hi = min(stop + n if stop < 0 else stop, n - 1)
+        if hi < lo:
+            return
+        for member in members[lo : hi + 1]:
+            del z[member]
+
 
 @pytest.fixture
 def fake_redis(monkeypatch) -> _FakeRedis:
@@ -54,7 +68,11 @@ def fake_redis(monkeypatch) -> _FakeRedis:
 
 
 def _run(coro):
-    return asyncio.new_event_loop().run_until_complete(coro)
+    loop = asyncio.new_event_loop()
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
 
 
 def test_mark_and_read_visitor(fake_redis: _FakeRedis) -> None:
@@ -95,6 +113,21 @@ def test_active_index_filters_and_prunes(fake_redis: _FakeRedis) -> None:
     assert ids == ["fresh"]
     # The stale member was pruned from the index on read.
     assert "stale" not in fake_redis.zsets["monitor:visitors:proj-1"]
+
+
+def test_index_is_capped_to_newest_members(fake_redis: _FakeRedis, monkeypatch) -> None:
+    # Shrink the cap so the test stays cheap; the trim logic is the same.
+    monkeypatch.setattr(vs, "_MAX_VISITOR_INDEX_MEMBERS", 3)
+    now = datetime(2026, 7, 3, 12, 0, 0, tzinfo=timezone.utc)
+    for i in range(6):
+        _run(
+            vs.mark_visitor_seen(
+                "proj-1", f"vis-{i}", now=now, score=now.timestamp() + i
+            )
+        )
+    index = fake_redis.zsets["monitor:visitors:proj-1"]
+    # Only the 3 newest (highest-score) members survive the write-side trim.
+    assert set(index) == {"vis-3", "vis-4", "vis-5"}
 
 
 def test_get_active_visitor_ids_handles_redis_down(monkeypatch) -> None:

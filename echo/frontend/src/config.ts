@@ -146,45 +146,73 @@ export const LEGAL_PRIVACY_URL =
 	"https://www.dembrane.com/legal/privacy" as const;
 export const LEGAL_DPA_URL = "https://www.dembrane.com/legal/DPA" as const;
 
-// The new user documentation site only exists on echo-next today
-// (docs.dembrane.com still serves the old site with different paths), so the
-// "What can Ask do?" link hides everywhere else until the docs migrate.
-export const ASK_DOCS_URL = byEnv<string | null>(
-	{
-		local: "https://docs.echo-next.dembrane.com/users/host/chat-and-ask.html",
-		next: "https://docs.echo-next.dembrane.com/users/host/chat-and-ask.html",
-	},
-	null,
-);
+// docs.dembrane.com is the one published corpus now, same site in every
+// environment, so the "What can Ask do?" link no longer needs to hide outside
+// echo-next.
+export const ASK_DOCS_URL =
+	"https://docs.dembrane.com/users/host/chat-and-ask.html" as const;
+
+// Linked from the retranscribe and regenerate-summary modals, where hosts hit
+// the problems it covers.
+export const TRANSCRIPT_TROUBLESHOOTING_DOCS_URL =
+	"https://docs.dembrane.com/users/host/troubleshooting-transcripts-and-summaries.html" as const;
+
+// The release history. The release-video modal shows only the newest release
+// and links out here for everything before it, so this page carries the
+// earlier videos. Written separately from this PR; the path corresponds to
+// docs/changelog.md, which the docs build renders as /changelog.html.
+export const CHANGELOG_DOCS_URL =
+	"https://docs.dembrane.com/changelog.html" as const;
 
 export const COMMUNITY_SLACK_URL =
 	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
 
-// Info Hub (documentation): published Notion pages, locale-aware.
-export const DOCS_URL_EN =
-	"https://dembrane.notion.site/Info-Hub-Welcome-to-dembrane-26f9cd84270580049be7cb1e7a472162" as const;
-export const DOCS_URL_NL =
-	"https://dembrane.notion.site/Welkom-bij-het-info-portaal-van-dembrane-2959cd842705804c815ac315464b6fa0" as const;
+// Documentation, locale-aware. Points at docs.dembrane.com, the one published
+// corpus since #907 cut it over to docs/ on GitHub Pages. The Notion Info Hub
+// these used to point at is the old home; the deep links above (ASK_DOCS_URL,
+// TRANSCRIPT_TROUBLESHOOTING_DOCS_URL) already moved and this one did not, so
+// the sidebar sent people somewhere the rest of the app had left.
+// Dutch lives at index.nl-NL.html, not README.nl-NL.html; both verified live.
+export const DOCS_URL_EN = "https://docs.dembrane.com/" as const;
+export const DOCS_URL_NL = "https://docs.dembrane.com/index.nl-NL.html" as const;
 
 export const getDocumentationUrl = (locale = "en-US") =>
 	locale === "nl-NL" ? DOCS_URL_NL : DOCS_URL_EN;
 
 export const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "1";
 
-export const ENABLE_CHAT_SELECT_ALL = true;
 export const ENABLE_CONVERSATION_HEALTH = true;
 export const ENABLE_ANNOUNCEMENTS = true;
 export const ENABLE_DISPLAY_CONVERSATION_LINKS = true;
 export const ENABLE_WEBHOOKS = true;
-// On everywhere except production: local, testing/dev, next/staging.
-// Re-enabled 2026-07-02 with the agent on gemini-3.5-flash via Vertex and the
-// #573 harvest (server-side grep, chunk citations, titles) on main.
-export const ENABLE_AGENTIC_CHAT = byEnv({ production: false }, true);
+// Availability of agentic chat: on in every environment, production included.
+//
+// Availability and default-ness are deliberately two separate constants. Each
+// chat persists its own chat_mode, so agentic chats already exist in the data;
+// switching this to false would strand them on the legacy chat UI, which posts
+// to /chats/{id} and is rejected for agentic chats. Only flip this off if you
+// also have a story for those chats.
+export const ENABLE_AGENTIC_CHAT = true;
+// Which mode a new chat starts in. False means hosts get Specific Details by
+// default and opt in to Agentic from the Ask entry screen. Linear ECHO-898
+// decides when (and under what name) agentic becomes the default.
+export const AGENTIC_CHAT_IS_DEFAULT = false;
 // Re-enabled on echo-next (2026-06-21). Runtime render gate only; the build
 // always ships the (lazy) agentation chunk and JSX source metadata — other
 // environments just never render or download it. Widen to more envs by adding
 // keys here (e.g. local/testing) when ready to roll out further.
 export const ENABLE_AGENTATION = byEnv({ next: true }, false);
+// Host live-monitor (page, sidebar item, project-home block) and the portal
+// beacons that feed it. Kill switch: flip to false / byEnv to disable a env.
+export const ENABLE_MONITOR = true;
+// Project Library / dynamic canvases. Off in production this release; on elsewhere.
+export const ENABLE_CANVAS = byEnv({ production: false }, true);
+// The release-video modal. Off in production for this release by Sameer's call:
+// the video is being recorded and the changelog page it links to is not written
+// yet, so a modal pointing at a 404 would reach every host at once. A patch
+// release turns it on once both exist. Everywhere else it stays on, which is
+// how the flow gets tested before it ships.
+export const ENABLE_RELEASE_VIDEO_MODAL = byEnv({ production: false }, true);
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
 	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;

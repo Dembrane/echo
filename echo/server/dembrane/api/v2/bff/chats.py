@@ -63,7 +63,6 @@ async def create_chat(
     ):
         raise free_tier_limit_error("chats")
 
-
     payload: dict = {
         "id": generate_uuid(),
         "project_id": body.project_id,
@@ -84,10 +83,12 @@ async def list_chats(
     limit: int = Query(15, ge=1, le=200),
     offset: int = Query(0, ge=0),
     has_messages: bool = Query(False),
+    q: Optional[str] = Query(None, max_length=200),
 ) -> dict:
     """List chats in a project. Returns {chats, total}.
 
     has_messages=true excludes chats with zero messages from page and total.
+    q filters by chat name, case-insensitive substring, applied to both.
     """
     access = await resolve_project_access(project_id, auth)
     access.require("chat:use")
@@ -95,6 +96,9 @@ async def list_chats(
     base_filter: dict = {"project_id": {"_eq": project_id}}
     if has_messages:
         base_filter["count(project_chat_messages)"] = {"_gt": 0}
+    search = (q or "").strip()
+    if search:
+        base_filter["name"] = {"_icontains": search}
     filt = filter_exclude_deleted(base_filter)
 
     chats = (
