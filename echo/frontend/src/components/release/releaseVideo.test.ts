@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import { getReleases } from "./releases";
 import {
 	latestRelease,
+	playerBridgeUrl,
 	RELEASE_VIDEO_SEEN_KEY,
 	shouldShowReleaseVideo,
+	YOUTUBE_EMBED_ORIGIN,
 	youtubeEmbedUrl,
 } from "./releaseVideo";
 
@@ -146,5 +148,21 @@ describe("youtubeEmbedUrl", () => {
 		expect(youtubeEmbedUrl("https://www.youtube.com/watch")).toBeNull();
 		expect(youtubeEmbedUrl("https://www.youtube.com/")).toBeNull();
 		expect(youtubeEmbedUrl("https://www.youtube.com/watch?v=abc")).toBeNull();
+	});
+});
+
+describe("playerBridgeUrl", () => {
+	it("switches on the widget protocol without leaving the nocookie origin", () => {
+		const bridged = playerBridgeUrl(
+			"https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ?rel=0",
+			"https://dashboard.dembrane.com",
+		);
+		const url = new URL(bridged);
+		expect(url.origin).toBe(YOUTUBE_EMBED_ORIGIN);
+		expect(url.searchParams.get("rel")).toBe("0");
+		expect(url.searchParams.get("enablejsapi")).toBe("1");
+		expect(url.searchParams.get("origin")).toBe(
+			"https://dashboard.dembrane.com",
+		);
 	});
 });
