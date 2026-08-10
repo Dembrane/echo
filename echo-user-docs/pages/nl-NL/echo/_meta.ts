@@ -1,6 +1,0 @@
-export default {
-  "getting-started": "Aan de Slag",
-  "core-concepts": "Kernconcepten",
-  "first-aid": "Eerste hulp bij ECHO",
-  "avoiding-pitfalls": "Valkuilen Vermijden"
-};

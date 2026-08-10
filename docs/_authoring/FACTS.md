@@ -17,9 +17,11 @@ and turns hours of dialogue into summaries, themes, reports, and a chat you can
 interrogate. Core belief: *"PEOPLE KNOW HOW"* - communities already hold the
 knowledge; dembrane surfaces it.
 
-"ECHO" is the historical name of the platform feature. It is *not* the brand and
-should be used sparingly. The brand is always *dembrane* (lowercase). In new docs,
-prefer "dembrane" / "the dashboard" / "the portal" over "ECHO".
+"ECHO" is the legacy platform name. The brand is always *dembrane* (lowercase); its
+parts are "the dashboard", "the portal", "the recorder". Do not use "ECHO" in docs
+prose. The single "formerly ECHO" note lives on `docs/README.md`. The one live
+exception is the participant record button, still labelled "ECHO" in the portal UI
+(msgid `participant.button.echo`): describe that button as the UI labels it.
 
 The product ships three ways:
 1. *Managed SaaS* at dembrane.com (dashboard.dembrane.com + portal.dembrane.com).
@@ -244,9 +246,11 @@ Auth: `/login /register /check-your-email /verify-email /password-reset /request
   conversations; auto-select vs manual context; sources; templates (built-in + user templates);
   standard mode + *agentic mode* (tool use, separate agent service). Free-tier chat gate.
   `ENABLE_AGENTIC_CHAT = byEnv({production:false}, true)` - agentic OFF in production. Where
-  it's on, `/chats/new` is the *Ask home*: chat list + a question bar that filters chats and
-  creates one on Enter, a `Templates` insert menu, starter chips, and a
-  "Prefer the old chat? Start a Specific Details chat" escape hatch. Agentic runs show live
+  it's on, `/chats/new` is the *Ask home*: chat list + one question bar (headed "Where would
+  you like to start?") that filters chats and creates one on Enter, a `Templates` insert menu,
+  and a "Prefer the old chat? Start a Specific Details chat" escape hatch. The old Overview
+  mode is retired - unreachable in the new experience; Specific Details remains as the
+  classic fallback. Agentic runs show live
   progress, a Send↔Stop morph, named citation links ("{name}'s conversation" →
   `#chunk-` deep links), and documentation citations via a chooser modal
   ("Open documentation" / "Open chat documentation"). Agent tools (echo/agent, 20): inventory/
@@ -321,6 +325,12 @@ No account required. Public/participant API in §10.4.
 
 ## 9. dembrane Go (iOS) - native SwiftUI app (`dembrane-go/`)
 
+*Distribution: BETA.* NOT on the App Store yet - distributed via TestFlight to invited
+testers only. Beta sign-up: email sameer@dembrane.com. Docs must not imply general
+availability; user-facing mentions carry a "beta" qualifier and the canonical pages
+(`features/mobile-app-dembrane-go.md`, `users/host/using-dembrane-go-mobile.md`) carry the
+contact callout. Drop all of this at App Store launch.
+
 Production env, email/password + 2FA login, register. Local-first chunked recording
 (30 s chunks, survives crash/kill, background capture, Live Activity / Dynamic Island,
 waveform, mic selector), audio-file import. Conversations list/detail (transcript, summary,
@@ -358,12 +368,7 @@ training (+ training_license); verification_topic; processing_status; notificati
 announcement; access_request; referral_ledger.
 
 ### 10.3 Processing pipeline
-Upload chunk → S3 (presigned) → `task_transcribe_chunk` (AssemblyAI webhook/poll OR LiteLLM)
-→ `task_correct_transcript` (Gemini: hotwords + PII redaction; diarization schema
-"Dembrane-25-09" / "…-26-01-redaction") → coordination counter → when 0 & finished →
-`task_finalize_conversation` → `task_merge_conversation_chunks` + `task_summarize_conversation`
-(Gemini). Reports = two-phase (fan-out summaries → generate). Chat: overview (summaries) vs
-deep_dive (transcripts). Redis locks for idempotency. SSE progress via Redis pub/sub.
+Upload chunk → S3 (presigned) → `task_transcribe_chunk` (Gemini 2.5 Pro via Vertex AI OR LiteLLM; single-pass transcription, hotword normalization, and optional PII redaction; diarization schema "Dembrane-26-07-gemini") → coordination counter → when 0 & finished → `task_finalize_conversation` → `task_merge_conversation_chunks` + `task_summarize_conversation` (Gemini). Reports = two-phase (fan-out summaries → generate). Chat: overview (summaries) vs deep_dive (transcripts). Redis locks for idempotency. SSE progress via Redis pub/sub.
 LLM via LiteLLM Router groups: MULTI_MODAL_PRO (Gemini 2.5 Pro), MULTI_MODAL_FAST (Flash),
 TEXT_FAST (legacy). Config `docs/litellm_config.md`, env `LLM__<GROUP>[_n]__*`.
 
@@ -422,9 +427,11 @@ ADRs in `echo/docs/adr/`.
    Library, Reporting a Bug, Compliance & Trust), toggles for Setting-up a project /
    Recording / Analysing / Templates / Ready-Check-Go / Designing a session / Upload docs.
    Also links to docs.dembrane.com for First Aid + bug reporting.
-2. *docs.dembrane.com* = the Nextra site `echo-user-docs/` (en-US + nl-NL): Getting Started
-   (creating-project, collecting-data, analysis), Core Concepts, First Aid, Avoiding Pitfalls
-   (technical, social). Thin, "under construction", off-brand ("ECHO").
+2. *The retired Nextra site* `echo-user-docs/` (en-US + nl-NL), which served
+   docs.dembrane.com until 2026-07-30: Getting Started (creating-project, collecting-data,
+   analysis), Core Concepts, First Aid, Avoiding Pitfalls (technical, social). Thin, "under
+   construction", off-brand ("ECHO"). docs.dembrane.com now serves this `docs/` corpus,
+   published from `main` by `.github/workflows/deploy-docs.yml`.
 3. *echo/docs/* = developer/internal docs (ADRs, plans, issues, litellm config, migrations).
 
 These are the baseline our new docs replace: comprehensive, role-segmented, on-brand,

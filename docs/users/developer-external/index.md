@@ -33,9 +33,9 @@ licence. The full terms, the threshold, and who to contact are on the
 [licensing](./licensing.md) page - read it before you deploy.
 
 > [!NOTE]
-> "ECHO" is the historical internal name of the platform feature and still appears in some
-> file paths and older docs. The brand is dembrane. We use "dembrane", "the dashboard",
-> and "the portal" throughout these guides.
+> dembrane was formerly called ECHO, so the old name still shows up in the repository name,
+> container images, and Kubernetes namespaces. These guides say "dembrane", "the dashboard",
+> and "the portal".
 
 ## The three ways to run dembrane
 

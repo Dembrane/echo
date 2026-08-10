@@ -209,7 +209,7 @@ export const VerifySelection = () => {
 		return (
 			<Stack align="center" justify="center" className="h-full">
 				<div className="animate-spin">
-					<Logo hideTitle alwaysDembrane h="48px" />
+					<Logo hideTitle hideEnvBadge alwaysDembrane h="48px" />
 				</div>
 			</Stack>
 		);

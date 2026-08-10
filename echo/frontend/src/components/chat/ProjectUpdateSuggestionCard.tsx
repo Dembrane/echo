@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
-	Badge,
+	Box,
 	Button,
 	Checkbox,
 	Group,
@@ -10,10 +10,16 @@ import {
 	Text,
 	Textarea,
 } from "@mantine/core";
-import { IconArrowRight, IconCheck } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import { useId, useMemo, useState } from "react";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { toast } from "@/components/common/Toaster";
+import {
+	buildWordDiff,
+	elideUnchangedRuns,
+	needsWordDiff,
+	type WordDiffChunk,
+} from "@/components/common/wordDiff";
 import {
 	useProjectById,
 	useUpdateProjectByIdMutation,
@@ -64,12 +70,76 @@ const FIELD_LABELS: Record<string, () => string> = {
 	tutorial_slug: () => t`Tutorial`,
 };
 
+/**
+ * What a field actually touches, in one sentence. Only fields whose reach is
+ * wider than the setting screen they live on: the host cannot be expected to
+ * know that project context is read by four different features.
+ */
+const FIELD_IMPACT: Record<string, () => string> = {
+	anonymize_transcripts: () =>
+		t`This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in.`,
+	context: () =>
+		t`The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen.`,
+	default_conversation_transcript_prompt: () =>
+		t`Key terms tell transcription how to spell the names and words that matter in this project.`,
+	host_guide: () =>
+		t`The host guide is what facilitators read before they run a session.`,
+	language: () =>
+		t`This sets the language participants see in the portal, including the questions they are asked.`,
+};
+
 const fieldLabel = (field: string) =>
 	FIELD_LABELS[field]?.() ??
 	field.replace(/^default_conversation_/, "").replace(/_/g, " ");
 
+const fieldImpact = (field: string) => FIELD_IMPACT[field]?.() ?? null;
+
+/** Names the fields in the headline. Past three, the tail becomes a count so
+ * the resting state stays one readable line. */
+const summarizeFields = (fields: string[]) => {
+	const labels = fields.map(fieldLabel);
+	if (labels.length <= 3) return labels.join(", ");
+	const names = labels.slice(0, 3).join(", ");
+	const extra = labels.length - 3;
+	return t`${names} and ${extra} more`;
+};
+
 const isEmptyValue = (value: unknown) =>
 	value === null || value === undefined || value === "";
+
+/** Coarse pointers need a 44px target; Mantine's xs controls are 30px. */
+const COARSE_TAP_TARGET = "[@media(pointer:coarse)]:min-h-11";
+
+const VALUE_BOX =
+	"max-h-64 overflow-y-auto rounded-md border border-slate-200 px-2 py-1.5";
+
+/**
+ * The three ways a fragment can read inside a value box, and the only place
+ * they are defined. The word diff and the short-value line both pull from
+ * here, so a marking can never drift between the long and short paths.
+ *
+ * Each mark carries a shape as well as a colour: the removal is struck
+ * through, the addition is underlined. A background alone does not survive
+ * greyscale (the green sits at about 97% luminance) or a colour-blind reader,
+ * and the addition used to have nothing but that background.
+ *
+ * Unchanged text recedes on purpose. Marked and unmarked prose used to sit at
+ * the same contrast, so a two word edit inside a paragraph read as one flat
+ * block; dropping the surround to a mid grey makes the edit the first thing
+ * the eye lands on, without inventing a colour the card does not already use.
+ */
+const REMOVED_MARK =
+	"bg-red-100 text-red-900 line-through decoration-red-500 decoration-2";
+const ADDED_MARK =
+	"bg-green-100 text-green-900 underline decoration-green-600 decoration-2";
+const UNCHANGED_TEXT = "text-slate-500";
+
+const asDisplayString = (value: unknown) => {
+	if (typeof value === "string") return value;
+	if (value === null || value === undefined) return "";
+	if (typeof value === "object") return JSON.stringify(value);
+	return String(value);
+};
 
 const ValueText = ({
 	value,
@@ -79,9 +149,16 @@ const ValueText = ({
 	kind: "old" | "new";
 }) => {
 	if (isEmptyValue(value)) {
+		// A description of the value, not the value itself. Italics used to carry
+		// that difference and carried it to nobody; the words say it instead, and
+		// the dimmed colour keeps them from reading as content.
 		return (
-			<Text size="xs" component="span" fs="italic" c="graphite.5">
-				{kind === "old" ? <Trans>empty</Trans> : <Trans>cleared</Trans>}
+			<Text size="sm" component="span" c="dimmed">
+				{kind === "old" ? (
+					<Trans>nothing here yet</Trans>
+				) : (
+					<Trans>emptied out</Trans>
+				)}
 			</Text>
 		);
 	}
@@ -92,20 +169,14 @@ const ValueText = ({
 			) : (
 				<Trans>off</Trans>
 			)
-		) : typeof value === "object" ? (
-			JSON.stringify(value)
 		) : (
-			String(value)
+			asDisplayString(value)
 		);
 	return (
 		<Text
-			size="xs"
+			size="sm"
 			component="span"
-			className={
-				kind === "old"
-					? "break-words text-red-800 line-through decoration-red-300"
-					: "break-words text-green-900"
-			}
+			className={`break-words ${kind === "old" ? REMOVED_MARK : ADDED_MARK}`}
 		>
 			{display}
 		</Text>
@@ -113,19 +184,238 @@ const ValueText = ({
 };
 
 /**
- * Renders an agent-proposed settings change for the host to review.
- * The agent never writes; the host can fine-tune each proposed value, pick
- * which changes to keep, and apply them through the normal project PATCH
- * under their own session (the access ladder gates the write).
+ * One side of a word diff. The same chunk list renders both sides: the
+ * "current" side hides additions and strikes removals, the "proposed" side
+ * hides removals and highlights additions. Reading them top to bottom shows
+ * the previous version, the new version, and exactly which words moved.
  *
- * Applied state is stateless: the card compares the live project values to
- * the proposal, so a reload still shows "Applied" truthfully.
+ * Everything here is one size and one weight. What separates the edit from
+ * its surroundings is contrast and shape, not type: the untouched prose sits
+ * back in grey, the edited words come forward in full contrast on a tint,
+ * struck through or underlined.
+ */
+const WordDiffSide = ({
+	chunks,
+	side,
+}: {
+	chunks: WordDiffChunk[];
+	side: "current" | "proposed";
+}) => (
+	<Text size="sm" className="whitespace-pre-wrap break-words">
+		{chunks.map((chunk, index) => {
+			if (side === "current" && chunk.added) return null;
+			if (side === "proposed" && chunk.removed) return null;
+			// An elided run reads as ordinary unchanged text. The " … " it carries
+			// and the "show the full text" button already say it was shortened,
+			// which is what the italics were for.
+			const className = chunk.removed
+				? REMOVED_MARK
+				: chunk.added
+					? ADDED_MARK
+					: UNCHANGED_TEXT;
+			return (
+				// biome-ignore lint/suspicious/noArrayIndexKey: chunks are positional and the list is rebuilt whole
+				<span key={index} className={className}>
+					{chunk.value}
+				</span>
+			);
+		})}
+	</Text>
+);
+
+/**
+ * A local input that prevents keystroke-by-keystroke re-renders of the whole
+ * card and chat list. It buffers the value locally and flushes to the parent
+ * on blur.
+ */
+const BufferedTextarea = ({
+	initialValue,
+	onFlush,
+	...props
+}: Omit<React.ComponentProps<typeof Textarea>, "value" | "onChange"> & {
+	initialValue: string;
+	onFlush: (val: string) => void;
+}) => {
+	const [localVal, setLocalVal] = useState(initialValue);
+
+	return (
+		<Textarea
+			{...props}
+			value={localVal}
+			onChange={(event) => setLocalVal(event.currentTarget.value)}
+			onBlur={() => onFlush(localVal)}
+		/>
+	);
+};
+
+/** The before and after for one field, with the difference marked. */
+const ChangeDetail = ({
+	change,
+	value,
+	editing,
+	showFullText,
+	onToggleFullText,
+	onEditValue,
+}: {
+	change: ProjectUpdateSuggestionChange;
+	value: unknown;
+	editing: boolean;
+	showFullText: boolean;
+	onToggleFullText: () => void;
+	onEditValue: (next: unknown) => void;
+}) => {
+	const isBoolean = typeof change.proposed === "boolean";
+	const useWordDiff = !isBoolean && needsWordDiff(change.current, value);
+
+	const diff = useMemo(() => {
+		if (!useWordDiff) return null;
+		return buildWordDiff(
+			asDisplayString(change.current),
+			asDisplayString(value),
+		);
+	}, [useWordDiff, change.current, value]);
+
+	const elided = useMemo(
+		() => (diff && !diff.unavailable ? elideUnchangedRuns(diff.chunks) : null),
+		[diff],
+	);
+	const hasElision = Boolean(elided?.some((chunk) => chunk.elided));
+	// `elided` is null when the diff could not be computed; fall back to the
+	// plain before/after boxes rather than rendering an empty diff.
+	const chunks = elided && showFullText ? (diff?.chunks ?? null) : elided;
+
+	const unchanged = asDisplayString(change.current) === asDisplayString(value);
+
+	return (
+		<Stack gap={6}>
+			{unchanged ? (
+				<Text size="sm" c="dimmed">
+					<Trans>This field already holds the proposed value.</Trans>
+				</Text>
+			) : null}
+
+			{chunks ? (
+				<Text size="xs" c="dimmed">
+					<Plural
+						value={diff?.addedWords ?? 0}
+						one="# word added"
+						other="# words added"
+					/>
+					{", "}
+					<Plural
+						value={diff?.removedWords ?? 0}
+						one="# word removed"
+						other="# words removed"
+					/>
+				</Text>
+			) : null}
+
+			<Stack gap={2}>
+				<Text size="xs" c="dimmed">
+					<Trans>Current</Trans>
+				</Text>
+				<Box className={VALUE_BOX}>
+					{chunks ? (
+						<WordDiffSide chunks={chunks} side="current" />
+					) : (
+						<ValueText value={change.current} kind="old" />
+					)}
+				</Box>
+			</Stack>
+
+			<Stack gap={2}>
+				<Text size="xs" c="dimmed">
+					<Trans>Proposed</Trans>
+				</Text>
+				{editing ? (
+					<BufferedTextarea
+						size="sm"
+						autosize
+						minRows={2}
+						maxRows={10}
+						initialValue={asDisplayString(value)}
+						onFlush={onEditValue}
+						{...testId(`suggestion-field-input-${change.field}`)}
+					/>
+				) : (
+					<Box className={VALUE_BOX}>
+						{isBoolean ? (
+							<Switch
+								size="sm"
+								checked={Boolean(value)}
+								onChange={(event) => onEditValue(event.currentTarget.checked)}
+								label={
+									<Text size="sm">
+										{value ? <Trans>on</Trans> : <Trans>off</Trans>}
+									</Text>
+								}
+							/>
+						) : chunks ? (
+							<WordDiffSide chunks={chunks} side="proposed" />
+						) : (
+							<ValueText value={value} kind="new" />
+						)}
+					</Box>
+				)}
+			</Stack>
+
+			{hasElision && !editing ? (
+				<Group gap="xs">
+					<Button
+						variant="subtle"
+						size="xs"
+						className={COARSE_TAP_TARGET}
+						onClick={onToggleFullText}
+					>
+						{showFullText ? (
+							<Trans>Show only what changed</Trans>
+						) : (
+							<Trans>Show the full text</Trans>
+						)}
+					</Button>
+				</Group>
+			) : null}
+		</Stack>
+	);
+};
+
+/**
+ * Renders an agent-proposed settings change for the host to review.
+ *
+ * The card rests on three things and nothing else: a headline naming what
+ * would change, the assistant's own reason for proposing it, and the row of
+ * actions. What a field reaches into is said beside that field once expanded,
+ * never at rest, where it competed with the assistant's message a few lines
+ * above saying the same thing in different words.
+ *
+ * Expanding shows, per field, the value the project holds now, the value being
+ * proposed, and the words that differ between them. The agent never writes;
+ * the host applies through the normal project PATCH under their own session
+ * (the access ladder gates the write).
+ *
+ * Applying replaces a field wholesale, so the strikethrough on the current
+ * value is doing real work: a proposal that rewrites the whole context shows
+ * the whole current context struck through, which is the truth of what the
+ * host is about to agree to.
+ *
+ * Applied state is stateless: the card compares the live project values to the
+ * proposal, so a reload still shows "Applied" truthfully.
+ *
+ * Type here is deliberately thin: two sizes, two weights, no italics. Body for
+ * anything read as content, small and dimmed for labels that name it, semibold
+ * only on the headline and the field names. Emphasis that used to come from
+ * slant now comes from colour and shape, which is the only kind a diff can
+ * afford to lean on.
  */
 export const ProjectUpdateSuggestionCard = ({
 	suggestion,
+	onSendNote,
 }: {
 	suggestion: ProjectUpdateSuggestion;
+	/** Sends the host's note back into the chat so the assistant can revise. */
+	onSendNote?: (message: string) => void | Promise<void>;
 }) => {
+	const panelId = useId();
 	const updateProjectMutation = useUpdateProjectByIdMutation();
 	const changedFields = useMemo(
 		() => suggestion.changes.map((c) => c.field),
@@ -141,7 +431,16 @@ export const ProjectUpdateSuggestionCard = ({
 	);
 	// Hosts can fine-tune proposed values before applying.
 	const [edited, setEdited] = useState<Record<string, unknown>>({});
+	const [editingFields, setEditingFields] = useState<Record<string, boolean>>(
+		{},
+	);
+	const [fullTextFields, setFullTextFields] = useState<Record<string, boolean>>(
+		{},
+	);
 	const [dismissed, setDismissed] = useState(false);
+	const [expanded, setExpanded] = useState(false);
+	const [noteOpen, setNoteOpen] = useState(false);
+	const [note, setNote] = useState("");
 
 	const effectiveValue = (change: ProjectUpdateSuggestionChange) =>
 		change.field in edited ? edited[change.field] : change.proposed;
@@ -164,6 +463,13 @@ export const ProjectUpdateSuggestionCard = ({
 		[suggestion.changes, selected],
 	);
 
+	const headlineFields = useMemo(
+		() => summarizeFields(changedFields),
+		[changedFields],
+	);
+	const selectedCount = selectedChanges.length;
+	const totalCount = suggestion.changes.length;
+
 	const handleApply = async () => {
 		if (selectedChanges.length === 0) return;
 		const payload = Object.fromEntries(
@@ -181,6 +487,16 @@ export const ProjectUpdateSuggestionCard = ({
 		} catch {
 			toast.error(t`Could not apply the changes. Nothing was saved.`);
 		}
+	};
+
+	const handleSendNote = async () => {
+		const hostNote = note.trim();
+		if (!hostNote || !onSendNote) return;
+		setNoteOpen(false);
+		setNote("");
+		// The note goes back as the host's own chat message, with just enough
+		// context for the assistant to know which proposal it answers.
+		await onSendNote(t`About the suggested project update: ${hostNote}`);
 	};
 
 	if (applied) {
@@ -210,7 +526,10 @@ export const ProjectUpdateSuggestionCard = ({
 							const value = effectiveValue(change);
 							return (
 								<Stack key={change.field} gap={2}>
-									<Text size="xs" fw={600}>
+									{/* Same label treatment as "Current" and "Proposed" below:
+									    small and dimmed, so the value it names is the thing
+									    being read. */}
+									<Text size="xs" c="dimmed">
 										{fieldLabel(change.field)}
 									</Text>
 									<Text size="sm" lineClamp={3}>
@@ -221,11 +540,11 @@ export const ProjectUpdateSuggestionCard = ({
 												<Trans>off</Trans>
 											)
 										) : isEmptyValue(value) ? (
-											<Text component="span" size="sm" fs="italic">
-												<Trans>cleared</Trans>
+											<Text component="span" size="sm" c="dimmed">
+												<Trans>emptied out</Trans>
 											</Text>
 										) : (
-											String(value)
+											asDisplayString(value)
 										)}
 									</Text>
 								</Stack>
@@ -237,130 +556,242 @@ export const ProjectUpdateSuggestionCard = ({
 		);
 	}
 
+	if (dismissed) {
+		return (
+			<SuggestionCardFrame compact testId="agentic-project-update-suggestion">
+				<Group justify="space-between" gap="xs" wrap="wrap">
+					<Text size="sm">
+						<Trans>Dismissed. Nothing was changed.</Trans>
+					</Text>
+					<Button
+						variant="subtle"
+						size="xs"
+						className={COARSE_TAP_TARGET}
+						onClick={() => setDismissed(false)}
+					>
+						<Trans>Review again</Trans>
+					</Button>
+				</Group>
+			</SuggestionCardFrame>
+		);
+	}
+
 	return (
 		<SuggestionCardFrame testId="agentic-project-update-suggestion">
 			<Stack gap="sm">
-				<Group justify="space-between" wrap="nowrap">
-					<Text size="sm" fw={600}>
-						<Trans>Suggested changes for your project</Trans>
-					</Text>
-					{dismissed && (
-						<Badge size="xs" variant="outline">
-							<Trans>Dismissed</Trans>
-						</Badge>
-					)}
-				</Group>
-				{suggestion.summary && <Text size="xs">{suggestion.summary}</Text>}
-				{!dismissed && (
-					<Text size="xs" fs="italic" c="graphite.6">
-						<Trans>
-							Review each change below. You can edit the new text first. Nothing
-							changes until you apply.
-						</Trans>
-					</Text>
-				)}
+				<Text size="sm" fw={600}>
+					<Trans>
+						The assistant suggests updating {headlineFields}. Waiting on you.
+					</Trans>
+				</Text>
+				{suggestion.summary ? (
+					<Text size="sm">{suggestion.summary}</Text>
+				) : null}
 
-				<Stack gap="md">
-					{suggestion.changes.map((change) => {
-						const value = effectiveValue(change);
-						const isBoolean = typeof change.proposed === "boolean";
-						const isEditable =
-							!isBoolean && typeof change.proposed !== "object";
-						return (
-							<Group
-								key={change.field}
-								align="flex-start"
-								gap="sm"
-								wrap="nowrap"
-							>
-								{!dismissed && (
-									<Checkbox
-										size="sm"
-										mt={2}
-										checked={Boolean(selected[change.field])}
-										onChange={(event) =>
-											setSelected((prev) => ({
-												...prev,
-												[change.field]: event.currentTarget.checked,
-											}))
-										}
-										{...testId(`suggestion-field-checkbox-${change.field}`)}
-									/>
-								)}
-								<Stack gap={4} className="min-w-0 flex-1">
-									<Text size="sm" fw={500}>
-										{fieldLabel(change.field)}
-									</Text>
-									<Group gap={6} wrap="wrap" align="center">
-										<ValueText value={change.current} kind="old" />
-										<IconArrowRight
-											size={12}
-											className="shrink-0"
-											style={{ color: "var(--mantine-color-primary-5)" }}
-											aria-hidden
-										/>
-										{isBoolean ? (
-											<Switch
-												size="xs"
-												checked={Boolean(value)}
-												disabled={dismissed}
-												onChange={(event) =>
+				<div id={panelId} hidden={!expanded}>
+					{expanded ? (
+						<Stack gap="lg" className="pt-1">
+							{/* With one field there is nothing to leave out: unticking
+							    only disables Accept, which reads as a broken card. */}
+							{suggestion.changes.length > 1 ? (
+								<Text size="xs" c="dimmed">
+									<Trans>Untick a field to leave it exactly as it is.</Trans>
+								</Text>
+							) : null}
+							{suggestion.changes.map((change) => {
+								const value = effectiveValue(change);
+								const impact = fieldImpact(change.field);
+								const isEditable =
+									typeof change.proposed !== "boolean" &&
+									typeof change.proposed !== "object";
+								const editing = Boolean(editingFields[change.field]);
+								return (
+									<Stack key={change.field} gap="xs">
+										<Group justify="space-between" gap="xs" wrap="nowrap">
+											<Checkbox
+												size="sm"
+												className={`min-w-0 ${COARSE_TAP_TARGET}`}
+												checked={Boolean(selected[change.field])}
+												onChange={(event) => {
+													// Read the DOM before the updater runs: React
+													// clears currentTarget once the handler returns,
+													// and a lazily applied updater then reads null.
+													const checked = event.currentTarget.checked;
+													setSelected((prev) => ({
+														...prev,
+														[change.field]: checked,
+													}));
+												}}
+												label={
+													<Text size="sm" fw={600}>
+														{fieldLabel(change.field)}
+													</Text>
+												}
+												{...testId(`suggestion-field-checkbox-${change.field}`)}
+											/>
+											{isEditable ? (
+												<Button
+													variant="subtle"
+													size="xs"
+													className={`shrink-0 ${COARSE_TAP_TARGET}`}
+													onClick={() =>
+														setEditingFields((prev) => ({
+															...prev,
+															[change.field]: !prev[change.field],
+														}))
+													}
+													{...testId(`suggestion-field-edit-${change.field}`)}
+												>
+													{editing ? <Trans>Done</Trans> : <Trans>Edit</Trans>}
+												</Button>
+											) : null}
+										</Group>
+										<Stack gap="xs" className="pl-7">
+											{change.reason ? (
+												<Text size="sm">{change.reason}</Text>
+											) : null}
+											{impact ? (
+												<Text size="sm" c="dimmed">
+													{impact}
+												</Text>
+											) : null}
+											<ChangeDetail
+												change={change}
+												value={value}
+												editing={editing}
+												showFullText={Boolean(fullTextFields[change.field])}
+												onToggleFullText={() =>
+													setFullTextFields((prev) => ({
+														...prev,
+														[change.field]: !prev[change.field],
+													}))
+												}
+												onEditValue={(next) =>
 													setEdited((prev) => ({
 														...prev,
-														[change.field]: event.currentTarget.checked,
+														[change.field]: next,
 													}))
 												}
 											/>
-										) : !isEditable || dismissed ? (
-											<ValueText value={value} kind="new" />
-										) : null}
-									</Group>
-									{isEditable && !dismissed && (
-										<Textarea
-											size="xs"
-											autosize
-											minRows={1}
-											maxRows={6}
-											value={String(value ?? "")}
-											onChange={(event) =>
-												setEdited((prev) => ({
-													...prev,
-													[change.field]: event.currentTarget.value,
-												}))
-											}
-											{...testId(`suggestion-field-input-${change.field}`)}
-										/>
-									)}
-									{change.reason && (
-										<Text size="xs" fs="italic" c="graphite.6">
-											{change.reason}
-										</Text>
-									)}
-								</Stack>
-							</Group>
-						);
-					})}
-				</Stack>
+										</Stack>
+									</Stack>
+								);
+							})}
+						</Stack>
+					) : null}
+				</div>
 
-				{!dismissed && (
-					<Group justify="flex-end" gap="sm">
+				{selectedCount !== totalCount ? (
+					<Text size="xs" c="dimmed">
+						<Trans>
+							{selectedCount} of {totalCount} fields selected. Accept applies
+							only the ticked ones.
+						</Trans>
+					</Text>
+				) : null}
+
+				{/* Writing a note is its own step, so it takes the action row over
+				    rather than stacking a second one on top of it. Stacked, the
+				    card offered four verbs and two submit buttons at once and it
+				    was not obvious which one sent the note. Cancel puts the
+				    original row back untouched. */}
+				{noteOpen ? (
+					<Stack gap="xs">
+						<Textarea
+							size="sm"
+							autosize
+							minRows={2}
+							maxRows={6}
+							label={t`Add a note`}
+							placeholder={t`What should be different about this?`}
+							value={note}
+							onChange={(event) => setNote(event.currentTarget.value)}
+							{...testId("suggestion-note-input")}
+						/>
+						<Group justify="flex-end" gap="xs">
+							<Button
+								variant="subtle"
+								size="xs"
+								className={COARSE_TAP_TARGET}
+								onClick={() => {
+									setNoteOpen(false);
+									setNote("");
+								}}
+								{...testId("suggestion-note-cancel-button")}
+							>
+								<Trans>Cancel</Trans>
+							</Button>
+							<Button
+								size="xs"
+								className={COARSE_TAP_TARGET}
+								disabled={note.trim().length === 0}
+								onClick={() => void handleSendNote()}
+								{...testId("suggestion-note-send-button")}
+							>
+								<Trans>Send note</Trans>
+							</Button>
+						</Group>
+					</Stack>
+				) : (
+					<Group justify="space-between" gap="xs" wrap="wrap">
 						<Button
 							variant="subtle"
 							size="xs"
-							onClick={() => setDismissed(true)}
-							{...testId("suggestion-dismiss-button")}
+							className={COARSE_TAP_TARGET}
+							aria-expanded={expanded}
+							aria-controls={panelId}
+							leftSection={
+								expanded ? (
+									<IconChevronUp size={14} aria-hidden />
+								) : (
+									<IconChevronDown size={14} aria-hidden />
+								)
+							}
+							onClick={() => setExpanded((prev) => !prev)}
+							{...testId("suggestion-expand-button")}
 						>
-							<Trans>Not now</Trans>
+							{expanded ? (
+								<Trans>Hide the changes</Trans>
+							) : (
+								<Plural
+									value={suggestion.changes.length}
+									one="Show what changes (# field)"
+									other="Show what changes (# fields)"
+								/>
+							)}
 						</Button>
-						<Button
-							size="xs"
-							loading={updateProjectMutation.isPending}
-							disabled={selectedChanges.length === 0}
-							onClick={() => void handleApply()}
-							{...testId("suggestion-apply-button")}
-						>
-							<Trans>Apply selected</Trans>
-						</Button>
+						<Group gap="xs" wrap="wrap">
+							{onSendNote ? (
+								<Button
+									variant="subtle"
+									size="xs"
+									className={COARSE_TAP_TARGET}
+									onClick={() => setNoteOpen(true)}
+									{...testId("suggestion-note-button")}
+								>
+									<Trans>Add a note</Trans>
+								</Button>
+							) : null}
+							<Button
+								variant="subtle"
+								size="xs"
+								className={COARSE_TAP_TARGET}
+								onClick={() => setDismissed(true)}
+								{...testId("suggestion-dismiss-button")}
+							>
+								<Trans>Dismiss</Trans>
+							</Button>
+							<Button
+								size="xs"
+								className={COARSE_TAP_TARGET}
+								loading={updateProjectMutation.isPending}
+								disabled={selectedChanges.length === 0}
+								onClick={() => void handleApply()}
+								{...testId("suggestion-apply-button")}
+							>
+								<Trans>Accept</Trans>
+							</Button>
+						</Group>
 					</Group>
 				)}
 			</Stack>

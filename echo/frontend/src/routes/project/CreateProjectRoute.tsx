@@ -23,7 +23,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
-import { API_BASE_URL, ENABLE_AGENTIC_CHAT } from "@/config";
+import {
+	AGENTIC_CHAT_IS_DEFAULT,
+	API_BASE_URL,
+	ENABLE_AGENTIC_CHAT,
+} from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -74,8 +78,13 @@ export const CreateProjectRoute = () => {
 	const [name, setName] = useState("");
 	const [context, setContext] = useState("");
 	const [access, setAccess] = useState<Access>("workspace");
-	const [setupWithAssistant, setSetupWithAssistant] =
-		useState(ENABLE_AGENTIC_CHAT);
+	// Availability is not default-ness. The assistant setup starts an agentic
+	// chat, so it follows AGENTIC_CHAT_IS_DEFAULT: off unless the host ticks it
+	// (or picks "Help me figure it out"). Pre-ticking it would fire an agentic
+	// run on every project created, before the host has typed anything.
+	const [setupWithAssistant, setSetupWithAssistant] = useState(
+		AGENTIC_CHAT_IS_DEFAULT,
+	);
 	const [setupInitialMessage, setSetupInitialMessage] = useState(
 		SETUP_INITIAL_MESSAGE,
 	);
@@ -124,8 +133,13 @@ export const CreateProjectRoute = () => {
 			posthog?.capture("project_created", { project_id: project.id });
 			toast.success(t`Project created`);
 			if (ENABLE_AGENTIC_CHAT && setupWithAssistant) {
+				// Ticking the toggle is the opt-in, so name the mode explicitly
+				// rather than letting the Ask screen assume agentic.
 				navigate(`/w/${workspaceId}/projects/${project.id}/chats/new`, {
-					state: { initialMessage: setupInitialMessage },
+					state: {
+						initialMessage: setupInitialMessage,
+						preferMode: "agentic",
+					},
 				});
 			} else {
 				navigate(`/w/${workspaceId}/projects/${project.id}/home`);

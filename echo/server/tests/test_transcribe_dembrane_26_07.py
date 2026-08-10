@@ -26,7 +26,9 @@ class _FakeCompletion:
 def _stub_common(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(transcribe, "GCP_SA_JSON", {"type": "service_account"})
     monkeypatch.setattr(
-        transcribe, "_get_audio_file_object", lambda _uri: {"type": "file", "file": {"file_data": "x"}}
+        transcribe,
+        "_get_audio_file_object",
+        lambda _uri: {"type": "file", "file": {"file_data": "x"}},
     )
 
 
@@ -52,7 +54,9 @@ def test_transcribe_26_07_audio_only_no_candidate(monkeypatch: pytest.MonkeyPatc
     def _fake_router(model: Any, messages: Any, response_format: Any) -> _FakeCompletion:
         captured["model"] = model
         captured["messages"] = messages
-        return _FakeCompletion(json.dumps({"corrected_transcript": "hello world", "note": "speak closer"}))
+        return _FakeCompletion(
+            json.dumps({"corrected_transcript": "hello world", "note": "speak closer"})
+        )
 
     monkeypatch.setattr(transcribe, "router_completion", _fake_router)
 
@@ -97,6 +101,53 @@ def test_transcribe_26_07_empty_maps_to_placeholder(monkeypatch: pytest.MonkeyPa
 
     transcript, _meta = transcribe.transcribe_audio_dembrane_26_07("https://example.com/a.mp3")
     assert transcript == "[Nothing to transcribe]"
+
+
+def test_transcribe_26_07_prompt_override_replaces_transcription_prompt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _stub_common(monkeypatch)
+    captured: dict[str, Any] = {}
+
+    def _fake_router(model: Any, messages: Any, response_format: Any) -> _FakeCompletion:
+        captured["messages"] = messages
+        return _FakeCompletion(json.dumps({"corrected_transcript": "HELLO", "note": ""}))
+
+    monkeypatch.setattr(transcribe, "router_completion", _fake_router)
+
+    transcript, _meta = transcribe.transcribe_audio_dembrane_26_07(
+        "https://example.com/a.mp3", prompt_override="Transcribe in ALL CAPS."
+    )
+
+    assert transcript == "HELLO"
+    system_msg = next(m for m in captured["messages"] if m["role"] == "system")
+    assert system_msg["content"][0]["text"] == "Transcribe in ALL CAPS."
+
+
+def test_transcribe_26_07_prompt_override_leaves_redaction_prompt_alone(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The override only swaps the pass-1 transcription prompt. The dedicated
+    redaction pass keeps its own prompt so redaction stays reliable."""
+    _stub_common(monkeypatch)
+    system_prompts: list[str] = []
+
+    def _fake_router(model: Any, messages: Any, response_format: Any) -> _FakeCompletion:
+        system_msg = next(m for m in messages if m["role"] == "system")
+        system_prompts.append(system_msg["content"][0]["text"])
+        return _FakeCompletion(json.dumps({"corrected_transcript": "x", "note": ""}))
+
+    monkeypatch.setattr(transcribe, "router_completion", _fake_router)
+
+    transcribe.transcribe_audio_dembrane_26_07(
+        "https://example.com/a.mp3",
+        use_pii_redaction=True,
+        prompt_override="Transcribe in ALL CAPS.",
+    )
+
+    assert len(system_prompts) == 2
+    assert system_prompts[0] == "Transcribe in ALL CAPS."
+    assert system_prompts[1] != "Transcribe in ALL CAPS."
 
 
 def test_transcribe_26_07_pii_runs_correction_pass_over_audio_and_transcript(
@@ -150,7 +201,10 @@ def test_transcribe_26_07_anonymize_regex_before_correction_and_hides_raw(
         "router_completion",
         _router_dispatch(
             {"corrected_transcript": "my name is Usama, call me at 0612345678", "note": ""},
-            {"corrected_transcript": "my name is <redacted_name>, call me at <redacted_phone>", "note": ""},
+            {
+                "corrected_transcript": "my name is <redacted_name>, call me at <redacted_phone>",
+                "note": "",
+            },
         ),
     )
     seen: dict[str, str] = {}

@@ -1,6 +1,6 @@
 # Contributing Guide
 
-Thank you for your interest in contributing. ECHO is an open source project. If you are interested in making it better, there are many ways you can contribute. For example, you can:
+Thank you for your interest in contributing. dembrane is an open source project. If you are interested in making it better, there are many ways you can contribute. For example, you can:
 
 - Submit a bug report
 - Suggest a new feature

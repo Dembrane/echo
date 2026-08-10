@@ -15,7 +15,7 @@ description: >-
 This is the code → docs half of the two-way docs/code sync. (The docs → code
 half - editing a doc and trickling the change into code - is planned, not
 built.) The docs corpus is `docs/` at the repo root, published to
-docs.echo-next.dembrane.com on every main push touching `docs/**`. The agent
+docs.dembrane.com on every main push touching `docs/**`. The agent
 service also cites these pages in chat, so stale docs mislead both people
 and the assistant.
 

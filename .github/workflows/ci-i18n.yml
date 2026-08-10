@@ -1,0 +1,102 @@
+# Guards the lingui catalogs against extraction drift.
+#
+# Commits #929 to #932 changed frontend strings without re-running extract, so
+# three new msgids were missing from every catalog. Natural-language msgids
+# degrade to English via fallbackLocales, but a dotted id that was never
+# extracted (library.generate.duration.message) renders as the raw id in the UI.
+# This job re-runs extract and compile on a clean checkout and fails if the
+# catalogs move, which means source strings changed without the catalogs
+# being regenerated.
+name: ci-i18n
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "echo/frontend/src/**"
+      - "echo/frontend/lingui.config.ts"
+      - "echo/frontend/package.json"
+      - "echo/frontend/pnpm-lock.yaml"
+      - ".github/workflows/ci-i18n.yml"
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - hotfix-*
+    paths:
+      - "echo/frontend/src/**"
+      - "echo/frontend/lingui.config.ts"
+      - "echo/frontend/package.json"
+      - "echo/frontend/pnpm-lock.yaml"
+      - ".github/workflows/ci-i18n.yml"
+
+concurrency:
+  group: ci-i18n-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci-check-i18n-catalogs:
+    name: ci-check-i18n-catalogs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./echo/frontend/
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('echo/frontend/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Extract messages
+        run: pnpm run messages:extract
+
+      - name: Compile messages
+        run: pnpm run messages:compile
+
+      - name: Check catalogs are up to date
+        shell: bash
+        run: |
+          if ! git diff --exit-code -- src/locales; then
+            echo ""
+            echo "::error::The lingui catalogs are out of date. Source strings changed but messages:extract / messages:compile were not re-run, so new msgids are missing from every catalog. A dotted id that is never extracted renders as the raw id in the UI."
+            echo ""
+            echo "Fix it with:"
+            echo ""
+            echo "    cd echo/frontend && pnpm run messages:extract && pnpm run messages:compile"
+            echo ""
+            echo "then commit the changed files under echo/frontend/src/locales/."
+            echo ""
+            echo "Files that drifted:"
+            git diff --name-only -- src/locales
+            exit 1
+          fi
+          echo "Catalogs are up to date: extract and compile produced no changes."

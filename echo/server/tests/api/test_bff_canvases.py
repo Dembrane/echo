@@ -25,14 +25,18 @@ def _app() -> FastAPI:
 
 
 class _Access:
-    def __init__(self) -> None:
+    def __init__(self, canvas_enabled: bool = True) -> None:
         self.required: list[str] = []
+        # Mirrors ResourceAccess.project; the canvas gate reads the beta toggle.
+        self.project: dict[str, Any] = {"id": "p1", "is_canvas_enabled": canvas_enabled}
 
     def require(self, policy: str) -> None:
         self.required.append(policy)
 
 
 class _DeniedAccess:
+    project: dict[str, Any] = {"id": "p1", "is_canvas_enabled": True}
+
     def require(self, policy: str) -> None:  # noqa: ARG002
         raise HTTPException(status_code=403, detail="Not allowed")
 
@@ -215,6 +219,28 @@ async def test_list_canvases_requires_project_read_and_returns_summary_shape(mon
     assert res.status_code == 200
     assert res.json()[0]["latest_generation_at"] == "2026-07-07T10:05:00Z"
     assert access.required == ["project:read"]
+
+
+@pytest.mark.asyncio
+async def test_canvas_routes_404_when_project_not_opted_into_beta(monkeypatch) -> None:
+    access = _Access(canvas_enabled=False)
+
+    async def _project(project_id: str, auth) -> _Access:  # noqa: ARG001
+        return access
+
+    async def _report(report_id: str, auth) -> tuple[_Access, dict]:  # noqa: ARG001
+        return access, {"id": report_id, "kind": "canvas", "project_id": "p1"}
+
+    monkeypatch.setattr(canvases_bff, "resolve_project_access", _project)
+    monkeypatch.setattr(canvases_bff, "resolve_report_access", _report)
+
+    list_res = await _get("/api/v2/bff/canvases?project_id=p1")
+    get_res = await _get("/api/v2/bff/canvases/r1")
+
+    assert list_res.status_code == 404
+    assert get_res.status_code == 404
+    # The gate fires before any policy check, hiding existence entirely.
+    assert access.required == []
 
 
 @pytest.mark.asyncio

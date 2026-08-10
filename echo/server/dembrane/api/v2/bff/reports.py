@@ -64,7 +64,9 @@ async def list_reports(
         if fields
         else default_fields
     )
-    filt = filter_exclude_deleted({"project_id": {"_eq": project_id}})
+    filt = filter_exclude_deleted(
+        {"project_id": {"_eq": project_id}, "kind": {"_eq": "report"}}
+    )
 
     rows = await async_directus.get_items(
         "project_report",
@@ -119,7 +121,7 @@ async def get_report_timeline(
         {
             "query": {
                 "filter": filter_exclude_deleted(
-                    {"project_id": {"_eq": project_id_str}}
+                    {"project_id": {"_eq": project_id_str}, "kind": {"_eq": "report"}}
                 ),
                 "fields": ["id", "date_created"],
                 "sort": ["date_created"],
@@ -155,6 +157,8 @@ async def get_report_timeline(
                 "query": {
                     "aggregate": {"count": "id"},
                     "groupBy": ["conversation_id"],
+                    # Directus caps grouped rows at its default limit (100).
+                    "limit": -1,
                     "filter": {"conversation_id": {"_in": conv_ids}},
                 }
             },

@@ -109,11 +109,16 @@ def _transcribe_audio_gemini(
     hotwords: Optional[List[str]],
     use_pii_redaction: bool,
     custom_guidance_prompt: Optional[str] = None,
+    prompt_override: Optional[str] = None,
 ) -> tuple[str, str]:
-    """Single Gemini pass: transcribe audio directly, normalize hotwords, optional PII redaction."""
+    """Single Gemini pass: transcribe audio directly, normalize hotwords, optional PII redaction.
+
+    prompt_override replaces the entire rendered transcription prompt. The JSON output
+    contract still holds because response_format enforces the schema independently.
+    """
     logger = logging.getLogger("transcribe.transcribe_audio_gemini")
 
-    prompt = render_prompt(
+    prompt = prompt_override or render_prompt(
         "transcript_from_audio_workflow",
         "en",
         {
@@ -218,6 +223,7 @@ def transcribe_audio_dembrane_26_07(
     use_pii_redaction: bool = False,
     anonymize_transcripts: bool = False,
     custom_guidance_prompt: Optional[str] = None,
+    prompt_override: Optional[str] = None,
 ) -> tuple[str, dict[str, Any]]:
     """Transcribe audio through the Dembrane-26-07 workflow: one Gemini EU pass.
 
@@ -230,6 +236,9 @@ def transcribe_audio_dembrane_26_07(
        original correction-and-redaction pass runs on the audio plus that transcript.
     No raw response is stored.
 
+    prompt_override replaces the rendered transcription prompt for pass 1 only. The
+    redaction pass keeps its own dedicated prompt so redaction stays reliable.
+
     Returns:
         0: The transcript
         1: {"note": str, "raw": dict, "error": None}
@@ -238,7 +247,7 @@ def transcribe_audio_dembrane_26_07(
 
     # Pass 1: transcription only, no redaction.
     transcript, note = _transcribe_audio_gemini(
-        audio_file_uri, language, hotwords, False, custom_guidance_prompt
+        audio_file_uri, language, hotwords, False, custom_guidance_prompt, prompt_override
     )
 
     # Regex runs before correction, matching the old pipeline order.

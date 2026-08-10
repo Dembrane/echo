@@ -938,8 +938,10 @@ export const ParticipantConversationAudio = () => {
 						}`}
 					>
 						<ScrollToBottomButton
-							elementRef={scrollTargetRef}
-							isVisible={isVisible}
+							visible={!isVisible}
+							onClick={() =>
+								scrollTargetRef.current?.scrollIntoView({ behavior: "smooth" })
+							}
 						/>
 					</Group>
 

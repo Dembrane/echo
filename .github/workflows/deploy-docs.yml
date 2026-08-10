@@ -1,0 +1,59 @@
+# Publishes the user documentation site (docs/) to GitHub Pages at
+# https://docs.dembrane.com on every push to main.
+#
+# Built with the separately-tracked folder2website tool. This is now the only
+# docs deploy path: docs.dembrane.com used to be a Vercel project building the
+# old echo-user-docs/ (Nextra) site, and prod-deploy-docs.yml shipped this same
+# docs/ corpus to it via the Build Output API on release tags. Both are gone:
+# the Vercel project was deleted (2026-07-30) so this workflow's GitHub Pages
+# custom domain could take over docs.dembrane.com directly. docs updates now
+# ship on every merge to main rather than being gated to a release tag.
+name: deploy-docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/dev-deploy-docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: deploy-docs
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # folder2website reads git history for page metadata
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Build docs site
+        run: bunx github:spashii/folder2website#main docs --out _docs-site --base-url https://docs.dembrane.com
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _docs-site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

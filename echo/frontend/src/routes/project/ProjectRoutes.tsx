@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
@@ -13,6 +13,7 @@ import {
 } from "@/components/project/hooks";
 import ProjectBasicEdit from "@/components/project/ProjectBasicEdit";
 import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
+import { ProjectExperimentalSection } from "@/components/project/ProjectExperimentalSection";
 import { ProjectExportSection } from "@/components/project/ProjectExportSection";
 import { ProjectMoveWorkspace } from "@/components/project/ProjectMoveWorkspace";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
@@ -23,23 +24,47 @@ import {
 } from "@/components/project/ProjectUsageAndSharing";
 import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
 import { FeatureGate } from "@/components/workspace/FeatureGate";
-import { ENABLE_WEBHOOKS } from "@/config";
+import { ENABLE_CANVAS, ENABLE_WEBHOOKS } from "@/config";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { getProjectTranscriptsLink } from "@/lib/api";
 import type { Tier } from "@/lib/tiers";
 
 export const ProjectConversationsRoute = () => {
 	const { projectId, workspaceId } = useParams();
+	const navigate = useI18nNavigate();
+	// Off by default so the page keeps browsing normally (full row actions,
+	// click-through to the conversation). Turning it on swaps in the same
+	// checkbox picker used inside a chat, plus "Ask about these" to start a
+	// new chat pre-focused on the pick, before any chat exists.
+	const [pickerMode, setPickerMode] = useState(false);
+	const [selectedConversationIds, setSelectedConversationIds] = useState<
+		string[]
+	>([]);
 
 	if (!projectId) return null;
 
 	return (
 		<PageContainer width="xl">
-			<ProjectConversationsPanel
-				projectId={projectId}
-				workspaceId={workspaceId}
-				showUpload
-			/>
+			<Stack gap="md">
+				<ProjectConversationsPanel
+					projectId={projectId}
+					workspaceId={workspaceId}
+					showUpload
+					selectionMode={pickerMode}
+					selection={selectedConversationIds}
+					onSelectionChange={setSelectedConversationIds}
+					onToggleSelectionMode={() => {
+						if (pickerMode) setSelectedConversationIds([]);
+						setPickerMode((current) => !current);
+					}}
+					onAskAboutSelection={() => {
+						navigate(`/w/${workspaceId}/projects/${projectId}/chats/new`, {
+							state: { selectedConversationIds },
+						});
+					}}
+				/>
+			</Stack>
 		</PageContainer>
 	);
 };
@@ -58,6 +83,7 @@ export const ProjectSettingsRoute = () => {
 				"updated_at",
 				"language",
 				"is_conversation_allowed",
+				"is_canvas_enabled",
 				"default_conversation_ask_for_participant_name",
 			],
 		}),
@@ -111,6 +137,13 @@ export const ProjectSettingsRoute = () => {
 
 					<Divider />
 					{projectId && <ProjectMemorySection projectId={projectId} />}
+
+					{ENABLE_CANVAS && (
+						<>
+							<Divider />
+							<ProjectExperimentalSection project={projectQuery.data} />
+						</>
+					)}
 
 					<Divider />
 					<ProjectMoveWorkspace project={projectQuery.data} />

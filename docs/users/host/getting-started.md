@@ -22,6 +22,13 @@ email. You'll be the *owner* of whatever you create, so you can do everything in
 on two-factor later in [account & security](../../features/account-and-security.md) -
 recommended, not required.)
 
+## Finding your way around (and the sidebar toggle)
+
+Once signed in, you will see your main dashboard:
+- *The sidebar* - The sidebar on the left lets you quickly navigate between your Organisation, Workspaces, and Projects.
+- *Sidebar collapse* - To give yourself more screen space when reading transcripts or analysing data, you can collapse the sidebar entirely. Look for the *Sidebar Toggle* (the sidebar icon) in the sidebar header, top-right by the logo, to slide it closed. Clicking the toggle again expands it back.
+- *Collapse persistence* - The collapsed state persists (saved in your browser's local storage), so the sidebar stays exactly how you left it when you return or sign in again.
+
 ## 2. Create a project
 
 An onboarding wizard sets up the two containers everything lives in: a *workspace* (home for
@@ -68,7 +75,7 @@ ready-to-print sheet with instructions and the code on it.
 People open the portal, do a quick mic test, and talk - the portal handles pausing,
 resuming, and uploading in the background. You can mix in other ways too: record yourself in
 the browser if you're holding the conversation, upload transcripts you already have, or
-record on your phone with [dembrane Go](./using-dembrane-go-mobile.md). See
+record on your phone with [dembrane Go](./using-dembrane-go-mobile.md) (currently in beta). See
 [collecting conversations](./collecting-conversations.md) for which to use when.
 
 ## 6. Read what comes back

@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
+	Anchor,
 	Badge,
 	Button,
 	Divider,
@@ -42,7 +43,10 @@ import {
 import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArtefactsSection";
 import { useProjectById } from "@/components/project/hooks";
-import { ENABLE_DISPLAY_CONVERSATION_LINKS } from "@/config";
+import {
+	ENABLE_DISPLAY_CONVERSATION_LINKS,
+	TRANSCRIPT_TROUBLESHOOTING_DOCS_URL,
+} from "@/config";
 import { generateConversationSummary } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 
@@ -385,7 +389,25 @@ export const ProjectConversationRoute = () => {
 				onClose={closeRegenerateConfirm}
 				title={t`Regenerate summary`}
 				data-testid="conversation-regenerate-summary-modal"
-				message={t`Are you sure you want to regenerate the summary? You will lose the current summary.`}
+				message={
+					<Stack gap="xs">
+						<Text size="sm">
+							<Trans>
+								Are you sure you want to regenerate the summary? You will lose
+								the current summary.
+							</Trans>
+						</Text>
+						<Anchor
+							size="sm"
+							target="_blank"
+							href={TRANSCRIPT_TROUBLESHOOTING_DOCS_URL}
+						>
+							<Trans>
+								Read the troubleshooting guide for transcripts and summaries
+							</Trans>
+						</Anchor>
+					</Stack>
+				}
 				confirmLabel={<Trans>Regenerate</Trans>}
 				onConfirm={() => {
 					useHandleGenerateSummaryManually.mutate(true);

@@ -146,6 +146,17 @@ class EchoClient:
         payload = await self.get(f"/agentic/projects/{project_id}/settings")
         return payload if isinstance(payload, dict) else {}
 
+    async def list_project_reports(self, project_id: str) -> list[dict[str, Any]]:
+        payload = await self.get(f"/agentic/projects/{project_id}/reports")
+        if isinstance(payload, dict):
+            reports = payload.get("reports")
+            return reports if isinstance(reports, list) else []
+        return []
+
+    async def get_project_report(self, project_id: str, report_id: str) -> dict[str, Any]:
+        payload = await self.get(f"/agentic/projects/{project_id}/reports/{report_id}")
+        return payload if isinstance(payload, dict) else {}
+
     async def list_project_tags(self, project_id: str) -> list[dict[str, Any]]:
         payload = await self.get(f"/v2/bff/tags?project_id={project_id}")
         return payload if isinstance(payload, list) else []
@@ -330,8 +341,11 @@ class EchoClient:
         limit: int = 20,
         conversation_id: str | None = None,
         transcript_query: str | None = None,
+        offset: int = 0,
     ) -> AgentProjectConversationsResponse:
         params: dict[str, object] = {"limit": limit}
+        if offset:
+            params["offset"] = offset
         if conversation_id:
             params["conversation_id"] = conversation_id
         if transcript_query:
@@ -346,6 +360,25 @@ class EchoClient:
         if not isinstance(payload, dict):
             raise ValueError("Unexpected list project conversations response shape")
         return cast(AgentProjectConversationsResponse, payload)
+
+    async def list_focused_conversations(
+        self,
+        project_id: str,
+        project_chat_id: str,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        response = await self._client.get(
+            f"/agentic/projects/{project_id}/focused-conversations",
+            params={
+                "project_chat_id": project_chat_id,
+                "limit": limit,
+                "offset": offset,
+            },
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
 
     async def get_project_monitor(
         self,
