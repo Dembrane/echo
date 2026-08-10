@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -12,6 +13,7 @@ import {
 } from "@mantine/core";
 import { UsersThree } from "@phosphor-icons/react";
 import { COMMUNITY_SLACK_URL, getProductFeedbackUrl } from "@/config";
+import { useV2Me } from "@/hooks/useV2Me";
 import { QRCode } from "./QRCode";
 
 interface FeedbackPortalModalProps {
@@ -25,7 +27,22 @@ export const FeedbackPortalModal = ({
 	onClose,
 	locale,
 }: FeedbackPortalModalProps) => {
-	const feedbackUrl = getProductFeedbackUrl(locale);
+	const { data: me } = useV2Me();
+	const baseFeedbackUrl = getProductFeedbackUrl(locale);
+
+	const feedbackUrl = useMemo(() => {
+		if (!me?.email) return baseFeedbackUrl;
+		try {
+			const url = new URL(baseFeedbackUrl);
+			url.searchParams.set("participant_email", me.email);
+			if (me.display_name) {
+				url.searchParams.set("participant_name", me.display_name);
+			}
+			return url.toString();
+		} catch (e) {
+			return baseFeedbackUrl;
+		}
+	}, [baseFeedbackUrl, me]);
 
 	const actionButtonStyles = {
 		root: {
