@@ -253,13 +253,18 @@ export const useLogoutMutation = () => {
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
 		},
-		onSuccess: (_data, { next, reason, doRedirect }) => {
-			posthog?.capture("user_logged_out");
-			posthog?.reset();
-			if (doRedirect) {
-				navigate(`/login${buildLoginQuery({ next, reason })}`);
-			}
-		},
+			onSuccess: (_data, { next, reason, doRedirect }) => {
+				posthog?.capture("user_logged_out");
+				posthog?.reset();
+				try {
+					localStorage.removeItem("last_login_time");
+				} catch (e) {
+					console.error("Failed to remove last_login_time from localStorage:", e);
+				}
+				if (doRedirect) {
+					navigate(`/login${buildLoginQuery({ next, reason })}`);
+				}
+			},
 	});
 };
 

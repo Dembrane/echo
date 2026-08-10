@@ -102,11 +102,16 @@ export const RegisterRoute = () => {
 			},
 			{
 				onSuccess: () => {
-					posthog?.identify(data.email);
-					posthog?.capture("user_registered", {
-						email: data.email,
-						first_name: data.first_name,
-					});
+						posthog?.identify(data.email);
+						posthog?.capture("user_registered", {
+							email: data.email,
+							first_name: data.first_name,
+						});
+						try {
+							localStorage.setItem("last_login_time", Date.now().toString());
+						} catch (e) {
+							console.error("Failed to set last_login_time in localStorage:", e);
+						}
 					setSubmittedEmail(data.email);
 					setStep(2);
 				},

@@ -1,14 +1,16 @@
 import { t } from "@lingui/core/macro";
 import { Modal, Stack } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useId, useState } from "react";
+import { useId, useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
+import { useLanguage } from "@/hooks/useLanguage";
 import { API_BASE_URL } from "@/config";
 import { usePrefersReducedMotion } from "@/features/sidebar/animations/motion";
 import { useV2Me } from "@/hooks/useV2Me";
+import posthog from "posthog-js";
 import styles from "./ReleaseVideoModal.module.css";
 import {
 	latestRelease,
@@ -67,6 +69,8 @@ export const ReleaseVideoModal = ({
 	const prefersReducedMotion = usePrefersReducedMotion();
 	const titleId = useId();
 
+	const { language } = useLanguage();
+
 	// Closes the modal immediately, without waiting on the network. If the write
 	// fails the modal returns on the next load, which is the recoverable
 	// direction: better a second showing than a dismissal that will not stick.
@@ -106,15 +110,152 @@ export const ReleaseVideoModal = ({
 					release.version,
 				)));
 
+	const iframeRef = useRef<HTMLIFrameElement>(null);
+	const playerRef = useRef<any>(null);
+	const playStartTime = useRef<number | null>(null);
+	const watchedSeconds = useRef<number>(0);
+	const hasPlayed = useRef<boolean>(false);
+
+	const getLastLoginTime = (): number => {
+		let val = localStorage.getItem("last_login_time");
+		if (!val) {
+			const nowStr = Date.now().toString();
+			try {
+				localStorage.setItem("last_login_time", nowStr);
+			} catch {}
+			val = nowStr;
+		}
+		return parseInt(val, 10);
+	};
+
+	const getSecondsSinceLogin = (): number | null => {
+		const lastLogin = getLastLoginTime();
+		return lastLogin ? Math.floor((Date.now() - lastLogin) / 1000) : null;
+	};
+
+	// Capture modal open event
+	useEffect(() => {
+		if (opened && release) {
+			playStartTime.current = null;
+			watchedSeconds.current = 0;
+			hasPlayed.current = false;
+
+			posthog?.capture("whats_new_modal_opened", {
+				language,
+				seconds_since_login: getSecondsSinceLogin(),
+				version: release.version,
+			});
+		}
+	}, [opened, release?.version, language]);
+
+	const embedUrl = release ? youtubeEmbedUrl(release.videoUrl) : null;
+	const embedUrlWithApi = embedUrl ? `${embedUrl}&enablejsapi=1` : null;
+
+	// Load YouTube API and track play state
+	useEffect(() => {
+		if (!opened || !embedUrlWithApi || !release) return;
+
+		if (!(window as any).YT) {
+			const tag = document.createElement("script");
+			tag.src = "https://www.youtube.com/iframe_api";
+			const firstScriptTag = document.getElementsByTagName("script")[0];
+			firstScriptTag?.parentNode?.insertBefore(tag, firstScriptTag);
+		}
+
+		let checkInterval: NodeJS.Timeout;
+		let initialized = false;
+
+		const initPlayer = () => {
+			const anyWindow = window as any;
+			if (anyWindow.YT && anyWindow.YT.Player && iframeRef.current && !initialized) {
+				initialized = true;
+				playerRef.current = new anyWindow.YT.Player(iframeRef.current, {
+					events: {
+						onStateChange: (event: any) => {
+							const state = event.data;
+							// 1 is PLAYING
+							if (state === 1) {
+								if (!hasPlayed.current) {
+									hasPlayed.current = true;
+									posthog?.capture("whats_new_video_started", {
+										language,
+										seconds_since_login: getSecondsSinceLogin(),
+										version: release.version,
+									});
+								}
+								playStartTime.current = Date.now();
+							} else {
+								// PAUSED (2), ENDED (0), etc.
+								if (playStartTime.current !== null) {
+									const elapsed = (Date.now() - playStartTime.current) / 1000;
+									watchedSeconds.current += elapsed;
+									playStartTime.current = null;
+								}
+							}
+						},
+					},
+				});
+				clearInterval(checkInterval);
+			}
+		};
+
+		const anyWindow = window as any;
+		if (anyWindow.YT && anyWindow.YT.Player) {
+			initPlayer();
+		} else {
+			checkInterval = setInterval(initPlayer, 100);
+		}
+
+		return () => {
+			if (checkInterval) clearInterval(checkInterval);
+			if (playerRef.current && typeof playerRef.current.destroy === "function") {
+				try {
+					playerRef.current.destroy();
+				} catch {}
+			}
+			playerRef.current = null;
+			playStartTime.current = null;
+		};
+	}, [opened, embedUrlWithApi, release?.version, language]);
+
 	const close = () => {
+		if (playStartTime.current !== null) {
+			const elapsed = (Date.now() - playStartTime.current) / 1000;
+			watchedSeconds.current += elapsed;
+			playStartTime.current = null;
+		}
+
+		let videoDuration = 0;
+		try {
+			if (playerRef.current && typeof playerRef.current.getDuration === "function") {
+				videoDuration = playerRef.current.getDuration();
+			}
+		} catch (e) {
+			console.error("Failed to get video duration:", e);
+		}
+
+		const percentWatched = videoDuration > 0
+			? Math.min(100, Math.round((watchedSeconds.current / videoDuration) * 100))
+			: 0;
+
+		if (release) {
+			posthog?.capture("whats_new_modal_closed", {
+				language,
+				seconds_since_login: getSecondsSinceLogin(),
+				version: release.version,
+				video_watched_seconds: Math.round(watchedSeconds.current * 10) / 10,
+				video_duration_seconds: videoDuration,
+				video_percent_watched: percentWatched,
+				video_watched: hasPlayed.current,
+			});
+		}
+
 		setDismissed(true);
 		onRequestedClose?.();
 		if (release) markSeen.mutate(release.version);
 	};
 
 	if (!release) return null;
-
-	const embedUrl = youtubeEmbedUrl(release.videoUrl);
 
 	return (
 		<Modal.Root
@@ -146,13 +287,14 @@ export const ReleaseVideoModal = ({
 				</Modal.Header>
 				<Modal.Body style={{ padding: "0 2rem 2rem" }}>
 					<Stack gap="lg">
-						{embedUrl ? (
+						{embedUrlWithApi ? (
 							<div className={styles.videoFrame}>
 								<iframe
+									ref={iframeRef}
 									allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"
 									allowFullScreen
 									className={styles.video}
-									src={embedUrl}
+									src={embedUrlWithApi}
 									title={t`Release video`}
 								/>
 							</div>

@@ -131,8 +131,13 @@ export const LoginRoute = () => {
 				password: data.password,
 			});
 
-			posthog?.identify(data.email);
-			posthog?.capture("user_logged_in", { email: data.email });
+							posthog?.identify(data.email);
+							posthog?.capture("user_logged_in", { email: data.email });
+							try {
+								localStorage.setItem("last_login_time", Date.now().toString());
+							} catch (e) {
+								console.error("Failed to set last_login_time in localStorage:", e);
+							}
 
 			const isNewUser = searchParams.get("new") === "true";
 			const next = searchParams.get("next");

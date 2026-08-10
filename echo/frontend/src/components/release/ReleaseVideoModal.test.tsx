@@ -40,6 +40,14 @@ vi.mock("@/components/layout/TransitionCurtainProvider", () => ({
 	useTransitionCurtain: () => curtainState,
 }));
 
+vi.mock("posthog-js", () => ({
+	default: { capture: vi.fn() },
+}));
+
+vi.mock("@/hooks/useLanguage", () => ({
+	useLanguage: () => ({ language: "en-US" }),
+}));
+
 import { ReleaseVideoModal } from "./ReleaseVideoModal";
 import { getReleases } from "./releases";
 import { RELEASE_VIDEO_SEEN_KEY } from "./releaseVideo";
