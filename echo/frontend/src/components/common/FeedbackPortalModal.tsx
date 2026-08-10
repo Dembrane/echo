@@ -39,7 +39,7 @@ export const FeedbackPortalModal = ({
 				url.searchParams.set("participant_name", me.display_name);
 			}
 			return url.toString();
-		} catch (e) {
+		} catch (_e) {
 			return baseFeedbackUrl;
 		}
 	}, [baseFeedbackUrl, me]);
