@@ -157,13 +157,6 @@ export const ASK_DOCS_URL =
 export const TRANSCRIPT_TROUBLESHOOTING_DOCS_URL =
 	"https://docs.dembrane.com/users/host/troubleshooting-transcripts-and-summaries.html" as const;
 
-// The release history. The release-video modal shows only the newest release
-// and links out here for everything before it, so this page carries the
-// earlier videos. Written separately from this PR; the path corresponds to
-// docs/changelog.md, which the docs build renders as /changelog.html.
-export const CHANGELOG_DOCS_URL =
-	"https://docs.dembrane.com/changelog.html" as const;
-
 export const COMMUNITY_SLACK_URL =
 	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
 
@@ -208,8 +201,6 @@ export const ENABLE_MONITOR = true;
 // Project Library / dynamic canvases. Off in production this release; on elsewhere.
 export const ENABLE_CANVAS = byEnv({ production: false }, true);
 // The release-video modal. On everywhere now that the video is recorded.
-// CHANGELOG_DOCS_URL still 404s, so "see earlier releases" is a dead link
-// until docs/changelog.md ships.
 export const ENABLE_RELEASE_VIDEO_MODAL = true;
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
