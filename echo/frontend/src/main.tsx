@@ -12,19 +12,10 @@ import {
 	POSTHOG_UI_HOST,
 	USE_PARTICIPANT_ROUTER,
 } from "./config";
+import { recoverFromChunkFailure } from "./lib/appVersion";
 
 posthog.init(POSTHOG_TOKEN, {
 	api_host: POSTHOG_HOST,
-	// api_host is our reverse proxy; ui_host must stay the real PostHog host so
-	// the toolbar and in-app links resolve (required when api_host is proxied).
-	ui_host: POSTHOG_UI_HOST,
-	// The portal serves anonymous participants on a privacy-sensitive flow, so
-	// never record their sessions. We track the journey with explicit events
-	// instead. The dashboard (hosts) is unaffected.
-	disable_session_recording: USE_PARTICIPANT_ROUTER,
-	// Share the cookie across .dembrane.com so a visitor's distinct id carries
-	// over from the marketing site, stitching both into one person profile.
-	cross_subdomain_cookie: true,
 	// Error tracking: autocapture unhandled errors and promise rejections.
 	// React render errors are reported separately via ErrorBoundary.
 	capture_exceptions: {
@@ -32,7 +23,14 @@ posthog.init(POSTHOG_TOKEN, {
 		capture_unhandled_errors: true,
 		capture_unhandled_rejections: true,
 	},
+	// Share the cookie across .dembrane.com so a visitor's distinct id carries
+	// over from the marketing site, stitching both into one person profile.
+	cross_subdomain_cookie: true,
 	defaults: "2026-01-30",
+	// The portal serves anonymous participants on a privacy-sensitive flow, so
+	// never record their sessions. We track the journey with explicit events
+	// instead. The dashboard (hosts) is unaffected.
+	disable_session_recording: USE_PARTICIPANT_ROUTER,
 	loaded: (ph) => {
 		// testing + local never send analytics (see POSTHOG_CAPTURE in config.ts).
 		// The opt-out persists per-domain, so explicitly opt back in when the
@@ -46,6 +44,15 @@ posthog.init(POSTHOG_TOKEN, {
 			posthog.opt_in_capturing({ captureEventName: null });
 		}
 	},
+	// api_host is our reverse proxy; ui_host must stay the real PostHog host so
+	// the toolbar and in-app links resolve (required when api_host is proxied).
+	ui_host: POSTHOG_UI_HOST,
+});
+
+// Not calling preventDefault: cancelling makes Vite resolve the import to
+// `undefined`, so LazyRoute throws a misleading error instead of the real one.
+window.addEventListener("vite:preloadError", () => {
+	void recoverFromChunkFailure();
 });
 
 const root = document.getElementById("root");

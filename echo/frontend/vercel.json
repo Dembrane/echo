@@ -24,12 +24,21 @@
 				}
 			],
 			"source": "/(.*)"
+		},
+		{
+			"headers": [
+				{
+					"key": "Cache-Control",
+					"value": "no-store"
+				}
+			],
+			"source": "/version.json"
 		}
 	],
 	"rewrites": [
 		{
 			"destination": "/",
-			"source": "/(.*)"
+			"source": "/((?!assets/).*)"
 		}
 	]
 }
