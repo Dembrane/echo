@@ -2388,7 +2388,7 @@ msgstr "Cerrar"
 msgid "select.all.modal.close"
 msgstr "Cerrar"
 
-#: src/components/release/ReleaseVideoModal.tsx:116
+#: src/components/release/ReleaseVideoModal.tsx:131
 msgid "Close and go to dembrane"
 msgstr ""
 
@@ -2513,7 +2513,7 @@ msgid "Consent"
 msgstr "Consentimiento"
 
 #: src/features/sidebar/views/HelpView.tsx:28
-#: src/features/sidebar/blocks/HelpBlock.tsx:42
+#: src/features/sidebar/blocks/HelpBlock.tsx:59
 msgid "Contact support"
 msgstr ""
 
@@ -3435,7 +3435,7 @@ msgid "Do you want to stay in the loop?"
 msgstr "¿Quieres estar en el bucle?"
 
 #: src/features/sidebar/views/HelpView.tsx:36
-#: src/features/sidebar/blocks/HelpBlock.tsx:29
+#: src/features/sidebar/blocks/HelpBlock.tsx:46
 #: src/components/chat/ChatHistoryMessage.tsx:172
 msgid "Documentation"
 msgstr "Documentación"
@@ -4226,7 +4226,7 @@ msgid "participant.modal.echo.info.title"
 msgstr "Función disponible pronto"
 
 #: src/features/sidebar/views/HelpView.tsx:59
-#: src/features/sidebar/blocks/HelpBlock.tsx:22
+#: src/features/sidebar/blocks/HelpBlock.tsx:32
 msgid "Feedback"
 msgstr ""
 
@@ -4665,7 +4665,7 @@ msgid "Have you completed a training?"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:26
-#: src/features/sidebar/blocks/HelpBlock.tsx:19
+#: src/features/sidebar/blocks/HelpBlock.tsx:29
 msgid "Help"
 msgstr ""
 
@@ -7298,7 +7298,7 @@ msgid "Plan ends"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:53
-#: src/features/sidebar/blocks/HelpBlock.tsx:38
+#: src/features/sidebar/blocks/HelpBlock.tsx:55
 msgid "Planned"
 msgstr ""
 
@@ -7965,7 +7965,7 @@ msgstr "Regenerando el resumen. Espera..."
 msgid "Register | dembrane"
 msgstr "Registrar | dembrane"
 
-#: src/components/release/ReleaseVideoModal.tsx:130
+#: src/components/release/ReleaseVideoModal.tsx:145
 msgid "Release video"
 msgstr ""
 
@@ -8762,7 +8762,7 @@ msgstr "Secreto"
 msgid "Secret copied"
 msgstr "Secreto copiado"
 
-#: src/components/release/ReleaseVideoModal.tsx:160
+#: src/components/release/ReleaseVideoModal.tsx:175
 msgid "see earlier releases"
 msgstr ""
 
@@ -9651,7 +9651,7 @@ msgid "System"
 msgstr "Sistema"
 
 #: src/features/sidebar/views/HelpView.tsx:50
-#: src/features/sidebar/blocks/HelpBlock.tsx:35
+#: src/features/sidebar/blocks/HelpBlock.tsx:52
 msgid "System status"
 msgstr ""
 
@@ -11428,6 +11428,10 @@ msgstr "¿Cuáles fueron los momentos clave de esta conversación?"
 #: src/components/chat/ChatModeSelector.tsx:266
 msgid "What would you like to explore?"
 msgstr "¿Qué te gustaría explorar?"
+
+#: src/features/sidebar/blocks/HelpBlock.tsx:40
+msgid "What's new"
+msgstr ""
 
 #: src/components/billing/BillingManager.tsx:536
 msgid "What's the main reason?"

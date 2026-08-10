@@ -3,8 +3,6 @@ import { SidebarSimple } from "@phosphor-icons/react";
 import type { PropsWithChildren } from "react";
 import { Outlet } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
-import { ReleaseVideoModal } from "@/components/release/ReleaseVideoModal";
-import { ENABLE_RELEASE_VIDEO_MODAL } from "@/config";
 import { AppSidebar, useSidebarView } from "@/features/sidebar";
 import { AppBreadcrumbs } from "@/features/sidebar/breadcrumbs/AppBreadcrumbs";
 import { useSidebarState } from "@/features/sidebar/hooks/useSidebarState";
@@ -81,9 +79,6 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 					</main>
 				</ErrorBoundary>
 				<Toaster />
-				{/* Inside the curtain provider on purpose: the modal reads
-				    isActive and stays down while a transition is running. */}
-				{ENABLE_RELEASE_VIDEO_MODAL ? <ReleaseVideoModal /> : null}
 			</div>
 		</TransitionCurtainProvider>
 	);

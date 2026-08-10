@@ -2,6 +2,7 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
 	cleanup,
@@ -192,6 +193,71 @@ describe("dismissing", () => {
 	});
 });
 
+// The automatic showing is spent after one dismissal, so the sidebar entry is
+// the only way back to the video. It has to ignore the seen gate entirely.
+describe("opening it on demand", () => {
+	// HelpBlock owns this flag through useDisclosure and hands it down.
+	const OnDemand = () => {
+		const [requested, handlers] = useDisclosure(false);
+		return (
+			<>
+				<button type="button" onClick={handlers.open}>
+					What's new
+				</button>
+				<ReleaseVideoModal
+					requested={requested}
+					onRequestedClose={handlers.close}
+				/>
+			</>
+		);
+	};
+
+	const renderOnDemand = () =>
+		render(
+			<QueryClientProvider client={new QueryClient()}>
+				<I18nProvider i18n={i18n}>
+					<MantineProvider>
+						<OnDemand />
+					</MantineProvider>
+				</I18nProvider>
+			</QueryClientProvider>,
+		);
+
+	beforeEach(() => {
+		meState.data = { settings: { [RELEASE_VIDEO_SEEN_KEY]: LATEST.version } };
+	});
+
+	it("opens for a user who already dismissed the newest release", async () => {
+		renderOnDemand();
+		expect(modalIsOpen()).toBe(false);
+
+		fireEvent.click(screen.getByRole("button", { name: "What's new" }));
+		await waitFor(() => {
+			expect(modalIsOpen()).toBe(true);
+		});
+	});
+
+	it("can be opened again after being closed", async () => {
+		renderOnDemand();
+		const trigger = screen.getByRole("button", { name: "What's new" });
+
+		fireEvent.click(trigger);
+		await waitFor(() => {
+			expect(modalIsOpen()).toBe(true);
+		});
+
+		fireEvent.click(screen.getByLabelText("Close and go to dembrane"));
+		await waitFor(() => {
+			expect(modalIsOpen()).toBe(false);
+		});
+
+		fireEvent.click(trigger);
+		await waitFor(() => {
+			expect(modalIsOpen()).toBe(true);
+		});
+	});
+});
+
 describe("typography", () => {
 	it("renders nothing italic", () => {
 		const { baseElement } = renderModal();
@@ -213,6 +279,22 @@ describe("typography", () => {
 		const frame = screen.getByTitle("Release video") as HTMLIFrameElement;
 		expect(frame.getAttribute("src")).toContain(
 			"https://www.youtube-nocookie.com/embed/",
+		);
+	});
+
+	// Mantine applies a `style` prop on Modal.Content to the full-viewport
+	// .inner wrapper as well as to the panel. Painting a background there
+	// covers the overlay and the modal arrives with no visible scrim, which is
+	// what "styles" (keyed by selector) avoids.
+	it("leaves the overlay visible by not painting the inner wrapper", () => {
+		const { baseElement } = renderModal();
+		const inner = baseElement.querySelector(".mantine-Modal-inner");
+		expect(inner).not.toBeNull();
+		expect(inner?.getAttribute("style") ?? "").not.toContain("background");
+
+		const overlay = baseElement.querySelector(".mantine-Modal-overlay");
+		expect(overlay?.getAttribute("style") ?? "").toContain(
+			"--overlay-bg: rgba(0, 0, 0, 0.6)",
 		);
 	});
 
