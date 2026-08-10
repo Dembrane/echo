@@ -246,7 +246,7 @@ const FocusedOnLine = ({
 	);
 };
 
-const enrichAgenticContent = ({
+export const enrichAgenticContent = ({
 	content,
 	conversationNames,
 	language,

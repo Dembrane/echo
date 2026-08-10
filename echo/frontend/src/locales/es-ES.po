@@ -2529,7 +2529,7 @@ msgstr "Contenido"
 msgid "Context"
 msgstr "Contexto"
 
-#: src/components/chat/ChatHistoryMessage.tsx:394
+#: src/components/chat/ChatHistoryMessage.tsx:449
 msgid "Context added:"
 msgstr "Contexto añadido:"
 
@@ -3436,7 +3436,7 @@ msgstr "¿Quieres estar en el bucle?"
 
 #: src/features/sidebar/views/HelpView.tsx:36
 #: src/features/sidebar/blocks/HelpBlock.tsx:46
-#: src/components/chat/ChatHistoryMessage.tsx:172
+#: src/components/chat/ChatHistoryMessage.tsx:192
 msgid "Documentation"
 msgstr "Documentación"
 
@@ -4764,7 +4764,7 @@ msgstr ""
 msgid "Hours from now"
 msgstr ""
 
-#: src/components/chat/ChatHistoryMessage.tsx:185
+#: src/components/chat/ChatHistoryMessage.tsx:205
 msgid "How Ask works and what it can do."
 msgstr ""
 
@@ -6743,7 +6743,7 @@ msgstr ""
 msgid "Open all"
 msgstr ""
 
-#: src/components/chat/ChatHistoryMessage.tsx:184
+#: src/components/chat/ChatHistoryMessage.tsx:204
 msgid "Open chat documentation"
 msgstr ""
 
@@ -6753,7 +6753,7 @@ msgstr ""
 msgid "Open conversation"
 msgstr ""
 
-#: src/components/chat/ChatHistoryMessage.tsx:178
+#: src/components/chat/ChatHistoryMessage.tsx:198
 msgid "Open documentation"
 msgstr ""
 
@@ -6799,8 +6799,8 @@ msgstr ""
 msgid "Open to the workspace"
 msgstr ""
 
-#: src/components/chat/ChatHistoryMessage.tsx:227
-#: src/components/chat/ChatHistoryMessage.tsx:231
+#: src/components/chat/ChatHistoryMessage.tsx:280
+#: src/components/chat/ChatHistoryMessage.tsx:284
 msgid "Open transcript"
 msgstr ""
 
@@ -8516,7 +8516,7 @@ msgstr "guardar"
 msgid "Save access"
 msgstr ""
 
-#: src/components/chat/ChatHistoryMessage.tsx:296
+#: src/components/chat/ChatHistoryMessage.tsx:349
 msgid "Save as template"
 msgstr "Guardar como plantilla"
 
@@ -9373,6 +9373,10 @@ msgstr "Ordenar"
 msgid "Source {0}"
 msgstr "Fuente {0}"
 
+#: src/components/chat/ChatHistoryMessage.tsx:389
+msgid "Sources"
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:644
 msgid "Spanish"
 msgstr "Español"
@@ -9867,7 +9871,7 @@ msgstr ""
 msgid "The organisation this invite was for has been deleted. There's nothing to join."
 msgstr ""
 
-#: src/components/chat/ChatHistoryMessage.tsx:179
+#: src/components/chat/ChatHistoryMessage.tsx:199
 msgid "The page this answer refers to."
 msgstr ""
 
