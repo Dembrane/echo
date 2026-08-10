@@ -216,6 +216,29 @@ export const ChatHistoryMessage = ({
 
 		return {
 			a({ children, className, href, ...props }) {
+				// Footnote hops (superscript -> definition and the ↩ back-ref) stay
+				// inside this message. Fragment navigation is the wrong tool for
+				// them in an SPA: it rewrites the URL, stacks history entries, and
+				// a repeated click on the same fragment does not scroll again. So
+				// scroll directly and leave the URL alone.
+				if (href?.startsWith("#")) {
+					return (
+						<a
+							href={href}
+							className={className}
+							{...props}
+							onClick={(event) => {
+								event.preventDefault();
+								document
+									.getElementById(decodeURIComponent(href.slice(1)))
+									?.scrollIntoView({ behavior: "smooth", block: "center" });
+							}}
+						>
+							{children}
+						</a>
+					);
+				}
+
 				if (isDocsHref(href)) {
 					return (
 						<AgenticDocsLink href={href ?? ""}>{children}</AgenticDocsLink>
@@ -333,6 +356,8 @@ export const ChatHistoryMessage = ({
 							className="prose-sm"
 							content={message.content}
 							components={markdownComponents}
+							footnoteLabel={t`Sources`}
+							footnoteIdPrefix={`msg-${message.id}-`}
 						/>
 						{portalStartLink ? (
 							<Box

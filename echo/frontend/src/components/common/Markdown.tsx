@@ -13,10 +13,20 @@ export const Markdown = ({
 	content,
 	className,
 	components: customComponents,
+	footnoteLabel,
+	footnoteIdPrefix,
 }: {
 	content: string;
 	className?: string;
 	components?: Components;
+	/** Visible, localised heading for the GFM footnote list. Without it the
+	 * renderer emits its default English "Footnotes" heading, which our CSS
+	 * never hides (we ship no `sr-only` class). */
+	footnoteLabel?: string;
+	/** Prefix for footnote ids and hrefs. Every message rendered on a page
+	 * otherwise mints the same `#user-content-fn-1` ids, so the browser
+	 * resolves a superscript to the first message that defined it. */
+	footnoteIdPrefix?: string;
 }) => {
 	// FIXME: workaround to load Tally embeds
 	useEffect(() => {
@@ -57,6 +67,22 @@ export const Markdown = ({
 		[customComponents],
 	);
 
+	const remarkRehypeOptions = useMemo(() => {
+		if (!footnoteLabel && !footnoteIdPrefix) return undefined;
+		return {
+			...(footnoteIdPrefix ? { clobberPrefix: footnoteIdPrefix } : {}),
+			...(footnoteLabel
+				? {
+						footnoteLabel,
+						// The default properties hide the label behind `sr-only`,
+						// which our Tailwind build does not generate. A caller who
+						// names the label wants it visible.
+						footnoteLabelProperties: {},
+					}
+				: {}),
+		};
+	}, [footnoteLabel, footnoteIdPrefix]);
+
 	return (
 		<ReactMarkdown
 			className={cn(
@@ -64,6 +90,7 @@ export const Markdown = ({
 				className,
 			)}
 			remarkPlugins={[remarkGfm]}
+			remarkRehypeOptions={remarkRehypeOptions}
 			components={components}
 		>
 			{processedContent}
