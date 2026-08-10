@@ -76,6 +76,26 @@ const getLinkLabel = (children: React.ReactNode) => {
 const AGENTIC_LINK_CLASSES =
 	"not-prose inline-flex items-baseline gap-0.5 text-[var(--mantine-color-anchor)] underline underline-offset-2 transition-colors hover:text-[var(--mantine-color-blue-7)]";
 
+// The same flash the transcript page gives a deep-linked chunk
+// (ConversationChunkAudioTranscript), so a footnote hop reads as the one
+// highlight language the product has. Class names must match ones already in
+// source, or the Tailwind build will not carry them.
+const FOOTNOTE_HIGHLIGHT_CLASSES = [
+	"!bg-cyan-50",
+	"ring-2",
+	"ring-cyan-300",
+	"rounded-sm",
+];
+const FOOTNOTE_HIGHLIGHT_MS = 5000;
+
+const flashFootnoteTarget = (target: HTMLElement) => {
+	target.scrollIntoView({ behavior: "smooth", block: "center" });
+	target.classList.add(...FOOTNOTE_HIGHLIGHT_CLASSES);
+	window.setTimeout(() => {
+		target.classList.remove(...FOOTNOTE_HIGHLIGHT_CLASSES);
+	}, FOOTNOTE_HIGHLIGHT_MS);
+};
+
 const URL_PATTERN = /https?:\/\/[^\s<>)\]]+/g;
 
 function ownPortalStartLink(content: string, projectId?: string): string | null {
@@ -216,11 +236,20 @@ export const ChatHistoryMessage = ({
 
 		return {
 			a({ children, className, href, ...props }) {
-				// Footnote hops (superscript -> definition and the ↩ back-ref) stay
-				// inside this message. Fragment navigation is the wrong tool for
-				// them in an SPA: it rewrites the URL, stacks history entries, and
-				// a repeated click on the same fragment does not scroll again. So
-				// scroll directly and leave the URL alone.
+				// The ↩ back-references under each footnote add a second (or Nth)
+				// arrow icon per source line without earning it: the superscript
+				// that brought the reader down is still on screen after the
+				// highlight scroll. One icon per source, so these go.
+				if (className?.includes("data-footnote-backref")) {
+					return null;
+				}
+
+				// Footnote hops (superscript -> definition) stay inside this
+				// message. Fragment navigation is the wrong tool for them in an
+				// SPA: it rewrites the URL, stacks history entries, a repeated
+				// click on the same fragment does not scroll again, and a target
+				// already on screen gives no feedback at all. So scroll and flash
+				// the target directly and leave the URL alone.
 				if (href?.startsWith("#")) {
 					return (
 						<a
@@ -229,9 +258,10 @@ export const ChatHistoryMessage = ({
 							{...props}
 							onClick={(event) => {
 								event.preventDefault();
-								document
-									.getElementById(decodeURIComponent(href.slice(1)))
-									?.scrollIntoView({ behavior: "smooth", block: "center" });
+								const target = document.getElementById(
+									decodeURIComponent(href.slice(1)),
+								);
+								if (target) flashFootnoteTarget(target);
 							}}
 						>
 							{children}

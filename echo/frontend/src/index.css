@@ -98,6 +98,22 @@ body {
 	font-feature-settings: var(--app-font-feature-settings) !important;
 }
 
+/* Visually hidden, kept for screen readers. Our own name on purpose: Tailwind
+   owns `sr-only` and only generates it when a source file uses it, so markup
+   injected at runtime (the markdown renderer's footnote heading) needs a class
+   we define unconditionally. */
+.dembrane-sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+}
+
 [aria-label="editable markdown"] {
 	font-family: var(--app-font-family) !important;
 	font-feature-settings: var(--app-font-feature-settings) !important;

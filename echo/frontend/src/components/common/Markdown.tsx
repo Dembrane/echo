@@ -20,8 +20,8 @@ export const Markdown = ({
 	className?: string;
 	components?: Components;
 	/** Visible, localised heading for the GFM footnote list. Without it the
-	 * renderer emits its default English "Footnotes" heading, which our CSS
-	 * never hides (we ship no `sr-only` class). */
+	 * renderer's default English "Footnotes" heading is kept but visually
+	 * hidden (screen readers still announce it). */
 	footnoteLabel?: string;
 	/** Prefix for footnote ids and hrefs. Every message rendered on a page
 	 * otherwise mints the same `#user-content-fn-1` ids, so the browser
@@ -67,21 +67,19 @@ export const Markdown = ({
 		[customComponents],
 	);
 
-	const remarkRehypeOptions = useMemo(() => {
-		if (!footnoteLabel && !footnoteIdPrefix) return undefined;
-		return {
+	const remarkRehypeOptions = useMemo(
+		() => ({
 			...(footnoteIdPrefix ? { clobberPrefix: footnoteIdPrefix } : {}),
+			// A caller who names the label wants it visible; without one, the
+			// renderer's default English "Footnotes" heading stays, hidden with
+			// our own class. The library's default is `sr-only`, which our
+			// Tailwind build never generates (no source file uses it).
 			...(footnoteLabel
-				? {
-						footnoteLabel,
-						// The default properties hide the label behind `sr-only`,
-						// which our Tailwind build does not generate. A caller who
-						// names the label wants it visible.
-						footnoteLabelProperties: {},
-					}
-				: {}),
-		};
-	}, [footnoteLabel, footnoteIdPrefix]);
+				? { footnoteLabel, footnoteLabelProperties: {} }
+				: { footnoteLabelProperties: { className: "dembrane-sr-only" } }),
+		}),
+		[footnoteLabel, footnoteIdPrefix],
+	);
 
 	return (
 		<ReactMarkdown
