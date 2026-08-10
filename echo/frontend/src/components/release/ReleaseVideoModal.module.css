@@ -1,13 +1,15 @@
 /* The whole type system of the release modal lives in this file, and there are
    exactly TWO combinations of (size, weight, colour, style):
 
-     1. .title  28px / 400 / var(--app-text) / normal
-     2. .body   20px / 400 / var(--app-text) / normal
+     1. titles  24px / 400 / var(--app-text) / normal
+     2. copy    20px / 400 / var(--app-text) / normal
 
    Both sizes come from the app's own ramp in index.css, both are the app's
-   black, both are weight 400, neither is italic. Every piece of text in the
-   modal carries one of these two classes and nothing in the component sets a
-   font size, weight, colour or style of its own.
+   black, both are weight 400, neither is italic. The two titles (the header's
+   standing line and the release title) share one size; the description and the
+   feedback note share the other, so the modal reads as one step of hierarchy
+   and no more. Every piece of text carries one of the classes below and nothing
+   in the component sets a font size, weight, colour or style of its own.
 
    The reset under .body is what keeps that true once markdown is involved: an
    author writing **bold**, _italic_ or a heading inside a release description
@@ -15,12 +17,20 @@
    flattened on purpose. Links keep an underline, which is a decoration rather
    than a colour, so a link is still visibly a link while staying black. */
 
-.title {
+.headerTitle {
 	color: var(--app-text);
-	font-size: var(--app-font-size-xl);
+	font-size: var(--app-font-size-lg);
 	font-style: normal;
 	font-weight: 400;
-	line-height: 1.25;
+	line-height: 1.35;
+}
+
+.title {
+	color: var(--app-text);
+	font-size: var(--app-font-size-lg);
+	font-style: normal;
+	font-weight: 400;
+	line-height: 1.35;
 	margin: 0;
 }
 
@@ -88,26 +98,18 @@
 	overflow: hidden;
 }
 
-/* The changelog link navigates, so it is an anchor rather than a button. */
-.link {
-	align-items: center;
-	align-self: flex-start;
-	cursor: pointer;
-	display: inline-flex;
-	gap: 0.4em;
-	text-align: left;
-	text-decoration: underline;
-}
-
-.link:focus-visible {
-	border-radius: 2px;
-	outline: 2px solid var(--app-text);
-	outline-offset: 3px;
+/* The nudge towards the Feedback button, at the same size as everything else. */
+.note {
+	color: var(--app-text);
+	font-size: var(--app-font-size-md);
+	font-style: normal;
+	font-weight: 400;
+	line-height: 1.55;
+	margin: 0;
 }
 
 /* Touch and stylus get 44px targets; a mouse keeps the tighter defaults. */
 @media (pointer: coarse) {
-	.link,
 	.closeButton {
 		min-height: 44px;
 		min-width: 44px;

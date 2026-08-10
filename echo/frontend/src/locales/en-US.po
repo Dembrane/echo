@@ -2387,7 +2387,7 @@ msgstr "Close"
 msgid "select.all.modal.close"
 msgstr "Close"
 
-#: src/components/release/ReleaseVideoModal.tsx:131
+#: src/components/release/ReleaseVideoModal.tsx:142
 msgid "Close and go to dembrane"
 msgstr "Close and go to dembrane"
 
@@ -5787,6 +5787,10 @@ msgstr "Memory"
 msgid "Memory removed"
 msgstr "Memory removed"
 
+#: src/components/release/releases.ts:52
+msgid "Message from the dembrane team"
+msgstr "Message from the dembrane team"
+
 #: src/components/chat/AgenticChatPanel.tsx:2246
 msgid "Message is too long (maximum 32,000 characters). Please attach conversations or shorten your message."
 msgstr "Message is too long (maximum 32,000 characters). Please attach conversations or shorten your message."
@@ -7964,7 +7968,7 @@ msgstr "Regenerating the summary. Please wait..."
 msgid "Register | dembrane"
 msgstr "Register | dembrane"
 
-#: src/components/release/ReleaseVideoModal.tsx:145
+#: src/components/release/ReleaseVideoModal.tsx:156
 msgid "Release video"
 msgstr "Release video"
 
@@ -7987,6 +7991,10 @@ msgstr "Reload Page"
 #: src/components/participant/verify/VerifyArtefactError.tsx:39
 msgid "participant.concrete.artefact.action.button.reload"
 msgstr "Reload Page"
+
+#: src/components/release/releases.ts:53
+msgid "Remember you can always use the Feedback button for suggestions. We appreciate all your support, and thank you for using dembrane."
+msgstr "Remember you can always use the Feedback button for suggestions. We appreciate all your support, and thank you for using dembrane."
 
 #: src/components/project/ProjectPortalEditor.tsx:1269
 msgid "Remind users to verify before finishing"
@@ -8762,8 +8770,8 @@ msgid "Secret copied"
 msgstr "Secret copied"
 
 #: src/components/release/ReleaseVideoModal.tsx:175
-msgid "see earlier releases"
-msgstr "see earlier releases"
+#~ msgid "see earlier releases"
+#~ msgstr "see earlier releases"
 
 #: src/components/billing/BillingManager.tsx:1196
 msgid "See plans"
@@ -10172,6 +10180,10 @@ msgstr "This prompt guides how the AI responds to participants. Customize it to 
 msgid "This puts the account on dembrane-managed billing: no automatic Mollie charges or auto-expiry."
 msgstr "This puts the account on dembrane-managed billing: no automatic Mollie charges or auto-expiry."
 
+#: src/components/release/releases.ts:51
+msgid "This quick walkthrough recaps our new three-level hierarchy: organisations, workspaces, and projects. Watch to learn how to manage access, organise your work, and use our new analysis tools."
+msgstr "This quick walkthrough recaps our new three-level hierarchy: organisations, workspaces, and projects. Watch to learn how to manage access, organise your work, and use our new analysis tools."
+
 #: src/routes/admin/AdminSettingsRoute.tsx:772
 msgid "This record has no billing account."
 msgstr "This record has no billing account."
@@ -10682,6 +10694,10 @@ msgstr "Unable to process this chunk"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:696
 msgid "Under your organisation"
 msgstr "Under your organisation"
+
+#: src/components/release/releases.ts:54
+msgid "Understanding our new structure"
+msgstr "Understanding our new structure"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:539
 msgid "Undo"

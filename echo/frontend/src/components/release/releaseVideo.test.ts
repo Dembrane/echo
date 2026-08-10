@@ -1,5 +1,6 @@
+import { i18n } from "@lingui/core";
 import { describe, expect, it } from "vitest";
-import { RELEASES } from "./releases";
+import { getReleases } from "./releases";
 import {
 	latestRelease,
 	RELEASE_VIDEO_SEEN_KEY,
@@ -49,8 +50,22 @@ describe("shouldShowReleaseVideo", () => {
 describe("latestRelease", () => {
 	it("takes the first entry, because the array is newest first", () => {
 		const releases = [
-			{ description: "b", title: "B", version: "2", videoUrl: "" },
-			{ description: "a", title: "A", version: "1", videoUrl: "" },
+			{
+				description: "b",
+				headerTitle: "H",
+				note: "n",
+				title: "B",
+				version: "2",
+				videoUrl: "",
+			},
+			{
+				description: "a",
+				headerTitle: "H",
+				note: "n",
+				title: "A",
+				version: "1",
+				videoUrl: "",
+			},
 		];
 		expect(latestRelease(releases)?.version).toBe("2");
 	});
@@ -60,6 +75,12 @@ describe("latestRelease", () => {
 	});
 });
 
+// getReleases() resolves its copy through `t`, so a locale has to be active
+// before the shipped-history tests call it; the empty catalog falls back to
+// the English source, which is all these tests read.
+i18n.load("en", {});
+i18n.activate("en");
+
 describe("the shipped release history", () => {
 	it("has a newest entry whose video resolves to a playable embed", () => {
 		const release = latestRelease();
@@ -68,7 +89,7 @@ describe("the shipped release history", () => {
 	});
 
 	it("uses unique version identifiers, so the gate cannot stick", () => {
-		const versions = RELEASES.map((r) => r.version);
+		const versions = getReleases().map((r) => r.version);
 		expect(new Set(versions).size).toBe(versions.length);
 	});
 

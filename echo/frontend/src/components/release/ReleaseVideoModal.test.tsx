@@ -41,15 +41,17 @@ vi.mock("@/components/layout/TransitionCurtainProvider", () => ({
 }));
 
 import { ReleaseVideoModal } from "./ReleaseVideoModal";
-import { RELEASES } from "./releases";
+import { getReleases } from "./releases";
 import { RELEASE_VIDEO_SEEN_KEY } from "./releaseVideo";
 
-const LATEST = RELEASES[0];
+// getReleases() resolves its copy through `t`, so a locale has to be active
+// before the first call; with an empty catalog the English source comes back.
+i18n.load("en", {});
+i18n.activate("en");
+
+const LATEST = getReleases()[0];
 
 beforeAll(() => {
-	i18n.load("en", {});
-	i18n.activate("en");
-
 	// MantineProvider and usePrefersReducedMotion both read matchMedia; jsdom
 	// has none, so stub a minimal always-non-matching implementation.
 	window.matchMedia =
@@ -298,11 +300,9 @@ describe("typography", () => {
 		);
 	});
 
-	it("links out to the changelog in a new tab", () => {
+	it("titles the header and points at the Feedback button", () => {
 		renderModal();
-		const link = screen.getByRole("link", { name: /see earlier releases/i });
-		expect(link.getAttribute("href")).toContain("docs.dembrane.com");
-		expect(link.getAttribute("target")).toBe("_blank");
-		expect(link.getAttribute("rel")).toContain("noopener");
+		expect(screen.getByText("Message from the dembrane team")).toBeTruthy();
+		expect(screen.getByText(/Feedback button/i)).toBeTruthy();
 	});
 });
