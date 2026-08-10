@@ -52,29 +52,33 @@ export const AppSidebar = () => {
 
 	return (
 		<SidebarShell
-			header={<SidebarHeader />}
-			footer={
+			header={
 				<>
-					<HelpBlock />
+					<SidebarHeader />
 					<div
-						className="mt-1 border-t pt-1.5 pb-1"
+						className="flex shrink-0 flex-col gap-0.5 border-b p-1.5"
 						style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
 					>
-						<UserMenu />
+						<SearchBlock />
+						<InboxBlock />
 					</div>
 				</>
 			}
+			footer={
+				<div className="pb-1">
+					<UserMenu />
+				</div>
+			}
 		>
-			<div
-				className="flex shrink-0 flex-col gap-0.5 border-b p-1.5"
-				style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
-			>
-				<SearchBlock />
-				<InboxBlock />
-			</div>
 			<ViewTransition>
 				<ErrorBoundary fallback={<ViewError />}>{content}</ErrorBoundary>
 			</ViewTransition>
+			<div
+				className="flex shrink-0 flex-col gap-0.5 border-t p-1.5"
+				style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
+			>
+				<HelpBlock />
+			</div>
 		</SidebarShell>
 	);
 };

@@ -7,6 +7,7 @@ import axios, {
 	type CreateAxiosDefaults,
 } from "axios";
 import { toast } from "@/components/common/Toaster";
+import { VOICE_TRANSCRIBE_TIMEOUT_MS } from "@/components/voice/voiceInput";
 import { API_BASE_URL, USE_PARTICIPANT_ROUTER } from "@/config";
 import { bff } from "./bff";
 import { directus } from "./directus";
@@ -1201,6 +1202,12 @@ export type AgenticRunEvent = {
 	timestamp: string;
 };
 
+// Streaming snapshot of the assistant message being written; ephemeral, no seq.
+export type AgenticDraftPayload = {
+	message_id: string;
+	text: string;
+};
+
 export type AgenticRunEventsResponse = {
 	run_id: string;
 	status: AgenticRunStatus;
@@ -1213,6 +1220,48 @@ export type AgenticRunStopResponse = {
 	run_id: string;
 	turn_seq: number;
 	status: "stopping";
+};
+
+export type StatelessTranscriptionResponse = {
+	transcript: string;
+	note: string;
+};
+
+/** Transcribe one audio file and get the text back in the response.
+ *
+ * Nothing is stored: the upload is parked in S3 for the length of the request
+ * and deleted afterwards whether transcription worked or not. `project_id` is
+ * the project to bill, and it is required for anyone who is not a staff admin,
+ * because the call spends that workspace's audio hours.
+ *
+ * The whole recording goes in one part named `file`. There is no chunked
+ * variant of this endpoint and no job to poll: the response arrives when the
+ * transcription has finished, which is why the timeout is minutes rather than
+ * seconds.
+ */
+export const transcribeStateless = async (payload: {
+	file: Blob;
+	filename: string;
+	projectId: string;
+	language?: string;
+	/** Comma-separated proper nouns. Without them the model mishears names. */
+	hotwords?: string;
+	signal?: AbortSignal;
+}) => {
+	const form = new FormData();
+	form.append("file", payload.file, payload.filename);
+	form.append("project_id", payload.projectId);
+	if (payload.language) form.append("language", payload.language);
+	if (payload.hotwords) form.append("hotwords", payload.hotwords);
+
+	return api.post<unknown, StatelessTranscriptionResponse>(
+		"/stateless/transcribe",
+		form,
+		{
+			signal: payload.signal,
+			timeout: VOICE_TRANSCRIBE_TIMEOUT_MS,
+		},
+	);
 };
 
 export const createAgenticRun = async (payload: {
@@ -1260,6 +1309,7 @@ type StreamAgenticRunOptions = {
 	afterSeq?: number;
 	signal?: AbortSignal;
 	onEvent: (event: AgenticRunEvent) => void;
+	onDraft?: (draft: AgenticDraftPayload) => void;
 	onHeartbeat?: () => void;
 };
 
@@ -1333,6 +1383,23 @@ export const streamAgenticRun = async (
 				if (parsed) {
 					if (parsed.eventType === "heartbeat") {
 						options.onHeartbeat?.();
+					} else if (parsed.eventType === "assistant.draft") {
+						// Drafts have no seq and must never reach the onEvent merge map.
+						if (parsed.data) {
+							try {
+								const frame = JSON.parse(parsed.data) as {
+									payload?: AgenticDraftPayload;
+								};
+								if (
+									typeof frame.payload?.message_id === "string" &&
+									typeof frame.payload?.text === "string"
+								) {
+									options.onDraft?.(frame.payload);
+								}
+							} catch {
+								// Ignore malformed frames and continue streaming.
+							}
+						}
 					} else if (parsed.data) {
 						try {
 							const event = JSON.parse(parsed.data) as AgenticRunEvent;

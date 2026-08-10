@@ -24,6 +24,7 @@ import {
 	IconAlertCircle,
 	IconChevronDown,
 	IconChevronRight,
+	IconPlayerStopFilled,
 	IconSend,
 	IconSparkles,
 } from "@tabler/icons-react";
@@ -58,6 +59,12 @@ import {
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { GoalSuggestionCard } from "@/components/goal/GoalSuggestionCard";
+import { useProjectById } from "@/components/project/hooks";
+import { useVoiceTranscription } from "@/components/voice/useVoiceTranscription";
+import { VoiceInputButton } from "@/components/voice/VoiceInputButton";
+import { VoiceInputError } from "@/components/voice/VoiceInputError";
+import { VoiceRecordingBar } from "@/components/voice/VoiceRecordingBar";
+import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -84,9 +91,11 @@ import {
 	FREE_TIER_MAX_CHAT_USER_TURNS,
 	isFreeTierLimitError,
 } from "@/lib/freeTier";
+import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 import { testId } from "@/lib/testUtils";
 import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
+import { toast } from "../common/Toaster";
 import { focusedConversationIdsFromPayload } from "./agenticFocus";
 import {
 	extractTopLevelToolActivity,
@@ -105,7 +114,11 @@ import { ChatHistoryMessage } from "./ChatHistoryMessage";
 import { ChatTemplatesMenuConnected } from "./ChatTemplatesMenuConnected";
 import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopicSuggestionCard";
 import { formatMessage } from "./chatUtils";
-import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
+import {
+	ChatTurnLimitCard,
+	ChatUpgradeModal,
+	VoiceCapUpgradeModal,
+} from "./FreeTierChatGate";
 import { useChat as useProjectChat } from "./hooks";
 import { InsightNoteCard } from "./InsightNoteCard";
 import { NavigationSuggestionCard } from "./NavigationSuggestionCard";
@@ -177,6 +190,22 @@ const AGENTIC_REFERENCE_PATTERN =
 const AGENTIC_REFERENCE_LIST_PATTERN = /\[conversation_ids?:\s*([^\]]+)\]/g;
 
 const LOOKS_LIKE_ID_PATTERN = /^[0-9a-f][0-9a-f-]{7,}$/i;
+
+export const MAX_AGENTIC_MESSAGE_LENGTH = 32000;
+
+// A failed run tells us a code, never prose: the server deliberately withholds
+// upstream error text, which is unbounded, untranslated and can echo the prompt
+// back at us. The wording is ours and lives here so it is localised.
+const runFailureMessage = (errorCode: unknown): string => {
+	switch (errorCode) {
+		case "AGENT_CANCELLED":
+			return t`You stopped this run.`;
+		case "AGENT_TIMEOUT":
+			return t`This request took too long, so I stopped it. Send it again and I'll retry.`;
+		default:
+			return t`Something went wrong on my side. Send your message again and I'll retry.`;
+	}
+};
 
 const buildTranscriptLink = ({
 	chunkId,
@@ -331,13 +360,7 @@ const toMessage = ({
 
 	if (event.event_type === "run.failed" || event.event_type === "run.timeout") {
 		return {
-			content: enrichAgenticContent({
-				content: content ?? t`Agent run failed`,
-				conversationNames,
-				language,
-				projectId,
-				workspaceId,
-			}),
+			content: runFailureMessage(payload?.error_code),
 			id: `a-${event.seq}`,
 			role: "assistant",
 			sortSeq: event.seq,
@@ -574,9 +597,10 @@ const ToolActivityGroup = ({
 		<Box className="flex justify-start">
 			<Paper
 				// The theme defaults Paper to withBorder; tool activity is ambient,
-				// not a card, so it stays borderless.
+				// not a card, so it stays borderless. No w-full either: the row
+				// ends where its text ends, and max-w is only a ceiling.
 				withBorder={false}
-				className="w-full max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
+				className="max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
 				style={{
 					backgroundColor:
 						"color-mix(in srgb, var(--app-background) 88%, var(--mantine-color-primary-1))",
@@ -661,13 +685,16 @@ const LiveRunIndicator = ({
 	<Box className="flex justify-start" {...testId("agentic-run-indicator")}>
 		<Paper
 			withBorder={false}
-			className="w-full max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
+			className="max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
 			style={{
 				backgroundColor:
 					"color-mix(in srgb, var(--app-background) 88%, var(--mantine-color-primary-1))",
 			}}
 		>
-			<Group justify="space-between" gap="lg" wrap="nowrap">
+			{/* Cancel sits next to the headline it cancels, not flung to a far
+			    column edge: the row hugs its content, so there is no gap to
+			    space-between across. */}
+			<Group justify="flex-start" gap="md" wrap="nowrap">
 				<Group gap={8} wrap="nowrap" className="min-w-0">
 					<Box
 						aria-hidden="true"
@@ -796,12 +823,62 @@ export const AgenticChatPanel = ({
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isHydratingStoredRun, setIsHydratingStoredRun] = useState(false);
 	const [streamFailureCount, setStreamFailureCount] = useState(0);
+	// Snapshot of the message being written; the durable assistant.message
+	// with the same message_id replaces it in place.
+	const [liveDraft, setLiveDraft] = useState<{
+		messageId: string;
+		text: string;
+		timestamp: string;
+	} | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [expandedGroupIds, setExpandedGroupIds] = useState<
 		Record<string, boolean>
 	>({});
 	const [conversationPickerOpened, conversationPickerHandlers] =
 		useDisclosure(false);
+	// Proper nouns for the transcription pass. This is the same field the
+	// recording pipeline splits into hotwords (transcribe._build_hotwords), so a
+	// project that already teaches the model its names teaches it here too.
+	// Narrow fields on purpose: the panel needs one string, not the whole row.
+	const projectTranscriptHintsQuery = useProjectById({
+		projectId,
+		query: { fields: ["id", "default_conversation_transcript_prompt"] },
+	});
+	const voiceHotwords =
+		(
+			projectTranscriptHintsQuery.data as
+				| { default_conversation_transcript_prompt?: string | null }
+				| undefined
+		)?.default_conversation_transcript_prompt ?? undefined;
+	const composerRef = useRef<HTMLTextAreaElement>(null);
+	const voice = useVoiceTranscription({
+		hotwords: voiceHotwords,
+		language: iso639_1 ?? "en",
+		onDurationLimit: () =>
+			toast.info(
+				t`Recording stopped at the five minute limit. Turning what you recorded into text.`,
+			),
+		// The transcript lands in the composer rather than being sent. A
+		// mishearing that goes out on its own is worse than one the host can fix
+		// in two seconds, and the composer is already where a message gets read
+		// back before sending.
+		onTranscript: (transcript) => {
+			setInput((current) => mergeTranscriptIntoDraft(current, transcript));
+			// Hand the caret back to the text the host now has to read over.
+			window.requestAnimationFrame(() => composerRef.current?.focus());
+		},
+		projectId,
+	});
+	const isVoiceActive = voice.status !== "idle";
+	// The control the host just pressed is unmounted by the swap, which drops
+	// keyboard focus to the body. Hand it to whatever replaced it.
+	const voiceStopButtonRef = useRef<HTMLButtonElement>(null);
+	useEffect(() => {
+		if (voice.status === "recording") voiceStopButtonRef.current?.focus();
+	}, [voice.status]);
+	const returnFocusToComposer = useCallback(() => {
+		window.requestAnimationFrame(() => composerRef.current?.focus());
+	}, []);
 	const streamAbortRef = useRef<AbortController | null>(null);
 	const streamRunIdRef = useRef<string | null>(null);
 	const stopArmedRunIdRef = useRef<string | null>(null);
@@ -818,6 +895,10 @@ export const AgenticChatPanel = ({
 	useEffect(() => {
 		currentRunIdRef.current = runId;
 	}, [runId]);
+
+	useEffect(() => {
+		if (!isRunInFlight) setLiveDraft(null);
+	}, [isRunInFlight]);
 
 	useEffect(() => {
 		if (queryPrefillStartedRef.current) return;
@@ -845,6 +926,30 @@ export const AgenticChatPanel = ({
 		}
 		return names;
 	}, [conversationsQuery.data]);
+
+	// Renders only until its durable copy is in the event log.
+	const liveDraftMessage = useMemo(() => {
+		if (!liveDraft) return null;
+		const durable = events.some(
+			(event) =>
+				event.event_type === "assistant.message" &&
+				asObject(event.payload)?.message_id === liveDraft.messageId,
+		);
+		if (durable) return null;
+		return {
+			content: enrichAgenticContent({
+				content: liveDraft.text,
+				conversationNames,
+				language,
+				projectId,
+				workspaceId: workspaceId ?? "",
+			}),
+			id: "live-draft",
+			role: "assistant" as const,
+			sortSeq: Number.MAX_SAFE_INTEGER,
+			timestamp: liveDraft.timestamp,
+		};
+	}, [liveDraft, events, conversationNames, language, projectId, workspaceId]);
 
 	const timeline = useMemo(() => {
 		const sorted = [...events].sort((a, b) => a.seq - b.seq);
@@ -1016,8 +1121,11 @@ export const AgenticChatPanel = ({
 	}, [timeline, pendingUserMessage]);
 
 	// Free tier: max 3 user turns per chat. The 4th routes to upgrade.
-	const { freeTier } = useWorkspaceUsage(workspace?.id);
+	const { freeTier, usageGates } = useWorkspaceUsage(workspace?.id);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	// A voice note bills audio hours, so the gate that locks uploads locks the mic.
+	const voiceCapReached = Boolean(usageGates?.uploads_locked);
+	const [voiceCapOpened, voiceCapHandlers] = useDisclosure(false);
 	const userTurnCount = useMemo(
 		() =>
 			timeline.filter((item) => item.kind === "message" && item.role === "user")
@@ -1150,11 +1258,35 @@ export const AgenticChatPanel = ({
 			try {
 				await streamAgenticRun(targetRunId, {
 					afterSeq: fromSeq,
+					onDraft: (draft) => {
+						if (currentRunIdRef.current !== targetRunId) return;
+						setLiveDraft((previous) => ({
+							messageId: draft.message_id,
+							text: draft.text,
+							timestamp:
+								previous?.messageId === draft.message_id
+									? previous.timestamp
+									: new Date().toISOString(),
+						}));
+					},
 					onEvent: (event) => {
 						if (currentRunIdRef.current !== targetRunId) return;
 						mergeEvents([event]);
 						setAfterSeq((previous) => Math.max(previous, event.seq));
 						setStreamFailureCount(0);
+						if (event.event_type === "assistant.message") {
+							// Same React batch as the merge: draft and durable swap in one paint.
+							const payload = asObject(event.payload);
+							const durableMessageId =
+								typeof payload?.message_id === "string"
+									? payload.message_id
+									: null;
+							setLiveDraft((previous) =>
+								previous && previous.messageId === durableMessageId
+									? null
+									: previous,
+							);
+						}
 						if (event.event_type === "run.failed") {
 							setRunStatus("failed");
 						}
@@ -1213,6 +1345,7 @@ export const AgenticChatPanel = ({
 		setIsSubmitting(false);
 		setIsHydratingStoredRun(false);
 		setStreamFailureCount(0);
+		setLiveDraft(null);
 	}, [chatId, stopStream]);
 
 	useEffect(() => {
@@ -1360,7 +1493,11 @@ export const AgenticChatPanel = ({
 			: tail.kind === "message"
 				? `m:${tail.id}:${tail.content.length}`
 				: `t:${tail.id}:${tail.status}`;
-	// biome-ignore lint/correctness/useExhaustiveDependencies: tailKey and isRunInFlight are triggers, not reads. They exist so a growing tail and the live indicator re-fire this effect.
+	// The draft renders outside the timeline, so it needs its own growth key.
+	const draftKey = liveDraftMessage
+		? `d:${liveDraftMessage.timestamp}:${liveDraftMessage.content.length}`
+		: "";
+	// biome-ignore lint/correctness/useExhaustiveDependencies: tailKey, draftKey and isRunInFlight are triggers, not reads. They exist so a growing tail (timeline or draft) and the live indicator re-fire this effect.
 	useEffect(() => {
 		if (timeline.length === 0) return;
 		if (!hasScrolledInitiallyRef.current) {
@@ -1375,7 +1512,14 @@ export const AgenticChatPanel = ({
 			// run finishes, a single smooth scroll is the nicer motion.
 			scrollToBottom(isStreaming ? "auto" : "smooth");
 		}
-	}, [timeline.length, tailKey, isRunInFlight, isStreaming, scrollToBottom]);
+	}, [
+		timeline.length,
+		tailKey,
+		draftKey,
+		isRunInFlight,
+		isStreaming,
+		scrollToBottom,
+	]);
 
 	useEffect(() => {
 		return () => {
@@ -1392,18 +1536,23 @@ export const AgenticChatPanel = ({
 		});
 	}, [chatId, projectId, queryClient]);
 
-	const handleSubmit = async (overrideMessage?: string) => {
-		const message = (overrideMessage ?? input).trim();
-		if (!message || !projectId || !chatId) return;
+		const handleSubmit = async (overrideMessage?: string) => {
+			const message = (overrideMessage ?? input).trim();
+			if (!message || !projectId || !chatId) return;
 
-		if (atTurnLimit) {
-			upgradeHandlers.open();
-			return;
-		}
+			if (message.length > MAX_AGENTIC_MESSAGE_LENGTH) {
+				return;
+			}
+
+			if (atTurnLimit) {
+				upgradeHandlers.open();
+				return;
+			}
 
 		setError(null);
 		setIsSubmitting(true);
 		setInput("");
+		setLiveDraft(null);
 		setPendingUserMessage({
 			content: message,
 			focusedConversations: focusedContextConversations,
@@ -1881,11 +2030,19 @@ export const AgenticChatPanel = ({
 							</div>
 						)}
 
-					{/* Last node in the thread, after the newest user message, for as
-					    long as the run is in flight. There is no second indicator by
-					    the composer: one live thing, in the place the eye already is.
-					    Not while the chat is still loading, so the skeleton and the
-					    live line never claim the same space. */}
+					{liveDraftMessage && isRunInFlight && (
+						<div key="live-draft">
+							<ChatHistoryMessage
+								message={toHistoryMessage(liveDraftMessage)}
+								chatMode="agentic"
+							/>
+						</div>
+					)}
+
+					{/* Last node in the thread, below the draft bubble when one is
+					    streaming; hosts the stop control. Not while the chat is still
+					    loading, so the skeleton and the live line never claim the
+					    same space. */}
 					{!showExistingChatLoading && isRunInFlight && (
 						<LiveRunIndicator
 							headline={liveRunStatusText}
@@ -1921,6 +2078,12 @@ export const AgenticChatPanel = ({
 
 					{atTurnLimit && (
 						<ChatTurnLimitCard onUpgrade={upgradeHandlers.open} />
+					)}
+					{voice.errorKind && (
+						<VoiceInputError
+							kind={voice.errorKind}
+							onDismiss={voice.dismissError}
+						/>
 					)}
 					<form
 						onSubmit={(event) => {
@@ -1961,60 +2124,146 @@ export const AgenticChatPanel = ({
 								) : undefined
 							}
 							footerLeft={
-								<ConversationPickerButton
-									ariaLabel={t`Focus on conversations`}
-									label={<Trans>Focus on conversations</Trans>}
-									onClick={conversationPickerHandlers.open}
-									testId="agentic-select-conversations-button"
-								/>
+								isVoiceActive ? (
+									<Button
+										className="tap-target"
+										onClick={() => {
+											voice.cancel();
+											returnFocusToComposer();
+										}}
+										size="compact-sm"
+										type="button"
+										variant="subtle"
+										{...testId("chat-voice-cancel-button")}
+									>
+										<Trans>Cancel</Trans>
+									</Button>
+								) : (
+									<ConversationPickerButton
+										ariaLabel={t`Focus on conversations`}
+										label={<Trans>Focus on conversations</Trans>}
+										onClick={conversationPickerHandlers.open}
+										testId="agentic-select-conversations-button"
+									/>
+								)
 							}
 							footerRight={
-								<Button
-									type="submit"
-									size="md"
-									radius="md"
-									rightSection={
-										isSubmitting ? <Loader size={18} /> : <IconSend size={18} />
-									}
-									disabled={
-										isSubmitting || input.trim().length === 0 || atTurnLimit
-									}
-									{...testId("chat-send-button")}
-								>
-									<Trans>Send</Trans>
-								</Button>
+								voice.status === "recording" ? (
+									<Button
+										aria-label={t`Stop recording and turn it into text`}
+										className="tap-target"
+										onClick={voice.stop}
+										radius="md"
+										ref={voiceStopButtonRef}
+										rightSection={<IconPlayerStopFilled size={18} />}
+										size="md"
+										type="button"
+										{...testId("chat-voice-stop-button")}
+									>
+										<Trans>Stop</Trans>
+									</Button>
+								) : voice.status === "transcribing" ? null : (
+									<>
+										<VoiceInputButton
+											ariaLabel={t`Record a voice message`}
+											disabled={atTurnLimit || voice.isStarting}
+											locked={voiceCapReached && !atTurnLimit}
+											onClick={
+												voiceCapReached && !atTurnLimit
+													? () => {
+															emitFrozenFeatureAttempt();
+															voiceCapHandlers.open();
+														}
+													: voice.start
+											}
+											testId="chat-voice-record-button"
+											tooltip={
+												voiceCapReached && !atTurnLimit
+													? t`This workspace has used its recording hours. Upgrade to keep using voice.`
+													: undefined
+											}
+										/>
+											<Button
+												type="submit"
+												size="md"
+												radius="md"
+												rightSection={
+													isSubmitting ? (
+														<Loader size={18} />
+													) : (
+														<IconSend size={18} />
+													)
+												}
+												disabled={
+													isSubmitting ||
+													input.trim().length === 0 ||
+													input.length > MAX_AGENTIC_MESSAGE_LENGTH ||
+													atTurnLimit
+												}
+												{...testId("chat-send-button")}
+											>
+											<Trans>Send</Trans>
+										</Button>
+									</>
+								)
 							}
 						>
-							<Textarea
-								variant="unstyled"
-								styles={{
-									input: { backgroundColor: "transparent", resize: "none" },
-								}}
-								autosize
-								minRows={2}
-								maxRows={10}
-								value={input}
-								onChange={(event) => setInput(event.currentTarget.value)}
-								placeholder={t`Ask about your conversations...`}
-								disabled={atTurnLimit}
-								onKeyDown={(event) => {
-									if (event.key === "Enter" && !event.shiftKey) {
-										event.preventDefault();
-										void handleSubmit();
-									}
-								}}
-								{...testId("chat-input-textarea")}
-							/>
-						</ChatComposerShell>
-						<Group
-							justify="space-between"
-							gap="sm"
-							wrap="wrap"
-							className="mt-1"
-						>
-							<Text size="xs" className="hidden italic md:block">
-								<Trans>Use Shift + Enter to add a new line</Trans>
-							</Text>
+							{isVoiceActive ? (
+								// The input is closed while the mic is open, not merely
+								// disabled: one composer, one way in at a time.
+								<VoiceRecordingBar
+									elapsedMs={voice.elapsedMs}
+									isTranscribing={voice.status === "transcribing"}
+									levels={voice.levels}
+								/>
+							) : (
+								<Textarea
+									variant="unstyled"
+									styles={{
+										input: { backgroundColor: "transparent", resize: "none" },
+									}}
+									autosize
+									minRows={2}
+									maxRows={10}
+									ref={composerRef}
+									value={input}
+									onChange={(event) => setInput(event.currentTarget.value)}
+									placeholder={t`Ask about your conversations...`}
+									disabled={atTurnLimit}
+									onKeyDown={(event) => {
+										if (event.key === "Enter" && !event.shiftKey) {
+											event.preventDefault();
+											void handleSubmit();
+										}
+									}}
+									{...testId("chat-input-textarea")}
+								/>
+							)}
+							</ChatComposerShell>
+							{input.length > 25000 && (
+								<Text size="xs" c={input.length > MAX_AGENTIC_MESSAGE_LENGTH ? "red" : "orange"} fw={500} className="mt-1">
+									{input.length > MAX_AGENTIC_MESSAGE_LENGTH ? (
+										<Trans>
+											Message is too long (maximum 32,000 characters). Please attach conversations or shorten your message.
+										</Trans>
+									) : (
+										<Trans>
+											Approaching limit: {input.length.toLocaleString()} / 32,000 characters
+										</Trans>
+									)}
+								</Text>
+							)}
+							<Group
+								justify="space-between"
+								gap="sm"
+								wrap="wrap"
+								className="mt-1"
+							>
+							{!isVoiceActive && (
+								<Text size="xs" className="hidden italic md:block">
+									<Trans>Use Shift + Enter to add a new line</Trans>
+								</Text>
+							)}
 							<Text size="xs" className="italic">
 								<Trans>
 									dembrane can make mistakes. Please double-check responses.
@@ -2042,6 +2291,11 @@ export const AgenticChatPanel = ({
 				opened={upgradeOpened}
 				onClose={upgradeHandlers.close}
 				reason="chat_turns"
+			/>
+			<VoiceCapUpgradeModal
+				opened={voiceCapOpened}
+				onClose={voiceCapHandlers.close}
+				upgradeTier={usageGates?.upgrade_cta_tier ?? null}
 			/>
 		</Stack>
 	);

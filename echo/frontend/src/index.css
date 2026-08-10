@@ -108,6 +108,17 @@ strong, b {
 	font-feature-settings: var(--app-font-feature-settings) !important;
 }
 
+/* Touch-sized hit area for compact controls.
+ * Mantine's compact sizes set `height`, which a larger `min-height` still wins
+ * over, so this widens the target without changing how the control looks on a
+ * mouse. Apply it to any compact button a finger has to hit. */
+@media (pointer: coarse) {
+	.tap-target {
+		min-width: 44px;
+		min-height: 44px;
+	}
+}
+
 /* Scrollbar styling to match theme */
 /* Firefox */
 * {

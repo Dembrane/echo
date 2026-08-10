@@ -11,6 +11,7 @@ Cross-cutting rules (brand, UI, Directus, BFF, architecture, translations) live 
 - **Auth session state** lives under the `['auth','session']` React Query key. Invalidate it on login/logout before fetching `['users','me']`
 - **2FA flow**: Directus surfaces it by returning `INVALID_OTP`. Toggle a Mantine `PinInput` field and retry the same mutation. See `src/routes/auth/Login.tsx`
 - **Transitions**: login/logout flows call `useTransitionCurtain().runTransition()` before navigation; animations expect the Directus mutation promise to be awaited
+- **Draft chat behind the Ask picker**: opening "Select conversations" on `NewChatRoute` creates a real `project_chat` before any mode or message, because `ProjectConversationsPanel` only renders Select All when it has a server-side chat (`selectionChatId`). Those empty rows are deliberate. The draft is deleted on unmount unless it was handed off to the started chat, and its create/delete pass `silent` so picker clicks raise no chat toasts
 
 ## Buttons and brand colors
 

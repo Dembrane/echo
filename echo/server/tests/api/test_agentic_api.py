@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import time
 import asyncio
 from types import SimpleNamespace
@@ -1560,7 +1561,42 @@ async def test_post_stream_uses_hidden_agent_prompt_content_when_available(monke
 
     assert response.status_code == 200
     assert len(start_calls) == 1
+    # Two values, two jobs: the prompt drives the model, the host's own text is
+    # the only thing that may be shown back to them.
     assert start_calls[0]["user_message"] == "hidden-agent-prompt-content"
+    assert start_calls[0]["host_user_message"] == "visible-user-message"
+
+
+@pytest.mark.asyncio
+async def test_post_stream_falls_back_to_content_for_legacy_runs(monkeypatch) -> None:
+    """Runs created before the assembled prompt existed still execute."""
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    run = run_service.create_run(project_id="project-1", directus_user_id="user-1", status="queued")
+    run_service.append_event(run["id"], "user.message", {"content": "legacy-user-message"})
+
+    start_calls: list[dict[str, Any]] = []
+    session = _make_session(user_id="user-1")
+
+    async def _fake_start_claimed_turn(**kwargs: Any) -> None:
+        start_calls.append(kwargs)
+        run_service.append_event(kwargs["run_id"], "assistant.message", {"content": "done"})
+        run_service.set_status(kwargs["run_id"], "completed", latest_output="done")
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+        lease_result=True,
+        start_calls=start_calls,
+        start_impl=_fake_start_claimed_turn,
+    ) as client:
+        response = await client.post(f"/api/agentic/runs/{run['id']}/stream")
+
+    assert response.status_code == 200
+    assert len(start_calls) == 1
+    assert start_calls[0]["user_message"] == "legacy-user-message"
+    assert start_calls[0]["host_user_message"] == "legacy-user-message"
 
 
 @pytest.mark.asyncio
@@ -2970,3 +3006,105 @@ def test_strip_focus_blocks_removes_a_real_block_and_keeps_the_message() -> None
     content = f"{FOCUS_BLOCK_OPEN}\n- id: conv-1\n{FOCUS_BLOCK_CLOSE}\n\nUser Message: hello"
 
     assert strip_focus_blocks(content) == "User Message: hello"
+
+
+@pytest.mark.asyncio
+async def test_stream_live_events_forwards_drafts_without_cursor_advance(monkeypatch) -> None:
+    """Drafts pass through with no id line; the cursor advances only on seq events."""
+    run_id = "run-draft-1"
+
+    draft_payload = json.dumps(
+        {"event_type": "assistant.draft", "payload": {"message_id": "m-1", "text": "Hel"}}
+    )
+    durable_event = {
+        "event_type": "assistant.message",
+        "seq": 3,
+        "payload": {"content": "Hello", "message_id": "m-1"},
+    }
+    durable_payload = json.dumps(durable_event)
+
+    live_queue = [draft_payload, durable_payload]
+
+    class _FakePubSub:
+        pass
+
+    @asynccontextmanager
+    async def _fake_subscribe(_run_id: str):
+        yield _FakePubSub()
+
+    async def _fake_read(_pubsub: Any, timeout_seconds: float = 1.0) -> str | None:  # noqa: ARG001
+        if live_queue:
+            return live_queue.pop(0)
+        return None
+
+    async def _no_db_events(_run_id: str, after_seq: int) -> list[dict[str, Any]]:  # noqa: ARG001
+        return []
+
+    # After the queue drains, report the run terminal so the loop exits.
+    def _fake_get_run(_run_id: str) -> dict[str, Any]:
+        return {"id": run_id, "status": "completed" if not live_queue else "running"}
+
+    monkeypatch.setattr(agentic_api, "subscribe_live_events", _fake_subscribe)
+    monkeypatch.setattr(agentic_api, "read_live_event", _fake_read)
+    monkeypatch.setattr(agentic_api, "_list_events_after", _no_db_events)
+    monkeypatch.setattr(agentic_api, "_get_run_or_404", _fake_get_run)
+
+    frames = []
+    async for frame in agentic_api._stream_live_events(run_id, after_seq=0):
+        frames.append(frame)
+
+    draft_frames = [f for f in frames if "assistant.draft" in f]
+    assert len(draft_frames) == 1
+    assert draft_frames[0].startswith("event: assistant.draft\n")
+    assert "id:" not in draft_frames[0]
+    assert '"text": "Hel"' in draft_frames[0]
+
+    durable_frames = [f for f in frames if "assistant.message" in f]
+    assert len(durable_frames) == 1
+    assert durable_frames[0].startswith("id: 3\n")
+
+
+@pytest.mark.asyncio
+async def test_stream_live_events_forwards_drafts_to_reconnecting_clients(monkeypatch) -> None:
+    """A client reconnecting mid-message still gets the next draft snapshot."""
+    run_id = "run-draft-reconnect"
+
+    draft_payload = json.dumps(
+        {
+            "event_type": "assistant.draft",
+            "payload": {"message_id": "m-1", "text": "Full text so far, resent whole"},
+        }
+    )
+
+    live_queue = [draft_payload]
+
+    class _FakePubSub:
+        pass
+
+    @asynccontextmanager
+    async def _fake_subscribe(_run_id: str):
+        yield _FakePubSub()
+
+    async def _fake_read(_pubsub: Any, timeout_seconds: float = 1.0) -> str | None:  # noqa: ARG001
+        if live_queue:
+            return live_queue.pop(0)
+        return None
+
+    async def _no_db_events(_run_id: str, after_seq: int) -> list[dict[str, Any]]:  # noqa: ARG001
+        return []
+
+    def _fake_get_run(_run_id: str) -> dict[str, Any]:
+        return {"id": run_id, "status": "completed" if not live_queue else "running"}
+
+    monkeypatch.setattr(agentic_api, "subscribe_live_events", _fake_subscribe)
+    monkeypatch.setattr(agentic_api, "read_live_event", _fake_read)
+    monkeypatch.setattr(agentic_api, "_list_events_after", _no_db_events)
+    monkeypatch.setattr(agentic_api, "_get_run_or_404", _fake_get_run)
+
+    frames = []
+    async for frame in agentic_api._stream_live_events(run_id, after_seq=42):
+        frames.append(frame)
+
+    draft_frames = [f for f in frames if "assistant.draft" in f]
+    assert len(draft_frames) == 1
+    assert '"text": "Full text so far, resent whole"' in draft_frames[0]
