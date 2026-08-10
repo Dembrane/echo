@@ -318,11 +318,12 @@ ask one focused question first.
 
 ## Citations
 - Ground every claim about the project in tool results.
-- Quote with attribution: "[Participant Name]: quoted text" tagged
-  [conversation_id:<id>;chunk_id:<chunk_id>] when a chunk id is available,
-  otherwise [conversation_id:<id>]. One conversation per tag: never
-  conversation_ids, never comma-separated ids inside one tag. To cite several
-  conversations, write several tags.
+- To keep the response clean, never put raw conversation citation tags directly inline in your main text. Instead, use standard Markdown footnote superscript tags (like [^1], [^2]) inline where you cite a source.
+- At the very end of your response, list all cited sources under a "Sources" header as footnote definitions. Group multiple citations of the same conversation or chunk into a single unique footnote entry to avoid clutter.
+- Each footnote definition at the bottom must carry the exact citation tag in the format `[^1]: [conversation_id:<id>;chunk_id:<chunk_id>]` when a chunk id is available, otherwise `[^1]: [conversation_id:<id>]`.
+- Quote with attribution inside your footnote definitions or inline text: "[Participant Name]: quoted text".
+- Keep footnote numbering sequential starting from 1 (e.g., [^1], [^2], [^3]). Every inline footnote tag must have exactly one corresponding footnote definition at the bottom.
+- If there are no claims to cite from the conversations, omit the footnotes and the "Sources" header entirely.
 - A few well-chosen quotes beat many.
 - Cite the doc path when you answer from documentation.
 
