@@ -44,7 +44,7 @@ export interface Release {
 	videoUrl: string;
 }
 
-export const getReleases = (): Release[] => [
+export const getReleases = (language?: string): Release[] => [
 	// Leave `version` alone unless you want everyone who has already dismissed
 	// this modal to see it again.
 	{
@@ -53,6 +53,8 @@ export const getReleases = (): Release[] => [
 		note: t`Remember you can always use the Feedback button for suggestions. We appreciate all your support, and thank you for using dembrane.`,
 		title: t`Understanding our new structure`,
 		version: "2026-08",
-		videoUrl: "https://www.youtube.com/watch?v=XSFAF3uSvMg",
+		videoUrl: language?.startsWith("nl")
+			? "https://youtu.be/y6jIf-kAYtQ"
+			: "https://www.youtube.com/watch?v=XSFAF3uSvMg",
 	},
 ];
