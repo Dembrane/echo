@@ -1,17 +1,18 @@
 # conversation.py
 from typing import TYPE_CHECKING, Any, List, Iterable, Optional, ContextManager
 from logging import getLogger
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
 
 from fastapi import UploadFile
 
-from dembrane.utils import generate_uuid
+from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.directus import (
     DirectusClient,
     DirectusBadRequest,
     DirectusGenericException,
     directus,
+    is_unknown_field_error,
     directus_client_context,
 )
 
@@ -23,6 +24,83 @@ if TYPE_CHECKING:
 
 # allows for None to be a sentinel value
 _UNSET = object()
+
+# how far ahead of server time a client-supplied timestamp may sit
+_RECORDING_STARTED_AT_SKEW_TOLERANCE = timedelta(minutes=5)
+
+
+def _as_utc(value: Any) -> Optional[datetime]:
+    """Coerce a datetime or Directus timestamp string to tz-aware UTC."""
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str) and value:
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    else:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    # normalize a client-supplied offset so what we persist is always UTC
+    return parsed.astimezone(timezone.utc)
+
+
+def stamp_recording_started_at(
+    conversation_id: str,
+    candidate: datetime,
+    client: Optional[DirectusClient] = None,
+    allow_moving_earlier: bool = False,
+) -> None:
+    """Conditionally write recording_started_at on a conversation row.
+
+    A single conditional PATCH (Directus batch-update-by-query) so concurrent
+    writers cannot race. Default is fill-if-empty, so an untrusted client
+    timestamp can never overwrite a stored value. `allow_moving_earlier` is for
+    server-clocked callers only: it also wins over a later stored value.
+    Uploaded conversations are excluded in the filter, whoever calls this.
+    """
+    stamp = candidate.isoformat()
+    if allow_moving_earlier:
+        when: dict[str, Any] = {
+            "_or": [
+                {"recording_started_at": {"_null": True}},
+                {"recording_started_at": {"_gt": stamp}},
+            ]
+        }
+    else:
+        when = {"recording_started_at": {"_null": True}}
+
+    payload = {
+        "query": {
+            "filter": {
+                "_and": [
+                    {"id": {"_eq": conversation_id}},
+                    {
+                        "_or": [
+                            {"source": {"_null": True}},
+                            {"source": {"_neq": "DASHBOARD_UPLOAD"}},
+                        ]
+                    },
+                    when,
+                ]
+            }
+        },
+        "data": {"recording_started_at": stamp},
+    }
+    with directus_client_context(client) as active_client:
+        try:
+            active_client.patch("/items/conversation", json=payload)
+        except DirectusBadRequest as exc:
+            if is_unknown_field_error(exc, "recording_started_at"):
+                # column not deployed in this environment yet
+                logger.debug(
+                    "recording_started_at not writable for %s", conversation_id, exc_info=True
+                )
+            else:
+                logger.warning(
+                    "failed to stamp recording_started_at for %s: %s", conversation_id, exc
+                )
 
 
 def sanitize_url_for_logging(url: str) -> str:
@@ -62,6 +140,44 @@ class ConversationService:
         self, override_client: Optional[DirectusClient] = None
     ) -> ContextManager[DirectusClient]:
         return directus_client_context(override_client or self._directus_client)
+
+    def _stamp_recording_started_at(self, conversation: dict, timestamp: datetime) -> None:
+        """Stamp when recording began, from the (untrusted) chunk timestamp.
+
+        Fill-if-empty only: never overwrites a value the server-clocked liveness
+        path already wrote.
+        """
+        if "recording_started_at" not in conversation:
+            # column not deployed in this environment yet
+            logger.debug("recording_started_at absent on %s, skipping", conversation.get("id"))
+            return
+
+        if conversation.get("source") == "DASHBOARD_UPLOAD":
+            # upload time is not a recording start
+            return
+
+        if conversation.get("recording_started_at") is not None:
+            return
+
+        now = get_utc_timestamp()
+        candidate = _as_utc(timestamp) or now
+        # a device with a fast clock must not stamp a permanent future time
+        candidate = min(candidate, now + _RECORDING_STARTED_AT_SKEW_TOLERANCE)
+        # nor a slow one a time before the conversation existed; the stamp is
+        # written once, so a bad value would be permanent
+        created_at = _as_utc(conversation.get("created_at"))
+        if created_at is not None:
+            candidate = max(candidate, created_at)
+
+        try:
+            # the snapshot check above is only a cheap short-circuit; concurrent
+            # chunks race, so the write itself is conditional on the stored value
+            stamp_recording_started_at(conversation["id"], candidate, self._directus_client)
+            conversation["recording_started_at"] = candidate
+        except Exception:
+            logger.warning(
+                "failed to set recording_started_at for %s", conversation["id"], exc_info=True
+            )
 
     def _clear_conversation_token_count(self, conversation_id: str) -> None:
         """Transcript text changed: the persisted token count is stale."""
@@ -540,6 +656,10 @@ class ConversationService:
                     "transcript": transcript,
                 },
             )["data"]
+
+        # only audio chunks; a typed text message is not a recording start
+        if has_file:
+            self._stamp_recording_started_at(conversation, timestamp)
 
         if has_transcript:
             self._clear_conversation_token_count(conversation["id"])
