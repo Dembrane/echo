@@ -17,9 +17,12 @@ from __future__ import annotations
 
 import json
 from typing import Any, Optional
+from logging import getLogger
 from datetime import datetime, timezone
 
 from dembrane.redis_async import get_redis_client
+
+logger = getLogger("dembrane.conversation_liveness")
 
 # Participants ping ~every 5s. Keep the key alive long enough to ride out a
 # few missed pings or a brief network gap without flapping the live state.
@@ -124,6 +127,30 @@ def _parse_value(text: str) -> Optional[dict[str, Any]]:
     return {"seen": seen}
 
 
+async def _persist_recording_started_at(conversation_id: str, seen_iso: str) -> None:
+    """Mirror the first recording ping onto the conversation row (best-effort).
+
+    The Redis key expires after 90s, so this branch can re-fire mid-recording.
+    The write is conditional on the stored value, so a re-fire matches no rows.
+    """
+    candidate = _parse_dt(seen_iso)
+    if candidate is None:
+        return
+    try:
+        # imported here: the service module pulls in the wider Directus stack
+        from dembrane.async_helpers import run_in_thread_pool
+        from dembrane.service.conversation import stamp_recording_started_at
+
+        # server-clocked, so it may also correct a later client-stamped value
+        await run_in_thread_pool(
+            stamp_recording_started_at, conversation_id, candidate, allow_moving_earlier=True
+        )
+    except Exception:  # noqa: BLE001 - a ping must never fail on a DB hiccup
+        logger.warning(
+            "failed to persist recording_started_at for %s", conversation_id, exc_info=True
+        )
+
+
 async def mark_conversation_seen(
     conversation_id: str,
     *,
@@ -177,12 +204,17 @@ async def mark_conversation_seen(
     # Stamp the first "recording" ping (server time) and carry it forward, so the
     # monitor gets a real "recording started" without reading chunks.
     existing_started = existing.get("recording_started_at") if existing else None
+    first_recording_ping = False
     if existing_started:
         payload["recording_started_at"] = existing_started
     elif payload.get("state") == "recording":
         payload["recording_started_at"] = payload["seen"]
+        first_recording_ping = True
 
     await client.set(key, json.dumps(payload), ex=ttl)
+
+    if first_recording_ping:
+        await _persist_recording_started_at(conversation_id, payload["seen"])
 
 
 async def get_telemetry_many(

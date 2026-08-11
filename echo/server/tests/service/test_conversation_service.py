@@ -1,17 +1,19 @@
 import logging
 from io import BytesIO
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from unittest.mock import Mock, patch
 
 import pytest
 from fastapi import UploadFile
 
+from dembrane.utils import get_utc_timestamp
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import DirectusBadRequest
 from dembrane.service.conversation import (
     ConversationService,
     ConversationNotFoundException,
     ConversationNotOpenForParticipationException,
+    stamp_recording_started_at,
 )
 
 logger = logging.getLogger(__name__)
@@ -620,5 +622,328 @@ def test_chunk_timestamp_edge_cases(project):
     expected_precise = precise_time.isoformat()[:23] + "Z"
     assert chunk4["timestamp"] == expected_precise
     assert ".500Z" in chunk4["timestamp"]
+
+    conversation_service.delete(conversation["id"])
+
+
+def _mock_directus():
+    """Patch the client context so the conditional PATCH is captured, not sent."""
+    context = patch("dembrane.service.conversation.directus_client_context")
+    mock_context = context.start()
+    mock_client = Mock()
+    mock_context.return_value.__enter__.return_value = mock_client
+    return context, mock_client
+
+
+def _patch_body(mock_client):
+    return mock_client.patch.call_args.kwargs["json"]
+
+
+def _stamped_value(mock_client):
+    return _patch_body(mock_client)["data"]["recording_started_at"]
+
+
+def _stampable_conversation(**overrides):
+    conversation = {
+        "id": "conv-1",
+        "created_at": "2024-01-01T00:00:00Z",
+        "recording_started_at": None,
+    }
+    conversation.update(overrides)
+    return conversation
+
+
+def test_stamp_recording_started_at_sets_when_null():
+    """First chunk stamps recording_started_at from the chunk timestamp."""
+    conversation = _stampable_conversation()
+    timestamp = datetime(2024, 1, 15, 14, 30, 25)
+
+    context, mock_client = _mock_directus()
+    try:
+        conversation_service._stamp_recording_started_at(conversation, timestamp)
+
+        mock_client.patch.assert_called_once()
+        assert mock_client.patch.call_args.args[0] == "/items/conversation"
+        assert _stamped_value(mock_client) == timestamp.replace(tzinfo=timezone.utc).isoformat()
+    finally:
+        context.stop()
+
+
+def test_stamp_recording_started_at_does_not_overwrite():
+    """A later chunk leaves an existing recording_started_at alone."""
+    conversation = _stampable_conversation(recording_started_at="2024-01-15T14:30:25Z")
+
+    context, mock_client = _mock_directus()
+    try:
+        conversation_service._stamp_recording_started_at(
+            conversation, datetime(2024, 1, 15, 15, 0, 0)
+        )
+
+        mock_client.patch.assert_not_called()
+    finally:
+        context.stop()
+
+
+def test_chunk_path_write_is_fill_if_empty():
+    """A skewed client timestamp must not overwrite an existing (trusted) stamp."""
+    conversation = _stampable_conversation()
+
+    context, mock_client = _mock_directus()
+    try:
+        conversation_service._stamp_recording_started_at(
+            conversation, datetime(2024, 1, 15, 14, 30, 25)
+        )
+
+        conditions = _patch_body(mock_client)["query"]["filter"]["_and"]
+        assert {"id": {"_eq": "conv-1"}} in conditions
+        assert {"recording_started_at": {"_null": True}} in conditions
+        assert not any("_gt" in str(condition) for condition in conditions)
+    finally:
+        context.stop()
+
+
+def test_liveness_path_may_move_the_stamp_earlier():
+    """The server-clocked caller also wins over a later stored value."""
+    context, mock_client = _mock_directus()
+    try:
+        stamp_recording_started_at(
+            "conv-1",
+            datetime(2024, 1, 15, 14, 30, 25, tzinfo=timezone.utc),
+            allow_moving_earlier=True,
+        )
+
+        conditions = _patch_body(mock_client)["query"]["filter"]["_and"]
+        assert {
+            "_or": [
+                {"recording_started_at": {"_null": True}},
+                {"recording_started_at": {"_gt": "2024-01-15T14:30:25+00:00"}},
+            ]
+        } in conditions
+    finally:
+        context.stop()
+
+
+def test_stamp_filter_excludes_dashboard_uploads():
+    """Enforcement lives in the filter, so no caller can stamp an upload."""
+    context, mock_client = _mock_directus()
+    try:
+        stamp_recording_started_at("conv-1", datetime(2024, 1, 15, 14, 30, 25, tzinfo=timezone.utc))
+
+        conditions = _patch_body(mock_client)["query"]["filter"]["_and"]
+        assert {
+            "_or": [
+                {"source": {"_null": True}},
+                {"source": {"_neq": "DASHBOARD_UPLOAD"}},
+            ]
+        } in conditions
+    finally:
+        context.stop()
+
+
+def test_stamp_logs_warning_on_unexpected_directus_error(caplog):
+    """A 403/500 must be visible, not swallowed as 'column not deployed'."""
+    context, mock_client = _mock_directus()
+    try:
+        mock_client.patch.side_effect = DirectusBadRequest("403 Forbidden")
+        with caplog.at_level(logging.WARNING, logger="dembrane.service.conversation"):
+            stamp_recording_started_at(
+                "conv-1", datetime(2024, 1, 15, 14, 30, 25, tzinfo=timezone.utc)
+            )
+        assert any("403 Forbidden" in record.getMessage() for record in caplog.records)
+    finally:
+        context.stop()
+
+
+def test_stamp_stays_quiet_when_column_not_deployed(caplog):
+    """The pre-migration unknown-field error is expected, so no warning."""
+    context, mock_client = _mock_directus()
+    try:
+        mock_client.patch.side_effect = DirectusBadRequest(
+            'Invalid query. Field "recording_started_at" does not exist in collection "conversation".'
+        )
+        with caplog.at_level(logging.WARNING, logger="dembrane.service.conversation"):
+            stamp_recording_started_at(
+                "conv-1", datetime(2024, 1, 15, 14, 30, 25, tzinfo=timezone.utc)
+            )
+        assert caplog.records == []
+    finally:
+        context.stop()
+
+
+def test_stamp_recording_started_at_skips_when_column_missing():
+    """Migration not applied: the key is absent and no PATCH is attempted."""
+    conversation = {"id": "conv-1", "created_at": "2024-01-01T00:00:00Z"}
+
+    context, mock_client = _mock_directus()
+    try:
+        conversation_service._stamp_recording_started_at(
+            conversation, datetime(2024, 1, 15, 14, 30, 25)
+        )
+
+        mock_client.patch.assert_not_called()
+    finally:
+        context.stop()
+
+
+def test_stamp_recording_started_at_skips_dashboard_upload():
+    """Uploaded conversations are never stamped; upload time is not a recording start."""
+    conversation = _stampable_conversation(source="DASHBOARD_UPLOAD")
+
+    context, mock_client = _mock_directus()
+    try:
+        conversation_service._stamp_recording_started_at(
+            conversation, datetime(2024, 1, 15, 14, 30, 25)
+        )
+
+        mock_client.patch.assert_not_called()
+    finally:
+        context.stop()
+
+
+def test_stamp_recording_started_at_swallows_directus_failure():
+    """A stamp failure must never fail the chunk upload."""
+    conversation = _stampable_conversation()
+
+    context, mock_client = _mock_directus()
+    try:
+        mock_client.patch.side_effect = RuntimeError("directus down")
+        conversation_service._stamp_recording_started_at(
+            conversation, datetime(2024, 1, 15, 14, 30, 25)
+        )
+    finally:
+        context.stop()
+
+
+def test_stamp_recording_started_at_clamps_future_client_clock():
+    """A device clock running years ahead cannot stamp a far-future time."""
+    conversation = _stampable_conversation()
+    future = get_utc_timestamp() + timedelta(days=365)
+
+    context, mock_client = _mock_directus()
+    try:
+        conversation_service._stamp_recording_started_at(conversation, future)
+
+        written = _stamped_value(mock_client)
+        assert datetime.fromisoformat(written) < get_utc_timestamp() + timedelta(minutes=10)
+    finally:
+        context.stop()
+
+
+def test_stamp_recording_started_at_floors_past_client_clock():
+    """A device clock stuck in the past floors at the conversation's created_at."""
+    conversation = _stampable_conversation(created_at="2024-01-15T14:00:00Z")
+
+    context, mock_client = _mock_directus()
+    try:
+        conversation_service._stamp_recording_started_at(
+            conversation, datetime(2001, 6, 1, 9, 0, 0)
+        )
+
+        assert _stamped_value(mock_client) == "2024-01-15T14:00:00+00:00"
+    finally:
+        context.stop()
+
+
+def test_stamp_recording_started_at_normalizes_offset_to_utc():
+    """A client sending +02:00 is stored as the equivalent UTC time."""
+    conversation = _stampable_conversation()
+
+    context, mock_client = _mock_directus()
+    try:
+        conversation_service._stamp_recording_started_at(
+            conversation,
+            datetime.fromisoformat("2024-01-15T16:30:25+02:00"),
+        )
+
+        assert _stamped_value(mock_client) == "2024-01-15T14:30:25+00:00"
+    finally:
+        context.stop()
+
+
+def _create_chunk_with_mocks(**kwargs):
+    """Run create_chunk against mocked Directus; returns the stamp mock."""
+    context, mock_client = _mock_directus()
+    mock_client.create_item.return_value = {"data": {"id": "chunk-1"}}
+    try:
+        with (
+            patch.object(
+                conversation_service,
+                "get_by_id_or_raise",
+                return_value=_stampable_conversation(project_id="proj-1"),
+            ),
+            patch.object(
+                conversation_service.project_service,
+                "get_by_id_or_raise",
+                return_value={"is_conversation_allowed": True},
+            ),
+            patch.object(conversation_service, "_clear_conversation_token_count"),
+            patch.object(conversation_service, "_stamp_recording_started_at") as stamp,
+            patch("dembrane.tasks.task_process_conversation_chunk"),
+        ):
+            conversation_service.create_chunk(
+                conversation_id="conv-1",
+                timestamp=datetime(2024, 1, 15, 14, 30, 25),
+                **kwargs,
+            )
+            return stamp
+    finally:
+        context.stop()
+
+
+def test_create_chunk_does_not_stamp_for_text_chunk():
+    """A typed portal message must never set recording_started_at."""
+    stamp = _create_chunk_with_mocks(source="PORTAL_TEXT", transcript="hello")
+    stamp.assert_not_called()
+
+
+def test_create_chunk_stamps_for_audio_chunk():
+    stamp = _create_chunk_with_mocks(
+        source="PORTAL_AUDIO", file_url="https://s3.example.com/chunk.webm"
+    )
+    stamp.assert_called_once()
+
+
+@pytest.mark.integration
+def test_create_chunk_stamps_recording_started_at_once(project):
+    """First audio chunk sets recording_started_at; the second does not move it."""
+    conversation = conversation_service.create(
+        project_id=project["id"],
+        participant_name="Test Participant",
+    )
+
+    first_timestamp = get_utc_timestamp()
+    with patch.object(conversation_service.file_service, "save") as mock_save:
+        mock_save.return_value = "https://s3.example.com/first.mp3"
+        conversation_service.create_chunk(
+            conversation_id=conversation["id"],
+            file_obj=UploadFile(filename="first.mp3", file=BytesIO(b"audio content")),
+            timestamp=first_timestamp,
+            source="PORTAL_AUDIO",
+        )
+
+    stamped = conversation_service.get_by_id_or_raise(conversation["id"])["recording_started_at"]
+    assert stamped is not None
+
+    with patch.object(conversation_service.file_service, "save") as mock_save:
+        mock_save.return_value = "https://s3.example.com/second.mp3"
+        conversation_service.create_chunk(
+            conversation_id=conversation["id"],
+            file_obj=UploadFile(filename="second.mp3", file=BytesIO(b"audio content")),
+            timestamp=first_timestamp + timedelta(minutes=5),
+            source="PORTAL_AUDIO",
+        )
+
+    unchanged = conversation_service.get_by_id_or_raise(conversation["id"])
+    assert unchanged["recording_started_at"] == stamped
+
+    # a text chunk must not move it either
+    conversation_service.create_chunk(
+        conversation_id=conversation["id"],
+        transcript="typed message",
+        timestamp=first_timestamp - timedelta(minutes=5),
+        source="PORTAL_TEXT",
+    )
+    still_unchanged = conversation_service.get_by_id_or_raise(conversation["id"])
+    assert still_unchanged["recording_started_at"] == stamped
 
     conversation_service.delete(conversation["id"])
