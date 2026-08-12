@@ -219,7 +219,7 @@ msgid "{0, plural, one {Focusing on # conversation:} other {Focusing on # conver
 msgstr ""
 
 #. placeholder {0}: state.count
-#: src/features/sidebar/blocks/UpdatesBlock.tsx:46
+#: src/features/sidebar/blocks/InboxUpdatesRow.tsx:44
 msgid "{0, plural, one {Message from dembrane} other {Messages from dembrane}}"
 msgstr "{0, plural, one {Mensaje de dembrane} other {Mensajes de dembrane}}"
 
@@ -859,7 +859,7 @@ msgstr ""
 msgid "Action By"
 msgstr "Acción de"
 
-#: src/features/sidebar/views/InboxView.tsx:533
+#: src/features/sidebar/views/InboxView.tsx:537
 #: src/components/inbox/Inbox.tsx:468
 msgid "Action needed"
 msgstr ""
@@ -1204,7 +1204,7 @@ msgstr "Todas las archivos se han subido correctamente."
 msgid "All projects"
 msgstr ""
 
-#: src/features/sidebar/views/InboxView.tsx:159
+#: src/features/sidebar/views/InboxView.tsx:162
 msgid "All read"
 msgstr ""
 
@@ -4115,18 +4115,18 @@ msgstr "Error al generar el resumen. Inténtalo de nuevo más tarde."
 msgid "Failed to load webhooks"
 msgstr "Error al cargar los webhooks"
 
-#: src/components/announcement/hooks/index.ts:451
-#: src/components/announcement/hooks/index.ts:465
+#: src/components/announcement/hooks/index.ts:449
+#: src/components/announcement/hooks/index.ts:463
 msgid "Failed to mark all announcements as read"
 msgstr "Error al marcar todos los anuncios como leídos"
 
-#: src/components/announcement/hooks/index.ts:191
-#: src/components/announcement/hooks/index.ts:211
+#: src/components/announcement/hooks/index.ts:176
+#: src/components/announcement/hooks/index.ts:196
 msgid "Failed to mark announcement as read"
 msgstr "Error al marcar el anuncio como leído"
 
-#: src/components/announcement/hooks/index.ts:308
-#: src/components/announcement/hooks/index.ts:327
+#: src/components/announcement/hooks/index.ts:297
+#: src/components/announcement/hooks/index.ts:316
 msgid "Failed to mark announcement as unread"
 msgstr ""
 
@@ -4395,7 +4395,7 @@ msgstr ""
 msgid "for the dembrane team"
 msgstr ""
 
-#: src/features/sidebar/views/InboxView.tsx:140
+#: src/features/sidebar/views/InboxView.tsx:143
 #: src/components/inbox/Inbox.tsx:213
 msgid "For you"
 msgstr ""
@@ -4861,8 +4861,8 @@ msgstr ""
 msgid "Inactive"
 msgstr ""
 
-#: src/features/sidebar/views/InboxView.tsx:130
-#: src/features/sidebar/blocks/InboxBlock.tsx:23
+#: src/features/sidebar/views/InboxView.tsx:133
+#: src/features/sidebar/blocks/InboxBlock.tsx:37
 #: src/components/inbox/Inbox.tsx:165
 #: src/components/inbox/Inbox.tsx:180
 msgid "Inbox"
@@ -5714,7 +5714,7 @@ msgstr ""
 msgid "Manages members, workspaces, and organisation settings."
 msgstr ""
 
-#: src/features/sidebar/views/InboxView.tsx:156
+#: src/features/sidebar/views/InboxView.tsx:159
 msgid "Mark all as read"
 msgstr ""
 
@@ -5726,14 +5726,14 @@ msgstr "Marcar todos como leídos"
 msgid "Mark as attended"
 msgstr ""
 
-#: src/features/sidebar/views/InboxView.tsx:543
-#: src/features/sidebar/views/InboxView.tsx:643
+#: src/features/sidebar/views/InboxView.tsx:547
+#: src/features/sidebar/views/InboxView.tsx:649
 #: src/components/inbox/Inbox.tsx:399
 #: src/components/announcement/AnnouncementItem.tsx:161
 msgid "Mark as read"
 msgstr "Marcar como leído"
 
-#: src/features/sidebar/views/InboxView.tsx:643
+#: src/features/sidebar/views/InboxView.tsx:649
 #: src/components/announcement/AnnouncementItem.tsx:149
 msgid "Mark as unread"
 msgstr ""
@@ -6554,7 +6554,7 @@ msgstr ""
 msgid "Notes the assistant saved about this workspace from chats. Everyone in the workspace shares them."
 msgstr ""
 
-#: src/features/sidebar/views/InboxView.tsx:344
+#: src/features/sidebar/views/InboxView.tsx:347
 #: src/components/inbox/Inbox.tsx:268
 msgid "Nothing from dembrane right now."
 msgstr ""
@@ -7192,7 +7192,7 @@ msgstr "Pendiente"
 msgid "Pending access requests"
 msgstr ""
 
-#: src/features/sidebar/views/InboxView.tsx:316
+#: src/features/sidebar/views/InboxView.tsx:319
 msgid "Pending action"
 msgstr ""
 
@@ -9184,13 +9184,13 @@ msgstr ""
 msgid "Show IP addresses"
 msgstr "Mostrar direcciones IP"
 
-#: src/features/sidebar/views/InboxView.tsx:637
+#: src/features/sidebar/views/InboxView.tsx:643
 #: src/components/chat/CanvasSuggestionCard.tsx:293
 #: src/components/announcement/AnnouncementItem.tsx:127
 msgid "Show less"
 msgstr "Mostrar menos"
 
-#: src/features/sidebar/views/InboxView.tsx:637
+#: src/features/sidebar/views/InboxView.tsx:643
 #: src/components/workspace/SupportAccessSection.tsx:252
 #: src/components/chat/CanvasSuggestionCard.tsx:293
 #: src/components/announcement/AnnouncementItem.tsx:132
@@ -10855,7 +10855,7 @@ msgstr ""
 msgid "Updated."
 msgstr ""
 
-#: src/features/sidebar/views/InboxView.tsx:147
+#: src/features/sidebar/views/InboxView.tsx:150
 msgid "Updates"
 msgstr ""
 
@@ -11870,7 +11870,7 @@ msgstr ""
 msgid "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 msgstr ""
 
-#: src/features/sidebar/views/InboxView.tsx:255
+#: src/features/sidebar/views/InboxView.tsx:258
 #: src/components/inbox/Inbox.tsx:240
 msgid "You're all caught up."
 msgstr ""
