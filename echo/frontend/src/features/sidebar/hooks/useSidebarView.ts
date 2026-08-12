@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useLocation } from "react-router";
 import type { ResolvedSidebarView, SidebarViewId } from "../types";
+import { SIDEBAR_TAB_PARAM } from "./useSidebarOverlayLink";
 
 const LOCALE_RE = /^[a-z]{2}(-[A-Z]{2})?$/;
 
@@ -23,6 +24,8 @@ const OVERLAY_VIEWS = new Set(["inbox", "help"]);
 function withoutSidebarSearch(search: string): string {
 	const params = new URLSearchParams(search);
 	params.delete("sidebar");
+	// Overlay state must not leak onto the page the overlay closes back to.
+	params.delete(SIDEBAR_TAB_PARAM);
 	const next = params.toString();
 	return next ? `?${next}` : "";
 }

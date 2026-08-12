@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { isReadByMe } from "../announcementFilters";
 
 export const getTranslatedContent = (
 	announcement: Announcement,
@@ -54,10 +55,8 @@ function processAnnouncement(
 		id: announcement.id,
 		level: announcement.level as "info" | "urgent",
 		message,
-		read:
-			(announcement.activity as AnnouncementActivity[])?.some(
-				(a) => a.read === true,
-			) ?? false,
+		// Same definition the badge and the sidebar row use.
+		read: isReadByMe(announcement.activity as AnnouncementActivity[]),
 		title,
 	};
 }
