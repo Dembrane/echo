@@ -19,13 +19,8 @@ export const RELEASE_VIDEO_SEEN_KEY = "release_video_seen";
  * what lets getReleases() resolve its `t` strings against the active locale.
  */
 export const latestRelease = (
-	languageOrReleases?: string | Release[],
-): Release | undefined => {
-	if (Array.isArray(languageOrReleases)) {
-		return languageOrReleases[0];
-	}
-	return getReleases(languageOrReleases)[0];
-};
+	releases: Release[] = getReleases(),
+): Release | undefined => releases[0];
 
 /**
  * The seen/unseen gate.

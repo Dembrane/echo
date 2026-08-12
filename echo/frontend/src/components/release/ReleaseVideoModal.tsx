@@ -96,7 +96,7 @@ export const ReleaseVideoModal = ({
 	// direction: better a second showing than a dismissal that will not stick.
 	const [dismissed, setDismissed] = useState(false);
 
-	const release = latestRelease(language);
+	const release = latestRelease();
 	const releaseVersion = release?.version;
 
 	const markSeen = useMutation({
