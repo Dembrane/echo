@@ -56,28 +56,6 @@ class DirectusBadRequest(DirectusGenericException):
     """Exception raised for bad requests to Directus API (e.g., assertion errors)."""
 
 
-_UNKNOWN_FIELD_SIGNATURES = (
-    "invalid query",
-    "invalid_query",
-    "doesn't exist",
-    "does not exist",
-    "failedvalidation",
-)
-
-
-def is_unknown_field_error(detail: Any, field: str) -> bool:
-    """True when a Directus error says `field` is not in the collection.
-
-    Lets callers tolerate a column that exists in code but not yet in the
-    deployed Directus schema, without swallowing real 403/500 failures.
-    """
-    text = str(detail)
-    if field not in text:
-        return False
-    lowered = text.lower()
-    return any(signature in lowered for signature in _UNKNOWN_FIELD_SIGNATURES)
-
-
 def is_recoverable_error(response: requests.Response) -> bool:
     """
     Check if the response status code indicates a recoverable error.

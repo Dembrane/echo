@@ -741,7 +741,7 @@ def test_stamp_filter_excludes_dashboard_uploads():
 
 
 def test_stamp_logs_warning_on_unexpected_directus_error(caplog):
-    """A 403/500 must be visible, not swallowed as 'column not deployed'."""
+    """A Directus error is logged as a warning, not raised or swallowed."""
     context, mock_client = _mock_directus()
     try:
         mock_client.patch.side_effect = DirectusBadRequest("403 Forbidden")
@@ -750,37 +750,6 @@ def test_stamp_logs_warning_on_unexpected_directus_error(caplog):
                 "conv-1", datetime(2024, 1, 15, 14, 30, 25, tzinfo=timezone.utc)
             )
         assert any("403 Forbidden" in record.getMessage() for record in caplog.records)
-    finally:
-        context.stop()
-
-
-def test_stamp_stays_quiet_when_column_not_deployed(caplog):
-    """The pre-migration unknown-field error is expected, so no warning."""
-    context, mock_client = _mock_directus()
-    try:
-        mock_client.patch.side_effect = DirectusBadRequest(
-            'Invalid query. Field "recording_started_at" does not exist in collection "conversation".'
-        )
-        with caplog.at_level(logging.WARNING, logger="dembrane.service.conversation"):
-            stamp_recording_started_at(
-                "conv-1", datetime(2024, 1, 15, 14, 30, 25, tzinfo=timezone.utc)
-            )
-        assert caplog.records == []
-    finally:
-        context.stop()
-
-
-def test_stamp_recording_started_at_skips_when_column_missing():
-    """Migration not applied: the key is absent and no PATCH is attempted."""
-    conversation = {"id": "conv-1", "created_at": "2024-01-01T00:00:00Z"}
-
-    context, mock_client = _mock_directus()
-    try:
-        conversation_service._stamp_recording_started_at(
-            conversation, datetime(2024, 1, 15, 14, 30, 25)
-        )
-
-        mock_client.patch.assert_not_called()
     finally:
         context.stop()
 
