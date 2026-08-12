@@ -38,7 +38,6 @@ from fastapi import Query, Request, APIRouter, HTTPException
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
-from dembrane.directus import is_unknown_field_error
 from dembrane.settings import get_settings
 from dembrane.free_tier import resolve_project_gate, workspace_over_cap_active
 from dembrane.redis_async import get_redis_client
@@ -92,29 +91,6 @@ _CONVERSATION_DEFAULT_FIELDS = [
     "is_over_cap",
     "move_history",
 ]
-
-_RECORDING_STARTED_AT = "recording_started_at"
-
-
-async def _get_conversations(query_dict: dict) -> Any:
-    """List conversations, degrading if recording_started_at isn't deployed yet.
-
-    API pods can roll before the Directus snapshot applies; without this the
-    whole list would come back as a query error.
-    """
-    result = await async_directus.get_items("conversation", {"query": query_dict})
-    fields = query_dict.get("fields") or []
-    if _RECORDING_STARTED_AT not in fields:
-        return result
-    detail = result.get("error") if isinstance(result, dict) else None
-    if detail is None or not is_unknown_field_error(detail, _RECORDING_STARTED_AT):
-        return result
-    logger.warning(
-        "conversation list: %s missing in Directus, retrying without it", _RECORDING_STARTED_AT
-    )
-    retry = {**query_dict, "fields": [f for f in fields if f != _RECORDING_STARTED_AT]}
-    return await async_directus.get_items("conversation", {"query": retry})
-
 
 # Shared by the list/count/select-all endpoints so they stay consistent.
 # No `id`: Directus rejects _icontains on uuid fields and errors the query.
@@ -290,7 +266,13 @@ async def list_conversations(
             conv_filter, search_text.strip(), _CONVERSATION_SEARCH_FIELDS
         )
 
-    convs = await _get_conversations(query_dict) or []
+    convs = (
+        await async_directus.get_items(
+            "conversation",
+            {"query": query_dict},
+        )
+        or []
+    )
     if not isinstance(convs, list):
         return []
 

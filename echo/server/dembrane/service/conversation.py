@@ -12,7 +12,6 @@ from dembrane.directus import (
     DirectusBadRequest,
     DirectusGenericException,
     directus,
-    is_unknown_field_error,
     directus_client_context,
 )
 
@@ -92,15 +91,9 @@ def stamp_recording_started_at(
         try:
             active_client.patch("/items/conversation", json=payload)
         except DirectusBadRequest as exc:
-            if is_unknown_field_error(exc, "recording_started_at"):
-                # column not deployed in this environment yet
-                logger.debug(
-                    "recording_started_at not writable for %s", conversation_id, exc_info=True
-                )
-            else:
-                logger.warning(
-                    "failed to stamp recording_started_at for %s: %s", conversation_id, exc
-                )
+            logger.warning(
+                "failed to stamp recording_started_at for %s: %s", conversation_id, exc
+            )
 
 
 def sanitize_url_for_logging(url: str) -> str:
@@ -147,11 +140,6 @@ class ConversationService:
         Fill-if-empty only: never overwrites a value the server-clocked liveness
         path already wrote.
         """
-        if "recording_started_at" not in conversation:
-            # column not deployed in this environment yet
-            logger.debug("recording_started_at absent on %s, skipping", conversation.get("id"))
-            return
-
         if conversation.get("source") == "DASHBOARD_UPLOAD":
             # upload time is not a recording start
             return
