@@ -2,8 +2,10 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ArrowCounterClockwise, Bell, Check } from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import { useSearchParams } from "react-router";
+import { stateColors } from "@/colors";
 import {
 	useMarkAsReadMutation as useAnnouncementMarkAsReadMutation,
 	useMarkAsUnreadMutation as useAnnouncementMarkAsUnreadMutation,
@@ -32,6 +34,7 @@ import {
 	type PendingAction,
 	useTrainingPendingActions,
 } from "../hooks/usePendingActions";
+import { SIDEBAR_TAB_PARAM } from "../hooks/useSidebarOverlayLink";
 import { useSidebarView } from "../hooks/useSidebarView";
 import { ViewHeader } from "../primitives/ViewHeader";
 
@@ -39,7 +42,26 @@ type Tab = "for-you" | "announcements";
 
 export const InboxView = () => {
 	const { backTo } = useSidebarView();
-	const [activeTab, setActiveTab] = useState<Tab>("for-you");
+	// In the URL so the sidebar can deep-link to it. Param says "updates", the
+	// internal value stays "announcements".
+	const [searchParams, setSearchParams] = useSearchParams();
+	const activeTab: Tab =
+		searchParams.get(SIDEBAR_TAB_PARAM) === "updates"
+			? "announcements"
+			: "for-you";
+
+	const setActiveTab = useCallback(
+		(tab: Tab) => {
+			const next = new URLSearchParams(searchParams);
+			if (tab === "announcements") {
+				next.set(SIDEBAR_TAB_PARAM, "updates");
+			} else {
+				next.delete(SIDEBAR_TAB_PARAM);
+			}
+			setSearchParams(next, { replace: true });
+		},
+		[searchParams, setSearchParams],
+	);
 	const navigate = useI18nNavigate();
 	const { language } = useLanguage();
 
@@ -157,8 +179,8 @@ export const InboxView = () => {
 						<AnnouncementsPanel
 							loading={loadingAnnouncements}
 							announcements={processedAnnouncements}
-							onMarkRead={(id) =>
-								markAnnouncementRead.mutate({ announcementId: id })
+							onMarkRead={(id, activityIds) =>
+								markAnnouncementRead.mutate({ activityIds, announcementId: id })
 							}
 							onMarkUnread={(id, activityIds) =>
 								markAnnouncementUnread.mutate({
@@ -303,7 +325,7 @@ const PendingActionRow = ({
 interface AnnouncementsPanelProps {
 	loading: boolean;
 	announcements: ReturnType<typeof useProcessedAnnouncements>;
-	onMarkRead: (id: string) => void;
+	onMarkRead: (id: string, activityIds: string[]) => void;
 	onMarkUnread: (id: string, activityIds: string[]) => void;
 	isFetchingNextPage: boolean;
 	loadMoreRef: (node?: Element | null) => void;
@@ -494,7 +516,8 @@ const NotificationRowItem = ({
 								{renderInlineMarkdown(row.message)}
 							</div>
 						)}
-						<div className="mt-1 flex items-center justify-between gap-2">
+						{/* pr-6 clears the read toggle pinned to the bottom-right. */}
+						<div className="mt-1 flex items-center justify-between gap-2 pr-6">
 							{createdLabel && (
 								<span
 									className="truncate text-xs"
@@ -526,7 +549,7 @@ const NotificationRowItem = ({
 						e.stopPropagation();
 						onMarkRead();
 					}}
-					className="absolute bottom-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded opacity-0 transition-opacity hover:bg-black/[0.06] focus-visible:opacity-100 group-hover:opacity-100"
+					className="absolute bottom-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded transition-colors hover:bg-black/[0.06]"
 					style={{ color: "rgba(45, 45, 44, 0.6)" }}
 				>
 					<Check size={12} />
@@ -538,7 +561,7 @@ const NotificationRowItem = ({
 
 interface AnnouncementRowItemProps {
 	announcement: ProcessedAnnouncement;
-	onMarkRead: (id: string) => void;
+	onMarkRead: (id: string, activityIds: string[]) => void;
 	onMarkUnread: (id: string, activityIds: string[]) => void;
 }
 
@@ -551,20 +574,21 @@ const AnnouncementRowItem = ({
 	const [expanded, setExpanded] = useState(false);
 	const isUrgent = announcement.level === "urgent";
 	const isRead = !!announcement.read;
-	const accent = isUrgent ? "#c0392b" : "#4169e1";
+	// Dot only. The card's text stays graphite whatever the level.
+	const accent = isUrgent ? stateColors.errorMark : "#4169e1";
 
 	const unreadBg = isUrgent
-		? "rgba(192, 57, 43, 0.05)"
+		? stateColors.errorSurface
 		: "rgba(65, 105, 225, 0.04)";
 	const borderColor = isUrgent
-		? "rgba(192, 57, 43, 0.18)"
+		? stateColors.errorBorder
 		: "rgba(65, 105, 225, 0.18)";
 
 	const toggleRead = () => {
 		if (isRead) {
 			onMarkUnread(announcement.id, announcement.activityIds);
 		} else {
-			onMarkRead(announcement.id);
+			onMarkRead(announcement.id, announcement.activityIds);
 		}
 	};
 
@@ -604,7 +628,8 @@ const AnnouncementRowItem = ({
 						<Markdown content={announcement.message} />
 					</div>
 				)}
-				<div className="mt-1 flex items-center justify-between gap-2">
+				{/* pr-6 clears the read toggle pinned to the bottom-right. */}
+				<div className="mt-1 flex items-center justify-between gap-2 pr-6">
 					<span
 						className="truncate text-xs"
 						style={{ color: "rgba(45, 45, 44, 0.45)" }}
@@ -626,7 +651,7 @@ const AnnouncementRowItem = ({
 					e.stopPropagation();
 					toggleRead();
 				}}
-				className="absolute bottom-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded opacity-0 transition-opacity hover:bg-black/[0.06] focus-visible:opacity-100 group-hover:opacity-100"
+				className="absolute bottom-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded transition-colors hover:bg-black/[0.06]"
 				style={{ color: "rgba(45, 45, 44, 0.6)" }}
 			>
 				{isRead ? <ArrowCounterClockwise size={12} /> : <Check size={12} />}

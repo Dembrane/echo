@@ -5,6 +5,7 @@ import { NavLink, useMatch, useParams, useResolvedPath } from "react-router";
 import { SUPPORTED_LANGUAGES } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { TIMINGS } from "../animations/motion";
+import { useSidebarView } from "../hooks/useSidebarView";
 
 interface NavItemProps {
 	to: string;
@@ -19,6 +20,8 @@ interface NavItemProps {
 	accent?: string;
 	/** Render as a non-navigable, greyed-out row (e.g. a planned page). */
 	disabled?: boolean;
+	/** Indent to align with an icon-bearing row's label, for sub-rows. */
+	inset?: boolean;
 }
 
 export const BADGE_TONES = {
@@ -71,11 +74,15 @@ export const NavItem = ({
 	muted,
 	accent,
 	disabled,
+	inset,
 }: NavItemProps) => {
 	const localePath = useLocalePath(to);
 	const resolved = useResolvedPath(localePath);
 	const match = useMatch({ end: end ?? false, path: resolved.pathname });
-	const active = forcedActive ?? match != null;
+	// An overlay leaves the pathname alone, so a path-matched row would stay
+	// active under it and fight the overlay's row for the shared pill layoutId.
+	const { overlay } = useSidebarView();
+	const active = forcedActive ?? (match != null && !overlay);
 
 	if (disabled) {
 		return (
@@ -104,7 +111,7 @@ export const NavItem = ({
 		<NavLink
 			to={localePath}
 			end={end}
-			className="relative flex h-[30px] items-center gap-2 rounded-md px-2 text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
+			className={`relative flex h-[30px] items-center gap-2 rounded-md text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1] ${inset ? "pr-2 pl-8" : "px-2"}`}
 			style={{
 				color: active
 					? (accent ?? "#4169e1")
