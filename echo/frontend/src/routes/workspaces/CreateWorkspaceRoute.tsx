@@ -625,11 +625,11 @@ export const CreateWorkspaceRoute = () => {
 													<Text size="xs" c="dimmed">
 														{opt.description}
 													</Text>
-													{gated && (
-														<Text size="xs">
-															<Trans>Available on innovator and above.</Trans>
-														</Text>
-													)}
+														{gated && (
+															<Text size="xs">
+																<Trans>Available on a paid plan.</Trans>
+															</Text>
+														)}
 												</Stack>
 											</Paper>
 										</UnstyledButton>
@@ -656,9 +656,13 @@ export const CreateWorkspaceRoute = () => {
 								/>
 							)}
 
-							<Text size="xs" c="dimmed">
-								<Trans>You can change this later in workspace settings.</Trans>
-							</Text>
+								<Text size="xs" c="dimmed">
+									{canGoPrivate ? (
+										<Trans>You can change this later in workspace settings.</Trans>
+									) : (
+										<Trans>You can change this later in workspace settings after you add billing details.</Trans>
+									)}
+								</Text>
 						</Stack>
 					</Stepper.Step>
 
