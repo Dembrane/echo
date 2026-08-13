@@ -3,43 +3,45 @@ import type { LanguageCards } from "../ParticipantOnboardingCards";
 type LegalBasis = ParticipantProject["legal_basis"];
 
 export const useOnboardingCards = () => {
-	const getSystemCards = (
-		lang: string,
-		tutorialSlug?: string,
-		legalBasis?: LegalBasis,
-		privacyPolicyUrl?: string | null,
-	): LanguageCards[string] => {
-		const basis = legalBasis ?? "client-managed";
-
-		// Normalize and fallback invalid values to "none"
-		const normalizedSlug = tutorialSlug?.toLowerCase();
-		const validSlugs = ["none", "basic", "advanced"];
-		const finalSlug = validSlugs.includes(normalizedSlug || "")
-			? normalizedSlug
-			: "none";
-
-		// none: Only privacy statement
-		if (finalSlug === "none") {
-			const privacyCard = getPrivacyCard(lang, basis, privacyPolicyUrl);
-			return privacyCard ? [privacyCard] : [];
-		}
-
-		// basic: Tutorial slides + privacy statement
-		if (finalSlug === "basic") {
-			const tutorialCards = getBasicTutorialCards(lang);
-			const privacyCard = getPrivacyCard(lang, basis, privacyPolicyUrl);
-			return [...tutorialCards, ...(privacyCard ? [privacyCard] : [])];
-		}
-
-		// advanced: Full tutorial + privacy statement + best practices
-		if (finalSlug === "advanced") {
-			const tutorialCards = getAdvancedTutorialCards(
-				lang,
-				basis,
-				privacyPolicyUrl,
-			);
-			return tutorialCards;
-		}
+		const getSystemCards = (
+			lang: string,
+			tutorialSlug?: string,
+			legalBasis?: LegalBasis,
+			privacyPolicyUrl?: string | null,
+			organisationName?: string | null,
+		): LanguageCards[string] => {
+			const basis = legalBasis ?? "client-managed";
+	
+			// Normalize and fallback invalid values to "none"
+			const normalizedSlug = tutorialSlug?.toLowerCase();
+			const validSlugs = ["none", "basic", "advanced"];
+			const finalSlug = validSlugs.includes(normalizedSlug || "")
+				? normalizedSlug
+				: "none";
+	
+			// none: Only privacy statement
+			if (finalSlug === "none") {
+				const privacyCard = getPrivacyCard(lang, basis, privacyPolicyUrl, organisationName);
+				return privacyCard ? [privacyCard] : [];
+			}
+	
+			// basic: Tutorial slides + privacy statement
+			if (finalSlug === "basic") {
+				const tutorialCards = getBasicTutorialCards(lang);
+				const privacyCard = getPrivacyCard(lang, basis, privacyPolicyUrl, organisationName);
+				return [...tutorialCards, ...(privacyCard ? [privacyCard] : [])];
+			}
+	
+			// advanced: Full tutorial + privacy statement + best practices
+			if (finalSlug === "advanced") {
+				const tutorialCards = getAdvancedTutorialCards(
+					lang,
+					basis,
+					privacyPolicyUrl,
+					organisationName,
+				);
+				return tutorialCards;
+			}
 
 		return [];
 	};
@@ -494,11 +496,12 @@ export const useOnboardingCards = () => {
 		return tutorialCards[lang] || tutorialCards["en-US"] || [];
 	};
 
-	const getAdvancedTutorialCards = (
-		lang: string,
-		legalBasis: LegalBasis = "client-managed",
-		privacyPolicyUrl?: string | null,
-	): LanguageCards[string] => {
+		const getAdvancedTutorialCards = (
+			lang: string,
+			legalBasis: LegalBasis = "client-managed",
+			privacyPolicyUrl?: string | null,
+			organisationName?: string | null,
+		): LanguageCards[string] => {
 		const tutorialCards: Record<string, LanguageCards[string]> = {
 			"de-DE": [
 				{
@@ -561,7 +564,7 @@ export const useOnboardingCards = () => {
 								"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
 							title: "Datenschutz ist wichtig",
 						},
-						...(getPrivacyCard("de-DE", legalBasis, privacyPolicyUrl)?.slides ||
+													...(getPrivacyCard("de-DE", legalBasis, privacyPolicyUrl, organisationName)?.slides ||
 							[]),
 					],
 				},
@@ -655,7 +658,7 @@ export const useOnboardingCards = () => {
 								"Avoid sharing details you don't want the host to know. Be mindful and don't record others without their consent.",
 							title: "Privacy Matters",
 						},
-						...(getPrivacyCard("en-US", legalBasis, privacyPolicyUrl)?.slides ||
+													...(getPrivacyCard("en-US", legalBasis, privacyPolicyUrl, organisationName)?.slides ||
 							[]),
 					],
 				},
@@ -748,7 +751,7 @@ export const useOnboardingCards = () => {
 								"Evita compartir detalles que no quieras que el anfitrión conozca. Sé consciente y no grabes a otros sin su consentimiento.",
 							title: "La Privacidad Importa",
 						},
-						...(getPrivacyCard("es-ES", legalBasis, privacyPolicyUrl)?.slides ||
+													...(getPrivacyCard("es-ES", legalBasis, privacyPolicyUrl, organisationName)?.slides ||
 							[]),
 					],
 				},
@@ -843,7 +846,7 @@ export const useOnboardingCards = () => {
 								"Évitez de partager des détails que vous ne voulez pas que l'hôte connaisse. Soyez attentif et n'enregistrez pas les autres sans leur consentement.",
 							title: "La Confidentialité Compte",
 						},
-						...(getPrivacyCard("fr-FR", legalBasis, privacyPolicyUrl)?.slides ||
+													...(getPrivacyCard("fr-FR", legalBasis, privacyPolicyUrl, organisationName)?.slides ||
 							[]),
 					],
 				},
@@ -936,7 +939,7 @@ export const useOnboardingCards = () => {
 								"Non condividere dettagli che non vuoi far sapere all'host. Chiedi sempre il permesso prima di registrare altre persone.",
 							title: "La privacy conta",
 						},
-						...(getPrivacyCard("it-IT", legalBasis, privacyPolicyUrl)?.slides ||
+													...(getPrivacyCard("it-IT", legalBasis, privacyPolicyUrl, organisationName)?.slides ||
 							[]),
 					],
 				},
@@ -1029,7 +1032,7 @@ export const useOnboardingCards = () => {
 								"Vermijd het delen van details die je niet met de organisator wilt delen. Wees voorzichtig en neem anderen niet op zonder hun toestemming.",
 							title: "Privacy is belangrijk",
 						},
-						...(getPrivacyCard("nl-NL", legalBasis, privacyPolicyUrl)?.slides ||
+													...(getPrivacyCard("nl-NL", legalBasis, privacyPolicyUrl, organisationName)?.slides ||
 							[]),
 					],
 				},
@@ -1123,7 +1126,7 @@ export const useOnboardingCards = () => {
 								"Уникайте обміну деталями, які ви не хочете повідомляти організатору. Будьте уважні та не записуйте інших без їхньої згоди.",
 							title: "Конфіденційність важлива",
 						},
-						...(getPrivacyCard("uk-UA", legalBasis, privacyPolicyUrl)?.slides ||
+													...(getPrivacyCard("uk-UA", legalBasis, privacyPolicyUrl, organisationName)?.slides ||
 							[]),
 					],
 				},

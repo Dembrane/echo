@@ -57,6 +57,7 @@ import { SupportAccessSection } from "@/components/workspace/SupportAccessSectio
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { UsageCard } from "@/components/workspace/UsageCard";
 import { WorkspaceDataOwnershipSection } from "@/components/workspace/WorkspaceDataOwnershipSection";
+import { LegalBasisSettingsCard } from "@/components/settings/LegalBasisSettingsCard";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
@@ -234,6 +235,8 @@ async function updateWorkspace(
 		visibility?: "open_to_organisation" | "invite_only" | "private";
 		inherit_organisation_members?: boolean;
 		allow_support_access?: boolean;
+		legal_basis?: "client-managed" | "consent" | "dembrane-events";
+		privacy_policy_url?: string | null;
 	},
 ) {
 	const res = await fetch(
@@ -750,14 +753,21 @@ export const WorkspaceSettingsRoute = () => {
 												workspaceId={workspaceId}
 												section="general"
 											/>
-											<PrivacyAndDefaultsSection
-												settings={settings}
-												canEdit={canEditSettings}
-												workspaceId={workspaceId}
-												section="access"
-											/>
-											<Divider />
-											<WorkspaceDataOwnershipSection
+												<PrivacyAndDefaultsSection
+													settings={settings}
+													canEdit={canEditSettings}
+													workspaceId={workspaceId}
+													section="access"
+												/>
+												<Divider />
+												<LegalBasisSettingsCard
+													workspaceId={workspaceId}
+													currentLegalBasis={(settings.legal_basis as any) ?? "client-managed"}
+													currentPrivacyUrl={settings.privacy_policy_url ?? ""}
+													canEdit={canEditSettings}
+												/>
+												<Divider />
+												<WorkspaceDataOwnershipSection
 												settings={settings}
 												canEdit={canEditSettings}
 												workspaceId={workspaceId}

@@ -47,18 +47,11 @@ export const UserSettingsView = () => {
 				label={<Trans>Appearance</Trans>}
 				icon={PaletteIcon}
 			/>
-			<NavItem
-				to="/settings/assistant"
-				label={<Trans>Assistant</Trans>}
-				icon={SparkleIcon}
-			/>
-			{!isExternalOnly && (
 				<NavItem
-					to="/settings/project-defaults"
-					label={<Trans>Project defaults</Trans>}
-					icon={ScalesIcon}
+					to="/settings/assistant"
+					label={<Trans>Assistant</Trans>}
+					icon={SparkleIcon}
 				/>
-			)}
-		</nav>
+			</nav>
 	);
 };

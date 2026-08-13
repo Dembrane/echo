@@ -262,6 +262,8 @@ class ProjectUpdate(BaseModel):
     tutorial_slug: Optional[str] = None
     host_guide: Optional[dict[str, Any]] = None
     methodology_version_id: Optional[str] = None
+    legal_basis: Optional[str] = None
+    privacy_policy_url: Optional[str] = None
 
 
 @project_router.get("")
@@ -422,6 +424,12 @@ async def update_project(
     payload = body.model_dump(exclude_unset=True)
     if not payload:
         raise HTTPException(status_code=400, detail="No fields to update")
+
+    # Validate override legal_basis and privacy_policy_url if provided
+    target_legal_basis = payload.get("legal_basis") if "legal_basis" in payload else access.project.get("legal_basis")
+    target_privacy_url = payload.get("privacy_policy_url") if "privacy_policy_url" in payload else access.project.get("privacy_policy_url")
+    if target_legal_basis == "consent" and not (target_privacy_url and target_privacy_url.strip()):
+        raise HTTPException(status_code=400, detail="Privacy policy URL is required for consent-based legal basis")
 
     updated = await async_directus.update_item("project", project_id, payload)
     if isinstance(updated, dict) and "data" in updated:

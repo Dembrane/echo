@@ -64,26 +64,39 @@ import {
 import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 
-const FormSchema = z.object({
-	anonymize_transcripts: z.boolean(),
-	conversation_title_prompt: z.string(),
-	default_conversation_ask_for_participant_email: z.boolean(),
-	default_conversation_ask_for_participant_name: z.boolean(),
-	default_conversation_description: z.string(),
-	default_conversation_finish_text: z.string(),
-	default_conversation_title: z.string(),
-	default_conversation_transcript_prompt: z.string(),
-	default_conversation_tutorial_slug: z.string(),
-	enable_ai_title_and_tags: z.boolean(),
-	get_reply_mode: z.string(),
-	get_reply_prompt: z.string(),
-	is_get_reply_enabled: z.boolean(),
-	is_project_notification_subscription_allowed: z.boolean(),
-	is_verify_enabled: z.boolean(),
-	is_verify_on_finish_enabled: z.boolean(),
-	language: z.enum(["en", "nl", "de", "fr", "es", "it", "uk", "cs"]),
-	verification_topics: z.array(z.string()),
-});
+	const FormSchema = z.object({
+		anonymize_transcripts: z.boolean(),
+		conversation_title_prompt: z.string(),
+		default_conversation_ask_for_participant_email: z.boolean(),
+		default_conversation_ask_for_participant_name: z.boolean(),
+		default_conversation_description: z.string(),
+		default_conversation_finish_text: z.string(),
+		default_conversation_title: z.string(),
+		default_conversation_transcript_prompt: z.string(),
+		default_conversation_tutorial_slug: z.string(),
+		enable_ai_title_and_tags: z.boolean(),
+		get_reply_mode: z.string(),
+		get_reply_prompt: z.string(),
+		is_get_reply_enabled: z.boolean(),
+		is_project_notification_subscription_allowed: z.boolean(),
+		is_verify_enabled: z.boolean(),
+		is_verify_on_finish_enabled: z.boolean(),
+		language: z.enum(["en", "nl", "de", "fr", "es", "it", "uk", "cs"]),
+		verification_topics: z.array(z.string()),
+		legal_basis: z.enum(["inherit", "client-managed", "consent", "dembrane-events"]),
+		privacy_policy_url: z.string(),
+	}).refine(
+		(data) => {
+			if (data.legal_basis === "consent" && !data.privacy_policy_url.trim()) {
+				return false;
+			}
+			return true;
+		},
+		{
+			message: "Privacy policy URL is required for consent-based legal basis",
+			path: ["privacy_policy_url"],
+		}
+	);
 
 type ProjectPortalFormValues = z.infer<typeof FormSchema>;
 
@@ -303,12 +316,14 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			is_get_reply_enabled: project.is_get_reply_enabled ?? false,
 			is_project_notification_subscription_allowed:
 				project.is_project_notification_subscription_allowed ?? false,
-			is_verify_enabled: project.is_verify_enabled ?? false,
-			is_verify_on_finish_enabled: project.is_verify_on_finish_enabled ?? false,
-			language: projectLanguageCode,
-			verification_topics: selectedTopicDefaults,
-		};
-	}, [project.id, projectLanguageCode, selectedTopicDefaults]);
+				is_verify_enabled: project.is_verify_enabled ?? false,
+				is_verify_on_finish_enabled: project.is_verify_on_finish_enabled ?? false,
+				language: projectLanguageCode,
+				verification_topics: selectedTopicDefaults,
+				legal_basis: (project.legal_basis as any) ?? "inherit",
+				privacy_policy_url: project.privacy_policy_url ?? "",
+			};
+		}, [project.id, projectLanguageCode, selectedTopicDefaults, project.legal_basis, project.privacy_policy_url]);
 
 	const formResolver = useMemo(() => zodResolver(FormSchema), []);
 
@@ -468,13 +483,15 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			const serializedTopics =
 				normalizedTopics.length > 0 ? normalizedTopics.join(",") : null;
 
-			await updateProjectMutation.mutateAsync({
-				id: project.id,
-				payload: {
-					...(projectPayload as Partial<Project>),
-					selected_verification_key_list: serializedTopics,
-				},
-			});
+				await updateProjectMutation.mutateAsync({
+					id: project.id,
+					payload: {
+						...(projectPayload as Partial<Project>),
+						selected_verification_key_list: serializedTopics,
+						legal_basis: projectPayload.legal_basis === "inherit" ? null : projectPayload.legal_basis,
+						privacy_policy_url: projectPayload.legal_basis === "consent" ? projectPayload.privacy_policy_url || null : null,
+					},
+				});
 
 			await queryClient.invalidateQueries({
 				queryKey: ["verify", "topics", project.id],
@@ -720,33 +737,77 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												/>
 											)}
 										/>
-										<Box>
-											<Group gap="sm" mb={4}>
-												<Text fw={500} size="sm">
-													<Trans>Legal Basis</Trans>
-												</Text>
-												<IconScale size={18} stroke={1.5} />
-											</Group>
-											<Text size="sm" c="dimmed" mb={4}>
-												<Trans>
-													Determines under which GDPR legal basis personal data
-													is processed. This setting applies to all your
-													projects and can be changed in your account settings.
-												</Trans>
-											</Text>
-											<Anchor
-												size="sm"
-												onClick={() =>
-													settingsNavigate("/settings#legal-basis")
-												}
-												style={{ cursor: "pointer" }}
-											>
-												<Group gap={4}>
-													<Trans>Go to Settings</Trans>
-													<IconExternalLink size={14} />
+											<Box>
+												<Group gap="sm" mb={4}>
+													<Text fw={500} size="sm">
+														<Trans>Legal Basis</Trans>
+													</Text>
+													<IconScale size={18} stroke={1.5} />
 												</Group>
-											</Anchor>
-										</Box>
+												<Text size="sm" c="dimmed" mb={12}>
+													<Trans>
+														Determines under which GDPR legal basis personal data is processed.
+														You can choose a project-level override here, or inherit the workspace default.
+													</Trans>
+												</Text>
+												<Controller
+													name="legal_basis"
+													control={control}
+													render={({ field }) => (
+														<NativeSelect
+															value={field.value}
+															onChange={(e) => field.onChange(e.currentTarget.value)}
+															data={[
+																{ label: t`Inherit workspace default`, value: "inherit" },
+																{ label: t`Client-managed`, value: "client-managed" },
+																{ label: t`Consent`, value: "consent" },
+																{ label: t`dembrane events`, value: "dembrane-events" },
+															]}
+															mb={field.value === "consent" ? "xs" : "md"}
+														/>
+													)}
+												/>
+												<Controller
+													name="privacy_policy_url"
+													control={control}
+													render={({ field, fieldState }) => {
+														const currentLegalBasis = watch("legal_basis");
+														if (currentLegalBasis !== "consent") return null;
+														return (
+															<TextInput
+																label={t`Privacy Policy URL`}
+																placeholder="https://example.com/privacy"
+																description={t`Required for consent-based projects`}
+																value={field.value}
+																onChange={(e) => field.onChange(e.currentTarget.value)}
+																error={fieldState.error?.message}
+																required
+																mb="md"
+															/>
+														);
+													}}
+												/>
+												{(() => {
+													const currentLegalBasis = watch("legal_basis");
+													if (currentLegalBasis === "inherit" && project.workspace_id) {
+														return (
+															<Anchor
+																size="sm"
+																onClick={() =>
+																	settingsNavigate(`/w/${project.workspace_id}/settings`)
+																}
+																style={{ cursor: "pointer" }}
+															>
+																<Group gap={4}>
+																	<Trans>Configure Workspace Default</Trans>
+																	<IconExternalLink size={14} />
+																</Group>
+															</Anchor>
+														);
+													}
+													return null;
+												})()}
+											</Box>
 										<Controller
 											name="default_conversation_tutorial_slug"
 											control={control}

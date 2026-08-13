@@ -79,6 +79,7 @@ class PublicProjectSchema(BaseModel):
     # legal basis
     legal_basis: Optional[str] = None
     privacy_policy_url: Optional[str] = None
+    organisation_name: Optional[str] = None
 
 
 class PublicConversationChunkSchema(BaseModel):
@@ -251,10 +252,16 @@ async def get_project(
         if project.get("is_conversation_allowed", False) is False:
             raise HTTPException(status_code=403, detail="Conversation not open for participation")
 
-        # Resolve whitelabel logo, legal basis, and privacy policy URL.
-        # PREFERRED: from workspace (new model). FALLBACK: from project owner (legacy).
+        # Resolve whitelabel logo, legal basis, and privacy policy URL overrides.
+        # PREFERRED: from project override, SECOND: from workspace (new model), FALLBACK: from project owner (legacy).
         workspace_id = project.get("workspace_id")
-        resolved_from_workspace = False
+        resolved_legal_basis = False
+        resolved_privacy_url = False
+
+        if project.get("legal_basis"):
+            resolved_legal_basis = True
+        if project.get("privacy_policy_url"):
+            resolved_privacy_url = True
 
         if workspace_id:
             try:
@@ -264,7 +271,7 @@ async def get_project(
                     {
                         "query": {
                             "filter": {"id": {"_eq": workspace_id}, "deleted_at": {"_null": True}},
-                            "fields": ["logo_url", "legal_basis", "privacy_policy_url"],
+                            "fields": ["logo_url", "legal_basis", "privacy_policy_url", "org_id"],
                             "limit": 1,
                         }
                     },
@@ -273,18 +280,29 @@ async def get_project(
                     ws = ws_data[0]
                     if ws.get("logo_url"):
                         project["whitelabel_logo_url"] = ws["logo_url"]
-                    if ws.get("legal_basis"):
+                    if not resolved_legal_basis and ws.get("legal_basis"):
                         project["legal_basis"] = ws["legal_basis"]
-                        resolved_from_workspace = True
-                    if ws.get("privacy_policy_url"):
+                        resolved_legal_basis = True
+                    if not resolved_privacy_url and ws.get("privacy_policy_url"):
                         project["privacy_policy_url"] = ws["privacy_policy_url"]
+                        resolved_privacy_url = True
+
+                    org_id = ws.get("org_id")
+                    if org_id:
+                        org = await run_in_thread_pool(
+                            directus.get_item,
+                            "org",
+                            org_id,
+                        )
+                        if org and org.get("name"):
+                            project["organisation_name"] = org["name"]
             except Exception as e:
                 logger.warning(
                     f"Failed to resolve workspace settings for project {project_id}: {e}"
                 )
 
-        # Fallback to owner's user settings if workspace didn't provide legal_basis
-        if not resolved_from_workspace:
+        # Fallback to owner's user settings if workspace or project override didn't provide them
+        if not resolved_legal_basis or not resolved_privacy_url:
             directus_user_id = project.get("directus_user_id")
             if directus_user_id:
                 try:
@@ -301,14 +319,20 @@ async def get_project(
                         owner = user_data[0]
                         if not project.get("whitelabel_logo_url") and owner.get("whitelabel_logo"):
                             project["whitelabel_logo_url"] = owner["whitelabel_logo"]
-                        if not project.get("legal_basis"):
+                        if not resolved_legal_basis:
                             project["legal_basis"] = owner.get("legal_basis") or "client-managed"
-                        if not project.get("privacy_policy_url"):
+                            resolved_legal_basis = True
+                        if not resolved_privacy_url and owner.get("privacy_policy_url"):
                             project["privacy_policy_url"] = owner.get("privacy_policy_url")
+                            resolved_privacy_url = True
                 except Exception as e:
                     logger.warning(
                         f"Failed to resolve owner settings for project {project_id}: {e}"
                     )
+
+        # Ensure we always return at least client-managed if nothing resolved
+        if not project.get("legal_basis"):
+            project["legal_basis"] = "client-managed"
 
         return project
 

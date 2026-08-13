@@ -33,14 +33,12 @@ type SectionId =
 	| "account"
 	| "access"
 	| "appearance"
-	| "assistant"
-	| "project-defaults";
+	| "assistant";
 
 const resolveSection = (section?: string): SectionId =>
 	section === "access" ||
 	section === "appearance" ||
-	section === "assistant" ||
-	section === "project-defaults"
+	section === "assistant"
 		? section
 		: "account";
 
@@ -154,19 +152,9 @@ export const UserSettingsRoute = () => {
 
 								<AssistantMemoryCard />
 							</Stack>
-						)}
-
-						{activeSection === "project-defaults" && !isExternalOnly && (
-							<Stack gap="lg">
-								<Title order={3}>
-									<Trans>Project defaults</Trans>
-								</Title>
-
-								<LegalBasisSettingsCard />
-							</Stack>
-						)}
-					</ScrollArea>
-				</Box>
+							)}
+						</ScrollArea>
+					</Box>
 			</Stack>
 		</Container>
 	);

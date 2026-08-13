@@ -324,6 +324,8 @@ class UpdateWorkspaceRequest(BaseModel):
     # support. Staff can only join while this is true; flipping it off does not
     # auto-revoke an active support session (the 24h timer handles that).
     allow_support_access: Optional[bool] = None
+    legal_basis: Optional[Literal["client-managed", "consent", "dembrane-events"]] = None
+    privacy_policy_url: Optional[str] = None
 
 
 # Only http/https logos allowed — blocks javascript:/data:/file:// URIs
@@ -401,6 +403,16 @@ async def update_workspace_settings(
         previous = bool(ctx.workspace.get("allow_support_access"))
         support_access_changed = body.allow_support_access != previous
         payload["allow_support_access"] = body.allow_support_access
+
+    if body.legal_basis is not None:
+        payload["legal_basis"] = body.legal_basis
+    if body.privacy_policy_url is not None:
+        payload["privacy_policy_url"] = body.privacy_policy_url.strip() or None
+
+    target_legal_basis = payload.get("legal_basis") if "legal_basis" in payload else ctx.workspace.get("legal_basis")
+    target_privacy_url = payload.get("privacy_policy_url") if "privacy_policy_url" in payload else ctx.workspace.get("privacy_policy_url")
+    if target_legal_basis == "consent" and not (target_privacy_url and target_privacy_url.strip()):
+        raise HTTPException(status_code=400, detail="Privacy policy URL is required for consent-based legal basis")
 
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")

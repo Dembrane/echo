@@ -299,9 +299,11 @@ interface Project {
 	// Per-project opt-in for the living canvas beta. Null or false = off;
 	// canvas APIs 404 unless this AND the global ENABLE_CANVAS flag are on.
 	is_canvas_enabled: boolean | null;
-	is_verify_on_finish_enabled: boolean | null;
-	selected_verification_key_list: string | null;
-	conversations: string[] | Conversation[];
+			is_verify_on_finish_enabled: boolean | null;
+			selected_verification_key_list: string | null;
+			legal_basis: "client-managed" | "consent" | "dembrane-events" | null;
+			privacy_policy_url: string | null;
+			conversations: string[] | Conversation[];
 	tags: string[] | ProjectTag[];
 	project_analysis_runs: string[] | ProjectAnalysisRun[];
 	project_chats: string[] | ProjectChat[];
@@ -317,10 +319,11 @@ interface Project {
 }
 
 interface ParticipantProject extends Project {
-	whitelabel_logo_url: string | null;
-	legal_basis: "client-managed" | "consent" | "dembrane-events" | null;
-	privacy_policy_url: string | null;
-}
+		whitelabel_logo_url: string | null;
+		legal_basis: "client-managed" | "consent" | "dembrane-events" | null;
+		privacy_policy_url: string | null;
+		organisation_name: string | null;
+	}
 
 interface ProjectAnalysisRun {
 	created_at: string | null;

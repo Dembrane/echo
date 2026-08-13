@@ -15,23 +15,27 @@ import { IconAlertTriangle, IconScale } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
-import { isAdminRole } from "@/lib/roles";
 import { API_BASE_URL } from "@/config";
 import { toast } from "../common/Toaster";
-import { useMyAccess } from "./MyAccessCard";
 
-type LegalBasisValue = CustomDirectusUser["legal_basis"];
+type LegalBasisValue = "client-managed" | "consent" | "dembrane-events";
 
-export const LegalBasisSettingsCard = () => {
+interface LegalBasisSettingsCardProps {
+	workspaceId: string;
+	currentLegalBasis: LegalBasisValue;
+	currentPrivacyUrl: string;
+	canEdit: boolean;
+}
+
+export const LegalBasisSettingsCard: React.FC<LegalBasisSettingsCardProps> = ({
+	workspaceId,
+	currentLegalBasis,
+	currentPrivacyUrl,
+	canEdit,
+}) => {
 	const { data: user } = useCurrentUser();
 	const queryClient = useQueryClient();
 
-	const { data: accessData } = useMyAccess();
-	const isOrgAdmin = accessData?.organisations?.some((org) => isAdminRole(org.role)) ?? false;
-
-	const currentLegalBasis =
-		(user?.legal_basis as LegalBasisValue | null) ?? "client-managed";
-	const currentPrivacyUrl = (user?.privacy_policy_url as string | null) ?? "";
 	const userEmail = user?.email ?? "";
 	const isDembraneUser = userEmail.endsWith("@dembrane.com");
 
@@ -46,17 +50,22 @@ export const LegalBasisSettingsCard = () => {
 
 	const hasChanges =
 		legalBasis !== currentLegalBasis ||
-		(legalBasis === "consent" && privacyPolicyUrl !== currentPrivacyUrl);
+		privacyPolicyUrl !== currentPrivacyUrl;
+
+	const saveDisabled =
+		!hasChanges ||
+		!canEdit ||
+		(legalBasis === "consent" && !privacyPolicyUrl.trim());
 
 	const mutation = useMutation({
 		mutationFn: async () => {
 			const response = await fetch(
-				`${API_BASE_URL}/user-settings/legal-basis`,
+				`${API_BASE_URL}/v2/workspaces/${workspaceId}/settings`,
 				{
 					body: JSON.stringify({
 						legal_basis: legalBasis,
 						privacy_policy_url:
-							legalBasis === "consent" ? privacyPolicyUrl || null : null,
+							legalBasis === "consent" ? privacyPolicyUrl.trim() || null : null,
 					}),
 					credentials: "include",
 					headers: { "Content-Type": "application/json" },
@@ -73,7 +82,9 @@ export const LegalBasisSettingsCard = () => {
 			toast.error(error.message || t`Failed to update legal basis`);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["users", "me"] });
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "workspace-settings", workspaceId],
+			});
 			toast.success(t`Legal basis updated`);
 		},
 	});
@@ -109,7 +120,7 @@ export const LegalBasisSettingsCard = () => {
 					</Text>
 				</Alert>
 
-				{!isOrgAdmin && (
+				{!canEdit && (
 					<Alert variant="light" color="primary" title={t`Read-only`}>
 						<Text size="sm">
 							<Trans>
@@ -127,18 +138,18 @@ export const LegalBasisSettingsCard = () => {
 						<Radio
 							value="client-managed"
 							label={t`Client-managed`}
-							disabled={!isOrgAdmin}
+							disabled={!canEdit}
 						/>
 						<Radio
 							value="consent"
 							label={t`Consent`}
-							disabled={!isOrgAdmin}
+							disabled={!canEdit}
 						/>
 						{isDembraneUser && (
 							<Radio
 								value="dembrane-events"
 								label={t`dembrane events`}
-								disabled={!isOrgAdmin}
+								disabled={!canEdit}
 							/>
 						)}
 					</Stack>
@@ -147,11 +158,12 @@ export const LegalBasisSettingsCard = () => {
 				{legalBasis === "consent" && (
 					<TextInput
 						label={t`Organiser's Privacy Policy URL`}
-						disabled={!isOrgAdmin}
+						disabled={!canEdit}
 						description={t`Link to your organisation's privacy policy that will be shown to participants`}
 						placeholder="https://example.com/privacy-policy"
 						value={privacyPolicyUrl}
 						onChange={(e) => setPrivacyPolicyUrl(e.currentTarget.value)}
+						required
 					/>
 				)}
 
@@ -159,7 +171,7 @@ export const LegalBasisSettingsCard = () => {
 					<Button
 						onClick={() => mutation.mutate()}
 						loading={mutation.isPending}
-						disabled={!hasChanges || !isOrgAdmin}
+						disabled={saveDisabled}
 					>
 						<Trans>Save</Trans>
 					</Button>
