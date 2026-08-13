@@ -43,10 +43,11 @@ import {
 	ConversationPickerButton,
 } from "@/components/chat/ChatComposer";
 import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
+import { ChatTemplatesMenuConnected } from "@/components/chat/ChatTemplatesMenuConnected";
 import { ChatUpgradeModal } from "@/components/chat/FreeTierChatGate";
 import {
-	useInfiniteProjectChats,
 	useDeleteChatMutation,
+	useInfiniteProjectChats,
 	useInitializeChatModeMutation,
 	usePrefetchSuggestions,
 	useProjectChatContext,
@@ -300,6 +301,20 @@ export const NewChatRoute = () => {
 	});
 	const [pickerOpened, pickerHandlers] = useDisclosure(false);
 	const [agenticIntroOpened, agenticIntroHandlers] = useDisclosure(false);
+	const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
+
+	const handleTemplateSelect = ({ content }: { content: string }) => {
+		const previousDraft = draft;
+		if (previousDraft === content) return;
+		setDraft(content);
+		toast(t`Template applied`, {
+			action: {
+				label: t`Undo`,
+				onClick: () => setDraft(previousDraft),
+			},
+			duration: 5000,
+		});
+	};
 	// Draft chat behind the picker: created the moment the picker first
 	// opens, so ticks and Select All write through the server like any other
 	// chat, and the server keeps owning limits and counts. Handed off on
@@ -562,6 +577,12 @@ export const NewChatRoute = () => {
 						<Title order={2} fw={500}>
 							<Trans>Where would you like to start?</Trans>
 						</Title>
+						<ChatTemplatesMenuConnected
+							projectId={projectId}
+							externalOpen={templatesModalOpen}
+							onExternalClose={() => setTemplatesModalOpen(false)}
+							onTemplateSelect={handleTemplateSelect}
+						/>
 						{/* The picker has to be reachable from an empty selection: this
 						    screen is where a host narrows the chat before it exists. */}
 						<ChatComposerShell
@@ -640,6 +661,11 @@ export const NewChatRoute = () => {
 								value={draft}
 								onChange={(event) => setDraft(event.currentTarget.value)}
 								onKeyDown={(event) => {
+									if (event.key === "/" && draft.trim() === "") {
+										event.preventDefault();
+										setTemplatesModalOpen(true);
+										return;
+									}
 									if (event.key === "Enter" && !event.shiftKey) {
 										event.preventDefault();
 										startChat();

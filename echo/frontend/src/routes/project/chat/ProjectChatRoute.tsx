@@ -526,25 +526,24 @@ export const ProjectChatRoute = () => {
 		content: string;
 		key: string;
 	}) => {
-		const previousInput = normalizedInput.trim();
+		const previousInput = normalizedInput;
 		const previousTemplateKey = templateKey;
+
+		if (previousInput === content) return;
 
 		setInput(content);
 		setTemplateKey(key);
 
-		// Show undo toast if there was existing input
-		if (previousInput !== "") {
-			toast(t`Template applied`, {
-				action: {
-					label: t`Undo`,
-					onClick: () => {
-						setInput(previousInput);
-						setTemplateKey(previousTemplateKey);
-					},
+		toast(t`Template applied`, {
+			action: {
+				label: t`Undo`,
+				onClick: () => {
+					setInput(previousInput);
+					setTemplateKey(previousTemplateKey);
 				},
-				duration: 5000,
-			});
-		}
+			},
+			duration: 5000,
+		});
 	};
 
 	// Clear template selection when input becomes empty
