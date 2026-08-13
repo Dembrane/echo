@@ -85,7 +85,7 @@ msgstr "\"Verify\" available soon"
 msgid "(direct workspace access)"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:677
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:684
 #: src/routes/project/CreateProjectRoute.tsx:336
 msgid "(missing)"
 msgstr ""
@@ -102,7 +102,7 @@ msgstr "(optional)"
 msgid "(Partner)"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:685
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:692
 msgid "(unknown)"
 msgstr ""
 
@@ -302,7 +302,7 @@ msgid "select.all.modal.added.count"
 msgstr "{0} added"
 
 #. placeholder {0}: memberEmails.length
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:713
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:720
 msgid "{0} added from your organisation"
 msgstr ""
 
@@ -768,7 +768,7 @@ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1840
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:576
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:702
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:709
 #: src/routes/project/CreateProjectRoute.tsx:270
 #: src/routes/project/CreateProjectRoute.tsx:359
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:121
@@ -1700,12 +1700,20 @@ msgid "Automatically send conversation data to your other tools and services whe
 msgstr "Automatically send conversation data to your other tools and services when events occur."
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:630
-msgid "Available on innovator and above."
-msgstr ""
+msgid "Available on a paid plan."
+msgstr "Available on a paid plan."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1834
-msgid "Available on innovator and above. Upgrade to unlock."
-msgstr ""
+msgid "Available on a paid plan. Upgrade to unlock."
+msgstr "Available on a paid plan. Upgrade to unlock."
+
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:630
+#~ msgid "Available on innovator and above."
+#~ msgstr ""
+
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1834
+#~ msgid "Available on innovator and above. Upgrade to unlock."
+#~ msgstr ""
 
 #: src/components/settings/AccountSettingsCard.tsx:105
 msgid "Avatar removed"
@@ -1721,7 +1729,7 @@ msgid "Away"
 msgstr ""
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:354
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:735
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:742
 #: src/routes/project/CreateProjectRoute.tsx:403
 #: src/routes/project/report/ProjectReportRoute.tsx:604
 #: src/routes/organisation/OrganisationRoute.tsx:694
@@ -1957,7 +1965,7 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1136
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1310
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1907
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:735
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:742
 #: src/routes/project/ProjectsHome.tsx:441
 #: src/routes/project/CreateProjectRoute.tsx:403
 #: src/routes/project/report/ProjectReportRoute.tsx:288
@@ -2982,7 +2990,7 @@ msgid "Create Webhook"
 msgstr "Create Webhook"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:409
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:759
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:766
 msgid "Create workspace"
 msgstr ""
 
@@ -5964,7 +5972,7 @@ msgstr "My templates"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1518
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:437
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:674
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:681
 #: src/routes/project/CreateProjectRoute.tsx:209
 #: src/routes/project/CreateProjectRoute.tsx:333
 #: src/components/project/ProjectBasicEdit.tsx:104
@@ -6107,7 +6115,7 @@ msgstr ""
 msgid "Newest First"
 msgstr "Newest First"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:747
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:754
 #: src/routes/project/CreateProjectRoute.tsx:411
 #: src/components/invite/InviteModal.tsx:823
 msgid "Next"
@@ -6292,7 +6300,7 @@ msgstr "No new feedback detected yet. Please continue your discussion and try ag
 msgid "No new invites needed. Check the list below."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:717
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:724
 msgid "No one added yet"
 msgstr ""
 
@@ -6886,7 +6894,7 @@ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:112
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:459
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:682
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:689
 #: src/routes/onboarding/OnboardingRoute.tsx:122
 #: src/features/sidebar/views/org/OrgHomeView.tsx:76
 #: src/features/sidebar/hooks/useSearchHits.ts:134
@@ -6995,7 +7003,7 @@ msgid "Overview - Themes & patterns"
 msgstr "Overview - Themes & patterns"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:476
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:690
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:697
 msgid "Ownership"
 msgstr ""
 
@@ -7209,7 +7217,7 @@ msgstr ""
 msgid "people"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:709
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:716
 #: src/routes/organisation/OrganisationRoute.tsx:1354
 msgid "People"
 msgstr ""
@@ -8397,7 +8405,7 @@ msgstr "Retry Upload"
 msgid "Return home"
 msgstr "Torna alla home"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:665
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:672
 #: src/routes/project/CreateProjectRoute.tsx:327
 msgid "Review"
 msgstr ""
@@ -8417,7 +8425,7 @@ msgstr ""
 msgid "Review and edit below. This adds a check that runs against each conversation. Verification must be enabled for it to run. Nothing changes until you add it."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:668
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:675
 msgid "Review before creating."
 msgstr ""
 
@@ -9001,7 +9009,7 @@ msgstr ""
 msgid "sent to the dembrane team"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:694
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:701
 msgid "Separate (client)"
 msgstr ""
 
@@ -10710,7 +10718,7 @@ msgstr "Unable to load the generated outcome. Please try again."
 msgid "Unable to process this chunk"
 msgstr "Unable to process this chunk"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:696
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:703
 msgid "Under your organisation"
 msgstr ""
 
@@ -10913,7 +10921,7 @@ msgstr ""
 msgid "Upgrade your plan to create more reports in this workspace."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:770
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:777
 msgid "Upgrade your plan to create more workspaces in this organisation."
 msgstr ""
 
@@ -11641,7 +11649,7 @@ msgstr ""
 msgid "workspaces"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:769
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:776
 #: src/routes/organisation/OrganisationRoute.tsx:1425
 #: src/routes/admin/AdminSettingsRoute.tsx:1685
 #: src/features/sidebar/views/org/OrgHomeView.tsx:140
@@ -11720,9 +11728,13 @@ msgstr ""
 msgid "You can change this later in project settings."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:660
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:663
+msgid "You can change this later in workspace settings after you add billing details."
+msgstr "You can change this later in workspace settings after you add billing details."
+
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:661
 msgid "You can change this later in workspace settings."
-msgstr ""
+msgstr "You can change this later in workspace settings."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:269
 msgid "You can navigate away and come back later. Your report will continue generating in the background."
