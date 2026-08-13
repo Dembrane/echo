@@ -767,26 +767,26 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														/>
 													)}
 												/>
-												<Controller
-													name="privacy_policy_url"
-													control={control}
-													render={({ field, fieldState }) => {
-														const currentLegalBasis = watch("legal_basis");
-														if (currentLegalBasis !== "consent") return null;
-														return (
-															<TextInput
-																label={t`Privacy Policy URL`}
-																placeholder="https://example.com/privacy"
-																description={t`Required for consent-based projects`}
-																value={field.value}
-																onChange={(e) => field.onChange(e.currentTarget.value)}
-																error={fieldState.error?.message}
-																required
-																mb="md"
-															/>
-														);
-													}}
-												/>
+													<Controller
+														name="privacy_policy_url"
+														control={control}
+														render={({ field, fieldState }) => {
+															const currentLegalBasis = watch("legal_basis");
+															if (currentLegalBasis !== "consent") return <></>;
+															return (
+																<TextInput
+																	label={t`Privacy Policy URL`}
+																	placeholder="https://example.com/privacy"
+																	description={t`Required for consent-based projects`}
+																	value={field.value}
+																	onChange={(e) => field.onChange(e.currentTarget.value)}
+																	error={fieldState.error?.message}
+																	required
+																	mb="md"
+																/>
+															);
+														}}
+													/>
 												{(() => {
 													const currentLegalBasis = watch("legal_basis");
 													if (currentLegalBasis === "inherit" && project.workspace_id) {

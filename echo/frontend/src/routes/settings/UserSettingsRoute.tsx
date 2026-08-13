@@ -12,7 +12,6 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AccountSettingsCard } from "@/components/settings/AccountSettingsCard";
@@ -48,26 +47,8 @@ export const UserSettingsRoute = () => {
 	const navigate = useI18nNavigate();
 	const { section: urlSection } = useParams<{ section?: string }>();
 
-	const { data: accessData } = useQuery<{
-		organisations: Array<{ id: string }>;
-	} | null>({
-		queryFn: async () => {
-			const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
-				credentials: "include",
-			});
-			if (!res.ok) return null;
-			return res.json();
-		},
-		queryKey: ["v2", "workspaces"],
-		staleTime: 60_000,
-	});
-
 	const requestedSection = resolveSection(urlSection);
-	const isExternalOnly = (accessData?.organisations.length ?? 0) === 0;
-	const activeSection =
-		isExternalOnly && requestedSection === "project-defaults"
-			? "account"
-			: requestedSection;
+	const activeSection = requestedSection;
 	const isTwoFactorEnabled = Boolean(user?.tfa_enabled);
 
 	return (

@@ -117,6 +117,8 @@ interface WorkspaceDetail {
 	is_external_client: boolean;
 	data_owner_org_name: string | null;
 	data_owner_email: string | null;
+	legal_basis?: string | null;
+	privacy_policy_url?: string | null;
 }
 
 async function deleteWorkspace(workspaceId: string) {

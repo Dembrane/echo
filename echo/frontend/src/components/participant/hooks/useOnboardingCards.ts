@@ -1170,6 +1170,7 @@ export const useOnboardingCards = () => {
 		lang: string,
 		legalBasis: LegalBasis = "client-managed",
 		privacyPolicyUrl?: string | null,
+		organisationName?: string | null,
 	): LanguageCards[string][number] | null => {
 		if (legalBasis === "client-managed") {
 			return getClientManagedPrivacyCard(lang);
@@ -1177,7 +1178,7 @@ export const useOnboardingCards = () => {
 		if (legalBasis === "dembrane-events") {
 			return getDembraneEventsPrivacyCard(lang);
 		}
-		return getConsentPrivacyCard(lang, privacyPolicyUrl);
+		return getConsentPrivacyCard(lang, privacyPolicyUrl, organisationName);
 	};
 
 	const getClientManagedPrivacyCard = (
@@ -1283,8 +1284,10 @@ export const useOnboardingCards = () => {
 	const getConsentPrivacyCard = (
 		lang: string,
 		privacyPolicyUrl?: string | null,
+		organisationName?: string | null,
 	): LanguageCards[string][number] | null => {
 		const policyUrl = privacyPolicyUrl || undefined;
+		const org = organisationName || null;
 
 		const cards: Record<string, LanguageCards[string][number]> = {
 			"de-DE": {
@@ -1296,15 +1299,19 @@ export const useOnboardingCards = () => {
 								"Ich stimme zu, dass mein Gespräch aufgezeichnet und verarbeitet wird.",
 							required: true,
 						},
-						content:
-							"Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
+						content: org
+							? `${org} ist dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden. dembrane verarbeitet Ihr Gespräch im Auftrag dieser.`
+							: "Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
 						cta: "Ich verstehe.",
-						extraHelp:
-							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
+						extraHelp: org
+							? `Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an ${org}.`
+							: "Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
 						...(policyUrl
 							? {
 									link: {
-										label: "Datenschutzrichtlinie des Organisators lesen",
+										label: org
+											? `Datenschutzrichtlinie von ${org} lesen`
+											: "Datenschutzrichtlinie des Organisators lesen",
 										url: policyUrl,
 									},
 								}
@@ -1322,15 +1329,19 @@ export const useOnboardingCards = () => {
 								"I consent to my conversation being recorded and processed.",
 							required: true,
 						},
-						content:
-							"The organiser is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.",
+						content: org
+							? `${org} is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.`
+							: "The organiser is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.",
 						cta: "I understand",
-						extraHelp:
-							"Recordings are transcribed and analysed for insights. Your data is stored on secured servers in Europe, is not used to train AI models, and is deleted within 30 days after the project has ended.\n\nQuestions about your privacy? Contact the organiser directly.",
+						extraHelp: org
+							? `Recordings are transcribed and analysed for insights. Your data is stored on secured servers in Europe, is not used to train AI models, and is deleted within 30 days after the project has ended.\n\nQuestions about your privacy? Contact ${org} directly.`
+							: "Recordings are transcribed and analysed for insights. Your data is stored on secured servers in Europe, is not used to train AI models, and is deleted within 30 days after the project has ended.\n\nQuestions about your privacy? Contact the organiser directly.",
 						...(policyUrl
 							? {
 									link: {
-										label: "Read the organiser's privacy policy",
+										label: org
+											? `Read ${org}'s privacy policy`
+											: "Read the organiser's privacy policy",
 										url: policyUrl,
 									},
 								}
@@ -1348,15 +1359,19 @@ export const useOnboardingCards = () => {
 								"Doy mi consentimiento para que mi conversación sea grabada y procesada.",
 							required: true,
 						},
-						content:
-							"El organizador es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.",
+						content: org
+							? `${org} es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.`
+							: "El organizador es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.",
 						cta: "Entiendo",
-						extraHelp:
-							"Las grabaciones se transcriben y analizan para obtener información. Sus datos se almacenan en servidores seguros en Europa, no se utilizan para entrenar modelos de IA y se eliminan dentro de los 30 días posteriores a la finalización del proyecto.\n\n¿Preguntas sobre su privacidad? Contacte directamente al organizador.",
+						extraHelp: org
+							? `Las grabaciones se transcriben y analizan para obtener información. Sus datos se almacenan en servidores seguros en Europa, no se utilizan para entrenar modelos de IA y se eliminan dentro de los 30 días posteriores a la finalización del proyecto.\n\n¿Preguntas sobre su privacidad? Contacte directamente a ${org}.`
+							: "Las grabaciones se transcriben y analizan para obtener información. Sus datos se almacenan en servidores seguros en Europa, no se utilizan para entrenar modelos de IA y se eliminan dentro de los 30 días posteriores a la finalización del proyecto.\n\n¿Preguntas sobre su privacidad? Contacte directamente al organizador.",
 						...(policyUrl
 							? {
 									link: {
-										label: "Lea la política de privacidad del organizador",
+										label: org
+											? `Lea la política de privacidad de ${org}`
+											: "Lea la política de privacidad del organizador",
 										url: policyUrl,
 									},
 								}
@@ -1374,16 +1389,19 @@ export const useOnboardingCards = () => {
 								"Je consens à ce que ma conversation soit enregistrée et traitée.",
 							required: true,
 						},
-						content:
-							"L'organisateur est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.",
+						content: org
+							? `${org} est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.`
+							: "L'organisateur est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.",
 						cta: "Je comprends",
-						extraHelp:
-							"Les enregistrements sont transcrits et analysés pour en tirer des enseignements. Vos données sont stockées sur des serveurs sécurisés en Europe, ne sont pas utilisées pour entraîner des modèles d'IA et sont supprimées dans les 30 jours suivant la fin du projet.\n\nDes questions sur votre vie privée ? Contactez directement l'organisateur.",
+						extraHelp: org
+							? `Les enregistrements sont transcrits et analysés pour en tirer des enseignements. Vos données sont stockées sur des serveurs sécurisés en Europe, ne sont pas utilisées pour entraîner des modèles d'IA et sont supprimées dans les 30 jours suivant la fin du projet.\n\nDes questions sur votre vie privée ? Contactez directement ${org}.`
+							: "Les enregistrements sont transcrits et analysés pour en tirer des enseignements. Vos données sont stockées sur des serveurs sécurisés en Europe, ne sont pas utilisées pour entraîner des modèles d'IA et sont supprimées dans les 30 jours suivant la fin du projet.\n\nDes questions sur votre vie privée ? Contactez directement l'organisateur.",
 						...(policyUrl
 							? {
 									link: {
-										label:
-											"Lire la politique de confidentialité de l'organisateur",
+										label: org
+											? `Lire la politique de confidentialité de ${org}`
+											: "Lire la politique de confidentialité de l'organisateur",
 										url: policyUrl,
 									},
 								}
@@ -1401,16 +1419,19 @@ export const useOnboardingCards = () => {
 								"Accetto che la mia conversazione sia registrata e trattata.",
 							required: true,
 						},
-						content:
-							"L'organizzatore decide come usare i tuoi dati in questa sessione. dembrane lavora per lui.",
+						content: org
+							? `${org} decide come usare i tuoi dati in questa sessione. dembrane lavora per lui.`
+							: "L'organizzatore decide come usare i tuoi dati in questa sessione. dembrane lavora per lui.",
 						cta: "Ho capito",
-						extraHelp:
-							"Trascriviamo e analizziamo le registrazioni per ottenere informazioni utili. I tuoi dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA. Li cancelliamo entro 30 giorni dalla fine del progetto.\n\nHai domande sulla privacy? Scrivi direttamente all'organizzatore.",
+						extraHelp: org
+							? `Trascriviamo e analizziamo le registrazioni per ottenere informazioni utili. I tuoi dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA. Li cancelliamo entro 30 giorni dalla fine del progetto.\n\nHai domande sulla privacy? Scrivi direttamente a ${org}.`
+							: "Trascriviamo e analizziamo le registrazioni per ottenere informazioni utili. I tuoi dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA. Li cancelliamo entro 30 giorni dalla fine del progetto.\n\nHai domande sulla privacy? Scrivi direttamente all'organizzatore.",
 						...(policyUrl
 							? {
 									link: {
-										label:
-											"Leggi l'informativa sulla privacy dell'organizzatore",
+										label: org
+											? `Leggi l'informativa sulla privacy di ${org}`
+											: "Leggi l'informativa sulla privacy dell'organizzatore",
 										url: policyUrl,
 									},
 								}
@@ -1428,15 +1449,19 @@ export const useOnboardingCards = () => {
 								"Ik geef toestemming voor het opnemen en verwerken van mijn gesprek.",
 							required: true,
 						},
-						content:
-							"De organisator is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.",
+						content: org
+							? `${org} is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.`
+							: "De organisator is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.",
 						cta: "Ik begrijp het",
-						extraHelp:
-							"Opnames worden getranscribeerd en geanalyseerd om inzichten te genereren. Jouw gegevens worden opgeslagen op beveiligde servers in Europa, niet gebruikt om AI-modellen te trainen, en verwijderd binnen 30 dagen na afloop van het project.\n\nVragen over jouw privacy? Neem contact op met de organisator.",
+						extraHelp: org
+							? `Opnames worden getranscribeerd en geanalyseerd om inzichten te genereren. Jouw gegevens worden opgeslagen op beveiligde servers in Europa, niet gebruikt om AI-modellen te trainen, en verwijderd binnen 30 dagen na afloop van het project.\n\nVragen over jouw privacy? Neem contact op met ${org}.`
+							: "Opnames worden getranscribeerd en geanalyseerd om inzichten te genereren. Jouw gegevens worden opgeslagen op beveiligde servers in Europa, niet gebruikt om AI-modellen te trainen, en verwijderd binnen 30 dagen na afloop van het project.\n\nVragen over jouw privacy? Neem contact op met de organisator.",
 						...(policyUrl
 							? {
 									link: {
-										label: "Lees het privacybeleid van de organisator",
+										label: org
+											? `Lees het privacybeleid van ${org}`
+											: "Lees het privacybeleid van de organisator",
 										url: policyUrl,
 									},
 								}
@@ -1453,16 +1478,19 @@ export const useOnboardingCards = () => {
 							label: "Я даю згоду на запис і обробку моєї розмови.",
 							required: true,
 						},
-						content:
-							"Організатор відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від його імені.",
+						content: org
+							? `${org} відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від його імені.`
+							: "Організатор відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від його імені.",
 						cta: "Я розумію",
-						extraHelp:
-							"Записи транскрибуються та аналізуються для отримання висновків. Ваші дані зберігаються на захищених серверах у Європі, не використовуються для навчання моделей ШІ та видаляються протягом 30 днів після завершення проєкту.\n\nПитання щодо вашої конфіденційності? Зверніться безпосередньо до організатора.",
+						extraHelp: org
+							? `Записи транскрибуються та аналізуються для отримання висновків. Ваші дані зберігаються на захищених серверах у Європі, не використовуються для навчання моделей ШІ та видаляються протягом 30 днів після завершення проєкту.\n\nПитання щодо вашої конфіденційності? Зверніться безпосередньо до ${org}.`
+							: "Записи транскрибуються та аналізуються для отримання висновків. Ваші дані зберігаються на захищених серверах у Європі, не використовуються для навчання моделей ШІ та видаляються протягом 30 днів після завершення проєкту.\n\nПитання щодо вашої конфіденційності? Зверніться безпосередньо до організатора.",
 						...(policyUrl
 							? {
 									link: {
-										label:
-											"Ознайомтесь з політикою конфіденційності організатора",
+										label: org
+											? `Ознайомтесь з політикою конфіденційності ${org}`
+											: "Ознайомтесь з політикою конфіденційності організатора",
 										url: policyUrl,
 									},
 								}
