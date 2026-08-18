@@ -111,6 +111,7 @@ interface Conversation {
 	participant_name: string | null;
 	participant_user_agent: string | null;
 	project_id: string | Project;
+	recording_started_at?: string | null;
 	source:
 		| "DASHBOARD_UPLOAD"
 		| "CLONE"

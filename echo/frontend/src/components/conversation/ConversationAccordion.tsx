@@ -87,6 +87,7 @@ import {
 	useSelectAllContextMutation,
 } from "./hooks";
 import { SelectAllConfirmationModal } from "./SelectAllConfirmationModal";
+import { getConversationStartTime } from "./utils";
 
 type SortOption = {
 	label: string;
@@ -623,7 +624,7 @@ const ConversationAccordionItem = ({
 				<div className="flex items-center justify-between gap-4">
 					<Text size="xs" c="gray.6" className="pl-[4px]">
 						{formatRelative(
-							new Date(conversation.created_at ?? new Date()),
+							new Date(getConversationStartTime(conversation) ?? new Date()),
 							new Date(),
 						)}
 					</Text>

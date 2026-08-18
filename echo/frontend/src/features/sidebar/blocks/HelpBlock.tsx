@@ -1,15 +1,25 @@
 import { Trans } from "@lingui/react/macro";
-import { ChatCircle, EnvelopeSimple, Note, Pulse } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import {
+	ChatCircle,
+	EnvelopeSimple,
+	Note,
+	Pulse,
+	Sparkle,
+} from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { FeedbackPortalModal } from "@/components/common/FeedbackPortalModal";
-import { getDocumentationUrl } from "@/config";
+import { ReleaseVideoModal } from "@/components/release/ReleaseVideoModal";
+import { ENABLE_RELEASE_VIDEO_MODAL, getDocumentationUrl } from "@/config";
 import { NavButton } from "../primitives/NavButton";
 import { SectionLabel } from "../primitives/SectionLabel";
 
 export const HelpBlock = () => {
 	const { language } = useParams();
-	const [feedbackOpen, setFeedbackOpen] = useState(false);
+	const [feedbackOpen, feedback] = useDisclosure(false);
+	// The release modal lives here so the button that reopens it can hold its
+	// own state. It also shows itself once per release without being asked.
+	const [releaseRequested, release] = useDisclosure(false);
 	const docUrl = getDocumentationUrl(language);
 
 	return (
@@ -23,8 +33,15 @@ export const HelpBlock = () => {
 					icon={ChatCircle}
 					iconColor="var(--mantine-color-primary-6)"
 					labelColor="var(--mantine-color-primary-6)"
-					onClick={() => setFeedbackOpen(true)}
+					onClick={feedback.open}
 				/>
+				{ENABLE_RELEASE_VIDEO_MODAL ? (
+					<NavButton
+						label={<Trans>What's new</Trans>}
+						icon={Sparkle}
+						onClick={release.open}
+					/>
+				) : null}
 				<NavButton
 					label={<Trans>Documentation</Trans>}
 					icon={Note}
@@ -49,9 +66,15 @@ export const HelpBlock = () => {
 			</div>
 			<FeedbackPortalModal
 				opened={feedbackOpen}
-				onClose={() => setFeedbackOpen(false)}
+				onClose={feedback.close}
 				locale={language}
 			/>
+			{ENABLE_RELEASE_VIDEO_MODAL ? (
+				<ReleaseVideoModal
+					requested={releaseRequested}
+					onRequestedClose={release.close}
+				/>
+			) : null}
 		</>
 	);
 };

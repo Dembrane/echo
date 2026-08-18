@@ -1,9 +1,12 @@
+import { i18n } from "@lingui/core";
 import { describe, expect, it } from "vitest";
-import { RELEASES } from "./releases";
+import { getReleases } from "./releases";
 import {
 	latestRelease,
+	playerBridgeUrl,
 	RELEASE_VIDEO_SEEN_KEY,
 	shouldShowReleaseVideo,
+	YOUTUBE_EMBED_ORIGIN,
 	youtubeEmbedUrl,
 } from "./releaseVideo";
 
@@ -49,8 +52,22 @@ describe("shouldShowReleaseVideo", () => {
 describe("latestRelease", () => {
 	it("takes the first entry, because the array is newest first", () => {
 		const releases = [
-			{ description: "b", title: "B", version: "2", videoUrl: "" },
-			{ description: "a", title: "A", version: "1", videoUrl: "" },
+			{
+				description: "b",
+				headerTitle: "H",
+				note: "n",
+				title: "B",
+				version: "2",
+				videoUrl: "",
+			},
+			{
+				description: "a",
+				headerTitle: "H",
+				note: "n",
+				title: "A",
+				version: "1",
+				videoUrl: "",
+			},
 		];
 		expect(latestRelease(releases)?.version).toBe("2");
 	});
@@ -60,6 +77,12 @@ describe("latestRelease", () => {
 	});
 });
 
+// getReleases() resolves its copy through `t`, so a locale has to be active
+// before the shipped-history tests call it; the empty catalog falls back to
+// the English source, which is all these tests read.
+i18n.load("en", {});
+i18n.activate("en");
+
 describe("the shipped release history", () => {
 	it("has a newest entry whose video resolves to a playable embed", () => {
 		const release = latestRelease();
@@ -68,7 +91,7 @@ describe("the shipped release history", () => {
 	});
 
 	it("uses unique version identifiers, so the gate cannot stick", () => {
-		const versions = RELEASES.map((r) => r.version);
+		const versions = getReleases().map((r) => r.version);
 		expect(new Set(versions).size).toBe(versions.length);
 	});
 
@@ -125,5 +148,21 @@ describe("youtubeEmbedUrl", () => {
 		expect(youtubeEmbedUrl("https://www.youtube.com/watch")).toBeNull();
 		expect(youtubeEmbedUrl("https://www.youtube.com/")).toBeNull();
 		expect(youtubeEmbedUrl("https://www.youtube.com/watch?v=abc")).toBeNull();
+	});
+});
+
+describe("playerBridgeUrl", () => {
+	it("switches on the widget protocol without leaving the nocookie origin", () => {
+		const bridged = playerBridgeUrl(
+			"https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ?rel=0",
+			"https://dashboard.dembrane.com",
+		);
+		const url = new URL(bridged);
+		expect(url.origin).toBe(YOUTUBE_EMBED_ORIGIN);
+		expect(url.searchParams.get("rel")).toBe("0");
+		expect(url.searchParams.get("enablejsapi")).toBe("1");
+		expect(url.searchParams.get("origin")).toBe(
+			"https://dashboard.dembrane.com",
+		);
 	});
 });

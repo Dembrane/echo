@@ -25,7 +25,7 @@ export const TierStatusBadge = ({
 
 	if (kind === "coming-soon") {
 		return (
-			<Badge variant="light" color="gray" size="xs">
+			<Badge variant="filled" color="graphite" size="xs">
 				<Trans>Coming soon</Trans>
 			</Badge>
 		);

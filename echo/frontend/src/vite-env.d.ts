@@ -1,5 +1,8 @@
 /// <reference types="vite/client" />
 
+/** Injected by vite.config.ts `define`. */
+declare const __APP_BUILD_ID__: string;
+
 declare module "*.woff2?inline" {
 	const src: string;
 	export default src;

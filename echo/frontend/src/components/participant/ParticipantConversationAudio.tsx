@@ -182,6 +182,7 @@ export const ParticipantConversationAudio = () => {
 		startRecording,
 		stopRecording,
 		isRecording,
+		isStarting,
 		recordingTime,
 		errored,
 		permissionError,
@@ -535,10 +536,11 @@ export const ParticipantConversationAudio = () => {
 		navigate(textModeUrl);
 	};
 
-	const handleResumeRecording = () => {
+	const handleResumeRecording = async () => {
 		const timeToResume = stoppedRecordingTime ?? 0;
 		// Don't clear stoppedRecordingTime here - let the useEffect do it when recording starts
-		startRecording(timeToResume);
+		const started = await startRecording(timeToResume);
+		if (!started) return;
 		// Obtain wakelock on user interaction
 		if (wakeLock.isSupported) {
 			wakeLock.obtainWakeLock();
@@ -632,12 +634,14 @@ export const ParticipantConversationAudio = () => {
 		}
 	};
 
-	const handleStartRecording = () => {
+	const handleStartRecording = async () => {
 		if (s3Status !== "passed") {
 			return;
 		}
 
-		startRecording();
+		const started = await startRecording();
+		if (!started) return;
+
 		posthog.capture("recording_started", {
 			conversation_id: conversationId,
 			project_id: projectId,
@@ -1002,7 +1006,11 @@ export const ParticipantConversationAudio = () => {
 										radius="md"
 										rightSection={<IconMicrophone />}
 										onClick={handleStartRecording}
-										loading={s3Status === "checking" || s3Status === "pending"}
+										loading={
+											isStarting ||
+											s3Status === "checking" ||
+											s3Status === "pending"
+										}
 										disabled={s3Status !== "passed"}
 										className="flex-grow"
 										{...testId("portal-audio-record-button")}

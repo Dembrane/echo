@@ -17,6 +17,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { RouterProvider } from "react-router/dom";
 import { I18nProvider } from "./components/layout/I18nProvider";
 import { ENABLE_AGENTATION, USE_PARTICIPANT_ROUTER } from "./config";
+import { watchForNewVersion } from "./lib/appVersion";
 import { detectAndEmitPilotBlock } from "./lib/pilotBlock";
 
 // Gated at runtime by ENABLE_AGENTATION (config.ts), not at build time, so no
@@ -65,6 +66,8 @@ const router = USE_PARTICIPANT_ROUTER ? participantRouter : mainRouter;
 export const App = () => {
 	// Pageviews (including SPA history changes) are captured by PostHog via
 	// the `defaults` option in posthog.init (src/main.tsx).
+
+	useEffect(() => watchForNewVersion(router), []);
 
 	useEffect(() => {
 		const preloadRoutes = () => {

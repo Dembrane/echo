@@ -1,7 +1,8 @@
+import { execSync } from "node:child_process";
 import path from "node:path";
 import { lingui } from "@lingui/vite-plugin";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type PluginOption } from "vite";
 
 // Babel plugin: inject __source into the props object of _jsx/_jsxs calls so
 // Agentation can resolve element-to-source paths in production-mode builds.
@@ -85,9 +86,40 @@ const injectJsxSource = (babel: any) => {
 	};
 };
 
+// Identifies the build; the client compares it against /version.json.
+const resolveBuildId = (): string => {
+	// VERCEL_GIT_COMMIT_SHA covers a Vercel-native build, whose container does
+	// not expose .git, so the git fallback below would miss.
+	const sha = process.env.GITHUB_SHA || process.env.VERCEL_GIT_COMMIT_SHA;
+	if (sha) return sha.slice(0, 12);
+	try {
+		return execSync("git rev-parse --short=12 HEAD", {
+			stdio: ["ignore", "pipe", "ignore"],
+		})
+			.toString()
+			.trim();
+	} catch {
+		return `t${Date.now().toString(36)}`;
+	}
+};
+
+// Emitted through rollup rather than public/ so it always matches the assets.
+const emitVersionManifest = (buildId: string): PluginOption => ({
+	apply: "build",
+	generateBundle() {
+		this.emitFile({
+			fileName: "version.json",
+			source: JSON.stringify({ buildId }),
+			type: "asset",
+		});
+	},
+	name: "dembrane-version-manifest",
+});
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
 	const isDev = mode === "development";
+	const buildId = resolveBuildId();
 	const devApiProxyTarget =
 		process.env.VITE_DEV_API_PROXY || "http://localhost:8000/";
 	const devDirectusProxyTarget =
@@ -127,6 +159,9 @@ export default defineConfig(({ mode }) => {
 				},
 			},
 		},
+		define: {
+			__APP_BUILD_ID__: JSON.stringify(buildId),
+		},
 		plugins: [
 			react({
 				babel: {
@@ -135,6 +170,7 @@ export default defineConfig(({ mode }) => {
 				},
 			}),
 			lingui(),
+			emitVersionManifest(buildId),
 		],
 		resolve: {
 			alias: {

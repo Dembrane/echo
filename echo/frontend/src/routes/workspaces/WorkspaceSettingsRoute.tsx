@@ -1831,7 +1831,7 @@ function PrivacyAndDefaultsSection({
 				});
 			}}
 		>
-			<Trans>Available on innovator and above. Upgrade to unlock.</Trans>
+			<Trans>Available on a paid plan. Upgrade to unlock.</Trans>
 		</Anchor>
 	);
 	return (
