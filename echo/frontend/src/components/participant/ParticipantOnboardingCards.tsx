@@ -117,10 +117,17 @@ const ParticipantOnboardingCards = ({
 	const tutorialSlug = project.default_conversation_tutorial_slug ?? "none";
 	const legalBasis = project.legal_basis ?? "client-managed";
 	const privacyPolicyUrl = project.privacy_policy_url;
+	const organiserName = project.organiser_name;
 
 	const cards: LanguageCards = {
 		"de-DE": [
-			...getSystemCards("de-DE", tutorialSlug, legalBasis, privacyPolicyUrl),
+			...getSystemCards(
+				"de-DE",
+				tutorialSlug,
+				legalBasis,
+				privacyPolicyUrl,
+				organiserName,
+			),
 			{
 				section: "Mikrofon-Check",
 				slides: [
@@ -143,7 +150,13 @@ const ParticipantOnboardingCards = ({
 			},
 		],
 		"en-US": [
-			...getSystemCards("en-US", tutorialSlug, legalBasis, privacyPolicyUrl),
+			...getSystemCards(
+				"en-US",
+				tutorialSlug,
+				legalBasis,
+				privacyPolicyUrl,
+				organiserName,
+			),
 			{
 				section: "Microphone Check",
 				slides: [
@@ -166,7 +179,13 @@ const ParticipantOnboardingCards = ({
 			},
 		],
 		"es-ES": [
-			...getSystemCards("es-ES", tutorialSlug, legalBasis, privacyPolicyUrl),
+			...getSystemCards(
+				"es-ES",
+				tutorialSlug,
+				legalBasis,
+				privacyPolicyUrl,
+				organiserName,
+			),
 			{
 				section: "Verificación del Micrófono",
 				slides: [
@@ -189,7 +208,13 @@ const ParticipantOnboardingCards = ({
 			},
 		],
 		"fr-FR": [
-			...getSystemCards("fr-FR", tutorialSlug, legalBasis, privacyPolicyUrl),
+			...getSystemCards(
+				"fr-FR",
+				tutorialSlug,
+				legalBasis,
+				privacyPolicyUrl,
+				organiserName,
+			),
 			{
 				section: "Vérification du Microphone",
 				slides: [
@@ -212,7 +237,13 @@ const ParticipantOnboardingCards = ({
 			},
 		],
 		"it-IT": [
-			...getSystemCards("it-IT", tutorialSlug, legalBasis, privacyPolicyUrl),
+			...getSystemCards(
+				"it-IT",
+				tutorialSlug,
+				legalBasis,
+				privacyPolicyUrl,
+				organiserName,
+			),
 			{
 				section: "Controllo microfono",
 				slides: [
@@ -235,7 +266,13 @@ const ParticipantOnboardingCards = ({
 			},
 		],
 		"nl-NL": [
-			...getSystemCards("nl-NL", tutorialSlug, legalBasis, privacyPolicyUrl),
+			...getSystemCards(
+				"nl-NL",
+				tutorialSlug,
+				legalBasis,
+				privacyPolicyUrl,
+				organiserName,
+			),
 			{
 				section: "Microfoon Controle",
 				slides: [
