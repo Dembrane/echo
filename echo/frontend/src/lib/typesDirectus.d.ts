@@ -320,6 +320,8 @@ interface ParticipantProject extends Project {
 	whitelabel_logo_url: string | null;
 	legal_basis: "client-managed" | "consent" | "dembrane-events" | null;
 	privacy_policy_url: string | null;
+	// consent-card name; null renders "The organiser"
+	organiser_name: string | null;
 }
 
 interface ProjectAnalysisRun {

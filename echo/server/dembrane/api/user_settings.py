@@ -1,4 +1,3 @@
-from typing import Literal, Optional
 from logging import getLogger
 from datetime import datetime, timezone
 
@@ -15,11 +14,6 @@ from dembrane.api.dependency_auth import DependencyDirectusSession
 logger = getLogger("api.user_settings")
 
 UserSettingsRouter = APIRouter()
-
-
-class LegalBasisUpdateSchema(BaseModel):
-    legal_basis: Literal["client-managed", "consent", "dembrane-events"]
-    privacy_policy_url: Optional[str] = None
 
 
 class UpdateNameSchema(BaseModel):
@@ -55,8 +49,6 @@ USER_PROFILE_FIELDS = [
     "disable_create_project",
     "tfa_secret",
     "whitelabel_logo",
-    "legal_basis",
-    "privacy_policy_url",
     "hide_ai_suggestions",
 ]
 
@@ -511,80 +503,6 @@ async def remove_avatar(
             await run_in_thread_pool(directus.delete_file, avatar_file_id)
         except Exception as e:
             logger.warning(f"Failed to delete avatar file {avatar_file_id}: {e}")
-
-    return {"status": "ok"}
-
-
-@UserSettingsRouter.patch("/legal-basis")
-async def update_legal_basis(
-    body: LegalBasisUpdateSchema,
-    auth: DependencyDirectusSession,
-) -> dict:
-    """Update the user's legal basis setting."""
-    app_user = await resolve_app_user(auth.user_id)
-    if not app_user:
-        raise HTTPException(status_code=403, detail="User not onboarded")
-
-    try:
-        org_memberships = await run_in_thread_pool(
-            directus.get_items,
-            "org_membership",
-            {
-                "query": {
-                    "filter": {
-                        "user_id": {"_eq": app_user["id"]},
-                        "role": {"_in": ["admin", "owner"]},
-                        "deleted_at": {"_null": True},
-                    },
-                    "fields": ["id"],
-                    "limit": 1,
-                }
-            },
-        )
-        if not org_memberships:
-            raise HTTPException(
-                status_code=403,
-                detail="Only organisation administrators can modify legal basis settings",
-            )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to verify organisation administrator status: {e}")
-        raise HTTPException(status_code=500, detail="Failed to verify permissions") from None
-    if body.legal_basis == "dembrane-events":
-        try:
-            user_data = await run_in_thread_pool(
-                directus.get_users,
-                {
-                    "query": {
-                        "filter": {"id": {"_eq": auth.user_id}},
-                        "fields": ["email"],
-                    }
-                },
-            )
-            email = user_data[0].get("email", "") if user_data else ""
-            if not email or not email.lower().endswith("@dembrane.com"):
-                raise HTTPException(
-                    status_code=403,
-                    detail="dembrane-events is only available for dembrane accounts",
-                )
-        except HTTPException:
-            raise
-        except Exception as e:
-            logger.error(f"Failed to verify user email: {e}")
-            raise HTTPException(status_code=500, detail="Failed to verify user") from None
-
-    update_data: dict = {"legal_basis": body.legal_basis}
-    if body.legal_basis == "consent":
-        update_data["privacy_policy_url"] = body.privacy_policy_url
-    else:
-        update_data["privacy_policy_url"] = None
-
-    try:
-        await run_in_thread_pool(directus.update_user, auth.user_id, update_data)
-    except Exception as e:
-        logger.error(f"Failed to update legal basis: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update legal basis") from None
 
     return {"status": "ok"}
 

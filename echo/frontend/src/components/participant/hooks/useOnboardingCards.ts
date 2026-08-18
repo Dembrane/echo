@@ -8,6 +8,7 @@ export const useOnboardingCards = () => {
 		tutorialSlug?: string,
 		legalBasis?: LegalBasis,
 		privacyPolicyUrl?: string | null,
+		organiserName?: string | null,
 	): LanguageCards[string] => {
 		const basis = legalBasis ?? "client-managed";
 
@@ -20,14 +21,24 @@ export const useOnboardingCards = () => {
 
 		// none: Only privacy statement
 		if (finalSlug === "none") {
-			const privacyCard = getPrivacyCard(lang, basis, privacyPolicyUrl);
+			const privacyCard = getPrivacyCard(
+				lang,
+				basis,
+				privacyPolicyUrl,
+				organiserName,
+			);
 			return privacyCard ? [privacyCard] : [];
 		}
 
 		// basic: Tutorial slides + privacy statement
 		if (finalSlug === "basic") {
 			const tutorialCards = getBasicTutorialCards(lang);
-			const privacyCard = getPrivacyCard(lang, basis, privacyPolicyUrl);
+			const privacyCard = getPrivacyCard(
+				lang,
+				basis,
+				privacyPolicyUrl,
+				organiserName,
+			);
 			return [...tutorialCards, ...(privacyCard ? [privacyCard] : [])];
 		}
 
@@ -37,6 +48,7 @@ export const useOnboardingCards = () => {
 				lang,
 				basis,
 				privacyPolicyUrl,
+				organiserName,
 			);
 			return tutorialCards;
 		}
@@ -498,6 +510,7 @@ export const useOnboardingCards = () => {
 		lang: string,
 		legalBasis: LegalBasis = "client-managed",
 		privacyPolicyUrl?: string | null,
+		organiserName?: string | null,
 	): LanguageCards[string] => {
 		const tutorialCards: Record<string, LanguageCards[string]> = {
 			"de-DE": [
@@ -561,8 +574,12 @@ export const useOnboardingCards = () => {
 								"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
 							title: "Datenschutz ist wichtig",
 						},
-						...(getPrivacyCard("de-DE", legalBasis, privacyPolicyUrl)?.slides ||
-							[]),
+						...(getPrivacyCard(
+							"de-DE",
+							legalBasis,
+							privacyPolicyUrl,
+							organiserName,
+						)?.slides || []),
 					],
 				},
 				{
@@ -655,8 +672,12 @@ export const useOnboardingCards = () => {
 								"Avoid sharing details you don't want the host to know. Be mindful and don't record others without their consent.",
 							title: "Privacy Matters",
 						},
-						...(getPrivacyCard("en-US", legalBasis, privacyPolicyUrl)?.slides ||
-							[]),
+						...(getPrivacyCard(
+							"en-US",
+							legalBasis,
+							privacyPolicyUrl,
+							organiserName,
+						)?.slides || []),
 					],
 				},
 				{
@@ -748,8 +769,12 @@ export const useOnboardingCards = () => {
 								"Evita compartir detalles que no quieras que el anfitrión conozca. Sé consciente y no grabes a otros sin su consentimiento.",
 							title: "La Privacidad Importa",
 						},
-						...(getPrivacyCard("es-ES", legalBasis, privacyPolicyUrl)?.slides ||
-							[]),
+						...(getPrivacyCard(
+							"es-ES",
+							legalBasis,
+							privacyPolicyUrl,
+							organiserName,
+						)?.slides || []),
 					],
 				},
 				{
@@ -843,8 +868,12 @@ export const useOnboardingCards = () => {
 								"Évitez de partager des détails que vous ne voulez pas que l'hôte connaisse. Soyez attentif et n'enregistrez pas les autres sans leur consentement.",
 							title: "La Confidentialité Compte",
 						},
-						...(getPrivacyCard("fr-FR", legalBasis, privacyPolicyUrl)?.slides ||
-							[]),
+						...(getPrivacyCard(
+							"fr-FR",
+							legalBasis,
+							privacyPolicyUrl,
+							organiserName,
+						)?.slides || []),
 					],
 				},
 				{
@@ -936,8 +965,12 @@ export const useOnboardingCards = () => {
 								"Non condividere dettagli che non vuoi far sapere all'host. Chiedi sempre il permesso prima di registrare altre persone.",
 							title: "La privacy conta",
 						},
-						...(getPrivacyCard("it-IT", legalBasis, privacyPolicyUrl)?.slides ||
-							[]),
+						...(getPrivacyCard(
+							"it-IT",
+							legalBasis,
+							privacyPolicyUrl,
+							organiserName,
+						)?.slides || []),
 					],
 				},
 				{
@@ -1029,8 +1062,12 @@ export const useOnboardingCards = () => {
 								"Vermijd het delen van details die je niet met de organisator wilt delen. Wees voorzichtig en neem anderen niet op zonder hun toestemming.",
 							title: "Privacy is belangrijk",
 						},
-						...(getPrivacyCard("nl-NL", legalBasis, privacyPolicyUrl)?.slides ||
-							[]),
+						...(getPrivacyCard(
+							"nl-NL",
+							legalBasis,
+							privacyPolicyUrl,
+							organiserName,
+						)?.slides || []),
 					],
 				},
 				{
@@ -1123,8 +1160,12 @@ export const useOnboardingCards = () => {
 								"Уникайте обміну деталями, які ви не хочете повідомляти організатору. Будьте уважні та не записуйте інших без їхньої згоди.",
 							title: "Конфіденційність важлива",
 						},
-						...(getPrivacyCard("uk-UA", legalBasis, privacyPolicyUrl)?.slides ||
-							[]),
+						...(getPrivacyCard(
+							"uk-UA",
+							legalBasis,
+							privacyPolicyUrl,
+							organiserName,
+						)?.slides || []),
 					],
 				},
 				{
@@ -1167,6 +1208,7 @@ export const useOnboardingCards = () => {
 		lang: string,
 		legalBasis: LegalBasis = "client-managed",
 		privacyPolicyUrl?: string | null,
+		organiserName?: string | null,
 	): LanguageCards[string][number] | null => {
 		if (legalBasis === "client-managed") {
 			return getClientManagedPrivacyCard(lang);
@@ -1174,7 +1216,7 @@ export const useOnboardingCards = () => {
 		if (legalBasis === "dembrane-events") {
 			return getDembraneEventsPrivacyCard(lang);
 		}
-		return getConsentPrivacyCard(lang, privacyPolicyUrl);
+		return getConsentPrivacyCard(lang, privacyPolicyUrl, organiserName);
 	};
 
 	const getClientManagedPrivacyCard = (
@@ -1280,8 +1322,11 @@ export const useOnboardingCards = () => {
 	const getConsentPrivacyCard = (
 		lang: string,
 		privacyPolicyUrl?: string | null,
+		organiserName?: string | null,
 	): LanguageCards[string][number] | null => {
 		const policyUrl = privacyPolicyUrl || undefined;
+		// no name = keep the generic "the organiser" wording
+		const name = organiserName?.trim() || undefined;
 
 		const cards: Record<string, LanguageCards[string][number]> = {
 			"de-DE": {
@@ -1293,8 +1338,9 @@ export const useOnboardingCards = () => {
 								"Ich stimme zu, dass mein Gespräch aufgezeichnet und verarbeitet wird.",
 							required: true,
 						},
-						content:
-							"Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
+						content: name
+							? `${name} ist dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.`
+							: "Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
 						cta: "Ich verstehe.",
 						extraHelp:
 							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
@@ -1319,8 +1365,9 @@ export const useOnboardingCards = () => {
 								"I consent to my conversation being recorded and processed.",
 							required: true,
 						},
-						content:
-							"The organiser is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.",
+						content: name
+							? `${name} is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.`
+							: "The organiser is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.",
 						cta: "I understand",
 						extraHelp:
 							"Recordings are transcribed and analysed for insights. Your data is stored on secured servers in Europe, is not used to train AI models, and is deleted within 30 days after the project has ended.\n\nQuestions about your privacy? Contact the organiser directly.",
@@ -1345,8 +1392,9 @@ export const useOnboardingCards = () => {
 								"Doy mi consentimiento para que mi conversación sea grabada y procesada.",
 							required: true,
 						},
-						content:
-							"El organizador es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.",
+						content: name
+							? `${name} es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.`
+							: "El organizador es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.",
 						cta: "Entiendo",
 						extraHelp:
 							"Las grabaciones se transcriben y analizan para obtener información. Sus datos se almacenan en servidores seguros en Europa, no se utilizan para entrenar modelos de IA y se eliminan dentro de los 30 días posteriores a la finalización del proyecto.\n\n¿Preguntas sobre su privacidad? Contacte directamente al organizador.",
@@ -1371,8 +1419,9 @@ export const useOnboardingCards = () => {
 								"Je consens à ce que ma conversation soit enregistrée et traitée.",
 							required: true,
 						},
-						content:
-							"L'organisateur est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.",
+						content: name
+							? `${name} est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.`
+							: "L'organisateur est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.",
 						cta: "Je comprends",
 						extraHelp:
 							"Les enregistrements sont transcrits et analysés pour en tirer des enseignements. Vos données sont stockées sur des serveurs sécurisés en Europe, ne sont pas utilisées pour entraîner des modèles d'IA et sont supprimées dans les 30 jours suivant la fin du projet.\n\nDes questions sur votre vie privée ? Contactez directement l'organisateur.",
@@ -1398,8 +1447,9 @@ export const useOnboardingCards = () => {
 								"Accetto che la mia conversazione sia registrata e trattata.",
 							required: true,
 						},
-						content:
-							"L'organizzatore decide come usare i tuoi dati in questa sessione. dembrane lavora per lui.",
+						content: name
+							? `${name} decide come usare i tuoi dati in questa sessione. dembrane lavora per suo conto.`
+							: "L'organizzatore decide come usare i tuoi dati in questa sessione. dembrane lavora per lui.",
 						cta: "Ho capito",
 						extraHelp:
 							"Trascriviamo e analizziamo le registrazioni per ottenere informazioni utili. I tuoi dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA. Li cancelliamo entro 30 giorni dalla fine del progetto.\n\nHai domande sulla privacy? Scrivi direttamente all'organizzatore.",
@@ -1425,8 +1475,9 @@ export const useOnboardingCards = () => {
 								"Ik geef toestemming voor het opnemen en verwerken van mijn gesprek.",
 							required: true,
 						},
-						content:
-							"De organisator is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.",
+						content: name
+							? `${name} is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.`
+							: "De organisator is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.",
 						cta: "Ik begrijp het",
 						extraHelp:
 							"Opnames worden getranscribeerd en geanalyseerd om inzichten te genereren. Jouw gegevens worden opgeslagen op beveiligde servers in Europa, niet gebruikt om AI-modellen te trainen, en verwijderd binnen 30 dagen na afloop van het project.\n\nVragen over jouw privacy? Neem contact op met de organisator.",
@@ -1450,8 +1501,9 @@ export const useOnboardingCards = () => {
 							label: "Я даю згоду на запис і обробку моєї розмови.",
 							required: true,
 						},
-						content:
-							"Організатор відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від його імені.",
+						content: name
+							? `${name} відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від імені цієї організації.`
+							: "Організатор відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від його імені.",
 						cta: "Я розумію",
 						extraHelp:
 							"Записи транскрибуються та аналізуються для отримання висновків. Ваші дані зберігаються на захищених серверах у Європі, не використовуються для навчання моделей ШІ та видаляються протягом 30 днів після завершення проєкту.\n\nПитання щодо вашої конфіденційності? Зверніться безпосередньо до організатора.",
