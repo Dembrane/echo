@@ -57,6 +57,7 @@ import { SupportAccessSection } from "@/components/workspace/SupportAccessSectio
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { UsageCard } from "@/components/workspace/UsageCard";
 import { WorkspaceDataOwnershipSection } from "@/components/workspace/WorkspaceDataOwnershipSection";
+import { WorkspaceLegalBasisSection } from "@/components/workspace/WorkspaceLegalBasisSection";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
@@ -116,6 +117,8 @@ interface WorkspaceDetail {
 	is_external_client: boolean;
 	data_owner_org_name: string | null;
 	data_owner_email: string | null;
+	legal_basis: string | null;
+	privacy_policy_url: string | null;
 }
 
 async function deleteWorkspace(workspaceId: string) {
@@ -772,6 +775,15 @@ export const WorkspaceSettingsRoute = () => {
 											</Trans>
 										</Text>
 									)}
+									<Divider />
+									<WorkspaceLegalBasisSection
+										settings={settings}
+										workspaceId={workspaceId}
+										canEdit={canEditSettings}
+										isDembraneUser={(meV2?.email ?? "")
+											.toLowerCase()
+											.endsWith("@dembrane.com")}
+									/>
 									<Divider />
 									<WorkspaceMemorySection workspaceId={workspaceId} />
 									<WorkspaceMethodologiesSection workspaceId={workspaceId} />
@@ -1831,7 +1843,7 @@ function PrivacyAndDefaultsSection({
 				});
 			}}
 		>
-			<Trans>Available on innovator and above. Upgrade to unlock.</Trans>
+			<Trans>Available on a paid plan. Upgrade to unlock.</Trans>
 		</Anchor>
 	);
 	return (

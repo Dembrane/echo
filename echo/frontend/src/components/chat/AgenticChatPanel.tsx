@@ -246,7 +246,7 @@ const FocusedOnLine = ({
 	);
 };
 
-const enrichAgenticContent = ({
+export const enrichAgenticContent = ({
 	content,
 	conversationNames,
 	language,
@@ -1633,6 +1633,19 @@ export const AgenticChatPanel = ({
 		pendingUserMessage,
 	]);
 
+	const handleTemplateSelect = ({ content }: { content: string }) => {
+		const previousInput = input;
+		if (previousInput === content) return;
+		setInput(content);
+		toast(t`Template applied`, {
+			action: {
+				label: t`Undo`,
+				onClick: () => setInput(previousInput),
+			},
+			duration: 5000,
+		});
+	};
+
 	const armStopControl = () => {
 		stopArmedRunIdRef.current = runId;
 	};
@@ -2073,7 +2086,7 @@ export const AgenticChatPanel = ({
 						chatId={chatId}
 						chatMode="agentic"
 						projectId={projectId}
-						onTemplateSelect={({ content }) => setInput(content)}
+						onTemplateSelect={handleTemplateSelect}
 					/>
 
 					{atTurnLimit && (

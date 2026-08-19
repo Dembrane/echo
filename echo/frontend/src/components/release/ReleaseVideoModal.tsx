@@ -1,21 +1,31 @@
 import { t } from "@lingui/core/macro";
 import { Modal, Stack } from "@mantine/core";
+import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
 import { usePrefersReducedMotion } from "@/features/sidebar/animations/motion";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useV2Me } from "@/hooks/useV2Me";
 import styles from "./ReleaseVideoModal.module.css";
 import {
 	latestRelease,
+	playerBridgeUrl,
 	RELEASE_VIDEO_SEEN_KEY,
 	shouldShowReleaseVideo,
+	YOUTUBE_EMBED_ORIGIN,
 	youtubeEmbedUrl,
 } from "./releaseVideo";
+import {
+	createWatchTracker,
+	playerInfoFromMessage,
+	type WatchEvent,
+	type WatchTracker,
+} from "./videoWatchTracker";
 
 /**
  * The release video modal: one video, one title, one description, shown once
@@ -42,9 +52,18 @@ import {
  *
  * Dismissing is the whole interaction: click the backdrop, press escape, or hit
  * the close button, and the newest version is written to app_user.settings.
- * Seen means dismissed, not watched, so no YouTube Player API is loaded. After
- * that it only comes back when the user asks for it from the sidebar's
- * "What's new".
+ * Seen means dismissed, not watched. After that it only comes back when the
+ * user asks for it from the sidebar's "What's new".
+ *
+ * Engagement is measured, not stored. PostHog events cover the showing
+ * (whats_new_modal_opened, with an auto/manual trigger), playback
+ * (whats_new_video_started, whats_new_video_progress at the milestones,
+ * whats_new_video_completed) and the roll-up (whats_new_modal_closed).
+ * Playback state comes from the embed's own postMessage stream (enablejsapi=1
+ * plus a `listening` handshake), so no YouTube script is loaded, `script-src`
+ * stays untouched, and the frame stays on the nocookie origin. Milestones go
+ * out the moment they are crossed, so a tab closed mid-video still leaves a
+ * record; pagehide flushes the summary for the walk-away case.
  *
  * Typography is held to two combinations, both defined in the adjacent
  * stylesheet: the two titles at one size, the copy below them at the other.
@@ -56,6 +75,9 @@ interface ReleaseVideoModalProps {
 	onRequestedClose?: () => void;
 }
 
+/** The id the widget echoes back in every message; one player, one constant. */
+const PLAYER_BRIDGE_ID = "release-video-modal";
+
 export const ReleaseVideoModal = ({
 	requested = false,
 	onRequestedClose,
@@ -66,6 +88,8 @@ export const ReleaseVideoModal = ({
 	const queryClient = useQueryClient();
 	const prefersReducedMotion = usePrefersReducedMotion();
 	const titleId = useId();
+	const posthog = usePostHog();
+	const { language } = useLanguage();
 
 	// Closes the modal immediately, without waiting on the network. If the write
 	// fails the modal returns on the next load, which is the recoverable
@@ -73,6 +97,7 @@ export const ReleaseVideoModal = ({
 	const [dismissed, setDismissed] = useState(false);
 
 	const release = latestRelease();
+	const releaseVersion = release?.version;
 
 	const markSeen = useMutation({
 		mutationFn: async (version: string) => {
@@ -106,15 +131,174 @@ export const ReleaseVideoModal = ({
 					release.version,
 				)));
 
+	const embedUrl = release ? youtubeEmbedUrl(release.videoUrl) : null;
+	const embedSrc = embedUrl
+		? playerBridgeUrl(embedUrl, window.location.origin)
+		: null;
+
+	const iframeRef = useRef<HTMLIFrameElement>(null);
+	const trackerRef = useRef<WatchTracker>(createWatchTracker());
+	const openedAtRef = useRef(0);
+	const openRecordedRef = useRef(false);
+	const summarySentRef = useRef(false);
+	const triggerRef = useRef<"auto" | "manual">("auto");
+
+	// One record per showing. The guard absorbs StrictMode re-runs and
+	// dependency refires, so a showing captures exactly once, and reopening
+	// from the sidebar starts a fresh one.
+	useEffect(() => {
+		if (!opened) {
+			openRecordedRef.current = false;
+			return;
+		}
+		if (openRecordedRef.current || !releaseVersion) return;
+		openRecordedRef.current = true;
+
+		trackerRef.current = createWatchTracker();
+		openedAtRef.current = Date.now();
+		summarySentRef.current = false;
+		triggerRef.current = requested ? "manual" : "auto";
+
+		posthog?.capture("whats_new_modal_opened", {
+			language,
+			// How deep into the visit the modal appeared. Deliberately not a
+			// time-since-login guess from the client: the person's real login
+			// and activity history already lives in PostHog, so recency is a
+			// query-side join against user_logged_in / prior events.
+			seconds_since_page_load: Math.round(performance.now() / 1000),
+			trigger: triggerRef.current,
+			version: releaseVersion,
+		});
+	}, [opened, language, posthog, releaseVersion, requested]);
+
+	// Kept in a ref so the message listener below never holds a stale closure
+	// and never has to re-subscribe on a render.
+	const captureWatchEvent = (watchEvent: WatchEvent) => {
+		const base = {
+			language,
+			trigger: triggerRef.current,
+			version: releaseVersion,
+		};
+		if (watchEvent.type === "started") {
+			posthog?.capture("whats_new_video_started", {
+				...base,
+				seconds_after_open: Math.round(
+					(Date.now() - openedAtRef.current) / 1000,
+				),
+			});
+			return;
+		}
+		if (watchEvent.type === "milestone") {
+			posthog?.capture("whats_new_video_progress", {
+				...base,
+				milestone_percent: watchEvent.milestone,
+			});
+			return;
+		}
+		const snap = trackerRef.current.snapshot();
+		posthog?.capture("whats_new_video_completed", {
+			...base,
+			video_duration_seconds: snap.durationSeconds,
+			video_watched_seconds: snap.watchedSeconds,
+		});
+	};
+	const captureWatchEventRef = useRef(captureWatchEvent);
+	useEffect(() => {
+		captureWatchEventRef.current = captureWatchEvent;
+	});
+
+	const flushSummary = (reason: "dismissed" | "pagehide") => {
+		if (summarySentRef.current || !openRecordedRef.current) return;
+		summarySentRef.current = true;
+		const snap = trackerRef.current.snapshot();
+		posthog?.capture("whats_new_modal_closed", {
+			language,
+			modal_open_seconds: Math.round((Date.now() - openedAtRef.current) / 1000),
+			reason,
+			trigger: triggerRef.current,
+			version: releaseVersion,
+			video_duration_seconds: snap.durationSeconds,
+			video_max_percent: snap.maxPercent,
+			video_percent_watched: snap.percentWatched,
+			video_watched: snap.started,
+			video_watched_seconds: snap.watchedSeconds,
+		});
+	};
+	const flushSummaryRef = useRef(flushSummary);
+	useEffect(() => {
+		flushSummaryRef.current = flushSummary;
+	});
+
+	// The listening handshake wakes the widget: it answers with initialDelivery
+	// and then streams infoDelivery while playing. The hello is resent on an
+	// interval until the first message lands, because the frame may still be
+	// booting when the modal opens.
+	useEffect(() => {
+		if (!opened || !embedSrc) return;
+
+		let handshaken = false;
+
+		const postListening = () => {
+			iframeRef.current?.contentWindow?.postMessage(
+				JSON.stringify({
+					channel: "widget",
+					event: "listening",
+					id: PLAYER_BRIDGE_ID,
+				}),
+				YOUTUBE_EMBED_ORIGIN,
+			);
+		};
+
+		const onMessage = (event: MessageEvent) => {
+			if (event.origin !== YOUTUBE_EMBED_ORIGIN) return;
+			if (
+				!iframeRef.current ||
+				event.source !== iframeRef.current.contentWindow
+			) {
+				return;
+			}
+			handshaken = true;
+			const info = playerInfoFromMessage(event.data);
+			if (!info) return;
+			for (const watchEvent of trackerRef.current.handleInfo(info)) {
+				captureWatchEventRef.current(watchEvent);
+			}
+		};
+
+		window.addEventListener("message", onMessage);
+		postListening();
+		const handshake = window.setInterval(() => {
+			if (handshaken) {
+				window.clearInterval(handshake);
+				return;
+			}
+			postListening();
+		}, 500);
+
+		return () => {
+			window.removeEventListener("message", onMessage);
+			window.clearInterval(handshake);
+		};
+	}, [opened, embedSrc]);
+
+	// Milestones above are durable on their own; this recovers the close
+	// summary when the tab goes instead of the modal. posthog-js flushes its
+	// queue with sendBeacon on pagehide, so the capture still makes it out.
+	useEffect(() => {
+		if (!opened) return;
+		const onPageHide = () => flushSummaryRef.current("pagehide");
+		window.addEventListener("pagehide", onPageHide);
+		return () => window.removeEventListener("pagehide", onPageHide);
+	}, [opened]);
+
 	const close = () => {
+		flushSummary("dismissed");
 		setDismissed(true);
 		onRequestedClose?.();
 		if (release) markSeen.mutate(release.version);
 	};
 
 	if (!release) return null;
-
-	const embedUrl = youtubeEmbedUrl(release.videoUrl);
 
 	return (
 		<Modal.Root
@@ -146,13 +330,14 @@ export const ReleaseVideoModal = ({
 				</Modal.Header>
 				<Modal.Body style={{ padding: "0 2rem 2rem" }}>
 					<Stack gap="lg">
-						{embedUrl ? (
+						{embedSrc ? (
 							<div className={styles.videoFrame}>
 								<iframe
 									allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"
 									allowFullScreen
 									className={styles.video}
-									src={embedUrl}
+									ref={iframeRef}
+									src={embedSrc}
 									title={t`Release video`}
 								/>
 							</div>
@@ -177,9 +362,7 @@ export const ReleaseVideoModal = ({
 							</ReactMarkdown>
 						</div>
 
-						<p className={styles.note}>
-							{release.note}
-						</p>
+						<p className={styles.note}>{release.note}</p>
 					</Stack>
 				</Modal.Body>
 			</Modal.Content>

@@ -111,6 +111,7 @@ interface Conversation {
 	participant_name: string | null;
 	participant_user_agent: string | null;
 	project_id: string | Project;
+	recording_started_at?: string | null;
 	source:
 		| "DASHBOARD_UPLOAD"
 		| "CLONE"
@@ -319,6 +320,8 @@ interface ParticipantProject extends Project {
 	whitelabel_logo_url: string | null;
 	legal_basis: "client-managed" | "consent" | "dembrane-events" | null;
 	privacy_policy_url: string | null;
+	// consent-card name; null renders "The organiser"
+	organiser_name: string | null;
 }
 
 interface ProjectAnalysisRun {

@@ -19,11 +19,14 @@ type UseAudioRecorderOptions = {
 };
 
 type UseAudioRecorderResult = {
-	startRecording: (initialTime?: number) => void;
+	/** Resolves true only when recording actually started. */
+	startRecording: (initialTime?: number) => Promise<boolean>;
 	stopRecording: () => void;
 	pauseRecording: () => void;
 	resumeRecording: () => void;
 	isRecording: boolean;
+	/** True while startRecording is awaiting mic permission / stream setup. */
+	isStarting: boolean;
 	isPaused: boolean;
 	recordingTime: number;
 	errored:
@@ -61,10 +64,16 @@ const useChunkedAudioRecorder = ({
 	debug = false,
 }: UseAudioRecorderOptions): UseAudioRecorderResult => {
 	const [isRecording, setIsRecording] = useState(false);
+	const [isStarting, setIsStarting] = useState(false);
 	const [isPaused, setIsPaused] = useState(false);
 	const [userPaused, setUserPaused] = useState(false);
 
 	const isRecordingRef = useRef(isRecording);
+	// Re-entrancy latch: isRecording only flips after getUserMedia resolves, so
+	// without this a second click during the mic prompt leaks a stream + interval.
+	const startingRef = useRef(false);
+	// bumped by stopRecording to cancel a start still awaiting the mic prompt
+	const startTokenRef = useRef(0);
 	const isPausedRef = useRef(isPaused);
 	const userPausedRef = useRef(userPaused);
 
@@ -267,7 +276,16 @@ const useChunkedAudioRecorder = ({
 		recorder.start(timeslice * 2);
 	}, [isRecording]);
 
-	const startRecording = async (initialTime = 0) => {
+	const startRecording = async (initialTime = 0): Promise<boolean> => {
+		if (startingRef.current || isRecordingRef.current) {
+			log("startRecording: already starting or recording, ignoring");
+			return false;
+		}
+		startingRef.current = true;
+		const startToken = ++startTokenRef.current;
+		setIsStarting(true);
+		let acquiredStream: MediaStream | null = null;
+
 		try {
 			log("Requesting access to the microphone...");
 
@@ -296,6 +314,15 @@ const useChunkedAudioRecorder = ({
 			const stream = await navigator.mediaDevices.getUserMedia({
 				audio: audioConstraint,
 			});
+			acquiredStream = stream;
+
+			if (startToken !== startTokenRef.current) {
+				log("startRecording: stopped while awaiting mic access, bailing");
+				stream.getTracks().forEach((track) => {
+					track.stop();
+				});
+				return false;
+			}
 
 			if (!navigator.mediaDevices?.enumerateDevices) {
 				log("enumerateDevices() not supported.");
@@ -349,6 +376,8 @@ const useChunkedAudioRecorder = ({
 			chunkHistoryRef.current = [];
 			hasCalledInterruptionCallbackRef.current = false;
 
+			// synchronous so the re-entrancy guard closes before startingRef clears
+			isRecordingRef.current = true;
 			setIsRecording(true);
 			setIsPaused(false);
 			setUserPaused(false);
@@ -378,14 +407,50 @@ const useChunkedAudioRecorder = ({
 				clearInterval(intervalRef.current);
 			}
 			intervalRef.current = setInterval(updateRecordingTime, 1000);
+			return true;
 		} catch (error) {
 			console.error("Error accessing audio stream", error);
 			setPermissionError("Error accessing audio stream");
+			// the ref must be reset too: React batches true -> false into a no-op,
+			// so the sync effect never fires and the guard would swallow every retry
+			isRecordingRef.current = false;
 			setIsRecording(false);
+			// release the mic; a failed start must not leave tracks live
+			const stream = streamRef.current ?? acquiredStream;
+			stream?.getTracks().forEach((track) => {
+				track.stop();
+			});
+			streamRef.current = null;
+			// drop a half-started recorder: the next attempt calls stop() on it,
+			// which throws InvalidStateError while inactive and fails every retry
+			if (mediaRecorderRef.current) {
+				try {
+					mediaRecorderRef.current.stop();
+				} catch {
+					// already inactive
+				}
+				mediaRecorderRef.current = null;
+			}
+			// close the VU meter opened by this attempt, so repeated failures
+			// don't exhaust the browser's AudioContext limit
+			meterSourceRef.current?.disconnect();
+			meterSourceRef.current = null;
+			if (meterCtxRef.current && meterCtxRef.current.state !== "closed") {
+				meterCtxRef.current.close();
+			}
+			meterCtxRef.current = null;
+			analyserRef.current = null;
+			meterBufferRef.current = null;
+			return false;
+		} finally {
+			startingRef.current = false;
+			setIsStarting(false);
 		}
 	};
 
 	const stopRecording = () => {
+		startTokenRef.current += 1;
+		isRecordingRef.current = false;
 		if (
 			mediaRecorderRef.current &&
 			mediaRecorderRef.current.state === "recording"
@@ -478,6 +543,7 @@ const useChunkedAudioRecorder = ({
 		hadInterruption: hadConsecutiveSuspiciousChunksRef.current,
 		isPaused,
 		isRecording,
+		isStarting,
 		loading: false,
 		pauseRecording: userPauseRecording,
 		permissionError,

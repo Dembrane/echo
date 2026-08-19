@@ -77,6 +77,7 @@ _CONVERSATION_DEFAULT_FIELDS = [
     "id",
     "created_at",
     "updated_at",
+    "recording_started_at",
     "project_id",
     "participant_name",
     "participant_email",

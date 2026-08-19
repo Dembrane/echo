@@ -53,6 +53,6 @@ export const getReleases = (): Release[] => [
 		note: t`Remember you can always use the Feedback button for suggestions. We appreciate all your support, and thank you for using dembrane.`,
 		title: t`Understanding our new structure`,
 		version: "2026-08",
-		videoUrl: "https://www.youtube.com/watch?v=XSFAF3uSvMg",
+		videoUrl: t`https://www.youtube.com/watch?v=XSFAF3uSvMg`,
 	},
 ];

@@ -26,6 +26,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
+import { UsersThree } from "@phosphor-icons/react";
 import {
 	IconChevronDown,
 	IconChevronRight,
@@ -34,7 +35,6 @@ import {
 	IconPlus,
 	IconSparkles,
 } from "@tabler/icons-react";
-import { UsersThree } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -49,20 +49,20 @@ import {
 } from "@/components/members";
 import { OrgTrainingPanel } from "@/components/training";
 import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { OrganisationUsageRollup } from "@/components/workspace/OrganisationUsageRollup";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { UpgradeModal } from "@/components/workspace/FeatureGate";
-import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import {
 	avatarUrl,
 	memberInitials,
 	logoUrl as resolveLogoUrl,
 } from "@/lib/avatar";
 import { displayRole, isOutsiderRole, roleColor } from "@/lib/roles";
+import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import { OrganisationExternalView } from "./OrganisationExternalView";
 
 /**
@@ -1315,7 +1315,6 @@ function OrganisationOverviewPanel({
 					conversation_count: w.usage?.conversation_count ?? 0,
 					id: w.id,
 					is_private: roster?.is_private ?? false,
-					visibility: roster?.visibility ?? "open_to_organisation",
 					logo_url: w.logo_url ?? null,
 					member_count: w.member_count,
 					members_preview: w.members_preview ?? [],
@@ -1324,6 +1323,7 @@ function OrganisationOverviewPanel({
 					project_count: w.project_count,
 					recently_approved: recentlyApproved,
 					tier: w.tier,
+					visibility: roster?.visibility ?? "open_to_organisation",
 				};
 			})
 			.sort((a, b) => a.name.localeCompare(b.name));
@@ -1442,10 +1442,15 @@ function OrganisationOverviewPanel({
 								<Trans>New workspace</Trans>
 							</Button>
 							{atWorkspaceLimit && (
-								<Tooltip label={t`Free plan allows 1 workspace per organisation`}>
+								<Tooltip
+									label={t`Free plan allows 1 workspace per organisation`}
+								>
 									<IconInfoCircle
 										size={14}
-										style={{ color: "var(--mantine-color-primary-6)", cursor: "help" }}
+										style={{
+											color: "var(--mantine-color-primary-6)",
+											cursor: "help",
+										}}
 									/>
 								</Tooltip>
 							)}
@@ -1577,7 +1582,10 @@ function OrganisationWorkspaceCard({
 					>
 						{workspace.name}
 					</Text>
-					<WorkspaceVisibilityIcon visibility={workspace.visibility} size={14} />
+					<WorkspaceVisibilityIcon
+						visibility={workspace.visibility}
+						size={14}
+					/>
 				</Group>
 				<Text size="xs" c="dimmed" lineClamp={1}>
 					{capitalizedTier}
@@ -1910,7 +1918,10 @@ function OrganisationPersonCard({
 									className="rounded px-2 py-1 hover:bg-[var(--mantine-color-default-hover)]"
 								>
 									<Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
-										<WorkspaceVisibilityIcon visibility={ws.visibility} size={12} />
+										<WorkspaceVisibilityIcon
+											visibility={ws.visibility}
+											size={12}
+										/>
 										<Text size="sm" truncate>
 											{ws.name}
 										</Text>

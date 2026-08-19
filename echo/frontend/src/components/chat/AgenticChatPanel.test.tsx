@@ -197,7 +197,7 @@ vi.mock("./ChatHistoryMessage", () => ({
 	),
 }));
 
-import { AgenticChatPanel } from "./AgenticChatPanel";
+import { AgenticChatPanel, enrichAgenticContent } from "./AgenticChatPanel";
 
 const at = (seq: number) =>
 	new Date(Date.UTC(2026, 7, 1, 10, seq)).toISOString();
@@ -648,5 +648,28 @@ describe("AgenticChatPanel, voice input", () => {
 		expect(alert.textContent).toContain("blocking the microphone");
 		// A denial leaves the composer exactly as it was.
 		expect(screen.getByTestId("chat-input-textarea")).toBeTruthy();
+	});
+});
+
+describe("enrichAgenticContent, footnote citations", () => {
+	const CONVERSATION_ID = "0aa78d5a-1111-2222-3333-444455556666";
+
+	const enrich = (content: string) =>
+		enrichAgenticContent({
+			content,
+			conversationNames: new Map([[CONVERSATION_ID, "Maria"]]),
+			language: "en-US",
+			projectId: "project-1",
+			workspaceId: "workspace-1",
+		});
+
+	it("turns footnote definition tags into rich transcript links", () => {
+		const enriched = enrich(
+			`Parking came up often[^1].\n\n[^1]: [conversation_id:${CONVERSATION_ID};chunk_id:chunk-9]`,
+		);
+
+		expect(enriched).toContain("[^1]: [Maria's transcript excerpt](");
+		expect(enriched).toContain("#chunk-chunk-9");
+		expect(enriched).not.toContain("conversation_id:");
 	});
 });

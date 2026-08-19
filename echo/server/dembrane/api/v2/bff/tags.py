@@ -9,7 +9,7 @@ live here so we can retire the frontend's direct Directus calls.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 from logging import getLogger
 from datetime import datetime, timezone
 
@@ -17,6 +17,7 @@ from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
+from dembrane.legal_basis import require_dembrane_email, build_legal_basis_write
 from dembrane.directus_async import async_directus
 from dembrane.search_filters import merge_search_filter
 from dembrane.api.v2.bff._access import (
@@ -262,6 +263,9 @@ class ProjectUpdate(BaseModel):
     tutorial_slug: Optional[str] = None
     host_guide: Optional[dict[str, Any]] = None
     methodology_version_id: Optional[str] = None
+    # Legal override; explicit null clears it (model_fields_set semantics)
+    legal_basis: Optional[Literal["client-managed", "consent", "dembrane-events"]] = None
+    privacy_policy_url: Optional[str] = None
 
 
 @project_router.get("")
@@ -422,6 +426,25 @@ async def update_project(
     payload = body.model_dump(exclude_unset=True)
     if not payload:
         raise HTTPException(status_code=400, detail="No fields to update")
+
+    legal_write = build_legal_basis_write(
+        fields_set=body.model_fields_set,
+        legal_basis=body.legal_basis,
+        privacy_policy_url=body.privacy_policy_url,
+        stored_legal_basis=access.project.get("legal_basis"),
+        stored_privacy_policy_url=access.project.get("privacy_policy_url"),
+    )
+    if legal_write is not None:
+        # Stricter than project:update (which externals hold): the override
+        # can switch the consent checkbox off, so it needs the admin bar.
+        if access.role not in ("admin", "owner"):
+            raise HTTPException(
+                status_code=403,
+                detail="Only workspace admins can change the legal basis",
+            )
+        if legal_write.requires_dembrane_email_check:
+            await require_dembrane_email(directus_user_id=auth.user_id)
+        payload.update(legal_write.payload)
 
     updated = await async_directus.update_item("project", project_id, payload)
     if isinstance(updated, dict) and "data" in updated:

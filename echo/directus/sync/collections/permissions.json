@@ -265,10 +265,15 @@
     "collection": "announcement",
     "action": "read",
     "permissions": {
-      "_and": [
+      "_or": [
         {
           "expires_at": {
             "_gte": "$NOW"
+          }
+        },
+        {
+          "expires_at": {
+            "_null": true
           }
         }
       ]
