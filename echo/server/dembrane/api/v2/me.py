@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from pydantic import Field, BaseModel
+from redis.exceptions import LockError
 
 from dembrane.app_user import (
     resolve_app_user,
@@ -14,6 +15,7 @@ from dembrane.app_user import (
     get_directus_user_profile,
 )
 from dembrane.policies import ROLE_HIERARCHY as _ROLE_LEVEL
+from dembrane.redis_async import get_redis_client
 from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.invites import compute_invite_hash
@@ -245,6 +247,9 @@ async def update_me(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Update the current user's profile (display_name and settings)."""
+    if body.display_name is None and body.settings is None:
+        raise HTTPException(status_code=400, detail="Nothing to update")
+
     app_user = await get_app_user_or_raise(auth.user_id)
 
     payload: dict[str, Any] = {}
@@ -254,17 +259,42 @@ async def update_me(
         cleaned = body.display_name.replace("\r", " ").replace("\n", " ").strip()
         payload["display_name"] = cleaned
 
+    lock = None
     if body.settings is not None:
-        existing_settings = app_user.get("settings") or {}
-        if not isinstance(existing_settings, dict):
-            existing_settings = {}
-        merged_settings = {**existing_settings, **body.settings}
-        payload["settings"] = merged_settings
+        # Per-user lock: concurrent read-merge-writes clobber each other's keys.
+        # Fails closed if Redis is down; an unlocked fallback would revive the race.
+        redis = await get_redis_client()
+        lock = redis.lock(
+            f"dembrane:app_user_settings_lock:{app_user['id']}",
+            timeout=30,
+            blocking_timeout=3,
+        )
+        if not await lock.acquire():
+            raise HTTPException(
+                status_code=503,
+                detail="Settings are being updated, try again",
+                headers={"Retry-After": "2"},
+            )
 
-    if not payload:
-        raise HTTPException(status_code=400, detail="Nothing to update")
-
-    await async_directus.update_item("app_user", app_user["id"], payload)
+    try:
+        if body.settings is not None:
+            # Re-read inside the lock; the pre-lock read may be stale.
+            fresh_user = await get_app_user_or_raise(auth.user_id)
+            existing_settings = fresh_user.get("settings") or {}
+            if not isinstance(existing_settings, dict):
+                existing_settings = {}
+            payload["settings"] = {**existing_settings, **body.settings}
+        await async_directus.update_item("app_user", app_user["id"], payload)
+    finally:
+        if lock is not None:
+            try:
+                await lock.release()
+            except LockError:
+                # Lock expired mid-hold; the write already committed.
+                logger.warning(
+                    "settings lock for app_user %s expired before release",
+                    app_user["id"],
+                )
     return {"status": "success"}
 
 
