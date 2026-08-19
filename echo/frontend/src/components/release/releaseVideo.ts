@@ -43,6 +43,12 @@ export const shouldShowReleaseVideo = (
 };
 
 /**
+ * The one YouTube origin the CSP lets us frame (`frame-src` in vercel.json),
+ * and therefore also the postMessage peer for the watch-progress bridge.
+ */
+export const YOUTUBE_EMBED_ORIGIN = "https://www.youtube-nocookie.com";
+
+/**
  * Convert a YouTube link into a privacy-mode embed URL.
  *
  * The embed host is www.youtube-nocookie.com, which is the only YouTube origin
@@ -52,7 +58,21 @@ export const shouldShowReleaseVideo = (
  */
 export const youtubeEmbedUrl = (videoUrl: string): string | null => {
 	const id = youtubeVideoId(videoUrl);
-	return id ? `https://www.youtube-nocookie.com/embed/${id}?rel=0` : null;
+	return id ? `${YOUTUBE_EMBED_ORIGIN}/embed/${id}?rel=0` : null;
+};
+
+/**
+ * Add the query params that make the embed talk back. `enablejsapi` switches
+ * on the player's widget postMessage protocol; `origin` names the parent
+ * window it may trust with it. No script loads and no new origin appears
+ * anywhere: the bridge is window.postMessage against the frame that is
+ * already there, which is what keeps the CSP and the nocookie posture intact.
+ */
+export const playerBridgeUrl = (embedUrl: string, origin: string): string => {
+	const url = new URL(embedUrl);
+	url.searchParams.set("enablejsapi", "1");
+	url.searchParams.set("origin", origin);
+	return url.toString();
 };
 
 const YOUTUBE_HOSTS = new Set([

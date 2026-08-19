@@ -485,6 +485,9 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "[conversation_id:<id>;chunk_id:<chunk_id>]" in SYSTEM_PROMPT
     assert "[conversation_id:<id>]" in SYSTEM_PROMPT
     assert "footnote" in prompt
+    # The frontend renders the footnote list under its own localized header;
+    # a model-written one duplicates it (ChatHistoryMessage.tsx)
+    assert "do not write any header above them" in prompt
     assert "worked from summaries only" in prompt
     assert "read the full transcript" in prompt
     assert "never fabricate quotes" in prompt

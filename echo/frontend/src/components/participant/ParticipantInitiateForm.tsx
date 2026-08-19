@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { AxiosError } from "axios";
 import posthog from "posthog-js";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { z } from "zod";
@@ -84,21 +84,42 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 	const { isSuccess, isError, ...initiateConversationMutation } =
 		useInitiateConversationMutation();
 
-	const startConversation = (data: FormValues) => {
-		posthog.capture("conversation_started", {
-			project_id: project.id,
-			source: "PORTAL_AUDIO",
-		});
-		initiateConversationMutation.mutate({
-			name: data.name ?? t`Participant`,
-			email: data.email || undefined,
-			pin: "",
-			projectId: project.id,
-			source: "PORTAL_AUDIO",
-			tagIdList: data.tagIdList,
-			visitorId: getVisitorId(project.id),
-		});
-	};
+	// Re-entrancy latch: isPending flips too late to block a fast double click
+	// or a StrictMode double-invoke of the auto-submit effect.
+	const hasInitiatedRef = useRef(false);
+
+	const { mutate: initiateConversation } = initiateConversationMutation;
+
+	const startConversation = useCallback(
+		(data: FormValues) => {
+			if (hasInitiatedRef.current) return;
+			hasInitiatedRef.current = true;
+
+			posthog.capture("conversation_started", {
+				project_id: project.id,
+				source: "PORTAL_AUDIO",
+			});
+			initiateConversation(
+				{
+					// `??` not `||`: an empty name is intentional when the project does
+					// not ask for one, and keeps the dashboard's auto-title fallback
+					name: data.name ?? t`Participant`,
+					email: data.email || undefined,
+					pin: "",
+					projectId: project.id,
+					source: "PORTAL_AUDIO",
+					tagIdList: data.tagIdList,
+					visitorId: getVisitorId(project.id),
+				},
+				{
+					onError: () => {
+						hasInitiatedRef.current = false;
+					},
+				},
+			);
+		},
+		[project.id, initiateConversation],
+	);
 
 	// Auto-submit if skipOnboarding is requested and we have required fields prefilled
 	useEffect(() => {
@@ -113,18 +134,14 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 			!isSuccess &&
 			!isError
 		) {
-			initiateConversationMutation.mutate({
+			// startConversation owns the latch, the payload, and the analytics
+			startConversation({
 				name: defaultName || t`Participant`,
-				email: defaultEmail || undefined,
-				pin: "",
-				projectId: project.id,
-				source: "PORTAL_AUDIO",
+				email: defaultEmail,
 				tagIdList: defaultTagIdList,
-				visitorId: getVisitorId(project.id),
 			});
 		}
 	}, [
-		project.id,
 		project.default_conversation_ask_for_participant_name,
 		defaultName,
 		defaultEmail,
@@ -133,7 +150,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		isError,
 		searchParams,
 		initiateConversationMutation.isPending,
-		initiateConversationMutation.mutate,
+		startConversation,
 	]);
 
 	useEffect(() => {
@@ -153,6 +170,8 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 					`/${project.id}/conversation/${initiateConversationMutation.data?.id}${pathSuffix}${queryStr}`,
 				);
 			} else {
+				// release the latch so Continue works again
+				hasInitiatedRef.current = false;
 				reset();
 			}
 		}

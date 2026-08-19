@@ -68,6 +68,7 @@ import {
 	useSelectAllContextMutation,
 } from "./hooks";
 import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
+import { getConversationStartTime } from "./utils";
 
 type SortOption = {
 	label: string;
@@ -123,9 +124,9 @@ const hasVerifiedArtifacts = (conversation: Conversation) =>
 		(artifact) => (artifact as ConversationArtifact).approved_at,
 	) ?? false;
 
-const formatCreatedAt = (createdAt: string | null) => {
-	if (!createdAt) return t`Unknown date`;
-	return t`${formatDistanceToNowStrict(new Date(createdAt), {
+const formatStartedAt = (startedAt: string | null) => {
+	if (!startedAt) return t`Unknown date`;
+	return t`${formatDistanceToNowStrict(new Date(startedAt), {
 		addSuffix: true,
 	})}`;
 };
@@ -346,7 +347,7 @@ const ConversationRow = ({
 								</Tooltip>
 							)}
 							<Text size="xs" c="dimmed">
-								{formatCreatedAt(conversation.created_at)}
+								{formatStartedAt(getConversationStartTime(conversation))}
 							</Text>
 							{conversation.live && (
 								<Badge size="xs" color="red" variant="light">

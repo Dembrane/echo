@@ -301,7 +301,7 @@ export const ConversationEdit = ({
 					)}
 
 					<Box>
-						<Text size="sm" c="dimmed">
+						<Text size="sm">
 							<Trans>Created on</Trans>
 						</Text>
 						<Text size="sm">
@@ -309,9 +309,20 @@ export const ConversationEdit = ({
 						</Text>
 					</Box>
 
+					{conversation.recording_started_at && (
+						<Box>
+							<Text size="sm">
+								<Trans>Recording started</Trans>
+							</Text>
+							<Text size="sm">
+								{new Date(conversation.recording_started_at).toLocaleString()}
+							</Text>
+						</Box>
+					)}
+
 					{conversation.duration != null && conversation.duration > 0 && (
 						<Box>
-							<Text size="sm" c="dimmed">
+							<Text size="sm">
 								<Trans>Duration</Trans>
 							</Text>
 							<Text size="sm">{formatDuration(conversation.duration)}</Text>

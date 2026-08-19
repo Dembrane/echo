@@ -24,6 +24,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useInfiniteConversationsByProjectId } from "@/components/conversation/hooks";
 import { LiveMonitorSection } from "@/components/conversation/LiveMonitorSection";
 import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
+import { getConversationStartTime } from "@/components/conversation/utils";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectById } from "@/components/project/hooks";
 import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
@@ -211,6 +212,7 @@ export const ProjectHomeRoute = () => {
 											| ConversationProjectTag[]
 											| undefined) ?? [];
 									const isLocked = !!conversation.locked;
+									const startedAt = getConversationStartTime(conversation);
 
 									const card = (
 										<Card
@@ -229,10 +231,8 @@ export const ProjectHomeRoute = () => {
 													</Text>
 													<Group gap="xs" align="center" wrap="nowrap">
 														<Text size="xs" c="dimmed">
-															{conversation.created_at
-																? new Date(
-																		conversation.created_at,
-																	).toLocaleDateString()
+															{startedAt
+																? new Date(startedAt).toLocaleDateString()
 																: ""}
 														</Text>
 														{conversation.live && (

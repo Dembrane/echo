@@ -1,4 +1,10 @@
-import { createItems, type Query, readItems, updateItem } from "@directus/sdk";
+import {
+	createItems,
+	type Query,
+	readItems,
+	updateItem,
+	updateItems,
+} from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import {
 	useInfiniteQuery,
@@ -12,11 +18,14 @@ import useSessionStorageState from "use-session-storage-state";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { directus } from "@/lib/directus";
+import { isUnreadByMe, notExpiredFilter } from "../announcementFilters";
 
 export const useLatestAnnouncement = () => {
 	const { data: currentUser } = useCurrentUser();
 
 	return useQuery({
+		// Without a user this 403s on every cold load.
+		enabled: !!currentUser?.id,
 		queryFn: async () => {
 			try {
 				const response = await directus.request(
@@ -42,20 +51,7 @@ export const useLatestAnnouncement = () => {
 								activity: ["id", "user_id", "announcement_activity", "read"],
 							},
 						],
-						filter: {
-							_or: [
-								{
-									expires_at: {
-										_gte: new Date().toISOString(),
-									},
-								},
-								{
-									expires_at: {
-										_null: true,
-									},
-								},
-							],
-						},
+						filter: notExpiredFilter(),
 						limit: 1,
 						sort: ["-created_at"],
 					}),
@@ -68,13 +64,6 @@ export const useLatestAnnouncement = () => {
 				throw error;
 			}
 		},
-		// The query is meaningless without a user: it filters `activity` by
-		// currentUser.id, and `announcement` is readable only by the Basic User
-		// policy. Firing it before auth resolves means an unauthenticated request
-		// that Directus answers 403, three times over because of `retry: 2`, and
-		// a red console error on every cold load. `useInfiniteAnnouncementActivity`
-		// in this same file already gates on the user; this one was missed.
-		enabled: !!currentUser?.id,
 		queryKey: ["announcements", "latest"],
 		retry: 2,
 		staleTime: 1000 * 60 * 5, // 5 minutes
@@ -98,7 +87,8 @@ export const useInfiniteAnnouncements = ({
 	const { initialLimit = 10 } = options;
 
 	return useInfiniteQuery({
-		enabled,
+		// Firing before auth resolves caches a wrong result under a stale key.
+		enabled: enabled && !!currentUser?.id,
 		getNextPageParam: (lastPage: {
 			announcements: Announcement[];
 			nextOffset?: number;
@@ -129,20 +119,7 @@ export const useInfiniteAnnouncements = ({
 								activity: ["id", "user_id", "announcement_activity", "read"],
 							},
 						],
-						filter: {
-							_or: [
-								{
-									expires_at: {
-										_gte: new Date().toISOString(),
-									},
-								},
-								{
-									expires_at: {
-										_null: true,
-									},
-								},
-							],
-						},
+						filter: notExpiredFilter(),
 						limit: initialLimit,
 						offset: pageParam * initialLimit,
 						sort: ["-created_at"],
@@ -161,7 +138,7 @@ export const useInfiniteAnnouncements = ({
 				throw error;
 			}
 		},
-		queryKey: ["announcements", "infinite", query],
+		queryKey: ["announcements", "infinite", currentUser?.id, query],
 	});
 };
 
@@ -170,12 +147,24 @@ export const useMarkAsReadMutation = () => {
 	return useMutation({
 		mutationFn: async ({
 			announcementId,
+			activityIds,
 			userId,
 		}: {
 			announcementId: string;
+			/** Existing rows for this user, if any. Passing them avoids duplicates. */
+			activityIds?: string[];
 			userId?: string;
 		}) => {
 			try {
+				// Update in place; a second row would pile up on every toggle.
+				if (activityIds && activityIds.length > 0) {
+					return await directus.request(
+						updateItems("announcement_activity", activityIds, {
+							read: true,
+						} as any),
+					);
+				}
+
 				return await directus.request(
 					createItems("announcement_activity", {
 						announcement_activity: announcementId,
@@ -264,13 +253,17 @@ export const useMarkAsReadMutation = () => {
 				},
 			);
 
-			// // Optimistically update unread count
+			// Count and urgent title are `select`s over these rows, so both follow.
 			queryClient.setQueriesData(
-				{ queryKey: ["announcements", "unread"] },
-				(old: number) => {
-					if (typeof old !== "number") return old;
-					return Math.max(0, old - 1);
-				},
+				{ queryKey: ["announcements", "summary"] },
+				(old: { id: string }[]) =>
+					Array.isArray(old)
+						? old.map((row) =>
+								row.id === announcementId
+									? { ...row, activity: [{ read: true }] }
+									: row,
+							)
+						: old,
 			);
 
 			// Return a context object with the snapshotted value
@@ -369,13 +362,16 @@ export const useMarkAsUnreadMutation = () => {
 				},
 			);
 
-			// Optimistically increment unread count
 			queryClient.setQueriesData(
-				{ queryKey: ["announcements", "unread"] },
-				(old: number) => {
-					if (typeof old !== "number") return old;
-					return old + 1;
-				},
+				{ queryKey: ["announcements", "summary"] },
+				(old: { id: string }[]) =>
+					Array.isArray(old)
+						? old.map((row) =>
+								row.id === announcementId
+									? { ...row, activity: [{ read: false }] }
+									: row,
+							)
+						: old,
 			);
 
 			return { previousAnnouncements };
@@ -393,56 +389,62 @@ export const useMarkAllAsReadMutation = () => {
 	return useMutation({
 		mutationFn: async () => {
 			try {
-				// Step 1: Find all announcement IDs that don't have activity for this user
-				const unreadAnnouncements = await directus.request(
+				// `deep._filter` scopes the rows to me and, unlike a permission, holds
+				// for admins too, who would otherwise overwrite other people's rows.
+				const liveAnnouncements = (await directus.request(
 					readItems("announcement", {
-						fields: ["id"],
-						filter: {
-							_and: [
-								{
-									// Only get announcements that don't have activity records for this user
-									activity: {
-										_none: {
-											user_id: {
-												_eq: currentUser?.id,
-											},
-										},
-									},
-								},
-								{
-									_or: [
-										{
-											expires_at: {
-												_gte: new Date().toISOString(),
-											},
-										},
-										{
-											expires_at: {
-												_null: true,
-											},
-										},
-									],
-								},
-							],
+						deep: {
+							activity: { _filter: { user_id: { _eq: currentUser?.id } } },
 						},
+						fields: ["id", { activity: ["id", "read"] }],
+						filter: notExpiredFilter(),
+						limit: -1,
 					}),
+				)) as {
+					id: string;
+					activity?: { id: string; read?: boolean | null }[];
+				}[];
+
+				const unreadAnnouncements = liveAnnouncements.filter((announcement) =>
+					isUnreadByMe(announcement.activity),
 				);
 
-				// Step 2: Create activity records for all unread announcements
-				if (unreadAnnouncements.length > 0) {
-					return await directus.request(
-						createItems(
-							"announcement_activity",
-							unreadAnnouncements.map((announcement) => ({
-								announcement_activity: announcement.id,
+				const activityIdsToUpdate = unreadAnnouncements.flatMap(
+					(announcement) =>
+						(announcement.activity ?? []).map((activity) => activity.id),
+				);
+				const announcementsToCreate = unreadAnnouncements.filter(
+					(announcement) => (announcement.activity ?? []).length === 0,
+				);
+
+				const results = [];
+
+				if (activityIdsToUpdate.length > 0) {
+					results.push(
+						await directus.request(
+							updateItems("announcement_activity", activityIdsToUpdate, {
 								read: true,
-								...(currentUser?.id ? { user_id: currentUser.id } : {}),
-							})) as any,
+							} as any),
 						),
 					);
 				}
 
-				return [];
+				if (announcementsToCreate.length > 0) {
+					results.push(
+						await directus.request(
+							createItems(
+								"announcement_activity",
+								announcementsToCreate.map((announcement) => ({
+									announcement_activity: announcement.id,
+									read: true,
+									...(currentUser?.id ? { user_id: currentUser.id } : {}),
+								})) as any,
+							),
+						),
+					);
+				}
+
+				return results;
 			} catch (error) {
 				toast.error(t`Failed to mark all announcements as read`);
 				posthog.captureException(error);
@@ -513,8 +515,16 @@ export const useMarkAllAsReadMutation = () => {
 				},
 			);
 
-			// Optimistically update unread count to 0
-			queryClient.setQueriesData({ queryKey: ["announcements", "unread"] }, 0);
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "summary"] },
+				(old: unknown[]) =>
+					Array.isArray(old)
+						? old.map((row) => ({
+								...(row as object),
+								activity: [{ read: true }],
+							}))
+						: old,
+			);
 
 			// Return a context object with the snapshotted value
 			return { previousAnnouncements };
@@ -526,7 +536,13 @@ export const useMarkAllAsReadMutation = () => {
 	});
 };
 
-export const useUnreadAnnouncements = () => {
+type SummaryRow = Announcement & { activity?: { read?: boolean | null }[] };
+
+/**
+ * Backs both the unread count and the urgent title as two `select`s over one
+ * cache entry: a single poll, and the two can never disagree.
+ */
+const useAnnouncementSummary = <T>(select: (rows: SummaryRow[]) => T) => {
 	const { data: currentUser } = useCurrentUser();
 
 	return useQuery({
@@ -534,54 +550,53 @@ export const useUnreadAnnouncements = () => {
 		queryFn: async () => {
 			try {
 				if (!currentUser?.id) {
-					return 0;
+					return [] as SummaryRow[];
 				}
 
-				const unreadAnnouncements = await directus.request(
+				return (await directus.request(
 					readItems("announcement", {
-						fields: ["id"],
-						filter: {
-							_and: [
-								{
-									activity: {
-										_none: {
-											user_id: {
-												_eq: currentUser.id,
-											},
-										},
-									},
-								},
-								{
-									_or: [
-										{
-											expires_at: {
-												_gte: new Date().toISOString(),
-											},
-										},
-										{
-											expires_at: {
-												_null: true,
-											},
-										},
-									],
-								},
-							],
+						deep: {
+							activity: { _filter: { user_id: { _eq: currentUser.id } } },
 						},
+						fields: [
+							"id",
+							"created_at",
+							"level",
+							{ translations: ["id", "languages_code", "title"] },
+							{ activity: ["read"] },
+						],
+						filter: notExpiredFilter(),
+						limit: -1,
+						sort: ["-created_at"],
 					}),
-				);
-
-				return unreadAnnouncements.length;
+				)) as SummaryRow[];
 			} catch (error) {
 				posthog.captureException(error);
-				console.error("Error fetching unread announcements count:", error);
+				console.error("Error fetching announcement summary:", error);
 				throw error;
 			}
 		},
-		queryKey: ["announcements", "unread", currentUser?.id],
+		queryKey: ["announcements", "summary", currentUser?.id],
+		refetchInterval: 60_000,
 		retry: 2,
+		select,
 		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 };
+
+// Module scope keeps these referentially stable across renders.
+const selectUnreadCount = (rows: SummaryRow[]) =>
+	rows.filter((row) => isUnreadByMe(row.activity)).length;
+
+const selectTopUrgentUnread = (rows: SummaryRow[]) =>
+	rows.find((row) => row.level === "urgent" && isUnreadByMe(row.activity)) ??
+	null;
+
+export const useUnreadAnnouncements = () =>
+	useAnnouncementSummary(selectUnreadCount);
+
+export const useTopUrgentUnreadAnnouncement = () =>
+	useAnnouncementSummary(selectTopUrgentUnread);
 
 export const useWhatsNewAnnouncements = ({
 	enabled = true,

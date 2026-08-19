@@ -9,6 +9,11 @@ from pydantic import BaseModel
 from dembrane.app_user import get_app_user_or_raise
 from dembrane.policies import has_policy
 from dembrane.inheritance import user_can_access, get_user_project_access
+from dembrane.legal_basis import (
+    fetch_cascade_rows,
+    resolve_organiser_name,
+    resolve_effective_legal_basis,
+)
 from dembrane.api.v2.schemas import MoveProjectRequest, MoveProjectResponse
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
@@ -77,6 +82,7 @@ async def get_project_bff(
     project_id: str,
     auth: DependencyDirectusSession,
     include_tags: bool = True,
+    include_legal: bool = False,
     fields: Optional[str] = None,
 ) -> dict:
     """BFF project fetch — project row for the frontend detail page.
@@ -110,6 +116,19 @@ async def get_project_bff(
 
     role, source = access
 
+    # Must run before the fields filter strips workspace_id/directus_user_id.
+    # The frontend can't re-derive this (no read access to other users' rows).
+    legal_block = None
+    if include_legal:
+        rows = await fetch_cascade_rows(project)
+        effective = resolve_effective_legal_basis(
+            project=project, workspace=rows.workspace, owner=rows.owner
+        )
+        inherited = resolve_effective_legal_basis(
+            workspace=rows.workspace, owner=rows.owner
+        )
+        legal_block = (effective, inherited, rows)
+
     # Apply the fields allowlist before enriching so `_role`/`_source`
     # can't be filtered out — they're cheap metadata the UI uses.
     if fields:
@@ -121,6 +140,22 @@ async def get_project_bff(
 
     project["_role"] = role
     project["_source"] = source
+
+    if legal_block is not None:
+        effective, inherited, rows = legal_block
+        project["_legal"] = {
+            "effective": {
+                "legal_basis": effective.legal_basis,
+                "privacy_policy_url": effective.privacy_policy_url,
+                "source": effective.source,
+            },
+            "inherited": {
+                "legal_basis": inherited.legal_basis,
+                "privacy_policy_url": inherited.privacy_policy_url,
+                "source": inherited.source,
+            },
+            "organiser_name": resolve_organiser_name(rows.workspace, rows.org),
+        }
 
     if include_tags:
         tags = (

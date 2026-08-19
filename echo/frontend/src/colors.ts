@@ -193,6 +193,12 @@ export const tailwindColors = {
 	springGreen: toTailwindPalette(brandColors.springGreen),
 };
 
+export const stateColors = {
+	errorBorder: "rgba(255, 154, 162, 0.55)",
+	errorMark: "#b36d72",
+	errorSurface: "rgba(255, 154, 162, 0.16)",
+} as const;
+
 // Base color values for quick access (e.g., in CSS-in-JS or inline styles)
 export const baseColors = {
 	cyan: "#00FFFF",

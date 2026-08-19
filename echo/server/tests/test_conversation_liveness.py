@@ -38,6 +38,22 @@ def fake_redis(monkeypatch) -> _FakeRedis:
     return client
 
 
+@pytest.fixture(autouse=True)
+def stamp_calls(monkeypatch) -> list:
+    """Capture the conversation-row write a recording ping triggers."""
+    import dembrane.service.conversation as conversation_module
+
+    calls: list[tuple] = []
+
+    def _stamp(
+        conversation_id: str, candidate: datetime, client=None, allow_moving_earlier: bool = False
+    ) -> None:
+        calls.append((conversation_id, candidate, allow_moving_earlier))
+
+    monkeypatch.setattr(conversation_module, "stamp_recording_started_at", _stamp)
+    return calls
+
+
 def _run(coro):
     import asyncio
 
@@ -82,6 +98,47 @@ def test_recording_started_at_stamped_once_and_carried(
     assert (
         json.loads(fake_redis.store[key].decode())["recording_started_at"] == started
     )
+
+
+def test_first_recording_ping_persists_to_conversation(
+    fake_redis: _FakeRedis, stamp_calls: list
+) -> None:
+    calls = stamp_calls
+    t0 = datetime(2026, 7, 3, 10, 0, 0, tzinfo=timezone.utc)
+    _run(liveness.mark_conversation_seen("c1", now=t0, telemetry={"state": "waiting"}))
+    assert calls == []
+
+    t1 = t0 + timedelta(seconds=5)
+    _run(liveness.mark_conversation_seen("c1", now=t1, telemetry={"state": "recording"}))
+    # server-clocked, so it is allowed to correct a later client stamp
+    assert calls == [("c1", t1, True)]
+
+    # carried forward within the same Redis window: no second write
+    _run(
+        liveness.mark_conversation_seen(
+            "c1", now=t1 + timedelta(seconds=5), telemetry={"state": "recording"}
+        )
+    )
+    assert len(calls) == 1
+
+
+def test_recording_ping_survives_persistence_failure(fake_redis: _FakeRedis, monkeypatch) -> None:
+    import json
+
+    import dembrane.service.conversation as conversation_module
+
+    def _boom(
+        conversation_id: str, candidate: datetime, client=None, allow_moving_earlier: bool = False
+    ) -> None:
+        raise RuntimeError("directus down")
+
+    monkeypatch.setattr(conversation_module, "stamp_recording_started_at", _boom)
+
+    now = datetime(2026, 7, 3, 10, 0, 0, tzinfo=timezone.utc)
+    _run(liveness.mark_conversation_seen("c1", now=now, telemetry={"state": "recording"}))
+
+    stored = json.loads(fake_redis.store["conversation_liveness:c1"].decode())
+    assert stored["recording_started_at"] == now.isoformat()
 
 
 def test_mark_sets_key_with_ttl(fake_redis: _FakeRedis) -> None:
