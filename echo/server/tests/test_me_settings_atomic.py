@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from fastapi import HTTPException
+import pytest
 
 from dembrane.api.v2.me import deep_merge, update_user_settings_atomic
 

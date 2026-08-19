@@ -248,7 +248,9 @@ def deep_merge(dict1: dict[str, Any], dict2: dict[str, Any]) -> dict[str, Any]:
 async def update_user_settings_atomic(app_user_id: str, new_settings: dict[str, Any]) -> dict[str, Any]:
     """Update settings atomically at the PostgreSQL level using row-level FOR UPDATE locks."""
     import json
+
     import psycopg
+
     from dembrane.settings import get_settings
 
     settings_obj = get_settings()
