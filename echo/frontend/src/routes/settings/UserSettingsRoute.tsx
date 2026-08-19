@@ -12,7 +12,6 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AccountSettingsCard } from "@/components/settings/AccountSettingsCard";
@@ -23,24 +22,14 @@ import { ChangePasswordCard } from "@/components/settings/ChangePasswordCard";
 import { FontSettingsCard } from "@/components/settings/FontSettingsCard";
 import { FontSizeSettingsCard } from "@/components/settings/FontSizeSettingsCard";
 import { LanguageSettingsCard } from "@/components/settings/LanguageSettingsCard";
-import { LegalBasisSettingsCard } from "@/components/settings/LegalBasisSettingsCard";
 import { MyAccessCard } from "@/components/settings/MyAccessCard";
 import { TwoFactorSettingsCard } from "@/components/settings/TwoFactorSettingsCard";
-import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
-type SectionId =
-	| "account"
-	| "access"
-	| "appearance"
-	| "assistant"
-	| "project-defaults";
+type SectionId = "account" | "access" | "appearance" | "assistant";
 
 const resolveSection = (section?: string): SectionId =>
-	section === "access" ||
-	section === "appearance" ||
-	section === "assistant" ||
-	section === "project-defaults"
+	section === "access" || section === "appearance" || section === "assistant"
 		? section
 		: "account";
 
@@ -50,26 +39,7 @@ export const UserSettingsRoute = () => {
 	const navigate = useI18nNavigate();
 	const { section: urlSection } = useParams<{ section?: string }>();
 
-	const { data: accessData } = useQuery<{
-		organisations: Array<{ id: string }>;
-	} | null>({
-		queryFn: async () => {
-			const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
-				credentials: "include",
-			});
-			if (!res.ok) return null;
-			return res.json();
-		},
-		queryKey: ["v2", "workspaces"],
-		staleTime: 60_000,
-	});
-
-	const requestedSection = resolveSection(urlSection);
-	const isExternalOnly = (accessData?.organisations.length ?? 0) === 0;
-	const activeSection =
-		isExternalOnly && requestedSection === "project-defaults"
-			? "account"
-			: requestedSection;
+	const activeSection = resolveSection(urlSection);
 	const isTwoFactorEnabled = Boolean(user?.tfa_enabled);
 
 	return (
@@ -153,16 +123,6 @@ export const UserSettingsRoute = () => {
 								</Title>
 
 								<AssistantMemoryCard />
-							</Stack>
-						)}
-
-						{activeSection === "project-defaults" && !isExternalOnly && (
-							<Stack gap="lg">
-								<Title order={3}>
-									<Trans>Project defaults</Trans>
-								</Title>
-
-								<LegalBasisSettingsCard />
 							</Stack>
 						)}
 					</ScrollArea>

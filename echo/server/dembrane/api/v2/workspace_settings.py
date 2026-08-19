@@ -12,6 +12,7 @@ from dembrane.directus import directus
 from dembrane.inheritance import (
     workspace_follows_organisation_members,
 )
+from dembrane.legal_basis import require_dembrane_email, build_legal_basis_write
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.directus_async import async_directus
 from dembrane.billing_account import workspace_is_external_client
@@ -324,6 +325,9 @@ class UpdateWorkspaceRequest(BaseModel):
     # support. Staff can only join while this is true; flipping it off does not
     # auto-revoke an active support session (the 24h timer handles that).
     allow_support_access: Optional[bool] = None
+    # model_fields_set semantics: explicit null clears, absent leaves untouched
+    legal_basis: Optional[Literal["client-managed", "consent", "dembrane-events"]] = None
+    privacy_policy_url: Optional[str] = None
 
 
 # Only http/https logos allowed — blocks javascript:/data:/file:// URIs
@@ -401,6 +405,18 @@ async def update_workspace_settings(
         previous = bool(ctx.workspace.get("allow_support_access"))
         support_access_changed = body.allow_support_access != previous
         payload["allow_support_access"] = body.allow_support_access
+
+    legal_write = build_legal_basis_write(
+        fields_set=body.model_fields_set,
+        legal_basis=body.legal_basis,
+        privacy_policy_url=body.privacy_policy_url,
+        stored_legal_basis=ctx.workspace.get("legal_basis"),
+        stored_privacy_policy_url=ctx.workspace.get("privacy_policy_url"),
+    )
+    if legal_write is not None:
+        if legal_write.requires_dembrane_email_check:
+            await require_dembrane_email(app_user_id=ctx.app_user_id)
+        payload.update(legal_write.payload)
 
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")
