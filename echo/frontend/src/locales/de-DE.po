@@ -1717,14 +1717,6 @@ msgstr "Verfügbar mit einem kostenpflichtigen Plan."
 msgid "Available on a paid plan. Upgrade to unlock."
 msgstr "Verfügbar mit einem kostenpflichtigen Plan. Upgrade, um freizuschalten."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:630
-#~ msgid "Available on innovator and above."
-#~ msgstr ""
-
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1834
-#~ msgid "Available on innovator and above. Upgrade to unlock."
-#~ msgstr ""
-
 #: src/components/settings/AccountSettingsCard.tsx:105
 msgid "Avatar removed"
 msgstr "Avatar entfernt"
@@ -3359,10 +3351,6 @@ msgstr "Legt fest, unter welcher DSGVO-Rechtsgrundlage personenbezogene Daten f�
 msgid "Determines under which GDPR legal basis personal data is processed. This affects the information shown to participants and data subject rights."
 msgstr "Bestimmt, unter welcher GDPR-Rechtsgrundlage personenbezogene Daten verarbeitet werden. Dies beeinflusst die Informationen, die an Teilnehmer und betroffene Personen gezeigt werden und deren Rechte."
 
-#: src/components/project/ProjectPortalEditor.tsx:731
-#~ msgid "Determines under which GDPR legal basis personal data is processed. This setting applies to all your projects and can be changed in your account settings."
-#~ msgstr "Bestimmt, unter welcher GDPR-Rechtsgrundlage personenbezogene Daten verarbeitet werden. Diese Einstellung gilt für alle Ihre Projekte und kann in Ihren Kontoeinstellungen geändert werden."
-
 #: src/components/chat/templates.ts:61
 msgid ""
 "Develop a strategic framework that drives meaningful outcomes. Please:\n"
@@ -4656,10 +4644,6 @@ msgstr ""
 msgid "Go to settings"
 msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:745
-#~ msgid "Go to Settings"
-#~ msgstr "Zur Einstellungen"
-
 #: src/components/goal/ProjectGoalSection.tsx:127
 msgid "Goal"
 msgstr ""
@@ -5387,10 +5371,6 @@ msgstr "Rechtsgrundlage"
 msgid "Legal basis saved"
 msgstr "Rechtsgrundlage gespeichert"
 
-#: src/components/settings/LegalBasisSettingsCard.tsx:77
-#~ msgid "Legal basis updated"
-#~ msgstr "Rechtsgrundlage aktualisiert"
-
 #: src/components/billing/BillingManager.tsx:386
 msgid "Legal entity name"
 msgstr ""
@@ -5465,10 +5445,6 @@ msgstr ""
 #: src/components/settings/LegalBasisCard.tsx:209
 msgid "Link to the privacy policy shown to participants"
 msgstr "Link zur Datenschutzerklärung, die Teilnehmenden angezeigt wird"
-
-#: src/components/settings/LegalBasisSettingsCard.tsx:151
-#~ msgid "Link to your organisation's privacy policy that will be shown to participants"
-#~ msgstr "Link zur Datenschutzerklärung Ihrer Organisation, die angezeigt wird"
 
 #: src/components/chat/AgenticChatPanel.tsx:1840
 msgid "List my conversations"
@@ -7003,10 +6979,6 @@ msgstr ""
 msgid "Organisations created by people who are external collaborators of a partner. A signal they may want their own plan."
 msgstr ""
 
-#: src/components/settings/LegalBasisSettingsCard.tsx:149
-#~ msgid "Organiser's Privacy Policy URL"
-#~ msgstr "URL der Datenschutzerklärung der Organisatoren"
-
 #: src/components/participant/verify/VerifyArtefact.tsx:137
 msgid "Outcome approved successfully!"
 msgstr "Ergebnis erfolgreich freigeschaltet!"
@@ -7646,11 +7618,6 @@ msgstr "Projekt erstellt"
 #: src/components/conversation/RetranscribeConversation.tsx:206
 msgid "Project default: enabled. Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation."
 msgstr "Projektstandard: aktiviert. Persönliche Informationen werden durch Platzhalter ersetzt. Audiowiedergabe, Download und erneute Transkription werden für das neue Gespräch deaktiviert."
-
-#: src/routes/settings/UserSettingsRoute.tsx:162
-#: src/features/sidebar/views/user/UserSettingsView.tsx:58
-#~ msgid "Project defaults"
-#~ msgstr ""
 
 #: src/components/workspace/OrganisationProjectsTable.tsx:132
 #: src/components/project/hooks/index.ts:127
@@ -8851,10 +8818,6 @@ msgstr "Geheimnis"
 msgid "Secret copied"
 msgstr "Geheimnis kopiert"
 
-#: src/components/release/ReleaseVideoModal.tsx:175
-#~ msgid "see earlier releases"
-#~ msgstr ""
-
 #: src/components/billing/BillingManager.tsx:1196
 msgid "See plans"
 msgstr ""
@@ -10054,10 +10017,6 @@ msgstr "Diese Unterhaltungen wurden aufgrund fehlender Transkripte ausgeschlosse
 #: src/components/view/DummyViews.tsx:8
 msgid "These default view templates will be generated when you create your first library."
 msgstr "Diese Standard-Ansichtsvorlagen werden generiert, wenn Sie Ihre erste Bibliothek erstellen."
-
-#: src/components/settings/LegalBasisSettingsCard.tsx:115
-#~ msgid "These settings are read-only. Only organisation administrators can modify project defaults."
-#~ msgstr ""
 
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:134
 msgid "These tag changes are applied to your project."
