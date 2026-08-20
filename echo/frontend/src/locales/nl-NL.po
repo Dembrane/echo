@@ -1714,14 +1714,6 @@ msgstr "Beschikbaar met een betaald abonnement."
 msgid "Available on a paid plan. Upgrade to unlock."
 msgstr "Beschikbaar met een betaald abonnement. Upgrade om te ontgrendelen."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:630
-#~ msgid "Available on innovator and above."
-#~ msgstr "Beschikbaar vanaf innovator."
-
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1834
-#~ msgid "Available on innovator and above. Upgrade to unlock."
-#~ msgstr "Beschikbaar vanaf innovator en hoger. Upgrade om te ontgrendelen."
-
 #: src/components/settings/AccountSettingsCard.tsx:105
 msgid "Avatar removed"
 msgstr "Avatar verwijderd"
@@ -3356,10 +3348,6 @@ msgstr "Bepaalt onder welke AVG-rechtsgrondslag persoonsgegevens voor dit projec
 msgid "Determines under which GDPR legal basis personal data is processed. This affects the information shown to participants and data subject rights."
 msgstr "Bepaalt op welke AVG-grondslag persoonsgegevens worden verwerkt. Dit is van invloed op de informatie die aan deelnemers wordt getoond en de rechten van betrokkenen."
 
-#: src/components/project/ProjectPortalEditor.tsx:731
-#~ msgid "Determines under which GDPR legal basis personal data is processed. This setting applies to all your projects and can be changed in your account settings."
-#~ msgstr "Bepaalt onder welke GDPR-rechtsgrondslag personenbezogene gegevens worden verwerkt. Deze instelling geldt voor alle projecten en kan worden gewijzigd in uw accountinstellingen."
-
 #: src/components/chat/templates.ts:61
 msgid ""
 "Develop a strategic framework that drives meaningful outcomes. Please:\n"
@@ -4653,10 +4641,6 @@ msgstr "Naar het rapport"
 msgid "Go to settings"
 msgstr "Naar instellingen"
 
-#: src/components/project/ProjectPortalEditor.tsx:745
-#~ msgid "Go to Settings"
-#~ msgstr "Ga naar Instellingen"
-
 #: src/components/goal/ProjectGoalSection.tsx:127
 msgid "Goal"
 msgstr "Doel"
@@ -5384,10 +5368,6 @@ msgstr "Rechtsgrondslag"
 msgid "Legal basis saved"
 msgstr "Rechtsgrondslag opgeslagen"
 
-#: src/components/settings/LegalBasisSettingsCard.tsx:77
-#~ msgid "Legal basis updated"
-#~ msgstr "Rechtsgrondslag bijgewerkt"
-
 #: src/components/billing/BillingManager.tsx:386
 msgid "Legal entity name"
 msgstr "Naam rechtspersoon"
@@ -5462,10 +5442,6 @@ msgstr "Link gekopieerd"
 #: src/components/settings/LegalBasisCard.tsx:209
 msgid "Link to the privacy policy shown to participants"
 msgstr "Link naar het privacybeleid dat deelnemers te zien krijgen"
-
-#: src/components/settings/LegalBasisSettingsCard.tsx:151
-#~ msgid "Link to your organisation's privacy policy that will be shown to participants"
-#~ msgstr "Link naar de privacyverklaring van uw organisatie die aan deelnemers wordt getoond"
 
 #: src/components/chat/AgenticChatPanel.tsx:1840
 msgid "List my conversations"
@@ -7000,10 +6976,6 @@ msgstr "Organisaties | dembrane"
 msgid "Organisations created by people who are external collaborators of a partner. A signal they may want their own plan."
 msgstr "Organisaties aangemaakt door mensen die externe samenwerkers van een partner zijn. Een signaal dat ze mogelijk hun eigen abonnement willen."
 
-#: src/components/settings/LegalBasisSettingsCard.tsx:149
-#~ msgid "Organiser's Privacy Policy URL"
-#~ msgstr "URL van de privacyverklaring van de organisator"
-
 #: src/components/participant/verify/VerifyArtefact.tsx:137
 msgid "Outcome approved successfully!"
 msgstr "Resultaat succesvol goedgekeurd!"
@@ -7643,11 +7615,6 @@ msgstr "Project aangemaakt"
 #: src/components/conversation/RetranscribeConversation.tsx:206
 msgid "Project default: enabled. Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation."
 msgstr "Projectstandaard: ingeschakeld. Persoonlijke informatie wordt vervangen door tijdelijke aanduidingen. Afspelen van audio, downloaden en hertranscriptie worden uitgeschakeld voor het nieuwe gesprek."
-
-#: src/routes/settings/UserSettingsRoute.tsx:162
-#: src/features/sidebar/views/user/UserSettingsView.tsx:58
-#~ msgid "Project defaults"
-#~ msgstr "Projectstandaarden"
 
 #: src/components/workspace/OrganisationProjectsTable.tsx:132
 #: src/components/project/hooks/index.ts:127
@@ -8848,10 +8815,6 @@ msgstr "Geheim"
 msgid "Secret copied"
 msgstr "Geheim gekopieerd"
 
-#: src/components/release/ReleaseVideoModal.tsx:175
-#~ msgid "see earlier releases"
-#~ msgstr "bekijk eerdere releases"
-
 #: src/components/billing/BillingManager.tsx:1196
 msgid "See plans"
 msgstr "Bekijk abonnementen"
@@ -10051,10 +10014,6 @@ msgstr "Deze gesprekken werden uitgesloten vanwege ontbrekende transcripties."
 #: src/components/view/DummyViews.tsx:8
 msgid "These default view templates will be generated when you create your first library."
 msgstr "Deze standaardweergaven worden automatisch aangemaakt wanneer je je eerste bibliotheek maakt."
-
-#: src/components/settings/LegalBasisSettingsCard.tsx:115
-#~ msgid "These settings are read-only. Only organisation administrators can modify project defaults."
-#~ msgstr "Deze instellingen zijn alleen-lezen. Alleen organisatiebeheerders kunnen de projectstandaarden wijzigen."
 
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:134
 msgid "These tag changes are applied to your project."
