@@ -15,10 +15,14 @@ export const Markdown = ({
 	components: customComponents,
 	footnoteLabel,
 	footnoteIdPrefix,
+	allowBold,
 }: {
 	content: string;
 	className?: string;
 	components?: Components;
+	/** Render bold at a real weight. Off by default: the app font
+	 * deliberately flattens bold. */
+	allowBold?: boolean;
 	/** Visible, localised heading for the GFM footnote list. Without it the
 	 * renderer's default English "Footnotes" heading is kept but visually
 	 * hidden (screen readers still announce it). */
@@ -85,6 +89,7 @@ export const Markdown = ({
 		<ReactMarkdown
 			className={cn(
 				"prose prose-table:block prose-table:w-full prose-table:overflow-x-scroll",
+				allowBold && "allow-bold",
 				className,
 			)}
 			remarkPlugins={[remarkGfm]}
