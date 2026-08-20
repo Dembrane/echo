@@ -21,10 +21,12 @@
           var bg = isDmSans ? '#F6F4F1' : '#FFFFFF';
           var text = isDmSans ? '#2D2D2C' : '#000000';
           var font = isDmSans ? "'DM Sans Variable', sans-serif" : "'Space Grotesk Variable', sans-serif";
+          var contentBoldFont = isDmSans ? "'DM Sans Content', 'DM Sans Variable', sans-serif" : "'Space Grotesk Variable', sans-serif";
           var style = document.documentElement.style;
           style.setProperty('--app-background', bg);
           style.setProperty('--app-text', text);
           style.setProperty('--app-font-family', font);
+          style.setProperty('--app-content-bold-font-family', contentBoldFont);
           style.setProperty('--mantine-color-white', bg);
           style.setProperty('--mantine-color-black', text);
           style.setProperty('--mantine-color-text', text);

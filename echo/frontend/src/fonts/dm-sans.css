@@ -26,3 +26,21 @@
 		'ss06' on,
 		'ss08' on;
 }
+
+/* Real variable cut for .allow-bold surfaces. The Light-only face above
+   is what keeps the rest of the app bold-free. */
+@font-face {
+	font-family: 'DM Sans Content';
+	src: url('./DMSans-Variable.woff2') format('woff2');
+	font-weight: 100 1000;
+	font-style: normal;
+	font-display: swap;
+	font-feature-settings: 
+		'ss01' on,
+		'ss02' on,
+		'ss03' on,
+		'ss04' on,
+		'ss05' on,
+		'ss06' on,
+		'ss08' on;
+}

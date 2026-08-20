@@ -28,6 +28,7 @@
 	
 	/* Font settings */
 	--app-font-family: 'DM Sans Variable', sans-serif;
+	--app-content-bold-font-family: 'DM Sans Content', var(--app-font-family);
 	--app-font-feature-settings: 'ss01' on, 'ss02' on, 'ss03' on, 'ss04' on, 'ss05' on, 'ss06' on, 'ss08' on;
 	
 	/* Typography - Font sizes (distinct ramp: Body3 12 / Body2 15 / Body1 20) */
@@ -96,6 +97,15 @@ body {
 .prose * {
 	font-family: var(--app-font-family) !important;
 	font-feature-settings: var(--app-font-feature-settings) !important;
+}
+
+/* Bold is opt-in per surface: the app font flattens bold, .allow-bold restores
+   it for strong/b and their descendants (which .prose * would re-flatten).
+   The .prose * rule above is also !important; this wins on specificity. */
+.allow-bold :is(strong, b),
+.allow-bold :is(strong, b) * {
+	font-family: var(--app-content-bold-font-family, var(--app-font-family)) !important;
+	font-weight: 700;
 }
 
 /* Visually hidden, kept for screen readers. Our own name on purpose: Tailwind

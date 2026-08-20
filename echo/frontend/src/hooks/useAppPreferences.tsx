@@ -128,6 +128,11 @@ export const AppPreferencesProvider = ({
 			? "'DM Sans Variable', sans-serif"
 			: "'Space Grotesk Variable', sans-serif";
 
+		// Bold face for .allow-bold surfaces; Space Grotesk has real weights already
+		const contentBoldFontValue = isDmSans
+			? "'DM Sans Content', 'DM Sans Variable', sans-serif"
+			: "'Space Grotesk Variable', sans-serif";
+
 		// Font feature settings for stylistic sets (ss01-ss06, ss08)
 		const fontFeatureSettings = isDmSans
 			? "'ss01' on, 'ss02' on, 'ss03' on, 'ss04' on, 'ss05' on, 'ss06' on, 'ss08' on"
@@ -223,6 +228,10 @@ export const AppPreferencesProvider = ({
 
 		// Set font family
 		root.style.setProperty("--app-font-family", fontValue);
+		root.style.setProperty(
+			"--app-content-bold-font-family",
+			contentBoldFontValue,
+		);
 
 		// Set colors
 		root.style.setProperty("--app-background", backgroundColor);
