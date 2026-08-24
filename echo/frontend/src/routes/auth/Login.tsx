@@ -19,32 +19,12 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
+import { resolveNextPath } from "@/components/auth/utils/nextPath";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
-
-// Same-origin path guard against open-redirect via ?next=//evil.com.
-const isSafeNextPath = (next: string | null | undefined): next is string => {
-	if (!next) return false;
-	if (!next.startsWith("/")) return false;
-	if (next.startsWith("//") || next.startsWith("/\\")) return false;
-	return true;
-};
-
-const UUID_RE =
-	/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-
-// Returns the workspace UUID from /w/:id/... (locale-prefix tolerant), else null.
-const extractWorkspaceIdFromPath = (path: string): string | null => {
-	const segments = path.split(/[?#]/)[0].split("/").filter(Boolean);
-	if (segments[0] && /^[a-z]{2}(-[A-Z]{2})?$/.test(segments[0])) {
-		segments.shift();
-	}
-	if (segments[0] !== "w" || !segments[1]) return null;
-	return UUID_RE.test(segments[1]) ? segments[1] : null;
-};
 
 // const LoginWithProvider = ({
 // 	provider,
@@ -150,7 +130,7 @@ export const LoginRoute = () => {
 			// were removed — /o is the canonical landing.
 			let needsOnboarding = false;
 			let onboardingIncomplete = false;
-			let wsList: { id: string }[] = [];
+			let wsList: { id: string; org_id?: string }[] = [];
 			try {
 				await new Promise((r) => setTimeout(r, 300));
 				const meResponse = await fetch(`${API_BASE_URL}/v2/me`, {
@@ -190,13 +170,11 @@ export const LoginRoute = () => {
 				return;
 			}
 
-			// Deep-link priority — but block cross-user leaks via workspace access check.
-			const nextWsId = isSafeNextPath(next)
-				? extractWorkspaceIdFromPath(next)
-				: null;
-			const nextHasAccess = !nextWsId || wsList.some((w) => w.id === nextWsId);
-			if (isSafeNextPath(next) && next !== "/login" && nextHasAccess) {
-				navigate(next);
+			// Deep-link priority; a stale ?next from a previous account fails
+			// the access check and falls through to /o.
+			const nextTarget = resolveNextPath(next, wsList);
+			if (nextTarget) {
+				navigate(nextTarget);
 				return;
 			}
 
