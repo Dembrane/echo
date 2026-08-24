@@ -2,6 +2,7 @@ import { Group, LoadingOverlay, Paper } from "@mantine/core";
 import { type PropsWithChildren, useEffect } from "react";
 import { Outlet, useLocation, useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
+import { resolveNextPath } from "@/components/auth/utils/nextPath";
 import { I18nLink } from "@/components/common/i18nLink";
 import { Logo } from "@/components/common/Logo";
 import { LanguagePicker } from "@/components/language/LanguagePicker";
@@ -55,7 +56,7 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 
 	useEffect(() => {
 		if (auth.isAuthenticated && !isActive && !skipRedirect) {
-			const nextLink = query.get("next") ?? "/o";
+			const nextLink = resolveNextPath(query.get("next"), []) ?? "/o";
 			navigate(nextLink);
 		}
 	}, [auth.isAuthenticated, isActive, navigate, query, skipRedirect]);
