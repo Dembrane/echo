@@ -1672,7 +1672,7 @@ msgstr "Auditlogboeken geëxporteerd naar CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Auditlogboeken geëxporteerd naar JSON"
 
-#: src/routes/auth/Login.tsx:298
+#: src/routes/auth/Login.tsx:276
 #: src/components/settings/TwoFactorSettingsCard.tsx:231
 #: src/components/settings/TwoFactorSettingsCard.tsx:381
 msgid "Authenticator code"
@@ -2940,7 +2940,7 @@ msgid "Create account"
 msgstr "Account aanmaken"
 
 #: src/routes/auth/Register.tsx:126
-#: src/routes/auth/Login.tsx:407
+#: src/routes/auth/Login.tsx:385
 msgid "Create an account"
 msgstr "Maak een account aan"
 
@@ -3681,8 +3681,8 @@ msgstr "Bewerk de rapport inhoud met de rich text editor hieronder. Je kunt teks
 msgid "Edit Webhook"
 msgstr "Webhook bewerken"
 
-#: src/routes/auth/Login.tsx:339
-#: src/routes/auth/Login.tsx:343
+#: src/routes/auth/Login.tsx:317
+#: src/routes/auth/Login.tsx:321
 #: src/components/settings/AccountSettingsCard.tsx:186
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -3817,7 +3817,7 @@ msgstr "Voer bestandsnaam (zonder extensie) in"
 msgid "Enter new password"
 msgstr "Voer het nieuwe wachtwoord in"
 
-#: src/routes/auth/Login.tsx:124
+#: src/routes/auth/Login.tsx:104
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Voer de 6-cijferige code uit je authenticator-app in."
 
@@ -4423,7 +4423,7 @@ msgstr "Prognose"
 msgid "Forgetting a saved memory"
 msgstr "Een opgeslagen herinnering vergeten"
 
-#: src/routes/auth/Login.tsx:375
+#: src/routes/auth/Login.tsx:353
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
 
@@ -4933,7 +4933,7 @@ msgstr "interview"
 msgid "Invalid code. Please request a new one."
 msgstr "Ongeldige code. Vraag een nieuwe aan."
 
-#: src/routes/auth/Login.tsx:250
+#: src/routes/auth/Login.tsx:228
 msgid "Invalid credentials."
 msgstr "Ongeldige inloggegevens."
 
@@ -5622,11 +5622,11 @@ msgstr "Uitloggen en het uitgenodigde e-mailadres gebruiken"
 msgid "Logging this with the dembrane team"
 msgstr "Dit doorgeven aan het dembrane-team"
 
-#: src/routes/auth/Login.tsx:391
+#: src/routes/auth/Login.tsx:369
 msgid "Login"
 msgstr "Inloggen"
 
-#: src/routes/auth/Login.tsx:78
+#: src/routes/auth/Login.tsx:58
 msgid "Login | dembrane"
 msgstr "Inloggen | dembrane"
 
@@ -6850,7 +6850,7 @@ msgstr "Werkruimte openen"
 msgid "Open workspace actions"
 msgstr "Werkruimteacties openen"
 
-#: src/routes/auth/Login.tsx:330
+#: src/routes/auth/Login.tsx:308
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open je authenticator-app en voer de huidige zescijferige code in."
 
@@ -6889,7 +6889,7 @@ msgid "Options"
 msgstr "Opties"
 
 #: src/routes/auth/Register.tsx:292
-#: src/routes/auth/Login.tsx:398
+#: src/routes/auth/Login.tsx:376
 msgid "or"
 msgstr "of"
 
@@ -7125,8 +7125,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr "Partnerwerkruimte, apart gefactureerd van de organisatie."
 
 #: src/routes/auth/Register.tsx:222
-#: src/routes/auth/Login.tsx:353
-#: src/routes/auth/Login.tsx:357
+#: src/routes/auth/Login.tsx:331
+#: src/routes/auth/Login.tsx:335
 msgid "Password"
 msgstr "Wachtwoord"
 
@@ -7376,7 +7376,7 @@ msgstr "Schakel deelneming in om delen mogelijk te maken"
 msgid "Please enter a valid email."
 msgstr "Voer een geldig e-mailadres in."
 
-#: src/routes/auth/Login.tsx:286
+#: src/routes/auth/Login.tsx:264
 msgid "Please log in to continue."
 msgstr "Log in om door te gaan."
 
@@ -9337,7 +9337,7 @@ msgstr "Iets blokkeert je verbinding. Je audio wordt niet opgeslagen tenzij dit 
 #: src/routes/project/report/ProjectReportRoute.tsx:933
 #: src/routes/project/report/ProjectReportRoute.tsx:1404
 #: src/routes/onboarding/OnboardingRoute.tsx:189
-#: src/routes/auth/Login.tsx:241
+#: src/routes/auth/Login.tsx:219
 #: src/components/project/ProjectAccessGuard.tsx:87
 #: src/components/participant/ParticipantInitiateForm.tsx:209
 #: src/components/error/ErrorPage.tsx:55
@@ -9821,7 +9821,7 @@ msgstr "Bedankt pagina inhoud"
 msgid "Thank you!"
 msgstr "Bedankt!"
 
-#: src/routes/auth/Login.tsx:224
+#: src/routes/auth/Login.tsx:202
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Die code werkte niet. Probeer het opnieuw met een verse code uit je authenticator-app."
 
@@ -11189,7 +11189,7 @@ msgstr "Verifiëren"
 msgid "participant.echo.verify"
 msgstr "Verifiëren"
 
-#: src/routes/auth/Login.tsx:389
+#: src/routes/auth/Login.tsx:367
 msgid "Verify code"
 msgstr "Code controleren"
 
@@ -11420,7 +11420,7 @@ msgstr "Webhooks zijn niet ingeschakeld voor deze omgeving."
 msgid "Welcome"
 msgstr "Welkom"
 
-#: src/routes/auth/Login.tsx:142
+#: src/routes/auth/Login.tsx:122
 msgid "Welcome back"
 msgstr "Welkom terug"
 
@@ -11429,7 +11429,7 @@ msgid "Welcome back, {displayName}"
 msgstr "Welkom terug, {displayName}"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:585
-#: src/routes/auth/Login.tsx:142
+#: src/routes/auth/Login.tsx:122
 msgid "Welcome to dembrane"
 msgstr "Welkom bij dembrane"
 
@@ -11450,7 +11450,7 @@ msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaa
 msgid "Welcome, {displayName}"
 msgstr "Welkom, {displayName}"
 
-#: src/routes/auth/Login.tsx:274
+#: src/routes/auth/Login.tsx:252
 msgid "Welcome!"
 msgstr "Welkom!"
 
@@ -11873,7 +11873,7 @@ msgstr "Je hebt de werkruimte verlaten"
 msgid "You may also choose to record another conversation."
 msgstr "Je kunt er ook voor kiezen om een ander gesprek op te nemen."
 
-#: src/routes/auth/Login.tsx:255
+#: src/routes/auth/Login.tsx:233
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Je moet inloggen met dezelfde provider die u gebruikte om u aan te melden. Als u problemen ondervindt, neem dan contact op met de ondersteuning."
 
@@ -12063,7 +12063,7 @@ msgstr "Je concept wordt niet opgeslagen."
 msgid "Your email is already verified"
 msgstr "Je e-mailadres is al geverifieerd"
 
-#: src/routes/auth/Login.tsx:279
+#: src/routes/auth/Login.tsx:257
 msgid "Your email is verified. Log in to continue."
 msgstr "Je e-mailadres is geverifieerd. Log in om door te gaan."
 
