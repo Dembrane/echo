@@ -12,7 +12,11 @@ import {
 	Text,
 } from "@mantine/core";
 import { UsersThree } from "@phosphor-icons/react";
-import { COMMUNITY_SLACK_URL, getProductFeedbackUrl } from "@/config";
+import {
+	COMMUNITY_SLACK_URL,
+	getProductFeedbackUrl,
+	getSecurityReportFormUrl,
+} from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 import { QRCode } from "./QRCode";
 
@@ -29,6 +33,7 @@ export const FeedbackPortalModal = ({
 }: FeedbackPortalModalProps) => {
 	const { data: me } = useV2Me();
 	const baseFeedbackUrl = getProductFeedbackUrl(locale);
+	const securityFormUrl = getSecurityReportFormUrl(locale);
 
 	const feedbackUrl = useMemo(() => {
 		if (!me?.email) return baseFeedbackUrl;
@@ -82,6 +87,25 @@ export const FeedbackPortalModal = ({
 							Just talk or type naturally. Your input goes directly to our
 							product team and genuinely helps us make dembrane better. We read
 							everything.
+						</Trans>
+					</Text>
+					<Text size="sm">
+						<Trans>
+							If what you've spotted involves data visible to the wrong people,
+							someone having access they shouldn't, or a possible security
+							vulnerability, please use our{" "}
+							<Anchor
+								href={securityFormUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								security reporting form
+							</Anchor>{" "}
+							instead. It reaches a different team on a faster track. For
+							anything urgent, email{" "}
+							<Anchor href="mailto:privacy@dembrane.com">
+								privacy@dembrane.com
+							</Anchor>
 						</Trans>
 					</Text>
 				</Stack>

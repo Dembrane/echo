@@ -205,3 +205,10 @@ export const ENABLE_RELEASE_VIDEO_MODAL = true;
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
 	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;
+
+// Security / responsible-disclosure report form (Notion). Dutch locales get
+// the Dutch form; everyone else gets the English one.
+export const getSecurityReportFormUrl = (locale = "en-US") =>
+	locale.startsWith("nl")
+		? "https://dembrane.notion.site/3ac9cd842705807c8badc71c90be9f01?pvs=105"
+		: "https://dembrane.notion.site/cc3d257b14ea462ca8272c6837278eb0?pvs=105";
