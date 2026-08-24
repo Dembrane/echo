@@ -1899,7 +1899,7 @@ msgstr ""
 msgid "Book a call"
 msgstr "Reservar una llamada"
 
-#: src/components/common/FeedbackPortalModal.tsx:115
+#: src/components/common/FeedbackPortalModal.tsx:139
 msgid "Book a call with us"
 msgstr "Reserve una llamada con nosotros"
 
@@ -2001,7 +2001,7 @@ msgstr ""
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:77
 #: src/components/common/ImageCropModal.tsx:145
-#: src/components/common/FeedbackPortalModal.tsx:141
+#: src/components/common/FeedbackPortalModal.tsx:165
 #: src/components/common/ConfirmModal.tsx:44
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:722
 #: src/components/chat/AgenticChatPanel.tsx:734
@@ -4253,7 +4253,7 @@ msgstr "Función disponible pronto"
 msgid "Feedback"
 msgstr ""
 
-#: src/components/common/FeedbackPortalModal.tsx:61
+#: src/components/common/FeedbackPortalModal.tsx:66
 msgid "Feedback portal"
 msgstr "Portal de comentarios"
 
@@ -4838,6 +4838,10 @@ msgstr "Identifica temas recurrentes, temas y argumentos que aparecen consistent
 msgid "Idle"
 msgstr ""
 
+#: src/components/common/FeedbackPortalModal.tsx:93
+msgid "If what you've spotted involves data visible to the wrong people, someone having access they shouldn't, or a possible security vulnerability, please use our <0>security reporting form</0> instead. It reaches a different team on a faster track. For anything urgent, email <1>privacy@dembrane.com</1>"
+msgstr "Si lo que has detectado implica datos visibles para personas equivocadas, alguien con un acceso que no debería tener, o una posible vulnerabilidad de seguridad, utiliza nuestro <0>formulario de notificación de seguridad</0>. Llega a otro equipo por una vía más rápida. Para cualquier urgencia, escribe a <1>privacy@dembrane.com</1>"
+
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:44
 msgid "participant.verify.instructions.approve.artefact"
@@ -5157,7 +5161,7 @@ msgstr ""
 msgid "Join for support (24h)"
 msgstr ""
 
-#: src/components/common/FeedbackPortalModal.tsx:132
+#: src/components/common/FeedbackPortalModal.tsx:156
 msgid "Join our Slack community"
 msgstr ""
 
@@ -5211,7 +5215,7 @@ msgstr ""
 msgid "Just started"
 msgstr ""
 
-#: src/components/common/FeedbackPortalModal.tsx:81
+#: src/components/common/FeedbackPortalModal.tsx:86
 msgid "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 msgstr "Simplemente hable o escriba de forma natural. Su aporte llega directamente a nuestro equipo de producto y realmente nos ayuda a mejorar dembrane. Lo leemos todo."
 
@@ -6900,7 +6904,7 @@ msgstr "o"
 msgid "Or choose a time"
 msgstr ""
 
-#: src/components/common/FeedbackPortalModal.tsx:108
+#: src/components/common/FeedbackPortalModal.tsx:132
 msgid "Or prefer to chat directly?"
 msgstr "O prefiere chatear directamente?"
 
@@ -8607,7 +8611,7 @@ msgstr ""
 msgid "Saving..."
 msgstr "Guardando..."
 
-#: src/components/common/FeedbackPortalModal.tsx:104
+#: src/components/common/FeedbackPortalModal.tsx:128
 msgid "Scan or click the QR code to open the feedback portal"
 msgstr ""
 
@@ -10437,7 +10441,7 @@ msgstr ""
 msgid "To assign a new tag, please create it first in the portal settings."
 msgstr ""
 
-#: src/components/common/FeedbackPortalModal.tsx:74
+#: src/components/common/FeedbackPortalModal.tsx:79
 msgid "To help us act on it, try to include where it happened and what you were trying to do. For bugs, tell us what went wrong. For ideas, tell us what need it would solve for you."
 msgstr "Para ayudarnos a actuar, intente incluir dónde ocurrió y qué estaba intentando hacer. Para errores, díganos qué salió mal. Para ideas, díganos qué necesidad resolvería para usted."
 
@@ -11369,7 +11373,7 @@ msgstr ""
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "Solo te enviaremos un mensaje si tu host genera un informe, nunca compartimos tus detalles con nadie. Puedes optar por no recibir más mensajes en cualquier momento."
 
-#: src/components/common/FeedbackPortalModal.tsx:67
+#: src/components/common/FeedbackPortalModal.tsx:72
 msgid "We'd love to hear from you. Whether you have an idea for something new, you've hit a bug, spotted a translation that feels off, or just want to share how things have been going."
 msgstr "Nos encantaría saber de usted. Ya sea que tenga una idea para algo nuevo, haya encontrado un error, haya visto una traducción que no suena bien, o simplemente quiera compartir cómo le ha ido."
 
