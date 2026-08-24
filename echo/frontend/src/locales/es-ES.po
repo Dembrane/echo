@@ -1675,7 +1675,7 @@ msgstr "Registros de auditoría exportados a CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Registros de auditoría exportados a JSON"
 
-#: src/routes/auth/Login.tsx:276
+#: src/routes/auth/Login.tsx:298
 #: src/components/settings/TwoFactorSettingsCard.tsx:231
 #: src/components/settings/TwoFactorSettingsCard.tsx:381
 msgid "Authenticator code"
@@ -2943,7 +2943,7 @@ msgid "Create account"
 msgstr ""
 
 #: src/routes/auth/Register.tsx:126
-#: src/routes/auth/Login.tsx:385
+#: src/routes/auth/Login.tsx:407
 msgid "Create an account"
 msgstr ""
 
@@ -3684,8 +3684,8 @@ msgstr "Edita el contenido del informe usando el editor de texto enriquecido a c
 msgid "Edit Webhook"
 msgstr "Editar Webhook"
 
-#: src/routes/auth/Login.tsx:317
-#: src/routes/auth/Login.tsx:321
+#: src/routes/auth/Login.tsx:339
+#: src/routes/auth/Login.tsx:343
 #: src/components/settings/AccountSettingsCard.tsx:186
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -3820,7 +3820,7 @@ msgstr "Ingresa el nombre del archivo (sin extensión)"
 msgid "Enter new password"
 msgstr "Introduzca la nueva contraseña"
 
-#: src/routes/auth/Login.tsx:104
+#: src/routes/auth/Login.tsx:124
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Ingresa el código de 6 dígitos de tu aplicación de autenticación."
 
@@ -4426,7 +4426,7 @@ msgstr ""
 msgid "Forgetting a saved memory"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:353
+#: src/routes/auth/Login.tsx:375
 msgid "Forgot your password?"
 msgstr "¿Olvidaste tu contraseña?"
 
@@ -4940,7 +4940,7 @@ msgstr ""
 msgid "Invalid code. Please request a new one."
 msgstr "Código inválido. Por favor solicita uno nuevo."
 
-#: src/routes/auth/Login.tsx:228
+#: src/routes/auth/Login.tsx:250
 msgid "Invalid credentials."
 msgstr "Credenciales inválidas."
 
@@ -5629,11 +5629,11 @@ msgstr ""
 msgid "Logging this with the dembrane team"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:369
+#: src/routes/auth/Login.tsx:391
 msgid "Login"
 msgstr "Iniciar sesión"
 
-#: src/routes/auth/Login.tsx:58
+#: src/routes/auth/Login.tsx:78
 msgid "Login | dembrane"
 msgstr "Iniciar sesión | dembrane"
 
@@ -6857,7 +6857,7 @@ msgstr ""
 msgid "Open workspace actions"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:308
+#: src/routes/auth/Login.tsx:330
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Abre tu aplicación de autenticación e ingresa el código actual de seis dígitos."
 
@@ -6896,7 +6896,7 @@ msgid "Options"
 msgstr "Opciones"
 
 #: src/routes/auth/Register.tsx:292
-#: src/routes/auth/Login.tsx:376
+#: src/routes/auth/Login.tsx:398
 msgid "or"
 msgstr "o"
 
@@ -7132,8 +7132,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr ""
 
 #: src/routes/auth/Register.tsx:222
-#: src/routes/auth/Login.tsx:331
-#: src/routes/auth/Login.tsx:335
+#: src/routes/auth/Login.tsx:353
+#: src/routes/auth/Login.tsx:357
 msgid "Password"
 msgstr "Contraseña"
 
@@ -7383,7 +7383,7 @@ msgstr "Por favor, habilite la participación para habilitar el uso compartido"
 msgid "Please enter a valid email."
 msgstr "Por favor, ingrese un correo electrónico válido."
 
-#: src/routes/auth/Login.tsx:264
+#: src/routes/auth/Login.tsx:286
 msgid "Please log in to continue."
 msgstr ""
 
@@ -9344,7 +9344,7 @@ msgstr "Algo está bloqueando tu conexión. Tu audio no se guardará a menos que
 #: src/routes/project/report/ProjectReportRoute.tsx:933
 #: src/routes/project/report/ProjectReportRoute.tsx:1404
 #: src/routes/onboarding/OnboardingRoute.tsx:189
-#: src/routes/auth/Login.tsx:219
+#: src/routes/auth/Login.tsx:241
 #: src/components/project/ProjectAccessGuard.tsx:87
 #: src/components/participant/ParticipantInitiateForm.tsx:209
 #: src/components/error/ErrorPage.tsx:55
@@ -9828,7 +9828,7 @@ msgstr "Contenido de la Página de Gracias"
 msgid "Thank you!"
 msgstr "¡Gracias!"
 
-#: src/routes/auth/Login.tsx:202
+#: src/routes/auth/Login.tsx:224
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Ese código no funcionó. Inténtalo de nuevo con un código nuevo de tu aplicación de autenticación."
 
@@ -11198,7 +11198,7 @@ msgstr "Verificar"
 msgid "participant.echo.verify"
 msgstr "Verificar"
 
-#: src/routes/auth/Login.tsx:367
+#: src/routes/auth/Login.tsx:389
 msgid "Verify code"
 msgstr "Verificar código"
 
@@ -11429,7 +11429,7 @@ msgstr ""
 msgid "Welcome"
 msgstr "Bienvenido"
 
-#: src/routes/auth/Login.tsx:122
+#: src/routes/auth/Login.tsx:142
 msgid "Welcome back"
 msgstr "Bienvenido de nuevo"
 
@@ -11438,7 +11438,7 @@ msgid "Welcome back, {displayName}"
 msgstr ""
 
 #: src/routes/onboarding/OnboardingRoute.tsx:585
-#: src/routes/auth/Login.tsx:122
+#: src/routes/auth/Login.tsx:142
 msgid "Welcome to dembrane"
 msgstr ""
 
@@ -11459,7 +11459,7 @@ msgstr "Bienvenido al modo Resumen. Tengo cargados los resúmenes de todas tus c
 msgid "Welcome, {displayName}"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:252
+#: src/routes/auth/Login.tsx:274
 msgid "Welcome!"
 msgstr "¡Bienvenido!"
 
@@ -11882,7 +11882,7 @@ msgstr ""
 msgid "You may also choose to record another conversation."
 msgstr "También puedes elegir registrar otra conversación."
 
-#: src/routes/auth/Login.tsx:233
+#: src/routes/auth/Login.tsx:255
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Debes iniciar sesión con el mismo proveedor con el que te registraste. Si encuentras algún problema, por favor contáctanos."
 
@@ -12072,7 +12072,7 @@ msgstr ""
 msgid "Your email is already verified"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:257
+#: src/routes/auth/Login.tsx:279
 msgid "Your email is verified. Log in to continue."
 msgstr ""
 

@@ -2,11 +2,9 @@ import { Group, LoadingOverlay, Paper } from "@mantine/core";
 import { type PropsWithChildren, useEffect } from "react";
 import { Outlet, useLocation, useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
-import { resolveNextPath } from "@/components/auth/utils/nextPath";
 import { I18nLink } from "@/components/common/i18nLink";
 import { Logo } from "@/components/common/Logo";
 import { LanguagePicker } from "@/components/language/LanguagePicker";
-import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Toaster } from "../common/Toaster";
 import { Footer } from "./Footer";
@@ -56,31 +54,10 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 	);
 
 	useEffect(() => {
-		if (!(auth.isAuthenticated && !isActive && !skipRedirect)) return;
-		const next = query.get("next");
-		if (!next) {
-			navigate("/o");
-			return;
+		if (auth.isAuthenticated && !isActive && !skipRedirect) {
+			const nextLink = query.get("next") ?? "/o";
+			navigate(nextLink);
 		}
-		// Validate ?next against this account's access; fails closed to /o.
-		let cancelled = false;
-		(async () => {
-			let wsList: { id: string; org_id?: string }[] = [];
-			try {
-				const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
-					credentials: "include",
-				});
-				if (res.ok) {
-					const data = await res.json();
-					wsList = data.workspaces ?? [];
-				}
-			} catch {}
-			if (cancelled) return;
-			navigate(resolveNextPath(next, wsList) ?? "/o");
-		})();
-		return () => {
-			cancelled = true;
-		};
 	}, [auth.isAuthenticated, isActive, navigate, query, skipRedirect]);
 
 	return (
