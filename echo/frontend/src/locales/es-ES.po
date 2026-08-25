@@ -86,7 +86,7 @@ msgstr "\"Verificar\" disponible pronto"
 msgid "(direct workspace access)"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:684
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:711
 #: src/routes/project/CreateProjectRoute.tsx:336
 msgid "(missing)"
 msgstr ""
@@ -103,7 +103,7 @@ msgstr "(opcional)"
 msgid "(Partner)"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:692
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:719
 msgid "(unknown)"
 msgstr ""
 
@@ -303,7 +303,7 @@ msgid "select.all.modal.added.count"
 msgstr "{0} añadidas"
 
 #. placeholder {0}: memberEmails.length
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:720
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:747
 msgid "{0} added from your organisation"
 msgstr ""
 
@@ -453,7 +453,7 @@ msgstr "{finishedConversationsCount, plural, one {Actualmente, # conversación e
 msgid "{from} → {to}"
 msgstr ""
 
-#: src/components/pricing/PricingBookingStep.tsx:336
+#: src/components/pricing/PricingBookingStep.tsx:350
 msgid "{host} will read your answers before the call and brings a draft offer."
 msgstr ""
 
@@ -715,8 +715,8 @@ msgstr ""
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "Ya se está generando un informe para este proyecto. Espera a que se complete."
 
-#: src/components/pricing/PricingConfigurator.tsx:1096
-#: src/components/pricing/PricingConfigurator.tsx:1100
+#: src/components/pricing/PricingConfigurator.tsx:1125
+#: src/components/pricing/PricingConfigurator.tsx:1129
 msgid "A rough number or \"not sure\". Either is useful."
 msgstr ""
 
@@ -728,7 +728,7 @@ msgstr ""
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:521
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:536
 msgid "A separate data-ownership and billing context. It can be handed off to that organisation later with no data movement."
 msgstr ""
 
@@ -768,8 +768,8 @@ msgid "Accepted terms"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1867
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:576
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:709
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:591
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:736
 #: src/routes/project/CreateProjectRoute.tsx:270
 #: src/routes/project/CreateProjectRoute.tsx:359
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:121
@@ -984,7 +984,7 @@ msgstr "Añade términos clave o nombres propios para mejorar la calidad y preci
 msgid "Add new recordings to this project. Files you upload here will be processed and appear in conversations."
 msgstr "Añade nuevas grabaciones a este proyecto. Los archivos que subas aquí serán procesados y aparecerán en las conversaciones."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:642
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:669
 msgid "Add people from your organisation"
 msgstr ""
 
@@ -1742,10 +1742,6 @@ msgstr "Enviar automáticamente los datos de la conversación a tus otras herram
 msgid "Available on a paid plan"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:630
-msgid "Available on a paid plan."
-msgstr "Disponible con un plan de pago."
-
 #: src/components/settings/AccountSettingsCard.tsx:105
 msgid "Avatar removed"
 msgstr "Avatar eliminado"
@@ -1759,8 +1755,8 @@ msgstr "Avatar actualizado"
 msgid "Away"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:354
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:742
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:369
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:769
 #: src/routes/project/CreateProjectRoute.tsx:403
 #: src/routes/project/report/ProjectReportRoute.tsx:604
 #: src/routes/organisation/OrganisationRoute.tsx:694
@@ -1769,7 +1765,7 @@ msgstr ""
 #: src/routes/auth/Register.tsx:240
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:334
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:371
-#: src/components/pricing/PricingConfigurator.tsx:816
+#: src/components/pricing/PricingConfigurator.tsx:845
 msgid "Back"
 msgstr "Atrás"
 
@@ -1784,7 +1780,7 @@ msgstr "Volver"
 msgid "participant.button.back"
 msgstr "Volver"
 
-#: src/components/pricing/PricingConfigurator.tsx:901
+#: src/components/pricing/PricingConfigurator.tsx:930
 msgid "Back to dembrane"
 msgstr ""
 
@@ -1876,7 +1872,7 @@ msgstr ""
 msgid "Billed separately, not part of the organisation's plan."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:505
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:520
 msgid "Billed under your organisation's plan, alongside your other workspaces."
 msgstr ""
 
@@ -1969,7 +1965,7 @@ msgstr ""
 msgid "can read"
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:677
+#: src/components/pricing/PricingConfigurator.tsx:706
 msgid "Can you tell us more?"
 msgstr ""
 
@@ -1978,7 +1974,7 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1149
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1323
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1943
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:742
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:769
 #: src/routes/project/ProjectsHome.tsx:441
 #: src/routes/project/CreateProjectRoute.tsx:403
 #: src/routes/project/report/ProjectReportRoute.tsx:288
@@ -2300,7 +2296,7 @@ msgstr "Elegir un archivo de logo"
 msgid "Choose a methodology"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:241
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:256
 msgid "Choose an organisation first"
 msgstr ""
 
@@ -2565,7 +2561,7 @@ msgstr "Sugerencias contextuales"
 #: src/routes/onboarding/OnboardingRoute.tsx:530
 #: src/routes/onboarding/OnboardingRoute.tsx:662
 #: src/routes/auth/Register.tsx:212
-#: src/components/pricing/PricingConfigurator.tsx:837
+#: src/components/pricing/PricingConfigurator.tsx:866
 #: src/components/organisation/CreateOrganisationModal.tsx:207
 #: src/components/language/LanguagePicker.tsx:158
 #: src/components/billing/BillingManager.tsx:1457
@@ -2843,11 +2839,11 @@ msgstr ""
 msgid "Could not update this project's methodology"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:272
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:287
 msgid "Couldn't add {failed} members. Add them from workspace settings."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:271
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:286
 msgid "Couldn't add 1 member. Add them from workspace settings."
 msgstr ""
 
@@ -3003,12 +2999,12 @@ msgstr "Crear Vista"
 msgid "Create Webhook"
 msgstr "Crear Webhook"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:409
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:766
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:424
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:793
 msgid "Create workspace"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:138
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:147
 msgid "Create workspace | dembrane"
 msgstr ""
 
@@ -3106,7 +3102,7 @@ msgstr ""
 msgid "Dashboard URL (direct link to conversation overview)"
 msgstr "URL del panel de control (enlace directo a la vista de conversaciones)"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:554
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:569
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:164
 msgid "Data owner email"
 msgstr ""
@@ -3399,7 +3395,7 @@ msgstr "Desactivar autenticación de dos factores"
 msgid "Disabled"
 msgstr "Desactivado"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:322
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:337
 #: src/routes/project/CreateProjectRoute.tsx:167
 msgid "Discard"
 msgstr ""
@@ -3408,7 +3404,7 @@ msgstr ""
 msgid "Discard this project?"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:324
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:339
 msgid "Discard this workspace?"
 msgstr ""
 
@@ -3582,7 +3578,7 @@ msgstr "por ejemplo, \"Usar frases de sustantivos cortas como 'Espacios verdes u
 msgid "e.g. Client Alpha"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:446
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:461
 msgid "e.g. Client Alpha, Q1 Research"
 msgstr ""
 
@@ -3914,7 +3910,7 @@ msgstr ""
 msgid "Every week for a year"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:369
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:384
 msgid "Everyone can find it. Admins join directly; members can ask."
 msgstr ""
 
@@ -3924,7 +3920,7 @@ msgid "Everyone in {0} can find and open this project."
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1883
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:371
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:386
 #: src/components/workspace/DiscoverableWorkspaces.tsx:304
 msgid "Everyone in your organisation"
 msgstr ""
@@ -4373,7 +4369,7 @@ msgid "Font Size"
 msgstr "Tamaño de fuente"
 
 #. placeholder {0}: targetOrganisation.name
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:413
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:428
 msgid "For <0>{0}</0>"
 msgstr ""
 
@@ -4381,12 +4377,12 @@ msgstr ""
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 msgstr "Para usuarios avanzados: Una clave secreta para verificar la autenticidad del webhook. Solo necesario si tu servicio de recepción requiere verificación de firma."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:518
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:533
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:138
 msgid "For an external organisation"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:502
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:517
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:132
 msgid "For internal use"
 msgstr ""
@@ -4977,7 +4973,7 @@ msgid "Invite members to collaborate on projects and conversations in this works
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1902
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:377
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:392
 #: src/components/workspace/DiscoverableWorkspaces.tsx:306
 msgid "Invite only"
 msgstr ""
@@ -5059,7 +5055,7 @@ msgstr ""
 msgid "IP Address"
 msgstr "Dirección IP"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:481
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:496
 msgid "Is this for your organisation's internal use, or for an external organisation?"
 msgstr ""
 
@@ -5246,7 +5242,7 @@ msgstr ""
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Mantén el acceso seguro con un código de un solo uso de tu aplicación de autenticación. Activa o desactiva la autenticación de dos factores para esta cuenta."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:322
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:337
 #: src/routes/project/CreateProjectRoute.tsx:167
 msgid "Keep editing"
 msgstr ""
@@ -5385,7 +5381,7 @@ msgstr "Base legal guardada"
 msgid "Legal entity name"
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:839
+#: src/components/pricing/PricingConfigurator.tsx:868
 msgid "Let's go!"
 msgstr ""
 
@@ -5996,8 +5992,8 @@ msgid "My templates"
 msgstr "Mis plantillas"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1533
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:437
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:681
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:452
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:708
 #: src/routes/project/CreateProjectRoute.tsx:209
 #: src/routes/project/CreateProjectRoute.tsx:333
 #: src/components/project/ProjectBasicEdit.tsx:104
@@ -6020,7 +6016,7 @@ msgstr "Nombre A-Z"
 msgid "Name is required"
 msgstr "El nombre es requerido"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:445
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:460
 msgid "Name it after the client, engagement, or purpose."
 msgstr ""
 
@@ -6040,7 +6036,7 @@ msgstr ""
 msgid "Name your organisation. You can invite people next, or do it later from settings."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:440
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:455
 msgid "Name your workspace."
 msgstr ""
 
@@ -6140,9 +6136,9 @@ msgstr ""
 msgid "Newest First"
 msgstr "Más nuevos primero"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:754
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:781
 #: src/routes/project/CreateProjectRoute.tsx:411
-#: src/components/pricing/PricingConfigurator.tsx:843
+#: src/components/pricing/PricingConfigurator.tsx:872
 #: src/components/invite/InviteModal.tsx:823
 msgid "Next"
 msgstr "Siguiente"
@@ -6166,7 +6162,7 @@ msgstr "Siguiente"
 msgid "Next invoice"
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:841
+#: src/components/pricing/PricingConfigurator.tsx:870
 msgid "Next: pick a time"
 msgstr ""
 
@@ -6300,7 +6296,7 @@ msgstr ""
 msgid "No logo set. dembrane default will be used."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:655
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:682
 #: src/features/sidebar/blocks/SearchBlock.tsx:156
 msgid "No matches"
 msgstr ""
@@ -6334,11 +6330,11 @@ msgstr "No se han detectado nuevos comentarios aún. Por favor, continúa tu dis
 msgid "No new invites needed. Check the list below."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:724
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:751
 msgid "No one added yet"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:647
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:674
 msgid "No one else in this organisation yet"
 msgstr ""
 
@@ -6536,7 +6532,7 @@ msgid "Not available"
 msgstr "No disponible"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:568
-#: src/components/pricing/PricingConfigurator.tsx:806
+#: src/components/pricing/PricingConfigurator.tsx:835
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:216
 #: src/components/chat/AgenticIntroModal.tsx:78
 msgid "Not now"
@@ -6750,7 +6746,7 @@ msgstr ""
 msgid "Only change this setting in consultation with the responsible person(s) for data protection within your organisation."
 msgstr "Solo cambia este ajuste en consulta con la(s) persona(s) responsable(s) del cumplimiento de la normativa de protección de datos dentro de tu organización."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:347
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:362
 msgid "Only organisation admins and owners can create workspaces. Ask an admin on your organisation to create one, or to promote you first."
 msgstr ""
 
@@ -6758,7 +6754,7 @@ msgstr ""
 msgid "Only people already in this workspace can be added. Invite them to the workspace first if they aren't here yet."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:375
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:390
 msgid "Only the people you add or invite can see it."
 msgstr ""
 
@@ -6779,7 +6775,7 @@ msgstr "Solo los administradores del espacio de trabajo pueden cambiar la base l
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:381
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:396
 msgid "Only you can see this workspace."
 msgstr ""
 
@@ -6942,8 +6938,8 @@ msgid "Org only"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:112
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:459
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:689
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:474
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:716
 #: src/routes/onboarding/OnboardingRoute.tsx:122
 #: src/features/sidebar/views/org/OrgHomeView.tsx:76
 #: src/features/sidebar/hooks/useSearchHits.ts:134
@@ -7051,8 +7047,8 @@ msgstr "Vista General"
 msgid "Overview - Themes & patterns"
 msgstr "Overview - Temas y patrones"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:476
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:697
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:491
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:724
 msgid "Ownership"
 msgstr ""
 
@@ -7060,7 +7056,7 @@ msgstr ""
 msgid "Ownership is locked. Contact support to transfer."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:537
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:552
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:148
 msgid "Owning organisation"
 msgstr ""
@@ -7266,7 +7262,7 @@ msgstr ""
 msgid "people"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:716
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:743
 #: src/routes/organisation/OrganisationRoute.tsx:1353
 msgid "People"
 msgstr ""
@@ -7310,11 +7306,11 @@ msgstr "Teléfono"
 msgid "Pick a date"
 msgstr "Elija una fecha"
 
-#: src/components/pricing/PricingBookingStep.tsx:321
+#: src/components/pricing/PricingBookingStep.tsx:335
 msgid "Pick a time"
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:664
+#: src/components/pricing/PricingConfigurator.tsx:693
 msgid "Pick a time with {host}."
 msgstr ""
 
@@ -7514,7 +7510,7 @@ msgstr ""
 msgid "praise"
 msgstr ""
 
-#: src/components/pricing/PricingTextInput.tsx:223
+#: src/components/pricing/PricingTextInput.tsx:235
 msgid "Prefer talking? Press record and just say it."
 msgstr ""
 
@@ -7563,7 +7559,7 @@ msgid "Privacy Policy URL"
 msgstr "URL de la política de privacidad"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1922
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:383
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:398
 #: src/routes/project/CreateProjectRoute.tsx:304
 #: src/routes/project/CreateProjectRoute.tsx:365
 #: src/components/workspace/OrganisationProjectsTable.tsx:240
@@ -7927,7 +7923,7 @@ msgstr ""
 msgid "participant.button.record"
 msgstr "Grabar"
 
-#: src/components/pricing/PricingTextInput.tsx:243
+#: src/components/pricing/PricingTextInput.tsx:255
 #: src/components/chat/AgenticChatPanel.tsx:2181
 msgid "Record a voice message"
 msgstr ""
@@ -7993,9 +7989,9 @@ msgstr "Temas recurrentes"
 
 #: src/components/pricing/bookingPrefill.ts:168
 #: src/components/pricing/PricingConfigurator.tsx:155
-#: src/components/pricing/PricingConfigurator.tsx:892
-#: src/components/pricing/PricingBookingStep.tsx:310
-#: src/components/pricing/PricingBookingStep.tsx:343
+#: src/components/pricing/PricingConfigurator.tsx:921
+#: src/components/pricing/PricingBookingStep.tsx:324
+#: src/components/pricing/PricingBookingStep.tsx:357
 msgid "Reference {reference}"
 msgstr ""
 
@@ -8475,7 +8471,7 @@ msgstr "Reintentar subida"
 msgid "Return home"
 msgstr "Volver al inicio"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:672
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:699
 #: src/routes/project/CreateProjectRoute.tsx:327
 msgid "Review"
 msgstr ""
@@ -8495,7 +8491,7 @@ msgstr ""
 msgid "Review and edit below. This adds a check that runs against each conversation. Verification must be enabled for it to run. Nothing changes until you add it."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:675
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:702
 msgid "Review before creating."
 msgstr ""
 
@@ -8571,7 +8567,7 @@ msgstr ""
 msgid "Rough estimate to finish transcribing the backlog"
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:1104
+#: src/components/pricing/PricingConfigurator.tsx:1133
 msgid "Roughly how many?"
 msgstr ""
 
@@ -8750,7 +8746,7 @@ msgstr ""
 msgid "Search partner, client, workspace"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:646
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:673
 msgid "Search people"
 msgstr ""
 
@@ -9079,7 +9075,7 @@ msgstr ""
 msgid "sent to the dembrane team"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:701
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:728
 msgid "Separate (client)"
 msgstr ""
 
@@ -9134,7 +9130,7 @@ msgstr ""
 msgid "Set up your workspace | dembrane"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:579
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:594
 msgid "Set who can see and join."
 msgstr ""
 
@@ -9332,7 +9328,7 @@ msgstr ""
 
 #: src/routes/onboarding/OnboardingRoute.tsx:355
 #: src/routes/onboarding/OnboardingRoute.tsx:521
-#: src/components/pricing/PricingConfigurator.tsx:827
+#: src/components/pricing/PricingConfigurator.tsx:856
 #: src/components/organisation/CreateOrganisationModal.tsx:227
 msgid "Skip"
 msgstr "Omitir"
@@ -9587,7 +9583,7 @@ msgid "Stays up to date until tomorrow {0}"
 msgstr ""
 
 #. placeholder {0}: phase.step
-#: src/components/pricing/PricingConfigurator.tsx:717
+#: src/components/pricing/PricingConfigurator.tsx:746
 msgid "Step {0} of {STEP_COUNT}"
 msgstr ""
 
@@ -9596,7 +9592,7 @@ msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:755
-#: src/components/pricing/PricingTextInput.tsx:239
+#: src/components/pricing/PricingTextInput.tsx:251
 #: src/components/chat/AgenticChatPanel.tsx:2176
 msgid "Stop"
 msgstr "Detener"
@@ -9606,7 +9602,7 @@ msgstr "Detener"
 msgid "participant.button.stop"
 msgstr "Detener"
 
-#: src/components/pricing/PricingTextInput.tsx:230
+#: src/components/pricing/PricingTextInput.tsx:242
 #: src/components/chat/AgenticChatPanel.tsx:2166
 msgid "Stop recording and turn it into text"
 msgstr ""
@@ -9879,11 +9875,11 @@ msgstr "Contenido de la Página de Gracias"
 msgid "Thank you!"
 msgstr "¡Gracias!"
 
-#: src/components/pricing/PricingBookingStep.tsx:304
+#: src/components/pricing/PricingBookingStep.tsx:318
 msgid "Thank you! We will get in touch as soon as possible. You can also write to us at info@dembrane.com."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:884
+#: src/components/pricing/PricingConfigurator.tsx:913
 msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
 msgstr ""
 
@@ -9891,11 +9887,11 @@ msgstr ""
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Ese código no funcionó. Inténtalo de nuevo con un código nuevo de tu aplicación de autenticación."
 
-#: src/components/pricing/PricingConfigurator.tsx:786
+#: src/components/pricing/PricingConfigurator.tsx:815
 msgid "That didn't send. Your answers are still here, so try again."
 msgstr ""
 
-#: src/components/pricing/PricingTextInput.tsx:307
+#: src/components/pricing/PricingTextInput.tsx:319
 msgid "That didn't work out. We have saved your recording."
 msgstr ""
 
@@ -9903,7 +9899,7 @@ msgstr ""
 msgid "That recording is too long to send. Record a shorter note."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:748
+#: src/components/pricing/PricingConfigurator.tsx:777
 msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 msgstr ""
 
@@ -9944,7 +9940,7 @@ msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o c
 msgid "participant.conversation.error.loading"
 msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o contacta al soporte si el problema persiste"
 
-#: src/components/pricing/PricingBookingStep.tsx:139
+#: src/components/pricing/PricingBookingStep.tsx:152
 msgid "the dembrane team"
 msgstr ""
 
@@ -9977,7 +9973,7 @@ msgstr ""
 msgid "The host guide is what facilitators read before they run a session."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:870
+#: src/components/pricing/PricingConfigurator.tsx:899
 msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
 msgstr ""
 
@@ -9997,7 +9993,7 @@ msgstr ""
 msgid "The methodology is the way this project is set up and guided."
 msgstr ""
 
-#: src/components/pricing/PricingTextInput.tsx:288
+#: src/components/pricing/PricingTextInput.tsx:300
 msgid "The microphone is blocked in your browser, so recording is off. Typing works."
 msgstr ""
 
@@ -10014,7 +10010,7 @@ msgstr ""
 msgid "The page this answer refers to."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:704
+#: src/components/pricing/PricingConfigurator.tsx:733
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr ""
 
@@ -10060,7 +10056,7 @@ msgstr ""
 msgid "Their representative who owns this data. They are added as a free observer and become the handoff contact."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:556
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:571
 msgid "Their representative who owns this data. They are added as a free observer and emailed that they are the data owner, and become the handoff contact."
 msgstr ""
 
@@ -10122,7 +10118,7 @@ msgstr ""
 msgid "These workspaces have their own plan, managed from each workspace. They aren't part of this organisation's plan."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:643
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:670
 msgid "They'll be added as members. You can add more later."
 msgstr ""
 
@@ -10750,7 +10746,7 @@ msgstr ""
 #: src/routes/invite/MyInvitesRoute.tsx:222
 #: src/routes/invite/AcceptInviteRoute.tsx:557
 #: src/components/project/ProjectAccessGuard.tsx:109
-#: src/components/pricing/PricingTextInput.tsx:318
+#: src/components/pricing/PricingTextInput.tsx:330
 msgid "Try again"
 msgstr ""
 
@@ -10861,7 +10857,7 @@ msgstr "No se puede procesar este fragmento"
 msgid "Under 50."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:703
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:730
 msgid "Under your organisation"
 msgstr ""
 
@@ -11596,7 +11592,7 @@ msgstr "¿Qué desea verificar?"
 msgid "What gets sent"
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:1012
+#: src/components/pricing/PricingConfigurator.tsx:1041
 msgid "What is it?"
 msgstr ""
 
@@ -11694,11 +11690,11 @@ msgstr ""
 msgid "Where would you like to start?"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:460
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:475
 msgid "Which organisation does this workspace belong to?"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:539
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:554
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:150
 msgid "Which organisation owns this workspace's data? This sets the data and compliance context."
 msgstr ""
@@ -11763,7 +11759,7 @@ msgstr ""
 msgid "Workspace actions"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:292
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:307
 msgid "Workspace created."
 msgstr ""
 
@@ -11785,7 +11781,7 @@ msgstr ""
 msgid "Workspace logo"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:444
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:459
 msgid "Workspace name"
 msgstr ""
 
@@ -11878,7 +11874,7 @@ msgstr ""
 msgid "You are already unsubscribed or your link is invalid."
 msgstr "Ya estás desuscribido o tu enlace es inválido."
 
-#: src/components/pricing/PricingConfigurator.tsx:744
+#: src/components/pricing/PricingConfigurator.tsx:773
 msgid "You are on the free plan."
 msgstr ""
 
@@ -11899,11 +11895,11 @@ msgstr ""
 msgid "You can change this later in project settings."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:663
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:690
 msgid "You can change this later in workspace settings after you add billing details."
 msgstr "Puedes cambiarlo más tarde en los ajustes del espacio de trabajo después de añadir los datos de facturación."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:661
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:688
 msgid "You can change this later in workspace settings."
 msgstr "Puedes cambiarlo más tarde en los ajustes del espacio de trabajo."
 
@@ -11924,7 +11920,7 @@ msgstr ""
 msgid "You can try again below."
 msgstr "Puede intentarlo de nuevo a continuación."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:344
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:359
 msgid "You can't create a workspace yet"
 msgstr ""
 
@@ -11940,7 +11936,7 @@ msgstr ""
 msgid "You don't have access to this workspace."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:422
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:437
 msgid "You don't have permission to create workspaces in that organisation. Falling back to your primary organisation instead."
 msgstr ""
 
@@ -12017,7 +12013,7 @@ msgstr "Pareces estar desconectado, por favor verifica tu conexión a internet"
 msgid "You stopped this run."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:742
+#: src/components/pricing/PricingConfigurator.tsx:771
 msgid "You were trying to {action}."
 msgstr ""
 
@@ -12156,11 +12152,11 @@ msgstr "¡Su aprobación nos ayuda a comprender lo que realmente piensa!"
 msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:669
+#: src/components/pricing/PricingConfigurator.tsx:698
 msgid "Your call is booked: {bookedTime}."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:671
+#: src/components/pricing/PricingConfigurator.tsx:700
 msgid "Your call is booked."
 msgstr ""
 
@@ -12168,7 +12164,7 @@ msgstr ""
 msgid "Your details"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:318
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:333
 #: src/routes/project/CreateProjectRoute.tsx:163
 msgid "Your draft won't be saved."
 msgstr ""
@@ -12190,7 +12186,7 @@ msgstr ""
 msgid "Your free plan includes one report. Upgrade to create more."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:701
+#: src/components/pricing/PricingConfigurator.tsx:730
 msgid "Your free transcription hour is used up."
 msgstr ""
 
@@ -12281,11 +12277,11 @@ msgid "Your plan won't renew. You keep access until the period ends."
 msgstr ""
 
 #. placeholder {0}: formatElapsed(pending?.durationMs ?? 0)
-#: src/components/pricing/PricingTextInput.tsx:299
+#: src/components/pricing/PricingTextInput.tsx:311
 msgid "Your recording, {0}"
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:674
+#: src/components/pricing/PricingConfigurator.tsx:703
 msgid "Your request is in."
 msgstr ""
 
