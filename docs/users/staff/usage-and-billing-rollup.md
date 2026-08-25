@@ -48,10 +48,10 @@ Every account is sorted into a *revenue class* so you can tell real money from e
 ## MRR forecast
 
 Each account contributes to a *monthly recurring revenue (MRR) forecast* - what dembrane
-expects to earn from it monthly, derived from its tier, seats, and billing cadence. Tiers are
-[billed yearly by default with a 15% monthly premium](../../features/tiers-and-billing.md#monthly-vs-yearly),
-so the forecast normalises those to a comparable monthly figure. The rollup totals it across
-the accounts in view, so a [filter](#filters) re-totals the forecast for that slice.
+expects to earn from it monthly, derived from its tier, seats, and billing cadence.
+The forecast normalises different billing cadences to a comparable monthly figure. The
+rollup totals it across the accounts in view, so a [filter](#filters) re-totals the
+forecast for that slice.
 
 > [!NOTE]
 > The forecast is a forecast, not booked revenue. Unconverted trials and unpaid managed
@@ -112,5 +112,5 @@ export reflects the current filters and month, so set those first.
   payments rollup behind real money.
 - [Discounts, trials & tiers](./discounts-trials-and-tiers.md) - what "comped" and "trial"
   mean and how to set them.
-- [Tiers & billing](../../features/tiers-and-billing.md) - per-seat pricing, billing accounts,
-  and the yearly/monthly split the forecast normalises.
+- [Tiers & billing](../../features/tiers-and-billing.md) - the plans, seats and billing
+  accounts behind the forecast.

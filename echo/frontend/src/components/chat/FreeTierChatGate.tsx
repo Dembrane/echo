@@ -34,19 +34,9 @@ export function ChatUpgradeModal({
 			onClose={onClose}
 			currentTier={(workspace?.tier ?? "free") as Tier}
 			requiredTier={UPGRADE_TIER}
-			featureName={isChatLimit ? t`Chat limit reached` : t`Message limit reached`}
-			benefit={
-				isChatLimit
-					? isAdmin
-						? t`The free plan includes 1 chat per workspace. Upgrade to start more chats.`
-						: t`The free plan includes 1 chat per workspace. Ask a organisation admin to upgrade.`
-					: isAdmin
-						? t`You've reached the message limit on the free plan. Upgrade to keep chatting.`
-						: t`You've reached the message limit on the free plan. Ask a organisation admin to upgrade.`
-			}
 			canRequestUpgrade={isAdmin}
 			workspaceId={workspace?.id ?? ""}
-			source={isChatLimit ? "chat_cap" : "chat_turn_cap"}
+			wallKey={isChatLimit ? "chat_cap" : "chat_turn_cap"}
 		/>
 	);
 }
@@ -70,15 +60,9 @@ export function VoiceCapUpgradeModal({
 			onClose={onClose}
 			currentTier={(workspace?.tier ?? "free") as Tier}
 			requiredTier={(upgradeTier ?? UPGRADE_TIER) as Tier}
-			featureName={t`Recording limit reached`}
-			benefit={
-				isAdmin
-					? t`This workspace has used its included recording hours. Upgrade to keep using voice.`
-					: t`This workspace has used its included recording hours. Ask an organisation admin to upgrade.`
-			}
 			canRequestUpgrade={isAdmin}
 			workspaceId={workspace?.id ?? ""}
-			source="chat_voice_cap"
+			wallKey="chat_voice_cap"
 		/>
 	);
 }

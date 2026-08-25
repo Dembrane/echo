@@ -29,11 +29,11 @@ import { useCallback, useEffect, useState } from "react";
 
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
-import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
-import { TierPricingCards } from "@/components/workspace/TierPricingCards";
+import { usePricingConfigurator } from "@/components/pricing";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { type BillingPeriod, isComingSoon, SELLABLE_TIER } from "@/lib/tiers";
+import type { BillingPeriod, Tier } from "@/lib/tiers";
 
 export function tierLabel(tier: string | null | undefined): string {
 	if (!tier) return "";
@@ -67,17 +67,24 @@ interface BillingDetails {
 	billing_city: string | null;
 }
 
+/**
+ * The billing overview, minus `status`.
+ *
+ * `status` is deliberately NOT modelled here. It is unreliable: an account on
+ * a paid `tier` with `payment_mode` of `none` reads as unpaid, because that
+ * combination is how a tier is granted without a subscription. Everything
+ * this component decides comes from `tier`, `payment_mode` (surfaced as
+ * `is_managed`) and the Mollie ids (`has_active_subscription`,
+ * `has_payment_history`). Leaving the field out of the type keeps it that way.
+ */
 interface Overview {
 	account_id: string | null;
 	tier: string;
-	status: string | null;
 	billing_period: BillingPeriod | null;
 	seats: number;
 	/** Paid-for-but-unfilled seats this period (a member left). Free to reassign until renewal. */
 	available_seats: number;
-	/** Resume link for an unfinished first checkout (set only when pending + open). */
-	pending_checkout_url: string | null;
-	/** Date access ends when a plan is winding down (status "canceled"). Null while renewing. */
+	/** Date access ends when the plan is winding down. Null while renewing. */
 	current_period_end: string | null;
 	next_invoice: NextInvoice | null;
 	projected_monthly_eur: number | null;
@@ -96,15 +103,55 @@ interface Overview {
 	/** Set when a seat re-price against Mollie last failed (dead mandate / API
 	 *  error); null when reconcile is clean. Drives the "fix your payment" prompt. */
 	reconcile_failed_at: string | null;
-	/** Managed by dembrane (payment_mode "offline"): hide self-serve controls. */
+	/** payment_mode is "offline": dembrane invoices this account. */
 	is_managed: boolean;
-	/** A live Mollie subscription exists. The "Active" UI keys off this, not
-	 *  `status` (which can be "active" with no subscription). */
+	/** payment_mode is "mollie" AND a mollie_subscription_id exists. */
 	has_active_subscription: boolean;
-	/** Customer has checked out before (Mollie customer id): winding-down vs fresh. */
+	/** A mollie_customer_id exists, so this account has checked out at least
+	 *  once. Together with `has_active_subscription` this separates a customer
+	 *  who cancelled (keeps the manage flow) from one dembrane comped (never
+	 *  paid, so there is nothing to manage). */
 	has_payment_history: boolean;
 	account_manager: AccountManager | null;
 	billing_details: BillingDetails | null;
+}
+
+/** What this page shows an account. Derived only from `tier`, `payment_mode`
+ * and the Mollie ids. */
+export interface BillingView {
+	/** payment_mode is "offline": dembrane invoices them. */
+	managed: boolean;
+	/** Pays, or paid and then cancelled. The only case that gets the dashboard. */
+	existingPayer: boolean;
+	/** Paid before, no live subscription. Runs to the period end, then Free. */
+	windingDown: boolean;
+}
+
+/**
+ * The one entitlement rule on this page, kept pure so it can be walked in a
+ * test rather than in a browser.
+ *
+ * It reads `tier`, `payment_mode` and `mollie_subscription_id` only, through
+ * the three booleans the overview derives from them. It never reads `status`:
+ * an account granted a paid tier holds `payment_mode` of `none`, and `status`
+ * reports that as unpaid.
+ *
+ * Cancelling clears `mollie_subscription_id` and keeps `mollie_customer_id`.
+ * That is what separates a customer who cancelled, who keeps the manage flow,
+ * from an account dembrane comped, which never paid and has nothing to manage.
+ */
+export function billingView(overview: {
+	is_managed: boolean;
+	has_active_subscription: boolean;
+	has_payment_history: boolean;
+}): BillingView {
+	const existingPayer =
+		overview.has_active_subscription || overview.has_payment_history;
+	return {
+		existingPayer,
+		managed: overview.is_managed,
+		windingDown: existingPayer && !overview.has_active_subscription,
+	};
 }
 
 interface Invoice {
@@ -563,111 +610,94 @@ function CancelSubscriptionModal({
 }
 
 /**
- * Mandatory-training warning for high-risk deployments. Surfaced up front on the
- * plan picker (not as small print) so the training requirement never reads as a
- * hidden cost. Eventually this links to the onboarding questionnaire answers; for
- * now it states the rule and points to us.
+ * Shown to every account that has never paid: a free workspace, and a comped
+ * one (a paid tier granted by dembrane, payment_mode "none").
+ *
+ * There is no plan picker, no price and no checkout here. A comped account
+ * keeps every feature its tier gives it; it simply has nothing to settle.
+ *
+ * It carries the configurator. The two exceptions are the two panels above
+ * this one, and `billingView` already decides between them: a managed account
+ * keeps `ManagedBillingPanel`, an existing payer (paying now, or paid before
+ * and cancelled) keeps the manage dashboard. This panel is the remainder, so
+ * the rule is not re-derived here.
+ *
+ * This is the one entry that is not a wall. Nothing on this page is blocked,
+ * so there is no control for a popover to sit on: the button opens the modal
+ * directly and the modal reports `surface="modal"`. There is no required tier
+ * either, which is why `requiredTier` is null: there is nothing to suppress.
+ *
+ * `canRequestUpgrade` is true because both billing surfaces are already behind
+ * the financials permission: the organisation tab renders on `canSeeFinancials`
+ * and the workspace tab on `seesFinancials`. Whoever reads this page can book
+ * the call.
  */
-function HighRiskTrainingNotice() {
+function NothingToBillPanel({ tier }: { tier: string }) {
+	const comped = tier !== "free";
+	const configurator = usePricingConfigurator();
 	return (
-		<Alert
-			color="yellow"
-			variant="light"
-			title={t`High-risk use needs training first`}
-			styles={{
-				message: { color: "var(--app-text)" },
-				title: { color: "var(--app-text)" },
-			}}
-		>
-			<Stack gap={6}>
-				<Text size="sm">
+		<Paper withBorder p="md" radius="sm">
+			<Stack gap={12}>
+				<SectionRow label={t`Current plan`}>
+					<Group gap={8}>
+						<Text size="sm" fw={500}>
+							{tierLabel(tier)}
+						</Text>
+						{comped && (
+							<Badge size="xs" variant="light" color="green">
+								<Trans>Arranged with dembrane</Trans>
+							</Badge>
+						)}
+					</Group>
+				</SectionRow>
+				<Text size="xs">
+					{comped ? (
+						<Trans>
+							Your plan is arranged with dembrane, so there is nothing to pay
+							here. Everything your plan includes stays available.
+						</Trans>
+					) : (
+						<Trans>
+							You are on the free plan. There is no payment to manage yet.
+						</Trans>
+					)}
+				</Text>
+				<Text size="xs">
 					<Trans>
-						Using dembrane in health, education, recruitment, critical
-						infrastructure, law enforcement, or justice? Those are high-risk
-						contexts and need a mandatory training before live use.
+						If you need something different, we will draft an offer for your use
+						case.
 					</Trans>
 				</Text>
-				<Anchor
-					size="sm"
-					href="mailto:support@dembrane.com?subject=High-risk training"
-				>
-					<Trans>Talk to us about training</Trans>
-				</Anchor>
-			</Stack>
-		</Alert>
-	);
-}
-
-/** Pick a plan + cadence — used for first subscribe and for changing plan. */
-function ChangePlanModal({
-	opened,
-	onClose,
-	currentTier,
-	defaultPeriod,
-	submitting,
-	onConfirm,
-}: {
-	opened: boolean;
-	onClose: () => void;
-	currentTier: string;
-	defaultPeriod: BillingPeriod;
-	submitting: boolean;
-	onConfirm: (tier: string, period: BillingPeriod) => void;
-}) {
-	const [tier, setTier] = useState<string>(
-		currentTier && currentTier !== "free" ? currentTier : SELLABLE_TIER,
-	);
-	const [period, setPeriod] = useState<BillingPeriod>(defaultPeriod);
-
-	return (
-		<Modal
-			opened={opened}
-			onClose={onClose}
-			title={t`Choose a plan`}
-			size="72rem"
-			centered
-		>
-			<Stack gap="md">
-				<HighRiskTrainingNotice />
-				<Stack gap={6} align="flex-start">
-					<Text size="xs" fw={500} tt="uppercase">
-						<Trans>Billing period</Trans>
-					</Text>
-					<BillingPeriodToggle value={period} onChange={setPeriod} />
-				</Stack>
-				<TierPricingCards
-					value={tier}
-					onChange={setTier}
-					highlightTier={SELLABLE_TIER}
-					billingPeriod={period}
-				/>
-				<Text size="xs">
-					<Trans>Prices exclude VAT.</Trans>
-				</Text>
+				<Group>
+					<Button
+						size="xs"
+						onClick={configurator.open}
+						data-testid="billing-configurator-start"
+					>
+						<Trans>Tell us what you need</Trans>
+					</Button>
+				</Group>
 				<Text size="xs">
 					<Trans>
-						For bespoke compliance requirements,{" "}
+						To talk about what you need, email{" "}
 						<Anchor href="mailto:support@dembrane.com" inherit>
-							call us for a quote
+							support@dembrane.com
 						</Anchor>
 						.
 					</Trans>
 				</Text>
-				<Group justify="flex-end">
-					<Button
-						loading={submitting}
-						disabled={isComingSoon(tier)}
-						onClick={() => onConfirm(tier, period)}
-					>
-						{isComingSoon(tier) ? (
-							<Trans>Coming soon</Trans>
-						) : (
-							<Trans>Continue to payment</Trans>
-						)}
-					</Button>
-				</Group>
 			</Stack>
-		</Modal>
+			<UpgradeModal
+				opened={configurator.opened}
+				onClose={configurator.close}
+				currentTier={tier as Tier}
+				requiredTier={null}
+				canRequestUpgrade
+				workspaceId=""
+				wallKey="billing_page"
+				entry="modal_direct"
+			/>
+		</Paper>
 	);
 }
 
@@ -833,7 +863,6 @@ export function BillingManager({
 	const [submitting, setSubmitting] = useState(false);
 	const [updatingMethod, setUpdatingMethod] = useState(false);
 	const [retrying, setRetrying] = useState(false);
-	const [planOpen, { open: openPlan, close: closePlan }] = useDisclosure(false);
 	const [cancelOpen, { open: openCancel, close: closeCancel }] =
 		useDisclosure(false);
 	// Pre-redirect note so the EUR 0.00 verification on Mollie's hosted page
@@ -919,8 +948,14 @@ export function BillingManager({
 				});
 				const data = res.ok ? await res.json().catch(() => ({})) : {};
 				refreshAll();
-				// Status-driven messaging: a method swap reads its real outcome from
-				// `method_update`; checkout/resume is success only when active.
+				// A method swap reads its real outcome from `method_update`, which
+				// is the Mollie consent payment, not the account state.
+				//
+				// The checkout return is gone with the checkout: this component no
+				// longer starts a subscription, so `flow=checkout` can only arrive
+				// from a link made before this change. We still reconcile it, and we
+				// say nothing about it, because the only thing that could tell us
+				// the outcome is the account `status` this page must not read.
 				if (flow === "method") {
 					const m = data.method_update;
 					if (m === "paid") {
@@ -932,16 +967,6 @@ export function BillingManager({
 					} else {
 						toast(t`Your payment method update is still processing.`);
 					}
-				} else if (data.status === "active") {
-					toast.success(t`Your plan is active.`);
-				} else if (data.status === "past_due") {
-					toast.error(
-						t`Your payment didn't go through. Update your payment method to continue.`,
-					);
-				} else {
-					toast(
-						t`Your payment is still processing. Refresh in a moment to check.`,
-					);
 				}
 			} catch {
 				toast.error(t`Could not confirm payment. Refresh to retry.`);
@@ -949,39 +974,12 @@ export function BillingManager({
 		})();
 	}, [accountId]);
 
-	const startCheckout = async (tier: string, period: BillingPeriod) => {
-		if (!accountId || isComingSoon(tier)) return;
-		setSubmitting(true);
-		try {
-			posthog.capture("checkout_started", { period, source, tier });
-			const res = await fetch(
-				`${API_BASE_URL}/v2/billing-accounts/${accountId}/checkout`,
-				{
-					body: JSON.stringify({
-						billing_period: period,
-						redirect_url: `${window.location.origin}${window.location.pathname}?billing=return&flow=checkout`,
-						tier,
-					}),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				},
-			);
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
-			}
-			const data = await res.json();
-			window.location.href = data.checkout_url; // hosted Mollie checkout
-		} catch (e) {
-			toast.error((e as Error).message);
-			setSubmitting(false);
-		}
-	};
-
-	// Resume a canceled plan; the backend re-instates it with no charge while
-	// inside the paid period, else returns resumed=false to fall back to checkout.
-	const resumePlan = async (tier: string, period: BillingPeriod) => {
+	// Resume a plan that is winding down. The backend re-instates it with no
+	// charge while the paid period still runs. It returns resumed=false when
+	// there is nothing pre-paid left to ride; that used to fall through to a
+	// fresh Mollie checkout, and no path in this component starts a subscription
+	// any more, so it now says so and stops.
+	const resumePlan = async (tier: string) => {
 		if (!accountId) return;
 		setSubmitting(true);
 		try {
@@ -998,13 +996,14 @@ export function BillingManager({
 				posthog.capture("subscription_resumed", { source, tier });
 				toast.success(t`Your plan is back on. You keep your current period.`);
 				refreshAll();
-				setSubmitting(false);
-				return;
+			} else {
+				toast(
+					t`Your paid period has run out, so we cannot put this plan back on from here. Email support@dembrane.com and we will sort it out with you.`,
+				);
 			}
-			// Nothing pre-paid to preserve: start a fresh checkout (charges now).
-			await startCheckout(tier, period);
 		} catch (e) {
 			toast.error((e as Error).message);
+		} finally {
 			setSubmitting(false);
 		}
 	};
@@ -1055,7 +1054,12 @@ export function BillingManager({
 				throw new Error(err.detail || `Failed (${res.status})`);
 			}
 			const data = await res.json();
-			if (data.status === "active") {
+			// The endpoint answers with the account state its charge left behind.
+			// That is the outcome of a charge this customer just asked us to make,
+			// not an entitlement read: nothing on the page renders from it, and the
+			// dashboard below refreshes from tier + payment_mode + the Mollie ids.
+			const chargeSettled = data.status === "active";
+			if (chargeSettled) {
 				toast.success(t`Payment went through. Your plan is up to date.`);
 			} else {
 				toast.error(
@@ -1094,16 +1098,22 @@ export function BillingManager({
 		);
 	}
 
+	// Entitlement, read from tier + payment_mode + the Mollie ids. Never from
+	// `status`. See billingView above for why.
 	const tier = overview.tier || "free";
-	const status = overview.status;
-	const hasPaidPlan = tier !== "free";
-	const isCanceling = status === "canceled";
+	const hasLiveSubscription = overview.has_active_subscription;
+	const {
+		managed: isManaged,
+		existingPayer: isExistingPayer,
+		windingDown: isWindingDown,
+	} = billingView(overview);
+
 	const discountPct = overview.percent_discount ?? 0;
 	const period = overview.billing_period ?? "annual";
 	const endDate = formatDate(overview.current_period_end);
 	// Show the total at the cadence the customer is actually billed: a "monthly
 	// total" next to an annual charge reads as irrelevant. Annual = monthly x 12.
-	const isAnnual = !isCanceling && period === "annual";
+	const isAnnual = !isWindingDown && period === "annual";
 	const totalValue =
 		isAnnual && overview.projected_monthly_eur != null
 			? overview.projected_monthly_eur * 12
@@ -1112,17 +1122,25 @@ export function BillingManager({
 	// Pending invites aren't billed until accepted; surface where the total lands
 	// once they are so the figure never quietly understates the bill.
 	const pendingInvites = overview.pending_invites ?? 0;
-	const hasPending = !isCanceling && pendingInvites > 0;
+	const hasPending = !isWindingDown && pendingInvites > 0;
 	const withPendingValue =
 		isAnnual && overview.projected_with_pending_eur != null
 			? overview.projected_with_pending_eur * 12
 			: overview.projected_with_pending_eur;
+	// A charge we could not take. `reconcile_failed_at` covers a failed seat
+	// re-price. The newest ledger row covers a failed renewal: that failure is
+	// the event the account's `status` was set from, and the row is durable,
+	// so we read the row instead of the flag it produced. Only meaningful while
+	// a subscription is live, so an old failure cannot haunt a closed account.
 	const reconcileFailed = !!overview.reconcile_failed_at;
+	const chargeFailed =
+		reconcileFailed ||
+		(hasLiveSubscription && invoices[0]?.status === "failed");
 
 	// Managed by dembrane (payment_mode "offline"): no self-serve controls.
 	// Show the managed-state panel + the invoice list + billing-details capture.
 	// Full feature access is unchanged; this is only the payment surface.
-	if (overview.is_managed) {
+	if (isManaged) {
 		return (
 			<Stack gap={16}>
 				<ManagedBillingPanel
@@ -1152,113 +1170,17 @@ export function BillingManager({
 		);
 	}
 
-	// Free / never-subscribed: a focused subscribe prompt.
-	if (!hasPaidPlan) {
-		// Unfinished first checkout (e.g. closed the Mollie tab): offer to resume
-		// the exact same payment instead of a bare plan picker.
-		if (status === "pending" && overview.pending_checkout_url) {
-			return (
-				<Paper withBorder p="md" radius="sm">
-					<Stack gap={12}>
-						<Text size="sm" fw={500}>
-							<Trans>Finish setting up your plan</Trans>
-						</Text>
-						<Text size="xs">
-							<Trans>
-								Your payment hasn't been completed yet. Pick up where you left
-								off to activate your plan. You won't be charged twice.
-							</Trans>
-						</Text>
-						<Button
-							component="a"
-							href={overview.pending_checkout_url}
-							w="fit-content"
-						>
-							<Trans>Finish paying</Trans>
-						</Button>
-					</Stack>
-				</Paper>
-			);
-		}
-		return (
-			<Paper withBorder p="md" radius="sm">
-				<Stack gap={12}>
-					<Text size="sm" fw={500}>
-						<Trans>Choose a plan</Trans>
-					</Text>
-					<Text size="xs">
-						<Trans>
-							Billed per user. A seat is one member, counted automatically.
-							Cancel anytime.
-						</Trans>
-					</Text>
-					<Button onClick={openPlan} w="fit-content">
-						<Trans>See plans</Trans>
-					</Button>
-				</Stack>
-				<ChangePlanModal
-					opened={planOpen}
-					onClose={closePlan}
-					currentTier={tier}
-					defaultPeriod={period}
-					submitting={submitting}
-					onConfirm={startCheckout}
-				/>
-			</Paper>
-		);
-	}
-
-	// Paid tier with no live subscription (e.g. after managed->self-serve): show an
-	// honest "subscribe" prompt, not "Active". Canceled plans keep the Resume flow below.
-	if (hasPaidPlan && !isCanceling && !overview.has_active_subscription) {
-		return (
-			<Paper withBorder p="md" radius="sm">
-				<Stack gap={12}>
-					<Group gap={8}>
-						<Text size="sm" fw={500}>
-							{tierLabel(tier)}
-						</Text>
-						<Badge size="xs" variant="light" color="yellow">
-							{endDate ? (
-								<Trans>Ends {endDate}</Trans>
-							) : (
-								<Trans>No subscription</Trans>
-							)}
-						</Badge>
-					</Group>
-					<Text size="xs">
-						{endDate ? (
-							<Trans>
-								Your {tierLabel(tier)} access ends on {endDate}, then moves to
-								Free. Subscribe to keep it.
-							</Trans>
-						) : (
-							<Trans>
-								You're on {tierLabel(tier)}, but there's no active subscription.
-								Subscribe to set up billing and keep it.
-							</Trans>
-						)}
-					</Text>
-					<Button onClick={openPlan} w="fit-content">
-						<Trans>Subscribe</Trans>
-					</Button>
-				</Stack>
-				<ChangePlanModal
-					opened={planOpen}
-					onClose={closePlan}
-					currentTier={tier}
-					defaultPeriod={period}
-					submitting={submitting}
-					onConfirm={startCheckout}
-				/>
-			</Paper>
-		);
+	// Never paid: a free workspace, or a comped one (paid tier, payment_mode
+	// "none"). No plan picker, no price, no checkout. The comped account keeps
+	// every feature its tier gives it.
+	if (!isExistingPayer) {
+		return <NothingToBillPanel tier={tier} />;
 	}
 
 	return (
 		<Paper withBorder p="md" radius="sm">
 			<Stack gap={16}>
-				{(status === "past_due" || reconcileFailed) && (
+				{chargeFailed && (
 					<Alert
 						color="red"
 						title={t`We couldn't charge your payment method`}
@@ -1304,13 +1226,11 @@ export function BillingManager({
 						<Badge
 							size="xs"
 							variant="light"
-							color={
-								isCanceling ? "yellow" : status === "past_due" ? "red" : "green"
-							}
+							color={isWindingDown ? "yellow" : chargeFailed ? "red" : "green"}
 						>
-							{isCanceling ? (
+							{isWindingDown ? (
 								<Trans>Not renewing</Trans>
-							) : status === "past_due" ? (
+							) : chargeFailed ? (
 								<Trans>Payment failed</Trans>
 							) : (
 								<Trans>Active</Trans>
@@ -1318,7 +1238,7 @@ export function BillingManager({
 						</Badge>
 					</Group>
 					<Text size="xs">
-						{isCanceling && endDate ? (
+						{isWindingDown && endDate ? (
 							<Trans>Ends on {endDate}, then moves to Free</Trans>
 						) : period === "monthly" ? (
 							<Trans>Billed monthly</Trans>
@@ -1350,7 +1270,7 @@ export function BillingManager({
 						</Text>
 					)}
 					<Text size="xs">
-						{isCanceling ? (
+						{isWindingDown ? (
 							<Trans>
 								A seat is one member. Seats stay available until the plan ends;
 								changes won't be charged.
@@ -1367,7 +1287,7 @@ export function BillingManager({
 				<Divider />
 
 				<Group grow align="flex-start">
-					{isCanceling ? (
+					{isWindingDown ? (
 						<SectionRow label={t`Plan ends`}>
 							{endDate ? (
 								<Text size="sm">{endDate}</Text>
@@ -1399,7 +1319,7 @@ export function BillingManager({
 
 					<SectionRow
 						label={
-							isCanceling
+							isWindingDown
 								? t`Current rate`
 								: isAnnual
 									? t`Projected yearly total`
@@ -1409,7 +1329,7 @@ export function BillingManager({
 						<Text size="sm">{eur(totalValue)}</Text>
 						{overview.per_seat_monthly_eur != null && (
 							<Text size="xs">
-								{isCanceling ? (
+								{isWindingDown ? (
 									<Trans>
 										{eur(overview.per_seat_monthly_eur)} / seat ×{" "}
 										{overview.seats}. Not charged after this period.
@@ -1427,15 +1347,15 @@ export function BillingManager({
 								)}
 							</Text>
 						)}
-					{hasPending && withPendingValue != null && (
-						<Text size="xs" c="var(--mantine-color-primary-6)">
-							<Trans>
-								{isAnnual ? "Yearly" : "Monthly"} total rises to{" "}
-								{eur(withPendingValue)} when {pendingInvites} pending{" "}
-								{pendingInvites === 1 ? "invite is" : "invites are"} accepted
-							</Trans>
-						</Text>
-					)}
+						{hasPending && withPendingValue != null && (
+							<Text size="xs" c="var(--mantine-color-primary-6)">
+								<Trans>
+									{isAnnual ? "Yearly" : "Monthly"} total rises to{" "}
+									{eur(withPendingValue)} when {pendingInvites} pending{" "}
+									{pendingInvites === 1 ? "invite is" : "invites are"} accepted
+								</Trans>
+							</Text>
+						)}
 						{discountPct > 0 && (
 							<Text size="xs" c="primary">
 								<Trans>{discountPct}% discount applied</Trans>
@@ -1489,7 +1409,7 @@ export function BillingManager({
 
 				<Group justify="space-between" align="center">
 					<Text size="xs">
-						{isCanceling ? (
+						{isWindingDown ? (
 							endDate ? (
 								<Trans>Your plan ends on {endDate}.</Trans>
 							) : (
@@ -1501,11 +1421,11 @@ export function BillingManager({
 							</Trans>
 						)}
 					</Text>
-					{isCanceling ? (
+					{isWindingDown ? (
 						<Button
 							size="xs"
 							loading={submitting}
-							onClick={() => resumePlan(tier, period)}
+							onClick={() => resumePlan(tier)}
 						>
 							<Trans>Resume plan</Trans>
 						</Button>
@@ -1547,7 +1467,6 @@ interface SeparateWorkspaceAccount {
 	name: string;
 	account_id: string;
 	tier: string;
-	status: string;
 }
 
 export function OrgBillingTab({ orgId }: { orgId: string }) {

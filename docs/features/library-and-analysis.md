@@ -40,11 +40,12 @@ generation as a snapshot of what the project says right now.
 
 ## What you need
 
-The library is *built-in analysis*, so it needs *Changemaker* (€75/seat) or *Guardian*
-(€150/seat), where analysis on EU-hosted Gemini is included. It isn't on *Free* or *Innovator*;
-on Innovator you bring your own model via [MCP](./mcp-and-bring-your-own-llm.md) (coming soon)
-and work through [Ask](./chat-and-ask.md) instead. Where it isn't on your plan, dembrane points
-you to *contact sales* rather than hiding it.
+The library is *built-in analysis*, so it needs *Changemaker* or *Guardian*, where analysis
+on EU-hosted Gemini is included. It isn't on *Free* or *Innovator*; on Innovator you bring your
+own model via [MCP](./mcp-and-bring-your-own-llm.md) (coming soon) and work through
+[Ask](./chat-and-ask.md) instead. Where it isn't on your plan, dembrane asks what you need and
+offers you a call rather than hiding the feature. See
+[what it costs](./tiers-and-billing.md#what-it-costs).
 
 Reading the library follows the same access as the rest of a project - *owner*, *admin*,
 *member*, *external* and *observer* can all read it; generating it is a host action

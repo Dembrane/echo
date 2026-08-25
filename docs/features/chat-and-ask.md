@@ -100,11 +100,12 @@ Templates keep analysis consistent across projects and colleagues.
 Ask needs the `chat:use` permission, so *owner*, *admin*, *member* and *external* can use it;
 *observer* collaborators are read-only (see [roles & permissions](./roles-and-permissions.md)).
 
-The built-in analysis behind Ask is a *Changemaker* (€75/seat) and *Guardian* (€150/seat)
-feature, running on EU-hosted Gemini - chat that works out of the box. On *Free* it's limited.
-On *Innovator* (€20/seat) you bring your own model instead: the chat screen becomes an
-integration where you connect ChatGPT or Claude over [MCP](./mcp-and-bring-your-own-llm.md)
-(*coming soon*). See [tiers & billing](./tiers-and-billing.md).
+The built-in analysis behind Ask is a *Changemaker* and *Guardian* feature, running on
+EU-hosted Gemini - chat that works out of the box. On *Free* it's limited. On *Innovator* you
+bring your own model instead: the chat screen becomes an integration where you connect ChatGPT
+or Claude over [MCP](./mcp-and-bring-your-own-llm.md) (*coming soon*). Where it isn't on your
+plan, dembrane asks what you need and offers you a call. See
+[tiers & billing](./tiers-and-billing.md).
 
 ## Chat vs library vs reports
 

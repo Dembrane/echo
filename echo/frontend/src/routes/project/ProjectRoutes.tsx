@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
 import { useMemo, useState } from "react";
@@ -222,10 +223,10 @@ export const ProjectIntegrationsRoute = () => {
 						<FeatureGate
 							currentTier={workspace.tier as Tier}
 							requiredTier="changemaker"
-							featureName="Webhooks"
-							benefit="Send conversation and report events to your own systems."
+							featureName={t`Webhooks`}
 							canRequestUpgrade={isWorkspaceAdmin}
 							workspaceId={workspaceId}
+							wallKey="webhooks"
 						>
 							<WebhookSection projectId={projectId} />
 						</FeatureGate>

@@ -19,7 +19,8 @@ interface TrainingCatalogProps {
  * Catalog cards for the org Training view. Pricing comes from the API
  * (training_service.CATALOG), never hardcoded here. Coming-soon products
  * (Flex) render without a request CTA. Mirrors the Change-plan modal's
- * TierPricingCards layout: a left-aligned row of equal-width cards on wide
+ * The old tier price cards layout, which this catalog still shares: a
+ * left-aligned row of equal-width cards on wide
  * screens, stacked on narrow ones.
  */
 export const TrainingCatalog = ({

@@ -773,11 +773,9 @@ export const CreateWorkspaceRoute = () => {
 				onClose={upgradeHandlers.close}
 				currentTier={orgTier as Tier}
 				requiredTier="changemaker"
-				featureName={t`Workspaces`}
-				benefit={t`Upgrade your plan to create more workspaces in this organisation.`}
 				canRequestUpgrade
 				workspaceId=""
-				source="workspace_cap"
+				wallKey="workspace_cap"
 			/>
 		</Container>
 	);

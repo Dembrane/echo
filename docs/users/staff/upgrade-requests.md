@@ -36,8 +36,8 @@ request that changes a tier performs a
 - `new_workspace` - the customer wants a workspace they can't create under their current plan.
   On [Free](../../features/tiers-and-billing.md#free), extra workspaces are gated, so this is
   the route to one.
-- `tier_upgrade` - the customer wants their existing workspace moved up (most commonly Free →
-  Changemaker, the [self-serve tier](../../features/tiers-and-billing.md#changemaker--75--seat--month)).
+- `tier_upgrade` - the customer wants their existing workspace moved up (for example, Free →
+  [Changemaker](../../features/tiers-and-billing.md)).
 
 Read the kind first: it tells you whether you're approving a new thing or changing an existing
 one, and which workspace is affected.

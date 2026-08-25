@@ -3,10 +3,14 @@ import { t } from "@lingui/core/macro";
 /**
  * Tier copy + helpers (ADR 0005, per-seat tiers).
  *
- * Kept in sync with server/dembrane/tier_capacity.py. Free is retained in the
- * type as the internal baseline (default workspace, downgrade target) and for
- * rendering an existing workspace's badge, but it is HIDDEN from customer-facing
- * plan selection for now — see VISIBLE_TIERS.
+ * Kept in sync with server/dembrane/tier_capacity.py.
+ *
+ * TIER_ORDER is the ONE tier list (R26). There used to be three: this file's
+ * VISIBLE_TIERS, which nothing read, a copy inside the price cards, and a
+ * third derived in FeatureGate. A list that looks authoritative and is dead
+ * code is worse than no list, because the next person edits it and sees no
+ * effect. The price cards are gone now, and FeatureGate reads this one.
+ * Everything else here is a derivation of TIER_ORDER.
  */
 
 export type Tier = "free" | "innovator" | "changemaker" | "guardian";
@@ -19,41 +23,22 @@ export const TIER_ORDER: Tier[] = [
 	"guardian",
 ];
 
-// Customer-facing, selectable plans (pricing cards, plan picker). Free is
-// hidden for now; re-add it here to expose it again. Innovator/Guardian are
-// "coming soon" (gated on the MCP / sovereign stack) but still shown.
-export const VISIBLE_TIERS: Tier[] = [
-	// "free",  // hidden for now
-	"innovator",
-	"changemaker",
-	"guardian",
-];
-
 // Innovator and Guardian are shown with a "Coming soon" badge, not
 // selectable/checkout-able. Changemaker is live. Single source of truth:
-// used by the pricing cards, plan picker, and checkout.
+// used by the pricing cards and the staff tier grant.
 export const COMING_SOON_TIERS: Tier[] = ["innovator", "guardian"];
 
 export function isComingSoon(tier: string | null | undefined): boolean {
 	return !!tier && (COMING_SOON_TIERS as string[]).includes(tier);
 }
 
-// Tiers a customer can actually buy right now: visible minus coming-soon.
-// Single source for "how many plans are sellable" -- drives the Popular badge
+// Tiers a customer can hold on a paid plan right now: the order minus free and
+// minus coming-soon. Drives the staff tier grant, and the Popular badge
 // (ISSUE-011: a "Popular" tag on the sole buyable option reads oddly, so it is
 // hidden while exactly one tier is purchasable and auto-restores at >=2).
-export const PURCHASABLE_TIERS: Tier[] = VISIBLE_TIERS.filter(
-	(tier) => !isComingSoon(tier),
+export const PURCHASABLE_TIERS: Tier[] = TIER_ORDER.filter(
+	(tier) => tier !== "free" && !isComingSoon(tier),
 );
-
-// True only when there are at least two tiers a customer can actually buy.
-// Drives "Change plan": with a single purchasable tier (today, only
-// Changemaker) there is nothing to change to, so the button is hidden; it
-// auto-restores the moment a second tier goes live (mirrors backend
-// PURCHASABLE_TIERS in server/dembrane/tier_capacity.py).
-export function hasMultiplePurchasableTiers(): boolean {
-	return PURCHASABLE_TIERS.length >= 2;
-}
 
 // Recently launched: render a "New" badge. None currently.
 export const NEW_TIERS: Tier[] = [];
@@ -80,28 +65,19 @@ export function resolveTierBadge(
 	return null;
 }
 
-// Default selection in the plan picker (also carries the POPULAR badge).
+// The one paid tier that is live today. Carries the POPULAR badge, and is the
+// tier the feature gates and badges compare against. The plan picker that used
+// to default to it is gone.
 export const SELLABLE_TIER: Tier = "changemaker";
 
-// Annual is the anchor price; monthly cadence is surcharged by this percent
-// ("X% off when you pay annually"). Single knob — mirrors
-// MONTHLY_BILLING_PREMIUM_PCT in server/dembrane/tier_capacity.py. Change both
-// together. Drives the toggle badge + the offline price fallback.
-export const MONTHLY_BILLING_PREMIUM_PCT = 15;
+// MONTHLY_BILLING_PREMIUM_PCT and TIER_FALLBACK_PRICE_EUR are gone with the
+// price cards and the billing period toggle. Nothing in the app should hold a
+// price of its own: the live figure comes from the API, and the upgrade path
+// shows no price at all now. The server keeps the numbers in
+// tier_capacity.py.
 
-// Single source for the offline/fallback per-seat annual price (EUR/seat/mo).
-// Mirrors price_eur_monthly in server/dembrane/tier_capacity.py; the live price
-// comes from the API, this only backstops first paint before the call returns.
-export const TIER_FALLBACK_PRICE_EUR: Record<Tier, number | null> = {
-	changemaker: 75,
-	free: null,
-	guardian: 150,
-	innovator: 20,
-};
-
-// One-liner capacity summary. The prices here are translatable display copy
-// (kept literal so the i18n catalogs stay stable); the numeric source of truth
-// for computation is TIER_FALLBACK_PRICE_EUR + the live API.
+// One-liner capacity summary. The prices here are translatable display copy,
+// and the live numbers come from the API.
 export function capacityShortFor(tier: string | null | undefined): string {
 	if (!isTier(tier)) return "";
 	const map: Record<Tier, string> = {
@@ -109,17 +85,6 @@ export function capacityShortFor(tier: string | null | undefined): string {
 		free: t`1 h recording`,
 		guardian: t`€150 / seat / month`,
 		innovator: t`€20 / seat / month`,
-	};
-	return map[tier];
-}
-
-export function tierBestFor(tier: string | null | undefined): string {
-	if (!isTier(tier)) return "";
-	const map: Record<Tier, string> = {
-		changemaker: t`EU-hosted analysis, audit logs, and white labeling.`,
-		free: "",
-		guardian: t`Cloud Act safe. EU-sovereign stack for the strictest compliance.`,
-		innovator: t`Bring your own LLM via the MCP.`,
 	};
 	return map[tier];
 }
@@ -185,8 +150,12 @@ export interface TierCapacity {
  * - Annual selected -> `annual_billing`
  * - Monthly selected -> `monthly_billing`
  * - Free -> null (no displayable price)
+ *
+ * No longer exported. The price cards were its only reader outside this file,
+ * and they are gone. The two formatters below still need it, and they belong
+ * to the billing surface that existing payers keep.
  */
-export function pricingForBillingPeriod(
+function pricingForBillingPeriod(
 	cap: TierCapacity,
 	period: BillingPeriod,
 ):

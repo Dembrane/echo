@@ -38,11 +38,12 @@ chasing addresses.
 
 ## What you need
 
-Reports run on *built-in analysis*, so generating one needs a *Changemaker* (€75/seat) or
-*Guardian* (€150/seat) workspace. If the report option is greyed out, that's why. On *Free* and
-*Innovator* the built-in analysis isn't included; Innovator teams bring their own model via
+Reports run on *built-in analysis*, so generating one needs a *Changemaker* or *Guardian*
+workspace. If the report option is greyed out, that's why. On *Free* and *Innovator* the
+built-in analysis isn't included; Innovator teams bring their own model via
 [MCP](./mcp-and-bring-your-own-llm.md) (coming soon). Where it isn't on your plan, dembrane
-points you to contact sales. See [tiers & billing](./tiers-and-billing.md).
+asks what you need and offers you a call. See
+[what it costs](./tiers-and-billing.md#what-it-costs).
 
 By role: *owner*, *admin*, *member*, *external* and *observer* can *view* reports; everyone but
 *observer* can *generate*; *external* and *observer* can't *publish*. See

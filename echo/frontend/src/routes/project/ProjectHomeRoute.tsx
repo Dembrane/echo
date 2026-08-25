@@ -333,12 +333,12 @@ export const ProjectHomeRoute = () => {
 				onClose={upgradeHandlers.close}
 				currentTier={(workspace?.tier ?? "free") as Tier}
 				requiredTier={SELLABLE_TIER}
-				featureName="Conversations"
-				benefit={t`Your free plan includes one conversation. Upgrade to open the rest.`}
 				canRequestUpgrade={
 					workspace?.role === "admin" || workspace?.role === "owner"
 				}
 				workspaceId={workspaceId ?? ""}
+				wallKey="transcription_cap"
+				projectId={projectId}
 			/>
 		</PageContainer>
 	);
