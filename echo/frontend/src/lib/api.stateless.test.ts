@@ -66,3 +66,31 @@ it("carries the abort signal so a cancelled recording drops its upload", async (
 
 	expect(post.mock.calls[0][2]?.signal).toBe(controller.signal);
 });
+
+it("names the purpose instead of a project where there is none to bill", async () => {
+	const post = postSpy();
+	await transcribeStateless({
+		file: new Blob(["audio"], { type: "audio/webm" }),
+		filename: "voice-note.webm",
+		purpose: "pricing_intake",
+	});
+
+	const form = post.mock.calls[0][1] as FormData;
+	expect(form.get("purpose")).toBe("pricing_intake");
+	// A project_id alongside it would win on the server and meter the call, so
+	// the field is absent rather than empty.
+	expect(form.has("project_id")).toBe(false);
+	expect(form.getAll("file")).toHaveLength(1);
+});
+
+it("names no purpose where a project is billed", async () => {
+	const post = postSpy();
+	await transcribeStateless({
+		file: new Blob(["audio"], { type: "audio/webm" }),
+		filename: "voice-note.webm",
+		projectId: "project-1",
+	});
+
+	const form = post.mock.calls[0][1] as FormData;
+	expect(form.has("purpose")).toBe(false);
+});

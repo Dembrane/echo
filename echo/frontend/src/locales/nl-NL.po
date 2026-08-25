@@ -455,7 +455,7 @@ msgstr "{from} → {to}"
 
 #: src/components/pricing/PricingBookingStep.tsx:336
 msgid "{host} will read your answers before the call and brings a draft offer."
-msgstr ""
+msgstr "Voor het gesprek leest {host} je antwoorden en neemt een conceptvoorstel mee."
 
 #: src/components/invite/EmailChipsInput.tsx:297
 msgid "{invalidCount} addresses need attention"
@@ -624,7 +624,7 @@ msgstr "1. Je geeft een URL op waar je meldingen wilt ontvangen"
 
 #: src/components/pricing/questions.ts:189
 msgid "16 to 40."
-msgstr ""
+msgstr "16 tot 40."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:247
 msgid "2 months ago"
@@ -632,7 +632,7 @@ msgstr "2 maanden geleden"
 
 #: src/components/pricing/questions.ts:187
 msgid "2 to 5."
-msgstr ""
+msgstr "2 tot 5."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:764
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
@@ -644,7 +644,7 @@ msgstr "24 uur"
 
 #: src/components/pricing/questions.ts:175
 msgid "250 to 1000."
-msgstr ""
+msgstr "250 tot 1000."
 
 #: src/routes/project/canvas/CanvasRoute.tsx:215
 msgid "3 days"
@@ -660,11 +660,11 @@ msgstr "3. Uw systeem ontvangt de gegevens en kan erop reageren (bijvoorbeeld op
 
 #: src/components/pricing/questions.ts:174
 msgid "50 to 250."
-msgstr ""
+msgstr "50 tot 250."
 
 #: src/components/pricing/questions.ts:188
 msgid "6 to 15."
-msgstr ""
+msgstr "6 tot 15."
 
 #: src/routes/project/canvas/CanvasRoute.tsx:213
 msgid "8 hours"
@@ -718,7 +718,7 @@ msgstr "Er wordt al een rapport gegenereerd voor dit project. Wacht tot het klaa
 #: src/components/pricing/PricingConfigurator.tsx:1096
 #: src/components/pricing/PricingConfigurator.tsx:1100
 msgid "A rough number or \"not sure\". Either is useful."
-msgstr ""
+msgstr "Een schatting of \"weet ik nog niet\". Met allebei kunnen we verder."
 
 #: src/components/billing/BillingManager.tsx:1279
 msgid "A seat is one member. Add or remove members in each workspace's People tab; your next charge follows automatically."
@@ -941,7 +941,7 @@ msgstr "Voeg een projectdoel toe voordat je opslaat."
 
 #: src/components/workspace/gateWalls.ts:134
 msgid "add a workspace"
-msgstr ""
+msgstr "een werkruimte toe te voegen"
 
 #: src/components/view/CreateViewForm.tsx:132
 msgid "Add additional context (Optional)"
@@ -1048,7 +1048,7 @@ msgstr "Voeg uw eerste webhook toe"
 
 #: src/components/workspace/gateWalls.ts:124
 msgid "add your logo"
-msgstr ""
+msgstr "je logo toe te voegen"
 
 #: src/components/project/ProjectSharingModal.tsx:68
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:147
@@ -1310,7 +1310,7 @@ msgstr "Een extra training is verplicht voor teams die dembrane gebruiken in sit
 
 #: src/components/pricing/questions.ts:141
 msgid "An assembly."
-msgstr ""
+msgstr "Een burgerberaad."
 
 #. placeholder {0}: participantCount !== undefined ? participantCount : t`loading...`
 #. placeholder {1}: participantCount === 1 ? "" : "s"
@@ -1328,7 +1328,7 @@ msgstr "Er is een fout opgetreden."
 
 #: src/components/pricing/questions.ts:140
 msgid "An event or a workshop."
-msgstr ""
+msgstr "Een evenement of workshop."
 
 #: src/components/error/ErrorPage.tsx:65
 msgid "An unexpected error occurred. Reloading or returning home usually helps."
@@ -1424,7 +1424,7 @@ msgstr "Nog iets anders nodig?"
 
 #: src/components/pricing/questions.ts:207
 msgid "Anything else you'd like to share"
-msgstr ""
+msgstr "Wil je nog iets anders delen"
 
 #: src/components/billing/BillingManager.tsx:591
 msgid "Anything we could have done better?"
@@ -1599,7 +1599,7 @@ msgstr "Vraag het in de chat als je een live beeld van de gesprekken wilt. Het e
 #: src/components/workspace/gateWalls.ts:121
 #: src/components/workspace/gateWalls.ts:122
 msgid "ask more in chat"
-msgstr ""
+msgstr "meer vragen te stellen in de chat"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:48
 msgid "Ask participants for their email"
@@ -1651,7 +1651,7 @@ msgstr "Aan het einde van deze periode"
 
 #: src/components/pricing/questions.ts:184
 msgid "At your busiest moment, how many conversations will be running at once?"
-msgstr ""
+msgstr "Hoeveel gesprekken zijn er op je drukste moment tegelijk bezig?"
 
 #: src/components/conversation/RetranscribeConversation.tsx:215
 msgid "Attach verified artifacts"
@@ -2422,7 +2422,7 @@ msgstr "Collega's die je uitnodigt kunnen gesprekken verkennen, inzichten delen 
 
 #: src/components/pricing/questions.ts:149
 msgid "Collecting people's stories without you being there, like an audio-based survey."
-msgstr ""
+msgstr "Verhalen van mensen verzamelen zonder dat je erbij bent, zoals met een gesproken enquête."
 
 #: src/components/settings/AuditLogsCard.tsx:199
 msgid "Collection"
@@ -2950,7 +2950,7 @@ msgstr "Maak een account aan om deel te nemen"
 
 #: src/components/workspace/gateWalls.ts:126
 msgid "create another report"
-msgstr ""
+msgstr "nog een rapport te maken"
 
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:176
@@ -3885,7 +3885,7 @@ msgstr "In de EU gehoste taalmodellen inbegrepen"
 
 #: src/components/pricing/questions.ts:217
 msgid "Event help from the dembrane team"
-msgstr ""
+msgstr "Hulp van het dembrane-team bij je evenement"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:985
 msgid "Events"
@@ -4661,7 +4661,7 @@ msgstr "Heb je een training afgerond?"
 
 #: src/components/workspace/gateWalls.ts:130
 msgid "have your recordings transcribed"
-msgstr ""
+msgstr "je opnames te laten transcriberen"
 
 #: src/features/sidebar/views/HelpView.tsx:26
 #: src/features/sidebar/blocks/HelpBlock.tsx:29
@@ -4769,7 +4769,7 @@ msgstr "Hoe het werkt:"
 
 #: src/components/pricing/questions.ts:171
 msgid "How many recordings do you expect in your first year?"
-msgstr ""
+msgstr "Hoeveel opnames verwacht je in je eerste jaar?"
 
 #: src/components/project/ProjectBasicEdit.tsx:129
 msgid ""
@@ -4799,7 +4799,7 @@ msgstr "Ik heb het doel toegepast."
 
 #: src/components/pricing/questions.ts:198
 msgid "I have lots of big events coming up"
-msgstr ""
+msgstr "Ik heb binnenkort veel grote evenementen"
 
 #: src/routes/auth/Register.tsx:194
 msgid "I have read and accept the <0>terms</0>"
@@ -4807,11 +4807,11 @@ msgstr "Ik heb de <0>voorwaarden</0> gelezen en ga ermee akkoord"
 
 #: src/components/pricing/questions.ts:201
 msgid "I need a specific language to be supported"
-msgstr ""
+msgstr "Ik heb ondersteuning voor een specifieke taal nodig"
 
 #: src/components/pricing/questions.ts:203
 msgid "I need strict privacy guarantees"
-msgstr ""
+msgstr "Ik heb strikte privacygaranties nodig"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:853
@@ -4840,7 +4840,7 @@ msgstr "Inactief"
 
 #: src/components/common/FeedbackPortalModal.tsx:93
 msgid "If what you've spotted involves data visible to the wrong people, someone having access they shouldn't, or a possible security vulnerability, please use our <0>security reporting form</0> instead. It reaches a different team on a faster track. For anything urgent, email <1>privacy@dembrane.com</1>"
-msgstr ""
+msgstr "Als je hebt gezien dat gegevens zichtbaar zijn voor de verkeerde mensen, dat iemand toegang heeft die dat niet hoort te hebben, of dat er mogelijk een beveiligingslek is, gebruik dan ons <0>formulier voor beveiligingsmeldingen</0>. Je melding komt dan bij een ander team terecht en wordt sneller opgepakt. Mail bij spoed naar <1>privacy@dembrane.com</1>"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:44
@@ -4849,7 +4849,7 @@ msgstr "Als je tevreden bent met {objectLabel}, klik dan op \"Goedkeuren\" om te
 
 #: src/components/billing/BillingManager.tsx:666
 msgid "If you need something different, we will draft an offer for your use case."
-msgstr ""
+msgstr "Als je iets anders nodig hebt, maken we een voorstel voor jouw situatie."
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:387
 msgid "If you were expecting access, please ask the person who invited you to send it again."
@@ -5205,7 +5205,7 @@ msgstr "zojuist"
 
 #: src/components/pricing/questions.ts:186
 msgid "Just one."
-msgstr ""
+msgstr "Eén."
 
 #: src/components/chat/CanvasSuggestionCard.tsx:178
 msgid "Just previewed. Give it a moment."
@@ -5678,7 +5678,7 @@ msgstr "Batterij bijna leeg"
 
 #: src/components/workspace/gateWalls.ts:125
 msgid "make a workspace private"
-msgstr ""
+msgstr "een werkruimte privé te maken"
 
 #: src/components/project/ProjectSharingModal.tsx:131
 msgid "Make it private to share with specific people only. Private projects require the innovator plan or above."
@@ -5902,11 +5902,11 @@ msgstr "Meer acties"
 
 #: src/components/pricing/questions.ts:176
 msgid "More than 1000."
-msgstr ""
+msgstr "Meer dan 1000."
 
 #: src/components/pricing/questions.ts:190
 msgid "More than 40."
-msgstr ""
+msgstr "Meer dan 40."
 
 #: src/components/project/BulkMoveProjectsModal.tsx:119
 #: src/components/conversation/MoveConversationButton.tsx:242
@@ -6559,7 +6559,7 @@ msgstr "Niet ingesteld"
 #: src/components/pricing/questions.ts:177
 #: src/components/pricing/questions.ts:191
 msgid "Not sure yet."
-msgstr ""
+msgstr "Weet ik nog niet."
 
 #: src/components/chat/InsightNoteCard.tsx:138
 msgid "Not this one"
@@ -7313,7 +7313,7 @@ msgstr "Kies een tijd"
 
 #: src/components/pricing/PricingConfigurator.tsx:664
 msgid "Pick a time with {host}."
-msgstr ""
+msgstr "Kies een tijd met {host}."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3085
 msgid "Pick an account"
@@ -7513,7 +7513,7 @@ msgstr "compliment"
 
 #: src/components/pricing/PricingTextInput.tsx:223
 msgid "Prefer talking? Press record and just say it."
-msgstr ""
+msgstr "Praat je liever? Druk op opnemen en vertel het gewoon."
 
 #: src/components/chat/agenticToolActivity.ts:109
 msgid "Preparing a navigation shortcut"
@@ -7585,7 +7585,7 @@ msgstr "Privéwerkruimte"
 
 #: src/components/workspace/gateWalls.ts:87
 msgid "Private workspaces come with a paid plan."
-msgstr ""
+msgstr "Privéwerkruimtes zijn beschikbaar met een betaald abonnement."
 
 #: src/components/project/ProjectSharingModal.tsx:79
 msgid "Private. Add people to share it."
@@ -7611,7 +7611,7 @@ msgstr "Hertranscriptieaanvraag wordt verwerkt..."
 
 #: src/components/pricing/questions.ts:222
 msgid "Procurement help"
-msgstr ""
+msgstr "Hulp bij inkoop"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1607
 msgid "project"
@@ -7941,11 +7941,11 @@ msgstr "Opname"
 
 #: src/components/pricing/questions.ts:142
 msgid "Recording conference sessions."
-msgstr ""
+msgstr "Conferentiesessies opnemen."
 
 #: src/components/pricing/questions.ts:145
 msgid "Recording conversations you have in person, like street interviews."
-msgstr ""
+msgstr "Gesprekken opnemen waar je zelf bij bent, zoals straatinterviews."
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:881
@@ -8863,7 +8863,7 @@ msgstr "Geheim gekopieerd"
 
 #: src/components/workspace/gateWalls.ts:131
 msgid "see transcripts"
-msgstr ""
+msgstr "transcripten te bekijken"
 
 #: src/components/report/UpdateReportModalButton.tsx:223
 #: src/components/report/CreateReportForm.tsx:178
@@ -9381,7 +9381,7 @@ msgstr "Iemand"
 
 #: src/components/pricing/questions.ts:151
 msgid "Something else."
-msgstr ""
+msgstr "Iets anders."
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:781
@@ -9586,7 +9586,7 @@ msgstr "Blijft actueel tot morgen {0}"
 #. placeholder {0}: phase.step
 #: src/components/pricing/PricingConfigurator.tsx:717
 msgid "Step {0} of {STEP_COUNT}"
-msgstr ""
+msgstr "Stap {0} van {STEP_COUNT}"
 
 #: src/routes/auth/CheckYourEmail.tsx:51
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
@@ -9878,7 +9878,7 @@ msgstr "Bedankt!"
 
 #: src/components/pricing/PricingBookingStep.tsx:304
 msgid "Thank you! We will get in touch as soon as possible. You can also write to us at info@dembrane.com."
-msgstr ""
+msgstr "Bedankt! We nemen zo snel mogelijk contact met je op. Je kunt ons ook mailen via info@dembrane.com."
 
 #: src/components/pricing/PricingConfigurator.tsx:884
 msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
@@ -9894,7 +9894,7 @@ msgstr "Dat is niet verstuurd. Je antwoorden staan er nog, dus probeer het opnie
 
 #: src/components/pricing/PricingTextInput.tsx:307
 msgid "That didn't work out. We have saved your recording."
-msgstr ""
+msgstr "Dat is niet gelukt. We hebben je opname opgeslagen."
 
 #: src/components/voice/VoiceInputError.tsx:37
 msgid "That recording is too long to send. Record a shorter note."
@@ -9902,7 +9902,7 @@ msgstr "Die opname is te lang om te versturen. Neem een kortere notitie op."
 
 #: src/components/pricing/PricingConfigurator.tsx:748
 msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
-msgstr ""
+msgstr "Daarvoor heb je een betaald abonnement nodig. We stellen je nog 5 korte vragen. Daarna kies je een tijd met het dembrane-team. Voor het gesprek lezen we je antwoorden, zodat we een voorstel meenemen dat bij je past."
 
 #: src/components/voice/VoiceInputError.tsx:33
 msgid "That was too short to transcribe. Hold the recording a little longer."
@@ -9943,7 +9943,7 @@ msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of
 
 #: src/components/pricing/PricingBookingStep.tsx:139
 msgid "the dembrane team"
-msgstr ""
+msgstr "het dembrane-team"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:419
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
@@ -9976,7 +9976,7 @@ msgstr "De hostgids is wat begeleiders lezen voordat ze een sessie draaien."
 
 #: src/components/pricing/PricingConfigurator.tsx:870
 msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
-msgstr ""
+msgstr "De uitnodiging staat in je inbox. We lezen je antwoorden vooraf en nemen een conceptvoorstel mee. Heb je intussen vragen? Neem dan contact op met"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:337
 msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
@@ -10013,7 +10013,7 @@ msgstr "De pagina waar dit antwoord naar verwijst."
 
 #: src/components/pricing/PricingConfigurator.tsx:704
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
-msgstr ""
+msgstr "De portalen blijven werken! Je deelnemers kunnen altijd doorgaan en niets wat ze zeggen gaat verloren. Zodra je een betaald abonnement hebt, wordt alles wat al is opgenomen alsnog getranscribeerd."
 
 #: src/components/canvas/CanvasFrame.tsx:135
 msgid "The previous versions are still available below."
@@ -10125,7 +10125,7 @@ msgstr "Ze worden toegevoegd als leden. Je kunt er later meer toevoegen."
 
 #: src/components/pricing/questions.ts:220
 msgid "Things like: A call with your DPO or CISO, a security review or custom DPIA."
-msgstr ""
+msgstr "Denk aan: een gesprek met je DPO of CISO, een beveiligingsbeoordeling of een DPIA op maat."
 
 #: src/components/participant/ParticipantEchoMessages.tsx:44
 msgid "Thinking..."
@@ -10244,7 +10244,7 @@ msgstr "Dit staat op verwerking op basis van toestemming zonder link naar het pr
 
 #: src/components/pricing/questions.ts:197
 msgid "This is urgent"
-msgstr ""
+msgstr "Dit is dringend"
 
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:200
@@ -10459,11 +10459,11 @@ msgstr "Drie snelle stappen en je bent binnen."
 
 #: src/components/pricing/questions.ts:209
 msgid "Tick anything that applies."
-msgstr ""
+msgstr "Vink alles aan wat van toepassing is."
 
 #: src/components/pricing/questions.ts:135
 msgid "Tick anything that fits."
-msgstr ""
+msgstr "Vink alles aan wat past."
 
 #: src/routes/project/CreateProjectRoute.tsx:385
 #: src/routes/admin/AdminSettingsRoute.tsx:1578
@@ -10674,7 +10674,7 @@ msgstr "Transcriptiefout"
 
 #: src/components/workspace/gateWalls.ts:90
 msgid "Transcripts come with a paid plan."
-msgstr ""
+msgstr "Transcripten zijn beschikbaar met een betaald abonnement."
 
 #: src/components/chat/templates.ts:13
 msgid ""
@@ -10854,7 +10854,7 @@ msgstr "Kan dit fragment niet verwerken"
 
 #: src/components/pricing/questions.ts:173
 msgid "Under 50."
-msgstr ""
+msgstr "Minder dan 50."
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:703
 msgid "Under your organisation"
@@ -11109,7 +11109,7 @@ msgstr "Logo uploaden"
 
 #: src/components/workspace/gateWalls.ts:132
 msgid "upload recordings"
-msgstr ""
+msgstr "opnames te uploaden"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:554
 msgid "Uploading Audio Files..."
@@ -11127,7 +11127,7 @@ msgstr "Audio uploaden..."
 
 #: src/components/workspace/gateWalls.ts:91
 msgid "Uploading recordings comes with a paid plan."
-msgstr ""
+msgstr "Opnames uploaden is beschikbaar met een betaald abonnement."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:411
 msgid "URL is required"
@@ -11181,11 +11181,11 @@ msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 
 #: src/components/workspace/gateWalls.ts:133
 msgid "use webhooks"
-msgstr ""
+msgstr "webhooks te gebruiken"
 
 #: src/components/workspace/gateWalls.ts:123
 msgid "use your voice in chat"
-msgstr ""
+msgstr "je stem in de chat te gebruiken"
 
 #: src/components/billing/BillingManager.tsx:429
 msgid "Used on your invoices. Prices exclude VAT."
@@ -11457,7 +11457,7 @@ msgstr "We hebben je een verificatielink gestuurd. Klik erop om het instellen va
 
 #: src/components/pricing/questions.ts:215
 msgid "We set up the project, stand beside you on the day, and help write the report afterwards."
-msgstr ""
+msgstr "We zetten samen het project op, draaien op de dag zelf met je mee en helpen je daarna het rapport te schrijven."
 
 #: src/components/billing/BillingManager.tsx:1066
 msgid "We still couldn't charge your method. Update it and try again."
@@ -11521,7 +11521,7 @@ msgstr "Webhooks zijn niet ingeschakeld voor deze omgeving."
 
 #: src/components/workspace/gateWalls.ts:92
 msgid "Webhooks come with a paid plan."
-msgstr ""
+msgstr "Webhooks zijn beschikbaar met een betaald abonnement."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:121
 #: src/components/participant/ParticipantBody.tsx:130
@@ -11674,7 +11674,7 @@ msgstr "Wanneer moet het rapport gegenereerd worden?"
 
 #: src/components/pricing/questions.ts:181
 msgid "When someone scans the QR code, that is one conversation. If 50 people scan it at the same time, that is 50 conversations at once."
-msgstr ""
+msgstr "Als iemand de QR-code scant, is dat één gesprek. Als 50 mensen hem tegelijk scannen, zijn dat 50 gesprekken tegelijk."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:797
 msgid "When the summary is ready (includes both transcript and summary)"
@@ -12014,7 +12014,7 @@ msgstr "Je hebt deze run gestopt."
 
 #: src/components/pricing/PricingConfigurator.tsx:742
 msgid "You were trying to {action}."
-msgstr ""
+msgstr "Je probeerde {action}."
 
 #. placeholder {0}: selectedIds.length
 #: src/components/workspace/DiscoverableWorkspaces.tsx:409
@@ -12153,7 +12153,7 @@ msgstr "Je browser blokkeert de microfoon. Geef toegang en probeer het opnieuw."
 
 #: src/components/pricing/PricingConfigurator.tsx:669
 msgid "Your call is booked: {bookedTime}."
-msgstr ""
+msgstr "Je afspraak is geboekt: {bookedTime}."
 
 #: src/components/pricing/PricingConfigurator.tsx:671
 msgid "Your call is booked."
@@ -12187,7 +12187,7 @@ msgstr "Je gratis plan bevat één rapport. Upgrade om er meer te maken."
 
 #: src/components/pricing/PricingConfigurator.tsx:701
 msgid "Your free transcription hour is used up."
-msgstr ""
+msgstr "Je gratis uur voor transcriptie is opgebruikt."
 
 #: src/components/form/SaveStatus.tsx:55
 msgid "Your inputs will be saved automatically."
@@ -12233,7 +12233,7 @@ msgstr "Je organisatie of bedrijf"
 
 #: src/components/workspace/gateWalls.ts:86
 msgid "Your own logo comes with a paid plan."
-msgstr ""
+msgstr "Je eigen logo is beschikbaar met een betaald abonnement."
 
 #: src/components/billing/BillingManager.tsx:1001
 msgid "Your paid period has run out, so we cannot put this plan back on from here. Email support@dembrane.com and we will sort it out with you."

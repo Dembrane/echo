@@ -29,9 +29,9 @@ import type { VoiceAttachment } from "./submitConfiguration";
  *
  * It stops short of `useVoiceTranscription` for two reasons, both measured:
  *
- * 1. That hook takes a required `projectId` and `/stateless/transcribe` answers
- *    403 without one for anybody who is not a staff admin. The gate opens from
- *    org and workspace routes where no project exists.
+ * 1. That hook takes a required `projectId`, and the gate opens from org and
+ *    workspace routes where no project exists. The endpoint accepts a named
+ *    purpose instead of a project, and the hook has no way to send one.
  * 2. It consumes the recording and throws it away when transcription fails. The
  *    agreed behaviour here keeps the recording, offers one retry, and lets the
  *    audio travel with the answers after the second failure. None of that is
@@ -77,8 +77,9 @@ export const PricingTextInput = ({
 		seconds: number,
 	) => void;
 	placeholder?: string;
-	/** The project the transcription is billed to. Without one the endpoint
-	 * answers 403, so the record button does not render at all. */
+	/** The project the transcription is billed to, where the mount has one.
+	 * Without it the call names the intake purpose instead, which the endpoint
+	 * accepts unmetered, so the record button renders either way. */
 	projectId?: string;
 	questionKey: string;
 	testIdPrefix: string;
@@ -119,18 +120,30 @@ export const PricingTextInput = ({
 
 	const runTranscription = useCallback(
 		async (blob: Blob, durationMs: number, thisAttempt: number) => {
-			if (!projectId) return;
 			const controller = new AbortController();
 			abortRef.current = controller;
 			setIsTranscribing(true);
 			const seconds = Math.round(durationMs / 1000);
 			try {
-				const response = await transcribeStateless({
-					file: blob,
-					filename: "voice-note.webm",
-					projectId,
-					signal: controller.signal,
-				});
+				// A project is billed for the transcription where the mount has
+				// one. Where it does not, the call says what it is for instead,
+				// which is the only thing that opens the endpoint without a
+				// project to charge.
+				const response = await transcribeStateless(
+					projectId
+						? {
+								file: blob,
+								filename: "voice-note.webm",
+								projectId,
+								signal: controller.signal,
+							}
+						: {
+								file: blob,
+								filename: "voice-note.webm",
+								purpose: "pricing_intake",
+								signal: controller.signal,
+							},
+				);
 				if (unmountedRef.current || controller.signal.aborted) return;
 				if (isEmptyTranscript(response.transcript)) {
 					setErrorKind("empty");
@@ -204,15 +217,14 @@ export const PricingTextInput = ({
 
 	const isBlocked = errorKind !== null && BLOCKED_KINDS.has(errorKind);
 	const isVoiceActive = recorder.isRecording || isTranscribing;
-	const voiceAvailable = Boolean(projectId) && !isBlocked;
+	const voiceAvailable = !isBlocked;
 	const showRetry = pending !== null && errorKind !== null && attempt < 2;
 	const showFailure = errorKind !== null && !isBlocked;
 	// The voice nudge line, which also demonstrates the feature. It sits above
 	// every free text box, but ONLY where the record button really renders:
 	// telling somebody to press a button that is not there is worse than
-	// saying nothing. So the condition is the button's own, not `projectId`
-	// alone. It steps aside while the mic is open, because the button it names
-	// has become Stop.
+	// saying nothing. So the condition is the button's own. It steps aside
+	// while the mic is open, because the button it names has become Stop.
 	const showVoiceNudge =
 		voiceAvailable && !recorder.isRecording && !isTranscribing;
 

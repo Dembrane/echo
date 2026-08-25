@@ -603,32 +603,38 @@ it("gives all three free text answers the composer with voice", async () => {
 	expect(screen.getByTestId("pricing-context-voice-record")).toBeTruthy();
 });
 
-it("nudges towards the microphone only where the record button really is", async () => {
-	// Voice is billed to a project, so a mount without one has no record button.
-	// Telling somebody to press a button that is not there is worse than saying
-	// nothing.
-	const withVoice = renderConfigurator({
+it("puts the nudge wherever the record button really is", async () => {
+	// The nudge follows the button, not the project. Telling somebody to press
+	// a button that is not there is worse than saying nothing, so the two
+	// appear and disappear together.
+	const withProject = renderConfigurator({
 		entries: ["/workspace?pc_step=3"],
 		projectId: "p-1",
 	});
 	await screen.findByTestId("pricing-timing-input");
+	expect(screen.getByTestId("pricing-timing-voice-record")).toBeTruthy();
 	expect(screen.getByTestId("pricing-timing-voice-nudge").textContent).toBe(
 		"Prefer talking? Press record and just say it.",
 	);
-	withVoice.view.unmount();
+	withProject.view.unmount();
 	cleanup();
 
 	renderConfigurator({ entries: ["/workspace?pc_step=3"] });
 	await screen.findByTestId("pricing-timing-input");
-	expect(screen.queryByTestId("pricing-timing-voice-record")).toBeNull();
-	expect(screen.queryByTestId("pricing-timing-voice-nudge")).toBeNull();
+	expect(screen.getByTestId("pricing-timing-voice-record")).toBeTruthy();
+	expect(screen.getByTestId("pricing-timing-voice-nudge").textContent).toBe(
+		"Prefer talking? Press record and just say it.",
+	);
 });
 
-it("hides the record button where no project can be billed for the transcription", async () => {
+it("keeps the record button where there is no project to bill", async () => {
+	// The gate opens from org and workspace routes, where no project exists.
+	// The call names the intake purpose there instead, so the button stays.
+	// What it posts is pinned in PricingTextInput.test.tsx.
 	renderConfigurator({ entries: ["/workspace?pc_step=6"] });
 
 	await screen.findByTestId("pricing-context-input");
-	expect(screen.queryByTestId("pricing-context-voice-record")).toBeNull();
+	expect(screen.getByTestId("pricing-context-voice-record")).toBeTruthy();
 });
 
 it("fills the timing box from an example, and the example rides on the answer", async () => {
@@ -791,18 +797,29 @@ it("opens a number box above 40 and shows the one inline error on the attempt", 
 
 // 9. The confirmation, and the mail that can find the answers again.
 
-const confirmBooking = () => {
+const BOOKING = {
+	startTime: "2026-09-01T09:00:00.000Z",
+	status: "accepted",
+	uid: "cal-bk-9f3",
+};
+
+const confirmBooking = (data: Record<string, unknown> = BOOKING) => {
 	fireEvent(
 		window,
 		new MessageEvent("message", {
-			data: {
-				data: { startTime: "2026-09-01T09:00:00.000Z", status: "accepted" },
-				originator: "CAL",
-				type: "bookingSuccessfulV2",
-			},
+			data: { data, originator: "CAL", type: "bookingSuccessfulV2" },
 			origin: "https://app.cal.com",
 		}),
 	);
+};
+
+/** Fill the last step and land on the booking screen with a reference. */
+const reachBooking = async (submit: ReturnType<typeof submitMock>) => {
+	renderConfigurator({ entries: ["/workspace?pc_step=6"], submit });
+	await screen.findByTestId("pricing-context-input");
+	next();
+	await waitFor(() => expect(search()).toBe("?pc_step=book"));
+	await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
 };
 
 it("puts the reference in the subject of the confirmation mail link", async () => {
@@ -831,6 +848,57 @@ it("puts the reference in the subject of the confirmation mail link", async () =
 	expect(
 		screen.getByTestId("pricing-configurator-back-to-dembrane"),
 	).toBeTruthy();
+});
+
+// 9b. What cal.com confirmed reaches the row it belongs to.
+
+it("reports the confirmed booking to the same row, exactly once", async () => {
+	const submit = submitMock().mockResolvedValue({ reference: "DEM-4F2A" });
+	await reachBooking(submit);
+	const sessionId = submit.mock.calls[0][0].config_session_id;
+
+	confirmBooking();
+	await waitFor(() => expect(submit).toHaveBeenCalledTimes(2));
+
+	const report = submit.mock.calls[1][0];
+	expect(report.config_session_id).toBe(sessionId);
+	expect(report.booking_uid).toBe("cal-bk-9f3");
+	expect(report.booking_status).toBe("accepted");
+	expect(report.booking_start).toBe("2026-09-01T09:00:00.000Z");
+
+	// Fire and forget: the confirmation is on screen without waiting for it.
+	await waitFor(() => expect(search()).toBe("?pc_step=done"));
+
+	// A second confirmation must not write a second time.
+	confirmBooking();
+	await waitFor(() => expect(search()).toBe("?pc_step=done"));
+	expect(submit).toHaveBeenCalledTimes(2);
+});
+
+it("retries the booking report once, then stops", async () => {
+	const submit = submitMock()
+		.mockResolvedValueOnce({ reference: "DEM-4F2A" })
+		.mockRejectedValueOnce(new Error("network down"))
+		.mockRejectedValue(new Error("still down"));
+	await reachBooking(submit);
+
+	confirmBooking();
+	await waitFor(() => expect(submit).toHaveBeenCalledTimes(3));
+	expect(submit.mock.calls[2][0].booking_uid).toBe("cal-bk-9f3");
+
+	// The person is on the confirmation screen either way, and a failed report
+	// never turns into a loop.
+	await waitFor(() => expect(search()).toBe("?pc_step=done"));
+	expect(submit).toHaveBeenCalledTimes(3);
+});
+
+it("sends nothing when cal.com confirms without a uid", async () => {
+	const submit = submitMock().mockResolvedValue({ reference: "DEM-4F2A" });
+	await reachBooking(submit);
+
+	confirmBooking({ startTime: "2026-09-01T09:00:00.000Z", status: "accepted" });
+	await waitFor(() => expect(search()).toBe("?pc_step=done"));
+	expect(submit).toHaveBeenCalledTimes(1);
 });
 
 // 10. The price anchor line, behind its feature flag.
