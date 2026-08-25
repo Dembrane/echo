@@ -591,9 +591,38 @@ export const PricingConfigurator = ({
 		goTo(String(phase.step - 1));
 	}, [goTo, phase]);
 
+	/** Tell the row what cal.com just confirmed.
+	 *
+	 * The same upsert the answers took, on the same session id, carrying the
+	 * three booking fields. It is fire and forget with one retry: the booking
+	 * exists in cal.com whether or not this lands, so making a person wait on
+	 * our own write would trade something true for something that can be
+	 * retried. After two failures it goes quiet, because the row still holds
+	 * the answers and the reference still finds the booking.
+	 *
+	 * No uid means nothing to join on, so nothing is sent.
+	 */
+	const reportBooking = useCallback(
+		(signal: BookingSignal) => {
+			if (!sessionRef.current || !signal.uid) return;
+			const report = {
+				...payloadFor("submitted"),
+				booking_start: signal.startTime ?? undefined,
+				booking_status: signal.status ?? undefined,
+				booking_uid: signal.uid,
+				// The recordings already travelled with the answers. Sending them
+				// again would upload the same audio a second time.
+				voice_audio: undefined,
+			};
+			void submit(report).catch(() => submit(report).catch(() => {}));
+		},
+		[payloadFor, submit],
+	);
+
 	const handleBooked = useCallback(
 		(signal: BookingSignal) => {
 			setBooking(signal);
+			reportBooking(signal);
 			emit("pricing_config_booking_confirmed", {
 				reference: referenceRef.current,
 				seconds_after_open: signal.secondsAfterOpen,
@@ -601,7 +630,7 @@ export const PricingConfigurator = ({
 			});
 			goTo(DONE_STEP);
 		},
-		[emit, goTo],
+		[emit, goTo, reportBooking],
 	);
 
 	const handleBookingOpened = useCallback(

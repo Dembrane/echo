@@ -481,6 +481,15 @@ def fields() -> list[dict[str, Any]]:
             readonly=True,
             note="Every step write moves this. The abandonment sweep reads it.",
         ),
+        # Sorted after updated_at rather than beside the booking columns it
+        # belongs to. `ensure_field` only ever creates, so moving an existing
+        # field's sort would leave the migration and the snapshot disagreeing.
+        timestamp_field(
+            c,
+            "booking_notified_at",
+            sort=29,
+            note="Stamped by the outbox forwarder (dembrane.tasks:task_forward_pricing_bookings) once the booking on this row has been delivered. NULL means not sent yet, which is what the forwarder selects on.",
+        ),
     ]
 
 

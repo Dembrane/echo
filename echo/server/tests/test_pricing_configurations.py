@@ -10,6 +10,10 @@ What matters here:
 - The identity boundary: the email comes from the session and never from the
   payload, so a client cannot claim to be somebody else.
 - A recording that cannot be stored costs the recording and never the answers.
+- A booking lands on the row that already holds the answers, and a booking
+  write only ever raises the status, never lowers it.
+- The outbox that tells the team about a booking sends each row once, retries
+  what it could not deliver, and stays quiet when it is not configured.
 
 `async_directus` is mocked throughout; no live Directus.
 """
@@ -17,13 +21,20 @@ What matters here:
 from __future__ import annotations
 
 import json
+import logging
+from types import SimpleNamespace
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import requests
 from fastapi import HTTPException
 from starlette.requests import Request
 
+from dembrane.tasks import (
+    task_forward_pricing_bookings,
+    build_pricing_booking_forward_payload,
+)
 from dembrane.api.dependency_auth import DirectusSession
 from dembrane.api.v2.pricing_configurations import (
     _clean,
@@ -31,6 +42,7 @@ from dembrane.api.v2.pricing_configurations import (
     _merge_audio,
     _flat_mirrors,
     _new_reference,
+    build_answers_summary,
     upsert_pricing_configuration,
 )
 
@@ -152,6 +164,155 @@ async def test_submitted_never_falls_back_to_in_progress():
 
     _collection, _id, row = directus.update_item.await_args.args
     assert row["status"] == "submitted"
+
+
+# ── the booking lands on the row that holds the answers ──
+
+
+def _booking_payload(**overrides: Any) -> dict[str, Any]:
+    body = _payload(
+        status="submitted",
+        booking_uid="cal-bk-9f3",
+        # Cal.com's own casing. The row stores the word, lowercased.
+        booking_status="ACCEPTED",
+        booking_start="2026-09-01T09:00:00.000Z",
+    )
+    body.update(overrides)
+    return body
+
+
+def _booked_row(**overrides: Any) -> dict[str, Any]:
+    row = {
+        "id": "row-1",
+        "reference": "DEM-4F2A",
+        "status": "submitted",
+        "user_id": "user-1",
+        "booking_uid": "cal-bk-9f3",
+        "config": {
+            "v": 1,
+            "booking": {
+                "uid": "cal-bk-9f3",
+                "status": "accepted",
+                "start": "2026-09-01T09:00:00.000Z",
+            },
+        },
+    }
+    row.update(overrides)
+    return row
+
+
+@pytest.mark.asyncio
+async def test_a_booking_writes_the_uid_the_status_and_the_start():
+    directus = _directus(
+        {"id": "row-1", "reference": "DEM-4F2A", "status": "submitted", "user_id": "user-1"}
+    )
+
+    await _call(_booking_payload(), directus=directus)
+
+    directus.update_item.assert_awaited_once()
+    _collection, item_id, row = directus.update_item.await_args.args
+    assert item_id == "row-1"
+    assert row["booking_uid"] == "cal-bk-9f3"
+    assert row["booking_status"] == "accepted"
+    # No column for the start time, so it rides in the JSON beside the two
+    # values that do have columns.
+    assert row["config"]["booking"] == {
+        "uid": "cal-bk-9f3",
+        "status": "accepted",
+        "start": "2026-09-01T09:00:00.000Z",
+    }
+
+
+@pytest.mark.asyncio
+async def test_a_booking_raises_a_lagging_status_and_never_lowers_one():
+    # The client fell behind and still says in_progress. Nobody books a call on
+    # an attempt that was never sent, so the row goes forward, not back.
+    directus = _directus(
+        {"id": "row-1", "reference": "DEM-4F2A", "status": "in_progress", "user_id": "user-1"}
+    )
+
+    await _call(_booking_payload(status="in_progress"), directus=directus)
+
+    _collection, _id, row = directus.update_item.await_args.args
+    assert row["status"] == "submitted"
+
+
+@pytest.mark.asyncio
+async def test_a_later_step_write_cannot_blank_the_booking():
+    directus = _directus(_booked_row())
+
+    await _call(_payload(status="in_progress"), directus=directus)
+
+    _collection, _id, row = directus.update_item.await_args.args
+    # The booking columns are not in the patch at all, so Directus leaves them
+    # exactly as they were.
+    assert "booking_uid" not in row
+    assert "booking_status" not in row
+    # The client owns `config` and knows nothing about this key, so it is
+    # carried forward rather than dropped.
+    assert row["config"]["booking"]["uid"] == "cal-bk-9f3"
+    assert row["config"]["booking"]["start"] == "2026-09-01T09:00:00.000Z"
+
+
+@pytest.mark.asyncio
+async def test_the_same_uid_updates_and_keeps_the_start_it_already_had():
+    directus = _directus(_booked_row())
+
+    await _call(
+        _booking_payload(booking_status="cancelled", booking_start=None),
+        directus=directus,
+    )
+
+    _collection, _id, row = directus.update_item.await_args.args
+    assert row["booking_uid"] == "cal-bk-9f3"
+    assert row["booking_status"] == "cancelled"
+    assert row["config"]["booking"]["start"] == "2026-09-01T09:00:00.000Z"
+    # Same booking, so nothing is re-sent.
+    assert "booking_notified_at" not in row
+
+
+@pytest.mark.asyncio
+async def test_a_different_uid_is_logged_and_the_newest_wins(caplog):
+    directus = _directus(_booked_row())
+
+    with caplog.at_level(logging.WARNING, logger="api.v2.pricing_configurations"):
+        await _call(
+            _booking_payload(
+                booking_uid="cal-bk-later",
+                booking_start="2026-09-08T09:00:00.000Z",
+            ),
+            directus=directus,
+        )
+
+    assert "already carried booking" in caplog.text
+    assert "cal-bk-9f3" in caplog.text and "cal-bk-later" in caplog.text
+
+    _collection, _id, row = directus.update_item.await_args.args
+    assert row["booking_uid"] == "cal-bk-later"
+    assert row["config"]["booking"] == {
+        "uid": "cal-bk-later",
+        "status": "accepted",
+        "start": "2026-09-08T09:00:00.000Z",
+    }
+    # A booking the team has not heard about yet, so the outbox gets it back.
+    assert row["booking_notified_at"] is None
+
+
+@pytest.mark.asyncio
+async def test_a_status_without_a_uid_writes_no_booking():
+    directus = _directus(
+        {"id": "row-1", "reference": "DEM-4F2A", "status": "submitted", "user_id": "user-1"}
+    )
+
+    await _call(
+        _payload(status="submitted", booking_status="accepted", booking_start="2026-09-01"),
+        directus=directus,
+    )
+
+    _collection, _id, row = directus.update_item.await_args.args
+    assert "booking_uid" not in row
+    assert "booking_status" not in row
+    assert "booking" not in row["config"]
 
 
 # ── identity comes from the session, never from the payload ──
@@ -356,3 +517,240 @@ async def test_a_multipart_body_with_no_payload_part_is_a_400():
         await _read_body(_request(parts, f"multipart/form-data; boundary={boundary}"))
 
     assert caught.value.status_code == 400
+
+
+# ── the summary the team reads, built from the keys that were sent ──
+
+
+ANSWERS = {
+    "use_case": ["assembly", "something_else"],
+    "use_case_other": "a museum tour",
+    "timing": "Six weekends across seven months",
+    "volume": "50_to_250",
+    "concurrency": "more_than_40",
+    "concurrency_exact": "120",
+    "extras": ["event_help"],
+    "context": "A citizens assembly on housing.",
+}
+
+
+def test_the_summary_reads_in_english_from_the_keys_that_were_sent():
+    assert build_answers_summary(ANSWERS) == (
+        "Use case: an assembly, something else: a museum tour"
+        " | Timing: Six weekends across seven months"
+        " | Volume: 50 to 250"
+        " | At once: more than 40 (120)"
+        " | Extras: event help"
+        " | Notes: A citizens assembly on housing."
+    )
+
+
+def test_a_skipped_question_is_absent_rather_than_blank():
+    assert build_answers_summary({"volume": "under_50"}) == "Volume: under 50"
+    assert build_answers_summary({}) == ""
+    assert build_answers_summary(None) == ""
+
+
+def test_an_option_the_map_does_not_know_still_reads():
+    # A question set that moved on must degrade to the key, never drop the
+    # answer.
+    assert build_answers_summary({"volume": "50_to_9000"}) == "Volume: 50_to_9000"
+
+
+def test_free_text_stays_one_short_line():
+    summary = build_answers_summary({"context": "a\nb" + ("x" * 400)})
+    assert "\n" not in summary
+    assert summary.endswith("...")
+    assert len(summary) < 200
+
+
+# ── the outbox that tells the team about a booking ──
+
+
+def _forward_settings(
+    url: str | None = "https://proxy.example/echo-support",
+    token: str | None = "tok-123",
+    admin: str = "https://dashboard.dembrane.com",
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        support=SimpleNamespace(
+            forward_webhook_url=url,
+            forward_webhook_token=token,
+            forwarding_enabled=bool(url and token),
+        ),
+        urls=SimpleNamespace(admin_base_url=admin),
+    )
+
+
+def _ctx(client: MagicMock) -> MagicMock:
+    ctx = MagicMock()
+    ctx.__enter__ = MagicMock(return_value=client)
+    ctx.__exit__ = MagicMock(return_value=False)
+    return ctx
+
+
+def _forward_row(rid: str = "row-1", **overrides: Any) -> dict[str, Any]:
+    row = {
+        "id": rid,
+        "reference": "DEM-4F2A",
+        "booking_uid": "cal-bk-9f3",
+        "booking_status": "accepted",
+        "config": {
+            "v": 1,
+            "booking": {
+                "uid": "cal-bk-9f3",
+                "status": "accepted",
+                "start": "2026-09-01T09:00:00.000Z",
+            },
+        },
+        "answers_raw": ANSWERS,
+        "email": "someone@example.org",
+        "locale": "nl-NL",
+        "workspace_id": "ws-1",
+        "org_id": "org-1",
+        "is_internal": False,
+    }
+    row.update(overrides)
+    return row
+
+
+def _forward_client(rows: list[dict[str, Any]]) -> MagicMock:
+    client = MagicMock()
+    client.get_items.return_value = rows
+    return client
+
+
+def _resp(status_code: int, text: str = "ok") -> SimpleNamespace:
+    return SimpleNamespace(status_code=status_code, text=text)
+
+
+def test_the_payload_says_what_kind_it_is():
+    payload = build_pricing_booking_forward_payload(_forward_row(), "production")
+
+    # The one field that tells the receiver this is not a support request.
+    assert payload["kind"] == "pricing_booking"
+    assert payload["environment"] == "production"
+    assert payload["reference"] == "DEM-4F2A"
+    assert payload["booking_uid"] == "cal-bk-9f3"
+    assert payload["booking_status"] == "accepted"
+    assert payload["booking_start"] == "2026-09-01T09:00:00.000Z"
+    assert payload["email"] == "someone@example.org"
+    assert payload["locale"] == "nl-NL"
+    assert payload["workspace_id"] == "ws-1"
+    assert payload["org_id"] == "org-1"
+    assert payload["is_internal"] is False
+    assert payload["summary"].startswith("Use case: an assembly")
+
+
+def test_the_payload_omits_what_the_row_does_not_have():
+    row = {"id": "row-2", "booking_uid": "cal-bk-2"}
+    payload = build_pricing_booking_forward_payload(row, "development")
+
+    assert set(payload) == {"kind", "environment", "booking_uid", "is_internal"}
+    assert payload["is_internal"] is False
+
+
+def test_a_booking_is_posted_once_and_marked():
+    client = _forward_client([_forward_row()])
+    with (
+        patch("dembrane.tasks.get_settings", return_value=_forward_settings()),
+        patch("dembrane.tasks.directus_client_context", return_value=_ctx(client)),
+        patch("requests.post", return_value=_resp(200)) as post,
+    ):
+        task_forward_pricing_bookings()
+
+    assert post.call_count == 1
+    args, kwargs = post.call_args
+    assert args[0] == "https://proxy.example/echo-support"
+    assert kwargs["headers"]["X-Echo-Support-Token"] == "tok-123"
+    assert kwargs["json"]["kind"] == "pricing_booking"
+    assert kwargs["json"]["booking_uid"] == "cal-bk-9f3"
+
+    client.update_item.assert_called_once()
+    collection, rid, patch_body = client.update_item.call_args[0]
+    assert (collection, rid) == ("pricing_configuration", "row-1")
+    assert patch_body["booking_notified_at"]
+
+    # Idempotence is the query: only rows with a booking and no stamp.
+    _collection, query = client.get_items.call_args[0]
+    assert query["query"]["filter"] == {
+        "booking_uid": {"_nnull": True},
+        "booking_notified_at": {"_null": True},
+    }
+
+
+def test_a_failed_post_is_retried_on_the_next_run():
+    client = _forward_client([_forward_row()])
+    settings = _forward_settings()
+
+    with (
+        patch("dembrane.tasks.get_settings", return_value=settings),
+        patch("dembrane.tasks.directus_client_context", return_value=_ctx(client)),
+        patch("requests.post", return_value=_resp(503, "down")) as post,
+    ):
+        task_forward_pricing_bookings()
+
+    assert post.call_count == 1
+    client.update_item.assert_not_called()  # never stamped, so still selected
+
+    with (
+        patch("dembrane.tasks.get_settings", return_value=settings),
+        patch("dembrane.tasks.directus_client_context", return_value=_ctx(client)),
+        patch("requests.post", return_value=_resp(200)) as post,
+    ):
+        task_forward_pricing_bookings()
+
+    assert post.call_count == 1
+    client.update_item.assert_called_once()
+    assert client.update_item.call_args[0][1] == "row-1"
+
+
+def test_a_network_error_stops_the_batch_without_stamping():
+    client = _forward_client([_forward_row("row-a"), _forward_row("row-b")])
+    with (
+        patch("dembrane.tasks.get_settings", return_value=_forward_settings()),
+        patch("dembrane.tasks.directus_client_context", return_value=_ctx(client)),
+        patch("requests.post", side_effect=requests.ConnectionError("down")),
+    ):
+        task_forward_pricing_bookings()
+
+    client.update_item.assert_not_called()
+
+
+def test_a_4xx_leaves_the_row_unstamped_and_keeps_going():
+    client = _forward_client([_forward_row("row-a"), _forward_row("row-b")])
+    with (
+        patch("dembrane.tasks.get_settings", return_value=_forward_settings()),
+        patch("dembrane.tasks.directus_client_context", return_value=_ctx(client)),
+        patch("requests.post", side_effect=[_resp(400, "bad"), _resp(200)]) as post,
+    ):
+        task_forward_pricing_bookings()
+
+    assert post.call_count == 2
+    client.update_item.assert_called_once()
+    assert client.update_item.call_args[0][1] == "row-b"
+
+
+def test_nothing_is_sent_when_the_webhook_is_not_configured():
+    with (
+        patch("dembrane.tasks.get_settings", return_value=_forward_settings(url=None, token=None)),
+        patch("dembrane.tasks.directus_client_context") as ctx,
+        patch("requests.post") as post,
+    ):
+        task_forward_pricing_bookings()
+
+    ctx.assert_not_called()
+    post.assert_not_called()
+
+
+def test_no_bookings_is_quiet():
+    client = _forward_client([])
+    with (
+        patch("dembrane.tasks.get_settings", return_value=_forward_settings()),
+        patch("dembrane.tasks.directus_client_context", return_value=_ctx(client)),
+        patch("requests.post") as post,
+    ):
+        task_forward_pricing_bookings()
+
+    post.assert_not_called()
+    client.update_item.assert_not_called()

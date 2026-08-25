@@ -46,6 +46,14 @@ export type PricingConfigurationPayload = {
 	/** Audio that failed to transcribe twice. It travels with the answers rather
 	 * than being lost. Absent on almost every send. */
 	voice_audio?: VoiceAttachment[];
+	/** cal.com's own id for the booking, reported once the embed confirms one.
+	 * Absent on every write before that, and the server only ever writes the
+	 * booking columns when it is here. */
+	booking_uid?: string;
+	/** cal.com's own word for the state of that booking, as the event sent it. */
+	booking_status?: string;
+	/** When the call starts, ISO 8601, as cal.com sent it. */
+	booking_start?: string;
 };
 
 export type PricingConfigurationResult = {

@@ -2288,6 +2288,173 @@ def task_forward_support_requests() -> None:
             break
 
 
+def _pricing_booking_start(row: dict) -> Optional[str]:
+    """The start time of the call, out of the JSON where the upsert keeps it.
+
+    `pricing_configuration` has a column for the booking uid and one for the
+    booking status, and none for the start time, so the endpoint keeps the
+    start inside `config` under `booking`, beside the two it mirrors. Reading
+    it here is the other half of that decision.
+    """
+    config = row.get("config")
+    booking = config.get("booking") if isinstance(config, dict) else None
+    start = booking.get("start") if isinstance(booking, dict) else None
+    return str(start) if start else None
+
+
+def build_pricing_booking_forward_payload(row: dict, environment: str) -> dict:
+    """The webhook payload for one confirmed pricing configurator booking.
+
+    It goes to the same webhook, with the same token, as the support outbox,
+    so the receiver needs something to tell the two apart: `kind` is that
+    thing. A support request carries no `kind` at all and this always carries
+    `kind="pricing_booking"`, so an old receiver that only knows support
+    requests can ignore what it does not recognise instead of misreading it.
+
+    Same shape rules as the support payload: absent fields are omitted, never
+    sent as null or empty. `summary` is built here from `answers_raw` and the
+    English question labels, so the person reading the message knows what the
+    call is about without opening the row.
+    """
+    from dembrane.api.v2.pricing_configurations import build_answers_summary
+
+    payload: dict[str, Any] = {
+        "kind": "pricing_booking",
+        # Same derivation as the support payload: a booking from a preview
+        # deployment must not read as a booking from production.
+        "environment": environment,
+        "booking_uid": str(row["booking_uid"]),
+        # Always present, never omitted: whether to act on the booking at all
+        # is the first thing the receiver decides, and an absent flag would
+        # read as "not internal" on a row that never said.
+        "is_internal": bool(row.get("is_internal")),
+    }
+    for key in (
+        "reference",
+        "booking_status",
+        "email",
+        "locale",
+        "workspace_id",
+        "org_id",
+    ):
+        value = row.get(key)
+        if value:
+            payload[key] = str(value)
+    start = _pricing_booking_start(row)
+    if start:
+        payload["booking_start"] = start
+    summary = build_answers_summary(row.get("answers_raw"))
+    if summary:
+        payload["summary"] = summary
+    return payload
+
+
+@dramatiq.actor(queue_name="network", priority=40)
+def task_forward_pricing_bookings() -> None:
+    """Outbox forwarder for confirmed pricing configurator bookings.
+
+    The booking step reports a confirmed cal.com booking onto the
+    `pricing_configuration` row it belongs to. This makes the team hear about
+    it: rows with a booking_uid and booking_notified_at NULL are POSTed to the
+    same webhook the support outbox uses, and booking_notified_at is stamped
+    only on 2xx — at-least-once, deduped on the receiver by booking_uid, so a
+    redelivery after a crash or a non-2xx is safe.
+
+    Idempotent by construction: the stamp is the last step, so a run after a
+    failure picks up exactly the rows that were never delivered and nothing
+    else.
+
+    No-op when SUPPORT_WEBHOOK_URL / ECHO_SUPPORT_WEBHOOK_TOKEN are unset (the
+    local default), exactly like the support forwarder. Receiver semantics are
+    the same too: 2xx delivered-or-duplicate -> stamp; 4xx payload bug -> log
+    loudly, leave unstamped, keep going; 5xx/network -> receiver is down, stop
+    the batch and let the next run retry.
+    """
+    import requests
+
+    task_logger = getLogger("dembrane.tasks.task_forward_pricing_bookings")
+    support = get_settings().support
+    webhook_url, webhook_token = support.forward_webhook_url, support.forward_webhook_token
+    if not webhook_url or not webhook_token:
+        return
+
+    with directus_client_context() as client:
+        rows = client.get_items(
+            "pricing_configuration",
+            {
+                "query": {
+                    "filter": {
+                        "booking_uid": {"_nnull": True},
+                        "booking_notified_at": {"_null": True},
+                    },
+                    "fields": [
+                        "id",
+                        "reference",
+                        "booking_uid",
+                        "booking_status",
+                        "config",
+                        "answers_raw",
+                        "email",
+                        "locale",
+                        "workspace_id",
+                        "org_id",
+                        "is_internal",
+                    ],
+                    "sort": ["created_at"],
+                    "limit": 50,
+                }
+            },
+        )
+
+    if not isinstance(rows, list) or not rows:
+        return
+
+    environment = _support_forward_environment()
+    task_logger.info("forwarding %d pricing booking(s)", len(rows))
+    for row in rows:
+        # `_nnull` still passes an empty string. Nothing writes one, and a row
+        # with no uid has nothing to join a booking on, so it is skipped rather
+        # than delivered as a booking nobody can find.
+        if not row.get("booking_uid"):
+            continue
+
+        payload = build_pricing_booking_forward_payload(row, environment)
+        try:
+            response = requests.post(
+                webhook_url,
+                json=payload,
+                headers={"X-Echo-Support-Token": webhook_token},
+                timeout=(10, 30),
+            )
+        except requests.RequestException as e:
+            task_logger.warning(
+                "pricing booking forward: POST failed (%s); stopping batch, next run retries", e
+            )
+            break
+
+        if 200 <= response.status_code < 300:
+            with directus_client_context() as client:
+                client.update_item(
+                    "pricing_configuration",
+                    str(row["id"]),
+                    {"booking_notified_at": get_utc_timestamp().isoformat()},
+                )
+        elif 400 <= response.status_code < 500:
+            task_logger.error(
+                "pricing booking forward: %s rejected with %s (%s) — payload/config bug, "
+                "row stays unstamped until it's fixed",
+                row.get("id"),
+                response.status_code,
+                response.text[:200],
+            )
+        else:
+            task_logger.warning(
+                "pricing booking forward: receiver returned %s; stopping batch, next run retries",
+                response.status_code,
+            )
+            break
+
+
 @dramatiq.actor(queue_name="network", priority=30)
 def task_send_downgrade_email(
     audience_app_user_ids: list[str],

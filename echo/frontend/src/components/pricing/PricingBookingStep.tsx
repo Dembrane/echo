@@ -32,6 +32,10 @@ export type BookingSignal = {
 	status: string | null;
 	startTime: string | null;
 	secondsAfterOpen: number;
+	/** cal.com's own id for the booking. It is the one value that joins their
+	 * record to ours, so it travels up and lands on the row. Null when the
+	 * payload carried none, and then there is nothing to report. */
+	uid: string | null;
 };
 
 /** One queued call: the arguments exactly as they were passed. */
@@ -105,14 +109,21 @@ const installCalStub = (): CalApi => {
 	return cal;
 };
 
-/** Pull the two fields the confirmation needs out of a payload whose exact
- * shape cal.com owns. Everything is optional on purpose: a missing status is
- * read as "not accepted", which is the safe side. */
+/** Pull the three fields out of a payload whose exact shape cal.com owns.
+ *
+ * Two of them are what the confirmation reads. The third, `uid`, is what the
+ * row learns: it is cal.com's own id for the booking, so a row and a booking
+ * can be read as one thing afterwards.
+ *
+ * Everything is optional on purpose: a missing status is read as "not
+ * accepted", which is the safe side, and a missing uid means nothing is
+ * reported rather than a row learning a blank.
+ */
 const readBooking = (
 	payload: unknown,
-): { status: string | null; startTime: string | null } => {
+): { status: string | null; startTime: string | null; uid: string | null } => {
 	if (typeof payload !== "object" || payload === null) {
-		return { startTime: null, status: null };
+		return { startTime: null, status: null, uid: null };
 	}
 	const record = payload as Record<string, unknown>;
 	const nested =
@@ -121,9 +132,11 @@ const readBooking = (
 			: {};
 	const status = record.status ?? nested.status;
 	const startTime = record.startTime ?? nested.startTime ?? record.date;
+	const uid = record.uid ?? nested.uid;
 	return {
 		startTime: typeof startTime === "string" ? startTime : null,
 		status: typeof status === "string" ? status : null,
+		uid: typeof uid === "string" && uid.trim() !== "" ? uid : null,
 	};
 };
 
@@ -182,12 +195,13 @@ export const PricingBookingStep = ({
 		(payload: unknown) => {
 			if (bookedRef.current) return;
 			bookedRef.current = true;
-			const { startTime, status } = readBooking(payload);
+			const { startTime, status, uid } = readBooking(payload);
 			onBooked({
 				secondsAfterOpen: Math.round((Date.now() - openedAtRef.current) / 1000),
 				signal: "postmessage",
 				startTime,
 				status,
+				uid,
 			});
 		},
 		[onBooked],

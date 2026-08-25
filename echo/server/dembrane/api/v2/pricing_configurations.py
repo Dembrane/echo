@@ -20,6 +20,11 @@ failure costs the recording and never the lead. When it fails the response
 says so in `warnings`, and the attempt is recorded on the row rather than
 disappearing.
 
+The booking takes the same path. When cal.com confirms one inside the page the
+client posts the same session id again carrying `booking_uid`, `booking_status`
+and `booking_start`, so a booking is an update to the row that already holds
+the answers rather than a second record of the same person.
+
 Identity is read from the session, never from the payload. The gate only
 renders for a logged-in host, so an unauthenticated call is rejected.
 """
@@ -86,6 +91,12 @@ class PricingConfigurationRequest(BaseModel):
     answers_raw: dict[str, Any] = Field(default_factory=dict)
     config: dict[str, Any] = Field(default_factory=dict)
     status: Literal["in_progress", "submitted"] = "in_progress"
+    # The booking, reported by the booking step after cal.com confirms one.
+    # Absent on every write before that, and absence is what keeps a step write
+    # from touching the booking columns at all.
+    booking_uid: Optional[str] = Field(default=None, max_length=255)
+    booking_status: Optional[str] = Field(default=None, max_length=255)
+    booking_start: Optional[str] = Field(default=None, max_length=255)
 
 
 class PricingConfigurationResponse(BaseModel):
@@ -236,13 +247,85 @@ def _row_from(
     }
 
 
+# The booking column vocabulary is cal.com's, not ours. `booking_status` holds
+# the word the event sent ("accepted", "cancelled", "pending"), lowercased, so
+# a cancellation reads as a cancellation. The field's dropdown in Directus
+# still offers none/opened/confirmed, which is the shape it was created with;
+# the value is a plain varchar, so the raw word stores and displays.
+def _booking_from(payload: PricingConfigurationRequest) -> Optional[dict[str, Any]]:
+    """The booking this write reports, or None when it reports none.
+
+    The uid is the whole test. Without it there is nothing to join a row to a
+    booking on, so a status or a start time on its own is ignored rather than
+    written into a row that cannot be reconciled later.
+    """
+    uid = _clean(payload.booking_uid)
+    if not uid:
+        return None
+    status = _clean(payload.booking_status)
+    return {
+        "uid": uid,
+        "status": status.lower() if status else None,
+        "start": _clean(payload.booking_start),
+    }
+
+
+def _config_with_booking(
+    config: dict[str, Any],
+    existing: Optional[dict[str, Any]],
+    booking: Optional[dict[str, Any]],
+) -> dict[str, Any]:
+    """The client's `config`, with the booking kept inside it under `booking`.
+
+    The collection has `booking_uid` and `booking_status` columns and no column
+    for the start time. Rather than spend a column on one timestamp, the start
+    time lives here, beside the uid and status it belongs to, in the JSON the
+    row already carries.
+
+    The client owns `config` and sends the whole object on every write knowing
+    nothing about this key, so a later step write would silently drop the
+    booking. Whatever is stored is therefore carried forward unless this write
+    is the one bringing a booking. A booking for the same uid is merged, so a
+    status-only update keeps the start time; a different uid replaces it
+    outright, because it is a different booking.
+    """
+    merged = dict(config)
+    stored = (existing or {}).get("config")
+    carried = None
+    if isinstance(stored, dict) and isinstance(stored.get("booking"), dict):
+        carried = stored["booking"]
+
+    if booking is None:
+        if carried:
+            merged["booking"] = carried
+        return merged
+
+    entry: dict[str, Any] = {}
+    if carried and carried.get("uid") == booking["uid"]:
+        entry.update(carried)
+    entry.update({key: value for key, value in booking.items() if value is not None})
+    merged["booking"] = entry
+    return merged
+
+
 async def _find_by_session(config_session_id: str) -> Optional[dict[str, Any]]:
     rows = await async_directus.get_items(
         COLLECTION,
         {
             "query": {
                 "filter": {"config_session_id": {"_eq": config_session_id}},
-                "fields": ["id", "reference", "status", "user_id", "voice_audio"],
+                "fields": [
+                    "id",
+                    "reference",
+                    "status",
+                    "user_id",
+                    "voice_audio",
+                    # `config` carries the booking start time, and the client
+                    # sends `config` on every write knowing nothing about it,
+                    # so it has to be read back to be carried forward.
+                    "config",
+                    "booking_uid",
+                ],
                 "limit": 1,
             }
         },
@@ -310,10 +393,15 @@ async def upsert_pricing_configuration(
         # this caller's to overwrite.
         raise HTTPException(status_code=403, detail="This configuration belongs to another user")
 
+    booking = _booking_from(payload)
+
     # `submitted` never falls back to `in_progress`. A late step write must not
-    # make a finished configuration look abandoned.
+    # make a finished configuration look abandoned, and a booking write can only
+    # ever raise the status: nobody books a call on an attempt that was never
+    # sent, so a booking arriving while the payload still says `in_progress` is
+    # a client that fell behind, never a row going backwards.
     status = payload.status
-    if existing and existing.get("status") == "submitted":
+    if booking or (existing and existing.get("status") == "submitted"):
         status = "submitted"
 
     row = _row_from(
@@ -323,6 +411,31 @@ async def upsert_pricing_configuration(
         is_internal=is_internal,
         status=status,
     )
+    row["config"] = _config_with_booking(payload.config, existing, booking)
+
+    # The booking columns are written only by a write that reports a booking.
+    # A step write leaves them out of the patch entirely, so it cannot blank a
+    # booking the row already learned.
+    if booking:
+        previous_uid = (existing or {}).get("booking_uid")
+        if previous_uid and previous_uid != booking["uid"]:
+            # Two bookings on one session is a real thing, because a person can
+            # rebook. It is also exactly what a bug looks like, so it is never
+            # silent, and the newest one wins.
+            logger.warning(
+                "pricing configuration: session %s already carried booking %s and now "
+                "reports %s; the newest wins",
+                session_id,
+                previous_uid,
+                booking["uid"],
+            )
+            # The new booking has not been forwarded yet. Clearing the stamp
+            # lets the outbox send it, rather than leaving the team holding a
+            # time that has moved.
+            row["booking_notified_at"] = None
+        row["booking_uid"] = booking["uid"]
+        if booking["status"]:
+            row["booking_status"] = booking["status"]
 
     if existing:
         row_id = existing["id"]
@@ -441,3 +554,115 @@ async def _upload_to_directus(attachment: _Attachment) -> str:
     if response.status_code not in (200, 201):
         raise RuntimeError(f"directus /files returned {response.status_code}: {response.text[:200]}")
     return str(response.json()["data"]["id"])
+
+
+# ── the answers in one plain line, for a reader who will not open the row ──
+#
+# The labels below are the English short forms of the questions in
+# `frontend/src/components/pricing/questions.ts`. English only and on purpose:
+# this is read by the team, not by the person who filled the form, so it does
+# not follow their locale the way the booking note does.
+#
+# Only keys travel on the wire, never labels, so a renamed option in the
+# question set changes this map and nothing else. A key that is not here falls
+# through as itself, which keeps a new option readable instead of dropping the
+# answer.
+
+_SUMMARY_LABELS: dict[str, str] = {
+    "use_case": "Use case",
+    "timing": "Timing",
+    "volume": "Volume",
+    "concurrency": "At once",
+    "extras": "Extras",
+    "context": "Notes",
+}
+
+_SUMMARY_OPTIONS: dict[str, dict[str, str]] = {
+    "use_case": {
+        "event_workshop": "an event or a workshop",
+        "assembly": "an assembly",
+        "conference_sessions": "recording conference sessions",
+        "in_person": "in person conversations",
+        "audio_survey": "an audio survey",
+        "something_else": "something else",
+    },
+    "volume": {
+        "under_50": "under 50",
+        "50_to_250": "50 to 250",
+        "250_to_1000": "250 to 1000",
+        "over_1000": "more than 1000",
+        "not_sure": "not sure",
+    },
+    "concurrency": {
+        "just_one": "just one",
+        "2_to_5": "2 to 5",
+        "6_to_15": "6 to 15",
+        "16_to_40": "16 to 40",
+        "more_than_40": "more than 40",
+        "not_sure": "not sure",
+    },
+    "extras": {
+        "event_help": "event help",
+        "procurement_help": "procurement help",
+    },
+}
+
+# One free text answer, and the whole summary. It rides in a chat message, so
+# it stays one short line rather than a transcript.
+_SUMMARY_TEXT_LIMIT = 160
+_SUMMARY_LIMIT = 600
+
+
+def _summary_text(value: Any, limit: int = _SUMMARY_TEXT_LIMIT) -> Optional[str]:
+    """One line, whatever the person typed. Newlines collapse so the summary
+    reads the same in a chat message as it does in a log."""
+    if not isinstance(value, str):
+        return None
+    flat = " ".join(value.split())
+    if not flat:
+        return None
+    return flat if len(flat) <= limit else f"{flat[: limit - 3].rstrip()}..."
+
+
+def _summary_choices(question: str, chosen: Any, answers: dict[str, Any]) -> Optional[str]:
+    labels = _SUMMARY_OPTIONS.get(question, {})
+    keys = chosen if isinstance(chosen, list) else [chosen]
+    parts: list[str] = []
+    for key in keys:
+        if not isinstance(key, str) or not key:
+            continue
+        label = labels.get(key, key)
+        if key == "something_else":
+            typed = _summary_text(answers.get("use_case_other"))
+            if typed:
+                label = f"{label}: {typed}"
+        if key == "more_than_40":
+            exact = _summary_text(answers.get("concurrency_exact"), 12)
+            if exact and exact.isdigit():
+                label = f"{label} ({exact})"
+        parts.append(label)
+    return ", ".join(parts) if parts else None
+
+
+def build_answers_summary(answers_raw: Any) -> str:
+    """What the person said, in one short English line.
+
+    Reads `answers_raw`, which is exactly what the client sent, so a question
+    set that has moved on still summarises an old row. A skipped question is
+    absent rather than marked: a list of blanks tells a reader nothing.
+    """
+    if not isinstance(answers_raw, dict):
+        return ""
+    parts: list[str] = []
+    for question, label in _SUMMARY_LABELS.items():
+        raw = answers_raw.get(question)
+        if question in _SUMMARY_OPTIONS:
+            value = _summary_choices(question, raw, answers_raw)
+        else:
+            value = _summary_text(raw)
+        if value:
+            parts.append(f"{label}: {value}")
+    line = " | ".join(parts)
+    if len(line) <= _SUMMARY_LIMIT:
+        return line
+    return f"{line[: _SUMMARY_LIMIT - 3].rstrip()}..."
