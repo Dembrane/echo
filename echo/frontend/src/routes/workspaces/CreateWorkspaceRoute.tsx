@@ -34,6 +34,8 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import type { Tier } from "@/lib/tiers";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
+import type { WallKey } from "@/components/workspace/gateWalls";
 
 interface CreatedWorkspace {
 	id: string;
@@ -134,6 +136,13 @@ export const CreateWorkspaceRoute = () => {
 	const [dataOwnerOrgName, setDataOwnerOrgName] = useState("");
 	const [dataOwnerEmail, setDataOwnerEmail] = useState("");
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	// The access wall gets its own disclosure. The one above belongs to the
+	// workspace cap and opens from a 402, so sharing it would report that wall
+	// for every gate on the page and the funnel would count the wrong one.
+	const [upgradeFeature, setUpgradeFeature] = useState<{
+		requiredTier: Tier;
+		wallKey: WallKey;
+	} | null>(null);
 
 	useDocumentTitle(t`Create workspace | dembrane`);
 
@@ -203,6 +212,12 @@ export const CreateWorkspaceRoute = () => {
 	const canGoPrivate =
 		["innovator", "changemaker", "guardian"].includes(orgTier) &&
 		billFor !== "client";
+	// The tier the access wall measures, which is the tier of the account that
+	// would pay for THIS workspace. A client workspace starts on its own free
+	// account, so a paid organisation does not clear the wall on one, and the
+	// gate must not read the organisation's plan and suppress itself.
+	const accessGateTier: Tier =
+		billFor === "client" ? "free" : (orgTier as Tier);
 
 	// Never leave a gated visibility selected (e.g. after switching to a client
 	// workspace) — it would 402 on submit.
@@ -583,36 +598,31 @@ export const CreateWorkspaceRoute = () => {
 									const Icon = opt.icon;
 									const selected = access === opt.value;
 									// invite_only / private need Innovator+ (mirrors the
-									// server gate). Show them visibly locked instead of
-									// failing at submit.
+									// server gate). The blocked option is not disabled and
+									// carries no standing line: it stays enabled looking, and
+									// the click opens the popover that names the wall rather
+									// than moving the selection.
 									const gated = opt.value !== "everyone" && !canGoPrivate;
-									return (
+									// `key` only where the card is the array element itself.
+									// The gated branch is keyed on the popover around it.
+									const card = (onClick: () => void, key?: string) => (
 										<UnstyledButton
-											key={opt.value}
-											onClick={() => {
-												if (!gated) setAccess(opt.value);
-											}}
+											key={key}
+											onClick={onClick}
 											aria-pressed={selected}
-											aria-disabled={gated}
-											disabled={gated}
-											style={{ cursor: gated ? "not-allowed" : undefined }}
+											data-testid={`create-workspace-access-${opt.value}`}
 										>
 											<Paper
 												withBorder
 												p="md"
 												radius="sm"
 												h="100%"
-												className={
-													gated
-														? undefined
-														: "transition-colors hover:!border-primary-400"
-												}
+												className="transition-colors hover:!border-primary-400"
 												style={{
 													background: selected
 														? "rgba(65, 105, 225, 0.06)"
 														: undefined,
 													borderColor: selected ? "#4169e1" : undefined,
-													opacity: gated ? 0.55 : undefined,
 												}}
 											>
 												<Stack gap={6}>
@@ -625,14 +635,31 @@ export const CreateWorkspaceRoute = () => {
 													<Text size="xs" c="dimmed">
 														{opt.description}
 													</Text>
-													{gated && (
-														<Text size="xs">
-															<Trans>Available on a paid plan.</Trans>
-														</Text>
-													)}
 												</Stack>
 											</Paper>
 										</UnstyledButton>
+									);
+									if (!gated) {
+										return card(() => setAccess(opt.value), opt.value);
+									}
+									return (
+										<FeatureGatePopover
+											key={opt.value}
+											// Only organisation admins and owners reach this
+											// route at all, so the person meeting the wall can
+											// always ask for the upgrade themselves.
+											canRequestUpgrade
+											onStart={() =>
+												setUpgradeFeature({
+													requiredTier: "innovator",
+													wallKey: "private_workspace",
+												})
+											}
+											requiredTier="innovator"
+											wallKey="private_workspace"
+										>
+											{({ onClick }) => card(onClick)}
+										</FeatureGatePopover>
 									);
 								})}
 							</SimpleGrid>
@@ -773,11 +800,21 @@ export const CreateWorkspaceRoute = () => {
 				onClose={upgradeHandlers.close}
 				currentTier={orgTier as Tier}
 				requiredTier="changemaker"
-				featureName={t`Workspaces`}
-				benefit={t`Upgrade your plan to create more workspaces in this organisation.`}
 				canRequestUpgrade
 				workspaceId=""
-				source="workspace_cap"
+				wallKey="workspace_cap"
+			/>
+			<UpgradeModal
+				opened={upgradeFeature !== null}
+				onClose={() => setUpgradeFeature(null)}
+				currentTier={accessGateTier}
+				requiredTier={upgradeFeature?.requiredTier ?? "innovator"}
+				canRequestUpgrade
+				workspaceId=""
+				wallKey={upgradeFeature?.wallKey ?? "private_workspace"}
+				// The popover named the feature one click earlier and fired
+				// gate_viewed there, so this must not fire it a second time.
+				entry="popover_link"
 			/>
 		</Container>
 	);

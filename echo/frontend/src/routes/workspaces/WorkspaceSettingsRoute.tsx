@@ -3,7 +3,6 @@ import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
-	Anchor,
 	Avatar,
 	Badge,
 	Box,
@@ -28,7 +27,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { IconLock, IconTrash, IconUpload } from "@tabler/icons-react";
+import { IconTrash, IconUpload } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -53,6 +52,8 @@ import { WorkspaceMethodologiesSection } from "@/components/methodology/Workspac
 import { WorkspaceTrainingPanel } from "@/components/training";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
+import type { WallKey } from "@/components/workspace/gateWalls";
 import { SupportAccessSection } from "@/components/workspace/SupportAccessSection";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { UsageCard } from "@/components/workspace/UsageCard";
@@ -1378,10 +1379,12 @@ function PrivacyAndDefaultsSection({
 		settings.my_role === "owner" ||
 		settings.my_role === "admin" ||
 		settings.my_role === "billing";
+	// The modal names no feature, so the wall is a key now, not a display
+	// string with a benefit line. The popover on the blocked control carries
+	// the words.
 	const [upgradeFeature, setUpgradeFeature] = useState<{
 		requiredTier: Tier;
-		featureName: string;
-		benefit: string;
+		wallKey: WallKey;
 	} | null>(null);
 
 	const effectiveVisibility: Visibility = visibility ?? settings.visibility;
@@ -1672,103 +1675,85 @@ function PrivacyAndDefaultsSection({
 							);
 						}
 
+						// Blocked, and it looks like the row a paid workspace gets. The
+						// standing "Available on a paid plan / Upgrade to unlock" box
+						// beside it is gone on his call of 21 August: the blocked control
+						// itself now carries the popover, so one click both names the
+						// feature and offers the way in. Upload logo does not upload; it
+						// opens the popover.
 						return (
-							<Stack gap={0}>
-								<Divider />
-								<Group
-									justify="space-between"
-									align="center"
-									gap="xl"
-									py="md"
-									wrap="nowrap"
-								>
-									<Stack gap={6}>
-										<Text size="sm" fw={500}>
-											<Trans>Logo</Trans>
-										</Text>
-										{currentLogoUrl ? (
-											<>
-												<Group gap="sm" align="center">
-													<Image
-														src={currentLogoUrl}
-														alt={t`Workspace logo`}
-														h={48}
-														w="auto"
-														fit="contain"
-														style={{ maxWidth: 200 }}
-													/>
-													<Button
-														variant="subtle"
-														color="red"
-														size="compact-sm"
-														leftSection={<IconTrash size={14} />}
-														loading={removeLogoMutation.isPending}
-														disabled={!canEdit}
-														onClick={openRemoveLogoConfirm}
-													>
-														<Trans>Remove</Trans>
-													</Button>
-												</Group>
-												<Text size="xs" c="dimmed" fs="italic">
-													<Trans>
-														Your logo is still active but can't be changed on
-														this tier.
-													</Trans>
-												</Text>
-											</>
-										) : (
-											<>
-												<Text size="xs" c="dimmed" fs="italic">
-													<Trans>
-														No logo set. dembrane default will be used.
-													</Trans>
-												</Text>
-												<Button
-													variant="light"
-													size="compact-sm"
-													leftSection={<IconUpload size={14} />}
-													style={{ alignSelf: "flex-start" }}
-													disabled
-												>
-													<Trans>Upload logo</Trans>
-												</Button>
-											</>
-										)}
-									</Stack>
-
-									<Box
-										p="sm"
-										style={{
-											background: "rgba(65, 105, 225, 0.06)",
-											border: "1px solid rgba(65, 105, 225, 0.2)",
-											borderRadius: 8,
-										}}
-									>
-										<Stack align="center" gap="xs" maw={260} ta="center">
-											<IconLock
-												size={24}
-												stroke={1.5}
-												color="var(--mantine-color-blue-6)"
+							<Stack gap={6}>
+								<Text size="sm" fw={500}>
+									<Trans>Logo</Trans>
+								</Text>
+								<Text size="xs" c="dimmed">
+									<Trans>Custom workspace logo shown to participants.</Trans>
+								</Text>
+								{currentLogoUrl ? (
+									<>
+										<Group gap="sm" align="center">
+											<Image
+												src={currentLogoUrl}
+												alt={t`Workspace logo`}
+												h={48}
+												w="auto"
+												fit="contain"
+												style={{ maxWidth: 200 }}
 											/>
-											<Text size="sm" fw={600}>
-												<Trans>Requires changemaker tier or above</Trans>
-											</Text>
 											<Button
-												size="xs"
-												onClick={() =>
-													setUpgradeFeature({
-														benefit: t`Your brand on every participant screen.`,
-														featureName: t`Custom logo`,
-														requiredTier: "changemaker",
-													})
-												}
+												variant="subtle"
+												color="red"
+												size="compact-sm"
+												leftSection={<IconTrash size={14} />}
+												loading={removeLogoMutation.isPending}
+												disabled={!canEdit}
+												onClick={openRemoveLogoConfirm}
 											>
-												<Trans>Upgrade to unlock</Trans>
+												<Trans>Remove</Trans>
 											</Button>
-										</Stack>
-									</Box>
-								</Group>
-								<Divider />
+										</Group>
+										<Text size="xs" c="dimmed" fs="italic">
+											<Trans>
+												Your logo is still active but can't be changed on this
+												tier.
+											</Trans>
+										</Text>
+									</>
+								) : (
+									<Text size="xs" c="dimmed" fs="italic">
+										<Trans>No logo set. dembrane default will be used.</Trans>
+									</Text>
+								)}
+								<FeatureGatePopover
+									canRequestUpgrade={canRequestUpgrade}
+									onStart={() =>
+										setUpgradeFeature({
+											requiredTier: "changemaker",
+											wallKey: "custom_logo",
+										})
+									}
+									requiredTier="changemaker"
+									wallKey="custom_logo"
+									workspaceId={workspaceId}
+								>
+									{({ onClick }) => (
+										// A real button, so it is focusable and Enter or Space
+										// opens the popover with no handler of our own. The tier
+										// does not disable it; only the role does, the same rule
+										// the paid branch above uses.
+										<Button
+											variant="light"
+											size="compact-sm"
+											leftSection={<IconUpload size={14} />}
+											style={{ alignSelf: "flex-start" }}
+											disabled={!canEdit}
+											onClick={onClick}
+											data-testid="workspace-logo-upload-gated"
+										>
+											<Trans>Upload logo</Trans>
+										</Button>
+									)}
+								</FeatureGatePopover>
 							</Stack>
 						);
 					})()}
@@ -1809,10 +1794,10 @@ function PrivacyAndDefaultsSection({
 					onClose={() => setUpgradeFeature(null)}
 					currentTier={settings.tier as Tier}
 					requiredTier={upgradeFeature?.requiredTier ?? "changemaker"}
-					featureName={upgradeFeature?.featureName ?? ""}
-					benefit={upgradeFeature?.benefit ?? ""}
 					canRequestUpgrade={canRequestUpgrade}
 					workspaceId={workspaceId}
+					wallKey={upgradeFeature?.wallKey ?? "custom_logo"}
+					entry="popover_link"
 				/>
 			</>
 		);
@@ -1820,38 +1805,73 @@ function PrivacyAndDefaultsSection({
 	// section === "access"
 	// Matrix §2: non-open visibility (invite_only / private) is innovator+. The
 	// gate fires only when crossing OUT of open; an already-non-open workspace
-	// (e.g. migrated invite_only) can switch freely, so disable the non-open
-	// options only when currently open on a low tier.
+	// (e.g. migrated invite_only) can switch freely, so the tier only blocks the
+	// non-open options while currently open on a low tier.
 	const privateGateTiers = ["innovator", "changemaker", "guardian"];
 	const canGoPrivate = privateGateTiers.includes(settings.tier);
 	const currentlyOpen = effectiveVisibility === "open_to_organisation";
-	const nonOpenDisabled = !canEdit || (!canGoPrivate && currentlyOpen);
-	const upgradeLink = !canGoPrivate && currentlyOpen && (
-		<Anchor
-			component="button"
-			type="button"
-			size="xs"
-			ta="left"
-			style={{ alignSelf: "flex-start" }}
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				setUpgradeFeature({
-					benefit: t`Limit who can find and join this workspace.`,
-					featureName: t`Private workspaces`,
-					requiredTier: "innovator",
-				});
-			}}
-		>
-			<Trans>Available on a paid plan. Upgrade to unlock.</Trans>
-		</Anchor>
-	);
+	const tierBlocksNonOpen = !canGoPrivate && currentlyOpen;
+	// The tier no longer disables the radio. His call of 21 August: the blocked
+	// control stays visible and enabled looking, and clicking it opens the
+	// popover instead of doing the thing. Only the role still disables.
+	const nonOpenDisabled = !canEdit;
+	/**
+	 * Wraps a tier blocked radio so the click opens the popover, anchored on the
+	 * row, and the radio never flips.
+	 *
+	 * `preventDefault` on the click cancels the input's activation behaviour, so
+	 * the selection cannot move. The guard on `Radio.Group.onChange` below is the
+	 * second lock: the group is controlled, so even a change we did not cancel
+	 * cannot repaint the radio.
+	 */
+	const gateNonOpen = (value: Visibility, radio: React.ReactElement) => {
+		if (!tierBlocksNonOpen) return radio;
+		return (
+			<FeatureGatePopover
+				canRequestUpgrade={canRequestUpgrade}
+				onStart={() =>
+					setUpgradeFeature({
+						requiredTier: "innovator",
+						wallKey: "private_workspace",
+					})
+				}
+				requiredTier="innovator"
+				wallKey="private_workspace"
+				workspaceId={workspaceId}
+			>
+				{({ onClick }) => (
+					<Box
+						onClick={(e) => {
+							e.preventDefault();
+							onClick();
+						}}
+						// The radio input inside is already focusable, so this adds no
+						// second tab stop. Enter and Space bubble up to here.
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								onClick();
+							}
+						}}
+						data-testid={`workspace-access-gated-${value}`}
+					>
+						{radio}
+					</Box>
+				)}
+			</FeatureGatePopover>
+		);
+	};
 	return (
 		<Stack gap={16}>
 			<Radio.Group
 				label={t`Access`}
 				value={effectiveVisibility}
-				onChange={(v) => setVisibility(v as Visibility)}
+				onChange={(v) => {
+					// A blocked option never becomes the selection. The popover on it
+					// is the whole answer.
+					if (tierBlocksNonOpen && v !== "open_to_organisation") return;
+					setVisibility(v as Visibility);
+				}}
 			>
 				<Stack gap={8} mt={4}>
 					<Radio
@@ -1871,42 +1891,46 @@ function PrivacyAndDefaultsSection({
 							</Stack>
 						}
 					/>
-					<Radio
-						value="invite_only"
-						disabled={nonOpenDisabled}
-						label={
-							<Stack gap={0}>
-								<Text size="sm">
-									<Trans>Invite only</Trans>
-								</Text>
-								<Text size="xs">
-									<Trans>
-										Hidden from organisation members. Organisation admins can
-										still find and join.
-									</Trans>
-								</Text>
-								{upgradeLink}
-							</Stack>
-						}
-					/>
-					<Radio
-						value="private"
-						disabled={nonOpenDisabled}
-						label={
-							<Stack gap={0}>
-								<Text size="sm">
-									<Trans>Private</Trans>
-								</Text>
-								<Text size="xs">
-									<Trans>
-										Hidden from organisation members. Organisation admins can
-										still find and join.
-									</Trans>
-								</Text>
-								{upgradeLink}
-							</Stack>
-						}
-					/>
+					{gateNonOpen(
+						"invite_only",
+						<Radio
+							value="invite_only"
+							disabled={nonOpenDisabled}
+							label={
+								<Stack gap={0}>
+									<Text size="sm">
+										<Trans>Invite only</Trans>
+									</Text>
+									<Text size="xs">
+										<Trans>
+											Hidden from organisation members. Organisation admins can
+											still find and join.
+										</Trans>
+									</Text>
+								</Stack>
+							}
+						/>,
+					)}
+					{gateNonOpen(
+						"private",
+						<Radio
+							value="private"
+							disabled={nonOpenDisabled}
+							label={
+								<Stack gap={0}>
+									<Text size="sm">
+										<Trans>Private</Trans>
+									</Text>
+									<Text size="xs">
+										<Trans>
+											Hidden from organisation members. Organisation admins can
+											still find and join.
+										</Trans>
+									</Text>
+								</Stack>
+							}
+						/>,
+					)}
 				</Stack>
 			</Radio.Group>
 			{canEdit && privacyDirty && (
@@ -1955,10 +1979,10 @@ function PrivacyAndDefaultsSection({
 				onClose={() => setUpgradeFeature(null)}
 				currentTier={settings.tier as Tier}
 				requiredTier={upgradeFeature?.requiredTier ?? "innovator"}
-				featureName={upgradeFeature?.featureName ?? ""}
-				benefit={upgradeFeature?.benefit ?? ""}
 				canRequestUpgrade={canRequestUpgrade}
 				workspaceId={workspaceId}
+				wallKey={upgradeFeature?.wallKey ?? "private_workspace"}
+				entry="popover_link"
 			/>
 		</Stack>
 	);

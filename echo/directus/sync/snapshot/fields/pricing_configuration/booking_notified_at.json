@@ -1,0 +1,46 @@
+{
+  "collection": "pricing_configuration",
+  "field": "booking_notified_at",
+  "type": "timestamp",
+  "meta": {
+    "collection": "pricing_configuration",
+    "conditions": null,
+    "display": "datetime",
+    "display_options": {
+      "relative": true
+    },
+    "field": "booking_notified_at",
+    "group": null,
+    "hidden": false,
+    "interface": "datetime",
+    "note": "Stamped by the outbox forwarder (dembrane.tasks:task_forward_pricing_bookings) once the booking on this row has been delivered. NULL means not sent yet, which is what the forwarder selects on.",
+    "options": null,
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 29,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "half"
+  },
+  "schema": {
+    "name": "booking_notified_at",
+    "table": "pricing_configuration",
+    "data_type": "timestamp with time zone",
+    "default_value": null,
+    "max_length": null,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

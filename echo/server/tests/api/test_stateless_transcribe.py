@@ -100,6 +100,26 @@ class _FakeDirectus:
         return {"data": data}
 
 
+class _FakeRateLimiter:
+    """Stands in for the Redis limiter. Autouse below so no test opens a socket."""
+
+    def __init__(self) -> None:
+        self.checked: list[str] = []
+        self.raises: HTTPException | None = None
+
+    async def check(self, user_id: str) -> None:
+        self.checked.append(user_id)
+        if self.raises is not None:
+            raise self.raises
+
+
+@pytest.fixture(autouse=True)
+def pricing_intake_limiter(monkeypatch: pytest.MonkeyPatch) -> _FakeRateLimiter:
+    limiter = _FakeRateLimiter()
+    monkeypatch.setattr(stateless_api, "_pricing_intake_rate_limiter", limiter)
+    return limiter
+
+
 @pytest.fixture
 def fake_directus(monkeypatch: pytest.MonkeyPatch) -> _FakeDirectus:
     directus = _FakeDirectus()
@@ -512,3 +532,126 @@ async def test_uri_input_is_metered_too(
     assert fake_directus.created[0][1]["duration"] == PROBED_DURATION_SECONDS
     # A caller-provided URI is still never deleted.
     assert fake_s3.deleted == []
+
+
+# ── the pricing intake purpose ────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_pricing_intake_purpose_passes_without_a_project(
+    fake_s3: _FakeS3,
+    fake_directus: _FakeDirectus,
+    captured_transcribe: dict[str, Any],
+    pricing_intake_limiter: _FakeRateLimiter,
+) -> None:
+    """A signed in person who is not staff and names no project. There is no
+    workspace to bill, so nothing is metered and no conversation row is born."""
+    async with _client(_build_app(is_admin=False)) as client:
+        response = await client.post(
+            "/stateless/transcribe",
+            files={"file": ("answer.webm", b"fake-audio", "audio/webm")},
+            data={"purpose": "pricing_intake"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"transcript": "hello world", "note": "speak closer"}
+    assert fake_directus.created == []
+    assert pricing_intake_limiter.checked == ["user-1"]
+    # Still stateless about the audio itself.
+    assert fake_s3.deleted == fake_s3.saved
+
+
+@pytest.mark.asyncio
+async def test_unknown_purpose_is_refused(
+    fake_s3: _FakeS3,
+    fake_directus: _FakeDirectus,
+    pricing_intake_limiter: _FakeRateLimiter,
+) -> None:
+    async with _client(_build_app(is_admin=False)) as client:
+        response = await client.post(
+            "/stateless/transcribe",
+            files={"file": ("answer.webm", b"fake-audio", "audio/webm")},
+            data={"purpose": "something_else"},
+        )
+
+    assert response.status_code == 422
+    assert fake_s3.saved == []
+    assert fake_directus.created == []
+    assert pricing_intake_limiter.checked == []
+
+
+@pytest.mark.asyncio
+async def test_unknown_purpose_is_refused_even_with_a_project(
+    fake_s3: _FakeS3, fake_directus: _FakeDirectus, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The project would have carried the call. The disagreement about purpose
+    is still the answer, because a value nobody reads is a caller bug."""
+    _grant_project_access(monkeypatch, allowed_project_ids={"proj-1"})
+
+    async with _client(_build_app(is_admin=False)) as client:
+        response = await client.post(
+            "/stateless/transcribe",
+            files={"file": ("memo.mp3", b"fake-audio", "audio/mpeg")},
+            data={"project_id": "proj-1", "purpose": "something_else"},
+        )
+
+    assert response.status_code == 422
+    assert fake_s3.saved == []
+    assert fake_directus.created == []
+
+
+@pytest.mark.asyncio
+async def test_project_id_wins_over_purpose(
+    fake_s3: _FakeS3,
+    fake_directus: _FakeDirectus,
+    captured_transcribe: dict[str, Any],
+    pricing_intake_limiter: _FakeRateLimiter,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Both together is not a conflict: the named project is billed, the access
+    ladder runs, and the intake ceiling is not the one that applies."""
+    required = _grant_project_access(monkeypatch, allowed_project_ids={"proj-1"})
+
+    async with _client(_build_app(is_admin=False)) as client:
+        response = await client.post(
+            "/stateless/transcribe",
+            files={"file": ("memo.mp3", b"fake-audio", "audio/mpeg")},
+            data={"project_id": "proj-1", "purpose": "pricing_intake"},
+        )
+
+    assert response.status_code == 200
+    assert required == ["project:update"]
+    assert len(fake_directus.created) == 1
+    assert fake_directus.created[0][1]["project_id"] == "proj-1"
+    assert fake_directus.created[0][1]["duration"] == PROBED_DURATION_SECONDS
+    assert pricing_intake_limiter.checked == []
+
+
+@pytest.mark.asyncio
+async def test_pricing_intake_rate_limit_engages(
+    fake_s3: _FakeS3,
+    fake_directus: _FakeDirectus,
+    pricing_intake_limiter: _FakeRateLimiter,
+) -> None:
+    """Over the ceiling the call stops before the upload is parked, so a loop
+    costs nothing but the request itself."""
+    pricing_intake_limiter.raises = HTTPException(
+        status_code=429, detail="Too many requests. Try again later."
+    )
+
+    async with _client(_build_app(is_admin=False)) as client:
+        response = await client.post(
+            "/stateless/transcribe",
+            files={"file": ("answer.webm", b"fake-audio", "audio/webm")},
+            data={"purpose": "pricing_intake"},
+        )
+
+    assert response.status_code == 429
+    assert fake_s3.saved == []
+    assert fake_directus.created == []
+
+
+@pytest.mark.asyncio
+async def test_pricing_intake_is_named_by_a_constant_the_client_can_read() -> None:
+    """The endpoint accepts one word, and it is the same word the form sends."""
+    assert stateless_api.PRICING_INTAKE_PURPOSE == "pricing_intake"

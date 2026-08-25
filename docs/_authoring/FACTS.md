@@ -142,11 +142,13 @@ billing account's workspaces; a person counts once per workspace. `compute_effec
 
 ## 4. Tiers & billing (ADR 0005 "per-seat tier overhaul"; supersedes parts of 0001/0002)
 
-Tiers: *Free, Innovator, Changemaker, Guardian* (pilot & pioneer removed). Per seat /
-month, EUR, billed yearly by default; *monthly = +15%* (`MONTHLY_BILLING_PREMIUM_PCT=15`).
-Tiers stack (each includes everything below).
+Tiers: *Free, Innovator, Changemaker, Guardian* (pilot & pioneer removed). Seat based,
+pooled per billing account. Tiers stack (each includes everything below).
 
-| Capability | Free | Innovator €20 | Changemaker €75 | Guardian €150 |
+Public documentation describes plan capabilities and directs readers to dembrane for
+current pricing.
+
+| Capability | Free | Innovator | Changemaker | Guardian |
 |---|---|---|---|---|
 | Secure transcription | ✓ | ✓ | ✓ | ✓ |
 | Recording hours | 1 h | unlimited | unlimited | unlimited |
@@ -157,14 +159,16 @@ Tiers stack (each includes everything below).
 | EU-sovereign stack | - | - | - | ✓ |
 
 - *Free*: 1 h recording, single user, open registration, secure transcription. Only tier with an hour cap + the over-cap machinery (ADR 0001 reduces to Free-only).
-- *Innovator* (€20/seat): unlimited hours; *no built-in analysis* - chat screen becomes a BYO-LLM integration + MCP (connect ChatGPT/Claude). *Coming soon* (gated on MCP shipping).
-- *Changemaker* (€75/seat): the tier most land on. Built-in analysis on EU-hosted *Gemini*, audit logs, white labeling. *Self-serve via Mollie now.*
-- *Guardian* (€150/seat): CLOUD-Act-safe EU-sovereign stack (e.g. OVHcloud + sovereign LLMs). *Coming soon* (gated on sovereign stack).
+- *Innovator*: unlimited hours; *no built-in analysis* - chat screen becomes a BYO-LLM integration + MCP (connect ChatGPT/Claude). *Coming soon* (gated on MCP shipping).
+- *Changemaker*: Built-in analysis on EU-hosted *Gemini*, audit logs, white labeling.
+- *Guardian*: CLOUD-Act-safe EU-sovereign stack (e.g. OVHcloud + sovereign LLMs). *Coming soon* (gated on sovereign stack).
 - Bespoke compliance + self-hosting available.
 - Existing paying customers migrate to Changemaker (unlimited hours) until renewal.
-- Payments via *Mollie* (Stripe legacy). Billing-account split: billing account can be
-  org-scoped (pooled) or workspace-scoped (external-client). Free-tier gating (PR #710)
-  gates workspaces/transcripts/chat/reports on Free.
+- New workspaces use the contact flow for plan changes.
+- Payments via *Mollie* (Stripe legacy), for the subscriptions that already exist.
+  Billing-account split: billing account can be org-scoped (pooled) or workspace-scoped
+  (external-client). Free-tier gating (PR #710) gates workspaces/transcripts/chat/reports
+  on Free.
 
 ---
 

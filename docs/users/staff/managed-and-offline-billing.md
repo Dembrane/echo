@@ -6,8 +6,9 @@ audience: staff
 
 # Managed & offline billing
 
-Most customers pay self-serve through [Mollie](../../features/tiers-and-billing.md#payments) -
-card, automatic renewal, no human in the loop. Plenty don't: public-sector bodies, larger
+Workspaces that already hold a subscription pay through [Mollie](../../features/tiers-and-billing.md#payments) -
+card, automatic renewal, no human in the loop; new workspaces contact dembrane to arrange
+billing. Plenty of customers need neither: public-sector bodies, larger
 organisations, anyone who needs a formal invoice and pays by bank transfer. For them, dembrane
 runs *managed (offline) billing* - staff issue the invoice, the customer pays out-of-band,
 staff record the payment.

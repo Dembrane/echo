@@ -40,7 +40,7 @@ import { CreateView } from "@/components/view/CreateViewForm";
 import { ViewExpandedCard } from "@/components/view/View";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Icons } from "@/icons";
-import { SalesLinks } from "@/lib/links";
+import { BookingLinks } from "@/lib/links";
 import { DummyViews } from "../../../components/view/DummyViews";
 
 export const ProjectLibraryRoute = () => {
@@ -106,7 +106,7 @@ export const ProjectLibraryRoute = () => {
 	const contactSales = () => {
 		if (!isLibraryEnabled) {
 			posthog.capture("contact_sales_clicked", { source: "library" });
-			window.open(SalesLinks.CONTACT_SALES, "_blank");
+			window.open(BookingLinks.BOOK_A_CALL, "_blank");
 		}
 	};
 

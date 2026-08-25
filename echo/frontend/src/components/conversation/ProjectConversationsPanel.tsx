@@ -1077,13 +1077,12 @@ export const ProjectConversationsPanel = ({
 				onClose={upgradeHandlers.close}
 				currentTier={(workspace?.tier ?? "free") as Tier}
 				requiredTier={SELLABLE_TIER}
-				featureName="Conversations"
-				benefit="Upgrade your plan to open every conversation in this workspace."
 				canRequestUpgrade={
 					workspace?.role === "admin" || workspace?.role === "owner"
 				}
 				workspaceId={resolvedWorkspaceId ?? ""}
-				source="transcript_locked"
+				wallKey="transcription_cap"
+				projectId={projectId}
 			/>
 		</Stack>
 	);

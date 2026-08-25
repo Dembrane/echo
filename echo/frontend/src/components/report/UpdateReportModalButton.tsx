@@ -388,12 +388,11 @@ export const UpdateReportModalButton = ({
 				onClose={upgradeHandlers.close}
 				currentTier={(workspace?.tier ?? "free") as Tier}
 				requiredTier={SELLABLE_TIER}
-				featureName={t`Report limit reached`}
-				benefit={t`Your free plan includes one report. Upgrade to create more.`}
 				canRequestUpgrade={
 					workspace?.role === "admin" || workspace?.role === "owner"
 				}
 				workspaceId={workspace?.id ?? ""}
+				wallKey="report_cap"
 			/>
 		</>
 	);

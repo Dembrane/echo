@@ -1,18 +1,18 @@
 ---
 title: Tiers & billing
-description: dembrane's plans - Free, Innovator, Changemaker, Guardian - what each unlocks, how per-seat pricing works, and how billing is organised.
+description: dembrane's plans - Free, Innovator, Changemaker, Guardian - what each unlocks, how seats work, and how to get a price for what you need.
 audience: all
 ---
 
 # Tiers & billing
 
 A *tier* is the plan a workspace is on - it decides which features that workspace has. There
-are four, and they stack: each one includes everything below it. Prices are per seat, per
-month, in euros.
+are four, and they stack: each one includes everything below it. Plans are counted in seats.
+Contact dembrane for current pricing - see [what it costs](#what-it-costs).
 
 ## What each plan gives you
 
-| Capability | Free | Innovator €20 | Changemaker €75 | Guardian €150 |
+| Capability | Free | Innovator | Changemaker | Guardian |
 |---|---|---|---|---|
 | Secure [transcription](./transcription.md) | ✓ | ✓ | ✓ | ✓ |
 | Recording hours | 1 h | unlimited | unlimited | unlimited |
@@ -28,14 +28,13 @@ What each one is for:
   multilingual transcription as every paid tier. It's the only tier with an hour cap. On Free
   the heavier features ([chat](./chat-and-ask.md), [reports](./reports.md), extra workspaces)
   are gated, and you'll be prompted to upgrade when you reach for them.
-- *Innovator* (€20) - unlimited hours, plus the option to point your own ChatGPT or Claude at
+- *Innovator* - unlimited hours, plus the option to point your own ChatGPT or Claude at
   your conversations over [MCP](./mcp-and-bring-your-own-llm.md) instead of dembrane's
   built-in analysis. *Coming soon*, once the MCP integration ships.
-- *Changemaker* (€75) - the tier most teams land on, and the one you can buy yourself today.
-  Adds dembrane's [built-in analysis](./library-and-analysis.md) on EU-hosted language models,
-  [audit logs](./account-and-security.md#audit-logs), and
+- *Changemaker* - adds dembrane's [built-in analysis](./library-and-analysis.md) on
+  EU-hosted language models, [audit logs](./account-and-security.md#audit-logs), and
   [white labelling](./data-ownership-and-compliance.md).
-- *Guardian* (€150) - everything in Changemaker on an EU-sovereign, CLOUD-Act-safe stack for
+- *Guardian* - everything in Changemaker on an EU-sovereign, CLOUD-Act-safe stack for
   the strictest compliance needs. *Coming soon*.
 
 > [!TIP]
@@ -43,10 +42,11 @@ What each one is for:
 > tiers - see [data ownership & compliance](./data-ownership-and-compliance.md) and the
 > [external developer guides](../users/developer-external/index.md).
 
-## Monthly vs yearly
+## What it costs
 
-The prices above are the yearly rate, which is the cheaper option. You can pay monthly
-instead for 15% more per seat.
+When you reach something that isn't on your plan, dembrane opens a short set of questions
+about what you need and lets you pick a time to talk it through. You can also write to
+info@dembrane.com.
 
 ## What a seat is
 
@@ -81,8 +81,9 @@ Billing attaches to a *billing account*, scoped one of two ways:
 The full split, and what it means for data ownership, is in
 [data ownership & compliance](./data-ownership-and-compliance.md).
 
-Payments go through Mollie. Where dembrane needs to invoice offline - larger or public-sector
-customers paying by bank transfer - staff can arrange managed invoicing
+Payments go through Mollie for workspaces that already hold a subscription. Where dembrane
+needs to invoice offline - larger or public-sector customers paying by bank transfer - staff
+can arrange managed invoicing
 ([staff billing guides](../users/staff/managed-and-offline-billing.md)).
 
 > [!NOTE]

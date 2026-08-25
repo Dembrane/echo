@@ -15,7 +15,7 @@ want dembrane to be the *source of conversation data* rather than the analyst.
 
 > [!IMPORTANT]
 > Innovator's BYO-LLM and MCP are *coming soon* - Innovator as a self-serve tier is gated on
-> the MCP integration shipping. Today, most workspaces land on *Changemaker* for analysis,
+> the MCP integration shipping. Today, *Changemaker* includes analysis,
 > which has it built in. See [tiers & billing](./tiers-and-billing.md) for current
 > availability.
 

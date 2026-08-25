@@ -6,8 +6,8 @@ audience: host
 
 # Tiers, billing & usage (for hosts)
 
-dembrane comes in four plans - *Free, Innovator, Changemaker, Guardian* - priced per seat per
-month. Your workspace's plan decides your recording hours, whether you get built-in
+dembrane comes in four plans - *Free, Innovator, Changemaker, Guardian*. Your workspace's plan
+decides your recording hours, whether you get built-in
 [analysis](./library-and-analysis.md) and [reports](./reports.md), and a few compliance features
 on top. Here's what each gives you, how seats and usage work, and how to move up.
 
@@ -16,10 +16,10 @@ reference.
 
 ## The plans
 
-Prices are per seat per month, in EUR, *billed yearly by default*. Paying *monthly adds 15%*.
-Each tier includes everything below it.
+Each tier includes everything below it, and each is counted in seats. There's no published
+price: contact dembrane for current pricing. See [upgrading](#upgrading).
 
-| Capability | Free | Innovator €20 | Changemaker €75 | Guardian €150 |
+| Capability | Free | Innovator | Changemaker | Guardian |
 |---|---|---|---|---|
 | Secure transcription | ✓ | ✓ | ✓ | ✓ |
 | Recording hours | 1 h | unlimited | unlimited | unlimited |
@@ -33,14 +33,13 @@ In practice:
 
 - *Free* - 1 hour of recording, a single user, secure transcription. The only tier with an
   hours cap. Good for trying dembrane on a small session.
-- *Innovator (€20/seat)* - unlimited hours, *no built-in analysis*; the
+- *Innovator* - unlimited hours, *no built-in analysis*; the
   [chat screen](./chat-and-ask.md) becomes a bring-your-own-LLM integration over MCP (connect
   ChatGPT/Claude). *Coming soon*, gated on MCP shipping.
-- *Changemaker (€75/seat)* - the tier most hosts land on. Unlimited hours plus *built-in
-  analysis* on EU-hosted Gemini ([library](./library-and-analysis.md),
-  [reports](./reports.md), chat), audit logs, and white-labelling. Self-serve, billed through
-  Mollie, available now.
-- *Guardian (€150/seat)* - everything in Changemaker on a CLOUD-Act-safe EU-sovereign stack.
+- *Changemaker* - unlimited hours plus *built-in analysis* on EU-hosted Gemini
+  ([library](./library-and-analysis.md), [reports](./reports.md), chat), audit logs,
+  and white-labelling. Available now.
+- *Guardian* - everything in Changemaker on a CLOUD-Act-safe EU-sovereign stack.
   *Coming soon*.
 
 > [!NOTE]
@@ -67,14 +66,15 @@ per-project usage under each project's own *Usage* section.
 
 ## Upgrading
 
-To *Changemaker* is self-serve: with billing access (owner, admin, or the billing role),
-upgrade from *Settings → Billing & usage*; payment runs through Mollie. *Innovator* and
-*Guardian* are both *coming soon*, so not self-serve yet.
+Use the in-app contact flow or contact dembrane to discuss an upgrade.
 
-If you don't hold billing access, or you're on the free-tier flow, *request an upgrade*
-instead - it goes to whoever can approve it (your workspace owner/admin, or dembrane staff for
-free-tier requests), and you're notified of the decision. That's the route when you hit a gate:
-a walled feature, the hours cap, or a *contact sales* prompt that has no self-serve upgrade.
+If you don't hold billing access, you can also *request an upgrade* from inside the workspace.
+It goes to whoever can approve it (your workspace owner or admin, or dembrane staff for
+free-tier requests), and you're notified of the decision.
+
+If your workspace already pays, none of this changes it. Your plan, your amount and your
+invoices stay under *Settings → Billing & usage*, and you manage the subscription there as
+before.
 
 ## What's gated, at a glance
 
@@ -89,7 +89,7 @@ a walled feature, the hours cap, or a *contact sales* prompt that has no self-se
 ## Related
 
 - [Tiers & billing - feature reference](../../features/tiers-and-billing.md) - the canonical
-  pricing and plan page.
+  plan page, and how to get a price.
 - [Roles & permissions](../../features/roles-and-permissions.md) - which roles take seats and
   what they can do.
 - [Managing your workspace](./managing-your-workspace.md) - adding people and reading usage.

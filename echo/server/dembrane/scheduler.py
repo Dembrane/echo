@@ -96,6 +96,17 @@ scheduler.add_job(
     replace_existing=True,
 )
 
+# Same cadence as the support outbox above, and for the same reason: the row is
+# already written, so this only decides how long the team waits to hear about a
+# booking.
+scheduler.add_job(
+    func="dembrane.tasks:task_forward_pricing_bookings.send",
+    trigger=CronTrigger(minute="*/2"),
+    id="task_forward_pricing_bookings",
+    name="Forward confirmed pricing configurator bookings to the support webhook",
+    replace_existing=True,
+)
+
 scheduler.add_job(
     func="dembrane.tasks:task_expire_workspace_tiers.send",
     trigger=CronTrigger(minute=0),

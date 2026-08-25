@@ -17,6 +17,7 @@ from dembrane.prompts import render_prompt
 from dembrane.transcribe import TranscriptionError, transcribe_audio_dembrane_26_07
 from dembrane.audio_utils import get_duration_from_url
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
@@ -309,6 +310,19 @@ STATELESS_CONVERSATION_SOURCE = "STATELESS_TRANSCRIPTION"
 # self-describing to anyone who finds one in the database.
 STATELESS_PARTICIPANT_NAME = "Voice note"
 
+# The one purpose a caller may name. It is a closed value, not a free string:
+# it opens the endpoint to a session that names no project, so anything that is
+# not this exact word has to be refused rather than guessed at.
+PRICING_INTAKE_PURPOSE = "pricing_intake"
+
+# Tighter than the form's own ceiling, because this one spends transcription
+# rather than a database row. It clears one recording per free text answer with
+# a retry each and room to spare; it is here to stop a loop, not to ration the
+# form.
+_pricing_intake_rate_limiter = create_user_rate_limiter(
+    name="pricing_intake_transcription", capacity=30, window_seconds=3600
+)
+
 
 class StatelessTranscriptionResponse(BaseModel):
     transcript: str
@@ -488,6 +502,7 @@ async def transcribe_stateless(
     session: DependencyDirectusSession,
     file: UploadFile | None = None,
     project_id: Annotated[str | None, Form()] = None,
+    purpose: Annotated[str | None, Form()] = None,
     audio_file_uri: Annotated[str | None, Form()] = None,
     language: Annotated[str | None, Form()] = "en",
     hotwords: Annotated[str | None, Form()] = None,
@@ -510,12 +525,33 @@ async def transcribe_stateless(
     admins may omit project_id, which is how the endpoint originally worked, and such
     calls are not metered because there is no project to bill.
 
+    purpose is the one way past that requirement for a caller who is neither a staff
+    admin nor inside a project. Its only accepted value is "pricing_intake": a signed
+    in person speaking an answer into the pricing intake form, from an org or workspace
+    route where no project exists. Such a call is never metered, because there is no
+    workspace whose hours it could honestly be charged to, and a tighter per-user
+    ceiling stands in for the billing that would otherwise limit it. Anything else in
+    purpose is refused. project_id and purpose together are not a conflict: the project
+    wins, and the call is gated and metered exactly as it is without purpose.
+
     hotwords is a comma-separated list. custom_guidance_prompt is appended to the
     default transcription prompt; prompt_override replaces that prompt entirely (the
     PII redaction pass keeps its own dedicated prompt either way).
     """
+    if purpose is not None and purpose != PRICING_INTAKE_PURPOSE:
+        # Refused before anything else reads it, and refused whatever else the call
+        # carries: an unknown purpose means the caller and this endpoint disagree
+        # about what is being asked for.
+        raise HTTPException(status_code=422, detail=f"Unsupported purpose: {purpose}")
+
+    is_pricing_intake = purpose == PRICING_INTAKE_PURPOSE and not project_id
+
     if project_id:
         await _assert_project_access(project_id, session)
+    elif is_pricing_intake:
+        # An authenticated session is the whole gate here. The ceiling is what
+        # keeps an unbilled transcription from being an open one.
+        await _pricing_intake_rate_limiter.check(session.user_id)
     elif not session.is_admin:
         raise HTTPException(status_code=403, detail="project_id is required")
 

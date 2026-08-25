@@ -35,6 +35,7 @@ import { isFreeTierLimitError } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import type { Tier } from "@/lib/tiers";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { ConversationStatusTable } from "./ConversationStatusTable";
@@ -163,9 +164,21 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 								Your free plan includes one report. Upgrade to create more.
 							</Trans>
 						</Text>
-						<Button size="xs" onClick={upgradeHandlers.open}>
-							{t`See upgrade options`}
-						</Button>
+						<FeatureGatePopover
+							canRequestUpgrade={
+								workspace?.role === "admin" || workspace?.role === "owner"
+							}
+							onStart={upgradeHandlers.open}
+							requiredTier="changemaker"
+							wallKey="report_cap"
+							workspaceId={workspace?.id ?? ""}
+						>
+							{({ onClick }) => (
+								<Button size="xs" onClick={onClick}>
+									{t`See upgrade options`}
+								</Button>
+							)}
+						</FeatureGatePopover>
 					</Stack>
 				</Alert>
 			)}
@@ -383,13 +396,13 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 				onClose={upgradeHandlers.close}
 				currentTier={(workspace?.tier ?? "free") as Tier}
 				requiredTier="changemaker"
-				featureName={t`Reports`}
-				benefit={t`Upgrade your plan to create more reports in this workspace.`}
 				canRequestUpgrade={
 					workspace?.role === "admin" || workspace?.role === "owner"
 				}
 				workspaceId={workspace?.id ?? ""}
-				source="report_cap"
+				wallKey="report_cap"
+				entry="popover_link"
+				projectId={projectId}
 			/>
 		</Stack>
 	);

@@ -835,13 +835,12 @@ export const LiveMonitorSection = ({
 				onClose={upgradeHandlers.close}
 				currentTier={(workspace?.tier ?? "free") as Tier}
 				requiredTier={SELLABLE_TIER}
-				featureName="Transcripts"
-				benefit={t`Upgrade your workspace to view transcripts for new conversations.`}
 				canRequestUpgrade={
 					workspace?.role === "admin" || workspace?.role === "owner"
 				}
 				workspaceId={workspace?.id ?? workspaceId ?? ""}
-				source="transcript_locked"
+				wallKey="transcripts_view"
+				projectId={projectId}
 			/>
 		</>
 	);

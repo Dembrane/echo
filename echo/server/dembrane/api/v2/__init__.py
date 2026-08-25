@@ -58,6 +58,7 @@ from dembrane.api.v2.bff.conversations import (
 )
 from dembrane.api.v2.workspace_projects import router as workspace_projects_router
 from dembrane.api.v2.workspace_settings import router as workspace_settings_router
+from dembrane.api.v2.pricing_configurations import router as pricing_configurations_router
 
 v2_router = APIRouter()
 
@@ -69,6 +70,15 @@ v2_router.include_router(
     notifications_router, prefix="/me/notifications", tags=["v2:notifications"]
 )
 v2_router.include_router(onboarding_router, prefix="/onboarding", tags=["v2:onboarding"])
+
+# Pricing configurator: the durable row behind the gate (phase 1, R11). One
+# upsert on config_session_id, called at every step, so an abandoned form still
+# leaves its answers behind.
+v2_router.include_router(
+    pricing_configurations_router,
+    prefix="/pricing-configurations",
+    tags=["v2:pricing-configurations"],
+)
 
 # Organisation (org) management — user-facing word is "organisation", internal is "org" (see D1).
 v2_router.include_router(orgs_router, prefix="/orgs", tags=["v2:orgs"])

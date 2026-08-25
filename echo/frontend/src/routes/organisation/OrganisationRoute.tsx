@@ -1018,10 +1018,9 @@ export const OrganisationRoute = () => {
 				onClose={wsUpgradeHandlers.close}
 				currentTier={orgTier as Tier}
 				requiredTier={SELLABLE_TIER}
-				featureName={t`Workspace limit reached`}
-				benefit={t`The free plan includes 1 workspace per organisation. Upgrade to create additional workspaces.`}
 				canRequestUpgrade={isAdmin}
 				workspaceId=""
+				wallKey="workspace_cap"
 			/>
 		</Container>
 	);
