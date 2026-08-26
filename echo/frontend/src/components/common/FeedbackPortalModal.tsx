@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -12,6 +11,7 @@ import {
 	Text,
 } from "@mantine/core";
 import { UsersThree } from "@phosphor-icons/react";
+import { useMemo } from "react";
 import {
 	COMMUNITY_SLACK_URL,
 	getProductFeedbackUrl,
@@ -71,8 +71,9 @@ export const FeedbackPortalModal = ({
 					<Text size="sm">
 						<Trans>
 							We'd love to hear from you. Whether you have an idea for something
-							new, you've hit a bug, spotted a translation that feels off, or
-							just want to share how things have been going.
+							new, spotted a translation that feels off, or just want to share
+							how things have been going. Hit a bug? Use Report an issue in the
+							sidebar to send it with screenshots.
 						</Trans>
 					</Text>
 					<Text size="sm">
@@ -125,7 +126,9 @@ export const FeedbackPortalModal = ({
 							c="inherit"
 							underline="hover"
 						>
-							<Trans>Scan or click the QR code to open the feedback portal</Trans>
+							<Trans>
+								Scan or click the QR code to open the feedback portal
+							</Trans>
 						</Anchor>
 						<Group gap="xs">
 							<Text size="xs" c="dimmed">

@@ -1,6 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { useDisclosure } from "@mantine/hooks";
 import {
+	Bug,
 	ChatCircle,
 	EnvelopeSimple,
 	Note,
@@ -8,15 +9,15 @@ import {
 	Sparkle,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
-import { FeedbackPortalModal } from "@/components/common/FeedbackPortalModal";
 import { ReleaseVideoModal } from "@/components/release/ReleaseVideoModal";
 import { ENABLE_RELEASE_VIDEO_MODAL, getDocumentationUrl } from "@/config";
+import { useHelpModals } from "../hooks/useHelpModals";
 import { NavButton } from "../primitives/NavButton";
 import { SectionLabel } from "../primitives/SectionLabel";
 
 export const HelpBlock = () => {
 	const { language } = useParams();
-	const [feedbackOpen, feedback] = useDisclosure(false);
+	const { openFeedback, openReportIssue } = useHelpModals();
 	// The release modal lives here so the button that reopens it can hold its
 	// own state. It also shows itself once per release without being asked.
 	const [releaseRequested, release] = useDisclosure(false);
@@ -29,11 +30,18 @@ export const HelpBlock = () => {
 					<Trans>Help</Trans>
 				</SectionLabel>
 				<NavButton
+					label={<Trans>Report an issue</Trans>}
+					icon={Bug}
+					iconColor="var(--mantine-color-primary-6)"
+					labelColor="var(--mantine-color-primary-6)"
+					onClick={openReportIssue}
+				/>
+				<NavButton
 					label={<Trans>Feedback</Trans>}
 					icon={ChatCircle}
 					iconColor="var(--mantine-color-primary-6)"
 					labelColor="var(--mantine-color-primary-6)"
-					onClick={feedback.open}
+					onClick={openFeedback}
 				/>
 				{ENABLE_RELEASE_VIDEO_MODAL ? (
 					<NavButton
@@ -64,11 +72,6 @@ export const HelpBlock = () => {
 					}}
 				/>
 			</div>
-			<FeedbackPortalModal
-				opened={feedbackOpen}
-				onClose={feedback.close}
-				locale={language}
-			/>
 			{ENABLE_RELEASE_VIDEO_MODAL ? (
 				<ReleaseVideoModal
 					requested={releaseRequested}

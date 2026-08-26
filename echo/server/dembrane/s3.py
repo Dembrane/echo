@@ -118,7 +118,11 @@ def save_to_s3_from_url(
 
 
 def save_to_s3_from_file_like(
-    file_obj: UploadFile, file_name: str, public: bool, size_limit_mb: int = 100
+    file_obj: UploadFile,
+    file_name: str,
+    public: bool,
+    size_limit_mb: int = 100,
+    content_type: str | None = None,
 ) -> str:
     file_obj.file.seek(0, 2)
     file_size = file_obj.file.tell()
@@ -129,11 +133,15 @@ def save_to_s3_from_file_like(
 
     file_name = get_sanitized_s3_key(file_name)
 
+    extra_args = {"ACL": "public-read" if public else "private"}
+    if content_type:
+        extra_args["ContentType"] = content_type
+
     s3_client.upload_fileobj(
         Fileobj=file_obj.file,
         Bucket=STORAGE_S3_BUCKET,
         Key=get_sanitized_s3_key(file_name),
-        ExtraArgs={"ACL": "public-read" if public else "private"},
+        ExtraArgs=extra_args,
     )
 
     public_url = f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{file_name}"

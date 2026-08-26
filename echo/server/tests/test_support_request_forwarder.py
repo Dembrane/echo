@@ -11,6 +11,7 @@ src/recipes/product-support/recipe.md.
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import pytest
 import requests
 
 from dembrane.tasks import (
@@ -18,6 +19,7 @@ from dembrane.tasks import (
     task_forward_support_requests,
     build_support_request_forward_payload,
 )
+from dembrane.directus import DirectusBadRequest, DirectusServerError
 
 
 def _settings(
@@ -93,6 +95,25 @@ def test_payload_omits_absent_fields():
     assert "origin_link" not in payload  # no workspace/project to link to
     assert "page_context" not in payload
     assert set(payload) == {"id", "environment", "message"}
+
+
+def test_payload_feedback_shaped_row():
+    # Dashboard issue reports write only these fields; no chat or project.
+    row = {
+        "id": "sr-4",
+        "message": "Issue report from the dashboard",
+        "page_context": "Page: https://dashboard.dembrane.com/en | Locale: en-US",
+        "directus_user_id": "du-1",
+    }
+    with patch("dembrane.tasks.get_settings", return_value=_settings()):
+        payload = build_support_request_forward_payload(row, None, "echo-next")
+    assert set(payload) == {
+        "id",
+        "environment",
+        "message",
+        "page_context",
+        "directus_user_id",
+    }
 
 
 def test_payload_empty_message_gets_placeholder():
@@ -214,3 +235,33 @@ def test_missing_workspace_forwards_without_org():
     client.get_item.assert_not_called()  # no workspace hop attempted
     assert "org_id" not in post.call_args[1]["json"]
     client.update_item.assert_called_once()
+
+
+def test_unreadable_workspace_forwards_without_org():
+    # A stale or forbidden workspace id (4xx) must not abort the whole batch.
+    client = _client([_row("sr-a"), _row("sr-b")])
+    client.get_item.side_effect = DirectusBadRequest("workspace not found")
+    with (
+        patch("dembrane.tasks.get_settings", return_value=_settings()),
+        patch("dembrane.tasks.directus_client_context", return_value=_ctx(client)),
+        patch("requests.post", return_value=_resp(200)) as post,
+    ):
+        task_forward_support_requests()
+    assert post.call_count == 2
+    assert "org_id" not in post.call_args[1]["json"]
+    assert client.update_item.call_count == 2
+
+
+def test_directus_outage_on_workspace_hop_aborts_the_batch():
+    # A 5xx or transport failure means Directus is down: abort, next cron retries.
+    client = _client([_row("sr-a"), _row("sr-b")])
+    client.get_item.side_effect = DirectusServerError("directus down")
+    with (
+        patch("dembrane.tasks.get_settings", return_value=_settings()),
+        patch("dembrane.tasks.directus_client_context", return_value=_ctx(client)),
+        patch("requests.post", return_value=_resp(200)) as post,
+        pytest.raises(DirectusServerError),
+    ):
+        task_forward_support_requests()
+    post.assert_not_called()
+    client.update_item.assert_not_called()

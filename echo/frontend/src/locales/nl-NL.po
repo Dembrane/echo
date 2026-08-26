@@ -976,6 +976,10 @@ msgstr "Aangepast onderwerp toevoegen"
 msgid "Add goal text before applying."
 msgstr "Voeg doeltekst toe voordat je dit toepast."
 
+#: src/components/feedback/ReportIssueModal.tsx:298
+msgid "Add images"
+msgstr "Afbeeldingen toevoegen"
+
 #: src/components/project/ProjectPortalEditor.tsx:165
 msgid "Add key terms or proper nouns to improve transcript quality and accuracy."
 msgstr "Voeg belangrijke woorden of namen toe om de kwaliteit en nauwkeurigheid van het transcript te verbeteren."
@@ -1903,7 +1907,7 @@ msgstr "Facturatiemodus"
 msgid "Book a call"
 msgstr "Een gesprek boeken"
 
-#: src/components/common/FeedbackPortalModal.tsx:139
+#: src/components/common/FeedbackPortalModal.tsx:142
 msgid "Book a call with us"
 msgstr "Plan een gesprek met ons"
 
@@ -2005,7 +2009,7 @@ msgstr "Kun je ons meer vertellen?"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:77
 #: src/components/common/ImageCropModal.tsx:145
-#: src/components/common/FeedbackPortalModal.tsx:165
+#: src/components/common/FeedbackPortalModal.tsx:168
 #: src/components/common/ConfirmModal.tsx:44
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:722
 #: src/components/chat/AgenticChatPanel.tsx:734
@@ -2263,6 +2267,10 @@ msgstr "Controleer microfoontoegang"
 #: src/components/participant/PermissionErrorModal.tsx:71
 msgid "participant.button.check.microphone.access"
 msgstr "Controleer microfoontoegang"
+
+#: src/components/feedback/ReportIssueModal.tsx:152
+msgid "Check the text and images, then try again"
+msgstr "Controleer de tekst en afbeeldingen en probeer het opnieuw"
 
 #: src/routes/auth/Register.tsx:259
 #: src/routes/auth/CheckYourEmail.tsx:19
@@ -2530,8 +2538,8 @@ msgstr "Toestemming"
 msgid "Consent-based processing is active without a privacy policy link. Add one where the legal basis is set: participants must be able to read the privacy policy."
 msgstr "Verwerking op basis van toestemming is actief zonder link naar het privacybeleid. Voeg er een toe waar de rechtsgrondslag is ingesteld: deelnemers moeten het privacybeleid kunnen lezen."
 
-#: src/features/sidebar/views/HelpView.tsx:28
-#: src/features/sidebar/blocks/HelpBlock.tsx:59
+#: src/features/sidebar/views/HelpView.tsx:27
+#: src/features/sidebar/blocks/HelpBlock.tsx:67
 msgid "Contact support"
 msgstr "Contact met support"
 
@@ -2821,6 +2829,10 @@ msgstr "Kon dit projectdoel niet opslaan"
 #: src/components/members/PendingInvitesSection.tsx:101
 msgid "Could not send the invite email. Check email configuration."
 msgstr "De uitnodigings-e-mail kon niet worden verstuurd. Controleer de e-mailconfiguratie."
+
+#: src/components/feedback/ReportIssueModal.tsx:154
+msgid "Could not send the report. Try again"
+msgstr "Je melding kon niet worden verzonden. Probeer het opnieuw"
 
 #: src/components/chat/hooks/useUserTemplates.ts:79
 msgid "Could not update template"
@@ -3314,6 +3326,10 @@ msgstr "dembrane-medewerker heeft toegang aangevraagd"
 msgid "Deny"
 msgstr "Weigeren"
 
+#: src/components/feedback/ReportIssueModal.tsx:207
+msgid "Describe the issue"
+msgstr "Beschrijf het probleem"
+
 #: src/components/project/CustomTopicModal.tsx:223
 msgid "Describe what the language model should extract or summarize from the conversation..."
 msgstr "Beschrijf wat de taalmodel moet extraheren of samenvatten uit het gesprek..."
@@ -3447,8 +3463,8 @@ msgstr "Ben je van plan dembrane te gebruiken in de zorg, het onderwijs, werving
 msgid "Do you want to stay in the loop?"
 msgstr "Wil je op de hoogte blijven?"
 
-#: src/features/sidebar/views/HelpView.tsx:36
-#: src/features/sidebar/blocks/HelpBlock.tsx:46
+#: src/features/sidebar/views/HelpView.tsx:35
+#: src/features/sidebar/blocks/HelpBlock.tsx:54
 #: src/components/chat/ChatHistoryMessage.tsx:192
 msgid "Documentation"
 msgstr "Documentatie"
@@ -4239,8 +4255,8 @@ msgstr "Redelijk wachtwoord"
 msgid "participant.modal.echo.info.title"
 msgstr "Functie binnenkort beschikbaar"
 
-#: src/features/sidebar/views/HelpView.tsx:59
-#: src/features/sidebar/blocks/HelpBlock.tsx:32
+#: src/features/sidebar/views/HelpView.tsx:65
+#: src/features/sidebar/blocks/HelpBlock.tsx:40
 msgid "Feedback"
 msgstr "Feedback"
 
@@ -4659,8 +4675,8 @@ msgstr "Heb je een training afgerond?"
 msgid "have your recordings transcribed"
 msgstr "je opnames te laten transcriberen"
 
-#: src/features/sidebar/views/HelpView.tsx:26
-#: src/features/sidebar/blocks/HelpBlock.tsx:29
+#: src/features/sidebar/views/HelpView.tsx:25
+#: src/features/sidebar/blocks/HelpBlock.tsx:30
 msgid "Help"
 msgstr "Help"
 
@@ -4834,7 +4850,7 @@ msgstr "Identificeer herhalende thema's, onderwerpen en argumenten die consisten
 msgid "Idle"
 msgstr "Inactief"
 
-#: src/components/common/FeedbackPortalModal.tsx:93
+#: src/components/common/FeedbackPortalModal.tsx:94
 msgid "If what you've spotted involves data visible to the wrong people, someone having access they shouldn't, or a possible security vulnerability, please use our <0>security reporting form</0> instead. It reaches a different team on a faster track. For anything urgent, email <1>privacy@dembrane.com</1>"
 msgstr "Als je hebt gezien dat gegevens zichtbaar zijn voor de verkeerde mensen, dat iemand toegang heeft die dat niet hoort te hebben, of dat er mogelijk een beveiligingslek is, gebruik dan ons <0>formulier voor beveiligingsmeldingen</0>. Je melding komt dan bij een ander team terecht en wordt sneller opgepakt. Mail bij spoed naar <1>privacy@dembrane.com</1>"
 
@@ -4866,6 +4882,10 @@ msgstr "Als je je bij een bestaande organisatie wilt aansluiten, maak dan geen n
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:60
 msgid "Image style"
 msgstr "Beeldstijl"
+
+#: src/components/feedback/ReportIssueModal.tsx:98
+msgid "Images must be under {MAX_FILE_MB}MB"
+msgstr "Afbeeldingen mogen maximaal {MAX_FILE_MB}MB zijn"
 
 #: src/components/chat/AgenticChatPanel.tsx:1850
 msgid "Improve my setup"
@@ -5157,7 +5177,7 @@ msgstr "Aansluiten voor support"
 msgid "Join for support (24h)"
 msgstr "Aansluiten voor support (24 uur)"
 
-#: src/components/common/FeedbackPortalModal.tsx:156
+#: src/components/common/FeedbackPortalModal.tsx:159
 msgid "Join our Slack community"
 msgstr "Word lid van onze Slack-community"
 
@@ -5215,7 +5235,7 @@ msgstr "Net bijgewerkt. Even geduld."
 msgid "Just started"
 msgstr "Net begonnen"
 
-#: src/components/common/FeedbackPortalModal.tsx:86
+#: src/components/common/FeedbackPortalModal.tsx:87
 msgid "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 msgstr "Praat of typ gewoon op een natuurlijke manier. Uw bijdrage gaat rechtstreeks naar ons productteam en helpt ons echt om dembrane te verbeteren. We lezen alles."
 
@@ -6743,6 +6763,10 @@ msgstr "Lopende gesprekken"
 msgid "Only change this setting in consultation with the responsible person(s) for data protection within your organisation."
 msgstr "Verander deze instelling alleen in overleg met de verantwoordelijke persoon(nen) voor de bescherming van gegevens binnen uw organisatie."
 
+#: src/components/feedback/ReportIssueModal.tsx:94
+msgid "Only images can be attached"
+msgstr "Je kunt alleen afbeeldingen toevoegen"
+
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:362
 msgid "Only organisation admins and owners can create workspaces. Ask an admin on your organisation to create one, or to promote you first."
 msgstr "Alleen organisatiebeheerders en eigenaren kunnen werkruimtes aanmaken. Vraag een beheerder van je organisatie om er een aan te maken, of om je eerst te promoveren."
@@ -6922,7 +6946,7 @@ msgstr "of"
 msgid "Or choose a time"
 msgstr "Of kies een tijd"
 
-#: src/components/common/FeedbackPortalModal.tsx:132
+#: src/components/common/FeedbackPortalModal.tsx:135
 msgid "Or prefer to chat directly?"
 msgstr "Of liever direct chatten?"
 
@@ -7367,8 +7391,8 @@ msgstr "Vastgepinde sjablonen"
 msgid "Plan ends"
 msgstr "Plan eindigt"
 
-#: src/features/sidebar/views/HelpView.tsx:53
-#: src/features/sidebar/blocks/HelpBlock.tsx:55
+#: src/features/sidebar/views/HelpView.tsx:52
+#: src/features/sidebar/blocks/HelpBlock.tsx:63
 msgid "Planned"
 msgstr "Gepland"
 
@@ -7921,6 +7945,7 @@ msgid "participant.button.record"
 msgstr "Opname starten"
 
 #: src/components/pricing/PricingTextInput.tsx:255
+#: src/components/feedback/ReportIssueModal.tsx:247
 #: src/components/chat/AgenticChatPanel.tsx:2181
 msgid "Record a voice message"
 msgstr "Spraakbericht opnemen"
@@ -8108,7 +8133,9 @@ msgid "Remove"
 msgstr "Verwijderen"
 
 #. placeholder {0}: chip.value
+#. placeholder {0}: file.name
 #: src/components/invite/EmailChipsInput.tsx:391
+#: src/components/feedback/ReportIssueModal.tsx:275
 msgid "Remove {0}"
 msgstr "{0} verwijderen"
 
@@ -8230,6 +8257,12 @@ msgstr "Rapport"
 msgid "Report already generating"
 msgstr "Rapport wordt al gegenereerd"
 
+#: src/features/sidebar/views/HelpView.tsx:58
+#: src/features/sidebar/blocks/HelpBlock.tsx:33
+#: src/components/feedback/ReportIssueModal.tsx:180
+msgid "Report an issue"
+msgstr "Probleem melden"
+
 #. placeholder {0}: formatDateForAxis(new Date(data.allReports[0]?.createdAt!).getTime())
 #: src/components/report/ReportTimeline.tsx:304
 msgid "Report Created - {0}"
@@ -8262,6 +8295,10 @@ msgstr "Rapportmeldingen"
 #: src/routes/project/report/ProjectReportRoute.tsx:561
 msgid "Report scheduled"
 msgstr "Rapport gepland"
+
+#: src/components/feedback/ReportIssueModal.tsx:159
+msgid "Report sent. Thank you"
+msgstr "Melding verzonden. Bedankt"
 
 #: src/components/report/UpdateReportModalButton.tsx:365
 #: src/components/report/CreateReportForm.tsx:376
@@ -8646,7 +8683,7 @@ msgstr "Opgeslagen als doel van dit project."
 msgid "Saving..."
 msgstr "Opslaan..."
 
-#: src/components/common/FeedbackPortalModal.tsx:128
+#: src/components/common/FeedbackPortalModal.tsx:129
 msgid "Scan or click the QR code to open the feedback portal"
 msgstr "Scan of klik op de QR-code om het feedbackportaal te openen"
 
@@ -9046,6 +9083,10 @@ msgstr "Uitnodigingen versturen"
 msgid "Send note"
 msgstr "Notitie versturen"
 
+#: src/components/feedback/ReportIssueModal.tsx:310
+msgid "Send report"
+msgstr "Melding versturen"
+
 #: src/routes/admin/AdminSettingsRoute.tsx:1186
 #: src/components/training/RequestTrainingModal.tsx:100
 msgid "Send request"
@@ -9350,7 +9391,7 @@ msgstr "Overgeslagen omdat de selectie te groot was."
 msgid "Skipped mic check"
 msgstr "Microfooncheck overgeslagen"
 
-#: src/features/sidebar/views/HelpView.tsx:42
+#: src/features/sidebar/views/HelpView.tsx:41
 msgid "Slack community"
 msgstr "Slack-community"
 
@@ -9590,6 +9631,7 @@ msgstr "Kom je er nog niet uit? Mail <0>support@dembrane.com</0>."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:755
 #: src/components/pricing/PricingTextInput.tsx:251
+#: src/components/feedback/ReportIssueModal.tsx:243
 #: src/components/chat/AgenticChatPanel.tsx:2176
 msgid "Stop"
 msgstr "Stop"
@@ -9600,6 +9642,7 @@ msgid "participant.button.stop"
 msgstr "Stop"
 
 #: src/components/pricing/PricingTextInput.tsx:242
+#: src/components/feedback/ReportIssueModal.tsx:236
 #: src/components/chat/AgenticChatPanel.tsx:2166
 msgid "Stop recording and turn it into text"
 msgstr "Opname stoppen en omzetten naar tekst"
@@ -9762,8 +9805,8 @@ msgstr "Systeem"
 msgid "System default"
 msgstr "Systeemstandaard"
 
-#: src/features/sidebar/views/HelpView.tsx:50
-#: src/features/sidebar/blocks/HelpBlock.tsx:52
+#: src/features/sidebar/views/HelpView.tsx:49
+#: src/features/sidebar/blocks/HelpBlock.tsx:60
 msgid "System status"
 msgstr "Systeemstatus"
 
@@ -10530,7 +10573,7 @@ msgstr "naar"
 msgid "To assign a new tag, please create it first in the portal settings."
 msgstr "Om een nieuwe tag toe te wijzen, maak je deze eerst aan in de portalinstellingen."
 
-#: src/components/common/FeedbackPortalModal.tsx:79
+#: src/components/common/FeedbackPortalModal.tsx:80
 msgid "To help us act on it, try to include where it happened and what you were trying to do. For bugs, tell us what went wrong. For ideas, tell us what need it would solve for you."
 msgstr "Om ons te helpen actie te ondernemen, probeer aan te geven waar het gebeurde en wat u probeerde te doen. Bij bugs, vertel ons wat er mis ging. Bij ideeën, vertel ons welke behoefte het voor u zou oplossen."
 
@@ -10550,6 +10593,10 @@ msgstr "Te groot"
 #: src/components/conversation/SelectAllConfirmationModal.tsx:129
 msgid "Too long"
 msgstr "Te lang"
+
+#: src/components/feedback/ReportIssueModal.tsx:150
+msgid "Too many reports. Wait a few minutes and try again"
+msgstr "Te veel meldingen. Wacht een paar minuten en probeer het opnieuw"
 
 #: src/components/chat/AgenticChatPanel.tsx:2130
 msgid "Too many to list here. The assistant reads through them in batches."
@@ -10970,6 +11017,19 @@ msgstr "Tot {0} deelnemers"
 #: src/components/training/RequestTrainingModal.tsx:66
 msgid "Up to {0} participants are included."
 msgstr "Tot {0} deelnemers zijn inbegrepen."
+
+#: src/components/feedback/ReportIssueModal.tsx:102
+#: src/components/feedback/ReportIssueModal.tsx:302
+msgid "Up to {MAX_FILES} images"
+msgstr "Maximaal {MAX_FILES} afbeeldingen"
+
+#: src/components/feedback/ReportIssueModal.tsx:211
+#~ msgid "Up to {MAX_FILES} images, {MAX_FILE_MB}MB each"
+#~ msgstr "Maximaal {MAX_FILES} afbeeldingen, elk {MAX_FILE_MB}MB"
+
+#: src/components/feedback/ReportIssueModal.tsx:253
+msgid "Up to {MAX_MESSAGE_CHARS} characters"
+msgstr "Maximaal {MAX_MESSAGE_CHARS} tekens"
 
 #: src/components/chat/CanvasSuggestionCard.tsx:251
 msgid "Update"
@@ -11464,8 +11524,12 @@ msgid "We will only send you a message if your host generates a report, we never
 msgstr "We sturen u alleen een bericht als uw gastgever een rapport genereert, we delen uw gegevens niet met iemand. U kunt op elk moment afmelden."
 
 #: src/components/common/FeedbackPortalModal.tsx:72
-msgid "We'd love to hear from you. Whether you have an idea for something new, you've hit a bug, spotted a translation that feels off, or just want to share how things have been going."
-msgstr "We horen graag van u. Of u nu een idee heeft voor iets nieuws, een bug heeft gevonden, een vertaling heeft gezien die niet klopt, of gewoon wilt delen hoe het gaat."
+msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use Report an issue in the sidebar to send it with screenshots."
+msgstr "We horen graag van je. Of je nu een idee hebt voor iets nieuws, een vertaling zag die niet klopt, of gewoon wilt delen hoe het gaat. Bug gevonden? Gebruik Probleem melden in de zijbalk om die met schermafbeeldingen te sturen."
+
+#: src/components/common/FeedbackPortalModal.tsx:72
+#~ msgid "We'd love to hear from you. Whether you have an idea for something new, you've hit a bug, spotted a translation that feels off, or just want to share how things have been going."
+#~ msgstr "We horen graag van u. Of u nu een idee heeft voor iets nieuws, een bug heeft gevonden, een vertaling heeft gezien die niet klopt, of gewoon wilt delen hoe het gaat."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:299
@@ -11587,6 +11651,10 @@ msgstr "Wat wil je verifiëren?"
 msgid "What gets sent"
 msgstr "Wat er verstuurd wordt"
 
+#: src/components/feedback/ReportIssueModal.tsx:208
+msgid "What happened? Paste a screenshot here to attach it"
+msgstr "Wat is er gebeurd? Plak hier een screenshot om hem toe te voegen"
+
 #: src/components/pricing/PricingConfigurator.tsx:1041
 msgid "What is it?"
 msgstr "Wat is het?"
@@ -11619,7 +11687,7 @@ msgstr "Wat waren de belangrijkste momenten in dit gesprek?"
 msgid "What would you like to explore?"
 msgstr "Wat wil je verkennen?"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:40
+#: src/features/sidebar/blocks/HelpBlock.tsx:48
 msgid "What's new"
 msgstr "Wat is er nieuw"
 
@@ -12213,6 +12281,10 @@ msgstr "Je logo is nog actief, maar kan op dit niveau niet worden gewijzigd."
 #: src/components/settings/AccountSettingsCard.tsx:182
 msgid "Your name"
 msgstr "Uw naam"
+
+#: src/components/feedback/ReportIssueModal.tsx:314
+msgid "Your name, email and current page are included so we can follow up."
+msgstr "Je naam, e-mailadres en huidige pagina worden meegestuurd zodat we contact kunnen opnemen."
 
 #: src/routes/organisation/OrganisationRoute.tsx:836
 msgid "Your organisation is on the free plan by default. One plan covers every workspace, billed per seat once you upgrade."

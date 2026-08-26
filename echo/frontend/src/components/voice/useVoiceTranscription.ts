@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { transcribeStateless } from "@/lib/api";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type TranscribePurpose, transcribeStateless } from "@/lib/api";
 import { useVoiceRecorder, type VoiceRecorderResult } from "./useVoiceRecorder";
 import {
 	isEmptyTranscript,
@@ -18,8 +18,12 @@ import {
 
 export type VoiceTranscriptionStatus = "idle" | "recording" | "transcribing";
 
-type UseVoiceTranscriptionOptions = {
-	projectId: string;
+/** Who pays: a project, or a named unmetered purpose where no project exists. */
+type VoiceBilling =
+	| { projectId: string; purpose?: never }
+	| { projectId?: never; purpose: TranscribePurpose };
+
+type UseVoiceTranscriptionOptions = VoiceBilling & {
 	/** ISO 639-1, from the host's interface language. */
 	language?: string;
 	/** Comma-separated proper nouns for the project, so names survive. */
@@ -54,13 +58,16 @@ const extensionForMimeType = (mimeType: string): string => {
 	return "webm";
 };
 
-export const useVoiceTranscription = ({
-	hotwords,
-	language,
-	onDurationLimit,
-	onTranscript,
-	projectId,
-}: UseVoiceTranscriptionOptions): UseVoiceTranscriptionResult => {
+export const useVoiceTranscription = (
+	options: UseVoiceTranscriptionOptions,
+): UseVoiceTranscriptionResult => {
+	const { hotwords, language, onDurationLimit, onTranscript } = options;
+	const { projectId, purpose } = options;
+	const billing = useMemo<VoiceBilling>(
+		() =>
+			projectId ? { projectId } : { purpose: purpose as TranscribePurpose },
+		[projectId, purpose],
+	);
 	const [isTranscribing, setIsTranscribing] = useState(false);
 	const [errorKind, setErrorKind] = useState<VoiceErrorKind | null>(null);
 	const abortRef = useRef<AbortController | null>(null);
@@ -106,8 +113,8 @@ export const useVoiceTranscription = ({
 					filename: `voice-note.${extensionForMimeType(blob.type)}`,
 					hotwords,
 					language,
-					projectId,
 					signal: controller.signal,
+					...billing,
 				});
 				if (unmountedRef.current || controller.signal.aborted) return;
 				if (isEmptyTranscript(response.transcript)) {
@@ -123,7 +130,7 @@ export const useVoiceTranscription = ({
 				if (!unmountedRef.current) setIsTranscribing(false);
 			}
 		},
-		[hotwords, language, projectId],
+		[hotwords, language, billing],
 	);
 
 	const handleError = useCallback((kind: VoiceErrorKind) => {

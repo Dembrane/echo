@@ -1247,6 +1247,9 @@ export type StatelessTranscriptionResponse = {
  * transcription has finished, which is why the timeout is minutes rather than
  * seconds.
  */
+/** Named reasons the transcribe endpoint accepts without a project to bill. */
+export type TranscribePurpose = "pricing_intake" | "issue_report";
+
 export const transcribeStateless = async (
 	payload: {
 		file: Blob;
@@ -1257,7 +1260,7 @@ export const transcribeStateless = async (
 		signal?: AbortSignal;
 	} & (
 		| { projectId: string; purpose?: never }
-		| { projectId?: never; purpose: "pricing_intake" }
+		| { projectId?: never; purpose: TranscribePurpose }
 	),
 ) => {
 	const form = new FormData();
