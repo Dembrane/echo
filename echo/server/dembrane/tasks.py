@@ -2247,9 +2247,17 @@ def task_forward_support_requests() -> None:
         org_id = None
         ws_id = row.get("workspace_id")
         if ws_id:
-            with directus_client_context() as client:
-                ws = client.get_item("workspace", str(ws_id))
-            org_id = ws.get("org_id") if ws else None
+            # A bad workspace id must not abort the batch; an outage still does.
+            try:
+                with directus_client_context() as client:
+                    ws = client.get_item("workspace", str(ws_id))
+                org_id = ws.get("org_id") if ws else None
+            except DirectusBadRequest as e:
+                task_logger.warning(
+                    "support forward: workspace %s unreadable (%s); forwarding without org_id",
+                    ws_id,
+                    e,
+                )
 
         payload = build_support_request_forward_payload(row, org_id, environment)
         try:
@@ -3255,9 +3263,7 @@ def _fail_abandoned_agentic_run(run_id: str) -> bool:
         },
     )
     try:
-        run_async_in_new_loop(
-            lambda: publish_live_event(run_id, json.dumps(event, default=str))
-        )
+        run_async_in_new_loop(lambda: publish_live_event(run_id, json.dumps(event, default=str)))
     except Exception:
         logger.warning("failed to publish abandon event for run %s", run_id, exc_info=True)
 

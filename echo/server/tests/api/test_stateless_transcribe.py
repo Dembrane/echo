@@ -120,6 +120,13 @@ def pricing_intake_limiter(monkeypatch: pytest.MonkeyPatch) -> _FakeRateLimiter:
     return limiter
 
 
+@pytest.fixture(autouse=True)
+def issue_report_limiter(monkeypatch: pytest.MonkeyPatch) -> _FakeRateLimiter:
+    limiter = _FakeRateLimiter()
+    monkeypatch.setattr(stateless_api, "_issue_report_rate_limiter", limiter)
+    return limiter
+
+
 @pytest.fixture
 def fake_directus(monkeypatch: pytest.MonkeyPatch) -> _FakeDirectus:
     directus = _FakeDirectus()
@@ -558,6 +565,31 @@ async def test_pricing_intake_purpose_passes_without_a_project(
     assert fake_directus.created == []
     assert pricing_intake_limiter.checked == ["user-1"]
     # Still stateless about the audio itself.
+    assert fake_s3.deleted == fake_s3.saved
+
+
+@pytest.mark.asyncio
+async def test_issue_report_purpose_passes_without_a_project(
+    fake_s3: _FakeS3,
+    fake_directus: _FakeDirectus,
+    captured_transcribe: dict[str, Any],
+    issue_report_limiter: _FakeRateLimiter,
+    pricing_intake_limiter: _FakeRateLimiter,
+) -> None:
+    """A voice note dictated into the issue report: no project, unmetered,
+    gated only by its own ceiling."""
+    async with _client(_build_app(is_admin=False)) as client:
+        response = await client.post(
+            "/stateless/transcribe",
+            files={"file": ("note.webm", b"fake-audio", "audio/webm")},
+            data={"purpose": "issue_report"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["transcript"] == "hello world"
+    assert fake_directus.created == []
+    assert issue_report_limiter.checked == ["user-1"]
+    assert pricing_intake_limiter.checked == []
     assert fake_s3.deleted == fake_s3.saved
 
 

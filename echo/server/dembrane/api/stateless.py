@@ -17,7 +17,7 @@ from dembrane.prompts import render_prompt
 from dembrane.transcribe import TranscriptionError, transcribe_audio_dembrane_26_07
 from dembrane.audio_utils import get_duration_from_url
 from dembrane.async_helpers import run_in_thread_pool
-from dembrane.api.rate_limit import create_user_rate_limiter
+from dembrane.api.rate_limit import RedisUserRateLimiter, create_user_rate_limiter
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
@@ -323,6 +323,20 @@ _pricing_intake_rate_limiter = create_user_rate_limiter(
     name="pricing_intake_transcription", capacity=30, window_seconds=3600
 )
 
+# Issue-report dictation: no project to bill, so the ceiling is the whole gate.
+ISSUE_REPORT_PURPOSE = "issue_report"
+_issue_report_rate_limiter = create_user_rate_limiter(
+    name="issue_report_transcription", capacity=30, window_seconds=3600
+)
+UNMETERED_PURPOSES = (PRICING_INTAKE_PURPOSE, ISSUE_REPORT_PURPOSE)
+
+
+def _purpose_rate_limiter(purpose: str) -> RedisUserRateLimiter:
+    # Looked up at call time so tests can swap the module attribute.
+    if purpose == ISSUE_REPORT_PURPOSE:
+        return _issue_report_rate_limiter
+    return _pricing_intake_rate_limiter
+
 
 class StatelessTranscriptionResponse(BaseModel):
     transcript: str
@@ -538,20 +552,20 @@ async def transcribe_stateless(
     default transcription prompt; prompt_override replaces that prompt entirely (the
     PII redaction pass keeps its own dedicated prompt either way).
     """
-    if purpose is not None and purpose != PRICING_INTAKE_PURPOSE:
+    if purpose is not None and purpose not in UNMETERED_PURPOSES:
         # Refused before anything else reads it, and refused whatever else the call
         # carries: an unknown purpose means the caller and this endpoint disagree
         # about what is being asked for.
         raise HTTPException(status_code=422, detail=f"Unsupported purpose: {purpose}")
 
-    is_pricing_intake = purpose == PRICING_INTAKE_PURPOSE and not project_id
+    is_unmetered_purpose = purpose in UNMETERED_PURPOSES and not project_id
 
     if project_id:
         await _assert_project_access(project_id, session)
-    elif is_pricing_intake:
+    elif is_unmetered_purpose and purpose is not None:
         # An authenticated session is the whole gate here. The ceiling is what
         # keeps an unbilled transcription from being an open one.
-        await _pricing_intake_rate_limiter.check(session.user_id)
+        await _purpose_rate_limiter(purpose).check(session.user_id)
     elif not session.is_admin:
         raise HTTPException(status_code=403, detail="project_id is required")
 

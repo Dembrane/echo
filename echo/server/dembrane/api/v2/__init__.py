@@ -23,6 +23,7 @@ from dembrane.api.v2.bff.tags import (
     run_router as bff_analysis_runs_router,
     project_router as bff_projects_write_router,
 )
+from dembrane.api.v2.feedback import router as feedback_router
 from dembrane.api.v2.projects import router as projects_router
 from dembrane.api.v2.training import router as training_router
 from dembrane.api.v2.bff.chats import (
@@ -106,6 +107,9 @@ v2_router.include_router(billing_webhook_router, prefix="/billing", tags=["v2:bi
 # Project-level: /projects/{id}/move + /projects/{id}/members (private sharing)
 v2_router.include_router(projects_router, prefix="/projects", tags=["v2:projects"])
 v2_router.include_router(project_sharing_router, prefix="/projects", tags=["v2:project-sharing"])
+
+# In-dashboard issue reports.
+v2_router.include_router(feedback_router, prefix="/feedback", tags=["v2:feedback"])
 
 # BFF endpoints — funnel the old direct-Directus frontend calls through
 # an access-aware layer (see api/v2/bff/_access.py). Everything under

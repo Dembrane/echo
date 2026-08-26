@@ -3,6 +3,7 @@ import { ViewTransition } from "./animations/ViewTransition";
 import { HelpBlock } from "./blocks/HelpBlock";
 import { InboxBlock } from "./blocks/InboxBlock";
 import { SearchBlock } from "./blocks/SearchBlock";
+import { HelpModalsProvider } from "./hooks/useHelpModals";
 import { useRecordRecents } from "./hooks/useRecordRecents";
 import { useSidebarView } from "./hooks/useSidebarView";
 import { SidebarHeader } from "./shell/SidebarHeader";
@@ -51,35 +52,37 @@ export const AppSidebar = () => {
 	})();
 
 	return (
-		<SidebarShell
-			header={
-				<>
-					<SidebarHeader />
-					<div
-						className="flex shrink-0 flex-col gap-0.5 border-b p-1.5"
-						style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
-					>
-						<SearchBlock />
-						<InboxBlock />
+		<HelpModalsProvider>
+			<SidebarShell
+				header={
+					<>
+						<SidebarHeader />
+						<div
+							className="flex shrink-0 flex-col gap-0.5 border-b p-1.5"
+							style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
+						>
+							<SearchBlock />
+							<InboxBlock />
+						</div>
+					</>
+				}
+				footer={
+					<div className="pb-1">
+						<UserMenu />
 					</div>
-				</>
-			}
-			footer={
-				<div className="pb-1">
-					<UserMenu />
-				</div>
-			}
-		>
-			<ViewTransition>
-				<ErrorBoundary fallback={<ViewError />}>{content}</ErrorBoundary>
-			</ViewTransition>
-			<div
-				className="flex shrink-0 flex-col gap-0.5 border-t p-1.5"
-				style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
+				}
 			>
-				<HelpBlock />
-			</div>
-		</SidebarShell>
+				<ViewTransition>
+					<ErrorBoundary fallback={<ViewError />}>{content}</ErrorBoundary>
+				</ViewTransition>
+				<div
+					className="flex shrink-0 flex-col gap-0.5 border-t p-1.5"
+					style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
+				>
+					<HelpBlock />
+				</div>
+			</SidebarShell>
+		</HelpModalsProvider>
 	);
 };
 
