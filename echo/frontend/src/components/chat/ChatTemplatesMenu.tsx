@@ -23,7 +23,7 @@ import {
 	encodeTemplateKey,
 	type QuickAccessItem,
 } from "./templateKey";
-import { quickAccessTemplates, Templates } from "./templates";
+import { agenticQuickAccessTemplates, quickAccessTemplates, Templates } from "./templates";
 
 // Map icon names from API to Phosphor icons
 const SUGGESTION_ICONS: Record<string, Icon> = {
@@ -186,14 +186,17 @@ export const ChatTemplatesMenu = ({
 
 	// Resolve quick-access templates from quickAccessItems (already resolved by parent)
 	const resolvedQuickAccessTemplates = useMemo(() => {
+		const isAgentic = chatMode === "agentic";
+		const defaultTemplates = isAgentic ? agenticQuickAccessTemplates : quickAccessTemplates;
 		if (quickAccessItems.length === 0) {
-			return quickAccessTemplates;
+			return defaultTemplates;
 		}
 
 		const resolved: Array<{ title: string; content: string; key: string }> = [];
+		const allStatics = [...Templates, ...agenticQuickAccessTemplates];
 		for (const item of quickAccessItems) {
 			if (item.type === "static") {
-				const found = Templates.find((t) => t.id === item.id);
+				const found = allStatics.find((t) => t.id === item.id);
 				if (found) {
 					resolved.push({
 						content: found.content,
@@ -212,8 +215,8 @@ export const ChatTemplatesMenu = ({
 				}
 			}
 		}
-		return resolved.length > 0 ? resolved : quickAccessTemplates;
-	}, [quickAccessItems, userTemplates]);
+		return resolved.length > 0 ? resolved : defaultTemplates;
+	}, [quickAccessItems, userTemplates, chatMode]);
 
 	const handleTemplateSelect = (
 		template: { content: string; key: string },
