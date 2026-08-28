@@ -3,6 +3,7 @@ import {
 	CreditCard,
 	GraduationCap,
 	Handshake,
+	ThumbsUp,
 } from "@phosphor-icons/react";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
@@ -18,6 +19,11 @@ export const AdminHomeView = () => {
 			/>
 			<NavItem to="/admin/payments" label="Payments" icon={CreditCard} />
 			<NavItem to="/admin/training" label="Training" icon={GraduationCap} />
+			<NavItem
+				to="/admin/response-feedback"
+				label="Response feedback"
+				icon={ThumbsUp}
+			/>
 			<NavItem
 				to="/admin/partners"
 				label="Partners"

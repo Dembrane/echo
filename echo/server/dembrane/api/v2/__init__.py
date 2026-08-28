@@ -57,6 +57,7 @@ from dembrane.api.v2.bff.conversations import (
     chunk_router as bff_chunk_router,
     junction_router as bff_conv_tag_router,
 )
+from dembrane.api.v2.feedback_responses import router as feedback_responses_router
 from dembrane.api.v2.workspace_projects import router as workspace_projects_router
 from dembrane.api.v2.workspace_settings import router as workspace_settings_router
 from dembrane.api.v2.pricing_configurations import router as pricing_configurations_router
@@ -110,6 +111,7 @@ v2_router.include_router(project_sharing_router, prefix="/projects", tags=["v2:p
 
 # In-dashboard issue reports.
 v2_router.include_router(feedback_router, prefix="/feedback", tags=["v2:feedback"])
+v2_router.include_router(feedback_responses_router, prefix="/feedback", tags=["v2:feedback"])
 
 # BFF endpoints — funnel the old direct-Directus frontend calls through
 # an access-aware layer (see api/v2/bff/_access.py). Everything under

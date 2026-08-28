@@ -31,6 +31,8 @@ import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButt
 import { Markdown } from "@/components/common/Markdown";
 import { QRCode } from "@/components/common/QRCode";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
+import { ResponseFeedbackControls } from "@/components/feedback/ResponseFeedbackControls";
+import type { ResponseFeedback } from "@/components/feedback/hooks";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { cn } from "@/lib/utils";
 import { ReferencesIconButton } from "../common/ReferencesIconButton";
@@ -98,7 +100,10 @@ const flashFootnoteTarget = (target: HTMLElement) => {
 
 const URL_PATTERN = /https?:\/\/[^\s<>)\]]+/g;
 
-function ownPortalStartLink(content: string, projectId?: string): string | null {
+function ownPortalStartLink(
+	content: string,
+	projectId?: string,
+): string | null {
 	if (!projectId) return null;
 	const portal = new URL(PARTICIPANT_BASE_URL);
 	const matches = content.match(URL_PATTERN) ?? [];
@@ -217,6 +222,9 @@ export const ChatHistoryMessage = ({
 	setReferenceIds,
 	chatMode,
 	onSaveAsTemplate,
+	feedbackTargetId,
+	feedback,
+	feedbackTargetIds,
 }: {
 	message: ChatHistory[number];
 	section?: React.ReactNode;
@@ -224,6 +232,9 @@ export const ChatHistoryMessage = ({
 	setReferenceIds?: (ids: string[]) => void;
 	chatMode?: ChatMode;
 	onSaveAsTemplate?: (content: string) => void;
+	feedbackTargetId?: string;
+	feedback?: ResponseFeedback;
+	feedbackTargetIds?: string[];
 }) => {
 	const { projectId } = useParams();
 	const portalStartLink =
@@ -345,6 +356,15 @@ export const ChatHistoryMessage = ({
 								</Text>
 								<Group gap="sm">
 									<CopyRichTextIconButton markdown={message.content} />
+									{message.role === "assistant" && feedbackTargetId && (
+										<ResponseFeedbackControls
+											targetType="chat_message"
+											targetId={feedbackTargetId}
+											allTargetIds={feedbackTargetIds}
+											current={feedback}
+											analytics={{ chat_mode: chatMode }}
+										/>
+									)}
 									{message.role === "user" && onSaveAsTemplate && (
 										<Tooltip label={t`Save as template`}>
 											<ActionIcon
