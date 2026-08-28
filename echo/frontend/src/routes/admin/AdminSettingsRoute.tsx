@@ -61,6 +61,7 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
+import { AdminResponseFeedbackPanel } from "@/components/feedback/AdminResponseFeedbackPanel";
 import { StaffTrainingPanel } from "@/components/training";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -627,8 +628,8 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 				<Text size="xs" c="dimmed">
 					<Trans>
 						A downgrade applies the matrix downgrade effects and notifies
-						workspace admins. A paid tier puts the account on
-						dembrane-managed billing.
+						workspace admins. A paid tier puts the account on dembrane-managed
+						billing.
 					</Trans>
 				</Text>
 				{hasLiveSubscription && (
@@ -801,8 +802,8 @@ function BillingModeControl({
 							</Trans>
 						) : (
 							<Trans>
-								Not on managed billing. Set to managed to invoice this account at
-								the {tier} tier, with no automatic Mollie charges.
+								Not on managed billing. Set to managed to invoice this account
+								at the {tier} tier, with no automatic Mollie charges.
 							</Trans>
 						))}
 				</Text>
@@ -945,8 +946,10 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 		},
 	});
 
-	const [requestModalOpened, { open: openRequestModal, close: closeRequestModal }] =
-		useDisclosure(false);
+	const [
+		requestModalOpened,
+		{ open: openRequestModal, close: closeRequestModal },
+	] = useDisclosure(false);
 	const [requestNote, setRequestNote] = useState("");
 
 	const requestMutation = useMutation({
@@ -3287,6 +3290,9 @@ export const AdminSettingsRoute = () => {
 					</Tabs.Panel>
 					<Tabs.Panel value="training" pt="md">
 						<StaffTrainingPanel />
+					</Tabs.Panel>
+					<Tabs.Panel value="response-feedback" pt="md">
+						<AdminResponseFeedbackPanel />
 					</Tabs.Panel>
 				</Tabs>
 			</Stack>

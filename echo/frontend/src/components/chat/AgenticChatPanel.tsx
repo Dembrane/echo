@@ -58,6 +58,7 @@ import {
 } from "@/components/conversation/hooks";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { useResponseFeedback } from "@/components/feedback/hooks";
 import { GoalSuggestionCard } from "@/components/goal/GoalSuggestionCard";
 import { useProjectById } from "@/components/project/hooks";
 import { useVoiceTranscription } from "@/components/voice/useVoiceTranscription";
@@ -137,6 +138,7 @@ type RenderMessage = {
 	timestamp: string;
 	sortSeq: number;
 	focusedConversationIds?: string[];
+	feedbackTargetId?: string;
 };
 
 type TimelineItem =
@@ -149,6 +151,7 @@ type TimelineItem =
 
 type HistoryLikeMessage = ChatHistory[number] & {
 	createdAt: string;
+	feedbackTargetId?: string;
 };
 
 const storageKeyForChat = (chatId: string) => `agentic-run:${chatId}`;
@@ -351,6 +354,10 @@ const toMessage = ({
 				projectId,
 				workspaceId,
 			}),
+			feedbackTargetId:
+				typeof payload?.persisted_message_id === "string"
+					? payload.persisted_message_id
+					: undefined,
 			id: `a-${event.seq}`,
 			role: "assistant",
 			sortSeq: event.seq,
@@ -442,6 +449,7 @@ const toHistoryMessage = (message: RenderMessage): HistoryLikeMessage =>
 		} as ProjectChatMessage,
 		content: message.content,
 		createdAt: message.timestamp,
+		feedbackTargetId: message.feedbackTargetId,
 		id: message.id,
 		metadata: [],
 		role: message.role,
@@ -485,6 +493,7 @@ const historyToRenderMessage = ({
 			projectId,
 			workspaceId,
 		}),
+		feedbackTargetId: role === "assistant" ? message.id : undefined,
 		id: message.id,
 		role,
 		sortSeq,
@@ -1146,6 +1155,17 @@ export const AgenticChatPanel = ({
 				.map(toHistoryMessage),
 		[timeline],
 	);
+
+	const feedbackTargetIds = useMemo(
+		() =>
+			timeline.flatMap((item) =>
+				item.kind === "message" && item.role === "assistant" && item.feedbackTargetId
+					? [item.feedbackTargetId]
+					: [],
+			),
+		[timeline],
+	);
+	const feedbackQuery = useResponseFeedback("chat_message", feedbackTargetIds);
 
 	const computedChatForCopy = useMemo(() => {
 		const messagesList = historyMessages.map((message) =>
@@ -1883,6 +1903,13 @@ export const AgenticChatPanel = ({
 									<ChatHistoryMessage
 										message={toHistoryMessage(node.item)}
 										chatMode="agentic"
+										feedbackTargetId={node.item.feedbackTargetId}
+										feedback={
+											node.item.feedbackTargetId
+												? feedbackQuery.data?.[node.item.feedbackTargetId]
+												: undefined
+										}
+										feedbackTargetIds={feedbackTargetIds}
 									/>
 								</div>
 							);

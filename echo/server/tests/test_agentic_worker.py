@@ -47,9 +47,16 @@ class _FakeChatService:
     def __init__(self) -> None:
         self.created_messages: list[dict[str, str]] = []
 
-    def create_message(self, chat_id: str, message_from: str, text: str) -> dict[str, str]:
+    def create_message(
+        self,
+        chat_id: str,
+        message_from: str,
+        text: str,
+        *,
+        message_id: str | None = None,
+    ) -> dict[str, str]:
         message = {
-            "id": f"msg-{len(self.created_messages) + 1}",
+            "id": message_id or f"msg-{len(self.created_messages) + 1}",
             "project_chat_id": chat_id,
             "message_from": message_from,
             "text": text,

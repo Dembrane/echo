@@ -66,6 +66,10 @@ import {
 } from "@/components/conversation/hooks";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import {
+	isPersistedMessageId,
+	useResponseFeedback,
+} from "@/components/feedback/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import {
 	AGENTIC_CHAT_IS_DEFAULT,
@@ -158,13 +162,27 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 			// this uses the response stream from the backend and makes a chat message IN THE FRONTEND
 			// do this for now because - i dont want to do the stream text processing again in the backend
 			// if someone navigates away before onFinish is completed, the message will be lost
-			addChatMessageMutation.mutate({
-				chat_message_metadata: [],
-				date_created: new Date().toISOString(),
-				message_from: "assistant",
-				project_chat_id: chatId,
-				text: message.content,
-			});
+			addChatMessageMutation.mutate(
+				{
+					chat_message_metadata: [],
+					date_created: new Date().toISOString(),
+					message_from: "assistant",
+					project_chat_id: chatId,
+					text: message.content,
+				},
+				{
+					// Swap the streamed nanoid for the persisted uuid so it can be rated.
+					onSuccess: (created) => {
+						const persistedId = (created as { id?: unknown } | null)?.id;
+						if (!isPersistedMessageId(persistedId)) return;
+						setMessages((current) =>
+							current.map((m) =>
+								m.id === message.id ? { ...m, id: persistedId } : m,
+							),
+						);
+					},
+				},
+			);
 
 			// scroll to the last message
 			lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -402,6 +420,18 @@ export const ProjectChatRoute = () => {
 		statusMessage,
 	} = useDembraneChat({ chatId: chatId ?? "" });
 	const normalizedInput = typeof input === "string" ? input : "";
+
+	const assistantMessageIds = useMemo(
+		() =>
+			(messages ?? [])
+				.filter((m) => m.role === "assistant" && isPersistedMessageId(m.id))
+				.map((m) => m.id as string),
+		[messages],
+	);
+	const feedbackQuery = useResponseFeedback(
+		"chat_message",
+		assistantMessageIds,
+	);
 
 	const threadAnchorRef = useRef<HTMLDivElement>(null);
 	const { showScrollButton, scrollToBottom } =
@@ -704,6 +734,14 @@ export const ProjectChatRoute = () => {
 									setReferenceIds={setReferenceIds}
 									chatMode={chatMode}
 									onSaveAsTemplate={handleSaveAsTemplate}
+									feedbackTargetId={
+										message.role === "assistant" &&
+										isPersistedMessageId(message.id)
+											? message.id
+											: undefined
+									}
+									feedback={feedbackQuery.data?.[message.id]}
+									feedbackTargetIds={assistantMessageIds}
 								/>
 							</div>
 						))}
@@ -773,6 +811,15 @@ export const ProjectChatRoute = () => {
 									referenceIds={referenceIds}
 									setReferenceIds={setReferenceIds}
 									chatMode={chatMode}
+									feedbackTargetId={
+										isPersistedMessageId(messages[messages.length - 1].id)
+											? messages[messages.length - 1].id
+											: undefined
+									}
+									feedback={
+										feedbackQuery.data?.[messages[messages.length - 1].id]
+									}
+									feedbackTargetIds={assistantMessageIds}
 								/>
 							</div>
 						)}

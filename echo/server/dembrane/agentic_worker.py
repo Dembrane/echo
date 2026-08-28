@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import json
 import time
+import uuid
 import asyncio
 from uuid import UUID
 from typing import Any, Optional, AsyncGenerator
@@ -599,6 +600,15 @@ async def _raise_if_cancelled(run_id: str, turn_seq: int) -> None:
         raise AgenticRunCancelledError(AGENT_CANCELLED_MESSAGE)
 
 
+def _as_uuid_or_none(value: Optional[str]) -> Optional[str]:
+    if not value:
+        return None
+    try:
+        return str(uuid.UUID(str(value)))
+    except (ValueError, AttributeError, TypeError):
+        return None
+
+
 async def _append_assistant_message(
     *,
     svc: AgenticRunService,
@@ -615,27 +625,28 @@ async def _append_assistant_message(
     event_payload: dict[str, Any] = {"content": sanitized_content}
     if message_id:
         event_payload["message_id"] = message_id
-    await _append_event_and_publish(
-        svc,
-        run_id,
-        "assistant.message",
-        event_payload,
-    )
-    if not project_chat_id:
-        return sanitized_content
-    try:
-        await run_in_thread_pool(
-            chat_service.create_message,
-            project_chat_id,
-            "assistant",
-            sanitized_content,
-        )
-    except Exception as exc:  # noqa: BLE001
-        logger.warning(
-            "Failed to persist agentic assistant message to chat %s: %s",
-            project_chat_id,
-            exc,
-        )
+
+    # Streamed id doubles as the row id, so publish first and persist after; Directus latency never delays the reply.
+    row_id = _as_uuid_or_none(message_id) if project_chat_id else None
+    if row_id:
+        event_payload["persisted_message_id"] = row_id
+    await _append_event_and_publish(svc, run_id, "assistant.message", event_payload)
+
+    if project_chat_id:
+        try:
+            await run_in_thread_pool(
+                chat_service.create_message,
+                project_chat_id,
+                "assistant",
+                sanitized_content,
+                message_id=row_id,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "Failed to persist agentic assistant message to chat %s: %s",
+                project_chat_id,
+                exc,
+            )
     return sanitized_content
 
 
