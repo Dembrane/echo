@@ -27,6 +27,13 @@ the answers rather than a second record of the same person.
 
 Identity is read from the session, never from the payload. The gate only
 renders for a logged-in host, so an unauthenticated call is rejected.
+
+The public website takes the second route, `POST .../site`. There is no user
+there: the site's Pages Function holds a shared static token (`SITE_API_TOKEN`
+here, sent as `X-Site-Token`) and proxies the browser's writes. Those rows have
+no `user_id`, carry `mount = "site"`, mint `WEB-` references, and learn their
+email from the booking rather than from a session. The two routes share one
+upsert, so a site row and an app row are the same shape in every other way.
 """
 
 from __future__ import annotations
@@ -42,7 +49,8 @@ from pydantic import Field, BaseModel, ValidationError
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import get_directus_user_profile
-from dembrane.api.rate_limit import create_user_rate_limiter
+from dembrane.settings import get_settings
+from dembrane.api.rate_limit import create_rate_limiter, create_user_rate_limiter
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
@@ -56,9 +64,11 @@ COLLECTION = "pricing_configuration"
 # account is renamed or a test account is reused.
 INTERNAL_EMAIL_DOMAIN = "@dembrane.com"
 
-# DEM-XXXX. Ambiguous glyphs are out (0/O, 1/I/L), because the code is read
-# out loud and typed back.
+# DEM-XXXX from the app, WEB-XXXX from the website, so the prefix says where a
+# lead came from before anyone opens the row. Ambiguous glyphs are out (0/O,
+# 1/I/L), because the code is read out loud and typed back.
 _REFERENCE_PREFIX = "DEM-"
+_SITE_REFERENCE_PREFIX = "WEB-"
 _REFERENCE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
 _REFERENCE_LENGTH = 4
 _REFERENCE_ATTEMPTS = 8
@@ -68,6 +78,14 @@ _REFERENCE_ATTEMPTS = 8
 _rate_limiter = create_user_rate_limiter(
     name="pricing_configuration", capacity=120, window_seconds=3600
 )
+# The website has no user to key on, so its ceiling is per visitor address as
+# the Pages Function reports it. Same number: it is the same form.
+_site_rate_limiter = create_rate_limiter(
+    name="pricing_configuration_site", capacity=120, window_seconds=3600
+)
+
+SITE_TOKEN_HEADER = "X-Site-Token"
+SITE_VISITOR_IP_HEADER = "X-Site-Visitor-Ip"
 
 # A recording that failed to transcribe twice. Bigger than any single answer
 # needs, small enough that the endpoint cannot be used as a file host.
@@ -99,6 +117,15 @@ class PricingConfigurationRequest(BaseModel):
     booking_start: Optional[str] = Field(default=None, max_length=255)
 
 
+class SitePricingConfigurationRequest(PricingConfigurationRequest):
+    """The website's body: the same, plus the email, which the site only learns
+    from cal.com once a call is booked. It is the one identity field that is
+    trusted from a payload, because on the site there is nowhere else to read
+    it from, and the token gate is what makes the payload trustworthy."""
+
+    email: Optional[str] = Field(default=None, max_length=255)
+
+
 class PricingConfigurationResponse(BaseModel):
     """`reference` is the whole contract the client reads. `warnings` carries
     anything that degraded without costing the answers, which today means a
@@ -116,9 +143,22 @@ class _Attachment(BaseModel):
     content: bytes
 
 
-def _new_reference() -> str:
+def _new_reference(prefix: str = _REFERENCE_PREFIX) -> str:
     body = "".join(secrets.choice(_REFERENCE_ALPHABET) for _ in range(_REFERENCE_LENGTH))
-    return f"{_REFERENCE_PREFIX}{body}"
+    return f"{prefix}{body}"
+
+
+def _clean_email(value: Optional[str]) -> Optional[str]:
+    """Lowercased and trimmed, or None. The check is deliberately loose: the
+    value comes from cal.com, which already validated it, and a slightly odd
+    address on the row beats a lost lead."""
+    cleaned = _clean(value)
+    if cleaned is None:
+        return None
+    lowered = cleaned.lower()
+    if "@" not in lowered or " " in lowered:
+        return None
+    return lowered
 
 
 def _clean(value: Optional[str]) -> Optional[str]:
@@ -170,7 +210,9 @@ async def _read_body(request: Request) -> tuple[dict[str, Any], list[_Attachment
             logger.warning("pricing configuration: %s arrived as text, skipped", key)
             continue
         if len(attachments) >= MAX_ATTACHMENTS:
-            logger.warning("pricing configuration: more than %s recordings, rest dropped", MAX_ATTACHMENTS)
+            logger.warning(
+                "pricing configuration: more than %s recordings, rest dropped", MAX_ATTACHMENTS
+            )
             break
 
         question_key = key[len("audio_") :]
@@ -213,9 +255,15 @@ def _flat_mirrors(config: dict[str, Any]) -> dict[str, Any]:
     return {
         "volume_bucket": volume if isinstance(volume, str) else None,
         "concurrency_bucket": concurrency if isinstance(concurrency, str) else None,
-        "concurrency_exact": exact if isinstance(exact, int) and not isinstance(exact, bool) else None,
-        "answered_count": answered if isinstance(answered, int) and not isinstance(answered, bool) else None,
-        "furthest_step": furthest if isinstance(furthest, int) and not isinstance(furthest, bool) else None,
+        "concurrency_exact": exact
+        if isinstance(exact, int) and not isinstance(exact, bool)
+        else None,
+        "answered_count": answered
+        if isinstance(answered, int) and not isinstance(answered, bool)
+        else None,
+        "furthest_step": furthest
+        if isinstance(furthest, int) and not isinstance(furthest, bool)
+        else None,
     }
 
 
@@ -223,7 +271,7 @@ def _row_from(
     payload: PricingConfigurationRequest,
     *,
     email: Optional[str],
-    user_id: str,
+    user_id: Optional[str],
     is_internal: bool,
     status: str,
 ) -> dict[str, Any]:
@@ -335,13 +383,13 @@ async def _find_by_session(config_session_id: str) -> Optional[dict[str, Any]]:
     return None
 
 
-async def _insert(row: dict[str, Any]) -> dict[str, Any]:
+async def _insert(row: dict[str, Any], prefix: str = _REFERENCE_PREFIX) -> dict[str, Any]:
     """Create the row, minting a reference that is stable for the life of the
     session. Two things can make the insert fail, and they are told apart by
     re-reading: another writer won the race on this session id (so the answer is
     that row), or a reference collided (so try another one)."""
     for _ in range(_REFERENCE_ATTEMPTS):
-        candidate = {**row, "id": generate_uuid(), "reference": _new_reference()}
+        candidate = {**row, "id": generate_uuid(), "reference": _new_reference(prefix)}
         try:
             created = await async_directus.create_item(COLLECTION, candidate)
             return created["data"]
@@ -385,12 +433,70 @@ async def upsert_pricing_configuration(
         logger.warning("pricing configuration: no email on directus user %s", auth.user_id)
     is_internal = bool(email and email.endswith(INTERNAL_EMAIL_DOMAIN))
 
+    return await _upsert(
+        payload,
+        attachments,
+        email=email,
+        user_id=auth.user_id,
+        is_internal=is_internal,
+        prefix=_REFERENCE_PREFIX,
+    )
+
+
+@router.post("/site", response_model=PricingConfigurationResponse)
+async def upsert_site_pricing_configuration(request: Request) -> PricingConfigurationResponse:
+    """The website's write: the same upsert, behind a shared token instead of a
+    session.
+
+    The browser never holds the token. The site's Pages Function does, adds it,
+    and passes the visitor's address along in `X-Site-Visitor-Ip` so the rate
+    ceiling is per person rather than per Cloudflare edge.
+    """
+    expected = get_settings().site.api_token
+    if not expected:
+        raise HTTPException(status_code=503, detail="Site writes are not configured")
+    presented = request.headers.get(SITE_TOKEN_HEADER) or ""
+    if not secrets.compare_digest(presented.encode(), expected.encode()):
+        raise HTTPException(status_code=401, detail="Invalid site token")
+
+    visitor = (request.headers.get(SITE_VISITOR_IP_HEADER) or "").strip()
+    await _site_rate_limiter.check(visitor or "unknown")
+
+    body, _attachments = await _read_body(request)
+    try:
+        payload = SitePricingConfigurationRequest.model_validate(body)
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors(include_url=False)) from None
+    # Whatever the body said, this row came from the site.
+    payload.mount = "site"
+
+    email = _clean_email(payload.email)
+    return await _upsert(
+        payload,
+        [],
+        email=email,
+        user_id=None,
+        is_internal=bool(email and email.endswith(INTERNAL_EMAIL_DOMAIN)),
+        prefix=_SITE_REFERENCE_PREFIX,
+    )
+
+
+async def _upsert(
+    payload: PricingConfigurationRequest,
+    attachments: list[_Attachment],
+    *,
+    email: Optional[str],
+    user_id: Optional[str],
+    is_internal: bool,
+    prefix: str,
+) -> PricingConfigurationResponse:
     session_id = payload.config_session_id.strip()
     existing = await _find_by_session(session_id)
 
-    if existing and existing.get("user_id") and existing["user_id"] != auth.user_id:
+    if existing and existing.get("user_id") and existing["user_id"] != user_id:
         # Session ids are minted in the browser. Somebody else's answers are not
-        # this caller's to overwrite.
+        # this caller's to overwrite, and that includes the website writing
+        # over a row an account made.
         raise HTTPException(status_code=403, detail="This configuration belongs to another user")
 
     booking = _booking_from(payload)
@@ -407,11 +513,17 @@ async def upsert_pricing_configuration(
     row = _row_from(
         payload,
         email=email,
-        user_id=auth.user_id,
+        user_id=user_id,
         is_internal=is_internal,
         status=status,
     )
     row["config"] = _config_with_booking(payload.config, existing, booking)
+
+    if existing and email is None:
+        # A site row learns its email from the booking, on one write. Every
+        # other write says nothing about it, and nothing must not erase it.
+        row.pop("email", None)
+        row.pop("is_internal", None)
 
     # The booking columns are written only by a write that reports a booking.
     # A step write leaves them out of the patch entirely, so it cannot blank a
@@ -444,10 +556,10 @@ async def upsert_pricing_configuration(
         if not reference:
             # Nothing should reach here; a row without a reference cannot be
             # quoted back, so mint one rather than leave the gap.
-            reference = _new_reference()
+            reference = _new_reference(prefix)
             await async_directus.update_item(COLLECTION, row_id, {"reference": reference})
     else:
-        created = await _insert(row)
+        created = await _insert(row, prefix)
         row_id = created["id"]
         reference = created.get("reference") or ""
 
@@ -552,7 +664,9 @@ async def _upload_to_directus(attachment: _Attachment) -> str:
             },
         )
     if response.status_code not in (200, 201):
-        raise RuntimeError(f"directus /files returned {response.status_code}: {response.text[:200]}")
+        raise RuntimeError(
+            f"directus /files returned {response.status_code}: {response.text[:200]}"
+        )
     return str(response.json()["data"]["id"])
 
 

@@ -651,6 +651,21 @@ class SupportSettings(BaseSettings):
         return bool(self.forward_webhook_url and self.forward_webhook_token)
 
 
+class SiteSettings(BaseSettings):
+    """The public website (dembrane-site, Cloudflare Pages) writes pricing
+    configurations without a user session. Its Pages Function holds this
+    shared static token and sends it as `X-Site-Token`; the route is off
+    (503) until the token is set, which is the local default."""
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
+
+    api_token: Optional[str] = Field(
+        default=None,
+        alias="SITE_API_TOKEN",
+        validation_alias=AliasChoices("SITE_API_TOKEN", "SITE__API_TOKEN"),
+    )
+
+
 class AppSettings:
     """
     Aggregate application settings composed from modular sections.
@@ -674,6 +689,7 @@ class AppSettings:
         self.agentic = AgenticSettings()
         self.billing = BillingSettings()
         self.support = SupportSettings()
+        self.site = SiteSettings()
 
         self.transcription.ensure_valid()
 
