@@ -154,6 +154,9 @@ def collect_unsummarized_conversations(limit: int = 50) -> List[str]:
                         {"summary": {"_empty": True}},
                     ],
                     "deleted_at": {"_null": True},
+                    "project_id": {
+                        "deleted_at": {"_null": True}
+                    },
                     "created_at": {
                         "_lte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
                     },

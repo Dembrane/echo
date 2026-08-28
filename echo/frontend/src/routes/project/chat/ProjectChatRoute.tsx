@@ -95,20 +95,20 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const lastInput = useRef("");
 	const lastMessageRef = useRef<HTMLDivElement>(null);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
-	const contextToBeAdded = useMemo(() => {
-		if (!chatContextQuery.data) {
-			return null;
-		}
-		return {
-			conversations: chatContextQuery.data.conversations.filter(
-				(c) => !c.locked,
-			),
-			locked_conversations: chatContextQuery.data.conversations.filter(
-				(c) => c.locked,
-			),
-		};
-	}, [chatContextQuery.data, chatHistoryQuery.data]);
+		// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
+		const contextToBeAdded = useMemo(() => {
+			if (!chatContextQuery.data) {
+				return null;
+			}
+			return {
+				conversations: (chatContextQuery.data.conversations ?? []).filter(
+					(c) => !c.locked,
+				),
+				locked_conversations: (chatContextQuery.data.conversations ?? []).filter(
+					(c) => c.locked,
+				),
+			};
+		}, [chatContextQuery.data, chatHistoryQuery.data]);
 
 	const { iso639_1 } = useLanguage();
 

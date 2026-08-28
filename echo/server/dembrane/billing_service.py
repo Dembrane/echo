@@ -1023,6 +1023,14 @@ async def sync_subscription_seats(account_id: str) -> float | None:
     # re-price never silently restores the full rate.
     amount = apply_discount(amount, account.get("percent_discount"))
 
+    # Cap the amount in Mollie test mode to avoid "The amount is higher than the maximum" (422) error from Mollie test key limits.
+    settings = get_settings()
+    if settings.billing.mollie_api_key and settings.billing.mollie_api_key.startswith("test_"):
+        # Mollie test mode limits recurring/subscription amounts to €250.00 for credit cards
+        if amount > 240.00:
+            logger.info("capping subscription amount to 240.00 EUR in test mode (original: %s EUR)", amount)
+            amount = 240.00
+
     # Skip the PATCH when nothing changed (cron runs often; Mollie calls aren't free).
     try:
         sub = await mollie.get_subscription(customer_id=customer_id, subscription_id=sub_id)

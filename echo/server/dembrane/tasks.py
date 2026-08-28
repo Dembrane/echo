@@ -428,6 +428,7 @@ def task_summarize_conversation(conversation_id: str) -> None:
         clear_summarize_in_progress,
     )
     from dembrane.service.conversation import ConversationNotFoundException
+    from dembrane.service.project import ProjectNotFoundException
 
     try:
         from dembrane.service import conversation_service
@@ -497,6 +498,11 @@ def task_summarize_conversation(conversation_id: str) -> None:
         return
     except ConversationNotFoundException:
         logger.error(f"Conversation not found: {conversation_id}")
+        # Non-retriable error - clear lock
+        clear_summarize_in_progress(conversation_id)
+        return
+    except ProjectNotFoundException:
+        logger.warning(f"Project not found for conversation {conversation_id}, skipping summary")
         # Non-retriable error - clear lock
         clear_summarize_in_progress(conversation_id)
         return
