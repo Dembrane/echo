@@ -655,14 +655,22 @@ class SiteSettings(BaseSettings):
     """The public website (dembrane-site, Cloudflare Pages) writes pricing
     configurations without a user session. Its Pages Function holds this
     shared static token and sends it as `X-Site-Token`; the route is off
-    (503) until the token is set, which is the local default."""
+    (503) until the token is set, which is the local default.
+
+    `ECHO_SUPPORT_WEBHOOK_TOKEN` doubles as the fallback so production needs
+    no second sealed secret: the deployments that forward support requests
+    already carry it. Rotating that token therefore also rotates this gate
+    (sam's ingress and the site's `DEMBRANE_ECHO_TOKEN` move with it), and
+    setting `SITE_API_TOKEN` splits the two again."""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
 
     api_token: Optional[str] = Field(
         default=None,
         alias="SITE_API_TOKEN",
-        validation_alias=AliasChoices("SITE_API_TOKEN", "SITE__API_TOKEN"),
+        validation_alias=AliasChoices(
+            "SITE_API_TOKEN", "SITE__API_TOKEN", "ECHO_SUPPORT_WEBHOOK_TOKEN"
+        ),
     )
 
 
