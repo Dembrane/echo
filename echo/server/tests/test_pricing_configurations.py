@@ -14,6 +14,9 @@ What matters here:
   write only ever raises the status, never lowers it.
 - The outbox that tells the team about a booking sends each row once, retries
   what it could not deliver, and stays quiet when it is not configured.
+- The website's route: off until the token is set, closed to a wrong token,
+  and otherwise the same upsert with no user, a `WEB-` reference and an email
+  that comes from the payload and is never blanked by a later write.
 
 `async_directus` is mocked throughout; no live Directus.
 """
@@ -37,6 +40,8 @@ from dembrane.tasks import (
 )
 from dembrane.api.dependency_auth import DirectusSession
 from dembrane.api.v2.pricing_configurations import (
+    SITE_TOKEN_HEADER,
+    SITE_VISITOR_IP_HEADER,
     _clean,
     _read_body,
     _merge_audio,
@@ -44,6 +49,7 @@ from dembrane.api.v2.pricing_configurations import (
     _new_reference,
     build_answers_summary,
     upsert_pricing_configuration,
+    upsert_site_pricing_configuration,
 )
 
 MODULE = "dembrane.api.v2.pricing_configurations"
@@ -96,9 +102,7 @@ async def _call(
 def _directus(existing: dict[str, Any] | None = None) -> AsyncMock:
     directus = AsyncMock()
     directus.get_items = AsyncMock(return_value=[existing] if existing else [])
-    directus.create_item = AsyncMock(
-        side_effect=lambda _collection, data: {"data": {**data}}
-    )
+    directus.create_item = AsyncMock(side_effect=lambda _collection, data: {"data": {**data}})
     directus.update_item = AsyncMock(
         side_effect=lambda _collection, item_id, data: {
             "data": {**(existing or {}), **data, "id": item_id}
@@ -754,3 +758,95 @@ def test_no_bookings_is_quiet():
 
     post.assert_not_called()
     client.update_item.assert_not_called()
+
+
+# ── the website's route ──
+
+
+async def _site_call(
+    body: dict[str, Any],
+    *,
+    directus: AsyncMock,
+    token: str | None = "site-token",
+    presented: str | None = "site-token",
+) -> Any:
+    # Starlette headers are case-insensitive; a plain dict is not, so the
+    # module's own names are used verbatim.
+    headers = {SITE_VISITOR_IP_HEADER: "203.0.113.9"}
+    if presented is not None:
+        headers[SITE_TOKEN_HEADER] = presented
+    request = SimpleNamespace(headers=headers)
+    with (
+        patch(f"{MODULE}.async_directus", directus),
+        patch(f"{MODULE}._read_body", AsyncMock(return_value=(body, []))),
+        patch(f"{MODULE}._site_rate_limiter") as limiter,
+        patch(
+            f"{MODULE}.get_settings",
+            return_value=SimpleNamespace(site=SimpleNamespace(api_token=token)),
+        ),
+    ):
+        limiter.check = AsyncMock(return_value=None)
+        return await upsert_site_pricing_configuration(request=request)  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+async def test_site_route_is_off_until_the_token_is_configured():
+    with pytest.raises(HTTPException) as exc:
+        await _site_call(_payload(), directus=_directus(), token=None)
+    assert exc.value.status_code == 503
+
+
+@pytest.mark.asyncio
+async def test_site_route_rejects_a_wrong_or_missing_token():
+    for presented in ("nope", None):
+        with pytest.raises(HTTPException) as exc:
+            await _site_call(_payload(), directus=_directus(), presented=presented)
+        assert exc.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_site_write_creates_a_web_row_without_a_user():
+    directus = _directus()
+
+    result = await _site_call(
+        _payload(mount="app", email="  Someone@Example.ORG "), directus=directus
+    )
+
+    assert result.reference.startswith("WEB-")
+    _collection, row = directus.create_item.await_args.args
+    assert row["mount"] == "site"
+    assert row["user_id"] is None
+    assert row["email"] == "someone@example.org"
+    assert row["is_internal"] is False
+    assert row["wall_key"] == "transcription_cap"
+
+
+@pytest.mark.asyncio
+async def test_site_write_flags_internal_from_the_email():
+    directus = _directus()
+    await _site_call(_payload(email="eve@dembrane.com"), directus=directus)
+    _collection, row = directus.create_item.await_args.args
+    assert row["is_internal"] is True
+
+
+@pytest.mark.asyncio
+async def test_site_write_without_an_email_keeps_the_one_the_row_has():
+    directus = _directus(
+        {"id": "row-1", "reference": "WEB-4F2A", "status": "in_progress", "user_id": None}
+    )
+
+    await _site_call(_payload(), directus=directus)
+
+    _collection, _row_id, patch_ = directus.update_item.await_args.args
+    assert "email" not in patch_
+    assert "is_internal" not in patch_
+
+
+@pytest.mark.asyncio
+async def test_site_write_cannot_touch_a_row_an_account_made():
+    directus = _directus(
+        {"id": "row-1", "reference": "DEM-4F2A", "status": "in_progress", "user_id": "user-1"}
+    )
+    with pytest.raises(HTTPException) as exc:
+        await _site_call(_payload(), directus=directus)
+    assert exc.value.status_code == 403
