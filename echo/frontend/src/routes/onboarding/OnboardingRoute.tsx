@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Anchor,
 	Button,
 	Checkbox,
 	Group,
@@ -19,7 +20,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { InviteEmailList } from "@/components/organisation/InviteEmailList";
-import { API_BASE_URL } from "@/config";
+import { API_BASE_URL, LEGAL_PRIVACY_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useMyInvites } from "@/hooks/useMyInvites";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -480,6 +481,23 @@ export const OnboardingRoute = () => {
 								<Text size="md" fw={500} lh={1.4}>
 									{t`Have you completed a training?`}
 								</Text>
+								<Text size="sm" c="dimmed" lh={1.6}>
+									<Trans>
+										We highly recommend you to follow a training when using
+										dembrane in a high-risk environment. Trainings are given by
+										the dembrane team and come at an additional costs.
+									</Trans>
+								</Text>
+								<div>
+									<Anchor
+										href={LEGAL_PRIVACY_URL}
+										target="_blank"
+										rel="noopener noreferrer"
+										size="sm"
+									>
+										<Trans>Privacy policy on high-risk use</Trans>
+									</Anchor>
+								</div>
 								<Radio.Group value={q3} onChange={setQ3}>
 									<Group gap={16}>
 										<Radio size="md" value="yes" label={t`Yes`} />
