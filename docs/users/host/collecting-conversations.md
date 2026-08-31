@@ -64,9 +64,15 @@ shows the same thing in brief under *Live & recent*. For a detailed walkthrough 
 
 A quick checklist that saves a lot of lost recordings:
 
+- Use a phone from roughly *2018 onwards* - an iPhone 8 or newer on iOS 16, or an Android with
+  an up-to-date Chrome. Older phones can't record at all, and get stuck on an error they
+  can't close.
+- *Open the link in Safari or Chrome*, not inside another app. A link tapped in Instagram,
+  LinkedIn or Slack can block the microphone silently.
 - Be on good *wifi or 5G*.
 - When prompted, *allow microphone access*.
-- *Keep the screen on* - a black screen means no recording.
+- *Keep the screen on* - a black screen means no recording. On most iPhones dembrane cannot
+  keep it awake for them, so this one is on the participant.
 - A well-*charged phone* is less likely to sleep.
 - Turn on *Do Not Disturb* - better privacy, fewer interruptions.
 
