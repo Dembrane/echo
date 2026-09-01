@@ -427,8 +427,8 @@ def task_summarize_conversation(conversation_id: str) -> None:
         mark_summarize_in_progress,
         clear_summarize_in_progress,
     )
-    from dembrane.service.conversation import ConversationNotFoundException
     from dembrane.service.project import ProjectNotFoundException
+    from dembrane.service.conversation import ConversationNotFoundException
 
     try:
         from dembrane.service import conversation_service
