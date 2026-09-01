@@ -78,6 +78,7 @@ dependencies = [
     "click>=8.1.8",
     "ecdsa>=0.19.2",
     "pyasn1>=0.6.3",
+    "cryptography>=48.0.1",
 ]
 
 [tool.setuptools]
