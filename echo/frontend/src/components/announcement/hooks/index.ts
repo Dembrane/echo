@@ -598,58 +598,6 @@ export const useUnreadAnnouncements = () =>
 export const useTopUrgentUnreadAnnouncement = () =>
 	useAnnouncementSummary(selectTopUrgentUnread);
 
-export const useWhatsNewAnnouncements = ({
-	enabled = true,
-}: {
-	enabled?: boolean;
-} = {}) => {
-	const { data: currentUser } = useCurrentUser();
-
-	return useQuery({
-		enabled,
-		queryFn: async () => {
-			try {
-				const response: Announcement[] = await directus.request<Announcement[]>(
-					readItems("announcement", {
-						deep: {
-							activity: {
-								_filter: {
-									user_id: {
-										_eq: currentUser?.id,
-									},
-								},
-							},
-						},
-						fields: [
-							"id",
-							"created_at",
-							"expires_at",
-							"level",
-							{
-								translations: ["id", "languages_code", "title", "message"],
-							},
-							{
-								activity: ["id", "user_id", "announcement_activity", "read"],
-							},
-						],
-						limit: 50,
-						sort: ["-created_at"],
-					}),
-				);
-
-				return response;
-			} catch (error) {
-				posthog.captureException(error);
-				console.error("Error fetching what's new announcements:", error);
-				throw error;
-			}
-		},
-		queryKey: ["announcements", "whats-new"],
-		retry: 2,
-		staleTime: 1000 * 60 * 5,
-	});
-};
-
 export const useAnnouncementDrawer = () => {
 	const [isOpen, setIsOpen] = useSessionStorageState(
 		"announcement-drawer-open",
