@@ -25,6 +25,21 @@ import {
 } from "@/lib/api";
 import { bff } from "@/lib/bff";
 
+// The chat-context mutations already tell the user what went wrong. The server
+// answers expected rejections (conversation already attached, too long, or over
+// the context budget) with a 4xx and a `detail` string that the onError handlers
+// show as a toast. Filing those as exceptions only floods error-tracking triage.
+// Report only failures we cannot explain to the user: 5xx responses, network
+// errors, and non-Axios errors.
+const captureUnexpectedError = (error: unknown) => {
+	const status =
+		error instanceof AxiosError ? error.response?.status : undefined;
+	if (status !== undefined && status >= 400 && status < 500) {
+		return;
+	}
+	posthog.captureException(error);
+};
+
 type ConversationBffListParams = {
 	search_text?: string;
 	sort?:
@@ -276,7 +291,7 @@ export const useAddChatContextMutation = () => {
 			}),
 		mutationKey: ["chat-context", "add"],
 		onError: (error, variables, context) => {
-			posthog.captureException(error);
+			captureUnexpectedError(error);
 			const mutationContext = context as
 				| AddChatContextMutationContext
 				| undefined;
@@ -387,7 +402,7 @@ export const useDeleteChatContextMutation = () => {
 			deleteChatContext(payload.chatId, payload.conversationId),
 		mutationKey: ["chat-context", "delete"],
 		onError: (error, variables, context) => {
-			posthog.captureException(error);
+			captureUnexpectedError(error);
 			// Only rollback the failed optimistic entry
 			const conversationId = (context as { conversationId?: string })
 				?.conversationId;
@@ -517,7 +532,7 @@ export const useClearChatContextMutation = () => {
 		},
 		mutationKey: ["chat-context", "clear"],
 		onError: (error) => {
-			posthog.captureException(error);
+			captureUnexpectedError(error);
 			toast.error(t`Failed to clear conversations`);
 		},
 		onSettled: (_, __, variables) => {
@@ -531,7 +546,7 @@ export const useClearChatContextMutation = () => {
 				return;
 			}
 			for (const failure of failed) {
-				posthog.captureException(failure.reason);
+				captureUnexpectedError(failure.reason);
 			}
 			if (cleared === 0) {
 				toast.error(t`Failed to clear conversations`);

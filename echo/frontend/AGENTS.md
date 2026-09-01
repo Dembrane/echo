@@ -58,7 +58,8 @@ PostHog is the only analytics tool (Plausible was migrated and removed). Pagevie
 - Grep for `posthog.capture(` to see the live event set; auth, project, chat, report, conversation, and workspace-request flows are covered
 - Dashboard + insights live in the PostHog EU projects (production id 160282, echo-next id 197841). Don't add new dashboards from code; wire the event and let analytics own the visualization
 - Insights, cohorts, and other PostHog artifacts must always be created in both projects (echo production and echo-next), never just one
-- One-off error reports use `posthog.captureException`, not a capture event (see `ErrorBoundary`, participant audio interruption)
+- One-off error reports use `posthog.captureException`, not a capture event (see `ErrorBoundary`, participant audio interruption). Don't report expected server rejections: a handled 4xx already shown to the user as a toast just churns error tracking. See `captureUnexpectedError` in `src/components/conversation/hooks/index.ts` (reports only 5xx, network, and non-Axios errors)
+- Source maps upload to PostHog during the dashboard deploy, so minified frames symbolicate and issue fingerprints stay stable across deploys. `vite build` emits maps only when `POSTHOG_SOURCEMAPS=1` (set by the deploy workflows); the workflow injects and uploads via `@posthog/cli`, then strips the maps from the bundle. Needs the `POSTHOG_CLI_API_KEY` repo secret (personal API key, `error_tracking:write` scope)
 
 ## Modal conventions
 
