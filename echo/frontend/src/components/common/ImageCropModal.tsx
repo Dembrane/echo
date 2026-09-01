@@ -12,12 +12,10 @@ type ImageCropModalProps = {
 	aspect?: number;
 	cropShape?: "rect" | "round";
 	title?: string;
+	description?: React.ReactNode;
 };
 
-async function getCroppedImg(
-	imageSrc: string,
-	pixelCrop: Area,
-): Promise<Blob> {
+async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<Blob> {
 	const image = new Image();
 	image.crossOrigin = "anonymous";
 
@@ -65,12 +63,11 @@ export const ImageCropModal = ({
 	aspect = 1,
 	cropShape = "rect",
 	title,
+	description,
 }: ImageCropModalProps) => {
 	const [crop, setCrop] = useState({ x: 0, y: 0 });
 	const [zoom, setZoom] = useState(1);
-	const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(
-		null,
-	);
+	const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
 	const onCropCompleteCallback = useCallback(
 		(_croppedArea: Area, croppedAreaPixels: Area) => {
@@ -104,14 +101,19 @@ export const ImageCropModal = ({
 			onExitTransitionEnd={handleReset}
 		>
 			<Stack gap="md">
+				{description && (
+					<Text size="sm" c="dimmed">
+						{description}
+					</Text>
+				)}
 				<div
 					style={{
-						position: "relative",
-						width: "100%",
-						height: 350,
 						background: "#333",
 						borderRadius: 8,
+						height: 350,
 						overflow: "hidden",
+						position: "relative",
+						width: "100%",
 					}}
 				>
 					<Cropper

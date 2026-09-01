@@ -120,7 +120,8 @@ export const WhitelabelLogoCard = () => {
 					<Text size="sm" c="dimmed">
 						<Trans>
 							Upload a custom logo to replace the dembrane logo across the
-							portal, dashboard, reports, and host guide.
+							portal, dashboard, reports, and host guide. Recommended aspect
+							ratio is 3:1 (e.g. 600×200px horizontal format).
 						</Trans>
 					</Text>
 
@@ -201,6 +202,12 @@ export const WhitelabelLogoCard = () => {
 					onCropComplete={handleCropComplete}
 					aspect={3}
 					title={t`Crop Logo`}
+					description={
+						<Trans>
+							Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g.
+							600×200px).
+						</Trans>
+					}
 				/>
 			)}
 		</>
