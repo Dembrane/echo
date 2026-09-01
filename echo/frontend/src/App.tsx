@@ -19,6 +19,7 @@ import { I18nProvider } from "./components/layout/I18nProvider";
 import { ENABLE_AGENTATION, USE_PARTICIPANT_ROUTER } from "./config";
 import { watchForNewVersion } from "./lib/appVersion";
 import { detectAndEmitPilotBlock } from "./lib/pilotBlock";
+import { captureRequestErrorFromMeta } from "./lib/requestErrorCapture";
 
 // Gated at runtime by ENABLE_AGENTATION (config.ts), not at build time, so no
 // per-deploy env var is needed. The chunk stays lazy: environments where the
@@ -50,13 +51,17 @@ import { theme } from "./theme";
 // match — see lib/pilotBlock.ts.
 const queryClient = new QueryClient({
 	mutationCache: new MutationCache({
-		onError: (error) => {
+		// Fires once, after retries are spent — the right place to record a
+		// failure so a retrying request is not reported several times.
+		onError: (error, _variables, _context, mutation) => {
 			detectAndEmitPilotBlock(error);
+			captureRequestErrorFromMeta(error, mutation.meta);
 		},
 	}),
 	queryCache: new QueryCache({
-		onError: (error) => {
+		onError: (error, query) => {
 			detectAndEmitPilotBlock(error);
+			captureRequestErrorFromMeta(error, query.meta);
 		},
 	}),
 });
