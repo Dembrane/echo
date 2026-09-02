@@ -239,14 +239,14 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: contextToBeAdded.conversations.length
-#: src/routes/project/chat/ProjectChatRoute.tsx:942
+#: src/routes/project/chat/ProjectChatRoute.tsx:939
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr ""
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionDescription
 #. placeholder {0}: selectedOption.transitionMessage
-#: src/routes/project/chat/ProjectChatRoute.tsx:780
+#: src/routes/project/chat/ProjectChatRoute.tsx:777
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:51
 #: src/components/project/ProjectPortalEditor.tsx:606
@@ -1326,7 +1326,7 @@ msgstr "An email notification will be sent to {0} participant{1}. Do you want to
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "An error occurred while loading the Portal. Please contact the support team."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:836
+#: src/routes/project/chat/ProjectChatRoute.tsx:833
 msgid "An error occurred."
 msgstr "An error occurred."
 
@@ -2217,8 +2217,8 @@ msgstr "Changes will be saved automatically"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:687
-#: src/routes/project/chat/ProjectChatRoute.tsx:693
+#: src/routes/project/chat/ProjectChatRoute.tsx:684
+#: src/routes/project/chat/ProjectChatRoute.tsx:690
 #: src/features/sidebar/hooks/useSearchHits.ts:254
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
@@ -2227,7 +2227,7 @@ msgstr "Changing language during an active chat may lead to unexpected results. 
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:332
+#: src/routes/project/chat/ProjectChatRoute.tsx:329
 msgid "Chat | dembrane"
 msgstr "Chat | dembrane"
 
@@ -2239,7 +2239,7 @@ msgstr ""
 msgid "Chat deleted"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:624
+#: src/routes/project/chat/ProjectChatRoute.tsx:621
 #: src/routes/project/chat/NewChatRoute.tsx:546
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr ""
@@ -2448,10 +2448,6 @@ msgstr ""
 #: src/components/training/TrainingCatalog.tsx:105
 msgid "Coming soon"
 msgstr ""
-
-#: src/components/feedback/AdminResponseFeedbackPanel.tsx:430
-#~ msgid "Comment"
-#~ msgstr "Коментар"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:843
 msgid "Common use cases:"
@@ -3317,8 +3313,8 @@ msgstr ""
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1028
-#: src/routes/project/chat/ProjectChatRoute.tsx:1038
+#: src/routes/project/chat/ProjectChatRoute.tsx:1025
+#: src/routes/project/chat/ProjectChatRoute.tsx:1035
 #: src/components/chat/AgenticChatPanel.tsx:2308
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr ""
@@ -5902,10 +5898,6 @@ msgstr ""
 msgid "Messages from {0} - {1}%"
 msgstr "Messages from {0} - {1}%"
 
-#: src/components/feedback/AdminResponseFeedbackPanel.tsx:363
-#~ msgid "Metadata"
-#~ msgstr "Метадані"
-
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:160
 msgid "Methodologies"
 msgstr ""
@@ -8007,10 +7999,6 @@ msgstr "Причина"
 msgid "reason: {0}"
 msgstr ""
 
-#: src/components/feedback/AdminResponseFeedbackPanel.tsx:103
-#~ msgid "Reasons"
-#~ msgstr "Причини"
-
 #: src/routes/admin/AdminSettingsRoute.tsx:2777
 msgid "Recent payments across all accounts"
 msgstr ""
@@ -8543,10 +8531,6 @@ msgstr "Reset Password | dembrane"
 msgid "Reset to default"
 msgstr "Reset to default"
 
-#: src/components/feedback/AdminResponseFeedbackPanel.tsx:423
-#~ msgid "Response"
-#~ msgstr "Відповідь"
-
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:288
 msgid "Response feedback"
 msgstr "Відгук про відповідь"
@@ -8596,7 +8580,7 @@ msgstr "Retranscription not available for anonymized conversations"
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "Retranscription started. New conversation will be available soon."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:845
+#: src/routes/project/chat/ProjectChatRoute.tsx:842
 #: src/components/workspace/UsageCard.tsx:108
 #: src/components/workspace/OrganisationUsageRollup.tsx:494
 #: src/components/common/FetchErrorPanel.tsx:35
@@ -9033,7 +9017,7 @@ msgstr ""
 msgid "Select {0}"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:894
+#: src/routes/project/chat/ProjectChatRoute.tsx:891
 msgid "Select a conversation to continue"
 msgstr ""
 
@@ -9085,10 +9069,10 @@ msgstr "Select Audio Files to Upload"
 msgid "Select conversation"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:903
-#: src/routes/project/chat/ProjectChatRoute.tsx:963
-#: src/routes/project/chat/ProjectChatRoute.tsx:964
-#: src/routes/project/chat/ProjectChatRoute.tsx:1049
+#: src/routes/project/chat/ProjectChatRoute.tsx:900
+#: src/routes/project/chat/ProjectChatRoute.tsx:960
+#: src/routes/project/chat/ProjectChatRoute.tsx:961
+#: src/routes/project/chat/ProjectChatRoute.tsx:1046
 #: src/routes/project/chat/NewChatRoute.tsx:629
 #: src/routes/project/chat/NewChatRoute.tsx:631
 #: src/routes/project/chat/NewChatRoute.tsx:734
@@ -9170,7 +9154,7 @@ msgstr "Selection too large. Some conversations weren't added."
 msgid "Self-serve"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:988
+#: src/routes/project/chat/ProjectChatRoute.tsx:985
 #: src/routes/project/chat/NewChatRoute.tsx:648
 #: src/components/feedback/ResponseFeedbackControls.tsx:239
 #: src/components/chat/AgenticChatPanel.tsx:2245
@@ -9747,7 +9731,7 @@ msgstr ""
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:793
+#: src/routes/project/chat/ProjectChatRoute.tsx:790
 #: src/components/pricing/PricingTextInput.tsx:251
 #: src/components/feedback/ReportIssueModal.tsx:243
 #: src/components/chat/AgenticChatPanel.tsx:2203
@@ -9972,16 +9956,12 @@ msgstr "Take some time to create an outcome that makes your contribution concret
 msgid "Tell the workspace admins what you need access for. This note is optional."
 msgstr ""
 
-#: src/components/feedback/ResponseFeedbackControls.tsx:152
-#~ msgid "Tell us more"
-#~ msgstr "Розкажіть більше"
-
 #: src/components/workspace/FeatureGatePopover.tsx:115
 #: src/components/billing/BillingManager.tsx:677
 msgid "Tell us what you need"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:567
+#: src/routes/project/chat/ProjectChatRoute.tsx:564
 #: src/routes/project/chat/NewChatRoute.tsx:310
 #: src/components/chat/AgenticChatPanel.tsx:1660
 msgid "Template applied"
@@ -10998,7 +10978,7 @@ msgstr "Type"
 msgid "Type <0>{0}</0> to confirm."
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:997
+#: src/routes/project/chat/ProjectChatRoute.tsx:994
 msgid "Type a message or press / for templates..."
 msgstr "Type a message or press / for templates..."
 
@@ -11043,7 +11023,7 @@ msgstr ""
 msgid "Understanding our new structure"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:569
+#: src/routes/project/chat/ProjectChatRoute.tsx:566
 #: src/routes/project/chat/NewChatRoute.tsx:312
 #: src/components/chat/AgenticChatPanel.tsx:1662
 msgid "Undo"
@@ -11158,10 +11138,6 @@ msgstr ""
 #: src/components/feedback/ReportIssueModal.tsx:302
 msgid "Up to {MAX_FILES} images"
 msgstr "До {MAX_FILES} зображень"
-
-#: src/components/feedback/ReportIssueModal.tsx:211
-#~ msgid "Up to {MAX_FILES} images, {MAX_FILE_MB}MB each"
-#~ msgstr "До {MAX_FILES} зображень, по {MAX_FILE_MB} МБ кожне"
 
 #: src/components/feedback/ReportIssueModal.tsx:253
 msgid "Up to {MAX_MESSAGE_CHARS} characters"
@@ -11365,8 +11341,8 @@ msgstr ""
 msgid "Use inherited default"
 msgstr "Використати успадковане значення"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1025
-#: src/routes/project/chat/ProjectChatRoute.tsx:1035
+#: src/routes/project/chat/ProjectChatRoute.tsx:1022
+#: src/routes/project/chat/ProjectChatRoute.tsx:1032
 #: src/components/chat/AgenticChatPanel.tsx:2304
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
@@ -11663,10 +11639,6 @@ msgstr "We will only send you a message if your host generates a report, we neve
 msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use Report an issue in the sidebar to send it with screenshots."
 msgstr "Ми будемо раді почути вас. Якщо у вас є ідея, ви помітили невдалий переклад або просто хочете розповісти, як усе минає. Знайшли помилку? Скористайтеся кнопкою Повідомити про проблему на бічній панелі, щоб надіслати її зі знімками екрана."
 
-#: src/components/common/FeedbackPortalModal.tsx:72
-#~ msgid "We'd love to hear from you. Whether you have an idea for something new, you've hit a bug, spotted a translation that feels off, or just want to share how things have been going."
-#~ msgstr "We'd love to hear from you. Whether you have an idea for something new, you've hit a bug, spotted a translation that feels off, or just want to share how things have been going."
-
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:299
 msgid "participant.test.microphone.description"
@@ -11737,7 +11709,7 @@ msgstr ""
 msgid "Welcome to dembrane"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:716
+#: src/routes/project/chat/ProjectChatRoute.tsx:713
 msgid "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 msgstr ""
 
@@ -11745,7 +11717,7 @@ msgstr ""
 msgid "Welcome to dembrane!"
 msgstr "Welcome to dembrane!"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:715
+#: src/routes/project/chat/ProjectChatRoute.tsx:712
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Ласкаво просимо в режим Огляду! Я завантажив підсумки всіх ваших розмов. Запитуйте мене про закономірності, теми та висновки у ваших даних. Для точних цитат розпочніть нову бесіду в режимі Конкретного Контексту."
 
@@ -11803,10 +11775,6 @@ msgstr ""
 msgid "What should ECHO analyse or generate from the conversations?"
 msgstr "What should ECHO analyse or generate from the conversations?"
 
-#: src/components/feedback/AdminResponseFeedbackPanel.tsx:438
-#~ msgid "What the host said"
-#~ msgstr "Що сказав організатор"
-
 #: src/components/chat/AgenticChatPanel.tsx:1866
 msgid "What themes came up across the conversations in this project?"
 msgstr ""
@@ -11822,10 +11790,6 @@ msgstr ""
 #: src/components/feedback/ResponseFeedbackControls.tsx:183
 msgid "What went wrong?"
 msgstr "Що пішло не так?"
-
-#: src/components/feedback/ResponseFeedbackControls.tsx:168
-#~ msgid "What went wrong? (optional)"
-#~ msgstr "Що пішло не так? (необов'язково)"
 
 #: src/components/chat/ChatModeSelector.tsx:57
 msgid "What were the key moments in this conversation?"
@@ -12403,10 +12367,6 @@ msgstr ""
 #: src/routes/auth/VerifyEmail.tsx:131
 msgid "Your email is verified. Taking you to the login page."
 msgstr ""
-
-#: src/components/feedback/ResponseFeedbackControls.tsx:174
-#~ msgid "Your feedback and this response are shared with the dembrane team."
-#~ msgstr "Ваш відгук і ця відповідь передаються команді dembrane."
 
 #: src/components/feedback/ResponseFeedbackControls.tsx:222
 msgid "Your feedback and this response go to the dembrane team."

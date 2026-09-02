@@ -240,14 +240,14 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: contextToBeAdded.conversations.length
-#: src/routes/project/chat/ProjectChatRoute.tsx:942
+#: src/routes/project/chat/ProjectChatRoute.tsx:939
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr ""
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionDescription
 #. placeholder {0}: selectedOption.transitionMessage
-#: src/routes/project/chat/ProjectChatRoute.tsx:780
+#: src/routes/project/chat/ProjectChatRoute.tsx:777
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:51
 #: src/components/project/ProjectPortalEditor.tsx:606
@@ -1327,7 +1327,7 @@ msgstr "Eine E-Mail-Benachrichtigung wird an {0} Teilnehmer{1} gesendet. Möchte
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Beim Laden des Portals ist ein Fehler aufgetreten. Bitte kontaktieren Sie das Support-Team."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:836
+#: src/routes/project/chat/ProjectChatRoute.tsx:833
 msgid "An error occurred."
 msgstr "Ein Fehler ist aufgetreten."
 
@@ -2218,8 +2218,8 @@ msgstr "Änderungen werden automatisch gespeichert"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Das Ändern der Sprache während eines aktiven Chats kann unerwartete Ergebnisse hervorrufen. Es wird empfohlen, ein neues Gespräch zu beginnen, nachdem die Sprache geändert wurde. Sind Sie sicher, dass Sie fortfahren möchten?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:687
-#: src/routes/project/chat/ProjectChatRoute.tsx:693
+#: src/routes/project/chat/ProjectChatRoute.tsx:684
+#: src/routes/project/chat/ProjectChatRoute.tsx:690
 #: src/features/sidebar/hooks/useSearchHits.ts:254
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
@@ -2228,7 +2228,7 @@ msgstr "Das Ändern der Sprache während eines aktiven Chats kann unerwartete Er
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:332
+#: src/routes/project/chat/ProjectChatRoute.tsx:329
 msgid "Chat | dembrane"
 msgstr "Chat | dembrane"
 
@@ -2240,7 +2240,7 @@ msgstr ""
 msgid "Chat deleted"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:624
+#: src/routes/project/chat/ProjectChatRoute.tsx:621
 #: src/routes/project/chat/NewChatRoute.tsx:546
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr ""
@@ -2449,10 +2449,6 @@ msgstr ""
 #: src/components/training/TrainingCatalog.tsx:105
 msgid "Coming soon"
 msgstr ""
-
-#: src/components/feedback/AdminResponseFeedbackPanel.tsx:430
-#~ msgid "Comment"
-#~ msgstr "Kommentar"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:843
 msgid "Common use cases:"
@@ -3318,8 +3314,8 @@ msgstr ""
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1028
-#: src/routes/project/chat/ProjectChatRoute.tsx:1038
+#: src/routes/project/chat/ProjectChatRoute.tsx:1025
+#: src/routes/project/chat/ProjectChatRoute.tsx:1035
 #: src/components/chat/AgenticChatPanel.tsx:2308
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr ""
@@ -5903,10 +5899,6 @@ msgstr ""
 msgid "Messages from {0} - {1}%"
 msgstr "Nachrichten von {0} - {1}%"
 
-#: src/components/feedback/AdminResponseFeedbackPanel.tsx:363
-#~ msgid "Metadata"
-#~ msgstr "Metadaten"
-
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:160
 msgid "Methodologies"
 msgstr ""
@@ -8008,10 +8000,6 @@ msgstr "Grund"
 msgid "reason: {0}"
 msgstr ""
 
-#: src/components/feedback/AdminResponseFeedbackPanel.tsx:103
-#~ msgid "Reasons"
-#~ msgstr "Gründe"
-
 #: src/routes/admin/AdminSettingsRoute.tsx:2777
 msgid "Recent payments across all accounts"
 msgstr ""
@@ -8544,10 +8532,6 @@ msgstr "Passwort zurücksetzen | dembrane"
 msgid "Reset to default"
 msgstr "Auf Standard zurücksetzen"
 
-#: src/components/feedback/AdminResponseFeedbackPanel.tsx:423
-#~ msgid "Response"
-#~ msgstr "Antwort"
-
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:288
 msgid "Response feedback"
 msgstr "Feedback zur Antwort"
@@ -8597,7 +8581,7 @@ msgstr "Hertranskription nicht verfügbar für anonymisierte Unterhaltungen"
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "Hertranskription gestartet. Das neue Gespräch wird bald verfügbar sein."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:845
+#: src/routes/project/chat/ProjectChatRoute.tsx:842
 #: src/components/workspace/UsageCard.tsx:108
 #: src/components/workspace/OrganisationUsageRollup.tsx:494
 #: src/components/common/FetchErrorPanel.tsx:35
@@ -9034,7 +9018,7 @@ msgstr ""
 msgid "Select {0}"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:894
+#: src/routes/project/chat/ProjectChatRoute.tsx:891
 msgid "Select a conversation to continue"
 msgstr ""
 
@@ -9086,10 +9070,10 @@ msgstr "Audio-Dateien auswählen"
 msgid "Select conversation"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:903
-#: src/routes/project/chat/ProjectChatRoute.tsx:963
-#: src/routes/project/chat/ProjectChatRoute.tsx:964
-#: src/routes/project/chat/ProjectChatRoute.tsx:1049
+#: src/routes/project/chat/ProjectChatRoute.tsx:900
+#: src/routes/project/chat/ProjectChatRoute.tsx:960
+#: src/routes/project/chat/ProjectChatRoute.tsx:961
+#: src/routes/project/chat/ProjectChatRoute.tsx:1046
 #: src/routes/project/chat/NewChatRoute.tsx:629
 #: src/routes/project/chat/NewChatRoute.tsx:631
 #: src/routes/project/chat/NewChatRoute.tsx:734
@@ -9171,7 +9155,7 @@ msgstr "Auswahl zu groß. Einige Gespräche wurden nicht hinzugefügt."
 msgid "Self-serve"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:988
+#: src/routes/project/chat/ProjectChatRoute.tsx:985
 #: src/routes/project/chat/NewChatRoute.tsx:648
 #: src/components/feedback/ResponseFeedbackControls.tsx:239
 #: src/components/chat/AgenticChatPanel.tsx:2245
@@ -9748,7 +9732,7 @@ msgstr ""
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:793
+#: src/routes/project/chat/ProjectChatRoute.tsx:790
 #: src/components/pricing/PricingTextInput.tsx:251
 #: src/components/feedback/ReportIssueModal.tsx:243
 #: src/components/chat/AgenticChatPanel.tsx:2203
@@ -9973,16 +9957,12 @@ msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag f
 msgid "Tell the workspace admins what you need access for. This note is optional."
 msgstr ""
 
-#: src/components/feedback/ResponseFeedbackControls.tsx:152
-#~ msgid "Tell us more"
-#~ msgstr "Sagen Sie uns mehr"
-
 #: src/components/workspace/FeatureGatePopover.tsx:115
 #: src/components/billing/BillingManager.tsx:677
 msgid "Tell us what you need"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:567
+#: src/routes/project/chat/ProjectChatRoute.tsx:564
 #: src/routes/project/chat/NewChatRoute.tsx:310
 #: src/components/chat/AgenticChatPanel.tsx:1660
 msgid "Template applied"
@@ -10997,7 +10977,7 @@ msgstr "Typ"
 msgid "Type <0>{0}</0> to confirm."
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:997
+#: src/routes/project/chat/ProjectChatRoute.tsx:994
 msgid "Type a message or press / for templates..."
 msgstr "Nachricht eingeben oder / für Vorlagen drücken..."
 
@@ -11042,7 +11022,7 @@ msgstr ""
 msgid "Understanding our new structure"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:569
+#: src/routes/project/chat/ProjectChatRoute.tsx:566
 #: src/routes/project/chat/NewChatRoute.tsx:312
 #: src/components/chat/AgenticChatPanel.tsx:1662
 msgid "Undo"
@@ -11157,10 +11137,6 @@ msgstr ""
 #: src/components/feedback/ReportIssueModal.tsx:302
 msgid "Up to {MAX_FILES} images"
 msgstr "Höchstens {MAX_FILES} Bilder"
-
-#: src/components/feedback/ReportIssueModal.tsx:211
-#~ msgid "Up to {MAX_FILES} images, {MAX_FILE_MB}MB each"
-#~ msgstr "Bis zu {MAX_FILES} Bilder, je {MAX_FILE_MB} MB"
 
 #: src/components/feedback/ReportIssueModal.tsx:253
 msgid "Up to {MAX_MESSAGE_CHARS} characters"
@@ -11364,8 +11340,8 @@ msgstr ""
 msgid "Use inherited default"
 msgstr "Übernommenen Standard verwenden"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1025
-#: src/routes/project/chat/ProjectChatRoute.tsx:1035
+#: src/routes/project/chat/ProjectChatRoute.tsx:1022
+#: src/routes/project/chat/ProjectChatRoute.tsx:1032
 #: src/components/chat/AgenticChatPanel.tsx:2304
 msgid "Use Shift + Enter to add a new line"
 msgstr "Verwenden Sie Shift + Enter, um eine neue Zeile hinzuzufügen"
@@ -11662,10 +11638,6 @@ msgstr "Wir werden Ihnen nur eine Nachricht senden, wenn Ihr Gastgeber einen Ber
 msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use Report an issue in the sidebar to send it with screenshots."
 msgstr "Wir hören gerne von Ihnen. Ob Sie eine Idee für etwas Neues haben, eine Übersetzung entdeckt haben, die nicht passt, oder einfach erzählen möchten, wie es läuft. Einen Fehler gefunden? Nutzen Sie Problem melden in der Seitenleiste, um ihn mit Screenshots zu senden."
 
-#: src/components/common/FeedbackPortalModal.tsx:72
-#~ msgid "We'd love to hear from you. Whether you have an idea for something new, you've hit a bug, spotted a translation that feels off, or just want to share how things have been going."
-#~ msgstr "Wir würden gerne von Ihnen hören. Ob Sie eine Idee für etwas Neues haben, auf einen Fehler gestoßen sind, eine Übersetzung entdeckt haben, die sich falsch anfühlt, oder einfach teilen möchten, wie es läuft."
-
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:299
 msgid "participant.test.microphone.description"
@@ -11736,7 +11708,7 @@ msgstr ""
 msgid "Welcome to dembrane"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:716
+#: src/routes/project/chat/ProjectChatRoute.tsx:713
 msgid "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 msgstr ""
 
@@ -11744,7 +11716,7 @@ msgstr ""
 msgid "Welcome to dembrane!"
 msgstr "Willkommen bei dembrane!"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:715
+#: src/routes/project/chat/ProjectChatRoute.tsx:712
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Willkommen im Übersichtmodus! Ich hab Zusammenfassungen von all deinen Gesprächen geladen. Frag mich nach Mustern, Themen und Insights in deinen Daten. Für genaue Zitate start eine neue Chat im Modus „Genauer Kontext“."
 
@@ -11802,10 +11774,6 @@ msgstr ""
 msgid "What should ECHO analyse or generate from the conversations?"
 msgstr "Was soll ECHO aus den Gesprächen analysieren oder generieren?"
 
-#: src/components/feedback/AdminResponseFeedbackPanel.tsx:438
-#~ msgid "What the host said"
-#~ msgstr "Was der Host gesagt hat"
-
 #: src/components/chat/AgenticChatPanel.tsx:1866
 msgid "What themes came up across the conversations in this project?"
 msgstr ""
@@ -11821,10 +11789,6 @@ msgstr ""
 #: src/components/feedback/ResponseFeedbackControls.tsx:183
 msgid "What went wrong?"
 msgstr "Was lief schief?"
-
-#: src/components/feedback/ResponseFeedbackControls.tsx:168
-#~ msgid "What went wrong? (optional)"
-#~ msgstr "Was ist schiefgelaufen? (optional)"
 
 #: src/components/chat/ChatModeSelector.tsx:57
 msgid "What were the key moments in this conversation?"
@@ -12402,10 +12366,6 @@ msgstr ""
 #: src/routes/auth/VerifyEmail.tsx:131
 msgid "Your email is verified. Taking you to the login page."
 msgstr ""
-
-#: src/components/feedback/ResponseFeedbackControls.tsx:174
-#~ msgid "Your feedback and this response are shared with the dembrane team."
-#~ msgstr "Ihr Feedback und diese Antwort werden an das dembrane-Team weitergegeben."
 
 #: src/components/feedback/ResponseFeedbackControls.tsx:222
 msgid "Your feedback and this response go to the dembrane team."

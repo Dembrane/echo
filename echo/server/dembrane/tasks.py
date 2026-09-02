@@ -427,6 +427,7 @@ def task_summarize_conversation(conversation_id: str) -> None:
         mark_summarize_in_progress,
         clear_summarize_in_progress,
     )
+    from dembrane.service.project import ProjectNotFoundException
     from dembrane.service.conversation import ConversationNotFoundException
 
     try:
@@ -437,6 +438,26 @@ def task_summarize_conversation(conversation_id: str) -> None:
         if conversation["is_finished"] and conversation.get("summary"):
             logger.info(f"Conversation {conversation_id} already summarized, skipping")
             return
+
+        # Tier-lock gate, checked here instead of letting summarize_conversation
+        # 402 inside ProcessingStatusContext: the catch-up scheduler re-sends
+        # locked Free conversations every tick, and each 402 wrote a failed
+        # processing_status row plus an error log line. Skip quietly; the
+        # conversation stays in the catch-up set and summarizes after upgrade.
+        project_id = conversation.get("project_id")
+        if isinstance(project_id, dict):
+            project_id = project_id.get("id")
+        if project_id and conversation.get("is_over_cap"):
+            from dembrane.free_tier import resolve_project_tier, conversation_is_locked
+
+            pid = str(project_id)
+            tier = run_async_in_new_loop(lambda: resolve_project_tier(pid))
+            if conversation_is_locked(conversation, tier):
+                logger.info(
+                    f"Conversation {conversation_id} is tier-locked; skipping summary "
+                    "until the workspace upgrades (catch-up will retry)."
+                )
+                return
 
         # Atomic lock - prevent duplicate summarization (expensive LLM calls)
         if not mark_summarize_in_progress(conversation_id):
@@ -498,6 +519,11 @@ def task_summarize_conversation(conversation_id: str) -> None:
     except ConversationNotFoundException:
         logger.error(f"Conversation not found: {conversation_id}")
         # Non-retriable error - clear lock
+        clear_summarize_in_progress(conversation_id)
+        return
+    except ProjectNotFoundException:
+        # Project soft-deleted after the conversation was queued; not retriable.
+        logger.info(f"Project gone for conversation {conversation_id}, skipping summary")
         clear_summarize_in_progress(conversation_id)
         return
     except Exception as e:
