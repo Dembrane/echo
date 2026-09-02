@@ -28,6 +28,10 @@ _TIMEOUT = 20.0
 class MollieError(RuntimeError):
     """Raised on a non-2xx Mollie response or missing configuration."""
 
+    def __init__(self, message: str, *, status_code: Optional[int] = None) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+
 
 def _api_key() -> str:
     key = get_settings().billing.mollie_api_key
@@ -48,7 +52,10 @@ async def _request(method: str, path: str, json: Optional[dict] = None) -> dict:
     async with httpx.AsyncClient(base_url=_BASE_URL, headers=headers, timeout=_TIMEOUT) as client:
         resp = await client.request(method, path, json=json)
     if resp.status_code >= 400:
-        raise MollieError(f"Mollie {method} {path} -> {resp.status_code}: {resp.text[:300]}")
+        raise MollieError(
+            f"Mollie {method} {path} -> {resp.status_code}: {resp.text[:300]}",
+            status_code=resp.status_code,
+        )
     # DELETE subscription returns the (canceled) object; all return JSON.
     return resp.json() if resp.content else {}
 
