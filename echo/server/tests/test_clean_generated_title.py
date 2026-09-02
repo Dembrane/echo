@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from dembrane.api.stateless import _clean_generated_title
+from dembrane.utils import clean_generated_title
 
 
 @pytest.mark.parametrize(
@@ -34,4 +34,4 @@ from dembrane.api.stateless import _clean_generated_title
     ],
 )
 def test_clean_generated_title(raw: str, expected: str) -> None:
-    assert _clean_generated_title(raw) == expected
+    assert clean_generated_title(raw) == expected
