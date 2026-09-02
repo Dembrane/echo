@@ -199,6 +199,39 @@ it("does not refetch the manifest on every navigation", async () => {
 	await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 });
 
+// --- chunk-error message class ---
+
+it("recognises the stale-deploy chunk-error messages across browsers", async () => {
+	const { isChunkLoadErrorMessage } = await loadModule();
+
+	expect(
+		isChunkLoadErrorMessage(
+			"Unable to preload CSS for /assets/WorkspaceSelectorRoute-abc123.css",
+		),
+	).toBe(true);
+	expect(
+		isChunkLoadErrorMessage(
+			"Failed to fetch dynamically imported module: https://app/assets/Route-x.js",
+		),
+	).toBe(true);
+	expect(
+		isChunkLoadErrorMessage(
+			"error loading dynamically imported module: https://app/assets/Route-x.js",
+		),
+	).toBe(true);
+	expect(isChunkLoadErrorMessage("Importing a module script failed.")).toBe(
+		true,
+	);
+});
+
+it("leaves unrelated exceptions untouched", async () => {
+	const { isChunkLoadErrorMessage } = await loadModule();
+
+	expect(isChunkLoadErrorMessage("TypeError: x is not a function")).toBe(false);
+	expect(isChunkLoadErrorMessage(undefined)).toBe(false);
+	expect(isChunkLoadErrorMessage(null)).toBe(false);
+});
+
 // --- dev ---
 
 it("is inert in dev, where no manifest is emitted", async () => {
