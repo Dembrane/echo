@@ -5,6 +5,7 @@ from typing import Any, Optional
 from logging import getLogger
 from datetime import datetime, timezone, timedelta
 
+import redis
 import dramatiq
 import nest_asyncio
 
@@ -15,6 +16,8 @@ nest_asyncio.apply()
 
 import lz4.frame
 from dramatiq import group
+from redis.retry import Retry
+from redis.backoff import ExponentialBackoff
 from dramatiq.encoder import JSONEncoder, MessageData
 from dramatiq.results import Results
 from dramatiq_workflow import WorkflowMiddleware
@@ -83,16 +86,25 @@ if REDIS_URL.startswith("rediss://") and "?ssl_cert_reqs=" not in REDIS_URL:
 redis_connection_string = REDIS_URL + "/1" + ssl_params
 
 
-broker = RedisBroker(
-    url=redis_connection_string,
-    # Managed Redis closes idle connections; without health checks the
-    # scheduler's pooled broker connection goes stale between cron firings and
-    # enqueue() raises ConnectionError("Connection closed by server"), so the
-    # dispatched task is silently dropped. health_check_interval revives idle
-    # connections before use; keepalive keeps the socket warm. (passed through
-    # to the underlying redis-py client)
+# Managed Redis closes idle connections; without health checks the
+# scheduler's pooled broker connection goes stale between cron firings and
+# enqueue() raises ConnectionError("Connection closed by server"), so the
+# dispatched task is silently dropped. health_check_interval revives idle
+# connections before use, keepalive keeps the socket warm, and retry
+# reconnects on a dropped socket instead of surfacing the first failure.
+# These MUST live on the connection pool: RedisBroker(url=...) builds its own
+# pool from the bare URL and redis-py ignores client kwargs once a pool is set.
+_redis_pool = redis.ConnectionPool.from_url(
+    redis_connection_string,
     health_check_interval=25,
     socket_keepalive=True,
+    retry=Retry(ExponentialBackoff(cap=1.0, base=0.1), 3),
+    retry_on_error=[redis.exceptions.ConnectionError, redis.exceptions.TimeoutError],
+)
+_redis_client = redis.StrictRedis(connection_pool=_redis_pool)
+
+broker = RedisBroker(
+    client=_redis_client,
     # this is to disable Prometheus (https://groups.io/g/dramatiq-users/topic/disabling_prometheus/80745532)
     # middleware=[
     #     AgeLimit,
@@ -105,11 +117,11 @@ broker = RedisBroker(
 )
 
 # results backend
-results_backend = ResultsRedisBackend(url=redis_connection_string)
+results_backend = ResultsRedisBackend(client=_redis_client)
 broker.add_middleware(Results(backend=results_backend, result_ttl=60 * 60 * 1000))  # 1 hour
 
 # workflow backend
-workflow_backend = RateLimitRedisBackend(url=redis_connection_string)
+workflow_backend = RateLimitRedisBackend(client=_redis_client)
 broker.add_middleware(GroupCallbacks(workflow_backend))
 broker.add_middleware(WorkflowMiddleware(workflow_backend))
 
