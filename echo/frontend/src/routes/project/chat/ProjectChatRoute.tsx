@@ -104,13 +104,10 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		if (!chatContextQuery.data) {
 			return null;
 		}
+		const conversations = chatContextQuery.data.conversations ?? [];
 		return {
-			conversations: chatContextQuery.data.conversations.filter(
-				(c) => !c.locked,
-			),
-			locked_conversations: chatContextQuery.data.conversations.filter(
-				(c) => c.locked,
-			),
+			conversations: conversations.filter((c) => !c.locked),
+			locked_conversations: conversations.filter((c) => c.locked),
 		};
 	}, [chatContextQuery.data, chatHistoryQuery.data]);
 

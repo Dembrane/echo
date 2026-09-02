@@ -109,6 +109,52 @@ class ReconcileChargeError(RuntimeError):
     is caught inside reconcile_account_seats."""
 
 
+class RepriceRejectedError(mollie.MollieError):
+    """Mollie rejected a subscription re-price with a validation error (4xx,
+    e.g. "The amount is higher than the maximum" set on the Mollie account's
+    payment method). Deterministic for the same amount, so `repeated=True`
+    marks a re-run that was short-circuited without calling Mollie."""
+
+    def __init__(self, message: str, *, repeated: bool = False) -> None:
+        super().__init__(message, status_code=422)
+        self.repeated = repeated
+
+
+# Remembered per account so the hourly reconcile stops re-sending an amount
+# Mollie already rejected. Long TTL: the amount only changes with seats/tier.
+_REPRICE_REJECTED_TTL_SECONDS = 7 * 24 * 3600
+
+
+def _reprice_rejected_key(account_id: str) -> str:
+    return f"billing:reprice_rejected:{account_id}"
+
+
+async def _get_rejected_amount(account_id: str) -> float | None:
+    try:
+        client = await get_redis_client()
+        raw = await client.get(_reprice_rejected_key(account_id))
+    except Exception:
+        return None
+    if raw is None:
+        return None
+    try:
+        return float(raw.decode() if isinstance(raw, bytes) else raw)
+    except (ValueError, AttributeError):
+        return None
+
+
+async def _set_rejected_amount(account_id: str, amount: float | None) -> None:
+    try:
+        client = await get_redis_client()
+        key = _reprice_rejected_key(account_id)
+        if amount is None:
+            await client.delete(key)
+        else:
+            await client.set(key, f"{amount:.2f}", ex=_REPRICE_REJECTED_TTL_SECONDS)
+    except Exception:
+        logger.debug("could not update reprice-rejected memo for %s", account_id, exc_info=True)
+
+
 def is_managed(account: dict | None) -> bool:
     """A managed ('managed by dembrane') account: `payment_mode == 'offline'`.
 
@@ -1030,11 +1076,30 @@ async def sync_subscription_seats(account_id: str) -> float | None:
     except (mollie.MollieError, ValueError):
         current = None
     if current is not None and abs(current - amount) < 0.01:
+        await _set_rejected_amount(account_id, None)
         return amount
 
-    await mollie.update_subscription_amount(
-        customer_id=customer_id, subscription_id=sub_id, amount_eur=amount
-    )
+    # Mollie already rejected this exact amount (e.g. above the account's
+    # per-method maximum). Same input, same answer: don't re-send it every
+    # hour; surface a quiet, distinguishable error until the amount changes.
+    rejected = await _get_rejected_amount(account_id)
+    if rejected is not None and abs(rejected - amount) < 0.01:
+        raise RepriceRejectedError(
+            f"sub {sub_id} re-price to {amount:.2f} EUR still rejected by Mollie "
+            f"(account {account_id}); waiting for the amount to change",
+            repeated=True,
+        )
+
+    try:
+        await mollie.update_subscription_amount(
+            customer_id=customer_id, subscription_id=sub_id, amount_eur=amount
+        )
+    except mollie.MollieError as exc:
+        status = getattr(exc, "status_code", None)
+        if status is not None and 400 <= status < 500:
+            await _set_rejected_amount(account_id, amount)
+        raise
+    await _set_rejected_amount(account_id, None)
     logger.info(
         "re-priced sub %s to %s EUR for %d seat(s) on account %s",
         sub_id,
@@ -1329,7 +1394,11 @@ async def reconcile_account_seats(account_id: str) -> None:
     except (ReconcileChargeError, mollie.MollieError) as exc:
         # Allow + flag: the seat change already happened, the bill is owed, but
         # Mollie couldn't be brought in line. Flag for the prompt; do not re-raise.
-        logger.error("Seat reconcile failed for account %s: %s", account_id, exc)
+        if getattr(exc, "repeated", False):
+            # Known, unchanged rejection: the flag is already set, nothing new.
+            logger.info("Seat reconcile still blocked for account %s: %s", account_id, exc)
+        else:
+            logger.error("Seat reconcile failed for account %s: %s", account_id, exc)
         await _set_reconcile_failed(account_id, account, failed=True)
         return
 

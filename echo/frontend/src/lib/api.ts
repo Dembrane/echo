@@ -1075,8 +1075,23 @@ export const retranscribeConversation = async (
 	});
 };
 
+/** The interceptor hands back whatever body arrived with a 2xx. A proxy or
+ * challenge page can answer 200 with HTML, which then reaches components as
+ * `data` and crashes on `.conversations.filter`. Reject it here so React Query
+ * treats it as a failed fetch and retries. */
+export const isProjectChatContext = (
+	value: unknown,
+): value is TProjectChatContext =>
+	typeof value === "object" &&
+	value !== null &&
+	Array.isArray((value as TProjectChatContext).conversations);
+
 export const getProjectChatContext = async (chatId: string) => {
-	return api.get<unknown, TProjectChatContext>(`/chats/${chatId}/context`);
+	const data = await api.get<unknown, unknown>(`/chats/${chatId}/context`);
+	if (!isProjectChatContext(data)) {
+		throw new Error("Malformed chat context response");
+	}
+	return data;
 };
 
 export const addChatContext = async (
