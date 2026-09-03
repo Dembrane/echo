@@ -8,6 +8,7 @@ assembled bundle.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from fastapi import Depends, Request, APIRouter, HTTPException
@@ -23,6 +24,8 @@ from dembrane.api.feature_flags import require_canvas_enabled
 router = APIRouter(dependencies=[Depends(require_canvas_enabled)])
 
 NO_STORE = {"Cache-Control": "no-store"}
+# Tokens are urlsafe base64 from secrets.token_urlsafe; nothing else is a token.
+_TOKEN = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
 # Sized for a venue behind one NAT: the stage polls five times a second while
 # empty and a few screens plus phones may all sit on the same address.
 _page_limiter = create_rate_limiter(name="popcorn_public_page", capacity=300, window_seconds=60.0)
@@ -43,6 +46,8 @@ def _as_id(value: Any) -> str | None:
 
 
 async def _published_report(token: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    if not _TOKEN.fullmatch(token):
+        raise HTTPException(status_code=404, detail="Not found")
     report = await get_report_by_public_token(token)
     if not report:
         raise HTTPException(status_code=404, detail="Not found")
@@ -63,7 +68,10 @@ async def _published_report(token: str) -> tuple[dict[str, Any], dict[str, Any]]
 @router.get("/{token}", include_in_schema=False)
 async def public_popcorn_redirect(token: str) -> RedirectResponse:
     # The page fetches `data/bundle.json` relative to its own URL, so the
-    # canonical address ends in a slash.
+    # canonical address ends in a slash. Only a well-formed token is echoed
+    # back, and only as a relative path.
+    if not _TOKEN.fullmatch(token):
+        raise HTTPException(status_code=404, detail="Not found")
     return RedirectResponse(url=f"{token}/", status_code=307)
 
 

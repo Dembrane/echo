@@ -6,6 +6,7 @@ canvas opt-in, because popcorn runs on the same experimental loop machinery.
 
 from __future__ import annotations
 
+import re
 import json
 import time
 from typing import Any, AsyncIterator
@@ -47,6 +48,16 @@ router = APIRouter(dependencies=[Depends(require_canvas_enabled)])
 REFRESH_TTL_SECONDS = 20
 EVENT_HEARTBEAT_SECONDS = 15.0
 NO_STORE = {"Cache-Control": "no-store"}
+# Saved runs are Directus UUIDs; anything else never reaches the page or a query.
+_VERSION_ID = re.compile(r"^[0-9a-fA-F-]{36}$")
+
+
+def _version_id(value: str | None) -> str | None:
+    if value is None:
+        return None
+    if not _VERSION_ID.fullmatch(value):
+        raise HTTPException(status_code=404, detail="Version not found")
+    return value
 
 
 class CreatePopcornBody(BaseModel):
@@ -316,8 +327,9 @@ async def popcorn_view(
     phrase. Relative data fetches resolve under this path."""
     await _require_popcorn(popcorn_id, auth)
     embed: dict[str, Any] = {"mode": "host"}
-    if version:
-        embed["version"] = version
+    version_id = _version_id(version)
+    if version_id:
+        embed["version"] = version_id
     return HTMLResponse(render_popcorn_page(embed=embed), headers=NO_STORE)
 
 
@@ -336,12 +348,13 @@ async def popcorn_view_bundle(
     version: str | None = Query(default=None),
 ) -> JSONResponse:
     report, access = await _require_popcorn(popcorn_id, auth)
-    if version:
-        files = await get_version_files(str(report["id"]), version)
+    version_id = _version_id(version)
+    if version_id:
+        files = await get_version_files(str(report["id"]), version_id)
         if files is None:
             raise HTTPException(status_code=404, detail="Version not found")
         return JSONResponse(
-            {"run": None, "version": version, "files": files},
+            {"run": None, "version": version_id, "files": files},
             headers={"Cache-Control": "private, max-age=300"},
         )
     bundle = await bundle_for_report(report, access.project, host=True)
