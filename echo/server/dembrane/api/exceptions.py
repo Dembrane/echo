@@ -27,6 +27,14 @@ ConversationNotOpenForParticipationException = HTTPException(
     detail="This conversation is not open for participation at this time",
 )
 
+
 class NoContentFoundException(HTTPException):
     def __init__(self) -> None:
         super().__init__(status_code=404, detail="No content found")
+
+
+class NoMergeableChunksException(HTTPException):
+    """Every audio chunk failed to probe; distinct so the merge task can stop retrying."""
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(status_code=400, detail=f"Failed to merge audio files: {detail}")

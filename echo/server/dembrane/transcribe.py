@@ -7,6 +7,7 @@ But it is probably not needed.
 # transcribe.py
 import io
 import os
+import re
 import json
 import logging
 import mimetypes
@@ -15,9 +16,10 @@ from typing import Any, List, Literal, Optional
 
 import litellm
 import requests
+from litellm.exceptions import BadRequestError
 
 from dembrane.s3 import get_signed_url, get_stream_from_s3
-from dembrane.llms import MODELS, router_completion
+from dembrane.llms import MODELS, MODEL_REGISTRY, router_completion
 from dembrane.prompts import render_prompt
 from dembrane.service import file_service, conversation_service
 from dembrane.directus import directus
@@ -38,6 +40,100 @@ LITELLM_TRANSCRIPTION_API_VERSION = transcription_cfg.litellm_api_version
 
 class TranscriptionError(Exception):
     pass
+
+
+class TranscriptParseError(TranscriptionError):
+    """The model returned transcript JSON that could not be parsed or repaired."""
+
+    def __init__(self, message: str, finish_reason: Optional[str] = None) -> None:
+        super().__init__(message)
+        self.finish_reason = finish_reason
+
+    @property
+    def is_truncated(self) -> bool:
+        """The output limit cut the response; the same prompt truncates the same way."""
+        return str(self.finish_reason or "").lower() in {"length", "max_tokens"}
+
+
+# Gemini sometimes emits a literal backslash-u that is not a \uXXXX escape. The
+# lookbehind and the even-backslash group keep already-escaped backslashes intact.
+_BAD_UNICODE_ESCAPE = re.compile(r"(?<!\\)((?:\\\\)*)\\u(?![0-9a-fA-F]{4})")
+
+_TRANSCRIPT_KEYS = ("corrected_transcript", "note")
+
+
+def _transcript_fallbacks() -> List[dict[str, List[str]]]:
+    """Rate-limited transcription may degrade to the fast group.
+
+    Passed per call, not set on the shared router, so chat and reports keep their own
+    policy. Group names come from the registry so a rename cannot silently drop this.
+    Note: a per-call list replaces the router's fallbacks for that call, so reuse this
+    only for calls that start on multi_modal_pro.
+    """
+    primary = MODEL_REGISTRY[MODELS.MULTI_MODAL_PRO]["settings_attr"]
+    fallback = MODEL_REGISTRY[MODELS.MULTI_MODAL_FAST]["settings_attr"]
+    return [{primary: [fallback]}]
+
+
+def _parse_transcript_response(response: Any) -> dict[str, Any]:
+    """Parse the JSON transcript payload, repairing stray escapes when possible."""
+    choice = response.choices[0]
+    content = choice.message.content or ""
+    finish_reason = getattr(choice, "finish_reason", None)
+    try:
+        parsed = json.loads(content)
+    except json.JSONDecodeError as first_error:
+        repaired = _BAD_UNICODE_ESCAPE.sub(r"\1\\\\u", content)
+        try:
+            parsed = json.loads(repaired) if repaired != content else None
+        except json.JSONDecodeError:
+            parsed = None
+        if parsed is None:
+            raise TranscriptParseError(
+                f"Unparseable transcript JSON (finish_reason={finish_reason}, "
+                f"{len(content)} chars): {first_error}",
+                finish_reason=finish_reason,
+            ) from first_error
+    if not isinstance(parsed, dict) or not all(
+        isinstance(parsed.get(k), str) for k in _TRANSCRIPT_KEYS
+    ):
+        raise TranscriptParseError(
+            f"Transcript JSON missing {_TRANSCRIPT_KEYS} (finish_reason={finish_reason})",
+            finish_reason=finish_reason,
+        )
+    return parsed
+
+
+def _complete_transcript_json(
+    messages: List[dict[str, Any]], response_schema: dict[str, Any], logger: logging.Logger
+) -> tuple[dict[str, Any], Optional[str]]:
+    """One Gemini call returning the transcript schema, retried once on a bad payload.
+
+    Retrying here, rather than letting Dramatiq retry the whole chunk, means a parse
+    failure in the correction pass does not re-run the transcription pass within one
+    delivery. Returns the parsed payload and the model that answered.
+    """
+    last_error: Optional[TranscriptParseError] = None
+    for attempt in range(2):
+        response = router_completion(
+            MODELS.MULTI_MODAL_PRO,
+            messages=messages,
+            response_format={"type": "json_object", "response_schema": response_schema},
+            fallbacks=_transcript_fallbacks(),
+        )
+        # Visible record of which deployment answered, so a fallback is never silent.
+        model = getattr(response, "model", None)
+        logger.info("Transcript call answered by model=%s", model)
+        try:
+            return _parse_transcript_response(response), model
+        except TranscriptParseError as e:
+            last_error = e
+            logger.warning("Transcript JSON parse failed on attempt %d: %s", attempt + 1, e)
+            if e.is_truncated:
+                break  # same audio, same limit: a second upload buys nothing
+    if last_error is None:
+        raise TranscriptParseError("transcript completion never ran")
+    raise last_error
 
 
 def transcribe_audio_litellm(
@@ -110,7 +206,7 @@ def _transcribe_audio_gemini(
     use_pii_redaction: bool,
     custom_guidance_prompt: Optional[str] = None,
     prompt_override: Optional[str] = None,
-) -> tuple[str, str]:
+) -> tuple[str, str, Optional[str]]:
     """Single Gemini pass: transcribe audio directly, normalize hotwords, optional PII redaction.
 
     prompt_override replaces the entire rendered transcription prompt. The JSON output
@@ -140,21 +236,18 @@ def _transcribe_audio_gemini(
 
     assert GCP_SA_JSON, "GCP_SA_JSON is not set"
 
-    # Use router for load balancing and failover across Gemini EU regions
-    response = router_completion(
-        MODELS.MULTI_MODAL_PRO,
-        messages=[
+    json_response, model = _complete_transcript_json(
+        [
             {"role": "system", "content": [{"type": "text", "text": prompt}]},
             {"role": "user", "content": [_get_audio_file_object(audio_file_uri)]},
         ],
-        response_format={"type": "json_object", "response_schema": response_schema},
+        response_schema,
+        logger,
     )
-
-    json_response = json.loads(response.choices[0].message.content)
     transcript = json_response["corrected_transcript"]
     note = json_response["note"]
     logger.debug(f"gemini transcript: {len(transcript)} chars; note: {note}")
-    return transcript, note
+    return transcript, note, model
 
 
 def _transcript_correction_workflow(
@@ -163,7 +256,7 @@ def _transcript_correction_workflow(
     hotwords: Optional[List[str]],
     use_pii_redaction: bool,
     custom_guidance_prompt: Optional[str] = None,
-) -> tuple[str, str]:
+) -> tuple[str, str, Optional[str]]:
     """Correction and PII-redaction pass over a candidate transcript plus its audio.
 
     This is the same pass that ran under the AssemblyAI pipeline. It reliably redacts
@@ -193,10 +286,8 @@ def _transcript_correction_workflow(
 
     assert GCP_SA_JSON, "GCP_SA_JSON is not set"
 
-    # Use router for load balancing and failover across Gemini EU regions
-    response = router_completion(
-        MODELS.MULTI_MODAL_PRO,
-        messages=[
+    json_response, model = _complete_transcript_json(
+        [
             {"role": "system", "content": [{"type": "text", "text": transcript_correction_prompt}]},
             {
                 "role": "user",
@@ -206,14 +297,13 @@ def _transcript_correction_workflow(
                 ],
             },
         ],
-        response_format={"type": "json_object", "response_schema": response_schema},
+        response_schema,
+        logger,
     )
-
-    json_response = json.loads(response.choices[0].message.content)
     corrected_transcript = json_response["corrected_transcript"]
     note = json_response["note"]
     logger.debug(f"corrected_transcript: {len(corrected_transcript)} chars; note: {note}")
-    return corrected_transcript, note
+    return corrected_transcript, note, model
 
 
 def transcribe_audio_dembrane_26_07(
@@ -246,9 +336,11 @@ def transcribe_audio_dembrane_26_07(
     pii_on = use_pii_redaction or anonymize_transcripts
 
     # Pass 1: transcription only, no redaction.
-    transcript, note = _transcribe_audio_gemini(
+    transcript, note, model = _transcribe_audio_gemini(
         audio_file_uri, language, hotwords, False, custom_guidance_prompt, prompt_override
     )
+    # Which deployments answered, so a fallback-degraded chunk is identifiable later.
+    models = [model]
 
     # Regex runs before correction, matching the old pipeline order.
     if anonymize_transcripts:
@@ -259,14 +351,15 @@ def transcribe_audio_dembrane_26_07(
     # Never pass keyterms: an empty allow-list is load-bearing so all PII (including
     # hotword names) is redacted, not exempted.
     if pii_on:
-        transcript, note = _transcript_correction_workflow(
+        transcript, note, model = _transcript_correction_workflow(
             audio_file_uri, transcript, hotwords, True, custom_guidance_prompt
         )
+        models.append(model)
 
     if transcript == "":
         transcript = "[Nothing to transcribe]"
 
-    return transcript, {"note": note, "raw": {}, "error": None}
+    return transcript, {"note": note, "raw": {}, "error": None, "models": models}
 
 
 # Helper functions extracted to simplify `transcribe_conversation_chunk`
@@ -339,27 +432,55 @@ RECOVERABLE_ERRORS = [
 ]
 
 
+def _is_vertex_invalid_argument(error: Exception) -> bool:
+    """Vertex rejected the request body itself, which for us means the audio is bad.
+
+    BadRequestError is also the Router's own error for a missing group or no healthy
+    deployment, and the base of context-window and content-policy errors, so the
+    provider and status text both have to match. Known gap: Vertex uses the same code
+    for a bad response_schema or project misconfiguration and gives no audio-specific
+    text, so a prompt regression would mark chunks failed. Watch the `bad_request`
+    analytics reason for a spike.
+    """
+    if not isinstance(error, BadRequestError):
+        return False
+    provider = str(getattr(error, "llm_provider", "") or "").lower()
+    return provider.startswith("vertex") and "invalid_argument" in str(error).lower()
+
+
 def _is_recoverable_error(error: Exception) -> bool:
     """Check if an error is recoverable (chunk should be marked as failed, not retried)."""
+    if _is_vertex_invalid_argument(error):
+        return True
+    # Two truncated attempts in a row: redelivery would only repeat the cost.
+    if isinstance(error, TranscriptParseError) and error.is_truncated:
+        return True
     error_str = str(error).lower()
     return any(pattern in error_str for pattern in RECOVERABLE_ERRORS)
+
+
+def _failure_reason(error: Exception) -> str:
+    """Short analytics label for a transcription failure."""
+    if _is_vertex_invalid_argument(error):
+        return "bad_request"
+    if isinstance(error, TranscriptParseError) and error.is_truncated:
+        return "truncated_output"
+    error_str = str(error).lower()
+    return next((pattern for pattern in RECOVERABLE_ERRORS if pattern in error_str), "other")
 
 
 def _report_transcription_failure(
     conversation_chunk_id: str, error: Exception, conversation_id: Optional[str] = None
 ) -> None:
     """Fire-and-forget analytics for a chunk that failed transcription, keyed by conversation_id."""
-    error_str = str(error).lower()
-    recoverable = _is_recoverable_error(error)
-    reason = next((pattern for pattern in RECOVERABLE_ERRORS if pattern in error_str), "other")
     capture_event_sync(
         conversation_id or conversation_chunk_id,
         "server_chunk_transcription_failed",
         {
             "chunk_id": conversation_chunk_id,
             "conversation_id": conversation_id,
-            "recoverable": recoverable,
-            "error_reason": reason,
+            "recoverable": _is_recoverable_error(error),
+            "error_reason": _failure_reason(error),
         },
     )
 

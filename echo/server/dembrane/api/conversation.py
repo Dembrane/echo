@@ -16,6 +16,7 @@ from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.audio_utils import (
+    NoMergeableChunksError,
     sanitize_filename_component,
     merge_multiple_audio_files_and_save_to_s3,
 )
@@ -30,6 +31,7 @@ from dembrane.async_helpers import safe_gather, run_in_thread_pool
 from dembrane.stream_status import stream_with_status
 from dembrane.api.exceptions import (
     NoContentFoundException,
+    NoMergeableChunksException,
     ConversationNotFoundException,
 )
 from dembrane.directus_async import async_directus
@@ -415,6 +417,9 @@ async def get_conversation_content(
 
         return return_url_or_redirect(merged_path, signed=signed, return_url=return_url)
 
+    except NoMergeableChunksError as e:
+        logger.error(f"Error merging audio files: {str(e)}")
+        raise NoMergeableChunksException(str(e)) from e
     except Exception as e:
         logger.error(f"Error merging audio files: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to merge audio files: {str(e)}") from e
