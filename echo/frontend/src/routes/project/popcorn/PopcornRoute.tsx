@@ -166,7 +166,7 @@ function VoiceFields({
 					onChange({ note: "", presets: [] });
 				}}
 				label={t`dembrane default`}
-				description={t`The popcorn prompt exactly as written: the room's own words, the ideas that moved the conversation, nothing added.`}
+				description={t`The room's own words, the ideas that moved the conversation. Nothing added, nothing softened.`}
 				size={FIELD_SIZE}
 				{...testId("popcorn-voice-default")}
 			/>
@@ -443,7 +443,7 @@ function SharePopover({
 				<Stack gap="md">
 					<Switch
 						label={t`Public page`}
-						description={t`Anyone with the link can watch. No login, no transcripts, no passages.`}
+						description={t`Anyone with the link can watch. No login, and no transcripts.`}
 						checked={popcorn.settings.public}
 						disabled={settings.isPending}
 						onChange={(event) =>
@@ -688,9 +688,7 @@ function SessionModal({
 				<VoiceFields projectId={projectId} voice={voice} onChange={setVoice} />
 				{voiceChanged ? (
 					<Text size="sm">
-						<Trans>
-							A new voice re-reads every conversation on the next pass.
-						</Trans>
+						<Trans>Changing the voice re-reads every conversation.</Trans>
 					</Text>
 				) : null}
 				{canRemoveMark ? (
