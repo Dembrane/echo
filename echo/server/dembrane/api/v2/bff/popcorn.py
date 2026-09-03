@@ -326,11 +326,10 @@ async def popcorn_view(
     """The deck as the host sees it: the room's view plus the passage behind each
     phrase. Relative data fetches resolve under this path."""
     await _require_popcorn(popcorn_id, auth)
-    embed: dict[str, Any] = {"mode": "host"}
-    version_id = _version_id(version)
-    if version_id:
-        embed["version"] = version_id
-    return HTMLResponse(render_popcorn_page(embed=embed), headers=NO_STORE)
+    # The page picks a saved run to replay from its own query string; the
+    # server only checks the shape here so a bad link fails early.
+    _version_id(version)
+    return HTMLResponse(render_popcorn_page(embed={"mode": "host"}), headers=NO_STORE)
 
 
 @router.get("/{popcorn_id}/view/logo.png")

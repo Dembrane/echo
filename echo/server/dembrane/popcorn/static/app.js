@@ -9,6 +9,17 @@
      files, and the drag-and-drop / localStorage demo paths are off. */
   const EMBED = typeof window !== "undefined" && window.POPCORN_EMBED ? window.POPCORN_EMBED : null;
   const BUNDLE_MAX_AGE_MS = 250;
+  if (EMBED) {
+    // Every data path is relative to the page, so the address must end in a
+    // slash; fix it here rather than with a redirect the server would have to
+    // build from the request. The saved run to replay comes from the query
+    // string for the same reason: the server never echoes it into the page.
+    if (!location.pathname.endsWith("/")) {
+      history.replaceState(null, "", `${location.pathname}/${location.search}${location.hash}`);
+    }
+    const requested = new URLSearchParams(location.search).get("version");
+    if (requested && /^[0-9a-fA-F-]{36}$/.test(requested)) EMBED.version = requested;
+  }
   const MARKERS = ["var(--m0)", "var(--m1)", "var(--m2)", "var(--m3)", "var(--m4)", "var(--m5)"];
   const POLL_MS = 3000;           // slide files
   const POP_FAST_POLL_MS = 200;   // empty stage: reserve <500ms for detection + paint

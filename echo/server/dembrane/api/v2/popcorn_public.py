@@ -12,7 +12,7 @@ import re
 from typing import Any
 
 from fastapi import Depends, Request, APIRouter, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from dembrane.popcorn.view import LOGO_PATH, render_popcorn_page, render_not_live_page
 from dembrane.api.rate_limit import create_rate_limiter
@@ -65,16 +65,10 @@ async def _published_report(token: str) -> tuple[dict[str, Any], dict[str, Any]]
     return report, project
 
 
-@router.get("/{token}", include_in_schema=False)
-async def public_popcorn_redirect(token: str) -> RedirectResponse:
-    # The page fetches `data/bundle.json` relative to its own URL, so the
-    # canonical address ends in a slash. Only a well-formed token is echoed
-    # back, and only as a relative path.
-    if not _TOKEN.fullmatch(token):
-        raise HTTPException(status_code=404, detail="Not found")
-    return RedirectResponse(url=f"{token}/", status_code=307)
-
-
+# The page fetches `data/bundle.json` relative to its own URL, so the canonical
+# address ends in a slash. The page adds the slash itself when it is missing;
+# both spellings serve the same document, and nothing from the URL is echoed.
+@router.get("/{token}", response_class=HTMLResponse, include_in_schema=False)
 @router.get("/{token}/", response_class=HTMLResponse)
 async def public_popcorn_page(token: str, request: Request) -> HTMLResponse:
     await _page_limiter.check(_client_ip(request))
