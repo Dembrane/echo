@@ -205,7 +205,7 @@
      the public page: the server leaves `source` out of the room's bundle. */
   function showSourceTip(item, tid, returnFocusTo) {
     const src = item.source;
-    if (!src || !src.text) return;
+    if (!src || !src.text || presenting) return;
     const href = httpUrl(src.url);
     clearTimeout(quoteHideTimer);
     tip.innerHTML = `<h2 class="sr-only" id="quote-dialog-title">Why this phrase</h2>
@@ -460,7 +460,20 @@
      a royal +; a visible optional tab grows a × on hover. The host page gets
      a message and saves the change; the deck follows on its next poll. */
   const HOST = EMBED && EMBED.mode === "host";
-  const hostMeta = () => (HOST && state.session && state.session.host) || null;
+  // While the host page is fullscreen the preview *is* the wall: no host
+  // affordances, no passages, exactly what the public page shows.
+  let presenting = false;
+  const hostMeta = () => (HOST && !presenting && state.session && state.session.host) || null;
+  if (HOST) {
+    window.addEventListener("message", (ev) => {
+      const d = ev.data;
+      if (!d || d.type !== "dembrane:popcorn:presenting") return;
+      presenting = !!d.value;
+      document.body.classList.toggle("presenting", presenting);
+      renderTabs();
+      renderQrPanel();
+    });
+  }
   function postHostSetting(patch) {
     if (!HOST || !window.parent || window.parent === window) return;
     window.parent.postMessage({ type: "dembrane:popcorn:settings", patch }, "*");

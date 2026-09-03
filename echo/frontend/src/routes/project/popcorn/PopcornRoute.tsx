@@ -26,8 +26,6 @@ import {
 import { useDisclosure, useDocumentTitle, useFullscreen } from "@mantine/hooks";
 import {
 	ArrowSquareOutIcon,
-	ArrowsInIcon,
-	ArrowsOutIcon,
 	CheckIcon,
 	CopyIcon,
 	PencilSimpleIcon,
@@ -35,7 +33,7 @@ import {
 	ShareNetworkIcon,
 } from "@phosphor-icons/react";
 import { addDays, addHours, format, formatDistanceToNow } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
@@ -817,7 +815,17 @@ function PopcornSession({
 		toggle: toggleFullscreen,
 		fullscreen,
 	} = useFullscreen();
+	const frameRef = useRef<HTMLIFrameElement | null>(null);
 	useDocumentTitle(`${popcorn.name} | dembrane`);
+
+	// Fullscreen is the wall. Tell the deck, so it drops the host affordances
+	// and shows exactly what the public page shows.
+	useEffect(() => {
+		frameRef.current?.contentWindow?.postMessage(
+			{ type: "dembrane:popcorn:presenting", value: fullscreen },
+			"*",
+		);
+	}, [fullscreen]);
 
 	const loopStatus = popcorn.loop?.status;
 	const isEnded = ["expired", "ended", "stopped"].includes(loopStatus ?? "");
@@ -922,21 +930,6 @@ function PopcornSession({
 					>
 						<Trans>Settings</Trans>
 					</Button>
-					<Tooltip label={fullscreen ? t`Exit full screen` : t`Full screen`}>
-						<ActionIcon
-							variant="outline"
-							size="lg"
-							onClick={toggleFullscreen}
-							aria-label={t`Full screen`}
-							{...testId("popcorn-fullscreen-button")}
-						>
-							{fullscreen ? (
-								<ArrowsInIcon size={18} />
-							) : (
-								<ArrowsOutIcon size={18} />
-							)}
-						</ActionIcon>
-					</Tooltip>
 				</Group>
 				<VersionStrip
 					versions={versionsQuery.data ?? []}
@@ -962,6 +955,7 @@ function PopcornSession({
 					}}
 				>
 					<iframe
+						ref={frameRef}
 						title={popcorn.name}
 						src={viewUrl}
 						className="block h-full w-full border-0"
@@ -998,7 +992,6 @@ function PopcornLoading() {
 					<Skeleton height={36} width={120} radius="xl" />
 					<Skeleton height={36} width={96} radius="md" />
 					<Skeleton height={36} width={110} radius="md" />
-					<Skeleton height={36} width={36} radius="md" />
 				</Group>
 				<Skeleton height={520} radius="md" />
 			</Stack>

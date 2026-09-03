@@ -94,13 +94,18 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* host controls in the tab row: quiet, royal, only on hover */
 .tab-wrap { position: relative; display: inline-flex; align-items: stretch; }
-/* Same box as the tab (padding and the 3px rule), so the × sits on the label's baseline. */
+/* Out of the flow, so the row measures exactly as the public deck; same
+   padding and 3px rule as the tab, so the × sits on the label's baseline. */
 .tab-hide {
+  position: absolute; left: 100%; top: 0; bottom: 0;
   appearance: none; background: none; border: none; border-bottom: 3px solid transparent;
   font: inherit; font-size: 0.85em; line-height: inherit;
-  color: var(--ink-soft); cursor: pointer; padding: 0.5em 0.35em 0.9em; margin-left: 0.05em;
+  color: var(--ink-soft); cursor: pointer; padding: 0.5em 0.35em 0.9em;
   opacity: 0; transition: opacity 120ms, color 120ms;
 }
+body.presenting .pop-sourced { cursor: default; }
+body.presenting .tail-sourced { cursor: default; }
+body.presenting .tail-sourced:hover { outline: none; }
 .tab-wrap:hover .tab-hide, .tab-hide:focus-visible { opacity: 1; }
 .tab-hide:hover { color: var(--blue); }
 .tab.tab-ghost { color: var(--ink-faint); font-weight: 300; cursor: pointer; }
