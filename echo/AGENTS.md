@@ -173,6 +173,8 @@ Which group powers which feature is non-obvious, so don't downgrade silently.
 ### Transcription
 
 - Transcription runs as a single synchronous Gemini pass on `MULTI_MODAL_PRO` (Vertex `europe-west1`, EU). The `Dembrane-26-07` provider sends chunk audio directly to Gemini, which transcribes, normalizes hotwords, optionally redacts PII, and returns a recording-feedback note in one call
+- Transcription passes a per-call router fallback `MULTI_MODAL_PRO` to `MULTI_MODAL_FAST`; never set it on the shared router, chat and reports must not degrade. Answering models are logged and stored in `diarization.data.models`
+- Fallback timing: with one Pro deployment (production today) LiteLLM skips cooldowns, so 429s retry in-group first. Once a `_1` deployment exists, a 429 burst can route straight to Flash for the 60s cooldown. It also fires on non-429 failures, costing one Flash call per corrupt chunk
 - Gemini is natively multilingual (en, nl, de, fr, es, it, uk and more); there is no per-language model selection
 - When PII redaction or anonymization is requested, a dedicated second Gemini pass redacts the transcribed text (a single transcribe-and-redact pass under-redacts because verbatim transcription dominates). Anonymized conversations then run `regex_redact_pii` (`pii_regex.py`) as a deterministic post-pass and store no raw response
 - The redaction pass keeps the correction prompt's keyterms allow-list permanently empty on purpose: hotwords are passed as canonical_terms for normalization only, never as keyterms, so nothing is exempted and all PII (including names that are hotwords) is redacted. Do not wire hotwords into keyterms

@@ -6,21 +6,7 @@ from typing import Any
 import pytest
 
 import dembrane.transcribe as transcribe
-
-
-class _FakeMessage:
-    def __init__(self, content: str) -> None:
-        self.content = content
-
-
-class _FakeChoice:
-    def __init__(self, content: str) -> None:
-        self.message = _FakeMessage(content)
-
-
-class _FakeCompletion:
-    def __init__(self, content: str) -> None:
-        self.choices = [_FakeChoice(content)]
+from tests.llm_fakes import FakeCompletion as _FakeCompletion
 
 
 def _stub_common(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -37,7 +23,7 @@ def _router_dispatch(transcribe_json: dict[str, Any], correction_json: dict[str,
     user message) with transcribe_json and the correction/redaction call (candidate
     transcript text plus audio) with correction_json."""
 
-    def _fake(model: Any, messages: Any, response_format: Any) -> _FakeCompletion:
+    def _fake(model: Any, messages: Any, response_format: Any, **kwargs: Any) -> _FakeCompletion:
         user_msg = next(m for m in messages if m["role"] == "user")
         has_candidate_text = any(part.get("type") == "text" for part in user_msg["content"])
         return _FakeCompletion(
@@ -51,7 +37,9 @@ def test_transcribe_26_07_audio_only_no_candidate(monkeypatch: pytest.MonkeyPatc
     _stub_common(monkeypatch)
     captured: dict[str, Any] = {}
 
-    def _fake_router(model: Any, messages: Any, response_format: Any) -> _FakeCompletion:
+    def _fake_router(
+        model: Any, messages: Any, response_format: Any, **kwargs: Any
+    ) -> _FakeCompletion:
         captured["model"] = model
         captured["messages"] = messages
         return _FakeCompletion(
@@ -77,7 +65,9 @@ def test_transcribe_26_07_no_pii_is_single_call(monkeypatch: pytest.MonkeyPatch)
     _stub_common(monkeypatch)
     calls = {"n": 0}
 
-    def _fake_router(model: Any, messages: Any, response_format: Any) -> _FakeCompletion:
+    def _fake_router(
+        model: Any, messages: Any, response_format: Any, **kwargs: Any
+    ) -> _FakeCompletion:
         calls["n"] += 1
         return _FakeCompletion(json.dumps({"corrected_transcript": "hello", "note": ""}))
 
@@ -109,7 +99,9 @@ def test_transcribe_26_07_prompt_override_replaces_transcription_prompt(
     _stub_common(monkeypatch)
     captured: dict[str, Any] = {}
 
-    def _fake_router(model: Any, messages: Any, response_format: Any) -> _FakeCompletion:
+    def _fake_router(
+        model: Any, messages: Any, response_format: Any, **kwargs: Any
+    ) -> _FakeCompletion:
         captured["messages"] = messages
         return _FakeCompletion(json.dumps({"corrected_transcript": "HELLO", "note": ""}))
 
@@ -132,7 +124,9 @@ def test_transcribe_26_07_prompt_override_leaves_redaction_prompt_alone(
     _stub_common(monkeypatch)
     system_prompts: list[str] = []
 
-    def _fake_router(model: Any, messages: Any, response_format: Any) -> _FakeCompletion:
+    def _fake_router(
+        model: Any, messages: Any, response_format: Any, **kwargs: Any
+    ) -> _FakeCompletion:
         system_msg = next(m for m in messages if m["role"] == "system")
         system_prompts.append(system_msg["content"][0]["text"])
         return _FakeCompletion(json.dumps({"corrected_transcript": "x", "note": ""}))
@@ -159,7 +153,7 @@ def test_transcribe_26_07_pii_runs_correction_pass_over_audio_and_transcript(
     _stub_common(monkeypatch)
     correction_msgs: dict[str, Any] = {}
 
-    def _router(model: Any, messages: Any, response_format: Any) -> _FakeCompletion:
+    def _router(model: Any, messages: Any, response_format: Any, **kwargs: Any) -> _FakeCompletion:
         user_msg = next(m for m in messages if m["role"] == "user")
         has_candidate_text = any(part.get("type") == "text" for part in user_msg["content"])
         if has_candidate_text:

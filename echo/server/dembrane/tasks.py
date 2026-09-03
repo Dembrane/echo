@@ -211,7 +211,15 @@ broker.add_middleware(SkipRetryOnUnrecoverableError())
 
 
 # Transcription Task
-@dramatiq.actor(queue_name="network", priority=0)
+# Every retry re-sends the full audio to Gemini, so the default of 20 is far too many.
+# Five attempts with 30s..10min backoff still span roughly fifteen minutes of outage.
+@dramatiq.actor(
+    queue_name="network",
+    priority=0,
+    max_retries=5,
+    min_backoff=30_000,
+    max_backoff=600_000,
+)
 def task_transcribe_chunk(
     conversation_chunk_id: str,
     conversation_id: str,
@@ -587,28 +595,37 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
             return
 
         # local import to avoid circular imports
-        from dembrane.api.exceptions import NoContentFoundException
+        from dembrane.api.exceptions import (
+            NoContentFoundException,
+            NoMergeableChunksException,
+        )
         from dembrane.api.conversation import get_conversation_content
 
-        with ProcessingStatusContext(
-            conversation_id=conversation_id,
-            event_prefix="task_merge_conversation_chunks",
-        ):
-            try:
-                # Run async function in new event loop (CPU worker context)
-                run_async_in_new_loop(
-                    lambda: get_conversation_content(
-                        conversation_id,
-                        auth=DependencyDirectusSession(user_id="none", is_admin=True),
-                        force_merge=True,
-                        return_url=True,
+        try:
+            with ProcessingStatusContext(
+                conversation_id=conversation_id,
+                event_prefix="task_merge_conversation_chunks",
+            ):
+                try:
+                    # Run async function in new event loop (CPU worker context)
+                    run_async_in_new_loop(
+                        lambda: get_conversation_content(
+                            conversation_id,
+                            auth=DependencyDirectusSession(user_id="none", is_admin=True),
+                            force_merge=True,
+                            return_url=True,
+                        )
                     )
-                )
-            except NoContentFoundException:
-                logger.info(
-                    f"No valid content found for conversation {conversation_id}; skipping merge task."
-                )
-                return
+                except NoContentFoundException:
+                    logger.info(
+                        f"No valid content found for conversation {conversation_id}; skipping merge task."
+                    )
+                    return
+        except NoMergeableChunksException as e:
+            # Every chunk is unreadable; a retry re-probes the same bytes. Caught outside
+            # the status context so the timeline records a failure, not a completion.
+            logger.warning(f"Conversation {conversation_id} has no mergeable audio: {e.detail}")
+            return
 
         return
     except Exception as e:
