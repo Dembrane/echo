@@ -1,6 +1,6 @@
 import { CaretRightIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { useCanvas } from "@/components/canvas/hooks";
 import { useChat } from "@/components/chat/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -52,6 +52,7 @@ const PROJECT_SECTION_LABELS: Record<string, string> = {
 	library: "Library",
 	monitor: "Monitor",
 	overview: "Settings",
+	popcorn: "Popcorn",
 	portal: "Portal editor",
 	"portal-editor": "Portal editor",
 	report: "Report",
@@ -85,6 +86,10 @@ const ORG_SETTINGS_LABELS: Record<string, string> = {
 // Render when there is at least 1 meaningful crumb to show.
 export const AppBreadcrumbs = () => {
 	const { view, params } = useSidebarView();
+	const { pathname } = useLocation();
+	const isPopcornPath = pathname
+		.replace(/\/$/, "")
+		.endsWith("/library/popcorn");
 	const { collapsed } = useSidebarState();
 	const { orgId: routeOrgId, organisationId } = useParams<{
 		orgId?: string;
@@ -234,6 +239,12 @@ export const AppBreadcrumbs = () => {
 					if (chatName) {
 						out.push({ label: chatName });
 					}
+				} else if (section === "library" && isPopcornPath) {
+					out.push({
+						href: `/w/${params.workspaceId}/projects/${params.projectId}/library`,
+						label: PROJECT_SECTION_LABELS.library,
+					});
+					out.push({ label: PROJECT_SECTION_LABELS.popcorn });
 				} else if (section === "canvases" && params.canvasId) {
 					out.push({
 						href: `/w/${params.workspaceId}/projects/${params.projectId}/library`,
@@ -279,6 +290,7 @@ export const AppBreadcrumbs = () => {
 		conversationQuery.data,
 		chatQuery.data,
 		canvasQuery.data?.name,
+		isPopcornPath,
 	]);
 
 	if (crumbs.length === 0) return null;

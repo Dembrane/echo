@@ -1,0 +1,320 @@
+"""Popcorn contracts and the cross-conversation slides (tensions, stakeholders).
+
+Ported from Dembrane/popcorn `tools/analysis.py` (commit 7c3d1cf) so the
+in-app pipeline shapes output exactly the way the presentation expects.
+
+Popcorn is per conversation and fast. Tensions and stakeholders read the
+whole session at once and arrive later, which is what the deck expects. Both
+are grounded the same way: the model returns the quotes it relied on, every
+quote is checked verbatim against the source before anything is written, and
+whatever fails the check is dropped along with the aspects resting on it.
+"""
+
+from __future__ import annotations
+
+import re
+from typing import Any
+
+# The public popcorn contract: at most eight phrases, each short, weighted 1-3.
+POPCORN_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["items"],
+    "properties": {
+        "items": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["phrase", "weight"],
+                "properties": {
+                    "phrase": {"type": "string", "minLength": 1, "maxLength": 90},
+                    "weight": {"type": "integer", "minimum": 1, "maximum": 3},
+                },
+            },
+        }
+    },
+}
+
+QUOTE = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["transcript", "text"],
+    "properties": {
+        "transcript": {"type": "string"},
+        "text": {"type": "string", "minLength": 12, "maxLength": 400},
+        "context": {"type": "string", "maxLength": 200},
+    },
+}
+
+TENSIONS_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["tensions"],
+    "properties": {
+        "tensions": {
+            "type": "array",
+            "maxItems": 6,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["poleA", "poleB", "narrative", "toResolve", "quotes"],
+                "properties": {
+                    "poleA": {"type": "string", "minLength": 3, "maxLength": 60},
+                    "poleB": {"type": "string", "minLength": 3, "maxLength": 60},
+                    "narrative": {"type": "string", "minLength": 40, "maxLength": 700},
+                    "toResolve": {"type": "string", "minLength": 10, "maxLength": 300},
+                    "quotes": {"type": "array", "maxItems": 4, "items": QUOTE},
+                },
+            },
+        }
+    },
+}
+
+# Vertex rejects this schema outright when it carries maxItems at these nesting
+# depths (HTTP 400 INVALID_ARGUMENT; the flatter tensions schema takes it fine).
+# The caps are enforced in shape_stakeholders instead.
+MAX_STAKEHOLDERS, MAX_RELATIONS, MAX_ASPECTS, MAX_QUOTES = 9, 12, 3, 3
+
+STAKEHOLDERS_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["stakeholders", "relations"],
+    "properties": {
+        "stakeholders": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": [
+                    "name",
+                    "role",
+                    "stake",
+                    "rung",
+                    "stakeWeight",
+                    "mentionsWeight",
+                    "quotes",
+                ],
+                "properties": {
+                    "name": {"type": "string", "minLength": 2, "maxLength": 48},
+                    "role": {"type": "string", "minLength": 5, "maxLength": 160},
+                    "stake": {"type": "string", "minLength": 5, "maxLength": 200},
+                    "rung": {"type": "string", "enum": ["voiced", "named", "inferred"]},
+                    "invokedBy": {"type": "string", "maxLength": 48},
+                    "stakeWeight": {"type": "number", "minimum": 0, "maximum": 1},
+                    "mentionsWeight": {"type": "number", "minimum": 0, "maximum": 1},
+                    "quotes": {"type": "array", "items": QUOTE},
+                },
+            },
+        },
+        "relations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": [
+                    "between",
+                    "label",
+                    "intensity",
+                    "sentiment",
+                    "unowned",
+                    "detail",
+                    "aspects",
+                ],
+                "properties": {
+                    "between": {
+                        "type": "array",
+                        "minItems": 2,
+                        "items": {"type": "string", "maxLength": 48},
+                    },
+                    "label": {"type": "string", "minLength": 3, "maxLength": 70},
+                    "intensity": {"type": "number", "minimum": 0, "maximum": 1},
+                    "sentiment": {"type": "number", "minimum": -1, "maximum": 1},
+                    "unowned": {"type": "boolean"},
+                    "detail": {"type": "string", "minLength": 20, "maxLength": 500},
+                    "aspects": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "required": ["kind", "note", "quotes"],
+                            "properties": {
+                                "kind": {
+                                    "type": "string",
+                                    "enum": ["power", "risk", "opportunity"],
+                                },
+                                "note": {"type": "string", "minLength": 10, "maxLength": 300},
+                                "quotes": {"type": "array", "minItems": 1, "items": QUOTE},
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+}
+
+
+def norm(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip().casefold()
+
+
+def build_corpus(transcripts: list[tuple[str, str]]) -> str:
+    """One prompt-sized document, each transcript announced by its id."""
+    parts = []
+    for tid, text in transcripts:
+        parts.append(f"TRANSCRIPT id: {tid}\n{text}\nEND TRANSCRIPT {tid}")
+    return "\n\n".join(parts)
+
+
+def shape_popcorn_items(raw: dict[str, Any] | None, transcript_id: str) -> list[dict[str, Any]]:
+    """Apply the deterministic first-run gates to one extractor response.
+
+    Anything the schema cannot express (unique phrases, one weight-3 item,
+    no quotation marks or terminal punctuation) is enforced here so a slip
+    never reaches the screen.
+    """
+    items = raw.get("items") if isinstance(raw, dict) else None
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    weight3_used = False
+    for item in items or []:
+        if not isinstance(item, dict):
+            continue
+        phrase = re.sub(r"\s+", " ", str(item.get("phrase") or "")).strip()
+        phrase = phrase.strip("\"'“”‘’").rstrip(".!?;:").strip()
+        if not phrase or len(phrase) > 90:
+            continue
+        key = norm(phrase)
+        if key in seen:
+            continue
+        seen.add(key)
+        try:
+            weight = int(item.get("weight") or 1)
+        except (TypeError, ValueError):
+            weight = 1
+        weight = max(1, min(3, weight))
+        if weight == 3:
+            if weight3_used:
+                weight = 2
+            weight3_used = True
+        out.append({"id": f"p-{transcript_id}-{len(out) + 1}", "phrase": phrase, "weight": weight})
+        if len(out) >= 8:
+            break
+    return out
+
+
+class QuoteBook:
+    """Assigns quote ids, and refuses any quote that is not verbatim."""
+
+    def __init__(self, sources: dict[str, str]):
+        self.norm_sources = {tid: norm(t) for tid, t in sources.items()}
+        self.quotes: list[dict[str, Any]] = []
+        self._seen: dict[str, str] = {}
+        self.rejected = 0
+
+    def add(self, q: dict[str, Any]) -> str | None:
+        text = str(q.get("text") or "").strip()
+        if not text:
+            return None
+        key = norm(text)
+        if key in self._seen:
+            return self._seen[key]
+        tid = str(q.get("transcript") or "")
+        found_in = tid if key in self.norm_sources.get(tid, "") else None
+        if found_in is None:  # model may misattribute; accept if it exists anywhere
+            for cand, body in self.norm_sources.items():
+                if key in body:
+                    found_in = cand
+                    break
+        if found_in is None:
+            self.rejected += 1
+            return None
+        qid = f"q{len(self.quotes) + 1}"
+        entry: dict[str, Any] = {"id": qid, "transcript": found_in, "text": text}
+        if q.get("context"):
+            entry["context"] = str(q["context"])
+        self.quotes.append(entry)
+        self._seen[key] = qid
+        return qid
+
+    def add_all(self, qs: Any) -> list[str]:
+        return [qid for qid in (self.add(q) for q in (qs or []) if isinstance(q, dict)) if qid]
+
+    def payload(self) -> dict[str, Any]:
+        return {"quotes": self.quotes}
+
+
+def shape_tensions(raw: dict[str, Any], book: QuoteBook) -> dict[str, Any]:
+    out = []
+    for n, t in enumerate(raw.get("tensions") or [], 1):
+        out.append(
+            {
+                "id": f"x{n}",
+                "poleA": t["poleA"],
+                "poleB": t["poleB"],
+                "narrative": t["narrative"],
+                "toResolve": t["toResolve"],
+                "quoteIds": book.add_all(t.get("quotes")),
+            }
+        )
+    return {"tensions": out}
+
+
+def shape_stakeholders(raw: dict[str, Any], book: QuoteBook) -> dict[str, Any]:
+    people: list[dict[str, Any]] = []
+    by_name: dict[str, str] = {}
+    for n, s in enumerate((raw.get("stakeholders") or [])[:MAX_STAKEHOLDERS], 1):
+        sid = f"s{n}"
+        by_name[norm(s["name"])] = sid
+        ev: dict[str, Any] = {"rung": s["rung"]}
+        if s.get("invokedBy"):
+            ev["invokedBy"] = s["invokedBy"]
+        people.append(
+            {
+                "id": sid,
+                "name": s["name"],
+                "role": s["role"],
+                "stake": s["stake"],
+                "quoteIds": book.add_all((s.get("quotes") or [])[:MAX_QUOTES]),
+                "evidence": ev,
+                "weight": {
+                    "stake": round(float(s["stakeWeight"]), 2),
+                    "mentions": round(float(s["mentionsWeight"]), 2),
+                },
+            }
+        )
+
+    relations: list[dict[str, Any]] = []
+    seen_pairs: set[tuple[str, ...]] = set()
+    for r in raw.get("relations") or []:
+        if len(r.get("between") or []) != 2 or len(relations) >= MAX_RELATIONS:
+            continue
+        ids = [by_name.get(norm(nm)) for nm in r["between"]]
+        if None in ids or ids[0] == ids[1]:
+            continue  # a relation to nobody is not a relation
+        pair = tuple(sorted(str(i) for i in ids))
+        if pair in seen_pairs:
+            continue  # authored once, for both groups
+        seen_pairs.add(pair)
+        aspects = []
+        for a in (r.get("aspects") or [])[:MAX_ASPECTS]:
+            qids = book.add_all((a.get("quotes") or [])[:MAX_QUOTES])
+            if not qids:
+                continue  # no quote, no aspect
+            aspects.append({"kind": a["kind"], "note": a["note"], "quoteIds": qids})
+        relations.append(
+            {
+                "id": f"r{len(relations) + 1}",
+                "between": list(ids),
+                "label": r["label"],
+                "intensity": round(float(r["intensity"]), 2),
+                "sentiment": round(float(r["sentiment"]), 2),
+                "unowned": bool(r["unowned"]),
+                "detail": r["detail"],
+                "aspects": aspects,
+            }
+        )
+    return {"stakeholders": people, "relations": relations}

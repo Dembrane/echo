@@ -1837,6 +1837,21 @@ def task_reconcile_canvas_tick_tasks() -> None:
         logger.info("Backfilled %d canvas tick task(s)", enqueued)
 
 
+@dramatiq.actor(queue_name="network", priority=50)
+def task_reconcile_popcorn_tick_tasks() -> None:
+    """Reconciler: ensure active popcorn loops have a pending popcorn_tick row."""
+    from dembrane.popcorn.ticks import reconcile_missing_popcorn_tick_tasks
+
+    logger = getLogger("dembrane.tasks.task_reconcile_popcorn_tick_tasks")
+    try:
+        enqueued = run_async_in_new_loop(lambda: reconcile_missing_popcorn_tick_tasks())
+    except Exception as e:
+        logger.error("Error reconciling popcorn tick tasks: %s", e)
+        raise
+    if enqueued:
+        logger.info("Backfilled %d popcorn tick task(s)", enqueued)
+
+
 # ── Generic durable scheduled-task runner (ECHO-863) ─────────────────────────
 # Polls the scheduled_task collection for due one-shot tasks, claims them, and
 # dispatches by task_type. See dembrane/scheduled_tasks.py for the model. Fired
@@ -1886,6 +1901,7 @@ def task_process_scheduled_tasks() -> None:
 def _dispatch_scheduled_task(row: dict) -> None:
     from dembrane.scheduled_tasks import (
         TASK_CANVAS_TICK,
+        TASK_POPCORN_TICK,
         TASK_GENERATE_REPORT,
         TASK_REVOKE_STAFF_SUPPORT,
         TASK_EXPIRE_SUPPORT_REQUEST,
@@ -1900,6 +1916,8 @@ def _dispatch_scheduled_task(row: dict) -> None:
         _run_generate_report(payload)
     elif task_type == TASK_CANVAS_TICK:
         _run_canvas_tick(payload)
+    elif task_type == TASK_POPCORN_TICK:
+        _run_popcorn_tick(payload)
     elif task_type == TASK_EXPIRE_SUPPORT_REQUEST:
         _run_expire_support_request(payload)
     elif task_type == TASK_SUPPORT_TOGGLE_REMINDER:
@@ -1916,6 +1934,24 @@ def _run_canvas_tick(payload: dict) -> None:
     from dembrane.canvas.ticks import run_tick
 
     run_async_in_new_loop(lambda: run_tick(str(loop_id), str(tick_kind)))
+
+
+def _run_popcorn_tick(payload: dict) -> None:
+    loop_id = payload.get("loop_id")
+    if not loop_id:
+        raise ValueError("popcorn_tick payload missing loop_id")
+    tick_kind = payload.get("tick_kind") or "scheduled"
+    from dembrane.popcorn.ticks import run_popcorn_tick
+
+    run_async_in_new_loop(lambda: run_popcorn_tick(str(loop_id), str(tick_kind)))
+
+
+@dramatiq.actor(queue_name="network", priority=20, max_retries=0)
+def task_popcorn_tick_now(loop_id: str, tick_kind: str = "manual") -> None:
+    """Run a popcorn tick straight away. The scheduled_task table is polled once
+    a minute, which is fine for the cadence but not for the first phrase after
+    Start or after the host presses refresh."""
+    _run_popcorn_tick({"loop_id": loop_id, "tick_kind": tick_kind})
 
 
 async def _expire_support_request_async(request_id: str) -> bool:
