@@ -83,6 +83,23 @@ class FFmpegError(Exception):
     pass
 
 
+class NoMergeableChunksError(ValueError):
+    """Every input chunk failed to probe, so a retry cannot produce a merge."""
+
+    # ffprobe stderr is unbounded and this text ends up in logs, the processing
+    # status row and a 400 body.
+    MAX_ERROR_CHARS = 200
+
+    def __init__(self, file_names: List[str], errors: List[str]) -> None:
+        self.file_names = file_names
+        self.errors = errors
+        detail = "; ".join(
+            f"{name}: {err[: self.MAX_ERROR_CHARS]}"
+            for name, err in zip(file_names, errors, strict=False)
+        )
+        super().__init__(f"No processed data streams ({len(file_names)} chunk(s) failed): {detail}")
+
+
 class FileTooLargeError(Exception):
     """Custom exception for files that are too large to process"""
 
@@ -93,6 +110,10 @@ class FileTooSmallError(Exception):
     """Custom exception for files that are too small to process"""
 
     pass
+
+
+# Raised for chunk bytes that will not change on retry.
+_TERMINAL_CHUNK_ERRORS = (ValueError, FFmpegError, FileTooLargeError, FileTooSmallError)
 
 
 settings = get_settings()
@@ -342,6 +363,9 @@ def merge_multiple_audio_files_and_save_to_s3(
 
     # Process each file - probe format and convert if needed
     processed_data_streams = []
+    failed_names: List[str] = []
+    failed_errors: List[str] = []
+    transient_failure = False
     for i_name in input_file_names:
         # Probe file to determine format
         try:
@@ -368,9 +392,26 @@ def merge_multiple_audio_files_and_save_to_s3(
 
         except Exception as e:
             logger.error(f"Error probing file {i_name}: {str(e)} - Moving on to next file")
+            failed_names.append(i_name)
+            failed_errors.append(str(e))
+            # Bad bytes surface as probe/convert errors; anything else is transport
+            # (S3, network) and a retry can still succeed.
+            if not isinstance(e, _TERMINAL_CHUNK_ERRORS):
+                transient_failure = True
+
+    if failed_names and processed_data_streams:
+        logger.warning(
+            f"Skipped {len(failed_names)} of {len(input_file_names)} chunk(s) during merge: "
+            + "; ".join(
+                f"{n}: {e[: NoMergeableChunksError.MAX_ERROR_CHARS]}"
+                for n, e in zip(failed_names, failed_errors, strict=False)
+            )
+        )
 
     if not processed_data_streams:
-        raise ValueError("No processed data streams")
+        if transient_failure:
+            raise ValueError(f"No processed data streams: {'; '.join(failed_errors)}")
+        raise NoMergeableChunksError(failed_names, failed_errors)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         chunk_paths = []
@@ -564,12 +605,12 @@ def probe_from_bytes(file_bytes: bytes, input_format: str) -> dict:
                 if process.returncode != 0:
                     error = stderr_output or "Unknown error"
                     logger.error(f"ffprobe error: {error}")
-                    raise Exception(f"ffprobe error: {error}")
+                    raise FFmpegError(f"ffprobe error: {error}")
 
             output = process.stdout.decode()
             if not output:
                 logger.error("ffprobe returned empty output")
-                raise Exception("ffprobe returned empty output")
+                raise FFmpegError("ffprobe returned empty output")
 
             # Check the output for valid structure
             probe_data = json.loads(output)
