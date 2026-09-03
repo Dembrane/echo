@@ -158,6 +158,10 @@ export default defineConfig(({ mode }) => {
 					},
 				},
 			},
+			// Emit source maps only when a deploy opts in via POSTHOG_SOURCEMAPS,
+			// so the deploy workflow can upload them to PostHog for symbolication.
+			// Off by default to keep maps out of preview and portal bundles.
+			sourcemap: process.env.POSTHOG_SOURCEMAPS === "1",
 		},
 		define: {
 			__APP_BUILD_ID__: JSON.stringify(buildId),

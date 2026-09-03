@@ -2353,7 +2353,7 @@ msgstr ""
 msgid "Clear search"
 msgstr ""
 
-#: src/components/conversation/hooks/index.ts:540
+#: src/components/conversation/hooks/index.ts:555
 msgid "Cleared {cleared} of {total} conversations"
 msgstr ""
 
@@ -2601,7 +2601,7 @@ msgstr "conversation"
 msgid "Conversation"
 msgstr "Conversazione"
 
-#: src/components/conversation/hooks/index.ts:378
+#: src/components/conversation/hooks/index.ts:393
 msgid "Conversation added to chat"
 msgstr "Conversation added to chat"
 
@@ -2610,7 +2610,7 @@ msgstr "Conversation added to chat"
 msgid "participant.conversation.ended"
 msgstr "Conversation Ended"
 
-#: src/components/conversation/hooks/index.ts:494
+#: src/components/conversation/hooks/index.ts:509
 msgid "Conversation removed from chat"
 msgstr "Conversation removed from chat"
 
@@ -2641,7 +2641,7 @@ msgstr "conversations"
 msgid "Conversations"
 msgstr "Conversations"
 
-#: src/components/conversation/hooks/index.ts:530
+#: src/components/conversation/hooks/index.ts:545
 msgid "Conversations cleared"
 msgstr ""
 
@@ -4085,12 +4085,12 @@ msgstr ""
 msgid "Failed"
 msgstr "Failed"
 
-#: src/components/conversation/hooks/index.ts:313
+#: src/components/conversation/hooks/index.ts:328
 msgid "Failed to add conversation to chat"
 msgstr "Failed to add conversation to chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/components/conversation/hooks/index.ts:308
+#: src/components/conversation/hooks/index.ts:323
 msgid "Failed to add conversation to chat{0}"
 msgstr "Failed to add conversation to chat{0}"
 
@@ -4104,8 +4104,8 @@ msgstr "Failed to add conversations to context"
 msgid "Failed to approve outcome. Please try again."
 msgstr "Failed to approve outcome. Please try again."
 
-#: src/components/conversation/hooks/index.ts:521
-#: src/components/conversation/hooks/index.ts:537
+#: src/components/conversation/hooks/index.ts:536
+#: src/components/conversation/hooks/index.ts:552
 msgid "Failed to clear conversations"
 msgstr ""
 
@@ -4202,12 +4202,12 @@ msgstr "Failed to reload. Please try again."
 msgid "Failed to remove avatar"
 msgstr "Failed to remove avatar"
 
-#: src/components/conversation/hooks/index.ts:439
+#: src/components/conversation/hooks/index.ts:454
 msgid "Failed to remove conversation from chat"
 msgstr "Failed to remove conversation from chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/components/conversation/hooks/index.ts:434
+#: src/components/conversation/hooks/index.ts:449
 msgid "Failed to remove conversation from chat{0}"
 msgstr "Failed to remove conversation from chat{0}"
 
@@ -4219,7 +4219,7 @@ msgstr "Failed to remove logo"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Riprogrammazione non riuscita. Scegli un orario più avanti e riprova."
 
-#: src/components/conversation/hooks/index.ts:637
+#: src/components/conversation/hooks/index.ts:652
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Failed to retranscribe conversation. Please try again."
 
@@ -5651,7 +5651,7 @@ msgstr "loading..."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:164
 #: src/components/conversation/ConversationAccordion.tsx:119
-#: src/components/conversation/hooks/index.ts:351
+#: src/components/conversation/hooks/index.ts:366
 msgid "Loading..."
 msgstr "Loading..."
 

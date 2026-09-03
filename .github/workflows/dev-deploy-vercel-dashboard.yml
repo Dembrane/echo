@@ -58,6 +58,27 @@ jobs:
       - name: Build Project Artifacts
         run: vercel build --target=staging --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: echo/frontend
+        env:
+          POSTHOG_SOURCEMAPS: "1"
+
+      # Best-effort: symbolication is a nice-to-have, so a PostHog outage must
+      # never block a deploy. The cleanup step below always strips maps from
+      # the bundle, so nothing leaks even if upload fails.
+      - name: Upload source maps to PostHog
+        continue-on-error: true
+        working-directory: echo/frontend
+        env:
+          POSTHOG_CLI_HOST: https://eu.posthog.com
+          POSTHOG_CLI_PROJECT_ID: "197841"
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+        run: |
+          pnpm dlx @posthog/cli@0.16.0 sourcemap inject --directory .vercel/output/static
+          pnpm dlx @posthog/cli@0.16.0 sourcemap upload --directory .vercel/output/static
+
+      - name: Remove source maps from deploy bundle
+        if: always()
+        working-directory: echo/frontend
+        run: find .vercel/output/static -name '*.map' -type f -delete || true
 
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --target=staging --token=${{ secrets.VERCEL_TOKEN }}
