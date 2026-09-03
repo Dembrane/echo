@@ -104,6 +104,10 @@ const CanvasRoute = createLazyNamedRoute(
 	() => import("./routes/project/canvas/CanvasRoute"),
 	"CanvasRoute",
 );
+const PopcornRoute = createLazyNamedRoute(
+	() => import("./routes/project/popcorn/PopcornRoute"),
+	"PopcornRoute",
+);
 const ParticipantReport = createLazyNamedRoute(
 	() => import("./routes/participant/ParticipantReport"),
 	"ParticipantReport",
@@ -259,6 +263,10 @@ const projectRouteChildren = [
 						? [
 								{
 									children: [
+										{
+											element: <PopcornRoute />,
+											path: "popcorn",
+										},
 										{
 											element: <ProjectLibraryAspect />,
 											path: "views/:viewId/aspects/:aspectId",

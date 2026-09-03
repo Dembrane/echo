@@ -73,6 +73,14 @@ scheduler.add_job(
 )
 
 scheduler.add_job(
+    func="dembrane.tasks:task_reconcile_popcorn_tick_tasks.send",
+    trigger=CronTrigger(minute="*/5"),
+    id="task_reconcile_popcorn_tick_tasks",
+    name="Backfill scheduled_task rows for active popcorn loops (reconciler)",
+    replace_existing=True,
+)
+
+scheduler.add_job(
     func="dembrane.tasks:task_process_scheduled_tasks.send",
     trigger=CronTrigger(minute="*"),
     id="task_process_scheduled_tasks",

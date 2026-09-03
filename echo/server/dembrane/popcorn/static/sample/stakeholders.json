@@ -1,0 +1,320 @@
+{
+  "stakeholders": [
+    {
+      "id": "s1",
+      "name": "Individual members",
+      "role": "Freelancers and regulars who pay the full rate",
+      "stake": "Belonging, recognition, and a real say in how the space changes",
+      "quoteIds": [
+        "q1"
+      ],
+      "evidence": {
+        "rung": "voiced"
+      },
+      "weight": {
+        "stake": 0.9,
+        "mentions": 0.95
+      }
+    },
+    {
+      "id": "s2",
+      "name": "Anchor organisations",
+      "role": "Funded organisations with block bookings",
+      "stake": "Stable, affordable space that carries them through the winter",
+      "quoteIds": [
+        "q5"
+      ],
+      "evidence": {
+        "rung": "named",
+        "note": "Discussed as a category. No one in the room spoke as an anchor organisation."
+      },
+      "weight": {
+        "stake": 0.8,
+        "mentions": 0.45
+      }
+    },
+    {
+      "id": "s3",
+      "name": "Staff and programme team",
+      "role": "They run the calendar, the café and the welcome",
+      "stake": "A programme they can sustain without burning out",
+      "quoteIds": [],
+      "evidence": {
+        "rung": "voiced"
+      },
+      "weight": {
+        "stake": 0.9,
+        "mentions": 0.85
+      }
+    },
+    {
+      "id": "s4",
+      "name": "The board",
+      "role": "Holds the accounts and the contracts",
+      "stake": "Decisions that get made and hold, without losing the membership",
+      "quoteIds": [
+        "q11"
+      ],
+      "evidence": {
+        "rung": "named",
+        "note": "Talked about in the third person all day and never heard from directly."
+      },
+      "weight": {
+        "stake": 0.85,
+        "mentions": 0.6
+      }
+    },
+    {
+      "id": "s5",
+      "name": "Neighbours and the street",
+      "role": "The public on the ground floor's doorstep",
+      "stake": "A building they can walk into",
+      "quoteIds": [
+        "q3"
+      ],
+      "evidence": {
+        "rung": "named",
+        "invokedBy": "s1",
+        "note": "The ground-floor argument is about their doorstep. Members argued both sides of it in their name."
+      },
+      "weight": {
+        "stake": 0.85,
+        "mentions": 0.7
+      }
+    },
+    {
+      "id": "s6",
+      "name": "Funders",
+      "role": "Grant-makers whose money comes with reporting conditions",
+      "stake": "Visible impact for every pound",
+      "quoteIds": [
+        "q6"
+      ],
+      "evidence": {
+        "rung": "named",
+        "note": "Has the most structural power over the outcome and appears in the room only as grant conditions."
+      },
+      "weight": {
+        "stake": 0.9,
+        "mentions": 0.4
+      }
+    }
+  ],
+  "relations": [
+    {
+      "id": "r1",
+      "between": [
+        "s1",
+        "s2"
+      ],
+      "label": "the subsidy nobody chose",
+      "intensity": 0.7,
+      "sentiment": -0.5,
+      "unowned": true,
+      "detail": "Full-rate members cover the discounted rooms the anchor organisations hold. The discounts predate most of the current membership, and nobody at the money table knew who set them.",
+      "aspects": [
+        {
+          "kind": "power",
+          "note": "Neither group can change the rates. The tiers sit in contracts the board signed years ago.",
+          "quoteIds": [
+            "q5"
+          ]
+        },
+        {
+          "kind": "risk",
+          "note": "Full-rate members said the subsidy makes them question renewing.",
+          "quoteIds": [
+            "q5"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r2",
+      "between": [
+        "s1",
+        "s3"
+      ],
+      "label": "gatekeeper, coach, or infrastructure",
+      "intensity": 0.85,
+      "sentiment": -0.3,
+      "unowned": false,
+      "detail": "The programme team curates what happens in the building. Members describe their best experiences as unprogrammed and ask for permission and the keys instead.",
+      "aspects": [
+        {
+          "kind": "opportunity",
+          "note": "Members offering to host is unused capacity for a team that says it is stretched.",
+          "quoteIds": [
+            "q8",
+            "q9"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r3",
+      "between": [
+        "s1",
+        "s5"
+      ],
+      "label": "openness versus quiet",
+      "intensity": 0.75,
+      "sentiment": -0.6,
+      "unowned": false,
+      "detail": "The ground floor is the only part of the building a non-member can reach, and the only part the quiet-paying members cannot avoid.",
+      "aspects": [
+        {
+          "kind": "risk",
+          "note": "Members who pay for quiet said opening the doors would remove the one thing they cannot get anywhere else.",
+          "quoteIds": [
+            "q4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r4",
+      "between": [
+        "s1",
+        "s4"
+      ],
+      "label": "decisions fall between meetings",
+      "intensity": 0.8,
+      "sentiment": -0.4,
+      "unowned": true,
+      "detail": "Members and the board meet twice a year. The decisions too big for consensus wait for those meetings, and often past them.",
+      "aspects": [
+        {
+          "kind": "power",
+          "note": "Members defer upward, the board defers back to consensus, and nobody ends up holding the big decisions.",
+          "quoteIds": [
+            "q10",
+            "q11"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r5",
+      "between": [
+        "s3",
+        "s6"
+      ],
+      "label": "the reports land on staff",
+      "intensity": 0.7,
+      "sentiment": -0.7,
+      "unowned": false,
+      "detail": "Staff write the reports the grants require. The programme manager now spends more time reporting than programming.",
+      "aspects": [
+        {
+          "kind": "power",
+          "note": "Staff carry the funders' conditions without ever meeting the funders.",
+          "quoteIds": [
+            "q6"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r6",
+      "between": [
+        "s2",
+        "s6"
+      ],
+      "label": "grants with conditions attached",
+      "intensity": 0.6,
+      "sentiment": -0.2,
+      "unowned": false,
+      "detail": "The anchor organisations' bookings are paid from grants, and each grant's reporting conditions shape what they can commit to here.",
+      "aspects": [
+        {
+          "kind": "power",
+          "note": "The funders set the conditions; the organisations can meet them or lose the money.",
+          "quoteIds": [
+            "q6"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r7",
+      "between": [
+        "s4",
+        "s6"
+      ],
+      "label": "answers for the money",
+      "intensity": 0.65,
+      "sentiment": 0,
+      "unowned": false,
+      "detail": "The board answers to funders for how the money is spent.",
+      "aspects": [
+        {
+          "kind": "power",
+          "note": "Every pound arrives with conditions the board did not set.",
+          "quoteIds": [
+            "q6"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r8",
+      "between": [
+        "s4",
+        "s3"
+      ],
+      "label": "delegates the day-to-day",
+      "intensity": 0.6,
+      "sentiment": 0.3,
+      "unowned": false,
+      "detail": "The board delegates the running of the building to staff and mostly stays out of it.",
+      "aspects": [
+        {
+          "kind": "risk",
+          "note": "The board knows the accounts and staff know the building. The two halves rarely meet.",
+          "quoteIds": [
+            "q11"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r9",
+      "between": [
+        "s2",
+        "s3"
+      ],
+      "label": "block bookings anchor the calendar",
+      "intensity": 0.55,
+      "sentiment": 0.5,
+      "unowned": false,
+      "evidence": {
+        "rung": "inferred"
+      },
+      "detail": "The anchor organisations' regular bookings are the fixed points the staff build the calendar around, and the steadiest income they can plan on.",
+      "aspects": []
+    },
+    {
+      "id": "r10",
+      "between": [
+        "s3",
+        "s5"
+      ],
+      "label": "the café faces the street",
+      "intensity": 0.5,
+      "sentiment": 0.4,
+      "unowned": false,
+      "detail": "The café is the one place a neighbour can already walk into, and the staff run it.",
+      "aspects": [
+        {
+          "kind": "opportunity",
+          "note": "Opening the ground floor would extend something the café already does, rather than start something new.",
+          "quoteIds": [
+            "q3",
+            "q7"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -65,6 +65,11 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _is_popcorn_loop(loop: dict[str, Any] | None) -> bool:
+    caps = (loop or {}).get("caps")
+    return isinstance(caps, dict) and caps.get("kind") == "popcorn"
+
+
 def _parse_dt(value: Any) -> datetime | None:
     if not value:
         return None
@@ -842,6 +847,15 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
     loop = await async_directus.get_item("agent_loop", loop_id)
     if not loop:
         raise RuntimeError("Canvas loop not found")
+    if _is_popcorn_loop(loop):
+        # Popcorn loops share this table but run their own tick pipeline.
+        run = await _create_run(
+            loop_id=loop_id,
+            status="no_op",
+            detail="Not a canvas loop",
+            started_at=started_at,
+        )
+        return {"status": "no_op", "run": run}
 
     if not await _canvas_enabled_for_loop(loop):
         run = await _create_run(
@@ -1081,11 +1095,12 @@ async def reconcile_missing_canvas_tick_tasks() -> int:
                     "status": {"_eq": "active"},
                     "expires_at": {"_gt": now.isoformat()},
                 },
-                "fields": ["id", "expires_at"],
+                "fields": ["id", "expires_at", "caps"],
                 "limit": -1,
             }
         },
     )
+    loops = [loop for loop in (loops or []) if not _is_popcorn_loop(loop)]
     if not isinstance(loops, list) or not loops:
         return 0
 
