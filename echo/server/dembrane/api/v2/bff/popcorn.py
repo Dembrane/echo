@@ -231,13 +231,17 @@ async def popcorn_loop_action(
     action: str,
     auth: DependencyDirectusSession,
 ) -> dict[str, Any]:
-    if action not in {"pause", "resume", "stop"}:
+    if action not in {"pause", "resume", "stop", "go-live"}:
         raise HTTPException(status_code=404, detail="Popcorn loop action not found")
     report, access = await _require_popcorn(popcorn_id, auth)
     access.require("project:update")
     loop = await get_loop_for_report(str(report["id"]))
     if not loop:
         raise HTTPException(status_code=404, detail="Popcorn loop not found")
+    if action == "go-live":
+        # An ended session comes back for another eight hours, reading straight away.
+        await go_live_again(loop)
+        return await popcorn_payload(report)
     try:
         updated = await apply_loop_action(loop, action)
     except ValueError as exc:
@@ -247,18 +251,6 @@ async def popcorn_loop_action(
     payload = await popcorn_payload(report)
     payload["loop"] = {**(payload.get("loop") or {}), "status": updated.get("status")}
     return payload
-
-
-@router.post("/{popcorn_id}/loop/go-live")
-async def popcorn_go_live(popcorn_id: str, auth: DependencyDirectusSession) -> dict[str, Any]:
-    """Bring an ended session back for another eight hours, reading straight away."""
-    report, access = await _require_popcorn(popcorn_id, auth)
-    access.require("project:update")
-    loop = await get_loop_for_report(str(report["id"]))
-    if not loop:
-        raise HTTPException(status_code=404, detail="Popcorn loop not found")
-    await go_live_again(loop)
-    return await popcorn_payload(report)
 
 
 @router.patch("/{popcorn_id}/loop")
