@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from dembrane.s3 import delete_from_s3, get_signed_url, save_to_s3_from_file_like
 from dembrane.llms import MODELS, router_completion
-from dembrane.utils import generate_uuid
+from dembrane.utils import generate_uuid, clean_generated_title
 from dembrane.prompts import render_prompt
 from dembrane.transcribe import TranscriptionError, transcribe_audio_dembrane_26_07
 from dembrane.audio_utils import get_duration_from_url
@@ -98,32 +98,6 @@ def generate_summary(
         return ""
 
 
-def _clean_generated_title(content: str) -> str:
-    # The model occasionally returns a list of options or wraps the title in
-    # quotes/markdown; keep only the first candidate as plain text.
-    lines = [line.strip() for line in content.splitlines() if line.strip()]
-    if not lines:
-        return ""
-
-    list_item = re.compile(r"^(?:[-*•]\s+|\d+[.):]\s+)(.+)$")
-    candidate = ""
-    for line in lines:
-        match = list_item.match(line)
-        if match:
-            candidate = match.group(1)
-            break
-    if not candidate:
-        for i, line in enumerate(lines):
-            # Skip preamble like "Here are some options:" when more lines follow
-            if line.endswith(":") and i < len(lines) - 1:
-                continue
-            candidate = line
-            break
-
-    candidate = re.sub(r"^\*\*(.+?)\*\*$", r"\1", candidate)
-    return candidate.strip().strip("\"'“”‘’").strip()
-
-
 def generate_conversation_title(
     summary: str,
     language: str | None,
@@ -174,7 +148,7 @@ def generate_conversation_title(
         if response_content is None:
             logger.warning("LLM returned None content for title")
             return ""
-        return _clean_generated_title(response_content)
+        return clean_generated_title(response_content)
     except (IndexError, AttributeError, KeyError) as e:
         logger.error(f"Error getting response content for title: {e}")
         return ""

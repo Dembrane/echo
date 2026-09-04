@@ -1,3 +1,4 @@
+import re
 import time
 import uuid
 import random
@@ -12,6 +13,32 @@ random.seed(time.time())
 
 def generate_uuid() -> str:
     return str(uuid.uuid4())
+
+
+def clean_generated_title(content: str) -> str:
+    # The model occasionally returns a list of options or wraps the title in
+    # quotes/markdown; keep only the first candidate as plain text.
+    lines = [line.strip() for line in content.splitlines() if line.strip()]
+    if not lines:
+        return ""
+
+    list_item = re.compile(r"^(?:[-*•]\s+|\d+[.):]\s+)(.+)$")
+    candidate = ""
+    for line in lines:
+        match = list_item.match(line)
+        if match:
+            candidate = match.group(1)
+            break
+    if not candidate:
+        for i, line in enumerate(lines):
+            # Skip preamble like "Here are some options:" when more lines follow
+            if line.endswith(":") and i < len(lines) - 1:
+                continue
+            candidate = line
+            break
+
+    candidate = re.sub(r"^\*\*(.+?)\*\*$", r"\1", candidate)
+    return candidate.strip().strip("\"'“”‘’").strip()
 
 
 def generate_4_digit_pin() -> str:
