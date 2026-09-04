@@ -129,28 +129,7 @@ function VoiceFields({
 	// The default is the prompt as written. It is on whenever nothing else is,
 	// and choosing it clears everything else, so it reads as one of the choices
 	// rather than as the absence of one.
-	const isDefault = voice.presets.length === 0 && !voice.note && !otherOpen;
-	const options: Array<{
-		key: PopcornVoicePreset;
-		label: string;
-		description: string;
-	}> = [
-		{
-			description: t`The softer of two ways the room said a thing. Nothing that names or blames a person.`,
-			key: "gentle",
-			label: t`Gentle on people`,
-		},
-		{
-			description: t`The plainest wording the room used. No metaphors or jokes the room did not come back to.`,
-			key: "plain",
-			label: t`Keep it plain`,
-		},
-		{
-			description: t`Favour what became a decision, a need or a next step.`,
-			key: "decisions",
-			label: t`Lean towards decisions`,
-		},
-	];
+	const isDefault = !voice.note && !otherOpen;
 	return (
 		<Stack gap="sm">
 			<Text fw={500}>
@@ -164,29 +143,10 @@ function VoiceFields({
 					onChange({ note: "", presets: [] });
 				}}
 				label={t`dembrane default`}
-				description={t`The room's own words, the ideas that moved the conversation. Nothing added, nothing softened.`}
+				description={t`The room's own words, the ideas that moved the conversation.`}
 				size={FIELD_SIZE}
 				{...testId("popcorn-voice-default")}
 			/>
-			<Checkbox.Group
-				value={voice.presets}
-				onChange={(next) =>
-					onChange({ ...voice, presets: next as PopcornVoicePreset[] })
-				}
-			>
-				<Stack gap="sm">
-					{options.map((option) => (
-						<Checkbox
-							key={option.key}
-							value={option.key}
-							label={option.label}
-							description={option.description}
-							size={FIELD_SIZE}
-							{...testId(`popcorn-voice-${option.key}`)}
-						/>
-					))}
-				</Stack>
-			</Checkbox.Group>
 			<Box>
 				<Checkbox
 					checked={otherOpen}
@@ -298,7 +258,6 @@ function PopcornStart({
 	const [titleError, setTitleError] = useState<string | null>(null);
 	const [duration, setDuration] = useState<Duration>("24h");
 	const [voice, setVoice] = useState<PopcornVoice>(EMPTY_VOICE);
-	const [showSample, setShowSample] = useState(true);
 	const create = useCreatePopcornMutation(projectId);
 
 	useEffect(() => {
@@ -318,42 +277,6 @@ function PopcornStart({
 							while they are still happening.
 						</Trans>
 					</Text>
-				</Stack>
-				{/* The sample deck is the first thing on the page, already playing:
-				    nobody has to dare to click before they know what this is. */}
-				<Stack gap="xs" {...testId("popcorn-try")}>
-					{showSample ? (
-						<Box
-							className="overflow-hidden rounded-md border"
-							style={{
-								borderColor: "var(--mantine-color-gray-3)",
-								height: 520,
-							}}
-						>
-							<iframe
-								title={t`Sample popcorn session`}
-								src={popcornSampleViewUrl()}
-								className="block h-full w-full border-0"
-								{...testId("popcorn-sample-frame")}
-							/>
-						</Box>
-					) : null}
-					<Group justify="space-between" align="center" gap="sm">
-						<Text size="xs">
-							<Trans>
-								This is a sample session, not your data. Your own screen will
-								look like this once you start.
-							</Trans>
-						</Text>
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => setShowSample((current) => !current)}
-							{...testId("popcorn-try-button")}
-						>
-							{showSample ? t`Hide the sample` : t`Show the sample`}
-						</Button>
-					</Group>
 				</Stack>
 				<Paper withBorder className="rounded-md" p="lg">
 					<Stack gap="lg">
