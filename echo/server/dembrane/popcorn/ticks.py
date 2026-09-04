@@ -643,8 +643,8 @@ async def reconcile_missing_popcorn_tick_tasks() -> int:
 
     from dembrane.scheduled_tasks import (
         STATUS_FAILED,
-        STATUS_PROCESSING,
         STATUS_SCHEDULED,
+        STATUS_PROCESSING,
         TASK_POPCORN_TICK,
     )
 

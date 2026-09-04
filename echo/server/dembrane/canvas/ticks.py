@@ -1107,9 +1107,9 @@ async def reconcile_missing_canvas_tick_tasks() -> int:
 
     from dembrane.scheduled_tasks import (
         STATUS_FAILED,
-        STATUS_PROCESSING,
         STATUS_SCHEDULED,
         TASK_CANVAS_TICK,
+        STATUS_PROCESSING,
     )
 
     existing = await async_directus.get_items(
