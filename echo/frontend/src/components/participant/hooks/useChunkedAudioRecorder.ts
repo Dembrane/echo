@@ -186,95 +186,136 @@ const useChunkedAudioRecorder = ({
 
 	const chunkBufferRef = useRef<Blob[]>([]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be looked at
-	const startRecordingChunk = useCallback(() => {
-		log("startRecordingChunk", {
-			isRecording,
-			mediaRecorderRefState: mediaRecorderRef.current?.state,
-		});
-		if (!streamRef.current) {
-			log("startRecordingChunk: no stream found");
-			return;
-		}
-
-		// Ensure that any previous MediaRecorder instance is stopped before creating a new one
-		if (mediaRecorderRef.current) {
-			log("startRecordingChunk: stopping previous MediaRecorder instance");
-			mediaRecorderRef.current.stop();
-			mediaRecorderRef.current = null;
-		}
-
-		log("startRecordingChunk: creating new MediaRecorder instance");
-		const recorder = new MediaRecorder(streamRef.current, {
-			mimeType: MediaRecorder.isTypeSupported(mimeType)
-				? mimeType
-				: "audio/webm",
-		});
-		mediaRecorderRef.current = recorder;
-
-		recorder.ondataavailable = (event) => {
-			log("ondataavailable", event.data.size, "bytes");
-			if (event.data.size > 0) {
-				chunkBufferRef.current.push(event.data);
-			}
-		};
-
-		recorder.onstop = () => {
-			log("MediaRecorder stopped");
-			const chunkBlob = new Blob(chunkBufferRef.current, { type: mimeType });
-			const chunkSize = chunkBlob.size;
-
-			// Track chunk history for interruption reporting
-			chunkHistoryRef.current.push({
-				size: chunkSize,
-				timestamp: Date.now(),
+	// Play the pre-unlocked alert so the participant hears the recording was
+	// interrupted. Best-effort: playback can be blocked and must not throw.
+	const playInterruptionAlert = useCallback(() => {
+		if (audioAlertRef.current) {
+			audioAlertRef.current.muted = false;
+			audioAlertRef.current.currentTime = 0;
+			audioAlertRef.current.play().catch((error) => {
+				console.error("Failed to play notification sound:", error);
 			});
+		}
+	}, []);
 
-			// Check if this is a suspicious chunk (< 1KB)
-			if (chunkSize < MIN_CHUNK_SIZE_BYTES) {
-				suspiciousChunkCountRef.current++;
-
-				// If 2 consecutive suspicious chunks, recording has failed
-				if (
-					suspiciousChunkCountRef.current >= 2 &&
-					!hasCalledInterruptionCallbackRef.current
-				) {
-					hadConsecutiveSuspiciousChunksRef.current = true;
-					hasCalledInterruptionCallbackRef.current = true;
-
-					// Play notification sound for interruption using pre-unlocked audio
-					if (audioAlertRef.current) {
-						audioAlertRef.current.muted = false;
-						audioAlertRef.current.currentTime = 0;
-						audioAlertRef.current.play().catch((error) => {
-							console.error("Failed to play notification sound:", error);
-						});
-					}
-
-					// Don't upload suspicious chunk, don't restart recording
-					chunkBufferRef.current = [];
-					onRecordingInterrupted?.();
-					return;
-				}
-
-				// First suspicious chunk - don't upload it, but continue recording
-				chunkBufferRef.current = [];
-				startRecordingChunk();
+	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be looked at
+	const startRecordingChunk = useCallback(
+		(isRestart = false) => {
+			log("startRecordingChunk", {
+				isRecording,
+				mediaRecorderRefState: mediaRecorderRef.current?.state,
+			});
+			if (!streamRef.current) {
+				log("startRecordingChunk: no stream found");
 				return;
 			}
 
-			// Good chunk - reset suspicious counter and upload
-			suspiciousChunkCountRef.current = 0;
-			onChunk(chunkBlob);
+			// Ensure that any previous MediaRecorder instance is stopped before creating a new one.
+			// A restart runs from onstop, where the previous recorder is already inactive; stop()
+			// on an inactive recorder throws, so only stop one still recording (as stopRecording and
+			// pauseRecording do).
+			if (mediaRecorderRef.current) {
+				log("startRecordingChunk: stopping previous MediaRecorder instance");
+				if (mediaRecorderRef.current.state === "recording") {
+					mediaRecorderRef.current.stop();
+				}
+				mediaRecorderRef.current = null;
+			}
 
-			// flush the buffer and restart
-			chunkBufferRef.current = [];
-			startRecordingChunk();
-		};
+			log("startRecordingChunk: creating new MediaRecorder instance");
+			const recorder = new MediaRecorder(streamRef.current, {
+				mimeType: MediaRecorder.isTypeSupported(mimeType)
+					? mimeType
+					: "audio/webm",
+			});
+			mediaRecorderRef.current = recorder;
 
-		// allow for some room to restart so all is just one chunk as per mediarec
-		recorder.start(timeslice * 2);
-	}, [isRecording]);
+			recorder.ondataavailable = (event) => {
+				log("ondataavailable", event.data.size, "bytes");
+				if (event.data.size > 0) {
+					chunkBufferRef.current.push(event.data);
+				}
+			};
+
+			recorder.onstop = () => {
+				log("MediaRecorder stopped");
+				const chunkBlob = new Blob(chunkBufferRef.current, { type: mimeType });
+				const chunkSize = chunkBlob.size;
+
+				// Track chunk history for interruption reporting
+				chunkHistoryRef.current.push({
+					size: chunkSize,
+					timestamp: Date.now(),
+				});
+
+				// Check if this is a suspicious chunk (< 1KB)
+				if (chunkSize < MIN_CHUNK_SIZE_BYTES) {
+					suspiciousChunkCountRef.current++;
+
+					// If 2 consecutive suspicious chunks, recording has failed
+					if (
+						suspiciousChunkCountRef.current >= 2 &&
+						!hasCalledInterruptionCallbackRef.current
+					) {
+						hadConsecutiveSuspiciousChunksRef.current = true;
+						hasCalledInterruptionCallbackRef.current = true;
+
+						// Play notification sound for interruption using pre-unlocked audio
+						playInterruptionAlert();
+
+						// Don't upload suspicious chunk, don't restart recording
+						chunkBufferRef.current = [];
+						onRecordingInterrupted?.();
+						return;
+					}
+
+					// First suspicious chunk - don't upload it, but continue recording
+					chunkBufferRef.current = [];
+					startRecordingChunk(true);
+					return;
+				}
+
+				// Good chunk - reset suspicious counter and upload
+				suspiciousChunkCountRef.current = 0;
+				onChunk(chunkBlob);
+
+				// flush the buffer and restart
+				chunkBufferRef.current = [];
+				startRecordingChunk(true);
+			};
+
+			// allow for some room to restart so all is just one chunk as per mediarec
+			try {
+				recorder.start(timeslice * 2);
+			} catch (error) {
+				// The initial start propagates to startRecording, which releases the
+				// mic and returns false. A restart has no such caller, so the throw
+				// would escape onstop or the restart timer and leave isRecording stuck
+				// true while no more audio is captured and the participant is never
+				// told. The mic track can die between chunks: the participant takes a
+				// call, or another app grabs the device. Reset here and raise the same
+				// interruption the participant gets for a dead mic.
+				if (!isRestart) {
+					throw error;
+				}
+				console.error("Failed to restart recording chunk", error);
+				mediaRecorderRef.current = null;
+				isRecordingRef.current = false;
+				setIsRecording(false);
+				streamRef.current?.getTracks().forEach((track) => {
+					track.stop();
+				});
+				streamRef.current = null;
+				if (!hasCalledInterruptionCallbackRef.current) {
+					hasCalledInterruptionCallbackRef.current = true;
+					chunkBufferRef.current = [];
+					playInterruptionAlert();
+					onRecordingInterrupted?.();
+				}
+			}
+		},
+		[isRecording],
+	);
 
 	const startRecording = async (initialTime = 0): Promise<boolean> => {
 		if (startingRef.current || isRecordingRef.current) {
@@ -398,7 +439,7 @@ const useChunkedAudioRecorder = ({
 
 					if (isRecording) {
 						log("Restarting recording chunk");
-						startRecordingChunk();
+						startRecordingChunk(true);
 					}
 				}
 			}, timeslice);
