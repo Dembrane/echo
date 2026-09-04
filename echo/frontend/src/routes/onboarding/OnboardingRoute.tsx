@@ -20,7 +20,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { InviteEmailList } from "@/components/organisation/InviteEmailList";
-import { API_BASE_URL, LEGAL_PRIVACY_URL } from "@/config";
+import { API_BASE_URL, TRUST_ROOM_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useMyInvites } from "@/hooks/useMyInvites";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -490,12 +490,12 @@ export const OnboardingRoute = () => {
 								</Text>
 								<div>
 									<Anchor
-										href={LEGAL_PRIVACY_URL}
+										href={TRUST_ROOM_URL}
 										target="_blank"
 										rel="noopener noreferrer"
 										size="sm"
 									>
-										<Trans>Privacy policy on high-risk use</Trans>
+										<Trans>Trust room</Trans>
 									</Anchor>
 								</div>
 								<Radio.Group value={q3} onChange={setQ3}>

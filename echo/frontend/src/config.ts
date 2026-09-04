@@ -145,6 +145,7 @@ export const LEGAL_TERMS_URL = "https://www.dembrane.com/legal/terms" as const;
 export const LEGAL_PRIVACY_URL =
 	"https://www.dembrane.com/legal/privacy" as const;
 export const LEGAL_DPA_URL = "https://www.dembrane.com/legal/DPA" as const;
+export const TRUST_ROOM_URL = "https://www.dembrane.com/trust" as const;
 
 // docs.dembrane.com is the one published corpus now, same site in every
 // environment, so the "What can Ask do?" link no longer needs to hide outside
