@@ -807,7 +807,7 @@ msgstr ""
 msgid "Accepted terms"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1867
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1876
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:591
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:736
 #: src/routes/project/CreateProjectRoute.tsx:270
@@ -1278,7 +1278,7 @@ msgstr ""
 msgid "All seats taken"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:844
+#: src/components/chat/TemplatesModal.tsx:845
 msgid "All Templates"
 msgstr "All Templates"
 
@@ -1295,7 +1295,7 @@ msgstr ""
 msgid "All workspaces"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1961
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1970
 msgid "Allow dembrane staff to access this workspace for support"
 msgstr ""
 
@@ -1466,7 +1466,7 @@ msgstr ""
 msgid "Any tag"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1886
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1895
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr ""
 
@@ -1524,7 +1524,7 @@ msgstr ""
 #: src/routes/admin/AdminSettingsRoute.tsx:659
 #: src/components/view/CreateViewForm.tsx:153
 #: src/components/goal/GoalSuggestionCard.tsx:140
-#: src/components/common/ImageCropModal.tsx:148
+#: src/components/common/ImageCropModal.tsx:150
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:225
 #: src/components/chat/CanvasSuggestionCard.tsx:361
 msgid "Apply"
@@ -1596,7 +1596,7 @@ msgstr "Are you sure you want to delete this report? This action cannot be undon
 msgid "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 msgstr "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 
-#: src/components/chat/TemplatesModal.tsx:430
+#: src/components/chat/TemplatesModal.tsx:431
 msgid "Are you sure you want to delete this template? This cannot be undone."
 msgstr "Are you sure you want to delete this template? This cannot be undone."
 
@@ -1617,7 +1617,7 @@ msgstr "Are you sure you want to regenerate the summary? You will lose the curre
 msgid "Are you sure you want to remove your avatar?"
 msgstr "Are you sure you want to remove your avatar?"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:183
+#: src/components/settings/WhitelabelLogoCard.tsx:184
 msgid "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 msgstr "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 
@@ -1874,7 +1874,7 @@ msgstr ""
 msgid "Back to Selection"
 msgstr "Back to Selection"
 
-#: src/components/chat/TemplatesModal.tsx:456
+#: src/components/chat/TemplatesModal.tsx:457
 msgid "Back to templates"
 msgstr "Back to templates"
 
@@ -2053,7 +2053,7 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1115
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1149
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1323
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1943
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1952
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:769
 #: src/routes/project/ProjectsHome.tsx:441
 #: src/routes/project/CreateProjectRoute.tsx:403
@@ -2088,7 +2088,7 @@ msgstr ""
 #: src/components/conversation/MoveConversationButton.tsx:231
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:77
-#: src/components/common/ImageCropModal.tsx:145
+#: src/components/common/ImageCropModal.tsx:147
 #: src/components/common/FeedbackPortalModal.tsx:168
 #: src/components/common/ConfirmModal.tsx:44
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:722
@@ -2389,7 +2389,7 @@ msgstr ""
 msgid "Checking your session."
 msgstr ""
 
-#: src/components/settings/WhitelabelLogoCard.tsx:171
+#: src/components/settings/WhitelabelLogoCard.tsx:172
 msgid "Choose a logo file"
 msgstr "Choose a logo file"
 
@@ -2660,7 +2660,7 @@ msgstr "Context"
 msgid "Context added:"
 msgstr "Context added:"
 
-#: src/components/chat/TemplatesModal.tsx:716
+#: src/components/chat/TemplatesModal.tsx:717
 msgid "Contextual suggestions"
 msgstr "Contextual suggestions"
 
@@ -3129,7 +3129,7 @@ msgstr ""
 msgid "Create Report"
 msgstr "Create Report"
 
-#: src/components/chat/TemplatesModal.tsx:763
+#: src/components/chat/TemplatesModal.tsx:764
 msgid "Create template"
 msgstr "Create template"
 
@@ -3177,23 +3177,28 @@ msgstr ""
 msgid "Crop Avatar"
 msgstr "Crop Avatar"
 
-#: src/components/common/ImageCropModal.tsx:100
+#: src/components/common/ImageCropModal.tsx:97
 msgid "Crop Image"
 msgstr "Crop Image"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1771
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1774
 msgid "Crop logo"
 msgstr ""
 
-#: src/components/settings/WhitelabelLogoCard.tsx:203
+#: src/components/settings/WhitelabelLogoCard.tsx:204
 msgid "Crop Logo"
 msgstr "Crop Logo"
+
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1776
+#: src/components/settings/WhitelabelLogoCard.tsx:206
+msgid "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×200px)."
+msgstr ""
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:315
 msgid "Current"
 msgstr ""
 
-#: src/components/settings/WhitelabelLogoCard.tsx:130
+#: src/components/settings/WhitelabelLogoCard.tsx:131
 msgid "Current logo"
 msgstr "Current logo"
 
@@ -3228,9 +3233,12 @@ msgstr "Custom Logo"
 msgid "Custom title prompt"
 msgstr "Custom title prompt"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1623
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1690
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1693
 msgid "Custom workspace logo shown to participants."
+msgstr ""
+
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1623
+msgid "Custom workspace logo shown to participants. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:651
@@ -3329,9 +3337,9 @@ msgstr "Delegate multi-step analysis with live tool execution"
 #: src/components/conversation/ConversationDrilldownModal.tsx:254
 #: src/components/conversation/ConversationDrilldownModal.tsx:269
 #: src/components/conversation/ConversationDangerZone.tsx:99
-#: src/components/chat/TemplatesModal.tsx:431
-#: src/components/chat/TemplatesModal.tsx:518
-#: src/components/chat/TemplatesModal.tsx:633
+#: src/components/chat/TemplatesModal.tsx:432
+#: src/components/chat/TemplatesModal.tsx:519
+#: src/components/chat/TemplatesModal.tsx:634
 #: src/components/chat/ChatAccordion.tsx:174
 msgid "Delete"
 msgstr "Delete"
@@ -3382,7 +3390,7 @@ msgstr "Delete report"
 msgid "Delete tag"
 msgstr "Delete tag"
 
-#: src/components/chat/TemplatesModal.tsx:428
+#: src/components/chat/TemplatesModal.tsx:429
 msgid "Delete template"
 msgstr "Delete template"
 
@@ -3703,7 +3711,7 @@ msgid "Drag audio files here or click to select files"
 msgstr "Drag audio files here or click to select files"
 
 #: src/routes/project/HostGuidePage.tsx:1484
-#: src/components/chat/TemplatesModal.tsx:568
+#: src/components/chat/TemplatesModal.tsx:569
 msgid "Drag to reorder"
 msgstr "Drag to reorder"
 
@@ -3711,8 +3719,8 @@ msgstr "Drag to reorder"
 msgid "Drops to the free tier. They can subscribe to a paid plan anytime."
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:593
-#: src/components/chat/TemplatesModal.tsx:621
+#: src/components/chat/TemplatesModal.tsx:594
+#: src/components/chat/TemplatesModal.tsx:622
 msgid "Duplicate"
 msgstr "Duplicate"
 
@@ -3762,7 +3770,7 @@ msgstr ""
 msgid "e.g. We are a research agency. Reports go to municipal clients, so keep summaries formal and in Dutch."
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:464
+#: src/components/chat/TemplatesModal.tsx:465
 msgid "e.g. Weekly stakeholder digest"
 msgstr "e.g. Weekly stakeholder digest"
 
@@ -3786,7 +3794,7 @@ msgstr "ECHO"
 #: src/components/project/PortalSettingsOverview.tsx:118
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:647
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:234
-#: src/components/chat/TemplatesModal.tsx:608
+#: src/components/chat/TemplatesModal.tsx:609
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:645
 msgid "Edit"
 msgstr "Edit"
@@ -4119,7 +4127,7 @@ msgstr ""
 msgid "Everyone in {0} can find and open this project."
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1883
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1892
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:386
 #: src/components/workspace/DiscoverableWorkspaces.tsx:304
 msgid "Everyone in your organisation"
@@ -4915,8 +4923,8 @@ msgstr ""
 msgid "Hidden"
 msgstr "Hidden"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1905
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1925
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1914
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1934
 msgid "Hidden from organisation members. Organisation admins can still find and join."
 msgstr ""
 
@@ -5224,7 +5232,7 @@ msgstr ""
 msgid "Invite members to collaborate on projects and conversations in this workspace."
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1902
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1911
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:392
 #: src/components/workspace/DiscoverableWorkspaces.tsx:306
 msgid "Invite only"
@@ -5955,7 +5963,7 @@ msgid "Login | dembrane"
 msgstr "Login | dembrane"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1620
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1687
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1690
 msgid "Logo"
 msgstr ""
 
@@ -6028,7 +6036,7 @@ msgstr ""
 msgid "Manage organisation billing"
 msgstr ""
 
-#: src/components/chat/ChatTemplatesMenu.tsx:356
+#: src/components/chat/ChatTemplatesMenu.tsx:359
 msgid "Manage templates"
 msgstr "Manage templates"
 
@@ -6212,7 +6220,7 @@ msgstr ""
 msgid "Monitor"
 msgstr ""
 
-#: src/components/chat/ChatTemplatesMenu.tsx:351
+#: src/components/chat/ChatTemplatesMenu.tsx:354
 msgid "more"
 msgstr "more"
 
@@ -6308,7 +6316,7 @@ msgstr "Має бути щонайменше через 10 хвилин"
 msgid "My access"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:858
+#: src/components/chat/TemplatesModal.tsx:859
 msgid "My templates"
 msgstr "My templates"
 
@@ -6376,6 +6384,10 @@ msgstr ""
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:163
 msgid "Named ways of working your team can reuse."
+msgstr ""
+
+#: src/components/chat/templates.ts:134
+msgid "Narratives"
 msgstr ""
 
 #: src/routes/organisation/OrganisationExternalView.tsx:130
@@ -6617,8 +6629,8 @@ msgstr ""
 msgid "No invites went out. Check the list below."
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1649
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1724
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1652
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1727
 msgid "No logo set. dembrane default will be used."
 msgstr ""
 
@@ -6771,7 +6783,7 @@ msgstr "No tags found"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "No tags have been added to this project yet. Add a tag using the text input above to get started."
 
-#: src/components/chat/TemplatesModal.tsx:873
+#: src/components/chat/TemplatesModal.tsx:874
 msgid "No templates match '{searchQuery}'"
 msgstr "No templates match '{searchQuery}'"
 
@@ -7719,7 +7731,7 @@ msgstr "Pick the approach that fits your question"
 msgid "Pilot limit reached"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:670
+#: src/components/chat/TemplatesModal.tsx:671
 msgid "Pin"
 msgstr "Pin"
 
@@ -7727,7 +7739,7 @@ msgstr "Pin"
 msgid "Pin project"
 msgstr "Pin project"
 
-#: src/components/chat/TemplatesModal.tsx:828
+#: src/components/chat/TemplatesModal.tsx:829
 msgid "Pin templates here for quick access."
 msgstr "Pin templates here for quick access."
 
@@ -7735,7 +7747,7 @@ msgstr "Pin templates here for quick access."
 msgid "Pinned"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:669
+#: src/components/chat/TemplatesModal.tsx:670
 msgid "Pinned is full (max 5)"
 msgstr "Pinned is full (max 5)"
 
@@ -7743,7 +7755,7 @@ msgstr "Pinned is full (max 5)"
 msgid "Pinned projects"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:798
+#: src/components/chat/TemplatesModal.tsx:799
 msgid "Pinned templates"
 msgstr "Pinned templates"
 
@@ -7978,7 +7990,7 @@ msgstr ""
 msgid "Privacy Policy URL"
 msgstr "URL політики конфіденційності"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1922
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1931
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:398
 #: src/routes/project/CreateProjectRoute.tsx:304
 #: src/routes/project/CreateProjectRoute.tsx:365
@@ -8169,7 +8181,7 @@ msgid "Projects will show up here once someone on the organisation shares one wi
 msgstr ""
 
 #: src/components/project/CustomTopicModal.tsx:217
-#: src/components/chat/TemplatesModal.tsx:468
+#: src/components/chat/TemplatesModal.tsx:469
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:137
 msgid "Prompt"
 msgstr "Prompt"
@@ -8572,12 +8584,12 @@ msgid "Reminder sent: support access still on"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1150
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1644
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1712
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1787
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1647
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1715
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1796
 #: src/routes/organisation/OrganisationRoute.tsx:1835
-#: src/components/settings/WhitelabelLogoCard.tsx:149
-#: src/components/settings/WhitelabelLogoCard.tsx:184
+#: src/components/settings/WhitelabelLogoCard.tsx:150
+#: src/components/settings/WhitelabelLogoCard.tsx:185
 #: src/components/settings/AccountSettingsCard.tsx:167
 #: src/components/settings/AccountSettingsCard.tsx:208
 #: src/components/organisation/InviteEmailList.tsx:58
@@ -8630,8 +8642,8 @@ msgstr ""
 msgid "Remove from this chat"
 msgstr "Remove from this chat"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1781
-#: src/components/settings/WhitelabelLogoCard.tsx:181
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1790
+#: src/components/settings/WhitelabelLogoCard.tsx:182
 msgid "Remove logo"
 msgstr "Remove logo"
 
@@ -8647,7 +8659,7 @@ msgstr ""
 msgid "Remove override"
 msgstr "Видалити перевизначення"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1783
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1792
 msgid "Remove the custom logo? The dembrane default will be used instead."
 msgstr ""
 
@@ -9115,7 +9127,7 @@ msgstr "Save"
 msgid "participant.concrete.action.button.save"
 msgstr "Save"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1949
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1958
 msgid "Save access"
 msgstr ""
 
@@ -9139,7 +9151,7 @@ msgstr ""
 msgid "Save Error!"
 msgstr "Save Error!"
 
-#: src/components/chat/TemplatesModal.tsx:528
+#: src/components/chat/TemplatesModal.tsx:529
 msgid "Save template"
 msgstr "Save template"
 
@@ -9301,7 +9313,7 @@ msgstr ""
 msgid "Search tags"
 msgstr "Search tags"
 
-#: src/components/chat/TemplatesModal.tsx:736
+#: src/components/chat/TemplatesModal.tsx:737
 msgid "Search templates..."
 msgstr "Search templates..."
 
@@ -9735,8 +9747,8 @@ msgstr ""
 msgid "Share with someone"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:482
-#: src/components/chat/TemplatesModal.tsx:498
+#: src/components/chat/TemplatesModal.tsx:483
+#: src/components/chat/TemplatesModal.tsx:499
 msgid "Share with workspace"
 msgstr ""
 
@@ -10245,7 +10257,7 @@ msgstr "Submit"
 msgid "Success"
 msgstr "Success"
 
-#: src/components/chat/TemplatesModal.tsx:726
+#: src/components/chat/TemplatesModal.tsx:727
 msgid "Suggest dynamic suggestions based on your conversation."
 msgstr "Suggest dynamic suggestions based on your conversation."
 
@@ -10262,7 +10274,7 @@ msgid "Suggested verification prompt"
 msgstr ""
 
 #: src/components/library/LibraryTemplatesMenu.tsx:33
-#: src/components/chat/ChatTemplatesMenu.tsx:277
+#: src/components/chat/ChatTemplatesMenu.tsx:280
 msgid "Suggested:"
 msgstr "Suggested:"
 
@@ -10450,7 +10462,7 @@ msgstr ""
 msgid "Template deleted"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:460
+#: src/components/chat/TemplatesModal.tsx:461
 msgid "Template name"
 msgstr "Template name"
 
@@ -10458,7 +10470,7 @@ msgstr "Template name"
 msgid "Template updated"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:416
+#: src/components/chat/TemplatesModal.tsx:417
 #: src/components/chat/InsertTemplateMenu.tsx:24
 #: src/components/chat/InsertTemplateMenu.tsx:27
 msgid "Templates"
@@ -11154,7 +11166,7 @@ msgstr "Tip"
 msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 msgstr "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 
-#: src/components/chat/TemplatesModal.tsx:505
+#: src/components/chat/TemplatesModal.tsx:506
 msgid "Tip: You can also create a template from any chat message you send, or duplicate an existing template."
 msgstr "Tip: You can also create a template from any chat message you send, or duplicate an existing template."
 
@@ -11567,7 +11579,7 @@ msgstr ""
 msgid "Unknown reason"
 msgstr "Unknown reason"
 
-#: src/components/chat/TemplatesModal.tsx:652
+#: src/components/chat/TemplatesModal.tsx:653
 msgid "Unpin"
 msgstr "Unpin"
 
@@ -11758,8 +11770,12 @@ msgid "Upload"
 msgstr "Upload"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:121
-msgid "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide."
-msgstr "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide."
+#~ msgid "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide."
+#~ msgstr "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide."
+
+#: src/components/settings/WhitelabelLogoCard.tsx:121
+msgid "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
+msgstr ""
 
 #: src/components/settings/AccountSettingsCard.tsx:154
 msgid "Upload avatar"
@@ -11790,8 +11806,8 @@ msgstr ""
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1669
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1753
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1672
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1756
 msgid "Upload logo"
 msgstr ""
 
@@ -11857,6 +11873,15 @@ msgstr ""
 msgid "Usage this cycle"
 msgstr ""
 
+#: src/components/chat/templates.ts:127
+msgid ""
+"Use a double diamond approach (design science approach) on all conversations in this dataset to develop a MECE set of 7+/-2 narratives that explain the variance within this dataset. Pay special attention to outliers. Quantify the evidence for each narrative as the number of \"occurrences\" where the data supports a particular narrative hypothesis.\n"
+"\n"
+"dutch version\n"
+"\n"
+"Gebruik een double diamond-aanpak (design science approach) op alle gesprekken in deze dataset om een MECE-set van 7+/-2 narratieven te ontwikkelen die de variantie binnen deze dataset verklaren. Let daarbij extra op de uitschieters. Kwantificeer het bewijs voor elk narratief als het aantal \"verschijnselen\" waarin de data een bepaalde narratieve hypothese ondersteunt."
+msgstr ""
+
 #: src/components/settings/LegalBasisCard.tsx:240
 msgid "Use inherited default"
 msgstr "Використати успадковане значення"
@@ -11895,7 +11920,7 @@ msgstr ""
 msgid "Username"
 msgstr "Username"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:155
+#: src/components/settings/WhitelabelLogoCard.tsx:156
 msgid "Using default dembrane logo"
 msgstr "Using default dembrane logo"
 
@@ -12054,7 +12079,7 @@ msgstr ""
 msgid "Visible to everyone in this workspace"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:485
+#: src/components/chat/TemplatesModal.tsx:486
 msgid "Visible to everyone in this workspace. Leave off to keep it personal."
 msgstr ""
 
@@ -12296,7 +12321,7 @@ msgstr ""
 msgid "What should be different about this?"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:472
+#: src/components/chat/TemplatesModal.tsx:473
 msgid "What should ECHO analyse or generate from the conversations?"
 msgstr "What should ECHO analyse or generate from the conversations?"
 
@@ -12360,7 +12385,7 @@ msgstr "When enabled, all new transcripts will have personal information (names,
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1966
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1975
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 msgstr ""
 
@@ -12480,8 +12505,8 @@ msgstr ""
 msgid "Workspace is full"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1629
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1697
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1632
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1700
 msgid "Workspace logo"
 msgstr ""
 
@@ -12927,7 +12952,7 @@ msgstr ""
 msgid "Your latest report generation was cancelled. Showing your most recent completed report."
 msgstr "Your latest report generation was cancelled. Showing your most recent completed report."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1716
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1719
 msgid "Your logo is still active but can't be changed on this tier."
 msgstr ""
 
@@ -13034,6 +13059,6 @@ msgstr ""
 msgid "yr"
 msgstr ""
 
-#: src/components/common/ImageCropModal.tsx:131
+#: src/components/common/ImageCropModal.tsx:133
 msgid "Zoom"
 msgstr "Zoom"
