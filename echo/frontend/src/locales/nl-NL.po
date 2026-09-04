@@ -77,7 +77,7 @@ msgstr "\"ECHO\" binnenkort beschikbaar"
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Verkennen\" binnenkort beschikbaar"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:700
+#: src/routes/project/popcorn/PopcornRoute.tsx:699
 msgid "\"made with dembrane\" stays on the screen."
 msgstr ""
 
@@ -313,7 +313,7 @@ msgstr "{0} toegevoegd vanuit je organisatie"
 
 #. placeholder {0}: counts.conversations
 #. placeholder {1}: counts.phrases
-#: src/routes/project/popcorn/PopcornRoute.tsx:94
+#: src/routes/project/popcorn/PopcornRoute.tsx:93
 msgid "{0} conversations · {1} phrases"
 msgstr ""
 
@@ -656,12 +656,12 @@ msgstr "2 tot 5."
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. Wanneer een gesprek of rapport plaatsvindt, sturen we de data automatisch naar je URL"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:374
+#: src/routes/project/popcorn/PopcornRoute.tsx:373
 #: src/routes/project/canvas/CanvasRoute.tsx:214
 msgid "24 hours"
 msgstr "24 uur"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:673
+#: src/routes/project/popcorn/PopcornRoute.tsx:672
 msgid "24 more hours"
 msgstr ""
 
@@ -669,7 +669,7 @@ msgstr ""
 msgid "250 to 1000."
 msgstr "250 tot 1000."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:375
+#: src/routes/project/popcorn/PopcornRoute.tsx:374
 #: src/routes/project/canvas/CanvasRoute.tsx:215
 msgid "3 days"
 msgstr "3 dagen"
@@ -678,7 +678,7 @@ msgstr "3 dagen"
 msgid "3 months ago"
 msgstr "3 maanden geleden"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:674
+#: src/routes/project/popcorn/PopcornRoute.tsx:673
 msgid "3 more days"
 msgstr ""
 
@@ -694,12 +694,12 @@ msgstr "50 tot 250."
 msgid "6 to 15."
 msgstr "6 tot 15."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:373
+#: src/routes/project/popcorn/PopcornRoute.tsx:372
 #: src/routes/project/canvas/CanvasRoute.tsx:213
 msgid "8 hours"
 msgstr "8 uur"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:672
+#: src/routes/project/popcorn/PopcornRoute.tsx:671
 msgid "8 more hours"
 msgstr ""
 
@@ -761,7 +761,7 @@ msgstr "Er wordt al een rapport gegenereerd voor dit project. Wacht tot het klaa
 msgid "A rough number or \"not sure\". Either is useful."
 msgstr "Een schatting of \"weet ik nog niet\". Met allebei kunnen we verder."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:288
+#: src/routes/project/popcorn/PopcornRoute.tsx:287
 msgid "A sample session, not your data. Yours will look like this."
 msgstr ""
 
@@ -1472,7 +1472,7 @@ msgstr "Elke tag"
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Iedereen in je organisatie kan deze werkruimte vinden. Admins kunnen meteen meedoen, leden kunnen toegang aanvragen."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:452
+#: src/routes/project/popcorn/PopcornRoute.tsx:451
 msgid "Anyone with the link can watch. No login, and no transcripts."
 msgstr ""
 
@@ -1627,7 +1627,7 @@ msgstr "Weet je zeker dat je je aangepaste logo wilt verwijderen? Het standaard 
 msgid "Arranged with dembrane"
 msgstr "Geregeld met dembrane"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:669
+#: src/routes/project/popcorn/PopcornRoute.tsx:668
 msgid "As now"
 msgstr ""
 
@@ -1863,8 +1863,8 @@ msgstr "Terug"
 msgid "Back to dembrane"
 msgstr "Terug naar dembrane"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:761
-#: src/routes/project/popcorn/PopcornRoute.tsx:973
+#: src/routes/project/popcorn/PopcornRoute.tsx:760
+#: src/routes/project/popcorn/PopcornRoute.tsx:972
 #: src/routes/project/canvas/CanvasRoute.tsx:307
 msgid "Back to live"
 msgstr "Terug naar live"
@@ -1905,7 +1905,7 @@ msgid "Basic Settings"
 msgstr "Basis instellingen"
 
 #: src/routes/project/ProjectMonitorRoute.tsx:85
-#: src/routes/project/popcorn/PopcornRoute.tsx:903
+#: src/routes/project/popcorn/PopcornRoute.tsx:902
 #: src/routes/project/library/LibraryRoute.tsx:129
 #: src/routes/project/chat/NewChatRoute.tsx:701
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:94
@@ -2063,7 +2063,7 @@ msgstr "Kun je ons meer vertellen?"
 #: src/routes/project/CreateProjectRoute.tsx:403
 #: src/routes/project/report/ProjectReportRoute.tsx:288
 #: src/routes/project/report/ProjectReportRoute.tsx:1459
-#: src/routes/project/popcorn/PopcornRoute.tsx:709
+#: src/routes/project/popcorn/PopcornRoute.tsx:708
 #: src/routes/organisation/OrganisationRoute.tsx:1789
 #: src/routes/organisation/OrganisationRoute.tsx:1812
 #: src/routes/organisation/OrganisationRoute.tsx:1835
@@ -2282,7 +2282,7 @@ msgstr "Werkruimterol wijzigen?"
 msgid "Change your own role?"
 msgstr "Je eigen rol wijzigen?"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:703
+#: src/routes/project/popcorn/PopcornRoute.tsx:702
 msgid "Changemaker plan takes it off"
 msgstr ""
 
@@ -2298,7 +2298,7 @@ msgstr "Wijzigingen worden automatisch opgeslagen"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resultaten opleveren. Het wordt aanbevolen om een nieuw gesprek te starten na het wijzigen van de taal. Weet je zeker dat je wilt doorgaan?"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:680
+#: src/routes/project/popcorn/PopcornRoute.tsx:679
 msgid "Changing the voice re-reads every conversation."
 msgstr ""
 
@@ -2751,7 +2751,7 @@ msgstr "Gesprekken gewist"
 msgid "participant.refine.cooling.down"
 msgstr "Even afkoelen. Beschikbaar over {0}"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:523
+#: src/routes/project/popcorn/PopcornRoute.tsx:522
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/conversation/CopyConversationTranscript.tsx:44
@@ -2786,7 +2786,7 @@ msgstr "Kopieer"
 msgid "Copy approved outcomes to the new conversation so they aren't lost when the original is deleted."
 msgstr "Kopieer goedgekeurde uitkomsten naar het nieuwe gesprek zodat ze niet verloren gaan als het origineel wordt verwijderd."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:523
+#: src/routes/project/popcorn/PopcornRoute.tsx:522
 msgid "Copy code"
 msgstr ""
 
@@ -3462,7 +3462,7 @@ msgstr "dembrane B.V. {0}, alle rechten voorbehouden."
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane kan fouten maken. Controleer antwoorden altijd even."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:216
+#: src/routes/project/popcorn/PopcornRoute.tsx:215
 msgid "dembrane default"
 msgstr ""
 
@@ -3791,7 +3791,7 @@ msgstr "bijvoorbeeld, Slack meldingen, Make workflow"
 msgid "Each new member is billed per seat on your plan."
 msgstr "Elk nieuw lid wordt per stoel in rekening gebracht volgens je abonnement."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:752
+#: src/routes/project/popcorn/PopcornRoute.tsx:751
 msgid "Earlier"
 msgstr ""
 
@@ -3905,7 +3905,7 @@ msgstr "email@werk.com"
 #~ msgid "Embed"
 #~ msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:502
+#: src/routes/project/popcorn/PopcornRoute.tsx:501
 msgid "Embed code"
 msgstr ""
 
@@ -3913,9 +3913,13 @@ msgstr ""
 #~ msgid "Embed code copied"
 #~ msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:489
-msgid "Embed in your webpage"
+#: src/routes/project/popcorn/PopcornRoute.tsx:488
+msgid "Embed in a webpage"
 msgstr ""
+
+#: src/routes/project/popcorn/PopcornRoute.tsx:489
+#~ msgid "Embed in your webpage"
+#~ msgstr ""
 
 #: src/components/project/CustomTopicModal.tsx:236
 msgid "Emoji"
@@ -3982,11 +3986,11 @@ msgstr "Ingeschakeld"
 msgid "Ended"
 msgstr "Afgelopen"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:104
+#: src/routes/project/popcorn/PopcornRoute.tsx:103
 msgid "Ended · {read}"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:104
+#: src/routes/project/popcorn/PopcornRoute.tsx:103
 msgid "Ended {expiryLabel} · {read}"
 msgstr ""
 
@@ -4627,7 +4631,7 @@ msgstr "Voor geavanceerde gebruikers: Een geheime sleutel om de authenticiteit v
 msgid "For an external organisation"
 msgstr "Voor een externe organisatie"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:239
+#: src/routes/project/popcorn/PopcornRoute.tsx:238
 msgid "For example: keep the members' own words, skip anything about named staff."
 msgstr ""
 
@@ -4691,7 +4695,7 @@ msgstr "Frans"
 msgid "friction"
 msgstr "wrijving"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:946
+#: src/routes/project/popcorn/PopcornRoute.tsx:945
 #: src/routes/project/canvas/CanvasRoute.tsx:571
 #: src/routes/project/canvas/CanvasRoute.tsx:578
 msgid "Full screen"
@@ -4807,8 +4811,8 @@ msgstr "{0} van dembrane 24 uur adminrechten geven voor deze werkruimte? De toeg
 msgid "Give me a list of 5-10 topics that are being discussed."
 msgstr "Geef me een lijst van 5-10 onderwerpen die worden besproken."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:389
-#: src/routes/project/popcorn/PopcornRoute.tsx:600
+#: src/routes/project/popcorn/PopcornRoute.tsx:388
+#: src/routes/project/popcorn/PopcornRoute.tsx:599
 msgid "Give the session a title"
 msgstr ""
 
@@ -4830,7 +4834,7 @@ msgstr "Volledig scherm"
 msgid "Go home"
 msgstr "Ga naar home"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:930
+#: src/routes/project/popcorn/PopcornRoute.tsx:929
 msgid "Go live"
 msgstr ""
 
@@ -5057,7 +5061,7 @@ msgstr "Hoe het werkt:"
 msgid "How many recordings do you expect in your first year?"
 msgstr "Hoeveel opnames verwacht je in je eerste jaar?"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:207
+#: src/routes/project/popcorn/PopcornRoute.tsx:206
 msgid "How should the phrases sound?"
 msgstr ""
 
@@ -5577,7 +5581,7 @@ msgstr "Mijn abonnement behouden"
 msgid "Keep pending"
 msgstr "In behandeling houden"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:648
+#: src/routes/project/popcorn/PopcornRoute.tsx:647
 msgid "Keep reading new conversations"
 msgstr ""
 
@@ -5767,7 +5771,7 @@ msgstr "Levenslange limiet"
 msgid "Link"
 msgstr "Link"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:478
+#: src/routes/project/popcorn/PopcornRoute.tsx:477
 #: src/components/members/PendingInvitesSection.tsx:83
 #: src/components/invite/InviteResultsList.tsx:68
 msgid "Link copied"
@@ -5793,7 +5797,7 @@ msgstr "Gesprekken op een rij zetten"
 msgid "Listing documentation pages"
 msgstr "Documentatiepagina's opzoeken"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:155
+#: src/routes/project/popcorn/PopcornRoute.tsx:154
 #: src/routes/project/canvas/CanvasRoute.tsx:301
 #: src/components/conversation/monitorGrouping.ts:72
 #: src/components/conversation/LiveFunnelSection.tsx:265
@@ -5801,12 +5805,12 @@ msgid "Live"
 msgstr "Live"
 
 #. placeholder {0}: countdown(seconds)
-#: src/routes/project/popcorn/PopcornRoute.tsx:159
+#: src/routes/project/popcorn/PopcornRoute.tsx:158
 msgid "Live · first read in {0}"
 msgstr ""
 
 #. placeholder {0}: countdown(seconds)
-#: src/routes/project/popcorn/PopcornRoute.tsx:161
+#: src/routes/project/popcorn/PopcornRoute.tsx:160
 msgid "Live · next read in {0}"
 msgstr ""
 
@@ -5855,7 +5859,7 @@ msgstr "Live opnames, voortgang van transcriptie en fouten verschijnen hier zodr
 msgid "live slides for the room"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:346
+#: src/routes/project/popcorn/PopcornRoute.tsx:345
 msgid "Live slides for the room, made from this project's conversations while they are still happening."
 msgstr ""
 
@@ -5879,7 +5883,7 @@ msgstr "Live verbinding onderbroken. We halen updates nu periodiek op."
 #~ msgid "Live until {0}."
 #~ msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:108
+#: src/routes/project/popcorn/PopcornRoute.tsx:107
 msgid "live until {expiryLabel}"
 msgstr ""
 
@@ -6924,7 +6928,7 @@ msgstr "Niet toegevoegd"
 msgid "Not available"
 msgstr "Niet beschikbaar"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:301
+#: src/routes/project/popcorn/PopcornRoute.tsx:300
 #: src/routes/invite/AcceptInviteRoute.tsx:568
 #: src/components/pricing/PricingConfigurator.tsx:835
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:216
@@ -6936,7 +6940,7 @@ msgstr "Niet nu"
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr "Geen beheerde facturatie. Zet op beheerd om dit account op het {tier}-niveau te factureren, zonder automatische afschrijvingen via Mollie."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:97
+#: src/routes/project/popcorn/PopcornRoute.tsx:96
 msgid "Not reading new conversations · {read}"
 msgstr ""
 
@@ -7060,7 +7064,7 @@ msgstr "uit"
 msgid "Off"
 msgstr "Uit"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:649
+#: src/routes/project/popcorn/PopcornRoute.tsx:648
 msgid "Off freezes the screen exactly as it is, for example while you talk it through. On picks up where it left off."
 msgstr ""
 
@@ -7189,7 +7193,7 @@ msgstr "Alleen werkruimtebeheerders kunnen deze instellingen wijzigen. Vraag een
 msgid "Only you can see this workspace."
 msgstr "Alleen jij kunt deze werkruimte zien."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:998
+#: src/routes/project/popcorn/PopcornRoute.tsx:997
 msgid "Only you see these controls: hover a tab to hide it, use the stage corner for the QR code, click a phrase to see where it came from."
 msgstr ""
 
@@ -7274,7 +7278,7 @@ msgstr "Open de chat"
 msgid "Open the original invitation email and click the link from there, or ask the inviter to send a new invite."
 msgstr "Open de oorspronkelijke uitnodigings-e-mail en klik daar op de link, of vraag de uitnodiger om een nieuwe uitnodiging te sturen."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:541
+#: src/routes/project/popcorn/PopcornRoute.tsx:540
 msgid "Open the public page"
 msgstr ""
 
@@ -7604,7 +7608,7 @@ msgstr "Wachtwoord voldoet niet aan de vereisten."
 msgid "Passwords do not match"
 msgstr "Wachtwoorden komen niet overeen"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:507
+#: src/routes/project/popcorn/PopcornRoute.tsx:506
 msgid "Paste it into any page. It stays live."
 msgstr ""
 
@@ -7912,14 +7916,14 @@ msgstr "PNG, JPEG of WebP. Wordt bijgesneden tot een cirkel."
 msgid "Poor response"
 msgstr "Slecht antwoord"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:271
-#: src/routes/project/popcorn/PopcornRoute.tsx:343
+#: src/routes/project/popcorn/PopcornRoute.tsx:270
+#: src/routes/project/popcorn/PopcornRoute.tsx:342
 #: src/routes/project/library/LibraryRoute.tsx:126
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:113
 msgid "Popcorn"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:1064
+#: src/routes/project/popcorn/PopcornRoute.tsx:1063
 msgid "Popcorn could not be loaded. Try again in a moment."
 msgstr ""
 
@@ -7927,7 +7931,7 @@ msgstr ""
 #~ msgid "Popcorn is not available for this project. Turn on the living canvas in project settings first."
 #~ msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:293
+#: src/routes/project/popcorn/PopcornRoute.tsx:292
 msgid "Popcorn shows a room its own words while it is still talking: live slides from this project's conversations, for a big screen. It is early, and you can turn it off again in the project settings."
 msgstr ""
 
@@ -8269,7 +8273,7 @@ msgstr "Geef een overzicht van de belangrijkste onderwerpen en herhalende thema'
 #~ msgid "Public link"
 #~ msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:451
+#: src/routes/project/popcorn/PopcornRoute.tsx:450
 msgid "Public page"
 msgstr ""
 
@@ -8367,7 +8371,7 @@ msgstr "Minder lezen"
 msgid "Read more →"
 msgstr "Meer lezen →"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:165
+#: src/routes/project/popcorn/PopcornRoute.tsx:164
 msgid "Read the conversations now"
 msgstr ""
 
@@ -8395,7 +8399,7 @@ msgstr "Transcript van {0} lezen"
 #~ msgstr ""
 
 #. placeholder {0}: counts.conversations
-#: src/routes/project/popcorn/PopcornRoute.tsx:153
+#: src/routes/project/popcorn/PopcornRoute.tsx:152
 msgid "Reading {reading} of {0} conversations…"
 msgstr ""
 
@@ -8411,7 +8415,7 @@ msgstr "Een skill lezen"
 msgid "Reading a transcript"
 msgstr "Een transcript lezen"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:157
+#: src/routes/project/popcorn/PopcornRoute.tsx:156
 msgid "Reading now…"
 msgstr ""
 
@@ -8439,7 +8443,7 @@ msgstr ""
 msgid "Reading the documentation"
 msgstr "De documentatie lezen"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:107
+#: src/routes/project/popcorn/PopcornRoute.tsx:106
 msgid "reads every {every} min"
 msgstr ""
 
@@ -9186,11 +9190,11 @@ msgstr "Bezig"
 msgid "Sales invoice issued."
 msgstr "Verkoopfactuur uitgegeven."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:281
+#: src/routes/project/popcorn/PopcornRoute.tsx:280
 msgid "Sample popcorn session"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:716
+#: src/routes/project/popcorn/PopcornRoute.tsx:715
 #: src/routes/project/canvas/CanvasRoute.tsx:255
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:204
 #: src/components/training/TrainingRowActions.tsx:197
@@ -9253,7 +9257,7 @@ msgstr "Opgeslagen"
 msgid "Saved as this project's goal."
 msgstr "Opgeslagen als doel van dit project."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:765
+#: src/routes/project/popcorn/PopcornRoute.tsx:764
 msgid "Saved runs"
 msgstr ""
 
@@ -9261,7 +9265,7 @@ msgstr ""
 msgid "Saving..."
 msgstr "Opslaan..."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:230
+#: src/routes/project/popcorn/PopcornRoute.tsx:229
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr ""
 
@@ -9720,7 +9724,7 @@ msgstr "Sessienaam"
 #~ msgid "Session settings"
 #~ msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:355
+#: src/routes/project/popcorn/PopcornRoute.tsx:354
 msgid "Session title"
 msgstr ""
 
@@ -9785,8 +9789,8 @@ msgstr "Instellen"
 
 #: src/routes/settings/UserSettingsRoute.tsx:62
 #: src/routes/project/ProjectsHome.tsx:245
-#: src/routes/project/popcorn/PopcornRoute.tsx:627
-#: src/routes/project/popcorn/PopcornRoute.tsx:955
+#: src/routes/project/popcorn/PopcornRoute.tsx:626
+#: src/routes/project/popcorn/PopcornRoute.tsx:954
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:28
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:80
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
@@ -9818,11 +9822,11 @@ msgstr "Instellingen bijgewerkt"
 msgid "Setup"
 msgstr "Instellen"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:445
+#: src/routes/project/popcorn/PopcornRoute.tsx:444
 msgid "Share"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:478
+#: src/routes/project/popcorn/PopcornRoute.tsx:477
 msgid "Share link"
 msgstr ""
 
@@ -9884,7 +9888,7 @@ msgstr "Kortste eerst"
 msgid "Show"
 msgstr "Toon"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:686
+#: src/routes/project/popcorn/PopcornRoute.tsx:685
 msgid "Show \"made with dembrane\" on the screen"
 msgstr ""
 
@@ -9977,7 +9981,7 @@ msgstr "Toont {displayFrom}–{displayTo} van {totalItems} items"
 msgid "Showing {rangeStart}-{rangeEnd} of {total}"
 msgstr "{rangeStart}-{rangeEnd} van {total}"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:963
+#: src/routes/project/popcorn/PopcornRoute.tsx:962
 msgid "Showing a saved run. The room and the public link keep seeing the live session."
 msgstr ""
 
@@ -9990,11 +9994,11 @@ msgstr "De eerste {0} van {shownCount} resultaten worden getoond. Verfijn je zoe
 msgid "Showing your most recent completed report."
 msgstr "Uw meest recente voltooide rapport wordt getoond."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:634
+#: src/routes/project/popcorn/PopcornRoute.tsx:633
 msgid "Shown at the top of the screen."
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:356
+#: src/routes/project/popcorn/PopcornRoute.tsx:355
 msgid "Shown at the top of the screen. Change it any time."
 msgstr ""
 
@@ -10067,7 +10071,7 @@ msgstr "Een deel van de recente audio kon niet worden getranscribeerd. De opname
 msgid "Someone"
 msgstr "Iemand"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:229
+#: src/routes/project/popcorn/PopcornRoute.tsx:228
 msgid "Something else"
 msgstr ""
 
@@ -10238,7 +10242,7 @@ msgstr "Nieuw gesprek starten"
 msgid "Start over"
 msgstr "Opnieuw beginnen"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:403
+#: src/routes/project/popcorn/PopcornRoute.tsx:402
 msgid "Start popcorn"
 msgstr ""
 
@@ -10263,12 +10267,12 @@ msgstr "Status"
 #~ msgid "Stay live"
 #~ msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:368
+#: src/routes/project/popcorn/PopcornRoute.tsx:367
 #: src/routes/project/canvas/CanvasRoute.tsx:208
 msgid "Stay live for"
 msgstr "Blijft live gedurende"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:659
+#: src/routes/project/popcorn/PopcornRoute.tsx:658
 msgid "Stays live until"
 msgstr ""
 
@@ -10771,7 +10775,7 @@ msgstr "De projectcontext wordt gelezen door transcriptie, chatantwoorden en can
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "Het rapport kan tot 5 minuten na de gekozen tijd starten."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:217
+#: src/routes/project/popcorn/PopcornRoute.tsx:216
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr ""
 
@@ -11277,7 +11281,7 @@ msgstr "Tip: Gebruik de afspeelknop (▶) om een testpayload naar je webhook te 
 msgid "Tip: You can also create a template from any chat message you send, or duplicate an existing template."
 msgstr "Tip: U kunt ook een sjabloon maken van elk chatbericht dat u verstuurt, of een bestaand sjabloon dupliceren."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:633
+#: src/routes/project/popcorn/PopcornRoute.tsx:632
 #: src/components/conversation/ConversationEdit.tsx:385
 msgid "Title"
 msgstr "Titel"
@@ -11570,7 +11574,7 @@ msgstr "Uitschakelen"
 msgid "Turn off anonymization?"
 msgstr "Anonimisering uitschakelen?"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:313
+#: src/routes/project/popcorn/PopcornRoute.tsx:312
 msgid "Turn on popcorn"
 msgstr ""
 
@@ -12130,7 +12134,7 @@ msgstr "Verifieert"
 msgid "Verifying your email address."
 msgstr "Je e-mailadres wordt geverifieerd."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:726
+#: src/routes/project/popcorn/PopcornRoute.tsx:725
 #: src/routes/project/canvas/CanvasRoute.tsx:143
 msgid "Version"
 msgstr "Versie"
@@ -12200,7 +12204,7 @@ msgstr "Spraak"
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "Wachten tot gesprekken zijn afgerond voordat een rapport wordt gegenereerd."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:93
+#: src/routes/project/popcorn/PopcornRoute.tsx:92
 msgid "Waiting for the first conversation"
 msgstr ""
 
@@ -13126,7 +13130,7 @@ msgstr "Je abonnement is inactief. Activeer het opnieuw om leden toe te voegen."
 msgid "Your plan is managed by dembrane. Contact your account manager to make changes."
 msgstr "Je abonnement wordt beheerd door dembrane. Neem contact op met je accountmanager om wijzigingen te maken."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:687
+#: src/routes/project/popcorn/PopcornRoute.tsx:686
 msgid "Your plan lets you take the mark off."
 msgstr ""
 
