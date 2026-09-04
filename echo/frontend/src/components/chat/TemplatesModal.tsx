@@ -54,7 +54,7 @@ import {
 	type QuickAccessItem,
 	quickAccessToKey,
 } from "./templateKey";
-import { Templates } from "./templates";
+import { agenticQuickAccessTemplates, Templates } from "./templates";
 
 // ── Types ──
 
@@ -344,7 +344,8 @@ export const TemplatesModal = ({
 
 	const allTemplates = useMemo(() => {
 		const items: UnifiedTemplate[] = [];
-		for (const tmpl of Templates) {
+		const staticTemplates = [...Templates, ...agenticQuickAccessTemplates];
+		for (const tmpl of staticTemplates) {
 			items.push({
 				content: tmpl.content,
 				id: tmpl.id,

@@ -123,4 +123,14 @@ Please:
 		id: "highlight-specific-concept",
 		title: t`Highlight specific Concept`,
 	},
+		{
+			content: t`Use a double diamond approach (design science approach) on all conversations in this dataset to develop a MECE set of 7+/-2 narratives that explain the variance within this dataset. Pay special attention to outliers. Quantify the evidence for each narrative as the number of "occurrences" where the data supports a particular narrative hypothesis.
+
+dutch version
+
+Gebruik een double diamond-aanpak (design science approach) op alle gesprekken in deze dataset om een MECE-set van 7+/-2 narratieven te ontwikkelen die de variantie binnen deze dataset verklaren. Let daarbij extra op de uitschieters. Kwantificeer het bewijs voor elk narratief als het aantal "verschijnselen" waarin de data een bepaalde narratieve hypothese ondersteunt.`,
+			icon: IconNotes,
+			id: "narratives",
+			title: t`Narratives`,
+		},
 ];

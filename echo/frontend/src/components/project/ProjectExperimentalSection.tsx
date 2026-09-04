@@ -42,7 +42,7 @@ export const ProjectExperimentalSection = ({
 					<Stack gap="0.25rem">
 						<Group gap="xs" wrap="nowrap">
 							<Text>
-								<Trans>Living canvas</Trans>
+								<Trans>Living canvas and popcorn</Trans>
 							</Text>
 							<Badge size="sm" variant="light" color="primary">
 								<Trans>Beta</Trans>
@@ -50,8 +50,9 @@ export const ProjectExperimentalSection = ({
 						</Group>
 						<Text size="sm">
 							<Trans>
-								A live page in your Library that regenerates while your session
-								runs. Early beta: it may change or be removed.
+								A live page in your Library, and live slides for the room, both
+								made from your conversations while a session runs. Early beta:
+								they may change or be removed.
 							</Trans>
 						</Text>
 					</Stack>

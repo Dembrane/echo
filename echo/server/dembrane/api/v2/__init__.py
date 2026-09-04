@@ -37,6 +37,7 @@ from dembrane.api.v2.bff.goals import (
 from dembrane.api.v2.bff.memory import router as bff_memory_router
 from dembrane.api.v2.onboarding import router as onboarding_router
 from dembrane.api.v2.workspaces import router as workspaces_router
+from dembrane.api.v2.bff.popcorn import router as bff_popcorn_router
 from dembrane.api.v2.bff.reports import (
     router as bff_reports_router,
     metric_router as bff_report_metric_router,
@@ -46,6 +47,7 @@ from dembrane.api.v2.admin_managed import router as admin_managed_router
 from dembrane.api.v2.notifications import router as notifications_router
 from dembrane.api.v2.admin_training import router as admin_training_router
 from dembrane.api.v2.invite_actions import router as invite_actions_router
+from dembrane.api.v2.popcorn_public import router as popcorn_public_router
 from dembrane.api.v2.support_access import router as support_access_router
 from dembrane.api.v2.access_requests import (
     router as access_requests_router,
@@ -154,6 +156,10 @@ v2_router.include_router(
 )
 v2_router.include_router(
     bff_canvases_router, prefix="/bff/canvases", tags=["v2:bff:canvases"]
+)
+v2_router.include_router(bff_popcorn_router, prefix="/bff/popcorn", tags=["v2:bff:popcorn"])
+v2_router.include_router(
+    popcorn_public_router, prefix="/popcorn/public", tags=["v2:popcorn-public"]
 )
 v2_router.include_router(
     bff_analysis_runs_router,

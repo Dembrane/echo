@@ -1620,7 +1620,10 @@ function PrivacyAndDefaultsSection({
 										<Trans>Logo</Trans>
 									</Text>
 									<Text size="xs" c="dimmed">
-										<Trans>Custom workspace logo shown to participants.</Trans>
+										<Trans>
+											Custom workspace logo shown to participants. Recommended
+											aspect ratio is 3:1 (e.g. 600×200px horizontal format).
+										</Trans>
 									</Text>
 									{currentLogoUrl ? (
 										<Group gap="sm" align="center">
@@ -1769,6 +1772,12 @@ function PrivacyAndDefaultsSection({
 						onCropComplete={handleCropComplete}
 						aspect={3}
 						title={t`Crop logo`}
+						description={
+							<Trans>
+								Crop your logo to a 3:1 horizontal aspect ratio (recommended
+								e.g. 600×200px).
+							</Trans>
+						}
 					/>
 				)}
 				<ConfirmModal

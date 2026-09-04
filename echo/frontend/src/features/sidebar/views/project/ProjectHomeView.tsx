@@ -10,6 +10,7 @@ import {
 	FileTextIcon,
 	GearIcon,
 	PaintBrushIcon,
+	PopcornIcon,
 	UsersThreeIcon,
 } from "@phosphor-icons/react";
 import { useLocation, useParams } from "react-router";
@@ -49,9 +50,13 @@ export const ProjectHomeView = () => {
 
 	if (!workspaceId || !projectId) return null;
 	const base = `/w/${workspaceId}/projects/${projectId}`;
+	const popcornActive = pathname.includes(
+		`/projects/${projectId}/library/popcorn`,
+	);
 	const libraryActive =
-		pathname.includes(`/projects/${projectId}/library`) ||
-		pathname.includes(`/projects/${projectId}/canvases/`);
+		!popcornActive &&
+		(pathname.includes(`/projects/${projectId}/library`) ||
+			pathname.includes(`/projects/${projectId}/canvases/`));
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
@@ -98,6 +103,17 @@ export const ProjectHomeView = () => {
 					label={<Trans>Library</Trans>}
 					icon={BooksIcon}
 					active={libraryActive}
+				/>
+			)}
+			{/* Popcorn lives in the Library but earns a shortcut. Before the
+			    project opts in, the page itself explains and offers to turn it on. */}
+			{ENABLE_CANVAS && (
+				<NavItem
+					to={`${base}/library/popcorn`}
+					label={<Trans>Popcorn</Trans>}
+					icon={PopcornIcon}
+					badge={<Trans>Beta</Trans>}
+					active={popcornActive}
 				/>
 			)}
 			<NavItem

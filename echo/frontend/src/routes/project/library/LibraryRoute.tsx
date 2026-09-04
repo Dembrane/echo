@@ -11,11 +11,13 @@ import {
 } from "@mantine/core";
 import { format, formatDistanceToNow } from "date-fns";
 import { ChevronRight } from "lucide-react";
+import { PopcornIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useProjectCanvases } from "@/components/canvas/hooks";
 import type { CanvasListItem, CanvasLoop } from "@/components/canvas/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { useProjectPopcorn } from "@/components/popcorn/hooks";
 import { testId } from "@/lib/testUtils";
 
 function loopStatusLine(loop?: CanvasLoop | null): string {
@@ -92,6 +94,60 @@ function CanvasListRow({
 	);
 }
 
+// Popcorn is the live deck for the room; it sits above the canvases because
+// it is the one item here that is meant for a screen, not for reading later.
+function PopcornRow({ base, projectId }: { base: string; projectId: string }) {
+	const popcornQuery = useProjectPopcorn(projectId);
+	const popcorn = popcornQuery.data;
+	const loop = popcorn?.loop;
+	const status = !popcorn
+		? t`Not started`
+		: loop?.status === "active"
+			? t`Live, ${popcorn.counts.phrases} phrases so far`
+			: loop?.status === "paused"
+				? t`Paused`
+				: t`Ended`;
+	return (
+		<I18nLink
+			to={`${base}/library/popcorn`}
+			className="block no-underline"
+			{...testId("library-popcorn-row")}
+		>
+			<Paper
+				withBorder
+				className="rounded-md px-4 py-4 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-sm"
+			>
+				<Group justify="space-between" align="center" gap="md" wrap="nowrap">
+					<Group gap="sm" wrap="nowrap" className="min-w-0">
+						<PopcornIcon size={22} aria-hidden />
+						<Stack gap={2} className="min-w-0">
+							<Group gap="xs" wrap="nowrap">
+								<Text size="lg" fw={500} truncate>
+									{popcorn?.name ?? t`Popcorn`}
+								</Text>
+								<Badge size="xs" variant="light" color="primary">
+									<Trans>Beta</Trans>
+								</Badge>
+							</Group>
+							<Text size="xs">
+								{popcornQuery.isLoading ? t`Loading` : status}
+								{" · "}
+								<Trans>live slides for the room</Trans>
+							</Text>
+						</Stack>
+					</Group>
+					<ChevronRight
+						size={18}
+						className="shrink-0"
+						style={{ color: "var(--mantine-color-primary-6)" }}
+						aria-hidden
+					/>
+				</Group>
+			</Paper>
+		</I18nLink>
+	);
+}
+
 function CanvasListSkeleton() {
 	const rows = [
 		{ id: "first", width: "42%" },
@@ -132,9 +188,14 @@ export const LibraryRoute = () => {
 						<Trans>Library</Trans>
 					</Title>
 					<Text size="sm" maw={640}>
-						<Trans>Canvases built for this project live here.</Trans>
+						<Trans>
+							The live popcorn deck and the canvases built for this project live
+							here.
+						</Trans>
 					</Text>
 				</Stack>
+
+				{projectId ? <PopcornRow base={base} projectId={projectId} /> : null}
 
 				{canvasesQuery.isLoading ? (
 					<CanvasListSkeleton />
