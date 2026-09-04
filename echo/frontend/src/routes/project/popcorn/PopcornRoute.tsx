@@ -242,6 +242,22 @@ function IntroModal({
 			{...testId("popcorn-intro-modal")}
 		>
 			<Stack gap="md">
+				<Box
+					className="overflow-hidden rounded-md border"
+					style={{ borderColor: "var(--mantine-color-gray-3)", height: 340 }}
+				>
+					<iframe
+						title={t`Sample popcorn session`}
+						src={popcornSampleViewUrl()}
+						className="block h-full w-full border-0"
+						{...testId("popcorn-intro-sample-frame")}
+					/>
+				</Box>
+				<Text size="xs">
+					<Trans>
+						A sample session, not your data. Yours will look like this.
+					</Trans>
+				</Text>
 				<Text>
 					<Trans>
 						Popcorn shows a room its own words while it is still talking: live
@@ -286,7 +302,7 @@ function PopcornStart({
 	const [title, setTitle] = useState(projectName);
 	const [duration, setDuration] = useState<Duration>("24h");
 	const [voice, setVoice] = useState<PopcornVoice>(EMPTY_VOICE);
-	const [trying, setTrying] = useState(false);
+	const [showSample, setShowSample] = useState(true);
 	const create = useCreatePopcornMutation(projectId);
 
 	useEffect(() => {
@@ -307,35 +323,15 @@ function PopcornStart({
 						</Trans>
 					</Text>
 				</Stack>
-				{/* Try it: the upstream sample deck in the real viewer, no model call. */}
-				<Paper
-					withBorder
-					className="rounded-md"
-					p="md"
-					{...testId("popcorn-try")}
-				>
-					<Group justify="space-between" align="center" wrap="wrap" gap="sm">
-						<Text size="sm">
-							<Trans>
-								See what the room will see, with a sample session, before your
-								own day.
-							</Trans>
-						</Text>
-						<Button
-							variant={trying ? "subtle" : "outline"}
-							onClick={() => setTrying((current) => !current)}
-							{...testId("popcorn-try-button")}
-						>
-							{trying ? t`Hide the sample` : t`Try it with a sample`}
-						</Button>
-					</Group>
-					{trying ? (
+				{/* The sample deck is the first thing on the page, already playing:
+				    nobody has to dare to click before they know what this is. */}
+				<Stack gap="xs" {...testId("popcorn-try")}>
+					{showSample ? (
 						<Box
-							mt="md"
 							className="overflow-hidden rounded-md border"
 							style={{
 								borderColor: "var(--mantine-color-gray-3)",
-								height: 560,
+								height: 520,
 							}}
 						>
 							<iframe
@@ -346,7 +342,23 @@ function PopcornStart({
 							/>
 						</Box>
 					) : null}
-				</Paper>
+					<Group justify="space-between" align="center" gap="sm">
+						<Text size="xs">
+							<Trans>
+								This is a sample session, not your data. Your own screen will
+								look like this once you start.
+							</Trans>
+						</Text>
+						<Button
+							variant="subtle"
+							size="xs"
+							onClick={() => setShowSample((current) => !current)}
+							{...testId("popcorn-try-button")}
+						>
+							{showSample ? t`Hide the sample` : t`Show the sample`}
+						</Button>
+					</Group>
+				</Stack>
 				<Paper withBorder className="rounded-md" p="lg">
 					<Stack gap="lg">
 						<TextInput

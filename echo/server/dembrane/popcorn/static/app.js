@@ -707,7 +707,13 @@
     const total = [...state.popcorn.values()].reduce((n, d) => n + (d.items?.length || 0), 0);
     let waiting = stageEl.querySelector(".popcorn-waiting");
     if (!total) {
-      const msg = state.session ? "listening…" : "drop your session's JSON files anywhere on this page";
+      // In dembrane the deck reads transcripts that already exist; it never
+      // records. Say what is actually happening so a host does not think a
+      // microphone is open.
+      const msg = !state.session ? "drop your session's JSON files anywhere on this page"
+        : EMBED && !(state.session.transcripts || []).length ? "waiting for the first conversation"
+        : EMBED ? "reading the conversations…"
+        : "listening…";
       if (!waiting) stageEl.innerHTML = `<p class="popcorn-waiting"><span class="live-dot"></span>&nbsp; ${msg}</p>`;
       else if (!waiting.textContent.includes(msg.slice(0, 8))) waiting.innerHTML = `<span class="live-dot"></span>&nbsp; ${msg}`;
       return;
