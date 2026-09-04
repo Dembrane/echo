@@ -741,7 +741,7 @@ function SessionModal({
 						<Trans>Cancel</Trans>
 					</Button>
 					<Button
-						loading={settings.isPending || loopSettings.isPending}
+						loading={busy}
 						onClick={save}
 						{...testId("popcorn-title-save")}
 					>
