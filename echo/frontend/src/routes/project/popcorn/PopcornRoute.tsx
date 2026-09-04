@@ -47,6 +47,7 @@ import {
 	popcornSampleViewUrl,
 	useCreatePopcornMutation,
 	useInvalidatePopcorn,
+	usePopcornGoLiveMutation,
 	usePopcornLifecycleMutation,
 	usePopcornLoopSettingsMutation,
 	usePopcornSettingsMutation,
@@ -97,7 +98,7 @@ function statusLine(popcorn: PopcornDetail): string {
 	if (loop.status === "paused")
 		return t`Not reading new conversations · ${read}`;
 	if (["expired", "ended", "stopped"].includes(loop.status)) {
-		return t`Ended · ${read}`;
+		return t`Ended, new conversations are not read · ${read}`;
 	}
 	const every = loop.cadence_minutes ?? 2;
 	const last = relativeTime(loop.last_run_started_at);
@@ -751,6 +752,7 @@ function PopcornSession({
 	popcorn: PopcornDetail;
 }) {
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
+	const goLive = usePopcornGoLiveMutation(projectId, popcorn.id);
 	const versionsQuery = usePopcornVersions(popcorn.id);
 	const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
 	const [sessionOpened, sessionModal] = useDisclosure(false);
@@ -828,8 +830,10 @@ function PopcornSession({
 	);
 	// Present: the one button for the minute before the wall. Publishes, puts
 	// the QR up, and goes fullscreen, in that order, so the room's link works
-	// the moment the screen is large.
+	// the moment the screen is large. An ended session comes back live first:
+	// presenting is the strongest possible signal that the day is not over.
 	const present = () => {
+		if (isEnded) goLive.mutate();
 		const patch: Record<string, boolean> = {};
 		if (!popcorn.settings.public) patch.public = true;
 		if (!popcorn.settings.show_qr) patch.show_qr = true;
@@ -858,13 +862,22 @@ function PopcornSession({
 					{/* The one pill on the page: the primary action. */}
 					<Button
 						leftSection={<PresentationIcon size={16} />}
-						loading={settings.isPending}
-						disabled={isEnded}
+						loading={settings.isPending || goLive.isPending}
 						onClick={present}
 						{...testId("popcorn-present-button")}
 					>
 						<Trans>Present</Trans>
 					</Button>
+					{isEnded ? (
+						<Button
+							variant="outline"
+							loading={goLive.isPending}
+							onClick={() => goLive.mutate()}
+							{...testId("popcorn-go-live-button")}
+						>
+							<Trans>Go live again</Trans>
+						</Button>
+					) : null}
 					<SharePopover projectId={projectId} popcorn={popcorn} />
 					<Button
 						variant="outline"

@@ -26,7 +26,11 @@ def test_shape_popcorn_items_applies_first_run_gates() -> None:
         "The kettle is the real reception",
     ]
     assert [i["weight"] for i in items] == [3, 2]
-    assert [i["id"] for i in items] == ["p-t1-1", "p-t1-2"]
+    ids = [i["id"] for i in items]
+    assert all(i.startswith("p-t1-") and len(i) == len("p-t1-") + 8 for i in ids)
+    assert len(set(ids)) == 2
+    # Same phrase, same id: a re-read keeps the phrases that survived.
+    assert shape_popcorn_items(raw, "t1")[0]["id"] == ids[0]
 
 
 def test_shape_popcorn_items_caps_at_eight_and_tolerates_junk() -> None:

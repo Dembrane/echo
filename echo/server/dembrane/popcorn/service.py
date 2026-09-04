@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import secrets
 from typing import Any
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from dembrane.utils import generate_uuid
 from dembrane.popcorn.qr import qr_svg_markup
@@ -240,6 +240,23 @@ def dispatch_popcorn_tick_now(loop_id: str, tick_kind: str = "manual") -> None:
     task_popcorn_tick_now.send(loop_id, tick_kind)
 
 
+SAFETY_TICK_DELAY_SECONDS = 20
+
+
+async def dispatch_popcorn_tick_now_with_safety(loop_id: str, tick_kind: str = "manual") -> None:
+    """The direct actor plus a scheduled tick shortly after. On a worker whose
+    async clients are bound to a foreign loop the direct actor dies before it
+    writes a run; the scheduled one then lands within seconds instead of
+    waiting for the five-minute reconciler. When both run, the run lock makes
+    the second a harmless no-op."""
+    dispatch_popcorn_tick_now(loop_id, tick_kind)
+    await enqueue_popcorn_tick(
+        loop_id,
+        when=_now() + timedelta(seconds=SAFETY_TICK_DELAY_SECONDS),
+        tick_kind=tick_kind,
+    )
+
+
 async def create_popcorn(
     *,
     project_id: str,
@@ -299,7 +316,7 @@ async def create_popcorn(
             },
         )
     )
-    dispatch_popcorn_tick_now(str(loop["id"]), "manual")
+    await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "manual")
     return {"report": report, "config": config, "loop": loop}
 
 
@@ -409,6 +426,22 @@ async def update_settings(
                 "agent_loop", str(loop["id"]), {"name": settings["title"]}
             )
     return settings
+
+
+async def go_live_again(loop: dict[str, Any], *, hours: int = 8) -> dict[str, Any]:
+    """Bring an ended or paused loop back: new expiry from now, active, failures
+    cleared, and a read straight away."""
+    loop_id = str(loop["id"])
+    expires_at = (_now() + timedelta(hours=hours)).isoformat()
+    updated = _data(
+        await async_directus.update_item(
+            "agent_loop",
+            loop_id,
+            {"status": "active", "expires_at": expires_at, "failure_count": 0},
+        )
+    )
+    await dispatch_popcorn_tick_now_with_safety(loop_id, "manual")
+    return updated
 
 
 async def ensure_public_token(report: dict[str, Any]) -> str:

@@ -209,6 +209,24 @@ export const usePopcornLifecycleMutation = (
 	});
 };
 
+export const usePopcornGoLiveMutation = (
+	projectId: string,
+	popcornId: string,
+) => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: () =>
+			bff.post<PopcornDetail>(
+				`/popcorn/${encodeURIComponent(popcornId)}/loop/go-live`,
+			),
+		onError: () => toast.error(t`Could not bring popcorn back`),
+		onSuccess: (detail) => {
+			queryClient.setQueryData(projectKey(projectId), detail);
+			toast.success(t`Live again for 8 hours`);
+		},
+	});
+};
+
 export const usePopcornLoopSettingsMutation = (
 	projectId: string,
 	popcornId: string,
