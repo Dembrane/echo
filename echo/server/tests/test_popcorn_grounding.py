@@ -149,7 +149,7 @@ def test_validated_is_false_once_a_conversation_changed_after_the_pass() -> None
 def test_sample_bundle_is_the_upstream_deck() -> None:
     bundle = sample_bundle()
     assert bundle["sample"] is True
-    assert bundle["files"]["session.json"]["client"] == "Sorted Collaboration"
+    assert bundle["files"]["session.json"]["client"] == "Facilitation BV"
     assert {"popcorn/t1.json", "tensions.json", "stakeholders.json", "quotes.json"} <= set(
         bundle["files"]
     )

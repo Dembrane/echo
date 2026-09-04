@@ -188,6 +188,12 @@ async def _enqueue_next_if_due(loop: dict[str, Any]) -> None:
         else:
             await async_directus.update_item("agent_loop", loop_id, {"status": "expired"})
             return
+    # One chain per loop. Every manual read and every go-live adds a safety
+    # tick, and each tick that runs schedules the next, so without this the
+    # chains multiply and a busy host ends the day with a tick storm.
+    from dembrane.scheduled_tasks import TASK_POPCORN_TICK, cancel_pending_tasks
+
+    await cancel_pending_tasks(task_type=TASK_POPCORN_TICK, payload_match={"loop_id": loop_id})
     await enqueue_popcorn_tick(loop_id, when=next_at)
 
 
@@ -545,6 +551,10 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
             return {"status": "no_op", "run": run}
 
         state["run"] = int(state.get("run") or 0) + 1
+        # A conversation being re-read shows as "reading" on the deck and the
+        # host page until its extractor lands; its old phrases stay on screen.
+        for t in changed:
+            state["conversations"][t["id"]]["done"] = False
         writer = _TickWriter(loop_id, report_id, state)
         # The legend and the "listening…" stage need the transcript list before
         # any phrase lands, so the session is published before extraction starts.

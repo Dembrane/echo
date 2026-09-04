@@ -198,7 +198,7 @@ def test_first_tick_pops_every_transcript_then_analyses(fake: _FakeDirectus, mon
     assert state["conversations"]["c1"]["label"] == "Table 1"
     assert state["conversations"]["c2"]["label"] == "Conversation 2"
     assert state["conversations"]["c1"]["items"][0]["phrase"] == "Nobody joins for the desks"
-    assert state["conversations"]["c1"]["items"][0]["id"] == "p-c1-1"
+    assert state["conversations"]["c1"]["items"][0]["id"].startswith("p-c1-")
     assert state["conversations"]["c2"]["done"] is True
     # Verbatim phrases are registered first (q1, q2); the tension's quote keeps
     # its full stop, so it is a distinct registry entry after them.

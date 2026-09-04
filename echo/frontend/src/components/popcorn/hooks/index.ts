@@ -9,6 +9,7 @@ export type PopcornLoop = {
 	status: "active" | "paused" | "expired" | "stopped" | "ended" | string;
 	expires_at?: string | null;
 	cadence_minutes?: number | null;
+	next_read_at?: string | null;
 	last_run_started_at?: string | null;
 	last_run_status?: "ok" | "no_op" | "error" | string | null;
 	last_run_detail?: string | null;
@@ -46,6 +47,7 @@ export type PopcornVersion = {
 export type PopcornCounts = {
 	conversations: number;
 	conversations_read: number;
+	reading?: number;
 	phrases: number;
 	quotes: number;
 	tensions: number;
@@ -205,6 +207,24 @@ export const usePopcornLifecycleMutation = (
 		onError: () => toast.error(t`Could not update popcorn`),
 		onSuccess: (detail) => {
 			queryClient.setQueryData(projectKey(projectId), detail);
+		},
+	});
+};
+
+export const usePopcornGoLiveMutation = (
+	projectId: string,
+	popcornId: string,
+) => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: () =>
+			bff.post<PopcornDetail>(
+				`/popcorn/${encodeURIComponent(popcornId)}/loop/go-live`,
+			),
+		onError: () => toast.error(t`Could not bring popcorn back`),
+		onSuccess: (detail) => {
+			queryClient.setQueryData(projectKey(projectId), detail);
+			toast.success(t`Live again for 8 hours`);
 		},
 	});
 };

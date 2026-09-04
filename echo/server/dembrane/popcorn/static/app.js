@@ -508,6 +508,15 @@
     if (!total) { el.textContent = ""; return; }
     const done = [...state.popcorn.values()].filter((p) => p.done).length;
     const live = done < total;
+    if (EMBED) {
+      // Say what is happening in words: hosts read this footer to know whether
+      // the deck is still working on a table.
+      const pending = total - done;
+      el.innerHTML = live
+        ? `<span class="live-dot"></span>reading ${pending} of ${total} conversation${total === 1 ? "" : "s"}…`
+        : `${total} conversation${total === 1 ? "" : "s"} · all read`;
+      return;
+    }
     el.innerHTML = `${live ? '<span class="live-dot"></span>' : ""}${total} conversation${total === 1 ? "" : "s"} · ${done} read`;
   }
 
@@ -667,13 +676,19 @@
     document.getElementById("pop-legend").innerHTML =
       (state.session?.transcripts || []).map((t) => attribution(t.id)).join("");
 
-    // interleave transcripts round-robin so neighbours differ, like the stage
+    // Upstream interleaves transcripts round-robin so neighbours differ, like
+    // the stage. In dembrane the tail is the record of the day: conversations in
+    // the order they started, each phrase in the order it was found.
     const queues = (state.session?.transcripts || [])
       .map((t) => ({ tid: t.id, items: [...(state.popcorn.get(t.id)?.items || [])] }))
       .filter((q) => q.items.length);
     const all = [];
-    while (queues.some((q) => q.items.length)) {
-      for (const q of queues) if (q.items.length) all.push({ tid: q.tid, item: q.items.shift() });
+    if (EMBED) {
+      for (const q of queues) for (const item of q.items) all.push({ tid: q.tid, item });
+    } else {
+      while (queues.some((q) => q.items.length)) {
+        for (const q of queues) if (q.items.length) all.push({ tid: q.tid, item: q.items.shift() });
+      }
     }
 
     const q = (state.popSearch || "").trim().toLowerCase();
@@ -681,13 +696,29 @@
       ? all.filter((e) => (e.item.phrase + " " + shortLabel(e.tid)).toLowerCase().includes(q))
       : all;
     document.getElementById("pop-count").textContent = all.length ? `${filtered.length} of ${all.length}` : "";
-    list.innerHTML = filtered.map((e, n) => {
+    const phraseHtml = (e, n) => {
       const rooted = e.item.quoteId && quoteById(e.item.quoteId);
       const sourced = !rooted && e.item.source && e.item.source.text;
       const cls = "tail-phrase" + (rooted ? " tail-rooted" : sourced ? " tail-sourced" : "");
       const title = rooted ? "read the quote" : sourced ? "why this phrase" : shortLabel(e.tid);
       return `<span class="${cls}" data-n="${n}" style="--marker:${markerFor(e.tid)}" title="${esc(title)}">${rooted ? `“${esc(e.item.phrase)}”` : esc(e.item.phrase)}</span>`;
-    }).join("");
+    };
+    if (EMBED) {
+      // one block per conversation, headed by its marker and name
+      const groups = [];
+      filtered.forEach((e, n) => {
+        let g = groups[groups.length - 1];
+        if (!g || g.tid !== e.tid) { g = { tid: e.tid, html: [] }; groups.push(g); }
+        g.html.push(phraseHtml(e, n));
+      });
+      list.classList.add("pop-list-grouped");
+      list.innerHTML = groups.map((g) => {
+        const reading = !popcornSettled(state.popcorn.get(g.tid)) && !(state.popcorn.get(g.tid) || {}).done;
+        return `<section class="tail-group"><h3 class="tail-group-head">${attribution(g.tid)}<span class="tail-group-count">${g.html.length} phrase${g.html.length === 1 ? "" : "s"}${reading ? " · reading…" : ""}</span></h3><div class="tail-group-list">${g.html.join("")}</div></section>`;
+      }).join("");
+    } else {
+      list.innerHTML = filtered.map(phraseHtml).join("");
+    }
     list.querySelectorAll(".tail-rooted, .tail-sourced").forEach((el) => {
       const e = filtered[Number(el.dataset.n)];
       el.addEventListener("click", (ev) => {

@@ -471,6 +471,13 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .pop-disclaimer { font-size: 0.78em; color: var(--ink-soft); margin-bottom: 1em; }
 .pop-legend { display: flex; flex-wrap: wrap; gap: 0.6em 1.6em; margin: 0.9em 0 1.2em; }
 .pop-list { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.7em 1em; padding-bottom: 1em; }
+/* the record of the day: one block per conversation, oldest first */
+.pop-list-grouped { display: block; }
+.tail-group { padding: 0.9em 0 1.1em; border-top: 1px solid var(--hairline); }
+.tail-group:first-child { border-top: none; padding-top: 0.2em; }
+.tail-group-head { display: flex; align-items: baseline; gap: 1em; font-size: 0.8em; font-weight: 400; margin-bottom: 0.7em; }
+.tail-group-count { color: var(--ink-faint); }
+.tail-group-list { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.7em 1em; }
 .tail-phrase {
   background: var(--marker);
   padding: 0.08em 0.35em;

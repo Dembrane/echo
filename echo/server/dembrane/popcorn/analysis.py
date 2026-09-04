@@ -13,6 +13,7 @@ whatever fails the check is dropped along with the aspects resting on it.
 from __future__ import annotations
 
 import re
+import hashlib
 from typing import Any
 
 # The public popcorn contract: at most eight phrases, each short, weighted 1-3.
@@ -200,7 +201,11 @@ def shape_popcorn_items(raw: dict[str, Any] | None, transcript_id: str) -> list[
             if weight3_used:
                 weight = 2
             weight3_used = True
-        out.append({"id": f"p-{transcript_id}-{len(out) + 1}", "phrase": phrase, "weight": weight})
+        # The id follows the phrase text, not its position: a later re-read of a
+        # growing transcript keeps the same id for a phrase it returns again, so
+        # the stage does not pop it a second time.
+        digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:8]
+        out.append({"id": f"p-{transcript_id}-{digest}", "phrase": phrase, "weight": weight})
         if len(out) >= 8:
             break
     return out

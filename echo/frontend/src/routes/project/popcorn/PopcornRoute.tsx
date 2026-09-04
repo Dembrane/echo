@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
 	Alert,
 	Badge,
 	Box,
@@ -9,10 +8,10 @@ import {
 	Checkbox,
 	CopyButton,
 	Group,
+	Menu,
 	Modal,
 	Paper,
 	Popover,
-	SegmentedControl,
 	Select,
 	Skeleton,
 	Stack,
@@ -26,13 +25,16 @@ import {
 import { useDisclosure, useDocumentTitle, useFullscreen } from "@mantine/hooks";
 import {
 	ArrowSquareOutIcon,
+	ArrowsOutIcon,
+	CaretDownIcon,
 	CheckIcon,
+	CodeIcon,
 	CopyIcon,
+	LinkIcon,
 	PencilSimpleIcon,
-	PresentationIcon,
 	ShareNetworkIcon,
 } from "@phosphor-icons/react";
-import { addDays, addHours, format, formatDistanceToNow } from "date-fns";
+import { addDays, addHours, format } from "date-fns";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -40,13 +42,13 @@ import {
 	type PopcornDetail,
 	type PopcornVersion,
 	type PopcornVoice,
-	type PopcornVoicePreset,
 	popcornEmbedSnippet,
 	popcornHostViewUrl,
 	popcornPublicUrl,
 	popcornSampleViewUrl,
 	useCreatePopcornMutation,
 	useInvalidatePopcorn,
+	usePopcornGoLiveMutation,
 	usePopcornLifecycleMutation,
 	usePopcornLoopSettingsMutation,
 	usePopcornSettingsMutation,
@@ -77,13 +79,6 @@ function expiryFor(duration: Duration): Date {
 	return addDays(now, 3);
 }
 
-function relativeTime(value?: string | null): string | null {
-	if (!value) return null;
-	const date = new Date(value);
-	if (Number.isNaN(date.getTime())) return null;
-	return formatDistanceToNow(date, { addSuffix: true });
-}
-
 function meetsTier(tier: string | null | undefined, minimum: Tier): boolean {
 	const index = TIER_ORDER.indexOf((tier ?? "free") as Tier);
 	return index >= 0 && index >= TIER_ORDER.indexOf(minimum);
@@ -92,24 +87,99 @@ function meetsTier(tier: string | null | undefined, minimum: Tier): boolean {
 function statusLine(popcorn: PopcornDetail): string {
 	const loop = popcorn.loop;
 	const counts = popcorn.counts;
-	const read = t`${counts.conversations} conversations · ${counts.phrases} phrases`;
+	const read =
+		counts.conversations === 0
+			? t`Waiting for the first conversation`
+			: t`${counts.conversations} conversations · ${counts.phrases} phrases`;
 	if (!loop) return read;
 	if (loop.status === "paused")
 		return t`Not reading new conversations · ${read}`;
+	const expiry = loop.expires_at ? new Date(loop.expires_at) : null;
+	const expiryLabel =
+		expiry && !Number.isNaN(expiry.getTime())
+			? format(expiry, "EEE d MMM, HH:mm")
+			: null;
 	if (["expired", "ended", "stopped"].includes(loop.status)) {
-		return t`Ended · ${read}`;
+		return expiryLabel ? t`Ended ${expiryLabel} · ${read}` : t`Ended · ${read}`;
 	}
 	const every = loop.cadence_minutes ?? 2;
-	const last = relativeTime(loop.last_run_started_at);
-	const expiry = loop.expires_at ? new Date(loop.expires_at) : null;
-	const until =
-		expiry && !Number.isNaN(expiry.getTime())
-			? t`Live until ${format(expiry, "EEE d MMM, HH:mm")}`
-			: t`Live`;
-	const rhythm = last
-		? t`Reads new conversations every ${every} minutes, last read ${last}`
-		: t`Reading the conversations now`;
-	return `${until} · ${rhythm} · ${read}`;
+	const parts = [read, t`reads every ${every} min`];
+	if (expiryLabel) parts.push(t`live until ${expiryLabel}`);
+	return parts.join(" · ");
+}
+
+function countdown(seconds: number): string {
+	const m = Math.floor(seconds / 60);
+	const sec = seconds % 60;
+	return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+// The one pill on the page. Live and "when next" are the same fact to a host
+// on stage, so the pill carries the clock, and pressing it reads now.
+function LiveChip({
+	popcorn,
+	onReadNow,
+	onStale,
+	pending,
+}: {
+	popcorn: PopcornDetail;
+	onReadNow: () => void;
+	onStale: () => void;
+	pending: boolean;
+}) {
+	const [now, setNow] = useState(() => Date.now());
+	useEffect(() => {
+		const timer = window.setInterval(() => setNow(Date.now()), 1000);
+		return () => window.clearInterval(timer);
+	}, []);
+	const loop = popcorn.loop;
+	const counts = popcorn.counts;
+	const next = loop?.next_read_at
+		? new Date(loop.next_read_at).getTime()
+		: null;
+	const seconds = next ? Math.ceil((next - now) / 1000) : null;
+	const overdue = seconds !== null && seconds <= 0;
+	// A tick that is due but not yet reported: ask again until it lands.
+	useEffect(() => {
+		if (!overdue) return;
+		const timer = window.setInterval(onStale, 4000);
+		return () => window.clearInterval(timer);
+	}, [overdue, onStale]);
+
+	let label: string;
+	const reading = counts.reading ?? 0;
+	if (reading > 0) {
+		label = t`Reading ${reading} of ${counts.conversations} conversations…`;
+	} else if (seconds === null) {
+		label = t`Live`;
+	} else if (overdue) {
+		label = t`Reading now…`;
+	} else if (!loop?.last_run_started_at) {
+		label = t`Live · first read in ${countdown(seconds)}`;
+	} else {
+		label = t`Live · next read in ${countdown(seconds)}`;
+	}
+	const busy = reading > 0 || overdue;
+	return (
+		<Tooltip label={t`Read the conversations now`} disabled={busy}>
+			<Button
+				variant="light"
+				loading={pending}
+				disabled={busy}
+				onClick={onReadNow}
+				style={{ fontVariantNumeric: "tabular-nums" }}
+				leftSection={
+					<span
+						className="inline-block h-2 w-2 animate-pulse rounded-full bg-current"
+						aria-hidden
+					/>
+				}
+				{...testId("popcorn-live-badge")}
+			>
+				{label}
+			</Button>
+		</Tooltip>
+	);
 }
 
 // Same shape as the booking form's use-case step: a few checkable ways to
@@ -350,7 +420,7 @@ function SharePopover({
 }) {
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
 	const [opened, setOpened] = useState(false);
-	const [mode, setMode] = useState<"link" | "embed">("link");
+	const [showEmbed, setShowEmbed] = useState(false);
 	const token = popcorn.public_token;
 	const publicUrl = token ? popcornPublicUrl(token) : null;
 	const isPublic = popcorn.settings.public && !!publicUrl;
@@ -360,8 +430,8 @@ function SharePopover({
 		<Popover
 			opened={opened}
 			onChange={setOpened}
-			position="bottom-start"
-			width={440}
+			position="bottom-end"
+			width={500}
 			shadow="md"
 		>
 			<Popover.Target>
@@ -387,58 +457,38 @@ function SharePopover({
 						{...testId("popcorn-public-toggle")}
 					/>
 					{isPublic && publicUrl ? (
-						<Stack gap="sm">
-							<SegmentedControl
-								size="sm"
-								value={mode}
-								onChange={(value) => setMode(value as "link" | "embed")}
-								data={[
-									{ label: t`Link`, value: "link" },
-									{ label: t`Embed`, value: "embed" },
-								]}
-								{...testId("popcorn-share-mode")}
-							/>
-							{mode === "link" ? (
-								<Group gap="xs" wrap="nowrap">
-									<TextInput
-										value={publicUrl}
-										readOnly
-										className="min-w-0 flex-1"
-										aria-label={t`Public link`}
-										{...testId("popcorn-public-url")}
-									/>
-									<CopyButton value={publicUrl} timeout={2000}>
-										{({ copied, copy }) => (
-											<Button
-												onClick={copy}
-												leftSection={
-													copied ? (
-														<CheckIcon size={16} />
-													) : (
-														<CopyIcon size={16} />
-													)
-												}
-												{...testId("popcorn-copy-link")}
-											>
-												{copied ? t`Copied` : t`Copy`}
-											</Button>
-										)}
-									</CopyButton>
-									<Tooltip label={t`Open in a new tab`}>
-										<ActionIcon
-											variant="outline"
-											size="lg"
-											component="a"
-											href={publicUrl}
-											target="_blank"
-											rel="noopener noreferrer"
-											aria-label={t`Open in a new tab`}
+						<>
+							<Group grow gap="sm" align="stretch">
+								<CopyButton value={publicUrl} timeout={2000}>
+									{({ copied, copy }) => (
+										<Button
+											size="md"
+											variant={copied ? "filled" : "outline"}
+											leftSection={
+												copied ? (
+													<CheckIcon size={18} />
+												) : (
+													<LinkIcon size={18} />
+												)
+											}
+											onClick={copy}
+											{...testId("popcorn-copy-link")}
 										>
-											<ArrowSquareOutIcon size={16} />
-										</ActionIcon>
-									</Tooltip>
-								</Group>
-							) : (
+											{copied ? t`Link copied` : t`Share link`}
+										</Button>
+									)}
+								</CopyButton>
+								<Button
+									size="md"
+									variant="outline"
+									leftSection={<CodeIcon size={18} />}
+									onClick={() => setShowEmbed((current) => !current)}
+									{...testId("popcorn-share-embed")}
+								>
+									<Trans>Embed in a webpage</Trans>
+								</Button>
+							</Group>
+							{showEmbed ? (
 								<Stack gap="xs">
 									<Textarea
 										value={embed}
@@ -458,24 +508,38 @@ function SharePopover({
 										<CopyButton value={embed} timeout={2000}>
 											{({ copied, copy }) => (
 												<Button
+													size="xs"
 													onClick={copy}
 													leftSection={
 														copied ? (
-															<CheckIcon size={16} />
+															<CheckIcon size={14} />
 														) : (
-															<CopyIcon size={16} />
+															<CopyIcon size={14} />
 														)
 													}
 													{...testId("popcorn-copy-embed")}
 												>
-													{copied ? t`Copied` : t`Copy`}
+													{copied ? t`Copied` : t`Copy code`}
 												</Button>
 											)}
 										</CopyButton>
 									</Group>
 								</Stack>
-							)}
-						</Stack>
+							) : null}
+							<Button
+								variant="subtle"
+								size="xs"
+								component="a"
+								href={publicUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								leftSection={<ArrowSquareOutIcon size={14} />}
+								className="self-start"
+								{...testId("popcorn-public-url")}
+							>
+								<Trans>Open the public page</Trans>
+							</Button>
+						</>
 					) : null}
 				</Stack>
 			</Popover.Dropdown>
@@ -501,7 +565,6 @@ function SessionModal({
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
 	const loopSettings = usePopcornLoopSettingsMutation(projectId, popcorn.id);
 	const lifecycle = usePopcornLifecycleMutation(projectId, popcorn.id);
-	const refresh = useRefreshPopcornMutation(projectId, popcorn.id);
 	const [title, setTitle] = useState(popcorn.settings.title);
 	const [voice, setVoice] = useState<PopcornVoice>(
 		popcorn.settings.voice ?? EMPTY_VOICE,
@@ -591,25 +654,6 @@ function SessionModal({
 						{...testId("popcorn-reading-toggle")}
 					/>
 				) : null}
-				{!isEnded ? (
-					<Group gap="sm" align="center" wrap="wrap">
-						<Button
-							variant="outline"
-							size="xs"
-							loading={refresh.isPending}
-							onClick={() => refresh.mutate()}
-							{...testId("popcorn-refresh-button")}
-						>
-							<Trans>Read everything again now</Trans>
-						</Button>
-						<Text size="xs">
-							<Trans>
-								Rarely needed: new conversations are picked up on their own. Use
-								it after changing the voice.
-							</Trans>
-						</Text>
-					</Group>
-				) : null}
 				<Select
 					label={t`Stays live until`}
 					size={FIELD_SIZE}
@@ -682,9 +726,9 @@ function versionLabel(version: PopcornVersion): string {
 	return format(date, "HH:mm");
 }
 
-// Every run that changed the deck is kept. Picking one replays it in the
-// viewer, phrases popping in as they did; Live returns to the running session.
-function VersionStrip({
+// Every run that changed the deck is kept, behind one chip. Picking one
+// replays it in the viewer, phrases popping in as they did.
+function EarlierMenu({
 	versions,
 	selected,
 	onSelect,
@@ -694,38 +738,43 @@ function VersionStrip({
 	onSelect: (id: string | null) => void;
 }) {
 	if (versions.length === 0) return null;
+	const current = versions.find((version) => version.id === selected);
 	return (
-		<Group gap="xs" align="center" wrap="wrap" {...testId("popcorn-versions")}>
-			<Text size="sm" fw={500}>
-				<Trans>Replay</Trans>
-			</Text>
-			<Button
-				size="xs"
-				variant={selected ? "subtle" : "outline"}
-				onClick={() => onSelect(null)}
-				{...testId("popcorn-version-live")}
-			>
-				<Trans>Live</Trans>
-			</Button>
-			{versions.slice(0, 12).map((version) => (
-				<Tooltip
-					key={version.id}
-					label={version.detail ?? ""}
-					multiline
-					w={360}
+		<Menu position="bottom-start" shadow="md" width={220}>
+			<Menu.Target>
+				<Button
+					variant={current ? "filled" : "outline"}
+					rightSection={<CaretDownIcon size={14} />}
+					style={{ fontVariantNumeric: "tabular-nums" }}
+					{...testId("popcorn-versions")}
 				>
-					<Button
-						size="xs"
-						variant={selected === version.id ? "outline" : "subtle"}
-						style={{ fontVariantNumeric: "tabular-nums" }}
+					{current ? versionLabel(current) : t`Earlier`}
+				</Button>
+			</Menu.Target>
+			<Menu.Dropdown>
+				{current ? (
+					<Menu.Item
+						onClick={() => onSelect(null)}
+						{...testId("popcorn-version-live")}
+					>
+						<Trans>Back to live</Trans>
+					</Menu.Item>
+				) : null}
+				<Menu.Label>
+					<Trans>Saved runs</Trans>
+				</Menu.Label>
+				{versions.slice(0, 12).map((version) => (
+					<Menu.Item
+						key={version.id}
 						onClick={() => onSelect(version.id)}
+						style={{ fontVariantNumeric: "tabular-nums" }}
 						{...testId(`popcorn-version-${version.id}`)}
 					>
 						{versionLabel(version)}
-					</Button>
-				</Tooltip>
-			))}
-		</Group>
+					</Menu.Item>
+				))}
+			</Menu.Dropdown>
+		</Menu>
 	);
 }
 
@@ -751,6 +800,8 @@ function PopcornSession({
 	popcorn: PopcornDetail;
 }) {
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
+	const goLive = usePopcornGoLiveMutation(projectId, popcorn.id);
+	const refresh = useRefreshPopcornMutation(projectId, popcorn.id);
 	const versionsQuery = usePopcornVersions(popcorn.id);
 	const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
 	const [sessionOpened, sessionModal] = useDisclosure(false);
@@ -773,7 +824,7 @@ function PopcornSession({
 	}, [fullscreen]);
 
 	const loopStatus = popcorn.loop?.status;
-	const isEnded = ["expired", "ended", "stopped"].includes(loopStatus ?? "");
+	const isActive = loopStatus === "active";
 
 	// The deck polls its own data; this stream only keeps the counts and the
 	// status line in step with the tick.
@@ -826,15 +877,16 @@ function PopcornSession({
 		() => popcornHostViewUrl(popcorn.id, selectedVersion ?? undefined),
 		[popcorn.id, selectedVersion],
 	);
-	// Present: the one button for the minute before the wall. Publishes, puts
-	// the QR up, and goes fullscreen, in that order, so the room's link works
-	// the moment the screen is large.
-	const present = () => {
+	// Go live: the session reads, the page is public, the code is up. Full
+	// screen is a separate act, for the wall, so a host can go live from a
+	// laptop in the back of the room and put it on the screen later.
+	const isLive = isActive && popcorn.settings.public;
+	const goLiveNow = () => {
+		if (!isActive) goLive.mutate();
 		const patch: Record<string, boolean> = {};
 		if (!popcorn.settings.public) patch.public = true;
 		if (!popcorn.settings.show_qr) patch.show_qr = true;
 		if (Object.keys(patch).length) settings.mutate(patch);
-		if (!fullscreen) toggleFullscreen();
 	};
 
 	return (
@@ -854,38 +906,72 @@ function PopcornSession({
 						{statusLine(popcorn)}
 					</Text>
 				</Stack>
-				<Group gap="xs" wrap="wrap" {...testId("popcorn-actions")}>
-					{/* The one pill on the page: the primary action. */}
-					<Button
-						leftSection={<PresentationIcon size={16} />}
-						loading={settings.isPending}
-						disabled={isEnded}
-						onClick={present}
-						{...testId("popcorn-present-button")}
-					>
-						<Trans>Present</Trans>
-					</Button>
-					<SharePopover projectId={projectId} popcorn={popcorn} />
-					<Button
-						variant="outline"
-						leftSection={<PencilSimpleIcon size={16} />}
-						onClick={sessionModal.open}
-						{...testId("popcorn-title-edit-button")}
-					>
-						<Trans>Settings</Trans>
-					</Button>
+				<Group
+					justify="space-between"
+					gap="xs"
+					wrap="wrap"
+					{...testId("popcorn-actions")}
+				>
+					<Group gap="xs" wrap="wrap">
+						{isLive ? (
+							<LiveChip
+								popcorn={popcorn}
+								pending={refresh.isPending}
+								onReadNow={() => refresh.mutate()}
+								onStale={invalidate}
+							/>
+						) : (
+							<Button
+								loading={settings.isPending || goLive.isPending}
+								onClick={goLiveNow}
+								{...testId("popcorn-go-live-button")}
+							>
+								<Trans>Go live</Trans>
+							</Button>
+						)}
+						<EarlierMenu
+							versions={versionsQuery.data ?? []}
+							selected={selectedVersion}
+							onSelect={setSelectedVersion}
+						/>
+					</Group>
+					<Group gap="xs" wrap="wrap">
+						<Button
+							variant="outline"
+							leftSection={<ArrowsOutIcon size={16} />}
+							onClick={toggleFullscreen}
+							{...testId("popcorn-fullscreen-button")}
+						>
+							<Trans>Full screen</Trans>
+						</Button>
+						<SharePopover projectId={projectId} popcorn={popcorn} />
+						<Button
+							variant="outline"
+							leftSection={<PencilSimpleIcon size={16} />}
+							onClick={sessionModal.open}
+							{...testId("popcorn-title-edit-button")}
+						>
+							<Trans>Settings</Trans>
+						</Button>
+					</Group>
 				</Group>
-				<VersionStrip
-					versions={versionsQuery.data ?? []}
-					selected={selectedVersion}
-					onSelect={setSelectedVersion}
-				/>
 				{selectedVersion ? (
 					<Alert variant="light" {...testId("popcorn-replay-banner")}>
-						<Trans>
-							Replaying a saved run. The room's page and the public link keep
-							showing the live session.
-						</Trans>
+						<Group justify="space-between" align="center" gap="sm" wrap="wrap">
+							<Text size="sm">
+								<Trans>
+									Showing a saved run. The room and the public link keep seeing
+									the live session.
+								</Trans>
+							</Text>
+							<Button
+								variant="subtle"
+								size="xs"
+								onClick={() => setSelectedVersion(null)}
+							>
+								<Trans>Back to live</Trans>
+							</Button>
+						</Group>
 					</Alert>
 				) : null}
 				<Box

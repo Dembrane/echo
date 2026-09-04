@@ -365,6 +365,25 @@ def _reset_async_runtime_for_retry(reason: str) -> None:
     reset_background_loop(reason)
 
 
+_FOREIGN_LOOP_MARKERS = ("attached to a different loop", "Event loop is closed")
+
+
+def _is_foreign_loop_error(exc: BaseException) -> bool:
+    """True when exc (or its cause) is asyncio complaining that a pooled client is
+    bound to a loop other than the background one. Same remedy as the sniffio
+    failure: discard the clients, reset the loop, retry the factory once."""
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        if isinstance(current, RuntimeError) and any(
+            marker in str(current) for marker in _FOREIGN_LOOP_MARKERS
+        ):
+            return True
+        seen.add(id(current))
+        current = current.__cause__ or current.__context__
+    return False
+
+
 def _run_async_once(awaitable: Coroutine[Any, Any, T] | asyncio.Future[T]) -> T:
     if not asyncio.iscoroutine(awaitable) and not asyncio.isfuture(awaitable):
         raise TypeError("run_async_in_new_loop expects a coroutine, Future, or zero-arg factory.")
@@ -431,24 +450,25 @@ def run_async_in_new_loop(
         try:
             return _run_async_once(awaitable)
         except Exception as exc:
-            if not _is_async_library_not_found(exc):
+            if _is_async_library_not_found(exc):
+                what = "sniffio AsyncLibraryNotFoundError"
+            elif _is_foreign_loop_error(exc):
+                what = "foreign-loop RuntimeError"
+            else:
                 raise
             if attempt + 1 >= attempts:
                 logger.exception(
-                    "sniffio AsyncLibraryNotFoundError crossed run_async_in_new_loop; "
-                    "resetting async runtime without retry because no fresh coroutine "
-                    "factory is available"
+                    "%s crossed run_async_in_new_loop; resetting async runtime without "
+                    "retry because no fresh coroutine factory is available",
+                    what,
                 )
-                _reset_async_runtime_for_retry(
-                    "sniffio AsyncLibraryNotFoundError in run_async_in_new_loop"
-                )
+                _reset_async_runtime_for_retry(f"{what} in run_async_in_new_loop")
                 raise
             logger.exception(
-                "sniffio AsyncLibraryNotFoundError crossed run_async_in_new_loop; "
-                "resetting async clients/background loop and retrying once"
+                "%s crossed run_async_in_new_loop; resetting async clients/background "
+                "loop and retrying once",
+                what,
             )
-            _reset_async_runtime_for_retry(
-                "sniffio AsyncLibraryNotFoundError in run_async_in_new_loop"
-            )
+            _reset_async_runtime_for_retry(f"{what} in run_async_in_new_loop")
 
     raise RuntimeError("unreachable run_async_in_new_loop retry state")

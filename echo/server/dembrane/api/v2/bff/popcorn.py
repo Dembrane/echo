@@ -14,6 +14,7 @@ from datetime import datetime, timezone, timedelta
 
 from fastapi import Query, Depends, Request, APIRouter, HTTPException, status
 from pydantic import Field, BaseModel
+from redis.exceptions import ConnectionError as RedisConnectionError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 
 from dembrane.policies import meets_tier
@@ -28,6 +29,7 @@ from dembrane.popcorn.service import (
     MAX_CADENCE_MINUTES,
     MIN_CADENCE_MINUTES,
     DEFAULT_CADENCE_MINUTES,
+    go_live_again,
     list_versions,
     sample_bundle,
     create_popcorn,
@@ -37,7 +39,7 @@ from dembrane.popcorn.service import (
     get_popcorn_report,
     ensure_public_token,
     get_loop_for_report,
-    dispatch_popcorn_tick_now,
+    dispatch_popcorn_tick_now_with_safety,
 )
 from dembrane.api.feature_flags import require_canvas_enabled, require_project_canvas_enabled
 from dembrane.api.v2.bff._access import resolve_report_access, resolve_project_access
@@ -219,7 +221,7 @@ async def refresh_popcorn(popcorn_id: str, auth: DependencyDirectusSession) -> d
         raise HTTPException(status_code=429, detail="Just refreshed")
     # Handed to a worker rather than awaited: a manual pass reads every
     # conversation and the request must not hang on the slowest transcript.
-    dispatch_popcorn_tick_now(str(loop["id"]), "manual")
+    await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "manual")
     return {"tick": "queued"}
 
 
@@ -229,19 +231,23 @@ async def popcorn_loop_action(
     action: str,
     auth: DependencyDirectusSession,
 ) -> dict[str, Any]:
-    if action not in {"pause", "resume", "stop"}:
+    if action not in {"pause", "resume", "stop", "go-live"}:
         raise HTTPException(status_code=404, detail="Popcorn loop action not found")
     report, access = await _require_popcorn(popcorn_id, auth)
     access.require("project:update")
     loop = await get_loop_for_report(str(report["id"]))
     if not loop:
         raise HTTPException(status_code=404, detail="Popcorn loop not found")
+    if action == "go-live":
+        # An ended session comes back for another eight hours, reading straight away.
+        await go_live_again(loop)
+        return await popcorn_payload(report)
     try:
         updated = await apply_loop_action(loop, action)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     if action == "resume":
-        dispatch_popcorn_tick_now(str(loop["id"]), "manual")
+        await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "manual")
     payload = await popcorn_payload(report)
     payload["loop"] = {**(payload.get("loop") or {}), "status": updated.get("status")}
     return payload
@@ -281,18 +287,22 @@ async def popcorn_events(
     async def event_stream() -> AsyncIterator[str]:
         last_heartbeat = time.monotonic()
         yield f"event: connected\ndata: {json.dumps({'type': 'connected'})}\n\n"
-        async with subscribe_generation_nudges(report_id) as pubsub:
-            while True:
-                if await request.is_disconnected():
-                    break
-                payload = await read_generation_nudge(pubsub, timeout_seconds=1.0)
-                if payload is not None:
-                    yield f"event: update\ndata: {json.dumps({'type': 'update'})}\n\n"
-                    continue
-                now = time.monotonic()
-                if now - last_heartbeat >= EVENT_HEARTBEAT_SECONDS:
-                    yield ": keep-alive\n\n"
-                    last_heartbeat = now
+        try:
+            async with subscribe_generation_nudges(report_id) as pubsub:
+                while True:
+                    if await request.is_disconnected():
+                        break
+                    payload = await read_generation_nudge(pubsub, timeout_seconds=1.0)
+                    if payload is not None:
+                        yield f"event: update\ndata: {json.dumps({'type': 'update'})}\n\n"
+                        continue
+                    now = time.monotonic()
+                    if now - last_heartbeat >= EVENT_HEARTBEAT_SECONDS:
+                        yield ": keep-alive\n\n"
+                        last_heartbeat = now
+        except RedisConnectionError:
+            # Redis dropped the idle subscription; the page reconnects on its own.
+            return
 
     return StreamingResponse(
         event_stream(),
