@@ -16,7 +16,7 @@ import {
 	useUserTemplates,
 } from "./hooks/useUserTemplates";
 import type { QuickAccessItem } from "./templateKey";
-import { Templates } from "./templates";
+import { agenticQuickAccessTemplates, Templates } from "./templates";
 
 /** Shared hook wiring for ChatTemplatesMenu so classic and agentic render it identically. */
 export const ChatTemplatesMenuConnected = ({
@@ -72,8 +72,10 @@ export const ChatTemplatesMenuConnected = ({
 
 	// Resolve quick access items - default to first 3 built-in templates
 	const quickAccessItems: QuickAccessItem[] = useMemo(() => {
+		const isAgentic = chatMode === "agentic";
+		const defaultTemplates = isAgentic ? agenticQuickAccessTemplates : Templates.slice(0, 3);
 		if (!quickAccessQuery.data || quickAccessQuery.data.length === 0)
-			return Templates.slice(0, 3).map((t) => ({
+			return defaultTemplates.map((t) => ({
 				id: t.id,
 				title: t.title,
 				type: "static" as const,
@@ -81,7 +83,8 @@ export const ChatTemplatesMenuConnected = ({
 		return quickAccessQuery.data
 			.map((pref) => {
 				if (pref.type === "static") {
-					const found = Templates.find((t) => t.id === pref.id);
+					const allStatics = [...Templates, ...agenticQuickAccessTemplates];
+					const found = allStatics.find((t) => t.id === pref.id);
 					if (found)
 						return {
 							id: found.id,
@@ -100,7 +103,7 @@ export const ChatTemplatesMenuConnected = ({
 				return null;
 			})
 			.filter(Boolean) as QuickAccessItem[];
-	}, [quickAccessQuery.data, userTemplatesQuery.data]);
+	}, [quickAccessQuery.data, userTemplatesQuery.data, chatMode]);
 
 	const handleSaveQuickAccess = (items: QuickAccessItem[]) => {
 		saveQuickAccessMutation.mutate(
