@@ -261,13 +261,8 @@ function IntroModal({
 				<Text>
 					<Trans>
 						Popcorn shows a room its own words while it is still talking: live
-						slides made from this project's conversations, for a big screen.
-					</Trans>
-				</Text>
-				<Text size="sm">
-					<Trans>
-						An early feature. It may change, and you can turn it off again in
-						the project settings.
+						slides from this project's conversations, for a big screen. It is
+						early, and you can turn it off again in the project settings.
 					</Trans>
 				</Text>
 				<Group justify="flex-end" gap="xs">
@@ -300,6 +295,7 @@ function PopcornStart({
 	projectName: string;
 }) {
 	const [title, setTitle] = useState(projectName);
+	const [titleError, setTitleError] = useState<string | null>(null);
 	const [duration, setDuration] = useState<Duration>("24h");
 	const [voice, setVoice] = useState<PopcornVoice>(EMPTY_VOICE);
 	const [showSample, setShowSample] = useState(true);
@@ -366,8 +362,12 @@ function PopcornStart({
 							description={t`Shown at the top of the screen. Change it any time.`}
 							size={FIELD_SIZE}
 							value={title}
+							error={titleError}
 							maxLength={160}
-							onChange={(event) => setTitle(event.currentTarget.value)}
+							onChange={(event) => {
+								setTitle(event.currentTarget.value);
+								setTitleError(null);
+							}}
 							{...testId("popcorn-title-input")}
 						/>
 						<Select
@@ -388,11 +388,13 @@ function PopcornStart({
 						/>
 						<Group justify="flex-end">
 							<Button
-								radius="xl"
 								size={FIELD_SIZE}
 								loading={create.isPending}
-								disabled={!title.trim()}
-								onClick={() =>
+								onClick={() => {
+									if (!title.trim()) {
+										setTitleError(t`Give the session a title`);
+										return;
+									}
 									create.mutate({
 										expires_at: expiryFor(duration).toISOString(),
 										title: title.trim(),
@@ -400,8 +402,8 @@ function PopcornStart({
 											voice.presets.length || voice.note.trim()
 												? { note: voice.note.trim(), presets: voice.presets }
 												: undefined,
-									})
-								}
+									});
+								}}
 								{...testId("popcorn-start-button")}
 							>
 								<Trans>Start popcorn</Trans>
@@ -585,6 +587,7 @@ function SessionModal({
 	const [showBranding, setShowBranding] = useState(
 		popcorn.settings.show_branding ?? true,
 	);
+	const [titleError, setTitleError] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (!opened) return;
@@ -606,6 +609,10 @@ function SessionModal({
 		settings.isPending || loopSettings.isPending || lifecycle.isPending;
 
 	const save = () => {
+		if (!title.trim()) {
+			setTitleError(t`Give the session a title`);
+			return;
+		}
 		settings.mutate(
 			{
 				show_branding: showBranding,
@@ -640,8 +647,12 @@ function SessionModal({
 					description={t`Shown at the top of the screen.`}
 					size={FIELD_SIZE}
 					value={title}
+					error={titleError}
 					maxLength={160}
-					onChange={(event) => setTitle(event.currentTarget.value)}
+					onChange={(event) => {
+						setTitle(event.currentTarget.value);
+						setTitleError(null);
+					}}
 					{...testId("popcorn-title-edit-input")}
 				/>
 				{!isEnded ? (
@@ -731,7 +742,6 @@ function SessionModal({
 					</Button>
 					<Button
 						loading={settings.isPending || loopSettings.isPending}
-						disabled={!title.trim() || busy}
 						onClick={save}
 						{...testId("popcorn-title-save")}
 					>
@@ -924,7 +934,6 @@ function PopcornSession({
 				<Group gap="xs" wrap="wrap" {...testId("popcorn-actions")}>
 					{/* The one pill on the page: the primary action. */}
 					<Button
-						radius="xl"
 						leftSection={<PresentationIcon size={16} />}
 						loading={settings.isPending}
 						disabled={isEnded}
@@ -1001,7 +1010,7 @@ function PopcornLoading() {
 					<Skeleton height={16} width={320} />
 				</Stack>
 				<Group gap="xs">
-					<Skeleton height={36} width={120} radius="xl" />
+					<Skeleton height={36} width={120} radius="md" />
 					<Skeleton height={36} width={96} radius="md" />
 					<Skeleton height={36} width={110} radius="md" />
 				</Group>
