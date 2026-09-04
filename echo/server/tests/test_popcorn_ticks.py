@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import pytest
 
 import dembrane.popcorn.ticks as ticks
+import dembrane.scheduled_tasks as scheduled_tasks
 
 
 class _FakeDirectus:
@@ -319,8 +321,6 @@ def test_disabled_project_no_ops(fake: _FakeDirectus, monkeypatch) -> None:
 def test_reconcile_missing_popcorn_tick_tasks_enqueues_active_loop(
     fake: _FakeDirectus, monkeypatch
 ) -> None:
-    from datetime import datetime, timezone
-
     now = datetime(2026, 9, 4, 12, 0, 0, tzinfo=timezone.utc)
     monkeypatch.setattr(ticks, "_now", lambda: now)
     fake.scheduled_tasks = []
@@ -340,9 +340,6 @@ def test_reconcile_missing_popcorn_tick_tasks_enqueues_active_loop(
 def test_reconcile_missing_popcorn_tick_tasks_skips_covered_loop(
     fake: _FakeDirectus, monkeypatch
 ) -> None:
-    from datetime import datetime, timezone
-    import dembrane.scheduled_tasks as scheduled_tasks
-
     now = datetime(2026, 9, 4, 12, 0, 0, tzinfo=timezone.utc)
     monkeypatch.setattr(ticks, "_now", lambda: now)
     fake.scheduled_tasks = [
@@ -369,9 +366,6 @@ def test_reconcile_missing_popcorn_tick_tasks_skips_covered_loop(
 def test_reconcile_missing_popcorn_tick_tasks_rescues_stale_processing(
     fake: _FakeDirectus, monkeypatch
 ) -> None:
-    from datetime import datetime, timezone, timedelta
-    import dembrane.scheduled_tasks as scheduled_tasks
-
     now = datetime(2026, 9, 4, 12, 0, 0, tzinfo=timezone.utc)
     stale_claimed = (now - timedelta(minutes=10)).isoformat()
     monkeypatch.setattr(ticks, "_now", lambda: now)
