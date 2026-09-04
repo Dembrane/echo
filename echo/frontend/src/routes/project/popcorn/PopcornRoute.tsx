@@ -139,6 +139,7 @@ function LiveChip({
 		: null;
 	const seconds = next ? Math.ceil((next - now) / 1000) : null;
 	const overdue = seconds !== null && seconds <= 0;
+	const overdueLong = seconds !== null && seconds < -60;
 	// A tick that is due but not yet reported: ask again until it lands.
 	useEffect(() => {
 		if (!overdue) return;
@@ -152,6 +153,8 @@ function LiveChip({
 		label = t`Reading ${reading} of ${counts.conversations} conversations…`;
 	} else if (seconds === null) {
 		label = t`Live`;
+	} else if (overdueLong) {
+		label = t`Delayed · read now`;
 	} else if (overdue) {
 		label = t`Reading now…`;
 	} else if (!loop?.last_run_started_at) {
@@ -159,7 +162,7 @@ function LiveChip({
 	} else {
 		label = t`Live · next read in ${countdown(seconds)}`;
 	}
-	const busy = reading > 0 || overdue;
+	const busy = reading > 0 || (overdue && !overdueLong);
 	return (
 		<Tooltip label={t`Read the conversations now`} disabled={busy}>
 			<Button

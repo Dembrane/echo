@@ -849,3 +849,38 @@ async def test_reconcile_missing_canvas_tick_tasks_enqueues_orphaned_active_loop
 
     assert count == 1
     assert enqueued == ["loop1"]
+
+
+@pytest.mark.asyncio
+async def test_reconcile_missing_canvas_tick_tasks_rescues_stale_processing(
+    monkeypatch,
+) -> None:
+    fake = _FakeDirectus()
+    now = datetime(2026, 7, 7, 10, 0, 0, tzinfo=timezone.utc)
+    stale_time = (now - timedelta(minutes=10)).isoformat()
+    fake.scheduled_tasks = [
+        {
+            "id": "stale_task_1",
+            "payload": {"loop_id": "loop1"},
+            "status": scheduled_tasks.STATUS_PROCESSING,
+            "claimed_at": stale_time,
+            "task_type": scheduled_tasks.TASK_CANVAS_TICK,
+        }
+    ]
+    enqueued: list[str] = []
+
+    async def _enqueue(loop: dict[str, Any], when: datetime | None = None) -> None:
+        enqueued.append(str(loop["id"]))
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_now", lambda: now)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+
+    count = await ticks.reconcile_missing_canvas_tick_tasks()
+
+    assert count == 1
+    assert enqueued == ["loop1"]
+    assert any(
+        col == "scheduled_task" and item_id == "stale_task_1" and patch.get("status") == scheduled_tasks.STATUS_FAILED
+        for col, item_id, patch in fake.updated
+    )

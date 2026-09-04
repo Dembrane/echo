@@ -1891,11 +1891,33 @@ def task_process_scheduled_tasks() -> None:
             _dispatch_scheduled_task(row)
         except Exception as exc:
             task_logger.exception("scheduled_task %s (%s) failed", task_id, row.get("task_type"))
-            with directus_client_context() as client:
-                mark_task_failed(client, task_id, str(exc))
+            marked = False
+            for attempt in range(2):
+                try:
+                    with directus_client_context() as client:
+                        mark_task_failed(client, task_id, str(exc))
+                    marked = True
+                    break
+                except Exception:
+                    if attempt == 0:
+                        import time
+                        time.sleep(1)
+            if not marked:
+                task_logger.exception("failed to mark scheduled_task %s as failed in Directus", task_id)
             continue
-        with directus_client_context() as client:
-            mark_task_completed(client, task_id)
+        marked = False
+        for attempt in range(2):
+            try:
+                with directus_client_context() as client:
+                    mark_task_completed(client, task_id)
+                marked = True
+                break
+            except Exception:
+                if attempt == 0:
+                    import time
+                    time.sleep(1)
+        if not marked:
+            task_logger.exception("failed to mark scheduled_task %s as completed in Directus", task_id)
 
 
 def _dispatch_scheduled_task(row: dict) -> None:

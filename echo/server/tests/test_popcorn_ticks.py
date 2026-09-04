@@ -53,7 +53,9 @@ class _FakeDirectus:
             },
         ]
         self.created: dict[str, list[dict[str, Any]]] = {}
+        self.updated: list[tuple[str, str, dict[str, Any]]] = []
         self.state_writes: list[dict[str, Any]] = []
+        self.scheduled_tasks: list[dict[str, Any]] = []
 
     async def get_item(self, collection: str, item_id: str) -> dict[str, Any] | None:
         return self.items.get(collection, {}).get(item_id)
@@ -66,7 +68,7 @@ class _FakeDirectus:
         if collection == "agent_loop":
             return list(self.items["agent_loop"].values())
         if collection == "scheduled_task":
-            return []
+            return list(self.scheduled_tasks)
         return []
 
     async def create_item(self, collection: str, data: dict[str, Any]) -> dict[str, Any]:
@@ -74,6 +76,7 @@ class _FakeDirectus:
         return {"data": data}
 
     async def update_item(self, collection: str, item_id: str, data: dict[str, Any]) -> dict:
+        self.updated.append((collection, item_id, data))
         if collection == "agent_loop" and "popcorn_state" in data:
             # Snapshot the write so incremental publication is observable.
             import copy
@@ -311,3 +314,90 @@ def test_disabled_project_no_ops(fake: _FakeDirectus, monkeypatch) -> None:
     result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
     assert result["status"] == "disabled"
     assert calls == []
+
+
+def test_reconcile_missing_popcorn_tick_tasks_enqueues_active_loop(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    from datetime import datetime, timezone
+
+    now = datetime(2026, 9, 4, 12, 0, 0, tzinfo=timezone.utc)
+    monkeypatch.setattr(ticks, "_now", lambda: now)
+    fake.scheduled_tasks = []
+
+    enqueued: list[tuple[str, str]] = []
+
+    async def _enqueue(loop: dict[str, Any], when: Any = None) -> None:  # noqa: ARG001
+        enqueued.append((str(loop["id"]), "scheduled"))
+
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+
+    count = asyncio.run(ticks.reconcile_missing_popcorn_tick_tasks())
+    assert count == 1
+    assert enqueued == [("loop1", "scheduled")]
+
+
+def test_reconcile_missing_popcorn_tick_tasks_skips_covered_loop(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    from datetime import datetime, timezone
+    import dembrane.scheduled_tasks as scheduled_tasks
+
+    now = datetime(2026, 9, 4, 12, 0, 0, tzinfo=timezone.utc)
+    monkeypatch.setattr(ticks, "_now", lambda: now)
+    fake.scheduled_tasks = [
+        {
+            "id": "task_sched",
+            "task_type": scheduled_tasks.TASK_POPCORN_TICK,
+            "status": scheduled_tasks.STATUS_SCHEDULED,
+            "payload": {"loop_id": "loop1"},
+        }
+    ]
+
+    enqueued: list[tuple[str, str]] = []
+
+    async def _enqueue(loop: dict[str, Any], when: Any = None) -> None:  # noqa: ARG001
+        enqueued.append((str(loop["id"]), "scheduled"))
+
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+
+    count = asyncio.run(ticks.reconcile_missing_popcorn_tick_tasks())
+    assert count == 0
+    assert enqueued == []
+
+
+def test_reconcile_missing_popcorn_tick_tasks_rescues_stale_processing(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    from datetime import datetime, timezone, timedelta
+    import dembrane.scheduled_tasks as scheduled_tasks
+
+    now = datetime(2026, 9, 4, 12, 0, 0, tzinfo=timezone.utc)
+    stale_claimed = (now - timedelta(minutes=10)).isoformat()
+    monkeypatch.setattr(ticks, "_now", lambda: now)
+    fake.scheduled_tasks = [
+        {
+            "id": "stale_popcorn_task",
+            "task_type": scheduled_tasks.TASK_POPCORN_TICK,
+            "status": scheduled_tasks.STATUS_PROCESSING,
+            "claimed_at": stale_claimed,
+            "payload": {"loop_id": "loop1"},
+        }
+    ]
+
+    enqueued: list[tuple[str, str]] = []
+
+    async def _enqueue(loop: dict[str, Any], when: Any = None) -> None:  # noqa: ARG001
+        enqueued.append((str(loop["id"]), "scheduled"))
+
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+
+    count = asyncio.run(ticks.reconcile_missing_popcorn_tick_tasks())
+    assert count == 1
+    assert enqueued == [("loop1", "scheduled")]
+    assert any(
+        col == "scheduled_task"
+        and item_id == "stale_popcorn_task"
+        and patch.get("status") == scheduled_tasks.STATUS_FAILED
+        for col, item_id, patch in fake.updated
+    )
