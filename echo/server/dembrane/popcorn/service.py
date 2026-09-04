@@ -498,6 +498,7 @@ def state_counts(state: dict[str, Any]) -> dict[str, Any]:
     return {
         "conversations": len(conversations),
         "conversations_read": done,
+        "reading": len(conversations) - done,
         "phrases": phrases,
         "quotes": len(analysis.get("quotes") or []),
         "tensions": len((analysis.get("tensions") or {}).get("tensions") or []),

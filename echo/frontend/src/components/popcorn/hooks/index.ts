@@ -46,6 +46,7 @@ export type PopcornVersion = {
 export type PopcornCounts = {
 	conversations: number;
 	conversations_read: number;
+	reading?: number;
 	phrases: number;
 	quotes: number;
 	tensions: number;

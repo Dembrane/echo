@@ -26,10 +26,10 @@ import {
 import { useDisclosure, useDocumentTitle, useFullscreen } from "@mantine/hooks";
 import {
 	ArrowSquareOutIcon,
+	ArrowsOutIcon,
 	CheckIcon,
 	CopyIcon,
 	PencilSimpleIcon,
-	PresentationIcon,
 	ShareNetworkIcon,
 } from "@phosphor-icons/react";
 import { addDays, addHours, format, formatDistanceToNow } from "date-fns";
@@ -40,7 +40,6 @@ import {
 	type PopcornDetail,
 	type PopcornVersion,
 	type PopcornVoice,
-	type PopcornVoicePreset,
 	popcornEmbedSnippet,
 	popcornHostViewUrl,
 	popcornPublicUrl,
@@ -102,6 +101,10 @@ function statusLine(popcorn: PopcornDetail): string {
 	}
 	const every = loop.cadence_minutes ?? 2;
 	const last = relativeTime(loop.last_run_started_at);
+	const reading = counts.reading ?? 0;
+	if (reading > 0) {
+		return t`Reading ${reading} of ${counts.conversations} conversations now · ${counts.phrases} phrases so far`;
+	}
 	const expiry = loop.expires_at ? new Date(loop.expires_at) : null;
 	const until =
 		expiry && !Number.isNaN(expiry.getTime())
@@ -775,7 +778,7 @@ function PopcornSession({
 	}, [fullscreen]);
 
 	const loopStatus = popcorn.loop?.status;
-	const isEnded = ["expired", "ended", "stopped"].includes(loopStatus ?? "");
+	const isActive = loopStatus === "active";
 
 	// The deck polls its own data; this stream only keeps the counts and the
 	// status line in step with the tick.
@@ -828,17 +831,16 @@ function PopcornSession({
 		() => popcornHostViewUrl(popcorn.id, selectedVersion ?? undefined),
 		[popcorn.id, selectedVersion],
 	);
-	// Present: the one button for the minute before the wall. Publishes, puts
-	// the QR up, and goes fullscreen, in that order, so the room's link works
-	// the moment the screen is large. An ended session comes back live first:
-	// presenting is the strongest possible signal that the day is not over.
-	const present = () => {
-		if (isEnded) goLive.mutate();
+	// Go live: the session reads, the page is public, the code is up. Full
+	// screen is a separate act, for the wall, so a host can go live from a
+	// laptop in the back of the room and put it on the screen later.
+	const isLive = isActive && popcorn.settings.public;
+	const goLiveNow = () => {
+		if (!isActive) goLive.mutate();
 		const patch: Record<string, boolean> = {};
 		if (!popcorn.settings.public) patch.public = true;
 		if (!popcorn.settings.show_qr) patch.show_qr = true;
 		if (Object.keys(patch).length) settings.mutate(patch);
-		if (!fullscreen) toggleFullscreen();
 	};
 
 	return (
@@ -860,24 +862,38 @@ function PopcornSession({
 				</Stack>
 				<Group gap="xs" wrap="wrap" {...testId("popcorn-actions")}>
 					{/* The one pill on the page: the primary action. */}
-					<Button
-						leftSection={<PresentationIcon size={16} />}
-						loading={settings.isPending || goLive.isPending}
-						onClick={present}
-						{...testId("popcorn-present-button")}
-					>
-						<Trans>Present</Trans>
-					</Button>
-					{isEnded ? (
+					{isLive ? (
+						<Badge
+							size="lg"
+							variant="light"
+							color="primary"
+							leftSection={
+								<span
+									className="inline-block h-2 w-2 animate-pulse rounded-full bg-current"
+									aria-hidden
+								/>
+							}
+							{...testId("popcorn-live-badge")}
+						>
+							<Trans>Live</Trans>
+						</Badge>
+					) : (
 						<Button
-							variant="outline"
-							loading={goLive.isPending}
-							onClick={() => goLive.mutate()}
+							loading={settings.isPending || goLive.isPending}
+							onClick={goLiveNow}
 							{...testId("popcorn-go-live-button")}
 						>
-							<Trans>Go live again</Trans>
+							<Trans>Go live</Trans>
 						</Button>
-					) : null}
+					)}
+					<Button
+						variant="outline"
+						leftSection={<ArrowsOutIcon size={16} />}
+						onClick={toggleFullscreen}
+						{...testId("popcorn-fullscreen-button")}
+					>
+						<Trans>Full screen</Trans>
+					</Button>
 					<SharePopover projectId={projectId} popcorn={popcorn} />
 					<Button
 						variant="outline"
