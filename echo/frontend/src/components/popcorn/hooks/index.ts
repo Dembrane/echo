@@ -86,8 +86,8 @@ export const popcornHostViewUrl = (popcornId: string, versionId?: string) =>
 	}`;
 
 // Upstream's fictional sample deck: the way to see popcorn before a real day.
-export const popcornSampleViewUrl = () =>
-	`${API_BASE_URL}/v2/bff/popcorn/sample/view/`;
+export const popcornSampleViewUrl = (scale?: number) =>
+	`${API_BASE_URL}/v2/bff/popcorn/sample/view/${scale ? `?scale=${scale}` : ""}`;
 
 export const popcornPublicUrl = (token: string) =>
 	absoluteApiUrl(`/v2/popcorn/public/${encodeURIComponent(token)}/`);

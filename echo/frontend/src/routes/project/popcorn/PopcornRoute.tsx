@@ -238,17 +238,17 @@ function IntroModal({
 			opened={opened}
 			onClose={onClose}
 			title={t`Popcorn`}
-			size="lg"
+			size="xl"
 			{...testId("popcorn-intro-modal")}
 		>
 			<Stack gap="md">
 				<Box
 					className="overflow-hidden rounded-md border"
-					style={{ borderColor: "var(--mantine-color-gray-3)", height: 340 }}
+					style={{ borderColor: "var(--mantine-color-gray-3)", height: 460 }}
 				>
 					<iframe
 						title={t`Sample popcorn session`}
-						src={popcornSampleViewUrl()}
+						src={popcornSampleViewUrl(0.75)}
 						className="block h-full w-full border-0"
 						{...testId("popcorn-intro-sample-frame")}
 					/>

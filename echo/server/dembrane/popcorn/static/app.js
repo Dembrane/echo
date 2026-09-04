@@ -19,6 +19,10 @@
     }
     const requested = new URLSearchParams(location.search).get("version");
     if (requested && /^[0-9a-fA-F-]{36}$/.test(requested)) EMBED.version = requested;
+    // A small frame (the intro's sample) asks for the deck scaled down so the
+    // stage keeps its proportions instead of cramming full-size phrases.
+    const scale = Number(new URLSearchParams(location.search).get("scale"));
+    if (scale >= 0.4 && scale <= 1) document.documentElement.style.zoom = String(scale);
   }
   const MARKERS = ["var(--m0)", "var(--m1)", "var(--m2)", "var(--m3)", "var(--m4)", "var(--m5)"];
   const POLL_MS = 3000;           // slide files
