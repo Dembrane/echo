@@ -9,6 +9,7 @@ export type PopcornLoop = {
 	status: "active" | "paused" | "expired" | "stopped" | "ended" | string;
 	expires_at?: string | null;
 	cadence_minutes?: number | null;
+	next_read_at?: string | null;
 	last_run_started_at?: string | null;
 	last_run_status?: "ok" | "no_op" | "error" | string | null;
 	last_run_detail?: string | null;

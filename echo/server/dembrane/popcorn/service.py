@@ -240,7 +240,7 @@ def dispatch_popcorn_tick_now(loop_id: str, tick_kind: str = "manual") -> None:
     task_popcorn_tick_now.send(loop_id, tick_kind)
 
 
-SAFETY_TICK_DELAY_SECONDS = 20
+SAFETY_TICK_DELAY_SECONDS = 0
 
 
 async def dispatch_popcorn_tick_now_with_safety(loop_id: str, tick_kind: str = "manual") -> None:
@@ -476,7 +476,39 @@ async def get_report_by_public_token(token: str) -> dict[str, Any] | None:
 # ── read models ──────────────────────────────────────────────────────
 
 
-def loop_payload(loop: dict[str, Any] | None, run: dict[str, Any] | None) -> dict[str, Any] | None:
+async def next_read_at(loop_id: str) -> str | None:
+    """When the next tick is due: the earliest pending scheduled tick for the
+    loop. A time in the past means a tick is being run right now."""
+    from dembrane.scheduled_tasks import STATUS_SCHEDULED, STATUS_PROCESSING
+
+    rows = await async_directus.get_items(
+        "scheduled_task",
+        {
+            "query": {
+                "filter": {
+                    "task_type": {"_eq": TASK_POPCORN_TICK},
+                    "status": {"_in": [STATUS_SCHEDULED, STATUS_PROCESSING]},
+                },
+                "fields": ["payload", "scheduled_at"],
+                "limit": -1,
+            }
+        },
+    )
+    times = sorted(
+        str(row.get("scheduled_at"))
+        for row in (rows if isinstance(rows, list) else [])
+        if isinstance(row, dict)
+        and (row.get("payload") or {}).get("loop_id") == loop_id
+        and row.get("scheduled_at")
+    )
+    return times[0] if times else None
+
+
+def loop_payload(
+    loop: dict[str, Any] | None,
+    run: dict[str, Any] | None,
+    next_at: str | None = None,
+) -> dict[str, Any] | None:
     if not loop:
         return None
     return {
@@ -484,6 +516,7 @@ def loop_payload(loop: dict[str, Any] | None, run: dict[str, Any] | None) -> dic
         "status": loop.get("status"),
         "expires_at": loop.get("expires_at"),
         "cadence_minutes": loop.get("cadence_minutes"),
+        "next_read_at": next_at,
         "last_run_started_at": (run or {}).get("started_at"),
         "last_run_status": (run or {}).get("status"),
         "last_run_detail": (run or {}).get("detail"),
@@ -527,7 +560,9 @@ async def popcorn_payload(report: dict[str, Any]) -> dict[str, Any]:
         "updated_at": (loop or {}).get("updated_at"),
         "settings": settings,
         "public_token": report.get("public_token"),
-        "loop": loop_payload(loop, run),
+        "loop": loop_payload(
+            loop, run, await next_read_at(str(loop["id"])) if loop else None
+        ),
         "counts": state_counts(state),
     }
 
