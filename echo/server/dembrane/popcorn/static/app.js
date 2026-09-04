@@ -19,6 +19,10 @@
     }
     const requested = new URLSearchParams(location.search).get("version");
     if (requested && /^[0-9a-fA-F-]{36}$/.test(requested)) EMBED.version = requested;
+    // A small frame (the intro's sample) asks for the deck scaled down so the
+    // stage keeps its proportions instead of cramming full-size phrases.
+    const scale = Number(new URLSearchParams(location.search).get("scale"));
+    if (scale >= 0.4 && scale <= 1) document.documentElement.style.zoom = String(scale);
   }
   const MARKERS = ["var(--m0)", "var(--m1)", "var(--m2)", "var(--m3)", "var(--m4)", "var(--m5)"];
   const POLL_MS = 3000;           // slide files
@@ -707,7 +711,13 @@
     const total = [...state.popcorn.values()].reduce((n, d) => n + (d.items?.length || 0), 0);
     let waiting = stageEl.querySelector(".popcorn-waiting");
     if (!total) {
-      const msg = state.session ? "listening…" : "drop your session's JSON files anywhere on this page";
+      // In dembrane the deck reads transcripts that already exist; it never
+      // records. Say what is actually happening so a host does not think a
+      // microphone is open.
+      const msg = !state.session ? "drop your session's JSON files anywhere on this page"
+        : EMBED && !(state.session.transcripts || []).length ? "waiting for the first conversation"
+        : EMBED ? "reading the conversations…"
+        : "listening…";
       if (!waiting) stageEl.innerHTML = `<p class="popcorn-waiting"><span class="live-dot"></span>&nbsp; ${msg}</p>`;
       else if (!waiting.textContent.includes(msg.slice(0, 8))) waiting.innerHTML = `<span class="live-dot"></span>&nbsp; ${msg}`;
       return;

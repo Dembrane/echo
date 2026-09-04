@@ -129,28 +129,7 @@ function VoiceFields({
 	// The default is the prompt as written. It is on whenever nothing else is,
 	// and choosing it clears everything else, so it reads as one of the choices
 	// rather than as the absence of one.
-	const isDefault = voice.presets.length === 0 && !voice.note && !otherOpen;
-	const options: Array<{
-		key: PopcornVoicePreset;
-		label: string;
-		description: string;
-	}> = [
-		{
-			description: t`The softer of two ways the room said a thing. Nothing that names or blames a person.`,
-			key: "gentle",
-			label: t`Gentle on people`,
-		},
-		{
-			description: t`The plainest wording the room used. No metaphors or jokes the room did not come back to.`,
-			key: "plain",
-			label: t`Keep it plain`,
-		},
-		{
-			description: t`Favour what became a decision, a need or a next step.`,
-			key: "decisions",
-			label: t`Lean towards decisions`,
-		},
-	];
+	const isDefault = !voice.note && !otherOpen;
 	return (
 		<Stack gap="sm">
 			<Text fw={500}>
@@ -164,29 +143,10 @@ function VoiceFields({
 					onChange({ note: "", presets: [] });
 				}}
 				label={t`dembrane default`}
-				description={t`The room's own words, the ideas that moved the conversation. Nothing added, nothing softened.`}
+				description={t`The room's own words, the ideas that moved the conversation.`}
 				size={FIELD_SIZE}
 				{...testId("popcorn-voice-default")}
 			/>
-			<Checkbox.Group
-				value={voice.presets}
-				onChange={(next) =>
-					onChange({ ...voice, presets: next as PopcornVoicePreset[] })
-				}
-			>
-				<Stack gap="sm">
-					{options.map((option) => (
-						<Checkbox
-							key={option.key}
-							value={option.key}
-							label={option.label}
-							description={option.description}
-							size={FIELD_SIZE}
-							{...testId(`popcorn-voice-${option.key}`)}
-						/>
-					))}
-				</Stack>
-			</Checkbox.Group>
 			<Box>
 				<Checkbox
 					checked={otherOpen}
@@ -238,20 +198,31 @@ function IntroModal({
 			opened={opened}
 			onClose={onClose}
 			title={t`Popcorn`}
-			size="lg"
+			size="xl"
 			{...testId("popcorn-intro-modal")}
 		>
 			<Stack gap="md">
+				<Box
+					className="overflow-hidden rounded-md border"
+					style={{ borderColor: "var(--mantine-color-gray-3)", height: 460 }}
+				>
+					<iframe
+						title={t`Sample popcorn session`}
+						src={popcornSampleViewUrl(0.75)}
+						className="block h-full w-full border-0"
+						{...testId("popcorn-intro-sample-frame")}
+					/>
+				</Box>
+				<Text size="xs">
+					<Trans>
+						A sample session, not your data. Yours will look like this.
+					</Trans>
+				</Text>
 				<Text>
 					<Trans>
 						Popcorn shows a room its own words while it is still talking: live
-						slides made from this project's conversations, for a big screen.
-					</Trans>
-				</Text>
-				<Text size="sm">
-					<Trans>
-						An early feature. It may change, and you can turn it off again in
-						the project settings.
+						slides from this project's conversations, for a big screen. It is
+						early, and you can turn it off again in the project settings.
 					</Trans>
 				</Text>
 				<Group justify="flex-end" gap="xs">
@@ -284,9 +255,9 @@ function PopcornStart({
 	projectName: string;
 }) {
 	const [title, setTitle] = useState(projectName);
+	const [titleError, setTitleError] = useState<string | null>(null);
 	const [duration, setDuration] = useState<Duration>("24h");
 	const [voice, setVoice] = useState<PopcornVoice>(EMPTY_VOICE);
-	const [trying, setTrying] = useState(false);
 	const create = useCreatePopcornMutation(projectId);
 
 	useEffect(() => {
@@ -307,46 +278,6 @@ function PopcornStart({
 						</Trans>
 					</Text>
 				</Stack>
-				{/* Try it: the upstream sample deck in the real viewer, no model call. */}
-				<Paper
-					withBorder
-					className="rounded-md"
-					p="md"
-					{...testId("popcorn-try")}
-				>
-					<Group justify="space-between" align="center" wrap="wrap" gap="sm">
-						<Text size="sm">
-							<Trans>
-								See what the room will see, with a sample session, before your
-								own day.
-							</Trans>
-						</Text>
-						<Button
-							variant={trying ? "subtle" : "outline"}
-							onClick={() => setTrying((current) => !current)}
-							{...testId("popcorn-try-button")}
-						>
-							{trying ? t`Hide the sample` : t`Try it with a sample`}
-						</Button>
-					</Group>
-					{trying ? (
-						<Box
-							mt="md"
-							className="overflow-hidden rounded-md border"
-							style={{
-								borderColor: "var(--mantine-color-gray-3)",
-								height: 560,
-							}}
-						>
-							<iframe
-								title={t`Sample popcorn session`}
-								src={popcornSampleViewUrl()}
-								className="block h-full w-full border-0"
-								{...testId("popcorn-sample-frame")}
-							/>
-						</Box>
-					) : null}
-				</Paper>
 				<Paper withBorder className="rounded-md" p="lg">
 					<Stack gap="lg">
 						<TextInput
@@ -354,8 +285,12 @@ function PopcornStart({
 							description={t`Shown at the top of the screen. Change it any time.`}
 							size={FIELD_SIZE}
 							value={title}
+							error={titleError}
 							maxLength={160}
-							onChange={(event) => setTitle(event.currentTarget.value)}
+							onChange={(event) => {
+								setTitle(event.currentTarget.value);
+								setTitleError(null);
+							}}
 							{...testId("popcorn-title-input")}
 						/>
 						<Select
@@ -376,11 +311,13 @@ function PopcornStart({
 						/>
 						<Group justify="flex-end">
 							<Button
-								radius="xl"
 								size={FIELD_SIZE}
 								loading={create.isPending}
-								disabled={!title.trim()}
-								onClick={() =>
+								onClick={() => {
+									if (!title.trim()) {
+										setTitleError(t`Give the session a title`);
+										return;
+									}
 									create.mutate({
 										expires_at: expiryFor(duration).toISOString(),
 										title: title.trim(),
@@ -388,8 +325,8 @@ function PopcornStart({
 											voice.presets.length || voice.note.trim()
 												? { note: voice.note.trim(), presets: voice.presets }
 												: undefined,
-									})
-								}
+									});
+								}}
 								{...testId("popcorn-start-button")}
 							>
 								<Trans>Start popcorn</Trans>
@@ -573,6 +510,7 @@ function SessionModal({
 	const [showBranding, setShowBranding] = useState(
 		popcorn.settings.show_branding ?? true,
 	);
+	const [titleError, setTitleError] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (!opened) return;
@@ -594,6 +532,10 @@ function SessionModal({
 		settings.isPending || loopSettings.isPending || lifecycle.isPending;
 
 	const save = () => {
+		if (!title.trim()) {
+			setTitleError(t`Give the session a title`);
+			return;
+		}
 		settings.mutate(
 			{
 				show_branding: showBranding,
@@ -628,8 +570,12 @@ function SessionModal({
 					description={t`Shown at the top of the screen.`}
 					size={FIELD_SIZE}
 					value={title}
+					error={titleError}
 					maxLength={160}
-					onChange={(event) => setTitle(event.currentTarget.value)}
+					onChange={(event) => {
+						setTitle(event.currentTarget.value);
+						setTitleError(null);
+					}}
 					{...testId("popcorn-title-edit-input")}
 				/>
 				{!isEnded ? (
@@ -718,8 +664,7 @@ function SessionModal({
 						<Trans>Cancel</Trans>
 					</Button>
 					<Button
-						loading={settings.isPending || loopSettings.isPending}
-						disabled={!title.trim() || busy}
+						loading={busy}
 						onClick={save}
 						{...testId("popcorn-title-save")}
 					>
@@ -912,7 +857,6 @@ function PopcornSession({
 				<Group gap="xs" wrap="wrap" {...testId("popcorn-actions")}>
 					{/* The one pill on the page: the primary action. */}
 					<Button
-						radius="xl"
 						leftSection={<PresentationIcon size={16} />}
 						loading={settings.isPending}
 						disabled={isEnded}
@@ -989,7 +933,7 @@ function PopcornLoading() {
 					<Skeleton height={16} width={320} />
 				</Stack>
 				<Group gap="xs">
-					<Skeleton height={36} width={120} radius="xl" />
+					<Skeleton height={36} width={120} radius="md" />
 					<Skeleton height={36} width={96} radius="md" />
 					<Skeleton height={36} width={110} radius="md" />
 				</Group>
