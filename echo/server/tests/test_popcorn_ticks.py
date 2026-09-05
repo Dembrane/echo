@@ -156,42 +156,68 @@ def _install_models(monkeypatch, *, calls: list[str], fail_for: set[str] | None 
         first = transcript.split(".")[0]
         return {"items": [{"phrase": first, "weight": 2}]}
 
-    async def _analysis(*, kind: str, corpus: str) -> dict[str, Any]:  # noqa: ARG001
-        calls.append(f"analysis:{kind}")
-        if kind == "tensions":
-            return {
+    async def _pipeline(sources: dict[str, str], book: Any) -> dict[str, Any]:  # noqa: ARG001
+        calls.append("analysis:tensions")
+        qids = book.add_all([{"transcript": "c1", "text": "Nobody joins for the desks."}])
+        return {
+            "tensions": {
                 "tensions": [
                     {
-                        "poleA": "desks",
-                        "poleB": "kettle",
-                        "narrative": "n" * 40,
-                        "toResolve": "which one?",
-                        "quotes": [{"transcript": "c1", "text": "Nobody joins for the desks."}],
+                        "id": "x1",
+                        "poleA": "keep the desks",
+                        "poleB": "boil the kettle",
+                        "knot": "Keep the desks and nobody comes; drop them and there is nowhere to sit.",
+                        "toResolve": "Which one goes first?",
+                        "quoteIds": qids,
                     }
                 ]
+            },
+            "gate_flags": [],
+            "counts": {"positions": 2, "candidates": 1, "cross_table": 1, "verified": 1, "kept": 1},
+        }
+
+    monkeypatch.setattr(ticks, "run_tensions_pipeline", _pipeline)
+
+    def _group(name: str, rung: str, stake: float, mentions: float) -> dict[str, Any]:
+        return {
+            "name": name,
+            "role": "r" * 5,
+            "stake": "s" * 5,
+            "rung": rung,
+            "stakeWeight": stake,
+            "mentionsWeight": mentions,
+            "quotes": [],
+        }
+
+    _relation = {
+        "between": ["Members", "Staff"],
+        "label": "told after the fact",
+        "intensity": 0.7,
+        "sentiment": -0.4,
+        "unowned": True,
+        "detail": "Decisions arrive as announcements.",
+        "aspects": [],
+    }
+
+    async def _analysis(
+        *, kind: str, corpus: str, feedback: list[str] | None = None
+    ) -> dict[str, Any]:  # noqa: ARG001
+        calls.append(f"analysis:{kind}" + (":retry" if feedback else ""))
+        if feedback is None and getattr(_analysis, "joined_first", False):
+            _analysis.joined_first = False  # type: ignore[attr-defined]
+            return {
+                "stakeholders": [
+                    _group("Members/AI", "voiced", 0.9, 0.8),
+                    _group("Staff", "named", 0.4, 0.2),
+                ],
+                "relations": [{**_relation, "between": ["Members/AI", "Staff"]}],
             }
         return {
             "stakeholders": [
-                {
-                    "name": "Members",
-                    "role": "r" * 5,
-                    "stake": "s" * 5,
-                    "rung": "voiced",
-                    "stakeWeight": 0.9,
-                    "mentionsWeight": 0.8,
-                    "quotes": [],
-                },
-                {
-                    "name": "Staff",
-                    "role": "r" * 5,
-                    "stake": "s" * 5,
-                    "rung": "named",
-                    "stakeWeight": 0.4,
-                    "mentionsWeight": 0.2,
-                    "quotes": [],
-                },
+                _group("Members", "voiced", 0.9, 0.8),
+                _group("Staff", "named", 0.4, 0.2),
             ],
-            "relations": [],
+            "relations": [_relation],
         }
 
     async def _validate(*, transcript_id: str, transcript: str, phrase: str) -> dict[str, Any]:
@@ -404,6 +430,24 @@ def test_the_last_conversation_vanishing_clears_the_deck(fake: _FakeDirectus, mo
     assert state["analysis"] is None and state["quotes"] == []
 
 
+def test_a_joined_stakeholder_name_is_sent_back_once(fake: _FakeDirectus, monkeypatch) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    ticks.run_analysis.joined_first = True  # type: ignore[attr-defined]
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    assert result["status"] == "ok"
+    assert [c for c in calls if c.startswith("analysis:stakeholders")] == [
+        "analysis:stakeholders",
+        "analysis:stakeholders:retry",
+    ]
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    assert [s["name"] for s in state["analysis"]["stakeholders"]["stakeholders"]] == [
+        "Members",
+        "Staff",
+    ]
+    assert "asked again" in fake.created["agent_loop_run"][-1]["detail"]
+
+
 def test_failed_extractor_does_not_stall_the_stage(fake: _FakeDirectus, monkeypatch) -> None:
     calls: list[str] = []
     _install_models(monkeypatch, calls=calls, fail_for={"c2"})
@@ -422,7 +466,9 @@ def test_failed_analysis_keeps_previous_block(fake: _FakeDirectus, monkeypatch) 
     asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
     previous = fake.items["agent_loop"]["loop1"]["popcorn_state"]["analysis"]
 
-    async def _broken(*, kind: str, corpus: str) -> dict[str, Any]:  # noqa: ARG001
+    async def _broken(
+        *, kind: str, corpus: str, feedback: list[str] | None = None
+    ) -> dict[str, Any]:  # noqa: ARG001
         raise RuntimeError("quota")
 
     monkeypatch.setattr(ticks, "run_analysis", _broken)
@@ -431,7 +477,7 @@ def test_failed_analysis_keeps_previous_block(fake: _FakeDirectus, monkeypatch) 
     assert result["status"] == "ok"
     state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
     assert state["analysis"] == previous
-    assert "tensions: FAILED quota" in fake.created["agent_loop_run"][-1]["detail"]
+    assert "stakeholders: FAILED quota" in fake.created["agent_loop_run"][-1]["detail"]
 
 
 def test_non_popcorn_loop_is_refused(fake: _FakeDirectus) -> None:

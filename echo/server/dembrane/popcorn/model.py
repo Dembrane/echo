@@ -31,8 +31,14 @@ POPCORN_PROMPT = "popcorn-v1.6"
 VALIDATE_PROMPT = "popcorn-validate"
 KIND_PROMPT = "popcorn-kind"
 QUESTION_PROMPT = "popcorn-question"
-TENSIONS_PROMPT = "tensions"
-STAKEHOLDERS_PROMPT = "stakeholders"
+TENSIONS_PROMPT = (
+    "tensions"  # the single-call slide, kept for the record; the tick runs the pipeline
+)
+STAKEHOLDERS_PROMPT = "stakeholders-v0.9"
+
+# Gemini counts its thinking against maxOutputTokens, and the analysis calls
+# think by default, so a tight cap truncates the JSON mid-array.
+ANALYSIS_MAX_TOKENS = 32000
 
 # The second pass thinks, and Gemini counts thinking against the output cap.
 ENRICH_MAX_TOKENS = 8000
@@ -207,14 +213,37 @@ async def rewrite_question(*, transcript_id: str, transcript: str, phrase: str) 
     )
 
 
-async def run_analysis(*, kind: str, corpus: str) -> dict[str, Any]:
-    """One cross-conversation slide (tensions or stakeholders) over the whole session."""
+async def analysis_call(
+    *, system_prompt: str, user_text: str, schema: dict[str, Any], thinking: bool = True
+) -> dict[str, Any]:
+    """One judgement of the analysis kind: the caller brings the prompt and the
+    schema; the model thinks unless told not to."""
     return await _structured_completion(
-        system_prompt=prompt_text(ANALYSIS_PROMPTS[kind]),
+        system_prompt=system_prompt,
+        user_text=user_text,
+        schema=schema,
+        max_tokens=ANALYSIS_MAX_TOKENS,
+        fast=not thinking,
+    )
+
+
+async def run_analysis(
+    *, kind: str, corpus: str, feedback: list[str] | None = None
+) -> dict[str, Any]:
+    """One cross-conversation slide over the whole session. `feedback` is the
+    list of deterministic checks a previous answer failed; the prompt goes
+    back with them appended, once."""
+    system = prompt_text(ANALYSIS_PROMPTS[kind])
+    if feedback:
+        lines = "".join(f"- {f}\n" for f in feedback)
+        system = (
+            f"{system}\n\n## Your previous answer failed these checks\n\n{lines}"
+            "\nFix every one of them and return the complete output again."
+        )
+    return await _structured_completion(
+        system_prompt=system,
         user_text=_transcript_message("session", corpus),
         schema=ANALYSIS_SCHEMAS[kind],
-        # Gemini counts its thinking against maxOutputTokens, and the analysis
-        # passes think by default, so a tight cap truncates the JSON mid-array.
-        max_tokens=32000,
+        max_tokens=ANALYSIS_MAX_TOKENS,
         fast=False,
     )

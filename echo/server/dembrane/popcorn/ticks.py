@@ -37,8 +37,11 @@ from dembrane.redis_async import get_redis_client
 from dembrane.canvas.access import CanvasReaderAccessDenied, resolve_canvas_reader_context
 from dembrane.canvas.events import publish_generation_nudge
 from dembrane.popcorn.flags import gate_items, known_shingles, introduced_names
+from dembrane.popcorn.gates import name_flags, island_flags
 from dembrane.popcorn.model import (
+    prompt_text,
     run_analysis,
+    analysis_call,
     classify_phrase,
     extract_popcorn,
     validate_phrase,
@@ -59,10 +62,10 @@ from dembrane.popcorn.service import (
 from dembrane.popcorn.analysis import (
     QuoteBook,
     build_corpus,
-    shape_tensions,
     shape_stakeholders,
     shape_popcorn_items,
 )
+from dembrane.popcorn.tensions import PROMPT_NAMES as TENSION_PROMPTS, run_pipeline
 from dembrane.popcorn.grounding import ground_items
 from dembrane.popcorn.enrichment import enrich_item, apply_results
 
@@ -74,6 +77,8 @@ MAX_PARALLEL_EXTRACTORS = 16
 # after every fast extractor has flushed, so it never competes with a first
 # phrase for the model.
 MAX_PARALLEL_ENRICHMENT = 8
+# Calls in flight for the tensions pipeline, which runs beside the stakeholders call.
+MAX_PARALLEL_ANALYSIS = 8
 # A single conversation rarely passes 100k characters in a day; the cap only
 # guards the prompt against a runaway recording.
 MAX_CHARS_PER_CONVERSATION = 150_000
@@ -86,8 +91,6 @@ STALE_TICK_SECONDS = 90
 # A running tick says so every HEARTBEAT_SECONDS; the key lives STALE_TICK_SECONDS,
 # so a worker that dies is noticed within one cadence and a slow second pass is not.
 HEARTBEAT_SECONDS = 30
-ANALYSIS_KINDS = ("tensions", "stakeholders")
-ANALYSIS_SHAPERS = {"tensions": shape_tensions, "stakeholders": shape_stakeholders}
 
 
 def _now() -> datetime:
@@ -551,14 +554,26 @@ def _referenced_quotes(state: dict[str, Any], quotes: list[dict[str, Any]]) -> l
     return [q for q in quotes if q.get("id") in ids]
 
 
+async def run_tensions_pipeline(sources: dict[str, str], book: QuoteBook) -> dict[str, Any]:
+    """The five-stage tensions pipeline over the session, into the shared registry."""
+    return await run_pipeline(
+        sources,
+        book,
+        generate=analysis_call,
+        prompts={name: prompt_text(name) for name in TENSION_PROMPTS},
+        concurrency=MAX_PARALLEL_ANALYSIS,
+    )
+
+
 async def _run_analysis_pass(
     transcripts: list[dict[str, Any]],
     outcomes: list[str],
     book: QuoteBook,
 ) -> dict[str, Any] | None:
-    """Both slow slides at once, registering into the tick's shared quote book.
-    Returns the new analysis block, or None when any slide failed so the
-    previous block stays."""
+    """Both slow slides at once, registering into the tick's shared quote book:
+    the stakeholders call with its two gates and one retry, and the tensions
+    pipeline. Returns the new analysis block, or None when either failed so
+    the previous block stays."""
     total = sum(len(t["text"]) for t in transcripts)
     per_transcript = (
         MAX_ANALYSIS_CHARS // max(1, len(transcripts)) if total > MAX_ANALYSIS_CHARS else None
@@ -567,27 +582,48 @@ async def _run_analysis_pass(
         t["id"]: (t["text"][:per_transcript] if per_transcript else t["text"]) for t in transcripts
     }
     corpus = build_corpus([(tid, text) for tid, text in sources.items()])
-    book_lock = asyncio.Lock()
     shaped: dict[str, dict[str, Any]] = {}
 
-    async def one(kind: str) -> None:
+    async def stakeholders_slide() -> None:
         started = _now()
-        raw = await run_analysis(kind=kind, corpus=corpus)
-        async with book_lock:
-            shaped[kind] = ANALYSIS_SHAPERS[kind](raw, book)
-        n = len(shaped[kind].get(kind) or [])
-        extra = (
-            f", {len(shaped[kind].get('relations') or [])} relations"
-            if kind == "stakeholders"
-            else ""
-        )
+        raw = await run_analysis(kind="stakeholders", corpus=corpus)
+        # The gates read a shaped answer; a throwaway book keeps a rejected
+        # answer's quotes out of the shared registry.
+        probe = shape_stakeholders(raw, QuoteBook(sources))
+        flags = name_flags(probe) + island_flags(probe)
+        if flags:
+            raw = await run_analysis(kind="stakeholders", corpus=corpus, feedback=flags)
+        shaped["stakeholders"] = shape_stakeholders(raw, book)
+        left = name_flags(shaped["stakeholders"]) + island_flags(shaped["stakeholders"])
         elapsed_ms = int((_now() - started).total_seconds() * 1000)
-        outcomes.append(f"{kind}: {n} items{extra} in {elapsed_ms} ms")
+        outcomes.append(
+            f"stakeholders: {len(shaped['stakeholders']['stakeholders'])} items, "
+            f"{len(shaped['stakeholders']['relations'])} relations in {elapsed_ms} ms"
+            + (f", {len(flags)} gate flag(s), asked again" if flags else "")
+            + (f", {len(left)} left" if left else "")
+        )
 
-    results = await asyncio.gather(*(one(kind) for kind in ANALYSIS_KINDS), return_exceptions=True)
+    async def tensions_slide() -> None:
+        started = _now()
+        result = await run_tensions_pipeline(sources, book)
+        shaped["tensions"] = result["tensions"]
+        c = result.get("counts") or {}
+        elapsed_ms = int((_now() - started).total_seconds() * 1000)
+        outcomes.append(
+            f"tensions: {len(result['tensions']['tensions'])} items in {elapsed_ms} ms "
+            f"({c.get('positions', 0)} positions, {c.get('candidates', 0)} pairs, "
+            f"{c.get('cross_table', 0)} across tables, {c.get('verified', 0)} verified)"
+            + (
+                f", {len(result['gate_flags'])} screen flag(s) left"
+                if result.get("gate_flags")
+                else ""
+            )
+        )
+
+    results = await asyncio.gather(stakeholders_slide(), tensions_slide(), return_exceptions=True)
     failed = [
         f"{kind}: FAILED {exc}"
-        for kind, exc in zip(ANALYSIS_KINDS, results, strict=True)
+        for kind, exc in zip(("stakeholders", "tensions"), results, strict=True)
         if isinstance(exc, BaseException)
     ]
     if failed:
