@@ -78,7 +78,8 @@ their icons and quotation marks by themselves, and the tally moves.
 When the QR code is on, it floats bottom right over the whole screen,
 whichever tab is showing, full size while the slide is up. Scrolling into
 the keys shrinks it and lifts it to sit on the top of the timeline strip;
-scrolling into the list hides it; it comes back on the way up. Whoever is at the presenter view can also fold it away to a small
+the moment the list below comes into view it is gone, on every tab, so it
+never covers the details; it comes back on the way up. Whoever is at the presenter view can also fold it away to a small
 chip, remembered in that browser. The dashboard only decides whether it is
 on at all.
 

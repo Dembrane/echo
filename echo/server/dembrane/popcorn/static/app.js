@@ -534,15 +534,21 @@
     const panel = document.querySelector(".qr-panel");
     if (!panel) return;
     const ratio = stage.clientHeight ? stage.scrollTop / stage.clientHeight : 0;
-    const small = ratio >= 0.12 && ratio < 0.9;
+    // The details (the long list under the stage, the list under a deck)
+    // are never covered: the moment they enter the viewport the code is gone.
+    const details = stage.querySelector(".pop-tail, .deck-tail");
+    const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+    const detailsIn = !!(details && vh) && details.getBoundingClientRect().top < vh - 4;
+    const gone = detailsIn || ratio >= 0.9;
+    const small = !gone && ratio >= 0.12;
     panel.classList.toggle("small", small);
-    panel.classList.toggle("gone", ratio >= 0.9);
+    panel.classList.toggle("gone", gone);
     // Small, it stays out of the keys' way: its bottom edge sits on the top
     // of the timeline strip and follows it as the strip slides up. Without a
     // strip (the deck tabs) it keeps its place.
     const keys = document.getElementById("pop-keys");
     const top = small && keys ? keys.getBoundingClientRect().top : 0;
-    panel.style.bottom = top > 0 && window.innerHeight ? `${window.innerHeight - top + 10}px` : "";
+    panel.style.bottom = top > 0 && vh ? `${vh - top + 10}px` : "";
   }
   stage.addEventListener("scroll", placeQrByScroll, { passive: true });
 

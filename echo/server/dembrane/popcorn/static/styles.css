@@ -465,8 +465,8 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .pop-tail { border-top: 1px solid var(--hairline); padding: 1.4em var(--pad-x) 1.6em; }
 /* a small callout at the bottom of the popcorn tab's scroll */
 .pop-disclaimer {
-  display: block; margin: 2.2em auto 0.6em; max-width: 62ch;
-  padding: 0.7em 1em; border: 1px solid var(--hairline); border-left: 3px solid var(--blue);
+  display: block; margin: 2.2em 0 0.6em; max-width: 62ch;
+  padding: 0.7em 1em; border: 1px solid var(--hairline);
   font-size: 0.78em; color: var(--ink-soft); background: var(--paper, #fff);
 }
 

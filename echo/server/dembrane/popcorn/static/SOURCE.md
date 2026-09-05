@@ -44,8 +44,9 @@ Patches carried on top of upstream, all guarded by `window.POPCORN_EMBED`:
   bottom right), whichever tab is up, foldable to a chip with its own button
   (the fold remembered in `localStorage` per path). A scroll into the keys
   shrinks it and sits its bottom edge on the top of the keys strip, following
-  the strip as it slides; the weeds (past the first fold) hide it; it comes
-  back on the way up. The dashboard only says whether it is on; upstream draws it
+  the strip as it slides; the moment the details (`.pop-tail`, `.deck-tail`)
+  enter the viewport it is gone, so it never covers them; it comes back on
+  the way up. The dashboard only says whether it is on; upstream draws it
   inside the popcorn stage with no controls.
 - How the stage plays is one switch (`#pop-shuffle`, styled like a Mantine
   switch): off is upstream's "in order of time", charcoal, the thumb carrying
