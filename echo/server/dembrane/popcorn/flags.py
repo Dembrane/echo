@@ -81,9 +81,12 @@ def introduced_names(transcript: str) -> set[str]:
 
 
 def name_hits(text: str, names: set[str]) -> list[str]:
-    """Names from the introductions that appear in the text, in any case."""
-    words = {w.casefold() for w in re.findall(r"[^\W\d_]+", text or "")}
-    return sorted(n for n in names if n.casefold() in words)
+    """Names from the introductions that appear in the text, as names: written
+    with their capital. A lowercase match is a common word that happens to be
+    somebody's name ("tension" against a "Tension" the transcript capitalised),
+    and holding a phrase back for that is a loss the room never sees."""
+    words = set(re.findall(r"[^\W\d_]+", text or ""))
+    return sorted(n for n in names if n in words)
 
 
 def scrub_names(text: str, names: set[str]) -> str:

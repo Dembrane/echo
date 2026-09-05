@@ -81,5 +81,8 @@ def test_gate_items_holds_back_names_known_text_and_twins() -> None:
 def test_names_are_found_in_any_case_and_script_and_hit_in_any_case() -> None:
     names = introduced_names("my name is José. hi, I'm alice. HELLO, Ømer.")
     assert names == {"José", "Ømer"}  # "alice" starts without a capital: not a name
-    assert name_hits("alice should lead, and JOSÉ too", {"Alice", "José"}) == ["Alice", "José"]
+    assert name_hits("Alice should lead, and José too", {"Alice", "José"}) == ["Alice", "José"]
+    # A name is a capitalised word: "tension" in a phrase is not the "Tension"
+    # a transcript capitalised after "this is", and a phrase is not held back for it.
+    assert name_hits("solving some kind of tension", {"Tension", "Alice"}) == []
     assert name_hits("nobody joins for the desks", {"Alice"}) == []
