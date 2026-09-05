@@ -15,6 +15,10 @@ PROJECT_PLAN.md and tools/serve_demo.py):
   tensions pipeline, side by side). Neither reads the other's output; both
   read the transcripts. `validated` on the bundle means the second pass
   finished for the transcript as it stands.
+- A read is scheduled (the live chain) or on request: `manual` (run, refresh)
+  and `rerun`. A rerun wipes the state here, under the run lock, before it
+  reads, so a rerun pressed during a read cannot be undone by that read's own
+  write; the run counter goes on so the saved runs stay in order.
 - Each analysis view is committed on its own, with the fingerprint of the
   session it read: a failed stakeholders call keeps the previous stakeholders
   and still publishes the new tensions, and the next tick retries only the
@@ -56,6 +60,7 @@ from dembrane.directus_async import async_directus
 from dembrane.popcorn.service import (
     MIN_CADENCE_MINUTES,
     DEFAULT_CADENCE_MINUTES,
+    fresh_state,
     save_version,
     is_popcorn_loop,
     normalize_state,
@@ -96,6 +101,8 @@ MAX_CHARS_PER_CONVERSATION = 150_000
 # split what is left evenly, so the two slow calls stay inside one context.
 MAX_ANALYSIS_CHARS = 600_000
 ANALYSIS_VIEWS = ("tensions", "stakeholders")
+# Reads a host asked for, as opposed to the live chain's scheduled ticks.
+ON_REQUEST = ("manual", "rerun")
 RUN_LOCK_SECONDS = 5 * 60
 MANUAL_LOCK_WAIT_SECONDS = 180
 STALE_TICK_SECONDS = 90
@@ -806,9 +813,9 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         )
         return {"status": "disabled", "run": run}
 
-    # Only the scheduled chain answers to the mode and the expiry. A manual
-    # read (refresh, rerun, run) goes ahead in any mode, at any time.
-    if tick_kind != "manual":
+    # Only the scheduled chain answers to the mode and the expiry. A read on
+    # request (run, refresh, rerun) goes ahead in any mode, at any time.
+    if tick_kind not in ON_REQUEST:
         if loop.get("status") != "active":
             run = await _create_run(
                 loop_id=loop_id,
@@ -835,7 +842,7 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         # A host pressing "read again" while a tick is mid-flight expects the
         # new chunks to be read, not dropped: wait for the running tick to end.
         claimed = False
-        if tick_kind == "manual":
+        if tick_kind in ON_REQUEST:
             for _ in range(MANUAL_LOCK_WAIT_SECONDS // 2):
                 await asyncio.sleep(2)
                 if await _claim_run_lock(loop_id):
@@ -867,6 +874,12 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         await _enqueue_next_if_due(loop)
 
         state = normalize_state(loop.get("popcorn_state"))
+        if tick_kind == "rerun":
+            # Wiped here, under the lock: phrases, quotes and analysis go, the
+            # run counter goes on, the saved runs stay. Everything is re-read.
+            previous_run = state["run"]
+            state = fresh_state()
+            state["run"] = previous_run
         # What the tool has put in front of the room so far, before this tick
         # writes anything: a new phrase that quotes it is the tool quoting itself.
         # Each conversation is checked against everything but its own phrases.
@@ -922,7 +935,7 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         analysis_stale = bool(transcripts) and bool(_stale_views(state, analysis_fingerprint))
 
         owed = _pending_enrichment(state, transcripts)
-        if not changed and not analysis_stale and not owed and tick_kind != "manual":
+        if not changed and not analysis_stale and not owed and tick_kind not in ON_REQUEST:
             run = await _create_run(
                 loop_id=loop_id,
                 status="no_op",
@@ -977,7 +990,7 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
                 )
 
         async def analysis_pass() -> None:
-            if not transcripts or not (analysis_stale or changed or tick_kind == "manual"):
+            if not transcripts or not (analysis_stale or changed or tick_kind in ON_REQUEST):
                 return
             fresh = await _run_analysis_pass(transcripts, outcomes, book)
             # A view that failed keeps its previous slide, unless it cites a quote
@@ -997,7 +1010,10 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
             await writer.flush()
 
         detail = "; ".join(
-            [f"run {state['run']}: {len(changed)} of {len(transcripts)} conversations re-read"]
+            [
+                f"run {state['run']}: {len(changed)} of {len(transcripts)} conversations re-read"
+                + (" (rerun: the previous state wiped)" if tick_kind == "rerun" else "")
+            ]
             + outcomes
         )
         run = await _create_run(loop_id=loop_id, status="ok", detail=detail, started_at=started_at)

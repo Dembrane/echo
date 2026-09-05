@@ -180,7 +180,7 @@ export function PopcornActions({
 							loading={live.isPending}
 							{...testId("popcorn-live-button")}
 						>
-							<Trans>Live</Trans>
+							<Trans>Go live</Trans>
 						</Button>
 					</Menu.Target>
 					<Menu.Dropdown>

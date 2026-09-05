@@ -60,9 +60,14 @@ twin phrases survived; Jorim asked for it to go.
   `expires_at` sets the loop to `paused` and no-ops ("Live ended; back to
   manual"); `_enqueue_next_if_due` does the same instead of writing
   `expired`. A manual tick never refuses.
-- **Rerun keeps the saved runs.** `reset_for_rerun` writes a fresh state
-  with the previous run counter, so the versions stay in order, and fires a
-  manual tick. The dashboard asks first and says the history stays.
+- **Rerun is a tick of its own kind.** The request dispatches a `rerun`
+  tick; the tick wipes the state itself, once it holds the run lock, with the
+  previous run counter so the versions stay in order, then reads everything.
+  The first version did the wipe in the API before dispatching, and a read
+  already in flight wrote the old state straight back over it, so a rerun
+  pressed during a read appeared to do nothing (found by Jorim on
+  2026-09-06). Refresh and rerun have separate rate-limit keys. The dashboard
+  asks first and says the history stays.
 - **The presenter view is a query parameter.** `?present=1` on the host view
   sets `presenting` from the first paint (the room's bundle, `view=room`, no
   host affordance). The postMessage bridge, the tab hide/show buttons and the
@@ -97,7 +102,7 @@ twin phrases survived; Jorim asked for it to go.
 dispatches one manual tick. `go_live(loop, hours=)` sets `active` with
 `now + hours`, clears the failure count and dispatches a tick;
 `stop_live(loop)` cancels pending popcorn tick tasks and sets `paused`.
-`reset_for_rerun(loop)` as above. `readiness(project_id=, ...)` reuses the
+`request_rerun(loop)` dispatches the `rerun` tick. `readiness(project_id=, ...)` reuses the
 tick's gather and returns conversations with a transcript and their word
 count (the dashboard says minutes at 150 words a minute). `loop_payload`
 carries `mode`; `state_counts` carries `validated` (items with a `quoteId`)
@@ -107,7 +112,7 @@ and `held_back`.
 
 `GET /popcorn?project_id=` carries `readiness` when `popcorn` is null.
 `POST /popcorn` ignores `expires_at` and `cadence_minutes` from older
-clients. New: `POST /{id}/rerun` (same twenty-second rate limit as refresh),
+clients. New: `POST /{id}/rerun` (a twenty-second rate limit of its own),
 `POST /{id}/live` (`{hours}`, 422 outside 1/8/24), `POST /{id}/live/stop`,
 `POST /{id}/view/data/latency` (the body read by hand, because `sendBeacon`
 may post it as text). `PATCH /{id}/settings` accepts `public_labels`. Removed:
@@ -118,7 +123,7 @@ may post it as text). `PATCH /{id}/settings` accepts `public_labels`. Removed:
 `PopcornRoute.tsx` composes one component per section from
 `frontend/src/components/popcorn/`: `PopcornStart` (readiness, title, voice,
 Run), `PopcornActions` (Open presenter view, Refresh, Rerun with its modal,
-Live with the duration menu, the live chip with Stop live), `PopcornStatus`,
+Go live with the duration menu, the live chip with Stop live), `PopcornStatus`,
 `PopcornScreenSettings` (tabs, QR code, names on the legend, the mark),
 `PopcornVoiceSection`, `PopcornShare`, `PopcornHistory`, `PopcornIntroModal`.
 The hooks gain `popcornPresenterUrl`, `useRerunPopcornMutation`,
@@ -137,9 +142,10 @@ conversations no longer in the session; `data-weight` is 2 for every phrase.
 ## Testing
 
 Server: `tests/test_popcorn_service.py` (new: manual creation, live and stop,
-legacy statuses, the rerun reset, readiness), `tests/test_popcorn_ticks.py`
+legacy statuses, the rerun dispatch, readiness), `tests/test_popcorn_ticks.py`
 (a scheduled tick past expiry returns to manual, a manual tick ignores expiry
-and books nothing, a phrase without a passage leaves the deck),
+and books nothing, a rerun tick wipes under the lock and re-reads everything,
+a phrase without a passage leaves the deck),
 `tests/test_popcorn_analysis.py` and `tests/test_popcorn_flags.py` (no
 weight, the first twin wins, `held_back` in the bundle),
 `tests/test_popcorn_view.py` (the presenter switch, no host bridge). 87

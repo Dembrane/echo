@@ -518,16 +518,12 @@ async def stop_live(loop: dict[str, Any]) -> dict[str, Any]:
     )
 
 
-async def reset_for_rerun(loop: dict[str, Any]) -> dict[str, Any]:
-    """Wipe the live state (phrases, quotes, analysis) and read again. The
-    run counter continues so the saved runs stay in order; they are kept."""
-    loop_id = str(loop["id"])
-    previous = normalize_state(loop.get("popcorn_state"))
-    state = fresh_state()
-    state["run"] = previous["run"]
-    await async_directus.update_item("agent_loop", loop_id, {"popcorn_state": state})
-    await dispatch_popcorn_tick_now_with_safety(loop_id, "manual")
-    return state
+async def request_rerun(loop: dict[str, Any]) -> None:
+    """Wipe the live state (phrases, quotes, analysis) and read everything
+    again. The wipe itself happens inside the tick, under the run lock, so a
+    rerun pressed while a read is running is not undone by that read's own
+    write. The run counter continues and the saved runs are kept."""
+    await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "rerun")
 
 
 async def readiness(*, project_id: str, acting_directus_user_id: str) -> dict[str, int]:

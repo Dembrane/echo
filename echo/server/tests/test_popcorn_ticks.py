@@ -681,3 +681,37 @@ def test_a_manual_tick_ignores_expiry_and_books_nothing(fake: _FakeDirectus, mon
     assert sorted(c for c in calls if c.startswith("popcorn")) == ["popcorn:c1", "popcorn:c2"]
     # Manual mode books nothing.
     assert fake.enqueued == []  # type: ignore[attr-defined]
+
+
+def test_a_rerun_tick_wipes_the_state_and_reads_everything_again(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    """Nothing changed, the loop is manual and past its expiry: a rerun still
+    wipes phrases, quotes and analysis under the lock and re-reads every
+    conversation. The run counter goes on so the saved runs stay in order."""
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    loop = fake.items["agent_loop"]["loop1"]
+    loop["status"] = "paused"
+    loop["expires_at"] = "2000-01-01T00:00:00+00:00"
+    assert asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))["status"] == "no_op"
+    before = loop["popcorn_state"]
+    assert before["run"] == 1 and before["conversations"]["c1"]["items"]
+    calls.clear()
+    fake.state_writes.clear()
+    fake.enqueued.clear()  # type: ignore[attr-defined]
+
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "rerun"))
+    assert result["status"] == "ok"
+    assert sorted(c for c in calls if c.startswith("popcorn")) == ["popcorn:c1", "popcorn:c2"]
+    assert "analysis:tensions" in calls
+    # The first write of the rerun is the wiped state: every conversation
+    # reading, no phrase, no analysis, no quotes, the counter one on.
+    first = fake.state_writes[0]
+    assert first["run"] == 2 and first["analysis"] is None and first["quotes"] == []
+    assert all(not c["items"] and not c["done"] for c in first["conversations"].values())
+    after = loop["popcorn_state"]
+    assert after["run"] == 2 and after["conversations"]["c1"]["items"][0]["quoteId"]
+    assert "rerun: the previous state wiped" in fake.created["agent_loop_run"][-1]["detail"]
+    assert loop["status"] == "paused" and fake.enqueued == []  # type: ignore[attr-defined]

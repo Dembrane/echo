@@ -31,10 +31,10 @@ from dembrane.popcorn.service import (
     readiness,
     stop_live,
     list_versions,
+    request_rerun,
     sample_bundle,
     create_popcorn,
     popcorn_payload,
-    reset_for_rerun,
     update_settings,
     get_version_files,
     get_popcorn_report,
@@ -100,12 +100,13 @@ def _as_id(value: Any) -> str | None:
     return str(value) if value is not None else None
 
 
-async def _rate_limit(popcorn_id: str) -> None:
-    """One read on request per twenty seconds: a second press lands on the
-    tick already queued."""
+async def _rate_limit(popcorn_id: str, action: str = "refresh") -> None:
+    """One press per twenty seconds per action: a second press lands on the
+    tick already queued. Refresh and rerun keep separate keys, so a rerun
+    right after a refresh still reruns."""
     client = await get_redis_client()
     hot = not await client.set(
-        f"popcorn:refresh:{popcorn_id}", "1", ex=REFRESH_TTL_SECONDS, nx=True
+        f"popcorn:{action}:{popcorn_id}", "1", ex=REFRESH_TTL_SECONDS, nx=True
     )
     if hot:
         raise HTTPException(status_code=429, detail="Just read")
@@ -235,12 +236,13 @@ async def refresh_popcorn(popcorn_id: str, auth: DependencyDirectusSession) -> d
 @router.post("/{popcorn_id}/rerun", status_code=status.HTTP_202_ACCEPTED)
 async def rerun_popcorn(popcorn_id: str, auth: DependencyDirectusSession) -> dict[str, str]:
     """Wipe the phrases, quotes and analysis and read everything again. The
-    saved runs stay in the history."""
+    wipe happens inside the tick, under the run lock. The saved runs stay in
+    the history."""
     report, access = await _require_popcorn(popcorn_id, auth)
     access.require("project:update")
     loop = await _loop_of(report)
-    await _rate_limit(popcorn_id)
-    await reset_for_rerun(loop)
+    await _rate_limit(popcorn_id, "rerun")
+    await request_rerun(loop)
     forget_bundle(str(report["id"]))
     return {"tick": "queued"}
 

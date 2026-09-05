@@ -87,22 +87,13 @@ def test_legacy_statuses_read_as_manual() -> None:
         assert payload and payload["mode"] == "manual", status
 
 
-def test_rerun_resets_the_state_and_keeps_the_run_counter(directus: _Directus) -> None:
+def test_rerun_is_a_tick_of_its_own_kind(directus: _Directus) -> None:
+    """The wipe happens inside the tick, under the run lock; the request
+    only dispatches it and never writes the state."""
     loop = _create()["loop"]
-    loop["popcorn_state"] = {
-        "version": 2,
-        "run": 7,
-        "order": ["c1"],
-        "conversations": {"c1": {"id": "c1", "items": [{"id": "p", "phrase": "x"}]}},
-        "quotes": [{"id": "q1", "transcript": "c1", "text": "x"}],
-        "analysis": {"tensions": {"tensions": []}},
-    }
-    state = asyncio.run(service.reset_for_rerun(loop))
-    assert state["run"] == 7 and state["conversations"] == {} and state["quotes"] == []
-    assert state["analysis"] is None and state["order"] == []
-    written = [d for c, _i, d in directus.updates if c == "agent_loop" and "popcorn_state" in d]
-    assert written[-1]["popcorn_state"] == state
-    assert directus.dispatched[-1] == (str(loop["id"]), "manual")  # type: ignore[attr-defined]
+    asyncio.run(service.request_rerun(loop))
+    assert directus.dispatched[-1] == (str(loop["id"]), "rerun")  # type: ignore[attr-defined]
+    assert not [d for c, _i, d in directus.updates if c == "agent_loop" and "popcorn_state" in d]
 
 
 def test_readiness_counts_transcribed_conversations_and_words(monkeypatch) -> None:

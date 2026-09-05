@@ -4896,9 +4896,9 @@ msgstr "Go Fullscreen"
 msgid "Go home"
 msgstr "Go home"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:944
-#~ msgid "Go live"
-#~ msgstr ""
+#: src/components/popcorn/PopcornActions.tsx:183
+msgid "Go live"
+msgstr ""
 
 #: src/routes/project/popcorn/PopcornRoute.tsx:878
 #~ msgid "Go live again"
@@ -5868,7 +5868,6 @@ msgid "Listing documentation pages"
 msgstr ""
 
 #: src/routes/project/canvas/CanvasRoute.tsx:301
-#: src/components/popcorn/PopcornActions.tsx:183
 #: src/components/conversation/monitorGrouping.ts:72
 #: src/components/conversation/LiveFunnelSection.tsx:265
 msgid "Live"

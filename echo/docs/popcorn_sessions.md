@@ -41,8 +41,9 @@ no transcripts can still run; the screen fills as conversations land.
   size, exactly as the room sees it: numbered conversations unless you say
   otherwise, no passages, no controls. Open it on as many screens as you
   like. The screen is never shown inside the dashboard.
-- **Refresh**, **Rerun** and **Live** as above. Rerun asks first, and says
-  that earlier runs stay in the history.
+- **Refresh**, **Rerun** and **Go live** as above. Rerun asks first, and
+  says that earlier runs stay in the history. A rerun pressed while a read is
+  running still reruns: the wipe happens inside the read, under its lock.
 - **Status**: conversations, phrases, how many are validated, how many were
   held back, the last read and what it did, and a progress bar while the
   check is running.
@@ -80,7 +81,9 @@ loop's `status` carries the mode: `paused` is manual, `active` is live. The
 legacy statuses (`expired`, `ended`, `stopped`) read as manual. `expires_at`
 is only read by the scheduled chain: a scheduled tick past it sets the loop
 to `paused` and no-ops; a manual tick (run, refresh, rerun) goes ahead in any
-mode at any time.
+mode at any time. A tick is scheduled or on request (`manual` for run and
+refresh, `rerun`); the rerun wipes the state itself, under the run lock, so a
+read in flight cannot write the old state back over it.
 
 The BFF routes under `/v2/bff/popcorn`:
 
@@ -89,7 +92,7 @@ The BFF routes under `/v2/bff/popcorn`:
 | `GET ?project_id=` | the session, or `{"popcorn": null, "readiness": {"conversations", "words"}}` before one exists |
 | `POST` | create in manual mode and read once |
 | `POST /{id}/refresh` | one read now; one per twenty seconds |
-| `POST /{id}/rerun` | reset the state (the run counter continues), read; saved runs kept |
+| `POST /{id}/rerun` | queue a `rerun` tick: the state is wiped under the run lock, then everything is read; the run counter continues; saved runs kept; one per twenty seconds, apart from refresh |
 | `POST /{id}/live` | body `{"hours": 1 \| 8 \| 24}`; active with that expiry, reads now |
 | `POST /{id}/live/stop` | back to manual |
 | `PATCH /{id}/settings` | title, client, tabs, public, show_qr, show_branding, public_labels, voice |
@@ -115,4 +118,4 @@ lives in `frontend/src/components/popcorn/`, one component per section.
 | Loop status | `paused` | `active`, with `expires_at` |
 | Reads | Refresh, Rerun, Run | every two minutes, and Refresh |
 | Ends | never | at the expiry, back to manual |
-| Set with | Run, Stop live | Live, then 1, 8 or 24 hours |
+| Set with | Run, Stop live | Go live, then 1, 8 or 24 hours |
