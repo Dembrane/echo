@@ -84,7 +84,8 @@
   code, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86em; }
   code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
   .diagram { background: var(--paper); border: 1px solid var(--hairline); border-radius: 6px; padding: 18px 14px 10px; margin: 18px 0 22px; overflow-x: auto; }
-  .diagram pre.mermaid { margin: 0; background: transparent; }
+  .diagram pre.mermaid { margin: 0; background: transparent; display: block; white-space: normal; line-height: 1; }
+  .diagram pre.mermaid svg { display: block; height: auto; max-width: 100%; margin: 0 auto; }
   .diagram-caption { font-size: 13px; color: var(--ink-faint); padding: 0 6px 4px; }
   table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 8px 0 18px; }
   th, td { text-align: left; vertical-align: top; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--hairline); }
@@ -474,7 +475,7 @@ flowchart TD
   <footer>Served only while SERVE_API_DOCS is on (local development). Branch <span class="mono">popcorn-lab-sync</span>, September 5th 2026. Prompts from Dembrane/popcorn at <span class="mono">8c23eba</span>.</footer>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
 <script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script>
 </body>
 </html>
