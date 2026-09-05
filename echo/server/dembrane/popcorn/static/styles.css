@@ -413,12 +413,13 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .source-phrase { font-weight: 500; margin-bottom: 0.7em; }
 .source-text { font-size: 0.9em; }
 
-/* the room's way in: portal QR on the popcorn stage, bottom right */
+/* the room's way in: the portal QR, floating over the whole deck, draggable,
+   foldable to a chip; where it sits is this screen's business */
 .qr-panel {
-  position: absolute;
-  right: var(--pad-x);
-  bottom: 2.2em;
-  z-index: 3;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 120;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -426,12 +427,29 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   padding: 0.7em 0.7em 0.55em;
   background: var(--parchment);
   border: 1px solid var(--hairline);
-  pointer-events: none;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.qr-panel { pointer-events: auto; }
-.qr-image { display: block; width: clamp(96px, 12vw, 200px); height: auto; aspect-ratio: 1; }
+.qr-panel.dragging { cursor: grabbing; box-shadow: 0 10px 32px rgba(0, 0, 0, 0.14); }
+.qr-panel.minimised { padding: 0; border: none; background: transparent; box-shadow: none; }
+.qr-image { display: block; width: clamp(96px, 12vw, 200px); height: auto; aspect-ratio: 1; pointer-events: none; }
 .qr-image svg { display: block; width: 100%; height: 100%; }
 .qr-label { font-size: 0.72em; color: var(--ink-soft); letter-spacing: 0.01em; white-space: nowrap; }
+.qr-min {
+  position: absolute; top: 0.15em; right: 0.25em;
+  border: none; background: transparent; color: var(--ink-faint); font: inherit; font-size: 1em; line-height: 1;
+  padding: 0.1em 0.3em; cursor: pointer;
+}
+.qr-min:hover { color: var(--graphite); }
+.qr-chip {
+  border: 1px solid var(--hairline); background: var(--parchment); color: var(--ink-soft);
+  font: inherit; font-size: 0.72em; letter-spacing: 0.06em; padding: 0.45em 0.7em; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+.qr-chip:hover { color: var(--graphite); }
 
 .stage-hint {
   position: absolute;

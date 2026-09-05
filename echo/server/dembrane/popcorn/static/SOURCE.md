@@ -40,6 +40,15 @@ Patches carried on top of upstream, all guarded by `window.POPCORN_EMBED`:
   is in flight and holds the first phrase until the count ends; past the
   count with nothing landed it shows a spinner and sends one beacon
   (`data/latency`, `{ms}`) from the host's view.
+- The QR panel floats over the whole deck on `body` (`position: fixed`),
+  whichever tab is up: draggable by pointer, foldable to a chip with its own
+  button, position and fold remembered in `localStorage` per path. The
+  dashboard only says whether it is on; upstream draws it inside the popcorn
+  stage, bottom right, with no controls.
+- Any change to a popcorn file redraws the list and the phrases on stage
+  (`popcornStamp`, `refreshLivePops`): the second pass changes quotes, kinds
+  and marks without changing the count, so the count alone was not the
+  signal and a validated phrase stayed plain until the next interaction.
 - The long list's count is a tally: popcorns, validated (with a `quoteId`),
   held back (`held_back` per file), and `reading n of m` while a second pass
   runs.

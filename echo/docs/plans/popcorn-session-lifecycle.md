@@ -2,9 +2,10 @@
 
 ## Status
 
-Implemented on PR #1044 (2026-09-06), commits `4cb82c15` to `147fa478`
-(the last one moves the rerun's wipe into the tick and renames the Live
-button to Go live, after Jorim's first look). The feature as shipped is described in
+Implemented on PR #1044 (2026-09-06), commits `4cb82c15` onward
+(the later ones fix what Jorim's first look and first run-through found:
+the rerun's wipe moves into the tick, the button says Go live, the QR panel
+floats and folds, the second pass reaches the screen without a click). The feature as shipped is described in
 `docs/popcorn_sessions.md`; this is the plan it was built from, kept for the
 reasoning. Written by Oren from Jorim's brief and approved in chat on
 2026-09-05.
@@ -91,6 +92,18 @@ twin phrases survived; Jorim asked for it to go.
 - **Weights go entirely.** `popcorn-v1.7` is v1.6 without the weight section;
   the schema, the shaper, the bundle and the deck follow. Between twins the
   first kept wins. One phrase size on the wall, stepped down only to fit.
+- **The QR panel belongs to the presenter view.** It floats over the whole
+  deck on `body`, draggable, foldable to a chip, with its place and fold
+  remembered in `localStorage` per path. The dashboard switch says whether it
+  is on; where it sits and whether it is folded is the business of whoever is
+  at the wall (Jorim's first run-through, 2026-09-06).
+- **Any change to a popcorn file redraws the screen.** The deck used to redraw
+  the list only when the number of phrases changed; the second pass changes
+  quotes, kinds and marks without changing the count, so validated phrases
+  stayed plain until the next click (found on the same run-through).
+  `popcornStamp` (revision, validated, count per file) is the signal, and
+  `refreshLivePops` redraws the phrases already on stage from the data as it
+  is now, by item id, fading one the pass held back.
 - **Prompts leave the fingerprints.** Commit `4a07df65` had put the prompt
   text into every conversation's fingerprint so a prompt change re-read the
   session; that is reversed here.

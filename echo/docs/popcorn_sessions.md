@@ -47,11 +47,10 @@ no transcripts can still run; the screen fills as conversations land.
 - **Status**: conversations, phrases, how many are validated, how many were
   held back, the last read and what it did, and a progress bar while the
   check is running.
-- **Screen**: the tensions tab, the stakeholders tab, the QR code in the
-  corner of the stage, names on the legend (off numbers the conversations; on
-  shows the name typed on the phone, which may be a person's), and the
-  dembrane mark (a Changemaker plan can take it off). Every switch lands on
-  the wall at its next poll.
+- **Screen**: the tensions tab, the stakeholders tab, the QR code, names on
+  the legend (off numbers the conversations; on shows the name typed on the
+  phone, which may be a person's), and the dembrane mark (a Changemaker plan
+  can take it off). Every switch lands on the wall at its next poll.
 - **Voice**: the title and how the phrases should sound. Changing the voice
   re-reads every conversation on the next read.
 - **Share**: the public page switch, the link, the embed code.
@@ -73,6 +72,13 @@ the stage carries the tally: how many phrases, how many validated, how many
 held back, and how many conversations are still being read.
 
 Every phrase is the same size on the wall; a long one steps down only to fit.
+As the background check lands, the phrases on stage and in the list pick up
+their icons and quotation marks by themselves, and the tally moves.
+
+When the QR code is on, it floats over the whole screen, whichever tab is
+showing. Whoever is at the presenter view can drag it wherever it should sit
+and fold it away to a small chip; that is remembered in that browser. The
+dashboard only decides whether it is on at all.
 
 ## If you are working on it
 

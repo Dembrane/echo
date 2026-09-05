@@ -86,6 +86,7 @@
       kindFilter: null,     // null = every kind; { kind, mode: "only" | "except" } from the legend
       cursor: 0,            // position in the time-ordered sequence
       countdown: null,      // { startedAt, beaconed } while the first read is in flight and nothing has landed
+      tailStamp: "",        // the popcorn files as last drawn; a change redraws the list and the stage
     },
     openThemes: new Set(),  // recommendation theme accordions the presenter has opened
     // deck tabs: null = list view; an item id (or "auto" = first) = horizontal slide deck
@@ -517,11 +518,66 @@
      code (graphite modules, blue eyes) on the popcorn stage. session.qr is
      present only while the host has switched it on, so the panel follows the
      session poll and never needs a reload. */
+  // The QR panel floats over the whole deck, whichever tab is up: the room's
+  // way in should be in view for as long as the host has it on. Where it sits
+  // and whether it is folded away are this screen's business, remembered in
+  // this browser; the dashboard only says whether it is on at all.
+  const QR_STORE = `popcorn-qr:${location.pathname}`;
+  let qrPrefs = { x: null, y: null, min: false };
+  try { qrPrefs = { ...qrPrefs, ...(JSON.parse(localStorage.getItem(QR_STORE) || "{}") || {}) }; } catch { /* no storage: defaults */ }
+  const saveQrPrefs = () => { try { localStorage.setItem(QR_STORE, JSON.stringify(qrPrefs)); } catch { /* fine */ } };
+
+  function placeQrPanel(panel) {
+    // A hidden or not yet laid out window measures 0; never clamp into the
+    // corner for that. The panel stays inside whatever the viewport is.
+    const vw = window.innerWidth || document.documentElement.clientWidth || 1280;
+    const vh = window.innerHeight || document.documentElement.clientHeight || 720;
+    const w = panel.offsetWidth || 160, h = panel.offsetHeight || 200;
+    const maxX = Math.max(8, vw - w - 8), maxY = Math.max(8, vh - h - 8);
+    const x = qrPrefs.x === null ? maxX - 12 : qrPrefs.x;
+    const y = qrPrefs.y === null ? maxY - 56 : qrPrefs.y;
+    panel.style.left = `${Math.min(Math.max(8, x), maxX)}px`;
+    panel.style.top = `${Math.min(Math.max(8, y), maxY)}px`;
+  }
+
+  function wireQrDrag(panel) {
+    let drag = null;
+    panel.addEventListener("pointerdown", (ev) => {
+      if (ev.target.closest("button")) return;
+      drag = { dx: ev.clientX - panel.offsetLeft, dy: ev.clientY - panel.offsetTop, moved: false };
+      panel.setPointerCapture(ev.pointerId);
+      panel.classList.add("dragging");
+    });
+    panel.addEventListener("pointermove", (ev) => {
+      if (!drag) return;
+      drag.moved = true;
+      qrPrefs.x = ev.clientX - drag.dx;
+      qrPrefs.y = ev.clientY - drag.dy;
+      placeQrPanel(panel);
+    });
+    const end = (ev) => {
+      if (!drag) return;
+      panel.classList.remove("dragging");
+      try { panel.releasePointerCapture(ev.pointerId); } catch { /* already released */ }
+      if (drag.moved) { qrPrefs.x = panel.offsetLeft; qrPrefs.y = panel.offsetTop; saveQrPrefs(); }
+      drag = null;
+    };
+    panel.addEventListener("pointerup", end);
+    panel.addEventListener("pointercancel", end);
+    panel.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button[data-qr]");
+      if (!btn) return;
+      ev.stopPropagation();
+      qrPrefs.min = btn.dataset.qr === "min";
+      saveQrPrefs();
+      renderQrPanel();
+    });
+    window.addEventListener("resize", () => placeQrPanel(panel));
+  }
+
   function renderQrPanel() {
-    const host = stage.querySelector(".popcorn");
-    if (!host) return;
     const qr = state.session?.qr;
-    let panel = host.querySelector(".qr-panel");
+    let panel = document.querySelector(".qr-panel");
     if (!qr || !(qr.svg || qr.image)) {
       if (panel) panel.remove();
       return;
@@ -530,16 +586,24 @@
       panel = document.createElement("aside");
       panel.className = "qr-panel";
       panel.setAttribute("aria-label", "scan to add your voice");
-      host.appendChild(panel);
+      document.body.appendChild(panel);
+      wireQrDrag(panel);
     }
     const label = qr.label || "add your voice";
-    // The server draws the code (dembrane logomark in the middle, like the
-    // dashboard's QR). Inline SVG so the logo image loads next to the page.
-    const code = qr.svg
-      ? `<div class="qr-image" role="img" aria-label="QR code: ${esc(label)}">${qr.svg}</div>`
-      : `<img class="qr-image" alt="QR code: ${esc(label)}" src="${esc(qr.image)}">`;
-    const next = `${code}<span class="qr-label">${esc(label)}</span>`;
+    let next;
+    if (qrPrefs.min) {
+      next = `<button type="button" class="qr-chip" data-qr="max" title="show the QR code" aria-label="show the QR code">QR</button>`;
+    } else {
+      // The server draws the code (dembrane logomark in the middle, like the
+      // dashboard's QR). Inline SVG so the logo image loads next to the page.
+      const code = qr.svg
+        ? `<div class="qr-image" role="img" aria-label="QR code: ${esc(label)}">${qr.svg}</div>`
+        : `<img class="qr-image" alt="QR code: ${esc(label)}" src="${esc(qr.image)}">`;
+      next = `<button type="button" class="qr-min" data-qr="min" title="fold the QR code away" aria-label="fold the QR code away">–</button>${code}<span class="qr-label">${esc(label)}</span>`;
+    }
+    panel.classList.toggle("minimised", !!qrPrefs.min);
     if (panel.innerHTML !== next) panel.innerHTML = next;
+    placeQrPanel(panel);
   }
 
   async function loadAll() {
@@ -766,9 +830,47 @@
     });
     await Promise.all(jobs);
     renderProgress();
-    if (state.active === "popcorn") {
-      const count = popcornItemCount();
-      if (count !== state.pop.tailCount) renderPopTail();
+    // Anything that changed a file redraws the list and the phrases on stage:
+    // the second pass changes quotes, kinds and marks without changing the
+    // count, so the count alone is not the signal.
+    const stamp = popcornStamp();
+    if (stamp !== state.pop.tailStamp) {
+      state.pop.tailStamp = stamp;
+      if (state.active === "popcorn") {
+        renderPopTail();
+        refreshLivePops();
+      }
+    }
+  }
+
+  // One string that moves whenever any popcorn file did.
+  const popcornStamp = () => [...state.popcorn.entries()]
+    .map(([tid, d]) => `${tid}:${d.revision ?? 0}:${d.validated ? 1 : 0}:${(d.items || []).length}`)
+    .sort()
+    .join("|");
+
+  // The phrase a live popcorn stands for, as the data has it now: by id, so a
+  // phrase held back by the second pass is found gone rather than confused
+  // with its neighbour.
+  function currentItem(rec) {
+    const items = state.popcorn.get(rec.tid)?.items || [];
+    return (rec.itemId && items.find((i) => i.id === rec.itemId)) || (rec.itemId ? null : items[rec.idx]) || null;
+  }
+
+  // Redraw the phrases on stage from the data as it is now: an icon and
+  // quotation marks the second pass just earned, or a fade for a phrase it
+  // held back.
+  function refreshLivePops() {
+    for (const rec of state.pop.live) {
+      if (rec.el.classList.contains("pop-out")) continue;
+      const item = currentItem(rec);
+      if (!item) { rec.beginFade?.(); continue; }
+      const phrase = rec.el.querySelector(".pop-phrase");
+      const html = `${kindIcon(item.kind)}${quotedPhrase(item)}`;
+      if (phrase && phrase.innerHTML !== html) phrase.innerHTML = html;
+      const rooted = !!(item.quoteId && quoteById(item.quoteId));
+      rec.el.classList.toggle("pop-rooted", rooted);
+      rec.el.classList.toggle("pop-sourced", !rooted && !!(item.source && item.source.text));
     }
   }
 
@@ -944,7 +1046,7 @@
     if (!document.getElementById("pop-list")) return;
     renderPopTimeline();
     renderPopTables();
-    state.pop.tailCount = popcornItemCount();
+    state.pop.tailStamp = popcornStamp();
   }
 
   /* The timeline: a histogram of the popcorns over the day. The track is
@@ -1435,7 +1537,7 @@
     while (clashes() && w > 1) { el.dataset.weight = --w; clamp(); }
     el.style.animation = "";
 
-    const rec = { tid, idx, slot: slotIdx, el, pinned };
+    const rec = { tid, idx, itemId: item.id, slot: slotIdx, el, pinned };
     state.pop.live.push(rec);
     state.pop.lastSpawn = Date.now();
     if (!pinned) {
@@ -1463,21 +1565,20 @@
     el.addEventListener("mouseleave", () => {
       if (!screenFrozen) rec.timer = setTimeout(beginFade, pinned ? POP_HOLD_PINNED : 3500);
     });
-    // the opening click must not also read as a click outside the modal
-    if (rooted) {
-      el.classList.add("pop-rooted");
-      el.addEventListener("click", (ev) => {
+    // The opening click must not also read as a click outside the modal. The
+    // item is read at click time: the second pass may have rooted it since.
+    el.classList.toggle("pop-rooted", !!rooted);
+    if (!rooted && item.source && item.source.text) el.classList.add("pop-sourced");
+    el.addEventListener("click", (ev) => {
+      const cur = currentItem(rec) || item;
+      if (cur.quoteId && quoteById(cur.quoteId)) {
         ev.stopPropagation();
-        showQuoteTip(item.quoteId, null);
-      });
-    } else if (item.source && item.source.text) {
-      el.classList.add("pop-sourced");
-      el.title = "why this phrase";
-      el.addEventListener("click", (ev) => {
+        showQuoteTip(cur.quoteId, null);
+      } else if (cur.source && cur.source.text) {
         ev.stopPropagation();
-        showSourceTip(item, tid, null);
-      });
-    }
+        showSourceTip(cur, tid, null);
+      }
+    });
   }
 
   /* ---------- recommendations ---------- */
