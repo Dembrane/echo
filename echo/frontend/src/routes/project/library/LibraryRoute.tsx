@@ -98,15 +98,12 @@ function CanvasListRow({
 // it is the one item here that is meant for a screen, not for reading later.
 function PopcornRow({ base, projectId }: { base: string; projectId: string }) {
 	const popcornQuery = useProjectPopcorn(projectId);
-	const popcorn = popcornQuery.data;
-	const loop = popcorn?.loop;
+	const popcorn = popcornQuery.data?.popcorn;
 	const status = !popcorn
 		? t`Not started`
-		: loop?.status === "active"
+		: popcorn.loop?.mode === "live"
 			? t`Live, ${popcorn.counts.phrases} phrases so far`
-			: loop?.status === "paused"
-				? t`Paused`
-				: t`Ended`;
+			: t`${popcorn.counts.phrases} phrases`;
 	return (
 		<I18nLink
 			to={`${base}/library/popcorn`}

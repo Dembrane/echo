@@ -6,7 +6,10 @@ import { bff } from "@/lib/bff";
 
 export type PopcornLoop = {
 	id?: string;
-	status: "active" | "paused" | "expired" | "stopped" | "ended" | string;
+	status: string;
+	// manual: nothing scheduled, Refresh reads once. live: a read every two
+	// minutes until expires_at, then back to manual.
+	mode: "manual" | "live";
 	expires_at?: string | null;
 	cadence_minutes?: number | null;
 	next_read_at?: string | null;
@@ -34,6 +37,9 @@ export type PopcornSettings = {
 	public: boolean;
 	show_qr: boolean;
 	show_branding: boolean;
+	// What the room's legend calls a conversation: the name typed on the
+	// phone, or a number.
+	public_labels: "names" | "neutral";
 	voice: PopcornVoice;
 };
 
@@ -49,6 +55,8 @@ export type PopcornCounts = {
 	conversations_read: number;
 	reading?: number;
 	phrases: number;
+	validated?: number;
+	held_back?: number;
 	quotes: number;
 	tensions: number;
 	stakeholders: number;
@@ -69,6 +77,16 @@ export type PopcornDetail = {
 	counts: PopcornCounts;
 };
 
+// What a first read would find, before a session exists.
+export type PopcornReadiness = { conversations: number; words: number };
+
+export type PopcornProject = {
+	popcorn: PopcornDetail | null;
+	readiness?: PopcornReadiness;
+};
+
+export type LiveHours = 1 | 8 | 24;
+
 export type PopcornSettingsPatch = Partial<
 	Omit<PopcornSettings, "tabs" | "voice"> & {
 		tabs: Partial<PopcornTabs>;
@@ -82,9 +100,11 @@ export type PopcornSettingsPatch = Partial<
 const absoluteApiUrl = (path: string) =>
 	new URL(`${API_BASE_URL}${path}`, window.location.origin).toString();
 
-export const popcornHostViewUrl = (popcornId: string, versionId?: string) =>
-	`${API_BASE_URL}/v2/bff/popcorn/${encodeURIComponent(popcornId)}/view/${
-		versionId ? `?version=${encodeURIComponent(versionId)}` : ""
+// The deck full screen in its own tab: the room's view, no host affordance.
+// A saved run replays the same way.
+export const popcornPresenterUrl = (popcornId: string, versionId?: string) =>
+	`${API_BASE_URL}/v2/bff/popcorn/${encodeURIComponent(popcornId)}/view/?present=1${
+		versionId ? `&version=${encodeURIComponent(versionId)}` : ""
 	}`;
 
 // Upstream's fictional sample deck: the way to see popcorn before a real day.
@@ -102,17 +122,27 @@ const projectKey = (projectId: string) => ["project", projectId, "popcorn"];
 export const useProjectPopcorn = (projectId: string) =>
 	useQuery({
 		enabled: !!projectId,
-		queryFn: async () => {
-			const response = await bff.get<{ popcorn: PopcornDetail | null }>(
-				"/popcorn",
-				{ project_id: projectId },
-			);
-			return response.popcorn;
-		},
+		queryFn: () =>
+			bff.get<PopcornProject>("/popcorn", { project_id: projectId }),
 		queryKey: projectKey(projectId),
 		refetchInterval: (query) =>
-			query.state.data?.loop?.status === "active" ? 15000 : false,
+			query.state.data?.popcorn?.loop?.mode === "live" ? 15000 : false,
 	});
+
+// Every mutation that returns the session writes it back into the project
+// query, readiness and all.
+const putPopcorn = (
+	queryClient: ReturnType<typeof useQueryClient>,
+	projectId: string,
+	detail: PopcornDetail,
+) =>
+	queryClient.setQueryData(
+		projectKey(projectId),
+		(old: PopcornProject | undefined): PopcornProject => ({
+			...(old ?? {}),
+			popcorn: detail,
+		}),
+	);
 
 export const useInvalidatePopcorn = (projectId: string) => {
 	const queryClient = useQueryClient();
@@ -137,18 +167,14 @@ export const useCreatePopcornMutation = (projectId: string) => {
 		mutationFn: (payload: {
 			title: string;
 			client?: string;
-			cadence_minutes?: number;
-			expires_at: string;
 			voice?: Partial<PopcornVoice>;
 		}) =>
 			bff.post<PopcornDetail>("/popcorn", {
 				project_id: projectId,
 				...payload,
 			}),
-		onError: () => toast.error(t`Could not start popcorn`),
-		onSuccess: (detail) => {
-			queryClient.setQueryData(projectKey(projectId), detail);
-		},
+		onError: () => toast.error(t`Could not run popcorn`),
+		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
 	});
 };
 
@@ -164,9 +190,7 @@ export const usePopcornSettingsMutation = (
 				patch,
 			),
 		onError: () => toast.error(t`Could not save popcorn settings`),
-		onSuccess: (detail) => {
-			queryClient.setQueryData(projectKey(projectId), detail);
-		},
+		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
 	});
 };
 
@@ -194,24 +218,47 @@ export const useRefreshPopcornMutation = (
 	});
 };
 
-export const usePopcornLifecycleMutation = (
+export const useRerunPopcornMutation = (
+	projectId: string,
+	popcornId: string,
+) => {
+	const invalidate = useInvalidatePopcorn(projectId);
+	return useMutation({
+		mutationFn: () =>
+			bff.post<{ tick: string }>(
+				`/popcorn/${encodeURIComponent(popcornId)}/rerun`,
+			),
+		onError: (error: Error & { status?: number }) => {
+			if (error.status === 429) {
+				toast.info(t`Just read. Give it a moment.`);
+				return;
+			}
+			toast.error(t`Could not rerun popcorn`);
+		},
+		onSuccess: () => {
+			toast.success(t`Reading everything again`);
+			invalidate();
+		},
+	});
+};
+
+export const usePopcornLiveMutation = (
 	projectId: string,
 	popcornId: string,
 ) => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (action: "pause" | "resume" | "stop") =>
+		mutationFn: (hours: LiveHours) =>
 			bff.post<PopcornDetail>(
-				`/popcorn/${encodeURIComponent(popcornId)}/loop/${action}`,
+				`/popcorn/${encodeURIComponent(popcornId)}/live`,
+				{ hours },
 			),
-		onError: () => toast.error(t`Could not update popcorn`),
-		onSuccess: (detail) => {
-			queryClient.setQueryData(projectKey(projectId), detail);
-		},
+		onError: () => toast.error(t`Could not go live`),
+		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
 	});
 };
 
-export const usePopcornGoLiveMutation = (
+export const usePopcornStopLiveMutation = (
 	projectId: string,
 	popcornId: string,
 ) => {
@@ -219,30 +266,9 @@ export const usePopcornGoLiveMutation = (
 	return useMutation({
 		mutationFn: () =>
 			bff.post<PopcornDetail>(
-				`/popcorn/${encodeURIComponent(popcornId)}/loop/go-live`,
+				`/popcorn/${encodeURIComponent(popcornId)}/live/stop`,
 			),
-		onError: () => toast.error(t`Could not bring popcorn back`),
-		onSuccess: (detail) => {
-			queryClient.setQueryData(projectKey(projectId), detail);
-			toast.success(t`Live again for 8 hours`);
-		},
-	});
-};
-
-export const usePopcornLoopSettingsMutation = (
-	projectId: string,
-	popcornId: string,
-) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: (payload: { cadence_minutes: number; expires_at: string }) =>
-			bff.patch<PopcornDetail>(
-				`/popcorn/${encodeURIComponent(popcornId)}/loop`,
-				payload,
-			),
-		onError: () => toast.error(t`Could not save popcorn schedule`),
-		onSuccess: (detail) => {
-			queryClient.setQueryData(projectKey(projectId), detail);
-		},
+		onError: () => toast.error(t`Could not stop live`),
+		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
 	});
 };
