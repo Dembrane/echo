@@ -78,7 +78,7 @@ MAX_PARALLEL_EXTRACTORS = 16
 # phrase for the model.
 MAX_PARALLEL_ENRICHMENT = 8
 # Calls in flight for the tensions pipeline, which runs beside the stakeholders call.
-MAX_PARALLEL_ANALYSIS = 8
+MAX_PARALLEL_ANALYSIS = 12
 # A single conversation rarely passes 100k characters in a day; the cap only
 # guards the prompt against a runaway recording.
 MAX_CHARS_PER_CONVERSATION = 150_000

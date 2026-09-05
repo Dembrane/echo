@@ -12,6 +12,7 @@ from dembrane.popcorn.tensions import (
     POSITIONS_SCHEMA,
     COLLISIONS_SCHEMA,
     run_pipeline,
+    trim_positions,
 )
 
 T1 = "We should record everything so nothing is lost. The notes never capture it."
@@ -138,14 +139,10 @@ def test_pipeline_finds_the_cross_table_pair_and_registers_its_quotes() -> None:
     assert t["quoteIds"] == ["q1", "q2"]
     assert [q["transcript"] for q in book.quotes] == ["t1", "t2"]
     assert result["gate_flags"] == []
-    assert result["counts"] == {
-        "handed": 1,
-        "positions": 3,
-        "candidates": 1,
-        "cross_table": 1,
-        "verified": 1,
-        "kept": 1,
-    }
+    counts = result["counts"]
+    assert counts["positions"] == 3 and counts["found_positions"] == 3
+    assert counts["candidates"] == 1 and counts["found_pairs"] == 1 and counts["cross_table"] == 1
+    assert counts["verified"] == 1 and counts["kept"] == 1 and counts["handed"] == 1
     # One call per stage per unit: two positions calls, three collisions, one verify, one write, no dedupe for the first.
     assert sorted(c for c in log if c.startswith("positions")) == ["positions:t1", "positions:t2"]
     assert log.count("verify") == 1 and log.count("write") == 1 and "dedupe" not in log
@@ -186,3 +183,22 @@ def test_pipeline_with_nothing_colliding_writes_nothing() -> None:
     book = QuoteBook({"t1": T1})
     result = asyncio.run(run_pipeline({"t1": T1}, book, generate=quiet, prompts=PROMPTS))
     assert result["tensions"] == {"tensions": []} and book.quotes == []
+
+
+def test_trim_keeps_each_transcripts_firmest_positions() -> None:
+    def pos(i: int, verbatim: bool = True, hedged: bool = False) -> dict:
+        return {"position": f"p{i}", "verbatim": verbatim, "hedged": hedged}
+
+    found = {
+        "t1": [pos(1), pos(2, verbatim=False), pos(3), pos(4, hedged=True), pos(5), pos(6)],
+        "t2": [pos(7), pos(8), pos(9), pos(10), pos(11), pos(12)],
+    }
+    assert trim_positions(found, cap=20) == found  # under the cap nothing moves
+    trimmed = trim_positions(found, cap=8)
+    assert [p["position"] for p in trimmed["t1"]] == [
+        "p1",
+        "p3",
+        "p5",
+        "p6",
+    ]  # firm first, in order
+    assert [p["position"] for p in trimmed["t2"]] == ["p7", "p8", "p9", "p10"]

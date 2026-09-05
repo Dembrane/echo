@@ -21,15 +21,32 @@ deck's `tensions.json` shape; the quotes go into the tick's shared registry.
 
 from __future__ import annotations
 
+import time
 import asyncio
+import logging
 from typing import Any, Callable, Awaitable
 
 from dembrane.popcorn.gates import screen_flags
 from dembrane.popcorn.analysis import QuoteBook, norm
 
+logger = logging.getLogger("dembrane.popcorn.tensions")
+
+# One judgement that has not answered in this long is not going to; the slide
+# fails loudly and the previous block stays, rather than the tick hanging.
+CALL_TIMEOUT_SECONDS = 240
+
+
 PROMPT_NAMES = ("positions", "collisions", "tension-verify", "tension-write", "tensions-handed")
 MAX_TENSIONS = 8
 MAX_POSITIONS_PER_TRANSCRIPT = 30
+# The budget of the run. The lab's model found about seven positions per
+# transcript; the platform's finds three times as many, and every position is
+# one collisions call and every candidate pair one verification call, so the
+# stages are bounded here rather than in the prompts. Each transcript keeps
+# its firmest positions (a verbatim quote, not hedged, in order of speaking),
+# and verification takes the best-ranked pairs, cross-table first.
+MAX_POSITIONS_TOTAL = 80
+MAX_CANDIDATES = 40
 MIN_ZERO_SUM = 0.2
 MAX_QUOTES_PER_TENSION = 4
 
@@ -160,6 +177,27 @@ def _corpus(transcripts: dict[str, str], tids: list[str]) -> str:
     return "\n\n".join(f"TRANSCRIPT id: {t}\n{transcripts[t]}\nEND TRANSCRIPT {t}" for t in tids)
 
 
+def trim_positions(
+    found: dict[str, list[dict[str, Any]]], cap: int = MAX_POSITIONS_TOTAL
+) -> dict[str, list[dict[str, Any]]]:
+    """Keep at most `cap` positions across the transcripts, each transcript
+    keeping its firmest: a verbatim quote and no hedge first, then the order
+    they were said in. Under the cap nothing moves."""
+    total = sum(len(v) for v in found.values())
+    if total <= cap or not found:
+        return found
+    share = max(4, cap // len(found))
+    out: dict[str, list[dict[str, Any]]] = {}
+    for tid, items in found.items():
+        ranked = sorted(
+            enumerate(items),
+            key=lambda pair: (not pair[1].get("verbatim"), bool(pair[1].get("hedged")), pair[0]),
+        )
+        keep = {i for i, _ in ranked[:share]}
+        out[tid] = [item for i, item in enumerate(items) if i in keep]
+    return out
+
+
 async def run_pipeline(
     transcripts: dict[str, str],
     book: QuoteBook,
@@ -175,12 +213,26 @@ async def run_pipeline(
     tids = list(transcripts)
     sem = asyncio.Semaphore(concurrency)
 
+    calls = {"n": 0}
+    started = time.monotonic()
+
+    def stage(name: str, **counts: Any) -> None:
+        logger.info(
+            "tensions pipeline %s after %d s and %d calls: %s",
+            name,
+            int(time.monotonic() - started),
+            calls["n"],
+            ", ".join(f"{k}={v}" for k, v in counts.items()),
+        )
+
     async def gen(
         system: str, user: str, schema: dict[str, Any], thinking: bool = True
     ) -> dict[str, Any]:
         async with sem:
-            return await generate(
-                system_prompt=system, user_text=user, schema=schema, thinking=thinking
+            calls["n"] += 1
+            return await asyncio.wait_for(
+                generate(system_prompt=system, user_text=user, schema=schema, thinking=thinking),
+                timeout=CALL_TIMEOUT_SECONDS,
             )
 
     # 0. what the rooms were handed, over the whole corpus
@@ -194,6 +246,8 @@ async def run_pipeline(
         )
         or "- nothing was handed to the rooms"
     )
+
+    stage("handed", handed=len(handed))
 
     # 1. positions per transcript
     async def positions_for(tid: str) -> list[dict[str, Any]]:
@@ -215,12 +269,23 @@ async def run_pipeline(
             )
         return found
 
+    found_by_tid = dict(
+        zip(tids, await asyncio.gather(*(positions_for(t) for t in tids)), strict=True)
+    )
+    found_total = sum(len(v) for v in found_by_tid.values())
+    found_by_tid = trim_positions(found_by_tid)
     positions: list[dict[str, Any]] = []
-    for found in await asyncio.gather(*(positions_for(t) for t in tids)):
-        for p in found:
+    for tid in tids:
+        for p in found_by_tid[tid]:
             positions.append({"id": f"P{len(positions) + 1}", **p})
     by_id = {p["id"]: p for p in positions}
 
+    stage(
+        "positions",
+        positions=len(positions),
+        found=found_total,
+        verbatim=sum(1 for p in positions if p["verbatim"]),
+    )
     # 2. collisions per position, across all tables
     key = {t: f"T{i + 1}" for i, t in enumerate(tids)}
     listing = "\n".join(
@@ -262,6 +327,15 @@ async def run_pipeline(
     candidates = sorted(
         pair.values(), key=lambda c: (not c["cross_table"], -c["zero_sum"], -len(c["named_by"]))
     )
+    found_pairs = len(candidates)
+    candidates = candidates[:MAX_CANDIDATES]
+
+    stage(
+        "collisions",
+        candidates=len(candidates),
+        found=found_pairs,
+        cross_table=sum(1 for c in candidates if c["cross_table"]),
+    )
 
     # 3. verify each candidate against its transcripts
     async def verify(c: dict[str, Any]) -> dict[str, Any]:
@@ -291,6 +365,7 @@ async def run_pipeline(
     verified = list(await asyncio.gather(*(verify(c) for c in candidates)))
     valid = [v for v in verified if v["valid"] and v["poleA"] and v["poleB"]]
 
+    stage("verify", verified=len(valid), of=len(verified))
     # 4. dedupe in rank order, one call per pair against what is kept
     kept: list[dict[str, Any]] = []
     for v in valid:
@@ -323,6 +398,8 @@ async def run_pipeline(
         kept.append({**v, "id": f"x{len(kept) + 1}"})
         if len(kept) >= max_tensions:
             break
+
+    stage("dedupe", kept=len(kept))
 
     # 5. write each, then the screen gate with one retry
     async def write(k: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
@@ -380,6 +457,7 @@ async def run_pipeline(
         )
         tensions.append(tension)
         gate_flags += flags
+    stage("write", tensions=len(tensions), flags_left=len(gate_flags))
     return {
         "tensions": {"tensions": tensions},
         "gate_flags": gate_flags,
@@ -387,6 +465,8 @@ async def run_pipeline(
             "handed": len(handed),
             "positions": len(positions),
             "candidates": len(candidates),
+            "found_pairs": found_pairs,
+            "found_positions": found_total,
             "cross_table": sum(1 for c in candidates if c["cross_table"]),
             "verified": len(valid),
             "kept": len(kept),
