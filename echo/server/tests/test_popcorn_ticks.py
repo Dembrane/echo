@@ -325,6 +325,35 @@ def test_second_tick_only_rereads_changed_conversations(fake: _FakeDirectus, mon
     assert state["conversations"]["c1"]["items"][0]["quoteId"] == "q1"
 
 
+def test_a_quiet_tick_still_pays_the_second_pass_it_owes(fake: _FakeDirectus, monkeypatch) -> None:
+    """A session read before the second pass existed (state version 1) gets
+    its evidence and kinds on the next scheduled tick, transcripts unchanged."""
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    for conv in state["conversations"].values():
+        conv.pop("validated_fingerprint", None)  # as an older run left it
+        for item in conv["items"]:
+            item.pop("kind", None)
+    calls.clear()
+
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
+    assert result["status"] == "ok"
+    assert [c for c in calls if c.startswith("popcorn")] == []  # nothing re-read
+    assert sorted(c for c in calls if c.startswith("validate")) == ["validate:c1", "validate:c2"]
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    assert all(
+        c["validated_fingerprint"] == c["fingerprint"] for c in state["conversations"].values()
+    )
+    assert state["conversations"]["c1"]["items"][0]["kind"] == "observation"
+
+    # Paid in full: the next quiet tick is a no-op again.
+    calls.clear()
+    assert asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))["status"] == "no_op"
+    assert calls == []
+
+
 def test_failed_extractor_does_not_stall_the_stage(fake: _FakeDirectus, monkeypatch) -> None:
     calls: list[str] = []
     _install_models(monkeypatch, calls=calls, fail_for={"c2"})

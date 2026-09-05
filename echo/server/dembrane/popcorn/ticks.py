@@ -468,6 +468,24 @@ async def _enrich_one(
     await writer.flush()
 
 
+def _pending_enrichment(
+    state: dict[str, Any], transcripts: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """The conversations still owed a second pass on the transcript as it
+    stands: read this tick, or read earlier without the pass finishing."""
+    out = []
+    for t in transcripts:
+        conv = state["conversations"].get(t["id"])
+        if (
+            conv
+            and conv.get("done")
+            and conv.get("items")
+            and conv.get("validated_fingerprint") != t["fingerprint"]
+        ):
+            out.append(t)
+    return out
+
+
 def _referenced_quote_ids(value: Any) -> set[str]:
     ids: set[str] = set()
     if isinstance(value, dict):
@@ -694,7 +712,8 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
             (state.get("analysis") or {}).get("fingerprint") != analysis_fingerprint
         )
 
-        if not changed and not analysis_stale and tick_kind != "manual":
+        owed = _pending_enrichment(state, transcripts)
+        if not changed and not analysis_stale and not owed and tick_kind != "manual":
             run = await _create_run(
                 loop_id=loop_id,
                 status="no_op",
@@ -738,14 +757,7 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
 
         # The second pass, only now that every first phrase is on the stage: the
         # conversations re-read this tick, and any whose earlier pass did not finish.
-        pending = [
-            t
-            for t in transcripts
-            if (conv := state["conversations"].get(t["id"]))
-            and conv.get("done")
-            and conv.get("items")
-            and conv.get("validated_fingerprint") != t["fingerprint"]
-        ]
+        pending = _pending_enrichment(state, transcripts)
         if pending:
             enrich_semaphore = asyncio.Semaphore(MAX_PARALLEL_ENRICHMENT)
             await asyncio.gather(
