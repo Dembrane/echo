@@ -619,12 +619,11 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   letter-spacing: -0.01em;
   line-height: 1.3;
 }
+/* one size for every phrase; a phrase steps down only to fit the stage */
+.pop .pop-phrase { font-size: clamp(24px, 2.6vw, 42px); }
 .pop[data-weight="1"] .pop-phrase { font-size: clamp(19px, 1.9vw, 30px); }
-.pop[data-weight="2"] .pop-phrase { font-size: clamp(24px, 2.6vw, 42px); }
-.pop[data-weight="3"] .pop-phrase { font-size: clamp(30px, 3.4vw, 56px); font-weight: 450; }
+.pop.center .pop-phrase { font-size: clamp(32px, 3.6vw, 58px); }
 .pop.center[data-weight="1"] .pop-phrase { font-size: clamp(26px, 2.8vw, 46px); }
-.pop.center[data-weight="2"] .pop-phrase { font-size: clamp(32px, 3.6vw, 58px); }
-.pop.center[data-weight="3"] .pop-phrase { font-size: clamp(38px, 4.4vw, 72px); }
 .pop .attribution { display: block; margin-top: 0.6em; justify-content: center; }
 
 @keyframes pop-in {

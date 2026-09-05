@@ -19,10 +19,11 @@ PROJECT_PLAN.md and tools/serve_demo.py):
   session it read: a failed stakeholders call keeps the previous stakeholders
   and still publishes the new tensions, and the next tick retries only the
   view that is stale.
-- A conversation's fingerprint covers its whole transcript, the host's voice
-  and the popcorn prompts, so new speech past the model's window, a change of
-  voice, or a new prompt version all re-read it. The model reads a window of
-  the transcript (`model_window`); the quote registry checks against all of it.
+- A conversation's fingerprint covers its whole transcript and the host's
+  voice, so new speech past the model's window or a change of voice re-reads
+  it. A new prompt version does not: it applies to conversations read after
+  it ships, and to a rerun. The model reads a window of the transcript
+  (`model_window`); the quote registry checks against all of it.
 - Every quote of the session lives in one registry (`state["quotes"]`), seeded
   into one QuoteBook per tick, so ids the deck already holds stay valid.
 """
@@ -43,11 +44,6 @@ from dembrane.canvas.events import publish_generation_nudge
 from dembrane.popcorn.flags import gate_items, known_shingles, introduced_names
 from dembrane.popcorn.gates import name_flags, island_flags
 from dembrane.popcorn.model import (
-    KIND_PROMPT,
-    POPCORN_PROMPT,
-    QUESTION_PROMPT,
-    VALIDATE_PROMPT,
-    STAKEHOLDERS_PROMPT,
     prompt_text,
     run_analysis,
     analysis_call,
@@ -99,10 +95,6 @@ MAX_CHARS_PER_CONVERSATION = 150_000
 # shared so that short transcripts keep every character and the long ones
 # split what is left evenly, so the two slow calls stay inside one context.
 MAX_ANALYSIS_CHARS = 600_000
-# The prompts whose text is part of a conversation's fingerprint: a new prompt
-# version re-reads the session, like new speech would.
-POPCORN_PASS_PROMPTS = (POPCORN_PROMPT, VALIDATE_PROMPT, KIND_PROMPT, QUESTION_PROMPT)
-ANALYSIS_PASS_PROMPTS = (STAKEHOLDERS_PROMPT, *TENSION_PROMPTS)
 ANALYSIS_VIEWS = ("tensions", "stakeholders")
 RUN_LOCK_SECONDS = 5 * 60
 MANUAL_LOCK_WAIT_SECONDS = 180
@@ -137,11 +129,6 @@ def _as_id(value: Any) -> str | None:
 
 def _fingerprint(text: str) -> str:
     return hashlib.sha1(text.encode("utf-8")).hexdigest()[:16]
-
-
-def _prompts_version(names: tuple[str, ...]) -> str:
-    """One fingerprint over the text of the prompts a pass runs with."""
-    return _fingerprint("\x1f".join(prompt_text(name) for name in names))
 
 
 def model_window(text: str, cap: int | None = None) -> str:
@@ -871,11 +858,11 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         transcripts = await gather_transcripts(
             project_id=project_id, acting_directus_user_id=acting_user_id
         )
-        pass_version = _prompts_version(POPCORN_PASS_PROMPTS)
         for t in transcripts:
-            # The whole transcript, the voice and the prompts: a change of any
-            # re-reads the conversation, like new speech would.
-            t["fingerprint"] = _fingerprint(t["text"] + "\x1f" + host_note + "\x1f" + pass_version)
+            # The whole transcript and the voice: a change of either re-reads
+            # the conversation. A new prompt version does not (Jorim's call):
+            # it applies to what is read after it ships, and to a rerun.
+            t["fingerprint"] = _fingerprint(t["text"] + "\x1f" + host_note)
             t["window"] = model_window(t["text"])
 
         changed: list[dict[str, Any]] = []
@@ -908,8 +895,6 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
 
         analysis_fingerprint = _fingerprint(
             "|".join(f"{t['id']}:{t['fingerprint']}" for t in transcripts)
-            + "\x1f"
-            + _prompts_version(ANALYSIS_PASS_PROMPTS)
         )
         analysis_stale = bool(transcripts) and bool(_stale_views(state, analysis_fingerprint))
 

@@ -1360,7 +1360,7 @@
     const rooted = item.quoteId && quoteById(item.quoteId);
     const el = document.createElement("div");
     el.className = "pop" + (centerStage ? " center" : "") + (pinned ? " pinned" : "");
-    el.dataset.weight = Math.min(3, Math.max(1, item.weight || 2));
+    el.dataset.weight = 2;   // one size; stepped down below only to fit
     el.style.setProperty("--tilt", `${hashTilt(item.phrase)}deg`);
     el.innerHTML = `<span class="pop-phrase" style="--marker:${markerFor(tid)}">${kindIcon(item.kind)}${quotedPhrase(item)}</span>
       <span class="pop-att">${attribution(tid)}</span>`;

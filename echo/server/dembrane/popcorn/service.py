@@ -664,11 +664,7 @@ def build_bundle(
         for item in conv.get("items") or []:
             if not isinstance(item, dict) or not item.get("phrase"):
                 continue
-            entry: dict[str, Any] = {
-                "id": item["id"],
-                "phrase": item["phrase"],
-                "weight": item["weight"],
-            }
+            entry: dict[str, Any] = {"id": item["id"], "phrase": item["phrase"]}
             if item.get("question"):
                 entry["question"] = True
             # The phrase itself is in the transcript word for word: the deck

@@ -191,7 +191,7 @@ flowchart TD
       <tr><td>the host's voice note</td><td>popcorn settings</td><td>appended to the extractor's message; a change of voice re-reads every conversation</td></tr>
     </table></div>
     <div class="prose">
-      <p>Each conversation gets a fingerprint of its whole transcript, the voice note and the text of the popcorn prompts, so new speech, a change of voice and a new prompt version all re-read it. A conversation is re-read when its fingerprint moved or its last read never finished. On a runaway recording the model reads the most recent window; the host's bundle says how much lies before it (<code>coverage</code>). A conversation that vanished (deleted, or its chunks gone) leaves the deck with the tick; when the last one vanishes, the slides and the quotes go with it.</p>
+      <p>Each conversation gets a fingerprint of its whole transcript and the voice note, so new speech and a change of voice re-read it. A new prompt version does not: it applies to conversations read after it ships, and to a rerun. A conversation is re-read when its fingerprint moved or its last read never finished. On a runaway recording the model reads the most recent window; the host's bundle says how much lies before it (<code>coverage</code>). A conversation that vanished (deleted, or its chunks gone) leaves the deck with the tick; when the last one vanishes, the slides and the quotes go with it.</p>
     </div>
   </section>
 

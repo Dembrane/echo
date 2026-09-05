@@ -17,7 +17,8 @@ import re
 import hashlib
 from typing import Any
 
-# The public popcorn contract: at most eight phrases, each short, weighted 1-3.
+# The public popcorn contract: at most eight phrases, each short. Size on the
+# wall is one size; the deck steps a phrase down only to make it fit.
 POPCORN_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
@@ -29,11 +30,8 @@ POPCORN_SCHEMA: dict[str, Any] = {
             "items": {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["phrase", "weight"],
-                "properties": {
-                    "phrase": {"type": "string", "minLength": 1, "maxLength": 90},
-                    "weight": {"type": "integer", "minimum": 1, "maximum": 3},
-                },
+                "required": ["phrase"],
+                "properties": {"phrase": {"type": "string", "minLength": 1, "maxLength": 90}},
             },
         }
     },
@@ -196,8 +194,8 @@ def build_corpus(transcripts: list[tuple[str, str]]) -> str:
 def shape_popcorn_items(raw: dict[str, Any] | None, transcript_id: str) -> list[dict[str, Any]]:
     """Apply the deterministic first-run gates to one extractor response.
 
-    Anything the schema cannot express (unique phrases, one weight-3 item, at
-    most thirteen words, no quotation marks or terminal punctuation) is
+    Anything the schema cannot express (unique phrases, at most thirteen
+    words, no quotation marks or terminal punctuation) is
     enforced here so a slip never reaches the screen. The one mark that
     survives is a question mark: a phrase in question form keeps `question`
     true and the deck draws the mark back. Near-duplicates, names and text the
@@ -207,7 +205,6 @@ def shape_popcorn_items(raw: dict[str, Any] | None, transcript_id: str) -> list[
     items = raw.get("items") if isinstance(raw, dict) else None
     out: list[dict[str, Any]] = []
     seen: set[str] = set()
-    weight3_used = False
     for item in items or []:
         if not isinstance(item, dict):
             continue
@@ -223,24 +220,11 @@ def shape_popcorn_items(raw: dict[str, Any] | None, transcript_id: str) -> list[
         if key in seen:
             continue
         seen.add(key)
-        try:
-            weight = int(item.get("weight") or 1)
-        except (TypeError, ValueError):
-            weight = 1
-        weight = max(1, min(3, weight))
-        if weight == 3:
-            if weight3_used:
-                weight = 2
-            weight3_used = True
         # The id follows the phrase text, not its position: a later re-read of a
         # growing transcript keeps the same id for a phrase it returns again, so
         # the stage does not pop it a second time.
         digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:8]
-        entry: dict[str, Any] = {
-            "id": f"p-{transcript_id}-{digest}",
-            "phrase": phrase,
-            "weight": weight,
-        }
+        entry: dict[str, Any] = {"id": f"p-{transcript_id}-{digest}", "phrase": phrase}
         if question:
             entry["question"] = True
         out.append(entry)

@@ -13,17 +13,17 @@ from dembrane.popcorn.analysis import (
 def test_shape_popcorn_items_applies_first_run_gates() -> None:
     raw = {
         "items": [
-            {"phrase": '"Nobody joins for the desks."', "weight": 3},
-            {"phrase": "Nobody joins for the desks", "weight": 2},  # near-duplicate
-            {"phrase": "The kettle is the real reception!", "weight": 3},  # second weight-3
-            {"phrase": "x" * 120, "weight": 1},  # over the length budget
-            {"phrase": "   ", "weight": 1},
+            {"phrase": '"Nobody joins for the desks."'},
+            {"phrase": "Nobody joins for the desks"},  # near-duplicate
+            {"phrase": "The kettle is the real reception!"},
+            {"phrase": "x" * 120},  # over the length budget
+            {"phrase": "   "},
             {
-                "phrase": "one two three four five six seven eight nine ten eleven twelve thirteen fourteen",
-                "weight": 1,
+                "phrase": "one two three four five six seven eight nine ten eleven twelve thirteen fourteen"
             },
-            {"phrase": "Where did the budget go?", "weight": 1},
-            {"phrase": 'He said "no" and left', "weight": 1},  # a quotation mark inside
+            {"phrase": "Where did the budget go?"},
+            {"phrase": 'He said "no" and left'},  # a quotation mark inside
+            {"phrase": "Old clients still send weight", "weight": 3},  # ignored, not refused
         ]
     }
     items = shape_popcorn_items(raw, "t1")
@@ -31,22 +31,30 @@ def test_shape_popcorn_items_applies_first_run_gates() -> None:
         "Nobody joins for the desks",
         "The kettle is the real reception",
         "Where did the budget go",
+        "Old clients still send weight",
     ]
-    assert [i["weight"] for i in items] == [3, 2, 1]
+    assert all("weight" not in i for i in items)
     # The question mark is stripped like every terminal mark, and remembered.
     assert items[2]["question"] is True and "question" not in items[0]
     ids = [i["id"] for i in items]
     assert all(i.startswith("p-t1-") and len(i) == len("p-t1-") + 8 for i in ids)
-    assert len(set(ids)) == 3
+    assert len(set(ids)) == 4
     # Same phrase, same id: a re-read keeps the phrases that survived.
     assert shape_popcorn_items(raw, "t1")[0]["id"] == ids[0]
 
 
 def test_shape_popcorn_items_caps_at_eight_and_tolerates_junk() -> None:
-    raw = {"items": [{"phrase": f"phrase {n}", "weight": 1} for n in range(12)]}
+    raw = {"items": [{"phrase": f"phrase {n}"} for n in range(12)]}
     assert len(shape_popcorn_items(raw, "t")) == 8
     assert shape_popcorn_items(None, "t") == []
     assert shape_popcorn_items({"items": "nope"}, "t") == []
+
+
+def test_popcorn_schema_has_no_weight() -> None:
+    from dembrane.popcorn.analysis import POPCORN_SCHEMA
+
+    item = POPCORN_SCHEMA["properties"]["items"]["items"]
+    assert item["required"] == ["phrase"] and "weight" not in item["properties"]
 
 
 def test_quote_book_refuses_non_verbatim_quotes() -> None:
@@ -221,7 +229,7 @@ def _state() -> dict:
                     "short": "Table 1",
                     "done": True,
                     "revision": 1,
-                    "items": [{"id": "p-c1-1", "phrase": "one", "weight": 2}],
+                    "items": [{"id": "p-c1-1", "phrase": "one"}],
                 },
                 "c2": {
                     "id": "c2",

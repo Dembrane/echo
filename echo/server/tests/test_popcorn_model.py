@@ -36,8 +36,9 @@ def test_popcorn_falls_back_to_the_shared_fast_group_and_says_so_once(monkeypatc
 
 
 def test_prompts_are_the_versioned_snapshots() -> None:
-    assert model.POPCORN_PROMPT == "popcorn-v1.6"
-    assert "Version: `popcorn-v1.6`" in model.prompt_text(model.POPCORN_PROMPT)
+    assert model.POPCORN_PROMPT == "popcorn-v1.7"
+    assert "Version: `popcorn-v1.7`" in model.prompt_text(model.POPCORN_PROMPT)
+    assert "weight" not in model.prompt_text(model.POPCORN_PROMPT).lower()
     assert "Version: `popcorn-validate-v1.1`" in model.prompt_text(model.VALIDATE_PROMPT)
     assert "Version: `popcorn-kind-v3`" in model.prompt_text(model.KIND_PROMPT)
     assert "Version: `popcorn-question-v1`" in model.prompt_text(model.QUESTION_PROMPT)

@@ -56,25 +56,21 @@ def test_gate_items_holds_back_names_known_text_and_twins() -> None:
         {"conversations": {"c": {"items": [{"phrase": "the kettle is the real reception here"}]}}}
     )
     items = [
-        {"id": "1", "phrase": "Nobody joins for the desks", "weight": 2},
-        {"id": "2", "phrase": "Priya runs the Tuesday group", "weight": 1},
-        {"id": "3", "phrase": "the kettle is the real reception here", "weight": 3},
-        {
-            "id": "4",
-            "phrase": "Nobody joins because of the desks",
-            "weight": 3,
-        },  # a heavier twin of 1
-        {"id": "5", "phrase": "The desks are why nobody joins", "weight": 1},  # a lighter twin of 4
+        {"id": "1", "phrase": "Nobody joins for the desks"},
+        {"id": "2", "phrase": "Priya runs the Tuesday group"},
+        {"id": "3", "phrase": "the kettle is the real reception here"},
+        {"id": "4", "phrase": "Nobody joins because of the desks"},  # a twin of 1
+        {"id": "5", "phrase": "The desks are why nobody joins"},  # another twin of 1
     ]
     kept, suppressed = gate_items(items, names={"Priya"}, known=known)
-    assert [k["id"] for k in kept] == ["4"]
+    # Between twins the first kept wins: there is no weight to prefer one by.
+    assert [k["id"] for k in kept] == ["1"]
     reasons = {s["id"]: s["reason"] for s in suppressed}
     assert "name" in reasons["2"] and "Priya" in reasons["2"]
     assert "text the room was shown" in reasons["3"]
-    assert reasons["1"].startswith("says what") and "less weight" in reasons["1"]
-    assert reasons["5"].startswith("says what")
+    assert reasons["4"].startswith("says what") and reasons["5"].startswith("says what")
     # Nothing to hold back: everything passes in order.
-    plain = [{"id": "a", "phrase": "quiet is a service we sell", "weight": 1}]
+    plain = [{"id": "a", "phrase": "quiet is a service we sell"}]
     assert gate_items(plain, names=set(), known=set()) == (plain, [])
 
 

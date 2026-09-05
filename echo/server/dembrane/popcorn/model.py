@@ -2,8 +2,9 @@
 
 The prompt files under `prompts/` are immutable snapshots copied from
 Dembrane/popcorn (popcorn-v1.4 at commit 7c3d1cf; popcorn-v1.5, v1.6 and the
-second-pass prompts at commit 8c23eba). A prompt iteration is a new file plus
-a new version constant here, never an edit in place.
+second-pass prompts at commit 8c23eba; popcorn-v1.7 is v1.6 without the
+weight section, platform-side, September 5th 2026). A prompt iteration is a
+new file plus a new version constant here, never an edit in place.
 
 Every popcorn call goes through one model group, `popcorn_model()`: the
 POPCORN_FAST deployment when one is configured, otherwise MULTI_MODAL_FAST.
@@ -27,7 +28,7 @@ from dembrane.popcorn.enrichment import KIND_SCHEMA, QUESTION_SCHEMA, VALIDATE_S
 logger = logging.getLogger("dembrane.popcorn.model")
 
 PROMPTS_DIR = Path(__file__).with_name("prompts")
-POPCORN_PROMPT = "popcorn-v1.6"
+POPCORN_PROMPT = "popcorn-v1.7"
 VALIDATE_PROMPT = "popcorn-validate"
 KIND_PROMPT = "popcorn-kind"
 QUESTION_PROMPT = "popcorn-question"

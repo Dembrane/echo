@@ -6,7 +6,7 @@ its own, each caught by code:
 
 - two phrases naming one idea (content-word overlap of a half or more, and
   the same polarity: a phrase and its negation are two ideas, however many
-  words they share);
+  words they share); the first of the two stays;
 - a phrase carrying a name somebody introduced themselves with, or was
   addressed by, in the transcript;
 - a phrase quoting text the room was shown. In a live session the screen
@@ -212,14 +212,8 @@ def gate_items(
             None,
         )
         if twin is not None:
-            if int(item.get("weight") or 1) > int(twin.get("weight") or 1):
-                # The heavier of two phrases for one idea is the one that stays.
-                suppressed.append(
-                    {**twin, "reason": f"says what {phrase!r} says, with less weight"}
-                )
-                kept[kept.index(twin)] = item
-            else:
-                suppressed.append({**item, "reason": f"says what {twin['phrase']!r} says"})
+            # Of two phrases for one idea the first stays; nothing weighs them.
+            suppressed.append({**item, "reason": f"says what {twin['phrase']!r} says"})
             continue
         kept.append(item)
     return kept, suppressed
