@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from dembrane.popcorn.view import render_popcorn_page
+from dembrane.popcorn.view import render_flow_page, render_popcorn_page
 
 
 def test_page_is_self_contained_and_carries_embed_config() -> None:
@@ -22,3 +22,10 @@ def test_embed_config_cannot_break_out_of_its_script_tag() -> None:
     html = render_popcorn_page(embed={"mode": "</script><script>alert(1)"})
     assert "</script><script>alert(1)" not in html
     assert "<\\/script>" in html
+
+
+def test_flow_page_is_a_whole_document_with_its_diagrams() -> None:
+    html = render_flow_page()
+    assert html.startswith("<!doctype html>") and "<title>How popcorn works</title>" in html
+    assert html.count('<pre class="mermaid">') >= 5
+    assert "cdnjs.cloudflare.com/ajax/libs/mermaid/" in html

@@ -658,6 +658,18 @@
 
   function renderProgress() {
     const el = document.getElementById("progress-note");
+    // Local development only: the host bundle offers the account of what the
+    // tick does; the room's bundle never does.
+    const flow = hostMeta() && hostMeta().flow;
+    let link = document.getElementById("flow-link");
+    if (flow && !link) {
+      link = document.createElement("a");
+      link.id = "flow-link"; link.className = "flow-link"; link.href = flow; link.target = "_blank"; link.rel = "noopener";
+      link.textContent = "how popcorn works";
+      document.querySelector(".colophon-left")?.appendChild(link);
+    } else if (!flow && link) {
+      link.remove();
+    }
     const total = state.session?.transcripts?.length || 0;
     if (!total) { el.textContent = ""; return; }
     const done = [...state.popcorn.values()].filter((p) => p.done).length;

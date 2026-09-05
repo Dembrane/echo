@@ -222,3 +222,19 @@ def test_sample_bundle_is_the_upstream_deck() -> None:
         bundle["files"]
     )
     assert "custom/breakthroughs.json" in bundle["files"]
+
+
+def test_only_a_dev_host_bundle_offers_the_flow_page() -> None:
+    common = dict(
+        state=_grounded_state(),
+        settings=normalize_settings({}, fallback_title="x"),
+        report={"id": "r1"},
+        project={"id": "p1"},
+        participant_base_url="",
+    )
+    assert (
+        build_bundle(host=True, dev=True, **common)["files"]["session.json"]["host"]["flow"]
+        == "flow/"
+    )
+    assert "flow" not in build_bundle(host=True, **common)["files"]["session.json"]["host"]
+    assert "host" not in build_bundle(host=False, dev=True, **common)["files"]["session.json"]

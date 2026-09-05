@@ -1137,3 +1137,7 @@ details.theme-block[open] .theme-body { animation: rise-in 0.38s cubic-bezier(0.
 
 /* the platform's tensions still carry a narrative paragraph until its prompt moves to the knot */
 .tension-narrative { text-align: center; color: var(--ink-soft); font-size: clamp(17px, 1.5vw, 24px); max-width: 60ch; margin: clamp(0.9em, 2.5vh, 1.6em) auto 0; }
+
+/* local development only: the footer's link to how popcorn works */
+.flow-link { margin-left: 1em; color: var(--ink-faint); text-decoration: none; border-bottom: 1px solid var(--hairline); }
+.flow-link:hover { color: var(--graphite); border-bottom-color: var(--graphite); }

@@ -67,6 +67,7 @@ async def bundle_for_report(
         participant_base_url=get_settings().urls.participant_base_url,
         admin_base_url=get_settings().urls.admin_base_url,
         host=host,
+        dev=bool(get_settings().feature_flags.serve_api_docs),
     )
     _cache[cache_key] = (now, bundle)
     if len(_cache) > 512:

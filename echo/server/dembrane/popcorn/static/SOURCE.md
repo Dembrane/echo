@@ -29,6 +29,9 @@ Patches carried on top of upstream, all guarded by `window.POPCORN_EMBED`:
 - A settled popcorn file is still applied when its revision moved: on the
   platform a conversation can be re-read after its transcript grows.
 - `sample/` holds upstream `data/` verbatim for the Try it view.
+- `flow.html` is not upstream: the account of what the tick does, served at
+  `view/flow/` while `SERVE_API_DOCS` is on; the footer links to it when the
+  host bundle says so (`session.host.flow`).
 
 Two things upstream's 8c23eba merge changed on purpose:
 

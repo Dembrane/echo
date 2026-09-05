@@ -18,8 +18,9 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 
 from dembrane.policies import meets_tier
+from dembrane.settings import get_settings
 from dembrane.redis_async import get_redis_client
-from dembrane.popcorn.view import LOGO_PATH, render_popcorn_page
+from dembrane.popcorn.view import LOGO_PATH, render_flow_page, render_popcorn_page
 from dembrane.canvas.events import read_generation_nudge, subscribe_generation_nudges
 from dembrane.canvas.service import apply_loop_action, update_loop_settings
 from dembrane.directus_async import async_directus
@@ -340,6 +341,16 @@ async def popcorn_view(
     # server only checks the shape here so a bad link fails early.
     _version_id(version)
     return HTMLResponse(render_popcorn_page(embed={"mode": "host"}), headers=NO_STORE)
+
+
+@router.get("/{popcorn_id}/view/flow/", response_class=HTMLResponse)
+async def popcorn_view_flow(popcorn_id: str, auth: DependencyDirectusSession) -> HTMLResponse:
+    """What happens to a session's words, step by step, with every check: a
+    page for local development, gone wherever the API docs are off."""
+    await _require_popcorn(popcorn_id, auth)
+    if not get_settings().feature_flags.serve_api_docs:
+        raise HTTPException(status_code=404, detail="Not found")
+    return HTMLResponse(render_flow_page(), headers=NO_STORE)
 
 
 @router.get("/{popcorn_id}/view/logo.png")

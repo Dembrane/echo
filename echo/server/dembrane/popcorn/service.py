@@ -614,6 +614,7 @@ def build_bundle(
     participant_base_url: str,
     admin_base_url: str = "",
     host: bool = False,
+    dev: bool = False,
 ) -> dict[str, Any]:
     """Everything the presentation polls, as one document keyed by the file
     paths the page would otherwise fetch. A hidden tab is simply a missing file.
@@ -651,6 +652,10 @@ def build_bundle(
             "qr": bool(settings.get("show_qr")),
             "qrAvailable": participant_url(project, participant_base_url) is not None,
         }
+        if dev:
+            # Local development only: the deck's footer links to the account of
+            # what the tick does, served beside the view.
+            session["host"]["flow"] = "flow/"
     files["session.json"] = session
 
     for cid in order:
