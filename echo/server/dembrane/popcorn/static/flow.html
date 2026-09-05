@@ -150,7 +150,7 @@
 <pre class="mermaid">
 %%{init: {'theme':'neutral', 'flowchart': {'curve':'basis', 'nodeSpacing': 26, 'rankSpacing': 34}}}%%
 flowchart TD
-  T[Scheduled tick every 2 min<br/>or the host presses read now]:::code --> L[Take the run lock, with a token<br/>start the heartbeat, every 30 s]:::code
+  T[A read on request: run, refresh, rerun<br/>or, while live, the scheduled tick every 2 min]:::code --> L[Take the run lock, with a token<br/>start the heartbeat, every 30 s]:::code
   L --> G[Gather: every conversation of the project<br/>and its chunks, joined into one transcript each]:::code
   G --> K[Known text: the phrases and slide text<br/>the tool already showed the room]:::code
   K --> C{Which conversations changed<br/>since last tick?}:::code
@@ -169,7 +169,7 @@ flowchart TD
   classDef code fill:#F6F4F1,stroke:#8C8A85,color:#2D2D2C;
   classDef store fill:#E9F4EC,stroke:#2F7D4F,color:#2D2D2C;
 </pre>
-      <div class="diagram-caption">A tick that finds a conversation still owed its second pass, or an analysis view that failed last time, runs that even when no transcript changed. A "read now" always runs the analysis. The second pass and the analysis both read the transcripts and neither reads the other, so they run together.</div>
+      <div class="diagram-caption">A session is manual by default: nothing is scheduled, Refresh runs one tick, Rerun wipes the phrases, quotes and analysis (the saved runs stay) and runs one. Live is a choice with a duration (1, 8 or 24 hours): the two-minute chain until the expiry, then back to manual. Only the scheduled chain answers to the mode and the expiry; a read on request goes ahead in any mode. A tick that finds a conversation still owed its second pass, or an analysis view that failed last time, runs that even when no transcript changed. The second pass and the analysis both read the transcripts and neither reads the other, so they run together.</div>
     </div>
     <div class="prose">
       <p>Two things protect the room from a long tick. The run lock stops a second tick from writing the same state; only the tick that took it can renew or release it. The heartbeat key tells the reconciler (which rescues ticks whose worker died) that this one is alive, however long its second pass or its pipeline takes, so a slow tick is never rescued as a dead one, and a dead one is still noticed within ninety seconds.</p>
@@ -207,7 +207,7 @@ flowchart TD
 <pre class="mermaid">
 %%{init: {'theme':'neutral', 'flowchart': {'curve':'basis', 'nodeSpacing': 26, 'rankSpacing': 30}}}%%
 flowchart LR
-  T[Transcript<br/>+ host voice note] --> M[popcorn-v1.6<br/>thinking off, at most 8 items]:::model
+  T[Transcript<br/>+ host voice note] --> M[popcorn-v1.7<br/>thinking off, at most 8 items]:::model
   M --> S[Shaper:<br/>contract checks]:::gate
   S --> G[Gates:<br/>names, known text, twins]:::gate
   G --> R[Grounding:<br/>verbatim flag, closest passage]:::code
@@ -225,7 +225,6 @@ flowchart LR
       <tr><td>quotation marks</td><td>none inside the phrase</td><td>dropped</td></tr>
       <tr><td>terminal punctuation</td><td>a trailing <code>. ! ; :</code> is stripped; a trailing <code>?</code> is stripped and remembered as <code>question: true</code></td><td>the deck draws the question mark back, only then</td></tr>
       <tr><td>duplicates</td><td>the same words twice, normalised</td><td>the second is dropped</td></tr>
-      <tr><td>weight</td><td>1 to 3, one weight-3 phrase per conversation</td><td>a second weight 3 becomes 2</td></tr>
       <tr><td>ids</td><td>a hash of the phrase text</td><td>a re-read that returns the same phrase keeps its id, so the stage does not pop it twice</td></tr>
     </table></div>
     <h3>The gates <span class="pill gate">code</span></h3>
@@ -272,8 +271,8 @@ flowchart LR
     <div class="table-wrap"><table>
       <tr><th>Outcome</th><th>Rule</th><th>On the wall</th></tr>
       <tr><td>rooted, verbatim</td><td>the phrase itself is in the transcript word for word (code, from the fast pass)</td><td>the phrase wears quotation marks and opens its passage on click</td></tr>
-      <tr><td>rooted, a paraphrase</td><td>the model's passage is in the transcript word for word; the phrase is not</td><td>the phrase wears the passage mark ❝, no quotation marks, and opens the passage on click</td></tr>
-      <tr><td>unrooted</td><td>the passage is not verbatim, or the model said it found none</td><td>plain phrase, no click; the host sees the closest passage instead</td></tr>
+      <tr><td>rooted, a paraphrase</td><td>the model's passage is in the transcript word for word; the phrase is not</td><td>the phrase is plain, no quotation marks; the tally counts it as validated</td></tr>
+      <tr><td>held back</td><td>the passage is not verbatim, or the model said it found none</td><td>the phrase leaves the deck: it moves to <code>review.dropped</code> with the model's reason, for the host; the tally counts it as held back</td></tr>
       <tr><td>a kind</td><td>one of observation, distinction, need, practice, idea, objection, question, decision</td><td>an icon before the phrase, its one-word name on hover; qualifiers (tentative, personal experience, not implemented) are stored, not drawn</td></tr>
       <tr><td>a hedge added</td><td>"can", "may", "often" and the like in the phrase but not in the passage</td><td>nothing yet: kept on the state under <code>review</code> for the host</td></tr>
       <tr><td>a failed call</td><td>the phrase keeps whatever landed; the conversation is not stamped validated</td><td>the next tick retries exactly the phrases that failed</td></tr>
@@ -410,7 +409,7 @@ flowchart TD
     <div class="table-wrap"><table>
       <tr><th>File</th><th>Carries</th></tr>
       <tr><td><code>session.json</code></td><td>title, date, the transcripts with label, start time and duration (the timeline), the QR when on</td></tr>
-      <tr><td><code>popcorn/&lt;id&gt;.json</code></td><td>per phrase: id, phrase, weight, kind, question, qualifiers, quoteId, and <code>verbatim</code> when the phrase itself is in the transcript word for word; <code>validated</code> is true when the second pass finished for the transcript as it stands; the host's copy carries <code>coverage</code> when the model read a window</td></tr>
+      <tr><td><code>popcorn/&lt;id&gt;.json</code></td><td>per phrase: id, phrase, kind, question, qualifiers, quoteId, and <code>verbatim</code> when the phrase itself is in the transcript word for word (no weight: one size on the wall); <code>validated</code> is true when the second pass finished for the transcript as it stands; <code>held_back</code> counts the phrases the pass took off the deck; the host's copy carries <code>coverage</code> when the model read a window</td></tr>
       <tr><td><code>quotes.json</code></td><td>id, transcript, text, and a context only when it assigns no speaker</td></tr>
       <tr><td><code>tensions.json</code></td><td>poles, knot, question, quote ids</td></tr>
       <tr><td><code>stakeholders.json</code></td><td>groups with rung and weights, relations with aspects, quote ids</td></tr>
@@ -428,7 +427,7 @@ flowchart TD
     </div>
     <div class="table-wrap"><table>
       <tr><th>Call</th><th>Prompt</th><th>Thinking</th><th>Output cap</th></tr>
-      <tr><td>fast pass</td><td><code>popcorn-v1.6</code></td><td>off</td><td class="num">2,000 tokens</td></tr>
+      <tr><td>fast pass</td><td><code>popcorn-v1.7</code></td><td>off</td><td class="num">2,000 tokens</td></tr>
       <tr><td>evidence, kind, question rewrite</td><td><code>popcorn-validate</code>, <code>popcorn-kind</code>, <code>popcorn-question</code></td><td>on</td><td class="num">8,000</td></tr>
       <tr><td>stakeholders</td><td><code>stakeholders-v0.9</code></td><td>on</td><td class="num">32,000</td></tr>
       <tr><td>handed, positions, collisions, verify, write</td><td>the five pipeline prompts</td><td>on</td><td class="num">32,000</td></tr>
