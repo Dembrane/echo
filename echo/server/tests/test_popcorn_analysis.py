@@ -18,7 +18,10 @@ def test_shape_popcorn_items_applies_first_run_gates() -> None:
             {"phrase": "The kettle is the real reception!", "weight": 3},  # second weight-3
             {"phrase": "x" * 120, "weight": 1},  # over the length budget
             {"phrase": "   ", "weight": 1},
-            {"phrase": "one two three four five six seven eight nine ten eleven twelve thirteen fourteen", "weight": 1},
+            {
+                "phrase": "one two three four five six seven eight nine ten eleven twelve thirteen fourteen",
+                "weight": 1,
+            },
             {"phrase": "Where did the budget go?", "weight": 1},
             {"phrase": 'He said "no" and left', "weight": 1},  # a quotation mark inside
         ]
@@ -34,7 +37,7 @@ def test_shape_popcorn_items_applies_first_run_gates() -> None:
     assert items[2]["question"] is True and "question" not in items[0]
     ids = [i["id"] for i in items]
     assert all(i.startswith("p-t1-") and len(i) == len("p-t1-") + 8 for i in ids)
-    assert len(set(ids)) == 2
+    assert len(set(ids)) == 3
     # Same phrase, same id: a re-read keeps the phrases that survived.
     assert shape_popcorn_items(raw, "t1")[0]["id"] == ids[0]
 
@@ -72,7 +75,7 @@ def test_quote_book_is_seeded_and_keeps_ids() -> None:
     book = QuoteBook(sources, existing=existing)
     assert [q["id"] for q in book.quotes] == ["q4", "q3"]
     # A seeded quote keeps its id; a new one continues after the highest.
-    assert book.add({"transcript": "t1", "text": "and more"}) == "q4"
+    assert book.add({"transcript": "t1", "text": "AND  more."}) == "q4"
     assert book.add({"transcript": "t1", "text": "We said the lift"}) == "q5"
 
 

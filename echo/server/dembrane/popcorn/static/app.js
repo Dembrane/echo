@@ -31,13 +31,53 @@
   const POP_HOLD = 10000;    // solid reading time per phrase
   const POP_FADE = 900;
   const POP_GAP = 2400;      // stagger between spawns once the stage is warm
-  const POP_MAX = 3;         // phrases on stage at once (one per band)
+  const POP_MAX = 3;         // phrases the automatic flow keeps up at once (one per band)
+  const POP_CAP = 5;         // phrases on stage at once, all told; a keyed pop past this sends the oldest away
+  const POP_HOLD_PINNED = 30000;  // a phrase the facilitator popped from the keys lingers
+  const POP_EDGE_PX = 18;    // no phrase comes closer than this to the edge of the stage
+
+  // The kind of a popcorn: what the contribution is doing in the conversation
+  // (PROMPTS/popcorn-ontology.md, v3). Phosphor bold icons (MIT), inlined so the
+  // single-file build works offline; bold so the stroke reads at the weight of the type.
+  const POP_KIND_ICONS = {
+    observation: "M241,150.65s0,0,0-.05a51.33,51.33,0,0,0-2.53-5.9L196.93,50.18a12,12,0,0,0-2.5-3.65,36,36,0,0,0-50.92,0A12,12,0,0,0,140,55V76H116V55a12,12,0,0,0-3.51-8.48,36,36,0,0,0-50.92,0,12,12,0,0,0-2.5,3.65L17.53,144.7A51.33,51.33,0,0,0,15,150.6s0,0,0,.05A52,52,0,1,0,116,168V100h24v68a52,52,0,1,0,101-17.35ZM80,62.28a12,12,0,0,1,12-1.22v63.15a51.9,51.9,0,0,0-35.9-7.62ZM64,196a28,28,0,1,1,28-28A28,28,0,0,1,64,196ZM164,61.06a12.06,12.06,0,0,1,12,1.22l23.87,54.31a51.9,51.9,0,0,0-35.9,7.62ZM192,196a28,28,0,1,1,28-28A28,28,0,0,1,192,196Z",
+    distinction: "M232.49,192.49l-32,32a12,12,0,0,1-17,0l-32-32a12,12,0,0,1,17-17L180,187V141L128,89,76,141V187l11.51-11.52a12,12,0,0,1,17,17l-32,32a12,12,0,0,1-17,0l-32-32a12,12,0,1,1,17-17L52,187V136a12,12,0,0,1,3.51-8.49L116,67V24a12,12,0,0,1,24,0V67l60.49,60.48A12,12,0,0,1,204,136v51l11.51-11.52a12,12,0,0,1,17,17Z",
+    need: "M40.14,46.88A12,12,0,0,0,36,56V224a12,12,0,0,0,24,0V181.72c22.84-17.12,42.1-9.12,70.68,5,16.23,8,34.74,17.2,54.8,17.2,14.72,0,30.28-4.94,46.38-18.88A12,12,0,0,0,236,176V56a12,12,0,0,0-19.86-9.07c-24.71,21.41-44.53,13.31-74.82-1.68C113.19,31.27,78.17,13.94,40.14,46.88ZM212,170.26c-22.84,17.13-42.1,9.11-70.68-5C118.16,153.76,90.33,140,60,153.87V61.69c22.84-17.12,42.1-9.12,70.68,5,16.23,8,34.74,17.2,54.8,17.2A63,63,0,0,0,212,78.08Z",
+    practice: "M248.92,104,215.3,66.62A20,20,0,0,0,200.44,60H140V32a12,12,0,0,0-24,0V60H40A20,20,0,0,0,20,80v64a20,20,0,0,0,20,20h76v60a12,12,0,0,0,24,0V164h60.44a20,20,0,0,0,14.86-6.62L248.92,120A12,12,0,0,0,248.92,104Zm-50.26,36H44V84H198.66l25.2,28Z",
+    idea: "M180,232a12,12,0,0,1-12,12H88a12,12,0,0,1,0-24h80A12,12,0,0,1,180,232Zm40-128a91.51,91.51,0,0,1-35.17,72.35A12.26,12.26,0,0,0,180,186v2a20,20,0,0,1-20,20H96a20,20,0,0,1-20-20v-2a12,12,0,0,0-4.7-9.51A91.57,91.57,0,0,1,36,104.52C35.73,54.69,76,13.2,125.79,12A92,92,0,0,1,220,104Zm-24,0a68,68,0,0,0-69.65-68C89.56,36.88,59.8,67.55,60,104.38a67.71,67.71,0,0,0,26.1,53.19A35.87,35.87,0,0,1,100,184h56.1A36.13,36.13,0,0,1,170,157.49,67.68,67.68,0,0,0,196,104Zm-20.07-5.32a48.5,48.5,0,0,0-31.91-40,12,12,0,0,0-8,22.62,24.31,24.31,0,0,1,16.09,20,12,12,0,0,0,23.86-2.64Z",
+    objection: "M188,84a32,32,0,0,0-8,1V60a32,32,0,0,0-43.21-30A32,32,0,0,0,76,44v1A32,32,0,0,0,36,76v76a92,92,0,0,0,184,0V116A32,32,0,0,0,188,84Zm8,68a68,68,0,0,1-136,0V76a8,8,0,0,1,16,0v40a12,12,0,0,0,24,0V44a8,8,0,0,1,16,0v64a12,12,0,0,0,24,0V60a8,8,0,0,1,16,0v65.4A52.09,52.09,0,0,0,116,176a12,12,0,0,0,24,0,28,28,0,0,1,28-28,12,12,0,0,0,12-12V116a8,8,0,0,1,16,0Z",
+    question: "M144,180a16,16,0,1,1-16-16A16,16,0,0,1,144,180Zm92-52A108,108,0,1,1,128,20,108.12,108.12,0,0,1,236,128Zm-24,0a84,84,0,1,0-84,84A84.09,84.09,0,0,0,212,128ZM128,64c-24.26,0-44,17.94-44,40v4a12,12,0,0,0,24,0v-4c0-8.82,9-16,20-16s20,7.18,20,16-9,16-20,16a12,12,0,0,0-12,12v8a12,12,0,0,0,23.73,2.56C158.31,137.88,172,122.37,172,104,172,81.94,152.26,64,128,64Z",
+    decision: "M253.88,108.11l-25.53-51a20,20,0,0,0-26.83-9L178.34,59.7,131.7,44.58a12.14,12.14,0,0,0-7.4,0L77.66,59.7,54.48,48.11a20,20,0,0,0-26.83,9L2.12,108.11a20,20,0,0,0,9,26.83l26.67,13.34,51.18,37.41A12.15,12.15,0,0,0,93,187.62l62,16a12.27,12.27,0,0,0,3,.38,12,12,0,0,0,8.48-3.52l52.62-52.62,25.83-12.92a20,20,0,0,0,8.95-26.83Zm-58.12,29.15-27.52-26a12,12,0,0,0-16.76.26c-9.66,9.74-25.06,16.81-40.81,9.55l38.19-37h22.72l25.81,51.63ZM47.32,71.37,60.59,78l-22,43.9-13.27-6.63Zm107,107.3L101.23,165l-42-30.66L85.17,82.5,128,68.61l1.69.55L90,107.68l-.13.12a20,20,0,0,0,3.4,31c20.95,13.39,46,12.07,66.33-2.73l19.2,18.15Zm63-56.77-22-43.9,13.27-6.63,21.95,43.9ZM118.55,219a12,12,0,0,1-14.62,8.62l-26.6-6.87a12,12,0,0,1-4.08-1.93L48.92,201a12,12,0,0,1,14.16-19.37l22.47,16.42,24.38,6.29A12,12,0,0,1,118.55,219Z",
+  };
+  const POP_KIND_ORDER = ["observation", "distinction", "need", "practice", "idea", "objection", "question", "decision"];
+  const POP_KIND_WORD = { observation: "how things are, seen or explained", distinction: "two things set apart",
+    need: "what has to be true, without the how", practice: "a method that exists somewhere", idea: "something new to try",
+    objection: "pushing back on something on the table", question: "left open", decision: "the room committed" };
+  const kindIcon = (kind) => POP_KIND_ICONS[kind]
+    ? `<span class="pop-kind-wrap" data-tip="${kind.charAt(0).toUpperCase() + kind.slice(1)}"><svg class="pop-kind" viewBox="0 0 256 256" aria-label="${kind}" role="img"><path d="${POP_KIND_ICONS[kind]}"/></svg></span>`
+    : "";
+  // The extractor strips terminal punctuation; the kind pass says whether the
+  // phrase is a question in form, and the screen gives the question mark back.
+  // A question-kind phrase not in question form gets no mark: the second pass
+  // rewrites those as the question that was asked.
+  const phraseText = (item) => {
+    const t = item.phrase || "";
+    return item.question && !/[?]$/.test(t) ? `${t}?` : t;
+  };
+  const KEY_DWELL_MS = 120;       // hover this long on a circle before it pops: a sweep pops a few, a pause pops one
 
   const state = {
     session: null,          // data/session.json
     slides: new Map(),      // slideId -> parsed json (only present files)
     popcorn: new Map(),     // transcriptId -> { done, validated?, items }
-    pop: { live: [], fresh: {}, recycle: {}, tidTime: {}, lastSpawn: 0, lastTid: null },
+    pop: {
+      live: [], fresh: {}, recycle: {}, tidTime: {}, lastSpawn: 0, lastTid: null,
+      mode: "random",       // "random" (fresh first, tables alternating) or "time" (in order of the scans)
+      window: null,         // null = the whole day; { from, to } = fractions along the popcorn axis
+      hidden: new Set(),    // transcript ids and popcorn keys the facilitator has hidden
+      kindFilter: null,     // null = every kind; { kind, mode: "only" | "except" } from the legend
+      cursor: 0,            // position in the time-ordered sequence
+    },
     openThemes: new Set(),  // recommendation theme accordions the presenter has opened
     // deck tabs: null = list view; an item id (or "auto" = first) = horizontal slide deck
     deck: { tensions: "auto", recommendations: null, stakeholders: null },
@@ -127,6 +167,120 @@
 
   function attribution(tid) {
     return `<span class="attribution"><span class="chip" style="--marker:${markerFor(tid)}"></span>${esc(shortLabel(tid))}</span>`;
+  }
+
+  /* ---------- time on the popcorns ----------
+     A conversation's time is the moment its phone scanned in. session.json
+     can say it (`time`, ISO 8601) and how long the conversation ran
+     (`duration`, seconds); failing the time, the transcript id is read for
+     the dembrane export prefix YYYYMMDD_HHMMSS. A popcorn's own moment is
+     `at` on the item when the platform knows where in the conversation it
+     came from; until it does, a conversation's popcorns are spread evenly
+     over its length. A transcript with no time at all sits after every
+     timed one. */
+  function transcriptTime(t) {
+    if (!t) return null;
+    if (t.time) {
+      const ms = Date.parse(t.time);
+      if (!Number.isNaN(ms)) return ms;
+    }
+    const m = /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/.exec(t.id || "");
+    return m ? new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : null;
+  }
+  const DEFAULT_DURATION_MS = 25 * 60 * 1000;
+  const transcriptDuration = (t) => (t?.duration > 0 ? t.duration * 1000 : DEFAULT_DURATION_MS);
+  function popcornTime(t, item, idx, n) {
+    if (item?.at) {
+      const ms = Date.parse(item.at);
+      if (!Number.isNaN(ms)) return ms;
+    }
+    const start = transcriptTime(t);
+    return start === null ? null : start + ((idx + 0.5) / Math.max(1, n)) * transcriptDuration(t);
+  }
+
+  // Popcorns closer together than this belong to one sitting: five phones at
+  // a table within a minute, a room full of them after a coffee break.
+  const BUNDLE_GAP_MS = 10 * 60 * 1000;
+  // A break between sittings is shrunk to between ten and sixty minutes of
+  // axis on a log: a lunch reads wider than a coffee and a day wider than a
+  // lunch, without an afternoon flattening the morning to a sliver.
+  const breakMs = (gap) => BUNDLE_GAP_MS * Math.min(6, 1 + Math.log2(gap / BUNDLE_GAP_MS));
+
+  // Every popcorn with its moment, in time order, on a compressed axis: time
+  // runs to scale inside a sitting and breaks are shrunk. Each event gets
+  // `f`, its place along the axis as a fraction, which is what the
+  // histogram bins and the crop window work in, so neither depends on the
+  // width of the screen.
+  const popKey = (tid, idx, item) => (item?.id ? `${tid}#${item.id}` : `${tid}:${idx}`);
+  const clockOf = (ms) => ms === null ? "no time"
+    : new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  let eventsCache = { session: null, count: -1, value: null };
+  function popcornEvents() {
+    const count = popcornItemCount();
+    if (eventsCache.value && eventsCache.session === state.session && eventsCache.count === count) return eventsCache.value;
+    const events = [];
+    (state.session?.transcripts || []).forEach((t, order) => {
+      const items = state.popcorn.get(t.id)?.items || [];
+      items.forEach((item, idx) => events.push({
+        tid: t.id, idx, item, order, key: popKey(t.id, idx, item), time: popcornTime(t, item, idx, items.length),
+      }));
+    });
+    events.sort((a, b) => ((a.time ?? Infinity) - (b.time ?? Infinity)) || (a.order - b.order) || (a.idx - b.idx));
+    const sittings = [];
+    let x = 0, prev = null;
+    for (const e of events) {
+      if (e.time === null) break;
+      const gap = prev === null ? 0 : e.time - prev;
+      if (prev === null || gap > BUNDLE_GAP_MS) {
+        x += prev === null ? 0 : breakMs(gap);
+        sittings.push({ x, time: e.time });
+      } else x += gap;
+      e.x = x;
+      prev = e.time;
+    }
+    // untimed popcorns sit after the last timed one, in their own sitting
+    const untimed = events.filter((e) => e.time === null);
+    if (untimed.length) {
+      x += prev === null ? 0 : BUNDLE_GAP_MS;
+      sittings.push({ x, time: null });
+      for (const e of untimed) { e.x = x; x += 30 * 1000; }
+    }
+    const span = Math.max(x, 1);
+    for (const e of events) e.f = e.x / span;
+    for (const st of sittings) st.f = st.x / span;
+    const byKey = new Map(events.map((e) => [`${e.tid}:${e.idx}`, e]));
+    eventsCache = { session: state.session, count, value: { events, sittings, byKey } };
+    return eventsCache.value;
+  }
+
+  // What the facilitator has hidden, and what the crop window lets through.
+  // The window is a pair of fractions along the axis; a popcorn is inside
+  // when its moment is.
+  const inWindow = (f) => !state.pop.window || (f >= state.pop.window.from && f <= state.pop.window.to);
+  const popHiddenItem = (tid, idx) => state.pop.hidden.has(popKey(tid, idx, state.popcorn.get(tid)?.items?.[idx]));
+  function popKindAllowed(tid, idx) {
+    const f = state.pop.kindFilter;
+    if (!f) return true;
+    const kind = state.popcorn.get(tid)?.items?.[idx]?.kind;
+    return f.mode === "only" ? kind === f.kind : kind !== f.kind;
+  }
+  function popVisible(tid, idx, ev = popcornEvents()) {
+    if (state.pop.hidden.has(tid) || popHiddenItem(tid, idx)) return false;
+    if (!popKindAllowed(tid, idx)) return false;
+    const e = ev.byKey.get(`${tid}:${idx}`);
+    return e ? inWindow(e.f) : true;
+  }
+
+  // Anything on stage that the crop or a hide just excluded leaves now,
+  // rather than finishing its ten seconds in front of the room.
+  function pruneStage() {
+    const ev = popcornEvents();
+    for (const rec of [...state.pop.live]) {
+      if (!popVisible(rec.tid, rec.idx, ev) && rec.beginFade && !rec.el.classList.contains("pop-out")) {
+        clearTimeout(rec.timer);
+        rec.beginFade();
+      }
+    }
   }
 
   function quoteById(id) {
@@ -553,7 +707,7 @@
   });
 
   document.addEventListener("keydown", (e) => {
-    if (e.target.matches?.("input, textarea")) return;
+    if (e.target.matches?.("input, textarea, .tl-handle, .tl-grip")) return;
     if (screenFrozen) { if (e.key === "Escape") hideTip(); return; }
     if (e.key === "Escape") {
       if (isDeckTab(state.active) && state.deck[state.active]) {
@@ -642,96 +796,415 @@
     run();
   }
 
+
   function renderPopcorn() {
-    stage.innerHTML = `<section class="popcorn" aria-label="popcorn — moments of recognition from the conversations">
+    // The keys strip sits between the stage and the tail and sticks to the
+    // bottom of the fold while the stage is showing: the histogram is a
+    // keyboard (click a circle and it pops on the stage above), with the
+    // play control under it. Scroll down and the strip settles at the top
+    // of the list.
+    // Three beats on scroll. The stage fills the fold and is pinned there;
+    // the first scroll slides the keys strip up over its foot; the next
+    // scroll takes the whole fold away and brings the settings (search,
+    // hide). Scroll snapping lands on each beat, and a wheel from the very
+    // top is steered to the keys so the first beat never gets skipped.
+    stage.innerHTML = `<div class="pop-fold" id="pop-fold">
+    <section class="popcorn" aria-label="popcorn — moments of recognition from the conversations">
       <div class="pop-stage" id="pop-stage"></div>
-      <p class="stage-hint">every phrase so far ↓</p>
     </section>
+    <section class="pop-keys" id="pop-keys" aria-label="when the popcorns happened, and how the stage plays">
+      <div class="pop-timeline" id="pop-timeline" aria-label="the popcorns over the day; hover one to pop it, click to hold or release it, drag the edges to crop"></div>
+      <div class="pop-play" role="group" aria-label="how the stage plays">
+        <span class="pop-play-label">play</span>
+        <button type="button" class="pop-mode" data-mode="time" aria-pressed="${state.pop.mode === "time"}">in order of time</button>
+        <button type="button" class="pop-mode" data-mode="random" aria-pressed="${state.pop.mode === "random"}">at random</button>
+        <span class="pop-play-note" id="pop-play-note"></span>
+        <span class="pop-keys-hint">hover a circle to pop it, click to hold or release · settings ↓</span>
+      </div>
+    </section>
+    </div>
     <section class="pop-tail" aria-label="all popcorn phrases">
       <p class="pop-disclaimer">popcorn is optimised for latency, not accuracy. popcorns in “quotes” are verified against the conversation; the rest are not direct quotes.</p>
       <div class="quote-tools">
         <input class="quote-search" id="pop-search" type="search" placeholder="search the popcorn…" aria-label="search popcorn phrases" value="${esc(state.popSearch || "")}">
+        <div class="kind-legend" id="kind-legend" aria-label="filter the popcorn by kind" hidden></div>
         <span class="quote-count" id="pop-count"></span>
       </div>
-      <div class="pop-legend" id="pop-legend"></div>
-      <div class="pop-list" id="pop-list"></div>
+      <div class="pop-tables" id="pop-list"></div>
     </section>`;
     state.pop.live = [];
     state.pop.lastSpawn = 0;
     const input = document.getElementById("pop-search");
     input.addEventListener("input", () => {
       state.popSearch = input.value;
-      renderPopTail();
+      renderPopTables();
     });
+    stage.querySelectorAll(".pop-mode").forEach((b) => b.addEventListener("click", () => {
+      state.pop.mode = b.dataset.mode;
+      state.pop.cursor = 0;
+      stage.querySelectorAll(".pop-mode").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    }));
+    // hide and unhide: a phrase for itself, a conversation's name for the lot
+    document.getElementById("pop-list").addEventListener("click", (ev) => {
+      const el = ev.target.closest("[data-hide]");
+      if (!el) return;
+      togglePopHidden(el.dataset.hide);
+    });
+    // the keyboard: resting on a circle pops its phrase somewhere on the
+    // stage, where it lingers; a click holds one that is up, or releases it
+    const keys = document.getElementById("pop-timeline");
+    let dwell = null;
+    const bounce = (dot) => { dot.classList.remove("popped"); void dot.offsetWidth; dot.classList.add("popped"); };
+    keys.addEventListener("mouseover", (ev) => {
+      const dot = ev.target.closest(".tl-dot");
+      if (!dot || dot === dwell?.dot) return;
+      clearTimeout(dwell?.t);
+      dwell = { dot, t: setTimeout(() => {
+        dwell = null;
+        if (!dot.classList.contains("on")) { bounce(dot); popNow(dot.dataset.tid, Number(dot.dataset.idx)); }
+      }, KEY_DWELL_MS) };
+    });
+    keys.addEventListener("mouseout", (ev) => {
+      const dot = ev.target.closest(".tl-dot");
+      if (dot && dwell?.dot === dot) { clearTimeout(dwell.t); dwell = null; }
+    });
+    keys.addEventListener("click", (ev) => {
+      const dot = ev.target.closest(".tl-dot");
+      if (!dot) return;
+      clearTimeout(dwell?.t); dwell = null;
+      bounce(dot);
+      popNow(dot.dataset.tid, Number(dot.dataset.idx), { toggle: true });
+    });
+    // a wheel from the very top goes to the keys and no further, so the
+    // first scroll always reveals the keyboard; trackpad momentum is held
+    // off for a moment so it cannot carry straight on to the settings
+    if (!state.pop.wheelWired) {
+      state.pop.wheelWired = true;
+      stage.addEventListener("wheel", (ev) => {
+        if (state.active !== "popcorn") return;
+        if (state.pop.scrollHold && Date.now() < state.pop.scrollHold) { ev.preventDefault(); return; }
+        const keysEl = document.getElementById("pop-keys");
+        if (!keysEl || stage.scrollTop > 2 || ev.deltaY <= 0) return;
+        ev.preventDefault();
+        stage.scrollTo({ top: keysEl.offsetHeight, behavior: "smooth" });
+        state.pop.scrollHold = Date.now() + 800;
+      }, { passive: false });
+    }
     renderPopTail();
     renderQrPanel();
     popTick();
   }
 
-  // the long tail: every phrase so far, searchable, below the fold
+  // Pop this one now, ahead of the queue: whatever is on stage starts
+  // leaving and the chosen phrase lands centre-stage at full size. Other
+  // open windows of the page (a projector, say) pop it too.
+  const popChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("popcorn-stage") : null;
+  popChannel?.addEventListener("message", (ev) => {
+    if (ev.data?.type === "pop" && state.active === "popcorn") popNow(ev.data.tid, ev.data.idx, { relay: true, toggle: !!ev.data.toggle });
+  });
+  // Pop this one from the keys: it lands somewhere free on the stage and
+  // lingers, and nothing already up is disturbed. If it is up already, a
+  // hover holds it a while longer and a click (toggle) lets it go. When
+  // the stage is crowded with keyed phrases the oldest one gives way.
+  const leaveNow = (rec) => {
+    if (rec.beginFade && !rec.el.classList.contains("pop-out")) { clearTimeout(rec.timer); rec.beginFade(); }
+  };
+  function popNow(tid, idx, { relay = false, toggle = false } = {}) {
+    const stageEl = document.getElementById("pop-stage");
+    if (!stageEl || !state.popcorn.get(tid)?.items?.[idx]) return;
+    if (screenFrozen) return;
+    stageEl.querySelector(".popcorn-waiting")?.remove();
+    const up = state.pop.live.find((l) => l.tid === tid && l.idx === idx);
+    if (up) {
+      if (toggle) leaveNow(up);
+      else if (up.beginFade) { clearTimeout(up.timer); up.el.classList.remove("pop-out"); up.timer = setTimeout(up.beginFade, POP_HOLD_PINNED); }
+    } else {
+      const staying = state.pop.live.filter((l) => !l.el.classList.contains("pop-out"));
+      while (staying.length >= POP_CAP) leaveNow(staying.shift());
+      spawnPop(stageEl, { tid, idx }, { pinned: true });
+      state.pop.lastSpawn = Date.now();   // the automatic flow waits its turn
+    }
+    if (!relay) popChannel?.postMessage({ type: "pop", tid, idx, toggle });
+  }
+
+  // the circles of whatever is on stage wear a ring
+  function markDotsOnStage() {
+    const keys = document.getElementById("pop-timeline");
+    if (!keys) return;
+    keys.querySelectorAll(".tl-dot.on").forEach((d) => d.classList.remove("on"));
+    for (const rec of state.pop.live) {
+      if (rec.el.classList.contains("pop-out")) continue;
+      keys.querySelector(`.tl-dot[data-tid="${CSS.escape(rec.tid)}"][data-idx="${rec.idx}"]`)?.classList.add("on");
+    }
+  }
+
+  function togglePopHidden(key) {
+    if (state.pop.hidden.has(key)) state.pop.hidden.delete(key);
+    else state.pop.hidden.add(key);
+    pruneStage();
+    renderPopTail();
+  }
+
+  // the long tail: when the conversations happened, then every phrase so far
   function renderPopTail() {
-    const list = document.getElementById("pop-list");
-    if (!list) return;
+    if (!document.getElementById("pop-list")) return;
+    renderPopTimeline();
+    renderPopTables();
+    state.pop.tailCount = popcornItemCount();
+  }
 
-    document.getElementById("pop-legend").innerHTML =
-      (state.session?.transcripts || []).map((t) => attribution(t.id)).join("");
-
-    // Upstream interleaves transcripts round-robin so neighbours differ, like
-    // the stage. In dembrane the tail is the record of the day: conversations in
-    // the order they started, each phrase in the order it was found.
-    const queues = (state.session?.transcripts || [])
-      .map((t) => ({ tid: t.id, items: [...(state.popcorn.get(t.id)?.items || [])] }))
-      .filter((q) => q.items.length);
-    const all = [];
-    if (EMBED) {
-      for (const q of queues) for (const item of q.items) all.push({ tid: q.tid, item });
-    } else {
-      while (queues.some((q) => q.items.length)) {
-        for (const q of queues) if (q.items.length) all.push({ tid: q.tid, item: q.items.shift() });
-      }
-    }
-
-    const q = (state.popSearch || "").trim().toLowerCase();
-    const filtered = q
-      ? all.filter((e) => (e.item.phrase + " " + shortLabel(e.tid)).toLowerCase().includes(q))
-      : all;
-    document.getElementById("pop-count").textContent = all.length ? `${filtered.length} of ${all.length}` : "";
-    const phraseHtml = (e, n) => {
-      const rooted = e.item.quoteId && quoteById(e.item.quoteId);
-      const sourced = !rooted && e.item.source && e.item.source.text;
-      const cls = "tail-phrase" + (rooted ? " tail-rooted" : sourced ? " tail-sourced" : "");
-      const title = rooted ? "read the quote" : sourced ? "why this phrase" : shortLabel(e.tid);
-      return `<span class="${cls}" data-n="${n}" style="--marker:${markerFor(e.tid)}" title="${esc(title)}">${rooted ? `“${esc(e.item.phrase)}”` : esc(e.item.phrase)}</span>`;
-    };
-    if (EMBED) {
-      // one block per conversation, headed by its marker and name
-      const groups = [];
-      filtered.forEach((e, n) => {
-        let g = groups[groups.length - 1];
-        if (!g || g.tid !== e.tid) { g = { tid: e.tid, html: [] }; groups.push(g); }
-        g.html.push(phraseHtml(e, n));
+  /* The timeline: a histogram of the popcorns over the day. The track is
+     cut into bins about fourteen pixels wide, every popcorn lands in the
+     bin its moment falls in, and each bin stacks its popcorns as circles in
+     their conversations' colours, in time order, so tables that ran at the
+     same time mix in the same stacks. Time is to scale inside a sitting and
+     breaks are shrunk (popcornEvents), and the axis is fractions, so the
+     picture re-bins on every width without moving the crop. Two handles
+     crop a window; the stage plays only the popcorns inside it. Sittings
+     are labelled with the time they began. */
+  const TL_BIN_PX = 18;
+  const TL_STACK_PX = 72;
+  function renderPopTimeline() {
+    const host = document.getElementById("pop-timeline");
+    if (!host) return;
+    const { events, sittings } = popcornEvents();
+    if (!events.length) { host.innerHTML = ""; return; }
+    const W = host.clientWidth || 800;
+    const N = Math.max(24, Math.min(160, Math.round(W / TL_BIN_PX)));
+    const bins = Array.from({ length: N }, () => []);
+    for (const e of events) bins[Math.min(N - 1, Math.floor(e.f * N))].push(e);
+    const tallest = Math.max(1, ...bins.map((b) => b.length));
+    const sq = Math.max(3, Math.min(14, Math.floor(W / N) - 4, Math.floor(TL_STACK_PX / tallest) - 1));
+    const w = state.pop.window;
+    const binIn = (k) => !w || ((k + 1) / N > w.from && k / N < w.to);
+    const html = bins.map((b, k) =>
+      `<div class="tl-bin${binIn(k) ? "" : " out"}" data-k="${k}">${b.map((e) => {
+        const off = state.pop.hidden.has(e.tid) || state.pop.hidden.has(e.key);
+        return `<button type="button" class="tl-dot${off ? " off" : ""}" tabindex="-1" data-tid="${esc(e.tid)}" data-idx="${e.idx}" style="--marker:${markerFor(e.tid)}" aria-label="pop: ${esc(e.item.phrase)}"></button>`;
+      }).join("")}</div>`).join("");
+    const labels = sittings.map((st) =>
+      `<span class="tl-time" style="left:min(${(st.f * 100).toFixed(2)}%, calc(100% - 3.4em))">${esc(clockOf(st.time))}</span>`).join("");
+    host.innerHTML = `<div class="tl-track"><div class="tl-inner" style="--sq:${sq}px">${html}${labels}
+      <div class="tl-window" id="tl-window">
+        <span class="tl-grip" tabindex="0" role="slider" aria-label="move the window, keeping its length" aria-valuemin="0" aria-valuemax="${N}" aria-valuenow="${w ? Math.round(w.from * N) : 0}"></span>
+        <span class="tl-handle" data-edge="start" tabindex="0" role="slider" aria-label="start of the window" aria-valuemin="0" aria-valuemax="${N}" aria-valuenow="${w ? Math.round(w.from * N) : 0}"></span>
+        <span class="tl-handle" data-edge="end" tabindex="0" role="slider" aria-label="end of the window" aria-valuemin="0" aria-valuemax="${N}" aria-valuenow="${w ? Math.round(w.to * N) : N}"></span>
+      </div></div></div>`;
+    placeWindow();
+    wireWindow(N);
+    // the bins are cut from the width, so a new width is a new histogram
+    if (!state.pop.tlObserver && typeof ResizeObserver !== "undefined") {
+      state.pop.tlObserver = new ResizeObserver(() => {
+        syncKeysHeight();
+        const el = document.getElementById("pop-timeline");
+        if (!el || el.dataset.w === String(el.clientWidth)) return;
+        el.dataset.w = String(el.clientWidth);
+        renderPopTimeline();
       });
-      list.classList.add("pop-list-grouped");
-      list.innerHTML = groups.map((g) => {
-        const reading = !popcornSettled(state.popcorn.get(g.tid)) && !(state.popcorn.get(g.tid) || {}).done;
-        return `<section class="tail-group"><h3 class="tail-group-head">${attribution(g.tid)}<span class="tail-group-count">${g.html.length} phrase${g.html.length === 1 ? "" : "s"}${reading ? " · reading…" : ""}</span></h3><div class="tail-group-list">${g.html.join("")}</div></section>`;
-      }).join("");
-    } else {
-      list.innerHTML = filtered.map(phraseHtml).join("");
     }
-    list.querySelectorAll(".tail-rooted, .tail-sourced").forEach((el) => {
-      const e = filtered[Number(el.dataset.n)];
-      el.addEventListener("click", (ev) => {
+    host.dataset.w = String(host.clientWidth);
+    if (state.pop.tlObserver) state.pop.tlObserver.observe(host);
+    markDotsOnStage();
+    syncKeysHeight();
+  }
+
+  // the fold is the stage plus the keys strip; the stage stays pinned while
+  // the strip slides up over its foot, so the fold must know the strip's height
+  function syncKeysHeight() {
+    const fold = document.getElementById("pop-fold");
+    const keys = document.getElementById("pop-keys");
+    if (fold && keys) fold.style.setProperty("--keys-h", `${keys.offsetHeight}px`);
+  }
+
+  function placeWindow() {
+    const win = document.getElementById("tl-window");
+    if (!win) return;
+    const w = state.pop.window || { from: 0, to: 1 };
+    win.style.left = `${(w.from * 100).toFixed(3)}%`;
+    win.style.width = `${((w.to - w.from) * 100).toFixed(3)}%`;
+    win.classList.toggle("tl-window-all", !state.pop.window);
+    const note = document.getElementById("pop-play-note");
+    if (note) {
+      const ev = popcornEvents();
+      const shown = ev.events.filter((e) => popVisible(e.tid, e.idx, ev));
+      const timed = shown.filter((e) => e.time !== null);
+      note.textContent = (state.pop.window || state.pop.hidden.size || state.pop.kindFilter) && ev.events.length
+        ? `${shown.length} of ${ev.events.length} popcorns${timed.length ? `, ${clockOf(timed[0].time)} to ${clockOf(timed[timed.length - 1].time)}` : ""}`
+        : "";
+    }
+  }
+
+  function wireWindow(N) {
+    const inner = document.querySelector("#pop-timeline .tl-inner");
+    if (!inner) return;
+    const edgeAt = (clientX) => {
+      const r = inner.getBoundingClientRect();
+      return Math.max(0, Math.min(N, Math.round(((clientX - r.left) / r.width) * N)));
+    };
+    const applyWindow = (next) => {
+      next.from = Math.max(0, next.from);
+      next.to = Math.min(1, next.to);
+      state.pop.window = (next.from <= 0 && next.to >= 1) ? null : next;
+      state.pop.cursor = 0;
+      placeWindow();
+      inner.querySelectorAll(".tl-bin").forEach((b) => {
+        const j = Number(b.dataset.k);
+        b.classList.toggle("out", !!state.pop.window && !((j + 1) / N > next.from && j / N < next.to));
+      });
+      inner.querySelector('.tl-handle[data-edge="start"]')?.setAttribute("aria-valuenow", String(Math.round(next.from * N)));
+      inner.querySelector('.tl-handle[data-edge="end"]')?.setAttribute("aria-valuenow", String(Math.round(next.to * N)));
+      inner.querySelector(".tl-grip")?.setAttribute("aria-valuenow", String(Math.round(next.from * N)));
+      pruneStage();
+      renderPopTables();
+    };
+    const setEdge = (edge, k) => {
+      const cur = state.pop.window || { from: 0, to: 1 };
+      const step = 1 / N;
+      applyWindow(edge === "start"
+        ? { from: Math.min(k * step, cur.to - step), to: cur.to }
+        : { from: cur.from, to: Math.max(k * step, cur.from + step) });
+    };
+    // the grip along the top of the window moves the whole window, length kept,
+    // snapped to bins, so a length set with the handles can be walked over the day
+    const moveWindow = (fromK) => {
+      const cur = state.pop.window;
+      if (!cur) return;
+      const len = cur.to - cur.from;
+      const from = Math.max(0, Math.min(1 - len, fromK / N));
+      applyWindow({ from, to: from + len });
+    };
+    const grip = inner.querySelector(".tl-grip");
+    if (grip) {
+      grip.addEventListener("pointerdown", (ev) => {
+        const cur = state.pop.window;
+        if (!cur) return;
+        ev.preventDefault();
+        try { grip.setPointerCapture(ev.pointerId); } catch { /* synthetic pointers have nothing to capture */ }
+        grip.classList.add("dragging");
+        const r = inner.getBoundingClientRect();
+        const startX = ev.clientX, startFrom = cur.from;
+        const move = (e) => moveWindow(Math.round((startFrom + (e.clientX - startX) / r.width) * N));
+        const up = () => {
+          grip.classList.remove("dragging");
+          grip.removeEventListener("pointermove", move);
+          grip.removeEventListener("pointerup", up);
+          grip.removeEventListener("pointercancel", up);
+        };
+        grip.addEventListener("pointermove", move);
+        grip.addEventListener("pointerup", up);
+        grip.addEventListener("pointercancel", up);
+      });
+      grip.addEventListener("keydown", (ev) => {
+        if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+        ev.preventDefault();
         ev.stopPropagation();
-        if (e.item.quoteId && quoteById(e.item.quoteId)) showQuoteTip(e.item.quoteId, el);
-        else showSourceTip(e.item, e.tid, el);
+        const cur = state.pop.window;
+        if (!cur) return;
+        const at = Math.round(cur.from * N);
+        moveWindow(ev.key === "ArrowLeft" ? at - 1 : at + 1);
+      });
+    }
+    inner.querySelectorAll(".tl-handle").forEach((h) => {
+      h.addEventListener("pointerdown", (ev) => {
+        ev.preventDefault();
+        try { h.setPointerCapture(ev.pointerId); } catch { /* synthetic pointers have nothing to capture */ }
+        h.classList.add("dragging");
+        const move = (e) => setEdge(h.dataset.edge, edgeAt(e.clientX));
+        const up = () => {
+          h.classList.remove("dragging");
+          h.removeEventListener("pointermove", move);
+          h.removeEventListener("pointerup", up);
+          h.removeEventListener("pointercancel", up);
+        };
+        h.addEventListener("pointermove", move);
+        h.addEventListener("pointerup", up);
+        h.addEventListener("pointercancel", up);
+      });
+      h.addEventListener("keydown", (ev) => {
+        if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+        // the page moves between tabs on these keys; a focused handle owns them
+        ev.preventDefault();
+        ev.stopPropagation();
+        const cur = state.pop.window || { from: 0, to: 1 };
+        const at = Math.round((h.dataset.edge === "start" ? cur.from : cur.to) * N);
+        setEdge(h.dataset.edge, ev.key === "ArrowLeft" ? Math.max(0, at - 1) : Math.min(N, at + 1));
       });
     });
-    state.pop.tailCount = all.length;
+  }
+
+  // Every phrase so far, one group per conversation in the order they
+  // scanned in. A phrase is a button that hides itself; the conversation's
+  // name hides the lot. A phrase outside the crop window is dimmed.
+  // The legend is a filter. One click on a kind keeps only that kind; a second
+  // click on the same kind turns it inside out (everything but that kind); a
+  // third returns to every kind. Clicking a different kind starts over with it.
+  function renderKindLegend() {
+    const host = document.getElementById("kind-legend");
+    if (!host) return;
+    const any = [...state.popcorn.values()].some((f) => (f.items || []).some((it) => it.kind));
+    host.hidden = !any;
+    if (!any) return;
+    const f = state.pop.kindFilter;
+    host.innerHTML = POP_KIND_ORDER.map((k) => {
+      const mode = f && f.kind === k ? f.mode : "";
+      const label = k.charAt(0).toUpperCase() + k.slice(1);
+      const glyph = `<svg class="pop-kind" viewBox="0 0 256 256" aria-hidden="true"><path d="${POP_KIND_ICONS[k]}"/></svg>`;
+      return `<button type="button" class="kind-key${mode ? ` ${mode}` : ""}${f && !mode ? " dim" : ""}" data-kind="${k}" aria-pressed="${mode ? "true" : "false"}" aria-label="${mode === "only" ? `only ${k}` : mode === "except" ? `everything but ${k}` : k}">${glyph}${label}</button>`;
+    }).join("");
+    host.querySelectorAll(".kind-key").forEach((b) => b.addEventListener("click", () => {
+      const k = b.dataset.kind, cur = state.pop.kindFilter;
+      state.pop.kindFilter = !cur || cur.kind !== k ? { kind: k, mode: "only" }
+        : cur.mode === "only" ? { kind: k, mode: "except" } : null;
+      state.pop.cursor = 0;
+      state.pop.lastSpawn = 0;   // the stage refills at once rather than after the usual stagger
+      pruneStage();
+      placeWindow();
+      renderPopTables();
+    }));
+  }
+
+  function renderPopTables() {
+    const list = document.getElementById("pop-list");
+    if (!list) return;
+    renderKindLegend();
+    const ev = popcornEvents();
+    const order = (state.session?.transcripts || [])
+      .map((t) => ({ tid: t.id, time: transcriptTime(t), order: (state.session?.transcripts || []).indexOf(t) }))
+      .sort((a, b) => ((a.time ?? Infinity) - (b.time ?? Infinity)) || (a.order - b.order));
+    const q = (state.popSearch || "").trim().toLowerCase();
+    let total = 0, shown = 0, hidden = 0;
+    const html = order.map((c) => {
+      const items = state.popcorn.get(c.tid)?.items || [];
+      if (!items.length) return "";
+      total += items.length;
+      const tableOff = state.pop.hidden.has(c.tid);
+      const rows = items.map((item, idx) => {
+        const e = ev.byKey.get(`${c.tid}:${idx}`);
+        return { item, idx, key: popKey(c.tid, idx, item), out: (e ? !inWindow(e.f) : false ) || !popKindAllowed(c.tid, idx)};
+      }).filter((r) => !q || r.item.phrase.toLowerCase().includes(q) || shortLabel(c.tid).toLowerCase().includes(q));
+      shown += rows.length;
+      hidden += tableOff ? items.length : items.filter((item, idx) => state.pop.hidden.has(popKey(c.tid, idx, item))).length;
+      if (q && !rows.length) return "";
+      const allOut = rows.length && rows.every((r) => r.out);
+      const stateWord = tableOff ? "hidden" : allOut ? "outside the window" : "";
+      return `<section class="pop-table${tableOff ? " hidden" : ""}${allOut ? " out" : ""}">
+        <button type="button" class="pop-table-name" data-hide="${esc(c.tid)}" aria-pressed="${tableOff}" title="${tableOff ? "show this conversation" : "hide this conversation"}">
+          <span class="chip" style="--marker:${markerFor(c.tid)}"></span>${esc(transcriptById(c.tid)?.label || c.tid)}
+          <span class="pop-table-meta">${esc(clockOf(c.time))} · ${items.length}${stateWord ? ` · ${stateWord}` : ""}</span>
+        </button>
+        <div class="pop-list">${rows.map((r) => {
+          const off = state.pop.hidden.has(r.key);
+          return `<button type="button" class="tail-phrase${r.out ? " out" : ""}" data-hide="${esc(r.key)}" aria-pressed="${off}" style="--marker:${markerFor(c.tid)}" title="${off ? "show this popcorn" : "hide this popcorn"}${r.out ? " (outside the window)" : ""}">${kindIcon(r.item.kind)}${esc(phraseText(r.item))}</button>`;
+        }).join("")}</div>
+      </section>`;
+    }).join("");
+    list.innerHTML = html;
+    const count = document.getElementById("pop-count");
+    if (count) count.textContent = !total ? "" : q ? `${shown} of ${total}` : `${total} popcorn${total === 1 ? "" : "s"}${hidden ? ` · ${hidden} hidden` : ""}`;
   }
 
   // three horizontal bands, one phrase each — overlap-free by construction
-  const SLOTS = [{ y: 19 }, { y: 48 }, { y: 79 }];
+  const SLOTS = [{ y: 18 }, { y: 45 }, { y: 71 }];   // the keys strip docks over the bottom of the fold
 
   function popTick() {
     if (screenFrozen) return;
@@ -760,7 +1233,8 @@
     }
     waiting?.remove();
 
-    if (state.pop.live.length >= POP_MAX) return;
+    const staying = state.pop.live.filter((l) => !l.el.classList.contains("pop-out"));
+    if (staying.length >= POP_CAP || staying.filter((l) => !l.pinned).length >= POP_MAX) return;
     const gap = state.pop.live.length ? POP_GAP : 0; // an empty stage never waits
     if (Date.now() - state.pop.lastSpawn < gap) return;
 
@@ -768,85 +1242,172 @@
     if (next) spawnPop(stageEl, next);
   }
 
-  // fresh phrases first, alternating transcripts; then recycle forever
+  // Which phrase next. Both modes only draw from what the crop window lets
+  // through and the facilitator has not hidden.
+  // "random": fresh phrases first, alternating conversations, then recycle
+  // forever (the live-room default: the screen never goes dead).
+  // "time": every popcorn in the order of its moment, tables interleaving
+  // where they overlapped, and loop.
   function nextPopItem() {
-    const tids = (state.session?.transcripts || []).map((t) => t.id);
+    const ev = popcornEvents();
+    const isLive = (tid, idx) => state.pop.live.some((l) => l.tid === tid && l.idx === idx);
+
+    if (state.pop.mode === "time") {
+      const seq = ev.events.filter((e) => popVisible(e.tid, e.idx, ev));
+      if (!seq.length) return null;
+      for (let k = 0; k < seq.length; k++) {
+        const pick = seq[(state.pop.cursor + k) % seq.length];
+        if (isLive(pick.tid, pick.idx)) continue;
+        state.pop.cursor = (state.pop.cursor + k + 1) % seq.length;
+        return { tid: pick.tid, idx: pick.idx };
+      }
+      return null;
+    }
+
+    const tids = (state.session?.transcripts || []).map((t) => t.id).filter((tid) => !state.pop.hidden.has(tid));
     const byLeastRecent = (a, b) => (state.pop.tidTime[a] || 0) - (state.pop.tidTime[b] || 0);
     const notLast = (list) => list.find((id) => id !== state.pop.lastTid) ?? list[0];
+    const len = (tid) => state.popcorn.get(tid)?.items?.length || 0;
 
-    const freshTids = tids.filter((id) =>
-      (state.popcorn.get(id)?.items?.length || 0) > (state.pop.fresh[id] || 0));
+    // fresh: the next phrase this conversation has not shown yet, skipping what is hidden or cropped out
+    const nextFresh = (tid) => {
+      let idx = state.pop.fresh[tid] || 0;
+      while (idx < len(tid) && !popVisible(tid, idx, ev)) idx++;
+      return idx < len(tid) ? idx : null;
+    };
+    const freshTids = tids.filter((tid) => nextFresh(tid) !== null);
     if (freshTids.length) {
       const tid = notLast(freshTids.sort(byLeastRecent));
-      const idx = state.pop.fresh[tid] || 0;
+      const idx = nextFresh(tid);
       state.pop.fresh[tid] = idx + 1;
       return { tid, idx };
     }
 
-    const havers = tids.filter((id) => (state.popcorn.get(id)?.items?.length || 0) > 0);
+    // recycle: the next visible phrase of the least-recently-shown conversation
+    // that still has one to show. A conversation whose phrases are all hidden,
+    // cropped, filtered out or already on stage is not a candidate; choosing it
+    // and finding nothing used to leave the stage empty until the filter changed.
+    const nextRecycled = (tid) => {
+      const n = len(tid);
+      for (let k = 0; k < n; k++) {
+        const idx = ((state.pop.recycle[tid] || 0) + k) % n;
+        if (popVisible(tid, idx, ev) && !isLive(tid, idx)) return idx;
+      }
+      return null;
+    };
+    const havers = tids.filter((tid) => nextRecycled(tid) !== null);
     if (!havers.length) return null;
     const tid = notLast(havers.sort(byLeastRecent));
-    const items = state.popcorn.get(tid).items;
-    const idx = (state.pop.recycle[tid] || 0) % items.length;
+    const idx = nextRecycled(tid);
     state.pop.recycle[tid] = idx + 1;
-    if (state.pop.live.some((l) => l.tid === tid && l.idx === idx)) return null;
     return { tid, idx };
   }
 
-  function spawnPop(stageEl, { tid, idx }) {
+  // The automatic flow lays phrases in three bands, one each, jittered. A
+  // phrase popped from the keys (pinned) lands anywhere free in the open
+  // stage instead, tries a few spots to stay clear of the others, and
+  // lingers far longer.
+  function spawnPop(stageEl, { tid, idx }, { center = false, pinned = false } = {}) {
     const item = state.popcorn.get(tid)?.items?.[idx];
     if (!item) return;
 
-    const centerStage = !state.pop.live.length; // an empty stage gets the big opening treatment
-    const used = new Set(state.pop.live.map((l) => l.slot));
-    let slotIdx;
-    if (centerStage) {
-      slotIdx = 1; // middle band
-    } else {
-      const free = [0, 1, 2].filter((i) => !used.has(i));
-      if (!free.length) return;
-      slotIdx = free[Math.floor(Math.random() * free.length)];
+    // an empty stage gets the big opening treatment; so does a popcorn the
+    // facilitator asked for by name
+    const centerStage = !pinned && (center || !state.pop.live.length);
+    let slotIdx = null;
+    if (!pinned) {
+      const used = new Set(state.pop.live.map((l) => l.slot));
+      if (centerStage) {
+        slotIdx = 1; // middle band
+      } else {
+        const free = [0, 1, 2].filter((i) => !used.has(i));
+        if (!free.length) return;
+        slotIdx = free[Math.floor(Math.random() * free.length)];
+      }
     }
     const jx = centerStage ? 0 : Math.random() * 24 - 12;
     const jy = centerStage ? 0 : Math.random() * 2 - 1;
 
     const rooted = item.quoteId && quoteById(item.quoteId);
     const el = document.createElement("div");
-    el.className = "pop" + (centerStage ? " center" : "");
+    el.className = "pop" + (centerStage ? " center" : "") + (pinned ? " pinned" : "");
     el.dataset.weight = Math.min(3, Math.max(1, item.weight || 2));
-    el.style.setProperty("--x", `${50 + jx}%`);
-    el.style.setProperty("--y", `${SLOTS[slotIdx].y + jy}%`);
     el.style.setProperty("--tilt", `${hashTilt(item.phrase)}deg`);
-    el.innerHTML = `<span class="pop-phrase" style="--marker:${markerFor(tid)}">${rooted ? `“${esc(item.phrase)}”` : esc(item.phrase)}</span>
+    el.innerHTML = `<span class="pop-phrase" style="--marker:${markerFor(tid)}">${kindIcon(item.kind)}${rooted ? `“${esc(phraseText(item))}”` : esc(phraseText(item))}</span>
       <span class="pop-att">${attribution(tid)}</span>`;
     stageEl.appendChild(el);
+    // measure at the size it will settle at, not mid pop-in
+    el.style.animation = "none";
 
     // never let phrases collide: step the size down until this one fits clear
     const clashes = () => {
       const r = el.getBoundingClientRect();
       return state.pop.live.some((l) => {
+        if (l.el.classList.contains("pop-out")) return false;   // leaving anyway
         const o = l.el.getBoundingClientRect();
         return !(r.right < o.left || o.right < r.left || r.bottom < o.top || o.bottom < r.top);
       });
     };
+    // stay on the stage: a phrase too wide for the room steps down first,
+    // and any phrase hanging over an edge is nudged back inside before it
+    // is judged against its neighbours
+    const room = stageEl.getBoundingClientRect();
+    const overflows = () => el.getBoundingClientRect().width > room.width - 2 * POP_EDGE_PX;
+    const clamp = () => {
+      const r = el.getBoundingClientRect();
+      let dx = 0, dy = 0;
+      if (r.left < room.left + POP_EDGE_PX) dx = room.left + POP_EDGE_PX - r.left;
+      else if (r.right > room.right - POP_EDGE_PX) dx = room.right - POP_EDGE_PX - r.right;
+      if (r.top < room.top + POP_EDGE_PX) dy = room.top + POP_EDGE_PX - r.top;
+      else if (r.bottom > room.bottom - POP_EDGE_PX) dy = room.bottom - POP_EDGE_PX - r.bottom;
+      if (dx || dy) {
+        el.style.setProperty("--x", `${parseFloat(el.style.getPropertyValue("--x")) + (dx / room.width) * 100}%`);
+        el.style.setProperty("--y", `${parseFloat(el.style.getPropertyValue("--y")) + (dy / room.height) * 100}%`);
+      }
+    };
     let w = Number(el.dataset.weight);
-    while (clashes() && w > 1) el.dataset.weight = --w;
+    if (pinned) {
+      // scatter: a handful of throws across the open stage; the first that
+      // sits inside and clear of the others wins
+      el.style.setProperty("--x", "50%");
+      el.style.setProperty("--y", "40%");
+      while (overflows() && w > 1) el.dataset.weight = --w;
+      let placed = false;
+      for (let t = 0; t < 12 && !placed; t++) {
+        el.style.setProperty("--x", `${18 + Math.random() * 64}%`);
+        el.style.setProperty("--y", `${12 + Math.random() * 54}%`);
+        clamp();
+        placed = !clashes();
+      }
+    } else {
+      el.style.setProperty("--x", `${50 + jx}%`);
+      el.style.setProperty("--y", `${SLOTS[slotIdx].y + jy}%`);
+      while (overflows() && w > 1) el.dataset.weight = --w;
+      clamp();
+    }
+    // still touching something: step the size down until it fits clear
+    while (clashes() && w > 1) { el.dataset.weight = --w; clamp(); }
+    el.style.animation = "";
 
-    const rec = { tid, idx, slot: slotIdx, el };
+    const rec = { tid, idx, slot: slotIdx, el, pinned };
     state.pop.live.push(rec);
     state.pop.lastSpawn = Date.now();
-    state.pop.lastTid = tid;
-    state.pop.tidTime[tid] = Date.now();
+    if (!pinned) {
+      state.pop.lastTid = tid;
+      state.pop.tidTime[tid] = Date.now();
+    }
+    markDotsOnStage();
 
     const beginFade = () => {
       el.classList.add("pop-out");
+      markDotsOnStage();
       rec.timer = setTimeout(() => {
         el.remove();
         state.pop.live = state.pop.live.filter((l) => l !== rec);
       }, POP_FADE + 100);
     };
     rec.beginFade = beginFade;   // the freeze needs to stop and restart this
-    rec.timer = setTimeout(beginFade, POP_HOLD);
+    rec.timer = setTimeout(beginFade, pinned ? POP_HOLD_PINNED : POP_HOLD);
 
     // hovering a popcorn holds it on stage; rooted popcorns raise their quote
     el.addEventListener("mouseenter", () => {
@@ -854,7 +1415,7 @@
       el.classList.remove("pop-out");
     });
     el.addEventListener("mouseleave", () => {
-      if (!screenFrozen) rec.timer = setTimeout(beginFade, 3500);
+      if (!screenFrozen) rec.timer = setTimeout(beginFade, pinned ? POP_HOLD_PINNED : 3500);
     });
     // the opening click must not also read as a click outside the modal
     if (rooted) {
@@ -1055,7 +1616,7 @@
     const hl = markMatch("tensions");
     const q = (state.searches.tensions || "").trim().toLowerCase();
     const filtered = q ? items.filter((t) =>
-      `${t.poleA} ${t.poleB} ${t.narrative || ""} ${t.toResolve || ""}`.toLowerCase().includes(q)) : items;
+      `${t.poleA} ${t.poleB} ${t.knot || t.narrative || ""} ${t.toResolve || ""}`.toLowerCase().includes(q)) : items;
     const toolsHtml = searchTools("tensions", "search the tensions…", `${q ? `${filtered.length} of ` : ""}${items.length} tensions`);
     const listHtml = `<div class="action-list">
         ${filtered.map((t) => `<button class="action-row" data-id="${esc(t.id)}">
@@ -1070,8 +1631,8 @@
         <div class="rope" aria-hidden="true"></div>
         <p class="pole-block pole-b">${esc(t.poleB)}</p>
       </div>
+      ${t.knot ? `<p class="tension-knot">${esc(t.knot)}</p>` : t.narrative ? `<p class="tension-narrative">${esc(t.narrative)}</p>` : ""}
       ${t.toResolve ? `<div class="tension-resolve"><span class="label">To work through</span><p>${esc(t.toResolve)}</p></div>` : ""}
-      ${t.narrative ? `<p class="tension-narrative">${esc(t.narrative)}</p>` : ""}
       ${t.quoteIds?.length ? `<div class="deck-quotes tension-quotes">${quoteLinks(t.quoteIds)}</div>` : ""}`;
 
     stage.classList.toggle("stage-flush", !!state.deck.tensions && items.length > 0);
@@ -1151,12 +1712,23 @@
     intensity: 0.5, sentiment: 0, unowned: false, aspects: [], ...r,
     rung: r.evidence?.rung || "stated",
   }));
-  // sentiment colour: coral at -1, neutral grey at 0, spring green at +1
-  const SENT = { neg: [0xEF, 0x37, 0x46], mid: [0x98, 0x95, 0x8D], pos: [0x08, 0x82, 0x4F] };
+  // sentiment colour: five steps, hot red (strained) through magenta and
+  // royal blue (neutral) to a bluish green and then a bright green
+  // (working), weighted to the poles. Each is the most saturated colour of
+  // its hue that clears the contrast it is held to on the parchment: 3.5:1
+  // for the red and the magenta, the institution blue as it is at 4.4:1,
+  // 3.2:1 for the bluish green, and 2.8:1 for the green pole, deliberately
+  // under the 3:1 line because a green that clears it reads as forest, not
+  // spark, next to the red. Blue is only for relations the analyst put
+  // within a tenth of zero; from 0.2 to 0.5 either way is the mild step,
+  // and 0.6 and beyond is the pole, matching the prompt's own line between
+  // "cooperative or wary" and "warmth or grievance".
+  const SENT_STEPS = ["#FF134E", "#EF00C0", "#4169E1", "#009B79", "#33A900"];
   const sentColor = (v) => {
     const s = Math.max(-1, Math.min(1, v || 0));
-    const [a, b, t] = s < 0 ? [SENT.mid, SENT.neg, -s] : [SENT.mid, SENT.pos, s];
-    return `rgb(${a.map((c, i) => Math.round(c + (b[i] - c) * t)).join(",")})`;
+    const a = Math.abs(s);
+    const k = a < 0.15 ? 0 : a < 0.55 ? 1 : 2;
+    return SENT_STEPS[2 + Math.sign(s) * k];
   };
   const relStatus = (r) => r.unowned ? "Unowned"
     : r.sentiment <= -0.5 ? "Strained" : r.sentiment < 0 ? "Friction"
@@ -1223,11 +1795,15 @@
         <input type="range" id="stake-detail" min="0" max="1" step="0.01" value="${detail}">
         <span class="map-count">${items.length} of ${all.length} groups</span>
       </div>` : "";
-    const legendHtml = `<div class="flow-key" aria-label="how to read the lines">
-      <span><svg width="34" height="12" aria-hidden="true"><line x1="1" y1="3" x2="33" y2="3" stroke="#98958D" stroke-width="1.2"/><line x1="1" y1="9" x2="33" y2="9" stroke="#98958D" stroke-width="3.6"/></svg>weight = how much it shapes the week</span>
-      <span><svg width="34" height="8" aria-hidden="true"><line x1="1" y1="4" x2="12" y2="4" stroke="${sentColor(-1)}" stroke-width="2.5"/><line x1="12" y1="4" x2="23" y2="4" stroke="${sentColor(0)}" stroke-width="2.5"/><line x1="23" y1="4" x2="33" y2="4" stroke="${sentColor(1)}" stroke-width="2.5"/></svg>colour = strained to working</span>
-      <span><svg width="34" height="8" aria-hidden="true"><line x1="1" y1="4" x2="33" y2="4" stroke="#98958D" stroke-width="2.5" stroke-dasharray="5 4"/></svg>dashed = nobody owns it</span>
-      <span>dotted card = inferred, not said aloud</span>
+    // The key is swatches with one or two words each; the prose lives in
+    // the tooltips and the relation slides.
+    const legendHtml = `<div class="flow-key" aria-label="key">
+      <span><svg width="34" height="12" aria-hidden="true"><line x1="1" y1="3" x2="33" y2="3" stroke="${sentColor(0)}" stroke-width="1.2"/><line x1="1" y1="9" x2="33" y2="9" stroke="${sentColor(0)}" stroke-width="3.6"/></svg>intensity</span>
+      <span>strained<svg width="58" height="8" aria-hidden="true">${SENT_STEPS.map((c, i, all) => `<line x1="${1 + i * 56 / all.length}" y1="4" x2="${1 + (i + 1) * 56 / all.length}" y2="4" stroke="${c}" stroke-width="2.5"/>`).join("")}</svg>working</span>
+      <span><svg width="34" height="8" aria-hidden="true"><line x1="1" y1="4" x2="33" y2="4" stroke="${sentColor(0)}" stroke-width="2.5" stroke-dasharray="5 4"/></svg>unowned</span>
+      <span><svg width="16" height="12" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="9" fill="#FFFFFF" stroke="#2D2D2C" stroke-opacity="0.25"/></svg>spoke for themselves</span>
+      <span><svg width="16" height="12" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="9" fill="#EAE8E5" stroke="#2D2D2C" stroke-opacity="0.25"/></svg>spoken for</span>
+      <span><svg width="16" height="12" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="9" fill="#EAE8E5" stroke="#2D2D2C" stroke-opacity="0.25"/><rect x="4" y="4" width="8" height="4" fill="none" stroke="#2D2D2C" stroke-opacity="0.5" stroke-dasharray="1 1.2"/></svg>inferred</span>
     </div>`;
     const bring = bringInList(all);
     const bringHtml = bring.length ? `<section class="bring-in">
@@ -2222,6 +2798,10 @@
       for (const n of nodes) {
         if (n.dummy) continue;
         nodeEls[n.id].style.transform = `translate(${n.x}px, ${n.y}px) translate(-50%, -50%)`;
+        // the hover grow uses the `scale` property, which applies outside the
+        // transform above and so would scale the translate with it; pinning
+        // the origin to the anchor point makes the card swell around itself
+        nodeEls[n.id].style.transformOrigin = `${n.x}px ${n.y}px`;
       }
       conns.forEach((c, i) => {
         const els = segEls[i] || [];

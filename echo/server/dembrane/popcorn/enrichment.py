@@ -24,12 +24,21 @@ bundle never emits `review`.
 from __future__ import annotations
 
 import re
-from typing import Any, Awaitable, Callable
+from typing import Any, Callable, Awaitable
 
-from dembrane.popcorn.analysis import norm
 from dembrane.popcorn.flags import scrub_names
+from dembrane.popcorn.analysis import norm
 
-KINDS = ["observation", "distinction", "need", "practice", "idea", "objection", "question", "decision"]
+KINDS = [
+    "observation",
+    "distinction",
+    "need",
+    "practice",
+    "idea",
+    "objection",
+    "question",
+    "decision",
+]
 QUALIFIERS = ["tentative", "personal_experience", "not_implemented"]
 
 VALIDATE_SCHEMA: dict[str, Any] = {
@@ -75,7 +84,9 @@ HEDGE = re.compile(
 
 def hedge_added(phrase: str, quote: str) -> list[str]:
     """Hedges in the phrase that the source passage does not carry."""
-    return sorted({m.lower() for m in HEDGE.findall(phrase)} - {m.lower() for m in HEDGE.findall(quote)})
+    return sorted(
+        {m.lower() for m in HEDGE.findall(phrase)} - {m.lower() for m in HEDGE.findall(quote)}
+    )
 
 
 def evidence_from(raw: dict[str, Any], phrase: str, transcript: str) -> dict[str, Any]:
@@ -144,7 +155,9 @@ async def enrich_item(
         kind = kind_from(raw, names)
         if kind["kind"] == "question" and not kind["question"]:
             try:
-                out = await rewrite(transcript_id=transcript_id, transcript=transcript, phrase=phrase)
+                out = await rewrite(
+                    transcript_id=transcript_id, transcript=transcript, phrase=phrase
+                )
                 candidate = str(out.get("phrase") or "").strip()
                 if question_ok(candidate):
                     result["rewritten"] = candidate[:-1].rstrip()

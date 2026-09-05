@@ -236,7 +236,11 @@ def shape_popcorn_items(raw: dict[str, Any] | None, transcript_id: str) -> list[
         # growing transcript keeps the same id for a phrase it returns again, so
         # the stage does not pop it a second time.
         digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:8]
-        entry: dict[str, Any] = {"id": f"p-{transcript_id}-{digest}", "phrase": phrase, "weight": weight}
+        entry: dict[str, Any] = {
+            "id": f"p-{transcript_id}-{digest}",
+            "phrase": phrase,
+            "weight": weight,
+        }
         if question:
             entry["question"] = True
         out.append(entry)
@@ -305,7 +309,11 @@ class QuoteBook:
         entry: dict[str, Any] = {"id": qid, "transcript": found_in, "text": text}
         ctx = str(q.get("context") or "").strip()
         # The transcripts carry no speakers; a context that assigns one is dropped.
-        if ctx and not attributes(ctx) and not any(re.search(rf"\b{re.escape(n)}\b", ctx) for n in self.names):
+        if (
+            ctx
+            and not attributes(ctx)
+            and not any(re.search(rf"\b{re.escape(n)}\b", ctx) for n in self.names)
+        ):
             entry["context"] = ctx
         self.quotes.append(entry)
         self._seen[key] = qid

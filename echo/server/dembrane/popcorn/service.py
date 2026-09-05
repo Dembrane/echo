@@ -581,9 +581,7 @@ async def popcorn_payload(report: dict[str, Any]) -> dict[str, Any]:
         "updated_at": (loop or {}).get("updated_at"),
         "settings": settings,
         "public_token": report.get("public_token"),
-        "loop": loop_payload(
-            loop, run, await next_read_at(str(loop["id"])) if loop else None
-        ),
+        "loop": loop_payload(loop, run, await next_read_at(str(loop["id"])) if loop else None),
         "counts": state_counts(state),
     }
 

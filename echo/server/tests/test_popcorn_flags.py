@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from dembrane.popcorn.flags import (
-    gate_items,
     known_run,
+    gate_items,
     scrub_names,
     known_shingles,
     introduced_names,
@@ -37,22 +37,33 @@ def test_known_shingles_come_from_everything_the_room_was_shown() -> None:
     known = known_shingles(state)
     assert ("one", "two", "three", "four", "five", "six") in known
     assert ("a", "b", "c", "d", "e", "f") in known
-    assert ("beta", "gamma", "delta", "epsilon", "zeta", "eta") in known
+    # Quotes are the room's words, never the tool's.
+    assert ("beta", "gamma", "delta", "epsilon", "zeta", "eta") not in known
+    # A conversation is never checked against its own phrases.
+    assert ("one", "two", "three", "four", "five", "six") not in known_shingles(state, exclude="c1")
     # A run never crosses from one text into the next.
     assert ("six", "seven", "a", "b", "c", "d") not in known
-    assert known_run("they said one two three four five six", known) == "one two three four five six"
+    assert (
+        known_run("they said one two three four five six", known) == "one two three four five six"
+    )
     assert known_run("one two three four", known) is None
     assert known_shingles({}) == set()
 
 
 def test_gate_items_holds_back_names_known_text_and_twins() -> None:
-    known = known_shingles({"conversations": {"c": {"items": [{"phrase": "the kettle is the real reception here"}]}}})
+    known = known_shingles(
+        {"conversations": {"c": {"items": [{"phrase": "the kettle is the real reception here"}]}}}
+    )
     items = [
         {"id": "1", "phrase": "Nobody joins for the desks", "weight": 2},
         {"id": "2", "phrase": "Priya runs the Tuesday group", "weight": 1},
         {"id": "3", "phrase": "the kettle is the real reception here", "weight": 3},
-        {"id": "4", "phrase": "Joining is never for the desks", "weight": 3},  # a heavier twin of 1
-        {"id": "5", "phrase": "Desks are not why anybody joins", "weight": 1},  # a lighter twin
+        {
+            "id": "4",
+            "phrase": "Nobody joins because of the desks",
+            "weight": 3,
+        },  # a heavier twin of 1
+        {"id": "5", "phrase": "The desks are why nobody joins", "weight": 1},  # a lighter twin of 4
     ]
     kept, suppressed = gate_items(items, names={"Priya"}, known=known)
     assert [k["id"] for k in kept] == ["4"]

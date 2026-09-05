@@ -111,6 +111,13 @@ def fake(monkeypatch) -> _FakeDirectus:
     monkeypatch.setattr(ticks, "_claim_run_lock", _claim)
     monkeypatch.setattr(ticks, "_release_run_lock", _release)
     monkeypatch.setattr(ticks, "_renew_run_lock", _release)
+    monkeypatch.setattr(ticks, "_mark_alive", _release)
+    monkeypatch.setattr(ticks, "_clear_alive", _release)
+
+    async def _not_alive(loop_id: str) -> bool:  # noqa: ARG001
+        return False
+
+    monkeypatch.setattr(ticks, "_tick_alive", _not_alive)
 
     enqueued: list[tuple[str, str]] = []
 
@@ -406,6 +413,38 @@ def test_reconcile_missing_popcorn_tick_tasks_skips_covered_loop(
     count = asyncio.run(ticks.reconcile_missing_popcorn_tick_tasks())
     assert count == 0
     assert enqueued == []
+
+
+def test_reconcile_leaves_a_long_tick_alone_while_it_beats(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    now = datetime(2026, 9, 4, 12, 0, 0, tzinfo=timezone.utc)
+    monkeypatch.setattr(ticks, "_now", lambda: now)
+    fake.scheduled_tasks = [
+        {
+            "id": "slow_second_pass",
+            "task_type": scheduled_tasks.TASK_POPCORN_TICK,
+            "status": scheduled_tasks.STATUS_PROCESSING,
+            "claimed_at": (now - timedelta(minutes=10)).isoformat(),
+            "payload": {"loop_id": "loop1"},
+        }
+    ]
+
+    async def _alive(loop_id: str) -> bool:  # noqa: ARG001
+        return True
+
+    monkeypatch.setattr(ticks, "_tick_alive", _alive)
+    enqueued: list[Any] = []
+
+    async def _enqueue(loop: dict[str, Any], when: Any = None) -> None:  # noqa: ARG001
+        enqueued.append(loop["id"])
+
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+    assert asyncio.run(ticks.reconcile_missing_popcorn_tick_tasks()) == 0
+    assert enqueued == []
+    assert not any(
+        patch.get("status") == scheduled_tasks.STATUS_FAILED for _, _, patch in fake.updated
+    )
 
 
 def test_reconcile_missing_popcorn_tick_tasks_rescues_stale_processing(

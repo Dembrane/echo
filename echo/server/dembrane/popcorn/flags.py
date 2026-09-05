@@ -35,7 +35,7 @@ INTRO = re.compile(
 )
 ADDRESSED = re.compile(
     r"\b([A-Z][a-z]{2,}),\s+(?:you're|you are|would you|are you|do you|what do you|be interesting|yeah|thanks|there's|sorry)"
-    r"|\bwhat ([A-Z][a-z]{2,}) (?:was|is) saying|\bThanks,?\s+([A-Z][a-z]{2,})|\bto ([A-Z][a-z]{2,})'s point"
+    r"|\b[Ww]hat ([A-Z][a-z]{2,}) (?:was|is) saying|\bThanks,?\s+([A-Z][a-z]{2,})|\bto ([A-Z][a-z]{2,})'s point"
 )
 # Capitalised words the patterns above catch that are not names.
 NOT_NAMES = set(
@@ -109,22 +109,37 @@ def _strings(value: Any, skip: Iterable[str] = ()) -> Iterable[str]:
 
 
 # Keys whose values the room never sees, or that are not prose.
-_NOT_SHOWN = {"id", "url", "transcript", "source", "review", "fingerprint", "error", "label", "short"}
+_NOT_SHOWN = {
+    "id",
+    "url",
+    "transcript",
+    "source",
+    "review",
+    "fingerprint",
+    "error",
+    "label",
+    "short",
+}
 
 
-def known_shingles(state: dict[str, Any], n: int = KNOWN_RUN) -> set[tuple[str, ...]]:
-    """Every run of `n` words in what the room has been shown so far: the
-    phrases on the stage, the slides, the quotes behind them."""
+def known_shingles(
+    state: dict[str, Any], n: int = KNOWN_RUN, *, exclude: str | None = None
+) -> set[tuple[str, ...]]:
+    """Every run of `n` words the tool itself has put in front of the room:
+    the phrases on the stage and the text of the slides. Quotes are left out,
+    because they are the room's words, not the tool's, and a phrase that
+    repeats one is grounded, not lifted. `exclude` leaves out one
+    conversation's own phrases: a re-read that returns the same phrase again
+    is the same phrase, with the same id, and not the tool quoting itself."""
     words: list[str] = []
-    for conv in (state.get("conversations") or {}).values():
+    for cid, conv in (state.get("conversations") or {}).items():
+        if cid == exclude:
+            continue
         for item in conv.get("items") or []:
             words += tokens(str(item.get("phrase") or ""))
             words.append("\x00")  # runs never cross from one text to the next
     for text in _strings(state.get("analysis") or {}, _NOT_SHOWN):
         words += tokens(text)
-        words.append("\x00")
-    for quote in state.get("quotes") or []:
-        words += tokens(str(quote.get("text") or ""))
         words.append("\x00")
     return {s for s in shingles(words, n) if "\x00" not in s}
 
@@ -146,17 +161,26 @@ def gate_items(
         phrase = str(item.get("phrase") or "")
         hit = name_hits(phrase, names)
         if hit:
-            suppressed.append({**item, "reason": f"carries a name from the introductions ({', '.join(hit)})"})
+            suppressed.append(
+                {**item, "reason": f"carries a name from the introductions ({', '.join(hit)})"}
+            )
             continue
         run = known_run(phrase, known)
         if run:
-            suppressed.append({**item, "reason": f"shares {KNOWN_RUN} words with text the room was shown ({run!r})"})
+            suppressed.append(
+                {
+                    **item,
+                    "reason": f"shares {KNOWN_RUN} words with text the room was shown ({run!r})",
+                }
+            )
             continue
         twin = next((k for k in kept if jaccard(k["phrase"], phrase) >= NEAR_DUPLICATE), None)
         if twin is not None:
             if int(item.get("weight") or 1) > int(twin.get("weight") or 1):
                 # The heavier of two phrases for one idea is the one that stays.
-                suppressed.append({**twin, "reason": f"says what {phrase!r} says, with less weight"})
+                suppressed.append(
+                    {**twin, "reason": f"says what {phrase!r} says, with less weight"}
+                )
                 kept[kept.index(twin)] = item
             else:
                 suppressed.append({**item, "reason": f"says what {twin['phrase']!r} says"})

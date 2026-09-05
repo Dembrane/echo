@@ -55,6 +55,7 @@ def popcorn_model() -> MODELS:
         _fallback_warned = True
     return MODELS.MULTI_MODAL_FAST
 
+
 ANALYSIS_SCHEMAS: dict[str, dict[str, Any]] = {
     "tensions": TENSIONS_SCHEMA,
     "stakeholders": STAKEHOLDERS_SCHEMA,

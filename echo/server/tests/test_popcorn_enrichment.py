@@ -7,9 +7,9 @@ import pytest
 
 from dembrane.popcorn.enrichment import (
     kind_from,
-    question_ok,
     enrich_item,
     hedge_added,
+    question_ok,
     apply_results,
     evidence_from,
 )
@@ -21,13 +21,19 @@ Knowing at what stage to introduce the tools, that is the thing, isn't it?"""
 
 def test_evidence_counts_only_when_verbatim() -> None:
     good = evidence_from(
-        {"grounded": True, "quote": "nobody joins for the desks. I could get a desk", "reason": "r"},
+        {
+            "grounded": True,
+            "quote": "nobody joins for the desks. I could get a desk",
+            "reason": "r",
+        },
         "Nobody joins for the desks",
         TRANSCRIPT,
     )
     assert good["grounded"] is True and good["quote"].startswith("nobody joins")
     # The model says grounded but the passage is not in the transcript: unrooted.
-    bad = evidence_from({"grounded": True, "quote": "nobody joins for the chairs", "reason": "r"}, "x", TRANSCRIPT)
+    bad = evidence_from(
+        {"grounded": True, "quote": "nobody joins for the chairs", "reason": "r"}, "x", TRANSCRIPT
+    )
     assert bad["grounded"] is False and bad["quote"] == ""
     short = evidence_from({"grounded": True, "quote": "desks.", "reason": "r"}, "x", TRANSCRIPT)
     assert short["grounded"] is False
@@ -35,8 +41,13 @@ def test_evidence_counts_only_when_verbatim() -> None:
 
 def test_hedge_added_names_the_modal_the_source_lacks() -> None:
     quote = "Some environments make junior staff feel they have nothing to add."
-    assert hedge_added("Environments can make junior staff feel they have nothing to add", quote) == ["can"]
-    assert hedge_added("Some environments make junior staff feel they have nothing to add", quote) == []
+    assert hedge_added(
+        "Environments can make junior staff feel they have nothing to add", quote
+    ) == ["can"]
+    assert (
+        hedge_added("Some environments make junior staff feel they have nothing to add", quote)
+        == []
+    )
     ev = evidence_from(
         {"grounded": True, "quote": quote, "reason": "r"},
         "Environments can make junior staff feel they have nothing to add",
@@ -47,8 +58,13 @@ def test_hedge_added_names_the_modal_the_source_lacks() -> None:
 
 def test_kind_from_scrubs_names_and_rejects_unknown_kinds() -> None:
     kind = kind_from(
-        {"kind": "objection", "qualifiers": ["tentative", "bogus"], "question_form": False,
-         "target": "Priya's plan", "reason": "answers what Tom proposed"},
+        {
+            "kind": "objection",
+            "qualifiers": ["tentative", "bogus"],
+            "question_form": False,
+            "target": "Priya's plan",
+            "reason": "answers what Tom proposed",
+        },
         {"Priya", "Tom"},
     )
     assert kind == {
@@ -69,16 +85,28 @@ def test_question_ok_is_the_contract_plus_the_mark() -> None:
     assert not question_ok(" ".join(["w"] * 14) + "?")
 
 
-def _calls(question_rewrite: str = "At what stage do we introduce the tools?") -> tuple[list[str], dict[str, Any]]:
+def _calls(
+    question_rewrite: str = "At what stage do we introduce the tools?",
+) -> tuple[list[str], dict[str, Any]]:
     log: list[str] = []
 
     async def validate(*, transcript_id: str, transcript: str, phrase: str) -> dict[str, Any]:  # noqa: ARG001
         log.append("validate")
-        return {"grounded": True, "quote": "Nobody joins for the desks. I could get a desk", "reason": "r"}
+        return {
+            "grounded": True,
+            "quote": "Nobody joins for the desks. I could get a desk",
+            "reason": "r",
+        }
 
     async def classify(*, transcript_id: str, transcript: str, phrase: str) -> dict[str, Any]:  # noqa: ARG001
         log.append("classify")
-        return {"kind": "question", "qualifiers": [], "question_form": False, "target": "", "reason": "asks"}
+        return {
+            "kind": "question",
+            "qualifiers": [],
+            "question_form": False,
+            "target": "",
+            "reason": "asks",
+        }
 
     async def rewrite(*, transcript_id: str, transcript: str, phrase: str) -> dict[str, Any]:  # noqa: ARG001
         log.append("rewrite")
@@ -90,17 +118,23 @@ def _calls(question_rewrite: str = "At what stage do we introduce the tools?") -
 def test_enrich_item_rewrites_a_question_written_as_a_statement() -> None:
     log, calls = _calls()
     item = {"id": "p1", "phrase": "Knowing at what stage to introduce the tools", "weight": 1}
-    result = asyncio.run(enrich_item(item, transcript_id="t1", transcript=TRANSCRIPT, names=set(), **calls))
+    result = asyncio.run(
+        enrich_item(item, transcript_id="t1", transcript=TRANSCRIPT, names=set(), **calls)
+    )
     assert log == ["validate", "classify", "rewrite"]
     assert result["kind"]["question"] is True
-    assert result["rewritten"] == "At what stage do we introduce the tools"  # the mark is the deck's
+    assert (
+        result["rewritten"] == "At what stage do we introduce the tools"
+    )  # the mark is the deck's
     assert result["errors"] == []
 
 
 def test_enrich_item_keeps_the_statement_when_the_rewrite_fails_the_gate() -> None:
     _, calls = _calls(question_rewrite="not a question")
     item = {"id": "p1", "phrase": "Knowing at what stage to introduce the tools", "weight": 1}
-    result = asyncio.run(enrich_item(item, transcript_id="t1", transcript=TRANSCRIPT, names=set(), **calls))
+    result = asyncio.run(
+        enrich_item(item, transcript_id="t1", transcript=TRANSCRIPT, names=set(), **calls)
+    )
     assert "rewritten" not in result and result["kind"]["question"] is False
 
 
@@ -112,7 +146,9 @@ def test_enrich_item_survives_one_dead_call() -> None:
 
     calls["validate"] = broken
     item = {"id": "p1", "phrase": "Nobody joins for the desks", "weight": 1}
-    result = asyncio.run(enrich_item(item, transcript_id="t1", transcript=TRANSCRIPT, names=set(), **calls))
+    result = asyncio.run(
+        enrich_item(item, transcript_id="t1", transcript=TRANSCRIPT, names=set(), **calls)
+    )
     assert "evidence" not in result and result["kind"]["kind"] == "question"
     assert result["errors"] == ["evidence: quota"]
 
@@ -124,14 +160,48 @@ def test_apply_results_writes_once_and_skips_a_phrase_that_moved() -> None:
         {"id": "p3", "phrase": "Knowing at what stage to introduce the tools", "weight": 1},
     ]
     results = [
-        {"id": "p1", "phrase": "Nobody joins for the desks", "errors": [],
-         "evidence": {"grounded": False, "quote": "", "hedge_added": [], "reason": "paraphrase too loose"},
-         "kind": {"kind": "observation", "qualifiers": ["personal_experience"], "question": False, "target": "", "reason": "r"}},
-        {"id": "p2", "phrase": "an older wording", "errors": [],
-         "evidence": {"grounded": True, "quote": "Nobody joins for the desks.", "hedge_added": [], "reason": "r"}},
-        {"id": "p3", "phrase": "Knowing at what stage to introduce the tools", "errors": ["evidence: quota"],
-         "kind": {"kind": "question", "qualifiers": [], "question": True, "target": "", "reason": "r"},
-         "rewritten": "At what stage do we introduce the tools"},
+        {
+            "id": "p1",
+            "phrase": "Nobody joins for the desks",
+            "errors": [],
+            "evidence": {
+                "grounded": False,
+                "quote": "",
+                "hedge_added": [],
+                "reason": "paraphrase too loose",
+            },
+            "kind": {
+                "kind": "observation",
+                "qualifiers": ["personal_experience"],
+                "question": False,
+                "target": "",
+                "reason": "r",
+            },
+        },
+        {
+            "id": "p2",
+            "phrase": "an older wording",
+            "errors": [],
+            "evidence": {
+                "grounded": True,
+                "quote": "Nobody joins for the desks.",
+                "hedge_added": [],
+                "reason": "r",
+            },
+        },
+        {
+            "id": "p3",
+            "phrase": "Knowing at what stage to introduce the tools",
+            "errors": ["evidence: quota"],
+            "kind": {
+                "kind": "question",
+                "qualifiers": [],
+                "question": True,
+                "target": "",
+                "reason": "r",
+            },
+            "rewritten": "At what stage do we introduce the tools",
+        },
     ]
     registered: list[str] = []
 

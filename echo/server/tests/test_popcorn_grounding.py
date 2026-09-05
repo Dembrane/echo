@@ -165,9 +165,9 @@ def test_public_labels_can_show_names_when_the_host_says_so() -> None:
         participant_base_url="",
     )["files"]
     assert files["session.json"]["transcripts"][0]["label"] == "Table 1"
-    assert normalize_settings({"public_labels": "anything"}, fallback_title="x")["public_labels"] == (
-        "neutral"
-    )
+    assert normalize_settings({"public_labels": "anything"}, fallback_title="x")[
+        "public_labels"
+    ] == ("neutral")
 
 
 def test_state_v1_registry_moves_to_the_top() -> None:

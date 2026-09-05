@@ -44,7 +44,6 @@ from dembrane.popcorn.model import (
     validate_phrase,
     rewrite_question,
 )
-from dembrane.popcorn.enrichment import enrich_item, apply_results
 from dembrane.directus_async import async_directus
 from dembrane.popcorn.service import (
     MIN_CADENCE_MINUTES,
@@ -65,6 +64,7 @@ from dembrane.popcorn.analysis import (
     shape_popcorn_items,
 )
 from dembrane.popcorn.grounding import ground_items
+from dembrane.popcorn.enrichment import enrich_item, apply_results
 
 logger = logging.getLogger("dembrane.popcorn.ticks")
 
@@ -83,6 +83,9 @@ MAX_ANALYSIS_CHARS = 600_000
 RUN_LOCK_SECONDS = 5 * 60
 MANUAL_LOCK_WAIT_SECONDS = 180
 STALE_TICK_SECONDS = 90
+# A running tick says so every HEARTBEAT_SECONDS; the key lives STALE_TICK_SECONDS,
+# so a worker that dies is noticed within one cadence and a slow second pass is not.
+HEARTBEAT_SECONDS = 30
 ANALYSIS_KINDS = ("tensions", "stakeholders")
 ANALYSIS_SHAPERS = {"tensions": shape_tensions, "stakeholders": shape_stakeholders}
 
@@ -160,6 +163,37 @@ async def _release_run_lock(loop_id: str) -> None:
         await client.delete(f"popcorn:run:{loop_id}")
     except Exception:
         logger.warning("Redis unavailable releasing popcorn run lock", exc_info=True)
+
+
+async def _mark_alive(loop_id: str) -> None:
+    try:
+        client = await get_redis_client()
+        await client.set(f"popcorn:alive:{loop_id}", "1", ex=STALE_TICK_SECONDS)
+    except Exception:
+        logger.warning("Redis unavailable for popcorn heartbeat", exc_info=True)
+
+
+async def _clear_alive(loop_id: str) -> None:
+    try:
+        client = await get_redis_client()
+        await client.delete(f"popcorn:alive:{loop_id}")
+    except Exception:
+        logger.warning("Redis unavailable clearing popcorn heartbeat", exc_info=True)
+
+
+async def _tick_alive(loop_id: str) -> bool:
+    """True while a tick for this loop is still beating, however long it runs."""
+    try:
+        client = await get_redis_client()
+        return bool(await client.exists(f"popcorn:alive:{loop_id}"))
+    except Exception:
+        return False
+
+
+async def _heartbeat(loop_id: str) -> None:
+    while True:
+        await _mark_alive(loop_id)
+        await asyncio.sleep(HEARTBEAT_SECONDS)
 
 
 async def _renew_run_lock(loop_id: str) -> None:
@@ -603,6 +637,7 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
     report_id = _as_id(loop.get("report_id"))
     project_id = _as_id(loop.get("project_id"))
     acting_user_id = str(loop.get("acting_directus_user_id") or "")
+    pulse = asyncio.create_task(_heartbeat(loop_id))
     try:
         if not report_id or not project_id or not acting_user_id:
             raise RuntimeError("Popcorn loop is missing required ids")
@@ -613,9 +648,11 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         await _enqueue_next_if_due(loop)
 
         state = normalize_state(loop.get("popcorn_state"))
-        # What the room has been shown so far, before this tick writes anything:
-        # a phrase that quotes it is the tool quoting itself.
-        known = known_shingles(state)
+        # What the tool has put in front of the room so far, before this tick
+        # writes anything: a new phrase that quotes it is the tool quoting itself.
+        # Each conversation is checked against everything but its own phrases.
+        known_all = known_shingles(state)
+        known_by = {cid: known_shingles(state, exclude=cid) for cid in state["conversations"]}
         config = await get_latest_config(report_id)
         settings = normalize_settings(
             (config or {}).get("popcorn_settings"),
@@ -681,7 +718,12 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         if changed:
             semaphore = asyncio.Semaphore(MAX_PARALLEL_EXTRACTORS)
             await asyncio.gather(
-                *(_extract_one(writer, semaphore, t, outcomes, host_note, known) for t in changed)
+                *(
+                    _extract_one(
+                        writer, semaphore, t, outcomes, host_note, known_by.get(t["id"], known_all)
+                    )
+                    for t in changed
+                )
             )
 
         # One quote registry for the tick, seeded with the session's so the ids
@@ -749,6 +791,8 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         logger.warning("popcorn tick failed for loop %s: %s", loop_id, detail)
         return {"status": "error", "run": run}
     finally:
+        pulse.cancel()
+        await _clear_alive(loop_id)
         await _release_run_lock(loop_id)
 
 
@@ -805,8 +849,12 @@ async def reconcile_missing_popcorn_tick_tasks() -> int:
             covered.add(loop_id)
         elif status == STATUS_PROCESSING:
             claimed_at = _parse_dt(task.get("claimed_at"))
-            # If claimed_at is missing or older than STALE_TICK_SECONDS, it is stranded.
-            if claimed_at and (now - claimed_at).total_seconds() <= STALE_TICK_SECONDS:
+            # Stranded: claimed longer ago than STALE_TICK_SECONDS and no heartbeat.
+            # A tick in its second pass beats for as long as it runs.
+            fresh = (
+                claimed_at is not None and (now - claimed_at).total_seconds() <= STALE_TICK_SECONDS
+            )
+            if fresh or await _tick_alive(loop_id):
                 covered.add(loop_id)
             else:
                 task_id = str(task.get("id") or "")
