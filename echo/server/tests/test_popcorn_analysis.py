@@ -238,6 +238,7 @@ def _state() -> dict:
                     "done": False,
                     "revision": 0,
                     "items": [],
+                    "review": {"dropped": [{"id": "x", "phrase": "p", "reason": "r"}]},
                 },
             },
             "analysis": {
@@ -281,6 +282,9 @@ def test_build_bundle_hides_tabs_and_carries_qr() -> None:
     assert files["popcorn/c1.json"]["items"][0]["phrase"] == "one"
     assert files["popcorn/c1.json"]["validated"] is False
     assert files["popcorn/c2.json"]["done"] is False
+    # A phrase the second pass held back is a count on the file, never text.
+    assert files["popcorn/c2.json"]["held_back"] == 1 and files["popcorn/c1.json"]["held_back"] == 0
+    assert "review" not in files["popcorn/c2.json"]
     assert "tensions.json" in files
     assert "stakeholders.json" not in files
     assert files["quotes.json"]["quotes"][0]["id"] == "q1"

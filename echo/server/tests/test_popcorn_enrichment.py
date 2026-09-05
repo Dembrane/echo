@@ -219,6 +219,8 @@ def test_apply_results_writes_once_and_skips_a_phrase_that_moved() -> None:
     assert "quoteId" not in items[0] and items[0]["kind"] == "observation"
     assert items[0]["qualifiers"] == ["personal_experience"] and items[0]["question"] is False
     assert items[0]["review"] == {"evidence": "paraphrase too loose", "kind": "r"}
+    assert items[0]["rooted"] is False  # the pass answered: no passage
+    assert "rooted" not in items[2]  # the evidence call failed: not decided
     # A phrase whose wording moved under the pass is left alone.
     assert items[1] == {"id": "p2", "phrase": "A phrase the pass never saw", "weight": 1}
     # The rewritten question keeps its old wording for the host, and its error.

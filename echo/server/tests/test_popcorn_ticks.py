@@ -632,3 +632,26 @@ def test_the_second_pass_and_the_analysis_run_side_by_side(
     assert asyncio.run(run())["status"] == "ok"
     state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
     assert state["conversations"]["c1"]["items"][0]["quoteId"]
+
+
+def test_a_phrase_without_a_passage_leaves_the_deck(fake: _FakeDirectus, monkeypatch) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+
+    async def _no_passage(*, transcript_id: str, transcript: str, phrase: str) -> dict[str, Any]:  # noqa: ARG001
+        if transcript_id == "c2":
+            return {"grounded": False, "quote": "", "reason": "nothing like it was said"}
+        return {"grounded": True, "quote": transcript.split("\n")[0], "reason": "r"}
+
+    monkeypatch.setattr(ticks, "validate_phrase", _no_passage)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    c2 = state["conversations"]["c2"]
+    assert c2["items"] == [] and c2["validated_fingerprint"] == c2["fingerprint"]
+    assert c2["review"]["dropped"][0]["phrase"] == "Quiet is a service we sell"
+    assert c2["review"]["dropped"][0]["reason"] == "nothing like it was said"
+    assert "held back" in fake.created["agent_loop_run"][-1]["detail"]
+    from dembrane.popcorn.service import state_counts
+
+    counts = state_counts(state)
+    assert counts["phrases"] == 1 and counts["validated"] == 1 and counts["held_back"] == 1

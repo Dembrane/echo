@@ -555,6 +555,12 @@ def state_counts(state: dict[str, Any]) -> dict[str, Any]:
         "conversations_read": done,
         "reading": len(conversations) - done,
         "phrases": phrases,
+        "validated": sum(
+            1 for c in conversations.values() for i in (c.get("items") or []) if i.get("quoteId")
+        ),
+        "held_back": sum(
+            len((c.get("review") or {}).get("dropped") or []) for c in conversations.values()
+        ),
         "quotes": len(state.get("quotes") or []),
         "tensions": len((analysis.get("tensions") or {}).get("tensions") or []),
         "stakeholders": len((analysis.get("stakeholders") or {}).get("stakeholders") or []),
@@ -694,6 +700,9 @@ def build_bundle(
             "validated": bool(conv.get("done"))
             and bool(conv.get("fingerprint"))
             and conv.get("validated_fingerprint") == conv.get("fingerprint"),
+            # Phrases the second pass could not root: a count for the tally,
+            # never their text, in either bundle.
+            "held_back": len((conv.get("review") or {}).get("dropped") or []),
             "items": items_out,
         }
         if host and int(conv.get("clipped") or 0) > 0:

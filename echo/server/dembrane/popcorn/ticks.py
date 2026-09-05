@@ -536,6 +536,21 @@ async def _enrich_one(
         transcript_id=cid,
         register=lambda tid, quote: book.add({"transcript": tid, "text": quote}),
     )
+    # A phrase the pass could not root leaves the deck: the room must not
+    # read a paraphrase nothing in the transcript holds. The host keeps it.
+    dropped = [i for i in entry["items"] if i.get("rooted") is False]
+    if dropped:
+        review = dict(entry.get("review") or {})
+        review["dropped"] = (review.get("dropped") or []) + [
+            {
+                "id": i.get("id"),
+                "phrase": i.get("phrase"),
+                "reason": str((i.get("review") or {}).get("evidence") or ""),
+            }
+            for i in dropped
+        ]
+        entry["review"] = review
+        entry["items"] = [i for i in entry["items"] if i.get("rooted") is not False]
     entry["revision"] = int(entry.get("revision") or 0) + 1
     failed = sum(len(r.get("errors") or []) for r in results)
     if not failed:
@@ -547,6 +562,7 @@ async def _enrich_one(
     outcomes.append(
         f"enrich {cid[:8]}: {stats['rooted']}/{len(items)} rooted, {stats['classified']} kinds, "
         f"{stats['rewritten']} rewritten in {elapsed_ms} ms"
+        + (f", {len(dropped)} held back" if dropped else "")
         + (f", {failed} call(s) failed" if failed else "")
     )
     await writer.flush()

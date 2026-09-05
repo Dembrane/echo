@@ -221,6 +221,9 @@ def apply_results(
                     item.pop("quoteId", None)
             else:
                 item.pop("quoteId", None)
+            # The pass answered: the phrase is rooted, or it is not. A failed
+            # call leaves this unset, and the phrase stays until it is retried.
+            item["rooted"] = bool(item.get("quoteId"))
             review["evidence"] = evidence["reason"]
             if evidence["hedge_added"]:
                 review["hedge_added"] = evidence["hedge_added"]
