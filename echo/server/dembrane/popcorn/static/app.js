@@ -35,6 +35,7 @@
   const POP_CAP = 5;         // phrases on stage at once, all told; a keyed pop past this sends the oldest away
   const POP_HOLD_PINNED = 30000;  // a phrase the facilitator popped from the keys lingers
   const POP_EDGE_PX = 18;    // no phrase comes closer than this to the edge of the stage
+  const COUNTDOWN_MS = 3000; // 3, 2, 1 to the first popcorn; the first phrase is held until the count ends
 
   // The kind of a popcorn: what the contribution is doing in the conversation
   // (PROMPTS/popcorn-ontology.md, v3). Phosphor bold icons (MIT), inlined so the
@@ -65,14 +66,11 @@
     return item.question && !/[?]$/.test(t) ? `${t}?` : t;
   };
   // Quotation marks mean the room's words, word for word (`verbatim` from the
-  // bundle). A phrase that only paraphrases a passage it can open (`quoteId`
-  // without `verbatim`) wears the passage mark instead; a paraphrase is not a
-  // quotation, and the wall must not say it is.
+  // bundle). A phrase that paraphrases a passage is plain: a paraphrase is not
+  // a quotation, and the wall must not say it is.
   const quotedPhrase = (item) => {
     const text = esc(phraseText(item));
-    if (item.verbatim) return `“${text}”`;
-    if (item.quoteId) return `<span class="pop-mark" aria-hidden="true">❝</span>${text}`;
-    return text;
+    return item.verbatim ? `“${text}”` : text;
   };
   const KEY_DWELL_MS = 120;       // hover this long on a circle before it pops: a sweep pops a few, a pause pops one
 
@@ -87,6 +85,7 @@
       hidden: new Set(),    // transcript ids and popcorn keys the facilitator has hidden
       kindFilter: null,     // null = every kind; { kind, mode: "only" | "except" } from the legend
       cursor: 0,            // position in the time-ordered sequence
+      countdown: null,      // { startedAt, beaconed } while the first read is in flight and nothing has landed
     },
     openThemes: new Set(),  // recommendation theme accordions the presenter has opened
     // deck tabs: null = list view; an item id (or "auto" = first) = horizontal slide deck
@@ -523,24 +522,10 @@
     if (!host) return;
     const qr = state.session?.qr;
     let panel = host.querySelector(".qr-panel");
-    const meta = hostMeta();
-    let ghost = host.querySelector(".qr-ghost");
     if (!qr || !(qr.svg || qr.image)) {
       if (panel) panel.remove();
-      // Host only: the empty corner offers the code where it would appear.
-      if (meta && meta.qrAvailable && !meta.qr) {
-        if (!ghost) {
-          ghost = document.createElement("button");
-          ghost.type = "button";
-          ghost.className = "qr-ghost";
-          ghost.innerHTML = `<span class="qr-ghost-mark">+</span><span>qr code for the room</span>`;
-          ghost.addEventListener("click", () => { postHostSetting({ show_qr: true }); ghost.disabled = true; });
-          host.appendChild(ghost);
-        }
-      } else if (ghost) ghost.remove();
       return;
     }
-    if (ghost) ghost.remove();
     if (!panel) {
       panel = document.createElement("aside");
       panel.className = "qr-panel";
@@ -553,12 +538,8 @@
     const code = qr.svg
       ? `<div class="qr-image" role="img" aria-label="QR code: ${esc(label)}">${qr.svg}</div>`
       : `<img class="qr-image" alt="QR code: ${esc(label)}" src="${esc(qr.image)}">`;
-    const hide = meta ? `<button type="button" class="qr-hide" title="take the code off the screen" aria-label="take the QR code off the screen">×</button>` : "";
-    const next = `${hide}${code}<span class="qr-label">${esc(label)}</span>`;
-    if (panel.innerHTML !== next) {
-      panel.innerHTML = next;
-      panel.querySelector(".qr-hide")?.addEventListener("click", (ev) => { ev.stopPropagation(); postHostSetting({ show_qr: false }); ev.currentTarget.disabled = true; });
-    }
+    const next = `${code}<span class="qr-label">${esc(label)}</span>`;
+    if (panel.innerHTML !== next) panel.innerHTML = next;
   }
 
   async function loadAll() {
@@ -566,6 +547,12 @@
       const session = await fetchJson("data/session.json");
       if (session) {
         state.session = session;
+        // A conversation that left the session (a rerun wipes them all) takes
+        // its phrases with it, so the stage empties and counts down again.
+        const present = new Set((session.transcripts || []).map((t) => t.id));
+        for (const tid of [...state.popcorn.keys()]) {
+          if (!present.has(tid) && !state.dropped.has(`popcorn:${tid}`)) state.popcorn.delete(tid);
+        }
         applySession();
       }
     }
@@ -628,42 +615,20 @@
      a royal +; a visible optional tab grows a × on hover. The host page gets
      a message and saves the change; the deck follows on its next poll. */
   const HOST = EMBED && EMBED.mode === "host";
-  // While the host page is fullscreen the preview *is* the wall: no host
-  // affordances, no passages, exactly what the public page shows.
-  let presenting = false;
+  // The presenter view is the wall: opened in its own tab with ?present=1 it
+  // shows the room's bundle and no host affordance, from the first paint.
+  // Every host control lives in the dashboard; the deck edits nothing.
+  const presenting = HOST && new URLSearchParams(location.search).get("present") === "1";
+  if (presenting) document.body.classList.add("presenting");
   const hostMeta = () => (HOST && !presenting && state.session && state.session.host) || null;
-  if (HOST) {
-    window.addEventListener("message", (ev) => {
-      const d = ev.data;
-      if (!d || d.type !== "dembrane:popcorn:presenting") return;
-      presenting = !!d.value;
-      document.body.classList.toggle("presenting", presenting);
-      renderTabs();
-      renderQrPanel();
-    });
-  }
-  function postHostSetting(patch) {
-    if (!HOST || !window.parent || window.parent === window) return;
-    window.parent.postMessage({ type: "dembrane:popcorn:settings", patch }, "*");
-  }
 
   function renderTabs() {
     const slides = visibleSlides();
-    const meta = hostMeta();
-    const toggleable = meta ? Object.keys(meta.tabs || {}) : [];
-    tabsEl.innerHTML = slides.map((s) => {
-      const canHide = meta && toggleable.includes(s.id);
-      return `<span class="tab-wrap"><button class="tab" role="tab" aria-selected="${s.id === state.active}" data-slide="${s.id}">${esc(s.label)}</button>${
-        canHide ? `<button type="button" class="tab-hide" data-hide="${s.id}" title="hide this tab from the room" aria-label="hide ${esc(s.label)} from the room">×</button>` : ""}</span>`;
-    }).join("") + (meta ? toggleable.filter((id) => !meta.tabs[id]).map((id) =>
-      `<button type="button" class="tab tab-ghost" data-show="${id}" title="show this tab to the room" aria-label="show ${esc(id)} to the room">${esc(id)} <span class="tab-plus">+</span></button>`
-    ).join("") : "");
+    tabsEl.innerHTML = slides.map((s) =>
+      `<span class="tab-wrap"><button class="tab" role="tab" aria-selected="${s.id === state.active}" data-slide="${s.id}">${esc(s.label)}</button></span>`
+    ).join("");
     tabsEl.querySelectorAll(".tab[data-slide]").forEach((el) =>
       el.addEventListener("click", () => showSlide(el.dataset.slide)));
-    tabsEl.querySelectorAll(".tab-hide").forEach((el) =>
-      el.addEventListener("click", (ev) => { ev.stopPropagation(); postHostSetting({ tabs: { [el.dataset.hide]: false } }); el.disabled = true; }));
-    tabsEl.querySelectorAll(".tab-ghost").forEach((el) =>
-      el.addEventListener("click", () => { postHostSetting({ tabs: { [el.dataset.show]: true } }); el.disabled = true; }));
   }
 
   function renderProgress() {
@@ -853,7 +818,7 @@
     </section>
     </div>
     <section class="pop-tail" aria-label="all popcorn phrases">
-      <p class="pop-disclaimer">popcorn is optimised for latency, not accuracy. a popcorn in “quotes” is the room's words, word for word; one marked ❝ paraphrases a passage of the conversation you can open; the rest are unchecked.</p>
+      <p class="pop-disclaimer">popcorn is optimised for latency, not accuracy. popcorns in “quotes” are the room's words, word for word; the rest paraphrase what was said.</p>
       <div class="quote-tools">
         <input class="quote-search" id="pop-search" type="search" placeholder="search the popcorn…" aria-label="search popcorn phrases" value="${esc(state.popSearch || "")}">
         <div class="kind-legend" id="kind-legend" aria-label="filter the popcorn by kind" hidden></div>
@@ -1229,11 +1194,55 @@
     }).join("");
     list.innerHTML = html;
     const count = document.getElementById("pop-count");
-    if (count) count.textContent = !total ? "" : q ? `${shown} of ${total}` : `${total} popcorn${total === 1 ? "" : "s"}${hidden ? ` · ${hidden} hidden` : ""}`;
+    // The tally: what is on the wall, how much of it the second pass has
+    // rooted, what it held back, and whether it is still reading.
+    const files = [...state.popcorn.values()];
+    const validated = files.reduce((n, d) => n + (d.items || []).filter((i) => i.quoteId).length, 0);
+    const heldBack = files.reduce((n, d) => n + (d.held_back || 0), 0);
+    const settled = files.filter((d) => popcornSettled(d)).length;
+    const parts = [`${total} popcorn${total === 1 ? "" : "s"}`, `${validated} validated`];
+    if (heldBack) parts.push(`${heldBack} held back`);
+    if (settled < files.length) parts.push(`reading ${files.length - settled} of ${files.length}`);
+    if (hidden) parts.push(`${hidden} hidden`);
+    if (count) count.textContent = !total ? "" : q ? `${shown} of ${total}` : parts.join(" · ");
   }
 
   // three horizontal bands, one phrase each — overlap-free by construction
   const SLOTS = [{ y: 18 }, { y: 45 }, { y: 71 }];   // the keys strip docks over the bottom of the fold
+
+  // The empty stage: a message, or the count to the first popcorn. Past the
+  // count with nothing landed: a spinner, and one note of the latency to the
+  // server (the host's view only; the public page sends nothing).
+  function renderWaiting(stageEl, msg) {
+    let waiting = stageEl.querySelector(".popcorn-waiting");
+    if (!waiting) {
+      waiting = document.createElement("p");
+      waiting.className = "popcorn-waiting";
+      stageEl.innerHTML = "";
+      stageEl.appendChild(waiting);
+    }
+    const cd = state.pop.countdown;
+    if (cd) {
+      const elapsed = Date.now() - cd.startedAt;
+      if (elapsed < COUNTDOWN_MS) {
+        const n = 3 - Math.floor(elapsed / 1000);
+        const html = `<span class="countdown" aria-live="polite">${n}</span>`;
+        if (waiting.innerHTML !== html) waiting.innerHTML = html;
+        return;
+      }
+      if (!cd.beaconed) {
+        cd.beaconed = true;
+        if (HOST && navigator.sendBeacon) {
+          navigator.sendBeacon("data/latency", new Blob([JSON.stringify({ ms: elapsed })], { type: "application/json" }));
+        }
+      }
+      const html = `<span class="spinner" aria-hidden="true"></span>&nbsp; the first popcorn is taking longer than usual`;
+      if (waiting.innerHTML !== html) waiting.innerHTML = html;
+      return;
+    }
+    const html = `<span class="live-dot"></span>&nbsp; ${msg}`;
+    if (!waiting.textContent.includes(msg.slice(0, 8))) waiting.innerHTML = html;
+  }
 
   function popTick() {
     if (screenFrozen) return;
@@ -1242,13 +1251,16 @@
     if (!stageEl) return;
 
     const total = [...state.popcorn.values()].reduce((n, d) => n + (d.items?.length || 0), 0);
-    let waiting = stageEl.querySelector(".popcorn-waiting");
+    // In dembrane the deck reads transcripts that already exist; it never
+    // records. Say what is actually happening so a host does not think a
+    // microphone is open.
+    const transcripts = (state.session?.transcripts || []).length;
+    const read = [...state.popcorn.values()].filter((p) => p.done).length;
+    const inFlight = EMBED && transcripts > 0 && read < transcripts;
     if (!total) {
-      // In dembrane the deck reads transcripts that already exist; it never
-      // records. Say what is actually happening so a host does not think a
-      // microphone is open.
-      const transcripts = (state.session?.transcripts || []).length;
-      const read = [...state.popcorn.values()].filter((p) => p.done).length;
+      // The first read of a session: count 3, 2, 1 to the first popcorn.
+      if (inFlight && !state.pop.countdown) state.pop.countdown = { startedAt: Date.now(), beaconed: false };
+      if (!inFlight) state.pop.countdown = null;
       // A finished read that found nothing must say so, or a host takes an
       // empty stage for a broken one.
       const msg = !state.session ? "drop your session's JSON files anywhere on this page"
@@ -1256,11 +1268,16 @@
         : EMBED && read >= transcripts ? `read ${transcripts} conversation${transcripts === 1 ? "" : "s"}, nothing worth a popcorn yet`
         : EMBED ? "reading the conversations…"
         : "listening…";
-      if (!waiting) stageEl.innerHTML = `<p class="popcorn-waiting"><span class="live-dot"></span>&nbsp; ${msg}</p>`;
-      else if (!waiting.textContent.includes(msg.slice(0, 8))) waiting.innerHTML = `<span class="live-dot"></span>&nbsp; ${msg}`;
+      renderWaiting(stageEl, msg);
       return;
     }
-    waiting?.remove();
+    // The first phrase waits for the count to end, so 3, 2, 1 is honest.
+    if (state.pop.countdown && Date.now() - state.pop.countdown.startedAt < COUNTDOWN_MS) {
+      renderWaiting(stageEl, "");
+      return;
+    }
+    state.pop.countdown = null;
+    stageEl.querySelector(".popcorn-waiting")?.remove();
 
     const staying = state.pop.live.filter((l) => !l.el.classList.contains("pop-out"));
     if (staying.length >= POP_CAP || staying.filter((l) => !l.pinned).length >= POP_MAX) return;

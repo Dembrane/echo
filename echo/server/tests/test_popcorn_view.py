@@ -29,3 +29,12 @@ def test_flow_page_is_a_whole_document_with_its_diagrams() -> None:
     assert html.startswith("<!doctype html>") and "<title>How popcorn works</title>" in html
     assert html.count('<pre class="mermaid">') >= 5
     assert "cdnjs.cloudflare.com/ajax/libs/mermaid/" in html
+
+
+def test_the_page_carries_the_presenter_switch_and_no_host_bridge() -> None:
+    from dembrane.popcorn.view import render_popcorn_page
+
+    html = render_popcorn_page(embed={"mode": "host"})
+    assert 'get("present") === "1"' in html
+    assert "dembrane:popcorn:settings" not in html and "postHostSetting" not in html
+    assert "data/latency" in html and "COUNTDOWN_MS" in html

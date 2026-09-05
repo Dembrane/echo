@@ -29,10 +29,22 @@ Patches carried on top of upstream, all guarded by `window.POPCORN_EMBED`:
 - A settled popcorn file is still applied when its revision moved: on the
   platform a conversation can be re-read after its transcript grows.
 - Quotation marks only for a phrase the bundle marks `verbatim` (the room's
-  words, word for word). A phrase with a `quoteId` and no `verbatim` is a
-  rooted paraphrase: it wears the passage mark (`.pop-mark`, ❝) and opens
-  its passage on click, but is not drawn as a quotation. The disclaimer under
-  the stage says which is which. Upstream draws marks on any `quoteId`.
+  words, word for word). A rooted paraphrase is plain; the disclaimer under
+  the stage says so. Upstream draws marks on any `quoteId`.
+- `?present=1` on the host view is the presenter view: `presenting` from the
+  first paint, the room's bundle, no host affordance. The postMessage bridge
+  (`dembrane:popcorn:presenting`, `dembrane:popcorn:settings`), the tab
+  hide and show buttons and the QR corner are gone: every host control lives
+  in the dashboard, and the deck edits nothing.
+- The empty stage counts 3, 2, 1 to the first popcorn while the first read
+  is in flight and holds the first phrase until the count ends; past the
+  count with nothing landed it shows a spinner and sends one beacon
+  (`data/latency`, `{ms}`) from the host's view.
+- The long list's count is a tally: popcorns, validated (with a `quoteId`),
+  held back (`held_back` per file), and `reading n of m` while a second pass
+  runs.
+- One phrase size (`data-weight` 2, stepped down to 1 only to fit): the
+  bundle carries no weight.
 - `sample/` holds upstream `data/` verbatim for the Try it view.
 - `flow.html` is not upstream: the account of what the tick does, served at
   `view/flow/` while `SERVE_API_DOCS` is on; the footer links to it when the

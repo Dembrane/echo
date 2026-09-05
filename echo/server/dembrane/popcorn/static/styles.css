@@ -97,22 +97,9 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .tab-wrap { position: relative; display: inline-flex; align-items: stretch; }
 /* Out of the flow, so the row measures exactly as the public deck; same
    padding and 3px rule as the tab, so the × sits on the label's baseline. */
-.tab-hide {
-  position: absolute; left: 100%; top: 0; bottom: 0;
-  appearance: none; background: none; border: none; border-bottom: 3px solid transparent;
-  font: inherit; font-size: 0.85em; line-height: inherit;
-  color: var(--ink-soft); cursor: pointer; padding: 0.5em 0.35em 0.9em;
-  opacity: 0; transition: opacity 120ms, color 120ms;
-}
 body.presenting .pop-sourced { cursor: default; }
 body.presenting .tail-sourced { cursor: default; }
 body.presenting .tail-sourced:hover { outline: none; }
-.tab-wrap:hover .tab-hide, .tab-hide:focus-visible { opacity: 1; }
-.tab-hide:hover { color: var(--blue); }
-.tab.tab-ghost { color: var(--ink-faint); font-weight: 300; cursor: pointer; }
-.tab.tab-ghost:hover { color: var(--blue); }
-.tab-plus { color: var(--blue); font-weight: 500; }
-.tab-hide:disabled, .tab-ghost:disabled { opacity: 0.4; cursor: default; }
 
 .stage {
   flex: 1;
@@ -442,22 +429,6 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   pointer-events: none;
 }
 .qr-panel { pointer-events: auto; }
-.qr-hide {
-  position: absolute; top: 0.2em; right: 0.3em;
-  appearance: none; background: none; border: none; font: inherit; font-size: 0.9em;
-  color: var(--ink-faint); cursor: pointer; opacity: 0; transition: opacity 120ms;
-}
-.qr-panel:hover .qr-hide, .qr-hide:focus-visible { opacity: 1; }
-.qr-hide:hover { color: var(--blue); }
-.qr-ghost {
-  position: absolute; right: var(--pad-x); bottom: 2.2em; z-index: 3;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3em;
-  width: clamp(120px, 14vw, 230px); aspect-ratio: 1;
-  background: none; border: 1px dashed var(--hairline); color: var(--ink-faint);
-  font: inherit; font-size: 0.72em; cursor: pointer; opacity: 0.55; transition: opacity 120ms, border-color 120ms;
-}
-.qr-ghost:hover { opacity: 1; border-color: var(--blue); color: var(--blue); }
-.qr-ghost-mark { font-size: 1.8em; color: var(--blue); line-height: 1; }
 .qr-image { display: block; width: clamp(96px, 12vw, 200px); height: auto; aspect-ratio: 1; }
 .qr-image svg { display: block; width: 100%; height: 100%; }
 .qr-label { font-size: 0.72em; color: var(--ink-soft); letter-spacing: 0.01em; white-space: nowrap; }
@@ -598,9 +569,6 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   z-index: 60;
 }
 .pop-rooted { cursor: pointer; }
-/* the passage mark: a rooted paraphrase, not a quotation */
-.pop-mark { color: var(--blue); font-weight: 500; font-size: 0.72em; vertical-align: 0.28em; margin-right: 0.12em; }
-.tail-phrase .pop-mark { font-size: 0.85em; vertical-align: 0.15em; }
 .pop-att { display: block; margin-top: 0.55em; opacity: 0; transition: opacity 0.15s ease; }
 .pop-att .attribution { font-size: 0.78em; }
 .pop:hover .pop-att { opacity: 1; }
@@ -632,6 +600,11 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(var(--tilt, 0deg)); }
 }
 
+/* the count to the first popcorn, then a spinner if it is late */
+.popcorn-waiting .countdown { font-size: clamp(64px, 9vw, 160px); font-weight: 300; line-height: 1; color: var(--graphite); display: inline-block; animation: count-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes count-in { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+.popcorn-waiting .spinner { display: inline-block; width: 0.8em; height: 0.8em; border: 2px solid var(--hairline); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.9s linear infinite; vertical-align: -0.1em; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .popcorn-waiting {
   position: absolute;
   left: 50%; top: 45%;
