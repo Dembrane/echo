@@ -202,3 +202,240 @@ def test_trim_keeps_each_transcripts_firmest_positions() -> None:
         "p6",
     ]  # firm first, in order
     assert [p["position"] for p in trimmed["t2"]] == ["p7", "p8", "p9", "p10"]
+
+
+def test_trim_is_an_exact_cap_that_uses_every_slot() -> None:
+    def pos(i: int) -> dict:
+        return {"position": f"p{i}", "verbatim": True, "hedged": False}
+
+    # Twenty-five transcripts of five: the cap holds exactly, every transcript keeps some.
+    many = {f"t{n}": [pos(n * 10 + i) for i in range(5)] for n in range(25)}
+    trimmed = trim_positions(many, cap=80)
+    assert sum(len(v) for v in trimmed.values()) == 80
+    assert all(len(v) >= 3 for v in trimmed.values())
+    # Uneven tables: the small one keeps its one, the rest fill the cap exactly.
+    uneven = {
+        "a": [pos(1)],
+        "b": [pos(i) for i in range(10, 40)],
+        "c": [pos(i) for i in range(50, 80)],
+    }
+    trimmed = trim_positions(uneven, cap=41)
+    assert len(trimmed["a"]) == 1 and len(trimmed["b"]) + len(trimmed["c"]) == 40
+
+
+def test_a_facets_quotes_stay_with_their_pole_and_the_registry_names_the_right_table() -> None:
+    T3 = "Do not rush this, it needs checking. Move quickly or we lose the moment."
+    transcripts = {"zz": T1, "aa": T2, "mm": T3}
+    log: list[str] = []
+    writes = {"n": 0}
+
+    async def generate(
+        *, system_prompt: str, user_text: str, schema: dict[str, Any], thinking: bool
+    ) -> dict[str, Any]:
+        if schema is HANDED_SCHEMA:
+            return {"handed": []}
+        if schema is POSITIONS_SCHEMA:
+            tid = user_text.split("TRANSCRIPT id: ", 1)[1].split("\n", 1)[0].strip()
+            if tid == "zz":
+                return {
+                    "positions": [
+                        {
+                            "position": "record everything",
+                            "holder": "h",
+                            "kind": "want",
+                            "hedged": False,
+                            "quote": "record everything so nothing is lost",
+                        }
+                    ]
+                }
+            if tid == "aa":
+                return {
+                    "positions": [
+                        {
+                            "position": "no permanent record",
+                            "holder": "h",
+                            "kind": "constraint",
+                            "hedged": False,
+                            "quote": "would not speak freely on a permanent record",
+                        }
+                    ]
+                }
+            return {
+                "positions": [
+                    {
+                        "position": "check carefully",
+                        "holder": "h",
+                        "kind": "value",
+                        "hedged": False,
+                        "quote": "Do not rush this",
+                    }
+                ]
+            }
+        if schema is COLLISIONS_SCHEMA:
+            focal = user_text.rsplit("FOCAL POSITION: ", 1)[1].strip()
+            log.append(f"collisions:{focal}")
+            return (
+                {
+                    "collides": [
+                        {"id": "P2", "why": "candour", "zero_sum": 0.9},
+                        {"id": "P3", "why": "haste", "zero_sum": 0.8},
+                    ]
+                }
+                if focal == "P1"
+                else {"collides": []}
+            )
+        if schema is VERIFY_SCHEMA:
+            if "check carefully" in user_text:
+                return {
+                    "valid": True,
+                    "why": "held",
+                    "poleA": "record every conversation",
+                    "poleB": "check it carefully first",
+                    "quotesA": [],
+                    "quotesB": ["Do not rush this"],
+                }
+            return {
+                "valid": True,
+                "why": "held",
+                "poleA": "record every conversation",
+                "poleB": "no permanent record",
+                "quotesA": ["record everything so nothing is lost"],
+                "quotesB": ["would not speak freely on a permanent record"],
+            }
+        if schema is DEDUPE_SCHEMA:
+            log.append("dedupe")
+            return {"same_as": "x1", "why": "a facet"}
+        if schema is WRITE_SCHEMA:
+            writes["n"] += 1
+            assert "FACETS OF THE SAME PULL" in user_text
+            # The facet's quote arrived under HOLDING B, never under HOLDING A.
+            assert "Do not rush this" in user_text.split("HOLDING B:", 1)[1].split("\n", 1)[0]
+            assert "Do not rush this" not in user_text.split("HOLDING A:", 1)[1].split("\n", 1)[0]
+            return {
+                "poleA": "",
+                "poleB": "",
+                "knot": "Record it all and candour goes; keep it off the record and the memory goes.",
+                "toResolve": "Which conversations go on the record, and who decides?",
+            }
+        raise AssertionError("unexpected schema")
+
+    book = QuoteBook(transcripts)
+    result = asyncio.run(
+        run_pipeline(
+            transcripts, book, generate=generate, prompts=PROMPTS, concurrency=3, max_tensions=1
+        )
+    )
+    tensions = result["tensions"]["tensions"]
+    assert len(tensions) == 1 and writes["n"] == 1
+    # Both pairs were deduped into x1 even though the cap of one was already reached.
+    assert log.count("dedupe") == 1
+    # Quotes were registered against the pole's own transcript, not the sorted first and last.
+    by_id = {q["id"]: q for q in book.quotes}
+    regs = [by_id[q]["transcript"] for q in tensions[0]["quoteIds"]]
+    assert regs == ["zz", "aa", "mm"]
+
+
+def test_a_failed_stage_cancels_its_siblings() -> None:
+    cancelled: list[str] = []
+
+    async def generate(
+        *, system_prompt: str, user_text: str, schema: dict[str, Any], thinking: bool
+    ) -> dict[str, Any]:
+        if schema is HANDED_SCHEMA:
+            return {"handed": []}
+        if schema is POSITIONS_SCHEMA:
+            if "id: t1" in user_text:
+                raise RuntimeError("quota")
+            try:
+                await asyncio.sleep(30)
+            except asyncio.CancelledError:
+                cancelled.append("t2")
+                raise
+            return {"positions": []}
+        raise AssertionError("unexpected schema")
+
+    book = QuoteBook({"t1": T1, "t2": T2})
+
+    async def run() -> None:
+        try:
+            await run_pipeline(
+                {"t1": T1, "t2": T2}, book, generate=generate, prompts=PROMPTS, concurrency=2
+            )
+        except* RuntimeError:
+            pass
+
+    asyncio.run(run())
+    assert cancelled == ["t2"]
+
+
+def test_the_best_pair_of_every_table_is_verified() -> None:
+    from dembrane.popcorn import tensions as mod
+
+    async def generate(
+        *, system_prompt: str, user_text: str, schema: dict[str, Any], thinking: bool
+    ) -> dict[str, Any]:
+        if schema is HANDED_SCHEMA:
+            return {"handed": []}
+        if schema is POSITIONS_SCHEMA:
+            tid = user_text.split("TRANSCRIPT id: ", 1)[1].split("\n", 1)[0].strip()
+            n = 3 if tid in ("ta", "tb") else 1
+            return {
+                "positions": [
+                    {
+                        "position": f"{tid} wants {i}",
+                        "holder": "h",
+                        "kind": "want",
+                        "hedged": False,
+                        "quote": "x",
+                    }
+                    for i in range(n)
+                ]
+            }
+        if schema is COLLISIONS_SCHEMA:
+            focal = user_text.rsplit("FOCAL POSITION: ", 1)[1].strip()
+            listing = user_text.split("ALL POSITIONS:", 1)[1].split("FOCAL POSITION:", 1)[0]
+            ids = [line.split(" ", 1)[0] for line in listing.strip().splitlines()]
+            table_of = {
+                line.split(" ", 1)[0]: line.split("[", 1)[1].split(" ", 1)[0]
+                for line in listing.strip().splitlines()
+            }
+            mine = table_of[focal]
+            # ta and tb collide hard with each other; tc's single position collides mildly with everything.
+            out = []
+            for other in ids:
+                if other == focal:
+                    continue
+                if {mine, table_of[other]} == {"T1", "T2"}:
+                    out.append({"id": other, "why": "loud", "zero_sum": 0.95})
+                elif "T3" in (mine, table_of[other]):
+                    out.append({"id": other, "why": "quiet", "zero_sum": 0.3})
+            return {"collides": out}
+        if schema is VERIFY_SCHEMA:
+            return {
+                "valid": False,
+                "why": "n",
+                "poleA": "",
+                "poleB": "",
+                "quotesA": [],
+                "quotesB": [],
+            }
+        raise AssertionError("unexpected schema")
+
+    old = mod.MAX_CANDIDATES
+    mod.MAX_CANDIDATES = 4
+    try:
+        book = QuoteBook({"ta": "a", "tb": "b", "tc": "c"})
+        result = asyncio.run(
+            run_pipeline(
+                {"ta": "a", "tb": "b", "tc": "c"},
+                book,
+                generate=generate,
+                prompts=PROMPTS,
+                concurrency=3,
+            )
+        )
+    finally:
+        mod.MAX_CANDIDATES = old
+    # Nine loud ta/tb pairs exist; the cap of four still verified one of tc's quiet pairs.
+    assert result["counts"]["found_pairs"] > 4
+    assert result["counts"]["candidates"] == 4

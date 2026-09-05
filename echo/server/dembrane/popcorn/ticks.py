@@ -79,6 +79,9 @@ MAX_PARALLEL_EXTRACTORS = 16
 MAX_PARALLEL_ENRICHMENT = 8
 # Calls in flight for the tensions pipeline, which runs beside the stakeholders call.
 MAX_PARALLEL_ANALYSIS = 12
+# The stakeholders call reads the whole session at once; one that has not answered
+# in this long is not going to, and the tick must not wait on it forever.
+STAKEHOLDERS_TIMEOUT_SECONDS = 300
 # A single conversation rarely passes 100k characters in a day; the cap only
 # guards the prompt against a runaway recording.
 MAX_CHARS_PER_CONVERSATION = 150_000
@@ -586,13 +589,18 @@ async def _run_analysis_pass(
 
     async def stakeholders_slide() -> None:
         started = _now()
-        raw = await run_analysis(kind="stakeholders", corpus=corpus)
+        raw = await asyncio.wait_for(
+            run_analysis(kind="stakeholders", corpus=corpus), timeout=STAKEHOLDERS_TIMEOUT_SECONDS
+        )
         # The gates read a shaped answer; a throwaway book keeps a rejected
         # answer's quotes out of the shared registry.
         probe = shape_stakeholders(raw, QuoteBook(sources))
         flags = name_flags(probe) + island_flags(probe)
         if flags:
-            raw = await run_analysis(kind="stakeholders", corpus=corpus, feedback=flags)
+            raw = await asyncio.wait_for(
+                run_analysis(kind="stakeholders", corpus=corpus, feedback=flags),
+                timeout=STAKEHOLDERS_TIMEOUT_SECONDS,
+            )
         shaped["stakeholders"] = shape_stakeholders(raw, book)
         left = name_flags(shaped["stakeholders"]) + island_flags(shaped["stakeholders"])
         elapsed_ms = int((_now() - started).total_seconds() * 1000)
@@ -854,6 +862,16 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
             if analysis is not None:
                 analysis["fingerprint"] = analysis_fingerprint
                 state["analysis"] = analysis
+            elif state.get("analysis"):
+                # The previous slides stay, unless they cite a quote whose
+                # conversation is gone: those words have left the session, and a
+                # slide pointing at them would show a dead quote.
+                held = {q["id"] for q in book.quotes}
+                if _referenced_quote_ids(state["analysis"]) - held:
+                    state["analysis"] = None
+                    outcomes.append(
+                        "analysis: previous slides dropped, they cited a conversation that is gone"
+                    )
         if transcripts:
             state["quotes"] = _referenced_quotes(state, book.quotes)
             await writer.flush()

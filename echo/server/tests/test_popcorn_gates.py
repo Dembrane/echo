@@ -12,10 +12,13 @@ def test_name_flags_catch_joined_names_and_things() -> None:
             {"id": "s4", "name": "The tool developers"},
             {"id": "s5", "name": "Funders"},
             {"id": "s6", "name": "External Pressures"},
+            {"id": "s7", "name": "Women in Technology"},
+            {"id": "s8", "name": "Residents, aged 65+"},
+            {"id": "s9", "name": "Staff, Volunteers"},
         ]
     }
     flags = name_flags(stake)
-    assert [f.split(":")[0] for f in flags] == ["s1", "s2", "s3", "s6"]
+    assert [f.split(":")[0] for f in flags] == ["s1", "s2", "s3", "s6", "s9"]
     assert "joins two groups" in flags[0] and "names a thing" in flags[2]
 
 
@@ -68,3 +71,20 @@ def test_screen_flags_read_from_the_back_of_the_room() -> None:
     assert any("more than one sentence" in f for f in flags)
     assert any("reports the meeting" in f for f in flags)
     assert any("toResolve: 23 words" in f for f in flags)
+
+
+def test_screen_flags_want_a_question() -> None:
+    flags = screen_flags(
+        {
+            "tensions": [
+                {
+                    "id": "x1",
+                    "poleA": "record every conversation",
+                    "poleB": "keep it off the record",
+                    "knot": "Record it and candour goes; keep it off and the memory goes.",
+                    "toResolve": "",
+                }
+            ]
+        }
+    )
+    assert flags == ["x1 toResolve: missing"]

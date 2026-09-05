@@ -20,7 +20,19 @@ import re
 from typing import Any
 from collections import deque, defaultdict
 
-JOINED = re.compile(r"(\band\b|&|/|,)", re.IGNORECASE)
+# A comma joins two groups when a second name follows it ("Staff, Volunteers");
+# a qualifier after it ("Residents, aged 65+") is one group.
+JOINED = re.compile(r"(\band\b|&|/|,\s*(?-i:[A-ZÀ-Þ]))", re.IGNORECASE)
+# A name that says who the people are is people, whatever word it ends in
+# ("Women in Technology", "Users of the recording").
+PEOPLE = re.compile(
+    r"\b(people|persons?|staff|workers?|users?|members?|residents?|volunteers?|developers?|hosts?"
+    r"|facilitators?|leaders?|managers?|teams?|citizens?|participants?|women|men|youth|parents?"
+    r"|students?|employees?|customers?|clients?|partners?|funders?|commissioners?|officials?|experts?"
+    r"|practitioners?|newcomers?|colleagues?|organisations?|organizations?|charities|charity|groups?"
+    r"|communit(y|ies)|neighbou?rs?|families|family|founders?|owners?|directors?|board|councils?|makers?)\b",
+    re.IGNORECASE,
+)
 # ...and a name whose last word is an abstraction (a pressure, a process, a
 # culture) is a force on people wearing a card; the people it acts through are
 # the group.
@@ -55,7 +67,7 @@ def name_flags(stake: dict[str, Any]) -> list[str]:
         gid = g.get("id", "?")
         if JOINED.search(name):
             flags.append(f"{gid}: {name!r} joins two groups on one card; one group, one name")
-        elif THING.search(name.strip()):
+        elif THING.search(name.strip()) and not PEOPLE.search(name):
             flags.append(
                 f"{gid}: {name!r} names a thing, not people; name the people who make or run it"
             )
@@ -130,7 +142,9 @@ def screen_flags(tensions: dict[str, Any]) -> list[str]:
             flags.append(f"{tid} knot: {_words(knot)} words, at most {KNOT_WORDS}: {knot!r}")
         elif len(SENTENCE_END.findall(knot.strip())) > 1:
             flags.append(f"{tid} knot: more than one sentence: {knot!r}")
-        if _words(t.get("toResolve")) > QUESTION_WORDS:
+        if not str(t.get("toResolve") or "").strip():
+            flags.append(f"{tid} toResolve: missing")
+        elif _words(t.get("toResolve")) > QUESTION_WORDS:
             flags.append(
                 f"{tid} toResolve: {_words(t.get('toResolve'))} words, at most {QUESTION_WORDS}: "
                 f"{t.get('toResolve')!r}"

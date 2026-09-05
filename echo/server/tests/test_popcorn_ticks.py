@@ -448,6 +448,50 @@ def test_a_joined_stakeholder_name_is_sent_back_once(fake: _FakeDirectus, monkey
     assert "asked again" in fake.created["agent_loop_run"][-1]["detail"]
 
 
+def test_previous_slides_go_when_a_cited_conversation_is_gone_and_the_new_run_fails(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    assert state["analysis"]["tensions"]["tensions"][0]["quoteIds"]  # cites c1's words
+
+    async def _broken(
+        *, kind: str, corpus: str, feedback: list[str] | None = None
+    ) -> dict[str, Any]:  # noqa: ARG001
+        raise RuntimeError("quota")
+
+    monkeypatch.setattr(ticks, "run_analysis", _broken)
+    fake.chunks[:] = [
+        c for c in fake.chunks if c["conversation_id"] != "c1"
+    ]  # c1's transcript is gone
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
+    assert result["status"] == "ok"
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    assert state["analysis"] is None
+    assert "cited a conversation that is gone" in fake.created["agent_loop_run"][-1]["detail"]
+
+
+def test_a_stuck_stakeholders_call_fails_the_slide_instead_of_the_tick(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+
+    async def _stuck(
+        *, kind: str, corpus: str, feedback: list[str] | None = None
+    ) -> dict[str, Any]:  # noqa: ARG001
+        await asyncio.sleep(30)
+        return {}
+
+    monkeypatch.setattr(ticks, "run_analysis", _stuck)
+    monkeypatch.setattr(ticks, "STAKEHOLDERS_TIMEOUT_SECONDS", 0.05)
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    assert result["status"] == "ok"
+    assert "stakeholders: FAILED" in fake.created["agent_loop_run"][-1]["detail"]
+
+
 def test_failed_extractor_does_not_stall_the_stage(fake: _FakeDirectus, monkeypatch) -> None:
     calls: list[str] = []
     _install_models(monkeypatch, calls=calls, fail_for={"c2"})

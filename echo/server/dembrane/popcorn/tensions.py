@@ -24,7 +24,7 @@ from __future__ import annotations
 import time
 import asyncio
 import logging
-from typing import Any, Callable, Awaitable
+from typing import Any, Callable, Awaitable, Coroutine
 
 from dembrane.popcorn.gates import screen_flags
 from dembrane.popcorn.analysis import QuoteBook, norm
@@ -173,6 +173,14 @@ that share a pole and pull on the same thing from two angles are."""
 Generate = Callable[..., Awaitable[dict[str, Any]]]
 
 
+async def _all(coros: list[Coroutine[Any, Any, Any]]) -> list[Any]:
+    """gather that cancels the siblings when one fails, so an abandoned stage
+    does not go on spending the model's quota after the tick has moved on."""
+    async with asyncio.TaskGroup() as group:
+        tasks: list[asyncio.Task[Any]] = [group.create_task(c) for c in coros]
+    return [t.result() for t in tasks]
+
+
 def _corpus(transcripts: dict[str, str], tids: list[str]) -> str:
     return "\n\n".join(f"TRANSCRIPT id: {t}\n{transcripts[t]}\nEND TRANSCRIPT {t}" for t in tids)
 
@@ -180,22 +188,37 @@ def _corpus(transcripts: dict[str, str], tids: list[str]) -> str:
 def trim_positions(
     found: dict[str, list[dict[str, Any]]], cap: int = MAX_POSITIONS_TOTAL
 ) -> dict[str, list[dict[str, Any]]]:
-    """Keep at most `cap` positions across the transcripts, each transcript
-    keeping its firmest: a verbatim quote and no hedge first, then the order
-    they were said in. Under the cap nothing moves."""
+    """Keep at most `cap` positions across the transcripts, exactly: each
+    transcript's positions are ranked by firmness (a verbatim quote and no
+    hedge first, then the order they were said in) and the transcripts take
+    turns, one position each per round, until the cap is reached. Every
+    transcript with a position keeps at least one while the cap allows; under
+    the cap nothing moves."""
     total = sum(len(v) for v in found.values())
     if total <= cap or not found:
         return found
-    share = max(4, cap // len(found))
-    out: dict[str, list[dict[str, Any]]] = {}
-    for tid, items in found.items():
-        ranked = sorted(
-            enumerate(items),
-            key=lambda pair: (not pair[1].get("verbatim"), bool(pair[1].get("hedged")), pair[0]),
+    ranked = {
+        tid: sorted(
+            range(len(items)),
+            key=lambda i: (not items[i].get("verbatim"), bool(items[i].get("hedged")), i),
         )
-        keep = {i for i, _ in ranked[:share]}
-        out[tid] = [item for i, item in enumerate(items) if i in keep]
-    return out
+        for tid, items in found.items()
+    }
+    keep: dict[str, set[int]] = {tid: set() for tid in found}
+    taken = 0
+    round_ = 0
+    while taken < cap and any(round_ < len(r) for r in ranked.values()):
+        for tid, order in ranked.items():
+            if taken >= cap:
+                break
+            if round_ < len(order):
+                keep[tid].add(order[round_])
+                taken += 1
+        round_ += 1
+    return {
+        tid: [item for i, item in enumerate(items) if i in keep[tid]]
+        for tid, items in found.items()
+    }
 
 
 async def run_pipeline(
@@ -260,18 +283,17 @@ async def run_pipeline(
         for p in (out.get("positions") or [])[:MAX_POSITIONS_PER_TRANSCRIPT]:
             if not isinstance(p, dict) or not p.get("position"):
                 continue
+            quote = str(p.get("quote") or "").strip()
             found.append(
                 {
                     **p,
                     "transcript": tid,
-                    "verbatim": norm(str(p.get("quote") or "")) in norm(transcripts[tid]),
+                    "verbatim": bool(quote) and norm(quote) in norm(transcripts[tid]),
                 }
             )
         return found
 
-    found_by_tid = dict(
-        zip(tids, await asyncio.gather(*(positions_for(t) for t in tids)), strict=True)
-    )
+    found_by_tid = dict(zip(tids, await _all([positions_for(t) for t in tids]), strict=True))
     found_total = sum(len(v) for v in found_by_tid.values())
     found_by_tid = trim_positions(found_by_tid)
     positions: list[dict[str, Any]] = []
@@ -302,7 +324,7 @@ async def run_pipeline(
         return p["id"], [c for c in (out.get("collides") or []) if isinstance(c, dict)]
 
     pair: dict[tuple[str, str], dict[str, Any]] = {}
-    for pid, cols in await asyncio.gather(*(collisions_for(p) for p in positions)):
+    for pid, cols in await _all([collisions_for(p) for p in positions]):
         for c in cols:
             other = str(c.get("id") or "").strip()
             try:
@@ -328,7 +350,19 @@ async def run_pipeline(
         pair.values(), key=lambda c: (not c["cross_table"], -c["zero_sum"], -len(c["named_by"]))
     )
     found_pairs = len(candidates)
-    candidates = candidates[:MAX_CANDIDATES]
+    # The best pair of every transcript is verified whatever its rank, so a
+    # quiet table is not squeezed out by two loud ones; the rest fill by rank.
+    reserved: list[dict[str, Any]] = []
+    seen_tids: set[str] = set()
+    for c in candidates:
+        for tid in (by_id[c["a"]]["transcript"], by_id[c["b"]]["transcript"]):
+            if tid not in seen_tids:
+                seen_tids.add(tid)
+                if c not in reserved:
+                    reserved.append(c)
+    rest = [c for c in candidates if c not in reserved]
+    candidates = (reserved + rest)[: max(MAX_CANDIDATES, len(reserved))]
+    candidates.sort(key=lambda c: (not c["cross_table"], -c["zero_sum"], -len(c["named_by"])))
 
     stage(
         "collisions",
@@ -360,9 +394,11 @@ async def run_pipeline(
             "quotesA": qa,
             "quotesB": qb,
             "transcripts": ts,
+            "transcriptA": a["transcript"],
+            "transcriptB": b["transcript"],
         }
 
-    verified = list(await asyncio.gather(*(verify(c) for c in candidates)))
+    verified = list(await _all([verify(c) for c in candidates]))
     valid = [v for v in verified if v["valid"] and v["poleA"] and v["poleB"]]
 
     stage("verify", verified=len(valid), of=len(verified))
@@ -385,19 +421,17 @@ async def run_pipeline(
             target.setdefault("merged", []).append(
                 {"a": v["a"], "b": v["b"], "why": str(out.get("why") or "")}
             )
-            for q in v["quotesA"] + v["quotesB"]:
-                if q not in target["quotesA"] + target["quotesB"] and (
-                    len(target["quotesA"]) + len(target["quotesB"]) < MAX_QUOTES_PER_TENSION
-                ):
-                    (
-                        target["quotesA"]
-                        if len(target["quotesA"]) <= len(target["quotesB"])
-                        else target["quotesB"]
-                    ).append(q)
+            # A facet's quotes stay with the pole they held.
+            for side in ("quotesA", "quotesB"):
+                for q in v[side]:
+                    if q not in target["quotesA"] + target["quotesB"] and (
+                        len(target["quotesA"]) + len(target["quotesB"]) < MAX_QUOTES_PER_TENSION
+                    ):
+                        target[side].append(q)
             continue
-        kept.append({**v, "id": f"x{len(kept) + 1}"})
         if len(kept) >= max_tensions:
-            break
+            continue  # full: later pairs can still fold into a kept tension as facets
+        kept.append({**v, "id": f"x{len(kept) + 1}"})
 
     stage("dedupe", kept=len(kept))
 
@@ -449,11 +483,11 @@ async def run_pipeline(
 
     tensions: list[dict[str, Any]] = []
     gate_flags: list[str] = []
-    written = await asyncio.gather(*(write(item) for item in kept))
+    written = await _all([write(item) for item in kept])
     for (tension, flags), item in zip(written, kept, strict=True):
         tension["quoteIds"] = book.add_all(
-            [{"transcript": item["transcripts"][0], "text": q} for q in item["quotesA"]]
-            + [{"transcript": item["transcripts"][-1], "text": q} for q in item["quotesB"]]
+            [{"transcript": item["transcriptA"], "text": q} for q in item["quotesA"]]
+            + [{"transcript": item["transcriptB"], "text": q} for q in item["quotesB"]]
         )
         tensions.append(tension)
         gate_flags += flags
