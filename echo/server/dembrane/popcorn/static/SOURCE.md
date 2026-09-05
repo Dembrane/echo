@@ -43,19 +43,23 @@ Patches carried on top of upstream, all guarded by `window.POPCORN_EMBED`:
 - The QR panel floats over the whole deck on `body` (`position: fixed`,
   bottom right), whichever tab is up, foldable to a chip with its own button
   (the fold remembered in `localStorage` per path). A scroll into the keys
-  shrinks it, the weeds (past the first fold) hide it, and it comes back on
-  the way up. The dashboard only says whether it is on; upstream draws it
+  shrinks it and sits its bottom edge on the top of the keys strip, following
+  the strip as it slides; the weeds (past the first fold) hide it; it comes
+  back on the way up. The dashboard only says whether it is on; upstream draws it
   inside the popcorn stage with no controls.
 - How the stage plays is one switch (`#pop-shuffle`, styled like a Mantine
-  switch with the timer and shuffle icons): off is upstream's "in order of
-  time", on is "at random". In order of time the cursor moves only once the
+  switch): off is upstream's "in order of time", charcoal, the thumb carrying
+  the timer icon and the label reading "in order"; on is "at random", blue,
+  the shuffle icon and "shuffle". Flipping it sends every phrase on stage off,
+  so the new order starts clean. In order of time the cursor moves only once the
   phrase is on stage (`commit` after `spawnPop` returns true), so a spawn
   that finds no free band no longer skips a phrase. Upstream had two buttons
   and advanced the cursor before spawning.
-- The tally and the disclaimer live in the footer: `renderProgress` prints
-  popcorns, validated, held back and `reading n of m` after the conversation
-  count; `#pop-disclaimer` in the colophon shows on the popcorn tab. The count
-  beside the search shows only the search result and what is hidden.
+- The tally lives in the footer: `renderProgress` prints popcorns, validated,
+  held back and `reading n of m` after the conversation count. The
+  disclaimer is a callout at the bottom of the popcorn tab's scroll, under
+  the long list. The count beside the search shows only the search result
+  and what is hidden.
 - Any change to a popcorn file redraws the list and the phrases on stage
   (`popcornStamp`, `refreshLivePops`): the second pass changes quotes, kinds
   and marks without changing the count, so the count alone was not the

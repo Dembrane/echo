@@ -463,8 +463,12 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 
 /* the long tail below the fold: when, then every phrase so far */
 .pop-tail { border-top: 1px solid var(--hairline); padding: 1.4em var(--pad-x) 1.6em; }
-.pop-disclaimer { color: var(--ink-faint); text-align: center; flex: 1; padding: 0 1.5em; }
-@media (max-width: 900px) { .pop-disclaimer { display: none; } }
+/* a small callout at the bottom of the popcorn tab's scroll */
+.pop-disclaimer {
+  display: block; margin: 2.2em auto 0.6em; max-width: 62ch;
+  padding: 0.7em 1em; border: 1px solid var(--hairline); border-left: 3px solid var(--blue);
+  font-size: 0.78em; color: var(--ink-soft); background: var(--paper, #fff);
+}
 
 /* the keys strip: below the fold at rest, over the foot of the stage after
    the first scroll, gone with the fold on the next */
@@ -476,30 +480,31 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .pop-tail { scroll-snap-align: start; }
 .pop-keys-hint { margin-left: auto; color: var(--ink-faint); }
 
-/* how the stage plays: one switch. Off, the popcorns play in order of time;
-   on, shuffled, the conversations taking turns. The thumb slides over the
-   icon of the mode that is off, leaving the active one showing. */
+/* how the stage plays: one switch. Off, the popcorns play in the order they
+   were said, charcoal; on, shuffled with the conversations taking turns,
+   blue. The thumb carries the icon of the mode that is on; the label names it. */
 .pop-play { display: flex; align-items: center; flex-wrap: wrap; gap: 0.2em 1em; margin: 0; font-size: 0.78em; color: var(--ink-soft); }
 .pop-shuffle { display: inline-flex; align-items: center; gap: 0.55em; cursor: pointer; user-select: none; }
 .pop-shuffle input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
 .pop-switch {
-  position: relative; display: inline-flex; align-items: center; justify-content: space-between;
-  width: 3.6em; height: 1.75em; padding: 0 0.32em; box-sizing: border-box;
-  border-radius: 1em; background: var(--hairline); transition: background 0.18s ease;
+  position: relative; display: inline-block; width: 3.4em; height: 1.75em; box-sizing: border-box;
+  border-radius: 1em; background: var(--graphite); transition: background 0.18s ease;
 }
-.pop-switch-icon { width: 1.05em; height: 1.05em; fill: currentColor; display: block; }
-.pop-switch-off, .pop-switch-on { display: inline-flex; color: var(--ink-soft); transition: color 0.18s ease; }
 .pop-switch-thumb {
   position: absolute; top: 0.18em; left: 0.18em; width: 1.39em; height: 1.39em; border-radius: 50%;
-  background: var(--paper, #fff); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); transition: left 0.18s ease;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--paper, #fff); color: var(--graphite); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition: left 0.18s ease, color 0.18s ease;
 }
+.pop-switch-icon { width: 0.95em; height: 0.95em; fill: currentColor; display: block; }
+.pop-switch-icon-off, .pop-switch-icon-on { display: none; line-height: 0; }
+.pop-shuffle input:not(:checked) + .pop-switch .pop-switch-icon-off { display: inline-flex; }
 .pop-shuffle input:checked + .pop-switch { background: var(--blue); }
-.pop-shuffle input:checked + .pop-switch .pop-switch-thumb { left: calc(100% - 1.39em - 0.18em); }
-.pop-shuffle input:checked + .pop-switch .pop-switch-off { color: var(--parchment); }
-.pop-shuffle input:not(:checked) + .pop-switch .pop-switch-on { color: var(--ink-faint); }
+.pop-shuffle input:checked + .pop-switch .pop-switch-thumb { left: calc(100% - 1.39em - 0.18em); color: var(--blue); }
+.pop-shuffle input:checked + .pop-switch .pop-switch-icon-on { display: inline-flex; }
 .pop-shuffle input:focus-visible + .pop-switch { outline: 2px solid var(--blue); outline-offset: 2px; }
-.pop-shuffle-text { letter-spacing: 0.02em; }
-.pop-shuffle input:checked ~ .pop-shuffle-text { color: var(--graphite); }
+.pop-shuffle-text { letter-spacing: 0.02em; color: var(--graphite); font-weight: 500; }
+.pop-shuffle input:checked ~ .pop-shuffle-text { color: var(--blue); }
 .pop-play-note { color: var(--ink-faint); margin-left: 0.4em; }
 
 /* the timeline: a histogram over the day. The track is cut into bins of

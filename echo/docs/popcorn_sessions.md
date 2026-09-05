@@ -77,16 +77,17 @@ their icons and quotation marks by themselves, and the tally moves.
 
 When the QR code is on, it floats bottom right over the whole screen,
 whichever tab is showing, full size while the slide is up. Scrolling into
-the keys shrinks it; scrolling into the list hides it; it comes back on the
-way up. Whoever is at the presenter view can also fold it away to a small
+the keys shrinks it and lifts it to sit on the top of the timeline strip;
+scrolling into the list hides it; it comes back on the way up. Whoever is at the presenter view can also fold it away to a small
 chip, remembered in that browser. The dashboard only decides whether it is
 on at all.
 
-Under the stage, one switch says how the popcorns play: off, in the order
-they were said, whatever the conversation, none skipped; on, shuffled, with
-the conversations taking turns. The footer carries the tally (popcorns,
-validated, held back, still reading) and the disclaimer about quotation
-marks.
+Under the stage, one switch says how the popcorns play: "in order", the
+order they were said, whatever the conversation, none skipped; or
+"shuffle", the conversations taking turns. Flipping it clears the stage and
+the new order starts from its first phrase. The footer carries the tally
+(popcorns, validated, held back, still reading); a small callout at the
+bottom of the list explains the quotation marks.
 
 ## If you are working on it
 

@@ -95,14 +95,18 @@ twin phrases survived; Jorim asked for it to go.
 - **The QR panel belongs to the presenter view.** It floats bottom right
   over the whole deck on `body`, foldable to a chip (remembered in
   `localStorage` per path), and follows the scroll: full size at the top of
-  any tab, small in the keys, gone in the weeds. A draggable version was
+  any tab, small and sitting on the top of the keys strip in the keys, gone
+  in the weeds. A draggable version was
   tried first and dropped the same day for the scroll rule (Jorim's first
   run-through, 2026-09-06). The dashboard switch says whether it is on.
 - **Time order is exact.** One switch under the stage, shuffle on or off,
   replaces the two play buttons. Off plays every popcorn in the order it was
   said, whatever the conversation; the cursor moves only once the phrase is
   on stage, so a spawn that finds no free band no longer skips one (the
-  skipping Jorim saw). The tally and the disclaimer move to the footer.
+  skipping Jorim saw). The switch is charcoal with the timer icon and "in
+  order" off, blue with the shuffle icon and "shuffle" on, and flipping it
+  clears the stage. The tally moves to the footer; the disclaimer is a
+  callout at the bottom of the list.
 - **Any change to a popcorn file redraws the screen.** The deck used to redraw
   the list only when the number of phrases changed; the second pass changes
   quotes, kinds and marks without changing the count, so validated phrases

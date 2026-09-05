@@ -534,8 +534,15 @@
     const panel = document.querySelector(".qr-panel");
     if (!panel) return;
     const ratio = stage.clientHeight ? stage.scrollTop / stage.clientHeight : 0;
-    panel.classList.toggle("small", ratio >= 0.12 && ratio < 0.9);
+    const small = ratio >= 0.12 && ratio < 0.9;
+    panel.classList.toggle("small", small);
     panel.classList.toggle("gone", ratio >= 0.9);
+    // Small, it stays out of the keys' way: its bottom edge sits on the top
+    // of the timeline strip and follows it as the strip slides up. Without a
+    // strip (the deck tabs) it keeps its place.
+    const keys = document.getElementById("pop-keys");
+    const top = small && keys ? keys.getBoundingClientRect().top : 0;
+    panel.style.bottom = top > 0 && window.innerHeight ? `${window.innerHeight - top + 10}px` : "";
   }
   stage.addEventListener("scroll", placeQrByScroll, { passive: true });
 
@@ -685,8 +692,6 @@
       link.remove();
     }
     const total = state.session?.transcripts?.length || 0;
-    const disclaimer = document.getElementById("pop-disclaimer");
-    if (disclaimer) disclaimer.hidden = state.active !== "popcorn";
     if (!total) { el.textContent = ""; return; }
     const done = [...state.popcorn.values()].filter((p) => p.done).length;
     const live = done < total;
@@ -899,14 +904,15 @@
     <section class="pop-keys" id="pop-keys" aria-label="when the popcorns happened, and how the stage plays">
       <div class="pop-timeline" id="pop-timeline" aria-label="the popcorns over the day; hover one to pop it, click to hold or release it, drag the edges to crop"></div>
       <div class="pop-play" role="group" aria-label="how the stage plays">
-        <label class="pop-shuffle" title="off: in order of time · on: shuffled, conversations taking turns">
+        <label class="pop-shuffle" title="off: in the order they were said · on: shuffled, the conversations taking turns">
           <input type="checkbox" role="switch" id="pop-shuffle" aria-label="shuffle the popcorns" ${state.pop.mode === "random" ? "checked" : ""}>
           <span class="pop-switch" aria-hidden="true">
-            <span class="pop-switch-off"><svg class="pop-switch-icon" viewBox="0 0 256 256" aria-hidden="true"><path d="M128,44a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,44Zm0,168a72,72,0,1,1,72-72A72.08,72.08,0,0,1,128,212ZM164.49,99.51a12,12,0,0,1,0,17l-28,28a12,12,0,0,1-17-17l28-28A12,12,0,0,1,164.49,99.51ZM92,16A12,12,0,0,1,104,4h48a12,12,0,0,1,0,24H104A12,12,0,0,1,92,16Z"/></svg></span>
-            <span class="pop-switch-on"><svg class="pop-switch-icon" viewBox="0 0 256 256" aria-hidden="true"><path d="M240.49,175.51a12,12,0,0,1,0,17l-24,24a12,12,0,0,1-17-17L203,196h-2.09a76.17,76.17,0,0,1-61.85-31.83L97.38,105.78A52.1,52.1,0,0,0,55.06,84H32a12,12,0,0,1,0-24H55.06a76.17,76.17,0,0,1,61.85,31.83l41.71,58.39A52.1,52.1,0,0,0,200.94,172H203l-3.52-3.51a12,12,0,0,1,17-17Zm-95.62-72.62a12,12,0,0,0,16.93-1.13A52,52,0,0,1,200.94,84H203l-3.52,3.51a12,12,0,0,0,17,17l24-24a12,12,0,0,0,0-17l-24-24a12,12,0,0,0-17,17L203,60h-2.09a76,76,0,0,0-57.2,26A12,12,0,0,0,144.87,102.89Zm-33.74,50.22a12,12,0,0,0-16.93,1.13A52,52,0,0,1,55.06,172H32a12,12,0,0,0,0,24H55.06a76,76,0,0,0,57.2-26A12,12,0,0,0,111.13,153.11Z"/></svg></span>
-            <span class="pop-switch-thumb"></span>
+            <span class="pop-switch-thumb">
+              <span class="pop-switch-icon-off"><svg class="pop-switch-icon" viewBox="0 0 256 256" aria-hidden="true"><path d="M128,44a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,44Zm0,168a72,72,0,1,1,72-72A72.08,72.08,0,0,1,128,212ZM164.49,99.51a12,12,0,0,1,0,17l-28,28a12,12,0,0,1-17-17l28-28A12,12,0,0,1,164.49,99.51ZM92,16A12,12,0,0,1,104,4h48a12,12,0,0,1,0,24H104A12,12,0,0,1,92,16Z"/></svg></span>
+              <span class="pop-switch-icon-on"><svg class="pop-switch-icon" viewBox="0 0 256 256" aria-hidden="true"><path d="M240.49,175.51a12,12,0,0,1,0,17l-24,24a12,12,0,0,1-17-17L203,196h-2.09a76.17,76.17,0,0,1-61.85-31.83L97.38,105.78A52.1,52.1,0,0,0,55.06,84H32a12,12,0,0,1,0-24H55.06a76.17,76.17,0,0,1,61.85,31.83l41.71,58.39A52.1,52.1,0,0,0,200.94,172H203l-3.52-3.51a12,12,0,0,1,17-17Zm-95.62-72.62a12,12,0,0,0,16.93-1.13A52,52,0,0,1,200.94,84H203l-3.52,3.51a12,12,0,0,0,17,17l24-24a12,12,0,0,0,0-17l-24-24a12,12,0,0,0-17,17L203,60h-2.09a76,76,0,0,0-57.2,26A12,12,0,0,0,144.87,102.89Zm-33.74,50.22a12,12,0,0,0-16.93,1.13A52,52,0,0,1,55.06,172H32a12,12,0,0,0,0,24H55.06a76,76,0,0,0,57.2-26A12,12,0,0,0,111.13,153.11Z"/></svg></span>
+            </span>
           </span>
-          <span class="pop-shuffle-text">shuffle</span>
+          <span class="pop-shuffle-text" id="pop-shuffle-text">${state.pop.mode === "random" ? "shuffle" : "in order"}</span>
         </label>
         <span class="pop-play-note" id="pop-play-note"></span>
         <span class="pop-keys-hint">hover a circle to pop it, click to hold or release · settings ↓</span>
@@ -920,6 +926,7 @@
         <span class="quote-count" id="pop-count"></span>
       </div>
       <div class="pop-tables" id="pop-list"></div>
+      <aside class="pop-disclaimer" aria-label="about the popcorns">popcorn is optimised for latency, not accuracy. popcorns in “quotes” are the room's words, word for word; the rest paraphrase what was said.</aside>
     </section>`;
     state.pop.live = [];
     state.pop.lastSpawn = 0;
@@ -931,6 +938,12 @@
     document.getElementById("pop-shuffle")?.addEventListener("change", (ev) => {
       state.pop.mode = ev.currentTarget.checked ? "random" : "time";
       state.pop.cursor = 0;
+      const text = document.getElementById("pop-shuffle-text");
+      if (text) text.textContent = state.pop.mode === "random" ? "shuffle" : "in order";
+      // A new order starts clean: whatever is on stage leaves, and the first
+      // phrase of the new order takes the empty stage.
+      for (const rec of [...state.pop.live]) leaveNow(rec);
+      state.pop.lastSpawn = 0;
     });
     // hide and unhide: a phrase for itself, a conversation's name for the lot
     document.getElementById("pop-list").addEventListener("click", (ev) => {
