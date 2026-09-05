@@ -18,14 +18,20 @@ def test_shape_popcorn_items_applies_first_run_gates() -> None:
             {"phrase": "The kettle is the real reception!", "weight": 3},  # second weight-3
             {"phrase": "x" * 120, "weight": 1},  # over the length budget
             {"phrase": "   ", "weight": 1},
+            {"phrase": "one two three four five six seven eight nine ten eleven twelve thirteen fourteen", "weight": 1},
+            {"phrase": "Where did the budget go?", "weight": 1},
+            {"phrase": 'He said "no" and left', "weight": 1},  # a quotation mark inside
         ]
     }
     items = shape_popcorn_items(raw, "t1")
     assert [i["phrase"] for i in items] == [
         "Nobody joins for the desks",
         "The kettle is the real reception",
+        "Where did the budget go",
     ]
-    assert [i["weight"] for i in items] == [3, 2]
+    assert [i["weight"] for i in items] == [3, 2, 1]
+    # The question mark is stripped like every terminal mark, and remembered.
+    assert items[2]["question"] is True and "question" not in items[0]
     ids = [i["id"] for i in items]
     assert all(i.startswith("p-t1-") and len(i) == len("p-t1-") + 8 for i in ids)
     assert len(set(ids)) == 2
@@ -54,6 +60,35 @@ def test_quote_book_refuses_non_verbatim_quotes() -> None:
     assert (
         book.add({"transcript": "t1", "text": "The lift has been  nearly fixed for a year"}) == "q1"
     )
+
+
+def test_quote_book_is_seeded_and_keeps_ids() -> None:
+    sources = {"t1": "We said the lift has been nearly fixed for a year.\nAnd more."}
+    existing = [
+        {"id": "q4", "transcript": "t1", "text": "And more."},
+        {"id": "q2", "transcript": "t9", "text": "gone with its transcript"},
+        {"id": "q3", "transcript": "t1", "text": "the lift has been nearly fixed for a year"},
+    ]
+    book = QuoteBook(sources, existing=existing)
+    assert [q["id"] for q in book.quotes] == ["q4", "q3"]
+    # A seeded quote keeps its id; a new one continues after the highest.
+    assert book.add({"transcript": "t1", "text": "and more"}) == "q4"
+    assert book.add({"transcript": "t1", "text": "We said the lift"}) == "q5"
+
+
+def test_quote_book_drops_a_context_that_names_a_speaker() -> None:
+    book = QuoteBook({"t1": "the lift has been nearly fixed for a year"}, names={"Priya"})
+    cases = {
+        "near the end of the round": True,
+        "Priya, introducing herself": False,
+        "he was talking about the lift": False,
+        "what Jack said about the lift": False,
+        "the AI came up": True,
+    }
+    for ctx, kept in cases.items():
+        book = QuoteBook({"t1": "the lift has been nearly fixed for a year"}, names={"Priya"})
+        book.add({"transcript": "t1", "text": "the lift has been nearly fixed", "context": ctx})
+        assert ("context" in book.quotes[0]) is kept, ctx
 
 
 def test_shape_stakeholders_drops_aspects_without_a_verbatim_quote() -> None:

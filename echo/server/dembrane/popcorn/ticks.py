@@ -13,8 +13,14 @@ PROJECT_PLAN.md and tools/serve_demo.py):
   registry for the run: every quote is checked verbatim against the transcripts
   before it is written, and the analysis block is replaced atomically so a
   new run never mixes with stale slides.
-- Popcorn phrases are never presented as direct quotes. The upstream validation
-  pass (popcorn-validate) has not been written yet, so `validated` stays false.
+- Once every fast extractor has flushed, each changed conversation gets the
+  second pass (`enrichment.py`): one evidence call and one kind call per
+  phrase, applied in one write per conversation, so its phrases turn into
+  verified quotes with icons while tensions and stakeholders are still
+  cooking. `validated` on the bundle means that pass finished for the
+  transcript as it stands.
+- Every quote of the session lives in one registry (`state["quotes"]`), seeded
+  into one QuoteBook per tick, so ids the deck already holds stay valid.
 """
 
 from __future__ import annotations
@@ -30,7 +36,15 @@ from dembrane.settings import get_settings
 from dembrane.redis_async import get_redis_client
 from dembrane.canvas.access import CanvasReaderAccessDenied, resolve_canvas_reader_context
 from dembrane.canvas.events import publish_generation_nudge
-from dembrane.popcorn.model import run_analysis, extract_popcorn
+from dembrane.popcorn.flags import gate_items, known_shingles, introduced_names
+from dembrane.popcorn.model import (
+    run_analysis,
+    classify_phrase,
+    extract_popcorn,
+    validate_phrase,
+    rewrite_question,
+)
+from dembrane.popcorn.enrichment import enrich_item, apply_results
 from dembrane.directus_async import async_directus
 from dembrane.popcorn.service import (
     MIN_CADENCE_MINUTES,
@@ -56,6 +70,10 @@ logger = logging.getLogger("dembrane.popcorn.ticks")
 
 # Parallel extractors per tick. The upstream demo runs 16; Vertex flash keeps up.
 MAX_PARALLEL_EXTRACTORS = 16
+# Second-pass calls in flight per tick (two per phrase). The pass starts only
+# after every fast extractor has flushed, so it never competes with a first
+# phrase for the model.
+MAX_PARALLEL_ENRICHMENT = 8
 # A single conversation rarely passes 100k characters in a day; the cap only
 # guards the prompt against a runaway recording.
 MAX_CHARS_PER_CONVERSATION = 150_000
@@ -144,6 +162,16 @@ async def _release_run_lock(loop_id: str) -> None:
         logger.warning("Redis unavailable releasing popcorn run lock", exc_info=True)
 
 
+async def _renew_run_lock(loop_id: str) -> None:
+    """The second pass can outlast the lock on a big session; every write of
+    the state renews it, so a scheduled tick cannot start underneath."""
+    try:
+        client = await get_redis_client()
+        await client.expire(f"popcorn:run:{loop_id}", RUN_LOCK_SECONDS)
+    except Exception:
+        logger.warning("Redis unavailable renewing popcorn run lock", exc_info=True)
+
+
 async def _popcorn_enabled_for_loop(loop: dict[str, Any]) -> bool:
     if not get_settings().feature_flags.enable_canvas:
         return False
@@ -217,7 +245,7 @@ async def gather_transcripts(
         {
             "query": {
                 "filter": {"project_id": {"_eq": project_id}, "deleted_at": {"_null": True}},
-                "fields": ["id", "participant_name", "created_at"],
+                "fields": ["id", "participant_name", "created_at", "duration"],
                 "sort": ["created_at"],
                 "limit": 500,
             }
@@ -265,6 +293,7 @@ async def gather_transcripts(
                 "label": label,
                 "short": short,
                 "created_at": conv.get("created_at"),
+                "duration": conv.get("duration"),
                 "text": text[:MAX_CHARS_PER_CONVERSATION],
             }
         )
@@ -290,6 +319,7 @@ class _TickWriter:
             await async_directus.update_item(
                 "agent_loop", self.loop_id, {"popcorn_state": self.state}
             )
+        await _renew_run_lock(self.loop_id)
         await publish_generation_nudge(self.report_id)
 
 
@@ -299,6 +329,7 @@ async def _extract_one(
     transcript: dict[str, Any],
     outcomes: list[str],
     host_note: str = "",
+    known: set[tuple[str, ...]] | None = None,
 ) -> None:
     cid = transcript["id"]
     entry = writer.state["conversations"][cid]
@@ -308,12 +339,20 @@ async def _extract_one(
             raw = await extract_popcorn(
                 transcript_id=cid, transcript=transcript["text"], host_note=host_note
             )
-            # Grounding is code, not a model call: verbatim phrases earn a quote in
-            # the next analysis pass, the rest carry their closest passage for the host.
-            items = ground_items(shape_popcorn_items(raw, cid), transcript["text"])
+            # The gates are code: a name from the introductions, text the room was
+            # shown, or a twin of another phrase never reaches the stage.
+            items, suppressed = gate_items(
+                shape_popcorn_items(raw, cid),
+                names=introduced_names(transcript["text"]),
+                known=known or set(),
+            )
+            # Grounding is code too: the closest passage behind each phrase, for
+            # the host. The quote behind it is the second pass's job.
+            items = ground_items(items, transcript["text"])
             entry.update(
                 {
                     "items": items,
+                    "review": {"suppressed": suppressed} if suppressed else {},
                     "revision": int(entry.get("revision") or 0) + 1,
                     "done": True,
                     "fingerprint": transcript["fingerprint"],
@@ -323,7 +362,8 @@ async def _extract_one(
                 }
             )
             elapsed_ms = int((_now() - started).total_seconds() * 1000)
-            outcomes.append(f"popcorn {cid[:8]}: {len(items)} phrases in {elapsed_ms} ms")
+            held = f", {len(suppressed)} held back" if suppressed else ""
+            outcomes.append(f"popcorn {cid[:8]}: {len(items)} phrases{held} in {elapsed_ms} ms")
         except Exception as exc:  # a dead transcript must not stall the stage
             entry.update(
                 {
@@ -338,13 +378,96 @@ async def _extract_one(
     await writer.flush()
 
 
+async def _enrich_one(
+    writer: _TickWriter,
+    semaphore: asyncio.Semaphore,
+    transcript: dict[str, Any],
+    outcomes: list[str],
+    book: QuoteBook,
+) -> None:
+    """The second pass over one conversation's phrases, written once: quotes into
+    the shared registry, kinds and question marks onto the items, one revision,
+    one flush. A failed call leaves its phrase as it was; the pass is retried
+    next tick because the transcript's fingerprint is not stamped."""
+    cid = transcript["id"]
+    entry = writer.state["conversations"][cid]
+    items = entry.get("items") or []
+    text = transcript["text"]
+    names = introduced_names(text)
+    started = _now()
+
+    async def one(item: dict[str, Any]) -> dict[str, Any]:
+        async with semaphore:
+            return await enrich_item(
+                item,
+                transcript_id=cid,
+                transcript=text,
+                names=names,
+                validate=validate_phrase,
+                classify=classify_phrase,
+                rewrite=rewrite_question,
+            )
+
+    try:
+        results = await asyncio.gather(*(one(item) for item in items))
+    except Exception as exc:  # a dead pass must not stall the tick
+        outcomes.append(f"enrich {cid[:8]}: FAILED {exc}")
+        return
+    if entry.get("fingerprint") != transcript["fingerprint"]:
+        return  # re-read underneath the pass; the next tick enriches the new phrases
+    stats = apply_results(
+        items,
+        results,
+        transcript_id=cid,
+        register=lambda tid, quote: book.add({"transcript": tid, "text": quote}),
+    )
+    entry["revision"] = int(entry.get("revision") or 0) + 1
+    entry["validated_fingerprint"] = transcript["fingerprint"]
+    writer.state["quotes"] = list(book.quotes)
+    failed = sum(len(r.get("errors") or []) for r in results)
+    elapsed_ms = int((_now() - started).total_seconds() * 1000)
+    outcomes.append(
+        f"enrich {cid[:8]}: {stats['rooted']}/{len(items)} rooted, {stats['classified']} kinds, "
+        f"{stats['rewritten']} rewritten in {elapsed_ms} ms"
+        + (f", {failed} call(s) failed" if failed else "")
+    )
+    await writer.flush()
+
+
+def _referenced_quote_ids(value: Any) -> set[str]:
+    ids: set[str] = set()
+    if isinstance(value, dict):
+        qid = value.get("quoteId")
+        if isinstance(qid, str):
+            ids.add(qid)
+        qids = value.get("quoteIds")
+        if isinstance(qids, list):
+            ids.update(str(q) for q in qids)
+        for v in value.values():
+            if isinstance(v, (dict, list)):
+                ids |= _referenced_quote_ids(v)
+    elif isinstance(value, list):
+        for v in value:
+            ids |= _referenced_quote_ids(v)
+    return ids
+
+
+def _referenced_quotes(state: dict[str, Any], quotes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The registry after a run: every quote something on the deck still cites."""
+    ids = _referenced_quote_ids(state.get("conversations") or {}) | _referenced_quote_ids(
+        state.get("analysis") or {}
+    )
+    return [q for q in quotes if q.get("id") in ids]
+
+
 async def _run_analysis_pass(
     transcripts: list[dict[str, Any]],
     outcomes: list[str],
-    state: dict[str, Any] | None = None,
+    book: QuoteBook,
 ) -> dict[str, Any] | None:
-    """Both slow slides at once, sharing one quote registry. Returns the new
-    analysis block, or None when any slide failed so the previous block stays."""
+    """Both slow slides at once, registering into the tick's shared quote book.
+    Returns the new analysis block, or None when any slide failed so the
+    previous block stays."""
     total = sum(len(t["text"]) for t in transcripts)
     per_transcript = (
         MAX_ANALYSIS_CHARS // max(1, len(transcripts)) if total > MAX_ANALYSIS_CHARS else None
@@ -353,20 +476,8 @@ async def _run_analysis_pass(
         t["id"]: (t["text"][:per_transcript] if per_transcript else t["text"]) for t in transcripts
     }
     corpus = build_corpus([(tid, text) for tid, text in sources.items()])
-    book = QuoteBook(sources)
     book_lock = asyncio.Lock()
     shaped: dict[str, dict[str, Any]] = {}
-
-    # Verbatim popcorn phrases go into the registry first, in deck order, so
-    # their ids stay stable across the two analysis calls that follow.
-    popcorn_quotes: dict[str, str] = {}
-    conversations = (state or {}).get("conversations") or {}
-    for cid in (state or {}).get("order") or []:
-        for item in (conversations.get(cid) or {}).get("items") or []:
-            if isinstance(item, dict) and item.get("verbatim") and item.get("phrase"):
-                qid = book.add({"transcript": cid, "text": item["phrase"]})
-                if qid:
-                    popcorn_quotes[str(item.get("id"))] = qid
 
     async def one(kind: str) -> None:
         started = _now()
@@ -391,15 +502,11 @@ async def _run_analysis_pass(
     if failed:
         outcomes.extend(failed)
         return None
-    outcomes.append(
-        f"quotes: {len(book.quotes)} verified ({len(popcorn_quotes)} popcorn), {book.rejected} rejected"
-    )
+    outcomes.append(f"quotes: {len(book.quotes)} verified, {book.rejected} rejected")
     return {
-        "popcorn_quotes": popcorn_quotes,
         "fingerprint": _fingerprint(
             "|".join(f"{tid}:{_fingerprint(text)}" for tid, text in sources.items())
         ),
-        "quotes": book.quotes,
         "tensions": shaped["tensions"],
         "stakeholders": shaped["stakeholders"],
         "updated_at": _now().isoformat(),
@@ -506,6 +613,9 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         await _enqueue_next_if_due(loop)
 
         state = normalize_state(loop.get("popcorn_state"))
+        # What the room has been shown so far, before this tick writes anything:
+        # a phrase that quotes it is the tool quoting itself.
+        known = known_shingles(state)
         config = await get_latest_config(report_id)
         settings = normalize_settings(
             (config or {}).get("popcorn_settings"),
@@ -529,6 +639,7 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
             entry["label"] = t["label"]
             entry["short"] = t["short"]
             entry["created_at"] = t["created_at"]
+            entry["duration"] = t.get("duration")
             if entry.get("fingerprint") != t["fingerprint"] or not entry.get("done"):
                 changed.append(t)
         # A conversation that vanished (deleted, or its chunks removed) leaves
@@ -570,27 +681,43 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         if changed:
             semaphore = asyncio.Semaphore(MAX_PARALLEL_EXTRACTORS)
             await asyncio.gather(
-                *(_extract_one(writer, semaphore, t, outcomes, host_note) for t in changed)
+                *(_extract_one(writer, semaphore, t, outcomes, host_note, known) for t in changed)
+            )
+
+        # One quote registry for the tick, seeded with the session's so the ids
+        # the deck holds stay valid; every pass below registers into it.
+        book = QuoteBook(
+            {t["id"]: t["text"] for t in transcripts},
+            names=set().union(*(introduced_names(t["text"]) for t in transcripts))
+            if transcripts
+            else set(),
+            existing=state.get("quotes"),
+        )
+
+        # The second pass, only now that every first phrase is on the stage: the
+        # conversations re-read this tick, and any whose earlier pass did not finish.
+        pending = [
+            t
+            for t in transcripts
+            if (conv := state["conversations"].get(t["id"]))
+            and conv.get("done")
+            and conv.get("items")
+            and conv.get("validated_fingerprint") != t["fingerprint"]
+        ]
+        if pending:
+            enrich_semaphore = asyncio.Semaphore(MAX_PARALLEL_ENRICHMENT)
+            await asyncio.gather(
+                *(_enrich_one(writer, enrich_semaphore, t, outcomes, book) for t in pending)
             )
 
         if transcripts and (analysis_stale or changed or tick_kind == "manual"):
-            analysis = await _run_analysis_pass(transcripts, outcomes, state)
+            analysis = await _run_analysis_pass(transcripts, outcomes, book)
             if analysis is not None:
                 analysis["fingerprint"] = analysis_fingerprint
-                popcorn_quotes = analysis.pop("popcorn_quotes", {})
-                for cid in state["order"]:
-                    conv = state["conversations"].get(cid) or {}
-                    for item in conv.get("items") or []:
-                        if isinstance(item, dict):
-                            qid = popcorn_quotes.get(str(item.get("id")))
-                            if qid:
-                                item["quoteId"] = qid
-                            else:
-                                item.pop("quoteId", None)
-                    if conv.get("done"):
-                        conv["validated_run"] = state["run"]
                 state["analysis"] = analysis
-                await writer.flush()
+        if transcripts:
+            state["quotes"] = _referenced_quotes(state, book.quotes)
+            await writer.flush()
 
         detail = "; ".join(
             [f"run {state['run']}: {len(changed)} of {len(transcripts)} conversations re-read"]
