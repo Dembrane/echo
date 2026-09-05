@@ -79,6 +79,34 @@ def test_quote_book_is_seeded_and_keeps_ids() -> None:
     assert book.add({"transcript": "t1", "text": "We said the lift"}) == "q5"
 
 
+def test_seeded_quotes_lose_a_context_that_names_a_speaker() -> None:
+    sources = {"t1": "the lift has been nearly fixed for a year"}
+    existing = [
+        {
+            "id": "q1",
+            "transcript": "t1",
+            "text": "the lift has been nearly fixed",
+            "context": "Priya, on the lift",
+        },
+        {
+            "id": "q2",
+            "transcript": "t1",
+            "text": "nearly fixed for a year",
+            "context": "near the end of the round",
+        },
+        {
+            "id": "q3",
+            "transcript": "t1",
+            "text": "fixed for a year",
+            "context": "Self-introduction by Jack.",
+        },
+    ]
+    book = QuoteBook(sources, names={"Priya"}, existing=existing)
+    assert "context" not in book.quotes[0]
+    assert book.quotes[1]["context"] == "near the end of the round"
+    assert "context" not in book.quotes[2]  # a proper noun is a speaker too
+
+
 def test_quote_book_drops_a_context_that_names_a_speaker() -> None:
     book = QuoteBook({"t1": "the lift has been nearly fixed for a year"}, names={"Priya"})
     cases = {

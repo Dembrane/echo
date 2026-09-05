@@ -281,11 +281,23 @@ class QuoteBook:
             if not m or not text or key in self._seen or key not in self.norm_sources.get(tid, ""):
                 continue
             entry = {"id": q["id"], "transcript": tid, "text": text}
-            if q.get("context"):
-                entry["context"] = str(q["context"])
+            ctx = self._safe_context(q.get("context"))
+            if ctx:
+                entry["context"] = ctx
             self.quotes.append(entry)
             self._seen[key] = q["id"]
             self._next = max(self._next, int(m.group(1)) + 1)
+
+    def _safe_context(self, raw: Any) -> str:
+        """A context line that says where the moment sits, never who spoke:
+        the transcripts carry no speakers, so one that assigns a speaker is
+        dropped, whether it arrives new or seeded from an older registry."""
+        ctx = str(raw or "").strip()
+        if not ctx or attributes(ctx):
+            return ""
+        if any(re.search(rf"\b{re.escape(n)}\b", ctx) for n in self.names):
+            return ""
+        return ctx
 
     def add(self, q: dict[str, Any]) -> str | None:
         text = str(q.get("text") or "").strip()
@@ -307,13 +319,8 @@ class QuoteBook:
         qid = f"q{self._next}"
         self._next += 1
         entry: dict[str, Any] = {"id": qid, "transcript": found_in, "text": text}
-        ctx = str(q.get("context") or "").strip()
-        # The transcripts carry no speakers; a context that assigns one is dropped.
-        if (
-            ctx
-            and not attributes(ctx)
-            and not any(re.search(rf"\b{re.escape(n)}\b", ctx) for n in self.names)
-        ):
+        ctx = self._safe_context(q.get("context"))
+        if ctx:
             entry["context"] = ctx
         self.quotes.append(entry)
         self._seen[key] = qid
