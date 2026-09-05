@@ -1,8 +1,9 @@
 # ruff: noqa: E402
 import json
+import time
 import logging
 from typing import Any, Optional
-from logging import getLogger
+from logging import Logger, getLogger
 from datetime import datetime, timezone, timedelta
 
 import redis
@@ -1868,8 +1869,6 @@ def task_process_scheduled_tasks() -> None:
     """
     from dembrane.scheduled_tasks import (
         claim_due_tasks,
-        mark_task_failed,
-        mark_task_completed,
         reconcile_stale_claims,
     )
 
@@ -1891,33 +1890,33 @@ def task_process_scheduled_tasks() -> None:
             _dispatch_scheduled_task(row)
         except Exception as exc:
             task_logger.exception("scheduled_task %s (%s) failed", task_id, row.get("task_type"))
-            marked = False
-            for attempt in range(2):
-                try:
-                    with directus_client_context() as client:
-                        mark_task_failed(client, task_id, str(exc))
-                    marked = True
-                    break
-                except Exception:
-                    if attempt == 0:
-                        import time
-                        time.sleep(1)
-            if not marked:
-                task_logger.exception("failed to mark scheduled_task %s as failed in Directus", task_id)
+            _settle_scheduled_task(task_id, error=str(exc), task_logger=task_logger)
             continue
-        marked = False
-        for attempt in range(2):
-            try:
-                with directus_client_context() as client:
+        _settle_scheduled_task(task_id, error=None, task_logger=task_logger)
+
+
+def _settle_scheduled_task(task_id: str, *, error: str | None, task_logger: Logger) -> None:
+    """Write a task's terminal status, retrying once after a second.
+
+    A Directus connection drop here must not escape: it would abort the rest of
+    the batch and leave this row in `processing` until a reconciler rescues it
+    (ECHO-968). If both attempts fail the row stays `processing` and the tick
+    reconcilers pick it up on their stale-claim pass.
+    """
+    from dembrane.scheduled_tasks import mark_task_failed, mark_task_completed
+
+    for attempt in range(2):
+        try:
+            with directus_client_context() as client:
+                if error is None:
                     mark_task_completed(client, task_id)
-                marked = True
-                break
-            except Exception:
-                if attempt == 0:
-                    import time
-                    time.sleep(1)
-        if not marked:
-            task_logger.exception("failed to mark scheduled_task %s as completed in Directus", task_id)
+                else:
+                    mark_task_failed(client, task_id, error)
+            return
+        except Exception:
+            if attempt == 0:
+                time.sleep(1)
+    task_logger.exception("failed to settle scheduled_task %s in Directus", task_id)
 
 
 def _dispatch_scheduled_task(row: dict) -> None:

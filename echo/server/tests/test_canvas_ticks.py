@@ -838,7 +838,7 @@ async def test_reconcile_missing_canvas_tick_tasks_enqueues_orphaned_active_loop
     ]
     enqueued: list[str] = []
 
-    async def _enqueue(loop: dict[str, Any]) -> None:
+    async def _enqueue(loop: dict[str, Any], when: datetime | None = None) -> None:  # noqa: ARG001
         enqueued.append(str(loop["id"]))
 
     monkeypatch.setattr(ticks, "async_directus", fake)
@@ -881,6 +881,8 @@ async def test_reconcile_missing_canvas_tick_tasks_rescues_stale_processing(
     assert count == 1
     assert enqueued == ["loop1"]
     assert any(
-        col == "scheduled_task" and item_id == "stale_task_1" and patch.get("status") == scheduled_tasks.STATUS_FAILED
+        col == "scheduled_task"
+        and item_id == "stale_task_1"
+        and patch.get("status") == scheduled_tasks.STATUS_FAILED
         for col, item_id, patch in fake.updated
     )
