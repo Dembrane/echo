@@ -3,6 +3,7 @@ name: prod-deploy-vercel-dashboard
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DASHBOARD }}
+  POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
 
 on:
   workflow_dispatch:
@@ -60,6 +61,19 @@ jobs:
       - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: echo/frontend
+
+      # Injects a chunk id into each built file and uploads the maps to PostHog,
+      # so dashboard exceptions arrive symbolicated. Skipped until the
+      # POSTHOG_CLI_API_KEY secret is set, so it never blocks a deploy.
+      - name: Inject and upload source maps to PostHog
+        if: ${{ env.POSTHOG_CLI_API_KEY != '' }}
+        uses: PostHog/upload-source-maps@v2
+        with:
+          directory: echo/frontend/.vercel/output/static
+          host: https://eu.posthog.com
+          project-id: "160282"
+          api-key: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          release-version: ${{ github.sha }}
 
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
