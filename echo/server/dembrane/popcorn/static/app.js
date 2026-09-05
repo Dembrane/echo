@@ -467,7 +467,7 @@
     if (!bundleCache.promise || now - bundleCache.at > BUNDLE_MAX_AGE_MS) {
       bundleCache = {
         at: now,
-        promise: fetch(`data/bundle.json?t=${now}${EMBED.version ? `&version=${encodeURIComponent(EMBED.version)}` : ""}`, { cache: "no-store" })
+        promise: fetch(`data/bundle.json?t=${now}${presenting ? "&view=room" : ""}${EMBED.version ? `&version=${encodeURIComponent(EMBED.version)}` : ""}`, { cache: "no-store" })
           .then((res) => (res.ok ? res.json() : null))
           .catch(() => null),
       };
@@ -764,11 +764,18 @@
   // two-second first-pop target.
   async function pollPopcorn() {
     const jobs = (state.session?.transcripts || []).map(async (t) => {
-      if (popcornSettled(state.popcorn.get(t.id)) || state.dropped.has(`popcorn:${t.id}`)) return;
+      const cached = state.popcorn.get(t.id);
+      // Upstream stops asking for a settled file. Here every file rides one
+      // bundle request anyway, and a settled conversation can be re-read when
+      // its transcript grows, so a settled file is still applied when its
+      // revision moved.
+      if ((!EMBED && popcornSettled(cached)) || state.dropped.has(`popcorn:${t.id}`)) return;
       const data = await fetchJson(`data/popcorn/${t.id}.json`);
       // A drop may have landed while this request was in flight; dropped data
       // always wins over the development server.
-      if (data && !state.dropped.has(`popcorn:${t.id}`)) state.popcorn.set(t.id, data);
+      if (!data || state.dropped.has(`popcorn:${t.id}`)) return;
+      if (cached && popcornSettled(cached) && data.revision === cached.revision) return;
+      state.popcorn.set(t.id, data);
     });
     await Promise.all(jobs);
     renderProgress();

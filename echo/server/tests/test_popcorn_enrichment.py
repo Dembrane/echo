@@ -223,3 +223,12 @@ def test_apply_results_writes_once_and_skips_a_phrase_that_moved() -> None:
     assert items[2]["question"] is True
     assert items[2]["review"]["was"] == "Knowing at what stage to introduce the tools"
     assert items[2]["review"]["errors"] == ["evidence: quota"]
+
+
+def test_a_rewrite_that_carries_a_name_is_refused() -> None:
+    _, calls = _calls(question_rewrite="Should Alice lead the group?")
+    item = {"id": "p1", "phrase": "Whether the newcomer should lead", "weight": 1}
+    result = asyncio.run(
+        enrich_item(item, transcript_id="t1", transcript=TRANSCRIPT, names={"Alice"}, **calls)
+    )
+    assert "rewritten" not in result and result["kind"]["question"] is False

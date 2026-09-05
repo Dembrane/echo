@@ -17,6 +17,7 @@ from dembrane.utils import generate_uuid
 from dembrane.popcorn.qr import qr_svg_markup
 from dembrane.directus_async import async_directus
 from dembrane.scheduled_tasks import TASK_POPCORN_TICK, schedule_task
+from dembrane.popcorn.analysis import attributes
 
 REPORT_KIND = "popcorn"
 LOOP_KIND = "popcorn"
@@ -696,6 +697,10 @@ def build_bundle(
         quotes = []
         for quote in registry:
             entry = dict(quote)
+            # A registry written before the attribution rule may still carry a
+            # speaker in its context; the bundle is the last door it must not pass.
+            if entry.get("context") and attributes(str(entry["context"])):
+                entry.pop("context", None)
             if host and admin_base_url and quote.get("transcript"):
                 entry["url"] = conversation_url(project, str(quote["transcript"]), admin_base_url)
             quotes.append(entry)

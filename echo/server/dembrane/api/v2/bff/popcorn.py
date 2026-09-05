@@ -355,7 +355,11 @@ async def popcorn_view_bundle(
     popcorn_id: str,
     auth: DependencyDirectusSession,
     version: str | None = Query(default=None),
+    view: str | None = Query(default=None),
 ) -> JSONResponse:
+    """The host's bundle, or with `view=room` exactly what the room's page
+    gets: the deck asks for that while the host presents it fullscreen, so the
+    wall never shows the names typed on the phones or a host-only passage."""
     report, access = await _require_popcorn(popcorn_id, auth)
     version_id = _version_id(version)
     if version_id:
@@ -366,5 +370,5 @@ async def popcorn_view_bundle(
             {"run": None, "version": version_id, "files": files},
             headers={"Cache-Control": "private, max-age=300"},
         )
-    bundle = await bundle_for_report(report, access.project, host=True)
+    bundle = await bundle_for_report(report, access.project, host=view != "room")
     return JSONResponse(bundle, headers=NO_STORE)

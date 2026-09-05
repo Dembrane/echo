@@ -354,6 +354,56 @@ def test_a_quiet_tick_still_pays_the_second_pass_it_owes(fake: _FakeDirectus, mo
     assert calls == []
 
 
+def test_a_failed_second_pass_call_keeps_the_conversation_owed(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    attempts: dict[str, int] = {}
+
+    async def _flaky_validate(
+        *, transcript_id: str, transcript: str, phrase: str
+    ) -> dict[str, Any]:  # noqa: ARG001
+        attempts[transcript_id] = attempts.get(transcript_id, 0) + 1
+        calls.append(f"validate:{transcript_id}")
+        if transcript_id == "c2" and attempts["c2"] == 1:
+            raise RuntimeError("quota")
+        return {"grounded": True, "quote": transcript.split("\n")[0], "reason": "r"}
+
+    monkeypatch.setattr(ticks, "validate_phrase", _flaky_validate)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    c1, c2 = state["conversations"]["c1"], state["conversations"]["c2"]
+    # c1 is complete and stamped; c2 kept its kind, has no quote, and is still owed.
+    assert c1["validated_fingerprint"] == c1["fingerprint"]
+    assert c2.get("validated_fingerprint") != c2["fingerprint"]
+    assert c2["items"][0]["kind"] == "observation" and "quoteId" not in c2["items"][0]
+    assert c2["items"][0]["review"]["errors"] == ["evidence: quota"]
+
+    # The next quiet tick retries only c2's failed phrase, then stamps it.
+    calls.clear()
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
+    assert result["status"] == "ok"
+    assert calls.count("validate:c1") == 0 and calls.count("validate:c2") == 1
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    c2 = state["conversations"]["c2"]
+    assert c2["validated_fingerprint"] == c2["fingerprint"]
+    assert c2["items"][0]["quoteId"] and "errors" not in c2["items"][0]["review"]
+
+
+def test_the_last_conversation_vanishing_clears_the_deck(fake: _FakeDirectus, monkeypatch) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    assert fake.items["agent_loop"]["loop1"]["popcorn_state"]["analysis"]
+    fake.chunks.clear()  # every transcript is gone
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
+    assert result["status"] == "no_op"
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    assert state["conversations"] == {} and state["order"] == []
+    assert state["analysis"] is None and state["quotes"] == []
+
+
 def test_failed_extractor_does_not_stall_the_stage(fake: _FakeDirectus, monkeypatch) -> None:
     calls: list[str] = []
     _install_models(monkeypatch, calls=calls, fail_for={"c2"})

@@ -30,12 +30,25 @@ STOP = set(
 KNOWN_RUN = 6
 NEAR_DUPLICATE = 0.5
 
+# A name: a capital, then letters, any script Latin can write.
+_NAME = r"([A-ZÀ-ÖØ-Þ][a-zà-öø-ÿ]{2,})"
 INTRO = re.compile(
-    r"\b(?:I'm|I am|my name's|my name is|this is|Hi|Hey|Hello|Thanks|Thank you|Welcome),?\s+([A-Z][a-z]{2,})"
+    r"\b(?:I'm|I am|my name's|my name is|this is|Hi|Hey|Hello|Thanks|Thank you|Welcome),?\s+"
+    + _NAME,
+    re.IGNORECASE,
 )
 ADDRESSED = re.compile(
-    r"\b([A-Z][a-z]{2,}),\s+(?:you're|you are|would you|are you|do you|what do you|be interesting|yeah|thanks|there's|sorry)"
-    r"|\b[Ww]hat ([A-Z][a-z]{2,}) (?:was|is) saying|\bThanks,?\s+([A-Z][a-z]{2,})|\bto ([A-Z][a-z]{2,})'s point"
+    r"\b"
+    + _NAME
+    + r",\s+(?:you're|you are|would you|are you|do you|what do you|be interesting|yeah|thanks|there's|sorry)"
+    r"|\bwhat "
+    + _NAME
+    + r" (?:was|is) saying|\bThanks,?\s+"
+    + _NAME
+    + r"|\bto "
+    + _NAME
+    + r"'s point",
+    re.IGNORECASE,
 )
 # Capitalised words the patterns above catch that are not names.
 NOT_NAMES = set(
@@ -63,12 +76,14 @@ def introduced_names(transcript: str) -> set[str]:
         for name in groups if isinstance(groups, tuple) else (groups,):
             if name:
                 found.add(name)
-    return {n for n in found if n not in NOT_NAMES}
+    # The trigger words match in any case; the name itself must start with a capital.
+    return {n for n in found if n[:1].isupper() and n not in NOT_NAMES}
 
 
 def name_hits(text: str, names: set[str]) -> list[str]:
-    words = set(re.findall(r"[A-Za-z']+", text or ""))
-    return sorted(words & names)
+    """Names from the introductions that appear in the text, in any case."""
+    words = {w.casefold() for w in re.findall(r"[^\W\d_]+", text or "")}
+    return sorted(n for n in names if n.casefold() in words)
 
 
 def scrub_names(text: str, names: set[str]) -> str:

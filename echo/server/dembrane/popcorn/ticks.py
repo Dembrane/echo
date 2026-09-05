@@ -146,23 +146,45 @@ async def _create_run(
     return result["data"] if isinstance(result, dict) and "data" in result else result
 
 
+# The lock carries the token of the tick that took it, so a tick that outlived
+# its lock cannot renew or release the one a later tick holds.
+_LOCK_TOKENS: dict[str, str] = {}
+
+
 async def _claim_run_lock(loop_id: str) -> bool:
     """Serialise ticks per loop: a manual refresh must never race a scheduled tick
     over the same state row."""
+    token = generate_uuid()
     try:
         client = await get_redis_client()
-        return bool(await client.set(f"popcorn:run:{loop_id}", "1", ex=RUN_LOCK_SECONDS, nx=True))
+        taken = bool(
+            await client.set(f"popcorn:run:{loop_id}", token, ex=RUN_LOCK_SECONDS, nx=True)
+        )
+        if taken:
+            _LOCK_TOKENS[loop_id] = token
+        return taken
     except Exception:
         logger.warning("Redis unavailable for popcorn run lock", exc_info=True)
+        _LOCK_TOKENS[loop_id] = token
         return True
+
+
+async def _owns_run_lock(client: Any, loop_id: str) -> bool:
+    held = await client.get(f"popcorn:run:{loop_id}")
+    if isinstance(held, bytes):
+        held = held.decode()
+    return bool(held) and held == _LOCK_TOKENS.get(loop_id)
 
 
 async def _release_run_lock(loop_id: str) -> None:
     try:
         client = await get_redis_client()
-        await client.delete(f"popcorn:run:{loop_id}")
+        if await _owns_run_lock(client, loop_id):
+            await client.delete(f"popcorn:run:{loop_id}")
     except Exception:
         logger.warning("Redis unavailable releasing popcorn run lock", exc_info=True)
+    finally:
+        _LOCK_TOKENS.pop(loop_id, None)
 
 
 async def _mark_alive(loop_id: str) -> None:
@@ -193,15 +215,18 @@ async def _tick_alive(loop_id: str) -> bool:
 async def _heartbeat(loop_id: str) -> None:
     while True:
         await _mark_alive(loop_id)
+        await _renew_run_lock(loop_id)
         await asyncio.sleep(HEARTBEAT_SECONDS)
 
 
 async def _renew_run_lock(loop_id: str) -> None:
     """The second pass can outlast the lock on a big session; every write of
-    the state renews it, so a scheduled tick cannot start underneath."""
+    the state and every heartbeat renews it, so a scheduled tick cannot start
+    underneath. Only the tick that holds the lock may renew it."""
     try:
         client = await get_redis_client()
-        await client.expire(f"popcorn:run:{loop_id}", RUN_LOCK_SECONDS)
+        if await _owns_run_lock(client, loop_id):
+            await client.expire(f"popcorn:run:{loop_id}", RUN_LOCK_SECONDS)
     except Exception:
         logger.warning("Redis unavailable renewing popcorn run lock", exc_info=True)
 
@@ -425,7 +450,9 @@ async def _enrich_one(
     next tick because the transcript's fingerprint is not stamped."""
     cid = transcript["id"]
     entry = writer.state["conversations"][cid]
-    items = entry.get("items") or []
+    # A phrase that already has its kind and its evidence answer is done; the
+    # pass is retried only for what a failed call left behind.
+    items = [item for item in entry.get("items") or [] if _needs_pass(item)]
     text = transcript["text"]
     names = introduced_names(text)
     started = _now()
@@ -456,9 +483,12 @@ async def _enrich_one(
         register=lambda tid, quote: book.add({"transcript": tid, "text": quote}),
     )
     entry["revision"] = int(entry.get("revision") or 0) + 1
-    entry["validated_fingerprint"] = transcript["fingerprint"]
-    writer.state["quotes"] = list(book.quotes)
     failed = sum(len(r.get("errors") or []) for r in results)
+    if not failed:
+        # Only a complete pass is stamped; a failed call keeps the conversation
+        # owed, so the next tick retries exactly the phrases it failed on.
+        entry["validated_fingerprint"] = transcript["fingerprint"]
+    writer.state["quotes"] = list(book.quotes)
     elapsed_ms = int((_now() - started).total_seconds() * 1000)
     outcomes.append(
         f"enrich {cid[:8]}: {stats['rooted']}/{len(items)} rooted, {stats['classified']} kinds, "
@@ -484,6 +514,15 @@ def _pending_enrichment(
         ):
             out.append(t)
     return out
+
+
+def _needs_pass(item: dict[str, Any]) -> bool:
+    """A phrase still owed the second pass: no kind yet, or a call that failed."""
+    if not isinstance(item, dict):
+        return False
+    if "kind" not in item:
+        return True
+    return bool((item.get("review") or {}).get("errors"))
 
 
 def _referenced_quote_ids(value: Any) -> set[str]:
@@ -651,6 +690,9 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
                 started_at=started_at,
             )
             return {"status": "duplicate", "run": run}
+        # The tick that just finished wrote the state; read it, not the snapshot
+        # taken before the wait.
+        loop = await async_directus.get_item("agent_loop", loop_id) or loop
 
     report_id = _as_id(loop.get("report_id"))
     project_id = _as_id(loop.get("project_id"))
@@ -700,10 +742,17 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         # A conversation that vanished (deleted, or its chunks removed) leaves
         # the deck with it; the legend must not name a table that is not there.
         present = {t["id"] for t in transcripts}
-        for cid in list(state["conversations"]):
-            if cid not in present:
-                state["conversations"].pop(cid, None)
+        vanished = [cid for cid in state["conversations"] if cid not in present]
+        for cid in vanished:
+            state["conversations"].pop(cid, None)
         state["order"] = [cid for cid in state["order"] if cid in present]
+        if vanished and not transcripts:
+            # The last conversation is gone: nothing derived from it may stay on
+            # the deck. Written now, because the no-op path below never writes.
+            state["analysis"] = None
+            state["quotes"] = []
+            await async_directus.update_item("agent_loop", loop_id, {"popcorn_state": state})
+            await publish_generation_nudge(report_id)
 
         analysis_fingerprint = _fingerprint(
             "|".join(f"{t['id']}:{t['fingerprint']}" for t in transcripts)

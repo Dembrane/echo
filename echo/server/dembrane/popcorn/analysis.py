@@ -268,7 +268,7 @@ class QuoteBook:
         self.norm_sources = {tid: norm(t) for tid, t in sources.items()}
         self.names = set(names or ())
         self.quotes: list[dict[str, Any]] = []
-        self._seen: dict[str, str] = {}
+        self._seen: dict[tuple[str, str], str] = {}
         self.rejected = 0
         self._next = 1
         for q in existing or []:
@@ -278,14 +278,19 @@ class QuoteBook:
             text = str(q.get("text") or "").strip()
             key = norm(text)
             tid = str(q.get("transcript") or "")
-            if not m or not text or key in self._seen or key not in self.norm_sources.get(tid, ""):
+            if (
+                not m
+                or not text
+                or (tid, key) in self._seen
+                or key not in self.norm_sources.get(tid, "")
+            ):
                 continue
             entry = {"id": q["id"], "transcript": tid, "text": text}
             ctx = self._safe_context(q.get("context"))
             if ctx:
                 entry["context"] = ctx
             self.quotes.append(entry)
-            self._seen[key] = q["id"]
+            self._seen[(tid, key)] = q["id"]
             self._next = max(self._next, int(m.group(1)) + 1)
 
     def _safe_context(self, raw: Any) -> str:
@@ -304,8 +309,6 @@ class QuoteBook:
         if not text:
             return None
         key = norm(text)
-        if key in self._seen:
-            return self._seen[key]
         tid = str(q.get("transcript") or "")
         found_in = tid if key in self.norm_sources.get(tid, "") else None
         if found_in is None:  # model may misattribute; accept if it exists anywhere
@@ -316,6 +319,9 @@ class QuoteBook:
         if found_in is None:
             self.rejected += 1
             return None
+        # The same words said at two tables are two quotes: one per conversation.
+        if (found_in, key) in self._seen:
+            return self._seen[(found_in, key)]
         qid = f"q{self._next}"
         self._next += 1
         entry: dict[str, Any] = {"id": qid, "transcript": found_in, "text": text}
@@ -323,7 +329,7 @@ class QuoteBook:
         if ctx:
             entry["context"] = ctx
         self.quotes.append(entry)
-        self._seen[key] = qid
+        self._seen[(found_in, key)] = qid
         return qid
 
     def add_all(self, qs: Any) -> list[str]:

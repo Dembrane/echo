@@ -23,6 +23,11 @@ Patches carried on top of upstream, all guarded by `window.POPCORN_EMBED`:
   upstream.
 - `EMBED.version` makes the bundle request ask for a saved run, for replay.
 - The empty-stage line says when a finished read found nothing (#1043).
+- While the host presents fullscreen (`dembrane:popcorn:presenting`), the
+  bundle request carries `view=room` and the server answers with the room's
+  bundle: neutral labels, no passages, no links.
+- A settled popcorn file is still applied when its revision moved: on the
+  platform a conversation can be re-read after its transcript grows.
 - `sample/` holds upstream `data/` verbatim for the Try it view.
 
 Two things upstream's 8c23eba merge changed on purpose:

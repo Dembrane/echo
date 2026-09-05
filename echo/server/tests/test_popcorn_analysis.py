@@ -291,3 +291,29 @@ def test_build_bundle_without_qr_or_participation() -> None:
     )
     assert "qr" not in bundle["files"]["session.json"]
     assert bundle["files"]["session.json"]["title"] == "Popcorn"
+
+
+def test_the_same_words_at_two_tables_are_two_quotes() -> None:
+    book = QuoteBook({"t1": "we need more time to do this", "t2": "we need more time to do this"})
+    assert book.add({"transcript": "t1", "text": "we need more time"}) == "q1"
+    assert book.add({"transcript": "t2", "text": "we need more time"}) == "q2"
+    assert book.add({"transcript": "t2", "text": "We need more  time"}) == "q2"
+    assert [q["transcript"] for q in book.quotes] == ["t1", "t2"]
+
+
+def test_bundle_strips_a_context_that_assigns_a_speaker_whatever_wrote_it() -> None:
+    state = _state()
+    state["quotes"] = [
+        {"id": "q1", "transcript": "c1", "text": "one", "context": "Alice said she was worried"},
+        {"id": "q2", "transcript": "c1", "text": "one", "context": "near the end of the round"},
+    ]
+    files = build_bundle(
+        state=state,
+        settings=normalize_settings({}, fallback_title="x"),
+        report={"id": "r1"},
+        project={"id": "p1"},
+        participant_base_url="",
+    )["files"]
+    quotes = files["quotes.json"]["quotes"]
+    assert "context" not in quotes[0]
+    assert quotes[1]["context"] == "near the end of the round"

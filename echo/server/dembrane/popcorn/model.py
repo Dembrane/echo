@@ -40,13 +40,38 @@ ENRICH_MAX_TOKENS = 8000
 _fallback_warned = False
 
 
+_route_warned = False
+
+
+def _warn_if_outside_europe(deployments: list[Any]) -> None:
+    """Participant transcripts go to this group; anything but a Vertex
+    deployment in a European location is worth one line in the log."""
+    global _route_warned
+    if _route_warned:
+        return
+    for _suffix, cfg in deployments:
+        model_name = str(getattr(cfg, "model", "") or "")
+        location = str(getattr(cfg, "vertex_location", "") or "")
+        if not model_name.startswith("vertex_ai/") or not location.startswith("europe"):
+            logger.warning(
+                "LLM__POPCORN_FAST deployment %s at %r is not a Vertex deployment in Europe; "
+                "participant transcripts are its input",
+                model_name,
+                location,
+            )
+            _route_warned = True
+            return
+
+
 def popcorn_model() -> MODELS:
     """The group every popcorn call uses. `LLM__POPCORN_FAST__*` names a
     deployment of its own (a Vertex project in the EU, so participant text
     never leaves it); until one is configured the shared MULTI_MODAL_FAST group
     serves, and the log says so once per process."""
     global _fallback_warned
-    if get_settings().llms.get_deployments_for_group("popcorn_fast"):
+    deployments = get_settings().llms.get_deployments_for_group("popcorn_fast")
+    if deployments:
+        _warn_if_outside_europe(deployments)
         return MODELS.POPCORN_FAST
     if not _fallback_warned:
         logger.warning(

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dembrane.popcorn.flags import (
     known_run,
+    name_hits,
     gate_items,
     scrub_names,
     known_shingles,
@@ -75,3 +76,10 @@ def test_gate_items_holds_back_names_known_text_and_twins() -> None:
     # Nothing to hold back: everything passes in order.
     plain = [{"id": "a", "phrase": "quiet is a service we sell", "weight": 1}]
     assert gate_items(plain, names=set(), known=set()) == (plain, [])
+
+
+def test_names_are_found_in_any_case_and_script_and_hit_in_any_case() -> None:
+    names = introduced_names("my name is José. hi, I'm alice. HELLO, Ømer.")
+    assert names == {"José", "Ømer"}  # "alice" starts without a capital: not a name
+    assert name_hits("alice should lead, and JOSÉ too", {"Alice", "José"}) == ["Alice", "José"]
+    assert name_hits("nobody joins for the desks", {"Alice"}) == []

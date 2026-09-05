@@ -26,7 +26,7 @@ from __future__ import annotations
 import re
 from typing import Any, Callable, Awaitable
 
-from dembrane.popcorn.flags import scrub_names
+from dembrane.popcorn.flags import name_hits, scrub_names
 from dembrane.popcorn.analysis import norm
 
 KINDS = [
@@ -159,7 +159,7 @@ async def enrich_item(
                     transcript_id=transcript_id, transcript=transcript, phrase=phrase
                 )
                 candidate = str(out.get("phrase") or "").strip()
-                if question_ok(candidate):
+                if question_ok(candidate) and not name_hits(candidate, names):
                     result["rewritten"] = candidate[:-1].rstrip()
                     kind["question"] = True
             except Exception as exc:
@@ -215,6 +215,8 @@ def apply_results(
                 rewritten += 1
         if r.get("errors"):
             review["errors"] = list(r["errors"])
+        else:
+            review.pop("errors", None)  # a retry that landed clears the old failure
         if review:
             item["review"] = review
     return {"rooted": rooted, "classified": classified, "rewritten": rewritten}
