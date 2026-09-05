@@ -598,6 +598,9 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   z-index: 60;
 }
 .pop-rooted { cursor: pointer; }
+/* the passage mark: a rooted paraphrase, not a quotation */
+.pop-mark { color: var(--blue); font-weight: 500; font-size: 0.72em; vertical-align: 0.28em; margin-right: 0.12em; }
+.tail-phrase .pop-mark { font-size: 0.85em; vertical-align: 0.15em; }
 .pop-att { display: block; margin-top: 0.55em; opacity: 0; transition: opacity 0.15s ease; }
 .pop-att .attribution { font-size: 0.78em; }
 .pop:hover .pop-att { opacity: 1; }

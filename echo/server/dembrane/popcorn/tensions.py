@@ -4,6 +4,8 @@ Ported from Dembrane/popcorn `tools/tensions_pipeline.py` (commit 8c23eba),
 the threads replaced by the tick's event loop. Five stages, every call one
 judgement:
 
+0. handed      one call over the session: what the rooms were handed from
+               outside, and what each room did with it; runs beside stage 1
 1. positions   one call per transcript: every want, constraint and value held,
                with its holder (never a name) and a verbatim quote
 2. collisions  one call per position: which other positions, across all
@@ -17,6 +19,13 @@ judgement:
 
 Cross-table pairs rank first, then by how zero-sum they are. The output is the
 deck's `tensions.json` shape; the quotes go into the tick's shared registry.
+
+Evidence is the contract throughout. A verified pair keeps only quotes that
+are word for word in one of its two transcripts, and a quote is carried with
+the transcript that holds it (its own pole's table first when both said it).
+A pair with no quote on either pole is unsupported, whatever the verifier
+said, and never reaches the deck. A handed item whose quote is not in the
+transcripts is still shown to the verifier, marked as unverified.
 """
 
 from __future__ import annotations
@@ -108,9 +117,10 @@ VERIFY_SCHEMA: dict[str, Any] = {
 DEDUPE_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["same_as", "why"],
+    "required": ["same_as", "swapped", "why"],
     "properties": {
         "same_as": {"type": "string", "maxLength": 12},
+        "swapped": {"type": "boolean"},
         "why": {"type": "string", "maxLength": 240},
     },
 }
@@ -166,9 +176,12 @@ with it and its other pole is a middle course between the kept poles, a
 reason behind one of them, or a consequence of one of them (the kept tension's
 knot will carry the facet). Return `same_as` with the id of the kept tension
 it belongs to, or an empty string when it pulls between two things no kept
-tension pulls between, and a `why` of one line. Two tensions on the same
-subject that pull between different things are not the same; two tensions
-that share a pole and pull on the same thing from two angles are."""
+tension pulls between, and a `why` of one line. `swapped` is true when the new
+tension's A side belongs with the kept tension's B side (and its B with the
+kept A), false when the sides line up, and false when `same_as` is empty.
+Two tensions on the same subject that pull between different things are not
+the same; two tensions that share a pole and pull on the same thing from two
+angles are."""
 
 Generate = Callable[..., Awaitable[dict[str, Any]]]
 
@@ -185,6 +198,19 @@ def _corpus(transcripts: dict[str, str], tids: list[str]) -> str:
     return "\n\n".join(f"TRANSCRIPT id: {t}\n{transcripts[t]}\nEND TRANSCRIPT {t}" for t in tids)
 
 
+def locate(quote: str, transcripts: dict[str, str], order: list[str]) -> str | None:
+    """The first transcript in `order` that holds the quote word for word, or
+    None. The order says whose table to credit when two tables said the same
+    words: the pole's own first."""
+    key = norm(quote)
+    if not key:
+        return None
+    for tid in order:
+        if tid in transcripts and key in norm(transcripts[tid]):
+            return tid
+    return None
+
+
 def trim_positions(
     found: dict[str, list[dict[str, Any]]], cap: int = MAX_POSITIONS_TOTAL
 ) -> dict[str, list[dict[str, Any]]]:
@@ -192,9 +218,11 @@ def trim_positions(
     transcript's positions are ranked by firmness (a verbatim quote and no
     hedge first, then the order they were said in) and the transcripts take
     turns, one position each per round, until the cap is reached. Every
-    transcript with a position keeps at least one while the cap allows; under
-    the cap nothing moves."""
+    transcript with a position keeps at least one, whatever the cap: a quiet
+    table is never squeezed off the slide by the budget. Under the cap nothing
+    moves."""
     total = sum(len(v) for v in found.values())
+    cap = max(cap, sum(1 for v in found.values() if v))
     if total <= cap or not found:
         return found
     ranked = {
@@ -258,21 +286,24 @@ async def run_pipeline(
                 timeout=CALL_TIMEOUT_SECONDS,
             )
 
-    # 0. what the rooms were handed, over the whole corpus
-    handed = (await gen(prompts["tensions-handed"], _corpus(transcripts, tids), HANDED_SCHEMA)).get(
-        "handed"
-    ) or []
-    handed_text = (
-        "\n".join(
-            f"- [{h.get('status')}] {h.get('text')}\n  what the rooms did: {h.get('response')}"
-            for h in handed
-        )
-        or "- nothing was handed to the rooms"
-    )
+    # 0. what the rooms were handed, over the whole corpus. Its quotes are
+    # checked like every other: an item whose quote is nowhere in the
+    # transcripts still reaches the verifier, marked as unverified, so the
+    # framing it describes cannot reject a tension on the same footing as a
+    # framing the rooms can be heard reading.
+    async def handed_list() -> list[dict[str, Any]]:
+        out = await gen(prompts["tensions-handed"], _corpus(transcripts, tids), HANDED_SCHEMA)
+        items = []
+        for h in out.get("handed") or []:
+            if not isinstance(h, dict):
+                continue
+            quote = str(h.get("quote") or "").strip()
+            claimed = str(h.get("transcript") or "")
+            where = locate(quote, transcripts, [claimed] + tids) if quote else None
+            items.append({**h, "transcript": where or claimed, "verified": where is not None})
+        return items
 
-    stage("handed", handed=len(handed))
-
-    # 1. positions per transcript
+    # 1. positions per transcript, beside the handed call: neither reads the other
     async def positions_for(tid: str) -> list[dict[str, Any]]:
         out = await gen(
             prompts["positions"],
@@ -293,7 +324,19 @@ async def run_pipeline(
             )
         return found
 
-    found_by_tid = dict(zip(tids, await _all([positions_for(t) for t in tids]), strict=True))
+    first, *rest = await _all([handed_list()] + [positions_for(t) for t in tids])
+    handed: list[dict[str, Any]] = first
+    handed_text = (
+        "\n".join(
+            f"- [{h.get('status')}] {h.get('text')}\n  what the rooms did: {h.get('response')}"
+            + ("" if h["verified"] else "\n  (its quote was not found in the transcripts)")
+            for h in handed
+        )
+        or "- nothing was handed to the rooms"
+    )
+    stage("handed", handed=len(handed), verified=sum(1 for h in handed if h["verified"]))
+
+    found_by_tid = dict(zip(tids, rest, strict=True))
     found_total = sum(len(v) for v in found_by_tid.values())
     found_by_tid = trim_positions(found_by_tid)
     positions: list[dict[str, Any]] = []
@@ -382,26 +425,44 @@ async def run_pipeline(
             f"Flagged because: {c['why']}"
         )
         out = await gen(prompts["tension-verify"], user, VERIFY_SCHEMA)
-        in_ts = lambda q: any(norm(q) in norm(transcripts[t]) for t in ts)  # noqa: E731
-        qa = [q for q in (out.get("quotesA") or []) if isinstance(q, str) and in_ts(q)][:2]
-        qb = [q for q in (out.get("quotesB") or []) if isinstance(q, str) and in_ts(q)][:2]
+
+        def located(raw: Any, own: str, other: str) -> list[dict[str, str]]:
+            """The pole's quotes that are word for word in one of the two
+            transcripts, each with the table that said them: the pole's own
+            table first, so a line both tables said is credited to the holder."""
+            found = []
+            for q in raw or []:
+                where = locate(q, transcripts, [own, other]) if isinstance(q, str) else None
+                if where:
+                    found.append({"transcript": where, "text": q})
+            return found[:2]
+
         return {
             **c,
             "valid": bool(out.get("valid")),
             "verify_why": str(out.get("why") or ""),
             "poleA": str(out.get("poleA") or "").strip(),
             "poleB": str(out.get("poleB") or "").strip(),
-            "quotesA": qa,
-            "quotesB": qb,
+            "quotesA": located(out.get("quotesA"), a["transcript"], b["transcript"]),
+            "quotesB": located(out.get("quotesB"), b["transcript"], a["transcript"]),
             "transcripts": ts,
-            "transcriptA": a["transcript"],
-            "transcriptB": b["transcript"],
         }
 
     verified = list(await _all([verify(c) for c in candidates]))
-    valid = [v for v in verified if v["valid"] and v["poleA"] and v["poleB"]]
+    # A tension is a claim about two poles; each needs a passage that holds
+    # it. The verifier's yes without a quote on a pole is unsupported.
+    valid = [
+        v
+        for v in verified
+        if v["valid"] and v["poleA"] and v["poleB"] and v["quotesA"] and v["quotesB"]
+    ]
+    unsupported = sum(
+        1
+        for v in verified
+        if v["valid"] and v["poleA"] and v["poleB"] and not (v["quotesA"] and v["quotesB"])
+    )
 
-    stage("verify", verified=len(valid), of=len(verified))
+    stage("verify", verified=len(valid), of=len(verified), unsupported=unsupported)
     # 4. dedupe in rank order, one call per pair against what is kept
     kept: list[dict[str, Any]] = []
     for v in valid:
@@ -421,13 +482,17 @@ async def run_pipeline(
             target.setdefault("merged", []).append(
                 {"a": v["a"], "b": v["b"], "why": str(out.get("why") or "")}
             )
-            # A facet's quotes stay with the pole they held.
-            for side in ("quotesA", "quotesB"):
+            # A facet's quotes stay with the pole they held, which is the kept
+            # tension's other pole when the facet arrived the other way round.
+            swapped = bool(out.get("swapped"))
+            for side, into in (
+                ("quotesA", "quotesB" if swapped else "quotesA"),
+                ("quotesB", "quotesA" if swapped else "quotesB"),
+            ):
                 for q in v[side]:
-                    if q not in target["quotesA"] + target["quotesB"] and (
-                        len(target["quotesA"]) + len(target["quotesB"]) < MAX_QUOTES_PER_TENSION
-                    ):
-                        target[side].append(q)
+                    held = [x["text"] for x in target["quotesA"] + target["quotesB"]]
+                    if q["text"] not in held and len(held) < MAX_QUOTES_PER_TENSION:
+                        target[into].append(q)
             continue
         if len(kept) >= max_tensions:
             continue  # full: later pairs can still fold into a kept tension as facets
@@ -444,8 +509,8 @@ async def run_pipeline(
         ]
         user = (
             f"POLE A: {k['poleA']}\nPOLE B: {k['poleB']}\n"
-            "HOLDING A: " + " | ".join(f'"{q}"' for q in k["quotesA"]) + "\n"
-            "HOLDING B: " + " | ".join(f'"{q}"' for q in k["quotesB"]) + "\n"
+            "HOLDING A: " + " | ".join(f'"{q["text"]}"' for q in k["quotesA"]) + "\n"
+            "HOLDING B: " + " | ".join(f'"{q["text"]}"' for q in k["quotesB"]) + "\n"
             f"WHAT COLLIDES: {k['why']}"
             + (
                 (
@@ -485,10 +550,8 @@ async def run_pipeline(
     gate_flags: list[str] = []
     written = await _all([write(item) for item in kept])
     for (tension, flags), item in zip(written, kept, strict=True):
-        tension["quoteIds"] = book.add_all(
-            [{"transcript": item["transcriptA"], "text": q} for q in item["quotesA"]]
-            + [{"transcript": item["transcriptB"], "text": q} for q in item["quotesB"]]
-        )
+        # Every quote arrives with the table that said it; the book only confirms.
+        tension["quoteIds"] = book.add_all(item["quotesA"] + item["quotesB"])
         tensions.append(tension)
         gate_flags += flags
     stage("write", tensions=len(tensions), flags_left=len(gate_flags))
@@ -497,12 +560,14 @@ async def run_pipeline(
         "gate_flags": gate_flags,
         "counts": {
             "handed": len(handed),
+            "handed_verified": sum(1 for h in handed if h["verified"]),
             "positions": len(positions),
             "candidates": len(candidates),
             "found_pairs": found_pairs,
             "found_positions": found_total,
             "cross_table": sum(1 for c in candidates if c["cross_table"]),
             "verified": len(valid),
+            "unsupported": unsupported,
             "kept": len(kept),
         },
     }

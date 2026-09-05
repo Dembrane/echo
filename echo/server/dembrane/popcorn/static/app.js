@@ -64,6 +64,16 @@
     const t = item.phrase || "";
     return item.question && !/[?]$/.test(t) ? `${t}?` : t;
   };
+  // Quotation marks mean the room's words, word for word (`verbatim` from the
+  // bundle). A phrase that only paraphrases a passage it can open (`quoteId`
+  // without `verbatim`) wears the passage mark instead; a paraphrase is not a
+  // quotation, and the wall must not say it is.
+  const quotedPhrase = (item) => {
+    const text = esc(phraseText(item));
+    if (item.verbatim) return `“${text}”`;
+    if (item.quoteId) return `<span class="pop-mark" aria-hidden="true">❝</span>${text}`;
+    return text;
+  };
   const KEY_DWELL_MS = 120;       // hover this long on a circle before it pops: a sweep pops a few, a pause pops one
 
   const state = {
@@ -843,7 +853,7 @@
     </section>
     </div>
     <section class="pop-tail" aria-label="all popcorn phrases">
-      <p class="pop-disclaimer">popcorn is optimised for latency, not accuracy. popcorns in “quotes” are verified against the conversation; the rest are not direct quotes.</p>
+      <p class="pop-disclaimer">popcorn is optimised for latency, not accuracy. a popcorn in “quotes” is the room's words, word for word; one marked ❝ paraphrases a passage of the conversation you can open; the rest are unchecked.</p>
       <div class="quote-tools">
         <input class="quote-search" id="pop-search" type="search" placeholder="search the popcorn…" aria-label="search popcorn phrases" value="${esc(state.popSearch || "")}">
         <div class="kind-legend" id="kind-legend" aria-label="filter the popcorn by kind" hidden></div>
@@ -1213,7 +1223,7 @@
         </button>
         <div class="pop-list">${rows.map((r) => {
           const off = state.pop.hidden.has(r.key);
-          return `<button type="button" class="tail-phrase${r.out ? " out" : ""}" data-hide="${esc(r.key)}" aria-pressed="${off}" style="--marker:${markerFor(c.tid)}" title="${off ? "show this popcorn" : "hide this popcorn"}${r.out ? " (outside the window)" : ""}">${kindIcon(r.item.kind)}${esc(phraseText(r.item))}</button>`;
+          return `<button type="button" class="tail-phrase${r.out ? " out" : ""}" data-hide="${esc(r.key)}" aria-pressed="${off}" style="--marker:${markerFor(c.tid)}" title="${off ? "show this popcorn" : "hide this popcorn"}${r.out ? " (outside the window)" : ""}">${kindIcon(r.item.kind)}${quotedPhrase(r.item)}</button>`;
         }).join("")}</div>
       </section>`;
     }).join("");
@@ -1352,7 +1362,7 @@
     el.className = "pop" + (centerStage ? " center" : "") + (pinned ? " pinned" : "");
     el.dataset.weight = Math.min(3, Math.max(1, item.weight || 2));
     el.style.setProperty("--tilt", `${hashTilt(item.phrase)}deg`);
-    el.innerHTML = `<span class="pop-phrase" style="--marker:${markerFor(tid)}">${kindIcon(item.kind)}${rooted ? `“${esc(phraseText(item))}”` : esc(phraseText(item))}</span>
+    el.innerHTML = `<span class="pop-phrase" style="--marker:${markerFor(tid)}">${kindIcon(item.kind)}${quotedPhrase(item)}</span>
       <span class="pop-att">${attribution(tid)}</span>`;
     stageEl.appendChild(el);
     // measure at the size it will settle at, not mid pop-in

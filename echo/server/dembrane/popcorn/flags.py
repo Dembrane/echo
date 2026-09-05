@@ -4,7 +4,9 @@ Ported from Dembrane/popcorn `tools/popcorn_flags.py` and `tools/known_text.py`
 (commit 8c23eba). Three failure modes the extractor prompt cannot prevent on
 its own, each caught by code:
 
-- two phrases naming one idea (content-word overlap of a half or more);
+- two phrases naming one idea (content-word overlap of a half or more, and
+  the same polarity: a phrase and its negation are two ideas, however many
+  words they share);
 - a phrase carrying a name somebody introduced themselves with, or was
   addressed by, in the transcript;
 - a phrase quoting text the room was shown. In a live session the screen
@@ -27,6 +29,9 @@ STOP = set(
     "a an the and or of to in on at for is are was were be it its this that with as by from "
     "not no we you they he she i our your their his her them us me if so but than then".split()
 )
+# Negation is not a stopword: "not" is the whole difference between two
+# phrases, and the twin check compares polarity before it compares words.
+NEGATION = set("not no never nor none nobody nothing neither without cannot".split())
 KNOWN_RUN = 6
 NEAR_DUPLICATE = 0.5
 
@@ -94,6 +99,11 @@ def scrub_names(text: str, names: set[str]) -> str:
     for n in sorted(names, key=len, reverse=True):
         text = re.sub(rf"\b{re.escape(n)}(?:'s)?\b", "a participant", text)
     return text
+
+
+def negated(text: str) -> bool:
+    """True when the text carries a negation (a negating word or an n't)."""
+    return any(t in NEGATION or t.endswith("n't") for t in tokens(text))
 
 
 def jaccard(a: str, b: str) -> float:
@@ -192,7 +202,15 @@ def gate_items(
                 }
             )
             continue
-        twin = next((k for k in kept if jaccard(k["phrase"], phrase) >= NEAR_DUPLICATE), None)
+        twin = next(
+            (
+                k
+                for k in kept
+                if jaccard(k["phrase"], phrase) >= NEAR_DUPLICATE
+                and negated(k["phrase"]) == negated(phrase)
+            ),
+            None,
+        )
         if twin is not None:
             if int(item.get("weight") or 1) > int(twin.get("weight") or 1):
                 # The heavier of two phrases for one idea is the one that stays.

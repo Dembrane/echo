@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, Callable
 
 from dembrane.popcorn.analysis import QuoteBook
 from dembrane.popcorn.tensions import (
@@ -291,7 +291,7 @@ def test_a_facets_quotes_stay_with_their_pole_and_the_registry_names_the_right_t
                     "why": "held",
                     "poleA": "record every conversation",
                     "poleB": "check it carefully first",
-                    "quotesA": [],
+                    "quotesA": ["record everything so nothing is lost"],
                     "quotesB": ["Do not rush this"],
                 }
             return {
@@ -439,3 +439,260 @@ def test_the_best_pair_of_every_table_is_verified() -> None:
     # Nine loud ta/tb pairs exist; the cap of four still verified one of tc's quiet pairs.
     assert result["counts"]["found_pairs"] > 4
     assert result["counts"]["candidates"] == 4
+
+
+def _stub(
+    *,
+    verify: dict[str, Any] | Callable[[str], dict[str, Any]],
+    dedupe: dict[str, Any] | None = None,
+    positions: dict[str, list[dict[str, Any]]] | None = None,
+    collide: dict[str, list[dict[str, Any]]] | None = None,
+    handed: list[dict[str, Any]] | None = None,
+    seen: list[str] | None = None,
+):
+    """A generate stub built from answers per stage. `verify` may be a dict or
+    a function of the verify call's user text; `collide` maps a focal id to
+    its collisions; `positions` maps a transcript id to its positions."""
+    seen = seen if seen is not None else []
+
+    async def generate(
+        *, system_prompt: str, user_text: str, schema: dict[str, Any], thinking: bool
+    ) -> dict[str, Any]:
+        if schema is HANDED_SCHEMA:
+            return {"handed": handed or []}
+        if schema is POSITIONS_SCHEMA:
+            tid = user_text.split("TRANSCRIPT id: ", 1)[1].split("\n", 1)[0].strip()
+            return {"positions": (positions or {}).get(tid, [])}
+        if schema is COLLISIONS_SCHEMA:
+            focal = user_text.rsplit("FOCAL POSITION: ", 1)[1].strip()
+            return {"collides": (collide or {}).get(focal, [])}
+        if schema is VERIFY_SCHEMA:
+            seen.append(user_text)
+            return verify(user_text) if callable(verify) else verify
+        if schema is DEDUPE_SCHEMA:
+            return dedupe or {"same_as": "", "swapped": False, "why": ""}
+        if schema is WRITE_SCHEMA:
+            return {
+                "poleA": "",
+                "poleB": "",
+                "knot": "Record it and candour goes; keep it off and the memory goes.",
+                "toResolve": "Which conversations go on the record?",
+            }
+        raise AssertionError("unexpected schema")
+
+    return generate
+
+
+def _pos(position: str, quote: str, kind: str = "want") -> dict[str, Any]:
+    return {"position": position, "holder": "h", "kind": kind, "hedged": False, "quote": quote}
+
+
+def test_a_tension_needs_evidence_on_both_poles() -> None:
+    """Astra's reproduction (September 5th 2026): a pair the verifier calls
+    valid with two pole labels and no quotes reached the deck as a tension
+    with `quoteIds: []`. Now it is unsupported and dropped."""
+    generate = _stub(
+        verify={
+            "valid": True,
+            "why": "both held",
+            "poleA": "record every conversation",
+            "poleB": "keep no recording",
+            "quotesA": [],
+            "quotesB": ["would not speak freely on a permanent record"],
+        },
+        positions={
+            "t1": [_pos("record everything", "record everything")],
+            "t2": [_pos("no record", "permanent record")],
+        },
+        collide={"P1": [{"id": "P2", "why": "candour", "zero_sum": 0.9}]},
+    )
+    book = QuoteBook({"t1": T1, "t2": T2})
+    result = asyncio.run(
+        run_pipeline({"t1": T1, "t2": T2}, book, generate=generate, prompts=PROMPTS)
+    )
+    assert result["tensions"] == {"tensions": []}
+    assert result["counts"]["verified"] == 0 and result["counts"]["unsupported"] == 1
+    assert book.quotes == []
+
+
+def test_a_quote_is_registered_against_the_transcript_that_holds_it() -> None:
+    """The verifier may quote pole A with words said at pole B's table; the
+    quote goes into the registry under the table that said them, and when both
+    tables said them, under the pole's own."""
+    both = "Some things stay in the room."
+    t1 = T1 + " " + both
+    generate = _stub(
+        verify={
+            "valid": True,
+            "why": "both held",
+            "poleA": "record every conversation",
+            "poleB": "no permanent record",
+            # said only at t2, quoted for pole A; said at both, quoted for pole B
+            "quotesA": ["would not speak freely on a permanent record", both],
+            "quotesB": [both],
+        },
+        positions={
+            "t1": [_pos("record everything", "record everything")],
+            "t2": [_pos("no record", "permanent record")],
+        },
+        collide={"P1": [{"id": "P2", "why": "candour", "zero_sum": 0.9}]},
+    )
+    book = QuoteBook({"t1": t1, "t2": T2})
+    result = asyncio.run(
+        run_pipeline({"t1": t1, "t2": T2}, book, generate=generate, prompts=PROMPTS)
+    )
+    t = result["tensions"]["tensions"][0]
+    by_id = {q["id"]: q for q in book.quotes}
+    regs = [(by_id[q]["transcript"], by_id[q]["text"]) for q in t["quoteIds"]]
+    assert regs == [
+        ("t2", "would not speak freely on a permanent record"),
+        ("t1", both),  # pole A's own table first
+        ("t2", both),  # pole B's own table
+    ]
+
+
+def test_a_swapped_facet_puts_its_quotes_on_the_other_pole() -> None:
+    T3 = "Do not rush this, it needs checking. Move quickly or we lose the moment."
+    transcripts = {"t1": T1, "t2": T2, "t3": T3}
+    writes: list[str] = []
+
+    def verify(user_text: str) -> dict[str, Any]:
+        if "check carefully" in user_text:
+            # The facet arrives the other way round: its A is the kept tension's B side.
+            return {
+                "valid": True,
+                "why": "held",
+                "poleA": "check it carefully first",
+                "poleB": "record every conversation",
+                "quotesA": ["Do not rush this"],
+                "quotesB": ["record everything so nothing is lost"],
+            }
+        return {
+            "valid": True,
+            "why": "held",
+            "poleA": "record every conversation",
+            "poleB": "no permanent record",
+            "quotesA": ["record everything so nothing is lost"],
+            "quotesB": ["would not speak freely on a permanent record"],
+        }
+
+    generate = _stub(
+        verify=verify,
+        dedupe={"same_as": "x1", "swapped": True, "why": "a facet, poles the other way"},
+        positions={
+            "t1": [_pos("record everything", "record everything so nothing is lost")],
+            "t2": [
+                _pos(
+                    "no permanent record",
+                    "would not speak freely on a permanent record",
+                    "constraint",
+                )
+            ],
+            "t3": [_pos("check carefully", "Do not rush this", "value")],
+        },
+        collide={
+            "P1": [
+                {"id": "P2", "why": "candour", "zero_sum": 0.9},
+                {"id": "P3", "why": "haste", "zero_sum": 0.8},
+            ]
+        },
+    )
+
+    async def spy(**kwargs: Any) -> dict[str, Any]:
+        if kwargs["schema"] is WRITE_SCHEMA:
+            writes.append(kwargs["user_text"])
+        return await generate(**kwargs)
+
+    book = QuoteBook(transcripts)
+    result = asyncio.run(
+        run_pipeline(transcripts, book, generate=spy, prompts=PROMPTS, max_tensions=1)
+    )
+    assert len(result["tensions"]["tensions"]) == 1 and len(writes) == 1
+    holding_a = writes[0].split("HOLDING A:", 1)[1].split("\n", 1)[0]
+    holding_b = writes[0].split("HOLDING B:", 1)[1].split("\n", 1)[0]
+    # The facet's "Do not rush this" held its pole A, which is the kept pole B.
+    assert "Do not rush this" in holding_b and "Do not rush this" not in holding_a
+    by_id = {q["id"]: q for q in book.quotes}
+    assert [by_id[q]["transcript"] for q in result["tensions"]["tensions"][0]["quoteIds"]] == [
+        "t1",
+        "t2",
+        "t3",
+    ]
+
+
+def test_handed_items_whose_quote_is_not_in_the_transcripts_are_marked() -> None:
+    seen: list[str] = []
+    generate = _stub(
+        verify={"valid": False, "why": "n", "poleA": "", "poleB": "", "quotesA": [], "quotesB": []},
+        positions={"t1": [_pos("a", "x")], "t2": [_pos("b", "y")]},
+        collide={"P1": [{"id": "P2", "why": "w", "zero_sum": 0.5}]},
+        handed=[
+            {
+                "text": "capture vs privacy",
+                "quote": "record everything so nothing is lost",
+                "transcript": "t1",
+                "response": "argued",
+                "status": "argued",
+            },
+            {
+                "text": "a card nobody read",
+                "quote": "these words were never said",
+                "transcript": "t2",
+                "response": "ignored",
+                "status": "ignored",
+            },
+        ],
+        seen=seen,
+    )
+    book = QuoteBook({"t1": T1, "t2": T2})
+    result = asyncio.run(
+        run_pipeline({"t1": T1, "t2": T2}, book, generate=generate, prompts=PROMPTS)
+    )
+    assert len(seen) == 1
+    handed = seen[0].split("WHAT THE ROOMS WERE HANDED:", 1)[1].split("THE PAIR:", 1)[0]
+    first, second = handed.split("- [argued]", 1)[1].split("- [ignored]", 1)
+    assert "not found" not in first and "its quote was not found in the transcripts" in second
+    assert result["counts"]["handed"] == 2 and result["counts"]["handed_verified"] == 1
+
+
+def test_handed_and_positions_run_side_by_side() -> None:
+    positions_started = asyncio.Event()
+
+    async def generate(
+        *, system_prompt: str, user_text: str, schema: dict[str, Any], thinking: bool
+    ) -> dict[str, Any]:
+        if schema is HANDED_SCHEMA:
+            # Sequential stages would wait here forever: positions never start.
+            await asyncio.wait_for(positions_started.wait(), 2)
+            return {"handed": []}
+        if schema is POSITIONS_SCHEMA:
+            positions_started.set()
+            return {"positions": []}
+        raise AssertionError("unexpected schema")
+
+    async def run() -> dict[str, Any]:
+        book = QuoteBook({"t1": T1})
+        return await asyncio.wait_for(
+            run_pipeline({"t1": T1}, book, generate=generate, prompts=PROMPTS), 5
+        )
+
+    assert asyncio.run(run())["tensions"] == {"tensions": []}
+
+
+def test_trim_keeps_one_position_for_every_transcript() -> None:
+    """Astra's reproduction: 81 transcripts with one position each and a cap
+    of 80 left one transcript with no position at all. A table is never
+    squeezed off the slide by the budget."""
+    many = {f"t{i}": [{"position": str(i), "verbatim": True, "hedged": False}] for i in range(81)}
+    trimmed = trim_positions(many, cap=80)
+    assert all(len(items) == 1 for items in trimmed.values())
+    # With room to spare the cap still holds exactly.
+    two_each = {
+        f"t{i}": [
+            {"position": f"{i}a", "verbatim": True, "hedged": False},
+            {"position": f"{i}b", "verbatim": True, "hedged": False},
+        ]
+        for i in range(50)
+    }
+    trimmed = trim_positions(two_each, cap=80)
+    assert sum(len(v) for v in trimmed.values()) == 80 and all(v for v in trimmed.values())

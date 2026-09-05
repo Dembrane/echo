@@ -157,17 +157,19 @@ flowchart TD
   C -- new or grown --> S[Publish the session list first<br/>so the legend shows before any phrase]:::store
   S --> F[Fast pass, in parallel<br/>one call per changed conversation]:::model
   F --> W1[Write each conversation<br/>the moment its phrases land]:::store
-  W1 --> E[Second pass, only now<br/>two calls per phrase owed]:::model
+  W1 --> E[Second pass, only now<br/>two calls per phrase owed, at once]:::model
+  W1 --> A[Analysis, beside the second pass:<br/>stakeholders call and tensions pipeline]:::model
   E --> W2[Write each conversation once<br/>quotes, kinds, question marks]:::store
-  W2 --> A[Analysis, side by side:<br/>stakeholders call and tensions pipeline]:::model
-  C -- nothing changed, nothing owed --> N[No-op, next tick booked]:::code
-  A --> P[Prune the quote registry<br/>to what the deck still cites]:::code
+  A --> W4[Commit each view on its own<br/>stamped with the session it read]:::store
+  C -- nothing changed, nothing owed, no view stale --> N[No-op, next tick booked]:::code
+  W2 --> P[Prune the quote registry<br/>to what the deck still cites]:::code
+  W4 --> P
   P --> W3[Write the state, save a replayable version<br/>book the next tick]:::store
   classDef model fill:#EEF1FD,stroke:#4169E1,color:#2D2D2C;
   classDef code fill:#F6F4F1,stroke:#8C8A85,color:#2D2D2C;
   classDef store fill:#E9F4EC,stroke:#2F7D4F,color:#2D2D2C;
 </pre>
-      <div class="diagram-caption">A tick that finds a conversation still owed its second pass runs it even when no transcript changed. A "read now" always runs the analysis.</div>
+      <div class="diagram-caption">A tick that finds a conversation still owed its second pass, or an analysis view that failed last time, runs that even when no transcript changed. A "read now" always runs the analysis. The second pass and the analysis both read the transcripts and neither reads the other, so they run together.</div>
     </div>
     <div class="prose">
       <p>Two things protect the room from a long tick. The run lock stops a second tick from writing the same state; only the tick that took it can renew or release it. The heartbeat key tells the reconciler (which rescues ticks whose worker died) that this one is alive, however long its second pass or its pipeline takes, so a slow tick is never rescued as a dead one, and a dead one is still noticed within ninety seconds.</p>
@@ -185,11 +187,11 @@ flowchart TD
     <div class="table-wrap"><table>
       <tr><th>Read</th><th>From</th><th>Used for</th></tr>
       <tr><td>id, participant name, created at, duration</td><td><code>conversation</code>, oldest first</td><td>the legend, the timeline, the order of the deck</td></tr>
-      <tr><td>transcript, timestamp, created at</td><td><code>conversation_chunk</code>, by timestamp</td><td>joined with line breaks into one transcript per conversation, capped at 150,000 characters</td></tr>
+      <tr><td>transcript, timestamp, created at</td><td><code>conversation_chunk</code>, by timestamp</td><td>joined with line breaks into one transcript per conversation; the whole of it is fingerprinted and quoted against, and the model reads its most recent 150,000 characters</td></tr>
       <tr><td>the host's voice note</td><td>popcorn settings</td><td>appended to the extractor's message; a change of voice re-reads every conversation</td></tr>
     </table></div>
     <div class="prose">
-      <p>Each conversation gets a fingerprint of its transcript plus the voice note. A conversation is re-read when its fingerprint moved or its last read never finished. A conversation that vanished (deleted, or its chunks gone) leaves the deck with the tick; when the last one vanishes, the slides and the quotes go with it.</p>
+      <p>Each conversation gets a fingerprint of its whole transcript, the voice note and the text of the popcorn prompts, so new speech, a change of voice and a new prompt version all re-read it. A conversation is re-read when its fingerprint moved or its last read never finished. On a runaway recording the model reads the most recent window; the host's bundle says how much lies before it (<code>coverage</code>). A conversation that vanished (deleted, or its chunks gone) leaves the deck with the tick; when the last one vanishes, the slides and the quotes go with it.</p>
     </div>
   </section>
 
@@ -241,7 +243,7 @@ flowchart LR
       <div class="stage-num">3</div>
       <div>
         <h2>The second pass</h2>
-        <p class="sub">Only after every fast extractor has written. Two calls per phrase owed, eight in flight, thinking on. Applied in one write per conversation, so a phrase is never half-updated on the wall.</p>
+        <p class="sub">Only after every fast extractor has written. Two calls per phrase owed, asked at once, eight in flight, thinking on. Applied in one write per conversation, so a phrase is never half-updated on the wall.</p>
       </div>
     </div>
     <div class="diagram">
@@ -255,8 +257,10 @@ flowchart LR
   K --> Q{question kind<br/>written as a statement?}:::code
   Q -- yes --> RW[popcorn-question<br/>rewritten as the question asked]:::model
   RW --> QG[Rewrite gate<br/>ends in ?, 13 words, no name]:::gate
+  QG -- rewritten --> V2[popcorn-validate again,<br/>on the words the room will read]:::model
+  V2 --> VC
   H --> A[Apply once per conversation]:::code
-  QG --> A
+  QG -- kept as it was --> A
   Q -- no --> A
   A --> W[(quoteId, kind, question,<br/>qualifiers; revision +1;<br/>validated if every call landed)]:::store
   classDef model fill:#EEF1FD,stroke:#4169E1,color:#2D2D2C;
@@ -267,7 +271,8 @@ flowchart LR
     </div>
     <div class="table-wrap"><table>
       <tr><th>Outcome</th><th>Rule</th><th>On the wall</th></tr>
-      <tr><td>rooted</td><td>the model's passage is in the transcript word for word</td><td>the phrase wears quotation marks and opens the passage on click</td></tr>
+      <tr><td>rooted, verbatim</td><td>the phrase itself is in the transcript word for word (code, from the fast pass)</td><td>the phrase wears quotation marks and opens its passage on click</td></tr>
+      <tr><td>rooted, a paraphrase</td><td>the model's passage is in the transcript word for word; the phrase is not</td><td>the phrase wears the passage mark ❝, no quotation marks, and opens the passage on click</td></tr>
       <tr><td>unrooted</td><td>the passage is not verbatim, or the model said it found none</td><td>plain phrase, no click; the host sees the closest passage instead</td></tr>
       <tr><td>a kind</td><td>one of observation, distinction, need, practice, idea, objection, question, decision</td><td>an icon before the phrase, its one-word name on hover; qualifiers (tentative, personal experience, not implemented) are stored, not drawn</td></tr>
       <tr><td>a hedge added</td><td>"can", "may", "often" and the like in the phrase but not in the passage</td><td>nothing yet: kept on the state under <code>review</code> for the host</td></tr>
@@ -287,7 +292,7 @@ flowchart LR
     <div class="table-wrap"><table>
       <tr><th>Rule</th><th>What it means</th></tr>
       <tr><td>seeded</td><td>each tick starts from the registry it inherited; a seeded quote whose conversation is gone is dropped with it</td></tr>
-      <tr><td>verbatim only</td><td>a quote that is not in its transcript word for word is refused (the model may misattribute the transcript; the words must exist somewhere)</td></tr>
+      <tr><td>verbatim only</td><td>a quote that is not in any transcript word for word is refused; one the model credited to the wrong table is credited to the table that said it, and the run's log line counts those</td></tr>
       <tr><td>one per table</td><td>the same words said at two tables are two quotes, one per conversation, so the modal names the right table</td></tr>
       <tr><td>no speaker</td><td>a context line naming a person, a pronoun, an organisation, or a name from the introductions is dropped: the transcripts carry no speakers, so a context that assigns one is a guess</td></tr>
       <tr><td>pruned</td><td>after the analysis, only quotes something on the deck cites are kept</td></tr>
@@ -299,7 +304,7 @@ flowchart LR
       <div class="stage-num">5</div>
       <div>
         <h2>Stakeholders</h2>
-        <p class="sub">One call over the whole session (clipped evenly to 600,000 characters), thinking on, five-minute timeout, behind two checks with one retry.</p>
+        <p class="sub">One call over the whole session (a 600,000-character budget, shared so short transcripts keep every character and the long ones split what is left), thinking on, five-minute timeout, behind two checks with one retry.</p>
       </div>
     </div>
     <div class="diagram">
@@ -343,14 +348,16 @@ flowchart LR
 %%{init: {'theme':'neutral', 'flowchart': {'curve':'basis', 'nodeSpacing': 22, 'rankSpacing': 30}}}%%
 flowchart TD
   H[tensions-handed, one call over the session:<br/>what the rooms were handed from outside,<br/>and what each room did with it]:::model
-  H --> P[positions, one call per transcript:<br/>every want, constraint and value held,<br/>its holder never a name, a verbatim quote]:::model
-  P --> PB[Budget: at most 80 positions,<br/>transcripts take turns by firmness]:::gate
+  H --> HQ[Handed quotes checked;<br/>an item whose quote is nowhere<br/>is marked unverified for the verifier]:::gate
+  P[positions, one call per transcript, beside handed:<br/>every want, constraint and value held,<br/>its holder never a name, a verbatim quote]:::model
+  P --> PB[Budget: at most 80 positions,<br/>transcripts take turns by firmness,<br/>every table keeps at least one]:::gate
+  HQ --> V
   PB --> C[collisions, one call per position:<br/>which others it collides with, across all tables,<br/>and how zero-sum]:::model
   C --> CB[Pairs ranked cross-table first;<br/>the best pair of every table kept;<br/>at most 40 go on]:::gate
   CB --> V[tension-verify, one call per pair,<br/>with the two transcripts and the handed list:<br/>both poles held, zero-sum enough,<br/>not a handed trade-off reopened, not settled]:::model
-  V --> VQ[Quotes kept only if verbatim,<br/>at most two per pole]:::gate
-  VQ --> D[dedupe, one call per verified pair, in rank order,<br/>thinking off: the same tension, a facet of one, or new]:::model
-  D --> DB[At most 8 kept; later pairs still fold in as facets;<br/>a facet's quotes stay with its pole]:::gate
+  V --> VQ[Quotes kept only if verbatim, at most two per pole,<br/>each credited to the table that said it;<br/>a pole without a quote makes the pair unsupported]:::gate
+  VQ --> D[dedupe, one call per verified pair, in rank order,<br/>thinking off: the same tension, a facet of one, or new,<br/>and whether the facet's poles are the other way round]:::model
+  D --> DB[At most 8 kept; later pairs still fold in as facets;<br/>a facet's quotes go to the pole they held]:::gate
   DB --> W[tension-write, one call per tension:<br/>the knot and the question, facets in view]:::model
   W --> SG[Screen gate, one retry:<br/>poles 3 to 7 words, knot one sentence of at most 18,<br/>question at most 22, never reports the meeting]:::gate
   SG --> R[(tensions slide;<br/>quotes into the registry,<br/>each against its pole's transcript)]:::store
@@ -361,12 +368,13 @@ flowchart TD
     </div>
     <div class="table-wrap"><table>
       <tr><th>Budget or guard</th><th>Value</th><th>Why</th></tr>
-      <tr><td>positions per transcript</td><td class="num">at most 30 from the model, at most 80 in total</td><td>the platform's model found 178 on eight tables where the lab's found 59, and every position is one collisions call</td></tr>
+      <tr><td>positions per transcript</td><td class="num">at most 30 from the model, at most 80 in total, at least one per table</td><td>the platform's model found 178 on eight tables where the lab's found 59, and every position is one collisions call</td></tr>
       <tr><td>collision threshold</td><td class="num">zero-sum at least 0.2</td><td>below it the pair is not a collision</td></tr>
       <tr><td>pairs verified</td><td class="num">at most 40, cross-table first, one reserved per table</td><td>one verification call per pair with both transcripts in view</td></tr>
       <tr><td>tensions kept</td><td class="num">at most 8</td><td>the dedupe keeps folding facets after the cap</td></tr>
       <tr><td>per call</td><td class="num">240 seconds</td><td>a call that has not answered by then fails the slide; a failed stage cancels its siblings</td></tr>
-      <tr><td>on failure</td><td>the previous slides stay</td><td>unless they cite a conversation that is gone; then they are dropped</td></tr>
+      <tr><td>evidence</td><td>a quote on each pole</td><td>the verifier's yes without a passage holding a pole is unsupported, and the pair is dropped</td></tr>
+      <tr><td>on failure</td><td>the previous tensions slide stays; the stakeholders slide is committed on its own</td><td>unless the previous slide cites a conversation that is gone; then it is dropped</td></tr>
     </table></div>
     <div class="note amber">The known-text gate is not applied to tensions on the platform. In the lab it caught the theme cards read aloud into the room; here the only "shown text" would be the previous tick's own tensions, and a tension that persists across ticks must not trip it. The handed list in the verify call does that gate's job.</div>
   </section>
@@ -402,7 +410,7 @@ flowchart TD
     <div class="table-wrap"><table>
       <tr><th>File</th><th>Carries</th></tr>
       <tr><td><code>session.json</code></td><td>title, date, the transcripts with label, start time and duration (the timeline), the QR when on</td></tr>
-      <tr><td><code>popcorn/&lt;id&gt;.json</code></td><td>per phrase: id, phrase, weight, kind, question, qualifiers, quoteId; <code>validated</code> is true when the second pass finished for the transcript as it stands</td></tr>
+      <tr><td><code>popcorn/&lt;id&gt;.json</code></td><td>per phrase: id, phrase, weight, kind, question, qualifiers, quoteId, and <code>verbatim</code> when the phrase itself is in the transcript word for word; <code>validated</code> is true when the second pass finished for the transcript as it stands; the host's copy carries <code>coverage</code> when the model read a window</td></tr>
       <tr><td><code>quotes.json</code></td><td>id, transcript, text, and a context only when it assigns no speaker</td></tr>
       <tr><td><code>tensions.json</code></td><td>poles, knot, question, quote ids</td></tr>
       <tr><td><code>stakeholders.json</code></td><td>groups with rung and weights, relations with aspects, quote ids</td></tr>

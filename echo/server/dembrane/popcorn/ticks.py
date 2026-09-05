@@ -8,17 +8,21 @@ PROJECT_PLAN.md and tools/serve_demo.py):
   room before the slowest transcript finishes.
 - Only conversations whose transcript changed since the last tick are
   re-extracted. Unchanged ones keep their phrases and their stable ids.
-- Tensions and stakeholders read the whole session at once and run after the
-  popcorn pass, in parallel with each other. One QuoteBook owns the quote
-  registry for the run: every quote is checked verbatim against the transcripts
-  before it is written, and the analysis block is replaced atomically so a
-  new run never mixes with stale slides.
-- Once every fast extractor has flushed, each changed conversation gets the
-  second pass (`enrichment.py`): one evidence call and one kind call per
-  phrase, applied in one write per conversation, so its phrases turn into
-  verified quotes with icons while tensions and stakeholders are still
-  cooking. `validated` on the bundle means that pass finished for the
-  transcript as it stands.
+- Once every fast extractor has flushed, two things start together: the
+  second pass over each changed conversation (`enrichment.py`: one evidence
+  call and one kind call per phrase, at once, applied in one write per
+  conversation) and the session analysis (the stakeholders call and the
+  tensions pipeline, side by side). Neither reads the other's output; both
+  read the transcripts. `validated` on the bundle means the second pass
+  finished for the transcript as it stands.
+- Each analysis view is committed on its own, with the fingerprint of the
+  session it read: a failed stakeholders call keeps the previous stakeholders
+  and still publishes the new tensions, and the next tick retries only the
+  view that is stale.
+- A conversation's fingerprint covers its whole transcript, the host's voice
+  and the popcorn prompts, so new speech past the model's window, a change of
+  voice, or a new prompt version all re-read it. The model reads a window of
+  the transcript (`model_window`); the quote registry checks against all of it.
 - Every quote of the session lives in one registry (`state["quotes"]`), seeded
   into one QuoteBook per tick, so ids the deck already holds stay valid.
 """
@@ -39,6 +43,11 @@ from dembrane.canvas.events import publish_generation_nudge
 from dembrane.popcorn.flags import gate_items, known_shingles, introduced_names
 from dembrane.popcorn.gates import name_flags, island_flags
 from dembrane.popcorn.model import (
+    KIND_PROMPT,
+    POPCORN_PROMPT,
+    QUESTION_PROMPT,
+    VALIDATE_PROMPT,
+    STAKEHOLDERS_PROMPT,
     prompt_text,
     run_analysis,
     analysis_call,
@@ -83,11 +92,18 @@ MAX_PARALLEL_ANALYSIS = 12
 # in this long is not going to, and the tick must not wait on it forever.
 STAKEHOLDERS_TIMEOUT_SECONDS = 300
 # A single conversation rarely passes 100k characters in a day; the cap only
-# guards the prompt against a runaway recording.
+# guards the prompt against a runaway recording. It bounds what the model
+# reads (the most recent part), never what is fingerprinted or quoted.
 MAX_CHARS_PER_CONVERSATION = 150_000
-# The analysis corpus is every transcript at once. Above this the transcripts
-# are clipped evenly so the two slow calls stay inside one context window.
+# The analysis corpus is every transcript at once. Above this the budget is
+# shared so that short transcripts keep every character and the long ones
+# split what is left evenly, so the two slow calls stay inside one context.
 MAX_ANALYSIS_CHARS = 600_000
+# The prompts whose text is part of a conversation's fingerprint: a new prompt
+# version re-reads the session, like new speech would.
+POPCORN_PASS_PROMPTS = (POPCORN_PROMPT, VALIDATE_PROMPT, KIND_PROMPT, QUESTION_PROMPT)
+ANALYSIS_PASS_PROMPTS = (STAKEHOLDERS_PROMPT, *TENSION_PROMPTS)
+ANALYSIS_VIEWS = ("tensions", "stakeholders")
 RUN_LOCK_SECONDS = 5 * 60
 MANUAL_LOCK_WAIT_SECONDS = 180
 STALE_TICK_SECONDS = 90
@@ -121,6 +137,48 @@ def _as_id(value: Any) -> str | None:
 
 def _fingerprint(text: str) -> str:
     return hashlib.sha1(text.encode("utf-8")).hexdigest()[:16]
+
+
+def _prompts_version(names: tuple[str, ...]) -> str:
+    """One fingerprint over the text of the prompts a pass runs with."""
+    return _fingerprint("\x1f".join(prompt_text(name) for name in names))
+
+
+def model_window(text: str, cap: int | None = None) -> str:
+    """What the model reads of a conversation: all of it, or on a runaway
+    recording its most recent `cap` characters, from the next line break. The
+    fingerprint and the quote registry use the whole text, so speech past the
+    cap is still read when it arrives, and every quote still verifies."""
+    cap = MAX_CHARS_PER_CONVERSATION if cap is None else cap
+    if len(text) <= cap:
+        return text
+    tail = text[-cap:]
+    cut = tail.find("\n")
+    return tail[cut + 1 :] if 0 <= cut < 2000 else tail
+
+
+def allocate_chars(lengths: dict[str, int], budget: int) -> dict[str, int]:
+    """Share a character budget across transcripts: a transcript short enough
+    to fit its equal share keeps every character, and what it leaves goes to
+    the longer ones in equal measure. The largest total that fits, with no
+    transcript cut while a longer one is whole."""
+    if sum(lengths.values()) <= budget:
+        return dict(lengths)
+    quota: dict[str, int] = {}
+    remaining = budget
+    pending = sorted(lengths.items(), key=lambda kv: kv[1])
+    while pending:
+        share = remaining // len(pending)
+        tid, n = pending[0]
+        if n <= share:
+            quota[tid] = n
+            remaining -= n
+            pending.pop(0)
+        else:
+            for tid, _n in pending:
+                quota[tid] = share
+            pending = []
+    return quota
 
 
 def labels_for(conversation: dict[str, Any], index: int) -> tuple[str, str]:
@@ -312,7 +370,7 @@ async def gather_transcripts(
                 "filter": {"project_id": {"_eq": project_id}, "deleted_at": {"_null": True}},
                 "fields": ["id", "participant_name", "created_at", "duration"],
                 "sort": ["created_at"],
-                "limit": 500,
+                "limit": -1,
             }
         },
     )
@@ -359,7 +417,7 @@ async def gather_transcripts(
                 "short": short,
                 "created_at": conv.get("created_at"),
                 "duration": conv.get("duration"),
-                "text": text[:MAX_CHARS_PER_CONVERSATION],
+                "text": text,
             }
         )
     return out
@@ -398,12 +456,11 @@ async def _extract_one(
 ) -> None:
     cid = transcript["id"]
     entry = writer.state["conversations"][cid]
+    window = transcript.get("window") or model_window(transcript["text"])
     async with semaphore:
         started = _now()
         try:
-            raw = await extract_popcorn(
-                transcript_id=cid, transcript=transcript["text"], host_note=host_note
-            )
+            raw = await extract_popcorn(transcript_id=cid, transcript=window, host_note=host_note)
             # The gates are code: a name from the introductions, text the room was
             # shown, or a twin of another phrase never reaches the stage.
             items, suppressed = gate_items(
@@ -422,6 +479,8 @@ async def _extract_one(
                     "done": True,
                     "fingerprint": transcript["fingerprint"],
                     "chars": len(transcript["text"]),
+                    # characters before the model's window, for the host
+                    "clipped": len(transcript["text"]) - len(window),
                     "extracted_at": _now().isoformat(),
                     "error": None,
                 }
@@ -459,8 +518,10 @@ async def _enrich_one(
     # A phrase that already has its kind and its evidence answer is done; the
     # pass is retried only for what a failed call left behind.
     items = [item for item in entry.get("items") or [] if _needs_pass(item)]
-    text = transcript["text"]
-    names = introduced_names(text)
+    # The model reads the window the phrases came from; the introductions,
+    # and so the names, are at the start of the whole transcript.
+    text = transcript.get("window") or model_window(transcript["text"])
+    names = introduced_names(transcript["text"])
     started = _now()
 
     async def one(item: dict[str, Any]) -> dict[str, Any]:
@@ -572,20 +633,22 @@ async def _run_analysis_pass(
     transcripts: list[dict[str, Any]],
     outcomes: list[str],
     book: QuoteBook,
-) -> dict[str, Any] | None:
+) -> dict[str, dict[str, Any] | None]:
     """Both slow slides at once, registering into the tick's shared quote book:
     the stakeholders call with its two gates and one retry, and the tensions
-    pipeline. Returns the new analysis block, or None when either failed so
-    the previous block stays."""
-    total = sum(len(t["text"]) for t in transcripts)
-    per_transcript = (
-        MAX_ANALYSIS_CHARS // max(1, len(transcripts)) if total > MAX_ANALYSIS_CHARS else None
-    )
-    sources = {
-        t["id"]: (t["text"][:per_transcript] if per_transcript else t["text"]) for t in transcripts
-    }
+    pipeline. Returns one entry per view: the new slide, or None where that
+    view failed, so the caller keeps the previous one of those alone."""
+    lengths = {t["id"]: len(t["text"]) for t in transcripts}
+    quota = allocate_chars(lengths, MAX_ANALYSIS_CHARS)
+    sources = {t["id"]: t["text"][: quota[t["id"]]] for t in transcripts}
+    clipped = [tid for tid, n in lengths.items() if quota[tid] < n]
+    if clipped:
+        outcomes.append(
+            f"analysis corpus: {sum(quota.values())} of {sum(lengths.values())} chars read, "
+            f"{len(clipped)} of {len(lengths)} conversations cut short"
+        )
     corpus = build_corpus([(tid, text) for tid, text in sources.items()])
-    shaped: dict[str, dict[str, Any]] = {}
+    shaped: dict[str, dict[str, Any] | None] = {kind: None for kind in ANALYSIS_VIEWS}
 
     async def stakeholders_slide() -> None:
         started = _now()
@@ -601,12 +664,13 @@ async def _run_analysis_pass(
                 run_analysis(kind="stakeholders", corpus=corpus, feedback=flags),
                 timeout=STAKEHOLDERS_TIMEOUT_SECONDS,
             )
-        shaped["stakeholders"] = shape_stakeholders(raw, book)
-        left = name_flags(shaped["stakeholders"]) + island_flags(shaped["stakeholders"])
+        slide = shape_stakeholders(raw, book)
+        shaped["stakeholders"] = slide
+        left = name_flags(slide) + island_flags(slide)
         elapsed_ms = int((_now() - started).total_seconds() * 1000)
         outcomes.append(
-            f"stakeholders: {len(shaped['stakeholders']['stakeholders'])} items, "
-            f"{len(shaped['stakeholders']['relations'])} relations in {elapsed_ms} ms"
+            f"stakeholders: {len(slide['stakeholders'])} items, "
+            f"{len(slide['relations'])} relations in {elapsed_ms} ms"
             + (f", {len(flags)} gate flag(s), asked again" if flags else "")
             + (f", {len(left)} left" if left else "")
         )
@@ -629,23 +693,64 @@ async def _run_analysis_pass(
         )
 
     results = await asyncio.gather(stakeholders_slide(), tensions_slide(), return_exceptions=True)
-    failed = [
-        f"{kind}: FAILED {exc}"
-        for kind, exc in zip(("stakeholders", "tensions"), results, strict=True)
-        if isinstance(exc, BaseException)
-    ]
-    if failed:
-        outcomes.extend(failed)
-        return None
-    outcomes.append(f"quotes: {len(book.quotes)} verified, {book.rejected} rejected")
-    return {
-        "fingerprint": _fingerprint(
-            "|".join(f"{tid}:{_fingerprint(text)}" for tid, text in sources.items())
-        ),
-        "tensions": shaped["tensions"],
-        "stakeholders": shaped["stakeholders"],
-        "updated_at": _now().isoformat(),
+    for kind, exc in zip(("stakeholders", "tensions"), results, strict=True):
+        if isinstance(exc, BaseException):
+            outcomes.append(f"{kind}: FAILED {exc}")
+            shaped[kind] = None
+    outcomes.append(
+        f"quotes: {len(book.quotes)} verified, {book.rejected} rejected"
+        + (
+            f", {book.reattributed} credited to the table that said them"
+            if book.reattributed
+            else ""
+        )
+    )
+    return shaped
+
+
+def _stale_views(state: dict[str, Any], analysis_fingerprint: str) -> list[str]:
+    """The analysis views not yet computed over this session's transcripts."""
+    held = (state.get("analysis") or {}).get("fingerprints") or {}
+    return [kind for kind in ANALYSIS_VIEWS if held.get(kind) != analysis_fingerprint]
+
+
+def _commit_views(
+    state: dict[str, Any],
+    fresh: dict[str, dict[str, Any] | None],
+    *,
+    analysis_fingerprint: str,
+    held_quotes: set[str],
+    outcomes: list[str],
+) -> None:
+    """Each view on its own: a fresh slide replaces the old one and is stamped
+    with the session it read; a view that failed keeps its previous slide,
+    unless that slide cites a quote whose conversation is gone."""
+    previous = state.get("analysis") or {}
+    analysis: dict[str, Any] = {
+        "fingerprints": dict(previous.get("fingerprints") or {}),
+        "updated": dict(previous.get("updated") or {}),
     }
+    now = _now().isoformat()
+    for kind in ANALYSIS_VIEWS:
+        slide = fresh.get(kind)
+        if slide is not None:
+            analysis[kind] = slide
+            analysis["fingerprints"][kind] = analysis_fingerprint
+            analysis["updated"][kind] = now
+            continue
+        kept = previous.get(kind)
+        if kept and _referenced_quote_ids(kept) - held_quotes:
+            outcomes.append(f"{kind}: previous slide dropped, it cited a conversation that is gone")
+            kept = None
+        analysis[kind] = kept
+        if kept is None:
+            analysis["fingerprints"].pop(kind, None)
+            analysis["updated"].pop(kind, None)
+    if not any(analysis.get(kind) for kind in ANALYSIS_VIEWS):
+        state["analysis"] = None
+        return
+    analysis["updated_at"] = max(analysis["updated"].values(), default=now)
+    state["analysis"] = analysis
 
 
 async def _snapshot_version(
@@ -766,9 +871,12 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         transcripts = await gather_transcripts(
             project_id=project_id, acting_directus_user_id=acting_user_id
         )
+        pass_version = _prompts_version(POPCORN_PASS_PROMPTS)
         for t in transcripts:
-            # A change of voice re-reads every conversation, like a new transcript would.
-            t["fingerprint"] = _fingerprint(t["text"] + "\x1f" + host_note)
+            # The whole transcript, the voice and the prompts: a change of any
+            # re-reads the conversation, like new speech would.
+            t["fingerprint"] = _fingerprint(t["text"] + "\x1f" + host_note + "\x1f" + pass_version)
+            t["window"] = model_window(t["text"])
 
         changed: list[dict[str, Any]] = []
         for t in transcripts:
@@ -800,10 +908,10 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
 
         analysis_fingerprint = _fingerprint(
             "|".join(f"{t['id']}:{t['fingerprint']}" for t in transcripts)
+            + "\x1f"
+            + _prompts_version(ANALYSIS_PASS_PROMPTS)
         )
-        analysis_stale = bool(transcripts) and (
-            (state.get("analysis") or {}).get("fingerprint") != analysis_fingerprint
-        )
+        analysis_stale = bool(transcripts) and bool(_stale_views(state, analysis_fingerprint))
 
         owed = _pending_enrichment(state, transcripts)
         if not changed and not analysis_stale and not owed and tick_kind != "manual":
@@ -848,30 +956,34 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
             existing=state.get("quotes"),
         )
 
-        # The second pass, only now that every first phrase is on the stage: the
-        # conversations re-read this tick, and any whose earlier pass did not finish.
-        pending = _pending_enrichment(state, transcripts)
-        if pending:
-            enrich_semaphore = asyncio.Semaphore(MAX_PARALLEL_ENRICHMENT)
-            await asyncio.gather(
-                *(_enrich_one(writer, enrich_semaphore, t, outcomes, book) for t in pending)
+        # Only now that every first phrase is on the stage, two things at once,
+        # both reading the transcripts and neither the other: the second pass
+        # over the conversations re-read this tick (and any whose earlier pass
+        # did not finish), and the session analysis.
+        async def second_pass() -> None:
+            pending = _pending_enrichment(state, transcripts)
+            if pending:
+                enrich_semaphore = asyncio.Semaphore(MAX_PARALLEL_ENRICHMENT)
+                await asyncio.gather(
+                    *(_enrich_one(writer, enrich_semaphore, t, outcomes, book) for t in pending)
+                )
+
+        async def analysis_pass() -> None:
+            if not transcripts or not (analysis_stale or changed or tick_kind == "manual"):
+                return
+            fresh = await _run_analysis_pass(transcripts, outcomes, book)
+            # A view that failed keeps its previous slide, unless it cites a quote
+            # whose conversation is gone: those words have left the session, and
+            # a slide pointing at them would show a dead quote.
+            _commit_views(
+                state,
+                fresh,
+                analysis_fingerprint=analysis_fingerprint,
+                held_quotes={q["id"] for q in book.quotes},
+                outcomes=outcomes,
             )
 
-        if transcripts and (analysis_stale or changed or tick_kind == "manual"):
-            analysis = await _run_analysis_pass(transcripts, outcomes, book)
-            if analysis is not None:
-                analysis["fingerprint"] = analysis_fingerprint
-                state["analysis"] = analysis
-            elif state.get("analysis"):
-                # The previous slides stay, unless they cite a quote whose
-                # conversation is gone: those words have left the session, and a
-                # slide pointing at them would show a dead quote.
-                held = {q["id"] for q in book.quotes}
-                if _referenced_quote_ids(state["analysis"]) - held:
-                    state["analysis"] = None
-                    outcomes.append(
-                        "analysis: previous slides dropped, they cited a conversation that is gone"
-                    )
+        await asyncio.gather(second_pass(), analysis_pass())
         if transcripts:
             state["quotes"] = _referenced_quotes(state, book.quotes)
             await writer.flush()

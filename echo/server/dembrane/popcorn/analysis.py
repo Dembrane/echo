@@ -270,6 +270,8 @@ class QuoteBook:
         self.quotes: list[dict[str, Any]] = []
         self._seen: dict[tuple[str, str], str] = {}
         self.rejected = 0
+        # quotes the model credited to one table that only another said
+        self.reattributed = 0
         self._next = 1
         for q in existing or []:
             if not isinstance(q, dict):
@@ -311,10 +313,14 @@ class QuoteBook:
         key = norm(text)
         tid = str(q.get("transcript") or "")
         found_in = tid if key in self.norm_sources.get(tid, "") else None
-        if found_in is None:  # model may misattribute; accept if it exists anywhere
+        if found_in is None:
+            # The model may credit the wrong table. The words are the evidence
+            # and the table that said them is their provenance, so the quote
+            # is credited to that table, and counted, never silently.
             for cand, body in self.norm_sources.items():
                 if key in body:
                     found_in = cand
+                    self.reattributed += 1
                     break
         if found_in is None:
             self.rejected += 1

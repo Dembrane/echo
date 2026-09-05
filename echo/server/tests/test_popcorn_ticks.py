@@ -299,9 +299,9 @@ def test_first_tick_pops_every_transcript_then_analyses(fake: _FakeDirectus, mon
         "analysis:stakeholders",
         "analysis:tensions",
     ]
-    assert calls.index("analysis:tensions") > max(
-        i for i, c in enumerate(calls) if c.startswith(("validate", "kind"))
-    )
+    # Each view is stamped with the session it read.
+    fps = state["analysis"]["fingerprints"]
+    assert set(fps) == {"tensions", "stakeholders"} and len(set(fps.values())) == 1
 
     runs = fake.created["agent_loop_run"]
     assert runs[-1]["status"] == "ok"
@@ -448,7 +448,7 @@ def test_a_joined_stakeholder_name_is_sent_back_once(fake: _FakeDirectus, monkey
     assert "asked again" in fake.created["agent_loop_run"][-1]["detail"]
 
 
-def test_previous_slides_go_when_a_cited_conversation_is_gone_and_the_new_run_fails(
+def test_a_previous_view_goes_when_a_cited_conversation_is_gone_and_its_new_run_fails(
     fake: _FakeDirectus, monkeypatch
 ) -> None:
     calls: list[str] = []
@@ -457,20 +457,23 @@ def test_previous_slides_go_when_a_cited_conversation_is_gone_and_the_new_run_fa
     state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
     assert state["analysis"]["tensions"]["tensions"][0]["quoteIds"]  # cites c1's words
 
-    async def _broken(
-        *, kind: str, corpus: str, feedback: list[str] | None = None
-    ) -> dict[str, Any]:  # noqa: ARG001
+    async def _broken_pipeline(sources: dict[str, str], book: Any) -> dict[str, Any]:  # noqa: ARG001
         raise RuntimeError("quota")
 
-    monkeypatch.setattr(ticks, "run_analysis", _broken)
+    monkeypatch.setattr(ticks, "run_tensions_pipeline", _broken_pipeline)
     fake.chunks[:] = [
         c for c in fake.chunks if c["conversation_id"] != "c1"
     ]  # c1's transcript is gone
     result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
     assert result["status"] == "ok"
     state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
-    assert state["analysis"] is None
-    assert "cited a conversation that is gone" in fake.created["agent_loop_run"][-1]["detail"]
+    # The tensions slide cited c1 and could not be redone: gone. The
+    # stakeholders slide was redone and stays, on its own.
+    assert state["analysis"]["tensions"] is None
+    assert "tensions" not in state["analysis"]["fingerprints"]
+    assert len(state["analysis"]["stakeholders"]["stakeholders"]) == 2
+    detail = fake.created["agent_loop_run"][-1]["detail"]
+    assert "tensions: FAILED quota" in detail and "tensions: previous slide dropped" in detail
 
 
 def test_a_stuck_stakeholders_call_fails_the_slide_instead_of_the_tick(
@@ -504,7 +507,10 @@ def test_failed_extractor_does_not_stall_the_stage(fake: _FakeDirectus, monkeypa
     assert "FAILED" in fake.created["agent_loop_run"][-1]["detail"]
 
 
-def test_failed_analysis_keeps_previous_block(fake: _FakeDirectus, monkeypatch) -> None:
+def test_each_analysis_view_is_committed_on_its_own(fake: _FakeDirectus, monkeypatch) -> None:
+    """Astra's finding: a failed stakeholders call used to discard the new
+    tensions with it. Now the tensions land, the previous stakeholders stay,
+    and the next tick redoes only the stale view."""
     calls: list[str] = []
     _install_models(monkeypatch, calls=calls)
     asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
@@ -520,8 +526,126 @@ def test_failed_analysis_keeps_previous_block(fake: _FakeDirectus, monkeypatch) 
     result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
     assert result["status"] == "ok"
     state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
-    assert state["analysis"] == previous
+    analysis = state["analysis"]
+    assert analysis["stakeholders"] == previous["stakeholders"]
+    assert analysis["fingerprints"]["stakeholders"] == previous["fingerprints"]["stakeholders"]
+    assert analysis["fingerprints"]["tensions"] != previous["fingerprints"]["tensions"]
+    assert analysis["updated"]["tensions"] > analysis["updated"]["stakeholders"]
     assert "stakeholders: FAILED quota" in fake.created["agent_loop_run"][-1]["detail"]
+
+    # Nothing changed, but the stakeholders view is stale: only it is redone.
+    _install_models(monkeypatch, calls=calls)
+    calls.clear()
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
+    assert result["status"] == "ok"
+    assert [c for c in calls if c.startswith(("popcorn", "validate"))] == []
+    assert "analysis:stakeholders" in calls
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    assert len(set(state["analysis"]["fingerprints"].values())) == 1
+    assert asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))["status"] == "no_op"
+
+
+def test_a_transcript_past_the_cap_is_still_read_when_it_grows(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    """Astra's reproduction: the transcript was clipped before it was
+    fingerprinted, so speech after the cap never changed the fingerprint and
+    was never read. The fingerprint now covers the whole transcript and the
+    model reads its most recent window."""
+    calls: list[str] = []
+    seen: dict[str, str] = {}
+    _install_models(monkeypatch, calls=calls)
+    monkeypatch.setattr(ticks, "MAX_CHARS_PER_CONVERSATION", 200)
+
+    async def _extract(
+        *, transcript_id: str, transcript: str, host_note: str = ""
+    ) -> dict[str, Any]:  # noqa: ARG001
+        calls.append(f"popcorn:{transcript_id}")
+        seen[transcript_id] = transcript
+        return {
+            "items": [{"phrase": transcript.strip().split("\n")[-1].split(".")[0], "weight": 2}]
+        }
+
+    monkeypatch.setattr(ticks, "extract_popcorn", _extract)
+    fake.chunks[:] = [
+        {
+            "id": "k1",
+            "conversation_id": "c1",
+            "transcript": "Hi, I'm Priya.\n" + ("filler " * 60).strip(),
+            "timestamp": 1,
+        },
+    ]
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    assert len(seen["c1"]) <= 200 and "Priya" not in seen["c1"]
+    assert state["conversations"]["c1"]["clipped"] > 0
+    fake.chunks.append(
+        {
+            "id": "k2",
+            "conversation_id": "c1",
+            "transcript": "A new position after the cap.",
+            "timestamp": 2,
+        }
+    )
+    calls.clear()
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
+    assert result["status"] == "ok"
+    assert calls.count("popcorn:c1") == 1 and "A new position after the cap" in seen["c1"]
+    assert state["conversations"]["c1"]["items"][0]["phrase"] == "A new position after the cap"
+
+
+def test_analysis_budget_is_shared_so_short_transcripts_keep_everything() -> None:
+    """Astra's reproduction: eight transcripts of 640,000 characters kept
+    340,000 under a 600,000 budget, because every one got the same quota."""
+    lengths = {f"t{i}": 150_000 for i in range(4)} | {f"s{i}": 10_000 for i in range(4)}
+    quota = ticks.allocate_chars(lengths, 600_000)
+    assert sum(quota.values()) == 600_000
+    assert all(quota[f"s{i}"] == 10_000 for i in range(4))
+    assert all(quota[f"t{i}"] == 140_000 for i in range(4))
+    assert ticks.allocate_chars({"a": 5, "b": 7}, 100) == {"a": 5, "b": 7}
+    assert ticks.model_window("x" * 10, cap=20) == "x" * 10
+    # The window starts at the first line break inside it, when one is near.
+    assert ticks.model_window("early\nlate\n" + "x" * 20, cap=25) == "x" * 20
+    assert ticks.model_window("late" * 10, cap=25) == ("late" * 10)[-25:]
+
+
+def test_the_second_pass_and_the_analysis_run_side_by_side(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    analysed = asyncio.Event()
+
+    async def _validate(*, transcript_id: str, transcript: str, phrase: str) -> dict[str, Any]:  # noqa: ARG001
+        # A second pass that had to finish before the analysis would wait here forever.
+        await asyncio.wait_for(analysed.wait(), 2)
+        return {"grounded": True, "quote": transcript.split("\n")[0], "reason": "r"}
+
+    async def _pipeline(sources: dict[str, str], book: Any) -> dict[str, Any]:  # noqa: ARG001
+        analysed.set()
+        return {"tensions": {"tensions": []}, "gate_flags": [], "counts": {}}
+
+    monkeypatch.setattr(ticks, "validate_phrase", _validate)
+    monkeypatch.setattr(ticks, "run_tensions_pipeline", _pipeline)
+
+    async def run() -> dict[str, Any]:
+        return await asyncio.wait_for(ticks.run_popcorn_tick("loop1", "manual"), 5)
+
+    assert asyncio.run(run())["status"] == "ok"
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    assert state["conversations"]["c1"]["items"][0]["quoteId"]
+
+
+def test_a_new_prompt_version_re_reads_the_session(fake: _FakeDirectus, monkeypatch) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    calls.clear()
+    assert asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))["status"] == "no_op"
+    monkeypatch.setattr(ticks, "_prompts_version", lambda names: "v-next")  # noqa: ARG005
+    assert asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))["status"] == "ok"
+    assert sorted(c for c in calls if c.startswith("popcorn")) == ["popcorn:c1", "popcorn:c2"]
+    assert "analysis:tensions" in calls
 
 
 def test_non_popcorn_loop_is_refused(fake: _FakeDirectus) -> None:

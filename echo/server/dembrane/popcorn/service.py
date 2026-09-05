@@ -671,6 +671,11 @@ def build_bundle(
             }
             if item.get("question"):
                 entry["question"] = True
+            # The phrase itself is in the transcript word for word: the deck
+            # may draw it in quotation marks. A rooted paraphrase is not a
+            # quotation; it opens its passage without the marks.
+            if item.get("verbatim"):
+                entry["verbatim"] = True
             if item.get("kind"):
                 entry["kind"] = item["kind"]
                 entry["qualifiers"] = [str(q) for q in (item.get("qualifiers") or [])]
@@ -684,7 +689,7 @@ def build_bundle(
                     else None,
                 }
             items_out.append(entry)
-        files[f"popcorn/{cid}.json"] = {
+        popcorn_file: dict[str, Any] = {
             "transcript": cid,
             "revision": int(conv.get("revision") or 1),
             "done": bool(conv.get("done")),
@@ -695,6 +700,13 @@ def build_bundle(
             and conv.get("validated_fingerprint") == conv.get("fingerprint"),
             "items": items_out,
         }
+        if host and int(conv.get("clipped") or 0) > 0:
+            # A runaway recording: the model read the most recent window only.
+            popcorn_file["coverage"] = {
+                "chars": int(conv.get("chars") or 0),
+                "clipped": int(conv.get("clipped") or 0),
+            }
+        files[f"popcorn/{cid}.json"] = popcorn_file
 
     tabs = settings.get("tabs") or {}
     registry = state.get("quotes") or []

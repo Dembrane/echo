@@ -121,11 +121,14 @@ def test_enrich_item_rewrites_a_question_written_as_a_statement() -> None:
     result = asyncio.run(
         enrich_item(item, transcript_id="t1", transcript=TRANSCRIPT, names=set(), **calls)
     )
-    assert log == ["validate", "classify", "rewrite"]
+    # Evidence and kind at once; the rewrite is validated again, so the passage
+    # behind the phrase is the passage behind the words the room will read.
+    assert log == ["validate", "classify", "rewrite", "validate"]
     assert result["kind"]["question"] is True
     assert (
         result["rewritten"] == "At what stage do we introduce the tools"
     )  # the mark is the deck's
+    assert result["evidence"]["for"] == "At what stage do we introduce the tools"
     assert result["errors"] == []
 
 
@@ -232,3 +235,72 @@ def test_a_rewrite_that_carries_a_name_is_refused() -> None:
         enrich_item(item, transcript_id="t1", transcript=TRANSCRIPT, names={"Alice"}, **calls)
     )
     assert "rewritten" not in result and result["kind"]["question"] is False
+
+
+def test_evidence_and_kind_are_asked_for_at_once() -> None:
+    classified = asyncio.Event()
+
+    async def validate(**kwargs: Any) -> dict[str, Any]:  # noqa: ARG001
+        # One call after the other would wait here forever.
+        await asyncio.wait_for(classified.wait(), 2)
+        return {"grounded": True, "quote": "Nobody joins for the desks. I could", "reason": "r"}
+
+    async def classify(**kwargs: Any) -> dict[str, Any]:  # noqa: ARG001
+        classified.set()
+        return {
+            "kind": "observation",
+            "qualifiers": [],
+            "question_form": False,
+            "target": "",
+            "reason": "r",
+        }
+
+    async def run() -> dict[str, Any]:
+        return await asyncio.wait_for(
+            enrich_item(
+                {"id": "p1", "phrase": "Nobody joins for the desks"},
+                transcript_id="t1",
+                transcript=TRANSCRIPT,
+                names=set(),
+                validate=validate,
+                classify=classify,
+                rewrite=classify,
+            ),
+            5,
+        )
+
+    result = asyncio.run(run())
+    assert result["evidence"]["grounded"] and result["kind"]["kind"] == "observation"
+
+
+def test_a_rewritten_question_keeps_the_evidence_of_its_final_words() -> None:
+    """Astra's finding: the rewrite changed the phrase after its evidence was
+    checked. The evidence now follows the rewrite, hedges included."""
+    asked: list[str] = []
+
+    async def validate(*, phrase: str, **kwargs: Any) -> dict[str, Any]:  # noqa: ARG001
+        asked.append(phrase)
+        if phrase.startswith("At what stage"):
+            return {
+                "grounded": True,
+                "quote": "Knowing at what stage to introduce the tools, that is the thing",
+                "reason": "r",
+            }
+        return {
+            "grounded": True,
+            "quote": "Nobody joins for the desks. I could get a desk",
+            "reason": "r",
+        }
+
+    _, calls = _calls(question_rewrite="At what stage could we introduce the tools?")
+    calls["validate"] = validate
+    item = {"id": "p1", "phrase": "Knowing at what stage to introduce the tools", "weight": 1}
+    result = asyncio.run(
+        enrich_item(item, transcript_id="t1", transcript=TRANSCRIPT, names=set(), **calls)
+    )
+    assert asked == [
+        "Knowing at what stage to introduce the tools",
+        "At what stage could we introduce the tools",
+    ]
+    assert result["evidence"]["quote"].startswith("Knowing at what stage")
+    assert result["evidence"]["hedge_added"] == ["could"]  # against the final words

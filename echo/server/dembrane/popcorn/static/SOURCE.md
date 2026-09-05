@@ -28,6 +28,11 @@ Patches carried on top of upstream, all guarded by `window.POPCORN_EMBED`:
   bundle: neutral labels, no passages, no links.
 - A settled popcorn file is still applied when its revision moved: on the
   platform a conversation can be re-read after its transcript grows.
+- Quotation marks only for a phrase the bundle marks `verbatim` (the room's
+  words, word for word). A phrase with a `quoteId` and no `verbatim` is a
+  rooted paraphrase: it wears the passage mark (`.pop-mark`, ❝) and opens
+  its passage on click, but is not drawn as a quotation. The disclaimer under
+  the stage says which is which. Upstream draws marks on any `quoteId`.
 - `sample/` holds upstream `data/` verbatim for the Try it view.
 - `flow.html` is not upstream: the account of what the tick does, served at
   `view/flow/` while `SERVE_API_DOCS` is on; the footer links to it when the

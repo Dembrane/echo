@@ -3,7 +3,7 @@
 Ported from Dembrane/popcorn `tools/validate_popcorn.py` and
 `tools/classify_popcorn.py` (commit 8c23eba). The fast pass writes phrases
 without checking them, because latency is the point. Once they are on the
-stage, each phrase gets two calls with its transcript in view:
+stage, each phrase gets two calls at once, with its transcript in view:
 
 - evidence (`popcorn-validate`): the verbatim passage the phrase paraphrases.
   The passage is checked word for word against the transcript by code; a
@@ -14,7 +14,9 @@ stage, each phrase gets two calls with its transcript in view:
   `popcorn-ontology`), qualifiers that are stored and not drawn, and whether
   the phrase is a question in form. A question-kind phrase written as a
   statement is rewritten as the question that was asked (`popcorn-question`),
-  gated by the same contract as the extractor.
+  gated by the same contract as the extractor. A rewrite is then validated
+  again, so the passage behind a phrase is always the passage behind the
+  words the room reads, and the hedge check runs against those words.
 
 The model's reasons and targets never reach a screen: they are kept on the
 item under `review`, with the names from the introductions scrubbed, and the
@@ -24,6 +26,7 @@ bundle never emits `review`.
 from __future__ import annotations
 
 import re
+import asyncio
 from typing import Any, Callable, Awaitable
 
 from dembrane.popcorn.flags import name_hits, scrub_names
@@ -99,6 +102,8 @@ def evidence_from(raw: dict[str, Any], phrase: str, transcript: str) -> dict[str
         "quote": quote if grounded else "",
         "hedge_added": hedge_added(phrase, quote) if grounded else [],
         "reason": str(raw.get("reason") or "").strip(),
+        # the wording this evidence was checked against
+        "for": phrase,
     }
 
 
@@ -141,18 +146,19 @@ async def enrich_item(
     classify: Call,
     rewrite: Call,
 ) -> dict[str, Any]:
-    """Both calls for one phrase, each failure kept on its own so the other
-    still lands. Returns a result record; nothing is applied here."""
+    """Both calls for one phrase at once, each failure kept on its own so the
+    other still lands. Returns a result record; nothing is applied here."""
     phrase = str(item.get("phrase") or "")
     result: dict[str, Any] = {"id": item.get("id"), "phrase": phrase, "errors": []}
-    try:
-        raw = await validate(transcript_id=transcript_id, transcript=transcript, phrase=phrase)
-        result["evidence"] = evidence_from(raw, phrase, transcript)
-    except Exception as exc:  # one dead call must not cost the phrase its kind
-        result["errors"].append(f"evidence: {str(exc)[:200]}")
-    try:
+
+    async def evidence_for(text: str) -> dict[str, Any]:
+        raw = await validate(transcript_id=transcript_id, transcript=transcript, phrase=text)
+        return evidence_from(raw, text, transcript)
+
+    async def kind_for() -> tuple[dict[str, Any], str | None]:
         raw = await classify(transcript_id=transcript_id, transcript=transcript, phrase=phrase)
         kind = kind_from(raw, names)
+        rewritten = None
         if kind["kind"] == "question" and not kind["question"]:
             try:
                 out = await rewrite(
@@ -160,13 +166,31 @@ async def enrich_item(
                 )
                 candidate = str(out.get("phrase") or "").strip()
                 if question_ok(candidate) and not name_hits(candidate, names):
-                    result["rewritten"] = candidate[:-1].rstrip()
+                    rewritten = candidate[:-1].rstrip()
                     kind["question"] = True
             except Exception as exc:
                 result["errors"].append(f"question: {str(exc)[:200]}")
+        return kind, rewritten
+
+    evidence, kind_out = await asyncio.gather(
+        evidence_for(phrase), kind_for(), return_exceptions=True
+    )
+    if isinstance(kind_out, BaseException):
+        result["errors"].append(f"kind: {str(kind_out)[:200]}")
+    else:
+        kind, rewritten = kind_out
         result["kind"] = kind
-    except Exception as exc:
-        result["errors"].append(f"kind: {str(exc)[:200]}")
+        if rewritten:
+            result["rewritten"] = rewritten
+            # The words changed under the evidence: check the words the room reads.
+            try:
+                evidence = await evidence_for(rewritten)
+            except Exception as exc:
+                evidence = exc
+    if isinstance(evidence, BaseException):  # one dead call must not cost the phrase its kind
+        result["errors"].append(f"evidence: {str(evidence)[:200]}")
+    else:
+        result["evidence"] = evidence
     return result
 
 

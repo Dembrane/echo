@@ -86,3 +86,22 @@ def test_names_are_found_in_any_case_and_script_and_hit_in_any_case() -> None:
     # a transcript capitalised after "this is", and a phrase is not held back for it.
     assert name_hits("solving some kind of tension", {"Tension", "Alice"}) == []
     assert name_hits("nobody joins for the desks", {"Alice"}) == []
+
+
+def test_a_phrase_and_its_negation_are_two_ideas() -> None:
+    """Astra's reproduction (September 5th 2026): "not" was a stopword, so
+    "We should record every conversation" and "We should not record every
+    conversation" shared every content word and the second was held back as
+    a twin of the first."""
+    from dembrane.popcorn.flags import negated
+
+    positive = {"id": "1", "phrase": "We should record every conversation", "weight": 2}
+    negative = {"id": "2", "phrase": "We should not record every conversation", "weight": 2}
+    kept, suppressed = gate_items([positive, negative], names=set(), known=set())
+    assert [k["id"] for k in kept] == ["1", "2"] and suppressed == []
+    # Two phrasings of the same polarity are still one idea.
+    twin = {"id": "3", "phrase": "Every conversation should be recorded by us", "weight": 1}
+    kept, suppressed = gate_items([positive, twin], names=set(), known=set())
+    assert [k["id"] for k in kept] == ["1"] and suppressed[0]["id"] == "3"
+    assert negated("we can't record it") and negated("nobody joins for the desks")
+    assert not negated("quiet is a service we sell")
