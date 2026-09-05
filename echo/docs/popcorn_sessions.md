@@ -69,16 +69,24 @@ without them paraphrases a passage of the conversation; a check in the
 background finds that passage, and a phrase for which no passage can be found
 is taken off the screen (the host sees it as *held back*). The long list under
 the stage carries the tally: how many phrases, how many validated, how many
-held back, and how many conversations are still being read.
+held back, and how many conversations are still being read, in the footer.
 
 Every phrase is the same size on the wall; a long one steps down only to fit.
 As the background check lands, the phrases on stage and in the list pick up
 their icons and quotation marks by themselves, and the tally moves.
 
-When the QR code is on, it floats over the whole screen, whichever tab is
-showing. Whoever is at the presenter view can drag it wherever it should sit
-and fold it away to a small chip; that is remembered in that browser. The
-dashboard only decides whether it is on at all.
+When the QR code is on, it floats bottom right over the whole screen,
+whichever tab is showing, full size while the slide is up. Scrolling into
+the keys shrinks it; scrolling into the list hides it; it comes back on the
+way up. Whoever is at the presenter view can also fold it away to a small
+chip, remembered in that browser. The dashboard only decides whether it is
+on at all.
+
+Under the stage, one switch says how the popcorns play: off, in the order
+they were said, whatever the conversation, none skipped; on, shuffled, with
+the conversations taking turns. The footer carries the tally (popcorns,
+validated, held back, still reading) and the disclaimer about quotation
+marks.
 
 ## If you are working on it
 

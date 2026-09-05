@@ -523,47 +523,23 @@
   // and whether it is folded away are this screen's business, remembered in
   // this browser; the dashboard only says whether it is on at all.
   const QR_STORE = `popcorn-qr:${location.pathname}`;
-  let qrPrefs = { x: null, y: null, min: false };
+  let qrPrefs = { min: false };
   try { qrPrefs = { ...qrPrefs, ...(JSON.parse(localStorage.getItem(QR_STORE) || "{}") || {}) }; } catch { /* no storage: defaults */ }
-  const saveQrPrefs = () => { try { localStorage.setItem(QR_STORE, JSON.stringify(qrPrefs)); } catch { /* fine */ } };
+  const saveQrPrefs = () => { try { localStorage.setItem(QR_STORE, JSON.stringify({ min: qrPrefs.min })); } catch { /* fine */ } };
 
-  function placeQrPanel(panel) {
-    // A hidden or not yet laid out window measures 0; never clamp into the
-    // corner for that. The panel stays inside whatever the viewport is.
-    const vw = window.innerWidth || document.documentElement.clientWidth || 1280;
-    const vh = window.innerHeight || document.documentElement.clientHeight || 720;
-    const w = panel.offsetWidth || 160, h = panel.offsetHeight || 200;
-    const maxX = Math.max(8, vw - w - 8), maxY = Math.max(8, vh - h - 8);
-    const x = qrPrefs.x === null ? maxX - 12 : qrPrefs.x;
-    const y = qrPrefs.y === null ? maxY - 56 : qrPrefs.y;
-    panel.style.left = `${Math.min(Math.max(8, x), maxX)}px`;
-    panel.style.top = `${Math.min(Math.max(8, y), maxY)}px`;
+  // The code is for the room, and the room reads the slide, not the list:
+  // at the top of any tab it is full size; a scroll into the keys shrinks it;
+  // in the weeds (past the first fold) it is gone. It comes back on the way up.
+  function placeQrByScroll() {
+    const panel = document.querySelector(".qr-panel");
+    if (!panel) return;
+    const ratio = stage.clientHeight ? stage.scrollTop / stage.clientHeight : 0;
+    panel.classList.toggle("small", ratio >= 0.12 && ratio < 0.9);
+    panel.classList.toggle("gone", ratio >= 0.9);
   }
+  stage.addEventListener("scroll", placeQrByScroll, { passive: true });
 
-  function wireQrDrag(panel) {
-    let drag = null;
-    panel.addEventListener("pointerdown", (ev) => {
-      if (ev.target.closest("button")) return;
-      drag = { dx: ev.clientX - panel.offsetLeft, dy: ev.clientY - panel.offsetTop, moved: false };
-      panel.setPointerCapture(ev.pointerId);
-      panel.classList.add("dragging");
-    });
-    panel.addEventListener("pointermove", (ev) => {
-      if (!drag) return;
-      drag.moved = true;
-      qrPrefs.x = ev.clientX - drag.dx;
-      qrPrefs.y = ev.clientY - drag.dy;
-      placeQrPanel(panel);
-    });
-    const end = (ev) => {
-      if (!drag) return;
-      panel.classList.remove("dragging");
-      try { panel.releasePointerCapture(ev.pointerId); } catch { /* already released */ }
-      if (drag.moved) { qrPrefs.x = panel.offsetLeft; qrPrefs.y = panel.offsetTop; saveQrPrefs(); }
-      drag = null;
-    };
-    panel.addEventListener("pointerup", end);
-    panel.addEventListener("pointercancel", end);
+  function wireQrPanel(panel) {
     panel.addEventListener("click", (ev) => {
       const btn = ev.target.closest("button[data-qr]");
       if (!btn) return;
@@ -572,7 +548,6 @@
       saveQrPrefs();
       renderQrPanel();
     });
-    window.addEventListener("resize", () => placeQrPanel(panel));
   }
 
   function renderQrPanel() {
@@ -587,7 +562,7 @@
       panel.className = "qr-panel";
       panel.setAttribute("aria-label", "scan to add your voice");
       document.body.appendChild(panel);
-      wireQrDrag(panel);
+      wireQrPanel(panel);
     }
     const label = qr.label || "add your voice";
     let next;
@@ -603,7 +578,7 @@
     }
     panel.classList.toggle("minimised", !!qrPrefs.min);
     if (panel.innerHTML !== next) panel.innerHTML = next;
-    placeQrPanel(panel);
+    placeQrByScroll();
   }
 
   async function loadAll() {
@@ -710,19 +685,32 @@
       link.remove();
     }
     const total = state.session?.transcripts?.length || 0;
+    const disclaimer = document.getElementById("pop-disclaimer");
+    if (disclaimer) disclaimer.hidden = state.active !== "popcorn";
     if (!total) { el.textContent = ""; return; }
     const done = [...state.popcorn.values()].filter((p) => p.done).length;
     const live = done < total;
+    // The tally: what is on the wall, how much of it the second pass has
+    // rooted, what it held back, and whether it is still reading.
+    const files = [...state.popcorn.values()];
+    const popcorns = files.reduce((n, d) => n + (d.items || []).length, 0);
+    const validated = files.reduce((n, d) => n + (d.items || []).filter((i) => i.quoteId).length, 0);
+    const heldBack = files.reduce((n, d) => n + (d.held_back || 0), 0);
+    const settled = files.filter((d) => popcornSettled(d)).length;
+    const tally = popcorns ? [`${popcorns} popcorn${popcorns === 1 ? "" : "s"}`, `${validated} validated`] : [];
+    if (heldBack) tally.push(`${heldBack} held back`);
+    if (popcorns && settled < files.length) tally.push(`reading ${files.length - settled} of ${files.length}`);
     if (EMBED) {
       // Say what is happening in words: hosts read this footer to know whether
       // the deck is still working on a table.
       const pending = total - done;
-      el.innerHTML = live
+      const head = live
         ? `<span class="live-dot"></span>reading ${pending} of ${total} conversation${total === 1 ? "" : "s"}…`
         : `${total} conversation${total === 1 ? "" : "s"} · all read`;
+      el.innerHTML = [head, ...tally.map(esc)].join(" · ");
       return;
     }
-    el.innerHTML = `${live ? '<span class="live-dot"></span>' : ""}${total} conversation${total === 1 ? "" : "s"} · ${done} read`;
+    el.innerHTML = [`${live ? '<span class="live-dot"></span>' : ""}${total} conversation${total === 1 ? "" : "s"} · ${done} read`, ...tally.map(esc)].join(" · ");
   }
 
   /* ---------- routing ---------- */
@@ -911,16 +899,21 @@
     <section class="pop-keys" id="pop-keys" aria-label="when the popcorns happened, and how the stage plays">
       <div class="pop-timeline" id="pop-timeline" aria-label="the popcorns over the day; hover one to pop it, click to hold or release it, drag the edges to crop"></div>
       <div class="pop-play" role="group" aria-label="how the stage plays">
-        <span class="pop-play-label">play</span>
-        <button type="button" class="pop-mode" data-mode="time" aria-pressed="${state.pop.mode === "time"}">in order of time</button>
-        <button type="button" class="pop-mode" data-mode="random" aria-pressed="${state.pop.mode === "random"}">at random</button>
+        <label class="pop-shuffle" title="off: in order of time · on: shuffled, conversations taking turns">
+          <input type="checkbox" role="switch" id="pop-shuffle" aria-label="shuffle the popcorns" ${state.pop.mode === "random" ? "checked" : ""}>
+          <span class="pop-switch" aria-hidden="true">
+            <span class="pop-switch-off"><svg class="pop-switch-icon" viewBox="0 0 256 256" aria-hidden="true"><path d="M128,44a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,44Zm0,168a72,72,0,1,1,72-72A72.08,72.08,0,0,1,128,212ZM164.49,99.51a12,12,0,0,1,0,17l-28,28a12,12,0,0,1-17-17l28-28A12,12,0,0,1,164.49,99.51ZM92,16A12,12,0,0,1,104,4h48a12,12,0,0,1,0,24H104A12,12,0,0,1,92,16Z"/></svg></span>
+            <span class="pop-switch-on"><svg class="pop-switch-icon" viewBox="0 0 256 256" aria-hidden="true"><path d="M240.49,175.51a12,12,0,0,1,0,17l-24,24a12,12,0,0,1-17-17L203,196h-2.09a76.17,76.17,0,0,1-61.85-31.83L97.38,105.78A52.1,52.1,0,0,0,55.06,84H32a12,12,0,0,1,0-24H55.06a76.17,76.17,0,0,1,61.85,31.83l41.71,58.39A52.1,52.1,0,0,0,200.94,172H203l-3.52-3.51a12,12,0,0,1,17-17Zm-95.62-72.62a12,12,0,0,0,16.93-1.13A52,52,0,0,1,200.94,84H203l-3.52,3.51a12,12,0,0,0,17,17l24-24a12,12,0,0,0,0-17l-24-24a12,12,0,0,0-17,17L203,60h-2.09a76,76,0,0,0-57.2,26A12,12,0,0,0,144.87,102.89Zm-33.74,50.22a12,12,0,0,0-16.93,1.13A52,52,0,0,1,55.06,172H32a12,12,0,0,0,0,24H55.06a76,76,0,0,0,57.2-26A12,12,0,0,0,111.13,153.11Z"/></svg></span>
+            <span class="pop-switch-thumb"></span>
+          </span>
+          <span class="pop-shuffle-text">shuffle</span>
+        </label>
         <span class="pop-play-note" id="pop-play-note"></span>
         <span class="pop-keys-hint">hover a circle to pop it, click to hold or release · settings ↓</span>
       </div>
     </section>
     </div>
     <section class="pop-tail" aria-label="all popcorn phrases">
-      <p class="pop-disclaimer">popcorn is optimised for latency, not accuracy. popcorns in “quotes” are the room's words, word for word; the rest paraphrase what was said.</p>
       <div class="quote-tools">
         <input class="quote-search" id="pop-search" type="search" placeholder="search the popcorn…" aria-label="search popcorn phrases" value="${esc(state.popSearch || "")}">
         <div class="kind-legend" id="kind-legend" aria-label="filter the popcorn by kind" hidden></div>
@@ -935,11 +928,10 @@
       state.popSearch = input.value;
       renderPopTables();
     });
-    stage.querySelectorAll(".pop-mode").forEach((b) => b.addEventListener("click", () => {
-      state.pop.mode = b.dataset.mode;
+    document.getElementById("pop-shuffle")?.addEventListener("change", (ev) => {
+      state.pop.mode = ev.currentTarget.checked ? "random" : "time";
       state.pop.cursor = 0;
-      stage.querySelectorAll(".pop-mode").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-    }));
+    });
     // hide and unhide: a phrase for itself, a conversation's name for the lot
     document.getElementById("pop-list").addEventListener("click", (ev) => {
       const el = ev.target.closest("[data-hide]");
@@ -1296,17 +1288,9 @@
     }).join("");
     list.innerHTML = html;
     const count = document.getElementById("pop-count");
-    // The tally: what is on the wall, how much of it the second pass has
-    // rooted, what it held back, and whether it is still reading.
-    const files = [...state.popcorn.values()];
-    const validated = files.reduce((n, d) => n + (d.items || []).filter((i) => i.quoteId).length, 0);
-    const heldBack = files.reduce((n, d) => n + (d.held_back || 0), 0);
-    const settled = files.filter((d) => popcornSettled(d)).length;
-    const parts = [`${total} popcorn${total === 1 ? "" : "s"}`, `${validated} validated`];
-    if (heldBack) parts.push(`${heldBack} held back`);
-    if (settled < files.length) parts.push(`reading ${files.length - settled} of ${files.length}`);
-    if (hidden) parts.push(`${hidden} hidden`);
-    if (count) count.textContent = !total ? "" : q ? `${shown} of ${total}` : parts.join(" · ");
+    // Beside the search: what the search left, and what is hidden. The tally
+    // itself lives in the footer (renderProgress).
+    if (count) count.textContent = !total ? "" : q ? `${shown} of ${total}` : hidden ? `${hidden} hidden` : "";
   }
 
   // three horizontal bands, one phrase each — overlap-free by construction
@@ -1387,7 +1371,7 @@
     if (Date.now() - state.pop.lastSpawn < gap) return;
 
     const next = nextPopItem();
-    if (next) spawnPop(stageEl, next);
+    if (next && spawnPop(stageEl, next)) next.commit?.();
   }
 
   // Which phrase next. Both modes only draw from what the crop window lets
@@ -1401,13 +1385,16 @@
     const isLive = (tid, idx) => state.pop.live.some((l) => l.tid === tid && l.idx === idx);
 
     if (state.pop.mode === "time") {
+      // Exact order, whatever the conversation. The cursor moves only once
+      // the phrase is on stage (`commit`), so a spawn that finds no free band
+      // does not skip the phrase.
       const seq = ev.events.filter((e) => popVisible(e.tid, e.idx, ev));
       if (!seq.length) return null;
       for (let k = 0; k < seq.length; k++) {
-        const pick = seq[(state.pop.cursor + k) % seq.length];
+        const at = (state.pop.cursor + k) % seq.length;
+        const pick = seq[at];
         if (isLive(pick.tid, pick.idx)) continue;
-        state.pop.cursor = (state.pop.cursor + k + 1) % seq.length;
-        return { tid: pick.tid, idx: pick.idx };
+        return { tid: pick.tid, idx: pick.idx, commit: () => { state.pop.cursor = (at + 1) % seq.length; } };
       }
       return null;
     }
@@ -1457,7 +1444,7 @@
   // lingers far longer.
   function spawnPop(stageEl, { tid, idx }, { center = false, pinned = false } = {}) {
     const item = state.popcorn.get(tid)?.items?.[idx];
-    if (!item) return;
+    if (!item) return false;
 
     // an empty stage gets the big opening treatment; so does a popcorn the
     // facilitator asked for by name
@@ -1469,7 +1456,7 @@
         slotIdx = 1; // middle band
       } else {
         const free = [0, 1, 2].filter((i) => !used.has(i));
-        if (!free.length) return;
+        if (!free.length) return false;
         slotIdx = free[Math.floor(Math.random() * free.length)];
       }
     }
@@ -1579,6 +1566,7 @@
         showSourceTip(cur, tid, null);
       }
     });
+    return true;
   }
 
   /* ---------- recommendations ---------- */

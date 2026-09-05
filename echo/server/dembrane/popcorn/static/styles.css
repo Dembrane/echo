@@ -413,12 +413,13 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .source-phrase { font-weight: 500; margin-bottom: 0.7em; }
 .source-text { font-size: 0.9em; }
 
-/* the room's way in: the portal QR, floating over the whole deck, draggable,
-   foldable to a chip; where it sits is this screen's business */
+/* the room's way in: the portal QR, floating over the whole deck, bottom
+   right, foldable to a chip; a scroll into the keys shrinks it, the weeds
+   hide it */
 .qr-panel {
   position: fixed;
-  left: 0;
-  top: 0;
+  right: var(--pad-x);
+  bottom: 3.4em;
   z-index: 120;
   display: flex;
   flex-direction: column;
@@ -428,12 +429,11 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   background: var(--parchment);
   border: 1px solid var(--hairline);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
+  transform-origin: bottom right;
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
-.qr-panel.dragging { cursor: grabbing; box-shadow: 0 10px 32px rgba(0, 0, 0, 0.14); }
+.qr-panel.small { transform: scale(0.55); }
+.qr-panel.gone { opacity: 0; transform: scale(0.4); pointer-events: none; }
 .qr-panel.minimised { padding: 0; border: none; background: transparent; box-shadow: none; }
 .qr-image { display: block; width: clamp(96px, 12vw, 200px); height: auto; aspect-ratio: 1; pointer-events: none; }
 .qr-image svg { display: block; width: 100%; height: 100%; }
@@ -463,7 +463,8 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 
 /* the long tail below the fold: when, then every phrase so far */
 .pop-tail { border-top: 1px solid var(--hairline); padding: 1.4em var(--pad-x) 1.6em; }
-.pop-disclaimer { font-size: 0.78em; color: var(--ink-soft); margin-bottom: 1em; }
+.pop-disclaimer { color: var(--ink-faint); text-align: center; flex: 1; padding: 0 1.5em; }
+@media (max-width: 900px) { .pop-disclaimer { display: none; } }
 
 /* the keys strip: below the fold at rest, over the foot of the stage after
    the first scroll, gone with the fold on the next */
@@ -475,15 +476,30 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .pop-tail { scroll-snap-align: start; }
 .pop-keys-hint { margin-left: auto; color: var(--ink-faint); }
 
-/* play mode: a pair of tab-like buttons under the timeline */
+/* how the stage plays: one switch. Off, the popcorns play in order of time;
+   on, shuffled, the conversations taking turns. The thumb slides over the
+   icon of the mode that is off, leaving the active one showing. */
 .pop-play { display: flex; align-items: center; flex-wrap: wrap; gap: 0.2em 1em; margin: 0; font-size: 0.78em; color: var(--ink-soft); }
-.pop-play-label { letter-spacing: 0.04em; }
-.pop-mode {
-  appearance: none; background: none; border: none; border-bottom: 2px solid transparent;
-  font: inherit; color: var(--ink-soft); padding: 0.15em 0 0.3em; cursor: pointer;
+.pop-shuffle { display: inline-flex; align-items: center; gap: 0.55em; cursor: pointer; user-select: none; }
+.pop-shuffle input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.pop-switch {
+  position: relative; display: inline-flex; align-items: center; justify-content: space-between;
+  width: 3.6em; height: 1.75em; padding: 0 0.32em; box-sizing: border-box;
+  border-radius: 1em; background: var(--hairline); transition: background 0.18s ease;
 }
-.pop-mode:hover { color: var(--graphite); }
-.pop-mode[aria-pressed="true"] { color: var(--blue); font-weight: 500; border-bottom-color: var(--blue); }
+.pop-switch-icon { width: 1.05em; height: 1.05em; fill: currentColor; display: block; }
+.pop-switch-off, .pop-switch-on { display: inline-flex; color: var(--ink-soft); transition: color 0.18s ease; }
+.pop-switch-thumb {
+  position: absolute; top: 0.18em; left: 0.18em; width: 1.39em; height: 1.39em; border-radius: 50%;
+  background: var(--paper, #fff); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); transition: left 0.18s ease;
+}
+.pop-shuffle input:checked + .pop-switch { background: var(--blue); }
+.pop-shuffle input:checked + .pop-switch .pop-switch-thumb { left: calc(100% - 1.39em - 0.18em); }
+.pop-shuffle input:checked + .pop-switch .pop-switch-off { color: var(--parchment); }
+.pop-shuffle input:not(:checked) + .pop-switch .pop-switch-on { color: var(--ink-faint); }
+.pop-shuffle input:focus-visible + .pop-switch { outline: 2px solid var(--blue); outline-offset: 2px; }
+.pop-shuffle-text { letter-spacing: 0.02em; }
+.pop-shuffle input:checked ~ .pop-shuffle-text { color: var(--graphite); }
 .pop-play-note { color: var(--ink-faint); margin-left: 0.4em; }
 
 /* the timeline: a histogram over the day. The track is cut into bins of

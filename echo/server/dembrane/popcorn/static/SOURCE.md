@@ -40,11 +40,22 @@ Patches carried on top of upstream, all guarded by `window.POPCORN_EMBED`:
   is in flight and holds the first phrase until the count ends; past the
   count with nothing landed it shows a spinner and sends one beacon
   (`data/latency`, `{ms}`) from the host's view.
-- The QR panel floats over the whole deck on `body` (`position: fixed`),
-  whichever tab is up: draggable by pointer, foldable to a chip with its own
-  button, position and fold remembered in `localStorage` per path. The
-  dashboard only says whether it is on; upstream draws it inside the popcorn
-  stage, bottom right, with no controls.
+- The QR panel floats over the whole deck on `body` (`position: fixed`,
+  bottom right), whichever tab is up, foldable to a chip with its own button
+  (the fold remembered in `localStorage` per path). A scroll into the keys
+  shrinks it, the weeds (past the first fold) hide it, and it comes back on
+  the way up. The dashboard only says whether it is on; upstream draws it
+  inside the popcorn stage with no controls.
+- How the stage plays is one switch (`#pop-shuffle`, styled like a Mantine
+  switch with the timer and shuffle icons): off is upstream's "in order of
+  time", on is "at random". In order of time the cursor moves only once the
+  phrase is on stage (`commit` after `spawnPop` returns true), so a spawn
+  that finds no free band no longer skips a phrase. Upstream had two buttons
+  and advanced the cursor before spawning.
+- The tally and the disclaimer live in the footer: `renderProgress` prints
+  popcorns, validated, held back and `reading n of m` after the conversation
+  count; `#pop-disclaimer` in the colophon shows on the popcorn tab. The count
+  beside the search shows only the search result and what is hidden.
 - Any change to a popcorn file redraws the list and the phrases on stage
   (`popcornStamp`, `refreshLivePops`): the second pass changes quotes, kinds
   and marks without changing the count, so the count alone was not the

@@ -92,11 +92,17 @@ twin phrases survived; Jorim asked for it to go.
 - **Weights go entirely.** `popcorn-v1.7` is v1.6 without the weight section;
   the schema, the shaper, the bundle and the deck follow. Between twins the
   first kept wins. One phrase size on the wall, stepped down only to fit.
-- **The QR panel belongs to the presenter view.** It floats over the whole
-  deck on `body`, draggable, foldable to a chip, with its place and fold
-  remembered in `localStorage` per path. The dashboard switch says whether it
-  is on; where it sits and whether it is folded is the business of whoever is
-  at the wall (Jorim's first run-through, 2026-09-06).
+- **The QR panel belongs to the presenter view.** It floats bottom right
+  over the whole deck on `body`, foldable to a chip (remembered in
+  `localStorage` per path), and follows the scroll: full size at the top of
+  any tab, small in the keys, gone in the weeds. A draggable version was
+  tried first and dropped the same day for the scroll rule (Jorim's first
+  run-through, 2026-09-06). The dashboard switch says whether it is on.
+- **Time order is exact.** One switch under the stage, shuffle on or off,
+  replaces the two play buttons. Off plays every popcorn in the order it was
+  said, whatever the conversation; the cursor moves only once the phrase is
+  on stage, so a spawn that finds no free band no longer skips one (the
+  skipping Jorim saw). The tally and the disclaimer move to the footer.
 - **Any change to a popcorn file redraws the screen.** The deck used to redraw
   the list only when the number of phrases changed; the second pass changes
   quotes, kinds and marks without changing the count, so validated phrases
