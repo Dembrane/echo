@@ -17,13 +17,14 @@ from dembrane.utils import generate_uuid
 from dembrane.popcorn.qr import qr_svg_markup
 from dembrane.directus_async import async_directus
 from dembrane.scheduled_tasks import TASK_POPCORN_TICK, schedule_task
+from dembrane.popcorn.analysis import attributes
 
 REPORT_KIND = "popcorn"
 LOOP_KIND = "popcorn"
 DEFAULT_CADENCE_MINUTES = 2
 MIN_CADENCE_MINUTES = 1
 MAX_CADENCE_MINUTES = 120
-STATE_VERSION = 1
+STATE_VERSION = 2  # 2: one quote registry at the top of the state, validation per transcript
 
 # Tabs the host can hide from the room. Popcorn itself is always shown: it is
 # the opening screen and the reason the deck exists.
@@ -88,6 +89,7 @@ def default_settings(*, title: str, client: str | None = None) -> dict[str, Any]
         "show_qr": False,
         "show_branding": True,
         "voice": {"presets": [], "note": ""},
+        "public_labels": "neutral",
     }
 
 
@@ -123,11 +125,23 @@ def normalize_settings(raw: dict[str, Any] | None, *, fallback_title: str) -> di
         # whitelabel; the API enforces the tier, the setting only records it.
         "show_branding": bool(raw.get("show_branding", True)),
         "voice": normalize_voice(raw.get("voice")),
+        # What the room's legend calls a conversation. A conversation's label is
+        # the name typed on the phone, which may be a person's; the public page
+        # numbers them unless the host chooses otherwise. The host page always
+        # shows the names.
+        "public_labels": "names" if raw.get("public_labels") == "names" else "neutral",
     }
 
 
 def fresh_state() -> dict[str, Any]:
-    return {"version": STATE_VERSION, "run": 0, "order": [], "conversations": {}, "analysis": None}
+    return {
+        "version": STATE_VERSION,
+        "run": 0,
+        "order": [],
+        "conversations": {},
+        "quotes": [],
+        "analysis": None,
+    }
 
 
 def normalize_state(raw: Any) -> dict[str, Any]:
@@ -146,7 +160,15 @@ def normalize_state(raw: Any) -> dict[str, Any]:
     for cid in state["conversations"]:
         if cid not in state["order"]:
             state["order"].append(cid)
-    state["analysis"] = raw.get("analysis") if isinstance(raw.get("analysis"), dict) else None
+    analysis = dict(raw["analysis"]) if isinstance(raw.get("analysis"), dict) else None
+    quotes_raw = raw.get("quotes")
+    if not isinstance(quotes_raw, list) and analysis is not None:
+        # Version 1 kept the registry inside the analysis block; it is the session's now.
+        quotes_raw = analysis.pop("quotes", None)
+    elif analysis is not None:
+        analysis.pop("quotes", None)
+    state["quotes"] = [q for q in (quotes_raw or []) if isinstance(q, dict) and q.get("id")]
+    state["analysis"] = analysis
     return state
 
 
@@ -533,7 +555,7 @@ def state_counts(state: dict[str, Any]) -> dict[str, Any]:
         "conversations_read": done,
         "reading": len(conversations) - done,
         "phrases": phrases,
-        "quotes": len(analysis.get("quotes") or []),
+        "quotes": len(state.get("quotes") or []),
         "tensions": len((analysis.get("tensions") or {}).get("tensions") or []),
         "stakeholders": len((analysis.get("stakeholders") or {}).get("stakeholders") or []),
         "analysis_updated_at": analysis.get("updated_at"),
@@ -560,9 +582,7 @@ async def popcorn_payload(report: dict[str, Any]) -> dict[str, Any]:
         "updated_at": (loop or {}).get("updated_at"),
         "settings": settings,
         "public_token": report.get("public_token"),
-        "loop": loop_payload(
-            loop, run, await next_read_at(str(loop["id"])) if loop else None
-        ),
+        "loop": loop_payload(loop, run, await next_read_at(str(loop["id"])) if loop else None),
         "counts": state_counts(state),
     }
 
@@ -598,13 +618,15 @@ def build_bundle(
     """Everything the presentation polls, as one document keyed by the file
     paths the page would otherwise fetch. A hidden tab is simply a missing file.
 
-    The host variant adds what the room must not see: the closest transcript
-    passage behind every unverified phrase, and links into the dashboard."""
+    The host variant adds what the room must not see: the names typed on the
+    phones, the closest transcript passage behind every unverified phrase, and
+    links into the dashboard. Nothing under an item's `review` leaves here."""
     files: dict[str, Any] = {}
     conversations = state.get("conversations") or {}
     order = [cid for cid in state.get("order") or [] if cid in conversations]
     analysis = state.get("analysis") or {}
     run = int(state.get("run") or 0)
+    show_names = host or settings.get("public_labels") == "names"
 
     session: dict[str, Any] = {
         "title": settings["title"],
@@ -612,12 +634,8 @@ def build_bundle(
         "date": _session_date(report.get("date_created")),
         "branding": bool(settings.get("show_branding", True)),
         "transcripts": [
-            {
-                "id": cid,
-                "label": conversations[cid].get("label") or "conversation",
-                "short": conversations[cid].get("short") or conversations[cid].get("label") or "",
-            }
-            for cid in order
+            _transcript_entry(conversations[cid], cid, index, show_names)
+            for index, cid in enumerate(order, start=1)
         ],
     }
     if settings.get("show_qr"):
@@ -646,7 +664,12 @@ def build_bundle(
                 "phrase": item["phrase"],
                 "weight": item["weight"],
             }
-            if item.get("quoteId") and analysis:
+            if item.get("question"):
+                entry["question"] = True
+            if item.get("kind"):
+                entry["kind"] = item["kind"]
+                entry["qualifiers"] = [str(q) for q in (item.get("qualifiers") or [])]
+            if item.get("quoteId"):
                 entry["quoteId"] = item["quoteId"]
             if host and isinstance(item.get("source"), dict) and not item.get("quoteId"):
                 entry["source"] = {
@@ -660,26 +683,57 @@ def build_bundle(
             "transcript": cid,
             "revision": int(conv.get("revision") or 1),
             "done": bool(conv.get("done")),
-            # The grounding pass ran for this conversation in the current run.
-            "validated": bool(conv.get("done")) and conv.get("validated_run") == run,
+            # The second pass finished for the transcript as it stands. Not every
+            # phrase has a quote; the page may stop polling the file either way.
+            "validated": bool(conv.get("done"))
+            and bool(conv.get("fingerprint"))
+            and conv.get("validated_fingerprint") == conv.get("fingerprint"),
             "items": items_out,
         }
 
     tabs = settings.get("tabs") or {}
-    if analysis:
+    registry = state.get("quotes") or []
+    if registry or analysis:
         quotes = []
-        for quote in analysis.get("quotes") or []:
+        for quote in registry:
             entry = dict(quote)
+            # A registry written before the attribution rule may still carry a
+            # speaker in its context; the bundle is the last door it must not pass.
+            if entry.get("context") and attributes(str(entry["context"])):
+                entry.pop("context", None)
             if host and admin_base_url and quote.get("transcript"):
                 entry["url"] = conversation_url(project, str(quote["transcript"]), admin_base_url)
             quotes.append(entry)
         files["quotes.json"] = {"quotes": quotes}
+    if analysis:
         for kind in TOGGLEABLE_TABS:
             slide = analysis.get(kind)
             if tabs.get(kind, True) and isinstance(slide, dict):
                 files[f"{kind}.json"] = slide
 
     return {"run": run, "files": files}
+
+
+def _transcript_entry(
+    conv: dict[str, Any], cid: str, index: int, show_names: bool
+) -> dict[str, Any]:
+    """One legend entry. With names hidden the label is a number in deck order;
+    `time` and `duration` let the timeline place the conversation's phrases."""
+    name = str(conv.get("label") or "").strip() if show_names else ""
+    if name:
+        label = name
+        short = str(conv.get("short") or "").strip() or name
+    else:
+        label = f"Conversation {index}"
+        short = label
+    entry: dict[str, Any] = {"id": cid, "label": label, "short": short}
+    created_at = conv.get("created_at")
+    if isinstance(created_at, str) and created_at:
+        entry["time"] = created_at
+    duration = conv.get("duration")
+    if isinstance(duration, (int, float)) and not isinstance(duration, bool) and duration > 0:
+        entry["duration"] = float(duration)
+    return entry
 
 
 def sample_bundle() -> dict[str, Any]:

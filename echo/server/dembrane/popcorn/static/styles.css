@@ -11,6 +11,7 @@
 
 :root {
   --parchment: #F6F4F1;
+  --brand-grey: #EAE8E5;
   --graphite: #2D2D2C;
   --blue: #4169E1;
   --hairline: #E6E3DF;
@@ -118,8 +119,9 @@ body.presenting .tail-sourced:hover { outline: none; }
   overflow-y: auto;
   padding: clamp(20px, 3vh, 44px) var(--pad-x) clamp(28px, 4vh, 56px);
 }
-/* popcorn slide: the stage owns the full fold, the long tail starts 100% below it */
-.stage.stage-flush { padding: 0; }
+/* popcorn slide: the stage owns the full fold, the long tail starts 100% below it;
+   the scroll snaps to its three beats (stage, stage with keys, settings) */
+.stage.stage-flush { padding: 0; scroll-snap-type: y proximity; }
 /* deck tabs: a horizontal full-screen deck in the fold, list below it */
 .deck { position: relative; height: 100%; overflow: hidden; }
 .deck-track {
@@ -404,9 +406,13 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 
 /* ---------- popcorn ---------- */
 
+/* the fold: the stage pinned at the top while the keys strip, in flow after
+   it, slides up over its foot on the first scroll */
+.pop-fold { height: calc(100% + var(--keys-h, 120px)); scroll-snap-align: start; }
 .popcorn {
-  position: relative;
-  height: 100%;
+  position: sticky;
+  top: 0;
+  height: calc(100% - var(--keys-h, 120px));
   overflow: hidden;
 }
 
@@ -466,20 +472,104 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   white-space: nowrap;
 }
 
-/* the long tail below the fold: every phrase so far */
+/* the long tail below the fold: when, then every phrase so far */
 .pop-tail { border-top: 1px solid var(--hairline); padding: 1.4em var(--pad-x) 1.6em; }
 .pop-disclaimer { font-size: 0.78em; color: var(--ink-soft); margin-bottom: 1em; }
-.pop-legend { display: flex; flex-wrap: wrap; gap: 0.6em 1.6em; margin: 0.9em 0 1.2em; }
-.pop-list { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.7em 1em; padding-bottom: 1em; }
-/* the record of the day: one block per conversation, oldest first */
-.pop-list-grouped { display: block; }
-.tail-group { padding: 0.9em 0 1.1em; border-top: 1px solid var(--hairline); }
-.tail-group:first-child { border-top: none; padding-top: 0.2em; }
-.tail-group-head { display: flex; align-items: baseline; gap: 1em; font-size: 0.8em; font-weight: 400; margin-bottom: 0.7em; }
-.tail-group-count { color: var(--ink-faint); }
-.tail-group-list { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.7em 1em; }
+
+/* the keys strip: below the fold at rest, over the foot of the stage after
+   the first scroll, gone with the fold on the next */
+.pop-keys {
+  position: relative; z-index: 5; scroll-snap-align: end;
+  background: var(--parchment); border-top: 1px solid var(--hairline);
+  padding: 0.55em var(--pad-x) 0.35em;
+}
+.pop-tail { scroll-snap-align: start; }
+.pop-keys-hint { margin-left: auto; color: var(--ink-faint); }
+
+/* play mode: a pair of tab-like buttons under the timeline */
+.pop-play { display: flex; align-items: center; flex-wrap: wrap; gap: 0.2em 1em; margin: 0; font-size: 0.78em; color: var(--ink-soft); }
+.pop-play-label { letter-spacing: 0.04em; }
+.pop-mode {
+  appearance: none; background: none; border: none; border-bottom: 2px solid transparent;
+  font: inherit; color: var(--ink-soft); padding: 0.15em 0 0.3em; cursor: pointer;
+}
+.pop-mode:hover { color: var(--graphite); }
+.pop-mode[aria-pressed="true"] { color: var(--blue); font-weight: 500; border-bottom-color: var(--blue); }
+.pop-play-note { color: var(--ink-faint); margin-left: 0.4em; }
+
+/* the timeline: a histogram over the day. The track is cut into bins of
+   equal width; each bin stacks its popcorns as circles in their
+   conversations' colours. Circle size comes from the JS (--sq), sized to
+   the bin and to the tallest stack. */
+.pop-timeline { margin: 0 0 1.35em; }   /* room under the rule for the sitting labels */
+.tl-track { padding-bottom: 0.2em; }
+.tl-inner {
+  position: relative; display: flex; align-items: flex-end; width: 100%; min-height: 2.6em;
+  padding: 0.4em 0 0.3em; border-bottom: 1px solid var(--graphite);
+}
+.tl-bin { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column-reverse; align-items: center; gap: 1px; }
+/* a circle is a key: hover swells it, a click bounces it while its phrase pops on stage */
+.tl-dot {
+  appearance: none; border: none; padding: 0; cursor: pointer;
+  display: grid; place-items: center; width: var(--sq, 8px); height: var(--sq, 8px); border-radius: 50%; background: var(--marker);
+  transition: scale 90ms ease;
+}
+
+.tl-dot:hover { scale: 1.5; position: relative; z-index: 2; }
+.tl-dot.popped { animation: dot-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes dot-pop { 0% { scale: 1; } 50% { scale: 2.2; } 100% { scale: 1; } }
+.tl-dot.off { background: var(--hairline); }
+/* the ring says: this one is on the stage right now */
+.tl-dot.on { box-shadow: 0 0 0 2px var(--blue); }
+.tl-bin.out { opacity: 0.35; }
+.tl-time { position: absolute; top: 100%; margin-top: 0.3em; font-size: 0.68em; color: var(--ink-soft); white-space: nowrap; }
+/* the crop window: two handles on the track; the tint disappears when the
+   window is the whole session */
+.tl-window {
+  position: absolute; top: 0; bottom: 0; pointer-events: none;
+  background: rgba(65, 105, 225, 0.07); border-left: 2px solid var(--blue); border-right: 2px solid var(--blue);
+}
+.tl-window.tl-window-all { background: none; border-color: var(--hairline); }
+/* the grip: a bar along the top of the window; drag it to move the whole window, length kept */
+.tl-grip { position: absolute; left: 0; right: 0; top: 0; height: 0.8em; pointer-events: auto; cursor: grab; touch-action: none;
+  background: var(--blue); opacity: 0.3; }
+.tl-grip:hover, .tl-grip:focus-visible { opacity: 0.6; }
+.tl-grip.dragging { opacity: 0.85; cursor: grabbing; }
+.tl-window.tl-window-all .tl-grip { display: none; }   /* the whole session is the window: nothing to move */
+.tl-handle {
+  position: absolute; top: 0; bottom: 0; width: 1.4em; pointer-events: auto;
+  cursor: ew-resize; touch-action: none;
+}
+.tl-handle::after {
+  content: ""; position: absolute; top: 50%; width: 6px; height: 1.4em; transform: translateY(-50%);
+  background: var(--blue);
+}
+.tl-window.tl-window-all .tl-handle::after { background: var(--graphite); opacity: 0.5; }
+.tl-handle[data-edge="start"] { left: -0.7em; }
+.tl-handle[data-edge="start"]::after { left: calc(0.7em - 3px); }
+.tl-handle[data-edge="end"] { right: -0.7em; }
+.tl-handle[data-edge="end"]::after { right: calc(0.7em - 3px); }
+.tl-handle:hover::after, .tl-handle.dragging::after, .tl-handle:focus-visible::after { height: 2em; }
+
+/* the list, grouped by conversation in time order */
+.pop-tables { display: flex; flex-direction: column; gap: 1.2em; padding-bottom: 1em; }
+.pop-table-name {
+  appearance: none; background: none; border: none; padding: 0; margin: 0 0 0.55em; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 0.5em; font: inherit;
+  font-size: 0.78em; font-weight: 500; letter-spacing: 0.04em; color: var(--ink-soft); text-align: left;
+}
+.pop-table-name:hover { color: var(--graphite); }
+.pop-table-name .chip { width: 0.75em; height: 0.75em; }
+.pop-table-meta { font-weight: var(--text-weight); letter-spacing: 0; color: var(--ink-faint); }
+.pop-table.hidden .pop-table-name, .pop-table.out .pop-table-name { color: var(--ink-faint); }
+.pop-table.hidden .pop-table-name .chip { background: var(--hairline); }
+.pop-table.hidden .tail-phrase, .tail-phrase.out { opacity: 0.4; }
+.pop-list { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.7em 1em; }
 .tail-phrase {
+  appearance: none; border: none; cursor: pointer; text-align: left;
   background: var(--marker);
+  color: inherit;
+  font: inherit;
   padding: 0.08em 0.35em;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
@@ -487,6 +577,8 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   font-weight: var(--text-weight);
   line-height: var(--text-leading);
 }
+.tail-phrase:hover { outline: 1px solid var(--graphite); outline-offset: 1px; }
+.tail-phrase[aria-pressed="true"] { background: var(--hairline); color: var(--ink-faint); text-decoration: line-through; }
 
 .pop {
   position: absolute;
@@ -494,6 +586,7 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   top: var(--y, 50%);
   max-width: 80%;
   text-align: center;
+  text-wrap: balance;   /* even lines, never a lone word on the last one */
   transform: translate(-50%, -50%) rotate(var(--tilt, 0deg));
   animation: pop-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
   transition: transform 0.18s ease;
@@ -712,7 +805,10 @@ button.action-row:hover .action-sentence { color: var(--blue); }
 .tension-resolve { text-align: center; max-width: 46ch; margin: clamp(1.4em, 4vh, 2.6em) auto 0; }
 .tension-resolve .label { display: block; font-size: 0.85em; font-weight: 600; letter-spacing: 0.03em; color: var(--blue); margin-bottom: 0.3em; }
 .tension-resolve p { font-size: clamp(20px, 1.9vw, 31px); font-weight: var(--text-weight); line-height: var(--text-leading); }
-.tension-narrative { text-align: center; color: var(--ink-soft); font-size: clamp(17px, 1.5vw, 24px); max-width: 60ch; margin: clamp(0.9em, 2.5vh, 1.6em) auto 0; }
+/* the knot: one line under the poles, what each side pays; the only
+   explanation the room gets, so it is set to be read from the back */
+.tension-knot { text-align: center; font-size: clamp(22px, 2.1vw, 34px); font-weight: var(--text-weight); line-height: var(--display-leading); max-width: 34ch; text-wrap: balance; margin: clamp(1.4em, 4vh, 2.6em) auto 0; }
+.tension-knot + .tension-resolve { margin-top: clamp(1em, 3vh, 1.8em); }
 .tension-quotes { margin-top: clamp(0.6em, 1.5vh, 1em); }
 
 /* custom slides (breakthroughs, insights, and whatever a facilitator defines)
@@ -722,16 +818,18 @@ button.action-row:hover .action-sentence { color: var(--blue); }
 
 .stake-map { position: relative; height: clamp(380px, 64vh, 640px); }
 .stake-map svg { position: absolute; inset: 0; }
-/* Line colour carries sentiment: a scale from coral (strained) through
-   neutral grey to spring green (working), computed per relation in app.js
-   (sentColor). The poles are the coral and spring-green accents darkened
-   to the lightest values that still clear 3:1 as strokes on the parchment;
-   brighter and the lines stop reading at distance. Line weight carries
-   intensity, and a dashed line means nobody owns the relation. All three
-   are named in the legend, and each relation is spelled out in words in
-   its tooltip. */
+/* Line colour carries sentiment in five steps: hot red (strained) through
+   magenta, royal blue (neutral) and a bluish green to pure green (working),
+   looked up per relation in app.js (sentColor). Each is the brightest
+   colour of its hue that holds its contrast as a stroke on the parchment:
+   3.5:1 at the red end, the institution blue as it is, and 2.8:1 at the
+   green pole, a deliberate trade so the green pops as much as the red
+   does. Blue is kept to a sliver around zero; the two steps between lean
+   hard toward their pole. Line weight carries intensity, and a dashed line
+   means nobody owns the relation. All three are named in the legend, and
+   each relation is spelled out in words in its tooltip. */
 :root {
-  --flow-neutral: #98958D;
+  --flow-neutral: #4169E1;
 }
 .stake-line { stroke: var(--flow-neutral); stroke-width: var(--w, 1.5); fill: none; }
 /* an unowned relation is dashed: present, active, and nobody's job */
@@ -758,24 +856,26 @@ button.action-row:hover .action-sentence { color: var(--blue); }
   transform: translate(-50%, -50%);
   touch-action: none;
   appearance: none;
-  background: #FFFFFF;
-  border: 1px solid var(--hairline);
+  --card: var(--brand-grey);
+  background: var(--card);
+  border: 1px solid var(--card);
   padding: 0.7em 1em;
   cursor: pointer;
   font: inherit;
-  color: inherit;
+  color: var(--graphite);
   text-align: center;
   max-width: 22ch;
   display: flex;
   flex-direction: column;
   gap: 0.15em;
 }
-/* The ladder of evidence, on the card itself. Border weight and fill say how
-   well attested this group is; nothing here filters, so an inferred group
-   with a high stake still survives to the coarsest view. */
-.stake-node.rung-voiced { border-color: var(--graphite); border-width: 2px; }
-.stake-node.rung-named { border-style: dashed; }
-.stake-node.rung-inferred { border-style: dotted; background: #FBFAF6; }
+/* The ladder of evidence, on the card itself. Fill says who spoke: white
+   for a group that spoke for itself, the brand grey for a group others
+   spoke about. An inferred group keeps the grey, marked by its tag and a
+   dotted inner rule. Nothing here filters, so an inferred group with a
+   high stake still survives to the coarsest view. */
+.stake-node.rung-voiced { --card: #FFFFFF; }
+.stake-node.rung-inferred { outline: 1px dotted var(--ink-faint); outline-offset: -4px; }
 .stake-node.rung-inferred .stake-name { color: var(--ink-soft); }
 .stake-node .rung-mark {
   position: absolute;
@@ -790,9 +890,11 @@ button.action-row:hover .action-sentence { color: var(--blue); }
 .stake-node.rung-voiced .rung-mark { display: none; }
 .stake-node .rung-mark.invoked { color: var(--blue); }
 
-.stake-node:hover { border-color: var(--blue); cursor: grab; }
+/* hover grows the card a touch; `scale` composes with the inline
+   translate that positions it, so the card swells in place */
+.stake-node { transition: scale 120ms ease; }
+.stake-node:hover { scale: 1.05; cursor: grab; }
 .stake-node:active { cursor: grabbing; }
-.stake-node:hover .stake-name { color: var(--blue); }
 .stake-node.dim { opacity: 0.3; }
 .stake-name { font-size: clamp(17px, 1.5vw, 24px); font-weight: 420; line-height: var(--display-leading); letter-spacing: -0.01em; }
 .stake-role { font-size: 0.72em; color: var(--ink-soft); }
@@ -870,6 +972,8 @@ button.action-row:hover .action-sentence { color: var(--blue); }
   .rope::before, .rope::after { animation: none; }
   .theme-body { animation: none; }
   .quote-tip, .quote-veil { transition: none; }
+  .stake-node { transition: none; }
+  .tl-dot { transition: none; animation: none; }
 }
 
 /* ---------- stakeholder relation slide ---------- */
@@ -1007,3 +1111,29 @@ details.theme-block[open] .theme-body { animation: rise-in 0.38s cubic-bezier(0.
   .rel-row-body, .rel-row-body-content, details.theme-block::details-content { transition: none; }
   details.theme-block[open] .theme-body { animation: none; }
 }
+
+/* the kind of a popcorn: an icon before the phrase (PROMPTS/popcorn-ontology.md) */
+.pop-kind { width: 1.07em; height: 1.07em; vertical-align: -0.14em; margin-right: 0.3em; fill: currentColor; opacity: 0.92; flex: none; }
+.tail-phrase .pop-kind { width: 1.17em; height: 1.17em; margin-right: 0.4em; }
+.kind-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 0 4px; font-size: 12px; color: var(--ink-faint, #666); }
+.kind-key { display: inline-flex; align-items: center; gap: 4px; appearance: none; border: none; background: none; padding: 2px 4px; margin: 0;
+  font: inherit; color: inherit; cursor: pointer; border-radius: 2px; }
+.kind-key:hover { color: var(--ink, #1d1d1f); }
+.kind-key .pop-kind { width: 1.3em; height: 1.3em; margin: 0; opacity: 0.9; }
+.kind-key.only { color: var(--ink, #1d1d1f); background: var(--hairline, #e5e0d6); }
+.kind-key.except { color: var(--ink, #1d1d1f); background: var(--hairline, #e5e0d6); text-decoration: line-through; }
+.kind-key.except .pop-kind { opacity: 0.45; }
+.kind-key.dim { opacity: 0.45; }
+
+/* the icon's tooltip: the definition of the kind, on the icon only */
+.pop-kind-wrap { position: relative; display: inline-block; }
+.pop-kind-wrap::after { content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 0.45em); transform: translateX(-50%);
+  white-space: nowrap; font-size: clamp(11px, 0.8vw, 14px); font-weight: 400; line-height: 1.2; letter-spacing: 0; padding: 0.35em 0.6em;
+  background: var(--graphite, #1d1d1f); color: var(--parchment, #f7f4ee); border-radius: 2px; opacity: 0; pointer-events: none; transition: opacity 120ms; z-index: 5; }
+.pop-kind-wrap:hover::after { opacity: 1; }
+.pop-kind-wrap:hover .pop-kind { opacity: 1; }
+/* air between the colour chip and the name of the recording under a hovered popcorn */
+.pop .attribution .chip { margin-right: 0.6em; }
+
+/* the platform's tensions still carry a narrative paragraph until its prompt moves to the knot */
+.tension-narrative { text-align: center; color: var(--ink-soft); font-size: clamp(17px, 1.5vw, 24px); max-width: 60ch; margin: clamp(0.9em, 2.5vh, 1.6em) auto 0; }
