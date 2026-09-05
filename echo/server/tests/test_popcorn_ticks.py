@@ -237,7 +237,8 @@ def test_first_tick_pops_every_transcript_then_analyses(fake: _FakeDirectus, mon
     runs = fake.created["agent_loop_run"]
     assert runs[-1]["status"] == "ok"
     assert "2 of 2 conversations re-read" in runs[-1]["detail"]
-    assert fake.enqueued == [("loop1", "scheduled")]  # type: ignore[attr-defined]
+    # Booked once when the read starts and again when it ends.
+    assert fake.enqueued == [("loop1", "scheduled"), ("loop1", "scheduled")]  # type: ignore[attr-defined]
 
 
 def test_second_tick_only_rereads_changed_conversations(fake: _FakeDirectus, monkeypatch) -> None:

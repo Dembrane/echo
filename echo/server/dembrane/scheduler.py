@@ -74,7 +74,8 @@ scheduler.add_job(
 
 scheduler.add_job(
     func="dembrane.tasks:task_reconcile_popcorn_tick_tasks.send",
-    trigger=CronTrigger(minute="*/5"),
+    # Every minute, not five: a live room notices a missed 2-minute read.
+    trigger=CronTrigger(minute="*"),
     id="task_reconcile_popcorn_tick_tasks",
     name="Backfill scheduled_task rows for active popcorn loops (reconciler)",
     replace_existing=True,

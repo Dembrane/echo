@@ -64,7 +64,7 @@ MAX_CHARS_PER_CONVERSATION = 150_000
 MAX_ANALYSIS_CHARS = 600_000
 RUN_LOCK_SECONDS = 5 * 60
 MANUAL_LOCK_WAIT_SECONDS = 180
-STALE_TICK_SECONDS = 180
+STALE_TICK_SECONDS = 90
 ANALYSIS_KINDS = ("tensions", "stakeholders")
 ANALYSIS_SHAPERS = {"tensions": shape_tensions, "stakeholders": shape_stakeholders}
 
@@ -500,6 +500,11 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         if not report_id or not project_id or not acting_user_id:
             raise RuntimeError("Popcorn loop is missing required ids")
 
+        # The next read is booked before this one starts, so a worker that dies
+        # mid-read (a pod scaled away, a crash) costs the room one cadence and
+        # never the chain. The booking is refreshed again when this read ends.
+        await _enqueue_next_if_due(loop)
+
         state = normalize_state(loop.get("popcorn_state"))
         config = await get_latest_config(report_id)
         settings = normalize_settings(
@@ -662,7 +667,7 @@ async def reconcile_missing_popcorn_tick_tasks() -> int:
         },
     )
     covered: set[str] = set()
-    for task in (existing or []):
+    for task in existing or []:
         if not isinstance(task, dict):
             continue
         loop_id = str((task.get("payload") or {}).get("loop_id") or "")
@@ -696,7 +701,9 @@ async def reconcile_missing_popcorn_tick_tasks() -> int:
                             },
                         )
                     except Exception as exc:
-                        logger.warning("Failed to mark stranded task %s as failed: %s", task_id, exc)
+                        logger.warning(
+                            "Failed to mark stranded task %s as failed: %s", task_id, exc
+                        )
 
     enqueued = 0
     for loop in popcorn_loops:

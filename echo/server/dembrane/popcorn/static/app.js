@@ -745,8 +745,13 @@
       // In dembrane the deck reads transcripts that already exist; it never
       // records. Say what is actually happening so a host does not think a
       // microphone is open.
+      const transcripts = (state.session?.transcripts || []).length;
+      const read = [...state.popcorn.values()].filter((p) => p.done).length;
+      // A finished read that found nothing must say so, or a host takes an
+      // empty stage for a broken one.
       const msg = !state.session ? "drop your session's JSON files anywhere on this page"
-        : EMBED && !(state.session.transcripts || []).length ? "waiting for the first conversation"
+        : EMBED && !transcripts ? "waiting for the first conversation"
+        : EMBED && read >= transcripts ? `read ${transcripts} conversation${transcripts === 1 ? "" : "s"}, nothing worth a popcorn yet`
         : EMBED ? "reading the conversations…"
         : "listening…";
       if (!waiting) stageEl.innerHTML = `<p class="popcorn-waiting"><span class="live-dot"></span>&nbsp; ${msg}</p>`;
