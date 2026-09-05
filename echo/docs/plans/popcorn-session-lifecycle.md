@@ -2,8 +2,9 @@
 
 ## Status
 
-Implemented on PR #1044 (2026-09-06), eight commits from `4cb82c15` to
-`7ba1d959`. The feature as shipped is described in
+Implemented on PR #1044 (2026-09-06), commits `4cb82c15` to `147fa478`
+(the last one moves the rerun's wipe into the tick and renames the Live
+button to Go live, after Jorim's first look). The feature as shipped is described in
 `docs/popcorn_sessions.md`; this is the plan it was built from, kept for the
 reasoning. Written by Oren from Jorim's brief and approved in chat on
 2026-09-05.
