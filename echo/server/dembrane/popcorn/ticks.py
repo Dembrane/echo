@@ -316,7 +316,8 @@ async def _enqueue_next_if_due(loop: dict[str, Any], when: datetime | None = Non
     expires_at = _parse_dt(fresh.get("expires_at"))
     now = _now()
     if expires_at and now >= expires_at:
-        await async_directus.update_item("agent_loop", loop_id, {"status": "expired"})
+        # Live ended: back to manual, nothing more booked.
+        await async_directus.update_item("agent_loop", loop_id, {"status": "paused"})
         return
     cadence = max(MIN_CADENCE_MINUTES, int(fresh.get("cadence_minutes") or DEFAULT_CADENCE_MINUTES))
     next_at = when or (now + timedelta(minutes=cadence))
@@ -325,7 +326,7 @@ async def _enqueue_next_if_due(loop: dict[str, Any], when: datetime | None = Non
         if final_at > now:
             next_at = final_at
         else:
-            await async_directus.update_item("agent_loop", loop_id, {"status": "expired"})
+            await async_directus.update_item("agent_loop", loop_id, {"status": "paused"})
             return
     # One chain per loop. Every manual read and every go-live adds a safety
     # tick, and each tick that runs schedules the next, so without this the
@@ -805,24 +806,30 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         )
         return {"status": "disabled", "run": run}
 
-    expires_at = _parse_dt(loop.get("expires_at"))
-    if expires_at and started_at >= expires_at:
-        await async_directus.update_item("agent_loop", loop_id, {"status": "expired"})
-        run = await _create_run(
-            loop_id=loop_id,
-            status="no_op",
-            detail="Loop expired before tick start",
-            started_at=started_at,
-        )
-        return {"status": "expired", "run": run}
-    if loop.get("status") != "active" and tick_kind != "manual":
-        run = await _create_run(
-            loop_id=loop_id,
-            status="no_op",
-            detail=f"Loop is {loop.get('status')}",
-            started_at=started_at,
-        )
-        return {"status": "no_op", "run": run}
+    # Only the scheduled chain answers to the mode and the expiry. A manual
+    # read (refresh, rerun, run) goes ahead in any mode, at any time.
+    if tick_kind != "manual":
+        if loop.get("status") != "active":
+            run = await _create_run(
+                loop_id=loop_id,
+                status="no_op",
+                detail=f"Loop is {loop.get('status')}",
+                started_at=started_at,
+            )
+            return {"status": "no_op", "run": run}
+        expires_at = _parse_dt(loop.get("expires_at"))
+        if expires_at and started_at >= expires_at:
+            # Live ended: back to manual. The deck stays; refresh still works.
+            await async_directus.update_item(
+                "agent_loop", loop_id, {"status": "paused", "expires_at": started_at.isoformat()}
+            )
+            run = await _create_run(
+                loop_id=loop_id,
+                status="no_op",
+                detail="Live ended; back to manual",
+                started_at=started_at,
+            )
+            return {"status": "no_op", "run": run}
 
     if not await _claim_run_lock(loop_id):
         # A host pressing "read again" while a tick is mid-flight expects the

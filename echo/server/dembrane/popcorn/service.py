@@ -1,10 +1,16 @@
 """Popcorn sessions: one live deck per project, riding the canvas loop machinery.
 
 A popcorn session is a `project_report` row of kind "popcorn" with one
-`canvas_config_revision` (presentation settings) and one `agent_loop` (cadence,
+`canvas_config_revision` (presentation settings) and one `agent_loop` (mode,
 expiry, and the extraction state). Everything the presentation reads is
 assembled from that state by `build_bundle`, so the public page and the
 in-app page render the same thing.
+
+The loop's status carries the mode. `paused` is manual, the default: nothing
+is scheduled, a refresh runs one tick, a rerun wipes the state and runs one.
+`active` is live: the two-minute chain until `expires_at`, then back to
+manual. The legacy statuses (expired, ended, stopped) read as manual. A
+session never ends; the deck stays up and refresh keeps working.
 """
 
 from __future__ import annotations
@@ -24,6 +30,8 @@ LOOP_KIND = "popcorn"
 DEFAULT_CADENCE_MINUTES = 2
 MIN_CADENCE_MINUTES = 1
 MAX_CADENCE_MINUTES = 120
+# How long live can be asked for, in hours.
+LIVE_HOURS = (1, 8, 24)
 STATE_VERSION = 2  # 2: one quote registry at the top of the state, validation per transcript
 
 # Tabs the host can hide from the room. Popcorn itself is always shown: it is
@@ -63,6 +71,38 @@ PARTICIPANT_LANGUAGE_CODES = {
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _parse_dt(value: Any) -> datetime | None:
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+def loop_mode(loop: dict[str, Any] | None) -> str:
+    """`live` while the two-minute chain runs; everything else is manual."""
+    return "live" if (loop or {}).get("status") == "active" else "manual"
+
+
+async def gather_transcripts(**kwargs: Any) -> list[dict[str, Any]]:
+    """The tick's gather, reached late because the tick imports this module."""
+    from dembrane.popcorn.ticks import gather_transcripts as gather
+
+    return await gather(**kwargs)
+
+
+async def cancel_pending_popcorn_ticks(loop_id: str) -> int:
+    from dembrane.scheduled_tasks import cancel_pending_tasks
+
+    return await cancel_pending_tasks(
+        task_type=TASK_POPCORN_TICK, payload_match={"loop_id": loop_id}
+    )
 
 
 def _data(result: dict[str, Any]) -> dict[str, Any]:
@@ -284,12 +324,11 @@ async def create_popcorn(
     project_id: str,
     title: str,
     client: str | None,
-    cadence_minutes: int,
-    expires_at: str,
     acting_directus_user_id: str,
 ) -> dict[str, Any]:
-    """Create the report row, its settings revision, the loop, and the first tick."""
-    cadence = max(MIN_CADENCE_MINUTES, min(MAX_CADENCE_MINUTES, cadence_minutes))
+    """Create the report row, its settings revision, the loop in manual mode,
+    and one read straight away. Nothing is scheduled until the host goes live."""
+    cadence = DEFAULT_CADENCE_MINUTES
     report = _data(
         await async_directus.create_item(
             "project_report",
@@ -328,8 +367,8 @@ async def create_popcorn(
                 "project_id": project_id,
                 "report_id": report_id,
                 "name": title,
-                "status": "active",
-                "expires_at": expires_at,
+                "status": "paused",
+                "expires_at": _now().isoformat(),
                 "cadence_minutes": cadence,
                 "acting_directus_user_id": acting_directus_user_id,
                 "failure_count": 0,
@@ -424,7 +463,7 @@ async def update_settings(
     fallback_title = str(report.get("user_instructions") or "Popcorn")
     current = normalize_settings(config.get("popcorn_settings"), fallback_title=fallback_title)
     merged = dict(current)
-    for key in ("title", "client", "public", "show_qr", "show_branding"):
+    for key in ("title", "client", "public", "show_qr", "show_branding", "public_labels"):
         if key in patch and patch[key] is not None:
             merged[key] = patch[key]
     if isinstance(patch.get("voice"), dict):
@@ -450,9 +489,11 @@ async def update_settings(
     return settings
 
 
-async def go_live_again(loop: dict[str, Any], *, hours: int = 8) -> dict[str, Any]:
-    """Bring an ended or paused loop back: new expiry from now, active, failures
-    cleared, and a read straight away."""
+async def go_live(loop: dict[str, Any], *, hours: int) -> dict[str, Any]:
+    """Live: the two-minute chain until the expiry, reading straight away.
+    Stop live, or the expiry, returns the session to manual."""
+    if hours not in LIVE_HOURS:
+        raise ValueError(f"hours must be one of {LIVE_HOURS}")
     loop_id = str(loop["id"])
     expires_at = (_now() + timedelta(hours=hours)).isoformat()
     updated = _data(
@@ -464,6 +505,41 @@ async def go_live_again(loop: dict[str, Any], *, hours: int = 8) -> dict[str, An
     )
     await dispatch_popcorn_tick_now_with_safety(loop_id, "manual")
     return updated
+
+
+async def stop_live(loop: dict[str, Any]) -> dict[str, Any]:
+    """Back to manual: nothing scheduled, the deck stays, refresh still works."""
+    loop_id = str(loop["id"])
+    await cancel_pending_popcorn_ticks(loop_id)
+    return _data(
+        await async_directus.update_item(
+            "agent_loop", loop_id, {"status": "paused", "expires_at": _now().isoformat()}
+        )
+    )
+
+
+async def reset_for_rerun(loop: dict[str, Any]) -> dict[str, Any]:
+    """Wipe the live state (phrases, quotes, analysis) and read again. The
+    run counter continues so the saved runs stay in order; they are kept."""
+    loop_id = str(loop["id"])
+    previous = normalize_state(loop.get("popcorn_state"))
+    state = fresh_state()
+    state["run"] = previous["run"]
+    await async_directus.update_item("agent_loop", loop_id, {"popcorn_state": state})
+    await dispatch_popcorn_tick_now_with_safety(loop_id, "manual")
+    return state
+
+
+async def readiness(*, project_id: str, acting_directus_user_id: str) -> dict[str, int]:
+    """What a first read would find: conversations with a transcript, and the
+    words in them (the dashboard says minutes, at 150 a minute)."""
+    transcripts = await gather_transcripts(
+        project_id=project_id, acting_directus_user_id=acting_directus_user_id
+    )
+    return {
+        "conversations": len(transcripts),
+        "words": sum(len(str(t.get("text") or "").split()) for t in transcripts),
+    }
 
 
 async def ensure_public_token(report: dict[str, Any]) -> str:
@@ -536,6 +612,7 @@ def loop_payload(
     return {
         "id": str(loop.get("id")),
         "status": loop.get("status"),
+        "mode": loop_mode(loop),
         "expires_at": loop.get("expires_at"),
         "cadence_minutes": loop.get("cadence_minutes"),
         "next_read_at": next_at,

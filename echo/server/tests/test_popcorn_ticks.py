@@ -655,3 +655,29 @@ def test_a_phrase_without_a_passage_leaves_the_deck(fake: _FakeDirectus, monkeyp
 
     counts = state_counts(state)
     assert counts["phrases"] == 1 and counts["validated"] == 1 and counts["held_back"] == 1
+
+
+def test_a_scheduled_tick_past_expiry_returns_the_loop_to_manual(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    loop = fake.items["agent_loop"]["loop1"]
+    loop["expires_at"] = "2000-01-01T00:00:00+00:00"
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
+    assert result["status"] == "no_op"
+    assert loop["status"] == "paused" and calls == []
+    assert "Live ended" in fake.created["agent_loop_run"][-1]["detail"]
+
+
+def test_a_manual_tick_ignores_expiry_and_books_nothing(fake: _FakeDirectus, monkeypatch) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    loop = fake.items["agent_loop"]["loop1"]
+    loop["status"] = "paused"
+    loop["expires_at"] = "2000-01-01T00:00:00+00:00"
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    assert result["status"] == "ok" and loop["status"] == "paused"
+    assert sorted(c for c in calls if c.startswith("popcorn")) == ["popcorn:c1", "popcorn:c2"]
+    # Manual mode books nothing.
+    assert fake.enqueued == []  # type: ignore[attr-defined]
