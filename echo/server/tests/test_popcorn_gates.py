@@ -11,10 +11,11 @@ def test_name_flags_catch_joined_names_and_things() -> None:
             {"id": "s3", "name": "The recording tool"},
             {"id": "s4", "name": "The tool developers"},
             {"id": "s5", "name": "Funders"},
+            {"id": "s6", "name": "External Pressures"},
         ]
     }
     flags = name_flags(stake)
-    assert [f.split(":")[0] for f in flags] == ["s1", "s2", "s3"]
+    assert [f.split(":")[0] for f in flags] == ["s1", "s2", "s3", "s6"]
     assert "joins two groups" in flags[0] and "names a thing" in flags[2]
 
 

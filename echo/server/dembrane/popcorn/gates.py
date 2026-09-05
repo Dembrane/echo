@@ -21,9 +21,14 @@ from typing import Any
 from collections import deque, defaultdict
 
 JOINED = re.compile(r"(\band\b|&|/|,)", re.IGNORECASE)
+# ...and a name whose last word is an abstraction (a pressure, a process, a
+# culture) is a force on people wearing a card; the people it acts through are
+# the group.
 THING = re.compile(
     r"\b(tool|tools|system|systems|technology|software|platform|app|recording|recordings|algorithm"
-    r"|ai|bot|machine|summary|dashboard|black box)$",
+    r"|ai|bot|machine|summary|dashboard|black box"
+    r"|pressure|pressures|demand|demands|force|forces|factor|factors|trend|trends|process|processes"
+    r"|structure|structures|culture|cultures|market|markets|environment|environments)$",
     re.IGNORECASE,
 )
 
