@@ -108,6 +108,8 @@ function statusLine(popcorn: PopcornDetail): string {
 	return parts.join(" · ");
 }
 
+const DELAYED_AFTER_SECONDS = 60;
+
 function countdown(seconds: number): string {
 	const m = Math.floor(seconds / 60);
 	const sec = seconds % 60;
@@ -139,6 +141,10 @@ function LiveChip({
 		: null;
 	const seconds = next ? Math.ceil((next - now) / 1000) : null;
 	const overdue = seconds !== null && seconds <= 0;
+	// A read that is a minute late has most likely been stranded on the
+	// server, so the stage has gone quiet. From here the pill becomes the way
+	// to ask for a read instead of a promise that one is coming.
+	const delayed = seconds !== null && seconds <= -DELAYED_AFTER_SECONDS;
 	// A tick that is due but not yet reported: ask again until it lands.
 	useEffect(() => {
 		if (!overdue) return;
@@ -148,7 +154,9 @@ function LiveChip({
 
 	let label: string;
 	const reading = counts.reading ?? 0;
-	if (reading > 0) {
+	if (delayed) {
+		label = t`Delayed · read now`;
+	} else if (reading > 0) {
 		label = t`Reading ${reading} of ${counts.conversations} conversations…`;
 	} else if (seconds === null) {
 		label = t`Live`;
@@ -159,9 +167,16 @@ function LiveChip({
 	} else {
 		label = t`Live · next read in ${countdown(seconds)}`;
 	}
-	const busy = reading > 0 || overdue;
+	const busy = !delayed && (reading > 0 || overdue);
 	return (
-		<Tooltip label={t`Read the conversations now`} disabled={busy}>
+		<Tooltip
+			label={
+				delayed
+					? t`The last read is late. Press to read the conversations now.`
+					: t`Read the conversations now`
+			}
+			disabled={busy}
+		>
 			<Button
 				variant="light"
 				loading={pending}
