@@ -17,18 +17,25 @@ from pydantic import BaseModel
 
 from dembrane.free_tier import workspace_over_cap_active
 from dembrane.directus_async import async_directus
+from dembrane.toolkit.projects import ProjectHit as ProjectHit
 from dembrane.api.v2.bff._access import (
     resolve_project_access,
     resolve_conversation_access,
 )
 from dembrane.agent_access.context import AgentContext
+from dembrane.toolkit.conversations import (
+    Snippet as Snippet,
+    SearchResult as SearchResult,
+    TranscriptPage as TranscriptPage,
+    ConversationSort as ConversationSort,
+    ConversationSummary as ConversationSummary,
+)
 from dembrane.api.v2.bff.conversations import (
     _enrich_conversation,
     _scrub_chunk_transcript,
 )
 
 BATCH_MAX = 50
-ConversationSort = Literal["-created_at", "created_at", "-duration", "duration"]
 
 
 # ── output models ──────────────────────────────────────────────────────────
@@ -80,20 +87,7 @@ class ProjectUpdateIn(BaseModel):
     default_conversation_finish_text: Optional[str] = None
 
 
-class ConversationSummaryOut(BaseModel):
-    id: str
-    project_id: str
-    title: Optional[str] = None
-    participant_name: Optional[str] = None
-    summary: Optional[str] = None
-    source: Optional[str] = None
-    duration: Optional[float] = None
-    is_finished: Optional[bool] = None
-    locked: bool = False
-    created_at: Optional[str] = None
-
-
-class ConversationOut(ConversationSummaryOut):
+class ConversationOut(ConversationSummary):
     transcript: Optional[str] = None
     transcript_locked: bool = False
     chunk_count: int = 0
@@ -141,17 +135,33 @@ async def _org_role(org_id: str, app_user_id: str) -> Optional[str]:
     return None
 
 
-async def _project_access(ctx: AgentContext, project_id: str) -> Any:
-    """Resolve project access as the user, then confirm its org is in the
-    grant and switched on. 404 either way, so an agent cannot probe."""
-    access = await resolve_project_access(project_id, ctx.session)
+async def _org_of(access: Any) -> Optional[str]:
     org_id = access.org_id
     if not org_id and access.workspace_id:
         ws = await async_directus.get_item("workspace", access.workspace_id)
         org_id = ws.get("org_id") if isinstance(ws, dict) else None
-    await ctx.require_org(org_id)
-    await ctx.charge(str(org_id))
-    return access, str(org_id)
+    return _s(org_id)
+
+
+async def _project_access(ctx: AgentContext, project_id: str) -> Any:
+    """Resolve project access as the user, then confirm its org is in the
+    grant and switched on, then charge. 404 either way, so an agent cannot
+    probe."""
+    access = await resolve_project_access(project_id, ctx.session)
+    org_id = await ctx.require_org(await _org_of(access))
+    await ctx.charge(org_id)
+    return access, org_id
+
+
+async def _conversation_access(
+    ctx: AgentContext, conversation_id: str
+) -> tuple[Any, dict[str, Any], str]:
+    """Resolve conversation access as the user and confirm its org is in the
+    grant and switched on. Charging is the caller's call: a batch charges
+    once per org, a single read once."""
+    access, conv = await resolve_conversation_access(conversation_id, ctx.session)
+    org_id = await ctx.require_org(await _org_of(access))
+    return access, conv, org_id
 
 
 def _project_out(row: dict[str, Any], org_id: Optional[str]) -> ProjectOut:
@@ -168,8 +178,8 @@ def _project_out(row: dict[str, Any], org_id: Optional[str]) -> ProjectOut:
     )
 
 
-def _conversation_summary(row: dict[str, Any]) -> ConversationSummaryOut:
-    return ConversationSummaryOut(
+def _conversation_summary(row: dict[str, Any]) -> ConversationSummary:
+    return ConversationSummary(
         id=str(row["id"]),
         project_id=str(row.get("project_id")),
         title=_s(row.get("title")),
@@ -178,8 +188,10 @@ def _conversation_summary(row: dict[str, Any]) -> ConversationSummaryOut:
         source=_s(row.get("source")),
         duration=row.get("duration"),
         is_finished=row.get("is_finished"),
+        is_all_chunks_transcribed=row.get("is_all_chunks_transcribed"),
         locked=bool(row.get("locked")),
         created_at=_s(row.get("created_at")),
+        updated_at=_s(row.get("updated_at")),
     )
 
 
@@ -339,55 +351,108 @@ async def list_conversations(
     limit: int = 100,
     offset: int = 0,
     sort: ConversationSort = "-created_at",
-) -> list[ConversationSummaryOut]:
-    from dembrane.search_filters import merge_search_filter
-    from dembrane.api.v2.bff.conversations import _CONVERSATION_SEARCH_FIELDS
+    created_after: Optional[str] = None,
+    created_before: Optional[str] = None,
+) -> list[ConversationSummary]:
+    from dembrane.toolkit import conversations as toolkit
 
     access, _org_id = await _project_access(ctx, project_id)
-    access.require("conversation:read")
-    over_cap = await workspace_over_cap_active(access.workspace_id, access.tier)
-    flt: dict[str, Any] = {"project_id": {"_eq": project_id}, "deleted_at": {"_null": True}}
-    if search and search.strip():
-        flt = merge_search_filter(flt, search.strip(), _CONVERSATION_SEARCH_FIELDS)
-    rows = await async_directus.get_items(
-        "conversation",
-        {
-            "query": {
-                "filter": flt,
-                "fields": [
-                    "id",
-                    "project_id",
-                    "title",
-                    "participant_name",
-                    "summary",
-                    "source",
-                    "duration",
-                    "is_finished",
-                    "is_over_cap",
-                    "created_at",
-                ],
-                "sort": [sort],
-                "limit": max(1, min(limit, 500)),
-                "offset": max(0, offset),
-            }
-        },
+    page = await toolkit.list_conversations(
+        project_id,
+        search=search,
+        limit=limit,
+        offset=offset,
+        sort=sort,
+        created_after=created_after,
+        created_before=created_before,
+        session=ctx.session,
+        access=access,
     )
-    out: list[ConversationSummaryOut] = []
-    for row in rows if isinstance(rows, list) else []:
-        _enrich_conversation(row, access.tier, over_cap)
-        out.append(_conversation_summary(row))
+    return page.conversations
+
+
+async def search_transcripts(
+    ctx: AgentContext, project_id: str, query: str, limit: int = 20, offset: int = 0
+) -> SearchResult:
+    """Conversations whose transcript contains the query's words, with snippets.
+    One charge per call, whatever the page size."""
+    from dembrane.toolkit import conversations as toolkit
+
+    if not (query or "").strip():
+        raise HTTPException(status_code=400, detail="query is required")
+    access, _org_id = await _project_access(ctx, project_id)
+    result = await toolkit.search_transcripts(
+        project_id, query, limit=limit, offset=offset, session=ctx.session, access=access
+    )
+    if not result.tokens:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"query needs at least one word of {toolkit.MIN_TOKEN_LENGTH} letters or more; "
+                "shorter words are ignored"
+            ),
+        )
+    return result
+
+
+async def grep_conversation(
+    ctx: AgentContext, conversation_id: str, query: str, max_matches: int = 10
+) -> list[Snippet]:
+    from dembrane.toolkit import conversations as toolkit
+
+    if not (query or "").strip():
+        raise HTTPException(status_code=400, detail="query is required")
+    access, conv, org_id = await _conversation_access(ctx, conversation_id)
+    await ctx.charge(org_id)
+    return await toolkit.grep_conversation(
+        conversation_id,
+        query,
+        max_matches=max_matches,
+        session=ctx.session,
+        resolved=(access, conv),
+    )
+
+
+async def read_transcript(
+    ctx: AgentContext, conversation_id: str, offset: int = 0, limit: int = 50
+) -> TranscriptPage:
+    from dembrane.toolkit import conversations as toolkit
+
+    access, conv, org_id = await _conversation_access(ctx, conversation_id)
+    await ctx.charge(org_id)
+    return await toolkit.read_transcript(
+        conversation_id, offset=offset, limit=limit, session=ctx.session, resolved=(access, conv)
+    )
+
+
+async def find_projects(
+    ctx: AgentContext, query: Optional[str] = None, limit: int = 50
+) -> list[ProjectHit]:
+    """Projects by name across the grant's organisations. No charge: this is
+    how an agent finds where to look before it spends a call. Organisations
+    outside the grant, or switched off by their admin, are dropped rather
+    than refused, so the answer never confirms what lies outside."""
+    from dembrane.toolkit import projects as toolkit
+    from dembrane.agent_access.context import org_agent_access_enabled
+
+    hits = await toolkit.find_projects(query, limit=limit, session=ctx.session)
+    enabled: dict[str, bool] = {}
+    out: list[ProjectHit] = []
+    for hit in hits:
+        org_id = hit.org_id
+        if not org_id or org_id not in ctx.org_ids:
+            continue
+        if org_id not in enabled:
+            enabled[org_id] = await org_agent_access_enabled(org_id)
+        if enabled[org_id]:
+            out.append(hit)
     return out
 
 
 async def _conversation_detail(
     ctx: AgentContext, conversation_id: str
 ) -> tuple[ConversationOut, str]:
-    access, conv = await resolve_conversation_access(conversation_id, ctx.session)
-    org_id = access.org_id
-    if not org_id and access.workspace_id:
-        ws = await async_directus.get_item("workspace", access.workspace_id)
-        org_id = ws.get("org_id") if isinstance(ws, dict) else None
-    org = await ctx.require_org(org_id)
+    access, conv, org = await _conversation_access(ctx, conversation_id)
     over_cap = await workspace_over_cap_active(access.workspace_id, access.tier)
     _enrich_conversation(conv, access.tier, over_cap)
     locked = bool(conv.get("locked"))
@@ -437,6 +502,10 @@ async def _conversation_detail(
 
 
 async def get_conversation(ctx: AgentContext, conversation_id: str) -> ConversationOut:
+    """The whole conversation in one answer: metadata, tags and the full
+    transcript joined into one string. Fine for one short conversation;
+    `read_transcript` is the paged path, with chunk ids and timestamps, and
+    the one to use for anything long or for many conversations."""
     detail, org_id = await _conversation_detail(ctx, conversation_id)
     await ctx.charge(org_id)
     return detail

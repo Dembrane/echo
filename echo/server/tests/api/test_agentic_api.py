@@ -206,6 +206,45 @@ class _FakeDirectusClient:
         return rows
 
 
+def _fake_access(project_id: str) -> SimpleNamespace:
+    """What resolve_project_access hands back, with the fields the toolkit's
+    lock scrub reads (a legacy project: no workspace, no tier, never locked)."""
+    return SimpleNamespace(
+        require=lambda _policy: None,
+        role="owner",
+        project={},
+        project_id=project_id,
+        workspace_id=None,
+        tier=None,
+        org_id=None,
+    )
+
+
+class _AsyncDirectus:
+    """The toolkit reads through async_directus; this wraps a sync fake for it."""
+
+    def __init__(self, inner: Any) -> None:
+        self.inner = inner
+
+    async def get_items(self, collection: str, params: dict[str, Any]) -> Any:
+        return self.inner.get_items(collection, params)
+
+
+def _patch_toolkit_directus(monkeypatch, directus_client: Any) -> None:
+    from dembrane.toolkit import conversations as toolkit
+
+    monkeypatch.setattr(toolkit, "async_directus", _AsyncDirectus(directus_client))
+
+
+def _patch_toolkit_reads(monkeypatch, directus_client: Any) -> None:
+    _patch_toolkit_directus(monkeypatch, directus_client)
+
+    async def _resolve(project_id: str, auth: Any) -> SimpleNamespace:  # noqa: ARG001
+        return _fake_access(project_id)
+
+    monkeypatch.setattr(bff_access, "resolve_project_access", _resolve)
+
+
 @asynccontextmanager
 async def _build_api_client(
     *,
@@ -233,7 +272,7 @@ async def _build_api_client(
         if owner_entry is None or owner_id != auth.user_id:
             # Ladder semantics: non-members get 404, not 403.
             raise HTTPException(status_code=404, detail="Project not found")
-        return SimpleNamespace(require=lambda _policy: None, role="owner", project={})
+        return _fake_access(project_id)
 
     monkeypatch.setattr(bff_access, "resolve_project_access", _fake_resolve_project_access)
 
@@ -894,16 +933,19 @@ def _conversation_rows(count: int) -> list[dict[str, Any]]:
     ]
 
 
-def test_list_project_conversations_for_agent_pages_with_offset() -> None:
+@pytest.mark.asyncio
+async def test_list_project_conversations_for_agent_pages_with_offset(monkeypatch) -> None:
     """Without offset the per-call cap was a ceiling: rows past it could not be
     reached at all, which is what made "call the list tool for the rest" false."""
     directus_client = _RecordingDirectus(_conversation_rows(250))
+    _patch_toolkit_reads(monkeypatch, directus_client)
+    session = _make_session(user_id="user-1")
 
-    first = agentic_api._list_project_conversations_for_agent(
+    first = await agentic_api._list_project_conversations_for_agent(
         project_id="project-1",
         limit=100,
         offset=0,
-        directus_client=directus_client,
+        auth=session,
     )
     assert [c["conversation_id"] for c in first["conversations"]] == [
         f"conv-{i}" for i in range(100)
@@ -911,11 +953,11 @@ def test_list_project_conversations_for_agent_pages_with_offset() -> None:
     assert first["offset"] == 0
     assert first["has_more"] is True
 
-    third = agentic_api._list_project_conversations_for_agent(
+    third = await agentic_api._list_project_conversations_for_agent(
         project_id="project-1",
         limit=100,
         offset=200,
-        directus_client=directus_client,
+        auth=session,
     )
     assert [c["conversation_id"] for c in third["conversations"]] == [
         f"conv-{i}" for i in range(200, 250)
@@ -924,15 +966,17 @@ def test_list_project_conversations_for_agent_pages_with_offset() -> None:
     assert third["has_more"] is False
 
 
-def test_list_project_conversations_for_agent_still_caps_each_call() -> None:
+@pytest.mark.asyncio
+async def test_list_project_conversations_for_agent_still_caps_each_call(monkeypatch) -> None:
     """Offset makes it pageable; it does not lift the per-call ceiling."""
     directus_client = _RecordingDirectus(_conversation_rows(500))
+    _patch_toolkit_reads(monkeypatch, directus_client)
 
-    result = agentic_api._list_project_conversations_for_agent(
+    result = await agentic_api._list_project_conversations_for_agent(
         project_id="project-1",
         limit=5000,
         offset=0,
-        directus_client=directus_client,
+        auth=_make_session(user_id="user-1"),
     )
 
     assert len(result["conversations"]) == 100
@@ -1689,7 +1733,7 @@ async def test_list_project_conversations_returns_expected_shape(monkeypatch) ->
                     "is_finished": True,
                     "is_all_chunks_transcribed": True,
                     "created_at": "2026-02-01T12:00:00Z",
-                    "chunks": [{"timestamp": "2026-02-01T12:05:00Z"}],
+                    "updated_at": "2026-02-01T12:05:00Z",
                 },
                 {
                     "id": "conv-2",
@@ -1698,13 +1742,13 @@ async def test_list_project_conversations_returns_expected_shape(monkeypatch) ->
                     "summary": None,
                     "is_finished": False,
                     "is_all_chunks_transcribed": False,
-                    "created_at": "2026-02-01T13:00:00Z",
-                    "chunks": [],
+                    "created_at": "2026-02-01T11:00:00Z",
+                    "updated_at": "2026-02-01T11:30:00Z",
                 },
             ]
         }
     )
-    monkeypatch.setattr(agentic_api, "directus", directus_client)
+    _patch_toolkit_directus(monkeypatch, directus_client)
     session = _make_session(user_id="user-1")
 
     async with _build_api_client(
@@ -2628,7 +2672,7 @@ async def test_list_project_conversations_supports_conversation_id_filter(monkey
             ]
         }
     )
-    monkeypatch.setattr(agentic_api, "directus", directus_client)
+    _patch_toolkit_directus(monkeypatch, directus_client)
     session = _make_session(user_id="user-1")
 
     async with _build_api_client(
@@ -2710,7 +2754,7 @@ async def test_list_project_conversations_transcript_query_scopes_to_project_and
             ]
         }
     )
-    monkeypatch.setattr(agentic_api, "directus", directus_client)
+    _patch_toolkit_directus(monkeypatch, directus_client)
     session = _make_session(user_id="user-1")
 
     async with _build_api_client(
@@ -2786,7 +2830,7 @@ async def test_list_project_conversations_transcript_query_excludes_deleted(
             ]
         }
     )
-    monkeypatch.setattr(agentic_api, "directus", directus_client)
+    _patch_toolkit_directus(monkeypatch, directus_client)
     session = _make_session(user_id="user-1")
 
     async with _build_api_client(
@@ -2889,7 +2933,7 @@ async def test_list_project_conversations_transcript_query_token_or_limit_and_or
             ]
         }
     )
-    monkeypatch.setattr(agentic_api, "directus", directus_client)
+    _patch_toolkit_directus(monkeypatch, directus_client)
     session = _make_session(user_id="user-1")
 
     async with _build_api_client(

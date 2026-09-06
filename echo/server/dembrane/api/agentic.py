@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import json
 import time
 import asyncio
@@ -15,7 +14,6 @@ from pydantic import Field, BaseModel
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from dembrane.service import chat_service, project_service, agentic_run_service
-from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.chat_utils import generate_title
 from dembrane.agentic_focus import format_focus_block
@@ -199,18 +197,39 @@ def _require_agent_token(auth: DirectusSession) -> str:
     return auth.access_token
 
 
-async def _assert_project_access(project_id: str, auth: DirectusSession) -> None:
+async def _assert_project_access(project_id: str, auth: DirectusSession) -> Optional[Any]:
     """v2 access gate shared with the chat BFF: any workspace member whose
     role grants chat:use can drive the agent (the old check required the
     project creator, which 403'd members the read tools already serve).
     Staff admins bypass the app-layer model (they may have no app_user row).
-    Non-members get 404, matching the ladder's don't-confirm-existence rule."""
+    Non-members get 404, matching the ladder's don't-confirm-existence rule.
+
+    Returns the resolved access so the read tools can hand it to the toolkit
+    instead of resolving twice; None for staff admins."""
     if auth.is_admin:
-        return
+        return None
     from dembrane.api.v2.bff._access import resolve_project_access
 
     access = await resolve_project_access(project_id, auth)
     access.require("chat:use")
+    return access
+
+
+def _staff_project_access(project_id: str, auth: DirectusSession) -> Any:
+    """What the toolkit gets for a staff admin, who bypasses the ladder in
+    _assert_project_access: every read policy granted and nothing locked, which
+    is what the bypass has always meant for these routes."""
+    from dembrane.api.v2.bff._access import ResourceAccess
+
+    return ResourceAccess(
+        app_user_id="",
+        directus_user_id=auth.user_id,
+        project_id=project_id,
+        workspace_id=None,
+        tier=None,
+        role="owner",
+        source="staff",
+    )
 
 
 def _exclude_others_private_chats(
@@ -507,35 +526,6 @@ def _build_initial_agent_prompt_content(
     )
 
 
-def _conversation_status(payload: dict[str, Any]) -> str:
-    if not payload.get("is_finished"):
-        return "live"
-    if not payload.get("is_all_chunks_transcribed"):
-        return "processing"
-    return "done"
-
-
-def _extract_last_chunk_at(payload: dict[str, Any]) -> Optional[str]:
-    direct_value = _to_non_empty_string(payload.get("last_chunk_at"))
-    if direct_value is not None:
-        return direct_value
-
-    updated_value = _to_non_empty_string(payload.get("updated_at"))
-    if updated_value is not None:
-        return updated_value
-
-    chunks = payload.get("chunks")
-    if not isinstance(chunks, list) or not chunks:
-        return None
-
-    latest = chunks[0]
-    if not isinstance(latest, dict):
-        return None
-
-    timestamp = latest.get("timestamp") or latest.get("created_at")
-    return _to_non_empty_string(timestamp)
-
-
 def _to_related_id(value: Any) -> Optional[str]:
     if isinstance(value, dict):
         return _to_non_empty_string(value.get("id"))
@@ -599,265 +589,95 @@ def _to_memory_card(row: dict[str, Any]) -> dict[str, Any]:
     return {field: row.get(field) for field in MEMORY_CARD_FIELDS}
 
 
-def _normalize_transcript_query_tokens(query: str, *, max_tokens: int = 4) -> list[str]:
-    raw_tokens = re.findall(r"[a-z0-9]+", query.lower())
-    normalized_tokens: list[str] = []
-    seen: set[str] = set()
-    for token in raw_tokens:
-        if len(token) < 4 or token in seen:
-            continue
-        seen.add(token)
-        normalized_tokens.append(token)
-        if len(normalized_tokens) >= max_tokens:
-            break
-    return normalized_tokens
-
-
-def _build_match_snippet(*, text: str, tokens: list[str], context_window: int = 80) -> str:
-    lowered = text.lower()
-    best_offset = -1
-    best_length = 0
-
-    for token in tokens:
-        offset = lowered.find(token)
-        if offset < 0:
-            continue
-        best_offset = offset
-        best_length = len(token)
-        break
-
-    if best_offset < 0:
-        snippet = text.strip()
-        return snippet[: context_window * 2].strip()
-
-    start = max(0, best_offset - context_window)
-    end = min(len(text), best_offset + best_length + context_window)
-    snippet = text[start:end].strip()
-    if start > 0 and snippet:
-        snippet = f"...{snippet}"
-    if end < len(text) and snippet:
-        snippet = f"{snippet}..."
-    return snippet
-
-
-def _to_chunk_match(row: dict[str, Any], *, tokens: list[str]) -> Optional[dict[str, str]]:
-    chunk_id = _to_non_empty_string(row.get("id"))
-    if chunk_id is None:
-        return None
-
-    transcript = _to_non_empty_string(row.get("transcript")) or _to_non_empty_string(
-        row.get("raw_transcript")
-    )
-    if transcript is None:
-        return None
-
-    timestamp = _to_non_empty_string(row.get("timestamp")) or _to_non_empty_string(
-        row.get("created_at")
-    )
-    return {
-        "chunk_id": chunk_id,
-        "timestamp": timestamp or "",
-        "snippet": _build_match_snippet(text=transcript, tokens=tokens),
-    }
-
-
-def _to_agent_conversation_card(
-    row: dict[str, Any],
+def _agent_conversation_card(
+    summary: Any,
     *,
-    project_id: str,
-    fallback_project_id: Optional[str] = None,
     matches: Optional[list[dict[str, str]]] = None,
-) -> Optional[dict[str, Any]]:
-    normalized_conversation_id = _to_non_empty_string(row.get("id"))
-    if normalized_conversation_id is None:
-        return None
-
-    row_project_id = _to_related_id(row.get("project_id")) or fallback_project_id
-    if row_project_id != project_id:
-        return None
-
-    payload = {
-        "conversation_id": normalized_conversation_id,
-        "participant_name": _to_non_empty_string(row.get("participant_name")),
-        "status": _conversation_status(row),
-        "summary": row.get("summary") if isinstance(row.get("summary"), str) else None,
-        "started_at": _to_non_empty_string(row.get("created_at")),
-        "last_chunk_at": _extract_last_chunk_at(row),
+) -> dict[str, Any]:
+    """The assistant's conversation card, from a toolkit ConversationSummary.
+    Key names and order are the agent service's contract."""
+    payload: dict[str, Any] = {
+        "conversation_id": summary.id,
+        "participant_name": summary.participant_name,
+        "status": summary.status,
+        "summary": summary.summary,
+        "started_at": summary.created_at,
+        "last_chunk_at": summary.updated_at,
     }
     if matches is not None:
         payload["matches"] = matches
     return payload
 
 
-def _list_project_conversations_for_agent(
+async def _list_project_conversations_for_agent(
     *,
     project_id: str,
     limit: int,
     offset: int = 0,
     conversation_id: Optional[str] = None,
     transcript_query: Optional[str] = None,
-    directus_client: Any,
+    auth: DirectusSession,
+    access: Optional[Any] = None,
 ) -> dict[str, Any]:
-    # `limit` stays a per-call cap; `offset` is what turns it into a page.
-    # Without it the cap was a ceiling and rows past it were unreachable, which
-    # made any "call the list tool for the rest" guidance untrue.
+    """The assistant's listing and keyword search over one project, both
+    served by `dembrane.toolkit.conversations` and reshaped here.
+
+    `limit` stays a per-call cap of 100; `offset` is what turns it into a page,
+    and `has_more` is exact so the agent can stop paging without guessing. A
+    query with no usable word (every word under four letters) answers with the
+    short no-search shape, which the agent service treats as no matches.
+    `access` is what _assert_project_access resolved; without it the toolkit
+    resolves the caller itself.
+    """
+    from dembrane.toolkit import conversations as toolkit
+
     normalized_limit = max(1, min(limit, 100))
     normalized_offset = max(0, offset)
     normalized_conversation_id = _to_non_empty_string(conversation_id)
-    normalized_transcript_query = _to_non_empty_string(transcript_query)
+    normalized_query = _to_non_empty_string(transcript_query)
+    if access is None and auth.is_admin:
+        access = _staff_project_access(project_id, auth)
 
-    if normalized_transcript_query is not None:
-        tokens = _normalize_transcript_query_tokens(normalized_transcript_query)
-        if not tokens:
-            return {
-                "project_id": project_id,
-                "count": 0,
-                "conversations": [],
-            }
-
-        transcript_or_filters: list[dict[str, Any]] = []
-        for token in tokens:
-            transcript_or_filters.append({"transcript": {"_icontains": token}})
-            transcript_or_filters.append({"raw_transcript": {"_icontains": token}})
-
-        transcript_and_filters: list[dict[str, Any]] = [
-            {"conversation_id": {"project_id": {"_eq": project_id}}},
-            # Pre-existing gap (not introduced by the focus feature): the
-            # transcript search filtered only on project, so a soft-deleted
-            # conversation's transcript stayed reachable by id even though the
-            # plain listing path below excludes it.
-            {"conversation_id": {"deleted_at": {"_null": True}}},
-            {"_or": transcript_or_filters},
-        ]
-        if normalized_conversation_id:
-            transcript_and_filters.append(
-                {"conversation_id": {"id": {"_eq": normalized_conversation_id}}}
-            )
-
-        wanted = normalized_limit + normalized_offset
-        chunk_limit = min(max(wanted * 25, 25), 1000)
-        chunk_rows = directus_client.get_items(
-            "conversation_chunk",
-            {
-                "query": {
-                    "filter": {"_and": transcript_and_filters},
-                    "fields": [
-                        "id",
-                        "timestamp",
-                        "created_at",
-                        "transcript",
-                        "raw_transcript",
-                        "conversation_id.id",
-                        "conversation_id.project_id",
-                        "conversation_id.participant_name",
-                        "conversation_id.summary",
-                        "conversation_id.is_finished",
-                        "conversation_id.is_all_chunks_transcribed",
-                        "conversation_id.created_at",
-                        "conversation_id.updated_at",
-                    ],
-                    "sort": ["-timestamp", "-created_at"],
-                    "limit": chunk_limit,
-                }
-            },
+    if normalized_query is not None:
+        result = await toolkit.search_transcripts(
+            project_id,
+            normalized_query,
+            limit=normalized_limit,
+            offset=normalized_offset,
+            session=auth,
+            conversation_id=normalized_conversation_id,
+            access=access,
         )
-
-        conversations_by_id: dict[str, dict[str, Any]] = {}
-        if isinstance(chunk_rows, list):
-            for row in chunk_rows:
-                if not isinstance(row, dict):
-                    continue
-                conversation_ref = row.get("conversation_id")
-                if not isinstance(conversation_ref, dict):
-                    continue
-                conversation_identifier = _to_non_empty_string(conversation_ref.get("id"))
-                if conversation_identifier is None:
-                    continue
-                is_new_conversation = conversation_identifier not in conversations_by_id
-                if is_new_conversation and len(conversations_by_id) >= wanted:
-                    continue
-                existing_matches = conversations_by_id.get(conversation_identifier, {}).get(
-                    "matches"
-                )
-                normalized_existing_matches = (
-                    existing_matches if isinstance(existing_matches, list) else []
-                )
-                match = _to_chunk_match(row, tokens=tokens)
-                next_matches = normalized_existing_matches
-                if match is not None and len(normalized_existing_matches) < 3:
-                    next_matches = [*normalized_existing_matches, match]
-                card = _to_agent_conversation_card(
-                    conversation_ref,
-                    project_id=project_id,
-                    fallback_project_id=project_id,
-                    matches=next_matches,
-                )
-                if card is None:
-                    continue
-                conversations_by_id[conversation_identifier] = card
-
-        matched = list(conversations_by_id.values())
-        conversations = matched[normalized_offset : normalized_offset + normalized_limit]
+        if not result.tokens:
+            return {"project_id": project_id, "count": 0, "conversations": []}
+        cards = [
+            _agent_conversation_card(hit, matches=[m.model_dump() for m in hit.matches])
+            for hit in result.conversations
+        ]
         return {
             "project_id": project_id,
-            "count": len(conversations),
-            "offset": normalized_offset,
-            "has_more": len(matched) > normalized_offset + len(conversations),
-            "conversations": conversations,
+            "count": len(cards),
+            "offset": result.offset,
+            "has_more": result.has_more,
+            "conversations": cards,
         }
 
-    conversation_filter: dict[str, Any] = {
-        "project_id": {"_eq": project_id},
-        "deleted_at": {"_null": True},
-    }
-    if normalized_conversation_id:
-        conversation_filter["id"] = {"_eq": normalized_conversation_id}
-
-    rows = directus_client.get_items(
-        "conversation",
-        {
-            "query": {
-                "filter": conversation_filter,
-                "fields": [
-                    "id",
-                    "project_id",
-                    "participant_name",
-                    "summary",
-                    "is_finished",
-                    "is_all_chunks_transcribed",
-                    "created_at",
-                    "updated_at",
-                ],
-                "sort": "-updated_at",
-                # One extra row is a cheap, exact has_more: no second COUNT
-                # query, and the agent can stop paging without guessing.
-                "limit": normalized_limit + 1,
-                "offset": normalized_offset,
-            }
-        },
+    page = await toolkit.list_conversations(
+        project_id,
+        limit=normalized_limit,
+        offset=normalized_offset,
+        sort="-updated_at",
+        conversation_id=normalized_conversation_id,
+        session=auth,
+        access=access,
     )
-
-    normalized_rows = rows if isinstance(rows, list) else []
-    has_more = len(normalized_rows) > normalized_limit
-
-    conversation_cards: list[dict[str, Any]] = []
-    for row in normalized_rows[:normalized_limit]:
-        if not isinstance(row, dict):
-            continue
-        card = _to_agent_conversation_card(
-            row,
-            project_id=project_id,
-            fallback_project_id=project_id,
-        )
-        if card is not None:
-            conversation_cards.append(card)
-
+    cards = [_agent_conversation_card(row) for row in page.conversations]
     return {
         "project_id": project_id,
-        "count": len(conversation_cards),
-        "offset": normalized_offset,
-        "has_more": has_more,
-        "conversations": conversation_cards,
+        "count": len(cards),
+        "offset": page.offset,
+        "has_more": page.has_more,
+        "conversations": cards,
     }
 
 
@@ -1389,15 +1209,15 @@ async def list_project_conversations(
         logger.warning("Project %s not found while listing project conversations", project_id)
         raise HTTPException(status_code=404, detail="Project not found") from exc
 
-    await _assert_project_access(project_id, auth)
-    return await run_in_thread_pool(
-        _list_project_conversations_for_agent,
+    access = await _assert_project_access(project_id, auth)
+    return await _list_project_conversations_for_agent(
         project_id=project_id,
         limit=limit,
         offset=offset,
         conversation_id=conversation_id,
         transcript_query=transcript_query,
-        directus_client=directus,
+        auth=auth,
+        access=access,
     )
 
 

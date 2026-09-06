@@ -100,6 +100,20 @@ async def list_projects(
     )
 
 
+@router.get("/projects/find", response_model=list[T.ProjectHit])
+async def find_projects(
+    ctx: DependencyAgent,
+    q: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+) -> list[T.ProjectHit]:
+    return await _run(
+        ctx,
+        "find_projects",
+        {"query": (q or "")[:200], "limit": limit},
+        lambda: T.find_projects(ctx, query=q, limit=limit),
+    )
+
+
 @router.get("/projects/{project_id}", response_model=T.ProjectOut)
 async def get_project(project_id: str, ctx: DependencyAgent) -> T.ProjectOut:
     return await _run(
@@ -119,7 +133,7 @@ async def update_project(
     )
 
 
-@router.get("/projects/{project_id}/conversations", response_model=list[T.ConversationSummaryOut])
+@router.get("/projects/{project_id}/conversations", response_model=list[T.ConversationSummary])
 async def list_conversations(
     project_id: str,
     ctx: DependencyAgent,
@@ -127,7 +141,9 @@ async def list_conversations(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     sort: Annotated[T.ConversationSort, Query()] = "-created_at",
-) -> list[T.ConversationSummaryOut]:
+    created_after: Optional[str] = Query(None),
+    created_before: Optional[str] = Query(None),
+) -> list[T.ConversationSummary]:
     return await _run(
         ctx,
         "list_conversations",
@@ -137,10 +153,65 @@ async def list_conversations(
             "limit": limit,
             "offset": offset,
             "sort": sort,
+            "created_after": created_after,
+            "created_before": created_before,
         },
         lambda: T.list_conversations(
-            ctx, project_id, search=search, limit=limit, offset=offset, sort=sort
+            ctx,
+            project_id,
+            search=search,
+            limit=limit,
+            offset=offset,
+            sort=sort,
+            created_after=created_after,
+            created_before=created_before,
         ),
+    )
+
+
+@router.get("/projects/{project_id}/search", response_model=T.SearchResult)
+async def search_transcripts(
+    project_id: str,
+    ctx: DependencyAgent,
+    q: str = Query(..., min_length=1),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+) -> T.SearchResult:
+    return await _run(
+        ctx,
+        "search_transcripts",
+        {"project_id": project_id, "query": q[:200], "limit": limit, "offset": offset},
+        lambda: T.search_transcripts(ctx, project_id, q, limit=limit, offset=offset),
+    )
+
+
+@router.get("/conversations/{conversation_id}/grep", response_model=list[T.Snippet])
+async def grep_conversation(
+    conversation_id: str,
+    ctx: DependencyAgent,
+    q: str = Query(..., min_length=1),
+    max_matches: int = Query(10, ge=1, le=50),
+) -> list[T.Snippet]:
+    return await _run(
+        ctx,
+        "grep_conversation",
+        {"conversation_id": conversation_id, "query": q[:200], "max_matches": max_matches},
+        lambda: T.grep_conversation(ctx, conversation_id, q, max_matches=max_matches),
+    )
+
+
+@router.get("/conversations/{conversation_id}/transcript", response_model=T.TranscriptPage)
+async def read_transcript(
+    conversation_id: str,
+    ctx: DependencyAgent,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+) -> T.TranscriptPage:
+    return await _run(
+        ctx,
+        "read_transcript",
+        {"conversation_id": conversation_id, "offset": offset, "limit": limit},
+        lambda: T.read_transcript(ctx, conversation_id, offset=offset, limit=limit),
     )
 
 

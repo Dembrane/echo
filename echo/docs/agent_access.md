@@ -12,7 +12,9 @@ An AI agent connects to dembrane as one person and sees exactly what that person
 | `/api/v2/agent/*` | OAuth access token | Same tools as REST |
 | `/api/v2/agent-access/*` | cookie session | Consent step, grants, org switch, audit |
 
-Tools: `whoami`, `list_organisations`, `list_workspaces`, `list_projects`, `get_project`, `update_project` (write scope), `list_conversations`, `get_conversation`, `get_conversations` (max 50), `list_project_webhooks`, `report_issue`, `request_tool`, `list_docs`, `read_doc`, `search_docs`.
+Tools: `whoami`, `list_organisations`, `list_workspaces`, `list_projects`, `find_projects`, `get_project`, `update_project` (write scope), `list_conversations` (optional `created_after` / `created_before`), `search_transcripts`, `grep_conversation`, `read_transcript`, `get_conversation`, `get_conversations` (max 50), `list_project_webhooks`, `report_issue`, `request_tool`, `list_docs`, `read_doc`, `search_docs`.
+
+The read tools are thin adapters over `server/dembrane/toolkit/` (`conversations.py`, `projects.py`): one implementation per primitive, the same one the in-app assistant's routes in `api/agentic.py` call, so the two front doors cannot drift on access checks or on the locked scrub. `search_transcripts` matches chunk transcripts case-insensitively (words of four letters or more, at most four) and returns up to three snippets per conversation; `read_transcript` pages chunks (at most 200 per call) with a total and `has_more`; `find_projects` searches by name across every workspace the person can reach, filtered to the grant's organisations, and charges nothing.
 
 The three docs tools read the product documentation through `dembrane/knowledge.py`: the published site (docs.dembrane.com, one markdown twin per page) in deployed environments, the repository's `docs/` folder locally, cached for an hour. Same list, line-numbered read and regex grep the in-app assistant has; public content, so no organisation and no budget charge.
 
@@ -24,7 +26,7 @@ The three docs tools read the product documentation through `dembrane/knowledge.
 2. `/api/mcp/authorize` parks the request in Redis (10 min) and redirects the browser to `<dashboard>/settings/agents/authorize?request=<id>`.
 3. The consent page (session) shows client, scopes, redirect host, the user's organisations and the risk notice. Approve creates an `agent_grant` and a single-use code (Redis, 5 min). Deny sends `error=access_denied` back.
 4. `/token` exchanges the code for an access token (1 h) and a refresh token (30 d). Refresh rotates the pair; the old pair dies. Only SHA-256 hashes are stored (`agent_token`).
-5. Every call: token → grant (live, not revoked) → `AgentContext`. The org must be in the grant and have `org.agent_access_enabled`. Then the normal resolvers (`resolve_project_access`, `resolve_conversation_access`, `get_workspace_context`) run as the user. Then one `agent_audit_event` row.
+5. Every call: token → grant (live, not revoked) → `AgentContext`. The org must be in the grant and have `org.agent_access_enabled`. Then the normal resolvers (`resolve_project_access`, `resolve_conversation_access`, `get_workspace_context`) run as the user, inside the toolkit for the read tools. Then one `agent_audit_event` row.
 
 ## Rules that are not obvious from the code
 
