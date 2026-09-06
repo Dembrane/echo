@@ -23,7 +23,7 @@ from dembrane.settings import get_settings
 from dembrane.inheritance import user_can_access
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.rate_limit import create_user_rate_limiter
-from dembrane.directus_async import async_directus
+from dembrane.support_requests import SOURCE_DASHBOARD, file_support_request
 from dembrane.api.v2.bff._access import resolve_project_access
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
@@ -237,26 +237,23 @@ async def create_feedback_report(
             )
 
         try:
-            created = await async_directus.create_item(
-                "support_request",
-                {
-                    "directus_user_id": auth.user_id,
-                    "workspace_id": workspace_id,
-                    "project_id": project_id,
-                    "message": build_report_message(
-                        reporter_name=reporter_name,
-                        reporter_email=reporter_email,
-                        message=message,
-                        session_replay_url=session_replay_url,
-                        attachment_links=attachment_links,
-                    ),
-                    "page_context": build_report_page_context(
-                        page_url=page_url,
-                        locale=locale,
-                        user_agent=user_agent,
-                    ),
-                    "status": "new",
-                },
+            created = await file_support_request(
+                source=SOURCE_DASHBOARD,
+                directus_user_id=auth.user_id,
+                workspace_id=workspace_id,
+                project_id=project_id,
+                message=build_report_message(
+                    reporter_name=reporter_name,
+                    reporter_email=reporter_email,
+                    message=message,
+                    session_replay_url=session_replay_url,
+                    attachment_links=attachment_links,
+                ),
+                page_context=build_report_page_context(
+                    page_url=page_url,
+                    locale=locale,
+                    user_agent=user_agent,
+                ),
             )
         except Exception as exc:
             logger.error(
@@ -272,7 +269,7 @@ async def create_feedback_report(
                 logger.warning("Could not clean up %s", key)
         raise
 
-    created_row = created.get("data") if isinstance(created, dict) else {}
+    created_row = created
     support_request_id = (created_row or {}).get("id")
     logger.info(
         "Feedback report %s stored as support_request %s (%d attachments)",

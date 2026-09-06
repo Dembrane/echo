@@ -154,6 +154,44 @@ async def get_conversation(conversation_id: str, ctx: DependencyAgent) -> T.Conv
     )
 
 
+class IssueIn(BaseModel):
+    message: str = Field(..., min_length=1, max_length=8000)
+    project_id: Optional[str] = None
+    conversation_id: Optional[str] = None
+
+
+class ToolRequestIn(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
+    description: str = Field(..., min_length=1, max_length=8000)
+    example: Optional[str] = Field(None, max_length=2000)
+
+
+@router.post("/issues", response_model=T.TicketOut)
+async def report_issue(body: IssueIn, ctx: DependencyAgent) -> T.TicketOut:
+    return await _run(
+        ctx,
+        "report_issue",
+        {
+            "project_id": body.project_id,
+            "conversation_id": body.conversation_id,
+            "chars": len(body.message),
+        },
+        lambda: T.report_issue(
+            ctx, body.message, project_id=body.project_id, conversation_id=body.conversation_id
+        ),
+    )
+
+
+@router.post("/tool-requests", response_model=T.TicketOut)
+async def request_tool(body: ToolRequestIn, ctx: DependencyAgent) -> T.TicketOut:
+    return await _run(
+        ctx,
+        "request_tool",
+        {"name": body.name, "chars": len(body.description)},
+        lambda: T.request_tool(ctx, body.name, body.description, example=body.example),
+    )
+
+
 class ConversationBatchIn(BaseModel):
     ids: list[str] = Field(..., max_length=T.BATCH_MAX)
 

@@ -22,6 +22,7 @@ from dembrane.agentic_focus import format_focus_block
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.methodologies import list_visible_methodologies
 from dembrane.project_goals import list_project_goal_revisions, get_current_project_goal_content
+from dembrane.agent_insights import file_agent_insight
 from dembrane.agentic_worker import (
     AGENT_CANCELLED_MESSAGE,
     AGENT_CANCELLED_ERROR_CODE,
@@ -50,6 +51,7 @@ from dembrane.agentic_runtime import (
     subscribe_live_events,
 )
 from dembrane.service.agentic import TERMINAL_RUN_STATUSES, AgenticRunNotFoundException
+from dembrane.support_requests import SOURCE_ASSISTANT, file_support_request
 from dembrane.api.feature_flags import require_canvas_enabled_for_project
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
@@ -1572,21 +1574,18 @@ async def create_support_request(
     project = await async_directus.get_item("project", project_id)
     workspace_id = project.get("workspace_id") if isinstance(project, dict) else None
 
-    created = await async_directus.create_item(
-        "support_request",
-        {
-            "workspace_id": workspace_id,
-            "project_id": project_id,
-            "directus_user_id": auth.user_id,
-            "chat_id": body.chat_id,
-            "app_user_id": body.app_user_id,
-            "message_id": body.message_id,
-            "message": body.message,
-            "page_context": body.page_context,
-            "status": "new",
-        },
+    created = await file_support_request(
+        source=SOURCE_ASSISTANT,
+        workspace_id=workspace_id,
+        project_id=project_id,
+        directus_user_id=auth.user_id,
+        chat_id=body.chat_id,
+        app_user_id=body.app_user_id,
+        message_id=body.message_id,
+        message=body.message,
+        page_context=body.page_context,
     )
-    support_request_id = created.get("id") if isinstance(created, dict) else None
+    support_request_id = created.get("id")
     return JSONResponse(
         status_code=201,
         content={"id": support_request_id, "status": "new"},
@@ -1609,21 +1608,17 @@ async def create_agent_insight(
 
     suggested_capability = _to_non_empty_string(body.suggested_capability)
     workspace_id = await _resolve_workspace_id_for_project(project_id)
-    created = await async_directus.create_item(
-        "agent_insight",
-        {
-            "workspace_id": workspace_id,
-            "project_id": project_id,
-            "chat_id": body.chat_id,
-            "message_id": body.message_id,
-            "kind": body.kind,
-            "content": content,
-            "suggested_capability": suggested_capability,
-            "status": "new",
-        },
+    created_row = await file_agent_insight(
+        source=SOURCE_ASSISTANT,
+        kind=body.kind,
+        content=content,
+        suggested_capability=suggested_capability,
+        workspace_id=workspace_id,
+        project_id=project_id,
+        chat_id=body.chat_id,
+        message_id=body.message_id,
     )
-    created_row = created.get("data") if isinstance(created, dict) else {}
-    insight_id = _to_non_empty_string((created_row or {}).get("id"))
+    insight_id = _to_non_empty_string(created_row.get("id"))
     return JSONResponse(
         status_code=201,
         content={"id": insight_id, "status": "new"},

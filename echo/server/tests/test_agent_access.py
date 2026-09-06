@@ -4,6 +4,7 @@ the end-to-end flow against a real stack lives outside the unit suite."""
 
 from __future__ import annotations
 
+import json
 import time
 from typing import Any
 from datetime import datetime, timezone, timedelta
@@ -297,6 +298,7 @@ def _ctx(scopes: list[str] | None = None, org_ids: list[str] | None = None) -> A
     return AgentContext(
         grant_id="grant-1",
         client_id="client-1",
+        client_name="Test agent",
         app_user_id=_USER,
         directus_user_id=_DIRECTUS_USER,
         org_ids=org_ids if org_ids is not None else [_ORG],
@@ -526,3 +528,145 @@ def test_issuer_url_never_doubles_the_api_prefix(base: str, expected: str) -> No
     settings.urls.api_base_url = base
     with patch("dembrane.agent_access.oauth.get_settings", return_value=settings):
         assert oauth.issuer_url() == expected
+
+
+# ── reporting back ─────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_report_issue_files_a_support_request_with_agent_source(fake: FakeStore) -> None:
+    from dembrane import support_requests
+    from dembrane.agent_access import tools as T
+
+    access = MagicMock(workspace_id="ws-1", project_id="p1")
+    with (
+        patch.object(
+            support_requests.async_directus,
+            "create_item",
+            new=AsyncMock(return_value={"data": {"id": "sr-1"}}),
+        ) as create,
+        patch(
+            "dembrane.agent_access.tools._project_access",
+            new=AsyncMock(return_value=(access, _ORG)),
+        ),
+    ):
+        out = await T.report_issue(
+            _ctx(), "Transcript of table 3 is empty", project_id="p1", conversation_id="c9"
+        )
+    assert out.id == "sr-1" and out.kind == "issue"
+    collection, row = create.call_args.args
+    assert (
+        collection == "support_request" and row["source"] == "agent_mcp" and row["status"] == "new"
+    )
+    assert (
+        row["project_id"] == "p1" and row["workspace_id"] == "ws-1" and row["app_user_id"] == _USER
+    )
+    assert row["message"].startswith("[Test agent via MCP] Transcript of table 3 is empty")
+    ctx_json = json.loads(row["page_context"])
+    assert (
+        ctx_json["kind"] == "issue"
+        and ctx_json["conversation_id"] == "c9"
+        and ctx_json["grant_id"] == "grant-1"
+    )
+
+
+@pytest.mark.asyncio
+async def test_request_tool_files_a_capability_gap_insight(fake: FakeStore) -> None:
+    from dembrane import agent_insights
+    from dembrane.agent_access import tools as T
+
+    with patch.object(
+        agent_insights.async_directus,
+        "create_item",
+        new=AsyncMock(return_value={"data": {"id": "in-2"}}),
+    ) as create:
+        out = await T.request_tool(
+            _ctx(),
+            "search_transcripts",
+            "Find what a participant said about a topic",
+            example="search_transcripts(project_id, 'Popcorn')",
+        )
+    assert out.kind == "tool_request" and out.id == "in-2"
+    collection, row = create.call_args.args
+    assert (
+        collection == "agent_insight"
+        and row["source"] == "agent_mcp"
+        and row["kind"] == "capability_gap"
+    )
+    assert row["suggested_capability"] == "search_transcripts" and row["project_id"] is None
+    assert (
+        row["content"].startswith("[Test agent via MCP] Find what") and "Example:" in row["content"]
+    )
+
+
+@pytest.mark.asyncio
+async def test_shared_writers_stamp_the_source() -> None:
+    from dembrane import agent_insights, support_requests
+
+    with patch.object(
+        support_requests.async_directus,
+        "create_item",
+        new=AsyncMock(return_value={"data": {"id": "a"}}),
+    ) as c1:
+        await support_requests.file_support_request(
+            source=support_requests.SOURCE_DASHBOARD, message="m", page_context={"k": 1}
+        )
+    row = c1.call_args.args[1]
+    assert (
+        row["source"] == "dashboard"
+        and json.loads(row["page_context"]) == {"k": 1}
+        and row["status"] == "new"
+    )
+    with patch.object(
+        agent_insights.async_directus,
+        "create_item",
+        new=AsyncMock(return_value={"data": {"id": "b"}}),
+    ) as c2:
+        await agent_insights.file_agent_insight(
+            source=agent_insights.SOURCE_ASSISTANT,
+            kind="wish",
+            content="  x  ",
+            suggested_capability=" ",
+        )
+    row = c2.call_args.args[1]
+    assert (
+        row["source"] == "assistant"
+        and row["content"] == "x"
+        and row["suggested_capability"] is None
+    )
+
+
+@pytest.mark.asyncio
+async def test_unknown_tool_is_audited_and_answered_with_a_hint(fake: FakeStore) -> None:
+    from mcp.server.mcpserver.exceptions import ToolError
+    from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser
+    from mcp.server.auth.middleware.auth_context import auth_context_var
+
+    from dembrane.agent_access.oauth import AgentAccessToken
+    from dembrane.agent_access.mcp_server import server
+
+    fake.grants["grant-1"] = {
+        "id": "grant-1",
+        "client_id": "client-1",
+        "client_name": "Test agent",
+        "app_user_id": _USER,
+        "directus_user_id": _DIRECTUS_USER,
+        "org_ids": [_ORG],
+        "scopes": [SCOPE_READ],
+        "revoked_at": None,
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+    }
+    token = AgentAccessToken(
+        token="t", client_id="client-1", scopes=[SCOPE_READ], grant_id="grant-1", pair_id="pair"
+    )
+    reset = auth_context_var.set(AuthenticatedUser(token))
+    try:
+        with pytest.raises(ToolError) as exc:
+            await server.call_tool("grep", {"query": "Popcorn"})
+    finally:
+        auth_context_var.reset(reset)
+    assert "request_tool" in str(exc.value) and "Unknown tool: grep" in str(exc.value)
+    assert fake.audit[-1]["tool"] == "unknown_tool" and fake.audit[-1]["params"] == {
+        "requested": "grep",
+        "arguments": ["query"],
+    }

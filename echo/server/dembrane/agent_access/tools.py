@@ -100,6 +100,12 @@ class ConversationOut(ConversationSummaryOut):
     tags: list[str] = []
 
 
+class TicketOut(BaseModel):
+    id: str
+    status: str
+    kind: Literal["issue", "tool_request"]
+
+
 class WebhookOut(BaseModel):
     id: str
     name: Optional[str] = None
@@ -487,3 +493,89 @@ async def list_project_webhooks(ctx: AgentContext, project_id: str) -> list[Webh
         )
         for w in (rows if isinstance(rows, list) else [])
     ]
+
+
+# ── reporting back to dembrane ─────────────────────────────────────────────
+
+MAX_TICKET_CHARS = 4000
+
+
+def _clip(text: str, limit: int = MAX_TICKET_CHARS) -> str:
+    text = (text or "").strip()
+    return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+async def report_issue(
+    ctx: AgentContext,
+    message: str,
+    project_id: Optional[str] = None,
+    conversation_id: Optional[str] = None,
+) -> TicketOut:
+    """An agent reports something wrong with dembrane: a bad transcript, a
+    tool that errored, data that looks off. Same table and forwarder as a
+    host's report, source agent_mcp. Never transcript content."""
+    from dembrane.support_requests import SOURCE_AGENT_MCP, file_support_request
+
+    if not (message or "").strip():
+        raise HTTPException(status_code=400, detail="message is required")
+    workspace_id: Optional[str] = None
+    org_id: Optional[str] = None
+    if conversation_id and not project_id:
+        access, _conv = await resolve_conversation_access(conversation_id, ctx.session)
+        project_id = access.project_id
+    if project_id:
+        access, org_id = await _project_access(ctx, project_id)
+        workspace_id = access.workspace_id
+    body = f"[{ctx.client_name} via MCP] {_clip(message)}"
+    if conversation_id:
+        body += f"\nConversation: {conversation_id}"
+    row = await file_support_request(
+        source=SOURCE_AGENT_MCP,
+        directus_user_id=ctx.directus_user_id,
+        app_user_id=ctx.app_user_id,
+        workspace_id=workspace_id,
+        project_id=project_id,
+        message=body,
+        page_context={
+            "source": SOURCE_AGENT_MCP,
+            "kind": "issue",
+            "client_name": ctx.client_name,
+            "client_id": ctx.client_id,
+            "grant_id": ctx.grant_id,
+            "conversation_id": conversation_id,
+            "org_id": org_id,
+        },
+    )
+    return TicketOut(id=str(row.get("id") or ""), status="new", kind="issue")
+
+
+async def request_tool(
+    ctx: AgentContext,
+    name: str,
+    description: str,
+    example: Optional[str] = None,
+    project_id: Optional[str] = None,
+) -> TicketOut:
+    """An agent asks for a tool that does not exist. Filed as a capability
+    gap in agent_insight, the same channel the in-app assistant uses for
+    what a host could not do, so one review surface covers both."""
+    from dembrane.agent_insights import SOURCE_AGENT_MCP, file_agent_insight
+
+    if not (name or "").strip() or not (description or "").strip():
+        raise HTTPException(status_code=400, detail="name and description are required")
+    workspace_id: Optional[str] = None
+    if project_id:
+        access, _org = await _project_access(ctx, project_id)
+        workspace_id = access.workspace_id
+    content = f"[{ctx.client_name} via MCP] {_clip(description)}"
+    if example:
+        content += f"\nExample: {_clip(example, 1000)}"
+    row = await file_agent_insight(
+        source=SOURCE_AGENT_MCP,
+        kind="capability_gap",
+        content=content,
+        suggested_capability=name.strip()[:120],
+        workspace_id=workspace_id,
+        project_id=project_id,
+    )
+    return TicketOut(id=str(row.get("id") or ""), status="new", kind="tool_request")
