@@ -47,8 +47,18 @@ MCP_PATH = "/api/mcp"
 CONSENT_PATH = "/settings/agents/authorize"
 
 
+def api_origin() -> str:
+    """The API host without a path. Deployments set API_BASE_URL with a
+    trailing /api (echo-next, production); local runs set the bare host.
+    MCP_PATH already carries /api, so strip one if present."""
+    base = get_settings().urls.api_base_url.rstrip("/")
+    if base.endswith("/api"):
+        base = base[: -len("/api")]
+    return base
+
+
 def issuer_url() -> str:
-    return get_settings().urls.api_base_url.rstrip("/") + MCP_PATH
+    return api_origin() + MCP_PATH
 
 
 def resource_url() -> str:

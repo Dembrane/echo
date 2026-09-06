@@ -7,7 +7,7 @@ from __future__ import annotations
 import time
 from typing import Any
 from datetime import datetime, timezone, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import AsyncClient, ASGITransport
@@ -511,3 +511,18 @@ async def test_consent_lists_guest_orgs_with_guest_role(fake: FakeStore) -> None
     ):
         memberships = await mod._my_org_memberships(_USER)
     assert memberships == [{"org_id": "org-g", "role": "guest"}]
+
+
+@pytest.mark.parametrize(
+    ("base", "expected"),
+    [
+        ("http://localhost:8000", "http://localhost:8000/api/mcp"),
+        ("https://api.echo-next.dembrane.com/api", "https://api.echo-next.dembrane.com/api/mcp"),
+        ("https://api.dembrane.com/api/", "https://api.dembrane.com/api/mcp"),
+    ],
+)
+def test_issuer_url_never_doubles_the_api_prefix(base: str, expected: str) -> None:
+    settings = MagicMock()
+    settings.urls.api_base_url = base
+    with patch("dembrane.agent_access.oauth.get_settings", return_value=settings):
+        assert oauth.issuer_url() == expected
