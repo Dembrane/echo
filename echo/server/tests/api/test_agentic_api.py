@@ -2187,6 +2187,9 @@ async def test_agentic_insight_endpoint_persists_reach_back_context(monkeypatch)
 
     fake_directus = _AsyncDirectus()
     monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+    from dembrane import agent_insights as agent_insights_module
+
+    monkeypatch.setattr(agent_insights_module, "async_directus", fake_directus)
 
     async with _build_api_client(
         monkeypatch=monkeypatch,
@@ -2211,6 +2214,7 @@ async def test_agentic_insight_endpoint_persists_reach_back_context(monkeypatch)
         (
             "agent_insight",
             {
+                "source": "assistant",
                 "workspace_id": "workspace-1",
                 "project_id": "project-1",
                 "chat_id": "chat-1",

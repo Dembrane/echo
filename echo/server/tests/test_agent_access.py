@@ -535,30 +535,32 @@ def test_issuer_url_never_doubles_the_api_prefix(base: str, expected: str) -> No
 
 @pytest.mark.asyncio
 async def test_report_issue_files_a_support_request_with_agent_source(fake: FakeStore) -> None:
+    from dembrane import support_requests
     from dembrane.agent_access import tools as T
-
-    created: list[dict[str, Any]] = []
-
-    async def _create(collection: str, data: dict[str, Any]) -> dict[str, Any]:
-        created.append({"collection": collection, **data})
-        return {"data": {"id": "sr-1", **data}}
 
     access = MagicMock(workspace_id="ws-1", project_id="p1")
     with (
-        patch("dembrane.agent_access.tools.async_directus") as directus,
+        patch.object(
+            support_requests.async_directus,
+            "create_item",
+            new=AsyncMock(return_value={"data": {"id": "sr-1"}}),
+        ) as create,
         patch(
             "dembrane.agent_access.tools._project_access",
             new=AsyncMock(return_value=(access, _ORG)),
         ),
     ):
-        directus.create_item = AsyncMock(side_effect=_create)
         out = await T.report_issue(
             _ctx(), "Transcript of table 3 is empty", project_id="p1", conversation_id="c9"
         )
     assert out.id == "sr-1" and out.kind == "issue"
-    row = created[0]
-    assert row["collection"] == "support_request" and row["source"] == "agent_mcp"
-    assert row["project_id"] == "p1" and row["workspace_id"] == "ws-1" and row["status"] == "new"
+    collection, row = create.call_args.args
+    assert (
+        collection == "support_request" and row["source"] == "agent_mcp" and row["status"] == "new"
+    )
+    assert (
+        row["project_id"] == "p1" and row["workspace_id"] == "ws-1" and row["app_user_id"] == _USER
+    )
     assert row["message"].startswith("[Test agent via MCP] Transcript of table 3 is empty")
     ctx_json = json.loads(row["page_context"])
     assert (
@@ -569,21 +571,69 @@ async def test_report_issue_files_a_support_request_with_agent_source(fake: Fake
 
 
 @pytest.mark.asyncio
-async def test_request_tool_files_a_tool_request(fake: FakeStore) -> None:
+async def test_request_tool_files_a_capability_gap_insight(fake: FakeStore) -> None:
+    from dembrane import agent_insights
     from dembrane.agent_access import tools as T
 
-    with patch("dembrane.agent_access.tools.async_directus") as directus:
-        directus.create_item = AsyncMock(return_value={"data": {"id": "sr-2"}})
+    with patch.object(
+        agent_insights.async_directus,
+        "create_item",
+        new=AsyncMock(return_value={"data": {"id": "in-2"}}),
+    ) as create:
         out = await T.request_tool(
             _ctx(),
             "search_transcripts",
             "Find what a participant said about a topic",
             example="search_transcripts(project_id, 'Popcorn')",
         )
-        row = directus.create_item.call_args.args[1]
-    assert out.kind == "tool_request" and row["source"] == "agent_mcp" and row["project_id"] is None
-    assert "Tool request: search_transcripts" in row["message"] and "Example:" in row["message"]
-    assert json.loads(row["page_context"])["tool_name"] == "search_transcripts"
+    assert out.kind == "tool_request" and out.id == "in-2"
+    collection, row = create.call_args.args
+    assert (
+        collection == "agent_insight"
+        and row["source"] == "agent_mcp"
+        and row["kind"] == "capability_gap"
+    )
+    assert row["suggested_capability"] == "search_transcripts" and row["project_id"] is None
+    assert (
+        row["content"].startswith("[Test agent via MCP] Find what") and "Example:" in row["content"]
+    )
+
+
+@pytest.mark.asyncio
+async def test_shared_writers_stamp_the_source() -> None:
+    from dembrane import agent_insights, support_requests
+
+    with patch.object(
+        support_requests.async_directus,
+        "create_item",
+        new=AsyncMock(return_value={"data": {"id": "a"}}),
+    ) as c1:
+        await support_requests.file_support_request(
+            source=support_requests.SOURCE_DASHBOARD, message="m", page_context={"k": 1}
+        )
+    row = c1.call_args.args[1]
+    assert (
+        row["source"] == "dashboard"
+        and json.loads(row["page_context"]) == {"k": 1}
+        and row["status"] == "new"
+    )
+    with patch.object(
+        agent_insights.async_directus,
+        "create_item",
+        new=AsyncMock(return_value={"data": {"id": "b"}}),
+    ) as c2:
+        await agent_insights.file_agent_insight(
+            source=agent_insights.SOURCE_ASSISTANT,
+            kind="wish",
+            content="  x  ",
+            suggested_capability=" ",
+        )
+    row = c2.call_args.args[1]
+    assert (
+        row["source"] == "assistant"
+        and row["content"] == "x"
+        and row["suggested_capability"] is None
+    )
 
 
 @pytest.mark.asyncio

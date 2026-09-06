@@ -105,7 +105,7 @@ async def test_happy_path_writes_support_request_and_stores_s3():
             new=AsyncMock(return_value=_PROFILE),
         ),
         patch("dembrane.api.v2.feedback.save_to_s3_from_file_like") as save_mock,
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post("/v2/feedback/reports", data=_form(), files=[_png()])
@@ -143,7 +143,7 @@ async def test_verified_scope_ids_are_persisted():
             "dembrane.api.v2.feedback.get_directus_user_profile",
             new=AsyncMock(return_value=_PROFILE),
         ),
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
         _scope_patch(),
     ):
         async with _client(_build_app()) as c:
@@ -167,7 +167,7 @@ async def test_unverified_scope_ids_are_dropped():
                 "dembrane.api.v2.feedback.get_directus_user_profile",
                 new=AsyncMock(return_value=_PROFILE),
             ),
-            patch("dembrane.api.v2.feedback.async_directus", new=directus),
+            patch("dembrane.support_requests.async_directus", new=directus),
             scope,
         ):
             async with _client(_build_app()) as c:
@@ -191,7 +191,7 @@ async def test_no_attachments_omits_attachment_block():
             "dembrane.api.v2.feedback.get_directus_user_profile",
             new=AsyncMock(return_value=_PROFILE),
         ),
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post("/v2/feedback/reports", data=_form())
@@ -209,7 +209,7 @@ async def test_untrusted_replay_url_is_dropped():
             "dembrane.api.v2.feedback.get_directus_user_profile",
             new=AsyncMock(return_value=_PROFILE),
         ),
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post(
@@ -229,7 +229,7 @@ async def test_non_http_page_url_is_dropped():
             "dembrane.api.v2.feedback.get_directus_user_profile",
             new=AsyncMock(return_value=_PROFILE),
         ),
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post(
@@ -251,7 +251,7 @@ async def test_rejects_wrong_mime():
             "dembrane.api.v2.feedback.get_directus_user_profile",
             new=AsyncMock(return_value=_PROFILE),
         ),
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post(
@@ -272,7 +272,7 @@ async def test_rejects_too_many_files():
             "dembrane.api.v2.feedback.get_directus_user_profile",
             new=AsyncMock(return_value=_PROFILE),
         ),
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post(
@@ -288,7 +288,7 @@ async def test_rejects_empty_message():
     with (
         patch("dembrane.api.v2.feedback.get_settings", return_value=settings),
         patch("dembrane.api.v2.feedback._RATE_LIMITER", new=AsyncMock()),
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post("/v2/feedback/reports", data=_form(message="  "))
@@ -300,7 +300,7 @@ async def test_rejects_oversize_message():
     with (
         patch("dembrane.api.v2.feedback.get_settings", return_value=settings),
         patch("dembrane.api.v2.feedback._RATE_LIMITER", new=AsyncMock()),
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post("/v2/feedback/reports", data=_form(message="x" * 5001))
@@ -319,7 +319,7 @@ async def test_directus_failure_cleans_up_s3_and_returns_502():
         ),
         patch("dembrane.api.v2.feedback.save_to_s3_from_file_like"),
         patch("dembrane.api.v2.feedback.delete_from_s3") as delete_mock,
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post("/v2/feedback/reports", data=_form(), files=[_png()])
@@ -337,7 +337,7 @@ async def test_filename_with_spaces_is_allow_listed():
             new=AsyncMock(return_value=_PROFILE),
         ),
         patch("dembrane.api.v2.feedback.save_to_s3_from_file_like") as save_mock,
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post(
@@ -364,7 +364,7 @@ async def test_dot_runs_are_collapsed_not_rejected():
             new=AsyncMock(return_value=_PROFILE),
         ),
         patch("dembrane.api.v2.feedback.save_to_s3_from_file_like") as save_mock,
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post("/v2/feedback/reports", data=_form(), files=[_png("a..b.png")])
@@ -400,7 +400,7 @@ async def test_attachment_link_has_one_api_segment_either_way():
                 new=AsyncMock(return_value=_PROFILE),
             ),
             patch("dembrane.api.v2.feedback.save_to_s3_from_file_like"),
-            patch("dembrane.api.v2.feedback.async_directus", new=directus),
+            patch("dembrane.support_requests.async_directus", new=directus),
         ):
             async with _client(_build_app()) as c:
                 resp = await c.post("/v2/feedback/reports", data=_form(), files=[_png()])
@@ -423,7 +423,7 @@ async def test_upload_carries_the_validated_content_type():
             new=AsyncMock(return_value=_PROFILE),
         ),
         patch("dembrane.api.v2.feedback.save_to_s3_from_file_like") as save_mock,
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post("/v2/feedback/reports", data=_form(), files=[_png()])
@@ -442,7 +442,7 @@ async def test_oversize_attachment_is_rejected_before_any_upload():
             new=AsyncMock(return_value=_PROFILE),
         ),
         patch("dembrane.api.v2.feedback.save_to_s3_from_file_like") as save_mock,
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post("/v2/feedback/reports", data=_form(), files=[_png(size=oversize)])
@@ -464,7 +464,7 @@ async def test_rate_limit_is_not_spent_on_an_invalid_request():
             new=AsyncMock(return_value=_PROFILE),
         ),
         patch("dembrane.api.v2.feedback.save_to_s3_from_file_like"),
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             bad = await c.post(
@@ -495,7 +495,7 @@ async def test_unsanitizable_filename_returns_400_and_cleans_up():
         ),
         patch("dembrane.api.v2.feedback.save_to_s3_from_file_like"),
         patch("dembrane.api.v2.feedback.delete_from_s3") as delete_mock,
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             resp = await c.post(
@@ -522,7 +522,7 @@ async def test_unexpected_upload_error_cleans_up_earlier_object():
             side_effect=[None, RuntimeError("s3 down")],
         ),
         patch("dembrane.api.v2.feedback.delete_from_s3") as delete_mock,
-        patch("dembrane.api.v2.feedback.async_directus", new=directus),
+        patch("dembrane.support_requests.async_directus", new=directus),
     ):
         async with _client(_build_app()) as c:
             with pytest.raises(RuntimeError):

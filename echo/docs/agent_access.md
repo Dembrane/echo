@@ -14,7 +14,7 @@ An AI agent connects to dembrane as one person and sees exactly what that person
 
 Tools: `whoami`, `list_organisations`, `list_workspaces`, `list_projects`, `get_project`, `update_project` (write scope), `list_conversations`, `get_conversation`, `get_conversations` (max 50), `list_project_webhooks`, `report_issue`, `request_tool`.
 
-`report_issue` and `request_tool` write `support_request` rows with `source = agent_mcp` (kind and agent details in `page_context`), so the existing forwarder carries them into the same triage thread as a host's report. A call to a tool that does not exist is recorded as an `unknown_tool` audit row with the requested name, and the error message points the agent at `request_tool`. Those three rows are the signal for which tools to add next.
+`report_issue` files a `support_request` through `dembrane/support_requests.py`, the one writer the dashboard's report form and the assistant's `reachOutToDembraneSupport` also use, with `source = agent_mcp`; the forwarder carries it into the same triage thread as a host's report. `request_tool` files an `agent_insight` of kind `capability_gap` through `dembrane/agent_insights.py`, the channel the assistant's `noteInsight` already uses, with `source = agent_mcp` and the wanted tool name in `suggested_capability`. A call to a tool that does not exist is recorded as an `unknown_tool` audit row with the requested name, and the error message points the agent at `request_tool`. Those three rows are the signal for which tools to add next.
 
 ## Flow
 
