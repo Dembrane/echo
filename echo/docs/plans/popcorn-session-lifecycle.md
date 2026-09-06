@@ -118,14 +118,16 @@ twin phrases survived; Jorim asked for it to go.
   text into every conversation's fingerprint so a prompt change re-read the
   session; that is reversed here.
 - **From Sameer's review (2026-09-06).** The tick cancels its pending rows
-  in any mode, so a read on request's safety row never runs the read a
-  second time (a rerun's would have wiped twice). Saved runs are the room's
+  in any mode. The direct actor and its backup also share a request ID:
+  the completed run is checked under the lock, so a backup already claimed
+  by the scheduler cannot execute a completed rerun again. Saved runs are the room's
   bundle, and older host snapshots are filtered on read, so a replay on the
   wall shows no passage, link or withheld name. Every model call is bounded.
   Refresh reads what changed and finishes what is owed; when nothing is new
   it is a no-op, and only a rerun forces the analysis. A re-read carries
-  kind, quote and held-back verdict forward by phrase id, so a growing table
-  is not re-checked every two minutes. The old loop routes stay one release
+  reviewed wording, kind and a still-verbatim quote forward by extractor ID.
+  Rejections expire when the input changes, since new speech can support a
+  phrase previously held back. The old loop routes stay one release
   as aliases. Popcorn has no model group of its own: the platform's fast
   group is already the 3.7 model in production (Jorim), so the
   `POPCORN_FAST` group, its settings and its `.env.sample` recipe go.
@@ -151,8 +153,9 @@ and `held_back`.
 clients. New: `POST /{id}/rerun` (a twenty-second rate limit of its own),
 `POST /{id}/live` (`{hours}`, 422 outside 1/8/24), `POST /{id}/live/stop`,
 `POST /{id}/view/data/latency` (the body read by hand, because `sendBeacon`
-may post it as text). `PATCH /{id}/settings` accepts `public_labels`. Removed:
-`POST /{id}/loop/{action}` and `PATCH /{id}/loop`.
+may post it as text). `PATCH /{id}/settings` accepts `public_labels`.
+`POST /{id}/loop/{action}` and `PATCH /{id}/loop` remain deprecated aliases
+for one release.
 
 ### Dashboard
 

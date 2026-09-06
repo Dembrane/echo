@@ -232,7 +232,7 @@ flowchart LR
       <tr><th>Check</th><th>Rule</th><th>What happens</th></tr>
       <tr><td>a name</td><td>a capitalised word the transcript introduces someone by ("I'm Priya", "Thanks, Tom", "what Aisha was saying"), in any Latin script</td><td>held back, never on screen; kept on the state for the host</td></tr>
       <tr><td>known text</td><td>six consecutive words shared with a phrase from another conversation or with slide text the room was shown (never with quotes, which are the room's own words)</td><td>held back: the tool was quoting itself</td></tr>
-      <tr><td>twins</td><td>two phrases sharing half their content words (Jaccard 0.5)</td><td>the heavier stays, the other is held back</td></tr>
+      <tr><td>twins</td><td>two phrases with matching polarity sharing half their content words (Jaccard 0.5)</td><td>the first stays, the other is held back</td></tr>
     </table></div>
     <div class="prose"><p>Grounding is code, not a model call: a phrase found verbatim in the transcript is flagged as such, and every phrase gets its closest passage (rarity-weighted word overlap) for the host's "why this phrase". The room never sees the passage.</p></div>
   </section>
@@ -277,7 +277,7 @@ flowchart LR
       <tr><td>a hedge added</td><td>"can", "may", "often" and the like in the phrase but not in the passage</td><td>nothing yet: kept on the state under <code>review</code> for the host</td></tr>
       <tr><td>a failed call</td><td>the phrase keeps whatever landed; the conversation is not stamped validated</td><td>the next tick retries exactly the phrases that failed</td></tr>
     </table></div>
-    <div class="prose"><p>The model's reasons, the objection's target and any scrubbed names stay under <code>review</code> on the state. The bundle never emits <code>review</code>.</p></div>
+    <div class="prose"><p>A re-read keeps a phrase's reviewed wording, kind and quote while its passage remains in the transcript. A question rewrite keeps its corrected words; the display gates and verbatim check run on those words. Rejections apply only to the input checked: new speech or a changed voice note triggers reconsideration. The model's reasons, the objection's target and any scrubbed names stay under <code>review</code> on the state. The bundle never emits <code>review</code>.</p></div>
   </section>
 
   <section class="stage" id="registry">

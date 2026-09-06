@@ -190,11 +190,12 @@ async def _create_run(
     status: str,
     started_at: datetime,
     detail: str | None = None,
+    request_id: str | None = None,
 ) -> dict[str, Any]:
     result = await async_directus.create_item(
         "agent_loop_run",
         {
-            "id": generate_uuid(),
+            "id": request_id or generate_uuid(),
             "loop_id": loop_id,
             "status": status,
             "detail": (detail or "")[:5000] or None,
@@ -458,21 +459,28 @@ async def _extract_one(
         started = _now()
         try:
             raw = await extract_popcorn(transcript_id=cid, transcript=window, host_note=host_note)
-            # The gates are code: a name from the introductions, text the room was
-            # shown, or a twin of another phrase never reaches the stage.
-            items, suppressed = gate_items(
+            items, carried, redropped = _carry_forward(
                 shape_popcorn_items(raw, cid),
+                entry,
+                transcript["text"],
+                writer.state.get("quotes") or [],
+                fingerprint=transcript["fingerprint"],
+            )
+            # The gates are code: a name from the introductions, text the room was
+            # shown, or a twin of another phrase never reaches the stage. Check
+            # the carried wording too, since it may be a rewritten question.
+            items, suppressed = gate_items(
+                items,
                 names=introduced_names(transcript["text"]),
                 known=known or set(),
             )
             # Grounding is code too: the closest passage behind each phrase, for
             # the host. The quote behind it is the second pass's job.
             items = ground_items(items, transcript["text"])
-            items, carried, redropped = _carry_forward(
-                items, entry, transcript["text"], writer.state.get("quotes") or []
-            )
             review: dict[str, Any] = {}
-            if (entry.get("review") or {}).get("dropped"):
+            if entry.get("fingerprint") == transcript["fingerprint"] and (
+                entry.get("review") or {}
+            ).get("dropped"):
                 review["dropped"] = entry["review"]["dropped"]
             if suppressed:
                 review["suppressed"] = suppressed
@@ -558,6 +566,9 @@ async def _enrich_one(
         transcript_id=cid,
         register=lambda tid, quote: book.add({"transcript": tid, "text": quote}),
     )
+    # A question rewrite changes the words whose verbatim flag and closest
+    # passage the deck shows, as well as the words validated above.
+    ground_items(items, transcript["text"])
     # A phrase the pass could not root leaves the deck: the room must not
     # read a paraphrase nothing in the transcript holds. The host keeps it.
     dropped = [i for i in entry["items"] if i.get("rooted") is False]
@@ -623,20 +634,21 @@ def _carry_forward(
     entry: dict[str, Any],
     text: str,
     quotes: list[dict[str, Any]],
+    *,
+    fingerprint: str,
 ) -> tuple[list[dict[str, Any]], int, int]:
-    """A re-read of a grown transcript returns most of the same phrases, with
-    the same ids (the id is the phrase's own words). Their kind and their
-    quote stand: the transcript only grew, so a passage found last time is
-    still there, and is checked to be. A phrase the second pass held back
-    last time stays held back. Returns the items to keep, how many carried
-    their evidence, how many were held back again."""
+    """Reuse each phrase's reviewed wording and any quote still in the source.
+    Question rewrites retain their extractor id, so wording and evidence must
+    travel together. Rejections apply only to the fingerprint they were
+    checked against: new speech may now support a previously rejected phrase.
+    Returns kept items, carried evidence count and repeated rejection count."""
     previous = {
         str(i.get("id")): i for i in entry.get("items") or [] if isinstance(i, dict) and i.get("id")
     }
     dropped = {
         str(d.get("id"))
         for d in (entry.get("review") or {}).get("dropped") or []
-        if isinstance(d, dict) and d.get("id")
+        if isinstance(d, dict) and d.get("id") and entry.get("fingerprint") == fingerprint
     }
     by_quote = {str(q.get("id")): q for q in quotes if isinstance(q, dict) and q.get("id")}
     kept: list[dict[str, Any]] = []
@@ -650,7 +662,7 @@ def _carry_forward(
         if old is None:
             kept.append(item)
             continue
-        for key in ("kind", "question", "qualifiers", "review"):
+        for key in ("phrase", "kind", "question", "qualifiers", "review"):
             if key in old:
                 item[key] = old[key]
         quote = by_quote.get(str(old.get("quoteId") or ""))
@@ -864,7 +876,9 @@ async def _snapshot_version(
     )
 
 
-async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]:
+async def run_popcorn_tick(
+    loop_id: str, tick_kind: str = "scheduled", request_id: str | None = None
+) -> dict[str, Any]:
     started_at = _now()
     loop = await async_directus.get_item("agent_loop", loop_id)
     if not loop or not is_popcorn_loop(loop):
@@ -933,6 +947,18 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
     try:
         if not report_id or not project_id or not acting_user_id:
             raise RuntimeError("Popcorn loop is missing required ids")
+
+        # Both deliveries of an on-request tick carry the same id. The run
+        # record persists beyond later reruns, unlike a last-request state flag.
+        # Check under the lock and before cancelling tasks or wiping any state.
+        if request_id:
+            completed = await async_directus.get_item("agent_loop_run", request_id)
+            if (
+                completed
+                and _as_id(completed.get("loop_id")) == loop_id
+                and completed.get("status") in {"ok", "no_op"}
+            ):
+                return {"status": "duplicate", "run": completed}
 
         # The next read is booked before this one starts, so a worker that dies
         # mid-read (a pod scaled away, a crash) costs the room one cadence and
@@ -1009,6 +1035,7 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
                 status="no_op",
                 detail="No new transcript content since the last tick",
                 started_at=started_at,
+                request_id=request_id,
             )
             await _enqueue_next_if_due(loop)
             return {"status": "no_op", "run": run}
@@ -1091,7 +1118,13 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
             ]
             + outcomes
         )
-        run = await _create_run(loop_id=loop_id, status="ok", detail=detail, started_at=started_at)
+        run = await _create_run(
+            loop_id=loop_id,
+            status="ok",
+            detail=detail,
+            started_at=started_at,
+            request_id=request_id,
+        )
         try:
             await _snapshot_version(
                 report_id=report_id,

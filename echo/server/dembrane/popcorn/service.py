@@ -286,37 +286,45 @@ async def get_latest_run(loop_id: str) -> dict[str, Any] | None:
 
 
 async def enqueue_popcorn_tick(
-    loop_id: str, when: datetime | None = None, tick_kind: str = "scheduled"
+    loop_id: str,
+    when: datetime | None = None,
+    tick_kind: str = "scheduled",
+    request_id: str | None = None,
 ) -> str:
+    payload = {"loop_id": loop_id, "tick_kind": tick_kind}
+    if request_id:
+        payload["request_id"] = request_id
     return await schedule_task(
         task_type=TASK_POPCORN_TICK,
         scheduled_at=when or _now(),
-        payload={"loop_id": loop_id, "tick_kind": tick_kind},
+        payload=payload,
     )
 
 
-def dispatch_popcorn_tick_now(loop_id: str, tick_kind: str = "manual") -> None:
+def dispatch_popcorn_tick_now(
+    loop_id: str, tick_kind: str = "manual", request_id: str | None = None
+) -> None:
     """Hand a tick to a worker immediately instead of waiting for the scheduler poll."""
     from dembrane.tasks import task_popcorn_tick_now
 
-    task_popcorn_tick_now.send(loop_id, tick_kind)
+    task_popcorn_tick_now.send(loop_id, tick_kind, request_id=request_id)
 
 
 SAFETY_TICK_DELAY_SECONDS = 0
 
 
 async def dispatch_popcorn_tick_now_with_safety(loop_id: str, tick_kind: str = "manual") -> None:
-    """The direct actor plus a scheduled tick shortly after. On a worker whose
-    async clients are bound to a foreign loop the direct actor dies before it
-    writes a run; the scheduled one then lands within seconds instead of
-    waiting for the five-minute reconciler. When both run, the run lock makes
-    the second a harmless no-op."""
-    dispatch_popcorn_tick_now(loop_id, tick_kind)
+    """Persist the backup before dispatch, with one identity for both deliveries.
+    Under the run lock, a completed run with this id makes a late backup a
+    no-op, even if the scheduler already claimed it before cancellation."""
+    request_id = generate_uuid()
     await enqueue_popcorn_tick(
         loop_id,
         when=_now() + timedelta(seconds=SAFETY_TICK_DELAY_SECONDS),
         tick_kind=tick_kind,
+        request_id=request_id,
     )
+    dispatch_popcorn_tick_now(loop_id, tick_kind, request_id=request_id)
 
 
 async def create_popcorn(

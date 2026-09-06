@@ -102,6 +102,11 @@ to `paused` and no-ops; a manual tick (run, refresh, rerun) goes ahead in any
 mode at any time. A tick is scheduled or on request (`manual` for run and
 refresh, `rerun`); the rerun wipes the state itself, under the run lock, so a
 read in flight cannot write the old state back over it.
+Each request has one ID shared by its direct actor and durable backup. A
+completed `agent_loop_run` uses that ID, checked under the run lock before
+any state changes. A late backup skips an already completed request even
+when the scheduler claimed it before cancellation or another rerun has
+since finished. An attempt that failed before completion remains retryable.
 
 The BFF routes under `/v2/bff/popcorn`:
 
@@ -123,8 +128,11 @@ ahead of the server.
 
 The payload's `loop.mode` is `"manual"` or `"live"`; `counts` carries
 `validated` and `held_back`. A re-read of a grown transcript carries each
-phrase's kind, quote and held-back verdict forward by phrase id (the id is
-the phrase's own words), so only new phrases are checked again. Every model
+phrase's reviewed wording, kind and quote forward by its extractor ID while
+the quote remains in the transcript. Rewritten questions keep their corrected
+wording, and display gates and verbatim checks run on those words. Rejected
+phrases are reconsidered when the transcript or voice changes; unchanged
+input keeps its verdict without another call. Every model
 call is bounded (60 s for the fast pass, 120 s for the second pass, up to
 300 s for the analysis). Popcorn uses the platform's fast multimodal group,
 the same deployment as everything else that reads transcripts. A phrase the second pass could not root moves from

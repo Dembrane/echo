@@ -1962,17 +1962,24 @@ def _run_popcorn_tick(payload: dict) -> None:
     if not loop_id:
         raise ValueError("popcorn_tick payload missing loop_id")
     tick_kind = payload.get("tick_kind") or "scheduled"
+    request_id = payload.get("request_id")
     from dembrane.popcorn.ticks import run_popcorn_tick
 
-    run_async_in_new_loop(lambda: run_popcorn_tick(str(loop_id), str(tick_kind)))
+    run_async_in_new_loop(
+        lambda: run_popcorn_tick(
+            str(loop_id), str(tick_kind), request_id=str(request_id) if request_id else None
+        )
+    )
 
 
 @dramatiq.actor(queue_name="network", priority=20, max_retries=0)
-def task_popcorn_tick_now(loop_id: str, tick_kind: str = "manual") -> None:
+def task_popcorn_tick_now(
+    loop_id: str, tick_kind: str = "manual", request_id: str | None = None
+) -> None:
     """Run a popcorn tick straight away. The scheduled_task table is polled once
     a minute, which is fine for the cadence but not for the first phrase after
     Start or after the host presses refresh."""
-    _run_popcorn_tick({"loop_id": loop_id, "tick_kind": tick_kind})
+    _run_popcorn_tick({"loop_id": loop_id, "tick_kind": tick_kind, "request_id": request_id})
 
 
 async def _expire_support_request_async(request_id: str) -> bool:

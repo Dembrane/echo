@@ -135,3 +135,25 @@ def test_room_files_strip_what_the_host_alone_may_see() -> None:
     assert room["tensions.json"] == {"tensions": []}
     named = service.room_files(files, neutral_labels=False)
     assert named["session.json"]["transcripts"][0]["label"] == "Priya"
+
+
+def test_both_deliveries_share_a_request_id_and_the_backup_is_persisted_first(monkeypatch):
+    scheduled: list[dict[str, Any]] = []
+    dispatched: list[tuple[str, str, str | None]] = []
+
+    async def _schedule(**kwargs):
+        scheduled.append(kwargs)
+        return "task-id"
+
+    def _dispatch(loop_id: str, tick_kind: str, request_id: str | None = None):
+        assert scheduled  # A failed send must still leave a durable backup.
+        dispatched.append((loop_id, tick_kind, request_id))
+
+    monkeypatch.setattr(service, "schedule_task", _schedule)
+    monkeypatch.setattr(service, "dispatch_popcorn_tick_now", _dispatch)
+    asyncio.run(service.dispatch_popcorn_tick_now_with_safety("loop1", "rerun"))
+    payload = scheduled[0]["payload"]
+    assert payload["request_id"] and payload["tick_kind"] == "rerun"
+    assert dispatched == [("loop1", "rerun", payload["request_id"])]
+    asyncio.run(service.dispatch_popcorn_tick_now_with_safety("loop1", "rerun"))
+    assert scheduled[1]["payload"]["request_id"] != payload["request_id"]

@@ -74,6 +74,7 @@ class _FakeDirectus:
 
     async def create_item(self, collection: str, data: dict[str, Any]) -> dict[str, Any]:
         self.created.setdefault(collection, []).append(data)
+        self.items.setdefault(collection, {})[str(data["id"])] = data
         return {"data": data}
 
     async def update_item(self, collection: str, item_id: str, data: dict[str, Any]) -> dict:
@@ -95,6 +96,7 @@ def fake(monkeypatch) -> _FakeDirectus:
     import dembrane.popcorn.service as service
 
     monkeypatch.setattr(service, "async_directus", fake)
+    monkeypatch.setattr(scheduled_tasks, "async_directus", fake)
 
     async def _reader(**kwargs):  # noqa: ARG001
         return None
@@ -760,9 +762,7 @@ def test_a_refresh_with_nothing_new_is_a_no_op(fake: _FakeDirectus, monkeypatch)
 def test_a_re_read_carries_the_evidence_forward_by_phrase_id(
     fake: _FakeDirectus, monkeypatch
 ) -> None:
-    """Sameer's finding: a re-read replaced the whole item list, so every
-    phrase lost its kind and quote and was checked again, and a held-back
-    phrase came back until it was dropped again."""
+    """Keep positive evidence, but reconsider a rejection against new speech."""
     calls: list[str] = []
     _install_models(monkeypatch, calls=calls)
 
@@ -795,9 +795,12 @@ def test_a_re_read_carries_the_evidence_forward_by_phrase_id(
     result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
     assert result["status"] == "ok"
     assert sorted(c for c in calls if c.startswith("popcorn")) == ["popcorn:c1", "popcorn:c2"]
-    # Nothing was validated again: c1's phrase kept its kind and its quote,
-    # c2's phrase stayed held back without a call.
-    assert [c for c in calls if c.startswith(("validate", "kind"))] == []
+    # c1 keeps its quote. c2 is checked again because its source changed;
+    # another rejection replaces the old verdict instead of accumulating it.
+    assert sorted(c for c in calls if c.startswith(("validate", "kind"))) == [
+        "kind:c2",
+        "validate:c2",
+    ]
     state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
     c1, c2 = state["conversations"]["c1"], state["conversations"]["c2"]
     assert c1["items"][0]["quoteId"] == "q1" and c1["items"][0]["kind"] == "observation"
@@ -805,4 +808,193 @@ def test_a_re_read_carries_the_evidence_forward_by_phrase_id(
     assert c1["validated_fingerprint"] == c1["fingerprint"]
     assert c2["items"] == [] and len(c2["review"]["dropped"]) == 1
     detail = fake.created["agent_loop_run"][-1]["detail"]
-    assert "1 carried over" in detail and "1 held back again" in detail
+    assert "1 carried over" in detail and "1 held back" in detail
+
+
+def test_a_refresh_preserves_the_validated_question_wording(fake: _FakeDirectus, monkeypatch):
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    rewritten = "Who comes here for the desks"
+    quote = "Who actually joins for the desks?"
+    fake.chunks[1]["transcript"] = quote
+    classify = ticks.classify_phrase
+    validate = ticks.validate_phrase
+
+    async def _classify(**kwargs):
+        if kwargs["transcript_id"] != "c1":
+            return await classify(**kwargs)
+        calls.append("kind:c1")
+        return {
+            "kind": "question",
+            "question_form": False,
+            "qualifiers": [],
+            "target": "",
+            "reason": "An open question",
+        }
+
+    async def _validate(**kwargs):
+        if kwargs["transcript_id"] != "c1":
+            return await validate(**kwargs)
+        calls.append("validate:c1")
+        return {"grounded": kwargs["phrase"] == rewritten, "quote": quote, "reason": "Asked"}
+
+    async def _rewrite(**kwargs):  # noqa: ARG001
+        calls.append("rewrite:c1")
+        return {"phrase": rewritten + "?"}
+
+    monkeypatch.setattr(ticks, "classify_phrase", _classify)
+    monkeypatch.setattr(ticks, "validate_phrase", _validate)
+    monkeypatch.setattr(ticks, "rewrite_question", _rewrite)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    item = fake.items["agent_loop"]["loop1"]["popcorn_state"]["conversations"]["c1"]["items"][0]
+    assert item["phrase"] == rewritten and item["rooted"] and item["question"]
+    assert not item["verbatim"]  # The extractor's original wording was verbatim.
+    qid = item["quoteId"]
+    calls.clear()
+    fake.chunks.append(
+        {"id": "k4", "conversation_id": "c1", "transcript": "More discussion.", "timestamp": 3}
+    )
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    item = fake.items["agent_loop"]["loop1"]["popcorn_state"]["conversations"]["c1"]["items"][0]
+    assert item["phrase"] == rewritten and item["quoteId"] == qid
+    assert item["question"] and item["rooted"] and not item["verbatim"]
+    assert not [c for c in calls if c.startswith(("validate", "kind", "rewrite"))]
+
+
+def test_a_rejected_phrase_returns_when_new_speech_supports_it(fake: _FakeDirectus, monkeypatch):
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    phrase = "Quiet is a service we sell"
+    extract = ticks.extract_popcorn
+    fake.chunks[2]["transcript"] = "We only sell desks and coffee."
+
+    async def _extract(**kwargs):
+        if kwargs["transcript_id"] == "c2":
+            calls.append("popcorn:c2")
+            return {"items": [{"phrase": phrase}]}
+        return await extract(**kwargs)
+
+    monkeypatch.setattr(ticks, "extract_popcorn", _extract)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    conv = fake.items["agent_loop"]["loop1"]["popcorn_state"]["conversations"]["c2"]
+    assert conv["items"] == [] and conv["review"]["dropped"][0]["phrase"] == phrase
+    calls.clear()
+    assert asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))["status"] == "no_op"
+    assert calls == []
+
+    fake.chunks.append(
+        {"id": "k4", "conversation_id": "c2", "transcript": phrase + ".", "timestamp": 3}
+    )
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    conv = fake.items["agent_loop"]["loop1"]["popcorn_state"]["conversations"]["c2"]
+    assert conv["items"][0]["phrase"] == phrase and conv["items"][0]["rooted"]
+    assert not conv["review"].get("dropped")
+    assert "validate:c2" in calls
+
+
+@pytest.mark.parametrize("tick_kind", ["manual", "rerun"])
+def test_a_late_backup_does_not_repeat_a_completed_request(
+    fake: _FakeDirectus, monkeypatch, tick_kind: str
+) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    loop = fake.items["agent_loop"]["loop1"]
+    loop["status"] = "paused"
+    payload = {"loop_id": "loop1", "tick_kind": tick_kind, "request_id": "request-a"}
+    # A scheduler batch has already claimed this row, so the cancellation
+    # query for still-scheduled rows cannot return it.
+    fake.scheduled_tasks = []
+    first = asyncio.run(ticks.run_popcorn_tick(**payload))
+    assert first["status"] == "ok" and first["run"]["id"] == "request-a"
+    # Another real request can finish before the delayed backup is dispatched.
+    second = asyncio.run(ticks.run_popcorn_tick("loop1", "rerun", request_id="request-b"))
+    assert second["status"] == "ok" and loop["popcorn_state"]["run"] == 2
+    calls.clear()
+    fake.state_writes.clear()
+    versions = len(fake.created["canvas_generation"])
+    backup = asyncio.run(ticks.run_popcorn_tick(**payload))
+    assert backup["status"] == "duplicate" and backup["run"] == first["run"]
+    assert calls == [] and fake.state_writes == []
+    assert loop["popcorn_state"]["run"] == 2
+    assert len(fake.created["canvas_generation"]) == versions
+
+
+def test_a_quiet_request_is_also_deduplicated(fake: _FakeDirectus, monkeypatch) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual", request_id="quiet"))
+    assert result["status"] == "no_op" and result["run"]["id"] == "quiet"
+    # Speech arriving after the request finished belongs to the next request,
+    # not to a second delivery of the completed one.
+    fake.chunks.append(
+        {"id": "k4", "conversation_id": "c1", "transcript": "More discussion.", "timestamp": 3}
+    )
+    calls.clear()
+    assert (
+        asyncio.run(ticks.run_popcorn_tick("loop1", "manual", request_id="quiet"))["status"]
+        == "duplicate"
+    )
+    assert calls == []
+
+
+def test_an_unfinished_request_can_still_be_retried(fake: _FakeDirectus, monkeypatch) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    gather = ticks.gather_transcripts
+
+    async def _broken(**kwargs):  # noqa: ARG001
+        raise RuntimeError("temporary read failure")
+
+    monkeypatch.setattr(ticks, "gather_transcripts", _broken)
+    assert (
+        asyncio.run(ticks.run_popcorn_tick("loop1", "rerun", request_id="retry"))["status"]
+        == "error"
+    )
+    assert "retry" not in fake.items["agent_loop_run"]
+    monkeypatch.setattr(ticks, "gather_transcripts", gather)
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "rerun", request_id="retry"))
+    assert result["status"] == "ok" and result["run"]["id"] == "retry"
+
+
+def test_a_backup_waiting_on_the_lock_checks_completion_after_acquiring_it(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    fake.items["agent_loop"]["loop1"]["status"] = "paused"
+    extract = ticks.extract_popcorn
+
+    async def run():
+        lock = asyncio.Lock()
+        extracting = asyncio.Event()
+        backup_waiting = asyncio.Event()
+
+        async def _claim(loop_id):  # noqa: ARG001
+            if lock.locked():
+                backup_waiting.set()
+                return False
+            await lock.acquire()
+            return True
+
+        async def _release(loop_id):  # noqa: ARG001
+            lock.release()
+
+        async def _extract(**kwargs):
+            extracting.set()
+            await backup_waiting.wait()
+            return await extract(**kwargs)
+
+        monkeypatch.setattr(ticks, "_claim_run_lock", _claim)
+        monkeypatch.setattr(ticks, "_release_run_lock", _release)
+        monkeypatch.setattr(ticks, "extract_popcorn", _extract)
+        first = asyncio.create_task(ticks.run_popcorn_tick("loop1", "rerun", "shared"))
+        await extracting.wait()
+        backup = asyncio.create_task(ticks.run_popcorn_tick("loop1", "rerun", "shared"))
+        return await asyncio.wait_for(asyncio.gather(first, backup), 5)
+
+    first, backup = asyncio.run(run())
+    assert first["status"] == "ok" and backup["status"] == "duplicate"
+    assert backup["run"] == first["run"]
+    assert sorted(c for c in calls if c.startswith("popcorn")) == ["popcorn:c1", "popcorn:c2"]
+    assert len(fake.created["canvas_generation"]) == 1
