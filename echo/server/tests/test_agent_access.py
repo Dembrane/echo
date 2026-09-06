@@ -727,3 +727,164 @@ async def test_docs_tools_are_audited_and_need_no_org(
     assert r.status_code == 200 and r.json()[0]["path"] == "users/participant/index.md"
     assert fake.audit[-1]["tool"] == "search_docs" and fake.audit[-1]["status"] == "ok"
     assert fake.usage == {}
+
+
+# ── shared read primitives behind the tools ────────────────────────────────
+
+
+def _chunk_row(conv_id: str, text: str, *, over_cap: bool = False) -> dict[str, Any]:
+    return {
+        "id": f"{conv_id}-k1",
+        "timestamp": "2026-09-01T10:00:00Z",
+        "transcript": text,
+        "conversation_id": {
+            "id": conv_id,
+            "project_id": "p1",
+            "participant_name": f"Table {conv_id}",
+            "summary": "a summary",
+            "is_finished": True,
+            "is_all_chunks_transcribed": True,
+            "is_over_cap": over_cap,
+            "created_at": "2026-09-01T09:00:00Z",
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_search_transcripts_returns_snippets_and_keeps_locked_text_out(
+    fake: FakeStore,
+) -> None:
+    """Through REST: the org check and one free-tier charge happen before the
+    read, the audit row lands, and a locked conversation is a hit without text."""
+    access = MagicMock(workspace_id="ws-1", tier="free", org_id=_ORG, project_id="p1")
+    rows = [
+        _chunk_row("open", "the membership fee doubles next year"),
+        _chunk_row("locked", "membership secrets", over_cap=True),
+    ]
+    app = _rest_app(_ctx())
+    with (
+        patch(
+            "dembrane.agent_access.tools.resolve_project_access", new=AsyncMock(return_value=access)
+        ),
+        patch(
+            "dembrane.agent_access.context.org_agent_access_enabled",
+            new=AsyncMock(return_value=True),
+        ),
+        patch("dembrane.agent_access.context.org_is_paid", new=AsyncMock(return_value=False)),
+        patch(
+            "dembrane.toolkit.conversations.workspace_over_cap_active",
+            new=AsyncMock(return_value=False),
+        ),
+        patch("dembrane.toolkit.conversations.async_directus") as directus,
+    ):
+        directus.get_items = AsyncMock(return_value=rows)
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as ac:
+            r = await ac.get("/v2/agent/projects/p1/search", params={"q": "membership fee"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["tokens"] == ["membership"] and body["has_more"] is False
+    open_hit, locked_hit = body["conversations"]
+    assert open_hit["id"] == "open" and open_hit["locked"] is False
+    assert open_hit["matches"][0]["chunk_id"] == "open-k1"
+    assert "membership fee" in open_hit["matches"][0]["snippet"]
+    assert locked_hit["locked"] is True and locked_hit["matches"] == []
+    assert locked_hit["summary"] is None
+    assert fake.usage == {_ORG: 1}
+    assert fake.audit[-1]["tool"] == "search_transcripts" and fake.audit[-1]["status"] == "ok"
+    assert fake.audit[-1]["org_id"] == _ORG
+
+
+@pytest.mark.asyncio
+async def test_read_transcript_pages_and_marks_has_more(fake: FakeStore) -> None:
+    from dembrane.agent_access import tools as T
+
+    access = MagicMock(workspace_id="ws-1", tier=None, org_id=_ORG, project_id="p1")
+    conv = {"id": "c1", "project_id": "p1", "is_finished": True, "is_over_cap": False}
+    chunks = [{"id": f"k{i}", "timestamp": f"t{i}", "transcript": f"text {i}"} for i in range(5)]
+
+    async def _get_items(collection: str, params: dict[str, Any]) -> Any:
+        query = params["query"]
+        if "aggregate" in query:
+            return [{"count": {"id": "5"}}]
+        return chunks[query["offset"] : query["offset"] + query["limit"]]
+
+    with (
+        patch(
+            "dembrane.agent_access.tools.resolve_conversation_access",
+            new=AsyncMock(return_value=(access, conv)),
+        ),
+        patch(
+            "dembrane.agent_access.context.org_agent_access_enabled",
+            new=AsyncMock(return_value=True),
+        ),
+        patch("dembrane.agent_access.context.org_is_paid", new=AsyncMock(return_value=False)),
+        patch(
+            "dembrane.toolkit.conversations.workspace_over_cap_active",
+            new=AsyncMock(return_value=False),
+        ),
+        patch("dembrane.toolkit.conversations.async_directus") as directus,
+    ):
+        directus.get_items = AsyncMock(side_effect=_get_items)
+        page = await T.read_transcript(_ctx(), "c1", offset=2, limit=2)
+        last = await T.read_transcript(_ctx(), "c1", offset=4, limit=2)
+
+    assert [c.id for c in page.chunks] == ["k2", "k3"] and page.chunks[0].transcript == "text 2"
+    assert page.total == 5 and page.has_more is True and page.transcript_locked is False
+    assert [c.id for c in last.chunks] == ["k4"] and last.has_more is False
+    assert fake.usage == {_ORG: 2}
+
+
+@pytest.mark.asyncio
+async def test_find_projects_filters_to_the_grants_orgs_and_charges_nothing(
+    fake: FakeStore,
+) -> None:
+    from dembrane.agent_access import tools as T
+    from dembrane.toolkit.projects import ProjectHit
+
+    hits = [
+        ProjectHit(id="p1", name="Members' strategy day", workspace_id="ws-1", org_id=_ORG),
+        ProjectHit(id="p2", name="Members' offsite", workspace_id="ws-9", org_id="org-other"),
+        ProjectHit(id="p3", name="Members' legacy", workspace_id=None, org_id=None),
+    ]
+    with (
+        patch("dembrane.toolkit.projects.find_projects", new=AsyncMock(return_value=hits)) as find,
+        patch(
+            "dembrane.agent_access.context.org_agent_access_enabled",
+            new=AsyncMock(return_value=True),
+        ),
+    ):
+        out = await T.find_projects(_ctx(org_ids=[_ORG]), query="members", limit=10)
+    assert [h.id for h in out] == ["p1"]
+    assert find.call_args.args == ("members",) and find.call_args.kwargs["limit"] == 10
+    assert fake.usage == {}
+
+
+@pytest.mark.asyncio
+async def test_list_conversations_date_bounds_land_in_the_directus_filter(
+    fake: FakeStore,
+) -> None:
+    from dembrane.agent_access import tools as T
+
+    access = MagicMock(workspace_id="ws-1", tier=None, org_id=_ORG, project_id="p1")
+    with (
+        patch(
+            "dembrane.agent_access.tools._project_access",
+            new=AsyncMock(return_value=(access, _ORG)),
+        ),
+        patch(
+            "dembrane.toolkit.conversations.workspace_over_cap_active",
+            new=AsyncMock(return_value=False),
+        ),
+        patch("dembrane.toolkit.conversations.async_directus") as directus,
+    ):
+        directus.get_items = AsyncMock(return_value=[])
+        out = await T.list_conversations(
+            _ctx(), "p1", created_after="2026-08-30", created_before="2026-09-06T00:00:00Z"
+        )
+        with pytest.raises(HTTPException) as exc:
+            await T.list_conversations(_ctx(), "p1", created_after="last week")
+    assert out == []
+    query = directus.get_items.call_args.args[1]["query"]
+    assert query["filter"]["created_at"] == {"_gte": "2026-08-30", "_lte": "2026-09-06T00:00:00Z"}
+    assert query["filter"]["project_id"] == {"_eq": "p1"} and query["limit"] == 101
+    assert exc.value.status_code == 400

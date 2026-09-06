@@ -79,9 +79,13 @@ server = DembraneMCPServer(
     name="dembrane",
     instructions=(
         "You are connected to dembrane as one person, limited to the organisations "
-        "they chose. Start with whoami, then list_organisations. Ids are UUIDs; pass "
-        "them between tools verbatim. Transcripts can be long: list first, then fetch "
-        "the conversations you need, at most 50 at a time. If something looks wrong, "
+        "they chose. Start with whoami. To find a project, call find_projects with "
+        "part of its name; list_organisations, list_workspaces and list_projects walk "
+        "the tree when you need it. To find what was said, call search_transcripts on "
+        "the project, then read_transcript on the conversations that matter, paging "
+        "with offset; grep_conversation finds exact wording in one conversation. "
+        "Never call get_conversations for many conversations: transcripts are long. "
+        "Ids are UUIDs; pass them between tools verbatim. If something looks wrong, "
         "call report_issue; if a tool you need does not exist, call request_tool. "
         "Questions about how dembrane works: search_docs, then read_doc."
     ),
@@ -175,6 +179,24 @@ async def list_projects(
     )
 
 
+@server.tool(
+    name="find_projects",
+    description=(
+        "Find projects by name across every organisation in the grant: id, name, "
+        "workspace and organisation. Leave the query empty for the most recently "
+        "updated ones. At most 200."
+    ),
+)
+async def find_projects(query: Optional[str] = None, limit: int = 50) -> list[dict[str, Any]]:
+    return _dump(
+        await _run(
+            "find_projects",
+            {"query": (query or "")[:200], "limit": limit},
+            lambda c: T.find_projects(c, query=query, limit=limit),
+        )
+    )
+
+
 @server.tool(name="get_project", description="One project's settings.")
 async def get_project(project_id: str) -> dict[str, Any]:
     return _dump(
@@ -223,7 +245,11 @@ async def update_project(
 
 @server.tool(
     name="list_conversations",
-    description="Conversations in a project: id, title, participant, summary, duration. No transcripts here.",
+    description=(
+        "Conversations in a project: id, title, participant, summary, duration, status. "
+        "No transcripts here. search matches participant, title and summary; "
+        "created_after and created_before are ISO 8601 bounds. At most 500 per page."
+    ),
 )
 async def list_conversations(
     project_id: str,
@@ -231,6 +257,8 @@ async def list_conversations(
     limit: int = 100,
     offset: int = 0,
     sort: T.ConversationSort = "-created_at",
+    created_after: Optional[str] = None,
+    created_before: Optional[str] = None,
 ) -> list[dict[str, Any]]:
     return _dump(
         await _run(
@@ -241,16 +269,90 @@ async def list_conversations(
                 "limit": limit,
                 "offset": offset,
                 "sort": sort,
+                "created_after": created_after,
+                "created_before": created_before,
             },
             lambda c: T.list_conversations(
-                c, project_id, search=search, limit=limit, offset=offset, sort=sort
+                c,
+                project_id,
+                search=search,
+                limit=limit,
+                offset=offset,
+                sort=sort,
+                created_after=created_after,
+                created_before=created_before,
             ),
         )
     )
 
 
 @server.tool(
-    name="get_conversation", description="One conversation with its full transcript and tags."
+    name="search_transcripts",
+    description=(
+        "Find the conversations in a project whose transcript contains the words in "
+        "the query: two to four words of four letters or more work best, shorter words "
+        "are dropped. Each hit carries up to 3 snippets with the chunk id. At most 100 "
+        "per page; has_more says whether to page with offset. A locked conversation "
+        "comes back without snippets."
+    ),
+)
+async def search_transcripts(
+    project_id: str, query: str, limit: int = 20, offset: int = 0
+) -> dict[str, Any]:
+    return _dump(
+        await _run(
+            "search_transcripts",
+            {"project_id": project_id, "query": query[:200], "limit": limit, "offset": offset},
+            lambda c: T.search_transcripts(c, project_id, query, limit=limit, offset=offset),
+        )
+    )
+
+
+@server.tool(
+    name="grep_conversation",
+    description=(
+        "Snippets from one conversation's transcript around the words in the query, "
+        "in speaking order, each with its chunk id and timestamp. At most 50 matches. "
+        "Nothing from a locked conversation."
+    ),
+)
+async def grep_conversation(
+    conversation_id: str, query: str, max_matches: int = 10
+) -> list[dict[str, Any]]:
+    return _dump(
+        await _run(
+            "grep_conversation",
+            {"conversation_id": conversation_id, "query": query[:200], "max_matches": max_matches},
+            lambda c: T.grep_conversation(c, conversation_id, query, max_matches=max_matches),
+        )
+    )
+
+
+@server.tool(
+    name="read_transcript",
+    description=(
+        "One conversation's transcript as a page of chunks in speaking order, each with "
+        "id, timestamp and text. offset and limit count chunks; limit is at most 200. "
+        "total and has_more say when to page. A locked conversation returns its chunks "
+        "without text."
+    ),
+)
+async def read_transcript(conversation_id: str, offset: int = 0, limit: int = 50) -> dict[str, Any]:
+    return _dump(
+        await _run(
+            "read_transcript",
+            {"conversation_id": conversation_id, "offset": offset, "limit": limit},
+            lambda c: T.read_transcript(c, conversation_id, offset=offset, limit=limit),
+        )
+    )
+
+
+@server.tool(
+    name="get_conversation",
+    description=(
+        "One conversation with its tags and the whole transcript as one string. For "
+        "anything long, or for several conversations, use read_transcript instead."
+    ),
 )
 async def get_conversation(conversation_id: str) -> dict[str, Any]:
     return _dump(

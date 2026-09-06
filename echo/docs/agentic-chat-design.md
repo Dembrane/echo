@@ -66,6 +66,14 @@ Agent tools: fs_read, fs_grep (ripgrep), fs_write (commit per turn).
   editor fields) and /v2/bff/tags CRUD. No new permission system.
 - Open issue: a 600s run can outlive the bearer JWT; validate at run start and
   surface a clean re-auth instead of failing mid-turn.
+- The assistant's read endpoints (the project conversation list, the keyword
+  search behind findConversationsByKeywords and the per-conversation grep behind
+  grepConversationSnippets) now call `dembrane/toolkit/` instead of owning the
+  query. The toolkit resolves access with `resolve_project_access(...).require("conversation:read")`
+  and applies the same locked/over-cap scrub as the dashboard, so a locked
+  conversation never surfaces transcript text through a snippet; the MCP tools
+  in `agent_access/tools.py` call the same functions. Response shapes are
+  unchanged; the agent service is not affected.
 
 ## Phases
 
