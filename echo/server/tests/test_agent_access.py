@@ -380,18 +380,25 @@ async def test_rest_whoami_and_audit(fake: FakeStore) -> None:
     app = _rest_app(_ctx())
     with patch("dembrane.agent_access.tools.async_directus") as directus:
         directus.get_item = AsyncMock(return_value={"email": "a@b.c", "display_name": "A"})
+        directus.get_items = AsyncMock(return_value=[])
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as ac:
             r = await ac.get("/v2/agent/whoami")
     assert r.status_code == 200 and r.json()["email"] == "a@b.c"
-    assert fake.audit[-1]["tool"] == "whoami" and fake.audit[-1]["status"] == "ok"
+    assert r.json()["organisations"] == [] and r.json()["build_version"]
+    assert fake.audit[-1]["tool"] == "dembrane_whoami" and fake.audit[-1]["status"] == "ok"
+    assert fake.usage == {}
 
 
 @pytest.mark.asyncio
-async def test_rest_batch_is_capped_at_50(fake: FakeStore) -> None:
+async def test_removed_rest_routes_are_gone(fake: FakeStore) -> None:
     app = _rest_app(_ctx())
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as ac:
-        r = await ac.post("/v2/agent/conversations/batch", json={"ids": ["x"] * 51})
-    assert r.status_code == 422
+        batch = await ac.post("/v2/agent/conversations/batch", json={"ids": ["x"]})
+        orgs = await ac.get("/v2/agent/organisations")
+        docs = await ac.get("/v2/agent/docs")
+    # /conversations/batch now falls into GET /conversations/{conversation_id}: no POST there.
+    assert batch.status_code == 405
+    assert orgs.status_code == 404 and docs.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -400,7 +407,8 @@ async def test_rest_update_without_write_scope_is_denied_and_audited(fake: FakeS
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as ac:
         r = await ac.patch("/v2/agent/projects/p1", json={"name": "x"})
     assert r.status_code == 403
-    assert fake.audit[-1]["tool"] == "update_project" and fake.audit[-1]["status"] == "denied"
+    assert fake.audit[-1]["tool"] == "dembrane_update_project"
+    assert fake.audit[-1]["status"] == "denied"
 
 
 @pytest.mark.asyncio
@@ -666,7 +674,10 @@ async def test_unknown_tool_is_audited_and_answered_with_a_hint(fake: FakeStore)
             await server.call_tool("grep", {"query": "Popcorn"})
     finally:
         auth_context_var.reset(reset)
-    assert "request_tool" in str(exc.value) and "Unknown tool: grep" in str(exc.value)
+    message = str(exc.value)
+    assert "Unknown tool: grep" in message
+    assert "dembrane_request_tool" in message and "dembrane_list_tools" in message
+    assert "dembrane_search_transcripts" in message and " grep_conversation" not in message
     assert fake.audit[-1]["tool"] == "unknown_tool" and fake.audit[-1]["params"] == {
         "requested": "grep",
         "arguments": ["query"],
@@ -697,7 +708,8 @@ async def test_docs_list_read_and_grep_follow_the_assistant_semantics(
         {"path": "users/participant/index.md", "title": "For participants"},
     ]
     text = await knowledge.read_doc("users/host/index.md", offset=1, limit=2)
-    assert text.startswith("1: # For hosts\n2: ") and "call read_doc with offset=3" in text
+    assert text.startswith("1: # For hosts\n2: ")
+    assert "call dembrane_read_doc with offset=3" in text
     assert (await knowledge.read_doc("nope.md")).startswith("Not found: nope.md")
     hits = await knowledge.grep_docs("transcript", max_results=10)
     assert [(h["path"], h["line"]) for h in hits] == [
@@ -724,8 +736,22 @@ async def test_docs_tools_are_audited_and_need_no_org(
     app = _rest_app(_ctx(org_ids=[]))
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as ac:
         r = await ac.get("/v2/agent/docs/search", params={"pattern": "invited"})
-    assert r.status_code == 200 and r.json()[0]["path"] == "users/participant/index.md"
-    assert fake.audit[-1]["tool"] == "search_docs" and fake.audit[-1]["status"] == "ok"
+        index = await ac.get("/v2/agent/docs/search")
+    assert r.status_code == 200 and r.json()["pattern"] == "invited"
+    hit = r.json()["results"][0]
+    assert hit == {
+        "path": "users/participant/index.md",
+        "title": "For participants",
+        "line": 3,
+        "text": "Someone invited you.",
+    }
+    assert fake.audit[-1]["tool"] == "dembrane_search_docs" and fake.audit[-1]["status"] == "ok"
+    # No pattern: the page index, titles included, nothing line-numbered.
+    assert index.status_code == 200 and index.json()["pattern"] is None
+    assert [(p["path"], p["title"], p["line"]) for p in index.json()["results"]] == [
+        ("users/host/index.md", "For hosts", None),
+        ("users/participant/index.md", "For participants", None),
+    ]
     assert fake.usage == {}
 
 
@@ -779,7 +805,7 @@ async def test_search_transcripts_returns_snippets_and_keeps_locked_text_out(
     ):
         directus.get_items = AsyncMock(return_value=rows)
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as ac:
-            r = await ac.get("/v2/agent/projects/p1/search", params={"q": "membership fee"})
+            r = await ac.get("/v2/agent/projects/p1/search", params={"query": "membership fee"})
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["tokens"] == ["membership"] and body["has_more"] is False
@@ -790,8 +816,8 @@ async def test_search_transcripts_returns_snippets_and_keeps_locked_text_out(
     assert locked_hit["locked"] is True and locked_hit["matches"] == []
     assert locked_hit["summary"] is None
     assert fake.usage == {_ORG: 1}
-    assert fake.audit[-1]["tool"] == "search_transcripts" and fake.audit[-1]["status"] == "ok"
-    assert fake.audit[-1]["org_id"] == _ORG
+    assert fake.audit[-1]["tool"] == "dembrane_search_transcripts"
+    assert fake.audit[-1]["status"] == "ok" and fake.audit[-1]["org_id"] == _ORG
 
 
 @pytest.mark.asyncio
@@ -826,11 +852,19 @@ async def test_read_transcript_pages_and_marks_has_more(fake: FakeStore) -> None
     ):
         directus.get_items = AsyncMock(side_effect=_get_items)
         page = await T.read_transcript(_ctx(), "c1", offset=2, limit=2)
-        last = await T.read_transcript(_ctx(), "c1", offset=4, limit=2)
+        last = await T.read_transcript(_ctx(), "c1", offset=4, limit=2, format="detailed")
 
-    assert [c.id for c in page.chunks] == ["k2", "k3"] and page.chunks[0].transcript == "text 2"
-    assert page.total == 5 and page.has_more is True and page.transcript_locked is False
-    assert [c.id for c in last.chunks] == ["k4"] and last.has_more is False
+    # Concise chunks carry timestamp and text only; detailed adds the chunk id.
+    assert [c.model_dump() for c in page.chunks] == [
+        {"timestamp": "t2", "transcript": "text 2"},
+        {"timestamp": "t3", "transcript": "text 3"},
+    ]
+    assert page.format == "concise" and page.total == 5 and page.has_more is True
+    assert page.transcript_locked is False
+    assert [c.model_dump() for c in last.chunks] == [
+        {"id": "k4", "timestamp": "t4", "transcript": "text 4"}
+    ]
+    assert last.format == "detailed" and last.has_more is False
     assert fake.usage == {_ORG: 2}
 
 
@@ -842,7 +876,13 @@ async def test_find_projects_filters_to_the_grants_orgs_and_charges_nothing(
     from dembrane.toolkit.projects import ProjectHit
 
     hits = [
-        ProjectHit(id="p1", name="Members' strategy day", workspace_id="ws-1", org_id=_ORG),
+        ProjectHit(
+            id="p1",
+            name="Members' strategy day",
+            workspace_id="ws-1",
+            workspace_name="Research",
+            org_id=_ORG,
+        ),
         ProjectHit(id="p2", name="Members' offsite", workspace_id="ws-9", org_id="org-other"),
         ProjectHit(id="p3", name="Members' legacy", workspace_id=None, org_id=None),
     ]
@@ -852,11 +892,54 @@ async def test_find_projects_filters_to_the_grants_orgs_and_charges_nothing(
             "dembrane.agent_access.context.org_agent_access_enabled",
             new=AsyncMock(return_value=True),
         ),
+        patch("dembrane.agent_access.tools.async_directus") as directus,
     ):
+        directus.get_items = AsyncMock(return_value=[{"id": _ORG, "name": "Acme"}])
         out = await T.find_projects(_ctx(org_ids=[_ORG]), query="members", limit=10)
-    assert [h.id for h in out] == ["p1"]
-    assert find.call_args.args == ("members",) and find.call_args.kwargs["limit"] == 10
+        narrowed = await T.find_projects(
+            _ctx(org_ids=[_ORG]), query="members", workspace_id="ws-1", limit=10
+        )
+    assert out.query == "members" and out.workspace_id is None
+    assert [p.model_dump() for p in out.projects] == [
+        {
+            "id": "p1",
+            "name": "Members' strategy day",
+            "workspace_id": "ws-1",
+            "workspace_name": "Research",
+            "organisation_id": _ORG,
+            "organisation_name": "Acme",
+            "updated_at": None,
+        }
+    ]
+    assert find.call_args_list[0].args == ("members",)
+    assert find.call_args_list[0].kwargs["limit"] == 10
+    assert find.call_args_list[0].kwargs["workspace_id"] is None
+    # The workspace filter reaches the toolkit and is echoed back.
+    assert find.call_args_list[1].kwargs["workspace_id"] == "ws-1"
+    assert narrowed.workspace_id == "ws-1" and [p.id for p in narrowed.projects] == ["p1"]
     assert fake.usage == {}
+
+
+@pytest.mark.asyncio
+async def test_toolkit_find_projects_workspace_filter_narrows_to_a_reachable_one() -> None:
+    from dembrane.toolkit import projects as toolkit
+
+    with (
+        patch.object(toolkit, "get_app_user_or_raise", new=AsyncMock(return_value={"id": _USER})),
+        patch.object(
+            toolkit, "reachable_workspace_ids", new=AsyncMock(return_value=["ws-1", "ws-2"])
+        ),
+        patch.object(toolkit, "_workspaces_by_id", new=AsyncMock(return_value={})),
+        patch.object(toolkit, "get_user_project_access", new=AsyncMock(return_value=None)),
+        patch.object(toolkit, "async_directus") as directus,
+    ):
+        directus.get_items = AsyncMock(return_value=[])
+        session = DirectusSession(user_id=_DIRECTUS_USER, is_admin=False)
+        assert await toolkit.find_projects("x", limit=5, session=session, workspace_id="ws-9") == []
+        assert directus.get_items.call_count == 0
+        await toolkit.find_projects("x", limit=5, session=session, workspace_id="ws-2")
+    flt = directus.get_items.call_args.args[1]["query"]["filter"]
+    assert json.dumps(flt).count('"ws-2"') == 1 and '"ws-1"' not in json.dumps(flt)
 
 
 @pytest.mark.asyncio
@@ -883,8 +966,261 @@ async def test_list_conversations_date_bounds_land_in_the_directus_filter(
         )
         with pytest.raises(HTTPException) as exc:
             await T.list_conversations(_ctx(), "p1", created_after="last week")
-    assert out == []
+    assert out.conversations == [] and out.has_more is False and out.format == "concise"
     query = directus.get_items.call_args.args[1]["query"]
     assert query["filter"]["created_at"] == {"_gte": "2026-08-30", "_lte": "2026-09-06T00:00:00Z"}
     assert query["filter"]["project_id"] == {"_eq": "p1"} and query["limit"] == 101
     assert exc.value.status_code == 400
+
+
+# ── the reshaped surface ───────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_whoami_carries_organisations_with_their_workspaces(fake: FakeStore) -> None:
+    """One call answers who, where and with what role; an organisation whose
+    admin switched agent access off is named but its workspaces stay hidden."""
+    from dembrane.agent_access import tools as T
+
+    other = "org-2"
+
+    async def _get_items(collection: str, params: dict[str, Any]) -> Any:
+        flt = params["query"]["filter"]
+        if collection == "org":
+            return [{"id": _ORG, "name": "Acme"}, {"id": other, "name": "Beta"}]
+        if collection == "org_membership":
+            return [{"role": "admin"}] if flt["org_id"]["_eq"] == _ORG else []
+        if collection == "workspace":
+            return [{"id": "ws-1", "name": "Research", "org_id": _ORG}]
+        raise AssertionError(collection)
+
+    with (
+        patch("dembrane.agent_access.tools.async_directus") as directus,
+        patch("dembrane.agent_access.context.guest_org_ids", new=AsyncMock(return_value=[other])),
+        patch(
+            "dembrane.agent_access.context.org_agent_access_enabled",
+            new=AsyncMock(side_effect=lambda org_id: org_id == _ORG),
+        ),
+        patch(
+            "dembrane.inheritance.resolve_workspace_access",
+            new=AsyncMock(return_value=("member", "direct", {})),
+        ),
+        patch("dembrane.billing_account.billing_from_workspace", return_value={"tier": "pro"}),
+    ):
+        directus.get_item = AsyncMock(return_value={"email": "a@b.c", "display_name": "A"})
+        directus.get_items = AsyncMock(side_effect=_get_items)
+        me = await T.whoami(_ctx(org_ids=[_ORG, other]))
+
+    assert me.email == "a@b.c" and me.scopes == [SCOPE_READ] and me.client_name == "Test agent"
+    assert isinstance(me.build_version, str) and me.build_version
+    assert [o.model_dump() for o in me.organisations] == [
+        {
+            "id": _ORG,
+            "name": "Acme",
+            "role": "admin",
+            "agent_access_enabled": True,
+            "workspaces": [{"id": "ws-1", "name": "Research", "role": "member", "tier": "pro"}],
+        },
+        {
+            "id": other,
+            "name": "Beta",
+            "role": "guest",
+            "agent_access_enabled": False,
+            "workspaces": [],
+        },
+    ]
+    assert fake.usage == {}
+
+
+def _conversation_row(cid: str, **extra: Any) -> dict[str, Any]:
+    return {
+        "id": cid,
+        "project_id": "p1",
+        "title": f"Title {cid}",
+        "participant_name": f"Table {cid}",
+        "summary": f"Summary {cid}",
+        "duration": 60.0,
+        "is_finished": True,
+        "is_all_chunks_transcribed": True,
+        "is_over_cap": False,
+        "created_at": "2026-09-01T09:00:00Z",
+        "updated_at": "2026-09-01T09:30:00Z",
+        **extra,
+    }
+
+
+@pytest.mark.asyncio
+async def test_list_conversations_concise_and_detailed(fake: FakeStore) -> None:
+    from dembrane.agent_access import tools as T
+
+    access = MagicMock(workspace_id="ws-1", tier=None, org_id=_ORG, project_id="p1")
+    rows = [_conversation_row("c1"), _conversation_row("c2", is_all_chunks_transcribed=False)]
+    tag_rows = [{"conversation_id": "c1", "project_tag_id": {"text": "housing"}}]
+    with (
+        patch(
+            "dembrane.agent_access.tools._project_access",
+            new=AsyncMock(return_value=(access, _ORG)),
+        ),
+        patch(
+            "dembrane.toolkit.conversations.workspace_over_cap_active",
+            new=AsyncMock(return_value=False),
+        ),
+        patch("dembrane.toolkit.conversations.async_directus") as toolkit_directus,
+        patch("dembrane.agent_access.tools.async_directus") as tools_directus,
+    ):
+        toolkit_directus.get_items = AsyncMock(return_value=rows)
+        tools_directus.get_items = AsyncMock(return_value=tag_rows)
+        concise = await T.list_conversations(_ctx(), "p1")
+        detailed = await T.list_conversations(_ctx(), "p1", format="detailed", limit=1)
+
+    assert concise.format == "concise" and concise.has_more is False
+    assert [c.model_dump() for c in concise.conversations] == [
+        {
+            "id": "c1",
+            "participant_name": "Table c1",
+            "title": "Title c1",
+            "created_at": "2026-09-01T09:00:00Z",
+            "duration": 60.0,
+            "status": "done",
+        },
+        {
+            "id": "c2",
+            "participant_name": "Table c2",
+            "title": "Title c2",
+            "created_at": "2026-09-01T09:00:00Z",
+            "duration": 60.0,
+            "status": "processing",
+        },
+    ]
+    # Tags are read only for the detailed shape, and only for the page shown.
+    assert tools_directus.get_items.call_count == 1
+    assert tools_directus.get_items.call_args.args[1]["query"]["filter"] == {
+        "conversation_id": {"_in": ["c1"]}
+    }
+    assert detailed.format == "detailed" and detailed.has_more is True
+    assert [c.model_dump() for c in detailed.conversations] == [
+        {
+            "id": "c1",
+            "participant_name": "Table c1",
+            "title": "Title c1",
+            "created_at": "2026-09-01T09:00:00Z",
+            "duration": 60.0,
+            "status": "done",
+            "locked": False,
+            "summary": "Summary c1",
+            "tags": ["housing"],
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_get_conversation_is_metadata_only(fake: FakeStore) -> None:
+    from dembrane.agent_access import tools as T
+
+    access = MagicMock(workspace_id="ws-1", tier=None, org_id=_ORG, project_id="p1")
+
+    async def _get_items(collection: str, params: dict[str, Any]) -> Any:
+        if collection == "conversation_chunk":
+            assert "aggregate" in params["query"], "only a count, never the chunks"
+            return [{"count": {"id": "7"}}]
+        return [{"conversation_id": "c1", "project_tag_id": {"text": "housing"}}]
+
+    with (
+        patch(
+            "dembrane.agent_access.tools.resolve_conversation_access",
+            new=AsyncMock(return_value=(access, _conversation_row("c1"))),
+        ),
+        patch(
+            "dembrane.agent_access.context.org_agent_access_enabled",
+            new=AsyncMock(return_value=True),
+        ),
+        patch("dembrane.agent_access.context.org_is_paid", new=AsyncMock(return_value=False)),
+        patch(
+            "dembrane.agent_access.tools.workspace_over_cap_active",
+            new=AsyncMock(return_value=False),
+        ),
+        patch("dembrane.agent_access.tools.async_directus") as directus,
+    ):
+        directus.get_items = AsyncMock(side_effect=_get_items)
+        out = await T.get_conversation(_ctx(), "c1")
+
+    dumped = out.model_dump()
+    assert "transcript" not in dumped and "chunks" not in dumped
+    assert dumped["summary"] == "Summary c1" and dumped["tags"] == ["housing"]
+    assert dumped["chunk_count"] == 7 and dumped["status"] == "done" and dumped["locked"] is False
+    assert fake.usage == {_ORG: 1}
+
+
+def test_fit_cuts_the_longest_list_and_says_how_to_continue() -> None:
+    from dembrane.agent_access.mcp_server import MAX_RESULT_CHARS, fit
+
+    chunk = {"timestamp": "t", "transcript": "word " * 200}
+    page = {
+        "conversation_id": "c1",
+        "offset": 40,
+        "limit": 200,
+        "total": 500,
+        "has_more": False,
+        "transcript_locked": False,
+        "chunks": [dict(chunk) for _ in range(200)],
+    }
+    out = fit(page)
+    assert out["truncated"] is True and out["has_more"] is True
+    assert 0 < len(out["chunks"]) < 200
+    assert len(json.dumps(out, ensure_ascii=False)) <= MAX_RESULT_CHARS
+    assert f"offset={40 + len(out['chunks'])}" in out["note"]
+    assert f"{len(out['chunks'])} of 200 chunks" in out["note"]
+    # Every field other than the cut list survives untouched.
+    assert out["total"] == 500 and out["conversation_id"] == "c1"
+
+    # A tool without paging is told to narrow instead, and has_more is not invented.
+    flat = {"query": "x", "projects": [{"id": str(i), "name": "n" * 400} for i in range(400)]}
+    cut = fit(flat)
+    assert cut["truncated"] is True and "has_more" not in cut
+    assert "narrower query" in cut["note"] and len(cut["projects"]) < 400
+
+    # Under the cap, or with nothing to cut, the answer is returned as it was.
+    small = {"a": [1, 2, 3]}
+    assert fit(small) is small
+    prose = {"path": "x.md", "text": "y" * (MAX_RESULT_CHARS + 10)}
+    assert fit(prose) is prose
+
+
+@pytest.mark.asyncio
+async def test_list_tools_names_every_tool_with_its_read_only_flag(fake: FakeStore) -> None:
+    from dembrane.agent_access import USER_SERVER
+    from dembrane.agent_access.mcp_server import server, catalogue
+
+    out = await catalogue(_ctx())
+    names = [t.name for t in out.tools]
+    assert names == sorted(USER_SERVER.tools) and len(names) == 15
+    assert all(n.startswith("dembrane_") for n in names)
+    assert {t.name for t in out.tools if not t.read_only} == {
+        "dembrane_update_project",
+        "dembrane_report_issue",
+        "dembrane_request_tool",
+    }
+    assert all("\n" not in t.description and t.description.endswith(".") for t in out.tools)
+    assert isinstance(out.build_version, str) and out.build_version
+
+    # The registry agrees: every tool is annotated and none reaches outside dembrane.
+    registered = await server.list_tools()
+    assert sorted(t.name for t in registered) == names
+    for tool in registered:
+        assert tool.annotations is not None and tool.annotations.open_world_hint is False
+        if tool.name in {
+            "dembrane_update_project",
+            "dembrane_report_issue",
+            "dembrane_request_tool",
+        }:
+            assert tool.annotations.read_only_hint is False
+            assert tool.annotations.destructive_hint is False
+            assert tool.annotations.idempotent_hint is False
+        else:
+            assert tool.annotations.read_only_hint is True
+
+    app = _rest_app(_ctx())
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as ac:
+        r = await ac.get("/v2/agent/tools")
+    assert r.status_code == 200 and [t["name"] for t in r.json()["tools"]] == names
+    assert fake.audit[-1]["tool"] == "dembrane_list_tools" and fake.usage == {}
