@@ -123,7 +123,10 @@ async def read_doc(path: str, offset: int = 1, limit: int = MAX_READ_LINES) -> s
     data = await corpus()
     text = data.get(path.strip().lstrip("/"))
     if text is None:
-        return f"Not found: {path}. Use list_docs to see available paths."
+        return (
+            f"Not found: {path}. Call dembrane_search_docs without a pattern "
+            "to see every available path."
+        )
     lines = text.splitlines()
     start = max(offset, 1)
     end = min(start - 1 + max(1, min(limit, MAX_READ_LINES)), len(lines))
@@ -131,7 +134,7 @@ async def read_doc(path: str, offset: int = 1, limit: int = MAX_READ_LINES) -> s
     suffix = (
         ""
         if end >= len(lines)
-        else f"\n... ({len(lines) - end} more lines; call read_doc with offset={end + 1})"
+        else f"\n... ({len(lines) - end} more lines; call dembrane_read_doc with offset={end + 1})"
     )
     return "\n".join(numbered) + suffix
 

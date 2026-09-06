@@ -108,15 +108,23 @@ async def _workspaces_by_id(ws_ids: list[str]) -> dict[str, dict[str, Any]]:
 
 
 async def find_projects(
-    query: Optional[str], *, limit: int, session: DirectusSession
+    query: Optional[str],
+    *,
+    limit: int,
+    session: DirectusSession,
+    workspace_id: Optional[str] = None,
 ) -> list[ProjectHit]:
     """Projects the caller can open, across every workspace they can reach,
     most recently updated first. `query` matches the name, case-insensitive,
-    every word required. Fewer than `limit` may come back: the access ladder
-    filters after the read, so private projects without a share drop out."""
+    every word required. `workspace_id` narrows to one workspace; one the
+    caller cannot reach yields nothing rather than an error. Fewer than
+    `limit` may come back: the access ladder filters after the read, so
+    private projects without a share drop out."""
     app_user = await get_app_user_or_raise(session.user_id)
     app_user_id = str(app_user["id"])
     ws_ids = await reachable_workspace_ids(app_user_id)
+    if workspace_id:
+        ws_ids = [ws_id for ws_id in ws_ids if ws_id == workspace_id]
     if not ws_ids:
         return []
 
