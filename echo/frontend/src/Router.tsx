@@ -121,6 +121,14 @@ const UserSettingsRoute = createLazyNamedRoute(
 	() => import("./routes/settings/UserSettingsRoute"),
 	"UserSettingsRoute",
 );
+const AgentConsentRoute = createLazyNamedRoute(
+	() => import("./routes/settings/AgentConsentRoute"),
+	"AgentConsentRoute",
+);
+const ConnectAgentRoute = createLazyNamedRoute(
+	() => import("./routes/agent-access/ConnectAgentRoute"),
+	"ConnectAgentRoute",
+);
 const HostGuidePage = createLazyNamedRoute(
 	() => import("./routes/project/HostGuidePage"),
 	"HostGuidePage",
@@ -497,6 +505,29 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "w/:workspaceId",
+			},
+			{
+				// OAuth consent step for agent access. The backend redirects the
+				// agent's browser here with ?request=<id>, without a language
+				// prefix, so this must resolve with :language unset. No sidebar:
+				// the page is one decision, then a redirect back to the agent.
+				// Protected bounces a logged-out user to /login?next=... and
+				// Login honours next, so they land back here.
+				element: (
+					<Protected>
+						<AgentConsentRoute />
+					</Protected>
+				),
+				path: "settings/agents/authorize",
+			},
+			{
+				children: [{ element: <ConnectAgentRoute />, index: true }],
+				element: (
+					<Protected>
+						<BaseLayout />
+					</Protected>
+				),
+				path: "connect-agent",
 			},
 			{
 				children: [

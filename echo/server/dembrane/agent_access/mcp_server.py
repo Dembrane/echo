@@ -1,0 +1,348 @@
+"""The MCP server itself: one tool per function in `tools`, mounted inside
+the FastAPI app so it shares the process, the settings and the access code.
+
+Auth is the bearer access token from `oauth`. The SDK's middleware verifies
+it and parks it in a context variable; each tool reads it back, builds the
+AgentContext, runs, and records the audit row. Stateless HTTP with JSON
+responses, so any API replica can answer any call.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Optional
+from logging import getLogger
+from contextlib import asynccontextmanager
+from collections.abc import Callable, Awaitable, AsyncIterator
+
+from fastapi import HTTPException
+from pydantic import AnyHttpUrl
+from starlette.routing import Route
+from mcp.server.mcpserver import MCPServer
+from mcp.server.auth.routes import (
+    create_auth_routes,
+    create_protected_resource_routes,
+)
+from mcp.server.mcpserver.exceptions import ToolError
+from mcp.server.streamable_http_manager import StreamableHTTPASGIApp, StreamableHTTPSessionManager
+from starlette.middleware.authentication import AuthenticationMiddleware
+from mcp.server.auth.middleware.bearer_auth import (
+    BearerAuthBackend,
+    RequireAuthMiddleware,
+)
+from mcp.server.auth.middleware.auth_context import (
+    AuthContextMiddleware,
+    get_access_token,
+)
+
+from dembrane.agent_access import SCOPE_READ, USER_SERVER, tools as T
+from dembrane.agent_access.oauth import (
+    MCP_PATH,
+    AgentAccessToken,
+    AgentOAuthProvider,
+    issuer_url,
+    resource_url,
+    auth_settings,
+)
+from dembrane.agent_access.context import AgentContext, context_from_access_token
+
+logger = getLogger("agent_access.mcp")
+
+provider = AgentOAuthProvider()
+
+server = MCPServer(
+    name="dembrane",
+    instructions=(
+        "You are connected to dembrane as one person, limited to the organisations "
+        "they chose. Start with whoami, then list_organisations. Ids are UUIDs; pass "
+        "them between tools verbatim. Transcripts can be long: list first, then fetch "
+        "the conversations you need, at most 50 at a time."
+    ),
+    auth_server_provider=provider,
+    auth=auth_settings(),
+)
+
+
+async def _ctx() -> AgentContext:
+    token = get_access_token()
+    if not isinstance(token, AgentAccessToken):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return await context_from_access_token(token)
+
+
+async def _run(
+    tool: str,
+    params: dict[str, Any],
+    fn: Callable[[AgentContext], Awaitable[Any]],
+    *,
+    org_id: Optional[str] = None,
+) -> Any:
+    """Run one tool with audit. HTTP-style errors become tool errors the
+    agent can read; the status is recorded either way."""
+    ctx = await _ctx()
+    status = "ok"
+    try:
+        result = await fn(ctx)
+    except HTTPException as exc:
+        status = (
+            "limited"
+            if exc.status_code == 429
+            else "denied"
+            if exc.status_code in (401, 403, 404)
+            else "error"
+        )
+        await ctx.record(tool, params, org_id=org_id, status=status)
+        raise ToolError(f"{exc.status_code}: {exc.detail}") from None
+    except Exception:
+        await ctx.record(tool, params, org_id=org_id, status="error")
+        raise
+    await ctx.record(tool, params, org_id=org_id, status=status)
+    return result
+
+
+def _dump(model: Any) -> Any:
+    if isinstance(model, list):
+        return [m.model_dump() for m in model]
+    return model.model_dump()
+
+
+@server.tool(
+    name="whoami", description="Who the agent is acting as, the granted scopes and organisations."
+)
+async def whoami() -> dict[str, Any]:
+    return _dump(await _run("whoami", {}, T.whoami))
+
+
+@server.tool(
+    name="list_organisations",
+    description="Organisations this grant can reach, with the user's role in each.",
+)
+async def list_organisations() -> list[dict[str, Any]]:
+    return _dump(await _run("list_organisations", {}, T.list_organisations))
+
+
+@server.tool(
+    name="list_workspaces", description="Workspaces in one organisation that the user can see."
+)
+async def list_workspaces(organisation_id: str) -> list[dict[str, Any]]:
+    return _dump(
+        await _run(
+            "list_workspaces",
+            {"organisation_id": organisation_id},
+            lambda c: T.list_workspaces(c, organisation_id),
+            org_id=organisation_id,
+        )
+    )
+
+
+@server.tool(name="list_projects", description="Projects in one workspace. Optional name search.")
+async def list_projects(
+    workspace_id: str, search: Optional[str] = None, limit: int = 50
+) -> list[dict[str, Any]]:
+    return _dump(
+        await _run(
+            "list_projects",
+            {"workspace_id": workspace_id, "search": search, "limit": limit},
+            lambda c: T.list_projects(c, workspace_id, search=search, limit=limit),
+        )
+    )
+
+
+@server.tool(name="get_project", description="One project's settings.")
+async def get_project(project_id: str) -> dict[str, Any]:
+    return _dump(
+        await _run(
+            "get_project", {"project_id": project_id}, lambda c: T.get_project(c, project_id)
+        )
+    )
+
+
+@server.tool(
+    name="update_project",
+    description="Change project settings. Needs the write scope. Only the fields you pass are changed.",
+)
+async def update_project(
+    project_id: str,
+    name: Optional[str] = None,
+    context: Optional[str] = None,
+    language: Optional[str] = None,
+    is_conversation_allowed: Optional[bool] = None,
+    default_conversation_title: Optional[str] = None,
+    default_conversation_description: Optional[str] = None,
+    default_conversation_finish_text: Optional[str] = None,
+) -> dict[str, Any]:
+    fields = {
+        k: v
+        for k, v in {
+            "name": name,
+            "context": context,
+            "language": language,
+            "is_conversation_allowed": is_conversation_allowed,
+            "default_conversation_title": default_conversation_title,
+            "default_conversation_description": default_conversation_description,
+            "default_conversation_finish_text": default_conversation_finish_text,
+        }.items()
+        if v is not None
+    }
+    body = T.ProjectUpdateIn.model_validate(fields)
+    return _dump(
+        await _run(
+            "update_project",
+            {"project_id": project_id, "fields": sorted(fields)},
+            lambda c: T.update_project(c, project_id, body),
+        )
+    )
+
+
+@server.tool(
+    name="list_conversations",
+    description="Conversations in a project: id, title, participant, summary, duration. No transcripts here.",
+)
+async def list_conversations(
+    project_id: str,
+    search: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    sort: T.ConversationSort = "-created_at",
+) -> list[dict[str, Any]]:
+    return _dump(
+        await _run(
+            "list_conversations",
+            {
+                "project_id": project_id,
+                "search": search,
+                "limit": limit,
+                "offset": offset,
+                "sort": sort,
+            },
+            lambda c: T.list_conversations(
+                c, project_id, search=search, limit=limit, offset=offset, sort=sort
+            ),
+        )
+    )
+
+
+@server.tool(
+    name="get_conversation", description="One conversation with its full transcript and tags."
+)
+async def get_conversation(conversation_id: str) -> dict[str, Any]:
+    return _dump(
+        await _run(
+            "get_conversation",
+            {"conversation_id": conversation_id},
+            lambda c: T.get_conversation(c, conversation_id),
+        )
+    )
+
+
+@server.tool(
+    name="get_conversations",
+    description=f"Up to {T.BATCH_MAX} conversations with transcripts in one call. Unknown ids are skipped.",
+)
+async def get_conversations(conversation_ids: list[str]) -> list[dict[str, Any]]:
+    return _dump(
+        await _run(
+            "get_conversations",
+            {"conversation_ids": conversation_ids[: T.BATCH_MAX], "count": len(conversation_ids)},
+            lambda c: T.get_conversations(c, conversation_ids),
+        )
+    )
+
+
+@server.tool(
+    name="list_project_webhooks",
+    description="Webhooks on a project: name, URL, events, status. Never the secret.",
+)
+async def list_project_webhooks(project_id: str) -> list[dict[str, Any]]:
+    return _dump(
+        await _run(
+            "list_project_webhooks",
+            {"project_id": project_id},
+            lambda c: T.list_project_webhooks(c, project_id),
+        )
+    )
+
+
+# ── mounting into FastAPI ──────────────────────────────────────────────────
+
+_session_manager: Optional[StreamableHTTPSessionManager] = None
+
+
+def _manager() -> StreamableHTTPSessionManager:
+    global _session_manager
+    if _session_manager is None:
+        _session_manager = StreamableHTTPSessionManager(
+            app=server._lowlevel_server,
+            json_response=True,
+            stateless=True,
+            security_settings=None,
+        )
+    return _session_manager
+
+
+@asynccontextmanager
+async def lifespan() -> AsyncIterator[None]:
+    """Run inside the FastAPI lifespan so the session manager's task group
+    lives as long as the app."""
+    async with _manager().run():
+        yield
+
+
+def routes() -> list[Route]:
+    """Everything the MCP surface needs, ready for `app.router.routes.extend`.
+
+    Issuer is `<api>/api/mcp`, so the OAuth endpoints sit under it
+    (/api/mcp/authorize, /token, /register, /revoke) and the two metadata
+    documents are served at the host root paths RFC 8414 and RFC 9728
+    prescribe for a path-bearing issuer, plus the path-relative form for
+    clients that look there first.
+    """
+    settings = auth_settings()
+    auth_routes = create_auth_routes(
+        provider=provider,
+        issuer_url=settings.issuer_url,
+        client_registration_options=settings.client_registration_options,
+        revocation_options=settings.revocation_options,
+    )
+    metadata_route = next(r for r in auth_routes if r.path.startswith("/.well-known/"))
+    endpoint_routes = [r for r in auth_routes if not r.path.startswith("/.well-known/")]
+
+    asgi = RequireAuthMiddleware(
+        StreamableHTTPASGIApp(_manager()),
+        required_scopes=[SCOPE_READ],
+        resource_metadata_url=AnyHttpUrl(
+            str(settings.resource_server_url).rstrip("/").replace(MCP_PATH, "")
+            + "/.well-known/oauth-protected-resource"
+            + MCP_PATH
+        ),
+    )
+    protected = AuthContextMiddleware(asgi)
+    authenticated = AuthenticationMiddleware(protected, backend=BearerAuthBackend(provider))
+
+    prefixed = [
+        Route(MCP_PATH + r.path, endpoint=r.endpoint, methods=list(r.methods or []))
+        for r in endpoint_routes
+    ]
+    return [
+        # The MCP endpoint itself. A flat route, not a Mount, so `/api/mcp`
+        # answers directly and no client is bounced through a slash redirect.
+        Route(MCP_PATH, endpoint=authenticated, methods=["GET", "POST", "DELETE"]),
+        # RFC 8414 root form for a path-bearing issuer, plus the path-relative
+        # form some clients try first.
+        Route(
+            "/.well-known/oauth-authorization-server" + MCP_PATH,
+            endpoint=metadata_route.endpoint,
+            methods=["GET", "OPTIONS"],
+        ),
+        Route(
+            MCP_PATH + "/.well-known/oauth-authorization-server",
+            endpoint=metadata_route.endpoint,
+            methods=["GET", "OPTIONS"],
+        ),
+        *create_protected_resource_routes(
+            resource_url=AnyHttpUrl(resource_url()),
+            authorization_servers=[AnyHttpUrl(issuer_url())],
+            scopes_supported=[SCOPE_READ, "write"],
+            resource_name=USER_SERVER.name,
+        ),
+        *prefixed,
+    ]
