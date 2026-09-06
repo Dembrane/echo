@@ -38,7 +38,11 @@ STAKEHOLDERS_PROMPT = "stakeholders-v0.9"
 
 # Gemini counts its thinking against maxOutputTokens, and the analysis calls
 # think by default, so a tight cap truncates the JSON mid-array.
-ANALYSIS_MAX_TOKENS = 32000
+# Gemini counts thinking against the answer budget, and a long table's
+# exhaustive positions call thinks hard (30,719 reasoning tokens on a
+# 97,000-character transcript, gemini-2.5-flash, September 6th 2026): at
+# 32,000 the answer was cut mid-string. 65,536 is the model's own ceiling.
+ANALYSIS_MAX_TOKENS = 65536
 
 # The second pass thinks, and Gemini counts thinking against the output cap.
 ENRICH_MAX_TOKENS = 8000
@@ -131,7 +135,31 @@ async def _structured_completion(
     response = await asyncio.wait_for(
         arouter_completion(popcorn_model(), **kwargs), timeout=timeout
     )
-    return _json_from_text(_choice_text(response))
+    text = _choice_text(response)
+    try:
+        return _json_from_text(text)
+    except ValueError as exc:
+        # A cut-off answer (finish_reason "length": the budget went to
+        # thinking) reads as a JSON error; the log should say which it was.
+        raise ValueError(
+            f"model answer did not parse ({_answer_facts(response, text)}): {exc}"
+        ) from exc
+
+
+def _answer_facts(response: Any, text: str) -> str:
+    """finish_reason and the token counts, for a log line about a bad answer."""
+    try:
+        finish = response.choices[0].finish_reason
+    except Exception:
+        finish = None
+    usage = getattr(response, "usage", None)
+    completion = getattr(usage, "completion_tokens", None)
+    details = getattr(usage, "completion_tokens_details", None)
+    reasoning = getattr(details, "reasoning_tokens", None)
+    return (
+        f"finish_reason={finish}, {len(text)} chars, "
+        f"completion_tokens={completion}, reasoning_tokens={reasoning}"
+    )
 
 
 def _phrase_message(transcript_id: str, transcript: str, phrase: str, label: str) -> str:

@@ -368,6 +368,41 @@ def test_a_failed_stage_cancels_its_siblings() -> None:
     assert cancelled == ["t2"]
 
 
+def test_a_call_that_fails_once_is_asked_again_and_a_second_failure_names_it() -> None:
+    """The handed call times out once and answers the second time; the
+    positions call answers badly twice, and the error says so by name."""
+    seen: dict[str, int] = {"handed": 0, "positions": 0}
+
+    async def generate(
+        *, system_prompt: str, user_text: str, schema: dict[str, Any], thinking: bool
+    ) -> dict[str, Any]:
+        if schema is HANDED_SCHEMA:
+            seen["handed"] += 1
+            if seen["handed"] == 1:
+                raise TimeoutError()
+            return {"handed": []}
+        if schema is POSITIONS_SCHEMA:
+            seen["positions"] += 1
+            raise ValueError("model answer did not parse (finish_reason=length)")
+        raise AssertionError("unexpected schema")
+
+    book = QuoteBook({"t1": T1})
+    caught: list[BaseException] = []
+
+    async def run() -> None:
+        try:
+            await run_pipeline({"t1": T1}, book, generate=generate, prompts=PROMPTS)
+        except* ValueError as group:
+            caught.extend(group.exceptions)
+
+    asyncio.run(run())
+    assert seen == {"handed": 2, "positions": 2}
+    assert len(caught) == 1
+    assert str(caught[0]).startswith(
+        "positions call answered badly twice: model answer did not parse"
+    )
+
+
 def test_the_best_pair_of_every_table_is_verified() -> None:
     from dembrane.popcorn import tensions as mod
 

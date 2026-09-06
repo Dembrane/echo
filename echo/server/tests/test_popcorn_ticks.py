@@ -497,6 +497,26 @@ def test_a_stuck_stakeholders_call_fails_the_slide_instead_of_the_tick(
     assert "stakeholders: FAILED" in fake.created["agent_loop_run"][-1]["detail"]
 
 
+def test_a_failed_pipeline_stage_names_its_sub_exception(fake: _FakeDirectus, monkeypatch) -> None:
+    """The tensions pipeline fails as a task group; the outcome line carries
+    the sub-exception, not the group's own "unhandled errors" message."""
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+
+    async def _cut_off(sources: dict[str, str], book: Any) -> dict[str, Any]:  # noqa: ARG001
+        raise ExceptionGroup(
+            "unhandled errors in a TaskGroup",
+            [ValueError("model answer did not parse (finish_reason=length, 5306 chars)")],
+        )
+
+    monkeypatch.setattr(ticks, "run_tensions_pipeline", _cut_off)
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    assert result["status"] == "ok"
+    detail = fake.created["agent_loop_run"][-1]["detail"]
+    assert "tensions: FAILED model answer did not parse (finish_reason=length" in detail
+    assert "unhandled errors" not in detail
+
+
 def test_failed_extractor_does_not_stall_the_stage(fake: _FakeDirectus, monkeypatch) -> None:
     calls: list[str] = []
     _install_models(monkeypatch, calls=calls, fail_for={"c2"})

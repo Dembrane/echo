@@ -782,7 +782,7 @@ async def _run_analysis_pass(
     results = await asyncio.gather(*(jobs[kind]() for kind in wanted), return_exceptions=True)
     for kind, exc in zip(wanted, results, strict=True):
         if isinstance(exc, BaseException):
-            outcomes.append(f"{kind}: FAILED {exc}")
+            outcomes.append(f"{kind}: FAILED {_failure_text(exc)}")
             shaped[kind] = None
     outcomes.append(
         f"quotes: {len(book.quotes)} verified, {book.rejected} rejected"
@@ -793,6 +793,16 @@ async def _run_analysis_pass(
         )
     )
     return shaped
+
+
+def _failure_text(exc: BaseException) -> str:
+    """What failed, in the outcome line. A pipeline stage fails as a task
+    group, whose own message ("unhandled errors in a TaskGroup") says nothing;
+    the sub-exceptions do."""
+    subs = getattr(exc, "exceptions", None)
+    if subs:
+        return "; ".join(_failure_text(sub) for sub in subs)
+    return str(exc)[:300] or type(exc).__name__
 
 
 def _stale_views(state: dict[str, Any], analysis_fingerprint: str) -> list[str]:

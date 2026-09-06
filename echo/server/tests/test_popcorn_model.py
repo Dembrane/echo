@@ -38,3 +38,31 @@ def test_prompts_are_the_versioned_snapshots() -> None:
     assert "Version: `popcorn-validate-v1.1`" in model.prompt_text(model.VALIDATE_PROMPT)
     assert "Version: `popcorn-kind-v3`" in model.prompt_text(model.KIND_PROMPT)
     assert "Version: `popcorn-question-v1`" in model.prompt_text(model.QUESTION_PROMPT)
+
+
+def test_a_cut_off_answer_says_why(monkeypatch) -> None:
+    """Thinking that eats the answer budget comes back as JSON cut mid-string;
+    the error names the finish reason and the token counts, and the analysis
+    calls ask for the model's whole output ceiling."""
+    from types import SimpleNamespace
+
+    seen: dict[str, Any] = {}
+
+    async def _cut(_group: Any, **kwargs: Any) -> Any:
+        seen.update(kwargs)
+        details = SimpleNamespace(reasoning_tokens=30719)
+        usage = SimpleNamespace(completion_tokens=31986, completion_tokens_details=details)
+        choice = SimpleNamespace(
+            finish_reason="length",
+            message=SimpleNamespace(content='{"positions": [{"position": "we should keep the'),
+        )
+        return SimpleNamespace(choices=[choice], usage=usage)
+
+    monkeypatch.setattr(model, "arouter_completion", _cut)
+    with pytest.raises(ValueError, match="finish_reason=length.*reasoning_tokens=30719"):
+        asyncio.run(
+            model.analysis_call(
+                system_prompt="p", user_text="t", schema={"type": "object"}, thinking=True
+            )
+        )
+    assert seen["max_tokens"] == 65536

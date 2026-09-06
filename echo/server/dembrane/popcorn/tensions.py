@@ -277,14 +277,36 @@ async def run_pipeline(
         )
 
     async def gen(
-        system: str, user: str, schema: dict[str, Any], thinking: bool = True
+        system: str,
+        user: str,
+        schema: dict[str, Any],
+        thinking: bool = True,
+        label: str = "model",
     ) -> dict[str, Any]:
+        """One bounded call, tried twice: a call that times out or answers in
+        broken JSON is asked once more (the lab's runner retries too), and a
+        second failure names the call in its error so the tick's outcome line
+        says which stage died, not just that a task group did."""
         async with sem:
-            calls["n"] += 1
-            return await asyncio.wait_for(
-                generate(system_prompt=system, user_text=user, schema=schema, thinking=thinking),
-                timeout=CALL_TIMEOUT_SECONDS,
-            )
+            for attempt in (1, 2):
+                calls["n"] += 1
+                try:
+                    return await asyncio.wait_for(
+                        generate(
+                            system_prompt=system, user_text=user, schema=schema, thinking=thinking
+                        ),
+                        timeout=CALL_TIMEOUT_SECONDS,
+                    )
+                except (TimeoutError, ValueError) as exc:
+                    if attempt == 1:
+                        logger.warning("popcorn %s call failed once, asking again: %s", label, exc)
+                        continue
+                    if isinstance(exc, TimeoutError):
+                        raise TimeoutError(
+                            f"{label} call took more than {CALL_TIMEOUT_SECONDS} s, twice"
+                        ) from exc
+                    raise ValueError(f"{label} call answered badly twice: {exc}") from exc
+            raise AssertionError("unreachable")
 
     # 0. what the rooms were handed, over the whole corpus. Its quotes are
     # checked like every other: an item whose quote is nowhere in the
@@ -292,7 +314,9 @@ async def run_pipeline(
     # framing it describes cannot reject a tension on the same footing as a
     # framing the rooms can be heard reading.
     async def handed_list() -> list[dict[str, Any]]:
-        out = await gen(prompts["tensions-handed"], _corpus(transcripts, tids), HANDED_SCHEMA)
+        out = await gen(
+            prompts["tensions-handed"], _corpus(transcripts, tids), HANDED_SCHEMA, label="handed"
+        )
         items = []
         for h in out.get("handed") or []:
             if not isinstance(h, dict):
@@ -309,6 +333,7 @@ async def run_pipeline(
             prompts["positions"],
             f"TRANSCRIPT id: {tid}\n{transcripts[tid]}\nEND TRANSCRIPT",
             POSITIONS_SCHEMA,
+            label="positions",
         )
         found = []
         for p in (out.get("positions") or [])[:MAX_POSITIONS_PER_TRANSCRIPT]:
@@ -363,6 +388,7 @@ async def run_pipeline(
             prompts["collisions"],
             f"ALL POSITIONS:\n{listing}\n\nFOCAL POSITION: {p['id']}",
             COLLISIONS_SCHEMA,
+            label="collisions",
         )
         return p["id"], [c for c in (out.get("collides") or []) if isinstance(c, dict)]
 
@@ -424,7 +450,7 @@ async def run_pipeline(
             f'B ({b.get("holder")}, {b.get("kind")}): {b["position"]}\n   said: "{b.get("quote")}"\n'
             f"Flagged because: {c['why']}"
         )
-        out = await gen(prompts["tension-verify"], user, VERIFY_SCHEMA)
+        out = await gen(prompts["tension-verify"], user, VERIFY_SCHEMA, label="verify")
 
         def located(raw: Any, own: str, other: str) -> list[dict[str, str]]:
             """The pole's quotes that are word for word in one of the two
@@ -475,6 +501,7 @@ async def run_pipeline(
             f"KEPT:\n{listing_kept}\n\nNEW: {v['poleA']} / {v['poleB']}\n  (from: {v['why']})",
             DEDUPE_SCHEMA,
             thinking=False,
+            label="dedupe",
         )
         same = str(out.get("same_as") or "").strip()
         target = next((k for k in kept if k["id"] == same), None) if same else None
@@ -533,7 +560,7 @@ async def run_pipeline(
                 "toResolve": str(out.get("toResolve") or "").strip(),
             }
 
-        t = shaped(await gen(prompts["tension-write"], user, WRITE_SCHEMA))
+        t = shaped(await gen(prompts["tension-write"], user, WRITE_SCHEMA, label="write"))
         flags = screen_flags({"tensions": [t]})
         if flags:
             retry_prompt = (
@@ -542,7 +569,7 @@ async def run_pipeline(
                 + "\n".join(f"- {f}" for f in flags)
                 + "\n\nFix every one of them."
             )
-            t = shaped(await gen(retry_prompt, user, WRITE_SCHEMA))
+            t = shaped(await gen(retry_prompt, user, WRITE_SCHEMA, label="write"))
             flags = screen_flags({"tensions": [t]})
         return t, flags
 
