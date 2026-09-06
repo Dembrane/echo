@@ -74,6 +74,8 @@ USER_SERVER = ServerDescriptor(
         "get_conversation",
         "get_conversations",
         "list_project_webhooks",
+        "report_issue",
+        "request_tool",
     ],
 )
 

@@ -32,6 +32,7 @@ logger = getLogger("agent_access.context")
 class AgentContext:
     grant_id: str
     client_id: str
+    client_name: str
     app_user_id: str
     directus_user_id: str
     org_ids: list[str]
@@ -111,6 +112,7 @@ async def context_from_access_token(token: AgentAccessToken) -> AgentContext:
     return AgentContext(
         grant_id=grant["id"],
         client_id=str(grant.get("client_id")),
+        client_name=str(grant.get("client_name") or "agent"),
         app_user_id=str(grant["app_user_id"]),
         directus_user_id=str(grant["directus_user_id"]),
         org_ids=[str(o) for o in (grant.get("org_ids") or [])],

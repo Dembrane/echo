@@ -10,6 +10,7 @@ names and text it needs, not raw Directus rows.
 
 from __future__ import annotations
 
+import json
 from typing import Any, Literal, Optional
 
 from fastapi import HTTPException
@@ -98,6 +99,12 @@ class ConversationOut(ConversationSummaryOut):
     transcript_locked: bool = False
     chunk_count: int = 0
     tags: list[str] = []
+
+
+class TicketOut(BaseModel):
+    id: str
+    status: str
+    kind: Literal["issue", "tool_request"]
 
 
 class WebhookOut(BaseModel):
@@ -487,3 +494,104 @@ async def list_project_webhooks(ctx: AgentContext, project_id: str) -> list[Webh
         )
         for w in (rows if isinstance(rows, list) else [])
     ]
+
+
+# ── reporting back to dembrane ─────────────────────────────────────────────
+
+SUPPORT_SOURCE = "agent_mcp"
+MAX_TICKET_CHARS = 4000
+
+
+def _clip(text: str, limit: int = MAX_TICKET_CHARS) -> str:
+    text = (text or "").strip()
+    return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+async def _file_support_request(
+    ctx: AgentContext,
+    *,
+    kind: Literal["issue", "tool_request"],
+    message: str,
+    project_id: Optional[str] = None,
+    workspace_id: Optional[str] = None,
+    context: Optional[dict[str, Any]] = None,
+) -> TicketOut:
+    """One support_request row, source agent_mcp. The existing forwarder
+    picks it up like any other row, so an agent's report lands in the same
+    triage thread as a host's. Never transcript content."""
+    page_context = {
+        "source": SUPPORT_SOURCE,
+        "kind": kind,
+        "client_name": ctx.client_name,
+        "client_id": ctx.client_id,
+        "grant_id": ctx.grant_id,
+        **(context or {}),
+    }
+    created = await async_directus.create_item(
+        "support_request",
+        {
+            "directus_user_id": ctx.directus_user_id,
+            "app_user_id": ctx.app_user_id,
+            "workspace_id": workspace_id,
+            "project_id": project_id,
+            "message": message,
+            "page_context": json.dumps(page_context),
+            "status": "new",
+            "source": SUPPORT_SOURCE,
+        },
+    )
+    row = created.get("data") if isinstance(created, dict) and "data" in created else created
+    return TicketOut(id=str((row or {}).get("id") or ""), status="new", kind=kind)
+
+
+async def report_issue(
+    ctx: AgentContext,
+    message: str,
+    project_id: Optional[str] = None,
+    conversation_id: Optional[str] = None,
+) -> TicketOut:
+    """An agent reports something wrong with dembrane: a bad transcript, a
+    tool that errored, data that looks off. Scoped to a project when the
+    agent can name one, so the team lands in the right place."""
+    if not (message or "").strip():
+        raise HTTPException(status_code=400, detail="message is required")
+    workspace_id: Optional[str] = None
+    org_id: Optional[str] = None
+    if conversation_id and not project_id:
+        access, _conv = await resolve_conversation_access(conversation_id, ctx.session)
+        project_id = access.project_id
+    if project_id:
+        access, org_id = await _project_access(ctx, project_id)
+        workspace_id = access.workspace_id
+    body = f"[{ctx.client_name} via MCP] {_clip(message)}"
+    if conversation_id:
+        body += f"\nConversation: {conversation_id}"
+    return await _file_support_request(
+        ctx,
+        kind="issue",
+        message=body,
+        project_id=project_id,
+        workspace_id=workspace_id,
+        context={"conversation_id": conversation_id, "org_id": org_id},
+    )
+
+
+async def request_tool(
+    ctx: AgentContext,
+    name: str,
+    description: str,
+    example: Optional[str] = None,
+) -> TicketOut:
+    """An agent asks for a tool that does not exist yet. The description is
+    what it wanted to do, in its own words; that is the signal we mine."""
+    if not (name or "").strip() or not (description or "").strip():
+        raise HTTPException(status_code=400, detail="name and description are required")
+    body = f"[{ctx.client_name} via MCP] Tool request: {_clip(name, 120)}\n{_clip(description)}"
+    if example:
+        body += f"\nExample: {_clip(example, 1000)}"
+    return await _file_support_request(
+        ctx,
+        kind="tool_request",
+        message=body,
+        context={"tool_name": name.strip()},
+    )

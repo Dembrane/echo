@@ -49,13 +49,40 @@ logger = getLogger("agent_access.mcp")
 
 provider = AgentOAuthProvider()
 
-server = MCPServer(
+
+class DembraneMCPServer(MCPServer):
+    """Records the tools agents reach for and do not find. The SDK rejects an
+    unknown name before any tool code runs, so this is the only place to see
+    it; the audit row is the signal behind the tool roadmap."""
+
+    async def call_tool(self, name: str, arguments: dict[str, Any], context: Any = None) -> Any:
+        known = sorted(t.name for t in self._tool_manager.list_tools())
+        if name not in known:
+            try:
+                ctx = await _ctx()
+                await ctx.record(
+                    "unknown_tool",
+                    {"requested": name, "arguments": sorted(arguments or {})},
+                    org_id=None,
+                    status="denied",
+                )
+            except Exception:  # noqa: BLE001 — logging must not change the answer
+                logger.warning("unknown tool %s requested, audit skipped", name)
+            raise ToolError(
+                f"Unknown tool: {name}. Available: {', '.join(known)}. "
+                "If you needed something else, call request_tool with what you wanted to do."
+            )
+        return await super().call_tool(name, arguments, context)
+
+
+server = DembraneMCPServer(
     name="dembrane",
     instructions=(
         "You are connected to dembrane as one person, limited to the organisations "
         "they chose. Start with whoami, then list_organisations. Ids are UUIDs; pass "
         "them between tools verbatim. Transcripts can be long: list first, then fetch "
-        "the conversations you need, at most 50 at a time."
+        "the conversations you need, at most 50 at a time. If something looks wrong, "
+        "call report_issue; if a tool you need does not exist, call request_tool."
     ),
     auth_server_provider=provider,
     auth=auth_settings(),
@@ -244,6 +271,50 @@ async def get_conversations(conversation_ids: list[str]) -> list[dict[str, Any]]
             "get_conversations",
             {"conversation_ids": conversation_ids[: T.BATCH_MAX], "count": len(conversation_ids)},
             lambda c: T.get_conversations(c, conversation_ids),
+        )
+    )
+
+
+@server.tool(
+    name="report_issue",
+    description=(
+        "Report something wrong with dembrane to its team: a broken transcript, a tool "
+        "that errored, data that looks off. Name the project or conversation when you can."
+    ),
+)
+async def report_issue(
+    message: str, project_id: Optional[str] = None, conversation_id: Optional[str] = None
+) -> dict[str, Any]:
+    return _dump(
+        await _run(
+            "report_issue",
+            {
+                "project_id": project_id,
+                "conversation_id": conversation_id,
+                "chars": len(message or ""),
+            },
+            lambda c: T.report_issue(
+                c, message, project_id=project_id, conversation_id=conversation_id
+            ),
+        )
+    )
+
+
+@server.tool(
+    name="request_tool",
+    description=(
+        "Ask dembrane for a tool that does not exist yet. Say what you wanted to do, in your "
+        "own words, and give one example call you wish had worked."
+    ),
+)
+async def request_tool(
+    name: str, description: str, example: Optional[str] = None
+) -> dict[str, Any]:
+    return _dump(
+        await _run(
+            "request_tool",
+            {"name": name, "chars": len(description or "")},
+            lambda c: T.request_tool(c, name, description, example=example),
         )
     )
 

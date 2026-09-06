@@ -2283,6 +2283,7 @@ def build_support_request_forward_payload(
     }
     for key in (
         "page_context",
+        "source",
         "created_at",
         "chat_id",
         "project_id",
@@ -2343,6 +2344,7 @@ def task_forward_support_requests() -> None:
                         "id",
                         "message",
                         "page_context",
+                        "source",
                         "created_at",
                         "chat_id",
                         "project_id",

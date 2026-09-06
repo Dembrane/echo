@@ -12,7 +12,9 @@ An AI agent connects to dembrane as one person and sees exactly what that person
 | `/api/v2/agent/*` | OAuth access token | Same tools as REST |
 | `/api/v2/agent-access/*` | cookie session | Consent step, grants, org switch, audit |
 
-Tools: `whoami`, `list_organisations`, `list_workspaces`, `list_projects`, `get_project`, `update_project` (write scope), `list_conversations`, `get_conversation`, `get_conversations` (max 50), `list_project_webhooks`.
+Tools: `whoami`, `list_organisations`, `list_workspaces`, `list_projects`, `get_project`, `update_project` (write scope), `list_conversations`, `get_conversation`, `get_conversations` (max 50), `list_project_webhooks`, `report_issue`, `request_tool`.
+
+`report_issue` and `request_tool` write `support_request` rows with `source = agent_mcp` (kind and agent details in `page_context`), so the existing forwarder carries them into the same triage thread as a host's report. A call to a tool that does not exist is recorded as an `unknown_tool` audit row with the requested name, and the error message points the agent at `request_tool`. Those three rows are the signal for which tools to add next.
 
 ## Flow
 
