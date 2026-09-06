@@ -39,7 +39,7 @@ export const SidebarShell = ({
 				aria-modal={mobileOpen ? "true" : undefined}
 				aria-label={mobileOpen ? "Navigation" : undefined}
 				className={cn(
-					"flex h-screen flex-col border-r print:hidden",
+					"flex h-dvh max-h-dvh flex-col border-r print:hidden",
 					mobileOpen
 						? "fixed inset-y-0 left-0 z-50 max-w-[85vw] shadow-xl"
 						: "relative",
@@ -53,13 +53,16 @@ export const SidebarShell = ({
 				}}
 			>
 				{header ?? null}
-				<div className="flex-1 overflow-x-hidden overflow-y-auto">
+				<div className="flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
 					<div className="flex min-h-full flex-col">{children}</div>
 				</div>
 				{footer ? (
 					<div
 						className="flex flex-col gap-0.5 border-t p-1.5"
-						style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
+						style={{
+							borderColor: "rgba(45, 45, 44, 0.06)",
+							paddingBottom: "max(0.375rem, env(safe-area-inset-bottom, 0px))",
+						}}
 					>
 						{footer}
 					</div>
