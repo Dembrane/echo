@@ -1,10 +1,8 @@
-"""Model calls for popcorn, using the prompts exactly as versioned upstream.
+"""Model calls for popcorn.
 
-The prompt files under `prompts/` are immutable snapshots copied from
-Dembrane/popcorn (popcorn-v1.4 at commit 7c3d1cf; popcorn-v1.5, v1.6 and the
-second-pass prompts at commit 8c23eba; popcorn-v1.7 is v1.6 without the
-weight section, platform-side, September 5th 2026). A prompt iteration is a
-new file plus a new version constant here, never an edit in place.
+The prompt files under `prompts/` are the versions in use. A prompt iteration
+is a new file plus a new version constant here, never an edit in place, so a
+stored run can always name the prompt that produced it.
 
 Every popcorn call goes through the platform's fast multimodal group
 (`popcorn_model()`), bounded by a timeout per kind of call.
@@ -31,9 +29,6 @@ POPCORN_PROMPT = "popcorn-v1.7"
 VALIDATE_PROMPT = "popcorn-validate"
 KIND_PROMPT = "popcorn-kind"
 QUESTION_PROMPT = "popcorn-question"
-TENSIONS_PROMPT = (
-    "tensions"  # the single-call slide, kept for the record; the tick runs the pipeline
-)
 STAKEHOLDERS_PROMPT = "stakeholders-v0.9"
 
 # Gemini counts its thinking against maxOutputTokens, and the analysis calls
@@ -66,7 +61,6 @@ ANALYSIS_SCHEMAS: dict[str, dict[str, Any]] = {
     "stakeholders": STAKEHOLDERS_SCHEMA,
 }
 ANALYSIS_PROMPTS: dict[str, str] = {
-    "tensions": TENSIONS_PROMPT,
     "stakeholders": STAKEHOLDERS_PROMPT,
 }
 
