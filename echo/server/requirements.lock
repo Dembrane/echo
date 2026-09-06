@@ -258,6 +258,7 @@ cryptography==48.0.1 \
     --hash=sha256:f2ceef93cb096aa3c4cc4b5c94ca6131f9196d28c64d6111533402a9b2054d41 \
     --hash=sha256:fe0180af5bf9236518a087e35bf2d9a347d5f5f51e63c579d683ddff424e3d46
     # via
+    #   dembrane
     #   google-auth
     #   python-jose
     #   sendgrid
@@ -1125,6 +1126,10 @@ scipy==1.17.1 \
     --hash=sha256:d30e57c72013c2a4fe441c2fcb8e77b14e152ad48b5464858e07e2ad9fbfceff \
     --hash=sha256:e18f12c6b0bc5a592ed23d3f7b891f68fd7f8241d69b7883769eb5d5dfb52696
     # via scikit-learn
+segno==1.6.6 \
+    --hash=sha256:28c7d081ed0cf935e0411293a465efd4d500704072cdb039778a2ab8736190c7 \
+    --hash=sha256:e60933afc4b52137d323a4434c8340e0ce1e58cec71439e46680d4db188f11b3
+    # via dembrane
 sendgrid==6.12.5 \
     --hash=sha256:96f92cc91634bf552fdb766b904bbb53968018da7ae41fdac4d1090dc0311ca8 \
     --hash=sha256:ea9aae30cd55c332e266bccd11185159482edfc07c149b6cd15cf08869fabdb7
@@ -1240,7 +1245,9 @@ tornado==6.5.7 \
     --hash=sha256:e726f0c75da7726eec023aa62751ff8878bd2737e34fbdd33b1ae5897d2200f5 \
     --hash=sha256:f8de3bf12d3efdd0cbe7c8887868198f8a91415e3f29fcf258d9b8eb7b1d9ae4 \
     --hash=sha256:ff934fce95643af5f11efdae618eaa73d469dc588641e5c8d19295a0c65c4796
-    # via flower
+    # via
+    #   dembrane
+    #   flower
 tqdm==4.68.2 \
     --hash=sha256:89c230e8dbc67c7615c142487111222f878c77427ea09549960f62389e258add \
     --hash=sha256:d4240441fb5353290b87d6a85968c9decc131a99b8c7faa28269d829de669ede
