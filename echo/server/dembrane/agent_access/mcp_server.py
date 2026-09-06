@@ -82,7 +82,8 @@ server = DembraneMCPServer(
         "they chose. Start with whoami, then list_organisations. Ids are UUIDs; pass "
         "them between tools verbatim. Transcripts can be long: list first, then fetch "
         "the conversations you need, at most 50 at a time. If something looks wrong, "
-        "call report_issue; if a tool you need does not exist, call request_tool."
+        "call report_issue; if a tool you need does not exist, call request_tool. "
+        "Questions about how dembrane works: search_docs, then read_doc."
     ),
     auth_server_provider=provider,
     auth=auth_settings(),
@@ -315,6 +316,42 @@ async def request_tool(
             "request_tool",
             {"name": name, "chars": len(description or "")},
             lambda c: T.request_tool(c, name, description, example=example),
+        )
+    )
+
+
+@server.tool(
+    name="list_docs",
+    description="The dembrane user documentation: every page with its path and title. Public content.",
+)
+async def list_docs() -> list[dict[str, Any]]:
+    return _dump(await _run("list_docs", {}, T.list_docs))
+
+
+@server.tool(
+    name="read_doc",
+    description="Read one documentation page by path, line-numbered. Use offset to continue a long page.",
+)
+async def read_doc(path: str, offset: int = 1, limit: int = 400) -> dict[str, Any]:
+    return _dump(
+        await _run(
+            "read_doc",
+            {"path": path, "offset": offset, "limit": limit},
+            lambda c: T.read_doc(c, path, offset=offset, limit=limit),
+        )
+    )
+
+
+@server.tool(
+    name="search_docs",
+    description="Grep the documentation: a regular expression, case-insensitive, matching lines with their page and line number.",
+)
+async def search_docs(pattern: str, max_results: int = 50) -> list[dict[str, Any]]:
+    return _dump(
+        await _run(
+            "search_docs",
+            {"pattern": pattern[:200], "max_results": max_results},
+            lambda c: T.search_docs(c, pattern, max_results=max_results),
         )
     )
 

@@ -579,3 +579,42 @@ async def request_tool(
         project_id=project_id,
     )
     return TicketOut(id=str(row.get("id") or ""), status="new", kind="tool_request")
+
+
+# ── documentation ──────────────────────────────────────────────────────────
+
+
+class DocOut(BaseModel):
+    path: str
+    title: str
+
+
+class DocReadOut(BaseModel):
+    path: str
+    text: str
+
+
+class DocHitOut(BaseModel):
+    path: str
+    line: int
+    text: str
+
+
+async def list_docs(ctx: AgentContext) -> list[DocOut]:  # noqa: ARG001 — same signature as every tool
+    from dembrane import knowledge
+
+    return [DocOut(**d) for d in await knowledge.list_docs()]
+
+
+async def read_doc(ctx: AgentContext, path: str, offset: int = 1, limit: int = 400) -> DocReadOut:  # noqa: ARG001
+    from dembrane import knowledge
+
+    return DocReadOut(path=path, text=await knowledge.read_doc(path, offset=offset, limit=limit))
+
+
+async def search_docs(ctx: AgentContext, pattern: str, max_results: int = 50) -> list[DocHitOut]:  # noqa: ARG001
+    from dembrane import knowledge
+
+    if not (pattern or "").strip():
+        raise HTTPException(status_code=400, detail="pattern is required")
+    return [DocHitOut(**h) for h in await knowledge.grep_docs(pattern, max_results=max_results)]
