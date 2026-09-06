@@ -13,7 +13,7 @@ import { TransitionCurtainProvider } from "./TransitionCurtainProvider";
 
 const SidebarFailure = () => (
 	<aside
-		className="flex h-screen w-[240px] shrink-0 flex-col items-center justify-center border-r p-4 text-center text-xs"
+		className="flex h-dvh w-[240px] shrink-0 flex-col items-center justify-center border-r p-4 text-center text-xs"
 		style={{
 			backgroundColor: "#f6f4f1",
 			borderColor: "rgba(45, 45, 44, 0.08)",
@@ -38,7 +38,7 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 
 	return (
 		<TransitionCurtainProvider>
-			<div className="flex h-screen w-screen overflow-hidden">
+			<div className="flex h-dvh w-screen overflow-hidden">
 				{isAuthenticated ? (
 					<ErrorBoundary fallback={<SidebarFailure />}>
 						<AppSidebar />
