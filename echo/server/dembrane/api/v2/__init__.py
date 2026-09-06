@@ -13,6 +13,7 @@ from dembrane.api.v2.me import router as me_router
 from dembrane.api.v2.auth import router as auth_router
 from dembrane.api.v2.orgs import router as orgs_router
 from dembrane.api.v2.admin import router as admin_router
+from dembrane.api.v2.agent import router as agent_router
 from dembrane.api.v2.billing import (
     router as billing_router,
     webhook_router as billing_webhook_router,
@@ -42,6 +43,7 @@ from dembrane.api.v2.bff.reports import (
     router as bff_reports_router,
     metric_router as bff_report_metric_router,
 )
+from dembrane.api.v2.agent_access import router as agent_access_router
 from dembrane.api.v2.bff.canvases import router as bff_canvases_router
 from dembrane.api.v2.admin_managed import router as admin_managed_router
 from dembrane.api.v2.notifications import router as notifications_router
@@ -188,3 +190,8 @@ v2_router.include_router(training_router, prefix="/training", tags=["v2:training
 v2_router.include_router(
     admin_training_router, prefix="/admin", tags=["v2:admin:training"]
 )
+
+# Agent access: the OAuth-token face for agents, and the session face the
+# "Connect your agent" page uses. The MCP transport itself is mounted in main.py.
+v2_router.include_router(agent_router, prefix="/agent", tags=["v2:agent"])
+v2_router.include_router(agent_access_router, prefix="/agent-access", tags=["v2:agent-access"])

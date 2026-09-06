@@ -298,7 +298,7 @@ msgid "{0} accounts, {1} workspaces, {2} active"
 msgstr ""
 
 #. placeholder {0}: displayRole(reached[0].role as string)
-#: src/routes/organisation/OrganisationRoute.tsx:1765
+#: src/routes/organisation/OrganisationRoute.tsx:1780
 msgid "{0} across all"
 msgstr "{0} across all"
 
@@ -318,14 +318,15 @@ msgstr "{0} added"
 msgid "{0} added from your organisation"
 msgstr ""
 
+#. placeholder {0}: org.calls_this_month
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:34
+msgid "{0} calls this month"
+msgstr ""
+
 #. placeholder {0}: counts.conversations
 #: src/routes/project/popcorn/PopcornRoute.tsx:40
 msgid "{0} conversations"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:93
-#~ msgid "{0} conversations · {1} phrases"
-#~ msgstr ""
 
 #. placeholder {0}: counts.conversations
 #: src/components/popcorn/PopcornStatus.tsx:44
@@ -358,10 +359,15 @@ msgstr ""
 
 #. placeholder {0}: organisation.name
 #. placeholder {0}: workspace.name
-#: src/routes/organisation/OrganisationRoute.tsx:735
-#: src/routes/organisation/OrganisationRoute.tsx:1569
+#: src/routes/organisation/OrganisationRoute.tsx:739
+#: src/routes/organisation/OrganisationRoute.tsx:1584
 msgid "{0} logo"
 msgstr "{0} logo"
+
+#. placeholder {0}: target.client_name
+#: src/components/agent-access/AgentGrantsCard.tsx:203
+msgid "{0} loses access immediately. To connect it again, start over from the agent."
+msgstr ""
 
 #. js-lingui-explicit-id
 #. placeholder {0}: reallySkipped.length
@@ -369,13 +375,11 @@ msgstr "{0} logo"
 msgid "select.all.modal.not.added.count"
 msgstr "{0} not added"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:97
-#~ msgid "{0} of {1} conversations read · {2} phrases"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:79
-#~ msgid "{0} of {1} conversations read, {2} phrases"
-#~ msgstr ""
+#. placeholder {0}: org.calls_this_month
+#. placeholder {1}: org.monthly_limit
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:40
+msgid "{0} of {1} calls this month (free plan)"
+msgstr ""
 
 #. placeholder {0}: roster.trained_count
 #. placeholder {1}: roster.total_count
@@ -433,6 +437,11 @@ msgstr ""
 msgid "{0} views"
 msgstr "{0} views"
 
+#. placeholder {0}: data.client_name
+#: src/routes/settings/AgentConsentRoute.tsx:236
+msgid "{0} wants MCP access to dembrane"
+msgstr ""
+
 #. placeholder {0}: data.workspace_count
 #. placeholder {1}: data.total_seat_count
 #. placeholder {2}: data.total_observer_count
@@ -464,6 +473,10 @@ msgstr "{accessCount, plural, one {# person} other {# people}}"
 msgid "{accessCount, plural, one {# person} other {# people}} in {0}"
 msgstr "{accessCount, plural, one {# person} other {# people}} in {0}"
 
+#: src/components/agent-access/AgentRiskNotice.tsx:27
+msgid "{clientName} and the company running it will receive the conversation content you allow."
+msgstr ""
+
 #: src/routes/admin/AdminSettingsRoute.tsx:2024
 msgid "{compedCount, plural, one {# comped} other {# comped}}"
 msgstr ""
@@ -488,6 +501,10 @@ msgstr ""
 
 #: src/components/chat/CanvasSuggestionCard.tsx:103
 msgid "{currentCadence} min"
+msgstr ""
+
+#: src/routes/settings/AgentConsentRoute.tsx:305
+msgid "{days} days"
 msgstr ""
 
 #: src/components/billing/BillingManager.tsx:1361
@@ -552,7 +569,7 @@ msgstr ""
 msgid "{pendingInvites} invite(s) pending. Counted once accepted."
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1824
+#: src/routes/organisation/OrganisationRoute.tsx:1839
 msgid "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
 msgstr "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
 
@@ -701,10 +718,6 @@ msgstr "2. When a conversation or report event happens, we automatically send th
 msgid "24 hours"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:687
-#~ msgid "24 more hours"
-#~ msgstr ""
-
 #: src/components/pricing/questions.ts:175
 msgid "250 to 1000."
 msgstr ""
@@ -716,10 +729,6 @@ msgstr ""
 #: src/routes/admin/AdminSettingsRoute.tsx:249
 msgid "3 months ago"
 msgstr "3 months ago"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:688
-#~ msgid "3 more days"
-#~ msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:770
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
@@ -737,10 +746,6 @@ msgstr ""
 #: src/components/popcorn/PopcornActions.tsx:131
 msgid "8 hours"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:686
-#~ msgid "8 more hours"
-#~ msgstr ""
 
 #: src/routes/onboarding/OnboardingRoute.tsx:452
 msgid "A couple of quick questions and you're in."
@@ -767,20 +772,12 @@ msgid "A friendly name to identify this webhook"
 msgstr "A friendly name to identify this webhook"
 
 #: src/components/project/ProjectExperimentalSection.tsx:52
-#~ msgid "A live page in your Library that regenerates while your session runs. Early beta: it may change or be removed."
-#~ msgstr ""
-
-#: src/components/project/ProjectExperimentalSection.tsx:52
 msgid "A live page in your Library, and live slides for the room, both made from your conversations while a session runs. Early beta: they may change or be removed."
 msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:564
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "A new report will be automatically generated and published at the scheduled time."
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:691
-#~ msgid "A new voice re-reads every conversation on the next pass."
-#~ msgstr ""
 
 #: src/components/settings/LegalBasisCard.tsx:95
 msgid "A privacy policy link is required for consent-based processing. It must start with http:// or https:// and be at most 255 characters."
@@ -816,7 +813,7 @@ msgstr ""
 msgid "A separate data-ownership and billing context. It can be handed off to that organisation later with no data movement."
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1122
+#: src/routes/organisation/OrganisationRoute.tsx:1137
 msgid "A short blurb shown on the organisation overview."
 msgstr "A short blurb shown on the organisation overview."
 
@@ -864,6 +861,10 @@ msgstr "Access"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:859
 msgid "Access ends on"
+msgstr ""
+
+#: src/routes/settings/AgentConsentRoute.tsx:299
+msgid "Access expires after"
 msgstr ""
 
 #: src/components/workspace/SupportAccessSection.tsx:154
@@ -968,6 +969,7 @@ msgstr "Actions"
 #: src/components/workspace/OrganisationUsageRollup.tsx:419
 #: src/components/workspace/OrganisationUsageRollup.tsx:572
 #: src/components/billing/BillingManager.tsx:1236
+#: src/components/agent-access/format.ts:31
 msgid "Active"
 msgstr "Active"
 
@@ -981,11 +983,15 @@ msgstr "Active · {0}"
 msgid "select.all.modal.loading.filters"
 msgstr "Active filters"
 
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:222
+msgid "Activity"
+msgstr ""
+
 #: src/routes/participant/ParticipantPostConversation.tsx:177
-#: src/routes/organisation/OrganisationRoute.tsx:2043
-#: src/routes/organisation/OrganisationRoute.tsx:2050
-#: src/routes/organisation/OrganisationRoute.tsx:2064
-#: src/routes/organisation/OrganisationRoute.tsx:2087
+#: src/routes/organisation/OrganisationRoute.tsx:2058
+#: src/routes/organisation/OrganisationRoute.tsx:2065
+#: src/routes/organisation/OrganisationRoute.tsx:2079
+#: src/routes/organisation/OrganisationRoute.tsx:2102
 #: src/components/project/ProjectSharingModal.tsx:252
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:193
 #: src/components/billing/BillingManager.tsx:1381
@@ -997,8 +1003,8 @@ msgstr "Add"
 #. placeholder {1}: ws.name
 #. placeholder {2}: displayRole("external")
 #. placeholder {2}: displayRole(roleOpt)
-#: src/routes/organisation/OrganisationRoute.tsx:2033
-#: src/routes/organisation/OrganisationRoute.tsx:2075
+#: src/routes/organisation/OrganisationRoute.tsx:2048
+#: src/routes/organisation/OrganisationRoute.tsx:2090
 msgid "Add {0} to {1} as <0>{2}</0>?"
 msgstr "Add {0} to {1} as <0>{2}</0>?"
 
@@ -1090,8 +1096,8 @@ msgid "Add Tags"
 msgstr "Add Tags"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2046
-#: src/routes/organisation/OrganisationRoute.tsx:2091
+#: src/routes/organisation/OrganisationRoute.tsx:2061
+#: src/routes/organisation/OrganisationRoute.tsx:2106
 msgid "Add to {0}?"
 msgstr "Add to {0}?"
 
@@ -1152,7 +1158,7 @@ msgstr "Added"
 msgid "Added emails"
 msgstr "Added emails"
 
-#: src/routes/organisation/OrganisationRoute.tsx:571
+#: src/routes/organisation/OrganisationRoute.tsx:575
 msgid "Added to workspace"
 msgstr "Added to workspace"
 
@@ -1227,7 +1233,7 @@ msgstr "Admin"
 msgid "Admin dashboard"
 msgstr "Admin dashboard"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1966
+#: src/routes/organisation/OrganisationRoute.tsx:1981
 msgid "Admin here via organisation role"
 msgstr "Admin here via organisation role"
 
@@ -1236,12 +1242,12 @@ msgid "Admin, dembrane"
 msgstr "Admin, dembrane"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:815
-#: src/routes/organisation/OrganisationRoute.tsx:870
+#: src/routes/organisation/OrganisationRoute.tsx:885
 #: src/components/project/ProjectUsageAndSharing.tsx:247
 msgid "Admins"
 msgstr "Admins"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1006
+#: src/routes/organisation/OrganisationRoute.tsx:1021
 msgid "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 msgstr "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 
@@ -1257,6 +1263,11 @@ msgstr "Advanced (Tips and best practices)"
 #: src/components/project/PortalSettingsOverview.tsx:43
 msgid "Advanced Settings"
 msgstr "Advanced Settings"
+
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:79
+#: src/components/agent-access/AgentGrantsCard.tsx:85
+msgid "Agent"
+msgstr ""
 
 #: src/components/chat/AgenticChatPanel.tsx:392
 msgid "Agent run failed"
@@ -1277,7 +1288,7 @@ msgid "Agentic chat"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:814
-#: src/routes/organisation/OrganisationRoute.tsx:869
+#: src/routes/organisation/OrganisationRoute.tsx:884
 #: src/routes/admin/AdminSettingsRoute.tsx:2055
 #: src/routes/admin/AdminSettingsRoute.tsx:2764
 #: src/components/workspace/OrganisationUsageRollup.tsx:564
@@ -1339,8 +1350,21 @@ msgstr "All visible conversations selected"
 msgid "All workspaces"
 msgstr "All workspaces"
 
+#: src/routes/settings/AgentConsentRoute.tsx:347
+msgid "Allow"
+msgstr ""
+
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1970
 msgid "Allow dembrane staff to access this workspace for support"
+msgstr ""
+
+#: src/components/agent-access/OrgAgentAccessSwitch.tsx:48
+msgid "Allow MCP access"
+msgstr ""
+
+#. placeholder {0}: org.name
+#: src/components/agent-access/OrgAgentAccessSwitch.tsx:49
+msgid "Allow MCP access in {0}"
 msgstr ""
 
 #: src/components/conversation/OpenForParticipationSummaryCard.tsx:45
@@ -1380,6 +1404,10 @@ msgstr "Already invited"
 msgid "Already used in this chat"
 msgstr "Already used in this chat"
 
+#: src/routes/settings/AgentConsentRoute.tsx:259
+msgid "Also allow it to change project settings"
+msgstr ""
+
 #: src/components/pricing/questions.ts:160
 msgid "Always on, it lives on our website"
 msgstr ""
@@ -1397,13 +1425,13 @@ msgstr ""
 msgid "An additional training is mandatory for teams using dembrane in situations classified as high risk under the EU AI Act."
 msgstr ""
 
+#: src/components/agent-access/AgentAccessSection.tsx:104
+msgid "An AI assistant you connect, and the company that runs it, will receive the conversations and projects you allow. dembrane is not responsible for what they do with that data. You can revoke a connection at any time."
+msgstr ""
+
 #: src/components/pricing/questions.ts:141
 msgid "An assembly."
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:268
-#~ msgid "An early feature. It may change, and you can turn it off again in the project settings."
-#~ msgstr ""
 
 #. placeholder {0}: participantCount !== undefined ? participantCount : t`loading...`
 #. placeholder {1}: participantCount === 1 ? "" : "s"
@@ -1517,18 +1545,6 @@ msgstr ""
 #: src/components/popcorn/PopcornShare.tsx:61
 msgid "Anyone with the link can watch. No login, and no transcripts."
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:446
-#~ msgid "Anyone with the link can watch. No login, no transcripts, no passages."
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:203
-#~ msgid "Anyone with the link can watch. No login, no transcripts."
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:129
-#~ msgid "Anything else about how it should sound? Optional, type or speak."
-#~ msgstr ""
 
 #: src/components/pricing/questions.ts:212
 msgid "Anything else you might need?"
@@ -1669,14 +1685,6 @@ msgstr "Are you sure you want to remove your custom logo? The default dembrane l
 msgid "Arranged with dembrane"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:683
-#~ msgid "As now"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:120
-#~ msgid "As the room said it"
-#~ msgstr ""
-
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:79
 msgid "Ask"
 msgstr "Ask"
@@ -1731,6 +1739,10 @@ msgstr ""
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:50
 msgid "Ask participants for their name"
+msgstr ""
+
+#: src/components/agent-access/YourOrganisations.tsx:113
+msgid "Ask your admin"
 msgstr ""
 
 #: src/routes/project/library/ProjectLibraryAspect.tsx:51
@@ -1880,8 +1892,8 @@ msgstr ""
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:769
 #: src/routes/project/CreateProjectRoute.tsx:403
 #: src/routes/project/report/ProjectReportRoute.tsx:604
-#: src/routes/organisation/OrganisationRoute.tsx:694
-#: src/routes/organisation/OrganisationRoute.tsx:717
+#: src/routes/organisation/OrganisationRoute.tsx:698
+#: src/routes/organisation/OrganisationRoute.tsx:721
 #: src/routes/onboarding/OnboardingRoute.tsx:439
 #: src/routes/auth/Register.tsx:240
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:334
@@ -1918,6 +1930,10 @@ msgstr "Back to my workspaces"
 msgid "Back to Selection"
 msgstr "Back to Selection"
 
+#: src/routes/settings/AgentConsentRoute.tsx:228
+msgid "Back to settings"
+msgstr ""
+
 #: src/components/chat/TemplatesModal.tsx:457
 msgid "Back to templates"
 msgstr "Back to templates"
@@ -1944,12 +1960,17 @@ msgstr "Basic (Essential tutorial slides)"
 msgid "Basic Settings"
 msgstr "Basic Settings"
 
+#: src/components/agent-access/AgentRiskNotice.tsx:21
+msgid "Before you connect an agent"
+msgstr ""
+
 #: src/routes/project/ProjectMonitorRoute.tsx:85
 #: src/routes/project/popcorn/PopcornRoute.tsx:114
 #: src/routes/project/library/LibraryRoute.tsx:126
 #: src/routes/project/chat/NewChatRoute.tsx:701
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:94
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:115
+#: src/features/sidebar/blocks/HelpBlock.tsx:52
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:248
 #: src/components/project/ProjectPortalEditor.tsx:1457
@@ -1959,6 +1980,7 @@ msgstr "Basic Settings"
 #: src/components/chat/ChatModeSelector.tsx:152
 #: src/components/chat/ChatModeBanner.tsx:45
 #: src/components/chat/AgenticIntroModal.tsx:26
+#: src/components/agent-access/AgentAccessSection.tsx:150
 msgid "Beta"
 msgstr "Beta"
 
@@ -2002,10 +2024,10 @@ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:817
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1026
-#: src/routes/organisation/OrganisationRoute.tsx:833
-#: src/routes/organisation/OrganisationRoute.tsx:872
+#: src/routes/organisation/OrganisationRoute.tsx:837
+#: src/routes/organisation/OrganisationRoute.tsx:887
 #: src/lib/roles.ts:13
-#: src/features/sidebar/views/org/OrgSettingsView.tsx:44
+#: src/features/sidebar/views/org/OrgSettingsView.tsx:49
 #: src/components/invite/RoleSelect.tsx:40
 msgid "Billing"
 msgstr "Billing"
@@ -2103,12 +2125,12 @@ msgstr ""
 #: src/routes/project/CreateProjectRoute.tsx:403
 #: src/routes/project/report/ProjectReportRoute.tsx:288
 #: src/routes/project/report/ProjectReportRoute.tsx:1459
-#: src/routes/organisation/OrganisationRoute.tsx:1789
-#: src/routes/organisation/OrganisationRoute.tsx:1812
-#: src/routes/organisation/OrganisationRoute.tsx:1835
-#: src/routes/organisation/OrganisationRoute.tsx:2002
-#: src/routes/organisation/OrganisationRoute.tsx:2043
-#: src/routes/organisation/OrganisationRoute.tsx:2086
+#: src/routes/organisation/OrganisationRoute.tsx:1804
+#: src/routes/organisation/OrganisationRoute.tsx:1827
+#: src/routes/organisation/OrganisationRoute.tsx:1850
+#: src/routes/organisation/OrganisationRoute.tsx:2017
+#: src/routes/organisation/OrganisationRoute.tsx:2058
+#: src/routes/organisation/OrganisationRoute.tsx:2101
 #: src/routes/admin/AdminSettingsRoute.tsx:869
 #: src/routes/admin/AdminSettingsRoute.tsx:1183
 #: src/components/workspace/OrganisationProjectsTable.tsx:158
@@ -2240,10 +2262,6 @@ msgstr ""
 msgid "Canvas settings"
 msgstr ""
 
-#: src/routes/project/library/LibraryRoute.tsx:135
-#~ msgid "Canvases built for this project live here."
-#~ msgstr ""
-
 #: src/components/chat/InsightNoteCard.tsx:15
 msgid "capability gap"
 msgstr ""
@@ -2267,13 +2285,13 @@ msgstr ""
 
 #. placeholder {0}: displayRole(member.role)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1783
+#: src/routes/organisation/OrganisationRoute.tsx:1798
 msgid "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 
 #. placeholder {0}: displayRole(currentRole)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1806
+#: src/routes/organisation/OrganisationRoute.tsx:1821
 msgid "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 
@@ -2281,7 +2299,7 @@ msgstr "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgid "Change anyway"
 msgstr "Change anyway"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1965
+#: src/routes/organisation/OrganisationRoute.tsx:1980
 msgid "Change in workspace settings"
 msgstr "Change in workspace settings"
 
@@ -2289,7 +2307,7 @@ msgstr "Change in workspace settings"
 msgid "Change language"
 msgstr "Change language"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1791
+#: src/routes/organisation/OrganisationRoute.tsx:1806
 msgid "Change organisation role?"
 msgstr "Change organisation role?"
 
@@ -2302,8 +2320,12 @@ msgstr "Change password"
 msgid "Change payment method"
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1789
-#: src/routes/organisation/OrganisationRoute.tsx:1812
+#: src/components/agent-access/format.ts:26
+msgid "change project settings"
+msgstr ""
+
+#: src/routes/organisation/OrganisationRoute.tsx:1804
+#: src/routes/organisation/OrganisationRoute.tsx:1827
 msgid "Change role"
 msgstr "Change role"
 
@@ -2314,7 +2336,7 @@ msgstr "Change role"
 msgid "Change tier"
 msgstr "Change tier"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1814
+#: src/routes/organisation/OrganisationRoute.tsx:1829
 msgid "Change workspace role?"
 msgstr "Change workspace role?"
 
@@ -2408,14 +2430,6 @@ msgstr "Zkontrolujte text a obrázky a zkuste to znovu"
 #: src/routes/auth/CheckYourEmail.tsx:19
 msgid "Check your email"
 msgstr "Check your email"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:111
-#~ msgid "Checked {checked}"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:92
-#~ msgid "Checked {checked}."
-#~ msgstr ""
 
 #: src/routes/project/canvas/CanvasRoute.tsx:122
 msgid "Checked {checkedAgo}. A first update will appear when there is enough to show."
@@ -2511,11 +2525,6 @@ msgstr "Click to sort"
 msgid "Client discount %"
 msgstr "Client discount %"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:289
-#: src/routes/project/popcorn/PopcornRoute.tsx:528
-#~ msgid "Client or organisation"
-#~ msgstr ""
-
 #: src/routes/admin/AdminSettingsRoute.tsx:2315
 msgid "Client organisation"
 msgstr "Client organisation"
@@ -2548,6 +2557,7 @@ msgstr "Clone Project"
 #: src/components/project/ProjectSharingModal.tsx:139
 #: src/components/dropzone/UploadConversationDropzone.tsx:872
 #: src/components/conversation/ConversationLinks.tsx:110
+#: src/components/agent-access/AgentAccessSection.tsx:98
 msgid "Close"
 msgstr "Close"
 
@@ -2658,6 +2668,25 @@ msgstr "Confirm reschedule"
 msgid "Confirm your password to generate a new secret for your authenticator app."
 msgstr "Confirm your password to generate a new secret for your authenticator app."
 
+#: src/components/agent-access/AgentAccessSection.tsx:172
+msgid "Connect"
+msgstr ""
+
+#: src/features/sidebar/blocks/HelpBlock.tsx:50
+#: src/components/agent-access/AgentAccessSection.tsx:147
+msgid "Connect your agent"
+msgstr ""
+
+#: src/routes/agent-access/ConnectAgentRoute.tsx:9
+msgid "Connect your agent | dembrane"
+msgstr ""
+
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:205
+#: src/components/agent-access/AgentGrantsCard.tsx:68
+#: src/components/agent-access/AgentAccessSection.tsx:193
+msgid "Connected agents"
+msgstr ""
+
 #: src/components/report/ReportModalNavigationButton.tsx:85
 msgid "Connecting to report services..."
 msgstr "Connecting to report services..."
@@ -2670,6 +2699,10 @@ msgstr "Connection healthy"
 #: src/components/participant/ParticipantConversationAudio.tsx:774
 msgid "participant.modal.s3check.title"
 msgstr "Connection issue"
+
+#: src/components/agent-access/hooks/index.ts:217
+msgid "Connection revoked"
+msgstr ""
 
 #: src/components/common/ConnectionHealthStatus.tsx:30
 msgid "Connection unhealthy"
@@ -2684,7 +2717,7 @@ msgid "Consent-based processing is active without a privacy policy link. Add one
 msgstr "Zpracování na základě souhlasu je aktivní bez odkazu na zásady ochrany osobních údajů. Přidejte ho tam, kde je právní základ nastaven: účastníci si musí mít možnost zásady přečíst."
 
 #: src/features/sidebar/views/HelpView.tsx:27
-#: src/features/sidebar/blocks/HelpBlock.tsx:67
+#: src/features/sidebar/blocks/HelpBlock.tsx:76
 msgid "Contact support"
 msgstr "Contact support"
 
@@ -2729,7 +2762,7 @@ msgstr "Continue"
 msgid "participant.ready.to.begin.button.text"
 msgstr "Continue"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1614
+#: src/routes/organisation/OrganisationRoute.tsx:1629
 msgid "conversation"
 msgstr "conversation"
 
@@ -2765,7 +2798,7 @@ msgstr "Conversation Status Details"
 msgid "Conversation tags"
 msgstr "Conversation tags"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1614
+#: src/routes/organisation/OrganisationRoute.tsx:1629
 #: src/components/report/CreateReportForm.tsx:217
 #: src/components/chat/NavigationSuggestionCard.tsx:57
 msgid "conversations"
@@ -2798,6 +2831,7 @@ msgstr "Cooling down. Available in {0}"
 #: src/components/conversation/ConversationEdit.tsx:51
 #: src/components/common/CopyRichTextIconButton.tsx:37
 #: src/components/common/CopyIconButton.tsx:17
+#: src/components/agent-access/AgentAccessSection.tsx:38
 msgid "Copied"
 msgstr "Copied"
 
@@ -2829,14 +2863,6 @@ msgstr ""
 #: src/components/popcorn/PopcornShare.tsx:124
 msgid "Copy code"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:386
-#~ msgid "Copy embed code"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:440
-#~ msgid "Copy embed code for a website"
-#~ msgstr ""
 
 #: src/components/members/PendingInvitesSection.tsx:165
 #: src/components/members/PendingInvitesSection.tsx:170
@@ -2875,6 +2901,11 @@ msgstr "Copy to clipboard"
 msgid "Copy to Clipboard"
 msgstr "Copy to Clipboard"
 
+#: src/components/agent-access/AgentAccessSection.tsx:38
+#: src/components/agent-access/AgentAccessSection.tsx:43
+msgid "Copy URL"
+msgstr ""
+
 #: src/components/common/CopyRichTextIconButton.tsx:37
 msgid "Copying..."
 msgstr "Copying..."
@@ -2890,10 +2921,6 @@ msgstr ""
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:488
 msgid "Could not apply the changes. Nothing was saved."
 msgstr ""
-
-#: src/components/popcorn/hooks/index.ts:224
-#~ msgid "Could not bring popcorn back"
-#~ msgstr ""
 
 #: src/routes/project/chat/NewChatRoute.tsx:456
 msgid "Could not carry over your selection. Pick again below."
@@ -2993,10 +3020,6 @@ msgstr ""
 msgid "Could not save feedback"
 msgstr ""
 
-#: src/components/popcorn/hooks/index.ts:243
-#~ msgid "Could not save popcorn schedule"
-#~ msgstr ""
-
 #: src/components/popcorn/hooks/index.ts:192
 msgid "Could not save popcorn settings"
 msgstr ""
@@ -3025,17 +3048,9 @@ msgstr "Could not send the invite email. Check email configuration."
 msgid "Could not send the report. Try again"
 msgstr "Hlášení se nepodařilo odeslat. Zkuste to znovu"
 
-#: src/components/popcorn/hooks/index.ts:148
-#~ msgid "Could not start popcorn"
-#~ msgstr ""
-
 #: src/components/popcorn/hooks/index.ts:271
 msgid "Could not stop live"
 msgstr ""
-
-#: src/components/popcorn/hooks/index.ts:207
-#~ msgid "Could not update popcorn"
-#~ msgstr ""
 
 #: src/components/chat/hooks/useUserTemplates.ts:79
 msgid "Could not update template"
@@ -3087,11 +3102,11 @@ msgid "Couldn't load memories. Refresh to try again."
 msgstr ""
 
 #. placeholder {0}: res.status
-#: src/routes/organisation/OrganisationRoute.tsx:150
+#: src/routes/organisation/OrganisationRoute.tsx:151
 msgid "Couldn't load organisation ({0})"
 msgstr "Couldn't load organisation ({0})"
 
-#: src/routes/organisation/OrganisationRoute.tsx:884
+#: src/routes/organisation/OrganisationRoute.tsx:899
 msgid "Couldn't load organisation members. Try refreshing, and if it keeps failing, contact support."
 msgstr "Couldn't load organisation members. Try refreshing, and if it keeps failing, contact support."
 
@@ -3310,7 +3325,7 @@ msgstr ""
 msgid "Czech (only ECHO features, Transcription and Summaries)"
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1151
+#: src/routes/organisation/OrganisationRoute.tsx:1166
 msgid "Danger"
 msgstr "Danger"
 
@@ -3387,10 +3402,6 @@ msgstr "Default"
 #: src/components/project/ProjectPortalEditor.tsx:746
 msgid "Default - No tutorial (Only privacy statements)"
 msgstr "Default - No tutorial (Only privacy statements)"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:158
-#~ msgid "Delayed · read now"
-#~ msgstr ""
 
 #: src/components/chat/ChatModeSelector.tsx:281
 msgid "Delegate multi-step analysis with live tool execution"
@@ -3498,7 +3509,7 @@ msgstr "Deleted · {0}"
 msgid "Deleted successfully"
 msgstr "Deleted successfully"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1154
+#: src/routes/organisation/OrganisationRoute.tsx:1169
 msgid "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 msgstr "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 
@@ -3530,6 +3541,10 @@ msgstr ""
 msgid "dembrane events"
 msgstr "dembrane events"
 
+#: src/components/agent-access/AgentRiskNotice.tsx:39
+msgid "dembrane is not responsible for what a third party does with that content."
+msgstr ""
+
 #: src/components/workspace/SupportAccessSection.tsx:58
 msgid "dembrane staff access ended automatically"
 msgstr ""
@@ -3550,6 +3565,7 @@ msgstr ""
 msgid "dembrane staff requested access"
 msgstr ""
 
+#: src/routes/settings/AgentConsentRoute.tsx:339
 #: src/components/workspace/SupportAccessSection.tsx:211
 msgid "Deny"
 msgstr "Deny"
@@ -3565,7 +3581,7 @@ msgstr "Describe what the language model should extract or summarize from the co
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1560
 #: src/routes/project/CreateProjectRoute.tsx:227
 #: src/routes/project/CreateProjectRoute.tsx:341
-#: src/routes/organisation/OrganisationRoute.tsx:1121
+#: src/routes/organisation/OrganisationRoute.tsx:1136
 #: src/routes/admin/AdminSettingsRoute.tsx:2717
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:261
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:325
@@ -3692,7 +3708,7 @@ msgid "Do you want to stay in the loop?"
 msgstr "Do you want to stay in the loop?"
 
 #: src/features/sidebar/views/HelpView.tsx:35
-#: src/features/sidebar/blocks/HelpBlock.tsx:54
+#: src/features/sidebar/blocks/HelpBlock.tsx:63
 #: src/components/chat/ChatHistoryMessage.tsx:197
 msgid "Documentation"
 msgstr "Documentation"
@@ -3851,10 +3867,6 @@ msgstr "e.g., Slack Notifications, Make Workflow"
 msgid "Each new member is billed per seat on your plan."
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:766
-#~ msgid "Earlier"
-#~ msgstr ""
-
 #: src/components/popcorn/PopcornHistory.tsx:41
 msgid "Earlier runs"
 msgstr ""
@@ -3923,20 +3935,6 @@ msgstr "Edit Report Content"
 msgid "report.editor.description"
 msgstr "Edit the report content using the rich text editor below. You can format text, add links, images, and more."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:752
-#~ msgid "Edit the session"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:375
-#: src/routes/project/popcorn/PopcornRoute.tsx:380
-#~ msgid "Edit title and client"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:507
-#: src/routes/project/popcorn/PopcornRoute.tsx:512
-#~ msgid "Edit title, client and voice"
-#~ msgstr ""
-
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:246
 msgid "Edit Webhook"
 msgstr "Edit Webhook"
@@ -3965,25 +3963,13 @@ msgstr "Email verification | dembrane"
 msgid "email@work.com"
 msgstr "email@work.com"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:402
-#~ msgid "Embed"
-#~ msgstr ""
-
 #: src/components/popcorn/PopcornShare.tsx:103
 msgid "Embed code"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:439
-#~ msgid "Embed code copied"
-#~ msgstr ""
-
 #: src/components/popcorn/PopcornShare.tsx:92
 msgid "Embed in a webpage"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:489
-#~ msgid "Embed in your webpage"
-#~ msgstr ""
 
 #: src/components/project/CustomTopicModal.tsx:236
 msgid "Emoji"
@@ -4001,6 +3987,10 @@ msgstr ""
 #: src/components/conversation/ConversationTranscriptSection.tsx:117
 msgid "Empty"
 msgstr "Empty"
+
+#: src/routes/settings/AgentConsentRoute.tsx:95
+msgid "Enable"
+msgstr ""
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:266
 msgid "Enable 2FA"
@@ -4048,22 +4038,6 @@ msgstr "Enabled"
 #: src/routes/project/canvas/CanvasRoute.tsx:68
 msgid "Ended"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:103
-#~ msgid "Ended · {read}"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:103
-#~ msgid "Ended {expiryLabel} · {read}"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:101
-#~ msgid "Ended, new conversations are not read · {read}"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:83
-#~ msgid "Ended. {read}"
-#~ msgstr ""
 
 #: src/components/billing/BillingManager.tsx:1242
 msgid "Ends on {endDate}, then moves to Free"
@@ -4206,6 +4180,19 @@ msgstr ""
 msgid "Every 60 minutes"
 msgstr ""
 
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:225
+msgid "Every call an agent made in this organisation, newest first."
+msgstr ""
+
+#. placeholder {0}: org.name
+#: src/components/agent-access/OrgAgentAccessSwitch.tsx:78
+msgid "Every connected agent in {0} stops working immediately. Members keep their connections and they resume if you turn this back on."
+msgstr ""
+
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:208
+msgid "Every member's connection that names this organisation."
+msgstr ""
+
 #: src/components/pricing/questions.ts:158
 msgid "Every week for a year"
 msgstr ""
@@ -4242,10 +4229,6 @@ msgstr "Example Webhook Payload"
 msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Exceeds seat cap. Overage billing applies."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:925
-#~ msgid "Exit full screen"
-#~ msgstr ""
-
 #: src/routes/project/report/ProjectReportRoute.tsx:1335
 #: src/routes/project/canvas/CanvasRoute.tsx:571
 #: src/routes/project/canvas/CanvasRoute.tsx:578
@@ -4261,10 +4244,12 @@ msgid "Experimental"
 msgstr "Experimental"
 
 #: src/components/billing/BillingManager.tsx:229
+#: src/components/agent-access/format.ts:32
 msgid "Expired"
 msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2354
+#: src/components/agent-access/AgentGrantsCard.tsx:98
 msgid "Expires"
 msgstr "Expires"
 
@@ -4306,8 +4291,8 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:919
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1001
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1300
-#: src/routes/organisation/OrganisationRoute.tsx:1374
-#: src/routes/organisation/OrganisationRoute.tsx:1873
+#: src/routes/organisation/OrganisationRoute.tsx:1389
+#: src/routes/organisation/OrganisationRoute.tsx:1888
 #: src/routes/organisation/OrganisationExternalView.tsx:63
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:113
@@ -4327,7 +4312,7 @@ msgid "External of partner"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:821
-#: src/routes/organisation/OrganisationRoute.tsx:876
+#: src/routes/organisation/OrganisationRoute.tsx:891
 #: src/components/workspace/UsageCard.tsx:223
 #: src/components/project/ProjectUsageAndSharing.tsx:250
 msgid "Externals"
@@ -4526,6 +4511,7 @@ msgid "Failed to update pin"
 msgstr "Failed to update pin"
 
 #: src/components/settings/BetaFeaturesCard.tsx:39
+#: src/components/agent-access/AgentAccessSection.tsx:72
 msgid "Failed to update settings"
 msgstr ""
 
@@ -4541,17 +4527,13 @@ msgstr "Failed to upload logo"
 msgid "Fair password"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:149
-#~ msgid "Favour what became a decision, a need or a next step."
-#~ msgstr ""
-
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:726
 msgid "participant.modal.echo.info.title"
 msgstr "Feature available soon"
 
 #: src/features/sidebar/views/HelpView.tsx:65
-#: src/features/sidebar/blocks/HelpBlock.tsx:40
+#: src/features/sidebar/blocks/HelpBlock.tsx:43
 msgid "Feedback"
 msgstr "Feedback"
 
@@ -4703,7 +4685,7 @@ msgstr ""
 msgid "For internal use"
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:844
+#: src/routes/organisation/OrganisationRoute.tsx:848
 msgid "For invoices, a shared contract, to discuss a partnership, or anything custom, email <0>support@dembrane.com</0>."
 msgstr ""
 
@@ -4737,12 +4719,16 @@ msgstr ""
 msgid "Free"
 msgstr "Free"
 
+#: src/components/agent-access/AgentRiskNotice.tsx:49
+msgid "Free organisations have a monthly limit of {freeTierMonthlyCalls} calls."
+msgstr ""
+
 #: src/components/report/UpdateReportModalButton.tsx:161
 #: src/components/report/UpdateReportModalButton.tsx:179
 msgid "Free plan allows 1 report per workspace"
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1445
+#: src/routes/organisation/OrganisationRoute.tsx:1460
 msgid "Free plan allows 1 workspace per organisation"
 msgstr ""
 
@@ -4773,7 +4759,7 @@ msgstr "Fullscreen"
 
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:34
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:21
-#: src/features/sidebar/views/org/OrgSettingsView.tsx:31
+#: src/features/sidebar/views/org/OrgSettingsView.tsx:36
 msgid "General"
 msgstr "General"
 
@@ -4834,14 +4820,6 @@ msgstr "Generating the summary. Please wait..."
 msgid "Generating your report..."
 msgstr "Generating your report..."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:141
-#~ msgid "Gentle on people"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:121
-#~ msgid "Gentler"
-#~ msgstr ""
-
 #: src/components/project/ProjectPortalEditor.tsx:639
 msgid "German"
 msgstr "German"
@@ -4879,6 +4857,7 @@ msgid "Give the session a title"
 msgstr ""
 
 #: src/routes/settings/UserSettingsRoute.tsx:54
+#: src/components/agent-access/AgentAccessSection.tsx:118
 msgid "Go back"
 msgstr "Go back"
 
@@ -4899,10 +4878,6 @@ msgstr "Go home"
 #: src/components/popcorn/PopcornActions.tsx:183
 msgid "Go live"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:878
-#~ msgid "Go live again"
-#~ msgstr ""
 
 #: src/components/workspace/PilotBlockModal.tsx:60
 msgid "Go to billing"
@@ -5004,7 +4979,7 @@ msgid "have your recordings transcribed"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:25
-#: src/features/sidebar/blocks/HelpBlock.tsx:30
+#: src/features/sidebar/blocks/HelpBlock.tsx:33
 msgid "Help"
 msgstr "Help"
 
@@ -5045,7 +5020,7 @@ msgstr "Hide"
 msgid "Hide data"
 msgstr "Hide data"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1890
+#: src/routes/organisation/OrganisationRoute.tsx:1905
 msgid "Hide detail"
 msgstr "Hide detail"
 
@@ -5064,10 +5039,6 @@ msgstr ""
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:754
 msgid "Hide the changes"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:354
-#~ msgid "Hide the sample"
-#~ msgstr ""
 
 #: src/components/chat/templates.ts:124
 msgid "Highlight specific Concept"
@@ -5174,6 +5145,15 @@ msgstr ""
 msgid "participant.button.i.understand"
 msgstr "I understand"
 
+#: src/components/agent-access/AgentAccessSection.tsx:125
+msgid "I understand"
+msgstr ""
+
+#. placeholder {0}: data.client_name
+#: src/routes/settings/AgentConsentRoute.tsx:317
+msgid "I understand that {0} and its provider will receive this data"
+msgstr ""
+
 #: src/components/pricing/questions.ts:161
 msgid "I will know in a week or two"
 msgstr ""
@@ -5233,6 +5213,10 @@ msgstr "Obrázky musí být menší než {MAX_FILE_MB} MB"
 
 #: src/components/chat/AgenticChatPanel.tsx:1870
 msgid "Improve my setup"
+msgstr ""
+
+#: src/routes/settings/AgentConsentRoute.tsx:267
+msgid "In which organisations"
 msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1521
@@ -5344,7 +5328,7 @@ msgid "Invite only"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:839
-#: src/routes/organisation/OrganisationRoute.tsx:917
+#: src/routes/organisation/OrganisationRoute.tsx:932
 msgid "Invite people"
 msgstr "Invite people"
 
@@ -5369,7 +5353,7 @@ msgstr "Invite sent"
 msgid "Invite sent."
 msgstr "Invite sent."
 
-#: src/routes/organisation/OrganisationRoute.tsx:919
+#: src/routes/organisation/OrganisationRoute.tsx:934
 msgid "Invite to a workspace, or just the organisation."
 msgstr "Invite to a workspace, or just the organisation."
 
@@ -5381,7 +5365,7 @@ msgstr "Invite to this workspace, or just the organisation."
 msgid "Invite your team"
 msgstr "Invite your team"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1243
+#: src/routes/organisation/OrganisationRoute.tsx:1258
 msgid "Invite-only workspace"
 msgstr ""
 
@@ -5395,10 +5379,6 @@ msgstr "invited by {0}"
 #: src/routes/invite/AcceptInviteRoute.tsx:399
 msgid "Invites expire after 7 days. Ask {inviterName} to send a new one."
 msgstr "Invites expire after 7 days. Ask {inviterName} to send a new one."
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:253
-#~ msgid "Invites the room to add its voice through the portal."
-#~ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3180
 msgid "Invoice amount, EUR"
@@ -5445,9 +5425,9 @@ msgstr ""
 msgid "It has its own plan and seats, not {0}'s pooled plan. Changes here only affect this workspace."
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:251
-#~ msgid "It is early. Phrases are quick paraphrases, not quotes, and the look may change. Turning it on also turns on the living canvas for this project; both can be turned off again in the project settings."
-#~ msgstr ""
+#: src/routes/settings/AgentConsentRoute.tsx:245
+msgid "It is asking to"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/participant/ConversationErrorView.tsx:30
@@ -5476,6 +5456,11 @@ msgstr "It may have already been used or expired. If your email is verified, log
 msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
 msgstr "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
 
+#. placeholder {0}: data.redirect_host
+#: src/routes/settings/AgentConsentRoute.tsx:239
+msgid "It will send you back to {0}."
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:643
 msgid "Italian (only ECHO features, Transcription and Summaries)"
 msgstr "Italian (only ECHO features, Transcription and Summaries)"
@@ -5488,23 +5473,23 @@ msgstr "John"
 msgid "john@doe.com"
 msgstr "john@doe.com"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2002
-#: src/routes/organisation/OrganisationRoute.tsx:2008
+#: src/routes/organisation/OrganisationRoute.tsx:2017
+#: src/routes/organisation/OrganisationRoute.tsx:2023
 msgid "Join"
 msgstr "Join"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1996
+#: src/routes/organisation/OrganisationRoute.tsx:2011
 msgid "Join {0} as <0>admin</0>? It'll show in your sidebar right after."
 msgstr ""
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2014
+#: src/routes/organisation/OrganisationRoute.tsx:2029
 msgid "Join {0} as an admin first to add others."
 msgstr ""
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2004
+#: src/routes/organisation/OrganisationRoute.tsx:2019
 msgid "Join {0}?"
 msgstr ""
 
@@ -5521,7 +5506,7 @@ msgstr ""
 msgid "Join as admin?"
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:2019
+#: src/routes/organisation/OrganisationRoute.tsx:2034
 msgid "Join first"
 msgstr ""
 
@@ -5555,7 +5540,7 @@ msgstr "Join this workspace to collaborate on conversations, share insights, and
 msgid "Joined {subjectName}"
 msgstr "Joined {subjectName}"
 
-#: src/routes/organisation/OrganisationRoute.tsx:610
+#: src/routes/organisation/OrganisationRoute.tsx:614
 msgid "Joined as admin"
 msgstr ""
 
@@ -5631,10 +5616,6 @@ msgstr "Keep editing"
 msgid "Keep it"
 msgstr "Keep it"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:146
-#~ msgid "Keep it plain"
-#~ msgstr ""
-
 #: src/components/training/TrainingRowActions.tsx:345
 msgid "Keep license"
 msgstr ""
@@ -5646,10 +5627,6 @@ msgstr ""
 #: src/components/workspace/AccessRequestsList.tsx:220
 msgid "Keep pending"
 msgstr "Keep pending"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:662
-#~ msgid "Keep reading new conversations"
-#~ msgstr ""
 
 #: src/routes/project/canvas/CanvasRoute.tsx:203
 msgid "Keep this canvas fresh"
@@ -5715,6 +5692,10 @@ msgstr "Last Updated"
 msgid "Last updated {0}"
 msgstr ""
 
+#: src/components/agent-access/AgentGrantsCard.tsx:101
+msgid "Last used"
+msgstr ""
+
 #: src/routes/project/report/ProjectReportRoute.tsx:336
 msgid "Latest"
 msgstr "Latest"
@@ -5722,10 +5703,6 @@ msgstr "Latest"
 #: src/routes/project/ProjectHomeRoute.tsx:301
 msgid "Latest report"
 msgstr "Latest report"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:151
-#~ msgid "Lean towards decisions"
-#~ msgstr ""
 
 #: src/components/workspace/TierCapacityMatrix.tsx:220
 #: src/components/workspace/DowngradeBanner.tsx:99
@@ -5739,10 +5716,6 @@ msgstr "Learn more about webhooks"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:463
 msgid "Leave empty to keep existing"
 msgstr "Leave empty to keep existing"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:159
-#~ msgid "Leave everything off to keep the room's own words as they are."
-#~ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1119
 msgid "Leave now"
@@ -5873,10 +5846,6 @@ msgstr ""
 msgid "Live"
 msgstr "Live"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:166
-#~ msgid "Live · first read in {0}"
-#~ msgstr ""
-
 #. placeholder {0}: countdown(seconds)
 #: src/components/popcorn/PopcornActions.tsx:80
 msgid "Live · next read in {0}"
@@ -5898,10 +5867,6 @@ msgstr ""
 #: src/routes/project/ProjectHomeRoute.tsx:187
 msgid "Live & recent"
 msgstr ""
-
-#: src/components/popcorn/hooks/index.ts:227
-#~ msgid "Live again for 8 hours"
-#~ msgstr ""
 
 #: src/components/chat/ChatModeBanner.tsx:54
 msgid "Live agent execution mode"
@@ -5940,14 +5905,6 @@ msgstr ""
 msgid "live slides for the room"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:360
-#~ msgid "Live slides for the room, made from this project's conversations while they are still happening."
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:304
-#~ msgid "Live slides for the room, made from this project's conversations while they are still happening. Phrases pop up as each table is read; tensions and stakeholders follow."
-#~ msgstr ""
-
 #: src/components/popcorn/PopcornStart.tsx:58
 msgid "Live slides for the room, made from this project's conversations."
 msgstr ""
@@ -5960,22 +5917,10 @@ msgstr ""
 msgid "Live stream interrupted. Falling back to polling."
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:112
-#~ msgid "Live until {0}"
-#~ msgstr ""
-
 #. placeholder {0}: format(expiry, "EEE d MMM, HH:mm")
 #: src/routes/project/popcorn/PopcornRoute.tsx:50
 msgid "live until {0}, reads every {every} min"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:89
-#~ msgid "Live until {0}."
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:107
-#~ msgid "live until {expiryLabel}"
-#~ msgstr ""
 
 #. placeholder {0}: popcorn.counts.phrases
 #: src/routes/project/library/LibraryRoute.tsx:105
@@ -5985,14 +5930,6 @@ msgstr ""
 #: src/routes/project/popcorn/PopcornRoute.tsx:51
 msgid "live, reads every {every} min"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:90
-#~ msgid "Live."
-#~ msgstr ""
-
-#: src/components/project/ProjectExperimentalSection.tsx:45
-#~ msgid "Living canvas"
-#~ msgstr ""
 
 #: src/components/project/ProjectExperimentalSection.tsx:45
 msgid "Living canvas and popcorn"
@@ -6029,7 +5966,7 @@ msgstr "Loading audit logs…"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
-#: src/routes/organisation/OrganisationRoute.tsx:930
+#: src/routes/organisation/OrganisationRoute.tsx:945
 msgid "Loading members"
 msgstr ""
 
@@ -6177,6 +6114,7 @@ msgstr "Make visible to the whole workspace"
 #: src/components/conversation/ProjectConversationsPanel.tsx:391
 #: src/components/conversation/ProjectConversationsPanel.tsx:395
 #: src/components/billing/BillingManager.tsx:1537
+#: src/components/agent-access/YourOrganisations.tsx:93
 msgid "Manage"
 msgstr "Manage"
 
@@ -6185,7 +6123,7 @@ msgstr "Manage"
 msgid "Manage attendees"
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1402
+#: src/routes/organisation/OrganisationRoute.tsx:1417
 msgid "Manage members"
 msgstr "Manage members"
 
@@ -6262,6 +6200,34 @@ msgstr ""
 msgid "Marks {orgName} as a partner. Its workspaces self-identify internal vs external client use on creation."
 msgstr ""
 
+#: src/features/sidebar/views/org/OrgSettingsView.tsx:56
+#: src/components/agent-access/YourOrganisations.tsx:66
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:154
+msgid "MCP access"
+msgstr ""
+
+#: src/routes/settings/AgentConsentRoute.tsx:103
+msgid "MCP access | dembrane"
+msgstr ""
+
+#. placeholder {0}: org.name
+#: src/components/agent-access/hooks/index.ts:196
+msgid "MCP access for {0} is off"
+msgstr ""
+
+#. placeholder {0}: org.name
+#: src/components/agent-access/hooks/index.ts:195
+msgid "MCP access for {0} is on"
+msgstr ""
+
+#: src/components/agent-access/AgentAccessSection.tsx:155
+msgid "MCP is a bridge that lets an AI assistant such as Claude, ChatGPT or Le Chat read your dembrane conversations and projects. It can see everything you can see, in the organisations you allow."
+msgstr ""
+
+#: src/components/agent-access/AgentAccessSection.tsx:33
+msgid "MCP URL"
+msgstr ""
+
 #: src/components/chat/templates.ts:58
 msgid "Meeting Notes"
 msgstr "Meeting Notes"
@@ -6275,6 +6241,8 @@ msgstr "member"
 #: src/components/training/TrainingRoster.tsx:44
 #: src/components/training/TrainingRoster.tsx:56
 #: src/components/invite/RoleSelect.tsx:35
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:76
+#: src/components/agent-access/AgentGrantsCard.tsx:89
 msgid "Member"
 msgstr "Member"
 
@@ -6288,7 +6256,7 @@ msgstr "members"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:798
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:819
-#: src/routes/organisation/OrganisationRoute.tsx:874
+#: src/routes/organisation/OrganisationRoute.tsx:889
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:75
 #: src/features/sidebar/views/org/OrgHomeView.tsx:118
 #: src/components/workspace/UsageCard.tsx:213
@@ -6296,6 +6264,11 @@ msgstr "members"
 #: src/components/project/ProjectUsageAndSharing.tsx:248
 msgid "Members"
 msgstr "Members"
+
+#. placeholder {0}: org.name
+#: src/components/agent-access/OrgAgentAccessSwitch.tsx:61
+msgid "Members of {0} will be able to connect AI agents to what they can already see here. The agent and the company running it receive that content."
+msgstr ""
 
 #: src/components/settings/AssistantMemoryCard.tsx:17
 msgid "Memory"
@@ -6559,7 +6532,12 @@ msgstr "Need more access? Ask the person who invited you to add you to the organ
 msgid "Needs attention"
 msgstr "Needs attention"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1651
+#: src/components/agent-access/AgentGrantsCard.tsx:141
+#: src/components/agent-access/AgentGrantsCard.tsx:148
+msgid "Never"
+msgstr ""
+
+#: src/routes/organisation/OrganisationRoute.tsx:1666
 #: src/components/workspace/TierStatusBadge.tsx:37
 msgid "New"
 msgstr "New"
@@ -6618,7 +6596,7 @@ msgstr "New Report"
 msgid "New tier"
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1441
+#: src/routes/organisation/OrganisationRoute.tsx:1456
 msgid "New workspace"
 msgstr "New workspace"
 
@@ -6671,7 +6649,7 @@ msgstr ""
 msgid "participant.button.finish.no.text.mode"
 msgstr "No"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2103
+#: src/routes/organisation/OrganisationRoute.tsx:2118
 msgid "No access"
 msgstr "No access"
 
@@ -6682,6 +6660,14 @@ msgstr ""
 #: src/components/settings/AuditLogsCard.tsx:472
 msgid "No actions found"
 msgstr "No actions found"
+
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:66
+msgid "No agent calls yet."
+msgstr ""
+
+#: src/components/agent-access/AgentGrantsCard.tsx:77
+msgid "No agents connected yet."
+msgstr ""
 
 #: src/components/settings/AuditLogsCard.tsx:630
 msgid "No audit logs match the current filters."
@@ -6846,17 +6832,17 @@ msgid "No one is auto-blocked for non-payment. Watch failed charges here and fol
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1171
-#: src/routes/organisation/OrganisationRoute.tsx:987
+#: src/routes/organisation/OrganisationRoute.tsx:1002
 #: src/components/project/ProjectUsageAndSharing.tsx:352
 msgid "No one matches that filter."
 msgstr "No one matches that filter."
 
-#: src/routes/organisation/OrganisationRoute.tsx:897
-#: src/routes/organisation/OrganisationRoute.tsx:940
+#: src/routes/organisation/OrganisationRoute.tsx:912
+#: src/routes/organisation/OrganisationRoute.tsx:955
 msgid "No one on the organisation yet."
 msgstr "No one on the organisation yet."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1365
+#: src/routes/organisation/OrganisationRoute.tsx:1380
 msgid "No one on this organisation yet."
 msgstr "No one on this organisation yet."
 
@@ -6869,7 +6855,7 @@ msgstr "No one shared yet"
 msgid "No one's on the workspace yet."
 msgstr "No one's on the workspace yet."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1868
+#: src/routes/organisation/OrganisationRoute.tsx:1883
 msgid "No organisation role. Access via workspace invites."
 msgstr "No organisation role. Access via workspace invites."
 
@@ -6997,7 +6983,7 @@ msgstr "No webhooks configured"
 msgid "No webhooks found"
 msgstr "No webhooks found"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1762
+#: src/routes/organisation/OrganisationRoute.tsx:1777
 msgid "No workspace access yet"
 msgstr "No workspace access yet"
 
@@ -7005,7 +6991,7 @@ msgstr "No workspace access yet"
 msgid "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 msgstr "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1934
+#: src/routes/organisation/OrganisationRoute.tsx:1949
 msgid "No workspace role change. Add this person to the organisation, then re-invite from the workspace."
 msgstr "No workspace role change. Add this person to the organisation, then re-invite from the workspace."
 
@@ -7034,6 +7020,11 @@ msgstr "Not Added"
 msgid "Not available"
 msgstr "Not available"
 
+#. placeholder {0}: org.name
+#: src/routes/settings/AgentConsentRoute.tsx:83
+msgid "Not enabled by an admin of {0}"
+msgstr ""
+
 #: src/routes/invite/AcceptInviteRoute.tsx:568
 #: src/components/pricing/PricingConfigurator.tsx:835
 #: src/components/popcorn/PopcornIntroModal.tsx:54
@@ -7045,10 +7036,6 @@ msgstr "Not now"
 #: src/routes/admin/AdminSettingsRoute.tsx:804
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:96
-#~ msgid "Not reading new conversations · {read}"
-#~ msgstr ""
 
 #: src/components/billing/BillingManager.tsx:1232
 msgid "Not renewing"
@@ -7167,12 +7154,9 @@ msgid "off"
 msgstr ""
 
 #: src/components/project/PortalSettingsOverview.tsx:67
+#: src/components/agent-access/YourOrganisations.tsx:44
 msgid "Off"
 msgstr "Off"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:663
-#~ msgid "Off freezes the screen exactly as it is, for example while you talk it through. On picks up where it left off."
-#~ msgstr ""
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:82
 msgid "Off numbers the conversations. On shows the name typed on the phone, which may be a person's."
@@ -7198,6 +7182,7 @@ msgid "on"
 msgstr ""
 
 #: src/components/project/PortalSettingsOverview.tsx:63
+#: src/components/agent-access/YourOrganisations.tsx:44
 msgid "On"
 msgstr "On"
 
@@ -7303,10 +7288,6 @@ msgstr "Only workspace admins can change these settings. Ask an admin if somethi
 msgid "Only you can see this workspace."
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:1012
-#~ msgid "Only you see these controls: hover a tab to hide it, use the stage corner for the QR code, click a phrase to see where it came from."
-#~ msgstr ""
-
 #. js-lingui-explicit-id
 #: src/components/participant/PermissionErrorModal.tsx:43
 msgid "participant.alert.microphone.access.failure"
@@ -7354,11 +7335,6 @@ msgstr "Open for participation"
 #: src/components/project/HostGuideDownload.tsx:30
 msgid "Open host guide"
 msgstr "Open host guide"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:432
-#: src/routes/project/popcorn/PopcornRoute.tsx:440
-#~ msgid "Open in a new tab"
-#~ msgstr ""
 
 #: src/components/chat/CanvasSuggestionCard.tsx:230
 msgid "Open in library"
@@ -7494,10 +7470,11 @@ msgstr "Org only"
 #: src/components/organisation/CreateOrganisationModal.tsx:174
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:178
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:362
+#: src/components/agent-access/YourOrganisations.tsx:63
 msgid "Organisation"
 msgstr "Organisation"
 
-#: src/routes/organisation/OrganisationRoute.tsx:382
+#: src/routes/organisation/OrganisationRoute.tsx:385
 msgid "Organisation | dembrane"
 msgstr "Organisation | dembrane"
 
@@ -7510,21 +7487,21 @@ msgstr ""
 msgid "Organisation member"
 msgstr "Organisation member"
 
-#: src/routes/organisation/OrganisationRoute.tsx:943
+#: src/routes/organisation/OrganisationRoute.tsx:958
 msgid "Organisation members appear here once they join a workspace."
 msgstr "Organisation members appear here once they join a workspace."
 
-#: src/routes/organisation/OrganisationRoute.tsx:900
+#: src/routes/organisation/OrganisationRoute.tsx:915
 msgid "Organisation members appear here once they join a workspace. Invites are sent from each workspace's Members tab."
 msgstr "Organisation members appear here once they join a workspace. Invites are sent from each workspace's Members tab."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1098
+#: src/routes/organisation/OrganisationRoute.tsx:1113
 #: src/routes/onboarding/OnboardingRoute.tsx:676
 #: src/components/organisation/CreateOrganisationModal.tsx:194
 msgid "Organisation name"
 msgstr "Organisation name"
 
-#: src/routes/organisation/OrganisationRoute.tsx:714
+#: src/routes/organisation/OrganisationRoute.tsx:718
 msgid "Organisation not found"
 msgstr "Organisation not found"
 
@@ -7538,6 +7515,7 @@ msgid "Organisation usage"
 msgstr "Organisation usage"
 
 #: src/features/sidebar/views/user/UserHomeView.tsx:94
+#: src/components/agent-access/AgentGrantsCard.tsx:94
 msgid "Organisations"
 msgstr "Organisations"
 
@@ -7681,7 +7659,7 @@ msgstr ""
 msgid "Participants will be able to select tags when creating conversations"
 msgstr "Participants will be able to select tags when creating conversations"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1597
+#: src/routes/organisation/OrganisationRoute.tsx:1612
 msgid "partner"
 msgstr "partner"
 
@@ -7694,7 +7672,7 @@ msgstr ""
 msgid "Partner organisation"
 msgstr "Partner organisation"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1593
+#: src/routes/organisation/OrganisationRoute.tsx:1608
 msgid "Partner workspace, billed on its own and not part of the organisation's plan."
 msgstr ""
 
@@ -7727,10 +7705,6 @@ msgstr "Passwords do not match"
 msgid "Paste it into any page. It stays live."
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:795
-#~ msgid "Pause"
-#~ msgstr ""
-
 #: src/components/participant/verify/VerifyArtefact.tsx:339
 msgid "Pause reading"
 msgstr "Pause reading"
@@ -7745,17 +7719,9 @@ msgstr ""
 msgid "Paused"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:86
-#~ msgid "Paused · {read}"
-#~ msgstr ""
-
 #: src/routes/project/canvas/CanvasRoute.tsx:106
 msgid "Paused."
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:81
-#~ msgid "Paused. {read}"
-#~ msgstr ""
 
 #: src/routes/project/canvas/CanvasRoute.tsx:106
 msgid "Paused. Updated {updatedAgo}."
@@ -7828,12 +7794,12 @@ msgstr "Pending invites"
 msgid "Pending invites | dembrane"
 msgstr "Pending invites | dembrane"
 
-#: src/routes/organisation/OrganisationRoute.tsx:752
+#: src/routes/organisation/OrganisationRoute.tsx:756
 msgid "people"
 msgstr "people"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:743
-#: src/routes/organisation/OrganisationRoute.tsx:1353
+#: src/routes/organisation/OrganisationRoute.tsx:1368
 msgid "People"
 msgstr "People"
 
@@ -7846,7 +7812,7 @@ msgstr "People with access"
 msgid "Per-recipient results:"
 msgstr "Per-recipient results:"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1905
+#: src/routes/organisation/OrganisationRoute.tsx:1920
 msgid "Per-workspace access"
 msgstr "Per-workspace access"
 
@@ -7858,7 +7824,7 @@ msgstr "Percent"
 msgid "Period"
 msgstr "Period"
 
-#: src/routes/organisation/OrganisationRoute.tsx:752
+#: src/routes/organisation/OrganisationRoute.tsx:756
 msgid "person"
 msgstr "person"
 
@@ -7936,16 +7902,12 @@ msgstr "Pinned projects"
 msgid "Pinned templates"
 msgstr "Pinned templates"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:122
-#~ msgid "Plainer"
-#~ msgstr ""
-
 #: src/components/billing/BillingManager.tsx:1291
 msgid "Plan ends"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:52
-#: src/features/sidebar/blocks/HelpBlock.tsx:63
+#: src/features/sidebar/blocks/HelpBlock.tsx:72
 msgid "Planned"
 msgstr "Planned"
 
@@ -8041,21 +8003,9 @@ msgstr ""
 msgid "Popcorn could not be loaded. Try again in a moment."
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:904
-#~ msgid "Popcorn is not available for this project. Turn on the living canvas in project settings first."
-#~ msgstr ""
-
 #: src/components/popcorn/PopcornIntroModal.tsx:46
 msgid "Popcorn shows a room its own words while it is still talking: live slides from this project's conversations, for a big screen. It is early, and you can turn it off again in the project settings."
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:262
-#~ msgid "Popcorn shows a room its own words while it is still talking: live slides made from this project's conversations, for a big screen."
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:236
-#~ msgid "Popcorn turns the conversations in this project into live slides for the room. As each table is recorded, the phrases people reached for pop up on the screen. A few minutes later the tensions and the stakeholders follow."
-#~ msgstr ""
 
 #: src/components/workspace/TierStatusBadge.tsx:49
 msgid "Popular"
@@ -8135,10 +8085,6 @@ msgstr ""
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:869
-#~ msgid "Present"
-#~ msgstr ""
-
 #: src/components/chat/CanvasSuggestionCard.tsx:303
 msgid "Preview"
 msgstr ""
@@ -8190,7 +8136,7 @@ msgstr "Private · only invited people can see this"
 msgid "Private project"
 msgstr "Private project"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1234
+#: src/routes/organisation/OrganisationRoute.tsx:1249
 #: src/components/workspace/OrganisationUsageRollup.tsx:345
 msgid "Private workspace"
 msgstr "Private workspace"
@@ -8225,7 +8171,7 @@ msgstr "Processing your retranscription request..."
 msgid "Procurement help"
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1607
+#: src/routes/organisation/OrganisationRoute.tsx:1622
 msgid "project"
 msgstr "project"
 
@@ -8335,7 +8281,7 @@ msgstr ""
 msgid "Projected yearly total"
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1607
+#: src/routes/organisation/OrganisationRoute.tsx:1622
 #: src/routes/organisation/OrganisationExternalView.tsx:109
 msgid "projects"
 msgstr "projects"
@@ -8383,10 +8329,6 @@ msgstr ""
 msgid "Provide an overview of the main topics and recurring themes"
 msgstr "Provide an overview of the main topics and recurring themes"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:412
-#~ msgid "Public link"
-#~ msgstr ""
-
 #: src/components/popcorn/PopcornShare.tsx:60
 msgid "Public page"
 msgstr ""
@@ -8394,10 +8336,6 @@ msgstr ""
 #: src/routes/project/report/ProjectReportRoute.tsx:1064
 msgid "Publish"
 msgstr "Publish"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:202
-#~ msgid "Publish a public page"
-#~ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1097
 msgid "Publish this report first to show the portal link"
@@ -8423,10 +8361,6 @@ msgstr ""
 msgid "QR code"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:335
-#~ msgid "QR code on screen"
-#~ msgstr ""
-
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:175
 msgid "Question"
 msgstr ""
@@ -8439,10 +8373,6 @@ msgstr ""
 #: src/components/chat/AgenticChatPanel.tsx:596
 msgid "Ran {0} steps at once"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:611
-#~ msgid "Rarely needed: new conversations are picked up on their own. Use it after changing the voice."
-#~ msgstr ""
 
 #: src/components/invite/InviteResultsList.tsx:49
 msgid "Rate limited"
@@ -8469,21 +8399,17 @@ msgstr ""
 msgid "Reactivate plan"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:905
-#~ msgid "Read again now"
-#~ msgstr ""
-
 #: src/components/participant/verify/VerifyArtefact.tsx:339
 msgid "Read aloud"
 msgstr "Read aloud"
 
+#: src/components/agent-access/format.ts:25
+msgid "read conversations, transcripts, projects and settings you can see"
+msgstr ""
+
 #: src/components/popcorn/PopcornActions.tsx:188
 msgid "Read every 2 minutes for"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:608
-#~ msgid "Read everything again now"
-#~ msgstr ""
 
 #: src/routes/auth/Register.tsx:322
 msgid "Read less"
@@ -8492,10 +8418,6 @@ msgstr "Read less"
 #: src/routes/auth/Register.tsx:324
 msgid "Read more →"
 msgstr "Read more →"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:176
-#~ msgid "Read the conversations now"
-#~ msgstr ""
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:405
 #: src/components/conversation/RetranscribeConversation.tsx:188
@@ -8515,10 +8437,6 @@ msgstr ""
 #: src/components/chat/agenticToolActivity.ts:140
 msgid "Reading {0}'s transcript"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:107
-#~ msgid "Reading {reading} of {0} conversations now · {1} phrases so far"
-#~ msgstr ""
 
 #. placeholder {0}: counts.conversations
 #: src/components/popcorn/PopcornStatus.tsx:50
@@ -8541,10 +8459,6 @@ msgstr ""
 msgid "Reading everything again"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:164
-#~ msgid "Reading now…"
-#~ msgstr ""
-
 #: src/components/chat/agenticToolActivity.ts:121
 msgid "Reading project context"
 msgstr ""
@@ -8557,29 +8471,13 @@ msgstr ""
 msgid "Reading the conversations again"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:116
-#~ msgid "Reading the conversations now"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:91
-#~ msgid "Reading the conversations now."
-#~ msgstr ""
-
 #: src/components/chat/agenticToolActivity.ts:115
 msgid "Reading the documentation"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:106
-#~ msgid "reads every {every} min"
-#~ msgstr ""
-
 #: src/components/popcorn/PopcornActions.tsx:84
 msgid "Reads every 2 minutes. Refresh reads now."
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:115
-#~ msgid "Reads new conversations every {every} minutes, last read {last}"
-#~ msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantOnboardingCards.tsx:408
@@ -8806,7 +8704,7 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1647
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1715
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1796
-#: src/routes/organisation/OrganisationRoute.tsx:1835
+#: src/routes/organisation/OrganisationRoute.tsx:1850
 #: src/components/settings/WhitelabelLogoCard.tsx:150
 #: src/components/settings/WhitelabelLogoCard.tsx:185
 #: src/components/settings/AccountSettingsCard.tsx:167
@@ -8849,11 +8747,11 @@ msgstr "Remove file"
 msgid "Remove from chat"
 msgstr "Remove from chat"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2121
+#: src/routes/organisation/OrganisationRoute.tsx:2136
 msgid "Remove from organisation"
 msgstr "Remove from organisation"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1837
+#: src/routes/organisation/OrganisationRoute.tsx:1852
 msgid "Remove from organisation?"
 msgstr "Remove from organisation?"
 
@@ -8890,7 +8788,7 @@ msgstr ""
 msgid "Removed"
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:522
+#: src/routes/organisation/OrganisationRoute.tsx:526
 msgid "Removed from organisation"
 msgstr "Removed from organisation"
 
@@ -8915,10 +8813,6 @@ msgstr ""
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:367
 msgid "Replay"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:910
-#~ msgid "Replaying a saved run. The room's page and the public link keep showing the live session."
-#~ msgstr ""
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:62
 msgid "Replies to participants"
@@ -8954,7 +8848,7 @@ msgid "Report already generating"
 msgstr "Report already generating"
 
 #: src/features/sidebar/views/HelpView.tsx:58
-#: src/features/sidebar/blocks/HelpBlock.tsx:33
+#: src/features/sidebar/blocks/HelpBlock.tsx:36
 #: src/components/feedback/ReportIssueModal.tsx:180
 msgid "Report an issue"
 msgstr "Nahlásit problém"
@@ -9039,6 +8933,10 @@ msgstr "Request declined"
 
 #: src/components/workspace/SupportAccessSection.tsx:155
 msgid "Request denied."
+msgstr ""
+
+#: src/components/agent-access/hooks/index.ts:108
+msgid "Request failed"
 msgstr ""
 
 #: src/routes/auth/RequestPasswordReset.tsx:24
@@ -9154,10 +9052,6 @@ msgstr ""
 msgid "participant.button.stop.resume"
 msgstr "Resume"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:795
-#~ msgid "Resume"
-#~ msgstr ""
-
 #: src/components/billing/BillingManager.tsx:1430
 msgid "Resume plan"
 msgstr ""
@@ -9272,6 +9166,8 @@ msgid "Revision history"
 msgstr ""
 
 #: src/components/training/TrainingRowActions.tsx:255
+#: src/components/agent-access/AgentGrantsCard.tsx:169
+#: src/components/agent-access/AgentGrantsCard.tsx:198
 msgid "Revoke"
 msgstr ""
 
@@ -9292,6 +9188,14 @@ msgstr ""
 msgid "Revoke the invite sent to {0}? You can invite them again later."
 msgstr "Revoke the invite sent to {0}? You can invite them again later."
 
+#: src/components/agent-access/AgentGrantsCard.tsx:197
+msgid "Revoke this connection?"
+msgstr ""
+
+#: src/components/agent-access/format.ts:33
+msgid "Revoked"
+msgstr ""
+
 #: src/routes/project/HostGuidePage.tsx:1478
 msgid "Right-click to highlight"
 msgstr "Right-click to highlight"
@@ -9301,8 +9205,8 @@ msgstr "Right-click to highlight"
 msgid "Role"
 msgstr "Role"
 
-#: src/routes/organisation/OrganisationRoute.tsx:464
-#: src/routes/organisation/OrganisationRoute.tsx:491
+#: src/routes/organisation/OrganisationRoute.tsx:468
+#: src/routes/organisation/OrganisationRoute.tsx:495
 msgid "Role changed"
 msgstr "Role changed"
 
@@ -9390,7 +9294,7 @@ msgstr "Save template"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1423
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1455
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1475
-#: src/routes/organisation/OrganisationRoute.tsx:1088
+#: src/routes/organisation/OrganisationRoute.tsx:1103
 #: src/routes/admin/AdminSettingsRoute.tsx:461
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:109
 #: src/components/conversation/ConversationDrilldownModal.tsx:149
@@ -9404,10 +9308,6 @@ msgstr ""
 #: src/components/popcorn/PopcornHistory.tsx:44
 msgid "Saved in the history. A rerun keeps these."
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:779
-#~ msgid "Saved runs"
-#~ msgstr ""
 
 #: src/components/form/SaveStatus.tsx:47
 msgid "Saving..."
@@ -9642,10 +9542,6 @@ msgstr ""
 msgid "See upgrade options"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:319
-#~ msgid "See what the room will see, with a sample session, before your own day."
-#~ msgstr ""
-
 #: src/features/sidebar/shell/UserMenu.tsx:49
 msgid "See you soon"
 msgstr "See you soon"
@@ -9864,25 +9760,13 @@ msgstr ""
 msgid "Separate with commas, spaces, or new lines."
 msgstr "Separate with commas, spaces, or new lines."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:514
-#~ msgid "Session"
-#~ msgstr ""
-
 #: src/components/participant/ParticipantInitiateForm.tsx:222
 msgid "Session Name"
 msgstr "Session Name"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:621
-#~ msgid "Session settings"
-#~ msgstr ""
-
 #: src/components/popcorn/PopcornStart.tsx:73
 msgid "Session title"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:746
-#~ msgid "Session: title, client, voice, how long it stays live"
-#~ msgstr ""
 
 #. placeholder {0}: setByLabel(revision.set_by)
 #: src/components/goal/ProjectGoalSection.tsx:44
@@ -9946,7 +9830,7 @@ msgstr ""
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:18
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:149
-#: src/features/sidebar/views/org/OrgSettingsView.tsx:26
+#: src/features/sidebar/views/org/OrgSettingsView.tsx:31
 #: src/features/sidebar/views/org/OrgHomeView.tsx:130
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
 #: src/components/layout/ParticipantHeader.tsx:97
@@ -10058,7 +9942,7 @@ msgstr "Show audio player"
 msgid "Show data"
 msgstr "Show data"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1890
+#: src/routes/organisation/OrganisationRoute.tsx:1905
 msgid "Show detail"
 msgstr "Show detail"
 
@@ -10109,14 +9993,6 @@ msgstr ""
 msgid "Show the full text"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:252
-#~ msgid "Show the QR code on screen"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:354
-#~ msgid "Show the sample"
-#~ msgstr ""
-
 #. placeholder {0}: count.shown
 #. placeholder {1}: count.total
 #: src/components/members/MembersToolbar.tsx:62
@@ -10130,10 +10006,6 @@ msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:264
 msgid "Showing {rangeStart}-{rangeEnd} of {total}"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:977
-#~ msgid "Showing a saved run. The room and the public link keep seeing the live session."
-#~ msgstr ""
 
 #. placeholder {0}: listedChats.length
 #: src/routes/project/chat/NewChatRoute.tsx:195
@@ -10152,17 +10024,9 @@ msgstr ""
 msgid "Shown at the top of the screen. Change it any time."
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1099
+#: src/routes/organisation/OrganisationRoute.tsx:1114
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Shown in the organisation header and in email subject lines."
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:290
-#~ msgid "Shown under the title on the screen."
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:129
-#~ msgid "Shown under the title on the screen. Optional."
-#~ msgstr ""
 
 #: src/components/pricing/questions.ts:157
 msgid "Six weekends across seven months"
@@ -10349,10 +10213,6 @@ msgstr "Staff only"
 msgid "Staff-created"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:322
-#~ msgid "Stakeholders"
-#~ msgstr ""
-
 #: src/components/popcorn/PopcornScreenSettings.tsx:57
 msgid "Stakeholders tab"
 msgstr ""
@@ -10372,6 +10232,10 @@ msgstr "Start a chat"
 #: src/components/chat/AgenticIntroModal.tsx:82
 #: src/components/chat/AgenticIntroModal.tsx:85
 msgid "Start a new chat"
+msgstr ""
+
+#: src/routes/settings/AgentConsentRoute.tsx:214
+msgid "Start again from your agent. It will open a fresh request here."
 msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:310
@@ -10396,10 +10260,6 @@ msgstr "Start New Conversation"
 msgid "Start over"
 msgstr "Start over"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:417
-#~ msgid "Start popcorn"
-#~ msgstr ""
-
 #: src/components/conversation/ConversationDrilldownModal.tsx:60
 msgid "Started recording"
 msgstr ""
@@ -10415,20 +10275,14 @@ msgstr "Starts"
 #: src/components/report/ConversationStatusTable.tsx:62
 #: src/components/popcorn/PopcornStatus.tsx:36
 #: src/components/billing/BillingManager.tsx:767
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:85
+#: src/components/agent-access/AgentGrantsCard.tsx:104
 msgid "Status"
 msgstr "Status"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:649
-#~ msgid "Stay live"
-#~ msgstr ""
 
 #: src/routes/project/canvas/CanvasRoute.tsx:208
 msgid "Stay live for"
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:673
-#~ msgid "Stays live until"
-#~ msgstr ""
 
 #: src/routes/project/library/LibraryRoute.tsx:29
 #: src/routes/project/library/LibraryRoute.tsx:31
@@ -10640,21 +10494,9 @@ msgid "System default"
 msgstr "Systémová výchozí hodnota"
 
 #: src/features/sidebar/views/HelpView.tsx:49
-#: src/features/sidebar/blocks/HelpBlock.tsx:60
+#: src/features/sidebar/blocks/HelpBlock.tsx:69
 msgid "System status"
 msgstr "System status"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:204
-#~ msgid "Tabs"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:306
-#~ msgid "Tabs on screen"
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:263
-#~ msgid "Tabs on the screen"
-#~ msgstr ""
 
 #: src/components/project/hooks/index.ts:338
 msgid "Tag deleted"
@@ -10696,10 +10538,6 @@ msgstr "Take some time to create an outcome that makes your contribution concret
 msgid "participant.refine.make.concrete.description"
 msgstr "Take some time to create an outcome that makes your contribution concrete."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:681
-#~ msgid "Taking the mark off comes with the Changemaker plan."
-#~ msgstr ""
-
 #: src/routes/admin/AdminSettingsRoute.tsx:1168
 msgid "Tell the workspace admins what you need access for. This note is optional."
 msgstr ""
@@ -10736,10 +10574,6 @@ msgstr ""
 #: src/components/chat/InsertTemplateMenu.tsx:27
 msgid "Templates"
 msgstr "Templates"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:310
-#~ msgid "Tensions"
-#~ msgstr ""
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:46
 msgid "Tensions tab"
@@ -10808,6 +10642,14 @@ msgstr ""
 #: src/routes/invite/AcceptInviteRoute.tsx:199
 msgid "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
 msgstr "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
+
+#: src/components/agent-access/AgentRiskNotice.tsx:57
+msgid "The agent acts as you: it can only see what you can already see."
+msgstr ""
+
+#: src/components/agent-access/AgentRiskNotice.tsx:32
+msgid "The agent and the company running it will receive the conversation content you allow."
+msgstr ""
 
 #: src/components/memory/MemoryList.tsx:114
 msgid "The assistant forgets it in every future chat."
@@ -10879,10 +10721,6 @@ msgstr ""
 msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
 msgstr "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:175
-#~ msgid "The last read is late. Press to read the conversations now."
-#~ msgstr ""
-
 #: src/components/project/ProjectAccessGuard.tsx:92
 msgid "The link may be private, or it may have moved. Ask the person who shared it to check."
 msgstr "The link may be private, or it may have moved. Ask the person who shared it to check."
@@ -10920,14 +10758,6 @@ msgstr "The organisation this invite was for has been deleted. There's nothing t
 msgid "The page this answer refers to."
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:144
-#~ msgid "The plainest wording the room used. No metaphors or jokes the room did not come back to."
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:169
-#~ msgid "The popcorn prompt exactly as written: the room's own words, the ideas that moved the conversation, nothing added."
-#~ msgstr ""
-
 #: src/components/pricing/PricingConfigurator.tsx:733
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr ""
@@ -10952,14 +10782,6 @@ msgstr "The report may start up to 5 minutes after the chosen time."
 #: src/components/popcorn/PopcornVoiceSection.tsx:60
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:167
-#~ msgid "The room's own words, the ideas that moved the conversation. Nothing added, nothing softened."
-#~ msgstr ""
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:139
-#~ msgid "The softer of two ways the room said a thing. Nothing that names or blames a person."
-#~ msgstr ""
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:130
 msgid "The summary is being generated. Please wait for it to be available."
@@ -11163,10 +10985,6 @@ msgstr "This is a live preview of the participant's portal. You will need to ref
 msgid "This is a map of every organisation and workspace you are a member of."
 msgstr "This is a map of every organisation and workspace you are a member of."
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:343
-#~ msgid "This is a sample session, not your data. Your own screen will look like this once you start."
-#~ msgstr ""
-
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1089
 msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 msgstr "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
@@ -11217,6 +11035,10 @@ msgstr "This month"
 msgid "This moves the workspace into its own billing and data context. Its projects will no longer move freely with the rest of your organisation."
 msgstr ""
 
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:180
+msgid "This organisation"
+msgstr ""
+
 #: src/components/training/TrainingRowActions.tsx:286
 msgid "This organisation has no members to train yet."
 msgstr ""
@@ -11225,6 +11047,10 @@ msgstr ""
 #: src/routes/invite/AcceptInviteRoute.tsx:429
 msgid "This organisation no longer exists"
 msgstr "This organisation no longer exists"
+
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:162
+msgid "This page is about {orgName} only. To get your MCP URL, or to manage other organisations, go to <0>Connect your agent</0>."
+msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:1398
 msgid "This page is shown after the participant has completed the conversation."
@@ -11238,17 +11064,13 @@ msgstr "This page is shown to participants when they start a conversation after 
 msgid "This part of the page failed to load. Reloading usually fixes it. If it keeps happening, head back home."
 msgstr "This part of the page failed to load. Reloading usually fixes it. If it keeps happening, head back home."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1779
-#: src/routes/organisation/OrganisationRoute.tsx:1802
-#: src/routes/organisation/OrganisationRoute.tsx:1819
-#: src/routes/organisation/OrganisationRoute.tsx:2037
-#: src/routes/organisation/OrganisationRoute.tsx:2079
+#: src/routes/organisation/OrganisationRoute.tsx:1794
+#: src/routes/organisation/OrganisationRoute.tsx:1817
+#: src/routes/organisation/OrganisationRoute.tsx:1834
+#: src/routes/organisation/OrganisationRoute.tsx:2052
+#: src/routes/organisation/OrganisationRoute.tsx:2094
 msgid "this person"
 msgstr "this person"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:964
-#~ msgid "This preview is yours to shape: hover a tab to hide it from the room, use the corner of the stage for the QR code, and click a phrase to see where it came from. The room only ever sees the result."
-#~ msgstr ""
 
 #: src/components/voice/VoiceInputError.tsx:41
 msgid "This project could not be reached."
@@ -11309,6 +11131,10 @@ msgstr "This report is not yet available. "
 #: src/routes/project/report/ProjectReportRoute.tsx:220
 msgid "This report was opened by {0} people"
 msgstr "This report was opened by {0} people"
+
+#: src/routes/settings/AgentConsentRoute.tsx:211
+msgid "This request has expired"
+msgstr ""
 
 #: src/components/chat/AgenticChatPanel.tsx:207
 msgid "This request took too long, so I stopped it. Send it again and I'll retry."
@@ -11523,6 +11349,7 @@ msgstr ""
 
 #: src/components/chat/agenticToolActivity.ts:84
 #: src/components/chat/agenticToolActivity.ts:85
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:82
 msgid "Tool"
 msgstr ""
 
@@ -11550,7 +11377,7 @@ msgstr "Topic-based title describing what was discussed"
 msgid "Topics"
 msgstr "Topics"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1610
+#: src/routes/organisation/OrganisationRoute.tsx:1625
 msgid "total"
 msgstr "total"
 
@@ -11729,10 +11556,6 @@ msgstr "Try asking"
 msgid "Try it"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:329
-#~ msgid "Try it with a sample"
-#~ msgstr ""
-
 #: src/components/participant/hooks/useConversationIssueBanner.ts:24
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr "Try moving a bit closer to your microphone for better sound quality."
@@ -11741,18 +11564,31 @@ msgstr "Try moving a bit closer to your microphone for better sound quality."
 msgid "Trying to join an existing organization?"
 msgstr "Trying to join an existing organization?"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:271
-#~ msgid "Turn it on and continue"
-#~ msgstr ""
-
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:1512
 msgid "portal.anonymization.disable.confirm"
 msgstr "Turn off"
 
+#: src/components/agent-access/OrgAgentAccessSwitch.tsx:74
+msgid "Turn off"
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:1502
 msgid "Turn off anonymization?"
 msgstr "Turn off anonymization?"
+
+#: src/components/agent-access/OrgAgentAccessSwitch.tsx:73
+msgid "Turn off MCP access?"
+msgstr ""
+
+#: src/components/agent-access/YourOrganisations.tsx:109
+#: src/components/agent-access/OrgAgentAccessSwitch.tsx:58
+msgid "Turn on"
+msgstr ""
+
+#: src/components/agent-access/OrgAgentAccessSwitch.tsx:57
+msgid "Turn on MCP access?"
+msgstr ""
 
 #: src/components/popcorn/PopcornIntroModal.tsx:66
 msgid "Turn on popcorn"
@@ -11860,7 +11696,9 @@ msgid "Unknown date"
 msgstr "Unknown date"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:909
-#: src/routes/organisation/OrganisationRoute.tsx:1851
+#: src/routes/organisation/OrganisationRoute.tsx:1866
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:99
+#: src/components/agent-access/AgentGrantsCard.tsx:128
 msgid "Unknown member"
 msgstr "Unknown member"
 
@@ -11910,11 +11748,7 @@ msgstr ""
 msgid "until {0}"
 msgstr ""
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:658
-#~ msgid "Until {0} (as now)"
-#~ msgstr ""
-
-#: src/routes/organisation/OrganisationRoute.tsx:1632
+#: src/routes/organisation/OrganisationRoute.tsx:1647
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:95
 #: src/components/workspace/OrganisationProjectsTable.tsx:236
 msgid "Untitled"
@@ -12059,10 +11893,6 @@ msgid "Upload"
 msgstr "Upload"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:121
-#~ msgid "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide."
-#~ msgstr "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide."
-
-#: src/components/settings/WhitelabelLogoCard.tsx:121
 msgid "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr ""
 
@@ -12122,6 +11952,10 @@ msgstr "Uploading audio..."
 msgid "Uploading recordings comes with a paid plan."
 msgstr ""
 
+#: src/components/agent-access/AgentAccessSection.tsx:43
+msgid "URL copied"
+msgstr ""
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:411
 msgid "URL is required"
 msgstr "URL is required"
@@ -12131,7 +11965,7 @@ msgid "URL must start with http:// or https://"
 msgstr "URL must start with http:// or https://"
 
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:142
-#: src/features/sidebar/views/org/OrgSettingsView.tsx:37
+#: src/features/sidebar/views/org/OrgSettingsView.tsx:42
 #: src/components/project/ProjectUsageAndSharing.tsx:415
 #: src/components/layout/ProjectOverviewLayout.tsx:53
 msgid "Usage"
@@ -12174,10 +12008,6 @@ msgstr ""
 #: src/components/settings/LegalBasisCard.tsx:240
 msgid "Use inherited default"
 msgstr "Použít zděděnou hodnotu"
-
-#: src/routes/project/popcorn/PopcornRoute.tsx:244
-#~ msgid "Use it on the day itself, on a big screen, while people are still talking. It gives a room the moment of hearing its own words come back, before anyone has written a report."
-#~ msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:1022
 #: src/routes/project/chat/ProjectChatRoute.tsx:1032
@@ -12426,7 +12256,7 @@ msgstr "We couldn’t enable two-factor authentication. Double-check your code a
 msgid "We couldn't find the page you were looking for. It may have moved."
 msgstr "We couldn't find the page you were looking for. It may have moved."
 
-#: src/routes/organisation/OrganisationRoute.tsx:689
+#: src/routes/organisation/OrganisationRoute.tsx:693
 msgid "We couldn't load this organisation. Try again in a moment."
 msgstr "We couldn't load this organisation. Try again in a moment."
 
@@ -12434,7 +12264,7 @@ msgstr "We couldn't load this organisation. Try again in a moment."
 msgid "We couldn't load this organisation's usage."
 msgstr "We couldn't load this organisation's usage."
 
-#: src/routes/organisation/OrganisationRoute.tsx:769
+#: src/routes/organisation/OrganisationRoute.tsx:773
 msgid "We couldn't load this organisation's workspaces. Some controls may be missing. Try refreshing."
 msgstr "We couldn't load this organisation's workspaces. Some controls may be missing. Try refreshing."
 
@@ -12651,12 +12481,16 @@ msgstr "What were the key moments in this conversation?"
 msgid "What would you like to explore?"
 msgstr "What would you like to explore?"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:48
+#: src/features/sidebar/blocks/HelpBlock.tsx:57
 msgid "What's new"
 msgstr ""
 
 #: src/components/billing/BillingManager.tsx:583
 msgid "What's the main reason?"
+msgstr ""
+
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:88
+msgid "When"
 msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:783
@@ -12768,7 +12602,7 @@ msgstr ""
 msgid "Working on your answer..."
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:749
+#: src/routes/organisation/OrganisationRoute.tsx:753
 msgid "workspace"
 msgstr "workspace"
 
@@ -12840,11 +12674,11 @@ msgstr "Workspace settings | dembrane"
 msgid "Workspace-only guest. Not added to the organisation."
 msgstr "Workspace-only guest. Not added to the organisation."
 
-#: src/routes/organisation/OrganisationRoute.tsx:750
+#: src/routes/organisation/OrganisationRoute.tsx:754
 msgid "workspaces"
 msgstr "workspaces"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1424
+#: src/routes/organisation/OrganisationRoute.tsx:1439
 #: src/routes/admin/AdminSettingsRoute.tsx:1688
 #: src/features/sidebar/views/org/OrgHomeView.tsx:140
 msgid "Workspaces"
@@ -12917,6 +12751,14 @@ msgstr ""
 msgid "You are already unsubscribed or your link is invalid."
 msgstr "You are already unsubscribed or your link is invalid."
 
+#: src/routes/settings/AgentConsentRoute.tsx:275
+msgid "You are not a member of any organisation, so there is nothing to connect yet."
+msgstr ""
+
+#: src/components/agent-access/YourOrganisations.tsx:135
+msgid "You are not in an organisation yet."
+msgstr ""
+
 #: src/components/pricing/PricingConfigurator.tsx:773
 msgid "You are on the free plan."
 msgstr ""
@@ -12955,9 +12797,17 @@ msgstr "You can navigate away and come back later. Your report will continue gen
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1830
+#: src/routes/organisation/OrganisationRoute.tsx:1845
 msgid "You can re-invite them later from any workspace."
 msgstr "You can re-invite them later from any workspace."
+
+#: src/components/agent-access/AgentRiskNotice.tsx:45
+msgid "You can revoke a connection at any time."
+msgstr ""
+
+#: src/routes/settings/AgentConsentRoute.tsx:323
+msgid "You can revoke this later under <0>Help, Connect your agent</0>."
+msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1422
 msgid "You can try again below."
@@ -12970,6 +12820,10 @@ msgstr "You can't create a workspace yet"
 #: src/components/invite/EmailChipsInput.tsx:366
 msgid "You can't invite yourself."
 msgstr "You can't invite yourself."
+
+#: src/components/agent-access/OrgAgentAccessPanel.tsx:198
+msgid "You cannot manage MCP access for this organisation."
+msgstr ""
 
 #: src/components/voice/VoiceInputError.tsx:39
 msgid "You do not have permission to transcribe in this project."
@@ -13023,7 +12877,7 @@ msgstr "You have successfully unsubscribed."
 msgid "You have support access to this workspace. It ends automatically on {endsAt}."
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1463
+#: src/routes/organisation/OrganisationRoute.tsx:1478
 msgid "You haven't joined any workspace in this organisation yet."
 msgstr "You haven't joined any workspace in this organisation yet."
 
@@ -13186,6 +13040,10 @@ msgstr "Your access"
 msgid "Your access to {0} ended on {1}."
 msgstr "Your access to {0} ended on {1}."
 
+#: src/components/agent-access/AgentAccessSection.tsx:184
+msgid "Your agent will open dembrane and ask your permission before it can read anything."
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:53
 msgid "participant.verify.instructions.approval.helps"
@@ -13201,6 +13059,10 @@ msgstr ""
 
 #: src/components/pricing/PricingConfigurator.tsx:700
 msgid "Your call is booked."
+msgstr ""
+
+#: src/components/agent-access/AgentAccessSection.tsx:99
+msgid "Your data will leave dembrane"
 msgstr ""
 
 #: src/routes/auth/Register.tsx:134
@@ -13270,7 +13132,7 @@ msgstr "Your name"
 msgid "Your name, email and current page are included so we can follow up."
 msgstr "Přikládáme vaše jméno, e-mail a aktuální stránku, abychom se vám mohli ozvat."
 
-#: src/routes/organisation/OrganisationRoute.tsx:836
+#: src/routes/organisation/OrganisationRoute.tsx:840
 msgid "Your organisation is on the free plan by default. One plan covers every workspace, billed per seat once you upgrade."
 msgstr ""
 
@@ -13282,6 +13144,10 @@ msgstr "Your organisation is waiting for you. Click continue to join."
 #: src/components/organisation/CreateOrganisationModal.tsx:196
 msgid "Your organisation or company"
 msgstr "Your organisation or company"
+
+#: src/components/agent-access/AgentAccessSection.tsx:165
+msgid "Your organisations"
+msgstr ""
 
 #: src/components/workspace/gateWalls.ts:86
 msgid "Your own logo comes with a paid plan."

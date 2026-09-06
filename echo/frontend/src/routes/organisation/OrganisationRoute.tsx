@@ -38,6 +38,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
+import { OrgAgentAccessPanel } from "@/components/agent-access/OrgAgentAccessPanel";
 import { OrgBillingTab } from "@/components/billing/BillingManager";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
@@ -331,6 +332,7 @@ export const OrganisationRoute = () => {
 		"members",
 		"training",
 		"billing",
+		"agents",
 	] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const segments = (splat ?? "").split("/").filter(Boolean);
@@ -345,6 +347,7 @@ export const OrganisationRoute = () => {
 				if (section === "members") return "members";
 				if (section === "training") return "training";
 				if (section === "billing") return "billing";
+				if (section === "agents") return "agents";
 				// general / anything else → overview (general settings).
 				return "overview";
 			})()
@@ -443,7 +446,8 @@ export const OrganisationRoute = () => {
 	// Views the caller can't open fall back to Members so landing state is
 	// never an empty panel for them.
 	const view: TabValue =
-		!canSeeFinancials && (viewRaw === "usage" || viewRaw === "billing")
+		(!canSeeFinancials && (viewRaw === "usage" || viewRaw === "billing")) ||
+		(!isAdmin && viewRaw === "agents")
 			? "members"
 			: viewRaw;
 
@@ -857,6 +861,17 @@ export const OrganisationRoute = () => {
 					<Tabs.Panel value="training" pt="md">
 						{organisationId && <OrgTrainingPanel orgId={organisationId} />}
 					</Tabs.Panel>
+
+					{isAdmin && (
+						<Tabs.Panel value="agents" pt="md">
+							{organisationId && (
+								<OrgAgentAccessPanel
+									orgId={organisationId}
+									orgName={organisation.name}
+								/>
+							)}
+						</Tabs.Panel>
+					)}
 
 					<Tabs.Panel value="members" pt="md">
 						<Stack gap="md">

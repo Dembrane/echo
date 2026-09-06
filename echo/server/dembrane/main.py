@@ -19,6 +19,7 @@ from dembrane.sentry import init_sentry
 from dembrane.api.api import api
 from dembrane.settings import get_settings
 from dembrane.gzip_middleware import SSEAwareGZipMiddleware
+from dembrane.agent_access.mcp_server import routes as mcp_routes
 
 # Enable nested event loops for Dramatiq workers calling async handlers
 nest_asyncio.apply()
@@ -60,7 +61,12 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception:
         pass
 
-    yield
+    # The MCP session manager needs a task group that outlives every request,
+    # so it runs inside the app lifespan.
+    from dembrane.agent_access.mcp_server import lifespan as mcp_lifespan
+
+    async with mcp_lifespan():
+        yield
     # shutdown
     logger.info("shutting down server")
     try:
@@ -113,6 +119,10 @@ app.include_router(api, prefix="/api")
 
 logger.info("mounting v2 api on /api/v2")
 app.include_router(v2_router, prefix="/api/v2")
+
+# MCP transport plus its OAuth endpoints and discovery documents. Plain
+# Starlette routes appended to the app router, outside the /api routers.
+app.router.routes.extend(mcp_routes())
 
 
 class SPAStaticFiles(StaticFiles):

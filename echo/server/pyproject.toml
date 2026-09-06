@@ -6,7 +6,7 @@ requires-python = ">= 3.11, < 3.12"
 dependencies = [
     # API server
     "fastapi==0.109.*",
-    "uvicorn[standard]==0.27.*",
+    "uvicorn[standard]>=0.31",
     "gunicorn==22.0.*",
     "python-multipart==0.0.*",
     "pypdf==4.0.*",
@@ -79,6 +79,7 @@ dependencies = [
     "ecdsa>=0.19.2",
     "pyasn1>=0.6.3",
     "segno>=1.6.6",
+    "mcp==2.1.1",
 ]
 
 [tool.setuptools]
