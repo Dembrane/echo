@@ -9,33 +9,37 @@ from __future__ import annotations
 import re
 import json
 import time
-from typing import Any, AsyncIterator
-from datetime import datetime, timezone, timedelta
+from typing import Any, Literal, AsyncIterator
+from datetime import datetime, timezone
 
-from fastapi import Query, Depends, Request, APIRouter, HTTPException, status
+from fastapi import Query, Depends, Request, Response, APIRouter, HTTPException, status
 from pydantic import Field, BaseModel
 from redis.exceptions import ConnectionError as RedisConnectionError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 
 from dembrane.policies import meets_tier
+from dembrane.settings import get_settings
+from dembrane.analytics import capture_event
 from dembrane.redis_async import get_redis_client
-from dembrane.popcorn.view import LOGO_PATH, render_popcorn_page
+from dembrane.popcorn.view import LOGO_PATH, render_flow_page, render_popcorn_page
 from dembrane.canvas.events import read_generation_nudge, subscribe_generation_nudges
-from dembrane.canvas.service import apply_loop_action, update_loop_settings
 from dembrane.directus_async import async_directus
 from dembrane.popcorn.bundle import forget_bundle, bundle_for_report
 from dembrane.popcorn.service import (
+    LIVE_HOURS,
     REPORT_KIND,
-    MAX_CADENCE_MINUTES,
-    MIN_CADENCE_MINUTES,
-    DEFAULT_CADENCE_MINUTES,
-    go_live_again,
+    go_live,
+    readiness,
+    stop_live,
+    room_files,
     list_versions,
+    request_rerun,
     sample_bundle,
     create_popcorn,
     popcorn_payload,
     update_settings,
     get_version_files,
+    load_settings_for,
     get_popcorn_report,
     ensure_public_token,
     get_loop_for_report,
@@ -67,10 +71,10 @@ class CreatePopcornBody(BaseModel):
     title: str = Field(min_length=1, max_length=160)
     client: str | None = Field(default=None, max_length=160)
     voice: PopcornVoiceBody | None = None
-    cadence_minutes: int = Field(
-        default=DEFAULT_CADENCE_MINUTES, ge=MIN_CADENCE_MINUTES, le=MAX_CADENCE_MINUTES
-    )
-    expires_at: datetime
+    # Older clients still send these; a session starts in manual mode now,
+    # and live has its own call.
+    cadence_minutes: int | None = None
+    expires_at: datetime | None = None
 
 
 class PopcornVoiceBody(BaseModel):
@@ -85,12 +89,12 @@ class PopcornSettingsBody(BaseModel):
     public: bool | None = None
     show_qr: bool | None = None
     show_branding: bool | None = None
+    public_labels: Literal["names", "neutral"] | None = None
     voice: PopcornVoiceBody | None = None
 
 
-class PopcornLoopSettingsBody(BaseModel):
-    cadence_minutes: int = Field(ge=MIN_CADENCE_MINUTES, le=MAX_CADENCE_MINUTES)
-    expires_at: datetime
+class LiveBody(BaseModel):
+    hours: int
 
 
 def _as_id(value: Any) -> str | None:
@@ -99,15 +103,23 @@ def _as_id(value: Any) -> str | None:
     return str(value) if value is not None else None
 
 
-def _validate_expiry(expires_at: datetime) -> datetime:
-    now = datetime.now(timezone.utc)
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    if expires_at <= now:
-        raise HTTPException(status_code=422, detail="expires_at must be in the future")
-    if expires_at > now + timedelta(days=7):
-        raise HTTPException(status_code=422, detail="expires_at must be within 7 days")
-    return expires_at
+async def _rate_limit(popcorn_id: str, action: str = "refresh") -> None:
+    """One press per twenty seconds per action: a second press lands on the
+    tick already queued. Refresh and rerun keep separate keys, so a rerun
+    right after a refresh still reruns."""
+    client = await get_redis_client()
+    hot = not await client.set(
+        f"popcorn:{action}:{popcorn_id}", "1", ex=REFRESH_TTL_SECONDS, nx=True
+    )
+    if hot:
+        raise HTTPException(status_code=429, detail="Just read")
+
+
+async def _loop_of(report: dict[str, Any]) -> dict[str, Any]:
+    loop = await get_loop_for_report(str(report["id"]))
+    if not loop:
+        raise HTTPException(status_code=404, detail="Popcorn loop not found")
+    return loop
 
 
 async def _require_popcorn(popcorn_id: str, auth: DependencyDirectusSession) -> tuple[dict, Any]:
@@ -124,12 +136,18 @@ async def get_project_popcorn(
     auth: DependencyDirectusSession,
     project_id: str = Query(...),
 ) -> dict[str, Any]:
-    """The project's popcorn session, or `{"popcorn": null}` before one exists."""
+    """The project's popcorn session, or before one exists `{"popcorn": null,
+    "readiness": {...}}`: what a first read would find."""
     access = await resolve_project_access(project_id, auth)
     require_project_canvas_enabled(access.project)
     access.require("project:read")
     report = await get_popcorn_report(project_id)
-    return {"popcorn": await popcorn_payload(report) if report else None}
+    if report:
+        return {"popcorn": await popcorn_payload(report)}
+    return {
+        "popcorn": None,
+        "readiness": await readiness(project_id=project_id, acting_directus_user_id=auth.user_id),
+    }
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -147,8 +165,6 @@ async def create_project_popcorn(
         project_id=body.project_id,
         title=body.title.strip(),
         client=(body.client or "").strip() or None,
-        cadence_minutes=body.cadence_minutes,
-        expires_at=_validate_expiry(body.expires_at).isoformat(),
         acting_directus_user_id=auth.user_id,
     )
     if body.voice is not None:
@@ -208,69 +224,99 @@ async def patch_popcorn_settings(
 
 @router.post("/{popcorn_id}/refresh", status_code=status.HTTP_202_ACCEPTED)
 async def refresh_popcorn(popcorn_id: str, auth: DependencyDirectusSession) -> dict[str, str]:
+    """One read now, in any mode: changed conversations, owed second passes,
+    stale analysis views."""
     report, access = await _require_popcorn(popcorn_id, auth)
     access.require("project:update")
-    loop = await get_loop_for_report(str(report["id"]))
-    if not loop:
-        raise HTTPException(status_code=404, detail="Popcorn loop not found")
-    client = await get_redis_client()
-    hot = not await client.set(
-        f"popcorn:refresh:{popcorn_id}", "1", ex=REFRESH_TTL_SECONDS, nx=True
-    )
-    if hot:
-        raise HTTPException(status_code=429, detail="Just refreshed")
+    loop = await _loop_of(report)
+    await _rate_limit(popcorn_id)
     # Handed to a worker rather than awaited: a manual pass reads every
     # conversation and the request must not hang on the slowest transcript.
     await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "manual")
     return {"tick": "queued"}
 
 
-@router.post("/{popcorn_id}/loop/{action}")
-async def popcorn_loop_action(
-    popcorn_id: str,
-    action: str,
-    auth: DependencyDirectusSession,
+@router.post("/{popcorn_id}/rerun", status_code=status.HTTP_202_ACCEPTED)
+async def rerun_popcorn(popcorn_id: str, auth: DependencyDirectusSession) -> dict[str, str]:
+    """Wipe the phrases, quotes and analysis and read everything again. The
+    wipe happens inside the tick, under the run lock. The saved runs stay in
+    the history."""
+    report, access = await _require_popcorn(popcorn_id, auth)
+    access.require("project:update")
+    loop = await _loop_of(report)
+    await _rate_limit(popcorn_id, "rerun")
+    await request_rerun(loop)
+    forget_bundle(str(report["id"]))
+    return {"tick": "queued"}
+
+
+@router.post("/{popcorn_id}/live")
+async def popcorn_live(
+    popcorn_id: str, body: LiveBody, auth: DependencyDirectusSession
 ) -> dict[str, Any]:
+    """Live for so many hours: a read every two minutes, then back to manual."""
+    report, access = await _require_popcorn(popcorn_id, auth)
+    access.require("project:update")
+    loop = await _loop_of(report)
+    try:
+        await go_live(loop, hours=body.hours)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return await popcorn_payload(report)
+
+
+@router.post("/{popcorn_id}/live/stop")
+async def popcorn_live_stop(popcorn_id: str, auth: DependencyDirectusSession) -> dict[str, Any]:
+    report, access = await _require_popcorn(popcorn_id, auth)
+    access.require("project:update")
+    await stop_live(await _loop_of(report))
+    return await popcorn_payload(report)
+
+
+# ── one release of compatibility for dashboards deployed ahead of this server ──
+# The dashboard ships through Vercel and can land before the server, or after
+# it. These map the old loop routes onto the modes; remove them one release
+# after the dashboard has shipped without them.
+
+
+class PopcornLoopSettingsBody(BaseModel):
+    cadence_minutes: int | None = None
+    expires_at: datetime
+
+
+def _hours_until(expires_at: datetime) -> int:
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    left = (expires_at - datetime.now(timezone.utc)).total_seconds() / 3600
+    return next((h for h in LIVE_HOURS if h >= left), LIVE_HOURS[-1])
+
+
+@router.post("/{popcorn_id}/loop/{action}", deprecated=True)
+async def popcorn_loop_action(
+    popcorn_id: str, action: str, auth: DependencyDirectusSession
+) -> dict[str, Any]:
+    """Deprecated: go-live and resume go live for eight hours; pause and stop
+    return to manual."""
     if action not in {"pause", "resume", "stop", "go-live"}:
         raise HTTPException(status_code=404, detail="Popcorn loop action not found")
     report, access = await _require_popcorn(popcorn_id, auth)
     access.require("project:update")
-    loop = await get_loop_for_report(str(report["id"]))
-    if not loop:
-        raise HTTPException(status_code=404, detail="Popcorn loop not found")
-    if action == "go-live":
-        # An ended session comes back for another eight hours, reading straight away.
-        await go_live_again(loop)
-        return await popcorn_payload(report)
-    try:
-        updated = await apply_loop_action(loop, action)
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
-    if action == "resume":
-        await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "manual")
-    payload = await popcorn_payload(report)
-    payload["loop"] = {**(payload.get("loop") or {}), "status": updated.get("status")}
-    return payload
+    loop = await _loop_of(report)
+    if action in {"go-live", "resume"}:
+        await go_live(loop, hours=8)
+    else:
+        await stop_live(loop)
+    return await popcorn_payload(report)
 
 
-@router.patch("/{popcorn_id}/loop")
+@router.patch("/{popcorn_id}/loop", deprecated=True)
 async def patch_popcorn_loop(
-    popcorn_id: str,
-    body: PopcornLoopSettingsBody,
-    auth: DependencyDirectusSession,
+    popcorn_id: str, body: PopcornLoopSettingsBody, auth: DependencyDirectusSession
 ) -> dict[str, Any]:
+    """Deprecated: live until the expiry, rounded up to the nearest duration."""
     report, access = await _require_popcorn(popcorn_id, auth)
     access.require("project:update")
-    loop = await get_loop_for_report(str(report["id"]))
-    if not loop:
-        raise HTTPException(status_code=404, detail="Popcorn loop not found")
-    expires_at = _validate_expiry(body.expires_at)
-    try:
-        await update_loop_settings(
-            loop, cadence_minutes=body.cadence_minutes, expires_at=expires_at.isoformat()
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    await go_live(await _loop_of(report), hours=_hours_until(body.expires_at))
     return await popcorn_payload(report)
 
 
@@ -342,6 +388,16 @@ async def popcorn_view(
     return HTMLResponse(render_popcorn_page(embed={"mode": "host"}), headers=NO_STORE)
 
 
+@router.get("/{popcorn_id}/view/flow/", response_class=HTMLResponse)
+async def popcorn_view_flow(popcorn_id: str, auth: DependencyDirectusSession) -> HTMLResponse:
+    """What happens to a session's words, step by step, with every check: a
+    page for local development, gone wherever the API docs are off."""
+    await _require_popcorn(popcorn_id, auth)
+    if not get_settings().feature_flags.serve_api_docs:
+        raise HTTPException(status_code=404, detail="Not found")
+    return HTMLResponse(render_flow_page(), headers=NO_STORE)
+
+
 @router.get("/{popcorn_id}/view/logo.png")
 async def popcorn_view_logo(popcorn_id: str, auth: DependencyDirectusSession) -> FileResponse:
     await _require_popcorn(popcorn_id, auth)
@@ -355,16 +411,48 @@ async def popcorn_view_bundle(
     popcorn_id: str,
     auth: DependencyDirectusSession,
     version: str | None = Query(default=None),
+    view: str | None = Query(default=None),
 ) -> JSONResponse:
+    """The host's bundle, or with `view=room` exactly what the room's page
+    gets: the deck asks for that while the host presents it fullscreen, so the
+    wall never shows the names typed on the phones or a host-only passage."""
     report, access = await _require_popcorn(popcorn_id, auth)
     version_id = _version_id(version)
     if version_id:
         files = await get_version_files(str(report["id"]), version_id)
         if files is None:
             raise HTTPException(status_code=404, detail="Version not found")
+        if view == "room":
+            # The wall never sees a passage, a dashboard link or a name the
+            # setting withholds, whichever bundle the run was saved as.
+            settings = await load_settings_for(report)
+            files = room_files(files, neutral_labels=settings.get("public_labels") != "names")
         return JSONResponse(
             {"run": None, "version": version_id, "files": files},
             headers={"Cache-Control": "private, max-age=300"},
         )
-    bundle = await bundle_for_report(report, access.project, host=True)
+    bundle = await bundle_for_report(report, access.project, host=view != "room")
     return JSONResponse(bundle, headers=NO_STORE)
+
+
+@router.post("/{popcorn_id}/view/data/latency", status_code=status.HTTP_204_NO_CONTENT)
+async def popcorn_view_latency(
+    popcorn_id: str, request: Request, auth: DependencyDirectusSession
+) -> Response:
+    """The deck's one beacon when the first phrase missed the three-second
+    count. `sendBeacon` may post it as text, so the body is read by hand."""
+    report, access = await _require_popcorn(popcorn_id, auth)
+    try:
+        ms = int((json.loads((await request.body()) or b"{}") or {}).get("ms") or 0)
+    except (ValueError, TypeError):
+        ms = 0
+    await capture_event(
+        auth.user_id,
+        "popcorn_first_phrase_late",
+        {
+            "popcorn_id": str(report["id"]),
+            "project_id": _as_id((access.project or {}).get("id")),
+            "ms": max(0, min(ms, 600_000)),
+        },
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

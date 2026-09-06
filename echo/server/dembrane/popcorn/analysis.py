@@ -1,7 +1,8 @@
 """Popcorn contracts and the cross-conversation slides (tensions, stakeholders).
 
-Ported from Dembrane/popcorn `tools/analysis.py` (commit 7c3d1cf) so the
-in-app pipeline shapes output exactly the way the presentation expects.
+Ported from Dembrane/popcorn `tools/analysis.py` (commit 7c3d1cf, gates and
+the quote context rule from 8c23eba) so the in-app pipeline shapes output
+exactly the way the presentation expects.
 
 Popcorn is per conversation and fast. Tensions and stakeholders read the
 whole session at once and arrive later, which is what the deck expects. Both
@@ -16,7 +17,8 @@ import re
 import hashlib
 from typing import Any
 
-# The public popcorn contract: at most eight phrases, each short, weighted 1-3.
+# The public popcorn contract: at most eight phrases, each short. Size on the
+# wall is one size; the deck steps a phrase down only to make it fit.
 POPCORN_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
@@ -28,11 +30,8 @@ POPCORN_SCHEMA: dict[str, Any] = {
             "items": {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["phrase", "weight"],
-                "properties": {
-                    "phrase": {"type": "string", "minLength": 1, "maxLength": 90},
-                    "weight": {"type": "integer", "minimum": 1, "maximum": 3},
-                },
+                "required": ["phrase"],
+                "properties": {"phrase": {"type": "string", "minLength": 1, "maxLength": 90}},
             },
         }
     },
@@ -158,6 +157,28 @@ STAKEHOLDERS_SCHEMA: dict[str, Any] = {
 }
 
 
+# The prompt asks for twelve words; the gate tolerates thirteen on purpose
+# (upstream measured bloat beginning at fourteen).
+MAX_PHRASE_WORDS = 13
+MAX_PHRASE_CHARS = 90
+
+# A quote's context may say where in the conversation the moment sits, never
+# who said it: the transcripts have no speaker labels, so a pronoun or a name
+# here is a guess about a real person.
+ATTRIBUTES = re.compile(
+    r"\b(he|she|him|her|his|hers|himself|herself|introducing (him|her)self)\b", re.IGNORECASE
+)
+# ...and a proper noun after the first word is a person or an organisation,
+# which is the same guess in a different costume. "AI" is the one capital that
+# is neither.
+PROPER = re.compile(r"(?<!^)(?<![.!?]\s)\b(?!AI\b)[A-Z][a-z]+")
+
+
+def attributes(context: str) -> bool:
+    """True when a context line assigns a speaker: a pronoun, a name, an organisation."""
+    return bool(ATTRIBUTES.search(context) or PROPER.search(context.strip()))
+
+
 def norm(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().casefold()
 
@@ -173,76 +194,132 @@ def build_corpus(transcripts: list[tuple[str, str]]) -> str:
 def shape_popcorn_items(raw: dict[str, Any] | None, transcript_id: str) -> list[dict[str, Any]]:
     """Apply the deterministic first-run gates to one extractor response.
 
-    Anything the schema cannot express (unique phrases, one weight-3 item,
-    no quotation marks or terminal punctuation) is enforced here so a slip
-    never reaches the screen.
+    Anything the schema cannot express (unique phrases, at most thirteen
+    words, no quotation marks or terminal punctuation) is
+    enforced here so a slip never reaches the screen. The one mark that
+    survives is a question mark: a phrase in question form keeps `question`
+    true and the deck draws the mark back. Near-duplicates, names and text the
+    room was shown are the tick's business (`flags.gate_items`), because they
+    need the transcript and the previous state.
     """
     items = raw.get("items") if isinstance(raw, dict) else None
     out: list[dict[str, Any]] = []
     seen: set[str] = set()
-    weight3_used = False
     for item in items or []:
         if not isinstance(item, dict):
             continue
         phrase = re.sub(r"\s+", " ", str(item.get("phrase") or "")).strip()
-        phrase = phrase.strip("\"'“”‘’").rstrip(".!?;:").strip()
-        if not phrase or len(phrase) > 90:
+        phrase = phrase.strip("\"'“”‘’").strip()
+        question = phrase.endswith("?")
+        phrase = phrase.rstrip(".!?;:").strip()
+        if not phrase or len(phrase) > MAX_PHRASE_CHARS or len(phrase.split()) > MAX_PHRASE_WORDS:
+            continue
+        if '"' in phrase or "“" in phrase or "”" in phrase:
             continue
         key = norm(phrase)
         if key in seen:
             continue
         seen.add(key)
-        try:
-            weight = int(item.get("weight") or 1)
-        except (TypeError, ValueError):
-            weight = 1
-        weight = max(1, min(3, weight))
-        if weight == 3:
-            if weight3_used:
-                weight = 2
-            weight3_used = True
         # The id follows the phrase text, not its position: a later re-read of a
         # growing transcript keeps the same id for a phrase it returns again, so
         # the stage does not pop it a second time.
         digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:8]
-        out.append({"id": f"p-{transcript_id}-{digest}", "phrase": phrase, "weight": weight})
+        entry: dict[str, Any] = {"id": f"p-{transcript_id}-{digest}", "phrase": phrase}
+        if question:
+            entry["question"] = True
+        out.append(entry)
         if len(out) >= 8:
             break
     return out
 
 
 class QuoteBook:
-    """Assigns quote ids, and refuses any quote that is not verbatim."""
+    """Assigns quote ids, and refuses any quote that is not verbatim.
 
-    def __init__(self, sources: dict[str, str]):
+    One book serves a whole tick: it is seeded with the registry the session
+    already has, so ids the deck holds stay valid, and every pass (the popcorn
+    second pass, then tensions and stakeholders) registers into the same one.
+    A seeded quote whose transcript is gone is dropped with the transcript.
+    """
+
+    def __init__(
+        self,
+        sources: dict[str, str],
+        *,
+        names: set[str] | None = None,
+        existing: list[dict[str, Any]] | None = None,
+    ):
         self.norm_sources = {tid: norm(t) for tid, t in sources.items()}
+        self.names = set(names or ())
         self.quotes: list[dict[str, Any]] = []
-        self._seen: dict[str, str] = {}
+        self._seen: dict[tuple[str, str], str] = {}
         self.rejected = 0
+        # quotes the model credited to one table that only another said
+        self.reattributed = 0
+        self._next = 1
+        for q in existing or []:
+            if not isinstance(q, dict):
+                continue
+            m = re.fullmatch(r"q(\d+)", str(q.get("id") or ""))
+            text = str(q.get("text") or "").strip()
+            key = norm(text)
+            tid = str(q.get("transcript") or "")
+            if (
+                not m
+                or not text
+                or (tid, key) in self._seen
+                or key not in self.norm_sources.get(tid, "")
+            ):
+                continue
+            entry = {"id": q["id"], "transcript": tid, "text": text}
+            ctx = self._safe_context(q.get("context"))
+            if ctx:
+                entry["context"] = ctx
+            self.quotes.append(entry)
+            self._seen[(tid, key)] = q["id"]
+            self._next = max(self._next, int(m.group(1)) + 1)
+
+    def _safe_context(self, raw: Any) -> str:
+        """A context line that says where the moment sits, never who spoke:
+        the transcripts carry no speakers, so one that assigns a speaker is
+        dropped, whether it arrives new or seeded from an older registry."""
+        ctx = str(raw or "").strip()
+        if not ctx or attributes(ctx):
+            return ""
+        if any(re.search(rf"\b{re.escape(n)}\b", ctx) for n in self.names):
+            return ""
+        return ctx
 
     def add(self, q: dict[str, Any]) -> str | None:
         text = str(q.get("text") or "").strip()
         if not text:
             return None
         key = norm(text)
-        if key in self._seen:
-            return self._seen[key]
         tid = str(q.get("transcript") or "")
         found_in = tid if key in self.norm_sources.get(tid, "") else None
-        if found_in is None:  # model may misattribute; accept if it exists anywhere
+        if found_in is None:
+            # The model may credit the wrong table. The words are the evidence
+            # and the table that said them is their provenance, so the quote
+            # is credited to that table, and counted, never silently.
             for cand, body in self.norm_sources.items():
                 if key in body:
                     found_in = cand
+                    self.reattributed += 1
                     break
         if found_in is None:
             self.rejected += 1
             return None
-        qid = f"q{len(self.quotes) + 1}"
+        # The same words said at two tables are two quotes: one per conversation.
+        if (found_in, key) in self._seen:
+            return self._seen[(found_in, key)]
+        qid = f"q{self._next}"
+        self._next += 1
         entry: dict[str, Any] = {"id": qid, "transcript": found_in, "text": text}
-        if q.get("context"):
-            entry["context"] = str(q["context"])
+        ctx = self._safe_context(q.get("context"))
+        if ctx:
+            entry["context"] = ctx
         self.quotes.append(entry)
-        self._seen[key] = qid
+        self._seen[(found_in, key)] = qid
         return qid
 
     def add_all(self, qs: Any) -> list[str]:

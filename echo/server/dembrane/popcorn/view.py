@@ -75,3 +75,10 @@ footer{padding:.55em clamp(24px,4vw,72px);border-top:1px solid var(--hairline);f
 
 def render_not_live_page() -> str:
     return NOT_LIVE_PAGE
+
+
+@lru_cache(maxsize=1)
+def render_flow_page() -> str:
+    """The boxes-and-arrows account of what the tick does to a session's words,
+    for hosts iterating locally. Served only while the API docs are."""
+    return _read("flow.html")

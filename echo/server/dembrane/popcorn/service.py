@@ -1,10 +1,16 @@
 """Popcorn sessions: one live deck per project, riding the canvas loop machinery.
 
 A popcorn session is a `project_report` row of kind "popcorn" with one
-`canvas_config_revision` (presentation settings) and one `agent_loop` (cadence,
+`canvas_config_revision` (presentation settings) and one `agent_loop` (mode,
 expiry, and the extraction state). Everything the presentation reads is
 assembled from that state by `build_bundle`, so the public page and the
 in-app page render the same thing.
+
+The loop's status carries the mode. `paused` is manual, the default: nothing
+is scheduled, a refresh runs one tick, a rerun wipes the state and runs one.
+`active` is live: the two-minute chain until `expires_at`, then back to
+manual. The legacy statuses (expired, ended, stopped) read as manual. A
+session never ends; the deck stays up and refresh keeps working.
 """
 
 from __future__ import annotations
@@ -17,13 +23,16 @@ from dembrane.utils import generate_uuid
 from dembrane.popcorn.qr import qr_svg_markup
 from dembrane.directus_async import async_directus
 from dembrane.scheduled_tasks import TASK_POPCORN_TICK, schedule_task
+from dembrane.popcorn.analysis import attributes
 
 REPORT_KIND = "popcorn"
 LOOP_KIND = "popcorn"
 DEFAULT_CADENCE_MINUTES = 2
 MIN_CADENCE_MINUTES = 1
 MAX_CADENCE_MINUTES = 120
-STATE_VERSION = 1
+# How long live can be asked for, in hours.
+LIVE_HOURS = (1, 8, 24)
+STATE_VERSION = 2  # 2: one quote registry at the top of the state, validation per transcript
 
 # Tabs the host can hide from the room. Popcorn itself is always shown: it is
 # the opening screen and the reason the deck exists.
@@ -64,6 +73,38 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _parse_dt(value: Any) -> datetime | None:
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+def loop_mode(loop: dict[str, Any] | None) -> str:
+    """`live` while the two-minute chain runs; everything else is manual."""
+    return "live" if (loop or {}).get("status") == "active" else "manual"
+
+
+async def gather_transcripts(**kwargs: Any) -> list[dict[str, Any]]:
+    """The tick's gather, reached late because the tick imports this module."""
+    from dembrane.popcorn.ticks import gather_transcripts as gather
+
+    return await gather(**kwargs)
+
+
+async def cancel_pending_popcorn_ticks(loop_id: str) -> int:
+    from dembrane.scheduled_tasks import cancel_pending_tasks
+
+    return await cancel_pending_tasks(
+        task_type=TASK_POPCORN_TICK, payload_match={"loop_id": loop_id}
+    )
+
+
 def _data(result: dict[str, Any]) -> dict[str, Any]:
     return result["data"] if isinstance(result, dict) and "data" in result else result
 
@@ -88,6 +129,7 @@ def default_settings(*, title: str, client: str | None = None) -> dict[str, Any]
         "show_qr": False,
         "show_branding": True,
         "voice": {"presets": [], "note": ""},
+        "public_labels": "neutral",
     }
 
 
@@ -123,11 +165,23 @@ def normalize_settings(raw: dict[str, Any] | None, *, fallback_title: str) -> di
         # whitelabel; the API enforces the tier, the setting only records it.
         "show_branding": bool(raw.get("show_branding", True)),
         "voice": normalize_voice(raw.get("voice")),
+        # What the room's legend calls a conversation. A conversation's label is
+        # the name typed on the phone, which may be a person's; the public page
+        # numbers them unless the host chooses otherwise. The host page always
+        # shows the names.
+        "public_labels": "names" if raw.get("public_labels") == "names" else "neutral",
     }
 
 
 def fresh_state() -> dict[str, Any]:
-    return {"version": STATE_VERSION, "run": 0, "order": [], "conversations": {}, "analysis": None}
+    return {
+        "version": STATE_VERSION,
+        "run": 0,
+        "order": [],
+        "conversations": {},
+        "quotes": [],
+        "analysis": None,
+    }
 
 
 def normalize_state(raw: Any) -> dict[str, Any]:
@@ -146,7 +200,15 @@ def normalize_state(raw: Any) -> dict[str, Any]:
     for cid in state["conversations"]:
         if cid not in state["order"]:
             state["order"].append(cid)
-    state["analysis"] = raw.get("analysis") if isinstance(raw.get("analysis"), dict) else None
+    analysis = dict(raw["analysis"]) if isinstance(raw.get("analysis"), dict) else None
+    quotes_raw = raw.get("quotes")
+    if not isinstance(quotes_raw, list) and analysis is not None:
+        # Version 1 kept the registry inside the analysis block; it is the session's now.
+        quotes_raw = analysis.pop("quotes", None)
+    elif analysis is not None:
+        analysis.pop("quotes", None)
+    state["quotes"] = [q for q in (quotes_raw or []) if isinstance(q, dict) and q.get("id")]
+    state["analysis"] = analysis
     return state
 
 
@@ -224,37 +286,45 @@ async def get_latest_run(loop_id: str) -> dict[str, Any] | None:
 
 
 async def enqueue_popcorn_tick(
-    loop_id: str, when: datetime | None = None, tick_kind: str = "scheduled"
+    loop_id: str,
+    when: datetime | None = None,
+    tick_kind: str = "scheduled",
+    request_id: str | None = None,
 ) -> str:
+    payload = {"loop_id": loop_id, "tick_kind": tick_kind}
+    if request_id:
+        payload["request_id"] = request_id
     return await schedule_task(
         task_type=TASK_POPCORN_TICK,
         scheduled_at=when or _now(),
-        payload={"loop_id": loop_id, "tick_kind": tick_kind},
+        payload=payload,
     )
 
 
-def dispatch_popcorn_tick_now(loop_id: str, tick_kind: str = "manual") -> None:
+def dispatch_popcorn_tick_now(
+    loop_id: str, tick_kind: str = "manual", request_id: str | None = None
+) -> None:
     """Hand a tick to a worker immediately instead of waiting for the scheduler poll."""
     from dembrane.tasks import task_popcorn_tick_now
 
-    task_popcorn_tick_now.send(loop_id, tick_kind)
+    task_popcorn_tick_now.send(loop_id, tick_kind, request_id=request_id)
 
 
 SAFETY_TICK_DELAY_SECONDS = 0
 
 
 async def dispatch_popcorn_tick_now_with_safety(loop_id: str, tick_kind: str = "manual") -> None:
-    """The direct actor plus a scheduled tick shortly after. On a worker whose
-    async clients are bound to a foreign loop the direct actor dies before it
-    writes a run; the scheduled one then lands within seconds instead of
-    waiting for the five-minute reconciler. When both run, the run lock makes
-    the second a harmless no-op."""
-    dispatch_popcorn_tick_now(loop_id, tick_kind)
+    """Persist the backup before dispatch, with one identity for both deliveries.
+    Under the run lock, a completed run with this id makes a late backup a
+    no-op, even if the scheduler already claimed it before cancellation."""
+    request_id = generate_uuid()
     await enqueue_popcorn_tick(
         loop_id,
         when=_now() + timedelta(seconds=SAFETY_TICK_DELAY_SECONDS),
         tick_kind=tick_kind,
+        request_id=request_id,
     )
+    dispatch_popcorn_tick_now(loop_id, tick_kind, request_id=request_id)
 
 
 async def create_popcorn(
@@ -262,12 +332,11 @@ async def create_popcorn(
     project_id: str,
     title: str,
     client: str | None,
-    cadence_minutes: int,
-    expires_at: str,
     acting_directus_user_id: str,
 ) -> dict[str, Any]:
-    """Create the report row, its settings revision, the loop, and the first tick."""
-    cadence = max(MIN_CADENCE_MINUTES, min(MAX_CADENCE_MINUTES, cadence_minutes))
+    """Create the report row, its settings revision, the loop in manual mode,
+    and one read straight away. Nothing is scheduled until the host goes live."""
+    cadence = DEFAULT_CADENCE_MINUTES
     report = _data(
         await async_directus.create_item(
             "project_report",
@@ -306,8 +375,8 @@ async def create_popcorn(
                 "project_id": project_id,
                 "report_id": report_id,
                 "name": title,
-                "status": "active",
-                "expires_at": expires_at,
+                "status": "paused",
+                "expires_at": _now().isoformat(),
                 "cadence_minutes": cadence,
                 "acting_directus_user_id": acting_directus_user_id,
                 "failure_count": 0,
@@ -402,7 +471,7 @@ async def update_settings(
     fallback_title = str(report.get("user_instructions") or "Popcorn")
     current = normalize_settings(config.get("popcorn_settings"), fallback_title=fallback_title)
     merged = dict(current)
-    for key in ("title", "client", "public", "show_qr", "show_branding"):
+    for key in ("title", "client", "public", "show_qr", "show_branding", "public_labels"):
         if key in patch and patch[key] is not None:
             merged[key] = patch[key]
     if isinstance(patch.get("voice"), dict):
@@ -428,9 +497,11 @@ async def update_settings(
     return settings
 
 
-async def go_live_again(loop: dict[str, Any], *, hours: int = 8) -> dict[str, Any]:
-    """Bring an ended or paused loop back: new expiry from now, active, failures
-    cleared, and a read straight away."""
+async def go_live(loop: dict[str, Any], *, hours: int) -> dict[str, Any]:
+    """Live: the two-minute chain until the expiry, reading straight away.
+    Stop live, or the expiry, returns the session to manual."""
+    if hours not in LIVE_HOURS:
+        raise ValueError(f"hours must be one of {LIVE_HOURS}")
     loop_id = str(loop["id"])
     expires_at = (_now() + timedelta(hours=hours)).isoformat()
     updated = _data(
@@ -442,6 +513,37 @@ async def go_live_again(loop: dict[str, Any], *, hours: int = 8) -> dict[str, An
     )
     await dispatch_popcorn_tick_now_with_safety(loop_id, "manual")
     return updated
+
+
+async def stop_live(loop: dict[str, Any]) -> dict[str, Any]:
+    """Back to manual: nothing scheduled, the deck stays, refresh still works."""
+    loop_id = str(loop["id"])
+    await cancel_pending_popcorn_ticks(loop_id)
+    return _data(
+        await async_directus.update_item(
+            "agent_loop", loop_id, {"status": "paused", "expires_at": _now().isoformat()}
+        )
+    )
+
+
+async def request_rerun(loop: dict[str, Any]) -> None:
+    """Wipe the live state (phrases, quotes, analysis) and read everything
+    again. The wipe itself happens inside the tick, under the run lock, so a
+    rerun pressed while a read is running is not undone by that read's own
+    write. The run counter continues and the saved runs are kept."""
+    await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "rerun")
+
+
+async def readiness(*, project_id: str, acting_directus_user_id: str) -> dict[str, int]:
+    """What a first read would find: conversations with a transcript, and the
+    words in them (the dashboard says minutes, at 150 a minute)."""
+    transcripts = await gather_transcripts(
+        project_id=project_id, acting_directus_user_id=acting_directus_user_id
+    )
+    return {
+        "conversations": len(transcripts),
+        "words": sum(len(str(t.get("text") or "").split()) for t in transcripts),
+    }
 
 
 async def ensure_public_token(report: dict[str, Any]) -> str:
@@ -514,6 +616,7 @@ def loop_payload(
     return {
         "id": str(loop.get("id")),
         "status": loop.get("status"),
+        "mode": loop_mode(loop),
         "expires_at": loop.get("expires_at"),
         "cadence_minutes": loop.get("cadence_minutes"),
         "next_read_at": next_at,
@@ -521,6 +624,15 @@ def loop_payload(
         "last_run_status": (run or {}).get("status"),
         "last_run_detail": (run or {}).get("detail"),
     }
+
+
+async def load_settings_for(report: dict[str, Any]) -> dict[str, Any]:
+    """The report's presentation settings, normalised."""
+    config = await get_latest_config(str(report["id"]))
+    return normalize_settings(
+        (config or {}).get("popcorn_settings"),
+        fallback_title=str(report.get("user_instructions") or "Popcorn"),
+    )
 
 
 def state_counts(state: dict[str, Any]) -> dict[str, Any]:
@@ -533,7 +645,13 @@ def state_counts(state: dict[str, Any]) -> dict[str, Any]:
         "conversations_read": done,
         "reading": len(conversations) - done,
         "phrases": phrases,
-        "quotes": len(analysis.get("quotes") or []),
+        "validated": sum(
+            1 for c in conversations.values() for i in (c.get("items") or []) if i.get("quoteId")
+        ),
+        "held_back": sum(
+            len((c.get("review") or {}).get("dropped") or []) for c in conversations.values()
+        ),
+        "quotes": len(state.get("quotes") or []),
         "tensions": len((analysis.get("tensions") or {}).get("tensions") or []),
         "stakeholders": len((analysis.get("stakeholders") or {}).get("stakeholders") or []),
         "analysis_updated_at": analysis.get("updated_at"),
@@ -560,9 +678,7 @@ async def popcorn_payload(report: dict[str, Any]) -> dict[str, Any]:
         "updated_at": (loop or {}).get("updated_at"),
         "settings": settings,
         "public_token": report.get("public_token"),
-        "loop": loop_payload(
-            loop, run, await next_read_at(str(loop["id"])) if loop else None
-        ),
+        "loop": loop_payload(loop, run, await next_read_at(str(loop["id"])) if loop else None),
         "counts": state_counts(state),
     }
 
@@ -594,17 +710,20 @@ def build_bundle(
     participant_base_url: str,
     admin_base_url: str = "",
     host: bool = False,
+    dev: bool = False,
 ) -> dict[str, Any]:
     """Everything the presentation polls, as one document keyed by the file
     paths the page would otherwise fetch. A hidden tab is simply a missing file.
 
-    The host variant adds what the room must not see: the closest transcript
-    passage behind every unverified phrase, and links into the dashboard."""
+    The host variant adds what the room must not see: the names typed on the
+    phones, the closest transcript passage behind every unverified phrase, and
+    links into the dashboard. Nothing under an item's `review` leaves here."""
     files: dict[str, Any] = {}
     conversations = state.get("conversations") or {}
     order = [cid for cid in state.get("order") or [] if cid in conversations]
     analysis = state.get("analysis") or {}
     run = int(state.get("run") or 0)
+    show_names = host or settings.get("public_labels") == "names"
 
     session: dict[str, Any] = {
         "title": settings["title"],
@@ -612,12 +731,8 @@ def build_bundle(
         "date": _session_date(report.get("date_created")),
         "branding": bool(settings.get("show_branding", True)),
         "transcripts": [
-            {
-                "id": cid,
-                "label": conversations[cid].get("label") or "conversation",
-                "short": conversations[cid].get("short") or conversations[cid].get("label") or "",
-            }
-            for cid in order
+            _transcript_entry(conversations[cid], cid, index, show_names)
+            for index, cid in enumerate(order, start=1)
         ],
     }
     if settings.get("show_qr"):
@@ -633,6 +748,10 @@ def build_bundle(
             "qr": bool(settings.get("show_qr")),
             "qrAvailable": participant_url(project, participant_base_url) is not None,
         }
+        if dev:
+            # Local development only: the deck's footer links to the account of
+            # what the tick does, served beside the view.
+            session["host"]["flow"] = "flow/"
     files["session.json"] = session
 
     for cid in order:
@@ -641,12 +760,18 @@ def build_bundle(
         for item in conv.get("items") or []:
             if not isinstance(item, dict) or not item.get("phrase"):
                 continue
-            entry: dict[str, Any] = {
-                "id": item["id"],
-                "phrase": item["phrase"],
-                "weight": item["weight"],
-            }
-            if item.get("quoteId") and analysis:
+            entry: dict[str, Any] = {"id": item["id"], "phrase": item["phrase"]}
+            if item.get("question"):
+                entry["question"] = True
+            # The phrase itself is in the transcript word for word: the deck
+            # may draw it in quotation marks. A rooted paraphrase is not a
+            # quotation; it opens its passage without the marks.
+            if item.get("verbatim"):
+                entry["verbatim"] = True
+            if item.get("kind"):
+                entry["kind"] = item["kind"]
+                entry["qualifiers"] = [str(q) for q in (item.get("qualifiers") or [])]
+            if item.get("quoteId"):
                 entry["quoteId"] = item["quoteId"]
             if host and isinstance(item.get("source"), dict) and not item.get("quoteId"):
                 entry["source"] = {
@@ -656,30 +781,114 @@ def build_bundle(
                     else None,
                 }
             items_out.append(entry)
-        files[f"popcorn/{cid}.json"] = {
+        popcorn_file: dict[str, Any] = {
             "transcript": cid,
             "revision": int(conv.get("revision") or 1),
             "done": bool(conv.get("done")),
-            # The grounding pass ran for this conversation in the current run.
-            "validated": bool(conv.get("done")) and conv.get("validated_run") == run,
+            # The second pass finished for the transcript as it stands. Not every
+            # phrase has a quote; the page may stop polling the file either way.
+            "validated": bool(conv.get("done"))
+            and bool(conv.get("fingerprint"))
+            and conv.get("validated_fingerprint") == conv.get("fingerprint"),
+            # Phrases the second pass could not root: a count for the tally,
+            # never their text, in either bundle.
+            "held_back": len((conv.get("review") or {}).get("dropped") or []),
             "items": items_out,
         }
+        if host and int(conv.get("clipped") or 0) > 0:
+            # A runaway recording: the model read the most recent window only.
+            popcorn_file["coverage"] = {
+                "chars": int(conv.get("chars") or 0),
+                "clipped": int(conv.get("clipped") or 0),
+            }
+        files[f"popcorn/{cid}.json"] = popcorn_file
 
     tabs = settings.get("tabs") or {}
-    if analysis:
+    registry = state.get("quotes") or []
+    if registry or analysis:
         quotes = []
-        for quote in analysis.get("quotes") or []:
+        for quote in registry:
             entry = dict(quote)
+            # A registry written before the attribution rule may still carry a
+            # speaker in its context; the bundle is the last door it must not pass.
+            if entry.get("context") and attributes(str(entry["context"])):
+                entry.pop("context", None)
             if host and admin_base_url and quote.get("transcript"):
                 entry["url"] = conversation_url(project, str(quote["transcript"]), admin_base_url)
             quotes.append(entry)
         files["quotes.json"] = {"quotes": quotes}
+    if analysis:
         for kind in TOGGLEABLE_TABS:
             slide = analysis.get(kind)
             if tabs.get(kind, True) and isinstance(slide, dict):
                 files[f"{kind}.json"] = slide
 
     return {"run": run, "files": files}
+
+
+def room_files(files: dict[str, Any], *, neutral_labels: bool) -> dict[str, Any]:
+    """A saved run as the room may see it. Runs saved before September 6th
+    2026 hold the host's bundle; this strips what the host alone may see (the
+    passages, the dashboard links, the host block, the coverage) and numbers
+    the legend when the setting says so. Newer runs are saved as the room's
+    bundle and pass through unchanged."""
+    out: dict[str, Any] = {}
+    for name, file in files.items():
+        if not isinstance(file, dict):
+            out[name] = file
+            continue
+        if name == "session.json":
+            session = {k: v for k, v in file.items() if k != "host"}
+            transcripts = []
+            for index, t in enumerate(session.get("transcripts") or [], start=1):
+                if not isinstance(t, dict):
+                    continue
+                if neutral_labels:
+                    t = {**t, "label": f"Conversation {index}", "short": f"Conversation {index}"}
+                transcripts.append(t)
+            session["transcripts"] = transcripts
+            out[name] = session
+        elif name.startswith("popcorn/"):
+            out[name] = {
+                **{k: v for k, v in file.items() if k != "coverage"},
+                "items": [
+                    {k: v for k, v in i.items() if k != "source"} if isinstance(i, dict) else i
+                    for i in file.get("items") or []
+                ],
+            }
+        elif name == "quotes.json":
+            out[name] = {
+                **file,
+                "quotes": [
+                    {k: v for k, v in q.items() if k != "url"} if isinstance(q, dict) else q
+                    for q in file.get("quotes") or []
+                ],
+            }
+        else:
+            out[name] = file
+    return out
+
+
+def _transcript_entry(
+    conv: dict[str, Any], cid: str, index: int, show_names: bool
+) -> dict[str, Any]:
+    """One legend entry. With names hidden the label is a number in deck order;
+    `time` and `duration` let the timeline place the conversation's phrases."""
+    name = str(conv.get("label") or "").strip() if show_names else ""
+    if name:
+        label = name
+        short = str(conv.get("short") or "").strip() or name
+    else:
+        label = f"Conversation {index}"
+        short = label
+    entry: dict[str, Any] = {"id": cid, "label": label, "short": short}
+    created_at = conv.get("created_at")
+    if isinstance(created_at, str) and created_at:
+        entry["time"] = created_at
+    duration = conv.get("duration")
+    if isinstance(duration, (int, float)) and not isinstance(duration, bool) and duration > 0:
+        entry["duration"] = float(duration)
+    return entry
 
 
 def sample_bundle() -> dict[str, Any]:

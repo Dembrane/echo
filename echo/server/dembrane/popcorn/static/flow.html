@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How popcorn works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --parchment: #F6F4F1;
+    --paper: #FFFFFF;
+    --graphite: #2D2D2C;
+    --ink-soft: #5B5A57;
+    --ink-faint: #8C8A85;
+    --hairline: #E6E3DF;
+    --blue: #4169E1;
+    --blue-wash: #EEF1FD;
+    --amber: #B4600A;
+    --amber-wash: #FBF1E6;
+    --green: #2F7D4F;
+    --green-wash: #E9F4EC;
+    --code-bg: #EFECE7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --parchment: #1F1F1E;
+      --paper: #262625;
+      --graphite: #ECE9E3;
+      --ink-soft: #B9B5AD;
+      --ink-faint: #85817A;
+      --hairline: #3B3A38;
+      --blue: #8AA1FF;
+      --blue-wash: #2A3150;
+      --amber: #E4A15A;
+      --amber-wash: #3E2F1E;
+      --green: #7FC49A;
+      --green-wash: #22372A;
+      --code-bg: #2F2F2D;
+    }
+  }
+  :root[data-theme="dark"] {
+    --parchment: #1F1F1E;
+    --paper: #262625;
+    --graphite: #ECE9E3;
+    --ink-soft: #B9B5AD;
+    --ink-faint: #85817A;
+    --hairline: #3B3A38;
+    --blue: #8AA1FF;
+    --blue-wash: #2A3150;
+    --amber: #E4A15A;
+    --amber-wash: #3E2F1E;
+    --green: #7FC49A;
+    --green-wash: #22372A;
+    --code-bg: #2F2F2D;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--parchment);
+    color: var(--graphite);
+    font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 48px 28px 96px; }
+  .prose { max-width: 68ch; }
+  header.masthead { padding-bottom: 28px; border-bottom: 1px solid var(--hairline); margin-bottom: 40px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); font-weight: 500; }
+  h1 { font-weight: 300; font-size: clamp(34px, 4.6vw, 54px); line-height: 1.08; margin: 10px 0 14px; letter-spacing: -0.01em; text-wrap: balance; }
+  .lede { font-size: 19px; color: var(--ink-soft); max-width: 62ch; margin: 0; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 18px; font-size: 14px; color: var(--ink-soft); }
+  .meta code { font-size: 13px; }
+  h2 { font-weight: 400; font-size: 28px; line-height: 1.2; margin: 0 0 6px; text-wrap: balance; }
+  h3 { font-weight: 500; font-size: 17px; margin: 28px 0 10px; }
+  p { margin: 0 0 14px; }
+  section.stage { padding: 40px 0; border-top: 1px solid var(--hairline); }
+  .stage-head { display: grid; grid-template-columns: 64px 1fr; gap: 18px; align-items: start; margin-bottom: 18px; }
+  .stage-num { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 30px; font-weight: 400; color: var(--blue); line-height: 1.1; padding-top: 4px; }
+  .stage-head .sub { color: var(--ink-soft); margin: 0; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86em; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+  .diagram { background: var(--paper); border: 1px solid var(--hairline); border-radius: 6px; padding: 18px 14px 10px; margin: 18px 0 22px; overflow-x: auto; }
+  .diagram pre.mermaid { margin: 0; background: transparent; display: block; white-space: normal; line-height: 1; }
+  .diagram pre.mermaid svg { display: block; height: auto; max-width: 100%; margin: 0 auto; }
+  .diagram-caption { font-size: 13px; color: var(--ink-faint); padding: 0 6px 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 8px 0 18px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--hairline); }
+  th { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); font-weight: 500; }
+  td:first-child { white-space: nowrap; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .table-wrap { overflow-x: auto; }
+  .key { display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 14px; color: var(--ink-soft); margin: 14px 0 6px; }
+  .key span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; border: 1px solid var(--graphite); }
+  .key .k-model::before { background: var(--blue-wash); border-color: var(--blue); }
+  .key .k-code::before { background: var(--parchment); border-color: var(--graphite); }
+  .key .k-gate::before { background: var(--amber-wash); border-color: var(--amber); }
+  .key .k-store::before { background: var(--green-wash); border-color: var(--green); }
+  .pill { display: inline-block; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--hairline); color: var(--ink-soft); font-weight: 500; white-space: nowrap; }
+  .pill.model { background: var(--blue-wash); border-color: var(--blue); color: var(--blue); }
+  .pill.gate { background: var(--amber-wash); border-color: var(--amber); color: var(--amber); }
+  .pill.gap { background: var(--amber-wash); border-color: var(--amber); color: var(--amber); }
+  .pill.ok { background: var(--green-wash); border-color: var(--green); color: var(--green); }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px 36px; }
+  .note { border-left: 3px solid var(--blue); padding: 6px 0 6px 16px; color: var(--ink-soft); margin: 18px 0; max-width: 68ch; }
+  .note.amber { border-left-color: var(--amber); }
+  ul { padding-left: 20px; margin: 0 0 14px; }
+  li { margin-bottom: 5px; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--hairline); font-size: 14px; color: var(--ink-faint); }
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .stage-head { grid-template-columns: 44px 1fr; gap: 12px; }
+    .stage-num { font-size: 24px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+</head>
+<body>
+<main>
+  <header class="masthead">
+    <div class="eyebrow">dembrane echo · branch popcorn-lab-sync · pull request #1044</div>
+    <h1>What happens to a session's words, step by step</h1>
+    <p class="lede">Every move the platform makes from a table's transcript to the deck on the wall, with the check at each step and what the evaluation can see. Written for review without reading the code, from the branch as it stood on September 5th 2026.</p>
+    <div class="meta">
+      <span>Model route: the platform's fast multimodal group (<code>MULTI_MODAL_FAST</code>), gemini-3.7-flash in production</span>
+      <span>State: version 2 on <code>agent_loop.popcorn_state</code></span>
+      <span>Cadence: one tick every 2 minutes, or "read now"</span>
+    </div>
+    <div class="key">
+      <span class="k-model">a model call</span>
+      <span class="k-code">code</span>
+      <span class="k-gate">a deterministic check</span>
+      <span class="k-store">what gets written</span>
+    </div>
+  </header>
+
+  <section class="stage" id="tick">
+    <div class="stage-head">
+      <div class="stage-num">0</div>
+      <div>
+        <h2>One tick, end to end</h2>
+        <p class="sub">The order things happen in. Everything below is a stage of this.</p>
+      </div>
+    </div>
+    <div class="diagram">
+<pre class="mermaid">
+%%{init: {'theme':'neutral', 'flowchart': {'curve':'basis', 'nodeSpacing': 26, 'rankSpacing': 34}}}%%
+flowchart TD
+  T[A read on request: run, refresh, rerun<br/>or, while live, the scheduled tick every 2 min]:::code --> L[Take the run lock, with a token<br/>start the heartbeat, every 30 s]:::code
+  L --> G[Gather: every conversation of the project<br/>and its chunks, joined into one transcript each]:::code
+  G --> K[Known text: the phrases and slide text<br/>the tool already showed the room]:::code
+  K --> C{Which conversations changed<br/>since last tick?}:::code
+  C -- new or grown --> S[Publish the session list first<br/>so the legend shows before any phrase]:::store
+  S --> F[Fast pass, in parallel<br/>one call per changed conversation]:::model
+  F --> W1[Write each conversation<br/>the moment its phrases land]:::store
+  W1 --> E[Second pass, only now<br/>two calls per phrase owed, at once]:::model
+  W1 --> A[Analysis, beside the second pass:<br/>stakeholders call and tensions pipeline]:::model
+  E --> W2[Write each conversation once<br/>quotes, kinds, question marks]:::store
+  A --> W4[Commit each view on its own<br/>stamped with the session it read]:::store
+  C -- nothing changed, nothing owed, no view stale --> N[No-op, next tick booked]:::code
+  W2 --> P[Prune the quote registry<br/>to what the deck still cites]:::code
+  W4 --> P
+  P --> W3[Write the state, save a replayable version<br/>book the next tick]:::store
+  classDef model fill:#EEF1FD,stroke:#4169E1,color:#2D2D2C;
+  classDef code fill:#F6F4F1,stroke:#8C8A85,color:#2D2D2C;
+  classDef store fill:#E9F4EC,stroke:#2F7D4F,color:#2D2D2C;
+</pre>
+      <div class="diagram-caption">A session is manual by default: nothing is scheduled, Refresh runs one tick, Rerun wipes the phrases, quotes and analysis (the saved runs stay) and runs one. Live is a choice with a duration (1, 8 or 24 hours): the two-minute chain until the expiry, then back to manual. Only the scheduled chain answers to the mode and the expiry; a read on request goes ahead in any mode. A tick that finds a conversation still owed its second pass, or an analysis view that failed last time, runs that even when no transcript changed. The second pass and the analysis both read the transcripts and neither reads the other, so they run together.</div>
+    </div>
+    <div class="prose">
+      <p>Two things protect the room from a long tick. The run lock stops a second tick from writing the same state; only the tick that took it can renew or release it. The heartbeat key tells the reconciler (which rescues ticks whose worker died) that this one is alive, however long its second pass or its pipeline takes, so a slow tick is never rescued as a dead one, and a dead one is still noticed within ninety seconds.</p>
+    </div>
+  </section>
+
+  <section class="stage" id="gather">
+    <div class="stage-head">
+      <div class="stage-num">1</div>
+      <div>
+        <h2>Gather and fingerprint</h2>
+        <p class="sub">What the tick reads, and how it knows what changed.</p>
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <tr><th>Read</th><th>From</th><th>Used for</th></tr>
+      <tr><td>id, participant name, created at, duration</td><td><code>conversation</code>, oldest first</td><td>the legend, the timeline, the order of the deck</td></tr>
+      <tr><td>transcript, timestamp, created at</td><td><code>conversation_chunk</code>, by timestamp</td><td>joined with line breaks into one transcript per conversation; the whole of it is fingerprinted and quoted against, and the model reads its most recent 150,000 characters</td></tr>
+      <tr><td>the host's voice note</td><td>popcorn settings</td><td>appended to the extractor's message; a change of voice re-reads every conversation</td></tr>
+    </table></div>
+    <div class="prose">
+      <p>Each conversation gets a fingerprint of its whole transcript and the voice note, so new speech and a change of voice re-read it. A new prompt version does not: it applies to conversations read after it ships, and to a rerun. A conversation is re-read when its fingerprint moved or its last read never finished. On a runaway recording the model reads the most recent window; the host's bundle says how much lies before it (<code>coverage</code>). A conversation that vanished (deleted, or its chunks gone) leaves the deck with the tick; when the last one vanishes, the slides and the quotes go with it.</p>
+    </div>
+  </section>
+
+  <section class="stage" id="fast">
+    <div class="stage-head">
+      <div class="stage-num">2</div>
+      <div>
+        <h2>The fast pass</h2>
+        <p class="sub">One call per changed conversation, sixteen in parallel, thinking off. Latency is the point: the first phrase is on the wall in one to four seconds.</p>
+      </div>
+    </div>
+    <div class="diagram">
+<pre class="mermaid">
+%%{init: {'theme':'neutral', 'flowchart': {'curve':'basis', 'nodeSpacing': 26, 'rankSpacing': 30}}}%%
+flowchart LR
+  T[Transcript<br/>+ host voice note] --> M[popcorn-v1.7<br/>thinking off, at most 8 items]:::model
+  M --> S[Shaper:<br/>contract checks]:::gate
+  S --> G[Gates:<br/>names, known text, twins]:::gate
+  G --> R[Grounding:<br/>verbatim flag, closest passage]:::code
+  R --> W[(Conversation written,<br/>revision +1, done)]:::store
+  classDef model fill:#EEF1FD,stroke:#4169E1,color:#2D2D2C;
+  classDef gate fill:#FBF1E6,stroke:#B4600A,color:#2D2D2C;
+  classDef code fill:#F6F4F1,stroke:#8C8A85,color:#2D2D2C;
+  classDef store fill:#E9F4EC,stroke:#2F7D4F,color:#2D2D2C;
+</pre>
+    </div>
+    <h3>The shaper <span class="pill gate">code</span></h3>
+    <div class="table-wrap"><table>
+      <tr><th>Check</th><th>Rule</th><th>What happens</th></tr>
+      <tr><td>length</td><td>at most 90 characters and 13 words</td><td>the phrase is dropped</td></tr>
+      <tr><td>quotation marks</td><td>none inside the phrase</td><td>dropped</td></tr>
+      <tr><td>terminal punctuation</td><td>a trailing <code>. ! ; :</code> is stripped; a trailing <code>?</code> is stripped and remembered as <code>question: true</code></td><td>the deck draws the question mark back, only then</td></tr>
+      <tr><td>duplicates</td><td>the same words twice, normalised</td><td>the second is dropped</td></tr>
+      <tr><td>ids</td><td>a hash of the phrase text</td><td>a re-read that returns the same phrase keeps its id, so the stage does not pop it twice</td></tr>
+    </table></div>
+    <h3>The gates <span class="pill gate">code</span></h3>
+    <div class="table-wrap"><table>
+      <tr><th>Check</th><th>Rule</th><th>What happens</th></tr>
+      <tr><td>a name</td><td>a capitalised word the transcript introduces someone by ("I'm Priya", "Thanks, Tom", "what Aisha was saying"), in any Latin script</td><td>held back, never on screen; kept on the state for the host</td></tr>
+      <tr><td>known text</td><td>six consecutive words shared with a phrase from another conversation or with slide text the room was shown (never with quotes, which are the room's own words)</td><td>held back: the tool was quoting itself</td></tr>
+      <tr><td>twins</td><td>two phrases with matching polarity sharing half their content words (Jaccard 0.5)</td><td>the first stays, the other is held back</td></tr>
+    </table></div>
+    <div class="prose"><p>Grounding is code, not a model call: a phrase found verbatim in the transcript is flagged as such, and every phrase gets its closest passage (rarity-weighted word overlap) for the host's "why this phrase". The room never sees the passage.</p></div>
+  </section>
+
+  <section class="stage" id="second">
+    <div class="stage-head">
+      <div class="stage-num">3</div>
+      <div>
+        <h2>The second pass</h2>
+        <p class="sub">Only after every fast extractor has written. Two calls per phrase owed, asked at once, eight in flight, thinking on. Applied in one write per conversation, so a phrase is never half-updated on the wall.</p>
+      </div>
+    </div>
+    <div class="diagram">
+<pre class="mermaid">
+%%{init: {'theme':'neutral', 'flowchart': {'curve':'basis', 'nodeSpacing': 26, 'rankSpacing': 30}}}%%
+flowchart LR
+  P[Phrase + its transcript] --> V[popcorn-validate<br/>the passage it paraphrases]:::model
+  P --> K[popcorn-kind v3<br/>kind, qualifiers, question form]:::model
+  V --> VC[Verbatim check<br/>at least 12 characters, word for word]:::gate
+  VC --> H[Hedge check<br/>a modal the passage lacks]:::gate
+  K --> Q{question kind<br/>written as a statement?}:::code
+  Q -- yes --> RW[popcorn-question<br/>rewritten as the question asked]:::model
+  RW --> QG[Rewrite gate<br/>ends in ?, 13 words, no name]:::gate
+  QG -- rewritten --> V2[popcorn-validate again,<br/>on the words the room will read]:::model
+  V2 --> VC
+  H --> A[Apply once per conversation]:::code
+  QG -- kept as it was --> A
+  Q -- no --> A
+  A --> W[(quoteId, kind, question,<br/>qualifiers; revision +1;<br/>validated if every call landed)]:::store
+  classDef model fill:#EEF1FD,stroke:#4169E1,color:#2D2D2C;
+  classDef gate fill:#FBF1E6,stroke:#B4600A,color:#2D2D2C;
+  classDef code fill:#F6F4F1,stroke:#8C8A85,color:#2D2D2C;
+  classDef store fill:#E9F4EC,stroke:#2F7D4F,color:#2D2D2C;
+</pre>
+    </div>
+    <div class="table-wrap"><table>
+      <tr><th>Outcome</th><th>Rule</th><th>On the wall</th></tr>
+      <tr><td>rooted, verbatim</td><td>the phrase itself is in the transcript word for word (code, from the fast pass)</td><td>the phrase wears quotation marks and opens its passage on click</td></tr>
+      <tr><td>rooted, a paraphrase</td><td>the model's passage is in the transcript word for word; the phrase is not</td><td>the phrase is plain, no quotation marks; the tally counts it as validated</td></tr>
+      <tr><td>held back</td><td>the passage is not verbatim, or the model said it found none</td><td>the phrase leaves the deck: it moves to <code>review.dropped</code> with the model's reason, for the host; the tally counts it as held back</td></tr>
+      <tr><td>a kind</td><td>one of observation, distinction, need, practice, idea, objection, question, decision</td><td>an icon before the phrase, its one-word name on hover; qualifiers (tentative, personal experience, not implemented) are stored, not drawn</td></tr>
+      <tr><td>a hedge added</td><td>"can", "may", "often" and the like in the phrase but not in the passage</td><td>nothing yet: kept on the state under <code>review</code> for the host</td></tr>
+      <tr><td>a failed call</td><td>the phrase keeps whatever landed; the conversation is not stamped validated</td><td>the next tick retries exactly the phrases that failed</td></tr>
+    </table></div>
+    <div class="prose"><p>A re-read keeps a phrase's reviewed wording, kind and quote while its passage remains in the transcript. A question rewrite keeps its corrected words; the display gates and verbatim check run on those words. Rejections apply only to the input checked: new speech or a changed voice note triggers reconsideration. The model's reasons, the objection's target and any scrubbed names stay under <code>review</code> on the state. The bundle never emits <code>review</code>.</p></div>
+  </section>
+
+  <section class="stage" id="registry">
+    <div class="stage-head">
+      <div class="stage-num">4</div>
+      <div>
+        <h2>One quote registry</h2>
+        <p class="sub">Every quote of the session in one list at the top of the state, so a quote id the deck holds stays valid across ticks.</p>
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <tr><th>Rule</th><th>What it means</th></tr>
+      <tr><td>seeded</td><td>each tick starts from the registry it inherited; a seeded quote whose conversation is gone is dropped with it</td></tr>
+      <tr><td>verbatim only</td><td>a quote that is not in any transcript word for word is refused; one the model credited to the wrong table is credited to the table that said it, and the run's log line counts those</td></tr>
+      <tr><td>one per table</td><td>the same words said at two tables are two quotes, one per conversation, so the modal names the right table</td></tr>
+      <tr><td>no speaker</td><td>a context line naming a person, a pronoun, an organisation, or a name from the introductions is dropped: the transcripts carry no speakers, so a context that assigns one is a guess</td></tr>
+      <tr><td>pruned</td><td>after the analysis, only quotes something on the deck cites are kept</td></tr>
+    </table></div>
+  </section>
+
+  <section class="stage" id="stakeholders">
+    <div class="stage-head">
+      <div class="stage-num">5</div>
+      <div>
+        <h2>Stakeholders</h2>
+        <p class="sub">One call over the whole session (a 600,000-character budget, shared so short transcripts keep every character and the long ones split what is left), thinking on, five-minute timeout, behind two checks with one retry.</p>
+      </div>
+    </div>
+    <div class="diagram">
+<pre class="mermaid">
+%%{init: {'theme':'neutral', 'flowchart': {'curve':'basis', 'nodeSpacing': 26, 'rankSpacing': 30}}}%%
+flowchart LR
+  C[Whole session] --> M[stakeholders v0.9<br/>only people hold a stake; one map]:::model
+  M --> S[Shape: at most 9 groups, 12 relations,<br/>3 aspects each; quotes verbatim or the aspect goes]:::code
+  S --> N[Name gate]:::gate
+  S --> I[Island gate]:::gate
+  N --> R{any flag?}:::code
+  I --> R
+  R -- yes, once --> M2[The same call again,<br/>the failed checks appended]:::model
+  M2 --> W[(stakeholders slide,<br/>quotes into the registry)]:::store
+  R -- no --> W
+  classDef model fill:#EEF1FD,stroke:#4169E1,color:#2D2D2C;
+  classDef gate fill:#FBF1E6,stroke:#B4600A,color:#2D2D2C;
+  classDef code fill:#F6F4F1,stroke:#8C8A85,color:#2D2D2C;
+  classDef store fill:#E9F4EC,stroke:#2F7D4F,color:#2D2D2C;
+</pre>
+    </div>
+    <div class="table-wrap"><table>
+      <tr><th>Check</th><th>Rule</th></tr>
+      <tr><td>a joined name</td><td>"and", "&amp;", "/" or a comma followed by another name is two groups on one card ("Residents, aged 65+" is one group)</td></tr>
+      <tr><td>a thing</td><td>a name ending in tool, system, technology, AI, recording, dashboard, and the like, or in an abstraction (pressures, culture, process), unless the name says who the people are ("Women in Technology")</td></tr>
+      <tr><td>an island</td><td>a group with no relation, or a cluster connected only to itself; the map is one map</td></tr>
+    </table></div>
+    <div class="prose"><p>The second answer is taken as it is; what still fails is written into the run's log line. The rung (voiced, named, inferred) and the weights are the model's, not checked by code.</p></div>
+  </section>
+
+  <section class="stage" id="tensions">
+    <div class="stage-head">
+      <div class="stage-num">6</div>
+      <div>
+        <h2>Tensions</h2>
+        <p class="sub">A pipeline of single judgements, every call one question, run beside the stakeholders call. Two to six minutes on eight tables, depending on the model.</p>
+      </div>
+    </div>
+    <div class="diagram">
+<pre class="mermaid">
+%%{init: {'theme':'neutral', 'flowchart': {'curve':'basis', 'nodeSpacing': 22, 'rankSpacing': 30}}}%%
+flowchart TD
+  H[tensions-handed, one call over the session:<br/>what the rooms were handed from outside,<br/>and what each room did with it]:::model
+  H --> HQ[Handed quotes checked;<br/>an item whose quote is nowhere<br/>is marked unverified for the verifier]:::gate
+  P[positions, one call per transcript, beside handed:<br/>every want, constraint and value held,<br/>its holder never a name, a verbatim quote]:::model
+  P --> PB[Budget: at most 80 positions,<br/>transcripts take turns by firmness,<br/>every table keeps at least one]:::gate
+  HQ --> V
+  PB --> C[collisions, one call per position:<br/>which others it collides with, across all tables,<br/>and how zero-sum]:::model
+  C --> CB[Pairs ranked cross-table first;<br/>the best pair of every table kept;<br/>at most 40 go on]:::gate
+  CB --> V[tension-verify, one call per pair,<br/>with the two transcripts and the handed list:<br/>both poles held, zero-sum enough,<br/>not a handed trade-off reopened, not settled]:::model
+  V --> VQ[Quotes kept only if verbatim, at most two per pole,<br/>each credited to the table that said it;<br/>a pole without a quote makes the pair unsupported]:::gate
+  VQ --> D[dedupe, one call per verified pair, in rank order,<br/>thinking off: the same tension, a facet of one, or new,<br/>and whether the facet's poles are the other way round]:::model
+  D --> DB[At most 8 kept; later pairs still fold in as facets;<br/>a facet's quotes go to the pole they held]:::gate
+  DB --> W[tension-write, one call per tension:<br/>the knot and the question, facets in view]:::model
+  W --> SG[Screen gate, one retry:<br/>poles 3 to 7 words, knot one sentence of at most 18,<br/>question at most 22, never reports the meeting]:::gate
+  SG --> R[(tensions slide;<br/>quotes into the registry,<br/>each against its pole's transcript)]:::store
+  classDef model fill:#EEF1FD,stroke:#4169E1,color:#2D2D2C;
+  classDef gate fill:#FBF1E6,stroke:#B4600A,color:#2D2D2C;
+  classDef store fill:#E9F4EC,stroke:#2F7D4F,color:#2D2D2C;
+</pre>
+    </div>
+    <div class="table-wrap"><table>
+      <tr><th>Budget or guard</th><th>Value</th><th>Why</th></tr>
+      <tr><td>positions per transcript</td><td class="num">at most 30 from the model, at most 80 in total, at least one per table</td><td>the platform's model found 178 on eight tables where the lab's found 59, and every position is one collisions call</td></tr>
+      <tr><td>collision threshold</td><td class="num">zero-sum at least 0.2</td><td>below it the pair is not a collision</td></tr>
+      <tr><td>pairs verified</td><td class="num">at most 40, cross-table first, one reserved per table</td><td>one verification call per pair with both transcripts in view</td></tr>
+      <tr><td>tensions kept</td><td class="num">at most 8</td><td>the dedupe keeps folding facets after the cap</td></tr>
+      <tr><td>per call</td><td class="num">240 seconds</td><td>a call that has not answered by then fails the slide; a failed stage cancels its siblings</td></tr>
+      <tr><td>evidence</td><td>a quote on each pole</td><td>the verifier's yes without a passage holding a pole is unsupported, and the pair is dropped</td></tr>
+      <tr><td>on failure</td><td>the previous tensions slide stays; the stakeholders slide is committed on its own</td><td>unless the previous slide cites a conversation that is gone; then it is dropped</td></tr>
+    </table></div>
+    <div class="note amber">The known-text gate is not applied to tensions on the platform. In the lab it caught the theme cards read aloud into the room; here the only "shown text" would be the previous tick's own tensions, and a tension that persists across ticks must not trip it. The handed list in the verify call does that gate's job.</div>
+  </section>
+
+  <section class="stage" id="bundle">
+    <div class="stage-head">
+      <div class="stage-num">7</div>
+      <div>
+        <h2>What leaves the state</h2>
+        <p class="sub">The deck polls one bundle; the server assembles it from the state each time, in two variants.</p>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <h3>The host's bundle</h3>
+        <ul>
+          <li>labels are the names typed on the phones</li>
+          <li>an unrooted phrase carries its closest passage, as a reading aid</li>
+          <li>quotes carry a link into the dashboard</li>
+          <li>host controls: hide a tab, the QR code</li>
+        </ul>
+      </div>
+      <div>
+        <h3>The room's bundle</h3>
+        <ul>
+          <li>labels are "Conversation 1, 2, 3" unless the host sets <code>public_labels</code> to names</li>
+          <li>no passages, no links, no host controls</li>
+          <li>the same bundle the host's fullscreen presenting mode asks for</li>
+          <li>no <code>review</code> field ever, in either variant</li>
+        </ul>
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <tr><th>File</th><th>Carries</th></tr>
+      <tr><td><code>session.json</code></td><td>title, date, the transcripts with label, start time and duration (the timeline), the QR when on</td></tr>
+      <tr><td><code>popcorn/&lt;id&gt;.json</code></td><td>per phrase: id, phrase, kind, question, qualifiers, quoteId, and <code>verbatim</code> when the phrase itself is in the transcript word for word (no weight: one size on the wall); <code>validated</code> is true when the second pass finished for the transcript as it stands; <code>held_back</code> counts the phrases the pass took off the deck; the host's copy carries <code>coverage</code> when the model read a window</td></tr>
+      <tr><td><code>quotes.json</code></td><td>id, transcript, text, and a context only when it assigns no speaker</td></tr>
+      <tr><td><code>tensions.json</code></td><td>poles, knot, question, quote ids</td></tr>
+      <tr><td><code>stakeholders.json</code></td><td>groups with rung and weights, relations with aspects, quote ids</td></tr>
+    </table></div>
+    <div class="prose"><p>The deck keeps polling a conversation's file until it is validated, and applies a validated file again when its revision moves, which happens when the transcript grows and the conversation is re-read.</p></div>
+  </section>
+
+  <section class="stage" id="models">
+    <div class="stage-head">
+      <div class="stage-num">8</div>
+      <div>
+        <h2>Which model, and when it thinks</h2>
+        <p class="sub">One group for every popcorn call.</p>
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <tr><th>Call</th><th>Prompt</th><th>Thinking</th><th>Output cap</th></tr>
+      <tr><td>fast pass</td><td><code>popcorn-v1.7</code></td><td>off</td><td class="num">2,000 tokens</td></tr>
+      <tr><td>evidence, kind, question rewrite</td><td><code>popcorn-validate</code>, <code>popcorn-kind</code>, <code>popcorn-question</code></td><td>on</td><td class="num">8,000</td></tr>
+      <tr><td>stakeholders</td><td><code>stakeholders-v0.9</code></td><td>on</td><td class="num">32,000</td></tr>
+      <tr><td>handed, positions, collisions, verify, write</td><td>the five pipeline prompts</td><td>on</td><td class="num">32,000</td></tr>
+      <tr><td>dedupe</td><td>an inline instruction</td><td>off</td><td class="num">32,000</td></tr>
+    </table></div>
+    <div class="prose"><p>Every call goes through the platform's fast multimodal group, the same deployment as everything else that reads transcripts (gemini-3.7-flash in production), and every call is bounded: 60 s for the fast pass, 120 s for the second pass, 240 to 300 s for the analysis calls. The prompts are byte-for-byte the lab's, kept as immutable snapshots; a new version is a new file.</p></div>
+  </section>
+
+  <section class="stage" id="evaluation">
+    <div class="stage-head">
+      <div class="stage-num">9</div>
+      <div>
+        <h2>What the evaluation sees</h2>
+        <p class="sub">The lab's judge scores a run one judgement per call: every rubric dimension per item, every benchmark match, every trap. The platform's output can be exported into the lab's run shape and judged the same way.</p>
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <tr><th>Output</th><th>Rubric dimensions</th><th>Benchmarks</th><th>Covered</th></tr>
+      <tr><td>popcorn phrases</td><td>faithful status (an added hedge is a status change), room's words, not read-aloud text, weight, no names</td><td>61 tier-A phrases, 47 tier-B</td><td><span class="pill ok">judged</span></td></tr>
+      <tr><td>tensions</td><td>substance, both poles held, open question, screen ready, recognisable</td><td>6 tier-A, 6 tier-B; Astra's 12 core, 5 design issues; 15 traps</td><td><span class="pill ok">judged</span></td></tr>
+      <tr><td>stakeholder groups</td><td>own side, recognisable, rung honest, weight sane</td><td>9 groups; Astra's 41</td><td><span class="pill ok">judged</span></td></tr>
+      <tr><td>relations</td><td>specific, scalars, substance</td><td>11 relations; Astra's 42</td><td><span class="pill ok">judged</span></td></tr>
+      <tr><td>kinds and qualifiers</td><td>none</td><td>none; the ontology is v3, hand-checked on 49 phrases</td><td><span class="pill gap">gap</span></td></tr>
+      <tr><td>question rewrites</td><td>none beyond the shape gate</td><td>none</td><td><span class="pill gap">gap</span></td></tr>
+      <tr><td>the pipeline's middle stages</td><td>only the final tensions are judged; positions, collisions and verify are audited by reading</td><td>none</td><td><span class="pill gap">gap</span></td></tr>
+      <tr><td>a pole that names the absence as the thing</td><td>"psychological safety often is a barrier" for "the lack of it is"; not a rubric line or a trap yet</td><td>none</td><td><span class="pill gap">gap</span></td></tr>
+      <tr><td>non-Latin scripts</td><td>the screen gate counts words by spaces; the name gate reads Latin capitals</td><td>none</td><td><span class="pill gap">gap</span></td></tr>
+    </table></div>
+    <div class="note">The order of work the eval loop implies: add the reversed-pole case as a trap and a rubric line; judge the verify prompt's variants against it on the model that will run in production; keep the variant that passes. Prompt wording changes without that loop are guesses.</div>
+  </section>
+
+  <section class="stage" id="numbers">
+    <div class="stage-head">
+      <div class="stage-num">10</div>
+      <div>
+        <h2>What it measured on the local stack</h2>
+        <p class="sub">Copies of Ben's practice sessions, September 5th 2026.</p>
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <tr><th>Step</th><th>Measured</th><th>Model</th></tr>
+      <tr><td>first phrase on the wall</td><td class="num">1.6 to 4.0 s per conversation</td><td>2.5-flash and 3.7-flash, thinking off</td></tr>
+      <tr><td>second pass per conversation</td><td class="num">8 to 77 s, behind the first phrases</td><td>both</td></tr>
+      <tr><td>stakeholders</td><td class="num">24 to 60 s</td><td>3.7-flash</td></tr>
+      <tr><td>tensions, eight tables, unbounded</td><td class="num">over 40 minutes, abandoned</td><td>2.5-flash</td></tr>
+      <tr><td>tensions, eight tables, budgeted</td><td class="num">377 s</td><td>2.5-flash</td></tr>
+      <tr><td>tensions, eight tables, budgeted</td><td class="num">139 s</td><td>3.7-flash</td></tr>
+      <tr><td>tensions, four tables</td><td class="num">123 to 129 s</td><td>3.7-flash</td></tr>
+    </table></div>
+  </section>
+
+  <footer>Served only while SERVE_API_DOCS is on (local development). Branch <span class="mono">popcorn-lab-sync</span>, September 5th 2026. Prompts from Dembrane/popcorn at <span class="mono">8c23eba</span>.</footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js" integrity="sha384-WmdflGW9aGfoBdHc4rRyWzYuAjEmDwMdGdiPNacbwfGKxBW/SO6guzuQ76qjnSlr" crossorigin="anonymous"></script>
+<script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script>
+</body>
+</html>

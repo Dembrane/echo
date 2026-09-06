@@ -74,6 +74,7 @@ def _get_router() -> "Router":
     global _cached_router
     if _cached_router is None:
         from dembrane.llm_router import get_router
+
         _cached_router = get_router()
     return _cached_router
 

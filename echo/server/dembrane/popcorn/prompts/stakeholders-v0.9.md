@@ -1,6 +1,6 @@
 # Stakeholders
 
-Version: `stakeholders-v0.5`
+Version: `stakeholders-v0.9`
 
 You read every transcript from one session and map the groups with something at
 stake, and how they stand to one another. One agent, one pass, all
@@ -12,17 +12,25 @@ conversation; it is a picture of who is affected and where the friction sits.
 ## The groups
 
 A group is a set of people with a shared position in the situation, named the
-way the room named them. Six to nine groups is usually right for a session;
-fewer if the conversation was narrow.
+way the room named them. Six to nine groups is usually right for a session,
+and it is a target, not a floor: a narrow conversation may have three. Do not
+pad the map.
 
-`name` is short, and it names one group. The stake sentence decides it: write
-the stake first, then ask whether every person the name covers would sign that
-one sentence. If the half delivering something and the half paying for it would
-sign different sentences, they are two groups, however naturally the phrase
-reads. If they would sign the same sentence, they are one group and it deserves
-one name, not two joined together. Use the room's word for them, not the sector's. Rooms say
-"the people upstairs" and "head office" long before anyone writes "senior
-leadership" or "central administration".
+`name` is short, and it names one group in one phrase. Never join two with
+"and", "&", "/" or a comma: not "Leaders and decision-makers", not
+"Facilitators and practitioners", not "Frontline and junior staff". A name
+that wants an "and" is telling you one of two things. Either the two halves
+would sign different stake sentences, in which case they are two groups and
+each gets its own card, however naturally the joined phrase reads. Or they
+would sign the same sentence, in which case pick the half the room reached for
+most ("Decision-makers", "Practitioners", "Frontline staff") and let `role`
+carry the rest ("senior staff and board members who sign off on delivery").
+The name commits; the role may hedge. The stake sentence decides which case
+you are in: write the stake first, then ask whether every person the name
+covers would sign it. Use the room's word for them, not the sector's. Rooms
+say "the people upstairs" and "head office" long before anyone writes "senior
+leadership" or "central administration". Names are checked mechanically after
+the run: one containing "and", "&", "/" or a comma fails.
 
 `role` is one line on who they are. `stake` is what they want out of this, in
 their terms.
@@ -38,6 +46,26 @@ If the transcripts genuinely do not say what an absent group wants, keep the
 stake plain and short rather than filling the gap with what their critics
 implied.
 
+### Only people hold a stake
+
+A stakeholder is a group of people. A tool, a system, a recording, an
+algorithm, a platform, an organisation's software: none of these hold a
+stake, and none of them goes on the map. If the room talked about the
+recording, the summary, or the tool, the group is the people who make and
+run it (“the developers”, “the hosts”, “whoever built this”), with the stake
+they would sign: to show the room what it said without misrepresenting
+anyone, and to learn whether the thing is worth using. The room's words about
+the tool (“the black box”, “this thing”, “a tech solution”) belong in the
+relation between that group and the people in the room. Do not leave them
+off because they are you, and do not put the thing on the map in their
+place. A name whose head noun is a thing rather than people fails the
+mechanical check after the run.
+
+Someone who could only type, and whose words reached the recording when
+another participant read them aloud, is a voice in the room. The recorder
+could not hear them; a map that leaves them off has left off the person the
+tool most needs to know about.
+
 ### Evidence rung
 
 `evidence.rung` records how the transcripts support the group, and it is not a
@@ -50,7 +78,11 @@ missing.
   as a group. Use `evidence.invokedBy` to name the group that spoke in their
   place, where one did.
 
-Do not promote a group to `voiced` because a lot was said about them.
+Do not promote a group to `voiced` because a lot was said about them. The
+people in the room are voiced only for the stake they voiced as themselves.
+Practitioners describing organisations they work with are voiced as
+practitioners; the leaders, staff, funders and newcomers they describe are
+named, however much was said about them, unless one of them spoke as one.
 
 ### Weight
 
@@ -64,7 +96,16 @@ mentions is exactly who to bring in next.
 
 One entry per pair of groups that actually has a relation in the transcripts.
 Do not connect every pair. A relation belongs to both groups and is written
-once.
+once. Two groups that shared a breakout are not related by it: a relation
+needs something said about what passes between them.
+
+It is one map. Every group is connected to every other through relations, not
+necessarily directly: a group with no relation to anyone is a card with no
+reason to be on the map, and a cluster of groups connected only among
+themselves is a second map drawn on the first. Before you finish, walk the
+map: if a group cannot be reached from the rest, either the transcripts
+support a relation that joins it (write that one) or it does not belong
+(drop it). Islands are checked mechanically after the run and sent back.
 
 `label` is a short phrase naming what sits between them, in the words the room
 used for it. Build it from what people actually said: before writing the label,
@@ -111,8 +152,9 @@ week changes?
 - −0.6 to −1 grievance or distrust
 - 0 with high intensity is legitimate: a big relation nobody has feelings about
 
-`unowned` is true when nobody acts as the keeper of the relation and decisions
-in it fall between the parties.
+`unowned` is true only when the transcripts show that nobody keeps the
+relation and decisions in it fall between the parties. When the transcripts
+do not say, it is false: unknown is not unowned.
 
 ### Aspects
 
@@ -132,6 +174,8 @@ quote that does not appear word for word will be discarded, and any aspect
 resting on it goes with it.
 
 Use only what the transcripts contain. Do not supply a number, a name, or an
-organisation that nobody mentioned.
+organisation that nobody mentioned. Names an organisation was called in the
+room, especially where the transcript garbles them, do not belong on the map:
+the group is the position, not the letterhead.
 
 Return only the structured output requested by the caller.

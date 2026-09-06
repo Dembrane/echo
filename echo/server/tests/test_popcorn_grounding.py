@@ -70,13 +70,20 @@ def _grounded_state() -> dict:
                     "short": "Table 1",
                     "done": True,
                     "revision": 2,
-                    "validated_run": 3,
+                    "fingerprint": "f-c1",
+                    "validated_fingerprint": "f-c1",
+                    "created_at": "2026-09-03T09:00:00+00:00",
+                    "duration": 1500.0,
                     "items": [
                         {
                             "id": "p-c1-1",
                             "phrase": "Nobody joins for the desks",
                             "weight": 3,
                             "quoteId": "q1",
+                            "kind": "observation",
+                            "question": False,
+                            "qualifiers": ["personal_experience"],
+                            "review": {"evidence": "said as such", "kind": "reports a fact"},
                         },
                         {
                             "id": "p-c1-2",
@@ -89,8 +96,8 @@ def _grounded_state() -> dict:
                     ],
                 }
             },
+            "quotes": [{"id": "q1", "transcript": "c1", "text": "Nobody joins for the desks"}],
             "analysis": {
-                "quotes": [{"id": "q1", "transcript": "c1", "text": "Nobody joins for the desks"}],
                 "tensions": {"tensions": []},
                 "stakeholders": {"stakeholders": [], "relations": []},
             },
@@ -120,8 +127,24 @@ def test_host_bundle_carries_sources_and_links_but_public_does_not() -> None:
     }
     assert "host" not in public["session.json"]
     assert public["session.json"]["branding"] is True
+    # The host sees the name typed on the phone; the room sees a number.
+    assert host["session.json"]["transcripts"][0]["label"] == "Table 1"
+    assert public["session.json"]["transcripts"][0] == {
+        "id": "c1",
+        "label": "Conversation 1",
+        "short": "Conversation 1",
+        "time": "2026-09-03T09:00:00+00:00",
+        "duration": 1500.0,
+    }
     assert host["popcorn/c1.json"]["validated"] is True
     assert host["popcorn/c1.json"]["items"][0]["quoteId"] == "q1"
+    assert host["popcorn/c1.json"]["items"][0]["kind"] == "observation"
+    assert host["popcorn/c1.json"]["items"][0]["qualifiers"] == ["personal_experience"]
+    assert "question" not in host["popcorn/c1.json"]["items"][0]
+    # What the model said about a phrase stays in the state.
+    for files in (host, public):
+        for item in files["popcorn/c1.json"]["items"]:
+            assert "review" not in item and "verbatim" not in item
     assert host["popcorn/c1.json"]["items"][1]["source"]["text"].startswith("the Tuesday")
     assert host["popcorn/c1.json"]["items"][1]["source"]["url"] == (
         "https://dashboard.dembrane.com/en-US/w/w1/projects/p1/conversations/c1"
@@ -133,9 +156,41 @@ def test_host_bundle_carries_sources_and_links_but_public_does_not() -> None:
     assert "url" not in public["quotes.json"]["quotes"][0]
 
 
-def test_validated_is_false_once_a_conversation_changed_after_the_pass() -> None:
+def test_public_labels_can_show_names_when_the_host_says_so() -> None:
+    files = build_bundle(
+        state=_grounded_state(),
+        settings=normalize_settings({"public_labels": "names"}, fallback_title="x"),
+        report={"id": "r1"},
+        project={"id": "p1"},
+        participant_base_url="",
+    )["files"]
+    assert files["session.json"]["transcripts"][0]["label"] == "Table 1"
+    assert normalize_settings({"public_labels": "anything"}, fallback_title="x")[
+        "public_labels"
+    ] == ("neutral")
+
+
+def test_state_v1_registry_moves_to_the_top() -> None:
+    state = normalize_state(
+        {
+            "run": 1,
+            "order": ["c1"],
+            "conversations": {"c1": {"id": "c1", "done": True, "items": []}},
+            "analysis": {
+                "quotes": [{"id": "q1", "transcript": "c1", "text": "x"}],
+                "tensions": {"tensions": []},
+            },
+        }
+    )
+    assert state["version"] == 2
+    assert [q["id"] for q in state["quotes"]] == ["q1"]
+    assert "quotes" not in state["analysis"]
+    assert normalize_state(None)["quotes"] == []
+
+
+def test_validated_is_false_once_the_transcript_grew_after_the_pass() -> None:
     state = _grounded_state()
-    state["run"] = 4  # a newer run re-read something; this conversation was not re-grounded
+    state["conversations"]["c1"]["fingerprint"] = "f-c1-grown"  # re-read, not yet re-passed
     files = build_bundle(
         state=state,
         settings=normalize_settings({}, fallback_title="x"),
@@ -146,6 +201,19 @@ def test_validated_is_false_once_a_conversation_changed_after_the_pass() -> None
     assert files["popcorn/c1.json"]["validated"] is False
 
 
+def test_another_conversation_changing_leaves_this_one_validated() -> None:
+    state = _grounded_state()
+    state["run"] = 9  # many ticks later, other conversations re-read
+    files = build_bundle(
+        state=state,
+        settings=normalize_settings({}, fallback_title="x"),
+        report={"id": "r1"},
+        project={"id": "p1"},
+        participant_base_url="",
+    )["files"]
+    assert files["popcorn/c1.json"]["validated"] is True
+
+
 def test_sample_bundle_is_the_upstream_deck() -> None:
     bundle = sample_bundle()
     assert bundle["sample"] is True
@@ -154,3 +222,19 @@ def test_sample_bundle_is_the_upstream_deck() -> None:
         bundle["files"]
     )
     assert "custom/breakthroughs.json" in bundle["files"]
+
+
+def test_only_a_dev_host_bundle_offers_the_flow_page() -> None:
+    common = dict(
+        state=_grounded_state(),
+        settings=normalize_settings({}, fallback_title="x"),
+        report={"id": "r1"},
+        project={"id": "p1"},
+        participant_base_url="",
+    )
+    assert (
+        build_bundle(host=True, dev=True, **common)["files"]["session.json"]["host"]["flow"]
+        == "flow/"
+    )
+    assert "flow" not in build_bundle(host=True, **common)["files"]["session.json"]["host"]
+    assert "host" not in build_bundle(host=False, dev=True, **common)["files"]["session.json"]

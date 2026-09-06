@@ -8,13 +8,28 @@ PROJECT_PLAN.md and tools/serve_demo.py):
   room before the slowest transcript finishes.
 - Only conversations whose transcript changed since the last tick are
   re-extracted. Unchanged ones keep their phrases and their stable ids.
-- Tensions and stakeholders read the whole session at once and run after the
-  popcorn pass, in parallel with each other. One QuoteBook owns the quote
-  registry for the run: every quote is checked verbatim against the transcripts
-  before it is written, and the analysis block is replaced atomically so a
-  new run never mixes with stale slides.
-- Popcorn phrases are never presented as direct quotes. The upstream validation
-  pass (popcorn-validate) has not been written yet, so `validated` stays false.
+- Once every fast extractor has flushed, two things start together: the
+  second pass over each changed conversation (`enrichment.py`: one evidence
+  call and one kind call per phrase, at once, applied in one write per
+  conversation) and the session analysis (the stakeholders call and the
+  tensions pipeline, side by side). Neither reads the other's output; both
+  read the transcripts. `validated` on the bundle means the second pass
+  finished for the transcript as it stands.
+- A read is scheduled (the live chain) or on request: `manual` (run, refresh)
+  and `rerun`. A rerun wipes the state here, under the run lock, before it
+  reads, so a rerun pressed during a read cannot be undone by that read's own
+  write; the run counter goes on so the saved runs stay in order.
+- Each analysis view is committed on its own, with the fingerprint of the
+  session it read: a failed stakeholders call keeps the previous stakeholders
+  and still publishes the new tensions, and the next tick retries only the
+  view that is stale.
+- A conversation's fingerprint covers its whole transcript and the host's
+  voice, so new speech past the model's window or a change of voice re-reads
+  it. A new prompt version does not: it applies to conversations read after
+  it ships, and to a rerun. The model reads a window of the transcript
+  (`model_window`); the quote registry checks against all of it.
+- Every quote of the session lives in one registry (`state["quotes"]`), seeded
+  into one QuoteBook per tick, so ids the deck already holds stay valid.
 """
 
 from __future__ import annotations
@@ -30,11 +45,22 @@ from dembrane.settings import get_settings
 from dembrane.redis_async import get_redis_client
 from dembrane.canvas.access import CanvasReaderAccessDenied, resolve_canvas_reader_context
 from dembrane.canvas.events import publish_generation_nudge
-from dembrane.popcorn.model import run_analysis, extract_popcorn
+from dembrane.popcorn.flags import gate_items, known_shingles, introduced_names
+from dembrane.popcorn.gates import name_flags, island_flags
+from dembrane.popcorn.model import (
+    prompt_text,
+    run_analysis,
+    analysis_call,
+    classify_phrase,
+    extract_popcorn,
+    validate_phrase,
+    rewrite_question,
+)
 from dembrane.directus_async import async_directus
 from dembrane.popcorn.service import (
     MIN_CADENCE_MINUTES,
     DEFAULT_CADENCE_MINUTES,
+    fresh_state,
     save_version,
     is_popcorn_loop,
     normalize_state,
@@ -45,28 +71,45 @@ from dembrane.popcorn.service import (
 )
 from dembrane.popcorn.analysis import (
     QuoteBook,
+    norm,
     build_corpus,
-    shape_tensions,
     shape_stakeholders,
     shape_popcorn_items,
 )
+from dembrane.popcorn.tensions import PROMPT_NAMES as TENSION_PROMPTS, run_pipeline
 from dembrane.popcorn.grounding import ground_items
+from dembrane.popcorn.enrichment import enrich_item, apply_results
 
 logger = logging.getLogger("dembrane.popcorn.ticks")
 
 # Parallel extractors per tick. The upstream demo runs 16; Vertex flash keeps up.
 MAX_PARALLEL_EXTRACTORS = 16
+# Second-pass calls in flight per tick (two per phrase). The pass starts only
+# after every fast extractor has flushed, so it never competes with a first
+# phrase for the model.
+MAX_PARALLEL_ENRICHMENT = 8
+# Calls in flight for the tensions pipeline, which runs beside the stakeholders call.
+MAX_PARALLEL_ANALYSIS = 12
+# The stakeholders call reads the whole session at once; one that has not answered
+# in this long is not going to, and the tick must not wait on it forever.
+STAKEHOLDERS_TIMEOUT_SECONDS = 300
 # A single conversation rarely passes 100k characters in a day; the cap only
-# guards the prompt against a runaway recording.
+# guards the prompt against a runaway recording. It bounds what the model
+# reads (the most recent part), never what is fingerprinted or quoted.
 MAX_CHARS_PER_CONVERSATION = 150_000
-# The analysis corpus is every transcript at once. Above this the transcripts
-# are clipped evenly so the two slow calls stay inside one context window.
+# The analysis corpus is every transcript at once. Above this the budget is
+# shared so that short transcripts keep every character and the long ones
+# split what is left evenly, so the two slow calls stay inside one context.
 MAX_ANALYSIS_CHARS = 600_000
+ANALYSIS_VIEWS = ("tensions", "stakeholders")
+# Reads a host asked for, as opposed to the live chain's scheduled ticks.
+ON_REQUEST = ("manual", "rerun")
 RUN_LOCK_SECONDS = 5 * 60
 MANUAL_LOCK_WAIT_SECONDS = 180
 STALE_TICK_SECONDS = 90
-ANALYSIS_KINDS = ("tensions", "stakeholders")
-ANALYSIS_SHAPERS = {"tensions": shape_tensions, "stakeholders": shape_stakeholders}
+# A running tick says so every HEARTBEAT_SECONDS; the key lives STALE_TICK_SECONDS,
+# so a worker that dies is noticed within one cadence and a slow second pass is not.
+HEARTBEAT_SECONDS = 30
 
 
 def _now() -> datetime:
@@ -96,6 +139,43 @@ def _fingerprint(text: str) -> str:
     return hashlib.sha1(text.encode("utf-8")).hexdigest()[:16]
 
 
+def model_window(text: str, cap: int | None = None) -> str:
+    """What the model reads of a conversation: all of it, or on a runaway
+    recording its most recent `cap` characters, from the next line break. The
+    fingerprint and the quote registry use the whole text, so speech past the
+    cap is still read when it arrives, and every quote still verifies."""
+    cap = MAX_CHARS_PER_CONVERSATION if cap is None else cap
+    if len(text) <= cap:
+        return text
+    tail = text[-cap:]
+    cut = tail.find("\n")
+    return tail[cut + 1 :] if 0 <= cut < 2000 else tail
+
+
+def allocate_chars(lengths: dict[str, int], budget: int) -> dict[str, int]:
+    """Share a character budget across transcripts: a transcript short enough
+    to fit its equal share keeps every character, and what it leaves goes to
+    the longer ones in equal measure. The largest total that fits, with no
+    transcript cut while a longer one is whole."""
+    if sum(lengths.values()) <= budget:
+        return dict(lengths)
+    quota: dict[str, int] = {}
+    remaining = budget
+    pending = sorted(lengths.items(), key=lambda kv: kv[1])
+    while pending:
+        share = remaining // len(pending)
+        tid, n = pending[0]
+        if n <= share:
+            quota[tid] = n
+            remaining -= n
+            pending.pop(0)
+        else:
+            for tid, _n in pending:
+                quota[tid] = share
+            pending = []
+    return quota
+
+
 def labels_for(conversation: dict[str, Any], index: int) -> tuple[str, str]:
     """Human label and short label for the legend, from the participant name."""
     name = str(conversation.get("participant_name") or "").strip()
@@ -110,11 +190,12 @@ async def _create_run(
     status: str,
     started_at: datetime,
     detail: str | None = None,
+    request_id: str | None = None,
 ) -> dict[str, Any]:
     result = await async_directus.create_item(
         "agent_loop_run",
         {
-            "id": generate_uuid(),
+            "id": request_id or generate_uuid(),
             "loop_id": loop_id,
             "status": status,
             "detail": (detail or "")[:5000] or None,
@@ -125,23 +206,89 @@ async def _create_run(
     return result["data"] if isinstance(result, dict) and "data" in result else result
 
 
+# The lock carries the token of the tick that took it, so a tick that outlived
+# its lock cannot renew or release the one a later tick holds.
+_LOCK_TOKENS: dict[str, str] = {}
+
+
 async def _claim_run_lock(loop_id: str) -> bool:
     """Serialise ticks per loop: a manual refresh must never race a scheduled tick
     over the same state row."""
+    token = generate_uuid()
     try:
         client = await get_redis_client()
-        return bool(await client.set(f"popcorn:run:{loop_id}", "1", ex=RUN_LOCK_SECONDS, nx=True))
+        taken = bool(
+            await client.set(f"popcorn:run:{loop_id}", token, ex=RUN_LOCK_SECONDS, nx=True)
+        )
+        if taken:
+            _LOCK_TOKENS[loop_id] = token
+        return taken
     except Exception:
         logger.warning("Redis unavailable for popcorn run lock", exc_info=True)
+        _LOCK_TOKENS[loop_id] = token
         return True
+
+
+async def _owns_run_lock(client: Any, loop_id: str) -> bool:
+    held = await client.get(f"popcorn:run:{loop_id}")
+    if isinstance(held, bytes):
+        held = held.decode()
+    return bool(held) and held == _LOCK_TOKENS.get(loop_id)
 
 
 async def _release_run_lock(loop_id: str) -> None:
     try:
         client = await get_redis_client()
-        await client.delete(f"popcorn:run:{loop_id}")
+        if await _owns_run_lock(client, loop_id):
+            await client.delete(f"popcorn:run:{loop_id}")
     except Exception:
         logger.warning("Redis unavailable releasing popcorn run lock", exc_info=True)
+    finally:
+        _LOCK_TOKENS.pop(loop_id, None)
+
+
+async def _mark_alive(loop_id: str) -> None:
+    try:
+        client = await get_redis_client()
+        await client.set(f"popcorn:alive:{loop_id}", "1", ex=STALE_TICK_SECONDS)
+    except Exception:
+        logger.warning("Redis unavailable for popcorn heartbeat", exc_info=True)
+
+
+async def _clear_alive(loop_id: str) -> None:
+    try:
+        client = await get_redis_client()
+        await client.delete(f"popcorn:alive:{loop_id}")
+    except Exception:
+        logger.warning("Redis unavailable clearing popcorn heartbeat", exc_info=True)
+
+
+async def _tick_alive(loop_id: str) -> bool:
+    """True while a tick for this loop is still beating, however long it runs."""
+    try:
+        client = await get_redis_client()
+        return bool(await client.exists(f"popcorn:alive:{loop_id}"))
+    except Exception:
+        return False
+
+
+async def _heartbeat(loop_id: str) -> None:
+    while True:
+        await _mark_alive(loop_id)
+        await _renew_run_lock(loop_id)
+        await asyncio.sleep(HEARTBEAT_SECONDS)
+
+
+async def _renew_run_lock(loop_id: str) -> None:
+    """The second pass can outlast the lock on a big session; every write of
+    the state and every heartbeat renews it, so a scheduled tick cannot start
+    underneath. Only the tick that holds the lock may renew it."""
+    try:
+        client = await get_redis_client()
+        if await _owns_run_lock(client, loop_id):
+            await client.expire(f"popcorn:run:{loop_id}", RUN_LOCK_SECONDS)
+    except Exception:
+        logger.warning("Redis unavailable renewing popcorn run lock", exc_info=True)
 
 
 async def _popcorn_enabled_for_loop(loop: dict[str, Any]) -> bool:
@@ -172,13 +319,21 @@ async def _update_loop_after_tick(loop: dict[str, Any], *, status: str) -> None:
 
 async def _enqueue_next_if_due(loop: dict[str, Any], when: datetime | None = None) -> None:
     loop_id = str(loop["id"])
+    # One chain per loop, in any mode. Every read on request comes with a
+    # safety row beside its direct actor, and each tick that runs books the
+    # next; without this the rows pile up, and in manual mode a rerun's safety
+    # row would wipe and read the session a second time a minute later.
+    from dembrane.scheduled_tasks import TASK_POPCORN_TICK, cancel_pending_tasks
+
+    await cancel_pending_tasks(task_type=TASK_POPCORN_TICK, payload_match={"loop_id": loop_id})
     fresh = await async_directus.get_item("agent_loop", loop_id)
     if not fresh or fresh.get("status") != "active":
         return
     expires_at = _parse_dt(fresh.get("expires_at"))
     now = _now()
     if expires_at and now >= expires_at:
-        await async_directus.update_item("agent_loop", loop_id, {"status": "expired"})
+        # Live ended: back to manual, nothing more booked.
+        await async_directus.update_item("agent_loop", loop_id, {"status": "paused"})
         return
     cadence = max(MIN_CADENCE_MINUTES, int(fresh.get("cadence_minutes") or DEFAULT_CADENCE_MINUTES))
     next_at = when or (now + timedelta(minutes=cadence))
@@ -187,14 +342,8 @@ async def _enqueue_next_if_due(loop: dict[str, Any], when: datetime | None = Non
         if final_at > now:
             next_at = final_at
         else:
-            await async_directus.update_item("agent_loop", loop_id, {"status": "expired"})
+            await async_directus.update_item("agent_loop", loop_id, {"status": "paused"})
             return
-    # One chain per loop. Every manual read and every go-live adds a safety
-    # tick, and each tick that runs schedules the next, so without this the
-    # chains multiply and a busy host ends the day with a tick storm.
-    from dembrane.scheduled_tasks import TASK_POPCORN_TICK, cancel_pending_tasks
-
-    await cancel_pending_tasks(task_type=TASK_POPCORN_TICK, payload_match={"loop_id": loop_id})
     await enqueue_popcorn_tick(loop_id, when=next_at)
 
 
@@ -217,9 +366,9 @@ async def gather_transcripts(
         {
             "query": {
                 "filter": {"project_id": {"_eq": project_id}, "deleted_at": {"_null": True}},
-                "fields": ["id", "participant_name", "created_at"],
+                "fields": ["id", "participant_name", "created_at", "duration"],
                 "sort": ["created_at"],
-                "limit": 500,
+                "limit": -1,
             }
         },
     )
@@ -265,7 +414,8 @@ async def gather_transcripts(
                 "label": label,
                 "short": short,
                 "created_at": conv.get("created_at"),
-                "text": text[:MAX_CHARS_PER_CONVERSATION],
+                "duration": conv.get("duration"),
+                "text": text,
             }
         )
     return out
@@ -290,6 +440,7 @@ class _TickWriter:
             await async_directus.update_item(
                 "agent_loop", self.loop_id, {"popcorn_state": self.state}
             )
+        await _renew_run_lock(self.loop_id)
         await publish_generation_nudge(self.report_id)
 
 
@@ -299,31 +450,61 @@ async def _extract_one(
     transcript: dict[str, Any],
     outcomes: list[str],
     host_note: str = "",
+    known: set[tuple[str, ...]] | None = None,
 ) -> None:
     cid = transcript["id"]
     entry = writer.state["conversations"][cid]
+    window = transcript.get("window") or model_window(transcript["text"])
     async with semaphore:
         started = _now()
         try:
-            raw = await extract_popcorn(
-                transcript_id=cid, transcript=transcript["text"], host_note=host_note
+            raw = await extract_popcorn(transcript_id=cid, transcript=window, host_note=host_note)
+            items, carried, redropped = _carry_forward(
+                shape_popcorn_items(raw, cid),
+                entry,
+                transcript["text"],
+                writer.state.get("quotes") or [],
+                fingerprint=transcript["fingerprint"],
             )
-            # Grounding is code, not a model call: verbatim phrases earn a quote in
-            # the next analysis pass, the rest carry their closest passage for the host.
-            items = ground_items(shape_popcorn_items(raw, cid), transcript["text"])
+            # The gates are code: a name from the introductions, text the room was
+            # shown, or a twin of another phrase never reaches the stage. Check
+            # the carried wording too, since it may be a rewritten question.
+            items, suppressed = gate_items(
+                items,
+                names=introduced_names(transcript["text"]),
+                known=known or set(),
+            )
+            # Grounding is code too: the closest passage behind each phrase, for
+            # the host. The quote behind it is the second pass's job.
+            items = ground_items(items, transcript["text"])
+            review: dict[str, Any] = {}
+            if entry.get("fingerprint") == transcript["fingerprint"] and (
+                entry.get("review") or {}
+            ).get("dropped"):
+                review["dropped"] = entry["review"]["dropped"]
+            if suppressed:
+                review["suppressed"] = suppressed
             entry.update(
                 {
                     "items": items,
+                    "review": review,
                     "revision": int(entry.get("revision") or 0) + 1,
                     "done": True,
                     "fingerprint": transcript["fingerprint"],
                     "chars": len(transcript["text"]),
+                    # characters before the model's window, for the host
+                    "clipped": len(transcript["text"]) - len(window),
                     "extracted_at": _now().isoformat(),
                     "error": None,
                 }
             )
             elapsed_ms = int((_now() - started).total_seconds() * 1000)
-            outcomes.append(f"popcorn {cid[:8]}: {len(items)} phrases in {elapsed_ms} ms")
+            held = f", {len(suppressed)} held back" if suppressed else ""
+            again = f", {redropped} held back again" if redropped else ""
+            kept = f", {carried} carried over" if carried else ""
+            outcomes.append(
+                f"popcorn {cid[:8]}: {len(items)} phrases{held}{again}{kept} in {elapsed_ms} ms"
+            )
         except Exception as exc:  # a dead transcript must not stall the stage
             entry.update(
                 {
@@ -338,72 +519,335 @@ async def _extract_one(
     await writer.flush()
 
 
+async def _enrich_one(
+    writer: _TickWriter,
+    semaphore: asyncio.Semaphore,
+    transcript: dict[str, Any],
+    outcomes: list[str],
+    book: QuoteBook,
+) -> None:
+    """The second pass over one conversation's phrases, written once: quotes into
+    the shared registry, kinds and question marks onto the items, one revision,
+    one flush. A failed call leaves its phrase as it was; the pass is retried
+    next tick because the transcript's fingerprint is not stamped."""
+    cid = transcript["id"]
+    entry = writer.state["conversations"][cid]
+    # A phrase that already has its kind and its evidence answer is done; the
+    # pass is retried only for what a failed call left behind.
+    items = [item for item in entry.get("items") or [] if _needs_pass(item)]
+    # The model reads the window the phrases came from; the introductions,
+    # and so the names, are at the start of the whole transcript.
+    text = transcript.get("window") or model_window(transcript["text"])
+    names = introduced_names(transcript["text"])
+    started = _now()
+
+    async def one(item: dict[str, Any]) -> dict[str, Any]:
+        async with semaphore:
+            return await enrich_item(
+                item,
+                transcript_id=cid,
+                transcript=text,
+                names=names,
+                validate=validate_phrase,
+                classify=classify_phrase,
+                rewrite=rewrite_question,
+            )
+
+    try:
+        results = await asyncio.gather(*(one(item) for item in items))
+    except Exception as exc:  # a dead pass must not stall the tick
+        outcomes.append(f"enrich {cid[:8]}: FAILED {exc}")
+        return
+    if entry.get("fingerprint") != transcript["fingerprint"]:
+        return  # re-read underneath the pass; the next tick enriches the new phrases
+    stats = apply_results(
+        items,
+        results,
+        transcript_id=cid,
+        register=lambda tid, quote: book.add({"transcript": tid, "text": quote}),
+    )
+    # A question rewrite changes the words whose verbatim flag and closest
+    # passage the deck shows, as well as the words validated above.
+    ground_items(items, transcript["text"])
+    # A phrase the pass could not root leaves the deck: the room must not
+    # read a paraphrase nothing in the transcript holds. The host keeps it.
+    dropped = [i for i in entry["items"] if i.get("rooted") is False]
+    if dropped:
+        review = dict(entry.get("review") or {})
+        review["dropped"] = (review.get("dropped") or []) + [
+            {
+                "id": i.get("id"),
+                "phrase": i.get("phrase"),
+                "reason": str((i.get("review") or {}).get("evidence") or ""),
+            }
+            for i in dropped
+        ]
+        entry["review"] = review
+        entry["items"] = [i for i in entry["items"] if i.get("rooted") is not False]
+    entry["revision"] = int(entry.get("revision") or 0) + 1
+    failed = sum(len(r.get("errors") or []) for r in results)
+    if not failed:
+        # Only a complete pass is stamped; a failed call keeps the conversation
+        # owed, so the next tick retries exactly the phrases it failed on.
+        entry["validated_fingerprint"] = transcript["fingerprint"]
+    writer.state["quotes"] = list(book.quotes)
+    elapsed_ms = int((_now() - started).total_seconds() * 1000)
+    outcomes.append(
+        f"enrich {cid[:8]}: {stats['rooted']}/{len(items)} rooted, {stats['classified']} kinds, "
+        f"{stats['rewritten']} rewritten in {elapsed_ms} ms"
+        + (f", {len(dropped)} held back" if dropped else "")
+        + (f", {failed} call(s) failed" if failed else "")
+    )
+    await writer.flush()
+
+
+def _pending_enrichment(
+    state: dict[str, Any], transcripts: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """The conversations still owed a second pass on the transcript as it
+    stands: read this tick, or read earlier without the pass finishing."""
+    out = []
+    for t in transcripts:
+        conv = state["conversations"].get(t["id"])
+        if (
+            conv
+            and conv.get("done")
+            and conv.get("items")
+            and conv.get("validated_fingerprint") != t["fingerprint"]
+        ):
+            out.append(t)
+    return out
+
+
+def _needs_pass(item: dict[str, Any]) -> bool:
+    """A phrase still owed the second pass: no kind yet, no evidence verdict
+    yet, or a call that failed."""
+    if not isinstance(item, dict):
+        return False
+    if "kind" not in item or "rooted" not in item:
+        return True
+    return bool((item.get("review") or {}).get("errors"))
+
+
+def _carry_forward(
+    items: list[dict[str, Any]],
+    entry: dict[str, Any],
+    text: str,
+    quotes: list[dict[str, Any]],
+    *,
+    fingerprint: str,
+) -> tuple[list[dict[str, Any]], int, int]:
+    """Reuse each phrase's reviewed wording and any quote still in the source.
+    Question rewrites retain their extractor id, so wording and evidence must
+    travel together. Rejections apply only to the fingerprint they were
+    checked against: new speech may now support a previously rejected phrase.
+    Returns kept items, carried evidence count and repeated rejection count."""
+    previous = {
+        str(i.get("id")): i for i in entry.get("items") or [] if isinstance(i, dict) and i.get("id")
+    }
+    dropped = {
+        str(d.get("id"))
+        for d in (entry.get("review") or {}).get("dropped") or []
+        if isinstance(d, dict) and d.get("id") and entry.get("fingerprint") == fingerprint
+    }
+    by_quote = {str(q.get("id")): q for q in quotes if isinstance(q, dict) and q.get("id")}
+    kept: list[dict[str, Any]] = []
+    carried = redropped = 0
+    for item in items:
+        iid = str(item.get("id"))
+        if iid in dropped:
+            redropped += 1
+            continue
+        old = previous.get(iid)
+        if old is None:
+            kept.append(item)
+            continue
+        for key in ("phrase", "kind", "question", "qualifiers", "review"):
+            if key in old:
+                item[key] = old[key]
+        quote = by_quote.get(str(old.get("quoteId") or ""))
+        if old.get("rooted") is True and quote and norm(str(quote.get("text") or "")) in norm(text):
+            item["quoteId"] = old["quoteId"]
+            item["rooted"] = True
+        if "kind" in item and "rooted" in item:
+            carried += 1
+        kept.append(item)
+    return kept, carried, redropped
+
+
+def _referenced_quote_ids(value: Any) -> set[str]:
+    ids: set[str] = set()
+    if isinstance(value, dict):
+        qid = value.get("quoteId")
+        if isinstance(qid, str):
+            ids.add(qid)
+        qids = value.get("quoteIds")
+        if isinstance(qids, list):
+            ids.update(str(q) for q in qids)
+        for v in value.values():
+            if isinstance(v, (dict, list)):
+                ids |= _referenced_quote_ids(v)
+    elif isinstance(value, list):
+        for v in value:
+            ids |= _referenced_quote_ids(v)
+    return ids
+
+
+def _referenced_quotes(state: dict[str, Any], quotes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The registry after a run: every quote something on the deck still cites."""
+    ids = _referenced_quote_ids(state.get("conversations") or {}) | _referenced_quote_ids(
+        state.get("analysis") or {}
+    )
+    return [q for q in quotes if q.get("id") in ids]
+
+
+async def run_tensions_pipeline(sources: dict[str, str], book: QuoteBook) -> dict[str, Any]:
+    """The five-stage tensions pipeline over the session, into the shared registry."""
+    return await run_pipeline(
+        sources,
+        book,
+        generate=analysis_call,
+        prompts={name: prompt_text(name) for name in TENSION_PROMPTS},
+        concurrency=MAX_PARALLEL_ANALYSIS,
+    )
+
+
 async def _run_analysis_pass(
     transcripts: list[dict[str, Any]],
     outcomes: list[str],
-    state: dict[str, Any] | None = None,
-) -> dict[str, Any] | None:
-    """Both slow slides at once, sharing one quote registry. Returns the new
-    analysis block, or None when any slide failed so the previous block stays."""
-    total = sum(len(t["text"]) for t in transcripts)
-    per_transcript = (
-        MAX_ANALYSIS_CHARS // max(1, len(transcripts)) if total > MAX_ANALYSIS_CHARS else None
-    )
-    sources = {
-        t["id"]: (t["text"][:per_transcript] if per_transcript else t["text"]) for t in transcripts
-    }
+    book: QuoteBook,
+    views: tuple[str, ...] = ANALYSIS_VIEWS,
+) -> dict[str, dict[str, Any] | None]:
+    """The slow slides asked for, at once, registering into the tick's shared
+    quote book: the stakeholders call with its two gates and one retry, and
+    the tensions pipeline. Returns one entry per view: the new slide, or None
+    where that view failed or was not asked for, so the caller keeps the
+    previous one of those alone."""
+    lengths = {t["id"]: len(t["text"]) for t in transcripts}
+    quota = allocate_chars(lengths, MAX_ANALYSIS_CHARS)
+    sources = {t["id"]: t["text"][: quota[t["id"]]] for t in transcripts}
+    clipped = [tid for tid, n in lengths.items() if quota[tid] < n]
+    if clipped:
+        outcomes.append(
+            f"analysis corpus: {sum(quota.values())} of {sum(lengths.values())} chars read, "
+            f"{len(clipped)} of {len(lengths)} conversations cut short"
+        )
     corpus = build_corpus([(tid, text) for tid, text in sources.items()])
-    book = QuoteBook(sources)
-    book_lock = asyncio.Lock()
-    shaped: dict[str, dict[str, Any]] = {}
+    shaped: dict[str, dict[str, Any] | None] = {kind: None for kind in ANALYSIS_VIEWS}
 
-    # Verbatim popcorn phrases go into the registry first, in deck order, so
-    # their ids stay stable across the two analysis calls that follow.
-    popcorn_quotes: dict[str, str] = {}
-    conversations = (state or {}).get("conversations") or {}
-    for cid in (state or {}).get("order") or []:
-        for item in (conversations.get(cid) or {}).get("items") or []:
-            if isinstance(item, dict) and item.get("verbatim") and item.get("phrase"):
-                qid = book.add({"transcript": cid, "text": item["phrase"]})
-                if qid:
-                    popcorn_quotes[str(item.get("id"))] = qid
-
-    async def one(kind: str) -> None:
+    async def stakeholders_slide() -> None:
         started = _now()
-        raw = await run_analysis(kind=kind, corpus=corpus)
-        async with book_lock:
-            shaped[kind] = ANALYSIS_SHAPERS[kind](raw, book)
-        n = len(shaped[kind].get(kind) or [])
-        extra = (
-            f", {len(shaped[kind].get('relations') or [])} relations"
-            if kind == "stakeholders"
+        raw = await asyncio.wait_for(
+            run_analysis(kind="stakeholders", corpus=corpus), timeout=STAKEHOLDERS_TIMEOUT_SECONDS
+        )
+        # The gates read a shaped answer; a throwaway book keeps a rejected
+        # answer's quotes out of the shared registry.
+        probe = shape_stakeholders(raw, QuoteBook(sources))
+        flags = name_flags(probe) + island_flags(probe)
+        if flags:
+            raw = await asyncio.wait_for(
+                run_analysis(kind="stakeholders", corpus=corpus, feedback=flags),
+                timeout=STAKEHOLDERS_TIMEOUT_SECONDS,
+            )
+        slide = shape_stakeholders(raw, book)
+        shaped["stakeholders"] = slide
+        left = name_flags(slide) + island_flags(slide)
+        elapsed_ms = int((_now() - started).total_seconds() * 1000)
+        outcomes.append(
+            f"stakeholders: {len(slide['stakeholders'])} items, "
+            f"{len(slide['relations'])} relations in {elapsed_ms} ms"
+            + (f", {len(flags)} gate flag(s), asked again" if flags else "")
+            + (f", {len(left)} left" if left else "")
+        )
+
+    async def tensions_slide() -> None:
+        started = _now()
+        result = await run_tensions_pipeline(sources, book)
+        shaped["tensions"] = result["tensions"]
+        c = result.get("counts") or {}
+        elapsed_ms = int((_now() - started).total_seconds() * 1000)
+        outcomes.append(
+            f"tensions: {len(result['tensions']['tensions'])} items in {elapsed_ms} ms "
+            f"({c.get('positions', 0)} positions, {c.get('candidates', 0)} pairs, "
+            f"{c.get('cross_table', 0)} across tables, {c.get('verified', 0)} verified)"
+            + (
+                f", {len(result['gate_flags'])} screen flag(s) left"
+                if result.get("gate_flags")
+                else ""
+            )
+        )
+
+    jobs = {"stakeholders": stakeholders_slide, "tensions": tensions_slide}
+    wanted = [kind for kind in jobs if kind in views]
+    results = await asyncio.gather(*(jobs[kind]() for kind in wanted), return_exceptions=True)
+    for kind, exc in zip(wanted, results, strict=True):
+        if isinstance(exc, BaseException):
+            outcomes.append(f"{kind}: FAILED {_failure_text(exc)}")
+            shaped[kind] = None
+    outcomes.append(
+        f"quotes: {len(book.quotes)} verified, {book.rejected} rejected"
+        + (
+            f", {book.reattributed} credited to the table that said them"
+            if book.reattributed
             else ""
         )
-        elapsed_ms = int((_now() - started).total_seconds() * 1000)
-        outcomes.append(f"{kind}: {n} items{extra} in {elapsed_ms} ms")
-
-    results = await asyncio.gather(*(one(kind) for kind in ANALYSIS_KINDS), return_exceptions=True)
-    failed = [
-        f"{kind}: FAILED {exc}"
-        for kind, exc in zip(ANALYSIS_KINDS, results, strict=True)
-        if isinstance(exc, BaseException)
-    ]
-    if failed:
-        outcomes.extend(failed)
-        return None
-    outcomes.append(
-        f"quotes: {len(book.quotes)} verified ({len(popcorn_quotes)} popcorn), {book.rejected} rejected"
     )
-    return {
-        "popcorn_quotes": popcorn_quotes,
-        "fingerprint": _fingerprint(
-            "|".join(f"{tid}:{_fingerprint(text)}" for tid, text in sources.items())
-        ),
-        "quotes": book.quotes,
-        "tensions": shaped["tensions"],
-        "stakeholders": shaped["stakeholders"],
-        "updated_at": _now().isoformat(),
+    return shaped
+
+
+def _failure_text(exc: BaseException) -> str:
+    """What failed, in the outcome line. A pipeline stage fails as a task
+    group, whose own message ("unhandled errors in a TaskGroup") says nothing;
+    the sub-exceptions do."""
+    subs = getattr(exc, "exceptions", None)
+    if subs:
+        return "; ".join(_failure_text(sub) for sub in subs)
+    return str(exc)[:300] or type(exc).__name__
+
+
+def _stale_views(state: dict[str, Any], analysis_fingerprint: str) -> list[str]:
+    """The analysis views not yet computed over this session's transcripts."""
+    held = (state.get("analysis") or {}).get("fingerprints") or {}
+    return [kind for kind in ANALYSIS_VIEWS if held.get(kind) != analysis_fingerprint]
+
+
+def _commit_views(
+    state: dict[str, Any],
+    fresh: dict[str, dict[str, Any] | None],
+    *,
+    analysis_fingerprint: str,
+    held_quotes: set[str],
+    outcomes: list[str],
+) -> None:
+    """Each view on its own: a fresh slide replaces the old one and is stamped
+    with the session it read; a view that failed keeps its previous slide,
+    unless that slide cites a quote whose conversation is gone."""
+    previous = state.get("analysis") or {}
+    analysis: dict[str, Any] = {
+        "fingerprints": dict(previous.get("fingerprints") or {}),
+        "updated": dict(previous.get("updated") or {}),
     }
+    now = _now().isoformat()
+    for kind in ANALYSIS_VIEWS:
+        slide = fresh.get(kind)
+        if slide is not None:
+            analysis[kind] = slide
+            analysis["fingerprints"][kind] = analysis_fingerprint
+            analysis["updated"][kind] = now
+            continue
+        kept = previous.get(kind)
+        if kept and _referenced_quote_ids(kept) - held_quotes:
+            outcomes.append(f"{kind}: previous slide dropped, it cited a conversation that is gone")
+            kept = None
+        analysis[kind] = kept
+        if kept is None:
+            analysis["fingerprints"].pop(kind, None)
+            analysis["updated"].pop(kind, None)
+    if not any(analysis.get(kind) for kind in ANALYSIS_VIEWS):
+        state["analysis"] = None
+        return
+    analysis["updated_at"] = max(analysis["updated"].values(), default=now)
+    state["analysis"] = analysis
 
 
 async def _snapshot_version(
@@ -429,7 +873,9 @@ async def _snapshot_version(
         project=project if isinstance(project, dict) else {"id": project_id},
         participant_base_url=urls.participant_base_url,
         admin_base_url=urls.admin_base_url,
-        host=True,
+        # A saved run replays on the wall, so it is the room's bundle: no
+        # passages, no dashboard links, the legend as the setting says.
+        host=False,
     )
     await save_version(
         report_id=report_id,
@@ -440,7 +886,9 @@ async def _snapshot_version(
     )
 
 
-async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]:
+async def run_popcorn_tick(
+    loop_id: str, tick_kind: str = "scheduled", request_id: str | None = None
+) -> dict[str, Any]:
     started_at = _now()
     loop = await async_directus.get_item("agent_loop", loop_id)
     if not loop or not is_popcorn_loop(loop):
@@ -455,30 +903,36 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         )
         return {"status": "disabled", "run": run}
 
-    expires_at = _parse_dt(loop.get("expires_at"))
-    if expires_at and started_at >= expires_at:
-        await async_directus.update_item("agent_loop", loop_id, {"status": "expired"})
-        run = await _create_run(
-            loop_id=loop_id,
-            status="no_op",
-            detail="Loop expired before tick start",
-            started_at=started_at,
-        )
-        return {"status": "expired", "run": run}
-    if loop.get("status") != "active" and tick_kind != "manual":
-        run = await _create_run(
-            loop_id=loop_id,
-            status="no_op",
-            detail=f"Loop is {loop.get('status')}",
-            started_at=started_at,
-        )
-        return {"status": "no_op", "run": run}
+    # Only the scheduled chain answers to the mode and the expiry. A read on
+    # request (run, refresh, rerun) goes ahead in any mode, at any time.
+    if tick_kind not in ON_REQUEST:
+        if loop.get("status") != "active":
+            run = await _create_run(
+                loop_id=loop_id,
+                status="no_op",
+                detail=f"Loop is {loop.get('status')}",
+                started_at=started_at,
+            )
+            return {"status": "no_op", "run": run}
+        expires_at = _parse_dt(loop.get("expires_at"))
+        if expires_at and started_at >= expires_at:
+            # Live ended: back to manual. The deck stays; refresh still works.
+            await async_directus.update_item(
+                "agent_loop", loop_id, {"status": "paused", "expires_at": started_at.isoformat()}
+            )
+            run = await _create_run(
+                loop_id=loop_id,
+                status="no_op",
+                detail="Live ended; back to manual",
+                started_at=started_at,
+            )
+            return {"status": "no_op", "run": run}
 
     if not await _claim_run_lock(loop_id):
         # A host pressing "read again" while a tick is mid-flight expects the
         # new chunks to be read, not dropped: wait for the running tick to end.
         claimed = False
-        if tick_kind == "manual":
+        if tick_kind in ON_REQUEST:
             for _ in range(MANUAL_LOCK_WAIT_SECONDS // 2):
                 await asyncio.sleep(2)
                 if await _claim_run_lock(loop_id):
@@ -492,13 +946,29 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
                 started_at=started_at,
             )
             return {"status": "duplicate", "run": run}
+        # The tick that just finished wrote the state; read it, not the snapshot
+        # taken before the wait.
+        loop = await async_directus.get_item("agent_loop", loop_id) or loop
 
     report_id = _as_id(loop.get("report_id"))
     project_id = _as_id(loop.get("project_id"))
     acting_user_id = str(loop.get("acting_directus_user_id") or "")
+    pulse = asyncio.create_task(_heartbeat(loop_id))
     try:
         if not report_id or not project_id or not acting_user_id:
             raise RuntimeError("Popcorn loop is missing required ids")
+
+        # Both deliveries of an on-request tick carry the same id. The run
+        # record persists beyond later reruns, unlike a last-request state flag.
+        # Check under the lock and before cancelling tasks or wiping any state.
+        if request_id:
+            completed = await async_directus.get_item("agent_loop_run", request_id)
+            if (
+                completed
+                and _as_id(completed.get("loop_id")) == loop_id
+                and completed.get("status") in {"ok", "no_op"}
+            ):
+                return {"status": "duplicate", "run": completed}
 
         # The next read is booked before this one starts, so a worker that dies
         # mid-read (a pod scaled away, a crash) costs the room one cadence and
@@ -506,6 +976,17 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         await _enqueue_next_if_due(loop)
 
         state = normalize_state(loop.get("popcorn_state"))
+        if tick_kind == "rerun":
+            # Wiped here, under the lock: phrases, quotes and analysis go, the
+            # run counter goes on, the saved runs stay. Everything is re-read.
+            previous_run = state["run"]
+            state = fresh_state()
+            state["run"] = previous_run
+        # What the tool has put in front of the room so far, before this tick
+        # writes anything: a new phrase that quotes it is the tool quoting itself.
+        # Each conversation is checked against everything but its own phrases.
+        known_all = known_shingles(state)
+        known_by = {cid: known_shingles(state, exclude=cid) for cid in state["conversations"]}
         config = await get_latest_config(report_id)
         settings = normalize_settings(
             (config or {}).get("popcorn_settings"),
@@ -516,8 +997,11 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
             project_id=project_id, acting_directus_user_id=acting_user_id
         )
         for t in transcripts:
-            # A change of voice re-reads every conversation, like a new transcript would.
+            # The whole transcript and the voice: a change of either re-reads
+            # the conversation. A new prompt version does not (Jorim's call):
+            # it applies to what is read after it ships, and to a rerun.
             t["fingerprint"] = _fingerprint(t["text"] + "\x1f" + host_note)
+            t["window"] = model_window(t["text"])
 
         changed: list[dict[str, Any]] = []
         for t in transcripts:
@@ -529,29 +1013,39 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
             entry["label"] = t["label"]
             entry["short"] = t["short"]
             entry["created_at"] = t["created_at"]
+            entry["duration"] = t.get("duration")
             if entry.get("fingerprint") != t["fingerprint"] or not entry.get("done"):
                 changed.append(t)
         # A conversation that vanished (deleted, or its chunks removed) leaves
         # the deck with it; the legend must not name a table that is not there.
         present = {t["id"] for t in transcripts}
-        for cid in list(state["conversations"]):
-            if cid not in present:
-                state["conversations"].pop(cid, None)
+        vanished = [cid for cid in state["conversations"] if cid not in present]
+        for cid in vanished:
+            state["conversations"].pop(cid, None)
         state["order"] = [cid for cid in state["order"] if cid in present]
+        if vanished and not transcripts:
+            # The last conversation is gone: nothing derived from it may stay on
+            # the deck. Written now, because the no-op path below never writes.
+            state["analysis"] = None
+            state["quotes"] = []
+            await async_directus.update_item("agent_loop", loop_id, {"popcorn_state": state})
+            await publish_generation_nudge(report_id)
 
         analysis_fingerprint = _fingerprint(
             "|".join(f"{t['id']}:{t['fingerprint']}" for t in transcripts)
         )
-        analysis_stale = bool(transcripts) and (
-            (state.get("analysis") or {}).get("fingerprint") != analysis_fingerprint
-        )
+        analysis_stale = bool(transcripts) and bool(_stale_views(state, analysis_fingerprint))
 
-        if not changed and not analysis_stale and tick_kind != "manual":
+        owed = _pending_enrichment(state, transcripts)
+        # Nothing new, nothing owed, no view stale: nothing to do, whoever asked.
+        # Only a rerun goes on regardless, because a rerun wiped the state.
+        if not changed and not analysis_stale and not owed and tick_kind != "rerun":
             run = await _create_run(
                 loop_id=loop_id,
                 status="no_op",
                 detail="No new transcript content since the last tick",
                 started_at=started_at,
+                request_id=request_id,
             )
             await _enqueue_next_if_due(loop)
             return {"status": "no_op", "run": run}
@@ -570,33 +1064,77 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         if changed:
             semaphore = asyncio.Semaphore(MAX_PARALLEL_EXTRACTORS)
             await asyncio.gather(
-                *(_extract_one(writer, semaphore, t, outcomes, host_note) for t in changed)
+                *(
+                    _extract_one(
+                        writer, semaphore, t, outcomes, host_note, known_by.get(t["id"], known_all)
+                    )
+                    for t in changed
+                )
             )
 
-        if transcripts and (analysis_stale or changed or tick_kind == "manual"):
-            analysis = await _run_analysis_pass(transcripts, outcomes, state)
-            if analysis is not None:
-                analysis["fingerprint"] = analysis_fingerprint
-                popcorn_quotes = analysis.pop("popcorn_quotes", {})
-                for cid in state["order"]:
-                    conv = state["conversations"].get(cid) or {}
-                    for item in conv.get("items") or []:
-                        if isinstance(item, dict):
-                            qid = popcorn_quotes.get(str(item.get("id")))
-                            if qid:
-                                item["quoteId"] = qid
-                            else:
-                                item.pop("quoteId", None)
-                    if conv.get("done"):
-                        conv["validated_run"] = state["run"]
-                state["analysis"] = analysis
-                await writer.flush()
+        # One quote registry for the tick, seeded with the session's so the ids
+        # the deck holds stay valid; every pass below registers into it.
+        book = QuoteBook(
+            {t["id"]: t["text"] for t in transcripts},
+            names=set().union(*(introduced_names(t["text"]) for t in transcripts))
+            if transcripts
+            else set(),
+            existing=state.get("quotes"),
+        )
+
+        # Only now that every first phrase is on the stage, two things at once,
+        # both reading the transcripts and neither the other: the second pass
+        # over the conversations re-read this tick (and any whose earlier pass
+        # did not finish), and the session analysis.
+        async def second_pass() -> None:
+            pending = _pending_enrichment(state, transcripts)
+            if pending:
+                enrich_semaphore = asyncio.Semaphore(MAX_PARALLEL_ENRICHMENT)
+                await asyncio.gather(
+                    *(_enrich_one(writer, enrich_semaphore, t, outcomes, book) for t in pending)
+                )
+
+        async def analysis_pass() -> None:
+            if not transcripts or not (analysis_stale or changed or tick_kind == "rerun"):
+                return
+            # A changed session is analysed whole; a session that only has a
+            # view left stale (its last run failed) redoes that view alone.
+            views = (
+                ANALYSIS_VIEWS
+                if changed or tick_kind == "rerun"
+                else tuple(_stale_views(state, analysis_fingerprint))
+            )
+            fresh = await _run_analysis_pass(transcripts, outcomes, book, views=views)
+            # A view that failed keeps its previous slide, unless it cites a quote
+            # whose conversation is gone: those words have left the session, and
+            # a slide pointing at them would show a dead quote.
+            _commit_views(
+                state,
+                fresh,
+                analysis_fingerprint=analysis_fingerprint,
+                held_quotes={q["id"] for q in book.quotes},
+                outcomes=outcomes,
+            )
+
+        await asyncio.gather(second_pass(), analysis_pass())
+        if transcripts:
+            state["quotes"] = _referenced_quotes(state, book.quotes)
+            await writer.flush()
 
         detail = "; ".join(
-            [f"run {state['run']}: {len(changed)} of {len(transcripts)} conversations re-read"]
+            [
+                f"run {state['run']}: {len(changed)} of {len(transcripts)} conversations re-read"
+                + (" (rerun: the previous state wiped)" if tick_kind == "rerun" else "")
+            ]
             + outcomes
         )
-        run = await _create_run(loop_id=loop_id, status="ok", detail=detail, started_at=started_at)
+        run = await _create_run(
+            loop_id=loop_id,
+            status="ok",
+            detail=detail,
+            started_at=started_at,
+            request_id=request_id,
+        )
         try:
             await _snapshot_version(
                 report_id=report_id,
@@ -622,6 +1160,8 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         logger.warning("popcorn tick failed for loop %s: %s", loop_id, detail)
         return {"status": "error", "run": run}
     finally:
+        pulse.cancel()
+        await _clear_alive(loop_id)
         await _release_run_lock(loop_id)
 
 
@@ -678,8 +1218,12 @@ async def reconcile_missing_popcorn_tick_tasks() -> int:
             covered.add(loop_id)
         elif status == STATUS_PROCESSING:
             claimed_at = _parse_dt(task.get("claimed_at"))
-            # If claimed_at is missing or older than STALE_TICK_SECONDS, it is stranded.
-            if claimed_at and (now - claimed_at).total_seconds() <= STALE_TICK_SECONDS:
+            # Stranded: claimed longer ago than STALE_TICK_SECONDS and no heartbeat.
+            # A tick in its second pass beats for as long as it runs.
+            fresh = (
+                claimed_at is not None and (now - claimed_at).total_seconds() <= STALE_TICK_SECONDS
+            )
+            if fresh or await _tick_alive(loop_id):
                 covered.add(loop_id)
             else:
                 task_id = str(task.get("id") or "")

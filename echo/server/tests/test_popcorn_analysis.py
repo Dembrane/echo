@@ -13,31 +13,48 @@ from dembrane.popcorn.analysis import (
 def test_shape_popcorn_items_applies_first_run_gates() -> None:
     raw = {
         "items": [
-            {"phrase": '"Nobody joins for the desks."', "weight": 3},
-            {"phrase": "Nobody joins for the desks", "weight": 2},  # near-duplicate
-            {"phrase": "The kettle is the real reception!", "weight": 3},  # second weight-3
-            {"phrase": "x" * 120, "weight": 1},  # over the length budget
-            {"phrase": "   ", "weight": 1},
+            {"phrase": '"Nobody joins for the desks."'},
+            {"phrase": "Nobody joins for the desks"},  # near-duplicate
+            {"phrase": "The kettle is the real reception!"},
+            {"phrase": "x" * 120},  # over the length budget
+            {"phrase": "   "},
+            {
+                "phrase": "one two three four five six seven eight nine ten eleven twelve thirteen fourteen"
+            },
+            {"phrase": "Where did the budget go?"},
+            {"phrase": 'He said "no" and left'},  # a quotation mark inside
+            {"phrase": "Old clients still send weight", "weight": 3},  # ignored, not refused
         ]
     }
     items = shape_popcorn_items(raw, "t1")
     assert [i["phrase"] for i in items] == [
         "Nobody joins for the desks",
         "The kettle is the real reception",
+        "Where did the budget go",
+        "Old clients still send weight",
     ]
-    assert [i["weight"] for i in items] == [3, 2]
+    assert all("weight" not in i for i in items)
+    # The question mark is stripped like every terminal mark, and remembered.
+    assert items[2]["question"] is True and "question" not in items[0]
     ids = [i["id"] for i in items]
     assert all(i.startswith("p-t1-") and len(i) == len("p-t1-") + 8 for i in ids)
-    assert len(set(ids)) == 2
+    assert len(set(ids)) == 4
     # Same phrase, same id: a re-read keeps the phrases that survived.
     assert shape_popcorn_items(raw, "t1")[0]["id"] == ids[0]
 
 
 def test_shape_popcorn_items_caps_at_eight_and_tolerates_junk() -> None:
-    raw = {"items": [{"phrase": f"phrase {n}", "weight": 1} for n in range(12)]}
+    raw = {"items": [{"phrase": f"phrase {n}"} for n in range(12)]}
     assert len(shape_popcorn_items(raw, "t")) == 8
     assert shape_popcorn_items(None, "t") == []
     assert shape_popcorn_items({"items": "nope"}, "t") == []
+
+
+def test_popcorn_schema_has_no_weight() -> None:
+    from dembrane.popcorn.analysis import POPCORN_SCHEMA
+
+    item = POPCORN_SCHEMA["properties"]["items"]["items"]
+    assert item["required"] == ["phrase"] and "weight" not in item["properties"]
 
 
 def test_quote_book_refuses_non_verbatim_quotes() -> None:
@@ -54,6 +71,63 @@ def test_quote_book_refuses_non_verbatim_quotes() -> None:
     assert (
         book.add({"transcript": "t1", "text": "The lift has been  nearly fixed for a year"}) == "q1"
     )
+
+
+def test_quote_book_is_seeded_and_keeps_ids() -> None:
+    sources = {"t1": "We said the lift has been nearly fixed for a year.\nAnd more."}
+    existing = [
+        {"id": "q4", "transcript": "t1", "text": "And more."},
+        {"id": "q2", "transcript": "t9", "text": "gone with its transcript"},
+        {"id": "q3", "transcript": "t1", "text": "the lift has been nearly fixed for a year"},
+    ]
+    book = QuoteBook(sources, existing=existing)
+    assert [q["id"] for q in book.quotes] == ["q4", "q3"]
+    # A seeded quote keeps its id; a new one continues after the highest.
+    assert book.add({"transcript": "t1", "text": "AND  more."}) == "q4"
+    assert book.add({"transcript": "t1", "text": "We said the lift"}) == "q5"
+
+
+def test_seeded_quotes_lose_a_context_that_names_a_speaker() -> None:
+    sources = {"t1": "the lift has been nearly fixed for a year"}
+    existing = [
+        {
+            "id": "q1",
+            "transcript": "t1",
+            "text": "the lift has been nearly fixed",
+            "context": "Priya, on the lift",
+        },
+        {
+            "id": "q2",
+            "transcript": "t1",
+            "text": "nearly fixed for a year",
+            "context": "near the end of the round",
+        },
+        {
+            "id": "q3",
+            "transcript": "t1",
+            "text": "fixed for a year",
+            "context": "Self-introduction by Jack.",
+        },
+    ]
+    book = QuoteBook(sources, names={"Priya"}, existing=existing)
+    assert "context" not in book.quotes[0]
+    assert book.quotes[1]["context"] == "near the end of the round"
+    assert "context" not in book.quotes[2]  # a proper noun is a speaker too
+
+
+def test_quote_book_drops_a_context_that_names_a_speaker() -> None:
+    book = QuoteBook({"t1": "the lift has been nearly fixed for a year"}, names={"Priya"})
+    cases = {
+        "near the end of the round": True,
+        "Priya, introducing herself": False,
+        "he was talking about the lift": False,
+        "what Jack said about the lift": False,
+        "the AI came up": True,
+    }
+    for ctx, kept in cases.items():
+        book = QuoteBook({"t1": "the lift has been nearly fixed for a year"}, names={"Priya"})
+        book.add({"transcript": "t1", "text": "the lift has been nearly fixed", "context": ctx})
+        assert ("context" in book.quotes[0]) is kept, ctx
 
 
 def test_shape_stakeholders_drops_aspects_without_a_verbatim_quote() -> None:
@@ -155,7 +229,7 @@ def _state() -> dict:
                     "short": "Table 1",
                     "done": True,
                     "revision": 1,
-                    "items": [{"id": "p-c1-1", "phrase": "one", "weight": 2}],
+                    "items": [{"id": "p-c1-1", "phrase": "one"}],
                 },
                 "c2": {
                     "id": "c2",
@@ -164,6 +238,7 @@ def _state() -> dict:
                     "done": False,
                     "revision": 0,
                     "items": [],
+                    "review": {"dropped": [{"id": "x", "phrase": "p", "reason": "r"}]},
                 },
             },
             "analysis": {
@@ -207,6 +282,9 @@ def test_build_bundle_hides_tabs_and_carries_qr() -> None:
     assert files["popcorn/c1.json"]["items"][0]["phrase"] == "one"
     assert files["popcorn/c1.json"]["validated"] is False
     assert files["popcorn/c2.json"]["done"] is False
+    # A phrase the second pass held back is a count on the file, never text.
+    assert files["popcorn/c2.json"]["held_back"] == 1 and files["popcorn/c1.json"]["held_back"] == 0
+    assert "review" not in files["popcorn/c2.json"]
     assert "tensions.json" in files
     assert "stakeholders.json" not in files
     assert files["quotes.json"]["quotes"][0]["id"] == "q1"
@@ -225,3 +303,29 @@ def test_build_bundle_without_qr_or_participation() -> None:
     )
     assert "qr" not in bundle["files"]["session.json"]
     assert bundle["files"]["session.json"]["title"] == "Popcorn"
+
+
+def test_the_same_words_at_two_tables_are_two_quotes() -> None:
+    book = QuoteBook({"t1": "we need more time to do this", "t2": "we need more time to do this"})
+    assert book.add({"transcript": "t1", "text": "we need more time"}) == "q1"
+    assert book.add({"transcript": "t2", "text": "we need more time"}) == "q2"
+    assert book.add({"transcript": "t2", "text": "We need more  time"}) == "q2"
+    assert [q["transcript"] for q in book.quotes] == ["t1", "t2"]
+
+
+def test_bundle_strips_a_context_that_assigns_a_speaker_whatever_wrote_it() -> None:
+    state = _state()
+    state["quotes"] = [
+        {"id": "q1", "transcript": "c1", "text": "one", "context": "Alice said she was worried"},
+        {"id": "q2", "transcript": "c1", "text": "one", "context": "near the end of the round"},
+    ]
+    files = build_bundle(
+        state=state,
+        settings=normalize_settings({}, fallback_title="x"),
+        report={"id": "r1"},
+        project={"id": "p1"},
+        participant_base_url="",
+    )["files"]
+    quotes = files["quotes.json"]["quotes"]
+    assert "context" not in quotes[0]
+    assert quotes[1]["context"] == "near the end of the round"
