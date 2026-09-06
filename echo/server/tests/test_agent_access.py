@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import time
 from typing import Any
+from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -670,3 +671,59 @@ async def test_unknown_tool_is_audited_and_answered_with_a_hint(fake: FakeStore)
         "requested": "grep",
         "arguments": ["query"],
     }
+
+
+# ── documentation ──────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def docs_corpus() -> Any:
+    data = {
+        "users/host/index.md": "# For hosts\n\nCreate projects.\nRead transcripts here.\n",
+        "users/participant/index.md": "# For participants\n\nSomeone invited you.\nYour transcript is yours.\n",
+    }
+    with patch("dembrane.knowledge.corpus", new=AsyncMock(return_value=data)):
+        yield data
+
+
+@pytest.mark.asyncio
+async def test_docs_list_read_and_grep_follow_the_assistant_semantics(
+    docs_corpus: dict[str, str],
+) -> None:
+    from dembrane import knowledge
+
+    assert await knowledge.list_docs() == [
+        {"path": "users/host/index.md", "title": "For hosts"},
+        {"path": "users/participant/index.md", "title": "For participants"},
+    ]
+    text = await knowledge.read_doc("users/host/index.md", offset=1, limit=2)
+    assert text.startswith("1: # For hosts\n2: ") and "call read_doc with offset=3" in text
+    assert (await knowledge.read_doc("nope.md")).startswith("Not found: nope.md")
+    hits = await knowledge.grep_docs("transcript", max_results=10)
+    assert [(h["path"], h["line"]) for h in hits] == [
+        ("users/host/index.md", 4),
+        ("users/participant/index.md", 4),
+    ]
+    assert await knowledge.grep_docs("[unclosed", max_results=10) == []
+
+
+def test_disk_corpus_skips_authoring_and_translation_twins(tmp_path: Path) -> None:
+    from dembrane import knowledge
+
+    (tmp_path / "a.md").write_text("# A", encoding="utf-8")
+    (tmp_path / "a.nl-NL.md").write_text("# A nl", encoding="utf-8")
+    (tmp_path / "_authoring").mkdir()
+    (tmp_path / "_authoring" / "notes.md").write_text("# notes", encoding="utf-8")
+    assert list(knowledge._disk_corpus(tmp_path)) == ["a.md"]
+
+
+@pytest.mark.asyncio
+async def test_docs_tools_are_audited_and_need_no_org(
+    fake: FakeStore, docs_corpus: dict[str, str]
+) -> None:
+    app = _rest_app(_ctx(org_ids=[]))
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as ac:
+        r = await ac.get("/v2/agent/docs/search", params={"pattern": "invited"})
+    assert r.status_code == 200 and r.json()[0]["path"] == "users/participant/index.md"
+    assert fake.audit[-1]["tool"] == "search_docs" and fake.audit[-1]["status"] == "ok"
+    assert fake.usage == {}

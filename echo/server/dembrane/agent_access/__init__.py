@@ -76,6 +76,9 @@ USER_SERVER = ServerDescriptor(
         "list_project_webhooks",
         "report_issue",
         "request_tool",
+        "list_docs",
+        "read_doc",
+        "search_docs",
     ],
 )
 

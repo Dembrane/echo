@@ -154,6 +154,40 @@ async def get_conversation(conversation_id: str, ctx: DependencyAgent) -> T.Conv
     )
 
 
+@router.get("/docs", response_model=list[T.DocOut])
+async def list_docs(ctx: DependencyAgent) -> list[T.DocOut]:
+    return await _run(ctx, "list_docs", {}, lambda: T.list_docs(ctx))
+
+
+@router.get("/docs/read", response_model=T.DocReadOut)
+async def read_doc(
+    ctx: DependencyAgent,
+    path: str = Query(...),
+    offset: int = Query(1, ge=1),
+    limit: int = Query(400, ge=1, le=400),
+) -> T.DocReadOut:
+    return await _run(
+        ctx,
+        "read_doc",
+        {"path": path, "offset": offset, "limit": limit},
+        lambda: T.read_doc(ctx, path, offset=offset, limit=limit),
+    )
+
+
+@router.get("/docs/search", response_model=list[T.DocHitOut])
+async def search_docs(
+    ctx: DependencyAgent,
+    pattern: str = Query(..., min_length=1),
+    max_results: int = Query(50, ge=1, le=50),
+) -> list[T.DocHitOut]:
+    return await _run(
+        ctx,
+        "search_docs",
+        {"pattern": pattern[:200], "max_results": max_results},
+        lambda: T.search_docs(ctx, pattern, max_results=max_results),
+    )
+
+
 class IssueIn(BaseModel):
     message: str = Field(..., min_length=1, max_length=8000)
     project_id: Optional[str] = None
