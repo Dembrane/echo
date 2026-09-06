@@ -126,7 +126,7 @@
     <h1>What happens to a session's words, step by step</h1>
     <p class="lede">Every move the platform makes from a table's transcript to the deck on the wall, with the check at each step and what the evaluation can see. Written for review without reading the code, from the branch as it stood on September 5th 2026.</p>
     <div class="meta">
-      <span>Model route: <code>POPCORN_FAST</code>, gemini-3.7-flash on the EU multi-region</span>
+      <span>Model route: the platform's fast multimodal group (<code>MULTI_MODAL_FAST</code>), gemini-3.7-flash in production</span>
       <span>State: version 2 on <code>agent_loop.popcorn_state</code></span>
       <span>Cadence: one tick every 2 minutes, or "read now"</span>
     </div>
@@ -433,7 +433,7 @@ flowchart TD
       <tr><td>handed, positions, collisions, verify, write</td><td>the five pipeline prompts</td><td>on</td><td class="num">32,000</td></tr>
       <tr><td>dedupe</td><td>an inline instruction</td><td>off</td><td class="num">32,000</td></tr>
     </table></div>
-    <div class="prose"><p>The group is <code>LLM__POPCORN_FAST__*</code>; while it is unset the shared fast group serves, with one warning. Locally it is gemini-3.7-flash on the EU multi-region, which the router reaches only through the full endpoint as its base. The prompts are byte-for-byte the lab's, kept as immutable snapshots; a new version is a new file.</p></div>
+    <div class="prose"><p>Every call goes through the platform's fast multimodal group, the same deployment as everything else that reads transcripts (gemini-3.7-flash in production), and every call is bounded: 60 s for the fast pass, 120 s for the second pass, 240 to 300 s for the analysis calls. The prompts are byte-for-byte the lab's, kept as immutable snapshots; a new version is a new file.</p></div>
   </section>
 
   <section class="stage" id="evaluation">
@@ -482,7 +482,7 @@ flowchart TD
   <footer>Served only while SERVE_API_DOCS is on (local development). Branch <span class="mono">popcorn-lab-sync</span>, September 5th 2026. Prompts from Dembrane/popcorn at <span class="mono">8c23eba</span>.</footer>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js" integrity="sha384-WmdflGW9aGfoBdHc4rRyWzYuAjEmDwMdGdiPNacbwfGKxBW/SO6guzuQ76qjnSlr" crossorigin="anonymous"></script>
 <script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script>
 </body>
 </html>

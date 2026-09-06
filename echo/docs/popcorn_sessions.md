@@ -15,7 +15,8 @@ dashboard, and the *room*, which sees the screen and nothing else.
 ## Two modes
 
 - **Manual.** The default. Nothing is scheduled. *Refresh* reads the
-  conversations once (the changed ones, plus any check still owed). *Rerun*
+  conversations once: the changed ones, any check still owed, any slide
+  that is stale; when nothing is new it does nothing and says so. *Rerun*
   wipes every phrase, tension and stakeholder and reads everything again;
   earlier runs are saved in the history.
 - **Live.** A read every two minutes for 1, 8 or 24 hours, then back to
@@ -55,7 +56,8 @@ no transcripts can still run; the screen fills as conversations land.
   re-reads every conversation on the next read.
 - **Share**: the public page switch, the link, the embed code.
 - **Earlier runs**: every run that changed the screen, each opening the
-  presenter view of that run in its own tab. A rerun keeps them.
+  presenter view of that run in its own tab, as the room saw it. A rerun
+  keeps them.
 
 ## What the room sees
 
@@ -107,16 +109,25 @@ The BFF routes under `/v2/bff/popcorn`:
 |---|---|
 | `GET ?project_id=` | the session, or `{"popcorn": null, "readiness": {"conversations", "words"}}` before one exists |
 | `POST` | create in manual mode and read once |
-| `POST /{id}/refresh` | one read now; one per twenty seconds |
+| `POST /{id}/refresh` | one read now (changed conversations, owed checks, stale views; a no-op when nothing is new); one per twenty seconds |
 | `POST /{id}/rerun` | queue a `rerun` tick: the state is wiped under the run lock, then everything is read; the run counter continues; saved runs kept; one per twenty seconds, apart from refresh |
 | `POST /{id}/live` | body `{"hours": 1 \| 8 \| 24}`; active with that expiry, reads now |
 | `POST /{id}/live/stop` | back to manual |
 | `PATCH /{id}/settings` | title, client, tabs, public, show_qr, show_branding, public_labels, voice |
-| `GET /{id}/view/?present=1` | the presenter view; `&version=` replays a saved run |
+| `GET /{id}/view/?present=1` | the presenter view; `&version=` replays a saved run (saved as the room's bundle; older host snapshots are filtered on read) |
 | `POST /{id}/view/data/latency` | the deck's beacon; recorded as the PostHog event `popcorn_first_phrase_late` |
 
+The old loop routes (`POST /{id}/loop/{action}`, `PATCH /{id}/loop`) stay
+one release as aliases onto live and stop live, for a dashboard deployed
+ahead of the server.
+
 The payload's `loop.mode` is `"manual"` or `"live"`; `counts` carries
-`validated` and `held_back`. A phrase the second pass could not root moves from
+`validated` and `held_back`. A re-read of a grown transcript carries each
+phrase's kind, quote and held-back verdict forward by phrase id (the id is
+the phrase's own words), so only new phrases are checked again. Every model
+call is bounded (60 s for the fast pass, 120 s for the second pass, up to
+300 s for the analysis). Popcorn uses the platform's fast multimodal group,
+the same deployment as everything else that reads transcripts. A phrase the second pass could not root moves from
 the conversation's `items` to `review.dropped` on the state, with the model's
 reason; the bundle carries `held_back` as a count per conversation and never
 the text. The prompts are not part of any fingerprint: a new prompt version

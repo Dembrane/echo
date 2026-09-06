@@ -17,17 +17,12 @@ class MODELS(Enum):
     MULTI_MODAL_PRO = "MULTI_MODAL_PRO"  # Gemini 2.5 Pro – chat/report/inference
     MULTI_MODAL_FAST = "MULTI_MODAL_FAST"  # Gemini 2.5 Flash – realtime/verification
     TEXT_FAST = "TEXT_FAST"  # GPT-5 style small text model – summaries & utilities
-    # Popcorn reads participant transcripts; its group is a Vertex deployment in
-    # the EU of its own (LLM__POPCORN_FAST__*). Until one is configured the
-    # popcorn module falls back to MULTI_MODAL_FAST and says so in the log.
-    POPCORN_FAST = "POPCORN_FAST"
 
 
 MODEL_REGISTRY: Dict[MODELS, Dict[str, str]] = {
     MODELS.MULTI_MODAL_PRO: {"settings_attr": "multi_modal_pro"},
     MODELS.MULTI_MODAL_FAST: {"settings_attr": "multi_modal_fast"},
     MODELS.TEXT_FAST: {"settings_attr": "text_fast"},
-    MODELS.POPCORN_FAST: {"settings_attr": "popcorn_fast"},
 }
 
 # Cached router instance
@@ -79,6 +74,7 @@ def _get_router() -> "Router":
     global _cached_router
     if _cached_router is None:
         from dembrane.llm_router import get_router
+
         _cached_router = get_router()
     return _cached_router
 

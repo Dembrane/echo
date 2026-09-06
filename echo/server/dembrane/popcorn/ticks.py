@@ -71,6 +71,7 @@ from dembrane.popcorn.service import (
 )
 from dembrane.popcorn.analysis import (
     QuoteBook,
+    norm,
     build_corpus,
     shape_stakeholders,
     shape_popcorn_items,
@@ -317,6 +318,13 @@ async def _update_loop_after_tick(loop: dict[str, Any], *, status: str) -> None:
 
 async def _enqueue_next_if_due(loop: dict[str, Any], when: datetime | None = None) -> None:
     loop_id = str(loop["id"])
+    # One chain per loop, in any mode. Every read on request comes with a
+    # safety row beside its direct actor, and each tick that runs books the
+    # next; without this the rows pile up, and in manual mode a rerun's safety
+    # row would wipe and read the session a second time a minute later.
+    from dembrane.scheduled_tasks import TASK_POPCORN_TICK, cancel_pending_tasks
+
+    await cancel_pending_tasks(task_type=TASK_POPCORN_TICK, payload_match={"loop_id": loop_id})
     fresh = await async_directus.get_item("agent_loop", loop_id)
     if not fresh or fresh.get("status") != "active":
         return
@@ -335,12 +343,6 @@ async def _enqueue_next_if_due(loop: dict[str, Any], when: datetime | None = Non
         else:
             await async_directus.update_item("agent_loop", loop_id, {"status": "paused"})
             return
-    # One chain per loop. Every manual read and every go-live adds a safety
-    # tick, and each tick that runs schedules the next, so without this the
-    # chains multiply and a busy host ends the day with a tick storm.
-    from dembrane.scheduled_tasks import TASK_POPCORN_TICK, cancel_pending_tasks
-
-    await cancel_pending_tasks(task_type=TASK_POPCORN_TICK, payload_match={"loop_id": loop_id})
     await enqueue_popcorn_tick(loop_id, when=next_at)
 
 
@@ -466,10 +468,18 @@ async def _extract_one(
             # Grounding is code too: the closest passage behind each phrase, for
             # the host. The quote behind it is the second pass's job.
             items = ground_items(items, transcript["text"])
+            items, carried, redropped = _carry_forward(
+                items, entry, transcript["text"], writer.state.get("quotes") or []
+            )
+            review: dict[str, Any] = {}
+            if (entry.get("review") or {}).get("dropped"):
+                review["dropped"] = entry["review"]["dropped"]
+            if suppressed:
+                review["suppressed"] = suppressed
             entry.update(
                 {
                     "items": items,
-                    "review": {"suppressed": suppressed} if suppressed else {},
+                    "review": review,
                     "revision": int(entry.get("revision") or 0) + 1,
                     "done": True,
                     "fingerprint": transcript["fingerprint"],
@@ -482,7 +492,11 @@ async def _extract_one(
             )
             elapsed_ms = int((_now() - started).total_seconds() * 1000)
             held = f", {len(suppressed)} held back" if suppressed else ""
-            outcomes.append(f"popcorn {cid[:8]}: {len(items)} phrases{held} in {elapsed_ms} ms")
+            again = f", {redropped} held back again" if redropped else ""
+            kept = f", {carried} carried over" if carried else ""
+            outcomes.append(
+                f"popcorn {cid[:8]}: {len(items)} phrases{held}{again}{kept} in {elapsed_ms} ms"
+            )
         except Exception as exc:  # a dead transcript must not stall the stage
             entry.update(
                 {
@@ -595,12 +609,58 @@ def _pending_enrichment(
 
 
 def _needs_pass(item: dict[str, Any]) -> bool:
-    """A phrase still owed the second pass: no kind yet, or a call that failed."""
+    """A phrase still owed the second pass: no kind yet, no evidence verdict
+    yet, or a call that failed."""
     if not isinstance(item, dict):
         return False
-    if "kind" not in item:
+    if "kind" not in item or "rooted" not in item:
         return True
     return bool((item.get("review") or {}).get("errors"))
+
+
+def _carry_forward(
+    items: list[dict[str, Any]],
+    entry: dict[str, Any],
+    text: str,
+    quotes: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], int, int]:
+    """A re-read of a grown transcript returns most of the same phrases, with
+    the same ids (the id is the phrase's own words). Their kind and their
+    quote stand: the transcript only grew, so a passage found last time is
+    still there, and is checked to be. A phrase the second pass held back
+    last time stays held back. Returns the items to keep, how many carried
+    their evidence, how many were held back again."""
+    previous = {
+        str(i.get("id")): i for i in entry.get("items") or [] if isinstance(i, dict) and i.get("id")
+    }
+    dropped = {
+        str(d.get("id"))
+        for d in (entry.get("review") or {}).get("dropped") or []
+        if isinstance(d, dict) and d.get("id")
+    }
+    by_quote = {str(q.get("id")): q for q in quotes if isinstance(q, dict) and q.get("id")}
+    kept: list[dict[str, Any]] = []
+    carried = redropped = 0
+    for item in items:
+        iid = str(item.get("id"))
+        if iid in dropped:
+            redropped += 1
+            continue
+        old = previous.get(iid)
+        if old is None:
+            kept.append(item)
+            continue
+        for key in ("kind", "question", "qualifiers", "review"):
+            if key in old:
+                item[key] = old[key]
+        quote = by_quote.get(str(old.get("quoteId") or ""))
+        if old.get("rooted") is True and quote and norm(str(quote.get("text") or "")) in norm(text):
+            item["quoteId"] = old["quoteId"]
+            item["rooted"] = True
+        if "kind" in item and "rooted" in item:
+            carried += 1
+        kept.append(item)
+    return kept, carried, redropped
 
 
 def _referenced_quote_ids(value: Any) -> set[str]:
@@ -644,11 +704,13 @@ async def _run_analysis_pass(
     transcripts: list[dict[str, Any]],
     outcomes: list[str],
     book: QuoteBook,
+    views: tuple[str, ...] = ANALYSIS_VIEWS,
 ) -> dict[str, dict[str, Any] | None]:
-    """Both slow slides at once, registering into the tick's shared quote book:
-    the stakeholders call with its two gates and one retry, and the tensions
-    pipeline. Returns one entry per view: the new slide, or None where that
-    view failed, so the caller keeps the previous one of those alone."""
+    """The slow slides asked for, at once, registering into the tick's shared
+    quote book: the stakeholders call with its two gates and one retry, and
+    the tensions pipeline. Returns one entry per view: the new slide, or None
+    where that view failed or was not asked for, so the caller keeps the
+    previous one of those alone."""
     lengths = {t["id"]: len(t["text"]) for t in transcripts}
     quota = allocate_chars(lengths, MAX_ANALYSIS_CHARS)
     sources = {t["id"]: t["text"][: quota[t["id"]]] for t in transcripts}
@@ -703,8 +765,10 @@ async def _run_analysis_pass(
             )
         )
 
-    results = await asyncio.gather(stakeholders_slide(), tensions_slide(), return_exceptions=True)
-    for kind, exc in zip(("stakeholders", "tensions"), results, strict=True):
+    jobs = {"stakeholders": stakeholders_slide, "tensions": tensions_slide}
+    wanted = [kind for kind in jobs if kind in views]
+    results = await asyncio.gather(*(jobs[kind]() for kind in wanted), return_exceptions=True)
+    for kind, exc in zip(wanted, results, strict=True):
         if isinstance(exc, BaseException):
             outcomes.append(f"{kind}: FAILED {exc}")
             shaped[kind] = None
@@ -787,7 +851,9 @@ async def _snapshot_version(
         project=project if isinstance(project, dict) else {"id": project_id},
         participant_base_url=urls.participant_base_url,
         admin_base_url=urls.admin_base_url,
-        host=True,
+        # A saved run replays on the wall, so it is the room's bundle: no
+        # passages, no dashboard links, the legend as the setting says.
+        host=False,
     )
     await save_version(
         report_id=report_id,
@@ -935,7 +1001,9 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
         analysis_stale = bool(transcripts) and bool(_stale_views(state, analysis_fingerprint))
 
         owed = _pending_enrichment(state, transcripts)
-        if not changed and not analysis_stale and not owed and tick_kind not in ON_REQUEST:
+        # Nothing new, nothing owed, no view stale: nothing to do, whoever asked.
+        # Only a rerun goes on regardless, because a rerun wiped the state.
+        if not changed and not analysis_stale and not owed and tick_kind != "rerun":
             run = await _create_run(
                 loop_id=loop_id,
                 status="no_op",
@@ -990,9 +1058,16 @@ async def run_popcorn_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[s
                 )
 
         async def analysis_pass() -> None:
-            if not transcripts or not (analysis_stale or changed or tick_kind in ON_REQUEST):
+            if not transcripts or not (analysis_stale or changed or tick_kind == "rerun"):
                 return
-            fresh = await _run_analysis_pass(transcripts, outcomes, book)
+            # A changed session is analysed whole; a session that only has a
+            # view left stale (its last run failed) redoes that view alone.
+            views = (
+                ANALYSIS_VIEWS
+                if changed or tick_kind == "rerun"
+                else tuple(_stale_views(state, analysis_fingerprint))
+            )
+            fresh = await _run_analysis_pass(transcripts, outcomes, book, views=views)
             # A view that failed keeps its previous slide, unless it cites a quote
             # whose conversation is gone: those words have left the session, and
             # a slide pointing at them would show a dead quote.

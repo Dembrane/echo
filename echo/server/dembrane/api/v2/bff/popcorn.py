@@ -10,7 +10,7 @@ import re
 import json
 import time
 from typing import Any, Literal, AsyncIterator
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import Query, Depends, Request, Response, APIRouter, HTTPException, status
 from pydantic import Field, BaseModel
@@ -26,10 +26,12 @@ from dembrane.canvas.events import read_generation_nudge, subscribe_generation_n
 from dembrane.directus_async import async_directus
 from dembrane.popcorn.bundle import forget_bundle, bundle_for_report
 from dembrane.popcorn.service import (
+    LIVE_HOURS,
     REPORT_KIND,
     go_live,
     readiness,
     stop_live,
+    room_files,
     list_versions,
     request_rerun,
     sample_bundle,
@@ -37,6 +39,7 @@ from dembrane.popcorn.service import (
     popcorn_payload,
     update_settings,
     get_version_files,
+    load_settings_for,
     get_popcorn_report,
     ensure_public_token,
     get_loop_for_report,
@@ -270,6 +273,53 @@ async def popcorn_live_stop(popcorn_id: str, auth: DependencyDirectusSession) ->
     return await popcorn_payload(report)
 
 
+# ── one release of compatibility for dashboards deployed ahead of this server ──
+# The dashboard ships through Vercel and can land before the server, or after
+# it. These map the old loop routes onto the modes; remove them one release
+# after the dashboard has shipped without them.
+
+
+class PopcornLoopSettingsBody(BaseModel):
+    cadence_minutes: int | None = None
+    expires_at: datetime
+
+
+def _hours_until(expires_at: datetime) -> int:
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    left = (expires_at - datetime.now(timezone.utc)).total_seconds() / 3600
+    return next((h for h in LIVE_HOURS if h >= left), LIVE_HOURS[-1])
+
+
+@router.post("/{popcorn_id}/loop/{action}", deprecated=True)
+async def popcorn_loop_action(
+    popcorn_id: str, action: str, auth: DependencyDirectusSession
+) -> dict[str, Any]:
+    """Deprecated: go-live and resume go live for eight hours; pause and stop
+    return to manual."""
+    if action not in {"pause", "resume", "stop", "go-live"}:
+        raise HTTPException(status_code=404, detail="Popcorn loop action not found")
+    report, access = await _require_popcorn(popcorn_id, auth)
+    access.require("project:update")
+    loop = await _loop_of(report)
+    if action in {"go-live", "resume"}:
+        await go_live(loop, hours=8)
+    else:
+        await stop_live(loop)
+    return await popcorn_payload(report)
+
+
+@router.patch("/{popcorn_id}/loop", deprecated=True)
+async def patch_popcorn_loop(
+    popcorn_id: str, body: PopcornLoopSettingsBody, auth: DependencyDirectusSession
+) -> dict[str, Any]:
+    """Deprecated: live until the expiry, rounded up to the nearest duration."""
+    report, access = await _require_popcorn(popcorn_id, auth)
+    access.require("project:update")
+    await go_live(await _loop_of(report), hours=_hours_until(body.expires_at))
+    return await popcorn_payload(report)
+
+
 @router.get("/{popcorn_id}/events")
 async def popcorn_events(
     popcorn_id: str,
@@ -372,6 +422,11 @@ async def popcorn_view_bundle(
         files = await get_version_files(str(report["id"]), version_id)
         if files is None:
             raise HTTPException(status_code=404, detail="Version not found")
+        if view == "room":
+            # The wall never sees a passage, a dashboard link or a name the
+            # setting withholds, whichever bundle the run was saved as.
+            settings = await load_settings_for(report)
+            files = room_files(files, neutral_labels=settings.get("public_labels") != "names")
         return JSONResponse(
             {"run": None, "version": version_id, "files": files},
             headers={"Cache-Control": "private, max-age=300"},

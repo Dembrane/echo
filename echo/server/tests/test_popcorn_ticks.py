@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 
 import dembrane.popcorn.ticks as ticks
+import dembrane.scheduled_tasks as scheduled_tasks
 
 
 class _FakeDirectus:
@@ -331,8 +332,9 @@ def test_second_tick_only_rereads_changed_conversations(fake: _FakeDirectus, mon
     result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
     assert result["status"] == "ok"
     assert [c for c in calls if c.startswith("popcorn")] == ["popcorn:c2"]
-    # Only the re-read conversation gets the second pass again.
-    assert [c for c in calls if c.startswith("validate")] == ["validate:c2"]
+    # The re-read returned the same phrase: its kind and quote carried over,
+    # so the second pass had nothing to ask.
+    assert [c for c in calls if c.startswith("validate")] == []
     assert sorted(c for c in calls if c.startswith("analysis")) == [
         "analysis:stakeholders",
         "analysis:tensions",
@@ -537,7 +539,7 @@ def test_each_analysis_view_is_committed_on_its_own(fake: _FakeDirectus, monkeyp
     result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
     assert result["status"] == "ok"
     assert [c for c in calls if c.startswith(("popcorn", "validate"))] == []
-    assert "analysis:stakeholders" in calls
+    assert calls == ["analysis:stakeholders"]  # the fresh tensions view is left alone
     state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
     assert len(set(state["analysis"]["fingerprints"].values())) == 1
     assert asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))["status"] == "no_op"
@@ -715,3 +717,92 @@ def test_a_rerun_tick_wipes_the_state_and_reads_everything_again(
     assert after["run"] == 2 and after["conversations"]["c1"]["items"][0]["quoteId"]
     assert "rerun: the previous state wiped" in fake.created["agent_loop_run"][-1]["detail"]
     assert loop["status"] == "paused" and fake.enqueued == []  # type: ignore[attr-defined]
+
+
+def test_a_read_on_request_cancels_its_safety_row_in_any_mode(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    """Sameer's finding: a manual session's safety row survived the read and
+    ran it again a minute later; for a rerun that meant a second wipe."""
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    cancelled: list[str] = []
+
+    async def _cancel(*, task_type: str, payload_match: dict[str, Any]) -> int:
+        cancelled.append(f"{task_type}:{payload_match.get('loop_id')}")
+        return 1
+
+    monkeypatch.setattr(scheduled_tasks, "cancel_pending_tasks", _cancel)
+    fake.items["agent_loop"]["loop1"]["status"] = "paused"
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    assert "popcorn_tick:loop1" in cancelled
+    assert fake.enqueued == []  # type: ignore[attr-defined]
+
+
+def test_a_refresh_with_nothing_new_is_a_no_op(fake: _FakeDirectus, monkeypatch) -> None:
+    """Sameer's finding: a refresh re-ran the analysis and saved a version for
+    nothing new. Refresh reads what changed and finishes what is owed; only
+    a rerun goes on regardless."""
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    calls.clear()
+    versions = len(fake.created.get("canvas_generation", []))
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    assert result["status"] == "no_op" and calls == []
+    assert len(fake.created.get("canvas_generation", [])) == versions
+    # A stale view alone is enough for a refresh to do something.
+    fake.items["agent_loop"]["loop1"]["popcorn_state"]["analysis"]["fingerprints"].pop("tensions")
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    assert result["status"] == "ok" and calls == ["analysis:tensions"]
+
+
+def test_a_re_read_carries_the_evidence_forward_by_phrase_id(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    """Sameer's finding: a re-read replaced the whole item list, so every
+    phrase lost its kind and quote and was checked again, and a held-back
+    phrase came back until it was dropped again."""
+    calls: list[str] = []
+    _install_models(monkeypatch, calls=calls)
+
+    async def _validate(*, transcript_id: str, transcript: str, phrase: str) -> dict[str, Any]:  # noqa: ARG001
+        calls.append(f"validate:{transcript_id}")
+        if transcript_id == "c2":
+            return {"grounded": False, "quote": "", "reason": "nothing like it was said"}
+        for line in transcript.split("\n"):
+            if phrase in line:
+                return {"grounded": True, "quote": line.strip(), "reason": "r"}
+        return {"grounded": False, "quote": "", "reason": "not there"}
+
+    monkeypatch.setattr(ticks, "validate_phrase", _validate)
+    asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    c1, c2 = state["conversations"]["c1"], state["conversations"]["c2"]
+    assert c1["items"][0]["quoteId"] == "q1" and c1["items"][0]["kind"] == "observation"
+    assert (
+        c2["items"] == [] and c2["review"]["dropped"][0]["phrase"] == "Quiet is a service we sell"
+    )
+    calls.clear()
+
+    # Both transcripts grow; the extractor returns the same first sentence.
+    fake.chunks.append(
+        {"id": "k4", "conversation_id": "c1", "transcript": "More said.", "timestamp": 3}
+    )
+    fake.chunks.append(
+        {"id": "k5", "conversation_id": "c2", "transcript": "And more.", "timestamp": 3}
+    )
+    result = asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))
+    assert result["status"] == "ok"
+    assert sorted(c for c in calls if c.startswith("popcorn")) == ["popcorn:c1", "popcorn:c2"]
+    # Nothing was validated again: c1's phrase kept its kind and its quote,
+    # c2's phrase stayed held back without a call.
+    assert [c for c in calls if c.startswith(("validate", "kind"))] == []
+    state = fake.items["agent_loop"]["loop1"]["popcorn_state"]
+    c1, c2 = state["conversations"]["c1"], state["conversations"]["c2"]
+    assert c1["items"][0]["quoteId"] == "q1" and c1["items"][0]["kind"] == "observation"
+    assert c1["items"][0]["rooted"] is True
+    assert c1["validated_fingerprint"] == c1["fingerprint"]
+    assert c2["items"] == [] and len(c2["review"]["dropped"]) == 1
+    detail = fake.created["agent_loop_run"][-1]["detail"]
+    assert "1 carried over" in detail and "1 held back again" in detail

@@ -1,38 +1,34 @@
 from __future__ import annotations
 
-import logging
+import asyncio
 from typing import Any
+
+import pytest
 
 import dembrane.popcorn.model as model
 from dembrane.llms import MODELS
 
 
-class _Llms:
-    def __init__(self, deployments: list[Any]) -> None:
-        self._deployments = deployments
-
-    def get_deployments_for_group(self, group: str) -> list[Any]:
-        assert group == "popcorn_fast"
-        return self._deployments
+def test_popcorn_uses_the_platforms_fast_group() -> None:
+    assert model.popcorn_model() is MODELS.MULTI_MODAL_FAST
 
 
-class _Settings:
-    def __init__(self, deployments: list[Any]) -> None:
-        self.llms = _Llms(deployments)
+def test_every_call_is_bounded(monkeypatch) -> None:
+    async def _hangs(*args: Any, **kwargs: Any) -> Any:  # noqa: ARG001
+        await asyncio.sleep(30)
 
-
-def test_popcorn_uses_its_own_group_when_one_is_configured(monkeypatch) -> None:
-    monkeypatch.setattr(model, "get_settings", lambda: _Settings([(None, object())]))
-    assert model.popcorn_model() is MODELS.POPCORN_FAST
-
-
-def test_popcorn_falls_back_to_the_shared_fast_group_and_says_so_once(monkeypatch, caplog) -> None:
-    monkeypatch.setattr(model, "get_settings", lambda: _Settings([]))
-    monkeypatch.setattr(model, "_fallback_warned", False)
-    with caplog.at_level(logging.WARNING, logger="dembrane.popcorn.model"):
-        assert model.popcorn_model() is MODELS.MULTI_MODAL_FAST
-        assert model.popcorn_model() is MODELS.MULTI_MODAL_FAST
-    assert sum("POPCORN_FAST" in r.message for r in caplog.records) == 1
+    monkeypatch.setattr(model, "arouter_completion", _hangs)
+    monkeypatch.setattr(model, "EXTRACT_TIMEOUT_SECONDS", 0.05)
+    monkeypatch.setattr(model, "ENRICH_TIMEOUT_SECONDS", 0.05)
+    monkeypatch.setattr(model, "ANALYSIS_TIMEOUT_SECONDS", 0.05)
+    with pytest.raises(asyncio.TimeoutError):
+        asyncio.run(model.extract_popcorn(transcript_id="t", transcript="x"))
+    with pytest.raises(asyncio.TimeoutError):
+        asyncio.run(model.validate_phrase(transcript_id="t", transcript="x", phrase="p"))
+    with pytest.raises(asyncio.TimeoutError):
+        asyncio.run(
+            model.analysis_call(system_prompt="s", user_text="u", schema={"type": "object"})
+        )
 
 
 def test_prompts_are_the_versioned_snapshots() -> None:

@@ -6,22 +6,21 @@ second-pass prompts at commit 8c23eba; popcorn-v1.7 is v1.6 without the
 weight section, platform-side, September 5th 2026). A prompt iteration is a
 new file plus a new version constant here, never an edit in place.
 
-Every popcorn call goes through one model group, `popcorn_model()`: the
-POPCORN_FAST deployment when one is configured, otherwise MULTI_MODAL_FAST.
-Participant transcripts are the input to all of them.
+Every popcorn call goes through the platform's fast multimodal group
+(`popcorn_model()`), bounded by a timeout per kind of call.
 """
 
 from __future__ import annotations
 
 import re
 import json
+import asyncio
 import logging
 from typing import Any
 from pathlib import Path
 from functools import lru_cache
 
 from dembrane.llms import MODELS, arouter_completion
-from dembrane.settings import get_settings
 from dembrane.popcorn.analysis import POPCORN_SCHEMA, TENSIONS_SCHEMA, STAKEHOLDERS_SCHEMA
 from dembrane.popcorn.enrichment import KIND_SCHEMA, QUESTION_SCHEMA, VALIDATE_SCHEMA
 
@@ -44,47 +43,17 @@ ANALYSIS_MAX_TOKENS = 32000
 # The second pass thinks, and Gemini counts thinking against the output cap.
 ENRICH_MAX_TOKENS = 8000
 
-_fallback_warned = False
-
-
-_route_warned = False
-
-
-def _warn_if_outside_europe(deployments: list[Any]) -> None:
-    """Participant transcripts go to this group; anything but a Vertex
-    deployment in a European location is worth one line in the log."""
-    global _route_warned
-    if _route_warned:
-        return
-    for _suffix, cfg in deployments:
-        model_name = str(getattr(cfg, "model", "") or "")
-        location = str(getattr(cfg, "vertex_location", "") or "")
-        if not model_name.startswith("vertex_ai/") or not location.startswith("europe"):
-            logger.warning(
-                "LLM__POPCORN_FAST deployment %s at %r is not a Vertex deployment in Europe; "
-                "participant transcripts are its input",
-                model_name,
-                location,
-            )
-            _route_warned = True
-            return
+# Every call is bounded. The fast pass answers in seconds (thinking off); the
+# second pass thinks; the analysis calls carry their callers' longer bounds
+# as well (tensions 240 s, stakeholders 300 s), this is the backstop.
+EXTRACT_TIMEOUT_SECONDS = 60
+ENRICH_TIMEOUT_SECONDS = 120
+ANALYSIS_TIMEOUT_SECONDS = 300
 
 
 def popcorn_model() -> MODELS:
-    """The group every popcorn call uses. `LLM__POPCORN_FAST__*` names a
-    deployment of its own (a Vertex project in the EU, so participant text
-    never leaves it); until one is configured the shared MULTI_MODAL_FAST group
-    serves, and the log says so once per process."""
-    global _fallback_warned
-    deployments = get_settings().llms.get_deployments_for_group("popcorn_fast")
-    if deployments:
-        _warn_if_outside_europe(deployments)
-        return MODELS.POPCORN_FAST
-    if not _fallback_warned:
-        logger.warning(
-            "No LLM__POPCORN_FAST__* deployment configured; popcorn is using MULTI_MODAL_FAST"
-        )
-        _fallback_warned = True
+    """The group every popcorn call uses: the platform's fast multimodal
+    group, the same deployment as everything else that reads transcripts."""
     return MODELS.MULTI_MODAL_FAST
 
 
@@ -142,6 +111,7 @@ async def _structured_completion(
     schema: dict[str, Any],
     max_tokens: int,
     fast: bool,
+    timeout: float,
 ) -> dict[str, Any]:
     kwargs: dict[str, Any] = {
         "messages": [
@@ -158,7 +128,9 @@ async def _structured_completion(
         # thinkingConfig is passed through LiteLLM verbatim as a Gemini
         # generationConfig field, exactly as the upstream demo sends it.
         kwargs["thinkingConfig"] = {"thinkingBudget": 0}
-    response = await arouter_completion(popcorn_model(), **kwargs)
+    response = await asyncio.wait_for(
+        arouter_completion(popcorn_model(), **kwargs), timeout=timeout
+    )
     return _json_from_text(_choice_text(response))
 
 
@@ -176,6 +148,7 @@ async def extract_popcorn(
         schema=POPCORN_SCHEMA,
         max_tokens=2000,
         fast=True,
+        timeout=EXTRACT_TIMEOUT_SECONDS,
     )
 
 
@@ -187,6 +160,7 @@ async def validate_phrase(*, transcript_id: str, transcript: str, phrase: str) -
         schema=VALIDATE_SCHEMA,
         max_tokens=ENRICH_MAX_TOKENS,
         fast=False,
+        timeout=ENRICH_TIMEOUT_SECONDS,
     )
 
 
@@ -198,6 +172,7 @@ async def classify_phrase(*, transcript_id: str, transcript: str, phrase: str) -
         schema=KIND_SCHEMA,
         max_tokens=ENRICH_MAX_TOKENS,
         fast=False,
+        timeout=ENRICH_TIMEOUT_SECONDS,
     )
 
 
@@ -211,6 +186,7 @@ async def rewrite_question(*, transcript_id: str, transcript: str, phrase: str) 
         schema=QUESTION_SCHEMA,
         max_tokens=ENRICH_MAX_TOKENS,
         fast=False,
+        timeout=ENRICH_TIMEOUT_SECONDS,
     )
 
 
@@ -225,6 +201,7 @@ async def analysis_call(
         schema=schema,
         max_tokens=ANALYSIS_MAX_TOKENS,
         fast=not thinking,
+        timeout=ANALYSIS_TIMEOUT_SECONDS,
     )
 
 
@@ -247,4 +224,5 @@ async def run_analysis(
         schema=ANALYSIS_SCHEMAS[kind],
         max_tokens=ANALYSIS_MAX_TOKENS,
         fast=False,
+        timeout=ANALYSIS_TIMEOUT_SECONDS,
     )

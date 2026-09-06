@@ -117,6 +117,18 @@ twin phrases survived; Jorim asked for it to go.
 - **Prompts leave the fingerprints.** Commit `4a07df65` had put the prompt
   text into every conversation's fingerprint so a prompt change re-read the
   session; that is reversed here.
+- **From Sameer's review (2026-09-06).** The tick cancels its pending rows
+  in any mode, so a read on request's safety row never runs the read a
+  second time (a rerun's would have wiped twice). Saved runs are the room's
+  bundle, and older host snapshots are filtered on read, so a replay on the
+  wall shows no passage, link or withheld name. Every model call is bounded.
+  Refresh reads what changed and finishes what is owed; when nothing is new
+  it is a no-op, and only a rerun forces the analysis. A re-read carries
+  kind, quote and held-back verdict forward by phrase id, so a growing table
+  is not re-checked every two minutes. The old loop routes stay one release
+  as aliases. Popcorn has no model group of its own: the platform's fast
+  group is already the 3.7 model in production (Jorim), so the
+  `POPCORN_FAST` group, its settings and its `.env.sample` recipe go.
 
 ## How it works
 

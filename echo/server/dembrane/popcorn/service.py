@@ -618,6 +618,15 @@ def loop_payload(
     }
 
 
+async def load_settings_for(report: dict[str, Any]) -> dict[str, Any]:
+    """The report's presentation settings, normalised."""
+    config = await get_latest_config(str(report["id"]))
+    return normalize_settings(
+        (config or {}).get("popcorn_settings"),
+        fallback_title=str(report.get("user_instructions") or "Popcorn"),
+    )
+
+
 def state_counts(state: dict[str, Any]) -> dict[str, Any]:
     conversations = state.get("conversations") or {}
     phrases = sum(len(c.get("items") or []) for c in conversations.values())
@@ -807,6 +816,49 @@ def build_bundle(
                 files[f"{kind}.json"] = slide
 
     return {"run": run, "files": files}
+
+
+def room_files(files: dict[str, Any], *, neutral_labels: bool) -> dict[str, Any]:
+    """A saved run as the room may see it. Runs saved before September 6th
+    2026 hold the host's bundle; this strips what the host alone may see (the
+    passages, the dashboard links, the host block, the coverage) and numbers
+    the legend when the setting says so. Newer runs are saved as the room's
+    bundle and pass through unchanged."""
+    out: dict[str, Any] = {}
+    for name, file in files.items():
+        if not isinstance(file, dict):
+            out[name] = file
+            continue
+        if name == "session.json":
+            session = {k: v for k, v in file.items() if k != "host"}
+            transcripts = []
+            for index, t in enumerate(session.get("transcripts") or [], start=1):
+                if not isinstance(t, dict):
+                    continue
+                if neutral_labels:
+                    t = {**t, "label": f"Conversation {index}", "short": f"Conversation {index}"}
+                transcripts.append(t)
+            session["transcripts"] = transcripts
+            out[name] = session
+        elif name.startswith("popcorn/"):
+            out[name] = {
+                **{k: v for k, v in file.items() if k != "coverage"},
+                "items": [
+                    {k: v for k, v in i.items() if k != "source"} if isinstance(i, dict) else i
+                    for i in file.get("items") or []
+                ],
+            }
+        elif name == "quotes.json":
+            out[name] = {
+                **file,
+                "quotes": [
+                    {k: v for k, v in q.items() if k != "url"} if isinstance(q, dict) else q
+                    for q in file.get("quotes") or []
+                ],
+            }
+        else:
+            out[name] = file
+    return out
 
 
 def _transcript_entry(

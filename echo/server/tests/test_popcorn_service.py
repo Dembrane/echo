@@ -105,3 +105,33 @@ def test_readiness_counts_transcribed_conversations_and_words(monkeypatch) -> No
         "conversations": 2,
         "words": 5,
     }
+
+
+def test_room_files_strip_what_the_host_alone_may_see() -> None:
+    files = {
+        "session.json": {
+            "title": "T",
+            "host": {"tabs": {}, "flow": "flow/"},
+            "transcripts": [{"id": "c1", "label": "Priya", "short": "Priya", "time": "t"}],
+        },
+        "popcorn/c1.json": {
+            "transcript": "c1",
+            "validated": True,
+            "coverage": {"chars": 1, "clipped": 0},
+            "items": [
+                {"id": "p", "phrase": "x", "quoteId": "q1", "source": {"text": "s", "url": "u"}}
+            ],
+        },
+        "quotes.json": {"quotes": [{"id": "q1", "transcript": "c1", "text": "x", "url": "u"}]},
+        "tensions.json": {"tensions": []},
+    }
+    room = service.room_files(files, neutral_labels=True)
+    assert "host" not in room["session.json"]
+    assert room["session.json"]["transcripts"][0]["label"] == "Conversation 1"
+    assert room["session.json"]["transcripts"][0]["time"] == "t"
+    assert "coverage" not in room["popcorn/c1.json"]
+    assert room["popcorn/c1.json"]["items"] == [{"id": "p", "phrase": "x", "quoteId": "q1"}]
+    assert room["quotes.json"]["quotes"] == [{"id": "q1", "transcript": "c1", "text": "x"}]
+    assert room["tensions.json"] == {"tensions": []}
+    named = service.room_files(files, neutral_labels=False)
+    assert named["session.json"]["transcripts"][0]["label"] == "Priya"
