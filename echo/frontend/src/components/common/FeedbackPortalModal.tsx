@@ -24,16 +24,23 @@ interface FeedbackPortalModalProps {
 	opened: boolean;
 	onClose: () => void;
 	locale?: string;
+	onReportIssue?: () => void;
 }
 
 export const FeedbackPortalModal = ({
 	opened,
 	onClose,
 	locale,
+	onReportIssue,
 }: FeedbackPortalModalProps) => {
 	const { data: me } = useV2Me();
 	const baseFeedbackUrl = getProductFeedbackUrl(locale);
 	const securityFormUrl = getSecurityReportFormUrl(locale);
+
+	const handleReportIssue = () => {
+		onClose();
+		onReportIssue?.();
+	};
 
 	const feedbackUrl = useMemo(() => {
 		if (!me?.email) return baseFeedbackUrl;
@@ -72,15 +79,15 @@ export const FeedbackPortalModal = ({
 						<Trans>
 							We'd love to hear from you. Whether you have an idea for something
 							new, spotted a translation that feels off, or just want to share
-							how things have been going. Hit a bug? Use Report an issue in the
-							sidebar to send it with screenshots.
-						</Trans>
-					</Text>
-					<Text size="sm">
-						<Trans>
-							To help us act on it, try to include where it happened and what
-							you were trying to do. For bugs, tell us what went wrong. For
-							ideas, tell us what need it would solve for you.
+							how things have been going. Hit a bug? Use{" "}
+							<Anchor
+								component="button"
+								type="button"
+								onClick={handleReportIssue}
+							>
+								Report an issue
+							</Anchor>{" "}
+							to send it with screenshots.
 						</Trans>
 					</Text>
 					<Text size="sm">

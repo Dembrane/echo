@@ -31,6 +31,7 @@ export const HelpModalsProvider = ({ children }: { children: ReactNode }) => {
 				opened={feedbackOpen}
 				onClose={feedback.close}
 				locale={language}
+				onReportIssue={report.open}
 			/>
 			<ReportIssueModal
 				opened={reportOpen}
