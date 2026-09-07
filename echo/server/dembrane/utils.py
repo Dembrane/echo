@@ -41,6 +41,21 @@ def clean_generated_title(content: str) -> str:
     return candidate.strip().strip("\"'“”‘’").strip()
 
 
+# A title is a handful of words; anything longer is model chatter, not a title.
+MAX_GENERATED_TITLE_LENGTH = 120
+
+
+def sanitize_generated_title(content: str) -> Optional[str]:
+    """Clean model output into a usable title, or return None if it is not one."""
+    title = clean_generated_title(content)
+    if not title:
+        return None
+    if len(title) > MAX_GENERATED_TITLE_LENGTH:
+        logger.warning("Discarding generated title: too long (%d chars)", len(title))
+        return None
+    return title
+
+
 def generate_4_digit_pin() -> str:
     return str(random.randint(1000, 9999))[:4]
 

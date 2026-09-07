@@ -5,27 +5,14 @@ from typing import Any
 import pytest
 
 from dembrane import chat_utils
-
-
-class _Message:
-    def __init__(self, content: str | None) -> None:
-        self.content = content
-
-
-class _Choice:
-    def __init__(self, content: str | None) -> None:
-        self.message = _Message(content)
-
-
-class _Response:
-    def __init__(self, content: str | None) -> None:
-        self.choices = [_Choice(content)]
+from tests.llm_fakes import FakeCompletion
 
 
 def _patch_completion(monkeypatch: pytest.MonkeyPatch, content: str | None) -> None:
-    async def _fake(*_args: Any, **_kwargs: Any) -> _Response:
-        return _Response(content)
+    async def _fake(*_args: Any, **_kwargs: Any) -> FakeCompletion:
+        return FakeCompletion(content)
 
+    monkeypatch.setattr(chat_utils, "DISABLE_CHAT_TITLE_GENERATION", False)
     monkeypatch.setattr(chat_utils, "arouter_completion", _fake)
 
 
@@ -33,26 +20,19 @@ def _patch_completion(monkeypatch: pytest.MonkeyPatch, content: str | None) -> N
 async def test_generate_title_returns_none_when_model_call_raises(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    async def _fake(*_args: Any, **_kwargs: Any) -> _Response:
+    async def _fake(*_args: Any, **_kwargs: Any) -> FakeCompletion:
         raise RuntimeError("litellm.APIConnectionError: upstream unavailable")
 
+    monkeypatch.setattr(chat_utils, "DISABLE_CHAT_TITLE_GENERATION", False)
     monkeypatch.setattr(chat_utils, "arouter_completion", _fake)
 
     assert await chat_utils.generate_title("what do people say about housing?", "en") is None
 
 
-@pytest.mark.parametrize(
-    "content",
-    [
-        "litellm.APIConnectionError: deployment multi_modal_fast failed",
-        "Error: 500 Internal Server Error from provider",
-        "I'm sorry, I can't help with generating a title for that.",
-        "x" * 400,
-    ],
-)
+@pytest.mark.parametrize("content", [None, "", "   \n  ", "x" * 400])
 @pytest.mark.asyncio
-async def test_generate_title_rejects_error_shaped_content(
-    monkeypatch: pytest.MonkeyPatch, content: str
+async def test_generate_title_rejects_unusable_content(
+    monkeypatch: pytest.MonkeyPatch, content: str | None
 ) -> None:
     _patch_completion(monkeypatch, content)
 
@@ -66,6 +46,7 @@ async def test_generate_title_rejects_error_shaped_content(
         ('  "Housing Costs"  \n', "Housing Costs"),
         ("Here are some options:\n1. Housing Costs\n2. Rent Debate", "Housing Costs"),
         ("**Housing Costs**", "Housing Costs"),
+        ("Warning signs of burnout", "Warning signs of burnout"),
     ],
 )
 @pytest.mark.asyncio

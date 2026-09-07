@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from dembrane.s3 import delete_from_s3, get_signed_url, save_to_s3_from_file_like
 from dembrane.llms import MODELS, router_completion
-from dembrane.utils import generate_uuid, clean_generated_title
+from dembrane.utils import generate_uuid, sanitize_generated_title
 from dembrane.prompts import render_prompt
 from dembrane.transcribe import TranscriptionError, transcribe_audio_dembrane_26_07
 from dembrane.audio_utils import get_duration_from_url
@@ -148,7 +148,7 @@ def generate_conversation_title(
         if response_content is None:
             logger.warning("LLM returned None content for title")
             return ""
-        return clean_generated_title(response_content)
+        return sanitize_generated_title(response_content) or ""
     except (IndexError, AttributeError, KeyError) as e:
         logger.error(f"Error getting response content for title: {e}")
         return ""

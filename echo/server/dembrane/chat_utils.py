@@ -1,4 +1,3 @@
-import re
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -6,7 +5,7 @@ from pydantic import BaseModel
 from litellm.utils import token_counter
 
 from dembrane.llms import MODELS, arouter_completion, get_completion_kwargs
-from dembrane.utils import clean_generated_title
+from dembrane.utils import sanitize_generated_title
 from dembrane.prompts import render_prompt
 from dembrane.service import chat_service, conversation_service
 from dembrane.directus import directus
@@ -320,41 +319,6 @@ class CitationsSchema(BaseModel):
     citations: List[CitationSingleSchema]
 
 
-# A chat title is a handful of words; anything longer is model chatter, not a title.
-MAX_GENERATED_TITLE_LENGTH = 120
-
-# Error-shaped or refusal-shaped output must never become a host-visible chat title.
-_REJECTED_TITLE_PATTERN = re.compile(
-    r"traceback \(most recent call last\)"
-    r"|litellm\."
-    r"|api(?:connection|status|response)?error"
-    r"|ratelimiterror"
-    r"|internalservererror"
-    r"|^(?:error|exception|warning)\b"
-    r"|^i(?:'m| am) sorry"
-    r"|^i (?:cannot|can't|can not)\b"
-    r"|^as an? (?:ai|language model)",
-    re.IGNORECASE,
-)
-
-
-def _sanitize_generated_title(content: str) -> Optional[str]:
-    """Clean model output into a usable title, or return None if it is not one."""
-    # Reuse the sanitiser already proven on the conversation-title path.
-    title = clean_generated_title(content)
-
-    if not title:
-        return None
-    if len(title) > MAX_GENERATED_TITLE_LENGTH:
-        logger.warning("Discarding generated chat title: too long (%d chars)", len(title))
-        return None
-    if _REJECTED_TITLE_PATTERN.search(title):
-        logger.warning("Discarding generated chat title: error or refusal shaped output")
-        return None
-
-    return title
-
-
 async def generate_title(
     user_query: str,
     language: str,
@@ -390,13 +354,11 @@ async def generate_title(
             messages=[{"role": "user", "content": title_prompt}],
         )
         content = response.choices[0].message.content
-    except Exception as exc:  # noqa: BLE001
+        if content is None:
+            logger.warning(f"No title generated for user query: {user_query}")
+            return None
+        return sanitize_generated_title(content)
+    except Exception:
         # A failed title call must never fail the chat turn or leak into the title.
-        logger.warning("Title generation failed, falling back to no title: %s", exc)
+        logger.exception("Title generation failed, leaving chat untitled")
         return None
-
-    if content is None:
-        logger.warning(f"No title generated for user query: {user_query}")
-        return None
-
-    return _sanitize_generated_title(content)
