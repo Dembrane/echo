@@ -1,0 +1,55 @@
+{
+  "collection": "agent_insight",
+  "field": "source",
+  "type": "string",
+  "meta": {
+    "collection": "agent_insight",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "source",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": "assistant (in-app chat, host-reviewed) or agent_mcp (an external agent asking for a capability). Null on older rows.",
+    "options": {
+      "choices": [
+        {
+          "text": "Assistant",
+          "value": "assistant"
+        },
+        {
+          "text": "Agent MCP",
+          "value": "agent_mcp"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 11,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "half"
+  },
+  "schema": {
+    "name": "source",
+    "table": "agent_insight",
+    "data_type": "character varying",
+    "default_value": null,
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

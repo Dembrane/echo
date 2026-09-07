@@ -1,0 +1,59 @@
+{
+  "collection": "support_request",
+  "field": "source",
+  "type": "string",
+  "meta": {
+    "collection": "support_request",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "source",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": "Where the request came from: dashboard (report issue), assistant (in-app chat), agent_mcp (an external agent over MCP). Null on rows older than this field.",
+    "options": {
+      "choices": [
+        {
+          "text": "Dashboard",
+          "value": "dashboard"
+        },
+        {
+          "text": "Assistant",
+          "value": "assistant"
+        },
+        {
+          "text": "Agent MCP",
+          "value": "agent_mcp"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 31,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "half"
+  },
+  "schema": {
+    "name": "source",
+    "table": "support_request",
+    "data_type": "character varying",
+    "default_value": null,
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

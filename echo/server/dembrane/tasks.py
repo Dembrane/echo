@@ -1,8 +1,9 @@
 # ruff: noqa: E402
 import json
+import time
 import logging
 from typing import Any, Optional
-from logging import getLogger
+from logging import Logger, getLogger
 from datetime import datetime, timezone, timedelta
 
 import redis
@@ -1868,8 +1869,6 @@ def task_process_scheduled_tasks() -> None:
     """
     from dembrane.scheduled_tasks import (
         claim_due_tasks,
-        mark_task_failed,
-        mark_task_completed,
         reconcile_stale_claims,
     )
 
@@ -1891,11 +1890,33 @@ def task_process_scheduled_tasks() -> None:
             _dispatch_scheduled_task(row)
         except Exception as exc:
             task_logger.exception("scheduled_task %s (%s) failed", task_id, row.get("task_type"))
-            with directus_client_context() as client:
-                mark_task_failed(client, task_id, str(exc))
+            _settle_scheduled_task(task_id, error=str(exc), task_logger=task_logger)
             continue
-        with directus_client_context() as client:
-            mark_task_completed(client, task_id)
+        _settle_scheduled_task(task_id, error=None, task_logger=task_logger)
+
+
+def _settle_scheduled_task(task_id: str, *, error: str | None, task_logger: Logger) -> None:
+    """Write a task's terminal status, retrying once after a second.
+
+    A Directus connection drop here must not escape: it would abort the rest of
+    the batch and leave this row in `processing` until a reconciler rescues it
+    (ECHO-968). If both attempts fail the row stays `processing` and the tick
+    reconcilers pick it up on their stale-claim pass.
+    """
+    from dembrane.scheduled_tasks import mark_task_failed, mark_task_completed
+
+    for attempt in range(2):
+        try:
+            with directus_client_context() as client:
+                if error is None:
+                    mark_task_completed(client, task_id)
+                else:
+                    mark_task_failed(client, task_id, error)
+            return
+        except Exception:
+            if attempt == 0:
+                time.sleep(1)
+    task_logger.exception("failed to settle scheduled_task %s in Directus", task_id)
 
 
 def _dispatch_scheduled_task(row: dict) -> None:
@@ -1941,17 +1962,24 @@ def _run_popcorn_tick(payload: dict) -> None:
     if not loop_id:
         raise ValueError("popcorn_tick payload missing loop_id")
     tick_kind = payload.get("tick_kind") or "scheduled"
+    request_id = payload.get("request_id")
     from dembrane.popcorn.ticks import run_popcorn_tick
 
-    run_async_in_new_loop(lambda: run_popcorn_tick(str(loop_id), str(tick_kind)))
+    run_async_in_new_loop(
+        lambda: run_popcorn_tick(
+            str(loop_id), str(tick_kind), request_id=str(request_id) if request_id else None
+        )
+    )
 
 
 @dramatiq.actor(queue_name="network", priority=20, max_retries=0)
-def task_popcorn_tick_now(loop_id: str, tick_kind: str = "manual") -> None:
+def task_popcorn_tick_now(
+    loop_id: str, tick_kind: str = "manual", request_id: str | None = None
+) -> None:
     """Run a popcorn tick straight away. The scheduled_task table is polled once
     a minute, which is fine for the cadence but not for the first phrase after
     Start or after the host presses refresh."""
-    _run_popcorn_tick({"loop_id": loop_id, "tick_kind": tick_kind})
+    _run_popcorn_tick({"loop_id": loop_id, "tick_kind": tick_kind, "request_id": request_id})
 
 
 async def _expire_support_request_async(request_id: str) -> bool:
@@ -2255,6 +2283,7 @@ def build_support_request_forward_payload(
     }
     for key in (
         "page_context",
+        "source",
         "created_at",
         "chat_id",
         "project_id",
@@ -2315,6 +2344,7 @@ def task_forward_support_requests() -> None:
                         "id",
                         "message",
                         "page_context",
+                        "source",
                         "created_at",
                         "chat_id",
                         "project_id",

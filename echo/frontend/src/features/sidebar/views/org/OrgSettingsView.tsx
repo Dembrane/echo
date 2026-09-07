@@ -1,5 +1,10 @@
 import { Trans } from "@lingui/react/macro";
-import { ChartLineIcon, CreditCardIcon, GearIcon } from "@phosphor-icons/react";
+import {
+	ChartLineIcon,
+	CreditCardIcon,
+	GearIcon,
+	PlugsConnectedIcon,
+} from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useV2Me } from "@/hooks/useV2Me";
 import { BackButton } from "../../primitives/BackButton";
@@ -15,8 +20,8 @@ export const OrgSettingsView = () => {
 	// Mirror OrganisationRoute's `canSeeFinancials`; others get bounced off
 	// Usage/Billing to the Members panel, so don't offer those items.
 	const role = me?.orgs.find((o) => o.id === orgId)?.role;
-	const canSeeFinancials =
-		role === "owner" || role === "admin" || role === "billing";
+	const isAdmin = role === "owner" || role === "admin";
+	const canSeeFinancials = isAdmin || role === "billing";
 	if (!orgId) return null;
 
 	return (
@@ -43,6 +48,13 @@ export const OrgSettingsView = () => {
 					to={`/o/${orgId}/settings/billing`}
 					label={<Trans>Billing</Trans>}
 					icon={CreditCardIcon}
+				/>
+			)}
+			{isAdmin && (
+				<NavItem
+					to={`/o/${orgId}/settings/agents`}
+					label={<Trans>MCP access</Trans>}
+					icon={PlugsConnectedIcon}
 				/>
 			)}
 		</nav>

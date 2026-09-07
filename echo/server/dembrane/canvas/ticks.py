@@ -40,6 +40,7 @@ _BANNED_VISIBLE_COPY: tuple[tuple[str, str], ...] = (
     ("\u2014", "em dash"),
 )
 CANVAS_TRANSCRIPT_WINDOW_CHARS = 20_000
+STALE_TICK_SECONDS = 180
 
 
 class _VisibleTextParser(HTMLParser):
@@ -308,7 +309,7 @@ async def _update_loop_after_tick(loop: dict[str, Any], *, status: str) -> None:
         await async_directus.update_item("agent_loop", loop_id, patch)
 
 
-async def _enqueue_next_if_due(loop: dict[str, Any]) -> None:
+async def _enqueue_next_if_due(loop: dict[str, Any], when: datetime | None = None) -> None:
     loop_id = str(loop["id"])
     fresh = await async_directus.get_item("agent_loop", loop_id)
     if not fresh or fresh.get("status") != "active":
@@ -319,7 +320,7 @@ async def _enqueue_next_if_due(loop: dict[str, Any]) -> None:
         await async_directus.update_item("agent_loop", loop_id, {"status": "expired"})
         return
     cadence = max(2, int(fresh.get("cadence_minutes") or 5))
-    next_at = now + timedelta(minutes=cadence)
+    next_at = when or (now + timedelta(minutes=cadence))
     if expires_at and next_at >= expires_at:
         final_at = expires_at - timedelta(seconds=5)
         if final_at > now:
@@ -1104,7 +1105,12 @@ async def reconcile_missing_canvas_tick_tasks() -> int:
     if not isinstance(loops, list) or not loops:
         return 0
 
-    from dembrane.scheduled_tasks import STATUS_SCHEDULED, TASK_CANVAS_TICK, STATUS_PROCESSING
+    from dembrane.scheduled_tasks import (
+        STATUS_FAILED,
+        STATUS_SCHEDULED,
+        TASK_CANVAS_TICK,
+        STATUS_PROCESSING,
+    )
 
     existing = await async_directus.get_items(
         "scheduled_task",
@@ -1114,7 +1120,7 @@ async def reconcile_missing_canvas_tick_tasks() -> int:
                     "task_type": {"_eq": TASK_CANVAS_TICK},
                     "status": {"_in": [STATUS_SCHEDULED, STATUS_PROCESSING]},
                 },
-                "fields": ["payload"],
+                "fields": ["id", "payload", "status", "claimed_at"],
                 "limit": -1,
             }
         },
@@ -1122,16 +1128,44 @@ async def reconcile_missing_canvas_tick_tasks() -> int:
     covered: set[str] = set()
     if isinstance(existing, list):
         for task in existing:
-            loop_id = (task.get("payload") or {}).get("loop_id")
-            if loop_id:
-                covered.add(str(loop_id))
+            loop_id = str((task.get("payload") or {}).get("loop_id") or "")
+            if not loop_id:
+                continue
+            status = task.get("status")
+            if status == STATUS_SCHEDULED:
+                covered.add(loop_id)
+            elif status == STATUS_PROCESSING:
+                claimed_at = _parse_dt(task.get("claimed_at"))
+                if claimed_at and (now - claimed_at).total_seconds() <= STALE_TICK_SECONDS:
+                    covered.add(loop_id)
+                else:
+                    task_id = str(task.get("id") or "")
+                    logger.warning(
+                        "Rescuing stranded canvas tick task %s for loop %s (claimed at %s)",
+                        task_id,
+                        loop_id,
+                        task.get("claimed_at"),
+                    )
+                    if task_id:
+                        try:
+                            await async_directus.update_item(
+                                "scheduled_task",
+                                task_id,
+                                {
+                                    "status": STATUS_FAILED,
+                                    "error": "Stale processing claim rescued by canvas reconciler",
+                                    "updated_at": now.isoformat(),
+                                },
+                            )
+                        except Exception as exc:
+                            logger.warning("Failed to mark stranded task %s as failed: %s", task_id, exc)
 
     enqueued = 0
     for loop in loops:
         loop_id = str(loop.get("id") or "")
         if not loop_id or loop_id in covered:
             continue
-        await _enqueue_next_if_due(loop)
+        await _enqueue_next_if_due(loop, when=now)
         enqueued += 1
 
     if enqueued:

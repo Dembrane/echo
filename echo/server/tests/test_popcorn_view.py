@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from dembrane.popcorn.view import render_popcorn_page
+from dembrane.popcorn.view import render_flow_page, render_popcorn_page
 
 
 def test_page_is_self_contained_and_carries_embed_config() -> None:
@@ -22,3 +22,19 @@ def test_embed_config_cannot_break_out_of_its_script_tag() -> None:
     html = render_popcorn_page(embed={"mode": "</script><script>alert(1)"})
     assert "</script><script>alert(1)" not in html
     assert "<\\/script>" in html
+
+
+def test_flow_page_is_a_whole_document_with_its_diagrams() -> None:
+    html = render_flow_page()
+    assert html.startswith("<!doctype html>") and "<title>How popcorn works</title>" in html
+    assert html.count('<pre class="mermaid">') >= 5
+    assert "cdnjs.cloudflare.com/ajax/libs/mermaid/" in html
+
+
+def test_the_page_carries_the_presenter_switch_and_no_host_bridge() -> None:
+    from dembrane.popcorn.view import render_popcorn_page
+
+    html = render_popcorn_page(embed={"mode": "host"})
+    assert 'get("present") === "1"' in html
+    assert "dembrane:popcorn:settings" not in html and "postHostSetting" not in html
+    assert "data/latency" in html and "COUNTDOWN_MS" in html

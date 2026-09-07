@@ -5,12 +5,14 @@ import {
 	ChatCircle,
 	EnvelopeSimple,
 	Note,
+	PlugsConnected,
 	Pulse,
 	Sparkle,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { ReleaseVideoModal } from "@/components/release/ReleaseVideoModal";
 import { ENABLE_RELEASE_VIDEO_MODAL, getDocumentationUrl } from "@/config";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useHelpModals } from "../hooks/useHelpModals";
 import { NavButton } from "../primitives/NavButton";
 import { SectionLabel } from "../primitives/SectionLabel";
@@ -18,6 +20,7 @@ import { SectionLabel } from "../primitives/SectionLabel";
 export const HelpBlock = () => {
 	const { language } = useParams();
 	const { openFeedback, openReportIssue } = useHelpModals();
+	const navigate = useI18nNavigate();
 	// The release modal lives here so the button that reopens it can hold its
 	// own state. It also shows itself once per release without being asked.
 	const [releaseRequested, release] = useDisclosure(false);
@@ -42,6 +45,12 @@ export const HelpBlock = () => {
 					iconColor="var(--mantine-color-primary-6)"
 					labelColor="var(--mantine-color-primary-6)"
 					onClick={openFeedback}
+				/>
+				<NavButton
+					label={<Trans>Connect your agent</Trans>}
+					icon={PlugsConnected}
+					badge={<Trans>Beta</Trans>}
+					onClick={() => navigate("/connect-agent")}
 				/>
 				{ENABLE_RELEASE_VIDEO_MODAL ? (
 					<NavButton
