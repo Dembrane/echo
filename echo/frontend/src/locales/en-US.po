@@ -2052,7 +2052,7 @@ msgstr "Billing mode"
 msgid "Book a call"
 msgstr "Book a call"
 
-#: src/components/common/FeedbackPortalModal.tsx:142
+#: src/components/common/FeedbackPortalModal.tsx:149
 msgid "Book a call with us"
 msgstr "Book a call with us"
 
@@ -2155,7 +2155,7 @@ msgstr "Can you tell us more?"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:77
 #: src/components/common/ImageCropModal.tsx:147
-#: src/components/common/FeedbackPortalModal.tsx:168
+#: src/components/common/FeedbackPortalModal.tsx:175
 #: src/components/common/ConfirmModal.tsx:44
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:722
 #: src/components/chat/AgenticChatPanel.tsx:743
@@ -4537,7 +4537,7 @@ msgstr "Feature available soon"
 msgid "Feedback"
 msgstr "Feedback"
 
-#: src/components/common/FeedbackPortalModal.tsx:66
+#: src/components/common/FeedbackPortalModal.tsx:73
 msgid "Feedback portal"
 msgstr "Feedback portal"
 
@@ -5174,7 +5174,7 @@ msgstr "Identify recurring themes, topics, and arguments that appear consistentl
 msgid "Idle"
 msgstr "Idle"
 
-#: src/components/common/FeedbackPortalModal.tsx:94
+#: src/components/common/FeedbackPortalModal.tsx:101
 msgid "If what you've spotted involves data visible to the wrong people, someone having access they shouldn't, or a possible security vulnerability, please use our <0>security reporting form</0> instead. It reaches a different team on a faster track. For anything urgent, email <1>privacy@dembrane.com</1>"
 msgstr "If what you've spotted involves data visible to the wrong people, someone having access they shouldn't, or a possible security vulnerability, please use our <0>security reporting form</0> instead. It reaches a different team on a faster track. For anything urgent, email <1>privacy@dembrane.com</1>"
 
@@ -5518,7 +5518,7 @@ msgstr "Join for support"
 msgid "Join for support (24h)"
 msgstr "Join for support (24h)"
 
-#: src/components/common/FeedbackPortalModal.tsx:159
+#: src/components/common/FeedbackPortalModal.tsx:166
 msgid "Join our Slack community"
 msgstr "Join our Slack community"
 
@@ -5581,7 +5581,7 @@ msgstr "Just refreshed. Give it a moment."
 msgid "Just started"
 msgstr "Just started"
 
-#: src/components/common/FeedbackPortalModal.tsx:87
+#: src/components/common/FeedbackPortalModal.tsx:94
 msgid "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 msgstr "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 
@@ -7448,7 +7448,7 @@ msgstr "or"
 msgid "Or choose a time"
 msgstr "Or choose a time"
 
-#: src/components/common/FeedbackPortalModal.tsx:135
+#: src/components/common/FeedbackPortalModal.tsx:142
 msgid "Or prefer to chat directly?"
 msgstr "Or prefer to chat directly?"
 
@@ -9317,7 +9317,7 @@ msgstr "Saving..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Say it in your own words. Type, or press record and talk."
 
-#: src/components/common/FeedbackPortalModal.tsx:129
+#: src/components/common/FeedbackPortalModal.tsx:136
 msgid "Scan or click the QR code to open the feedback portal"
 msgstr "Scan or click the QR code to open the feedback portal"
 
@@ -11315,8 +11315,8 @@ msgid "To assign a new tag, please create it first in the portal settings."
 msgstr "To assign a new tag, please create it first in the portal settings."
 
 #: src/components/common/FeedbackPortalModal.tsx:80
-msgid "To help us act on it, try to include where it happened and what you were trying to do. For bugs, tell us what went wrong. For ideas, tell us what need it would solve for you."
-msgstr "To help us act on it, try to include where it happened and what you were trying to do. For bugs, tell us what went wrong. For ideas, tell us what need it would solve for you."
+#~ msgid "To help us act on it, try to include where it happened and what you were trying to do. For bugs, tell us what went wrong. For ideas, tell us what need it would solve for you."
+#~ msgstr "To help us act on it, try to include where it happened and what you were trying to do. For bugs, tell us what went wrong. For ideas, tell us what need it would solve for you."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:996
 msgid "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
@@ -12322,9 +12322,13 @@ msgstr "We still couldn't charge your method. Update it and try again."
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 
+#: src/components/common/FeedbackPortalModal.tsx:79
+msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use <0>Report an issue</0> to send it with screenshots."
+msgstr "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use <0>Report an issue</0> to send it with screenshots."
+
 #: src/components/common/FeedbackPortalModal.tsx:72
-msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use Report an issue in the sidebar to send it with screenshots."
-msgstr "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use Report an issue in the sidebar to send it with screenshots."
+#~ msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use Report an issue in the sidebar to send it with screenshots."
+#~ msgstr "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use Report an issue in the sidebar to send it with screenshots."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:299
