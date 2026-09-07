@@ -32,7 +32,7 @@ const Breadcrumbs = () => {
 export const SidebarPreviewLayout = () => {
 	return (
 		<div
-			className="flex h-screen w-screen"
+			className="flex h-dvh w-screen"
 			style={{ backgroundColor: "#efece8" }}
 		>
 			<AppSidebar />
