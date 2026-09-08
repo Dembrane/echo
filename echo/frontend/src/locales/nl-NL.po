@@ -2050,7 +2050,7 @@ msgstr "Facturatiemodus"
 msgid "Book a call"
 msgstr "Een gesprek boeken"
 
-#: src/components/common/FeedbackPortalModal.tsx:142
+#: src/components/common/FeedbackPortalModal.tsx:149
 msgid "Book a call with us"
 msgstr "Plan een gesprek met ons"
 
@@ -2153,7 +2153,7 @@ msgstr "Kun je ons meer vertellen?"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:77
 #: src/components/common/ImageCropModal.tsx:147
-#: src/components/common/FeedbackPortalModal.tsx:168
+#: src/components/common/FeedbackPortalModal.tsx:175
 #: src/components/common/ConfirmModal.tsx:44
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:722
 #: src/components/chat/AgenticChatPanel.tsx:743
@@ -4535,7 +4535,7 @@ msgstr "Functie binnenkort beschikbaar"
 msgid "Feedback"
 msgstr "Feedback"
 
-#: src/components/common/FeedbackPortalModal.tsx:66
+#: src/components/common/FeedbackPortalModal.tsx:73
 msgid "Feedback portal"
 msgstr "Feedbackportaal"
 
@@ -5172,7 +5172,7 @@ msgstr "Identificeer herhalende thema's, onderwerpen en argumenten die consisten
 msgid "Idle"
 msgstr "Inactief"
 
-#: src/components/common/FeedbackPortalModal.tsx:94
+#: src/components/common/FeedbackPortalModal.tsx:101
 msgid "If what you've spotted involves data visible to the wrong people, someone having access they shouldn't, or a possible security vulnerability, please use our <0>security reporting form</0> instead. It reaches a different team on a faster track. For anything urgent, email <1>privacy@dembrane.com</1>"
 msgstr "Als je hebt gezien dat gegevens zichtbaar zijn voor de verkeerde mensen, dat iemand toegang heeft die dat niet hoort te hebben, of dat er mogelijk een beveiligingslek is, gebruik dan ons <0>formulier voor beveiligingsmeldingen</0>. Je melding komt dan bij een ander team terecht en wordt sneller opgepakt. Mail bij spoed naar <1>privacy@dembrane.com</1>"
 
@@ -5516,7 +5516,7 @@ msgstr "Aansluiten voor support"
 msgid "Join for support (24h)"
 msgstr "Aansluiten voor support (24 uur)"
 
-#: src/components/common/FeedbackPortalModal.tsx:159
+#: src/components/common/FeedbackPortalModal.tsx:166
 msgid "Join our Slack community"
 msgstr "Word lid van onze Slack-community"
 
@@ -5579,7 +5579,7 @@ msgstr "Net bijgewerkt. Even geduld."
 msgid "Just started"
 msgstr "Net begonnen"
 
-#: src/components/common/FeedbackPortalModal.tsx:87
+#: src/components/common/FeedbackPortalModal.tsx:94
 msgid "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 msgstr "Praat of typ gewoon op een natuurlijke manier. Uw bijdrage gaat rechtstreeks naar ons productteam en helpt ons echt om dembrane te verbeteren. We lezen alles."
 
@@ -7446,7 +7446,7 @@ msgstr "of"
 msgid "Or choose a time"
 msgstr "Of kies een tijd"
 
-#: src/components/common/FeedbackPortalModal.tsx:135
+#: src/components/common/FeedbackPortalModal.tsx:142
 msgid "Or prefer to chat directly?"
 msgstr "Of liever direct chatten?"
 
@@ -9315,7 +9315,7 @@ msgstr "Opslaan..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr ""
 
-#: src/components/common/FeedbackPortalModal.tsx:129
+#: src/components/common/FeedbackPortalModal.tsx:136
 msgid "Scan or click the QR code to open the feedback portal"
 msgstr "Scan of klik op de QR-code om het feedbackportaal te openen"
 
@@ -11313,8 +11313,8 @@ msgid "To assign a new tag, please create it first in the portal settings."
 msgstr "Om een nieuwe tag toe te wijzen, maak je deze eerst aan in de portalinstellingen."
 
 #: src/components/common/FeedbackPortalModal.tsx:80
-msgid "To help us act on it, try to include where it happened and what you were trying to do. For bugs, tell us what went wrong. For ideas, tell us what need it would solve for you."
-msgstr "Om ons te helpen actie te ondernemen, probeer aan te geven waar het gebeurde en wat u probeerde te doen. Bij bugs, vertel ons wat er mis ging. Bij ideeën, vertel ons welke behoefte het voor u zou oplossen."
+#~ msgid "To help us act on it, try to include where it happened and what you were trying to do. For bugs, tell us what went wrong. For ideas, tell us what need it would solve for you."
+#~ msgstr "Om ons te helpen actie te ondernemen, probeer aan te geven waar het gebeurde en wat u probeerde te doen. Bij bugs, vertel ons wat er mis ging. Bij ideeën, vertel ons welke behoefte het voor u zou oplossen."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:996
 msgid "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
@@ -12313,9 +12313,13 @@ msgstr "We konden je methode nog steeds niet belasten. Werk deze bij en probeer 
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "We sturen u alleen een bericht als uw gastgever een rapport genereert, we delen uw gegevens niet met iemand. U kunt op elk moment afmelden."
 
+#: src/components/common/FeedbackPortalModal.tsx:79
+msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use <0>Report an issue</0> to send it with screenshots."
+msgstr "We horen graag van je. Of je nu een idee hebt voor iets nieuws, een vertaling zag die niet klopt, of gewoon wilt delen hoe het gaat. Bug gevonden? Gebruik <0>Probleem melden</0> om die met schermafbeeldingen te sturen."
+
 #: src/components/common/FeedbackPortalModal.tsx:72
-msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use Report an issue in the sidebar to send it with screenshots."
-msgstr "We horen graag van je. Of je nu een idee hebt voor iets nieuws, een vertaling zag die niet klopt, of gewoon wilt delen hoe het gaat. Bug gevonden? Gebruik Probleem melden in de zijbalk om die met schermafbeeldingen te sturen."
+#~ msgid "We'd love to hear from you. Whether you have an idea for something new, spotted a translation that feels off, or just want to share how things have been going. Hit a bug? Use Report an issue in the sidebar to send it with screenshots."
+#~ msgstr "We horen graag van je. Of je nu een idee hebt voor iets nieuws, een vertaling zag die niet klopt, of gewoon wilt delen hoe het gaat. Bug gevonden? Gebruik Probleem melden in de zijbalk om die met schermafbeeldingen te sturen."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:299
