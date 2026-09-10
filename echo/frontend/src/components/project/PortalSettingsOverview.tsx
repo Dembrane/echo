@@ -39,7 +39,7 @@ const SECTIONS = [
 	},
 	{
 		key: "advanced",
-		rowKeys: ["anonymisation"],
+		rowKeys: ["anonymisation", "event_cta"],
 		title: <Trans>Advanced Settings</Trans>,
 	},
 ] as const;
@@ -167,6 +167,11 @@ export const PortalSettingsOverview = ({
 								<SettingSection title={SECTIONS[2].title}>
 									<SettingRow label={<Trans>Anonymize Transcripts</Trans>}>
 										<StatusBadge on={!!project.anonymize_transcripts} />
+									</SettingRow>
+									<SettingRow label={<Trans>dembrane event invitation</Trans>}>
+										<StatusBadge
+											on={project.is_dembrane_event_cta_enabled !== false}
+										/>
 									</SettingRow>
 								</SettingSection>
 							</>

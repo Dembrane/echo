@@ -19,6 +19,7 @@ import { type KeyboardEvent, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { Markdown } from "@/components/common/Markdown";
+import { DembraneEventCta } from "@/components/participant/DembraneEventCta";
 import {
 	useParticipantProjectById,
 	useSubmitNotificationParticipant,
@@ -139,137 +140,139 @@ export const ParticipantPostConversation = () => {
 							<Trans>Record another conversation</Trans>
 						</Button>
 					</I18nLink>
-				{project.data?.default_conversation_ask_for_participant_email && (
-					<Stack
-						className="mt-20 md:mt-32"
-						{...testId("portal-finish-notification-section")}
-					>
-						{!isSubmitted ? (
-							<>
-								<Stack gap="xs">
-									<Text size="lg" fw={700}>
-										<Trans>Do you want to stay in the loop?</Trans>
-									</Text>
-									<Text size="sm" c="gray.6">
-										<Trans>Share your details here</Trans>
-									</Text>
-								</Stack>
-								<Stack gap="md">
-									<TextInput
-										ref={inputRef}
-										placeholder={t`email@work.com`}
-										value={email}
-										size="md"
-										leftSection={<IconMail size={20} />}
-										onChange={handleInputChange}
-										onKeyDown={handleKeyDown}
-										error={error}
-										disabled={isPending}
-										rightSection={
-											<Button
-												size="sm"
-												variant="outline"
-												onClick={() => addEmail(inputRef.current)}
-												disabled={!email.trim() || isPending}
-												className="me-[2px] hover:bg-blue-50"
-												{...testId("portal-finish-email-add-button")}
+					{project.data?.default_conversation_ask_for_participant_email && (
+						<Stack
+							className="mt-20 md:mt-32"
+							{...testId("portal-finish-notification-section")}
+						>
+							{!isSubmitted ? (
+								<>
+									<Stack gap="xs">
+										<Text size="lg" fw={700}>
+											<Trans>Do you want to stay in the loop?</Trans>
+										</Text>
+										<Text size="sm" c="gray.6">
+											<Trans>Share your details here</Trans>
+										</Text>
+									</Stack>
+									<Stack gap="md">
+										<TextInput
+											ref={inputRef}
+											placeholder={t`email@work.com`}
+											value={email}
+											size="md"
+											leftSection={<IconMail size={20} />}
+											onChange={handleInputChange}
+											onKeyDown={handleKeyDown}
+											error={error}
+											disabled={isPending}
+											rightSection={
+												<Button
+													size="sm"
+													variant="outline"
+													onClick={() => addEmail(inputRef.current)}
+													disabled={!email.trim() || isPending}
+													className="me-[2px] hover:bg-blue-50"
+													{...testId("portal-finish-email-add-button")}
+												>
+													{t`Add`}
+												</Button>
+											}
+											rightSectionWidth="auto"
+											{...testId("portal-finish-email-input")}
+										/>
+										{emails.length > 0 && (
+											<Paper
+												shadow="sm"
+												radius="sm"
+												p="md"
+												withBorder
+												{...testId("portal-finish-email-list")}
 											>
-												{t`Add`}
-											</Button>
-										}
-										rightSectionWidth="auto"
-										{...testId("portal-finish-email-input")}
-									/>
-									{emails.length > 0 && (
-										<Paper
-											shadow="sm"
-											radius="sm"
-											p="md"
-											withBorder
-											{...testId("portal-finish-email-list")}
-										>
-											<Text size="sm" fw={500} className="mb-2">
-												<Trans>Added emails</Trans> ({emails.length}):
-											</Text>
-											<Group>
-												{emails.map((emailItem, index) => (
-													<Tooltip
-														key={`${emailItem}`}
-														label={t`Remove Email`}
-														transitionProps={{
-															duration: 100,
-															transition: "pop",
-														}}
-														refProp="rootRef"
-													>
-														<Chip
-															disabled={isPending}
-															value={emailItem}
-															variant="outline"
-															onClick={() => removeEmail(emailItem)}
-															styles={{
-																iconWrapper: { display: "none" },
+												<Text size="sm" fw={500} className="mb-2">
+													<Trans>Added emails</Trans> ({emails.length}):
+												</Text>
+												<Group>
+													{emails.map((emailItem, index) => (
+														<Tooltip
+															key={`${emailItem}`}
+															label={t`Remove Email`}
+															transitionProps={{
+																duration: 100,
+																transition: "pop",
 															}}
-															{...testId(`portal-finish-email-chip-${index}`)}
+															refProp="rootRef"
 														>
-															{emailItem}
-														</Chip>
-													</Tooltip>
-												))}
-											</Group>
-										</Paper>
-									)}
-									{emails.length > 0 && (
-										<Button
-											size="lg"
-											fullWidth
-											onClick={handleSubscribe}
-											loading={isPending}
-											className="mt-4"
-											{...testId("portal-finish-email-submit-button")}
-										>
-											{isPending ? (
-												<IconLoader2 className="animate-spin" />
-											) : (
-												<Trans> Submit</Trans>
-											)}
-										</Button>
-									)}
-								</Stack>
-							</>
-						) : (
-							<Box p="md" {...testId("portal-finish-email-success")}>
+															<Chip
+																disabled={isPending}
+																value={emailItem}
+																variant="outline"
+																onClick={() => removeEmail(emailItem)}
+																styles={{
+																	iconWrapper: { display: "none" },
+																}}
+																{...testId(`portal-finish-email-chip-${index}`)}
+															>
+																{emailItem}
+															</Chip>
+														</Tooltip>
+													))}
+												</Group>
+											</Paper>
+										)}
+										{emails.length > 0 && (
+											<Button
+												size="lg"
+												fullWidth
+												onClick={handleSubscribe}
+												loading={isPending}
+												className="mt-4"
+												{...testId("portal-finish-email-submit-button")}
+											>
+												{isPending ? (
+													<IconLoader2 className="animate-spin" />
+												) : (
+													<Trans> Submit</Trans>
+												)}
+											</Button>
+										)}
+									</Stack>
+								</>
+							) : (
+								<Box p="md" {...testId("portal-finish-email-success")}>
+									<Text
+										c="green"
+										size="md"
+										className="flex items-center gap-4 md:gap-2"
+									>
+										<span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-white">
+											<IconCheck size={16} strokeWidth={3} />
+										</span>
+										<Trans>Thank you!</Trans>
+									</Text>
+								</Box>
+							)}
+							{project.data?.is_project_notification_subscription_allowed && (
 								<Text
-									c="green"
-									size="md"
-									className="flex items-center gap-4 md:gap-2"
+									size="sm"
+									c="gray.6"
+									className="mt-4"
+									{...testId("portal-finish-email-disclaimer")}
 								>
-									<span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-white">
-										<IconCheck size={16} strokeWidth={3} />
-									</span>
 									<Trans>
-										Thank you!
+										We will only send you a message if your host generates a
+										report, we never share your details with anyone. You can opt
+										out at any time.
 									</Trans>
 								</Text>
-							</Box>
-						)}
-						{project.data?.is_project_notification_subscription_allowed && (
-							<Text
-								size="sm"
-								c="gray.6"
-								className="mt-4"
-								{...testId("portal-finish-email-disclaimer")}
-							>
-								<Trans>
-									We will only send you a message if your host generates a
-									report, we never share your details with anyone. You can opt
-									out at any time.
-								</Trans>
-							</Text>
-						)}
-					</Stack>
-				)}
+							)}
+						</Stack>
+					)}
 				</Box>
+				{project.data &&
+					project.data.is_dembrane_event_cta_enabled !== false && (
+						<DembraneEventCta projectId={projectId ?? ""} />
+					)}
 			</Stack>
 		</div>
 	);

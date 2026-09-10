@@ -51,6 +51,7 @@ const BLOCKED_KINDS = new Set<VoiceErrorKind>([
 ]);
 
 export const PricingTextInput = ({
+	allowVoice = true,
 	ariaLabelledBy,
 	minRows = 3,
 	onAudioRetained,
@@ -63,6 +64,10 @@ export const PricingTextInput = ({
 	testIdPrefix,
 	value,
 }: {
+	/** Off on the participant portal: the transcription endpoint needs a
+	 * session the participant does not have, so no record button and no
+	 * nudge, rather than a button that fails on the first press. */
+	allowVoice?: boolean;
 	ariaLabelledBy?: string;
 	minRows?: number;
 	/** Called with the recording that never became text, or null once it did.
@@ -217,7 +222,7 @@ export const PricingTextInput = ({
 
 	const isBlocked = errorKind !== null && BLOCKED_KINDS.has(errorKind);
 	const isVoiceActive = recorder.isRecording || isTranscribing;
-	const voiceAvailable = !isBlocked;
+	const voiceAvailable = allowVoice && !isBlocked;
 	const showRetry = pending !== null && errorKind !== null && attempt < 2;
 	const showFailure = errorKind !== null && !isBlocked;
 	// The voice nudge line, which also demonstrates the feature. It sits above

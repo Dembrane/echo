@@ -17,9 +17,11 @@ from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
+from dembrane.free_tier import is_free_tier
 from dembrane.legal_basis import require_dembrane_email, build_legal_basis_write
 from dembrane.directus_async import async_directus
 from dembrane.search_filters import merge_search_filter
+from dembrane.billing_account import resolve_workspace_tier
 from dembrane.api.v2.bff._access import (
     resolve_tag_access,
     resolve_project_access,
@@ -252,6 +254,9 @@ class ProjectUpdate(BaseModel):
     # in project settings). Pydantic drops unknown fields silently, so the
     # toggle write no-ops unless this is whitelisted here.
     is_canvas_enabled: Optional[bool] = None
+    # The dembrane event invitation on the portal's thank you page. Switching
+    # it off comes with a paid plan; the free tier is refused in update_project.
+    is_dembrane_event_cta_enabled: Optional[bool] = None
     # CSV string, not a list: matches the text column and verify.py's
     # serialization (null clears the selection).
     selected_verification_key_list: Optional[str] = None
@@ -426,6 +431,16 @@ async def update_project(
     payload = body.model_dump(exclude_unset=True)
     if not payload:
         raise HTTPException(status_code=400, detail="No fields to update")
+
+    if payload.get("is_dembrane_event_cta_enabled") is False:
+        # The dashboard gates the switch behind the upgrade path; this is the
+        # same rule for anyone writing the field directly.
+        tier = await resolve_workspace_tier(access.workspace_id) if access.workspace_id else None
+        if is_free_tier(tier):
+            raise HTTPException(
+                status_code=403,
+                detail="Hiding the dembrane event invitation comes with a paid plan",
+            )
 
     legal_write = build_legal_basis_write(
         fields_set=body.model_fields_set,

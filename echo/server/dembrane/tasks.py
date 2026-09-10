@@ -2443,7 +2443,9 @@ def build_pricing_booking_forward_payload(row: dict, environment: str) -> dict:
     Same shape rules as the support payload: absent fields are omitted, never
     sent as null or empty. `summary` is built here from `answers_raw` and the
     English question labels, so the person reading the message knows what the
-    call is about without opening the row.
+    call is about without opening the row. `mount` and `project_id` say where
+    the lead came from: a `portal` row carries the project the participant was
+    in, so the message can read "was at this event".
     """
     from dembrane.api.v2.pricing_configurations import build_answers_summary
 
@@ -2465,6 +2467,8 @@ def build_pricing_booking_forward_payload(row: dict, environment: str) -> dict:
         "locale",
         "workspace_id",
         "org_id",
+        "mount",
+        "project_id",
     ):
         value = row.get(key)
         if value:
@@ -2527,6 +2531,8 @@ def task_forward_pricing_bookings() -> None:
                         "locale",
                         "workspace_id",
                         "org_id",
+                        "mount",
+                        "project_id",
                         "is_internal",
                     ],
                     "sort": ["created_at"],
