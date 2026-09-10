@@ -159,11 +159,44 @@ async def _require_share_admin(project: dict, acting_app_user_id: str) -> dict:
     return workspace
 
 
+_APP_USER_FIELDS = ["id", "email", "display_name", "directus_user_id"]
+
+
+def _share_response(
+    row: dict,
+    app_user: dict,
+    avatar: Optional[str],
+    workspace_role: Optional[str],
+) -> ProjectShareResponse:
+    return ProjectShareResponse(
+        user_id=row["user_id"],
+        email=app_user.get("email") or "",
+        display_name=app_user.get("display_name") or "",
+        avatar=avatar,
+        workspace_role=workspace_role,
+        granted_by=row.get("granted_by"),
+        created_at=row.get("created_at"),
+    )
+
+
+async def _fetch_avatars(directus_user_ids: list[Optional[str]]) -> dict[str, Optional[str]]:
+    """directus_user_id -> avatar for the whole batch in one query."""
+    ids = sorted({i for i in directus_user_ids if i})
+    if not ids:
+        return {}
+    rows = await async_directus.get_users(
+        {"query": {"filter": {"id": {"_in": ids}}, "fields": ["id", "avatar"], "limit": -1}}
+    )
+    if not isinstance(rows, list):
+        return {}
+    return {r["id"]: r.get("avatar") for r in rows if r.get("id")}
+
+
 async def _enrich_member(
     row: dict, workspace_role: Optional[str]
 ) -> Optional[ProjectShareResponse]:
-    """Turn a project_membership row into the response shape by joining
-    app_user + directus_users for display_name/email/avatar."""
+    """Single-row version of the join. The listing batches instead; this is
+    for endpoints that already deal with exactly one member."""
     uid = row.get("user_id")
     if not uid:
         return None
@@ -173,29 +206,8 @@ async def _enrich_member(
         return None
 
     du_id = app_user.get("directus_user_id")
-    avatar = None
-    if du_id:
-        du_rows = await async_directus.get_users(
-            {
-                "query": {
-                    "filter": {"id": {"_eq": du_id}},
-                    "fields": ["avatar"],
-                    "limit": 1,
-                }
-            }
-        )
-        if isinstance(du_rows, list) and du_rows:
-            avatar = du_rows[0].get("avatar")
-
-    return ProjectShareResponse(
-        user_id=uid,
-        email=app_user.get("email") or "",
-        display_name=app_user.get("display_name") or "",
-        avatar=avatar,
-        workspace_role=workspace_role,
-        granted_by=row.get("granted_by"),
-        created_at=row.get("created_at"),
-    )
+    avatars = await _fetch_avatars([du_id])
+    return _share_response(row, app_user, avatars.get(du_id or ""), workspace_role)
 
 
 # ── Endpoints ───────────────────────────────────────────────────────────
@@ -248,17 +260,36 @@ async def list_project_shares(
     if not isinstance(rows, list):
         return []
 
-    # One resolution for the whole workspace instead of a lookup per share.
+    uids = [r["user_id"] for r in rows if r.get("user_id")]
+    if not uids:
+        return []
+
+    # Three queries for the whole list, not two per row: workspace roles,
+    # app_user rows, avatars.
     ws_roles = {m["user_id"]: m["role"] for m in await get_effective_members(workspace_id)}
+    app_user_rows = await async_directus.get_items(
+        "app_user",
+        {"query": {"filter": {"id": {"_in": uids}}, "fields": _APP_USER_FIELDS, "limit": -1}},
+    )
+    app_users = (
+        {a["id"]: a for a in app_user_rows if a.get("id")}
+        if isinstance(app_user_rows, list)
+        else {}
+    )
+    avatars = await _fetch_avatars([a.get("directus_user_id") for a in app_users.values()])
 
     out: list[ProjectShareResponse] = []
     for row in rows:
-        ws_role = ws_roles.get(row.get("user_id"))
+        uid = row.get("user_id")
+        ws_role = ws_roles.get(uid)
         if ws_role is None:
             continue  # stale share for someone no longer on the workspace
-        enriched = await _enrich_member(row, ws_role)
-        if not enriched:
+        member = app_users.get(uid)
+        if not member:
             continue
+        enriched = _share_response(
+            row, member, avatars.get(member.get("directus_user_id") or ""), ws_role
+        )
         # Hide email from non-admin readers on private projects, unless
         # the reader is themselves one of the shared users (they've
         # already seen their own email in /v2/me).

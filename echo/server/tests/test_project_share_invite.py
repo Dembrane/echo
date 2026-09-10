@@ -849,6 +849,11 @@ async def test_list_shares_resolves_workspace_roles_once():
                 {"user_id": "au-1", "granted_by": _APP_USER_ID, "created_at": None},
                 {"user_id": "au-2", "granted_by": _APP_USER_ID, "created_at": None},
             ]
+        if collection == "app_user":
+            return [
+                {"id": "au-1", "email": "au-1@example.com", "display_name": "au-1"},
+                {"id": "au-2", "email": "au-2@example.com", "display_name": "au-2"},
+            ]
         return []
 
     mock.get_items = AsyncMock(side_effect=_fake_get_items)
@@ -1222,6 +1227,11 @@ async def test_list_shares_hides_rows_without_workspace_access():
                 {"user_id": "au-1", "granted_by": _APP_USER_ID, "created_at": None},
                 {"user_id": "au-gone", "granted_by": _APP_USER_ID, "created_at": None},
             ]
+        if collection == "app_user":
+            return [
+                {"id": "au-1", "email": "au-1@example.com", "display_name": "au-1"},
+                {"id": "au-gone", "email": "au-gone@example.com", "display_name": "au-gone"},
+            ]
         return []
 
     mock.get_items = AsyncMock(side_effect=_fake_get_items)
@@ -1340,3 +1350,75 @@ async def test_add_share_below_tier_keeps_the_plan_message():
             )
     assert resp.status_code == 403, resp.text
     assert "plan" in resp.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_list_shares_batches_user_lookups():
+    """N shares must not mean 2N Directus round trips (one app_user read plus
+    one avatar read each). Both lookups are batched."""
+    n = 5
+    uids = [f"au-{i}" for i in range(n)]
+    calls = {"app_user_items": 0, "app_user_item": 0, "users": 0}
+
+    async def _fake_get_items(collection: str, _params: dict) -> Any:
+        if collection == "project_membership":
+            return [{"user_id": u, "granted_by": _APP_USER_ID, "created_at": None} for u in uids]
+        if collection == "app_user":
+            calls["app_user_items"] += 1
+            return [
+                {
+                    "id": u,
+                    "email": f"{u}@example.com",
+                    "display_name": u,
+                    "directus_user_id": f"du-{u}",
+                }
+                for u in uids
+            ]
+        return []
+
+    async def _fake_get_item(col: str, _id: str) -> Any:
+        if col == "app_user":
+            calls["app_user_item"] += 1
+            return {"id": _id, "email": f"{_id}@example.com", "display_name": _id}
+        return {"project": _PROJECT_ROW, "workspace": _WORKSPACE_ROW}.get(col)
+
+    async def _fake_get_users(_params: dict) -> Any:
+        calls["users"] += 1
+        return [{"id": f"du-{u}", "avatar": f"av-{u}"} for u in uids]
+
+    mock = AsyncMock()
+    mock.get_items = AsyncMock(side_effect=_fake_get_items)
+    mock.get_item = AsyncMock(side_effect=_fake_get_item)
+    mock.get_users = AsyncMock(side_effect=_fake_get_users)
+
+    with (
+        patch("dembrane.api.v2.project_sharing.async_directus", mock),
+        patch(
+            "dembrane.api.v2.project_sharing.get_app_user_or_raise",
+            new_callable=AsyncMock,
+            return_value=_APP_USER,
+        ),
+        patch(
+            "dembrane.api.v2.project_sharing.user_can_access",
+            new_callable=AsyncMock,
+            return_value=("admin", "direct"),
+        ),
+        patch(
+            "dembrane.api.v2.project_sharing.get_effective_members",
+            new_callable=AsyncMock,
+            return_value=[{"user_id": u, "role": "member", "source": "direct"} for u in uids],
+        ),
+    ):
+        app = _build_sharing_app()
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.get(f"/v2/projects/{_PROJECT_ID}/members")
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert len(body) == n
+    assert {m["user_id"] for m in body} == set(uids)
+    assert body[0]["avatar"] == "av-au-0"
+    assert body[0]["email"] == "au-0@example.com"
+    assert calls["app_user_item"] == 0, "per-row app_user fetch is an N+1"
+    assert calls["app_user_items"] == 1, "app_user rows must come from one query"
+    assert calls["users"] <= 1, "avatars must come from at most one query"
