@@ -174,23 +174,10 @@ WORKSPACE_ROLE_PRESETS: dict[str, list[str]] = {
 
 # ── Project role presets (for private project sharing, innovator+ tier) ──
 
-PROJECT_ROLE_PRESETS: dict[str, list[str]] = {
-    "viewer": [
-        "project:read",
-        "conversation:read",
-        "report:view",
-    ],
-    "editor": [
-        "project:read",
-        "project:update",
-        "conversation:read",
-        "conversation:delete",
-        "chat:use",
-        "report:view",
-        "report:generate",
-        "export:data",
-    ],
-}
+def role_can_access_projects(role: str | None) -> bool:
+    """Whether a workspace role can open projects at all (project:read).
+    Billing can't, so sharing a project with a billing member is a no-op."""
+    return has_policy(role or "", [], "project:read")
 
 
 # ── Role mapping (defensive) ──

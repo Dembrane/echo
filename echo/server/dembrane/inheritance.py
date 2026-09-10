@@ -593,7 +593,8 @@ async def get_user_project_access(
 
       3. Private projects — workspace admin/owner retain access; everyone
          else requires a project_membership row. Source = 'workspace'
-         for admins/owners, 'project_share' for direct shares.
+         for admins/owners, 'project_share' for direct shares. A share only
+         unlocks the project: the role returned is still the workspace role.
 
     Returns None when the project is private and the caller has no
     admin/owner role on the workspace and no project_membership row.
@@ -661,14 +662,13 @@ async def get_user_project_access(
                     "project_id": {"_eq": project_id},
                     "user_id": {"_eq": user_id},
                 },
-                "fields": ["role"],
+                "fields": ["id"],
                 "limit": 1,
             }
         },
     )
     if isinstance(share_rows, list) and share_rows:
-        share_role = share_rows[0].get("role", "viewer")
-        return share_role, "project_share"
+        return ws_role, "project_share"
 
     return None
 

@@ -8,40 +8,54 @@ Private project = project.visibility == 'private'. When visibility is
 'workspace', project is visible to every workspace member — project_membership
 is irrelevant.
 
-Role hierarchy on a project share (PROJECT_ROLE_PRESETS):
-    viewer → read-only
-    editor → can edit + run chats/reports + export data
+A share only unlocks the private project. What the person can do there is
+their workspace role (dembrane.policies.WORKSPACE_ROLE_PRESETS); there is no
+separate per-share level.
 
 Endpoints:
   GET    /v2/projects/:id/members          — list current shares
+  GET    /v2/projects/:id/invites          — pending workspace invites carrying this project
   POST   /v2/projects/:id/members          — add a share (innovator+)
-  PATCH  /v2/projects/:id/members/:uid     — change role
   DELETE /v2/projects/:id/members/:uid     — revoke share (hard delete)
 """
 
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Optional
 from logging import getLogger
 
 from fastapi import APIRouter, HTTPException
 from pydantic import EmailStr, BaseModel
 
-from dembrane.utils import generate_uuid
 from dembrane.app_user import get_app_user_or_raise
 from dembrane.policies import (
     TIER_REQUIRED_FOR_POLICY,
     has_policy,
     meets_tier,
+    role_can_access_projects,
 )
-from dembrane.inheritance import user_can_access
+from dembrane.inheritance import user_can_access, get_effective_members
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.v2._invite_helpers import upsert_project_membership
 
 router = APIRouter()
 logger = getLogger("api.v2.project_sharing")
 
-_VALID_PROJECT_ROLES = {"viewer", "editor"}
+NOT_A_MEMBER = "not_a_member"
+ROLE_CANNOT_ACCESS_PROJECTS = "role_cannot_access_projects"
+
+
+def require_role_can_access_projects(role: str | None) -> None:
+    """Sharing with a role that can't open projects (billing) would be a silent no-op."""
+    if not role_can_access_projects(role):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": ROLE_CANNOT_ACCESS_PROJECTS,
+                "message": "Billing members can't open projects. Give them another role first.",
+            },
+        )
 
 
 # ── Response shapes ─────────────────────────────────────────────────────
@@ -52,18 +66,22 @@ class ProjectShareResponse(BaseModel):
     email: str
     display_name: str
     avatar: Optional[str] = None
-    role: Literal["viewer", "editor"]
+    # The person's workspace role: it decides what they can do on the project.
+    workspace_role: Optional[str] = None
     granted_by: Optional[str] = None
     created_at: Optional[str] = None
 
 
+class ProjectPendingInvite(BaseModel):
+    id: str
+    email: str
+    role: str  # workspace role granted on accept; the share level follows it
+    created_at: Optional[str] = None
+    expires_at: Optional[str] = None
+
+
 class AddShareRequest(BaseModel):
     email: EmailStr
-    role: Literal["viewer", "editor"] = "viewer"  # D16: safest default
-
-
-class ChangeShareRoleRequest(BaseModel):
-    role: Literal["viewer", "editor"]
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────
@@ -76,13 +94,27 @@ async def _get_project(project_id: str) -> dict:
     return project
 
 
-async def _require_share_admin(
-    project: dict, acting_app_user_id: str
-) -> dict:
-    """Verify the caller has project:share on this project's workspace.
+def require_private_project(project: dict) -> None:
+    """Shares only exist on private projects; workspace-visible ones need no share."""
+    if project.get("visibility") != "private":
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "This project is visible to the whole workspace. "
+                "Mark it private before adding individual shares."
+            ),
+        )
 
-    project:share is admin-level and tier-gated at innovator+. Workspace
-    must also resolve access (derived or direct) for this user.
+
+async def _resolve_share_admin(
+    project: dict, acting_app_user_id: str
+) -> tuple[dict, bool]:
+    """Resolve (workspace, tier_allows_sharing) for a caller of the share APIs.
+
+    Raises on the access and admin checks, but returns the tier gate rather
+    than raising it, so a read-only caller (the pending-invites list) can
+    degrade to an empty answer instead of erroring. Checking the role before
+    the tier keeps a non-admin a 403 even on a lapsed workspace.
     """
     workspace_id = project.get("workspace_id")
     if not workspace_id:
@@ -100,26 +132,36 @@ async def _require_share_admin(
     if not workspace:
         raise HTTPException(status_code=404, detail="Workspace not found")
 
+    # Role first, with no tier passed so has_policy skips its tier gate.
+    if not has_policy(role, [], "project:share"):
+        raise HTTPException(
+            status_code=403, detail="Only workspace admins can share projects"
+        )
+
     from dembrane.billing_account import resolve_workspace_tier
 
     tier = (await resolve_workspace_tier(workspace_id)) or "pioneer"
-    if not has_policy(role, [], "project:share", workspace_tier=tier):
+    required_tier = TIER_REQUIRED_FOR_POLICY.get("project:share", "innovator")
+    return workspace, meets_tier(tier, required_tier)
+
+
+async def _require_share_admin(project: dict, acting_app_user_id: str) -> dict:
+    """_resolve_share_admin with the tier gate raised as a 403."""
+    workspace, tier_ok = await _resolve_share_admin(project, acting_app_user_id)
+    if not tier_ok:
         required_tier = TIER_REQUIRED_FOR_POLICY.get("project:share", "innovator")
-        if not meets_tier(tier, required_tier):
-            raise HTTPException(
-                status_code=403,
-                detail=(
-                    f"Private project sharing requires the {required_tier} "
-                    "plan or above."
-                ),
-            )
         raise HTTPException(
-            status_code=403, detail="Only workspace admins can share projects"
+            status_code=403,
+            detail=(
+                f"Private project sharing requires the {required_tier} plan or above."
+            ),
         )
     return workspace
 
 
-async def _enrich_member(row: dict) -> Optional[ProjectShareResponse]:
+async def _enrich_member(
+    row: dict, workspace_role: Optional[str]
+) -> Optional[ProjectShareResponse]:
     """Turn a project_membership row into the response shape by joining
     app_user + directus_users for display_name/email/avatar."""
     uid = row.get("user_id")
@@ -150,7 +192,7 @@ async def _enrich_member(row: dict) -> Optional[ProjectShareResponse]:
         email=app_user.get("email") or "",
         display_name=app_user.get("display_name") or "",
         avatar=avatar,
-        role=row.get("role", "viewer"),
+        workspace_role=workspace_role,
         granted_by=row.get("granted_by"),
         created_at=row.get("created_at"),
     )
@@ -198,7 +240,7 @@ async def list_project_shares(
         {
             "query": {
                 "filter": {"project_id": {"_eq": project_id}},
-                "fields": ["user_id", "role", "granted_by", "created_at"],
+                "fields": ["user_id", "granted_by", "created_at"],
                 "limit": -1,
             }
         },
@@ -206,9 +248,15 @@ async def list_project_shares(
     if not isinstance(rows, list):
         return []
 
+    # One resolution for the whole workspace instead of a lookup per share.
+    ws_roles = {m["user_id"]: m["role"] for m in await get_effective_members(workspace_id)}
+
     out: list[ProjectShareResponse] = []
     for row in rows:
-        enriched = await _enrich_member(row)
+        ws_role = ws_roles.get(row.get("user_id"))
+        if ws_role is None:
+            continue  # stale share for someone no longer on the workspace
+        enriched = await _enrich_member(row, ws_role)
         if not enriched:
             continue
         # Hide email from non-admin readers on private projects, unless
@@ -218,6 +266,58 @@ async def list_project_shares(
             enriched.email = ""
         out.append(enriched)
     return out
+
+
+@router.get("/{project_id}/invites", response_model=list[ProjectPendingInvite])
+async def list_project_pending_invites(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> list[ProjectPendingInvite]:
+    """Pending workspace invites that will share this project on accept.
+
+    Admin-only (project:share), since the rows carry emails of people who
+    aren't on the workspace yet.
+    """
+    from datetime import datetime, timezone
+
+    acting_user = await get_app_user_or_raise(auth.user_id)
+    project = await _get_project(project_id)
+    # Lapsed tier: the Access tab polls this, so answer empty instead of a 403
+    # storm. A non-admin still gets the 403 from _resolve_share_admin.
+    workspace, tier_ok = await _resolve_share_admin(project, acting_user["id"])
+    if not tier_ok:
+        return []
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    rows = await async_directus.get_items(
+        "workspace_invite",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                    "workspace_id": {"_eq": workspace["id"]},
+                    "accepted_at": {"_null": True},
+                    "deleted_at": {"_null": True},
+                    "expires_at": {"_gt": now_iso},
+                },
+                "fields": ["id", "email", "role", "created_at", "expires_at"],
+                "sort": ["-created_at"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return []
+    return [
+        ProjectPendingInvite(
+            id=r["id"],
+            email=r.get("email") or "",
+            role=r.get("role") or "member",
+            created_at=r.get("created_at"),
+            expires_at=r.get("expires_at"),
+        )
+        for r in rows
+    ]
 
 
 @router.post("/{project_id}/members", response_model=ProjectShareResponse)
@@ -237,16 +337,7 @@ async def add_project_share(
     """
     acting_user = await get_app_user_or_raise(auth.user_id)
     project = await _get_project(project_id)
-
-    if project.get("visibility") != "private":
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "This project is visible to the whole workspace. "
-                "Mark it private before adding individual shares."
-            ),
-        )
-
+    require_private_project(project)
     workspace = await _require_share_admin(project, acting_user["id"])
 
     # Find the invitee's app_user (via email).
@@ -261,61 +352,43 @@ async def add_project_share(
             }
         },
     )
+    # Structured detail so the sharing modal can offer a workspace invite
+    # instead of a dead-end toast (POST /v2/workspaces/:id/invite with project_id).
     if not isinstance(app_users, list) or not app_users:
         raise HTTPException(
             status_code=404,
-            detail="That email isn't on this workspace. Invite them to the workspace first.",
+            detail={
+                "code": NOT_A_MEMBER,
+                "message": "That email isn't on this workspace. Invite them to the workspace first.",
+            },
         )
     invitee_id = app_users[0]["id"]
 
     # Invitee must have workspace access. No cross-workspace sharing.
-    if not await user_can_access(workspace["id"], invitee_id):
+    invitee_access = await user_can_access(workspace["id"], invitee_id)
+    if not invitee_access:
         raise HTTPException(
-            status_code=400,
-            detail="That person isn't in this workspace. Invite them first.",
-        )
-
-    # Upsert — if a share row exists, update role; else insert fresh.
-    existing = await async_directus.get_items(
-        "project_membership",
-        {
-            "query": {
-                "filter": {
-                    "project_id": {"_eq": project_id},
-                    "user_id": {"_eq": invitee_id},
-                },
-                "fields": ["id", "role"],
-                "limit": 1,
-            }
-        },
-    )
-    if isinstance(existing, list) and existing:
-        await async_directus.update_item(
-            "project_membership", existing[0]["id"], {"role": body.role}
-        )
-        logger.info(
-            f"Updated project {project_id} share for {invitee_id} to {body.role}"
-        )
-    else:
-        await async_directus.create_item(
-            "project_membership",
-            {
-                "id": generate_uuid(),
-                "project_id": project_id,
-                "user_id": invitee_id,
-                "role": body.role,
-                "granted_by": acting_user["id"],
+            status_code=404,
+            detail={
+                "code": NOT_A_MEMBER,
+                "message": "That person isn't in this workspace. Invite them first.",
             },
         )
-        logger.info(
-            f"Added project {project_id} share: {invitee_id} as {body.role} "
-            f"by {acting_user['id']}"
-        )
+
+    invitee_ws_role = invitee_access[0]
+    require_role_can_access_projects(invitee_ws_role)
+    outcome = await upsert_project_membership(
+        async_directus,
+        project_id=project_id,
+        user_id=invitee_id,
+        granted_by=acting_user["id"],
+    )
+    logger.info(f"{outcome} project {project_id} share: {invitee_id} by {acting_user['id']}")
 
     # Notify the invitee — they now have access to a project they
     # didn't before. Skip when they're re-granting themselves (shouldn't
     # happen given the admin-only guard above, defense-in-depth).
-    if invitee_id != acting_user["id"]:
+    if outcome == "created" and invitee_id != acting_user["id"]:
         project_name = project.get("name") or "a project"
         from dembrane.notifications import emit
         await emit(
@@ -324,7 +397,7 @@ async def add_project_share(
             event_code="PROJECT_SHARE_ADDED",
             title=f"{project_name} was shared with you",
             message=(
-                f"You can **{body.role}** this project in "
+                f"You now have access to this project in "
                 f"{workspace.get('name', 'its workspace')}."
             ),
             action="NAVIGATE_PROJECT",
@@ -333,68 +406,13 @@ async def add_project_share(
         )
 
     enriched = await _enrich_member(
-        {
-            "user_id": invitee_id,
-            "role": body.role,
-            "granted_by": acting_user["id"],
-        }
+        {"user_id": invitee_id, "granted_by": acting_user["id"]},
+        invitee_ws_role,
     )
     # _enrich_member only returns None when the app_user row vanishes — since
     # we just verified it via email lookup, enriched is non-None here.
     assert enriched is not None
     return enriched
-
-
-@router.patch("/{project_id}/members/{user_id}")
-async def change_project_share_role(
-    project_id: str,
-    user_id: str,
-    body: ChangeShareRoleRequest,
-    auth: DependencyDirectusSession,
-) -> dict:
-    acting_user = await get_app_user_or_raise(auth.user_id)
-    project = await _get_project(project_id)
-    await _require_share_admin(project, acting_user["id"])
-
-    rows = await async_directus.get_items(
-        "project_membership",
-        {
-            "query": {
-                "filter": {
-                    "project_id": {"_eq": project_id},
-                    "user_id": {"_eq": user_id},
-                },
-                "fields": ["id"],
-                "limit": 1,
-            }
-        },
-    )
-    if not isinstance(rows, list) or not rows:
-        raise HTTPException(status_code=404, detail="Share not found")
-
-    await async_directus.update_item(
-        "project_membership", rows[0]["id"], {"role": body.role}
-    )
-    logger.info(
-        f"Project {project_id} share role changed: {user_id} → {body.role} "
-        f"by {acting_user['id']}"
-    )
-
-    if user_id != acting_user["id"]:
-        project_name = project.get("name") or "a project"
-        from dembrane.notifications import emit
-        await emit(
-            audience_user_id=user_id,
-            actor_user_id=acting_user["id"],
-            event_code="PROJECT_SHARE_ROLE_CHANGED",
-            title=f"Your access to {project_name} changed",
-            message=f"You're now a **{body.role}** on this project.",
-            action="NAVIGATE_PROJECT",
-            ref_project_id=project_id,
-            ref_workspace_id=project.get("workspace_id"),
-        )
-
-    return {"status": "updated", "role": body.role}
 
 
 @router.delete("/{project_id}/members/{user_id}")

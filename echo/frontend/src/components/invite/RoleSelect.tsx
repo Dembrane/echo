@@ -4,7 +4,12 @@ import { Alert, Radio, Stack, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { roleLevel } from "@/lib/roles";
 
-export type InviteRole = "member" | "billing" | "admin" | "external" | "observer";
+export type InviteRole =
+	| "member"
+	| "billing"
+	| "admin"
+	| "external"
+	| "observer";
 
 interface Props {
 	value: InviteRole;
@@ -13,6 +18,8 @@ interface Props {
 	inviterLevel: "member" | "admin" | "owner";
 	/** Whether the modal is in workspace-only mode (no zero-workspace submit). */
 	allowExternal?: boolean;
+	// Roles to leave out entirely (e.g. billing can't open projects, observer only exists in external-client workspaces).
+	exclude?: InviteRole[];
 	disabled?: boolean;
 	"data-testid"?: string;
 }
@@ -23,6 +30,7 @@ export function RoleSelect({
 	onChange,
 	inviterLevel,
 	allowExternal = true,
+	exclude = [],
 	disabled,
 	"data-testid": dataTestId,
 }: Props) {
@@ -59,8 +67,10 @@ export function RoleSelect({
 			});
 		}
 		// Funnel every option through the same hierarchy gate; levels come from lib/roles.ts (mirrors backend policies.py).
-		return rows.filter((r) => roleLevel(r.value) <= inviterRank);
-	}, [inviterRank, allowExternal]);
+		return rows
+			.filter((r) => !exclude.includes(r.value))
+			.filter((r) => roleLevel(r.value) <= inviterRank);
+	}, [inviterRank, allowExternal, exclude]);
 
 	return (
 		<Stack gap={6}>

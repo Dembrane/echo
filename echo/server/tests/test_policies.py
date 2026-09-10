@@ -94,3 +94,12 @@ def test_role_hierarchy_ordering():
 def test_guest_preset_key_removed():
     """The 'guest' preset is renamed to 'external' — old key should be gone."""
     assert "guest" not in WORKSPACE_ROLE_PRESETS
+
+
+# ── Legacy role mapping ──
+
+
+def test_legacy_workspace_viewer_still_maps_to_member():
+    """The retired workspace 'viewer' role reads as member."""
+    assert has_policy("viewer", [], "project:create")  # member preset
+    assert not has_policy("viewer", [], "member:invite")
