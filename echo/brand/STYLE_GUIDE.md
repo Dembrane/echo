@@ -162,27 +162,32 @@ Keep it simple. One or two font weights max. Let whitespace do the work.
 
 ## Buttons
 
+Only the primary button is pill-shaped. That shape is what marks the primary action on a screen, so secondary and tertiary keep standard corners.
+
 ### Primary
 
-- Default: Royal Blue background, white text, rounded corners
+- Default: Royal Blue background, white text, pill shape (fully rounded)
 - Hover: Graphite background
 - Click: Graphite background
+- Loading: Graphite background, white spinner
 
 ### Secondary
 
-- Default: Transparent with Royal Blue border, Royal Blue text
+- Default: Transparent with Royal Blue border, Royal Blue text, standard corners
 - Hover: 10% Royal Blue opacity fill
 - Click: 20% Royal Blue opacity fill
 
 ### Tertiary
 
-- Default: Text only, Royal Blue, no border
+- Default: Text only, Royal Blue, no border, standard corners
 - Hover: 10% Royal Blue opacity background
 - Click: 20% Royal Blue opacity background
 
 ### Disabled
 
-- Parchment background (darker), Graphite text at 50% opacity
+- Default: Gray background, Graphite text at full opacity. Disabled labels stay readable, never dimmed
+- Hover: 1px Golden Pollen border
+- Click: 1px Cotton Candy border
 
 ### Copy patterns
 
