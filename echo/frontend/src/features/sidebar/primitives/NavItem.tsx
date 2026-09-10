@@ -22,6 +22,7 @@ interface NavItemProps {
 	disabled?: boolean;
 	/** Indent to align with an icon-bearing row's label, for sub-rows. */
 	inset?: boolean;
+	state?: unknown;
 }
 
 export const BADGE_TONES = {
@@ -75,6 +76,7 @@ export const NavItem = ({
 	accent,
 	disabled,
 	inset,
+	state,
 }: NavItemProps) => {
 	const localePath = useLocalePath(to);
 	const resolved = useResolvedPath(localePath);
@@ -110,6 +112,7 @@ export const NavItem = ({
 	return (
 		<NavLink
 			to={localePath}
+			state={state}
 			end={end}
 			className={`relative flex h-[30px] items-center gap-2 rounded-md text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1] ${inset ? "pr-2 pl-8" : "px-2"}`}
 			style={{
