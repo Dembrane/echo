@@ -157,6 +157,13 @@ const EMPTY_SUMMARY: MonitorSummary = {
 // SSE is the primary channel; React Query is the fallback (first fetch + poll).
 const FALLBACK_POLL_MS = 5000;
 const SAFETY_POLL_MS = 30000;
+// A dropped SSE connection auto-reconnects within a browser retry cycle (~3s)
+// and the fallback poll covers the gap, so a brief flap never reaches the host.
+// Wait out this grace window before treating the stream as down: only a stream
+// that fails to recover across several reconnect attempts is a real degradation.
+// Keeps the "Reconnecting" badge and the monitor_stream_degraded event tied to
+// genuine, host-visible outages instead of routine reconnects.
+const MONITOR_DEGRADE_GRACE_MS = 10000;
 
 type StreamState = { data: MonitorResponse | null; connected: boolean };
 
@@ -220,16 +227,18 @@ const openSource = (projectId: string, conn: SharedConnection) => {
 		}
 	});
 	source.onerror = () => {
-		// Auto-reconnects; mark down meanwhile so consumers fall back to the poll.
-		conn.state = { connected: false, data: conn.state.data };
-		notify(conn);
-		// Debounce ~3s so a brief reconnect flap doesn't emit a degrade/reconnect pair.
+		// EventSource auto-reconnects on its own; hold "connected" through the
+		// grace window so a brief flap doesn't flip the badge or emit a
+		// degrade/reconnect pair. Only when the stream stays down past the window
+		// do we mark it down (so consumers fall back to the fast poll) and report.
 		if (!conn.degradeTimer && conn.degradedAt === null) {
 			conn.degradeTimer = setTimeout(() => {
 				conn.degradedAt = Date.now();
+				conn.state = { connected: false, data: conn.state.data };
+				notify(conn);
 				posthog.capture("monitor_stream_degraded", { project_id: projectId });
 				conn.degradeTimer = null;
-			}, 3000);
+			}, MONITOR_DEGRADE_GRACE_MS);
 		}
 	};
 };
