@@ -1,21 +1,27 @@
 import { t } from "@lingui/core/macro";
-import { Modal, Stack } from "@mantine/core";
+import { Trans } from "@lingui/react/macro";
+import { Button, Group, Modal, Stack } from "@mantine/core";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { useMatch } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
+import { I18nLink } from "@/components/common/i18nLink";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
 import { usePrefersReducedMotion } from "@/features/sidebar/animations/motion";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useV2Me } from "@/hooks/useV2Me";
+import { ReleaseChanges } from "./ReleaseChanges";
+import { ReleaseDescription } from "./ReleaseDescription";
+import { ReleaseMetadata } from "./ReleaseMetadata";
 import styles from "./ReleaseVideoModal.module.css";
 import {
 	latestRelease,
+	locallySeenRelease,
 	playerBridgeUrl,
 	RELEASE_VIDEO_SEEN_KEY,
+	rememberReleaseLocally,
 	shouldShowReleaseVideo,
 	YOUTUBE_EMBED_ORIGIN,
 	youtubeEmbedUrl,
@@ -28,46 +34,13 @@ import {
 } from "./videoWatchTracker";
 
 /**
- * The release video modal: one video, one title, one description, shown once
- * per release.
+ * Shows the newest release once, with a path to the full release history.
+ * Dismissing or opening release notes records the version in a flat settings
+ * key. Browsing release notes suppresses automatic popups without marking seen.
+ * The sidebar can always reopen it manually.
  *
- * It renders getReleases()[0] and nothing else. There is no history to scroll,
- * so the modal stays a single thing to look at and then dismiss.
- *
- * Every line of copy comes off that release object (header line, title,
- * description, closing note); none of it is written here. Shipping a release is
- * an edit to releases.ts plus the usual translation pass.
- *
- * Mounted in HelpBlock, next to the "What's new" button that reopens it, so the
- * one piece of shared state stays local. HelpBlock renders for every signed-in
- * user and survives a collapsed sidebar (SidebarShell keeps its children
- * mounted at width 0), which is what the automatic showing needs.
- *
- * It sits inside BaseLayout's TransitionCurtainProvider and refuses to paint
- * while that curtain is active, which covers the in-app transitions (theme
- * change, sign out) that run in this provider. Note that the LOGIN curtain
- * belongs to a different provider instance inside AuthLayout, and AuthLayout
- * unmounts on the post-login navigate, so there is no overlap to guard against
- * there.
- *
- * Dismissing is the whole interaction: click the backdrop, press escape, or hit
- * the close button, and the newest version is written to app_user.settings.
- * Seen means dismissed, not watched. After that it only comes back when the
- * user asks for it from the sidebar's "What's new".
- *
- * Engagement is measured, not stored. PostHog events cover the showing
- * (whats_new_modal_opened, with an auto/manual trigger), playback
- * (whats_new_video_started, whats_new_video_progress at the milestones,
- * whats_new_video_completed) and the roll-up (whats_new_modal_closed).
- * Playback state comes from the embed's own postMessage stream (enablejsapi=1
- * plus a `listening` handshake), so no YouTube script is loaded, `script-src`
- * stays untouched, and the frame stays on the nocookie origin. Milestones go
- * out the moment they are crossed, so a tab closed mid-video still leaves a
- * record; pagehide flushes the summary for the walk-away case.
- *
- * Typography is held to two combinations, both defined in the adjacent
- * stylesheet: the two titles at one size, the copy below them at the other.
- * Nothing here sets a font size, weight, colour or style.
+ * Playback uses the privacy-mode iframe's postMessage bridge. Keep its event
+ * milestones and close summary paired with the open event.
  */
 interface ReleaseVideoModalProps {
 	/** Set by the sidebar's "What's new", which ignores the seen gate. */
@@ -90,11 +63,15 @@ export const ReleaseVideoModal = ({
 	const titleId = useId();
 	const posthog = usePostHog();
 	const { language } = useLanguage();
+	const isReleaseNotesPage = useMatch("/:language?/release-notes");
 
-	// Closes the modal immediately, without waiting on the network. If the write
-	// fails the modal returns on the next load, which is the recoverable
-	// direction: better a second showing than a dismissal that will not stick.
-	const [dismissed, setDismissed] = useState(false);
+	// Key in-memory dismissal by account and release so a new release still opens.
+	// Local storage bridges reloads and sidebar remounts, even if PATCH fails.
+	const userId = me?.directus_user_id;
+	const [dismissed, setDismissed] = useState<{
+		userId: string | undefined;
+		version: string;
+	} | null>(null);
 
 	const release = latestRelease();
 	const releaseVersion = release?.version;
@@ -124,14 +101,19 @@ export const ReleaseVideoModal = ({
 		!curtainIsActive &&
 		(requested ||
 			(isAuthenticated &&
+				!isReleaseNotesPage &&
 				isSuccess &&
-				!dismissed &&
+				!!userId &&
+				!(
+					dismissed?.userId === userId && dismissed?.version === release.version
+				) &&
+				locallySeenRelease(userId) !== release.version &&
 				shouldShowReleaseVideo(
 					me?.settings?.[RELEASE_VIDEO_SEEN_KEY],
 					release.version,
 				)));
 
-	const embedUrl = release ? youtubeEmbedUrl(release.videoUrl) : null;
+	const embedUrl = release ? youtubeEmbedUrl(release.videoUrl ?? "") : null;
 	const embedSrc = embedUrl
 		? playerBridgeUrl(embedUrl, window.location.origin)
 		: null;
@@ -207,7 +189,7 @@ export const ReleaseVideoModal = ({
 		captureWatchEventRef.current = captureWatchEvent;
 	});
 
-	const flushSummary = (reason: "dismissed" | "pagehide") => {
+	const flushSummary = (reason: "dismissed" | "pagehide" | "release_notes") => {
 		if (summarySentRef.current || !openRecordedRef.current) return;
 		summarySentRef.current = true;
 		const snap = trackerRef.current.snapshot();
@@ -291,11 +273,14 @@ export const ReleaseVideoModal = ({
 		return () => window.removeEventListener("pagehide", onPageHide);
 	}, [opened]);
 
-	const close = () => {
-		flushSummary("dismissed");
-		setDismissed(true);
+	const close = (reason: "dismissed" | "release_notes" = "dismissed") => {
+		flushSummary(reason);
+		if (release) {
+			setDismissed({ userId, version: release.version });
+			if (userId) rememberReleaseLocally(userId, release.version);
+		}
 		onRequestedClose?.();
-		if (release) markSeen.mutate(release.version);
+		if (release && isAuthenticated && userId) markSeen.mutate(release.version);
 	};
 
 	if (!release) return null;
@@ -303,7 +288,7 @@ export const ReleaseVideoModal = ({
 	return (
 		<Modal.Root
 			centered
-			onClose={close}
+			onClose={() => close()}
 			opened={opened}
 			size="lg"
 			transitionProps={{ duration: prefersReducedMotion ? 0 : 200 }}
@@ -320,7 +305,7 @@ export const ReleaseVideoModal = ({
 					}}
 				>
 					<Modal.Title className={styles.headerTitle}>
-						{release.headerTitle}
+						<Trans>What's new</Trans>
 					</Modal.Title>
 					<Modal.CloseButton
 						aria-label={t`Close and go to dembrane`}
@@ -330,6 +315,19 @@ export const ReleaseVideoModal = ({
 				</Modal.Header>
 				<Modal.Body style={{ padding: "0 2rem 2rem" }}>
 					<Stack gap="lg">
+						<Stack gap="xs">
+							<ReleaseMetadata release={release} />
+							<h2 className={styles.title} id={titleId}>
+								{release.title}
+							</h2>
+							{release.summary || release.description ? (
+								<ReleaseDescription
+									description={release.summary ?? release.description ?? ""}
+								/>
+							) : release.changes?.length ? (
+								<ReleaseChanges changes={release.changes} />
+							) : null}
+						</Stack>
 						{embedSrc ? (
 							<div className={styles.videoFrame}>
 								<iframe
@@ -343,26 +341,19 @@ export const ReleaseVideoModal = ({
 							</div>
 						) : null}
 
-						<h2 className={styles.title} id={titleId}>
-							{release.title}
-						</h2>
-
-						<div className={styles.body}>
-							<ReactMarkdown
-								components={{
-									a: ({ children, href }) => (
-										<a href={href} rel="noopener noreferrer" target="_blank">
-											{children}
-										</a>
-									),
-								}}
-								remarkPlugins={[remarkGfm]}
+						<Group justify="space-between" gap="sm">
+							<Button
+								component={I18nLink}
+								to="/release-notes"
+								variant="subtle"
+								onClick={() => close("release_notes")}
 							>
-								{release.description}
-							</ReactMarkdown>
-						</div>
-
-						<p className={styles.note}>{release.note}</p>
+								<Trans>View release notes</Trans>
+							</Button>
+							<Button onClick={() => close()}>
+								<Trans>Got it</Trans>
+							</Button>
+						</Group>
 					</Stack>
 				</Modal.Body>
 			</Modal.Content>

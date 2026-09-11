@@ -1,0 +1,24 @@
+.history {
+	border-block-start: 1px solid
+		color-mix(in srgb, var(--app-text) 16%, transparent);
+	margin-inline-start: 8rem;
+	padding-block: 1.5rem 0.5rem;
+}
+
+.highlights {
+	list-style: disc outside;
+	font-size: var(--app-font-size-sm);
+	line-height: 1.5;
+	margin: 0;
+	padding-inline-start: 1.25rem;
+}
+
+.highlights li + li {
+	margin-block-start: 0.25rem;
+}
+
+@media (max-width: 639px) {
+	.history {
+		margin-inline-start: 0;
+	}
+}
