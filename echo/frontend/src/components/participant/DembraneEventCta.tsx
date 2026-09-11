@@ -61,15 +61,15 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 			    of the viewport until the page runs out and it settles in place. */}
 			<Box
 				bg="var(--app-background)"
-				className="sticky bottom-0 z-10 mt-6 border-t border-slate-300 p-4"
+				className="sticky bottom-0 z-10 mt-auto flex justify-center border-t border-slate-300 p-4 pt-6"
 				{...testId("portal-finish-event-cta")}
 			>
 				<Button
-					// Tertiary on purpose. The page's job is done; this is a quiet
-					// offer, not a call to action, and it is already always in view.
-					variant="subtle"
+					// Secondary: the page's job is done and this is an offer, not a
+					// call to action, but it is the one thing left to do here.
+					variant="outline"
 					size="lg"
-					fullWidth
+					className="w-full sm:w-auto sm:min-w-80"
 					rightSection={<IconArrowRight size={18} />}
 					onClick={handleOpen}
 					{...testId("portal-finish-event-cta-button")}

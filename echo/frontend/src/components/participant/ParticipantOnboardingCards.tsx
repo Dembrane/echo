@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import posthog from "posthog-js";
 // Start of Selection
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import "./ParticipantOnboardingCards.css";
@@ -12,7 +12,6 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
 import { cn } from "@/lib/utils";
 import { useOnboardingCards } from "./hooks/useOnboardingCards";
-import MicrophoneTest from "./MicrophoneTest";
 import {
 	ParticipantInitiateForm,
 	portalHasNothingToAsk,
@@ -67,9 +66,6 @@ const ParticipantOnboardingCards = ({
 		{},
 	);
 	const [animationDirection, setAnimationDirection] = useState("");
-	const [micTestSuccess, setMicTestSuccess] = useState(false);
-	const [micSkipped, setMicSkipped] = useState(false);
-	const [micBlocked, setMicBlocked] = useState(false);
 
 	const { language } = useLanguage();
 
@@ -108,19 +104,6 @@ const ParticipantOnboardingCards = ({
 	// about to answer.
 	const nothingToAsk = portalHasNothingToAsk(project);
 
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be looked at
-	const MicrophoneTestComponent = useMemo(
-		() => () => (
-			<MicrophoneTest
-				onContinue={(_id: string) => {}}
-				onMicTestSuccess={setMicTestSuccess}
-				onMicAccessDenied={setMicBlocked}
-			/>
-		),
-		[setMicTestSuccess],
-	);
-
 	const { getSystemCards } = useOnboardingCards();
 
 	const tutorialSlug = project.default_conversation_tutorial_slug ?? "none";
@@ -137,17 +120,6 @@ const ParticipantOnboardingCards = ({
 				privacyPolicyUrl,
 				organiserName,
 			),
-			{
-				section: "Mikrofon-Check",
-				slides: [
-					{
-						component: MicrophoneTestComponent,
-						content: "Lass uns sichergehen, dass wir dich hören können.",
-						title: "Mikrofon-Check",
-						type: "microphone",
-					},
-				],
-			},
 			{
 				section: "Bereit zum Start?",
 				slides: [
@@ -167,17 +139,6 @@ const ParticipantOnboardingCards = ({
 				organiserName,
 			),
 			{
-				section: "Microphone Check",
-				slides: [
-					{
-						component: MicrophoneTestComponent,
-						content: "Let's Make Sure We Can Hear You.",
-						title: "Microphone Check",
-						type: "microphone",
-					},
-				],
-			},
-			{
 				section: "Get Started",
 				slides: [
 					{
@@ -195,17 +156,6 @@ const ParticipantOnboardingCards = ({
 				privacyPolicyUrl,
 				organiserName,
 			),
-			{
-				section: "Verificación del Micrófono",
-				slides: [
-					{
-						component: MicrophoneTestComponent,
-						content: "Verifiquemos que podamos escucharte.",
-						title: "Verificación del Micrófono",
-						type: "microphone",
-					},
-				],
-			},
 			{
 				section: "¿Listo para empezar?",
 				slides: [
@@ -225,17 +175,6 @@ const ParticipantOnboardingCards = ({
 				organiserName,
 			),
 			{
-				section: "Vérification du Microphone",
-				slides: [
-					{
-						component: MicrophoneTestComponent,
-						content: "Vérifions que nous puissions vous entendre.",
-						title: "Vérification du Microphone",
-						type: "microphone",
-					},
-				],
-			},
-			{
 				section: "Prêt à commencer?",
 				slides: [
 					{
@@ -253,17 +192,6 @@ const ParticipantOnboardingCards = ({
 				privacyPolicyUrl,
 				organiserName,
 			),
-			{
-				section: "Controllo microfono",
-				slides: [
-					{
-						component: MicrophoneTestComponent,
-						content: "Controlliamo se ti sentiamo bene.",
-						title: "Controllo microfono",
-						type: "microphone",
-					},
-				],
-			},
 			{
 				section: "Tutto pronto?",
 				slides: [
@@ -283,17 +211,6 @@ const ParticipantOnboardingCards = ({
 				organiserName,
 			),
 			{
-				section: "Microfoon Controle",
-				slides: [
-					{
-						component: MicrophoneTestComponent,
-						content: "Laten we zorgen dat we je kunnen horen.",
-						title: "Microfoon Controle",
-						type: "microphone",
-					},
-				],
-			},
-			{
 				section: "Aan de slag",
 				slides: [
 					{
@@ -312,39 +229,17 @@ const ParticipantOnboardingCards = ({
 
 	const currentCard = allSlides[currentSlideIndex];
 
-	const micOutcomeReportedRef = useRef(false);
-	useEffect(() => {
-		if (micOutcomeReportedRef.current) return;
-		const outcome = micBlocked
-			? "blocked"
-			: micSkipped
-				? "skipped"
-				: micTestSuccess
-					? "granted"
-					: null;
-		if (!outcome) return;
-		micOutcomeReportedRef.current = true;
-		posthog.capture("mic_permission_resolved", {
-			outcome,
-			project_id: project.id,
-		});
-	}, [micBlocked, micSkipped, micTestSuccess, project.id]);
-
-	// The funnel stage this visitor is at, reported to the host monitor. Mic
-	// carries its outcome (ok / skipped / blocked) so a stuck participant is
-	// visible. Monotonic-ish: furthest milestone reached wins.
+	// The funnel stage this visitor is at, reported to the host monitor.
+	// Monotonic-ish: furthest milestone reached wins. There is no microphone
+	// stage any more: the deck assumes the microphone works, and the recording
+	// screen finds out for real, opening the microphone test only when nothing
+	// arrives.
 	const funnelStage =
 		skipOnboarding === "1" || currentSlideIndex === allSlides.length - 1
 			? "profile"
-			: micBlocked
-				? "mic_blocked"
-				: micSkipped
-					? "mic_skipped"
-					: micTestSuccess
-						? "mic_ok"
-						: currentSlideIndex > 0
-							? "terms"
-							: "scanned";
+			: currentSlideIndex > 0
+				? "terms"
+				: "scanned";
 	const tagsKey = preselectedTags.join("|");
 	// biome-ignore lint/correctness/useExhaustiveDependencies: preselectedTags folded into tagsKey; onFunnelStage identity is stable
 	useEffect(() => {
@@ -430,22 +325,6 @@ const ParticipantOnboardingCards = ({
 							)}
 							{...testId(`portal-onboarding-slide-${currentSlideIndex}`)}
 						>
-							{currentCard?.type === "microphone" && (
-								<Button
-									onClick={() => {
-										setMicSkipped(true);
-										nextSlide();
-									}}
-									variant="subtle"
-									color="primary"
-									size="md"
-									p="sm"
-									className="absolute right-0 top-0"
-									{...testId("portal-onboarding-mic-skip-button")}
-								>
-									<Trans id="participant.mic.check.button.skip">Skip</Trans>
-								</Button>
-							)}
 							{currentCard.icon && (
 								<div
 									className={cn(
@@ -529,63 +408,34 @@ const ParticipantOnboardingCards = ({
 						</div>
 
 						<div className="mt-8 flex w-full items-center justify-between gap-4">
-							{currentCard?.type === "microphone" ? (
-								<>
-									{currentSlideIndex > 0 && (
-										<Button
-											onClick={prevSlide}
-											variant="outline"
-											size="lg"
-											className="basis-1/2"
-											{...testId("portal-onboarding-mic-back-button")}
-										>
-											<Trans id="participant.button.back.microphone">
-												Back
-											</Trans>
-										</Button>
+							{currentSlideIndex > 0 && (
+								<Button
+									onClick={prevSlide}
+									variant="outline"
+									size="lg"
+									className={!isLastSlide ? "basis-1/2" : "w-full"}
+									{...testId("portal-onboarding-back-button")}
+								>
+									<Trans id="participant.button.back">Back</Trans>
+								</Button>
+							)}
+							{!isLastSlide && (
+								<Button
+									onClick={nextSlide}
+									size="lg"
+									disabled={
+										currentCard.checkbox?.required &&
+										!checkboxStates[`${currentSlideIndex}`]
+									}
+									className={currentSlideIndex > 0 ? "basis-1/2" : "w-full"}
+									{...testId("portal-onboarding-next-button")}
+								>
+									{currentCard.cta ? (
+										currentCard.cta
+									) : (
+										<Trans id="participant.button.next">Next</Trans>
 									)}
-									<Button
-										onClick={nextSlide}
-										size="lg"
-										disabled={!micTestSuccess}
-										className={currentSlideIndex > 0 ? "basis-1/2" : "w-full"}
-										{...testId("portal-onboarding-mic-continue-button")}
-									>
-										<Trans id="participant.button.continue">Continue</Trans>
-									</Button>
-								</>
-							) : (
-								<>
-									{currentSlideIndex > 0 && (
-										<Button
-											onClick={prevSlide}
-											variant="outline"
-											size="lg"
-											className={!isLastSlide ? "basis-1/2" : "w-full"}
-											{...testId("portal-onboarding-back-button")}
-										>
-											<Trans id="participant.button.back">Back</Trans>
-										</Button>
-									)}
-									{!isLastSlide && (
-										<Button
-											onClick={nextSlide}
-											size="lg"
-											disabled={
-												currentCard.checkbox?.required &&
-												!checkboxStates[`${currentSlideIndex}`]
-											}
-											className={currentSlideIndex > 0 ? "basis-1/2" : "w-full"}
-											{...testId("portal-onboarding-next-button")}
-										>
-											{currentCard.cta ? (
-												currentCard.cta
-											) : (
-												<Trans id="participant.button.next">Next</Trans>
-											)}
-										</Button>
-									)}
-								</>
+								</Button>
 							)}
 						</div>
 
