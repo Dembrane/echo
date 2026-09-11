@@ -63,17 +63,11 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 			<Button
 				size="xl"
 				fullWidth
-				// The question is the label, and in Dutch or German it runs to two
-				// lines on a phone. A button that clips its own question is worse
-				// than a taller one.
-				h="auto"
-				py="md"
-				styles={{ label: { lineHeight: 1.25, whiteSpace: "normal" } }}
 				rightSection={<IconArrowRight size={20} />}
 				onClick={handleOpen}
 				{...testId("portal-finish-event-cta-button")}
 			>
-				<Trans>Want to use dembrane at your next event?</Trans>
+				<Trans>Want this at your event?</Trans>
 			</Button>
 			<PricingConfigurator
 				{...configurator.configuratorProps}
