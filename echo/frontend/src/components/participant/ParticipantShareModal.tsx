@@ -11,6 +11,7 @@ import {
 import posthog from "posthog-js";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router";
+import { Logo } from "@/components/common/Logo";
 import { QRCode } from "@/components/common/QRCode";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
 import { buildPortalSessionSharingLink } from "@/lib/portalSharing";
@@ -72,11 +73,7 @@ export const ParticipantShareModal = ({
 			onClose={onClose}
 			fullScreen
 			padding="xl"
-			title={
-				<Text size="xl" fw={600}>
-					<Trans>Share portal</Trans>
-				</Text>
-			}
+			title={<Logo h="36px" />}
 			{...testId("portal-share-modal")}
 		>
 			<Stack align="center" justify="center" gap="lg" mih="calc(100dvh - 7rem)">

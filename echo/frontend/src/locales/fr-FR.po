@@ -2899,7 +2899,7 @@ msgstr "Période de repos. Disponible dans {0}"
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/popcorn/PopcornShare.tsx:124
-#: src/components/participant/ParticipantShareModal.tsx:108
+#: src/components/participant/ParticipantShareModal.tsx:105
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:51
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -2946,7 +2946,7 @@ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1164
 #: src/components/project/ProjectQRCode.tsx:157
-#: src/components/participant/ParticipantShareModal.tsx:108
+#: src/components/participant/ParticipantShareModal.tsx:105
 msgid "Copy link"
 msgstr "Copier le lien"
 
@@ -4033,7 +4033,7 @@ msgstr "Modifier le webhook"
 #: src/routes/auth/Login.tsx:318
 #: src/routes/auth/Login.tsx:322
 #: src/components/settings/AccountSettingsCard.tsx:186
-#: src/components/participant/ParticipantShareModal.tsx:134
+#: src/components/participant/ParticipantShareModal.tsx:131
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:365
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -5648,9 +5648,9 @@ msgstr ""
 msgid "Join this organisation to discover workspaces and collaborate with your team."
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:56
-#: src/components/participant/ParticipantShareModal.tsx:66
-#: src/components/participant/ParticipantShareModal.tsx:129
+#: src/components/participant/ParticipantShareModal.tsx:57
+#: src/components/participant/ParticipantShareModal.tsx:67
+#: src/components/participant/ParticipantShareModal.tsx:126
 msgid "Join this portal session"
 msgstr "Rejoindre cette session du portail"
 
@@ -6485,7 +6485,7 @@ msgstr "Suivi"
 msgid "more"
 msgstr "autres"
 
-#: src/components/participant/ParticipantShareModal.tsx:144
+#: src/components/participant/ParticipantShareModal.tsx:141
 msgid "More"
 msgstr "Plus"
 
@@ -9480,7 +9480,7 @@ msgstr "Scannez le code QR ou copiez le secret dans votre application."
 msgid "Scan to join this project"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:84
+#: src/components/participant/ParticipantShareModal.tsx:81
 msgid "Scan to start a new portal session"
 msgstr "Scannez pour démarrer une nouvelle session du portail"
 
@@ -10023,7 +10023,6 @@ msgstr "Partager"
 msgid "Share link"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:77
 #: src/components/layout/ParticipantHeader.tsx:111
 #: src/components/layout/ParticipantHeader.tsx:112
 msgid "Share portal"
@@ -11279,7 +11278,7 @@ msgstr "Cette partie de la page n'a pas pu se charger. Recharger la page règle 
 msgid "this person"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:151
+#: src/components/participant/ParticipantShareModal.tsx:148
 msgid "This portal is not accepting new sessions right now."
 msgstr "Ce portail n’accepte pas de nouvelles sessions pour le moment."
 
@@ -12709,7 +12708,7 @@ msgstr "Nouveautés"
 msgid "What's the main reason?"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:123
+#: src/components/participant/ParticipantShareModal.tsx:120
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
