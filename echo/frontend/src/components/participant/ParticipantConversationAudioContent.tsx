@@ -27,8 +27,6 @@ const VERIFICATION_BANNER_THRESHOLD_SECONDS = 60;
 
 type OutletContextType = {
 	isRecording: boolean;
-	/** Non-resetting read of the mic level, for the recording waveform. */
-	peekAudioLevel?: () => number;
 	recordingTime: number;
 };
 
@@ -39,8 +37,7 @@ export const ParticipantConversationAudioContent = () => {
 
 	const { projectId, conversationId } = useParams();
 	const [searchParams, setSearchParams] = useSearchParams();
-	const { isRecording, peekAudioLevel, recordingTime } =
-		useOutletContext<OutletContextType>();
+	const { isRecording, recordingTime } = useOutletContext<OutletContextType>();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const conversationQuery = useConversationQuery(projectId, conversationId);
 	const [_isRefineDisabled, _setIsRefineDisabled, removeValue] =
@@ -142,7 +139,6 @@ export const ParticipantConversationAudioContent = () => {
 					conversationId={conversationId ?? ""}
 					isRecording={isRecording}
 					isAnonymized={conversationQuery.data?.is_anonymized ?? false}
-					peekAudioLevel={peekAudioLevel}
 				/>
 			)}
 

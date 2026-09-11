@@ -14,15 +14,18 @@ import { VOICE_WAVEFORM_BARS, waveformHeights } from "./voiceInput";
  */
 export const VoiceWaveform = ({
 	className,
+	gain,
 	levels,
 }: {
 	className?: string;
+	/** Multiplies the drawn height; see `waveformHeights`. */
+	gain?: number;
 	levels: number[];
 }) => {
 	const reduceMotion = useReducedMotion();
 	const heights = reduceMotion
 		? Array<number>(VOICE_WAVEFORM_BARS).fill(30)
-		: waveformHeights(levels);
+		: waveformHeights(levels, VOICE_WAVEFORM_BARS, gain);
 
 	return (
 		<div

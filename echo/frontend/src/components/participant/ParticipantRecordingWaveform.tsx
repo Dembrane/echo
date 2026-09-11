@@ -33,5 +33,7 @@ export const ParticipantRecordingWaveform = ({
 
 	if (!peekAudioLevel) return null;
 
-	return <VoiceWaveform className="w-full" levels={levels} />;
+	// Twice the swing of the composer's meter. This one sits above the timer at
+	// arm's length on a phone on a table, not under the reader's nose.
+	return <VoiceWaveform className="w-full" gain={2} levels={levels} />;
 };

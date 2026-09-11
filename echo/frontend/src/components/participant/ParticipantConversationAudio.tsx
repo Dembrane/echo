@@ -54,6 +54,7 @@ import {
 } from "./hooks";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
 import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
+import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
 import { PermissionErrorModal } from "./PermissionErrorModal";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 import { useConversationArtefacts } from "./verify/hooks";
@@ -923,7 +924,6 @@ export const ParticipantConversationAudio = () => {
 				<Outlet
 					context={{
 						isRecording,
-						peekAudioLevel: audioRecorder.peekAudioLevel,
 						recordingTime,
 					}}
 				/>
@@ -949,6 +949,12 @@ export const ParticipantConversationAudio = () => {
 							}
 						/>
 					</Group>
+
+					{isRecording && (
+						<ParticipantRecordingWaveform
+							peekAudioLevel={audioRecorder.peekAudioLevel}
+						/>
+					)}
 
 					<Group justify="space-between">
 						{/* Recording time indicator - show when recording OR when stop modal is open OR when interruption modal is open OR resuming */}

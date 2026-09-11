@@ -20,7 +20,6 @@ import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { testId } from "@/lib/testUtils";
 import { ConnectionHealthStatus } from "../common/ConnectionHealthStatus";
 import { TipBanner } from "../common/TipBanner";
-import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
 import SpikeMessage from "./SpikeMessage";
 import SystemMessage from "./SystemMessage";
 import UserChunkMessage from "./UserChunkMessage";
@@ -33,7 +32,6 @@ export const ParticipantBody = ({
 	interleaveMessages = true,
 	isRecording = false,
 	isAnonymized = false,
-	peekAudioLevel,
 }: PropsWithChildren<{
 	projectId: string;
 	conversationId: string;
@@ -41,7 +39,6 @@ export const ParticipantBody = ({
 	interleaveMessages?: boolean;
 	isRecording?: boolean;
 	isAnonymized?: boolean;
-	peekAudioLevel?: () => number;
 }>) => {
 	const [ref] = useAutoAnimate();
 	const [chatRef] = useAutoAnimate();
@@ -170,9 +167,6 @@ export const ParticipantBody = ({
 				/>
 			)}
 
-			{isRecording && (
-				<ParticipantRecordingWaveform peekAudioLevel={peekAudioLevel} />
-			)}
 			{projectQuery.data && (
 				<Stack ref={chatRef} pt="xs" pb={9}>
 					{projectQuery.data.default_conversation_title && (
