@@ -100,6 +100,7 @@ export const getReleases = (): Release[] => [
 		highlight: true,
 		title: t`Introducing Popcorn`,
 		version: "2026-09",
+		videoUrl: "https://www.youtube.com/watch?v=nKFxtUr13sI",
 	},
 	...getReleaseHistory(),
 ];
