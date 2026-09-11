@@ -71,7 +71,7 @@ This document describes the button design system implemented in the ECHO fronten
 
 ## Brand Colors
 
-All brand colors are defined in [`src/colors.ts`](../src/colors.ts) as the single source of truth.
+All brand colors are defined in [`frontend/src/colors.ts`](../../frontend/src/colors.ts) as the single source of truth.
 
 ### Available Colors
 
@@ -116,10 +116,10 @@ import { baseColors } from "@/colors";
 
 ### File Structure
 
-- **[`src/colors.ts`](../src/colors.ts)**: Single source of truth for all brand colors
-- **[`src/theme.tsx`](../src/theme.tsx)**: Mantine theme configuration with button defaults
-- **[`src/styles/button.module.css`](../src/styles/button.module.css)**: Custom button variant styles
-- **[`tailwind.config.js`](../../tailwind.config.js)**: Tailwind configuration with brand colors
+- **[`frontend/src/colors.ts`](../../frontend/src/colors.ts)**: Single source of truth for all brand colors
+- **[`frontend/src/theme.tsx`](../../frontend/src/theme.tsx)**: Mantine theme configuration with button defaults
+- **[`frontend/src/styles/button.module.css`](../../frontend/src/styles/button.module.css)**: Custom button variant styles
+- **[`frontend/tailwind.config.js`](../../frontend/tailwind.config.js)**: Tailwind configuration with brand colors
 
 ### How It Works
 
@@ -192,6 +192,6 @@ Test button states in development:
 ## Questions?
 
 For questions about the design system, refer to:
-- [Frontend Style Guides](../../docs/style-guides/)
-- [AGENTS.md](../AGENTS.md) for general frontend patterns
-- [COPY_GUIDE.md](../COPY_GUIDE.md) for button text guidelines
+- [Frontend style guides](./) for the other frontend conventions
+- [frontend/AGENTS.md](../../frontend/AGENTS.md) for general frontend patterns
+- [brand/STYLE_GUIDE.md](../../brand/STYLE_GUIDE.md) for button text guidelines
