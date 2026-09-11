@@ -11,6 +11,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import {
 	afterEach,
 	beforeAll,
@@ -21,9 +22,23 @@ import {
 	vi,
 } from "vitest";
 
+// Playback regression tests keep a video release even when the newest update
+// ships without one. The history page tests exercise the full release list.
+vi.mock("./releases", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("./releases")>();
+	return {
+		...actual,
+		getReleases: () =>
+			actual.getReleases().filter((release) => release.videoUrl),
+	};
+});
+
 const authState = { isAuthenticated: true };
 const curtainState = { isActive: false };
-const meState: { data: unknown; isSuccess: boolean } = {
+const meState: {
+	data: Record<string, unknown> | null | undefined;
+	isSuccess: boolean;
+} = {
 	data: { settings: {} },
 	isSuccess: true,
 };
@@ -33,7 +48,12 @@ vi.mock("@/components/auth/hooks", () => ({
 }));
 
 vi.mock("@/hooks/useV2Me", () => ({
-	useV2Me: () => meState,
+	useV2Me: () => ({
+		...meState,
+		data: meState.data
+			? { directus_user_id: "user-a", ...meState.data }
+			: meState.data,
+	}),
 }));
 
 vi.mock("@/components/layout/TransitionCurtainProvider", () => ({
@@ -58,6 +78,7 @@ vi.mock("@/hooks/useLanguage", () => ({
 
 import { ReleaseVideoModal } from "./ReleaseVideoModal";
 import { getReleases } from "./releases";
+import * as releaseVideo from "./releaseVideo";
 import { RELEASE_VIDEO_SEEN_KEY } from "./releaseVideo";
 
 // getReleases() resolves its copy through `t`, so a locale has to be active
@@ -85,6 +106,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+	localStorage.clear();
 	authState.isAuthenticated = true;
 	curtainState.isActive = false;
 	meState.data = { settings: {} };
@@ -100,14 +122,17 @@ afterEach(() => {
 	cleanup();
 	vi.unstubAllGlobals();
 	vi.clearAllMocks();
+	vi.restoreAllMocks();
 });
 
-const renderModal = () =>
+const renderModal = (path = "/", requested = false) =>
 	render(
 		<QueryClientProvider client={new QueryClient()}>
 			<I18nProvider i18n={i18n}>
 				<MantineProvider>
-					<ReleaseVideoModal />
+					<MemoryRouter initialEntries={[path]}>
+						<ReleaseVideoModal requested={requested} />
+					</MemoryRouter>
 				</MantineProvider>
 			</I18nProvider>
 		</QueryClientProvider>,
@@ -212,6 +237,74 @@ describe("dismissing", () => {
 	});
 });
 
+describe("persistent dismissal", () => {
+	const dismiss = async () => {
+		fireEvent.click(screen.getByLabelText("Close and go to dembrane"));
+		await waitFor(() => expect(modalIsOpen()).toBe(false));
+	};
+
+	it("survives a remount with a stale profile while saving is pending", async () => {
+		vi.mocked(fetch).mockImplementation(() => new Promise(() => {}));
+		const view = renderModal();
+		await dismiss();
+		view.unmount();
+		renderModal();
+		expect(modalIsOpen()).toBe(false);
+	});
+
+	it("survives a reload with a failed save and an old server setting", async () => {
+		vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 503 }));
+		const view = renderModal();
+		await dismiss();
+		await waitFor(() => expect(fetch).toHaveBeenCalled());
+		view.unmount();
+		// A fresh component and QueryClient retain only the browser fallback.
+		renderModal();
+		expect(modalIsOpen()).toBe(false);
+	});
+
+	it("shows a new release after an earlier one was closed", async () => {
+		const view = renderModal();
+		await dismiss();
+		vi.spyOn(releaseVideo, "latestRelease").mockReturnValue({
+			...LATEST,
+			title: "Next release",
+			version: "next-release",
+		});
+		view.unmount();
+		renderModal();
+		expect(modalIsOpen()).toBe(true);
+		expect(screen.getByText("Next release")).toBeTruthy();
+	});
+
+	it("does not share dismissals between accounts on the same browser", async () => {
+		const view = renderModal();
+		await dismiss();
+		view.unmount();
+		meState.data = { directus_user_id: "user-b", settings: {} };
+		renderModal();
+		expect(modalIsOpen()).toBe(true);
+	});
+
+	it("still closes when browser storage is unavailable", async () => {
+		vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+			throw new Error("blocked");
+		});
+		vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+			throw new Error("blocked");
+		});
+		renderModal();
+		await dismiss();
+		await waitFor(() => expect(fetch).toHaveBeenCalled());
+	});
+
+	it("does not open automatically without a valid profile", () => {
+		meState.data = null;
+		renderModal();
+		expect(modalIsOpen()).toBe(false);
+	});
+});
+
 // The automatic showing is spent after one dismissal, so the sidebar entry is
 // the only way back to the video. It has to ignore the seen gate entirely.
 describe("opening it on demand", () => {
@@ -236,7 +329,9 @@ describe("opening it on demand", () => {
 			<QueryClientProvider client={new QueryClient()}>
 				<I18nProvider i18n={i18n}>
 					<MantineProvider>
-						<OnDemand />
+						<MemoryRouter>
+							<OnDemand />
+						</MemoryRouter>
 					</MantineProvider>
 				</I18nProvider>
 			</QueryClientProvider>,
@@ -332,7 +427,9 @@ describe("analytics", () => {
 			<QueryClientProvider client={new QueryClient()}>
 				<I18nProvider i18n={i18n}>
 					<MantineProvider>
-						<Reopen />
+						<MemoryRouter>
+							<Reopen />
+						</MemoryRouter>
 					</MantineProvider>
 				</I18nProvider>
 			</QueryClientProvider>,
@@ -430,9 +527,10 @@ describe("analytics", () => {
 		renderModal();
 		fireEvent(window, new Event("pagehide"));
 		expect(capturesOf("whats_new_modal_closed")).toHaveLength(1);
-		expect(capturesOf("whats_new_modal_closed")[0].props.reason).toBe(
-			"pagehide",
-		);
+		expect(
+			captured.find(({ event }) => event === "whats_new_modal_closed")?.props
+				.reason,
+		).toBe("pagehide");
 
 		screen.getByLabelText("Close and go to dembrane").click();
 		await waitFor(() => {
@@ -482,9 +580,47 @@ describe("typography", () => {
 		);
 	});
 
-	it("titles the header and points at the Feedback button", () => {
+	it("shows a short summary before the video", () => {
 		renderModal();
-		expect(screen.getByText("Message from the dembrane team")).toBeTruthy();
-		expect(screen.getByText(/Feedback button/i)).toBeTruthy();
+		expect(screen.getByText("What's new")).toBeTruthy();
+		expect(
+			screen.getByText(LATEST.summary ?? LATEST.description ?? ""),
+		).toBeTruthy();
+		for (const change of LATEST.changes ?? []) {
+			expect(screen.queryByText(change.text)).toBeNull();
+		}
+	});
+});
+
+describe("release notes navigation", () => {
+	it("dismisses the update and links to release notes in the active language", async () => {
+		renderModal();
+		const link = screen.getByRole("link", { name: "View release notes" });
+		expect(link.getAttribute("href")).toBe("/nl-NL/release-notes");
+		fireEvent.click(link);
+		await waitFor(() => expect(fetch).toHaveBeenCalled());
+		expect(
+			JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string),
+		).toEqual({
+			settings: { [RELEASE_VIDEO_SEEN_KEY]: LATEST.version },
+		});
+		expect(
+			captured.find(({ event }) => event === "whats_new_modal_closed")?.props
+				.reason,
+		).toBe("release_notes");
+	});
+
+	it.each(["/release-notes", "/nl-NL/release-notes"])(
+		"does not interrupt reading %s or mark it seen",
+		(path) => {
+			renderModal(path);
+			expect(modalIsOpen()).toBe(false);
+			expect(fetch).not.toHaveBeenCalled();
+		},
+	);
+
+	it("allows manual opening from the release notes page", () => {
+		renderModal("/nl-NL/release-notes", true);
+		expect(modalIsOpen()).toBe(true);
 	});
 });

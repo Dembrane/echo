@@ -12,6 +12,29 @@ import { getReleases, type Release } from "./releases";
  */
 export const RELEASE_VIDEO_SEEN_KEY = "release_video_seen";
 
+/** Browser fallback is account-scoped and survives reloads if PATCH fails. */
+export const locallySeenRelease = (
+	userId: string | undefined,
+): string | null => {
+	if (!userId) return null;
+	try {
+		return localStorage.getItem(`${RELEASE_VIDEO_SEEN_KEY}:${userId}`);
+	} catch {
+		return null;
+	}
+};
+
+export const rememberReleaseLocally = (
+	userId: string,
+	version: string,
+): void => {
+	try {
+		localStorage.setItem(`${RELEASE_VIDEO_SEEN_KEY}:${userId}`, version);
+	} catch {
+		// Storage may be disabled. In-memory dismissal and the server still work.
+	}
+};
+
 /**
  * The release the modal shows, or undefined if the history is empty.
  *
