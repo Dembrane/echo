@@ -13,9 +13,14 @@ import {
 	USE_PARTICIPANT_ROUTER,
 } from "./config";
 import { recoverFromChunkFailure } from "./lib/appVersion";
+import { dropInjectedScriptExceptions } from "./lib/errorTracking";
 
 posthog.init(POSTHOG_TOKEN, {
 	api_host: POSTHOG_HOST,
+	// Drop exceptions thrown by scripts that in-app mobile browsers and
+	// extensions inject into the page. Their only frame points at the document
+	// URL, so they arrive as unattributable noise next to real crashes.
+	before_send: dropInjectedScriptExceptions,
 	// Error tracking: autocapture unhandled errors and promise rejections.
 	// React render errors are reported separately via ErrorBoundary.
 	capture_exceptions: {
