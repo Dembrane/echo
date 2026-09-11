@@ -1,7 +1,7 @@
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Modal, Stack, Text, Title } from "@mantine/core";
+import { Button, Modal, Stack, Title } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconWifiOff } from "@tabler/icons-react";
@@ -130,14 +130,12 @@ export const ParticipantBody = ({
 				</h2>
 			)}
 
-			{isRecording && (
-				<div className="flex min-h-[2.25rem] justify-center transition-opacity duration-500 ease-in-out">
-					{ENABLE_CONVERSATION_HEALTH && (
-						<ConnectionHealthStatus
-							isOnline={isOnline}
-							sseConnectionHealthy={sseConnectionHealthy}
-						/>
-					)}
+			{isRecording && ENABLE_CONVERSATION_HEALTH && (
+				<div className="flex justify-center transition-opacity duration-500 ease-in-out">
+					<ConnectionHealthStatus
+						isOnline={isOnline}
+						sseConnectionHealthy={sseConnectionHealthy}
+					/>
 				</div>
 			)}
 

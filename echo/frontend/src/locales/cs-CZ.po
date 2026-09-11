@@ -2763,8 +2763,8 @@ msgid "Connecting to report services..."
 msgstr "Connecting to report services..."
 
 #: src/components/common/ConnectionHealthStatus.tsx:30
-msgid "Connection healthy"
-msgstr "Connection healthy"
+#~ msgid "Connection healthy"
+#~ msgstr "Connection healthy"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:775
@@ -2775,7 +2775,7 @@ msgstr "Connection issue"
 msgid "Connection revoked"
 msgstr ""
 
-#: src/components/common/ConnectionHealthStatus.tsx:30
+#: src/components/common/ConnectionHealthStatus.tsx:28
 msgid "Connection unhealthy"
 msgstr "Connection unhealthy"
 
@@ -8094,7 +8094,7 @@ msgstr "Please enter a valid email."
 msgid "Please log in to continue."
 msgstr "Please log in to continue."
 
-#: src/components/participant/ParticipantBody.tsx:195
+#: src/components/participant/ParticipantBody.tsx:193
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -8104,7 +8104,7 @@ msgstr ""
 "**Please keep this screen lit up**\n"
 "(black screen = not recording)"
 
-#: src/components/participant/ParticipantBody.tsx:191
+#: src/components/participant/ParticipantBody.tsx:189
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -10327,7 +10327,7 @@ msgstr "Something went wrong while generating the secret."
 msgid "Something went wrong while transcribing. Try again."
 msgstr ""
 
-#: src/components/participant/ParticipantBody.tsx:156
+#: src/components/participant/ParticipantBody.tsx:154
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 
@@ -11482,7 +11482,7 @@ msgstr "Timestamp"
 msgid "Timestamps and duration"
 msgstr "Timestamps and duration"
 
-#: src/components/participant/ParticipantBody.tsx:148
+#: src/components/participant/ParticipantBody.tsx:146
 msgid "Tip"
 msgstr "Tip"
 
@@ -12390,7 +12390,7 @@ msgstr "View example payload"
 msgid "View invite"
 msgstr "View invite"
 
-#: src/components/participant/ParticipantBody.tsx:252
+#: src/components/participant/ParticipantBody.tsx:250
 msgid "View your responses"
 msgstr "View your responses"
 
@@ -13127,7 +13127,7 @@ msgstr "You must login with the same provider you used to sign up. If you face a
 msgid "You need an invitation from a colleague"
 msgstr "You need an invitation from a colleague"
 
-#: src/components/participant/ParticipantBody.tsx:147
+#: src/components/participant/ParticipantBody.tsx:145
 msgid "You seem to be offline, please check your internet connection"
 msgstr "You seem to be offline, please check your internet connection"
 
@@ -13447,7 +13447,7 @@ msgstr ""
 msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
 msgstr "Vaše odpověď byla zaznamenána. Tuto kartu můžete zavřít. Můžete také nahrát další rozhovor nebo sdílet QR kód, aby mohli přispět i ostatní."
 
-#: src/components/participant/ParticipantBody.tsx:262
+#: src/components/participant/ParticipantBody.tsx:260
 msgid "Your responses"
 msgstr "Your responses"
 

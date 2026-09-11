@@ -2761,8 +2761,8 @@ msgid "Connecting to report services..."
 msgstr "Verbinding maken met rapportservices..."
 
 #: src/components/common/ConnectionHealthStatus.tsx:30
-msgid "Connection healthy"
-msgstr "Verbinding gezond"
+#~ msgid "Connection healthy"
+#~ msgstr "Verbinding gezond"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:775
@@ -2773,7 +2773,7 @@ msgstr "Verbindingsprobleem"
 msgid "Connection revoked"
 msgstr ""
 
-#: src/components/common/ConnectionHealthStatus.tsx:30
+#: src/components/common/ConnectionHealthStatus.tsx:28
 msgid "Connection unhealthy"
 msgstr "Verbinding ongezond"
 
@@ -8092,7 +8092,7 @@ msgstr "Voer een geldig e-mailadres in."
 msgid "Please log in to continue."
 msgstr "Log in om door te gaan."
 
-#: src/components/participant/ParticipantBody.tsx:195
+#: src/components/participant/ParticipantBody.tsx:193
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -8102,7 +8102,7 @@ msgstr ""
 "**Houd dit scherm verlicht**\n"
 "(zwart scherm = niet aan het opnemen)"
 
-#: src/components/participant/ParticipantBody.tsx:191
+#: src/components/participant/ParticipantBody.tsx:189
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -10325,7 +10325,7 @@ msgstr "Er is iets misgegaan bij het genereren van het geheim."
 msgid "Something went wrong while transcribing. Try again."
 msgstr "Er ging iets mis tijdens het transcriberen. Probeer het opnieuw."
 
-#: src/components/participant/ParticipantBody.tsx:156
+#: src/components/participant/ParticipantBody.tsx:154
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Er ging iets mis met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
 
@@ -11480,7 +11480,7 @@ msgstr "Tijdstempel"
 msgid "Timestamps and duration"
 msgstr "Tijdstempels en duur"
 
-#: src/components/participant/ParticipantBody.tsx:148
+#: src/components/participant/ParticipantBody.tsx:146
 msgid "Tip"
 msgstr "Tip"
 
@@ -12386,7 +12386,7 @@ msgstr "Voorbeeld payload bekijken"
 msgid "View invite"
 msgstr "Uitnodiging bekijken"
 
-#: src/components/participant/ParticipantBody.tsx:252
+#: src/components/participant/ParticipantBody.tsx:250
 msgid "View your responses"
 msgstr "Bekijk je reacties"
 
@@ -13123,7 +13123,7 @@ msgstr "Je moet inloggen met dezelfde provider die u gebruikte om u aan te melde
 msgid "You need an invitation from a colleague"
 msgstr "Je hebt een uitnodiging van een collega nodig"
 
-#: src/components/participant/ParticipantBody.tsx:147
+#: src/components/participant/ParticipantBody.tsx:145
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
 
@@ -13443,7 +13443,7 @@ msgstr "Je aanvraag is binnen."
 msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
 msgstr "Je antwoord is opgeslagen. Je kunt dit tabblad sluiten. Je kunt ook nog een gesprek opnemen of de QR-code delen zodat anderen kunnen bijdragen."
 
-#: src/components/participant/ParticipantBody.tsx:262
+#: src/components/participant/ParticipantBody.tsx:260
 msgid "Your responses"
 msgstr "Je reacties"
 
