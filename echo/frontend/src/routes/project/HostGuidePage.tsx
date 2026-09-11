@@ -226,6 +226,9 @@ const defaultTranslations = {
 				button2: "Fortsetzen",
 			},
 			{ text: "Energiesparmodus ausschalten" },
+			{
+				text: "Fokus-/Nicht-Stören-Modus aktivieren, um Benachrichtigungen auf dem Bildschirm zu vermeiden",
+			},
 		],
 		title: "So nehmen Sie auf",
 	},
@@ -262,6 +265,9 @@ const defaultTranslations = {
 				button2: "Resume",
 			},
 			{ text: "Turn off battery saver" },
+			{
+				text: "Turn on privacy/focus mode to avoid notifications from showing on your screen",
+			},
 		],
 		title: "How to Record",
 	},
@@ -298,6 +304,9 @@ const defaultTranslations = {
 				button2: "Continuar",
 			},
 			{ text: "Desactiva el ahorro de batería" },
+			{
+				text: "Activa el modo de concentración/privacidad para evitar que las notificaciones aparezcan en la pantalla",
+			},
 		],
 		title: "Cómo grabar",
 	},
@@ -334,6 +343,9 @@ const defaultTranslations = {
 				button2: "Reprendre",
 			},
 			{ text: "Désactivez le mode économie d'énergie" },
+			{
+				text: "Activez le mode concentration/confidentialité pour éviter que les notifications ne s'affichent à l'écran",
+			},
 		],
 		title: "Comment enregistrer",
 	},
@@ -370,6 +382,9 @@ const defaultTranslations = {
 				button2: "Riprendi",
 			},
 			{ text: "Disattiva il risparmio energetico" },
+			{
+				text: "Attiva la modalità concentrazione/privacy per evitare che le notifiche appaiano sullo schermo",
+			},
 		],
 		title: "Come registrare",
 	},
@@ -406,6 +421,9 @@ const defaultTranslations = {
 				button2: "Hervatten",
 			},
 			{ text: "Zet batterijbesparing uit" },
+			{
+				text: "Zet privacy/focusmodus aan om te voorkomen dat meldingen op je scherm verschijnen",
+			},
 		],
 		title: "Hoe neem je op",
 	},
