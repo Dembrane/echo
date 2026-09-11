@@ -63,20 +63,14 @@ const wrap = (node: React.ReactNode) =>
 		</I18nProvider>,
 	);
 
-it("makes the case in three reasons and one button, and asks nothing yet", () => {
+it("shows the heading, illustration and one button, and asks nothing yet", () => {
 	wrap(<DembraneEventCta projectId="p1" />);
 
 	expect(screen.getByTestId("portal-finish-event-cta").textContent).toContain(
 		"Want to run an event with dembrane?",
 	);
-	expect(screen.getByTestId("portal-finish-event-cta").textContent).toContain(
-		"1000+ events",
-	);
-	expect(
-		screen
-			.getByTestId("portal-finish-event-cta-reasons")
-			.querySelectorAll("li"),
-	).toHaveLength(3);
+	expect(screen.getByTestId("portal-finish-event-cta-art")).toBeTruthy();
+	expect(screen.queryByTestId("portal-finish-event-cta-reasons")).toBeNull();
 	expect(screen.getByTestId("portal-finish-event-cta-button").textContent).toBe(
 		"Get in touch",
 	);

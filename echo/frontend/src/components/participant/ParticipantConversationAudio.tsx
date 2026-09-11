@@ -69,7 +69,7 @@ export const ParticipantConversationAudio = () => {
 		key: `refine_disabled_${conversationId}`,
 	});
 	const textModeUrl = `/${projectId}/conversation/${conversationId}/text`;
-	const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
+	const finishUrl = `/${projectId}/conversation/${conversationId}/finish${location.search}`;
 
 	// Check if we're on the verify or refine route
 	const isOnVerifyRoute = location.pathname.includes("/verify");

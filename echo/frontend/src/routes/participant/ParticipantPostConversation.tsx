@@ -14,7 +14,14 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { IconCheck, IconLoader2, IconMail } from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
+import {
+	IconCheck,
+	IconLoader2,
+	IconMail,
+	IconQrcode,
+	IconRepeat,
+} from "@tabler/icons-react";
 import { type KeyboardEvent, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -24,6 +31,7 @@ import {
 	useParticipantProjectById,
 	useSubmitNotificationParticipant,
 } from "@/components/participant/hooks";
+import { ParticipantShareModal } from "@/components/participant/ParticipantShareModal";
 import { testId } from "@/lib/testUtils";
 
 export const ParticipantPostConversation = () => {
@@ -33,6 +41,8 @@ export const ParticipantPostConversation = () => {
 	const [email, setEmail] = useState("");
 	const [error, setError] = useState("");
 	const [isSubmitted, setIsSubmitted] = useState(false);
+	const [shareOpened, { open: openShare, close: closeShare }] =
+		useDisclosure(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const { mutate, isPending } = useSubmitNotificationParticipant();
 
@@ -109,6 +119,11 @@ export const ParticipantPostConversation = () => {
 			className="container mx-auto max-w-2xl"
 			{...testId("portal-finish-container")}
 		>
+			<ParticipantShareModal
+				opened={shareOpened}
+				onClose={closeShare}
+				project={project.data}
+			/>
 			<Stack className="mt-[64px] px-4 py-8">
 				{!!text && text !== "" ? (
 					<>
@@ -124,22 +139,35 @@ export const ParticipantPostConversation = () => {
 				)}
 				<Text size="lg">
 					<Trans>
-						Your response has been recorded. You may now close this tab.
-					</Trans>{" "}
-					<Trans>You may also choose to record another conversation.</Trans>
+						Your response has been recorded. You may now close this tab. You may
+						also choose to record another conversation or share the QR code so
+						others can contribute.
+					</Trans>
 				</Text>
 				<Box className="relative">
 					<LoadingOverlay visible={project.isLoading} />
-					<I18nLink to={initiateLink}>
+					<Group gap="sm" wrap="wrap">
+						<I18nLink to={initiateLink}>
+							<Button
+								component="a"
+								size="md"
+								variant="outline"
+								leftSection={<IconRepeat size={18} />}
+								{...testId("portal-finish-record-another-button")}
+							>
+								<Trans>Record another conversation</Trans>
+							</Button>
+						</I18nLink>
 						<Button
-							component="a"
 							size="md"
 							variant="outline"
-							{...testId("portal-finish-record-another-button")}
+							leftSection={<IconQrcode size={18} />}
+							onClick={openShare}
+							{...testId("portal-finish-show-qr-button")}
 						>
-							<Trans>Record another conversation</Trans>
+							<Trans>Show QR Code</Trans>
 						</Button>
-					</I18nLink>
+					</Group>
 					{project.data?.default_conversation_ask_for_participant_email && (
 						<Stack
 							className="mt-20 md:mt-32"

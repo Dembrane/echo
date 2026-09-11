@@ -27,6 +27,18 @@ by default, dembrane guides participants through a brief, friendly tutorial to i
 
 appending `skipOnboarding=1` lands the participant directly on the start screen.
 
+## sharing from an active portal session
+
+the share icon beside settings in the portal header, and *Show QR Code* on the
+thank-you screen, both open the same full-screen QR code with copy, whatsapp,
+and email actions. the new link keeps reusable portal configuration, including
+`skipOnboarding`, `tags`, `tag_id_list`, `mode`, and `theme`, so participants can
+daisy-chain sessions with the same setup.
+
+participant names, email addresses, prefilled feedback, and temporary screen
+state are not included. every shared link starts a fresh portal session without
+carrying over the current participant's personal details or content.
+
 ---
 
 ## auto-initiation and prefilling

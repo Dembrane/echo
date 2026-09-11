@@ -3,13 +3,15 @@ import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Box, Button, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { GearSixIcon } from "@phosphor-icons/react";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconShare2 } from "@tabler/icons-react";
 import { useLocation, useParams, useSearchParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 import { Logo } from "../common/Logo";
+import { useParticipantProjectById } from "../participant/hooks";
 import { ParticipantSettingsModal } from "../participant/ParticipantSettingsModal";
+import { ParticipantShareModal } from "../participant/ParticipantShareModal";
 
 export const ParticipantHeader = () => {
 	const [loadingFinished] = useSessionStorageState("loadingFinished", {
@@ -18,8 +20,12 @@ export const ParticipantHeader = () => {
 	const { pathname } = useLocation();
 	const { projectId, conversationId } = useParams();
 	const navigate = useI18nNavigate();
-	const [opened, { open, close }] = useDisclosure(false);
+	const [settingsOpened, { open: openSettings, close: closeSettings }] =
+		useDisclosure(false);
+	const [shareOpened, { open: openShare, close: closeShare }] =
+		useDisclosure(false);
 	const [searchParams] = useSearchParams();
+	const projectQuery = useParticipantProjectById(projectId ?? "");
 
 	const showInstructions = searchParams.get("instructions") === "true";
 	const showBackButton =
@@ -30,7 +36,7 @@ export const ParticipantHeader = () => {
 		pathname.includes("/verify") &&
 		!pathname.includes("/verify/approve") &&
 		showInstructions;
-	const hideSettingsButton =
+	const hideHeaderActions =
 		pathname.includes("start") || pathname.includes("finish");
 	const hideHeader = pathname.includes("start");
 
@@ -52,7 +58,15 @@ export const ParticipantHeader = () => {
 
 	return (
 		<>
-			<ParticipantSettingsModal opened={opened} onClose={close} />
+			<ParticipantSettingsModal
+				opened={settingsOpened}
+				onClose={closeSettings}
+			/>
+			<ParticipantShareModal
+				opened={shareOpened}
+				onClose={closeShare}
+				project={projectQuery.data}
+			/>
 			<Group
 				component="header"
 				justify="center"
@@ -88,19 +102,29 @@ export const ParticipantHeader = () => {
 				)}
 				<Logo hideTitle h="64px" />
 			</Group>
-			{!hideSettingsButton && (
-				<Box className="absolute right-4 top-5 z-20">
+			{!hideHeaderActions && (
+				<Group className="absolute right-4 top-5 z-20" gap="xs" wrap="nowrap">
 					<ActionIcon
 						size="lg"
 						variant="transparent"
-						onClick={open}
+						onClick={openSettings}
 						title={t`Settings`}
 						aria-label={t`Settings`}
 						{...testId("portal-header-settings-button")}
 					>
 						<GearSixIcon size={24} color="gray" />
 					</ActionIcon>
-				</Box>
+					<ActionIcon
+						size="lg"
+						variant="transparent"
+						onClick={openShare}
+						title={t`Share portal`}
+						aria-label={t`Share portal`}
+						{...testId("portal-header-share-button")}
+					>
+						<IconShare2 size={24} color="gray" />
+					</ActionIcon>
+				</Group>
 			)}
 		</>
 	);

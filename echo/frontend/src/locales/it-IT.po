@@ -66,7 +66,7 @@ msgstr ""
 msgid "library.generate.duration.message"
 msgstr " Generating library can take up to an hour."
 
-#: src/routes/participant/ParticipantPostConversation.tsx:235
+#: src/routes/participant/ParticipantPostConversation.tsx:263
 msgid " Submit"
 msgstr " Submit"
 
@@ -987,7 +987,7 @@ msgstr "Active filters"
 msgid "Activity"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:178
+#: src/routes/participant/ParticipantPostConversation.tsx:206
 #: src/routes/organisation/OrganisationRoute.tsx:2058
 #: src/routes/organisation/OrganisationRoute.tsx:2065
 #: src/routes/organisation/OrganisationRoute.tsx:2079
@@ -1154,7 +1154,7 @@ msgstr ""
 msgid "select.all.modal.added"
 msgstr "Added"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:193
+#: src/routes/participant/ParticipantPostConversation.tsx:221
 msgid "Added emails"
 msgstr "Added emails"
 
@@ -1661,7 +1661,7 @@ msgid "Are you sure you want to delete this template? This cannot be undone."
 msgstr "Are you sure you want to delete this template? This cannot be undone."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:161
+#: src/components/participant/ParticipantConversationText.tsx:166
 msgid "participant.modal.finish.message.text.mode"
 msgstr "Are you sure you want to finish the conversation?"
 
@@ -1909,7 +1909,7 @@ msgstr "Back"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantOnboardingCards.tsx:552
-#: src/components/layout/ParticipantHeader.tsx:71
+#: src/components/layout/ParticipantHeader.tsx:85
 msgid "participant.button.back"
 msgstr "Back"
 
@@ -2178,7 +2178,7 @@ msgid "participant.concrete.action.button.cancel"
 msgstr "Cancel"
 
 #. js-lingui-explicit-id
-#: src/components/layout/ParticipantHeader.tsx:83
+#: src/components/layout/ParticipantHeader.tsx:97
 msgid "participant.concrete.instructions.button.cancel"
 msgstr "Cancel"
 
@@ -2832,6 +2832,7 @@ msgstr "Cooling down. Available in {0}"
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/popcorn/PopcornShare.tsx:124
+#: src/components/participant/ParticipantShareModal.tsx:108
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:51
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -2878,6 +2879,7 @@ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1164
 #: src/components/project/ProjectQRCode.tsx:157
+#: src/components/participant/ParticipantShareModal.tsx:108
 msgid "Copy link"
 msgstr "Copy link"
 
@@ -3713,7 +3715,7 @@ msgstr "Do I need this?"
 msgid "Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:152
+#: src/routes/participant/ParticipantPostConversation.tsx:180
 msgid "Do you want to stay in the loop?"
 msgstr "Do you want to stay in the loop?"
 
@@ -3956,6 +3958,7 @@ msgstr "Edit Webhook"
 #: src/routes/auth/Login.tsx:318
 #: src/routes/auth/Login.tsx:322
 #: src/components/settings/AccountSettingsCard.tsx:186
+#: src/components/participant/ParticipantShareModal.tsx:134
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:365
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -3973,7 +3976,7 @@ msgstr ""
 msgid "Email verification | dembrane"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:161
+#: src/routes/participant/ParticipantPostConversation.tsx:189
 msgid "email@work.com"
 msgstr "email@work.com"
 
@@ -4204,8 +4207,8 @@ msgid "Every connected agent in {0} stops working immediately. Members keep thei
 msgstr ""
 
 #: src/components/participant/DembraneEventCta.tsx:105
-msgid "Every insight traceable. The report links each finding back to what was actually said."
-msgstr "Ogni spunto è tracciabile. Il report collega ogni risultato a ciò che è stato davvero detto."
+#~ msgid "Every insight traceable. The report links each finding back to what was actually said."
+#~ msgstr "Ogni spunto è tracciabile. Il report collega ogni risultato a ciò che è stato davvero detto."
 
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:208
 msgid "Every member's connection that names this organisation."
@@ -4626,7 +4629,7 @@ msgid "participant.button.stop.finish"
 msgstr "Finish"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:254
+#: src/components/participant/ParticipantConversationText.tsx:259
 msgid "participant.button.finish.text.mode"
 msgstr "Finish"
 
@@ -4636,7 +4639,7 @@ msgid "participant.button.finish"
 msgstr "Finish"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:149
+#: src/components/participant/ParticipantConversationText.tsx:154
 msgid "participant.modal.finish.title.text.mode"
 msgstr "Finish Conversation"
 
@@ -4855,7 +4858,7 @@ msgstr "Get an immediate reply from dembrane to help you deepen the conversation
 msgid "participant.refine.go.deeper.description"
 msgstr "Get an immediate reply from dembrane to help you deepen the conversation."
 
-#: src/components/participant/DembraneEventCta.tsx:118
+#: src/components/participant/DembraneEventCta.tsx:73
 msgid "Get in touch"
 msgstr "Mettiti in contatto"
 
@@ -5568,6 +5571,12 @@ msgstr ""
 #: src/routes/invite/AcceptInviteRoute.tsx:538
 msgid "Join this organisation to discover workspaces and collaborate with your team."
 msgstr ""
+
+#: src/components/participant/ParticipantShareModal.tsx:56
+#: src/components/participant/ParticipantShareModal.tsx:66
+#: src/components/participant/ParticipantShareModal.tsx:129
+msgid "Join this portal session"
+msgstr "Partecipa a questa sessione del portale"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1094
 msgid "Join this workspace as an admin to help with support. The customer must have turned on staff support access. Your access ends automatically after 24 hours."
@@ -6404,6 +6413,10 @@ msgstr ""
 msgid "more"
 msgstr "more"
 
+#: src/components/participant/ParticipantShareModal.tsx:144
+msgid "More"
+msgstr "Altro"
+
 #: src/routes/project/report/ProjectReportRoute.tsx:1172
 msgid "More actions"
 msgstr "More actions"
@@ -6695,7 +6708,7 @@ msgid "No"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:173
+#: src/components/participant/ParticipantConversationText.tsx:178
 msgid "participant.button.finish.no.text.mode"
 msgstr "No"
 
@@ -6720,8 +6733,8 @@ msgid "No agents connected yet."
 msgstr ""
 
 #: src/components/participant/DembraneEventCta.tsx:93
-msgid "No app, no hardware. Participants scan a QR code and their phones become the portal."
-msgstr "Nessuna app, nessun hardware. I partecipanti scansionano un codice QR e il loro telefono diventa il portale."
+#~ msgid "No app, no hardware. Participants scan a QR code and their phones become the portal."
+#~ msgstr "Nessuna app, nessun hardware. I partecipanti scansionano un codice QR e il loro telefono diventa il portale."
 
 #: src/components/settings/AuditLogsCard.tsx:630
 msgid "No audit logs match the current filters."
@@ -8008,7 +8021,7 @@ msgstr "Please check your inputs for errors."
 msgid "Please enable participation to enable sharing"
 msgstr "Please enable participation to enable sharing"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:86
+#: src/routes/participant/ParticipantPostConversation.tsx:96
 msgid "Please enter a valid email."
 msgstr "Please enter a valid email."
 
@@ -8606,7 +8619,7 @@ msgstr "Record"
 msgid "Record a voice message"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:140
+#: src/routes/participant/ParticipantPostConversation.tsx:158
 msgid "Record another conversation"
 msgstr "Record another conversation"
 
@@ -8746,7 +8759,7 @@ msgid "Reload page"
 msgstr "Ricarica la pagina"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:117
+#: src/components/participant/ParticipantConversationText.tsx:122
 msgid "participant.button.reload.page.text.mode"
 msgstr "Reload Page"
 
@@ -8806,7 +8819,7 @@ msgstr ""
 msgid "Remove avatar"
 msgstr "Remove avatar"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:199
+#: src/routes/participant/ParticipantPostConversation.tsx:227
 msgid "Remove Email"
 msgstr "Remove Email"
 
@@ -9120,8 +9133,8 @@ msgid "Response feedback"
 msgstr "Commento sulla risposta"
 
 #: src/components/participant/DembraneEventCta.tsx:99
-msgid "Results before people leave. We run the analysis live and present it in the room."
-msgstr "Risultati prima che le persone vadano via. Analizziamo dal vivo e presentiamo in sala."
+#~ msgid "Results before people leave. We run the analysis live and present it in the room."
+#~ msgstr "Risultati prima che le persone vadano via. Analizziamo dal vivo e presentiamo in sala."
 
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:145
@@ -9408,6 +9421,10 @@ msgstr "Scan the QR code or copy the secret into your app."
 #: src/routes/project/ProjectMonitorRoute.tsx:96
 msgid "Scan to join this project"
 msgstr ""
+
+#: src/components/participant/ParticipantShareModal.tsx:84
+msgid "Scan to start a new portal session"
+msgstr "Scansiona per iniziare una nuova sessione del portale"
 
 #: src/components/conversation/LiveFunnelSection.tsx:250
 msgid "Scanned"
@@ -9913,8 +9930,8 @@ msgstr ""
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
 #: src/features/sidebar/views/org/OrgHomeView.tsx:130
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
-#: src/components/layout/ParticipantHeader.tsx:97
-#: src/components/layout/ParticipantHeader.tsx:98
+#: src/components/layout/ParticipantHeader.tsx:111
+#: src/components/layout/ParticipantHeader.tsx:112
 msgid "Settings"
 msgstr "Settings"
 
@@ -9938,11 +9955,17 @@ msgstr ""
 
 #: src/components/popcorn/PopcornShare.tsx:56
 msgid "Share"
-msgstr ""
+msgstr "Condividi"
 
 #: src/components/popcorn/PopcornShare.tsx:82
 msgid "Share link"
 msgstr ""
+
+#: src/components/participant/ParticipantShareModal.tsx:77
+#: src/components/layout/ParticipantHeader.tsx:121
+#: src/components/layout/ParticipantHeader.tsx:122
+msgid "Share portal"
+msgstr "Condividi il portale"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1217
 msgid "Share report"
@@ -9951,6 +9974,10 @@ msgstr "Share report"
 #: src/routes/project/ProjectHomeRoute.tsx:126
 msgid "Share the project, watch live activity, and jump into the main tools from one place."
 msgstr ""
+
+#: src/routes/participant/ParticipantPostConversation.tsx:165
+#~ msgid "Share this conversation"
+#~ msgstr "Condividi questa conversazione"
 
 #: src/components/project/ProjectUsageAndSharing.tsx:263
 msgid "Share with someone"
@@ -9961,7 +9988,7 @@ msgstr ""
 msgid "Share with workspace"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:155
+#: src/routes/participant/ParticipantPostConversation.tsx:183
 msgid "Share your details here"
 msgstr "Share your details here"
 
@@ -10055,6 +10082,10 @@ msgstr ""
 #: src/components/workspace/OrganisationUsageRollup.tsx:302
 msgid "Show projects"
 msgstr ""
+
+#: src/routes/participant/ParticipantPostConversation.tsx:168
+msgid "Show QR Code"
+msgstr "Mostra il codice QR"
 
 #: src/components/common/ReferencesIconButton.tsx:15
 #: src/components/common/ReferencesIconButton.tsx:22
@@ -10201,7 +10232,7 @@ msgid "Something went wrong"
 msgstr "Something went wrong"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:100
+#: src/components/participant/ParticipantConversationText.tsx:105
 msgid "participant.conversation.error.text.mode"
 msgstr "Something went wrong"
 
@@ -10336,7 +10367,7 @@ msgid "Start in assistant chat"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:129
+#: src/components/participant/ParticipantConversationText.tsx:134
 msgid "participant.button.start.new.conversation.text.mode"
 msgstr "Start New Conversation"
 
@@ -10453,7 +10484,7 @@ msgid "Submit"
 msgstr "Submit"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:233
+#: src/components/participant/ParticipantConversationText.tsx:238
 msgid "participant.button.submit.text.mode"
 msgstr "Submit"
 
@@ -10696,7 +10727,7 @@ msgstr "Test Webhook"
 msgid "Text"
 msgstr "Text"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:122
+#: src/routes/participant/ParticipantPostConversation.tsx:137
 msgid "Thank you for participating!"
 msgstr "Thank you for participating!"
 
@@ -10704,7 +10735,7 @@ msgstr "Thank you for participating!"
 msgid "Thank You Page Content"
 msgstr "Thank You Page Content"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:251
+#: src/routes/participant/ParticipantPostConversation.tsx:279
 msgid "Thank you!"
 msgstr "Thank you!"
 
@@ -10788,7 +10819,7 @@ msgid "The connection dropped. Retrying automatically."
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:105
+#: src/components/participant/ParticipantConversationText.tsx:110
 msgid "participant.conversation.error.loading.text.mode"
 msgstr "The conversation could not be loaded. Please try again or contact support."
 
@@ -11046,7 +11077,7 @@ msgstr "This conversation has the following copies:"
 msgid "conversation.linking_conversations.description"
 msgstr "This conversation is a copy of"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:82
+#: src/routes/participant/ParticipantPostConversation.tsx:92
 msgid "This email is already in the list."
 msgstr "This email is already in the list."
 
@@ -11192,6 +11223,10 @@ msgstr "Questa parte della pagina non si è caricata. Di solito basta ricaricare
 #: src/routes/organisation/OrganisationRoute.tsx:2094
 msgid "this person"
 msgstr ""
+
+#: src/components/participant/ParticipantShareModal.tsx:151
+msgid "This portal is not accepting new sessions right now."
+msgstr "Questo portale non accetta nuove sessioni al momento."
 
 #: src/components/voice/VoiceInputError.tsx:41
 msgid "This project could not be reached."
@@ -11756,7 +11791,7 @@ msgstr ""
 msgid "Type a message or press / for templates..."
 msgstr "Type a message or press / for templates..."
 
-#: src/components/participant/ParticipantConversationText.tsx:218
+#: src/components/participant/ParticipantConversationText.tsx:223
 msgid "Type your response here"
 msgstr "Type your response here"
 
@@ -12352,7 +12387,7 @@ msgstr ""
 msgid "Walks you through setup and suggests next steps."
 msgstr ""
 
-#: src/components/participant/DembraneEventCta.tsx:69
+#: src/components/participant/DembraneEventCta.tsx:58
 msgid "Want to run an event with dembrane?"
 msgstr "Vuoi organizzare un evento con dembrane?"
 
@@ -12361,8 +12396,8 @@ msgid "Watch live recordings, transcription progress, and errors across this pro
 msgstr ""
 
 #: src/components/participant/DembraneEventCta.tsx:72
-msgid "We bring the tool and the crew, from the intake call to the report. Proven across 1000+ events."
-msgstr "Portiamo lo strumento e il team, dalla chiamata iniziale al report. Collaudato in oltre 1000 eventi."
+#~ msgid "We bring the tool and the crew, from the intake call to the report. Proven across 1000+ events."
+#~ msgstr "Portiamo lo strumento e il team, dalla chiamata iniziale al report. Collaudato in oltre 1000 eventi."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:396
@@ -12450,7 +12485,7 @@ msgstr "Ti ricontatteremo entro un giorno. Preferisci scegliere tu un orario?"
 #~ msgid "We will get in touch within a day. Prefer to pick a time yourself? The calendar is right here."
 #~ msgstr "Ti ricontatteremo entro un giorno. Preferisci scegliere tu un orario? Il calendario è proprio qui."
 
-#: src/routes/participant/ParticipantPostConversation.tsx:262
+#: src/routes/participant/ParticipantPostConversation.tsx:290
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 
@@ -12629,6 +12664,10 @@ msgstr ""
 #: src/components/billing/BillingManager.tsx:583
 msgid "What's the main reason?"
 msgstr ""
+
+#: src/components/participant/ParticipantShareModal.tsx:123
+msgid "WhatsApp"
+msgstr "WhatsApp"
 
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:88
 msgid "When"
@@ -12876,7 +12915,7 @@ msgid "Yes"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:182
+#: src/components/participant/ParticipantConversationText.tsx:187
 msgid "participant.button.finish.yes.text.mode"
 msgstr "Yes"
 
@@ -13035,9 +13074,9 @@ msgstr "You haven't verified any outcomes yet. Would you like to verify before f
 msgid "You left the workspace"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:129
-msgid "You may also choose to record another conversation."
-msgstr "You may also choose to record another conversation."
+#: src/routes/participant/ParticipantPostConversation.tsx:143
+#~ msgid "You may also choose to record another conversation."
+#~ msgstr "You may also choose to record another conversation."
 
 #: src/routes/auth/Login.tsx:234
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
@@ -13359,9 +13398,13 @@ msgstr ""
 msgid "Your request is in."
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:126
-msgid "Your response has been recorded. You may now close this tab."
-msgstr "Your response has been recorded. You may now close this tab."
+#: src/routes/participant/ParticipantPostConversation.tsx:140
+#~ msgid "Your response has been recorded. You may now close this tab."
+#~ msgstr "Your response has been recorded. You may now close this tab."
+
+#: src/routes/participant/ParticipantPostConversation.tsx:141
+msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
+msgstr "La tua risposta è stata registrata. Ora puoi chiudere questa scheda. Puoi anche registrare un'altra conversazione o condividere il codice QR così che altri possano contribuire."
 
 #: src/components/participant/ParticipantBody.tsx:267
 msgid "Your responses"
