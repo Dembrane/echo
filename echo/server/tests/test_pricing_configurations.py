@@ -38,7 +38,6 @@ from dembrane.tasks import (
     task_forward_pricing_bookings,
     build_pricing_booking_forward_payload,
 )
-from dembrane.service.project import ProjectNotFoundException
 from dembrane.api.dependency_auth import DirectusSession
 from dembrane.api.v2.pricing_configurations import (
     SITE_TOKEN_HEADER,
@@ -51,7 +50,6 @@ from dembrane.api.v2.pricing_configurations import (
     build_answers_summary,
     upsert_pricing_configuration,
     upsert_site_pricing_configuration,
-    upsert_portal_pricing_configuration,
 )
 
 MODULE = "dembrane.api.v2.pricing_configurations"
@@ -648,16 +646,6 @@ def test_the_payload_says_what_kind_it_is():
     assert payload["summary"].startswith("Use case: an assembly")
 
 
-def test_the_payload_says_where_a_portal_lead_came_from():
-    row = _forward_row(reference="PTL-7K2M", mount="portal", project_id="proj-1")
-    payload = build_pricing_booking_forward_payload(row, "production")
-    # The prefix already says it; the two fields let the receiver say so
-    # without parsing the reference.
-    assert payload["reference"] == "PTL-7K2M"
-    assert payload["mount"] == "portal"
-    assert payload["project_id"] == "proj-1"
-
-
 def test_the_payload_omits_what_the_row_does_not_have():
     row = {"id": "row-2", "booking_uid": "cal-bk-2"}
     payload = build_pricing_booking_forward_payload(row, "development")
@@ -862,95 +850,3 @@ async def test_site_write_cannot_touch_a_row_an_account_made():
     with pytest.raises(HTTPException) as exc:
         await _site_call(_payload(), directus=directus)
     assert exc.value.status_code == 403
-
-
-# ── the participant portal's route ──
-
-
-def _open_project(**overrides: Any) -> dict[str, Any]:
-    project = {"id": "proj-1", "is_conversation_allowed": True}
-    project.update(overrides)
-    return project
-
-
-async def _portal_call(
-    body: dict[str, Any],
-    *,
-    directus: AsyncMock,
-    project: dict[str, Any] | None = None,
-    missing: bool = False,
-) -> Any:
-    service = MagicMock()
-    if missing:
-        service.get_by_id_or_raise = MagicMock(side_effect=ProjectNotFoundException("nope"))
-    else:
-        service.get_by_id_or_raise = MagicMock(return_value=project or _open_project())
-    request = SimpleNamespace(headers={"x-forwarded-for": "203.0.113.9"}, client=None)
-    with (
-        patch(f"{MODULE}.async_directus", directus),
-        patch(f"{MODULE}._read_body", AsyncMock(return_value=(body, []))),
-        patch(f"{MODULE}._portal_rate_limiter") as limiter,
-        patch(f"{MODULE}.project_service", service),
-    ):
-        limiter.check = AsyncMock(return_value=None)
-        return await upsert_portal_pricing_configuration(request=request)  # type: ignore[arg-type]
-
-
-@pytest.mark.asyncio
-async def test_portal_write_creates_a_ptl_row_for_an_open_project():
-    directus = _directus()
-    result = await _portal_call(
-        _payload(
-            mount="app",
-            project_id="proj-1",
-            workspace_id=None,
-            wall_key=None,
-            email="  Someone@Example.ORG ",
-        ),
-        directus=directus,
-    )
-    assert result.reference.startswith("PTL-")
-    _collection, row = directus.create_item.await_args.args
-    assert row["mount"] == "portal"
-    assert row["user_id"] is None
-    assert row["email"] == "someone@example.org"
-    assert row["is_internal"] is False
-    assert row["project_id"] == "proj-1"
-    assert row["workspace_id"] is None
-
-
-@pytest.mark.asyncio
-async def test_portal_write_needs_a_project():
-    with pytest.raises(HTTPException) as exc:
-        await _portal_call(_payload(), directus=_directus())
-    assert exc.value.status_code == 422
-
-
-@pytest.mark.asyncio
-async def test_portal_write_refuses_an_unknown_project():
-    directus = _directus()
-    with pytest.raises(HTTPException) as exc:
-        await _portal_call(_payload(project_id="ghost"), directus=directus, missing=True)
-    assert exc.value.status_code == 404
-    directus.create_item.assert_not_awaited()
-
-
-@pytest.mark.asyncio
-async def test_portal_write_refuses_a_closed_project():
-    directus = _directus()
-    with pytest.raises(HTTPException) as exc:
-        await _portal_call(
-            _payload(project_id="proj-1"),
-            directus=directus,
-            project=_open_project(is_conversation_allowed=False),
-        )
-    assert exc.value.status_code == 403
-    directus.create_item.assert_not_awaited()
-
-
-@pytest.mark.asyncio
-async def test_portal_write_flags_internal_from_the_email():
-    directus = _directus()
-    await _portal_call(_payload(project_id="proj-1", email="eve@dembrane.com"), directus=directus)
-    _collection, row = directus.create_item.await_args.args
-    assert row["is_internal"] is True

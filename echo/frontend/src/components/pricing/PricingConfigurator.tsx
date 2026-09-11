@@ -8,23 +8,15 @@ import {
 	Divider,
 	Group,
 	Modal,
-	Progress,
 	Radio,
 	Stack,
 	Text,
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { wallActionLine } from "@/components/workspace/gateWalls";
-import {
-	BookingHost,
-	BookingLinks,
-	EventBookingHost,
-	EventBookingLinks,
-} from "@/lib/links";
 import { testId } from "@/lib/testUtils";
 import { buildBookingPrefill } from "./bookingPrefill";
 import {
@@ -91,13 +83,6 @@ export const STEP_PARAM = "pc_step";
  * out of the calendar returns to question 6 rather than leaving the page. */
 const BOOKING_STEP = "book";
 const DONE_STEP = "done";
-/** The portal only: the screen after the lead is captured, where the five
- * questions are offered as a favour rather than put in the way. */
-const THANKS_STEP = "thanks";
-
-/** Loose on purpose: cal.com validates the address properly on the booking.
- * This only stops an empty or obviously broken one from being sent. */
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type PricingConfiguratorEventHandler = (
 	name: string,
@@ -131,9 +116,7 @@ export type PricingConfiguratorProps = {
 	/** Transcription is billed to a project. Without one the voice button does
 	 * not render, because the endpoint answers 403. */
 	projectId?: string;
-	/** `portal` is the participant portal's closing card: the opening asks for
-	 * an email, the calendar is the event intake call, and voice is off. */
-	mount?: "app" | "site" | "portal";
+	mount?: "app" | "site";
 	/** Where the events go. A no-op by default: emitting is another state's job,
 	 * and this only says when and with what. */
 	onEvent?: PricingConfiguratorEventHandler;
@@ -146,14 +129,12 @@ const noop: PricingConfiguratorEventHandler = () => {};
 /** 1 to 6, or one of the two steps after the last question. */
 type Phase =
 	| { kind: "question"; step: number }
-	| { kind: "thanks" }
 	| { kind: "book" }
 	| { kind: "done" };
 
 const phaseFor = (raw: string | null): Phase => {
 	if (raw === BOOKING_STEP) return { kind: "book" };
 	if (raw === DONE_STEP) return { kind: "done" };
-	if (raw === THANKS_STEP) return { kind: "thanks" };
 	const parsed = Number.parseInt(raw ?? "", 10);
 	if (Number.isNaN(parsed)) return { kind: "question", step: 1 };
 	return { kind: "question", step: Math.min(Math.max(parsed, 1), STEP_COUNT) };
@@ -211,19 +192,6 @@ export const PricingConfigurator = ({
 	/** The booking step fell back to the plain link, so it now carries its own
 	 * heading and the modal drops the step title. */
 	const [bookingUnavailable, setBookingUnavailable] = useState(false);
-	// The participant portal asks for an email on the opening: it has no
-	// account to read one from and no booking yet to learn it from.
-	const asksEmail = mount === "portal";
-	// A phone gets the whole screen: the portal is used standing up, in a room.
-	const isNarrow = useMediaQuery("(max-width: 48em)");
-	const fullScreen = asksEmail && !!isNarrow;
-	// Thumb-sized controls on the portal: `lg` clears the 44px guideline where
-	// the theme's `md` lands at 38px.
-	const controlSize = asksEmail ? "lg" : "md";
-	const [email, setEmail] = useState("");
-	const [showEmailError, setShowEmailError] = useState(false);
-	const emailRef = useRef(email);
-	emailRef.current = email;
 
 	const headingRef = useRef<HTMLHeadingElement>(null);
 	const initialisedRef = useRef(false);
@@ -245,24 +213,11 @@ export const PricingConfigurator = ({
 		() =>
 			buildBookingPrefill({
 				answers,
-				attendee: {
-					email:
-						attendeeEmail ??
-						(asksEmail ? email.trim().toLowerCase() || undefined : undefined),
-					name: attendeeName,
-				},
+				attendee: { email: attendeeEmail, name: attendeeName },
 				questions,
 				reference: reference ?? "",
 			}),
-		[
-			answers,
-			asksEmail,
-			attendeeEmail,
-			attendeeName,
-			email,
-			questions,
-			reference,
-		],
+		[answers, attendeeEmail, attendeeName, questions, reference],
 	);
 
 	// Read through a ref so the event helpers never go stale inside a listener
@@ -329,7 +284,6 @@ export const PricingConfigurator = ({
 			setSessionId(stored.config_session_id);
 			setAnswers(stored.answers);
 			setFurthestStep(stored.furthest_step);
-			if (stored.email) setEmail(stored.email);
 			sessionRef.current = stored.config_session_id;
 			return;
 		}
@@ -379,7 +333,6 @@ export const PricingConfigurator = ({
 		writeStoredConfiguration({
 			answers: next,
 			config_session_id: id,
-			email: emailRef.current.trim() || undefined,
 			furthest_step: step,
 			question_set_version: QUESTION_SET_VERSION,
 		});
@@ -402,9 +355,6 @@ export const PricingConfigurator = ({
 			config: configRef.current,
 			config_session_id: sessionRef.current ?? "",
 			config_shape_version: CONFIG_SHAPE_VERSION,
-			email: asksEmail
-				? emailRef.current.trim().toLowerCase() || undefined
-				: undefined,
 			locale,
 			mount,
 			org_id: orgId,
@@ -415,7 +365,7 @@ export const PricingConfigurator = ({
 			wall_key: wallKey,
 			workspace_id: workspaceId,
 		}),
-		[asksEmail, audio, locale, mount, orgId, projectId, wallKey, workspaceId],
+		[audio, locale, mount, orgId, projectId, wallKey, workspaceId],
 	);
 
 	/** A row exists from the first answer, so an abandoned attempt is still
@@ -520,7 +470,6 @@ export const PricingConfigurator = ({
 			setBooking(null);
 			setSubmitAttempt(0);
 			setAudio([]);
-			setEmail("");
 		}
 		dropStepParam();
 		onClose();
@@ -617,52 +566,10 @@ export const PricingConfigurator = ({
 		}
 	}, [emit, goTo, payloadFor, submit, submitAttempt]);
 
-	/** The portal's opening: the email alone captures the lead. The row is
-	 * written as submitted right here, before any question, so a person who
-	 * leaves at this point has still asked to be contacted. The questions that
-	 * follow update the same row. */
-	const sendLead = useCallback(async () => {
-		setIsSending(true);
-		setSendFailed(false);
-		try {
-			const result = await submit(payloadFor("submitted"));
-			setReference(result.reference);
-			referenceRef.current = result.reference;
-			emit("pricing_config_lead_captured", {
-				reference: result.reference,
-				seconds_in_form: Math.round((Date.now() - openedAtRef.current) / 1000),
-			});
-			goTo(THANKS_STEP);
-		} catch (error) {
-			const failure = submitFailureOf(error);
-			setSendFailed(true);
-			emit("pricing_config_submit_failed", {
-				attempt: 1,
-				config: configRef.current,
-				reason: failure.reason,
-				status: failure.status,
-			});
-		} finally {
-			setIsSending(false);
-		}
-	}, [emit, goTo, payloadFor, submit]);
-
 	const advance = useCallback(() => {
 		if (phase.kind !== "question") return;
 		const step = phase.step;
 		const key = questionKeyForStep(step);
-		// The portal's opening carries the email, and it is the one thing the
-		// form insists on: without it the lead cannot be answered at all.
-		if (step === OPENING_STEP && asksEmail) {
-			if (!EMAIL_PATTERN.test(emailRef.current.trim())) {
-				setShowEmailError(true);
-				return;
-			}
-			setShowEmailError(false);
-			persist(answersRef.current, furthestRef.current);
-			void sendLead();
-			return;
-		}
 		// The one inline validation in the form, and it fires on the attempt.
 		if (key === "concurrency" && hasUnreadableExactCount(answersRef.current)) {
 			setShowExactError(true);
@@ -677,33 +584,7 @@ export const PricingConfigurator = ({
 		}
 		persistProgress();
 		goTo(String(step + 1));
-	}, [
-		asksEmail,
-		emitTextLength,
-		goTo,
-		optionChanged,
-		persist,
-		persistProgress,
-		phase,
-		send,
-		sendLead,
-	]);
-
-	/** The portal's exit from any question: whatever was answered goes onto
-	 * the row, and the person is done. The lead already exists, so this write
-	 * is best effort. */
-	const finishEarly = useCallback(() => {
-		if (phase.kind !== "question") return;
-		const key = questionKeyForStep(phase.step);
-		if (key) emitTextLength(key);
-		void submit(payloadFor("submitted")).catch(() => {});
-		emit("pricing_config_finished_early", {
-			answered_count: answeredCount(answersRef.current),
-			config: configRef.current,
-			step: phase.step,
-		});
-		goTo(DONE_STEP);
-	}, [emit, emitTextLength, goTo, payloadFor, phase, submit]);
+	}, [emitTextLength, goTo, optionChanged, persistProgress, phase, send]);
 
 	const back = useCallback(() => {
 		if (phase.kind !== "question" || phase.step <= OPENING_STEP) return;
@@ -794,7 +675,7 @@ export const PricingConfigurator = ({
 
 	const headingId = "pricing-configurator-question";
 	const isConfirmed = booking?.status === "accepted";
-	const host = bookingHostName(asksEmail ? EventBookingHost : BookingHost);
+	const host = bookingHostName();
 	const bookedTime = booking?.startTime
 		? formatBookingTime(booking.startTime)
 		: null;
@@ -821,12 +702,7 @@ export const PricingConfigurator = ({
 			) : (
 				<Trans>Your request is in.</Trans>
 			)
-		) : phase.kind === "thanks" ? (
-			<Trans>Thanks, we will be in touch within a day.</Trans>
-		) : asksEmail &&
-			phase.step ===
-				OPENING_STEP ? // The heading below is the whole ask; a title above it would say it twice.
-		undefined : (
+		) : (
 			<Trans>Can you tell us more?</Trans>
 		);
 
@@ -836,38 +712,14 @@ export const PricingConfigurator = ({
 		// on the viewport.
 		<Modal
 			centered
-			fullScreen={fullScreen}
 			onClose={handleClose}
 			opened={opened}
-			padding={fullScreen ? "lg" : "md"}
 			size={896}
-			// On the phone sheet the body is a column and the controls take
-			// `mt="auto"`, so they sit along the bottom, clear of the home bar.
-			styles={
-				fullScreen
-					? {
-							body: {
-								display: "flex",
-								flex: 1,
-								flexDirection: "column",
-								// A flex item will not shrink below its content unless it is
-								// told it may, and without that the sheet grew past the
-								// screen on a small phone and took the buttons with it.
-								// `minHeight: 0` lets it shrink; the overflow then scrolls.
-								minHeight: 0,
-								overflowY: "auto",
-								paddingBottom:
-									"max(var(--mantine-spacing-lg), env(safe-area-inset-bottom))",
-							},
-							content: { display: "flex", flexDirection: "column" },
-						}
-					: undefined
-			}
 			title={title}
 			{...testId("pricing-configurator-modal")}
 		>
 			{phase.kind === "question" && (
-				<Stack gap="lg" style={fullScreen ? { flex: 1 } : undefined}>
+				<Stack gap="lg">
 					{/* The locked data exception, and the only block that ever sits
 					    above the opening. Nothing was blocked while recording, so
 					    the block says so before anything asks for money. */}
@@ -890,287 +742,139 @@ export const PricingConfigurator = ({
 						</>
 					)}
 
-					{asksEmail ? (
-						// A thin bar says how far along the optional questions are; the
-						// count is kept for the screen reader.
-						phase.step > OPENING_STEP && (
-							<Progress
-								aria-label={t`Optional question ${phase.step - OPENING_STEP} of ${STEP_COUNT - OPENING_STEP}`}
-								radius="xl"
-								size="sm"
-								value={
-									((phase.step - OPENING_STEP) / (STEP_COUNT - OPENING_STEP)) *
-									100
-								}
-								{...testId("pricing-configurator-progress")}
-							/>
-						)
-					) : (
-						<Text role="status" size="sm">
-							<Trans>
-								Step {phase.step} of {STEP_COUNT}
-							</Trans>
-						</Text>
-					)}
+					<Text role="status" size="sm">
+						<Trans>
+							Step {phase.step} of {STEP_COUNT}
+						</Trans>
+					</Text>
 
 					<form
 						onSubmit={(event) => {
 							event.preventDefault();
 							advance();
 						}}
-						style={
-							fullScreen
-								? { display: "flex", flex: 1, flexDirection: "column" }
-								: undefined
-						}
 					>
-						<Stack gap="lg" style={fullScreen ? { flex: 1 } : undefined}>
-							{/* On the phone the ask sits in the middle of the sheet rather
-							    than at the top: the options are what a thumb has to reach,
-							    and the top of a tall screen is the hardest place to reach.
-							    Auto margins split the free space above and below; when the
-							    question is taller than the sheet they collapse to nothing,
-							    so a long list still starts at the top instead of clipping. */}
-							<Stack gap="lg" my={fullScreen ? "auto" : undefined}>
-								{phase.step === OPENING_STEP ? (
-									// The opening is step 1 of 6, so the person is already one
-									// step in when they arrive. The wall told us what they were
-									// trying to do, which is the one line that varies here.
-									<Stack gap="xs">
-										{asksEmail ? (
-											// The portal's opening. Nobody here met a wall and nobody
-											// is on a plan, so it says what the form is for and asks
-											// for the one thing it needs.
-											<>
-												<Title
-													id={headingId}
-													order={2}
-													ref={headingRef}
-													tabIndex={-1}
-													{...testId("pricing-configurator-opening")}
-												>
-													<Trans>
-														Leave your email so we can get in touch with you.
-													</Trans>
-												</Title>
-												<TextInput
-													autoComplete="email"
-													error={
-														showEmailError
-															? t`That does not look like an email address.`
-															: undefined
-													}
-													label={t`Your email`}
-													mt="sm"
-													onChange={(event) => {
-														setEmail(event.currentTarget.value);
-														if (showEmailError) setShowEmailError(false);
-													}}
-													placeholder={t`you@example.org`}
-													size={controlSize}
-													type="email"
-													value={email}
-													withAsterisk
-													{...testId("pricing-configurator-email")}
-												/>
-											</>
-										) : (
-											<>
-												<Title
-													id={headingId}
-													order={4}
-													ref={headingRef}
-													tabIndex={-1}
-													{...testId("pricing-configurator-opening")}
-												>
-													{action ? (
-														<Trans>You were trying to {action}.</Trans>
-													) : (
-														<Trans>You are on the free plan.</Trans>
-													)}
-												</Title>
-												<Text size="sm">
-													<Trans>
-														That requires a paid plan. We're going to ask you 5
-														more quick questions, then you pick a time with the
-														dembrane team. We'll read your answers before the
-														call to bring an offer that fits your needs.
-													</Trans>
-												</Text>
-												{/* One optional line from the feature flag's payload, and
-											    only for the share of people the flag holds. The words
-											    live with the flag, not here. See `priceAnchor.ts`. */}
-												{priceAnchor === "anchor" && priceAnchorLine && (
-													<Text
-														size="sm"
-														{...testId("pricing-configurator-anchor")}
-													>
-														{priceAnchorLine}
-													</Text>
-												)}
-											</>
-										)}
-									</Stack>
-								) : (
-									<QuestionBody
-										answers={answers}
-										headingId={headingId}
-										headingRef={headingRef}
-										onAudioRetained={retainAudio}
-										onOptionChanged={optionChanged}
-										onOptionOpened={optionOpened}
-										onSubmit={advance}
-										projectId={projectId}
-										question={questions[phase.step - 1 - OPENING_STEP]}
-										showExactError={showExactError}
-										updateAnswers={updateAnswers}
-										// A phone, held standing up: helper text one size up and
-										// example buttons that are real tap targets.
-										touch={asksEmail}
-										// Voice needs a session for the transcription; a participant
-										// has none, so the portal asks in writing only.
-										voice={!asksEmail}
-									/>
-								)}
-
-								{sendFailed && (
-									<Text
-										c="red"
-										size="sm"
-										{...testId("pricing-configurator-send-failed")}
+						<Stack gap="lg">
+							{phase.step === OPENING_STEP ? (
+								// The opening is step 1 of 6, so the person is already one
+								// step in when they arrive. The wall told us what they were
+								// trying to do, which is the one line that varies here.
+								<Stack gap="xs">
+									<Title
+										id={headingId}
+										order={4}
+										ref={headingRef}
+										tabIndex={-1}
+										{...testId("pricing-configurator-opening")}
 									>
+										{action ? (
+											<Trans>You were trying to {action}.</Trans>
+										) : (
+											<Trans>You are on the free plan.</Trans>
+										)}
+									</Title>
+									<Text size="sm">
 										<Trans>
-											That didn't send. Your answers are still here, so try
-											again.
+											That requires a paid plan. We're going to ask you 5 more
+											quick questions, then you pick a time with the dembrane
+											team. We'll read your answers before the call to bring an
+											offer that fits your needs.
 										</Trans>
 									</Text>
-								)}
-							</Stack>
+									{/* One optional line from the feature flag's payload, and
+									    only for the share of people the flag holds. The words
+									    live with the flag, not here. See `priceAnchor.ts`. */}
+									{priceAnchor === "anchor" && priceAnchorLine && (
+										<Text size="sm" {...testId("pricing-configurator-anchor")}>
+											{priceAnchorLine}
+										</Text>
+									)}
+								</Stack>
+							) : (
+								<QuestionBody
+									answers={answers}
+									headingId={headingId}
+									headingRef={headingRef}
+									onAudioRetained={retainAudio}
+									onOptionChanged={optionChanged}
+									onOptionOpened={optionOpened}
+									onSubmit={advance}
+									projectId={projectId}
+									question={questions[phase.step - 1 - OPENING_STEP]}
+									showExactError={showExactError}
+									updateAnswers={updateAnswers}
+								/>
+							)}
 
-							{/* `size={controlSize}` on every button in the modal, one step up from
+							{sendFailed && (
+								<Text
+									c="red"
+									size="sm"
+									{...testId("pricing-configurator-send-failed")}
+								>
+									<Trans>
+										That didn't send. Your answers are still here, so try again.
+									</Trans>
+								</Text>
+							)}
+
+							{/* `size="md"` on every button in the modal, one step up from
 							    Mantine's default, matching the onboarding questionnaire. */}
 							{/* Not now stands for both the opening and the first question:
 							    there is nothing behind the first question worth a Back.
 							    Back, Skip and Next start together, one step later. */}
-							<Stack gap="xs">
-								{asksEmail && phase.step > OPENING_STEP && (
-									<Group justify="flex-end">
-										<Button
-											onClick={finishEarly}
-											size="sm"
-											type="button"
-											variant="subtle"
-											{...testId("pricing-configurator-finish-early")}
-										>
-											<Trans>Done, reach out to me</Trans>
-										</Button>
-									</Group>
-								)}
-								<Group justify="flex-end">
-									{(
-										asksEmail
-											? phase.step === OPENING_STEP
-											: phase.step <= OPENING_STEP + 1
-									) ? (
-										<Button
-											onClick={handleClose}
-											size={controlSize}
-											type="button"
-											variant="subtle"
-											{...testId("pricing-configurator-not-now")}
-										>
-											<Trans>Not now</Trans>
-										</Button>
-									) : (
-										<Button
-											onClick={back}
-											size={controlSize}
-											type="button"
-											variant="subtle"
-											{...testId("pricing-configurator-back")}
-										>
-											<Trans>Back</Trans>
-										</Button>
-									)}
-									{(asksEmail
-										? phase.step > OPENING_STEP
-										: phase.step > OPENING_STEP + 1) &&
-										phase.step < STEP_COUNT && (
-											<Button
-												onClick={advance}
-												size={controlSize}
-												type="button"
-												variant="subtle"
-												{...testId("pricing-configurator-skip")}
-											>
-												<Trans>Skip</Trans>
-											</Button>
-										)}
+							<Group justify="flex-end">
+								{phase.step <= OPENING_STEP + 1 ? (
 									<Button
-										loading={isSending}
-										size={controlSize}
-										type="submit"
-										{...testId("pricing-configurator-next")}
+										onClick={handleClose}
+										size="md"
+										type="button"
+										variant="subtle"
+										{...testId("pricing-configurator-not-now")}
 									>
-										{phase.step === OPENING_STEP ? (
-											asksEmail ? (
-												<Trans>Reach out to me</Trans>
-											) : (
-												<Trans>Continue</Trans>
-											)
-										) : phase.step === OPENING_STEP + 1 && !asksEmail ? (
-											<Trans>Let's go!</Trans>
-										) : phase.step === STEP_COUNT ? (
-											<Trans>Next: pick a time</Trans>
-										) : (
-											<Trans>Next</Trans>
-										)}
+										<Trans>Not now</Trans>
 									</Button>
-								</Group>
-							</Stack>
+								) : (
+									<Button
+										onClick={back}
+										size="md"
+										type="button"
+										variant="subtle"
+										{...testId("pricing-configurator-back")}
+									>
+										<Trans>Back</Trans>
+									</Button>
+								)}
+								{phase.step > OPENING_STEP + 1 && phase.step < STEP_COUNT && (
+									<Button
+										onClick={advance}
+										size="md"
+										type="button"
+										variant="subtle"
+										{...testId("pricing-configurator-skip")}
+									>
+										<Trans>Skip</Trans>
+									</Button>
+								)}
+								<Button
+									loading={isSending}
+									size="md"
+									type="submit"
+									{...testId("pricing-configurator-next")}
+								>
+									{phase.step === OPENING_STEP ? (
+										<Trans>Continue</Trans>
+									) : phase.step === OPENING_STEP + 1 ? (
+										<Trans>Let's go!</Trans>
+									) : phase.step === STEP_COUNT ? (
+										<Trans>Next: pick a time</Trans>
+									) : (
+										<Trans>Next</Trans>
+									)}
+								</Button>
+							</Group>
 						</Stack>
 					</form>
-				</Stack>
-			)}
-			{/* The portal's thanks screen: the lead is in, the questions are a
-			    favour, and saying so is the whole point of the screen. */}
-			{phase.kind === "thanks" && (
-				<Stack
-					gap="lg"
-					style={fullScreen ? { flex: 1 } : undefined}
-					{...testId("pricing-configurator-thanks")}
-				>
-					<Text
-						mt={fullScreen ? "auto" : undefined}
-						style={{
-							fontSize: "var(--app-heading-h2-size)",
-							fontWeight: "var(--app-heading-font-weight, 300)",
-							lineHeight: "var(--app-heading-h2-line-height)",
-						}}
-					>
-						<Trans>
-							Got two minutes? Five optional questions help us prepare.
-						</Trans>
-					</Text>
-					<Group justify="flex-end" mt={fullScreen ? "auto" : undefined}>
-						<Button
-							onClick={() => goTo(DONE_STEP)}
-							size={controlSize}
-							type="button"
-							variant="subtle"
-							{...testId("pricing-configurator-thanks-done")}
-						>
-							<Trans>That's all, thanks</Trans>
-						</Button>
-						<Button
-							onClick={() => goTo(String(OPENING_STEP + 1))}
-							size={controlSize}
-							type="button"
-							{...testId("pricing-configurator-thanks-questions")}
-						>
-							<Trans>Sure</Trans>
-						</Button>
-					</Group>
 				</Stack>
 			)}
 
@@ -1178,9 +882,6 @@ export const PricingConfigurator = ({
 			    the answers are saved before this step can render at all. */}
 			{phase.kind === "book" && reference && (
 				<PricingBookingStep
-					host={asksEmail ? EventBookingHost : BookingHost}
-					links={asksEmail ? EventBookingLinks : BookingLinks}
-					showReference={!asksEmail}
 					onBooked={handleBooked}
 					onOpened={handleBookingOpened}
 					onUnavailable={handleBookingUnavailable}
@@ -1190,11 +891,7 @@ export const PricingConfigurator = ({
 			)}
 
 			{phase.kind === "done" && (
-				<Stack
-					gap="lg"
-					style={fullScreen ? { flex: 1 } : undefined}
-					{...testId("pricing-configurator-confirmation")}
-				>
+				<Stack gap="lg" {...testId("pricing-configurator-confirmation")}>
 					{isConfirmed ? (
 						// The time is shown in the modal title, not here: "Your call is
 						// booked: {time}."
@@ -1211,20 +908,6 @@ export const PricingConfigurator = ({
 								info@dembrane.com
 							</Anchor>
 						</Text>
-					) : asksEmail ? (
-						<Text
-							mt={fullScreen ? "auto" : undefined}
-							style={{
-								fontSize: "var(--app-heading-h2-size)",
-								fontWeight: "var(--app-heading-font-weight, 300)",
-								lineHeight: "var(--app-heading-h2-line-height)",
-							}}
-						>
-							<Trans>
-								We will be in touch within a day. Prefer to pick a time
-								yourself?
-							</Trans>
-						</Text>
 					) : (
 						<Text>
 							<Trans>
@@ -1234,34 +917,18 @@ export const PricingConfigurator = ({
 							</Trans>
 						</Text>
 					)}
-					{!asksEmail && (
-						<Text size="xs">
-							<Trans>Reference {reference}</Trans>
-						</Text>
-					)}
-					<Group justify="flex-end" mt={fullScreen ? "auto" : undefined}>
+					<Text size="xs">
+						<Trans>Reference {reference}</Trans>
+					</Text>
+					<Group justify="flex-end">
 						<Button
 							onClick={handleClose}
-							size={controlSize}
+							size="md"
 							variant="subtle"
 							{...testId("pricing-configurator-back-to-dembrane")}
 						>
-							{asksEmail ? (
-								<Trans>Close</Trans>
-							) : (
-								<Trans>Back to dembrane</Trans>
-							)}
+							<Trans>Back to dembrane</Trans>
 						</Button>
-						{asksEmail && !isConfirmed && (
-							<Button
-								onClick={() => goTo(BOOKING_STEP)}
-								size={controlSize}
-								type="button"
-								{...testId("pricing-configurator-pick-a-time")}
-							>
-								<Trans>Pick a time now</Trans>
-							</Button>
-						)}
 					</Group>
 				</Stack>
 			)}
@@ -1290,9 +957,7 @@ const QuestionBody = ({
 	projectId,
 	question,
 	showExactError,
-	touch,
 	updateAnswers,
-	voice,
 }: {
 	answers: Answers;
 	headingId: string;
@@ -1311,28 +976,17 @@ const QuestionBody = ({
 	projectId?: string;
 	question: Question;
 	showExactError: boolean;
-	/** Phone sizing: helper text one step up, example buttons full height. */
-	touch: boolean;
 	updateAnswers: (patch: Partial<Answers>) => void;
-	/** Whether the free text boxes offer the record button. */
-	voice: boolean;
 }) => {
 	// The rhythm is the onboarding questionnaire's, which is the app's other
 	// question-per-step form: 4px between the question and its helper line, 12px
 	// from there to the options, 8px between options, and `size="md"` controls.
 	const heading = (
 		<Stack gap="xs">
-			{/* The question is the conversation; the options are labels. On the
-			    portal the two sit further apart: h2 over the 16px options. */}
-			<Title
-				id={headingId}
-				order={touch ? 2 : 4}
-				ref={headingRef}
-				tabIndex={-1}
-			>
+			<Title id={headingId} order={4} ref={headingRef} tabIndex={-1}>
 				{question.label}
 			</Title>
-			{question.hint && <Text size={touch ? "md" : "sm"}>{question.hint}</Text>}
+			{question.hint && <Text size="sm">{question.hint}</Text>}
 		</Stack>
 	);
 
@@ -1378,7 +1032,6 @@ const QuestionBody = ({
 								{option.reveals === "text" && selected.includes(option.key) && (
 									<Box mt="sm" pl="xl">
 										<PricingTextInput
-											allowVoice={voice}
 											minRows={1}
 											onAudioRetained={onAudioRetained("use_case_other")}
 											onChange={(value) =>
@@ -1413,9 +1066,7 @@ const QuestionBody = ({
 							onSubmit={onSubmit}
 							projectId={projectId}
 							question={question.follow}
-							touch={touch}
 							updateAnswers={updateAnswers}
-							voice={voice}
 						/>
 					</Stack>
 				)}
@@ -1516,8 +1167,6 @@ const QuestionBody = ({
 				projectId={projectId}
 				question={question}
 				updateAnswers={updateAnswers}
-				voice={voice}
-				touch={touch}
 			/>
 		</Stack>
 	);
@@ -1541,9 +1190,7 @@ const FreeTextAnswer = ({
 	onSubmit,
 	projectId,
 	question,
-	touch,
 	updateAnswers,
-	voice,
 }: {
 	answers: Answers;
 	ariaLabelledBy: string;
@@ -1559,15 +1206,12 @@ const FreeTextAnswer = ({
 	onSubmit: () => void;
 	projectId?: string;
 	question: TextQuestion;
-	touch: boolean;
 	updateAnswers: (patch: Partial<Answers>) => void;
-	voice: boolean;
 }) => {
 	const isTiming = question.key === "timing";
 	return (
 		<Stack gap="md">
 			<PricingTextInput
-				allowVoice={voice}
 				ariaLabelledBy={ariaLabelledBy}
 				onAudioRetained={onAudioRetained(question.key)}
 				onChange={(value) =>
@@ -1596,7 +1240,7 @@ const FreeTextAnswer = ({
 										: { context: example.label },
 								);
 							}}
-							size={touch ? "md" : "compact-md"}
+							size="compact-md"
 							type="button"
 							variant="outline"
 							{...testId(`pricing-${question.key}-example-${example.key}`)}
