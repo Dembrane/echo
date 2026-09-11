@@ -76,12 +76,12 @@ msgid " Unsubscribe from Notifications"
 msgstr " Se désabonner des notifications"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:707
+#: src/components/participant/ParticipantConversationAudio.tsx:736
 msgid "participant.modal.echo.info.title.generic"
 msgstr "\"ECHO\" bientôt disponible"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:721
+#: src/components/participant/ParticipantConversationAudio.tsx:750
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Explorer\" bientôt disponible"
 
@@ -90,7 +90,7 @@ msgid "\"made with dembrane\" stays on the screen."
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:714
+#: src/components/participant/ParticipantConversationAudio.tsx:743
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Vérifier\" bientôt disponible"
 
@@ -1864,7 +1864,7 @@ msgid "Attach verified artifacts"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:889
+#: src/components/participant/ParticipantConversationAudio.tsx:923
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention ! Nous avons perdu les 60 dernières secondes de votre enregistrement en raison d'une interruption. Veuillez appuyer sur le bouton ci-dessous pour vous reconnecter."
 
@@ -2768,7 +2768,7 @@ msgstr "Connexion aux services de création de rapports..."
 #~ msgstr "Connexion saine"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:775
+#: src/components/participant/ParticipantConversationAudio.tsx:804
 msgid "participant.modal.s3check.title"
 msgstr "Problème de connexion"
 
@@ -2776,7 +2776,7 @@ msgstr "Problème de connexion"
 msgid "Connection revoked"
 msgstr ""
 
-#: src/components/common/ConnectionHealthStatus.tsx:28
+#: src/components/common/ConnectionHealthStatus.tsx:29
 msgid "Connection unhealthy"
 msgstr "Connexion défectueuse"
 
@@ -3967,7 +3967,7 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1082
+#: src/components/participant/ParticipantConversationAudio.tsx:1120
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -4491,7 +4491,7 @@ msgstr "Échec de la suppression de la réponse"
 msgid "Failed to delete tag"
 msgstr ""
 
-#: src/components/participant/ParticipantConversationAudio.tsx:524
+#: src/components/participant/ParticipantConversationAudio.tsx:553
 msgid "Failed to finish conversation. Please try again."
 msgstr "Échec de la fin de la conversation. Veuillez réessayer."
 
@@ -4532,7 +4532,7 @@ msgstr ""
 msgid "Failed to move projects"
 msgstr ""
 
-#: src/components/participant/ParticipantConversationAudio.tsx:633
+#: src/components/participant/ParticipantConversationAudio.tsx:662
 msgid "Failed to reconnect. Please try reloading the page."
 msgstr "Échec de la reconnexion. Veuillez recharger la page."
 
@@ -4573,7 +4573,7 @@ msgstr "Échec de la transcription de la conversation. Veuillez réessayer."
 msgid "Failed to revise outcome. Please try again."
 msgstr "Échec de la révision du résultat. Veuillez réessayer."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:208
+#: src/components/participant/ParticipantConversationAudio.tsx:237
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Échec de l'arrêt de l'enregistrement lors du changement de périphérique. Veuillez réessayer."
 
@@ -4620,7 +4620,7 @@ msgid "Fair password"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:727
+#: src/components/participant/ParticipantConversationAudio.tsx:756
 msgid "participant.modal.echo.info.title"
 msgstr "Fonctionnalité bientôt disponible"
 
@@ -4705,7 +4705,7 @@ msgid "participant.button.finish.text.mode"
 msgstr "Terminer"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1050
+#: src/components/participant/ParticipantConversationAudio.tsx:1088
 msgid "participant.button.finish"
 msgstr "Terminer"
 
@@ -4916,7 +4916,7 @@ msgstr "Génération de votre rapport en cours..."
 msgid "German"
 msgstr "Allemand"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:699
+#: src/components/participant/ParticipantConversationAudio.tsx:728
 msgid "Get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Obtenez une réponse immédiate de dembrane pour vous aider à approfondir la conversation."
 
@@ -5249,7 +5249,7 @@ msgid "I need strict privacy guarantees"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:854
+#: src/components/participant/ParticipantConversationAudio.tsx:888
 msgid "participant.button.i.understand"
 msgstr "Je comprends"
 
@@ -8095,7 +8095,7 @@ msgstr "Veuillez entrer une adresse e-mail valide."
 msgid "Please log in to continue."
 msgstr ""
 
-#: src/components/participant/ParticipantBody.tsx:193
+#: src/components/participant/ParticipantBody.tsx:190
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -8105,7 +8105,7 @@ msgstr ""
 "**Veuillez garder cet écran allumé**\n"
 "(écran noir = pas d'enregistrement)"
 
-#: src/components/participant/ParticipantBody.tsx:189
+#: src/components/participant/ParticipantBody.tsx:186
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -8661,12 +8661,12 @@ msgid "Recommended apps"
 msgstr "Applications recommandées"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:803
+#: src/components/participant/ParticipantConversationAudio.tsx:832
 msgid "participant.button.s3check.reconnect"
 msgstr "Reconnecter"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:916
+#: src/components/participant/ParticipantConversationAudio.tsx:950
 msgid "participant.button.interruption.reconnect"
 msgstr "Reconnecter"
 
@@ -8675,7 +8675,7 @@ msgid "Reconnecting"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1025
+#: src/components/participant/ParticipantConversationAudio.tsx:1063
 msgid "participant.button.record"
 msgstr "Enregistrer"
 
@@ -8704,7 +8704,7 @@ msgid "Recording conversations you have in person, like street interviews."
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:882
+#: src/components/participant/ParticipantConversationAudio.tsx:916
 msgid "participant.modal.interruption.title"
 msgstr "Enregistrement interrompu"
 
@@ -10276,7 +10276,7 @@ msgid "Something else."
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:782
+#: src/components/participant/ParticipantConversationAudio.tsx:811
 msgid "participant.modal.s3check.message"
 msgstr "Quelque chose bloque votre connexion. Votre audio ne sera pas sauvegardé tant que ce problème ne sera pas résolu."
 
@@ -10328,7 +10328,7 @@ msgstr "Une erreur s'est produite lors de la génération du secret."
 msgid "Something went wrong while transcribing. Try again."
 msgstr ""
 
-#: src/components/participant/ParticipantBody.tsx:154
+#: src/components/participant/ParticipantBody.tsx:151
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Une erreur s'est produite avec la conversation. Veuillez réessayer ou contacter le support si le problème persiste"
 
@@ -10503,7 +10503,7 @@ msgid "Stop"
 msgstr "Arrêter"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1102
+#: src/components/participant/ParticipantConversationAudio.tsx:1140
 msgid "participant.button.stop"
 msgstr "Arrêter"
 
@@ -10715,11 +10715,11 @@ msgstr ""
 msgid "Take me to {resolvedWorkspaceName}"
 msgstr ""
 
-#: src/components/participant/ParticipantConversationAudio.tsx:693
+#: src/components/participant/ParticipantConversationAudio.tsx:722
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:696
+#: src/components/participant/ParticipantConversationAudio.tsx:725
 msgid "Take some time to create an outcome that makes your contribution concrete."
 msgstr "Take some time to create an outcome that makes your contribution concrete."
 
@@ -11109,7 +11109,7 @@ msgid "This browser cannot record audio. Chrome, Edge and Safari can."
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:788
+#: src/components/participant/ParticipantConversationAudio.tsx:817
 msgid "participant.modal.s3check.suggestions"
 msgstr "Cela peut se produire lorsqu'un VPN ou un pare-feu bloque la connexion. Essayez de désactiver votre VPN, de passer à un autre réseau (par ex. partage de connexion mobile) ou contactez votre service informatique pour obtenir de l'aide."
 
@@ -11136,7 +11136,7 @@ msgid "This email is already in the list."
 msgstr "Cette e-mail est déjà dans la liste."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:843
+#: src/components/participant/ParticipantConversationAudio.tsx:877
 msgid "participant.modal.refine.info.available.in"
 msgstr "Cette fonctionnalité sera disponible dans {remainingTime} secondes."
 
@@ -11483,7 +11483,7 @@ msgstr "Horodatage"
 msgid "Timestamps and duration"
 msgstr "Horodatages et durée"
 
-#: src/components/participant/ParticipantBody.tsx:146
+#: src/components/participant/ParticipantBody.tsx:143
 msgid "Tip"
 msgstr "Conseil"
 
@@ -12151,7 +12151,7 @@ msgid "participant.modal.uploading"
 msgstr "Envoi de l'audio..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:900
+#: src/components/participant/ParticipantConversationAudio.tsx:934
 msgid "participant.modal.interruption.uploading"
 msgstr "Envoi de l'audio..."
 
@@ -12280,7 +12280,7 @@ msgid "participant.modal.verify_prompt.title"
 msgstr "Rappel de vérification"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudioContent.tsx:167
+#: src/components/participant/ParticipantConversationAudioContent.tsx:177
 msgid "participant.banner.verification_required"
 msgstr "Vérification requise"
 
@@ -12388,7 +12388,7 @@ msgstr "Voir un exemple de payload"
 msgid "View invite"
 msgstr ""
 
-#: src/components/participant/ParticipantBody.tsx:250
+#: src/components/participant/ParticipantBody.tsx:247
 msgid "View your responses"
 msgstr "Voir vos réponses"
 
@@ -12504,7 +12504,7 @@ msgid "We couldn't update your payment method. Your old one is still active. Ple
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:735
+#: src/components/participant/ParticipantConversationAudio.tsx:764
 msgid "participant.modal.echo.info.reason"
 msgstr "Nous avons besoin d'un peu plus de contexte pour vous aider à utiliser ECHO efficacement. Veuillez continuer à enregistrer afin que nous puissions fournir de meilleures suggestions."
 
@@ -12593,7 +12593,7 @@ msgid "Webhooks come with a paid plan."
 msgstr ""
 
 #: src/routes/onboarding/OnboardingRoute.tsx:121
-#: src/components/participant/ParticipantBody.tsx:129
+#: src/components/participant/ParticipantBody.tsx:126
 msgid "Welcome"
 msgstr "Bienvenue"
 
@@ -13125,7 +13125,7 @@ msgstr "Vous devez vous connecter avec le même fournisseur que vous avez utilis
 msgid "You need an invitation from a colleague"
 msgstr ""
 
-#: src/components/participant/ParticipantBody.tsx:145
+#: src/components/participant/ParticipantBody.tsx:142
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Vous semblez être hors ligne, veuillez vérifier votre connexion internet"
 
@@ -13445,7 +13445,7 @@ msgstr ""
 msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
 msgstr "Votre réponse a été enregistrée. Vous pouvez maintenant fermer cette page. Vous pouvez également enregistrer une autre conversation ou partager le code QR pour que d'autres puissent contribuer."
 
-#: src/components/participant/ParticipantBody.tsx:260
+#: src/components/participant/ParticipantBody.tsx:257
 msgid "Your responses"
 msgstr "Vos réponses"
 

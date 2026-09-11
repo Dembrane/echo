@@ -19,9 +19,10 @@ export const ConnectionHealthStatus = ({
 	return (
 		<Group justify="center">
 			<Group gap="sm" align="center">
-				<div className="h-3 w-3 rounded-full bg-yellow-500 transition-all duration-500 ease-in-out" />
+				<div className="h-4 w-4 rounded-full bg-yellow-500 transition-all duration-500 ease-in-out" />
 				<Text
-					size="md"
+					size="xl"
+					fw={500}
 					c="yellow"
 					className="transition-colors duration-500 ease-in-out"
 				>

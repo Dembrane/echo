@@ -24,9 +24,10 @@ import Cookies from "js-cookie";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
-import { ENABLE_MONITOR } from "@/config";
+import { ENABLE_CONVERSATION_HEALTH, ENABLE_MONITOR } from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import {
@@ -53,8 +54,11 @@ import {
 	useUploadConversationChunk,
 } from "./hooks";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
+import { useConversationsHealthStream } from "./hooks/useConversationsHealthStream";
 import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
+import type { RecordingMeterStatus } from "./ParticipantRecordingWaveform";
 import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
+import { ParticipantSettingsModal } from "./ParticipantSettingsModal";
 import { PermissionErrorModal } from "./PermissionErrorModal";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 import { useConversationArtefacts } from "./verify/hooks";
@@ -128,6 +132,22 @@ export const ParticipantConversationAudio = () => {
 		{ open: openRefineInfoModal, close: closeRefineInfoModal },
 	] = useDisclosure(false);
 
+	// One health stream for this screen. The meter reads it here, and the body
+	// below reads it through the outlet context rather than opening a second
+	// EventSource of its own.
+	const isOnline = useOnlineStatus();
+	const { conversationIssue, sseConnectionHealthy } =
+		useConversationsHealthStream(
+			ENABLE_CONVERSATION_HEALTH && conversationId
+				? [conversationId]
+				: undefined,
+		);
+
+	const [
+		forcedSettingsOpened,
+		{ close: closeForcedSettings, open: openForcedSettings },
+	] = useDisclosure(false);
+
 	const [interruptionModalOpened, { open: openInterruptionModal }] =
 		useDisclosure(false);
 	const [isReconnecting, setIsReconnecting] = useState(false);
@@ -188,6 +208,15 @@ export const ParticipantConversationAudio = () => {
 		errored,
 		permissionError,
 	} = audioRecorder;
+
+	// What colour the meter runs in. A run that was interrupted is the recording
+	// itself failing, so it outranks a connection that has merely gone quiet.
+	// The meter escalates to `problem` on its own when no sound arrives at all.
+	const meterStatus: RecordingMeterStatus = audioRecorder.hadInterruption
+		? "problem"
+		: !isOnline || (ENABLE_CONVERSATION_HEALTH && !sseConnectionHealthy)
+			? "unhealthy"
+			: "healthy";
 
 	// Keep the latest audio-level reader in a ref so the (state-scoped) beacon
 	// effect can sample it each tick without re-subscribing every render.
@@ -806,6 +835,11 @@ export const ParticipantConversationAudio = () => {
 			</Modal>
 
 			{/* modal for stop recording confirmation */}
+			<ParticipantSettingsModal
+				opened={forcedSettingsOpened}
+				onClose={closeForcedSettings}
+			/>
+
 			<StopRecordingConfirmationModal
 				opened={opened}
 				close={close}
@@ -923,8 +957,10 @@ export const ParticipantConversationAudio = () => {
 			<Box className={clsx("relative flex-grow p-4 transition-all")}>
 				<Outlet
 					context={{
+						conversationIssue,
 						isRecording,
 						recordingTime,
+						sseConnectionHealthy,
 					}}
 				/>
 				<div ref={scrollTargetRef} />
@@ -952,7 +988,9 @@ export const ParticipantConversationAudio = () => {
 
 					{isRecording && (
 						<ParticipantRecordingWaveform
+							onSilence={openForcedSettings}
 							peekAudioLevel={audioRecorder.peekAudioLevel}
+							status={meterStatus}
 						/>
 					)}
 

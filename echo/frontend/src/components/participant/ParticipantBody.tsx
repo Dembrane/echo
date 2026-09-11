@@ -14,7 +14,6 @@ import {
 	useParticipantProjectById,
 } from "@/components/participant/hooks";
 import { useConversationIssueBanner } from "@/components/participant/hooks/useConversationIssueBanner";
-import { useConversationsHealthStream } from "@/components/participant/hooks/useConversationsHealthStream";
 import { ENABLE_CONVERSATION_HEALTH } from "@/config";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { testId } from "@/lib/testUtils";
@@ -32,6 +31,8 @@ export const ParticipantBody = ({
 	interleaveMessages = true,
 	isRecording = false,
 	isAnonymized = false,
+	conversationIssue,
+	sseConnectionHealthy = true,
 }: PropsWithChildren<{
 	projectId: string;
 	conversationId: string;
@@ -39,6 +40,9 @@ export const ParticipantBody = ({
 	interleaveMessages?: boolean;
 	isRecording?: boolean;
 	isAnonymized?: boolean;
+	/** From the one health stream, owned by the recording screen above. */
+	conversationIssue?: string | null;
+	sseConnectionHealthy?: boolean;
 }>) => {
 	const [ref] = useAutoAnimate();
 	const [chatRef] = useAutoAnimate();
@@ -48,13 +52,6 @@ export const ParticipantBody = ({
 	const chunksQuery = useConversationChunksQuery(projectId, conversationId);
 	const repliesQuery = useConversationRepliesQuery(conversationId);
 	const isOnline = useOnlineStatus();
-	const {
-		sseConnectionHealthy,
-
-		conversationIssue,
-	} = useConversationsHealthStream(
-		ENABLE_CONVERSATION_HEALTH ? [conversationId] : undefined,
-	);
 
 	const combinedMessages = useMemo(() => {
 		const userChunks = (chunksQuery.data ?? []).map((chunk) => ({

@@ -14,10 +14,13 @@ import { VOICE_WAVEFORM_BARS, waveformHeights } from "./voiceInput";
  */
 export const VoiceWaveform = ({
 	className,
+	color = "var(--mantine-color-primary-6)",
 	gain,
 	levels,
 }: {
 	className?: string;
+	/** Bar colour, as any CSS colour. */
+	color?: string;
 	/** Multiplies the drawn height; see `waveformHeights`. */
 	gain?: number;
 	levels: number[];
@@ -39,10 +42,12 @@ export const VoiceWaveform = ({
 					// biome-ignore lint/suspicious/noArrayIndexKey: bars are positions in a fixed-length meter, not data
 					key={index}
 					style={{
-						backgroundColor: "var(--mantine-color-primary-6)",
+						backgroundColor: color,
 						height: `${height}%`,
 						minHeight: "2px",
-						transition: reduceMotion ? undefined : "height 90ms linear",
+						transition: reduceMotion
+							? undefined
+							: "background-color 300ms ease, height 90ms linear",
 					}}
 				/>
 			))}
