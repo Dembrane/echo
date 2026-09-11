@@ -54,6 +54,16 @@ msgstr "Preparando tu dashboard"
 msgid "Welcome back"
 msgstr "Bienvenido de nuevo"
 
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantOnboardingCards.tsx:542
+#~ msgid "participant.button.back.microphone"
+#~ msgstr "Volver"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantOnboardingCards.tsx:446
+#~ msgid "participant.mic.check.button.skip"
+#~ msgstr "Omitir"
+
 #: src/components/popcorn/PopcornStatus.tsx:45
 msgid " · {heldBack} held back"
 msgstr ""
@@ -2089,13 +2099,8 @@ msgid "Back"
 msgstr "Atrás"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:542
-msgid "participant.button.back.microphone"
-msgstr "Volver"
-
-#. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:567
-#: src/components/layout/ParticipantHeader.tsx:87
+#: src/components/participant/ParticipantOnboardingCards.tsx:419
+#: src/components/layout/ParticipantHeader.tsx:90
 msgid "participant.button.back"
 msgstr "Volver"
 
@@ -2382,7 +2387,7 @@ msgid "participant.concrete.action.button.cancel"
 msgstr "cancelar"
 
 #. js-lingui-explicit-id
-#: src/components/layout/ParticipantHeader.tsx:97
+#: src/components/layout/ParticipantHeader.tsx:100
 msgid "participant.concrete.instructions.button.cancel"
 msgstr "cancelar"
 
@@ -3039,14 +3044,13 @@ msgid "Continue"
 msgstr "Continuar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:554
-#: src/components/participant/MicrophoneTest.tsx:414
-msgid "participant.button.continue"
+#: src/components/participant/ParticipantInitiateForm.tsx:336
+msgid "participant.ready.to.begin.button.text"
 msgstr "Continuar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:336
-msgid "participant.ready.to.begin.button.text"
+#: src/components/participant/MicrophoneTest.tsx:414
+msgid "participant.button.continue"
 msgstr "Continuar"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1629
@@ -7276,7 +7280,7 @@ msgid "Next"
 msgstr "Siguiente"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:584
+#: src/components/participant/ParticipantOnboardingCards.tsx:436
 msgid "participant.button.next"
 msgstr "Siguiente"
 
@@ -9277,7 +9281,7 @@ msgid "Reads every 2 minutes. Refresh reads now."
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:418
+#: src/components/participant/ParticipantOnboardingCards.tsx:313
 msgid "participant.ready.to.begin"
 msgstr "¿Listo para comenzar?"
 
@@ -10767,8 +10771,8 @@ msgstr ""
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
 #: src/features/sidebar/views/org/OrgHomeView.tsx:130
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
-#: src/components/layout/ParticipantHeader.tsx:121
-#: src/components/layout/ParticipantHeader.tsx:122
+#: src/components/layout/ParticipantHeader.tsx:124
+#: src/components/layout/ParticipantHeader.tsx:125
 msgid "Settings"
 msgstr "Configuración"
 
@@ -10811,8 +10815,8 @@ msgstr ""
 msgid "Share link"
 msgstr ""
 
-#: src/components/layout/ParticipantHeader.tsx:111
-#: src/components/layout/ParticipantHeader.tsx:112
+#: src/components/layout/ParticipantHeader.tsx:114
+#: src/components/layout/ParticipantHeader.tsx:115
 msgid "Share portal"
 msgstr "Compartir portal"
 
@@ -11025,11 +11029,6 @@ msgstr "Omitir"
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:106
 msgid "participant.button.verify_prompt.skip"
-msgstr "Omitir"
-
-#. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:446
-msgid "participant.mic.check.button.skip"
 msgstr "Omitir"
 
 #. js-lingui-explicit-id

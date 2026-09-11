@@ -116,7 +116,7 @@ export const ParticipantPostConversation = () => {
 
 	return (
 		<div
-			className="container mx-auto max-w-2xl"
+			className="container mx-auto flex min-h-full max-w-2xl flex-col"
 			{...testId("portal-finish-container")}
 		>
 			<ParticipantShareModal
@@ -149,7 +149,7 @@ export const ParticipantPostConversation = () => {
 					<Group gap="sm" wrap="wrap">
 						<Button
 							size="md"
-							variant="outline"
+							variant="subtle"
 							leftSection={<IconQrcode size={18} />}
 							onClick={openShare}
 							{...testId("portal-finish-show-qr-button")}
@@ -160,7 +160,7 @@ export const ParticipantPostConversation = () => {
 							<Button
 								component="a"
 								size="md"
-								variant="outline"
+								variant="subtle"
 								leftSection={<IconRepeat size={18} />}
 								{...testId("portal-finish-record-another-button")}
 							>
