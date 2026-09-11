@@ -75,12 +75,12 @@ it("shows the illustration and one button, and asks nothing itself", () => {
 	expect(capture).not.toHaveBeenCalled();
 });
 
-it("links to the website's needs form in a new tab, carrying the project", () => {
+it("links to the email step of the website's needs form in a new tab, carrying the project", () => {
 	wrap(<DembraneEventCta projectId="p1" />);
 
 	const button = screen.getByTestId("portal-finish-event-cta-button");
 	expect(button.getAttribute("href")).toBe(
-		"https://www.dembrane.com/pricing?project=p1#needs",
+		"https://www.dembrane.com/pricing?project=p1&step=2#needs",
 	);
 	expect(button.getAttribute("target")).toBe("_blank");
 	expect(button.getAttribute("rel")).toContain("noopener");
@@ -96,5 +96,5 @@ it("sends a Dutch participant to the Dutch form", () => {
 
 	expect(
 		screen.getByTestId("portal-finish-event-cta-button").getAttribute("href"),
-	).toBe("https://www.dembrane.com/nl/pricing?project=p1#needs");
+	).toBe("https://www.dembrane.com/nl/pricing?project=p1&step=2#needs");
 });

@@ -56,7 +56,8 @@ export const BookingHost: BookingHostInfo | null = {
  * back to English, which is what the site has. `project` is the project the
  * participant was in: the site writes it onto the enquiry row as
  * `project_id`, so the lead is a website lead like any other and still says
- * which event it came from.
+ * which event it came from. `step=2` lands on the email step: the opening's
+ * pitch is what the portal card already made, so the form starts at the ask.
  */
 export const eventEnquiryUrl = ({
 	language,
@@ -70,6 +71,7 @@ export const eventEnquiryUrl = ({
 		: "/pricing";
 	const url = new URL(path, "https://www.dembrane.com");
 	if (projectId) url.searchParams.set("project", projectId);
+	url.searchParams.set("step", "2");
 	url.hash = "needs";
 	return url.toString();
 };
