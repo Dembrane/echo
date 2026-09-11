@@ -25,6 +25,7 @@ export const ReleaseTimeline = ({
 	latestVersion?: string;
 }) => {
 	const { i18n } = useLingui();
+	// The active locale doubles as the caption preference on the embeds.
 	const months = new Map<string, Release[]>();
 	for (const release of releases) {
 		const month = release.publication?.date.slice(0, 7) ?? "upcoming";
@@ -70,7 +71,10 @@ export const ReleaseTimeline = ({
 						<div className={styles.entries}>
 							{entries.map((release) => {
 								const compact = isPatchRelease(release) && !release.highlight;
-								const embedUrl = youtubeEmbedUrl(release.videoUrl ?? "");
+								const embedUrl = youtubeEmbedUrl(
+									release.videoUrl ?? "",
+									i18n.locale,
+								);
 								return (
 									<article
 										key={release.version}

@@ -37,7 +37,7 @@ const show = (path = "/en-US/release-notes") =>
 		</I18nProvider>,
 	);
 
-it("keeps the previous walkthrough below the newest text release", () => {
+it("keeps each walkthrough with its own release, captions on", () => {
 	const history = releases.getReleases();
 	show();
 	const articles = screen.getAllByRole("article");
@@ -48,7 +48,9 @@ it("keeps the previous walkthrough below the newest text release", () => {
 	expect(within(articles[0]).getByText("Upcoming")).toBeTruthy();
 	expect(within(articles[0]).queryByRole("link")).toBeNull();
 	expect(within(articles[1]).getByText("Latest release")).toBeTruthy();
-	expect(articles[0].querySelector("iframe")).toBeNull();
+	expect(articles[0].querySelector("iframe")?.src).toContain(
+		"youtube-nocookie.com/embed/nKFxtUr13sI?rel=0&cc_load_policy=1&cc_lang_pref=en",
+	);
 	expect(
 		within(articles[1]).getByRole("heading", { name: history[1].title }),
 	).toBeTruthy();
