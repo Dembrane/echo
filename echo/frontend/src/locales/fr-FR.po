@@ -2899,7 +2899,7 @@ msgstr "Période de repos. Disponible dans {0}"
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/popcorn/PopcornShare.tsx:124
-#: src/components/participant/ParticipantShareModal.tsx:105
+#: src/components/participant/ParticipantShareModal.tsx:110
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:51
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -2946,7 +2946,7 @@ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1164
 #: src/components/project/ProjectQRCode.tsx:157
-#: src/components/participant/ParticipantShareModal.tsx:105
+#: src/components/participant/ParticipantShareModal.tsx:110
 msgid "Copy link"
 msgstr "Copier le lien"
 
@@ -4033,7 +4033,7 @@ msgstr "Modifier le webhook"
 #: src/routes/auth/Login.tsx:318
 #: src/routes/auth/Login.tsx:322
 #: src/components/settings/AccountSettingsCard.tsx:186
-#: src/components/participant/ParticipantShareModal.tsx:131
+#: src/components/participant/ParticipantShareModal.tsx:136
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:365
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -5650,7 +5650,7 @@ msgstr ""
 
 #: src/components/participant/ParticipantShareModal.tsx:57
 #: src/components/participant/ParticipantShareModal.tsx:67
-#: src/components/participant/ParticipantShareModal.tsx:126
+#: src/components/participant/ParticipantShareModal.tsx:131
 msgid "Join this portal session"
 msgstr "Rejoindre cette session du portail"
 
@@ -6485,7 +6485,7 @@ msgstr "Suivi"
 msgid "more"
 msgstr "autres"
 
-#: src/components/participant/ParticipantShareModal.tsx:141
+#: src/components/participant/ParticipantShareModal.tsx:146
 msgid "More"
 msgstr "Plus"
 
@@ -8095,7 +8095,7 @@ msgstr "Veuillez entrer une adresse e-mail valide."
 msgid "Please log in to continue."
 msgstr ""
 
-#: src/components/participant/ParticipantBody.tsx:199
+#: src/components/participant/ParticipantBody.tsx:201
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -8105,7 +8105,7 @@ msgstr ""
 "**Veuillez garder cet écran allumé**\n"
 "(écran noir = pas d'enregistrement)"
 
-#: src/components/participant/ParticipantBody.tsx:195
+#: src/components/participant/ParticipantBody.tsx:197
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -9480,7 +9480,7 @@ msgstr "Scannez le code QR ou copiez le secret dans votre application."
 msgid "Scan to join this project"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:81
+#: src/components/participant/ParticipantShareModal.tsx:86
 msgid "Scan to start a new portal session"
 msgstr "Scannez pour démarrer une nouvelle session du portail"
 
@@ -11278,7 +11278,7 @@ msgstr "Cette partie de la page n'a pas pu se charger. Recharger la page règle 
 msgid "this person"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:148
+#: src/components/participant/ParticipantShareModal.tsx:153
 msgid "This portal is not accepting new sessions right now."
 msgstr "Ce portail n’accepte pas de nouvelles sessions pour le moment."
 
@@ -12388,7 +12388,7 @@ msgstr "Voir un exemple de payload"
 msgid "View invite"
 msgstr ""
 
-#: src/components/participant/ParticipantBody.tsx:256
+#: src/components/participant/ParticipantBody.tsx:258
 msgid "View your responses"
 msgstr "Voir vos réponses"
 
@@ -12708,7 +12708,7 @@ msgstr "Nouveautés"
 msgid "What's the main reason?"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:120
+#: src/components/participant/ParticipantShareModal.tsx:125
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -13445,7 +13445,7 @@ msgstr ""
 msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
 msgstr "Votre réponse a été enregistrée. Vous pouvez maintenant fermer cette page. Vous pouvez également enregistrer une autre conversation ou partager le code QR pour que d'autres puissent contribuer."
 
-#: src/components/participant/ParticipantBody.tsx:266
+#: src/components/participant/ParticipantBody.tsx:268
 msgid "Your responses"
 msgstr "Vos réponses"
 

@@ -126,7 +126,7 @@ export const ParticipantBody = ({
 
 			{!isRecording && (
 				<h2
-					className="text-left text-3xl transition-opacity duration-500 ease-in-out"
+					className="mt-3 text-left text-3xl transition-opacity duration-500 ease-in-out"
 					{...testId("portal-welcome-heading")}
 				>
 					<Trans>Welcome</Trans>
@@ -174,10 +174,12 @@ export const ParticipantBody = ({
 				<ParticipantRecordingWaveform peekAudioLevel={peekAudioLevel} />
 			)}
 			{projectQuery.data && (
-				<Stack ref={chatRef} py="md" pb={9}>
-					<Title order={3} {...testId("portal-conversation-title")}>
-						{projectQuery.data.default_conversation_title}
-					</Title>
+				<Stack ref={chatRef} pt="xs" pb={9}>
+					{projectQuery.data.default_conversation_title && (
+						<Title order={3} {...testId("portal-conversation-title")}>
+							{projectQuery.data.default_conversation_title}
+						</Title>
+					)}
 
 					{projectQuery.data.default_conversation_description && (
 						<div {...testId("portal-conversation-description")}>

@@ -11,13 +11,13 @@ import {
 	Text,
 } from "@mantine/core";
 import { useDisclosure, useLocalStorage, useWindowEvent } from "@mantine/hooks";
+import { ArticleNyTimesIcon } from "@phosphor-icons/react";
 import {
 	IconAlertTriangle,
 	IconCheck,
 	IconMicrophone,
 	IconPlayerPause,
 	IconPlayerStopFilled,
-	IconTextCaption,
 } from "@tabler/icons-react";
 import clsx from "clsx";
 import Cookies from "js-cookie";
@@ -1026,7 +1026,7 @@ export const ParticipantConversationAudio = () => {
 											px="lg"
 											{...testId("portal-audio-switch-to-text-button")}
 										>
-											<IconTextCaption />
+											<ArticleNyTimesIcon size={24} />
 										</Button>
 									</I18nLink>
 

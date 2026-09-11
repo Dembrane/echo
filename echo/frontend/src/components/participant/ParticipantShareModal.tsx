@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, CopyButton, Group, Modal, Stack, Text } from "@mantine/core";
+import { XIcon } from "@phosphor-icons/react";
 import {
 	IconBrandWhatsapp,
 	IconCheck,
@@ -11,7 +12,6 @@ import {
 import posthog from "posthog-js";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router";
-import { Logo } from "@/components/common/Logo";
 import { QRCode } from "@/components/common/QRCode";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
 import { buildPortalSessionSharingLink } from "@/lib/portalSharing";
@@ -73,7 +73,12 @@ export const ParticipantShareModal = ({
 			onClose={onClose}
 			fullScreen
 			padding="xl"
-			title={<Logo h="36px" />}
+			closeButtonProps={{
+				// Matches the settings icon it replaces, so the header does not
+				// shrink the moment the share view opens.
+				icon: <XIcon size={30} color="gray" />,
+				size: "xl",
+			}}
 			{...testId("portal-share-modal")}
 		>
 			<Stack align="center" justify="center" gap="lg" mih="calc(100dvh - 7rem)">

@@ -2899,7 +2899,7 @@ msgstr "Abkühlung läuft. Verfügbar in {0}"
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/popcorn/PopcornShare.tsx:124
-#: src/components/participant/ParticipantShareModal.tsx:105
+#: src/components/participant/ParticipantShareModal.tsx:110
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:51
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -2946,7 +2946,7 @@ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1164
 #: src/components/project/ProjectQRCode.tsx:157
-#: src/components/participant/ParticipantShareModal.tsx:105
+#: src/components/participant/ParticipantShareModal.tsx:110
 msgid "Copy link"
 msgstr "Link kopieren"
 
@@ -4033,7 +4033,7 @@ msgstr "Webhook bearbeiten"
 #: src/routes/auth/Login.tsx:318
 #: src/routes/auth/Login.tsx:322
 #: src/components/settings/AccountSettingsCard.tsx:186
-#: src/components/participant/ParticipantShareModal.tsx:131
+#: src/components/participant/ParticipantShareModal.tsx:136
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:365
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -5650,7 +5650,7 @@ msgstr ""
 
 #: src/components/participant/ParticipantShareModal.tsx:57
 #: src/components/participant/ParticipantShareModal.tsx:67
-#: src/components/participant/ParticipantShareModal.tsx:126
+#: src/components/participant/ParticipantShareModal.tsx:131
 msgid "Join this portal session"
 msgstr "An dieser Portal-Sitzung teilnehmen"
 
@@ -6485,7 +6485,7 @@ msgstr ""
 msgid "more"
 msgstr "weitere"
 
-#: src/components/participant/ParticipantShareModal.tsx:141
+#: src/components/participant/ParticipantShareModal.tsx:146
 msgid "More"
 msgstr "Mehr"
 
@@ -8095,7 +8095,7 @@ msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein."
 msgid "Please log in to continue."
 msgstr ""
 
-#: src/components/participant/ParticipantBody.tsx:199
+#: src/components/participant/ParticipantBody.tsx:201
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -8105,7 +8105,7 @@ msgstr ""
 "**Bitte lassen Sie diesen Bildschirm eingeschaltet**\n"
 "(schwarzer Bildschirm = keine Aufnahme)"
 
-#: src/components/participant/ParticipantBody.tsx:195
+#: src/components/participant/ParticipantBody.tsx:197
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -9480,7 +9480,7 @@ msgstr "Scannen Sie den QR-Code oder kopieren Sie das Geheimnis in Ihre App."
 msgid "Scan to join this project"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:81
+#: src/components/participant/ParticipantShareModal.tsx:86
 msgid "Scan to start a new portal session"
 msgstr "Scannen, um eine neue Portal-Sitzung zu starten"
 
@@ -11278,7 +11278,7 @@ msgstr "Dieser Teil der Seite konnte nicht geladen werden. Neu laden behebt das 
 msgid "this person"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:148
+#: src/components/participant/ParticipantShareModal.tsx:153
 msgid "This portal is not accepting new sessions right now."
 msgstr "Dieses Portal nimmt derzeit keine neuen Sitzungen an."
 
@@ -12389,7 +12389,7 @@ msgstr "Beispiel-Payload anzeigen"
 msgid "View invite"
 msgstr ""
 
-#: src/components/participant/ParticipantBody.tsx:256
+#: src/components/participant/ParticipantBody.tsx:258
 msgid "View your responses"
 msgstr "Ihre Antworten anzeigen"
 
@@ -12709,7 +12709,7 @@ msgstr ""
 msgid "What's the main reason?"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:120
+#: src/components/participant/ParticipantShareModal.tsx:125
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -13446,7 +13446,7 @@ msgstr ""
 msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
 msgstr "Ihre Antwort wurde aufgezeichnet. Sie können diesen Tab jetzt schließen. Sie können auch ein weiteres Gespräch aufnehmen oder den QR-Code teilen, damit andere beitragen können."
 
-#: src/components/participant/ParticipantBody.tsx:266
+#: src/components/participant/ParticipantBody.tsx:268
 msgid "Your responses"
 msgstr "Ihre Antworten"
 

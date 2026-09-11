@@ -2898,7 +2898,7 @@ msgstr "Cooling down. Available in {0}"
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/popcorn/PopcornShare.tsx:124
-#: src/components/participant/ParticipantShareModal.tsx:105
+#: src/components/participant/ParticipantShareModal.tsx:110
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:51
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -2945,7 +2945,7 @@ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1164
 #: src/components/project/ProjectQRCode.tsx:157
-#: src/components/participant/ParticipantShareModal.tsx:105
+#: src/components/participant/ParticipantShareModal.tsx:110
 msgid "Copy link"
 msgstr "Copy link"
 
@@ -4032,7 +4032,7 @@ msgstr "Edit Webhook"
 #: src/routes/auth/Login.tsx:318
 #: src/routes/auth/Login.tsx:322
 #: src/components/settings/AccountSettingsCard.tsx:186
-#: src/components/participant/ParticipantShareModal.tsx:131
+#: src/components/participant/ParticipantShareModal.tsx:136
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:365
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -5649,7 +5649,7 @@ msgstr "Join this organisation to discover workspaces and collaborate with your 
 
 #: src/components/participant/ParticipantShareModal.tsx:57
 #: src/components/participant/ParticipantShareModal.tsx:67
-#: src/components/participant/ParticipantShareModal.tsx:126
+#: src/components/participant/ParticipantShareModal.tsx:131
 msgid "Join this portal session"
 msgstr "Připojit se k této relaci portálu"
 
@@ -6484,7 +6484,7 @@ msgstr "Monitor"
 msgid "more"
 msgstr "more"
 
-#: src/components/participant/ParticipantShareModal.tsx:141
+#: src/components/participant/ParticipantShareModal.tsx:146
 msgid "More"
 msgstr "Další"
 
@@ -8094,7 +8094,7 @@ msgstr "Please enter a valid email."
 msgid "Please log in to continue."
 msgstr "Please log in to continue."
 
-#: src/components/participant/ParticipantBody.tsx:199
+#: src/components/participant/ParticipantBody.tsx:201
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -8104,7 +8104,7 @@ msgstr ""
 "**Please keep this screen lit up**\n"
 "(black screen = not recording)"
 
-#: src/components/participant/ParticipantBody.tsx:195
+#: src/components/participant/ParticipantBody.tsx:197
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -9479,7 +9479,7 @@ msgstr "Scan the QR code or copy the secret into your app."
 msgid "Scan to join this project"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:81
+#: src/components/participant/ParticipantShareModal.tsx:86
 msgid "Scan to start a new portal session"
 msgstr "Naskenujte a zahajte novou relaci portálu"
 
@@ -11277,7 +11277,7 @@ msgstr "This part of the page failed to load. Reloading usually fixes it. If it 
 msgid "this person"
 msgstr "this person"
 
-#: src/components/participant/ParticipantShareModal.tsx:148
+#: src/components/participant/ParticipantShareModal.tsx:153
 msgid "This portal is not accepting new sessions right now."
 msgstr "Tento portál nyní nepřijímá nové relace."
 
@@ -12390,7 +12390,7 @@ msgstr "View example payload"
 msgid "View invite"
 msgstr "View invite"
 
-#: src/components/participant/ParticipantBody.tsx:256
+#: src/components/participant/ParticipantBody.tsx:258
 msgid "View your responses"
 msgstr "View your responses"
 
@@ -12710,7 +12710,7 @@ msgstr ""
 msgid "What's the main reason?"
 msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:120
+#: src/components/participant/ParticipantShareModal.tsx:125
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -13447,7 +13447,7 @@ msgstr ""
 msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
 msgstr "Vaše odpověď byla zaznamenána. Tuto kartu můžete zavřít. Můžete také nahrát další rozhovor nebo sdílet QR kód, aby mohli přispět i ostatní."
 
-#: src/components/participant/ParticipantBody.tsx:266
+#: src/components/participant/ParticipantBody.tsx:268
 msgid "Your responses"
 msgstr "Your responses"
 

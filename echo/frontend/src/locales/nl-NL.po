@@ -2896,7 +2896,7 @@ msgstr "Even afkoelen. Beschikbaar over {0}"
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/popcorn/PopcornShare.tsx:124
-#: src/components/participant/ParticipantShareModal.tsx:105
+#: src/components/participant/ParticipantShareModal.tsx:110
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:51
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -2943,7 +2943,7 @@ msgstr "Uitnodigingslink kopiëren"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1164
 #: src/components/project/ProjectQRCode.tsx:157
-#: src/components/participant/ParticipantShareModal.tsx:105
+#: src/components/participant/ParticipantShareModal.tsx:110
 msgid "Copy link"
 msgstr "Kopieer link"
 
@@ -4030,7 +4030,7 @@ msgstr "Webhook bewerken"
 #: src/routes/auth/Login.tsx:318
 #: src/routes/auth/Login.tsx:322
 #: src/components/settings/AccountSettingsCard.tsx:186
-#: src/components/participant/ParticipantShareModal.tsx:131
+#: src/components/participant/ParticipantShareModal.tsx:136
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:365
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -5647,7 +5647,7 @@ msgstr "Word lid van deze organisatie om werkruimtes te ontdekken en samen te we
 
 #: src/components/participant/ParticipantShareModal.tsx:57
 #: src/components/participant/ParticipantShareModal.tsx:67
-#: src/components/participant/ParticipantShareModal.tsx:126
+#: src/components/participant/ParticipantShareModal.tsx:131
 msgid "Join this portal session"
 msgstr "Doe mee aan deze portalsessie"
 
@@ -6482,7 +6482,7 @@ msgstr "Monitoren"
 msgid "more"
 msgstr "meer"
 
-#: src/components/participant/ParticipantShareModal.tsx:141
+#: src/components/participant/ParticipantShareModal.tsx:146
 msgid "More"
 msgstr "Meer"
 
@@ -8092,7 +8092,7 @@ msgstr "Voer een geldig e-mailadres in."
 msgid "Please log in to continue."
 msgstr "Log in om door te gaan."
 
-#: src/components/participant/ParticipantBody.tsx:199
+#: src/components/participant/ParticipantBody.tsx:201
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -8102,7 +8102,7 @@ msgstr ""
 "**Houd dit scherm verlicht**\n"
 "(zwart scherm = niet aan het opnemen)"
 
-#: src/components/participant/ParticipantBody.tsx:195
+#: src/components/participant/ParticipantBody.tsx:197
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -9477,7 +9477,7 @@ msgstr "Scan de QR-code of kopieer het geheim naar je app."
 msgid "Scan to join this project"
 msgstr "Scan om deel te nemen aan dit project"
 
-#: src/components/participant/ParticipantShareModal.tsx:81
+#: src/components/participant/ParticipantShareModal.tsx:86
 msgid "Scan to start a new portal session"
 msgstr "Scan om een nieuwe portalsessie te starten"
 
@@ -11275,7 +11275,7 @@ msgstr "Dit deel van de pagina kon niet laden. Opnieuw laden lost het meestal op
 msgid "this person"
 msgstr "deze persoon"
 
-#: src/components/participant/ParticipantShareModal.tsx:148
+#: src/components/participant/ParticipantShareModal.tsx:153
 msgid "This portal is not accepting new sessions right now."
 msgstr "Deze portal accepteert nu geen nieuwe sessies."
 
@@ -12386,7 +12386,7 @@ msgstr "Voorbeeld payload bekijken"
 msgid "View invite"
 msgstr "Uitnodiging bekijken"
 
-#: src/components/participant/ParticipantBody.tsx:256
+#: src/components/participant/ParticipantBody.tsx:258
 msgid "View your responses"
 msgstr "Bekijk je reacties"
 
@@ -12706,7 +12706,7 @@ msgstr "Wat is er nieuw"
 msgid "What's the main reason?"
 msgstr "Wat is de belangrijkste reden?"
 
-#: src/components/participant/ParticipantShareModal.tsx:120
+#: src/components/participant/ParticipantShareModal.tsx:125
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -13443,7 +13443,7 @@ msgstr "Je aanvraag is binnen."
 msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
 msgstr "Je antwoord is opgeslagen. Je kunt dit tabblad sluiten. Je kunt ook nog een gesprek opnemen of de QR-code delen zodat anderen kunnen bijdragen."
 
-#: src/components/participant/ParticipantBody.tsx:266
+#: src/components/participant/ParticipantBody.tsx:268
 msgid "Your responses"
 msgstr "Je reacties"
 
