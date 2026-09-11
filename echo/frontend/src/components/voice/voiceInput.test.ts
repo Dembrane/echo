@@ -95,6 +95,19 @@ it("keeps a silent meter visible and clamps a loud one", () => {
 	expect(Math.max(...heights)).toBeLessThanOrEqual(100);
 });
 
+it("scales the drawn height by the gain, floor and ceiling intact", () => {
+	const quiet = 0.09; // sqrt(0.09) * 100 = 30%
+	expect(waveformHeights([quiet]).at(-1)).toBeCloseTo(30, 5);
+	expect(waveformHeights([quiet], VOICE_WAVEFORM_BARS, 2).at(-1)).toBeCloseTo(
+		60,
+		5,
+	);
+	// Silence stays on the floor rather than being amplified off it, and a loud
+	// sample still clips at the top.
+	expect(waveformHeights([0], VOICE_WAVEFORM_BARS, 2).at(-1)).toBe(8);
+	expect(waveformHeights([1], VOICE_WAVEFORM_BARS, 2).at(-1)).toBe(100);
+});
+
 it("shows the newest samples, dropping the oldest", () => {
 	const levels = [...Array(VOICE_WAVEFORM_BARS).fill(0), 1];
 	expect(waveformHeights(levels).at(-1)).toBe(100);

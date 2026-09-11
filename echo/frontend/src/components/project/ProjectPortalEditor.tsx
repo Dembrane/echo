@@ -39,13 +39,17 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ProjectLegalBasisSection } from "@/components/project/ProjectLegalBasisSection";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import type {
 	VerificationTopicMetadata,
 	VerificationTopicsResponse,
 } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
+import type { Tier } from "@/lib/tiers";
 import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
@@ -74,6 +78,7 @@ const FormSchema = z.object({
 	enable_ai_title_and_tags: z.boolean(),
 	get_reply_mode: z.string(),
 	get_reply_prompt: z.string(),
+	is_dembrane_event_cta_enabled: z.boolean(),
 	is_get_reply_enabled: z.boolean(),
 	is_project_notification_subscription_allowed: z.boolean(),
 	is_verify_enabled: z.boolean(),
@@ -296,6 +301,8 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			enable_ai_title_and_tags: project.enable_ai_title_and_tags ?? false,
 			get_reply_mode: project.get_reply_mode ?? "summarize",
 			get_reply_prompt: project.get_reply_prompt ?? "",
+			is_dembrane_event_cta_enabled:
+				project.is_dembrane_event_cta_enabled ?? true,
 			is_get_reply_enabled: project.is_get_reply_enabled ?? false,
 			is_project_notification_subscription_allowed:
 				project.is_project_notification_subscription_allowed ?? false,
@@ -350,6 +357,17 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	});
 
 	const updateProjectMutation = useUpdateProjectByIdMutation();
+
+	// The event invitation switch is a paid-plan control. On the free tier it
+	// stays on and opens the upgrade path instead of toggling, the way the
+	// custom logo does in workspace settings.
+	const { workspace } = useWorkspace();
+	const eventCtaLocked = workspace?.tier === "free";
+	const canRequestUpgrade =
+		workspace?.role === "owner" ||
+		workspace?.role === "admin" ||
+		workspace?.role === "billing";
+	const [upgradeModalOpened, upgradeModalHandlers] = useDisclosure(false);
 	const createCustomTopicMutation = useCreateCustomTopicMutation();
 	const updateCustomTopicMutation = useUpdateCustomTopicMutation();
 	const deleteCustomTopicMutation = useDeleteCustomTopicMutation();
@@ -1417,6 +1435,66 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												)}
 											/>
 										</Stack>
+
+										<Stack
+											gap="xs"
+											{...testId("portal-editor-event-cta-section")}
+										>
+											<FormLabel
+												label={t`dembrane event invitation`}
+												isDirty={
+													formState.dirtyFields.is_dembrane_event_cta_enabled
+												}
+												error={
+													formState.errors.is_dembrane_event_cta_enabled
+														?.message
+												}
+											/>
+											<InputDescription>
+												<Trans>
+													The thank you page ends on a card inviting
+													participants to run their own event with dembrane.
+												</Trans>
+											</InputDescription>
+											{eventCtaLocked ? (
+												<FeatureGatePopover
+													canRequestUpgrade={canRequestUpgrade}
+													onStart={upgradeModalHandlers.open}
+													requiredTier="changemaker"
+													wallKey="event_cta"
+													workspaceId={workspace?.id}
+												>
+													{({ onClick }) => (
+														<Switch
+															label={t`Show the invitation`}
+															description={t`Switching it off comes with a paid plan.`}
+															checked
+															readOnly
+															onClick={(e) => {
+																e.preventDefault();
+																onClick();
+															}}
+															{...testId("portal-editor-event-cta-switch")}
+														/>
+													)}
+												</FeatureGatePopover>
+											) : (
+												<Controller
+													name="is_dembrane_event_cta_enabled"
+													control={control}
+													render={({ field }) => (
+														<Switch
+															label={t`Show the invitation`}
+															checked={field.value}
+															onChange={(e) =>
+																field.onChange(e.currentTarget.checked)
+															}
+															{...testId("portal-editor-event-cta-switch")}
+														/>
+													)}
+												/>
+											)}
+										</Stack>
 									</Stack>
 								</Stack>
 
@@ -1697,6 +1775,17 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 					)}
 				</div>
 			</Stack>
+			<UpgradeModal
+				opened={upgradeModalOpened}
+				onClose={upgradeModalHandlers.close}
+				currentTier={(workspace?.tier ?? "free") as Tier}
+				requiredTier="changemaker"
+				canRequestUpgrade={canRequestUpgrade}
+				workspaceId={workspace?.id ?? ""}
+				wallKey="event_cta"
+				entry="popover_link"
+				projectId={project.id}
+			/>
 			<CustomTopicModal
 				opened={customTopicModalOpened}
 				onClose={customTopicModalHandlers.close}

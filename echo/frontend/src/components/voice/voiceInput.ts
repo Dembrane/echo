@@ -153,11 +153,14 @@ export const isEmptyTranscript = (transcript: string): boolean => {
 export const waveformHeights = (
 	levels: number[],
 	barCount = VOICE_WAVEFORM_BARS,
+	/** Multiplies the drawn height. Above 1 the loud end clips at 100%, which
+	 * is the point: it trades headroom for visible movement on quiet input. */
+	gain = 1,
 ): number[] => {
 	const recent = levels.slice(-barCount);
 	const padding = Array<number>(Math.max(0, barCount - recent.length)).fill(0);
 	return [...padding, ...recent].map((level) => {
-		const scaled = Math.sqrt(Math.max(0, Math.min(1, level))) * 100;
+		const scaled = Math.sqrt(Math.max(0, Math.min(1, level))) * 100 * gain;
 		// A floor of 8% keeps the row legible as a meter during silence instead
 		// of collapsing to an invisible line.
 		return Math.max(8, Math.min(100, scaled));

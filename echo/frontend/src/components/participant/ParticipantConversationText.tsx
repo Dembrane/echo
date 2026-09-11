@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
 	Box,
 	Button,
 	Group,
@@ -41,10 +40,15 @@ export const ParticipantConversationText = () => {
 	const conversationQuery = useConversationQuery(projectId, conversationId);
 	const chunks = useConversationChunksQuery(projectId, conversationId);
 	const uploadChunkMutation = useUploadConversationTextChunk();
-	const newConversationLink = useProjectSharingLink(projectQuery.data, "portal");
+	const newConversationLink = useProjectSharingLink(
+		projectQuery.data,
+		"portal",
+	);
 
 	const [text, setText] = useState(() => {
-		return searchParams.get("general_feedback") || searchParams.get("feedback") || "";
+		return (
+			searchParams.get("general_feedback") || searchParams.get("feedback") || ""
+		);
 	});
 	const [
 		finishModalOpened,
@@ -81,7 +85,8 @@ export const ParticipantConversationText = () => {
 	const navigate = useI18nNavigate();
 
 	const audioModeUrl = `/${projectId}/conversation/${conversationId}`;
-	const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
+	const currentSearch = searchParams.toString();
+	const finishUrl = `/${projectId}/conversation/${conversationId}/finish${currentSearch ? `?${currentSearch}` : ""}`;
 
 	const handleConfirmFinishButton = () => {
 		navigate(finishUrl);

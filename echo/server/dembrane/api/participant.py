@@ -13,6 +13,7 @@ from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.analytics import capture_event
+from dembrane.free_tier import is_event_cta_enabled
 from dembrane.legal_basis import (
     fetch_cascade_rows,
     resolve_organiser_name,
@@ -24,6 +25,7 @@ from dembrane.monitor_stream import (
     publish_monitor_dirty,
     register_active_conversation,
 )
+from dembrane.billing_account import resolve_workspace_billing
 from dembrane.service.project import ProjectNotFoundException
 from dembrane.visitor_session import (
     VALID_VISITOR_STAGES,
@@ -66,6 +68,9 @@ class PublicProjectSchema(BaseModel):
     is_verify_on_finish_enabled: bool = False
     is_project_notification_subscription_allowed: bool
     verification_topics: Optional[List[str]] = []
+    # The dembrane event invitation at the foot of the thank you page. The
+    # free tier always shows it; a paid workspace can switch it off per project.
+    is_dembrane_event_cta_enabled: bool = True
 
     # onboarding
     default_conversation_tutorial_slug: Optional[str] = None
@@ -246,6 +251,28 @@ async def initiate_conversation(
         ) from e
 
 
+async def resolve_event_cta(project: dict, workspace: Optional[dict]) -> bool:
+    """The thank you page's dembrane event invitation, with the tier applied.
+
+    The billing account is read only when the project switched the card off:
+    that is the one case where the tier changes the answer, because the free
+    tier cannot hide it. A billing hiccup degrades to the stored value, the
+    "unknown tier is never gated" rule dembrane.free_tier documents.
+    """
+    stored = project.get("is_dembrane_event_cta_enabled")
+    if stored is not False:
+        return True
+    tier: Optional[str] = None
+    workspace_id = project.get("workspace_id")
+    if workspace_id:
+        try:
+            billing = await resolve_workspace_billing(workspace_id, workspace=workspace)
+            tier = billing.get("tier")
+        except Exception as e:
+            logger.warning(f"Failed to resolve tier for project {project.get('id')}: {e}")
+    return is_event_cta_enabled(stored, tier)
+
+
 @ParticipantRouter.get("/projects/{project_id}", response_model=PublicProjectSchema)
 async def get_project(
     project_id: str,
@@ -270,6 +297,8 @@ async def get_project(
             project["whitelabel_logo_url"] = rows.workspace["logo_url"]
         elif rows.owner and rows.owner.get("whitelabel_logo"):
             project["whitelabel_logo_url"] = rows.owner["whitelabel_logo"]
+
+        project["is_dembrane_event_cta_enabled"] = await resolve_event_cta(project, rows.workspace)
 
         return project
 

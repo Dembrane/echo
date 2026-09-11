@@ -39,8 +39,15 @@ type UseAudioRecorderResult = {
 	hadInterruption: boolean;
 	getChunkHistory: () => ChunkInfo[];
 	/** Current mic input level in [0, 1] (RMS). 0 when not actively recording
-	 * or when the meter is unavailable. Read-only — never affects capture. */
+	 * or when the meter is unavailable. Read-only — never affects capture.
+	 *
+	 * Reading it resets the accumulated peak, so it belongs to the liveness
+	 * beacon alone. Anything that only wants to draw the level reads
+	 * `peekAudioLevel` instead. */
 	getAudioLevel: () => number;
+	/** The most recent sampled RMS in [0, 1], without resetting anything.
+	 * Safe for any number of readers: the waveform uses this. */
+	peekAudioLevel: () => number;
 };
 
 const preferredMimeTypes = ["audio/webm", "audio/wav", "video/mp4"];
@@ -95,6 +102,9 @@ const useChunkedAudioRecorder = ({
 	const analyserRef = useRef<AnalyserNode | null>(null);
 	const meterBufferRef = useRef<Uint8Array | null>(null);
 	const peakLevelRef = useRef(0);
+	// The same sample, kept un-reset so drawing the meter cannot starve the
+	// beacon of the peak it is about to read.
+	const instantLevelRef = useRef(0);
 
 	// We create and "unlock" the Audio element during user gesture (startRecording),
 	// then reuse it for playback later when interruption is detected.
@@ -135,6 +145,7 @@ const useChunkedAudioRecorder = ({
 				isPausedRef.current
 			) {
 				peakLevelRef.current = 0;
+				instantLevelRef.current = 0;
 				return;
 			}
 			try {
@@ -146,8 +157,10 @@ const useChunkedAudioRecorder = ({
 				}
 				const instant = Math.sqrt(sumSquares / buffer.length);
 				peakLevelRef.current = Math.max(instant, peakLevelRef.current);
+				instantLevelRef.current = instant;
 			} catch {
 				peakLevelRef.current = 0;
+				instantLevelRef.current = 0;
 			}
 		}, SAMPLE_MS);
 		return () => clearInterval(id);
@@ -536,6 +549,11 @@ const useChunkedAudioRecorder = ({
 		return peak;
 	}, []);
 
+	const peekAudioLevel = useCallback((): number => {
+		if (!isRecordingRef.current || isPausedRef.current) return 0;
+		return instantLevelRef.current;
+	}, []);
+
 	return {
 		errored: false,
 		getAudioLevel,
@@ -546,6 +564,7 @@ const useChunkedAudioRecorder = ({
 		isStarting,
 		loading: false,
 		pauseRecording: userPauseRecording,
+		peekAudioLevel,
 		permissionError,
 		recordingTime,
 		resumeRecording: userResumeRecording,

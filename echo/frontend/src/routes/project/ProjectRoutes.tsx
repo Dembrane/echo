@@ -267,6 +267,7 @@ export const ProjectPortalSettingsRoute = () => {
 				"anonymize_transcripts",
 				"enable_ai_title_and_tags",
 				"conversation_title_prompt",
+				"is_dembrane_event_cta_enabled",
 				{
 					tags: ["id", "created_at", "text", "sort"],
 				},

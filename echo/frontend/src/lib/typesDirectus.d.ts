@@ -299,6 +299,10 @@ interface Project {
 	// Per-project opt-in for the living canvas beta. Null or false = off;
 	// canvas APIs 404 unless this AND the global ENABLE_CANVAS flag are on.
 	is_canvas_enabled: boolean | null;
+	// The dembrane event invitation at the foot of the portal's thank you
+	// page. Null reads as on. The free tier cannot switch it off: the
+	// participant API forces it on there whatever this says.
+	is_dembrane_event_cta_enabled: boolean | null;
 	is_verify_on_finish_enabled: boolean | null;
 	selected_verification_key_list: string | null;
 	conversations: string[] | Conversation[];

@@ -29,6 +29,30 @@ export const BookingLinks = {
 } as const;
 
 /**
+ * Where the participant portal's closing card books a call.
+ *
+ * The website's event intake call, the same event type dembrane.com/events
+ * books. Not `BookingLinks`: that one is the pricing configurator's "discuss
+ * your needs", this one is "plan an event". Same embed, own namespace.
+ */
+/** What a booking step needs to know about one event type. Both sets below
+ * satisfy it; the configurator picks one by mount. */
+export type BookingLinkSet = {
+	BOOK_A_CALL: string;
+	CAL_LINK: string;
+	EMBED_NAMESPACE: string;
+};
+
+export const EventBookingLinks = {
+	/** Fallback route: the plain page, opened in a new tab. */
+	BOOK_A_CALL: "https://cal.com/team/dembrane/plan-event",
+	/** Primary route: the same event type, as the embed names it. */
+	CAL_LINK: "team/dembrane/plan-event",
+	/** Keeps this embed separate from the configurator's on the same page. */
+	EMBED_NAMESPACE: "plan-event",
+} as const;
+
+/**
  * Who the person books with.
  *
  * A named human outperforms "a dembrane team member": people book calls with
@@ -47,5 +71,12 @@ export type BookingHostInfo = {
 
 export const BookingHost: BookingHostInfo | null = {
 	name: "Eve",
+	photo: null,
+};
+
+/** Who answers the event intake call: the events crew, so the portal's
+ * booking step names both of them. Same rules as `BookingHost`. */
+export const EventBookingHost: BookingHostInfo | null = {
+	name: "Eve or Pauline",
 	photo: null,
 };

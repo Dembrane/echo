@@ -77,6 +77,7 @@ export const ProjectHomeRoute = () => {
 				"is_verify_enabled",
 				"default_conversation_ask_for_participant_name",
 				"default_conversation_ask_for_participant_email",
+				"is_dembrane_event_cta_enabled",
 			],
 		},
 	});

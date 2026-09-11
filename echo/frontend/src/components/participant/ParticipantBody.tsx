@@ -1,12 +1,11 @@
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Modal, Stack, Text, Title } from "@mantine/core";
+import { Button, Modal, Stack, Title } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconWifiOff } from "@tabler/icons-react";
 import { type PropsWithChildren, useEffect, useMemo, useRef } from "react";
-import WelcomeImage from "@/assets/participant-welcome-pattern.png";
 import { Toaster } from "@/components/common/Toaster";
 import {
 	combineUserChunks,
@@ -15,7 +14,6 @@ import {
 	useParticipantProjectById,
 } from "@/components/participant/hooks";
 import { useConversationIssueBanner } from "@/components/participant/hooks/useConversationIssueBanner";
-import { useConversationsHealthStream } from "@/components/participant/hooks/useConversationsHealthStream";
 import { ENABLE_CONVERSATION_HEALTH } from "@/config";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { testId } from "@/lib/testUtils";
@@ -33,6 +31,8 @@ export const ParticipantBody = ({
 	interleaveMessages = true,
 	isRecording = false,
 	isAnonymized = false,
+	conversationIssue,
+	sseConnectionHealthy = true,
 }: PropsWithChildren<{
 	projectId: string;
 	conversationId: string;
@@ -40,6 +40,9 @@ export const ParticipantBody = ({
 	interleaveMessages?: boolean;
 	isRecording?: boolean;
 	isAnonymized?: boolean;
+	/** From the one health stream, owned by the recording screen above. */
+	conversationIssue?: string | null;
+	sseConnectionHealthy?: boolean;
 }>) => {
 	const [ref] = useAutoAnimate();
 	const [chatRef] = useAutoAnimate();
@@ -49,13 +52,6 @@ export const ParticipantBody = ({
 	const chunksQuery = useConversationChunksQuery(projectId, conversationId);
 	const repliesQuery = useConversationRepliesQuery(conversationId);
 	const isOnline = useOnlineStatus();
-	const {
-		sseConnectionHealthy,
-
-		conversationIssue,
-	} = useConversationsHealthStream(
-		ENABLE_CONVERSATION_HEALTH ? [conversationId] : undefined,
-	);
 
 	const combinedMessages = useMemo(() => {
 		const userChunks = (chunksQuery.data ?? []).map((chunk) => ({
@@ -124,21 +120,19 @@ export const ParticipantBody = ({
 
 			{!isRecording && (
 				<h2
-					className="text-center text-3xl transition-opacity duration-500 ease-in-out"
+					className="mt-3 text-left text-3xl transition-opacity duration-500 ease-in-out"
 					{...testId("portal-welcome-heading")}
 				>
 					<Trans>Welcome</Trans>
 				</h2>
 			)}
 
-			{isRecording && (
-				<div className="flex min-h-[2.25rem] justify-center transition-opacity duration-500 ease-in-out">
-					{ENABLE_CONVERSATION_HEALTH && (
-						<ConnectionHealthStatus
-							isOnline={isOnline}
-							sseConnectionHealthy={sseConnectionHealthy}
-						/>
-					)}
+			{isRecording && ENABLE_CONVERSATION_HEALTH && (
+				<div className="flex justify-center transition-opacity duration-500 ease-in-out">
+					<ConnectionHealthStatus
+						isOnline={isOnline}
+						sseConnectionHealthy={sseConnectionHealthy}
+					/>
 				</div>
 			)}
 
@@ -168,17 +162,13 @@ export const ParticipantBody = ({
 				/>
 			)}
 
-			<img
-				className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "grayscale filter"} ${ENABLE_CONVERSATION_HEALTH && conversationIssueBanner ? "opacity-50" : "saturate-200"}`}
-				src={WelcomeImage}
-				alt="Welcome pattern"
-				{...testId("portal-welcome-image")}
-			/>
 			{projectQuery.data && (
-				<Stack ref={chatRef} py="md" pb={9}>
-					<Title order={3} {...testId("portal-conversation-title")}>
-						{projectQuery.data.default_conversation_title}
-					</Title>
+				<Stack ref={chatRef} pt="xs" pb={9}>
+					{projectQuery.data.default_conversation_title && (
+						<Title order={3} {...testId("portal-conversation-title")}>
+							{projectQuery.data.default_conversation_title}
+						</Title>
+					)}
 
 					{projectQuery.data.default_conversation_description && (
 						<div {...testId("portal-conversation-description")}>

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { api } from "@/lib/api";
+import { api, apiNoAuth } from "@/lib/api";
 import type { Answers, PricingConfig } from "./configuratorState";
 
 /** The write that turns an attempt into a row, and the row into a reference.
@@ -28,8 +28,9 @@ export type PricingConfigurationPayload = {
 	config_session_id: string;
 	question_set_version: string;
 	config_shape_version: number;
-	/** `app` in v1. `site` when the website version lands. */
-	mount: "app" | "site";
+	/** `app` from the dashboard, `site` from the website, `portal` from the
+	 * participant portal's closing card. */
+	mount: "app" | "site" | "portal";
 	locale: string;
 	/** Which wall started this session. Comes from the gate. */
 	wall_key?: string;
@@ -43,6 +44,10 @@ export type PricingConfigurationPayload = {
 	config: PricingConfig;
 	/** `in_progress` on a step write, `submitted` on the send. */
 	status: "in_progress" | "submitted";
+	/** The participant portal asks for it on the opening, because it has no
+	 * session to read one from. The app never sends it: the server reads the
+	 * email from the session there and ignores the payload's. */
+	email?: string;
 	/** Audio that failed to transcribe twice. It travels with the answers rather
 	 * than being lost. Absent on almost every send. */
 	voice_audio?: VoiceAttachment[];
@@ -118,3 +123,19 @@ export const submitConfiguration = async (
 };
 
 export type SubmitConfiguration = typeof submitConfiguration;
+
+/** The participant portal's route: anonymous, gated by the project. */
+export const PORTAL_PRICING_CONFIGURATION_PATH =
+	"/v2/pricing-configurations/portal";
+
+/** The portal's send. No session, so the unauthenticated client; no voice on
+ * the portal, so JSON only. Same result shape, with a PTL- reference. */
+export const submitPortalConfiguration: SubmitConfiguration = async (
+	payload,
+) => {
+	const { voice_audio: _unused, ...body } = payload;
+	return apiNoAuth.post<unknown, PricingConfigurationResult>(
+		PORTAL_PRICING_CONFIGURATION_PATH,
+		body,
+	);
+};

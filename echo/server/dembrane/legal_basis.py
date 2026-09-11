@@ -191,6 +191,9 @@ async def fetch_cascade_rows(project: dict[str, Any]) -> CascadeRows:
                             "data_owner_org_name",
                             "data_owner_email",
                             "billed_to_team_id",
+                            # so the tier can be resolved without a second
+                            # workspace read (the portal's event invitation)
+                            "billing_account_id",
                             "org_id.id",
                             "org_id.name",
                             "org_id.deleted_at",

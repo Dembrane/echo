@@ -34,6 +34,16 @@ here, sent as `X-Site-Token`) and proxies the browser's writes. Those rows have
 no `user_id`, carry `mount = "site"`, mint `WEB-` references, and learn their
 email from the booking rather than from a session. The two routes share one
 upsert, so a site row and an app row are the same shape in every other way.
+
+The participant portal takes the third route, `POST .../portal`. A participant
+who has just finished a conversation is invited to run their own event; the
+form is the same six questions, with the email asked up front because there is
+no account and no booking yet to learn it from. There is no token either: the
+browser calls it directly, like every other participant endpoint, so the gate
+is the project. A write must name an existing project that is open for
+participation, and the ceiling is per client address. Those rows carry
+`mount = "portal"`, mint `PTL-` references, and keep the project id so the
+lead reads as "was at this event".
 """
 
 from __future__ import annotations
@@ -48,10 +58,13 @@ from fastapi import Request, APIRouter, HTTPException
 from pydantic import Field, BaseModel, ValidationError
 
 from dembrane.utils import generate_uuid
+from dembrane.service import project_service
 from dembrane.app_user import get_directus_user_profile
 from dembrane.settings import get_settings
+from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.rate_limit import create_rate_limiter, create_user_rate_limiter
 from dembrane.directus_async import async_directus
+from dembrane.service.project import ProjectNotFoundException
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
@@ -64,11 +77,13 @@ COLLECTION = "pricing_configuration"
 # account is renamed or a test account is reused.
 INTERNAL_EMAIL_DOMAIN = "@dembrane.com"
 
-# DEM-XXXX from the app, WEB-XXXX from the website, so the prefix says where a
-# lead came from before anyone opens the row. Ambiguous glyphs are out (0/O,
-# 1/I/L), because the code is read out loud and typed back.
+# DEM-XXXX from the app, WEB-XXXX from the website, PTL-XXXX from the
+# participant portal, so the prefix says where a lead came from before anyone
+# opens the row. Ambiguous glyphs are out (0/O, 1/I/L), because the code is
+# read out loud and typed back.
 _REFERENCE_PREFIX = "DEM-"
 _SITE_REFERENCE_PREFIX = "WEB-"
+_PORTAL_REFERENCE_PREFIX = "PTL-"
 _REFERENCE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
 _REFERENCE_LENGTH = 4
 _REFERENCE_ATTEMPTS = 8
@@ -82,6 +97,11 @@ _rate_limiter = create_user_rate_limiter(
 # the Pages Function reports it. Same number: it is the same form.
 _site_rate_limiter = create_rate_limiter(
     name="pricing_configuration_site", capacity=120, window_seconds=3600
+)
+# The portal has no user either; its ceiling is per client address, read the
+# way the other participant endpoints read it.
+_portal_rate_limiter = create_rate_limiter(
+    name="pricing_configuration_portal", capacity=120, window_seconds=3600
 )
 
 SITE_TOKEN_HEADER = "X-Site-Token"
@@ -100,7 +120,7 @@ class PricingConfigurationRequest(BaseModel):
     config_session_id: str = Field(min_length=1, max_length=255)
     question_set_version: str = Field(default="", max_length=255)
     config_shape_version: Optional[int] = None
-    mount: Literal["app", "site"] = "app"
+    mount: Literal["app", "site", "portal"] = "app"
     locale: str = Field(default="", max_length=255)
     wall_key: Optional[str] = Field(default=None, max_length=255)
     workspace_id: Optional[str] = Field(default=None, max_length=255)
@@ -124,6 +144,16 @@ class SitePricingConfigurationRequest(PricingConfigurationRequest):
     it from, and the token gate is what makes the payload trustworthy."""
 
     email: Optional[str] = Field(default=None, max_length=255)
+
+
+class PortalPricingConfigurationRequest(PricingConfigurationRequest):
+    """The participant portal's body: the same, plus the email the form asks
+    up front, and the project the participant was in. The project is required
+    because it is the gate: an anonymous write that names no open project is
+    refused before anything is stored."""
+
+    email: Optional[str] = Field(default=None, max_length=255)
+    project_id: str = Field(min_length=1, max_length=255)
 
 
 class PricingConfigurationResponse(BaseModel):
@@ -478,6 +508,50 @@ async def upsert_site_pricing_configuration(request: Request) -> PricingConfigur
         user_id=None,
         is_internal=bool(email and email.endswith(INTERNAL_EMAIL_DOMAIN)),
         prefix=_SITE_REFERENCE_PREFIX,
+    )
+
+
+def _client_ip(request: Request) -> str:
+    """Best effort, the way the participant endpoints do it: the first hop of
+    X-Forwarded-For behind the proxy, else the socket."""
+    forwarded_for = request.headers.get("x-forwarded-for") or ""
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip() or "unknown"
+    client = getattr(request, "client", None)
+    return (client.host if client else None) or "unknown"
+
+
+@router.post("/portal", response_model=PricingConfigurationResponse)
+async def upsert_portal_pricing_configuration(request: Request) -> PricingConfigurationResponse:
+    """The participant portal's write: the same upsert, gated by the project.
+
+    No session and no token: the browser calls this the way it calls every
+    other participant endpoint. What makes the write worth storing is that it
+    must name a project that exists and is open for participation, which is
+    exactly what the portal page it came from needed too.
+    """
+    await _portal_rate_limiter.check(_client_ip(request))
+    body, _attachments = await _read_body(request)
+    try:
+        payload = PortalPricingConfigurationRequest.model_validate(body)
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors(include_url=False)) from None
+    try:
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, payload.project_id)
+    except ProjectNotFoundException as exc:
+        raise HTTPException(status_code=404, detail="Project not found") from exc
+    if project.get("is_conversation_allowed", False) is False:
+        raise HTTPException(status_code=403, detail="Conversation not open for participation")
+    # Whatever the body said, this row came from the portal.
+    payload.mount = "portal"
+    email = _clean_email(payload.email)
+    return await _upsert(
+        payload,
+        [],
+        email=email,
+        user_id=None,
+        is_internal=bool(email and email.endswith(INTERNAL_EMAIL_DOMAIN)),
+        prefix=_PORTAL_REFERENCE_PREFIX,
     )
 
 

@@ -1,6 +1,5 @@
 import { t } from "@lingui/core/macro";
 import { Group, Text } from "@mantine/core";
-import clsx from "clsx";
 
 type Props = {
 	isOnline: boolean;
@@ -13,21 +12,21 @@ export const ConnectionHealthStatus = ({
 }: Props) => {
 	const isHealthy = isOnline && sseConnectionHealthy;
 
+	// A healthy connection is the expected case and says nothing a participant
+	// can act on. Only trouble earns a line on the screen.
+	if (isHealthy) return null;
+
 	return (
 		<Group justify="center">
 			<Group gap="sm" align="center">
-				<div
-					className={clsx(
-						"h-3 w-3 rounded-full transition-all duration-500 ease-in-out",
-						isHealthy ? "bg-green-500" : "bg-yellow-500",
-					)}
-				/>
+				<div className="h-4 w-4 rounded-full bg-yellow-500 transition-all duration-500 ease-in-out" />
 				<Text
-					size="md"
-					c={isHealthy ? "green" : "yellow"}
+					size="xl"
+					fw={500}
+					c="yellow"
 					className="transition-colors duration-500 ease-in-out"
 				>
-					{isHealthy ? t`Connection healthy` : t`Connection unhealthy`}
+					{t`Connection unhealthy`}
 				</Text>
 			</Group>
 		</Group>

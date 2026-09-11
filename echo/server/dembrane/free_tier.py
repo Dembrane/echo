@@ -43,6 +43,19 @@ def is_free_tier(tier: Optional[str]) -> bool:
     return tier == FREE_TIER
 
 
+def is_event_cta_enabled(project_value: Optional[bool], tier: Optional[str]) -> bool:
+    """Whether a project's participant portal ends on the dembrane event
+    invitation: the card on the thank you page that books an intake call.
+
+    On unless the project switched it off (null reads as on). Only a paid or
+    legacy workspace can switch it off: on the free tier the stored value is
+    ignored and the invitation always shows.
+    """
+    if is_free_tier(tier):
+        return True
+    return project_value is not False
+
+
 def free_tier_limit_error(limit: str) -> HTTPException:
     """Build the shared 402 raised when a free-tier limit is hit.
 
