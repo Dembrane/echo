@@ -77,6 +77,25 @@ Note: Focus on strategies that create sustainable competitive advantages, not ju
 
 export const quickAccessTemplates = Templates.slice(0, 3);
 
+/** One template per language, not one template carrying both. The prompt
+ * is sent as written, so a Dutch host picks the Dutch one and gets Dutch
+ * narratives back; the titles name the language so the two read apart in
+ * any interface language. */
+export const narrativesTemplates: Template[] = [
+	{
+		content: `Use a double diamond approach (design science approach) on all conversations in this dataset to develop a MECE set of 7+/-2 narratives that explain the variance within this dataset. Pay special attention to outliers. Quantify the evidence for each narrative as the number of "occurrences" where the data supports a particular narrative hypothesis.`,
+		icon: IconNotes,
+		id: "narratives",
+		title: t`Narratives (English)`,
+	},
+	{
+		content: `Gebruik een double diamond-aanpak (design science approach) op alle gesprekken in deze dataset om een MECE-set van 7+/-2 narratieven te ontwikkelen die de variantie binnen deze dataset verklaren. Let daarbij extra op de uitschieters. Kwantificeer het bewijs voor elk narratief als het aantal "verschijnselen" waarin de data een bepaalde narratieve hypothese ondersteunt.`,
+		icon: IconNotes,
+		id: "narratives-nl",
+		title: "Narratieven (Nederlands)",
+	},
+];
+
 export const agenticQuickAccessTemplates: Template[] = [
 	{
 		content: `Summarize the most important project-wide themes and patterns.
@@ -123,14 +142,15 @@ Please:
 		id: "highlight-specific-concept",
 		title: t`Highlight specific Concept`,
 	},
-		{
-			content: t`Use a double diamond approach (design science approach) on all conversations in this dataset to develop a MECE set of 7+/-2 narratives that explain the variance within this dataset. Pay special attention to outliers. Quantify the evidence for each narrative as the number of "occurrences" where the data supports a particular narrative hypothesis.
-
-dutch version
-
-Gebruik een double diamond-aanpak (design science approach) op alle gesprekken in deze dataset om een MECE-set van 7+/-2 narratieven te ontwikkelen die de variantie binnen deze dataset verklaren. Let daarbij extra op de uitschieters. Kwantificeer het bewijs voor elk narratief als het aantal "verschijnselen" waarin de data een bepaalde narratieve hypothese ondersteunt.`,
-			icon: IconNotes,
-			id: "narratives",
-			title: t`Narratives`,
-		},
+	...narrativesTemplates,
 ];
+
+/** The agentic chat's default pills. One Narratives entry, in the interface
+ * language; the other stays reachable from the templates list. Both would
+ * not fit beside the suggestions, and a host wants the one they will read. */
+export const agenticDefaultTemplates = (locale: string): Template[] => {
+	const dutch = locale.toLowerCase().startsWith("nl");
+	return agenticQuickAccessTemplates.filter(
+		(template) => template.id !== (dutch ? "narratives" : "narratives-nl"),
+	);
+};

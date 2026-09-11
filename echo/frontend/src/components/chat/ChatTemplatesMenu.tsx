@@ -1,5 +1,6 @@
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { t } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Group, Paper, Text, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -23,7 +24,12 @@ import {
 	encodeTemplateKey,
 	type QuickAccessItem,
 } from "./templateKey";
-import { agenticQuickAccessTemplates, quickAccessTemplates, Templates } from "./templates";
+import {
+	agenticDefaultTemplates,
+	agenticQuickAccessTemplates,
+	quickAccessTemplates,
+	Templates,
+} from "./templates";
 
 // Map icon names from API to Phosphor icons
 const SUGGESTION_ICONS: Record<string, Icon> = {
@@ -184,10 +190,13 @@ export const ChatTemplatesMenu = ({
 		onExternalClose?.();
 	};
 
+	const { i18n } = useLingui();
 	// Resolve quick-access templates from quickAccessItems (already resolved by parent)
 	const resolvedQuickAccessTemplates = useMemo(() => {
 		const isAgentic = chatMode === "agentic";
-		const defaultTemplates = isAgentic ? agenticQuickAccessTemplates : quickAccessTemplates;
+		const defaultTemplates = isAgentic
+			? agenticDefaultTemplates(i18n.locale)
+			: quickAccessTemplates;
 		if (quickAccessItems.length === 0) {
 			return defaultTemplates;
 		}
@@ -216,7 +225,7 @@ export const ChatTemplatesMenu = ({
 			}
 		}
 		return resolved.length > 0 ? resolved : defaultTemplates;
-	}, [quickAccessItems, userTemplates, chatMode]);
+	}, [quickAccessItems, userTemplates, chatMode, i18n.locale]);
 
 	const handleTemplateSelect = (
 		template: { content: string; key: string },
