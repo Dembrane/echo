@@ -67,7 +67,7 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 				onClick={handleOpen}
 				{...testId("portal-finish-event-cta-button")}
 			>
-				<Trans>Want this at your event?</Trans>
+				<Trans>dembrane at your event?</Trans>
 			</Button>
 			<PricingConfigurator
 				{...configurator.configuratorProps}

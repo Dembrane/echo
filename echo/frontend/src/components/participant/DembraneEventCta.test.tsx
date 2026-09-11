@@ -70,7 +70,7 @@ it("shows the illustration and one button, and asks nothing yet", () => {
 	expect(screen.getByTestId("portal-finish-event-cta-art")).toBeTruthy();
 	expect(screen.queryByTestId("portal-finish-event-cta-reasons")).toBeNull();
 	expect(screen.getByTestId("portal-finish-event-cta-button").textContent).toBe(
-		"Want this at your event?",
+		"dembrane at your event?",
 	);
 	expect(
 		screen.getByTestId("portal-finish-event-cta").textContent,

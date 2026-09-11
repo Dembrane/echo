@@ -3901,6 +3901,10 @@ msgstr ""
 msgid "dembrane - the default"
 msgstr ""
 
+#: src/components/participant/DembraneEventCta.tsx:70
+msgid "dembrane at your event?"
+msgstr "dembrane pour votre événement ?"
+
 #. placeholder {0}: new Date().getFullYear()
 #: src/components/layout/Footer.tsx:19
 msgid "dembrane B.V. {0}, all rights reserved."
@@ -13440,8 +13444,8 @@ msgid "Walks you through setup and suggests next steps."
 msgstr ""
 
 #: src/components/participant/DembraneEventCta.tsx:70
-msgid "Want this at your event?"
-msgstr "Pareil pour votre événement ?"
+#~ msgid "Want this at your event?"
+#~ msgstr "Pareil pour votre événement ?"
 
 #: src/components/participant/DembraneEventCta.tsx:58
 #~ msgid "Want to run an event with dembrane?"
