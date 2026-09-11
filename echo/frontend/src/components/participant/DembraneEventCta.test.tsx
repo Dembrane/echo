@@ -63,17 +63,18 @@ const wrap = (node: React.ReactNode) =>
 		</I18nProvider>,
 	);
 
-it("shows the heading, illustration and one button, and asks nothing yet", () => {
+it("shows the illustration and one button, and asks nothing yet", () => {
 	wrap(<DembraneEventCta projectId="p1" />);
 
-	expect(screen.getByTestId("portal-finish-event-cta").textContent).toContain(
-		"Want to run an event with dembrane?",
-	);
+	// The question is the button. No heading above it, no reasons below.
 	expect(screen.getByTestId("portal-finish-event-cta-art")).toBeTruthy();
 	expect(screen.queryByTestId("portal-finish-event-cta-reasons")).toBeNull();
 	expect(screen.getByTestId("portal-finish-event-cta-button").textContent).toBe(
-		"Get in touch",
+		"Want to use dembrane at your next event?",
 	);
+	expect(
+		screen.getByTestId("portal-finish-event-cta").textContent,
+	).not.toContain("run an event");
 	// The form waits for the click: no opening step, nothing reported.
 	expect(screen.queryByTestId("pricing-configurator-opening")).toBeNull();
 	expect(capture).not.toHaveBeenCalled();

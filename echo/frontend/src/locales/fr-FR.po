@@ -5326,8 +5326,8 @@ msgid "participant.refine.go.deeper.description"
 msgstr "Obtenez une réponse immédiate de dembrane pour vous aider à approfondir la conversation."
 
 #: src/components/participant/DembraneEventCta.tsx:73
-msgid "Get in touch"
-msgstr "Prendre contact"
+#~ msgid "Get in touch"
+#~ msgstr "Prendre contact"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:691
 #: src/features/sidebar/views/user/UserHomeView.tsx:81
@@ -13440,8 +13440,12 @@ msgid "Walks you through setup and suggests next steps."
 msgstr ""
 
 #: src/components/participant/DembraneEventCta.tsx:58
-msgid "Want to run an event with dembrane?"
-msgstr "Envie d'organiser un événement avec dembrane ?"
+#~ msgid "Want to run an event with dembrane?"
+#~ msgstr "Envie d'organiser un événement avec dembrane ?"
+
+#: src/components/participant/DembraneEventCta.tsx:70
+msgid "Want to use dembrane at your next event?"
+msgstr "Envie d'utiliser dembrane lors de votre prochain événement ?"
 
 #: src/routes/project/ProjectMonitorRoute.tsx:89
 msgid "Watch live recordings, transcription progress, and errors across this project as they happen."

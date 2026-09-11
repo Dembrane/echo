@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Button, Stack, Title } from "@mantine/core";
+import { Button, Stack } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import posthog from "posthog-js";
 import { useCallback } from "react";
@@ -54,9 +54,6 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 			className="mt-16 md:mt-24"
 			{...testId("portal-finish-event-cta")}
 		>
-			<Title order={3}>
-				<Trans>Want to run an event with dembrane?</Trans>
-			</Title>
 			<img
 				src={PaulineUnderstandArt}
 				alt=""
@@ -66,11 +63,17 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 			<Button
 				size="xl"
 				fullWidth
+				// The question is the label, and in Dutch or German it runs to two
+				// lines on a phone. A button that clips its own question is worse
+				// than a taller one.
+				h="auto"
+				py="md"
+				styles={{ label: { lineHeight: 1.25, whiteSpace: "normal" } }}
 				rightSection={<IconArrowRight size={20} />}
 				onClick={handleOpen}
 				{...testId("portal-finish-event-cta-button")}
 			>
-				<Trans>Get in touch</Trans>
+				<Trans>Want to use dembrane at your next event?</Trans>
 			</Button>
 			<PricingConfigurator
 				{...configurator.configuratorProps}
