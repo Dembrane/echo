@@ -158,6 +158,11 @@ export default defineConfig(({ mode }) => {
 					},
 				},
 			},
+			// Emit source maps so PostHog error tracking can symbolicate the
+			// production bundle. Without them every exception surfaces as a
+			// minified frame (`async queryFn` in assets/index-<hash>.js) that no
+			// one can place. The deploy pipeline uploads these maps to PostHog.
+			sourcemap: true,
 		},
 		define: {
 			__APP_BUILD_ID__: JSON.stringify(buildId),
