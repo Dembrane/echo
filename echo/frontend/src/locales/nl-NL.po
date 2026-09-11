@@ -3677,8 +3677,8 @@ msgid "Custom Logo"
 msgstr "Aangepast logo"
 
 #: src/components/release/releases.ts:68
-msgid "Custom logo settings now explain the recommended 3:1 aspect ratio."
-msgstr "De instellingen voor eigen logo's leggen nu de aanbevolen verhouding van 3:1 uit."
+#~ msgid "Custom logo settings now explain the recommended 3:1 aspect ratio."
+#~ msgstr "De instellingen voor eigen logo's leggen nu de aanbevolen verhouding van 3:1 uit."
 
 #: src/components/project/ProjectPortalEditor.tsx:1660
 msgid "Custom title prompt"
@@ -3881,8 +3881,8 @@ msgid "Deleted · {0}"
 msgstr "Verwijderd · {0}"
 
 #: src/components/release/releases.ts:92
-msgid "Deleted projects and conversations paused by plan limits no longer trigger repeated summary attempts."
-msgstr "Verwijderde projecten en gesprekken die door abonnementslimieten zijn gepauzeerd, veroorzaken geen herhaalde samenvattingspogingen meer."
+#~ msgid "Deleted projects and conversations paused by plan limits no longer trigger repeated summary attempts."
+#~ msgstr "Verwijderde projecten en gesprekken die door abonnementslimieten zijn gepauzeerd, veroorzaken geen herhaalde samenvattingspogingen meer."
 
 #: src/components/participant/UserChunkMessage.tsx:68
 msgid "Deleted successfully"
@@ -4715,7 +4715,7 @@ msgstr "Verkennen"
 msgid "Explore recurring themes in the Library"
 msgstr "Verken terugkerende thema’s in de Library"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:60
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Verken verhalen en perspectieven met de chattemplate Narratives, in het Engels en Nederlands."
 
@@ -5423,6 +5423,10 @@ msgstr "Naar het overzicht"
 msgid "Go to portal editor"
 msgstr "Naar de portal-editor"
 
+#: src/components/release/ReleaseVideoModal.tsx:354
+msgid "Go to previous release notes"
+msgstr ""
+
 #: src/routes/project/CreateProjectRoute.tsx:378
 msgid "Go to project home"
 msgstr "Naar de projectpagina"
@@ -5828,7 +5832,7 @@ msgstr "Integraties en export"
 msgid "interview"
 msgstr "interview"
 
-#: src/components/release/releases.ts:101
+#: src/components/release/releases.ts:78
 msgid "Introducing Popcorn"
 msgstr "Nieuw: Popcorn"
 
@@ -6831,7 +6835,7 @@ msgstr ""
 msgid "MCP access for {0} is on"
 msgstr ""
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:52
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Met MCP-verbindingen kan je agent projecten vinden, gesprekken doorzoeken, transcripties lezen en documentatie raadplegen, met organisatie-instellingen en expliciete toestemming."
 
@@ -9508,8 +9512,8 @@ msgid "Release notes | dembrane"
 msgstr "Release notes | dembrane"
 
 #: src/components/release/releases.ts:72
-msgid "Release notes live in the app. What's new opens the latest update, and View release notes keeps every past update. Dismissing an update now sticks across your devices."
-msgstr ""
+#~ msgid "Release notes live in the app. What's new opens the latest update, and View release notes keeps every past update. Dismissing an update now sticks across your devices."
+#~ msgstr ""
 
 #: src/components/release/ReleaseVideoModal.tsx:336
 msgid "Release video"
@@ -10880,7 +10884,7 @@ msgstr "Gedeeld met {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Gedeeld met {0} en {overflow} anderen"
 
-#: src/components/release/releases.ts:84
+#: src/components/release/releases.ts:68
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Als je een privéproject deelt met iemand die nog geen lid is, kun je diegene nu uitnodigen in plaats van een foutmelding te krijgen. De toegang wordt verleend zodra diegene lid wordt van de werkruimte."
 
@@ -11746,7 +11750,7 @@ msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of
 msgid "The conversation list shows clearer totals."
 msgstr "De gesprekslijst toont duidelijkere totalen."
 
-#: src/components/release/releases.ts:80
+#: src/components/release/releases.ts:64
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr ""
 
@@ -11763,8 +11767,8 @@ msgid "The feedback form can prefill your email address."
 msgstr "Het feedbackformulier kan je e-mailadres vooraf invullen."
 
 #: src/components/release/releases.ts:76
-msgid "The feedback form links straight to Report an issue, so sending a bug with screenshots takes one step fewer."
-msgstr ""
+#~ msgid "The feedback form links straight to Report an issue, so sending a bug with screenshots takes one step fewer."
+#~ msgstr ""
 
 #: src/components/release/releaseHistory.ts:25
 msgid "The feedback portal explains how to report security issues."
@@ -11893,7 +11897,7 @@ msgstr "Het rapport kan tot 5 minuten na de gekozen tijd starten."
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr ""
 
-#: src/components/release/releases.ts:96
+#: src/components/release/releases.ts:72
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "De zijbalk past beter op mobiele schermen en heeft verbeterde Franse navigatieteksten."
 
@@ -11914,8 +11918,8 @@ msgid "The thank you page ends on a card inviting participants to run their own 
 msgstr "De bedankpagina eindigt met een kaart die deelnemers uitnodigt om zelf een event met dembrane te organiseren."
 
 #: src/components/release/releases.ts:60
-msgid "The thank you page invites participants to run their own event with dembrane. Hosts on a paid plan can switch this card off per project in the portal editor."
-msgstr ""
+#~ msgid "The thank you page invites participants to run their own event with dembrane. Hosts on a paid plan can switch this card off per project in the portal editor."
+#~ msgstr ""
 
 #: src/components/voice/VoiceInputError.tsx:45
 msgid "The transcript did not come back. Check your connection and try again."
@@ -12894,8 +12898,8 @@ msgid "Unread"
 msgstr "Ongelezen"
 
 #: src/components/release/releases.ts:88
-msgid "Unreadable audio and invalid transcription responses no longer cause repeated processing attempts."
-msgstr "Onleesbare audio en ongeldige transcriptieresultaten leiden niet meer tot herhaalde verwerkingspogingen."
+#~ msgid "Unreadable audio and invalid transcription responses no longer cause repeated processing attempts."
+#~ msgstr "Onleesbare audio en ongeldige transcriptieresultaten leiden niet meer tot herhaalde verwerkingspogingen."
 
 #: src/components/form/FormLabel.tsx:18
 msgid "Unsaved changes"
@@ -13400,8 +13404,8 @@ msgid "View invite"
 msgstr "Uitnodiging bekijken"
 
 #: src/components/release/ReleaseVideoModal.tsx:354
-msgid "View release notes"
-msgstr "Bekijk release notes"
+#~ msgid "View release notes"
+#~ msgstr "Bekijk release notes"
 
 #: src/components/participant/ParticipantBody.tsx:247
 msgid "View your responses"

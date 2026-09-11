@@ -599,7 +599,9 @@ describe("typography", () => {
 describe("release notes navigation", () => {
 	it("dismisses the update and links to release notes in the active language", async () => {
 		renderModal();
-		const link = screen.getByRole("link", { name: "View release notes" });
+		const link = screen.getByRole("link", {
+			name: "Go to previous release notes",
+		});
 		expect(link.getAttribute("href")).toBe("/nl-NL/release-notes");
 		fireEvent.click(link);
 		await waitFor(() => expect(fetch).toHaveBeenCalled());

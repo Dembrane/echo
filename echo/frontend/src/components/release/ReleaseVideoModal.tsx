@@ -351,7 +351,7 @@ export const ReleaseVideoModal = ({
 								variant="subtle"
 								onClick={() => close("release_notes")}
 							>
-								<Trans>View release notes</Trans>
+								<Trans>Go to previous release notes</Trans>
 							</Button>
 							<Button onClick={() => close()}>
 								<Trans>Got it</Trans>

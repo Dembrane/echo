@@ -27,11 +27,12 @@ deliberately complete rather than collapsed behind a "more" control.
 
 ## Entry and dismissal
 
-The shared sidebar's What's new action opens the modal; View release notes
-opens the history inside the regular app layout, with a Home / Release notes
+The shared sidebar's What's new action opens the modal; Go to previous
+release notes opens the history inside the regular app layout, with a Home / Release notes
 breadcrumb. Both desktop and mobile use the same sidebar and navigation.
 
-Closing via the close control, Escape, backdrop, or View release notes records
+Closing via the close control, Escape, backdrop, or Go to previous release
+notes records
 the current dismissal key under `app_user.settings.release_video_seen`. A
 browser fallback scoped to the authenticated Directus user preserves dismissal
 through reloads and failed saves. The server setting shares it across devices
@@ -54,7 +55,7 @@ updated app; this is not a live Directus feed.
 
 Keep dismissal keys stable when enriching an existing announcement. The August
 walkthrough keeps `version: "2026-08"` while displaying its actual `v2.2.0` tag.
-Popcorn keeps its existing `2026-09` key while its public version is pending.
+Popcorn keeps its `2026-09` key while displaying its `v2.4.0` tag.
 Adding old releases never changes the first entry or its seen state.
 
 The Popcorn draft includes the non-member project-sharing fix from

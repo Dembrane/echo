@@ -45,9 +45,12 @@ it("keeps each walkthrough with its own release, captions on", () => {
 	expect(
 		within(articles[0]).getByRole("heading", { name: history[0].title }),
 	).toBeTruthy();
-	expect(within(articles[0]).getByText("Upcoming")).toBeTruthy();
-	expect(within(articles[0]).queryByRole("link")).toBeNull();
-	expect(within(articles[1]).getByText("Latest release")).toBeTruthy();
+	expect(within(articles[0]).queryByText("Upcoming")).toBeNull();
+	expect(
+		within(articles[0]).getByRole("link", { name: "v2.4.0" }),
+	).toBeTruthy();
+	expect(within(articles[0]).getByText("Latest release")).toBeTruthy();
+	expect(within(articles[1]).queryByText("Latest release")).toBeNull();
 	expect(articles[0].querySelector("iframe")?.src).toContain(
 		"youtube-nocookie.com/embed/nKFxtUr13sI?rel=0&cc_load_policy=1&cc_lang_pref=en",
 	);
@@ -113,10 +116,12 @@ it("groups releases by month and keeps the same month in different years separat
 	expect(within(august2026).queryByRole("link", { name: "v1.9.0" })).toBeNull();
 	expect(within(august2025).getByRole("link", { name: "v1.9.0" })).toBeTruthy();
 	expect(within(august2025).queryByRole("link", { name: "v2.3.0" })).toBeNull();
+	expect(screen.queryByRole("region", { name: "Next" })).toBeNull();
 	expect(
-		within(screen.getByRole("region", { name: "Next" })).getByRole("heading", {
-			name: "Introducing Popcorn",
-		}),
+		within(screen.getByRole("region", { name: "September 2026" })).getByRole(
+			"heading",
+			{ name: "Introducing Popcorn" },
+		),
 	).toBeTruthy();
 });
 

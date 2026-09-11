@@ -49,7 +49,7 @@ export const getReleases = (): Release[] => [
 				type: "feature",
 			},
 			{
-				text: t`Explore stories and perspectives with the Narratives chat template, in English and Dutch.`,
+				text: t`MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent.`,
 				type: "feature",
 			},
 			{
@@ -57,23 +57,7 @@ export const getReleases = (): Release[] => [
 				type: "feature",
 			},
 			{
-				text: t`The thank you page invites participants to run their own event with dembrane. Hosts on a paid plan can switch this card off per project in the portal editor.`,
-				type: "feature",
-			},
-			{
-				text: t`MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent.`,
-				type: "improvement",
-			},
-			{
-				text: t`Custom logo settings now explain the recommended 3:1 aspect ratio.`,
-				type: "improvement",
-			},
-			{
-				text: t`Release notes live in the app. What's new opens the latest update, and View release notes keeps every past update. Dismissing an update now sticks across your devices.`,
-				type: "improvement",
-			},
-			{
-				text: t`The feedback form links straight to Report an issue, so sending a bug with screenshots takes one step fewer.`,
+				text: t`Explore stories and perspectives with the Narratives chat template, in English and Dutch.`,
 				type: "improvement",
 			},
 			{
@@ -85,19 +69,12 @@ export const getReleases = (): Release[] => [
 				type: "fix",
 			},
 			{
-				text: t`Unreadable audio and invalid transcription responses no longer cause repeated processing attempts.`,
-				type: "fix",
-			},
-			{
-				text: t`Deleted projects and conversations paused by plan limits no longer trigger repeated summary attempts.`,
-				type: "fix",
-			},
-			{
 				text: t`The sidebar fits mobile screens more reliably, with corrected French navigation labels.`,
 				type: "fix",
 			},
 		],
 		highlight: true,
+		publication: { date: "2026-09-11", tag: "v2.4.0" },
 		title: t`Introducing Popcorn`,
 		version: "2026-09",
 		videoUrl: "https://www.youtube.com/watch?v=nKFxtUr13sI",

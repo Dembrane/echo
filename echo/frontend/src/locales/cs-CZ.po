@@ -3679,8 +3679,8 @@ msgid "Custom Logo"
 msgstr "Custom Logo"
 
 #: src/components/release/releases.ts:68
-msgid "Custom logo settings now explain the recommended 3:1 aspect ratio."
-msgstr ""
+#~ msgid "Custom logo settings now explain the recommended 3:1 aspect ratio."
+#~ msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:1660
 msgid "Custom title prompt"
@@ -3883,8 +3883,8 @@ msgid "Deleted · {0}"
 msgstr "Deleted · {0}"
 
 #: src/components/release/releases.ts:92
-msgid "Deleted projects and conversations paused by plan limits no longer trigger repeated summary attempts."
-msgstr "Smazané projekty a konverzace pozastavené kvůli limitům tarifu už nespouštějí opakované pokusy o vytvoření shrnutí."
+#~ msgid "Deleted projects and conversations paused by plan limits no longer trigger repeated summary attempts."
+#~ msgstr "Smazané projekty a konverzace pozastavené kvůli limitům tarifu už nespouštějí opakované pokusy o vytvoření shrnutí."
 
 #: src/components/participant/UserChunkMessage.tsx:68
 msgid "Deleted successfully"
@@ -4717,7 +4717,7 @@ msgstr "Explore"
 msgid "Explore recurring themes in the Library"
 msgstr "Prozkoumej opakující se témata v Library"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:60
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Prozkoumej příběhy a pohledy pomocí šablony chatu Narratives v angličtině a nizozemštině."
 
@@ -5425,6 +5425,10 @@ msgstr ""
 msgid "Go to portal editor"
 msgstr ""
 
+#: src/components/release/ReleaseVideoModal.tsx:354
+msgid "Go to previous release notes"
+msgstr ""
+
 #: src/routes/project/CreateProjectRoute.tsx:378
 msgid "Go to project home"
 msgstr ""
@@ -5830,7 +5834,7 @@ msgstr "Integrations & Export"
 msgid "interview"
 msgstr ""
 
-#: src/components/release/releases.ts:101
+#: src/components/release/releases.ts:78
 msgid "Introducing Popcorn"
 msgstr "Představujeme Popcorn"
 
@@ -6833,7 +6837,7 @@ msgstr ""
 msgid "MCP access for {0} is on"
 msgstr ""
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:52
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Připojení MCP umožní tvému agentovi hledat projekty a konverzace, číst přepisy a procházet dokumentaci, s kontrolou organizace a výslovným souhlasem."
 
@@ -9510,8 +9514,8 @@ msgid "Release notes | dembrane"
 msgstr "Poznámky k vydání | dembrane"
 
 #: src/components/release/releases.ts:72
-msgid "Release notes live in the app. What's new opens the latest update, and View release notes keeps every past update. Dismissing an update now sticks across your devices."
-msgstr ""
+#~ msgid "Release notes live in the app. What's new opens the latest update, and View release notes keeps every past update. Dismissing an update now sticks across your devices."
+#~ msgstr ""
 
 #: src/components/release/ReleaseVideoModal.tsx:336
 msgid "Release video"
@@ -10882,7 +10886,7 @@ msgstr "Shared with {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Shared with {0} and {overflow} others"
 
-#: src/components/release/releases.ts:84
+#: src/components/release/releases.ts:68
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Při sdílení soukromého projektu s nečlenem se nyní místo chyby nabídne pozvánka. Přístup získá po připojení k pracovnímu prostoru."
 
@@ -11748,7 +11752,7 @@ msgstr "The conversation could not be loaded. Please try again or contact suppor
 msgid "The conversation list shows clearer totals."
 msgstr ""
 
-#: src/components/release/releases.ts:80
+#: src/components/release/releases.ts:64
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr ""
 
@@ -11765,8 +11769,8 @@ msgid "The feedback form can prefill your email address."
 msgstr ""
 
 #: src/components/release/releases.ts:76
-msgid "The feedback form links straight to Report an issue, so sending a bug with screenshots takes one step fewer."
-msgstr ""
+#~ msgid "The feedback form links straight to Report an issue, so sending a bug with screenshots takes one step fewer."
+#~ msgstr ""
 
 #: src/components/release/releaseHistory.ts:25
 msgid "The feedback portal explains how to report security issues."
@@ -11895,7 +11899,7 @@ msgstr "The report may start up to 5 minutes after the chosen time."
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr ""
 
-#: src/components/release/releases.ts:96
+#: src/components/release/releases.ts:72
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr ""
 
@@ -11916,8 +11920,8 @@ msgid "The thank you page ends on a card inviting participants to run their own 
 msgstr "Děkovná stránka končí kartou, která účastníky zve k uspořádání vlastní akce s dembrane."
 
 #: src/components/release/releases.ts:60
-msgid "The thank you page invites participants to run their own event with dembrane. Hosts on a paid plan can switch this card off per project in the portal editor."
-msgstr ""
+#~ msgid "The thank you page invites participants to run their own event with dembrane. Hosts on a paid plan can switch this card off per project in the portal editor."
+#~ msgstr ""
 
 #: src/components/voice/VoiceInputError.tsx:45
 msgid "The transcript did not come back. Check your connection and try again."
@@ -12898,8 +12902,8 @@ msgid "Unread"
 msgstr "Unread"
 
 #: src/components/release/releases.ts:88
-msgid "Unreadable audio and invalid transcription responses no longer cause repeated processing attempts."
-msgstr ""
+#~ msgid "Unreadable audio and invalid transcription responses no longer cause repeated processing attempts."
+#~ msgstr ""
 
 #: src/components/form/FormLabel.tsx:18
 msgid "Unsaved changes"
@@ -13404,8 +13408,8 @@ msgid "View invite"
 msgstr "View invite"
 
 #: src/components/release/ReleaseVideoModal.tsx:354
-msgid "View release notes"
-msgstr "Zobrazit poznámky k vydání"
+#~ msgid "View release notes"
+#~ msgstr "Zobrazit poznámky k vydání"
 
 #: src/components/participant/ParticipantBody.tsx:247
 msgid "View your responses"
