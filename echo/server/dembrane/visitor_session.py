@@ -35,15 +35,12 @@ _MAX_VISITOR_INDEX_MEMBERS = 2000
 _LINK_KEY_PREFIX = "visitor_conversation:"
 _LINK_TTL_SECONDS = 120
 
-# Funnel stages the portal reports. Mic carries its outcome so the host can see
-# a skip or a block, not just "advanced".
+# Funnel stages the portal reports. There is no microphone stage: the portal
+# assumes the microphone works and finds out for real once recording starts.
 VALID_VISITOR_STAGES = frozenset(
     {
         "scanned",  # landed on the portal (QR)
         "terms",  # accepted / advanced past consent
-        "mic_ok",  # mic check passed
-        "mic_skipped",  # mic check skipped
-        "mic_blocked",  # mic permission denied / blocked
         "profile",  # on the name/details step
     }
 )

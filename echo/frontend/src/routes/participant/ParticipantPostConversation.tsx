@@ -124,7 +124,7 @@ export const ParticipantPostConversation = () => {
 				onClose={closeShare}
 				project={project.data}
 			/>
-			<Stack className="px-4 pt-3 pb-8">
+			<Stack className="px-4 pt-8 pb-8">
 				{!!text && text !== "" ? (
 					<>
 						<div {...testId("portal-finish-custom-message")}>
@@ -149,7 +149,7 @@ export const ParticipantPostConversation = () => {
 					<Group gap="sm" wrap="wrap">
 						<Button
 							size="md"
-							variant="subtle"
+							variant="outline"
 							leftSection={<IconQrcode size={18} />}
 							onClick={openShare}
 							{...testId("portal-finish-show-qr-button")}
@@ -160,7 +160,7 @@ export const ParticipantPostConversation = () => {
 							<Button
 								component="a"
 								size="md"
-								variant="subtle"
+								variant="outline"
 								leftSection={<IconRepeat size={18} />}
 								{...testId("portal-finish-record-another-button")}
 							>

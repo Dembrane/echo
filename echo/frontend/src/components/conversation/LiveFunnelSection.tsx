@@ -50,9 +50,6 @@ const relativeTime = (stamp: string | null): string => {
 const STAGE_TIMELINE_ORDER: { stage: FunnelStage; label: string }[] = [
 	{ label: t`Scanned the QR`, stage: "scanned" },
 	{ label: t`Accepted terms`, stage: "terms" },
-	{ label: t`Mic checked`, stage: "mic_ok" },
-	{ label: t`Skipped mic check`, stage: "mic_skipped" },
-	{ label: t`Mic blocked`, stage: "mic_blocked" },
 	{ label: t`Entered details`, stage: "profile" },
 ];
 

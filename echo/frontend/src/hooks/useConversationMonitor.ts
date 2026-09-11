@@ -105,13 +105,7 @@ export type MonitorSummary = {
 	catch_up_eta_seconds: number;
 };
 
-export type FunnelStage =
-	| "scanned"
-	| "terms"
-	| "mic_ok"
-	| "mic_skipped"
-	| "mic_blocked"
-	| "profile";
+export type FunnelStage = "scanned" | "terms" | "profile";
 
 export type FunnelVisitor = {
 	id: string;

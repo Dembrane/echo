@@ -793,7 +793,9 @@ def test_build_funnel_groups_stages_and_dedupes_graduated() -> None:
     now = datetime(2026, 7, 3, 12, 0, 0, tzinfo=timezone.utc)
     visitors = {
         "v-scan": {"seen": now, "stage": "scanned", "scan_count": 2},
-        "v-mic-skip": {"seen": now, "stage": "mic_skipped"},
+        "v-terms": {"seen": now, "stage": "terms"},
+        # written by a portal tab from before the microphone check was removed
+        "v-stale-mic": {"seen": now, "stage": "mic_skipped"},
         "v-profile": {
             "seen": now,
             "stage": "profile",
@@ -811,16 +813,18 @@ def test_build_funnel_groups_stages_and_dedupes_graduated() -> None:
 
     assert "v-live" not in by_id  # graduated dot is not double-counted
     assert by_id["v-scan"]["scan_count"] == 2
-    assert by_id["v-mic-skip"]["stage"] == "mic_skipped"
+    assert by_id["v-terms"]["stage"] == "terms"
+    assert by_id["v-stale-mic"]["stage"] == "terms"  # retired stage folds forward
     assert by_id["v-profile"]["name"] == "Ada"
     assert by_id["v-profile"]["tags"] == ["Table 3"]
     assert by_id["v-profile"]["tags_preselected"] is True
     assert by_id["v-weird"]["stage"] == "scanned"
 
     assert funnel["summary"]["scanned"] == 2  # v-scan + v-weird
-    assert funnel["summary"]["mic_skipped"] == 1
+    assert funnel["summary"]["terms"] == 2  # v-terms + v-stale-mic
     assert funnel["summary"]["profile"] == 1
-    assert funnel["summary"]["total"] == 4
+    assert funnel["summary"]["total"] == 5
+    assert "mic_skipped" not in funnel["summary"]
 
 
 # ── endpoint wiring: access gate + two-query aggregation ──────────────

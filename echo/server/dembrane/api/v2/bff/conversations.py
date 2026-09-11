@@ -1092,7 +1092,13 @@ def _build_monitor_payload(
     }
 
 
-_FUNNEL_STAGES = ("scanned", "terms", "mic_ok", "mic_skipped", "mic_blocked", "profile")
+_FUNNEL_STAGES = ("scanned", "terms", "profile")
+
+# Stages the portal used to report while it still ran a microphone check. A
+# visitor session written by a tab from before the change can still carry one
+# for as long as the session lives; they had passed consent, so they count as
+# "terms" rather than falling back to "scanned".
+_RETIRED_MIC_STAGES = frozenset({"mic_ok", "mic_skipped", "mic_blocked"})
 
 
 def _build_funnel(visitors: dict[str, dict], graduated: set[str]) -> dict:
@@ -1108,6 +1114,8 @@ def _build_funnel(visitors: dict[str, dict], graduated: set[str]) -> dict:
         if visitor_id in graduated:
             continue
         stage = tele.get("stage")
+        if stage in _RETIRED_MIC_STAGES:
+            stage = "terms"
         if stage not in VALID_VISITOR_STAGES:
             stage = "scanned"
         seen = tele.get("seen")
