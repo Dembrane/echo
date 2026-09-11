@@ -113,7 +113,9 @@ export const ReleaseVideoModal = ({
 					release.version,
 				)));
 
-	const embedUrl = release ? youtubeEmbedUrl(release.videoUrl ?? "") : null;
+	const embedUrl = release
+		? youtubeEmbedUrl(release.videoUrl ?? "", language)
+		: null;
 	const embedSrc = embedUrl
 		? playerBridgeUrl(embedUrl, window.location.origin)
 		: null;
@@ -320,11 +322,10 @@ export const ReleaseVideoModal = ({
 							<h2 className={styles.title} id={titleId}>
 								{release.title}
 							</h2>
-							{release.summary || release.description ? (
-								<ReleaseDescription
-									description={release.summary ?? release.description ?? ""}
-								/>
-							) : release.changes?.length ? (
+							{release.description ? (
+								<ReleaseDescription description={release.description} />
+							) : null}
+							{release.changes?.length ? (
 								<ReleaseChanges changes={release.changes} />
 							) : null}
 						</Stack>

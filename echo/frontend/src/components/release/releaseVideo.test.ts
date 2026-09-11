@@ -107,7 +107,8 @@ describe("the shipped release history", () => {
 });
 
 describe("youtubeEmbedUrl", () => {
-	const EMBED = "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ?rel=0";
+	const EMBED =
+		"https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ?rel=0&cc_load_policy=1";
 
 	it("converts every YouTube link shape to the privacy-mode embed", () => {
 		expect(youtubeEmbedUrl("https://www.youtube.com/watch?v=aqz-KE-bpKQ")).toBe(
@@ -129,6 +130,15 @@ describe("youtubeEmbedUrl", () => {
 		expect(
 			youtubeEmbedUrl("https://www.youtube.com/watch?v=aqz-KE-bpKQ&t=42s"),
 		).toBe(EMBED);
+	});
+
+	it("asks for captions in the app language, by its two-letter code", () => {
+		expect(youtubeEmbedUrl("https://youtu.be/aqz-KE-bpKQ", "nl-NL")).toBe(
+			`${EMBED}&cc_lang_pref=nl`,
+		);
+		expect(youtubeEmbedUrl("https://youtu.be/aqz-KE-bpKQ", "en-US")).toBe(
+			`${EMBED}&cc_lang_pref=en`,
+		);
 	});
 
 	it("refuses anything that is not an https YouTube link", () => {

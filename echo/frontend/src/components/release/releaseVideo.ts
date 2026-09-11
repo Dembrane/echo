@@ -79,9 +79,21 @@ export const YOUTUBE_EMBED_ORIGIN = "https://www.youtube-nocookie.com";
  * means a malformed link in the releases array degrades to a modal with no
  * video rather than a broken frame or an unexpected origin.
  */
-export const youtubeEmbedUrl = (videoUrl: string): string | null => {
+export const youtubeEmbedUrl = (
+	videoUrl: string,
+	captionLanguage?: string,
+): string | null => {
 	const id = youtubeVideoId(videoUrl);
-	return id ? `${YOUTUBE_EMBED_ORIGIN}/embed/${id}?rel=0` : null;
+	if (!id) return null;
+	const url = new URL(`${YOUTUBE_EMBED_ORIGIN}/embed/${id}`);
+	url.searchParams.set("rel", "0");
+	// Captions on from the first frame. The walkthroughs are spoken in Dutch
+	// and most hosts read English, so the player starts with the track for the
+	// app language and falls back to whatever the video carries.
+	url.searchParams.set("cc_load_policy", "1");
+	const code = captionLanguage?.split("-")[0]?.toLowerCase();
+	if (code) url.searchParams.set("cc_lang_pref", code);
+	return url.toString();
 };
 
 /**

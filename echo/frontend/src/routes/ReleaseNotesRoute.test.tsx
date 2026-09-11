@@ -2,13 +2,7 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
-import {
-	cleanup,
-	fireEvent,
-	render,
-	screen,
-	within,
-} from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
 import * as releases from "@/components/release/releases";
@@ -43,7 +37,7 @@ const show = (path = "/en-US/release-notes") =>
 		</I18nProvider>,
 	);
 
-it("keeps the previous walkthrough below the newest text release", () => {
+it("keeps each walkthrough with its own release, captions on", () => {
 	const history = releases.getReleases();
 	show();
 	const articles = screen.getAllByRole("article");
@@ -54,7 +48,9 @@ it("keeps the previous walkthrough below the newest text release", () => {
 	expect(within(articles[0]).getByText("Upcoming")).toBeTruthy();
 	expect(within(articles[0]).queryByRole("link")).toBeNull();
 	expect(within(articles[1]).getByText("Latest release")).toBeTruthy();
-	expect(articles[0].querySelector("iframe")).toBeNull();
+	expect(articles[0].querySelector("iframe")?.src).toContain(
+		"youtube-nocookie.com/embed/nKFxtUr13sI?rel=0&cc_load_policy=1&cc_lang_pref=en",
+	);
 	expect(
 		within(articles[1]).getByRole("heading", { name: history[1].title }),
 	).toBeTruthy();
@@ -107,37 +103,6 @@ it("links published versions to verified release pages and preserves real tag na
 		"2026-08-31",
 	);
 	expect(screen.queryByText("2026-09")).toBeNull();
-});
-
-it("filters by year in the URL without calling an older release latest", () => {
-	show();
-	fireEvent.click(screen.getByRole("button", { name: "2025" }));
-	expect(screen.getByTestId("location").textContent).toBe("?year=2025");
-	expect(screen.queryByText("Upcoming")).toBeNull();
-	expect(screen.queryByText("Latest release")).toBeNull();
-	expect(screen.queryByRole("link", { name: "v2.3.0" })).toBeNull();
-	expect(screen.getByRole("link", { name: "v1.0.0" })).toBeTruthy();
-	fireEvent.click(screen.getByRole("button", { name: "All years" }));
-	expect(screen.getByTestId("location").textContent).toBe("");
-	expect(screen.getByText("Upcoming")).toBeTruthy();
-});
-
-it("restores a year filter from a shared URL", () => {
-	show("/en-US/release-notes?year=2025");
-	expect(
-		screen.getByRole("button", { name: "2025" }).getAttribute("aria-pressed"),
-	).toBe("true");
-	expect(screen.queryByRole("link", { name: "v2.3.0" })).toBeNull();
-});
-
-it("falls back to the full history for an unknown year", () => {
-	show("/en-US/release-notes?year=invalid");
-	expect(
-		screen
-			.getByRole("button", { name: "All years" })
-			.getAttribute("aria-pressed"),
-	).toBe("true");
-	expect(screen.getByText("Upcoming")).toBeTruthy();
 });
 
 it("groups releases by month and keeps the same month in different years separate", () => {
@@ -199,7 +164,9 @@ it("shows each category once and omits empty groups", () => {
 	for (const name of ["New features", "Improvements", "Bug fixes"]) {
 		expect(within(popcorn).getAllByRole("heading", { name })).toHaveLength(1);
 	}
-	expect(within(popcorn).getAllByRole("listitem")).toHaveLength(8);
+	expect(within(popcorn).getAllByRole("listitem")).toHaveLength(
+		releases.getReleases()[0].changes?.length ?? 0,
+	);
 	const fix = screen.getByRole("link", { name: "v2.1.1" }).closest("article");
 	if (!fix) throw new Error("Missing Czech fix release");
 	expect(
@@ -211,7 +178,7 @@ it("shows each category once and omits empty groups", () => {
 	expect(within(fix).getByRole("list", { name: "Bug fixes" })).toBeTruthy();
 });
 
-it("keeps launch details as separate bullets instead of repeating the popup summary", () => {
+it("keeps launch details as separate bullets", () => {
 	show();
 	const reportRelease = screen
 		.getByRole("link", { name: "v1.17.0" })
@@ -233,11 +200,6 @@ it("keeps launch details as separate bullets instead of repeating the popup summ
 			"Use Ukrainian for chat and participant replies.",
 		),
 	).toBeTruthy();
-	expect(reportRelease?.textContent).not.toContain(
-		releases
-			.getReleases()
-			.find((release) => release.publication?.tag === "v1.17.0")?.summary,
-	);
 });
 
 it("credits pilot after the oldest release without mixing repository versions", () => {
@@ -260,12 +222,4 @@ it("credits pilot after the oldest release without mixing repository versions", 
 			.getAttribute("href"),
 	).toBe("https://github.com/Dembrane/pilot/releases");
 	expect(within(pilot).queryByRole("link", { name: "v1.0.0" })).toBeNull();
-	fireEvent.click(screen.getByRole("button", { name: "2026" }));
-	expect(
-		screen.queryByRole("region", { name: "Before this release history" }),
-	).toBeNull();
-	fireEvent.click(screen.getByRole("button", { name: "2025" }));
-	expect(
-		screen.getByRole("region", { name: "Before this release history" }),
-	).toBeTruthy();
 });

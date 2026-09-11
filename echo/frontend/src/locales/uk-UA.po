@@ -821,7 +821,7 @@ msgstr ""
 msgid "A friendly name to identify this webhook"
 msgstr "A friendly name to identify this webhook"
 
-#: src/components/release/releaseHistory.ts:495
+#: src/components/release/releaseHistory.ts:480
 msgid "A Help us translate link invites community translations. Full Italian interface translation is not included."
 msgstr ""
 
@@ -829,11 +829,11 @@ msgstr ""
 msgid "A live page in your Library, and live slides for the room, both made from your conversations while a session runs. Early beta: they may change or be removed."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:769
+#: src/components/release/releaseHistory.ts:742
 msgid "A more reliable audio upload experience"
 msgstr "Надійніше завантаження аудіо"
 
-#: src/components/release/releaseHistory.ts:185
+#: src/components/release/releaseHistory.ts:179
 msgid "A new assistant and a live monitor"
 msgstr "Новий помічник і монітор наживо"
 
@@ -887,7 +887,7 @@ msgstr ""
 msgid "A short note on what this project is about. You can edit it later."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:576
+#: src/components/release/releaseHistory.ts:557
 msgid "A smoother conversation workspace"
 msgstr "Зручніший простір для розмов"
 
@@ -929,7 +929,7 @@ msgstr ""
 msgid "Access"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:245
+#: src/components/release/releaseHistory.ts:237
 msgid "Access controls explain when you need to join a workspace first."
 msgstr ""
 
@@ -1081,7 +1081,7 @@ msgstr "Add"
 msgid "Add {0} to {1} as <0>{2}</0>?"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:607
+#: src/components/release/releaseHistory.ts:587
 msgid "Add a conversation directly to chat context."
 msgstr ""
 
@@ -1126,13 +1126,13 @@ msgstr ""
 #~ msgid "Add by email"
 #~ msgstr ""
 
-#: src/components/release/releaseHistory.ts:788
+#: src/components/release/releaseHistory.ts:760
 msgid "Add conversation tags from the dashboard."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:621
-msgid "Add conversations to chat context, use improved question templates, and work with updated transcription options. Supporting quotes and translations receive fixes."
-msgstr "Додавайте розмови до контексту чату, використовуйте покращені шаблони запитань і параметри транскрипції. Виправлено підтверджувальні цитати й переклади."
+#~ msgid "Add conversations to chat context, use improved question templates, and work with updated transcription options. Supporting quotes and translations receive fixes."
+#~ msgstr "Додавайте розмови до контексту чату, використовуйте покращені шаблони запитань і параметри транскрипції. Виправлено підтверджувальні цитати й переклади."
 
 #. js-lingui-explicit-id
 #: src/components/conversation/SelectAllConfirmationModal.tsx:216
@@ -1428,7 +1428,7 @@ msgstr ""
 msgid "All read"
 msgstr ""
 
-#: src/routes/ReleaseNotesRoute.tsx:64
+#: src/routes/ReleaseNotesRoute.tsx:32
 msgid "All releases on GitHub"
 msgstr "Усі випуски на GitHub"
 
@@ -1462,8 +1462,8 @@ msgid "All workspaces"
 msgstr ""
 
 #: src/routes/ReleaseNotesRoute.tsx:79
-msgid "All years"
-msgstr "Усі роки"
+#~ msgid "All years"
+#~ msgstr "Усі роки"
 
 #: src/routes/settings/AgentConsentRoute.tsx:347
 msgid "Allow"
@@ -1612,15 +1612,15 @@ msgstr ""
 msgid "Announcements"
 msgstr "Announcements"
 
-#: src/components/release/releaseHistory.ts:566
+#: src/components/release/releaseHistory.ts:548
 msgid "Announcements no longer create repeated notification popups."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:61
+#: src/components/release/releaseHistory.ts:60
 msgid "Announcements without an expiry date are visible again."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:438
+#: src/components/release/releaseHistory.ts:425
 msgid "Anonymise personal information in transcripts. Anonymised conversations disable audio playback and download."
 msgstr ""
 
@@ -1628,7 +1628,7 @@ msgstr ""
 msgid "Anonymise transcripts"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:368
+#: src/components/release/releaseHistory.ts:358
 msgid "Anonymised transcripts have clearer labels."
 msgstr ""
 
@@ -1729,7 +1729,7 @@ msgstr "Apply"
 msgid "Apply template"
 msgstr "Apply template"
 
-#: src/components/release/releaseHistory.ts:69
+#: src/components/release/releaseHistory.ts:68
 msgid "Applying a template shows a confirmation with Undo."
 msgstr ""
 
@@ -1867,7 +1867,7 @@ msgstr "Ask for Email?"
 msgid "Ask for Name?"
 msgstr "Ask for Name?"
 
-#: src/components/release/releaseHistory.ts:434
+#: src/components/release/releaseHistory.ts:421
 msgid "Ask for participant email addresses after a conversation ends."
 msgstr ""
 
@@ -1950,7 +1950,7 @@ msgstr "Attention! We lost the last 60 seconds or so of your recording due to so
 msgid "Audio"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:734
+#: src/components/release/releaseHistory.ts:709
 msgid "Audio and text uploads feed into conversation analysis."
 msgstr ""
 
@@ -1966,15 +1966,15 @@ msgstr ""
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio playback not available for anonymized conversations"
 
-#: src/components/release/releaseHistory.ts:591
+#: src/components/release/releaseHistory.ts:572
 msgid "Audio playback, transcription and automatic conversation selection are improved."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:768
-msgid "Audio processing and uploads are more robust, and the conversation list shows clearer totals."
-msgstr "Обробка й завантаження аудіо стали надійнішими, а список розмов показує зрозуміліші підсумкові кількості."
+#~ msgid "Audio processing and uploads are more robust, and the conversation list shows clearer totals."
+#~ msgstr "Обробка й завантаження аудіо стали надійнішими, а список розмов показує зрозуміліші підсумкові кількості."
 
-#: src/components/release/releaseHistory.ts:759
+#: src/components/release/releaseHistory.ts:733
 msgid "Audio processing and uploads are more robust."
 msgstr ""
 
@@ -1984,15 +1984,15 @@ msgstr ""
 msgid "Audio Tip"
 msgstr "Audio Tip"
 
-#: src/components/release/releaseHistory.ts:637
+#: src/components/release/releaseHistory.ts:616
 msgid "Audio upload buttons and dialogs respond correctly to clicks."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:364
+#: src/components/release/releaseHistory.ts:354
 msgid "Audio uploads handle VPN connections more reliably."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:212
+#: src/components/release/releaseHistory.ts:205
 msgid "Audio uploads return you to the conversation list."
 msgstr ""
 
@@ -2030,15 +2030,15 @@ msgstr "Auto-generate Titles"
 msgid "Auto-generated or enter manually"
 msgstr "Auto-generated or enter manually"
 
-#: src/components/release/releaseHistory.ts:558
+#: src/components/release/releaseHistory.ts:540
 msgid "Automatic conversation selection leaves more room for chat answers."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:418
+#: src/components/release/releaseHistory.ts:406
 msgid "Automatic conversation titles remain visible when a name is removed."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:216
+#: src/components/release/releaseHistory.ts:209
 msgid "Automatic summaries, conversation merging and durations work more reliably."
 msgstr ""
 
@@ -2055,10 +2055,10 @@ msgid "Automatically save transcripts to your CRM or database"
 msgstr "Automatically save transcripts to your CRM or database"
 
 #: src/components/release/releaseHistory.ts:752
-msgid "Automatically select relevant conversations for chat and follow source citations. Subscribe to report notifications and work with improved audio and text uploads."
-msgstr "Автоматично обирайте відповідні розмови для чату й переходьте до джерел. Підписуйтеся на сповіщення про звіти та користуйтеся покращеним завантаженням аудіо й тексту."
+#~ msgid "Automatically select relevant conversations for chat and follow source citations. Subscribe to report notifications and work with improved audio and text uploads."
+#~ msgstr "Автоматично обирайте відповідні розмови для чату й переходьте до джерел. Підписуйтеся на сповіщення про звіти та користуйтеся покращеним завантаженням аудіо й тексту."
 
-#: src/components/release/releaseHistory.ts:728
+#: src/components/release/releaseHistory.ts:703
 msgid "Automatically select relevant conversations for your question."
 msgstr ""
 
@@ -2192,15 +2192,15 @@ msgstr "Beta"
 msgid "Beta features"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:39
+#: src/components/release/releaseHistory.ts:38
 msgid "Better feedback, easier follow-up"
 msgstr "Кращий зворотний зв’язок і простіший супровід"
 
-#: src/components/release/releaseHistory.ts:722
+#: src/components/release/releaseHistory.ts:697
 msgid "Better recordings, more ways to reply"
 msgstr "Кращі записи, більше способів відповідати"
 
-#: src/components/release/releaseHistory.ts:601
+#: src/components/release/releaseHistory.ts:581
 msgid "Better uploads, transcripts and discovery"
 msgstr "Кращі завантаження, транскрипти й пошук"
 
@@ -2556,7 +2556,7 @@ msgstr ""
 msgid "Change your own role?"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:352
+#: src/components/release/releaseHistory.ts:342
 msgid "Change your password from settings without contacting support."
 msgstr ""
 
@@ -2594,7 +2594,7 @@ msgstr "Chat"
 msgid "Chat | dembrane"
 msgstr "Chat | dembrane"
 
-#: src/components/release/releaseHistory.ts:629
+#: src/components/release/releaseHistory.ts:608
 msgid "Chat context includes conversation dates and durations."
 msgstr ""
 
@@ -2619,15 +2619,15 @@ msgstr ""
 msgid "Chat name"
 msgstr "Chat name"
 
-#: src/components/release/releaseHistory.ts:742
+#: src/components/release/releaseHistory.ts:717
 msgid "Chat no longer sends duplicate messages accidentally."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:679
+#: src/components/release/releaseHistory.ts:656
 msgid "Chat templates stay visible while you work."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:142
+#: src/components/release/releaseHistory.ts:139
 msgid "Chat warns before sending a message over the character limit."
 msgstr ""
 
@@ -2650,24 +2650,24 @@ msgid "project.sidebar.chat.title"
 msgstr "Chats"
 
 #: src/components/release/releaseHistory.ts:646
-msgid "Chats get automatic titles, and conversation context includes dates and durations. Jump to the latest message and use a clearer audio upload flow."
-msgstr "Чати отримують автоматичні назви, а контекст розмов містить дати й тривалість. Переходьте до останнього повідомлення та користуйтеся зрозумілішим завантаженням аудіо."
+#~ msgid "Chats get automatic titles, and conversation context includes dates and durations. Jump to the latest message and use a clearer audio upload flow."
+#~ msgstr "Чати отримують автоматичні назви, а контекст розмов містить дати й тривалість. Переходьте до останнього повідомлення та користуйтеся зрозумілішим завантаженням аудіо."
 
-#: src/components/release/releaseHistory.ts:627
+#: src/components/release/releaseHistory.ts:606
 msgid "Chats receive automatic titles."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:161
+#: src/components/release/releaseHistory.ts:157
 msgid "Chats set to Czech answer in Czech instead of English."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:166
-msgid "Chats set to Czech now answer in Czech instead of English."
-msgstr "Чати з чеською мовою тепер відповідають чеською замість англійської."
+#~ msgid "Chats set to Czech now answer in Czech instead of English."
+#~ msgstr "Чати з чеською мовою тепер відповідають чеською замість англійської."
 
 #: src/components/release/releaseHistory.ts:721
-msgid "Check and select your microphone before recording, see audio quality indicators, and use improved multilingual transcription. Choose summary, brainstorming or custom reply modes."
-msgstr "Перевіряйте й обирайте мікрофон перед записом, бачте показники якості аудіо та користуйтеся покращеною багатомовною транскрипцією. Обирайте підсумок, нові ідеї або власні режими відповіді."
+#~ msgid "Check and select your microphone before recording, see audio quality indicators, and use improved multilingual transcription. Choose summary, brainstorming or custom reply modes."
+#~ msgstr "Перевіряйте й обирайте мікрофон перед записом, бачте показники якості аудіо та користуйтеся покращеною багатомовною транскрипцією. Обирайте підсумок, нові ідеї або власні режими відповіді."
 
 #: src/components/voice/VoiceInputError.tsx:99
 msgid "Check microphone access"
@@ -2715,19 +2715,19 @@ msgstr ""
 msgid "Choose an organisation first"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:207
+#: src/components/release/releaseHistory.ts:200
 msgid "Choose discoverable, invite-only or private workspaces."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:226
-msgid "Choose discoverable, invite-only or private workspaces. Organisation members load faster, uploads return you to your conversations, and automatic summaries and merging are more reliable."
-msgstr "Обирайте видимі, доступні за запрошенням або приватні простори. Учасники організації завантажуються швидше, після завантаження файлів ви повертаєтеся до розмов, а підсумки й об’єднання працюють надійніше."
+#~ msgid "Choose discoverable, invite-only or private workspaces. Organisation members load faster, uploads return you to your conversations, and automatic summaries and merging are more reliable."
+#~ msgstr "Обирайте видимі, доступні за запрошенням або приватні простори. Учасники організації завантажуються швидше, після завантаження файлів ви повертаєтеся до розмов, а підсумки й об’єднання працюють надійніше."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:340
 msgid "Choose from your other projects"
 msgstr "Choose from your other projects"
 
-#: src/components/release/releaseHistory.ts:708
+#: src/components/release/releaseHistory.ts:684
 msgid "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgstr ""
 
@@ -2772,11 +2772,11 @@ msgstr ""
 msgid "Cleared {cleared} of {total} conversations"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:103
+#: src/components/release/releaseHistory.ts:100
 msgid "Clearer sources in chat"
 msgstr "Зрозуміліші джерела в чаті"
 
-#: src/components/release/releaseHistory.ts:251
+#: src/components/release/releaseHistory.ts:242
 msgid "Clearer workspace access for admins"
 msgstr "Зрозуміліший доступ для адміністраторів"
 
@@ -2784,7 +2784,7 @@ msgstr "Зрозуміліший доступ для адміністратор�
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Click \"Upload Files\" when you're ready to start the upload process."
 
-#: src/components/release/releaseHistory.ts:471
+#: src/components/release/releaseHistory.ts:457
 msgid "Click a conversation tag to add it to your filters."
 msgstr ""
 
@@ -2817,7 +2817,7 @@ msgstr ""
 msgid "Client-managed"
 msgstr "Client-managed"
 
-#: src/components/release/releaseHistory.ts:299
+#: src/components/release/releaseHistory.ts:290
 msgid "Clipboard buttons work in Safari, and your chosen interface language is remembered."
 msgstr ""
 
@@ -2849,7 +2849,7 @@ msgstr "Close"
 msgid "select.all.modal.close"
 msgstr "Close"
 
-#: src/components/release/ReleaseVideoModal.tsx:311
+#: src/components/release/ReleaseVideoModal.tsx:313
 msgid "Close and go to dembrane"
 msgstr ""
 
@@ -2884,7 +2884,7 @@ msgstr ""
 msgid "Common use cases:"
 msgstr "Common use cases:"
 
-#: src/components/release/releaseHistory.ts:118
+#: src/components/release/releaseHistory.ts:115
 msgid "Compact footnotes keep conversation sources within reach."
 msgstr ""
 
@@ -2917,7 +2917,7 @@ msgstr ""
 msgid "Completed on"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:408
+#: src/components/release/releaseHistory.ts:396
 msgid "Configure settings for each legal basis."
 msgstr ""
 
@@ -3066,19 +3066,19 @@ msgstr "Розмова"
 msgid "Conversation added to chat"
 msgstr "Conversation added to chat"
 
-#: src/components/release/releaseHistory.ts:93
+#: src/components/release/releaseHistory.ts:91
 msgid "Conversation citations appear together under one Sources heading."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:102
-msgid "Conversation citations now appear together under one Sources heading. The feedback form can prefill your email address."
-msgstr "Посилання на розмови тепер зібрані під одним заголовком Джерела. Форма зворотного зв’язку може заповнювати вашу електронну адресу."
+#~ msgid "Conversation citations now appear together under one Sources heading. The feedback form can prefill your email address."
+#~ msgstr "Посилання на розмови тепер зібрані під одним заголовком Джерела. Форма зворотного зв’язку може заповнювати вашу електронну адресу."
 
-#: src/components/release/releaseHistory.ts:53
+#: src/components/release/releaseHistory.ts:52
 msgid "Conversation dates show when recording began, rather than when the page opened."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:595
+#: src/components/release/releaseHistory.ts:576
 msgid "Conversation durations and project cloning are more reliable."
 msgstr ""
 
@@ -3087,17 +3087,17 @@ msgstr ""
 msgid "participant.conversation.ended"
 msgstr "Conversation Ended"
 
-#: src/components/release/releaseHistory.ts:641
+#: src/components/release/releaseHistory.ts:620
 msgid "Conversation names appear in the Library and the portal's end screen works correctly."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:562
+#: src/components/release/releaseHistory.ts:544
 msgid "Conversation pages and data loading are streamlined."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:575
-msgid "Conversation pages and data loading are streamlined. Automatic conversation selection leaves more room for answers, and announcements generate fewer repeated notifications."
-msgstr "Сторінки розмов і завантаження даних спрощено. Автоматичний вибір розмов залишає більше місця для відповідей, а оголошення створюють менше повторних сповіщень."
+#~ msgid "Conversation pages and data loading are streamlined. Automatic conversation selection leaves more room for answers, and announcements generate fewer repeated notifications."
+#~ msgstr "Сторінки розмов і завантаження даних спрощено. Автоматичний вибір розмов залишає більше місця для відповідей, а оголошення створюють менше повторних сповіщень."
 
 #: src/components/conversation/hooks/index.ts:494
 msgid "Conversation removed from chat"
@@ -3112,15 +3112,15 @@ msgstr "Conversation Status"
 msgid "Conversation Status Details"
 msgstr "Conversation Status Details"
 
-#: src/components/release/releaseHistory.ts:683
+#: src/components/release/releaseHistory.ts:660
 msgid "Conversation status includes upload progress."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:200
-msgid "Conversation summaries no longer get stuck in the affected processing cases. Conversations paused by free-plan limits are picked up after an upgrade."
-msgstr "Підсумки більше не зависають у відповідних випадках обробки. Розмови, призупинені через обмеження безкоштовного плану, обробляються після переходу на інший план."
+#~ msgid "Conversation summaries no longer get stuck in the affected processing cases. Conversations paused by free-plan limits are picked up after an upgrade."
+#~ msgstr "Підсумки більше не зависають у відповідних випадках обробки. Розмови, призупинені через обмеження безкоштовного плану, обробляються після переходу на інший план."
 
-#: src/components/release/releaseHistory.ts:191
+#: src/components/release/releaseHistory.ts:185
 msgid "Conversation summaries no longer hang in the affected processing cases."
 msgstr ""
 
@@ -3128,7 +3128,7 @@ msgstr ""
 msgid "Conversation tags"
 msgstr "Conversation tags"
 
-#: src/components/release/releaseHistory.ts:219
+#: src/components/release/releaseHistory.ts:212
 msgid "Conversation tags are easier to read."
 msgstr ""
 
@@ -3150,11 +3150,11 @@ msgstr "Conversations"
 msgid "Conversations cleared"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:195
+#: src/components/release/releaseHistory.ts:189
 msgid "Conversations paused by free-plan limits are summarised after an upgrade."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:178
+#: src/components/release/releaseHistory.ts:173
 msgid "Conversations use the updated Dembrane-26-07 transcription pipeline."
 msgstr ""
 
@@ -3527,7 +3527,7 @@ msgstr ""
 msgid "Create an account to join"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:316
+#: src/components/release/releaseHistory.ts:306
 msgid "Create and manage multiple reports in one project."
 msgstr ""
 
@@ -3535,7 +3535,7 @@ msgstr ""
 msgid "create another report"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:332
+#: src/components/release/releaseHistory.ts:322
 msgid "Create custom chat templates (beta), or duplicate and edit a built-in template."
 msgstr ""
 
@@ -3545,8 +3545,8 @@ msgid "library.create"
 msgstr "Create Library"
 
 #: src/components/release/releaseHistory.ts:374
-msgid "Create multiple reports per project and guide their writing with your own instructions. Scheduled reports (beta) include all conversations recorded before the scheduled time. Create, save and pin custom chat templates (beta). This release also adds project pinning, profile settings and Ukrainian chat support."
-msgstr "Створюй кілька звітів для кожного проєкту та задавай власні інструкції для їх написання. Заплановані звіти (бета) охоплюють усі розмови, записані до обраного часу. Створюй, зберігай і закріплюй власні шаблони чату (бета). Цей випуск також додає закріплення проєктів, налаштування профілю та підтримку української мови в чаті."
+#~ msgid "Create multiple reports per project and guide their writing with your own instructions. Scheduled reports (beta) include all conversations recorded before the scheduled time. Create, save and pin custom chat templates (beta). This release also adds project pinning, profile settings and Ukrainian chat support."
+#~ msgstr "Створюй кілька звітів для кожного проєкту та задавай власні інструкції для їх написання. Заплановані звіти (бета) охоплюють усі розмови, записані до обраного часу. Створюй, зберігай і закріплюй власні шаблони чату (бета). Цей випуск також додає закріплення проєктів, налаштування профілю та підтримку української мови в чаті."
 
 #: src/features/sidebar/shell/UserMenu.tsx:145
 msgid "Create new organisation"
@@ -3666,7 +3666,7 @@ msgstr ""
 msgid "Custom"
 msgstr "Custom"
 
-#: src/components/release/releaseHistory.ts:295
+#: src/components/release/releaseHistory.ts:286
 msgid "Custom chat templates save and share correctly again."
 msgstr ""
 
@@ -3678,7 +3678,7 @@ msgstr "Custom Filename"
 msgid "Custom Logo"
 msgstr "Custom Logo"
 
-#: src/components/release/releases.ts:62
+#: src/components/release/releases.ts:68
 msgid "Custom logo settings now explain the recommended 3:1 aspect ratio."
 msgstr ""
 
@@ -3698,7 +3698,7 @@ msgstr ""
 msgid "Czech (only ECHO features, Transcription and Summaries)"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:167
+#: src/components/release/releaseHistory.ts:162
 msgid "Czech conversations, Czech answers"
 msgstr "Чеські розмови, чеські відповіді"
 
@@ -3882,7 +3882,7 @@ msgstr ""
 msgid "Deleted · {0}"
 msgstr ""
 
-#: src/components/release/releases.ts:74
+#: src/components/release/releases.ts:92
 msgid "Deleted projects and conversations paused by plan limits no longer trigger repeated summary attempts."
 msgstr "Видалені проєкти та розмови, призупинені через ліміти тарифу, більше не спричиняють повторних спроб створити підсумки."
 
@@ -4160,17 +4160,17 @@ msgstr "Download audio"
 msgid "Download Audio"
 msgstr "Download Audio"
 
-#: src/components/release/releaseHistory.ts:804
+#: src/components/release/releaseHistory.ts:775
 msgid "Download audio and organise conversations"
 msgstr "Завантажуйте аудіо й упорядковуйте розмови"
 
-#: src/components/release/releaseHistory.ts:787
+#: src/components/release/releaseHistory.ts:759
 msgid "Download audio from conversations."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:803
-msgid "Download conversation audio, add tags from the dashboard, and use summaries that adapt to the conversation. Editing and portal preview fixes are included."
-msgstr "Завантажуйте аудіо розмов, додавайте теги з панелі й використовуйте адаптивні підсумки. Виправлено редагування та попередній перегляд порталу."
+#~ msgid "Download conversation audio, add tags from the dashboard, and use summaries that adapt to the conversation. Editing and portal preview fixes are included."
+#~ msgstr "Завантажуйте аудіо розмов, додавайте теги з панелі й використовуйте адаптивні підсумки. Виправлено редагування та попередній перегляд порталу."
 
 #: src/components/billing/BillingManager.tsx:820
 msgid "Download PDF"
@@ -4228,11 +4228,11 @@ msgstr "Duration"
 msgid "Dutch"
 msgstr "Dutch"
 
-#: src/components/release/releaseHistory.ts:778
+#: src/components/release/releaseHistory.ts:751
 msgid "Dutch documentation is updated."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:81
+#: src/components/release/releaseHistory.ts:80
 msgid "Dutch-speaking hosts see the Dutch What's new walkthrough."
 msgstr ""
 
@@ -4347,21 +4347,21 @@ msgstr "Edit Project"
 msgid "Edit Report Content"
 msgstr "Edit Report Content"
 
-#: src/components/release/releaseHistory.ts:539
+#: src/components/release/releaseHistory.ts:522
 msgid "Edit reports before publishing them."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:664
+#: src/components/release/releaseHistory.ts:641
 msgid "Edit reports directly"
 msgstr "Редагуйте звіти безпосередньо"
 
-#: src/components/release/releaseHistory.ts:652
+#: src/components/release/releaseHistory.ts:630
 msgid "Edit reports directly in dembrane."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:663
-msgid "Edit reports yourself, check microphones more clearly in the portal, and see better loading states and error messages."
-msgstr "Самостійно редагуйте звіти, простіше перевіряйте мікрофони в порталі та бачте кращі індикатори завантаження й повідомлення про помилки."
+#~ msgid "Edit reports yourself, check microphones more clearly in the portal, and see better loading states and error messages."
+#~ msgstr "Самостійно редагуйте звіти, простіше перевіряйте мікрофони в порталі та бачте кращі індикатори завантаження й повідомлення про помилки."
 
 #. js-lingui-explicit-id
 #: src/components/report/ReportEditor.tsx:127
@@ -4372,11 +4372,11 @@ msgstr "Edit the report content using the rich text editor below. You can format
 msgid "Edit Webhook"
 msgstr "Edit Webhook"
 
-#: src/components/release/releaseHistory.ts:348
+#: src/components/release/releaseHistory.ts:338
 msgid "Edit your display name and upload, crop or remove your profile picture."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:794
+#: src/components/release/releaseHistory.ts:766
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr ""
 
@@ -4430,7 +4430,7 @@ msgstr ""
 msgid "Empty"
 msgstr "Empty"
 
-#: src/components/release/releaseHistory.ts:738
+#: src/components/release/releaseHistory.ts:713
 msgid "Empty or deleted conversations no longer break chat context."
 msgstr ""
 
@@ -4713,11 +4713,11 @@ msgstr "Explore"
 msgid "participant.echo.explore"
 msgstr "Explore"
 
-#: src/components/release/releaseHistory.ts:694
+#: src/components/release/releaseHistory.ts:670
 msgid "Explore recurring themes in the Library"
 msgstr "Досліджуйте повторювані теми в Library"
 
-#: src/components/release/releases.ts:54
+#: src/components/release/releases.ts:52
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Досліджуй історії та погляди за допомогою шаблону чату Narratives англійською та нідерландською."
 
@@ -5057,22 +5057,22 @@ msgid "Filter by name or id"
 msgstr ""
 
 #: src/routes/ReleaseNotesRoute.tsx:72
-msgid "Filter releases by year"
-msgstr "Фільтрувати випуски за роком"
+#~ msgid "Filter releases by year"
+#~ msgstr "Фільтрувати випуски за роком"
 
 #: src/components/chat/ChatModeSelector.tsx:62
 msgid "Find contradictions and suggest follow-up questions"
 msgstr "Find contradictions and suggest follow-up questions"
 
-#: src/components/release/releaseHistory.ts:753
+#: src/components/release/releaseHistory.ts:727
 msgid "Find the right conversations for your question"
 msgstr "Знаходьте потрібні розмови для запитання"
 
-#: src/components/release/releaseHistory.ts:227
+#: src/components/release/releaseHistory.ts:219
 msgid "Find workspaces and keep conversations moving"
 msgstr "Знаходьте простори й продовжуйте розмови"
 
-#: src/components/release/releaseHistory.ts:647
+#: src/components/release/releaseHistory.ts:625
 msgid "Find your place in chat"
 msgstr "Знаходьте своє місце в чаті"
 
@@ -5132,11 +5132,11 @@ msgstr ""
 msgid "Focusing on:"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:174
+#: src/components/release/releaseHistory.ts:169
 msgid "Follow ongoing sessions in the live monitor."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:731
+#: src/components/release/releaseHistory.ts:706
 msgid "Follow source citations from chat answers."
 msgstr ""
 
@@ -5214,7 +5214,7 @@ msgstr ""
 msgid "Free plan allows 1 workspace per organisation"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:221
+#: src/components/release/releaseHistory.ts:214
 msgid "Free-plan limits and upgrade options are clearer."
 msgstr ""
 
@@ -5267,7 +5267,7 @@ msgstr "Generate a Report"
 msgid "Generate a summary first"
 msgstr "Generate a summary first"
 
-#: src/components/release/releaseHistory.ts:446
+#: src/components/release/releaseHistory.ts:433
 msgid "Generate conversation titles automatically, with an option to turn this off."
 msgstr ""
 
@@ -5294,7 +5294,7 @@ msgstr "Generate secret"
 msgid "Generate Summary"
 msgstr "Generate Summary"
 
-#: src/components/release/releaseHistory.ts:73
+#: src/components/release/releaseHistory.ts:72
 msgid "Generated conversation titles contain one title instead of a list of suggestions."
 msgstr ""
 
@@ -5318,7 +5318,7 @@ msgstr "Generating your report..."
 msgid "German"
 msgstr "German"
 
-#: src/components/release/releaseHistory.ts:822
+#: src/components/release/releaseHistory.ts:792
 msgid "Get a reply during a conversation"
 msgstr "Отримуйте відповідь під час розмови"
 
@@ -5449,7 +5449,7 @@ msgstr ""
 msgid "Good response"
 msgstr "Гарна відповідь"
 
-#: src/components/release/ReleaseVideoModal.tsx:354
+#: src/components/release/ReleaseVideoModal.tsx:355
 msgid "Got it"
 msgstr "Зрозуміло"
 
@@ -5469,7 +5469,7 @@ msgstr ""
 msgid "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
 msgstr "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
 
-#: src/components/release/releaseHistory.ts:320
+#: src/components/release/releaseHistory.ts:310
 msgid "Guide report writing with your own instructions."
 msgstr ""
 
@@ -5566,11 +5566,11 @@ msgstr "приховати запрошення на подію dembrane"
 msgid "Hiding the dembrane event invitation comes with a paid plan."
 msgstr "Приховати запрошення на подію dembrane можна в платному плані."
 
-#: src/components/release/releaseHistory.ts:475
+#: src/components/release/releaseHistory.ts:461
 msgid "High-demand messages explain longer waits for responses."
 msgstr ""
 
-#: src/components/release/ReleaseTimeline.tsx:95
+#: src/components/release/ReleaseTimeline.tsx:99
 msgid "Highlight"
 msgstr "Варто уваги"
 
@@ -5600,7 +5600,7 @@ msgstr ""
 msgid "Host guide"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:287
+#: src/components/release/releaseHistory.ts:278
 msgid "Host guides are saved with the project and print with a white background."
 msgstr ""
 
@@ -5608,7 +5608,7 @@ msgstr ""
 msgid "Host's feedback"
 msgstr "Відгук організатора"
 
-#: src/components/release/releaseHistory.ts:815
+#: src/components/release/releaseHistory.ts:786
 msgid "Hosts can enable replies and customise their prompt in portal settings."
 msgstr ""
 
@@ -5654,7 +5654,7 @@ msgstr ""
 msgid "However you would say it. A date, a season, or that you do not know yet."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:156
+#: src/components/release/releaseHistory.ts:152
 msgid "https://www.youtube.com/watch?v=XSFAF3uSvMg"
 msgstr ""
 
@@ -5830,7 +5830,7 @@ msgstr ""
 msgid "interview"
 msgstr ""
 
-#: src/components/release/releases.ts:90
+#: src/components/release/releases.ts:101
 msgid "Introducing Popcorn"
 msgstr "Представляємо Popcorn"
 
@@ -5867,7 +5867,7 @@ msgstr ""
 msgid "Invite declined"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:261
+#: src/components/release/releaseHistory.ts:252
 msgid "Invite external collaborators and observers with their own access roles."
 msgstr ""
 
@@ -6032,7 +6032,7 @@ msgstr ""
 msgid "Italian (only ECHO features, Transcription and Summaries)"
 msgstr "Italian (only ECHO features, Transcription and Summaries)"
 
-#: src/components/release/releaseHistory.ts:501
+#: src/components/release/releaseHistory.ts:485
 msgid "Italian for your core workflows"
 msgstr "Італійська для основних процесів"
 
@@ -6129,7 +6129,7 @@ msgstr ""
 msgid "Jump to"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:633
+#: src/components/release/releaseHistory.ts:612
 msgid "Jump to the latest chat message on tablet and desktop."
 msgstr ""
 
@@ -6209,7 +6209,7 @@ msgstr ""
 msgid "Keep pending"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:522
+#: src/components/release/releaseHistory.ts:505
 msgid "Keep recordings awake"
 msgstr "Не давайте пристроям засинати під час запису"
 
@@ -6217,13 +6217,13 @@ msgstr "Не давайте пристроям засинати під час з
 msgid "Keep this canvas fresh"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:586
+#: src/components/release/releaseHistory.ts:567
 msgid "Keep working while audio uploads in the background."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:600
-msgid "Keep working while audio uploads, search your tags, and see transcription progress. Improved audio playback and smarter conversation selection make analysis easier."
-msgstr "Працюйте під час завантаження аудіо, шукайте теги й бачте хід транскрипції. Покращене відтворення та розумніший вибір розмов спрощують аналіз."
+#~ msgid "Keep working while audio uploads, search your tags, and see transcription progress. Improved audio playback and smarter conversation selection make analysis easier."
+#~ msgstr "Працюйте під час завантаження аудіо, шукайте теги й бачте хід транскрипції. Покращене відтворення та розумніший вибір розмов спрощують аналіз."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:853
 msgid "Keeps the tier until the date below, then reverts to Free unless they subscribe."
@@ -6567,7 +6567,7 @@ msgstr "Loading audit logs…"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
-#: src/components/release/releaseHistory.ts:658
+#: src/components/release/releaseHistory.ts:636
 msgid "Loading indicators and error messages give clearer feedback."
 msgstr ""
 
@@ -6728,7 +6728,7 @@ msgstr ""
 msgid "Manage attendees"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:281
+#: src/components/release/releaseHistory.ts:272
 msgid "Manage billing accounts, payments and workspace upgrade requests."
 msgstr ""
 
@@ -6748,7 +6748,7 @@ msgstr "Manage templates"
 msgid "Manage training"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:269
+#: src/components/release/releaseHistory.ts:260
 msgid "Manage workspace ownership, including internal and external data owners."
 msgstr ""
 
@@ -6833,7 +6833,7 @@ msgstr ""
 msgid "MCP access for {0} is on"
 msgstr ""
 
-#: src/components/release/releases.ts:58
+#: src/components/release/releases.ts:64
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "З’єднання MCP дають твоєму агенту змогу знаходити проєкти, шукати розмови, читати транскрипти та переглядати документацію з контролем організації та явною згодою."
 
@@ -6979,11 +6979,11 @@ msgstr "Більше"
 msgid "More actions"
 msgstr "More actions"
 
-#: src/components/release/releaseHistory.ts:399
+#: src/components/release/releaseHistory.ts:387
 msgid "More dependable anonymisation and recording"
 msgstr "Надійніша анонімізація та запис"
 
-#: src/components/release/releaseHistory.ts:201
+#: src/components/release/releaseHistory.ts:194
 msgid "More reliable conversation summaries"
 msgstr "Надійніші підсумки розмов"
 
@@ -6995,7 +6995,7 @@ msgstr ""
 msgid "More than 40."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:622
+#: src/components/release/releaseHistory.ts:601
 msgid "More useful chat context"
 msgstr "Корисніший контекст чату"
 
@@ -7025,7 +7025,7 @@ msgstr ""
 msgid "Move Conversation"
 msgstr "Move Conversation"
 
-#: src/components/release/releaseHistory.ts:265
+#: src/components/release/releaseHistory.ts:256
 msgid "Move conversations between projects and projects between workspaces in bulk."
 msgstr ""
 
@@ -7069,7 +7069,7 @@ msgstr "Move to Project"
 msgid "Multi-step analysis."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:712
+#: src/components/release/releaseHistory.ts:688
 msgid "Multilingual transcription and longer conversation replies are improved."
 msgstr ""
 
@@ -7188,7 +7188,7 @@ msgstr "New"
 msgid "New chat about this canvas"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:532
+#: src/components/release/releaseHistory.ts:515
 msgid "New chat modes and question suggestions support analysis."
 msgstr ""
 
@@ -7209,11 +7209,11 @@ msgstr "New conversations have been added since the creation of the library. Cre
 msgid "New features"
 msgstr "Нові функції"
 
-#: src/routes/ReleaseNotesRoute.tsx:56
+#: src/routes/ReleaseNotesRoute.tsx:24
 msgid "New features, improvements and fixes in dembrane."
 msgstr "Нові функції, покращення та виправлення в dembrane."
 
-#: src/components/release/releaseHistory.ts:461
+#: src/components/release/releaseHistory.ts:447
 msgid "New look, new features"
 msgstr "Новий вигляд, нові функції"
 
@@ -7244,7 +7244,7 @@ msgstr ""
 msgid "New project | dembrane"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:389
+#: src/components/release/releaseHistory.ts:378
 msgid "New projects no longer add dembrane as a default transcription term."
 msgstr ""
 
@@ -7271,7 +7271,7 @@ msgstr "Newest First"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:781
 #: src/routes/project/CreateProjectRoute.tsx:411
-#: src/components/release/ReleaseTimeline.tsx:47
+#: src/components/release/ReleaseTimeline.tsx:48
 #: src/components/pricing/PricingConfigurator.tsx:872
 #: src/components/invite/InviteModal.tsx:774
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:329
@@ -7563,7 +7563,7 @@ msgstr ""
 msgid "No referral agreements yet."
 msgstr ""
 
-#: src/routes/ReleaseNotesRoute.tsx:95
+#: src/routes/ReleaseNotesRoute.tsx:37
 msgid "No release notes yet."
 msgstr "Приміток до випусків ще немає."
 
@@ -7990,7 +7990,7 @@ msgstr ""
 msgid "Open conversation"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:673
+#: src/components/release/releaseHistory.ts:650
 msgid "Open conversations through direct links."
 msgstr ""
 
@@ -8026,7 +8026,7 @@ msgstr ""
 msgid "Open replay"
 msgstr "Відкрити запис"
 
-#: src/components/release/releaseHistory.ts:138
+#: src/components/release/releaseHistory.ts:135
 msgid "Open tabs recover after a new deployment instead of getting stuck on an old page."
 msgstr ""
 
@@ -8066,7 +8066,7 @@ msgstr ""
 msgid "participant.button.open.troubleshooting.guide"
 msgstr "Open troubleshooting guide"
 
-#: src/components/release/releaseHistory.ts:109
+#: src/components/release/releaseHistory.ts:106
 msgid "Open What's new from the sidebar and watch the organisation, workspace and project walkthrough."
 msgstr ""
 
@@ -8165,13 +8165,13 @@ msgstr ""
 msgid "Organisation account"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:233
+#: src/components/release/releaseHistory.ts:225
 msgid "Organisation admins can join private workspaces from the members page."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:250
-msgid "Organisation admins can join private workspaces from the members page. Access controls now explain when you need to join a workspace first."
-msgstr "Адміністратори організації можуть приєднуватися до приватних просторів зі сторінки учасників. Параметри доступу пояснюють, коли спершу потрібно приєднатися до простору."
+#~ msgid "Organisation admins can join private workspaces from the members page. Access controls now explain when you need to join a workspace first."
+#~ msgstr "Адміністратори організації можуть приєднуватися до приватних просторів зі сторінки учасників. Параметри доступу пояснюють, коли спершу потрібно приєднатися до простору."
 
 #: src/components/workspace/AccessRequestsList.tsx:152
 msgid "Organisation member"
@@ -8185,7 +8185,7 @@ msgstr ""
 msgid "Organisation members appear here once they join a workspace. Invites are sent from each workspace's Members tab."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:210
+#: src/components/release/releaseHistory.ts:203
 msgid "Organisation members load faster."
 msgstr ""
 
@@ -8221,23 +8221,23 @@ msgstr ""
 msgid "Organisations created by people who are external collaborators of a partner. A signal they may want their own plan."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:310
+#: src/components/release/releaseHistory.ts:300
 msgid "Organisations, workspaces and projects"
 msgstr "Організації, робочі простори та проєкти"
 
-#: src/components/release/releaseHistory.ts:257
+#: src/components/release/releaseHistory.ts:248
 msgid "Organise projects into workspaces within your organisation."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:309
-msgid "Organise work in workspaces, invite external collaborators and observers, and manage access from the new sidebar. Move conversations between projects and projects between workspaces."
-msgstr "Організовуйте роботу в просторах, запрошуйте зовнішніх співпрацівників і спостерігачів та керуйте доступом із нової бічної панелі. Переміщуйте розмови між проєктами, а проєкти між просторами."
+#~ msgid "Organise work in workspaces, invite external collaborators and observers, and manage access from the new sidebar. Move conversations between projects and projects between workspaces."
+#~ msgstr "Організовуйте роботу в просторах, запрошуйте зовнішніх співпрацівників і спостерігачів та керуйте доступом із нової бічної панелі. Переміщуйте розмови між проєктами, а проєкти між просторами."
 
 #: src/components/release/releaseHistory.ts:153
-msgid "Organise your work in organisations, workspaces and projects, with clearer control over who has access."
-msgstr "Організовуйте роботу в організаціях, робочих просторах і проєктах та чіткіше керуйте доступом."
+#~ msgid "Organise your work in organisations, workspaces and projects, with clearer control over who has access."
+#~ msgstr "Організовуйте роботу в організаціях, робочих просторах і проєктах та чіткіше керуйте доступом."
 
-#: src/components/release/releaseHistory.ts:154
+#: src/components/release/releaseHistory.ts:150
 msgid "Organization"
 msgstr "Організація"
 
@@ -8245,7 +8245,7 @@ msgstr "Організація"
 msgid "Other"
 msgstr "Інше"
 
-#: src/components/release/releaseHistory.ts:834
+#: src/components/release/releaseHistory.ts:803
 msgid "Our first major release"
 msgstr "Наш перший великий випуск"
 
@@ -8361,7 +8361,7 @@ msgstr ""
 msgid "Participant name and email"
 msgstr "Participant name and email"
 
-#: src/components/release/releaseHistory.ts:512
+#: src/components/release/releaseHistory.ts:496
 msgid "Participant onboarding cards have clearer wording and corrected translations."
 msgstr ""
 
@@ -8377,23 +8377,27 @@ msgstr ""
 msgid "Participants"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:810
+#: src/components/release/releaseHistory.ts:781
 msgid "Participants can request a reply during a recording."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:821
-msgid "Participants can request a reply while recording and read it as it arrives. Hosts can enable replies and customise the prompt in portal settings."
-msgstr "Учасники можуть запитати відповідь під час запису й читати її в міру надходження. Ведучі вмикають відповіді й налаштовують інструкцію в параметрах порталу."
+#~ msgid "Participants can request a reply while recording and read it as it arrives. Hosts can enable replies and customise the prompt in portal settings."
+#~ msgstr "Учасники можуть запитати відповідь під час запису й читати її в міру надходження. Ведучі вмикають відповіді й налаштовують інструкцію в параметрах порталу."
 
-#: src/components/release/releaseHistory.ts:528
+#: src/components/release/releases.ts:56
+msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
+msgstr ""
+
+#: src/components/release/releaseHistory.ts:511
 msgid "Participants can verify outcomes and refine replies."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:551
-msgid "Participants can verify outcomes and refine replies. New chat modes and suggestions support analysis, and two-factor authentication adds another sign-in option."
-msgstr "Учасники можуть перевіряти результати та уточнювати відповіді. Нові режими й підказки допомагають аналізу, а двофакторна автентифікація доповнює вхід."
+#~ msgid "Participants can verify outcomes and refine replies. New chat modes and suggestions support analysis, and two-factor authentication adds another sign-in option."
+#~ msgstr "Учасники можуть перевіряти результати та уточнювати відповіді. Нові режими й підказки допомагають аналізу, а двофакторна автентифікація доповнює вхід."
 
-#: src/components/release/releaseHistory.ts:414
+#: src/components/release/releaseHistory.ts:402
 msgid "Participants receive a reminder to verify before ending a conversation."
 msgstr ""
 
@@ -8634,11 +8638,11 @@ msgstr "Pin project"
 msgid "Pin templates here for quick access."
 msgstr "Pin templates here for quick access."
 
-#: src/components/release/releaseHistory.ts:340
+#: src/components/release/releaseHistory.ts:330
 msgid "Pin up to three projects to the top of your project list."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:336
+#: src/components/release/releaseHistory.ts:326
 msgid "Pin your most-used templates directly in chat."
 msgstr ""
 
@@ -8805,7 +8809,7 @@ msgstr ""
 msgid "Portal Overview"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:798
+#: src/components/release/releaseHistory.ts:770
 msgid "Portal previews and supporting images display correctly."
 msgstr ""
 
@@ -8829,13 +8833,13 @@ msgstr ""
 msgid "Prefer talking? Press record and just say it."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:430
+#: src/components/release/releaseHistory.ts:417
 msgid "Prepare sessions with an editable host guide next to the QR code."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:460
-msgid "Prepare sessions with an editable host guide, collect participant emails, and anonymise transcripts. This update also introduces custom logos and automatic conversation titles."
-msgstr "Готуйте сеанси з редагованим посібником, збирайте електронні адреси й анонімізуйте транскрипти. Оновлення також додає власні логотипи й автоматичні назви розмов."
+#~ msgid "Prepare sessions with an editable host guide, collect participant emails, and anonymise transcripts. This update also introduces custom logos and automatic conversation titles."
+#~ msgstr "Готуйте сеанси з редагованим посібником, збирайте електронні адреси й анонімізуйте транскрипти. Оновлення також додає власні логотипи й автоматичні назви розмов."
 
 #: src/components/chat/agenticToolActivity.ts:109
 msgid "Preparing a navigation shortcut"
@@ -8962,7 +8966,7 @@ msgstr ""
 msgid "Project and conversation search, with branded QR codes."
 msgstr "Пошук проєктів і розмов із брендованими QR-кодами."
 
-#: src/components/release/releaseHistory.ts:344
+#: src/components/release/releaseHistory.ts:334
 msgid "Project cards show the project's language."
 msgstr ""
 
@@ -9007,7 +9011,7 @@ msgstr ""
 msgid "Project Library | dembrane"
 msgstr "Project Library | dembrane"
 
-#: src/components/release/releaseHistory.ts:716
+#: src/components/release/releaseHistory.ts:692
 msgid "Project lists show accurate conversation totals."
 msgstr ""
 
@@ -9105,7 +9109,7 @@ msgstr ""
 msgid "Prorated for the rest of this billing period."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:536
+#: src/components/release/releaseHistory.ts:519
 msgid "Protect sign-in with two-factor authentication."
 msgstr ""
 
@@ -9191,7 +9195,7 @@ msgstr ""
 msgid "Read aloud"
 msgstr "Read aloud"
 
-#: src/components/release/releaseHistory.ts:116
+#: src/components/release/releaseHistory.ts:113
 msgid "Read assistant answers as they arrive."
 msgstr ""
 
@@ -9211,11 +9215,11 @@ msgstr ""
 msgid "Read more →"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:675
+#: src/components/release/releaseHistory.ts:652
 msgid "Read product announcements in the dashboard."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:813
+#: src/components/release/releaseHistory.ts:784
 msgid "Read replies as they arrive."
 msgstr ""
 
@@ -9344,11 +9348,11 @@ msgstr "Record another conversation"
 msgid "Recording"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:454
+#: src/components/release/releaseHistory.ts:441
 msgid "Recording and keeping devices awake work more reliably."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:393
+#: src/components/release/releaseHistory.ts:382
 msgid "Recording checks the audio upload connection."
 msgstr ""
 
@@ -9360,15 +9364,15 @@ msgstr ""
 msgid "Recording conversations you have in person, like street interviews."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:506
+#: src/components/release/releaseHistory.ts:490
 msgid "Recording devices stay awake more reliably."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:521
-msgid "Recording devices stay awake more reliably. Participant onboarding, reply refinement and conversation selection in Specific Details chat receive fixes."
-msgstr "Пристрої надійніше залишаються активними. Виправлено вступні кроки для учасників, уточнення відповідей і вибір розмов у чаті Specific Details."
+#~ msgid "Recording devices stay awake more reliably. Participant onboarding, reply refinement and conversation selection in Specific Details chat receive fixes."
+#~ msgstr "Пристрої надійніше залишаються активними. Виправлено вступні кроки для учасників, уточнення відповідей і вибір розмов у чаті Specific Details."
 
-#: src/components/release/releaseHistory.ts:385
+#: src/components/release/releaseHistory.ts:374
 msgid "Recording duration stays accurate after pausing and resuming."
 msgstr ""
 
@@ -9381,7 +9385,7 @@ msgstr "Recording interrupted"
 msgid "Recording keeps working, so your participants are unaffected."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:126
+#: src/components/release/releaseHistory.ts:123
 msgid "Recording links can prefill a title, tags and participant name."
 msgstr ""
 
@@ -9402,7 +9406,7 @@ msgstr ""
 msgid "Recording stopped at the five minute limit. Turning what you recorded into text."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:479
+#: src/components/release/releaseHistory.ts:465
 msgid "Recording waits for audio uploads before finishing, preventing missing transcripts on affected browsers."
 msgstr ""
 
@@ -9433,7 +9437,7 @@ msgstr ""
 msgid "References"
 msgstr "References"
 
-#: src/components/release/releaseHistory.ts:508
+#: src/components/release/releaseHistory.ts:492
 msgid "Refine shows the correct label and cannot run while another reply is being generated."
 msgstr ""
 
@@ -9496,21 +9500,25 @@ msgstr "Regenerating the summary. Please wait..."
 msgid "Register | dembrane"
 msgstr "Register | dembrane"
 
-#: src/routes/ReleaseNotesRoute.tsx:53
+#: src/routes/ReleaseNotesRoute.tsx:21
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:142
 msgid "Release notes"
 msgstr "Примітки до випусків"
 
-#: src/routes/ReleaseNotesRoute.tsx:21
+#: src/routes/ReleaseNotesRoute.tsx:12
 msgid "Release notes | dembrane"
 msgstr "Примітки до випусків | dembrane"
 
-#: src/components/release/ReleaseVideoModal.tsx:339
+#: src/components/release/releases.ts:72
+msgid "Release notes live in the app. What's new opens the latest update, and View release notes keeps every past update. Dismissing an update now sticks across your devices."
+msgstr ""
+
+#: src/components/release/ReleaseVideoModal.tsx:340
 msgid "Release video"
 msgstr ""
 
 #. placeholder {0}: release.title
-#: src/components/release/ReleaseTimeline.tsx:120
+#: src/components/release/ReleaseTimeline.tsx:124
 msgid "Release video: {0}"
 msgstr "Відео випуску: {0}"
 
@@ -9664,7 +9672,7 @@ msgstr "Запис"
 msgid "Replies to participants"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:616
+#: src/components/release/releaseHistory.ts:596
 msgid "Reply buttons, chat templates and the Library have corrected translations."
 msgstr ""
 
@@ -9714,7 +9722,7 @@ msgstr "Report Created - {0}"
 msgid "Report generation cancelled"
 msgstr "Report generation cancelled"
 
-#: src/components/release/releaseHistory.ts:328
+#: src/components/release/releaseHistory.ts:318
 msgid "Report generation continues in the background with a visible status."
 msgstr ""
 
@@ -9727,7 +9735,7 @@ msgstr "Report generation in progress..."
 msgid "Report generation was cancelled. You can start a new report below."
 msgstr "Report generation was cancelled. You can start a new report below."
 
-#: src/components/release/releaseHistory.ts:541
+#: src/components/release/releaseHistory.ts:524
 msgid "Report generation, retranscription, project cloning and chat history receive reliability fixes."
 msgstr ""
 
@@ -9736,8 +9744,8 @@ msgid "Report issues from the dashboard with images and voice recordings."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:38
-msgid "Report issues with images or voice, rate chat responses, and request a plan that fits your needs. Set a default legal basis for your workspace."
-msgstr "Повідомляйте про проблеми зображеннями або голосом, оцінюйте відповіді чату та запитуйте відповідний план. Установіть стандартну правову підставу для робочого простору."
+#~ msgid "Report issues with images or voice, rate chat responses, and request a plan that fits your needs. Set a default legal basis for your workspace."
+#~ msgstr "Повідомляйте про проблеми зображеннями або голосом, оцінюйте відповіді чату та запитуйте відповідний план. Установіть стандартну правову підставу для робочого простору."
 
 #: src/components/report/UpdateReportModalButton.tsx:209
 #: src/components/report/CreateReportForm.tsx:160
@@ -9756,7 +9764,7 @@ msgstr "Report scheduled"
 msgid "Report sent. Thank you"
 msgstr "Повідомлення надіслано. Дякуємо"
 
-#: src/components/release/releaseHistory.ts:687
+#: src/components/release/releaseHistory.ts:664
 msgid "Report subscriptions, Library generation and live indicators receive fixes."
 msgstr ""
 
@@ -10104,13 +10112,13 @@ msgstr "Rows per page"
 msgid "Run"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:775
+#: src/components/release/releaseHistory.ts:748
 msgid "Run transcription again for an existing conversation."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:781
-msgid "Run transcription again for an existing conversation. Dutch documentation is also updated."
-msgstr "Запускайте транскрипцію наявної розмови знову. Також оновлено документацію нідерландською."
+#~ msgid "Run transcription again for an existing conversation. Dutch documentation is also updated."
+#~ msgstr "Запускайте транскрипцію наявної розмови знову. Також оновлено документацію нідерландською."
 
 #: src/components/chat/AgenticChatPanel.tsx:421
 msgid "Running"
@@ -10246,7 +10254,7 @@ msgstr "Schedule"
 msgid "Schedule Report"
 msgstr "Schedule Report"
 
-#: src/components/release/releaseHistory.ts:324
+#: src/components/release/releaseHistory.ts:314
 msgid "Schedule reports (beta) to include all conversations recorded before the chosen time."
 msgstr ""
 
@@ -10259,7 +10267,7 @@ msgstr ""
 msgid "Scheduled"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:375
+#: src/components/release/releaseHistory.ts:364
 msgid "Scheduled reports and custom templates"
 msgstr "Заплановані звіти та власні шаблони"
 
@@ -10308,7 +10316,7 @@ msgstr ""
 msgid "Search conversations"
 msgstr "Search conversations"
 
-#: src/components/release/releaseHistory.ts:285
+#: src/components/release/releaseHistory.ts:276
 msgid "Search matches your words in any order."
 msgstr ""
 
@@ -10358,7 +10366,7 @@ msgstr ""
 msgid "Search tags"
 msgstr "Search tags"
 
-#: src/components/release/releaseHistory.ts:582
+#: src/components/release/releaseHistory.ts:563
 msgid "Search tags and clear conversation filters in one click."
 msgstr ""
 
@@ -10438,7 +10446,7 @@ msgstr "Secret"
 msgid "Secret copied"
 msgstr "Secret copied"
 
-#: src/components/release/releaseHistory.ts:704
+#: src/components/release/releaseHistory.ts:680
 msgid "See audio quality indicators for noise, silence and overlapping speech."
 msgstr ""
 
@@ -10452,7 +10460,7 @@ msgstr ""
 msgid "See upgrade options"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:589
+#: src/components/release/releaseHistory.ts:570
 msgid "See when transcription is in progress."
 msgstr ""
 
@@ -10501,17 +10509,17 @@ msgstr "Select all"
 msgid "Select all ({remainingCount})"
 msgstr "Select all ({remainingCount})"
 
-#: src/components/release/releaseHistory.ts:467
+#: src/components/release/releaseHistory.ts:453
 msgid "Select all conversations, or only the filtered conversations, for chat."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:130
+#: src/components/release/releaseHistory.ts:127
 msgid "Select all is available in Ask and new Specific Details chats."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:484
-msgid "Select all or filtered conversations for chat and filter by clicking a tag. Recording uploads are more reliable, with clearer messages during high demand."
-msgstr "Обирайте для чату всі або відфільтровані розмови й фільтруйте натисканням на тег. Завантаження записів надійніше, а повідомлення під час високого навантаження зрозуміліші."
+#~ msgid "Select all or filtered conversations for chat and filter by clicking a tag. Recording uploads are more reliable, with clearer messages during high demand."
+#~ msgstr "Обирайте для чату всі або відфільтровані розмови й фільтруйте натисканням на тег. Завантаження записів надійніше, а повідомлення під час високого навантаження зрозуміліші."
 
 #. js-lingui-explicit-id
 #: src/components/conversation/SelectAllConfirmationModal.tsx:212
@@ -10557,7 +10565,7 @@ msgstr "Select conversations and find exact quotes"
 msgid "Select conversations from sidebar"
 msgstr "Select conversations from sidebar"
 
-#: src/components/release/releaseHistory.ts:485
+#: src/components/release/releaseHistory.ts:470
 msgid "Select multiple conversations"
 msgstr "Вибір кількох розмов"
 
@@ -10784,7 +10792,7 @@ msgstr "Settings"
 msgid "Settings | dembrane"
 msgstr "Settings | dembrane"
 
-#: src/components/release/releaseHistory.ts:356
+#: src/components/release/releaseHistory.ts:346
 msgid "Settings are grouped into Account & Security, Appearance and Project Defaults."
 msgstr ""
 
@@ -10797,7 +10805,7 @@ msgstr ""
 msgid "Setup"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:424
+#: src/components/release/releaseHistory.ts:411
 msgid "Shape how participants verify outcomes"
 msgstr "Налаштовуйте перевірку результатів"
 
@@ -10806,7 +10814,7 @@ msgstr "Налаштовуйте перевірку результатів"
 msgid "Share"
 msgstr "Поділитися"
 
-#: src/components/release/releaseHistory.ts:277
+#: src/components/release/releaseHistory.ts:268
 msgid "Share invite links as an alternative to email invitations."
 msgstr ""
 
@@ -10874,7 +10882,7 @@ msgstr ""
 msgid "Shared with {0} and {overflow} others"
 msgstr ""
 
-#: src/components/release/releases.ts:66
+#: src/components/release/releases.ts:84
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Коли ти ділишся приватним проєктом із людиною, яка ще не є учасником, тепер можна надіслати запрошення замість отримання помилки. Доступ надається після приєднання до робочого простору."
 
@@ -10970,7 +10978,7 @@ msgstr ""
 msgid "Show the invitation"
 msgstr "Показувати запрошення"
 
-#: src/components/release/releaseHistory.ts:442
+#: src/components/release/releaseHistory.ts:429
 msgid "Show your own logo to participants, available on request."
 msgstr ""
 
@@ -11044,7 +11052,7 @@ msgstr "Skipped because the selection was too large."
 msgid "Slack community"
 msgstr "Slack community"
 
-#: src/components/release/releaseHistory.ts:87
+#: src/components/release/releaseHistory.ts:85
 msgid "Smoother recording and quicker questions"
 msgstr "Зручніший запис і швидші запитання"
 
@@ -11167,7 +11175,7 @@ msgstr "Source {0}"
 msgid "Sources"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:746
+#: src/components/release/releaseHistory.ts:721
 msgid "Sources and references no longer appear empty in the affected cases."
 msgstr ""
 
@@ -11175,7 +11183,7 @@ msgstr ""
 msgid "Spanish"
 msgstr "Spanish"
 
-#: src/components/release/releaseHistory.ts:113
+#: src/components/release/releaseHistory.ts:110
 msgid "Speak a question and review the text before sending it."
 msgstr ""
 
@@ -11192,7 +11200,7 @@ msgstr "Specific Details"
 msgid "Specific Details - Selected conversations"
 msgstr "Specific Details - Selected conversations"
 
-#: src/components/release/releaseHistory.ts:516
+#: src/components/release/releaseHistory.ts:500
 msgid "Specific Details chat respects manual conversation selection."
 msgstr ""
 
@@ -11256,13 +11264,13 @@ msgstr "Start New Conversation"
 msgid "Start over"
 msgstr "Start over"
 
-#: src/components/release/releaseHistory.ts:122
+#: src/components/release/releaseHistory.ts:119
 msgid "Start recording without an extra ready-to-record confirmation."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:86
-msgid "Start recording without duplicate conversations, see the actual recording time, and use saved question templates from Ask. Sidebar updates now show an unread count."
-msgstr "Починайте запис без дублікатів розмов, бачте справжній час початку й використовуйте збережені шаблони запитань в Ask. Оновлення на бічній панелі показують кількість непрочитаних."
+#~ msgid "Start recording without duplicate conversations, see the actual recording time, and use saved question templates from Ask. Sidebar updates now show an unread count."
+#~ msgstr "Починайте запис без дублікатів розмов, бачте справжній час початку й використовуйте збережені шаблони запитань в Ask. Оновлення на бічній панелі показують кількість непрочитаних."
 
 #: src/components/conversation/ConversationDrilldownModal.tsx:54
 msgid "Started recording"
@@ -11355,7 +11363,7 @@ msgstr ""
 msgid "Stopped. Updated {updatedAgo}."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:49
+#: src/components/release/releaseHistory.ts:48
 msgid "Stopping during the microphone prompt releases the microphone so you can retry."
 msgstr ""
 
@@ -11376,7 +11384,7 @@ msgstr "Submit"
 msgid "participant.button.submit.text.mode"
 msgstr "Submit"
 
-#: src/components/release/releaseHistory.ts:732
+#: src/components/release/releaseHistory.ts:707
 msgid "Subscribe to report notifications."
 msgstr ""
 
@@ -11425,7 +11433,7 @@ msgstr ""
 msgid "Suggesting tag changes"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:790
+#: src/components/release/releaseHistory.ts:762
 msgid "Summaries adapt to the complexity of the conversation."
 msgstr ""
 
@@ -11486,7 +11494,7 @@ msgstr ""
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
-#: src/components/release/releaseHistory.ts:614
+#: src/components/release/releaseHistory.ts:594
 msgid "Supporting quotes display correctly."
 msgstr ""
 
@@ -11544,7 +11552,7 @@ msgstr "Tags"
 msgid "Tags are the vocabulary participants can pick from in the portal. Nothing changes until you apply."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:545
+#: src/components/release/releaseHistory.ts:528
 msgid "Tags update correctly for ongoing conversations."
 msgstr ""
 
@@ -11570,7 +11578,7 @@ msgstr "Take some time to create an outcome that makes your contribution concret
 msgid "participant.refine.make.concrete.description"
 msgstr "Take some time to create an outcome that makes your contribution concrete."
 
-#: src/components/release/releaseHistory.ts:45
+#: src/components/release/releaseHistory.ts:44
 msgid "Tapping Record twice no longer creates duplicate conversations."
 msgstr ""
 
@@ -11619,7 +11627,7 @@ msgstr ""
 msgid "Terms"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:700
+#: src/components/release/releaseHistory.ts:676
 msgid "Test and select your microphone before recording."
 msgstr ""
 
@@ -11736,8 +11744,12 @@ msgstr "The conversation could not be loaded. Please try again or contact suppor
 msgid "participant.conversation.error.loading"
 msgstr "The conversation could not be loaded. Please try again or contact support."
 
-#: src/components/release/releaseHistory.ts:763
+#: src/components/release/releaseHistory.ts:737
 msgid "The conversation list shows clearer totals."
+msgstr ""
+
+#: src/components/release/releases.ts:80
+msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr ""
 
 #: src/components/pricing/PricingBookingStep.tsx:152
@@ -11748,8 +11760,12 @@ msgstr ""
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 msgstr "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 
-#: src/components/release/releaseHistory.ts:97
+#: src/components/release/releaseHistory.ts:95
 msgid "The feedback form can prefill your email address."
+msgstr ""
+
+#: src/components/release/releases.ts:76
+msgid "The feedback form links straight to Report an issue, so sending a bug with screenshots takes one step fewer."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:25
@@ -11757,8 +11773,8 @@ msgid "The feedback portal explains how to report security issues."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:833
-msgid "The first major release establishes the project under the Business Source License 1.1."
-msgstr "Перший великий випуск установлює для проєкту Business Source License 1.1."
+#~ msgid "The first major release establishes the project under the Business Source License 1.1."
+#~ msgstr "Перший великий випуск установлює для проєкту Business Source License 1.1."
 
 #: src/components/chat/Sources.tsx:28
 msgid "The following conversations were automatically added to the context"
@@ -11793,13 +11809,13 @@ msgstr ""
 msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:670
+#: src/components/release/releaseHistory.ts:647
 msgid "The Library gains clearer views of recurring themes, available on request."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:693
-msgid "The Library gains clearer views of recurring themes. Chat templates stay within reach, conversations have direct links, and upload status is easier to follow."
-msgstr "Library чіткіше показує повторювані теми. Шаблони чату залишаються доступними, розмови мають прямі посилання, а за завантаженням легше стежити."
+#~ msgid "The Library gains clearer views of recurring themes. Chat templates stay within reach, conversations have direct links, and upload status is easier to follow."
+#~ msgstr "Library чіткіше показує повторювані теми. Шаблони чату залишаються доступними, розмови мають прямі посилання, а за завантаженням легше стежити."
 
 #: src/components/project/ProjectAccessGuard.tsx:92
 msgid "The link may be private, or it may have moved. Ask the person who shared it to check."
@@ -11817,7 +11833,7 @@ msgstr ""
 msgid "The live popcorn deck and the canvases built for this project live here."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:241
+#: src/components/release/releaseHistory.ts:233
 msgid "The members page shows a loading state instead of briefly claiming there are no members."
 msgstr ""
 
@@ -11833,7 +11849,7 @@ msgstr ""
 msgid "The microphone is still blocked. Change it in your browser settings, then check again."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:273
+#: src/components/release/releaseHistory.ts:264
 msgid "The new sidebar brings organisations, workspaces, members and settings together."
 msgstr ""
 
@@ -11846,7 +11862,7 @@ msgstr ""
 msgid "The page this answer refers to."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:654
+#: src/components/release/releaseHistory.ts:632
 msgid "The participant flow has clearer microphone checks."
 msgstr ""
 
@@ -11858,7 +11874,7 @@ msgstr ""
 msgid "The previous versions are still available below."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:828
+#: src/components/release/releaseHistory.ts:798
 msgid "The project adopts the Business Source License 1.1."
 msgstr ""
 
@@ -11879,11 +11895,11 @@ msgstr "The report may start up to 5 minutes after the chosen time."
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr ""
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:96
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:134
+#: src/components/release/releaseHistory.ts:131
 msgid "The sidebar scrolls on short screens while keeping its header and footer available."
 msgstr ""
 
@@ -11898,6 +11914,10 @@ msgstr "The summary is being regenerated. Please wait for it to be available."
 #: src/components/project/ProjectPortalEditor.tsx:1454
 msgid "The thank you page ends on a card inviting participants to run their own event with dembrane."
 msgstr "Сторінка подяки завершується карткою, яка запрошує учасників провести власну подію з dembrane."
+
+#: src/components/release/releases.ts:60
+msgid "The thank you page invites participants to run their own event with dembrane. Hosts on a paid plan can switch this card off per project in the portal editor."
+msgstr ""
 
 #: src/components/voice/VoiceInputError.tsx:45
 msgid "The transcript did not come back. Check your connection and try again."
@@ -12545,7 +12565,7 @@ msgstr ""
 msgid "Trainings"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:782
+#: src/components/release/releaseHistory.ts:754
 msgid "Transcribe a conversation again"
 msgstr "Транскрибуйте розмову повторно"
 
@@ -12566,10 +12586,10 @@ msgid "Transcript"
 msgstr "Transcript"
 
 #: src/components/release/releaseHistory.ts:398
-msgid "Transcript anonymisation and retranscription settings now work more consistently. Recording duration stays accurate after pausing and resuming."
-msgstr "Анонімізація транскриптів і налаштування повторної транскрипції працюють узгодженіше. Тривалість запису залишається правильною після паузи й відновлення."
+#~ msgid "Transcript anonymisation and retranscription settings now work more consistently. Recording duration stays accurate after pausing and resuming."
+#~ msgstr "Анонімізація транскриптів і налаштування повторної транскрипції працюють узгодженіше. Тривалість запису залишається правильною після паузи й відновлення."
 
-#: src/components/release/releaseHistory.ts:381
+#: src/components/release/releaseHistory.ts:370
 msgid "Transcript anonymisation and retranscription use consistent privacy settings."
 msgstr ""
 
@@ -12581,7 +12601,7 @@ msgstr "Transcript copied to clipboard"
 msgid "transcript excerpt"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:570
+#: src/components/release/releaseHistory.ts:552
 msgid "Transcript retrieval and conversation summaries finish before dependent work continues."
 msgstr ""
 
@@ -12692,7 +12712,7 @@ msgstr "Try moving a bit closer to your microphone for better sound quality."
 msgid "Trying to join an existing organization?"
 msgstr ""
 
-#: src/components/release/releases.ts:50
+#: src/components/release/releases.ts:48
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Перетворюй розмови на слайди наживо. Запускай живу сесію або аналіз на запит, презентуй групі та перевіряй джерела висновків."
 
@@ -12727,22 +12747,22 @@ msgid "Turn on popcorn"
 msgstr ""
 
 #: src/components/release/releases.ts:83
-msgid ""
-"Turn your project's conversations into live slides for the room.\n"
-"\n"
-"- Follow emerging themes as people talk.\n"
-"- Present insights and check the conversations behind them.\n"
-"- Start a live session or run an analysis when you need it.\n"
-"\n"
-"Plus: new chat templates, agent connections and mobile improvements."
-msgstr ""
-"Перетворюйте розмови свого проєкту на живі слайди для спільного перегляду.\n"
-"\n"
-"- Стежте за новими темами під час розмов.\n"
-"- Презентуйте висновки та перевіряйте розмови, на яких вони ґрунтуються.\n"
-"- Запустіть сеанс наживо або аналіз за потреби.\n"
-"\n"
-"Також: нові шаблони чату, підключення агентів і покращення для мобільних пристроїв."
+#~ msgid ""
+#~ "Turn your project's conversations into live slides for the room.\n"
+#~ "\n"
+#~ "- Follow emerging themes as people talk.\n"
+#~ "- Present insights and check the conversations behind them.\n"
+#~ "- Start a live session or run an analysis when you need it.\n"
+#~ "\n"
+#~ "Plus: new chat templates, agent connections and mobile improvements."
+#~ msgstr ""
+#~ "Перетворюйте розмови свого проєкту на живі слайди для спільного перегляду.\n"
+#~ "\n"
+#~ "- Стежте за новими темами під час розмов.\n"
+#~ "- Презентуйте висновки та перевіряйте розмови, на яких вони ґрунтуються.\n"
+#~ "- Запустіть сеанс наживо або аналіз за потреби.\n"
+#~ "\n"
+#~ "Також: нові шаблони чату, підключення агентів і покращення для мобільних пристроїв."
 
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:1582
@@ -12877,7 +12897,7 @@ msgstr "Unpin project"
 msgid "Unread"
 msgstr ""
 
-#: src/components/release/releases.ts:70
+#: src/components/release/releases.ts:88
 msgid "Unreadable audio and invalid transcription responses no longer cause repeated processing attempts."
 msgstr ""
 
@@ -12977,7 +12997,7 @@ msgstr ""
 msgid "Updated {updatedAgo}."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:450
+#: src/components/release/releaseHistory.ts:437
 msgid "Updated colours, fonts, icons and logo give dembrane a fresh look."
 msgstr ""
 
@@ -12989,7 +13009,7 @@ msgstr ""
 msgid "Updates"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:57
+#: src/components/release/releaseHistory.ts:56
 msgid "Updates appear in the sidebar with an unread count."
 msgstr ""
 
@@ -13171,11 +13191,11 @@ msgid ""
 "Gebruik een double diamond-aanpak (design science approach) op alle gesprekken in deze dataset om een MECE-set van 7+/-2 narratieven te ontwikkelen die de variantie binnen deze dataset verklaren. Let daarbij extra op de uitschieters. Kwantificeer het bewijs voor elk narratief als het aantal \"verschijnselen\" waarin de data een bepaalde narratieve hypothese ondersteunt."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:284
+#: src/components/release/releaseHistory.ts:275
 msgid "Use dembrane in Czech."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:611
+#: src/components/release/releaseHistory.ts:591
 msgid "Use improved question templates and updated transcription options."
 msgstr ""
 
@@ -13183,15 +13203,15 @@ msgstr ""
 msgid "Use inherited default"
 msgstr "Використати успадковане значення"
 
-#: src/components/release/releaseHistory.ts:491
+#: src/components/release/releaseHistory.ts:476
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:500
-msgid "Use Italian for chat, reports, transcription and participant onboarding cards. Full interface translation was not included in this release."
-msgstr "Використовуйте італійську для чату, звітів, транскрипції та вступних карток учасників. Повного перекладу інтерфейсу цей випуск не містив."
+#~ msgid "Use Italian for chat, reports, transcription and participant onboarding cards. Full interface translation was not included in this release."
+#~ msgstr "Використовуйте італійську для чату, звітів, транскрипції та вступних карток учасників. Повного перекладу інтерфейсу цей випуск не містив."
 
-#: src/components/release/releaseHistory.ts:65
+#: src/components/release/releaseHistory.ts:64
 msgid "Use pinned and saved question templates, including the / shortcut, from Ask."
 msgstr ""
 
@@ -13201,7 +13221,7 @@ msgstr ""
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
-#: src/components/release/releaseHistory.ts:360
+#: src/components/release/releaseHistory.ts:350
 msgid "Use Ukrainian for chat and participant replies."
 msgstr ""
 
@@ -13257,11 +13277,11 @@ msgstr ""
 msgid "Verification on the finish screen"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:410
+#: src/components/release/releaseHistory.ts:398
 msgid "Verification outcomes use the project's language."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:291
+#: src/components/release/releaseHistory.ts:282
 msgid "Verification prompts allow 10,000 characters, and verified outcomes have a copy button."
 msgstr ""
 
@@ -13334,7 +13354,7 @@ msgstr "Verify code"
 msgid "Verify email"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:552
+#: src/components/release/releaseHistory.ts:534
 msgid "Verify outcomes and refine replies"
 msgstr "Перевіряйте результати й уточнюйте відповіді"
 
@@ -13383,7 +13403,7 @@ msgstr "View example payload"
 msgid "View invite"
 msgstr ""
 
-#: src/components/release/ReleaseVideoModal.tsx:351
+#: src/components/release/ReleaseVideoModal.tsx:352
 msgid "View release notes"
 msgstr "Переглянути примітки до випусків"
 
@@ -13421,7 +13441,7 @@ msgstr ""
 msgid "Voice"
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:146
+#: src/components/release/releaseHistory.ts:143
 msgid "Voice input respects the free plan's recording limit."
 msgstr ""
 
@@ -13457,7 +13477,7 @@ msgstr ""
 msgid "Watch live recordings, transcription progress, and errors across this project as they happen."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:151
+#: src/components/release/releaseHistory.ts:148
 msgid "Watch the walkthrough for an introduction to organisations, workspaces and projects."
 msgstr "Перегляньте відео, щоб познайомитися з організаціями, робочими просторами та проєктами."
 
@@ -13716,7 +13736,7 @@ msgid "What would you like to explore?"
 msgstr "What would you like to explore?"
 
 #: src/features/sidebar/blocks/HelpBlock.tsx:57
-#: src/components/release/ReleaseVideoModal.tsx:308
+#: src/components/release/ReleaseVideoModal.tsx:310
 msgid "What's new"
 msgstr ""
 
@@ -13833,10 +13853,10 @@ msgid "Within my organisation"
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:184
-msgid "Work with the new conversational assistant, follow sessions in the live monitor, and use the updated transcription pipeline."
-msgstr "Працюйте з новим розмовним помічником, стежте за сеансами в моніторі наживо й використовуйте оновлену обробку транскрипції."
+#~ msgid "Work with the new conversational assistant, follow sessions in the live monitor, and use the updated transcription pipeline."
+#~ msgstr "Працюйте з новим розмовним помічником, стежте за сеансами в моніторі наживо й використовуйте оновлену обробку транскрипції."
 
-#: src/components/release/releaseHistory.ts:172
+#: src/components/release/releaseHistory.ts:167
 msgid "Work with the new conversational assistant."
 msgstr ""
 
@@ -13866,7 +13886,7 @@ msgstr ""
 msgid "Workspace / Project"
 msgstr "Робочий простір / проєкт"
 
-#: src/components/release/releaseHistory.ts:77
+#: src/components/release/releaseHistory.ts:76
 msgid "Workspace access options explain which settings need a paid plan."
 msgstr ""
 
@@ -13909,7 +13929,7 @@ msgstr ""
 msgid "Workspace name. Saves automatically."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:303
+#: src/components/release/releaseHistory.ts:294
 msgid "Workspace permissions, member counts and account-specific data loading are corrected."
 msgstr ""
 
@@ -13968,13 +13988,13 @@ msgstr ""
 msgid "add.tag.filter.modal.description"
 msgstr "Would you like to add this tag to your current filters?"
 
-#: src/components/release/releaseHistory.ts:405
+#: src/components/release/releaseHistory.ts:393
 msgid "Write custom host prompts for participant verification."
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:423
-msgid "Write custom verification prompts, generate outcomes in your project language, and remind participants to verify before finishing. Configure settings for each legal basis."
-msgstr "Пишіть власні інструкції перевірки, генеруйте результати мовою проєкту й нагадуйте учасникам перевірити їх перед завершенням. Налаштовуйте кожну правову підставу."
+#~ msgid "Write custom verification prompts, generate outcomes in your project language, and remind participants to verify before finishing. Configure settings for each legal basis."
+#~ msgstr "Пишіть власні інструкції перевірки, генеруйте результати мовою проєкту й нагадуйте учасникам перевірити їх перед завершенням. Налаштовуйте кожну правову підставу."
 
 #: src/routes/auth/Register.tsx:282
 msgid "Wrong address? Change email"
@@ -14424,7 +14444,7 @@ msgstr ""
 msgid "Your own logo comes with a paid plan."
 msgstr ""
 
-#: src/components/release/releaseHistory.ts:237
+#: src/components/release/releaseHistory.ts:229
 msgid "Your own member card stays at the top of the list."
 msgstr ""
 
