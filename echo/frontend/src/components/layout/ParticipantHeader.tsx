@@ -3,7 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Box, Button, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { GearSixIcon } from "@phosphor-icons/react";
-import { IconArrowLeft, IconShare2 } from "@tabler/icons-react";
+import { IconArrowLeft, IconQrcode } from "@tabler/icons-react";
 import { useLocation, useParams, useSearchParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -69,28 +69,28 @@ export const ParticipantHeader = () => {
 			/>
 			<Group
 				component="header"
-				justify="center"
-				className="relative py-2 shadow-sm"
+				justify="space-between"
+				wrap="nowrap"
+				className="relative px-4 py-2 shadow-sm"
 				{...testId("portal-header")}
 			>
-				{showBackButton && (
-					<Box className="absolute left-4 top-1/2 -translate-y-1/2">
+				<Box className="min-w-0">
+					{showBackButton ? (
 						<Button
 							size="md"
 							variant="subtle"
+							px={0}
 							leftSection={<IconArrowLeft size={16} />}
 							onClick={handleBack}
 							{...testId("portal-header-back-button")}
 						>
 							<Trans id="participant.button.back">Back</Trans>
 						</Button>
-					</Box>
-				)}
-				{showCancelButton && (
-					<Box className="absolute left-4 top-1/2 -translate-y-1/2">
+					) : showCancelButton ? (
 						<Button
 							size="md"
 							variant="subtle"
+							px={0}
 							onClick={handleCancel}
 							{...testId("portal-header-cancel-button")}
 						>
@@ -98,34 +98,35 @@ export const ParticipantHeader = () => {
 								Cancel
 							</Trans>
 						</Button>
-					</Box>
+					) : (
+						<Logo h="36px" />
+					)}
+				</Box>
+				{!hideHeaderActions && (
+					<Group gap="lg" wrap="nowrap">
+						<ActionIcon
+							size="xl"
+							variant="transparent"
+							onClick={openShare}
+							title={t`Share portal`}
+							aria-label={t`Share portal`}
+							{...testId("portal-header-share-button")}
+						>
+							<IconQrcode size={30} color="gray" />
+						</ActionIcon>
+						<ActionIcon
+							size="xl"
+							variant="transparent"
+							onClick={openSettings}
+							title={t`Settings`}
+							aria-label={t`Settings`}
+							{...testId("portal-header-settings-button")}
+						>
+							<GearSixIcon size={30} color="gray" />
+						</ActionIcon>
+					</Group>
 				)}
-				<Logo hideTitle h="64px" />
 			</Group>
-			{!hideHeaderActions && (
-				<Group className="absolute right-4 top-5 z-20" gap="xs" wrap="nowrap">
-					<ActionIcon
-						size="lg"
-						variant="transparent"
-						onClick={openSettings}
-						title={t`Settings`}
-						aria-label={t`Settings`}
-						{...testId("portal-header-settings-button")}
-					>
-						<GearSixIcon size={24} color="gray" />
-					</ActionIcon>
-					<ActionIcon
-						size="lg"
-						variant="transparent"
-						onClick={openShare}
-						title={t`Share portal`}
-						aria-label={t`Share portal`}
-						{...testId("portal-header-share-button")}
-					>
-						<IconShare2 size={24} color="gray" />
-					</ActionIcon>
-				</Group>
-			)}
 		</>
 	);
 };

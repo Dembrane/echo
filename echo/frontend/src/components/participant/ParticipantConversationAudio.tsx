@@ -923,6 +923,7 @@ export const ParticipantConversationAudio = () => {
 				<Outlet
 					context={{
 						isRecording,
+						peekAudioLevel: audioRecorder.peekAudioLevel,
 						recordingTime,
 					}}
 				/>

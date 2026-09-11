@@ -1978,7 +1978,7 @@ msgstr "Back"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantOnboardingCards.tsx:552
-#: src/components/layout/ParticipantHeader.tsx:85
+#: src/components/layout/ParticipantHeader.tsx:87
 msgid "participant.button.back"
 msgstr "Back"
 
@@ -3966,7 +3966,7 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1075
+#: src/components/participant/ParticipantConversationAudio.tsx:1076
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -4704,7 +4704,7 @@ msgid "participant.button.finish.text.mode"
 msgstr "Finish"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1043
+#: src/components/participant/ParticipantConversationAudio.tsx:1044
 msgid "participant.button.finish"
 msgstr "Finish"
 
@@ -8094,7 +8094,7 @@ msgstr "Please enter a valid email."
 msgid "Please log in to continue."
 msgstr "Please log in to continue."
 
-#: src/components/participant/ParticipantBody.tsx:200
+#: src/components/participant/ParticipantBody.tsx:199
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -8104,7 +8104,7 @@ msgstr ""
 "**Please keep this screen lit up**\n"
 "(black screen = not recording)"
 
-#: src/components/participant/ParticipantBody.tsx:196
+#: src/components/participant/ParticipantBody.tsx:195
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -8674,7 +8674,7 @@ msgid "Reconnecting"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1018
+#: src/components/participant/ParticipantConversationAudio.tsx:1019
 msgid "participant.button.record"
 msgstr "Record"
 
@@ -9990,8 +9990,8 @@ msgstr ""
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
 #: src/features/sidebar/views/org/OrgHomeView.tsx:130
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
-#: src/components/layout/ParticipantHeader.tsx:111
-#: src/components/layout/ParticipantHeader.tsx:112
+#: src/components/layout/ParticipantHeader.tsx:121
+#: src/components/layout/ParticipantHeader.tsx:122
 msgid "Settings"
 msgstr "Settings"
 
@@ -10023,8 +10023,8 @@ msgid "Share link"
 msgstr ""
 
 #: src/components/participant/ParticipantShareModal.tsx:77
-#: src/components/layout/ParticipantHeader.tsx:121
-#: src/components/layout/ParticipantHeader.tsx:122
+#: src/components/layout/ParticipantHeader.tsx:111
+#: src/components/layout/ParticipantHeader.tsx:112
 msgid "Share portal"
 msgstr "Sdílet portál"
 
@@ -10328,7 +10328,7 @@ msgstr "Something went wrong while generating the secret."
 msgid "Something went wrong while transcribing. Try again."
 msgstr ""
 
-#: src/components/participant/ParticipantBody.tsx:157
+#: src/components/participant/ParticipantBody.tsx:159
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 
@@ -10503,7 +10503,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1095
+#: src/components/participant/ParticipantConversationAudio.tsx:1096
 msgid "participant.button.stop"
 msgstr "Stop"
 
@@ -11483,7 +11483,7 @@ msgstr "Timestamp"
 msgid "Timestamps and duration"
 msgstr "Timestamps and duration"
 
-#: src/components/participant/ParticipantBody.tsx:149
+#: src/components/participant/ParticipantBody.tsx:151
 msgid "Tip"
 msgstr "Tip"
 
@@ -12283,7 +12283,7 @@ msgid "participant.modal.verify_prompt.title"
 msgstr "Verification reminder"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudioContent.tsx:167
+#: src/components/participant/ParticipantConversationAudioContent.tsx:171
 msgid "participant.banner.verification_required"
 msgstr "Verification required"
 
@@ -12391,7 +12391,7 @@ msgstr "View example payload"
 msgid "View invite"
 msgstr "View invite"
 
-#: src/components/participant/ParticipantBody.tsx:257
+#: src/components/participant/ParticipantBody.tsx:256
 msgid "View your responses"
 msgstr "View your responses"
 
@@ -12596,7 +12596,7 @@ msgid "Webhooks come with a paid plan."
 msgstr ""
 
 #: src/routes/onboarding/OnboardingRoute.tsx:121
-#: src/components/participant/ParticipantBody.tsx:130
+#: src/components/participant/ParticipantBody.tsx:132
 msgid "Welcome"
 msgstr "Welcome"
 
@@ -13128,7 +13128,7 @@ msgstr "You must login with the same provider you used to sign up. If you face a
 msgid "You need an invitation from a colleague"
 msgstr "You need an invitation from a colleague"
 
-#: src/components/participant/ParticipantBody.tsx:148
+#: src/components/participant/ParticipantBody.tsx:150
 msgid "You seem to be offline, please check your internet connection"
 msgstr "You seem to be offline, please check your internet connection"
 
@@ -13448,7 +13448,7 @@ msgstr ""
 msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
 msgstr "Vaše odpověď byla zaznamenána. Tuto kartu můžete zavřít. Můžete také nahrát další rozhovor nebo sdílet QR kód, aby mohli přispět i ostatní."
 
-#: src/components/participant/ParticipantBody.tsx:267
+#: src/components/participant/ParticipantBody.tsx:266
 msgid "Your responses"
 msgstr "Your responses"
 
