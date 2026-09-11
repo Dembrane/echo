@@ -1,8 +1,8 @@
 # Release notes
 
 `getReleases()` is the curated customer-facing history, newest first. The popup
-shows its first entry. The Release notes page keeps every entry and can filter
-by publication year. Releases are grouped by publication month in a timeline.
+shows its first entry. The Release notes page keeps every entry, grouped by
+publication month in a timeline.
 
 Set `highlight: true` for important product milestones. These display a
 "Highlight" badge and a prominent card, regardless of semver. Other patch
@@ -21,10 +21,9 @@ version. A patch can contain a feature; the compact layout does not hide it.
 Keep beta and access-on-request qualifications from the launch announcement.
 Show each category once, omit empty groups and combine overlapping descriptions
 of the same feature. Within each group, preserve the editorial order.
-Use `summary` for the short popup and `description` only for an optional
-introduction or legacy Markdown notes. The history renders every change once,
-without repeating the popup summary. Long releases are deliberately complete
-rather than collapsed behind a "more" control.
+The popup and the history render the same `changes` list. Use `description`
+only for an optional introduction or legacy Markdown notes. Long releases are
+deliberately complete rather than collapsed behind a "more" control.
 
 ## Entry and dismissal
 
@@ -45,7 +44,7 @@ updated app; this is not a live Directus feed.
 ## Publishing
 
 1. Prepend a release in `releases.ts`, with a stable `version` dismissal key,
-   headline, short Markdown summary and classified `changes`. Video is optional.
+   headline and classified `changes`. Video is optional.
 2. Until the GitHub release is published, omit `publication`. The UI says
    "Upcoming" and does not invent a version, date or GitHub release URL.
 3. When published, add `publication: { tag, date }` using the exact GitHub tag

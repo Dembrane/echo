@@ -580,15 +580,14 @@ describe("typography", () => {
 		);
 	});
 
-	it("shows a short summary before the video", () => {
+	it("shows every change, grouped, before the video", () => {
 		renderModal();
 		expect(screen.getByText("What's new")).toBeTruthy();
-		expect(
-			screen.getByText(LATEST.summary ?? LATEST.description ?? ""),
-		).toBeTruthy();
+		expect(LATEST.changes?.length).toBeGreaterThan(0);
 		for (const change of LATEST.changes ?? []) {
-			expect(screen.queryByText(change.text)).toBeNull();
+			expect(screen.getByText(change.text)).toBeTruthy();
 		}
+		expect(screen.getByText("New features")).toBeTruthy();
 	});
 });
 
