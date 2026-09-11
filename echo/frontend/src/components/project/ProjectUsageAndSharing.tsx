@@ -19,7 +19,10 @@ import { InviteMemberCard, MembersToolbar } from "@/components/members";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useV2Me } from "@/hooks/useV2Me";
-import { useProjectShares } from "@/hooks/useProjectSharing";
+import {
+	useProjectPendingInvites,
+	useProjectShares,
+} from "@/hooks/useProjectSharing";
 import { avatarUrl, memberInitials } from "@/lib/avatar";
 import { displayRole, isAdminRole } from "@/lib/roles";
 import { formatDurationFromHours } from "@/lib/time";
@@ -110,7 +113,8 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 	const { workspaceId, workspace } = useWorkspace();
 	const { data: meV2 } = useV2Me();
 	const myAppUserId = meV2?.id ?? null;
-	const { data: shares, isLoading: sharesLoading } = useProjectShares(projectId);
+	const { data: shares, isLoading: sharesLoading } =
+		useProjectShares(projectId);
 	const [memberSearch, setMemberSearch] = useState("");
 	const [memberFilter, setMemberFilter] = useState<
 		"all" | "admins" | "members" | "externals"
@@ -118,6 +122,11 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 	const [inviteOpen, setInviteOpen] = useState(false);
 
 	const isWorkspaceVisible = visibility === "workspace";
+	// Invites sent from the sharing modal that haven't been accepted yet.
+	const { data: pendingInvites } = useProjectPendingInvites(
+		projectId,
+		!isWorkspaceVisible && isAdminRole(workspace?.role),
+	);
 
 	const { data: wsSettings, isLoading: membersLoading } = useQuery({
 		queryKey: ["v2", "workspace-settings", workspaceId],
@@ -134,6 +143,7 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 		avatar: string | null;
 		role: string;
 		is_external?: boolean;
+		is_pending?: boolean;
 	};
 
 	const accessRows: AccessRow[] = isWorkspaceVisible
@@ -148,14 +158,26 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 					is_external: m.role === "external",
 				})),
 			)
-		: (shares ?? []).map((s) => ({
-				key: s.user_id,
-				user_id: s.user_id,
-				display_name: s.display_name,
-				email: s.email,
-				avatar: s.avatar,
-				role: s.role,
-			}));
+		: [
+				...(shares ?? []).map((s) => ({
+					key: s.user_id,
+					user_id: s.user_id,
+					display_name: s.display_name,
+					email: s.email,
+					avatar: s.avatar,
+					role: s.workspace_role ?? "",
+				})),
+				...(pendingInvites ?? []).map((inv) => ({
+					key: `invite-${inv.id}`,
+					user_id: "",
+					display_name: inv.email,
+					email: inv.email,
+					avatar: null,
+					role: inv.role,
+					is_external: inv.role === "external",
+					is_pending: true,
+				})),
+			];
 
 	const accessCount = accessRows.length;
 	const accessLoading = isWorkspaceVisible ? membersLoading : sharesLoading;
@@ -190,9 +212,7 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 					<Trans>Access</Trans>
 				</Title>
 				<Text size="sm" c="dimmed">
-					<Trans>
-						Who can see and collaborate on this project.
-					</Trans>
+					<Trans>Who can see and collaborate on this project.</Trans>
 				</Text>
 			</Stack>
 
@@ -212,22 +232,14 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 							<Trans>Loading…</Trans>
 						) : isWorkspaceVisible ? (
 							<Trans>
-								<Plural
-									value={accessCount}
-									one="# person"
-									other="# people"
-								/>{" "}
+								<Plural value={accessCount} one="# person" other="# people" />{" "}
 								in {workspace?.name ?? t`this workspace`}
 							</Trans>
 						) : accessCount === 0 ? (
 							<Trans>Just you — plus workspace admins.</Trans>
 						) : (
 							<>
-								<Plural
-									value={accessCount}
-									one="# person"
-									other="# people"
-								/>
+								<Plural value={accessCount} one="# person" other="# people" />
 								{" · "}
 								<Trans>plus workspace admins</Trans>
 							</>
@@ -240,8 +252,7 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 					onSearchChange={setMemberSearch}
 					filter={{
 						value: memberFilter,
-						onChange: (v) =>
-							setMemberFilter(v as typeof memberFilter),
+						onChange: (v) => setMemberFilter(v as typeof memberFilter),
 						options: [
 							{ value: "all", label: t`All` },
 							{ value: "admins", label: t`Admins` },
@@ -283,16 +294,8 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 					) : (
 						filteredAccessRows.map((row) => (
 							<Paper key={row.key} withBorder p="md" radius="md">
-								<Group
-									justify="space-between"
-									align="center"
-									wrap="nowrap"
-								>
-									<Group
-										gap={10}
-										wrap="nowrap"
-										style={{ minWidth: 0 }}
-									>
+								<Group justify="space-between" align="center" wrap="nowrap">
+									<Group gap={10} wrap="nowrap" style={{ minWidth: 0 }}>
 										<Avatar
 											size={32}
 											radius="xl"
@@ -312,35 +315,33 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 													)}
 												</Text>
 												{row.is_external && (
-													<Badge
-														size="xs"
-														variant="light"
-														color="gray"
-													>
+													<Badge size="xs" variant="light" color="gray">
 														<Trans>External</Trans>
 													</Badge>
 												)}
 											</Group>
-											{row.email &&
-												row.email !== row.display_name && (
-													<Text
-														size="xs"
-														c="dimmed"
-														lineClamp={1}
-													>
-														{row.email}
-													</Text>
-												)}
+											{row.email && row.email !== row.display_name && (
+												<Text size="xs" c="dimmed" lineClamp={1}>
+													{row.email}
+												</Text>
+											)}
 										</Box>
 									</Group>
-									<Badge
-										size="xs"
-										variant="light"
-										color="gray"
-										style={{ textTransform: "capitalize" }}
-									>
-										{displayRole(row.role)}
-									</Badge>
+									<Group gap={6} wrap="nowrap">
+										{row.is_pending && (
+											<Badge size="xs" variant="outline" color="gray">
+												<Trans>Pending</Trans>
+											</Badge>
+										)}
+										<Badge
+											size="xs"
+											variant="light"
+											color="gray"
+											style={{ textTransform: "capitalize" }}
+										>
+											{displayRole(row.role)}
+										</Badge>
+									</Group>
 								</Group>
 							</Paper>
 						))
@@ -415,9 +416,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 					<Trans>Usage</Trans>
 				</Title>
 				<Text size="sm" c="dimmed">
-					<Trans>
-						What this project is consuming this cycle.
-					</Trans>
+					<Trans>What this project is consuming this cycle.</Trans>
 				</Text>
 			</Stack>
 
@@ -468,15 +467,11 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 					{convUsage && convUsage.total_hours > 0 && (
 						<Stack gap={6} mt={4}>
 							<Text size="xs" c="dimmed">
-								<Trans>
-									Breakdown · {convUsage.active.length} active
-								</Trans>
+								<Trans>Breakdown · {convUsage.active.length} active</Trans>
 								{convUsage.deleted.length > 0 && (
 									<>
 										{" · "}
-										<Trans>
-											{convUsage.deleted.length} deleted
-										</Trans>
+										<Trans>{convUsage.deleted.length} deleted</Trans>
 									</>
 								)}
 							</Text>
@@ -520,9 +515,15 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 								{convUsage.deleted_hours > 0 && (
 									<Tooltip
 										label={
-											<Stack gap={4} style={{ maxHeight: 240, overflow: "hidden" }}>
+											<Stack
+												gap={4}
+												style={{ maxHeight: 240, overflow: "hidden" }}
+											>
 												<Text size="xs" fw={500}>
-													<Trans>Deleted · {formatDurationFromHours(convUsage.deleted_hours)}</Trans>
+													<Trans>
+														Deleted ·{" "}
+														{formatDurationFromHours(convUsage.deleted_hours)}
+													</Trans>
 												</Text>
 												{convUsage.deleted.slice(0, 8).map((d) => (
 													<Text key={d.id} size="xs">
@@ -533,9 +534,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 												))}
 												{convUsage.deleted.length > 8 && (
 													<Text size="xs" c="dimmed">
-														<Trans>
-															+{convUsage.deleted.length - 8} more
-														</Trans>
+														<Trans>+{convUsage.deleted.length - 8} more</Trans>
 													</Text>
 												)}
 											</Stack>
@@ -563,7 +562,9 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 										}}
 									/>
 									<Text size="xs" c="dimmed">
-										<Trans>Active · {formatDurationFromHours(convUsage.active_hours)}</Trans>
+										<Trans>
+											Active · {formatDurationFromHours(convUsage.active_hours)}
+										</Trans>
 									</Text>
 								</Group>
 								{convUsage.deleted_hours > 0 && (
@@ -577,7 +578,10 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 											}}
 										/>
 										<Text size="xs" c="dimmed">
-											<Trans>Deleted · {formatDurationFromHours(convUsage.deleted_hours)}</Trans>
+											<Trans>
+												Deleted ·{" "}
+												{formatDurationFromHours(convUsage.deleted_hours)}
+											</Trans>
 										</Text>
 									</Group>
 								)}
@@ -600,12 +604,17 @@ const ROLE_WEIGHT: Record<string, number> = {
 	admin: 1,
 	billing: 2,
 	member: 3,
-	viewer: 4,
-	editor: 3,
+	external: 4,
+	observer: 5,
 };
-function ROLE_SORT<T extends { role: string; display_name: string; email: string; is_external?: boolean }>(
-	rows: T[],
-): T[] {
+function ROLE_SORT<
+	T extends {
+		role: string;
+		display_name: string;
+		email: string;
+		is_external?: boolean;
+	},
+>(rows: T[]): T[] {
 	return [...rows].sort((a, b) => {
 		const aExt = a.is_external ? 1 : 0;
 		const bExt = b.is_external ? 1 : 0;

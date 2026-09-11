@@ -452,3 +452,87 @@ async def reconcile_external_membership_org_row(org_id: str, user_id: str) -> No
                 row["id"],
                 {"deleted_at": datetime.now(timezone.utc).isoformat()},
             )
+
+
+# ---------------------------------------------------------------------------
+# Project share carried on a workspace invite
+# ---------------------------------------------------------------------------
+# A private project can be shared with someone who isn't on the workspace yet.
+# The invite row stores project_id; every accept path calls
+# grant_invite_project_share once the workspace membership exists. A share only
+# unlocks the project: what the person can do there is their workspace role.
+
+
+async def upsert_project_membership(
+    client: Any,
+    *,
+    project_id: str,
+    user_id: str,
+    granted_by: Optional[str],
+) -> Literal["created", "exists"]:
+    """Insert a project_membership row unless one already exists."""
+    existing = await client.get_items(
+        "project_membership",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                    "user_id": {"_eq": user_id},
+                },
+                "fields": ["id"],
+                "limit": 1,
+            }
+        },
+    )
+    if isinstance(existing, list) and existing:
+        return "exists"
+    await client.create_item(
+        "project_membership",
+        {
+            "id": generate_uuid(),
+            "project_id": project_id,
+            "user_id": user_id,
+            "granted_by": granted_by,
+        },
+    )
+    return "created"
+
+
+async def grant_invite_project_share(
+    client: Any, invite: dict[str, Any], *, user_id: str
+) -> bool:
+    """Grant the project share stored on an accepted workspace invite.
+
+    Best-effort: the workspace membership is the load-bearing write, so a
+    missing/moved project or a Directus error only logs. True = share written."""
+    project_id = invite.get("project_id")
+    if not project_id:
+        return False
+    try:
+        project = await client.get_item("project", project_id)
+        if not project or project.get("deleted_at"):
+            logger.info("Invite %s: project %s gone, skipping share", invite.get("id"), project_id)
+            return False
+        if project.get("workspace_id") != invite.get("workspace_id"):
+            logger.info(
+                "Invite %s: project %s no longer in workspace %s, skipping share",
+                invite.get("id"),
+                project_id,
+                invite.get("workspace_id"),
+            )
+            return False
+        await upsert_project_membership(
+            client,
+            project_id=project_id,
+            user_id=user_id,
+            granted_by=invite.get("invited_by"),
+        )
+        return True
+    except Exception:
+        logger.exception(
+            "Failed to grant project %s share for %s from invite %s",
+            project_id,
+            user_id,
+            invite.get("id"),
+        )
+        return False

@@ -39,7 +39,7 @@ from dembrane.api.v2.schemas import (
 )
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
-from dembrane.api.v2._invite_helpers import create_membership_row
+from dembrane.api.v2._invite_helpers import create_membership_row, grant_invite_project_share
 
 router = APIRouter()
 logger = getLogger("api.v2.onboarding")
@@ -159,6 +159,7 @@ async def complete_onboarding(
                     "role",
                     "expires_at",
                     "invited_by",
+                    "project_id",
                 ],
                 "limit": -1,
             }
@@ -329,6 +330,9 @@ async def complete_onboarding(
                         f"Auto-accepted invite: {app_user_email} → workspace {ws_id} "
                         f"(role: {invite_role})"
                     )
+
+                # Project share carried on the invite (sharing modal). Best-effort.
+                await grant_invite_project_share(async_directus, invite, user_id=app_user_id)
 
                 if not first_workspace_id:
                     first_workspace_id = ws_id

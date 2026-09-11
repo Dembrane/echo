@@ -244,6 +244,9 @@ class WorkspaceInviteRequest(BaseModel):
 
     email: EmailStr
     role: Literal["admin", "member", "billing", "external", "observer"] = "member"
+    # Optional private project to share on join (project sharing modal). Requires project:share.
+    # The share level follows `role` (observer/billing read, others edit).
+    project_id: Optional[str] = None
 
 
 class WorkspaceInviteResponse(BaseModel):
@@ -253,6 +256,9 @@ class WorkspaceInviteResponse(BaseModel):
     user_existed: bool
     email_sent: bool = True  # False if SendGrid failed or was not configured
     invite_url: Optional[str] = None  # present only for invited / already_invited
+    # Outcome for the optional project share: granted now, pending on accept, or
+    # kept the invite's existing project (one invite carries one project).
+    project_share: Optional[Literal["granted", "pending", "pending_other_project"]] = None
 
 
 # ── /v2/projects/:id/move ──

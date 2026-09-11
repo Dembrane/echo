@@ -34,6 +34,7 @@ interface Props {
 	// When provided (org admins), the input offers these people as a dropdown.
 	// Absent → plain free-text behaviour, unchanged for everyone else.
 	suggestions?: MemberSuggestion[];
+	disabled?: boolean;
 	"data-testid"?: string;
 }
 
@@ -86,6 +87,7 @@ export function EmailChipsInput({
 	selfEmail,
 	autoFocus,
 	suggestions,
+	disabled,
 	"data-testid": dataTestId,
 }: Props) {
 	const [draft, setDraft] = useState("");
@@ -251,6 +253,7 @@ export function EmailChipsInput({
 						key={chip.id}
 						chip={chip}
 						highlighted={chip.id === pendingDeleteId}
+						disabled={disabled}
 						onRemove={() => removeChip(chip.id)}
 					/>
 				))}
@@ -264,6 +267,7 @@ export function EmailChipsInput({
 							: ""
 					}
 					value={draft}
+					disabled={disabled}
 					onChange={handleChange}
 					onKeyDown={handleKeyDown}
 					onPaste={handlePaste}
@@ -335,10 +339,12 @@ export function EmailChipsInput({
 function EmailChipPill({
 	chip,
 	highlighted,
+	disabled,
 	onRemove,
 }: {
 	chip: EmailChip;
 	highlighted?: boolean;
+	disabled?: boolean;
 	onRemove: () => void;
 }) {
 	const baseTone =
@@ -387,6 +393,7 @@ function EmailChipPill({
 				size="xs"
 				variant="subtle"
 				color={chip.state === "valid" ? "gray" : "red"}
+				disabled={disabled}
 				onClick={onRemove}
 				aria-label={t`Remove ${chip.value}`}
 			>
