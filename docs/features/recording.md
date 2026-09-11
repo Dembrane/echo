@@ -31,6 +31,25 @@ with the same pause, resume and stop controls - useful when you're the one in th
 most robust option when connectivity is shaky: it records to the device first and uploads
 when it can, so a dead spot never costs you the conversation.
 
+## What you need to record
+
+Recording runs in an ordinary web browser, with nothing to install. What it does need:
+
+- *An iPhone 8 or newer, on iOS 16 or later.* Older iPhones cannot record at all - the portal
+  shows a message about reaching storage that can't be dismissed.
+- *An Android phone with an up-to-date Chrome* (Chrome 103, mid-2022, or newer). Chrome updates
+  itself, so almost any phone still getting updates qualifies.
+- *A real browser, not an in-app one.* A link tapped inside Instagram, LinkedIn or Slack may
+  block the microphone, and dembrane can't warn anyone when it does. Ask people to open it in
+  Safari or Chrome.
+- *The screen kept awake.* dembrane asks the phone to stay awake, but only iOS 18.4 and later
+  (iPhone XS and newer) and Chrome on Android honour that request. On anything older the screen
+  sleeps and recording stops, so tell participants to keep the screen on.
+
+> [!NOTE]
+> These are the requirements as the code reads them. dembrane publishes no tested device list,
+> so if a specific handset matters for your session, try it beforehand.
+
 ## The mic check
 
 Before recording, the portal offers a *mic check* so a participant can confirm the right

@@ -14,9 +14,14 @@ controls work, how to type instead of speak, and what to try if something goes w
 A few things set you up well:
 
 - *Good signal.* Be on solid wifi or 5G.
+- *A phone from the last few years.* An iPhone 8 or newer (on iOS 16 or later), or an Android
+  with an up-to-date Chrome. Older phones can't record.
+- *Open the link in your normal browser.* If you tapped it inside another app like Instagram or
+  LinkedIn, the microphone may be blocked. Copy the link into Safari or Chrome instead.
 - *Allow the microphone* when your browser asks.
-- *Keep the screen on.* A black screen means no recording. A well-charged phone is less likely
-  to fall asleep.
+- *Keep the screen on.* A black screen means no recording. On most iPhones dembrane can't keep
+  the screen awake for you, so tap it now and then. A well-charged phone is less likely to fall
+  asleep.
 - *Turn on Do Not Disturb* for more privacy and fewer interruptions.
 
 ## Recording well
@@ -48,6 +53,14 @@ words are treated exactly the same way.
 ## If something isn't working
 
 Most hiccups are quick to fix.
+
+### If the Record button won't turn on
+
+- *If you see a message about reaching storage that you can't close*, your phone or browser is
+  too old. Recording needs an iPhone 8 or newer on iOS 16, or an up-to-date Chrome on Android.
+  Try a different phone, or ask the person who invited you whether you can type instead.
+- *Otherwise the connection check is probably still running.* Give it a moment, or use the
+  reconnect button if one is offered.
 
 ### If the microphone isn't working
 

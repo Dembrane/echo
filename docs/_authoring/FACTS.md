@@ -325,6 +325,38 @@ subscription, portal tags. Live preview. QR + invite link.
 - *report* - participant-facing summary/artifacts. *unsubscribe*.
 No account required. Public/participant API in §10.4.
 
+### 8.3 Device & browser support (portal recording) - verified against code, NOT against devices
+
+*Hard floor: iOS 16 (Safari 16) / Chrome 103.* `checkS3Connectivity` (`frontend/src/lib/api.ts`)
+calls `AbortSignal.timeout`, which Safari shipped in 16 and Chrome in 103. It runs as a
+mandatory pre-flight on every participant conversation (`useS3ConnectivityCheck.ts`). Below the
+floor the call throws, the check reports `failed`, and `ParticipantConversationAudio.tsx`
+disables the Record button (`disabled={s3Status !== "passed"}`), short-circuits
+`handleStartRecording`, and opens a modal with `withCloseButton={false}`,
+`closeOnClickOutside={false}`, `closeOnEscape={false}`. The participant cannot dismiss it and
+cannot record. iOS 16 = *iPhone 8 and newer* (iOS 16 dropped 6s, 7 and SE 1st gen).
+
+*Capture itself* needs `getUserMedia` over HTTPS (iOS Safari 11) and `MediaRecorder` (iOS
+Safari 14, Chrome 47), with the mime chain `audio/webm` → `audio/wav` → `video/mp4`
+(`useChunkedAudioRecorder.ts`). Both sit below the floor above, so the floor governs.
+
+*Wake lock: iOS Safari 18.4* (Chrome Android 84; desktop Safari 16.4 - do not confuse the two).
+`useWakeLock.ts` feature-detects and degrades silently, so on any iPhone older than XS, or any
+iPhone not updated to 18.4+, the screen sleeps and the recording is interrupted. The recorder
+carries iOS interruption detection (suspicious-chunk tracking, `useChunkedAudioRecorder.ts`)
+for exactly this case. iOS 18.4 = *iPhone XS and newer*.
+
+*The build target is an inherited default, not a decision.* `frontend/vite.config.ts` sets no
+`build.target`, so Vite 6's `ESBUILD_MODULES_TARGET` applies (es2020, safari14, chrome87,
+firefox78, edge88). That syntax floor is below the API floor, so it never binds.
+
+*In-app browsers (Instagram, LinkedIn, Slack webviews): untested and undetected.* No webview
+detection exists anywhere in `frontend/src`. Whether the microphone works is unknown, and
+nothing warns the participant if it doesn't.
+
+*No device matrix exists.* None of the above is confirmed on hardware. It is read from the
+code plus MDN compatibility data, so treat the floors as necessary conditions, not tested ones.
+
 ---
 
 ## 9. dembrane Go (iOS) - native SwiftUI app (`dembrane-go/`)
