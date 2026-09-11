@@ -580,14 +580,19 @@ describe("typography", () => {
 		);
 	});
 
-	it("shows every change, grouped, before the video", () => {
+	it("leads with the video, then every change, grouped", () => {
 		renderModal();
 		expect(screen.getByText("What's new")).toBeTruthy();
 		expect(LATEST.changes?.length).toBeGreaterThan(0);
 		for (const change of LATEST.changes ?? []) {
 			expect(screen.getByText(change.text)).toBeTruthy();
 		}
-		expect(screen.getByText("New features")).toBeTruthy();
+		const video = screen.getByTitle("Release video");
+		const firstGroup = screen.getByText("New features");
+		expect(
+			video.compareDocumentPosition(firstGroup) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
 	});
 });
 

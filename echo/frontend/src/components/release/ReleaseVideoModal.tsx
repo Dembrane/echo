@@ -322,13 +322,9 @@ export const ReleaseVideoModal = ({
 							<h2 className={styles.title} id={titleId}>
 								{release.title}
 							</h2>
-							{release.description ? (
-								<ReleaseDescription description={release.description} />
-							) : null}
-							{release.changes?.length ? (
-								<ReleaseChanges changes={release.changes} />
-							) : null}
 						</Stack>
+						{/* The video leads: it is the short version, and the list below
+						    is long enough to push anything under it out of view. */}
 						{embedSrc ? (
 							<div className={styles.videoFrame}>
 								<iframe
@@ -340,6 +336,12 @@ export const ReleaseVideoModal = ({
 									title={t`Release video`}
 								/>
 							</div>
+						) : null}
+						{release.description ? (
+							<ReleaseDescription description={release.description} />
+						) : null}
+						{release.changes?.length ? (
+							<ReleaseChanges changes={release.changes} />
 						) : null}
 
 						<Group justify="space-between" gap="sm">
