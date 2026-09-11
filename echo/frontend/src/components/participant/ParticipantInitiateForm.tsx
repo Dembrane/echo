@@ -5,30 +5,57 @@ import {
 	Alert,
 	Box,
 	Button,
+	Group,
+	Loader,
 	MultiSelect,
 	Stack,
-	Text,
 	TextInput,
-	Title,
 } from "@mantine/core";
 import { AxiosError } from "axios";
 import posthog from "posthog-js";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { z } from "zod";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { initiateConversation as requestConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { getVisitorId } from "@/lib/visitorId";
 import { useInitiateConversationMutation } from "./hooks";
 
 const FormSchema = z.object({
-	name: z.string().optional(),
 	email: z.string().optional(),
+	name: z.string().optional(),
 	tagIdList: z.array(z.string()).default([]),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
+
+/** True when this screen has nothing to ask a participant.
+ *
+ * The only questions here are the session name and the tags, both of which a
+ * host turns on per project. With neither, "Ready to Begin?" is a question
+ * whose only answer is Continue, so the portal answers it itself and goes
+ * straight from the mic check to recording. */
+export const portalHasNothingToAsk = (project: Project) =>
+	!project.default_conversation_ask_for_participant_name &&
+	project.tags.length === 0;
+
+/** The detail the server sent, or a generic apology. */
+const initiateErrorMessage = (error: unknown): string => {
+	const detail =
+		error instanceof AxiosError ? error.response?.data?.detail : undefined;
+	return typeof detail === "string" ? detail : t`Something went wrong`;
+};
+
+/** In-flight (or settled) auto-started conversations, keyed by project.
+ *
+ * Module scope on purpose: it has to outlive any one mount of this form. See
+ * the effect that fills it. */
+const autoStartedConversations = new Map<
+	string,
+	ReturnType<typeof requestConversation>
+>();
 
 export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 	const navigate = useI18nNavigate();
@@ -40,13 +67,9 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		searchParams.get("name") ||
 		"";
 	const defaultEmail =
-		searchParams.get("participant_email") ||
-		searchParams.get("email") ||
-		"";
+		searchParams.get("participant_email") || searchParams.get("email") || "";
 	const defaultTagsParam =
-		searchParams.get("tags") ||
-		searchParams.get("tag_id_list") ||
-		"";
+		searchParams.get("tags") || searchParams.get("tag_id_list") || "";
 
 	const defaultTagIdList = useMemo(() => {
 		if (!defaultTagsParam) return [];
@@ -70,15 +93,15 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		reset,
 		formState: { errors },
 	} = useForm<FormValues>({
-		resolver: zodResolver(FormSchema),
 		defaultValues: useMemo(
 			() => ({
-				name: defaultName,
 				email: defaultEmail,
+				name: defaultName,
 				tagIdList: defaultTagIdList,
 			}),
 			[defaultName, defaultEmail, defaultTagIdList],
 		),
+		resolver: zodResolver(FormSchema),
 	});
 
 	const { isSuccess, isError, ...initiateConversationMutation } =
@@ -101,10 +124,10 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 			});
 			initiateConversation(
 				{
+					email: data.email || undefined,
 					// `??` not `||`: an empty name is intentional when the project does
 					// not ask for one, and keeps the dashboard's auto-title fallback
 					name: data.name ?? t`Participant`,
-					email: data.email || undefined,
 					pin: "",
 					projectId: project.id,
 					source: "PORTAL_AUDIO",
@@ -121,68 +144,105 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		[project.id, initiateConversation],
 	);
 
-	// Auto-submit if skipOnboarding is requested and we have required fields prefilled
+	const nothingToAsk = portalHasNothingToAsk(project);
+	const [autoStartError, setAutoStartError] = useState<unknown>(null);
+
+	const goToConversation = useCallback(
+		(conversationId: string) => {
+			const mode =
+				searchParams.get("mode") ||
+				(searchParams.get("general_feedback") || searchParams.get("feedback")
+					? "text"
+					: "audio");
+			const pathSuffix = mode === "text" ? "/text" : "";
+			const searchStr = searchParams.toString();
+			const queryStr = searchStr ? `?${searchStr}` : "";
+
+			navigate(
+				`/${project.id}/conversation/${conversationId}${pathSuffix}${queryStr}`,
+			);
+		},
+		[navigate, project.id, searchParams],
+	);
+
+	// Start on arrival when the host asked to skip onboarding and the required
+	// fields are prefilled, or when there was never anything to ask.
+	//
+	// This deliberately bypasses the mutation hook. A component-scoped mutation
+	// loses its result if the component is torn down mid-flight, which happens
+	// on every mount under React's StrictMode and can happen in production
+	// whenever this subtree re-renders into a new component identity: the POST
+	// lands, a conversation exists, and the participant is left staring at the
+	// screen that was supposed to send them onward. The promise lives in the
+	// module instead, so a remounted form picks up the same request rather than
+	// firing a second one.
 	useEffect(() => {
 		const skipOnboarding = searchParams.get("skipOnboarding") === "1";
 		const hasRequiredName =
 			!project.default_conversation_ask_for_participant_name || defaultName;
 
-		if (
-			skipOnboarding &&
-			hasRequiredName &&
-			!initiateConversationMutation.isPending &&
-			!isSuccess &&
-			!isError
-		) {
-			// startConversation owns the latch, the payload, and the analytics
-			startConversation({
-				name: defaultName || t`Participant`,
-				email: defaultEmail,
-				tagIdList: defaultTagIdList,
+		if (!((skipOnboarding || nothingToAsk) && hasRequiredName)) return;
+
+		let cancelled = false;
+		let pending = autoStartedConversations.get(project.id);
+
+		if (!pending) {
+			posthog.capture("conversation_started", {
+				project_id: project.id,
+				source: "PORTAL_AUDIO",
 			});
+			pending = requestConversation({
+				email: defaultEmail || undefined,
+				name: defaultName || t`Participant`,
+				pin: "",
+				projectId: project.id,
+				source: "PORTAL_AUDIO",
+				tagIdList: defaultTagIdList,
+				visitorId: getVisitorId(project.id),
+			});
+			autoStartedConversations.set(project.id, pending);
 		}
+
+		pending
+			.then((conversation) => {
+				// The entry exists to survive a remount while the request is in
+				// flight, nothing longer. Coming back to this screen later (via
+				// "Record another conversation", say) has to start a new one.
+				autoStartedConversations.delete(project.id);
+				if (cancelled || !conversation?.id) return;
+				goToConversation(conversation.id);
+			})
+			.catch((error) => {
+				// Let the participant retry with the Continue button.
+				autoStartedConversations.delete(project.id);
+				if (!cancelled) setAutoStartError(error);
+			});
+
+		return () => {
+			cancelled = true;
+		};
 	}, [
 		project.default_conversation_ask_for_participant_name,
+		project.id,
+		nothingToAsk,
 		defaultName,
 		defaultEmail,
 		defaultTagIdList,
-		isSuccess,
-		isError,
 		searchParams,
-		initiateConversationMutation.isPending,
-		startConversation,
+		goToConversation,
 	]);
 
 	useEffect(() => {
 		if (isSuccess) {
 			if (initiateConversationMutation.data?.id) {
-				const mode =
-					searchParams.get("mode") ||
-					(searchParams.get("general_feedback") || searchParams.get("feedback")
-						? "text"
-						: "audio");
-				const pathSuffix = mode === "text" ? "/text" : "";
-
-				const searchStr = searchParams.toString();
-				const queryStr = searchStr ? `?${searchStr}` : "";
-
-				navigate(
-					`/${project.id}/conversation/${initiateConversationMutation.data?.id}${pathSuffix}${queryStr}`,
-				);
+				goToConversation(initiateConversationMutation.data.id);
 			} else {
 				// release the latch so Continue works again
 				hasInitiatedRef.current = false;
 				reset();
 			}
 		}
-	}, [
-		isSuccess,
-		reset,
-		initiateConversationMutation.data?.id,
-		navigate,
-		project.id,
-		searchParams,
-	]);
+	}, [isSuccess, initiateConversationMutation.data, reset, goToConversation]);
 
 	useEffect(() => {
 		if (isError) {
@@ -197,16 +257,16 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 			{...testId("portal-initiate-form")}
 		>
 			<Stack className="relative">
-				{initiateConversationMutation.error && (
+				{Boolean(initiateConversationMutation.error || autoStartError) && (
 					<Box>
 						<Alert
 							color="red"
 							variant="light"
 							{...testId("portal-initiate-error-alert")}
 						>
-							{(initiateConversationMutation.error instanceof AxiosError &&
-								initiateConversationMutation.error.response?.data.detail) ??
-								t`Something went wrong`}
+							{initiateErrorMessage(
+								initiateConversationMutation.error ?? autoStartError,
+							)}
 						</Alert>
 					</Box>
 				)}
@@ -252,15 +312,30 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 						{...testId("portal-initiate-tags-select")}
 					/>
 				)}
-				<Button
-					type="submit"
-					size="lg"
-					loading={initiateConversationMutation.isPending}
-					fullWidth
-					{...testId("portal-initiate-next-button")}
-				>
-					<Trans id="participant.ready.to.begin.button.text">Continue</Trans>
-				</Button>
+				{nothingToAsk &&
+				!initiateConversationMutation.error &&
+				!autoStartError ? (
+					// Nothing was asked, so the conversation is already starting. The
+					// button would only ever be pressed by the effect above; a spinner
+					// is the honest version of that.
+					<Group
+						justify="center"
+						py="md"
+						{...testId("portal-initiate-starting")}
+					>
+						<Loader size="sm" />
+					</Group>
+				) : (
+					<Button
+						type="submit"
+						size="lg"
+						loading={initiateConversationMutation.isPending}
+						fullWidth
+						{...testId("portal-initiate-next-button")}
+					>
+						<Trans id="participant.ready.to.begin.button.text">Continue</Trans>
+					</Button>
+				)}
 			</Stack>
 		</form>
 	);

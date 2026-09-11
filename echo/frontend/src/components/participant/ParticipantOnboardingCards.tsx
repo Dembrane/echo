@@ -13,7 +13,10 @@ import { testId } from "@/lib/testUtils";
 import { cn } from "@/lib/utils";
 import { useOnboardingCards } from "./hooks/useOnboardingCards";
 import MicrophoneTest from "./MicrophoneTest";
-import { ParticipantInitiateForm } from "./ParticipantInitiateForm";
+import {
+	ParticipantInitiateForm,
+	portalHasNothingToAsk,
+} from "./ParticipantInitiateForm";
 
 interface Slide {
 	type?: string;
@@ -99,6 +102,12 @@ const ParticipantOnboardingCards = ({
 		() => () => <ParticipantInitiateForm project={project} />,
 		[project],
 	);
+
+	// With no name and no tags to collect, the last card starts the conversation
+	// on its own, so it drops its heading rather than asking a question it is
+	// about to answer.
+	const nothingToAsk = portalHasNothingToAsk(project);
+
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be looked at
 	const MicrophoneTestComponent = useMemo(
@@ -404,9 +413,11 @@ const ParticipantOnboardingCards = ({
 						className="w-full max-w-[400px] text-left"
 						{...testId("portal-onboarding-skip")}
 					>
-						<Title order={2}>
-							<Trans id="participant.ready.to.begin">Ready to Begin?</Trans>
-						</Title>
+						{!nothingToAsk && (
+							<Title order={2}>
+								<Trans id="participant.ready.to.begin">Ready to Begin?</Trans>
+							</Title>
+						)}
 						<ParticipantInitiateForm project={project} />
 					</Stack>
 				) : (
@@ -448,9 +459,13 @@ const ParticipantOnboardingCards = ({
 								</div>
 							)}
 
-							<Text className={cn("text-4xl")} ta="left">
-								{currentCard.title}
-							</Text>
+							{!(
+								nothingToAsk && currentCard.component === InitiateFormComponent
+							) && (
+								<Text className={cn("text-4xl")} ta="left">
+									{currentCard.title}
+								</Text>
+							)}
 
 							{currentCard.content && (
 								<Text className="text-xl" ta="left">

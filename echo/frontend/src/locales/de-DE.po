@@ -1077,7 +1077,7 @@ msgstr ""
 msgid "Add additional context (Optional)"
 msgstr "Zusätzlichen Kontext hinzufügen (Optional)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:234
+#: src/components/participant/ParticipantInitiateForm.tsx:294
 msgid "Add all that apply"
 msgstr "Alle zutreffenden hinzufügen"
 
@@ -1973,12 +1973,12 @@ msgid "Back"
 msgstr "Zurück"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:527
+#: src/components/participant/ParticipantOnboardingCards.tsx:542
 msgid "participant.button.back.microphone"
 msgstr "Zurück"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:552
+#: src/components/participant/ParticipantOnboardingCards.tsx:567
 #: src/components/layout/ParticipantHeader.tsx:87
 msgid "participant.button.back"
 msgstr "Zurück"
@@ -2824,13 +2824,13 @@ msgid "Continue"
 msgstr "Weiter"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:539
+#: src/components/participant/ParticipantOnboardingCards.tsx:554
 #: src/components/participant/MicrophoneTest.tsx:414
 msgid "participant.button.continue"
 msgstr "Weiter"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:262
+#: src/components/participant/ParticipantInitiateForm.tsx:336
 msgid "participant.ready.to.begin.button.text"
 msgstr "Weiter"
 
@@ -6752,7 +6752,7 @@ msgid "Next"
 msgstr "Weiter"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:569
+#: src/components/participant/ParticipantOnboardingCards.tsx:584
 msgid "participant.button.next"
 msgstr "Weiter"
 
@@ -7758,8 +7758,8 @@ msgid "partially completed"
 msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:56
-#: src/components/participant/ParticipantInitiateForm.tsx:106
-#: src/components/participant/ParticipantInitiateForm.tsx:139
+#: src/components/participant/ParticipantInitiateForm.tsx:130
+#: src/components/participant/ParticipantInitiateForm.tsx:196
 msgid "Participant"
 msgstr "Teilnehmer"
 
@@ -8631,7 +8631,7 @@ msgid "Reads every 2 minutes. Refresh reads now."
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:408
+#: src/components/participant/ParticipantOnboardingCards.tsx:418
 msgid "participant.ready.to.begin"
 msgstr "Bereit zum Beginn"
 
@@ -9918,7 +9918,7 @@ msgstr ""
 msgid "Separate with commas, spaces, or new lines."
 msgstr ""
 
-#: src/components/participant/ParticipantInitiateForm.tsx:222
+#: src/components/participant/ParticipantInitiateForm.tsx:282
 msgid "Session Name"
 msgstr "Sitzungsname"
 
@@ -10228,7 +10228,7 @@ msgid "participant.button.verify_prompt.skip"
 msgstr "Überspringen"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:435
+#: src/components/participant/ParticipantOnboardingCards.tsx:446
 msgid "participant.mic.check.button.skip"
 msgstr "Überspringen"
 
@@ -10286,7 +10286,7 @@ msgstr "Etwas blockiert Ihre Verbindung. Ihr Audio wird nicht gespeichert, solan
 #: src/routes/onboarding/OnboardingRoute.tsx:189
 #: src/routes/auth/Login.tsx:220
 #: src/components/project/ProjectAccessGuard.tsx:87
-#: src/components/participant/ParticipantInitiateForm.tsx:209
+#: src/components/participant/ParticipantInitiateForm.tsx:48
 #: src/components/error/ErrorPage.tsx:55
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:298
@@ -10693,7 +10693,7 @@ msgid "Tag deleted"
 msgstr ""
 
 #: src/components/project/ProjectTagsInput.tsx:256
-#: src/components/participant/ParticipantInitiateForm.tsx:233
+#: src/components/participant/ParticipantInitiateForm.tsx:293
 #: src/components/conversation/ProjectConversationsPanel.tsx:853
 #: src/components/conversation/ConversationEdit.tsx:426
 #: src/components/conversation/ConversationDrilldownModal.tsx:205
