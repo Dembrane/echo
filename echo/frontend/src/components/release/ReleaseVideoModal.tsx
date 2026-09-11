@@ -113,7 +113,9 @@ export const ReleaseVideoModal = ({
 					release.version,
 				)));
 
-	const embedUrl = release ? youtubeEmbedUrl(release.videoUrl ?? "") : null;
+	const embedUrl = release
+		? youtubeEmbedUrl(release.videoUrl ?? "", language)
+		: null;
 	const embedSrc = embedUrl
 		? playerBridgeUrl(embedUrl, window.location.origin)
 		: null;
