@@ -560,7 +560,7 @@ msgstr "{finishedConversationsCount, plural, one {Currently # conversation is re
 msgid "{from} → {to}"
 msgstr ""
 
-#: src/components/pricing/PricingBookingStep.tsx:135
+#: src/components/pricing/PricingBookingStep.tsx:350
 msgid "{host} will read your answers before the call and brings a draft offer."
 msgstr ""
 
@@ -848,8 +848,8 @@ msgstr "A project holds everything for one topic. Share its link with participan
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "A report is already being generated for this project. Please wait for it to complete."
 
-#: src/components/pricing/PricingConfigurator.tsx:1474
-#: src/components/pricing/PricingConfigurator.tsx:1478
+#: src/components/pricing/PricingConfigurator.tsx:1125
+#: src/components/pricing/PricingConfigurator.tsx:1129
 msgid "A rough number or \"not sure\". Either is useful."
 msgstr ""
 
@@ -2083,7 +2083,7 @@ msgstr ""
 #: src/routes/auth/Register.tsx:240
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:334
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:371
-#: src/components/pricing/PricingConfigurator.tsx:1092
+#: src/components/pricing/PricingConfigurator.tsx:845
 msgid "Back"
 msgstr "Back"
 
@@ -2098,7 +2098,7 @@ msgstr "Back"
 msgid "participant.button.back"
 msgstr "Back"
 
-#: src/components/pricing/PricingConfigurator.tsx:1252
+#: src/components/pricing/PricingConfigurator.tsx:930
 msgid "Back to dembrane"
 msgstr ""
 
@@ -2316,7 +2316,7 @@ msgstr ""
 #~ msgid "can read"
 #~ msgstr "can read"
 
-#: src/components/pricing/PricingConfigurator.tsx:830
+#: src/components/pricing/PricingConfigurator.tsx:706
 msgid "Can you tell us more?"
 msgstr ""
 
@@ -2783,7 +2783,7 @@ msgstr "Click \"Upload Files\" when you're ready to start the upload process."
 msgid "Click a conversation tag to add it to your filters."
 msgstr ""
 
-#: src/routes/project/HostGuidePage.tsx:1472
+#: src/routes/project/HostGuidePage.tsx:1490
 msgid "Click to edit"
 msgstr "Click to edit"
 
@@ -2833,7 +2833,6 @@ msgstr "Clone project"
 msgid "Clone Project"
 msgstr "Clone Project"
 
-#: src/components/pricing/PricingConfigurator.tsx:1250
 #: src/components/dropzone/UploadConversationDropzone.tsx:872
 #: src/components/conversation/ConversationLinks.tsx:110
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3031,7 +3030,7 @@ msgstr "Contextual suggestions"
 #: src/routes/onboarding/OnboardingRoute.tsx:530
 #: src/routes/onboarding/OnboardingRoute.tsx:662
 #: src/routes/auth/Register.tsx:212
-#: src/components/pricing/PricingConfigurator.tsx:1119
+#: src/components/pricing/PricingConfigurator.tsx:866
 #: src/components/organisation/CreateOrganisationModal.tsx:207
 #: src/components/language/LanguagePicker.tsx:158
 #: src/components/billing/BillingManager.tsx:1457
@@ -3900,7 +3899,7 @@ msgstr ""
 msgid "dembrane - the default"
 msgstr ""
 
-#: src/components/participant/DembraneEventCta.tsx:77
+#: src/components/participant/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
 msgstr "dembrane na vaší akci?"
 
@@ -4125,8 +4124,8 @@ msgid "Done"
 msgstr "Done"
 
 #: src/components/pricing/PricingConfigurator.tsx:1065
-msgid "Done, reach out to me"
-msgstr "Hotovo, ozvěte se mi"
+#~ msgid "Done, reach out to me"
+#~ msgstr "Hotovo, ozvěte se mi"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:847
 msgid "Downgrade to Free now"
@@ -4201,7 +4200,7 @@ msgstr ""
 msgid "Drag audio files here or click to select files"
 msgstr "Drag audio files here or click to select files"
 
-#: src/routes/project/HostGuidePage.tsx:1484
+#: src/routes/project/HostGuidePage.tsx:1502
 #: src/components/chat/TemplatesModal.tsx:569
 msgid "Drag to reorder"
 msgstr "Drag to reorder"
@@ -4443,7 +4442,7 @@ msgstr "Enable 2FA"
 msgid "Enable Explore"
 msgstr "Enable Explore"
 
-#: src/routes/project/HostGuidePage.tsx:1658
+#: src/routes/project/HostGuidePage.tsx:1676
 msgid "Enable participation"
 msgstr "Enable participation"
 
@@ -5369,7 +5368,7 @@ msgstr "Go back"
 msgid "participant.concrete.artefact.action.button.go.back"
 msgstr "Go back"
 
-#: src/routes/project/HostGuidePage.tsx:1521
+#: src/routes/project/HostGuidePage.tsx:1539
 msgid "Go Fullscreen"
 msgstr "Go Fullscreen"
 
@@ -5451,8 +5450,8 @@ msgid "Got it"
 msgstr "Rozumím"
 
 #: src/components/pricing/PricingConfigurator.tsx:1151
-msgid "Got two minutes? Five optional questions help us prepare."
-msgstr "Máte dvě minuty? Pět nepovinných otázek nám pomůže s přípravou."
+#~ msgid "Got two minutes? Five optional questions help us prepare."
+#~ msgstr "Máte dvě minuty? Pět nepovinných otázek nám pomůže s přípravou."
 
 #: src/components/training/TrainingRowActions.tsx:305
 msgid "Grant licenses"
@@ -6326,8 +6325,8 @@ msgid "Leave workspace"
 msgstr "Leave workspace"
 
 #: src/components/pricing/PricingConfigurator.tsx:952
-msgid "Leave your email so we can get in touch with you."
-msgstr "Nechte nám svůj e-mail, ať se vám můžeme ozvat."
+#~ msgid "Leave your email so we can get in touch with you."
+#~ msgstr "Nechte nám svůj e-mail, ať se vám můžeme ozvat."
 
 #: src/components/conversation/StatePill.tsx:45
 msgid "Left"
@@ -6350,7 +6349,7 @@ msgstr "Právní základ uložen"
 msgid "Legal entity name"
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:1122
+#: src/components/pricing/PricingConfigurator.tsx:868
 msgid "Let's go!"
 msgstr ""
 
@@ -7269,7 +7268,7 @@ msgstr "Newest First"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:781
 #: src/routes/project/CreateProjectRoute.tsx:411
 #: src/components/release/ReleaseTimeline.tsx:47
-#: src/components/pricing/PricingConfigurator.tsx:1126
+#: src/components/pricing/PricingConfigurator.tsx:872
 #: src/components/invite/InviteModal.tsx:774
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:329
 msgid "Next"
@@ -7294,7 +7293,7 @@ msgstr "Next"
 msgid "Next invoice"
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:1124
+#: src/components/pricing/PricingConfigurator.tsx:870
 msgid "Next: pick a time"
 msgstr ""
 
@@ -7689,7 +7688,7 @@ msgid "Not enabled by an admin of {0}"
 msgstr ""
 
 #: src/routes/invite/AcceptInviteRoute.tsx:568
-#: src/components/pricing/PricingConfigurator.tsx:1082
+#: src/components/pricing/PricingConfigurator.tsx:835
 #: src/components/popcorn/PopcornIntroModal.tsx:54
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:216
 #: src/components/chat/AgenticIntroModal.tsx:78
@@ -8105,11 +8104,9 @@ msgstr "Optional field on the start page"
 msgid "Optional field on the thank you page"
 msgstr "Optional field on the thank you page"
 
-#. placeholder {0}: phase.step - OPENING_STEP
-#. placeholder {1}: STEP_COUNT - OPENING_STEP
 #: src/components/pricing/PricingConfigurator.tsx:898
-msgid "Optional question {0} of {1}"
-msgstr "Nepovinná otázka {0} z {1}"
+#~ msgid "Optional question {0} of {1}"
+#~ msgstr "Nepovinná otázka {0} z {1}"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1561
 msgid "Optional. What this workspace is for."
@@ -8585,15 +8582,15 @@ msgstr "Phone"
 msgid "Pick a date"
 msgstr "Pick a date"
 
-#: src/components/pricing/PricingBookingStep.tsx:120
+#: src/components/pricing/PricingBookingStep.tsx:335
 msgid "Pick a time"
 msgstr ""
 
 #: src/components/pricing/PricingConfigurator.tsx:1262
-msgid "Pick a time now"
-msgstr "Vybrat čas hned"
+#~ msgid "Pick a time now"
+#~ msgstr "Vybrat čas hned"
 
-#: src/components/pricing/PricingConfigurator.tsx:812
+#: src/components/pricing/PricingConfigurator.tsx:693
 msgid "Pick a time with {host}."
 msgstr ""
 
@@ -8824,7 +8821,7 @@ msgstr ""
 msgid "praise"
 msgstr ""
 
-#: src/components/pricing/PricingTextInput.tsx:240
+#: src/components/pricing/PricingTextInput.tsx:235
 msgid "Prefer talking? Press record and just say it."
 msgstr ""
 
@@ -8868,7 +8865,7 @@ msgstr ""
 msgid "Price"
 msgstr "Price"
 
-#: src/routes/project/HostGuidePage.tsx:1513
+#: src/routes/project/HostGuidePage.tsx:1531
 msgid "Print / Save PDF"
 msgstr "Print / Save PDF"
 
@@ -9175,8 +9172,8 @@ msgid "Re-use settings from an existing webhook"
 msgstr "Re-use settings from an existing webhook"
 
 #: src/components/pricing/PricingConfigurator.tsx:1117
-msgid "Reach out to me"
-msgstr "Ozvěte se mi"
+#~ msgid "Reach out to me"
+#~ msgstr "Ozvěte se mi"
 
 #: src/components/invite/InviteModal.tsx:680
 msgid "Reactivate"
@@ -9327,7 +9324,7 @@ msgstr ""
 msgid "participant.button.record"
 msgstr "Record"
 
-#: src/components/pricing/PricingTextInput.tsx:260
+#: src/components/pricing/PricingTextInput.tsx:255
 #: src/components/feedback/ReportIssueModal.tsx:247
 #: src/components/chat/AgenticChatPanel.tsx:2208
 msgid "Record a voice message"
@@ -9421,10 +9418,10 @@ msgid "Recurring Themes"
 msgstr "Recurring Themes"
 
 #: src/components/pricing/bookingPrefill.ts:168
-#: src/components/pricing/PricingConfigurator.tsx:174
-#: src/components/pricing/PricingConfigurator.tsx:1239
-#: src/components/pricing/PricingBookingStep.tsx:108
-#: src/components/pricing/PricingBookingStep.tsx:143
+#: src/components/pricing/PricingConfigurator.tsx:155
+#: src/components/pricing/PricingConfigurator.tsx:921
+#: src/components/pricing/PricingBookingStep.tsx:324
+#: src/components/pricing/PricingBookingStep.tsx:357
 msgid "Reference {reference}"
 msgstr ""
 
@@ -9893,7 +9890,7 @@ msgstr "Resend invite"
 msgid "Resend invite email"
 msgstr "Resend invite email"
 
-#: src/routes/project/HostGuidePage.tsx:1506
+#: src/routes/project/HostGuidePage.tsx:1524
 msgid "Reset"
 msgstr "Reset"
 
@@ -10070,7 +10067,7 @@ msgstr ""
 msgid "Revoked"
 msgstr ""
 
-#: src/routes/project/HostGuidePage.tsx:1478
+#: src/routes/project/HostGuidePage.tsx:1496
 msgid "Right-click to highlight"
 msgstr "Right-click to highlight"
 
@@ -10091,7 +10088,7 @@ msgstr "Role updated"
 msgid "Rough estimate to finish transcribing the backlog"
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:1482
+#: src/components/pricing/PricingConfigurator.tsx:1133
 msgid "Roughly how many?"
 msgstr ""
 
@@ -11018,7 +11015,7 @@ msgstr ""
 
 #: src/routes/onboarding/OnboardingRoute.tsx:355
 #: src/routes/onboarding/OnboardingRoute.tsx:521
-#: src/components/pricing/PricingConfigurator.tsx:1106
+#: src/components/pricing/PricingConfigurator.tsx:856
 #: src/components/organisation/CreateOrganisationModal.tsx:227
 #: src/components/feedback/ResponseFeedbackControls.tsx:232
 msgid "Skip"
@@ -11313,7 +11310,7 @@ msgid "Stays up to date until tomorrow {0}"
 msgstr ""
 
 #. placeholder {0}: phase.step
-#: src/components/pricing/PricingConfigurator.tsx:910
+#: src/components/pricing/PricingConfigurator.tsx:746
 msgid "Step {0} of {STEP_COUNT}"
 msgstr ""
 
@@ -11322,7 +11319,7 @@ msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Still stuck? Email <0>support@dembrane.com</0>."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:790
-#: src/components/pricing/PricingTextInput.tsx:256
+#: src/components/pricing/PricingTextInput.tsx:251
 #: src/components/feedback/ReportIssueModal.tsx:243
 #: src/components/chat/AgenticChatPanel.tsx:2203
 msgid "Stop"
@@ -11337,7 +11334,7 @@ msgstr "Stop"
 msgid "Stop live"
 msgstr ""
 
-#: src/components/pricing/PricingTextInput.tsx:247
+#: src/components/pricing/PricingTextInput.tsx:242
 #: src/components/feedback/ReportIssueModal.tsx:236
 #: src/components/chat/AgenticChatPanel.tsx:2193
 msgid "Stop recording and turn it into text"
@@ -11495,8 +11492,8 @@ msgid "Supporting quotes display correctly."
 msgstr ""
 
 #: src/components/pricing/PricingConfigurator.tsx:1171
-msgid "Sure"
-msgstr "Jasně"
+#~ msgid "Sure"
+#~ msgstr "Jasně"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:876
 msgid "Switch to self-serve"
@@ -11655,39 +11652,39 @@ msgstr "Thank You Page Content"
 msgid "Thank you!"
 msgstr "Thank you!"
 
-#: src/components/pricing/PricingBookingStep.tsx:101
+#: src/components/pricing/PricingBookingStep.tsx:318
 msgid "Thank you! We will get in touch as soon as possible. You can also write to us at info@dembrane.com."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:1230
+#: src/components/pricing/PricingConfigurator.tsx:913
 msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
 msgstr ""
 
 #: src/components/pricing/PricingConfigurator.tsx:825
-msgid "Thanks, we will be in touch within a day."
-msgstr "Děkujeme, do jednoho dne se vám ozveme."
+#~ msgid "Thanks, we will be in touch within a day."
+#~ msgstr "Děkujeme, do jednoho dne se vám ozveme."
 
 #: src/routes/auth/Login.tsx:203
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "That code didn't work. Try again with a fresh code from your authenticator app."
 
-#: src/components/pricing/PricingConfigurator.tsx:1042
+#: src/components/pricing/PricingConfigurator.tsx:815
 msgid "That didn't send. Your answers are still here, so try again."
 msgstr ""
 
-#: src/components/pricing/PricingTextInput.tsx:324
+#: src/components/pricing/PricingTextInput.tsx:319
 msgid "That didn't work out. We have saved your recording."
 msgstr ""
 
 #: src/components/pricing/PricingConfigurator.tsx:960
-msgid "That does not look like an email address."
-msgstr "Tohle nevypadá jako e-mailová adresa."
+#~ msgid "That does not look like an email address."
+#~ msgstr "Tohle nevypadá jako e-mailová adresa."
 
 #: src/components/voice/VoiceInputError.tsx:37
 msgid "That recording is too long to send. Record a shorter note."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:993
+#: src/components/pricing/PricingConfigurator.tsx:777
 msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 msgstr ""
 
@@ -11696,8 +11693,8 @@ msgid "That was too short to transcribe. Hold the recording a little longer."
 msgstr ""
 
 #: src/components/pricing/PricingConfigurator.tsx:1163
-msgid "That's all, thanks"
-msgstr "To je vše, díky"
+#~ msgid "That's all, thanks"
+#~ msgstr "To je vše, díky"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:199
 msgid "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
@@ -11744,7 +11741,7 @@ msgstr "The conversation could not be loaded. Please try again or contact suppor
 msgid "The conversation list shows clearer totals."
 msgstr ""
 
-#: src/components/pricing/PricingBookingStep.tsx:41
+#: src/components/pricing/PricingBookingStep.tsx:152
 msgid "the dembrane team"
 msgstr ""
 
@@ -11789,7 +11786,7 @@ msgstr ""
 msgid "The host guide is what facilitators read before they run a session."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:1202
+#: src/components/pricing/PricingConfigurator.tsx:899
 msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
 msgstr ""
 
@@ -11829,7 +11826,7 @@ msgstr ""
 msgid "The methodology is the way this project is set up and guided."
 msgstr ""
 
-#: src/components/pricing/PricingTextInput.tsx:305
+#: src/components/pricing/PricingTextInput.tsx:300
 msgid "The microphone is blocked in your browser, so recording is off. Typing works."
 msgstr ""
 
@@ -11854,7 +11851,7 @@ msgstr ""
 msgid "The participant flow has clearer microphone checks."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:881
+#: src/components/pricing/PricingConfigurator.tsx:733
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr ""
 
@@ -12668,7 +12665,7 @@ msgstr "Trouble logging in? Contact support@dembrane.com."
 #: src/routes/invite/MyInvitesRoute.tsx:222
 #: src/routes/invite/AcceptInviteRoute.tsx:557
 #: src/components/project/ProjectAccessGuard.tsx:109
-#: src/components/pricing/PricingTextInput.tsx:335
+#: src/components/pricing/PricingTextInput.tsx:330
 msgid "Try again"
 msgstr "Try again"
 
@@ -13544,8 +13541,8 @@ msgid "We still couldn't charge your method. Update it and try again."
 msgstr ""
 
 #: src/components/pricing/PricingConfigurator.tsx:1223
-msgid "We will be in touch within a day. Prefer to pick a time yourself?"
-msgstr "Do jednoho dne se vám ozveme. Chcete si čas raději vybrat sami?"
+#~ msgid "We will be in touch within a day. Prefer to pick a time yourself?"
+#~ msgstr "Do jednoho dne se vám ozveme. Chcete si čas raději vybrat sami?"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:290
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
@@ -13683,7 +13680,7 @@ msgstr ""
 msgid "What happened? Paste a screenshot here to attach it"
 msgstr "Co se stalo? Vložte sem snímek obrazovky a přiložte ho"
 
-#: src/components/pricing/PricingConfigurator.tsx:1388
+#: src/components/pricing/PricingConfigurator.tsx:1041
 msgid "What is it?"
 msgstr ""
 
@@ -14026,7 +14023,7 @@ msgstr ""
 msgid "You are not in an organisation yet."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:989
+#: src/components/pricing/PricingConfigurator.tsx:773
 msgid "You are on the free plan."
 msgstr ""
 
@@ -14177,7 +14174,7 @@ msgstr "You seem to be offline, please check your internet connection"
 msgid "You stopped this run."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:987
+#: src/components/pricing/PricingConfigurator.tsx:771
 msgid "You were trying to {action}."
 msgstr ""
 
@@ -14298,8 +14295,8 @@ msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, an
 msgstr "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 
 #: src/components/pricing/PricingConfigurator.tsx:969
-msgid "you@example.org"
-msgstr "vy@priklad.cz"
+#~ msgid "you@example.org"
+#~ msgstr "vy@priklad.cz"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1296
 msgid "Your access"
@@ -14324,11 +14321,11 @@ msgstr "Your approval helps us understand what you really think!"
 msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:817
+#: src/components/pricing/PricingConfigurator.tsx:698
 msgid "Your call is booked: {bookedTime}."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:819
+#: src/components/pricing/PricingConfigurator.tsx:700
 msgid "Your call is booked."
 msgstr ""
 
@@ -14346,8 +14343,8 @@ msgid "Your draft won't be saved."
 msgstr "Your draft won't be saved."
 
 #: src/components/pricing/PricingConfigurator.tsx:963
-msgid "Your email"
-msgstr "Váš e-mail"
+#~ msgid "Your email"
+#~ msgstr "Váš e-mail"
 
 #: src/routes/auth/VerifyEmail.tsx:104
 msgid "Your email is already verified"
@@ -14370,7 +14367,7 @@ msgstr ""
 msgid "Your free plan includes one report. Upgrade to create more."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:878
+#: src/components/pricing/PricingConfigurator.tsx:730
 msgid "Your free transcription hour is used up."
 msgstr ""
 
@@ -14477,11 +14474,11 @@ msgid "Your plan won't renew. You keep access until the period ends."
 msgstr ""
 
 #. placeholder {0}: formatElapsed(pending?.durationMs ?? 0)
-#: src/components/pricing/PricingTextInput.tsx:316
+#: src/components/pricing/PricingTextInput.tsx:311
 msgid "Your recording, {0}"
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:822
+#: src/components/pricing/PricingConfigurator.tsx:703
 msgid "Your request is in."
 msgstr ""
 

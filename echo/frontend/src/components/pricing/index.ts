@@ -62,6 +62,5 @@ export {
 	PRICING_CONFIGURATION_PATH,
 	submitConfiguration,
 	submitFailureOf,
-	submitPortalConfiguration,
 } from "./submitConfiguration";
 export { usePricingConfigurator } from "./usePricingConfigurator";

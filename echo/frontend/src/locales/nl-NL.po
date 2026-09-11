@@ -561,7 +561,7 @@ msgstr "{finishedConversationsCount, plural, one {Momenteel is # gesprek klaar o
 msgid "{from} → {to}"
 msgstr "{from} → {to}"
 
-#: src/components/pricing/PricingBookingStep.tsx:135
+#: src/components/pricing/PricingBookingStep.tsx:350
 msgid "{host} will read your answers before the call and brings a draft offer."
 msgstr "Voor het gesprek leest {host} je antwoorden en neemt een conceptvoorstel mee."
 
@@ -849,8 +849,8 @@ msgstr "Een project bevat alles voor één onderwerp. Deel de link met deelnemer
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "Er wordt al een rapport gegenereerd voor dit project. Wacht tot het klaar is."
 
-#: src/components/pricing/PricingConfigurator.tsx:1474
-#: src/components/pricing/PricingConfigurator.tsx:1478
+#: src/components/pricing/PricingConfigurator.tsx:1125
+#: src/components/pricing/PricingConfigurator.tsx:1129
 msgid "A rough number or \"not sure\". Either is useful."
 msgstr "Een schatting of \"weet ik nog niet\". Met allebei kunnen we verder."
 
@@ -2081,7 +2081,7 @@ msgstr "Afwezig"
 #: src/routes/auth/Register.tsx:240
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:334
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:371
-#: src/components/pricing/PricingConfigurator.tsx:1092
+#: src/components/pricing/PricingConfigurator.tsx:845
 msgid "Back"
 msgstr "Terug"
 
@@ -2096,7 +2096,7 @@ msgstr "Terug naar microfoon"
 msgid "participant.button.back"
 msgstr "Terug"
 
-#: src/components/pricing/PricingConfigurator.tsx:1252
+#: src/components/pricing/PricingConfigurator.tsx:930
 msgid "Back to dembrane"
 msgstr "Terug naar dembrane"
 
@@ -2314,7 +2314,7 @@ msgstr "Op trefwoord"
 #~ msgid "can read"
 #~ msgstr "kan lezen"
 
-#: src/components/pricing/PricingConfigurator.tsx:830
+#: src/components/pricing/PricingConfigurator.tsx:706
 msgid "Can you tell us more?"
 msgstr "Kun je ons meer vertellen?"
 
@@ -2781,7 +2781,7 @@ msgstr "Klik op \"Upload bestanden\" wanneer je klaar bent om de upload te start
 msgid "Click a conversation tag to add it to your filters."
 msgstr "Klik op een gesprekstag om die aan je filters toe te voegen."
 
-#: src/routes/project/HostGuidePage.tsx:1472
+#: src/routes/project/HostGuidePage.tsx:1490
 msgid "Click to edit"
 msgstr "Klik om te bewerken"
 
@@ -2831,7 +2831,6 @@ msgstr "Project klonen"
 msgid "Clone Project"
 msgstr "Project klonen"
 
-#: src/components/pricing/PricingConfigurator.tsx:1250
 #: src/components/dropzone/UploadConversationDropzone.tsx:872
 #: src/components/conversation/ConversationLinks.tsx:110
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3029,7 +3028,7 @@ msgstr "Contextuele suggesties"
 #: src/routes/onboarding/OnboardingRoute.tsx:530
 #: src/routes/onboarding/OnboardingRoute.tsx:662
 #: src/routes/auth/Register.tsx:212
-#: src/components/pricing/PricingConfigurator.tsx:1119
+#: src/components/pricing/PricingConfigurator.tsx:866
 #: src/components/organisation/CreateOrganisationModal.tsx:207
 #: src/components/language/LanguagePicker.tsx:158
 #: src/components/billing/BillingManager.tsx:1457
@@ -3898,7 +3897,7 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane, de standaard"
 
-#: src/components/participant/DembraneEventCta.tsx:77
+#: src/components/participant/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
 msgstr "Ook dembrane inzetten?"
 
@@ -4123,8 +4122,8 @@ msgid "Done"
 msgstr "Klaar"
 
 #: src/components/pricing/PricingConfigurator.tsx:1065
-msgid "Done, reach out to me"
-msgstr "Klaar, neem contact met me op"
+#~ msgid "Done, reach out to me"
+#~ msgstr "Klaar, neem contact met me op"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:847
 msgid "Downgrade to Free now"
@@ -4199,7 +4198,7 @@ msgstr "Een notitie opstellen die je naar het dembrane-team kunt sturen"
 msgid "Drag audio files here or click to select files"
 msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 
-#: src/routes/project/HostGuidePage.tsx:1484
+#: src/routes/project/HostGuidePage.tsx:1502
 #: src/components/chat/TemplatesModal.tsx:569
 msgid "Drag to reorder"
 msgstr "Sleep om te herordenen"
@@ -4441,7 +4440,7 @@ msgstr "2FA inschakelen"
 msgid "Enable Explore"
 msgstr "Verkennen inschakelen"
 
-#: src/routes/project/HostGuidePage.tsx:1658
+#: src/routes/project/HostGuidePage.tsx:1676
 msgid "Enable participation"
 msgstr "Deelnemen inschakelen"
 
@@ -5367,7 +5366,7 @@ msgstr "Ga terug"
 msgid "participant.concrete.artefact.action.button.go.back"
 msgstr "Terug"
 
-#: src/routes/project/HostGuidePage.tsx:1521
+#: src/routes/project/HostGuidePage.tsx:1539
 msgid "Go Fullscreen"
 msgstr "Volledig scherm"
 
@@ -5449,8 +5448,8 @@ msgid "Got it"
 msgstr "Begrepen"
 
 #: src/components/pricing/PricingConfigurator.tsx:1151
-msgid "Got two minutes? Five optional questions help us prepare."
-msgstr "Heb je twee minuten? Vijf optionele vragen helpen ons voorbereiden."
+#~ msgid "Got two minutes? Five optional questions help us prepare."
+#~ msgstr "Heb je twee minuten? Vijf optionele vragen helpen ons voorbereiden."
 
 #: src/components/training/TrainingRowActions.tsx:305
 msgid "Grant licenses"
@@ -6324,8 +6323,8 @@ msgid "Leave workspace"
 msgstr "Werkruimte verlaten"
 
 #: src/components/pricing/PricingConfigurator.tsx:952
-msgid "Leave your email so we can get in touch with you."
-msgstr "Laat je e-mailadres achter, dan nemen we contact met je op."
+#~ msgid "Leave your email so we can get in touch with you."
+#~ msgstr "Laat je e-mailadres achter, dan nemen we contact met je op."
 
 #: src/components/conversation/StatePill.tsx:45
 msgid "Left"
@@ -6348,7 +6347,7 @@ msgstr "Rechtsgrondslag opgeslagen"
 msgid "Legal entity name"
 msgstr "Naam rechtspersoon"
 
-#: src/components/pricing/PricingConfigurator.tsx:1122
+#: src/components/pricing/PricingConfigurator.tsx:868
 msgid "Let's go!"
 msgstr "Aan de slag!"
 
@@ -7267,7 +7266,7 @@ msgstr "Nieuwste eerst"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:781
 #: src/routes/project/CreateProjectRoute.tsx:411
 #: src/components/release/ReleaseTimeline.tsx:47
-#: src/components/pricing/PricingConfigurator.tsx:1126
+#: src/components/pricing/PricingConfigurator.tsx:872
 #: src/components/invite/InviteModal.tsx:774
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:329
 msgid "Next"
@@ -7292,7 +7291,7 @@ msgstr "Volgende"
 msgid "Next invoice"
 msgstr "Volgende factuur"
 
-#: src/components/pricing/PricingConfigurator.tsx:1124
+#: src/components/pricing/PricingConfigurator.tsx:870
 msgid "Next: pick a time"
 msgstr "Volgende: kies een tijd"
 
@@ -7687,7 +7686,7 @@ msgid "Not enabled by an admin of {0}"
 msgstr ""
 
 #: src/routes/invite/AcceptInviteRoute.tsx:568
-#: src/components/pricing/PricingConfigurator.tsx:1082
+#: src/components/pricing/PricingConfigurator.tsx:835
 #: src/components/popcorn/PopcornIntroModal.tsx:54
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:216
 #: src/components/chat/AgenticIntroModal.tsx:78
@@ -8103,11 +8102,9 @@ msgstr "Optioneel veld op de startpagina"
 msgid "Optional field on the thank you page"
 msgstr "Optioneel veld op de bedankpagina"
 
-#. placeholder {0}: phase.step - OPENING_STEP
-#. placeholder {1}: STEP_COUNT - OPENING_STEP
 #: src/components/pricing/PricingConfigurator.tsx:898
-msgid "Optional question {0} of {1}"
-msgstr "Optionele vraag {0} van {1}"
+#~ msgid "Optional question {0} of {1}"
+#~ msgstr "Optionele vraag {0} van {1}"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1561
 msgid "Optional. What this workspace is for."
@@ -8583,15 +8580,15 @@ msgstr "Telefoon"
 msgid "Pick a date"
 msgstr "Kies een datum"
 
-#: src/components/pricing/PricingBookingStep.tsx:120
+#: src/components/pricing/PricingBookingStep.tsx:335
 msgid "Pick a time"
 msgstr "Kies een tijd"
 
 #: src/components/pricing/PricingConfigurator.tsx:1262
-msgid "Pick a time now"
-msgstr "Kies nu een moment"
+#~ msgid "Pick a time now"
+#~ msgstr "Kies nu een moment"
 
-#: src/components/pricing/PricingConfigurator.tsx:812
+#: src/components/pricing/PricingConfigurator.tsx:693
 msgid "Pick a time with {host}."
 msgstr "Kies een tijd met {host}."
 
@@ -8822,7 +8819,7 @@ msgstr "Postcode"
 msgid "praise"
 msgstr "compliment"
 
-#: src/components/pricing/PricingTextInput.tsx:240
+#: src/components/pricing/PricingTextInput.tsx:235
 msgid "Prefer talking? Press record and just say it."
 msgstr "Praat je liever? Druk op opnemen en vertel het gewoon."
 
@@ -8866,7 +8863,7 @@ msgstr "Vorige"
 msgid "Price"
 msgstr "Prijs"
 
-#: src/routes/project/HostGuidePage.tsx:1513
+#: src/routes/project/HostGuidePage.tsx:1531
 msgid "Print / Save PDF"
 msgstr "Afdrukken / PDF opslaan"
 
@@ -9173,8 +9170,8 @@ msgid "Re-use settings from an existing webhook"
 msgstr "Gebruik instellingen van een bestaande webhook"
 
 #: src/components/pricing/PricingConfigurator.tsx:1117
-msgid "Reach out to me"
-msgstr "Neem contact met me op"
+#~ msgid "Reach out to me"
+#~ msgstr "Neem contact met me op"
 
 #: src/components/invite/InviteModal.tsx:680
 msgid "Reactivate"
@@ -9325,7 +9322,7 @@ msgstr "Opnieuw verbinden"
 msgid "participant.button.record"
 msgstr "Opname starten"
 
-#: src/components/pricing/PricingTextInput.tsx:260
+#: src/components/pricing/PricingTextInput.tsx:255
 #: src/components/feedback/ReportIssueModal.tsx:247
 #: src/components/chat/AgenticChatPanel.tsx:2208
 msgid "Record a voice message"
@@ -9419,10 +9416,10 @@ msgid "Recurring Themes"
 msgstr "Terugkerende thema's"
 
 #: src/components/pricing/bookingPrefill.ts:168
-#: src/components/pricing/PricingConfigurator.tsx:174
-#: src/components/pricing/PricingConfigurator.tsx:1239
-#: src/components/pricing/PricingBookingStep.tsx:108
-#: src/components/pricing/PricingBookingStep.tsx:143
+#: src/components/pricing/PricingConfigurator.tsx:155
+#: src/components/pricing/PricingConfigurator.tsx:921
+#: src/components/pricing/PricingBookingStep.tsx:324
+#: src/components/pricing/PricingBookingStep.tsx:357
 msgid "Reference {reference}"
 msgstr "Referentie {reference}"
 
@@ -9891,7 +9888,7 @@ msgstr "Uitnodiging opnieuw versturen"
 msgid "Resend invite email"
 msgstr "Uitnodiging opnieuw versturen"
 
-#: src/routes/project/HostGuidePage.tsx:1506
+#: src/routes/project/HostGuidePage.tsx:1524
 msgid "Reset"
 msgstr "Resetten"
 
@@ -10068,7 +10065,7 @@ msgstr ""
 msgid "Revoked"
 msgstr ""
 
-#: src/routes/project/HostGuidePage.tsx:1478
+#: src/routes/project/HostGuidePage.tsx:1496
 msgid "Right-click to highlight"
 msgstr "Rechtsklikken om te markeren"
 
@@ -10089,7 +10086,7 @@ msgstr "Rol bijgewerkt"
 msgid "Rough estimate to finish transcribing the backlog"
 msgstr "Ruwe schatting om de achterstand aan transcripties weg te werken"
 
-#: src/components/pricing/PricingConfigurator.tsx:1482
+#: src/components/pricing/PricingConfigurator.tsx:1133
 msgid "Roughly how many?"
 msgstr "Ongeveer hoeveel?"
 
@@ -11016,7 +11013,7 @@ msgstr "Zes weekenden verspreid over zeven maanden"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:355
 #: src/routes/onboarding/OnboardingRoute.tsx:521
-#: src/components/pricing/PricingConfigurator.tsx:1106
+#: src/components/pricing/PricingConfigurator.tsx:856
 #: src/components/organisation/CreateOrganisationModal.tsx:227
 #: src/components/feedback/ResponseFeedbackControls.tsx:232
 msgid "Skip"
@@ -11311,7 +11308,7 @@ msgid "Stays up to date until tomorrow {0}"
 msgstr "Blijft actueel tot morgen {0}"
 
 #. placeholder {0}: phase.step
-#: src/components/pricing/PricingConfigurator.tsx:910
+#: src/components/pricing/PricingConfigurator.tsx:746
 msgid "Step {0} of {STEP_COUNT}"
 msgstr "Stap {0} van {STEP_COUNT}"
 
@@ -11320,7 +11317,7 @@ msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Kom je er nog niet uit? Mail <0>support@dembrane.com</0>."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:790
-#: src/components/pricing/PricingTextInput.tsx:256
+#: src/components/pricing/PricingTextInput.tsx:251
 #: src/components/feedback/ReportIssueModal.tsx:243
 #: src/components/chat/AgenticChatPanel.tsx:2203
 msgid "Stop"
@@ -11335,7 +11332,7 @@ msgstr "Stop"
 msgid "Stop live"
 msgstr ""
 
-#: src/components/pricing/PricingTextInput.tsx:247
+#: src/components/pricing/PricingTextInput.tsx:242
 #: src/components/feedback/ReportIssueModal.tsx:236
 #: src/components/chat/AgenticChatPanel.tsx:2193
 msgid "Stop recording and turn it into text"
@@ -11493,8 +11490,8 @@ msgid "Supporting quotes display correctly."
 msgstr "Ondersteunende citaten worden correct weergegeven."
 
 #: src/components/pricing/PricingConfigurator.tsx:1171
-msgid "Sure"
-msgstr "Prima"
+#~ msgid "Sure"
+#~ msgstr "Prima"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:876
 msgid "Switch to self-serve"
@@ -11653,39 +11650,39 @@ msgstr "Bedankt pagina inhoud"
 msgid "Thank you!"
 msgstr "Bedankt!"
 
-#: src/components/pricing/PricingBookingStep.tsx:101
+#: src/components/pricing/PricingBookingStep.tsx:318
 msgid "Thank you! We will get in touch as soon as possible. You can also write to us at info@dembrane.com."
 msgstr "Bedankt! We nemen zo snel mogelijk contact met je op. Je kunt ons ook mailen via info@dembrane.com."
 
-#: src/components/pricing/PricingConfigurator.tsx:1230
+#: src/components/pricing/PricingConfigurator.tsx:913
 msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
 msgstr "Bedankt voor het invullen. Kijk in je mail voor de bevestiging van de afspraak. Heb je vragen voor ons, dan kun je ons altijd bereiken op info@dembrane.com"
 
 #: src/components/pricing/PricingConfigurator.tsx:825
-msgid "Thanks, we will be in touch within a day."
-msgstr "Bedankt, we nemen binnen een dag contact op."
+#~ msgid "Thanks, we will be in touch within a day."
+#~ msgstr "Bedankt, we nemen binnen een dag contact op."
 
 #: src/routes/auth/Login.tsx:203
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Die code werkte niet. Probeer het opnieuw met een verse code uit je authenticator-app."
 
-#: src/components/pricing/PricingConfigurator.tsx:1042
+#: src/components/pricing/PricingConfigurator.tsx:815
 msgid "That didn't send. Your answers are still here, so try again."
 msgstr "Dat is niet verstuurd. Je antwoorden staan er nog, dus probeer het opnieuw."
 
-#: src/components/pricing/PricingTextInput.tsx:324
+#: src/components/pricing/PricingTextInput.tsx:319
 msgid "That didn't work out. We have saved your recording."
 msgstr "Dat is niet gelukt. We hebben je opname opgeslagen."
 
 #: src/components/pricing/PricingConfigurator.tsx:960
-msgid "That does not look like an email address."
-msgstr "Dat ziet er niet uit als een e-mailadres."
+#~ msgid "That does not look like an email address."
+#~ msgstr "Dat ziet er niet uit als een e-mailadres."
 
 #: src/components/voice/VoiceInputError.tsx:37
 msgid "That recording is too long to send. Record a shorter note."
 msgstr "Die opname is te lang om te versturen. Neem een kortere notitie op."
 
-#: src/components/pricing/PricingConfigurator.tsx:993
+#: src/components/pricing/PricingConfigurator.tsx:777
 msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 msgstr "Daarvoor heb je een betaald abonnement nodig. We stellen je nog 5 korte vragen. Daarna kies je een tijd met het dembrane-team. Voor het gesprek lezen we je antwoorden, zodat we een voorstel meenemen dat bij je past."
 
@@ -11694,8 +11691,8 @@ msgid "That was too short to transcribe. Hold the recording a little longer."
 msgstr "Dat was te kort om te transcriberen. Houd de opname iets langer vast."
 
 #: src/components/pricing/PricingConfigurator.tsx:1163
-msgid "That's all, thanks"
-msgstr "Dat was het, bedankt"
+#~ msgid "That's all, thanks"
+#~ msgstr "Dat was het, bedankt"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:199
 msgid "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
@@ -11742,7 +11739,7 @@ msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of
 msgid "The conversation list shows clearer totals."
 msgstr "De gesprekslijst toont duidelijkere totalen."
 
-#: src/components/pricing/PricingBookingStep.tsx:41
+#: src/components/pricing/PricingBookingStep.tsx:152
 msgid "the dembrane team"
 msgstr "het dembrane-team"
 
@@ -11787,7 +11784,7 @@ msgstr "Het doel stuurt de rapporten, canvassen en suggesties van de assistent i
 msgid "The host guide is what facilitators read before they run a session."
 msgstr "De hostgids is wat begeleiders lezen voordat ze een sessie draaien."
 
-#: src/components/pricing/PricingConfigurator.tsx:1202
+#: src/components/pricing/PricingConfigurator.tsx:899
 msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
 msgstr "De uitnodiging staat in je inbox. We lezen je antwoorden vooraf en nemen een conceptvoorstel mee. Heb je intussen vragen? Neem dan contact op met"
 
@@ -11827,7 +11824,7 @@ msgstr "De ledenpagina toont een laadstatus in plaats van kort te zeggen dat er 
 msgid "The methodology is the way this project is set up and guided."
 msgstr "De methodologie is de manier waarop dit project is opgezet en wordt begeleid."
 
-#: src/components/pricing/PricingTextInput.tsx:305
+#: src/components/pricing/PricingTextInput.tsx:300
 msgid "The microphone is blocked in your browser, so recording is off. Typing works."
 msgstr "De microfoon is geblokkeerd in je browser, dus opnemen staat uit. Typen werkt wel."
 
@@ -11852,7 +11849,7 @@ msgstr "De pagina waar dit antwoord naar verwijst."
 msgid "The participant flow has clearer microphone checks."
 msgstr "De deelnemersflow heeft duidelijkere microfooncontroles."
 
-#: src/components/pricing/PricingConfigurator.tsx:881
+#: src/components/pricing/PricingConfigurator.tsx:733
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "De portalen blijven werken! Je deelnemers kunnen altijd doorgaan en niets wat ze zeggen gaat verloren. Zodra je een betaald abonnement hebt, wordt alles wat al is opgenomen alsnog getranscribeerd."
 
@@ -12664,7 +12661,7 @@ msgstr "Problemen met inloggen? Neem contact op via support@dembrane.com."
 #: src/routes/invite/MyInvitesRoute.tsx:222
 #: src/routes/invite/AcceptInviteRoute.tsx:557
 #: src/components/project/ProjectAccessGuard.tsx:109
-#: src/components/pricing/PricingTextInput.tsx:335
+#: src/components/pricing/PricingTextInput.tsx:330
 msgid "Try again"
 msgstr "Opnieuw proberen"
 
@@ -13540,8 +13537,8 @@ msgid "We still couldn't charge your method. Update it and try again."
 msgstr "We konden je methode nog steeds niet belasten. Werk deze bij en probeer het opnieuw."
 
 #: src/components/pricing/PricingConfigurator.tsx:1223
-msgid "We will be in touch within a day. Prefer to pick a time yourself?"
-msgstr "We nemen binnen een dag contact op. Liever zelf een moment kiezen?"
+#~ msgid "We will be in touch within a day. Prefer to pick a time yourself?"
+#~ msgstr "We nemen binnen een dag contact op. Liever zelf een moment kiezen?"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:290
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
@@ -13679,7 +13676,7 @@ msgstr "Wat er verstuurd wordt"
 msgid "What happened? Paste a screenshot here to attach it"
 msgstr "Wat is er gebeurd? Plak hier een screenshot om hem toe te voegen"
 
-#: src/components/pricing/PricingConfigurator.tsx:1388
+#: src/components/pricing/PricingConfigurator.tsx:1041
 msgid "What is it?"
 msgstr "Wat is het?"
 
@@ -14022,7 +14019,7 @@ msgstr ""
 msgid "You are not in an organisation yet."
 msgstr ""
 
-#: src/components/pricing/PricingConfigurator.tsx:989
+#: src/components/pricing/PricingConfigurator.tsx:773
 msgid "You are on the free plan."
 msgstr "Je zit op het gratis plan."
 
@@ -14173,7 +14170,7 @@ msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
 msgid "You stopped this run."
 msgstr "Je hebt deze run gestopt."
 
-#: src/components/pricing/PricingConfigurator.tsx:987
+#: src/components/pricing/PricingConfigurator.tsx:771
 msgid "You were trying to {action}."
 msgstr "Je probeerde {action}."
 
@@ -14294,8 +14291,8 @@ msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, an
 msgstr "Je hebt alle 10 uur van de pilot gebruikt. Tools voor hosts (Chat, rapporten, analyse, exports) staan op pauze."
 
 #: src/components/pricing/PricingConfigurator.tsx:969
-msgid "you@example.org"
-msgstr "jij@voorbeeld.nl"
+#~ msgid "you@example.org"
+#~ msgstr "jij@voorbeeld.nl"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1296
 msgid "Your access"
@@ -14320,11 +14317,11 @@ msgstr "Jouw goedkeuring helpt ons begrijpen wat je echt denkt!"
 msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr "Je browser blokkeert de microfoon. Geef toegang en probeer het opnieuw."
 
-#: src/components/pricing/PricingConfigurator.tsx:817
+#: src/components/pricing/PricingConfigurator.tsx:698
 msgid "Your call is booked: {bookedTime}."
 msgstr "Je afspraak is geboekt: {bookedTime}."
 
-#: src/components/pricing/PricingConfigurator.tsx:819
+#: src/components/pricing/PricingConfigurator.tsx:700
 msgid "Your call is booked."
 msgstr "Je afspraak is geboekt."
 
@@ -14342,8 +14339,8 @@ msgid "Your draft won't be saved."
 msgstr "Je concept wordt niet opgeslagen."
 
 #: src/components/pricing/PricingConfigurator.tsx:963
-msgid "Your email"
-msgstr "Jouw e-mailadres"
+#~ msgid "Your email"
+#~ msgstr "Jouw e-mailadres"
 
 #: src/routes/auth/VerifyEmail.tsx:104
 msgid "Your email is already verified"
@@ -14366,7 +14363,7 @@ msgstr "Je feedback en dit antwoord gaan naar het dembrane-team."
 msgid "Your free plan includes one report. Upgrade to create more."
 msgstr "Je gratis plan bevat één rapport. Upgrade om er meer te maken."
 
-#: src/components/pricing/PricingConfigurator.tsx:878
+#: src/components/pricing/PricingConfigurator.tsx:730
 msgid "Your free transcription hour is used up."
 msgstr "Je gratis uur voor transcriptie is opgebruikt."
 
@@ -14473,11 +14470,11 @@ msgid "Your plan won't renew. You keep access until the period ends."
 msgstr "Je abonnement wordt niet verlengd. Je houdt toegang tot het einde van de periode."
 
 #. placeholder {0}: formatElapsed(pending?.durationMs ?? 0)
-#: src/components/pricing/PricingTextInput.tsx:316
+#: src/components/pricing/PricingTextInput.tsx:311
 msgid "Your recording, {0}"
 msgstr "Je opname, {0}"
 
-#: src/components/pricing/PricingConfigurator.tsx:822
+#: src/components/pricing/PricingConfigurator.tsx:703
 msgid "Your request is in."
 msgstr "Je aanvraag is binnen."
 

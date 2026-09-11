@@ -11,7 +11,7 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter, useLocation, useNavigate } from "react-router";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
-import { BookingLinks, EventBookingLinks } from "@/lib/links";
+import { BookingLinks } from "@/lib/links";
 import {
 	type Answers,
 	CONFIG_STORAGE_KEY,
@@ -126,13 +126,11 @@ const seed = (answers: Answers, sessionId = "session-under-test") => {
 
 const renderConfigurator = ({
 	entries = ["/workspace"],
-	mount,
 	projectId,
 	submit = submitMock().mockResolvedValue({ reference: "DEM-4F2A" }),
 	wallKey,
 }: {
 	entries?: string[];
-	mount?: "app" | "site" | "portal";
 	projectId?: string;
 	submit?: ReturnType<typeof submitMock>;
 	wallKey?: string;
@@ -146,7 +144,6 @@ const renderConfigurator = ({
 					<LocationProbe />
 					<HistoryBack />
 					<PricingConfigurator
-						mount={mount}
 						onClose={onClose}
 						onEvent={onEvent}
 						opened
@@ -940,122 +937,4 @@ it("shows the price line only for the anchor variant, and says which one rode al
 			([name]) => name === "pricing_config_started",
 		)?.[1],
 	).toMatchObject({ price_anchor: "anchor" });
-});
-
-// ── the participant portal ──
-
-const typeEmail = (value: string) =>
-	fireEvent.change(screen.getByTestId("pricing-configurator-email"), {
-		target: { value },
-	});
-
-it("the portal opening asks for an email, offers to reach out, and names no plan", () => {
-	renderConfigurator({ mount: "portal", projectId: "proj-1" });
-
-	expect(screen.getByTestId("pricing-configurator-opening").textContent).toBe(
-		"Leave your email so we can get in touch with you.",
-	);
-	expect(screen.getByTestId("pricing-configurator-email")).toBeTruthy();
-	expect(screen.getByTestId("pricing-configurator-next").textContent).toBe(
-		"Reach out to me",
-	);
-	// No progress on the opening: it is the whole ask, not step 1 of 6.
-	expect(screen.queryByRole("progressbar")).toBeNull();
-	expect(
-		screen.getByTestId("pricing-configurator-modal").textContent,
-	).not.toMatch(/free plan|paid plan/i);
-});
-
-it("the portal captures the lead on the email alone, then offers the questions as a favour", async () => {
-	const inline = vi.fn();
-	(globalThis as { Cal?: unknown }).Cal = Object.assign(vi.fn(), {
-		ns: { [EventBookingLinks.EMBED_NAMESPACE]: inline },
-	});
-	const submit = submitMock().mockResolvedValue({ reference: "PTL-4F2A" });
-	renderConfigurator({ mount: "portal", projectId: "proj-1", submit });
-
-	// No email, no lead: the error shows and nothing was sent.
-	next();
-	expect(
-		screen.getByText("That does not look like an email address."),
-	).toBeTruthy();
-	expect(submit).not.toHaveBeenCalled();
-
-	typeEmail("Someone@Example.org");
-	next();
-
-	// The email alone writes the row, as submitted, before any question.
-	await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
-	const lead = submit.mock.calls[0][0];
-	expect(lead.status).toBe("submitted");
-	expect(lead.email).toBe("someone@example.org");
-	expect(lead.mount).toBe("portal");
-	expect(lead.project_id).toBe("proj-1");
-	expect(lead.answers_raw).toEqual({});
-
-	// The thanks screen: the questions are offered, not put in the way.
-	const thanks = await screen.findByTestId("pricing-configurator-thanks");
-	expect(thanks.textContent).toContain("Got two minutes?");
-
-	// Declining lands on the done screen, with the calendar as the eager path.
-	fireEvent.click(screen.getByTestId("pricing-configurator-thanks-done"));
-	const done = await screen.findByTestId("pricing-configurator-confirmation");
-	expect(done.textContent).toContain("We will be in touch within a day.");
-	// A participant has nobody to quote the code to, so it stays off screen.
-	expect(done.textContent).not.toContain("Reference");
-	fireEvent.click(screen.getByTestId("pricing-configurator-pick-a-time"));
-
-	await screen.findByTestId("pricing-configurator-booking");
-	// The events crew answer this calendar, so the title names both of them.
-	expect(screen.getByText("Pick a time with Eve or Pauline.")).toBeTruthy();
-	expect(inline).toHaveBeenCalledTimes(1);
-	const [, options] = inline.mock.calls[0] as [
-		string,
-		{ calLink: string; config: Record<string, string> },
-	];
-	// The event intake call, not the configurator's needs call, with the email
-	// already on the form.
-	expect(options.calLink).toBe(EventBookingLinks.CAL_LINK);
-	expect(options.config.email).toBe("someone@example.org");
-	expect(options.config["metadata[reference]"]).toBe("PTL-4F2A");
-	(globalThis as { Cal?: unknown }).Cal = undefined;
-});
-
-it("the portal's questions are optional, offer no voice, and can stop at any step", async () => {
-	const submit = submitMock().mockResolvedValue({ reference: "PTL-4F2A" });
-	renderConfigurator({ mount: "portal", projectId: "proj-1", submit });
-
-	typeEmail("someone@example.org");
-	next();
-	fireEvent.click(
-		await screen.findByTestId("pricing-configurator-thanks-questions"),
-	);
-
-	// Question 1: a progress bar along the top, the count kept for the screen
-	// reader, and Skip from the very first one.
-	const bar = screen.getByRole("progressbar");
-	expect(bar.getAttribute("aria-label")).toBe("Optional question 1 of 5");
-	expect(bar.getAttribute("aria-valuenow")).toBe("20");
-	expect(screen.getByTestId("pricing-configurator-skip")).toBeTruthy();
-	fireEvent.click(screen.getByLabelText("An event or a workshop."));
-	next();
-
-	// Question 2 is the first free text box. No record button for a
-	// participant: the transcription endpoint would refuse them.
-	expect(screen.getByRole("progressbar").getAttribute("aria-label")).toBe(
-		"Optional question 2 of 5",
-	);
-	expect(
-		screen.queryByText("Prefer talking? Press record and just say it."),
-	).toBeNull();
-	expect(document.querySelector('[data-testid$="-voice-record"]')).toBeNull();
-
-	// Stopping here puts what was answered on the row and ends the form.
-	fireEvent.click(screen.getByTestId("pricing-configurator-finish-early"));
-	await screen.findByTestId("pricing-configurator-confirmation");
-	const last = submit.mock.calls.at(-1)?.[0];
-	if (!last) throw new Error("the early exit wrote nothing");
-	expect(last.status).toBe("submitted");
-	expect(last.answers_raw.use_case).toEqual(["event_workshop"]);
-	expect(last.email).toBe("someone@example.org");
 });

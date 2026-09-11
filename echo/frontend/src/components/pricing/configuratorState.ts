@@ -156,8 +156,6 @@ export type StoredConfiguration = {
 	question_set_version: string;
 	answers: Answers;
 	furthest_step: number;
-	/** The participant portal's opening asks for one; nothing else sets it. */
-	email?: string;
 };
 
 /** A fresh id for one attempt. `crypto.randomUUID` where it exists; the
@@ -198,7 +196,6 @@ export const readStoredConfiguration = (): StoredConfiguration | null => {
 		return {
 			answers: (parsed.answers ?? {}) as Answers,
 			config_session_id: parsed.config_session_id,
-			email: typeof parsed.email === "string" ? parsed.email : undefined,
 			furthest_step:
 				typeof parsed.furthest_step === "number" ? parsed.furthest_step : 1,
 			question_set_version:
