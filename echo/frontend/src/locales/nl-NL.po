@@ -653,11 +653,11 @@ msgstr "{sent} uitnodigingen verstuurd. Het project wordt gedeeld zodra ze meedo
 msgid "{sentCount} invites sent."
 msgstr "{sentCount} uitnodigingen verstuurd."
 
-#: src/components/conversation/LiveFunnelSection.tsx:100
+#: src/components/conversation/LiveFunnelSection.tsx:97
 msgid "{tag} (preselected)"
 msgstr "{tag} (vooraf gekozen)"
 
-#: src/components/conversation/LiveFunnelSection.tsx:233
+#: src/components/conversation/LiveFunnelSection.tsx:230
 msgid "{totalActive, plural, one {# active} other {# active}}"
 msgstr "{totalActive, plural, one {# actief} other {# actief}}"
 
@@ -1651,7 +1651,7 @@ msgstr "anoniem gesprek"
 msgid "Anonymized conversation"
 msgstr "Anoniem gesprek"
 
-#: src/components/conversation/FunnelCanvas.tsx:347
+#: src/components/conversation/FunnelCanvas.tsx:344
 msgid "Anonymous"
 msgstr "Anoniem"
 
@@ -1659,7 +1659,7 @@ msgstr "Anoniem"
 msgid "Anonymous participant"
 msgstr "Anonieme deelnemer"
 
-#: src/components/conversation/LiveFunnelSection.tsx:83
+#: src/components/conversation/LiveFunnelSection.tsx:80
 msgid "Anonymous visitor"
 msgstr "Anonieme bezoeker"
 
@@ -3057,7 +3057,7 @@ msgstr "gesprek"
 
 #: src/features/sidebar/hooks/useSearchHits.ts:224
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:449
-#: src/components/conversation/ConversationDrilldownModal.tsx:304
+#: src/components/conversation/ConversationDrilldownModal.tsx:298
 msgid "Conversation"
 msgstr "Gesprek"
 
@@ -3355,7 +3355,7 @@ msgstr ""
 msgid "Could not run popcorn"
 msgstr ""
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:143
+#: src/components/conversation/ConversationDrilldownModal.tsx:137
 msgid "Could not save"
 msgstr "Kon niet opslaan"
 
@@ -3367,7 +3367,7 @@ msgstr "Feedback niet opgeslagen"
 msgid "Could not save popcorn settings"
 msgstr ""
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:168
+#: src/components/conversation/ConversationDrilldownModal.tsx:162
 msgid "Could not save tags"
 msgstr "Kon tags niet opslaan"
 
@@ -3790,8 +3790,8 @@ msgstr "Multistap analyse delegeren met live tool uitvoering"
 #: src/components/project/ProjectDangerZone.tsx:167
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:652
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:691
-#: src/components/conversation/ConversationDrilldownModal.tsx:254
-#: src/components/conversation/ConversationDrilldownModal.tsx:269
+#: src/components/conversation/ConversationDrilldownModal.tsx:248
+#: src/components/conversation/ConversationDrilldownModal.tsx:263
 #: src/components/conversation/ConversationDangerZone.tsx:99
 #: src/components/chat/TemplatesModal.tsx:432
 #: src/components/chat/TemplatesModal.tsx:519
@@ -3814,7 +3814,7 @@ msgstr "{0} verwijderen?"
 msgid "Delete chat"
 msgstr "Chat verwijderen"
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:262
+#: src/components/conversation/ConversationDrilldownModal.tsx:256
 #: src/components/conversation/ConversationDangerZone.tsx:96
 msgid "Delete conversation"
 msgstr "Gesprek verwijderen"
@@ -4549,8 +4549,8 @@ msgstr "Voer uw query in"
 msgid "Entered by the participant on the portal"
 msgstr "Ingevoerd door de deelnemer op het portaal"
 
-#: src/components/conversation/LiveFunnelSection.tsx:56
-#: src/components/conversation/ConversationDrilldownModal.tsx:56
+#: src/components/conversation/LiveFunnelSection.tsx:53
+#: src/components/conversation/ConversationDrilldownModal.tsx:50
 msgid "Entered details"
 msgstr "Gegevens ingevuld"
 
@@ -5098,7 +5098,7 @@ msgstr "Gesprek afmaken"
 #: src/components/report/ConversationStatusTable.tsx:82
 #: src/components/conversation/monitorGrouping.ts:78
 #: src/components/conversation/StatePill.tsx:31
-#: src/components/conversation/LiveFunnelSection.tsx:270
+#: src/components/conversation/LiveFunnelSection.tsx:267
 msgid "Finished"
 msgstr "Voltooid"
 
@@ -6120,7 +6120,7 @@ msgstr "Lid geworden van {subjectName}"
 msgid "Joined as admin"
 msgstr "Toegevoegd als admin"
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:58
+#: src/components/conversation/ConversationDrilldownModal.tsx:52
 msgid "Joined the conversation"
 msgstr "Deelgenomen aan het gesprek"
 
@@ -6251,7 +6251,7 @@ msgstr "Kickback %"
 msgid "Language"
 msgstr "Taal"
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:62
+#: src/components/conversation/ConversationDrilldownModal.tsx:56
 msgid "Last audio"
 msgstr "Laatste audio"
 
@@ -6442,7 +6442,7 @@ msgstr "Documentatiepagina's opzoeken"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:301
 #: src/components/conversation/monitorGrouping.ts:72
-#: src/components/conversation/LiveFunnelSection.tsx:265
+#: src/components/conversation/LiveFunnelSection.tsx:262
 msgid "Live"
 msgstr "Live"
 
@@ -6485,11 +6485,11 @@ msgstr "live monitor"
 msgid "Live monitoring"
 msgstr "Live monitoring"
 
-#: src/components/conversation/LiveFunnelSection.tsx:230
+#: src/components/conversation/LiveFunnelSection.tsx:227
 msgid "Live participant flow"
 msgstr "Live deelnemersstroom"
 
-#: src/components/conversation/FunnelCanvas.tsx:360
+#: src/components/conversation/FunnelCanvas.tsx:357
 msgid "Live participant funnel: scanned, setting up, on recording page, live, and finished counts"
 msgstr "Live deelnemerstrechter: aantallen voor gescand, instellen, op opnamepagina, live en voltooid"
 
@@ -6692,7 +6692,7 @@ msgid "loop"
 msgstr "loop"
 
 #: src/components/conversation/LiveMonitorSection.tsx:294
-#: src/components/conversation/LiveFunnelSection.tsx:119
+#: src/components/conversation/LiveFunnelSection.tsx:116
 msgid "Low battery"
 msgstr "Batterij bijna leeg"
 
@@ -6931,13 +6931,13 @@ msgstr "Methodologie bijgewerkt"
 
 #: src/components/conversation/LiveFunnelSection.tsx:55
 #: src/components/conversation/ConversationDrilldownModal.tsx:54
-msgid "Mic blocked"
-msgstr "Microfoon geblokkeerd"
+#~ msgid "Mic blocked"
+#~ msgstr "Microfoon geblokkeerd"
 
 #: src/components/conversation/LiveFunnelSection.tsx:53
 #: src/components/conversation/ConversationDrilldownModal.tsx:50
-msgid "Mic checked"
-msgstr "Microfoon getest"
+#~ msgid "Mic checked"
+#~ msgstr "Microfoon getest"
 
 #: src/components/participant/PermissionErrorModal.tsx:25
 msgid "Microphone access is still denied. Please check your settings and try again."
@@ -7985,7 +7985,7 @@ msgstr "Open chatdocumentatie"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:406
 #: src/components/conversation/ProjectConversationsPanel.tsx:410
-#: src/components/conversation/ConversationDrilldownModal.tsx:243
+#: src/components/conversation/ConversationDrilldownModal.tsx:237
 msgid "Open conversation"
 msgstr "Gesprek openen"
 
@@ -8354,7 +8354,7 @@ msgstr "Deelnemer e-mails"
 msgid "Participant Features"
 msgstr "Deelnemer features"
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:195
+#: src/components/conversation/ConversationDrilldownModal.tsx:189
 msgid "Participant name"
 msgstr "Naam deelnemer"
 
@@ -9341,7 +9341,7 @@ msgstr "Neem nog een gesprek op"
 
 #: src/components/voice/VoiceRecordingBar.tsx:38
 #: src/components/conversation/StatePill.tsx:19
-#: src/components/conversation/FunnelCanvas.tsx:345
+#: src/components/conversation/FunnelCanvas.tsx:342
 msgid "Recording"
 msgstr "Opname"
 
@@ -9386,7 +9386,7 @@ msgstr "Opnemen blijft werken, dus je deelnemers ondervinden er niets van."
 msgid "Recording links can prefill a title, tags and participant name."
 msgstr "Opnamelinks kunnen een titel, tags en deelnemersnaam vooraf invullen."
 
-#: src/components/conversation/LiveFunnelSection.tsx:260
+#: src/components/conversation/LiveFunnelSection.tsx:257
 msgid "Recording page"
 msgstr "Opnamepagina"
 
@@ -10180,7 +10180,7 @@ msgstr "Template opslaan"
 #: src/routes/organisation/OrganisationRoute.tsx:1103
 #: src/routes/admin/AdminSettingsRoute.tsx:461
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:109
-#: src/components/conversation/ConversationDrilldownModal.tsx:149
+#: src/components/conversation/ConversationDrilldownModal.tsx:143
 msgid "Saved"
 msgstr "Opgeslagen"
 
@@ -10220,12 +10220,12 @@ msgstr "Scan om deel te nemen aan dit project"
 msgid "Scan to start a new portal session"
 msgstr "Scan om een nieuwe portalsessie te starten"
 
-#: src/components/conversation/LiveFunnelSection.tsx:250
+#: src/components/conversation/LiveFunnelSection.tsx:247
 msgid "Scanned"
 msgstr "Gescand"
 
 #. placeholder {0}: visitor.scan_count
-#: src/components/conversation/LiveFunnelSection.tsx:87
+#: src/components/conversation/LiveFunnelSection.tsx:84
 msgid "Scanned {0} times"
 msgstr "{0} keer gescand"
 
@@ -10571,7 +10571,7 @@ msgid "Select Project"
 msgstr "Selecteer Project"
 
 #: src/components/conversation/ConversationEdit.tsx:423
-#: src/components/conversation/ConversationDrilldownModal.tsx:206
+#: src/components/conversation/ConversationDrilldownModal.tsx:200
 msgid "Select tags"
 msgstr "Selecteer tags"
 
@@ -10757,7 +10757,7 @@ msgstr "Bepaal wie het kan zien en kan deelnemen."
 msgid "Setting things up for you"
 msgstr "We zetten alles voor je klaar"
 
-#: src/components/conversation/LiveFunnelSection.tsx:255
+#: src/components/conversation/LiveFunnelSection.tsx:252
 msgid "Setting up"
 msgstr "Instellen"
 
@@ -11038,8 +11038,8 @@ msgstr "Overgeslagen omdat de selectie te groot was."
 
 #: src/components/conversation/LiveFunnelSection.tsx:54
 #: src/components/conversation/ConversationDrilldownModal.tsx:52
-msgid "Skipped mic check"
-msgstr "Microfooncheck overgeslagen"
+#~ msgid "Skipped mic check"
+#~ msgstr "Microfooncheck overgeslagen"
 
 #: src/features/sidebar/views/HelpView.tsx:41
 msgid "Slack community"
@@ -11062,7 +11062,7 @@ msgstr "Sommige bestanden werden al geselecteerd en worden niet dubbel toegevoeg
 msgid "select.all.modal.skip.disclaimer"
 msgstr "Sommige kunnen worden overgeslagen (geen transcript of selectie te groot)."
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:217
+#: src/components/conversation/ConversationDrilldownModal.tsx:211
 msgid "Some of the recent audio couldn't be transcribed. The recording is saved."
 msgstr "Een deel van de recente audio kon niet worden getranscribeerd. De opname is opgeslagen."
 
@@ -11265,7 +11265,7 @@ msgstr "Begin met opnemen zonder een extra bevestigingsstap."
 msgid "Start recording without duplicate conversations, see the actual recording time, and use saved question templates from Ask. Sidebar updates now show an unread count."
 msgstr "Start opnames zonder dubbele gesprekken, bekijk de echte starttijd en gebruik opgeslagen vraagsjablonen vanuit Ask. Updates in de zijbalk tonen nu het aantal ongelezen berichten."
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:60
+#: src/components/conversation/ConversationDrilldownModal.tsx:54
 msgid "Started recording"
 msgstr "Opname gestart"
 
@@ -11535,7 +11535,7 @@ msgstr "Tag verwijderd"
 #: src/components/participant/ParticipantInitiateForm.tsx:293
 #: src/components/conversation/ProjectConversationsPanel.tsx:853
 #: src/components/conversation/ConversationEdit.tsx:426
-#: src/components/conversation/ConversationDrilldownModal.tsx:205
+#: src/components/conversation/ConversationDrilldownModal.tsx:199
 #: src/components/conversation/ConversationAccordion.tsx:1281
 #: src/components/conversation/ConversationAccordion.tsx:1284
 msgid "Tags"
@@ -12223,7 +12223,7 @@ msgstr "Hiermee zet je het account op facturering die dembrane beheert: geen aut
 msgid "This record has no billing account."
 msgstr "Dit record heeft geen factureringsaccount."
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:264
+#: src/components/conversation/ConversationDrilldownModal.tsx:258
 msgid "This removes the conversation from the project. This can't be undone."
 msgstr "Hiermee verwijder je het gesprek uit het project. Dit kun je niet terugdraaien."
 
@@ -12373,8 +12373,8 @@ msgstr "Niveau gewijzigd"
 msgid "Time"
 msgstr "Tijd"
 
-#: src/components/conversation/LiveFunnelSection.tsx:67
-#: src/components/conversation/ConversationDrilldownModal.tsx:75
+#: src/components/conversation/LiveFunnelSection.tsx:64
+#: src/components/conversation/ConversationDrilldownModal.tsx:69
 msgid "Timeline"
 msgstr "Tijdlijn"
 
@@ -13411,7 +13411,7 @@ msgstr "Zichtbaar voor iedereen in deze werkruimte"
 msgid "Visible to everyone in this workspace. Leave off to keep it personal."
 msgstr "Zichtbaar voor iedereen in deze werkruimte. Laat uit om het persoonlijk te houden."
 
-#: src/components/conversation/LiveFunnelSection.tsx:303
+#: src/components/conversation/LiveFunnelSection.tsx:300
 msgid "Visitor details"
 msgstr "Bezoekersgegevens"
 
@@ -13573,7 +13573,7 @@ msgid "We've sent a verification link to <0>{0}</0>. Open the email and click th
 msgstr "We hebben een verificatielink naar <0>{0}</0> gestuurd. Open de e-mail en klik op de link om verder te gaan."
 
 #: src/components/conversation/LiveMonitorSection.tsx:289
-#: src/components/conversation/LiveFunnelSection.tsx:111
+#: src/components/conversation/LiveFunnelSection.tsx:108
 msgid "Weak network"
 msgstr "Zwak netwerk"
 
@@ -13763,7 +13763,7 @@ msgstr "Wanneer je het gesprek afmaakt, worden deelnemers die nog niet hebben ge
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 msgstr "Staat dit aan, dan kan het supportteam van dembrane deze werkruimte in om je te helpen. Hun toegang stopt automatisch na 24 uur."
 
-#: src/components/conversation/LiveFunnelSection.tsx:240
+#: src/components/conversation/LiveFunnelSection.tsx:237
 msgid "When participants scan the QR code, they'll appear here and flow across the stages in real time."
 msgstr "Zodra deelnemers de QR-code scannen, verschijnen ze hier en bewegen ze live door de fases."
 

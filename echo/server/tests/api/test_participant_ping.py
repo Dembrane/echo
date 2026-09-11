@@ -252,7 +252,7 @@ def test_ping_visitor_sanitises_and_publishes(monkeypatch) -> None:
     monkeypatch.setattr(participant, "publish_monitor_dirty", _fake_publish)
 
     body = participant.VisitorPingRequest(
-        stage="mic_skipped",
+        stage="terms",
         name="Ada",
         tags=["Table 3", "  "],
         tags_preselected=True,
@@ -263,7 +263,7 @@ def test_ping_visitor_sanitises_and_publishes(monkeypatch) -> None:
     assert result == {"ok": True}
     project_id, visitor_id, telemetry = marked[0]
     assert (project_id, visitor_id) == ("proj-1", "vis-1")
-    assert telemetry["stage"] == "mic_skipped"
+    assert telemetry["stage"] == "terms"
     assert telemetry["name"] == "Ada"
     assert telemetry["tags"] == ["Table 3"]  # blank tag dropped
     assert telemetry["tags_preselected"] is True

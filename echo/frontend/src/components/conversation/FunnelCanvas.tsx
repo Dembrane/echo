@@ -19,7 +19,6 @@ import { isFinishedSession, isOnRecordingPage } from "./monitorGrouping";
 // Mantine theme so the funnel stays in sync with the rest of the monitor.
 const FALLBACK_COLORS = {
 	backgrounded: "#868e96",
-	blocked: "#fa5252",
 	finished: "#868e96",
 	recording: "#fa5252",
 	// Matches the yellow StatePill for paused / away / left.
@@ -50,7 +49,6 @@ const resolveColors = (): typeof FALLBACK_COLORS => {
 			"--mantine-color-gray-6",
 			FALLBACK_COLORS.backgrounded,
 		),
-		blocked: readCssVar("--mantine-color-red-6", FALLBACK_COLORS.blocked),
 		finished: readCssVar("--mantine-color-gray-6", FALLBACK_COLORS.finished),
 		recording: readCssVar("--mantine-color-red-6", FALLBACK_COLORS.recording),
 		recordingPage: readCssVar(
@@ -103,7 +101,6 @@ const colorOf = (node: NodeDatum): string => {
 			return colors.backgrounded;
 		return colors.recording;
 	}
-	if (node.data.stage === "mic_blocked") return colors.blocked;
 	if (node.data.stage === "scanned") return colors.scanned;
 	return colors.setup;
 };

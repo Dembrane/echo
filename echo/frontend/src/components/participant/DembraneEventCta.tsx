@@ -69,7 +69,7 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 					// call to action, but it is the one thing left to do here.
 					variant="outline"
 					size="lg"
-					className="w-full sm:w-auto sm:min-w-80"
+					fullWidth
 					rightSection={<IconArrowRight size={18} />}
 					onClick={handleOpen}
 					{...testId("portal-finish-event-cta-button")}
