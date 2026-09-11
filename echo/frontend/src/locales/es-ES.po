@@ -3901,7 +3901,7 @@ msgstr ""
 msgid "dembrane - the default"
 msgstr ""
 
-#: src/components/participant/DembraneEventCta.tsx:70
+#: src/components/participant/DembraneEventCta.tsx:74
 msgid "dembrane at your event?"
 msgstr "¿dembrane en tu evento?"
 
@@ -9334,7 +9334,7 @@ msgstr "Grabar"
 msgid "Record a voice message"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:158
+#: src/routes/participant/ParticipantPostConversation.tsx:167
 msgid "Record another conversation"
 msgstr "Registrar otra conversación"
 
@@ -10944,7 +10944,7 @@ msgstr ""
 msgid "Show projects"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:168
+#: src/routes/participant/ParticipantPostConversation.tsx:157
 msgid "Show QR Code"
 msgstr "Mostrar código QR"
 
@@ -14491,8 +14491,12 @@ msgstr ""
 #~ msgstr "Tu respuesta ha sido registrada. Puedes cerrar esta pestaña ahora."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:141
-msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
-msgstr "Tu respuesta ha sido registrada. Puedes cerrar esta pestaña ahora. También puedes registrar otra conversación o compartir el código QR para que otras personas puedan contribuir."
+#~ msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
+#~ msgstr "Tu respuesta ha sido registrada. Puedes cerrar esta pestaña ahora. También puedes registrar otra conversación o compartir el código QR para que otras personas puedan contribuir."
+
+#: src/routes/participant/ParticipantPostConversation.tsx:141
+msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."
+msgstr "Tu respuesta ha sido registrada. Puedes cerrar esta pestaña ahora. También puedes compartir el código QR para que otras personas puedan contribuir, o registrar otra conversación."
 
 #: src/components/participant/ParticipantBody.tsx:257
 msgid "Your responses"

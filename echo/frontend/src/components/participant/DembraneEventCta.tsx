@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Button, Stack } from "@mantine/core";
+import { Box, Button } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import posthog from "posthog-js";
 import { useCallback } from "react";
@@ -49,26 +49,31 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 	};
 
 	return (
-		<Stack
-			gap="lg"
-			className="mt-16 md:mt-24"
-			{...testId("portal-finish-event-cta")}
-		>
+		<>
 			<img
 				src={PaulineUnderstandArt}
 				alt=""
-				className="mx-auto h-auto w-full max-w-lg"
+				className="mx-auto mt-16 h-auto w-full max-w-lg px-4 md:mt-24"
 				{...testId("portal-finish-event-cta-art")}
 			/>
-			<Button
-				size="xl"
-				fullWidth
-				rightSection={<IconArrowRight size={20} />}
-				onClick={handleOpen}
-				{...testId("portal-finish-event-cta-button")}
+			{/* The one ask on the page stays in reach however far they scroll. It
+			    is the last thing in the flow, so `sticky` pins it to the bottom
+			    of the viewport until the page runs out and it settles in place. */}
+			<Box
+				bg="var(--app-background)"
+				className="sticky bottom-0 z-10 mt-6 border-t border-slate-300 p-4"
+				{...testId("portal-finish-event-cta")}
 			>
-				<Trans>dembrane at your event?</Trans>
-			</Button>
+				<Button
+					size="xl"
+					fullWidth
+					rightSection={<IconArrowRight size={20} />}
+					onClick={handleOpen}
+					{...testId("portal-finish-event-cta-button")}
+				>
+					<Trans>dembrane at your event?</Trans>
+				</Button>
+			</Box>
 			<PricingConfigurator
 				{...configurator.configuratorProps}
 				entry="modal_direct"
@@ -78,6 +83,6 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 				projectId={projectId}
 				submit={submitPortalConfiguration}
 			/>
-		</Stack>
+		</>
 	);
 };

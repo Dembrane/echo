@@ -3901,7 +3901,7 @@ msgstr ""
 msgid "dembrane - the default"
 msgstr ""
 
-#: src/components/participant/DembraneEventCta.tsx:70
+#: src/components/participant/DembraneEventCta.tsx:74
 msgid "dembrane at your event?"
 msgstr "dembrane pour votre événement ?"
 
@@ -9334,7 +9334,7 @@ msgstr "Enregistrer"
 msgid "Record a voice message"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:158
+#: src/routes/participant/ParticipantPostConversation.tsx:167
 msgid "Record another conversation"
 msgstr "Enregistrer une autre conversation"
 
@@ -10944,7 +10944,7 @@ msgstr ""
 msgid "Show projects"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:168
+#: src/routes/participant/ParticipantPostConversation.tsx:157
 msgid "Show QR Code"
 msgstr "Afficher le code QR"
 
@@ -14488,8 +14488,12 @@ msgstr ""
 #~ msgstr "Votre réponse a été enregistrée. Vous pouvez maintenant fermer cette page."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:141
-msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
-msgstr "Votre réponse a été enregistrée. Vous pouvez maintenant fermer cette page. Vous pouvez également enregistrer une autre conversation ou partager le code QR pour que d'autres puissent contribuer."
+#~ msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
+#~ msgstr "Votre réponse a été enregistrée. Vous pouvez maintenant fermer cette page. Vous pouvez également enregistrer une autre conversation ou partager le code QR pour que d'autres puissent contribuer."
+
+#: src/routes/participant/ParticipantPostConversation.tsx:141
+msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."
+msgstr "Votre réponse a été enregistrée. Vous pouvez maintenant fermer cette page. Vous pouvez également partager le code QR pour que d'autres puissent contribuer, ou enregistrer une autre conversation."
 
 #: src/components/participant/ParticipantBody.tsx:257
 msgid "Your responses"

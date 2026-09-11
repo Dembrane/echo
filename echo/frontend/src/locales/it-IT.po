@@ -3900,7 +3900,7 @@ msgstr ""
 msgid "dembrane - the default"
 msgstr ""
 
-#: src/components/participant/DembraneEventCta.tsx:70
+#: src/components/participant/DembraneEventCta.tsx:74
 msgid "dembrane at your event?"
 msgstr "dembrane al tuo evento?"
 
@@ -9333,7 +9333,7 @@ msgstr "Record"
 msgid "Record a voice message"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:158
+#: src/routes/participant/ParticipantPostConversation.tsx:167
 msgid "Record another conversation"
 msgstr "Record another conversation"
 
@@ -10943,7 +10943,7 @@ msgstr ""
 msgid "Show projects"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:168
+#: src/routes/participant/ParticipantPostConversation.tsx:157
 msgid "Show QR Code"
 msgstr "Mostra il codice QR"
 
@@ -14490,8 +14490,12 @@ msgstr ""
 #~ msgstr "Your response has been recorded. You may now close this tab."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:141
-msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
-msgstr "La tua risposta è stata registrata. Ora puoi chiudere questa scheda. Puoi anche registrare un'altra conversazione o condividere il codice QR così che altri possano contribuire."
+#~ msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
+#~ msgstr "La tua risposta è stata registrata. Ora puoi chiudere questa scheda. Puoi anche registrare un'altra conversazione o condividere il codice QR così che altri possano contribuire."
+
+#: src/routes/participant/ParticipantPostConversation.tsx:141
+msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."
+msgstr "La tua risposta è stata registrata. Ora puoi chiudere questa scheda. Puoi anche condividere il codice QR così che altri possano contribuire, o registrare un'altra conversazione."
 
 #: src/components/participant/ParticipantBody.tsx:257
 msgid "Your responses"

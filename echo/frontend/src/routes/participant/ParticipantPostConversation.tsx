@@ -124,7 +124,7 @@ export const ParticipantPostConversation = () => {
 				onClose={closeShare}
 				project={project.data}
 			/>
-			<Stack className="mt-[64px] px-4 py-8">
+			<Stack className="px-4 pt-3 pb-8">
 				{!!text && text !== "" ? (
 					<>
 						<div {...testId("portal-finish-custom-message")}>
@@ -140,13 +140,22 @@ export const ParticipantPostConversation = () => {
 				<Text size="lg">
 					<Trans>
 						Your response has been recorded. You may now close this tab. You may
-						also choose to record another conversation or share the QR code so
-						others can contribute.
+						also share the QR code so others can contribute, or record another
+						conversation.
 					</Trans>
 				</Text>
 				<Box className="relative">
 					<LoadingOverlay visible={project.isLoading} />
 					<Group gap="sm" wrap="wrap">
+						<Button
+							size="md"
+							variant="outline"
+							leftSection={<IconQrcode size={18} />}
+							onClick={openShare}
+							{...testId("portal-finish-show-qr-button")}
+						>
+							<Trans>Show QR Code</Trans>
+						</Button>
 						<I18nLink to={initiateLink}>
 							<Button
 								component="a"
@@ -158,15 +167,6 @@ export const ParticipantPostConversation = () => {
 								<Trans>Record another conversation</Trans>
 							</Button>
 						</I18nLink>
-						<Button
-							size="md"
-							variant="outline"
-							leftSection={<IconQrcode size={18} />}
-							onClick={openShare}
-							{...testId("portal-finish-show-qr-button")}
-						>
-							<Trans>Show QR Code</Trans>
-						</Button>
 					</Group>
 					{project.data?.default_conversation_ask_for_participant_email && (
 						<Stack
@@ -297,11 +297,10 @@ export const ParticipantPostConversation = () => {
 						</Stack>
 					)}
 				</Box>
-				{project.data &&
-					project.data.is_dembrane_event_cta_enabled !== false && (
-						<DembraneEventCta projectId={projectId ?? ""} />
-					)}
 			</Stack>
+			{project.data && project.data.is_dembrane_event_cta_enabled !== false && (
+				<DembraneEventCta projectId={projectId ?? ""} />
+			)}
 		</div>
 	);
 };

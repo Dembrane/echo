@@ -3900,7 +3900,7 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane - the default"
 
-#: src/components/participant/DembraneEventCta.tsx:70
+#: src/components/participant/DembraneEventCta.tsx:74
 msgid "dembrane at your event?"
 msgstr "dembrane at your event?"
 
@@ -9333,7 +9333,7 @@ msgstr "Record"
 msgid "Record a voice message"
 msgstr "Record a voice message"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:158
+#: src/routes/participant/ParticipantPostConversation.tsx:167
 msgid "Record another conversation"
 msgstr "Record another conversation"
 
@@ -10943,7 +10943,7 @@ msgstr "Show only what changed"
 msgid "Show projects"
 msgstr "Show projects"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:168
+#: src/routes/participant/ParticipantPostConversation.tsx:157
 msgid "Show QR Code"
 msgstr "Show QR Code"
 
@@ -14495,8 +14495,12 @@ msgstr "Your request is in."
 #~ msgstr "Your response has been recorded. You may now close this tab."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:141
-msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
-msgstr "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
+#~ msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
+#~ msgstr "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
+
+#: src/routes/participant/ParticipantPostConversation.tsx:141
+msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."
+msgstr "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."
 
 #: src/components/participant/ParticipantBody.tsx:257
 msgid "Your responses"

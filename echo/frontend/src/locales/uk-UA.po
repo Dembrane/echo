@@ -3900,7 +3900,7 @@ msgstr ""
 msgid "dembrane - the default"
 msgstr ""
 
-#: src/components/participant/DembraneEventCta.tsx:70
+#: src/components/participant/DembraneEventCta.tsx:74
 msgid "dembrane at your event?"
 msgstr "dembrane на вашій події?"
 
@@ -9333,7 +9333,7 @@ msgstr "Record"
 msgid "Record a voice message"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:158
+#: src/routes/participant/ParticipantPostConversation.tsx:167
 msgid "Record another conversation"
 msgstr "Record another conversation"
 
@@ -10943,7 +10943,7 @@ msgstr ""
 msgid "Show projects"
 msgstr ""
 
-#: src/routes/participant/ParticipantPostConversation.tsx:168
+#: src/routes/participant/ParticipantPostConversation.tsx:157
 msgid "Show QR Code"
 msgstr "Показати QR-код"
 
@@ -14490,8 +14490,12 @@ msgstr ""
 #~ msgstr "Your response has been recorded. You may now close this tab."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:141
-msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
-msgstr "Вашу відповідь записано. Тепер ви можете закрити цю вкладку. Ви також можете записати ще одну розмову або поділитися QR-кодом, щоб інші могли долучитися."
+#~ msgid "Your response has been recorded. You may now close this tab. You may also choose to record another conversation or share the QR code so others can contribute."
+#~ msgstr "Вашу відповідь записано. Тепер ви можете закрити цю вкладку. Ви також можете записати ще одну розмову або поділитися QR-кодом, щоб інші могли долучитися."
+
+#: src/routes/participant/ParticipantPostConversation.tsx:141
+msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."
+msgstr "Вашу відповідь записано. Тепер ви можете закрити цю вкладку. Ви також можете поділитися QR-кодом, щоб інші могли долучитися, або записати ще одну розмову."
 
 #: src/components/participant/ParticipantBody.tsx:257
 msgid "Your responses"
