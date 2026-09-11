@@ -116,7 +116,7 @@ export const ParticipantPostConversation = () => {
 
 	return (
 		<div
-			className="container mx-auto max-w-2xl"
+			className="container mx-auto flex min-h-full max-w-2xl flex-col"
 			{...testId("portal-finish-container")}
 		>
 			<ParticipantShareModal
@@ -124,7 +124,7 @@ export const ParticipantPostConversation = () => {
 				onClose={closeShare}
 				project={project.data}
 			/>
-			<Stack className="px-4 pt-3 pb-8">
+			<Stack className="px-4 pt-8 pb-8">
 				{!!text && text !== "" ? (
 					<>
 						<div {...testId("portal-finish-custom-message")}>

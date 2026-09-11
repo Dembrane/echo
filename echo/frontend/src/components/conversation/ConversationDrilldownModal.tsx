@@ -46,12 +46,6 @@ const timelineLabel = (key: string): string => {
 			return t`Scanned the QR`;
 		case "terms":
 			return t`Accepted terms`;
-		case "mic_ok":
-			return t`Mic checked`;
-		case "mic_skipped":
-			return t`Skipped mic check`;
-		case "mic_blocked":
-			return t`Mic blocked`;
 		case "profile":
 			return t`Entered details`;
 		case "created":

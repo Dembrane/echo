@@ -53,6 +53,16 @@ msgstr "Preparing your dashboard"
 msgid "Welcome back"
 msgstr "Welcome back"
 
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantOnboardingCards.tsx:542
+#~ msgid "participant.button.back.microphone"
+#~ msgstr "Back"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantOnboardingCards.tsx:446
+#~ msgid "participant.mic.check.button.skip"
+#~ msgstr "Skip"
+
 #: src/components/popcorn/PopcornStatus.tsx:45
 msgid " · {heldBack} held back"
 msgstr " · {heldBack} held back"
@@ -642,11 +652,11 @@ msgstr "{sent} invites sent. The project is shared once they join."
 msgid "{sentCount} invites sent."
 msgstr "{sentCount} invites sent."
 
-#: src/components/conversation/LiveFunnelSection.tsx:100
+#: src/components/conversation/LiveFunnelSection.tsx:97
 msgid "{tag} (preselected)"
 msgstr "{tag} (preselected)"
 
-#: src/components/conversation/LiveFunnelSection.tsx:233
+#: src/components/conversation/LiveFunnelSection.tsx:230
 msgid "{totalActive, plural, one {# active} other {# active}}"
 msgstr "{totalActive, plural, one {# active} other {# active}}"
 
@@ -1643,7 +1653,7 @@ msgstr "anonymized conversation"
 msgid "Anonymized conversation"
 msgstr "Anonymized conversation"
 
-#: src/components/conversation/FunnelCanvas.tsx:347
+#: src/components/conversation/FunnelCanvas.tsx:344
 msgid "Anonymous"
 msgstr "Anonymous"
 
@@ -1651,7 +1661,7 @@ msgstr "Anonymous"
 msgid "Anonymous participant"
 msgstr "Anonymous participant"
 
-#: src/components/conversation/LiveFunnelSection.tsx:83
+#: src/components/conversation/LiveFunnelSection.tsx:80
 msgid "Anonymous visitor"
 msgstr "Anonymous visitor"
 
@@ -2088,13 +2098,8 @@ msgid "Back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:542
-msgid "participant.button.back.microphone"
-msgstr "Back"
-
-#. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:567
-#: src/components/layout/ParticipantHeader.tsx:87
+#: src/components/participant/ParticipantOnboardingCards.tsx:419
+#: src/components/layout/ParticipantHeader.tsx:90
 msgid "participant.button.back"
 msgstr "Back"
 
@@ -2381,7 +2386,7 @@ msgid "participant.concrete.action.button.cancel"
 msgstr "Cancel"
 
 #. js-lingui-explicit-id
-#: src/components/layout/ParticipantHeader.tsx:97
+#: src/components/layout/ParticipantHeader.tsx:100
 msgid "participant.concrete.instructions.button.cancel"
 msgstr "Cancel"
 
@@ -3038,14 +3043,13 @@ msgid "Continue"
 msgstr "Continue"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:554
-#: src/components/participant/MicrophoneTest.tsx:414
-msgid "participant.button.continue"
+#: src/components/participant/ParticipantInitiateForm.tsx:336
+msgid "participant.ready.to.begin.button.text"
 msgstr "Continue"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:336
-msgid "participant.ready.to.begin.button.text"
+#: src/components/participant/MicrophoneTest.tsx:414
+msgid "participant.button.continue"
 msgstr "Continue"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1629
@@ -3054,7 +3058,7 @@ msgstr "conversation"
 
 #: src/features/sidebar/hooks/useSearchHits.ts:224
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:449
-#: src/components/conversation/ConversationDrilldownModal.tsx:304
+#: src/components/conversation/ConversationDrilldownModal.tsx:298
 msgid "Conversation"
 msgstr "Conversation"
 
@@ -3352,7 +3356,7 @@ msgstr "Could not rerun popcorn"
 msgid "Could not run popcorn"
 msgstr "Could not run popcorn"
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:143
+#: src/components/conversation/ConversationDrilldownModal.tsx:137
 msgid "Could not save"
 msgstr "Could not save"
 
@@ -3364,7 +3368,7 @@ msgstr "Could not save feedback"
 msgid "Could not save popcorn settings"
 msgstr "Could not save popcorn settings"
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:168
+#: src/components/conversation/ConversationDrilldownModal.tsx:162
 msgid "Could not save tags"
 msgstr "Could not save tags"
 
@@ -3787,8 +3791,8 @@ msgstr "Delegate multi-step analysis with live tool execution"
 #: src/components/project/ProjectDangerZone.tsx:167
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:652
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:691
-#: src/components/conversation/ConversationDrilldownModal.tsx:254
-#: src/components/conversation/ConversationDrilldownModal.tsx:269
+#: src/components/conversation/ConversationDrilldownModal.tsx:248
+#: src/components/conversation/ConversationDrilldownModal.tsx:263
 #: src/components/conversation/ConversationDangerZone.tsx:99
 #: src/components/chat/TemplatesModal.tsx:432
 #: src/components/chat/TemplatesModal.tsx:519
@@ -3811,7 +3815,7 @@ msgstr "Delete {0}?"
 msgid "Delete chat"
 msgstr "Delete chat"
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:262
+#: src/components/conversation/ConversationDrilldownModal.tsx:256
 #: src/components/conversation/ConversationDangerZone.tsx:96
 msgid "Delete conversation"
 msgstr "Delete conversation"
@@ -4546,8 +4550,8 @@ msgstr "Enter your query"
 msgid "Entered by the participant on the portal"
 msgstr "Entered by the participant on the portal"
 
-#: src/components/conversation/LiveFunnelSection.tsx:56
-#: src/components/conversation/ConversationDrilldownModal.tsx:56
+#: src/components/conversation/LiveFunnelSection.tsx:53
+#: src/components/conversation/ConversationDrilldownModal.tsx:50
 msgid "Entered details"
 msgstr "Entered details"
 
@@ -5095,7 +5099,7 @@ msgstr "Finish Conversation"
 #: src/components/report/ConversationStatusTable.tsx:82
 #: src/components/conversation/monitorGrouping.ts:78
 #: src/components/conversation/StatePill.tsx:31
-#: src/components/conversation/LiveFunnelSection.tsx:270
+#: src/components/conversation/LiveFunnelSection.tsx:267
 msgid "Finished"
 msgstr "Finished"
 
@@ -6117,7 +6121,7 @@ msgstr "Joined {subjectName}"
 msgid "Joined as admin"
 msgstr "Joined as admin"
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:58
+#: src/components/conversation/ConversationDrilldownModal.tsx:52
 msgid "Joined the conversation"
 msgstr "Joined the conversation"
 
@@ -6248,7 +6252,7 @@ msgstr "Kickback %"
 msgid "Language"
 msgstr "Language"
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:62
+#: src/components/conversation/ConversationDrilldownModal.tsx:56
 msgid "Last audio"
 msgstr "Last audio"
 
@@ -6439,7 +6443,7 @@ msgstr "Listing documentation pages"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:301
 #: src/components/conversation/monitorGrouping.ts:72
-#: src/components/conversation/LiveFunnelSection.tsx:265
+#: src/components/conversation/LiveFunnelSection.tsx:262
 msgid "Live"
 msgstr "Live"
 
@@ -6482,11 +6486,11 @@ msgstr "live monitor"
 msgid "Live monitoring"
 msgstr "Live monitoring"
 
-#: src/components/conversation/LiveFunnelSection.tsx:230
+#: src/components/conversation/LiveFunnelSection.tsx:227
 msgid "Live participant flow"
 msgstr "Live participant flow"
 
-#: src/components/conversation/FunnelCanvas.tsx:360
+#: src/components/conversation/FunnelCanvas.tsx:357
 msgid "Live participant funnel: scanned, setting up, on recording page, live, and finished counts"
 msgstr "Live participant funnel: scanned, setting up, on recording page, live, and finished counts"
 
@@ -6689,7 +6693,7 @@ msgid "loop"
 msgstr "loop"
 
 #: src/components/conversation/LiveMonitorSection.tsx:294
-#: src/components/conversation/LiveFunnelSection.tsx:119
+#: src/components/conversation/LiveFunnelSection.tsx:116
 msgid "Low battery"
 msgstr "Low battery"
 
@@ -6928,13 +6932,13 @@ msgstr "Methodology updated"
 
 #: src/components/conversation/LiveFunnelSection.tsx:55
 #: src/components/conversation/ConversationDrilldownModal.tsx:54
-msgid "Mic blocked"
-msgstr "Mic blocked"
+#~ msgid "Mic blocked"
+#~ msgstr "Mic blocked"
 
 #: src/components/conversation/LiveFunnelSection.tsx:53
 #: src/components/conversation/ConversationDrilldownModal.tsx:50
-msgid "Mic checked"
-msgstr "Mic checked"
+#~ msgid "Mic checked"
+#~ msgstr "Mic checked"
 
 #: src/components/participant/PermissionErrorModal.tsx:25
 msgid "Microphone access is still denied. Please check your settings and try again."
@@ -7275,7 +7279,7 @@ msgid "Next"
 msgstr "Next"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:584
+#: src/components/participant/ParticipantOnboardingCards.tsx:436
 msgid "participant.button.next"
 msgstr "Next"
 
@@ -7982,7 +7986,7 @@ msgstr "Open chat documentation"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:406
 #: src/components/conversation/ProjectConversationsPanel.tsx:410
-#: src/components/conversation/ConversationDrilldownModal.tsx:243
+#: src/components/conversation/ConversationDrilldownModal.tsx:237
 msgid "Open conversation"
 msgstr "Open conversation"
 
@@ -8349,7 +8353,7 @@ msgstr "Participant Emails"
 msgid "Participant Features"
 msgstr "Participant Features"
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:195
+#: src/components/conversation/ConversationDrilldownModal.tsx:189
 msgid "Participant name"
 msgstr "Participant name"
 
@@ -9276,7 +9280,7 @@ msgid "Reads every 2 minutes. Refresh reads now."
 msgstr "Reads every 2 minutes. Refresh reads now."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:418
+#: src/components/participant/ParticipantOnboardingCards.tsx:313
 msgid "participant.ready.to.begin"
 msgstr "Ready to Begin?"
 
@@ -9336,7 +9340,7 @@ msgstr "Record another conversation"
 
 #: src/components/voice/VoiceRecordingBar.tsx:38
 #: src/components/conversation/StatePill.tsx:19
-#: src/components/conversation/FunnelCanvas.tsx:345
+#: src/components/conversation/FunnelCanvas.tsx:342
 msgid "Recording"
 msgstr "Recording"
 
@@ -9381,7 +9385,7 @@ msgstr "Recording keeps working, so your participants are unaffected."
 msgid "Recording links can prefill a title, tags and participant name."
 msgstr "Recording links can prefill a title, tags and participant name."
 
-#: src/components/conversation/LiveFunnelSection.tsx:260
+#: src/components/conversation/LiveFunnelSection.tsx:257
 msgid "Recording page"
 msgstr "Recording page"
 
@@ -10175,7 +10179,7 @@ msgstr "Save template"
 #: src/routes/organisation/OrganisationRoute.tsx:1103
 #: src/routes/admin/AdminSettingsRoute.tsx:461
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:109
-#: src/components/conversation/ConversationDrilldownModal.tsx:149
+#: src/components/conversation/ConversationDrilldownModal.tsx:143
 msgid "Saved"
 msgstr "Saved"
 
@@ -10215,12 +10219,12 @@ msgstr "Scan to join this project"
 msgid "Scan to start a new portal session"
 msgstr "Scan to start a new portal session"
 
-#: src/components/conversation/LiveFunnelSection.tsx:250
+#: src/components/conversation/LiveFunnelSection.tsx:247
 msgid "Scanned"
 msgstr "Scanned"
 
 #. placeholder {0}: visitor.scan_count
-#: src/components/conversation/LiveFunnelSection.tsx:87
+#: src/components/conversation/LiveFunnelSection.tsx:84
 msgid "Scanned {0} times"
 msgstr "Scanned {0} times"
 
@@ -10566,7 +10570,7 @@ msgid "Select Project"
 msgstr "Select Project"
 
 #: src/components/conversation/ConversationEdit.tsx:423
-#: src/components/conversation/ConversationDrilldownModal.tsx:206
+#: src/components/conversation/ConversationDrilldownModal.tsx:200
 msgid "Select tags"
 msgstr "Select tags"
 
@@ -10752,7 +10756,7 @@ msgstr "Set who can see and join."
 msgid "Setting things up for you"
 msgstr "Setting things up for you"
 
-#: src/components/conversation/LiveFunnelSection.tsx:255
+#: src/components/conversation/LiveFunnelSection.tsx:252
 msgid "Setting up"
 msgstr "Setting up"
 
@@ -10766,8 +10770,8 @@ msgstr "Setting up"
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
 #: src/features/sidebar/views/org/OrgHomeView.tsx:130
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
-#: src/components/layout/ParticipantHeader.tsx:121
-#: src/components/layout/ParticipantHeader.tsx:122
+#: src/components/layout/ParticipantHeader.tsx:124
+#: src/components/layout/ParticipantHeader.tsx:125
 msgid "Settings"
 msgstr "Settings"
 
@@ -10810,8 +10814,8 @@ msgstr "Share invite links as an alternative to email invitations."
 msgid "Share link"
 msgstr "Share link"
 
-#: src/components/layout/ParticipantHeader.tsx:111
-#: src/components/layout/ParticipantHeader.tsx:112
+#: src/components/layout/ParticipantHeader.tsx:114
+#: src/components/layout/ParticipantHeader.tsx:115
 msgid "Share portal"
 msgstr "Share portal"
 
@@ -11027,19 +11031,14 @@ msgid "participant.button.verify_prompt.skip"
 msgstr "Skip"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:446
-msgid "participant.mic.check.button.skip"
-msgstr "Skip"
-
-#. js-lingui-explicit-id
 #: src/components/conversation/SelectAllConfirmationModal.tsx:601
 msgid "select.all.modal.context.limit.reached.description"
 msgstr "Skipped because the selection was too large."
 
 #: src/components/conversation/LiveFunnelSection.tsx:54
 #: src/components/conversation/ConversationDrilldownModal.tsx:52
-msgid "Skipped mic check"
-msgstr "Skipped mic check"
+#~ msgid "Skipped mic check"
+#~ msgstr "Skipped mic check"
 
 #: src/features/sidebar/views/HelpView.tsx:41
 msgid "Slack community"
@@ -11062,7 +11061,7 @@ msgstr "Some files were already selected and won't be added twice."
 msgid "select.all.modal.skip.disclaimer"
 msgstr "Some may be skipped (no transcript or selection too large)."
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:217
+#: src/components/conversation/ConversationDrilldownModal.tsx:211
 msgid "Some of the recent audio couldn't be transcribed. The recording is saved."
 msgstr "Some of the recent audio couldn't be transcribed. The recording is saved."
 
@@ -11265,7 +11264,7 @@ msgstr "Start recording without an extra ready-to-record confirmation."
 msgid "Start recording without duplicate conversations, see the actual recording time, and use saved question templates from Ask. Sidebar updates now show an unread count."
 msgstr "Start recording without duplicate conversations, see the actual recording time, and use saved question templates from Ask. Sidebar updates now show an unread count."
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:60
+#: src/components/conversation/ConversationDrilldownModal.tsx:54
 msgid "Started recording"
 msgstr "Started recording"
 
@@ -11535,7 +11534,7 @@ msgstr "Tag deleted"
 #: src/components/participant/ParticipantInitiateForm.tsx:293
 #: src/components/conversation/ProjectConversationsPanel.tsx:853
 #: src/components/conversation/ConversationEdit.tsx:426
-#: src/components/conversation/ConversationDrilldownModal.tsx:205
+#: src/components/conversation/ConversationDrilldownModal.tsx:199
 #: src/components/conversation/ConversationAccordion.tsx:1281
 #: src/components/conversation/ConversationAccordion.tsx:1284
 msgid "Tags"
@@ -12223,7 +12222,7 @@ msgstr "This puts the account on dembrane-managed billing: no automatic Mollie c
 msgid "This record has no billing account."
 msgstr "This record has no billing account."
 
-#: src/components/conversation/ConversationDrilldownModal.tsx:264
+#: src/components/conversation/ConversationDrilldownModal.tsx:258
 msgid "This removes the conversation from the project. This can't be undone."
 msgstr "This removes the conversation from the project. This can't be undone."
 
@@ -12373,8 +12372,8 @@ msgstr "Tier changed"
 msgid "Time"
 msgstr "Time"
 
-#: src/components/conversation/LiveFunnelSection.tsx:67
-#: src/components/conversation/ConversationDrilldownModal.tsx:75
+#: src/components/conversation/LiveFunnelSection.tsx:64
+#: src/components/conversation/ConversationDrilldownModal.tsx:69
 msgid "Timeline"
 msgstr "Timeline"
 
@@ -13418,7 +13417,7 @@ msgstr "Visible to everyone in this workspace"
 msgid "Visible to everyone in this workspace. Leave off to keep it personal."
 msgstr "Visible to everyone in this workspace. Leave off to keep it personal."
 
-#: src/components/conversation/LiveFunnelSection.tsx:303
+#: src/components/conversation/LiveFunnelSection.tsx:300
 msgid "Visitor details"
 msgstr "Visitor details"
 
@@ -13580,7 +13579,7 @@ msgid "We've sent a verification link to <0>{0}</0>. Open the email and click th
 msgstr "We've sent a verification link to <0>{0}</0>. Open the email and click the link to continue."
 
 #: src/components/conversation/LiveMonitorSection.tsx:289
-#: src/components/conversation/LiveFunnelSection.tsx:111
+#: src/components/conversation/LiveFunnelSection.tsx:108
 msgid "Weak network"
 msgstr "Weak network"
 
@@ -13770,7 +13769,7 @@ msgstr "When finishing the conversation, participants who haven't verified yet w
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 msgstr "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 
-#: src/components/conversation/LiveFunnelSection.tsx:240
+#: src/components/conversation/LiveFunnelSection.tsx:237
 msgid "When participants scan the QR code, they'll appear here and flow across the stages in real time."
 msgstr "When participants scan the QR code, they'll appear here and flow across the stages in real time."
 

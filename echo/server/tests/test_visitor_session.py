@@ -84,7 +84,7 @@ def test_mark_and_read_visitor(fake_redis: _FakeRedis) -> None:
             now=now,
             score=now.timestamp(),
             telemetry={
-                "stage": "mic_skipped",
+                "stage": "terms",
                 "name": "Ada",
                 "tags": ["Table 3"],
                 "tags_preselected": True,
@@ -96,7 +96,7 @@ def test_mark_and_read_visitor(fake_redis: _FakeRedis) -> None:
     assert set(result.keys()) == {"vis-1"}
     entry = result["vis-1"]
     assert entry["seen"] == now
-    assert entry["stage"] == "mic_skipped"
+    assert entry["stage"] == "terms"
     assert entry["name"] == "Ada"
     assert entry["tags"] == ["Table 3"]
     assert entry["scan_count"] == 2
