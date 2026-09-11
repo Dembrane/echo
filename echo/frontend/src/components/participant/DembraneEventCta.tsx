@@ -53,7 +53,7 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 			<img
 				src={PaulineUnderstandArt}
 				alt=""
-				className="mx-auto mt-16 h-auto w-full max-w-lg px-4 md:mt-24"
+				className="mx-auto mt-2 h-auto w-full max-w-lg px-4"
 				{...testId("portal-finish-event-cta-art")}
 			/>
 			{/* The one ask on the page stays in reach however far they scroll. It
@@ -65,9 +65,12 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 				{...testId("portal-finish-event-cta")}
 			>
 				<Button
-					size="xl"
+					// Tertiary on purpose. The page's job is done; this is a quiet
+					// offer, not a call to action, and it is already always in view.
+					variant="subtle"
+					size="lg"
 					fullWidth
-					rightSection={<IconArrowRight size={20} />}
+					rightSection={<IconArrowRight size={18} />}
 					onClick={handleOpen}
 					{...testId("portal-finish-event-cta-button")}
 				>
