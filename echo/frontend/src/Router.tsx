@@ -125,6 +125,11 @@ const AgentConsentRoute = createLazyNamedRoute(
 	() => import("./routes/settings/AgentConsentRoute"),
 	"AgentConsentRoute",
 );
+const ReleaseNotesRoute = createLazyNamedRoute(
+	() => import("./routes/ReleaseNotesRoute"),
+	"ReleaseNotesRoute",
+);
+
 const ConnectAgentRoute = createLazyNamedRoute(
 	() => import("./routes/agent-access/ConnectAgentRoute"),
 	"ConnectAgentRoute",
@@ -519,6 +524,15 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "settings/agents/authorize",
+			},
+			{
+				children: [{ element: <ReleaseNotesRoute />, index: true }],
+				element: (
+					<Protected>
+						<BaseLayout />
+					</Protected>
+				),
+				path: "release-notes",
 			},
 			{
 				children: [{ element: <ConnectAgentRoute />, index: true }],

@@ -84,10 +84,12 @@ i18n.load("en", {});
 i18n.activate("en");
 
 describe("the shipped release history", () => {
-	it("has a newest entry whose video resolves to a playable embed", () => {
-		const release = latestRelease();
-		expect(release).toBeDefined();
-		expect(youtubeEmbedUrl(release?.videoUrl ?? "")).not.toBeNull();
+	it("has a newest release and valid embeds for every supplied video", () => {
+		expect(latestRelease()).toBeDefined();
+		for (const release of getReleases()) {
+			if (release.videoUrl)
+				expect(youtubeEmbedUrl(release.videoUrl)).not.toBeNull();
+		}
 	});
 
 	it("uses unique version identifiers, so the gate cannot stick", () => {
@@ -165,4 +167,21 @@ describe("playerBridgeUrl", () => {
 			"https://dashboard.dembrane.com",
 		);
 	});
+});
+
+it("keeps publication dates ordered and dismissal keys independent of tags", () => {
+	const history = getReleases();
+	expect(history[0].version).toBe("2026-09");
+	expect(history[0].publication).toBeUndefined();
+	expect(
+		history.find((release) => release.publication?.tag === "v2.2.0")?.version,
+	).toBe("2026-08");
+	const published = history.flatMap((release) =>
+		release.publication ? [release.publication] : [],
+	);
+	expect(new Set(published.map(({ tag }) => tag)).size).toBe(published.length);
+	const dates = published.map(({ date }) => date);
+	expect(dates).toEqual([...dates].sort().reverse());
+	for (const date of dates)
+		expect(new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10)).toBe(date);
 });

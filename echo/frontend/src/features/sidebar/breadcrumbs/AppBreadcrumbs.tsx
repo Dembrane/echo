@@ -1,6 +1,7 @@
+import { useLingui } from "@lingui/react/macro";
 import { CaretRightIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
-import { useLocation, useParams } from "react-router";
+import { useLocation, useMatch, useParams } from "react-router";
 import { useCanvas } from "@/components/canvas/hooks";
 import { useChat } from "@/components/chat/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -85,6 +86,8 @@ const ORG_SETTINGS_LABELS: Record<string, string> = {
 
 // Render when there is at least 1 meaningful crumb to show.
 export const AppBreadcrumbs = () => {
+	const { t } = useLingui();
+	const isReleaseNotesPage = !!useMatch("/:language?/release-notes");
 	const { view, params } = useSidebarView();
 	const { pathname } = useLocation();
 	const isPopcornPath = pathname
@@ -136,6 +139,7 @@ export const AppBreadcrumbs = () => {
 			case "help":
 				return out;
 			case "user-home":
+				if (isReleaseNotesPage) out.push({ label: t`Release notes` });
 				return out;
 			case "user-settings": {
 				out.push({ href: "/settings/account", label: "User settings" });
@@ -291,6 +295,8 @@ export const AppBreadcrumbs = () => {
 		chatQuery.data,
 		canvasQuery.data?.name,
 		isPopcornPath,
+		isReleaseNotesPage,
+		t,
 	]);
 
 	if (crumbs.length === 0) return null;
