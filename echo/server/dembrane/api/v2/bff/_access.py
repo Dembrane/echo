@@ -44,9 +44,9 @@ Design choices worth knowing about:
   require()s project:share / workspace:export / etc. gets the tier
   check for free.
 
-- **Private-project shares use PROJECT_ROLE_PRESETS.** When access came
-  in via source='project_share', require() evaluates against the
-  viewer/editor preset, not the workspace preset.
+- **Private-project shares carry the workspace role.** source='project_share'
+  only records how access was unlocked; require() always evaluates the
+  workspace preset, so a share never grants more than the role allows.
 """
 
 from __future__ import annotations
@@ -59,7 +59,6 @@ from fastapi import HTTPException
 
 from dembrane.app_user import get_app_user_or_raise
 from dembrane.policies import (
-    PROJECT_ROLE_PRESETS,
     WORKSPACE_ROLE_PRESETS,
     TIER_REQUIRED_FOR_POLICY,
     has_policy,
@@ -96,24 +95,18 @@ class ResourceAccess:
     # reuse it instead of re-fetching.
     project: dict = field(default_factory=dict)
 
-    @property
-    def _presets(self) -> dict[str, list[str]]:
-        # Private-project shares (viewer/editor) have their own preset
-        # table. Everything else evaluates against the workspace preset.
-        return PROJECT_ROLE_PRESETS if self.source == "project_share" else WORKSPACE_ROLE_PRESETS
-
     def allows(self, policy: str) -> bool:
         """Does this role (+tier) grant `policy`? Silent — returns bool.
 
         role='external' uses the strictly scoped external preset directly
-        (ADR-0003) — no flag-swap. Project-share access (source='project_share')
-        evaluates against the viewer/editor preset table instead.
+        (ADR-0003) — no flag-swap. Private-project shares carry the workspace
+        role too, so the same preset table applies.
         """
         return has_policy(
             role=self.role,
             custom_policies=self.custom_policies,
             required=policy,
-            presets=self._presets,
+            presets=WORKSPACE_ROLE_PRESETS,
             workspace_tier=self.tier,
         )
 

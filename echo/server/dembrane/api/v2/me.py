@@ -26,6 +26,7 @@ from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.api.v2._invite_helpers import (
     create_membership_row,
     reactivate_membership_row,
+    grant_invite_project_share,
 )
 
 router = APIRouter()
@@ -641,6 +642,9 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
 
             await invalidate_workspace_and_org_usage(invite["workspace_id"], ws.get("org_id"))
 
+    # Project share carried on the invite (sharing modal). Best-effort.
+    await grant_invite_project_share(async_directus, invite, user_id=app_user_id)
+
     # Mark invite as accepted
     await async_directus.update_item(
         "workspace_invite",
@@ -1223,7 +1227,7 @@ async def _consume_pending_invites_in_org(
             {
                 "query": {
                     "filter": ws_invite_filter,
-                    "fields": ["id", "workspace_id", "role"],
+                    "fields": ["id", "workspace_id", "role", "project_id", "invited_by"],
                     "limit": -1,
                 }
             },
@@ -1302,6 +1306,8 @@ async def _consume_pending_invites_in_org(
                                 "source": "direct",
                             },
                         )
+                    # Project share carried on the consumed invite (sharing modal). Best-effort.
+                    await grant_invite_project_share(async_directus, inv, user_id=app_user_id)
                     await async_directus.update_item(
                         "workspace_invite",
                         inv["id"],
@@ -1419,7 +1425,14 @@ async def accept_invite_by_hash(
                     "deleted_at": {"_null": True},
                     "expires_at": {"_gt": now_iso},
                 },
-                "fields": ["id", "email", "workspace_id", "role"],
+                "fields": [
+                    "id",
+                    "email",
+                    "workspace_id",
+                    "role",
+                    "invited_by",
+                    "project_id",
+                ],
                 "limit": -1,
             }
         },
@@ -1578,6 +1591,8 @@ async def accept_invite_by_hash(
                         "accepted_at",
                         "deleted_at",
                         "role",
+                        "invited_by",
+                        "project_id",
                     ],
                     "limit": -1,
                 }
@@ -1692,6 +1707,8 @@ async def accept_invite_by_hash(
                 from dembrane.cache_utils import invalidate_workspace_and_org_usage
 
                 await invalidate_workspace_and_org_usage(inv["workspace_id"], ws.get("org_id"))
+
+                await grant_invite_project_share(async_directus, inv, user_id=app_user_id)
 
                 # "healed" tells the frontend to skip the "Joined!" toast (partial-write recovery).
                 return {
@@ -1885,6 +1902,9 @@ async def accept_invite_by_hash(
             from dembrane.cache_utils import invalidate_workspace_and_org_usage
 
             await invalidate_workspace_and_org_usage(target_invite["workspace_id"], ws.get("org_id"))
+
+    # Project share carried on the invite (sharing modal). Best-effort.
+    await grant_invite_project_share(async_directus, target_invite, user_id=app_user_id)
 
     await async_directus.update_item(
         "workspace_invite",

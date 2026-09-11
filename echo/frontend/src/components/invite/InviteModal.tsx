@@ -25,6 +25,11 @@ import {
 	type InviteResultState,
 	InviteResultsList,
 } from "@/components/invite/InviteResultsList";
+import {
+	inviteToOrg,
+	inviteToWorkspace,
+	type WorkspaceInvitePayload,
+} from "@/components/invite/api";
 import { type InviteRole, RoleSelect } from "@/components/invite/RoleSelect";
 import {
 	type InviteableWorkspace,
@@ -82,61 +87,6 @@ async function fetchOrgMembers(orgId: string): Promise<OrgMemberLite[]> {
 	if (!res.ok) return [];
 	const data = await res.json().catch(() => null);
 	return Array.isArray(data) ? (data as OrgMemberLite[]) : [];
-}
-
-type WorkspaceInvitePayload = {
-	status: string;
-	email: string;
-	email_sent: boolean;
-	invite_url?: string | null;
-};
-
-async function inviteToWorkspace(
-	workspaceId: string,
-	email: string,
-	role: InviteRole,
-): Promise<WorkspaceInvitePayload> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
-		{
-			body: JSON.stringify({ email, role }),
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			method: "POST",
-		},
-	);
-	const data = await res.json().catch(() => ({}));
-	if (!res.ok) {
-		const err = new Error(
-			(data && (data.detail as string)) ||
-				`Workspace invite failed (${res.status})`,
-		);
-		(err as Error & { status?: number }).status = res.status;
-		throw err;
-	}
-	return data as WorkspaceInvitePayload;
-}
-
-async function inviteToOrg(
-	orgId: string,
-	email: string,
-	role: InviteRole,
-): Promise<{ status: string; email: string; invite_url?: string | null }> {
-	const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/invites`, {
-		body: JSON.stringify({ email, role }),
-		credentials: "include",
-		headers: { "Content-Type": "application/json" },
-		method: "POST",
-	});
-	const data = await res.json().catch(() => ({}));
-	if (!res.ok) {
-		const err = new Error(
-			(data && (data.detail as string)) || `Org invite failed (${res.status})`,
-		);
-		(err as Error & { status?: number }).status = res.status;
-		throw err;
-	}
-	return data as { status: string; email: string; invite_url?: string | null };
 }
 
 // One row of the cost preview, scoped to a single billing context (the org's
@@ -470,6 +420,7 @@ export function InviteModal({
 				count: emailCount,
 				role: submittedRole,
 				workspace_count: workspaceIds.length,
+				source: "invite_modal",
 			});
 			// Centralised helpers fan out to both query namespaces during the migration window.
 			invalidateOrgMembersEverywhere(queryClient, orgId);

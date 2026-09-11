@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException
 
 from dembrane.app_user import get_app_user_or_raise
 from dembrane.settings import get_settings
+from dembrane.inheritance import user_can_access
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.invites import compute_invite_hash, _enqueue_invite_email
 from dembrane.directus_async import async_directus
@@ -265,7 +266,8 @@ async def revoke_invite(
     """Soft-delete a pending invite by setting `deleted_at`.
 
     Works for either invite type. Permitted callers: the original
-    inviter, or an org admin/owner of the org the invite belongs to.
+    inviter, an org admin/owner of the org the invite belongs to, or (for
+    workspace invites) an admin/owner of that workspace.
     Idempotent: a second call against an already-deleted invite returns
     200 with `status="already_revoked"` so the frontend's optimistic
     update doesn't surface a toast error after the cache invalidated.
@@ -292,8 +294,14 @@ async def revoke_invite(
     is_org_admin = await _user_is_org_admin(org_id, app_user["id"])
     if is_inviter and not is_org_admin:
         is_inviter = await _user_is_org_member(org_id, app_user["id"])
-    if not (is_inviter or is_org_admin):
-        raise HTTPException(status_code=403, detail="Only the inviter or an org admin can revoke")
+    is_workspace_admin = False
+    if invite_type == "workspace" and not (is_inviter or is_org_admin):
+        resolved = await user_can_access(invite.get("workspace_id") or "", app_user["id"])
+        is_workspace_admin = resolved is not None and resolved[0] in ("admin", "owner")
+    if not (is_inviter or is_org_admin or is_workspace_admin):
+        raise HTTPException(
+            status_code=403, detail="Only the inviter or a workspace or org admin can revoke"
+        )
 
     if invite.get("deleted_at"):
         return {"status": "already_revoked", "type": invite_type}

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hmac
 import hashlib
-from typing import Annotated
+from typing import Any, Literal, Optional, Annotated
 from logging import getLogger
 from datetime import datetime, timezone, timedelta
 
@@ -19,7 +19,11 @@ from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.schemas import WorkspaceInviteRequest, WorkspaceInviteResponse
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
-from dembrane.api.v2._invite_helpers import build_invite_accept_url
+from dembrane.api.v2._invite_helpers import (
+    build_invite_accept_url,
+    upsert_project_membership,
+    grant_invite_project_share,
+)
 
 router = APIRouter()
 logger = getLogger("api.v2.invites")
@@ -107,6 +111,42 @@ async def workspace_seat_estimate(
     return await estimate_seat_addition(account["id"], max(1, added_seats))
 
 
+async def _resolve_invite_project_share(
+    ctx: WorkspaceContext, project_id: Optional[str], role: str
+) -> Optional[dict[str, Any]]:
+    """Validate the optional project share on an invite. Returns the project row or None."""
+    if not project_id:
+        return None
+    ctx.require_policy("project:share")
+    project = await async_directus.get_item("project", project_id)
+    if (
+        not project
+        or project.get("deleted_at")
+        or project.get("workspace_id") != ctx.workspace_id
+    ):
+        raise HTTPException(status_code=404, detail="Project not found in this workspace")
+    from dembrane.api.v2.project_sharing import (
+        require_private_project,
+        require_role_can_access_projects,
+    )
+
+    require_private_project(project)
+    require_role_can_access_projects(role)
+    return project
+
+
+async def _grant_project_share(
+    project: dict[str, Any], user_id: str, ctx: WorkspaceContext
+) -> None:
+    await upsert_project_membership(
+        async_directus,
+        project_id=project["id"],
+        user_id=user_id,
+        granted_by=ctx.app_user_id,
+    )
+    logger.info(f"Shared project {project['id']} with {user_id} via invite by {ctx.app_user_id}")
+
+
 @router.post("/{workspace_id}/invite", response_model=WorkspaceInviteResponse)
 async def invite_to_workspace(
     workspace_id: str,
@@ -182,6 +222,10 @@ async def invite_to_workspace(
     if requested_level > inviter_level:
         raise HTTPException(status_code=403, detail="Cannot grant a role higher than your own")
 
+    # Optional project share riding on the invite: the project must be a private
+    # project of this workspace and the caller must be allowed to share it.
+    share_project = await _resolve_invite_project_share(ctx, body.project_id, role)
+
     # Prevent self-invite
     inviter_app_user = await async_directus.get_items(
         "app_user",
@@ -249,13 +293,17 @@ async def invite_to_workspace(
                                     "accepted_at": {"_null": True},
                                     "deleted_at": {"_null": True},
                                 },
-                                "fields": ["id"],
+                                "fields": ["id", "workspace_id", "project_id", "invited_by"],
                                 "limit": -1,
                             }
                         },
                     )
                     if isinstance(stale, list):
                         for inv in stale:
+                            # A swept invite may still carry a project share (sharing modal).
+                            await grant_invite_project_share(
+                                async_directus, inv, user_id=app_user["id"]
+                            )
                             await async_directus.update_item(
                                 "workspace_invite",
                                 inv["id"],
@@ -269,11 +317,15 @@ async def invite_to_workspace(
                         workspace_id,
                     )
 
+                if share_project:
+                    await _grant_project_share(share_project, app_user["id"], ctx)
+
                 return WorkspaceInviteResponse(
                     status="already_member",
                     email=email,
                     user_existed=True,
                     email_sent=False,
+                    project_share="granted" if share_project else None,
                 )
 
             # Net-new seat or reactivation of soft-deleted row: include pending
@@ -359,6 +411,9 @@ async def invite_to_workspace(
             from dembrane.cache_utils import invalidate_workspace_and_org_usage
 
             await invalidate_workspace_and_org_usage(workspace_id, ws_org_id)
+
+            if share_project:
+                await _grant_project_share(share_project, app_user["id"], ctx)
 
             # Seat consumed now: reconcile billing immediately so the prorated
             # charge lands on add rather than waiting for the periodic cron.
@@ -475,6 +530,7 @@ async def invite_to_workspace(
                 email=email,
                 user_existed=True,
                 email_sent=email_queued,
+                project_share="granted" if share_project else None,
             )
 
     # User doesn't exist or doesn't have app_user — create an invite.
@@ -511,7 +567,7 @@ async def invite_to_workspace(
                     "deleted_at": {"_null": True},
                     "expires_at": {"_gt": now_iso},
                 },
-                "fields": ["id"],
+                "fields": ["id", "project_id"],
                 "limit": 1,
             }
         },
@@ -519,6 +575,18 @@ async def invite_to_workspace(
 
     if isinstance(existing_invites, list) and len(existing_invites) > 0:
         existing_id = existing_invites[0]["id"]
+        pending_share: Optional[Literal["pending", "pending_other_project"]] = None
+        if share_project:
+            # One invite carries one project. Never hijack a pending share for another project.
+            current = existing_invites[0].get("project_id")
+            if current in (None, share_project["id"]):
+                if current is None:
+                    await async_directus.update_item(
+                        "workspace_invite", existing_id, {"project_id": share_project["id"]}
+                    )
+                pending_share = "pending"
+            else:
+                pending_share = "pending_other_project"
         invite_url = build_invite_accept_url(
             invite_type="workspace",
             admin_base_url=settings.urls.admin_base_url,
@@ -535,20 +603,21 @@ async def invite_to_workspace(
             user_existed=user_existed,
             email_sent=False,
             invite_url=invite_url,
+            project_share=pending_share,
         )
 
     invite_id = generate_uuid()
-    await async_directus.create_item(
-        "workspace_invite",
-        {
-            "id": invite_id,
-            "workspace_id": workspace_id,
-            "email": email,
-            "role": role,
-            "invited_by": ctx.app_user_id,
-            "expires_at": expires_at,
-        },
-    )
+    invite_payload: dict[str, Any] = {
+        "id": invite_id,
+        "workspace_id": workspace_id,
+        "email": email,
+        "role": role,
+        "invited_by": ctx.app_user_id,
+        "expires_at": expires_at,
+    }
+    if share_project:
+        invite_payload["project_id"] = share_project["id"]
+    await async_directus.create_item("workspace_invite", invite_payload)
 
     invite_hash = compute_invite_hash(invite_id)
     invite_url = build_invite_accept_url(
@@ -584,4 +653,5 @@ async def invite_to_workspace(
         user_existed=user_existed,
         email_sent=email_queued,
         invite_url=invite_url,
+        project_share="pending" if share_project else None,
     )
