@@ -580,21 +580,28 @@ describe("typography", () => {
 		);
 	});
 
-	it("shows every change, grouped, before the video", () => {
+	it("leads with the video, then every change, grouped", () => {
 		renderModal();
 		expect(screen.getByText("What's new")).toBeTruthy();
 		expect(LATEST.changes?.length).toBeGreaterThan(0);
 		for (const change of LATEST.changes ?? []) {
 			expect(screen.getByText(change.text)).toBeTruthy();
 		}
-		expect(screen.getByText("New features")).toBeTruthy();
+		const video = screen.getByTitle("Release video");
+		const firstGroup = screen.getByText("New features");
+		expect(
+			video.compareDocumentPosition(firstGroup) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
 	});
 });
 
 describe("release notes navigation", () => {
 	it("dismisses the update and links to release notes in the active language", async () => {
 		renderModal();
-		const link = screen.getByRole("link", { name: "View release notes" });
+		const link = screen.getByRole("link", {
+			name: "Go to previous release notes",
+		});
 		expect(link.getAttribute("href")).toBe("/nl-NL/release-notes");
 		fireEvent.click(link);
 		await waitFor(() => expect(fetch).toHaveBeenCalled());

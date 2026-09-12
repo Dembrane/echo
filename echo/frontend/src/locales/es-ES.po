@@ -3680,8 +3680,8 @@ msgid "Custom Logo"
 msgstr "Logo personalizado"
 
 #: src/components/release/releases.ts:68
-msgid "Custom logo settings now explain the recommended 3:1 aspect ratio."
-msgstr ""
+#~ msgid "Custom logo settings now explain the recommended 3:1 aspect ratio."
+#~ msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:1660
 msgid "Custom title prompt"
@@ -3884,8 +3884,8 @@ msgid "Deleted · {0}"
 msgstr ""
 
 #: src/components/release/releases.ts:92
-msgid "Deleted projects and conversations paused by plan limits no longer trigger repeated summary attempts."
-msgstr "Los proyectos eliminados y las conversaciones pausadas por los límites del plan ya no provocan intentos repetidos de generar resúmenes."
+#~ msgid "Deleted projects and conversations paused by plan limits no longer trigger repeated summary attempts."
+#~ msgstr "Los proyectos eliminados y las conversaciones pausadas por los límites del plan ya no provocan intentos repetidos de generar resúmenes."
 
 #: src/components/participant/UserChunkMessage.tsx:68
 msgid "Deleted successfully"
@@ -4718,7 +4718,7 @@ msgstr "Explorar"
 msgid "Explore recurring themes in the Library"
 msgstr "Explora temas recurrentes en la Library"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:60
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Explora relatos y perspectivas con la plantilla de chat Narratives, en inglés y neerlandés."
 
@@ -5426,6 +5426,10 @@ msgstr ""
 msgid "Go to portal editor"
 msgstr ""
 
+#: src/components/release/ReleaseVideoModal.tsx:354
+msgid "Go to previous release notes"
+msgstr ""
+
 #: src/routes/project/CreateProjectRoute.tsx:378
 msgid "Go to project home"
 msgstr ""
@@ -5450,7 +5454,7 @@ msgstr ""
 msgid "Good response"
 msgstr "Buena respuesta"
 
-#: src/components/release/ReleaseVideoModal.tsx:355
+#: src/components/release/ReleaseVideoModal.tsx:357
 msgid "Got it"
 msgstr "Entendido"
 
@@ -5831,7 +5835,7 @@ msgstr ""
 msgid "interview"
 msgstr ""
 
-#: src/components/release/releases.ts:101
+#: src/components/release/releases.ts:78
 msgid "Introducing Popcorn"
 msgstr "Presentamos Popcorn"
 
@@ -6834,7 +6838,7 @@ msgstr ""
 msgid "MCP access for {0} is on"
 msgstr ""
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:52
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Las conexiones MCP permiten que tu agente encuentre proyectos, busque conversaciones, lea transcripciones y consulte documentación, con controles de la organización y consentimiento explícito."
 
@@ -9511,10 +9515,10 @@ msgid "Release notes | dembrane"
 msgstr "Notas de versión | dembrane"
 
 #: src/components/release/releases.ts:72
-msgid "Release notes live in the app. What's new opens the latest update, and View release notes keeps every past update. Dismissing an update now sticks across your devices."
-msgstr ""
+#~ msgid "Release notes live in the app. What's new opens the latest update, and View release notes keeps every past update. Dismissing an update now sticks across your devices."
+#~ msgstr ""
 
-#: src/components/release/ReleaseVideoModal.tsx:340
+#: src/components/release/ReleaseVideoModal.tsx:336
 msgid "Release video"
 msgstr ""
 
@@ -10883,7 +10887,7 @@ msgstr ""
 msgid "Shared with {0} and {overflow} others"
 msgstr ""
 
-#: src/components/release/releases.ts:84
+#: src/components/release/releases.ts:68
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Al compartir un proyecto privado con alguien que no es miembro, ahora se ofrece una invitación en lugar de un error. Recibe acceso cuando se une al espacio de trabajo."
 
@@ -11749,7 +11753,7 @@ msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o c
 msgid "The conversation list shows clearer totals."
 msgstr ""
 
-#: src/components/release/releases.ts:80
+#: src/components/release/releases.ts:64
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr ""
 
@@ -11766,8 +11770,8 @@ msgid "The feedback form can prefill your email address."
 msgstr ""
 
 #: src/components/release/releases.ts:76
-msgid "The feedback form links straight to Report an issue, so sending a bug with screenshots takes one step fewer."
-msgstr ""
+#~ msgid "The feedback form links straight to Report an issue, so sending a bug with screenshots takes one step fewer."
+#~ msgstr ""
 
 #: src/components/release/releaseHistory.ts:25
 msgid "The feedback portal explains how to report security issues."
@@ -11896,7 +11900,7 @@ msgstr "El informe puede comenzar hasta 5 minutos después de la hora elegida."
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr ""
 
-#: src/components/release/releases.ts:96
+#: src/components/release/releases.ts:72
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr ""
 
@@ -11917,8 +11921,8 @@ msgid "The thank you page ends on a card inviting participants to run their own 
 msgstr "La página de agradecimiento termina con una tarjeta que invita a los participantes a organizar su propio evento con dembrane."
 
 #: src/components/release/releases.ts:60
-msgid "The thank you page invites participants to run their own event with dembrane. Hosts on a paid plan can switch this card off per project in the portal editor."
-msgstr ""
+#~ msgid "The thank you page invites participants to run their own event with dembrane. Hosts on a paid plan can switch this card off per project in the portal editor."
+#~ msgstr ""
 
 #: src/components/voice/VoiceInputError.tsx:45
 msgid "The transcript did not come back. Check your connection and try again."
@@ -12899,8 +12903,8 @@ msgid "Unread"
 msgstr ""
 
 #: src/components/release/releases.ts:88
-msgid "Unreadable audio and invalid transcription responses no longer cause repeated processing attempts."
-msgstr ""
+#~ msgid "Unreadable audio and invalid transcription responses no longer cause repeated processing attempts."
+#~ msgstr ""
 
 #: src/components/form/FormLabel.tsx:18
 msgid "Unsaved changes"
@@ -13404,9 +13408,9 @@ msgstr "Ver ejemplo de payload"
 msgid "View invite"
 msgstr ""
 
-#: src/components/release/ReleaseVideoModal.tsx:352
-msgid "View release notes"
-msgstr "Ver notas de versión"
+#: src/components/release/ReleaseVideoModal.tsx:354
+#~ msgid "View release notes"
+#~ msgstr "Ver notas de versión"
 
 #: src/components/participant/ParticipantBody.tsx:247
 msgid "View your responses"

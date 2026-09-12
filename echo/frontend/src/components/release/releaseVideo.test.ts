@@ -182,7 +182,7 @@ describe("playerBridgeUrl", () => {
 it("keeps publication dates ordered and dismissal keys independent of tags", () => {
 	const history = getReleases();
 	expect(history[0].version).toBe("2026-09");
-	expect(history[0].publication).toBeUndefined();
+	expect(history[0].publication).toEqual({ date: "2026-09-11", tag: "v2.4.0" });
 	expect(
 		history.find((release) => release.publication?.tag === "v2.2.0")?.version,
 	).toBe("2026-08");

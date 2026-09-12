@@ -322,13 +322,9 @@ export const ReleaseVideoModal = ({
 							<h2 className={styles.title} id={titleId}>
 								{release.title}
 							</h2>
-							{release.description ? (
-								<ReleaseDescription description={release.description} />
-							) : null}
-							{release.changes?.length ? (
-								<ReleaseChanges changes={release.changes} />
-							) : null}
 						</Stack>
+						{/* The video leads: it is the short version, and the list below
+						    is long enough to push anything under it out of view. */}
 						{embedSrc ? (
 							<div className={styles.videoFrame}>
 								<iframe
@@ -341,6 +337,12 @@ export const ReleaseVideoModal = ({
 								/>
 							</div>
 						) : null}
+						{release.description ? (
+							<ReleaseDescription description={release.description} />
+						) : null}
+						{release.changes?.length ? (
+							<ReleaseChanges changes={release.changes} />
+						) : null}
 
 						<Group justify="space-between" gap="sm">
 							<Button
@@ -349,7 +351,7 @@ export const ReleaseVideoModal = ({
 								variant="subtle"
 								onClick={() => close("release_notes")}
 							>
-								<Trans>View release notes</Trans>
+								<Trans>Go to previous release notes</Trans>
 							</Button>
 							<Button onClick={() => close()}>
 								<Trans>Got it</Trans>
