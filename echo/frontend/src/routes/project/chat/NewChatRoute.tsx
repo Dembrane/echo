@@ -578,6 +578,7 @@ export const NewChatRoute = () => {
 							<Trans>Where would you like to start?</Trans>
 						</Title>
 						<ChatTemplatesMenuConnected
+							chatMode={modeToStart}
 							projectId={projectId}
 							externalOpen={templatesModalOpen}
 							onExternalClose={() => setTemplatesModalOpen(false)}

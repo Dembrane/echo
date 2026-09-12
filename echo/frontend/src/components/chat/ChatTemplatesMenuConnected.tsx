@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
@@ -16,7 +17,11 @@ import {
 	useUserTemplates,
 } from "./hooks/useUserTemplates";
 import type { QuickAccessItem } from "./templateKey";
-import { agenticQuickAccessTemplates, Templates } from "./templates";
+import {
+	agenticDefaultTemplates,
+	agenticQuickAccessTemplates,
+	Templates,
+} from "./templates";
 
 /** Shared hook wiring for ChatTemplatesMenu so classic and agentic render it identically. */
 export const ChatTemplatesMenuConnected = ({
@@ -64,6 +69,7 @@ export const ChatTemplatesMenuConnected = ({
 	const createUserTemplateMutation = useCreateUserTemplate(projectWorkspaceId);
 	const updateUserTemplateMutation = useUpdateUserTemplate(projectWorkspaceId);
 	const deleteUserTemplateMutation = useDeleteUserTemplate(projectWorkspaceId);
+	const { i18n } = useLingui();
 	const quickAccessQuery = useQuickAccessPreferences();
 	const saveQuickAccessMutation = useSaveQuickAccessPreferences();
 	const toggleAiSuggestionsMutation = useToggleAiSuggestions();
@@ -73,7 +79,9 @@ export const ChatTemplatesMenuConnected = ({
 	// Resolve quick access items - default to first 3 built-in templates
 	const quickAccessItems: QuickAccessItem[] = useMemo(() => {
 		const isAgentic = chatMode === "agentic";
-		const defaultTemplates = isAgentic ? agenticQuickAccessTemplates : Templates.slice(0, 3);
+		const defaultTemplates = isAgentic
+			? agenticDefaultTemplates(i18n.locale)
+			: Templates.slice(0, 3);
 		if (!quickAccessQuery.data || quickAccessQuery.data.length === 0)
 			return defaultTemplates.map((t) => ({
 				id: t.id,
@@ -103,7 +111,7 @@ export const ChatTemplatesMenuConnected = ({
 				return null;
 			})
 			.filter(Boolean) as QuickAccessItem[];
-	}, [quickAccessQuery.data, userTemplatesQuery.data, chatMode]);
+	}, [quickAccessQuery.data, userTemplatesQuery.data, chatMode, i18n.locale]);
 
 	const handleSaveQuickAccess = (items: QuickAccessItem[]) => {
 		saveQuickAccessMutation.mutate(

@@ -619,11 +619,11 @@ msgstr ""
 msgid "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
 msgstr ""
 
-#: src/routes/project/chat/NewChatRoute.tsx:596
+#: src/routes/project/chat/NewChatRoute.tsx:597
 msgid "{pickedCount, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
 msgstr ""
 
-#: src/routes/project/chat/NewChatRoute.tsx:602
+#: src/routes/project/chat/NewChatRoute.tsx:603
 msgid "{pickedCount, plural, one {Using # conversation} other {Using # conversations}}"
 msgstr ""
 
@@ -1852,7 +1852,7 @@ msgstr ""
 msgid "Ask about these"
 msgstr ""
 
-#: src/routes/project/chat/NewChatRoute.tsx:674
+#: src/routes/project/chat/NewChatRoute.tsx:675
 #: src/components/chat/AgenticChatPanel.tsx:2271
 msgid "Ask about your conversations..."
 msgstr ""
@@ -2161,7 +2161,7 @@ msgstr ""
 #: src/routes/project/ProjectMonitorRoute.tsx:85
 #: src/routes/project/popcorn/PopcornRoute.tsx:114
 #: src/routes/project/library/LibraryRoute.tsx:126
-#: src/routes/project/chat/NewChatRoute.tsx:701
+#: src/routes/project/chat/NewChatRoute.tsx:702
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:94
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:115
 #: src/features/sidebar/blocks/HelpBlock.tsx:52
@@ -2892,7 +2892,7 @@ msgstr ""
 msgid "Compare & Contrast"
 msgstr "Compare & Contrast"
 
-#: src/components/chat/templates.ts:109
+#: src/components/chat/templates.ts:128
 msgid "Compare & Contrast Insights"
 msgstr "Compare & Contrast Insights"
 
@@ -5578,7 +5578,7 @@ msgstr ""
 msgid "Highlight"
 msgstr "In evidenza"
 
-#: src/components/chat/templates.ts:124
+#: src/components/chat/templates.ts:143
 msgid "Highlight specific Concept"
 msgstr "Highlight specific Concept"
 
@@ -6744,7 +6744,7 @@ msgstr ""
 msgid "Manage organisation billing"
 msgstr ""
 
-#: src/components/chat/ChatTemplatesMenu.tsx:359
+#: src/components/chat/ChatTemplatesMenu.tsx:368
 msgid "Manage templates"
 msgstr "Manage templates"
 
@@ -6971,7 +6971,7 @@ msgstr ""
 msgid "Monitor"
 msgstr ""
 
-#: src/components/chat/ChatTemplatesMenu.tsx:354
+#: src/components/chat/ChatTemplatesMenu.tsx:363
 msgid "more"
 msgstr "more"
 
@@ -7166,7 +7166,11 @@ msgid "Names on the legend"
 msgstr ""
 
 #: src/components/chat/templates.ts:134
-msgid "Narratives"
+#~ msgid "Narratives"
+#~ msgstr ""
+
+#: src/components/chat/templates.ts:89
+msgid "Narratives (English)"
 msgstr ""
 
 #: src/routes/organisation/OrganisationExternalView.tsx:130
@@ -9019,7 +9023,7 @@ msgstr "Project Library | dembrane"
 msgid "Project lists show accurate conversation totals."
 msgstr ""
 
-#: src/components/chat/templates.ts:94
+#: src/components/chat/templates.ts:113
 msgid "Project Meta Summary"
 msgstr "Project Meta Summary"
 
@@ -10554,9 +10558,9 @@ msgstr ""
 #: src/routes/project/chat/ProjectChatRoute.tsx:960
 #: src/routes/project/chat/ProjectChatRoute.tsx:961
 #: src/routes/project/chat/ProjectChatRoute.tsx:1046
-#: src/routes/project/chat/NewChatRoute.tsx:629
-#: src/routes/project/chat/NewChatRoute.tsx:631
-#: src/routes/project/chat/NewChatRoute.tsx:734
+#: src/routes/project/chat/NewChatRoute.tsx:630
+#: src/routes/project/chat/NewChatRoute.tsx:632
+#: src/routes/project/chat/NewChatRoute.tsx:735
 #: src/components/conversation/ProjectConversationsPanel.tsx:952
 msgid "Select conversations"
 msgstr ""
@@ -10640,7 +10644,7 @@ msgid "Self-serve"
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:985
-#: src/routes/project/chat/NewChatRoute.tsx:648
+#: src/routes/project/chat/NewChatRoute.tsx:649
 #: src/components/feedback/ResponseFeedbackControls.tsx:239
 #: src/components/chat/AgenticChatPanel.tsx:2245
 msgid "Send"
@@ -11413,7 +11417,7 @@ msgid "Suggested verification prompt"
 msgstr ""
 
 #: src/components/library/LibraryTemplatesMenu.tsx:33
-#: src/components/chat/ChatTemplatesMenu.tsx:280
+#: src/components/chat/ChatTemplatesMenu.tsx:289
 msgid "Suggested:"
 msgstr "Suggested:"
 
@@ -12696,7 +12700,7 @@ msgstr ""
 msgid "Try again in a moment."
 msgstr ""
 
-#: src/routes/project/chat/NewChatRoute.tsx:698
+#: src/routes/project/chat/NewChatRoute.tsx:699
 msgid "Try Agentic instead"
 msgstr ""
 
@@ -13187,13 +13191,13 @@ msgid "Usage this cycle"
 msgstr ""
 
 #: src/components/chat/templates.ts:127
-msgid ""
-"Use a double diamond approach (design science approach) on all conversations in this dataset to develop a MECE set of 7+/-2 narratives that explain the variance within this dataset. Pay special attention to outliers. Quantify the evidence for each narrative as the number of \"occurrences\" where the data supports a particular narrative hypothesis.\n"
-"\n"
-"dutch version\n"
-"\n"
-"Gebruik een double diamond-aanpak (design science approach) op alle gesprekken in deze dataset om een MECE-set van 7+/-2 narratieven te ontwikkelen die de variantie binnen deze dataset verklaren. Let daarbij extra op de uitschieters. Kwantificeer het bewijs voor elk narratief als het aantal \"verschijnselen\" waarin de data een bepaalde narratieve hypothese ondersteunt."
-msgstr ""
+#~ msgid ""
+#~ "Use a double diamond approach (design science approach) on all conversations in this dataset to develop a MECE set of 7+/-2 narratives that explain the variance within this dataset. Pay special attention to outliers. Quantify the evidence for each narrative as the number of \"occurrences\" where the data supports a particular narrative hypothesis.\n"
+#~ "\n"
+#~ "dutch version\n"
+#~ "\n"
+#~ "Gebruik een double diamond-aanpak (design science approach) op alle gesprekken in deze dataset om een MECE-set van 7+/-2 narratieven te ontwikkelen die de variantie binnen deze dataset verklaren. Let daarbij extra op de uitschieters. Kwantificeer het bewijs voor elk narratief als het aantal \"verschijnselen\" waarin de data een bepaalde narratieve hypothese ondersteunt."
+#~ msgstr ""
 
 #: src/components/release/releaseHistory.ts:275
 msgid "Use dembrane in Czech."
