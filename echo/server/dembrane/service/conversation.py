@@ -395,6 +395,36 @@ class ConversationService:
 
         return chunks or []
 
+    def list_replies(self, conversation_id: str) -> List[dict]:
+        try:
+            with self._client_context() as client:
+                replies: Optional[List[dict]] = client.get_items(
+                    "conversation_reply",
+                    {
+                        "query": {
+                            "filter": {"conversation_id": {"_eq": conversation_id}},
+                            "fields": [
+                                "id",
+                                "conversation_id",
+                                "content_text",
+                                "type",
+                                "date_created",
+                            ],
+                            "sort": "date_created",
+                            "limit": -1,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            logger.error(
+                "Failed to list replies for conversation %s via Directus: %s",
+                conversation_id,
+                e,
+            )
+            raise ConversationServiceException() from e
+
+        return replies or []
+
     def create(
         self,
         project_id: str,
