@@ -17,6 +17,10 @@ procs:
     shell: "uv run dramatiq --queues cpu --processes 1 --threads 1 dembrane.tasks"
     cwd: server
 
+  workers-ticks:
+    shell: "uv run dramatiq --queues ticks --processes 1 --threads 4 dembrane.tasks"
+    cwd: server
+
   scheduler:
     shell: "uv run python -m dembrane.scheduler"
     cwd: server

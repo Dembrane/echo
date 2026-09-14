@@ -361,8 +361,33 @@ def _reset_async_runtime_for_retry(reason: str) -> None:
         logger.warning("Discarded %s async Directus client(s) during recovery", discarded)
     except Exception:
         logger.exception("Failed to discard async Directus clients during recovery")
+    try:
+        from dembrane import redis_async
+
+        redis_async.reset_clients()
+    except Exception:
+        logger.exception("Failed to discard async Redis clients during recovery")
+    if _bg_loop is not None:
+        _forget_litellm_clients(id(_bg_loop))
 
     reset_background_loop(reason)
+
+
+def _forget_litellm_clients(loop_id: int) -> None:
+    """LiteLLM keys its cached HTTP clients by event loop id. A closed loop's id
+    can be handed to the next loop, which would then be given a client whose
+    connections belong to a dead loop; drop that loop's entries."""
+    try:
+        import litellm
+
+        cache_dict = getattr(
+            getattr(litellm, "in_memory_llm_clients_cache", None), "cache_dict", None
+        )
+        if isinstance(cache_dict, dict):
+            for key in [k for k in cache_dict if str(k).endswith(f"-{loop_id}")]:
+                cache_dict.pop(key, None)
+    except Exception:
+        logger.debug("Could not drop LiteLLM clients for loop %s", loop_id, exc_info=True)
 
 
 _FOREIGN_LOOP_MARKERS = ("attached to a different loop", "Event loop is closed")

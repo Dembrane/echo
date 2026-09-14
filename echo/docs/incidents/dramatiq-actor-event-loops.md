@@ -84,6 +84,28 @@ on the shared loop, not a new one. Do not read the name as permission to make yo
 - **Never reuse a loop-bound client across loops.** This is what turned a small loop
   bug into a total outage rather than a slow path.
 
+## The loop is a greenlet, and what that means for long jobs
+
+`_real_thread_class` returns gevent's original `Thread` class, but that class still
+calls the patched `_start_new_thread` when it starts, so under `dramatiq-gevent` the
+"real OS thread" carrying the shared loop is a greenlet on the main thread. asyncio
+keeps its running loop per OS thread, so every actor greenlet in the process sees the
+shared loop as its own: that is the source of the `AsyncLibraryNotFoundError`,
+"attached to a different loop" and "Timeout should be used inside a task" errors the
+self-heal answers with a reset. On production the network worker resets that loop
+tens to hundreds of times a day under load; echo-next, with almost no traffic, never
+does. Each reset destroys every coroutine in flight, so a job that runs for minutes
+(a popcorn or canvas tick) cannot finish there while short jobs mostly do.
+
+Running such a job on its own loop inside the gevent process does not help: a
+genuine OS thread (from the original `_thread.start_new_thread`) runs a loop fine, but
+it cannot wake gevent's patched locks, so any lock shared with the greenlets (logging,
+LiteLLM internals) can stall it. Long async jobs therefore run on the `ticks` queue,
+served by a standard-dramatiq worker (`prod-worker-ticks.sh`) where the shared loop
+lives on a real thread and none of this applies. Making the network worker's loop a
+genuine thread is the root fix and is tracked separately; it changes the handoff for
+every actor and needs the echo-next queue-drain validation below.
+
 ## Validating a change here
 
 gevent behaviour depends on monkey-patching happening before imports, so it cannot be
