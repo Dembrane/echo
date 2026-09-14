@@ -1951,35 +1951,48 @@ def _run_canvas_tick(payload: dict) -> None:
     loop_id = payload.get("loop_id")
     if not loop_id:
         raise ValueError("canvas_tick payload missing loop_id")
-    tick_kind = payload.get("tick_kind") or "scheduled"
-    from dembrane.canvas.ticks import run_tick
-
-    run_async_in_new_loop(lambda: run_tick(str(loop_id), str(tick_kind)))
+    task_canvas_tick.send(str(loop_id), str(payload.get("tick_kind") or "scheduled"))
 
 
 def _run_popcorn_tick(payload: dict) -> None:
     loop_id = payload.get("loop_id")
     if not loop_id:
         raise ValueError("popcorn_tick payload missing loop_id")
-    tick_kind = payload.get("tick_kind") or "scheduled"
     request_id = payload.get("request_id")
-    from dembrane.popcorn.ticks import run_popcorn_tick
-
-    run_async_in_new_loop(
-        lambda: run_popcorn_tick(
-            str(loop_id), str(tick_kind), request_id=str(request_id) if request_id else None
-        )
+    task_popcorn_tick_now.send(
+        str(loop_id),
+        str(payload.get("tick_kind") or "scheduled"),
+        request_id=str(request_id) if request_id else None,
     )
 
 
-@dramatiq.actor(queue_name="network", priority=20, max_retries=0)
+# A tick reads every changed conversation and runs the analysis calls; a big
+# project takes well past dramatiq's ten-minute default. The queue is served by
+# prod-worker-ticks.sh: standard dramatiq, no gevent. On the gevent worker the
+# shared async loop is a greenlet on the main thread, every actor's async error
+# reaches it, and the self-heal that follows destroys whatever is in flight. A
+# tick is the one job that runs long enough to be caught by that every time.
+TICK_QUEUE = "ticks"
+TICK_TIME_LIMIT_MS = 60 * 60 * 1000
+
+
+@dramatiq.actor(queue_name=TICK_QUEUE, priority=20, max_retries=0, time_limit=TICK_TIME_LIMIT_MS)
 def task_popcorn_tick_now(
     loop_id: str, tick_kind: str = "manual", request_id: str | None = None
 ) -> None:
-    """Run a popcorn tick straight away. The scheduled_task table is polled once
-    a minute, which is fine for the cadence but not for the first phrase after
-    Start or after the host presses refresh."""
-    _run_popcorn_tick({"loop_id": loop_id, "tick_kind": tick_kind, "request_id": request_id})
+    """Run a popcorn tick. Sent straight from the API after Start or refresh,
+    and by the scheduled_task runner for the live chain."""
+    from dembrane.popcorn.ticks import run_popcorn_tick
+
+    run_async_in_new_loop(lambda: run_popcorn_tick(loop_id, tick_kind, request_id=request_id))
+
+
+@dramatiq.actor(queue_name=TICK_QUEUE, priority=20, max_retries=0, time_limit=TICK_TIME_LIMIT_MS)
+def task_canvas_tick(loop_id: str, tick_kind: str = "scheduled") -> None:
+    """Run a canvas tick, sent by the scheduled_task runner."""
+    from dembrane.canvas.ticks import run_tick
+
+    run_async_in_new_loop(lambda: run_tick(loop_id, tick_kind))
 
 
 async def _expire_support_request_async(request_id: str) -> bool:

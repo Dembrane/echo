@@ -1,32 +1,38 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Optional
 
 from redis.asyncio import Redis
 
 from dembrane.settings import get_settings
 
-_redis_client: Optional[Redis] = None
-_lock = asyncio.Lock()
+# One client per event loop, like the async Directus client. A client is bound
+# to the loop that opened its connections; reused from another loop (after the
+# worker's self-heal reset, or from a private tick loop) every call fails with
+# "attached to a different loop" and, in run_async_in_new_loop, that failure
+# triggers a further reset.
+_clients_by_loop: dict[int, Redis] = {}
 
 
 async def get_redis_client() -> Redis:
-    """
-    Lazily initialise and return a shared async Redis client.
-    """
-    global _redis_client
-    if _redis_client is not None:
-        return _redis_client
+    """Return the shared async Redis client for the running event loop."""
+    loop_id = id(asyncio.get_running_loop())
+    client = _clients_by_loop.get(loop_id)
+    if client is None:
+        settings = get_settings()
+        # decode responses to str for easier debugging, but keep bytes if preferred.
+        client = Redis.from_url(
+            settings.cache.redis_url,
+            encoding="utf-8",
+            decode_responses=False,
+        )
+        _clients_by_loop[loop_id] = client
+    return client
 
-    async with _lock:
-        if _redis_client is None:
-            settings = get_settings()
-            redis_url = settings.cache.redis_url
-            # decode responses to str for easier debugging, but keep bytes if preferred.
-            _redis_client = Redis.from_url(
-                redis_url,
-                encoding="utf-8",
-                decode_responses=False,
-            )
-        return _redis_client
+
+def reset_clients() -> int:
+    """Drop every cached client without awaiting close: the recovery hook for a
+    poisoned loop. The next call creates a fresh client on the current loop."""
+    count = len(_clients_by_loop)
+    _clients_by_loop.clear()
+    return count
