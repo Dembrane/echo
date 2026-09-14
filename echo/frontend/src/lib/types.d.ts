@@ -91,6 +91,14 @@ type TConversationChunk = {
 	error?: string | null;
 };
 
+type TConversationReply = {
+	id: string;
+	conversation_id: string;
+	content_text: string | null;
+	type: string | null;
+	date_created: string | null;
+};
+
 type TProject = {
 	id: string;
 	created_at: Date;

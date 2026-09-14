@@ -57,6 +57,15 @@ export const getParticipantConversationChunks = async (
 	);
 };
 
+export const getParticipantConversationReplies = async (
+	projectId: string,
+	conversationId: string,
+) => {
+	return apiNoAuth.get<unknown, TConversationReply[]>(
+		`participant/projects/${projectId}/conversations/${conversationId}/replies`,
+	);
+};
+
 export const deleteParticipantConversationChunk = async (
 	projectId: string,
 	conversationId: string,

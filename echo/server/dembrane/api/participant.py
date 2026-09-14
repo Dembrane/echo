@@ -102,6 +102,14 @@ class PublicConversationChunkSchema(BaseModel):
     source: str
 
 
+class PublicConversationReplySchema(BaseModel):
+    id: str
+    conversation_id: str
+    content_text: Optional[str] = None
+    type: Optional[str] = None
+    date_created: Optional[datetime] = None
+
+
 class PublicConversationSchema(BaseModel):
     id: str
     project_id: str
@@ -348,6 +356,31 @@ async def get_conversation_chunks(
         return conversation.get("chunks", [])
     except (ProjectNotFoundException, ConversationNotFoundException) as e:
         raise HTTPException(status_code=404, detail="Conversation not found") from e
+
+
+@ParticipantRouter.get(
+    "/projects/{project_id}/conversations/{conversation_id}/replies",
+    response_model=List[PublicConversationReplySchema],
+)
+async def get_conversation_replies(
+    project_id: str,
+    conversation_id: str,
+) -> List[dict]:
+    try:
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
+        conversation = await run_in_thread_pool(
+            conversation_service.get_by_id_or_raise, conversation_id
+        )
+    except (ProjectNotFoundException, ConversationNotFoundException) as e:
+        raise HTTPException(status_code=404, detail="Conversation not found") from e
+
+    if project_id != conversation.get("project_id"):
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    if project.get("is_conversation_allowed", False) is False:
+        raise HTTPException(status_code=403, detail="Conversation not open for participation")
+
+    return await run_in_thread_pool(conversation_service.list_replies, conversation_id)
 
 
 @ParticipantRouter.delete(
