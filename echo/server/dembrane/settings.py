@@ -272,7 +272,6 @@ class FeatureFlagSettings(BaseSettings):
     )
     # Global kill switch. Even when on, canvas is opt-in per project via the
     # experimental toggle (project.is_canvas_enabled, default false).
-    # Production sets ENABLE_CANVAS=0 this release (gitops values-prod.yaml).
     enable_canvas: bool = Field(
         default=True,
         alias="ENABLE_CANVAS",

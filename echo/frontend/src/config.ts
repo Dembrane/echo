@@ -198,8 +198,9 @@ export const ENABLE_AGENTATION = byEnv({ next: true }, false);
 // Host live-monitor (page, sidebar item, project-home block) and the portal
 // beacons that feed it. Kill switch: flip to false / byEnv to disable a env.
 export const ENABLE_MONITOR = true;
-// Project Library / dynamic canvases. Off in production this release; on elsewhere.
-export const ENABLE_CANVAS = byEnv({ production: false }, true);
+// Project Library, dynamic canvases and Popcorn. On everywhere; each project
+// still opts in through the experimental toggle (project.is_canvas_enabled).
+export const ENABLE_CANVAS = true;
 // The release-video modal. On everywhere now that the video is recorded.
 export const ENABLE_RELEASE_VIDEO_MODAL = true;
 
