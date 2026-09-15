@@ -37,6 +37,8 @@ import {
 	useContainerSize,
 	useGeometryNodes,
 	useNodeStyleLookup,
+	usePulseTimer,
+	useReleaseOwnedHighlight,
 } from "./hooks";
 import {
 	MapChromeButton,
@@ -133,6 +135,14 @@ export const LocalMapGraph = ({
 	const gRef = useRef<Selection<SVGGElement, unknown, null, undefined> | null>(
 		null,
 	);
+	// Cursor ring and timer arc, outside the zoomed group so they stay on the
+	// cursor at screen size while the map zooms and pans
+	const overlayRef = useRef<Selection<
+		SVGGElement,
+		unknown,
+		null,
+		undefined
+	> | null>(null);
 	const zoomRef = useRef<ZoomBehavior<SVGSVGElement> | null>(null);
 	const savedTransformRef = useRef<ZoomTransform | null>(null);
 	const positionCacheRef = useRef<
@@ -141,6 +151,7 @@ export const LocalMapGraph = ({
 	const lineSelectionRef = useRef<LineSelection | null>(null);
 	const circleSelectionRef = useRef<CircleSelection | null>(null);
 	const pulseSelectionRef = useRef<CircleSelection | null>(null);
+	const startPulse = usePulseTimer(pulseSelectionRef);
 	const linkOpacityRef = useRef<(link: LocalMapLink) => number>(() => 0.3);
 	const nnForceRef = useRef<NearestNeighbourForce<InternalNode> | null>(null);
 	const fpForceRef = useRef<PairForce<InternalNode> | null>(null);
@@ -272,6 +283,8 @@ export const LocalMapGraph = ({
 
 	// Geometry, rebuilt only when ids or any vector component change
 	const geometryNodes = useGeometryNodes(nodes);
+	// Clear this panel's hover highlight when its nodes leave or the map unmounts
+	useReleaseOwnedHighlight("local-hover", geometryNodes);
 
 	// MST edges for initial positioning
 	const mstEdges = useMemo(
@@ -462,6 +475,11 @@ export const LocalMapGraph = ({
 				window.clearTimeout(mouseMoveTimeoutRef.current);
 				mouseMoveTimeoutRef.current = null;
 			}
+			// A queued move would publish the hover again after the pointer left
+			if (rafId !== null) {
+				cancelAnimationFrame(rafId);
+				rafId = null;
+			}
 
 			setCursorPosition(null);
 			setLocalHighlightedNodeIds(new Set());
@@ -508,6 +526,10 @@ export const LocalMapGraph = ({
 			.attr("class", "nodes-group")
 			.append("g")
 			.attr("class", "circle-nodes");
+		overlayRef.current = svg
+			.append("g")
+			.attr("class", "cursor-layer")
+			.attr("pointer-events", "none");
 
 		const zoom = d3
 			.zoom<SVGSVGElement>()
@@ -528,6 +550,7 @@ export const LocalMapGraph = ({
 			svg.on(".zoom", null);
 			zoomRef.current = null;
 			gRef.current = null;
+			overlayRef.current = null;
 			lineSelectionRef.current = null;
 			circleSelectionRef.current = null;
 			pulseSelectionRef.current = null;
@@ -552,7 +575,15 @@ export const LocalMapGraph = ({
 		const existing = simulationRef.current;
 
 		if (simulationNodes.length === 0) {
-			existing?.stop();
+			// Let go of the simulation, so a resize or a slider change cannot
+			// restart it; the next nodes create a new one
+			if (existing) {
+				existing.stop().on("tick", null);
+				simulationRef.current = null;
+				nnForceRef.current = null;
+				fpForceRef.current = null;
+				appliedRef.current = null;
+			}
 			return;
 		}
 
@@ -653,15 +684,6 @@ export const LocalMapGraph = ({
 				simulationNodeByIdRef.current,
 			);
 
-			// Opacity pulse for in-flight fact-checks
-			const pulsing = pulseSelectionRef.current;
-			if (pulsing && !pulsing.empty()) {
-				pulsing.attr(
-					"opacity",
-					0.5 + 0.5 * Math.abs(Math.sin(performance.now() / 400)),
-				);
-			}
-
 			// Persist positions across re-renders
 			const cache = positionCacheRef.current;
 			for (const node of simulation.nodes()) {
@@ -689,8 +711,6 @@ export const LocalMapGraph = ({
 	useEffect(() => {
 		const g = gRef.current;
 		if (!g) return;
-
-		const transformOf = () => d3.zoomTransform(svgRef.current as SVGSVGElement);
 
 		const touchesHighlight = (link: LocalMapLink) =>
 			combinedHighlightedNodeIds.has(link.source) ||
@@ -810,12 +830,17 @@ export const LocalMapGraph = ({
 		pulseSelectionRef.current = circleSelection.filter(
 			(d) => styleOf(d.id).pulse,
 		);
+		startPulse();
 		// Place entered elements at once instead of waiting for the next tick
 		drawPositions(lineSelection, circleSelection, simulationNodeById);
 
-		// Cursor overlay circle
+		const overlay = overlayRef.current;
+		if (!overlay) return;
+
+		// Cursor ring in screen coordinates: 50 px at any zoom
 		const cursorCircleData = cursorPosition ? [cursorPosition] : [];
-		g.selectAll(".cursor-overlay")
+		overlay
+			.selectAll(".cursor-overlay")
 			.data(cursorCircleData)
 			.join("circle")
 			.attr("class", "cursor-overlay")
@@ -824,40 +849,27 @@ export const LocalMapGraph = ({
 			.attr("stroke-width", 2)
 			.attr("stroke-dasharray", "5,5")
 			.attr("pointer-events", "none")
-			.attr("cx", () => {
-				if (!cursorPosition) return 0;
-				const transform = transformOf();
-				return (cursorPosition.x - transform.x) / transform.k;
-			})
-			.attr("cy", () => {
-				if (!cursorPosition) return 0;
-				const transform = transformOf();
-				return (cursorPosition.y - transform.y) / transform.k;
-			})
-			.attr("r", () => 50 / transformOf().k);
+			.attr("cx", (d) => d.x)
+			.attr("cy", (d) => d.y)
+			.attr("r", 50);
 
-		// Timer arc around the cursor
+		// Timer arc around the cursor, at screen size like the ring
 		const timerArcData = timerActive && cursorPosition ? [cursorPosition] : [];
 		const arcGenerator = d3
 			.arc()
-			.innerRadius(() => 48 / transformOf().k)
-			.outerRadius(() => 52 / transformOf().k)
+			.innerRadius(48)
+			.outerRadius(52)
 			.startAngle(0)
 			.endAngle(timerProgress * 2 * Math.PI);
 
-		g.selectAll(".timer-arc")
+		overlay
+			.selectAll(".timer-arc")
 			.data(timerArcData)
 			.join("path")
 			.attr("class", "timer-arc")
 			.attr("fill", MAP_HIGHLIGHT)
 			.attr("pointer-events", "none")
-			.attr("transform", () => {
-				if (!cursorPosition) return "";
-				const transform = transformOf();
-				const cx = (cursorPosition.x - transform.x) / transform.k;
-				const cy = (cursorPosition.y - transform.y) / transform.k;
-				return `translate(${cx},${cy})`;
-			})
+			.attr("transform", (d) => `translate(${d.x},${d.y})`)
 			.attr("d", arcGenerator);
 	}, [
 		simulationNodes,
@@ -874,6 +886,7 @@ export const LocalMapGraph = ({
 		cursorPosition,
 		timerActive,
 		timerProgress,
+		startPulse,
 	]);
 
 	// Resize: move the centre and the charge horizon in place
@@ -1126,7 +1139,8 @@ export const LocalMap = memo(function LocalMap({
 			const node = nodeById.get(nodeId);
 			if (!node) return;
 
-			// The MST walk restarts its interval on this selection change
+			// The MST walk restarts its interval on every selection, also of the
+			// selected node
 			setSharedSelectedNodeId(nodeId);
 			onActiveNodeChange?.(node, Date.now() + walkIntervalMs, walkIntervalMs);
 			externalOnNodeClick?.(nodeId);

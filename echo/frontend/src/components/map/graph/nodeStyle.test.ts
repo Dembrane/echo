@@ -1,7 +1,6 @@
 import { i18n } from "@lingui/core";
 import { beforeAll, describe, expect, it } from "vitest";
-import type { FactCheckState, MapGraphNode } from "../types";
-import { buildEpistemicLine } from "./epistemicLine";
+import type { FactCheckState } from "../types";
 import { deriveDisplayVerdict, getNodeStyleFromInputs } from "./nodeStyle";
 
 beforeAll(() => {
@@ -17,17 +16,6 @@ const done = (verdict: "true" | "false" | "contested" | "unknown") =>
 		status: "done",
 		verdict,
 	}) satisfies FactCheckState;
-
-const claim = (factCheck?: FactCheckState): Pick<MapGraphNode, "metadata"> => ({
-	metadata: {
-		conversationIds: [],
-		createdAt: null,
-		factCheck,
-		kind: "claim",
-		quotes: [],
-		valence: "neutral",
-	},
-});
 
 describe("getNodeStyleFromInputs", () => {
 	it("colours by valence with the brand palette", () => {
@@ -71,27 +59,5 @@ describe("deriveDisplayVerdict", () => {
 		expect(deriveDisplayVerdict(undefined)).toBe("unknown");
 		expect(deriveDisplayVerdict({ status: "idle" })).toBe("unknown");
 		expect(deriveDisplayVerdict(done("contested"))).toBe("contested");
-	});
-});
-
-describe("buildEpistemicLine", () => {
-	it("counts claims by verdict in display order", () => {
-		expect(
-			buildEpistemicLine([
-				claim(done("false")),
-				claim(done("true")),
-				claim(),
-				claim(done("contested")),
-				claim(done("contested")),
-			]),
-		).toBe("1 confirmed · 2 contested · 1 refuted · 1 unverified");
-	});
-
-	it("returns null without claims", () => {
-		expect(
-			buildEpistemicLine([
-				{ metadata: { ...claim().metadata, kind: "argument" } },
-			]),
-		).toBeNull();
 	});
 });

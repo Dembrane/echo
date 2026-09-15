@@ -512,7 +512,7 @@ msgstr ""
 msgid "{alreadyPending} people were already invited. The project is shared once they join."
 msgstr "{alreadyPending} personnes étaient déjà invitées. Le projet sera partagé dès qu'elles rejoignent."
 
-#: src/components/map/MapPage.tsx:546
+#: src/components/map/MapPage.tsx:550
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr ""
 
@@ -543,24 +543,24 @@ msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr ""
 
 #: src/components/map/graph/epistemicLine.ts:26
-msgid "{count} confirmed"
-msgstr ""
+#~ msgid "{count} confirmed"
+#~ msgstr ""
 
 #: src/components/map/graph/epistemicLine.ts:30
-msgid "{count} contested"
-msgstr ""
+#~ msgid "{count} contested"
+#~ msgstr ""
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:45
 msgid "{count} history entries"
 msgstr ""
 
 #: src/components/map/graph/epistemicLine.ts:28
-msgid "{count} refuted"
-msgstr ""
+#~ msgid "{count} refuted"
+#~ msgstr ""
 
 #: src/components/map/graph/epistemicLine.ts:33
-msgid "{count} unverified"
-msgstr ""
+#~ msgid "{count} unverified"
+#~ msgstr ""
 
 #: src/components/chat/CanvasSuggestionCard.tsx:103
 msgid "{currentCadence} min"
@@ -698,7 +698,7 @@ msgstr ""
 msgid "library.conversations.still.processing"
 msgstr "{0} en cours de traitement."
 
-#: src/components/map/MapPage.tsx:699
+#: src/components/map/MapPage.tsx:703
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr ""
 
@@ -1340,7 +1340,7 @@ msgstr "Ajout de <0>{totalCount, plural, one {# conversation supplémentaire} ot
 msgid "select.all.modal.loading.title"
 msgstr "Ajout de conversations"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1016
+#: src/components/map/renderers/LocalMapGraph.tsx:1029
 msgid "Additional Forces"
 msgstr ""
 
@@ -1857,7 +1857,7 @@ msgstr "Êtes-vous sûr de vouloir supprimer votre logo personnalisé ? Le logo 
 msgid "Argument (not fact-checked)"
 msgstr ""
 
-#: src/components/map/renderers/MstGraph.tsx:944
+#: src/components/map/renderers/MstGraph.tsx:955
 msgid "Argument map"
 msgstr ""
 
@@ -1865,7 +1865,7 @@ msgstr ""
 msgid "Argument tree (MST)"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:145
+#: src/components/map/panels/SpotlightPanel.tsx:144
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr ""
 
@@ -2131,7 +2131,7 @@ msgstr "Avatar supprimé"
 msgid "Avatar updated"
 msgstr "Avatar mis à jour"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:985
+#: src/components/map/renderers/LocalMapGraph.tsx:998
 msgid "Avg low-dim distance (default: 10)"
 msgstr ""
 
@@ -2216,7 +2216,7 @@ msgid "Before you connect an agent"
 msgstr ""
 
 #: src/routes/project/ProjectMonitorRoute.tsx:85
-#: src/routes/project/popcorn/PopcornRoute.tsx:95
+#: src/routes/project/popcorn/PopcornRoute.tsx:96
 #: src/routes/project/library/LibraryRoute.tsx:126
 #: src/routes/project/chat/NewChatRoute.tsx:702
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:95
@@ -2228,7 +2228,7 @@ msgstr ""
 #: src/components/project/ProjectPortalEditor.tsx:1535
 #: src/components/project/ProjectPortalEditor.tsx:1616
 #: src/components/project/ProjectExperimentalSection.tsx:48
-#: src/components/map/MapPage.tsx:653
+#: src/components/map/MapPage.tsx:657
 #: src/components/conversation/RetranscribeConversation.tsx:156
 #: src/components/chat/ChatModeSelector.tsx:152
 #: src/components/chat/ChatModeBanner.tsx:45
@@ -2371,7 +2371,7 @@ msgid "By tag"
 msgstr ""
 
 #. placeholder {0}: cMed.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:974
+#: src/components/map/renderers/LocalMapGraph.tsx:987
 msgid "C_Med: {0}"
 msgstr ""
 
@@ -2423,7 +2423,7 @@ msgstr ""
 #: src/components/organisation/CreateOrganisationModal.tsx:204
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:284
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:366
-#: src/components/map/panels/SpotlightPanel.tsx:182
+#: src/components/map/panels/SpotlightPanel.tsx:181
 #: src/components/invite/InviteModal.tsx:762
 #: src/components/goal/ProjectGoalSection.tsx:143
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
@@ -2646,7 +2646,7 @@ msgid "Changing the voice re-reads every conversation."
 msgstr ""
 
 #. placeholder {0}: chargeFraction.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1041
+#: src/components/map/renderers/LocalMapGraph.tsx:1054
 msgid "Charge Distance (viewport fraction): {0}"
 msgstr ""
 
@@ -2773,8 +2773,8 @@ msgstr ""
 msgid "Checking your session."
 msgstr ""
 
-#: src/components/map/panels/shared.tsx:58
-#: src/components/map/panels/SpotlightPanel.tsx:173
+#: src/components/map/panels/shared.tsx:57
+#: src/components/map/panels/SpotlightPanel.tsx:172
 msgid "Checking…"
 msgstr ""
 
@@ -2883,7 +2883,7 @@ msgstr "Cliquez sur \"Télécharger les fichiers\" lorsque vous êtes prêt à c
 msgid "Click a conversation tag to add it to your filters."
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:254
+#: src/components/map/panels/SpotlightPanel.tsx:248
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr ""
 
@@ -2974,15 +2974,15 @@ msgid "Collection"
 msgstr "Collection"
 
 #. placeholder {0}: collisionRadius.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1030
+#: src/components/map/renderers/LocalMapGraph.tsx:1043
 msgid "Collision Radius: {0}x"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:122
+#: src/components/map/panels/SpotlightPanel.tsx:121
 msgid "Color graph by fact-check"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:101
+#: src/components/map/panels/SpotlightPanel.tsx:100
 msgid "Color graph by valence"
 msgstr ""
 
@@ -3140,7 +3140,7 @@ msgstr ""
 msgid "Content"
 msgstr "Contenu"
 
-#: src/components/map/panels/shared.tsx:56
+#: src/components/map/panels/shared.tsx:55
 msgid "Contested"
 msgstr ""
 
@@ -3181,7 +3181,7 @@ msgstr "Continuer"
 msgid "Contributing nodes ({0})"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1046
+#: src/components/map/renderers/LocalMapGraph.tsx:1059
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr ""
 
@@ -3836,7 +3836,7 @@ msgid "Czech conversations, Czech answers"
 msgstr "Conversations en tchèque, réponses en tchèque"
 
 #. placeholder {0}: dAdj.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:984
+#: src/components/map/renderers/LocalMapGraph.tsx:997
 msgid "d̄_adj: {0}"
 msgstr ""
 
@@ -4232,7 +4232,7 @@ msgid "Display name"
 msgstr "Nom d'affichage"
 
 #. placeholder {0}: linkDistanceQuadratic.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:988
+#: src/components/map/renderers/MstGraph.tsx:999
 msgid "Dissimilar links: {0}"
 msgstr ""
 
@@ -4962,7 +4962,7 @@ msgstr ""
 msgid "Fact check all ({pendingClaimCount})"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:159
+#: src/components/map/panels/SpotlightPanel.tsx:158
 msgid "Fact check this claim"
 msgstr ""
 
@@ -5168,7 +5168,7 @@ msgid "Fair password"
 msgstr ""
 
 #. placeholder {0}: fpStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1007
+#: src/components/map/renderers/LocalMapGraph.tsx:1020
 msgid "Far Pair Repulsion: {0}"
 msgstr ""
 
@@ -5367,15 +5367,15 @@ msgstr ""
 msgid "For you"
 msgstr "Pour vous"
 
-#: src/components/map/renderers/MstGraph.tsx:948
+#: src/components/map/renderers/MstGraph.tsx:959
 msgid "Force Graph Settings"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:994
+#: src/components/map/renderers/LocalMapGraph.tsx:1007
 msgid "Force Multipliers"
 msgstr ""
 
-#: src/components/map/renderers/MstGraph.tsx:957
+#: src/components/map/renderers/MstGraph.tsx:968
 msgid "Force Parameters"
 msgstr ""
 
@@ -5449,12 +5449,12 @@ msgid "General"
 msgstr "Général"
 
 #. placeholder {0}: chargeStrength.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1002
+#: src/components/map/renderers/MstGraph.tsx:1013
 msgid "General repulsion force: {0}"
 msgstr ""
 
 #. placeholder {0}: Math.abs(chargeStrength)
-#: src/components/map/renderers/LocalMapGraph.tsx:1020
+#: src/components/map/renderers/LocalMapGraph.tsx:1033
 msgid "General Repulsion: {0}"
 msgstr ""
 
@@ -6575,7 +6575,7 @@ msgid "Legal entity name"
 msgstr ""
 
 #: src/components/map/panels/MapSettingsMenu.tsx:33
-#: src/components/map/panels/Legend.tsx:59
+#: src/components/map/panels/Legend.tsx:55
 msgid "Legend"
 msgstr ""
 
@@ -6637,11 +6637,11 @@ msgstr ""
 msgid "Lifetime cap"
 msgstr ""
 
-#: src/components/map/panels/shared.tsx:54
+#: src/components/map/panels/shared.tsx:53
 msgid "Likely false"
 msgstr ""
 
-#: src/components/map/panels/shared.tsx:52
+#: src/components/map/panels/shared.tsx:51
 msgid "Likely true"
 msgstr ""
 
@@ -6852,7 +6852,7 @@ msgstr "Chargement..."
 msgid "Loading…"
 msgstr "Chargement…"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:945
+#: src/components/map/renderers/LocalMapGraph.tsx:958
 msgid "Local argument map"
 msgstr ""
 
@@ -6860,15 +6860,15 @@ msgstr ""
 msgid "Local map"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:966
+#: src/components/map/renderers/LocalMapGraph.tsx:979
 msgid "LocalMap Forces"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:970
+#: src/components/map/renderers/LocalMapGraph.tsx:983
 msgid "LocalMAP Paper Parameters"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:957
+#: src/components/map/renderers/LocalMapGraph.tsx:970
 msgid "LocalMap Settings"
 msgstr ""
 
@@ -7027,7 +7027,7 @@ msgstr ""
 msgid "Manages members, workspaces, and organisation settings."
 msgstr ""
 
-#: src/components/map/hooks/useMapFactCheck.ts:31
+#: src/components/map/hooks/useMapFactCheck.ts:74
 msgid "Many fact-checks were started just now. Try again in a moment."
 msgstr ""
 
@@ -7036,7 +7036,7 @@ msgid "Many maps were started just now. Try again in a moment."
 msgstr ""
 
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:132
-#: src/components/map/MapPage.tsx:650
+#: src/components/map/MapPage.tsx:654
 msgid "Map"
 msgstr ""
 
@@ -7044,7 +7044,7 @@ msgstr ""
 msgid "Map | dembrane"
 msgstr ""
 
-#: src/components/map/MapPage.tsx:588
+#: src/components/map/MapPage.tsx:592
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr ""
 
@@ -7120,12 +7120,12 @@ msgstr ""
 msgid "MCP URL"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:975
+#: src/components/map/renderers/LocalMapGraph.tsx:988
 msgid "Medium distance threshold (default: 10)"
 msgstr ""
 
 #. placeholder {0}: linkDistanceLinear.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:976
+#: src/components/map/renderers/MstGraph.tsx:987
 msgid "Medium distances: {0}"
 msgstr ""
 
@@ -7229,7 +7229,7 @@ msgid "Microphone access is still denied. Please check your settings and try aga
 msgstr "L'accès au microphone est toujours refusé. Veuillez vérifier vos paramètres et réessayer."
 
 #. placeholder {0}: linkDistanceConstant.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:962
+#: src/components/map/renderers/MstGraph.tsx:973
 msgid "Minimum link length: {0}"
 msgstr ""
 
@@ -7466,17 +7466,17 @@ msgstr ""
 msgid "Needs attention"
 msgstr ""
 
-#: src/components/map/panels/shared.tsx:26
+#: src/components/map/panels/shared.tsx:25
 #: src/components/map/panels/Legend.tsx:15
 msgid "Negative"
 msgstr ""
 
 #. placeholder {0}: nnStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:998
+#: src/components/map/renderers/LocalMapGraph.tsx:1011
 msgid "Neighbor Attraction: {0}"
 msgstr ""
 
-#: src/components/map/panels/shared.tsx:28
+#: src/components/map/panels/shared.tsx:27
 #: src/components/map/panels/Legend.tsx:16
 msgid "Neutral"
 msgstr ""
@@ -7601,7 +7601,7 @@ msgstr "Suivant"
 msgid "participant.verify.instructions.button.next"
 msgstr "Suivant"
 
-#: src/components/map/panels/ShowcasePanel.tsx:133
+#: src/components/map/panels/ShowcasePanel.tsx:125
 msgid "Next change in <0>{remainingSeconds}s</0>"
 msgstr ""
 
@@ -7643,7 +7643,7 @@ msgstr ""
 msgid "No agents connected yet."
 msgstr ""
 
-#: src/components/map/MapPage.tsx:607
+#: src/components/map/MapPage.tsx:611
 msgid "No arguments were found in this project's conversations."
 msgstr ""
 
@@ -7759,7 +7759,7 @@ msgstr ""
 msgid "No logo set. dembrane default will be used."
 msgstr ""
 
-#: src/components/map/MapPage.tsx:584
+#: src/components/map/MapPage.tsx:588
 msgid "No map has been generated for this project yet."
 msgstr ""
 
@@ -8410,7 +8410,7 @@ msgstr ""
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Ouvrez votre application d'authentification et entrez le code actuel à six chiffres."
 
-#: src/components/map/panels/SpotlightPanel.tsx:63
+#: src/components/map/panels/SpotlightPanel.tsx:62
 msgid "Opinion"
 msgstr ""
 
@@ -8789,7 +8789,7 @@ msgstr "Les mots de passe ne correspondent pas"
 msgid "Paste it into any page. It stays live."
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:934
+#: src/components/map/renderers/LocalMapGraph.tsx:947
 msgid "Pause physics"
 msgstr ""
 
@@ -9101,7 +9101,7 @@ msgstr "Mauvaise réponse"
 msgid "Popcorn"
 msgstr "Popcorn"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:166
+#: src/routes/project/popcorn/PopcornRoute.tsx:167
 msgid "Popcorn could not be loaded. Try again in a moment."
 msgstr ""
 
@@ -9163,7 +9163,7 @@ msgstr ""
 msgid "Portal tutorial"
 msgstr ""
 
-#: src/components/map/panels/shared.tsx:24
+#: src/components/map/panels/shared.tsx:23
 #: src/components/map/panels/Legend.tsx:14
 msgid "Positive"
 msgstr ""
@@ -9504,7 +9504,7 @@ msgstr "Question"
 msgid "Questions about how dembrane works, not only about your data."
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:110
+#: src/components/map/panels/NodeDetailCard.tsx:109
 msgid "Quotes ({quoteCount})"
 msgstr ""
 
@@ -9522,7 +9522,7 @@ msgstr ""
 msgid "Rating"
 msgstr "Évaluation"
 
-#: src/components/map/panels/SpotlightPanel.tsx:214
+#: src/components/map/panels/SpotlightPanel.tsx:213
 msgid "Re-check"
 msgstr ""
 
@@ -10299,7 +10299,7 @@ msgstr "Retour sur la réponse"
 msgid "participant.button.stop.resume"
 msgstr "Reprendre"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:934
+#: src/components/map/renderers/LocalMapGraph.tsx:947
 msgid "Resume physics"
 msgstr ""
 
@@ -10346,7 +10346,7 @@ msgstr "La rétranscrire a commencé. La nouvelle conversation sera disponible b
 #: src/routes/project/chat/ProjectChatRoute.tsx:842
 #: src/components/workspace/UsageCard.tsx:108
 #: src/components/workspace/OrganisationUsageRollup.tsx:494
-#: src/components/map/panels/SpotlightPanel.tsx:235
+#: src/components/map/panels/SpotlightPanel.tsx:234
 #: src/components/map/panels/ExplorePanel.tsx:113
 #: src/components/common/FetchErrorPanel.tsx:35
 msgid "Retry"
@@ -11581,8 +11581,8 @@ msgstr "Détails précis - Conversations sélectionnées"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:75
-#: src/components/map/panels/SpotlightPanel.tsx:78
+#: src/components/map/panels/SpotlightPanel.tsx:74
+#: src/components/map/panels/SpotlightPanel.tsx:77
 #: src/components/map/panels/MapSettingsMenu.tsx:30
 msgid "Spotlight"
 msgstr ""
@@ -11720,11 +11720,11 @@ msgstr "Arrêter"
 msgid "participant.button.stop"
 msgstr "Arrêter"
 
-#: src/components/map/panels/SpotlightPanel.tsx:121
+#: src/components/map/panels/SpotlightPanel.tsx:120
 msgid "Stop coloring graph by fact-check"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:100
+#: src/components/map/panels/SpotlightPanel.tsx:99
 msgid "Stop coloring graph by valence"
 msgstr ""
 
@@ -12151,11 +12151,11 @@ msgstr ""
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 msgstr "L'endpoint où nous enverrons les données. Obtenez cela de votre service de réception (par exemple, Zapier, Make, ou votre propre serveur)."
 
-#: src/components/map/hooks/useMapFactCheck.ts:135
+#: src/components/map/hooks/useMapFactCheck.ts:290
 msgid "The fact-check could not be cancelled."
 msgstr ""
 
-#: src/components/map/hooks/useMapFactCheck.ts:33
+#: src/components/map/hooks/useMapFactCheck.ts:76
 msgid "The fact-check could not be started."
 msgstr ""
 
@@ -12209,7 +12209,7 @@ msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}.
 msgstr ""
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:686
+#: src/components/map/MapPage.tsx:690
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr ""
 
@@ -12238,11 +12238,11 @@ msgid "The live popcorn deck and the canvases built for this project live here."
 msgstr ""
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:691
+#: src/components/map/MapPage.tsx:695
 msgid "The map could not be generated. {0}"
 msgstr ""
 
-#: src/components/map/MapPage.tsx:563
+#: src/components/map/MapPage.tsx:567
 msgid "The map could not be loaded. Try again in a moment."
 msgstr ""
 
@@ -12250,7 +12250,7 @@ msgstr ""
 msgid "The map could not be started."
 msgstr ""
 
-#: src/components/map/MapPage.tsx:571
+#: src/components/map/MapPage.tsx:575
 msgid "The map is being generated. It appears here when it is ready."
 msgstr ""
 
@@ -12307,7 +12307,7 @@ msgstr ""
 msgid "The pulls between what people want, verified against the conversations."
 msgstr ""
 
-#: src/components/map/panels/ShowcasePanel.tsx:108
+#: src/components/map/panels/ShowcasePanel.tsx:103
 msgid "The random walk will surface nodes here once available."
 msgstr ""
 
@@ -12455,15 +12455,15 @@ msgstr ""
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 msgstr ""
 
-#: src/components/map/panels/shared.tsx:43
+#: src/components/map/panels/shared.tsx:42
 msgid "This argument expresses opposition, disagreement, or concern."
 msgstr ""
 
-#: src/components/map/panels/shared.tsx:41
+#: src/components/map/panels/shared.tsx:40
 msgid "This argument expresses support, agreement, or a positive stance toward its subject."
 msgstr ""
 
-#: src/components/map/panels/shared.tsx:45
+#: src/components/map/panels/shared.tsx:44
 msgid "This argument is observational or balanced, neither for nor against."
 msgstr ""
 
@@ -12484,7 +12484,7 @@ msgstr ""
 msgid "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:165
+#: src/components/map/panels/SpotlightPanel.tsx:164
 msgid "This claim has not been fact-checked."
 msgstr ""
 
@@ -12653,8 +12653,8 @@ msgstr "Ce portail n’accepte pas de nouvelles sessions pour le moment."
 msgid "This project could not be reached."
 msgstr ""
 
-#: src/components/map/MapPage.tsx:577
-#: src/components/map/MapPage.tsx:602
+#: src/components/map/MapPage.tsx:581
+#: src/components/map/MapPage.tsx:606
 msgid "This project has no conversations with transcripts yet. Generate a map once conversations have been transcribed."
 msgstr ""
 
@@ -13121,7 +13121,7 @@ msgid "Tree"
 msgstr ""
 
 #. placeholder {0}: mstRepulsionCoeff.toFixed(3)
-#: src/components/map/renderers/MstGraph.tsx:1014
+#: src/components/map/renderers/MstGraph.tsx:1025
 msgid "Tree repulsion factor: {0}"
 msgstr ""
 
@@ -13414,7 +13414,7 @@ msgstr ""
 msgid "Untitled report"
 msgstr "Rapport sans titre"
 
-#: src/components/map/panels/shared.tsx:60
+#: src/components/map/panels/shared.tsx:59
 msgid "Unverified"
 msgstr ""
 
@@ -13926,7 +13926,7 @@ msgstr ""
 msgid "Waiting for the first conversation with a transcript."
 msgstr ""
 
-#: src/components/map/panels/ShowcasePanel.tsx:140
+#: src/components/map/panels/ShowcasePanel.tsx:130
 msgid "Waiting for the next node"
 msgstr ""
 
@@ -14585,7 +14585,7 @@ msgstr ""
 msgid "You cannot manage MCP access for this organisation."
 msgstr ""
 
-#: src/components/map/hooks/useMapFactCheck.ts:29
+#: src/components/map/hooks/useMapFactCheck.ts:72
 msgid "You do not have permission to fact-check claims."
 msgstr ""
 

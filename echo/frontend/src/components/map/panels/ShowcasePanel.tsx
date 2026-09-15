@@ -8,8 +8,8 @@ import type { FactCheckState, MapGraphNode } from "../types";
 import { CountdownProgressBar } from "./CountdownProgressBar";
 import { type ConversationHref, NodeDetailCard } from "./NodeDetailCard";
 import {
+	CaptionText,
 	formatTimestamp,
-	MutedText,
 	mapVars,
 	PanelHeader,
 	VALENCE_CHIP_CLASS,
@@ -95,20 +95,15 @@ export const ShowcasePanel = memo(function ShowcasePanel({
 						</div>
 
 						{timestamp ? (
-							<p
-								className="text-xs uppercase tracking-widest"
-								style={{ color: mapVars.muted }}
-							>
-								{timestamp}
-							</p>
+							<p className="text-xs uppercase tracking-widest">{timestamp}</p>
 						) : null}
 					</div>
 				) : (
-					<MutedText>
+					<CaptionText>
 						<Trans>
 							The random walk will surface nodes here once available.
 						</Trans>
-					</MutedText>
+					</CaptionText>
 				)}
 			</div>
 
@@ -125,16 +120,11 @@ export const ShowcasePanel = memo(function ShowcasePanel({
 						className="bg-cyan"
 					/>
 				</div>
-				<p
-					className="text-xs uppercase tracking-widest"
-					style={{ color: mapVars.muted }}
-				>
+				<p className="text-xs uppercase tracking-widest">
 					{hasTimer ? (
 						<Trans>
 							Next change in{" "}
-							<span className="font-semibold" style={{ color: mapVars.text }}>
-								{remainingSeconds}s
-							</span>
+							<span className="font-semibold">{remainingSeconds}s</span>
 						</Trans>
 					) : (
 						<Trans>Waiting for the next node</Trans>

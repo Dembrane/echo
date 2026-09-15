@@ -12,7 +12,6 @@ export const mapVars = {
 	accentText: "var(--map-accent-text)",
 	border: "var(--map-border)",
 	card: "var(--map-card)",
-	muted: "var(--map-muted)",
 	raised: "var(--map-surface-raised)",
 	surface: "var(--map-surface)",
 	text: "var(--map-text)",
@@ -119,14 +118,11 @@ export const PanelHeader = ({
 	</header>
 );
 
-export const MutedText = ({
+/** Hints, empty states and labels: set apart by size, in the text colour. */
+export const CaptionText = ({
 	children,
 	className,
 }: {
 	children: ReactNode;
 	className?: string;
-}) => (
-	<p className={cn("text-xs", className)} style={{ color: mapVars.muted }}>
-		{children}
-	</p>
-);
+}) => <p className={cn("text-xs", className)}>{children}</p>;

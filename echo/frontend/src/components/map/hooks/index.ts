@@ -5,7 +5,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { type ServerEvent, useServerEvents } from "@/hooks/useServerEvents";
@@ -195,18 +195,75 @@ export const putFactCheck = (
 		(old) => ({ ...(old ?? {}), [nodeId]: state }),
 	);
 
-export const useStartFactCheck = (resultId: string) =>
+const factCheckTime = (state: FactCheckState | undefined): number | null => {
+	if (!state) return null;
+	const value =
+		state.status === "processing"
+			? state.startedAt
+			: state.status === "done"
+				? state.checkedAt
+				: state.status === "error"
+					? state.at
+					: null;
+	if (!value) return null;
+	const time = Date.parse(value);
+	return Number.isNaN(time) ? null : time;
+};
+
+/**
+ * True when `cached` is a later server state than `response`, such as a check
+ * that finished after the response's check started. A state without a time
+ * is never newer.
+ */
+export const isNewerFactCheck = (
+	cached: FactCheckState | undefined,
+	response: FactCheckState,
+): boolean => {
+	const cachedAt = factCheckTime(cached);
+	const responseAt = factCheckTime(response);
+	if (cachedAt === null || responseAt === null) return false;
+	if (cachedAt !== responseAt) return cachedAt > responseAt;
+	// The same moment: a finished check outranks its own start.
+	return cached?.status !== "processing" && response.status === "processing";
+};
+
+/** Writes a start response unless the cache already holds a later state. */
+export const putStartedFactCheck = (
+	queryClient: QueryClient,
+	resultId: string,
+	nodeId: string,
+	state: FactCheckState,
+) =>
+	queryClient.setQueryData<FactCheckStates>(
+		mapKeys.factChecks(resultId),
+		(old) =>
+			isNewerFactCheck(old?.[nodeId], state)
+				? old
+				: { ...(old ?? {}), [nodeId]: state },
+	);
+
+// The result id travels with each request, so a request queued for one
+// result never goes out under another.
+export const useStartFactCheck = () =>
 	useMutation({
-		mutationFn: ({ nodeId, force }: { nodeId: string; force?: boolean }) =>
+		mutationFn: ({
+			resultId,
+			nodeId,
+			force,
+		}: {
+			resultId: string;
+			nodeId: string;
+			force?: boolean;
+		}) =>
 			bff.post<FactCheckState>(
 				`/map/results/${enc(resultId)}/fact-checks/${enc(nodeId)}`,
 				force ? { force: true } : {},
 			),
 	});
 
-export const useCancelFactCheck = (resultId: string) =>
+export const useCancelFactCheck = () =>
 	useMutation({
-		mutationFn: ({ nodeId }: { nodeId: string }) =>
+		mutationFn: ({ resultId, nodeId }: { resultId: string; nodeId: string }) =>
 			bff.delete<FactCheckState>(
 				`/map/results/${enc(resultId)}/fact-checks/${enc(nodeId)}`,
 			),
@@ -291,9 +348,22 @@ export function applyProgressEvent(
 	return { ...state, attempt: { ...attempt, progress, status } };
 }
 
+/** Fact-check events arriving within this window share one refetch. */
+export const FACT_CHECK_REFETCH_DELAY_MS = 300;
+
 /** Follows the project's map events and keeps the queries in step. */
 export const useMapEvents = (projectId: string) => {
 	const queryClient = useQueryClient();
+	const factCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: cleanup keyed on the project id
+	useEffect(
+		() => () => {
+			if (factCheckTimerRef.current) clearTimeout(factCheckTimerRef.current);
+			factCheckTimerRef.current = null;
+		},
+		[projectId],
+	);
 
 	const onEvent = useCallback(
 		(event: ServerEvent) => {
@@ -318,7 +388,20 @@ export const useMapEvents = (projectId: string) => {
 					return;
 				}
 				case "fact_check":
-					void queryClient.invalidateQueries({ queryKey: mapKeys.results });
+					// A bulk run sends one event per claim. The first event of a
+					// burst schedules a refetch of the current result's states;
+					// the rest join it.
+					if (factCheckTimerRef.current) return;
+					factCheckTimerRef.current = setTimeout(() => {
+						factCheckTimerRef.current = null;
+						const resultId = queryClient.getQueryData<ProjectMapState>(
+							mapKeys.project(projectId),
+						)?.current?.id;
+						if (!resultId) return;
+						void queryClient.invalidateQueries({
+							queryKey: mapKeys.factChecks(resultId),
+						});
+					}, FACT_CHECK_REFETCH_DELAY_MS);
 					return;
 				default:
 					void queryClient.invalidateQueries({

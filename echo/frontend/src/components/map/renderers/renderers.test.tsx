@@ -33,6 +33,7 @@ import {
 	type MapInteractionStore,
 } from "../state/interactionStore";
 import type { MapGraphNode } from "../types";
+import { d3, type Simulation, type SimulationNodeDatum } from "./d3";
 import { LocalMap } from "./LocalMapGraph";
 import { DEFAULT_WALK_INTERVAL_MS, MstMap } from "./MstGraph";
 
@@ -45,6 +46,15 @@ vi.mock("../graph/mst", async (importOriginal) => {
 vi.mock("../graph/forces", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("../graph/forces")>();
 	return { ...actual, mstLinkDistance: vi.fn(actual.mstLinkDistance) };
+});
+// Records the simulations the renderers create, so tests can stop them and
+// run their tick listeners by hand.
+vi.mock("./d3", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("./d3")>();
+	return {
+		...actual,
+		d3: { ...actual.d3, forceSimulation: vi.fn(actual.d3.forceSimulation) },
+	};
 });
 
 i18n.load("en-US", {});
@@ -116,6 +126,70 @@ type Datum = { id: string; x?: number; y?: number };
 /** The datum d3 bound to an element. */
 const datumOf = <T = Datum>(element: Element): T =>
 	(element as Element & { __data__: T }).__data__;
+
+const circleOf = (container: Element, id: string) =>
+	Array.from(container.querySelectorAll("circle.node")).find(
+		(circle) => datumOf(circle).id === id,
+	) as Element;
+
+const localSvgOf = (container: Element) =>
+	container.querySelector(
+		'svg[aria-label="Local argument map"]',
+	) as SVGSVGElement;
+
+type SimulatedNode = Datum & SimulationNodeDatum;
+
+/** The simulation the most recently mounted renderer created. */
+const latestSimulation = () =>
+	vi.mocked(d3.forceSimulation).mock.results.at(-1)
+		?.value as Simulation<SimulatedNode>;
+
+/** A simulation's tick listener, to run ticks without the d3 timer. */
+const tickListenerOf = (simulation: Simulation<SimulatedNode>) =>
+	(simulation as unknown as { on(typenames: string): () => void }).on("tick");
+
+/**
+ * A point and radius in an element's own coordinates, in the SVG's screen
+ * space: applies the translate and scale transforms of the element and its
+ * ancestors.
+ */
+const toScreen = (element: Element, x: number, y: number, r: number) => {
+	let point = { r, x, y };
+	for (
+		let node: Element | null = element;
+		node && node.tagName.toLowerCase() !== "svg";
+		node = node.parentElement
+	) {
+		const transform = node.getAttribute("transform") ?? "";
+		const translate = /translate\(([-\d.e]+),\s*([-\d.e]+)\)/.exec(transform);
+		const scale = /scale\(([-\d.e]+)\)/.exec(transform);
+		const k = scale ? Number(scale[1]) : 1;
+		point = {
+			r: point.r * k,
+			x: (translate ? Number(translate[1]) : 0) + k * point.x,
+			y: (translate ? Number(translate[2]) : 0) + k * point.y,
+		};
+	}
+	return point;
+};
+
+/** Copies of the nodes with the first one a claim whose fact-check is in flight. */
+const withProcessingClaim = (source: MapGraphNode[]): MapGraphNode[] =>
+	source.map((node, index) =>
+		index === 0
+			? {
+					...node,
+					metadata: {
+						...node.metadata,
+						factCheck: {
+							startedAt: "2026-09-15T10:00:00.000Z",
+							status: "processing",
+						},
+						kind: "claim",
+					},
+				}
+			: node,
+	);
 
 const inMap = (ui: ReactNode, store: MapInteractionStore) => (
 	<MantineProvider>
@@ -313,6 +387,97 @@ describe("MstMap", () => {
 			expect(call[2]).toBe(k);
 		}
 	});
+
+	it("drops the downstream highlight when the hovered node leaves, the tree empties or the map unmounts", () => {
+		const store = createMapInteractionStore();
+		const view = renderInMap(
+			<MstMap nodes={nodes} autoAdvance={false} />,
+			store,
+		);
+		const highlighted = () => store.getState().highlightedNodeIds;
+
+		const hovered = view.container.querySelectorAll("circle.node")[5];
+		const hoveredId = datumOf(hovered).id;
+		fireEvent.mouseEnter(hovered);
+		expect(highlighted().has(hoveredId)).toBe(true);
+
+		// The node goes without a mouseleave, and stays unhighlighted when it returns
+		const without = nodes.filter((node) => node.id !== hoveredId);
+		view.rerender(inMap(<MstMap nodes={without} autoAdvance={false} />, store));
+		expect(highlighted().size).toBe(0);
+		view.rerender(inMap(<MstMap nodes={nodes} autoAdvance={false} />, store));
+		expect(highlighted().size).toBe(0);
+
+		fireEvent.mouseEnter(view.container.querySelectorAll("circle.node")[0]);
+		expect(highlighted().size).toBeGreaterThan(0);
+		view.rerender(inMap(<MstMap nodes={[]} autoAdvance={false} />, store));
+		expect(highlighted().size).toBe(0);
+
+		view.rerender(inMap(<MstMap nodes={nodes} autoAdvance={false} />, store));
+		fireEvent.mouseEnter(view.container.querySelectorAll("circle.node")[0]);
+		expect(highlighted().size).toBeGreaterThan(0);
+		view.unmount();
+		expect(highlighted().size).toBe(0);
+	});
+
+	it("keeps pulsing in-flight fact-checks while the simulation is stopped", async () => {
+		vi.mocked(d3.forceSimulation).mockClear();
+		const { container } = renderInMap(
+			<MstMap
+				nodes={withProcessingClaim(nodes)}
+				colorBy="factCheck"
+				autoAdvance={false}
+			/>,
+			createMapInteractionStore(),
+		);
+		latestSimulation().stop();
+
+		const circle = circleOf(container, nodes[0].id);
+		const stoppedAt = circle.getAttribute("opacity");
+		await waitFor(() => {
+			expect(circle.getAttribute("opacity")).not.toBe(stoppedAt);
+		});
+	});
+
+	it("cancels a running auto-fit when the node set changes and on unmount", () => {
+		vi.mocked(d3.forceSimulation).mockClear();
+		const store = createMapInteractionStore();
+		const view = renderInMap(
+			<MstMap nodes={nodes} autoAdvance={false} />,
+			store,
+		);
+		const svg = view.container.querySelector(
+			'svg[aria-label="Argument map"]',
+		) as SVGSVGElement & { __transition?: unknown };
+		const simulation = latestSimulation();
+		const tick = tickListenerOf(simulation);
+
+		// Spread the nodes far past the viewport and run ten ticks by hand:
+		// auto-fit schedules a zoom-out transition on the SVG
+		const outgrowViewport = () => {
+			simulation.stop();
+			for (const node of simulation.nodes()) {
+				node.x = (node.x ?? 0) * 40;
+				node.y = (node.y ?? 0) * 40;
+			}
+			for (let i = 0; i < 10; i++) tick();
+		};
+
+		outgrowViewport();
+		expect(svg.__transition).toBeDefined();
+
+		view.rerender(
+			inMap(<MstMap nodes={nodes.slice(1)} autoAdvance={false} />, store),
+		);
+		expect(svg.__transition).toBeUndefined();
+
+		// The fit deadline was reset with it, so the next check fits at once
+		outgrowViewport();
+		expect(svg.__transition).toBeDefined();
+
+		view.unmount();
+		expect(svg.__transition).toBeUndefined();
+	});
 });
 
 describe("MstMap random walk", () => {
@@ -396,6 +561,39 @@ describe("MstMap random walk", () => {
 			vi.advanceTimersByTime(1_500);
 		});
 		expect(store.getState().selectedNodeId).not.toBe(other);
+	});
+
+	it("restarts the interval when the LocalMap selects the selected node again", () => {
+		const store = createMapInteractionStore();
+		const { container } = renderInMap(
+			<div>
+				<MstMap nodes={nodes} />
+				<LocalMap nodes={nodes} />
+			</div>,
+			store,
+		);
+		const first = store.getState().selectedNodeId as string;
+
+		act(() => {
+			vi.advanceTimersByTime(20_000);
+		});
+		expect(store.getState().selectedNodeId).toBe(first);
+
+		fireEvent.click(circleOf(localSvgOf(container), first));
+		expect(store.getState().selectedNodeId).toBe(first);
+
+		// The old schedule would have moved on 10 s after the click
+		act(() => {
+			vi.advanceTimersByTime(29_000);
+		});
+		expect(store.getState().selectedNodeId).toBe(first);
+
+		act(() => {
+			vi.advanceTimersByTime(1_500);
+		});
+		const next = store.getState().selectedNodeId as string;
+		const neighbours = adjacencyOf(nodes, buildMST(nodes)).get(first);
+		expect(neighbours?.has(next)).toBe(true);
 	});
 
 	it("keeps the initial selection with autoAdvance off", () => {
@@ -537,6 +735,168 @@ describe("LocalMap", () => {
 		expect(panel.className).toContain("max-w-[calc(100%-2rem)]");
 		expect(panel.className).toContain("max-h-[calc(100%-5rem)]");
 		expect(panel.className).toContain("overflow-y-auto");
+	});
+
+	it("drops a queued hover frame when the pointer leaves", () => {
+		const frames = new Map<number, FrameRequestCallback>();
+		let nextFrame = 1;
+		vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+			frames.set(nextFrame, callback);
+			return nextFrame++;
+		});
+		vi.stubGlobal("cancelAnimationFrame", (id: number) => {
+			frames.delete(id);
+		});
+		// A still clock keeps the second move inside the 50 ms throttle
+		vi.useFakeTimers({ toFake: ["Date"] });
+		try {
+			const store = createMapInteractionStore();
+			const { container } = renderInMap(<LocalMap nodes={nodes} />, store);
+			const svg = localSvgOf(container);
+			const { x = 0, y = 0 } = datumOf(
+				container.querySelectorAll("circle.node")[0],
+			);
+
+			fireEvent.mouseMove(svg, { clientX: x, clientY: y });
+			expect(store.getState().highlightSource).toBe("local-hover");
+			fireEvent.mouseMove(svg, { clientX: x + 1, clientY: y });
+			expect(frames.size).toBe(1);
+
+			fireEvent.mouseLeave(svg);
+			act(() => {
+				for (const callback of [...frames.values()]) callback(0);
+			});
+
+			expect(store.getState().highlightedNodeIds.size).toBe(0);
+			expect(container.querySelector(".cursor-overlay")).toBeNull();
+		} finally {
+			vi.useRealTimers();
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it("keeps the cursor ring and timer arc on the cursor at screen size while the map zooms", () => {
+		const { container } = renderInMap(
+			<LocalMap nodes={nodes} timerActive timerProgress={0.25} />,
+			createMapInteractionStore(),
+		);
+		const svg = localSvgOf(container);
+		// d3-zoom reads the SVG's size for a gesture; jsdom has no SVG lengths
+		Object.defineProperty(svg, "width", { value: { baseVal: { value: 800 } } });
+		Object.defineProperty(svg, "height", {
+			value: { baseVal: { value: 600 } },
+		});
+
+		const expectOnCursor = (
+			point: { x: number; y: number; r: number },
+			r: number,
+		) => {
+			expect(point.x).toBeCloseTo(120);
+			expect(point.y).toBeCloseTo(90);
+			expect(point.r).toBeCloseTo(r);
+		};
+		const ringOnScreen = () => {
+			const ring = container.querySelector(".cursor-overlay") as Element;
+			return toScreen(
+				ring,
+				Number(ring.getAttribute("cx")),
+				Number(ring.getAttribute("cy")),
+				Number(ring.getAttribute("r")),
+			);
+		};
+		const arcOnScreen = () => {
+			const arc = container.querySelector(".timer-arc") as Element;
+			const outer = /A([-\d.e]+),/.exec(arc.getAttribute("d") ?? "");
+			return toScreen(arc, 0, 0, Number(outer?.[1]));
+		};
+
+		fireEvent.mouseMove(svg, { clientX: 120, clientY: 90 });
+		expectOnCursor(ringOnScreen(), 50);
+		expectOnCursor(arcOnScreen(), 52);
+
+		// Wheel-zoom around another point while the pointer stays put
+		fireEvent.wheel(svg, { clientX: 400, clientY: 300, deltaY: -300 });
+		expect(
+			container.querySelector("svg > g")?.getAttribute("transform"),
+		).toMatch(/scale\((?!1\))/);
+
+		expectOnCursor(ringOnScreen(), 50);
+		expectOnCursor(arcOnScreen(), 52);
+	});
+
+	it("clears its hover highlight when the hovered node leaves the map", () => {
+		const store = createMapInteractionStore();
+		const { container, rerender } = renderInMap(
+			<LocalMap nodes={nodes} />,
+			store,
+		);
+		const hovered = datumOf(container.querySelectorAll("circle.node")[0]);
+		fireEvent.mouseMove(localSvgOf(container), {
+			clientX: hovered.x,
+			clientY: hovered.y,
+		});
+		expect(store.getState().highlightedNodeIds.has(hovered.id)).toBe(true);
+
+		const without = nodes.filter((node) => node.id !== hovered.id);
+		rerender(inMap(<LocalMap nodes={without} />, store));
+		expect(store.getState().highlightedNodeIds.has(hovered.id)).toBe(false);
+	});
+
+	it("clears its hover highlight on unmount", () => {
+		const store = createMapInteractionStore();
+		const { container, unmount } = renderInMap(
+			<LocalMap nodes={nodes} />,
+			store,
+		);
+		const hovered = datumOf(container.querySelectorAll("circle.node")[0]);
+		fireEvent.mouseMove(localSvgOf(container), {
+			clientX: hovered.x,
+			clientY: hovered.y,
+		});
+		expect(store.getState().highlightSource).toBe("local-hover");
+		expect(store.getState().highlightedNodeIds.size).toBeGreaterThan(0);
+
+		unmount();
+		expect(store.getState().highlightedNodeIds.size).toBe(0);
+	});
+
+	it("lets go of its simulation when the nodes run out", () => {
+		vi.mocked(d3.forceSimulation).mockClear();
+		const store = createMapInteractionStore();
+		const { container, rerender } = renderInMap(
+			<LocalMap nodes={nodes} />,
+			store,
+		);
+		const restart = vi.spyOn(latestSimulation(), "restart");
+
+		rerender(inMap(<LocalMap nodes={[]} />, store));
+		expect(container.querySelectorAll("circle.node")).toHaveLength(0);
+		restart.mockClear();
+
+		// A slider change and a resize must not wake the old simulation
+		fireEvent.click(screen.getByRole("button", { name: "LocalMap Settings" }));
+		const [cMedSlider] = screen.getAllByRole("slider");
+		fireEvent.change(cMedSlider, { target: { value: "20" } });
+		act(() => resizeContainers(1440, 900));
+		expect(restart).not.toHaveBeenCalled();
+
+		rerender(inMap(<LocalMap nodes={nodes} />, store));
+		expect(vi.mocked(d3.forceSimulation)).toHaveBeenCalledTimes(2);
+		expect(container.querySelectorAll("circle.node")).toHaveLength(20);
+	});
+
+	it("keeps pulsing in-flight fact-checks while physics is paused", async () => {
+		const { container } = renderInMap(
+			<LocalMap nodes={withProcessingClaim(nodes)} colorBy="factCheck" />,
+			createMapInteractionStore(),
+		);
+		fireEvent.click(screen.getByRole("button", { name: "Pause physics" }));
+
+		const circle = circleOf(container, nodes[0].id);
+		const pausedAt = circle.getAttribute("opacity");
+		await waitFor(() => {
+			expect(circle.getAttribute("opacity")).not.toBe(pausedAt);
+		});
 	});
 });
 

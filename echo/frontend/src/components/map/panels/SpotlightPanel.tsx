@@ -8,10 +8,9 @@ import { deriveDisplayVerdict } from "../graph/nodeStyle";
 import type { ColorBy, FactCheckState, MapGraphNode } from "../types";
 import { type ConversationHref, NodeDetailCard } from "./NodeDetailCard";
 import {
+	CaptionText,
 	CHIP_CLASS,
 	formatTimestamp,
-	MutedText,
-	mapVars,
 	OPINION_CHIP_CLASS,
 	PanelHeader,
 	VALENCE_CHIP_CLASS,
@@ -161,9 +160,9 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 								)}
 
 								{isClaim && status === "idle" && !canFactCheck && (
-									<MutedText>
+									<CaptionText>
 										<Trans>This claim has not been fact-checked.</Trans>
-									</MutedText>
+									</CaptionText>
 								)}
 
 								{isClaim && status === "processing" && (
@@ -241,20 +240,15 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 						)}
 
 						{timestamp ? (
-							<p
-								className="text-xs uppercase tracking-widest"
-								style={{ color: mapVars.muted }}
-							>
-								{timestamp}
-							</p>
+							<p className="text-xs uppercase tracking-widest">{timestamp}</p>
 						) : null}
 					</div>
 				) : (
-					<MutedText>
+					<CaptionText>
 						<Trans>
 							Click a node in the tree or cluster map to spotlight it here.
 						</Trans>
-					</MutedText>
+					</CaptionText>
 				)}
 			</div>
 		</section>

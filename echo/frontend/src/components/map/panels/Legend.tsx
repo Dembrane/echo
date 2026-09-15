@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { memo } from "react";
 import { baseColors } from "@/colors";
-import { MAP_NEUTRAL_GREY } from "../graph/nodeStyle";
+import { getNodeStyleFromInputs, MAP_NEUTRAL_GREY } from "../graph/nodeStyle";
 import type { ColorBy } from "../types";
 import { mapVars } from "./shared";
 
@@ -29,8 +29,6 @@ const rowsFor = (mode: ColorBy): Row[] => {
 	return [];
 };
 
-const LIGHT_SHADOW = "drop-shadow(0 1px 2px rgba(45, 45, 44, 0.35))";
-
 /** Colour key for the valence and fact-check modes; nothing in None. */
 export const Legend = memo(function Legend({
 	colorBy,
@@ -41,7 +39,8 @@ export const Legend = memo(function Legend({
 }) {
 	const rows = rowsFor(colorBy);
 	if (rows.length === 0) return null;
-	const filter = darkMode ? "none" : LIGHT_SHADOW;
+	// The swatches carry the same shadow as the nodes they explain.
+	const { filter } = getNodeStyleFromInputs({}, { colorBy, darkMode });
 
 	return (
 		<div
@@ -52,10 +51,7 @@ export const Legend = memo(function Legend({
 				color: mapVars.text,
 			}}
 		>
-			<p
-				className="mb-1 text-xs uppercase tracking-widest"
-				style={{ color: mapVars.muted }}
-			>
+			<p className="mb-1 text-xs uppercase tracking-widest">
 				<Trans>Legend</Trans>
 			</p>
 			{rows.map((row) => (

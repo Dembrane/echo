@@ -109,6 +109,10 @@ export interface Arc {
 	endAngle(angle: number): this;
 }
 
+export interface Timer {
+	stop(): void;
+}
+
 interface D3Subset {
 	select: typeof select;
 	zoom<E extends Element>(): ZoomBehavior<E>;
@@ -125,6 +129,7 @@ interface D3Subset {
 	drag<E extends Element, D>(): DragBehavior<E, D>;
 	arc(): Arc;
 	easeCubicOut(normalizedTime: number): number;
+	timer(callback: (elapsed: number) => void): Timer;
 }
 
 export const d3: D3Subset = d3Bundle;

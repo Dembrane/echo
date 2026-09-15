@@ -20,6 +20,11 @@ export type MapInteractionValues = {
 	highlightSource: HighlightSource;
 	highlightIsPreview: boolean;
 	highlightUpdatedAt: number;
+	/**
+	 * Counts selections. Every setSelectedNodeId bumps it, also when the id is
+	 * unchanged, so selecting the selected node again can restart the walk.
+	 */
+	selectionRevision: number;
 };
 
 export type MapInteractionActions = {
@@ -106,7 +111,11 @@ export function createMapInteractionStore(
 				}
 				return { highlightedNodesDistance: distances };
 			}),
-		setSelectedNodeId: (id) => setState({ selectedNodeId: id }),
+		setSelectedNodeId: (id) =>
+			setState((current) => ({
+				selectedNodeId: id,
+				selectionRevision: current.selectionRevision + 1,
+			})),
 	};
 
 	let state: MapInteractionState = {
@@ -116,6 +125,7 @@ export function createMapInteractionStore(
 		highlightSource: "unknown",
 		highlightUpdatedAt: 0,
 		selectedNodeId: null,
+		selectionRevision: 0,
 		...initial,
 		...actions,
 	};

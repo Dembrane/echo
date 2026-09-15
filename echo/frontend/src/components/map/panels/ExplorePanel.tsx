@@ -9,7 +9,7 @@ import type {
 	SelectionTitleError,
 } from "../hooks/useSelectionTitle";
 import type { MapGraphNode } from "../types";
-import { MutedText, mapVars, PanelHeader } from "./shared";
+import { CaptionText, mapVars, PanelHeader } from "./shared";
 
 type ExplorePanelProps = {
 	isProcessing: boolean;
@@ -165,12 +165,12 @@ export const ExplorePanel = memo(function ExplorePanel({
 				) : (
 					!isProcessing &&
 					!error && (
-						<MutedText>
+						<CaptionText>
 							<Trans>
 								Hover over nodes to explore clusters. Hold position for 1.5s to
 								distill the core idea.
 							</Trans>
-						</MutedText>
+						</CaptionText>
 					)
 				)}
 			</div>

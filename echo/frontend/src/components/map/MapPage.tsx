@@ -209,7 +209,7 @@ const MapSectionHeader = ({
 		style={{ borderColor: mapVars.border }}
 	>
 		<h2 className="text-xs font-light uppercase tracking-wider">{title}</h2>
-		<p className="text-xs" style={{ color: mapVars.muted }}>
+		<p className="text-xs">
 			<Plural value={count} one="# argument" other="# arguments" />
 		</p>
 	</div>
@@ -439,7 +439,7 @@ const MapExperience = ({
 						"relative flex flex-col items-center justify-center p-2",
 					)}
 				>
-					<p className="text-sm" style={{ color: mapVars.muted }}>
+					<p className="text-sm">
 						<Trans>Enable a visualization from the panel settings menu</Trans>
 					</p>
 				</section>
@@ -503,6 +503,7 @@ export const MapPage = ({
 	});
 	const factCheckStates = factCheck.states ?? EMPTY_STATES;
 	const placedNodes = graph?.placedNodes;
+	const { ready: factCheckReady, runAll } = factCheck;
 
 	useAutoFactCheck({
 		enabled:
@@ -510,19 +511,22 @@ export const MapPage = ({
 			settings.autoFactCheckClaims &&
 			settings.colorBy === "factCheck",
 		nodes: placedNodes ?? [],
+		ready: factCheckReady,
 		resultId,
-		run: factCheck.run,
+		runAll,
 		states: factCheckStates,
 	});
 
+	// Before the saved states load every claim looks idle: nothing is pending.
 	const pendingClaims = useMemo(
-		() => pendingClaimIds(placedNodes ?? [], factCheckStates),
-		[placedNodes, factCheckStates],
+		() =>
+			factCheckReady ? pendingClaimIds(placedNodes ?? [], factCheckStates) : [],
+		[factCheckReady, placedNodes, factCheckStates],
 	);
-	const { run } = factCheck;
-	const handleFactCheckAll = useCallback(() => {
-		for (const id of pendingClaims) void run(id);
-	}, [pendingClaims, run]);
+	const handleFactCheckAll = useCallback(
+		() => runAll(pendingClaims),
+		[pendingClaims, runAll],
+	);
 
 	const linkWorkspaceId = workspaceId ?? contextWorkspaceId;
 	const conversationHref = useCallback<ConversationHref>(

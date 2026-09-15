@@ -8,7 +8,12 @@ import {
 } from "react";
 import { nodeGeometryKey } from "../graph/nodeSet";
 import { getNodeStyleFromInputs, type NodeStyle } from "../graph/nodeStyle";
-import type { ColorBy, MapGraphNode } from "../types";
+import {
+	type MapInteractionStore,
+	useMapInteractionStore,
+} from "../state/interactionStore";
+import type { ColorBy, HighlightSource, MapGraphNode } from "../types";
+import { d3, type Selection, type Timer } from "./d3";
 
 /** Stable default for recentNodeIds, so a missing prop does not change identity per render. */
 export const EMPTY_NODE_IDS: string[] = [];
@@ -110,4 +115,92 @@ export function useContainerSize(containerRef: RefObject<HTMLElement | null>): {
 	}, [containerRef, update]);
 
 	return { measure, size, sizeRef };
+}
+
+const releaseHighlight = (
+	store: MapInteractionStore,
+	source: HighlightSource,
+) => {
+	store.setHighlightedNodeIds(new Set(), { isPreview: false, source });
+	store.setHighlightedNodesDistance(new Map());
+};
+
+/**
+ * Clears the store highlight a renderer published as `source` when one of
+ * its nodes leaves the node set (an empty set included) and when the
+ * renderer unmounts, so the other renderers stop outlining nodes that are
+ * gone. Highlights from other sources are left alone.
+ */
+export function useReleaseOwnedHighlight(
+	source: HighlightSource,
+	nodes: ReadonlyArray<{ id: string }>,
+) {
+	const store = useMapInteractionStore();
+
+	useEffect(() => {
+		const { highlightSource, highlightedNodeIds } = store.getState();
+		if (highlightSource !== source || highlightedNodeIds.size === 0) return;
+		const present = new Set(nodes.map((node) => node.id));
+		for (const id of highlightedNodeIds) {
+			if (!present.has(id)) {
+				releaseHighlight(store, source);
+				return;
+			}
+		}
+	}, [store, source, nodes]);
+
+	useEffect(() => {
+		return () => {
+			const { highlightSource, highlightedNodeIds } = store.getState();
+			if (highlightSource === source && highlightedNodeIds.size > 0) {
+				releaseHighlight(store, source);
+			}
+		};
+	}, [store, source]);
+}
+
+/** Opacity of an in-flight fact-check: 0.5 + 0.5 x |sin(t / 400)|. */
+const pulseOpacity = () =>
+	0.5 + 0.5 * Math.abs(Math.sin(performance.now() / 400));
+
+/**
+ * Pulses the circles in `pulseSelectionRef` on a d3 timer of its own, not the
+ * simulation tick, so in-flight fact-checks keep pulsing while the physics is
+ * paused or settled. Call the returned function after the pulse selection
+ * changes: it starts the timer when something pulses. The timer stops itself
+ * once nothing does, and on unmount.
+ */
+export function usePulseTimer<D>(
+	pulseSelectionRef: RefObject<Selection<
+		SVGCircleElement,
+		D,
+		SVGGElement,
+		unknown
+	> | null>,
+): () => void {
+	const timerRef = useRef<Timer | null>(null);
+
+	useEffect(() => {
+		return () => {
+			timerRef.current?.stop();
+			timerRef.current = null;
+		};
+	}, []);
+
+	return useCallback(() => {
+		if (timerRef.current) return;
+		const pulsing = pulseSelectionRef.current;
+		if (!pulsing || pulsing.empty()) return;
+
+		const timer = d3.timer(() => {
+			const current = pulseSelectionRef.current;
+			if (!current || current.empty()) {
+				timer.stop();
+				timerRef.current = null;
+				return;
+			}
+			current.attr("opacity", pulseOpacity());
+		});
+		timerRef.current = timer;
+	}, [pulseSelectionRef]);
 }

@@ -43,6 +43,8 @@ import {
 	useContainerSize,
 	useGeometryNodes,
 	useNodeStyleLookup,
+	usePulseTimer,
+	useReleaseOwnedHighlight,
 } from "./hooks";
 import { MapChromeButton, MapSettingsPanel, RangeSetting } from "./MapChrome";
 
@@ -177,10 +179,19 @@ export const MstGraph = ({
 	const gRef = useRef<Selection<SVGGElement, unknown, null, undefined> | null>(
 		null,
 	);
+	// Cursor ring and timer arc, outside the zoomed group so they stay on the
+	// cursor at screen size while the map zooms and pans
+	const overlayRef = useRef<Selection<
+		SVGGElement,
+		unknown,
+		null,
+		undefined
+	> | null>(null);
 	const zoomRef = useRef<ZoomBehavior<SVGSVGElement> | null>(null);
 	const linkSelectionRef = useRef<LinkSelection | null>(null);
 	const circleSelectionRef = useRef<CircleSelection | null>(null);
 	const pulseSelectionRef = useRef<CircleSelection | null>(null);
+	const startPulse = usePulseTimer(pulseSelectionRef);
 	const appliedRef = useRef<AppliedForces | null>(null);
 	const autoFitEndsAtRef = useRef(0);
 
@@ -449,7 +460,16 @@ export const MstGraph = ({
 	useEffect(() => {
 		if (highlightMode !== "downstream") return;
 
-		if (!hoveredNodeId) {
+		// A hovered node that left the tree (or an empty tree) is no hover. Its
+		// element went without a mouseleave, so forget it: it must not light up
+		// again when the node comes back.
+		const inTree =
+			hoveredNodeId !== null && rootedTree.parent.has(hoveredNodeId);
+		if (hoveredNodeId !== null && !inTree) {
+			setHoveredNodeId(null);
+		}
+
+		if (!hoveredNodeId || !inTree) {
 			// Only clear if this panel set the highlight.
 			const currentSource = interactionStore.getState().highlightSource;
 			if (currentSource === "mst-hover") {
@@ -461,9 +481,6 @@ export const MstGraph = ({
 			}
 			return;
 		}
-
-		// No root without nodes
-		if (!rootedTree.rootId) return;
 
 		const { ids, distances } = descendantsOf(hoveredNodeId, rootedTree);
 
@@ -478,6 +495,9 @@ export const MstGraph = ({
 		interactionStore,
 	]);
 
+	// Clear this panel's hover highlight when its nodes leave or the map unmounts
+	useReleaseOwnedHighlight("mst-hover", geometryNodes);
+
 	// SVG group and zoom, created once per mount
 	useEffect(() => {
 		const svgElement = svgRef.current;
@@ -491,6 +511,10 @@ export const MstGraph = ({
 			.append("g")
 			.attr("class", "circle-nodes");
 		gRef.current = g;
+		overlayRef.current = svg
+			.append("g")
+			.attr("class", "cursor-layer")
+			.attr("pointer-events", "none");
 
 		const zoom = d3
 			.zoom<SVGSVGElement>()
@@ -502,9 +526,11 @@ export const MstGraph = ({
 		zoomRef.current = zoom;
 
 		return () => {
+			cancelAutoFit(svgElement, autoFitEndsAtRef);
 			svg.on(".zoom", null);
 			svg.selectAll("*").remove();
 			gRef.current = null;
+			overlayRef.current = null;
 			zoomRef.current = null;
 			linkSelectionRef.current = null;
 			circleSelectionRef.current = null;
@@ -531,6 +557,7 @@ export const MstGraph = ({
 				existing.stop().on("tick", null);
 				simulationRef.current = null;
 				appliedRef.current = null;
+				cancelAutoFit(svgRef.current, autoFitEndsAtRef);
 			}
 			return;
 		}
@@ -549,7 +576,9 @@ export const MstGraph = ({
 		resetLinkEndpoints(simulationLinks);
 
 		if (existing) {
-			// New node set: carry positions over and adjust the forces
+			// New node set: carry positions over and adjust the forces. A running
+			// auto-fit was aimed at the old set, so stop it and fit afresh.
+			cancelAutoFit(svgRef.current, autoFitEndsAtRef);
 			const previous = new Map(existing.nodes().map((node) => [node.id, node]));
 			for (const node of simulationNodes) {
 				const old = previous.get(node.id);
@@ -640,15 +669,6 @@ export const MstGraph = ({
 				}
 
 				drawPositions(linkSelectionRef.current, circleSelectionRef.current);
-
-				// Opacity pulse for in-flight fact-checks
-				const pulsing = pulseSelectionRef.current;
-				if (pulsing && !pulsing.empty()) {
-					pulsing.attr(
-						"opacity",
-						0.5 + 0.5 * Math.abs(Math.sin(performance.now() / 400)),
-					);
-				}
 
 				tickCount++;
 				if (tickCount % AUTO_FIT_EVERY_TICKS === 0) {
@@ -767,8 +787,6 @@ export const MstGraph = ({
 		const g = gRef.current;
 		if (!g) return;
 
-		const transformOf = () => d3.zoomTransform(svgRef.current as SVGSVGElement);
-
 		const linkSelection = g
 			.select(".links-group")
 			.selectAll<SVGLineElement, SimulationLink>("line")
@@ -862,13 +880,18 @@ export const MstGraph = ({
 		pulseSelectionRef.current = circleSelection.filter(
 			(d) => styleOf(d.id).pulse,
 		);
+		startPulse();
 		// Place entered elements at once instead of waiting for the next tick
 		drawPositions(linkSelection, circleSelection);
 
-		// Cursor overlay circle (radius mode only)
+		const overlay = overlayRef.current;
+		if (!overlay) return;
+
+		// Cursor ring (radius mode only) in screen coordinates: 50 px at any zoom
 		const cursorCircleData =
 			highlightMode === "radius" && cursorPosition ? [cursorPosition] : [];
-		g.selectAll(".cursor-overlay")
+		overlay
+			.selectAll(".cursor-overlay")
 			.data(cursorCircleData)
 			.join("circle")
 			.attr("class", "cursor-overlay")
@@ -877,43 +900,30 @@ export const MstGraph = ({
 			.attr("stroke-width", 2)
 			.attr("stroke-dasharray", "5,5")
 			.attr("pointer-events", "none")
-			.attr("cx", () => {
-				if (!cursorPosition) return 0;
-				const transform = transformOf();
-				return (cursorPosition.x - transform.x) / transform.k;
-			})
-			.attr("cy", () => {
-				if (!cursorPosition) return 0;
-				const transform = transformOf();
-				return (cursorPosition.y - transform.y) / transform.k;
-			})
-			.attr("r", () => 50 / transformOf().k);
+			.attr("cx", (d) => d.x)
+			.attr("cy", (d) => d.y)
+			.attr("r", 50);
 
-		// Timer arc around the cursor (radius mode only)
+		// Timer arc around the cursor (radius mode only), at screen size like the ring
 		const timerArcData =
 			highlightMode === "radius" && timerActive && cursorPosition
 				? [cursorPosition]
 				: [];
 		const arcGenerator = d3
 			.arc()
-			.innerRadius(() => 48 / transformOf().k)
-			.outerRadius(() => 52 / transformOf().k)
+			.innerRadius(48)
+			.outerRadius(52)
 			.startAngle(0)
 			.endAngle(timerProgress * 2 * Math.PI);
 
-		g.selectAll(".timer-arc")
+		overlay
+			.selectAll(".timer-arc")
 			.data(timerArcData)
 			.join("path")
 			.attr("class", "timer-arc")
 			.attr("fill", MAP_HIGHLIGHT)
 			.attr("pointer-events", "none")
-			.attr("transform", () => {
-				if (!cursorPosition) return "";
-				const transform = transformOf();
-				const cx = (cursorPosition.x - transform.x) / transform.k;
-				const cy = (cursorPosition.y - transform.y) / transform.k;
-				return `translate(${cx},${cy})`;
-			})
+			.attr("transform", (d) => `translate(${d.x},${d.y})`)
 			.attr("d", arcGenerator);
 	}, [
 		simulationNodes,
@@ -930,6 +940,7 @@ export const MstGraph = ({
 		timerActive,
 		timerProgress,
 		highlightMode,
+		startPulse,
 	]);
 
 	return (
@@ -1094,6 +1105,15 @@ function autoFit(
 		);
 }
 
+/** Stops a running auto-fit and clears its deadline, so the next check can fit at once. */
+function cancelAutoFit(
+	svgElement: SVGSVGElement | null,
+	endsAtRef: { current: number },
+) {
+	if (svgElement) d3.select(svgElement).interrupt();
+	endsAtRef.current = 0;
+}
+
 export interface MstMapProps extends Omit<MstGraphProps, "recentNodeIds"> {
 	/**
 	 * Called with the selected node and when the walk will move on: for the
@@ -1116,8 +1136,8 @@ type WalkState = {
 	active: boolean;
 	/** When the walk moves on. */
 	expiresAt: number | null;
-	/** The selection the walk last saw. */
-	observedId: string | null;
+	/** The selection revision the walk last saw. */
+	observedRevision: number | null;
 	/** A selection this wrapper just made, with the expiry it reported. */
 	pendingOwn: { id: string; expiresAt: number } | null;
 };
@@ -1160,6 +1180,10 @@ export const MstMap = memo(function MstMap({
 	const setSharedSelectedNodeId = useMapInteraction(
 		(state) => state.setSelectedNodeId,
 	);
+	// Bumped by every selection, also of the selected node again
+	const selectionRevision = useMapInteraction(
+		(state) => state.selectionRevision,
+	);
 
 	const onActiveNodeChangeRef = useRef(onActiveNodeChange);
 	onActiveNodeChangeRef.current = onActiveNodeChange;
@@ -1167,11 +1191,9 @@ export const MstMap = memo(function MstMap({
 	const walkRef = useRef<WalkState>({
 		active: false,
 		expiresAt: null,
-		observedId: null,
+		observedRevision: null,
 		pendingOwn: null,
 	});
-	// Re-runs the walk effect when a node is selected again without changing the store
-	const [walkEpoch, setWalkEpoch] = useState(0);
 
 	const selectNode = useCallback(
 		(nodeId: string) => {
@@ -1181,7 +1203,6 @@ export const MstMap = memo(function MstMap({
 			const expiresAt = Date.now() + walkIntervalMs;
 			walkRef.current.pendingOwn = { expiresAt, id: nodeId };
 			setSharedSelectedNodeId(nodeId);
-			setWalkEpoch((epoch) => epoch + 1);
 			onActiveNodeChangeRef.current?.(node, expiresAt, walkIntervalMs);
 		},
 		[nodeById, walkIntervalMs, setSharedSelectedNodeId],
@@ -1237,8 +1258,7 @@ export const MstMap = memo(function MstMap({
 	]);
 
 	// Random walk. The next step is due walkIntervalMs after the latest
-	// selection, wherever it came from.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: walkEpoch re-runs the walk when a node is selected again
+	// selection, wherever it came from, a selection of the selected node too.
 	useEffect(() => {
 		const walk = walkRef.current;
 		const own =
@@ -1246,8 +1266,8 @@ export const MstMap = memo(function MstMap({
 				? walk.pendingOwn
 				: null;
 		if (own) walk.pendingOwn = null;
-		const selectionChanged = walk.observedId !== sharedSelectedNodeId;
-		walk.observedId = sharedSelectedNodeId;
+		const selectionChanged = walk.observedRevision !== selectionRevision;
+		walk.observedRevision = selectionRevision;
 
 		const selectedNode = sharedSelectedNodeId
 			? nodeById.get(sharedSelectedNodeId)
@@ -1289,8 +1309,8 @@ export const MstMap = memo(function MstMap({
 		nodeById,
 		pickRandomNeighbor,
 		selectNode,
+		selectionRevision,
 		sharedSelectedNodeId,
-		walkEpoch,
 		walkIntervalMs,
 	]);
 

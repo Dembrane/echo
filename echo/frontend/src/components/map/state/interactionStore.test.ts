@@ -19,6 +19,21 @@ describe("createMapInteractionStore", () => {
 		expect(state.highlightSource).toBe("unknown");
 		expect(state.highlightIsPreview).toBe(false);
 		expect(state.highlightUpdatedAt).toBe(0);
+		expect(state.selectionRevision).toBe(0);
+	});
+
+	it("bumps the selection revision on every selection, also of the same id", () => {
+		const store = createMapInteractionStore();
+		const listener = vi.fn();
+		store.subscribe(listener);
+
+		store.setSelectedNodeId("a");
+		const revision = store.getState().selectionRevision;
+		store.setSelectedNodeId("a");
+
+		expect(store.getState().selectedNodeId).toBe("a");
+		expect(store.getState().selectionRevision).toBe(revision + 1);
+		expect(listener).toHaveBeenCalledTimes(2);
 	});
 
 	it("stores a new highlight with its source; the preview flag defaults to false", () => {

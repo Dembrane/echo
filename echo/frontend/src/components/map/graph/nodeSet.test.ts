@@ -28,6 +28,13 @@ describe("nodeGeometryKey", () => {
 		expect(nodeGeometryKey(changed)).not.toBe(nodeGeometryKey(nodes));
 	});
 
+	it("tells apart vectors with the same length, sum, weighted sum and sum of squares", () => {
+		const b = { embedding: [1, 0, 0, 0], id: "b" };
+		expect(
+			nodeGeometryKey([{ embedding: [0, 0, 0, 10], id: "a" }, b]),
+		).not.toBe(nodeGeometryKey([{ embedding: [1, -3, 3, 9], id: "a" }, b]));
+	});
+
 	it("changes with the node order and ids", () => {
 		expect(nodeGeometryKey([...nodes].reverse())).not.toBe(
 			nodeGeometryKey(nodes),

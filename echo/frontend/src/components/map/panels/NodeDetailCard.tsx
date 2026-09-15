@@ -6,7 +6,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { cn } from "@/lib/utils";
 import type { EvidenceGroup } from "../data/adapter";
 import type { MapGraphNode } from "../types";
-import { MutedText, mapVars } from "./shared";
+import { CaptionText, mapVars } from "./shared";
 
 export type ConversationHref = (conversationId: string) => string | null;
 
@@ -41,9 +41,9 @@ const QuoteGroups = ({
 							{group.label}
 						</Anchor>
 					) : (
-						<MutedText className="font-semibold uppercase tracking-wider">
+						<CaptionText className="font-semibold uppercase tracking-wider">
 							{group.label}
-						</MutedText>
+						</CaptionText>
 					)}
 					{group.quotes.map((quote, index) => (
 						<blockquote
@@ -74,9 +74,9 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 
 	if (!node) {
 		return (
-			<MutedText>
+			<CaptionText>
 				<Trans>No node selected.</Trans>
-			</MutedText>
+			</CaptionText>
 		);
 	}
 
@@ -101,7 +101,6 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 						onClick={() => setQuotesOpen((open) => !open)}
 						aria-expanded={quotesOpen}
 						className="flex items-center gap-1 text-xs uppercase tracking-wider transition-opacity hover:opacity-80"
-						style={{ color: mapVars.muted }}
 					>
 						<CaretRightIcon
 							size={12}
