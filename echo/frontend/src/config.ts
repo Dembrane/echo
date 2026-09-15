@@ -201,6 +201,9 @@ export const ENABLE_MONITOR = true;
 // Project Library, dynamic canvases and Popcorn. On everywhere; each project
 // still opts in through the experimental toggle (project.is_canvas_enabled).
 export const ENABLE_CANVAS = true;
+// Map fixture mode: `?fixture=50|150|200` on the Map page renders synthetic
+// data with no network requests, for performance checks. Local only.
+export const ENABLE_MAP_FIXTURES = byEnv({ local: true }, false);
 // The release-video modal. On everywhere now that the video is recorded.
 export const ENABLE_RELEASE_VIDEO_MODAL = true;
 

@@ -31,7 +31,7 @@ How it was captured: DDW dev server on localhost:5190 with Directus pointed at t
 
 - kNN with k = min(10, n - 1). Forces: LocalMAP NN attraction (C_Med 10, d_adj 10, strength 0.1), far-pair repulsion over k x 2 x n random pairs (strength 2), charge -10 with distanceMax 0.4 x min(w, h), center strength 0.1, collision 2 x radius. Alpha 0.8, decay 0.004, alphaTarget 0.005. Early-alpha multipliers up to x3.5 charge, x2.5 NN, x3 far pairs.
 - Starts from the same MST radial layout. Positions are cached per node, so re-renders keep the layout and a new node appears next to its nearest neighbour (jitter of up to 15 px).
-- Red #FF0000 kNN edges for every node: width 1, opacity 0.3, 600 ms fade-in. Edges touching highlighted nodes: opacity 0.6, width 2 - 1.5 x nearest distance. 530 lines for 53 nodes.
+- Red #FF0000 kNN edges for every node: width 1, opacity 0.3, 600 ms fade-in. Edges touching highlighted nodes: opacity 0.6, width 2 - 1.5 x nearest distance. 530 lines for 53 nodes. Not shown in the Echo port, by Jorim's direction (September 15th 2026): the neighbour forces still shape the layout, and `showNeighbourLinks` on the renderer draws the edges again.
 - No auto-fit (transform stays identity); zoom 0.1 to 4 survives remounts.
 - Cursor ring: dashed #4169E1 circle, radius 50 screen px (divided by zoom), dash 5,5.
 - Nodes within 50 px outline at once. The store gets a preview publish (`local-hover`, preview true) immediately, throttled to 50 ms, and a settled publish (preview false) after 0.5 s without movement. Observed at 12 ms and 513 ms, 19 nodes.
