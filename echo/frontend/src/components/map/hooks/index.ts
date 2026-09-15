@@ -478,6 +478,8 @@ const MAP_EVENT_TYPES = [
 	"ready",
 	"superseded",
 	"failed",
+	"needs_review",
+	"cancelled",
 	"fact_check",
 ] as const;
 
@@ -594,7 +596,7 @@ export const useMapEvents = (projectId: string) => {
 
 	useServerEvents(
 		projectId
-			? `${API_BASE_URL}/v2/bff/map/projects/${enc(projectId)}/events`
+			? `${API_BASE_URL}/v2/bff/map/projects/${enc(projectId)}/events?runs=1`
 			: null,
 		MAP_EVENT_TYPES,
 		onEvent,
