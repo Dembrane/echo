@@ -48,6 +48,8 @@ from dembrane.canvas.events import publish_generation_nudge
 from dembrane.popcorn.flags import gate_items, known_shingles, introduced_names
 from dembrane.popcorn.gates import name_flags, island_flags
 from dembrane.popcorn.model import (
+    POPCORN_PROMPT,
+    VALIDATE_PROMPT,
     prompt_text,
     run_analysis,
     analysis_call,
@@ -70,9 +72,11 @@ from dembrane.popcorn.service import (
     enqueue_popcorn_tick,
 )
 from dembrane.popcorn.analysis import (
+    MAX_ANALYSIS_CHARS,
     QuoteBook,
     norm,
     build_corpus,
+    allocate_chars,
     shape_stakeholders,
     shape_popcorn_items,
 )
@@ -97,10 +101,6 @@ STAKEHOLDERS_TIMEOUT_SECONDS = 300
 # guards the prompt against a runaway recording. It bounds what the model
 # reads (the most recent part), never what is fingerprinted or quoted.
 MAX_CHARS_PER_CONVERSATION = 150_000
-# The analysis corpus is every transcript at once. Above this the budget is
-# shared so that short transcripts keep every character and the long ones
-# split what is left evenly, so the two slow calls stay inside one context.
-MAX_ANALYSIS_CHARS = 600_000
 ANALYSIS_VIEWS = ("tensions", "stakeholders")
 # Reads a host asked for, as opposed to the live chain's scheduled ticks.
 ON_REQUEST = ("manual", "rerun")
@@ -150,30 +150,6 @@ def model_window(text: str, cap: int | None = None) -> str:
     tail = text[-cap:]
     cut = tail.find("\n")
     return tail[cut + 1 :] if 0 <= cut < 2000 else tail
-
-
-def allocate_chars(lengths: dict[str, int], budget: int) -> dict[str, int]:
-    """Share a character budget across transcripts: a transcript short enough
-    to fit its equal share keeps every character, and what it leaves goes to
-    the longer ones in equal measure. The largest total that fits, with no
-    transcript cut while a longer one is whole."""
-    if sum(lengths.values()) <= budget:
-        return dict(lengths)
-    quota: dict[str, int] = {}
-    remaining = budget
-    pending = sorted(lengths.items(), key=lambda kv: kv[1])
-    while pending:
-        share = remaining // len(pending)
-        tid, n = pending[0]
-        if n <= share:
-            quota[tid] = n
-            remaining -= n
-            pending.pop(0)
-        else:
-            for tid, _n in pending:
-                quota[tid] = share
-            pending = []
-    return quota
 
 
 def labels_for(conversation: dict[str, Any], index: int) -> tuple[str, str]:
@@ -452,6 +428,153 @@ class _TickWriter:
         await publish_generation_nudge(self.report_id)
 
 
+class _Publisher:
+    """What the tick reads, published into the shared analysis store, inline.
+
+    One conversation's phrases are one output of the `popcorn` recipe and the
+    session's groups one output of `stakeholders`, each through the same
+    executor, run and step rows and the same publication transaction as every
+    other recipe. The phrases are published after the state is written, so the
+    stage still shows a phrase the moment its extractor lands.
+
+    Only where the executor owns the producer scope: a session waiting for its
+    import belongs to the legacy writer alone, and this writes nothing for it.
+    Nothing here may cost the room its deck, so a store that is missing, busy or
+    broken leaves an outcome line and the tick goes on.
+    """
+
+    def __init__(self, project_id: str, outcomes: list[str], host_note: str = "") -> None:
+        self.project_id = project_id
+        self.outcomes = outcomes
+        self.host_note = host_note
+        self._owns: dict[str, bool] = {}
+
+    async def _may_write(self, recipe_id: str, scope_key: str) -> bool:
+        key = f"{recipe_id}@{scope_key}"
+        if key not in self._owns:
+            from dembrane.analysis.executor import default_store
+            from dembrane.analysis.popcorn_import import analysis_owns
+
+            try:
+                self._owns[key] = await analysis_owns(
+                    self.project_id, recipe_id, scope_key, store=default_store()
+                )
+            except Exception:  # noqa: BLE001
+                # A store that cannot answer is not an answer: this read keeps
+                # to the session's own state, exactly as it did before.
+                logger.warning("popcorn: the analysis store did not answer for %s", key)
+                self._owns[key] = False
+        return self._owns[key]
+
+    async def conversation(self, state: dict[str, Any], transcript: dict[str, Any]) -> None:
+        """Publish one conversation's phrases as they now stand."""
+        from dembrane.analysis.executor import RunRequest, default_deps, execute_inline
+        from dembrane.analysis.recipes.popcorn import (
+            RECIPE_ID,
+            SOURCES_KEY,
+            ConversationPhrases,
+            scope_key_for,
+            phrase_records,
+        )
+
+        cid = str(transcript["id"])
+        scope_key = scope_key_for(cid)
+        try:
+            if not await self._may_write(RECIPE_ID, scope_key):
+                return
+            entry = (state.get("conversations") or {}).get(cid) or {}
+            quotes = {
+                str(q["id"]): q
+                for q in state.get("quotes") or []
+                if isinstance(q, dict) and q.get("id")
+            }
+            source = ConversationPhrases(
+                conversation_id=cid,
+                text=str(transcript["text"]),
+                phrases=tuple(phrase_records(entry.get("items"), quotes)),
+                label=str(entry.get("label") or "") or None,
+                created_at=str(entry.get("created_at") or "") or None,
+                voice=self.host_note,
+                prompts={"extract": POPCORN_PROMPT, "validate": VALIDATE_PROMPT},
+            )
+            outcome = await execute_inline(
+                RunRequest(project_id=self.project_id, recipe_id=RECIPE_ID, scope_key=scope_key),
+                deps=default_deps({SOURCES_KEY: _OneConversation(source)}),
+            )
+            if outcome.run.status not in ("ready", "superseded"):
+                self.outcomes.append(
+                    f"publish {cid[:8]}: {outcome.run.status}"
+                    + (f" ({outcome.run.error})" if outcome.run.error else "")
+                )
+        except Exception as exc:  # the deck is the tick's to keep
+            logger.warning("popcorn publication failed for conversation %s", cid, exc_info=True)
+            self.outcomes.append(f"publish {cid[:8]}: FAILED {_failure_text(exc)}")
+
+    async def stakeholders(
+        self, transcripts: list[dict[str, Any]], book: QuoteBook
+    ) -> dict[str, Any] | None:
+        """Run the stakeholders recipe over this session and return its slide,
+        or None when the scope is not the executor's. The recipe makes the one
+        call the tick would have made, so nothing is asked twice."""
+        from dataclasses import replace as _replace
+
+        from dembrane.map.recipe import Transcript
+        from dembrane.popcorn.bundle import load_deck_objects, stakeholders_slide
+        from dembrane.analysis.executor import (
+            RunRequest,
+            default_deps,
+            default_store,
+            execute_inline,
+        )
+        from dembrane.analysis.contracts import RunStatus
+        from dembrane.analysis.recipes.services import SERVICES_KEY, default_services
+        from dembrane.analysis.recipes.stakeholders import RECIPE_ID
+
+        if not await self._may_write(RECIPE_ID, "project"):
+            return None
+        pinned = [
+            Transcript(
+                id=str(t["id"]),
+                label=str(t.get("label") or ""),
+                created_at=t.get("created_at"),
+                text=str(t["text"]),
+            )
+            for t in transcripts
+        ]
+
+        async def _transcripts(project_id: str) -> list[Transcript]:  # noqa: ARG001
+            # The tick has already read them; the recipe reads the same text.
+            return list(pinned)
+
+        store = default_store()
+        services = _replace(default_services(), transcripts=_transcripts)
+        outcome = await execute_inline(
+            RunRequest(project_id=self.project_id, recipe_id=RECIPE_ID, scope_key="project"),
+            store=store,
+            deps=default_deps({SERVICES_KEY: services}),
+        )
+        if outcome.run.status != RunStatus.READY:
+            raise RuntimeError(outcome.run.error or f"the stakeholders run is {outcome.run.status}")
+        objects = await load_deck_objects(self.project_id, store=store)
+
+        def register(quote: dict[str, Any]) -> str | None:
+            # Into the session's own registry, so ids the deck holds stay valid.
+            return book.add({"transcript": quote.get("conversationId"), "text": quote.get("text")})
+
+        return stakeholders_slide(objects.stakeholders, objects.relations, register)
+
+
+class _OneConversation:
+    """The popcorn recipe's source for exactly the conversation the tick just
+    wrote, so it publishes that wording and reads nothing again."""
+
+    def __init__(self, source: Any) -> None:
+        self.source = source
+
+    async def conversation(self, project_id: str, conversation_id: str) -> Any:  # noqa: ARG002
+        return self.source if conversation_id == self.source.conversation_id else None
+
+
 async def _extract_one(
     writer: _TickWriter,
     semaphore: asyncio.Semaphore,
@@ -459,6 +582,7 @@ async def _extract_one(
     outcomes: list[str],
     host_note: str = "",
     known: set[tuple[str, ...]] | None = None,
+    publisher: _Publisher | None = None,
 ) -> None:
     cid = transcript["id"]
     entry = writer.state["conversations"][cid]
@@ -525,6 +649,8 @@ async def _extract_one(
             )
             outcomes.append(f"popcorn {cid[:8]}: FAILED {exc}")
     await writer.flush()
+    if publisher is not None:
+        await publisher.conversation(writer.state, transcript)
 
 
 async def _enrich_one(
@@ -533,6 +659,7 @@ async def _enrich_one(
     transcript: dict[str, Any],
     outcomes: list[str],
     book: QuoteBook,
+    publisher: _Publisher | None = None,
 ) -> None:
     """The second pass over one conversation's phrases, written once: quotes into
     the shared registry, kinds and question marks onto the items, one revision,
@@ -607,6 +734,10 @@ async def _enrich_one(
         + (f", {failed} call(s) failed" if failed else "")
     )
     await writer.flush()
+    # The second pass rewrote wording, rooted phrases and dropped what it could
+    # not root: the conversation's objects are published again against it.
+    if publisher is not None:
+        await publisher.conversation(writer.state, transcript)
 
 
 def _pending_enrichment(
@@ -725,6 +856,7 @@ async def _run_analysis_pass(
     outcomes: list[str],
     book: QuoteBook,
     views: tuple[str, ...] = ANALYSIS_VIEWS,
+    publisher: _Publisher | None = None,
 ) -> dict[str, dict[str, Any] | None]:
     """The slow slides asked for, at once, registering into the tick's shared
     quote book: the stakeholders call with its two gates and one retry, and
@@ -745,6 +877,18 @@ async def _run_analysis_pass(
 
     async def stakeholders_slide() -> None:
         started = _now()
+        if publisher is not None:
+            published = await publisher.stakeholders(transcripts, book)
+            if published is not None:
+                # The recipe makes the one call this slide needs, so nothing is
+                # asked twice: the objects the Map draws are the slide.
+                shaped["stakeholders"] = published
+                elapsed_ms = int((_now() - started).total_seconds() * 1000)
+                outcomes.append(
+                    f"stakeholders: {len(published['stakeholders'])} items, "
+                    f"{len(published['relations'])} relations in {elapsed_ms} ms, published"
+                )
+                return
         raw = await asyncio.wait_for(
             run_analysis(kind="stakeholders", corpus=corpus), timeout=STAKEHOLDERS_TIMEOUT_SECONDS
         )
@@ -869,6 +1013,7 @@ async def _snapshot_version(
     detail: str,
 ) -> None:
     from dembrane.settings import get_settings as _get_settings
+    from dembrane.popcorn.bundle import published_bundle
     from dembrane.popcorn.service import build_bundle
 
     project = await async_directus.get_item("project", project_id)
@@ -883,6 +1028,15 @@ async def _snapshot_version(
         admin_base_url=urls.admin_base_url,
         # A saved run replays on the wall, so it is the room's bundle: no
         # passages, no dashboard links, the legend as the setting says.
+        host=False,
+    )
+    # A saved run replays what the room saw, so it holds the same published
+    # objects the deck was reading when the run finished.
+    bundle = await published_bundle(
+        bundle,
+        project_id=project_id,
+        settings=settings,
+        project=project if isinstance(project, dict) else {"id": project_id},
         host=False,
     )
     await save_version(
@@ -1070,12 +1224,21 @@ async def run_popcorn_tick(
         await writer.flush()
 
         outcomes: list[str] = []
+        # What the tick reads reaches the shared store through the executor,
+        # for the producer scopes it owns. See `_Publisher`.
+        publisher = _Publisher(project_id, outcomes, host_note)
         if changed:
             semaphore = asyncio.Semaphore(MAX_PARALLEL_EXTRACTORS)
             await asyncio.gather(
                 *(
                     _extract_one(
-                        writer, semaphore, t, outcomes, host_note, known_by.get(t["id"], known_all)
+                        writer,
+                        semaphore,
+                        t,
+                        outcomes,
+                        host_note,
+                        known_by.get(t["id"], known_all),
+                        publisher,
                     )
                     for t in changed
                 )
@@ -1100,7 +1263,10 @@ async def run_popcorn_tick(
             if pending:
                 enrich_semaphore = asyncio.Semaphore(MAX_PARALLEL_ENRICHMENT)
                 await asyncio.gather(
-                    *(_enrich_one(writer, enrich_semaphore, t, outcomes, book) for t in pending)
+                    *(
+                        _enrich_one(writer, enrich_semaphore, t, outcomes, book, publisher)
+                        for t in pending
+                    )
                 )
 
         async def analysis_pass() -> None:
@@ -1113,7 +1279,9 @@ async def run_popcorn_tick(
                 if changed or tick_kind == "rerun"
                 else tuple(_stale_views(state, analysis_fingerprint))
             )
-            fresh = await _run_analysis_pass(transcripts, outcomes, book, views=views)
+            fresh = await _run_analysis_pass(
+                transcripts, outcomes, book, views=views, publisher=publisher
+            )
             # A view that failed keeps its previous slide, unless it cites a quote
             # whose conversation is gone: those words have left the session, and
             # a slide pointing at them would show a dead quote.

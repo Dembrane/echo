@@ -79,6 +79,29 @@ psql -h postgres -p 5432 -U dembrane -v ON_ERROR_STOP=1 \
       them is deployed, and existing `map_result` rows read as
       `manifest_version = 1`.
 
+   4. Popcorn sessions saved before this change (their phrases, tensions and
+      stakeholders) become analysis objects, and their producer scopes pass to
+      the executor, through `dembrane/analysis/popcorn_import.py`. Run it once
+      per deployment, before the ticks worker starts publishing:
+
+```bash
+uv run python -m dembrane.analysis.popcorn_import --dry-run
+uv run python -m dembrane.analysis.popcorn_import
+```
+
+      Per scope it marks the writer `legacy`, which fences the executor off it;
+      imports with `uuid5` ids, so a second run writes nothing and moves no
+      fence; then drains (it waits for that session's popcorn run lock to be
+      free) and marks the writer `analysis` with the fence bumped, which refuses
+      the importer from then on. There is never a moment with two writers.
+      `--no-transfer` imports and leaves the scopes `legacy`; running it again
+      hands them over. To reverse one scope, call
+      `dembrane.analysis.popcorn_import.transfer_to_legacy`: the executor is
+      fenced off, every published object and run is kept, and the tick serves
+      the deck from its own state again. A scope with nothing to import belongs
+      to the executor from the start, so import an existing session before the
+      tick begins publishing it.
+
 The script is idempotent, runs in one transaction and stops on the first error;
 it refuses to run before the push. Its indexes never use Directus's
 `{table}_{field}_index` names and none is single-column, so a pull still writes
