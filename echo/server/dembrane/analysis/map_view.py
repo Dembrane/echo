@@ -95,15 +95,25 @@ class UnknownResultScope(ValueError):
     pass
 
 
-def legacy_revision_id(result_id: str, node_id: str) -> str:
-    """The revision id a legacy node is imported under when its content is new."""
-    return str(uuid.uuid5(LEGACY_NAMESPACE, f"map_result:{result_id}:node:{node_id}"))
+def legacy_revision_id(result_id: str, node_id: str, *, variant: str = "") -> str:
+    """The revision id a legacy node is imported under when its content is new.
+    A `variant` names a successor of that revision, such as the one that
+    carries the stored vector a first import could not attach."""
+    name = f"map_result:{result_id}:node:{node_id}"
+    return str(uuid.uuid5(LEGACY_NAMESPACE, f"{name}:{variant}" if variant else name))
 
 
 def legacy_lineage_key(node_id: str) -> str:
     """A legacy node id is the identity v1 kept for one statement and kind
     across its results, so it is the imported object's lineage key."""
     return f"legacy-map:{uuid.uuid5(LEGACY_NAMESPACE, f'node:{node_id}')}"
+
+
+def legacy_object_id(node_id: str) -> str:
+    """The object id a legacy node's lineage is created under. Only a lineage
+    that has no object yet may be given one, so an import that predates fixed
+    ids keeps the id it already has."""
+    return str(uuid.uuid5(LEGACY_NAMESPACE, f"object:{node_id}"))
 
 
 def is_v2_manifest(manifest: Any) -> bool:
@@ -137,8 +147,19 @@ class ResultLink:
     completed_at: datetime | None = None
 
 
+@dataclass(frozen=True)
+class LineageHead:
+    """An imported object and the revision that is its head, if any."""
+
+    object_id: str
+    revision_id: str | None
+
+
 class MapViewReads(Protocol):
     async def producer_heads(self, project_id: str) -> list[ProducerHead]: ...
+    async def lineage_heads(
+        self, project_id: str, type_id: str, lineage_keys: list[str]
+    ) -> dict[str, LineageHead]: ...
     async def embedding_identity(self, project_id: str, config_key: str) -> tuple[str, int] | None: ...
     async def result_link(self, result_id: str) -> ResultLink | None: ...
     async def legacy_results(self, project_id: str | None) -> list[ResultLink]: ...
@@ -251,13 +272,34 @@ class SqlMapViewReads:
             )
             return result_id
 
+    async def lineage_heads(
+        self, project_id: str, type_id: str, lineage_keys: list[str]
+    ) -> dict[str, LineageHead]:
+        """The object and head revision of each lineage that already exists."""
+        if not lineage_keys:
+            return {}
+        async with db.autocommit_cursor(self._dsn, AnalysisStoreError) as cursor:
+            await cursor.execute(
+                """SELECT lineage_key, id::text AS object_id, current_revision_id::text AS revision_id
+                   FROM analysis_object
+                   WHERE project_id = %s AND type = %s AND lineage_key = ANY(%s)""",
+                (project_id, type_id, list(lineage_keys)),
+            )
+            return {
+                str(row["lineage_key"]): LineageHead(str(row["object_id"]), row["revision_id"])
+                for row in await cursor.fetchall()
+            }
+
     async def link_legacy_snapshot(self, result_id: str, snapshot_id: str) -> bool:
-        """The backfill watermark: a v1 result names the snapshot it was imported into, once."""
+        """The backfill watermark: a v1 result names the snapshot it was
+        imported into. A later import of the same result (one that attached the
+        vectors an earlier import could not) moves it to that snapshot; False
+        when the result already names it."""
         async with db.autocommit_cursor(self._dsn, AnalysisStoreError) as cursor:
             await cursor.execute(
                 """UPDATE map_result SET snapshot_id = %s, updated_at = now()
-                   WHERE id = %s AND manifest_version = 1 AND snapshot_id IS NULL""",
-                (snapshot_id, result_id),
+                   WHERE id = %s AND manifest_version = 1 AND snapshot_id IS DISTINCT FROM %s""",
+                (snapshot_id, result_id, snapshot_id),
             )
             return cursor.rowcount == 1
 

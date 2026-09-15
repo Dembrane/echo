@@ -24,8 +24,12 @@ What is imported, and what is not:
   get no argument relationships, because the session never recorded which
   arguments hold each pole, and none is invented: they are marked legacy and
   the tensions recipe can regenerate them over saved arguments.
-- No vector is computed here: an imported object without one is listed as
-  unplaced on the map until its recipe publishes it again.
+- No model call and no producer run: an import writes revisions, and a scope
+  reaches the Map only once it has a ready run. `--place` publishes each
+  imported conversation through the popcorn recipe, which reads the saved
+  phrases and embeds them without asking a language model. Tensions and
+  stakeholders have no such path, because their recipes do call one, so they
+  stay off the Map until someone runs them.
 
 Run inside the dev container:
 
@@ -48,11 +52,13 @@ from dembrane.map.recipe import sha256_hex
 from dembrane.popcorn.analysis import norm
 from dembrane.analysis.contracts import (
     Writer,
+    RunStatus,
     ScopeKind,
     SourceRef,
     AnalysisStore,
     RelationBasis,
     AnalysisStoreError,
+    ReferenceViolation,
     AnalysisValidationError,
 )
 from dembrane.analysis.revisions import RevisionService
@@ -314,6 +320,9 @@ class ImportReport:
     scopes_claimed: int = 0
     scopes_transferred: int = 0
     scopes_owned_by_analysis: int = 0
+    # Objects an earlier import created under an id minted from the lineage
+    # alone; they keep that id, and only new objects get the scoped one.
+    objects_under_earlier_ids: int = 0
     quotes_missing: int = 0
     transfers: list[dict[str, Any]] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
@@ -379,6 +388,14 @@ def stakeholder_lineage(name: str) -> str:
     return f"{STAKEHOLDERS_RECIPE_ID}/{PROJECT_SCOPE}/{stakeholder_lineage_key(name)}"
 
 
+def object_id_for(project_id: str, lineage: str) -> str:
+    """A new imported object's id: deterministic, and named after its project
+    as well as its lineage. A lineage key carries its producer scope, but a
+    scope key of `project` is the same string in every project, so the name
+    alone would give one group in two projects one row."""
+    return _uuid5(f"object:{project_id}:{lineage}")
+
+
 async def _import_one(
     revisions: RevisionService,
     *,
@@ -396,20 +413,29 @@ async def _import_one(
 ) -> Any:
     fixed = _uuid5(import_key)
     known = await revisions.store.get_revisions(project_id, [fixed])
-    revision = await revisions.import_revision(
-        project_id=project_id,
-        type_id=type_id,
-        lineage_key=lineage,
-        payload=payload,
-        import_key=import_key,
-        scope_id=scope_id,
-        source_refs=_source_refs(refs),
-        recipe_id=recipe_id,
-        recipe_version=recipe_version,
-        revision_id=fixed,
-        object_id=_uuid5(f"object:{lineage}"),
-        extra=extra,
-    )
+    fields: dict[str, Any] = {
+        "project_id": project_id,
+        "type_id": type_id,
+        "lineage_key": lineage,
+        "payload": payload,
+        "import_key": import_key,
+        "scope_id": scope_id,
+        "source_refs": _source_refs(refs),
+        "recipe_id": recipe_id,
+        "recipe_version": recipe_version,
+        "revision_id": fixed,
+        "extra": extra,
+    }
+    try:
+        revision = await revisions.import_revision(
+            **fields, object_id=object_id_for(project_id, lineage)
+        )
+    except ReferenceViolation:
+        # An earlier import minted this object's id from its lineage alone, so
+        # the same group name in two projects wanted one row. A row keeps the
+        # id it has; only an object written from here on gets the scoped one.
+        report.objects_under_earlier_ids += 1
+        revision = await revisions.import_revision(**fields)
     if fixed in known or revision.id != fixed:
         report.revisions_already_present += 1
     else:
@@ -715,12 +741,156 @@ async def import_session(
     await hand_over(STAKEHOLDERS_RECIPE_ID, PROJECT_SCOPE)
 
 
+# ── vectors for what was imported ───────────────────────────────────────
+
+
+@dataclass
+class PlacementReport:
+    """What reached the Map. An imported object is not on it until its scope
+    has a ready run, so this publishes one from the session's saved phrases."""
+
+    sessions: int = 0
+    conversations: int = 0
+    objects: int = 0
+    by_session: dict[str, dict[str, int]] = field(default_factory=dict)
+    failed: list[str] = field(default_factory=list)
+
+
+class _SavedPhrases:
+    """The popcorn recipe's source for one saved session: its phrases as the
+    state holds them, beside the transcript each was read from."""
+
+    def __init__(self, conversations: Mapping[str, Any]) -> None:
+        self.conversations = dict(conversations)
+
+    async def conversation(self, project_id: str, conversation_id: str) -> Any:  # noqa: ARG002
+        return self.conversations.get(conversation_id)
+
+
+async def saved_phrases(loop: Mapping[str, Any]) -> dict[str, Any]:
+    """One session's conversations as `ConversationPhrases`, read once."""
+    from dembrane.popcorn.model import POPCORN_PROMPT, VALIDATE_PROMPT
+    from dembrane.popcorn.ticks import gather_transcripts
+    from dembrane.popcorn.service import (
+        normalize_state,
+        voice_host_note,
+        get_latest_config,
+        normalize_settings,
+    )
+    from dembrane.analysis.recipes.popcorn import ConversationPhrases, phrase_records
+
+    project_id = _as_id(loop.get("project_id")) or ""
+    report_id = _as_id(loop.get("report_id"))
+    state = normalize_state(loop.get("popcorn_state"))
+    quotes = quote_registry(state)
+    settings = normalize_settings(
+        ((await get_latest_config(report_id)) or {}).get("popcorn_settings") if report_id else None,
+        fallback_title=str(loop.get("name") or "Popcorn"),
+    )
+    transcripts = {
+        str(t["id"]): t
+        for t in await gather_transcripts(
+            project_id=project_id,
+            acting_directus_user_id=str(loop.get("acting_directus_user_id") or ""),
+        )
+    }
+    out: dict[str, Any] = {}
+    for conversation_id, entry in (state.get("conversations") or {}).items():
+        transcript = transcripts.get(conversation_id)
+        phrases = phrase_records(entry.get("items"), quotes) if transcript else []
+        if not phrases or transcript is None:
+            continue
+        out[conversation_id] = ConversationPhrases(
+            conversation_id=conversation_id,
+            text=str(transcript["text"]),
+            phrases=tuple(phrases),
+            label=str(entry.get("label") or "") or None,
+            created_at=str(entry.get("created_at") or "") or None,
+            voice=voice_host_note(settings.get("voice")),
+            prompts={"extract": POPCORN_PROMPT, "validate": VALIDATE_PROMPT},
+        )
+    return out
+
+
+async def place_session(
+    loop: Mapping[str, Any], *, store: AnalysisStore, report: PlacementReport
+) -> None:
+    """Publish each imported conversation through the popcorn recipe, so its
+    phrases carry a vector and the Map can place them. The recipe reads the
+    saved phrases and calls no language model, only the embedding service."""
+    from dembrane.analysis.executor import RunRequest, default_deps, execute_inline
+    from dembrane.analysis.recipes.popcorn import RECIPE_ID, SOURCES_KEY
+
+    project_id = _as_id(loop.get("project_id"))
+    loop_id = _as_id(loop.get("id"))
+    if not project_id or not loop_id:
+        return
+    sources = await saved_phrases(loop)
+    if not sources:
+        return
+    report.sessions += 1
+    counts = {"conversations": 0, "objects": 0}
+    for conversation_id, source in sorted(sources.items()):
+        scope_key = scope_key_for(conversation_id)
+        if not await analysis_owns(project_id, RECIPE_ID, scope_key, store=store):
+            report.failed.append(f"{scope_key}: the legacy writer still owns it")
+            continue
+        try:
+            outcome = await execute_inline(
+                RunRequest(project_id=project_id, recipe_id=RECIPE_ID, scope_key=scope_key),
+                store=store,
+                deps=default_deps({SOURCES_KEY: _SavedPhrases({conversation_id: source})}),
+            )
+        except Exception as exc:  # noqa: BLE001
+            report.failed.append(f"{scope_key}: {type(exc).__name__}: {exc}")
+            continue
+        run = outcome.run
+        if run.status != RunStatus.READY:
+            report.failed.append(f"{scope_key}: {run.status} {run.error or ''}".strip())
+            continue
+        placed = len((run.output_manifest or {}).get("objects") or [])
+        counts["conversations"] += 1
+        counts["objects"] += placed
+        report.conversations += 1
+        report.objects += placed
+    report.by_session[loop_id] = counts
+
+
+async def run_placement(
+    *,
+    store: AnalysisStore,
+    project_id: str | None = None,
+    loops: list[dict[str, Any]] | None = None,
+) -> PlacementReport:
+    report = PlacementReport()
+    for loop in loops if loops is not None else await popcorn_loops(project_id):
+        try:
+            await place_session(loop, store=store, report=report)
+        except Exception as exc:  # noqa: BLE001
+            # A session whose transcripts cannot be read must not cost the
+            # other sessions their vectors.
+            session = _as_id(loop.get("id"))
+            report.failed.append(f"session {session}: {type(exc).__name__}: {exc}")
+    return report
+
+
 async def popcorn_loops(project_id: str | None = None) -> list[dict[str, Any]]:
     from dembrane.directus_async import async_directus
     from dembrane.popcorn.service import is_popcorn_loop
 
     query: dict[str, Any] = {
-        "fields": ["id", "project_id", "report_id", "name", "status", "caps", "popcorn_state"],
+        "fields": [
+            "id",
+            "project_id",
+            "report_id",
+            "name",
+            "status",
+            "caps",
+            # Reading a session's transcripts is the tick's own read, made as
+            # the host it runs for, so the placement pass needs this too.
+            "acting_directus_user_id",
+            "popcorn_state",
+        ],
         "sort": ["created_at"],
         "limit": -1,
     }
@@ -765,15 +935,24 @@ async def _main(argv: list[str]) -> int:
         action="store_true",
         help="import but leave the scopes with the legacy writer",
     )
+    parser.add_argument(
+        "--place",
+        action="store_true",
+        help="after importing, publish each conversation's phrases so the Map can place them",
+    )
     args = parser.parse_args(argv)
+    store = SqlAnalysisStore()
     report = await run_import(
-        store=SqlAnalysisStore(),
+        store=store,
         writers=SqlWriterStore(),
         project_id=args.project,
         dry_run=args.dry_run,
         transfer=not args.no_transfer,
     )
-    print(json.dumps(asdict(report), indent=2))
+    out: dict[str, Any] = {"import": asdict(report)}
+    if args.place and not args.dry_run:
+        out["placement"] = asdict(await run_placement(store=store, project_id=args.project))
+    print(json.dumps(out, indent=2))
     return 0
 
 

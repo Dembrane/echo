@@ -244,3 +244,84 @@ async def test_a_session_without_analysis_imports_only_its_phrases() -> None:
     report = await run_import(store, state=state)
     assert report.phrases == 2 and report.tensions == 0 and report.stakeholders == 0
     assert of_type(store, "tension") == [] and of_type(store, "stakeholder") == []
+
+
+OTHER_PROJECT = "66666666-6666-4666-8666-666666666666"
+OTHER_LOOP = "eeeeeeee-0000-4000-8000-00000000000a"
+
+
+async def import_loop(store: FakeAnalysisStore, row: dict[str, Any]) -> ImportReport:
+    report = ImportReport()
+    await import_session(row, store=store, writers=FakeWriters(store), report=report, drain=None)
+    return report
+
+
+def named(store: FakeAnalysisStore, type_id: str, key: str, value: str) -> list[Any]:
+    return [r for r in of_type(store, type_id) if r.payload.get(key) == value]
+
+
+@pytest.mark.asyncio
+async def test_one_group_name_in_two_projects_is_two_objects() -> None:
+    """A lineage key of `stakeholders/project/name:<hash>` is the same string in
+    every project, so an id minted from it alone gave the second project's
+    group the first project's row, and the import dropped it."""
+    store = FakeAnalysisStore()
+    first = await import_loop(store, loop())
+    second = await import_loop(store, {**loop(), "id": OTHER_LOOP, "project_id": OTHER_PROJECT})
+    assert first.skipped == [] and second.skipped == []
+    assert second.stakeholders == 2 and second.relations == 1
+
+    members = named(store, "stakeholder", "name", "Members")
+    assert len(members) == 2
+    assert len({r.object_id for r in members}) == 2
+    assert {store.objects[r.object_id].project_id for r in members} == {PROJECT, OTHER_PROJECT}
+    tensions = of_type(store, "tension")
+    assert len({r.object_id for r in tensions}) == 2
+
+
+@pytest.mark.asyncio
+async def test_two_sessions_of_one_project_share_the_group_and_append_a_revision() -> None:
+    """Within a project the stakeholders scope is the project, so the room's
+    name for a group is one object however many sessions describe it."""
+    store = FakeAnalysisStore()
+    await import_loop(store, loop())
+    later = session_state()
+    later["analysis"]["stakeholders"]["stakeholders"][0]["stake"] = "whether the space stays open"
+    await import_loop(store, {**loop(later), "id": OTHER_LOOP})
+
+    members = named(store, "stakeholder", "name", "Members")
+    assert len(members) == 2 and len({r.object_id for r in members}) == 1
+    record = store.objects[members[0].object_id]
+    assert record.current_revision_id is not None
+    head = store.revisions[record.current_revision_id]
+    assert head.payload["stake"] == "whether the space stays open"
+    assert head.provenance.extra["legacyLoopId"] == OTHER_LOOP
+
+
+@pytest.mark.asyncio
+async def test_an_object_imported_under_the_earlier_id_keeps_it() -> None:
+    """Rows the first import wrote are left exactly as they are: only an object
+    written from here on gets the scoped id."""
+    import uuid
+
+    from dembrane.analysis.popcorn_import import POPCORN_NAMESPACE
+
+    store = FakeAnalysisStore()
+    lineage = stakeholder_lineage("Members")
+    scope = await store.ensure_scope(
+        project_id=PROJECT, kind=ScopeKind.PRODUCER, owner_id="stakeholders", scope_key="project"
+    )
+    earlier = str(uuid.uuid5(POPCORN_NAMESPACE, f"object:{lineage}"))
+    await store.ensure_object(
+        project_id=PROJECT,
+        type="stakeholder",
+        lineage_key=lineage,
+        scope_id=scope.id,
+        object_id=earlier,
+    )
+
+    report = await import_loop(store, loop())
+    members = named(store, "stakeholder", "name", "Members")
+    assert len(members) == 1 and members[0].object_id == earlier
+    assert report.objects_under_earlier_ids == 1
+    assert report.stakeholders == 2 and report.skipped == []

@@ -21,6 +21,7 @@ from dembrane.analysis.executor import RunRequest, execute_inline
 from dembrane.analysis.map_view import (
     PAYLOAD_VERSION,
     ResultLink,
+    LineageHead,
     ProducerHead,
     advance_map_view,
 )
@@ -110,9 +111,17 @@ class FakeMapViewReads:
         self.links[row["id"]] = {"manifest_version": 2, "snapshot_id": snapshot.id}
         return row["id"]
 
+    async def lineage_heads(self, project_id: str, type_id: str, lineage_keys: list[str]) -> dict[str, LineageHead]:
+        wanted = set(lineage_keys)
+        return {
+            record.lineage_key: LineageHead(record.id, record.current_revision_id)
+            for record in self.store.objects.values()
+            if record.project_id == project_id and record.type == type_id and record.lineage_key in wanted
+        }
+
     async def link_legacy_snapshot(self, result_id: str, snapshot_id: str) -> bool:
         link = self.links.setdefault(result_id, {"manifest_version": 1})
-        if link.get("manifest_version", 1) != 1 or link.get("snapshot_id"):
+        if link.get("manifest_version", 1) != 1 or link.get("snapshot_id") == snapshot_id:
             return False
         link["snapshot_id"] = snapshot_id
         return True
