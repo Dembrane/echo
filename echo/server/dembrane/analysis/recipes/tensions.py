@@ -27,8 +27,11 @@ source, and every such argument becomes a `supports_pole_a` or
 tensions is a result. Too little evidence to look for tensions is a result
 too: it says so and suggests refreshing the arguments, without a model call.
 
-Pure pipeline logic and model calls: persistence, identity and publication
-belong to the shared executor.
+`run_tensions` is pipeline logic and model calls only. The recipe at the end
+of this module runs it through the executor: every judgement becomes a cached
+model step of its stage, the positions and the support are recorded as checks,
+and tensions and their `supports_pole_a`/`supports_pole_b` relations are
+emitted against the exact pinned argument revisions.
 """
 
 from __future__ import annotations
@@ -39,10 +42,31 @@ import asyncio
 import hashlib
 from typing import Any, Literal, Mapping, Sequence
 from pathlib import Path
+from collections import Counter, defaultdict
 from dataclasses import field, asdict, replace, dataclass
 
+from pydantic import BaseModel, ConfigDict
+
 from dembrane.popcorn import tensions as stages
+from dembrane.analysis.hashing import content_hash
 from dembrane.popcorn.analysis import QuoteBook, norm
+from dembrane.analysis.executor import StepResult, RecipeFailed, RecipeContext
+from dembrane.analysis.registry import Recipe, StepDef, Dependency, InputRequest, IdentityPolicy
+from dembrane.analysis.contracts import (
+    StepKind,
+    SourceRef,
+    CheckStatus,
+    CheckOutcome,
+    ObjectRevision,
+)
+from dembrane.analysis.recipes.services import model_deployment, producer_services
+from dembrane.analysis.recipes.arguments import (
+    artifact_hash,
+    argument_order,
+    revision_quotes,
+    live_model_deployment,
+    load_pinned_transcripts,
+)
 
 RECIPE_ID = "tensions"
 RECIPE_VERSION = "tensions-from-arguments-v1"
@@ -617,3 +641,499 @@ async def run_tensions(
         quotes=list(refs.values()),
         gate_flags=gate_flags,
     )
+
+
+# ── the model call ──────────────────────────────────────────────────────
+
+TOKEN_KEYS = ("prompt_tokens", "completion_tokens", "total_tokens")
+
+
+async def generate_with_usage(
+    *, system_prompt: str, user_text: str, schema: dict[str, Any], thinking: bool = True
+) -> tuple[dict[str, Any], dict[str, int]]:
+    """Popcorn's analysis judgement (same group, token cap and timeout), with
+    the provider's token usage alongside the answer."""
+    from dembrane.llms import arouter_completion
+    from dembrane.map.model import usage_of, choice_text, json_from_text
+    from dembrane.popcorn.model import ANALYSIS_MAX_TOKENS, ANALYSIS_TIMEOUT_SECONDS, popcorn_model
+
+    kwargs: dict[str, Any] = {
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_text},
+        ],
+        "temperature": 0,
+        "max_tokens": ANALYSIS_MAX_TOKENS,
+        "response_format": {"type": "json_object", "response_schema": schema},
+    }
+    if not thinking:
+        kwargs["thinkingConfig"] = {"thinkingBudget": 0}
+    response = await asyncio.wait_for(
+        arouter_completion(popcorn_model(), **kwargs), timeout=ANALYSIS_TIMEOUT_SECONDS
+    )
+    try:
+        answer = json_from_text(choice_text(response))
+    except ValueError as exc:
+        raise ValueError("model answer did not parse") from exc
+    return answer, usage_of(response)
+
+
+# ── recipe ──────────────────────────────────────────────────────────────
+
+POSITIONS_CHECK = "evidence-verbatim-v1"
+SUPPORT_CHECK = "both-poles-supported-v1"
+INPUT_TYPES: dict[str, ArgumentType] = {
+    "arguments": "argument",
+    "deduplicated_arguments": "deduplicated_argument",
+}
+STAGE_BY_SCHEMA: tuple[tuple[dict[str, Any], str], ...] = (
+    (stages.HANDED_SCHEMA, "framing"),
+    (stages.COLLISIONS_SCHEMA, "collisions"),
+    (stages.VERIFY_SCHEMA, "verify"),
+    (stages.DEDUPE_SCHEMA, "dedupe"),
+    (stages.WRITE_SCHEMA, "write"),
+)
+_VERSIONS = prompt_versions(default_prompts())
+_PROMPTS_FOLDER = "dembrane/popcorn/prompts"
+
+RECIPE_STEPS = (
+    StepDef(
+        "positions",
+        "1",
+        StepKind.CHECK,
+        "Every argument becomes a position when its evidence is found verbatim in its source",
+        check_version=POSITIONS_CHECK,
+    ),
+    StepDef(
+        "framing",
+        "1",
+        StepKind.MODEL,
+        "What the rooms were handed, when full transcripts are at hand",
+        prompt_ref=f"{_PROMPTS_FOLDER}/tensions-handed.md",
+        prompt_version=_VERSIONS["tensions-handed"],
+    ),
+    StepDef(
+        "collisions",
+        "1",
+        StepKind.MODEL,
+        "Which positions one position collides with, and how zero-sum",
+        prompt_ref=f"{_PROMPTS_FOLDER}/collisions.md",
+        prompt_version=_VERSIONS["collisions"],
+    ),
+    StepDef(
+        "verify",
+        "1",
+        StepKind.MODEL,
+        "Verify one candidate pair against its source passages and name the poles",
+        prompt_ref=f"{_PROMPTS_FOLDER}/tension-verify.md",
+        prompt_version=_VERSIONS["tension-verify"],
+    ),
+    StepDef(
+        "dedupe",
+        "1",
+        StepKind.MODEL,
+        "The same tension, a facet of a kept one, or a new one",
+        prompt_ref="dembrane/popcorn/tensions.py#DEDUPE_SYSTEM",
+        prompt_version=_VERSIONS[DEDUPE_PROMPT_NAME],
+    ),
+    StepDef(
+        "write",
+        "1",
+        StepKind.MODEL,
+        "The knot and the question, with the screen gate and one retry",
+        prompt_ref=f"{_PROMPTS_FOLDER}/tension-write.md",
+        prompt_version=_VERSIONS["tension-write"],
+    ),
+    StepDef(
+        "support",
+        "1",
+        StepKind.CHECK,
+        "Every tension has evidenced pinned arguments on both poles; coverage and the refresh suggestion",
+        check_version=SUPPORT_CHECK,
+    ),
+)
+
+
+class TensionsParameters(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Which argument set the tensions read: one of them, never both.
+    input_set: Literal["arguments", "deduplicated_arguments"]
+
+
+def _on_arguments(_scope_key: str, parameters: Mapping[str, Any]) -> Sequence[Dependency]:
+    return (Dependency(recipe_id=str(parameters["input_set"]), scope_key="project", name="arguments"),)
+
+
+def _sha(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _stage_of(schema: dict[str, Any]) -> str:
+    for known, stage in STAGE_BY_SCHEMA:
+        if schema is known:
+            return stage
+    raise RecipeFailed("The tensions pipeline asked for a judgement this recipe does not declare.")
+
+
+async def resolve_inputs(request: InputRequest) -> dict[str, Any]:
+    services = producer_services(request.services)
+    transcripts = await services.transcripts(request.project_id)
+    return {
+        "sources": [{"conversationId": t.id, "textHash": t.text_hash} for t in transcripts],
+        "prompts": prompt_versions(default_prompts()),
+        # No host note on voice reaches this recipe yet; declared so that one
+        # becomes part of the inputs the day it does.
+        "hostNote": "",
+    }
+
+
+def _argument(revision: ObjectRevision, member_ids: Sequence[str] = ()) -> ArgumentRevision:
+    return ArgumentRevision(
+        revision_id=revision.id,
+        object_id=revision.object_id,
+        type=INPUT_TYPES["deduplicated_arguments" if revision.type == "deduplicated_argument" else "arguments"],
+        statement=str(revision.payload["statement"]),
+        epistemic_kind=revision.payload["epistemicKind"],
+        valence=revision.payload.get("valence"),
+        evidence=tuple(
+            Evidence(conversation_id=ref.conversation_id, quote=ref.quote or "", location=ref.location)
+            for ref in revision_quotes(revision)
+        ),
+        member_revision_ids=tuple(member_ids),
+    )
+
+
+def _written(tension: Tension) -> bool:
+    return all(text.strip() for text in (tension.pole_a, tension.pole_b, tension.knot, tension.to_resolve))
+
+
+def lineage_key(tension: Tension) -> str:
+    """A tension's identity: the argument objects holding each pole. The same
+    arguments on the same poles are the same tension, reworded or not."""
+    pole_a = "\x1f".join(sorted({s.object_id for s in tension.supporters_a}))
+    pole_b = "\x1f".join(sorted({s.object_id for s in tension.supporters_b}))
+    return "poles:" + _sha(f"{pole_a}\x1e{pole_b}")[:40]
+
+
+async def execute(ctx: RecipeContext) -> None:
+    services = producer_services(ctx.services)
+    deployment = live_model_deployment(ctx)
+    input_set = str(ctx.parameters["input_set"])
+    expected_type = INPUT_TYPES[input_set]
+    pinned = ctx.dependencies["arguments"]
+    revisions = sorted(await ctx.input_revisions("arguments"), key=argument_order)
+    if any(r.type != expected_type for r in revisions):
+        raise RecipeFailed("The pinned arguments are not the argument set this run reads.")
+
+    # Deduplicated arguments carry their members through `derived_from`.
+    member_ids_of: dict[str, list[str]] = {}
+    member_revisions: dict[str, ObjectRevision] = {}
+    if expected_type == "deduplicated_argument":
+        pinned_ids = {r.id for r in revisions}
+        for relation in pinned.manifest.get("relations") or []:
+            if relation["type"] == "derived_from" and relation["from"] in pinned_ids:
+                member_ids_of.setdefault(str(relation["from"]), []).append(str(relation["to"]))
+        wanted = sorted({m for ids in member_ids_of.values() for m in ids})
+        member_revisions = await ctx.store.get_revisions(ctx.project_id, wanted)
+        for owner, ids in member_ids_of.items():
+            member_ids_of[owner] = sorted(
+                ids, key=lambda i: argument_order(member_revisions[i]) if i in member_revisions else ("", "", "", i)
+            )
+    arguments = [_argument(r, member_ids_of.get(r.id, ())) for r in revisions]
+    members = [_argument(member_revisions[i]) for i in sorted(member_revisions, key=lambda i: argument_order(member_revisions[i]))]
+
+    # Source passages: the full transcripts of the conversations the evidence names.
+    transcripts = await load_pinned_transcripts(
+        services, ctx.project_id, list(ctx.input_manifest.get("sources") or [])
+    )
+    labels = {t.id: f"Conversation {index}" for index, t in enumerate(transcripts, start=1)}
+    named = {e.conversation_id for a in (*arguments, *members) for e in a.evidence}
+    passages = [SourcePassages(t.id, labels[t.id], transcript=t.text) for t in transcripts if t.id in named]
+    text_hashes = {t.id: t.text_hash for t in transcripts}
+    source_inputs = [{"conversationId": p.conversation_id, "textHash": text_hashes[p.conversation_id]} for p in passages]
+
+    # 0. positions, recorded as a check before the pipeline reads them again
+    positions, coverage = positions_from_arguments(arguments, passages, members=members)
+    positions_doc = {
+        "positions": [
+            {"revisionId": p["revision_id"], "conversations": p["tables"], "quotes": len(p["evidence"])}
+            for p in positions
+        ],
+        "coverage": asdict(coverage),
+    }
+    await ctx.step(
+        "positions",
+        lambda: _done(
+            StepResult(
+                output=positions_doc,
+                validation=(
+                    CheckOutcome(
+                        check="evidence-verbatim",
+                        status=CheckStatus.PASSED,
+                        version=POSITIONS_CHECK,
+                        evidence={
+                            "arguments": len(arguments),
+                            "positions": len(positions),
+                            "withoutEvidence": coverage.without_evidence,
+                            "withoutSource": coverage.without_source,
+                            "evidenceNotFound": coverage.evidence_not_found,
+                            "membersMissing": coverage.members_missing,
+                        },
+                    ),
+                ),
+            )
+        ),
+        inputs={
+            "check": POSITIONS_CHECK,
+            "inputSet": input_set,
+            "revisionIds": [a.revision_id for a in arguments],
+            "memberRevisionIds": [m.revision_id for m in members],
+            "sources": source_inputs,
+        },
+    )
+
+    # 1 to 5: every judgement is a model step of its stage, keyed by its exact call
+    locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+
+    async def generate(
+        *, system_prompt: str, user_text: str, schema: dict[str, Any], thinking: bool = True
+    ) -> dict[str, Any]:
+        stage = _stage_of(schema)
+        call = {
+            "system": _sha(system_prompt),
+            "user": _sha(user_text),
+            "schema": content_hash(schema),
+            "thinking": thinking,
+        }
+        digest = content_hash(call)
+
+        async def compute() -> StepResult:
+            answer, usage = await services.generate(
+                system_prompt=system_prompt, user_text=user_text, schema=schema, thinking=thinking
+            )
+            tokens = {k: int(v) for k, v in usage.items() if k in TOKEN_KEYS}
+            return StepResult(output=answer, usage=tokens, model_calls=1)
+
+        async with locks[digest]:
+            return dict(
+                await ctx.step(stage, compute, instance=digest[:40], inputs={**call, "model": deployment})
+            )
+
+    await ctx.progress("finding tensions", force=True, positions=len(positions))
+    outcome = await run_tensions(
+        arguments,
+        passages,
+        generate=generate,
+        members=members,
+        input_set="deduplicated" if expected_type == "deduplicated_argument" else "raw",
+        concurrency=ctx.recipe.model_concurrency,
+    )
+
+    # support: both poles, pinned arguments only, and what the run covered
+    pinned_ids = {a.revision_id for a in arguments}
+    problems: list[str] = []
+    unwritten: list[str] = []
+    for tension in outcome.tensions:
+        pole_a = {s.revision_id for s in tension.supporters_a}
+        pole_b = {s.revision_id for s in tension.supporters_b}
+        if not pole_a or not pole_b:
+            problems.append(f"{tension.key}: a pole has no supporting argument")
+        if pole_a & pole_b:
+            problems.append(f"{tension.key}: an argument supports both poles")
+        if (pole_a | pole_b) - pinned_ids:
+            problems.append(f"{tension.key}: a supporter is not a pinned argument")
+        if not _written(tension):
+            unwritten.append(tension.key)
+    summary = {
+        "status": outcome.status,
+        "inputSet": input_set,
+        "counts": outcome.counts,
+        "coverage": asdict(outcome.coverage),
+        "suggestion": outcome.suggestion,
+        "gateFlags": outcome.gate_flags,
+        "promptVersions": outcome.prompt_versions,
+        "callsByStage": outcome.usage.get("calls_by_stage"),
+        "unwritten": unwritten,
+        "tensions": [
+            {
+                "key": t.key,
+                "supportersA": [s.revision_id for s in t.supporters_a],
+                "supportersB": [s.revision_id for s in t.supporters_b],
+            }
+            for t in outcome.tensions
+        ],
+        "relations": [
+            {"type": r.type, "from": r.from_revision_id, "tension": r.to_tension, "check": r.check}
+            for r in outcome.relations
+        ],
+    }
+    covered = outcome.coverage
+    await ctx.step(
+        "support",
+        lambda: _done(
+            StepResult(
+                output=summary,
+                validation=(
+                    CheckOutcome(
+                        check="both-poles-supported",
+                        status=CheckStatus.FAILED if problems else CheckStatus.PASSED,
+                        version=SUPPORT_CHECK,
+                        evidence={
+                            "tensions": len(outcome.tensions) - len(unwritten),
+                            "relations": len(outcome.relations),
+                            "problems": problems,
+                            "unwritten": unwritten,
+                        },
+                    ),
+                    CheckOutcome(
+                        check="tension-coverage",
+                        status=CheckStatus.PASSED,
+                        version=SUPPORT_CHECK,
+                        evidence={
+                            "status": outcome.status,
+                            "suggestion": outcome.suggestion,
+                            "inputSet": input_set,
+                            "arguments": covered.arguments,
+                            "positions": covered.positions,
+                            "conversationsWithEvidence": covered.conversations_with_evidence,
+                            "withoutEvidence": len(covered.without_evidence),
+                            "withoutSource": len(covered.without_source),
+                            "evidenceNotFound": len(covered.evidence_not_found),
+                            "trimmed": len(covered.trimmed),
+                            "bothPolesSkipped": len(covered.both_poles_skipped),
+                            "framing": covered.framing,
+                            "thin": covered.thin,
+                        },
+                        message=covered.note,
+                    ),
+                    CheckOutcome(
+                        check="screen-gate",
+                        status=CheckStatus.PASSED,
+                        evidence={"flagsLeft": outcome.gate_flags},
+                        message="Screen flags remained after the retry." if outcome.gate_flags else None,
+                    ),
+                ),
+            )
+        ),
+        inputs={
+            "check": SUPPORT_CHECK,
+            "revisionIds": sorted(pinned_ids),
+            "result": artifact_hash(summary),
+        },
+    )
+    if problems:
+        return
+
+    # objects and relations, against the exact pinned revisions
+    await ctx.progress("emitting", force=True)
+    by_revision = {r.id: r for r in revisions}
+    by_quote = {q.id: q for q in outcome.quotes}
+    seen: Counter[str] = Counter()
+    for tension in outcome.tensions:
+        if tension.key in unwritten:
+            continue
+        pole_a_quotes = {qid for s in tension.supporters_a for qid in s.quote_ids}
+        base = lineage_key(tension)
+        seen[base] += 1
+        key = base if seen[base] == 1 else f"{base}:{seen[base]}"
+        supporters = [*tension.supporters_a, *tension.supporters_b]
+        revision = await ctx.emit(
+            "tension",
+            key,
+            {
+                "poleA": tension.pole_a,
+                "poleB": tension.pole_b,
+                "knot": tension.knot,
+                "toResolve": tension.to_resolve,
+                "quotes": [
+                    {
+                        "text": q.text,
+                        "conversationId": q.conversation_id,
+                        "location": q.location if isinstance(q.location, dict) else None,
+                        "pole": "A" if q.id in pole_a_quotes else "B",
+                    }
+                    for q in tension.quotes
+                ],
+            },
+            source_refs=[
+                SourceRef(
+                    conversation_id=q.conversation_id,
+                    source_fingerprint=text_hashes.get(q.conversation_id),
+                    quote=q.text,
+                    location=q.location if isinstance(q.location, dict) else None,
+                )
+                for q in tension.quotes
+            ],
+            input_revision_ids=[s.revision_id for s in supporters],
+            extra={"inputSet": input_set},
+        )
+        for relation in outcome.relations:
+            if relation.to_tension != tension.key:
+                continue
+            supporter = next(s for s in supporters if s.revision_id == relation.from_revision_id)
+            quotes = [by_quote[qid] for qid in supporter.quote_ids if qid in by_quote]
+            await ctx.relate(
+                relation.type,
+                by_revision[relation.from_revision_id],
+                revision,
+                basis=relation.basis,
+                attributes={
+                    "rationale": str(relation.check.get("why") or "") or None,
+                    "quotes": [
+                        {
+                            "text": q.text,
+                            "conversationId": q.conversation_id,
+                            "location": q.location if isinstance(q.location, dict) else None,
+                        }
+                        for q in quotes
+                    ],
+                },
+                source_refs=[
+                    SourceRef(
+                        conversation_id=q.conversation_id,
+                        source_fingerprint=text_hashes.get(q.conversation_id),
+                        quote=q.text,
+                    )
+                    for q in quotes
+                ],
+            )
+            ctx.metrics[relation.type] += 1
+        ctx.metrics["tensions"] += 1
+
+
+async def _done(result: StepResult) -> StepResult:
+    return result
+
+
+RECIPE = Recipe(
+    id=RECIPE_ID,
+    version=RECIPE_VERSION,
+    name="Tensions",
+    purpose=(
+        "Find the tensions between saved arguments: two evidenced poles, the knot between them and "
+        "the question to resolve, each pole linked to the exact arguments that hold it."
+    ),
+    input_types=("argument", "deduplicated_argument"),
+    steps=RECIPE_STEPS,
+    output_types=("tension",),
+    execute=execute,
+    dependencies=_on_arguments,
+    resolve_inputs=resolve_inputs,
+    validation_rules=(
+        "reads one argument set, raw or deduplicated, never both",
+        "every pole is held by at least one pinned argument whose evidence was found verbatim",
+        "a verifier never supplies a side or a quote",
+        "too little evidence is a valid result that suggests refreshing the arguments",
+    ),
+    identity_policy=IdentityPolicy(
+        description="A tension keeps its identity while the same argument objects hold each of its poles."
+    ),
+    parameters_model=TensionsParameters,
+    scope_key_pattern=re.compile(r"^project$"),
+    model_config=model_deployment,
+    model_concurrency=8,
+    # Each judgement names its exact call, and the checks name the revisions
+    # and sources they read, so an unchanged judgement is not asked again.
+    partitioned_inputs=("sources", "revisionIds"),
+)

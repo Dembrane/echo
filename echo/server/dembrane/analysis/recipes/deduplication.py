@@ -22,28 +22,55 @@ False merges are worse than missed duplicates, and there is no target
 reduction: returning every input unchanged is a valid result. Every input
 revision appears in exactly one output item.
 
-Nothing here reads or writes a database. `deduplicate` takes the verifier as a
-function, so the executor passes `verify_with_model` and tests pass a fake.
+Nothing in the core reads or writes a database. `deduplicate` takes the
+verifier as a function, so tests pass a fake. The recipe at the end of this
+module runs the same stages through the executor: discovery, one cached model
+step per candidate group, assembly as a check, and embeddings of the output
+statements.
 """
 
 from __future__ import annotations
 
+import re
 import math
 import asyncio
 import hashlib
 import logging
-from typing import Any, Callable, Iterable, Sequence, Awaitable
+from typing import Any, Mapping, Callable, Iterable, Sequence, Awaitable
 from pathlib import Path
 from functools import lru_cache
+from collections import Counter
 from dataclasses import field, asdict, dataclass
 
+from pydantic import Field, BaseModel, ConfigDict
+
 from dembrane.llms import MODELS, arouter_completion
+from dembrane.analysis import types
 from dembrane.map.model import usage_of, data_block, choice_text, json_from_text
+from dembrane.analysis.hashing import content_hash
+from dembrane.analysis.executor import StepResult, RecipeFailed, RecipeContext
+from dembrane.analysis.registry import Recipe, StepDef, Dependency, IdentityPolicy
+from dembrane.analysis.contracts import (
+    StepKind,
+    SourceRef,
+    CheckStatus,
+    CheckOutcome,
+    ObjectRevision,
+)
+from dembrane.analysis.embeddings import EmbeddingRef, EmbeddingService, input_hash
+from dembrane.analysis.recipes.services import model_deployment, producer_services
+from dembrane.analysis.recipes.arguments import (
+    fresh,
+    artifact_hash,
+    argument_order,
+    revision_quotes,
+    live_model_deployment,
+)
 
 logger = logging.getLogger("dembrane.analysis.recipes.deduplication")
 
 RECIPE_ID = "deduplicated_arguments"
-RECIPE_VERSION = "deduplicated-arguments-v1"
+RECIPE_VERSION = "dedup-v1"
 CANDIDATE_STRATEGY = "emb-complete-linkage-v1"
 CANDIDATE_STRATEGY_VERSION = 1
 
@@ -1045,3 +1072,428 @@ async def verify_with_model(request: VerificationRequest) -> tuple[dict[str, Any
                 await asyncio.sleep(2 * attempt)
     assert last_error is not None
     raise last_error
+
+
+# ── recipe ──────────────────────────────────────────────────────────────
+
+ACCOUNTING_CHECK = "dedup-accounting-v1"
+# A merged sub-group and identical statements are verified; a member that was
+# judged apart, or never a candidate, is a singleton; a member whose group got
+# no usable answer, or that the group limit left out, is uncertain.
+_UNCERTAIN_OUTCOMES = frozenset(
+    {"uncertain", "malformed", "call_failed", "candidate_limit", "checks_incomplete", "empty_statement"}
+)
+
+STEPS = (
+    StepDef(
+        "discover",
+        "1",
+        StepKind.DETERMINISTIC,
+        "Propose candidate groups by complete linkage on statement embeddings, within one kind and valence",
+    ),
+    StepDef(
+        "verify",
+        "1",
+        StepKind.MODEL,
+        "Verify one candidate group: sub-groups, each proposed statement checked against every member",
+        prompt_ref=f"dembrane/analysis/prompts/{VERIFY_PROMPT}.md",
+        prompt_version=VERIFY_PROMPT,
+    ),
+    StepDef(
+        "assemble",
+        "1",
+        StepKind.CHECK,
+        "Merge only fully verified sub-groups and account for every input revision exactly once",
+        check_version=ACCOUNTING_CHECK,
+    ),
+    StepDef("embed", "1", StepKind.DETERMINISTIC, "Embed each output statement, reusing stored vectors"),
+)
+
+
+class DeduplicationParameters(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    similarity_threshold: float | None = Field(default=None, gt=0, le=1)
+    max_group_size: int = Field(default=DEFAULT_MAX_GROUP_SIZE, ge=2, le=64)
+    max_candidate_groups: int = Field(default=DEFAULT_MAX_CANDIDATE_GROUPS, ge=0, le=5000)
+
+
+def _on_arguments(_scope_key: str, _parameters: Mapping[str, Any]) -> Sequence[Dependency]:
+    return (Dependency(recipe_id="arguments", scope_key="project", name="arguments"),)
+
+
+def verification_status(verification: Verification) -> str:
+    if verification.outcome in ("merged", "exact_match"):
+        return "verified"
+    if verification.outcome in _UNCERTAIN_OUTCOMES:
+        return "uncertain"
+    return "singleton"
+
+
+def lineage_key(member_object_ids: Iterable[str]) -> str:
+    """The output's identity: which source objects it stands for, whatever
+    their current revisions say."""
+    return "members:" + _sha256_hex("\x1f".join(sorted(member_object_ids)))[:40]
+
+
+def _merged_evidence(members: Sequence[ObjectRevision]) -> list[dict[str, Any]]:
+    by_conversation: dict[str, dict[str, Any]] = {}
+    for member in members:
+        for item in member.payload.get("evidence") or []:
+            entry = by_conversation.setdefault(
+                str(item["conversationId"]),
+                {
+                    "conversationId": item["conversationId"],
+                    "label": item.get("label"),
+                    "createdAt": item.get("createdAt"),
+                    "quotes": [],
+                },
+            )
+            known = {q.casefold() for q in entry["quotes"]}
+            for quote in item.get("quotes") or []:
+                if quote.casefold() not in known:
+                    entry["quotes"].append(quote)
+                    known.add(quote.casefold())
+    return list(by_conversation.values())
+
+
+def _merged_refs(members: Sequence[ObjectRevision]) -> list[SourceRef]:
+    refs: dict[tuple[str, str], SourceRef] = {}
+    for member in members:
+        for ref in revision_quotes(member):
+            refs.setdefault((ref.conversation_id, norm_key(ref.quote or "")), ref)
+    return list(refs.values())
+
+
+async def _embedding_model(ctx: RecipeContext, refs: Sequence[Mapping[str, Any]], config_key: str) -> str:
+    """The embedding model behind the pinned vectors, which selects the
+    calibrated threshold: as the arguments recorded it, or the probed
+    deployment when it has the same configuration. Otherwise unknown, and
+    discovery proposes identical statements only."""
+    named = {str(ref.get("model")) for ref in refs if ref.get("model")}
+    if len(named) == 1:
+        return next(iter(named))
+    identity = await producer_services(ctx.services).probe()
+    return identity.model if identity.key == config_key else "unknown"
+
+
+async def execute(ctx: RecipeContext) -> None:
+    services = producer_services(ctx.services)
+    deployment = live_model_deployment(ctx)
+    parameters = DeduplicationParameters.model_validate(dict(ctx.parameters))
+    revisions = sorted(await ctx.input_revisions("arguments"), key=argument_order)
+    if any(r.type != "argument" for r in revisions):
+        raise RecipeFailed("Deduplication reads arguments only.")
+    refs = [r.embedding_refs or {} for r in revisions]
+    configs = {str(ref.get("configKey")) for ref in refs}
+    if any(not ref.get("embeddingId") or not ref.get("configKey") for ref in refs) or len(configs) > 1:
+        raise RecipeFailed("The arguments do not share one stored embedding configuration. Refresh the arguments.")
+    if any(r.payload.get("valence") not in VALENCES for r in revisions):
+        raise RecipeFailed("Some arguments have no valence, so they cannot be compared. Refresh the arguments.")
+    config_key = next(iter(configs)) if revisions else ""
+    vectors = await ctx.store.vectors_by_ids(ctx.project_id, [str(ref["embeddingId"]) for ref in refs])
+    if len(vectors) != len({str(ref["embeddingId"]) for ref in refs}):
+        raise RecipeFailed("Some arguments' vectors are missing. Refresh the arguments.")
+    embedding_model = await _embedding_model(ctx, refs, config_key) if revisions else "unknown"
+
+    sources = [
+        SourceArgument(
+            revision_id=r.id,
+            object_id=r.object_id,
+            statement=str(r.payload["statement"]),
+            epistemic_kind=str(r.payload["epistemicKind"]),
+            valence=str(r.payload["valence"]),
+            evidence=[Evidence(conversation_id=ref.conversation_id, quote=ref.quote or "") for ref in revision_quotes(r)],
+            embedding=vectors[str(ref["embeddingId"])],
+            embedding_config_key=config_key,
+        )
+        for r, ref in zip(revisions, refs, strict=True)
+    ]
+    params = DeduplicationParams(
+        embedding_model=embedding_model,
+        similarity_threshold=parameters.similarity_threshold,
+        max_group_size=parameters.max_group_size,
+        max_candidate_groups=parameters.max_candidate_groups,
+        concurrency=ctx.recipe.model_concurrency,
+    )
+    try:
+        discovery = discover_candidates(sources, params)
+    except InvalidInput as exc:
+        raise RecipeFailed(f"The arguments cannot be deduplicated: {exc}") from None
+
+    # 1. discovery: recomputed (it is cheap and exact), saved as the artifact
+    discovery_doc = {
+        "units": [list(unit) for unit in discovery.units],
+        "groups": [asdict(group) for group in discovery.groups],
+        "skipped": [asdict(group) for group in discovery.skipped],
+        "coverage": asdict(discovery.coverage),
+    }
+    await ctx.step(
+        "discover",
+        lambda: _done(StepResult(output=discovery_doc)),
+        inputs={
+            "revisionIds": [r.id for r in revisions],
+            "embeddingConfigKey": config_key,
+            "embeddingModel": embedding_model,
+            "strategy": CANDIDATE_STRATEGY,
+            "strategyVersion": CANDIDATE_STRATEGY_VERSION,
+            "parameters": parameters.model_dump(mode="json"),
+        },
+    )
+    await ctx.progress("verifying", force=True, groups_total=len(discovery.groups))
+
+    # 2. one model step per candidate group
+    by_revision = {s.revision_id: s for s in sources}
+    prompt = {"id": VERIFY_PROMPT, "fingerprint": prompt_fingerprint(VERIFY_PROMPT)}
+    verify_hashes: dict[str, str] = {}
+
+    async def verify_group(group: CandidateGroup) -> GroupCheck:
+        request = build_request(group, by_revision)
+
+        async def compute() -> StepResult:
+            try:
+                raw, usage = await services.verify(request)
+            except Exception as exc:
+                # The group stays apart; a regenerate asks again.
+                logger.warning("deduplication verification failed for %s: %s", group.group_id, type(exc).__name__)
+                return StepResult(output={"status": "call_failed", "error": type(exc).__name__}, model_calls=1)
+            tokens = {k: int(v) for k, v in usage.items() if k in ("prompt_tokens", "completion_tokens", "total_tokens")}
+            return StepResult(
+                output={"status": "answered", "answer": raw, "usage": dict(usage)},
+                usage=tokens,
+                model_calls=int(usage.get("attempts") or 1),
+            )
+
+        output = await ctx.step(
+            "verify",
+            compute,
+            instance=group.group_id,
+            inputs={
+                "units": [list(unit) for unit in group.units],
+                "request": content_hash(verification_user_text(request)),
+                "prompt": prompt,
+                "model": deployment,
+            },
+        )
+        verify_hashes[group.group_id] = artifact_hash(output)
+        if output.get("status") != "answered":
+            return GroupCheck(
+                group_id=group.group_id,
+                revision_ids=group.revision_ids,
+                min_similarity=group.min_similarity,
+                status="call_failed",
+                error=str(output.get("error") or "call failed"),
+                sub_groups=(),
+            )
+        return check_answer(group, request, by_revision, output["answer"], dict(output.get("usage") or {}))
+
+    async with asyncio.TaskGroup() as group_tasks:
+        tasks = [group_tasks.create_task(verify_group(group)) for group in discovery.groups]
+    checks = [task.result() for task in tasks]
+
+    # 3. assembly, the accounting check
+    try:
+        result: DeduplicationResult | None = assemble_result(sources, discovery, checks)
+        failure = None
+    except AccountingError as exc:
+        result, failure = None, str(exc)
+    unverified = sorted(check.group_id for check in checks if check.status != "verified")
+
+    async def assemble() -> StepResult:
+        if result is None:
+            return StepResult(
+                output={"error": failure},
+                validation=(
+                    CheckOutcome(
+                        check="accounts-for-every-input",
+                        status=CheckStatus.FAILED,
+                        version=ACCOUNTING_CHECK,
+                        evidence={"inputs": len(sources)},
+                        message="The output did not hold every input revision exactly once.",
+                    ),
+                ),
+            )
+        outcomes = Counter(item.verification.outcome for item in result.items)
+        return StepResult(
+            output=result.as_dict(),
+            validation=(
+                CheckOutcome(
+                    check="accounts-for-every-input",
+                    status=CheckStatus.PASSED,
+                    version=ACCOUNTING_CHECK,
+                    evidence={
+                        "inputs": len(sources),
+                        "outputs": len(result.items),
+                        "consolidated": len(result.consolidated),
+                        "singletons": len(result.singletons),
+                        "outcomes": dict(sorted(outcomes.items())),
+                    },
+                ),
+                CheckOutcome(
+                    check="candidate-coverage",
+                    status=CheckStatus.PASSED,
+                    version=CANDIDATE_STRATEGY,
+                    evidence={
+                        **asdict(result.coverage),
+                        "unverifiedGroups": unverified,
+                        "skippedGroups": [group.group_id for group in discovery.skipped],
+                    },
+                    message=(
+                        f"{len(unverified)} candidate group(s) were not verified and stayed apart."
+                        if unverified
+                        else None
+                    ),
+                ),
+            ),
+        )
+
+    await ctx.step(
+        "assemble",
+        assemble,
+        inputs={
+            "check": ACCOUNTING_CHECK,
+            "revisionIds": [r.id for r in revisions],
+            "discover": artifact_hash(discovery_doc),
+            "verify": dict(sorted(verify_hashes.items())),
+        },
+    )
+    if result is None:
+        return
+
+    # 4. embeddings of the output statements
+    await ctx.progress("embedding", force=True)
+    projection = types.get_object_type("deduplicated_argument").map
+    assert projection is not None
+    texts = {input_hash(projection.embedding_text({"statement": i.statement})): i.statement for i in result.items}
+
+    async def embed() -> StepResult:
+        stored = await ctx.store.load_embeddings(ctx.project_id, config_key, sorted(texts)) if texts else {}
+        ids = {hashed: embedding_id for hashed, (embedding_id, _vector) in stored.items()}
+        missing = [hashed for hashed in sorted(texts) if hashed not in stored]
+        computed = 0
+        if missing:
+            identity = await services.probe()
+            if identity.key != config_key:
+                raise RecipeFailed(
+                    "The embedding deployment changed since the arguments were embedded. Refresh the arguments first."
+                )
+            service = EmbeddingService(ctx.store, identity=identity, embed=services.embed)
+            batch = await service.ensure(ctx.project_id, [texts[hashed] for hashed in missing])
+            ids.update(batch.ids)
+            computed = batch.computed
+        durable = await ctx.store.vectors_by_ids(ctx.project_id, sorted(set(ids.values())))
+        if len(durable) != len(set(ids.values())):
+            raise RecipeFailed("Saving the output statements' vectors failed.")
+        return StepResult(output={"ids": ids, "configKey": config_key, "reused": len(stored), "computed": computed})
+
+    hits, resumed = ctx.metrics["cacheHits"], ctx.metrics["stepsResumed"]
+    embedded = await ctx.step(
+        "embed",
+        embed,
+        inputs={
+            "embeddingConfigKey": config_key,
+            "projectionVersion": projection.projection_version,
+            "inputHashes": sorted(texts),
+        },
+    )
+    if fresh(ctx, hits, resumed):
+        ctx.metrics["embeddingsReused"] += int(embedded["reused"])
+        ctx.metrics["embeddingsComputed"] += int(embedded["computed"])
+
+    # objects and their lineage
+    await ctx.progress("emitting", force=True)
+    members_by_id = {r.id: r for r in revisions}
+    model_name = embedding_model if embedding_model != "unknown" else None
+    for item in result.items:
+        members = [members_by_id[rid] for rid in item.member_revision_ids]
+        verification = item.verification
+        notes = {rid: check.note for check in verification.checks for rid in check.revision_ids}
+        hashed = input_hash(projection.embedding_text({"statement": item.statement}))
+        output = await ctx.emit(
+            "deduplicated_argument",
+            lineage_key(item.member_object_ids),
+            {
+                "statement": item.statement,
+                "epistemicKind": item.epistemic_kind,
+                "valence": item.valence,
+                "evidence": _merged_evidence(members),
+                "consolidation": {
+                    "strategy": CANDIDATE_STRATEGY,
+                    "memberCount": item.support_count,
+                    "verification": verification_status(verification),
+                    "rationale": verification.rationale or None,
+                    "coverage": {
+                        "method": verification.method,
+                        "outcome": verification.outcome,
+                        "verdict": verification.verdict,
+                        "groupId": verification.group_id,
+                        "checks": [
+                            {"revisionIds": list(check.revision_ids), "judgement": check.judgement, "note": check.note}
+                            for check in verification.checks
+                        ],
+                    },
+                },
+            },
+            source_refs=_merged_refs(members),
+            input_revision_ids=item.member_revision_ids,
+            embedding_refs={
+                **EmbeddingRef(
+                    embedding_id=embedded["ids"][hashed],
+                    input_hash=hashed,
+                    config_key=config_key,
+                    projection_version=projection.projection_version,
+                ).as_json(),
+                **({"model": model_name} if model_name else {}),
+            },
+        )
+        merged_by_model = verification.method == "model" and verification.outcome == "merged"
+        for member in members:
+            await ctx.relate(
+                "derived_from",
+                output,
+                member,
+                basis="inferred" if merged_by_model else "extracted",
+                attributes={"rationale": notes.get(member.id) or None},
+                source_refs=revision_quotes(member)[:MAX_QUOTES_SHOWN],
+            )
+    ctx.metrics["inputs"] += len(sources)
+    ctx.metrics["outputs"] += len(result.items)
+    ctx.metrics["consolidated"] += len(result.consolidated)
+    ctx.metrics["unverifiedGroups"] += len(unverified)
+
+
+async def _done(result: StepResult) -> StepResult:
+    return result
+
+
+RECIPE = Recipe(
+    id=RECIPE_ID,
+    version=RECIPE_VERSION,
+    name="Deduplicated arguments",
+    purpose=(
+        "Consolidate arguments that say the same thing into one argument each, verified against "
+        "every member and derived from each; distinct and minority arguments pass through."
+    ),
+    input_types=("argument",),
+    steps=STEPS,
+    output_types=("deduplicated_argument",),
+    execute=execute,
+    dependencies=_on_arguments,
+    validation_rules=(
+        "embedding similarity proposes candidates, never equivalence",
+        "a merge needs an equivalent sub-group of one kind and valence, checked against every member",
+        "every input revision is in exactly one output, with a derived_from relation to it",
+        "unverified candidate groups stay apart and are listed in the coverage check",
+    ),
+    identity_policy=IdentityPolicy(
+        description="An output keeps its identity while it stands for the same set of source argument objects."
+    ),
+    embedding_projections=("deduplicated_argument",),
+    parameters_model=DeduplicationParameters,
+    scope_key_pattern=re.compile(r"^project$"),
+    model_config=model_deployment,
+    model_concurrency=DEFAULT_CONCURRENCY,
+    # Each step names the argument revisions it read (a verification, its
+    # group's members), so an unchanged group is not verified again.
+    partitioned_inputs=("revisionIds",),
+)
