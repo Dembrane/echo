@@ -159,6 +159,15 @@ class ReuseOutdated(Exception):
         self.current_run_id = current_run_id
 
 
+class RetryConflict(AnalysisValidationError):
+    """A retry was refused because an equivalent run is already in flight:
+    that run is the live answer, and the failed run stays failed."""
+
+    def __init__(self, active: Run) -> None:
+        super().__init__(f"an equivalent run is already in flight: {active.id}")
+        self.active = active
+
+
 class RevisionConflict(Exception):
     """An edit named an expected revision that is no longer the head."""
 
@@ -697,7 +706,13 @@ class AnalysisStore(Protocol):
 
     # outbox
     async def claim_outbox(
-        self, *, claim: str, limit: int, claim_seconds: int, event_id: str | None = None
+        self,
+        *,
+        claim: str,
+        limit: int,
+        claim_seconds: int,
+        event_id: str | None = None,
+        dead: bool = False,
     ) -> list[OutboxEvent]: ...
     async def mark_consumer_done(self, event_id: str, claim: str, consumer: str) -> bool: ...
     async def finish_outbox(self, event_id: str, claim: str) -> bool: ...

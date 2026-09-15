@@ -57,7 +57,6 @@ from dembrane.analysis.registry import (
     get_recipe,
 )
 from dembrane.analysis.contracts import (
-    ACTIVE_RUN_STATUSES,
     Run,
     Step,
     NewRun,
@@ -199,6 +198,29 @@ class RequestOutcome:
         return self.outcome in ("created", "reused")
 
 
+# Context keys the executor sets itself: a caller's context never replaces them.
+RESERVED_CONTEXT = ("model", "selectedRevisionIds")
+
+
+def computation_manifest(manifest: Mapping[str, Any] | None, partitioned: Iterable[str] = ()) -> dict[str, Any]:
+    """An input manifest as it bears on computation: each dependency by the
+    output it pinned (never by the run that recorded that output, so a no-op
+    upstream refresh changes nothing), without the `partitioned` keys."""
+    if manifest is None:
+        return {}
+    skip = {*partitioned, "dependencies"}
+    out = {key: value for key, value in manifest.items() if key not in skip}
+    out["dependencies"] = {
+        name: {
+            "recipeId": dependency.get("recipeId"),
+            "scopeKey": dependency.get("scopeKey"),
+            "output": dependency.get("outputFingerprint") or dependency.get("manifestHash"),
+        }
+        for name, dependency in sorted((manifest.get("dependencies") or {}).items())
+    }
+    return out
+
+
 def work_fingerprint(
     *,
     recipe_version: str,
@@ -206,10 +228,14 @@ def work_fingerprint(
     context: Mapping[str, Any],
     input_fingerprint: str | None,
     epoch: int | None,
+    definition_hash: str | None = None,
 ) -> str:
-    """Two runs with the same work fingerprint compute the same output."""
+    """Two runs with the same work fingerprint compute the same output: the
+    recipe version and its captured step, prompt and check definitions,
+    parameters, context, computation inputs and generation epoch."""
     return fingerprint(
         recipeVersion=recipe_version,
+        definition=definition_hash,
         parameters=dict(parameters),
         context=dict(context),
         inputFingerprint=input_fingerprint,
@@ -222,8 +248,27 @@ def _run_work(run: Run) -> str:
         recipe_version=run.recipe_version,
         parameters=run.parameters,
         context=run.context,
-        input_fingerprint=run.input_fingerprint,
+        input_fingerprint=content_hash(computation_manifest(run.input_manifest)),
         epoch=run.epoch,
+        definition_hash=content_hash(run.definition),
+    )
+
+
+def _node_context(recipe: Recipe, request: RunRequest, selected: tuple[str, ...] = ()) -> dict[str, Any]:
+    context: dict[str, Any] = {**dict(request.context), "model": dict(recipe.model_config())}
+    if selected:
+        context["selectedRevisionIds"] = list(selected)
+    return context
+
+
+def _compatible(run: Run, recipe: Recipe, parameters: Mapping[str, Any], context: Mapping[str, Any]) -> bool:
+    """Whether a run computes what this request would, given the same inputs:
+    recipe version, captured definition, parameters and context."""
+    return (
+        run.recipe_version == recipe.version
+        and content_hash(run.definition) == content_hash(recipe.definition())
+        and content_hash(dict(run.parameters)) == content_hash(dict(parameters))
+        and content_hash(dict(run.context)) == content_hash(dict(context))
     )
 
 
@@ -315,26 +360,32 @@ async def request_run(
     anything is written."""
     store = store or default_store()
     deps = deps or default_deps()
+    if request.idempotency_key:
+        # An accepted key is answered before anything that can change after
+        # acceptance: a selected revision deleted since must not turn a
+        # repeated transport request into an error.
+        existing = await store.run_by_idempotency_key(request.project_id, request.idempotency_key)
+        if existing is not None:
+            return RequestOutcome(existing, "existing")
     recipe = get_recipe(request.recipe_id)
     try:
         mode = RunMode(request.mode)
     except ValueError:
         raise InvalidRecipeRequest(f"{request.mode!r} is not a run mode") from None
+    reserved = sorted(set(request.context) & set(RESERVED_CONTEXT))
+    if reserved:
+        raise InvalidRecipeRequest(f"context key {reserved[0]!r} is reserved for the executor")
     scope_key = recipe.validate_scope_key(request.scope_key)
     parameters = recipe.validate_parameters(request.parameters)
     plan = build_plan(recipe.id, scope_key, parameters)
     selected = await _validate_selection(store, recipe, request.project_id, request.selected_revision_ids)
 
-    if request.idempotency_key:
-        existing = await store.run_by_idempotency_key(request.project_id, request.idempotency_key)
-        if existing is not None:
-            return RequestOutcome(existing, "existing")
     key = request.idempotency_key or f"auto:{uuid.uuid4()}"
     scope = await store.ensure_scope(
         project_id=request.project_id, kind=ScopeKind.PRODUCER, owner_id=recipe.id, scope_key=scope_key
     )
     if mode == RunMode.RETRY:
-        return await _retry(store, deps, scope.id, replace(request, idempotency_key=request.idempotency_key))
+        return await _retry(store, deps, scope.id, request)
 
     pinned: dict[str, PinnedOutput] = {}
     waiting: dict[str, Run] = {}
@@ -350,19 +401,14 @@ async def request_run(
         upstream_waiting = any(dep_key in waiting for _name, dep_key in node.dependencies)
         if not request.refresh_dependencies and not upstream_waiting:
             current = await _current_ready(store, node_scope.id)
-            if current is not None:
+            if current is not None and _compatible(
+                current, node_recipe, node.parameters, _node_context(node_recipe, request)
+            ):
                 pinned[node.key] = _pinned(node.key, node.recipe_id, node.scope_key, current)
                 continue
-            in_flight = await store.latest_run(node_scope.id, ACTIVE_RUN_STATUSES)
-            if (
-                in_flight is not None
-                and in_flight.recipe_version == node_recipe.version
-                and in_flight.parameters == dict(node.parameters)
-            ):
-                # Compatible work already running for another parent: share it.
-                waiting[node.key] = in_flight
-                dependency_runs.append(in_flight)
-                continue
+        # Anything else is requested. Equivalent work already in flight is
+        # joined by the request's own dedupe, which compares the whole
+        # computation (definition, parameters, context and inputs).
         outcome = await _request_node(
             store,
             deps,
@@ -411,9 +457,7 @@ async def _request_node(
     waiting: Mapping[str, Run],
     request: RunRequest,
 ) -> RequestOutcome:
-    context: dict[str, Any] = {"model": dict(recipe.model_config()), **dict(request.context)}
-    if selected:
-        context["selectedRevisionIds"] = list(selected)
+    context = _node_context(recipe, request, selected)
     parameters = dict(node.parameters)
     current = await _current_ready(store, scope_id)
     epoch: int | None = None if mode == RunMode.REGENERATE else (current.epoch if current else 0)
@@ -444,6 +488,7 @@ async def _request_node(
             request_fingerprint=fingerprint(
                 waiting=True,
                 recipeVersion=recipe.version,
+                definition=content_hash(recipe.definition()),
                 parameters=parameters,
                 context=context,
                 dependsOn=list(depends_on),
@@ -467,8 +512,9 @@ async def _request_node(
             recipe_version=recipe.version,
             parameters=parameters,
             context=context,
-            input_fingerprint=input_fingerprint,
+            input_fingerprint=content_hash(computation_manifest(manifest)),
             epoch=epoch,
+            definition_hash=content_hash(recipe.definition()),
         )
         if mode == RunMode.REFRESH and current is not None and _run_work(current) == work:
             try:
@@ -530,23 +576,17 @@ async def _retry(store: AnalysisStore, deps: ExecutorDeps, scope_id: str, reques
     )
     if target is None or target.scope_id != scope_id or target.project_id != request.project_id:
         raise InvalidRecipeRequest("there is no failed run to retry in this scope")
-    if target.status != RunStatus.FAILED:
-        # A repeated retry request, or the run already moved on.
-        return RequestOutcome(target, "existing")
-    requeued = await store.requeue_run(target.id, idempotency_key=request.idempotency_key)
-    if requeued is None:
-        current = await store.get_run(target.id)
-        if current is not None and current.status != RunStatus.FAILED:
-            return RequestOutcome(current, "existing")
-        active = await store.active_run(scope_id, target.request_fingerprint)
-        if active is not None:
-            return RequestOutcome(active, "existing")
+    # The store binds the request's key to this run in the same transaction
+    # that requeues it. An equivalent run in flight refuses the retry
+    # (`RetryConflict`); it never answers in the failed run's place.
+    bound = await store.requeue_run(target.id, idempotency_key=request.idempotency_key)
+    if bound is None:
         raise AnalysisStoreError(f"run {target.id} could not be queued again")
-    await _dispatch(store, deps, requeued)
-    await deps.publish_event(
-        requeued.project_id, {"type": "queued", "run_id": requeued.id, "recipe_id": requeued.recipe_id}
-    )
-    return RequestOutcome(requeued, "requeued")
+    if bound.id != target.id or target.status != RunStatus.FAILED or bound.status != RunStatus.QUEUED:
+        return RequestOutcome(bound, "existing")
+    await _dispatch(store, deps, bound)
+    await deps.publish_event(bound.project_id, {"type": "queued", "run_id": bound.id, "recipe_id": bound.recipe_id})
+    return RequestOutcome(bound, "requeued")
 
 
 async def cancel_run(run_id: str, *, store: AnalysisStore, deps: ExecutorDeps) -> Run | None:
@@ -574,14 +614,30 @@ class StepResult:
     checkpoint: dict[str, Any] | None = None
 
 
-def step_cache_key(recipe: Recipe, step: StepDef, run: Run, inputs: Any) -> str:
-    """Recipe and step versions, prompt and check versions, the step's inputs
-    (the run's whole input fingerprint when the step names none), parameters,
-    context and model configuration, and the generation epoch for model steps."""
+def step_cache_key(
+    recipe: Recipe,
+    step: StepDef,
+    run: Run,
+    inputs: Any,
+    *,
+    scope_key: str | None = None,
+    instance: str | None = None,
+    upstream: Any = None,
+) -> str:
+    """Everything a step's result depends on: recipe and step versions with
+    their prompt and check versions; the scope and instance it runs for; the
+    run's inputs, always (less the recipe's partitioned keys, whose parts a
+    step names in its own `inputs`), with each dependency identified by its
+    output; the outputs of earlier steps it consumes; parameters, context and
+    the model configuration; and the generation epoch for model steps."""
     return fingerprint(
         recipe={"id": recipe.id, "version": recipe.version},
         step=step.definition(),
-        inputs=inputs if inputs is not None else {"inputFingerprint": run.input_fingerprint},
+        scope=scope_key,
+        instance=instance,
+        globalInputs=content_hash(computation_manifest(run.input_manifest, recipe.partitioned_inputs)),
+        inputs=inputs,
+        upstream=upstream,
         parameters=run.parameters,
         context=run.context,
         epoch=run.epoch if step.kind == StepKind.MODEL else None,
@@ -617,6 +673,8 @@ class RecipeContext:
         self.objects: dict[str, StagedRevision] = {}
         self.relations: dict[str, Relation] = {}
         self._steps: dict[str, Step] = {}
+        # Output hashes of the steps this run has produced so far, by row key.
+        self._outputs: dict[str, str] = {}
         self._lock = asyncio.Lock()
         self._started = deps.clock()
         self._last_progress = 0.0
@@ -713,24 +771,43 @@ class RecipeContext:
         *,
         instance: str | None = None,
         inputs: Any = None,
+        after: Iterable[str] | None = None,
     ) -> Any:
         """Run one declared step (once per `instance` for repeated steps, such
         as one extraction per conversation), or reuse its saved artifact.
 
+        `inputs` names what the step reads beyond the run's inputs (its part
+        of a partitioned input, say); `after` names the earlier steps, by row
+        key, whose outputs it consumes. A step that names neither depends on
+        every output produced before it in this run.
+
         In order: this run's own completed step (a resumed retry), a completed
         step with the same cache key anywhere in the project (recorded as a
         reference, not a copy), or `compute`. A computed result is saved with
-        its actual output and check outcomes before it is returned."""
+        its actual output and check outcomes before it is returned. One whose
+        own checks failed is saved as a failed attempt, with that evidence,
+        stops the run, and is never reused."""
         definition = self.recipe.step(key)
         if instance is not None and not STEP_INSTANCE.fullmatch(instance):
             raise AnalysisValidationError(f"step instance {instance!r} is not a valid key")
         row_key = f"{key}:{instance}" if instance is not None else key
-        cache_key = step_cache_key(self.recipe, definition, self.run, inputs)
+        upstream: Any = None
+        if after is not None:
+            consumed = sorted(set(after))
+            missing = [name for name in consumed if name not in self._outputs]
+            if missing:
+                raise AnalysisValidationError(f"step {row_key} consumes {missing[0]!r}, which has not run")
+            upstream = {name: self._outputs[name] for name in consumed}
+        elif inputs is None:
+            upstream = dict(sorted(self._outputs.items()))
+        cache_key = step_cache_key(
+            self.recipe, definition, self.run, inputs, scope_key=self.scope_key, instance=instance, upstream=upstream
+        )
         own = self._steps.get(row_key)
         if own is not None and own.status == StepStatus.COMPLETED and own.cache_key == cache_key:
             self.metrics["stepsResumed"] += 1
             self.step_checks.extend(CheckOutcome.from_json(c) for c in own.validation)
-            return await self._output_of(own)
+            return self._remember(row_key, await self._output_of(own))
         await self.checkpoint()
         cached = await self.store.find_reusable_step(self.project_id, cache_key)
         if cached is not None:
@@ -753,7 +830,7 @@ class RecipeContext:
             self._steps[row_key] = saved
             self.metrics["cacheHits"] += 1
             self.step_checks.extend(CheckOutcome.from_json(c) for c in cached.validation)
-            return cached.output
+            return self._remember(row_key, cached.output)
         started = self.deps.clock()
         running = StepWrite(
             step_key=row_key,
@@ -782,6 +859,7 @@ class RecipeContext:
             raise
         result = raw if isinstance(raw, StepResult) else StepResult(output=raw)
         usage = {str(k): int(v) for k, v in dict(result.usage).items()}
+        failed = [c for c in result.validation if c.status == CheckStatus.FAILED]
         async with self._lock:
             self.metrics["modelCalls"] += result.model_calls
             for name, value in usage.items():
@@ -792,10 +870,11 @@ class RecipeContext:
             self.lease,
             replace(
                 running,
-                status=StepStatus.COMPLETED,
+                status=StepStatus.FAILED if failed else StepStatus.COMPLETED,
                 output=result.output,
                 checkpoint=result.checkpoint,
                 validation=tuple(c.as_json() for c in result.validation),
+                error="checks failed" if failed else None,
                 usage={
                     **usage,
                     "modelCalls": result.model_calls,
@@ -806,8 +885,14 @@ class RecipeContext:
         if saved is None:
             raise RunStopped()
         self._steps[row_key] = saved
+        if failed:
+            raise ValidationFailed(list(result.validation))
         self.step_checks.extend(result.validation)
-        return result.output
+        return self._remember(row_key, result.output)
+
+    def _remember(self, row_key: str, output: Any) -> Any:
+        self._outputs[row_key] = content_hash(output)
+        return output
 
     # objects and relations
 
@@ -912,7 +997,13 @@ class RecipeContext:
         )
         relations = sorted(
             (
-                {"relationId": r.id, "type": r.type, "from": r.from_revision_id, "to": r.to_revision_id}
+                {
+                    "relationId": r.id,
+                    "type": r.type,
+                    "from": r.from_revision_id,
+                    "to": r.to_revision_id,
+                    "contentHash": r.content_hash,
+                }
                 for r in self.relations.values()
             ),
             key=lambda r: r["relationId"],
@@ -1173,6 +1264,27 @@ async def _needs_review(ctx: RecipeContext, manifest: dict[str, Any], checks: li
     return "needs_review"
 
 
+async def _settle_stopped(store: AnalysisStore, deps: ExecutorDeps, run: Run, lease: str) -> str:
+    """A worker that may no longer write: settle the run as superseded when a
+    newer ready request overtook it (the one write allowed without the rest
+    of ownership); otherwise leave it to its new owner or the expiry sweep."""
+    current = await store.get_run(run.id)
+    scope = await store.get_scope(run.scope_id)
+    if (
+        current is not None
+        and current.status == RunStatus.RUNNING
+        and current.lease == lease
+        and scope is not None
+        and scope.current_request_order is not None
+        and scope.current_request_order >= current.request_order
+    ):
+        if await store.finish_run(run.id, lease, status=RunStatus.SUPERSEDED):
+            await deps.publish_event(run.project_id, {"type": "superseded", "run_id": run.id})
+            return "superseded"
+    logger.info("analysis run %s stopped: no longer this worker's", run.id)
+    return "stopped"
+
+
 async def _settle_failure(
     store: AnalysisStore,
     deps: ExecutorDeps,
@@ -1183,21 +1295,7 @@ async def _settle_failure(
 ) -> str:
     leaves = _leaf_exceptions(raised)
     if any(isinstance(leaf, RunStopped) for leaf in leaves):
-        current = await store.get_run(run.id)
-        scope = await store.get_scope(run.scope_id)
-        if (
-            current is not None
-            and current.status == RunStatus.RUNNING
-            and current.lease == lease
-            and scope is not None
-            and scope.current_request_order is not None
-            and scope.current_request_order >= current.request_order
-        ):
-            if await store.finish_run(run.id, lease, status=RunStatus.SUPERSEDED):
-                await deps.publish_event(run.project_id, {"type": "superseded", "run_id": run.id})
-                return "superseded"
-        logger.info("analysis run %s stopped: no longer this worker's", run.id)
-        return "stopped"
+        return await _settle_stopped(store, deps, run, lease)
     exc = leaves[0]
     checks = [c.as_json() for c in exc.checks] if isinstance(exc, ValidationFailed) else None
     if isinstance(exc, PublicationRejected):
@@ -1217,8 +1315,7 @@ async def _settle_failure(
         logger.exception("analysis run %s: could not record the failure", run.id)
         recorded = False
     if not recorded:
-        logger.info("analysis run %s stopped: no longer this worker's", run.id)
-        return "stopped"
+        return await _settle_stopped(store, deps, run, lease)
     # Only messages this package wrote are logged: a provider's error can quote
     # its input, and that input is participant-derived text.
     ours = (RecipeFailed, ValidationFailed, AnalysisValidationError, AnalysisStoreError)

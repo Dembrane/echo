@@ -179,6 +179,8 @@ def _words(world: FixtureWorld) -> Recipe:
         execute=execute,
         resolve_inputs=resolve_inputs,
         embedding_projections=("argument",),
+        # Each extraction names its own conversation in its step inputs.
+        partitioned_inputs=("sources",),
         model_config=lambda: {"model": "fixture/model", "temperature": 0},
     )
 

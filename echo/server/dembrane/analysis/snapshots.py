@@ -181,6 +181,21 @@ async def build_manifest(request: SnapshotRequest, *, store: AnalysisStore) -> d
         for target, assessment in sorted((await store.assessments_for(request.project_id, checkable)).items())
     ]
 
+    # With an embedding configuration, each displayed map-capable revision is
+    # placed by its vector of that configuration, or listed as unplaced.
+    config_key = (request.embedding_config or {}).get("key")
+    vectors: list[dict[str, Any]] = []
+    unplaced: list[str] = []
+    if config_key:
+        for revision in sorted(displayed.values(), key=lambda r: r.id):
+            if types.get_object_type(revision.type).map is None:
+                continue
+            refs = revision.embedding_refs or {}
+            if refs.get("configKey") == config_key and refs.get("embeddingId"):
+                vectors.append({"revisionId": revision.id, "embeddingId": refs["embeddingId"]})
+            else:
+                unplaced.append(revision.id)
+
     body: dict[str, Any] = {
         "version": SNAPSHOT_MANIFEST_VERSION,
         "hashVersion": HASH_VERSION,
@@ -200,6 +215,9 @@ async def build_manifest(request: SnapshotRequest, *, store: AnalysisStore) -> d
         "settings": dict(request.settings),
         "versions": dict(request.versions),
     }
+    if config_key:
+        body["vectors"] = vectors
+        body["unplaced"] = unplaced
     return {**body, "contentHash": content_hash(body)}
 
 
@@ -218,10 +236,8 @@ async def assemble_snapshot(
     )
     expected = scope.current_snapshot_id if isinstance(expected_previous_id, _Current) else expected_previous_id
     manifest = await build_manifest(request, store=store)
-    if expected and request.source_event_id is None:
-        previous = await store.get_snapshot(expected)
-        if previous is not None and previous.content_hash == manifest["contentHash"]:
-            return previous
+    # Identical content returns the current snapshot, decided by the store
+    # under the view lock once the expected previous snapshot is confirmed.
     # The manifest owns every setting and version it pins; the columns repeat
     # them for queries, never with different values.
     return await store.publish_snapshot(

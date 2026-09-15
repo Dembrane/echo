@@ -7,6 +7,7 @@ connection holds, so each compare-and-set meets real contention.
 
 from __future__ import annotations
 
+import json
 import uuid
 import asyncio
 from typing import Any
@@ -208,7 +209,10 @@ async def test_an_outbox_event_is_retried_after_a_failed_dispatch_and_duplicates
         "SELECT status, attempts, last_error, consumers::text FROM analysis_outbox WHERE id = %s",
         (event_id,),
     )
-    assert (status, attempts, consumers) == ("pending", 1, "{}") and error.startswith("RuntimeError")
+    # Consumers are isolated: the page nudge and the wake-up (which also
+    # publishes) failed, the snapshot hooks ran and are recorded.
+    assert (status, attempts) == ("pending", 1) and error.startswith("RuntimeError")
+    assert set(json.loads(consumers)) == {"view_snapshots"}
     rec.publish_error = None
     await execute(pg_dsn, "UPDATE analysis_outbox SET next_attempt_at = now() WHERE id = %s", (event_id,))
 

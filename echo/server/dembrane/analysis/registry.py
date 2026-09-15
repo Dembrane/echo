@@ -94,6 +94,21 @@ class IdentityPolicy:
         return {"kind": self.kind, "description": self.description}
 
 
+def output_fingerprint(manifest: Mapping[str, Any]) -> str:
+    """What a ready output is, whichever run recorded it: its exact revisions
+    and its relations' content. A reuse run's copy of a manifest has the same
+    output fingerprint as the run it reuses."""
+    return content_hash(
+        {
+            "objects": sorted(str(o["revisionId"]) for o in manifest.get("objects") or []),
+            "relations": sorted(
+                [str(r.get("type")), str(r.get("from")), str(r.get("to")), str(r.get("contentHash") or r.get("relationId"))]
+                for r in manifest.get("relations") or []
+            ),
+        }
+    )
+
+
 @dataclass(frozen=True)
 class PinnedOutput:
     """A dependency's exact ready output, pinned before the consumer runs."""
@@ -120,6 +135,7 @@ class PinnedOutput:
             "scopeId": self.scope_id,
             "runId": self.run_id,
             "manifestHash": self.manifest_hash,
+            "outputFingerprint": output_fingerprint(self.manifest),
             "revisionIds": self.revision_ids,
         }
 
@@ -166,6 +182,11 @@ class Recipe:
     # unbounded) and model calls at once within one run.
     max_running: int | None = None
     model_concurrency: int = 4
+    # Input manifest keys whose parts a step names in its own `inputs` (one
+    # conversation's source, say). Every other key is part of every step's
+    # cache key, so a step is reused across a change to these keys only by
+    # declaring the part it read.
+    partitioned_inputs: tuple[str, ...] = ()
 
     def step(self, key: str) -> StepDef:
         for step in self.steps:

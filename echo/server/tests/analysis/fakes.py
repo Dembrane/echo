@@ -46,6 +46,7 @@ from dembrane.analysis.contracts import (
     OutboxStatus,
     StepConflict,
     PublishResult,
+    RetryConflict,
     ReuseOutdated,
     ObjectRevision,
     RelationStatus,
@@ -58,6 +59,13 @@ from dembrane.analysis.contracts import (
     PublicationRejected,
     AnalysisValidationError,
 )
+
+
+def _identity(run: Run) -> str:
+    return content_hash(
+        {"recipeVersion": run.recipe_version, "definition": run.definition, "parameters": run.parameters, "context": run.context}
+    )
+
 
 TABLES = ("scopes", "runs", "keys", "steps", "objects", "revisions", "relations", "snapshots", "outbox", "embeddings")
 
@@ -165,8 +173,13 @@ class FakeAnalysisStore:
             if active:
                 self.keys[(new.project_id, new.idempotency_key)] = active.id
                 return active, False
-        if new.reused_run_id is not None and scope.current_run_id != new.reused_run_id:
-            raise ReuseOutdated(scope.current_run_id)
+        if new.reused_run_id is not None:
+            if scope.current_run_id != new.reused_run_id:
+                raise ReuseOutdated(scope.current_run_id)
+            for entry in (new.output_manifest or {}).get("objects") or []:
+                record = self.objects.get(str(entry["objectId"]))
+                if record is None or record.current_revision_id != entry["revisionId"]:
+                    raise ReuseOutdated(scope.current_run_id)
         now = self.clock.now()
         order = scope.next_request_order
         epoch = new.epoch if new.epoch is not None else scope.generation_epoch + 1
@@ -303,6 +316,13 @@ class FakeAnalysisStore:
         run = self.runs.get(run_id)
         if run is None or run.status != RunStatus.RUNNING or run.lease != lease:
             return False
+        scope = self.scopes[run.scope_id]
+        overtaken = scope.current_request_order is not None and scope.current_request_order >= run.request_order
+        if status == RunStatus.SUPERSEDED:
+            if not overtaken:
+                return False
+        elif overtaken or not self._live(run) or scope.writer != Writer.ANALYSIS or scope.writer_fence != run.writer_fence:
+            return False
         progress = {**run.progress, "stage": str(status)}
         if candidate_manifest is not None:
             progress["candidateManifest"] = copy.deepcopy(candidate_manifest)
@@ -330,23 +350,27 @@ class FakeAnalysisStore:
 
     async def requeue_run(self, run_id: str, *, idempotency_key: str | None = None) -> Run | None:
         run = self.runs.get(run_id)
-        if run is None or run.status != RunStatus.FAILED:
+        if run is None:
             return None
-        if await self.active_run(run.scope_id, run.request_fingerprint):
-            return None
-        run = replace(
-            run,
-            status=RunStatus.QUEUED,
-            lease=None,
-            lease_expires_at=None,
-            error=None,
-            completed_at=None,
-            updated_at=self.clock.now(),
-            progress={**run.progress, "stage": "queued"},
-        )
-        self.runs[run_id] = run
+        if idempotency_key and (run.project_id, idempotency_key) in self.keys:
+            return self.runs[self.keys[(run.project_id, idempotency_key)]]
+        if run.status == RunStatus.FAILED:
+            active = await self.active_run(run.scope_id, run.request_fingerprint)
+            if active is not None:
+                raise RetryConflict(active)
+            run = replace(
+                run,
+                status=RunStatus.QUEUED,
+                lease=None,
+                lease_expires_at=None,
+                error=None,
+                completed_at=None,
+                updated_at=self.clock.now(),
+                progress={**run.progress, "stage": "queued"},
+            )
+            self.runs[run_id] = run
         if idempotency_key:
-            self.keys.setdefault((run.project_id, idempotency_key), run.id)
+            self.keys[(run.project_id, idempotency_key)] = run.id
         return run
 
     async def wake_waiting_runs(self, project_id: str | None) -> WakeResult:
@@ -371,7 +395,13 @@ class FakeAnalysisStore:
                     resolved.append(dep_id)
                 elif dep.status == RunStatus.SUPERSEDED:
                     scope = self.scopes[dep.scope_id]
-                    if scope.current_run_id is None or scope.current_request_order is None or scope.current_request_order < dep.request_order:
+                    replacement = self.runs.get(scope.current_run_id or "")
+                    if (
+                        replacement is None
+                        or scope.current_request_order is None
+                        or scope.current_request_order < dep.request_order
+                        or _identity(replacement) != _identity(dep)
+                    ):
                         broken = True
                         break
                     resolved.append(scope.current_run_id)
@@ -382,9 +412,7 @@ class FakeAnalysisStore:
             if broken:
                 status = RunStatus.FAILED
             elif pending:
-                if not substituted:
-                    continue
-                status = RunStatus.WAITING_FOR_INPUTS
+                continue
             else:
                 status = RunStatus.QUEUED
             progress = {**run.progress, "stage": str(status)}
@@ -710,6 +738,8 @@ class FakeAnalysisStore:
                 reasons.append("the run's inputs were never pinned")
             elif sorted(str(r) for r in inputs.get("revisionIds") or []) != sorted(pinned) or inputs.get("fingerprint") != run.input_fingerprint:
                 reasons.append("the manifest's inputs are not the run's pinned inputs")
+            elif content_hash(dict(inputs.get("dependencies") or {})) != content_hash(dict(run.input_manifest.get("dependencies") or {})):
+                reasons.append("the manifest's input dependencies are not the run's pinned dependencies")
             objects = list(manifest.get("objects") or [])
             entries = self._check_revisions(run.project_id, objects, run_id, reasons)
             published_inputs = {rid for rid in pinned if rid in self.revisions and self.revisions[rid].project_id == run.project_id and self.revisions[rid].status == RevisionStatus.PUBLISHED}
@@ -717,11 +747,12 @@ class FakeAnalysisStore:
                 reasons.append("pinned input revisions are not published in this project")
             self._check_relations(run.project_id, list(manifest.get("relations") or []), {str(o.get("revisionId")) for o in objects} | published_inputs, run_id, reasons)
             staged = [v for v in entries if v.status == RevisionStatus.STAGED]
-            for revision in staged:
+            for revision in entries:
                 prov = revision.provenance
-                if (prov.run_id, prov.recipe_id, prov.recipe_version) != (run.id, run.recipe_id, run.recipe_version):
+                own = revision.status == RevisionStatus.STAGED
+                if own and (prov.run_id, prov.recipe_id, prov.recipe_version) != (run.id, run.recipe_id, run.recipe_version):
                     reasons.append(f"revision {revision.id} names another run or recipe in its provenance")
-                if any(rid not in pinned for rid in prov.input_revision_ids):
+                if own and any(rid not in pinned for rid in prov.input_revision_ids):
                     reasons.append(f"revision {revision.id} cites revisions that are not pinned inputs")
                 ref = revision.embedding_refs or {}
                 if ref.get("embeddingId"):
@@ -809,6 +840,9 @@ class FakeAnalysisStore:
                         return snapshot
             if scope.current_snapshot_id != expected_previous_id:
                 raise SnapshotConflict(scope.id, expected_previous_id, scope.current_snapshot_id)
+            current = self.snapshots.get(scope.current_snapshot_id or "")
+            if current is not None and current.content_hash == new.content_hash:
+                return current
             reasons: list[str] = []
             objects = list(new.manifest.get("objects") or [])
             self._check_revisions(new.project_id, objects, None, reasons)
@@ -869,14 +903,16 @@ class FakeAnalysisStore:
 
     # ── outbox ──────────────────────────────────────────────────────────
 
-    async def claim_outbox(self, *, claim: str, limit: int, claim_seconds: int, event_id: str | None = None) -> list[OutboxEvent]:
+    async def claim_outbox(
+        self, *, claim: str, limit: int, claim_seconds: int, event_id: str | None = None, dead: bool = False
+    ) -> list[OutboxEvent]:
         self._enter("claim_outbox")
         now = self.clock.peek()
         due = sorted(
             (
                 e
                 for e in self.outbox.values()
-                if e.status in (OutboxStatus.PENDING, OutboxStatus.DISPATCHING)
+                if (e.status == OutboxStatus.DEAD if dead else e.status in (OutboxStatus.PENDING, OutboxStatus.DISPATCHING))
                 and (e.next_attempt_at or e.created_at or now) <= now
                 and (event_id is None or e.id == event_id)
             ),

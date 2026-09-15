@@ -82,6 +82,12 @@ def revision_content_hash(
     )
 
 
+def _same_embedding(current: dict[str, Any] | None, wanted: dict[str, Any] | None) -> bool:
+    """A head is reusable for a computation that names no vector, or the very
+    vector the head already references; never once the configuration moved."""
+    return wanted is None or dict(current or {}) == dict(wanted)
+
+
 class RevisionService:
     def __init__(self, store: AnalysisStore) -> None:
         self.store = store
@@ -139,7 +145,7 @@ class RevisionService:
             project_id=run.project_id, type=type_id, lineage_key=lineage_key, scope_id=run.scope_id
         )
         head = await self._head(record)
-        if head is not None and head.content_hash == hashed:
+        if head is not None and head.content_hash == hashed and _same_embedding(head.embedding_refs, embedding_refs):
             return StagedRevision(object=record, revision=head, reused=True, needs_review=False)
         over_authored = head is not None and head.provenance.origin == Origin.AUTHORED
         revision = await self.store.stage_revision(

@@ -86,6 +86,7 @@ class SweepReport:
     failed_waiting_runs: int = 0
     redispatched_runs: int = 0
     events: DispatchReport = field(default_factory=DispatchReport)
+    dead_events: DispatchReport = field(default_factory=DispatchReport)
 
 
 def _event_doc(event: OutboxEvent) -> dict[str, Any]:
@@ -131,6 +132,9 @@ CONSUMERS: tuple[tuple[str, Consumer], ...] = (
     ("wake_waiting", consume_wake_waiting),
     ("view_snapshots", consume_view_snapshots),
 )
+# Effects inside the platform, reconciled even after an event is dead; the
+# page nudge is not worth sending that late.
+INTERNAL_CONSUMERS = ("wake_waiting", "view_snapshots")
 
 
 async def dispatch_events(
@@ -140,51 +144,67 @@ async def dispatch_events(
     event_id: str | None = None,
     limit: int = SWEEP_LIMIT,
     consumers: tuple[tuple[str, Consumer], ...] = CONSUMERS,
+    dead: bool = False,
 ) -> DispatchReport:
-    """Claim due events (or the one named) and run their remaining consumers."""
+    """Claim due events (or the one named) and run each consumer not yet done.
+    Consumers are isolated: one that fails is retried with its event later
+    while the others still run and are recorded now. `dead` claims events past
+    their last attempt instead."""
     claim = uuid.uuid4().hex
-    events = await store.claim_outbox(claim=claim, limit=limit, claim_seconds=CLAIM_SECONDS, event_id=event_id)
+    events = await store.claim_outbox(
+        claim=claim, limit=limit, claim_seconds=CLAIM_SECONDS, event_id=event_id, dead=dead
+    )
     report = DispatchReport(claimed=len(events))
     for event in events:
         try:
+            failures: list[str] = []
             lost = False
             for name, consumer in consumers:
                 if name in event.consumers:
                     continue
-                await consumer(event, store, deps)
+                try:
+                    await consumer(event, store, deps)
+                except Exception as exc:  # noqa: BLE001
+                    failures.append(f"{type(exc).__name__}: {str(exc)[:300]} (consumer {name})")
+                    logger.warning(
+                        "analysis outbox %s (%s) consumer %s failed on attempt %d: %s",
+                        event.id,
+                        event.event_type,
+                        name,
+                        event.attempts,
+                        type(exc).__name__,
+                    )
+                    continue
                 if not await store.mark_consumer_done(event.id, claim, name):
                     lost = True
                     break
-            if lost or not await store.finish_outbox(event.id, claim):
+            if lost:
                 # Another dispatcher reclaimed it after our claim expired.
+                report.lost += 1
+                continue
+            if failures:
+                delay = backoff_seconds(event.attempts)
+                await store.retry_outbox(
+                    event.id, claim, error="; ".join(failures), delay_seconds=delay, max_attempts=MAX_ATTEMPTS
+                )
+                report.retried += 1
+                continue
+            if not await store.finish_outbox(event.id, claim):
                 report.lost += 1
                 continue
             report.delivered += 1
         except Exception as exc:  # noqa: BLE001
-            delay = backoff_seconds(event.attempts)
-            logger.warning(
-                "analysis outbox %s (%s) attempt %d failed: %s; retry in %ds",
-                event.id,
-                event.event_type,
-                event.attempts,
-                type(exc).__name__,
-                delay,
-            )
-            await store.retry_outbox(
-                event.id,
-                claim,
-                error=f"{type(exc).__name__}: {str(exc)[:500]}",
-                delay_seconds=delay,
-                max_attempts=MAX_ATTEMPTS,
-            )
-            report.retried += 1
+            # The claim expires and a later dispatch picks the event up again.
+            logger.warning("analysis outbox %s could not be settled: %s", event.id, type(exc).__name__)
+            report.lost += 1
     return report
 
 
 async def sweep(*, store: AnalysisStore, deps: OutboxDeps) -> SweepReport:
     """The minute job: fail runs whose lease deadline passed, settle waiting
     runs against their dependencies' rows, send stranded queued runs again and
-    dispatch every due event."""
+    dispatch every due event, then finish the internal effects (waking
+    waiting runs, assembling snapshots) of events already dead."""
     report = SweepReport()
     report.expired_runs = len(await store.expire_stale_runs())
     wake = await store.wake_waiting_runs(None)
@@ -199,6 +219,12 @@ async def sweep(*, store: AnalysisStore, deps: OutboxDeps) -> SweepReport:
             except Exception as exc:  # noqa: BLE001
                 logger.warning("analysis run %s not dispatched by the sweep: %s", run.id, type(exc).__name__)
     report.events = await dispatch_events(store=store, deps=deps)
+    report.dead_events = await dispatch_events(
+        store=store,
+        deps=deps,
+        dead=True,
+        consumers=tuple((name, consumer) for name, consumer in CONSUMERS if name in INTERNAL_CONSUMERS),
+    )
     return report
 
 

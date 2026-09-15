@@ -2,7 +2,8 @@
 
 Ownership. Every worker write (heartbeat, input pinning, step checkpoint,
 staged revision or relation) runs in one short transaction that locks the
-run's scope (`FOR KEY SHARE`) and then the run (`FOR UPDATE`), in the same
+run's scope (`FOR SHARE`, which also waits for a writer transfer) and then
+the run (`FOR UPDATE`), in the same
 order publication locks them (`FOR UPDATE` on both), and proceeds only while
 the run is running under the lease, before its lease deadline, under its
 scope's current writer fence, and not overtaken by a newer ready request. A
@@ -67,6 +68,7 @@ from dembrane.analysis.contracts import (
     StepConflict,
     PublishResult,
     RelationBasis,
+    RetryConflict,
     ReuseOutdated,
     ObjectRevision,
     RelationStatus,
@@ -356,6 +358,48 @@ def _outbox(row: dict[str, Any]) -> OutboxEvent:
     )
 
 
+class _KeyTaken(Exception):
+    """Another request bound this idempotency key first."""
+
+
+async def _lease_live(cursor: db.Cursor, run_id: str) -> bool:
+    """Whether the run's lease deadline is still ahead on the wall clock, read
+    after the caller took its locks: `now()` is the transaction's start, which
+    can be long before a lock wait ended."""
+    await cursor.execute(
+        "SELECT lease_expires_at > clock_timestamp() AS live FROM analysis_run WHERE id = %s", (run_id,)
+    )
+    row = await cursor.fetchone()
+    return bool(row and row["live"])
+
+
+async def _head_conflicts(cursor: db.Cursor, expected: dict[str, str | None]) -> list[str]:
+    """Objects whose current head is not the expected revision. Every object
+    row is locked, in id order, as publication locks them."""
+    if not expected:
+        return []
+    await cursor.execute(
+        """SELECT id::text AS id, current_revision_id::text AS current_revision_id
+           FROM analysis_object WHERE id = ANY(%s::uuid[]) ORDER BY id FOR UPDATE""",
+        (sorted(expected),),
+    )
+    heads = {row["id"]: row["current_revision_id"] for row in await cursor.fetchall()}
+    return sorted(object_id for object_id, revision_id in expected.items() if heads.get(object_id) != revision_id)
+
+
+def _computation_identity(row: dict[str, Any]) -> str:
+    """What a run computes, apart from its inputs: two runs with the same
+    identity over the same inputs are interchangeable dependencies."""
+    return content_hash(
+        {
+            "recipeVersion": row["recipe_version"],
+            "definition": row["definition"] or {},
+            "parameters": row["parameters"] or {},
+            "context": row["context"] or {},
+        }
+    )
+
+
 class SqlAnalysisStore:
     """`lease_seconds` is how long a claim or checkpoint keeps a run its
     worker's. `fault`, for tests only, is called with a named point inside the
@@ -400,17 +444,19 @@ class SqlAnalysisStore:
                 await cursor.execute("SELECT scope_id FROM analysis_run WHERE id = %s", (run_id,))
                 located = await cursor.fetchone()
                 if located is not None:
+                    # FOR SHARE conflicts with every update of the scope row: a
+                    # writer transfer (a fence change) or a publication waits
+                    # for this checkpoint, or this checkpoint for it.
                     await cursor.execute(
                         """SELECT writer, writer_fence, current_request_order FROM analysis_scope
-                           WHERE id = %s FOR KEY SHARE""",
+                           WHERE id = %s FOR SHARE""",
                         (located["scope_id"],),
                     )
                     scope = await cursor.fetchone()
                     await cursor.execute(
                         """SELECT id::text AS id, project_id::text AS project_id,
                                   scope_id::text AS scope_id, recipe_id, recipe_version,
-                                  request_order, writer_fence, input_manifest, input_fingerprint,
-                                  lease_expires_at > now() AS live
+                                  request_order, writer_fence, input_manifest, input_fingerprint
                            FROM analysis_run
                            WHERE id = %s AND lease = %s AND status = 'running'
                            FOR UPDATE""",
@@ -420,7 +466,7 @@ class SqlAnalysisStore:
                     if (
                         scope is not None
                         and run is not None
-                        and run["live"]
+                        and await _lease_live(cursor, run_id)
                         and scope["writer"] == Writer.ANALYSIS
                         and scope["writer_fence"] == run["writer_fence"]
                         and (
@@ -430,7 +476,8 @@ class SqlAnalysisStore:
                     ):
                         await cursor.execute(
                             """UPDATE analysis_run
-                               SET lease_expires_at = now() + make_interval(secs => %s), updated_at = now()
+                               SET lease_expires_at = clock_timestamp() + make_interval(secs => %s),
+                                   updated_at = now()
                                WHERE id = %s""",
                             (self._lease_seconds, run_id),
                         )
@@ -543,8 +590,18 @@ class SqlAnalysisStore:
                                 cursor, project_id=new.project_id, key=new.idempotency_key, run=joined, mode=str(new.mode)
                             )
                             return joined, False
-                    if new.reused_run_id is not None and scope.current_run_id != new.reused_run_id:
-                        raise ReuseOutdated(scope.current_run_id)
+                    if new.reused_run_id is not None:
+                        if scope.current_run_id != new.reused_run_id:
+                            raise ReuseOutdated(scope.current_run_id)
+                        # The reused output must still be what its objects say:
+                        # an edit since its publication makes it stale, exactly
+                        # as publication's expected-head check would find.
+                        expected: dict[str, str | None] = {
+                            str(o["objectId"]): str(o["revisionId"])
+                            for o in (new.output_manifest or {}).get("objects") or []
+                        }
+                        if await _head_conflicts(cursor, expected):
+                            raise ReuseOutdated(scope.current_run_id)
                     order = scope.next_request_order
                     epoch = new.epoch if new.epoch is not None else scope.generation_epoch + 1
                     await cursor.execute(
@@ -662,16 +719,26 @@ class SqlAnalysisStore:
 
     async def claim_run(self, run_id: str, lease: str, *, max_running: int | None) -> ClaimResult:
         """Start a queued run, or take over one whose lease deadline passed,
-        under a new lease. The running limit is a soft backpressure bound: two
-        claims at the same instant may both pass it, never more than that. A
-        run whose scope changed writer since it was accepted fails instead."""
+        under a new lease. With a running limit, counting and claiming are
+        serialised per recipe by a transaction-scoped advisory lock, so the
+        limit holds under concurrent claims. A run whose scope changed writer
+        since it was accepted fails instead."""
         if not _is_uuid(run_id):
             return ClaimResult("inactive")
-        async with self._cursor() as cursor:
+        async with self._transaction() as cursor:
+            if max_running is not None:
+                await cursor.execute("SELECT recipe_id FROM analysis_run WHERE id = %s", (run_id,))
+                located = await cursor.fetchone()
+                if located is None:
+                    return ClaimResult("inactive")
+                await cursor.execute(
+                    "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                    (f"analysis_recipe_running:{located['recipe_id']}",),
+                )
             await cursor.execute(
                 f"""UPDATE analysis_run AS r
                     SET status = 'running', lease = %(lease)s, attempt = r.attempt + 1,
-                        lease_expires_at = now() + make_interval(secs => %(lease_seconds)s),
+                        lease_expires_at = clock_timestamp() + make_interval(secs => %(lease_seconds)s),
                         started_at = COALESCE(r.started_at, now()), updated_at = now(),
                         error = NULL,
                         progress = (COALESCE(r.progress::jsonb, '{{}}'::jsonb)
@@ -679,14 +746,14 @@ class SqlAnalysisStore:
                     WHERE r.id = %(run_id)s
                       AND (r.status = 'queued'
                            OR (r.status = 'running'
-                               AND COALESCE(r.lease_expires_at, '-infinity') < now()))
+                               AND COALESCE(r.lease_expires_at, '-infinity') < clock_timestamp()))
                       AND EXISTS (SELECT 1 FROM analysis_scope AS s
                                   WHERE s.id = r.scope_id AND s.writer = 'analysis'
                                     AND s.writer_fence = r.writer_fence)
                       AND (%(max_running)s::int IS NULL OR (
                            SELECT count(*) FROM analysis_run AS o
                            WHERE o.recipe_id = r.recipe_id AND o.status = 'running'
-                             AND o.id <> r.id AND o.lease_expires_at > now()
+                             AND o.id <> r.id AND o.lease_expires_at > clock_timestamp()
                           ) < %(max_running)s::int)
                     RETURNING {RUN_COLUMNS_R}""",
                 {
@@ -758,14 +825,51 @@ class SqlAnalysisStore:
         metrics: dict[str, Any] | None = None,
         candidate_manifest: dict[str, Any] | None = None,
     ) -> bool:
-        """End a running run without publishing it: failed, needs review,
-        superseded or cancelled. Only under its lease."""
+        """End a running run without publishing it: failed, needs review or
+        cancelled only while it is still this worker's (lease, wall-clock
+        deadline, writer fence, not overtaken). Settling as superseded is the
+        one exception: it needs the lease and a newer ready request in the
+        scope, and nothing else."""
         if status in (RunStatus.READY, RunStatus.QUEUED, RunStatus.RUNNING, RunStatus.WAITING_FOR_INPUTS):
             raise ValueError(f"finish_run cannot set {status}")
+        if not _is_uuid(run_id) or not lease:
+            return False
         progress_extra: dict[str, Any] = {"stage": str(status)}
         if candidate_manifest is not None:
             progress_extra["candidateManifest"] = candidate_manifest
-        async with self._cursor() as cursor:
+        async with self._transaction() as cursor:
+            await cursor.execute("SELECT scope_id FROM analysis_run WHERE id = %s", (run_id,))
+            located = await cursor.fetchone()
+            if located is None:
+                return False
+            await cursor.execute(
+                "SELECT writer, writer_fence, current_request_order FROM analysis_scope WHERE id = %s FOR SHARE",
+                (located["scope_id"],),
+            )
+            scope = await cursor.fetchone()
+            await cursor.execute(
+                """SELECT request_order, writer_fence FROM analysis_run
+                   WHERE id = %s AND lease = %s AND status = 'running' FOR UPDATE""",
+                (run_id, lease),
+            )
+            run = await cursor.fetchone()
+            if scope is None or run is None:
+                return False
+            overtaken = (
+                scope["current_request_order"] is not None
+                and scope["current_request_order"] >= run["request_order"]
+            )
+            if status == RunStatus.SUPERSEDED:
+                allowed = overtaken
+            else:
+                allowed = (
+                    not overtaken
+                    and scope["writer"] == Writer.ANALYSIS
+                    and scope["writer_fence"] == run["writer_fence"]
+                    and await _lease_live(cursor, run_id)
+                )
+            if not allowed:
+                return False
             await cursor.execute(
                 """UPDATE analysis_run
                    SET status = %s, error = %s,
@@ -774,7 +878,7 @@ class SqlAnalysisStore:
                        progress = (COALESCE(progress::jsonb, '{}'::jsonb) || %s::jsonb)::json,
                        completed_at = CASE WHEN %s THEN NULL ELSE now() END,
                        updated_at = now()
-                   WHERE id = %s AND lease = %s AND status = 'running'""",
+                   WHERE id = %s""",
                 (
                     str(status),
                     error[:4000] if error else None,
@@ -783,10 +887,9 @@ class SqlAnalysisStore:
                     Json(progress_extra),
                     status == RunStatus.NEEDS_REVIEW,
                     run_id,
-                    lease,
                 ),
             )
-            return cursor.rowcount == 1
+            return True
 
     async def cancel_run(self, run_id: str) -> Run | None:
         if not _is_uuid(run_id):
@@ -803,58 +906,105 @@ class SqlAnalysisStore:
         return _run(row) if row else await self.get_run(run_id)
 
     async def requeue_run(self, run_id: str, *, idempotency_key: str | None = None) -> Run | None:
-        """A failed run queued again with its saved steps and pinned inputs;
-        the lease is cleared, so whichever worker claims it next writes under a
-        new one. The retry request's key is recorded against the run."""
+        """Bind a retry request to its run, atomically. Returns the run the key
+        already answers; else the failed run queued again with its saved steps
+        and pinned inputs (its lease cleared, so the next claim writes under a
+        new one); else the run as it stands when it is no longer failed. An
+        equivalent run in flight refuses the retry with `RetryConflict`: it is
+        never returned in the failed run's place. Two retries racing with one
+        key both return the run the first one bound."""
         if not _is_uuid(run_id):
             return None
-        try:
-            async with self._transaction() as cursor:
-                await cursor.execute(
-                    f"""UPDATE analysis_run
-                        SET status = 'queued', lease = NULL, lease_expires_at = NULL, error = NULL,
-                            completed_at = NULL, updated_at = now(),
-                            progress = (COALESCE(progress::jsonb, '{{}}'::jsonb)
-                                        || jsonb_build_object('stage', 'queued'))::json
-                        WHERE id = %s AND status = 'failed'
-                        RETURNING {RUN_COLUMNS}""",
-                    (run_id,),
-                )
-                row = await cursor.fetchone()
-                if row is None:
-                    return None
-                run = _run(row)
-                if idempotency_key:
-                    await cursor.execute(
-                        """INSERT INTO analysis_request_key
-                               (id, project_id, idempotency_key, run_id, scope_id, mode, created_at)
-                           VALUES (%s, %s, %s, %s, %s, 'retry', now())
-                           ON CONFLICT (project_id, idempotency_key) DO NOTHING""",
-                        (str(uuid.uuid4()), run.project_id, idempotency_key, run.id, run.scope_id),
-                    )
-                return run
-        except psycopg.errors.UniqueViolation:
-            # An equivalent request is in flight in the scope already.
-            return None
+        for _ in range(3):
+            try:
+                async with self._transaction() as cursor:
+                    await cursor.execute(f"SELECT {RUN_COLUMNS} FROM analysis_run WHERE id = %s", (run_id,))
+                    located = await cursor.fetchone()
+                    if located is None:
+                        return None
+                    target = _run(located)
+                    if idempotency_key:
+                        await cursor.execute(
+                            f"""SELECT {RUN_COLUMNS_R} FROM analysis_request_key AS k
+                                JOIN analysis_run AS r ON r.id = k.run_id
+                                WHERE k.project_id = %s AND k.idempotency_key = %s""",
+                            (target.project_id, idempotency_key),
+                        )
+                        mapped = await cursor.fetchone()
+                        if mapped is not None:
+                            return _run(mapped)
+                    await cursor.execute("SELECT id FROM analysis_scope WHERE id = %s FOR UPDATE", (target.scope_id,))
+                    await cursor.execute(f"SELECT {RUN_COLUMNS} FROM analysis_run WHERE id = %s FOR UPDATE", (run_id,))
+                    locked = await cursor.fetchone()
+                    assert locked is not None
+                    run = _run(locked)
+                    if run.status == RunStatus.FAILED:
+                        await cursor.execute(
+                            f"""SELECT {RUN_COLUMNS} FROM analysis_run
+                                WHERE scope_id = %s AND request_fingerprint = %s AND status = ANY(%s)
+                                ORDER BY request_order DESC LIMIT 1""",
+                            (run.scope_id, run.request_fingerprint, list(ACTIVE)),
+                        )
+                        active = await cursor.fetchone()
+                        if active is not None:
+                            raise RetryConflict(_run(active))
+                        await cursor.execute(
+                            f"""UPDATE analysis_run
+                                SET status = 'queued', lease = NULL, lease_expires_at = NULL, error = NULL,
+                                    completed_at = NULL, updated_at = now(),
+                                    progress = (COALESCE(progress::jsonb, '{{}}'::jsonb)
+                                                || jsonb_build_object('stage', 'queued'))::json
+                                WHERE id = %s
+                                RETURNING {RUN_COLUMNS}""",
+                            (run_id,),
+                        )
+                        row = await cursor.fetchone()
+                        assert row is not None
+                        run = _run(row)
+                    if idempotency_key:
+                        await cursor.execute(
+                            """INSERT INTO analysis_request_key
+                                   (id, project_id, idempotency_key, run_id, scope_id, mode, created_at)
+                               VALUES (%s, %s, %s, %s, %s, 'retry', now())
+                               ON CONFLICT (project_id, idempotency_key) DO NOTHING
+                               RETURNING id""",
+                            (str(uuid.uuid4()), run.project_id, idempotency_key, run.id, run.scope_id),
+                        )
+                        if await cursor.fetchone() is None:
+                            # Rolls this transaction back, requeue included.
+                            raise _KeyTaken()
+                    return run
+            except (_KeyTaken, psycopg.errors.UniqueViolation):
+                continue
+        raise AnalysisStoreError("could not bind the retry after three attempts")
 
     async def wake_waiting_runs(self, project_id: str | None) -> WakeResult:
         """Settle waiting runs against their dependencies' durable rows.
 
-        All dependencies ready with a manifest: queued. A dependency failed,
+        Only settleable waiters are selected (no dependency still queued,
+        waiting, running or in review), so a batch is never filled by runs
+        that cannot move while a runnable one waits behind them. All
+        dependencies ready with a manifest: queued. A dependency failed,
         cancelled or gone: failed. A superseded dependency is re-resolved to
-        its scope's current ready run when that run is newer (the substitution
-        is recorded in the waiting run's progress), and fails the waiting run
-        otherwise. Anything else keeps waiting. A second caller finds nothing
-        left to change."""
+        its scope's current ready run when that run is newer and computes the
+        same thing (recipe version, definition, parameters and context; the
+        substitution is recorded in the waiting run's progress), and fails the
+        waiting run otherwise. A second caller finds nothing left to change."""
         woken: list[Run] = []
         failed: list[Run] = []
         async with self._transaction() as cursor:
             await cursor.execute(
-                f"""SELECT {RUN_COLUMNS} FROM analysis_run
-                    WHERE status = 'waiting_for_inputs'
-                      AND (%(project_id)s::uuid IS NULL OR project_id = %(project_id)s::uuid)
-                    ORDER BY created_at LIMIT %(limit)s
-                    FOR UPDATE SKIP LOCKED""",
+                f"""SELECT {RUN_COLUMNS_R} FROM analysis_run AS r
+                    WHERE r.status = 'waiting_for_inputs'
+                      AND (%(project_id)s::uuid IS NULL OR r.project_id = %(project_id)s::uuid)
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM jsonb_array_elements_text(COALESCE(r.depends_on::jsonb, '[]'::jsonb)) AS dep(run_id)
+                          JOIN analysis_run AS d ON d.id::text = dep.run_id
+                          WHERE d.status IN ('queued', 'waiting_for_inputs', 'running', 'needs_review')
+                             OR (d.status = 'ready' AND d.output_manifest IS NULL))
+                    ORDER BY r.created_at LIMIT %(limit)s
+                    FOR UPDATE OF r SKIP LOCKED""",
                 {"project_id": project_id, "limit": WAKE_BATCH},
             )
             waiting = [_run(row) for row in await cursor.fetchall()]
@@ -862,7 +1012,8 @@ class SqlAnalysisStore:
                 deps = _uuids(run.depends_on)
                 await cursor.execute(
                     """SELECT id::text AS id, status, scope_id::text AS scope_id, request_order,
-                              output_manifest IS NOT NULL AS has_manifest
+                              output_manifest IS NOT NULL AS has_manifest,
+                              recipe_version, definition, parameters, context
                        FROM analysis_run WHERE id = ANY(%s::uuid[])""",
                     (deps,),
                 )
@@ -880,30 +1031,30 @@ class SqlAnalysisStore:
                         resolved.append(dep)
                     elif row["status"] == "superseded":
                         await cursor.execute(
-                            """SELECT current_run_id::text AS current_run_id, current_request_order
-                               FROM analysis_scope WHERE id = %s""",
+                            """SELECT r.id::text AS id, s.current_request_order, r.recipe_version,
+                                      r.definition, r.parameters, r.context
+                               FROM analysis_scope AS s JOIN analysis_run AS r ON r.id = s.current_run_id
+                               WHERE s.id = %s""",
                             (row["scope_id"],),
                         )
-                        scope = await cursor.fetchone()
+                        current = await cursor.fetchone()
                         if (
-                            scope is None
-                            or scope["current_run_id"] is None
-                            or scope["current_request_order"] is None
-                            or scope["current_request_order"] < row["request_order"]
+                            current is None
+                            or current["current_request_order"] is None
+                            or current["current_request_order"] < row["request_order"]
+                            or _computation_identity(current) != _computation_identity(row)
                         ):
                             broken = True
                             break
-                        resolved.append(scope["current_run_id"])
-                        substituted[dep] = scope["current_run_id"]
+                        resolved.append(current["id"])
+                        substituted[dep] = current["id"]
                     else:
                         pending = True
                         resolved.append(dep)
                 if broken:
-                    status, error = "failed", "A recipe this run depends on did not finish."
+                    status, error = "failed", "A recipe this run depends on did not finish with a usable output."
                 elif pending:
-                    if not substituted:
-                        continue
-                    status, error = "waiting_for_inputs", None
+                    continue
                 else:
                     status, error = "queued", None
                 progress = {**run.progress, "stage": status}
@@ -928,7 +1079,7 @@ class SqlAnalysisStore:
                 assert updated is not None
                 if status == "queued":
                     woken.append(_run(updated))
-                elif status == "failed":
+                else:
                     failed.append(_run(updated))
         return WakeResult(woken=tuple(woken), failed=tuple(failed))
 
@@ -938,7 +1089,7 @@ class SqlAnalysisStore:
                 """UPDATE analysis_run
                    SET status = 'failed', error = 'The run stopped without finishing.',
                        completed_at = now(), updated_at = now()
-                   WHERE status = 'running' AND lease_expires_at < now()
+                   WHERE status = 'running' AND lease_expires_at < clock_timestamp()
                    RETURNING id::text AS id"""
             )
             return [row["id"] for row in await cursor.fetchall()]
@@ -1494,24 +1645,26 @@ class SqlAnalysisStore:
         self,
         cursor: db.Cursor,
         run: Run,
-        staged: list[dict[str, Any]],
+        entries: list[dict[str, Any]],
         pinned: set[str],
         reasons: list[str],
     ) -> None:
-        """Staged revisions name this run and recipe, cite only pinned inputs,
-        and reference embeddings of this project and configuration."""
+        """Staged revisions name this run and recipe and cite only pinned
+        inputs; every output entry, staged or reused, references embeddings of
+        this project and of the configuration it names."""
         embedding_refs: dict[str, dict[str, Any]] = {}
-        for row in staged:
-            provenance = row["provenance"] or {}
-            if (provenance.get("runId"), provenance.get("recipeId"), provenance.get("recipeVersion")) != (
-                run.id,
-                run.recipe_id,
-                run.recipe_version,
-            ):
-                reasons.append(f"revision {row['id']} names another run or recipe in its provenance")
-            stray = [rid for rid in provenance.get("inputRevisionIds") or [] if str(rid) not in pinned]
-            if stray:
-                reasons.append(f"revision {row['id']} cites {len(stray)} revisions that are not pinned inputs")
+        for row in entries:
+            if row["status"] == "staged":
+                provenance = row["provenance"] or {}
+                if (provenance.get("runId"), provenance.get("recipeId"), provenance.get("recipeVersion")) != (
+                    run.id,
+                    run.recipe_id,
+                    run.recipe_version,
+                ):
+                    reasons.append(f"revision {row['id']} names another run or recipe in its provenance")
+                stray = [rid for rid in provenance.get("inputRevisionIds") or [] if str(rid) not in pinned]
+                if stray:
+                    reasons.append(f"revision {row['id']} cites {len(stray)} revisions that are not pinned inputs")
             ref = row["embedding_refs"] or {}
             if ref.get("embeddingId"):
                 embedding_refs[str(row["id"])] = ref
@@ -1587,10 +1740,7 @@ class SqlAnalysisStore:
                 f"SELECT {SCOPE_COLUMNS} FROM analysis_scope WHERE id = %s FOR UPDATE", (run.scope_id,)
             )
             scope_row = await cursor.fetchone()
-            await cursor.execute(
-                f"SELECT {RUN_COLUMNS}, lease_expires_at > now() AS live FROM analysis_run WHERE id = %s FOR UPDATE",
-                (run_id,),
-            )
+            await cursor.execute(f"SELECT {RUN_COLUMNS} FROM analysis_run WHERE id = %s FOR UPDATE", (run_id,))
             run_row = await cursor.fetchone()
             if scope_row is None or run_row is None:
                 return PublishResult("inactive")
@@ -1599,7 +1749,7 @@ class SqlAnalysisStore:
             if (
                 locked.status != RunStatus.RUNNING
                 or locked.lease != lease
-                or not run_row["live"]
+                or not await _lease_live(cursor, run_id)
                 or scope.writer != Writer.ANALYSIS
                 or scope.writer_fence != locked.writer_fence
             ):
@@ -1622,6 +1772,10 @@ class SqlAnalysisStore:
                 "fingerprint"
             ) != locked.input_fingerprint:
                 reasons.append("the manifest's inputs are not the run's pinned inputs")
+            elif content_hash(dict(inputs.get("dependencies") or {})) != content_hash(
+                dict(pinned_manifest.get("dependencies") or {})
+            ):
+                reasons.append("the manifest's input dependencies are not the run's pinned dependencies")
             objects = list(manifest.get("objects") or [])
             revision_rows = await self._check_revisions(
                 cursor, locked.project_id, objects, staged_run_id=run_id, reasons=reasons
@@ -1638,26 +1792,21 @@ class SqlAnalysisStore:
                 reasons=reasons,
             )
             staged = [row for row in revision_rows.values() if row["status"] == "staged"]
-            await self._check_staged_references(cursor, locked, staged, pinned, reasons)
+            entries = [row for row in revision_rows.values() if row["status"] in ("staged", "published")]
+            await self._check_staged_references(cursor, locked, entries, pinned, reasons)
             await self._check_steps(cursor, locked, checks, reasons)
             if reasons:
                 raise PublicationRejected(reasons)
 
             # Every entry expects a head: a staged revision its parent, a reused
             # revision itself. An edit that landed meanwhile is a conflict.
-            conflicts: list[str] = []
-            entry_rows = [row for row in revision_rows.values() if row["status"] in ("staged", "published")]
-            if entry_rows:
-                await cursor.execute(
-                    """SELECT id::text AS id, current_revision_id::text AS current_revision_id
-                       FROM analysis_object WHERE id = ANY(%s::uuid[]) ORDER BY id FOR UPDATE""",
-                    ([row["object_id"] for row in entry_rows],),
-                )
-                heads = {row["id"]: row["current_revision_id"] for row in await cursor.fetchall()}
-                for row in entry_rows:
-                    expected = row["parent_revision_id"] if row["status"] == "staged" else row["id"]
-                    if heads.get(row["object_id"]) != expected:
-                        conflicts.append(row["object_id"])
+            conflicts = await _head_conflicts(
+                cursor,
+                {
+                    row["object_id"]: row["parent_revision_id"] if row["status"] == "staged" else row["id"]
+                    for row in entries
+                },
+            )
             if conflicts:
                 return PublishResult("conflict", conflicts=tuple(sorted(conflicts)))
             self._fault("publish:validated")
@@ -1766,11 +1915,39 @@ class SqlAnalysisStore:
                     return _snapshot(effect)
             if scope.current_snapshot_id != expected_previous_id:
                 raise SnapshotConflict(scope.id, expected_previous_id, scope.current_snapshot_id)
+            if scope.current_snapshot_id is not None:
+                # Identical content is the current snapshot, returned only once
+                # the expected head has been confirmed under this lock.
+                await cursor.execute(
+                    f"SELECT {SNAPSHOT_COLUMNS} FROM analysis_snapshot WHERE id = %s", (scope.current_snapshot_id,)
+                )
+                current = await cursor.fetchone()
+                if current is not None and current["content_hash"] == new.content_hash:
+                    return _snapshot(current)
 
             reasons: list[str] = []
             objects = list(new.manifest.get("objects") or [])
             await self._check_revisions(cursor, new.project_id, objects, staged_run_id=None, reasons=reasons)
             displayed = {str(o.get("revisionId")) for o in objects}
+            vectors = list(new.manifest.get("vectors") or [])
+            if vectors:
+                config_key = (new.embedding_config or {}).get("key")
+                await cursor.execute(
+                    """SELECT id::text AS id, project_id::text AS project_id, config_key
+                       FROM map_embedding WHERE id = ANY(%s::uuid[])""",
+                    (_uuids([str(v.get("embeddingId")) for v in vectors]),),
+                )
+                embeddings = {row["id"]: row for row in await cursor.fetchall()}
+                for entry in vectors:
+                    embedding = embeddings.get(str(entry.get("embeddingId")))
+                    if str(entry.get("revisionId")) not in displayed:
+                        reasons.append(f"a vector names revision {entry.get('revisionId')}, which is not displayed")
+                    elif (
+                        embedding is None
+                        or embedding["project_id"] != new.project_id
+                        or (config_key and embedding["config_key"] != config_key)
+                    ):
+                        reasons.append(f"the vector of revision {entry.get('revisionId')} is not of this configuration")
             await self._check_relations(
                 cursor,
                 new.project_id,
@@ -1879,11 +2056,18 @@ class SqlAnalysisStore:
     # ── outbox ──────────────────────────────────────────────────────────
 
     async def claim_outbox(
-        self, *, claim: str, limit: int, claim_seconds: int, event_id: str | None = None
+        self,
+        *,
+        claim: str,
+        limit: int,
+        claim_seconds: int,
+        event_id: str | None = None,
+        dead: bool = False,
     ) -> list[OutboxEvent]:
         """Claim due events. A claim expires after `claim_seconds`, so an event
         whose dispatcher died is claimed again; SKIP LOCKED keeps two
-        dispatchers from claiming the same one."""
+        dispatchers from claiming the same one. `dead` claims events past
+        their last attempt instead, for reconciling their internal effects."""
         if event_id is not None and not _is_uuid(event_id):
             return []
         async with self._cursor() as cursor:
@@ -1894,14 +2078,20 @@ class SqlAnalysisStore:
                         updated_at = now()
                     WHERE o.id IN (
                         SELECT id FROM analysis_outbox
-                        WHERE status IN ('pending', 'dispatching')
+                        WHERE status = ANY(%(statuses)s)
                           AND COALESCE(next_attempt_at, created_at) <= now()
                           AND (%(event_id)s::uuid IS NULL OR id = %(event_id)s::uuid)
                         ORDER BY created_at
                         LIMIT %(limit)s
                         FOR UPDATE SKIP LOCKED)
                     RETURNING {OUTBOX_COLUMNS_O}""",
-                {"claim": claim, "claim_seconds": claim_seconds, "event_id": event_id, "limit": limit},
+                {
+                    "claim": claim,
+                    "claim_seconds": claim_seconds,
+                    "event_id": event_id,
+                    "limit": limit,
+                    "statuses": ["dead"] if dead else ["pending", "dispatching"],
+                },
             )
             return [_outbox(row) for row in await cursor.fetchall()]
 
