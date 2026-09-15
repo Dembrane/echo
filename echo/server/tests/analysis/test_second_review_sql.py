@@ -27,6 +27,7 @@ from dembrane.analysis.contracts import (
     Provenance,
     NewRevision,
     RevisionStatus,
+    ReferenceViolation,
     PublicationRejected,
 )
 from tests.analysis.fixture_recipes import WORDS, FixtureWorld
@@ -190,23 +191,29 @@ async def test_b7_publication_compares_dependency_records_and_checks_reused_embe
 
     record = await store.ensure_object(project_id=project, type="argument", lineage_key="imported:x", scope_id=scope_id)
     payload = {"statement": "Imported.", "epistemicKind": "argument"}
-    head = await store.append_revision(
-        NewRevision(
-            project_id=project,
-            object_id=record.id,
-            type="argument",
-            schema_version=1,
-            origin=Origin.IMPORTED,
-            payload=payload,
-            attributes={"epistemicKind": "argument"},
-            provenance=Provenance(run_id=None, origin=Origin.IMPORTED),
-            content_hash="c" * 64,
-            status=RevisionStatus.PUBLISHED,
-            embedding_refs={"embeddingId": str(uuid.uuid4()), "configKey": "missing"},
-        ),
-        expected_revision_id=None,
+    head = NewRevision(
+        project_id=project,
+        object_id=record.id,
+        type="argument",
+        schema_version=1,
+        origin=Origin.IMPORTED,
+        payload=payload,
+        attributes={"epistemicKind": "argument"},
+        provenance=Provenance(run_id=None, origin=Origin.IMPORTED),
+        content_hash="c" * 64,
+        status=RevisionStatus.PUBLISHED,
+        embedding_refs={"embeddingId": str(uuid.uuid4()), "configKey": "missing"},
     )
-    reusing = {**_manifest(run), "objects": [{"objectId": record.id, "revisionId": head.id, "type": "argument"}]}
+    # The import path refuses an unknown vector; a row that holds one anyway
+    # (written before that check) must still be refused at publication.
+    with pytest.raises(ReferenceViolation, match="not this project's"):
+        await store.append_revision(head, expected_revision_id=None)
+    head_id = str(uuid.uuid4())
+    await execute(pg_dsn, SqlAnalysisStore._INSERT_REVISION, SqlAnalysisStore._revision_params(head, head_id, 1, "published"))
+    await execute(
+        pg_dsn, "UPDATE analysis_object SET current_revision_id = %s, revision_count = 1 WHERE id = %s", (head_id, record.id)
+    )
+    reusing = {**_manifest(run), "objects": [{"objectId": record.id, "revisionId": head_id, "type": "argument"}]}
     with pytest.raises(PublicationRejected, match="embedding"):
         await store.publish_run(run.id, lease, manifest=reusing, checks=[], metrics={})
 

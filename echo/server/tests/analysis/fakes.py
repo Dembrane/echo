@@ -505,13 +505,24 @@ class FakeAnalysisStore:
 
     # ── objects, revisions, relations ───────────────────────────────────
 
-    async def ensure_object(self, *, project_id: str, type: str, lineage_key: str, scope_id: str | None) -> ObjectRecord:
+    async def ensure_object(
+        self, *, project_id: str, type: str, lineage_key: str, scope_id: str | None, object_id: str | None = None
+    ) -> ObjectRecord:
+        if object_id is not None:
+            try:
+                object_id = str(uuid.UUID(str(object_id)))
+            except ValueError:
+                raise AnalysisValidationError(f"object id {object_id!r} is not a uuid") from None
         for record in self.objects.values():
             if (record.project_id, record.type, record.lineage_key) == (project_id, type, lineage_key):
+                if object_id is not None and record.id != object_id:
+                    raise ReferenceViolation(f"object {lineage_key!r} already exists under another id")
                 return record
+        if object_id is not None and object_id in self.objects:
+            raise ReferenceViolation(f"object id {object_id} names another object")
         now = self.clock.now()
         record = ObjectRecord(
-            id=str(uuid.uuid4()), project_id=project_id, type=type, lineage_key=lineage_key, scope_id=scope_id, created_at=now, updated_at=now
+            id=object_id or str(uuid.uuid4()), project_id=project_id, type=type, lineage_key=lineage_key, scope_id=scope_id, created_at=now, updated_at=now
         )
         self.objects[record.id] = record
         return record
@@ -581,6 +592,13 @@ class FakeAnalysisStore:
                 raise ReferenceViolation(f"object {new.object_id} is not a {new.type} of this project")
             if record.scope_id is None:
                 raise ReferenceViolation(f"object {new.object_id} has no scope to publish its edits in")
+            if new.embedding_refs is not None:
+                embedding = self.embeddings.get(str(new.embedding_refs.get("embeddingId") or ""))
+                if embedding is None or embedding["project_id"] != new.project_id:
+                    raise ReferenceViolation("the revision references an embedding that is not this project's")
+                wanted_config = new.embedding_refs.get("configKey")
+                if wanted_config and embedding["config_key"] != wanted_config:
+                    raise ReferenceViolation("the revision references an embedding of another configuration")
             if new.revision_id and new.revision_id in self.revisions:
                 return self.revisions[new.revision_id]
             if record.current_revision_id != expected_revision_id:
@@ -634,6 +652,52 @@ class FakeAnalysisStore:
             content_hash=new.content_hash,
             run_id=run_id,
             created_at=existing.created_at if existing else self.clock.now(),
+        )
+        self.relations[relation.id] = relation
+        return relation
+
+    async def import_relation(self, new: NewRelation, *, relation_id: str | None = None) -> Relation:
+        self._enter("import_relation")
+        if new.run_id is not None:
+            raise ReferenceViolation("an imported relation belongs to no run")
+        if relation_id is not None:
+            try:
+                relation_id = str(uuid.UUID(str(relation_id)))
+            except ValueError:
+                raise AnalysisValidationError(f"relation id {relation_id!r} is not a uuid") from None
+            existing = self.relations.get(relation_id)
+            if existing is not None:
+                same = (existing.project_id, existing.type, existing.from_revision_id, existing.to_revision_id, existing.content_hash, existing.run_id)
+                if same != (new.project_id, new.type, new.from_revision_id, new.to_revision_id, new.content_hash, None):
+                    raise ReferenceViolation(f"relation id {relation_id} names another relation")
+                return existing
+        else:
+            for existing in self.relations.values():
+                if existing.run_id is None and existing.status == RelationStatus.PUBLISHED and (
+                    existing.project_id, existing.type, existing.from_revision_id, existing.to_revision_id, existing.content_hash
+                ) == (new.project_id, new.type, new.from_revision_id, new.to_revision_id, new.content_hash):
+                    return existing
+        for end, obj in ((new.from_revision_id, new.from_object_id), (new.to_revision_id, new.to_object_id)):
+            revision = self.revisions.get(end)
+            if revision is None or revision.project_id != new.project_id or revision.object_id != obj or revision.status != RevisionStatus.PUBLISHED:
+                raise ReferenceViolation("an imported relation connects published revisions of its objects in this project")
+        now = self.clock.now()
+        relation = Relation(
+            id=relation_id or str(uuid.uuid4()),
+            project_id=new.project_id,
+            type=new.type,
+            basis=new.basis,
+            status=RelationStatus.PUBLISHED,
+            from_revision_id=new.from_revision_id,
+            to_revision_id=new.to_revision_id,
+            from_object_id=new.from_object_id,
+            to_object_id=new.to_object_id,
+            attributes=copy.deepcopy(new.attributes),
+            provenance=copy.deepcopy(new.provenance),
+            content_hash=new.content_hash,
+            run_id=None,
+            created_at=now,
+            published_at=now,
         )
         self.relations[relation.id] = relation
         return relation

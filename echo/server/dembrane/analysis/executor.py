@@ -205,16 +205,24 @@ RESERVED_CONTEXT = ("model", "selectedRevisionIds")
 def computation_manifest(manifest: Mapping[str, Any] | None, partitioned: Iterable[str] = ()) -> dict[str, Any]:
     """An input manifest as it bears on computation: each dependency by the
     output it pinned (never by the run that recorded that output, so a no-op
-    upstream refresh changes nothing), without the `partitioned` keys."""
+    upstream refresh changes nothing), without the `partitioned` keys.
+
+    A dependency is partitioned as `dependencies.<name>` (or every dependency
+    as `dependencies`): it keeps its recipe and scope but not its output,
+    because each step names the dependency revisions it consumes in its own
+    `inputs`. Run identity and publication always use the whole manifest."""
     if manifest is None:
         return {}
-    skip = {*partitioned, "dependencies"}
-    out = {key: value for key, value in manifest.items() if key not in skip}
+    parts = set(partitioned)
+    every = "dependencies" in parts
+    out = {key: value for key, value in manifest.items() if key not in parts and key != "dependencies"}
     out["dependencies"] = {
         name: {
             "recipeId": dependency.get("recipeId"),
             "scopeKey": dependency.get("scopeKey"),
-            "output": dependency.get("outputFingerprint") or dependency.get("manifestHash"),
+            "output": None
+            if every or f"dependencies.{name}" in parts
+            else dependency.get("outputFingerprint") or dependency.get("manifestHash"),
         }
         for name, dependency in sorted((manifest.get("dependencies") or {}).items())
     }
@@ -628,7 +636,7 @@ def step_cache_key(
     their prompt and check versions; the scope and instance it runs for; the
     run's inputs, always (less the recipe's partitioned keys, whose parts a
     step names in its own `inputs`), with each dependency identified by its
-    output; the outputs of earlier steps it consumes; parameters, context and
+    output unless that dependency is partitioned too; the outputs of earlier steps it consumes; parameters, context and
     the model configuration; and the generation epoch for model steps."""
     return fingerprint(
         recipe={"id": recipe.id, "version": recipe.version},

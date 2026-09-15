@@ -185,7 +185,11 @@ class Recipe:
     # Input manifest keys whose parts a step names in its own `inputs` (one
     # conversation's source, say). Every other key is part of every step's
     # cache key, so a step is reused across a change to these keys only by
-    # declaring the part it read.
+    # declaring the part it read. `dependencies.<name>` (or `dependencies` for
+    # all of them) partitions a dependency's output: its steps name the exact
+    # dependency revision ids they consume, and `revisionIds`, which lists
+    # them all, is usually partitioned alongside. The run's work identity and
+    # publication checks still carry every dependency's whole output.
     partitioned_inputs: tuple[str, ...] = ()
 
     def step(self, key: str) -> StepDef:

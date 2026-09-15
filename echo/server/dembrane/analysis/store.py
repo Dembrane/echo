@@ -1212,16 +1212,31 @@ class SqlAnalysisStore:
     # ── objects and revisions ───────────────────────────────────────────
 
     async def ensure_object(
-        self, *, project_id: str, type: str, lineage_key: str, scope_id: str | None
+        self,
+        *,
+        project_id: str,
+        type: str,
+        lineage_key: str,
+        scope_id: str | None,
+        object_id: str | None = None,
     ) -> ObjectRecord:
+        """The object of this lineage, created when new. A fixed `object_id`
+        (a deterministic import id) must name this lineage's object: an
+        existing object under another id, or that id already naming another
+        object, is a `ReferenceViolation`."""
+        if object_id is not None:
+            if not _is_uuid(object_id):
+                raise AnalysisValidationError(f"object id {object_id!r} is not a uuid")
+            object_id = str(uuid.UUID(str(object_id)))
         async with self._cursor() as cursor:
+            # No conflict target: a taken id is caught below, never raised.
             await cursor.execute(
                 f"""INSERT INTO analysis_object
                         (id, project_id, type, lineage_key, scope_id, revision_count, created_at, updated_at)
                     VALUES (%s, %s, %s, %s, %s, 0, now(), now())
-                    ON CONFLICT (project_id, type, lineage_key) DO NOTHING
+                    ON CONFLICT DO NOTHING
                     RETURNING {OBJECT_COLUMNS}""",
-                (str(uuid.uuid4()), project_id, type, lineage_key, scope_id),
+                (object_id or str(uuid.uuid4()), project_id, type, lineage_key, scope_id),
             )
             row = await cursor.fetchone()
             if row is None:
@@ -1232,8 +1247,13 @@ class SqlAnalysisStore:
                 )
                 row = await cursor.fetchone()
         if row is None:
+            if object_id is not None:
+                raise ReferenceViolation(f"object id {object_id} names another object")
             raise AnalysisStoreError("object vanished after a conflicting insert")
-        return _object(row)
+        record = _object(row)
+        if object_id is not None and record.id != object_id:
+            raise ReferenceViolation(f"object {lineage_key!r} already exists under another id")
+        return record
 
     async def get_object(self, object_id: str) -> ObjectRecord | None:
         if not _is_uuid(object_id):
@@ -1359,6 +1379,22 @@ class SqlAnalysisStore:
                 raise ReferenceViolation(f"object {new.object_id} is not a {new.type} of this project")
             if located["scope_id"] is None:
                 raise ReferenceViolation(f"object {new.object_id} has no scope to publish its edits in")
+            if new.embedding_refs is not None:
+                # As publication checks a run's revisions: this project's
+                # vector, of the configuration the reference names.
+                embedding_id = str(new.embedding_refs.get("embeddingId") or "")
+                if not _is_uuid(embedding_id):
+                    raise ReferenceViolation("an embedding reference names an embedding id")
+                await cursor.execute(
+                    "SELECT project_id::text AS project_id, config_key FROM map_embedding WHERE id = %s",
+                    (embedding_id,),
+                )
+                embedding = await cursor.fetchone()
+                if embedding is None or embedding["project_id"] != new.project_id:
+                    raise ReferenceViolation("the revision references an embedding that is not this project's")
+                wanted_config = new.embedding_refs.get("configKey")
+                if wanted_config and embedding["config_key"] != wanted_config:
+                    raise ReferenceViolation("the revision references an embedding of another configuration")
             await cursor.execute(
                 f"SELECT {SCOPE_COLUMNS} FROM analysis_scope WHERE id = %s FOR UPDATE", (located["scope_id"],)
             )
@@ -1472,6 +1508,95 @@ class SqlAnalysisStore:
             )
             row = await cursor.fetchone()
             return _relation(row) if row else None
+
+    async def import_relation(self, new: NewRelation, *, relation_id: str | None = None) -> Relation:
+        """Publish an imported relation, which belongs to no run, between two
+        published revisions of its objects in its project. A repeat returns the
+        first row: the one under the same fixed id, or without one the same
+        relation with the same content."""
+        if new.run_id is not None:
+            raise ReferenceViolation("an imported relation belongs to no run")
+        if relation_id is not None:
+            if not _is_uuid(relation_id):
+                raise AnalysisValidationError(f"relation id {relation_id!r} is not a uuid")
+            relation_id = str(uuid.UUID(str(relation_id)))
+        identity = (new.project_id, new.type, new.from_revision_id, new.to_revision_id, new.content_hash)
+        async with self._transaction() as cursor:
+            # Two imports of one relation queue here instead of writing it twice.
+            await cursor.execute(
+                "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                (f"analysis_relation_import:{new.project_id}:{new.content_hash}",),
+            )
+            if relation_id is not None:
+                await cursor.execute(f"SELECT {RELATION_COLUMNS} FROM analysis_relation WHERE id = %s", (relation_id,))
+            else:
+                await cursor.execute(
+                    f"""SELECT {RELATION_COLUMNS} FROM analysis_relation
+                        WHERE project_id = %s AND type = %s AND from_revision_id = %s
+                          AND to_revision_id = %s AND content_hash = %s
+                          AND run_id IS NULL AND status = 'published'
+                        LIMIT 1""",
+                    identity,
+                )
+            existing = await cursor.fetchone()
+            if existing is not None:
+                found = (
+                    existing["project_id"],
+                    existing["type"],
+                    existing["from_revision_id"],
+                    existing["to_revision_id"],
+                    existing["content_hash"],
+                )
+                if found != identity or existing["run_id"] is not None:
+                    raise ReferenceViolation(f"relation id {relation_id} names another relation")
+                return _relation(existing)
+            ends = _uuids([new.from_revision_id, new.to_revision_id])
+            published: dict[str, str] = {}
+            if len(ends) == 2:
+                await cursor.execute(
+                    """SELECT id::text AS id, object_id::text AS object_id FROM analysis_object_revision
+                       WHERE project_id = %s AND status = 'published' AND id = ANY(%s::uuid[])
+                       FOR SHARE""",
+                    (new.project_id, ends),
+                )
+                published = {row["id"]: row["object_id"] for row in await cursor.fetchall()}
+            if (
+                published.get(new.from_revision_id) != new.from_object_id
+                or published.get(new.to_revision_id) != new.to_object_id
+            ):
+                raise ReferenceViolation(
+                    "an imported relation connects published revisions of its objects in this project"
+                )
+            await cursor.execute(
+                f"""INSERT INTO analysis_relation
+                        (id, project_id, type, basis, status, from_revision_id, to_revision_id,
+                         from_object_id, to_object_id, attributes, provenance, content_hash,
+                         hash_version, run_id, created_at, published_at)
+                    VALUES (%(id)s, %(project_id)s, %(type)s, %(basis)s, 'published',
+                            %(from_revision_id)s, %(to_revision_id)s, %(from_object_id)s,
+                            %(to_object_id)s, %(attributes)s, %(provenance)s, %(content_hash)s,
+                            'c14n-v1', NULL, now(), now())
+                    ON CONFLICT (id) DO NOTHING
+                    RETURNING {RELATION_COLUMNS}""",
+                {
+                    "id": relation_id or str(uuid.uuid4()),
+                    "project_id": new.project_id,
+                    "type": new.type,
+                    "basis": str(new.basis),
+                    "from_revision_id": new.from_revision_id,
+                    "to_revision_id": new.to_revision_id,
+                    "from_object_id": new.from_object_id,
+                    "to_object_id": new.to_object_id,
+                    "attributes": Json(new.attributes),
+                    "provenance": Json(new.provenance),
+                    "content_hash": new.content_hash,
+                },
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                # The fixed id was taken by another relation meanwhile.
+                raise ReferenceViolation(f"relation id {relation_id} names another relation")
+            return _relation(row)
 
     async def run_candidates(self, run_id: str) -> tuple[list[ObjectRevision], list[Relation]]:
         async with self._cursor() as cursor:

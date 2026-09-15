@@ -244,6 +244,7 @@ class RevisionService:
         recipe_version: str | None = None,
         extra: dict[str, Any] | None = None,
         revision_id: str | None = None,
+        embedding_refs: dict[str, Any] | None = None,
     ) -> ObjectRevision:
         definition = types.get_object_type(record.type)
         clean = types.validate_payload(record.type, payload)
@@ -278,6 +279,7 @@ class RevisionService:
                 actor_id=actor_id,
                 reason=reason,
                 revision_id=revision_id,
+                embedding_refs=embedding_refs,
             ),
             expected_revision_id=expected_revision_id,
         )
@@ -348,16 +350,26 @@ class RevisionService:
         recipe_version: str | None = None,
         revision_id: str | None = None,
         extra: dict[str, Any] | None = None,
+        embedding_refs: dict[str, Any] | None = None,
+        object_id: str | None = None,
     ) -> ObjectRevision:
         """Import saved history into a producer scope (the project's
         `imported` scope when none is named). A repeat import of the same
         content, or of the same fixed revision id, returns what the first one
-        wrote."""
+        wrote.
+
+        `embedding_refs` names a stored vector of this project (checked, with
+        its configuration, when the revision is written). `object_id` fixes the
+        object's id for a new lineage (a uuid5, say); an existing object under
+        another id, or that id naming another object, is a `ReferenceViolation`."""
+        if embedding_refs is not None and not embedding_refs.get("embeddingId"):
+            raise AnalysisValidationError("an embedding reference names its embedding")
         record = await self.store.ensure_object(
             project_id=project_id,
             type=type_id,
             lineage_key=lineage_key,
             scope_id=scope_id or await self._scope_id(project_id, IMPORTED_SCOPE_OWNER),
+            object_id=object_id,
         )
         head = await self._head(record)
         clean = types.validate_payload(type_id, payload)
@@ -370,12 +382,17 @@ class RevisionService:
             extra={**(extra or {}), "importKey": import_key},
         )
         attributes = types.attributes_for(type_id, clean)
-        if head is not None and head.content_hash == revision_content_hash(
-            type_id=type_id,
-            schema_version=types.get_object_type(type_id).schema_version,
-            payload=clean,
-            attributes=attributes,
-            provenance=provenance,
+        if (
+            head is not None
+            and head.content_hash
+            == revision_content_hash(
+                type_id=type_id,
+                schema_version=types.get_object_type(type_id).schema_version,
+                payload=clean,
+                attributes=attributes,
+                provenance=provenance,
+            )
+            and _same_embedding(head.embedding_refs, embedding_refs)
         ):
             return head
         return await self._append(
@@ -390,6 +407,78 @@ class RevisionService:
             recipe_version=recipe_version,
             extra={**(extra or {}), "importKey": import_key},
             revision_id=revision_id,
+            embedding_refs=embedding_refs,
+        )
+
+    async def import_relation(
+        self,
+        *,
+        project_id: str,
+        type_id: str,
+        from_revision_id: str,
+        to_revision_id: str,
+        basis: RelationBasis | str,
+        import_key: str,
+        attributes: dict[str, Any] | None = None,
+        source_refs: Iterable[SourceRef] = (),
+        recipe_id: str | None = None,
+        recipe_version: str | None = None,
+        relation_id: str | None = None,
+        extra: dict[str, Any] | None = None,
+    ) -> Relation:
+        """Import a published relation between two published revisions of this
+        project, validated as a run's relation is (type, basis, attributes,
+        endpoint types). It belongs to no run and commits no outbox event: a
+        view shows it where a snapshot pins it. A repeat import of the same
+        relation, or of the same fixed `relation_id`, returns the first one."""
+        ends = await self.store.get_revisions(project_id, [from_revision_id, to_revision_id])
+        from_revision, to_revision = ends.get(from_revision_id), ends.get(to_revision_id)
+        if from_revision is None or to_revision is None:
+            raise ReferenceViolation("a relation connects revisions of its own project only")
+        if from_revision.status != RevisionStatus.PUBLISHED or to_revision.status != RevisionStatus.PUBLISHED:
+            raise ReferenceViolation("an imported relation connects published revisions")
+        if from_revision.id == to_revision.id:
+            raise AnalysisValidationError("a relation connects two different revisions")
+        clean = types.validate_relation(
+            type_id,
+            from_type=from_revision.type,
+            to_type=to_revision.type,
+            basis=basis,
+            attributes=attributes,
+        )
+        parsed = RelationBasis(basis)
+        provenance = {
+            **(extra or {}),
+            "runId": None,
+            "origin": str(Origin.IMPORTED),
+            "recipeId": recipe_id,
+            "recipeVersion": recipe_version,
+            "importKey": import_key,
+            "sourceRefs": [ref.as_json() for ref in source_refs],
+        }
+        return await self.store.import_relation(
+            NewRelation(
+                project_id=project_id,
+                type=type_id,
+                basis=parsed,
+                from_revision_id=from_revision.id,
+                to_revision_id=to_revision.id,
+                from_object_id=from_revision.object_id,
+                to_object_id=to_revision.object_id,
+                attributes=clean,
+                provenance=provenance,
+                content_hash=content_hash(
+                    {
+                        "type": type_id,
+                        "basis": str(parsed),
+                        "from": from_revision.id,
+                        "to": to_revision.id,
+                        "attributes": clean,
+                        "sourceRefs": provenance["sourceRefs"],
+                    }
+                ),
+            ),
+            relation_id=relation_id,
         )
 
     async def rollback(

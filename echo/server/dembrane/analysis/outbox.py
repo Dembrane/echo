@@ -17,7 +17,8 @@ a retried or duplicated dispatch skips what already happened:
    dispatcher finds nothing left to wake and starts nothing; a duplicate
    message for a woken run is harmless because only one claim wins.
 3. `view_snapshots`: registered hooks that assemble following view snapshots.
-   A snapshot records the event it answers under a unique key, so a dispatch
+   The dispatcher imports the modules that register them (`VIEW_HOOK_MODULES`)
+   before its first dispatch, so a worker that only dispatches has them. A snapshot records the event it answers under a unique key, so a dispatch
    repeated after a crash between the snapshot's commit and this marker finds
    that snapshot instead of assembling another.
 
@@ -31,6 +32,7 @@ from __future__ import annotations
 import time
 import uuid
 import logging
+import importlib
 from typing import Any, Callable, Awaitable
 from dataclasses import field, dataclass
 
@@ -47,6 +49,26 @@ QUEUED_REDISPATCH_SECONDS = 120
 
 SnapshotHook = Callable[[OutboxEvent, AnalysisStore], Awaitable[None]]
 _snapshot_hooks: list[SnapshotHook] = []
+
+# Modules whose import registers a following-view hook. A worker that only
+# dispatches imports none of them otherwise, so the dispatcher loads them.
+VIEW_HOOK_MODULES = ("dembrane.analysis.map_view",)
+_view_hooks_loaded = False
+
+
+def load_view_hooks() -> None:
+    """Import every module in `VIEW_HOOK_MODULES` once (they import this
+    module, so never at import time). A deployment without one has no hook."""
+    global _view_hooks_loaded
+    if _view_hooks_loaded:
+        return
+    for name in VIEW_HOOK_MODULES:
+        try:
+            importlib.import_module(name)
+        except ModuleNotFoundError as exc:
+            if exc.name != name:
+                raise
+    _view_hooks_loaded = True
 
 
 def register_snapshot_hook(hook: SnapshotHook) -> SnapshotHook:
@@ -230,6 +252,7 @@ async def sweep(*, store: AnalysisStore, deps: OutboxDeps) -> SweepReport:
 
 async def run_dispatch(event_id: str | None = None) -> DispatchReport | SweepReport:
     """The actor's entry point: one event after commit, or the sweep."""
+    load_view_hooks()
     store = default_store()
     deps = OutboxDeps(executor=default_deps())
     if event_id:
