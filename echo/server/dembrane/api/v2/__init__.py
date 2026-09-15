@@ -14,6 +14,7 @@ from dembrane.api.v2.auth import router as auth_router
 from dembrane.api.v2.orgs import router as orgs_router
 from dembrane.api.v2.admin import router as admin_router
 from dembrane.api.v2.agent import router as agent_router
+from dembrane.api.v2.bff.map import router as bff_map_router
 from dembrane.api.v2.billing import (
     router as billing_router,
     webhook_router as billing_webhook_router,
@@ -160,6 +161,7 @@ v2_router.include_router(
     bff_canvases_router, prefix="/bff/canvases", tags=["v2:bff:canvases"]
 )
 v2_router.include_router(bff_popcorn_router, prefix="/bff/popcorn", tags=["v2:bff:popcorn"])
+v2_router.include_router(bff_map_router, prefix="/bff/map", tags=["v2:bff:map"])
 v2_router.include_router(
     popcorn_public_router, prefix="/popcorn/public", tags=["v2:popcorn-public"]
 )

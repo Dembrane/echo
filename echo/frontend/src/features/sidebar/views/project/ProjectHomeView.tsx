@@ -9,6 +9,7 @@ import {
 	ChatCircleTextIcon,
 	FileTextIcon,
 	GearIcon,
+	GraphIcon,
 	PaintBrushIcon,
 	PopcornIcon,
 	UsersThreeIcon,
@@ -125,6 +126,12 @@ export const ProjectHomeView = () => {
 				to={`${base}/report`}
 				label={<Trans>Report</Trans>}
 				icon={FileTextIcon}
+			/>
+			<NavItem
+				to={`${base}/map`}
+				label={<Trans>Map</Trans>}
+				icon={GraphIcon}
+				badge={<Trans>Beta</Trans>}
 			/>
 			<NavItem
 				to={`${base}/conversations`}
