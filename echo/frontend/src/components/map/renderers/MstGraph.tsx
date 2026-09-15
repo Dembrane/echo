@@ -10,7 +10,7 @@ import {
 	mstLinkDistance,
 	mstViewportForces,
 } from "../graph/forces";
-import { calculateInitialPositions, fitToViewport } from "../graph/layout";
+import { calculateInitialPositions } from "../graph/layout";
 import {
 	adjacencyOf,
 	buildMST,
@@ -27,6 +27,14 @@ import {
 } from "../state/interactionStore";
 import type { ColorBy, Edge, MapGraphNode, MapRelation } from "../types";
 import {
+	AUTO_FIT_EVERY_TICKS,
+	armAutoFit,
+	autoFit,
+	cancelAutoFit,
+	createAutoFitState,
+	FIT_PADDING_SCALE,
+} from "./autoFit";
+import {
 	type BaseType,
 	d3,
 	type ForceCenter,
@@ -41,7 +49,6 @@ import {
 import {
 	EMPTY_NODE_IDS,
 	type GeometryBuild,
-	type MapSize,
 	useContainerSize,
 	useNodeRadius,
 	useNodeStyleLookup,
@@ -136,13 +143,8 @@ export const DEFAULT_WALK_INTERVAL_MS = 30000;
 
 const EMPTY_RELATIONS: MapRelation[] = [];
 
-const AUTO_FIT_EVERY_TICKS = 10;
-const AUTO_FIT_DURATION_MS = 750;
-
 /** Collision radius as a multiple of the node's own radius. */
 const COLLISION_SCALE = 1.25;
-/** Auto-fit padding as a multiple of the node's own radius. */
-const FIT_PADDING_SCALE = 4;
 
 /** The synchronous path: the tree built here when no layout result is given. */
 const buildOwnGeometry = (
@@ -237,7 +239,7 @@ export const MstGraph = ({
 	const pulseSelectionRef = useRef<CircleSelection | null>(null);
 	const startPulse = usePulseTimer(pulseSelectionRef);
 	const appliedRef = useRef<AppliedForces | null>(null);
-	const autoFitEndsAtRef = useRef(0);
+	const autoFitRef = useRef(createAutoFitState());
 
 	const { size: dimensions, sizeRef, measure } = useContainerSize(containerRef);
 	const recentNodeIdsSet = useMemo(
@@ -617,14 +619,20 @@ export const MstGraph = ({
 		const zoom = d3
 			.zoom<SVGSVGElement>()
 			.scaleExtent([0.1, 4])
+			// The measured panel, not the SVG's own attributes
+			.extent(() => [
+				[0, 0],
+				[sizeRef.current.width, sizeRef.current.height],
+			])
 			.on("zoom", (event) => {
 				g.attr("transform", event.transform.toString());
+				if (event.sourceEvent) autoFitRef.current.userZoomed = true;
 			});
 		svg.call(zoom);
 		zoomRef.current = zoom;
 
 		return () => {
-			cancelAutoFit(svgElement, autoFitEndsAtRef);
+			cancelAutoFit(svgElement, autoFitRef.current);
 			svg.on(".zoom", null);
 			svg.selectAll("*").remove();
 			gRef.current = null;
@@ -635,7 +643,7 @@ export const MstGraph = ({
 			circleSelectionRef.current = null;
 			pulseSelectionRef.current = null;
 		};
-	}, []);
+	}, [sizeRef]);
 
 	// Stop the simulation on unmount
 	useEffect(() => {
@@ -656,7 +664,7 @@ export const MstGraph = ({
 				existing.stop().on("tick", null);
 				simulationRef.current = null;
 				appliedRef.current = null;
-				cancelAutoFit(svgRef.current, autoFitEndsAtRef);
+				cancelAutoFit(svgRef.current, autoFitRef.current);
 			}
 			return;
 		}
@@ -675,8 +683,10 @@ export const MstGraph = ({
 
 		if (existing) {
 			// New node set: carry positions over and adjust the forces. A running
-			// auto-fit was aimed at the old set, so stop it and fit afresh.
-			cancelAutoFit(svgRef.current, autoFitEndsAtRef);
+			// auto-fit was aimed at the old set, so stop it and fit afresh, in
+			// either direction while the new set settles.
+			cancelAutoFit(svgRef.current, autoFitRef.current);
+			armAutoFit(autoFitRef.current);
 			const previous = new Map(existing.nodes().map((node) => [node.id, node]));
 			for (const node of simulationNodes) {
 				const old = previous.get(node.id);
@@ -758,7 +768,6 @@ export const MstGraph = ({
 			// alphaTarget 0.01 keeps a gentle "breathing" but allows settling
 			simulation.alpha(0.8).alphaDecay(0.003).alphaTarget(0.01);
 
-			let tickCount = 0;
 			simulation.on("tick", () => {
 				// Adaptive charge: strong repulsion early (3x), 1x as alpha decays
 				const alpha = simulation.alpha();
@@ -775,20 +784,35 @@ export const MstGraph = ({
 					simulationNodeByIdRef.current,
 				);
 
-				tickCount++;
-				if (tickCount % AUTO_FIT_EVERY_TICKS === 0) {
-					autoFit(
-						simulation,
-						svgRef.current,
-						zoomRef.current,
-						sizeRef.current,
-						(node) => radiusOfRef.current(node.id) * FIT_PADDING_SCALE,
-						autoFitEndsAtRef,
-					);
+				const fitState = autoFitRef.current;
+				fitState.tick++;
+				if (fitState.tick % AUTO_FIT_EVERY_TICKS === 0) {
+					autoFit({
+						animate: true,
+						nodes: simulation.nodes(),
+						padding: (node) => radiusOfRef.current(node.id) * FIT_PADDING_SCALE,
+						size: sizeRef.current,
+						state: fitState,
+						svgElement: svgRef.current,
+						zoom: zoomRef.current,
+					});
 				}
 			});
 
 			simulationRef.current = simulation;
+
+			// Fit the first layout at once, not on a later tick: a background tab
+			// may not tick for a long while
+			armAutoFit(autoFitRef.current);
+			autoFit({
+				animate: false,
+				nodes: simulationNodes,
+				padding: (node) => radiusOfRef.current(node.id) * FIT_PADDING_SCALE,
+				size,
+				state: autoFitRef.current,
+				svgElement: svgRef.current,
+				zoom: zoomRef.current,
+			});
 		}
 
 		appliedRef.current = {
@@ -872,6 +896,8 @@ export const MstGraph = ({
 
 		applied.width = dimensions.width;
 		applied.height = dimensions.height;
+		// A new panel size may need a larger zoom as well as a smaller one
+		armAutoFit(autoFitRef.current);
 		simulation.alpha(Math.max(simulation.alpha(), 0.1)).restart();
 	}, [dimensions]);
 
@@ -1186,59 +1212,6 @@ function createDrag(
 			d.fx = null;
 			d.fy = null;
 		});
-}
-
-/**
- * Zooms out (never in) when the graph outgrows the viewport: checked against
- * the SVG's current transform, 10% margin, 5% hysteresis, and skipped while a
- * previous fit is still animating. Each node is padded by its own radius.
- */
-function autoFit(
-	simulation: Simulation<InternalNode>,
-	svgElement: SVGSVGElement | null,
-	zoom: ZoomBehavior<SVGSVGElement> | null,
-	size: MapSize,
-	padding: (node: InternalNode) => number,
-	endsAtRef: { current: number },
-) {
-	if (!svgElement || !zoom) return;
-	const now = performance.now();
-	if (now < endsAtRef.current) return;
-
-	const fit = fitToViewport(
-		simulation.nodes(),
-		size.width,
-		size.height,
-		padding,
-	);
-	if (!fit) return;
-
-	const current = d3.zoomTransform(svgElement);
-	if (fit.scale >= current.k * 0.95) return;
-
-	const newScale = fit.scale * 0.9;
-	endsAtRef.current = now + AUTO_FIT_DURATION_MS;
-	d3.select(svgElement)
-		.transition()
-		.duration(AUTO_FIT_DURATION_MS)
-		.call(
-			zoom.transform,
-			d3.zoomIdentity
-				.translate(
-					size.width / 2 - fit.centerX * newScale,
-					size.height / 2 - fit.centerY * newScale,
-				)
-				.scale(newScale),
-		);
-}
-
-/** Stops a running auto-fit and clears its deadline, so the next check can fit at once. */
-function cancelAutoFit(
-	svgElement: SVGSVGElement | null,
-	endsAtRef: { current: number },
-) {
-	if (svgElement) d3.select(svgElement).interrupt();
-	endsAtRef.current = 0;
 }
 
 export interface MstMapProps extends Omit<MstGraphProps, "recentNodeIds"> {

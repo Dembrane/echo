@@ -28,6 +28,14 @@ import {
 } from "../state/interactionStore";
 import type { ColorBy, Edge, MapGraphNode, MapRelation } from "../types";
 import {
+	AUTO_FIT_EVERY_TICKS,
+	armAutoFit,
+	autoFit,
+	cancelAutoFit,
+	createAutoFitState,
+	FIT_PADDING_SCALE,
+} from "./autoFit";
+import {
 	type BaseType,
 	d3,
 	type ForceCenter,
@@ -213,6 +221,7 @@ export const LocalMapGraph = ({
 	> | null>(null);
 	const zoomRef = useRef<ZoomBehavior<SVGSVGElement> | null>(null);
 	const savedTransformRef = useRef<ZoomTransform | null>(null);
+	const autoFitRef = useRef(createAutoFitState());
 	const positionCacheRef = useRef<
 		Map<string, { x: number; y: number; vx: number; vy: number }>
 	>(new Map());
@@ -641,9 +650,16 @@ export const LocalMapGraph = ({
 		const zoom = d3
 			.zoom<SVGSVGElement>()
 			.scaleExtent([0.1, 4])
+			// The measured panel, not the SVG's own attributes
+			.extent(() => [
+				[0, 0],
+				[sizeRef.current.width, sizeRef.current.height],
+			])
 			.on("zoom", (event) => {
 				g.attr("transform", event.transform.toString());
 				savedTransformRef.current = event.transform;
+				// A wheel or pan by the user: stop fitting until the node set changes
+				if (event.sourceEvent) autoFitRef.current.userZoomed = true;
 			});
 
 		svg.call(zoom);
@@ -654,6 +670,7 @@ export const LocalMapGraph = ({
 		}
 
 		return () => {
+			cancelAutoFit(svgElement, autoFitRef.current);
 			svg.on(".zoom", null);
 			zoomRef.current = null;
 			gRef.current = null;
@@ -664,7 +681,7 @@ export const LocalMapGraph = ({
 			pulseSelectionRef.current = null;
 			svg.selectAll("*").remove();
 		};
-	}, []);
+	}, [sizeRef]);
 
 	// Clean up simulation on unmount
 	useEffect(() => {
@@ -712,6 +729,9 @@ export const LocalMapGraph = ({
 			existing.nodes(simulationNodes);
 			nnForceRef.current?.setLinks(nnLinks);
 			fpForceRef.current?.setLinks(fpLinks);
+			// A new node set is fitted afresh, in either direction while it settles
+			cancelAutoFit(svgRef.current, autoFitRef.current);
+			armAutoFit(autoFitRef.current, { resetUserZoom: true });
 
 			// Gentle restart; low alpha avoids disrupting settled nodes
 			if (!pausedRef.current) {
@@ -805,18 +825,48 @@ export const LocalMapGraph = ({
 					y: node.y ?? 0,
 				});
 			}
+
+			// Keep the map inside its panel
+			const fitState = autoFitRef.current;
+			fitState.tick++;
+			if (fitState.tick % AUTO_FIT_EVERY_TICKS === 0) {
+				autoFit({
+					animate: true,
+					nodes: simulation.nodes(),
+					padding: (node) => radiusOfRef.current(node.id) * FIT_PADDING_SCALE,
+					respectUserZoom: true,
+					size: sizeRef.current,
+					state: fitState,
+					svgElement: svgRef.current,
+					zoom: zoomRef.current,
+				});
+			}
 		});
 
 		if (pausedRef.current) simulation.stop();
 
 		simulationRef.current = simulation;
+
+		// Fit the first layout at once, not on a later tick: a paused map or a
+		// background tab may not tick for a long while
+		armAutoFit(autoFitRef.current, { resetUserZoom: true });
+		autoFit({
+			animate: false,
+			nodes: simulationNodes,
+			padding: (node) => radiusOfRef.current(node.id) * FIT_PADDING_SCALE,
+			respectUserZoom: true,
+			size,
+			state: autoFitRef.current,
+			svgElement: svgRef.current,
+			zoom: zoomRef.current,
+		});
 		appliedRef.current = {
 			height: size.height,
 			params: current,
 			radiusSignature: radiusSignatureRef.current,
 			width: size.width,
 		};
-	}, [simulationNodes, nnLinks, fpLinks, measure]);
+	}, [simulationNodes, nnLinks, fpLinks, measure, sizeRef]);
 
 	// DOM updates with the enter/update/exit pattern
 	useEffect(() => {
@@ -1036,6 +1086,8 @@ export const LocalMapGraph = ({
 
 		applied.width = dimensions.width;
 		applied.height = dimensions.height;
+		// A new panel size may need a larger zoom as well as a smaller one
+		armAutoFit(autoFitRef.current);
 		if (!pausedRef.current) {
 			simulation.alpha(Math.max(simulation.alpha(), 0.1)).restart();
 		}

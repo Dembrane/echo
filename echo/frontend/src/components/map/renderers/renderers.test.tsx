@@ -21,6 +21,8 @@ import {
 	vi,
 } from "vitest";
 import { LEGACY_BUDGET_BOUNDS, minEdgeLimit } from "../budgets";
+import { buildMapGraph } from "../data/adapter";
+import { fixtureMapData } from "../data/fixture";
 import { createSyntheticMap } from "../fixtures/syntheticMap";
 import {
 	createNearestNeighbourForce,
@@ -49,6 +51,7 @@ import {
 	type MapInteractionStore,
 } from "../state/interactionStore";
 import type { ColorBy, MapGraphNode, MapRelation } from "../types";
+import { AUTO_FIT_EVERY_TICKS } from "./autoFit";
 import { d3, type Simulation, type SimulationNodeDatum } from "./d3";
 import { LocalMap } from "./LocalMapGraph";
 import { DEFAULT_WALK_INTERVAL_MS, MstMap } from "./MstGraph";
@@ -159,6 +162,19 @@ const localSvgOf = (container: Element) =>
 	container.querySelector(
 		'svg[aria-label="Local argument map"]',
 	) as SVGSVGElement;
+
+/** Where a node sits on screen, through the map's current zoom. */
+const screenPointOf = (
+	svg: SVGSVGElement,
+	datum: { x?: number; y?: number },
+) => {
+	const transform = d3.zoomTransform(svg);
+	return {
+		k: transform.k,
+		x: (datum.x ?? 0) * transform.k + transform.x,
+		y: (datum.y ?? 0) * transform.k + transform.y,
+	};
+};
 
 type SimulatedNode = Datum & SimulationNodeDatum;
 
@@ -931,9 +947,10 @@ describe("LocalMap", () => {
 			store,
 		);
 		const hovered = datumOf(container.querySelectorAll("circle.node")[0]);
+		const point = screenPointOf(localSvgOf(container), hovered);
 		fireEvent.mouseMove(localSvgOf(container), {
-			clientX: hovered.x,
-			clientY: hovered.y,
+			clientX: point.x,
+			clientY: point.y,
 		});
 		expect(store.getState().highlightedNodeIds.has(hovered.id)).toBe(true);
 
@@ -949,9 +966,10 @@ describe("LocalMap", () => {
 			store,
 		);
 		const hovered = datumOf(container.querySelectorAll("circle.node")[0]);
+		const point = screenPointOf(localSvgOf(container), hovered);
 		fireEvent.mouseMove(localSvgOf(container), {
-			clientX: hovered.x,
-			clientY: hovered.y,
+			clientX: point.x,
+			clientY: point.y,
 		});
 		expect(store.getState().highlightSource).toBe("local-hover");
 		expect(store.getState().highlightedNodeIds.size).toBeGreaterThan(0);
@@ -1231,13 +1249,14 @@ describe("per-node size", () => {
 				<LocalMap edgeLimit={EDGE_LIMIT} nodes={source} />,
 				store,
 			);
-			const { x = 0, y = 0 } = datumOf(circleOf(view.container, nodes[0].id));
-			// 52 px from the centre: outside the 50 px ring for a base node,
-			// inside it for a tension whose radius is 3 px larger
-			fireEvent.mouseMove(localSvgOf(view.container), {
-				clientX: x + 52,
-				clientY: y,
-			});
+			const svg = localSvgOf(view.container);
+			const { x, y, k } = screenPointOf(
+				svg,
+				datumOf(circleOf(view.container, nodes[0].id)),
+			);
+			// Half the tension's extra radius (3 graph units, times the zoom) past
+			// the 50 px ring: outside it for a base node, inside it for a tension
+			fireEvent.mouseMove(svg, { clientX: x + 50 + 1.5 * k, clientY: y });
 			const reached = store.getState().highlightedNodeIds.has(nodes[0].id);
 			view.unmount();
 			return reached;
@@ -1353,10 +1372,14 @@ function GeometryHarness({
 	nodes: current,
 	client,
 	showNeighbourLinks = false,
+	relations,
+	showRelationships = false,
 }: {
 	nodes: MapGraphNode[];
 	client?: LayoutClient;
 	showNeighbourLinks?: boolean;
+	relations?: MapRelation[];
+	showRelationships?: boolean;
 }) {
 	const geometry = useMapGeometry(current, {
 		client,
@@ -1368,6 +1391,8 @@ function GeometryHarness({
 				edgeLimit={EDGE_LIMIT}
 				nodes={current}
 				mstEdges={geometry.mstEdges}
+				relations={relations}
+				showRelationships={showRelationships}
 				autoAdvance={false}
 			/>
 			<LocalMap
@@ -1375,6 +1400,8 @@ function GeometryHarness({
 				nodes={current}
 				mstEdges={geometry.mstEdges}
 				neighbours={geometry.neighbours}
+				relations={relations}
+				showRelationships={showRelationships}
 				showNeighbourLinks={showNeighbourLinks}
 			/>
 		</div>
@@ -1667,4 +1694,210 @@ describe("the walk with relationships", () => {
 			expect(neighbours.get(from)?.has(to)).toBe(true);
 		}
 	});
+});
+
+describe("fitting the panel", () => {
+	type PanelSize = { width: number; height: number };
+	const TREE_PANEL: PanelSize = { height: 559, width: 393 };
+	const LOCAL_PANEL: PanelSize = { height: 559, width: 309 };
+
+	/** Gives the map containers a size: measured at creation, reported on change. */
+	const stubPanelSize = (initial: PanelSize) => {
+		const size = { ...initial };
+		const spy = vi
+			.spyOn(HTMLElement.prototype, "getBoundingClientRect")
+			.mockImplementation(
+				() =>
+					({
+						bottom: size.height,
+						height: size.height,
+						left: 0,
+						right: size.width,
+						toJSON: () => ({}),
+						top: 0,
+						width: size.width,
+						x: 0,
+						y: 0,
+					}) as DOMRect,
+			);
+		const resize = (next: PanelSize) => {
+			size.width = next.width;
+			size.height = next.height;
+			act(() => resizeContainers(next.width, next.height));
+		};
+		return { resize, restore: () => spy.mockRestore() };
+	};
+
+	/** The simulation moving one map's circles. */
+	const simulationOf = (svg: Element) => {
+		const datum = datumOf<SimulatedNode>(
+			svg.querySelector("circle.node") as Element,
+		);
+		return vi
+			.mocked(d3.forceSimulation)
+			.mock.results.map((result) => result.value as Simulation<SimulatedNode>)
+			.find((simulation) =>
+				simulation.nodes().includes(datum),
+			) as Simulation<SimulatedNode>;
+	};
+
+	/** Ticks by hand: the forces, then the renderer's listener (drawing and fitting). */
+	const step = (simulation: Simulation<SimulatedNode>, ticks: number) => {
+		const listener = tickListenerOf(simulation);
+		for (let i = 0; i < ticks; i++) {
+			(simulation as unknown as { tick: () => void }).tick();
+			listener();
+		}
+	};
+
+	/** Every circle and relationship line is on screen, and the map is not shrunk to a dot. */
+	const expectFitsPanel = (
+		svg: SVGSVGElement,
+		panel: PanelSize,
+		minFill: number,
+	) => {
+		const transform = d3.zoomTransform(svg);
+		const xs: number[] = [];
+		const ys: number[] = [];
+		for (const circle of svg.querySelectorAll("circle.node")) {
+			const point = screenPointOf(svg, datumOf(circle));
+			xs.push(point.x);
+			ys.push(point.y);
+		}
+		for (const line of svg.querySelectorAll("line.relation")) {
+			for (const [xName, yName] of [
+				["x1", "y1"],
+				["x2", "y2"],
+			] as const) {
+				xs.push(Number(line.getAttribute(xName)) * transform.k + transform.x);
+				ys.push(Number(line.getAttribute(yName)) * transform.k + transform.y);
+			}
+		}
+		const minX = Math.min(...xs);
+		const maxX = Math.max(...xs);
+		const minY = Math.min(...ys);
+		const maxY = Math.max(...ys);
+		expect(minX).toBeGreaterThanOrEqual(0);
+		expect(maxX).toBeLessThanOrEqual(panel.width);
+		expect(minY).toBeGreaterThanOrEqual(0);
+		expect(maxY).toBeLessThanOrEqual(panel.height);
+		expect(
+			Math.max((maxX - minX) / panel.width, (maxY - minY) / panel.height),
+		).toBeGreaterThan(minFill);
+	};
+
+	/**
+	 * Steps the layout and waits in real time (fit transitions run on timers)
+	 * until the check passes. Not waitFor: it re-runs its callback on every DOM
+	 * mutation, and stepping mutates the DOM, so it would never yield.
+	 */
+	const settleUntil = async (
+		advance: () => void,
+		check: () => void,
+		timeoutMs = 8000,
+	) => {
+		const deadline = Date.now() + timeoutMs;
+		for (;;) {
+			advance();
+			try {
+				check();
+				return;
+			} catch (error) {
+				if (Date.now() > deadline) throw error;
+			}
+			await new Promise((resolve) => setTimeout(resolve, 50));
+		}
+	};
+
+	const lateLayout = (ui: (client: LayoutClient) => ReactNode) => {
+		const worker = new FakeLayoutWorker();
+		const client = new LayoutClient(fakeWorkerFactory(worker));
+		const view = renderInMap(ui(client), createMapInteractionStore());
+		const arrive = () => act(() => worker.answer(worker.computes()[0]));
+		return { arrive, view };
+	};
+
+	it("fits both maps as soon as a late layout arrives, before any tick", () => {
+		const panel = stubPanelSize(TREE_PANEL);
+		try {
+			const { view, arrive } = lateLayout((client) => (
+				<GeometryHarness client={client} nodes={nodes} />
+			));
+			panel.resize(TREE_PANEL);
+			arrive();
+
+			expectFitsPanel(mstSvgOf(view.container), TREE_PANEL, 0.3);
+			expectFitsPanel(localSvgOf(view.container), TREE_PANEL, 0.3);
+		} finally {
+			panel.restore();
+		}
+	});
+
+	it("zooms the tree back in when a panel that was briefly narrow grows", async () => {
+		const narrow = { height: 378, width: 60 };
+		const panel = stubPanelSize(narrow);
+		try {
+			const { view, arrive } = lateLayout((client) => (
+				<GeometryHarness client={client} nodes={nodes} />
+			));
+			panel.resize(narrow);
+			arrive();
+			const svg = mstSvgOf(view.container);
+			const tree = simulationOf(svg);
+			tree.stop();
+			simulationOf(localSvgOf(view.container)).stop();
+			step(tree, 40);
+			const narrowScale = d3.zoomTransform(svg).k;
+
+			panel.resize(TREE_PANEL);
+			await settleUntil(
+				() => step(tree, AUTO_FIT_EVERY_TICKS),
+				() => expectFitsPanel(svg, TREE_PANEL, 0.4),
+			);
+			expect(d3.zoomTransform(svg).k).toBeGreaterThan(narrowScale * 2);
+		} finally {
+			panel.restore();
+		}
+	}, 20_000);
+
+	it("keeps the local map and its relationship lines inside the panel once it settles", async () => {
+		// The 50-argument fixture: at PR head most of its nodes settled outside
+		// a 309 px panel, because the local map never fitted
+		const fixtureNodes = buildMapGraph(
+			fixtureMapData("50").response,
+		).placedNodes;
+		const panel = stubPanelSize(LOCAL_PANEL);
+		try {
+			const { view, arrive } = lateLayout((client) => (
+				<GeometryHarness
+					client={client}
+					nodes={fixtureNodes}
+					relations={createRelationFixture(
+						fixtureNodes.map((node) => node.id),
+						2,
+					)}
+					showRelationships
+				/>
+			));
+			panel.resize(LOCAL_PANEL);
+			arrive();
+			const svg = localSvgOf(view.container);
+			const local = simulationOf(svg);
+			local.stop();
+			simulationOf(mstSvgOf(view.container)).stop();
+			step(local, 600);
+
+			await settleUntil(
+				() => step(local, AUTO_FIT_EVERY_TICKS),
+				() => {
+					expect(svg.querySelectorAll("line.relation").length).toBeGreaterThan(
+						0,
+					);
+					expectFitsPanel(svg, LOCAL_PANEL, 0.3);
+				},
+			);
+		} finally {
+			panel.restore();
+		}
+	}, 20_000);
 });
