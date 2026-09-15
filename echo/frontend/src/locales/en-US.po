@@ -143,6 +143,11 @@ msgstr "{0, plural, one {(# workspace)} other {(# workspaces)}}"
 msgid "{0, plural, one {# agreement} other {# agreements}}"
 msgstr "{0, plural, one {# agreement} other {# agreements}}"
 
+#. placeholder {0}: counts.argument
+#: src/components/map/MapPage.tsx:898
+msgid "{0, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
+msgstr "{0, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
+
 #. placeholder {0}: summary.not_receiving
 #: src/components/conversation/LiveMonitorSection.tsx:740
 msgid "{0, plural, one {# audio stopped} other {# audio stopped}}"
@@ -512,8 +517,8 @@ msgid "{alreadyPending} people were already invited. The project is shared once 
 msgstr "{alreadyPending} people were already invited. The project is shared once they join."
 
 #: src/components/map/MapPage.tsx:550
-msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
-msgstr "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
+#~ msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
+#~ msgstr "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 
 #: src/components/agent-access/AgentRiskNotice.tsx:27
 msgid "{clientName} and the company running it will receive the conversation content you allow."
@@ -537,9 +542,13 @@ msgstr "{conversationCount} selected"
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 
-#: src/components/map/MapPage.tsx:213
+#: src/components/map/MapPage.tsx:274
 msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr "{count, plural, one {# argument} other {# arguments}}"
+
+#: src/components/map/MapPage.tsx:276
+msgid "{count, plural, one {# object} other {# objects}}"
+msgstr "{count, plural, one {# object} other {# objects}}"
 
 #: src/components/map/graph/epistemicLine.ts:26
 #~ msgid "{count} confirmed"
@@ -684,6 +693,10 @@ msgstr "{tag} (preselected)"
 msgid "{totalActive, plural, one {# active} other {# active}}"
 msgstr "{totalActive, plural, one {# active} other {# active}}"
 
+#: src/components/map/MapPage.tsx:899
+msgid "{totalCount, plural, one {# object} other {# objects}} saved"
+msgstr "{totalCount, plural, one {# object} other {# objects}} saved"
+
 #: src/components/settings/MyAccessCard.tsx:114
 msgid "{totalOrganisations, plural, one {# organisation} other {# organisations}}"
 msgstr "{totalOrganisations, plural, one {# organisation} other {# organisations}}"
@@ -698,8 +711,12 @@ msgid "library.conversations.still.processing"
 msgstr "{unfinishedConversationsCount} still processing."
 
 #: src/components/map/MapPage.tsx:703
-msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
-msgstr "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
+#~ msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
+#~ msgstr "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
+
+#: src/components/map/MapPage.tsx:1140
+msgid "{unplacedCount, plural, one {# object could not be placed on the map. It is in the list.} other {# objects could not be placed on the map. They are in the list.}}"
+msgstr "{unplacedCount, plural, one {# object could not be placed on the map. It is in the list.} other {# objects could not be placed on the map. They are in the list.}}"
 
 #: src/components/participant/UserChunkMessage.tsx:107
 msgid "*Transcription in progress.*"
@@ -1289,6 +1306,11 @@ msgstr "Added {granted} people"
 #~ msgid "Added and shared"
 #~ msgstr "Added and shared"
 
+#: src/components/map/panels/shared.tsx:83
+#: src/components/map/panels/shared.tsx:108
+msgid "Added by a host"
+msgstr "Added by a host"
+
 #: src/routes/participant/ParticipantPostConversation.tsx:221
 msgid "Added emails"
 msgstr "Added emails"
@@ -1339,7 +1361,7 @@ msgstr "Adding <0>{totalCount, plural, one {# more conversation} other {# more c
 msgid "select.all.modal.loading.title"
 msgstr "Adding Conversations"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1029
+#: src/components/map/renderers/LocalMapGraph.tsx:1175
 msgid "Additional Forces"
 msgstr "Additional Forces"
 
@@ -1402,6 +1424,10 @@ msgstr "Advanced (Tips and best practices)"
 #: src/components/project/PortalSettingsOverview.tsx:43
 msgid "Advanced Settings"
 msgstr "Advanced Settings"
+
+#: src/components/map/panels/shared.tsx:72
+msgid "Affected by"
+msgstr "Affected by"
 
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:79
 #: src/components/agent-access/AgentGrantsCard.tsx:85
@@ -1601,6 +1627,10 @@ msgstr "An error occurred."
 #: src/components/pricing/questions.ts:140
 msgid "An event or a workshop."
 msgstr "An event or a workshop."
+
+#: src/components/map/panels/NodeDetailCard.tsx:126
+msgid "An object outside this view"
+msgstr "An object outside this view"
 
 #: src/components/error/ErrorPage.tsx:65
 msgid "An unexpected error occurred. Reloading or returning home usually helps."
@@ -1852,19 +1882,27 @@ msgstr "Are you sure you want to remove your avatar?"
 msgid "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 msgstr "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 
-#: src/components/map/panels/Legend.tsx:21
-msgid "Argument (not fact-checked)"
-msgstr "Argument (not fact-checked)"
+#: src/components/map/attributes.ts:61
+msgid "Argument"
+msgstr "Argument"
 
-#: src/components/map/renderers/MstGraph.tsx:955
+#: src/components/map/panels/Legend.tsx:21
+#~ msgid "Argument (not fact-checked)"
+#~ msgstr "Argument (not fact-checked)"
+
+#: src/components/map/renderers/MstGraph.tsx:1082
 msgid "Argument map"
 msgstr "Argument map"
 
-#: src/components/map/MapPage.tsx:391
+#: src/components/map/MapPage.tsx:548
 msgid "Argument tree (MST)"
 msgstr "Argument tree (MST)"
 
-#: src/components/map/panels/SpotlightPanel.tsx:144
+#: src/components/map/attributes.ts:62
+msgid "Arguments"
+msgstr "Arguments"
+
+#: src/components/map/panels/SpotlightPanel.tsx:178
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr "Arguments express stances or preferences and aren't fact-checked."
 
@@ -2066,7 +2104,7 @@ msgstr "Audit logs exported to JSON"
 msgid "Authenticator code"
 msgstr "Authenticator code"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:98
+#: src/components/map/panels/MapSettingsMenu.tsx:159
 msgid "Auto fact-check new claims"
 msgstr "Auto fact-check new claims"
 
@@ -2130,7 +2168,7 @@ msgstr "Avatar removed"
 msgid "Avatar updated"
 msgstr "Avatar updated"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:998
+#: src/components/map/renderers/LocalMapGraph.tsx:1144
 msgid "Avg low-dim distance (default: 10)"
 msgstr "Avg low-dim distance (default: 10)"
 
@@ -2227,7 +2265,7 @@ msgstr "Before you connect an agent"
 #: src/components/project/ProjectPortalEditor.tsx:1535
 #: src/components/project/ProjectPortalEditor.tsx:1616
 #: src/components/project/ProjectExperimentalSection.tsx:48
-#: src/components/map/MapPage.tsx:657
+#: src/components/map/MapPage.tsx:1064
 #: src/components/conversation/RetranscribeConversation.tsx:156
 #: src/components/chat/ChatModeSelector.tsx:152
 #: src/components/chat/ChatModeBanner.tsx:45
@@ -2370,7 +2408,7 @@ msgid "By tag"
 msgstr "By tag"
 
 #. placeholder {0}: cMed.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:987
+#: src/components/map/renderers/LocalMapGraph.tsx:1133
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
@@ -2422,7 +2460,7 @@ msgstr "Can you tell us more?"
 #: src/components/organisation/CreateOrganisationModal.tsx:204
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:284
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:366
-#: src/components/map/panels/SpotlightPanel.tsx:181
+#: src/components/map/panels/SpotlightPanel.tsx:221
 #: src/components/invite/InviteModal.tsx:762
 #: src/components/goal/ProjectGoalSection.tsx:143
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
@@ -2645,7 +2683,7 @@ msgid "Changing the voice re-reads every conversation."
 msgstr "Changing the voice re-reads every conversation."
 
 #. placeholder {0}: chargeFraction.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1054
+#: src/components/map/renderers/LocalMapGraph.tsx:1200
 msgid "Charge Distance (viewport fraction): {0}"
 msgstr "Charge Distance (viewport fraction): {0}"
 
@@ -2738,6 +2776,10 @@ msgstr "Chats set to Czech answer in Czech instead of English."
 #~ msgid "Check and select your microphone before recording, see audio quality indicators, and use improved multilingual transcription. Choose summary, brainstorming or custom reply modes."
 #~ msgstr "Check and select your microphone before recording, see audio quality indicators, and use improved multilingual transcription. Choose summary, brainstorming or custom reply modes."
 
+#: src/components/map/attributes.ts:285
+msgid "Check failed"
+msgstr "Check failed"
+
 #: src/components/voice/VoiceInputError.tsx:99
 msgid "Check microphone access"
 msgstr "Check microphone access"
@@ -2772,8 +2814,9 @@ msgstr "Checking live conversations"
 msgid "Checking your session."
 msgstr "Checking your session."
 
-#: src/components/map/panels/shared.tsx:57
-#: src/components/map/panels/SpotlightPanel.tsx:172
+#: src/components/map/attributes.ts:284
+#: src/components/map/panels/shared.tsx:132
+#: src/components/map/panels/SpotlightPanel.tsx:212
 msgid "Checking…"
 msgstr "Checking…"
 
@@ -2809,6 +2852,10 @@ msgstr "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgid "Choose when you want to receive notifications"
 msgstr "Choose when you want to receive notifications"
 
+#: src/components/map/panels/BudgetStates.tsx:23
+msgid "Choose which objects to show in the Objects filter."
+msgstr "Choose which objects to show in the Objects filter."
+
 #: src/components/settings/LanguageSettingsCard.tsx:17
 msgid "Choose your preferred language for the interface"
 msgstr "Choose your preferred language for the interface"
@@ -2822,24 +2869,24 @@ msgid "City"
 msgstr "City"
 
 #: src/components/map/panels/Legend.tsx:26
-msgid "Claim · checking…"
-msgstr "Claim · checking…"
+#~ msgid "Claim · checking…"
+#~ msgstr "Claim · checking…"
 
 #: src/components/map/panels/Legend.tsx:24
-msgid "Claim · contested"
-msgstr "Claim · contested"
+#~ msgid "Claim · contested"
+#~ msgstr "Claim · contested"
 
 #: src/components/map/panels/Legend.tsx:23
-msgid "Claim · likely false"
-msgstr "Claim · likely false"
+#~ msgid "Claim · likely false"
+#~ msgstr "Claim · likely false"
 
 #: src/components/map/panels/Legend.tsx:22
-msgid "Claim · likely true"
-msgstr "Claim · likely true"
+#~ msgid "Claim · likely true"
+#~ msgstr "Claim · likely true"
 
 #: src/components/map/panels/Legend.tsx:25
-msgid "Claim · unverified"
-msgstr "Claim · unverified"
+#~ msgid "Claim · unverified"
+#~ msgstr "Claim · unverified"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:935
 msgid "Clear"
@@ -2882,7 +2929,7 @@ msgstr "Click \"Upload Files\" when you're ready to start the upload process."
 msgid "Click a conversation tag to add it to your filters."
 msgstr "Click a conversation tag to add it to your filters."
 
-#: src/components/map/panels/SpotlightPanel.tsx:248
+#: src/components/map/panels/SpotlightPanel.tsx:288
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Click a node in the tree or cluster map to spotlight it here."
 
@@ -2955,7 +3002,7 @@ msgstr "Close and go to dembrane"
 msgid "Cloud Act Safe"
 msgstr "Cloud Act Safe"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:32
+#: src/components/map/panels/MapSettingsMenu.tsx:45
 msgid "Clusters"
 msgstr "Clusters"
 
@@ -2973,25 +3020,41 @@ msgid "Collection"
 msgstr "Collection"
 
 #. placeholder {0}: collisionRadius.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1043
+#: src/components/map/renderers/LocalMapGraph.tsx:1189
 msgid "Collision Radius: {0}x"
 msgstr "Collision Radius: {0}x"
 
 #: src/components/map/panels/SpotlightPanel.tsx:121
-msgid "Color graph by fact-check"
-msgstr "Color graph by fact-check"
+#~ msgid "Color graph by fact-check"
+#~ msgstr "Color graph by fact-check"
 
-#: src/components/map/panels/SpotlightPanel.tsx:100
+#: src/components/map/panels/SpotlightPanel.tsx:156
+msgid "Color graph by factual status"
+msgstr "Color graph by factual status"
+
+#: src/components/map/panels/SpotlightPanel.tsx:115
+msgid "Color graph by type"
+msgstr "Color graph by type"
+
+#: src/components/map/panels/SpotlightPanel.tsx:135
 msgid "Color graph by valence"
 msgstr "Color graph by valence"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:82
+#: src/components/map/panels/MapSettingsMenu.tsx:138
 msgid "Color nodes by"
 msgstr "Color nodes by"
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:590
 msgid "Columns"
 msgstr "Columns"
+
+#: src/components/map/panels/shared.tsx:68
+msgid "Combined from"
+msgstr "Combined from"
+
+#: src/components/map/panels/NodeDetailCard.tsx:405
+msgid "Combined from {memberCount} arguments"
+msgstr "Combined from {memberCount} arguments"
 
 #: src/components/workspace/TierStatusBadge.tsx:29
 #: src/components/training/TrainingCatalog.tsx:67
@@ -3139,7 +3202,8 @@ msgstr "Contact the admin if this was unexpected."
 msgid "Content"
 msgstr "Content"
 
-#: src/components/map/panels/shared.tsx:55
+#: src/components/map/attributes.ts:281
+#: src/components/map/panels/shared.tsx:130
 msgid "Contested"
 msgstr "Contested"
 
@@ -3180,7 +3244,7 @@ msgstr "Continue"
 msgid "Contributing nodes ({0})"
 msgstr "Contributing nodes ({0})"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1059
+#: src/components/map/renderers/LocalMapGraph.tsx:1205
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Controls how far charge forces act (higher = more global)"
 
@@ -3835,7 +3899,7 @@ msgid "Czech conversations, Czech answers"
 msgstr "Czech conversations, Czech answers"
 
 #. placeholder {0}: dAdj.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:997
+#: src/components/map/renderers/LocalMapGraph.tsx:1143
 msgid "d̄_adj: {0}"
 msgstr "d̄_adj: {0}"
 
@@ -3847,7 +3911,7 @@ msgstr "Danger"
 msgid "Danger zone"
 msgstr "Danger zone"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:124
+#: src/components/map/panels/MapSettingsMenu.tsx:234
 msgid "Dark mode"
 msgstr "Dark mode"
 
@@ -3906,6 +3970,19 @@ msgstr "Decline the invite to {subjectName}? You can ask them to send it again l
 msgid "Decline this access request? The requester won't be notified and would need to request access again."
 msgstr "Decline this access request? The requester won't be notified and would need to request access again."
 
+#: src/components/map/attributes.ts:69
+#: src/components/map/panels/BudgetStates.tsx:90
+msgid "Deduplicate arguments"
+msgstr "Deduplicate arguments"
+
+#: src/components/map/attributes.ts:70
+msgid "Deduplicated argument"
+msgstr "Deduplicated argument"
+
+#: src/components/map/attributes.ts:71
+msgid "Deduplicated arguments"
+msgstr "Deduplicated arguments"
+
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:49
 msgid "Deep Dive"
 msgstr "Deep Dive"
@@ -3920,6 +3997,14 @@ msgstr "Default"
 #: src/components/project/ProjectPortalEditor.tsx:764
 msgid "Default - No tutorial (Only privacy statements)"
 msgstr "Default - No tutorial (Only privacy statements)"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:200
+msgid "Default {defaultEdges}"
+msgstr "Default {defaultEdges}"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:190
+msgid "Default {defaultNodes}"
+msgstr "Default {defaultNodes}"
 
 #: src/components/chat/ChatModeSelector.tsx:281
 msgid "Delegate multi-step analysis with live tool execution"
@@ -4231,7 +4316,7 @@ msgid "Display name"
 msgstr "Display name"
 
 #. placeholder {0}: linkDistanceQuadratic.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:999
+#: src/components/map/renderers/MstGraph.tsx:1126
 msgid "Dissimilar links: {0}"
 msgstr "Dissimilar links: {0}"
 
@@ -4434,6 +4519,10 @@ msgstr "e.g., Slack Notifications, Make Workflow"
 msgid "Each new member is billed per seat on your plan."
 msgstr "Each new member is billed per seat on your plan."
 
+#: src/components/map/panels/shared.tsx:103
+msgid "Earlier map result"
+msgstr "Earlier map result"
+
 #: src/components/popcorn/PopcornHistory.tsx:41
 msgid "Earlier runs"
 msgstr "Earlier runs"
@@ -4563,11 +4652,11 @@ msgstr "Embed code"
 msgid "Embed in a webpage"
 msgstr "Embed in a webpage"
 
-#: src/components/map/MapPage.tsx:115
+#: src/components/map/MapPage.tsx:146
 msgid "Embedding arguments"
 msgstr "Embedding arguments"
 
-#: src/components/map/MapPage.tsx:114
+#: src/components/map/MapPage.tsx:145
 msgid "Embedding arguments {done} of {total}"
 msgstr "Embedding arguments {done} of {total}"
 
@@ -4600,7 +4689,7 @@ msgstr "Enable"
 msgid "Enable 2FA"
 msgstr "Enable 2FA"
 
-#: src/components/map/MapPage.tsx:443
+#: src/components/map/MapPage.tsx:617
 msgid "Enable a visualization from the panel settings menu"
 msgstr "Enable a visualization from the panel settings menu"
 
@@ -4829,6 +4918,14 @@ msgstr "Everyone on the roster is trained."
 msgid "participant.alert.microphone.access.success"
 msgstr "Everything looks good – you can continue."
 
+#: src/components/map/panels/NodeDetailCard.tsx:288
+msgid "Evidence"
+msgstr "Evidence"
+
+#: src/components/map/panels/NodeDetailCard.tsx:294
+msgid "Evidenced connections"
+msgstr "Evidenced connections"
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1084
 msgid "Example Webhook Payload"
 msgstr "Example Webhook Payload"
@@ -4867,7 +4964,7 @@ msgstr "Expiring soon"
 
 #: src/components/project/ProjectPortalEditor.tsx:794
 #: src/components/project/PortalSettingsOverview.tsx:159
-#: src/components/map/panels/MapSettingsMenu.tsx:28
+#: src/components/map/panels/MapSettingsMenu.tsx:41
 #: src/components/map/panels/ExplorePanel.tsx:81
 #: src/components/map/panels/ExplorePanel.tsx:84
 msgid "Explore"
@@ -4953,21 +5050,29 @@ msgstr "Externals only exist inside a workspace. Pick at least one to send the i
 msgid "Extra participants"
 msgstr "Extra participants"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:114
+#: src/components/map/panels/MapSettingsMenu.tsx:175
 msgid "Fact check all"
 msgstr "Fact check all"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:112
+#: src/components/map/panels/MapSettingsMenu.tsx:173
 msgid "Fact check all ({pendingClaimCount})"
 msgstr "Fact check all ({pendingClaimCount})"
 
-#: src/components/map/panels/SpotlightPanel.tsx:158
+#: src/components/map/panels/SpotlightPanel.tsx:198
 msgid "Fact check this claim"
 msgstr "Fact check this claim"
 
 #: src/components/map/panels/MapSettingsMenu.tsx:89
-msgid "Fact-check"
-msgstr "Fact-check"
+#~ msgid "Fact-check"
+#~ msgstr "Fact-check"
+
+#: src/components/map/attributes.ts:288
+msgid "Factual status"
+msgstr "Factual status"
+
+#: src/components/map/panels/SpotlightPanel.tsx:187
+msgid "Factual status does not apply to this object."
+msgstr "Factual status does not apply to this object."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2766
 #: src/routes/admin/AdminSettingsRoute.tsx:2831
@@ -5167,7 +5272,7 @@ msgid "Fair password"
 msgstr "Fair password"
 
 #. placeholder {0}: fpStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1020
+#: src/components/map/renderers/LocalMapGraph.tsx:1166
 msgid "Far Pair Repulsion: {0}"
 msgstr "Far Pair Repulsion: {0}"
 
@@ -5245,6 +5350,10 @@ msgstr "Filter by name or id"
 #: src/routes/ReleaseNotesRoute.tsx:72
 #~ msgid "Filter releases by year"
 #~ msgstr "Filter releases by year"
+
+#: src/components/map/panels/BudgetStates.tsx:107
+msgid "Filter the objects"
+msgstr "Filter the objects"
 
 #: src/components/chat/ChatModeSelector.tsx:62
 msgid "Find contradictions and suggest follow-up questions"
@@ -5366,15 +5475,15 @@ msgstr "for the dembrane team"
 msgid "For you"
 msgstr "For you"
 
-#: src/components/map/renderers/MstGraph.tsx:959
+#: src/components/map/renderers/MstGraph.tsx:1086
 msgid "Force Graph Settings"
 msgstr "Force Graph Settings"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1007
+#: src/components/map/renderers/LocalMapGraph.tsx:1153
 msgid "Force Multipliers"
 msgstr "Force Multipliers"
 
-#: src/components/map/renderers/MstGraph.tsx:968
+#: src/components/map/renderers/MstGraph.tsx:1095
 msgid "Force Parameters"
 msgstr "Force Parameters"
 
@@ -5428,6 +5537,10 @@ msgstr "French"
 msgid "friction"
 msgstr "friction"
 
+#: src/components/map/panels/shared.tsx:81
+msgid "From the transcript"
+msgstr "From the transcript"
+
 #: src/routes/project/canvas/CanvasRoute.tsx:571
 #: src/routes/project/canvas/CanvasRoute.tsx:578
 msgid "Full screen"
@@ -5448,12 +5561,12 @@ msgid "General"
 msgstr "General"
 
 #. placeholder {0}: chargeStrength.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1013
+#: src/components/map/renderers/MstGraph.tsx:1140
 msgid "General repulsion force: {0}"
 msgstr "General repulsion force: {0}"
 
 #. placeholder {0}: Math.abs(chargeStrength)
-#: src/components/map/renderers/LocalMapGraph.tsx:1033
+#: src/components/map/renderers/LocalMapGraph.tsx:1179
 msgid "General Repulsion: {0}"
 msgstr "General Repulsion: {0}"
 
@@ -5483,7 +5596,8 @@ msgstr "Generate conversation titles automatically, with an option to turn this 
 msgid "Generate library"
 msgstr "Generate library"
 
-#: src/components/map/MapPage.tsx:165
+#: src/components/map/attributes.ts:60
+#: src/components/map/MapPage.tsx:196
 msgid "Generate map"
 msgstr "Generate map"
 
@@ -5498,13 +5612,29 @@ msgstr "Generate now"
 msgid "Generate now instead"
 msgstr "Generate now instead"
 
+#: src/components/map/attributes.ts:78
+msgid "Generate popcorn"
+msgstr "Generate popcorn"
+
 #: src/components/settings/TwoFactorSettingsCard.tsx:190
 msgid "Generate secret"
 msgstr "Generate secret"
 
+#: src/components/map/attributes.ts:87
+msgid "Generate stakeholders"
+msgstr "Generate stakeholders"
+
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:323
 msgid "Generate Summary"
 msgstr "Generate Summary"
+
+#: src/components/map/attributes.ts:96
+msgid "Generate tensions"
+msgstr "Generate tensions"
+
+#: src/components/map/panels/shared.tsx:106
+msgid "Generated"
+msgstr "Generated"
 
 #: src/components/release/releaseHistory.ts:72
 msgid "Generated conversation titles contain one title instead of a list of suggestions."
@@ -5737,6 +5867,10 @@ msgstr "Hi {firstName}"
 msgid "Hidden"
 msgstr "Hidden"
 
+#: src/components/map/panels/NodeDetailCard.tsx:158
+msgid "Hidden by the Objects filter"
+msgstr "Hidden by the Objects filter"
+
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1914
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1934
 msgid "Hidden from organisation members. Organisation admins can still find and join."
@@ -5797,6 +5931,10 @@ msgstr "Highlight specific Concept"
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:353
 msgid "History note"
 msgstr "History note"
+
+#: src/components/map/panels/shared.tsx:70
+msgid "Holds position"
+msgstr "Holds position"
 
 #: src/features/sidebar/views/user/UserHomeView.tsx:76
 msgid "Home"
@@ -5973,6 +6111,10 @@ msgstr "Image style"
 msgid "Images must be under {MAX_FILE_MB}MB"
 msgstr "Images must be under {MAX_FILE_MB}MB"
 
+#: src/components/map/panels/shared.tsx:110
+msgid "Imported"
+msgstr "Imported"
+
 #: src/components/chat/AgenticChatPanel.tsx:1870
 msgid "Improve my setup"
 msgstr "Improve my setup"
@@ -6012,9 +6154,18 @@ msgstr "Included hours used up"
 msgid "Included hours used up this month"
 msgstr "Included hours used up this month"
 
+#: src/components/map/attributes.ts:282
+msgid "Inconclusive"
+msgstr "Inconclusive"
+
 #: src/components/feedback/reasons.ts:17
 msgid "Incorrect or made up"
 msgstr "Incorrect or made up"
+
+#: src/components/map/panels/shared.tsx:85
+#: src/components/map/panels/shared.tsx:96
+msgid "Inferred"
+msgstr "Inferred"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:935
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:949
@@ -6573,8 +6724,8 @@ msgstr "Legal basis saved"
 msgid "Legal entity name"
 msgstr "Legal entity name"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:33
-#: src/components/map/panels/Legend.tsx:55
+#: src/components/map/panels/MapSettingsMenu.tsx:46
+#: src/components/map/panels/Legend.tsx:31
 msgid "Legend"
 msgstr "Legend"
 
@@ -6636,11 +6787,13 @@ msgstr "Licenses granted"
 msgid "Lifetime cap"
 msgstr "Lifetime cap"
 
-#: src/components/map/panels/shared.tsx:53
+#: src/components/map/attributes.ts:280
+#: src/components/map/panels/shared.tsx:128
 msgid "Likely false"
 msgstr "Likely false"
 
-#: src/components/map/panels/shared.tsx:51
+#: src/components/map/attributes.ts:279
+#: src/components/map/panels/shared.tsx:126
 msgid "Likely true"
 msgstr "Likely true"
 
@@ -6657,6 +6810,10 @@ msgstr "Link copied"
 #: src/components/settings/LegalBasisCard.tsx:209
 msgid "Link to the privacy policy shown to participants"
 msgstr "Link to the privacy policy shown to participants"
+
+#: src/components/map/MapPage.tsx:1076
+msgid "List"
+msgstr "List"
 
 #: src/components/chat/AgenticChatPanel.tsx:1860
 msgid "List my conversations"
@@ -6820,6 +6977,10 @@ msgstr "Loading microphones..."
 msgid "Loading projects..."
 msgstr "Loading projects..."
 
+#: src/components/map/MapPage.tsx:1170
+msgid "Loading the new scope. The current map stays until then."
+msgstr "Loading the new scope. The current map stays until then."
+
 #: src/components/chat/AgenticChatPanel.tsx:1803
 msgid "Loading this chat..."
 msgstr "Loading this chat..."
@@ -6851,23 +7012,23 @@ msgstr "Loading..."
 msgid "Loading…"
 msgstr "Loading…"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:958
+#: src/components/map/renderers/LocalMapGraph.tsx:1104
 msgid "Local argument map"
 msgstr "Local argument map"
 
-#: src/components/map/MapPage.tsx:419
+#: src/components/map/MapPage.tsx:584
 msgid "Local map"
 msgstr "Local map"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:979
+#: src/components/map/renderers/LocalMapGraph.tsx:1125
 msgid "LocalMap Forces"
 msgstr "LocalMap Forces"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:983
+#: src/components/map/renderers/LocalMapGraph.tsx:1129
 msgid "LocalMAP Paper Parameters"
 msgstr "LocalMAP Paper Parameters"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:970
+#: src/components/map/renderers/LocalMapGraph.tsx:1116
 msgid "LocalMap Settings"
 msgstr "LocalMap Settings"
 
@@ -7026,16 +7187,17 @@ msgstr "Managed by dembrane"
 msgid "Manages members, workspaces, and organisation settings."
 msgstr "Manages members, workspaces, and organisation settings."
 
-#: src/components/map/hooks/useMapFactCheck.ts:74
+#: src/components/map/hooks/useMapFactCheck.ts:75
 msgid "Many fact-checks were started just now. Try again in a moment."
 msgstr "Many fact-checks were started just now. Try again in a moment."
 
-#: src/components/map/hooks/index.ts:161
+#: src/components/map/hooks/index.ts:312
 msgid "Many maps were started just now. Try again in a moment."
 msgstr "Many maps were started just now. Try again in a moment."
 
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:132
-#: src/components/map/MapPage.tsx:654
+#: src/components/map/MapPage.tsx:1061
+#: src/components/map/MapPage.tsx:1077
 msgid "Map"
 msgstr "Map"
 
@@ -7043,7 +7205,11 @@ msgstr "Map"
 msgid "Map | dembrane"
 msgstr "Map | dembrane"
 
-#: src/components/map/MapPage.tsx:592
+#: src/components/map/panels/MapSettingsMenu.tsx:185
+msgid "Map budget"
+msgstr "Map budget"
+
+#: src/components/map/MapPage.tsx:983
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 
@@ -7119,12 +7285,12 @@ msgstr "MCP is a bridge that lets an AI assistant such as Claude, ChatGPT or Le 
 msgid "MCP URL"
 msgstr "MCP URL"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:988
+#: src/components/map/renderers/LocalMapGraph.tsx:1134
 msgid "Medium distance threshold (default: 10)"
 msgstr "Medium distance threshold (default: 10)"
 
 #. placeholder {0}: linkDistanceLinear.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:987
+#: src/components/map/renderers/MstGraph.tsx:1114
 msgid "Medium distances: {0}"
 msgstr "Medium distances: {0}"
 
@@ -7228,7 +7394,7 @@ msgid "Microphone access is still denied. Please check your settings and try aga
 msgstr "Microphone access is still denied. Please check your settings and try again."
 
 #. placeholder {0}: linkDistanceConstant.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:973
+#: src/components/map/renderers/MstGraph.tsx:1100
 msgid "Minimum link length: {0}"
 msgstr "Minimum link length: {0}"
 
@@ -7441,6 +7607,10 @@ msgstr "name@example.com"
 msgid "name@example.com, name2@example.com"
 msgstr "name@example.com, name2@example.com"
 
+#: src/components/map/panels/shared.tsx:94
+msgid "Named by participants"
+msgstr "Named by participants"
+
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:163
 msgid "Named ways of working your team can reuse."
 msgstr "Named ways of working your team can reuse."
@@ -7448,6 +7618,10 @@ msgstr "Named ways of working your team can reuse."
 #: src/components/popcorn/PopcornScreenSettings.tsx:81
 msgid "Names on the legend"
 msgstr "Names on the legend"
+
+#: src/components/map/panels/NodeDetailCard.tsx:238
+msgid "Narrative"
+msgstr "Narrative"
 
 #: src/components/chat/templates.ts:134
 #~ msgid "Narratives"
@@ -7457,6 +7631,10 @@ msgstr "Names on the legend"
 msgid "Narratives (English)"
 msgstr "Narratives (English)"
 
+#: src/components/map/panels/BudgetStates.tsx:95
+msgid "Narrow the source"
+msgstr "Narrow the source"
+
 #: src/routes/organisation/OrganisationExternalView.tsx:130
 msgid "Need more access? Ask the person who invited you to add you to the organisation or another workspace."
 msgstr "Need more access? Ask the person who invited you to add you to the organisation or another workspace."
@@ -7465,18 +7643,18 @@ msgstr "Need more access? Ask the person who invited you to add you to the organ
 msgid "Needs attention"
 msgstr "Needs attention"
 
-#: src/components/map/panels/shared.tsx:25
-#: src/components/map/panels/Legend.tsx:15
+#: src/components/map/attributes.ts:247
+#: src/components/map/panels/shared.tsx:28
 msgid "Negative"
 msgstr "Negative"
 
 #. placeholder {0}: nnStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1011
+#: src/components/map/renderers/LocalMapGraph.tsx:1157
 msgid "Neighbor Attraction: {0}"
 msgstr "Neighbor Attraction: {0}"
 
-#: src/components/map/panels/shared.tsx:27
-#: src/components/map/panels/Legend.tsx:16
+#: src/components/map/attributes.ts:248
+#: src/components/map/panels/shared.tsx:30
 msgid "Neutral"
 msgstr "Neutral"
 
@@ -7600,7 +7778,7 @@ msgstr "Next"
 msgid "participant.verify.instructions.button.next"
 msgstr "Next"
 
-#: src/components/map/panels/ShowcasePanel.tsx:125
+#: src/components/map/panels/ShowcasePanel.tsx:142
 msgid "Next change in <0>{remainingSeconds}s</0>"
 msgstr "Next change in <0>{remainingSeconds}s</0>"
 
@@ -7642,7 +7820,11 @@ msgstr "No agent calls yet."
 msgid "No agents connected yet."
 msgstr "No agents connected yet."
 
-#: src/components/map/MapPage.tsx:611
+#: src/components/map/attributes.ts:59
+msgid "No arguments saved yet."
+msgstr "No arguments saved yet."
+
+#: src/components/map/MapPage.tsx:1002
 msgid "No arguments were found in this project's conversations."
 msgstr "No arguments were found in this project's conversations."
 
@@ -7683,6 +7865,10 @@ msgstr "No chats yet."
 msgid "No collections found"
 msgstr "No collections found"
 
+#: src/components/map/attributes.ts:214
+msgid "No colour"
+msgstr "No colour"
+
 #: src/components/conversation/SelectAllConfirmationModal.tsx:127
 msgid "No content"
 msgstr "No content"
@@ -7721,9 +7907,17 @@ msgstr "No conversations yet."
 msgid "No conversations yet. You can schedule a report now and conversations will be included once they are added."
 msgstr "No conversations yet. You can schedule a report now and conversations will be included once they are added."
 
+#: src/components/map/attributes.ts:68
+msgid "No deduplicated arguments saved yet."
+msgstr "No deduplicated arguments saved yet."
+
 #: src/components/project/ProjectLegalBasisSection.tsx:77
 msgid "No default set (client-managed applies)"
 msgstr "No default set (client-managed applies)"
+
+#: src/components/map/panels/NodeDetailCard.tsx:298
+msgid "No evidenced connections."
+msgstr "No evidenced connections."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2353
 msgid "no expiry"
@@ -7753,12 +7947,17 @@ msgstr "No goal yet. Set one here, or let the assistant interview you in chat."
 msgid "No invites went out. Check the list below."
 msgstr "No invites went out. Check the list below."
 
+#: src/components/map/panels/NodeDetailCard.tsx:253
+#: src/components/map/panels/NodeDetailCard.tsx:262
+msgid "No linked arguments."
+msgstr "No linked arguments."
+
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1652
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1727
 msgid "No logo set. dembrane default will be used."
 msgstr "No logo set. dembrane default will be used."
 
-#: src/components/map/MapPage.tsx:588
+#: src/components/map/MapPage.tsx:979
 msgid "No map has been generated for this project yet."
 msgstr "No map has been generated for this project yet."
 
@@ -7796,7 +7995,7 @@ msgstr "No new feedback detected yet. Please continue your discussion and try ag
 msgid "No new invites needed. Check the list below."
 msgstr "No new invites needed. Check the list below."
 
-#: src/components/map/panels/NodeDetailCard.tsx:78
+#: src/components/map/panels/NodeDetailCard.tsx:353
 msgid "No node selected."
 msgstr "No node selected."
 
@@ -7861,6 +8060,10 @@ msgstr "No PDF available for this invoice."
 msgid "No pending invites"
 msgstr "No pending invites"
 
+#: src/components/map/attributes.ts:77
+msgid "No popcorn saved yet."
+msgstr "No popcorn saved yet."
+
 #: src/components/workspace/OrganisationUsageRollup.tsx:860
 msgid "No project activity this period."
 msgstr "No project activity this period."
@@ -7906,6 +8109,10 @@ msgstr "No results"
 msgid "No selectable conversations"
 msgstr "No selectable conversations"
 
+#: src/components/map/attributes.ts:86
+msgid "No stakeholders saved yet."
+msgstr "No stakeholders saved yet."
+
 #: src/routes/project/ProjectHomeRoute.tsx:252
 #: src/components/conversation/ProjectConversationsPanel.tsx:435
 msgid "No summary yet"
@@ -7922,6 +8129,10 @@ msgstr "No tags have been added to this project yet. Add a tag using the text in
 #: src/components/chat/TemplatesModal.tsx:874
 msgid "No templates match '{searchQuery}'"
 msgstr "No templates match '{searchQuery}'"
+
+#: src/components/map/attributes.ts:95
+msgid "No tensions saved yet."
+msgstr "No tensions saved yet."
 
 #: src/components/training/StaffTrainingPanel.tsx:130
 msgid "No trainings match your filters."
@@ -7992,7 +8203,11 @@ msgstr "No workspaces from this organisation are shared with you right now."
 msgid "No workspaces match \"{search}\"."
 msgstr "No workspaces match \"{search}\"."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:87
+#: src/components/map/panels/MapSettingsMenu.tsx:189
+msgid "Nodes"
+msgstr "Nodes"
+
+#: src/components/map/attributes.ts:216
 msgid "None"
 msgstr "None"
 
@@ -8009,6 +8224,16 @@ msgstr "Not a valid email."
 msgid "select.all.modal.not.added"
 msgstr "Not Added"
 
+#: src/components/map/attributes.ts:250
+#: src/components/map/attributes.ts:278
+msgid "Not applicable"
+msgstr "Not applicable"
+
+#: src/components/map/attributes.ts:249
+#: src/components/map/panels/shared.tsx:32
+msgid "Not assessed"
+msgstr "Not assessed"
+
 #: src/routes/project/library/ProjectLibrary.tsx:140
 msgid "Not available"
 msgstr "Not available"
@@ -8017,6 +8242,10 @@ msgstr "Not available"
 #: src/routes/settings/AgentConsentRoute.tsx:83
 msgid "Not enabled by an admin of {0}"
 msgstr "Not enabled by an admin of {0}"
+
+#: src/components/map/panels/NodeDetailCard.tsx:160
+msgid "Not in this view"
+msgstr "Not in this view"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:568
 #: src/components/pricing/PricingConfigurator.tsx:835
@@ -8029,6 +8258,16 @@ msgstr "Not now"
 #: src/routes/admin/AdminSettingsRoute.tsx:804
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
+
+#: src/components/map/panels/ResultList.tsx:75
+msgid "Not placed on the map"
+msgstr "Not placed on the map"
+
+#: src/components/map/panels/shared.tsx:98
+#: src/components/map/panels/NodeDetailCard.tsx:283
+#: src/components/map/panels/NodeDetailCard.tsx:286
+msgid "Not recorded"
+msgstr "Not recorded"
 
 #: src/components/billing/BillingManager.tsx:1232
 msgid "Not renewing"
@@ -8117,6 +8356,15 @@ msgstr "Nothing saved yet. The assistant adds notes here as you chat."
 #: src/components/project/ProjectPortalEditor.tsx:1291
 msgid "Notify participants when a report is published."
 msgstr "Notify participants when a report is published."
+
+#: src/components/map/panels/ObjectsFilter.tsx:83
+#: src/components/map/panels/ObjectsFilter.tsx:90
+msgid "Objects"
+msgstr "Objects"
+
+#: src/components/map/panels/ObjectsFilter.tsx:84
+msgid "Objects ({visibleCount})"
+msgstr "Objects ({visibleCount})"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1014
 #: src/lib/roles.ts:17
@@ -8409,7 +8657,7 @@ msgstr "Open workspace actions"
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open your authenticator app and enter the current six-digit code."
 
-#: src/components/map/panels/SpotlightPanel.tsx:62
+#: src/components/map/panels/SpotlightPanel.tsx:82
 msgid "Opinion"
 msgstr "Opinion"
 
@@ -8661,9 +8909,9 @@ msgstr "Page Title"
 msgid "Paid"
 msgstr "Paid"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:49
-#: src/components/map/panels/MapSettingsMenu.tsx:50
-#: src/components/map/panels/MapSettingsMenu.tsx:58
+#: src/components/map/panels/MapSettingsMenu.tsx:97
+#: src/components/map/panels/MapSettingsMenu.tsx:98
+#: src/components/map/panels/MapSettingsMenu.tsx:106
 msgid "Panel settings"
 msgstr "Panel settings"
 
@@ -8788,7 +9036,7 @@ msgstr "Passwords do not match"
 msgid "Paste it into any page. It stays live."
 msgstr "Paste it into any page. It stays live."
 
-#: src/components/map/renderers/LocalMapGraph.tsx:947
+#: src/components/map/renderers/LocalMapGraph.tsx:1093
 msgid "Pause physics"
 msgstr "Pause physics"
 
@@ -9089,6 +9337,14 @@ msgstr "plus workspace admins"
 msgid "PNG, JPEG, or WebP. Will be cropped to a circle."
 msgstr "PNG, JPEG, or WebP. Will be cropped to a circle."
 
+#: src/components/map/panels/NodeDetailCard.tsx:231
+msgid "Pole A"
+msgstr "Pole A"
+
+#: src/components/map/panels/NodeDetailCard.tsx:234
+msgid "Pole B"
+msgstr "Pole B"
+
 #: src/components/feedback/ResponseFeedbackControls.tsx:163
 msgid "Poor response"
 msgstr "Poor response"
@@ -9097,6 +9353,8 @@ msgstr "Poor response"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:114
 #: src/components/popcorn/PopcornStart.tsx:55
 #: src/components/popcorn/PopcornIntroModal.tsx:24
+#: src/components/map/attributes.ts:79
+#: src/components/map/attributes.ts:80
 msgid "Popcorn"
 msgstr "Popcorn"
 
@@ -9162,8 +9420,8 @@ msgstr "Portal title"
 msgid "Portal tutorial"
 msgstr "Portal tutorial"
 
-#: src/components/map/panels/shared.tsx:23
-#: src/components/map/panels/Legend.tsx:14
+#: src/components/map/attributes.ts:246
+#: src/components/map/panels/shared.tsx:26
 msgid "Positive"
 msgstr "Positive"
 
@@ -9503,9 +9761,13 @@ msgstr "Question"
 msgid "Questions about how dembrane works, not only about your data."
 msgstr "Questions about how dembrane works, not only about your data."
 
-#: src/components/map/panels/NodeDetailCard.tsx:109
+#: src/components/map/panels/NodeDetailCard.tsx:429
 msgid "Quotes ({quoteCount})"
 msgstr "Quotes ({quoteCount})"
+
+#: src/components/map/panels/BudgetStates.tsx:86
+msgid "Raise the budget to {count}"
+msgstr "Raise the budget to {count}"
 
 #. placeholder {0}: items.length
 #: src/components/chat/AgenticChatPanel.tsx:596
@@ -9521,7 +9783,7 @@ msgstr "Rate limited"
 msgid "Rating"
 msgstr "Rating"
 
-#: src/components/map/panels/SpotlightPanel.tsx:213
+#: src/components/map/panels/SpotlightPanel.tsx:253
 msgid "Re-check"
 msgstr "Re-check"
 
@@ -9613,11 +9875,11 @@ msgstr "Reading a skill"
 msgid "Reading a transcript"
 msgstr "Reading a transcript"
 
-#: src/components/map/MapPage.tsx:122
+#: src/components/map/MapPage.tsx:153
 msgid "Reading conversations"
 msgstr "Reading conversations"
 
-#: src/components/map/MapPage.tsx:121
+#: src/components/map/MapPage.tsx:152
 msgid "Reading conversations {done} of {total}"
 msgstr "Reading conversations {done} of {total}"
 
@@ -9670,6 +9932,14 @@ msgstr "Recent payments across all accounts"
 #: src/components/goal/ProjectGoalSection.tsx:42
 msgid "recently"
 msgstr "recently"
+
+#: src/components/map/panels/NodeDetailCard.tsx:321
+msgid "Recipe: {recipe}"
+msgstr "Recipe: {recipe}"
+
+#: src/components/map/panels/NodeDetailCard.tsx:323
+msgid "Recipe: not recorded"
+msgstr "Recipe: not recorded"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:338
 msgid "Recommended apps"
@@ -9836,7 +10106,7 @@ msgid "Refreshing…"
 msgstr "Refreshing…"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:411
-#: src/components/map/MapPage.tsx:163
+#: src/components/map/MapPage.tsx:194
 #: src/components/conversation/ConversationEdit.tsx:403
 #: src/components/conversation/ConversationEdit.tsx:477
 msgid "Regenerate"
@@ -9862,6 +10132,12 @@ msgstr "Regenerating the summary. Please wait..."
 #: src/routes/auth/Register.tsx:32
 msgid "Register | dembrane"
 msgstr "Register | dembrane"
+
+#: src/components/map/panels/NodeDetailCard.tsx:266
+#: src/components/map/panels/NodeDetailCard.tsx:443
+#: src/components/map/panels/MapSettingsMenu.tsx:123
+msgid "Relationships"
+msgstr "Relationships"
 
 #: src/routes/ReleaseNotesRoute.tsx:21
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:143
@@ -10293,12 +10569,16 @@ msgstr "Reset to default"
 msgid "Response feedback"
 msgstr "Response feedback"
 
+#: src/components/map/panels/ResultList.tsx:40
+msgid "Results"
+msgstr "Results"
+
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:145
 msgid "participant.button.stop.resume"
 msgstr "Resume"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:947
+#: src/components/map/renderers/LocalMapGraph.tsx:1093
 msgid "Resume physics"
 msgstr "Resume physics"
 
@@ -10345,7 +10625,7 @@ msgstr "Retranscription started. New conversation will be available soon."
 #: src/routes/project/chat/ProjectChatRoute.tsx:842
 #: src/components/workspace/UsageCard.tsx:108
 #: src/components/workspace/OrganisationUsageRollup.tsx:494
-#: src/components/map/panels/SpotlightPanel.tsx:234
+#: src/components/map/panels/SpotlightPanel.tsx:274
 #: src/components/map/panels/ExplorePanel.tsx:113
 #: src/components/common/FetchErrorPanel.tsx:35
 msgid "Retry"
@@ -10417,6 +10697,10 @@ msgstr "Revision #{revisionNumber}"
 msgid "Revision history"
 msgstr "Revision history"
 
+#: src/components/map/panels/NodeDetailCard.tsx:328
+msgid "Revision history is not available yet."
+msgstr "Revision history is not available yet."
+
 #: src/components/training/TrainingRowActions.tsx:255
 #: src/components/agent-access/AgentGrantsCard.tsx:169
 #: src/components/agent-access/AgentGrantsCard.tsx:198
@@ -10453,6 +10737,7 @@ msgstr "Revoked"
 msgid "Right-click to highlight"
 msgstr "Right-click to highlight"
 
+#: src/components/map/panels/NodeDetailCard.tsx:282
 #: src/components/invite/RoleSelect.tsx:78
 msgid "Role"
 msgstr "Role"
@@ -11280,6 +11565,14 @@ msgstr "Show {hidden} more"
 msgid "Show {overflow} more"
 msgstr "Show {overflow} more"
 
+#: src/components/map/panels/NodeDetailCard.tsx:169
+msgid "Show {typePlural}"
+msgstr "Show {typePlural}"
+
+#: src/components/map/MapPage.tsx:1162
+msgid "Show all objects"
+msgstr "Show all objects"
+
 #: src/components/conversation/ConversationTranscriptSection.tsx:149
 msgid "Show audio player"
 msgstr "Show audio player"
@@ -11352,9 +11645,9 @@ msgstr "Show the invitation"
 msgid "Show your own logo to participants, available on request."
 msgstr "Show your own logo to participants, available on request."
 
-#: src/components/map/panels/ShowcasePanel.tsx:70
-#: src/components/map/panels/ShowcasePanel.tsx:73
-#: src/components/map/panels/MapSettingsMenu.tsx:29
+#: src/components/map/panels/ShowcasePanel.tsx:86
+#: src/components/map/panels/ShowcasePanel.tsx:89
+#: src/components/map/panels/MapSettingsMenu.tsx:42
 msgid "Showcase"
 msgstr "Showcase"
 
@@ -11368,6 +11661,10 @@ msgstr "Showing {0} of {1}"
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 
+#: src/components/map/MapPage.tsx:239
+msgid "Showing {drawn} of {available} connections"
+msgstr "Showing {drawn} of {available} connections"
+
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:264
 msgid "Showing {rangeStart}-{rangeEnd} of {total}"
 msgstr "Showing {rangeStart}-{rangeEnd} of {total}"
@@ -11376,6 +11673,10 @@ msgstr "Showing {rangeStart}-{rangeEnd} of {total}"
 #: src/routes/project/chat/NewChatRoute.tsx:195
 msgid "Showing the first {0} of {shownCount} matches. Narrow the search to see the rest."
 msgstr "Showing the first {0} of {shownCount} matches. Narrow the search to see the rest."
+
+#: src/components/map/MapPage.tsx:1155
+msgid "Showing the objects of one result."
+msgstr "Showing the objects of one result."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:951
 msgid "Showing your most recent completed report."
@@ -11444,6 +11745,10 @@ msgstr "Some files were already selected and won't be added twice."
 #: src/components/conversation/SelectAllConfirmationModal.tsx:239
 msgid "select.all.modal.skip.disclaimer"
 msgstr "Some may be skipped (no transcript or selection too large)."
+
+#: src/components/map/MapPage.tsx:1149
+msgid "Some objects are based on an earlier analysis."
+msgstr "Some objects are based on an earlier analysis."
 
 #: src/components/conversation/ConversationDrilldownModal.tsx:211
 msgid "Some of the recent audio couldn't be transcribed. The recording is saved."
@@ -11547,6 +11852,14 @@ msgstr "Sort"
 msgid "Source {0}"
 msgstr "Source {0}"
 
+#: src/components/map/panels/NodeDetailCard.tsx:412
+msgid "Source evidence"
+msgstr "Source evidence"
+
+#: src/components/map/panels/NodeDetailCard.tsx:317
+msgid "Source: {origin}"
+msgstr "Source: {origin}"
+
 #: src/components/chat/ChatHistoryMessage.tsx:409
 msgid "Sources"
 msgstr "Sources"
@@ -11580,9 +11893,9 @@ msgstr "Specific Details - Selected conversations"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr "Specific Details chat respects manual conversation selection."
 
-#: src/components/map/panels/SpotlightPanel.tsx:74
-#: src/components/map/panels/SpotlightPanel.tsx:77
-#: src/components/map/panels/MapSettingsMenu.tsx:30
+#: src/components/map/panels/SpotlightPanel.tsx:92
+#: src/components/map/panels/SpotlightPanel.tsx:95
+#: src/components/map/panels/MapSettingsMenu.tsx:43
 msgid "Spotlight"
 msgstr "Spotlight"
 
@@ -11598,6 +11911,18 @@ msgstr "Staff only"
 #: src/components/training/StaffTrainingPanel.tsx:185
 msgid "Staff-created"
 msgstr "Staff-created"
+
+#: src/components/map/panels/NodeDetailCard.tsx:285
+msgid "Stake"
+msgstr "Stake"
+
+#: src/components/map/attributes.ts:88
+msgid "Stakeholder"
+msgstr "Stakeholder"
+
+#: src/components/map/attributes.ts:89
+msgid "Stakeholders"
+msgstr "Stakeholders"
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:57
 msgid "Stakeholders tab"
@@ -11720,10 +12045,18 @@ msgid "participant.button.stop"
 msgstr "Stop"
 
 #: src/components/map/panels/SpotlightPanel.tsx:120
-msgid "Stop coloring graph by fact-check"
-msgstr "Stop coloring graph by fact-check"
+#~ msgid "Stop coloring graph by fact-check"
+#~ msgstr "Stop coloring graph by fact-check"
 
-#: src/components/map/panels/SpotlightPanel.tsx:99
+#: src/components/map/panels/SpotlightPanel.tsx:155
+msgid "Stop coloring graph by factual status"
+msgstr "Stop coloring graph by factual status"
+
+#: src/components/map/panels/SpotlightPanel.tsx:114
+msgid "Stop coloring graph by type"
+msgstr "Stop coloring graph by type"
+
+#: src/components/map/panels/SpotlightPanel.tsx:134
 msgid "Stop coloring graph by valence"
 msgstr "Stop coloring graph by valence"
 
@@ -11884,9 +12217,25 @@ msgstr "Support access turned on"
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
+#: src/components/map/panels/NodeDetailCard.tsx:247
+msgid "Supporting pole A"
+msgstr "Supporting pole A"
+
+#: src/components/map/panels/NodeDetailCard.tsx:256
+msgid "Supporting pole B"
+msgstr "Supporting pole B"
+
 #: src/components/release/releaseHistory.ts:594
 msgid "Supporting quotes display correctly."
 msgstr "Supporting quotes display correctly."
+
+#: src/components/map/panels/shared.tsx:64
+msgid "Supports pole A"
+msgstr "Supports pole A"
+
+#: src/components/map/panels/shared.tsx:66
+msgid "Supports pole B"
+msgstr "Supports pole B"
 
 #: src/components/pricing/PricingConfigurator.tsx:1171
 #~ msgid "Sure"
@@ -12009,6 +12358,14 @@ msgstr "Template updated"
 msgid "Templates"
 msgstr "Templates"
 
+#: src/components/map/attributes.ts:97
+msgid "Tension"
+msgstr "Tension"
+
+#: src/components/map/attributes.ts:98
+msgid "Tensions"
+msgstr "Tensions"
+
 #: src/components/popcorn/PopcornScreenSettings.tsx:46
 msgid "Tensions tab"
 msgstr "Tensions tab"
@@ -12113,6 +12470,10 @@ msgstr "The assistant forgets it in every future chat."
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "The assistant suggests updating {headlineFields}. Waiting on you."
 
+#: src/components/map/panels/BudgetStates.tsx:25
+msgid "The chosen object types have no saved objects. Choose other types or generate them."
+msgstr "The chosen object types have no saved objects. Choose other types or generate them."
+
 #: src/components/settings/TwoFactorSettingsCard.tsx:279
 #: src/components/settings/TwoFactorSettingsCard.tsx:290
 #: src/components/settings/hooks/index.ts:57
@@ -12146,15 +12507,19 @@ msgstr "The default host guide now reminds hosts to turn on focus mode so notifi
 msgid "the dembrane team"
 msgstr "the dembrane team"
 
+#: src/components/map/panels/MapSettingsMenu.tsx:60
+msgid "The edge budget must be a whole number above zero, so {applied} applies."
+msgstr "The edge budget must be a whole number above zero, so {applied} applies."
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:419
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 msgstr "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 
-#: src/components/map/hooks/useMapFactCheck.ts:290
+#: src/components/map/hooks/useMapFactCheck.ts:291
 msgid "The fact-check could not be cancelled."
 msgstr "The fact-check could not be cancelled."
 
-#: src/components/map/hooks/useMapFactCheck.ts:76
+#: src/components/map/hooks/useMapFactCheck.ts:77
 msgid "The fact-check could not be started."
 msgstr "The fact-check could not be started."
 
@@ -12208,9 +12573,13 @@ msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}.
 msgstr "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:690
+#: src/components/map/MapPage.tsx:1127
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "The last generation failed, so this is still the previous map. {0}"
+
+#: src/components/map/MapPage.tsx:267
+msgid "The layout could not be computed for this scope."
+msgstr "The layout could not be computed for this scope."
 
 #: src/components/release/releaseHistory.ts:647
 msgid "The Library gains clearer views of recurring themes, available on request."
@@ -12236,20 +12605,24 @@ msgstr "The link to add a voice, in the corner of the stage."
 msgid "The live popcorn deck and the canvases built for this project live here."
 msgstr "The live popcorn deck and the canvases built for this project live here."
 
+#: src/components/map/panels/BudgetStates.tsx:78
+msgid "The map and its vectors load once the scope fits the budget."
+msgstr "The map and its vectors load once the scope fits the budget."
+
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:695
+#: src/components/map/MapPage.tsx:1132
 msgid "The map could not be generated. {0}"
 msgstr "The map could not be generated. {0}"
 
-#: src/components/map/MapPage.tsx:567
+#: src/components/map/MapPage.tsx:958
 msgid "The map could not be loaded. Try again in a moment."
 msgstr "The map could not be loaded. Try again in a moment."
 
-#: src/components/map/hooks/index.ts:164
+#: src/components/map/hooks/index.ts:315
 msgid "The map could not be started."
 msgstr "The map could not be started."
 
-#: src/components/map/MapPage.tsx:575
+#: src/components/map/MapPage.tsx:966
 msgid "The map is being generated. It appears here when it is ready."
 msgstr "The map is being generated. It appears here when it is ready."
 
@@ -12272,6 +12645,10 @@ msgstr "The microphone is still blocked. Change it in your browser settings, the
 #: src/components/release/releaseHistory.ts:264
 msgid "The new sidebar brings organisations, workspaces, members and settings together."
 msgstr "The new sidebar brings organisations, workspaces, members and settings together."
+
+#: src/components/map/panels/MapSettingsMenu.tsx:59
+msgid "The node budget must be a whole number above zero, so {applied} applies."
+msgstr "The node budget must be a whole number above zero, so {applied} applies."
 
 #: src/routes/invite/AcceptInviteRoute.tsx:250
 #: src/routes/invite/AcceptInviteRoute.tsx:432
@@ -12306,7 +12683,7 @@ msgstr "The project context is read by transcription, chat answers and canvas ge
 msgid "The pulls between what people want, verified against the conversations."
 msgstr "The pulls between what people want, verified against the conversations."
 
-#: src/components/map/panels/ShowcasePanel.tsx:103
+#: src/components/map/panels/ShowcasePanel.tsx:120
 msgid "The random walk will surface nodes here once available."
 msgstr "The random walk will surface nodes here once available."
 
@@ -12355,6 +12732,10 @@ msgstr "The transcript did not come back. Check your connection and try again."
 msgid "The transcription did not finish. Try again."
 msgstr "The transcription did not finish. Try again."
 
+#: src/components/map/panels/shared.tsx:57
+msgid "The valence of this object has not been assessed."
+msgstr "The valence of this object has not been assessed."
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:350
 msgid "The webhook URL and events will be cloned. You'll need to re-enter the secret if one was configured."
 msgstr "The webhook URL and events will be cloned. You'll need to re-enter the secret if one was configured."
@@ -12391,6 +12772,10 @@ msgstr "There are no other workspaces you can move these projects into."
 #: src/components/project/ProjectMoveWorkspace.tsx:103
 msgid "There are no other workspaces you can move this project into."
 msgstr "There are no other workspaces you can move this project into."
+
+#: src/components/map/panels/BudgetStates.tsx:21
+msgid "There are no saved objects in this scope yet."
+msgstr "There are no saved objects in this scope yet."
 
 #: src/components/project/ProjectDangerZone.tsx:129
 msgid "There was an error cloning your project. Please try again or contact support."
@@ -12454,15 +12839,15 @@ msgstr "This account has an active subscription. Ask the customer to cancel it f
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 msgstr "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 
-#: src/components/map/panels/shared.tsx:42
+#: src/components/map/panels/shared.tsx:53
 msgid "This argument expresses opposition, disagreement, or concern."
 msgstr "This argument expresses opposition, disagreement, or concern."
 
-#: src/components/map/panels/shared.tsx:40
+#: src/components/map/panels/shared.tsx:51
 msgid "This argument expresses support, agreement, or a positive stance toward its subject."
 msgstr "This argument expresses support, agreement, or a positive stance toward its subject."
 
-#: src/components/map/panels/shared.tsx:44
+#: src/components/map/panels/shared.tsx:55
 msgid "This argument is observational or balanced, neither for nor against."
 msgstr "This argument is observational or balanced, neither for nor against."
 
@@ -12483,7 +12868,7 @@ msgstr "This canvas could not update."
 msgid "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 msgstr "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 
-#: src/components/map/panels/SpotlightPanel.tsx:164
+#: src/components/map/panels/SpotlightPanel.tsx:204
 msgid "This claim has not been fact-checked."
 msgstr "This claim has not been fact-checked."
 
@@ -12496,6 +12881,18 @@ msgstr "This conversation has the following copies:"
 #: src/components/conversation/ConversationLink.tsx:38
 msgid "conversation.linking_conversations.description"
 msgstr "This conversation is a copy of"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:64
+msgid "This deployment shows up to {applied} edges."
+msgstr "This deployment shows up to {applied} edges."
+
+#: src/components/map/panels/MapSettingsMenu.tsx:63
+msgid "This deployment shows up to {applied} nodes."
+msgstr "This deployment shows up to {applied} nodes."
+
+#: src/components/map/panels/BudgetStates.tsx:101
+msgid "This deployment shows up to {maxNodes} nodes."
+msgstr "This deployment shows up to {maxNodes} nodes."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:92
 msgid "This email is already in the list."
@@ -12652,8 +13049,8 @@ msgstr "This portal is not accepting new sessions right now."
 msgid "This project could not be reached."
 msgstr "This project could not be reached."
 
-#: src/components/map/MapPage.tsx:581
-#: src/components/map/MapPage.tsx:606
+#: src/components/map/MapPage.tsx:972
+#: src/components/map/MapPage.tsx:997
 msgid "This project has no conversations with transcripts yet. Generate a map once conversations have been transcribed."
 msgstr "This project has no conversations with transcripts yet. Generate a map once conversations have been transcribed."
 
@@ -12728,6 +13125,10 @@ msgstr "This returns the account to standard free billing."
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:189
 msgid "This returns the workspace to your organisation's shared billing and removes its external data owner."
 msgstr "This returns the workspace to your organisation's shared billing and removes its external data owner."
+
+#: src/components/map/panels/BudgetStates.tsx:72
+msgid "This scope has {count} objects. The map shows up to {nodeLimit} at once."
+msgstr "This scope has {count} objects. The map shows up to {nodeLimit} at once."
 
 #: src/components/map/panels/ExplorePanel.tsx:106
 msgid "This selection is too large to title."
@@ -12906,6 +13307,10 @@ msgstr "To assign a new tag, please create it first in the portal settings."
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:996
 msgid "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 msgstr "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
+
+#: src/components/map/panels/NodeDetailCard.tsx:243
+msgid "To resolve"
+msgstr "To resolve"
 
 #: src/components/billing/BillingManager.tsx:681
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
@@ -13118,12 +13523,12 @@ msgstr ""
 "\n"
 "Note: If the discussion lacks substantial decision points or insights, flag it for deeper exploration next time."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:31
+#: src/components/map/panels/MapSettingsMenu.tsx:44
 msgid "Tree"
 msgstr "Tree"
 
 #. placeholder {0}: mstRepulsionCoeff.toFixed(3)
-#: src/components/map/renderers/MstGraph.tsx:1025
+#: src/components/map/renderers/MstGraph.tsx:1152
 msgid "Tree repulsion factor: {0}"
 msgstr "Tree repulsion factor: {0}"
 
@@ -13147,7 +13552,7 @@ msgstr "Trouble logging in? Contact support@dembrane.com."
 #: src/routes/invite/AcceptInviteRoute.tsx:557
 #: src/components/project/ProjectAccessGuard.tsx:109
 #: src/components/pricing/PricingTextInput.tsx:330
-#: src/components/map/MapPage.tsx:161
+#: src/components/map/MapPage.tsx:192
 msgid "Try again"
 msgstr "Try again"
 
@@ -13256,6 +13661,7 @@ msgstr "Two-factor authentication enabled"
 #: src/routes/admin/AdminSettingsRoute.tsx:2707
 #: src/components/training/StaffTrainingPanel.tsx:148
 #: src/components/settings/AuditLogsCard.tsx:190
+#: src/components/map/attributes.ts:233
 msgid "Type"
 msgstr "Type"
 
@@ -13416,7 +13822,8 @@ msgstr "Untitled methodology"
 msgid "Untitled report"
 msgstr "Untitled report"
 
-#: src/components/map/panels/shared.tsx:59
+#: src/components/map/attributes.ts:283
+#: src/components/map/panels/shared.tsx:134
 msgid "Unverified"
 msgstr "Unverified"
 
@@ -13693,6 +14100,10 @@ msgstr "Use pinned and saved question templates, including the / shortcut, from 
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
+#: src/components/map/panels/MapSettingsMenu.tsx:225
+msgid "Use the default budget"
+msgstr "Use the default budget"
+
 #: src/components/release/releaseHistory.ts:350
 msgid "Use Ukrainian for chat and participant replies."
 msgstr "Use Ukrainian for chat and participant replies."
@@ -13733,7 +14144,7 @@ msgstr "Using fixture data."
 msgid "Using webhooks? We'd love to hear from you"
 msgstr "Using webhooks? We'd love to hear from you"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:88
+#: src/components/map/attributes.ts:253
 msgid "Valence"
 msgstr "Valence"
 
@@ -13863,6 +14274,7 @@ msgstr "Very quiet right now. Check the mic isn't muted."
 #: src/routes/project/library/ProjectLibraryAspect.tsx:47
 #: src/components/view/View.tsx:62
 #: src/components/report/ConversationStatusTable.tsx:95
+#: src/components/map/MapPage.tsx:1079
 #: src/components/goal/GoalSuggestionCard.tsx:87
 msgid "View"
 msgstr "View"
@@ -13896,6 +14308,14 @@ msgstr "Viewing {0}"
 msgid "Visible columns"
 msgstr "Visible columns"
 
+#: src/components/map/panels/MapSettingsMenu.tsx:199
+msgid "Visible edges"
+msgstr "Visible edges"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:66
+msgid "Visible edges raised to {applied} so the tree over {nodeLimit} nodes fits."
+msgstr "Visible edges raised to {applied} so the tree over {nodeLimit} nodes fits."
+
 #: src/components/project/ProjectSharingStrip.tsx:110
 msgid "Visible to everyone in {workspaceName}"
 msgstr "Visible to everyone in {workspaceName}"
@@ -13921,6 +14341,10 @@ msgstr "Voice"
 msgid "Voice input respects the free plan's recording limit."
 msgstr "Voice input respects the free plan's recording limit."
 
+#: src/components/map/panels/shared.tsx:92
+msgid "Voiced in a conversation"
+msgstr "Voiced in a conversation"
+
 #: src/components/report/CreateReportForm.tsx:237
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "Waiting for conversations to finish before generating a report."
@@ -13933,11 +14357,11 @@ msgstr "Waiting for the first conversation"
 msgid "Waiting for the first conversation with a transcript."
 msgstr "Waiting for the first conversation with a transcript."
 
-#: src/components/map/panels/ShowcasePanel.tsx:130
+#: src/components/map/panels/ShowcasePanel.tsx:147
 msgid "Waiting for the next node"
 msgstr "Waiting for the next node"
 
-#: src/components/map/MapPage.tsx:124
+#: src/components/map/MapPage.tsx:155
 msgid "Waiting to start"
 msgstr "Waiting to start"
 
@@ -14592,11 +15016,11 @@ msgstr "You can't invite yourself."
 msgid "You cannot manage MCP access for this organisation."
 msgstr "You cannot manage MCP access for this organisation."
 
-#: src/components/map/hooks/useMapFactCheck.ts:72
+#: src/components/map/hooks/useMapFactCheck.ts:73
 msgid "You do not have permission to fact-check claims."
 msgstr "You do not have permission to fact-check claims."
 
-#: src/components/map/hooks/index.ts:157
+#: src/components/map/hooks/index.ts:308
 msgid "You do not have permission to generate a map."
 msgstr "You do not have permission to generate a map."
 

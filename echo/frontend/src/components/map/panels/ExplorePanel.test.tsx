@@ -35,8 +35,13 @@ const node = (id: string, label: string): MapGraphNode => ({
 	metadata: {
 		conversationIds: [],
 		createdAt: null,
+		epistemicKind: "argument",
 		kind: "argument",
+		objectId: id,
+		objectType: "argument",
 		quotes: [],
+		revisionId: id,
+		sizeScale: 1,
 		valence: "neutral",
 	},
 });

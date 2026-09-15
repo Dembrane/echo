@@ -62,7 +62,8 @@ export interface ForceCenter<N extends SimulationNodeDatum> extends Force<N> {
 }
 
 export interface ForceCollide<N extends SimulationNodeDatum> extends Force<N> {
-	radius(radius: number): this;
+	/** A number, or a per-node radius; setting it re-reads every node's radius. */
+	radius(radius: number | ((node: N) => number)): this;
 	strength(strength: number): this;
 }
 

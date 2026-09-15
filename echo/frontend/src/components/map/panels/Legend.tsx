@@ -1,35 +1,11 @@
-import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { memo } from "react";
-import { baseColors } from "@/colors";
-import { getNodeStyleFromInputs, MAP_NEUTRAL_GREY } from "../graph/nodeStyle";
+import { legendEntries } from "../attributes";
+import { getNodeStyleFromInputs } from "../graph/nodeStyle";
 import type { ColorBy } from "../types";
 import { mapVars } from "./shared";
 
-type Row = { color: string; label: string };
-
-const rowsFor = (mode: ColorBy): Row[] => {
-	if (mode === "valence") {
-		return [
-			{ color: baseColors.springGreen, label: t`Positive` },
-			{ color: baseColors.salmon, label: t`Negative` },
-			{ color: MAP_NEUTRAL_GREY, label: t`Neutral` },
-		];
-	}
-	if (mode === "factCheck") {
-		return [
-			{ color: MAP_NEUTRAL_GREY, label: t`Argument (not fact-checked)` },
-			{ color: baseColors.springGreen, label: t`Claim · likely true` },
-			{ color: baseColors.salmon, label: t`Claim · likely false` },
-			{ color: baseColors.limeYellow, label: t`Claim · contested` },
-			{ color: baseColors.graphite, label: t`Claim · unverified` },
-			{ color: baseColors.institutionBlue, label: t`Claim · checking…` },
-		];
-	}
-	return [];
-};
-
-/** Colour key for the valence and fact-check modes; nothing in None. */
+/** Colour key of the active attribute, from its definition; nothing in None. */
 export const Legend = memo(function Legend({
 	colorBy,
 	darkMode,
@@ -37,7 +13,7 @@ export const Legend = memo(function Legend({
 	colorBy: ColorBy;
 	darkMode: boolean;
 }) {
-	const rows = rowsFor(colorBy);
+	const rows = legendEntries(colorBy);
 	if (rows.length === 0) return null;
 	// The swatches carry the same shadow as the nodes they explain.
 	const { filter } = getNodeStyleFromInputs({}, { colorBy, darkMode });
@@ -55,7 +31,7 @@ export const Legend = memo(function Legend({
 				<Trans>Legend</Trans>
 			</p>
 			{rows.map((row) => (
-				<div key={row.label} className="flex items-center gap-2">
+				<div key={row.key} className="flex items-center gap-2">
 					<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
 						<circle cx="8" cy="8" r="5" fill={row.color} style={{ filter }} />
 					</svg>

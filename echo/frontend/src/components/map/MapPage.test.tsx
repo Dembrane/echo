@@ -68,7 +68,7 @@ describe("MapPage in fixture mode", () => {
 				<I18nProvider i18n={i18n}>
 					<QueryClientProvider client={client}>
 						<MemoryRouter>
-							<MapPage projectId="p1" workspaceId="w1" fixtureCount={50} />
+							<MapPage projectId="p1" workspaceId="w1" fixture="50" />
 						</MemoryRouter>
 					</QueryClientProvider>
 				</I18nProvider>

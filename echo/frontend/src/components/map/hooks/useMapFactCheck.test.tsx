@@ -78,8 +78,13 @@ const claim = (id: string): MapGraphNode => ({
 	metadata: {
 		conversationIds: [],
 		createdAt: null,
+		epistemicKind: "claim",
 		kind: "claim",
+		objectId: id,
+		objectType: "argument",
 		quotes: [],
+		revisionId: id,
+		sizeScale: 1,
 		valence: "neutral",
 	},
 });
@@ -429,7 +434,11 @@ describe("useAutoFactCheck", () => {
 		claim("unknown-state"),
 		{
 			...claim("argument"),
-			metadata: { ...claim("argument").metadata, kind: "argument" },
+			metadata: {
+				...claim("argument").metadata,
+				epistemicKind: "argument",
+				kind: "argument",
+			},
 		},
 	];
 	const states: FactCheckStates = {

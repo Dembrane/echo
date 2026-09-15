@@ -227,19 +227,24 @@ export type RootedTree = {
 
 /**
  * Roots the tree at the graph centre by BFS. Build it once per node set and
- * look up subtrees with descendantsOf.
+ * look up subtrees with descendantsOf. Pass `centerId` when the centre is
+ * already known (the layout worker computes it) to skip finding it again.
  */
 export function buildRootedTree(
 	nodes: ReadonlyArray<IdNode>,
 	edges: ReadonlyArray<Edge>,
+	centerId?: string | null,
 ): RootedTree {
 	const parent = new Map<string, string | null>();
 	const children = new Map<string, string[]>();
 
-	const rootId = findGraphCenter(nodes, edges);
+	const adjacency = adjacencyOf(nodes, edges);
+	const rootId =
+		centerId && adjacency.has(centerId)
+			? centerId
+			: findGraphCenter(nodes, edges);
 	if (!rootId) return { children, parent, rootId };
 
-	const adjacency = adjacencyOf(nodes, edges);
 	const visited = new Set<string>([rootId]);
 	const queue: string[] = [rootId];
 	parent.set(rootId, null);

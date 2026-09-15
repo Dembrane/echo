@@ -2,18 +2,27 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { memo, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+	ATTRIBUTES,
+	attributeInputsOf,
+	isFactCheckEligible,
+} from "../attributes";
 import type { EvidenceGroup } from "../data/adapter";
 import { deriveDisplayVerdict } from "../graph/nodeStyle";
 import type { FactCheckState, MapGraphNode } from "../types";
 import { CountdownProgressBar } from "./CountdownProgressBar";
-import { type ConversationHref, NodeDetailCard } from "./NodeDetailCard";
+import {
+	type ConversationHref,
+	NodeDetailCard,
+	type NodeInspection,
+} from "./NodeDetailCard";
 import {
 	CaptionText,
 	formatTimestamp,
 	mapVars,
 	PanelHeader,
-	VALENCE_CHIP_CLASS,
 	VERDICT_CHIP_CLASS,
+	valenceChipClass,
 	valenceLabel,
 	verdictLabel,
 } from "./shared";
@@ -27,6 +36,7 @@ type ShowcasePanelProps = {
 	durationMs: number;
 	conversationHref?: ConversationHref;
 	locale?: string;
+	inspection?: NodeInspection | null;
 };
 
 const STATIC_CHIP =
@@ -41,6 +51,7 @@ export const ShowcasePanel = memo(function ShowcasePanel({
 	durationMs,
 	conversationHref,
 	locale,
+	inspection = null,
 }: ShowcasePanelProps) {
 	const [now, setNow] = useState(() => Date.now());
 
@@ -56,9 +67,14 @@ export const ShowcasePanel = memo(function ShowcasePanel({
 		? String(expiresAt)
 		: `idle-${node?.id ?? "none"}`;
 
-	const valence = node ? (node.metadata.valence ?? "neutral") : undefined;
+	const valenceApplies =
+		!!node &&
+		ATTRIBUTES.valence.appliesTo.includes(
+			node.metadata.objectType ?? "argument",
+		);
+	const valence = node?.metadata.valence;
 	const verdict =
-		node?.metadata.kind === "claim"
+		node && isFactCheckEligible(attributeInputsOf(node.metadata))
 			? deriveDisplayVerdict(factCheck)
 			: undefined;
 	const timestamp = formatTimestamp(node?.metadata.createdAt, locale);
@@ -79,11 +95,12 @@ export const ShowcasePanel = memo(function ShowcasePanel({
 							evidence={evidence}
 							conversationHref={conversationHref}
 							titleSize="large"
+							inspection={inspection}
 						/>
 
 						<div className="flex flex-wrap gap-2">
-							{valence && (
-								<span className={cn(STATIC_CHIP, VALENCE_CHIP_CLASS[valence])}>
+							{valenceApplies && (
+								<span className={cn(STATIC_CHIP, valenceChipClass(valence))}>
 									{valenceLabel(valence)}
 								</span>
 							)}

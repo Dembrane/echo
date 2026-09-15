@@ -3,11 +3,36 @@
  * pairs attract strongly, mid-near pairs attract weakly, further pairs repel.
  */
 
+type IdNode = { id: string };
 type EmbeddedNode = { id: string; embedding: number[] };
 
 export type LocalMapLink = { source: string; target: string; strength: number };
 
 export type NeighbourList = Array<{ id: string; distance: number }>;
+
+/** The pairs the LocalMap simulation runs on: neighbour attraction and further-pair repulsion. */
+export type LocalMapNeighbours = {
+	nnLinks: LocalMapLink[];
+	fpLinks: LocalMapLink[];
+};
+
+/**
+ * Seed for the random mid-near and further pairs. Versioned with the layout
+ * algorithm: change it only together with LAYOUT_ALGORITHM_VERSION, so a
+ * regression fixture stays repeatable.
+ */
+export const LOCAL_MAP_SEED = 20260915;
+
+/** Small seeded PRNG (mulberry32): same seed, same sequence. */
+export function seededRandom(seed: number): () => number {
+	let a = seed >>> 0;
+	return () => {
+		a = (a + 0x6d2b79f5) >>> 0;
+		let r = Math.imul(a ^ (a >>> 15), 1 | a);
+		r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+		return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+	};
+}
 
 /** Adaptive number of neighbours for a dataset of n points. */
 export function computeAdaptiveNeighbors(n: number): number {
@@ -60,7 +85,7 @@ export function computeKNN(
 
 /** Random pairs that are not k-NN pairs (in either direction). */
 export function generateMidNearPairs(
-	nodes: ReadonlyArray<EmbeddedNode>,
+	nodes: ReadonlyArray<IdNode>,
 	knnMap: Map<string, NeighbourList>,
 	mnCount: number,
 	random: () => number = Math.random,
@@ -106,7 +131,7 @@ export function generateMidNearPairs(
 
 /** Random pairs for repulsion; draws that land on the same node are skipped. */
 export function generateFurtherPairs(
-	nodes: ReadonlyArray<EmbeddedNode>,
+	nodes: ReadonlyArray<IdNode>,
 	fpCount: number,
 	random: () => number = Math.random,
 ): Array<{ source: string; target: string }> {
@@ -128,6 +153,56 @@ export function generateFurtherPairs(
 	}
 
 	return pairs;
+}
+
+/**
+ * NN, mid-near and further-pair links from k-NN lists that are already
+ * computed. The random pairs draw mid-near first, then further pairs, so a
+ * seeded source gives the same links as buildLocalMapForces.
+ */
+export function localMapLinksFromNeighbours(
+	nodes: ReadonlyArray<IdNode>,
+	knnMap: Map<string, NeighbourList>,
+	k: number,
+	mnRatio = 0.2,
+	fpRatio = 2.0,
+	random: () => number = Math.random,
+): {
+	nnLinks: LocalMapLink[];
+	mnLinks: LocalMapLink[];
+	fpLinks: LocalMapLink[];
+} {
+	// Nearest neighbour links (strong attraction)
+	const nnLinks: LocalMapLink[] = [];
+	for (const [sourceId, neighbors] of knnMap.entries()) {
+		for (const neighbor of neighbors) {
+			nnLinks.push({
+				source: sourceId,
+				strength: 1.0,
+				target: neighbor.id,
+			});
+		}
+	}
+
+	// Mid-near links (weak attraction)
+	const mnCount = Math.floor(k * mnRatio * nodes.length);
+	const mnPairs = generateMidNearPairs(nodes, knnMap, mnCount, random);
+	const mnLinks: LocalMapLink[] = mnPairs.map((pair) => ({
+		source: pair.source,
+		strength: 0.1,
+		target: pair.target,
+	}));
+
+	// Further pair links (repulsion)
+	const fpCount = Math.floor(k * fpRatio * nodes.length);
+	const fpPairs = generateFurtherPairs(nodes, fpCount, random);
+	const fpLinks: LocalMapLink[] = fpPairs.map((pair) => ({
+		source: pair.source,
+		strength: -0.5,
+		target: pair.target,
+	}));
+
+	return { fpLinks, mnLinks, nnLinks };
 }
 
 /** NN, mid-near and further-pair links for the LocalMap simulation. */
@@ -153,40 +228,12 @@ export function buildLocalMapForces(
 	const actualK = Math.min(k, nodes.length - 1);
 
 	const knnMap = computeKNN(nodes, actualK);
-
-	// Nearest neighbour links (strong attraction)
-	const nnLinks: LocalMapLink[] = [];
-	for (const [sourceId, neighbors] of knnMap.entries()) {
-		for (const neighbor of neighbors) {
-			nnLinks.push({
-				source: sourceId,
-				strength: 1.0,
-				target: neighbor.id,
-			});
-		}
-	}
-
-	// Mid-near links (weak attraction)
-	const mnCount = Math.floor(actualK * mnRatio * nodes.length);
-	const mnPairs = generateMidNearPairs(nodes, knnMap, mnCount, random);
-	const mnLinks: LocalMapLink[] = mnPairs.map((pair) => ({
-		source: pair.source,
-		strength: 0.1,
-		target: pair.target,
-	}));
-
-	// Further pair links (repulsion)
-	const fpCount = Math.floor(actualK * fpRatio * nodes.length);
-	const fpPairs = generateFurtherPairs(nodes, fpCount, random);
-	const fpLinks: LocalMapLink[] = fpPairs.map((pair) => ({
-		source: pair.source,
-		strength: -0.5,
-		target: pair.target,
-	}));
-
-	return {
-		fpLinks,
-		mnLinks,
-		nnLinks,
-	};
+	return localMapLinksFromNeighbours(
+		nodes,
+		knnMap,
+		actualK,
+		mnRatio,
+		fpRatio,
+		random,
+	);
 }

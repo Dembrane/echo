@@ -6,13 +6,21 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { attributeInputsOf } from "../attributes";
+import type { LocalMapNeighbours } from "../graph/localMap";
 import { nodeGeometryKey } from "../graph/nodeSet";
-import { getNodeStyleFromInputs, type NodeStyle } from "../graph/nodeStyle";
+import {
+	getNodeStyleFromInputs,
+	type NodeStyle,
+	nodeSizeScale,
+} from "../graph/nodeStyle";
+import { type EdgeCounts, edgeCountsEqual } from "../layout/edgeBudget";
+import { geometryResultOf } from "../layout/geometryResult";
 import {
 	type MapInteractionStore,
 	useMapInteractionStore,
 } from "../state/interactionStore";
-import type { ColorBy, HighlightSource, MapGraphNode } from "../types";
+import type { ColorBy, Edge, HighlightSource, MapGraphNode } from "../types";
 import { d3, type Selection, type Timer } from "./d3";
 
 /** Stable default for recentNodeIds, so a missing prop does not change identity per render. */
@@ -24,21 +32,130 @@ export type MapSize = { width: number; height: number };
 export const DEFAULT_MAP_SIZE: MapSize = { height: 600, width: 800 };
 
 /**
- * The node array to key geometry work on (tree, neighbours, layout). Keeps
- * the previous array while ids and vectors are unchanged, so a refetch that
- * only changes metadata or array identity does not rebuild the graph.
+ * The node array to key geometry work on (tree, neighbours, layout), with
+ * its geometry key. Keeps the previous array while ids and vectors are
+ * unchanged, so a refetch that only changes metadata or array identity does
+ * not rebuild the graph. Size, colour and labels are not part of the key.
  *
  * Held in a ref rather than a useMemo keyed on the geometry: the build can
  * widen a memo's dependencies to everything its callback reads (here the
  * nodes array), which would hand back every new array.
  */
-export function useGeometryNodes<N extends MapGraphNode>(nodes: N[]): N[] {
+export function useGeometry<N extends MapGraphNode>(
+	nodes: N[],
+): { key: string; nodes: N[] } {
 	const key = useMemo(() => nodeGeometryKey(nodes), [nodes]);
 	const stableRef = useRef<{ key: string; nodes: N[] } | null>(null);
 	if (stableRef.current === null || stableRef.current.key !== key) {
 		stableRef.current = { key, nodes };
 	}
-	return stableRef.current.nodes;
+	return stableRef.current;
+}
+
+/** The geometry-stable node array; see useGeometry. */
+export function useGeometryNodes<N extends MapGraphNode>(nodes: N[]): N[] {
+	return useGeometry(nodes).nodes;
+}
+
+/** What a renderer draws its geometry from. */
+export type RendererGeometry<N> = {
+	key: string;
+	/** The node set the tree and neighbours belong to. */
+	nodes: N[];
+	mstEdges: Edge[];
+	/** Graph centre when a layout result supplied it; undefined: find it. */
+	centerId: string | null | undefined;
+	neighbours: LocalMapNeighbours | null;
+};
+
+export type GeometryBuild = {
+	mstEdges: Edge[];
+	neighbours: LocalMapNeighbours | null;
+};
+
+const EMPTY_GEOMETRY: RendererGeometry<never> = {
+	centerId: null,
+	key: "",
+	mstEdges: [],
+	neighbours: null,
+	nodes: [],
+};
+
+const spansNodes = (edges: ReadonlyArray<Edge>, ids: ReadonlySet<string>) =>
+	edges.length === Math.max(0, ids.size - 1) &&
+	edges.every((edge) => ids.has(edge.source) && ids.has(edge.target));
+
+const linksWithin = (
+	neighbours: LocalMapNeighbours,
+	ids: ReadonlySet<string>,
+) =>
+	(ids.size < 2 || neighbours.nnLinks.length > 0) &&
+	[...neighbours.nnLinks, ...neighbours.fpLinks].every(
+		(link) => ids.has(link.source) && ids.has(link.target),
+	);
+
+/**
+ * The geometry a renderer draws. Without provided geometry it builds its
+ * own (the synchronous path). With a layout result (from useMapGeometry) it
+ * uses the result only when it belongs to the current node set; with arrays
+ * the caller built, only when they span the current nodes. Until a matching
+ * result arrives it keeps drawing the last geometry it accepted, so a
+ * filter never shows a tree over the wrong nodes and surviving nodes keep
+ * their place.
+ */
+export function useRendererGeometry<N extends MapGraphNode>(
+	nodes: N[],
+	provided: { mstEdges?: Edge[]; neighbours?: LocalMapNeighbours },
+	build: (nodes: ReadonlyArray<N>) => GeometryBuild,
+): RendererGeometry<N> {
+	const { key, nodes: geometryNodes } = useGeometry(nodes);
+	const { mstEdges: providedEdges, neighbours: providedNeighbours } = provided;
+	const isProvided =
+		providedEdges !== undefined || providedNeighbours !== undefined;
+
+	const own = useMemo(
+		() => (isProvided ? null : build(geometryNodes)),
+		[isProvided, build, geometryNodes],
+	);
+
+	const resolved = useMemo((): RendererGeometry<N> | null => {
+		if (own) {
+			return {
+				centerId: undefined,
+				key,
+				mstEdges: own.mstEdges,
+				neighbours: own.neighbours,
+				nodes: geometryNodes,
+			};
+		}
+		const result = geometryResultOf(providedEdges ?? providedNeighbours);
+		if (result) {
+			if (result.key !== key) return null;
+			return {
+				centerId: result.centerId,
+				key,
+				mstEdges: result.mstEdges,
+				neighbours: result.neighbours,
+				nodes: geometryNodes,
+			};
+		}
+		const ids = new Set(geometryNodes.map((node) => node.id));
+		if (providedEdges && !spansNodes(providedEdges, ids)) return null;
+		if (providedNeighbours && !linksWithin(providedNeighbours, ids)) {
+			return null;
+		}
+		return {
+			centerId: undefined,
+			key,
+			mstEdges: providedEdges ?? [],
+			neighbours: providedNeighbours ?? null,
+			nodes: geometryNodes,
+		};
+	}, [own, key, geometryNodes, providedEdges, providedNeighbours]);
+
+	const acceptedRef = useRef<RendererGeometry<N>>(EMPTY_GEOMETRY);
+	if (resolved) acceptedRef.current = resolved;
+	return resolved ?? acceptedRef.current;
 }
 
 /** Node style by id, computed once per nodes and colour inputs. */
@@ -51,22 +168,62 @@ export function useNodeStyleLookup(
 		const options = { colorBy, darkMode };
 		const styleById = new Map<string, NodeStyle>();
 		for (const node of nodes) {
-			const meta = node.metadata;
 			styleById.set(
 				node.id,
-				getNodeStyleFromInputs(
-					{
-						factCheck: meta?.factCheck,
-						kind: meta?.kind,
-						valence: meta?.valence,
-					},
-					options,
-				),
+				getNodeStyleFromInputs(attributeInputsOf(node.metadata), options),
 			);
 		}
 		const fallback = getNodeStyleFromInputs({}, options);
 		return (id: string) => styleById.get(id) ?? fallback;
 	}, [nodes, colorBy, darkMode]);
+}
+
+export type NodeRadius = {
+	/** Base radius times the node's size scale (tension 1.5). */
+	radiusOf: (id: string) => number;
+	/** Changes exactly when some node's radius changes. */
+	signature: string;
+};
+
+/**
+ * Per-node radius from each node's size scale. Circle radius, collision,
+ * auto-fit padding and the hover reach all read it; the geometry key does
+ * not, so a size change updates those in place.
+ */
+export function useNodeRadius(
+	nodes: ReadonlyArray<MapGraphNode>,
+	baseRadius: number,
+): NodeRadius {
+	return useMemo(() => {
+		const scaled = new Map<string, number>();
+		const parts: string[] = [];
+		for (const node of nodes) {
+			const scale = nodeSizeScale(node);
+			if (scale !== 1) {
+				scaled.set(node.id, baseRadius * scale);
+				parts.push(`${node.id}:${scale}`);
+			}
+		}
+		return {
+			radiusOf: (id: string) => scaled.get(id) ?? baseRadius,
+			signature: `${baseRadius}|${parts.join(",")}`,
+		};
+	}, [nodes, baseRadius]);
+}
+
+/** Calls onEdgeCounts when the drawn or available connection counts change. */
+export function useReportEdgeCounts(
+	counts: EdgeCounts,
+	onEdgeCounts: ((counts: EdgeCounts) => void) | undefined,
+) {
+	const reportedRef = useRef<EdgeCounts | null>(null);
+	useEffect(() => {
+		if (!onEdgeCounts) return;
+		const reported = reportedRef.current;
+		if (reported && edgeCountsEqual(reported, counts)) return;
+		reportedRef.current = counts;
+		onEdgeCounts(counts);
+	}, [counts, onEdgeCounts]);
 }
 
 /**

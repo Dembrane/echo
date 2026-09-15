@@ -4,13 +4,15 @@ import { findGraphCenter } from "./mst";
 /**
  * Radial initial layout rooted at the graph centre (minimum eccentricity).
  * BFS builds a tree from the root, and each child receives an angular slice
- * proportional to its subtree size.
+ * proportional to its subtree size. Pass `rootId` when the centre is already
+ * known (the layout worker computes it) to skip finding it again.
  */
 export function calculateInitialPositions(
 	nodes: ReadonlyArray<{ id: string }>,
 	edges: ReadonlyArray<Edge>,
 	width: number,
 	height: number,
+	rootId?: string | null,
 ): Map<string, { x: number; y: number }> {
 	const positions = new Map<string, { x: number; y: number }>();
 	const centerX = width / 2;
@@ -32,7 +34,10 @@ export function calculateInitialPositions(
 		adjacency.get(edge.target)?.add(edge.source);
 	}
 
-	const rootId = findGraphCenter(nodes, edges) as string;
+	const root =
+		rootId && adjacency.has(rootId)
+			? rootId
+			: (findGraphCenter(nodes, edges) as string);
 
 	const visited = new Set<string>();
 	const parent = new Map<string, string | null>();
@@ -41,8 +46,8 @@ export function calculateInitialPositions(
 	const nodesByDepth = new Map<number, string[]>();
 
 	// First pass: tree structure
-	const queue: { id: string; depth: number }[] = [{ depth: 0, id: rootId }];
-	parent.set(rootId, null);
+	const queue: { id: string; depth: number }[] = [{ depth: 0, id: root }];
+	parent.set(root, null);
 
 	while (queue.length > 0) {
 		const { id, depth } = queue.shift() as { id: string; depth: number };
@@ -123,7 +128,7 @@ export function calculateInitialPositions(
 		}
 	}
 
-	assignAnglesRecursively(rootId, 0, 0, 2 * Math.PI);
+	assignAnglesRecursively(root, 0, 0, 2 * Math.PI);
 
 	return positions;
 }
@@ -131,13 +136,14 @@ export function calculateInitialPositions(
 /**
  * Scale and centre that fit the points (plus padding on every side) into a
  * width x height viewport. The scale never exceeds 1: it only zooms out.
- * Null when no point has a finite position.
+ * Padding is one number or a per-point function, so a larger node gets more
+ * room. Null when no point has a finite position.
  */
-export function fitToViewport(
-	points: Iterable<{ x?: number; y?: number }>,
+export function fitToViewport<P extends { x?: number; y?: number }>(
+	points: Iterable<P>,
 	width: number,
 	height: number,
-	padding: number,
+	padding: number | ((point: P) => number),
 ): { scale: number; centerX: number; centerY: number } | null {
 	let minX = Number.POSITIVE_INFINITY;
 	let maxX = Number.NEGATIVE_INFINITY;
@@ -145,22 +151,19 @@ export function fitToViewport(
 	let maxY = Number.NEGATIVE_INFINITY;
 	let count = 0;
 
-	for (const { x, y } of points) {
+	for (const point of points) {
+		const { x, y } = point;
 		if (typeof x !== "number" || typeof y !== "number") continue;
 		if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-		minX = Math.min(minX, x);
-		maxX = Math.max(maxX, x);
-		minY = Math.min(minY, y);
-		maxY = Math.max(maxY, y);
+		const pad = typeof padding === "number" ? padding : padding(point);
+		minX = Math.min(minX, x - pad);
+		maxX = Math.max(maxX, x + pad);
+		minY = Math.min(minY, y - pad);
+		maxY = Math.max(maxY, y + pad);
 		count++;
 	}
 
 	if (count === 0) return null;
-
-	minX -= padding;
-	maxX += padding;
-	minY -= padding;
-	maxY += padding;
 
 	return {
 		centerX: (minX + maxX) / 2,

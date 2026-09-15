@@ -53,6 +53,24 @@ This plan fixes module layout, contracts and file ownership so several agents ca
 - **The similarity matrix** is quadratic per kind and valence partition: fine for hundreds of arguments. The benchmark ladder decides whether indexed neighbour discovery is needed; pairs split across chunks of an oversized cluster are only flagged as `truncated`.
 - **Model deployment** is recorded by the executor next to each recipe's prompt fingerprint.
 
+## Resolved during M4 (renderers and layout)
+
+- **Geometry results are tagged with their node set** (`layout/geometryResult.ts`). A renderer accepts `mstEdges` and `neighbours` only when they belong to its current nodes, so a stale answer can never draw over a new scope; until a matching result arrives it keeps the last one.
+- **One layout request per node set**, keyed by algorithm version, seed and the geometry key (revision ids plus vector digest). The worker refuses an over-budget or invalid node limit before any pairwise allocation; the page shows its own translated over-budget copy, never the worker's message.
+- **Edge counting is per node pair**: a neighbour pair drawn once counts once. The MST keeps all N−1 tree edges and relations fill `edgeLimit − (N−1)`; LocalMap draws relations first, then a deterministic subset of neighbour links, while forces keep every pair.
+- **Relation lines** are dashed with their own colour token `--map-relation`.
+- **Measured envelope** (`components/map/layout/BENCHMARKS.md`, noisy under concurrent load): worker total about 0.35 s at 150 nodes, up to 3.3 s at 500 and about 3.3 s at 1,000. Beyond roughly 300 nodes the bottlenecks are the all-pairs hop distances on the main thread and the O(n²) MST repulsion force. Defaults stay at 150/450; candidates to measure next are Prim's algorithm without sorting every pair, a typed hop-distance matrix in the worker, and a cheaper repulsion force.
+
+## Resolved during M4 (data and panels), open for M3
+
+- **Graph endpoint the frontend calls:** `GET /v2/bff/map/projects/{id}/graph?types=&scope=&node_limit=&edge_limit=` returning `MapPayloadV2`. An empty `types=` means no types selected. The frontend falls back to the legacy project state on 404; remove the fallback once the endpoint ships.
+- **v2 fact-checks and titles** are keyed by `snapshot_id` plus revision ids.
+- **`related[]`** (optional on the payload): objects connected to displayed nodes but outside the payload, so the inspector can name them and offer "Show <type>".
+- **Paginated objects endpoint** for over-budget scopes, which the server returns without nodes; until then their result list is empty.
+- **Generate actions for non-argument types**: MapRoute passes no `onGenerateObjects` yet, so those buttons are hidden in the real page until M3 exposes recipe runs.
+- **Settings v2** keeps v1 values; a new install colours by Type with arguments grey. Default type selection prefers deduplicated arguments over raw ones when both exist and adds types while the total fits the node budget.
+- **`metadata.kind`** stays as a deprecated alias only because `renderers/renderers.test.tsx` still writes it; remove both together.
+
 ## Deviations from the spec
 
 - The spec names a tension `narrative`; the live deck contract calls it `knot`. The payload keeps `knot` and the deck adapter is unchanged (decision 18).

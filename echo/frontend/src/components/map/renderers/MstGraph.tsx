@@ -20,11 +20,12 @@ import {
 } from "../graph/mst";
 import { newestNodeIds } from "../graph/nodeSet";
 import { MAP_EDGE_GREY, MAP_HIGHLIGHT } from "../graph/nodeStyle";
+import { type EdgeCounts, selectMstEdges } from "../layout/edgeBudget";
 import {
 	useMapInteraction,
 	useMapInteractionStore,
 } from "../state/interactionStore";
-import type { ColorBy, Edge, MapGraphNode } from "../types";
+import type { ColorBy, Edge, MapGraphNode, MapRelation } from "../types";
 import {
 	type BaseType,
 	d3,
@@ -39,22 +40,31 @@ import {
 } from "./d3";
 import {
 	EMPTY_NODE_IDS,
+	type GeometryBuild,
 	type MapSize,
 	useContainerSize,
-	useGeometryNodes,
+	useNodeRadius,
 	useNodeStyleLookup,
 	usePulseTimer,
 	useReleaseOwnedHighlight,
+	useRendererGeometry,
+	useReportEdgeCounts,
 } from "./hooks";
 import { MapChromeButton, MapSettingsPanel, RangeSetting } from "./MapChrome";
+import {
+	drawRelationPositions,
+	joinRelationLines,
+	type RelationLineSelection,
+} from "./relations";
 
 /**
  * Organic MST graph: builds a minimum spanning tree over the nodes' cosine
  * distances and renders it as a breathing d3 force graph.
  *
  * The simulation is created once, when nodes first arrive, and then updated
- * in place: a new node set, a resize and a force parameter change adjust the
- * running forces and keep node elements, positions and the zoom transform.
+ * in place: a new node set, a resize, a force parameter change and a node
+ * size change adjust the running forces and keep node elements, positions
+ * and the zoom transform.
  */
 
 interface InternalNode extends SimulationNodeDatum {
@@ -91,6 +101,7 @@ export interface MstGraphProps {
 	timerProgress?: number;
 	className?: string;
 	// Optional style overrides
+	/** Base node radius; each node's size scale multiplies it. */
 	nodeRadius?: number;
 	edgeColor?: string;
 	backgroundColor?: string;
@@ -98,10 +109,24 @@ export interface MstGraphProps {
 	// Highlighting mode
 	highlightMode?: "radius" | "downstream";
 	/**
-	 * Tree edges over `nodes`, when the caller has already built them. The
-	 * graph then uses these instead of building its own MST.
+	 * Tree edges over `nodes`: `mstEdges` from useMapGeometry, or edges the
+	 * caller built. Without them the graph builds its own MST.
 	 */
 	mstEdges?: Edge[];
+	/**
+	 * Explicit relationships between nodes (revision ids). Drawn as dashed
+	 * overlays; they never enter the tree, the forces or the walk.
+	 */
+	relations?: MapRelation[];
+	/**
+	 * Visible-edge budget. Every tree edge is always drawn; relationship
+	 * overlays use what is left.
+	 */
+	edgeLimit: number;
+	/** Draw every relationship within the budget, not only the selected node's. */
+	showRelationships?: boolean;
+	/** Drawn and available connection counts, called when they change. */
+	onEdgeCounts?: (counts: EdgeCounts) => void;
 }
 
 /** Edge stroke; follows --map-edge when the parent sets it. */
@@ -109,10 +134,20 @@ const DEFAULT_EDGE_COLOR = `var(--map-edge, ${MAP_EDGE_GREY})`;
 
 export const DEFAULT_WALK_INTERVAL_MS = 30000;
 
-const EMPTY_EDGES: Edge[] = [];
+const EMPTY_RELATIONS: MapRelation[] = [];
 
 const AUTO_FIT_EVERY_TICKS = 10;
 const AUTO_FIT_DURATION_MS = 750;
+
+/** Collision radius as a multiple of the node's own radius. */
+const COLLISION_SCALE = 1.25;
+/** Auto-fit padding as a multiple of the node's own radius. */
+const FIT_PADDING_SCALE = 4;
+
+/** The synchronous path: the tree built here when no layout result is given. */
+const buildOwnGeometry = (
+	nodes: ReadonlyArray<MapGraphNode>,
+): GeometryBuild => ({ mstEdges: buildMST(nodes), neighbours: null });
 
 const endpointNode = (end: string | InternalNode): InternalNode | undefined =>
 	typeof end === "string" ? undefined : end;
@@ -133,13 +168,16 @@ const resetLinkEndpoints = (links: SimulationLink[]) => {
 
 const drawPositions = (
 	links: LinkSelection | null,
+	relationLines: RelationLineSelection | null,
 	circles: CircleSelection | null,
+	nodeById: ReadonlyMap<string, InternalNode>,
 ) => {
 	links
 		?.attr("x1", (d) => endpointNode(d.source)?.x ?? null)
 		.attr("y1", (d) => endpointNode(d.source)?.y ?? null)
 		.attr("x2", (d) => endpointNode(d.target)?.x ?? null)
 		.attr("y2", (d) => endpointNode(d.target)?.y ?? null);
+	drawRelationPositions(relationLines, nodeById);
 	circles?.attr("cx", (d) => d.x ?? 0).attr("cy", (d) => d.y ?? 0);
 };
 
@@ -148,7 +186,8 @@ type AppliedForces = {
 	width: number;
 	height: number;
 	params: MstForceParams;
-	nodeRadius: number;
+	/** Node radii the collision force was initialised with. */
+	radiusSignature: string;
 };
 
 const forceOf = <F,>(
@@ -172,6 +211,10 @@ export const MstGraph = ({
 	recentNodeIds = EMPTY_NODE_IDS,
 	highlightMode = "radius",
 	mstEdges: providedMstEdges,
+	relations = EMPTY_RELATIONS,
+	edgeLimit,
+	showRelationships = false,
+	onEdgeCounts,
 }: MstGraphProps) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -189,6 +232,7 @@ export const MstGraph = ({
 	> | null>(null);
 	const zoomRef = useRef<ZoomBehavior<SVGSVGElement> | null>(null);
 	const linkSelectionRef = useRef<LinkSelection | null>(null);
+	const relationSelectionRef = useRef<RelationLineSelection | null>(null);
 	const circleSelectionRef = useRef<CircleSelection | null>(null);
 	const pulseSelectionRef = useRef<CircleSelection | null>(null);
 	const startPulse = usePulseTimer(pulseSelectionRef);
@@ -201,6 +245,10 @@ export const MstGraph = ({
 		[recentNodeIds],
 	);
 	const styleOf = useNodeStyleLookup(nodes, colorBy, darkMode);
+	const { radiusOf, signature: radiusSignature } = useNodeRadius(
+		nodes,
+		nodeRadius,
+	);
 	const nodeById = useMemo(
 		() => new Map(nodes.map((node) => [node.id, node])),
 		[nodes],
@@ -211,6 +259,10 @@ export const MstGraph = ({
 	nodeByIdRef.current = nodeById;
 	const nodeRadiusRef = useRef(nodeRadius);
 	nodeRadiusRef.current = nodeRadius;
+	const radiusOfRef = useRef(radiusOf);
+	radiusOfRef.current = radiusOf;
+	const radiusSignatureRef = useRef(radiusSignature);
+	radiusSignatureRef.current = radiusSignature;
 	const onNodeClickRef = useRef(onNodeClick);
 	onNodeClickRef.current = onNodeClick;
 	const onNodeHoverRef = useRef(onNodeHover);
@@ -305,26 +357,30 @@ export const MstGraph = ({
 		setMstRepulsionCoeff(MST_FORCE_DEFAULTS.mstRepulsionCoeff);
 	}, []);
 
-	// Geometry, computed once per node set (ids and vectors)
-	const geometryNodes = useGeometryNodes(nodes);
-	const ownMstEdges = useMemo(
-		() => (providedMstEdges ? null : buildMST(geometryNodes)),
-		[providedMstEdges, geometryNodes],
+	// Geometry, once per node set (ids and vectors): the layout result when
+	// given and matching these nodes, otherwise the last one that did
+	const geometry = useRendererGeometry(
+		nodes,
+		{ mstEdges: providedMstEdges },
+		buildOwnGeometry,
 	);
-	const mstEdges = providedMstEdges ?? ownMstEdges ?? EMPTY_EDGES;
+	const geometryNodes = geometry.nodes;
+	const mstEdges = geometry.mstEdges;
+	const centerId = geometry.centerId;
 
 	const mstDistances = useMemo(
 		() => mstHopDistances(geometryNodes, mstEdges),
 		[geometryNodes, mstEdges],
 	);
 	const rootedTree = useMemo(
-		() => buildRootedTree(geometryNodes, mstEdges),
-		[geometryNodes, mstEdges],
+		() => buildRootedTree(geometryNodes, mstEdges, centerId),
+		[geometryNodes, mstEdges, centerId],
 	);
 	// Radial layout at a fixed viewport size (not dependent on dimensions)
 	const initialPositions = useMemo(
-		() => calculateInitialPositions(geometryNodes, mstEdges, 800, 600),
-		[geometryNodes, mstEdges],
+		() =>
+			calculateInitialPositions(geometryNodes, mstEdges, 800, 600, centerId),
+		[geometryNodes, mstEdges, centerId],
 	);
 
 	// Defensive copy of nodes to prevent D3 mutations from affecting React state
@@ -332,6 +388,12 @@ export const MstGraph = ({
 		() => geometryNodes.map((node): InternalNode => ({ id: node.id })),
 		[geometryNodes],
 	);
+	const simulationNodeById = useMemo(
+		() => new Map(simulationNodes.map((node) => [node.id, node])),
+		[simulationNodes],
+	);
+	const simulationNodeByIdRef = useRef(simulationNodeById);
+	simulationNodeByIdRef.current = simulationNodeById;
 	const simulationLinks = useMemo(
 		() =>
 			mstEdges.map(
@@ -343,6 +405,32 @@ export const MstGraph = ({
 			),
 		[mstEdges],
 	);
+
+	// Lines inside the visible-edge budget: the whole tree, then relationships
+	const placedNodeIds = useMemo(
+		() => new Set(geometryNodes.map((node) => node.id)),
+		[geometryNodes],
+	);
+	const edgeSelection = useMemo(
+		() =>
+			selectMstEdges({
+				edgeLimit,
+				nodeIds: placedNodeIds,
+				relations,
+				selectedId,
+				showRelationships,
+				treeEdges: mstEdges,
+			}),
+		[
+			edgeLimit,
+			placedNodeIds,
+			relations,
+			selectedId,
+			showRelationships,
+			mstEdges,
+		],
+	);
+	useReportEdgeCounts(edgeSelection.counts, onEdgeCounts);
 
 	// Radius mode: highlight nodes near the cursor
 	useEffect(() => {
@@ -376,7 +464,16 @@ export const MstGraph = ({
 						// Node position in screen coordinates
 						const screenX = node.x * transform.k + transform.x;
 						const screenY = node.y * transform.k + transform.y;
-						const distance = Math.hypot(screenX - x, screenY - y);
+						// A larger node reaches the cursor sooner by its extra radius
+						const extraRadius =
+							Math.max(
+								0,
+								radiusOfRef.current(node.id) - nodeRadiusRef.current,
+							) * transform.k;
+						const distance = Math.max(
+							0,
+							Math.hypot(screenX - x, screenY - y) - extraRadius,
+						);
 
 						if (distance <= HIGHLIGHT_RADIUS) {
 							highlighted.add(node.id);
@@ -506,6 +603,7 @@ export const MstGraph = ({
 		const svg = d3.select(svgElement);
 		const g = svg.append("g");
 		g.append("g").attr("class", "links-group");
+		g.append("g").attr("class", "relations-group");
 		g.append("g")
 			.attr("class", "nodes-group")
 			.append("g")
@@ -533,6 +631,7 @@ export const MstGraph = ({
 			overlayRef.current = null;
 			zoomRef.current = null;
 			linkSelectionRef.current = null;
+			relationSelectionRef.current = null;
 			circleSelectionRef.current = null;
 			pulseSelectionRef.current = null;
 		};
@@ -564,7 +663,6 @@ export const MstGraph = ({
 
 		const size = measure();
 		const currentParams = paramsRef.current;
-		const radius = nodeRadiusRef.current;
 		const viewport = mstViewportForces(
 			size.width,
 			size.height,
@@ -645,7 +743,9 @@ export const MstGraph = ({
 				)
 				.force(
 					"collision",
-					d3.forceCollide<InternalNode>().radius(radius * 1.25),
+					d3
+						.forceCollide<InternalNode>()
+						.radius((d) => radiusOfRef.current(d.id) * COLLISION_SCALE),
 				)
 				.force(
 					"mstRepulsion",
@@ -668,7 +768,12 @@ export const MstGraph = ({
 					);
 				}
 
-				drawPositions(linkSelectionRef.current, circleSelectionRef.current);
+				drawPositions(
+					linkSelectionRef.current,
+					relationSelectionRef.current,
+					circleSelectionRef.current,
+					simulationNodeByIdRef.current,
+				);
 
 				tickCount++;
 				if (tickCount % AUTO_FIT_EVERY_TICKS === 0) {
@@ -677,7 +782,7 @@ export const MstGraph = ({
 						svgRef.current,
 						zoomRef.current,
 						sizeRef.current,
-						nodeRadiusRef.current,
+						(node) => radiusOfRef.current(node.id) * FIT_PADDING_SCALE,
 						autoFitEndsAtRef,
 					);
 				}
@@ -688,8 +793,8 @@ export const MstGraph = ({
 
 		appliedRef.current = {
 			height: size.height,
-			nodeRadius: radius,
 			params: currentParams,
+			radiusSignature: radiusSignatureRef.current,
 			width: size.width,
 		};
 	}, [
@@ -770,17 +875,23 @@ export const MstGraph = ({
 		simulation.alpha(Math.max(simulation.alpha(), 0.1)).restart();
 	}, [dimensions]);
 
-	// Node radius: collision radius in place
+	// Node sizes: collision radii in place, without restarting the layout
 	useEffect(() => {
 		const simulation = simulationRef.current;
 		const applied = appliedRef.current;
-		if (!simulation || !applied || applied.nodeRadius === nodeRadius) return;
+		if (
+			!simulation ||
+			!applied ||
+			applied.radiusSignature === radiusSignature
+		) {
+			return;
+		}
 
 		forceOf<ForceCollide<InternalNode>>(simulation, "collision")?.radius(
-			nodeRadius * 1.25,
+			(d) => radiusOfRef.current((d as InternalNode).id) * COLLISION_SCALE,
 		);
-		applied.nodeRadius = nodeRadius;
-	}, [nodeRadius]);
+		applied.radiusSignature = radiusSignature;
+	}, [radiusSignature]);
 
 	// DOM updates with the enter/update/exit pattern
 	useEffect(() => {
@@ -801,6 +912,13 @@ export const MstGraph = ({
 			)
 			.style("stroke", edgeColor)
 			.attr("stroke-width", (d) => 1 + (1 - d.distance) * 2);
+
+		// Relationship overlays inside what the tree leaves of the budget
+		const relationSelection = joinRelationLines(
+			g.select<SVGGElement>(".relations-group"),
+			edgeSelection.relations,
+			darkMode,
+		);
 
 		// Radius scale by selection state. Hover highlights are an outline, not a scale change.
 		const scaleFor = (id: string): number => {
@@ -870,19 +988,25 @@ export const MstGraph = ({
 			.attr("fill", (d) => styleOf(d.id).fill)
 			.attr("stroke", (d) => outlineFor(d.id).stroke)
 			.attr("stroke-width", (d) => outlineFor(d.id).strokeWidth)
-			.attr("r", (d) => nodeRadius * scaleFor(d.id))
+			.attr("r", (d) => radiusOf(d.id) * scaleFor(d.id))
 			.attr("opacity", (d) => (styleOf(d.id).pulse ? 0.9 : 1))
 			.select("title")
 			.text((d) => nodeById.get(d.id)?.label || d.id);
 
 		linkSelectionRef.current = linkSelection;
+		relationSelectionRef.current = relationSelection;
 		circleSelectionRef.current = circleSelection;
 		pulseSelectionRef.current = circleSelection.filter(
 			(d) => styleOf(d.id).pulse,
 		);
 		startPulse();
 		// Place entered elements at once instead of waiting for the next tick
-		drawPositions(linkSelection, circleSelection);
+		drawPositions(
+			linkSelection,
+			relationSelection,
+			circleSelection,
+			simulationNodeById,
+		);
 
 		const overlay = overlayRef.current;
 		if (!overlay) return;
@@ -927,9 +1051,12 @@ export const MstGraph = ({
 			.attr("d", arcGenerator);
 	}, [
 		simulationNodes,
+		simulationNodeById,
 		simulationLinks,
+		edgeSelection,
+		darkMode,
 		selectedId,
-		nodeRadius,
+		radiusOf,
 		nodeById,
 		styleOf,
 		edgeColor,
@@ -1064,14 +1191,14 @@ function createDrag(
 /**
  * Zooms out (never in) when the graph outgrows the viewport: checked against
  * the SVG's current transform, 10% margin, 5% hysteresis, and skipped while a
- * previous fit is still animating.
+ * previous fit is still animating. Each node is padded by its own radius.
  */
 function autoFit(
 	simulation: Simulation<InternalNode>,
 	svgElement: SVGSVGElement | null,
 	zoom: ZoomBehavior<SVGSVGElement> | null,
 	size: MapSize,
-	nodeRadius: number,
+	padding: (node: InternalNode) => number,
 	endsAtRef: { current: number },
 ) {
 	if (!svgElement || !zoom) return;
@@ -1082,7 +1209,7 @@ function autoFit(
 		simulation.nodes(),
 		size.width,
 		size.height,
-		nodeRadius * 4,
+		padding,
 	);
 	if (!fit) return;
 
@@ -1145,13 +1272,15 @@ type WalkState = {
 /**
  * MST map with selection in the interaction store: picks a random node on
  * load, scales the ten most recent nodes, and walks to a random tree
- * neighbour every walk interval while autoAdvance is on.
+ * neighbour every walk interval while autoAdvance is on. The walk follows
+ * tree edges only, never relationship overlays.
  */
 export const MstMap = memo(function MstMap({
 	nodes,
 	onActiveNodeChange,
 	walkIntervalMs = DEFAULT_WALK_INTERVAL_MS,
 	autoAdvance = true,
+	mstEdges: providedMstEdges,
 	...graphProps
 }: MstMapProps) {
 	const {
@@ -1166,12 +1295,15 @@ export const MstMap = memo(function MstMap({
 		[nodes],
 	);
 
-	// Built once per node set and handed to the graph
-	const geometryNodes = useGeometryNodes(nodes);
-	const mstEdges = useMemo(() => buildMST(geometryNodes), [geometryNodes]);
+	// Built once per node set (or taken from the layout result) and handed to the graph
+	const geometry = useRendererGeometry(
+		nodes,
+		{ mstEdges: providedMstEdges },
+		buildOwnGeometry,
+	);
 	const adjacency = useMemo(
-		() => adjacencyOf(geometryNodes, mstEdges),
-		[geometryNodes, mstEdges],
+		() => adjacencyOf(geometry.nodes, geometry.mstEdges),
+		[geometry.nodes, geometry.mstEdges],
 	);
 
 	const sharedSelectedNodeId = useMapInteraction(
@@ -1322,8 +1454,8 @@ export const MstMap = memo(function MstMap({
 				onNodeClick={handleNodeClick}
 				recentNodeIds={recentNodeIds}
 				highlightMode="downstream"
-				mstEdges={mstEdges}
 				{...restGraphProps}
+				mstEdges={geometry.mstEdges}
 			/>
 		</div>
 	);

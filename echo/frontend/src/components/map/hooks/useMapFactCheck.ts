@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { attributeInputsOf, isFactCheckEligible } from "../attributes";
 import type { FactCheckState, MapGraphNode } from "../types";
 import {
 	type FactCheckStates,
@@ -308,14 +309,17 @@ export function useMapFactCheck({
 
 export type MapFactCheck = ReturnType<typeof useMapFactCheck>;
 
-/** Claims without a verdict that a check may start: idle or error. */
+/**
+ * Eligible claims without a verdict that a check may start: idle or error.
+ * Eligibility is the node's capability, not its type name.
+ */
 export const pendingClaimIds = (
 	nodes: ReadonlyArray<MapGraphNode>,
 	states: FactCheckStates,
 ): string[] =>
 	nodes
 		.filter((node) => {
-			if (node.metadata.kind !== "claim") return false;
+			if (!isFactCheckEligible(attributeInputsOf(node.metadata))) return false;
 			const status = states[node.id]?.status ?? "idle";
 			return status === "idle" || status === "error";
 		})
