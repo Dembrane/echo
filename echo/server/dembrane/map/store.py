@@ -14,7 +14,10 @@ result is only ready when its vectors are durable.
 from __future__ import annotations
 
 import uuid
+import asyncio
 import logging
+import weakref
+import threading
 from typing import Any, Iterable, Protocol, AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -27,6 +30,37 @@ from dembrane.settings import get_settings
 logger = logging.getLogger("dembrane.map.store")
 
 ACTIVE_STATUSES = ("queued", "extracting", "embedding")
+
+# Every store call opens its own connection, and a generation saves eight
+# vectors at a time, so a process never holds more than this many at once per
+# event loop. Per loop because a semaphore belongs to the loop it first waits
+# on, and a worker process runs coroutines on more than one loop over its life.
+MAX_CONNECTIONS_PER_LOOP = 4
+_connection_slots_by_loop: weakref.WeakKeyDictionary[
+    asyncio.AbstractEventLoop, asyncio.Semaphore
+] = weakref.WeakKeyDictionary()
+_connection_slots_lock = threading.Lock()
+
+
+def _connection_slots() -> asyncio.Semaphore:
+    loop = asyncio.get_running_loop()
+    with _connection_slots_lock:
+        slots = _connection_slots_by_loop.get(loop)
+        if slots is None:
+            slots = asyncio.Semaphore(MAX_CONNECTIONS_PER_LOOP)
+            _connection_slots_by_loop[loop] = slots
+        return slots
+
+
+def new_lease() -> str:
+    return uuid.uuid4().hex
+
+
+def lease_of(row: dict[str, Any] | None) -> str | None:
+    """The token of the worker allowed to write an attempt. Written into the
+    attempt's progress whenever the attempt is created or requeued, so a worker
+    still running an expired attempt cannot write to its requeued row."""
+    return ((row or {}).get("progress") or {}).get("lease")
 
 RESULT_COLUMNS = (
     "id::text AS id, project_id::text AS project_id, status, execution_ref, "
@@ -87,16 +121,22 @@ class MapStore(Protocol):
         self,
         result_id: str,
         *,
+        lease: str | None,
         status: str,
         progress: dict[str, Any],
         source_fingerprint: str | None = None,
         embedding_config: dict[str, Any] | None = None,
     ) -> bool: ...
-    async def fail(self, result_id: str, error: str) -> bool: ...
+    async def fail(self, result_id: str, error: str, *, lease: str | None) -> bool: ...
     async def expire_stale(self, project_id: str, stale_seconds: int) -> list[str]: ...
     async def requeue(self, result_id: str) -> dict[str, Any] | None: ...
     async def publish(
-        self, result_id: str, manifest: dict[str, Any], progress: dict[str, Any]
+        self,
+        result_id: str,
+        manifest: dict[str, Any],
+        progress: dict[str, Any],
+        *,
+        lease: str | None,
     ) -> str: ...
     async def load_embeddings(
         self, project_id: str, config_key: str, input_hashes: list[str]
@@ -110,7 +150,7 @@ class MapStore(Protocol):
         model: str,
         dims: int,
         vector: list[float],
-    ) -> str: ...
+    ) -> tuple[str, list[float]]: ...
     async def vectors_by_ids(self, project_id: str, ids: list[str]) -> dict[str, list[float]]: ...
     async def fact_checks_for(
         self, project_id: str, claim_keys: list[str]
@@ -147,21 +187,22 @@ class SqlMapStore:
 
     @asynccontextmanager
     async def _cursor(self) -> AsyncIterator[psycopg.AsyncCursor[dict[str, Any]]]:
-        try:
-            connection = await psycopg.AsyncConnection.connect(
-                self._dsn or _dsn(), autocommit=True, row_factory=dict_row
-            )
-        except (psycopg.Error, OSError) as exc:
-            raise MapStoreError(f"could not connect to the database: {exc}") from exc
-        try:
-            async with connection.cursor() as cursor:
-                yield cursor
-        except psycopg.errors.UniqueViolation:
-            raise
-        except psycopg.Error as exc:
-            raise MapStoreError(str(exc).strip()) from exc
-        finally:
-            await connection.close()
+        async with _connection_slots():
+            try:
+                connection = await psycopg.AsyncConnection.connect(
+                    self._dsn or _dsn(), autocommit=True, row_factory=dict_row
+                )
+            except (psycopg.Error, OSError) as exc:
+                raise MapStoreError(f"could not connect to the database: {exc}") from exc
+            try:
+                async with connection.cursor() as cursor:
+                    yield cursor
+            except psycopg.errors.UniqueViolation:
+                raise
+            except psycopg.Error as exc:
+                raise MapStoreError(str(exc).strip()) from exc
+            finally:
+                await connection.close()
 
     # ── results ─────────────────────────────────────────────────────────
 
@@ -181,7 +222,7 @@ class SqlMapStore:
                         project_id,
                         recipe_version,
                         requested_by,
-                        Json({"stage": "queued"}),
+                        Json({"stage": "queued", "lease": new_lease()}),
                     ),
                 )
                 row = await cursor.fetchone()
@@ -230,11 +271,16 @@ class SqlMapStore:
         self,
         result_id: str,
         *,
+        lease: str | None,
         status: str,
         progress: dict[str, Any],
         source_fingerprint: str | None = None,
         embedding_config: dict[str, Any] | None = None,
     ) -> bool:
+        """Save a worker's progress while the attempt is active under its lease.
+
+        False when it is not: the attempt expired, failed, or was requeued for
+        another worker, and the caller stops. The lease stays in the progress."""
         async with self._cursor() as cursor:
             await cursor.execute(
                 """UPDATE map_result
@@ -243,25 +289,28 @@ class SqlMapStore:
                        source_fingerprint = COALESCE(%s, source_fingerprint),
                        embedding_config = COALESCE(%s::json, embedding_config),
                        updated_at = now()
-                   WHERE id = %s AND status = ANY(%s)""",
+                   WHERE id = %s AND status = ANY(%s)
+                     AND progress->>'lease' IS NOT DISTINCT FROM %s::text""",
                 (
                     status,
-                    Json(progress),
+                    Json({**progress, "lease": lease}),
                     source_fingerprint,
                     Json(embedding_config) if embedding_config is not None else None,
                     result_id,
                     list(ACTIVE_STATUSES),
+                    lease,
                 ),
             )
             return cursor.rowcount == 1
 
-    async def fail(self, result_id: str, error: str) -> bool:
+    async def fail(self, result_id: str, error: str, *, lease: str | None) -> bool:
         async with self._cursor() as cursor:
             await cursor.execute(
                 """UPDATE map_result
                    SET status = 'failed', error = %s, updated_at = now(), completed_at = now()
-                   WHERE id = %s AND status = ANY(%s)""",
-                (error[:4000], result_id, list(ACTIVE_STATUSES)),
+                   WHERE id = %s AND status = ANY(%s)
+                     AND progress->>'lease' IS NOT DISTINCT FROM %s::text""",
+                (error[:4000], result_id, list(ACTIVE_STATUSES), lease),
             )
             return cursor.rowcount == 1
 
@@ -280,16 +329,20 @@ class SqlMapStore:
             return [row["id"] for row in await cursor.fetchall()]
 
     async def requeue(self, result_id: str) -> dict[str, Any] | None:
+        """Queue a failed attempt again with its saved work, under a new lease,
+        so a worker that still runs the old attempt can no longer write to it."""
         row = await self.get_result(result_id)
         try:
             async with self._cursor() as cursor:
                 await cursor.execute(
                     f"""UPDATE map_result
                         SET status = 'queued', error = NULL, completed_at = NULL,
+                            progress = (COALESCE(progress::jsonb, '{{}}'::jsonb)
+                                        || jsonb_build_object('lease', %s::text))::json,
                             updated_at = now()
                         WHERE id = %s AND status = 'failed'
                         RETURNING {RESULT_COLUMNS}""",
-                    (result_id,),
+                    (new_lease(), result_id),
                 )
                 return await cursor.fetchone()
         except psycopg.errors.UniqueViolation:
@@ -298,34 +351,42 @@ class SqlMapStore:
             raise ActiveAttemptExists(active) from None
 
     async def publish(
-        self, result_id: str, manifest: dict[str, Any], progress: dict[str, Any]
+        self,
+        result_id: str,
+        manifest: dict[str, Any],
+        progress: dict[str, Any],
+        *,
+        lease: str | None,
     ) -> str:
         """Make an attempt the project's current revision, atomically.
 
         Returns "ready"; "superseded" when a newer attempt is already ready (an
         older attempt that finishes late never replaces it); "inactive" when
-        the attempt is no longer running (failed or expired meanwhile)."""
+        the attempt is no longer running under this lease (failed, expired or
+        requeued for another worker meanwhile)."""
         async with self._cursor() as cursor:
             await cursor.execute(
                 """UPDATE map_result AS r
                    SET status = 'ready', manifest = %s, progress = %s, error = NULL,
                        completed_at = now(), updated_at = now()
                    WHERE r.id = %s AND r.status = ANY(%s)
+                     AND r.progress->>'lease' IS NOT DISTINCT FROM %s::text
                      AND NOT EXISTS (
                          SELECT 1 FROM map_result AS n
                          WHERE n.project_id = r.project_id
                            AND n.status = 'ready'
                            AND n.created_at > r.created_at
                      )""",
-                (Json(manifest), Json(progress), result_id, list(ACTIVE_STATUSES)),
+                (Json(manifest), Json(progress), result_id, list(ACTIVE_STATUSES), lease),
             )
             if cursor.rowcount == 1:
                 return "ready"
             await cursor.execute(
                 """UPDATE map_result
                    SET status = 'superseded', updated_at = now(), completed_at = now()
-                   WHERE id = %s AND status = ANY(%s)""",
-                (result_id, list(ACTIVE_STATUSES)),
+                   WHERE id = %s AND status = ANY(%s)
+                     AND progress->>'lease' IS NOT DISTINCT FROM %s::text""",
+                (result_id, list(ACTIVE_STATUSES), lease),
             )
             return "superseded" if cursor.rowcount == 1 else "inactive"
 
@@ -357,18 +418,20 @@ class SqlMapStore:
         model: str,
         dims: int,
         vector: list[float],
-    ) -> str:
-        """Insert once per (project, input, configuration); return the row id.
+    ) -> tuple[str, list[float]]:
+        """Insert once per (project, input, configuration); return the row id
+        and the vector as stored.
 
-        A concurrent writer of the same vector loses the race harmlessly: the
-        conflict leaves the first row, never a duplicate or an overwrite."""
+        A concurrent writer of the same input loses the race harmlessly: the
+        conflict leaves the first row, never a duplicate or an overwrite, and
+        the loser gets the stored vector back to consolidate with."""
         async with self._cursor() as cursor:
             await cursor.execute(
                 """INSERT INTO map_embedding
                        (id, project_id, input_hash, config_key, model, dims, embedding, created_at)
                    VALUES (%s, %s, %s, %s, %s, %s, %s::vector, now())
                    ON CONFLICT (project_id, input_hash, config_key) DO NOTHING
-                   RETURNING id::text AS id""",
+                   RETURNING id::text AS id, embedding::text AS embedding""",
                 (
                     str(uuid.uuid4()),
                     project_id,
@@ -381,16 +444,16 @@ class SqlMapStore:
             )
             row = await cursor.fetchone()
             if row:
-                return str(row["id"])
+                return str(row["id"]), parse_vector(row["embedding"])
             await cursor.execute(
-                """SELECT id::text AS id FROM map_embedding
+                """SELECT id::text AS id, embedding::text AS embedding FROM map_embedding
                    WHERE project_id = %s AND input_hash = %s AND config_key = %s""",
                 (project_id, input_hash, config_key),
             )
             existing = await cursor.fetchone()
             if not existing:
                 raise MapStoreError("embedding row vanished after a conflicting insert")
-            return str(existing["id"])
+            return str(existing["id"]), parse_vector(existing["embedding"])
 
     async def vectors_by_ids(self, project_id: str, ids: list[str]) -> dict[str, list[float]]:
         if not ids:

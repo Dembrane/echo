@@ -156,7 +156,7 @@ Long-running progress streams via Server-Sent Events backed by Redis pub/sub (re
 
 - **No `asyncio` in Dramatiq actors**. Recurring event-loop corruption bugs led to this. Use `gevent` pools + `dramatiq.group()` instead. Report generation is fully synchronous
 - `gevent.pool.Pool` is only safe on the `network` queue (uses `dramatiq-gevent`); the CPU queue runs standard dramatiq
-- Popcorn and canvas ticks and Map generation run on the `ticks` queue (`prod-worker-ticks.sh`, standard dramatiq, no gevent). A tick runs for minutes; on the gevent worker the shared async loop is reset whenever any actor trips an async error, and a reset destroys every coroutine in flight. Any new job that runs longer than a minute of async work belongs on `ticks`, not `network`
+- Popcorn and canvas ticks, Map generation and Map fact-checks run on the `ticks` queue (`prod-worker-ticks.sh`, standard dramatiq, no gevent). A tick runs for minutes; on the gevent worker the shared async loop is reset whenever any actor trips an async error, and a reset destroys every coroutine in flight. Any new job that runs longer than a minute of async work belongs on `ticks`, not `network`
 - Use `gevent.sleep()` (not `time.sleep()`) in network-queue actors
 - Restart workers after changing actor signatures; positional args are serialized
 - `SkipRetryOnUnrecoverableError` middleware skips retries for `TypeError`, `SyntaxError`, `AttributeError`, `ImportError`, `NotImplementedError`

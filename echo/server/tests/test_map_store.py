@@ -4,6 +4,9 @@ Each module run copies the three Map tables (with their vector column, checks
 and indexes) into `map_test_<hex>` next to a schema-local `project` table, and
 drops the schema afterwards. Skipped, with the reason, when the database or the
 Map tables are unreachable, so unit runs in CI skip it.
+
+The races run their writers on separate connections that meet at a lock held by
+a third, so each compare-and-set is exercised under real contention.
 """
 
 from __future__ import annotations
@@ -11,14 +14,15 @@ from __future__ import annotations
 import uuid
 import asyncio
 import hashlib
-from typing import Any, Iterator
+from typing import Any, Callable, Iterator, Awaitable
 
 import pytest
 import psycopg
 from psycopg import sql
 from psycopg.conninfo import make_conninfo
 
-from dembrane.map.store import SqlMapStore, MapStoreError, ActiveAttemptExists
+import dembrane.map.store as store_module
+from dembrane.map.store import SqlMapStore, MapStoreError, ActiveAttemptExists, lease_of
 
 pytestmark = pytest.mark.integration
 
@@ -128,7 +132,7 @@ async def _save(
     config: str = CONFIG_A,
     dims: int | None = None,
 ) -> str:
-    return await store.save_embedding(
+    embedding_id, _stored = await store.save_embedding(
         project_id=project_id,
         input_hash=_hash(text),
         config_key=config,
@@ -136,6 +140,7 @@ async def _save(
         dims=len(vector) if dims is None else dims,
         vector=vector,
     )
+    return embedding_id
 
 
 async def _attempt(store: SqlMapStore, project_id: str) -> dict[str, Any]:
@@ -152,6 +157,63 @@ async def test_an_unreachable_database_is_a_store_error() -> None:
     store = SqlMapStore(dsn="postgresql://nobody@127.0.0.1:1/nothing?connect_timeout=1")
     with pytest.raises(MapStoreError):
         await store.latest_ready(str(uuid.uuid4()))
+
+
+@pytest.mark.asyncio
+async def test_store_connections_are_bounded_per_event_loop(monkeypatch: pytest.MonkeyPatch) -> None:
+    main_loop = asyncio.get_running_loop()
+    gate = asyncio.Event()
+    open_now = 0
+    peak = 0
+
+    class _Cursor:
+        async def __aenter__(self) -> _Cursor:
+            return self
+
+        async def __aexit__(self, *exc: Any) -> None:
+            return None
+
+        async def execute(self, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002
+            if asyncio.get_running_loop() is main_loop:
+                await gate.wait()
+
+        async def fetchone(self) -> None:
+            return None
+
+    class _Connection:
+        def cursor(self) -> _Cursor:
+            return _Cursor()
+
+        async def close(self) -> None:
+            nonlocal open_now
+            open_now -= 1
+
+    async def _connect(*args: Any, **kwargs: Any) -> _Connection:  # noqa: ARG001
+        nonlocal open_now, peak
+        open_now += 1
+        peak = max(peak, open_now)
+        return _Connection()
+
+    monkeypatch.setattr(store_module.psycopg.AsyncConnection, "connect", _connect)
+    store = SqlMapStore(dsn="postgresql://unused")
+    project = str(uuid.uuid4())
+    bound = store_module.MAX_CONNECTIONS_PER_LOOP
+
+    waiting = [asyncio.create_task(store.latest_ready(project)) for _ in range(bound + 3)]
+    for _ in range(100):
+        if open_now == bound:
+            break
+        await asyncio.sleep(0.01)
+    await asyncio.sleep(0.05)
+    assert open_now == peak == bound
+
+    # Another event loop (a worker's loop after a reset) has its own slots: it
+    # neither waits on this loop's nor trips over a semaphore bound to it.
+    assert await asyncio.to_thread(asyncio.run, store.latest_ready(project)) is None
+
+    gate.set()
+    assert await asyncio.gather(*waiting) == [None] * len(waiting)
+    assert open_now == 0
 
 
 # ── embeddings ──────────────────────────────────────────────────────────
@@ -208,9 +270,20 @@ async def test_the_same_input_and_config_is_one_row_even_under_concurrent_saves(
     store = SqlMapStore(dsn=dsn)
     project = await _project(dsn)
 
+    async def _save_vector(text: str, vector: list[float]) -> tuple[str, list[float]]:
+        return await store.save_embedding(
+            project_id=project,
+            input_hash=_hash(text),
+            config_key=CONFIG_A,
+            model="test/embedding-model",
+            dims=len(vector),
+            vector=vector,
+        )
+
     first = await _save(store, project, "duplicate", [1.0, 2.0])
-    second = await _save(store, project, "duplicate", [3.0, 4.0])
-    assert first == second
+    second_id, second_vector = await _save_vector("duplicate", [3.0, 4.0])
+    assert second_id == first
+    assert second_vector == [1.0, 2.0]  # the stored vector, never the loser's
     rows = await _execute(
         dsn,
         "SELECT embedding::text FROM map_embedding WHERE project_id = %s AND input_hash = %s",
@@ -218,8 +291,10 @@ async def test_the_same_input_and_config_is_one_row_even_under_concurrent_saves(
     )
     assert rows == [("[1,2]",)]  # the later writer never overwrites
 
-    ids = await asyncio.gather(*(_save(store, project, "race", [0.5, 0.25]) for _ in range(8)))
-    assert len(set(ids)) == 1
+    saved = await asyncio.gather(*(_save_vector("race", [0.5, 0.25 + i]) for i in range(8)))
+    embedding_id, stored = (await store.load_embeddings(project, CONFIG_A, [_hash("race")]))[_hash("race")]
+    assert {saved_id for saved_id, _vector in saved} == {embedding_id}
+    assert all(vector == stored for _saved_id, vector in saved)
     assert await _count(dsn, "map_embedding", project) == 2
 
 
@@ -267,15 +342,17 @@ async def test_only_one_attempt_is_active_per_project_and_failures_do_not_block(
     project = await _project(dsn)
 
     first = await _attempt(store, project)
-    assert first["status"] == "queued" and first["progress"] == {"stage": "queued"}
+    assert first["status"] == "queued" and first["progress"]["stage"] == "queued"
+    assert lease_of(first)
     with pytest.raises(ActiveAttemptExists) as raised:
         await _attempt(store, project)
     assert raised.value.row is not None and raised.value.row["id"] == first["id"]
     assert (await store.active_attempt(project))["id"] == first["id"]  # type: ignore[index]
 
-    assert await store.fail(first["id"], "Saving the map failed.") is True
-    assert await store.fail(first["id"], "again") is False
+    assert await store.fail(first["id"], "Saving the map failed.", lease=lease_of(first)) is True
+    assert await store.fail(first["id"], "again", lease=lease_of(first)) is False
     second = await _attempt(store, project)
+    assert lease_of(second) != lease_of(first)
     with pytest.raises(ActiveAttemptExists):
         await store.requeue(first["id"])
     other = await _attempt(store, await _project(dsn))
@@ -291,20 +368,23 @@ async def test_heartbeats_expiry_and_requeue_only_touch_the_right_states(dsn: st
     store = SqlMapStore(dsn=dsn)
     project = await _project(dsn)
     row = await _attempt(store, project)
+    lease = lease_of(row)
     config = {"model": "m", "dims": 3, "key": "k"}
 
     assert await store.heartbeat(
         row["id"],
+        lease=lease,
         status="extracting",
         progress={"stage": "extracting", "conversations_done": 1},
         source_fingerprint="f" * 64,
         embedding_config=config,
     )
-    assert await store.heartbeat(row["id"], status="embedding", progress={"stage": "embedding"})
+    assert await store.heartbeat(row["id"], lease=lease, status="embedding", progress={"stage": "embedding"})
     await store.set_execution_ref(row["id"], "msg-1")
     stored = await store.get_result(row["id"])
     assert stored is not None
-    assert stored["status"] == "embedding" and stored["progress"] == {"stage": "embedding"}
+    assert stored["status"] == "embedding"
+    assert stored["progress"] == {"stage": "embedding", "lease": lease}
     assert stored["source_fingerprint"] == "f" * 64 and stored["embedding_config"] == config
     assert stored["execution_ref"] == "msg-1"
 
@@ -313,14 +393,51 @@ async def test_heartbeats_expiry_and_requeue_only_touch_the_right_states(dsn: st
         dsn, "UPDATE map_result SET updated_at = now() - interval '2 hours' WHERE id = %s", (row["id"],)
     )
     assert await store.expire_stale(project, 3600) == [row["id"]]
-    assert await store.heartbeat(row["id"], status="embedding", progress={}) is False
+    assert await store.heartbeat(row["id"], lease=lease, status="embedding", progress={}) is False
     expired = await store.get_result(row["id"])
     assert expired is not None and expired["status"] == "failed"
     assert expired["error"] == "The generation stopped without finishing."
 
     requeued = await store.requeue(row["id"])
     assert requeued is not None and requeued["status"] == "queued" and requeued["error"] is None
+    assert requeued["progress"]["stage"] == "embedding"
+    assert lease_of(requeued) not in (None, lease)
     assert await store.requeue(row["id"]) is None
+
+
+@pytest.mark.asyncio
+async def test_a_requeued_attempt_refuses_every_write_of_the_worker_that_held_it(dsn: str) -> None:
+    store = SqlMapStore(dsn=dsn)
+    project = await _project(dsn)
+    row = await _attempt(store, project)
+    old = lease_of(row)
+    saved = {"stage": "extracting", "extractions": {"c1": {"text_hash": "h"}}}
+    assert await store.heartbeat(row["id"], lease=old, status="extracting", progress=saved)
+
+    # The worker reads one long conversation for a long time: the API expires
+    # the attempt, and a new request requeues it for another worker.
+    await _execute(
+        dsn, "UPDATE map_result SET updated_at = now() - interval '2 hours' WHERE id = %s", (row["id"],)
+    )
+    assert await store.expire_stale(project, 3600) == [row["id"]]
+    requeued = await store.requeue(row["id"])
+    assert requeued is not None
+    new = lease_of(requeued)
+    assert new and new != old
+    assert requeued["progress"]["extractions"] == saved["extractions"]  # the saved work resumes
+
+    # The first worker carries on: its heartbeat, failure and publish are refused.
+    assert await store.heartbeat(row["id"], lease=old, status="extracting", progress=saved) is False
+    assert await store.fail(row["id"], "Generating the map failed.", lease=old) is False
+    assert await store.publish(row["id"], {"arguments": []}, {"stage": "ready"}, lease=old) == "inactive"
+    untouched = await store.get_result(row["id"])
+    assert untouched is not None and untouched["status"] == "queued"
+    assert untouched["manifest"] is None and untouched["progress"] == requeued["progress"]
+
+    # The second worker owns the attempt.
+    assert await store.heartbeat(row["id"], lease=new, status="embedding", progress={"stage": "embedding"})
+    assert lease_of(await store.get_result(row["id"])) == new
+    assert await store.publish(row["id"], {"arguments": []}, {"stage": "ready"}, lease=new) == "ready"
 
 
 @pytest.mark.asyncio
@@ -329,28 +446,38 @@ async def test_publish_is_atomic_and_never_replaces_a_newer_ready_revision(dsn: 
     project = await _project(dsn)
 
     row = await _attempt(store, project)
-    await store.heartbeat(row["id"], status="embedding", progress={"stage": "embedding"})
+    lease = lease_of(row)
+    await store.heartbeat(row["id"], lease=lease, status="embedding", progress={"stage": "embedding"})
     manifest = {"arguments": [{"id": "a-1", "statement": "Trams."}]}
-    assert await store.publish(row["id"], manifest, {"stage": "ready", "embeddings_done": 3}) == "ready"
+    assert (
+        await store.publish(row["id"], manifest, {"stage": "ready", "embeddings_done": 3}, lease=lease)
+        == "ready"
+    )
     ready = await store.get_result(row["id"])
     assert ready is not None
     assert ready["status"] == "ready" and ready["manifest"] == manifest
     assert ready["progress"] == {"stage": "ready", "embeddings_done": 3}
     assert ready["completed_at"] is not None and ready["error"] is None
     assert (await store.latest_ready(project))["id"] == row["id"]  # type: ignore[index]
-    assert await store.publish(row["id"], {}, {}) == "inactive"
+    assert await store.publish(row["id"], {}, {}, lease=lease) == "inactive"
 
     failed = await _attempt(store, project)
-    await store.fail(failed["id"], "Saving the map failed.")
-    assert await store.publish(failed["id"], manifest, {}) == "inactive"
+    await store.fail(failed["id"], "Saving the map failed.", lease=lease_of(failed))
+    assert await store.publish(failed["id"], manifest, {}, lease=lease_of(failed)) == "inactive"
     assert (await store.get_result(failed["id"]))["status"] == "failed"  # type: ignore[index]
 
     older = await _attempt(store, project)
     await _execute(dsn, "UPDATE map_result SET status = 'failed' WHERE id = %s", (older["id"],))
     newer = await _attempt(store, project)
-    assert await store.publish(newer["id"], manifest, {"stage": "ready"}) == "ready"
+    assert await store.publish(newer["id"], manifest, {"stage": "ready"}, lease=lease_of(newer)) == "ready"
     await _execute(dsn, "UPDATE map_result SET status = 'embedding' WHERE id = %s", (older["id"],))
-    assert await store.publish(older["id"], {"arguments": []}, {"stage": "ready"}) == "superseded"
+    # A worker without the lease cannot even mark the older attempt superseded.
+    assert await store.publish(older["id"], {"arguments": []}, {}, lease="not-the-lease") == "inactive"
+    assert (await store.get_result(older["id"]))["status"] == "embedding"  # type: ignore[index]
+    assert (
+        await store.publish(older["id"], {"arguments": []}, {"stage": "ready"}, lease=lease_of(older))
+        == "superseded"
+    )
     late = await store.get_result(older["id"])
     assert late is not None and late["status"] == "superseded" and late["manifest"] is None
     assert (await store.latest_ready(project))["id"] == newer["id"]  # type: ignore[index]
@@ -417,6 +544,150 @@ async def test_fact_check_attempts_dedupe_and_guard_late_writes(dsn: str) -> Non
     assert dispatch and stale["attempt"] == 6
     assert (await store.get_fact_check(row["id"]))["attempt"] == 6  # type: ignore[index]
     assert await store.fact_checks_for(await _project(dsn), [key]) == {}
+
+
+# ── races ───────────────────────────────────────────────────────────────
+
+
+async def _all_waiting(dsn: str, application_name: str, racers: list[asyncio.Task[Any]]) -> bool:
+    for _ in range(500):
+        if any(racer.done() for racer in racers):
+            return False
+        rows = await _execute(
+            dsn,
+            """SELECT count(*) FROM pg_stat_activity
+               WHERE application_name = %s AND wait_event_type = 'Lock'""",
+            (application_name,),
+        )
+        if int(rows[0][0]) >= len(racers):
+            return True
+        await asyncio.sleep(0.02)
+    return False
+
+
+async def _race(
+    dsn: str,
+    lock: str,
+    params: tuple[Any, ...] | None,
+    *operations: Callable[[SqlMapStore], Awaitable[Any]],
+) -> list[Any]:
+    """Run the operations at once, each on its own connection.
+
+    A third connection takes `lock` in an open transaction and releases it only
+    when every operation is waiting on it, so they reach their compare-and-set
+    together."""
+    name = f"map_race_{uuid.uuid4().hex[:12]}"
+    store = SqlMapStore(dsn=make_conninfo(dsn, application_name=name))
+    async with await psycopg.AsyncConnection.connect(dsn) as holder:
+        await holder.execute(lock, params)  # type: ignore[arg-type]
+        racers = [asyncio.create_task(operation(store)) for operation in operations]
+        met = await _all_waiting(dsn, name, racers)
+        await holder.commit()
+    results = await asyncio.gather(*racers)
+    assert met, "the racers never all waited on the lock"
+    return list(results)
+
+
+@pytest.mark.asyncio
+async def test_two_starts_of_one_claim_dispatch_it_once(dsn: str) -> None:
+    store = SqlMapStore(dsn=dsn)
+    project = await _project(dsn)
+    key = _hash("raced claim")
+
+    async def _start(racer: SqlMapStore) -> tuple[dict[str, Any], bool]:
+        return await racer.start_fact_check(
+            project_id=project,
+            claim_key=key,
+            statement="The bridge opened in 1932.",
+            requested_by="u1",
+            force=False,
+            stale_seconds=900,
+        )
+
+    # A claim nobody checked yet: both inserts meet at the table lock.
+    outcomes = await _race(
+        dsn, "LOCK TABLE map_fact_check IN SHARE ROW EXCLUSIVE MODE", None, _start, _start
+    )
+    assert sorted(dispatch for _row, dispatch in outcomes) == [False, True]
+    assert [row["attempt"] for row, _dispatch in outcomes] == [1, 1]
+    assert await _count(dsn, "map_fact_check", project) == 1
+
+    # A retry after an error: both updates meet at the row lock.
+    check_id = outcomes[0][0]["id"]
+    assert await store.fail_fact_check(check_id, 1, "The fact-check could not finish. Try again.")
+    outcomes = await _race(
+        dsn, "SELECT 1 FROM map_fact_check WHERE id = %s FOR UPDATE", (check_id,), _start, _start
+    )
+    assert sorted(dispatch for _row, dispatch in outcomes) == [False, True]
+    assert [row["attempt"] for row, _dispatch in outcomes] == [2, 2]
+    final = await store.get_fact_check(check_id)
+    assert final is not None and final["status"] == "processing" and final["attempt"] == 2
+
+
+@pytest.mark.asyncio
+async def test_a_cancel_racing_a_completion_leaves_one_consistent_state(dsn: str) -> None:
+    store = SqlMapStore(dsn=dsn)
+    project = await _project(dsn)
+    key = _hash("cancelled or checked")
+    row, _dispatch = await store.start_fact_check(
+        project_id=project,
+        claim_key=key,
+        statement="Trams are cheaper than buses.",
+        requested_by="u1",
+        force=False,
+        stale_seconds=900,
+    )
+
+    async def _cancel(racer: SqlMapStore) -> dict[str, Any] | None:
+        return await racer.cancel_fact_check(project, key)
+
+    async def _complete(racer: SqlMapStore) -> bool:
+        return await racer.complete_fact_check(
+            row["id"], 1, verdict="false", justification="J", sources=[], model="m", prompt_version="p"
+        )
+
+    cancelled, completed = await _race(
+        dsn, "SELECT 1 FROM map_fact_check WHERE id = %s FOR UPDATE", (row["id"],), _cancel, _complete
+    )
+
+    final = await store.get_fact_check(row["id"])
+    assert final is not None and cancelled is not None
+    if completed:
+        assert final["status"] == "done" and final["attempt"] == 1 and final["verdict"] == "false"
+        assert cancelled["status"] == "done"
+    else:
+        assert final["status"] == "idle" and final["attempt"] == 2 and final["verdict"] is None
+        assert cancelled["status"] == "idle" and cancelled["attempt"] == 2
+
+
+@pytest.mark.asyncio
+async def test_two_publishes_of_one_attempt_make_one_ready_revision(dsn: str) -> None:
+    store = SqlMapStore(dsn=dsn)
+    project = await _project(dsn)
+    row = await _attempt(store, project)
+    lease = lease_of(row)
+    await store.heartbeat(row["id"], lease=lease, status="embedding", progress={"stage": "embedding"})
+
+    def _publish(label: str) -> Callable[[SqlMapStore], Awaitable[str]]:
+        async def _run(racer: SqlMapStore) -> str:
+            return await racer.publish(
+                row["id"], {"arguments": [], "by": label}, {"stage": "ready"}, lease=lease
+            )
+
+        return _run
+
+    outcomes = await _race(
+        dsn,
+        "SELECT 1 FROM map_result WHERE id = %s FOR UPDATE",
+        (row["id"],),
+        _publish("first"),
+        _publish("second"),
+    )
+
+    assert sorted(outcomes) == ["inactive", "ready"]
+    ready = await store.get_result(row["id"])
+    assert ready is not None and ready["status"] == "ready"
+    assert ready["manifest"]["by"] == ("first" if outcomes[0] == "ready" else "second")
 
 
 # ── lifecycle ───────────────────────────────────────────────────────────

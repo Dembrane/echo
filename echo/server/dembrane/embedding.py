@@ -69,7 +69,8 @@ def embedding_kwargs() -> Dict[str, Any]:
     return kwargs
 
 
-@backoff.on_exception(backoff.expo, (Exception), max_tries=5)
+# backoff's own logger would print the exception on every retry: off.
+@backoff.on_exception(backoff.expo, (Exception), max_tries=5, logger=None)
 def embed_text(text: str) -> List[float]:
     text = text.replace("\n", " ").strip()
     try:
@@ -79,8 +80,15 @@ def embed_text(text: str) -> List[float]:
         )
         return response["data"][0]["embedding"]
     except Exception as exc:
-        # The input is participant-derived text: log its size, never its body.
-        logger.debug("embedding error: %s (input of %d characters)", exc, len(text))
+        # The input is participant-derived text and a provider's error message
+        # can quote it: log the error's type, status and the input's size only.
+        status = getattr(exc, "status_code", None)
+        logger.debug(
+            "embedding error: %s%s (input of %d characters)",
+            type(exc).__name__,
+            f" (status {status})" if status is not None else "",
+            len(text),
+        )
         raise exc
 
 

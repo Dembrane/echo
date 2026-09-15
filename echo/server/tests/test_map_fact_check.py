@@ -12,11 +12,13 @@ from tests.map_fakes import (
     PROJECT,
     OTHER_PROJECT,
     FakeMapStore,
+    FakeAsyncRedis,
     ready_result,
     manifest_argument,
 )
 from dembrane.map.fact_check import (
     STALE_SECONDS,
+    ACQUIRE_SECONDS,
     run_fact_check,
     fact_check_state,
     mark_interrupted,
@@ -46,6 +48,7 @@ class _Harness:
         }
         self.error: BaseException | None = None
         self.during_check: Any = None
+        self.redis = FakeAsyncRedis()
 
     def dispatch(self, fact_check_id: str, attempt: int, result_id: str, node_id: str) -> str:
         self.dispatched.append((fact_check_id, attempt, result_id, node_id))
@@ -78,6 +81,7 @@ class _Harness:
             check=self.check,
             project_context=self.context,
             publish=self.publish,
+            redis=self.redis,
         )
 
     def row(self) -> dict[str, Any]:
@@ -377,3 +381,62 @@ async def test_only_claims_of_ready_maps_are_checked() -> None:
     with pytest.raises(service.NotReady):
         await service.fact_check_states(running, store)
     assert harness.dispatched == []
+
+
+# ── duplicate delivery ──────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_a_second_delivery_of_a_running_attempt_is_stale_and_calls_no_model() -> None:
+    store = FakeMapStore()
+    harness = _Harness(store)
+    result = await ready_result(store, _arguments())
+    await harness.start(result)
+    job = harness.dispatched[0]
+    duplicates: list[str] = []
+
+    async def _delivered_again() -> None:
+        duplicates.append(await harness.run(job))
+
+    harness.during_check = _delivered_again
+
+    assert await harness.run(job) == "done"
+
+    assert duplicates == ["stale"]
+    assert len(harness.checks) == 1
+    assert harness.row()["status"] == "done" and harness.row()["attempt"] == 1
+    (key,) = harness.redis.data
+    # Held for longer than the worker may run, so a late redelivery is refused too.
+    assert harness.redis.expiry[key] == ACQUIRE_SECONDS
+    assert await harness.run(job) == "stale" and len(harness.checks) == 1
+
+
+@pytest.mark.asyncio
+async def test_a_new_attempt_of_the_same_claim_is_acquired_afresh() -> None:
+    store = FakeMapStore()
+    harness = _Harness(store)
+    result = await ready_result(store, _arguments())
+    await harness.start(result)
+    harness.error = RuntimeError("search grounding unavailable")
+    assert await harness.run(harness.dispatched[0]) == "error"
+
+    harness.error = None
+    await harness.start(result)
+    assert await harness.run(harness.dispatched[1]) == "done"
+    assert len(harness.checks) == 2 and len(harness.redis.data) == 2
+
+
+@pytest.mark.asyncio
+async def test_a_check_still_runs_when_redis_cannot_answer() -> None:
+    class _BrokenRedis(FakeAsyncRedis):
+        async def set(self, *args: Any, **kwargs: Any) -> bool | None:  # noqa: ARG002
+            raise ConnectionError("redis is down")
+
+    store = FakeMapStore()
+    harness = _Harness(store)
+    harness.redis = _BrokenRedis()
+    result = await ready_result(store, _arguments())
+    await harness.start(result)
+
+    assert await harness.run(harness.dispatched[0]) == "done"
+    assert len(harness.checks) == 1

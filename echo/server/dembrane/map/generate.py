@@ -10,6 +10,8 @@
 
 Nothing here holds a database transaction across a model call. A failure marks
 the attempt failed and leaves the project's previous ready revision current.
+Every write carries the attempt's lease: a worker whose attempt expired and was
+requeued for another worker stops at its next write.
 """
 
 from __future__ import annotations
@@ -23,7 +25,7 @@ from dataclasses import field, dataclass
 
 from dembrane.map import recipe
 from dembrane.embedding import EmbeddingIdentity
-from dembrane.map.store import ACTIVE_STATUSES, MapStore, SqlMapStore, MapStoreError
+from dembrane.map.store import ACTIVE_STATUSES, MapStore, SqlMapStore, MapStoreError, lease_of
 
 logger = logging.getLogger("dembrane.map.generate")
 
@@ -32,10 +34,14 @@ EMBEDDING_CONCURRENCY = 8
 # Embedding progress reaches the page at most this often; extraction progress
 # is saved on every finished conversation because it is also the resume point.
 PROGRESS_INTERVAL_SECONDS = 1.5
+# Between the windows of a long conversation the attempt is kept alive at most
+# this often, far inside the API's stale limit, so a worker still reading is
+# never expired for looking quiet.
+WINDOW_HEARTBEAT_SECONDS = 60.0
 
 
 class GenerationStopped(Exception):
-    """The attempt stopped being active elsewhere (expired or failed)."""
+    """The attempt stopped being ours (expired, failed or requeued elsewhere)."""
 
 
 class ExtractionFailed(RuntimeError):
@@ -109,6 +115,7 @@ async def run_generation(
         logger.info("map generation %s skipped: not active", result_id)
         return "skipped"
     project_id = row["project_id"]
+    lease = lease_of(row)
     try:
         return await _generate(row, store, deps)
     except Exception as raised:
@@ -119,6 +126,15 @@ async def run_generation(
             logger.info("map generation %s stopped: no longer active", result_id)
             return "stopped"
         exc = leaves[0]
+        stopped = False
+        try:
+            stopped = not await store.fail(result_id, failure_message(exc), lease=lease)
+        except MapStoreError:
+            logger.exception("map generation %s: could not record the failure", result_id)
+        if stopped:
+            # Expired or requeued for another worker meanwhile: not ours to fail.
+            logger.info("map generation %s stopped: no longer active", result_id)
+            return "stopped"
         # Only messages this package wrote are logged: a provider's error can
         # quote its input, and that input is participant-derived text.
         detail = (
@@ -133,10 +149,6 @@ async def run_generation(
             type(exc).__name__,
             detail,
         )
-        try:
-            await store.fail(result_id, failure_message(exc))
-        except MapStoreError:
-            logger.exception("map generation %s: could not record the failure", result_id)
         await deps.publish(project_id, {"type": "failed", "result_id": result_id})
         return "failed"
 
@@ -144,6 +156,7 @@ async def run_generation(
 async def _generate(row: dict[str, Any], store: MapStore, deps: GenerationDeps) -> str:
     result_id = row["id"]
     project_id = row["project_id"]
+    lease = lease_of(row)
     started = deps.clock()
     saved = dict(row.get("progress") or {})
 
@@ -178,15 +191,18 @@ async def _generate(row: dict[str, Any], store: MapStore, deps: GenerationDeps) 
             "extractions": extractions,
         }
 
-    async def save(stage: str, *, force: bool = True) -> None:
+    async def save(
+        stage: str, *, force: bool = True, interval: float = PROGRESS_INTERVAL_SECONDS
+    ) -> None:
         nonlocal last_progress
         now = deps.clock()
-        if not force and now - last_progress < PROGRESS_INTERVAL_SECONDS:
+        if not force and now - last_progress < interval:
             return
         last_progress = now
         doc = progress_doc(stage)
         if not await store.heartbeat(
             result_id,
+            lease=lease,
             status=stage,
             progress=doc,
             source_fingerprint=fingerprint,
@@ -224,6 +240,9 @@ async def _generate(row: dict[str, Any], store: MapStore, deps: GenerationDeps) 
                     shaped.append(candidates)
                     dropped += lost
                     conversation_usage.update(used)
+                    if index < len(windows) - 1:
+                        async with lock:
+                            await save("extracting", force=False, interval=WINDOW_HEARTBEAT_SECONDS)
             except (GenerationStopped, MapStoreError):
                 raise
             except Exception as exc:
@@ -279,7 +298,9 @@ async def _generate(row: dict[str, Any], store: MapStore, deps: GenerationDeps) 
     async def embed_one(hashed: str) -> None:
         async with embed_semaphore:
             vector = recipe.validate_vector(await deps.embed(texts[hashed]), identity.dims)
-            embedding_id = await store.save_embedding(
+            # Another worker may have saved this input first: what comes back
+            # is the stored row, the vector the manifest will reference.
+            embedding_id, stored_vector = await store.save_embedding(
                 project_id=project_id,
                 input_hash=hashed,
                 config_key=identity.key,
@@ -288,7 +309,7 @@ async def _generate(row: dict[str, Any], store: MapStore, deps: GenerationDeps) 
                 vector=vector,
             )
         async with lock:
-            vectors[hashed] = vector
+            vectors[hashed] = recipe.validate_vector(stored_vector, identity.dims)
             embedding_ids[hashed] = embedding_id
             counts["embeddings_done"] += 1
             await save("embedding", force=False)
@@ -339,6 +360,7 @@ async def _generate(row: dict[str, Any], store: MapStore, deps: GenerationDeps) 
         result_id,
         manifest,
         {k: v for k, v in progress_doc("ready").items() if k != "extractions"},
+        lease=lease,
     )
     if outcome == "inactive":
         raise GenerationStopped()

@@ -2,9 +2,10 @@
 
 `FakeMapStore` implements the whole `MapStore` protocol with the guards the
 SQL enforces (one active attempt per project, writes only while an attempt is
-active, publish refusing to replace a newer ready revision, one embedding row
-per project + input + configuration, fact-check attempt guards), on a clock the
-test controls, with failures the test can inject.
+active and only under its current lease, publish refusing to replace a newer
+ready revision, one embedding row per project + input + configuration,
+fact-check attempt guards), on a clock the test controls, with failures the
+test can inject.
 
 `FakeGenerationWorld` builds `GenerationDeps` whose transcripts, extractor,
 embedder and event publisher are scripted and counted.
@@ -16,13 +17,19 @@ import copy
 import math
 import uuid
 import hashlib
-from typing import Any, Callable
+from typing import Any, Callable, Awaitable
 from datetime import datetime, timezone, timedelta
 from collections import Counter
 
 from dembrane.map import recipe
 from dembrane.embedding import EmbeddingIdentity
-from dembrane.map.store import ACTIVE_STATUSES, MapStoreError, ActiveAttemptExists
+from dembrane.map.store import (
+    ACTIVE_STATUSES,
+    MapStoreError,
+    ActiveAttemptExists,
+    lease_of,
+    new_lease,
+)
 from dembrane.map.generate import GenerationDeps
 
 PROJECT = "11111111-1111-4111-8111-111111111111"
@@ -80,6 +87,13 @@ class FakeMapStore:
         ]
         return max(rows, key=lambda r: r["created_at"]) if rows else None
 
+    def _owned(self, result_id: str, lease: str | None) -> dict[str, Any] | None:
+        """The row, while it is active and still under this lease."""
+        row = self.results.get(result_id)
+        if not row or row["status"] not in ACTIVE_STATUSES or lease_of(row) != lease:
+            return None
+        return row
+
     async def create_attempt(
         self, *, project_id: str, recipe_version: str, requested_by: str | None
     ) -> dict[str, Any]:
@@ -96,7 +110,7 @@ class FakeMapStore:
             "source_fingerprint": None,
             "recipe_version": recipe_version,
             "embedding_config": None,
-            "progress": {"stage": "queued"},
+            "progress": {"stage": "queued", "lease": new_lease()},
             "manifest": None,
             "error": None,
             "requested_by": requested_by,
@@ -139,6 +153,7 @@ class FakeMapStore:
         self,
         result_id: str,
         *,
+        lease: str | None,
         status: str,
         progress: dict[str, Any],
         source_fingerprint: str | None = None,
@@ -152,10 +167,10 @@ class FakeMapStore:
             if row["status"] in ACTIVE_STATUSES:
                 row.update(status="failed", error="The generation stopped without finishing.")
             return False
-        if row["status"] not in ACTIVE_STATUSES:
+        if self._owned(result_id, lease) is None:
             return False
         row["status"] = status
-        row["progress"] = copy.deepcopy(progress)
+        row["progress"] = {**copy.deepcopy(progress), "lease": lease}
         if source_fingerprint is not None:
             row["source_fingerprint"] = source_fingerprint
         if embedding_config is not None:
@@ -164,10 +179,10 @@ class FakeMapStore:
         self.heartbeats.append(copy.deepcopy(progress))
         return True
 
-    async def fail(self, result_id: str, error: str) -> bool:
+    async def fail(self, result_id: str, error: str, *, lease: str | None) -> bool:
         self._enter("fail")
-        row = self.results.get(result_id)
-        if not row or row["status"] not in ACTIVE_STATUSES:
+        row = self._owned(result_id, lease)
+        if row is None:
             return False
         now = self.clock.now()
         row.update(status="failed", error=error[:4000], updated_at=now, completed_at=now)
@@ -201,15 +216,26 @@ class FakeMapStore:
         active = self._active(row["project_id"])
         if active:
             raise ActiveAttemptExists(copy.deepcopy(active))
-        row.update(status="queued", error=None, completed_at=None, updated_at=self.clock.now())
+        row.update(
+            status="queued",
+            error=None,
+            completed_at=None,
+            updated_at=self.clock.now(),
+            progress={**(row["progress"] or {}), "lease": new_lease()},
+        )
         return copy.deepcopy(row)
 
     async def publish(
-        self, result_id: str, manifest: dict[str, Any], progress: dict[str, Any]
+        self,
+        result_id: str,
+        manifest: dict[str, Any],
+        progress: dict[str, Any],
+        *,
+        lease: str | None,
     ) -> str:
         self._enter("publish")
-        row = self.results.get(result_id)
-        if not row or row["status"] not in ACTIVE_STATUSES:
+        row = self._owned(result_id, lease)
+        if row is None:
             return "inactive"
         now = self.clock.now()
         newer_ready = any(
@@ -255,7 +281,7 @@ class FakeMapStore:
         model: str,
         dims: int,
         vector: list[float],
-    ) -> str:
+    ) -> tuple[str, list[float]]:
         self._enter("save_embedding")
         if self.fail_save_embedding_on is not None and (
             self.calls["save_embedding"] == self.fail_save_embedding_on
@@ -274,7 +300,8 @@ class FakeMapStore:
                 input_hash,
                 config_key,
             ):
-                return str(row["id"])
+                # The conflict: the first writer's row and vector stand.
+                return str(row["id"]), list(row["embedding"])
         row = {
             "id": str(uuid.uuid4()),
             "project_id": project_id,
@@ -286,7 +313,7 @@ class FakeMapStore:
             "created_at": self.clock.now(),
         }
         self.embeddings[row["id"]] = row
-        return str(row["id"])
+        return str(row["id"]), list(row["embedding"])
 
     async def vectors_by_ids(self, project_id: str, ids: list[str]) -> dict[str, list[float]]:
         self._enter("vectors_by_ids")
@@ -480,6 +507,10 @@ class FakeGenerationWorld:
         )
         self.vector_for: Callable[[str], Any] | None = None
         self.embed_error: BaseException | None = None
+        # Awaited inside a call, before it answers: (conversation id, window index)
+        # for the extractor, the embedded text for the embedder.
+        self.during_extract: Callable[[str, int], Awaitable[None]] | None = None
+        self.during_embed: Callable[[str], Awaitable[None]] | None = None
         self.extract_calls: Counter[str] = Counter()
         self.embed_calls: list[str] = []
         self.probe_calls = 0
@@ -506,6 +537,8 @@ class FakeGenerationWorld:
             *, conversation_id: str, window: str, window_index: int, window_count: int  # noqa: ARG001
         ) -> tuple[dict[str, Any], dict[str, int]]:
             self.extract_calls[conversation_id] += 1
+            if self.during_extract is not None:
+                await self.during_extract(conversation_id, window_index)
             if conversation_id in self.fail_extract:
                 raise self.extract_error(conversation_id)
             answer = {"items": copy.deepcopy(self.items.get(conversation_id, []))}
@@ -513,6 +546,8 @@ class FakeGenerationWorld:
 
         async def embed(text: str) -> list[float]:
             self.embed_calls.append(text)
+            if self.during_embed is not None:
+                await self.during_embed(text)
             if self.embed_error is not None:
                 raise self.embed_error
             if self.vector_for is not None:
@@ -581,7 +616,7 @@ async def ready_result(
     )
     for argument in arguments:
         if with_vectors and not argument.get("embedding_id"):
-            argument["embedding_id"] = await store.save_embedding(
+            argument["embedding_id"], _vector = await store.save_embedding(
                 project_id=project_id,
                 input_hash=argument["input_hash"],
                 config_key="fake-config",
@@ -597,7 +632,7 @@ async def ready_result(
         "consolidation": {},
         "stats": {"arguments": len(arguments)},
     }
-    outcome = await store.publish(row["id"], manifest, {"stage": "ready"})
+    outcome = await store.publish(row["id"], manifest, {"stage": "ready"}, lease=lease_of(row))
     assert outcome == "ready"
     stored = await store.get_result(row["id"])
     assert stored is not None

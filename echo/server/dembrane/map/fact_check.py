@@ -20,6 +20,10 @@ logger = logging.getLogger("dembrane.map.fact_check")
 # A check still processing after this long is treated as abandoned (its worker
 # died), and a new request may start it again.
 STALE_SECONDS = 15 * 60
+# A worker holds its attempt against a second delivery of the same message for
+# a little longer than the actor may run (task_map_fact_check's time limit is
+# ten minutes), so a duplicate never pays for a second search.
+ACQUIRE_SECONDS = 11 * 60
 
 
 def _iso(value: Any) -> str | None:
@@ -66,11 +70,32 @@ async def _project_context(project_id: str) -> tuple[str, str]:
     return str(project.get("name") or ""), str(project.get("context") or "")
 
 
+async def acquire_attempt(fact_check_id: str, attempt: int, redis: Any | None = None) -> bool:
+    """Take one attempt for this worker. False when another delivery of the
+    same message already took it. When Redis cannot answer, the check runs: the
+    attempt guard on the verdict still keeps a single result."""
+    key = f"map:fact_check:{fact_check_id}:{attempt}:worker"
+    try:
+        if redis is None:
+            from dembrane.redis_async import get_redis_client
+
+            redis = await get_redis_client()
+        return bool(await redis.set(key, "1", nx=True, ex=ACQUIRE_SECONDS))
+    except Exception as exc:
+        logger.warning(
+            "map fact-check %s attempt %s: could not acquire it (%s), running anyway",
+            fact_check_id,
+            attempt,
+            type(exc).__name__,
+        )
+        return True
+
+
 async def mark_interrupted(
     fact_check_id: str, attempt: int, *, store: MapStore | None = None
 ) -> bool:
-    """A worker that lost its check (the shared loop was reset, the time limit
-    hit) leaves an error for this attempt instead of a check stuck processing."""
+    """A worker that lost its check (the loop was reset, the time limit hit)
+    leaves an error for this attempt instead of a check stuck processing."""
     store = store or SqlMapStore()
     return await store.fail_fact_check(
         fact_check_id, attempt, "The fact-check was interrupted. Try again."
@@ -87,6 +112,7 @@ async def run_fact_check(
     check: Callable[..., Awaitable[dict[str, Any]]] | None = None,
     project_context: Callable[[str], Awaitable[tuple[str, str]]] | None = None,
     publish: Callable[[str, dict[str, Any]], Awaitable[None]] | None = None,
+    redis: Any | None = None,
 ) -> str:
     """Run one attempt. Returns done, error or stale."""
     from dembrane.map import model
@@ -113,6 +139,10 @@ async def run_fact_check(
             fact_check_id, attempt, "The claim is no longer part of this map."
         )
         return "error" if written else "stale"
+
+    if not await acquire_attempt(fact_check_id, attempt, redis):
+        logger.info("map fact-check %s attempt %s is already running", fact_check_id, attempt)
+        return "stale"
 
     evidence = [quote for item in argument.get("evidence") or [] for quote in item.get("quotes") or []]
     event = {"type": "fact_check", "claim_key": row["claim_key"]}

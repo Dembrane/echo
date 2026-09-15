@@ -25,11 +25,22 @@ logger = logging.getLogger("dembrane.map.model")
 MODEL_GROUP = MODELS.MULTI_MODAL_FAST
 PROMPTS_DIR = Path(__file__).with_name("prompts")
 
-EXTRACTION_PROMPT = "map-arguments-v1"
-TITLE_PROMPT = "map-title-v1"
-FACTCHECK_INVESTIGATE_PROMPT = "map-factcheck-investigate-v1"
-FACTCHECK_CLASSIFY_PROMPT = "map-factcheck-classify-v1"
+EXTRACTION_PROMPT = "map-arguments-v2"
+TITLE_PROMPT = "map-title-v2"
+FACTCHECK_INVESTIGATE_PROMPT = "map-factcheck-investigate-v2"
+FACTCHECK_CLASSIFY_PROMPT = "map-factcheck-classify-v2"
 FACTCHECK_PROMPT_VERSION = f"{FACTCHECK_INVESTIGATE_PROMPT}+{FACTCHECK_CLASSIFY_PROMPT}"
+
+# Transcript, project and web text reaches the models only inside these blocks,
+# and each prompt says a block's content is data, never instructions.
+DATA_BLOCKS = ("TRANSCRIPT", "PROJECT", "ARGUMENTS", "CLAIM", "EVIDENCE", "ANALYSIS")
+_BLOCK_MARKER = re.compile(rf"\b(?:{'|'.join(DATA_BLOCKS)})\s+(?:START|END)\b")
+
+
+def data_block(name: str, text: str) -> str:
+    """Untrusted text between START and END markers. A marker inside the text
+    is blanked, so the text can neither close its block nor open another."""
+    return f"{name} START\n{_BLOCK_MARKER.sub('[...]', text)}\n{name} END"
 
 # Gemini counts its thinking against max_tokens: an extraction of a long window
 # thinks and then writes many full statements, so the cap is generous.
@@ -148,10 +159,7 @@ async def extract_arguments(
     Returns the raw `{items: [...]}` and the provider's token usage. Retries
     once on a timeout or an answer that does not parse."""
     part = f"Part {window_index + 1} of {window_count}.\n" if window_count > 1 else ""
-    user_text = (
-        f"Conversation id: {conversation_id}\n{part}\n"
-        f"TRANSCRIPT START\n{window}\nTRANSCRIPT END"
-    )
+    user_text = f"Conversation id: {conversation_id}\n{part}\n" + data_block("TRANSCRIPT", window)
     last_error: Exception | None = None
     for attempt in range(1, EXTRACTION_ATTEMPTS + 1):
         try:
@@ -191,16 +199,19 @@ async def extract_arguments(
 
 async def title_selection(*, lines: list[str], project_name: str, project_context: str) -> str:
     """A one-sentence title for a settled selection, from every selected line."""
-    header = ""
+    project = []
     if project_name.strip():
-        header += f"Project: {project_name.strip()}\n"
+        project.append(f"Name: {project_name.strip()}")
     if project_context.strip():
-        header += f"Project Context: {project_context.strip()}\n"
-    user_text = (
-        f"{header}\nArguments in cluster (sorted by relevance):\n"
-        + "\n".join(lines)
-        + "\n\nDistill the core idea into one clear, concise sentence (8-15 words) "
-        "that captures what makes this cluster unique within the project context."
+        project.append(f"Context: {project_context.strip()}")
+    user_text = "\n\n".join(
+        [
+            *([data_block("PROJECT", "\n".join(project))] if project else []),
+            "Arguments in cluster (sorted by relevance):\n"
+            + data_block("ARGUMENTS", "\n".join(lines)),
+            "Distill the core idea into one clear, concise sentence (8-15 words) "
+            "that captures what makes this cluster unique within the project context.",
+        ]
     )
     response = await asyncio.wait_for(
         arouter_completion(
@@ -266,20 +277,18 @@ async def factcheck_claim(
     *, statement: str, evidence: list[str], project_name: str, project_context: str
 ) -> dict[str, Any]:
     """Investigate a claim with Search grounding, then classify the finding."""
-    header = []
+    project = []
     if project_name.strip():
-        header.append(f"PROJECT: {project_name.strip()}")
+        project.append(f"Name: {project_name.strip()}")
     if project_context.strip():
-        header.append(f"PROJECT CONTEXT: {project_context.strip()}")
-    user_text = "\n".join(
+        project.append(f"Context: {project_context.strip()}")
+    user_text = "\n\n".join(
         [
-            *header,
-            *([""] if header else []),
-            f"CLAIM: {statement}",
-            "",
-            "CONTEXT (speaker's own words: do not fact-check these, use them only "
-            "to understand what the speaker meant):",
-            *(f'- "{quote}"' for quote in evidence),
+            *([data_block("PROJECT", "\n".join(project))] if project else []),
+            data_block("CLAIM", statement),
+            "The speaker's own words: do not fact-check these, use them only to "
+            "understand what the speaker meant.\n"
+            + data_block("EVIDENCE", "\n".join(f'- "{quote}"' for quote in evidence)),
         ]
     )
     investigation = await asyncio.wait_for(
@@ -303,7 +312,12 @@ async def factcheck_claim(
             MODEL_GROUP,
             messages=[
                 {"role": "system", "content": prompt_text(FACTCHECK_CLASSIFY_PROMPT)},
-                {"role": "user", "content": f"CLAIM: {statement}\n\nANALYSIS:\n{analysis}"},
+                {
+                    "role": "user",
+                    "content": data_block("CLAIM", statement)
+                    + "\n\n"
+                    + data_block("ANALYSIS", analysis),
+                },
             ],
             temperature=0,
             max_tokens=FACTCHECK_MAX_TOKENS,

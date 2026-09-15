@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+import uuid
+import logging
 from typing import Any
 
 import pytest
 
-from dembrane.map import recipe, service
+from dembrane.map import recipe, service, generate
 from tests.map_fakes import (
     PROJECT,
     FakeMapStore,
@@ -15,7 +17,7 @@ from tests.map_fakes import (
     item,
     transcript,
 )
-from dembrane.map.store import ActiveAttemptExists
+from dembrane.map.store import ActiveAttemptExists, lease_of
 from dembrane.map.generate import run_generation
 
 BIKES = "We need more bike lanes in the city centre."
@@ -372,6 +374,208 @@ async def test_an_older_attempt_finishing_after_a_newer_ready_is_superseded() ->
     assert store.results[older]["manifest"] is None
     assert (await store.latest_ready(PROJECT))["id"] == newer
     assert world.event_types()[-1] == "superseded"
+
+
+# ── an attempt requeued while its first worker still runs ──────────────
+
+
+@pytest.mark.asyncio
+async def test_a_worker_whose_attempt_was_expired_and_requeued_stops_and_the_new_one_publishes() -> None:
+    store = FakeMapStore()
+    world = _world(store)
+    result_id = await _attempt(store)
+    first_lease = lease_of(store.results[result_id])
+    requeued: list[dict[str, Any]] = []
+
+    async def _expire_and_requeue(conversation_id: str, window_index: int) -> None:  # noqa: ARG001
+        if not requeued:
+            # The worker looks quiet: a page load expires it, a new request requeues it.
+            store.clock.advance(service.STALE_ATTEMPT_SECONDS + 1)
+            requeued.append(await _requeue(store))
+
+    world.during_extract = _expire_and_requeue
+
+    assert await run_generation(result_id, store=store, deps=world.deps()) == "stopped"
+
+    row = store.results[result_id]
+    assert requeued[0]["id"] == result_id
+    assert lease_of(row) == lease_of(requeued[0]) != first_lease
+    assert row["status"] == "queued" and row["manifest"] is None and row["error"] is None
+    assert store.calls["publish"] == 0
+    assert not {"ready", "failed", "superseded"} & set(world.event_types())
+
+    world.during_extract = None
+    assert await run_generation(result_id, store=store, deps=world.deps()) == "ready"
+    assert store.results[result_id]["status"] == "ready"
+
+
+@pytest.mark.asyncio
+async def test_a_worker_that_lost_its_attempt_while_embedding_cannot_publish() -> None:
+    store = FakeMapStore()
+    world = _world(store)
+    result_id = await _attempt(store)
+
+    async def _requeue_meanwhile(text: str) -> None:  # noqa: ARG001
+        row = store.results[result_id]
+        if row["status"] == "embedding":
+            row["status"] = "failed"
+            await store.requeue(result_id)
+
+    world.during_embed = _requeue_meanwhile
+
+    assert await run_generation(result_id, store=store, deps=world.deps()) == "stopped"
+
+    assert store.calls["publish"] == 1  # tried, refused
+    row = store.results[result_id]
+    assert row["status"] == "queued" and row["manifest"] is None
+    assert not {"ready", "failed", "superseded"} & set(world.event_types())
+
+
+@pytest.mark.asyncio
+async def test_a_failure_after_the_attempt_was_requeued_is_not_recorded() -> None:
+    store = FakeMapStore()
+    world = FakeGenerationWorld(
+        [transcript("c1", "Ann: We need more bike lanes in the city centre.")],
+        {"c1": [item(BIKES, "We need more bike lanes in the city centre")]},
+        clock=store.clock,
+    )
+    world.fail_extract = {"c1"}
+    result_id = await _attempt(store)
+
+    async def _requeue_meanwhile(conversation_id: str, window_index: int) -> None:  # noqa: ARG001
+        store.results[result_id]["status"] = "failed"
+        await store.requeue(result_id)
+
+    world.during_extract = _requeue_meanwhile
+
+    assert await run_generation(result_id, store=store, deps=world.deps()) == "stopped"
+
+    row = store.results[result_id]
+    assert row["status"] == "queued" and row["error"] is None
+    assert store.calls["fail"] == 1  # tried, refused
+    assert "failed" not in world.event_types()
+
+
+@pytest.mark.asyncio
+async def test_a_long_conversation_keeps_its_attempt_alive_between_windows(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(recipe, "transcript_windows", lambda text: [text, text, text])
+
+    async def _slow_windows(conversation_id: str, window_index: int) -> None:  # noqa: ARG001
+        store.clock.advance(generate.WINDOW_HEARTBEAT_SECONDS)
+
+    def _one_conversation(store: FakeMapStore) -> FakeGenerationWorld:
+        return FakeGenerationWorld(
+            [transcript("c1", "Ann: We need more bike lanes in the city centre.")],
+            {"c1": [item(BIKES, "We need more bike lanes in the city centre")]},
+            clock=store.clock,
+        )
+
+    # Quick windows: progress is saved at the start and when the conversation is done.
+    store = FakeMapStore()
+    assert await run_generation(await _attempt(store), store=store, deps=_one_conversation(store).deps()) == "ready"
+    assert [p["stage"] for p in store.heartbeats].count("extracting") == 2
+
+    # Slow windows: a heartbeat after each of the first two, too.
+    store = FakeMapStore()
+    world = _one_conversation(store)
+    world.during_extract = _slow_windows
+    assert await run_generation(await _attempt(store), store=store, deps=world.deps()) == "ready"
+    assert [p["stage"] for p in store.heartbeats].count("extracting") == 4
+
+    # And a window heartbeat that finds the attempt requeued stops the reading.
+    store = FakeMapStore()
+    world = _one_conversation(store)
+    result_id = await _attempt(store)
+
+    async def _slow_then_requeued(conversation_id: str, window_index: int) -> None:
+        await _slow_windows(conversation_id, window_index)
+        store.results[result_id]["status"] = "failed"
+        await store.requeue(result_id)
+
+    world.during_extract = _slow_then_requeued
+    assert await run_generation(result_id, store=store, deps=world.deps()) == "stopped"
+    assert world.extract_calls["c1"] == 1
+
+
+# ── embeddings saved by another worker first ────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_a_vector_another_worker_saved_first_is_the_one_consolidated() -> None:
+    trams = "Trams should run all night."
+    buses = "Night buses should replace late trams."
+    store = FakeMapStore()
+    world = FakeGenerationWorld(
+        [
+            transcript(
+                "c1",
+                "Ann: Trams should run all night.\nAnn: Night buses should replace late trams.\n"
+                "Ann: late trams should become night buses",
+            )
+        ],
+        {
+            "c1": [
+                item(trams, "Trams should run all night"),
+                item(buses, "Night buses should replace late trams", "late trams should become night buses"),
+            ]
+        },
+        model="vertex_ai/text-embedding-004",  # merges at 0.80
+        clock=store.clock,
+    )
+    axis = [[1.0 if i == k else 0.0 for i in range(world.dims)] for k in range(2)]
+    winner = str(uuid.uuid4())
+
+    def _vectors(text: str) -> list[float]:
+        if text == buses:
+            # A concurrent worker saves this statement first, with a vector that
+            # lands on the trams statement; this worker's own vector does not.
+            store.embeddings[winner] = {
+                "id": winner,
+                "project_id": PROJECT,
+                "input_hash": recipe.input_hash(buses),
+                "config_key": world.identity().key,
+                "model": world.model,
+                "dims": world.dims,
+                "embedding": list(axis[0]),
+                "created_at": store.clock.now(),
+            }
+            return axis[1]
+        return axis[0]
+
+    world.vector_for = _vectors
+
+    result_id, outcome = await _generate(store, world)
+
+    assert outcome == "ready"
+    (argument,) = store.results[result_id]["manifest"]["arguments"]
+    assert argument["statement"] == buses  # the better-evidenced statement represents both
+    assert argument["embedding_id"] == winner
+    assert len(argument["candidate_ids"]) == 2
+
+
+def test_embedding_errors_log_no_participant_text(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    import dembrane.embedding as embedding
+
+    class _ProviderError(Exception):
+        status_code = 400
+
+    def _refuse(**kwargs: Any) -> Any:
+        raise _ProviderError(f"invalid input: {kwargs['input']}")
+
+    monkeypatch.setattr(embedding.litellm, "embedding", _refuse)
+    monkeypatch.setattr(embedding, "embedding_kwargs", lambda: {"model": "fake/embedding-model"})
+    caplog.set_level(logging.DEBUG)
+
+    with pytest.raises(_ProviderError):
+        embedding.embed_text.__wrapped__(PARKING)  # one try, without backoff's sleeps
+
+    assert PARKING not in caplog.text
+    assert "_ProviderError (status 400)" in caplog.text
+    assert f"input of {len(PARKING)} characters" in caplog.text
 
 
 # ── what progress and errors may carry ──────────────────────────────────

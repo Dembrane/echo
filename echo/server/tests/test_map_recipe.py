@@ -151,7 +151,7 @@ def test_shape_extraction_caps_quotes_and_tolerates_non_dict_answers() -> None:
     assert shape_extraction({"items": "nope"}, transcript) == ([], 0)
 
 
-def test_merge_conversation_candidates_unions_quotes_but_keeps_valences_apart() -> None:
+def test_merge_conversation_candidates_unions_quotes_but_keeps_every_valence_apart() -> None:
     first = {
         "id": "c-1",
         "conversation_id": "c1",
@@ -163,13 +163,19 @@ def test_merge_conversation_candidates_unions_quotes_but_keeps_valences_apart() 
     }
     same_later = {**first, "quotes": ["Alpha quote", "beta quote"], "order": [1, 3]}
     opposite = {**first, "valence": "negative", "quotes": ["gamma quote"], "order": [1, 4]}
+    # Negative and neutral share a first letter: neither may swallow the other.
+    neutral = {**first, "valence": "neutral", "quotes": ["delta quote"], "order": [1, 5]}
+    opposite_again = {**opposite, "quotes": ["epsilon quote"], "order": [2, 0]}
 
-    merged = merge_conversation_candidates([[first], [same_later, opposite]])
+    merged = merge_conversation_candidates([[first], [same_later, opposite, neutral], [opposite_again]])
 
-    assert [c["id"] for c in merged] == ["c-1", "c-1-n"]
+    assert [c["id"] for c in merged] == ["c-1", "c-1-negative", "c-1-neutral"]
+    assert [c["valence"] for c in merged] == ["positive", "negative", "neutral"]
     assert merged[0]["quotes"] == ["alpha quote", "beta quote"]
-    assert merged[1]["valence"] == "negative"
+    assert merged[1]["quotes"] == ["gamma quote", "epsilon quote"]
+    assert merged[2]["quotes"] == ["delta quote"]
     assert first["quotes"] == ["alpha quote"]  # inputs are not mutated
+    assert opposite["quotes"] == ["gamma quote"]
 
 
 # ── windows and fingerprints ────────────────────────────────────────────
@@ -407,6 +413,34 @@ def test_manifest_raises_when_an_embedding_id_is_missing() -> None:
     groups = [[_candidate("Unembedded")]]
     with pytest.raises(KeyError):
         build_manifest(groups, _transcripts(), {}, stats={}, consolidation={})
+
+
+def test_manifest_ids_keep_every_valence_of_one_statement_apart() -> None:
+    statement = "The square should be car free."
+    groups = [
+        [_candidate(statement, valence=valence, order=(0, index))]
+        for index, valence in enumerate(("positive", "negative", "neutral"))
+    ]
+
+    manifest = build_manifest(
+        groups, _transcripts(), {input_hash(statement): "e1"}, stats={}, consolidation={}
+    )
+
+    base = recipe.node_id(statement, "argument")
+    assert [a["id"] for a in manifest["arguments"]] == [base, f"{base}-negative", f"{base}-neutral"]
+    assert [a["valence"] for a in manifest["arguments"]] == ["positive", "negative", "neutral"]
+
+
+def test_manifest_refuses_two_arguments_with_one_id() -> None:
+    # Consolidation never leaves two groups of one statement, kind and valence;
+    # if it did, the manifest refuses rather than resolving the clash.
+    positive = _candidate("Trams beat buses.")
+    negative = _candidate("Trams beat buses.", valence="negative", order=(0, 1))
+    groups = [[positive], [negative], [{**negative, "order": [0, 2]}]]
+    with pytest.raises(ValueError):
+        build_manifest(
+            groups, _transcripts(), {input_hash("Trams beat buses."): "e1"}, stats={}, consolidation={}
+        )
 
 
 def test_claim_key_follows_statement_and_evidence_only() -> None:

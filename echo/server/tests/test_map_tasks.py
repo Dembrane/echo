@@ -15,6 +15,7 @@ from dembrane.tasks import (
     task_map_fact_check,
     task_transcribe_chunk,
 )
+from dembrane.map.fact_check import ACQUIRE_SECONDS
 
 
 def test_map_generation_rides_the_ticks_queue_with_the_long_limit_and_no_retries() -> None:
@@ -23,11 +24,15 @@ def test_map_generation_rides_the_ticks_queue_with_the_long_limit_and_no_retries
     assert task_map_generate.options["max_retries"] == 0
 
 
-def test_map_fact_checks_ride_the_network_queue_below_transcription() -> None:
-    assert task_map_fact_check.queue_name == task_transcribe_chunk.queue_name == "network"
+def test_map_fact_checks_ride_the_ticks_queue_below_transcription() -> None:
+    # Minutes of async work: never on the gevent network worker's shared loop.
+    assert task_map_fact_check.queue_name == TICK_QUEUE
+    assert task_transcribe_chunk.queue_name == "network"
     # Dramatiq serves lower priority numbers first.
     assert task_map_fact_check.priority > task_transcribe_chunk.priority
     assert task_map_fact_check.options["max_retries"] == 0
+    # A duplicate delivery finds the attempt taken for as long as the first may run.
+    assert task_map_fact_check.options["time_limit"] < ACQUIRE_SECONDS * 1000
 
 
 class _Runner:

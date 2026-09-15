@@ -17,7 +17,7 @@ from tests.map_fakes import (
     ready_result,
     manifest_argument,
 )
-from dembrane.map.store import ActiveAttemptExists
+from dembrane.map.store import ActiveAttemptExists, lease_of
 
 
 @pytest.fixture(autouse=True)
@@ -73,6 +73,7 @@ async def test_project_state_shows_a_newer_running_attempt_with_filtered_progres
     running = await _attempt(store)
     await store.heartbeat(
         running["id"],
+        lease=lease_of(running),
         status="extracting",
         progress={"stage": "extracting", "conversations_total": 3, "extractions": {"c1": {}}},
     )
@@ -89,14 +90,14 @@ async def test_project_state_shows_a_newer_running_attempt_with_filtered_progres
 async def test_project_state_shows_a_newer_failure_but_not_older_or_superseded_attempts() -> None:
     store = FakeMapStore()
     older = await _attempt(store)
-    await store.fail(older["id"], "Saving the map failed.")
+    await store.fail(older["id"], "Saving the map failed.", lease=lease_of(older))
     current = await ready_result(store, _arguments())
 
     state = await service.project_state(PROJECT, store)
     assert state["current"]["id"] == current["id"] and state["attempt"] is None
 
     newer = await _attempt(store)
-    await store.fail(newer["id"], "Reading 1 of 2 conversations failed.")
+    await store.fail(newer["id"], "Reading 1 of 2 conversations failed.", lease=lease_of(newer))
     state = await service.project_state(PROJECT, store)
     assert state["attempt"]["id"] == newer["id"]
     assert state["attempt"]["error"] == "Reading 1 of 2 conversations failed."
@@ -321,6 +322,42 @@ async def test_a_title_is_generated_once_per_selection_and_cached(model_config: 
     other_revision = await ready_result(store, _arguments())
     await _title(other_revision, ["a-1", "a-2", "a-3"], store, redis, titler)
     assert len(titler.calls) == 3
+
+
+@pytest.mark.asyncio
+async def test_a_title_follows_a_finished_verdict_of_its_claims(model_config: Any) -> None:  # noqa: ARG001
+    store = FakeMapStore()
+    redis = FakeAsyncRedis()
+    titler = _Titler()
+    row = await ready_result(store, _arguments())
+    ids = ["a-1", "a-2", "a-3"]
+    claim_line = "The tram line cost 400 million euros."
+
+    assert (await _title(row, ids, store, redis, titler))["cached"] is False
+    assert titler.calls[0]["lines"][2] == f"3. [claim, unverified] {claim_line}"
+
+    check, _ = await store.start_fact_check(
+        project_id=PROJECT,
+        claim_key=row["manifest"]["arguments"][2]["claim_key"],
+        statement="s",
+        requested_by=None,
+        force=False,
+        stale_seconds=60,
+    )
+    # A check still running is no verdict: the title stands.
+    assert (await _title(row, ids, store, redis, titler))["cached"] is True
+
+    await store.complete_fact_check(
+        check["id"], 1, verdict="false", justification="j", sources=[], model="m", prompt_version="p"
+    )
+    changed = await _title(row, ids, store, redis, titler)
+
+    assert changed["cached"] is False and len(titler.calls) == 2
+    assert titler.calls[1]["lines"][2] == f"3. [claim, false] {claim_line}"
+    assert (await _title(row, list(reversed(ids)), store, redis, titler))["cached"] is True
+    # A selection without the claim keeps the title it had.
+    assert (await _title(row, ["a-1", "a-2", "a-4"], store, redis, titler))["cached"] is False
+    assert (await _title(row, ["a-4", "a-2", "a-1"], store, redis, titler))["cached"] is True
 
 
 @pytest.mark.asyncio

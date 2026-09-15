@@ -12,7 +12,7 @@ import logging
 from typing import Any, Callable, Awaitable
 
 from dembrane.map import recipe
-from dembrane.map.store import ACTIVE_STATUSES, MapStore, ActiveAttemptExists
+from dembrane.map.store import ACTIVE_STATUSES, MapStore, ActiveAttemptExists, lease_of
 from dembrane.map.events import publish_map_event
 from dembrane.map.fact_check import STALE_SECONDS as FACT_CHECK_STALE_SECONDS, fact_check_state
 
@@ -217,7 +217,7 @@ async def request_generation(
         await store.set_execution_ref(row["id"], (dispatch or dispatch_generation)(row["id"]))
     except Exception as exc:
         logger.error("map generation %s could not be dispatched: %s", row["id"], exc)
-        await store.fail(row["id"], "The generation could not be started.")
+        await store.fail(row["id"], "The generation could not be started.", lease=lease_of(row))
         raise
     await publish_map_event(project_id, {"type": "queued", "result_id": row["id"]})
     return row
@@ -239,7 +239,8 @@ async def selection_title(
     redis: Any,
     generate: Callable[..., Awaitable[str]] | None = None,
 ) -> dict[str, Any]:
-    """One title per (revision, selection, prompt and model), generated once.
+    """One title per (revision, selection, its claims' verdicts, prompt and
+    model), generated once.
 
     The whole selection goes to the model or the request is refused: a
     selection too large for the prompt is an error, never a partial summary."""
@@ -259,7 +260,9 @@ async def selection_title(
     }
     lines = recipe.title_lines(selected, verdicts)
 
-    config = f"{TITLE_PROMPT}|{model_identity()}"
+    # A finished verdict changes the lines the model reads, so it keys the title too.
+    verdict_state = ",".join(f"{key}={verdicts[key] or 'unverified'}" for key in sorted(verdicts))
+    config = f"{TITLE_PROMPT}|{model_identity()}|{verdict_state}"
     key = "map:title:" + recipe.title_selection_key(row["id"], ordered_ids, config)
     cached = await redis.get(key)
     if cached:

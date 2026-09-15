@@ -2010,11 +2010,13 @@ def task_map_generate(result_id: str) -> None:
     run_async_in_new_loop(lambda: run_generation(result_id))
 
 
-@dramatiq.actor(queue_name="network", priority=40, max_retries=0, time_limit=10 * 60 * 1000)
+@dramatiq.actor(queue_name=TICK_QUEUE, priority=40, max_retries=0, time_limit=10 * 60 * 1000)
 def task_map_fact_check(fact_check_id: str, attempt: int, result_id: str, node_id: str) -> None:
-    """Fact-check one Map claim: two short model calls. Below transcription's
-    priority. A check the shared loop drops is written as an error the analyst
-    can retry, never left processing."""
+    """Fact-check one Map claim: a search-grounded investigation and a
+    classification, each allowed three minutes. Async work that outlasts a
+    minute, so it rides the ticks worker for the reason given above, below
+    transcription's priority. A check that dies is written as an error the
+    analyst can retry, never left processing."""
     from dembrane.map.fact_check import run_fact_check, mark_interrupted
 
     try:

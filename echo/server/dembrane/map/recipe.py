@@ -13,6 +13,8 @@ import hashlib
 from typing import Any, Iterable
 from dataclasses import field, dataclass
 
+# What a saved extraction and manifest mean, and so which failed attempts may
+# resume. A prompt revision that leaves saved extractions valid keeps it.
 RECIPE_VERSION = "map-arguments-v1"
 MANIFEST_VERSION = 1
 
@@ -210,13 +212,13 @@ def merge_conversation_candidates(
     for window in windows:
         for candidate in window:
             existing = merged.get(candidate["id"])
+            if existing is not None and existing["valence"] != candidate["valence"]:
+                # Same words, different attitude: keep them apart, under the
+                # whole valence (negative and neutral share a first letter).
+                candidate = {**candidate, "id": f"{candidate['id']}-{candidate['valence']}"}
+                existing = merged.get(candidate["id"])
             if existing is None:
                 merged[candidate["id"]] = {**candidate, "quotes": list(candidate["quotes"])}
-                continue
-            if existing["valence"] != candidate["valence"]:
-                # Same words, different attitude: keep them apart.
-                alt = {**candidate, "id": candidate["id"] + "-" + candidate["valence"][0]}
-                merged.setdefault(alt["id"], {**alt, "quotes": list(candidate["quotes"])})
                 continue
             known = {q.casefold() for q in existing["quotes"]}
             for quote in candidate["quotes"]:
@@ -413,7 +415,10 @@ def build_manifest(
             raise KeyError(f"no persisted embedding for argument {head['id']}")
         identifier = node_id(head["statement"], head["kind"])
         if identifier in used_ids:
-            identifier = f"{identifier}-{head['valence'][0]}"
+            # The same words with another attitude: consolidation kept them apart.
+            identifier = f"{identifier}-{head['valence']}"
+        if identifier in used_ids:
+            raise ValueError(f"two arguments share the id {identifier}")
         used_ids.add(identifier)
         all_quotes = [q for quotes in evidence_by_conversation.values() for q in quotes]
         created = [item["created_at"] for item in evidence if item["created_at"]]
