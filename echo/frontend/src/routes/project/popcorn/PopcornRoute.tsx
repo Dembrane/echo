@@ -71,7 +71,8 @@ function PopcornSession({
 
 	// The deck follows the same events on its own. This stream keeps the
 	// counts, the status line and the saved runs in step with the tick; nothing
-	// on this page polls.
+	// on this page polls. `connected` lands here too, also after a reconnect,
+	// so whatever an event lost while the stream was down is refetched then.
 	useServerEvents(
 		`${API_BASE_URL}/v2/bff/popcorn/${encodeURIComponent(popcorn.id)}/events`,
 		["update"],

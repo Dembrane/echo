@@ -38,6 +38,10 @@
   // ask in the same instant.
   const EVENT_READ_DELAY_MS = 600;
   const EVENT_READ_JITTER_MS = 300;
+  // A publish can be lost, so an open stream also reads this often.
+  const SAFETY_READ_MS = 60000;
+  // A bundle request still unanswered after this is dropped and asked again.
+  const BUNDLE_TIMEOUT_MS = 20000;
   const POLL_MS = 3000;           // slide files
   const POP_FAST_POLL_MS = 200;   // empty stage: reserve <500ms for detection + paint
   const POP_POLL_MS = 800;        // warm stage and validation updates
@@ -492,10 +496,26 @@
       // in flight every read shares it, and a bundle that took longer than
       // the cache window to arrive is not fetched again by the same load.
       const entry = { at: Number.POSITIVE_INFINITY, promise: null };
-      entry.promise = fetch(`data/bundle.json?t=${now}${presenting ? "&view=room" : ""}${EMBED.version ? `&version=${encodeURIComponent(EMBED.version)}` : ""}`, { cache: "no-store" })
-        .then((res) => (res.ok ? res.json() : null))
-        .catch(() => null)
-        .finally(() => { entry.at = Date.now(); });
+      // A request that never settles would hold every later read on this
+      // promise. Past the timeout it is dropped, and the next read asks again.
+      const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+      const timeout = controller ? setTimeout(() => controller.abort(), BUNDLE_TIMEOUT_MS) : null;
+      entry.promise = fetch(`data/bundle.json?t=${now}${presenting ? "&view=room" : ""}${EMBED.version ? `&version=${encodeURIComponent(EMBED.version)}` : ""}`, { cache: "no-store", signal: controller ? controller.signal : undefined })
+        .then((res) => {
+          // The public bundle answers 404 once the host stops publishing. The
+          // page itself then serves the not-live notice, so load that rather
+          // than leave the old deck up.
+          if (res.status === 404 && EMBED.mode === "public") location.reload();
+          return res.ok ? res.json() : null;
+        })
+        .catch(() => {
+          if (bundleCache === entry) bundleCache = { at: 0, promise: null };
+          return null;
+        })
+        .finally(() => {
+          entry.at = Date.now();
+          if (timeout) clearTimeout(timeout);
+        });
       bundleCache = entry;
     }
     return bundleCache.promise;
@@ -3580,6 +3600,12 @@
     let reading = false;
     let readAgain = false;
     let retryMs = 1000;
+    let open = false;
+    // Every read waits just past the server's bundle cache, a `connected` one
+    // too: a reconnect answered from a bundle cached a moment before the
+    // update it missed would stay stale with no event to follow. First paint
+    // does not wait, because the boot read below is already under way.
+    const later = () => EVENT_READ_DELAY_MS + Math.random() * EVENT_READ_JITTER_MS;
     const read = async () => {
       if (reading) { readAgain = true; return; }
       reading = true;
@@ -3601,18 +3627,24 @@
     };
     const connect = () => {
       const source = new EventSource("events", { withCredentials: true });
-      source.addEventListener("connected", () => { retryMs = 1000; schedule(0); });
-      source.addEventListener("update", () =>
-        schedule(EVENT_READ_DELAY_MS + Math.random() * EVENT_READ_JITTER_MS));
+      source.addEventListener("connected", () => { retryMs = 1000; open = true; schedule(later()); });
+      source.addEventListener("update", () => schedule(later()));
       source.onerror = () => {
+        open = false;
         // A network drop reconnects on its own; a refused stream (session
         // unpublished, signed out) closes, and is retried with backoff.
         if (source.readyState !== EventSource.CLOSED) return;
+        // A public deck the host stopped publishing is refused too: one read
+        // finds out, and its answer swaps the old deck for the not-live page.
+        schedule(later());
         setTimeout(connect, retryMs);
         retryMs = Math.min(retryMs * 2, 30000);
       };
     };
     connect();
+    // A publish can fail and no later event is promised, so while the stream
+    // is open the deck also reads once a minute. A safety net, not a poll.
+    setInterval(() => { if (open) schedule(later()); }, SAFETY_READ_MS);
   }
 
   if (!EMBED) restoreLocal();

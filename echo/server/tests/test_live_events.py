@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import gc
+import asyncio
 from typing import Any
 
 import pytest
+from fastapi import HTTPException
 from redis.exceptions import ConnectionError as RedisConnectionError
 
 from dembrane import live_events
@@ -18,9 +21,14 @@ class FakePubSub:
         self.unsubscribed: list[str] = []
         self.closed = False
         self.error: BaseException | None = None
+        # What happened in order, the stream's side and the browser's side.
+        self.log: list[str] = []
 
     async def subscribe(self, *channels: str) -> None:
+        # Redis answers a subscribe later than the call returns control.
+        await asyncio.sleep(0)
         self.subscribed.extend(channels)
+        self.log.append("subscribed")
 
     async def unsubscribe(self, *channels: str) -> None:
         self.unsubscribed.extend(channels)
@@ -40,8 +48,10 @@ class FakeRedis:
     def __init__(self, pubsub: FakePubSub) -> None:
         self._pubsub = pubsub
         self.published: list[tuple[str, str]] = []
+        self.pubsubs = 0
 
     def pubsub(self) -> FakePubSub:
+        self.pubsubs += 1
         return self._pubsub
 
     async def publish(self, channel: str, data: str) -> int:
@@ -66,11 +76,14 @@ def _use(monkeypatch: pytest.MonkeyPatch, redis: Any) -> None:
     monkeypatch.setattr(live_events, "get_redis_client", _client)
 
 
-async def _collect(response: Any) -> list[str]:
-    return [
-        chunk if isinstance(chunk, str) else chunk.decode("utf-8")
-        async for chunk in response.body_iterator
-    ]
+async def _collect(response: Any, log: list[str] | None = None) -> list[str]:
+    chunks: list[str] = []
+    async for chunk in response.body_iterator:
+        text = chunk if isinstance(chunk, str) else chunk.decode("utf-8")
+        if log is not None:
+            log.append(f"sent {text.split(chr(10))[0]}")
+        chunks.append(text)
+    return chunks
 
 
 def test_decode_event_maps_bare_nudges_to_updates_and_json_to_dicts() -> None:
@@ -98,7 +111,7 @@ async def test_read_skips_empty_messages() -> None:
 
 
 @pytest.mark.asyncio
-async def test_sse_stream_connects_first_transforms_filters_and_stops_on_disconnect(
+async def test_sse_stream_subscribes_before_connected_transforms_filters_and_stops_on_disconnect(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     pubsub = FakePubSub(
@@ -120,8 +133,10 @@ async def test_sse_stream_connects_first_transforms_filters_and_stops_on_disconn
     response = live_events.sse_response(
         request, ["map:project:p1", "map:project:p2"], transform=_transform  # type: ignore[arg-type]
     )
-    chunks = await _collect(response)
+    chunks = await _collect(response, pubsub.log)
 
+    # The page reloads on `connected`, so Redis must already be listening then.
+    assert pubsub.log[:2] == ["subscribed", "sent event: connected"]
     assert response.media_type == "text/event-stream"
     assert response.headers["cache-control"] == "no-cache"
     assert response.headers["x-accel-buffering"] == "no"
@@ -163,6 +178,74 @@ async def test_sse_stream_ends_cleanly_when_redis_drops(monkeypatch: pytest.Monk
 
     assert await _collect(response) == [live_events.format_sse({"type": "connected"})]
     assert pubsub.unsubscribed == ["c"] and pubsub.closed
+
+
+@pytest.mark.asyncio
+async def test_sse_stream_ends_when_access_is_withdrawn(monkeypatch: pytest.MonkeyPatch) -> None:
+    pubsub = FakePubSub([])
+    _use(monkeypatch, FakeRedis(pubsub))
+    answers = [True, False]
+
+    async def _allowed() -> bool:
+        return answers.pop(0)
+
+    response = live_events.sse_response(
+        FakeRequest(disconnect_after=10), ["c"], heartbeat_seconds=0.0, still_allowed=_allowed  # type: ignore[arg-type]
+    )
+
+    # Allowed at the first heartbeat, withdrawn by the second: the stream ends.
+    assert await _collect(response) == [
+        live_events.format_sse({"type": "connected"}),
+        ": keep-alive\n\n",
+    ]
+    assert answers == [] and pubsub.unsubscribed == ["c"] and pubsub.closed
+
+    # A check that cannot answer ends it too; the connect check decides again.
+    broken = FakePubSub([])
+    _use(monkeypatch, FakeRedis(broken))
+
+    async def _unreachable() -> bool:
+        raise RuntimeError("directus down")
+
+    response = live_events.sse_response(
+        FakeRequest(disconnect_after=10), ["c"], heartbeat_seconds=0.0, still_allowed=_unreachable  # type: ignore[arg-type]
+    )
+    assert await _collect(response) == [live_events.format_sse({"type": "connected"})]
+    assert broken.closed
+
+
+@pytest.mark.asyncio
+async def test_sse_streams_are_bounded_per_process_and_per_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    streams = live_events._OpenStreams()
+    monkeypatch.setattr(live_events, "open_streams", streams)
+    redis = FakeRedis(FakePubSub([]))
+    _use(monkeypatch, redis)
+
+    def _open(key: str, **caps: Any) -> Any:
+        return live_events.sse_response(FakeRequest(disconnect_after=0), ["c"], key=key, **caps)  # type: ignore[arg-type]
+
+    first = _open("token:198.51.100.1", max_streams=2, max_streams_per_key=1)
+    with pytest.raises(HTTPException) as refused:
+        _open("token:198.51.100.1", max_streams=2, max_streams_per_key=1)
+    assert refused.value.status_code == 429
+    second = _open("token:198.51.100.2", max_streams=2, max_streams_per_key=1)
+    with pytest.raises(HTTPException) as full:
+        _open("token:198.51.100.3", max_streams=2, max_streams_per_key=1)
+    assert full.value.status_code == 429
+    # A refusal never reaches Redis.
+    assert redis.pubsubs == 0
+    assert streams.total == 2
+
+    # A stream that ends gives its slot back, and the viewer may open again.
+    await _collect(first)
+    assert streams.by_key == {"token:198.51.100.2": 1}
+    again = _open("token:198.51.100.1", max_streams=2, max_streams_per_key=1)
+    assert streams.total == 2
+
+    # So does a response that was never sent, once it is collected.
+    del second, again
+    gc.collect()
+    assert streams.total == 0 and streams.by_key == {}
 
 
 @pytest.mark.asyncio

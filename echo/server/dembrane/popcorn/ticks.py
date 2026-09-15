@@ -1056,6 +1056,7 @@ async def run_popcorn_tick(
                 request_id=request_id,
             )
             await _enqueue_next_if_due(loop)
+            await _nudge_loop(loop)
             return {"status": "no_op", "run": run}
 
         state["run"] = int(state.get("run") or 0) + 1

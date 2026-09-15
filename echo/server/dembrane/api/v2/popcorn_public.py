@@ -9,10 +9,11 @@ assembled bundle.
 from __future__ import annotations
 
 import re
+import time
 from typing import Any
 
 from fastapi import Depends, Request, APIRouter, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 
 from dembrane import live_events
 from dembrane.popcorn.view import LOGO_PATH, render_popcorn_page, render_not_live_page
@@ -101,14 +102,49 @@ async def public_popcorn_bundle(token: str, request: Request) -> JSONResponse:
     return JSONResponse(await bundle_for_report(report, project), headers=NO_STORE)
 
 
+# The connect limiter bounds how fast streams open, not how many stay open.
+# These bound that, per API process: the counters live in memory. A room's
+# screens and phones behind one NAT share a token and an address.
+_MAX_EVENT_STREAMS = 1000
+_MAX_EVENT_STREAMS_PER_VIEWER = 100
+# An open stream asks again at every heartbeat whether the deck is still
+# published; the screens following one token share the answer for a moment.
+_PUBLISHED_CHECK_SECONDS = 10.0
+_published_checks: dict[str, tuple[float, bool]] = {}
+
+
+async def _still_published(token: str) -> bool:
+    now = time.monotonic()
+    checked = _published_checks.get(token)
+    if checked and now - checked[0] < _PUBLISHED_CHECK_SECONDS:
+        return checked[1]
+    try:
+        await _published_report(token)
+        published = True
+    except HTTPException as exc:
+        if exc.status_code != 404:
+            raise
+        published = False
+    if len(_published_checks) > 10_000:
+        _published_checks.clear()
+    _published_checks[token] = (now, published)
+    return published
+
+
 @router.get("/{token}/events")
-async def public_popcorn_events(token: str, request: Request):
+async def public_popcorn_events(token: str, request: Request) -> StreamingResponse:
     """The room's live data: the deck keeps this one stream open and reads its
-    bundle when an update arrives. Events carry no session data at all."""
-    await _page_limiter.check(_client_ip(request))
+    bundle when an update arrives. Events carry no session data at all. The
+    stream ends once the host stops publishing."""
+    client_ip = _client_ip(request)
+    await _page_limiter.check(client_ip)
     report, _project = await _published_report(token)
     return live_events.sse_response(
         request,
         [generation_channel(str(report["id"]))],
         transform=lambda _event: {"type": "update"},
+        max_streams=_MAX_EVENT_STREAMS,
+        key=f"{token}:{client_ip}",
+        max_streams_per_key=_MAX_EVENT_STREAMS_PER_VIEWER,
+        still_allowed=lambda: _still_published(token),
     )

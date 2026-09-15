@@ -772,9 +772,13 @@ def test_a_refresh_with_nothing_new_is_a_no_op(fake: _FakeDirectus, monkeypatch)
     asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
     calls.clear()
     versions = len(fake.created.get("canvas_generation", []))
+    nudges = fake.nudges.count("r1")  # type: ignore[attr-defined]
     result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
     assert result["status"] == "no_op" and calls == []
     assert len(fake.created.get("canvas_generation", [])) == versions
+    # A quiet read also books the next and says so: pages showing "reading
+    # now" and the countdown follow a no-op like any other finished read.
+    assert fake.nudges.count("r1") == nudges + 1  # type: ignore[attr-defined]
     # A stale view alone is enough for a refresh to do something.
     fake.items["agent_loop"]["loop1"]["popcorn_state"]["analysis"]["fingerprints"].pop("tensions")
     result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
