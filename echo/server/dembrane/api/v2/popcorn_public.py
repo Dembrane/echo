@@ -14,7 +14,9 @@ from typing import Any
 from fastapi import Depends, Request, APIRouter, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
+from dembrane import live_events
 from dembrane.popcorn.view import LOGO_PATH, render_popcorn_page, render_not_live_page
+from dembrane.canvas.events import generation_channel
 from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.directus_async import async_directus
 from dembrane.popcorn.bundle import load_settings, bundle_for_report
@@ -26,8 +28,8 @@ router = APIRouter(dependencies=[Depends(require_canvas_enabled)])
 NO_STORE = {"Cache-Control": "no-store"}
 # Tokens are urlsafe base64 from secrets.token_urlsafe; nothing else is a token.
 _TOKEN = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
-# Sized for a venue behind one NAT: the stage polls five times a second while
-# empty and a few screens plus phones may all sit on the same address.
+# Sized for a venue behind one NAT: a few screens plus phones may all sit on
+# the same address, and every one of them reads the bundle on each update.
 _page_limiter = create_rate_limiter(name="popcorn_public_page", capacity=300, window_seconds=60.0)
 _data_limiter = create_rate_limiter(name="popcorn_public_data", capacity=6000, window_seconds=60.0)
 
@@ -97,3 +99,16 @@ async def public_popcorn_bundle(token: str, request: Request) -> JSONResponse:
         raise HTTPException(status_code=429, detail="Too many requests. Try again later.")
     report, project = await _published_report(token)
     return JSONResponse(await bundle_for_report(report, project), headers=NO_STORE)
+
+
+@router.get("/{token}/events")
+async def public_popcorn_events(token: str, request: Request):
+    """The room's live data: the deck keeps this one stream open and reads its
+    bundle when an update arrives. Events carry no session data at all."""
+    await _page_limiter.check(_client_ip(request))
+    report, _project = await _published_report(token)
+    return live_events.sse_response(
+        request,
+        [generation_channel(str(report["id"]))],
+        transform=lambda _event: {"type": "update"},
+    )

@@ -1,7 +1,8 @@
 /* popcorn — live session slides.
    Everything renders from data/*.json; a tab only exists if its file does.
    data/popcorn/<transcriptId>.json files are written incrementally by the
-   analysis agents and polled while the session is live. */
+   analysis agents; while the session is live the deck reads them whenever
+   the server says they changed. */
 
 (() => {
   /* Embedded in dembrane (window.POPCORN_EMBED set by the server): every
@@ -25,6 +26,18 @@
     if (scale >= 0.4 && scale <= 1) document.documentElement.style.zoom = String(scale);
   }
   const MARKERS = ["var(--m0)", "var(--m1)", "var(--m2)", "var(--m3)", "var(--m4)", "var(--m5)"];
+  // Embedded and live (the host's deck or the room's page, not a replay or
+  // the sample), the server sends an event whenever the session changes and
+  // the deck reads then; it never polls. The timers below serve only the
+  // standalone deck reading files from a development server, or a browser
+  // without EventSource.
+  const LIVE = !!(EMBED && (EMBED.mode === "host" || EMBED.mode === "public") && !EMBED.version);
+  const EVENTS = LIVE && typeof EventSource !== "undefined";
+  // The server keeps a bundle for 0.5 s per process: a read on an update waits
+  // just past that, with a little jitter so every screen in a room does not
+  // ask in the same instant.
+  const EVENT_READ_DELAY_MS = 600;
+  const EVENT_READ_JITTER_MS = 300;
   const POLL_MS = 3000;           // slide files
   const POP_FAST_POLL_MS = 200;   // empty stage: reserve <500ms for detection + paint
   const POP_POLL_MS = 800;        // warm stage and validation updates
@@ -475,12 +488,15 @@
   function fetchBundle() {
     const now = Date.now();
     if (!bundleCache.promise || now - bundleCache.at > BUNDLE_MAX_AGE_MS) {
-      bundleCache = {
-        at: now,
-        promise: fetch(`data/bundle.json?t=${now}${presenting ? "&view=room" : ""}${EMBED.version ? `&version=${encodeURIComponent(EMBED.version)}` : ""}`, { cache: "no-store" })
-          .then((res) => (res.ok ? res.json() : null))
-          .catch(() => null),
-      };
+      // The age counts from the answer, not the request: while a request is
+      // in flight every read shares it, and a bundle that took longer than
+      // the cache window to arrive is not fetched again by the same load.
+      const entry = { at: Number.POSITIVE_INFINITY, promise: null };
+      entry.promise = fetch(`data/bundle.json?t=${now}${presenting ? "&view=room" : ""}${EMBED.version ? `&version=${encodeURIComponent(EMBED.version)}` : ""}`, { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .catch(() => null)
+        .finally(() => { entry.at = Date.now(); });
+      bundleCache = entry;
     }
     return bundleCache.promise;
   }
@@ -880,6 +896,9 @@
   function startPopcornPolling() {
     if (popPollingStarted) return;
     popPollingStarted = true;
+    // Embedded, one read now; server events (or, without EventSource, the
+    // slide timer) drive every later one.
+    if (EMBED) { pollPopcorn(); return; }
     const run = async () => {
       try {
         await pollPopcorn();
@@ -3552,11 +3571,57 @@
 
   /* ---------- boot ---------- */
 
+  /* One stream for live data. Every update reads the session, the slides and
+     the popcorn files once. The server opens each stream with `connected`,
+     also after a reconnect, and that reads everything too: an update sent
+     while the stream was down is not replayed. */
+  function followServerEvents() {
+    let timer = null;
+    let reading = false;
+    let readAgain = false;
+    let retryMs = 1000;
+    const read = async () => {
+      if (reading) { readAgain = true; return; }
+      reading = true;
+      try {
+        bundleCache = { at: 0, promise: null };
+        await loadAll();
+        // loadAll has settled this read's bundle; the popcorn files come from
+        // it too, however long drawing the slides took.
+        bundleCache.at = Date.now();
+        await pollPopcorn();
+      } finally {
+        reading = false;
+        if (readAgain) { readAgain = false; schedule(EVENT_READ_DELAY_MS); }
+      }
+    };
+    const schedule = (delay) => {
+      if (timer) return;
+      timer = setTimeout(() => { timer = null; read(); }, delay);
+    };
+    const connect = () => {
+      const source = new EventSource("events", { withCredentials: true });
+      source.addEventListener("connected", () => { retryMs = 1000; schedule(0); });
+      source.addEventListener("update", () =>
+        schedule(EVENT_READ_DELAY_MS + Math.random() * EVENT_READ_JITTER_MS));
+      source.onerror = () => {
+        // A network drop reconnects on its own; a refused stream (session
+        // unpublished, signed out) closes, and is retried with backoff.
+        if (source.readyState !== EventSource.CLOSED) return;
+        setTimeout(connect, retryMs);
+        retryMs = Math.min(retryMs * 2, 30000);
+      };
+    };
+    connect();
+  }
+
   if (!EMBED) restoreLocal();
   loadAll().then(() => {
     const { slide, sub } = parseHash();
     if (slide) showSlide(slide, sub, { replace: true });
   });
-  setInterval(loadAll, POLL_MS);
+  if (EVENTS) followServerEvents();
+  else if (LIVE) setInterval(async () => { await loadAll(); await pollPopcorn(); }, POLL_MS);
+  else if (!EMBED) setInterval(loadAll, POLL_MS);
   setInterval(popTick, 300);
 })();
