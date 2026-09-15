@@ -316,7 +316,7 @@ def _on_chunk_transcription_done(
             logger.error(f"Error checking conversation state for {conversation_id}: {e}")
 
 
-@dramatiq.actor(queue_name="network", priority=20)
+@dramatiq.actor(queue_name="network", priority=20, max_retries=20)
 def task_finalize_conversation(conversation_id: str) -> None:
     """
     Finalize a conversation after all chunks are transcribed.
@@ -341,6 +341,7 @@ def task_finalize_conversation(conversation_id: str) -> None:
     )
     from dembrane.service.conversation import ConversationNotFoundException
 
+    lock_held = False
     try:
         logger.info(f"Finalizing conversation: {conversation_id}")
 
@@ -357,6 +358,7 @@ def task_finalize_conversation(conversation_id: str) -> None:
                 f"Conversation {conversation_id} finalization already in progress, skipping"
             )
             return
+        lock_held = True
 
         pending = get_pending_chunks(conversation_id)
         counts = conversation_service.get_chunk_counts(conversation_id)
@@ -427,10 +429,16 @@ def task_finalize_conversation(conversation_id: str) -> None:
         return
     except Exception as e:
         logger.error(f"Error finalizing conversation {conversation_id}: {e}")
+        # Only our own lock: a failure before acquiring must not free another
+        # worker's. Retries land inside the TTL and would otherwise no-op.
+        if lock_held:
+            from dembrane.coordination import clear_finalize_in_progress
+
+            clear_finalize_in_progress(conversation_id)
         raise
 
 
-@dramatiq.actor(queue_name="network", priority=30)
+@dramatiq.actor(queue_name="network", priority=30, max_retries=20)
 def task_summarize_conversation(conversation_id: str) -> None:
     """
     Summarize a conversation. The results are not returned. You can find it in
@@ -451,6 +459,7 @@ def task_summarize_conversation(conversation_id: str) -> None:
     from dembrane.service.project import ProjectNotFoundException
     from dembrane.service.conversation import ConversationNotFoundException
 
+    lock_held = False
     try:
         from dembrane.service import conversation_service
 
@@ -486,6 +495,7 @@ def task_summarize_conversation(conversation_id: str) -> None:
                 f"Conversation {conversation_id} summarization already in progress, skipping"
             )
             return
+        lock_held = True
 
         # Log chunk status before summarizing
         try:
@@ -539,13 +549,14 @@ def task_summarize_conversation(conversation_id: str) -> None:
         return
     except ConversationNotFoundException:
         logger.error(f"Conversation not found: {conversation_id}")
-        # Non-retriable error - clear lock
-        clear_summarize_in_progress(conversation_id)
+        if lock_held:
+            clear_summarize_in_progress(conversation_id)
         return
     except ProjectNotFoundException:
         # Project soft-deleted after the conversation was queued; not retriable.
         logger.info(f"Project gone for conversation {conversation_id}, skipping summary")
-        clear_summarize_in_progress(conversation_id)
+        if lock_held:
+            clear_summarize_in_progress(conversation_id)
         return
     except Exception as e:
         # Tier-locked (free tier): summarize_conversation raises HTTPException 402
@@ -560,15 +571,18 @@ def task_summarize_conversation(conversation_id: str) -> None:
                 f"Conversation {conversation_id} is tier-locked (402); skipping summary "
                 "until the workspace upgrades (catch-up will retry)."
             )
-            clear_summarize_in_progress(conversation_id)
+            if lock_held:
+                clear_summarize_in_progress(conversation_id)
             return
         logger.error(f"Error: {e}")
-        # Retriable error - don't clear lock, let TTL handle it
-        # This prevents catch-up task from starting duplicate work during retry window
+        # Only our own lock: a failure before acquiring must not free another
+        # worker's. Retries land inside the TTL and would otherwise no-op.
+        if lock_held:
+            clear_summarize_in_progress(conversation_id)
         raise e from e
 
 
-@dramatiq.actor(store_results=True, queue_name="cpu", priority=10)
+@dramatiq.actor(store_results=True, queue_name="cpu", priority=10, max_retries=20)
 def task_merge_conversation_chunks(conversation_id: str) -> None:
     """
     Merge conversation chunks.
@@ -715,7 +729,7 @@ def _stamp_over_cap(conversation_id: str, logger: Any) -> None:
     )
 
 
-@dramatiq.actor(queue_name="network", priority=30)
+@dramatiq.actor(queue_name="network", priority=30, max_retries=20)
 def task_finish_conversation_hook(conversation_id: str) -> None:
     """
     Handle user/scheduler signal that a conversation is finished.
@@ -736,6 +750,7 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
     from dembrane.coordination import get_pending_chunks, mark_finish_in_progress
     from dembrane.service.conversation import ConversationNotFoundException
 
+    lock_held = False
     try:
         logger.info(f"Finishing conversation: {conversation_id}")
 
@@ -751,6 +766,7 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
                 f"Conversation {conversation_id} finish already in progress by another task, skipping"
             )
             return
+        lock_held = True
 
         # Mark as finished (user intent)
         conversation_service.update(conversation_id=conversation_id, is_finished=True)
@@ -803,24 +819,28 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
 
     except ConversationNotFoundException:
         logger.error(f"NO RETRY: Conversation not found: {conversation_id}")
-        # Clear lock on non-retriable error
-        try:
-            from dembrane.coordination import clear_finish_in_progress
+        if lock_held:
+            try:
+                from dembrane.coordination import clear_finish_in_progress
 
-            clear_finish_in_progress(conversation_id)
-        except Exception:
-            pass
+                clear_finish_in_progress(conversation_id)
+            except Exception:
+                pass
         return
 
     except Exception as e:
         logger.error(f"Error: {e}")
-        # Don't clear lock on retriable error - let retry proceed
-        # Lock has 5 min TTL as safety net
+        # Only our own lock: a failure before acquiring must not free another
+        # worker's. Retries land inside the TTL and would otherwise no-op.
+        if lock_held:
+            from dembrane.coordination import clear_finish_in_progress
+
+            clear_finish_in_progress(conversation_id)
         raise e from e
 
 
 # cpu because it is also bottlenecked by the cpu queue due to the split_audio_chunk task
-@dramatiq.actor(queue_name="cpu", priority=0)
+@dramatiq.actor(queue_name="cpu", priority=0, max_retries=20)
 def task_process_conversation_chunk(
     chunk_id: str,
     use_pii_redaction: bool = False,
@@ -897,22 +917,15 @@ def task_process_conversation_chunk(
         )
         return
     except Exception as e:
-        from dembrane.audio_utils import FileTooSmallError
+        from dembrane.audio_utils import UNPLAYABLE_AUDIO_ERRORS
 
-        # Handle FileTooSmallError gracefully - mark chunk with error, don't retry
-        if isinstance(e, FileTooSmallError):
-            logger.warning(
-                f"Chunk {chunk_id} has audio file too small to process. "
-                f"Marking with error instead of retrying. Error: {e}"
-            )
-            try:
-                from dembrane.service import conversation_service
+        # Confirmed bad bytes do not improve on retry: mark the chunk and stop.
+        # A failed mark re-raises so the retry can persist it.
+        if isinstance(e, UNPLAYABLE_AUDIO_ERRORS):
+            logger.warning(f"Chunk {chunk_id} is unreadable, marking with error: {e}")
+            from dembrane.service import conversation_service
 
-                conversation_service.update_chunk(chunk_id, error="Audio not playable")
-                logger.info(f"Chunk {chunk_id} marked with error 'Audio not playable'")
-            except Exception as update_error:
-                logger.error(f"Failed to update chunk {chunk_id} with error: {update_error}")
-            # Don't re-raise - this is a non-retriable error
+            conversation_service.update_chunk(chunk_id, error="Audio not playable")
             return
 
         logger.error(f"Error processing conversation chunk@[{chunk_id}]: {e}")

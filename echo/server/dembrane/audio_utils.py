@@ -83,6 +83,12 @@ class FFmpegError(Exception):
     pass
 
 
+class InvalidAudioError(FFmpegError):
+    """FFmpeg or ffprobe rejected the bytes themselves. Retrying cannot help."""
+
+    pass
+
+
 class NoMergeableChunksError(ValueError):
     """Every input chunk failed to probe, so a retry cannot produce a merge."""
 
@@ -114,6 +120,31 @@ class FileTooSmallError(Exception):
 
 # Raised for chunk bytes that will not change on retry.
 _TERMINAL_CHUNK_ERRORS = (ValueError, FFmpegError, FileTooLargeError, FileTooSmallError)
+
+# Narrower: only errors that prove the bytes are bad. A generic FFmpegError can
+# also mean ffmpeg was killed under memory pressure, which a retry may survive.
+UNPLAYABLE_AUDIO_ERRORS = (InvalidAudioError, FileTooLargeError, FileTooSmallError)
+
+# ffprobe diagnostics that name the bytes as the problem.
+_INVALID_INPUT_MARKERS = (
+    "Invalid data found when processing input",
+    "Failed to find two consecutive MPEG audio frames",
+    "moov atom not found",
+    "EBML header parsing failed",
+    "Invalid argument",
+    "End of file",
+    "Header missing",
+)
+
+
+def _classify_ffprobe_failure(returncode: int, stderr: str) -> FFmpegError:
+    """A killed process (negative code) or an unrecognised message is retryable."""
+    message = f"ffprobe error: {stderr or 'Unknown error'}"
+    if returncode < 0:
+        return FFmpegError(f"{message} (killed, signal {-returncode})")
+    if any(marker in stderr for marker in _INVALID_INPUT_MARKERS):
+        return InvalidAudioError(message)
+    return FFmpegError(message)
 
 
 settings = get_settings()
@@ -274,7 +305,7 @@ def convert_and_save_to_s3(
             if "No such file or directory" in error_message:
                 raise FFmpegError(f"Input file not found: {input_file_name}")
             elif "Invalid data found when processing input" in error_message:
-                raise FFmpegError("Invalid or corrupted input file")
+                raise InvalidAudioError("Invalid or corrupted input file")
             elif "Memory allocation error" in error_message:
                 raise FFmpegError(
                     f"Memory allocation failed - file too large. "
@@ -603,9 +634,8 @@ def probe_from_bytes(file_bytes: bytes, input_format: str) -> dict:
                     logger.debug(f"ffprobe stderr (with format): {stderr_output}")
 
                 if process.returncode != 0:
-                    error = stderr_output or "Unknown error"
-                    logger.error(f"ffprobe error: {error}")
-                    raise FFmpegError(f"ffprobe error: {error}")
+                    logger.error(f"ffprobe error: {stderr_output or 'Unknown error'}")
+                    raise _classify_ffprobe_failure(process.returncode, stderr_output)
 
             output = process.stdout.decode()
             if not output:

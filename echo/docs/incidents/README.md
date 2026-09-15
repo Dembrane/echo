@@ -28,6 +28,7 @@ from the rule. Do not restate it in two places.
 | [agent-missing-from-build-matrix.md](agent-missing-from-build-matrix.md) | Every deployment referencing an image tag needs a build-matrix entry that produces that tag. Nothing else notices when one does not. |
 | [dramatiq-actor-event-loops.md](dramatiq-actor-event-loops.md) | Never create and close an event loop per call inside a worker. Go through `run_async_in_new_loop`, which owns one long-lived loop. |
 | [validate-execution-not-construction.md](validate-execution-not-construction.md) | A dependency migration is validated by running the real path end to end, never by confirming imports and constructors work. |
+| [redis-coordination-orphan-locks.md](redis-coordination-orphan-locks.md) | A Redis lock is one `SET NX EX`, never `setnx` then `expire`. Release it on failure only if this invocation acquired it. |
 
 ## Related
 

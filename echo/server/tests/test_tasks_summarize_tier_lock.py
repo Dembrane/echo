@@ -79,8 +79,9 @@ def test_summarize_genuine_error_still_retries(monkeypatch):
     # Non-402 errors must propagate so dramatiq retries them...
     with pytest.raises(RuntimeError):
         tasks.task_summarize_conversation("conv-error")
-    # ...and the lock must be retained (let TTL handle it during the retry window).
-    assert cleared == []
+    # ...and the lock is released: the first retries land inside the 10 minute
+    # TTL and would otherwise hit "already in progress" and do nothing.
+    assert cleared == ["conv-error"]
 
 
 def test_summarize_delegates_retry_boundary_to_async_helper(monkeypatch):

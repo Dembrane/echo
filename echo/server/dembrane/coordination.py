@@ -53,6 +53,16 @@ def _get_sync_redis_client() -> Any:
     return redis.from_url(connection_string, decode_responses=True)
 
 
+def _acquire_lock(client: Any, key: str, ttl_seconds: int) -> bool:
+    """One SET NX EX. A held key with no TTL (orphan) is given one."""
+    if client.set(key, "1", nx=True, ex=ttl_seconds):
+        return True
+    if client.ttl(key) == -1:
+        client.expire(key, ttl_seconds)
+        logger.warning(f"Coordination key {key} had no TTL; set to {ttl_seconds}s")
+    return False
+
+
 def _pending_chunks_key(conversation_id: str) -> str:
     """Redis key for tracking pending chunks count."""
     return f"{_KEY_PREFIX}:pending_chunks:{conversation_id}"
@@ -85,8 +95,11 @@ def increment_pending_chunks(conversation_id: str, count: int = 1) -> int:
     key = _pending_chunks_key(conversation_id)
 
     try:
-        new_count = int(client.incrby(key, count))
-        client.expire(key, _KEY_TTL_SECONDS)
+        # One transaction, so a crash cannot leave a counter with no TTL.
+        pipe = client.pipeline(transaction=True)
+        pipe.incrby(key, count)
+        pipe.expire(key, _KEY_TTL_SECONDS)
+        new_count = int(pipe.execute()[0])
         logger.debug(f"Incremented pending chunks for {conversation_id}: {new_count}")
         return new_count
     finally:
@@ -117,7 +130,7 @@ def decrement_pending_chunks(conversation_id: str) -> int:
                 f"Pending chunks for {conversation_id} went negative ({new_count}), "
                 "clamping to 0. This may indicate a bug in increment/decrement calls."
             )
-            client.set(key, 0)
+            client.set(key, 0, ex=_KEY_TTL_SECONDS)
             new_count = 0
 
         logger.debug(f"Decremented pending chunks for {conversation_id}: {new_count}")
@@ -186,12 +199,10 @@ def mark_processing_started(conversation_id: str) -> bool:
     key = _processing_started_key(conversation_id)
 
     try:
-        # SETNX returns True if key was set, False if it already existed
-        was_set = client.setnx(key, "1")
-        if was_set:
-            client.expire(key, _KEY_TTL_SECONDS)
+        acquired = _acquire_lock(client, key, _KEY_TTL_SECONDS)
+        if acquired:
             logger.debug(f"Marked processing started for {conversation_id}")
-        return bool(was_set)
+        return acquired
     finally:
         client.close()
 
@@ -278,12 +289,10 @@ def mark_finish_in_progress(conversation_id: str) -> bool:
     key = _finish_in_progress_key(conversation_id)
 
     try:
-        # SETNX returns True if key was set, False if it already existed
-        was_set = client.setnx(key, "1")
-        if was_set:
-            client.expire(key, _FINISH_LOCK_TTL_SECONDS)
+        acquired = _acquire_lock(client, key, _FINISH_LOCK_TTL_SECONDS)
+        if acquired:
             logger.debug(f"Acquired finish lock for {conversation_id}")
-        return bool(was_set)
+        return acquired
     finally:
         client.close()
 
@@ -328,11 +337,10 @@ def mark_finalize_in_progress(conversation_id: str) -> bool:
     key = _finalize_in_progress_key(conversation_id)
 
     try:
-        was_set = client.setnx(key, "1")
-        if was_set:
-            client.expire(key, _FINALIZE_LOCK_TTL_SECONDS)
+        acquired = _acquire_lock(client, key, _FINALIZE_LOCK_TTL_SECONDS)
+        if acquired:
             logger.debug(f"Acquired finalize lock for {conversation_id}")
-        return bool(was_set)
+        return acquired
     finally:
         client.close()
 
@@ -371,11 +379,10 @@ def mark_chunk_decremented(conversation_id: str, chunk_id: str) -> bool:
     key = _chunk_decremented_key(conversation_id, chunk_id)
 
     try:
-        was_set = client.setnx(key, "1")
-        if was_set:
-            client.expire(key, _CHUNK_DECREMENT_TTL_SECONDS)
+        acquired = _acquire_lock(client, key, _CHUNK_DECREMENT_TTL_SECONDS)
+        if acquired:
             logger.debug(f"Marked chunk {chunk_id} as decremented for {conversation_id}")
-        return bool(was_set)
+        return acquired
     finally:
         client.close()
 
@@ -411,11 +418,10 @@ def mark_summarize_in_progress(conversation_id: str) -> bool:
     key = _summarize_in_progress_key(conversation_id)
 
     try:
-        was_set = client.setnx(key, "1")
-        if was_set:
-            client.expire(key, _SUMMARIZE_LOCK_TTL_SECONDS)
+        acquired = _acquire_lock(client, key, _SUMMARIZE_LOCK_TTL_SECONDS)
+        if acquired:
             logger.debug(f"Acquired summarize lock for {conversation_id}")
-        return bool(was_set)
+        return acquired
     finally:
         client.close()
 

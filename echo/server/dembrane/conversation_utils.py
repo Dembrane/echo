@@ -147,15 +147,45 @@ def collect_unsummarized_conversations(limit: int = 50) -> List[str]:
     Returns:
         List of conversation IDs that need summarization.
     """
+    from dembrane.tier_capacity import OVERAGE_TIERS
+
     response = directus.get_items(
         "conversation",
         {
             "query": {
                 "filter": {
                     "is_all_chunks_transcribed": True,
-                    "_or": [
-                        {"summary": {"_null": True}},
-                        {"summary": {"_empty": True}},
+                    "_and": [
+                        {
+                            "_or": [
+                                {"summary": {"_null": True}},
+                                {"summary": {"_empty": True}},
+                            ]
+                        },
+                        # Mirrors is_conversation_locked (ADR 0001): over cap AND a
+                        # capped tier. Locked rows would otherwise fill this window.
+                        {
+                            "_or": [
+                                {"is_over_cap": {"_eq": False}},
+                                {"is_over_cap": {"_null": True}},
+                                {
+                                    "project_id": {
+                                        "workspace_id": {
+                                            "billing_account_id": {
+                                                "tier": {"_in": sorted(OVERAGE_TIERS)}
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "project_id": {
+                                        "workspace_id": {
+                                            "billing_account_id": {"tier": {"_null": True}}
+                                        }
+                                    }
+                                },
+                            ]
+                        },
                     ],
                     "deleted_at": {"_null": True},
                     # A soft-deleted project takes its conversations out of the pipeline.

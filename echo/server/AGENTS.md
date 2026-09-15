@@ -33,6 +33,9 @@ When fixing or extending Dramatiq flows:
    - L2 `task_reconcile_transcribed_flag` (~3 min) → sets `is_all_chunks_transcribed=True` for finished conversations with no pending chunks
    - L3 `task_catch_up_unsummarized_conversations` (~5 min) → `is_all_chunks_transcribed=True AND summary=null` → summarize
 4. **TEXT and AUDIO conversations share the same state machine**; both must converge to the same flags
+5. **Redis locks go through `_acquire_lock` in `coordination.py`**, one `SET NX EX`. A `setnx` followed by `expire` leaves a permanent lock if the worker dies in between. Actors release their lock on failure only if they acquired it. See [../docs/incidents/redis-coordination-orphan-locks.md](../docs/incidents/redis-coordination-orphan-locks.md)
+6. **Retries stay at 20; bad input is handled by classification, not a low cap.** Only errors that prove the bytes are bad are terminal. A killed ffmpeg or an S3 or Directus blip must keep retrying, nothing re-drives a stranded chunk
+7. **Catch-up windows exclude what cannot progress.** `collect_unsummarized_conversations` mirrors `is_conversation_locked` (ADR 0001): the `is_over_cap` stamp is permanent, the lock is live, so it filters on the account tier too
 
 The event-loop rules for actors live in @../AGENTS.md, "Dramatiq & Async Rules". The production failures behind them (closed-loop httpx pools, sniffio under gevent, the `nest_asyncio` fallback misfiring across greenlets) are written up in [../docs/incidents/dramatiq-actor-event-loops.md](../docs/incidents/dramatiq-actor-event-loops.md). Read it before touching `dembrane/async_helpers.py`.
 
