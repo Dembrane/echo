@@ -14,10 +14,17 @@ evaluates verification alone. `--real-embeddings` embeds every statement with
 the configured deployment and uses that model's calibrated threshold, which
 evaluates candidate discovery as well.
 
+A `should_merge` entry is either a list of ids that belong in one item, or
+`{"any_of": [grouping, ...], "why": "..."}` where each grouping is a list of
+id sets and every grouping covers the same ids. A result satisfies an entry
+when every set of at least one grouping lies within one output item each.
+`must_not_merge` pairs have no alternatives.
+
 False merges (a must-not-merge pair in one output item) and missed duplicates
-(a should-merge set split across items) are reported separately. False merges
-are the more serious failure and make the exit status 1. Merges the corpus
-does not mention are listed for review, not scored.
+(an entry no acceptable grouping satisfies, reported against the grouping it
+comes closest to) are reported separately. False merges are the more serious
+failure and make the exit status 1. Merges the corpus does not mention are
+listed for review, not scored.
 """
 
 from __future__ import annotations
@@ -43,6 +50,14 @@ def load_cases(names: list[str]) -> list[dict[str, Any]]:
     return cases
 
 
+def alternatives(entry: list[str] | dict[str, Any]) -> list[list[list[str]]]:
+    """Every acceptable grouping of one should-merge entry; a plain list of
+    ids is the single grouping that keeps them all together."""
+    if isinstance(entry, dict):
+        return [[list(members) for members in grouping] for grouping in entry["any_of"]]
+    return [[list(entry)]]
+
+
 def score(case: dict[str, Any], groups: list[list[str]]) -> dict[str, Any]:
     """`groups` is every output item's member ids."""
     home = {member: index for index, group in enumerate(groups) for member in group}
@@ -51,16 +66,45 @@ def score(case: dict[str, Any], groups: list[list[str]]) -> dict[str, Any]:
         for entry in case["must_not_merge"]
         if home[entry["pair"][0]] == home[entry["pair"][1]]
     ]
-    missed = [
-        {"expected": members, "split_into": sorted({tuple(groups[home[m]]) for m in members})}
-        for members in case["should_merge"]
-        if len({home[m] for m in members}) > 1
+    missed: list[dict[str, Any]] = []
+    for entry in case["should_merge"]:
+        options = alternatives(entry)
+        splits = [
+            [members for members in grouping if len({home[m] for m in members}) > 1]
+            for grouping in options
+        ]
+        if any(not split for split in splits):
+            continue
+        apart = [
+            sum(
+                1
+                for members in grouping
+                for i, a in enumerate(members)
+                for b in members[i + 1 :]
+                if home[a] != home[b]
+            )
+            for grouping in options
+        ]
+        closest = min(range(len(options)), key=lambda index: (apart[index], index))
+        missed.extend(
+            {
+                "expected": members,
+                "split_into": sorted({tuple(groups[home[m]]) for m in members}),
+                "grouping": closest,
+                "groupings": len(options),
+            }
+            for members in splits[closest]
+        )
+    acceptable = [
+        set(members)
+        for entry in case["should_merge"]
+        for grouping in alternatives(entry)
+        for members in grouping
     ]
-    expected_sets = [set(members) for members in case["should_merge"]]
     unlisted = [
         group
         for group in groups
-        if len(group) > 1 and not any(set(group) <= expected for expected in expected_sets)
+        if len(group) > 1 and not any(set(group) <= expected for expected in acceptable)
     ]
     return {"false_merges": false_merges, "missed_duplicates": missed, "unlisted_merges": unlisted}
 
@@ -152,7 +196,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"    {entry['pair']} [{entry['guard']}] {entry['why']}")
         print(f"  missed duplicates: {len(report['missed_duplicates'])}")
         for entry in report["missed_duplicates"]:
-            print(f"    {entry['expected']} split into {entry['split_into']}")
+            which = (
+                f" (closest of {entry['groupings']} acceptable groupings)"
+                if entry["groupings"] > 1
+                else ""
+            )
+            print(f"    {entry['expected']} split into {entry['split_into']}{which}")
         for group in report["unlisted_merges"]:
             print(f"  unlisted merge, review: {group}")
         print(f"  usage: {report['usage']}")

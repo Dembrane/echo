@@ -60,7 +60,15 @@
       "embedding": [1, 0, 0, 0, 0, 0.2]
     }
   ],
-  "should_merge": [["mi1", "mi2", "mi3", "mi4"]],
+  "should_merge": [
+    {
+      "any_of": [
+        [["mi1", "mi2", "mi3", "mi4"]],
+        [["mi1", "mi3"], ["mi2", "mi4"]]
+      ],
+      "why": "All four ask for more trams to the east side. mi2 and mi4 ask for trams more often, mi1 and mi3 for more trams; keeping quantity apart from frequency is also acceptable."
+    }
+  ],
   "must_not_merge": [
     {"pair": ["mi1", "mi5"], "guard": "model", "why": "The minority adds a condition: only if bus lines stay."},
     {"pair": ["mi2", "mi5"], "guard": "model", "why": "The minority adds a condition: only if bus lines stay."},

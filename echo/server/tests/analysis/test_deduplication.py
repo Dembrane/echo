@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from dembrane.analysis.recipes import deduplication as dd
+from tests.analysis.eval_deduplication import score, alternatives
 
 CONFIG = "cfg-synthetic"
 MODEL = "text-embedding-004"
@@ -799,10 +800,20 @@ def corpus_arguments(case: dict[str, Any]) -> list[dd.SourceArgument]:
     ]
 
 
-def expected_verifier(case: dict[str, Any]) -> FakeVerifier:
-    """A verifier that answers exactly as the corpus expects: members of one
-    should-merge set together, everyone else on their own."""
-    sets = [set(members) for members in case["should_merge"]]
+def chosen_sets(case: dict[str, Any], choice: int) -> list[set[str]]:
+    """The sets of each should-merge entry's `choice`th acceptable grouping,
+    or its last one when it has fewer."""
+    sets = []
+    for entry in case["should_merge"]:
+        options = alternatives(entry)
+        sets.extend(set(members) for members in options[min(choice, len(options) - 1)])
+    return sets
+
+
+def expected_verifier(case: dict[str, Any], choice: int = 0) -> FakeVerifier:
+    """A verifier that answers exactly as one acceptable grouping expects:
+    members of one set together, everyone else on their own."""
+    sets = chosen_sets(case, choice)
 
     def answer(request: dd.VerificationRequest) -> dict[str, Any]:
         by_set: dict[int, list[str]] = {}
@@ -822,6 +833,11 @@ def expected_verifier(case: dict[str, Any]) -> FakeVerifier:
 
 CASES = corpus_cases()
 CASE_IDS = [case["id"] for case in CASES]
+CASE_CHOICES = [
+    pytest.param(case, choice, id=f"{case['id']}-grouping{choice}")
+    for case in CASES
+    for choice in range(max([len(alternatives(e)) for e in case["should_merge"]] or [1]))
+]
 
 
 def test_the_corpus_covers_every_required_kind_of_case() -> None:
@@ -848,9 +864,20 @@ def test_corpus_case_is_consistent_with_candidate_discovery(case: dict[str, Any]
     containers = [set(group.revision_ids) for group in discovery.groups] + [
         set(unit) for unit in discovery.units
     ]
-    for members in case["should_merge"]:
-        assert set(members) <= set(ids)
-        assert any(set(members) <= container for container in containers), members
+    forbidden = [set(entry["pair"]) for entry in case["must_not_merge"]]
+    for entry in case["should_merge"]:
+        options = alternatives(entry)
+        if isinstance(entry, dict):
+            assert entry["why"] and len(options) > 1
+        covered = [sorted(m for members in grouping for m in members) for grouping in options]
+        assert all(ids_of == covered[0] for ids_of in covered), entry
+        for grouping in options:
+            flat = [m for members in grouping for m in members]
+            assert len(flat) == len(set(flat)), grouping
+            for members in grouping:
+                assert len(members) >= 2 and set(members) <= set(ids)
+                assert any(set(members) <= container for container in containers), members
+                assert not any(pair <= set(members) for pair in forbidden), members
     for entry in case["must_not_merge"]:
         assert entry["guard"] in {"code", "model"} and entry["why"]
         a, b = entry["pair"]
@@ -859,22 +886,53 @@ def test_corpus_case_is_consistent_with_candidate_discovery(case: dict[str, Any]
             assert not any({a, b} <= container for container in containers), entry
 
 
-@pytest.mark.parametrize("case", CASES, ids=CASE_IDS)
+@pytest.mark.parametrize("case, choice", CASE_CHOICES)
 @pytest.mark.asyncio
 async def test_corpus_expected_answers_give_no_false_merges_and_no_missed_duplicates(
-    case: dict[str, Any],
+    case: dict[str, Any], choice: int
 ) -> None:
     arguments = corpus_arguments(case)
     result = await dd.deduplicate(
-        arguments, params(embedding_model=case["embedding_model"]), expected_verifier(case)
+        arguments, params(embedding_model=case["embedding_model"]), expected_verifier(case, choice)
     )
     assert_accounts(arguments, result)
     for entry in case["must_not_merge"]:
         assert not together(result, *entry["pair"]), entry
-    for members in case["should_merge"]:
-        assert set(item_of(result, members[0]).member_revision_ids) == set(members)
     merged = {frozenset(item.member_revision_ids) for item in result.consolidated}
-    assert merged == {frozenset(members) for members in case["should_merge"]}
+    assert merged == {frozenset(members) for members in chosen_sets(case, choice)}
+    report = score(case, [list(item.member_revision_ids) for item in result.items])
+    assert report == {"false_merges": [], "missed_duplicates": [], "unlisted_merges": []}
+
+
+def test_scoring_accepts_any_listed_grouping_and_reports_the_rest() -> None:
+    case = next(case for case in CASES if case["id"] == "minority-arguments")
+    rest = [["mi5"], ["mi6"], ["mi7"]]
+
+    for groups in ([["mi1", "mi2", "mi3", "mi4"]], [["mi1", "mi3"], ["mi2", "mi4"]]):
+        report = score(case, groups + rest)
+        assert report == {"false_merges": [], "missed_duplicates": [], "unlisted_merges": []}
+
+    partial = score(case, [["mi1", "mi3"], ["mi2"], ["mi4"], *rest])
+    assert partial["false_merges"] == [] and partial["unlisted_merges"] == []
+    assert partial["missed_duplicates"] == [
+        {
+            "expected": ["mi2", "mi4"],
+            "split_into": [("mi2",), ("mi4",)],
+            "grouping": 1,
+            "groupings": 2,
+        }
+    ]
+
+    wrong = score(case, [["mi1", "mi2"], ["mi3", "mi4", "mi5"], ["mi6"], ["mi7"]])
+    assert [entry["pair"] for entry in wrong["false_merges"]] == [["mi3", "mi5"], ["mi4", "mi5"]]
+    assert [(e["expected"], e["grouping"]) for e in wrong["missed_duplicates"]] == [
+        (["mi1", "mi3"], 1),
+        (["mi2", "mi4"], 1),
+    ]
+    assert wrong["unlisted_merges"] == [["mi3", "mi4", "mi5"]]
+
+    plain = {"should_merge": [["a", "b"]], "must_not_merge": []}
+    assert score(plain, [["a"], ["b"]])["missed_duplicates"][0]["groupings"] == 1
 
 
 @pytest.mark.parametrize("case", CASES, ids=CASE_IDS)
