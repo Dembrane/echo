@@ -38,6 +38,7 @@ from dembrane.api.v2.bff.goals import (
 from dembrane.api.v2.bff.memory import router as bff_memory_router
 from dembrane.api.v2.onboarding import router as onboarding_router
 from dembrane.api.v2.workspaces import router as workspaces_router
+from dembrane.api.v2.bff.map import router as bff_map_router
 from dembrane.api.v2.bff.popcorn import router as bff_popcorn_router
 from dembrane.api.v2.bff.reports import (
     router as bff_reports_router,
@@ -160,6 +161,7 @@ v2_router.include_router(
     bff_canvases_router, prefix="/bff/canvases", tags=["v2:bff:canvases"]
 )
 v2_router.include_router(bff_popcorn_router, prefix="/bff/popcorn", tags=["v2:bff:popcorn"])
+v2_router.include_router(bff_map_router, prefix="/bff/map", tags=["v2:bff:map"])
 v2_router.include_router(
     popcorn_public_router, prefix="/popcorn/public", tags=["v2:popcorn-public"]
 )
