@@ -1,0 +1,95 @@
+{
+  "id": "qualifications",
+  "description": "Near-duplicates that differ in population, time, conditions, certainty or quantity. Each pair sits close in embedding space; none may merge.",
+  "embedding_model": "text-embedding-004",
+  "inputs": [
+    {
+      "id": "q1",
+      "statement": "Children need safer walking routes to school.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-1", "quote": "the kids need a safer way to walk to school"}],
+      "embedding": [1, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "q2",
+      "statement": "Everyone needs safer walking routes in the neighbourhood.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-2", "quote": "walking around here should be safer for everybody"}],
+      "embedding": [1, 0.2, 0, 0, 0, 0]
+    },
+    {
+      "id": "q3",
+      "statement": "The park should close at 22:00 from next summer onwards.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-1", "quote": "from next summer the park should close at ten"}],
+      "embedding": [0, 1, 0, 0, 0, 0]
+    },
+    {
+      "id": "q4",
+      "statement": "The park should close at 22:00.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-3", "quote": "close the park at ten in the evening"}],
+      "embedding": [0, 1, 0.2, 0, 0, 0]
+    },
+    {
+      "id": "q5",
+      "statement": "More trams would help the east side, if they run late at night.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-2", "quote": "trams would help us, but only if they run late"}],
+      "embedding": [0, 0, 1, 0, 0, 0]
+    },
+    {
+      "id": "q6",
+      "statement": "More trams would help the east side.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-4", "quote": "more trams would really help the east side"}],
+      "embedding": [0, 0, 1, 0.2, 0, 0]
+    },
+    {
+      "id": "q7",
+      "statement": "The new bridge will cause traffic jams on the ring road.",
+      "epistemic_kind": "claim",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-1", "quote": "that bridge will cause jams on the ring road, no doubt"}],
+      "embedding": [0, 0, 0, 1, 0, 0]
+    },
+    {
+      "id": "q8",
+      "statement": "The new bridge might cause traffic jams on the ring road.",
+      "epistemic_kind": "claim",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-3", "quote": "the bridge might cause jams on the ring road"}],
+      "embedding": [0, 0, 0, 1, 0.2, 0]
+    },
+    {
+      "id": "q9",
+      "statement": "Half of the residents in the flats have no parking space.",
+      "epistemic_kind": "claim",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-2", "quote": "half the people in the flats have nowhere to park"}],
+      "embedding": [0, 0, 0, 0, 1, 0]
+    },
+    {
+      "id": "q10",
+      "statement": "A third of the residents in the flats have no parking space.",
+      "epistemic_kind": "claim",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-4", "quote": "a third of the flats have no parking space"}],
+      "embedding": [0, 0, 0, 0, 1, 0.2]
+    }
+  ],
+  "should_merge": [],
+  "must_not_merge": [
+    {"pair": ["q1", "q2"], "guard": "model", "why": "Population: children versus everyone."},
+    {"pair": ["q3", "q4"], "guard": "model", "why": "Time: from next summer versus now."},
+    {"pair": ["q5", "q6"], "guard": "model", "why": "Condition: only if they run late."},
+    {"pair": ["q7", "q8"], "guard": "model", "why": "Certainty: will versus might."},
+    {"pair": ["q9", "q10"], "guard": "model", "why": "Quantity: half versus a third."}
+  ]
+}

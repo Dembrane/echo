@@ -47,6 +47,11 @@ This plan fixes module layout, contracts and file ownership so several agents ca
 - **Holders in prompts** are conversation labels, never participant names.
 - **The collisions prompt** is reused as is for argument listings; real local runs in M6 decide whether a `tensions-collisions` variant is needed.
 - **`tests/analysis/__init__.py`** is required so pytest can import `dembrane` from that folder.
+- **Deduplication module** is `analysis/recipes/deduplication.py` (not `deduplicated_arguments.py`). The model sees member labels `m1..mN`, never database ids; identical normalised text with the same kind and valence merges as `exact_match` without a call.
+- **A failed or malformed verification call** keeps its group separate and does not block publication; coverage lists the unverified groups, and a retry re-verifies them. The run is not `needs_review` for this alone, because no merge was made on an unchecked answer.
+- **Candidate thresholds** were calibrated as merge thresholds. M6 recalibrates them for candidate discovery with `eval_deduplication.py --real-embeddings`.
+- **The similarity matrix** is quadratic per kind and valence partition: fine for hundreds of arguments. The benchmark ladder decides whether indexed neighbour discovery is needed; pairs split across chunks of an oversized cluster are only flagged as `truncated`.
+- **Model deployment** is recorded by the executor next to each recipe's prompt fingerprint.
 
 ## Deviations from the spec
 
