@@ -1,0 +1,25 @@
+{
+  "collection": "analysis_snapshot",
+  "field": "scope_id",
+  "related_collection": "analysis_scope",
+  "meta": {
+    "junction_field": null,
+    "many_collection": "analysis_snapshot",
+    "many_field": "scope_id",
+    "one_allowed_collections": null,
+    "one_collection": "analysis_scope",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": null,
+    "sort_field": null
+  },
+  "schema": {
+    "table": "analysis_snapshot",
+    "column": "scope_id",
+    "foreign_key_table": "analysis_scope",
+    "foreign_key_column": "id",
+    "constraint_name": "analysis_snapshot_scope_id_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "CASCADE"
+  }
+}

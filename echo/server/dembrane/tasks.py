@@ -2010,6 +2010,28 @@ def task_map_generate(result_id: str) -> None:
     run_async_in_new_loop(lambda: run_generation(result_id))
 
 
+@dramatiq.actor(queue_name=TICK_QUEUE, priority=30, max_retries=0, time_limit=TICK_TIME_LIMIT_MS)
+def task_analysis_run(run_id: str) -> None:
+    """Run one analysis recipe run: claim it under a fresh lease, execute its
+    steps, validate and publish. Minutes of async work, so it rides the ticks
+    worker for the reason given above. A run whose worker dies is failed by the
+    minute sweep and resumes from its saved steps when it is retried."""
+    from dembrane.analysis.executor import run_worker
+
+    run_async_in_new_loop(lambda: run_worker(run_id))
+
+
+@dramatiq.actor(queue_name=TICK_QUEUE, priority=10, max_retries=0, time_limit=5 * 60 * 1000)
+def task_analysis_outbox_dispatch(event_id: str | None = None) -> None:
+    """Dispatch one committed analysis publication event (sent after commit),
+    or, without an id, sweep every due event, dead run and waiting run (the
+    minute job). The event row is the record: a lost message is found by the
+    next sweep, and consumers skip what an earlier dispatch already did."""
+    from dembrane.analysis.outbox import run_dispatch
+
+    run_async_in_new_loop(lambda: run_dispatch(event_id))
+
+
 @dramatiq.actor(queue_name=TICK_QUEUE, priority=40, max_retries=0, time_limit=10 * 60 * 1000)
 def task_map_fact_check(fact_check_id: str, attempt: int, result_id: str, node_id: str) -> None:
     """Fact-check one Map claim: a search-grounded investigation and a

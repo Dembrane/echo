@@ -116,6 +116,17 @@ scheduler.add_job(
     replace_existing=True,
 )
 
+# The analysis outbox: committed publications whose after-commit dispatch was
+# lost, runs whose worker died, and runs still waiting on a finished dependency.
+# Every minute, because a waiting run should not wait longer for a lost nudge.
+scheduler.add_job(
+    func="dembrane.tasks:task_analysis_outbox_dispatch.send",
+    trigger=CronTrigger(minute="*"),
+    id="task_analysis_outbox_sweep",
+    name="Sweep the analysis outbox, dead analysis runs and waiting runs",
+    replace_existing=True,
+)
+
 scheduler.add_job(
     func="dembrane.tasks:task_expire_workspace_tiers.send",
     trigger=CronTrigger(minute=0),
