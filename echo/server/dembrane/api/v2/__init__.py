@@ -14,6 +14,7 @@ from dembrane.api.v2.auth import router as auth_router
 from dembrane.api.v2.orgs import router as orgs_router
 from dembrane.api.v2.admin import router as admin_router
 from dembrane.api.v2.agent import router as agent_router
+from dembrane.api.v2.bff.map import router as bff_map_router
 from dembrane.api.v2.billing import (
     router as billing_router,
     webhook_router as billing_webhook_router,
@@ -38,7 +39,6 @@ from dembrane.api.v2.bff.goals import (
 from dembrane.api.v2.bff.memory import router as bff_memory_router
 from dembrane.api.v2.onboarding import router as onboarding_router
 from dembrane.api.v2.workspaces import router as workspaces_router
-from dembrane.api.v2.bff.map import router as bff_map_router
 from dembrane.api.v2.bff.popcorn import router as bff_popcorn_router
 from dembrane.api.v2.bff.reports import (
     router as bff_reports_router,
