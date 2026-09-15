@@ -38,6 +38,16 @@ This plan fixes module layout, contracts and file ownership so several agents ca
 - `Legend.tsx` hard-codes rows per mode; it moves to the attribute definitions.
 - There is no result id or filter in the URL today; M4 adds `types`, `scope` and color mode as search params.
 
+## Resolved during M2
+
+- **Tensions, arguments without verbatim evidence** leave the collision stage entirely and are counted in coverage; they could never hold a pole.
+- **Tensions, an argument on both poles** after facet merging is skipped and counted, not silently dropped.
+- **Usage.** The executor wraps each recipe's `generate` callable to capture tokens; recipes keep returning answers only.
+- **Result-local keys.** A recipe may name its outputs with result-local keys (`x1`); the executor maps them to object and revision ids and rewrites relation endpoints before staging.
+- **Holders in prompts** are conversation labels, never participant names.
+- **The collisions prompt** is reused as is for argument listings; real local runs in M6 decide whether a `tensions-collisions` variant is needed.
+- **`tests/analysis/__init__.py`** is required so pytest can import `dembrane` from that folder.
+
 ## Deviations from the spec
 
 - The spec names a tension `narrative`; the live deck contract calls it `knot`. The payload keeps `knot` and the deck adapter is unchanged (decision 18).
