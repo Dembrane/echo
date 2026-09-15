@@ -193,7 +193,7 @@ def is_hard_blocked(_tier: str, _hours_used: float) -> bool:
 
 # Paid tiers bill per seat and have unlimited hours — they never gate on hours.
 # Free is the only tier that gates consumption (1-hour cap).
-_OVERAGE_TIERS = frozenset({"innovator", "changemaker", "guardian"})
+OVERAGE_TIERS: frozenset[str] = frozenset({"innovator", "changemaker", "guardian"})
 
 
 def tier_allows_overage(tier: str) -> bool:
@@ -203,7 +203,7 @@ def tier_allows_overage(tier: str) -> bool:
     Name kept for call-site compatibility; reads as "this tier is not
     hour-capped" under the per-seat model.
     """
-    return tier in _OVERAGE_TIERS
+    return tier in OVERAGE_TIERS
 
 
 def compute_is_over_cap(
