@@ -15,6 +15,7 @@ from tests.analysis.producer_fakes import (
     C2,
     C3,
     TRAMS,
+    BRIDGE,
     RECORD,
     PARKING,
     PROJECT,
@@ -179,6 +180,29 @@ async def test_refresh_reuses_and_regenerate_verifies_again_with_the_same_vector
     assert (len(world.embed_calls), world.probe_calls) == (embeds, probes)
     assert again.metrics["objectsReused"] == 6
     assert sum(world.extract_calls.values()) == 3  # the pinned arguments were not regenerated
+
+
+@pytest.mark.asyncio
+async def test_a_changed_argument_outside_every_candidate_group_reuses_the_verification() -> None:
+    world, store = ProducerWorld.recording_debate(), FakeAnalysisStore()
+    world.verifier = merge_all(MERGED_RECORD)
+    first = await _inline(store, world, "d1")
+    text = next(t.text for t in world.transcripts if t.id == C2)
+    world.set_text(
+        C2,
+        text + "\nBob: It was built in 1932, by the province.",
+        [*world.items[C2][:2], item(BRIDGE, "built in 1932, by the province", kind="claim", valence="neutral")],
+    )
+    arguments = RunRequest(project_id=PROJECT, recipe_id="arguments", scope_key="project", idempotency_key="a2")
+    assert (await execute_inline(arguments, store=store, deps=world.deps(Recorder()))).run.status == RunStatus.READY
+
+    again = await _inline(store, world, "d2")
+    assert again.status == RunStatus.READY and again.id != first.id
+    # The recording group's members did not change: its verification is reused.
+    assert len(world.verify_calls) == 1 and again.metrics.get("modelCalls", 0) == 0
+    (verify,) = [s for s in await store.get_steps(again.id) if s.step_key.startswith("verify:")]
+    assert verify.reused_step_id is not None
+    assert again.input_manifest["dependencies"]["arguments"]["runId"] != first.input_manifest["dependencies"]["arguments"]["runId"]  # type: ignore[index]
 
 
 @pytest.mark.asyncio

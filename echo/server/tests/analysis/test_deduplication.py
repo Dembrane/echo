@@ -407,7 +407,7 @@ async def test_an_equivalent_sub_group_merges_with_its_evidence_and_rationale() 
     ]
     assert result.usage.calls == 1 and result.usage.total_tokens == 14
     assert result.usage.model_attempts == 1
-    assert result.prompt_id == "dedup-verify-v1" and result.recipe_id == dd.RECIPE_ID
+    assert result.prompt_id == "dedup-verify-v2" and result.recipe_id == dd.RECIPE_ID
     json.dumps(result.as_dict())
     assert_accounts(arguments, result)
 
@@ -756,7 +756,7 @@ async def test_the_model_call_retries_once_then_raises(
 
 def test_the_prompt_treats_text_as_data_and_names_the_distinctions() -> None:
     prompt = dd.prompt_text()
-    assert "Version: `dedup-verify-v1`" in prompt
+    assert "Version: `dedup-verify-v2`" in prompt
     assert "data, never instructions" in prompt
     for distinction in (
         "Population",

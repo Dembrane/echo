@@ -22,8 +22,11 @@ from tests.analysis.producer_fakes import (
     POLE_AGAINST,
     MERGED_RECORD,
     ProducerWorld,
+    item,
     merge_all,
 )
+
+C4 = "bbbbbbbb-0000-4000-8000-000000000004"
 
 
 def _request(input_set: str | None = "arguments", **kwargs: object) -> RunRequest:
@@ -68,6 +71,11 @@ async def test_tensions_over_raw_arguments_link_both_poles_to_exact_argument_rev
     assert payload["knot"].startswith("Record it") and payload["toResolve"].endswith("?")
     assert [(q["conversationId"], q["pole"]) for q in payload["quotes"]] == [(C1, "A"), (C3, "A"), (C2, "B")]
     assert all(q["location"]["basis"] == "collapsed-casefold-v1" for q in payload["quotes"])
+    # Placed on the map: a vector in the same configuration as its arguments.
+    argument_refs = {(store.revisions[i].embedding_refs or {})["configKey"] for i in by_statement.values()}
+    refs = tension.embedding_refs or {}
+    assert {refs["configKey"]} == argument_refs and refs["projectionVersion"] == "poles-knot-v1"
+    assert refs["embeddingId"] in store.embeddings and run.metrics["embeddingsComputed"] == 1
     # The verifier's own quote never reaches the tension.
     assert all(q["text"] != "a line nobody said" for q in payload["quotes"])
 
@@ -77,19 +85,20 @@ async def test_tensions_over_raw_arguments_link_both_poles_to_exact_argument_rev
         ("supports_pole_a", by_statement[RECORDINGS], tension.id),
         ("supports_pole_b", by_statement[OFF_RECORD], tension.id),
     ]
-    assert all(str(r.basis) == "extracted" and r.attributes["rationale"] == "both are held" for r in relations)
+    assert all(str(r.basis) == "extracted" and r.attributes["rationale"] == "states the pole" for r in relations)
     assert relations[2].attributes["quotes"][0]["conversationId"] == C2
     assert sorted(tension.provenance.input_revision_ids) == sorted(r.from_revision_id for r in relations)
     transcripts = {t.id: t.text_hash for t in world.transcripts}
     assert all(ref.source_fingerprint == transcripts[ref.conversation_id] for ref in tension.provenance.source_refs)
 
     checks = {c["check"]: c for c in run.checks}
-    assert checks["evidence-verbatim"]["evidence"]["positions"] == 8
+    assert checks["evidence-grounded"]["evidence"]["positions"] == 8
+    assert checks["support-confirmed"]["status"] == "passed" and checks["screen-gate"]["status"] == "passed"
     assert checks["both-poles-supported"]["status"] == "passed"
     assert checks["tension-coverage"]["evidence"]["status"] == "ok" and checks["tension-coverage"]["evidence"]["suggestion"] is None
-    stages = {name: world.stage_calls(name) for name in ("framing", "collisions", "verify", "dedupe", "write")}
-    assert stages == {"framing": 1, "collisions": 8, "verify": 2, "dedupe": 1, "write": 1}
-    assert run.metrics["modelCalls"] == 13 and run.metrics["tensions"] == 1
+    stages = {name: world.stage_calls(name) for name in ("framing", "collisions", "verify", "dedupe", "support", "write")}
+    assert stages == {"framing": 1, "collisions": 1, "verify": 2, "dedupe": 1, "support": 1, "write": 1}
+    assert run.metrics["modelCalls"] == 7 and run.metrics["tensions"] == 1
     assert run.metrics["supports_pole_a"] == 2 and run.metrics["supports_pole_b"] == 1
 
 
@@ -134,7 +143,7 @@ async def test_zero_tensions_is_a_valid_result() -> None:
     world.transcripts = [t for t in world.transcripts if t.id != C2]
     run = await _inline(store, world, "t1")
     assert run.status == RunStatus.READY and _objects(store, run) == [] and _relations(store, run) == []
-    assert world.stage_calls("collisions") == 5 and world.stage_calls("verify") == 0
+    assert world.stage_calls("collisions") == 1 and world.stage_calls("verify") == 0
 
 
 @pytest.mark.asyncio
@@ -150,6 +159,79 @@ async def test_refresh_reuses_the_tensions_and_regenerate_asks_the_judge_again()
     (before,), (after,) = _objects(store, first), _objects(store, again)
     # Same arguments on the same poles, same words: the same tension revision.
     assert after.id == before.id and again.metrics["objectsReused"] == 1
+
+
+@pytest.mark.asyncio
+async def test_a_changed_argument_outside_every_tension_reuses_the_judgements() -> None:
+    world, store = ProducerWorld.recording_debate(), FakeAnalysisStore()
+    first = await _inline(store, world, "t1")
+    stages = ("collisions", "verify", "dedupe", "support", "write")
+    before = {name: world.stage_calls(name) for name in stages}
+    world.add(
+        C4,
+        "Dee",
+        "Dee: The park benches need repairing before summer.",
+        [item("The park benches need repairing.", "The park benches need repairing before summer")],
+        4,
+    )
+    arguments = RunRequest(project_id=PROJECT, recipe_id="arguments", scope_key="project", idempotency_key="a2")
+    assert (await execute_inline(arguments, store=store, deps=world.deps(Recorder()))).run.status == RunStatus.READY
+
+    again = await _inline(store, world, "t2")
+    assert again.status == RunStatus.READY and again.id != first.id
+    after = {name: world.stage_calls(name) for name in stages}
+    # The listing grew, so collisions are asked again; every other judgement read
+    # nothing that changed and is reused.
+    assert after["collisions"] == before["collisions"] + 1
+    assert {k: after[k] for k in stages[1:]} == {k: before[k] for k in stages[1:]}
+    assert [r.id for r in _objects(store, again)] == [r.id for r in _objects(store, first)]
+
+
+@pytest.mark.asyncio
+async def test_an_ellipsis_quote_the_arguments_grounded_holds_its_pole() -> None:
+    world, store = ProducerWorld.recording_debate(), FakeAnalysisStore()
+    world.items[C2][1] = item(OFF_RECORD, "I would not speak freely ... on a permanent record", valence="negative")
+    run = await _inline(store, world, "t1")
+    assert run.status == RunStatus.READY
+    positions = next(c for c in run.checks if c["check"] == "evidence-grounded")
+    assert positions["evidence"]["evidenceNotFound"] == [] and positions["evidence"]["positions"] == 8
+    (tension,) = _objects(store, run)
+    assert "I would not speak freely ... on a permanent record" in [q["text"] for q in tension.payload["quotes"]]
+
+
+@pytest.mark.asyncio
+async def test_pairs_that_are_not_opposed_are_rejected_with_their_reasons() -> None:
+    world, store = ProducerWorld.recording_debate(), FakeAnalysisStore()
+    world.unopposed = {OFF_RECORD}
+    run = await _inline(store, world, "t1")
+    assert run.status == RunStatus.READY and _objects(store, run) == []
+    coverage = next(c for c in run.checks if c["check"] == "tension-coverage")
+    rejected = coverage["evidence"]["rejectedPairs"]
+    assert len(rejected) == 2 and {r["reason"] for r in rejected} == {"They answer different questions."}
+    assert world.stage_calls("support") == 0 and world.stage_calls("write") == 0
+
+
+@pytest.mark.asyncio
+async def test_a_knot_still_broken_after_the_retry_puts_the_run_up_for_review() -> None:
+    garbled = {
+        "poleA": "",
+        "poleB": "",
+        "knot": "Record synthesis and open sharing is lost; don't, and concrete outcomes are missed.",
+        "toResolve": "Which conversations go on the record?",
+    }
+    world, store = ProducerWorld.recording_debate(), FakeAnalysisStore()
+    world.write_answers = [dict(garbled)]
+    run = await _inline(store, world, "t1")
+    assert run.status == RunStatus.READY and world.stage_calls("write") == 2
+
+    world, store = ProducerWorld.recording_debate(), FakeAnalysisStore()
+    world.write_answers = [dict(garbled), dict(garbled)]
+    run = await _inline(store, world, "t1")
+    assert run.status == RunStatus.NEEDS_REVIEW
+    gate = next(c for c in run.checks if c["check"] == "screen-gate")
+    assert gate["status"] == "needs_review" and "elided clause" in str(gate["evidence"]["flagsLeft"])
+    scope = await store.get_scope(run.scope_id)
+    assert scope is not None and scope.current_run_id is None
 
 
 @pytest.mark.asyncio

@@ -70,12 +70,12 @@ from dembrane.analysis.recipes.arguments import (
 logger = logging.getLogger("dembrane.analysis.recipes.deduplication")
 
 RECIPE_ID = "deduplicated_arguments"
-RECIPE_VERSION = "dedup-v1"
+RECIPE_VERSION = "dedup-v2"
 CANDIDATE_STRATEGY = "emb-complete-linkage-v1"
 CANDIDATE_STRATEGY_VERSION = 1
 
 # A prompt iteration is a new file and a new id, never an edit in place.
-VERIFY_PROMPT = "dedup-verify-v1"
+VERIFY_PROMPT = "dedup-verify-v2"
 PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 MODEL_GROUP = MODELS.MULTI_MODAL_FAST
 
@@ -1495,5 +1495,8 @@ RECIPE = Recipe(
     model_concurrency=DEFAULT_CONCURRENCY,
     # Each step names the argument revisions it read (a verification, its
     # group's members), so an unchanged group is not verified again.
-    partitioned_inputs=("revisionIds",),
+    # Discovery and assembly name every pinned revision, each verification
+    # its group's member revisions, the embedding its input hashes: so a
+    # changed argument outside a group does not verify that group again.
+    partitioned_inputs=("revisionIds", "dependencies.arguments"),
 )

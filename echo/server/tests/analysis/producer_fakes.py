@@ -25,6 +25,7 @@ from dembrane.popcorn import tensions as stages
 from dembrane.embedding import EmbeddingIdentity
 from dembrane.map.recipe import Transcript
 from tests.analysis.helpers import Recorder
+from dembrane.analysis.recipes import tensions as recipe_tensions
 from dembrane.analysis.executor import ExecutorDeps
 from dembrane.analysis.recipes.services import SERVICES_KEY, ProducerServices
 from dembrane.analysis.recipes.deduplication import VerificationRequest
@@ -45,6 +46,7 @@ BRIDGE = "The bridge was built in 1932."
 BUSES = "Night buses are cheaper to run than night trams."
 MERGED_RECORD = "Conversations should be recorded so that what people meant is kept."
 
+QUESTION = "Should conversations be recorded?"
 POLE_FOR = "Record the conversations"
 POLE_AGAINST = "Keep talk off the record"
 
@@ -138,6 +140,12 @@ class ProducerWorld:
         self.judge_calls: list[tuple[str, str]] = []
         # A stage whose every call raises.
         self.judge_errors: dict[str, BaseException] = {}
+        # Pairs the verifier rejects: either argument's statement is here.
+        self.unopposed: set[str] = set()
+        # The support check's answer for a statement: (pole, strength).
+        self.support_for: dict[str, tuple[str, float]] = {}
+        # Write answers used in order before the default one.
+        self.write_answers: list[dict[str, Any]] = []
         self.deployment = {"group": "FAKE_GROUP", "model": "fake/model"}
 
     # ── the project ─────────────────────────────────────────────────────
@@ -269,28 +277,40 @@ class ProducerWorld:
             return {"handed": []}
         if stage == "collisions":
             listing = dict(re.findall(r"^(P\d+) \[[^\]]*\] (.*)$", user, re.MULTILINE))
-            focal = user.rsplit("FOCAL POSITION: ", 1)[1].strip()
-            mine = listing[focal]
-            collides = [
-                {"id": other, "why": "one pays for the other", "zero_sum": 0.9}
-                for other, statement in listing.items()
-                if other != focal
-                and (
-                    (for_recording(mine) and against_recording(statement))
-                    or (against_recording(mine) and for_recording(statement))
-                )
-            ]
-            return {"collides": collides}
+            focal = [f.strip() for f in user.rsplit("FOCAL POSITIONS: ", 1)[1].split(",")]
+            return {
+                "collisions": [
+                    {"focal": f, "other": other, "question": QUESTION, "why": "one pays for the other", "zero_sum": 0.9}
+                    for f in focal
+                    for other, statement in listing.items()
+                    if other != f
+                    and (
+                        (for_recording(listing[f]) and against_recording(statement))
+                        or (against_recording(listing[f]) and for_recording(statement))
+                    )
+                ]
+            }
         if stage == "verify":
             side_a = re.search(r"^A \([^)]*\): (.*)$", user, re.MULTILINE)
-            a_for = bool(side_a and for_recording(side_a.group(1)))
+            side_b = re.search(r"^B \([^)]*\): (.*)$", user, re.MULTILINE)
+            assert side_a is not None and side_b is not None
+            if {side_a.group(1), side_b.group(1)} & self.unopposed:
+                return {
+                    "valid": False,
+                    "opposed": False,
+                    "question": "",
+                    "reason": "They answer different questions.",
+                    "poleA": "",
+                    "poleB": "",
+                }
+            a_for = for_recording(side_a.group(1))
             return {
                 "valid": True,
-                "why": "both are held",
+                "opposed": True,
+                "question": QUESTION,
+                "reason": "both are held",
                 "poleA": POLE_FOR if a_for else POLE_AGAINST,
                 "poleB": POLE_AGAINST if a_for else POLE_FOR,
-                "quotesA": ["a line nobody said"],
-                "quotesB": [],
             }
         if stage == "dedupe":
             kept = re.findall(r"^(x\d+): (.*) / (.*)$", user, re.MULTILINE)
@@ -300,6 +320,23 @@ class ProducerWorld:
                 if {pole_a, pole_b} == {new.group(1), new.group(2)}:
                     return {"same_as": kept_id, "swapped": pole_a != new.group(1), "why": "the same pull"}
             return {"same_as": "", "swapped": False, "why": ""}
+        if stage == "support":
+            pole_a = re.search(r"^POLE A: (.*)$", user, re.MULTILINE)
+            assert pole_a is not None
+            entries = []
+            for pid, statement in re.findall(r"^(P\d+) \[[^\]]*\] (.*)$", user, re.MULTILINE):
+                if statement in self.support_for:
+                    pole, strength = self.support_for[statement]
+                elif for_recording(statement):
+                    pole, strength = ("A" if pole_a.group(1) == POLE_FOR else "B"), 0.9
+                elif against_recording(statement):
+                    pole, strength = ("B" if pole_a.group(1) == POLE_FOR else "A"), 0.9
+                else:
+                    pole, strength = "neither", 0.0
+                entries.append({"id": pid, "pole": pole, "strength": strength, "why": "states the pole"})
+            return {"supporters": entries}
+        if self.write_answers:
+            return self.write_answers.pop(0)
         return {
             "poleA": "",
             "poleB": "",
@@ -307,11 +344,11 @@ class ProducerWorld:
             "toResolve": "Which conversations go on the record?",
         }
 
-
 _STAGES = (
     (stages.HANDED_SCHEMA, "framing"),
-    (stages.COLLISIONS_SCHEMA, "collisions"),
-    (stages.VERIFY_SCHEMA, "verify"),
+    (recipe_tensions.COLLISIONS_SCHEMA, "collisions"),
+    (recipe_tensions.VERIFY_SCHEMA, "verify"),
     (stages.DEDUPE_SCHEMA, "dedupe"),
-    (stages.WRITE_SCHEMA, "write"),
+    (recipe_tensions.SUPPORT_SCHEMA, "support"),
+    (recipe_tensions.WRITE_SCHEMA, "write"),
 )
