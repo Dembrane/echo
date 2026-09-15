@@ -48,7 +48,8 @@ This plan fixes module layout, contracts and file ownership so several agents ca
 - **The collisions prompt** is reused as is for argument listings; real local runs in M6 decide whether a `tensions-collisions` variant is needed.
 - **`tests/analysis/__init__.py`** is required so pytest can import `dembrane` from that folder.
 - **Deduplication module** is `analysis/recipes/deduplication.py` (not `deduplicated_arguments.py`). The model sees member labels `m1..mN`, never database ids; identical normalised text with the same kind and valence merges as `exact_match` without a call.
-- **A failed or malformed verification call** keeps its group separate and does not block publication; coverage lists the unverified groups, and a retry re-verifies them. The run is not `needs_review` for this alone, because no merge was made on an unchecked answer.
+- **A failed or malformed verification call** keeps its group separate and does not block publication; coverage lists the unverified groups, and a **Regenerate** (new epoch for model steps, identical embeddings reused) re-verifies them. Retry keeps its meaning of resuming a failed run. The run is not `needs_review` for this alone, because no merge was made on an unchecked answer.
+- **Authored edits and following snapshots.** Snapshot assembly reads producer run manifests, so an authored successor revision does not yet appear in a following view. Editing UI is deferred in this slice; this is a known limit to close when editing ships, with historical snapshots keeping their original manifests.
 - **Candidate thresholds** were calibrated as merge thresholds. M6 recalibrates them for candidate discovery with `eval_deduplication.py --real-embeddings`.
 - **The similarity matrix** is quadratic per kind and valence partition: fine for hundreds of arguments. The benchmark ladder decides whether indexed neighbour discovery is needed; pairs split across chunks of an oversized cluster are only flagged as `truncated`.
 - **Model deployment** is recorded by the executor next to each recipe's prompt fingerprint.
@@ -70,6 +71,10 @@ This plan fixes module layout, contracts and file ownership so several agents ca
 - **Generate actions for non-argument types**: MapRoute passes no `onGenerateObjects` yet, so those buttons are hidden in the real page until M3 exposes recipe runs.
 - **Settings v2** keeps v1 values; a new install colours by Type with arguments grey. Default type selection prefers deduplicated arguments over raw ones when both exist and adds types while the total fits the node budget.
 - **`metadata.kind`** stays as a deprecated alias only because `renderers/renderers.test.tsx` still writes it; remove both together.
+
+## Known behaviour: tension identity does not carry across runs
+
+A tensions run derives identity from the argument objects holding each pole, so when its inputs change (a deduplication rerun, or new arguments) the run publishes new tension objects and the previous ones become superseded history rather than edited in place. That is correct under the spec's identity policy (retain an identity only when continuity is known), and it means a shared snapshot keeps showing the tensions it pinned. Revisit only if hosts need a tension to keep its identity across input changes, which would require an explicit lineage rule rather than similarity.
 
 ## Deviations from the spec
 
