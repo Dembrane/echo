@@ -72,6 +72,10 @@ This plan fixes module layout, contracts and file ownership so several agents ca
 - **Settings v2** keeps v1 values; a new install colours by Type with arguments grey. Default type selection prefers deduplicated arguments over raw ones when both exist and adds types while the total fits the node budget.
 - **`metadata.kind`** stays as a deprecated alias only because `renderers/renderers.test.tsx` still writes it; remove both together.
 
+## Known cost: collision calls are global
+
+Every collisions call reads the whole position listing, because cross-conversation collisions are what the stage is for. A genuinely reworded argument therefore re-asks all of them, whatever the batching. Keying each judgement by its own subject (framing its conversations, collisions its focal batch, verify the pair, support the tension's candidates, write the confirmed supporters) removes the churn from arguments a call never mentions: on one changed conversation, re-asked judgements fall from 9 of 10 to 5 of 10. Stable batching would only help if each call read just its own batch, which would cost recall, so it was not done.
+
 ## Known behaviour: tension identity does not carry across runs
 
 A tensions run derives identity from the argument objects holding each pole, so when its inputs change (a deduplication rerun, or new arguments) the run publishes new tension objects and the previous ones become superseded history rather than edited in place. That is correct under the spec's identity policy (retain an identity only when continuity is known), and it means a shared snapshot keeps showing the tensions it pinned. Revisit only if hosts need a tension to keep its identity across input changes, which would require an explicit lineage rule rather than similarity.
