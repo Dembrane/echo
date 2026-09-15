@@ -50,6 +50,8 @@ import re
 import time
 import asyncio
 import hashlib
+import contextlib
+import contextvars
 from typing import Any, Literal, Mapping, Iterable, Sequence, Coroutine
 from pathlib import Path
 from collections import Counter, defaultdict
@@ -371,6 +373,28 @@ async def _gather(coros: Iterable[Coroutine[Any, Any, Any]]) -> list[Any]:
     return [t.result() for t in tasks]
 
 
+# What the judgement being made is about: the argument revisions and the
+# conversations it is asked about. Every word the call reads is in its own
+# digest, so this is the identity the step records beside it; an argument the
+# call never mentions cannot invalidate it, and one whose words changed does,
+# through the digest. Set per task, so concurrent judgements do not mix.
+_NAMED: contextvars.ContextVar[dict[str, list[str]] | None] = contextvars.ContextVar("tensions_named", default=None)
+
+
+def named_inputs() -> dict[str, list[str]]:
+    return dict(_NAMED.get() or {})
+
+
+@contextlib.contextmanager
+def naming(*, revisions: Iterable[str] = (), conversations: Iterable[str] = ()) -> Any:
+    named = {"revisionIds": sorted(set(revisions)), "conversations": sorted(set(conversations))}
+    token = _NAMED.set({key: value for key, value in named.items() if value})
+    try:
+        yield
+    finally:
+        _NAMED.reset(token)
+
+
 def _input_set(
     arguments: Sequence[ArgumentRevision],
     sources: Sequence[SourcePassages],
@@ -605,9 +629,10 @@ async def find_collisions(
     ids = [p["id"] for p in positions]
 
     async def ask(focal: list[str]) -> tuple[list[str], list[dict[str, Any]]]:
-        out = await judge(
-            prompt, f"{listed}\n\nFOCAL POSITIONS: {', '.join(focal)}", COLLISIONS_SCHEMA, label="collisions"
-        )
+        with naming(revisions=[by_id[pid]["revision_id"] for pid in focal]):
+            out = await judge(
+                prompt, f"{listed}\n\nFOCAL POSITIONS: {', '.join(focal)}", COLLISIONS_SCHEMA, label="collisions"
+            )
         return focal, [c for c in (out.get("collisions") or []) if isinstance(c, dict)]
 
     pairs: dict[tuple[str, str], dict[str, Any]] = {}
@@ -703,7 +728,8 @@ async def verify_candidates(
             f"THE PAIR:\nA ({a.get('holder')}, {a.get('kind')}): {a['position']}\n{_said(a)}\n"
             f"B ({b.get('holder')}, {b.get('kind')}): {b['position']}\n{_said(b)}"
         )
-        out = await judge(prompt, user, VERIFY_SCHEMA, label="verify")
+        with naming(revisions=[a["revision_id"], b["revision_id"]], conversations=ts):
+            out = await judge(prompt, user, VERIFY_SCHEMA, label="verify")
         pole_a = str(out.get("poleA") or "").strip()
         pole_b = str(out.get("poleB") or "").strip()
         question = str(out.get("question") or "").strip()
@@ -758,7 +784,8 @@ async def confirm_support(
             f"QUESTION: {k['question']}\nPOLE A: {k['poleA']}\nPOLE B: {k['poleB']}\n\n"
             + data_block("ARGUMENTS", "\n".join(lines))
         )
-        out = await judge(prompt, user, SUPPORT_SCHEMA, label="support")
+        with naming(revisions=[by_id[pid]["revision_id"] for pid in ids]):
+            out = await judge(prompt, user, SUPPORT_SCHEMA, label="support")
         answers: dict[str, dict[str, Any]] = {}
         for entry in out.get("supporters") or []:
             if not isinstance(entry, dict):
@@ -922,23 +949,31 @@ async def write_tensions(
                 "toResolve": str(out.get("toResolve") or "").strip(),
             }
 
-        t = shaped(await judge(prompt, user, WRITE_SCHEMA, label="write"))
-        flags = write_flags(t)
-        if flags:
-            retry_prompt = (
-                prompt
-                + "\n\n## Your previous answer failed these checks\n\n"
-                + "\n".join(f"- {f}" for f in flags)
-                + "\n\nFix every one of them."
-            )
-            t = shaped(await judge(retry_prompt, user, WRITE_SCHEMA, label="write"))
+        supporters = [*k["confirmedA"], *k["confirmedB"]]
+        with naming(revisions=[by_id[s["position"]]["revision_id"] for s in supporters]):
+            t = shaped(await judge(prompt, user, WRITE_SCHEMA, label="write"))
             flags = write_flags(t)
+            if flags:
+                retry_prompt = (
+                    prompt
+                    + "\n\n## Your previous answer failed these checks\n\n"
+                    + "\n".join(f"- {f}" for f in flags)
+                    + "\n\nFix every one of them."
+                )
+                t = shaped(await judge(retry_prompt, user, WRITE_SCHEMA, label="write"))
+                flags = write_flags(t)
         return t, flags
 
     return await _gather(write(k) for k in items)
 
 
 # ── the pipeline ────────────────────────────────────────────────────────
+
+
+async def _framing(judge: stages.Judge, transcripts: dict[str, str], prompt: str) -> list[dict[str, Any]]:
+    """Popcorn's handed stage, naming the conversations it reads."""
+    with naming(conversations=list(transcripts)):
+        return await stages.find_handed(judge, transcripts, prompt=prompt)
 
 
 async def run_tensions(
@@ -1023,17 +1058,7 @@ async def run_tensions(
 
     # 1 and 2 beside each other: collisions do not read the handed list.
     async with asyncio.TaskGroup() as group:
-        handed_task = (
-            group.create_task(
-                stages.find_handed(
-                    judge,
-                    {c: texts[c] for c in in_play if c in full},
-                    prompt=prompts["handed"],
-                )
-            )
-            if assess
-            else None
-        )
+        handed_task = group.create_task(_framing(judge, {c: texts[c] for c in in_play if c in full}, prompts["handed"])) if assess else None
         collisions_task = group.create_task(
             find_collisions(
                 judge,
@@ -1489,10 +1514,9 @@ async def execute(ctx: RecipeContext) -> None:
     )
 
     # 1 to 6: every judgement is a model step of its stage, keyed by its exact
-    # call and by the pinned argument revisions it names. The pipeline numbers
-    # positions exactly as `_trim` does here, so a P id resolves to its revision.
-    numbered, _trimmed = _trim(positions, [p.conversation_id for p in passages], MAX_POSITIONS)
-    revision_of = {p["id"]: p["revision_id"] for p in numbered}
+    # call and by what that call is about (the stage names its focal arguments,
+    # its pair or its candidates). A judgement that never mentioned an argument
+    # is not asked again because that argument changed.
     locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
     async def generate(
@@ -1514,16 +1538,15 @@ async def execute(ctx: RecipeContext) -> None:
             tokens = {k: int(v) for k, v in usage.items() if k in TOKEN_KEYS}
             return StepResult(output=answer, usage=tokens, model_calls=1)
 
-        # Framing, dedupe and write calls name no argument: they read only
-        # transcripts and text already in the call.
-        named_revisions = sorted({revision_of[pid] for pid in re.findall(r"\bP\d+\b", user_text) if pid in revision_of})
+        # The dedupe stage names nothing: it reads the poles already in its call.
+        named = named_inputs()
         async with locks[digest]:
             return dict(
                 await ctx.step(
                     stage,
                     compute,
                     instance=digest[:40],
-                    inputs={**call, "revisionIds": named_revisions, "model": deployment},
+                    inputs={**call, **named, "model": deployment},
                 )
             )
 

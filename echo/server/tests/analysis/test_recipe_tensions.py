@@ -188,6 +188,50 @@ async def test_a_changed_argument_outside_every_tension_reuses_the_judgements() 
 
 
 @pytest.mark.asyncio
+async def test_a_conversation_whose_words_did_not_change_re_asks_only_what_read_it() -> None:
+    """A changed transcript gives its arguments new revisions. Judgements that
+    never mentioned them, and whose own words are unchanged, are reused: only
+    the focal batch that names them, and the stages that read that transcript,
+    are asked again."""
+    world, store = ProducerWorld.recording_debate(), FakeAnalysisStore()
+    # Enough arguments for more than one focal batch.
+    for index in range(4):
+        conversation = f"cccccccc-0000-4000-8000-00000000000{index}"
+        statements = [f"Statement {index}.{n} about the neighbourhood plan." for n in range(2)]
+        world.add(
+            conversation,
+            f"Speaker {index}",
+            "\n".join(f"Speaker: {s}" for s in statements),
+            [item(s, s.rstrip(".")) for s in statements],
+            index + 4,
+        )
+    first = await _inline(store, world, "t1")
+    assert first.status == RunStatus.READY
+    stages = ("framing", "collisions", "verify", "dedupe", "support", "write")
+    before = {name: world.stage_calls(name) for name in stages}
+    assert before["collisions"] == 2  # 16 positions, ten focal ids per call
+
+    # The same statements, said in a longer transcript: new revisions, same words.
+    quiet = "cccccccc-0000-4000-8000-000000000003"
+    longer = next(t.text for t in world.transcripts if t.id == quiet) + "\nSpeaker: And that is all from me."
+    world.set_text(quiet, longer)
+    arguments = RunRequest(project_id=PROJECT, recipe_id="arguments", scope_key="project", idempotency_key="a2")
+    assert (await execute_inline(arguments, store=store, deps=world.deps(Recorder()))).run.status == RunStatus.READY
+
+    again = await _inline(store, world, "t2")
+    assert again.status == RunStatus.READY and again.id != first.id
+    after = {name: world.stage_calls(name) for name in stages}
+    # Framing reads every transcript, so it is asked again; one focal batch names
+    # the changed arguments; the tension's own judgements read neither.
+    assert after["framing"] == before["framing"] + 1
+    assert after["collisions"] == before["collisions"] + 1
+    assert {k: after[k] for k in ("verify", "dedupe", "support", "write")} == {
+        k: before[k] for k in ("verify", "dedupe", "support", "write")
+    }
+    assert [r.id for r in _objects(store, again)] == [r.id for r in _objects(store, first)]
+
+
+@pytest.mark.asyncio
 async def test_an_ellipsis_quote_the_arguments_grounded_holds_its_pole() -> None:
     world, store = ProducerWorld.recording_debate(), FakeAnalysisStore()
     world.items[C2][1] = item(OFF_RECORD, "I would not speak freely ... on a permanent record", valence="negative")
