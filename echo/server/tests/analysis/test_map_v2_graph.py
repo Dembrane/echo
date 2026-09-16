@@ -21,6 +21,7 @@ from dembrane.analysis.map_view import (
     parse_types,
     graph_payload,
 )
+from dembrane.analysis.registry import get_recipe, register_recipe, unregister_recipe
 from tests.analysis.map_v2_fakes import READ, Grants, Limiter, Counting, MapWorld, inline, asgi_call
 from tests.analysis.fixture_recipes import PAIRS, WORDS, FixtureWorld
 
@@ -244,3 +245,38 @@ async def test_an_unimported_v1_result_is_served_in_the_v2_shape_and_its_v1_rout
 
     checks = await asgi_call(map_bff.router, BASE, "GET", f"/results/{result['id']}/fact-checks")
     assert checks.json() == {"fact_checks": {"a-3": {"status": "idle"}}}
+
+
+@pytest.mark.asyncio
+async def test_a_producer_this_process_cannot_resolve_keeps_what_the_parent_pinned(world: FixtureWorld) -> None:
+    maps = MapWorld()
+    first = await _pairs(maps, world)
+    pinned = {p["recipeId"]: p for p in first.manifest["producers"] if p.get("available")}
+    assert set(pinned) == {WORDS, PAIRS}
+
+    # A process whose registry predates the tensions producer assembles next.
+    tensions = get_recipe(PAIRS)
+    unregister_recipe(PAIRS)
+    try:
+        second = await maps.advance()
+        payload = await graph_payload(second, _query(BOTH), store=maps.store)
+    finally:
+        register_recipe(tensions, replace=True)
+
+    carried = next(p for p in second.manifest["producers"] if p["recipeId"] == PAIRS)
+    assert carried["carried"] is True and carried["runId"] == pinned[PAIRS]["runId"]
+    # Nothing the parent showed is removed by a process that cannot resolve it.
+    assert len(second.manifest["objects"]) == len(first.manifest["objects"])
+    assert [node["type"] for node in payload["nodes"]].count("tension") == 1
+    assert sorted(r["type"] for r in payload["relations"]) == ["supports_pole_a", "supports_pole_b"]
+
+    # It is dropped only once the producer's scope is gone.
+    (scope,) = [s for s in maps.store.scopes.values() if s.recipe_id == PAIRS]
+    del maps.store.scopes[scope.id]
+    unregister_recipe(PAIRS)
+    try:
+        third = await maps.advance()
+    finally:
+        register_recipe(tensions, replace=True)
+    assert all(p["recipeId"] != PAIRS for p in third.manifest["producers"] if p.get("available"))
+    assert all(o["type"] != "tension" for o in third.manifest["objects"])

@@ -71,8 +71,16 @@ from dembrane.analysis.embeddings import input_hash
 
 logger = logging.getLogger("dembrane.analysis.map_view")
 
+# A project has two kinds of view scope, and one kind left over:
+#
+# - `map` keyed `project`: the live map view, the one the page reads.
+# - `map.legacy` keyed `result:<id>`: one chain per imported v1 result, so
+#   importing one result again never rewrites another's snapshot.
+# - `map.legacy` keyed `project`: unreferenced history from before per-result
+#   scopes, on databases imported by an earlier backfill. Nothing reads it and
+#   nothing writes it; its snapshots are still referenced by that scope row, so
+#   it is kept rather than deleted. A fresh database never creates one.
 MAP_VIEW_ID = "map"
-# One snapshot per imported legacy result, chained apart from the live view.
 LEGACY_VIEW_ID = "map.legacy"
 VIEW_SCOPE_KEY = "project"
 PAYLOAD_VERSION = 2
@@ -725,17 +733,98 @@ async def legacy_graph_payload(row: dict[str, Any], query: GraphQuery, *, store:
 # ── assembly and advancement ────────────────────────────────────────────
 
 
-async def map_producers(project_id: str, *, reads: MapViewReads) -> list[ProducerHead]:
-    """Producer scopes with a ready output whose registered recipe makes a map type."""
-    out = []
+async def _resolve_producers(
+    project_id: str, *, reads: MapViewReads, parent: Snapshot | None = None
+) -> tuple[list[ProducerHead], list[dict[str, Any]]]:
+    """What this process resolves for the map view, and what it carries over.
+
+    Resolved: a producer scope with a ready output whose registered recipe
+    makes a map type. Carried: an entry the parent snapshot pinned whose recipe
+    this process does not know, while that producer's scope still has a ready
+    output. A process whose registry predates a producer must not remove it
+    from the view (during a rolling deploy two processes would take turns
+    adding and dropping it), so it keeps the parent's entry unchanged instead
+    of resolving an output it cannot judge. A producer this process has never
+    seen and the parent never pinned is simply not added, and one whose scope
+    is gone is not carried."""
+    known: list[ProducerHead] = []
+    unknown: set[tuple[str, str]] = set()
     for head in await reads.producer_heads(project_id):
         try:
             recipe = get_recipe(head.recipe_id)
         except UnknownRecipe:
+            unknown.add((head.recipe_id, head.scope_key))
             continue
         if set(recipe.output_types) & set(MAP_TYPES):
-            out.append(head)
-    return out
+            known.append(head)
+    carried = [
+        entry
+        for entry in (parent.manifest.get("producers") if parent else None) or []
+        if entry.get("available")
+        and entry.get("runId")
+        and (str(entry.get("recipeId")), str(entry.get("scopeKey"))) in unknown
+    ]
+    return known, carried
+
+
+async def map_producers(project_id: str, *, reads: MapViewReads) -> list[ProducerHead]:
+    """Producer scopes with a ready output whose registered recipe makes a map type."""
+    known, _carried = await _resolve_producers(project_id, reads=reads)
+    return known
+
+
+async def _carry_over(
+    body: dict[str, Any], carried: list[dict[str, Any]], parent: Snapshot, *, store: AnalysisStore
+) -> dict[str, Any]:
+    """Keep what the parent pinned for producers this process cannot resolve:
+    the producer entry, marked `carried`, the objects of the run it pinned, the
+    relations whose ends are all still displayed, and the assessments of those
+    objects, exactly as they were pinned. Nothing is resolved again here."""
+    parent_objects = {str(o["objectId"]): o for o in parent.manifest.get("objects") or []}
+    shown = {str(o["objectId"]) for o in body["objects"]}
+    entries: list[dict[str, Any]] = []
+    kept: list[dict[str, Any]] = []
+    for producer in carried:
+        run = await store.get_run(str(producer["runId"]))
+        manifest = (run.output_manifest if run else None) or {}
+        objects = [
+            parent_objects[str(o["objectId"])]
+            for o in manifest.get("objects") or []
+            if str(o["objectId"]) in parent_objects and str(o["objectId"]) not in shown
+        ]
+        if not objects:
+            continue
+        entries.append({**producer, "carried": True})
+        shown.update(str(o["objectId"]) for o in objects)
+        kept += objects
+    if not entries:
+        return body
+    body["producers"] = [*body["producers"], *entries]
+    body["objects"] = sorted([*body["objects"], *kept], key=lambda o: o["objectId"])
+    displayed = {str(o["revisionId"]) for o in body["objects"]}
+    carried_revisions = {str(o["revisionId"]) for o in kept}
+    drawn = {str(r["relationId"]) for r in body["relations"]}
+    body["relations"] = sorted(
+        [
+            *body["relations"],
+            *(
+                relation
+                for relation in parent.manifest.get("relations") or []
+                if str(relation["relationId"]) not in drawn
+                and {str(relation["from"]), str(relation["to"])} <= displayed
+                and {str(relation["from"]), str(relation["to"])} & carried_revisions
+            ),
+        ],
+        key=lambda r: r["relationId"],
+    )
+    body["assessments"] = sorted(
+        [
+            *body["assessments"],
+            *(a for a in parent.manifest.get("assessments") or [] if str(a["targetRevisionId"]) in carried_revisions),
+        ],
+        key=lambda a: a["targetRevisionId"],
+    )
+    return body
 
 
 async def legacy_source(
@@ -779,8 +868,10 @@ async def _embedding_config(
     return {"key": key, "model": identity[0] if identity else None, "dims": identity[1] if identity else None}
 
 
-async def build_map_manifest(project_id: str, *, store: AnalysisStore, reads: MapViewReads) -> dict[str, Any]:
-    heads = await map_producers(project_id, reads=reads)
+async def build_map_manifest(
+    project_id: str, *, store: AnalysisStore, reads: MapViewReads, parent: Snapshot | None = None
+) -> dict[str, Any]:
+    heads, carried = await _resolve_producers(project_id, reads=reads, parent=parent)
     request = SnapshotRequest(
         project_id=project_id,
         view_id=MAP_VIEW_ID,
@@ -790,6 +881,8 @@ async def build_map_manifest(project_id: str, *, store: AnalysisStore, reads: Ma
     )
     manifest = await build_manifest(request, store=store)
     body = {k: v for k, v in manifest.items() if k != "contentHash"}
+    if carried and parent is not None:
+        body = await _carry_over(body, carried, parent, store=store)
     arguments_ready = any(p["recipeId"] == ARGUMENTS_RECIPE_ID and p.get("available") for p in body["producers"])
     legacy = None if arguments_ready else await legacy_source(project_id, store=store, reads=reads)
     legacy_snapshot = legacy[1] if legacy else None
@@ -842,12 +935,20 @@ async def needs_advance(snapshot: Snapshot, *, store: AnalysisStore, reads: MapV
     newer assessment than the one pinned."""
     manifest = snapshot.manifest
     producers = list(manifest.get("producers") or [])
-    heads = await map_producers(snapshot.project_id, reads=reads)
-    pinned = {(p["recipeId"], p["scopeKey"], p["runId"]) for p in producers if p.get("runId")}
+    heads, carried = await _resolve_producers(snapshot.project_id, reads=reads, parent=snapshot)
+    pinned = {(p["recipeId"], p["scopeKey"], p["runId"]) for p in producers if p.get("runId") and not p.get("carried")}
     if pinned != {(h.recipe_id, h.scope_key, h.run_id) for h in heads}:
         return True
+    # A carried entry is compared by its producer, not its run: this process
+    # cannot resolve a newer output of a recipe it does not know.
+    if {(str(p["recipeId"]), str(p["scopeKey"])) for p in producers if p.get("carried")} != {
+        (str(c["recipeId"]), str(c["scopeKey"])) for c in carried
+    }:
+        return True
     legacy_pinned = next((p.get("legacySnapshotId") for p in producers if p["recipeId"] == LEGACY_RECIPE_ID), None)
-    if any(h.recipe_id == ARGUMENTS_RECIPE_ID for h in heads):
+    if any(h.recipe_id == ARGUMENTS_RECIPE_ID for h in heads) or any(
+        str(c["recipeId"]) == ARGUMENTS_RECIPE_ID for c in carried
+    ):
         if legacy_pinned:
             return True
     else:
@@ -889,10 +990,11 @@ async def advance_map_view(
             project_id=project_id, kind=ScopeKind.VIEW, owner_id=MAP_VIEW_ID, scope_key=VIEW_SCOPE_KEY
         )
         expected = scope.current_snapshot_id
-        manifest = await build_map_manifest(project_id, store=store, reads=reads)
+        previous = await store.get_snapshot(expected) if expected else None
+        # The parent is what a producer this process cannot resolve is carried from.
+        manifest = await build_map_manifest(project_id, store=store, reads=reads, parent=previous)
         if expected is None and not manifest["objects"] and not any(p.get("available") for p in manifest["producers"]):
             return None
-        previous = await store.get_snapshot(expected) if expected else None
         if previous is not None and source_event_id is None and previous.content_hash == manifest["contentHash"]:
             snapshot = previous
             break
