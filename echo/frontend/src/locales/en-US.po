@@ -1361,7 +1361,7 @@ msgstr "Adding <0>{totalCount, plural, one {# more conversation} other {# more c
 msgid "select.all.modal.loading.title"
 msgstr "Adding Conversations"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1175
+#: src/components/map/renderers/LocalMapGraph.tsx:1227
 msgid "Additional Forces"
 msgstr "Additional Forces"
 
@@ -1890,7 +1890,7 @@ msgstr "Argument"
 #~ msgid "Argument (not fact-checked)"
 #~ msgstr "Argument (not fact-checked)"
 
-#: src/components/map/renderers/MstGraph.tsx:1082
+#: src/components/map/renderers/MstGraph.tsx:1108
 msgid "Argument map"
 msgstr "Argument map"
 
@@ -2168,7 +2168,7 @@ msgstr "Avatar removed"
 msgid "Avatar updated"
 msgstr "Avatar updated"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1144
+#: src/components/map/renderers/LocalMapGraph.tsx:1196
 msgid "Avg low-dim distance (default: 10)"
 msgstr "Avg low-dim distance (default: 10)"
 
@@ -2408,7 +2408,7 @@ msgid "By tag"
 msgstr "By tag"
 
 #. placeholder {0}: cMed.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1133
+#: src/components/map/renderers/LocalMapGraph.tsx:1185
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
@@ -2683,7 +2683,7 @@ msgid "Changing the voice re-reads every conversation."
 msgstr "Changing the voice re-reads every conversation."
 
 #. placeholder {0}: chargeFraction.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1200
+#: src/components/map/renderers/LocalMapGraph.tsx:1252
 msgid "Charge Distance (viewport fraction): {0}"
 msgstr "Charge Distance (viewport fraction): {0}"
 
@@ -3020,7 +3020,7 @@ msgid "Collection"
 msgstr "Collection"
 
 #. placeholder {0}: collisionRadius.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1189
+#: src/components/map/renderers/LocalMapGraph.tsx:1241
 msgid "Collision Radius: {0}x"
 msgstr "Collision Radius: {0}x"
 
@@ -3244,7 +3244,7 @@ msgstr "Continue"
 msgid "Contributing nodes ({0})"
 msgstr "Contributing nodes ({0})"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1205
+#: src/components/map/renderers/LocalMapGraph.tsx:1257
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Controls how far charge forces act (higher = more global)"
 
@@ -3899,7 +3899,7 @@ msgid "Czech conversations, Czech answers"
 msgstr "Czech conversations, Czech answers"
 
 #. placeholder {0}: dAdj.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1143
+#: src/components/map/renderers/LocalMapGraph.tsx:1195
 msgid "d̄_adj: {0}"
 msgstr "d̄_adj: {0}"
 
@@ -4316,7 +4316,7 @@ msgid "Display name"
 msgstr "Display name"
 
 #. placeholder {0}: linkDistanceQuadratic.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:1126
+#: src/components/map/renderers/MstGraph.tsx:1152
 msgid "Dissimilar links: {0}"
 msgstr "Dissimilar links: {0}"
 
@@ -5272,7 +5272,7 @@ msgid "Fair password"
 msgstr "Fair password"
 
 #. placeholder {0}: fpStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1166
+#: src/components/map/renderers/LocalMapGraph.tsx:1218
 msgid "Far Pair Repulsion: {0}"
 msgstr "Far Pair Repulsion: {0}"
 
@@ -5475,15 +5475,15 @@ msgstr "for the dembrane team"
 msgid "For you"
 msgstr "For you"
 
-#: src/components/map/renderers/MstGraph.tsx:1086
+#: src/components/map/renderers/MstGraph.tsx:1112
 msgid "Force Graph Settings"
 msgstr "Force Graph Settings"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1153
+#: src/components/map/renderers/LocalMapGraph.tsx:1205
 msgid "Force Multipliers"
 msgstr "Force Multipliers"
 
-#: src/components/map/renderers/MstGraph.tsx:1095
+#: src/components/map/renderers/MstGraph.tsx:1121
 msgid "Force Parameters"
 msgstr "Force Parameters"
 
@@ -5561,12 +5561,12 @@ msgid "General"
 msgstr "General"
 
 #. placeholder {0}: chargeStrength.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1140
+#: src/components/map/renderers/MstGraph.tsx:1166
 msgid "General repulsion force: {0}"
 msgstr "General repulsion force: {0}"
 
 #. placeholder {0}: Math.abs(chargeStrength)
-#: src/components/map/renderers/LocalMapGraph.tsx:1179
+#: src/components/map/renderers/LocalMapGraph.tsx:1231
 msgid "General Repulsion: {0}"
 msgstr "General Repulsion: {0}"
 
@@ -7012,7 +7012,7 @@ msgstr "Loading..."
 msgid "Loading…"
 msgstr "Loading…"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1104
+#: src/components/map/renderers/LocalMapGraph.tsx:1156
 msgid "Local argument map"
 msgstr "Local argument map"
 
@@ -7020,15 +7020,15 @@ msgstr "Local argument map"
 msgid "Local map"
 msgstr "Local map"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1125
+#: src/components/map/renderers/LocalMapGraph.tsx:1177
 msgid "LocalMap Forces"
 msgstr "LocalMap Forces"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1129
+#: src/components/map/renderers/LocalMapGraph.tsx:1181
 msgid "LocalMAP Paper Parameters"
 msgstr "LocalMAP Paper Parameters"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1116
+#: src/components/map/renderers/LocalMapGraph.tsx:1168
 msgid "LocalMap Settings"
 msgstr "LocalMap Settings"
 
@@ -7285,12 +7285,12 @@ msgstr "MCP is a bridge that lets an AI assistant such as Claude, ChatGPT or Le 
 msgid "MCP URL"
 msgstr "MCP URL"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1134
+#: src/components/map/renderers/LocalMapGraph.tsx:1186
 msgid "Medium distance threshold (default: 10)"
 msgstr "Medium distance threshold (default: 10)"
 
 #. placeholder {0}: linkDistanceLinear.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:1114
+#: src/components/map/renderers/MstGraph.tsx:1140
 msgid "Medium distances: {0}"
 msgstr "Medium distances: {0}"
 
@@ -7394,7 +7394,7 @@ msgid "Microphone access is still denied. Please check your settings and try aga
 msgstr "Microphone access is still denied. Please check your settings and try again."
 
 #. placeholder {0}: linkDistanceConstant.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1100
+#: src/components/map/renderers/MstGraph.tsx:1126
 msgid "Minimum link length: {0}"
 msgstr "Minimum link length: {0}"
 
@@ -7649,7 +7649,7 @@ msgid "Negative"
 msgstr "Negative"
 
 #. placeholder {0}: nnStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1157
+#: src/components/map/renderers/LocalMapGraph.tsx:1209
 msgid "Neighbor Attraction: {0}"
 msgstr "Neighbor Attraction: {0}"
 
@@ -9036,7 +9036,7 @@ msgstr "Passwords do not match"
 msgid "Paste it into any page. It stays live."
 msgstr "Paste it into any page. It stays live."
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1093
+#: src/components/map/renderers/LocalMapGraph.tsx:1145
 msgid "Pause physics"
 msgstr "Pause physics"
 
@@ -10578,7 +10578,7 @@ msgstr "Results"
 msgid "participant.button.stop.resume"
 msgstr "Resume"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1093
+#: src/components/map/renderers/LocalMapGraph.tsx:1145
 msgid "Resume physics"
 msgstr "Resume physics"
 
@@ -13528,7 +13528,7 @@ msgid "Tree"
 msgstr "Tree"
 
 #. placeholder {0}: mstRepulsionCoeff.toFixed(3)
-#: src/components/map/renderers/MstGraph.tsx:1152
+#: src/components/map/renderers/MstGraph.tsx:1178
 msgid "Tree repulsion factor: {0}"
 msgstr "Tree repulsion factor: {0}"
 
