@@ -293,11 +293,16 @@ export const NewChatRoute = () => {
 		const state = location.state as {
 			selectedConversationIds?: unknown;
 		} | null;
-		return Array.isArray(state?.selectedConversationIds)
-			? state.selectedConversationIds.filter(
-					(id): id is string => typeof id === "string",
-				)
-			: [];
+		if (Array.isArray(state?.selectedConversationIds)) {
+			return state.selectedConversationIds.filter(
+				(id): id is string => typeof id === "string",
+			);
+		}
+		const params = new URLSearchParams(location.search);
+		const paramId =
+			params.get("conversationId") ?? params.get("conversation_id");
+		if (paramId) return [paramId];
+		return [];
 	});
 	const [pickerOpened, pickerHandlers] = useDisclosure(false);
 	const [agenticIntroOpened, agenticIntroHandlers] = useDisclosure(false);
