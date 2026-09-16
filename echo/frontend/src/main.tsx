@@ -12,10 +12,30 @@ import {
 	POSTHOG_UI_HOST,
 	USE_PARTICIPANT_ROUTER,
 } from "./config";
-import { recoverFromChunkFailure } from "./lib/appVersion";
+import {
+	isChunkLoadErrorMessage,
+	recoverFromChunkFailure,
+} from "./lib/appVersion";
 
 posthog.init(POSTHOG_TOKEN, {
 	api_host: POSTHOG_HOST,
+	// Stale-deploy chunk misses are already recovered by recoverFromChunkFailure
+	// (a tab on an old build reloads onto the new one). Vite still rethrows them,
+	// so drop the autocaptured exception here to keep error tracking clean.
+	before_send: (event) => {
+		if (event?.event === "$exception") {
+			const exceptions = event.properties?.$exception_list;
+			if (
+				Array.isArray(exceptions) &&
+				exceptions.some((exception) =>
+					isChunkLoadErrorMessage(exception?.value),
+				)
+			) {
+				return null;
+			}
+		}
+		return event;
+	},
 	// Error tracking: autocapture unhandled errors and promise rejections.
 	// React render errors are reported separately via ErrorBoundary.
 	capture_exceptions: {
