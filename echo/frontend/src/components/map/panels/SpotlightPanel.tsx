@@ -8,7 +8,6 @@ import {
 	attributeInputsOf,
 	FACT_CHECKABLE_TYPES,
 	isFactCheckEligible,
-	OBJECT_TYPE_STYLES,
 } from "../attributes";
 import type { EvidenceGroup } from "../data/adapter";
 import { deriveDisplayVerdict } from "../graph/nodeStyle";
@@ -72,7 +71,6 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 	const valence = node?.metadata.valence;
 	const verdict = eligible ? deriveDisplayVerdict(factCheck) : undefined;
 
-	const typeActive = colorBy === "type";
 	const valenceActive = colorBy === "valence";
 	const verdictActive = colorBy === "factCheck";
 
@@ -106,23 +104,6 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 						/>
 
 						<div className="flex flex-wrap gap-1.5">
-							<UnstyledButton
-								onClick={() => onColorByChange(typeActive ? "none" : "type")}
-								aria-pressed={typeActive}
-								title={
-									typeActive
-										? t`Stop coloring graph by type`
-										: t`Color graph by type`
-								}
-								className={cn(
-									CHIP_CLASS,
-									"text-graphite transition-opacity hover:opacity-80",
-									typeActive && ACTIVE_RING,
-								)}
-								style={{ backgroundColor: OBJECT_TYPE_STYLES[type].color }}
-							>
-								{OBJECT_TYPE_STYLES[type].label()}
-							</UnstyledButton>
 							{valenceApplies && (
 								<UnstyledButton
 									onClick={() =>
@@ -215,7 +196,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 											<Button
 												size="compact-xs"
 												variant="subtle"
-												radius="xl"
+												radius={0}
 												onClick={() => onCancelFactCheck(node.id)}
 											>
 												<Trans>Cancel</Trans>
@@ -248,6 +229,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 											<Button
 												size="compact-xs"
 												variant="subtle"
+												radius={0}
 												onClick={() => onFactCheck(node.id, { force: true })}
 											>
 												<Trans>Re-check</Trans>
@@ -268,7 +250,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 											<Button
 												size="compact-xs"
 												variant="outline"
-												radius="xl"
+												radius={0}
 												onClick={() => onFactCheck(node.id)}
 											>
 												<Trans>Retry</Trans>

@@ -21,6 +21,10 @@ import type {
 import type { MapSettings } from "../state/settings";
 import type { ColorBy } from "../types";
 
+const MAP_COLOR_BY_OPTIONS = COLOR_BY_OPTIONS.filter(
+	(option) => option !== "type",
+);
+
 type MapSettingsMenuProps = {
 	settings: MapSettings;
 	onChange: (patch: Partial<MapSettings>) => void;
@@ -89,11 +93,18 @@ export const MapSettingsMenu = ({
 		settings.nodeLimit !== null || settings.edgeLimit !== null;
 
 	return (
-		<Popover position="bottom-end" shadow="xl" width={300} withinPortal>
+		<Popover
+			position="bottom-end"
+			shadow="xl"
+			width={300}
+			radius={0}
+			withinPortal
+		>
 			<Popover.Target>
 				<ActionIcon
 					variant="subtle"
 					size="lg"
+					radius={0}
 					aria-label={t`Panel settings`}
 					title={t`Panel settings`}
 				>
@@ -140,7 +151,7 @@ export const MapSettingsMenu = ({
 						}
 					>
 						<Stack gap="xs" mt="xs">
-							{COLOR_BY_OPTIONS.map((option) => (
+							{MAP_COLOR_BY_OPTIONS.map((option) => (
 								<Radio
 									key={option}
 									size="sm"
@@ -164,7 +175,7 @@ export const MapSettingsMenu = ({
 							/>
 							<Button
 								size="sm"
-								radius="xl"
+								radius={0}
 								fullWidth
 								disabled={pendingClaimCount === 0}
 								onClick={onFactCheckAll}
@@ -191,6 +202,7 @@ export const MapSettingsMenu = ({
 							min={1}
 							step={1}
 							allowDecimal={false}
+							radius={0}
 							value={settings.nodeLimit ?? applied.nodeLimit}
 							onChange={(value) => onChange({ nodeLimit: readBudget(value) })}
 						/>
@@ -201,6 +213,7 @@ export const MapSettingsMenu = ({
 							min={1}
 							step={1}
 							allowDecimal={false}
+							radius={0}
 							value={settings.edgeLimit ?? applied.edgeLimit}
 							onChange={(value) => onChange({ edgeLimit: readBudget(value) })}
 						/>
@@ -220,6 +233,7 @@ export const MapSettingsMenu = ({
 							<Button
 								size="compact-xs"
 								variant="subtle"
+								radius={0}
 								onClick={() => onChange({ edgeLimit: null, nodeLimit: null })}
 							>
 								<Trans>Use the default budget</Trans>

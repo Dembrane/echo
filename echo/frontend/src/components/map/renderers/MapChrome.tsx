@@ -31,7 +31,7 @@ export const MapLoadingOverlay = ({
 			backgroundColor: `color-mix(in srgb, ${MAP_SURFACE} 80%, transparent)`,
 		}}
 	>
-		<div className="rounded-lg bg-graphite p-6 shadow-xl">
+		<div className="bg-graphite p-6 shadow-xl">
 			<div className="flex items-center gap-3">
 				<Loader color="primary" size={32} />
 				<Text size="md" className="text-parchment">
@@ -59,7 +59,7 @@ export const MapChromeButton = ({
 		<ActionIcon
 			variant="subtle"
 			size={42}
-			radius="md"
+			radius={0}
 			onClick={onClick}
 			title={label}
 			aria-label={label}
@@ -94,11 +94,11 @@ export const MapSettingsPanel = ({
 }) => (
 	<div
 		data-testid="map-settings-panel"
-		className="absolute right-4 top-16 z-10 max-h-[calc(100%-5rem)] w-80 max-w-[calc(100%-2rem)] overflow-y-auto rounded-md"
+		className="absolute right-4 top-16 z-10 max-h-[calc(100%-5rem)] w-80 max-w-[calc(100%-2rem)] overflow-y-auto"
 	>
 		<Paper
 			shadow="xl"
-			radius="md"
+			radius={0}
 			p="md"
 			style={{
 				backgroundColor: MAP_SURFACE_RAISED,
@@ -110,7 +110,7 @@ export const MapSettingsPanel = ({
 				<Text component="h3" size="md" fw={600}>
 					{title}
 				</Text>
-				<Button size="compact-sm" variant="subtle" onClick={onReset}>
+				<Button size="compact-sm" variant="subtle" radius={0} onClick={onReset}>
 					<Trans>Reset</Trans>
 				</Button>
 			</div>

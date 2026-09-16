@@ -19,8 +19,6 @@ export const MapRoute = () => {
 		? parseFixture(searchParams.get("fixture"))
 		: null;
 
-	// TODO(lead): pass onGenerateObjects once recipe runs can be started from
-	// the Map (tensions, popcorn, stakeholders, deduplicated arguments).
 	return (
 		<MapPage
 			projectId={projectId}

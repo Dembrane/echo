@@ -64,6 +64,8 @@ export type MapStats = {
 
 export type MapResult = {
 	id: string;
+	/** Snapshot identity included by the project summary compatibility payload. */
+	snapshot_id?: string | null;
 	status: "ready";
 	created_at: string | null;
 	completed_at: string | null;
@@ -227,6 +229,8 @@ export const mapKeys = {
 			},
 		] as const,
 	project: (projectId: string) => ["map", "project", projectId] as const,
+	projectLegacy: (projectId: string) =>
+		["map", "project", projectId, "legacy"] as const,
 	results: ["map", "result"] as const,
 };
 
@@ -237,12 +241,27 @@ const enc = encodeURIComponent;
 // ---------------------------------------------------------------------------
 
 /** The project's current map revision and any newer attempt. */
-export const useProjectMap = (projectId: string) =>
+export const useProjectMap = (
+	projectId: string,
+	{ enabled = true }: { enabled?: boolean } = {},
+) =>
+	useQuery({
+		enabled: enabled && !!projectId,
+		queryFn: () => bff.get<ProjectMapState>(`/map/projects/${enc(projectId)}`),
+		queryKey: mapKeys.projectLegacy(projectId),
+		// A result carries every vector; the event stream says when to reload.
+		refetchOnWindowFocus: false,
+	});
+
+/** Project state without graph vectors, used before large-map admission. */
+export const useProjectMapSummary = (projectId: string) =>
 	useQuery({
 		enabled: !!projectId,
-		queryFn: () => bff.get<ProjectMapState>(`/map/projects/${enc(projectId)}`),
+		queryFn: () =>
+			bff.get<ProjectMapState>(`/map/projects/${enc(projectId)}`, {
+				metadata_only: true,
+			}),
 		queryKey: mapKeys.project(projectId),
-		// A result carries every vector; the event stream says when to reload.
 		refetchOnWindowFocus: false,
 	});
 

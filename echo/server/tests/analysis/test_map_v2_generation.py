@@ -95,6 +95,56 @@ def test_the_map_channels() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("manifest", [
+    {"version": 2, "snapshotId": "snapshot-current"},
+    {"version": 1, "arguments": [{"embedding_id": "vector-1"}], "stats": {"arguments": 203}},
+])
+async def test_project_metadata_does_not_load_vectors_or_revisions(manifest: dict[str, Any]) -> None:
+    class NoReads:
+        def __getattr__(self, name: str) -> Any:
+            raise AssertionError(f"metadata must not read {name}")
+
+    current = {"id": "result-current", "status": "ready", "manifest": manifest}
+    payload = await service.state_payload(current, None, NoReads(), NoReads(), metadata_only=True)  # type: ignore[arg-type]
+    assert payload["current"]["id"] == "result-current"
+    assert payload["current"]["snapshot_id"] == manifest.get("snapshotId")
+    assert payload["current"]["metadata_only"] is True
+    assert payload["current"]["arguments"] == []
+
+
+@pytest.mark.asyncio
+async def test_project_metadata_route_uses_a_distinct_etag(monkeypatch: pytest.MonkeyPatch) -> None:
+    maps = MapWorld()
+    grants = Grants()
+    access = grants.grant(PROJECT, *READ)
+    current = {"id": "result-current", "status": "ready", "manifest": {"version": 2, "snapshotId": "snapshot-current"}}
+
+    async def rows(*args: Any) -> Any:
+        return current, None
+
+    async def count(*args: Any) -> int:
+        return 11
+
+    monkeypatch.setattr(map_bff, "resolve_project_access", grants.resolve)
+    monkeypatch.setattr(map_bff, "get_store", lambda: maps.map_store)
+    monkeypatch.setattr(map_bff, "get_map_analysis", lambda: None)
+    monkeypatch.setattr(service, "project_rows", rows)
+    monkeypatch.setattr(map_bff.transcripts, "count_conversations_with_transcripts", count)
+    path = f"/projects/{PROJECT}"
+    full_etag = service.state_etag(current, None, 11)
+    response = await asgi_call(map_bff.router, "/api/v2/bff/map", "GET", path,
+                               params={"metadata_only": "true"}, headers={"If-None-Match": full_etag})
+    assert response.status_code == 200
+    assert response.headers["etag"] != full_etag
+    assert response.json()["current"]["snapshot_id"] == "snapshot-current"
+    assert response.json()["current"]["arguments"] == []
+    assert access.required == ["project:read", "conversation:read"]
+    again = await asgi_call(map_bff.router, "/api/v2/bff/map", "GET", path,
+                           params={"metadata_only": "true"}, headers={"If-None-Match": response.headers["etag"]})
+    assert again.status_code == 304
+
+
+@pytest.mark.asyncio
 async def test_the_events_route_adds_executor_runs_on_request_or_once_the_project_has_them(
     world: FixtureWorld, arguments_recipe: None, monkeypatch: pytest.MonkeyPatch  # noqa: ARG001
 ) -> None:

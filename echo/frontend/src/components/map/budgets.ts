@@ -41,9 +41,6 @@ export const LEGACY_BUDGET_BOUNDS: MapBudgetBounds = {
 	defaults: { edgeLimit: 450, nodeLimit: 150 },
 };
 
-/** Below this many objects the result list is the primary entry. */
-export const SMALL_RESULT_LIMIT = 50;
-
 export const isPositiveInteger = (value: unknown): value is number =>
 	typeof value === "number" && Number.isInteger(value) && value > 0;
 
@@ -141,14 +138,23 @@ export function resolveBudgets(
 	return { adjustments, budgets: { edgeLimit, nodeLimit } };
 }
 
-export type BudgetState = "empty" | "small" | "map" | "overBudget";
+export type BudgetState = "empty" | "map" | "overBudget";
 
-/** Which entry state a scope of `count` objects gets under `nodeLimit`. */
+/** Which entry state a scope of `count` arguments gets under `nodeLimit`. */
 export function budgetState(count: number, nodeLimit: number): BudgetState {
 	if (count <= 0) return "empty";
 	if (count > nodeLimit) return "overBudget";
-	if (count < SMALL_RESULT_LIMIT) return "small";
 	return "map";
+}
+
+/** Highest node count that both deployment ceilings can admit. */
+export function maximumAdmittedNodes(bounds: MapBudgetBounds): number | null {
+	const { ceilings = {} } = sanitiseBounds(bounds);
+	const limits = [
+		ceilings.nodeLimit,
+		ceilings.edgeLimit === undefined ? undefined : ceilings.edgeLimit + 1,
+	].filter((value): value is number => value !== undefined);
+	return limits.length > 0 ? Math.min(...limits) : null;
 }
 
 /**

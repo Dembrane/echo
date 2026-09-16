@@ -96,6 +96,12 @@ type CircleSelection = Selection<
 	SVGGElement,
 	unknown
 >;
+type CountSelection = Selection<
+	SVGTextElement,
+	InternalNode,
+	SVGGElement,
+	unknown
+>;
 
 export interface MstGraphProps {
 	nodes: MapGraphNode[];
@@ -172,6 +178,7 @@ const drawPositions = (
 	links: LinkSelection | null,
 	relationLines: RelationLineSelection | null,
 	circles: CircleSelection | null,
+	counts: CountSelection | null,
 	nodeById: ReadonlyMap<string, InternalNode>,
 ) => {
 	links
@@ -181,6 +188,7 @@ const drawPositions = (
 		.attr("y2", (d) => endpointNode(d.target)?.y ?? null);
 	drawRelationPositions(relationLines, nodeById);
 	circles?.attr("cx", (d) => d.x ?? 0).attr("cy", (d) => d.y ?? 0);
+	counts?.attr("x", (d) => d.x ?? 0).attr("y", (d) => d.y ?? 0);
 };
 
 /** The forces the running simulation was last configured with. */
@@ -236,6 +244,7 @@ export const MstGraph = ({
 	const linkSelectionRef = useRef<LinkSelection | null>(null);
 	const relationSelectionRef = useRef<RelationLineSelection | null>(null);
 	const circleSelectionRef = useRef<CircleSelection | null>(null);
+	const countSelectionRef = useRef<CountSelection | null>(null);
 	const pulseSelectionRef = useRef<CircleSelection | null>(null);
 	const startPulse = usePulseTimer(pulseSelectionRef);
 	const appliedRef = useRef<AppliedForces | null>(null);
@@ -610,6 +619,7 @@ export const MstGraph = ({
 			.attr("class", "nodes-group")
 			.append("g")
 			.attr("class", "circle-nodes");
+		g.append("g").attr("class", "merge-counts").attr("pointer-events", "none");
 		gRef.current = g;
 		overlayRef.current = svg
 			.append("g")
@@ -641,6 +651,7 @@ export const MstGraph = ({
 			linkSelectionRef.current = null;
 			relationSelectionRef.current = null;
 			circleSelectionRef.current = null;
+			countSelectionRef.current = null;
 			pulseSelectionRef.current = null;
 		};
 	}, [sizeRef]);
@@ -781,6 +792,7 @@ export const MstGraph = ({
 					linkSelectionRef.current,
 					relationSelectionRef.current,
 					circleSelectionRef.current,
+					countSelectionRef.current,
 					simulationNodeByIdRef.current,
 				);
 
@@ -1019,9 +1031,41 @@ export const MstGraph = ({
 			.select("title")
 			.text((d) => nodeById.get(d.id)?.label || d.id);
 
+		const countSelection = g
+			.select<SVGGElement>(".merge-counts")
+			.selectAll<SVGTextElement, InternalNode>("text.merge-count")
+			.data(
+				simulationNodes.filter(
+					(d) =>
+						(nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0) > 1,
+				),
+				(d) => d.id,
+			)
+			.join("text")
+			.attr("class", "merge-count")
+			.attr("role", "img")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central")
+			.attr("font-size", 12)
+			.attr("font-weight", 700)
+			.attr("fill", "var(--map-surface, white)")
+			.attr("stroke", "var(--map-text, black)")
+			.attr("stroke-width", 0.75)
+			.attr("stroke-linejoin", "round")
+			.attr("paint-order", "stroke")
+			.attr(
+				"aria-label",
+				(d) =>
+					t`Combined from ${nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0} arguments`,
+			)
+			.text(
+				(d) => nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? "",
+			);
+
 		linkSelectionRef.current = linkSelection;
 		relationSelectionRef.current = relationSelection;
 		circleSelectionRef.current = circleSelection;
+		countSelectionRef.current = countSelection;
 		pulseSelectionRef.current = circleSelection.filter(
 			(d) => styleOf(d.id).pulse,
 		);
@@ -1031,6 +1075,7 @@ export const MstGraph = ({
 			linkSelection,
 			relationSelection,
 			circleSelection,
+			countSelection,
 			simulationNodeById,
 		);
 

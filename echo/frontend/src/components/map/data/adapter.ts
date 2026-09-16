@@ -53,9 +53,24 @@ export type MapProvenanceInfo = {
 	legacy: boolean;
 };
 
+export type ConsolidationMember = {
+	objectId: string;
+	revisionId: string;
+	statement: string;
+	evidence: EvidenceGroup[];
+};
+
+export type ConsolidationDetail = {
+	memberCount: number;
+	members: ConsolidationMember[];
+	/** Older trusted results retained counts but not their source statements. */
+	legacy: boolean;
+};
+
 export type ArgumentDetail = {
 	type: "argument" | "deduplicated_argument";
 	statement: string;
+	consolidation?: ConsolidationDetail;
 };
 
 export type PopcornDetail = { type: "popcorn"; phrase: string };
@@ -211,6 +226,49 @@ const groupEvidence = (evidence: MapEvidence[]): EvidenceGroup[] => {
 	return Array.from(groups.values());
 };
 
+/**
+ * Read only lineage that is internally consistent. The server validates that
+ * lineage against pinned inputs; this check prevents malformed or legacy
+ * numeric metadata from becoming a merge badge in the client.
+ */
+const parseConsolidation = (
+	value: unknown,
+): ConsolidationDetail | undefined => {
+	const consolidation = asRecord(value);
+	if (!Array.isArray(consolidation.members)) return undefined;
+	const memberCount = consolidation.memberCount;
+	const legacy = consolidation.legacy === true;
+	if (
+		typeof memberCount !== "number" ||
+		!Number.isInteger(memberCount) ||
+		memberCount <= 1
+	) {
+		return undefined;
+	}
+	if (legacy && consolidation.members.length === 0) {
+		return { legacy: true, memberCount, members: [] };
+	}
+	const members: ConsolidationMember[] = [];
+	const objectIds = new Set<string>();
+	for (const value of consolidation.members) {
+		const member = asRecord(value);
+		const objectId = asString(member.objectId, member.object_id);
+		const revisionId = asString(member.revisionId, member.revision_id);
+		if (!objectId || !revisionId || objectIds.has(objectId)) return undefined;
+		objectIds.add(objectId);
+		members.push({
+			evidence: groupEvidence(parseEvidence(member.evidence)),
+			objectId,
+			revisionId,
+			statement: asString(member.statement),
+		});
+	}
+	if (memberCount !== members.length) {
+		return undefined;
+	}
+	return { legacy: false, memberCount, members };
+};
+
 const parseDetail = (
 	type: ObjectType,
 	label: string,
@@ -241,7 +299,11 @@ const parseDetail = (
 			};
 		}
 		default:
-			return { statement: asString(detail.statement, label), type };
+			return {
+				consolidation: parseConsolidation(detail.consolidation),
+				statement: asString(detail.statement, label),
+				type,
+			};
 	}
 };
 
@@ -384,8 +446,9 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 		const eligible = Boolean(item.factCheck?.eligible);
 		const detailRecord = asRecord(item.detail);
 
+		const parsedDetail = parseDetail(type, label, item.detail);
 		objectsById.set(id, {
-			detail: parseDetail(type, label, item.detail),
+			detail: parsedDetail,
 			factCheck: {
 				claimKey: asStringOrNull(
 					item.factCheck?.claimKey,
@@ -411,6 +474,13 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 			id,
 			label,
 			metadata: {
+				consolidation:
+					parsedDetail.type === "argument" ||
+					parsedDetail.type === "deduplicated_argument"
+						? parsedDetail.consolidation
+							? { memberCount: parsedDetail.consolidation.memberCount }
+							: undefined
+						: undefined,
 				conversationIds: Array.from(
 					new Set(evidence.map((entry) => entry.conversation_id)),
 				),

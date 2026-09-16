@@ -4,9 +4,9 @@ import {
 	budgetState,
 	budgetsToAdmit,
 	type MapBudgetBounds,
+	maximumAdmittedNodes,
 	minEdgeLimit,
 	resolveBudgets,
-	SMALL_RESULT_LIMIT,
 } from "./budgets";
 
 // Server-shaped bounds. Tests read the default from here, never a literal.
@@ -100,11 +100,9 @@ describe("resolveBudgets", () => {
 });
 
 describe("budgetState", () => {
-	it("is empty for zero objects and small for one", () => {
+	it("is empty for zero objects and maps every non-empty fitting set", () => {
 		expect(budgetState(0, DEFAULT_NODES)).toBe("empty");
-		expect(budgetState(1, DEFAULT_NODES)).toBe("small");
-		expect(budgetState(SMALL_RESULT_LIMIT - 1, DEFAULT_NODES)).toBe("small");
-		expect(budgetState(SMALL_RESULT_LIMIT, DEFAULT_NODES)).toBe("map");
+		expect(budgetState(1, DEFAULT_NODES)).toBe("map");
 	});
 
 	it.each([
@@ -121,6 +119,19 @@ describe("budgetState", () => {
 
 	it("puts a small count over budget when the budget is smaller still", () => {
 		expect(budgetState(20, 10)).toBe("overBudget");
+	});
+});
+
+describe("maximumAdmittedNodes", () => {
+	it("reports the tighter node or tree-edge ceiling", () => {
+		expect(maximumAdmittedNodes(bounds)).toBe(1000);
+		expect(
+			maximumAdmittedNodes({
+				ceilings: { edgeLimit: 499, nodeLimit: 1000 },
+				defaults: bounds.defaults,
+			}),
+		).toBe(500);
+		expect(maximumAdmittedNodes({ defaults: bounds.defaults })).toBeNull();
 	});
 });
 

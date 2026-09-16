@@ -50,6 +50,8 @@ export type MapGraphNode = {
 		revisionId: string;
 		/** 1 for most types, 1.5 for tension; from the type style definition. */
 		sizeScale: number;
+		/** Verified original-argument lineage supplied in `detail.consolidation`. */
+		consolidation?: { memberCount: number };
 		/** Replaces `kind` for fact-check eligibility. */
 		epistemicKind?: MapEpistemicKind;
 		/** Missing means "Not assessed", which is not the same as neutral. */

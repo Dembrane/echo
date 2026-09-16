@@ -24,10 +24,10 @@ const store = (value: unknown) =>
 	window.localStorage.setItem(MAP_SETTINGS_STORAGE_KEY, JSON.stringify(value));
 
 describe("map settings", () => {
-	it("starts from DDW's panels, Type colouring and the deployment budgets", () => {
+	it("starts from DDW's panels, neutral colouring and the deployment budgets", () => {
 		expect(readMapSettings()).toEqual({
 			autoFactCheckClaims: false,
-			colorBy: "type",
+			colorBy: "none",
 			darkMode: false,
 			edgeLimit: null,
 			nodeLimit: null,
@@ -38,7 +38,6 @@ describe("map settings", () => {
 			showShowcase: false,
 			showSpotlight: true,
 			showTree: true,
-			types: null,
 		});
 	});
 
@@ -74,7 +73,7 @@ describe("map settings", () => {
 
 		store({ colorBy: "rainbow", showLegend: true, showTree: "yes" });
 		const settings = readMapSettings();
-		expect(settings.colorBy).toBe("type");
+		expect(settings.colorBy).toBe("none");
 		expect(settings.showLegend).toBe(true);
 		expect(settings.showTree).toBe(true);
 	});
@@ -108,12 +107,11 @@ describe("settings migration", () => {
 				showShowcase: true,
 				showSpotlight: false,
 				showTree: false,
-				types: null,
 			});
 		},
 	);
 
-	it("keeps custom budgets, relationships and saved types", () => {
+	it("keeps custom budgets and relationships but ignores saved types", () => {
 		store({
 			colorBy: "type",
 			edgeLimit: 900,
@@ -126,7 +124,12 @@ describe("settings migration", () => {
 		expect(settings.nodeLimit).toBe(300);
 		expect(settings.edgeLimit).toBe(900);
 		expect(settings.showRelationships).toBe(true);
-		expect(settings.types).toEqual(["tension", "argument"]);
+		expect(settings).not.toHaveProperty("types");
+	});
+
+	it("migrates retired type colouring to neutral", () => {
+		store({ colorBy: "type", version: 2 });
+		expect(readMapSettings().colorBy).toBe("none");
 	});
 
 	it("keeps an inconsistent budget pair as saved; resolution adjusts it where applied", () => {

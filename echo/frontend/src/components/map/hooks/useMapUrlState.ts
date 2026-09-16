@@ -1,47 +1,29 @@
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router";
-import { isObjectType, OBJECT_TYPES } from "../attributes";
 import { isColorBy } from "../state/settings";
-import type { ColorBy, ObjectType } from "../types";
-
-export type MapView = "list" | "map";
+import type { ColorBy } from "../types";
 
 /** Map state that lives in the URL so it is shareable and survives reload. */
 export type MapUrlState = {
-	/** Null: not in the URL. An empty list: no type selected. */
-	types: ObjectType[] | null;
 	/** A result scope, such as one deduplication result. */
 	scope: string | null;
 	colorBy: ColorBy | null;
-	view: MapView | null;
 };
 
 export const MAP_URL_PARAMS = {
 	colorBy: "colorBy",
 	scope: "scope",
-	types: "types",
-	view: "view",
 } as const;
 
 export function parseMapSearchParams(params: URLSearchParams): MapUrlState {
-	const rawTypes = params.get(MAP_URL_PARAMS.types);
-	const types =
-		rawTypes === null
-			? null
-			: OBJECT_TYPES.filter((type) =>
-					rawTypes
-						.split(",")
-						.map((item) => item.trim())
-						.filter(isObjectType)
-						.includes(type),
-				);
 	const colorBy = params.get(MAP_URL_PARAMS.colorBy);
-	const view = params.get(MAP_URL_PARAMS.view);
 	return {
-		colorBy: isColorBy(colorBy) ? colorBy : null,
+		colorBy: isColorBy(colorBy)
+			? colorBy === "type"
+				? "none"
+				: colorBy
+			: null,
 		scope: params.get(MAP_URL_PARAMS.scope) || null,
-		types,
-		view: view === "list" || view === "map" ? view : null,
 	};
 }
 
@@ -58,17 +40,17 @@ export function applyMapUrlState(
 			next.set(key, value);
 		}
 	};
-	if ("types" in patch) {
+	if ("scope" in patch) set(MAP_URL_PARAMS.scope, patch.scope ?? null);
+	if ("colorBy" in patch) {
 		set(
-			MAP_URL_PARAMS.types,
-			patch.types
-				? OBJECT_TYPES.filter((type) => patch.types?.includes(type)).join(",")
-				: null,
+			MAP_URL_PARAMS.colorBy,
+			patch.colorBy === "type" ? "none" : (patch.colorBy ?? null),
 		);
 	}
-	if ("scope" in patch) set(MAP_URL_PARAMS.scope, patch.scope ?? null);
-	if ("colorBy" in patch) set(MAP_URL_PARAMS.colorBy, patch.colorBy ?? null);
-	if ("view" in patch) set(MAP_URL_PARAMS.view, patch.view ?? null);
+	// Strip legacy controls when this page next writes its URL. They must not
+	// restore the retired list or mixed-object surfaces on a shared link.
+	next.delete("types");
+	next.delete("view");
 	return next;
 }
 
@@ -77,7 +59,6 @@ export const deduplicationResultScope = (
 	resultScope: string,
 ): Partial<MapUrlState> => ({
 	scope: resultScope,
-	types: ["deduplicated_argument"],
 });
 
 /** Reads and replaces the Map's search parameters through the router. */

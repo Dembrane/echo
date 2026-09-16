@@ -219,6 +219,13 @@ async def test_old_results_render_through_the_v2_map_view_and_keep_their_urls() 
     ]
     assert all(node["provenance"]["origin"] == "imported" and node["provenance"]["recipeId"] == LEGACY_RECIPE_ID for node in payload["nodes"])
     assert payload["unplaced"] == [] and payload["embedding"] == CONFIG
+    merged = next(node for node in payload["nodes"] if node["label"] == "Trams are quieter than buses.")
+    assert merged["detail"]["consolidation"] == {"memberCount": 2, "members": [], "legacy": True}
+    assert all(
+        "consolidation" not in node["detail"]
+        for node in payload["nodes"]
+        if node["revisionId"] != merged["revisionId"]
+    )
     (legacy,) = [p for p in snapshot.manifest["producers"] if p["recipeId"] == LEGACY_RECIPE_ID]
     assert legacy["legacyResultId"] == second["id"]
     scoped = await graph_payload(

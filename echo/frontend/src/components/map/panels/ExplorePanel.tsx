@@ -54,7 +54,7 @@ const NodeListAccordion = ({ nodes }: { nodes: MapGraphNode[] }) => {
 			{open && (
 				<ul className="space-y-0.5 pl-4">
 					{nodes.map((node) => (
-						<li key={node.id} className="text-xs">
+						<li key={node.id} className="text-xs leading-snug">
 							• {node.label ?? node.id}
 						</li>
 					))}
@@ -85,7 +85,7 @@ export const ExplorePanel = memo(function ExplorePanel({
 
 				{isProcessing && (
 					<div
-						className="mb-3 flex items-center gap-2 rounded p-2"
+						className="mb-3 flex items-center gap-2 p-2"
 						style={{ backgroundColor: mapVars.card }}
 					>
 						<Loader size={16} color="primary" />
@@ -97,7 +97,7 @@ export const ExplorePanel = memo(function ExplorePanel({
 
 				{error && !isProcessing && (
 					<div
-						className="mb-3 flex items-center justify-between gap-2 rounded p-2"
+						className="mb-3 flex items-center justify-between gap-2 p-2"
 						style={{ backgroundColor: mapVars.card }}
 						role="alert"
 					>
@@ -109,7 +109,12 @@ export const ExplorePanel = memo(function ExplorePanel({
 							)}
 						</span>
 						{error.kind === "failed" && (
-							<Button size="compact-xs" variant="subtle" onClick={onRetry}>
+							<Button
+								size="compact-xs"
+								variant="subtle"
+								radius={0}
+								onClick={onRetry}
+							>
 								<Trans>Retry</Trans>
 							</Button>
 						)}
@@ -123,7 +128,7 @@ export const ExplorePanel = memo(function ExplorePanel({
 							return (
 								<div
 									key={distillation.id}
-									className="rounded-lg border transition-colors"
+									className="border transition-colors"
 									style={{
 										backgroundColor: isSelected
 											? mapVars.accentSurface
@@ -139,7 +144,7 @@ export const ExplorePanel = memo(function ExplorePanel({
 										className="block w-full p-3 text-left transition-opacity hover:opacity-80"
 									>
 										<span
-											className="text-sm font-medium leading-tight"
+											className="block text-sm font-medium leading-tight"
 											style={{
 												color: isSelected ? mapVars.accentText : undefined,
 											}}

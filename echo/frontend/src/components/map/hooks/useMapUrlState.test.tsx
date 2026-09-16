@@ -11,7 +11,7 @@ import {
 } from "./useMapUrlState";
 
 describe("parseMapSearchParams", () => {
-	it("reads types, scope, colour mode and view", () => {
+	it("reads scope and colour mode while ignoring retired controls", () => {
 		expect(
 			parseMapSearchParams(
 				new URLSearchParams(
@@ -21,23 +21,21 @@ describe("parseMapSearchParams", () => {
 		).toEqual({
 			colorBy: "valence",
 			scope: "run-1",
-			// Filter order, unknown types dropped.
-			types: ["argument", "tension"],
-			view: "list",
 		});
 	});
 
-	it("tells an absent selection from an empty one", () => {
-		expect(parseMapSearchParams(new URLSearchParams("")).types).toBeNull();
-		expect(parseMapSearchParams(new URLSearchParams("types=")).types).toEqual(
-			[],
-		);
+	it("resolves retired type colouring to neutral", () => {
+		expect(
+			parseMapSearchParams(
+				new URLSearchParams("types=tension&view=list&colorBy=type"),
+			),
+		).toEqual({ colorBy: "none", scope: null });
 	});
 
 	it("ignores an unknown colour mode or view", () => {
 		expect(
 			parseMapSearchParams(new URLSearchParams("colorBy=rainbow&view=grid")),
-		).toMatchObject({ colorBy: null, view: null });
+		).toMatchObject({ colorBy: null });
 	});
 });
 
@@ -45,12 +43,12 @@ describe("applyMapUrlState", () => {
 	it("keeps other parameters and removes cleared ones", () => {
 		const next = applyMapUrlState(
 			new URLSearchParams("fixture=mixed&scope=run-1"),
-			{ colorBy: "type", scope: null, types: ["tension"] },
+			{ colorBy: "none", scope: null },
 		);
 		expect(next.get("fixture")).toBe("mixed");
 		expect(next.get("scope")).toBeNull();
-		expect(next.get("types")).toBe("tension");
-		expect(next.get("colorBy")).toBe("type");
+		expect(next.get("types")).toBeNull();
+		expect(next.get("colorBy")).toBe("none");
 	});
 
 	it("opens a deduplication result on its output only", () => {
@@ -60,7 +58,6 @@ describe("applyMapUrlState", () => {
 		);
 		expect(parseMapSearchParams(next)).toMatchObject({
 			scope: "dedup-run-7",
-			types: ["deduplicated_argument"],
 		});
 	});
 });
@@ -79,15 +76,12 @@ describe("useMapUrlState", () => {
 			first.result.current.url[1]({
 				colorBy: "factCheck",
 				scope: "dedup-run-7",
-				types: ["deduplicated_argument", "tension"],
 			});
 		});
 		const search = first.result.current.location.search;
 		expect(first.result.current.url[0]).toEqual({
 			colorBy: "factCheck",
 			scope: "dedup-run-7",
-			types: ["deduplicated_argument", "tension"],
-			view: null,
 		});
 
 		// A reload starts from the URL alone.

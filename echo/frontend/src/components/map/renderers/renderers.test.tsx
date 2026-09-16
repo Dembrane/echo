@@ -1128,6 +1128,20 @@ const withTensions = (
 			: node,
 	);
 
+const withConsolidation = (
+	source: MapGraphNode[],
+	index: number,
+	memberCount: number,
+): MapGraphNode[] =>
+	source.map((node, nodeIndex) =>
+		nodeIndex === index
+			? {
+					...node,
+					metadata: { ...node.metadata, consolidation: { memberCount } },
+				}
+			: node,
+	);
+
 type CollideForce = { radius: () => (node: { id: string }) => number };
 
 /** The collision radius a simulation gives one node. */
@@ -1165,6 +1179,35 @@ const relation = (
 });
 
 describe("per-node size", () => {
+	it("draws verified merge counts at a bounded larger radius in both maps", () => {
+		const merged = withConsolidation(nodes, 4, 2);
+		const largeMerge = withConsolidation(merged, 5, 1024);
+		const { container } = renderInMap(
+			<div>
+				<MstMap edgeLimit={EDGE_LIMIT} nodes={largeMerge} autoAdvance={false} />
+				<LocalMap edgeLimit={EDGE_LIMIT} nodes={largeMerge} />
+			</div>,
+			createMapInteractionStore({ selectedNodeId: nodes[0].id }),
+		);
+
+		for (const svg of mapSvgs(container)) {
+			expect(Number(circleOf(svg, nodes[4].id).getAttribute("r"))).toBeCloseTo(
+				7.2,
+			);
+			expect(Number(circleOf(svg, nodes[5].id).getAttribute("r"))).toBeCloseTo(
+				10.8,
+			);
+			expect(svg.querySelectorAll("text.merge-count")).toHaveLength(2);
+			expect(
+				svg.querySelector('text[aria-label="Combined from 2 arguments"]')
+					?.textContent,
+			).toBe("2");
+			expect(
+				svg.querySelector(".merge-counts")?.getAttribute("pointer-events"),
+			).toBe("none");
+		}
+	});
+
 	it("draws a tension at 1.5 times the radius, with the selected and recent scales on top", () => {
 		// Nodes 10 to 19 are the ten newest; node 3 is selected
 		const sized = withTensions(nodes, [2, 3, 15]);
@@ -1188,13 +1231,14 @@ describe("per-node size", () => {
 	});
 
 	it("gives each node a collision radius from its own size in both renderers", () => {
-		const sized = withTensions(nodes, [4]);
+		const sized = withConsolidation(withTensions(nodes, [4]), 5, 2);
 		renderInMap(
 			<MstMap edgeLimit={EDGE_LIMIT} nodes={sized} autoAdvance={false} />,
 			createMapInteractionStore(),
 		);
 		const mst = latestSimulation();
 		expect(collisionRadiusOf(mst, nodes[4].id)).toBe(9 * 1.25);
+		expect(collisionRadiusOf(mst, nodes[5].id)).toBeCloseTo(7.2 * 1.25);
 		expect(collisionRadiusOf(mst, nodes[0].id)).toBe(6 * 1.25);
 
 		renderInMap(
@@ -1203,6 +1247,7 @@ describe("per-node size", () => {
 		);
 		const local = latestSimulation();
 		expect(collisionRadiusOf(local, nodes[4].id)).toBe(9 * 2);
+		expect(collisionRadiusOf(local, nodes[5].id)).toBeCloseTo(7.2 * 2);
 		expect(collisionRadiusOf(local, nodes[0].id)).toBe(6 * 2);
 	});
 

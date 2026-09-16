@@ -88,6 +88,12 @@ type CircleSelection = Selection<
 	SVGGElement,
 	unknown
 >;
+type CountSelection = Selection<
+	SVGTextElement,
+	InternalNode,
+	SVGGElement,
+	unknown
+>;
 
 export interface LocalMapGraphProps {
 	nodes: MapGraphNode[];
@@ -173,6 +179,7 @@ const drawPositions = (
 	lines: LineSelection | null,
 	relationLines: RelationLineSelection | null,
 	circles: CircleSelection | null,
+	counts: CountSelection | null,
 	nodeById: Map<string, InternalNode>,
 ) => {
 	lines
@@ -182,6 +189,7 @@ const drawPositions = (
 		.attr("y2", (d) => nodeById.get(d.target)?.y ?? null);
 	drawRelationPositions(relationLines, nodeById);
 	circles?.attr("cx", (d) => d.x ?? 0).attr("cy", (d) => d.y ?? 0);
+	counts?.attr("x", (d) => d.x ?? 0).attr("y", (d) => d.y ?? 0);
 };
 
 export const LocalMapGraph = ({
@@ -228,6 +236,7 @@ export const LocalMapGraph = ({
 	const lineSelectionRef = useRef<LineSelection | null>(null);
 	const relationSelectionRef = useRef<RelationLineSelection | null>(null);
 	const circleSelectionRef = useRef<CircleSelection | null>(null);
+	const countSelectionRef = useRef<CountSelection | null>(null);
 	const pulseSelectionRef = useRef<CircleSelection | null>(null);
 	const startPulse = usePulseTimer(pulseSelectionRef);
 	const linkOpacityRef = useRef<(link: LocalMapLink) => number>(() => 0.3);
@@ -642,6 +651,7 @@ export const LocalMapGraph = ({
 			.attr("class", "nodes-group")
 			.append("g")
 			.attr("class", "circle-nodes");
+		g.append("g").attr("class", "merge-counts").attr("pointer-events", "none");
 		overlayRef.current = svg
 			.append("g")
 			.attr("class", "cursor-layer")
@@ -678,6 +688,7 @@ export const LocalMapGraph = ({
 			lineSelectionRef.current = null;
 			relationSelectionRef.current = null;
 			circleSelectionRef.current = null;
+			countSelectionRef.current = null;
 			pulseSelectionRef.current = null;
 			svg.selectAll("*").remove();
 		};
@@ -812,6 +823,7 @@ export const LocalMapGraph = ({
 				lineSelectionRef.current,
 				relationSelectionRef.current,
 				circleSelectionRef.current,
+				countSelectionRef.current,
 				simulationNodeByIdRef.current,
 			);
 
@@ -994,9 +1006,41 @@ export const LocalMapGraph = ({
 			.select("title")
 			.text((d) => nodeById.get(d.id)?.label || d.id);
 
+		const countSelection = g
+			.select<SVGGElement>(".merge-counts")
+			.selectAll<SVGTextElement, InternalNode>("text.merge-count")
+			.data(
+				simulationNodes.filter(
+					(d) =>
+						(nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0) > 1,
+				),
+				(d) => d.id,
+			)
+			.join("text")
+			.attr("class", "merge-count")
+			.attr("role", "img")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central")
+			.attr("font-size", 12)
+			.attr("font-weight", 700)
+			.attr("fill", "var(--map-surface, white)")
+			.attr("stroke", "var(--map-text, black)")
+			.attr("stroke-width", 0.75)
+			.attr("stroke-linejoin", "round")
+			.attr("paint-order", "stroke")
+			.attr(
+				"aria-label",
+				(d) =>
+					t`Combined from ${nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0} arguments`,
+			)
+			.text(
+				(d) => nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? "",
+			);
+
 		lineSelectionRef.current = lineSelection;
 		relationSelectionRef.current = relationSelection;
 		circleSelectionRef.current = circleSelection;
+		countSelectionRef.current = countSelection;
 		pulseSelectionRef.current = circleSelection.filter(
 			(d) => styleOf(d.id).pulse,
 		);
@@ -1006,6 +1050,7 @@ export const LocalMapGraph = ({
 			lineSelection,
 			relationSelection,
 			circleSelection,
+			countSelection,
 			simulationNodeById,
 		);
 

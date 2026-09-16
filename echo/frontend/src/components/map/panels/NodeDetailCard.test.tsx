@@ -60,6 +60,7 @@ const inspect = (
 	);
 	return {
 		inspection: {
+			canRevealRelatedTypes: true,
 			evidenceFor: (id) => graph.evidenceById.get(id) ?? [],
 			object: graph.objectsById.get(nodeId) ?? null,
 			onReveal: vi.fn(),
@@ -157,6 +158,106 @@ describe("inspector per type", () => {
 		expect(screen.getByText("Recipe: popcorn · fixture-1")).toBeTruthy();
 		expect(
 			screen.getByText("Revision history is not available yet."),
+		).toBeTruthy();
+	});
+
+	it("explains a merge from pinned source statements and evidence", () => {
+		const base = nodesById.get("rev-argument-0") as MapGraphNode;
+		const node: MapGraphNode = {
+			...base,
+			label: "Combined statement",
+			metadata: { ...base.metadata, consolidation: { memberCount: 2 } },
+		};
+		const object = graph.objectsById.get(base.id);
+		expect(object).toBeTruthy();
+		const inspection: NodeInspection = {
+			evidenceFor: () => [],
+			object: object
+				? {
+						...object,
+						detail: {
+							consolidation: {
+								legacy: false,
+								memberCount: 2,
+								members: [
+									{
+										evidence: [
+											{
+												conversationId: "conversation-1",
+												label: "Conversation one",
+												quotes: ["Pinned source quote"],
+											},
+										],
+										objectId: "source-1",
+										revisionId: "source-rev-1",
+										statement: "First source statement",
+									},
+									{
+										evidence: [],
+										objectId: "source-2",
+										revisionId: "source-rev-2",
+										statement: "Second source statement",
+									},
+								],
+							},
+							statement: "Combined statement",
+							type: "deduplicated_argument",
+						},
+					}
+				: null,
+			related: [],
+		};
+		render(
+			<Providers>
+				<NodeDetailCard node={node} evidence={[]} inspection={inspection} />
+			</Providers>,
+		);
+
+		expect(screen.getByText("Argument")).toBeTruthy();
+		expect(screen.queryByText("Deduplicated argument")).toBeNull();
+		expect(screen.getByText("Combined from 2 arguments")).toBeTruthy();
+		expect(screen.getByText(/First source statement/)).toBeTruthy();
+		expect(screen.getByText(/Second source statement/)).toBeTruthy();
+		expect(screen.getByText("Pinned source quote")).toBeTruthy();
+	});
+
+	it("explains when an older merge's source statements are unavailable", () => {
+		const base = nodesById.get("rev-argument-0") as MapGraphNode;
+		const object = graph.objectsById.get(base.id);
+		render(
+			<Providers>
+				<NodeDetailCard
+					node={{
+						...base,
+						metadata: { ...base.metadata, consolidation: { memberCount: 3 } },
+					}}
+					evidence={[]}
+					inspection={{
+						evidenceFor: () => [],
+						object: object
+							? {
+									...object,
+									detail: {
+										consolidation: {
+											legacy: true,
+											memberCount: 3,
+											members: [],
+										},
+										statement: base.label,
+										type: "argument",
+									},
+								}
+							: null,
+						related: [],
+					}}
+				/>
+			</Providers>,
+		);
+		expect(screen.getByText("Combined from 3 arguments")).toBeTruthy();
+		expect(
+			screen.getByText(
+				"The original statements are unavailable for this older result.",
+			),
 		).toBeTruthy();
 	});
 });

@@ -325,9 +325,29 @@ async def state_payload(
     attempt: dict[str, Any] | None,
     store: MapStore,
     analysis: MapAnalysis | None = None,
+    *,
+    metadata_only: bool = False,
 ) -> dict[str, Any]:
     shaped: dict[str, Any] | None
-    if current is not None and is_v2_manifest(current.get("manifest")) and analysis is not None:
+    if current is not None and metadata_only:
+        manifest = current.get("manifest") or {}
+        config = current.get("embedding_config") or {}
+        shaped = {
+            "id": current["id"],
+            "status": current["status"],
+            "created_at": _iso(current.get("created_at")),
+            "completed_at": _iso(current.get("completed_at")),
+            "recipe_version": current.get("recipe_version"),
+            "source_fingerprint": current.get("source_fingerprint"),
+            "snapshot_id": manifest.get("snapshotId"),
+            "metadata_only": True,
+            "embedding": {"model": config.get("model"), "dims": config.get("dims"), "key": config.get("key")},
+            "stats": manifest.get("stats") or {},
+            "conversations": [],
+            "arguments": [],
+            "missing_embeddings": [],
+        }
+    elif current is not None and is_v2_manifest(current.get("manifest")) and analysis is not None:
         shaped = await snapshot_result_payload(current, analysis)
     else:
         shaped = await result_payload(current, store) if current else None

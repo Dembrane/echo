@@ -12,7 +12,9 @@ import pytest
 import dembrane.map.events as map_events
 import dembrane.api.v2.bff.map as map_bff
 from tests.map_fakes import PROJECT, OTHER_PROJECT, ready_result, manifest_argument
+from tests.analysis.helpers import Recorder
 from dembrane.analysis.budgets import DEFAULT_NODE_LIMIT, Ceilings, resolve_budgets
+from dembrane.analysis.executor import RunRequest, execute_inline
 from dembrane.analysis.map_view import (
     LEGACY_RECIPE_ID,
     GraphQuery,
@@ -23,6 +25,14 @@ from dembrane.analysis.map_view import (
 )
 from dembrane.analysis.registry import get_recipe, register_recipe, unregister_recipe
 from tests.analysis.map_v2_fakes import READ, Grants, Limiter, Counting, MapWorld, inline, asgi_call
+from tests.analysis.producer_fakes import (
+    C1 as PRODUCER_C1,
+    PROJECT as PRODUCER_PROJECT,
+    MERGED_RECORD,
+    ProducerWorld,
+    item,
+    merge_all,
+)
 from tests.analysis.fixture_recipes import PAIRS, WORDS, FixtureWorld
 
 C1 = "aaaaaaaa-0000-4000-8000-000000000001"
@@ -102,7 +112,8 @@ async def test_types_select_nodes_and_relations_join_only_displayed_revisions(wo
     assert none["counts"]["argument"] == 3
 
     default = await graph_payload(snapshot, _query(None), store=maps.store)
-    assert default["scope"]["types"] == ["argument", "tension"]
+    assert default["scope"]["types"] == ["argument"]
+    assert {node["type"] for node in default["nodes"]} == {"argument"}
 
     assert parse_types("") == () and parse_types(None) is None and parse_types("tension,argument") == ("argument", "tension")
     with pytest.raises(UnknownMapType):
@@ -124,6 +135,73 @@ async def test_scope_narrows_the_graph_to_one_producer_output(world: FixtureWorl
         assert payload["counts"]["argument"] == 3 and payload["counts"]["tension"] == 0
     with pytest.raises(UnknownResultScope):
         await graph_payload(snapshot, _query(None, scope="deduplicated_arguments"), store=maps.store)
+
+
+@pytest.mark.asyncio
+async def test_current_complete_consolidation_replaces_originals_and_exposes_verified_members() -> None:
+    maps, producer = MapWorld(), ProducerWorld.recording_debate()
+    producer.verifier = merge_all(MERGED_RECORD)
+    await execute_inline(
+        RunRequest(PRODUCER_PROJECT, "deduplicated_arguments", "project", idempotency_key="dedup-1"),
+        store=maps.store,
+        deps=producer.deps(Recorder()),
+    )
+    snapshot = await maps.advance(PRODUCER_PROJECT)
+
+    payload = await graph_payload(snapshot, _query(None), store=maps.store)
+
+    assert payload["scope"]["types"] == ["deduplicated_argument"]
+    assert {node["type"] for node in payload["nodes"]} == {"deduplicated_argument"}
+    merged = [node for node in payload["nodes"] if node["detail"].get("consolidation")]
+    assert sorted(node["detail"]["consolidation"]["memberCount"] for node in merged) == [2, 2]
+    semantic = next(node for node in merged if node["label"] == MERGED_RECORD)
+    members = semantic["detail"]["consolidation"]["members"]
+    assert len(members) == 2 and len({member["objectId"] for member in members}) == 2
+    assert all(member["statement"] and member["evidence"] for member in members)
+    assert all("consolidation" not in node["detail"] for node in payload["nodes"] if node not in merged)
+
+    broken = replace(
+        snapshot,
+        manifest={
+            **snapshot.manifest,
+            "relations": [
+                relation
+                for relation in snapshot.manifest["relations"]
+                if relation.get("from") != semantic["revisionId"]
+            ],
+        },
+    )
+    explicit = await graph_payload(broken, _query(("deduplicated_argument",)), store=maps.store)
+    unverified = next(node for node in explicit["nodes"] if node["revisionId"] == semantic["revisionId"])
+    assert "consolidation" not in unverified["detail"]
+
+
+@pytest.mark.asyncio
+async def test_stale_consolidation_cannot_hide_newer_original_arguments() -> None:
+    maps, producer = MapWorld(), ProducerWorld.recording_debate()
+    producer.verifier = merge_all(MERGED_RECORD)
+    await execute_inline(
+        RunRequest(PRODUCER_PROJECT, "deduplicated_arguments", "project", idempotency_key="dedup-1"),
+        store=maps.store,
+        deps=producer.deps(Recorder()),
+    )
+    producer.set_text(
+        PRODUCER_C1,
+        "Ann: The city needs frequent night trams.",
+        [item("The city needs frequent night trams.", "The city needs frequent night trams")],
+    )
+    await execute_inline(
+        RunRequest(PRODUCER_PROJECT, "arguments", "project", idempotency_key="arguments-2"),
+        store=maps.store,
+        deps=producer.deps(Recorder()),
+    )
+    snapshot = await maps.advance(PRODUCER_PROJECT)
+
+    payload = await graph_payload(snapshot, _query(None), store=maps.store)
+
+    assert payload["scope"]["types"] == ["argument"]
+    assert {node["type"] for node in payload["nodes"]} == {"argument"}
+    assert "The city needs frequent night trams." in {node["label"] for node in payload["nodes"]}
 
 
 @pytest.mark.asyncio
@@ -228,6 +306,7 @@ async def test_an_unimported_v1_result_is_served_in_the_v2_shape_and_its_v1_rout
         manifest_argument("a-3", "The tram line cost 400 million euros.", kind="claim", valence="neutral"),
         manifest_argument("a-4", "Buses reach more neighbourhoods."),
     ]
+    arguments[0]["candidate_ids"] = ["source-a", "source-b"]
     result = await ready_result(maps.map_store, arguments)
 
     body = (await env.get(f"/projects/{PROJECT}/graph")).json()
@@ -237,6 +316,12 @@ async def test_an_unimported_v1_result_is_served_in_the_v2_shape_and_its_v1_rout
     assert claim["factCheck"] == {"eligible": True, "claimKey": arguments[2]["claim_key"]}
     assert claim["provenance"] == {"runId": result["id"], "origin": "imported", "recipeId": LEGACY_RECIPE_ID, "recipeVersion": result["recipe_version"]}
     assert all(node["embedding"] for node in body["nodes"]) and body["counts"]["argument"] == 4
+    assert body["nodes"][0]["detail"]["consolidation"] == {
+        "memberCount": 2,
+        "members": [],
+        "legacy": True,
+    }
+    assert all("consolidation" not in node["detail"] for node in body["nodes"][1:])
 
     vector_reads = maps.map_store.calls["vectors_by_ids"]
     over = (await env.get(f"/projects/{PROJECT}/graph", {"node_limit": "3"})).json()

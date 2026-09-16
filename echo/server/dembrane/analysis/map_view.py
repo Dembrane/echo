@@ -350,6 +350,10 @@ def claim_of(revision: ObjectRevision) -> tuple[str, list[str], str] | None:
 def project_detail(revision: ObjectRevision) -> dict[str, Any]:
     capability = types.get_object_type(revision.type).map
     detail = dict(capability.detail(revision.payload)) if capability else {}
+    # Consolidation shown by Map is reconstructed from pinned lineage below.
+    # Recipe payload metadata by itself must never create a merge badge.
+    if revision.type == "deduplicated_argument":
+        detail.pop("consolidation", None)
     if "evidence" not in detail and isinstance(detail.get("quotes"), list):
         detail["evidence"] = _quotes_as_evidence(detail["quotes"])
     created = [str(e["createdAt"]) for e in revision.payload.get("evidence") or [] if e.get("createdAt")]
@@ -379,19 +383,33 @@ def provenance_doc(revision: ObjectRevision) -> dict[str, Any]:
     return doc
 
 
-def node_doc(revision: ObjectRevision, vector: list[float] | None, assessment_id: str | None) -> dict[str, Any]:
+def node_doc(
+    revision: ObjectRevision,
+    vector: list[float] | None,
+    assessment_id: str | None,
+    consolidation: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     claim = claim_of(revision)
     fact_check: dict[str, Any] = {"eligible": claim is not None}
     if claim is not None:
         fact_check["claimKey"] = claim[2]
     if assessment_id:
         fact_check["assessmentRevisionId"] = assessment_id
+    detail = project_detail(revision)
+    if consolidation is None and revision.provenance.recipe_id == LEGACY_RECIPE_ID:
+        candidate_ids = {
+            str(item) for item in revision.provenance.extra.get("legacyCandidateIds") or [] if str(item)
+        }
+        if len(candidate_ids) > 1:
+            consolidation = {"memberCount": len(candidate_ids), "members": [], "legacy": True}
+    if consolidation is not None:
+        detail["consolidation"] = consolidation
     return {
         "objectId": revision.object_id,
         "revisionId": revision.id,
         "type": revision.type,
         "label": label_of(revision),
-        "detail": project_detail(revision),
+        "detail": detail,
         "attributes": {k: revision.attributes[k] for k in ("valence", "epistemicKind") if revision.attributes.get(k)},
         "factCheck": fact_check,
         "provenance": provenance_doc(revision),
@@ -479,20 +497,9 @@ def zero_counts() -> dict[str, int]:
     return {t: 0 for t in MAP_TYPES}
 
 
-def default_types(counts: dict[str, int], node_limit: int) -> list[str]:
-    """The frontend's default: available types that fit the node budget
-    together, deduplicated arguments standing in for raw ones; every available
-    type when none fits, so the over-budget state can explain it."""
-    available = [t for t in MAP_TYPES if counts.get(t)]
-    candidates = [t for t in available if t != "argument"] if "deduplicated_argument" in available else available
-    selected: list[str] = []
-    total = 0
-    for type_id in candidates:
-        if total + counts[type_id] > node_limit:
-            continue
-        selected.append(type_id)
-        total += counts[type_id]
-    return selected or candidates
+def default_types(counts: dict[str, int], node_limit: int) -> list[str]:  # noqa: ARG001
+    """The normal map is one argument set, even when another type is smaller."""
+    return ["argument"]
 
 
 def _producer_names(producer: dict[str, Any]) -> set[str]:
@@ -516,10 +523,134 @@ async def scope_object_ids(snapshot: Snapshot, scope: str, *, store: AnalysisSto
     raise UnknownResultScope(f"this map has no output named {scope!r}")
 
 
-def _budget_state(counts: dict[str, int], query: GraphQuery) -> tuple[list[str], bool]:
-    selected = list(query.types) if query.types is not None else default_types(counts, query.budgets.budgets.node_limit)
+def _budget_state(counts: dict[str, int], query: GraphQuery, default: list[str] | None = None) -> tuple[list[str], bool]:
+    selected = list(query.types) if query.types is not None else (default or default_types(counts, query.budgets.budgets.node_limit))
     total = sum(counts.get(t, 0) for t in selected)
     return selected, total > query.budgets.budgets.node_limit
+
+
+def _derived_members(manifest: dict[str, Any], output_ids: set[str]) -> dict[str, list[str]]:
+    members: dict[str, list[str]] = {}
+    for relation in manifest.get("relations") or []:
+        owner = str(relation.get("from") or "")
+        member = str(relation.get("to") or "")
+        if relation.get("type") == "derived_from" and owner in output_ids and member:
+            members.setdefault(owner, []).append(member)
+    return members
+
+
+async def _default_argument_entries(
+    snapshot: Snapshot, entries: list[dict[str, Any]], *, store: AnalysisStore
+) -> tuple[list[str], list[dict[str, Any]], dict[str, list[str]]]:
+    """Prefer a deduplication output only when it partitions exactly the
+    original argument revisions pinned by this snapshot."""
+    originals = [entry for entry in entries if entry.get("type") == "argument"]
+    original_ids = {str(entry["revisionId"]) for entry in originals}
+    consolidated = [entry for entry in entries if entry.get("type") == "deduplicated_argument"]
+    consolidated_ids = {str(entry["revisionId"]) for entry in consolidated}
+    if not originals or not consolidated:
+        return ["argument"], originals, {}
+
+    producers = [
+        producer
+        for producer in snapshot.manifest.get("producers") or []
+        if producer.get("available") and producer.get("recipeId") == "deduplicated_arguments" and producer.get("runId")
+    ]
+    for producer in reversed(producers):
+        run = await store.get_run(str(producer["runId"]))
+        manifest = (run.output_manifest if run else None) or {}
+        outputs = {
+            str(item["revisionId"])
+            for item in manifest.get("objects") or []
+            if item.get("type") == "deduplicated_argument"
+        }
+        pinned = {str(item) for item in (manifest.get("inputs") or {}).get("revisionIds") or []}
+        members = _derived_members(manifest, outputs)
+        flattened = [member for output in outputs for member in members.get(output, [])]
+        if (
+            outputs == consolidated_ids
+            and pinned == original_ids
+            and set(flattened) == original_ids
+            and len(flattened) == len(original_ids)
+            and all(members.get(output) for output in outputs)
+        ):
+            return ["deduplicated_argument"], consolidated, members
+    return ["argument"], originals, {}
+
+
+async def _verified_consolidations(
+    snapshot: Snapshot,
+    revisions: dict[str, ObjectRevision],
+    members_by_output: dict[str, list[str]],
+    *,
+    store: AnalysisStore,
+) -> dict[str, dict[str, Any]]:
+    """Member details backed by pinned provenance and published lineage."""
+    if not members_by_output:
+        return {}
+    relation_entries = {
+        (str(item["from"]), str(item["to"])): str(item["relationId"])
+        for item in snapshot.manifest.get("relations") or []
+        if item.get("type") == "derived_from"
+    }
+    relation_ids = [
+        relation_entries[(owner, member)]
+        for owner, member_ids in members_by_output.items()
+        for member in member_ids
+        if (owner, member) in relation_entries
+    ]
+    relations = await store.get_relations(snapshot.project_id, relation_ids) if relation_ids else {}
+    member_ids = sorted({member for values in members_by_output.values() for member in values})
+    member_revisions = await store.get_revisions(snapshot.project_id, member_ids) if member_ids else {}
+    out: dict[str, dict[str, Any]] = {}
+    for owner, member_ids_for_owner in members_by_output.items():
+        revision = revisions.get(owner)
+        if revision is None or revision.type != "deduplicated_argument":
+            continue
+        if (
+            set(revision.provenance.input_revision_ids) != set(member_ids_for_owner)
+            or len(revision.provenance.input_revision_ids) != len(member_ids_for_owner)
+        ):
+            continue
+        valid = True
+        members: list[ObjectRevision] = []
+        for member_id in revision.provenance.input_revision_ids:
+            member = member_revisions.get(member_id)
+            relation_id = relation_entries.get((owner, member_id))
+            relation = relations.get(relation_id or "")
+            if (
+                member is None
+                or member.type != "argument"
+                or member.project_id != snapshot.project_id
+                or relation is None
+                or relation.type != "derived_from"
+                or str(relation.status) != "published"
+                or relation.from_revision_id != owner
+                or relation.to_revision_id != member_id
+            ):
+                valid = False
+                break
+            members.append(member)
+        if not valid:
+            continue
+        unique: dict[str, ObjectRevision] = {}
+        for member in members:
+            unique.setdefault(member.object_id, member)
+        if len(unique) <= 1:
+            continue
+        details = []
+        for member in unique.values():
+            item: dict[str, Any] = {
+                "objectId": member.object_id,
+                "revisionId": member.id,
+                "statement": str(member.payload["statement"]),
+            }
+            evidence = member.payload.get("evidence") or []
+            if evidence:
+                item["evidence"] = evidence
+            details.append(item)
+        out[owner] = {"memberCount": len(unique), "members": details}
+    return out
 
 
 def _embedding_doc(config: dict[str, Any] | None) -> dict[str, Any]:
@@ -570,7 +701,15 @@ async def graph_payload(
     counts = zero_counts()
     for entry in entries:
         counts[str(entry["type"])] += 1
-    selected, over_budget = _budget_state(counts, query)
+    chosen_entries: list[dict[str, Any]] | None = None
+    members_by_output: dict[str, list[str]] = {}
+    default: list[str] | None = None
+    if query.types is None and query.scope is None:
+        default, chosen_entries, members_by_output = await _default_argument_entries(snapshot, entries, store=store)
+    elif query.types is None:
+        available = [type_id for type_id in MAP_TYPES if counts.get(type_id)]
+        default = available
+    selected, over_budget = _budget_state(counts, query, default)
     config = snapshot.embedding_config or manifest.get("embeddingConfig")
     snapshot_doc: dict[str, Any] = {
         "id": snapshot.id,
@@ -597,17 +736,32 @@ async def graph_payload(
         # Counts only: no revision, relation or vector is read for an oversized scope.
         return payload
 
-    chosen_entries = [o for o in entries if o["type"] in selected]
+    if chosen_entries is None:
+        chosen_entries = [o for o in entries if o["type"] in selected]
+    if not members_by_output and "deduplicated_argument" in selected:
+        members_by_output = _derived_members(
+            manifest, {str(entry["revisionId"]) for entry in chosen_entries if entry.get("type") == "deduplicated_argument"}
+        )
     chosen_ids = [str(o["revisionId"]) for o in chosen_entries]
     revisions = await store.get_revisions(snapshot.project_id, chosen_ids)
     vectors = await load_vectors(snapshot.project_id, revisions.values(), config, store=store)
+    consolidations = await _verified_consolidations(
+        snapshot, revisions, members_by_output, store=store
+    )
     assessments = {str(a["targetRevisionId"]): str(a["revisionId"]) for a in manifest.get("assessments") or []}
     nodes = []
     for revision_id in chosen_ids:
         revision = revisions.get(revision_id)
         if revision is None:
             continue
-        nodes.append(node_doc(revision, vectors.get(revision_id), assessments.get(revision_id)))
+        nodes.append(
+            node_doc(
+                revision,
+                vectors.get(revision_id),
+                assessments.get(revision_id),
+                consolidations.get(revision_id),
+            )
+        )
     shown = {node["revisionId"] for node in nodes}
     payload["nodes"] = nodes
     payload["unplaced"] = [node["revisionId"] for node in nodes if node["embedding"] is None]
@@ -664,6 +818,9 @@ def legacy_node(argument: dict[str, Any], row: dict[str, Any], vector: list[floa
     }
     if argument.get("created_at"):
         detail["createdAt"] = argument["created_at"]
+    candidate_ids = {str(item) for item in argument.get("candidate_ids") or [] if str(item)}
+    if len(candidate_ids) > 1:
+        detail["consolidation"] = {"memberCount": len(candidate_ids), "members": [], "legacy": True}
     fact_check: dict[str, Any] = {"eligible": argument.get("kind") == "claim"}
     if argument.get("claim_key"):
         detail["claimKey"] = argument["claim_key"]

@@ -112,7 +112,7 @@ def _etag_matches(header: str | None, etag: str) -> bool:
 
 @router.get("/projects/{project_id}")
 async def get_project_map(
-    project_id: str, request: Request, auth: DependencyDirectusSession
+    project_id: str, request: Request, auth: DependencyDirectusSession, metadata_only: bool = False
 ) -> Response:
     """The project's current map revision, any newer attempt, and how many of
     its conversations a generation would read.
@@ -135,11 +135,13 @@ async def get_project_map(
         logger.warning("map source count failed for project %s: %s", project_id, exc)
         conversations = None
     etag = service.state_etag(current, attempt, conversations)
+    if metadata_only:
+        etag = etag[:-1] + '-metadata"'
     headers = {"ETag": etag, "Cache-Control": "private, no-cache"}
     if _etag_matches(request.headers.get("if-none-match"), etag):
         return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
     try:
-        payload = await service.state_payload(current, attempt, store, analysis)
+        payload = await service.state_payload(current, attempt, store, analysis, metadata_only=metadata_only)
     except (MapStoreError, AnalysisStoreError) as exc:
         raise _unavailable() from exc
     payload["source"] = {"conversations_with_transcripts": conversations}

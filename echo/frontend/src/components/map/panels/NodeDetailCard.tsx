@@ -43,6 +43,8 @@ export type NodeInspection = {
 	 * so a reveal can lead to the over-budget state.
 	 */
 	onReveal?: (type: ObjectType) => void;
+	/** Explicit mixed-object views may opt into revealing related types. */
+	canRevealRelatedTypes?: boolean;
 };
 
 type NodeDetailCardProps = {
@@ -97,6 +99,55 @@ const QuoteGroups = ({
 		})}
 	</div>
 );
+
+const ConsolidationMembers = ({
+	detail,
+	conversationHref,
+}: {
+	detail: Extract<
+		MapObjectInfo["detail"],
+		{ type: "argument" | "deduplicated_argument" }
+	>;
+	conversationHref?: ConversationHref;
+}) => {
+	const consolidation = detail.consolidation;
+	if (!consolidation) return null;
+	return (
+		<Section
+			title={<Trans>Combined from {consolidation.memberCount} arguments</Trans>}
+		>
+			{consolidation.members.length > 0 ? (
+				<ol className="space-y-3" data-testid="consolidation-members">
+					{consolidation.members.map((member, index) => (
+						<li
+							key={member.objectId}
+							className="space-y-1 text-sm leading-snug"
+						>
+							<p>
+								{index + 1}.{" "}
+								{member.statement || t`Source statement unavailable`}
+							</p>
+							{member.evidence.length > 0 && (
+								<div className="pl-4">
+									<QuoteGroups
+										evidence={member.evidence}
+										conversationHref={conversationHref}
+									/>
+								</div>
+							)}
+						</li>
+					))}
+				</ol>
+			) : (
+				<CaptionText>
+					<Trans>
+						The original statements are unavailable for this older result.
+					</Trans>
+				</CaptionText>
+			)}
+		</Section>
+	);
+};
 
 const Section = ({
 	title,
@@ -154,21 +205,24 @@ const RelatedItem = ({
 					{!item.visible && (
 						<div className="flex flex-wrap items-center gap-2">
 							<CaptionText>
-								{item.node ? (
+								{item.node && inspection.canRevealRelatedTypes ? (
 									<Trans>Hidden by the Objects filter</Trans>
 								) : (
 									<Trans>Not in this view</Trans>
 								)}
 							</CaptionText>
-							{type && inspection.onReveal && (
-								<Button
-									size="compact-xs"
-									variant="subtle"
-									onClick={() => inspection.onReveal?.(type)}
-								>
-									<Trans>Show {typePlural}</Trans>
-								</Button>
-							)}
+							{type &&
+								inspection.canRevealRelatedTypes &&
+								inspection.onReveal && (
+									<Button
+										size="compact-xs"
+										variant="subtle"
+										radius={0}
+										onClick={() => inspection.onReveal?.(type)}
+									>
+										<Trans>Show {typePlural}</Trans>
+									</Button>
+								)}
 						</div>
 					)}
 				</div>
@@ -307,6 +361,8 @@ const Provenance = ({ object }: { object: MapObjectInfo }) => {
 		.filter(Boolean)
 		.join(" · ");
 	const origin = originLabel(provenance);
+	const argument =
+		object.type === "argument" || object.type === "deduplicated_argument";
 	return (
 		<div
 			className="space-y-1 border-t pt-2"
@@ -316,17 +372,21 @@ const Provenance = ({ object }: { object: MapObjectInfo }) => {
 			<CaptionText>
 				<Trans>Source: {origin}</Trans>
 			</CaptionText>
-			<CaptionText>
-				{recipe ? (
-					<Trans>Recipe: {recipe}</Trans>
-				) : (
-					<Trans>Recipe: not recorded</Trans>
-				)}
-			</CaptionText>
-			{/* TODO(lead): link the revision history once its route exists. */}
-			<CaptionText>
-				<Trans>Revision history is not available yet.</Trans>
-			</CaptionText>
+			{!argument && (
+				<>
+					<CaptionText>
+						{recipe ? (
+							<Trans>Recipe: {recipe}</Trans>
+						) : (
+							<Trans>Recipe: not recorded</Trans>
+						)}
+					</CaptionText>
+					{/* TODO(lead): link the revision history once its route exists. */}
+					<CaptionText>
+						<Trans>Revision history is not available yet.</Trans>
+					</CaptionText>
+				</>
+			)}
 		</div>
 	);
 };
@@ -366,27 +426,36 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 	const type = node.metadata.objectType;
 	const object = inspection?.object ?? null;
 	const detail = object?.detail;
-	const members =
-		inspection && type === "deduplicated_argument"
-			? inspection.related.filter(
-					(item) =>
-						item.direction === "outgoing" &&
-						item.relation.type === DERIVED_FROM,
-				)
-			: [];
-	const memberCount = members.length;
 	// Tensions and stakeholders list their relations in their own sections.
+	const argumentDetail =
+		detail?.type === "argument" || detail?.type === "deduplicated_argument"
+			? detail
+			: null;
 	const otherRelations =
 		inspection && type !== "tension" && type !== "stakeholder"
-			? inspection.related.filter((item) => !members.includes(item))
+			? inspection.related.filter(
+					(item) =>
+						!argumentDetail?.consolidation ||
+						item.relation.type !== DERIVED_FROM,
+				)
 			: [];
+	const typeLabel =
+		type === "argument" || type === "deduplicated_argument"
+			? t`Argument`
+			: OBJECT_TYPE_STYLES[type]?.label();
 
 	return (
 		<div className="space-y-3">
 			{type && (
 				<p className="flex items-center gap-2 text-xs uppercase tracking-wider">
-					<TypeDot type={type} />
-					{OBJECT_TYPE_STYLES[type]?.label()}
+					<TypeDot
+						type={
+							type === "argument" || type === "deduplicated_argument"
+								? "argument"
+								: type
+						}
+					/>
+					{typeLabel}
 				</p>
 			)}
 			<p className={titleClass}>{node.label ?? node.id}</p>
@@ -401,10 +470,11 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 			{inspection && detail?.type === "stakeholder" && (
 				<StakeholderSections detail={detail} inspection={inspection} />
 			)}
-			{inspection && memberCount > 0 && (
-				<Section title={<Trans>Combined from {memberCount} arguments</Trans>}>
-					<RelatedList items={members} inspection={inspection} />
-				</Section>
+			{argumentDetail && (
+				<ConsolidationMembers
+					detail={argumentDetail}
+					conversationHref={conversationHref}
+				/>
 			)}
 
 			{detail?.type === "popcorn" && quoteCount > 0 && (

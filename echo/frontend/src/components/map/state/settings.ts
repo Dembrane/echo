@@ -1,16 +1,17 @@
 import { useSyncExternalStore } from "react";
-import { COLOR_BY_OPTIONS, isObjectType } from "../attributes";
+import { COLOR_BY_OPTIONS } from "../attributes";
 import { isPositiveInteger } from "../budgets";
-import type { ColorBy, ObjectType } from "../types";
+import type { ColorBy } from "../types";
 
 export const MAP_SETTINGS_STORAGE_KEY = "dembrane-map-settings";
 
 /**
  * Version 1 had panels, colour mode, auto fact-check and dark mode, without
  * a version field. Version 2 adds the Type colour mode, custom budgets, the
- * Relationships control and the saved type selection.
+ * Relationships control and the saved type selection. Version 3 retires the
+ * type selection and resolves Type colouring to neutral.
  */
-export const MAP_SETTINGS_VERSION = 2;
+export const MAP_SETTINGS_VERSION = 3;
 
 export type MapSettings = {
 	showExplore: boolean;
@@ -27,13 +28,11 @@ export type MapSettings = {
 	/** Custom visible-edge budget; null follows the deployment default. */
 	edgeLimit: number | null;
 	showRelationships: boolean;
-	/** The last chosen object types; null leaves the choice to the page. */
-	types: ObjectType[] | null;
 };
 
 export const DEFAULT_MAP_SETTINGS: MapSettings = {
 	autoFactCheckClaims: false,
-	colorBy: "type",
+	colorBy: "none",
 	darkMode: false,
 	edgeLimit: null,
 	nodeLimit: null,
@@ -44,7 +43,6 @@ export const DEFAULT_MAP_SETTINGS: MapSettings = {
 	showShowcase: false,
 	showSpotlight: true,
 	showTree: true,
-	types: null,
 };
 
 const COLOR_BY: ReadonlySet<string> = new Set(COLOR_BY_OPTIONS);
@@ -76,14 +74,15 @@ export function migrateMapSettings(
 	for (const key of BOOLEAN_KEYS) {
 		if (typeof stored[key] === "boolean") settings[key] = stored[key];
 	}
-	if (isColorBy(stored.colorBy)) settings.colorBy = stored.colorBy;
+	if (isColorBy(stored.colorBy)) {
+		// Type colouring belonged to the mixed-object surface. Old saved values
+		// now resolve to the neutral argument map.
+		settings.colorBy = stored.colorBy === "type" ? "none" : stored.colorBy;
+	}
 	if (isPositiveInteger(stored.nodeLimit))
 		settings.nodeLimit = stored.nodeLimit;
 	if (isPositiveInteger(stored.edgeLimit))
 		settings.edgeLimit = stored.edgeLimit;
-	if (Array.isArray(stored.types)) {
-		settings.types = Array.from(new Set(stored.types.filter(isObjectType)));
-	}
 	return settings;
 }
 
@@ -139,7 +138,11 @@ const subscribe = (listener: () => void) => {
 };
 
 export function updateMapSettings(patch: Partial<MapSettings>): void {
-	const next = { ...getSnapshot(), ...patch };
+	const next = {
+		...getSnapshot(),
+		...patch,
+	};
+	if (patch.colorBy === "type") next.colorBy = "none";
 	current = next;
 	writeMapSettings(next);
 	for (const listener of listeners) listener();

@@ -69,8 +69,16 @@ export const getNodeStyle = (
 ): NodeStyle =>
 	getNodeStyleFromInputs(attributeInputsOf(node.metadata), options);
 
-/** Radius multiplier of a node: its own scale, else its type's. */
-export const nodeSizeScale = (node: Pick<MapGraphNode, "metadata">): number =>
-	node.metadata.sizeScale > 0
-		? node.metadata.sizeScale
-		: sizeScaleFor(node.metadata.objectType);
+/** Bounded radius multiplier for a verified merge. */
+export const consolidationSizeScale = (memberCount: number): number =>
+	memberCount > 1 ? Math.min(1.8, 1 + 0.2 * Math.log2(memberCount)) : 1;
+
+/** Radius multiplier from type and, when present, verified merge lineage. */
+export const nodeSizeScale = (node: Pick<MapGraphNode, "metadata">): number => {
+	const typeScale =
+		node.metadata.sizeScale > 0
+			? node.metadata.sizeScale
+			: sizeScaleFor(node.metadata.objectType);
+	const memberCount = node.metadata.consolidation?.memberCount ?? 1;
+	return Math.max(typeScale, consolidationSizeScale(memberCount));
+};

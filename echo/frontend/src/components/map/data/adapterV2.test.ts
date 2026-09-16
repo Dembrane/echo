@@ -101,6 +101,94 @@ describe("buildMapGraph with payload v2", () => {
 		expect(graph.version).toBe(2);
 	});
 
+	it("keeps verified consolidation members and their pinned evidence", () => {
+		const graph = buildMapGraph(
+			payload({
+				nodes: [
+					node({
+						detail: {
+							consolidation: {
+								memberCount: 2,
+								members: [
+									{
+										evidence: [
+											{
+												conversation_id: "conversation-1",
+												label: "Conversation one",
+												quotes: ["Pinned quote"],
+											},
+										],
+										objectId: "source-1",
+										revisionId: "source-rev-1",
+										statement: "First source statement",
+									},
+									{
+										objectId: "source-2",
+										revisionId: "source-rev-2",
+										statement: "Second source statement",
+									},
+								],
+							},
+							statement: "Combined statement",
+						},
+					}),
+				],
+			}),
+		);
+
+		expect(graph.placedNodes[0].metadata.consolidation).toEqual({
+			memberCount: 2,
+		});
+		const detail = graph.objectsById.get("rev-1")?.detail;
+		expect(detail).toMatchObject({
+			consolidation: { legacy: false, memberCount: 2 },
+		});
+		if (detail?.type === "argument") {
+			expect(detail.consolidation?.members).toHaveLength(2);
+			expect(detail.consolidation?.members[0]).toMatchObject({
+				evidence: [
+					{
+						conversationId: "conversation-1",
+						quotes: ["Pinned quote"],
+					},
+				],
+				objectId: "source-1",
+			});
+		}
+	});
+
+	it("accepts trusted legacy counts without statements and rejects inconsistent lineage", () => {
+		const graph = buildMapGraph(
+			payload({
+				nodes: [
+					node({
+						detail: {
+							consolidation: { legacy: true, memberCount: 3, members: [] },
+							statement: "Older merge",
+						},
+						revisionId: "legacy",
+					}),
+					node({
+						detail: {
+							consolidation: {
+								memberCount: 3,
+								members: [
+									{ objectId: "one", revisionId: "r1", statement: "One" },
+									{ objectId: "two", revisionId: "r2", statement: "Two" },
+								],
+							},
+						},
+						revisionId: "malformed",
+					}),
+				],
+			}),
+		);
+		expect(graph.allNodes[0].metadata.consolidation).toEqual({
+			memberCount: 3,
+		});
+		expect(graph.allNodes[1].metadata.consolidation).toBeUndefined();
+	});
+
 	it("adapts relations to node ids and keeps their basis", () => {
 		const graph = buildMapGraph(
 			payload({

@@ -140,7 +140,7 @@ export function fixtureMapData(id: MapFixtureId): {
 		case "single": {
 			const { payload, factChecks } = createSyntheticPayload({
 				budgets: FIXTURE_BUDGETS,
-				counts: { tension: 1 },
+				counts: { argument: 1 },
 				seed: 13,
 			});
 			return { factChecks, response: payload };
