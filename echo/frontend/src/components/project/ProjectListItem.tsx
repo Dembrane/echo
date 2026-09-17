@@ -3,24 +3,31 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Avatar,
-	Badge,
 	Box,
+	Button,
 	Checkbox,
 	Group,
 	Paper,
+	Popover,
 	Stack,
 	Text,
 	Tooltip,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { DotsThreeIcon } from "@phosphor-icons/react";
 import { IconLock, IconPin, IconPinFilled } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatRelative } from "date-fns";
-import type { PropsWithChildren } from "react";
+import { type PropsWithChildren, useState } from "react";
 import { useParams } from "react-router";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Icons } from "@/icons";
 import { avatarUrl } from "@/lib/avatar";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
+import { InputModal } from "../common/InputModal";
 import { I18nLink } from "../common/i18nLink";
+import { useUpdateProjectByIdMutation } from "./hooks";
 
 /**
  * Access bubbles rendered on the project list card.
@@ -119,6 +126,7 @@ export const ProjectListItem = ({
 	onTogglePin,
 	isPinned,
 	canPin,
+	canEdit,
 	onSearchOwner,
 	selectable,
 	selected,
@@ -128,6 +136,8 @@ export const ProjectListItem = ({
 	onTogglePin?: (projectId: string) => void;
 	isPinned?: boolean;
 	canPin?: boolean;
+	/** Shows the row menu (rename, configure portal). Off for read-only roles. */
+	canEdit?: boolean;
 	onSearchOwner?: (term: string) => void;
 	/** Select mode is active: show the inline checkbox and toggle instead of navigating. */
 	selectable?: boolean;
@@ -136,6 +146,11 @@ export const ProjectListItem = ({
 }>) => {
 	const { workspaceId } = useParams();
 	const link = `/w/${workspaceId}/projects/${project.id}/home`;
+	const navigate = useI18nNavigate();
+	const queryClient = useQueryClient();
+	const updateProject = useUpdateProjectByIdMutation();
+	const [renameOpened, renameHandlers] = useDisclosure(false);
+	const [menuOpened, setMenuOpened] = useState(false);
 	const languageLabel = project.language
 		? (LANGUAGE_LABELS[project.language] ?? project.language.toUpperCase())
 		: null;
@@ -177,11 +192,23 @@ export const ProjectListItem = ({
 						/>
 					)}
 					<Stack gap="0" style={{ flex: 1, minWidth: 0 }}>
-						<Group align="center" gap="xs" wrap="nowrap">
-							<Icons.Calendar />
+						{/* A long name stays on one line: wrapping pushed the icon off
+						    the baseline and squeezed the language badge to "E…". */}
+						<Group
+							align="center"
+							gap="xs"
+							wrap="nowrap"
+							style={{ minWidth: 0 }}
+						>
+							<Box style={{ display: "flex", flex: "none" }}>
+								<Icons.Calendar />
+							</Box>
 							<Text
 								className="font-semibold"
 								size="lg"
+								truncate
+								title={project.name ?? undefined}
+								style={{ minWidth: 0 }}
 								{...testId(`project-list-item-name-${project.id}`)}
 							>
 								{project.name}
@@ -192,15 +219,13 @@ export const ProjectListItem = ({
 								<Tooltip label={t`Private project`} withArrow>
 									<IconLock
 										size={14}
-										style={{ color: "var(--mantine-color-gray-6)" }}
+										style={{
+											color: "var(--mantine-color-gray-6)",
+											flex: "none",
+										}}
 										aria-label={t`Private project`}
 									/>
 								</Tooltip>
-							)}
-							{languageLabel && (
-								<Badge size="xs" variant="light" color="gray">
-									{languageLabel}
-								</Badge>
 							)}
 						</Group>
 						<Text size="sm" c="dimmed">
@@ -218,7 +243,14 @@ export const ProjectListItem = ({
 								{project.conversations_count ??
 									project?.conversations?.length ??
 									0}{" "}
-								Conversations • Edited{" "}
+								Conversations
+							</Trans>
+							{/* The language sits here, not beside the name, so a long
+							    name has the whole title line to itself. */}
+							{languageLabel && ` • ${languageLabel}`}
+							{" • "}
+							<Trans>
+								Edited{" "}
 								{formatRelative(
 									new Date(project.updated_at ?? new Date()),
 									new Date(),
@@ -265,36 +297,112 @@ export const ProjectListItem = ({
 					>
 						<AccessBubbles project={project} />
 					</Box>
-					{onTogglePin && (
-						<Tooltip
-							label={
-								isPinned
-									? t`Unpin project`
-									: canPin
-										? t`Pin project`
-										: t`Unpin a project first (max 3)`
-							}
-						>
-							<ActionIcon
-								variant="subtle"
-								color={isPinned ? "primary" : "gray"}
-								className={
+					{/* Pin and menu read as one cluster: the space between them
+					    stays smaller than the space from the menu to the card edge. */}
+					<Group gap={0} mr={4} wrap="nowrap" align="center">
+						{onTogglePin && (
+							<Tooltip
+								label={
 									isPinned
-										? ""
-										: "opacity-0 group-hover:opacity-100 transition-opacity"
+										? t`Unpin project`
+										: canPin
+											? t`Pin project`
+											: t`Unpin a project first (max 3)`
 								}
-								onClick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									if (isPinned || canPin) {
-										onTogglePin(project.id);
-									}
-								}}
 							>
-								{isPinned ? <IconPinFilled size={18} /> : <IconPin size={18} />}
-							</ActionIcon>
-						</Tooltip>
-					)}
+								<ActionIcon
+									variant="subtle"
+									size={30}
+									color={isPinned ? "primary" : "gray"}
+									onClick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										if (isPinned || canPin) {
+											onTogglePin(project.id);
+										}
+									}}
+								>
+									{isPinned ? (
+										<IconPinFilled size={18} />
+									) : (
+										<IconPin size={18} />
+									)}
+								</ActionIcon>
+							</Tooltip>
+						)}
+						{canEdit && !selectable && (
+							<Popover
+								opened={menuOpened}
+								onChange={setMenuOpened}
+								position="bottom-end"
+								shadow="md"
+								trapFocus
+								withinPortal
+							>
+								<Popover.Target>
+									<ActionIcon
+										variant="subtle"
+										size={30}
+										color="gray"
+										aria-label={t`Project options`}
+										aria-haspopup="menu"
+										aria-expanded={menuOpened}
+										// The row is a link; the menu must not follow it.
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											setMenuOpened((opened) => !opened);
+										}}
+										{...testId(`project-list-item-menu-${project.id}`)}
+									>
+										<DotsThreeIcon size={20} weight="bold" />
+									</ActionIcon>
+								</Popover.Target>
+								<Popover.Dropdown
+									p="xs"
+									style={{ border: "1px solid var(--mantine-color-gray-4)" }}
+									onClick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+									}}
+								>
+									<Stack gap="xs" role="menu">
+										<Button
+											role="menuitem"
+											variant="subtle"
+											color="gray"
+											c="var(--app-text)"
+											justify="flex-start"
+											fullWidth
+											onClick={() => {
+												setMenuOpened(false);
+												renameHandlers.open();
+											}}
+											{...testId(`project-list-item-rename-${project.id}`)}
+										>
+											<Trans>Rename project</Trans>
+										</Button>
+										<Button
+											role="menuitem"
+											variant="subtle"
+											color="gray"
+											c="var(--app-text)"
+											justify="flex-start"
+											fullWidth
+											onClick={() =>
+												navigate(
+													`/w/${workspaceId}/projects/${project.id}/portal-editor`,
+												)
+											}
+											{...testId(`project-list-item-portal-${project.id}`)}
+										>
+											<Trans>Configure portal</Trans>
+										</Button>
+									</Stack>
+								</Popover.Dropdown>
+							</Popover>
+						)}
+					</Group>
 				</Group>
 			</Group>
 		</Paper>
@@ -302,5 +410,38 @@ export const ProjectListItem = ({
 
 	// In select mode the card is the toggle target, so it must not navigate.
 	if (selectable) return body;
-	return <I18nLink to={link}>{body}</I18nLink>;
+	return (
+		<>
+			<I18nLink to={link}>{body}</I18nLink>
+			{/* Outside the link, so typing and clicking in it never navigate. */}
+			{canEdit && (
+				<InputModal
+					opened={renameOpened}
+					onClose={renameHandlers.close}
+					title={t`Rename project`}
+					label={<Trans>Project name</Trans>}
+					initialValue={project.name ?? ""}
+					loading={updateProject.isPending}
+					onConfirm={(name) => {
+						if (name === project.name) {
+							renameHandlers.close();
+							return;
+						}
+						updateProject.mutate(
+							{ id: project.id, payload: { name } },
+							{
+								onSuccess: () => {
+									queryClient.invalidateQueries({
+										queryKey: ["v2", "workspace-projects"],
+									});
+									renameHandlers.close();
+								},
+							},
+						);
+					}}
+					data-testid="project-rename-modal"
+				/>
+			)}
+		</>
+	);
 };

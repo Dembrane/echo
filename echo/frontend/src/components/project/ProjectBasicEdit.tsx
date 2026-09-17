@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Stack, Textarea, TextInput } from "@mantine/core";
+import { Stack, TextInput } from "@mantine/core";
 import type React from "react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -11,6 +11,7 @@ import { testId } from "@/lib/testUtils";
 import { FormLabel } from "../form/FormLabel";
 import { SaveStatus } from "../form/SaveStatus";
 import { useUpdateProjectByIdMutation } from "./hooks";
+import { ProjectContextInput } from "./ProjectContextInput";
 import { ProjectSettingsSection } from "./ProjectSettingsSection";
 
 type ProjectBasicEditProps = {
@@ -116,19 +117,15 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 						name="context"
 						control={control}
 						render={({ field }) => (
-							<Textarea
+							<ProjectContextInput
 								error={formState.errors.context?.message}
 								label={
 									<FormLabel
-										label={t`Context`}
+										label={t`Project context`}
 										isDirty={formState.dirtyFields.context}
 										error={formState.errors.context?.message}
 									/>
 								}
-								rows={4}
-								placeholder={t`How would you describe to a colleague what are you trying to accomplish with this project?
-* What is the north star goal or key metric
-* What does success look like`}
 								{...field}
 							/>
 						)}
