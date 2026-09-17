@@ -23,6 +23,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
+import { KeyTermsInput } from "@/components/project/KeyTermsInput";
 import {
 	AGENTIC_CHAT_IS_DEFAULT,
 	API_BASE_URL,
@@ -61,7 +62,11 @@ async function setVisibility(projectId: string, visibility: Access) {
  * (CreateWorkspaceRoute) so creating a project feels like creating a
  * workspace: a few deliberate steps instead of an instant POST.
  *
- * Three steps: Name & Context → Access → Review.
+ * Four steps: Name & Context → Key terms → Access → Review.
+ *
+ * Key terms get their own step because they decide how names are spelt in
+ * every transcript, and hosts only found them under advanced settings after
+ * the first conversations were already transcribed. The step is skippable.
  *
  * Access step surfaces the workspace's current tier inline so the
  * creator can see what that tier includes before picking Private
@@ -77,6 +82,7 @@ export const CreateProjectRoute = () => {
 	const [step, setStep] = useState(0);
 	const [name, setName] = useState("");
 	const [context, setContext] = useState("");
+	const [keyTerms, setKeyTerms] = useState("");
 	const [access, setAccess] = useState<Access>("workspace");
 	// Availability is not default-ness. The assistant setup starts an agentic
 	// chat, so it follows AGENTIC_CHAT_IS_DEFAULT: off unless the host ticks it
@@ -113,6 +119,7 @@ export const CreateProjectRoute = () => {
 				payload: {
 					context: context.trim() || null,
 					default_conversation_ask_for_participant_name: true,
+					default_conversation_transcript_prompt: keyTerms || null,
 					default_conversation_tutorial_slug: "None",
 					image_generation_model: "MODEST",
 				},
@@ -156,7 +163,7 @@ export const CreateProjectRoute = () => {
 	};
 
 	const handleCancel = () => {
-		if (name.trim() || context.trim()) {
+		if (name.trim() || context.trim() || keyTerms) {
 			modals.openConfirmModal({
 				children: (
 					<Text size="sm">
@@ -267,6 +274,31 @@ export const CreateProjectRoute = () => {
 						</Stack>
 					</Stepper.Step>
 
+					<Stepper.Step label={t`Key terms`}>
+						<Stack gap={16} mt="md">
+							<Stack gap={6}>
+								<Text size="sm">
+									<Trans>
+										Key terms tell transcription how to spell the names and
+										words that matter in this project.
+									</Trans>
+								</Text>
+								<Text size="sm">
+									<Trans>
+										Add the people, places, organisations and jargon you expect
+										to hear. You can skip this and add them later.
+									</Trans>
+								</Text>
+							</Stack>
+							<KeyTermsInput
+								autoFocus
+								value={keyTerms}
+								onChange={setKeyTerms}
+								inputTestId="create-project-key-terms-input"
+							/>
+						</Stack>
+					</Stepper.Step>
+
 					<Stepper.Step label={t`Access`}>
 						<Stack gap={14} mt="md">
 							<Radio.Group
@@ -320,7 +352,6 @@ export const CreateProjectRoute = () => {
 									/>
 								</Stack>
 							</Radio.Group>
-
 						</Stack>
 					</Stepper.Step>
 
@@ -346,6 +377,18 @@ export const CreateProjectRoute = () => {
 											style={{ flex: 1, whiteSpace: "pre-wrap" }}
 										>
 											{context.trim() || t`(none)`}
+										</Text>
+									</Group>
+									<Group gap={12} align="flex-start" wrap="nowrap">
+										<Text size="xs" c="dimmed" w={100}>
+											<Trans>Key terms</Trans>
+										</Text>
+										<Text
+											size="sm"
+											c={keyTerms ? undefined : "dimmed"}
+											style={{ flex: 1 }}
+										>
+											{keyTerms || t`(none)`}
 										</Text>
 									</Group>
 									<Group gap={12} align="baseline">
@@ -402,7 +445,7 @@ export const CreateProjectRoute = () => {
 					>
 						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
 					</Button>
-					{step < 2 ? (
+					{step < 3 ? (
 						<Button
 							size="sm"
 							disabled={step === 0 && !canAdvanceFromName}

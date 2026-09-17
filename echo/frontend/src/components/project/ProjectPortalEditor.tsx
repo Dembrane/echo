@@ -30,7 +30,6 @@ import {
 	IconRefresh,
 	IconRosetteDiscountCheck,
 	IconTrash,
-	IconX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Resizable } from "re-resizable";
@@ -62,6 +61,7 @@ import {
 	useUpdateCustomTopicMutation,
 	useUpdateProjectByIdMutation,
 } from "./hooks";
+import { KeyTermsInput } from "./KeyTermsInput";
 import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 
@@ -110,7 +110,7 @@ const normalizeTopicList = (topics: string[]): string[] =>
 		new Set(topics.map((topic) => topic.trim()).filter(Boolean)),
 	).sort();
 
-const ProperNounInput = ({
+const KeyTermsSection = ({
 	value,
 	onChange,
 	isDirty,
@@ -118,102 +118,33 @@ const ProperNounInput = ({
 	value: string;
 	onChange: (value: string) => void;
 	isDirty: boolean;
-}) => {
-	const [nouns, setNouns] = useState<string[]>([]);
-	const [nounInput, setNounInput] = useState("");
-
-	useEffect(() => {
-		setNouns(
-			value
-				.split(",")
-				.map((v) => v.trim())
-				.filter(Boolean),
-		);
-	}, [value]);
-
-	const handleAddNoun = () => {
-		if (nounInput.trim()) {
-			const newNouns = [
-				...nouns,
-				...nounInput
-					.split(",")
-					.map((noun) => noun.trim())
-					.filter(Boolean),
-			];
-			const uniqueNouns = Array.from(new Set(newNouns));
-			setNouns(uniqueNouns);
-			onChange(uniqueNouns.join(", "));
-			setNounInput("");
-		}
-	};
-
-	const handleRemoveNoun = (noun: string) => {
-		const newNouns = nouns.filter((n) => n !== noun);
-		setNouns(newNouns);
-		onChange(newNouns.join(", "));
-	};
-
-	return (
-		<Stack gap="md">
-			<Group gap="xs" align="center">
-				<Title order={4}>
-					<Trans>Specific Context</Trans>
-				</Title>
-				{isDirty && (
-					<div
-						className="h-1.5 w-1.5 rounded-full bg-blue-500"
-						role="presentation"
-					/>
-				)}
-			</Group>
-			<Text size="sm" c="dimmed">
-				<Trans>
-					Add key terms or proper nouns to improve transcript quality and
-					accuracy.
-				</Trans>
-			</Text>
-			<TextInput
-				className={isDirty ? "border-blue-500" : ""}
-				value={nounInput}
-				onChange={(e) => setNounInput(e.currentTarget.value)}
-				placeholder={t`Enter a key term or proper noun`}
-				onKeyDown={(e) => {
-					if (e.key === "Enter") {
-						e.preventDefault();
-						handleAddNoun();
-					}
-				}}
-				{...testId("portal-editor-specific-context-input")}
-			/>
-			<Group gap="xs">
-				{nouns.map((noun) => (
-					<Badge
-						key={noun}
-						variant="light"
-						c="var(--app-text)"
-						size="lg"
-						style={{
-							fontWeight: 500,
-							textTransform: "none",
-						}}
-						rightSection={
-							<ActionIcon
-								onClick={() => handleRemoveNoun(noun)}
-								size="xs"
-								variant="transparent"
-								c="gray.8"
-							>
-								<IconX size={14} />
-							</ActionIcon>
-						}
-					>
-						<span>{noun}</span>
-					</Badge>
-				))}
-			</Group>
-		</Stack>
-	);
-};
+}) => (
+	<Stack gap="md">
+		<Group gap="xs" align="center">
+			<Title order={4}>
+				<Trans>Key terms</Trans>
+			</Title>
+			{isDirty && (
+				<div
+					className="h-1.5 w-1.5 rounded-full bg-blue-500"
+					role="presentation"
+				/>
+			)}
+		</Group>
+		<Text size="sm" c="dimmed">
+			<Trans>
+				Key terms tell transcription how to spell the names and words that
+				matter in this project.
+			</Trans>
+		</Text>
+		<KeyTermsInput
+			value={value}
+			onChange={onChange}
+			isDirty={isDirty}
+			inputTestId="portal-editor-specific-context-input"
+		/>
+	</Stack>
+);
 
 // Memoized MarkdownWYSIWYG wrapper
 const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
@@ -1510,7 +1441,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											name="default_conversation_transcript_prompt"
 											control={control}
 											render={({ field }) => (
-												<ProperNounInput
+												<KeyTermsSection
 													isDirty={
 														formState.dirtyFields
 															.default_conversation_transcript_prompt ?? false
