@@ -285,6 +285,14 @@ export const CreateProjectRoute = () => {
 								</Text>
 								<Text size="sm">
 									<Trans>
+										Without them, a name or word the transcription model does
+										not know often comes out misspelt. Adding them now improves
+										everything built on the transcripts: summaries, chats,
+										reports and the library.
+									</Trans>
+								</Text>
+								<Text size="sm">
+									<Trans>
 										Add the people, places, organisations and jargon you expect
 										to hear. You can skip this and add them later.
 									</Trans>

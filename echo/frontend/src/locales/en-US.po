@@ -108,12 +108,12 @@ msgid "(direct workspace access)"
 msgstr "(direct workspace access)"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:711
-#: src/routes/project/CreateProjectRoute.tsx:367
+#: src/routes/project/CreateProjectRoute.tsx:375
 msgid "(missing)"
 msgstr "(missing)"
 
-#: src/routes/project/CreateProjectRoute.tsx:379
-#: src/routes/project/CreateProjectRoute.tsx:391
+#: src/routes/project/CreateProjectRoute.tsx:387
+#: src/routes/project/CreateProjectRoute.tsx:399
 msgid "(none)"
 msgstr "(none)"
 
@@ -922,8 +922,8 @@ msgstr "Accepted terms"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1876
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:591
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:736
-#: src/routes/project/CreateProjectRoute.tsx:302
-#: src/routes/project/CreateProjectRoute.tsx:402
+#: src/routes/project/CreateProjectRoute.tsx:310
+#: src/routes/project/CreateProjectRoute.tsx:410
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:137
 #: src/components/project/ProjectUsageAndSharing.tsx:212
 #: src/components/layout/ProjectOverviewLayout.tsx:52
@@ -1189,7 +1189,7 @@ msgstr "Add Tag to Filters"
 msgid "Add Tags"
 msgstr "Add Tags"
 
-#: src/routes/project/CreateProjectRoute.tsx:287
+#: src/routes/project/CreateProjectRoute.tsx:295
 msgid "Add the people, places, organisations and jargon you expect to hear. You can skip this and add them later."
 msgstr "Add the people, places, organisations and jargon you expect to hear. You can skip this and add them later."
 
@@ -2090,7 +2090,7 @@ msgstr "Away"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:369
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:769
-#: src/routes/project/CreateProjectRoute.tsx:446
+#: src/routes/project/CreateProjectRoute.tsx:454
 #: src/routes/project/report/ProjectReportRoute.tsx:604
 #: src/routes/organisation/OrganisationRoute.tsx:698
 #: src/routes/organisation/OrganisationRoute.tsx:721
@@ -2337,7 +2337,7 @@ msgstr "Can you tell us more?"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1952
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:769
 #: src/routes/project/ProjectsHome.tsx:441
-#: src/routes/project/CreateProjectRoute.tsx:446
+#: src/routes/project/CreateProjectRoute.tsx:454
 #: src/routes/project/report/ProjectReportRoute.tsx:288
 #: src/routes/project/report/ProjectReportRoute.tsx:1459
 #: src/routes/organisation/OrganisationRoute.tsx:1804
@@ -3571,7 +3571,7 @@ msgid "Create password"
 msgstr "Create password"
 
 #: src/routes/project/ProjectsHome.tsx:307
-#: src/routes/project/CreateProjectRoute.tsx:463
+#: src/routes/project/CreateProjectRoute.tsx:471
 msgid "Create project"
 msgstr "Create project"
 
@@ -3979,7 +3979,7 @@ msgstr "Describe what the language model should extract or summarize from the co
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1560
 #: src/routes/project/CreateProjectRoute.tsx:234
-#: src/routes/project/CreateProjectRoute.tsx:372
+#: src/routes/project/CreateProjectRoute.tsx:380
 #: src/routes/organisation/OrganisationRoute.tsx:1136
 #: src/routes/admin/AdminSettingsRoute.tsx:2717
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:261
@@ -4653,7 +4653,7 @@ msgid "Everyone can find it. Admins join directly; members can ask."
 msgstr "Everyone can find it. Admins join directly; members can ask."
 
 #. placeholder {0}: workspace.name
-#: src/routes/project/CreateProjectRoute.tsx:319
+#: src/routes/project/CreateProjectRoute.tsx:327
 msgid "Everyone in {0} can find and open this project."
 msgstr "Everyone in {0} can find and open this project."
 
@@ -5434,7 +5434,7 @@ msgstr "Go to portal editor"
 msgid "Go to previous release notes"
 msgstr "Go to previous release notes"
 
-#: src/routes/project/CreateProjectRoute.tsx:421
+#: src/routes/project/CreateProjectRoute.tsx:429
 msgid "Go to project home"
 msgstr "Go to project home"
 
@@ -5814,7 +5814,7 @@ msgstr "inherited from organisation"
 msgid "Initial"
 msgstr "Initial"
 
-#: src/routes/project/CreateProjectRoute.tsx:340
+#: src/routes/project/CreateProjectRoute.tsx:348
 msgid "Innovator or higher"
 msgstr "Innovator or higher"
 
@@ -6239,7 +6239,7 @@ msgid "Keeps the tier until the date below, then reverts to Free unless they sub
 msgstr "Keeps the tier until the date below, then reverts to Free unless they subscribe."
 
 #: src/routes/project/CreateProjectRoute.tsx:277
-#: src/routes/project/CreateProjectRoute.tsx:384
+#: src/routes/project/CreateProjectRoute.tsx:392
 #: src/components/project/ProjectPortalEditor.tsx:125
 #: src/components/project/KeyTermsInput.tsx:54
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:54
@@ -7110,7 +7110,7 @@ msgstr "My templates"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:452
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:708
 #: src/routes/project/CreateProjectRoute.tsx:216
-#: src/routes/project/CreateProjectRoute.tsx:364
+#: src/routes/project/CreateProjectRoute.tsx:372
 #: src/components/project/ProjectBasicEdit.tsx:104
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:382
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:253
@@ -7289,7 +7289,7 @@ msgid "Newest First"
 msgstr "Newest First"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:781
-#: src/routes/project/CreateProjectRoute.tsx:454
+#: src/routes/project/CreateProjectRoute.tsx:462
 #: src/components/release/ReleaseTimeline.tsx:48
 #: src/components/pricing/PricingConfigurator.tsx:872
 #: src/components/invite/InviteModal.tsx:774
@@ -7956,7 +7956,7 @@ msgstr "Only the people you add or invite can see it."
 msgid "Only when recording an invoice already paid out-of-band."
 msgstr "Only when recording an invoice already paid out-of-band."
 
-#: src/routes/project/CreateProjectRoute.tsx:345
+#: src/routes/project/CreateProjectRoute.tsx:353
 msgid "Only workspace admins and the people you invite can open this project."
 msgstr "Only workspace admins and the people you invite can open this project."
 
@@ -8070,8 +8070,8 @@ msgstr "Open the public page"
 msgid "Open the troubleshooting guide"
 msgstr "Open the troubleshooting guide"
 
-#: src/routes/project/CreateProjectRoute.tsx:316
-#: src/routes/project/CreateProjectRoute.tsx:406
+#: src/routes/project/CreateProjectRoute.tsx:324
+#: src/routes/project/CreateProjectRoute.tsx:414
 msgid "Open to the workspace"
 msgstr "Open to the workspace"
 
@@ -8914,8 +8914,8 @@ msgstr "Privacy Policy URL"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1931
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:398
-#: src/routes/project/CreateProjectRoute.tsx:336
-#: src/routes/project/CreateProjectRoute.tsx:408
+#: src/routes/project/CreateProjectRoute.tsx:344
+#: src/routes/project/CreateProjectRoute.tsx:416
 #: src/components/workspace/OrganisationProjectsTable.tsx:240
 #: src/components/workspace/DiscoverableWorkspaces.tsx:308
 #: src/components/project/ProjectSharingStrip.tsx:59
@@ -10029,7 +10029,7 @@ msgid "Return home"
 msgstr "Return home"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:699
-#: src/routes/project/CreateProjectRoute.tsx:358
+#: src/routes/project/CreateProjectRoute.tsx:366
 msgid "Review"
 msgstr "Review"
 
@@ -10834,7 +10834,7 @@ msgstr "Settings are grouped into Account & Security, Appearance and Project Def
 msgid "Settings updated"
 msgstr "Settings updated"
 
-#: src/routes/project/CreateProjectRoute.tsx:415
+#: src/routes/project/CreateProjectRoute.tsx:423
 #: src/features/sidebar/views/user/UserHomeView.tsx:74
 msgid "Setup"
 msgstr "Setup"
@@ -11280,7 +11280,7 @@ msgstr "Start again from your agent. It will open a fresh request here."
 msgid "Start fresh"
 msgstr "Start fresh"
 
-#: src/routes/project/CreateProjectRoute.tsx:419
+#: src/routes/project/CreateProjectRoute.tsx:427
 msgid "Start in assistant chat"
 msgstr "Start in assistant chat"
 
@@ -12410,7 +12410,7 @@ msgstr "Tick anything that applies."
 msgid "Tick anything that fits."
 msgstr "Tick anything that fits."
 
-#: src/routes/project/CreateProjectRoute.tsx:428
+#: src/routes/project/CreateProjectRoute.tsx:436
 #: src/routes/admin/AdminSettingsRoute.tsx:1581
 #: src/routes/admin/AdminSettingsRoute.tsx:2660
 #: src/routes/admin/AdminSettingsRoute.tsx:3108
@@ -13862,7 +13862,7 @@ msgstr "Which organisation owns this workspace's data? This sets the data and co
 msgid "Who can see and collaborate on this project."
 msgstr "Who can see and collaborate on this project."
 
-#: src/routes/project/CreateProjectRoute.tsx:305
+#: src/routes/project/CreateProjectRoute.tsx:313
 #: src/components/project/ProjectSharingModal.tsx:288
 msgid "Who can see this project?"
 msgstr "Who can see this project?"
@@ -13891,6 +13891,10 @@ msgstr "With external clients"
 msgid "Within my organisation"
 msgstr "Within my organisation"
 
+#: src/routes/project/CreateProjectRoute.tsx:287
+msgid "Without them, a name or word the transcription model does not know often comes out misspelt. Adding them now improves everything built on the transcripts: summaries, chats, reports and the library."
+msgstr "Without them, a name or word the transcription model does not know often comes out misspelt. Adding them now improves everything built on the transcripts: summaries, chats, reports and the library."
+
 #: src/components/release/releaseHistory.ts:184
 #~ msgid "Work with the new conversational assistant, follow sessions in the live monitor, and use the updated transcription pipeline."
 #~ msgstr "Work with the new conversational assistant, follow sessions in the live monitor, and use the updated transcription pipeline."
@@ -13912,7 +13916,7 @@ msgstr "Working on your answer..."
 msgid "workspace"
 msgstr "workspace"
 
-#: src/routes/project/CreateProjectRoute.tsx:396
+#: src/routes/project/CreateProjectRoute.tsx:404
 #: src/routes/admin/AdminSettingsRoute.tsx:1695
 #: src/routes/admin/AdminSettingsRoute.tsx:2277
 #: src/features/sidebar/hooks/useSearchHits.ts:164
@@ -14098,7 +14102,7 @@ msgstr "You are the data owner"
 msgid "You can change this anytime in settings."
 msgstr "You can change this anytime in settings."
 
-#: src/routes/project/CreateProjectRoute.tsx:306
+#: src/routes/project/CreateProjectRoute.tsx:314
 msgid "You can change this later in project settings."
 msgstr "You can change this later in project settings."
 
