@@ -37,8 +37,6 @@ import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
 type Access = "workspace" | "private";
 
 const SETUP_INITIAL_MESSAGE = "Help me set up this project.";
-const ZERO_CONTEXT_INITIAL_MESSAGE =
-	"Help me figure out what this project is for.";
 
 async function setVisibility(projectId: string, visibility: Access) {
 	const res = await fetch(
@@ -85,14 +83,11 @@ export const CreateProjectRoute = () => {
 	const [keyTerms, setKeyTerms] = useState("");
 	const [access, setAccess] = useState<Access>("workspace");
 	// Availability is not default-ness. The assistant setup starts an agentic
-	// chat, so it follows AGENTIC_CHAT_IS_DEFAULT: off unless the host ticks it
-	// (or picks "Help me figure it out"). Pre-ticking it would fire an agentic
-	// run on every project created, before the host has typed anything.
+	// chat, so it follows AGENTIC_CHAT_IS_DEFAULT: off unless the host ticks it.
+	// Pre-ticking it would fire an agentic run on every project created,
+	// before the host has typed anything.
 	const [setupWithAssistant, setSetupWithAssistant] = useState(
 		AGENTIC_CHAT_IS_DEFAULT,
-	);
-	const [setupInitialMessage, setSetupInitialMessage] = useState(
-		SETUP_INITIAL_MESSAGE,
 	);
 
 	useDocumentTitle(t`New project | dembrane`);
@@ -144,7 +139,7 @@ export const CreateProjectRoute = () => {
 				// rather than letting the Ask screen assume agentic.
 				navigate(`/w/${workspaceId}/projects/${project.id}/chats/new`, {
 					state: {
-						initialMessage: setupInitialMessage,
+						initialMessage: SETUP_INITIAL_MESSAGE,
 						preferMode: "agentic",
 					},
 				});
@@ -232,36 +227,15 @@ export const CreateProjectRoute = () => {
 
 							<ProjectContextInput
 								value={context}
-								onChange={(e) => {
-									setContext(e.currentTarget.value);
-									setSetupInitialMessage(SETUP_INITIAL_MESSAGE);
-								}}
+								onChange={(e) => setContext(e.currentTarget.value)}
 							/>
-							{ENABLE_AGENTIC_CHAT ? (
-								<Button
-									variant="subtle"
-									size="xs"
-									className="self-start"
-									onClick={() => {
-										setContext("");
-										setSetupWithAssistant(true);
-										setSetupInitialMessage(ZERO_CONTEXT_INITIAL_MESSAGE);
-										setStep(1);
-									}}
-								>
-									<Trans>Help me figure it out</Trans>
-								</Button>
-							) : null}
 
 							{ENABLE_AGENTIC_CHAT ? (
 								<Switch
 									checked={setupWithAssistant}
-									onChange={(event) => {
-										setSetupWithAssistant(event.currentTarget.checked);
-										if (event.currentTarget.checked) {
-											setSetupInitialMessage(SETUP_INITIAL_MESSAGE);
-										}
-									}}
+									onChange={(event) =>
+										setSetupWithAssistant(event.currentTarget.checked)
+									}
 									label={t`Set up with the assistant after creating`}
 									description={t`You'll land in a chat where dembrane helps shape the project before you collect conversations.`}
 								/>
