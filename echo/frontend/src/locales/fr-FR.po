@@ -174,7 +174,7 @@ msgstr ""
 
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
-#: src/routes/project/ProjectsHome.tsx:250
+#: src/routes/project/ProjectsHome.tsx:252
 #: src/components/workspace/DiscoverableWorkspaces.tsx:312
 #: src/components/workspace/DiscoverableWorkspaces.tsx:366
 msgid "{0, plural, one {# member} other {# members}}"
@@ -201,7 +201,7 @@ msgstr ""
 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
-#: src/routes/project/ProjectsHome.tsx:411
+#: src/routes/project/ProjectsHome.tsx:413
 #: src/components/workspace/DiscoverableWorkspaces.tsx:324
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr ""
@@ -340,16 +340,18 @@ msgstr ""
 msgid "{0} conversations"
 msgstr ""
 
+#. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
+#: src/components/project/ProjectListItem.tsx:242
+msgid "{0} Conversations"
+msgstr "{0} Conversations"
+
 #. placeholder {0}: counts.conversations
 #: src/components/popcorn/PopcornStatus.tsx:44
 msgid "{0} conversations · {phrases} phrases · {validated} validated"
 msgstr ""
 
-#. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
 #. placeholder {0}: project.conversations?.length ?? 0
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/ProjectListItem.tsx:217
 #: src/components/project/ProjectCard.tsx:46
 msgid "{0} Conversations • Edited {1}"
 msgstr "{0} Conversations • Modifié le {1}"
@@ -604,7 +606,7 @@ msgstr ""
 msgid "{nextCadence} min"
 msgstr ""
 
-#: src/components/project/ProjectListItem.tsx:97
+#: src/components/project/ProjectListItem.tsx:104
 #: src/components/project/PinnedProjectCard.tsx:79
 msgid "{overflow} more people"
 msgstr ""
@@ -851,7 +853,7 @@ msgstr "Un portail participant pour enregistrer les conversations."
 msgid "A privacy policy link is required for consent-based processing. It must start with http:// or https:// and be at most 255 characters."
 msgstr "Un lien vers la politique de confidentialité est obligatoire pour le traitement basé sur le consentement. Il doit commencer par http:// ou https:// et compter au maximum 255 caractères."
 
-#: src/routes/project/ProjectsHome.tsx:292
+#: src/routes/project/ProjectsHome.tsx:294
 msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 msgstr ""
 
@@ -1430,7 +1432,7 @@ msgstr "Toutes les conversations"
 msgid "All files were uploaded successfully."
 msgstr "Tous les fichiers ont été téléchargés avec succès."
 
-#: src/routes/project/ProjectsHome.tsx:340
+#: src/routes/project/ProjectsHome.tsx:342
 msgid "All projects"
 msgstr ""
 
@@ -2341,7 +2343,7 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1323
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1952
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:769
-#: src/routes/project/ProjectsHome.tsx:441
+#: src/routes/project/ProjectsHome.tsx:443
 #: src/routes/project/CreateProjectRoute.tsx:404
 #: src/routes/project/report/ProjectReportRoute.tsx:288
 #: src/routes/project/report/ProjectReportRoute.tsx:1459
@@ -2770,7 +2772,7 @@ msgid "Clear filters"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:274
-#: src/routes/project/ProjectsHome.tsx:362
+#: src/routes/project/ProjectsHome.tsx:364
 #: src/routes/project/chat/NewChatRoute.tsx:172
 #: src/features/sidebar/blocks/SearchBlock.tsx:136
 #: src/components/invite/WorkspaceSelectList.tsx:98
@@ -2925,6 +2927,10 @@ msgstr ""
 
 #: src/components/training/TrainingRowActions.tsx:291
 msgid "Completed on"
+msgstr ""
+
+#: src/components/project/ProjectListItem.tsx:390
+msgid "Configure portal"
 msgstr ""
 
 #: src/components/release/releaseHistory.ts:396
@@ -3510,7 +3516,7 @@ msgstr "Impossible d'envoyer l'invitation"
 msgid "Country"
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:349
+#: src/routes/project/ProjectsHome.tsx:351
 #: src/components/project/CustomTopicModal.tsx:260
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:291
 msgid "Create"
@@ -3575,7 +3581,7 @@ msgstr ""
 msgid "Create password"
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:307
+#: src/routes/project/ProjectsHome.tsx:309
 #: src/routes/project/CreateProjectRoute.tsx:421
 msgid "Create project"
 msgstr ""
@@ -4383,6 +4389,11 @@ msgstr "Modifier le webhook"
 #: src/components/release/releaseHistory.ts:338
 msgid "Edit your display name and upload, crop or remove your profile picture."
 msgstr ""
+
+#. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
+#: src/components/project/ProjectListItem.tsx:252
+msgid "Edited {0}"
+msgstr "Modifié le {0}"
 
 #: src/components/release/releaseHistory.ts:766
 msgid "Editing a conversation no longer triggers the affected save error."
@@ -6373,7 +6384,7 @@ msgstr ""
 msgid "Let's go!"
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:282
+#: src/routes/project/ProjectsHome.tsx:284
 msgid "Let's hear your first conversation."
 msgstr ""
 
@@ -7056,7 +7067,7 @@ msgstr ""
 msgid "Move project"
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:431
+#: src/routes/project/ProjectsHome.tsx:433
 #: src/components/project/BulkMoveProjectsModal.tsx:76
 msgid "Move projects"
 msgstr ""
@@ -7528,7 +7539,7 @@ msgstr "Personne dans l'organisation pour l'instant."
 msgid "No one on this organisation yet."
 msgstr ""
 
-#: src/components/project/ProjectListItem.tsx:59
+#: src/components/project/ProjectListItem.tsx:66
 #: src/components/project/PinnedProjectCard.tsx:42
 msgid "No one shared yet"
 msgstr ""
@@ -7567,7 +7578,7 @@ msgstr ""
 msgid "No projects found {0}"
 msgstr "Aucun projet trouvé {0}"
 
-#: src/routes/project/ProjectsHome.tsx:381
+#: src/routes/project/ProjectsHome.tsx:383
 msgid "No projects found for search term"
 msgstr "Aucun projet trouvé pour ce terme de recherche"
 
@@ -7783,7 +7794,7 @@ msgstr ""
 msgid "Nothing from dembrane right now."
 msgstr "Rien de nouveau de dembrane pour le moment."
 
-#: src/routes/project/ProjectsHome.tsx:280
+#: src/routes/project/ProjectsHome.tsx:282
 msgid "Nothing here for you yet."
 msgstr ""
 
@@ -8571,7 +8582,7 @@ msgstr ""
 msgid "People"
 msgstr ""
 
-#: src/components/project/ProjectListItem.tsx:79
+#: src/components/project/ProjectListItem.tsx:86
 #: src/components/project/PinnedProjectCard.tsx:61
 msgid "People with access"
 msgstr ""
@@ -8650,7 +8661,7 @@ msgstr ""
 msgid "Pin"
 msgstr "Épingler"
 
-#: src/components/project/ProjectListItem.tsx:274
+#: src/components/project/ProjectListItem.tsx:306
 msgid "Pin project"
 msgstr "Épingler le projet"
 
@@ -8666,7 +8677,7 @@ msgstr ""
 msgid "Pin your most-used templates directly in chat."
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:317
+#: src/routes/project/ProjectsHome.tsx:319
 msgid "Pinned"
 msgstr ""
 
@@ -8927,8 +8938,8 @@ msgstr ""
 msgid "Private · only invited people can see this"
 msgstr ""
 
-#: src/components/project/ProjectListItem.tsx:192
-#: src/components/project/ProjectListItem.tsx:196
+#: src/components/project/ProjectListItem.tsx:219
+#: src/components/project/ProjectListItem.tsx:226
 msgid "Private project"
 msgstr ""
 
@@ -9052,6 +9063,7 @@ msgstr ""
 
 #: src/routes/project/ProjectHomeRoute.tsx:389
 #: src/routes/project/CreateProjectRoute.tsx:215
+#: src/components/project/ProjectListItem.tsx:412
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Project name"
@@ -9068,6 +9080,10 @@ msgstr "Le nom du projet doit comporter au moins 4 caractères"
 #: src/routes/project/chat/NewChatRoute.tsx:529
 msgid "Project not found"
 msgstr "Projet introuvable"
+
+#: src/components/project/ProjectListItem.tsx:338
+msgid "Project options"
+msgstr ""
 
 #: src/components/chat/NavigationSuggestionCard.tsx:80
 msgid "project overview"
@@ -9115,7 +9131,7 @@ msgstr ""
 msgid "Projects moved"
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:287
+#: src/routes/project/ProjectsHome.tsx:289
 msgid "Projects will show up here once someone on the organisation shares one with you."
 msgstr ""
 
@@ -9691,6 +9707,8 @@ msgstr "Renommer le chat"
 #: src/routes/project/ProjectHomeRoute.tsx:143
 #: src/routes/project/ProjectHomeRoute.tsx:148
 #: src/routes/project/ProjectHomeRoute.tsx:388
+#: src/components/project/ProjectListItem.tsx:374
+#: src/components/project/ProjectListItem.tsx:411
 msgid "Rename project"
 msgstr ""
 
@@ -10378,7 +10396,7 @@ msgstr ""
 msgid "Search project or workspace"
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:369
+#: src/routes/project/ProjectsHome.tsx:371
 msgid "Search projects"
 msgstr "Rechercher des projets"
 
@@ -10510,7 +10528,7 @@ msgstr "À bientôt"
 msgid "Sees usage and invoices. No project or content access."
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:453
+#: src/routes/project/ProjectsHome.tsx:455
 #: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr ""
@@ -10537,7 +10555,7 @@ msgstr "Sélectionner un webhook à cloner"
 msgid "Select a workspace"
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:417
+#: src/routes/project/ProjectsHome.tsx:419
 #: src/components/workspace/DiscoverableWorkspaces.tsx:278
 #: src/components/conversation/ConversationAccordion.tsx:1449
 msgid "Select all"
@@ -10607,7 +10625,7 @@ msgstr "Sélectionne des conversations dans la barre latérale"
 msgid "Select multiple conversations"
 msgstr "Sélectionner plusieurs conversations"
 
-#: src/components/project/ProjectListItem.tsx:158
+#: src/components/project/ProjectListItem.tsx:173
 msgid "Select project"
 msgstr ""
 
@@ -10815,7 +10833,7 @@ msgid "Setting up"
 msgstr ""
 
 #: src/routes/settings/UserSettingsRoute.tsx:62
-#: src/routes/project/ProjectsHome.tsx:245
+#: src/routes/project/ProjectsHome.tsx:247
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:28
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:80
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
@@ -10917,13 +10935,13 @@ msgid "Shared with"
 msgstr ""
 
 #. placeholder {0}: visibleNames.join(", ")
-#: src/components/project/ProjectListItem.tsx:72
+#: src/components/project/ProjectListItem.tsx:79
 #: src/components/project/PinnedProjectCard.tsx:54
 msgid "Shared with {0}"
 msgstr ""
 
 #. placeholder {0}: visibleNames.join(", ")
-#: src/components/project/ProjectListItem.tsx:71
+#: src/components/project/ProjectListItem.tsx:78
 #: src/components/project/PinnedProjectCard.tsx:53
 msgid "Shared with {0} and {overflow} others"
 msgstr ""
@@ -12897,8 +12915,8 @@ msgstr "Annuler"
 
 #: src/components/settings/AuditLogsCard.tsx:280
 #: src/components/project/ProjectSharingModal.tsx:364
-#: src/components/project/ProjectListItem.tsx:87
-#: src/components/project/ProjectListItem.tsx:246
+#: src/components/project/ProjectListItem.tsx:94
+#: src/components/project/ProjectListItem.tsx:278
 #: src/components/project/PinnedProjectCard.tsx:69
 msgid "Unknown"
 msgstr "Inconnu"
@@ -12927,11 +12945,11 @@ msgstr "Détacher"
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Désépinglez d'abord un projet (max {MAX_PINNED})"
 
-#: src/components/project/ProjectListItem.tsx:275
+#: src/components/project/ProjectListItem.tsx:307
 msgid "Unpin a project first (max 3)"
 msgstr "Désépinglez d'abord un projet (max 3)"
 
-#: src/components/project/ProjectListItem.tsx:272
+#: src/components/project/ProjectListItem.tsx:304
 #: src/components/project/PinnedProjectCard.tsx:163
 msgid "Unpin project"
 msgstr "Désépingler le projet"
