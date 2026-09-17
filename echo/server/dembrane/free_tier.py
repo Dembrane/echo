@@ -15,11 +15,15 @@ billing_account; resolve it via dembrane.billing_account.resolve_workspace_tier.
 from __future__ import annotations
 
 from typing import Optional
+from logging import getLogger
+from dataclasses import asdict, dataclass
 
 from fastapi import HTTPException
 
 from dembrane import directus_async
 from dembrane.tier_capacity import is_conversation_locked
+
+logger = getLogger("dembrane.free_tier")
 
 FREE_TIER = "free"
 
@@ -145,7 +149,9 @@ async def _live_chat_ids(project_ids: list[str]) -> list[str]:
     return [r["id"] for r in rows if r.get("id")]
 
 
-async def count_workspace_chats(workspace_id: Optional[str], project_ids: Optional[list[str]] = None) -> int:
+async def count_workspace_chats(
+    workspace_id: Optional[str], project_ids: Optional[list[str]] = None
+) -> int:
     """Count chats that consume the free-tier allowance: chats with at least one
     user message. An empty chat (a mode was picked but nothing was ever sent)
     does not count, so opening the composer and leaving never locks a free
@@ -238,9 +244,7 @@ async def resolve_workspace_primary_report_id(
     )
 
 
-async def count_org_workspaces(
-    org_id: str, billing_account_id: Optional[str] = None
-) -> int:
+async def count_org_workspaces(org_id: str, billing_account_id: Optional[str] = None) -> int:
     """Count an org's non-deleted workspaces. When `billing_account_id` is
     given, count only workspaces that bill to that (org-pooled) account, so
     separately-billed client workspaces (which carry their own
@@ -325,9 +329,7 @@ async def _workspace_lifetime_audio_hours(workspace_id: str) -> float:
     return sum(r.get("duration") or 0 for r in rows) / 3600
 
 
-async def workspace_over_cap_active(
-    workspace_id: Optional[str], tier: Optional[str]
-) -> bool:
+async def workspace_over_cap_active(workspace_id: Optional[str], tier: Optional[str]) -> bool:
     """Whether the workspace is past its lifetime hour cap right now (Free's
     1-hour cap). A live signal, unlike the finish-time `is_over_cap` stamp, so it
     also gates conversations still recording. Paid/legacy tiers never cap."""
@@ -366,3 +368,75 @@ def conversation_is_locked(conv: dict, tier: Optional[str]) -> bool:
     conversations BFF, the summarize/title gates, and the chat context-add paths
     share one lock decision and cannot diverge."""
     return is_conversation_locked(conv, tier)
+
+
+# ── Billing context for the concurrent recording meter ─────────────────────
+# One read that turns a portal project into (account, tier, cap), cached so the
+# 3 second ping never hits Directus in steady state.
+
+CONTEXT_TTL_SECONDS = 60
+
+
+@dataclass(frozen=True)
+class BillingContext:
+    account_id: str
+    account_name: str
+    tier: Optional[str]
+    cap: Optional[int]
+    workspace_id: Optional[str]
+
+
+def context_cache_key(project_id: str) -> str:
+    return f"recording_cap:{project_id}"
+
+
+async def _read_project_billing_context(project_id: str) -> Optional[BillingContext]:
+    from dembrane.tier_capacity import resolve_concurrent_recording_cap
+
+    try:
+        project = await directus_async.async_directus.get_item("project", project_id)
+        workspace_id = (project or {}).get("workspace_id")
+        if not workspace_id:
+            return None
+        workspace = await directus_async.async_directus.get_item("workspace", workspace_id)
+        account_id = (workspace or {}).get("billing_account_id")
+        if isinstance(account_id, dict):
+            account_id = account_id.get("id")
+        if not account_id:
+            return None
+        account = await directus_async.async_directus.get_item("billing_account", account_id)
+        if not account:
+            return None
+        tier = account.get("tier")
+        return BillingContext(
+            account_id=str(account_id),
+            account_name=(account.get("label") or str(account_id)),
+            tier=tier,
+            cap=resolve_concurrent_recording_cap(tier),
+            workspace_id=str(workspace_id),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("billing context resolution failed for project %s: %s", project_id, exc)
+        return None
+
+
+async def resolve_project_billing_context(project_id: str) -> Optional[BillingContext]:
+    """Billing context for a project, cached CONTEXT_TTL_SECONDS. A cached
+    "not measured" is stored as {"none": true} so it is not a cache miss."""
+    from dembrane.cache_utils import cache_get_json, cache_set_json
+
+    if not project_id:
+        return None
+    key = context_cache_key(project_id)
+    cached = await cache_get_json(key)
+    if isinstance(cached, dict):
+        if cached.get("none"):
+            return None
+        if "account_id" in cached:
+            try:
+                return BillingContext(**cached)
+            except TypeError:
+                logger.warning("malformed billing context cache for project %s", project_id)
+    ctx = await _read_project_billing_context(project_id)
+    await cache_set_json(key, asdict(ctx) if ctx else {"none": True}, CONTEXT_TTL_SECONDS)
+    return ctx

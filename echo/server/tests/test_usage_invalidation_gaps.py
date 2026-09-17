@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from fastapi import BackgroundTasks
 
 from dembrane.api import project as project_mod, participant as participant_mod
 from dembrane.api.dependency_auth import DirectusSession
@@ -27,7 +28,7 @@ async def test_initiate_conversation_invalidates_usage():
             new=invalidate,
         ),
     ):
-        result = await participant_mod.initiate_conversation(body, "p1")
+        result = await participant_mod.initiate_conversation(body, "p1", BackgroundTasks())
     assert result == {"id": "c1"}
     invalidate.assert_awaited_once_with("c1")
 

@@ -4,7 +4,7 @@ from typing import List, Optional, Annotated
 from logging import getLogger
 from datetime import datetime
 
-from fastapi import Form, Request, APIRouter, UploadFile, HTTPException
+from fastapi import Form, Request, APIRouter, UploadFile, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 
 from dembrane.s3 import get_sanitized_s3_key, get_file_size_bytes_from_s3
@@ -13,7 +13,11 @@ from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.analytics import capture_event
-from dembrane.free_tier import is_event_cta_enabled
+from dembrane.free_tier import (
+    BillingContext,
+    is_event_cta_enabled,
+    resolve_project_billing_context,
+)
 from dembrane.legal_basis import (
     fetch_cascade_rows,
     resolve_organiser_name,
@@ -31,6 +35,16 @@ from dembrane.visitor_session import (
     VALID_VISITOR_STAGES,
     mark_visitor_seen,
     link_visitor_conversation,
+)
+from dembrane.recording_overage import observe
+from dembrane.recording_sessions import (
+    NEGATIVE_MARKER,
+    close_session,
+    record_presence,
+    register_negative,
+    refresh_if_present,
+    register_conversation,
+    account_for_conversation,
 )
 from dembrane.service.conversation import (
     ConversationServiceException,
@@ -196,6 +210,12 @@ _visitor_ping_rate_limiter = create_rate_limiter(
 )
 # Reject absurd id lengths so a crafted id can't bloat Redis (real ids are UUIDs).
 _MAX_PING_ID_LEN = 64
+# Participant states that end a recording: stop counting it.
+_TERMINAL_PING_STATES = frozenset({"left", "finished"})
+# Only portal audio conversations are metered; text and host uploads never are.
+PORTAL_AUDIO_SOURCE = "PORTAL_AUDIO"
+# Winding down: keep the entry warm but never re-add, the finish endpoint owns the close.
+_WINDING_DOWN_PING_STATE = "finishing"
 
 
 def _participant_client_ip(request: Optional[Request]) -> str:
@@ -210,6 +230,107 @@ def _participant_client_ip(request: Optional[Request]) -> str:
     return "unknown"
 
 
+async def _project_id_for_conversation(conversation_id: str) -> Optional[str]:
+    """Project of a conversation, for endpoints that only receive the
+    conversation id. Best-effort: None on any failure."""
+    try:
+        row = await run_in_thread_pool(conversation_service.get_by_id_or_raise, conversation_id)
+        return (row or {}).get("project_id")
+    except Exception:  # noqa: BLE001
+        return None
+
+
+async def _verify_and_register(ctx: BillingContext, conversation_id: str, project_id: str) -> bool:
+    """Recover a mapping that initiate never wrote or Redis lost. One Directus
+    read; a fabricated id is then marked absent so it is not read again for
+    NEGATIVE_TTL_SECONDS.
+
+    A lost mapping pinged with the wrong project id is marked absent too, so
+    that participant stays uncounted until the marker expires; accepted, the
+    alternative is trusting forged ids.
+
+    Only PORTAL_AUDIO rows recover. Initiate registers nothing else, so a text
+    conversation or a host upload pinged with mode voice is not a recording we
+    metered; a null source is legacy and treated the same.
+    """
+    try:
+        row = await run_in_thread_pool(conversation_service.get_by_id_or_raise, conversation_id)
+    except Exception:  # noqa: BLE001
+        row = None
+    if (
+        row
+        and not row.get("deleted_at")
+        and str(row.get("project_id") or "") == project_id
+        and row.get("source") == PORTAL_AUDIO_SOURCE
+    ):
+        await register_conversation(ctx.account_id, conversation_id)
+        return True
+    await register_negative(conversation_id)
+    logger.debug("recording meter marked %s absent for project %s", conversation_id, project_id)
+    return False
+
+
+async def _meter_upload(conversation_id: str) -> None:
+    """Refresh presence straight from the conversation mapping. No Directus:
+    only initiate and the PORTAL_AUDIO-gated ping recovery ever register a
+    mapping; this path only refreshes and can never create one."""
+    try:
+        account_id = await account_for_conversation(conversation_id)
+        if not account_id or account_id == NEGATIVE_MARKER:
+            return
+        await refresh_if_present(account_id, conversation_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("recording meter failed open for %s: %s", conversation_id, exc)
+
+
+async def _meter(
+    project_id: str,
+    conversation_id: str,
+    action: str,
+) -> None:
+    """Feed the concurrent recording meter. `action` is open, present, refresh
+    or close. Best-effort: an unresolved billing context means not measured.
+
+    Only "open" (initiate) claims a conversation outright. present and refresh
+    come from the public ping endpoint, so a missing mapping is re-verified
+    against Directus before it counts; that keeps fabricated ids out of the
+    live set while a lost mapping recovers on the next ping.
+    """
+    try:
+        ctx = await resolve_project_billing_context(project_id)
+        if ctx is None:
+            return
+        if action == "close":
+            await close_session(ctx.account_id, conversation_id)
+            return
+        if action == "open":
+            await register_conversation(ctx.account_id, conversation_id)
+        else:
+            known = await account_for_conversation(conversation_id)
+            if known is None:
+                if not await _verify_and_register(ctx, conversation_id, project_id):
+                    return
+            elif known != ctx.account_id:
+                # NEGATIVE_MARKER or another account: expected noise from stale
+                # or forged pings, and already checked once.
+                logger.debug(
+                    "recording meter skipped %s for %s (mapped to %s)",
+                    conversation_id,
+                    ctx.account_id,
+                    known if known == NEGATIVE_MARKER else "another account",
+                )
+                return
+        if action == "refresh":
+            await refresh_if_present(ctx.account_id, conversation_id)
+        else:
+            count = await record_presence(ctx.account_id, conversation_id)
+            await observe(ctx, count, conversation_id, project_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "recording meter failed open for %s/%s: %s", project_id, conversation_id, exc
+        )
+
+
 @ParticipantRouter.post(
     "/projects/{project_id}/conversations/initiate",
     tags=["conversation"],
@@ -218,6 +339,7 @@ def _participant_client_ip(request: Optional[Request]) -> str:
 async def initiate_conversation(
     body: InitiateConversationRequestBodySchema,
     project_id: str,
+    background_tasks: BackgroundTasks,
 ) -> dict:
     try:
         conversation = await run_in_thread_pool(
@@ -229,26 +351,29 @@ async def initiate_conversation(
             project_tag_id_list=body.tag_id_list,
             source=body.source,
         )
-
-        # Link the funnel dot to its new conversation so the monitor drops it
-        # from the pre-conversation lanes immediately (best-effort).
-        if body.visitor_id and isinstance(conversation, dict):
-            await link_visitor_conversation(body.visitor_id, conversation.get("id"))
-
-        # Bust cached usage so conversation counts don't lag the cache TTL.
-        if isinstance(conversation, dict) and conversation.get("id"):
-            from dembrane.api.conversation import _invalidate_usage_cache_for_conversation
-
-            try:
-                await _invalidate_usage_cache_for_conversation(conversation["id"])
-            except Exception:
-                logger.warning("usage cache invalidation failed for new conversation")
-
-        return conversation
     except ConversationNotOpenForParticipationException as e:
         raise HTTPException(
             status_code=403, detail="Conversation not open for participation"
         ) from e
+
+    # Link the funnel dot to its new conversation so the monitor drops it
+    # from the pre-conversation lanes immediately (best-effort).
+    if body.visitor_id and isinstance(conversation, dict):
+        await link_visitor_conversation(body.visitor_id, conversation.get("id"))
+
+    # Bust cached usage so conversation counts don't lag the cache TTL.
+    if isinstance(conversation, dict) and conversation.get("id"):
+        from dembrane.api.conversation import _invalidate_usage_cache_for_conversation
+
+        try:
+            await _invalidate_usage_cache_for_conversation(conversation["id"])
+        except Exception:
+            logger.warning("usage cache invalidation failed for new conversation")
+        if body.source != "PORTAL_TEXT":
+            # After the response: metering must not slow the recording start.
+            background_tasks.add_task(_meter, project_id, conversation["id"], "open")
+
+    return conversation
 
 
 async def resolve_event_cta(project: dict, workspace: Optional[dict]) -> bool:
@@ -418,7 +543,7 @@ async def upload_conversation_chunk(
     source: Annotated[str, Form()] = "PORTAL_AUDIO",
 ) -> dict:
     try:
-        return await run_in_thread_pool(
+        chunk_row = await run_in_thread_pool(
             conversation_service.create_chunk,
             conversation_id=conversation_id,
             timestamp=timestamp,
@@ -431,6 +556,9 @@ async def upload_conversation_chunk(
         raise HTTPException(
             status_code=403, detail="Conversation not open for participation"
         ) from e
+    # Keep the live entry warm; never create one, the start path owns that.
+    await _meter_upload(conversation_id)
+    return chunk_row
 
 
 class ConversationNetworkTelemetry(BaseModel):
@@ -534,13 +662,36 @@ async def ping_conversation(
     Redis failure is swallowed so it never disrupts recording. When the portal
     includes its project_id, we also nudge any open monitor streams so they
     refresh in near-real-time instead of waiting for the next poll tick.
+
+    Also feeds the concurrent recording meter: an audio ping keeps this
+    conversation counted, a winding-down ping keeps it warm, and a terminal
+    ping closes it. Metering never refuses a recording.
     """
+    # Over-limit: drop the beacon and skip metering. Recording carries on.
+    if not await _conversation_ping_rate_limiter.allow(_participant_client_ip(request)):
+        return {"ok": True}
+
+    project_id = body.project_id if body is not None else None
+    if (
+        body is not None
+        and project_id
+        and len(project_id) <= _MAX_PING_ID_LEN
+        and len(conversation_id) <= _MAX_PING_ID_LEN
+        and (body.mode or "voice") != "text"
+    ):
+        if body.state in _TERMINAL_PING_STATES:
+            await _meter(project_id, conversation_id, "close")
+        elif body.state == _WINDING_DOWN_PING_STATE:
+            # Never re-add: this ping races the finish endpoint and would
+            # revive the entry, counting a phantom recording until it expires.
+            await _meter(project_id, conversation_id, "refresh")
+        else:
+            await _meter(project_id, conversation_id, "present")
+
     # Monitor off server-side: no host reads these, so no-op (never disturb recording).
     if not settings.feature_flags.enable_monitor:
         return {"ok": True}
-    # Over-limit or absurd id: drop the beacon but report ok (never disturb recording).
-    if not await _conversation_ping_rate_limiter.allow(_participant_client_ip(request)):
-        return {"ok": True}
+    # Absurd id: drop the beacon but report ok (never disturb recording).
     if len(conversation_id) > _MAX_PING_ID_LEN:
         return {"ok": True}
     try:
@@ -874,6 +1025,9 @@ async def confirm_chunk_upload(
             f"{', marked as error' if is_audio_too_small else ''}"
         )
 
+        # Keep the live entry warm; never create one, the start path owns that.
+        await _meter_upload(conversation_id)
+
         return chunk
 
     except ConversationNotOpenForParticipationException as e:
@@ -905,6 +1059,9 @@ async def run_when_conversation_is_finished(
     from dembrane.tasks import task_finish_conversation_hook
 
     task_finish_conversation_hook.send(conversation_id)
+    project_id = await _project_id_for_conversation(conversation_id)
+    if project_id:
+        await _meter(project_id, conversation_id, "close")
     return "OK"
 
 
