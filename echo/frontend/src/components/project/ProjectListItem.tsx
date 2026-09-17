@@ -5,10 +5,11 @@ import {
 	Avatar,
 	Badge,
 	Box,
+	Button,
 	Checkbox,
 	Group,
-	Menu,
 	Paper,
+	Popover,
 	Stack,
 	Text,
 	Tooltip,
@@ -22,7 +23,7 @@ import {
 import { IconLock, IconPin, IconPinFilled } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatRelative } from "date-fns";
-import type { PropsWithChildren } from "react";
+import { type PropsWithChildren, useState } from "react";
 import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Icons } from "@/icons";
@@ -154,6 +155,7 @@ export const ProjectListItem = ({
 	const queryClient = useQueryClient();
 	const updateProject = useUpdateProjectByIdMutation();
 	const [renameOpened, renameHandlers] = useDisclosure(false);
+	const [menuOpened, setMenuOpened] = useState(false);
 	const languageLabel = project.language
 		? (LANGUAGE_LABELS[project.language] ?? project.language.toUpperCase())
 		: null;
@@ -296,11 +298,6 @@ export const ProjectListItem = ({
 							<ActionIcon
 								variant="subtle"
 								color={isPinned ? "primary" : "gray"}
-								className={
-									isPinned
-										? ""
-										: "opacity-0 group-hover:opacity-100 transition-opacity"
-								}
 								onClick={(e) => {
 									e.preventDefault();
 									e.stopPropagation();
@@ -314,48 +311,77 @@ export const ProjectListItem = ({
 						</Tooltip>
 					)}
 					{canEdit && !selectable && (
-						<Menu position="bottom-end" shadow="md" withinPortal>
-							<Menu.Target>
+						<Popover
+							opened={menuOpened}
+							onChange={setMenuOpened}
+							position="bottom-end"
+							shadow="md"
+							trapFocus
+							withinPortal
+						>
+							<Popover.Target>
 								<ActionIcon
 									variant="subtle"
 									color="gray"
 									aria-label={t`Project options`}
+									aria-haspopup="menu"
+									aria-expanded={menuOpened}
 									// The row is a link; the menu must not follow it.
 									onClick={(e) => {
 										e.preventDefault();
 										e.stopPropagation();
+										setMenuOpened((opened) => !opened);
 									}}
 									{...testId(`project-list-item-menu-${project.id}`)}
 								>
 									<DotsThreeIcon size={20} weight="bold" />
 								</ActionIcon>
-							</Menu.Target>
-							<Menu.Dropdown
+							</Popover.Target>
+							<Popover.Dropdown
+								p="xs"
+								style={{ border: "1px solid var(--mantine-color-gray-4)" }}
 								onClick={(e) => {
 									e.preventDefault();
 									e.stopPropagation();
 								}}
 							>
-								<Menu.Item
-									leftSection={<PencilSimpleIcon size={16} />}
-									onClick={renameHandlers.open}
-									{...testId(`project-list-item-rename-${project.id}`)}
-								>
-									<Trans>Rename project</Trans>
-								</Menu.Item>
-								<Menu.Item
-									leftSection={<PaintBrushIcon size={16} />}
-									onClick={() =>
-										navigate(
-											`/w/${workspaceId}/projects/${project.id}/portal-editor`,
-										)
-									}
-									{...testId(`project-list-item-portal-${project.id}`)}
-								>
-									<Trans>Configure portal</Trans>
-								</Menu.Item>
-							</Menu.Dropdown>
-						</Menu>
+								<Stack gap="xs" role="menu">
+									<Button
+										role="menuitem"
+										variant="subtle"
+										color="gray"
+										c="var(--app-text)"
+										justify="flex-start"
+										fullWidth
+										leftSection={<PencilSimpleIcon size={16} />}
+										onClick={() => {
+											setMenuOpened(false);
+											renameHandlers.open();
+										}}
+										{...testId(`project-list-item-rename-${project.id}`)}
+									>
+										<Trans>Rename project</Trans>
+									</Button>
+									<Button
+										role="menuitem"
+										variant="subtle"
+										color="gray"
+										c="var(--app-text)"
+										justify="flex-start"
+										fullWidth
+										leftSection={<PaintBrushIcon size={16} />}
+										onClick={() =>
+											navigate(
+												`/w/${workspaceId}/projects/${project.id}/portal-editor`,
+											)
+										}
+										{...testId(`project-list-item-portal-${project.id}`)}
+									>
+										<Trans>Configure portal</Trans>
+									</Button>
+								</Stack>
+							</Popover.Dropdown>
+						</Popover>
 					)}
 				</Group>
 			</Group>

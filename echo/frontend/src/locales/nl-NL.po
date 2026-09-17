@@ -349,7 +349,7 @@ msgstr ""
 #. placeholder {0}: project.conversations?.length ?? 0
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/ProjectListItem.tsx:235
+#: src/components/project/ProjectListItem.tsx:237
 #: src/components/project/ProjectCard.tsx:46
 msgid "{0} Conversations • Edited {1}"
 msgstr "{0} Gesprekken • Bewerkt {1}"
@@ -604,7 +604,7 @@ msgstr "{names} en nog {extra}"
 msgid "{nextCadence} min"
 msgstr "{nextCadence} min"
 
-#: src/components/project/ProjectListItem.tsx:108
+#: src/components/project/ProjectListItem.tsx:109
 #: src/components/project/PinnedProjectCard.tsx:79
 msgid "{overflow} more people"
 msgstr "{overflow} personen meer"
@@ -2924,7 +2924,7 @@ msgstr "Voltooid"
 msgid "Completed on"
 msgstr "Voltooid op"
 
-#: src/components/project/ProjectListItem.tsx:355
+#: src/components/project/ProjectListItem.tsx:380
 msgid "Configure portal"
 msgstr "Portaal instellen"
 
@@ -7529,7 +7529,7 @@ msgstr "Nog niemand in de organisatie."
 msgid "No one on this organisation yet."
 msgstr "Nog niemand in deze organisatie."
 
-#: src/components/project/ProjectListItem.tsx:70
+#: src/components/project/ProjectListItem.tsx:71
 #: src/components/project/PinnedProjectCard.tsx:42
 msgid "No one shared yet"
 msgstr "Nog niemand gedeeld"
@@ -8572,7 +8572,7 @@ msgstr "personen"
 msgid "People"
 msgstr "Personen"
 
-#: src/components/project/ProjectListItem.tsx:90
+#: src/components/project/ProjectListItem.tsx:91
 #: src/components/project/PinnedProjectCard.tsx:61
 msgid "People with access"
 msgstr "Personen met toegang"
@@ -8651,7 +8651,7 @@ msgstr "Pilotlimiet bereikt"
 msgid "Pin"
 msgstr "Vastpinnen"
 
-#: src/components/project/ProjectListItem.tsx:292
+#: src/components/project/ProjectListItem.tsx:294
 msgid "Pin project"
 msgstr "Project vastpinnen"
 
@@ -8928,8 +8928,8 @@ msgstr "Privé"
 msgid "Private · only invited people can see this"
 msgstr "Privé · alleen genodigden kunnen dit zien"
 
-#: src/components/project/ProjectListItem.tsx:210
-#: src/components/project/ProjectListItem.tsx:214
+#: src/components/project/ProjectListItem.tsx:212
+#: src/components/project/ProjectListItem.tsx:216
 msgid "Private project"
 msgstr "Privéproject"
 
@@ -9053,7 +9053,7 @@ msgstr "Project verplaatst"
 
 #: src/routes/project/ProjectHomeRoute.tsx:389
 #: src/routes/project/CreateProjectRoute.tsx:215
-#: src/components/project/ProjectListItem.tsx:376
+#: src/components/project/ProjectListItem.tsx:402
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Project name"
@@ -9071,7 +9071,7 @@ msgstr "Projectnaam moet minstens 4 tekens lang zijn"
 msgid "Project not found"
 msgstr "Project niet gevonden"
 
-#: src/components/project/ProjectListItem.tsx:322
+#: src/components/project/ProjectListItem.tsx:326
 msgid "Project options"
 msgstr "Projectopties"
 
@@ -9697,8 +9697,8 @@ msgstr "Chat hernoemen"
 #: src/routes/project/ProjectHomeRoute.tsx:143
 #: src/routes/project/ProjectHomeRoute.tsx:148
 #: src/routes/project/ProjectHomeRoute.tsx:388
-#: src/components/project/ProjectListItem.tsx:344
-#: src/components/project/ProjectListItem.tsx:375
+#: src/components/project/ProjectListItem.tsx:363
+#: src/components/project/ProjectListItem.tsx:401
 msgid "Rename project"
 msgstr "Project hernoemen"
 
@@ -10615,7 +10615,7 @@ msgstr "Selecteer gesprekken in de sidebar"
 msgid "Select multiple conversations"
 msgstr "Meerdere gesprekken selecteren"
 
-#: src/components/project/ProjectListItem.tsx:176
+#: src/components/project/ProjectListItem.tsx:178
 msgid "Select project"
 msgstr "Project selecteren"
 
@@ -10925,13 +10925,13 @@ msgid "Shared with"
 msgstr "Gedeeld met"
 
 #. placeholder {0}: visibleNames.join(", ")
-#: src/components/project/ProjectListItem.tsx:83
+#: src/components/project/ProjectListItem.tsx:84
 #: src/components/project/PinnedProjectCard.tsx:54
 msgid "Shared with {0}"
 msgstr "Gedeeld met {0}"
 
 #. placeholder {0}: visibleNames.join(", ")
-#: src/components/project/ProjectListItem.tsx:82
+#: src/components/project/ProjectListItem.tsx:83
 #: src/components/project/PinnedProjectCard.tsx:53
 msgid "Shared with {0} and {overflow} others"
 msgstr "Gedeeld met {0} en {overflow} anderen"
@@ -12906,8 +12906,8 @@ msgstr "Ongedaan maken"
 
 #: src/components/settings/AuditLogsCard.tsx:280
 #: src/components/project/ProjectSharingModal.tsx:364
-#: src/components/project/ProjectListItem.tsx:98
-#: src/components/project/ProjectListItem.tsx:264
+#: src/components/project/ProjectListItem.tsx:99
+#: src/components/project/ProjectListItem.tsx:266
 #: src/components/project/PinnedProjectCard.tsx:69
 msgid "Unknown"
 msgstr "Onbekend"
@@ -12936,11 +12936,11 @@ msgstr "Losmaken"
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Maak eerst een project los (max {MAX_PINNED})"
 
-#: src/components/project/ProjectListItem.tsx:293
+#: src/components/project/ProjectListItem.tsx:295
 msgid "Unpin a project first (max 3)"
 msgstr "Maak eerst een project los (max 3)"
 
-#: src/components/project/ProjectListItem.tsx:290
+#: src/components/project/ProjectListItem.tsx:292
 #: src/components/project/PinnedProjectCard.tsx:163
 msgid "Unpin project"
 msgstr "Project losmaken"
