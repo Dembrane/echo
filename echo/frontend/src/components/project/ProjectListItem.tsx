@@ -7,20 +7,31 @@ import {
 	Box,
 	Checkbox,
 	Group,
+	Menu,
 	Paper,
 	Stack,
 	Text,
 	Tooltip,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import {
+	DotsThreeIcon,
+	PaintBrushIcon,
+	PencilSimpleIcon,
+} from "@phosphor-icons/react";
 import { IconLock, IconPin, IconPinFilled } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatRelative } from "date-fns";
 import type { PropsWithChildren } from "react";
 import { useParams } from "react-router";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Icons } from "@/icons";
 import { avatarUrl } from "@/lib/avatar";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
+import { InputModal } from "../common/InputModal";
 import { I18nLink } from "../common/i18nLink";
+import { useUpdateProjectByIdMutation } from "./hooks";
 
 /**
  * Access bubbles rendered on the project list card.
@@ -119,6 +130,7 @@ export const ProjectListItem = ({
 	onTogglePin,
 	isPinned,
 	canPin,
+	canEdit,
 	onSearchOwner,
 	selectable,
 	selected,
@@ -128,6 +140,8 @@ export const ProjectListItem = ({
 	onTogglePin?: (projectId: string) => void;
 	isPinned?: boolean;
 	canPin?: boolean;
+	/** Shows the row menu (rename, configure portal). Off for read-only roles. */
+	canEdit?: boolean;
 	onSearchOwner?: (term: string) => void;
 	/** Select mode is active: show the inline checkbox and toggle instead of navigating. */
 	selectable?: boolean;
@@ -136,6 +150,10 @@ export const ProjectListItem = ({
 }>) => {
 	const { workspaceId } = useParams();
 	const link = `/w/${workspaceId}/projects/${project.id}/home`;
+	const navigate = useI18nNavigate();
+	const queryClient = useQueryClient();
+	const updateProject = useUpdateProjectByIdMutation();
+	const [renameOpened, renameHandlers] = useDisclosure(false);
 	const languageLabel = project.language
 		? (LANGUAGE_LABELS[project.language] ?? project.language.toUpperCase())
 		: null;
@@ -295,6 +313,50 @@ export const ProjectListItem = ({
 							</ActionIcon>
 						</Tooltip>
 					)}
+					{canEdit && !selectable && (
+						<Menu position="bottom-end" shadow="md" withinPortal>
+							<Menu.Target>
+								<ActionIcon
+									variant="subtle"
+									color="gray"
+									aria-label={t`Project options`}
+									// The row is a link; the menu must not follow it.
+									onClick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+									}}
+									{...testId(`project-list-item-menu-${project.id}`)}
+								>
+									<DotsThreeIcon size={20} weight="bold" />
+								</ActionIcon>
+							</Menu.Target>
+							<Menu.Dropdown
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+								}}
+							>
+								<Menu.Item
+									leftSection={<PencilSimpleIcon size={16} />}
+									onClick={renameHandlers.open}
+									{...testId(`project-list-item-rename-${project.id}`)}
+								>
+									<Trans>Rename project</Trans>
+								</Menu.Item>
+								<Menu.Item
+									leftSection={<PaintBrushIcon size={16} />}
+									onClick={() =>
+										navigate(
+											`/w/${workspaceId}/projects/${project.id}/portal-editor`,
+										)
+									}
+									{...testId(`project-list-item-portal-${project.id}`)}
+								>
+									<Trans>Configure portal</Trans>
+								</Menu.Item>
+							</Menu.Dropdown>
+						</Menu>
+					)}
 				</Group>
 			</Group>
 		</Paper>
@@ -302,5 +364,38 @@ export const ProjectListItem = ({
 
 	// In select mode the card is the toggle target, so it must not navigate.
 	if (selectable) return body;
-	return <I18nLink to={link}>{body}</I18nLink>;
+	return (
+		<>
+			<I18nLink to={link}>{body}</I18nLink>
+			{/* Outside the link, so typing and clicking in it never navigate. */}
+			{canEdit && (
+				<InputModal
+					opened={renameOpened}
+					onClose={renameHandlers.close}
+					title={t`Rename project`}
+					label={<Trans>Project name</Trans>}
+					initialValue={project.name ?? ""}
+					loading={updateProject.isPending}
+					onConfirm={(name) => {
+						if (name === project.name) {
+							renameHandlers.close();
+							return;
+						}
+						updateProject.mutate(
+							{ id: project.id, payload: { name } },
+							{
+								onSuccess: () => {
+									queryClient.invalidateQueries({
+										queryKey: ["v2", "workspace-projects"],
+									});
+									renameHandlers.close();
+								},
+							},
+						);
+					}}
+					data-testid="project-rename-modal"
+				/>
+			)}
+		</>
+	);
 };
