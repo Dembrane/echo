@@ -3,7 +3,6 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Avatar,
-	Badge,
 	Box,
 	Button,
 	Checkbox,
@@ -15,11 +14,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-	DotsThreeIcon,
-	PaintBrushIcon,
-	PencilSimpleIcon,
-} from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
 import { IconLock, IconPin, IconPinFilled } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatRelative } from "date-fns";
@@ -197,11 +192,23 @@ export const ProjectListItem = ({
 						/>
 					)}
 					<Stack gap="0" style={{ flex: 1, minWidth: 0 }}>
-						<Group align="center" gap="xs" wrap="nowrap">
-							<Icons.Calendar />
+						{/* A long name stays on one line: wrapping pushed the icon off
+						    the baseline and squeezed the language badge to "E…". */}
+						<Group
+							align="center"
+							gap="xs"
+							wrap="nowrap"
+							style={{ minWidth: 0 }}
+						>
+							<Box style={{ display: "flex", flex: "none" }}>
+								<Icons.Calendar />
+							</Box>
 							<Text
 								className="font-semibold"
 								size="lg"
+								truncate
+								title={project.name ?? undefined}
+								style={{ minWidth: 0 }}
 								{...testId(`project-list-item-name-${project.id}`)}
 							>
 								{project.name}
@@ -212,15 +219,13 @@ export const ProjectListItem = ({
 								<Tooltip label={t`Private project`} withArrow>
 									<IconLock
 										size={14}
-										style={{ color: "var(--mantine-color-gray-6)" }}
+										style={{
+											color: "var(--mantine-color-gray-6)",
+											flex: "none",
+										}}
 										aria-label={t`Private project`}
 									/>
 								</Tooltip>
-							)}
-							{languageLabel && (
-								<Badge size="xs" variant="light" color="gray">
-									{languageLabel}
-								</Badge>
 							)}
 						</Group>
 						<Text size="sm" c="dimmed">
@@ -238,7 +243,14 @@ export const ProjectListItem = ({
 								{project.conversations_count ??
 									project?.conversations?.length ??
 									0}{" "}
-								Conversations • Edited{" "}
+								Conversations
+							</Trans>
+							{/* The language sits here, not beside the name, so a long
+							    name has the whole title line to itself. */}
+							{languageLabel && ` • ${languageLabel}`}
+							{" • "}
+							<Trans>
+								Edited{" "}
 								{formatRelative(
 									new Date(project.updated_at ?? new Date()),
 									new Date(),
@@ -353,7 +365,6 @@ export const ProjectListItem = ({
 										c="var(--app-text)"
 										justify="flex-start"
 										fullWidth
-										leftSection={<PencilSimpleIcon size={16} />}
 										onClick={() => {
 											setMenuOpened(false);
 											renameHandlers.open();
@@ -369,7 +380,6 @@ export const ProjectListItem = ({
 										c="var(--app-text)"
 										justify="flex-start"
 										fullWidth
-										leftSection={<PaintBrushIcon size={16} />}
 										onClick={() =>
 											navigate(
 												`/w/${workspaceId}/projects/${project.id}/portal-editor`,

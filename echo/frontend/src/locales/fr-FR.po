@@ -340,16 +340,18 @@ msgstr ""
 msgid "{0} conversations"
 msgstr ""
 
+#. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
+#: src/components/project/ProjectListItem.tsx:242
+msgid "{0} Conversations"
+msgstr "{0} Conversations"
+
 #. placeholder {0}: counts.conversations
 #: src/components/popcorn/PopcornStatus.tsx:44
 msgid "{0} conversations · {phrases} phrases · {validated} validated"
 msgstr ""
 
-#. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
 #. placeholder {0}: project.conversations?.length ?? 0
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/ProjectListItem.tsx:237
 #: src/components/project/ProjectCard.tsx:46
 msgid "{0} Conversations • Edited {1}"
 msgstr "{0} Conversations • Modifié le {1}"
@@ -604,7 +606,7 @@ msgstr ""
 msgid "{nextCadence} min"
 msgstr ""
 
-#: src/components/project/ProjectListItem.tsx:109
+#: src/components/project/ProjectListItem.tsx:104
 #: src/components/project/PinnedProjectCard.tsx:79
 msgid "{overflow} more people"
 msgstr ""
@@ -2927,7 +2929,7 @@ msgstr ""
 msgid "Completed on"
 msgstr ""
 
-#: src/components/project/ProjectListItem.tsx:380
+#: src/components/project/ProjectListItem.tsx:390
 msgid "Configure portal"
 msgstr ""
 
@@ -4387,6 +4389,11 @@ msgstr "Modifier le webhook"
 #: src/components/release/releaseHistory.ts:338
 msgid "Edit your display name and upload, crop or remove your profile picture."
 msgstr ""
+
+#. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
+#: src/components/project/ProjectListItem.tsx:252
+msgid "Edited {0}"
+msgstr "Modifié le {0}"
 
 #: src/components/release/releaseHistory.ts:766
 msgid "Editing a conversation no longer triggers the affected save error."
@@ -7532,7 +7539,7 @@ msgstr "Personne dans l'organisation pour l'instant."
 msgid "No one on this organisation yet."
 msgstr ""
 
-#: src/components/project/ProjectListItem.tsx:71
+#: src/components/project/ProjectListItem.tsx:66
 #: src/components/project/PinnedProjectCard.tsx:42
 msgid "No one shared yet"
 msgstr ""
@@ -8575,7 +8582,7 @@ msgstr ""
 msgid "People"
 msgstr ""
 
-#: src/components/project/ProjectListItem.tsx:91
+#: src/components/project/ProjectListItem.tsx:86
 #: src/components/project/PinnedProjectCard.tsx:61
 msgid "People with access"
 msgstr ""
@@ -8654,7 +8661,7 @@ msgstr ""
 msgid "Pin"
 msgstr "Épingler"
 
-#: src/components/project/ProjectListItem.tsx:294
+#: src/components/project/ProjectListItem.tsx:306
 msgid "Pin project"
 msgstr "Épingler le projet"
 
@@ -8931,8 +8938,8 @@ msgstr ""
 msgid "Private · only invited people can see this"
 msgstr ""
 
-#: src/components/project/ProjectListItem.tsx:212
-#: src/components/project/ProjectListItem.tsx:216
+#: src/components/project/ProjectListItem.tsx:219
+#: src/components/project/ProjectListItem.tsx:226
 msgid "Private project"
 msgstr ""
 
@@ -9056,7 +9063,7 @@ msgstr ""
 
 #: src/routes/project/ProjectHomeRoute.tsx:389
 #: src/routes/project/CreateProjectRoute.tsx:215
-#: src/components/project/ProjectListItem.tsx:402
+#: src/components/project/ProjectListItem.tsx:412
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Project name"
@@ -9074,7 +9081,7 @@ msgstr "Le nom du projet doit comporter au moins 4 caractères"
 msgid "Project not found"
 msgstr "Projet introuvable"
 
-#: src/components/project/ProjectListItem.tsx:326
+#: src/components/project/ProjectListItem.tsx:338
 msgid "Project options"
 msgstr ""
 
@@ -9700,8 +9707,8 @@ msgstr "Renommer le chat"
 #: src/routes/project/ProjectHomeRoute.tsx:143
 #: src/routes/project/ProjectHomeRoute.tsx:148
 #: src/routes/project/ProjectHomeRoute.tsx:388
-#: src/components/project/ProjectListItem.tsx:363
-#: src/components/project/ProjectListItem.tsx:401
+#: src/components/project/ProjectListItem.tsx:374
+#: src/components/project/ProjectListItem.tsx:411
 msgid "Rename project"
 msgstr ""
 
@@ -10618,7 +10625,7 @@ msgstr "Sélectionne des conversations dans la barre latérale"
 msgid "Select multiple conversations"
 msgstr "Sélectionner plusieurs conversations"
 
-#: src/components/project/ProjectListItem.tsx:178
+#: src/components/project/ProjectListItem.tsx:173
 msgid "Select project"
 msgstr ""
 
@@ -10928,13 +10935,13 @@ msgid "Shared with"
 msgstr ""
 
 #. placeholder {0}: visibleNames.join(", ")
-#: src/components/project/ProjectListItem.tsx:84
+#: src/components/project/ProjectListItem.tsx:79
 #: src/components/project/PinnedProjectCard.tsx:54
 msgid "Shared with {0}"
 msgstr ""
 
 #. placeholder {0}: visibleNames.join(", ")
-#: src/components/project/ProjectListItem.tsx:83
+#: src/components/project/ProjectListItem.tsx:78
 #: src/components/project/PinnedProjectCard.tsx:53
 msgid "Shared with {0} and {overflow} others"
 msgstr ""
@@ -12908,8 +12915,8 @@ msgstr "Annuler"
 
 #: src/components/settings/AuditLogsCard.tsx:280
 #: src/components/project/ProjectSharingModal.tsx:364
-#: src/components/project/ProjectListItem.tsx:99
-#: src/components/project/ProjectListItem.tsx:266
+#: src/components/project/ProjectListItem.tsx:94
+#: src/components/project/ProjectListItem.tsx:278
 #: src/components/project/PinnedProjectCard.tsx:69
 msgid "Unknown"
 msgstr "Inconnu"
@@ -12938,11 +12945,11 @@ msgstr "Détacher"
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Désépinglez d'abord un projet (max {MAX_PINNED})"
 
-#: src/components/project/ProjectListItem.tsx:295
+#: src/components/project/ProjectListItem.tsx:307
 msgid "Unpin a project first (max 3)"
 msgstr "Désépinglez d'abord un projet (max 3)"
 
-#: src/components/project/ProjectListItem.tsx:292
+#: src/components/project/ProjectListItem.tsx:304
 #: src/components/project/PinnedProjectCard.tsx:163
 msgid "Unpin project"
 msgstr "Désépingler le projet"
