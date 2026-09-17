@@ -1,0 +1,28 @@
+{
+  "collection": "recording_overage",
+  "meta": {
+    "accountability": "all",
+    "archive_app_filter": true,
+    "archive_field": null,
+    "archive_value": null,
+    "collapse": "open",
+    "collection": "recording_overage",
+    "color": null,
+    "display_template": null,
+    "group": null,
+    "hidden": false,
+    "icon": "speed",
+    "item_duplication_fields": null,
+    "note": "Spans during which a billing account's live portal recording count exceeded its tier cap. Input for overage emails.",
+    "preview_url": null,
+    "singleton": false,
+    "sort": 14,
+    "sort_field": null,
+    "translations": null,
+    "unarchive_value": null,
+    "versioning": false
+  },
+  "schema": {
+    "name": "recording_overage"
+  }
+}

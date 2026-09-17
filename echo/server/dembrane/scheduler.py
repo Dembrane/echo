@@ -105,6 +105,24 @@ scheduler.add_job(
     replace_existing=True,
 )
 
+# Concurrent recording overage meter: close finished episodes, then announce
+# openings and closings to sam, stamped on the episode row as its own outbox.
+scheduler.add_job(
+    func="dembrane.tasks:task_close_recording_overage_episodes.send",
+    trigger=CronTrigger(minute="*/2"),
+    id="task_close_recording_overage_episodes",
+    name="Close concurrent recording overage episodes after the quiet window",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_notify_recording_overage.send",
+    trigger=CronTrigger(minute="1-59/2"),
+    id="task_notify_recording_overage",
+    name="File Slack notifications for concurrent recording overage episodes",
+    replace_existing=True,
+)
+
 # Same cadence as the support outbox above, and for the same reason: the row is
 # already written, so this only decides how long the team waits to hear about a
 # booking.

@@ -26,6 +26,7 @@ from dembrane.tier_capacity import (
     tier_allows_overage,
     monthly_seat_bill_eur,
     compute_monthly_billing_price,
+    resolve_concurrent_recording_cap,
 )
 
 PAID_TIERS = ["innovator", "changemaker", "guardian"]
@@ -53,13 +54,15 @@ class TestTierMatrix:
         assert cap.price_eur_monthly is None
         assert cap.billing_period_applicable is False
 
-    @pytest.mark.parametrize(("tier", "price"), [("innovator", 20), ("changemaker", 75), ("guardian", 150)])
+    @pytest.mark.parametrize(
+        ("tier", "price"), [("innovator", 20), ("changemaker", 75), ("guardian", 150)]
+    )
     def test_paid_tier_values(self, tier: str, price: int):
         cap = get_capacity(tier)
         assert cap is not None
-        assert cap.price_eur_monthly == price          # per seat / month
-        assert cap.included_seats is None              # unlimited, metered
-        assert cap.included_hours is None              # unlimited hours
+        assert cap.price_eur_monthly == price  # per seat / month
+        assert cap.included_seats is None  # unlimited, metered
+        assert cap.included_hours is None  # unlimited hours
         assert cap.billing_period_applicable is True
 
     def test_all_tiers_have_hard_block_false(self):
@@ -217,7 +220,9 @@ class TestBuildTierPricing:
     def test_unknown_tier_returns_none(self):
         assert build_tier_pricing("nonexistent") is None
 
-    @pytest.mark.parametrize(("tier", "annual"), [("innovator", 20), ("changemaker", 75), ("guardian", 150)])
+    @pytest.mark.parametrize(
+        ("tier", "annual"), [("innovator", 20), ("changemaker", 75), ("guardian", 150)]
+    )
     def test_paid_tiers_have_annual_and_monthly(self, tier: str, annual: int):
         p = build_tier_pricing(tier)
         assert p is not None
@@ -230,3 +235,33 @@ class TestBuildTierPricing:
         assert get_capacity("free").billing_period_applicable is False
         for tier in PAID_TIERS:
             assert get_capacity(tier).billing_period_applicable is True
+
+
+# ── concurrent portal recording cap ────────────────────────────────────
+
+
+def test_every_tier_declares_the_concurrent_cap_field():
+    for cap in TIER_CAPACITIES.values():
+        assert hasattr(cap, "max_concurrent_portal_recordings")
+
+
+def test_ships_unlimited_until_values_are_decided():
+    for cap in TIER_CAPACITIES.values():
+        assert cap.max_concurrent_portal_recordings is None
+
+
+def test_unknown_tier_resolves_like_free(monkeypatch):
+    capped = TIER_CAPACITIES["free"].__class__(
+        **{**TIER_CAPACITIES["free"].__dict__, "max_concurrent_portal_recordings": 4}
+    )
+    monkeypatch.setitem(TIER_CAPACITIES, "free", capped)
+    for tier in (None, "", "pilot", "nonsense"):
+        assert resolve_concurrent_recording_cap(tier) == 4
+
+
+def test_paid_tier_reads_its_own_value(monkeypatch):
+    capped = TIER_CAPACITIES["guardian"].__class__(
+        **{**TIER_CAPACITIES["guardian"].__dict__, "max_concurrent_portal_recordings": 50}
+    )
+    monkeypatch.setitem(TIER_CAPACITIES, "guardian", capped)
+    assert resolve_concurrent_recording_cap("guardian") == 50

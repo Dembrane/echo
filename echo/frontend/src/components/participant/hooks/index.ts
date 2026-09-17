@@ -1,4 +1,5 @@
 import { createItem, readItems } from "@directus/sdk";
+import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import posthog from "posthog-js";
@@ -325,10 +326,7 @@ export const useInitiateConversationMutation = () => {
 	return useMutation({
 		mutationFn: initiateConversation,
 		onError: () => {
-			toast.error("Invalid PIN or email. Please try again.");
-		},
-		onSuccess: () => {
-			toast.success("Success");
+			toast.error(t`Invalid PIN or email. Please try again.`);
 		},
 	});
 };

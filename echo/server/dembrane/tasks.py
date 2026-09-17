@@ -37,6 +37,7 @@ from dembrane.directus import (
 )
 from dembrane.settings import get_settings
 from dembrane.transcribe import transcribe_conversation_chunk
+from dembrane.sam_forward import post_to_sam, sam_environment, sam_webhook_config
 from dembrane.async_helpers import run_async_in_new_loop
 from dembrane.agentic_runtime import publish_live_event, get_turn_lease_owner
 from dembrane.conversation_utils import (
@@ -2034,6 +2035,30 @@ def task_canvas_tick(loop_id: str, tick_kind: str = "scheduled") -> None:
     run_async_in_new_loop(lambda: run_tick(loop_id, tick_kind))
 
 
+@dramatiq.actor(queue_name=TICK_QUEUE, priority=20, max_retries=0, time_limit=TICK_TIME_LIMIT_MS)
+def task_close_recording_overage_episodes() -> None:
+    """Close concurrent recording overage episodes that have stayed at or
+    below their cap for the quiet window. Runs every 2 minutes."""
+    from dembrane.recording_overage import close_finished_episodes
+
+    closed = close_finished_episodes()
+    if closed:
+        getLogger("dembrane.tasks.recording_overage").info("closed %d overage episode(s)", closed)
+
+
+@dramatiq.actor(queue_name=TICK_QUEUE, priority=20, max_retries=0, time_limit=TICK_TIME_LIMIT_MS)
+def task_notify_recording_overage() -> None:
+    """Post the opening and closing Slack messages for overage episodes to sam,
+    off the episode's own stamp columns. Runs every 2 minutes, after closing."""
+    from dembrane.recording_overage import file_pending_notifications
+
+    filed = file_pending_notifications()
+    if filed:
+        getLogger("dembrane.tasks.recording_overage").info(
+            "filed %d overage notification(s)", filed
+        )
+
+
 async def _expire_support_request_async(request_id: str) -> bool:
     """Expire a still-pending request and tell the requester. Status-guarded, so
     an approval/denial that raced the timer wins and this is a no-op."""
@@ -2295,27 +2320,6 @@ def task_expire_staff_support_memberships() -> None:
             task_logger.exception("failed to expire staff support membership %s", row.get("id"))
 
 
-def _support_forward_environment() -> str:
-    """Name the environment this deployment is, for the support payload.
-
-    Same exact-host derivation as analytics._resolve_posthog_token — the
-    admin dashboard URL is the one per-env value every deployment already
-    has, so no new env var (ISSUE-034 design). Unknown hosts (previews,
-    local with a configured webhook) report the host itself — sam's
-    receiver forwards what it gets, so an honest odd label beats a wrong
-    known one.
-    """
-    from urllib.parse import urlparse
-
-    raw = (get_settings().urls.admin_base_url or "").lower().strip()
-    host = urlparse(raw if "://" in raw else f"https://{raw}").hostname or ""
-    if host == "dashboard.dembrane.com":
-        return "production"
-    if host == "dashboard.echo-next.dembrane.com":
-        return "echo-next"
-    return host or "development"
-
-
 def build_support_request_forward_payload(
     row: dict, org_id: Optional[str], environment: str
 ) -> dict:
@@ -2375,12 +2379,8 @@ def task_forward_support_requests() -> None:
     row re-forwards once the bug is fixed); 5xx/network → receiver is down,
     stop the batch and let the next cron run retry.
     """
-    import requests
-
     task_logger = getLogger("dembrane.tasks.task_forward_support_requests")
-    support = get_settings().support
-    webhook_url, webhook_token = support.forward_webhook_url, support.forward_webhook_token
-    if not webhook_url or not webhook_token:
+    if sam_webhook_config() is None:
         return
 
     with directus_client_context() as client:
@@ -2413,7 +2413,7 @@ def task_forward_support_requests() -> None:
     if not isinstance(rows, list) or not rows:
         return
 
-    environment = _support_forward_environment()
+    environment = sam_environment()
     task_logger.info("forwarding %d support request(s) to sam", len(rows))
     for row in rows:
         # One workspace→org hop; support_request has no org_id column.
@@ -2433,39 +2433,15 @@ def task_forward_support_requests() -> None:
                 )
 
         payload = build_support_request_forward_payload(row, org_id, environment)
-        try:
-            response = requests.post(
-                webhook_url,
-                json=payload,
-                headers={"X-Echo-Support-Token": webhook_token},
-                timeout=(10, 30),
-            )
-        except requests.RequestException as e:
-            task_logger.warning(
-                "support forward: POST failed (%s); stopping batch, next run retries", e
-            )
-            break
-
-        if 200 <= response.status_code < 300:
+        outcome = post_to_sam(payload, task_logger)
+        if outcome == "delivered":
             with directus_client_context() as client:
                 client.update_item(
                     "support_request",
                     str(row["id"]),
                     {"forwarded_at": get_utc_timestamp().isoformat()},
                 )
-        elif 400 <= response.status_code < 500:
-            task_logger.error(
-                "support forward: %s rejected with %s (%s) — payload/config bug, "
-                "row stays unstamped until it's fixed",
-                row.get("id"),
-                response.status_code,
-                response.text[:200],
-            )
-        else:
-            task_logger.warning(
-                "support forward: receiver returned %s; stopping batch, next run retries",
-                response.status_code,
-            )
+        elif outcome == "retry":
             break
 
 
@@ -2596,7 +2572,7 @@ def task_forward_pricing_bookings() -> None:
     if not isinstance(rows, list) or not rows:
         return
 
-    environment = _support_forward_environment()
+    environment = sam_environment()
     task_logger.info("forwarding %d pricing booking(s)", len(rows))
     for row in rows:
         # `_nnull` still passes an empty string. Nothing writes one, and a row

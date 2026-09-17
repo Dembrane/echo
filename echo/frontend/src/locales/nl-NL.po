@@ -1130,7 +1130,7 @@ msgstr "een werkruimte toe te voegen"
 msgid "Add additional context (Optional)"
 msgstr "Voeg extra context toe (Optioneel)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:294
+#: src/components/participant/ParticipantInitiateForm.tsx:296
 msgid "Add all that apply"
 msgstr "Vink aan wat van toepassing is"
 
@@ -3029,7 +3029,7 @@ msgstr "Voltooid"
 msgid "Completed on"
 msgstr "Voltooid op"
 
-#: src/components/project/ProjectListItem.tsx:390
+#: src/components/project/ProjectListItem.tsx:399
 msgid "Configure portal"
 msgstr "Portaal instellen"
 
@@ -3163,7 +3163,7 @@ msgid "Continue"
 msgstr "Doorgaan"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:336
+#: src/components/participant/ParticipantInitiateForm.tsx:338
 msgid "participant.ready.to.begin.button.text"
 msgstr "Doorgaan"
 
@@ -6069,6 +6069,10 @@ msgstr "Ongeldige e-mail"
 msgid "Invalid invite link"
 msgstr "Ongeldige uitnodigingslink"
 
+#: src/components/participant/hooks/index.ts:329
+msgid "Invalid PIN or email. Please try again."
+msgstr "Ongeldige pincode of e-mail. Probeer het opnieuw."
+
 #: src/routes/invite/AcceptInviteRoute.tsx:154
 msgid "Invitation"
 msgstr "Uitnodiging"
@@ -8676,8 +8680,8 @@ msgid "partially completed"
 msgstr "deels afgerond"
 
 #: src/components/report/ConversationStatusTable.tsx:56
-#: src/components/participant/ParticipantInitiateForm.tsx:130
-#: src/components/participant/ParticipantInitiateForm.tsx:196
+#: src/components/participant/ParticipantInitiateForm.tsx:136
+#: src/components/participant/ParticipantInitiateForm.tsx:197
 msgid "Participant"
 msgstr "Deelnemer"
 
@@ -8975,7 +8979,7 @@ msgstr "Pilotlimiet bereikt"
 msgid "Pin"
 msgstr "Vastpinnen"
 
-#: src/components/project/ProjectListItem.tsx:306
+#: src/components/project/ProjectListItem.tsx:309
 msgid "Pin project"
 msgstr "Project vastpinnen"
 
@@ -9382,7 +9386,7 @@ msgstr "Project verplaatst"
 
 #: src/routes/project/ProjectHomeRoute.tsx:389
 #: src/routes/project/CreateProjectRoute.tsx:215
-#: src/components/project/ProjectListItem.tsx:412
+#: src/components/project/ProjectListItem.tsx:422
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Project name"
@@ -9400,7 +9404,7 @@ msgstr "Projectnaam moet minstens 4 tekens lang zijn"
 msgid "Project not found"
 msgstr "Project niet gevonden"
 
-#: src/components/project/ProjectListItem.tsx:338
+#: src/components/project/ProjectListItem.tsx:347
 msgid "Project options"
 msgstr "Projectopties"
 
@@ -10043,8 +10047,8 @@ msgstr "Chat hernoemen"
 #: src/routes/project/ProjectHomeRoute.tsx:143
 #: src/routes/project/ProjectHomeRoute.tsx:148
 #: src/routes/project/ProjectHomeRoute.tsx:388
-#: src/components/project/ProjectListItem.tsx:374
-#: src/components/project/ProjectListItem.tsx:411
+#: src/components/project/ProjectListItem.tsx:383
+#: src/components/project/ProjectListItem.tsx:421
 msgid "Rename project"
 msgstr "Project hernoemen"
 
@@ -11100,7 +11104,7 @@ msgstr "Apart (klant)"
 msgid "Separate with commas, spaces, or new lines."
 msgstr "Scheid met komma's, spaties of nieuwe regels."
 
-#: src/components/participant/ParticipantInitiateForm.tsx:282
+#: src/components/participant/ParticipantInitiateForm.tsx:284
 msgid "Session Name"
 msgstr "Sessienaam"
 
@@ -11509,7 +11513,7 @@ msgstr "Iets blokkeert je verbinding. Je audio wordt niet opgeslagen tenzij dit 
 #: src/routes/onboarding/OnboardingRoute.tsx:189
 #: src/routes/auth/Login.tsx:220
 #: src/components/project/ProjectAccessGuard.tsx:87
-#: src/components/participant/ParticipantInitiateForm.tsx:48
+#: src/components/participant/ParticipantInitiateForm.tsx:49
 #: src/components/error/ErrorPage.tsx:55
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:298
@@ -11966,7 +11970,7 @@ msgid "Tag deleted"
 msgstr "Tag verwijderd"
 
 #: src/components/project/ProjectTagsInput.tsx:256
-#: src/components/participant/ParticipantInitiateForm.tsx:293
+#: src/components/participant/ParticipantInitiateForm.tsx:295
 #: src/components/conversation/ProjectConversationsPanel.tsx:853
 #: src/components/conversation/ConversationEdit.tsx:426
 #: src/components/conversation/ConversationDrilldownModal.tsx:199
@@ -13382,11 +13386,11 @@ msgstr "Losmaken"
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Maak eerst een project los (max {MAX_PINNED})"
 
-#: src/components/project/ProjectListItem.tsx:307
+#: src/components/project/ProjectListItem.tsx:310
 msgid "Unpin a project first (max 3)"
 msgstr "Maak eerst een project los (max 3)"
 
-#: src/components/project/ProjectListItem.tsx:304
+#: src/components/project/ProjectListItem.tsx:307
 #: src/components/project/PinnedProjectCard.tsx:163
 msgid "Unpin project"
 msgstr "Project losmaken"

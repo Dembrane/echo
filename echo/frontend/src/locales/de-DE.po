@@ -1130,7 +1130,7 @@ msgstr ""
 msgid "Add additional context (Optional)"
 msgstr "Zusätzlichen Kontext hinzufügen (Optional)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:294
+#: src/components/participant/ParticipantInitiateForm.tsx:296
 msgid "Add all that apply"
 msgstr "Alle zutreffenden hinzufügen"
 
@@ -3032,7 +3032,7 @@ msgstr ""
 msgid "Completed on"
 msgstr ""
 
-#: src/components/project/ProjectListItem.tsx:390
+#: src/components/project/ProjectListItem.tsx:399
 msgid "Configure portal"
 msgstr ""
 
@@ -3166,7 +3166,7 @@ msgid "Continue"
 msgstr "Weiter"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:336
+#: src/components/participant/ParticipantInitiateForm.tsx:338
 msgid "participant.ready.to.begin.button.text"
 msgstr "Weiter"
 
@@ -6072,6 +6072,10 @@ msgstr ""
 msgid "Invalid invite link"
 msgstr ""
 
+#: src/components/participant/hooks/index.ts:329
+msgid "Invalid PIN or email. Please try again."
+msgstr "Ungültige PIN oder E-Mail. Bitte versuche es erneut."
+
 #: src/routes/invite/AcceptInviteRoute.tsx:154
 msgid "Invitation"
 msgstr ""
@@ -8679,8 +8683,8 @@ msgid "partially completed"
 msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:56
-#: src/components/participant/ParticipantInitiateForm.tsx:130
-#: src/components/participant/ParticipantInitiateForm.tsx:196
+#: src/components/participant/ParticipantInitiateForm.tsx:136
+#: src/components/participant/ParticipantInitiateForm.tsx:197
 msgid "Participant"
 msgstr "Teilnehmer"
 
@@ -8978,7 +8982,7 @@ msgstr ""
 msgid "Pin"
 msgstr "Anheften"
 
-#: src/components/project/ProjectListItem.tsx:306
+#: src/components/project/ProjectListItem.tsx:309
 msgid "Pin project"
 msgstr "Projekt anheften"
 
@@ -9385,7 +9389,7 @@ msgstr ""
 
 #: src/routes/project/ProjectHomeRoute.tsx:389
 #: src/routes/project/CreateProjectRoute.tsx:215
-#: src/components/project/ProjectListItem.tsx:412
+#: src/components/project/ProjectListItem.tsx:422
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Project name"
@@ -9403,7 +9407,7 @@ msgstr "Der Projektname muss mindestens 4 Zeichen lang sein"
 msgid "Project not found"
 msgstr "Projekt nicht gefunden"
 
-#: src/components/project/ProjectListItem.tsx:338
+#: src/components/project/ProjectListItem.tsx:347
 msgid "Project options"
 msgstr ""
 
@@ -10046,8 +10050,8 @@ msgstr "Chat umbenennen"
 #: src/routes/project/ProjectHomeRoute.tsx:143
 #: src/routes/project/ProjectHomeRoute.tsx:148
 #: src/routes/project/ProjectHomeRoute.tsx:388
-#: src/components/project/ProjectListItem.tsx:374
-#: src/components/project/ProjectListItem.tsx:411
+#: src/components/project/ProjectListItem.tsx:383
+#: src/components/project/ProjectListItem.tsx:421
 msgid "Rename project"
 msgstr ""
 
@@ -11103,7 +11107,7 @@ msgstr ""
 msgid "Separate with commas, spaces, or new lines."
 msgstr ""
 
-#: src/components/participant/ParticipantInitiateForm.tsx:282
+#: src/components/participant/ParticipantInitiateForm.tsx:284
 msgid "Session Name"
 msgstr "Sitzungsname"
 
@@ -11512,7 +11516,7 @@ msgstr "Etwas blockiert Ihre Verbindung. Ihr Audio wird nicht gespeichert, solan
 #: src/routes/onboarding/OnboardingRoute.tsx:189
 #: src/routes/auth/Login.tsx:220
 #: src/components/project/ProjectAccessGuard.tsx:87
-#: src/components/participant/ParticipantInitiateForm.tsx:48
+#: src/components/participant/ParticipantInitiateForm.tsx:49
 #: src/components/error/ErrorPage.tsx:55
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:298
@@ -11969,7 +11973,7 @@ msgid "Tag deleted"
 msgstr ""
 
 #: src/components/project/ProjectTagsInput.tsx:256
-#: src/components/participant/ParticipantInitiateForm.tsx:293
+#: src/components/participant/ParticipantInitiateForm.tsx:295
 #: src/components/conversation/ProjectConversationsPanel.tsx:853
 #: src/components/conversation/ConversationEdit.tsx:426
 #: src/components/conversation/ConversationDrilldownModal.tsx:199
@@ -13385,11 +13389,11 @@ msgstr "Loslösen"
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Löse zuerst ein Projekt (max. {MAX_PINNED})"
 
-#: src/components/project/ProjectListItem.tsx:307
+#: src/components/project/ProjectListItem.tsx:310
 msgid "Unpin a project first (max 3)"
 msgstr "Löse zuerst ein Projekt (max. 3)"
 
-#: src/components/project/ProjectListItem.tsx:304
+#: src/components/project/ProjectListItem.tsx:307
 #: src/components/project/PinnedProjectCard.tsx:163
 msgid "Unpin project"
 msgstr "Projekt lösen"
