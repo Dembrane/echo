@@ -1,8 +1,19 @@
 import { t } from "@lingui/core/macro";
-import { ActionIcon, Badge, Group, Stack, TextInput } from "@mantine/core";
+import { Trans } from "@lingui/react/macro";
+import {
+	ActionIcon,
+	Badge,
+	Group,
+	Stack,
+	Text,
+	TextInput,
+} from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import { useState } from "react";
+import { useFocusOnHash } from "@/hooks/useFocusOnHash";
 import { testId } from "@/lib/testUtils";
+
+export const KEY_TERMS_HASH = "key-terms";
 
 const parseTerms = (value: string) =>
 	value
@@ -14,6 +25,9 @@ const parseTerms = (value: string) =>
  * Key terms are stored on the project as one comma-separated string
  * (default_conversation_transcript_prompt) and sent to transcription as
  * hotwords, so this input reads and writes that string directly.
+ *
+ * The explanation of what key terms do lives here, with the control, so
+ * the create wizard and the portal editor say the same thing.
  *
  * A typed term is committed on blur as well as on Enter: in the create
  * wizard the next click is "Next", and a term left in the field would
@@ -33,6 +47,7 @@ export const KeyTermsInput = ({
 	inputTestId?: string;
 }) => {
 	const [draft, setDraft] = useState("");
+	const inputRef = useFocusOnHash<HTMLInputElement>(KEY_TERMS_HASH);
 	const terms = parseTerms(value);
 
 	const commitDraft = () => {
@@ -48,7 +63,28 @@ export const KeyTermsInput = ({
 
 	return (
 		<Stack gap="sm">
+			<Stack gap={6}>
+				<Text size="sm">
+					<Trans>
+						Key terms tell transcription how to spell the names and words that
+						matter in this project.
+					</Trans>
+				</Text>
+				<Text size="sm">
+					<Trans>
+						Without them, a name or word the transcription model does not know
+						often comes out misspelt. Adding them now improves everything built
+						on the transcripts: summaries, chats, reports and the library.
+					</Trans>
+				</Text>
+				<Text size="sm">
+					<Trans>
+						Add the people, places, organisations and jargon you expect to hear.
+					</Trans>
+				</Text>
+			</Stack>
 			<TextInput
+				ref={inputRef}
 				autoFocus={autoFocus}
 				className={isDirty ? "border-blue-500" : ""}
 				aria-label={t`Key terms`}

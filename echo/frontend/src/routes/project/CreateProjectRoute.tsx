@@ -12,7 +12,6 @@ import {
 	Stepper,
 	Switch,
 	Text,
-	Textarea,
 	TextInput,
 	Title,
 } from "@mantine/core";
@@ -24,6 +23,7 @@ import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
 import { KeyTermsInput } from "@/components/project/KeyTermsInput";
+import { ProjectContextInput } from "@/components/project/ProjectContextInput";
 import {
 	AGENTIC_CHAT_IS_DEFAULT,
 	API_BASE_URL,
@@ -230,17 +230,12 @@ export const CreateProjectRoute = () => {
 								}}
 							/>
 
-							<Textarea
-								label={t`Description`}
-								description={t`A short note on what this project is about. You can edit it later.`}
-								placeholder={t`What are you trying to learn?`}
+							<ProjectContextInput
 								value={context}
 								onChange={(e) => {
 									setContext(e.currentTarget.value);
 									setSetupInitialMessage(SETUP_INITIAL_MESSAGE);
 								}}
-								minRows={3}
-								autosize
 							/>
 							{ENABLE_AGENTIC_CHAT ? (
 								<Button
@@ -276,34 +271,15 @@ export const CreateProjectRoute = () => {
 
 					<Stepper.Step label={t`Key terms`}>
 						<Stack gap={16} mt="md">
-							<Stack gap={6}>
-								<Text size="sm">
-									<Trans>
-										Key terms tell transcription how to spell the names and
-										words that matter in this project.
-									</Trans>
-								</Text>
-								<Text size="sm">
-									<Trans>
-										Without them, a name or word the transcription model does
-										not know often comes out misspelt. Adding them now improves
-										everything built on the transcripts: summaries, chats,
-										reports and the library.
-									</Trans>
-								</Text>
-								<Text size="sm">
-									<Trans>
-										Add the people, places, organisations and jargon you expect
-										to hear. You can skip this and add them later.
-									</Trans>
-								</Text>
-							</Stack>
 							<KeyTermsInput
 								autoFocus
 								value={keyTerms}
 								onChange={setKeyTerms}
 								inputTestId="create-project-key-terms-input"
 							/>
+							<Text size="sm">
+								<Trans>You can skip this and add them later.</Trans>
+							</Text>
 						</Stack>
 					</Stepper.Step>
 
@@ -377,7 +353,7 @@ export const CreateProjectRoute = () => {
 									</Group>
 									<Group gap={12} align="flex-start" wrap="nowrap">
 										<Text size="xs" c="dimmed" w={100}>
-											<Trans>Description</Trans>
+											<Trans>Project context</Trans>
 										</Text>
 										<Text
 											size="sm"

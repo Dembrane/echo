@@ -131,12 +131,6 @@ const KeyTermsSection = ({
 				/>
 			)}
 		</Group>
-		<Text size="sm" c="dimmed">
-			<Trans>
-				Key terms tell transcription how to spell the names and words that
-				matter in this project.
-			</Trans>
-		</Text>
 		<KeyTermsInput
 			value={value}
 			onChange={onChange}
