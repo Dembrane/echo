@@ -91,3 +91,27 @@ Two things upstream's 8c23eba merge changed on purpose:
 To take a new upstream version: `git merge-file` the new files against the
 upstream commit named here, resolve to upstream where the platform-only
 change was superseded, re-check every patch above, and update the commit here.
+
+Opening patch: session.intro, session.disclosure and session.notice carry
+host-written opening copy for any session: an intro, a disclosure with an
+optional follow-up screen, then the countdown, and a notice bar that stays
+across tabs and can reopen the opening. session.data is a last opening
+screen, "what happens to your data", drawn from `illustrations/` beside the
+page; its words come from the server. The bundle always includes the
+disclosure and notice when session.demo.synthetic is set, and inside the
+deck a demo reads like a real run: the frame and the opening carry its
+provenance. A demo's QR opens dembrane's sales portal.
+
+Localisation patch: the page's own words live in `I18N` at the top of app.js
+(en and nl; a language is one more object with the same keys, and a missing
+key falls back to English), read with `tr` and `trn` in session.language,
+never applied to data. Counted strings pick their form with
+`Intl.PluralRules`, and sentence templates (the stakeholder prose, relation
+sentences, counts) keep word order and casing per language. session.date_iso
+is formatted in that language and `<html lang>` follows it. With
+session.translation the tally and the disclaimer say the texts were
+translated (and how many are still pending), and the quote sentence calls
+the quotes translations; a synthetic demo's disclaimer says its popcorns are
+fictional. The opening's screens are history entries, `#intro/N`: back steps
+back, a fresh load starts at screen 1, and an address never reaches a screen
+this page load has not shown.

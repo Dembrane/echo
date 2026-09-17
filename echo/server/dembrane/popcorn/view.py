@@ -51,6 +51,11 @@ def render_popcorn_page(*, embed: dict[str, Any]) -> str:
 
 
 LOGO_PATH = STATIC_DIR / "dembrane-logomark-cropped.png"
+# The data screen's drawings, served beside the page under their own names.
+ILLUSTRATIONS = {
+    name: STATIC_DIR / "illustrations" / f"{name}.webp"
+    for name in ("scan", "talk-anon", "talk-public", "understand")
+}
 
 NOT_LIVE_PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

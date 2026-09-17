@@ -21,9 +21,11 @@ from datetime import datetime, timezone, timedelta
 
 from dembrane.utils import generate_uuid
 from dembrane.popcorn.qr import qr_svg_markup
+from dembrane.legal_basis import DEFAULT_LEGAL_BASIS
 from dembrane.directus_async import async_directus
 from dembrane.scheduled_tasks import TASK_POPCORN_TICK, schedule_task
 from dembrane.popcorn.analysis import attributes
+from dembrane.popcorn.translate import LANGUAGES
 
 REPORT_KIND = "popcorn"
 LOOP_KIND = "popcorn"
@@ -120,6 +122,152 @@ def is_popcorn_loop(loop: dict[str, Any] | None) -> bool:
     return isinstance(caps, dict) and caps.get("kind") == LOOP_KIND
 
 
+# The screens before the countdown and the bar above every tab, each a switch
+# plus the host's words with their length limits. Any session may use them.
+OPENING_BLOCKS: dict[str, dict[str, int]] = {
+    "intro": {"title": 160, "subtitle": 600},
+    "disclosure": {"text": 600, "invitation_title": 160, "invitation_text": 600},
+    "notice": {"text": 160},
+    # The data screen has no words of its own: they follow the project.
+    "data": {},
+}
+
+# The data screen, step by step. Its words follow the project's
+# anonymisation and effective legal basis, never the host's typing, so the
+# screen cannot promise more than the platform does.
+DATA_COPY: dict[str, dict[str, Any]] = {
+    "nl": {
+        "title": "Dit gebeurt er stap voor stap met je gegevens",
+        "scan": "Eén persoon per gesprek scant de QR-code. Die telefoon maakt verbinding met dembrane.",
+        "talk-anon": (
+            "Het geluid wordt uitgeschreven. We halen namen die naar jou kunnen leiden uit het "
+            "transcript, en de organisator kan de opname niet beluisteren. Geen training, geen gedoe."
+        ),
+        "talk-public": (
+            "Het geluid wordt uitgeschreven en geanalyseerd. De organisator kan het gebruiken "
+            "voor onderzoek."
+        ),
+        "understand": (
+            "Daarna analyseert dembrane alle gesprekken om te zien wat de groep echt belangrijk "
+            "vindt. Dat kan het volgende gesprek voeden: zo wordt een hele groep samen slimmer, "
+            "door de kracht van het gesprek."
+        ),
+        "legal": {
+            "consent": (
+                "Voor je begint, vragen we je toestemming. De privacyverklaring van de "
+                "organisator is van toepassing."
+            ),
+            "client-managed": "De organisator bepaalt wat er met de gesprekken gebeurt.",
+            "dembrane-events": (
+                "dembrane organiseert deze sessie en verwerkt de gesprekken op basis van "
+                "gerechtvaardigd belang."
+            ),
+        },
+        "hood": (
+            "Onder de motorkap gebeurt de verwerking op servers van Google Vertex AI in de EU. "
+            "Opgeslagen gegevens staan versleuteld op servers in Amsterdam."
+        ),
+        "policy": "Privacyverklaring van de organisator",
+        "trust": {"url": "https://dembrane.com/nl/trust", "label": "Meer op dembrane.com/nl/trust"},
+    },
+    "en": {
+        "title": "Here's what happens to your data, step by step",
+        "scan": "One person per conversation scans the QR code, and their phone connects with dembrane.",
+        "talk-anon": (
+            "The audio is transcribed. We scrub the transcript of any names that could lead back "
+            "to you, and your host cannot listen to the recording. No training, no nonsense."
+        ),
+        "talk-public": "The audio is transcribed and analysed. The host may use it for research.",
+        "understand": (
+            "Then dembrane analyses all the conversations to identify what the group really "
+            "cares about. This can inform the next conversation: that's how a whole group gets "
+            "smarter, together, through the power of conversation."
+        ),
+        "legal": {
+            "consent": (
+                "You are asked for your consent before you start. The organiser's privacy "
+                "policy applies."
+            ),
+            "client-managed": "The organiser decides what happens with the conversations.",
+            "dembrane-events": (
+                "dembrane organises this session and processes the conversations on the basis "
+                "of legitimate interest."
+            ),
+        },
+        "hood": (
+            "Under the hood, processing happens on Google Vertex AI servers in the EU. "
+            "Stored data is encrypted on servers in Amsterdam."
+        ),
+        "policy": "The organiser's privacy policy",
+        "trust": {"url": "https://dembrane.com/trust", "label": "Details at dembrane.com/trust"},
+    },
+}
+
+# What a synthetic demo says where its host left the words empty.
+SYNTHETIC_COPY: dict[str, dict[str, str]] = {
+    "nl": {
+        "disclosure": (
+            "Alle uitspraken, spanningen en perspectieven in dit voorbeeld zijn verzonnen "
+            "voor demonstratiedoeleinden. Het is geen verslag van een echte bijeenkomst en "
+            "geeft niet weer wat mensen werkelijk vinden."
+        ),
+        "invitation_title": "Het begint met écht luisteren",
+        "invitation_text": (
+            "De echte verhalen komen van de mensen om wie het gaat.\n\n"
+            "Hun ervaringen, vragen en verschillen geven een bijeenkomst betekenis en "
+            "vullen dit scherm met echte verhalen en perspectieven."
+        ),
+        "notice": "Synthetische demo · verzonnen perspectieven, geen echte gespreksuitkomsten.",
+    },
+    "en": {
+        "disclosure": (
+            "Every contribution, tension and perspective in this example is fictional and "
+            "created for demonstration. These are not real people's perspectives or "
+            "findings from an event."
+        ),
+        "invitation_title": "It starts with listening to real people",
+        "invitation_text": (
+            "The real stories come from the people it is about.\n\n"
+            "Their experiences, questions and differences give a gathering its meaning and "
+            "fill this screen with real stories and perspectives."
+        ),
+        "notice": "Synthetic demo · fictional perspectives, not real conversation findings.",
+    },
+}
+
+
+def normalize_block(raw: Any, limits: dict[str, int]) -> dict[str, Any]:
+    raw = raw if isinstance(raw, dict) else {}
+    block: dict[str, Any] = {"enabled": bool(raw.get("enabled", False))}
+    for key, limit in limits.items():
+        block[key] = str(raw.get(key) or "").strip()[:limit]
+    return block
+
+
+def normalize_language(raw: Any) -> dict[str, str]:
+    """The screen's own language (`auto` follows the project) and, when the
+    host asked for one, the language the results are translated into."""
+    raw = raw if isinstance(raw, dict) else {}
+    ui = str(raw.get("ui") or "auto")
+    target = str(raw.get("translate_to") or "")
+    return {
+        "ui": ui if ui in LANGUAGES else "auto",
+        "translate_to": target if target in LANGUAGES else "",
+    }
+
+
+def screen_language(settings: dict[str, Any], demo: dict[str, Any], project: dict[str, Any]) -> str:
+    """The language of the screen's own words. Automatic follows the
+    results: their translation when the host asked for one, else the
+    project's language (a demo's own)."""
+    language = normalize_language(settings.get("language"))
+    choice = language["ui"]
+    if choice == "auto":
+        spoken = demo.get("language") if demo.get("synthetic") else project.get("language")
+        choice = language["translate_to"] or str(spoken or "en").split("-")[0]
+    return choice if choice in LANGUAGES else "en"
+
+
 def default_settings(*, title: str, client: str | None = None) -> dict[str, Any]:
     return {
         "title": title,
@@ -130,6 +278,8 @@ def default_settings(*, title: str, client: str | None = None) -> dict[str, Any]
         "show_branding": True,
         "voice": {"presets": [], "note": ""},
         "public_labels": "neutral",
+        **{name: normalize_block(None, limits) for name, limits in OPENING_BLOCKS.items()},
+        "language": normalize_language(None),
     }
 
 
@@ -165,6 +315,8 @@ def normalize_settings(raw: dict[str, Any] | None, *, fallback_title: str) -> di
         # whitelabel; the API enforces the tier, the setting only records it.
         "show_branding": bool(raw.get("show_branding", True)),
         "voice": normalize_voice(raw.get("voice")),
+        **{name: normalize_block(raw.get(name), limits) for name, limits in OPENING_BLOCKS.items()},
+        "language": normalize_language(raw.get("language")),
         # What the room's legend calls a conversation. A conversation's label is
         # the name typed on the phone, which may be a person's; the public page
         # numbers them unless the host chooses otherwise. The host page always
@@ -189,6 +341,13 @@ def normalize_state(raw: Any) -> dict[str, Any]:
     if not isinstance(raw, dict):
         return state
     state["run"] = int(raw.get("run") or 0)
+    # Provenance belongs to the data, never to a hideable screen setting.
+    if isinstance(raw.get("demo"), dict) and raw["demo"].get("synthetic") is True:
+        demo = dict(raw["demo"])
+        for key in ("disclosure", "notice", "portal_urls"):
+            if not isinstance(demo.get(key), dict):
+                demo.pop(key, None)
+        state["demo"] = demo
     conversations_value = raw.get("conversations")
     conversations: dict[Any, Any] = (
         conversations_value if isinstance(conversations_value, dict) else {}
@@ -209,6 +368,14 @@ def normalize_state(raw: Any) -> dict[str, Any]:
         analysis.pop("quotes", None)
     state["quotes"] = [q for q in (quotes_raw or []) if isinstance(q, dict) and q.get("id")]
     state["analysis"] = analysis
+    # Translations the host asked for, per language, keyed by source text.
+    translations = raw.get("translations")
+    if isinstance(translations, dict):
+        state["translations"] = {
+            str(lang): {str(k): str(v) for k, v in table.items() if isinstance(v, str)}
+            for lang, table in translations.items()
+            if lang in LANGUAGES and isinstance(table, dict)
+        }
     return state
 
 
@@ -474,8 +641,9 @@ async def update_settings(
     for key in ("title", "client", "public", "show_qr", "show_branding", "public_labels"):
         if key in patch and patch[key] is not None:
             merged[key] = patch[key]
-    if isinstance(patch.get("voice"), dict):
-        merged["voice"] = {**current["voice"], **patch["voice"]}
+    for key in ("voice", "language", *OPENING_BLOCKS):
+        if isinstance(patch.get(key), dict):
+            merged[key] = {**current[key], **patch[key]}
     if isinstance(patch.get("tabs"), dict):
         merged["tabs"] = {
             **current["tabs"],
@@ -681,10 +849,18 @@ async def popcorn_payload(report: dict[str, Any]) -> dict[str, Any]:
         "created_at": report.get("date_created"),
         "updated_at": (loop or {}).get("updated_at"),
         "settings": settings,
+        # A synthetic demo's disclosure and notice are the demo's; the
+        # dashboard leaves them out.
+        "synthetic": is_synthetic_session(state),
         "public_token": report.get("public_token"),
         "loop": loop_payload(loop, run, await next_read_at(str(loop["id"])) if loop else None),
         "counts": state_counts(state),
     }
+
+
+def _session_day(value: Any) -> str:
+    parsed = _parse_dt(value) or _now()
+    return parsed.date().isoformat()
 
 
 def _session_date(value: Any) -> str:
@@ -734,15 +910,42 @@ def build_bundle(
         "client": settings.get("client") or "",
         "date": _session_date(report.get("date_created")),
         "branding": bool(settings.get("show_branding", True)),
+        "intro": settings.get("intro") or {},
         "transcripts": [
             _transcript_entry(conversations[cid], cid, index, show_names)
             for index, cid in enumerate(order, start=1)
         ],
     }
+    demo = state.get("demo") or {}
+    if demo.get("synthetic") is True:
+        session["demo"] = {
+            "synthetic": True,
+            "public_sources_only": demo.get("public_sources_only") is True,
+            "language": "nl" if demo.get("language") == "nl" else "en",
+        }
+    session.update(opening_screens(settings, demo))
+    session["language"] = screen_language(settings, demo, project)
+    session["date_iso"] = _session_day(report.get("date_created"))
+    if (settings.get("data") or {}).get("enabled"):
+        session["data"] = data_screen(project, session["language"])
     if settings.get("show_qr"):
-        url = participant_url(project, participant_base_url)
+        # A demo's QR opens dembrane's sales portal, a separate project that
+        # records feedback for the dembrane team, in the screen's language
+        # where there is one. Nothing recorded there reaches the demo project.
+        portals = demo.get("portal_urls") or {}
+        url = (
+            portals.get(session["language"]) or demo.get("portal_url")
+            if demo.get("synthetic")
+            else participant_url(project, participant_base_url)
+        )
         if url:
             session["qr"] = {"url": url, "svg": qr_svg_markup(url)}
+            if demo.get("synthetic"):
+                session["qr"]["label"] = (
+                    "Feedback voor dembrane"
+                    if session["language"] == "nl"
+                    else "Feedback for dembrane"
+                )
     if host:
         # What the host can switch on or off from the preview itself.
         session["host"] = {
@@ -765,6 +968,8 @@ def build_bundle(
             if not isinstance(item, dict) or not item.get("phrase"):
                 continue
             entry: dict[str, Any] = {"id": item["id"], "phrase": item["phrase"]}
+            if demo.get("synthetic"):
+                entry["synthetic"] = True
             if item.get("question"):
                 entry["question"] = True
             # The phrase itself is in the transcript word for word: the deck
@@ -806,6 +1011,8 @@ def build_bundle(
                 "clipped": int(conv.get("clipped") or 0),
             }
         files[f"popcorn/{cid}.json"] = popcorn_file
+        if demo.get("synthetic"):
+            popcorn_file["synthetic"] = True
 
     tabs = settings.get("tabs") or {}
     registry = state.get("quotes") or []
@@ -825,9 +1032,99 @@ def build_bundle(
         for kind in TOGGLEABLE_TABS:
             slide = analysis.get(kind)
             if tabs.get(kind, True) and isinstance(slide, dict):
-                files[f"{kind}.json"] = slide
+                files[f"{kind}.json"] = (
+                    {**slide, "synthetic": True} if demo.get("synthetic") else slide
+                )
 
-    return {"run": run, "files": files}
+    return {"run": run, "files": mark_synthetic_files(files)}
+
+
+def opening_screens(settings: dict[str, Any], demo: dict[str, Any]) -> dict[str, Any]:
+    """The disclosure and notice the room sees, present only when switched on
+    and worded. A synthetic demo's come with the demo, never from the host's
+    settings: always on, in the demo's words or the standard ones."""
+    if demo.get("synthetic") is True:
+        copy = SYNTHETIC_COPY["nl" if demo.get("language") == "nl" else "en"]
+        own: dict[str, Any] = demo.get("disclosure") or {}
+        invitation: dict[str, Any] = (
+            own
+            if own.get("invitation_title") or own.get("invitation_text")
+            else {
+                "invitation_title": copy["invitation_title"],
+                "invitation_text": copy["invitation_text"],
+            }
+        )
+        demo_notice: dict[str, Any] = demo.get("notice") or {}
+        return {
+            "disclosure": {
+                "text": str(own.get("text") or copy["disclosure"]),
+                "invitation_title": str(invitation.get("invitation_title") or ""),
+                "invitation_text": str(invitation.get("invitation_text") or ""),
+            },
+            "notice": {"text": str(demo_notice.get("text") or copy["notice"])},
+        }
+    disclosure = settings.get("disclosure") or {}
+    notice = settings.get("notice") or {}
+    screens: dict[str, Any] = {}
+    if disclosure.get("enabled") and disclosure.get("text"):
+        screens["disclosure"] = {
+            key: disclosure.get(key) or ""
+            for key in ("text", "invitation_title", "invitation_text")
+        }
+    if notice.get("enabled") and notice.get("text"):
+        screens["notice"] = {"text": notice["text"]}
+    return screens
+
+
+def is_synthetic_session(state: dict[str, Any]) -> bool:
+    return (state.get("demo") or {}).get("synthetic") is True
+
+
+def data_screen(project: dict[str, Any], language: str) -> dict[str, Any]:
+    """What happens to the room's data, from the project's own settings.
+    `project["legal_basis"]` is the effective basis when the caller resolved
+    it; a bare project row falls back to the platform default."""
+    copy = DATA_COPY["nl" if language == "nl" else "en"]
+    talk = "talk-anon" if project.get("anonymize_transcripts") else "talk-public"
+    basis = str(project.get("legal_basis") or DEFAULT_LEGAL_BASIS)
+    screen: dict[str, Any] = {
+        "title": copy["title"],
+        "steps": [
+            {"image": "scan", "text": copy["scan"]},
+            {"image": talk, "text": copy[talk]},
+            {"image": "understand", "text": copy["understand"]},
+        ],
+        "notes": [text for text in (copy["legal"].get(basis), copy["hood"]) if text],
+        "links": [copy["trust"]],
+    }
+    policy = project.get("privacy_policy_url")
+    if (
+        basis == "consent"
+        and isinstance(policy, str)
+        and policy.startswith(("https://", "http://"))
+    ):
+        screen["links"].insert(0, {"url": policy, "label": copy["policy"]})
+    return screen
+
+
+def mark_synthetic_files(files: dict[str, Any]) -> dict[str, Any]:
+    """Keep provenance on individual files, including published-object overlays."""
+    if not ((files.get("session.json") or {}).get("demo") or {}).get("synthetic"):
+        return files
+    result = {}
+    for name, file in files.items():
+        if not isinstance(file, dict):
+            result[name] = file
+            continue
+        marked = {**file, "synthetic": True}
+        for key in ("items", "quotes", "tensions", "stakeholders", "relations", "transcripts"):
+            if isinstance(file.get(key), list):
+                marked[key] = [
+                    {**entry, "synthetic": True} if isinstance(entry, dict) else entry
+                    for entry in file[key]
+                ]
+        result[name] = marked
+    return result
 
 
 def room_files(files: dict[str, Any], *, neutral_labels: bool) -> dict[str, Any]:

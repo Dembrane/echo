@@ -24,6 +24,7 @@ from dataclasses import field, dataclass
 
 from dembrane.analysis import db
 from dembrane.settings import get_settings
+from dembrane.legal_basis import fetch_cascade_rows, resolve_effective_legal_basis
 from dembrane.directus_async import async_directus
 from dembrane.popcorn.service import (
     TOGGLEABLE_TABS,
@@ -33,8 +34,10 @@ from dembrane.popcorn.service import (
     get_latest_config,
     normalize_settings,
     get_loop_for_report,
+    mark_synthetic_files,
 )
 from dembrane.popcorn.analysis import norm
+from dembrane.popcorn.translate import translated_bundle
 from dembrane.analysis.contracts import AnalysisStore, ObjectRevision, AnalysisStoreError
 
 logger = logging.getLogger("dembrane.popcorn.bundle")
@@ -372,7 +375,7 @@ def apply_published_objects(
     for tab in TOGGLEABLE_TABS:
         if not tabs.get(tab, True):
             files.pop(f"{tab}.json", None)
-    return {**bundle, "files": files}
+    return {**bundle, "files": mark_synthetic_files(files)}
 
 
 async def published_bundle(
@@ -410,6 +413,25 @@ async def published_bundle(
 # ── the bundle the pages read ────────────────────────────────────────────
 
 
+async def with_effective_legal_basis(
+    project: dict[str, Any], settings: dict[str, Any]
+) -> dict[str, Any]:
+    """The project as the data screen must describe it: its legal basis
+    resolved through workspace and owner, the way the portal resolves it.
+    Only fetched when the screen is on."""
+    if not (settings.get("data") or {}).get("enabled") or not project.get("id"):
+        return project
+    rows = await fetch_cascade_rows(project)
+    effective = resolve_effective_legal_basis(
+        project=project, workspace=rows.workspace, owner=rows.owner
+    )
+    return {
+        **project,
+        "legal_basis": effective.legal_basis,
+        "privacy_policy_url": effective.privacy_policy_url,
+    }
+
+
 async def bundle_for_report(
     report: dict[str, Any],
     project: dict[str, Any] | None = None,
@@ -430,9 +452,11 @@ async def bundle_for_report(
         project = (
             await async_directus.get_item("project", project_id) if project_id else None
         ) or {}
+    project = await with_effective_legal_basis(project, settings)
+    state = normalize_state((loop or {}).get("popcorn_state"))
     urls = get_settings().urls
     bundle = build_bundle(
-        state=normalize_state((loop or {}).get("popcorn_state")),
+        state=state,
         settings=settings,
         report=report,
         project=project,
@@ -449,6 +473,7 @@ async def bundle_for_report(
         host=host,
         admin_base_url=urls.admin_base_url,
     )
+    bundle = translated_bundle(bundle, state, settings)
     _cache[cache_key] = (now, bundle)
     if len(_cache) > 512:
         oldest = sorted(_cache.items(), key=lambda item: item[1][0])[: len(_cache) - 256]

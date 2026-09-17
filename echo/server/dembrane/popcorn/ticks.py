@@ -55,6 +55,7 @@ from dembrane.popcorn.model import (
     analysis_call,
     classify_phrase,
     extract_popcorn,
+    translate_texts,
     validate_phrase,
     rewrite_question,
 )
@@ -82,6 +83,13 @@ from dembrane.popcorn.analysis import (
 )
 from dembrane.popcorn.tensions import PROMPT_NAMES as TENSION_PROMPTS, run_pipeline
 from dembrane.popcorn.grounding import ground_items
+from dembrane.popcorn.translate import (
+    text_key,
+    missing_texts,
+    target_language,
+    translated_bundle,
+    translatable_texts,
+)
 from dembrane.popcorn.enrichment import enrich_item, apply_results
 
 logger = logging.getLogger("dembrane.popcorn.ticks")
@@ -1002,28 +1010,26 @@ def _commit_views(
     state["analysis"] = analysis
 
 
-async def _snapshot_version(
-    *,
-    report_id: str,
-    config_id: str | None,
-    state: dict[str, Any],
-    settings: dict[str, Any],
-    project_id: str,
-    tick_kind: str,
-    detail: str,
-) -> None:
+async def _room_bundle(
+    *, report_id: str, state: dict[str, Any], settings: dict[str, Any], project_id: str
+) -> dict[str, Any]:
+    """The bundle the room reads, published objects applied, in the
+    original language."""
     from dembrane.settings import get_settings as _get_settings
-    from dembrane.popcorn.bundle import published_bundle
+    from dembrane.popcorn.bundle import published_bundle, with_effective_legal_basis
     from dembrane.popcorn.service import build_bundle
 
     project = await async_directus.get_item("project", project_id)
     report = await async_directus.get_item("project_report", report_id)
+    project = await with_effective_legal_basis(
+        project if isinstance(project, dict) else {"id": project_id}, settings
+    )
     urls = _get_settings().urls
     bundle = build_bundle(
         state=state,
         settings=settings,
         report=report if isinstance(report, dict) else {"id": report_id},
-        project=project if isinstance(project, dict) else {"id": project_id},
+        project=project,
         participant_base_url=urls.participant_base_url,
         admin_base_url=urls.admin_base_url,
         # A saved run replays on the wall, so it is the room's bundle: no
@@ -1039,6 +1045,23 @@ async def _snapshot_version(
         project=project if isinstance(project, dict) else {"id": project_id},
         host=False,
     )
+    return bundle
+
+
+async def _snapshot_version(
+    *,
+    report_id: str,
+    config_id: str | None,
+    state: dict[str, Any],
+    settings: dict[str, Any],
+    project_id: str,
+    tick_kind: str,
+    detail: str,
+) -> None:
+    bundle = await _room_bundle(
+        report_id=report_id, state=state, settings=settings, project_id=project_id
+    )
+    bundle = translated_bundle(bundle, state, settings)
     await save_version(
         report_id=report_id,
         config_id=config_id,
@@ -1046,6 +1069,34 @@ async def _snapshot_version(
         tick_kind=tick_kind,
         detail=detail,
     )
+
+
+async def _translate_session(
+    state: dict[str, Any], settings: dict[str, Any], *, report_id: str, project_id: str
+) -> str | None:
+    """The host's translation brought up to date with what the room's deck
+    shows now. An outcome line, or None when nothing was owed."""
+    target = target_language(settings)
+    if not target:
+        return None
+    files = (
+        await _room_bundle(
+            report_id=report_id, state=state, settings=settings, project_id=project_id
+        )
+    )["files"]
+    translations = state.setdefault("translations", {})
+    # Only the texts on the deck now are kept: a rerun's old phrases go.
+    shown = {text_key(text) for text in translatable_texts(files)}
+    table = {k: v for k, v in (translations.get(target) or {}).items() if k in shown}
+    translations[target] = table
+    gaps = missing_texts(files, table)
+    if not gaps:
+        return None
+    answers = await translate_texts(gaps, target)
+    for source, text in zip(gaps, answers, strict=True):
+        if text:
+            table[text_key(source)] = text
+    return f"translated {sum(1 for a in answers if a)} of {len(gaps)} texts into {target}"
 
 
 async def run_popcorn_tick(
@@ -1142,8 +1193,10 @@ async def run_popcorn_tick(
             # Wiped here, under the lock: phrases, quotes and analysis go, the
             # run counter goes on, the saved runs stay. Everything is re-read.
             previous_run = state["run"]
+            kept = {k: state[k] for k in ("demo", "translations") if state.get(k)}
             state = fresh_state()
             state["run"] = previous_run
+            state.update(kept)
         # What the tool has put in front of the room so far, before this tick
         # writes anything: a new phrase that quotes it is the tool quoting itself.
         # Each conversation is checked against everything but its own phrases.
@@ -1202,6 +1255,26 @@ async def run_popcorn_tick(
         # Nothing new, nothing owed, no view stale: nothing to do, whoever asked.
         # Only a rerun goes on regardless, because a rerun wiped the state.
         if not changed and not analysis_stale and not owed and tick_kind != "rerun":
+            # A translation the host asked for is the one thing left to do.
+            try:
+                translated = await _translate_session(
+                    state, settings, report_id=report_id, project_id=project_id
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("popcorn translation failed for %s: %s", report_id, exc)
+                translated = None
+            if translated:
+                await _TickWriter(loop_id, report_id, state).flush()
+                run = await _create_run(
+                    loop_id=loop_id,
+                    status="ok",
+                    detail=translated,
+                    started_at=started_at,
+                    request_id=request_id,
+                )
+                await _enqueue_next_if_due(loop)
+                await _nudge_loop(loop)
+                return {"status": "ok", "run": run, "state": state}
             run = await _create_run(
                 loop_id=loop_id,
                 status="no_op",
@@ -1296,6 +1369,15 @@ async def run_popcorn_tick(
         await asyncio.gather(second_pass(), analysis_pass())
         if transcripts:
             state["quotes"] = _referenced_quotes(state, book.quotes)
+            await writer.flush()
+        try:
+            translated = await _translate_session(
+                state, settings, report_id=report_id, project_id=project_id
+            )
+        except Exception as exc:  # the room keeps its original words
+            translated = f"translation failed: {_failure_text(exc)}"
+        if translated:
+            outcomes.append(translated)
             await writer.flush()
 
         detail = "; ".join(

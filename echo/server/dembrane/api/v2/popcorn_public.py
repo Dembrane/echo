@@ -16,7 +16,12 @@ from fastapi import Depends, Request, APIRouter, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 
 from dembrane import live_events
-from dembrane.popcorn.view import LOGO_PATH, render_popcorn_page, render_not_live_page
+from dembrane.popcorn.view import (
+    LOGO_PATH,
+    ILLUSTRATIONS,
+    render_popcorn_page,
+    render_not_live_page,
+)
 from dembrane.canvas.events import generation_channel
 from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.directus_async import async_directus
@@ -91,6 +96,17 @@ async def public_popcorn_logo(token: str) -> FileResponse:  # noqa: ARG001
     # Referenced by the QR code's SVG; harmless to serve for any token.
     return FileResponse(
         LOGO_PATH, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"}
+    )
+
+
+@router.get("/{token}/illustrations/{name}.webp")
+async def public_popcorn_illustration(token: str, name: str) -> FileResponse:  # noqa: ARG001
+    if name not in ILLUSTRATIONS:
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(
+        ILLUSTRATIONS[name],
+        media_type="image/webp",
+        headers={"Cache-Control": "public, max-age=86400"},
     )
 
 

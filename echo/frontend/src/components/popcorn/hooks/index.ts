@@ -30,7 +30,50 @@ export type PopcornVoice = {
 	note: string;
 };
 
+export type PopcornIntro = {
+	enabled: boolean;
+	title: string;
+	subtitle: string;
+};
+
+// A screen before the countdown, with an optional follow-up screen.
+export type PopcornDisclosure = {
+	enabled: boolean;
+	text: string;
+	invitation_title: string;
+	invitation_text: string;
+};
+
+// The bar above every tab of the screen.
+export type PopcornNotice = { enabled: boolean; text: string };
+
+// The screen that explains what happens to the data. Its words follow the
+// project's anonymisation and legal basis.
+export type PopcornData = { enabled: boolean };
+
+export type PopcornLanguageCode =
+	| "en"
+	| "nl"
+	| "de"
+	| "fr"
+	| "es"
+	| "it"
+	| "uk"
+	| "cs";
+
+// The screen's own language ("auto" follows the project) and the language the
+// results are translated into ("" keeps them as spoken).
+export type PopcornLanguage = {
+	ui: "auto" | PopcornLanguageCode;
+	translate_to: "" | PopcornLanguageCode;
+};
+
 export type PopcornSettings = {
+	intro: PopcornIntro;
+	disclosure: PopcornDisclosure;
+	notice: PopcornNotice;
+	data: PopcornData;
+	language?: PopcornLanguage;
 	title: string;
 	client: string;
 	tabs: PopcornTabs;
@@ -72,6 +115,8 @@ export type PopcornDetail = {
 	created_at?: string | null;
 	updated_at?: string | null;
 	settings: PopcornSettings;
+	// A synthetic demo always shows its disclosure and notice.
+	synthetic?: boolean;
 	public_token?: string | null;
 	loop?: PopcornLoop | null;
 	counts: PopcornCounts;
@@ -88,7 +133,15 @@ export type PopcornProject = {
 export type LiveHours = 1 | 8 | 24;
 
 export type PopcornSettingsPatch = Partial<
-	Omit<PopcornSettings, "tabs" | "voice"> & {
+	Omit<
+		PopcornSettings,
+		"tabs" | "voice" | "intro" | "disclosure" | "notice" | "data" | "language"
+	> & {
+		intro: Partial<PopcornIntro>;
+		disclosure: Partial<PopcornDisclosure>;
+		notice: Partial<PopcornNotice>;
+		data: Partial<PopcornData>;
+		language: Partial<PopcornLanguage>;
 		tabs: Partial<PopcornTabs>;
 		voice: Partial<PopcornVoice>;
 	}

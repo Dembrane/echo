@@ -723,6 +723,7 @@ def test_a_rerun_tick_wipes_the_state_and_reads_everything_again(
     loop["expires_at"] = "2000-01-01T00:00:00+00:00"
     assert asyncio.run(ticks.run_popcorn_tick("loop1", "scheduled"))["status"] == "no_op"
     before = loop["popcorn_state"]
+    before["demo"] = {"synthetic": True, "public_sources_only": True, "language": "nl"}
     assert before["run"] == 1 and before["conversations"]["c1"]["items"]
     calls.clear()
     fake.state_writes.clear()
@@ -738,6 +739,7 @@ def test_a_rerun_tick_wipes_the_state_and_reads_everything_again(
     assert first["run"] == 2 and first["analysis"] is None and first["quotes"] == []
     assert all(not c["items"] and not c["done"] for c in first["conversations"].values())
     after = loop["popcorn_state"]
+    assert after["demo"] == before["demo"]
     assert after["run"] == 2 and after["conversations"]["c1"]["items"][0]["quoteId"]
     assert "rerun: the previous state wiped" in fake.created["agent_loop_run"][-1]["detail"]
     assert loop["status"] == "paused" and fake.enqueued == []  # type: ignore[attr-defined]
