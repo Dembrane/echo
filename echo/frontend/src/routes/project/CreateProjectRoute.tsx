@@ -12,7 +12,6 @@ import {
 	Stepper,
 	Switch,
 	Text,
-	Textarea,
 	TextInput,
 	Title,
 } from "@mantine/core";
@@ -23,6 +22,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
+import { KeyTermsInput } from "@/components/project/KeyTermsInput";
+import { ProjectContextInput } from "@/components/project/ProjectContextInput";
 import {
 	AGENTIC_CHAT_IS_DEFAULT,
 	API_BASE_URL,
@@ -36,8 +37,6 @@ import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
 type Access = "workspace" | "private";
 
 const SETUP_INITIAL_MESSAGE = "Help me set up this project.";
-const ZERO_CONTEXT_INITIAL_MESSAGE =
-	"Help me figure out what this project is for.";
 
 async function setVisibility(projectId: string, visibility: Access) {
 	const res = await fetch(
@@ -61,7 +60,11 @@ async function setVisibility(projectId: string, visibility: Access) {
  * (CreateWorkspaceRoute) so creating a project feels like creating a
  * workspace: a few deliberate steps instead of an instant POST.
  *
- * Three steps: Name & Context → Access → Review.
+ * Four steps: Name & Context → Key terms → Access → Review.
+ *
+ * Key terms get their own step because they decide how names are spelt in
+ * every transcript, and hosts only found them under advanced settings after
+ * the first conversations were already transcribed. The step is skippable.
  *
  * Access step surfaces the workspace's current tier inline so the
  * creator can see what that tier includes before picking Private
@@ -77,16 +80,14 @@ export const CreateProjectRoute = () => {
 	const [step, setStep] = useState(0);
 	const [name, setName] = useState("");
 	const [context, setContext] = useState("");
+	const [keyTerms, setKeyTerms] = useState("");
 	const [access, setAccess] = useState<Access>("workspace");
 	// Availability is not default-ness. The assistant setup starts an agentic
-	// chat, so it follows AGENTIC_CHAT_IS_DEFAULT: off unless the host ticks it
-	// (or picks "Help me figure it out"). Pre-ticking it would fire an agentic
-	// run on every project created, before the host has typed anything.
+	// chat, so it follows AGENTIC_CHAT_IS_DEFAULT: off unless the host ticks it.
+	// Pre-ticking it would fire an agentic run on every project created,
+	// before the host has typed anything.
 	const [setupWithAssistant, setSetupWithAssistant] = useState(
 		AGENTIC_CHAT_IS_DEFAULT,
-	);
-	const [setupInitialMessage, setSetupInitialMessage] = useState(
-		SETUP_INITIAL_MESSAGE,
 	);
 
 	useDocumentTitle(t`New project | dembrane`);
@@ -113,6 +114,7 @@ export const CreateProjectRoute = () => {
 				payload: {
 					context: context.trim() || null,
 					default_conversation_ask_for_participant_name: true,
+					default_conversation_transcript_prompt: keyTerms || null,
 					default_conversation_tutorial_slug: "None",
 					image_generation_model: "MODEST",
 				},
@@ -137,7 +139,7 @@ export const CreateProjectRoute = () => {
 				// rather than letting the Ask screen assume agentic.
 				navigate(`/w/${workspaceId}/projects/${project.id}/chats/new`, {
 					state: {
-						initialMessage: setupInitialMessage,
+						initialMessage: SETUP_INITIAL_MESSAGE,
 						preferMode: "agentic",
 					},
 				});
@@ -156,7 +158,7 @@ export const CreateProjectRoute = () => {
 	};
 
 	const handleCancel = () => {
-		if (name.trim() || context.trim()) {
+		if (name.trim() || context.trim() || keyTerms) {
 			modals.openConfirmModal({
 				children: (
 					<Text size="sm">
@@ -223,47 +225,35 @@ export const CreateProjectRoute = () => {
 								}}
 							/>
 
-							<Textarea
-								label={t`Description`}
-								description={t`A short note on what this project is about. You can edit it later.`}
-								placeholder={t`What are you trying to learn?`}
+							<ProjectContextInput
 								value={context}
-								onChange={(e) => {
-									setContext(e.currentTarget.value);
-									setSetupInitialMessage(SETUP_INITIAL_MESSAGE);
-								}}
-								minRows={3}
-								autosize
+								onChange={(e) => setContext(e.currentTarget.value)}
 							/>
-							{ENABLE_AGENTIC_CHAT ? (
-								<Button
-									variant="subtle"
-									size="xs"
-									className="self-start"
-									onClick={() => {
-										setContext("");
-										setSetupWithAssistant(true);
-										setSetupInitialMessage(ZERO_CONTEXT_INITIAL_MESSAGE);
-										setStep(1);
-									}}
-								>
-									<Trans>Help me figure it out</Trans>
-								</Button>
-							) : null}
 
 							{ENABLE_AGENTIC_CHAT ? (
 								<Switch
 									checked={setupWithAssistant}
-									onChange={(event) => {
-										setSetupWithAssistant(event.currentTarget.checked);
-										if (event.currentTarget.checked) {
-											setSetupInitialMessage(SETUP_INITIAL_MESSAGE);
-										}
-									}}
+									onChange={(event) =>
+										setSetupWithAssistant(event.currentTarget.checked)
+									}
 									label={t`Set up with the assistant after creating`}
 									description={t`You'll land in a chat where dembrane helps shape the project before you collect conversations.`}
 								/>
 							) : null}
+						</Stack>
+					</Stepper.Step>
+
+					<Stepper.Step label={t`Key terms`}>
+						<Stack gap={16} mt="md">
+							<KeyTermsInput
+								autoFocus
+								value={keyTerms}
+								onChange={setKeyTerms}
+								inputTestId="create-project-key-terms-input"
+							/>
+							<Text size="sm">
+								<Trans>You can skip this and add them later.</Trans>
+							</Text>
 						</Stack>
 					</Stepper.Step>
 
@@ -320,7 +310,6 @@ export const CreateProjectRoute = () => {
 									/>
 								</Stack>
 							</Radio.Group>
-
 						</Stack>
 					</Stepper.Step>
 
@@ -338,7 +327,7 @@ export const CreateProjectRoute = () => {
 									</Group>
 									<Group gap={12} align="flex-start" wrap="nowrap">
 										<Text size="xs" c="dimmed" w={100}>
-											<Trans>Description</Trans>
+											<Trans>Project context</Trans>
 										</Text>
 										<Text
 											size="sm"
@@ -346,6 +335,18 @@ export const CreateProjectRoute = () => {
 											style={{ flex: 1, whiteSpace: "pre-wrap" }}
 										>
 											{context.trim() || t`(none)`}
+										</Text>
+									</Group>
+									<Group gap={12} align="flex-start" wrap="nowrap">
+										<Text size="xs" c="dimmed" w={100}>
+											<Trans>Key terms</Trans>
+										</Text>
+										<Text
+											size="sm"
+											c={keyTerms ? undefined : "dimmed"}
+											style={{ flex: 1 }}
+										>
+											{keyTerms || t`(none)`}
 										</Text>
 									</Group>
 									<Group gap={12} align="baseline">
@@ -402,7 +403,7 @@ export const CreateProjectRoute = () => {
 					>
 						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
 					</Button>
-					{step < 2 ? (
+					{step < 3 ? (
 						<Button
 							size="sm"
 							disabled={step === 0 && !canAdvanceFromName}
