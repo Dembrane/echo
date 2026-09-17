@@ -297,102 +297,112 @@ export const ProjectListItem = ({
 					>
 						<AccessBubbles project={project} />
 					</Box>
-					{onTogglePin && (
-						<Tooltip
-							label={
-								isPinned
-									? t`Unpin project`
-									: canPin
-										? t`Pin project`
-										: t`Unpin a project first (max 3)`
-							}
-						>
-							<ActionIcon
-								variant="subtle"
-								color={isPinned ? "primary" : "gray"}
-								onClick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									if (isPinned || canPin) {
-										onTogglePin(project.id);
-									}
-								}}
+					{/* Pin and menu read as one cluster: the space between them
+					    stays smaller than the space from the menu to the card edge. */}
+					<Group gap={0} mr={4} wrap="nowrap" align="center">
+						{onTogglePin && (
+							<Tooltip
+								label={
+									isPinned
+										? t`Unpin project`
+										: canPin
+											? t`Pin project`
+											: t`Unpin a project first (max 3)`
+								}
 							>
-								{isPinned ? <IconPinFilled size={18} /> : <IconPin size={18} />}
-							</ActionIcon>
-						</Tooltip>
-					)}
-					{canEdit && !selectable && (
-						<Popover
-							opened={menuOpened}
-							onChange={setMenuOpened}
-							position="bottom-end"
-							shadow="md"
-							trapFocus
-							withinPortal
-						>
-							<Popover.Target>
 								<ActionIcon
 									variant="subtle"
-									color="gray"
-									aria-label={t`Project options`}
-									aria-haspopup="menu"
-									aria-expanded={menuOpened}
-									// The row is a link; the menu must not follow it.
+									size={30}
+									color={isPinned ? "primary" : "gray"}
 									onClick={(e) => {
 										e.preventDefault();
 										e.stopPropagation();
-										setMenuOpened((opened) => !opened);
-									}}
-									{...testId(`project-list-item-menu-${project.id}`)}
-								>
-									<DotsThreeIcon size={20} weight="bold" />
-								</ActionIcon>
-							</Popover.Target>
-							<Popover.Dropdown
-								p="xs"
-								style={{ border: "1px solid var(--mantine-color-gray-4)" }}
-								onClick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-								}}
-							>
-								<Stack gap="xs" role="menu">
-									<Button
-										role="menuitem"
-										variant="subtle"
-										color="gray"
-										c="var(--app-text)"
-										justify="flex-start"
-										fullWidth
-										onClick={() => {
-											setMenuOpened(false);
-											renameHandlers.open();
-										}}
-										{...testId(`project-list-item-rename-${project.id}`)}
-									>
-										<Trans>Rename project</Trans>
-									</Button>
-									<Button
-										role="menuitem"
-										variant="subtle"
-										color="gray"
-										c="var(--app-text)"
-										justify="flex-start"
-										fullWidth
-										onClick={() =>
-											navigate(
-												`/w/${workspaceId}/projects/${project.id}/portal-editor`,
-											)
+										if (isPinned || canPin) {
+											onTogglePin(project.id);
 										}
-										{...testId(`project-list-item-portal-${project.id}`)}
+									}}
+								>
+									{isPinned ? (
+										<IconPinFilled size={18} />
+									) : (
+										<IconPin size={18} />
+									)}
+								</ActionIcon>
+							</Tooltip>
+						)}
+						{canEdit && !selectable && (
+							<Popover
+								opened={menuOpened}
+								onChange={setMenuOpened}
+								position="bottom-end"
+								shadow="md"
+								trapFocus
+								withinPortal
+							>
+								<Popover.Target>
+									<ActionIcon
+										variant="subtle"
+										size={30}
+										color="gray"
+										aria-label={t`Project options`}
+										aria-haspopup="menu"
+										aria-expanded={menuOpened}
+										// The row is a link; the menu must not follow it.
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											setMenuOpened((opened) => !opened);
+										}}
+										{...testId(`project-list-item-menu-${project.id}`)}
 									>
-										<Trans>Configure portal</Trans>
-									</Button>
-								</Stack>
-							</Popover.Dropdown>
-						</Popover>
-					)}
+										<DotsThreeIcon size={20} weight="bold" />
+									</ActionIcon>
+								</Popover.Target>
+								<Popover.Dropdown
+									p="xs"
+									style={{ border: "1px solid var(--mantine-color-gray-4)" }}
+									onClick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+									}}
+								>
+									<Stack gap="xs" role="menu">
+										<Button
+											role="menuitem"
+											variant="subtle"
+											color="gray"
+											c="var(--app-text)"
+											justify="flex-start"
+											fullWidth
+											onClick={() => {
+												setMenuOpened(false);
+												renameHandlers.open();
+											}}
+											{...testId(`project-list-item-rename-${project.id}`)}
+										>
+											<Trans>Rename project</Trans>
+										</Button>
+										<Button
+											role="menuitem"
+											variant="subtle"
+											color="gray"
+											c="var(--app-text)"
+											justify="flex-start"
+											fullWidth
+											onClick={() =>
+												navigate(
+													`/w/${workspaceId}/projects/${project.id}/portal-editor`,
+												)
+											}
+											{...testId(`project-list-item-portal-${project.id}`)}
+										>
+											<Trans>Configure portal</Trans>
+										</Button>
+									</Stack>
+								</Popover.Dropdown>
+							</Popover>
+						)}
+					</Group>
 				</Group>
 			</Group>
 		</Paper>
