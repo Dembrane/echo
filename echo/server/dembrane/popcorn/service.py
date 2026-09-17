@@ -494,6 +494,10 @@ async def update_settings(
             await async_directus.update_item(
                 "agent_loop", str(loop["id"]), {"name": settings["title"]}
             )
+    # The room's screen follows its settings (tabs, QR, labels) on this nudge.
+    from dembrane.canvas.events import publish_generation_nudge
+
+    await publish_generation_nudge(report_id)
     return settings
 
 

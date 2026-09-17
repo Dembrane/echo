@@ -51,6 +51,7 @@ const PROJECT_SECTION_LABELS: Record<string, string> = {
 	"host-guide": "Host guide",
 	integrations: "Integrations",
 	library: "Library",
+	map: "Map",
 	monitor: "Monitor",
 	overview: "Settings",
 	popcorn: "Popcorn",

@@ -289,7 +289,9 @@ def test_first_tick_pops_every_transcript_then_analyses(fake: _FakeDirectus, mon
     # The phrases were on the stage before their quotes existed.
     first_phrase_writes = [w for w in fake.state_writes if w["conversations"]["c1"].get("done")]
     assert "quoteId" not in first_phrase_writes[0]["conversations"]["c1"]["items"][0]
-    assert fake.nudges.count("r1") == 6  # type: ignore[attr-defined]
+    # One per state write, plus one when the read finishes and the next is
+    # booked, so pages following the session need no polling.
+    assert fake.nudges.count("r1") == 7  # type: ignore[attr-defined]
 
     # Both popcorn extractors ran before any second-pass call, then both analyses.
     assert sorted(c for c in calls if c.startswith("popcorn")) == ["popcorn:c1", "popcorn:c2"]
@@ -770,9 +772,13 @@ def test_a_refresh_with_nothing_new_is_a_no_op(fake: _FakeDirectus, monkeypatch)
     asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
     calls.clear()
     versions = len(fake.created.get("canvas_generation", []))
+    nudges = fake.nudges.count("r1")  # type: ignore[attr-defined]
     result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))
     assert result["status"] == "no_op" and calls == []
     assert len(fake.created.get("canvas_generation", [])) == versions
+    # A quiet read also books the next and says so: pages showing "reading
+    # now" and the countdown follow a no-op like any other finished read.
+    assert fake.nudges.count("r1") == nudges + 1  # type: ignore[attr-defined]
     # A stale view alone is enough for a refresh to do something.
     fake.items["agent_loop"]["loop1"]["popcorn_state"]["analysis"]["fingerprints"].pop("tensions")
     result = asyncio.run(ticks.run_popcorn_tick("loop1", "manual"))

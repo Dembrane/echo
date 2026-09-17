@@ -124,9 +124,8 @@ export const useProjectPopcorn = (projectId: string) =>
 		enabled: !!projectId,
 		queryFn: () =>
 			bff.get<PopcornProject>("/popcorn", { project_id: projectId }),
+		// No polling: the session page's event stream invalidates this query.
 		queryKey: projectKey(projectId),
-		refetchInterval: (query) =>
-			query.state.data?.popcorn?.loop?.mode === "live" ? 15000 : false,
 	});
 
 // Every mutation that returns the session writes it back into the project
@@ -157,8 +156,8 @@ export const usePopcornVersions = (popcornId: string) =>
 			bff.get<PopcornVersion[]>(
 				`/popcorn/${encodeURIComponent(popcornId)}/versions`,
 			),
+		// Invalidated by the session page's event stream when a read finishes.
 		queryKey: ["popcorn", popcornId, "versions"],
-		refetchInterval: 30000,
 	});
 
 export const useCreatePopcornMutation = (projectId: string) => {

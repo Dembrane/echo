@@ -317,6 +317,14 @@ async def _update_loop_after_tick(loop: dict[str, Any], *, status: str) -> None:
         await async_directus.update_item("agent_loop", loop_id, patch)
 
 
+async def _nudge_loop(loop: dict[str, Any]) -> None:
+    """A read finished and the next one is booked: pages showing the run's
+    status and the countdown follow without polling."""
+    report_id = _as_id(loop.get("report_id"))
+    if report_id:
+        await publish_generation_nudge(report_id)
+
+
 async def _enqueue_next_if_due(loop: dict[str, Any], when: datetime | None = None) -> None:
     loop_id = str(loop["id"])
     # One chain per loop, in any mode. Every read on request comes with a
@@ -1048,6 +1056,7 @@ async def run_popcorn_tick(
                 request_id=request_id,
             )
             await _enqueue_next_if_due(loop)
+            await _nudge_loop(loop)
             return {"status": "no_op", "run": run}
 
         state["run"] = int(state.get("run") or 0) + 1
@@ -1149,6 +1158,7 @@ async def run_popcorn_tick(
             logger.warning("popcorn version snapshot failed for %s: %s", report_id, exc)
         await _update_loop_after_tick(loop, status="ok")
         await _enqueue_next_if_due(loop)
+        await _nudge_loop(loop)
         return {"status": "ok", "run": run, "state": state}
     except (CanvasReaderAccessDenied, Exception) as exc:
         detail = str(exc)
@@ -1157,6 +1167,7 @@ async def run_popcorn_tick(
         )
         await _update_loop_after_tick(loop, status="error")
         await _enqueue_next_if_due(loop)
+        await _nudge_loop(loop)
         logger.warning("popcorn tick failed for loop %s: %s", loop_id, detail)
         return {"status": "error", "run": run}
     finally:

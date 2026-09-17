@@ -8,21 +8,20 @@ from __future__ import annotations
 
 import re
 import json
-import time
-from typing import Any, Literal, AsyncIterator
+from typing import Any, Literal
 from datetime import datetime, timezone
 
 from fastapi import Query, Depends, Request, Response, APIRouter, HTTPException, status
 from pydantic import Field, BaseModel
-from redis.exceptions import ConnectionError as RedisConnectionError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 
+from dembrane import live_events
 from dembrane.policies import meets_tier
 from dembrane.settings import get_settings
 from dembrane.analytics import capture_event
 from dembrane.redis_async import get_redis_client
 from dembrane.popcorn.view import LOGO_PATH, render_flow_page, render_popcorn_page
-from dembrane.canvas.events import read_generation_nudge, subscribe_generation_nudges
+from dembrane.canvas.events import generation_channel
 from dembrane.directus_async import async_directus
 from dembrane.popcorn.bundle import forget_bundle, bundle_for_report
 from dembrane.popcorn.service import (
@@ -52,7 +51,6 @@ from dembrane.api.dependency_auth import DependencyDirectusSession
 router = APIRouter(dependencies=[Depends(require_canvas_enabled)])
 
 REFRESH_TTL_SECONDS = 20
-EVENT_HEARTBEAT_SECONDS = 15.0
 NO_STORE = {"Cache-Control": "no-store"}
 # Saved runs are Directus UUIDs; anything else never reaches the page or a query.
 _VERSION_ID = re.compile(r"^[0-9a-fA-F-]{36}$")
@@ -326,38 +324,18 @@ async def popcorn_events(
     request: Request,
     auth: DependencyDirectusSession,
 ) -> StreamingResponse:
-    """SSE nudges whenever the tick writes new phrases or analysis."""
+    """SSE nudges whenever the tick writes new phrases or analysis, a read
+    finishes, or the screen settings change. The dashboard refetches on each."""
     report, _access = await _require_popcorn(popcorn_id, auth)
-    report_id = str(report["id"])
+    return _update_stream(request, str(report["id"]))
 
-    async def event_stream() -> AsyncIterator[str]:
-        last_heartbeat = time.monotonic()
-        yield f"event: connected\ndata: {json.dumps({'type': 'connected'})}\n\n"
-        try:
-            async with subscribe_generation_nudges(report_id) as pubsub:
-                while True:
-                    if await request.is_disconnected():
-                        break
-                    payload = await read_generation_nudge(pubsub, timeout_seconds=1.0)
-                    if payload is not None:
-                        yield f"event: update\ndata: {json.dumps({'type': 'update'})}\n\n"
-                        continue
-                    now = time.monotonic()
-                    if now - last_heartbeat >= EVENT_HEARTBEAT_SECONDS:
-                        yield ": keep-alive\n\n"
-                        last_heartbeat = now
-        except RedisConnectionError:
-            # Redis dropped the idle subscription; the page reconnects on its own.
-            return
 
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
+def _update_stream(request: Request, report_id: str) -> StreamingResponse:
+    # Every nudge on the session's channel reaches the page as a bare `update`.
+    return live_events.sse_response(
+        request,
+        [generation_channel(report_id)],
+        transform=lambda _event: {"type": "update"},
     )
 
 
@@ -386,6 +364,16 @@ async def popcorn_view(
     # server only checks the shape here so a bad link fails early.
     _version_id(version)
     return HTMLResponse(render_popcorn_page(embed={"mode": "host"}), headers=NO_STORE)
+
+
+@router.get("/{popcorn_id}/view/events")
+async def popcorn_view_events(
+    popcorn_id: str, request: Request, auth: DependencyDirectusSession
+) -> StreamingResponse:
+    """The host deck's live data: one stream instead of polling. The deck opens
+    it relative to its own address and reads its bundle on each update."""
+    report, _access = await _require_popcorn(popcorn_id, auth)
+    return _update_stream(request, str(report["id"]))
 
 
 @router.get("/{popcorn_id}/view/flow/", response_class=HTMLResponse)
