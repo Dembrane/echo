@@ -1118,7 +1118,7 @@ msgstr ""
 msgid "Add additional context (Optional)"
 msgstr "Ajouter un contexte supplémentaire (Optionnel)"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:294
+#: src/components/participant/ParticipantInitiateForm.tsx:296
 msgid "Add all that apply"
 msgstr "Ajouter tout ce qui s'applique"
 
@@ -3059,7 +3059,7 @@ msgid "Continue"
 msgstr "Continuer"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantInitiateForm.tsx:336
+#: src/components/participant/ParticipantInitiateForm.tsx:338
 msgid "participant.ready.to.begin.button.text"
 msgstr "Continuer"
 
@@ -5872,6 +5872,10 @@ msgstr ""
 msgid "Invalid invite link"
 msgstr ""
 
+#: src/components/participant/hooks/index.ts:329
+msgid "Invalid PIN or email. Please try again."
+msgstr "Code PIN ou e-mail invalide. Veuillez réessayer."
+
 #: src/routes/invite/AcceptInviteRoute.tsx:154
 msgid "Invitation"
 msgstr ""
@@ -8366,8 +8370,8 @@ msgid "partially completed"
 msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:56
-#: src/components/participant/ParticipantInitiateForm.tsx:130
-#: src/components/participant/ParticipantInitiateForm.tsx:196
+#: src/components/participant/ParticipantInitiateForm.tsx:136
+#: src/components/participant/ParticipantInitiateForm.tsx:197
 msgid "Participant"
 msgstr "Participant"
 
@@ -10757,7 +10761,7 @@ msgstr ""
 msgid "Separate with commas, spaces, or new lines."
 msgstr ""
 
-#: src/components/participant/ParticipantInitiateForm.tsx:282
+#: src/components/participant/ParticipantInitiateForm.tsx:284
 msgid "Session Name"
 msgstr "Nom de la Séance"
 
@@ -11160,7 +11164,7 @@ msgstr "Quelque chose bloque votre connexion. Votre audio ne sera pas sauvegard�
 #: src/routes/onboarding/OnboardingRoute.tsx:189
 #: src/routes/auth/Login.tsx:220
 #: src/components/project/ProjectAccessGuard.tsx:87
-#: src/components/participant/ParticipantInitiateForm.tsx:48
+#: src/components/participant/ParticipantInitiateForm.tsx:49
 #: src/components/error/ErrorPage.tsx:55
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:298
@@ -11603,7 +11607,7 @@ msgid "Tag deleted"
 msgstr ""
 
 #: src/components/project/ProjectTagsInput.tsx:256
-#: src/components/participant/ParticipantInitiateForm.tsx:293
+#: src/components/participant/ParticipantInitiateForm.tsx:295
 #: src/components/conversation/ProjectConversationsPanel.tsx:853
 #: src/components/conversation/ConversationEdit.tsx:426
 #: src/components/conversation/ConversationDrilldownModal.tsx:199

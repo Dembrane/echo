@@ -37,24 +37,27 @@ MONTHLY_BILLING_PREMIUM_PCT = 15
 class TierCapacity:
     tier: str
     tagline: str
-    price_eur_monthly: Optional[int]      # Per-seat annual-billing rate, EUR/seat/mo. None = Free.
-    price_note: str                        # "free" / "per seat / month"
-    included_seats: Optional[int]          # Hard seat cap. None = no cap (Free + paid; paid is metered).
-    included_hours: Optional[int]          # Free = 1; paid = None (unlimited, fair use).
-    hard_block_on_hours: bool              # Deprecated: always False. Kept for call-site compat.
-    training_included: str                 # human-readable
-    duration: str                          # "ongoing" / etc
+    price_eur_monthly: Optional[int]  # Per-seat annual-billing rate, EUR/seat/mo. None = Free.
+    price_note: str  # "free" / "per seat / month"
+    included_seats: Optional[int]  # Hard seat cap. None = no cap (Free + paid; paid is metered).
+    included_hours: Optional[int]  # Free = 1; paid = None (unlimited, fair use).
+    hard_block_on_hours: bool  # Deprecated: always False. Kept for call-site compat.
+    training_included: str  # human-readable
+    duration: str  # "ongoing" / etc
     # True when the tier supports annual + monthly cadences (all paid tiers).
     # False for Free (no price). The API serializer uses this to populate
     # `pricing.annual_billing` + `pricing.monthly_billing` vs leaving it null.
     billing_period_applicable: bool = False
     # Unused since Pilot's removal; kept so build_tier_pricing stays total.
     one_time_amount_eur: Optional[int] = None
+    # Concurrent portal audio recordings per billing account. None = no cap; values are not decided yet.
+    max_concurrent_portal_recordings: Optional[int] = None
 
 
 @dataclass(frozen=True)
 class UsageGates:
     """Workspace-level gate flags for over-cap UI gating (Free only)."""
+
     over_cap_active: bool
     uploads_locked: bool
 
@@ -74,6 +77,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         hard_block_on_hours=False,
         training_included="Sold separately",
         duration="—",
+        max_concurrent_portal_recordings=None,
     ),
     "innovator": TierCapacity(
         tier="innovator",
@@ -86,6 +90,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         training_included="Sold separately",
         duration="ongoing",
         billing_period_applicable=True,
+        max_concurrent_portal_recordings=None,
     ),
     "changemaker": TierCapacity(
         tier="changemaker",
@@ -98,6 +103,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         training_included="Sold separately",
         duration="ongoing",
         billing_period_applicable=True,
+        max_concurrent_portal_recordings=None,
     ),
     "guardian": TierCapacity(
         tier="guardian",
@@ -110,6 +116,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         training_included="Sold separately",
         duration="ongoing",
         billing_period_applicable=True,
+        max_concurrent_portal_recordings=None,
     ),
 }
 
@@ -236,6 +243,13 @@ def is_conversation_locked(conv: dict, tier: Optional[str]) -> bool:
     if tier is None:
         return False
     return not tier_allows_overage(tier)
+
+
+def resolve_concurrent_recording_cap(tier: Optional[str]) -> Optional[int]:
+    """The concurrent portal recording cap for a tier. None means no cap. An
+    unknown or missing tier reads the free tier, like the rest of this module."""
+    cap = get_capacity(tier or "") or TIER_CAPACITIES["free"]
+    return cap.max_concurrent_portal_recordings
 
 
 def compute_usage_gates(
