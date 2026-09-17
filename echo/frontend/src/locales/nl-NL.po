@@ -2926,7 +2926,7 @@ msgstr "Voltooid"
 msgid "Completed on"
 msgstr "Voltooid op"
 
-#: src/components/project/ProjectListItem.tsx:390
+#: src/components/project/ProjectListItem.tsx:399
 msgid "Configure portal"
 msgstr "Portaal instellen"
 
@@ -8658,7 +8658,7 @@ msgstr "Pilotlimiet bereikt"
 msgid "Pin"
 msgstr "Vastpinnen"
 
-#: src/components/project/ProjectListItem.tsx:306
+#: src/components/project/ProjectListItem.tsx:309
 msgid "Pin project"
 msgstr "Project vastpinnen"
 
@@ -9060,7 +9060,7 @@ msgstr "Project verplaatst"
 
 #: src/routes/project/ProjectHomeRoute.tsx:389
 #: src/routes/project/CreateProjectRoute.tsx:215
-#: src/components/project/ProjectListItem.tsx:412
+#: src/components/project/ProjectListItem.tsx:422
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Project name"
@@ -9078,7 +9078,7 @@ msgstr "Projectnaam moet minstens 4 tekens lang zijn"
 msgid "Project not found"
 msgstr "Project niet gevonden"
 
-#: src/components/project/ProjectListItem.tsx:338
+#: src/components/project/ProjectListItem.tsx:347
 msgid "Project options"
 msgstr "Projectopties"
 
@@ -9704,8 +9704,8 @@ msgstr "Chat hernoemen"
 #: src/routes/project/ProjectHomeRoute.tsx:143
 #: src/routes/project/ProjectHomeRoute.tsx:148
 #: src/routes/project/ProjectHomeRoute.tsx:388
-#: src/components/project/ProjectListItem.tsx:374
-#: src/components/project/ProjectListItem.tsx:411
+#: src/components/project/ProjectListItem.tsx:383
+#: src/components/project/ProjectListItem.tsx:421
 msgid "Rename project"
 msgstr "Project hernoemen"
 
@@ -12943,11 +12943,11 @@ msgstr "Losmaken"
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Maak eerst een project los (max {MAX_PINNED})"
 
-#: src/components/project/ProjectListItem.tsx:307
+#: src/components/project/ProjectListItem.tsx:310
 msgid "Unpin a project first (max 3)"
 msgstr "Maak eerst een project los (max 3)"
 
-#: src/components/project/ProjectListItem.tsx:304
+#: src/components/project/ProjectListItem.tsx:307
 #: src/components/project/PinnedProjectCard.tsx:163
 msgid "Unpin project"
 msgstr "Project losmaken"

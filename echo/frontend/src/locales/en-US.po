@@ -2928,7 +2928,7 @@ msgstr "Completed"
 msgid "Completed on"
 msgstr "Completed on"
 
-#: src/components/project/ProjectListItem.tsx:390
+#: src/components/project/ProjectListItem.tsx:399
 msgid "Configure portal"
 msgstr "Configure portal"
 
@@ -8660,7 +8660,7 @@ msgstr "Pilot limit reached"
 msgid "Pin"
 msgstr "Pin"
 
-#: src/components/project/ProjectListItem.tsx:306
+#: src/components/project/ProjectListItem.tsx:309
 msgid "Pin project"
 msgstr "Pin project"
 
@@ -9062,7 +9062,7 @@ msgstr "Project moved"
 
 #: src/routes/project/ProjectHomeRoute.tsx:389
 #: src/routes/project/CreateProjectRoute.tsx:215
-#: src/components/project/ProjectListItem.tsx:412
+#: src/components/project/ProjectListItem.tsx:422
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Project name"
@@ -9080,7 +9080,7 @@ msgstr "Project name must be at least 4 characters long"
 msgid "Project not found"
 msgstr "Project not found"
 
-#: src/components/project/ProjectListItem.tsx:338
+#: src/components/project/ProjectListItem.tsx:347
 msgid "Project options"
 msgstr "Project options"
 
@@ -9706,8 +9706,8 @@ msgstr "Rename chat"
 #: src/routes/project/ProjectHomeRoute.tsx:143
 #: src/routes/project/ProjectHomeRoute.tsx:148
 #: src/routes/project/ProjectHomeRoute.tsx:388
-#: src/components/project/ProjectListItem.tsx:374
-#: src/components/project/ProjectListItem.tsx:411
+#: src/components/project/ProjectListItem.tsx:383
+#: src/components/project/ProjectListItem.tsx:421
 msgid "Rename project"
 msgstr "Rename project"
 
@@ -12947,11 +12947,11 @@ msgstr "Unpin"
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Unpin a project first (max {MAX_PINNED})"
 
-#: src/components/project/ProjectListItem.tsx:307
+#: src/components/project/ProjectListItem.tsx:310
 msgid "Unpin a project first (max 3)"
 msgstr "Unpin a project first (max 3)"
 
-#: src/components/project/ProjectListItem.tsx:304
+#: src/components/project/ProjectListItem.tsx:307
 #: src/components/project/PinnedProjectCard.tsx:163
 msgid "Unpin project"
 msgstr "Unpin project"
