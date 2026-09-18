@@ -1688,8 +1688,8 @@
     });
   }
 
-  // The popcorn pops again: a short squat, up off the screen, and it turns
-  // over in the air. It is edge-on at the top, which is when the words change,
+  // The popcorn pops again: a short squat, up off the screen, and it tumbles
+  // top over bottom in the air. It is edge-on at the top, which is when the words change,
   // so it lands showing `face` (null turns it back to the room's own words).
   function morphPopLanguage(rec, item, face, done) {
     if (rec.el.classList.contains("pop-out")) return;

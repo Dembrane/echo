@@ -141,11 +141,13 @@ Translations stack. An item carries `translations: [{language, text}]`, one
 per language the host asked for (a bundle from before that carries a single
 `translation`, read as a list of one). After the room's own words the phrase
 pops again once per language, in random order, each with its full read: a
-short squat, up off the screen on a parabola while it turns evenly about its
-own upright axis (`playback.flipMs`, 820 ms), edge-on for an instant at the
-top, a tall thin bar, which is when the words change, and down the other side
-in the next language, leaning the other way: the tilt crosses over during the
-turn, as it would on the back of a tilted card. A phrase shown in translation ends with Phosphor's translate mark,
+short squat, up off the screen on a parabola while it tumbles evenly top over
+bottom (`playback.flipMs`, 820 ms), edge-on for an instant at the top, a thin
+line, which is when the words change, and down the other side in the next
+language, leaning the other way: the tilt crosses over during the turn, as it
+would on the back of a tilted card. It turns about its horizontal axis because
+phrases are wider than they are tall: about the upright axis a wide card swung
+through too much depth (host, September 19th 2026). A phrase shown in translation ends with Phosphor's translate mark,
 named for screen readers by `translation.done`, followed by the language code
 when more than one language is on the go; there is no Original or Translation
 caption. Languages that do not fit the 24-second appearance, or that land

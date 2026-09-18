@@ -735,25 +735,27 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   90%  { transform: translate(-50%, -49.2%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(1.05, 0.93); animation-timing-function: cubic-bezier(0.2, 1.6, 0.4, 1); }
   100% { opacity: 1; transform: translate(-50%, -50%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(1); }
 }
-/* FLLLLIP: 0-16% squat, 16-50% up and round to edge-on (a tall thin bar),
-   the words change, 50-84% down the other side, 84-100% land. It turns about
-   its own upright axis, the height is a parabola and the turn is even, so it
-   is edge-on for an instant at the top and never hangs there. The tilt crosses
-   over on the way: the other side of a tilted card leans the other way. */
+/* FLLLLIP: 0-16% squat, 16-50% up and over to edge-on (a thin line: phrases
+   are wider than they are tall, so they tumble top over bottom, which stays
+   playful where a turn about the upright axis swung a wide card through too
+   much depth), the words change, 50-84% down the other side, 84-100% land.
+   The height is a parabola and the turn is even, so it is edge-on for an
+   instant at the top and never hangs there. The tilt crosses over on the way:
+   the other side of a tilted card leans the other way. */
 @keyframes pop-flip {
-  0%   { transform: translate(-50%, -50%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1)) rotateY(0deg) scale(1); animation-timing-function: ease-in; }
-  8%   { transform: translate(-50%, -50%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1.3)) rotateY(0deg) scale(1.04, 0.92); }
-  16%  { transform: translate(-50%, -49.6%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1)) rotateY(0deg) scale(1.05, 0.9); animation-timing-function: linear; }
-  24.5% { transform: translate(-50%, -52.62%) perspective(900px) translateZ(131px) rotate(calc(var(--tilt, 0deg) * 0.75)) rotateY(22.5deg) scale(1.04); animation-timing-function: linear; }
-  33% { transform: translate(-50%, -54.5%) perspective(900px) translateZ(225px) rotate(calc(var(--tilt, 0deg) * 0.5)) rotateY(45.0deg) scale(1.04); animation-timing-function: linear; }
-  41.5% { transform: translate(-50%, -55.62%) perspective(900px) translateZ(281px) rotate(calc(var(--tilt, 0deg) * 0.25)) rotateY(67.5deg) scale(1.04); animation-timing-function: linear; }
-  50% { transform: translate(-50%, -56.0%) perspective(900px) translateZ(300px) rotate(calc(var(--tilt, 0deg) * 0.0)) rotateY(90.0deg) scale(1.04); animation-timing-function: step-end; }
-  50.01% { transform: translate(-50%, -56%) perspective(900px) translateZ(300px) rotate(calc(var(--tilt, 0deg) * 0)) rotateY(-90deg) scale(1.04); animation-timing-function: linear; }
-  58.5% { transform: translate(-50%, -55.62%) perspective(900px) translateZ(281px) rotate(calc(var(--tilt, 0deg) * -0.25)) rotateY(-67.5deg) scale(1.04); animation-timing-function: linear; }
-  67% { transform: translate(-50%, -54.5%) perspective(900px) translateZ(225px) rotate(calc(var(--tilt, 0deg) * -0.5)) rotateY(-45.0deg) scale(1.04); animation-timing-function: linear; }
-  75.5% { transform: translate(-50%, -52.62%) perspective(900px) translateZ(131px) rotate(calc(var(--tilt, 0deg) * -0.75)) rotateY(-22.5deg) scale(1.04); animation-timing-function: linear; }
-  84%  { transform: translate(-50%, -49.2%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1)) rotateY(0deg) scale(1.05, 0.93); animation-timing-function: cubic-bezier(0.2, 1.6, 0.4, 1); }
-  100% { transform: translate(-50%, -50%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1)) rotateY(0deg) scale(1); }
+  0%   { transform: translate(-50%, -50%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1)) rotateX(0deg) scale(1); animation-timing-function: ease-in; }
+  8%   { transform: translate(-50%, -50%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1.3)) rotateX(0deg) scale(1.04, 0.92); }
+  16%  { transform: translate(-50%, -49.6%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1)) rotateX(0deg) scale(1.05, 0.9); animation-timing-function: linear; }
+  24.5% { transform: translate(-50%, -52.62%) perspective(900px) translateZ(131px) rotate(calc(var(--tilt, 0deg) * 0.75)) rotateX(22.5deg) scale(1.04); animation-timing-function: linear; }
+  33% { transform: translate(-50%, -54.5%) perspective(900px) translateZ(225px) rotate(calc(var(--tilt, 0deg) * 0.5)) rotateX(45.0deg) scale(1.04); animation-timing-function: linear; }
+  41.5% { transform: translate(-50%, -55.62%) perspective(900px) translateZ(281px) rotate(calc(var(--tilt, 0deg) * 0.25)) rotateX(67.5deg) scale(1.04); animation-timing-function: linear; }
+  50% { transform: translate(-50%, -56.0%) perspective(900px) translateZ(300px) rotate(calc(var(--tilt, 0deg) * 0.0)) rotateX(90.0deg) scale(1.04); animation-timing-function: step-end; }
+  50.01% { transform: translate(-50%, -56%) perspective(900px) translateZ(300px) rotate(calc(var(--tilt, 0deg) * 0)) rotateX(-90deg) scale(1.04); animation-timing-function: linear; }
+  58.5% { transform: translate(-50%, -55.62%) perspective(900px) translateZ(281px) rotate(calc(var(--tilt, 0deg) * -0.25)) rotateX(-67.5deg) scale(1.04); animation-timing-function: linear; }
+  67% { transform: translate(-50%, -54.5%) perspective(900px) translateZ(225px) rotate(calc(var(--tilt, 0deg) * -0.5)) rotateX(-45.0deg) scale(1.04); animation-timing-function: linear; }
+  75.5% { transform: translate(-50%, -52.62%) perspective(900px) translateZ(131px) rotate(calc(var(--tilt, 0deg) * -0.75)) rotateX(-22.5deg) scale(1.04); animation-timing-function: linear; }
+  84%  { transform: translate(-50%, -49.2%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1)) rotateX(0deg) scale(1.05, 0.93); animation-timing-function: cubic-bezier(0.2, 1.6, 0.4, 1); }
+  100% { transform: translate(-50%, -50%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1)) rotateX(0deg) scale(1); }
 }
 /* the count to the first popcorn, then a spinner if it is late */
 .popcorn-waiting .countdown { font-size: clamp(64px, 9vw, 160px); font-weight: 300; line-height: 1; color: var(--graphite); display: inline-block; animation: count-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
