@@ -55,6 +55,20 @@ describe("vendored deck bilingual polling", () => {
 			currentItem: vi.fn(),
 			EMBED: { presentationId: "room" },
 			fetchJson: vi.fn().mockResolvedValue(translated),
+			// The deck's own helper: which languages this wording is still owed.
+			owedLanguages: (
+				key: string,
+				item: { translation?: string; translation_language?: string },
+			) => {
+				const shown =
+					(state.pop.shownTranslation.get(key) as
+						| Record<string, string>
+						| undefined) ?? {};
+				return item.translation &&
+					shown[item.translation_language ?? ""] !== item.translation
+					? [{ language: item.translation_language, text: item.translation }]
+					: [];
+			},
 			refreshLivePops,
 			renderPopTail,
 			renderProgress: vi.fn(),

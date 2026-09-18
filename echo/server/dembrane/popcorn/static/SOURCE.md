@@ -125,13 +125,38 @@ evidence link and focus target. An unheld appearance is capped at 24 seconds;
 when both full intervals cannot fit, the translation takes the next fair slot.
 Evidence, page visibility and the presentation shell pause both stage and
 language timers. Reduced motion keeps the same intervals with an instant
-handoff. A phrase enters with a 200 ms directional snap and controlled settle.
-The language handoff is the opposite register, soft and round: over 1.1 s
-(`playback.lensMs`) a round lens glides across the phrase, the words go out of
-focus beneath it, change once at the middle, and come back into focus in the
-other language. A phrase shown in translation ends with Phosphor's translate
-mark, named for screen readers by `translation.done`; there is no Original or
-Translation caption. The shell's pause holds the lens as well as the timers.
+handoff.
+
+The pop (September 19th 2026, after the host's storyboard: pop..., tension
+builds, wiggle!, Explode!, Land, FLLLLIP, Land). A phrase arrives as popcorn
+does, over `playback.enterMs` (1300 ms). A kernel, a small and slightly odd circle of
+the phrase's colour, no outline, appears where the phrase is about to land and is
+what draws the eye; it sits there and swells twice while the tension builds,
+wiggles for a fifth of a second, and is blown apart as the phrase explodes out
+of it, off the screen towards the room (`translateZ` under a 900 px
+perspective). The phrase comes back down, squashes on landing and settles at
+its tilt. The first read interval starts once the words can be read.
+
+Translations stack. An item carries `translations: [{language, text}]`, one
+per language the host asked for (a bundle from before that carries a single
+`translation`, read as a list of one). After the room's own words the phrase
+pops again once per language, in random order, each with its full read: a
+short squat, up off the screen on a parabola while it turns evenly about its
+own upright axis (`playback.flipMs`, 820 ms), edge-on for an instant at the
+top, a tall thin bar, which is when the words change, and down the other side
+in the next language, leaning the other way: the tilt crosses over during the
+turn, as it would on the back of a tilted card. A phrase shown in translation ends with Phosphor's translate mark,
+named for screen readers by `translation.done`, followed by the language code
+when more than one language is on the go; there is no Original or Translation
+caption. Languages that do not fit the 24-second appearance, or that land
+after the phrase has left the stage (they arrive batch by batch over SSE), are
+owed the next fair slot: that appearance opens on one owed language and pops
+through the rest. A held phrase keeps turning through every language, the
+room's own included. The shell's pause holds the animations as well as the
+timers (`.screen-frozen`), and reduced motion keeps the intervals with no
+kernel, no jump and an instant change of words. The entrance is a class
+(`pop-enter`) the page removes when it has played, because an animation left
+on the element would start over each time a flip hands it back.
 
 Opening patch: session.intro, session.disclosure and session.notice carry
 host-written opening copy for any session: an intro, a disclosure with an

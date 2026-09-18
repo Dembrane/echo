@@ -637,9 +637,13 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   text-align: center;
   text-wrap: balance;   /* even lines, never a lone word on the last one */
   transform: translate(-50%, -50%) rotate(var(--tilt, 0deg));
-  animation: pop-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
+/* The entrance is a class the page takes off when it has played: left on the
+   element, it would start over each time a flip hands the animation back.
+   Linear overall: every stage of the pop carries its own easing. */
+.pop.pop-enter { z-index: 70; animation: pop-in var(--enter-ms, 1300ms) linear both; }
 .pop.center { max-width: 88%; }
 /* hover: hold, straighten, expand, and reveal the group */
 .pop:hover {
@@ -666,31 +670,35 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   line-height: 1.3;
 }
 .pop-words { white-space: pre-wrap; }
-/* The language handoff: the phrase goes softly out of focus and returns in
-   the other language while a round lens glides across it. Soft in, soft out. */
-.pop-language-morph .pop-phrase {
-  animation: lens-refocus var(--lens-ms, 1100ms) cubic-bezier(0.45, 0, 0.25, 1) both;
+/* A popcorn pops once per language. It squats, jumps off the screen and
+   turns over in the air; it is edge-on at the top, where the words change,
+   so it lands in the next language. */
+.pop.pop-flip {
+  z-index: 70;
+  animation: pop-flip var(--flip-ms, 820ms) linear both;
 }
-.pop-lens {
+.pop-translated-wrap { white-space: nowrap; }
+.pop-translated { width: 0.8em; height: 0.8em; vertical-align: -0.06em; margin-left: 0.36em; fill: currentColor; opacity: 0.55; }
+.pop-translated-code { margin-left: 0.22em; font-size: 0.52em; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; vertical-align: 0.12em; }
+
+/* The kernel: what draws the eye to where a phrase is about to pop. */
+.pop-kernel {
   position: absolute;
-  top: 50%;
-  left: 0;
-  width: 3.4em;
+  left: var(--x, 50%);
+  top: var(--y, 50%);
+  width: 0.7em;
   aspect-ratio: 1;
-  border-radius: 50%;
   pointer-events: none;
   font-size: clamp(24px, 2.6vw, 42px);
-  background: radial-gradient(circle at 34% 30%, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.08) 46%, rgb(255 255 255 / 0) 70%);
-  border: 1.5px solid rgb(255 255 255 / 0.7);
-  box-shadow: 0 0.3em 1.1em rgb(45 45 44 / 0.16), inset 0 0 0.9em rgb(255 255 255 / 0.35);
-  -webkit-backdrop-filter: blur(2.5px) brightness(1.05);
-  backdrop-filter: blur(2.5px) brightness(1.05);
-  animation: lens-glide var(--lens-ms, 1100ms) cubic-bezier(0.45, 0, 0.25, 1) both;
+  background: var(--marker);
+  /* a slightly odd circle, not a perfect one, and no outline */
+  border-radius: 58% 42% 53% 47% / 46% 57% 43% 54%;
+  transform: translate(-50%, -50%) rotate(var(--tilt, 0deg));
+  animation: kernel var(--enter-ms, 1300ms) linear both;
 }
-.pop.center .pop-lens { font-size: clamp(32px, 3.6vw, 58px); }
-.pop-translated { width: 0.8em; height: 0.8em; vertical-align: -0.06em; margin-left: 0.36em; fill: currentColor; opacity: 0.55; }
-.screen-frozen .pop-language-morph .pop-phrase,
-.screen-frozen .pop-lens { animation-play-state: paused; }
+.pop-kernel.center { font-size: clamp(32px, 3.6vw, 58px); }
+.screen-frozen .pop,
+.screen-frozen .pop-kernel { animation-play-state: paused; }
 /* one size for every phrase; a phrase steps down only to fit the stage */
 .pop .pop-phrase { font-size: clamp(24px, 2.6vw, 42px); }
 .pop[data-weight="1"] .pop-phrase { font-size: clamp(19px, 1.9vw, 30px); }
@@ -698,24 +706,55 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .pop.center[data-weight="1"] .pop-phrase { font-size: clamp(26px, 2.8vw, 46px); }
 .pop .attribution { display: block; margin-top: 0.6em; justify-content: center; }
 
+/* The pop, after the host's storyboard, as percentages of --enter-ms (1300 ms):
+   0-8%    pop...          the kernel appears
+   8-46%   tension builds  it sits there and swells, twice, a little more
+   46-62%  wiggle!
+   62-74%  Explode!        the phrase bursts out of it, off the screen
+   74-90%  --- Land ---    back down, a squash
+   90-100% settled at its tilt */
+@keyframes kernel {
+  0%   { opacity: 0; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(0); animation-timing-function: cubic-bezier(0.2, 1.7, 0.4, 1); }
+  8%   { opacity: 1; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1); animation-timing-function: ease-in-out; }
+  20%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.1); animation-timing-function: ease-in-out; }
+  27%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.02); animation-timing-function: ease-in-out; }
+  39%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.2); animation-timing-function: ease-in-out; }
+  46%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.12); }
+  50%  { transform: translate(-58%, -50%) rotate(calc(var(--tilt, 0deg) - 16deg)) scale(1.16); }
+  54%  { transform: translate(-42%, -53%) rotate(calc(var(--tilt, 0deg) + 14deg)) scale(1.2); }
+  58%  { transform: translate(-57%, -47%) rotate(calc(var(--tilt, 0deg) - 12deg)) scale(1.24); }
+  62%  { opacity: 1; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.3); animation-timing-function: cubic-bezier(0.12, 0.9, 0.2, 1); }
+  70%  { opacity: 0; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(7); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(7); }
+}
 @keyframes pop-in {
-  0%   { opacity: 0; transform: translate(-54%, -46%) scale(0.86) rotate(-3deg); }
-  72%  { opacity: 1; transform: translate(-49%, -51%) scale(1.025) rotate(1deg); }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(var(--tilt, 0deg)); }
+  0%   { opacity: 0; transform: translate(-50%, -50%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(0.06); }
+  62%  { opacity: 0; transform: translate(-50%, -50%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(0.06); animation-timing-function: cubic-bezier(0.12, 0.9, 0.2, 1); }
+  66%  { opacity: 1; }
+  74%  { opacity: 1; transform: translate(-50%, -54%) perspective(900px) translateZ(270px) rotate(calc(var(--tilt, 0deg) * 1.6)) scale(1.18); animation-timing-function: cubic-bezier(0.55, 0, 0.85, 0.4); }
+  90%  { transform: translate(-50%, -49.2%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(1.05, 0.93); animation-timing-function: cubic-bezier(0.2, 1.6, 0.4, 1); }
+  100% { opacity: 1; transform: translate(-50%, -50%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(1); }
 }
-@keyframes lens-refocus {
-  0%   { filter: blur(0); opacity: 1; }
-  42%  { filter: blur(7px); opacity: 0.12; }
-  58%  { filter: blur(7px); opacity: 0.12; }
-  100% { filter: blur(0); opacity: 1; }
+/* FLLLLIP: 0-16% squat, 16-50% up and round to edge-on (a tall thin bar),
+   the words change, 50-84% down the other side, 84-100% land. It turns about
+   its own upright axis, the height is a parabola and the turn is even, so it
+   is edge-on for an instant at the top and never hangs there. The tilt crosses
+   over on the way: the other side of a tilted card leans the other way. */
+@keyframes pop-flip {
+  0%   { transform: translate(-50%, -50%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1)) rotateY(0deg) scale(1); animation-timing-function: ease-in; }
+  8%   { transform: translate(-50%, -50%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1.3)) rotateY(0deg) scale(1.04, 0.92); }
+  16%  { transform: translate(-50%, -49.6%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1)) rotateY(0deg) scale(1.05, 0.9); animation-timing-function: linear; }
+  24.5% { transform: translate(-50%, -52.62%) perspective(900px) translateZ(131px) rotate(calc(var(--tilt, 0deg) * 0.75)) rotateY(22.5deg) scale(1.04); animation-timing-function: linear; }
+  33% { transform: translate(-50%, -54.5%) perspective(900px) translateZ(225px) rotate(calc(var(--tilt, 0deg) * 0.5)) rotateY(45.0deg) scale(1.04); animation-timing-function: linear; }
+  41.5% { transform: translate(-50%, -55.62%) perspective(900px) translateZ(281px) rotate(calc(var(--tilt, 0deg) * 0.25)) rotateY(67.5deg) scale(1.04); animation-timing-function: linear; }
+  50% { transform: translate(-50%, -56.0%) perspective(900px) translateZ(300px) rotate(calc(var(--tilt, 0deg) * 0.0)) rotateY(90.0deg) scale(1.04); animation-timing-function: step-end; }
+  50.01% { transform: translate(-50%, -56%) perspective(900px) translateZ(300px) rotate(calc(var(--tilt, 0deg) * 0)) rotateY(-90deg) scale(1.04); animation-timing-function: linear; }
+  58.5% { transform: translate(-50%, -55.62%) perspective(900px) translateZ(281px) rotate(calc(var(--tilt, 0deg) * -0.25)) rotateY(-67.5deg) scale(1.04); animation-timing-function: linear; }
+  67% { transform: translate(-50%, -54.5%) perspective(900px) translateZ(225px) rotate(calc(var(--tilt, 0deg) * -0.5)) rotateY(-45.0deg) scale(1.04); animation-timing-function: linear; }
+  75.5% { transform: translate(-50%, -52.62%) perspective(900px) translateZ(131px) rotate(calc(var(--tilt, 0deg) * -0.75)) rotateY(-22.5deg) scale(1.04); animation-timing-function: linear; }
+  84%  { transform: translate(-50%, -49.2%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1)) rotateY(0deg) scale(1.05, 0.93); animation-timing-function: cubic-bezier(0.2, 1.6, 0.4, 1); }
+  100% { transform: translate(-50%, -50%) perspective(900px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1)) rotateY(0deg) scale(1); }
 }
-@keyframes lens-glide {
-  0%   { opacity: 0; transform: translate(-70%, -50%) scale(0.7); }
-  18%  { opacity: 1; transform: translate(-30%, -50%) scale(1); }
-  82%  { opacity: 1; }
-  100% { opacity: 0; left: 100%; transform: translate(-70%, -50%) scale(0.85); }
-}
-
 /* the count to the first popcorn, then a spinner if it is late */
 .popcorn-waiting .countdown { font-size: clamp(64px, 9vw, 160px); font-weight: 300; line-height: 1; color: var(--graphite); display: inline-block; animation: count-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
 @keyframes count-in { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
@@ -1056,9 +1095,9 @@ button.action-row:hover .action-sentence { color: var(--blue); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pop { animation: none; }
-  .pop-language-morph .pop-phrase { animation: none; }
-  .pop-lens { display: none; }
+  .pop.pop-enter { animation: none; }
+  .pop.pop-flip { animation: none; }
+  .pop-kernel { display: none; }
   .pop.pop-out { transition: none; }
   .live-dot { animation: none; opacity: 0.7; }
   .pole-block { animation: none; }

@@ -105,8 +105,14 @@
   const POP_LANGUAGE_HARD_CAP = Number(playback.languageHardCapMs) || 24000;
   const POP_RESIDENCY_CAP = Number(playback.residencyCapMs) || 24000;
   const POP_TRANSITION_MS = Number(playback.transitionMs) || 200;
-  // The language handoff is not a snap: a lens takes its time over a phrase.
-  const POP_LENS_MS = Number(playback.lensMs) || 1100;
+  // A popcorn pops, after the host's storyboard: a kernel appears (pop...),
+  // tension builds, it wiggles, explodes off the screen and lands. For each
+  // language it pops again and flips in the air.
+  const POP_ENTER_MS = Number(playback.enterMs) || 1300;
+  // The part of the entrance before the words can be read; the first read
+  // interval starts after it.
+  const POP_ENTER_LEAD_MS = Math.round(POP_ENTER_MS * 0.7);
+  const POP_FLIP_MS = Number(playback.flipMs) || 820;
   const POP_FADE = 400;
   const POP_GAP = 2400;      // stagger between spawns once the stage is warm
   const POP_MAX = 3;         // phrases the automatic flow keeps up at once (one per band)
@@ -537,7 +543,7 @@
       tailStamp: "",        // the popcorn files as last drawn; a change redraws the list and the stage
       bilingualNext: new Map(), // late translations owed their next fair slot
       shownOriginal: new Map(), // item identity -> exact source wording already given a full appearance
-      shownTranslation: new Map(), // item identity -> exact translation already displayed
+      shownTranslation: new Map(), // item identity -> { language: exact translation already displayed }
     },
     openThemes: new Set(),  // recommendation theme accordions the presenter has opened
     // deck tabs: null = list view; an item id (or "auto" = first) = horizontal slide deck
@@ -1554,6 +1560,7 @@
       item?.phrase || "",
       item?.translation || "",
       item?.translation_language || "",
+      (Array.isArray(item?.translations) ? item.translations : []).map((t) => `${t?.language || ""}:${t?.text || ""}`).join("|"),
       item?.translation_policy || "",
       item?.translation_ref?.source_key || "",
       item?.translation_ref?.revision ?? "",
@@ -1586,9 +1593,8 @@
           bilingualKey(rec.tid, rec.idx, currentItem(rec)) === key
           && !rec.el.classList.contains("pop-out"));
         if (
-          item.translation
-          && state.pop.shownOriginal.get(key) === item.phrase
-          && state.pop.shownTranslation.get(key) !== item.translation
+          state.pop.shownOriginal.get(key) === item.phrase
+          && owedLanguages(key, item).length
           && !live
         ) {
           state.pop.bilingualNext.set(key, { tid: t.id, idx, itemId: item.id });
@@ -1630,18 +1636,50 @@
     POP_READ_BASE + POP_READ_PER_WORD * phraseWords(text),
   );
   const bilingualKey = (tid, idx, item) => `${tid}:${item?.id || idx}`;
-  const phraseStateText = (item, translated = false) => {
-    const shown = translated ? { ...item, phrase: item.translation, verbatim: false } : item;
+  // Translations stack: a phrase carries one entry per language the host
+  // asked for. A bundle from before that carries a single `translation`.
+  const translationsOf = (item) => {
+    const list = Array.isArray(item?.translations)
+      ? item.translations.filter((t) => t && t.text && t.text !== item.phrase)
+      : [];
+    if (list.length) return list.map((t) => ({ language: String(t.language || ""), text: String(t.text) }));
+    return item?.translation
+      ? [{ language: String(item.translation_language || ""), text: String(item.translation) }]
+      : [];
+  };
+  // `face` is the language a phrase shows: null for the room's own words, a
+  // translation entry otherwise (`true` is the first translation).
+  const faceOf = (item, face) => (face === true ? translationsOf(item)[0] || null : face || null);
+  // Which languages this exact wording has not had a full appearance in yet.
+  const owedLanguages = (key, item) => {
+    const shown = state.pop.shownTranslation.get(key) || {};
+    return translationsOf(item).filter((t) => shown[t.language] !== t.text);
+  };
+  const markLanguageShown = (key, face) => {
+    state.pop.shownTranslation.set(key, {
+      ...(state.pop.shownTranslation.get(key) || {}),
+      [face.language]: face.text,
+    });
+  };
+  const phraseStateText = (item, face = null) => {
+    const shownFace = faceOf(item, face);
+    const shown = shownFace ? { ...item, phrase: shownFace.text, verbatim: false } : item;
     const text = phraseText(shown);
     return shown.verbatim ? `“${text}”` : text;
   };
   // Phosphor "translate", bold like the kind icons. It closes a phrase shown
   // in translation, so nobody takes the room's words for the translator's.
+  // With more than one language on the go it says which.
   const TRANSLATE_ICON = "M250.73,210.63l-56-112a12,12,0,0,0-21.46,0l-20.52,41A84.2,84.2,0,0,1,114,126.22,107.48,107.48,0,0,0,139.33,68H160a12,12,0,0,0,0-24H108V32a12,12,0,0,0-24,0V44H32a12,12,0,0,0,0,24h83.13A83.69,83.69,0,0,1,96,110.35,84,84,0,0,1,83.6,91a12,12,0,1,0-21.81,10A107.55,107.55,0,0,0,78,126.24,83.54,83.54,0,0,1,32,140a12,12,0,0,0,0,24,107.47,107.47,0,0,0,64-21.07,108.4,108.4,0,0,0,45.39,19.44l-24.13,48.26a12,12,0,1,0,21.46,10.73L151.41,196h65.17l12.68,25.36a12,12,0,1,0,21.47-10.73ZM163.41,172,184,130.83,204.58,172Z";
-  const translatedMark = () =>
-    `<svg class="pop-translated" viewBox="0 0 256 256" aria-label="${esc(tr("translation.done"))}" role="img"><path d="${TRANSLATE_ICON}"/></svg>`;
-  function phraseStateHtml(item, translated = false) {
-    return `${kindIcon(item.kind)}<span class="pop-words">${esc(phraseStateText(item, translated))}</span>${translated ? translatedMark() : ""}`;
+  const translatedMark = (item, face) => {
+    const code = translationsOf(item).length > 1 && face?.language
+      ? `<span class="pop-translated-code">${esc(face.language)}</span>`
+      : "";
+    return `<span class="pop-translated-wrap"><svg class="pop-translated" viewBox="0 0 256 256" aria-label="${esc(tr("translation.done"))}" role="img"><path d="${TRANSLATE_ICON}"/></svg>${code}</span>`;
+  };
+  function phraseStateHtml(item, face = null) {
+    const shownFace = faceOf(item, face);
+    return `${kindIcon(item.kind)}<span class="pop-words">${esc(phraseStateText(item, shownFace))}</span>${shownFace ? translatedMark(item, shownFace) : ""}`;
   }
 
   function queueTranslatedAppearance(rec, item) {
@@ -1650,68 +1688,75 @@
     });
   }
 
-  // One phrase, two languages: a round lens glides across it, the words go
-  // softly out of focus underneath, and come back into focus in the other
-  // language. The words change once, at the middle, while nobody can read them.
-  function morphPopLanguage(rec, item, translated, done) {
+  // The popcorn pops again: a short squat, up off the screen, and it turns
+  // over in the air. It is edge-on at the top, which is when the words change,
+  // so it lands showing `face` (null turns it back to the room's own words).
+  function morphPopLanguage(rec, item, face, done) {
     if (rec.el.classList.contains("pop-out")) return;
     const phrase = rec.el.querySelector(".pop-phrase");
-    const words = rec.el.querySelector(".pop-words");
-    if (!phrase || !words) return;
+    if (!phrase) return;
+    const next = faceOf(item, face);
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    rec.languagePhase = translated ? "morph-translation" : "morph-original";
+    rec.languagePhase = next ? "morph-translation" : "morph-original";
 
-    const swap = () => {
-      words.textContent = phraseStateText(item, translated);
-      phrase.querySelector(".pop-translated")?.remove();
-      if (translated) words.insertAdjacentHTML("afterend", translatedMark());
-    };
+    const swap = () => { phrase.innerHTML = phraseStateHtml(item, next); };
     const finish = () => {
-      rec.el.classList.remove("pop-language-morph");
-      rec.el.querySelector(".pop-lens")?.remove();
-      rec.languagePhase = translated ? "translation" : "original";
-      if (translated) {
-        state.pop.shownTranslation.set(bilingualKey(rec.tid, rec.idx, item), item.translation);
+      // The other side of a tilted card leans the other way.
+      const tilt = parseFloat(rec.el.style.getPropertyValue("--tilt")) || 0;
+      rec.el.style.setProperty("--tilt", `${-tilt}deg`);
+      rec.el.classList.remove("pop-flip");
+      rec.face = next;
+      rec.faceSince = Date.now();
+      rec.languagePhase = next ? "translation" : "original";
+      if (next) {
+        rec.shown.add(next.language);
+        markLanguageShown(bilingualKey(rec.tid, rec.idx, item), next);
       }
       done?.();
     };
-    if (reduceMotion || POP_LENS_MS <= 0) { swap(); finish(); return; }
+    if (reduceMotion || POP_FLIP_MS <= 0) { swap(); finish(); return; }
 
-    rec.el.style.setProperty("--lens-ms", `${POP_LENS_MS}ms`);
-    const lens = document.createElement("span");
-    lens.className = "pop-lens";
-    lens.setAttribute("aria-hidden", "true");
-    rec.el.appendChild(lens);
-    rec.el.classList.add("pop-language-morph");
+    rec.el.style.setProperty("--flip-ms", `${POP_FLIP_MS}ms`);
+    rec.el.classList.add("pop-flip");
     armPopTimer(rec, "morphTimer", () => {
       swap();
-      armPopTimer(rec, "morphTimer", finish, POP_LENS_MS / 2);
-    }, POP_LENS_MS / 2);
+      armPopTimer(rec, "morphTimer", finish, POP_FLIP_MS / 2);
+    }, POP_FLIP_MS / 2);
   }
 
+  // After the room's own words, one pop per language, in random order, each
+  // with its full read. What does not fit this appearance is owed the next
+  // fair slot. A language that arrives later (translations land batch by
+  // batch) is picked up the same way when the data is redrawn.
   function scheduleBilingualHandoff(rec, item) {
-    if (!item?.translation || rec.languagePhase !== "original" || rec.languageTimer) return;
-    const originalMs = languageReadMs(item.phrase);
-    const translatedMs = languageReadMs(item.translation);
-    const elapsed = Date.now() - rec.startedAt;
-    const handoffIn = Math.max(0, originalMs - elapsed);
+    if (rec.languageTimer || rec.languagePhase.startsWith("morph-")) return;
+    rec.shown ||= new Set();
+    const key = bilingualKey(rec.tid, rec.idx, item);
+    const current = rec.face ? rec.face.text : item.phrase;
+    const dwellLeft = Math.max(0, languageReadMs(current) - (Date.now() - (rec.faceSince || rec.startedAt)));
+
     if (rec.pinned) {
-      const cycle = (translated) => {
-        const current = currentItem(rec) || item;
-        if (!current.translation) return;
-        morphPopLanguage(rec, current, translated, () => {
-          armPopTimer(
-            rec,
-            "languageTimer",
-            () => cycle(!translated),
-            languageReadMs(translated ? current.translation : current.phrase),
-          );
-        });
-      };
-      armPopTimer(rec, "languageTimer", () => cycle(true), handoffIn);
+      // Held on stage: keep turning through every language, the room's own
+      // words included, for as long as it is held.
+      const faces = [null, ...translationsOf(item)];
+      if (faces.length < 2) return;
+      const at = faces.findIndex((f) => (f?.language ?? null) === (rec.face?.language ?? null));
+      const next = faces[(Math.max(0, at) + 1) % faces.length];
+      armPopTimer(rec, "languageTimer", () => {
+        const now = currentItem(rec) || item;
+        morphPopLanguage(rec, now, next && translationsOf(now).find((t) => t.language === next.language) || null,
+          () => scheduleBilingualHandoff(rec, currentItem(rec) || now));
+      }, dwellLeft);
       return;
     }
-    const fits = elapsed + handoffIn + POP_LENS_MS + translatedMs <= POP_RESIDENCY_CAP;
+
+    const remaining = translationsOf(item).filter((t) =>
+      !rec.shown.has(t.language)
+      && (!rec.owedOnly || (state.pop.shownTranslation.get(key) || {})[t.language] !== t.text));
+    if (!remaining.length) return;
+    const next = remaining[Math.floor(Math.random() * remaining.length)];
+    const elapsed = Date.now() - rec.startedAt;
+    const fits = elapsed + dwellLeft + POP_FLIP_MS + languageReadMs(next.text) <= POP_RESIDENCY_CAP;
     if (!fits) {
       queueTranslatedAppearance(rec, item);
       return;
@@ -1719,11 +1764,14 @@
     clearTimeout(rec.timer);
     rec.timer = null;
     armPopTimer(rec, "languageTimer", () => {
-      const current = currentItem(rec) || item;
-      morphPopLanguage(rec, current, true, () => {
-        armPopTimer(rec, "timer", rec.beginFade, languageReadMs(current.translation));
+      const now = currentItem(rec) || item;
+      const face = translationsOf(now).find((t) => t.language === next.language);
+      if (!face) { armPopTimer(rec, "timer", rec.beginFade, 0); return; }
+      morphPopLanguage(rec, now, face, () => {
+        armPopTimer(rec, "timer", rec.beginFade, languageReadMs(face.text));
+        scheduleBilingualHandoff(rec, currentItem(rec) || now);
       });
-    }, handoffIn);
+    }, dwellLeft);
   }
 
   // Redraw the phrases on stage from the data as it is now: an icon and
@@ -1735,22 +1783,30 @@
       const item = currentItem(rec);
       if (!item) { rec.beginFade?.(); continue; }
       const sourceChanged = item.phrase !== rec.sourcePhrase;
-      const targetChanged = item.translation_language !== rec.translationLanguage;
-      if (sourceChanged || targetChanged || (rec.languagePhase !== "original" && !item.translation)) {
+      // The language on show may have been reworded, or withdrawn (the host
+      // dropped it, or the wording it translated is gone). A language that
+      // merely ARRIVED is not a reason to start over: it gets its own pop.
+      const fresh = rec.face ? translationsOf(item).find((t) => t.language === rec.face.language) : null;
+      const faceGone = !!rec.face && !fresh;
+      if (fresh && !rec.languagePhase.startsWith("morph-")) rec.face = fresh;
+      if (sourceChanged || faceGone) {
         clearTimeout(rec.languageTimer);
         rec.languageTimer = null;
         clearTimeout(rec.morphTimer);
         rec.morphTimer = null;
-        rec.el.classList.remove("pop-language-morph");
+        rec.el.classList.remove("pop-flip");
         rec.languagePhase = "original";
+        rec.face = null;
+        rec.shown = new Set();
+        rec.owedOnly = false;
         rec.sourcePhrase = item.phrase;
-        rec.translationLanguage = item.translation_language;
         rec.startedAt = Date.now();
+        rec.faceSince = Date.now();
         state.pop.bilingualNext.delete(bilingualKey(rec.tid, rec.idx, item));
         armPopTimer(rec, "timer", rec.beginFade, languageReadMs(item.phrase));
       }
       const phrase = rec.el.querySelector(".pop-phrase");
-      const html = phraseStateHtml(item, rec.languagePhase === "translation");
+      const html = phraseStateHtml(item, rec.face);
       if (phrase && !rec.languagePhase.startsWith("morph-") && phrase.innerHTML !== html) phrase.innerHTML = html;
       const rooted = !!(item.quoteId && quoteById(item.quoteId));
       rec.el.classList.toggle("pop-rooted", rooted);
@@ -2343,7 +2399,8 @@
     const owed = [...state.pop.bilingualNext.entries()]
       .filter(([, pick]) => {
         const item = state.popcorn.get(pick.tid)?.items?.[pick.idx];
-        return item?.translation
+        return item
+          && owedLanguages(bilingualKey(pick.tid, pick.idx, item), item).length
           && (!pick.itemId || item.id === pick.itemId)
           && popVisible(pick.tid, pick.idx, ev)
           && !isLive(pick.tid, pick.idx);
@@ -2421,12 +2478,21 @@
     const jx = centerStage ? 0 : Math.random() * 24 - 12;
     const jy = centerStage ? 0 : Math.random() * 2 - 1;
 
+    // An owed appearance opens on one of the languages still owed, at random,
+    // and pops through the rest of them.
+    const owedFaces = translatedOnly ? owedLanguages(bilingualKey(tid, idx, item), item) : [];
+    const firstFace = owedFaces.length ? owedFaces[Math.floor(Math.random() * owedFaces.length)] : null;
+    if (translatedOnly && !firstFace) return false;
+
     const rooted = item.quoteId && quoteById(item.quoteId);
     const el = document.createElement("div");
-    el.className = "pop" + (centerStage ? " center" : "") + (pinned ? " pinned" : "");
+    el.className = "pop pop-enter" + (centerStage ? " center" : "") + (pinned ? " pinned" : "");
+    el.addEventListener("animationend", (ev) => {
+      if (ev.animationName === "pop-in") el.classList.remove("pop-enter");
+    });
     el.dataset.weight = 2;   // one size; stepped down below only to fit
     el.style.setProperty("--tilt", `${hashTilt(item.phrase)}deg`);
-    el.innerHTML = `<span class="pop-phrase" aria-live="off" style="--marker:${markerFor(tid)}">${phraseStateHtml(item, translatedOnly)}</span>
+    el.innerHTML = `<span class="pop-phrase" aria-live="off" style="--marker:${markerFor(tid)}">${phraseStateHtml(item, firstFace)}</span>
       <span class="pop-att">${attribution(tid)}</span>`;
     stageEl.appendChild(el);
     // measure at the size it will settle at, not mid pop-in
@@ -2481,19 +2547,42 @@
     // still touching something: step the size down until it fits clear
     while (clashes() && w > 1) { el.dataset.weight = --w; clamp(); }
     el.style.animation = "";
+    el.style.setProperty("--enter-ms", `${POP_ENTER_MS}ms`);
 
+    // The kernel: a small, slightly odd circle of the phrase's colour where it is about to
+    // pop. It is what draws the eye, sits there while the tension builds,
+    // wiggles, and is blown apart by the phrase. It lives on the stage, not in
+    // the phrase, which is still nothing.
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (!reduceMotion) {
+      const kernel = document.createElement("span");
+      kernel.className = "pop-kernel" + (centerStage ? " center" : "");
+      kernel.setAttribute("aria-hidden", "true");
+      for (const name of ["--x", "--y", "--tilt"]) kernel.style.setProperty(name, el.style.getPropertyValue(name));
+      kernel.style.setProperty("--enter-ms", `${POP_ENTER_MS}ms`);
+      kernel.style.setProperty("--marker", markerFor(tid));
+      kernel.addEventListener("animationend", () => kernel.remove());
+      stageEl.insertBefore(kernel, el);
+    }
+
+    const lead = reduceMotion ? 0 : POP_ENTER_LEAD_MS;
     const rec = {
       tid, idx, itemId: item.id, slot: slotIdx, el, pinned,
       startedAt: Date.now(),
-      languagePhase: translatedOnly ? "translation" : "original",
+      // The words cannot be read while the kernel is still jiggling: the first
+      // read interval starts when it has popped.
+      faceSince: Date.now() + lead,
+      face: firstFace,
+      shown: new Set(firstFace ? [firstFace.language] : []),
+      owedOnly: translatedOnly,
+      languagePhase: firstFace ? "translation" : "original",
       sourcePhrase: item.phrase,
-      translationLanguage: item.translation_language,
     };
     state.pop.live.push(rec);
     if (!translatedOnly) {
       state.pop.shownOriginal.set(bilingualKey(tid, idx, item), item.phrase);
-    } else if (item.translation) {
-      state.pop.shownTranslation.set(bilingualKey(tid, idx, item), item.translation);
+    } else {
+      markLanguageShown(bilingualKey(tid, idx, item), firstFace);
     }
     state.pop.lastSpawn = Date.now();
     if (!pinned) {
@@ -2507,7 +2596,7 @@
       rec.languageTimer = null;
       clearTimeout(rec.morphTimer);
       rec.morphTimer = null;
-      rec.el.classList.remove("pop-language-morph");
+      rec.el.classList.remove("pop-flip");
       el.classList.add("pop-out");
       markDotsOnStage();
       armPopTimer(rec, "timer", () => {
@@ -2522,9 +2611,9 @@
       beginFade,
       pinned
         ? POP_HOLD_PINNED
-        : languageReadMs(translatedOnly ? item.translation : item.phrase),
+        : lead + languageReadMs(firstFace ? firstFace.text : item.phrase),
     );
-    if (!translatedOnly) scheduleBilingualHandoff(rec, item);
+    scheduleBilingualHandoff(rec, item);
 
     // hovering a popcorn holds it on stage; rooted popcorns raise their quote
     el.addEventListener("mouseenter", () => {
