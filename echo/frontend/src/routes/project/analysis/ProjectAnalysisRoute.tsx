@@ -19,8 +19,8 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { useEffect, useMemo, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router";
+import { useMemo, useState } from "react";
+import { useParams, useSearchParams } from "react-router";
 import { AnalysisResultsList } from "@/components/analysis/AnalysisResultsList";
 import { EvidenceInspectionDrawer } from "@/components/analysis/EvidenceInspectionDrawer";
 import {
@@ -37,6 +37,8 @@ import {
 	useCancelAnalysisRun,
 	useRequestAnalysisRun,
 } from "@/components/analysis/hooks";
+import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
+import { I18nLink } from "@/components/common/i18nLink";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
 	type PopcornDetail,
@@ -44,6 +46,7 @@ import {
 	useProjectPopcorn,
 } from "@/components/popcorn/hooks";
 import { PopcornVoiceSection } from "@/components/popcorn/PopcornVoiceSection";
+import { useRecipeParameters } from "./useRecipeParameters";
 
 type AnalysisTab = "results" | "recipes" | "runs";
 const resultTypes = [
@@ -54,13 +57,15 @@ const resultTypes = [
 	"stakeholder",
 ];
 const activeStatuses = new Set(["queued", "running", "waiting_for_inputs"]);
-const resultTypeLabels: Record<string, string> = {
-	argument: "Arguments",
-	deduplicated_argument: "Consolidated arguments",
-	popcorn: "Popcorn phrases",
-	stakeholder: "Stakeholders",
-	tension: "Tensions",
-};
+// A function, not a constant: `t` has to run with a locale active, which is
+// only true once something renders.
+const resultTypeLabels = (): Record<string, string> => ({
+	argument: t`Arguments`,
+	deduplicated_argument: t`Consolidated arguments`,
+	popcorn: t`Popcorn phrases`,
+	stakeholder: t`Stakeholders`,
+	tension: t`Tensions`,
+});
 
 function dateLabel(value?: string | null) {
 	return value
@@ -99,6 +104,7 @@ function ResultsView({
 	);
 	const [selected, setSelected] = useState<AnalysisObject | null>(null);
 	const data = objects.data;
+	const labels = resultTypeLabels();
 	const mapPath = workspaceId
 		? `/w/${workspaceId}/projects/${projectId}/map`
 		: `/projects/${projectId}/map`;
@@ -112,7 +118,7 @@ function ResultsView({
 							clearable
 							value={type ?? null}
 							data={resultTypes.map((value) => ({
-								label: resultTypeLabels[value],
+								label: labels[value],
 								value,
 							}))}
 							onChange={(value) => {
@@ -140,16 +146,18 @@ function ResultsView({
 							}}
 						/>
 					</Group>
-					<Button component={Link} to={mapPath} variant="outline">
+					<Button component={I18nLink} to={mapPath} variant="outline">
 						<Trans>Open Map</Trans>
 					</Button>
 				</Group>
 			</Paper>
 			{objects.isLoading && <Loader />}
 			{objects.isError && (
-				<Alert color="red" variant="outline">
-					<Trans>Results could not be loaded.</Trans>
-				</Alert>
+				<FetchErrorPanel
+					onRetry={() => objects.refetch()}
+					message={<Trans>Results could not be loaded.</Trans>}
+					testId="analysis-results-error"
+				/>
 			)}
 			{data && data.total === 0 && (
 				<Paper withBorder p="xl">
@@ -181,7 +189,7 @@ function ResultsView({
 				<AnalysisResultsList
 					counts={data.counts}
 					items={data.items}
-					labels={resultTypeLabels}
+					labels={labels}
 					limit={data.limit}
 					onInspect={setSelected}
 					onPageChange={(nextPage) => {
@@ -218,27 +226,37 @@ function ParameterSummary({ recipe }: { recipe: AnalysisRecipe }) {
 		);
 	return (
 		<Stack gap="xs">
-			{properties.map(([name, schema]) => (
-				<Paper key={name} withBorder p="sm">
-					<Text fw={600}>{name}</Text>
-					<Text size="sm">
-						{String(schema.description ?? schema.title ?? schema.type ?? "")}
-					</Text>
-					<Group gap="xs">
-						{schema.default !== undefined && (
-							<Badge variant="outline">
-								<Trans>Default</Trans>: {String(schema.default)}
-							</Badge>
-						)}
-						{schema.minimum !== undefined && (
-							<Badge variant="outline">min {String(schema.minimum)}</Badge>
-						)}
-						{schema.maximum !== undefined && (
-							<Badge variant="outline">max {String(schema.maximum)}</Badge>
-						)}
-					</Group>
-				</Paper>
-			))}
+			{properties.map(([name, schema]) => {
+				const minimum =
+					schema.minimum === undefined ? null : String(schema.minimum);
+				const maximum =
+					schema.maximum === undefined ? null : String(schema.maximum);
+				return (
+					<Paper key={name} withBorder p="sm">
+						<Text fw={600}>{name}</Text>
+						<Text size="sm">
+							{String(schema.description ?? schema.title ?? schema.type ?? "")}
+						</Text>
+						<Group gap="xs">
+							{schema.default !== undefined && (
+								<Badge variant="outline">
+									<Trans>Default</Trans>: {String(schema.default)}
+								</Badge>
+							)}
+							{minimum !== null && (
+								<Badge variant="outline">
+									<Trans>min {minimum}</Trans>
+								</Badge>
+							)}
+							{maximum !== null && (
+								<Badge variant="outline">
+									<Trans>max {maximum}</Trans>
+								</Badge>
+							)}
+						</Group>
+					</Paper>
+				);
+			})}
 		</Stack>
 	);
 }
@@ -396,8 +414,6 @@ function RecipeCard({
 			),
 		[recipe.parametersSchema],
 	);
-	const [parameters, setParameters] =
-		useState<Record<string, unknown>>(defaults);
 	const scopeKey =
 		isConversationScoped && conversationId
 			? `conversation:${conversationId}`
@@ -405,9 +421,13 @@ function RecipeCard({
 	const latestRun = runs.find(
 		(run) => run.recipeId === recipe.id && run.scopeKey === scopeKey,
 	);
-	useEffect(() => {
-		setParameters({ ...defaults, ...(latestRun?.parameters ?? {}) });
-	}, [defaults, latestRun]);
+	const { markRequested, parameters, setParameter } = useRecipeParameters({
+		defaults,
+		latestRun,
+		recipeId: recipe.id,
+		scopeKey,
+	});
+	const labels = resultTypeLabels();
 	const isFailed = latestRun?.status === "failed";
 	const isActive = Boolean(latestRun && activeStatuses.has(latestRun.status));
 	const actionLabel = !latestRun
@@ -416,20 +436,26 @@ function RecipeCard({
 			? t`Try again`
 			: t`Update results`;
 	const run = () =>
-		request.mutate({
-			mode: isFailed ? "retry" : "refresh",
-			parameters,
-			recipe_id: recipe.id,
-			retry_run_id: isFailed ? latestRun?.id : undefined,
-			scope_key: scopeKey,
-		});
+		request.mutate(
+			{
+				mode: isFailed ? "retry" : "refresh",
+				parameters,
+				recipe_id: recipe.id,
+				retry_run_id: isFailed ? latestRun?.id : undefined,
+				scope_key: scopeKey,
+			},
+			{ onSuccess: markRequested },
+		);
 	const runFresh = () =>
-		request.mutate({
-			mode: "regenerate",
-			parameters,
-			recipe_id: recipe.id,
-			scope_key: scopeKey,
-		});
+		request.mutate(
+			{
+				mode: "regenerate",
+				parameters,
+				recipe_id: recipe.id,
+				scope_key: scopeKey,
+			},
+			{ onSuccess: markRequested },
+		);
 	const selectedSource = sources.find((source) => source.id === conversationId);
 	const scopeLabel = isConversationScoped
 		? selectedSource?.participant_name?.trim() ||
@@ -454,7 +480,7 @@ function RecipeCard({
 				<Group gap="xs">
 					{recipe.outputTypes.map((type) => (
 						<Badge key={type} variant="outline">
-							{resultTypeLabels[type] ?? type}
+							{labels[type] ?? type}
 						</Badge>
 					))}
 				</Group>
@@ -490,9 +516,7 @@ function RecipeCard({
 								<RecipeParameters
 									recipe={recipe}
 									values={parameters}
-									onChange={(name, value) =>
-										setParameters((current) => ({ ...current, [name]: value }))
-									}
+									onChange={setParameter}
 								/>
 							</Stack>
 						</Accordion.Panel>
@@ -568,8 +592,10 @@ function RecipeCard({
 							<Accordion.Panel>
 								<Stack gap="sm">
 									<Text size="sm">
-										Run this recipe again for {scopeLabel}. Existing published
-										results stay visible until the fresh generation is ready.
+										<Trans>
+											Run this recipe again for {scopeLabel}. Existing published
+											results stay visible until the fresh generation is ready.
+										</Trans>
 									</Text>
 									<Button
 										variant="outline"
@@ -621,9 +647,16 @@ function RecipesView({
 		return <Loader />;
 	if (recipes.isError || runs.isError || sources.isError || popcorn.isError)
 		return (
-			<Alert color="red" variant="outline">
-				<Trans>Recipes could not be loaded.</Trans>
-			</Alert>
+			<FetchErrorPanel
+				onRetry={() => {
+					if (recipes.isError) void recipes.refetch();
+					if (runs.isError) void runs.refetch();
+					if (sources.isError) void sources.refetch();
+					if (popcorn.isError) void popcorn.refetch();
+				}}
+				message={<Trans>Recipes could not be loaded.</Trans>}
+				testId="analysis-recipes-error"
+			/>
 		);
 	const visible = recipeId
 		? recipes.data?.filter((recipe) => recipe.id === recipeId)
@@ -743,9 +776,11 @@ function RunsView({ projectId }: { projectId: string }) {
 	if (runs.isLoading) return <Loader />;
 	if (runs.isError)
 		return (
-			<Alert color="red" variant="outline">
-				<Trans>Run history could not be loaded.</Trans>
-			</Alert>
+			<FetchErrorPanel
+				onRetry={() => runs.refetch()}
+				message={<Trans>Run history could not be loaded.</Trans>}
+				testId="analysis-runs-error"
+			/>
 		);
 	if (selected)
 		return (
@@ -831,7 +866,7 @@ export function ProjectAnalysisRoute() {
 						</Text>
 					</Stack>
 					{params.get("returnTo") === "present" && (
-						<Button component={Link} to={returnPath} variant="outline">
+						<Button component={I18nLink} to={returnPath} variant="outline">
 							<Trans>Return to presentation</Trans>
 						</Button>
 					)}

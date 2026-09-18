@@ -220,25 +220,22 @@ export const ProjectExportRoute = () => {
 	});
 
 	return (
-		<Stack
-			gap="3rem"
-			className="relative"
-			px={{ base: "1rem", md: "2rem" }}
-			py={{ base: "2rem", md: "4rem" }}
-		>
-			{projectQuery.isLoading && <LoadingOverlay visible />}
-			{projectQuery.isError && (
-				<Alert variant="outline" color="red">
-					<Trans>Error loading project</Trans>
-				</Alert>
-			)}
-			{projectQuery.data && projectId && (
-				<ProjectExportSection
-					exportLink={getProjectTranscriptsLink(projectId)}
-					projectName={projectQuery.data.name}
-				/>
-			)}
-		</Stack>
+		<PageContainer>
+			<Stack gap="3rem" className="relative">
+				{projectQuery.isLoading && <LoadingOverlay visible />}
+				{projectQuery.isError && (
+					<Alert variant="outline" color="red">
+						<Trans>Error loading project</Trans>
+					</Alert>
+				)}
+				{projectQuery.data && projectId && (
+					<ProjectExportSection
+						exportLink={getProjectTranscriptsLink(projectId)}
+						projectName={projectQuery.data.name}
+					/>
+				)}
+			</Stack>
+		</PageContainer>
 	);
 };
 

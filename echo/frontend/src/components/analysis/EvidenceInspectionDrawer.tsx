@@ -19,8 +19,8 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { I18nLink } from "@/components/common/i18nLink";
 import {
 	type AnalysisObject,
 	type AnalysisRevision,
@@ -75,10 +75,12 @@ function ResultEditor({
 	projectId,
 	item,
 	history,
+	refetchHistory,
 }: {
 	projectId: string;
 	item: AnalysisObject;
 	history: AnalysisRevision[];
+	refetchHistory: () => Promise<unknown>;
 }) {
 	const [revisionId, setRevisionId] = useState(item.revisionId);
 	const [payload, setPayload] = useState<Record<string, unknown>>(
@@ -93,6 +95,7 @@ function ResultEditor({
 	const edit = useEditAnalysisObject(projectId, item.objectId);
 	const membership = useSetAnalysisMembership(projectId, item.objectId);
 	const rollback = useRollbackAnalysisObject(projectId, item.objectId);
+	const [refreshingHistory, setRefreshingHistory] = useState(false);
 	const pending = edit.isPending || membership.isPending || rollback.isPending;
 	const conflict = [edit.error, membership.error, rollback.error].some(
 		(error) => mutationStatus(error) === 409,
@@ -104,7 +107,17 @@ function ResultEditor({
 		setExcluded(Boolean(item.membershipExcluded));
 		setReason("");
 		setRollbackRevision(null);
+		setRefreshingHistory(false);
 	}, [item]);
+
+	// A 409 means the cached history is behind, so fetch it again before
+	// offering to load "the latest" revision — and keep what the host typed on
+	// screen while that runs.
+	const onConflict = (error: unknown) => {
+		if (mutationStatus(error) !== 409) return;
+		setRefreshingHistory(true);
+		void refetchHistory().finally(() => setRefreshingHistory(false));
+	};
 
 	const accept = (revision: AnalysisRevision) => {
 		setRevisionId(revision.revisionId);
@@ -117,7 +130,7 @@ function ResultEditor({
 	const save = () =>
 		edit.mutate(
 			{ expected_revision_id: revisionId, payload, reason: reason || null },
-			{ onSuccess: ({ revision }) => accept(revision) },
+			{ onError: onConflict, onSuccess: ({ revision }) => accept(revision) },
 		);
 	const decideMembership = (nextExcluded: boolean) => {
 		membership.mutate(
@@ -129,6 +142,7 @@ function ResultEditor({
 					(nextExcluded ? "Withdrawn during review" : "Restored during review"),
 			},
 			{
+				onError: onConflict,
 				onSuccess: ({ revision }) => {
 					accept(revision);
 					withdrawModal.close();
@@ -146,6 +160,7 @@ function ResultEditor({
 				to_revision_id: rollbackRevision.revisionId,
 			},
 			{
+				onError: onConflict,
 				onSuccess: ({ revision: restored }) => {
 					accept(restored);
 					rollbackModal.close();
@@ -167,7 +182,7 @@ function ResultEditor({
 			{item.type === "argument" && (
 				<>
 					<Textarea
-						label="Statement"
+						label={t`Statement`}
 						autosize
 						minRows={3}
 						value={String(payload.statement ?? "")}
@@ -176,19 +191,23 @@ function ResultEditor({
 						}
 					/>
 					<Select
-						label="Kind"
+						label={t`Kind`}
 						value={String(payload.epistemicKind ?? "argument")}
 						data={[
-							{ label: "Argument", value: "argument" },
-							{ label: "Claim", value: "claim" },
+							{ label: t`Argument`, value: "argument" },
+							{ label: t`Claim`, value: "claim" },
 						]}
 						onChange={(value) => value && setField("epistemicKind", value)}
 					/>
 					<Select
 						clearable
-						label="Valence"
+						label={t`Valence`}
 						value={typeof payload.valence === "string" ? payload.valence : null}
-						data={["positive", "negative", "neutral"]}
+						data={[
+							{ label: t`Positive`, value: "positive" },
+							{ label: t`Negative`, value: "negative" },
+							{ label: t`Neutral`, value: "neutral" },
+						]}
 						onChange={(value) => setField("valence", value)}
 					/>
 				</>
@@ -196,13 +215,13 @@ function ResultEditor({
 			{item.type === "popcorn" && (
 				<>
 					<TextInput
-						label="Phrase"
+						label={t`Phrase`}
 						maxLength={90}
 						value={String(payload.phrase ?? "")}
 						onChange={(event) => setField("phrase", event.currentTarget.value)}
 					/>
 					<Switch
-						label="This phrase is a question"
+						label={t`This phrase is a question`}
 						checked={Boolean(payload.question)}
 						onChange={(event) =>
 							setField("question", event.currentTarget.checked)
@@ -213,24 +232,24 @@ function ResultEditor({
 			{item.type === "tension" && (
 				<>
 					<TextInput
-						label="First pole"
+						label={t`First pole`}
 						value={String(payload.poleA ?? "")}
 						onChange={(event) => setField("poleA", event.currentTarget.value)}
 					/>
 					<TextInput
-						label="Second pole"
+						label={t`Second pole`}
 						value={String(payload.poleB ?? "")}
 						onChange={(event) => setField("poleB", event.currentTarget.value)}
 					/>
 					<Textarea
-						label="Tension"
+						label={t`Tension`}
 						autosize
 						minRows={2}
 						value={String(payload.knot ?? "")}
 						onChange={(event) => setField("knot", event.currentTarget.value)}
 					/>
 					<Textarea
-						label="Question to resolve"
+						label={t`Question to resolve`}
 						autosize
 						minRows={2}
 						value={String(payload.toResolve ?? "")}
@@ -243,34 +262,34 @@ function ResultEditor({
 			{item.type === "stakeholder" && (
 				<>
 					<TextInput
-						label="Name"
+						label={t`Name`}
 						value={String(payload.name ?? "")}
 						onChange={(event) => setField("name", event.currentTarget.value)}
 					/>
 					<TextInput
-						label="Role"
+						label={t`Role`}
 						value={String(payload.role ?? "")}
 						onChange={(event) => setField("role", event.currentTarget.value)}
 					/>
 					<Textarea
-						label="Stake"
+						label={t`Stake`}
 						autosize
 						minRows={2}
 						value={String(payload.stake ?? "")}
 						onChange={(event) => setField("stake", event.currentTarget.value)}
 					/>
 					<Select
-						label="Evidence level"
+						label={t`Evidence level`}
 						value={String(payload.rung ?? "inferred")}
 						data={[
-							{ label: "Voiced directly", value: "voiced" },
-							{ label: "Named by participants", value: "named" },
-							{ label: "Inferred", value: "inferred" },
+							{ label: t`Voiced directly`, value: "voiced" },
+							{ label: t`Named by participants`, value: "named" },
+							{ label: t`Inferred`, value: "inferred" },
 						]}
 						onChange={(value) => value && setField("rung", value)}
 					/>
 					<TextInput
-						label="Invoked by"
+						label={t`Invoked by`}
 						value={String(payload.invokedBy ?? "")}
 						onChange={(event) =>
 							setField("invokedBy", event.currentTarget.value || null)
@@ -279,7 +298,7 @@ function ResultEditor({
 				</>
 			)}
 			<TextInput
-				label="Reason for this change"
+				label={t`Reason for this change`}
 				value={reason}
 				onChange={(event) => setReason(event.currentTarget.value)}
 			/>
@@ -289,7 +308,13 @@ function ResultEditor({
 						<Text>
 							<Trans>This result changed while you were reviewing it.</Trans>
 						</Text>
-						<Button variant="outline" w="fit-content" onClick={restoreLatest}>
+						<Button
+							variant="outline"
+							w="fit-content"
+							loading={refreshingHistory}
+							disabled={refreshingHistory}
+							onClick={restoreLatest}
+						>
 							<Trans>Load latest revision</Trans>
 						</Button>
 					</Stack>
@@ -344,7 +369,9 @@ function ResultEditor({
 											rollbackModal.open();
 										}}
 									>
-										<span>Revision {revision.revisionNumber}</span>
+										<span>
+											<Trans>Revision {revision.revisionNumber}</Trans>
+										</span>
 										<span>
 											{String(
 												revision.payload.statement ??
@@ -422,6 +449,7 @@ export function EvidenceInspectionDrawer({
 								projectId={projectId}
 								item={item}
 								history={history.data?.revisions ?? []}
+								refetchHistory={() => history.refetch()}
 							/>
 						)}
 					<Stack gap="xs">
@@ -456,7 +484,7 @@ export function EvidenceInspectionDrawer({
 									{source.quote && <Text>“{source.quote}”</Text>}
 									{source.conversationId && (
 										<Button
-											component={Link}
+											component={I18nLink}
 											to={conversationPath(
 												projectId,
 												source.conversationId,

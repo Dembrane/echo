@@ -1,5 +1,7 @@
+import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
@@ -242,6 +244,12 @@ function useResultMutation(projectId: string, objectId: string, path: string) {
 				`/analysis/projects/${projectId}/objects/${objectId}/${path}`,
 				body,
 			),
+		// A 409 is the review conflict the drawer resolves on screen, with the
+		// latest revision to load; a toast would only talk over it.
+		onError: (error: Error & { status?: number }) => {
+			if (error.status === 409) return;
+			toast.error(t`Could not save the change. Try again.`);
+		},
 		onSuccess: () => {
 			void queryClient.invalidateQueries({
 				queryKey: analysisKeys.history(projectId, objectId),
@@ -293,6 +301,7 @@ export function useRequestAnalysisRun(projectId: string) {
 				...body,
 				idempotency_key: crypto.randomUUID(),
 			}),
+		onError: () => toast.error(t`Could not start this run. Try again.`),
 		onSuccess: () =>
 			queryClient.invalidateQueries({ queryKey: analysisKeys.runs(projectId) }),
 	});
@@ -302,6 +311,7 @@ export function useCancelAnalysisRun(projectId: string) {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (runId: string) => bff.post(`/analysis/runs/${runId}/cancel`),
+		onError: () => toast.error(t`Could not stop this run. Try again.`),
 		onSuccess: (_data, runId) => {
 			queryClient.invalidateQueries({ queryKey: analysisKeys.runs(projectId) });
 			queryClient.invalidateQueries({ queryKey: analysisKeys.run(runId) });
