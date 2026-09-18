@@ -112,7 +112,10 @@
   // The part of the entrance before the words can be read; the first read
   // interval starts after it.
   const POP_ENTER_LEAD_MS = Math.round(POP_ENTER_MS * 0.7);
-  const POP_FLIP_MS = Number(playback.flipMs) || 820;
+  const POP_FLIP_MS = Number(playback.flipMs) || 620;
+  // Where in the flip the phrase is edge-on and the words change (the 36%
+  // keyframe of pop-flip in styles.css).
+  const POP_FLIP_SWAP = 0.36;
   const POP_FADE = 400;
   const POP_GAP = 2400;      // stagger between spawns once the stage is warm
   const POP_MAX = 3;         // phrases the automatic flow keeps up at once (one per band)
@@ -1717,11 +1720,15 @@
     if (reduceMotion || POP_FLIP_MS <= 0) { swap(); finish(); return; }
 
     rec.el.style.setProperty("--flip-ms", `${POP_FLIP_MS}ms`);
+    // Knocked over by a neighbour going off: which way it tumbles and how it
+    // was caught differ every time, so a stage of phrases never flips in step.
+    rec.el.style.setProperty("--flip-dir", Math.random() < 0.5 ? "1" : "-1");
+    rec.el.style.setProperty("--kick", `${(Math.random() * 14 - 7).toFixed(1)}deg`);
     rec.el.classList.add("pop-flip");
     armPopTimer(rec, "morphTimer", () => {
       swap();
-      armPopTimer(rec, "morphTimer", finish, POP_FLIP_MS / 2);
-    }, POP_FLIP_MS / 2);
+      armPopTimer(rec, "morphTimer", finish, POP_FLIP_MS * (1 - POP_FLIP_SWAP));
+    }, POP_FLIP_MS * POP_FLIP_SWAP);
   }
 
   // After the room's own words, one pop per language, in random order, each

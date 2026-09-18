@@ -52,7 +52,8 @@ function playback({ reducedMotion = false } = {}) {
 		kindIcon: () => "",
 		// The sandbox has a Math of its own; tests steer the random order.
 		Math,
-		POP_FLIP_MS: 820,
+		POP_FLIP_MS: 1_000,
+		POP_FLIP_SWAP: 0.36,
 		POP_LANGUAGE_HARD_CAP: 24_000,
 		POP_READ_BASE: 3_000,
 		POP_READ_PER_WORD: 500,
@@ -154,13 +155,17 @@ describe("Popcorn bilingual playback", () => {
 		// the popcorn is edge-on, and it lands in the translation with its mark.
 		vi.advanceTimersByTime(1);
 		expect(phrase.classes.has("pop-flip")).toBe(true);
-		vi.advanceTimersByTime(409);
+		// Thrown, not wound up: it is edge-on 36% of the way in.
+		vi.advanceTimersByTime(359);
 		expect(phrase.words()).toBe(item.phrase);
 		vi.advanceTimersByTime(1);
 		expect(phrase.words()).toBe(item.translation);
 		expect(phrase.phrase.innerHTML).toContain('class="pop-translated"');
 		expect(rec.languagePhase).toBe("morph-translation");
-		vi.advanceTimersByTime(410);
+		// Every flip is knocked differently, and tumbles one way or the other.
+		expect(["1", "-1"]).toContain(phrase.styles.get("--flip-dir"));
+		expect(phrase.styles.get("--kick")).toMatch(/^-?\d+(\.\d)?deg$/);
+		vi.advanceTimersByTime(640);
 		expect(rec.languagePhase).toBe("translation");
 		expect(phrase.classes.has("pop-flip")).toBe(false);
 		// The other side of a tilted card leans the other way.
