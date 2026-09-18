@@ -46,6 +46,7 @@ vi.mock("@/components/popcorn/PopcornOpeningSettings", () => ({
 	PopcornOpeningSettings: () => <div>Opening settings</div>,
 }));
 vi.mock("@/components/popcorn/PopcornLanguageSettings", () => ({
+	PopcornAlsoLanguages: () => <div data-testid="popcorn-language-also" />,
 	PopcornLanguageSettings: () => null,
 }));
 vi.mock("@/components/popcorn/PopcornScreenSettings", () => ({
@@ -317,5 +318,7 @@ describe("Telling the host how far the translation got", () => {
 		expect(
 			await screen.findByText("Translating: 9 of 12 into Nederlands"),
 		).toBeTruthy();
+		// Following the project language still leaves the extra languages on offer.
+		expect(screen.getByTestId("popcorn-language-also")).toBeTruthy();
 	});
 });

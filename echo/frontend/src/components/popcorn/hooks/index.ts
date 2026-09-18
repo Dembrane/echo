@@ -64,10 +64,14 @@ export type PopcornLanguageCode =
 	| "cs";
 
 // The screen's own language ("auto" follows the project) and the language the
-// results are translated into ("" keeps them as spoken).
+// results are translated into ("" keeps them as spoken). `also` stacks up to
+// three more languages on the popcorn phrases alone: each phrase pops once per
+// language, the original first. A server that does not know the field sends
+// nothing, so every reader treats it as empty.
 export type PopcornLanguage = {
 	ui: "auto" | PopcornLanguageCode;
 	translate_to: "" | PopcornLanguageCode;
+	also?: PopcornLanguageCode[];
 };
 
 export type PopcornSettings = {

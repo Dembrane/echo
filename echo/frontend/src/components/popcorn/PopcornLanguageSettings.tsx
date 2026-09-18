@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Paper, Select, Stack, Title } from "@mantine/core";
+import { MultiSelect, Paper, Select, Stack, Title } from "@mantine/core";
 import {
 	type PopcornDetail,
 	type PopcornLanguage,
@@ -26,6 +26,60 @@ const LANGUAGES: { value: PopcornLanguageCode; label: string }[] = [
 ];
 
 const DEFAULT_LANGUAGE: PopcornLanguage = { translate_to: "", ui: "auto" };
+
+// Three on top of the one the whole screen is translated into. More than that
+// and a single phrase holds the wall for a minute.
+const ALSO_MAX = 3;
+
+const asLanguageCodes = (values: string[]): PopcornLanguageCode[] =>
+	values.filter((value): value is PopcornLanguageCode =>
+		LANGUAGES.some((option) => option.value === value),
+	);
+
+/**
+ * The extra languages the popcorn phrases pop in. Separate from the card
+ * because the Present editor also offers it under "Follow project language",
+ * where the primary target comes from the project rather than from these
+ * settings: pass that language in and the list still writes here.
+ */
+export function PopcornAlsoLanguages({
+	projectId,
+	popcorn,
+	language,
+}: {
+	projectId: string;
+	popcorn: PopcornDetail;
+	// The language the screen is translated into, when it is not the one held
+	// in this presentation's own settings.
+	language?: PopcornLanguage;
+}) {
+	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
+	// `also` is only ever written to these settings, so they are its source
+	// whichever language policy is in force.
+	const stored = popcorn.settings.language ?? DEFAULT_LANGUAGE;
+	const primary = (language ?? stored).translate_to;
+	// A host who translates nothing has nothing to stack extra languages on.
+	if (!primary) return null;
+	// The source language the phrases were spoken in is not known here, so
+	// every language but the primary target stays on offer.
+	return (
+		<MultiSelect
+			size={FIELD_SIZE}
+			label={t`Popcorn also in`}
+			description={t`Each popcorn pops once per language: the original first, then these in random order.`}
+			data={LANGUAGES.filter(({ value }) => value !== primary)}
+			value={(stored.also ?? []).filter((code) => code !== primary)}
+			maxValues={ALSO_MAX}
+			clearable
+			searchable={false}
+			disabled={settings.isPending}
+			onChange={(value) =>
+				settings.mutate({ language: { also: asLanguageCodes(value) } })
+			}
+			{...testId("popcorn-language-also")}
+		/>
+	);
+}
 
 // Like the Screen card, each choice lands on the wall at its next poll. A new
 // translation language also starts a read, which translates the results.
@@ -87,16 +141,24 @@ export function PopcornLanguageSettings({
 					value={language.translate_to}
 					allowDeselect={false}
 					disabled={settings.isPending}
-					onChange={(value) =>
-						value !== null &&
+					onChange={(value) => {
+						if (value === null) return;
+						const target = value as PopcornLanguage["translate_to"];
+						const also = language.also ?? [];
+						// A language cannot be both the one everything is translated
+						// into and an extra the phrases pop in: drop it in the same
+						// save, so the room never hears the same phrase twice.
+						const kept = also.filter((code) => code !== target);
 						settings.mutate({
 							language: {
-								translate_to: value as PopcornLanguage["translate_to"],
+								translate_to: target,
+								...(kept.length === also.length ? {} : { also: kept }),
 							},
-						})
-					}
+						});
+					}}
 					{...testId("popcorn-language-translate")}
 				/>
+				<PopcornAlsoLanguages projectId={projectId} popcorn={popcorn} />
 				{embedded && (
 					<TranslationStatus
 						presentationId={popcorn.id}

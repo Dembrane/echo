@@ -19,6 +19,10 @@ export type PresentationManifest = {
 };
 // How far the results have been translated into the audience language. Read
 // only: the server counts the texts, the editor only reports what it says.
+// The counts are the totals across every language the presentation is
+// translated into. `targets` breaks them down per language, newest servers
+// only: one row for the primary target and one for each extra popcorn
+// language.
 export type TranslationStatus = {
 	target: string | null;
 	total: number;
@@ -26,6 +30,12 @@ export type TranslationStatus = {
 	pending: number;
 	state: "off" | "done" | "translating" | "incomplete";
 	detail: string | null;
+	targets?: Array<{
+		target: string;
+		total: number;
+		translated: number;
+		pending: number;
+	}>;
 };
 export type Presentation = PopcornDetail & {
 	effective_language: PopcornLanguage;

@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { CheckCircleIcon, WarningIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { ReactElement } from "react";
 import { toast } from "@/components/common/Toaster";
 import { languageOptionsByIso639_1 } from "@/components/language/LanguagePicker";
 import { bff } from "@/lib/bff";
@@ -59,9 +60,39 @@ export function TranslationStatus({
 	const failed = Math.max(0, total - translated);
 	const language = languageName(status.target);
 	const percent = total ? Math.round((translated / total) * 100) : 0;
+	// The counts above are the totals. With extra popcorn languages stacked on
+	// the primary target they cover several languages at once, so each one gets
+	// its own line underneath.
+	const rows = status.targets ?? [];
+	const breakdown =
+		rows.length > 1 ? (
+			<Stack gap={2} {...testId("present-translation-breakdown")}>
+				{rows.map((row) => {
+					const rowTotal = Math.max(0, row.total ?? 0);
+					const rowDone = Math.max(0, Math.min(row.translated ?? 0, rowTotal));
+					const name = languageName(row.target);
+					return (
+						<Text key={row.target} size="sm" c="dimmed">
+							<Trans>
+								{name}: {rowDone} of {rowTotal}
+							</Trans>
+						</Text>
+					);
+				})}
+			</Stack>
+		) : null;
+	const withBreakdown = (line: ReactElement) =>
+		breakdown ? (
+			<Stack gap={4}>
+				{line}
+				{breakdown}
+			</Stack>
+		) : (
+			line
+		);
 
 	if (status.state === "done")
-		return (
+		return withBreakdown(
 			<Group gap="xs" wrap="nowrap" {...testId("present-translation-status")}>
 				<CheckCircleIcon size={16} weight="fill" />
 				<Text size="sm">
@@ -69,11 +100,11 @@ export function TranslationStatus({
 						All {total} texts translated into {language}
 					</Trans>
 				</Text>
-			</Group>
+			</Group>,
 		);
 
 	if (status.state === "translating")
-		return (
+		return withBreakdown(
 			<Stack gap={4} {...testId("present-translation-status")}>
 				<Group gap="xs" wrap="nowrap">
 					<Loader size="xs" aria-label={t`Translating`} />
@@ -88,10 +119,10 @@ export function TranslationStatus({
 					value={percent}
 					aria-label={t`Translation progress`}
 				/>
-			</Stack>
+			</Stack>,
 		);
 
-	return (
+	return withBreakdown(
 		<Group gap="xs" wrap="nowrap" {...testId("present-translation-status")}>
 			<Tooltip label={status.detail} disabled={!status.detail}>
 				<WarningIcon size={16} weight="fill" />
@@ -112,6 +143,6 @@ export function TranslationStatus({
 					<Trans>Try again</Trans>
 				</Button>
 			)}
-		</Group>
+		</Group>,
 	);
 }

@@ -95,6 +95,80 @@ describe("How far the translation has got", () => {
 		).toBeTruthy();
 	});
 
+	it("keeps the line alone while one language is translated", () => {
+		show(
+			status({
+				targets: [{ pending: 0, target: "en", total: 12, translated: 12 }],
+			}),
+		);
+		expect(
+			screen.getByText("All 12 texts translated into English"),
+		).toBeTruthy();
+		expect(screen.queryByTestId("present-translation-breakdown")).toBeNull();
+	});
+
+	it("breaks the totals down per language once the popcorn stacks", () => {
+		show(
+			status({
+				targets: [
+					{ pending: 0, target: "en", total: 12, translated: 12 },
+					{ pending: 0, target: "fr", total: 4, translated: 4 },
+				],
+				total: 16,
+				translated: 16,
+			}),
+		);
+		expect(
+			screen.getByText("All 16 texts translated into English"),
+		).toBeTruthy();
+		expect(screen.getByTestId("present-translation-breakdown")).toBeTruthy();
+		expect(screen.getByText("English: 12 of 12")).toBeTruthy();
+		expect(screen.getByText("Français: 4 of 4")).toBeTruthy();
+	});
+
+	it("shows the breakdown while translating and when texts were left over", () => {
+		const targets = [
+			{ pending: 3, target: "en", total: 12, translated: 9 },
+			{ pending: 4, target: "fr", total: 4, translated: 0 },
+		];
+		show(
+			status({
+				pending: 7,
+				state: "translating",
+				targets,
+				total: 16,
+				translated: 9,
+			}),
+		);
+		expect(screen.getByText("English: 9 of 12")).toBeTruthy();
+		expect(screen.getByText("Français: 0 of 4")).toBeTruthy();
+		cleanup();
+		show(
+			status({
+				pending: 7,
+				state: "incomplete",
+				targets,
+				total: 16,
+				translated: 9,
+			}),
+		);
+		expect(screen.getByText("English: 9 of 12")).toBeTruthy();
+		expect(screen.getByText("Français: 0 of 4")).toBeTruthy();
+	});
+
+	it("says nothing at all when the breakdown arrives with translation off", () => {
+		show(
+			status({
+				state: "off",
+				targets: [
+					{ pending: 0, target: "en", total: 12, translated: 12 },
+					{ pending: 0, target: "fr", total: 4, translated: 4 },
+				],
+			}),
+		);
+		expect(screen.queryByTestId("present-translation-breakdown")).toBeNull();
+	});
+
 	it("asks again for the left-over texts, and for nothing else", async () => {
 		vi.mocked(bff.post).mockResolvedValue({});
 		show(

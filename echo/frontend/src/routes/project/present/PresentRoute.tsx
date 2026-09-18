@@ -52,7 +52,10 @@ import {
 	usePopcornSettingsMutation,
 	usePopcornStopLiveMutation,
 } from "@/components/popcorn/hooks";
-import { PopcornLanguageSettings } from "@/components/popcorn/PopcornLanguageSettings";
+import {
+	PopcornAlsoLanguages,
+	PopcornLanguageSettings,
+} from "@/components/popcorn/PopcornLanguageSettings";
 import { PopcornOpeningSettings } from "@/components/popcorn/PopcornOpeningSettings";
 import { PopcornScreenSettings } from "@/components/popcorn/PopcornScreenSettings";
 import { PopcornShare } from "@/components/popcorn/PopcornShare";
@@ -408,10 +411,17 @@ function Editor({
 										popcorn={presentation}
 									/>
 								) : (
-									<TranslationStatus
-										presentationId={presentation.id}
-										status={presentation.translation_status}
-									/>
+									<>
+										<PopcornAlsoLanguages
+											projectId={projectId}
+											popcorn={presentation}
+											language={presentation.effective_language}
+										/>
+										<TranslationStatus
+											presentationId={presentation.id}
+											status={presentation.translation_status}
+										/>
+									</>
 								)}
 							</Stack>
 						</Accordion.Panel>
