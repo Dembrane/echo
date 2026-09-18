@@ -120,3 +120,141 @@ it("resends an edit once against the draft another host moved on, and leaves a c
 	expect(vi.mocked(bff.get).mock.calls.length).toBeGreaterThanOrEqual(3);
 	client.clear();
 });
+
+const draftEnvelope = (
+	revision: number,
+	settings: Record<string, unknown>,
+) => ({
+	has_changes: revision > 2,
+	presentation: { id: "p", settings },
+	revision,
+});
+
+const mount = (client: QueryClient) => {
+	const wrapper = ({ children }: { children: ReactNode }) => (
+		<QueryClientProvider client={client}>{children}</QueryClientProvider>
+	);
+	return renderHook(() => usePresentationDraft("project-1", "p", true), {
+		wrapper,
+	});
+};
+
+const cachedSettings = (client: QueryClient) =>
+	(
+		client.getQueryData(["presentation-draft", "p"]) as
+			| { presentation: { settings: Record<string, unknown> } }
+			| undefined
+	)?.presentation.settings;
+
+it("shows a toggle in the cache before the server answers, merging the way the server does", async () => {
+	const client = new QueryClient({
+		defaultOptions: { queries: { retry: false } },
+	});
+	const settings = {
+		language: { translate_to: "", ui: "auto" },
+		presentation: {
+			blocks: ["popcorn"],
+			result_bindings: { map: "snapshot-1" },
+		},
+		title: "Workshop",
+	};
+	vi.mocked(bff.get).mockResolvedValue(draftEnvelope(2, settings));
+	vi.mocked(bff.patch).mockImplementation(() => new Promise(() => {}) as never);
+	const { result } = mount(client);
+	await waitFor(() => expect(result.current.query.isSuccess).toBe(true));
+
+	act(() => {
+		void result.current.save.mutate({
+			language: { translate_to: "nl" },
+			presentation: {
+				blocks: ["popcorn", "tensions"],
+				result_bindings: { tensions: "snapshot-2" },
+			},
+			title: "Room screen",
+		});
+	});
+
+	await waitFor(() =>
+		expect(cachedSettings(client)).toEqual({
+			// A scalar replaces, a named block shallow-merges, and the bindings
+			// merge per key so the map's binding survives the tensions patch.
+			language: { translate_to: "nl", ui: "auto" },
+			presentation: {
+				blocks: ["popcorn", "tensions"],
+				result_bindings: { map: "snapshot-1", tensions: "snapshot-2" },
+			},
+			title: "Room screen",
+		}),
+	);
+	expect(bff.patch).toHaveBeenCalledOnce();
+	client.clear();
+});
+
+it("puts the draft back when a lone save fails", async () => {
+	const client = new QueryClient({
+		defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
+	});
+	const settings = { presentation: { blocks: ["popcorn"] }, title: "Workshop" };
+	vi.mocked(bff.get).mockResolvedValue(draftEnvelope(2, settings));
+	vi.mocked(bff.patch).mockRejectedValue(new Error("offline"));
+	const { result } = mount(client);
+	await waitFor(() => expect(result.current.query.isSuccess).toBe(true));
+
+	await act(async () => {
+		await result.current.save
+			.mutateAsync({ presentation: { blocks: ["popcorn", "map"] } })
+			.catch(() => {});
+	});
+	expect(cachedSettings(client)).toEqual(settings);
+	client.clear();
+});
+
+it("does not erase a queued patch when the save before it fails", async () => {
+	const client = new QueryClient({
+		defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
+	});
+	const settings = { presentation: { blocks: ["popcorn"] }, title: "Workshop" };
+	// The refetch after the failure answers with the draft as the server has it:
+	// the first patch never landed, the second one did.
+	const after = { presentation: { blocks: ["popcorn", "tensions"] } };
+	vi.mocked(bff.get)
+		.mockResolvedValueOnce(draftEnvelope(2, settings))
+		.mockResolvedValue(draftEnvelope(3, after));
+	let failFirst: (error: unknown) => void = () => {};
+	vi.mocked(bff.patch)
+		.mockImplementationOnce(
+			() =>
+				new Promise((_resolve, reject) => {
+					failFirst = reject;
+				}) as never,
+		)
+		.mockResolvedValueOnce(draftEnvelope(3, after));
+	const { result } = mount(client);
+	await waitFor(() => expect(result.current.query.isSuccess).toBe(true));
+
+	let first!: Promise<unknown>;
+	let second!: Promise<unknown>;
+	act(() => {
+		first = result.current.save
+			.mutateAsync({ presentation: { blocks: ["popcorn", "map"] } })
+			.catch(() => {});
+		second = result.current.save.mutateAsync({
+			presentation: { blocks: ["popcorn", "tensions"] },
+		});
+	});
+	await waitFor(() =>
+		expect(
+			(cachedSettings(client)?.presentation as { blocks: string[] }).blocks,
+		).toEqual(["popcorn", "tensions"]),
+	);
+	await act(async () => {
+		failFirst(new Error("offline"));
+		await Promise.all([first, second]);
+	});
+
+	// The rollback of the first save must not put the second patch's block back.
+	expect(
+		(cachedSettings(client)?.presentation as { blocks: string[] }).blocks,
+	).toEqual(["popcorn", "tensions"]);
+	client.clear();
+});

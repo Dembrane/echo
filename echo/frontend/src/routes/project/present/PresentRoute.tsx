@@ -2,12 +2,13 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Accordion,
+	Badge,
 	Button,
-	Card,
 	Checkbox,
 	Group,
 	Loader,
 	Modal,
+	Pagination,
 	Popover,
 	Select,
 	Stack,
@@ -17,7 +18,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useElementSize } from "@mantine/hooks";
 import {
 	ArrowSquareOutIcon,
 	BroadcastIcon,
@@ -41,6 +42,7 @@ import {
 	EvidenceInspectionDrawer,
 	useAnalysisObjects,
 } from "@/components/analysis";
+import { ResultRowActions } from "@/components/analysis/ResultRowActions";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -70,12 +72,17 @@ import {
 	useEnsurePresentation,
 	usePresentation,
 } from "@/components/present/hooks";
-import { usePresentationDraft } from "@/components/present/hooks/usePresentationDraft";
+import {
+	presentationDraftKey,
+	usePresentationDraft,
+} from "@/components/present/hooks/usePresentationDraft";
+import { TranslationStatus } from "@/components/present/TranslationStatus";
 import { API_BASE_URL } from "@/config";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
+import { testId } from "@/lib/testUtils";
 import classes from "./PresentRoute.module.css";
 
 // One event stream per presentation page: the embedded preview follows the
@@ -90,6 +97,24 @@ function blockLabel(block: Block) {
 		tensions: t`Tensions`,
 	}[block];
 }
+
+// Which tab a kind of result lands on.
+const BLOCK_BY_TYPE: Record<string, Block> = {
+	argument: "map",
+	deduplicated_argument: "map",
+	popcorn: "popcorn",
+	stakeholder: "stakeholders",
+	tension: "tensions",
+};
+
+// The screen is Popcorn first: it is ready long before the rest, so the room
+// always has something to read. It is not a choice the host can undo.
+const ALWAYS_ON: Block = "popcorn";
+
+// The virtual size of the room's screen. The preview renders at this size and
+// is scaled down, so nothing reflows or clips at the column's width.
+const STAGE_WIDTH = 1440;
+const STAGE_HEIGHT = 810;
 
 function Editor({
 	projectId,
@@ -110,10 +135,11 @@ function Editor({
 	);
 	const [inspected, setInspected] = useState<AnalysisObject | null>(null);
 	const save = usePopcornSettingsMutation(projectId, presentation.id);
-	const selected = orderedBlocks(
-		presentation.settings.presentation?.blocks ?? ["popcorn"],
-	);
-	const opening = presentation.settings.presentation?.opening ?? selected[0];
+	const hidden = presentation.settings.presentation?.hidden_items ?? [];
+	const selected = orderedBlocks([
+		...(presentation.settings.presentation?.blocks ?? []),
+		ALWAYS_ON,
+	]);
 	return (
 		<div className={classes.editor}>
 			<Preview presentation={presentation} draft revision={revision} />
@@ -164,56 +190,48 @@ function Editor({
 							<Text size="sm">
 								<Trans>Choose the tabs your audience can explore.</Trans>
 							</Text>
-							{PRESENTATION_BLOCKS.map((block) => (
-								<Switch
-									key={block}
-									label={blockLabel(block)}
-									description={
-										{
-											map: t`Ideas and how they connect`,
-											popcorn: t`Short phrases from the conversations`,
-											stakeholders: t`People, groups and what matters to them`,
-											tensions: t`Different perspectives and trade-offs`,
-										}[block]
-									}
-									checked={selected.includes(block)}
-									disabled={save.isPending}
-									onChange={(event) =>
-										save.mutate({
-											presentation: {
-												blocks: orderedBlocks(
-													event.currentTarget.checked
-														? [...selected, block]
-														: selected.filter((item) => item !== block),
-												),
+							{PRESENTATION_BLOCKS.map((block) => {
+								const locked = block === ALWAYS_ON;
+								return (
+									<Switch
+										key={block}
+										label={blockLabel(block)}
+										description={
+											locked
+												? t`Always on. The screen opens here, so the room has something to read while the rest gets ready.`
+												: {
+														map: t`Ideas and how they connect`,
+														popcorn: t`Short phrases from the conversations`,
+														stakeholders: t`People, groups and what matters to them`,
+														tensions: t`Different perspectives and trade-offs`,
+													}[block]
+										}
+										checked={locked || selected.includes(block)}
+										readOnly={locked}
+										onChange={(event) => {
+											if (locked) return;
+											save.mutate({
+												presentation: {
+													blocks: orderedBlocks(
+														event.currentTarget.checked
+															? [...selected, block]
+															: selected.filter((item) => item !== block),
+													),
+												},
+											});
+										}}
+										styles={{
+											body: {
+												flexDirection: "row-reverse",
+												gap: "var(--mantine-spacing-md)",
+												justifyContent: "space-between",
 											},
-										})
-									}
-									styles={{
-										body: {
-											flexDirection: "row-reverse",
-											gap: "var(--mantine-spacing-md)",
-											justifyContent: "space-between",
-										},
-										labelWrapper: { paddingLeft: 0 },
-										track: { flexShrink: 0 },
-									}}
-								/>
-							))}
-							<Select
-								label={t`Open with`}
-								disabled={save.isPending || !selected.length}
-								allowDeselect={false}
-								value={opening ?? null}
-								data={selected.map((value) => ({
-									label: blockLabel(value),
-									value,
-								}))}
-								onChange={(value) =>
-									value &&
-									save.mutate({ presentation: { opening: value as Block } })
-								}
-							/>
+											labelWrapper: { paddingLeft: 0 },
+											track: { flexShrink: 0 },
+										}}
+									/>
+								);
+							})}
 							<Accordion variant="default">
 								<Accordion.Item value="findings">
 									<Accordion.Control>
@@ -226,9 +244,9 @@ function Editor({
 											</Title>
 											<Text size="sm">
 												<Trans>
-													Inspect evidence or hide a finding from this
-													presentation. Shared results stay available in
-													Analysis.
+													Edit the wording, check the evidence, or hide a
+													finding from this presentation. Shared results stay
+													available in Analysis.
 												</Trans>
 											</Text>
 											{results.isError && (
@@ -236,115 +254,100 @@ function Editor({
 													<Trans>Results could not be loaded.</Trans>
 												</Text>
 											)}
-											{results.data?.items
-												.filter((item) =>
-													selected.includes(
-														(
-															{
-																argument: "map",
-																deduplicated_argument: "map",
-																popcorn: "popcorn",
-																stakeholder: "stakeholders",
-																tension: "tensions",
-															} as Record<string, Block>
-														)[item.type],
-													),
-												)
-												.map((item) => {
-													const hidden =
-														presentation.settings.presentation?.hidden_items ??
-														[];
-													return (
-														<Card key={item.objectId} withBorder>
-															<Stack gap="xs">
-																<Text>{item.label}</Text>
-																<Group>
-																	<Button
-																		variant="subtle"
-																		onClick={() => setInspected(item)}
-																	>
-																		<Trans>Evidence and history</Trans>
-																	</Button>
-																	<Button
-																		variant="subtle"
-																		loading={save.isPending}
-																		onClick={() =>
-																			save.mutate({
-																				presentation: {
-																					hidden_items: hidden.includes(
-																						item.objectId,
-																					)
-																						? hidden.filter(
-																								(id) => id !== item.objectId,
-																							)
-																						: [...hidden, item.objectId],
-																				},
-																			})
-																		}
-																	>
-																		{hidden.includes(item.objectId)
-																			? t`Show in this presentation`
-																			: t`Hide from this presentation`}
-																	</Button>
+											<Stack gap={0}>
+												{results.data?.items
+													.filter((item) =>
+														selected.includes(BLOCK_BY_TYPE[item.type]),
+													)
+													.map((item) => {
+														const away = hidden.includes(item.objectId);
+														const label = item.label ?? item.objectId;
+														const block = BLOCK_BY_TYPE[item.type];
+														return (
+															<Group
+																key={item.objectId}
+																className={`${classes.row} ${away ? classes.rowHidden : ""}`}
+																gap="sm"
+																justify="space-between"
+																wrap="nowrap"
+																{...testId(`present-result-${item.objectId}`)}
+															>
+																<Group
+																	gap="xs"
+																	wrap="nowrap"
+																	className={classes.rowLabel}
+																>
+																	<Text size="sm" truncate title={label}>
+																		{label}
+																	</Text>
+																	{block && (
+																		<Badge
+																			size="xs"
+																			variant="outline"
+																			style={{ flexShrink: 0 }}
+																		>
+																			{blockLabel(block)}
+																		</Badge>
+																	)}
 																</Group>
-															</Stack>
-														</Card>
-													);
-												})}
+																<ResultRowActions
+																	hidden={away}
+																	onEdit={() => setInspected(item)}
+																	onToggleHidden={() =>
+																		save.mutate({
+																			presentation: {
+																				hidden_items: away
+																					? hidden.filter(
+																							(id) => id !== item.objectId,
+																						)
+																					: [...hidden, item.objectId],
+																			},
+																		})
+																	}
+																	testIdPrefix={`present-result-${item.objectId}`}
+																/>
+															</Group>
+														);
+													})}
+											</Stack>
 											{results.data &&
 												results.data.total > results.data.limit && (
-													<Group>
-														<Button
-															variant="subtle"
-															disabled={resultPage === 0 || results.isFetching}
-															onClick={() =>
+													<Group justify="center">
+														<Pagination
+															size="sm"
+															value={resultPage + 1}
+															total={Math.max(
+																1,
+																Math.ceil(
+																	results.data.total / results.data.limit,
+																),
+															)}
+															onChange={(page) =>
 																setParams((previous) => {
 																	const next = new URLSearchParams(previous);
-																	next.set(
-																		"resultsPage",
-																		String(resultPage - 1),
-																	);
+																	next.set("resultsPage", String(page - 1));
 																	return next;
 																})
 															}
-														>
-															<Trans>Previous results</Trans>
-														</Button>
-														<Text size="sm">
-															<Trans>Page {resultPage + 1}</Trans>
-														</Text>
-														<Button
-															variant="subtle"
-															disabled={
-																(resultPage + 1) * results.data.limit >=
-																	results.data.total || results.isFetching
-															}
-															onClick={() =>
-																setParams((previous) => {
-																	const next = new URLSearchParams(previous);
-																	next.set(
-																		"resultsPage",
-																		String(resultPage + 1),
-																	);
-																	return next;
-																})
-															}
-														>
-															<Trans>Next results</Trans>
-														</Button>
+														/>
 													</Group>
 												)}
-
-											{!!presentation.settings.presentation?.hidden_items
-												.length && (
-												<Button
-													variant="subtle"
-													onClick={() =>
-														save.mutate({ presentation: { hidden_items: [] } })
-													}
-												>
-													<Trans>Reset hidden findings</Trans>
-												</Button>
+											{!!hidden.length && (
+												<Group>
+													<Button
+														variant="subtle"
+														size="compact-sm"
+														onClick={() =>
+															save.mutate({
+																presentation: { hidden_items: [] },
+															})
+														}
+													>
+														<Trans>
+															Reset hidden findings ({hidden.length})
+														</Trans>
+													</Button>
+												</Group>
 											)}
 											<EvidenceInspectionDrawer
 												projectId={projectId}
@@ -357,11 +360,6 @@ function Editor({
 									</Accordion.Panel>
 								</Accordion.Item>
 							</Accordion>
-							{!selected.length && (
-								<Text>
-									<Trans>Select a tab to show results on the screen.</Trans>
-								</Text>
-							)}
 						</Stack>
 					</Tabs.Panel>
 				</Tabs>
@@ -378,7 +376,6 @@ function Editor({
 										presentation.settings.presentation?.language_policy ===
 										"project"
 									}
-									disabled={save.isPending}
 									onChange={(e) =>
 										save.mutate({
 											presentation: {
@@ -403,11 +400,17 @@ function Editor({
 										: ""}
 								</Text>
 								{presentation.settings.presentation?.language_policy !==
-									"project" && (
+								"project" ? (
+									// The embedded settings carry the translation line themselves.
 									<PopcornLanguageSettings
 										embedded
 										projectId={projectId}
 										popcorn={presentation}
+									/>
+								) : (
+									<TranslationStatus
+										presentationId={presentation.id}
+										status={presentation.translation_status}
 									/>
 								)}
 							</Stack>
@@ -475,6 +478,10 @@ function Preview({
 	revision?: number;
 }) {
 	const eventTick = useContext(PresentationEventTick);
+	// The room's screen at its own size, shrunk to fit the column. At the
+	// column's width the real screen would run its title into its tabs and clip
+	// them; scaled, the host sees what the room will see.
+	const { ref, width } = useElementSize();
 	return (
 		<div className={classes.preview}>
 			<Group px="md" py="sm" gap="xs">
@@ -483,14 +490,25 @@ function Preview({
 					<Trans>Audience preview</Trans>
 				</Text>
 			</Group>
-			<div className={classes.stage}>
-				<AudienceScreen
-					presentationId={presentation.id}
-					embedded
-					draft={draft}
-					draftRevision={revision}
-					eventTick={eventTick}
-				/>
+			<div className={classes.viewport} ref={ref}>
+				<div
+					className={classes.stage}
+					style={{
+						height: STAGE_HEIGHT,
+						transform: `scale(${width ? width / STAGE_WIDTH : 1})`,
+						width: STAGE_WIDTH,
+					}}
+					{...testId("present-preview-stage")}
+				>
+					<AudienceScreen
+						presentationId={presentation.id}
+						embedded
+						draft={draft}
+						draftRevision={revision}
+						eventTick={eventTick}
+						className={classes.screen}
+					/>
+				</div>
 			</div>
 		</div>
 	);
@@ -547,6 +565,12 @@ function Session({
 			client.invalidateQueries({
 				queryKey: ["presentation-updates", presentation.id],
 			});
+			// A read finishing changes what the draft reports too (translation
+			// progress, counts). Only read it back when nothing is in flight: a
+			// refetch over a queued edit would show the host a value they undid.
+			const draftKey = presentationDraftKey(presentation.id);
+			if (!client.isMutating({ mutationKey: draftKey }))
+				client.invalidateQueries({ queryKey: draftKey });
 		},
 	);
 	const editing = canEdit && (params.get("edit") === "1" || !!presentationId);

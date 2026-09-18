@@ -17,12 +17,23 @@ export type PresentationManifest = {
 	hidden_items: string[];
 	result_bindings: Partial<Record<Block, string>>;
 };
+// How far the results have been translated into the audience language. Read
+// only: the server counts the texts, the editor only reports what it says.
+export type TranslationStatus = {
+	target: string | null;
+	total: number;
+	translated: number;
+	pending: number;
+	state: "off" | "done" | "translating" | "incomplete";
+	detail: string | null;
+};
 export type Presentation = PopcornDetail & {
 	effective_language: PopcornLanguage;
 	project_language: {
 		code: string;
 		fallback: "multilingual" | "not_set" | null;
 	};
+	translation_status?: TranslationStatus;
 };
 export const presentationKey = (projectId: string) => [
 	"project",

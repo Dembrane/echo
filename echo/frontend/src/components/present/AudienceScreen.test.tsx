@@ -169,6 +169,16 @@ describe("AudienceScreen lifecycle", () => {
 		expect(screen.getByTestId("audience-notice").textContent).toContain(
 			"This is a synthetic example.",
 		);
+		// A frame, not a banner: the notice is the screen's top edge, above the
+		// title and the tabs, and the shell carries the frame round the rest.
+		const notice = screen.getByTestId("audience-notice");
+		const shell = notice.parentElement as HTMLElement;
+		expect(shell.firstElementChild).toBe(notice);
+		expect(shell.getAttribute("data-framed")).toBe("true");
+		expect(
+			notice.compareDocumentPosition(screen.getByRole("tablist")) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
 		expect(screen.getByTestId("rendered-qr").textContent).toBe(
 			"https://portal.example/join",
 		);

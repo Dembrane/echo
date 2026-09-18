@@ -12,8 +12,43 @@
 	background: var(--app-background);
 }
 
+/* The preview's height comes from the screen's shape, never from the
+   unscaled stage inside it. */
+.viewport {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+}
+
 .stage {
-	height: clamp(32rem, 68vh, 58rem);
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform-origin: top left;
+}
+
+.screen {
+	width: 100%;
+	height: 100%;
+}
+
+.row {
+	padding: var(--mantine-spacing-xs) var(--mantine-spacing-xs);
+	border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.row:last-child {
+	border-bottom: 0;
+}
+
+.rowHidden {
+	opacity: 0.55;
+}
+
+.rowLabel {
+	min-width: 0;
+	flex: 1;
 }
 
 .settings {
@@ -36,13 +71,6 @@
 	.preview {
 		position: sticky;
 		top: var(--mantine-spacing-md);
-	}
-}
-
-@media (max-width: 600px) {
-	.stage {
-		height: 60dvh;
-		min-height: 26rem;
 	}
 }
 

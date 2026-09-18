@@ -691,7 +691,28 @@ export const AudienceScreen = ({
 				className,
 			)}
 			data-opening={openingOpen || undefined}
+			data-framed={frameDetails.notice ? true : undefined}
 		>
+			{/* The frame goes round the whole screen: its notice is the top edge,
+			    above the title and the tabs, and its colour runs down both sides
+			    and along the bottom. */}
+			{frameDetails.notice && (
+				<aside className={classes.notice} data-testid="audience-notice">
+					<span>{frameDetails.notice}</span>
+					{openingAvailability.intro && (
+						<button
+							type="button"
+							onClick={() => {
+								setOpeningOpen(true);
+								setOpeningScreen("intro");
+								postDeckCommand("opening", { screen: "intro" });
+							}}
+						>
+							{audienceCopy.intro}
+						</button>
+					)}
+				</aside>
+			)}
 			<header className={classes.chrome}>
 				<div className={classes.sessionId}>
 					<span className={classes.sessionTitle}>{sessionIdentity.title}</span>
@@ -766,23 +787,6 @@ export const AudienceScreen = ({
 					</div>
 				</div>
 			</header>
-			{frameDetails.notice && (
-				<aside className={classes.notice} data-testid="audience-notice">
-					<span>{frameDetails.notice}</span>
-					{openingAvailability.intro && (
-						<button
-							type="button"
-							onClick={() => {
-								setOpeningOpen(true);
-								setOpeningScreen("intro");
-								postDeckCommand("opening", { screen: "intro" });
-							}}
-						>
-							{audienceCopy.intro}
-						</button>
-					)}
-				</aside>
-			)}
 			<div className={classes.contentFrame}>
 				<Tabs.Panel
 					value={activeBlock ?? "opening"}

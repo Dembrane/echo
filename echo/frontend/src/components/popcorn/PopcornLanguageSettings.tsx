@@ -8,6 +8,8 @@ import {
 	usePopcornSettingsMutation,
 } from "@/components/popcorn/hooks";
 import { FIELD_SIZE } from "@/components/popcorn/PopcornVoiceSection";
+import type { TranslationStatus as TranslationStatusValue } from "@/components/present/hooks";
+import { TranslationStatus } from "@/components/present/TranslationStatus";
 import { testId } from "@/lib/testUtils";
 
 // Each language in its own name, so a host finds theirs whatever the
@@ -33,7 +35,7 @@ export function PopcornLanguageSettings({
 	embedded = false,
 }: {
 	projectId: string;
-	popcorn: PopcornDetail;
+	popcorn: PopcornDetail & { translation_status?: TranslationStatusValue };
 	embedded?: boolean;
 }) {
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
@@ -95,6 +97,12 @@ export function PopcornLanguageSettings({
 					}
 					{...testId("popcorn-language-translate")}
 				/>
+				{embedded && (
+					<TranslationStatus
+						presentationId={popcorn.id}
+						status={popcorn.translation_status}
+					/>
+				)}
 			</Stack>
 		</Paper>
 	);

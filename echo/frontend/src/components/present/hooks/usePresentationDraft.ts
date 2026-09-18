@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { useRef } from "react";
-import type { PopcornSettingsPatch } from "@/components/popcorn/hooks";
+import type {
+	PopcornSettings,
+	PopcornSettingsPatch,
+} from "@/components/popcorn/hooks";
 import { bff } from "@/lib/bff";
 import { type Presentation, presentationKey } from ".";
 
@@ -12,14 +15,80 @@ type Draft = {
 	saved_at?: string;
 };
 
+export const presentationDraftKey = (id: string) => ["presentation-draft", id];
+
+// The blocks the server shallow-merges rather than replaces. Everything else
+// at the top level is a scalar a patch replaces outright.
+const SHALLOW_BLOCKS = [
+	"voice",
+	"language",
+	"intro",
+	"data",
+	"disclosure",
+	"notice",
+	"tabs",
+] as const;
+
+/**
+ * The server's merge semantics, run on the cached draft so a toggle answers at
+ * once. Mirrors `merge_settings` in the popcorn service: scalars replace, the
+ * named blocks shallow-merge, the presentation manifest shallow-merges with
+ * `result_bindings` merged per key so two adopters never drop each other's.
+ */
+export function mergeDraftSettings(
+	current: PopcornSettings,
+	patch: PopcornSettingsPatch,
+): PopcornSettings {
+	const merged = { ...current } as Record<string, unknown>;
+	for (const [key, value] of Object.entries(patch)) {
+		if (value === undefined || value === null) continue;
+		if (key === "presentation") {
+			const manifest = (current.presentation ?? {}) as Record<string, unknown>;
+			const next = { ...manifest, ...(value as Record<string, unknown>) };
+			const bindings = (value as { result_bindings?: Record<string, string> })
+				.result_bindings;
+			if (bindings)
+				next.result_bindings = {
+					...((manifest.result_bindings as Record<string, string>) ?? {}),
+					...bindings,
+				};
+			merged.presentation = next;
+			continue;
+		}
+		if ((SHALLOW_BLOCKS as readonly string[]).includes(key)) {
+			merged[key] = {
+				...((current[key as keyof PopcornSettings] as object) ?? {}),
+				...(value as object),
+			};
+			continue;
+		}
+		merged[key] = value;
+	}
+	return merged as PopcornSettings;
+}
+
+const withPatch = (draft: Draft, patch: PopcornSettingsPatch): Draft => ({
+	...draft,
+	has_changes: true,
+	presentation: {
+		...draft.presentation,
+		settings: mergeDraftSettings(draft.presentation.settings, patch),
+	},
+});
+
 export function usePresentationDraft(
 	projectId: string,
 	id: string,
 	enabled: boolean,
 ) {
 	const client = useQueryClient();
-	const key = ["presentation-draft", id];
+	const key = presentationDraftKey(id);
 	const revision = useRef(0);
+	// Every optimistic patch takes the next number. A failed save may only put
+	// its snapshot back while it is still the last one written, otherwise a
+	// patch queued behind it would be erased and the editor would show a value
+	// the host never chose.
+	const applied = useRef(0);
 	const path = `/present/${encodeURIComponent(id)}`;
 	const query = useQuery({
 		enabled,
@@ -56,6 +125,23 @@ export function usePresentationDraft(
 			}
 		},
 		mutationKey: key,
+		onError: (_error, _patch, context) => {
+			if (!context) return;
+			if (context.seq !== applied.current || !context.previous) {
+				// Another patch landed after this one: its value, not this stale
+				// snapshot, is what the draft should show. Read the draft back.
+				void client.invalidateQueries({ queryKey: key });
+				return;
+			}
+			client.setQueryData(key, context.previous);
+		},
+		onMutate: async (patch: PopcornSettingsPatch) => {
+			await client.cancelQueries({ queryKey: key });
+			const previous = client.getQueryData<Draft>(key);
+			const seq = ++applied.current;
+			if (previous) client.setQueryData(key, withPatch(previous, patch));
+			return { previous, seq };
+		},
 		onSuccess: accept,
 		scope: { id: `presentation-draft-${id}` },
 	});

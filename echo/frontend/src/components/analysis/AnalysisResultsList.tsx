@@ -1,17 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	ActionIcon,
-	Badge,
-	Group,
-	Pagination,
-	Stack,
-	Text,
-	Tooltip,
-} from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
+import { Badge, Group, Pagination, Stack, Text } from "@mantine/core";
 import { EntityListRow } from "@/components/common/EntityListRow";
 import type { AnalysisObject } from "./hooks";
+import { ResultRowActions } from "./ResultRowActions";
 
 export type AnalysisResultsListProps = {
 	counts: Record<string, number>;
@@ -79,19 +71,16 @@ export function AnalysisResultsList({
 											</Group>
 										</Stack>
 
-										<Tooltip label={t`Inspect evidence`}>
-											<ActionIcon
-												variant="subtle"
-												color="primary"
-												aria-label={t`Inspect evidence`}
-												onClick={(event) => {
-													event.stopPropagation();
-													onInspect(item);
-												}}
-											>
-												<IconExternalLink size={16} />
-											</ActionIcon>
-										</Tooltip>
+										{/* The same gestures in the same place as every other
+									    table of findings. */}
+										{/* biome-ignore lint/a11y/noStaticElementInteractions: only keeps a click on an icon from also opening the row */}
+										{/* biome-ignore lint/a11y/useKeyWithClickEvents: the icons inside are the keyboard targets */}
+										<div onClick={(event) => event.stopPropagation()}>
+											<ResultRowActions
+												onEdit={() => onInspect(item)}
+												testIdPrefix={`analysis-result-${item.objectId}`}
+											/>
+										</div>
 									</Group>
 
 									{item.missing && (

@@ -125,12 +125,22 @@
 	flex-shrink: 0;
 }
 
+/* A frame, not a banner: the notice is the top edge and the same colour goes
+   round the other three sides of the whole screen. */
+.shell[data-framed] {
+	--audience-frame: clamp(6px, 0.55vw, 12px);
+
+	border: var(--audience-frame) solid var(--mantine-color-primary-6);
+	border-top: 0;
+}
+
 .notice {
 	display: flex;
 	flex-shrink: 0;
 	align-items: baseline;
+	justify-content: space-between;
 	gap: 1em;
-	padding: 0.55em var(--audience-pad-x);
+	padding: 0.5em var(--audience-pad-x);
 	background: var(--mantine-color-primary-6);
 	color: var(--mantine-color-parchment-6);
 	font-size: 0.85em;
