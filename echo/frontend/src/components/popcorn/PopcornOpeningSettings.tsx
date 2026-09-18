@@ -10,7 +10,6 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import {
 	type PopcornData,
@@ -21,8 +20,7 @@ import {
 	usePopcornSettingsMutation,
 } from "@/components/popcorn/hooks";
 import { FIELD_SIZE } from "@/components/popcorn/PopcornVoiceSection";
-import { useSettingsFlush } from "@/components/popcorn/SettingsSaveContext";
-import { useAutoSave } from "@/hooks/useAutoSave";
+import { useSettingsDraft } from "@/components/popcorn/useSettingsDraft";
 import { testId } from "@/lib/testUtils";
 
 type Opening = {
@@ -65,21 +63,20 @@ export function PopcornOpeningSettings({
 	section?: "intro" | "data";
 	embedded?: boolean;
 }) {
-	const serverKey = JSON.stringify(openingFrom(popcorn));
-	const serverOpening = useMemo<Opening>(
-		() => JSON.parse(serverKey),
-		[serverKey],
-	);
-	const formIdentity = `${projectId}:${popcorn.id}:${section ?? "all"}`;
-	const [opening, setOpening] = useState<Opening>(serverOpening);
-	const currentRef = useRef(opening);
-	const dirtyRef = useRef(false);
-	const identityRef = useRef(formIdentity);
 	const mutation = usePopcornSettingsMutation(projectId, popcorn.id);
 	const synthetic = popcorn.synthetic === true;
-	const onSave = useCallback(
-		async (next: Opening) => {
-			const savedDraft = JSON.stringify(next);
+	const {
+		changeDraft: changeOpening,
+		draft: opening,
+		isError,
+		isPendingSave,
+		isSaving,
+		lastSavedAt,
+	} = useSettingsDraft<Opening>({
+		flushErrorMessage: "Could not save opening settings",
+		identity: `${projectId}:${popcorn.id}:${section ?? "all"}`,
+		initialLastSavedAt: popcorn.updated_at ?? undefined,
+		save: async (next) => {
 			await mutation.mutateAsync(
 				section === "intro"
 					? synthetic
@@ -93,52 +90,9 @@ export function PopcornOpeningSettings({
 							? { data: next.data, intro: next.intro }
 							: next,
 			);
-			// A response for an older draft must not make a newer keystroke clean.
-			if (JSON.stringify(currentRef.current) === savedDraft) {
-				dirtyRef.current = false;
-			}
 		},
-		[mutation.mutateAsync, section, synthetic],
-	);
-	const {
-		dispatchAutoSave,
-		isError,
-		isPendingSave,
-		isSaving,
-		lastSavedAt,
-		triggerManualSave,
-	} = useAutoSave({
-		initialLastSavedAt: popcorn.updated_at ?? undefined,
-		onSave,
+		serverValue: openingFrom(popcorn),
 	});
-	useSettingsFlush(async () => {
-		if (!dirtyRef.current && !isPendingSave) return;
-		const saved = await triggerManualSave(currentRef.current);
-		if (!saved) throw new Error("Could not save opening settings");
-	}, isPendingSave || isSaving);
-
-	// Refetches can arrive while an older autosave is in flight. Adopt server
-	// changes only when this form has no newer local draft to protect.
-	useEffect(() => {
-		if (identityRef.current !== formIdentity) {
-			identityRef.current = formIdentity;
-			currentRef.current = serverOpening;
-			dirtyRef.current = false;
-			setOpening(serverOpening);
-			return;
-		}
-		if (!dirtyRef.current && JSON.stringify(currentRef.current) !== serverKey) {
-			currentRef.current = serverOpening;
-			setOpening(serverOpening);
-		}
-	}, [formIdentity, serverKey, serverOpening]);
-
-	const changeOpening = (next: Opening) => {
-		currentRef.current = next;
-		dirtyRef.current = true;
-		setOpening(next);
-		dispatchAutoSave(next);
-	};
 	const { intro, disclosure, notice, data } = opening;
 
 	const content = (

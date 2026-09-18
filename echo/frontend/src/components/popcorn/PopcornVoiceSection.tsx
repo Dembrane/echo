@@ -10,16 +10,15 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import {
 	type PopcornDetail,
 	type PopcornVoice,
 	usePopcornSettingsMutation,
 } from "@/components/popcorn/hooks";
-import { useSettingsFlush } from "@/components/popcorn/SettingsSaveContext";
+import { useSettingsDraft } from "@/components/popcorn/useSettingsDraft";
 import { PricingTextInput } from "@/components/pricing/PricingTextInput";
-import { useAutoSave } from "@/hooks/useAutoSave";
 import { testId } from "@/lib/testUtils";
 
 // One control size for every field on these forms, including the voice
@@ -116,64 +115,26 @@ export function PopcornVoiceSection({
 	showTitle?: boolean;
 }) {
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
-	const serverKey = JSON.stringify(voiceSettingsFrom(popcorn));
-	const serverDraft = useMemo<VoiceSettingsDraft>(
-		() => JSON.parse(serverKey),
-		[serverKey],
-	);
-	const identity = `${projectId}:${popcorn.id}:${showTitle ? "title-and-voice" : "voice"}`;
-	const [draft, setDraft] = useState(serverDraft);
-	const currentRef = useRef(draft);
-	const dirtyRef = useRef(false);
-	const identityRef = useRef(identity);
-	const onSave = useCallback(
-		async (next: VoiceSettingsDraft) => {
-			if (showTitle && !next.title.trim())
-				throw new Error("A presentation title is required.");
-			const savedDraft = JSON.stringify(next);
-			await settings.mutateAsync({
-				...(showTitle ? { title: next.title.trim() } : {}),
-				voice: {
-					note: next.voice.note.trim(),
-					presets: next.voice.presets,
-				},
-			});
-			if (JSON.stringify(currentRef.current) === savedDraft) {
-				dirtyRef.current = false;
-			}
-		},
-		[settings.mutateAsync, showTitle],
-	);
-	const autosave = useAutoSave<VoiceSettingsDraft>({
-		initialLastSavedAt: popcorn.updated_at ?? undefined,
-		onSave,
-	});
-	useSettingsFlush(async () => {
-		if (!dirtyRef.current && !autosave.isPendingSave) return;
-		const saved = await autosave.triggerManualSave(currentRef.current);
-		if (!saved) throw new Error("Could not save voice settings");
-	}, autosave.isPendingSave || autosave.isSaving);
-
-	useEffect(() => {
-		if (identityRef.current !== identity) {
-			identityRef.current = identity;
-			currentRef.current = serverDraft;
-			dirtyRef.current = false;
-			setDraft(serverDraft);
-			return;
-		}
-		if (!dirtyRef.current && JSON.stringify(currentRef.current) !== serverKey) {
-			currentRef.current = serverDraft;
-			setDraft(serverDraft);
-		}
-	}, [identity, serverDraft, serverKey]);
-
-	const changeDraft = (next: VoiceSettingsDraft) => {
-		currentRef.current = next;
-		dirtyRef.current = true;
-		setDraft(next);
-		autosave.dispatchAutoSave(next);
-	};
+	const { changeDraft, draft, isError, isPendingSave, isSaving, lastSavedAt } =
+		useSettingsDraft<VoiceSettingsDraft>({
+			flushErrorMessage: "Could not save voice settings",
+			identity: `${projectId}:${popcorn.id}:${showTitle ? "title-and-voice" : "voice"}`,
+			initialLastSavedAt: popcorn.updated_at ?? undefined,
+			// A presentation without a title is refused rather than saved, so the
+			// draft stays dirty and SaveStatus shows the error.
+			save: async (next) => {
+				if (showTitle && !next.title.trim())
+					throw new Error("A presentation title is required.");
+				await settings.mutateAsync({
+					...(showTitle ? { title: next.title.trim() } : {}),
+					voice: {
+						note: next.voice.note.trim(),
+						presets: next.voice.presets,
+					},
+				});
+			},
+			serverValue: voiceSettingsFrom(popcorn),
+		});
 
 	return (
 		<Paper
@@ -189,10 +150,10 @@ export function PopcornVoiceSection({
 					</Title>
 					<SaveStatus
 						formErrors={{}}
-						isError={autosave.isError}
-						isPendingSave={autosave.isPendingSave}
-						isSaving={autosave.isSaving}
-						savedAt={autosave.lastSavedAt}
+						isError={isError}
+						isPendingSave={isPendingSave}
+						isSaving={isSaving}
+						savedAt={lastSavedAt}
 					/>
 				</Group>
 				{showTitle && (
