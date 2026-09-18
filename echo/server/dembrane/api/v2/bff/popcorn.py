@@ -16,7 +16,6 @@ from pydantic import Field, BaseModel
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 
 from dembrane import live_events
-from dembrane.policies import meets_tier
 from dembrane.settings import get_settings
 from dembrane.analytics import capture_event
 from dembrane.redis_async import get_redis_client
@@ -32,6 +31,9 @@ from dembrane.popcorn.bundle import forget_bundle, bundle_for_report
 from dembrane.popcorn.service import (
     LIVE_HOURS,
     REPORT_KIND,
+    LoopNotFound,
+    BrandingTierRequired,
+    SyntheticFrameLocked,
     go_live,
     readiness,
     stop_live,
@@ -40,7 +42,6 @@ from dembrane.popcorn.service import (
     request_rerun,
     sample_bundle,
     create_popcorn,
-    normalize_state,
     popcorn_payload,
     update_settings,
     get_version_files,
@@ -48,8 +49,11 @@ from dembrane.popcorn.service import (
     get_popcorn_report,
     ensure_public_token,
     get_loop_for_report,
-    is_synthetic_session,
-    resolve_presentation_settings,
+    retarget_translation,
+    expand_settings_patch,
+    require_branding_tier,
+    require_unlocked_frame,
+    presentation_create_lock,
     dispatch_popcorn_tick_now_with_safety,
 )
 from dembrane.api.feature_flags import require_popcorn_enabled, require_project_popcorn_enabled
@@ -208,15 +212,18 @@ async def create_project_popcorn(
     access = await resolve_project_access(body.project_id, auth)
     require_project_popcorn_enabled(access.project)
     access.require("project:update")
-    existing = await get_popcorn_report(body.project_id)
-    if existing:
-        return await popcorn_payload(existing)
-    created = await create_popcorn(
-        project_id=body.project_id,
-        title=body.title.strip(),
-        client=(body.client or "").strip() or None,
-        acting_directus_user_id=auth.user_id,
-    )
+    # The same lock the default presentation takes: a read followed by a create
+    # is one session per project only while nobody else is between the two.
+    async with presentation_create_lock(body.project_id):
+        existing = await get_popcorn_report(body.project_id)
+        if existing:
+            return await popcorn_payload(existing)
+        created = await create_popcorn(
+            project_id=body.project_id,
+            title=body.title.strip(),
+            client=(body.client or "").strip() or None,
+            acting_directus_user_id=auth.user_id,
+        )
     if body.voice is not None:
         await update_settings(
             report=created["report"], patch={"voice": body.voice.model_dump(exclude_none=True)}
@@ -271,42 +278,26 @@ async def patch_popcorn_settings(
         from dembrane.api.feature_flags import require_present_enabled
 
         require_present_enabled()
-        blocks = patch["presentation"].get("blocks")
-        if blocks is not None:
-            patch["tabs"] = {kind: kind in blocks for kind in ("tensions", "stakeholders")}
-    if "language" in patch and "presentation" not in patch:
-        current_settings = await load_settings_for(report)
-        if current_settings.get("presentation"):
-            patch["presentation"] = {"language_policy": "explicit"}
-    if {"disclosure", "notice"} & patch.keys():
-        loop = await get_loop_for_report(str(report["id"]))
-        if is_synthetic_session(normalize_state((loop or {}).get("popcorn_state"))):
-            raise HTTPException(
-                status_code=409,
-                detail="A synthetic demo's disclosure and frame are set with the demo.",
-            )
-    if patch.get("show_branding") is False and not meets_tier(
-        str(access.tier or "free"), "changemaker"
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="Removing the dembrane mark requires the changemaker tier.",
+    try:
+        if {"disclosure", "notice"} & patch.keys():
+            await require_unlocked_frame(report, await get_loop_for_report(str(report["id"])))
+        require_branding_tier(
+            str(access.tier or "free"), removes_branding=patch.get("show_branding") is False
         )
+    except SyntheticFrameLocked as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except BrandingTierRequired as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
     if patch.get("public"):
         await ensure_public_token(report)
     before = await load_settings_for(report)
+    patch = expand_settings_patch(patch, presentation_exists=bool(before.get("presentation")))
     updated = await update_settings(report=report, patch=patch)
-    forget_bundle(str(report["id"]))
-    before_target = (
-        resolve_presentation_settings(before, access.project).get("language") or {}
-    ).get("translate_to")
-    target = (
-        resolve_presentation_settings(updated, access.project).get("language") or {}
-    ).get("translate_to")
-    if target and target != before_target:
+    try:
         # A new language is translated now, not at the next scheduled read.
-        loop = await _loop_of(report)
-        await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "translation")
+        await retarget_translation(report, before=before, after=updated, project=access.project)
+    except LoopNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     fresh = await async_directus.get_item("project_report", str(report["id"]))
     return await popcorn_payload(fresh or report)
 

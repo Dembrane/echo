@@ -159,9 +159,13 @@ def test_intro_partial_patch_keeps_copy(monkeypatch):
     async def publish(_report_id):
         pass
 
+    class _Held:
+        async def still_held(self) -> bool:
+            return True
+
     @asynccontextmanager
     async def settings_lock(_report_id):
-        yield
+        yield _Held()
 
     monkeypatch.setattr(service, "get_latest_config", config)
     monkeypatch.setattr(service, "settings_write_lock", settings_lock)

@@ -10,14 +10,14 @@ from dembrane.settings import get_settings
 
 
 def require_present_enabled() -> None:
-    if not getattr(get_settings().feature_flags, "enable_present", False):
+    if not get_settings().feature_flags.enable_present:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
 
 def require_popcorn_enabled() -> None:
     """Legacy decks remain available during the independent Present rollout."""
     flags = get_settings().feature_flags
-    if not (getattr(flags, "enable_present", False) or flags.enable_canvas):
+    if not (flags.enable_present or flags.enable_canvas):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
 
@@ -25,7 +25,7 @@ def require_project_popcorn_enabled(project: dict[str, Any] | None) -> None:
     require_popcorn_enabled()
     if not project or project.get("deleted_at"):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    if not getattr(get_settings().feature_flags, "enable_present", False):
+    if not get_settings().feature_flags.enable_present:
         require_project_canvas_enabled(project)
 
 

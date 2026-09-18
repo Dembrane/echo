@@ -25,6 +25,7 @@ from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
 from dembrane.utils import generate_uuid
+from dembrane.policies import meets_tier
 from dembrane.popcorn.qr import qr_svg_markup
 from dembrane.legal_basis import DEFAULT_LEGAL_BASIS
 from dembrane.redis_async import get_redis_client
@@ -50,92 +51,157 @@ PRESENTATION_CREATE_LOCK_WAIT_SECONDS = 5.0
 logger = logging.getLogger("dembrane.popcorn.service")
 
 
-class SettingsWriteLockError(RuntimeError):
+class LockUnavailable(RuntimeError):
+    """A write could not be serialized right now: busy, or Redis is away. The
+    app answers 503 and the caller tries again; nothing was written."""
+
+
+class SettingsWriteLockError(LockUnavailable):
     pass
 
 
-class PresentationCreateLockError(RuntimeError):
+class PresentationCreateLockError(LockUnavailable):
     pass
+
+
+class LoopNotFound(RuntimeError):
+    """The report has no loop row, so there is nothing to dispatch a tick to."""
+
+
+class BrandingTierRequired(RuntimeError):
+    """The dembrane mark on the deck comes off on a paid plan only."""
+
+
+class SyntheticFrameLocked(RuntimeError):
+    """A synthetic demo's disclosure and notice are set with the demo."""
+
+
+# Release only what this holder still owns: a lock whose TTL expired and was
+# taken by someone else must survive our finally block.
+_RELEASE_IF_HELD = (
+    'if redis.call("get", KEYS[1]) == ARGV[1] then '
+    'return redis.call("del", KEYS[1]) else return 0 end'
+)
+
+
+# The lease is renewed for as long as its holder is working, on the same terms.
+_RENEW_IF_HELD = (
+    'if redis.call("get", KEYS[1]) == ARGV[1] then '
+    'return redis.call("expire", KEYS[1], ARGV[2]) else return 0 end'
+)
+
+
+class _LockHolder:
+    """The acquired lock, with the token that proves this holder owns it."""
+
+    def __init__(self, client: Any, key: str, token: str) -> None:
+        self._client = client
+        self._key = key
+        self._token = token
+        self._lost = False
+
+    async def renew(self, ttl_seconds: int) -> None:
+        """Keep the lease while the work runs: a read, up to three Directus
+        writes and a nudge can outlast it on a slow day."""
+        while not self._lost:
+            await asyncio.sleep(ttl_seconds / 3)
+            try:
+                result = self._client.eval(
+                    _RENEW_IF_HELD, 1, self._key, self._token, str(ttl_seconds)
+                )
+                if asyncio.iscoroutine(result):
+                    result = await result
+            except Exception:
+                continue  # still_held() asks again before the write
+            if not result:
+                self._lost = True
+
+    async def still_held(self) -> bool:
+        """False once the TTL ran out and another writer took the key, so a
+        long job can stop before it writes behind that writer's back."""
+        if self._lost:
+            return False
+        try:
+            current = await self._client.get(self._key)
+        except Exception:
+            return False
+        if isinstance(current, bytes):
+            current = current.decode()
+        return current == self._token
 
 
 @asynccontextmanager
-async def settings_write_lock(report_id: str) -> AsyncIterator[None]:
+async def _redis_lock(
+    key: str,
+    *,
+    ttl_seconds: int,
+    wait_seconds: float,
+    error: type[Exception],
+    busy_message: str,
+    unavailable_message: str,
+    log_label: str,
+) -> AsyncIterator[_LockHolder]:
+    """One `SET NX EX`, spun until the deadline. Redis being unreachable fails
+    the write rather than letting two writers through."""
+    token = secrets.token_urlsafe(24)
+    try:
+        client = await get_redis_client()
+    except Exception as exc:
+        raise error(unavailable_message) from exc
+    deadline = asyncio.get_running_loop().time() + wait_seconds
+    while True:
+        try:
+            acquired = await client.set(key, token, ex=ttl_seconds, nx=True)
+        except Exception as exc:
+            raise error(unavailable_message) from exc
+        if acquired:
+            break
+        if asyncio.get_running_loop().time() >= deadline:
+            raise error(busy_message)
+        await asyncio.sleep(0.05)
+    holder = _LockHolder(client, key, token)
+    renewal = asyncio.create_task(holder.renew(ttl_seconds))
+    try:
+        yield holder
+    finally:
+        renewal.cancel()
+        try:
+            result = client.eval(_RELEASE_IF_HELD, 1, key, token)
+            if asyncio.iscoroutine(result):
+                await result
+        except Exception:
+            logger.warning("Failed to release the %s lock for %s", log_label, key, exc_info=True)
+
+
+@asynccontextmanager
+async def settings_write_lock(report_id: str) -> AsyncIterator[_LockHolder]:
     """Serialize read/merge/write of the report's shared settings JSON."""
-    key = f"popcorn:settings-write:{report_id}"
-    token = secrets.token_urlsafe(24)
-    try:
-        client = await get_redis_client()
-    except Exception as exc:
-        raise SettingsWriteLockError("Settings storage is temporarily unavailable") from exc
-    deadline = asyncio.get_running_loop().time() + SETTINGS_WRITE_LOCK_WAIT_SECONDS
-    while True:
-        try:
-            acquired = await client.set(
-                key, token, ex=SETTINGS_WRITE_LOCK_TTL_SECONDS, nx=True
-            )
-        except Exception as exc:
-            raise SettingsWriteLockError("Settings storage is temporarily unavailable") from exc
-        if acquired:
-            break
-        if asyncio.get_running_loop().time() >= deadline:
-            raise SettingsWriteLockError("Settings are busy; try again")
-        await asyncio.sleep(0.05)
-    try:
-        yield
-    finally:
-        script = (
-            'if redis.call("get", KEYS[1]) == ARGV[1] then '
-            'return redis.call("del", KEYS[1]) else return 0 end'
-        )
-        try:
-            result = client.eval(script, 1, key, token)
-            if asyncio.iscoroutine(result):
-                await result
-        except Exception:
-            logger.warning("Failed to release settings lock for %s", report_id, exc_info=True)
+    async with _redis_lock(
+        f"popcorn:settings-write:{report_id}",
+        ttl_seconds=SETTINGS_WRITE_LOCK_TTL_SECONDS,
+        wait_seconds=SETTINGS_WRITE_LOCK_WAIT_SECONDS,
+        error=SettingsWriteLockError,
+        busy_message="Settings are busy; try again",
+        unavailable_message="Settings storage is temporarily unavailable",
+        log_label="settings",
+    ) as holder:
+        yield holder
 
 
 @asynccontextmanager
-async def presentation_create_lock(project_id: str) -> AsyncIterator[None]:
+async def presentation_create_lock(project_id: str) -> AsyncIterator[_LockHolder]:
     """Serialize creation of the one presentation report owned by a project."""
-    key = f"popcorn:presentation-create:{project_id}"
-    token = secrets.token_urlsafe(24)
-    try:
-        client = await get_redis_client()
-    except Exception as exc:
-        raise PresentationCreateLockError("Presentation storage is temporarily unavailable") from exc
-    deadline = asyncio.get_running_loop().time() + PRESENTATION_CREATE_LOCK_WAIT_SECONDS
-    while True:
-        try:
-            acquired = await client.set(
-                key, token, ex=PRESENTATION_CREATE_LOCK_TTL_SECONDS, nx=True
-            )
-        except Exception as exc:
-            raise PresentationCreateLockError(
-                "Presentation storage is temporarily unavailable"
-            ) from exc
-        if acquired:
-            break
-        if asyncio.get_running_loop().time() >= deadline:
-            raise PresentationCreateLockError("Presentation creation is busy; try again")
-        await asyncio.sleep(0.05)
-    try:
-        yield
-    finally:
-        script = (
-            'if redis.call("get", KEYS[1]) == ARGV[1] then '
-            'return redis.call("del", KEYS[1]) else return 0 end'
-        )
-        try:
-            result = client.eval(script, 1, key, token)
-            if asyncio.iscoroutine(result):
-                await result
-        except Exception:
-            logger.warning(
-                "Failed to release presentation creation lock for %s",
-                project_id,
-                exc_info=True,
-            )
+    async with _redis_lock(
+        f"popcorn:presentation-create:{project_id}",
+        ttl_seconds=PRESENTATION_CREATE_LOCK_TTL_SECONDS,
+        wait_seconds=PRESENTATION_CREATE_LOCK_WAIT_SECONDS,
+        error=PresentationCreateLockError,
+        busy_message="Presentation creation is busy; try again",
+        unavailable_message="Presentation storage is temporarily unavailable",
+        log_label="presentation creation",
+    ) as holder:
+        yield holder
+
 
 # Legacy audience tabs mirrored from the selected presentation recipes.
 TOGGLEABLE_TABS = ("tensions", "stakeholders")
@@ -816,6 +882,56 @@ async def get_version_files(report_id: str, version_id: str) -> dict[str, Any] |
     return files if isinstance(files, dict) else None
 
 
+# The two screens a synthetic demo writes for itself.
+FRAME_BLOCKS = ("disclosure", "notice")
+
+
+def expand_settings_patch(
+    patch: dict[str, Any], *, presentation_exists: bool = True
+) -> dict[str, Any]:
+    """The legacy audience tabs follow the chosen blocks, and a language picked
+    by hand stops a presentation following the project's.
+
+    A session without a presentation manifest has no policy to make explicit,
+    so `presentation_exists=False` leaves the language alone.
+    """
+    patch = dict(patch)
+    if "presentation" in patch:
+        blocks = patch["presentation"].get("blocks")
+        if blocks is not None:
+            patch["tabs"] = {kind: kind in blocks for kind in TOGGLEABLE_TABS}
+    if "language" in patch and "presentation" not in patch and presentation_exists:
+        patch["presentation"] = {"language_policy": "explicit"}
+    return patch
+
+
+def require_branding_tier(tier: str, *, removes_branding: bool) -> None:
+    """The setting only records the choice; the tier is enforced here."""
+    if removes_branding and not meets_tier(tier, "changemaker"):
+        raise BrandingTierRequired("Removing the dembrane mark requires the changemaker tier.")
+
+
+async def require_unlocked_frame(
+    report: dict[str, Any],
+    loop: dict[str, Any] | None,
+    *,
+    proposed: dict[str, Any] | None = None,
+) -> None:
+    """A synthetic demo's disclosure and notice belong to the demo, not the host.
+
+    With `proposed` settings the published wording is compared, so a write that
+    leaves the frame as it is passes; without them any write to it is refused.
+    The caller reads the loop, because it usually has one already.
+    """
+    if not is_synthetic_session(normalize_state((loop or {}).get("popcorn_state"))):
+        return
+    if proposed is not None:
+        published = await load_settings_for(report)
+        if all(proposed[name] == published[name] for name in FRAME_BLOCKS):
+            return
+    raise SyntheticFrameLocked("A synthetic demo's disclosure and frame are set with the demo.")
+
+
 def merge_settings(
     current: dict[str, Any], patch: dict[str, Any], *, fallback_title: str
 ) -> dict[str, Any]:
@@ -830,7 +946,15 @@ def merge_settings(
     if isinstance(patch.get("voice"), dict):
         merged["recipe_settings"] = {"voice": merged["voice"]}
     if isinstance(patch.get("presentation"), dict):
-        merged["presentation"] = {**(current.get("presentation") or {}), **patch["presentation"]}
+        manifest = current.get("presentation") or {}
+        merged["presentation"] = {**manifest, **patch["presentation"]}
+        # A bindings patch names the blocks it adopts and leaves the rest: two
+        # adopters who each found one result must not drop the other's.
+        if isinstance(patch["presentation"].get("result_bindings"), dict):
+            merged["presentation"]["result_bindings"] = {
+                **(manifest.get("result_bindings") or {}),
+                **patch["presentation"]["result_bindings"],
+            }
     if isinstance(patch.get("tabs"), dict):
         merged["tabs"] = {
             **current["tabs"],
@@ -846,12 +970,12 @@ async def update_settings(
 ) -> dict[str, Any]:
     """Update presentation settings in place. They are toggles, not analysis config,
     so they do not earn a new revision the way a canvas brief does."""
-    async with settings_write_lock(str(report["id"])):
-        return await _update_settings_unlocked(report=report, patch=patch)
+    async with settings_write_lock(str(report["id"])) as holder:
+        return await _update_settings_unlocked(report=report, patch=patch, holder=holder)
 
 
 async def _update_settings_unlocked(
-    *, report: dict[str, Any], patch: dict[str, Any]
+    *, report: dict[str, Any], patch: dict[str, Any], holder: _LockHolder
 ) -> dict[str, Any]:
     report_id = str(report["id"])
     config = await get_latest_config(report_id)
@@ -866,9 +990,52 @@ async def _update_settings_unlocked(
     # Legacy settings mutations must never discard that reserved host-only value.
     if isinstance(raw_settings.get("_present_draft"), dict):
         settings["_present_draft"] = raw_settings["_present_draft"]
+    await write_settings(
+        report, config, settings, fallback_title=fallback_title, nudge=True, holder=holder
+    )
+    # Keep the reserved draft container out of every settings response.
+    return normalize_settings(settings, fallback_title=fallback_title)
+
+
+async def write_config_settings(
+    config: dict[str, Any], settings: dict[str, Any], *, holder: _LockHolder
+) -> None:
+    """The one write of the settings JSON, draft container and all. Directus
+    has no conditional update, so ownership of the lock is asked one last time
+    here: a writer that stalled past its lease stops instead of overwriting."""
+    if not await holder.still_held():
+        raise SettingsWriteLockError("Settings are busy; try again")
     await async_directus.update_item(
         "canvas_config_revision", str(config["id"]), {"popcorn_settings": settings}
     )
+
+
+async def _invalidate_and_nudge(report_id: str) -> None:
+    """The cached bundle goes first, the nudge second: a screen that refetches
+    on the nudge must not be answered from the deck the write just replaced."""
+    from dembrane.canvas.events import publish_generation_nudge
+    from dembrane.popcorn.bundle import forget_bundle
+
+    forget_bundle(report_id)
+    await publish_generation_nudge(report_id)
+
+
+async def write_settings(
+    report: dict[str, Any],
+    config: dict[str, Any],
+    settings: dict[str, Any],
+    *,
+    fallback_title: str,
+    nudge: bool,
+    holder: _LockHolder,
+) -> None:
+    """Store the settings and let a changed title reach the report and the loop.
+
+    With `nudge`, the room's screen is told to reload once the write is durable:
+    it follows its settings (tabs, QR, labels) on that nudge.
+    """
+    report_id = str(report["id"])
+    await write_config_settings(config, settings, holder=holder)
     if settings["title"] != fallback_title:
         await async_directus.update_item(
             "project_report", report_id, {"user_instructions": settings["title"]}
@@ -878,12 +1045,46 @@ async def _update_settings_unlocked(
             await async_directus.update_item(
                 "agent_loop", str(loop["id"]), {"name": settings["title"]}
             )
-    # The room's screen follows its settings (tabs, QR, labels) on this nudge.
-    from dembrane.canvas.events import publish_generation_nudge
+    if nudge:
+        await _invalidate_and_nudge(report_id)
 
-    await publish_generation_nudge(report_id)
-    # Keep the reserved draft container out of every settings response.
-    return normalize_settings(settings, fallback_title=fallback_title)
+
+def translation_target(settings: dict[str, Any], project: dict[str, Any]) -> str:
+    """The language the results are translated into once the policy is resolved."""
+    resolved = resolve_presentation_settings(settings, project)
+    return str((resolved.get("language") or {}).get("translate_to") or "")
+
+
+async def retarget_translation(
+    report: dict[str, Any],
+    *,
+    before: dict[str, Any],
+    after: dict[str, Any],
+    project: dict[str, Any],
+    project_after: dict[str, Any] | None = None,
+    nudge: bool = False,
+    require_loop: bool = True,
+) -> bool:
+    """Translate into a newly chosen language now, not at the next scheduled read.
+
+    The settings around the change are resolved against the project, or against
+    `project_after` as well when the project row itself is what changed. With
+    `nudge`, the cached bundle is dropped and the room told to reload before the
+    tick is dispatched. Returns whether the target changed.
+    """
+    target = translation_target(after, project_after or project)
+    if not target or target == translation_target(before, project):
+        return False
+    report_id = str(report["id"])
+    if nudge:
+        await _invalidate_and_nudge(report_id)
+    loop = await get_loop_for_report(report_id)
+    if not loop:
+        if require_loop:
+            raise LoopNotFound("Popcorn loop not found")
+        return True
+    await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "translation")
+    return True
 
 
 async def go_live(loop: dict[str, Any], *, hours: int) -> dict[str, Any]:

@@ -14,6 +14,7 @@ from dembrane.api.v2.bff import present as present_api
 class _MemoryRedis:
     def __init__(self) -> None:
         self.values: dict[str, str] = {}
+        self.renewals: list[tuple[str, ...]] = []
 
     async def set(self, key, value, *, ex=None, nx=False):  # noqa: ARG002
         if nx and key in self.values:
@@ -21,9 +22,15 @@ class _MemoryRedis:
         self.values[key] = value
         return True
 
-    async def eval(self, _script, _numkeys, key, token):
+    async def get(self, key):
+        return self.values.get(key)
+
+    async def eval(self, script, _numkeys, key, token, *args):
         if self.values.get(key) != token:
             return 0
+        if "expire" in script:
+            self.renewals.append((key, *args))
+            return 1
         self.values.pop(key, None)
         return 1
 
@@ -83,7 +90,7 @@ class MemoryDirectus:
     async def get_items(self, collection, params=None):
         await asyncio.sleep(0)
         rows = list(self.rows.get(collection, {}).values())
-        filters = (((params or {}).get("query") or {}).get("filter") or {})
+        filters = ((params or {}).get("query") or {}).get("filter") or {}
         report_id = (filters.get("report_id") or {}).get("_eq")
         if report_id is not None:
             rows = [row for row in rows if str(row.get("report_id")) == str(report_id)]
@@ -148,6 +155,64 @@ def test_concurrent_default_creation_and_partial_retry(monkeypatch):
     assert not settings["public"]
 
 
+def test_lock_holder_knows_when_another_writer_took_the_key(_settings_lock_redis) -> None:
+    redis = _settings_lock_redis
+    key = "popcorn:settings-write:presentation"
+
+    async def run() -> None:
+        async with service.settings_write_lock("presentation") as holder:
+            assert await holder.still_held() is True
+            # What an expired TTL looks like: the key is someone else's now.
+            redis.values[key] = "another-writer"
+            assert await holder.still_held() is False
+
+    asyncio.run(run())
+    assert redis.values[key] == "another-writer"
+
+
+def test_legacy_creation_takes_the_presentation_create_lock(monkeypatch) -> None:
+    from contextlib import asynccontextmanager
+    from unittest.mock import AsyncMock
+
+    from dembrane.api.v2.bff import popcorn as popcorn_api
+
+    order: list[str] = []
+
+    @asynccontextmanager
+    async def lock(project_id: str):
+        order.append(f"lock:{project_id}")
+        try:
+            yield None
+        finally:
+            order.append("unlock")
+
+    async def existing(_project_id):
+        order.append("read")
+        return None
+
+    async def create(**_kwargs):
+        order.append("create")
+        return {"report": {"id": "r"}}
+
+    async def payload(_report):
+        return {"id": "r"}
+
+    monkeypatch.setattr(popcorn_api, "resolve_project_access", AsyncMock(return_value=_Access()))
+    monkeypatch.setattr(popcorn_api, "require_project_popcorn_enabled", lambda _project: None)
+    monkeypatch.setattr(popcorn_api, "presentation_create_lock", lock)
+    monkeypatch.setattr(popcorn_api, "get_popcorn_report", existing)
+    monkeypatch.setattr(popcorn_api, "create_popcorn", create)
+    monkeypatch.setattr(popcorn_api, "popcorn_payload", payload)
+
+    asyncio.run(
+        popcorn_api.create_project_popcorn(
+            popcorn_api.CreatePopcornBody(project_id="p", title="Room"),
+            SimpleNamespace(user_id="host"),
+        )
+    )
+    assert order == ["lock:p", "read", "create", "unlock"]
+
+
 def test_existing_presentation_keeps_random_component_ids_and_settings(monkeypatch) -> None:
     fake = MemoryDirectus()
     report = {"id": 73, "project_id": "p", "user_instructions": "Existing"}
@@ -164,12 +229,12 @@ def test_existing_presentation_keeps_random_component_ids_and_settings(monkeypat
                 "popcorn_settings": original,
             }
         },
-        "agent_loop": {
-            "random-loop": {"id": "random-loop", "report_id": 73}
-        },
+        "agent_loop": {"random-loop": {"id": "random-loop", "report_id": 73}},
     }
     monkeypatch.setattr(service, "async_directus", fake)
-    monkeypatch.setattr(service, "get_popcorn_report", lambda _project_id: asyncio.sleep(0, result=report))
+    monkeypatch.setattr(
+        service, "get_popcorn_report", lambda _project_id: asyncio.sleep(0, result=report)
+    )
 
     result = asyncio.run(
         present.ensure_default({"id": "p", "name": "Changed", "language": "nl"}, "host")
@@ -335,10 +400,14 @@ def test_opening_present_is_read_only(monkeypatch) -> None:
     monkeypatch.setattr(present_api, "resolve_project_access", resolve)
     monkeypatch.setattr(present_api.service, "get_popcorn_report", report)
     monkeypatch.setattr(
-        present_api.service, "get_latest_config", lambda *_args, **_kwargs: asyncio.sleep(0, result={"id": "config"})
+        present_api.service,
+        "get_latest_config",
+        lambda *_args, **_kwargs: asyncio.sleep(0, result={"id": "config"}),
     )
     monkeypatch.setattr(
-        present_api.service, "get_loop_for_report", lambda *_args, **_kwargs: asyncio.sleep(0, result={"id": "loop"})
+        present_api.service,
+        "get_loop_for_report",
+        lambda *_args, **_kwargs: asyncio.sleep(0, result={"id": "loop"}),
     )
     monkeypatch.setattr(present_api.present, "payload", payload)
     monkeypatch.setattr(present_api.service, "dispatch_popcorn_tick_now_with_safety", must_not_run)
@@ -354,23 +423,17 @@ def test_incomplete_presentation_reads_as_missing_so_default_post_can_repair(mon
     from unittest.mock import AsyncMock
 
     access = _Access()
-    monkeypatch.setattr(
-        present_api, "resolve_project_access", AsyncMock(return_value=access)
-    )
+    monkeypatch.setattr(present_api, "resolve_project_access", AsyncMock(return_value=access))
     monkeypatch.setattr(
         present_api.service,
         "get_popcorn_report",
         AsyncMock(return_value={"id": 42}),
     )
-    monkeypatch.setattr(
-        present_api.service, "get_latest_config", AsyncMock(return_value=None)
-    )
+    monkeypatch.setattr(present_api.service, "get_latest_config", AsyncMock(return_value=None))
     payload = AsyncMock(side_effect=AssertionError("partial report must not be exposed"))
     monkeypatch.setattr(present_api.present, "payload", payload)
 
-    result = asyncio.run(
-        present_api.project_presentation("p", SimpleNamespace(user_id="host"))
-    )
+    result = asyncio.run(present_api.project_presentation("p", SimpleNamespace(user_id="host")))
 
     assert result == {"presentation": None, "can_edit": False}
     payload.assert_not_called()
@@ -521,9 +584,10 @@ def test_present_draft_isolated_from_legacy_edits_until_publish(monkeypatch) -> 
     )
     assert saved["revision"] == 1
     assert saved["settings"]["title"] == "Draft"
-    assert service.normalize_settings(
-        config["popcorn_settings"], fallback_title="Published"
-    )["title"] == "Published"
+    assert (
+        service.normalize_settings(config["popcorn_settings"], fallback_title="Published")["title"]
+        == "Published"
+    )
 
     asyncio.run(service.update_settings(report=report, patch={"public_labels": "names"}))
     assert config["popcorn_settings"]["public_labels"] == "names"
@@ -532,15 +596,51 @@ def test_present_draft_isolated_from_legacy_edits_until_publish(monkeypatch) -> 
     published = asyncio.run(present.publish_draft(report, expected_revision=1))
     assert published["published"]["title"] == "Draft"
     assert published["revision"] == 2
-    with pytest.raises(HTTPException) as duplicate:
+    with pytest.raises(present.DraftConflict):
         asyncio.run(present.publish_draft(report, expected_revision=1))
-    assert duplicate.value.status_code == 409
-    visible = service.normalize_settings(
-        config["popcorn_settings"], fallback_title="Published"
-    )
+    visible = service.normalize_settings(config["popcorn_settings"], fallback_title="Published")
     assert visible["title"] == "Draft"
     assert visible["show_qr"] is True
     assert "_present_draft" not in visible
+
+
+def test_publish_drops_the_cached_bundle_before_the_nudge(monkeypatch) -> None:
+    from unittest.mock import AsyncMock
+
+    from dembrane.canvas import events
+    from dembrane.popcorn import bundle
+
+    report = {"id": "presentation", "user_instructions": "Published"}
+    config = {"id": "config", "popcorn_settings": service.default_settings(title="Published")}
+    order: list[str] = []
+
+    async def latest(_report_id):
+        return config
+
+    async def update_item(collection, _identity, data):
+        order.append(f"write:{collection}")
+        config.update(data)
+        return {"data": data}
+
+    async def nudge(report_id):
+        order.append(f"nudge:{report_id}")
+
+    monkeypatch.setattr(service, "get_latest_config", latest)
+    monkeypatch.setattr(service.async_directus, "update_item", update_item)
+    monkeypatch.setattr(service, "get_loop_for_report", AsyncMock(return_value=None))
+    monkeypatch.setattr(events, "publish_generation_nudge", nudge)
+    monkeypatch.setattr(
+        bundle, "forget_bundle", lambda report_id: order.append(f"forget:{report_id}")
+    )
+
+    asyncio.run(present.publish_draft(report, expected_revision=0))
+
+    # A viewer refetching on the nudge must not be served the pre-publish deck.
+    assert order == [
+        "write:canvas_config_revision",
+        "forget:presentation",
+        "nudge:presentation",
+    ]
 
 
 def test_present_draft_rejects_stale_revision(monkeypatch) -> None:
@@ -557,7 +657,7 @@ def test_present_draft_rejects_stale_revision(monkeypatch) -> None:
         "get_latest_config",
         AsyncMock(return_value={"id": "config", "popcorn_settings": settings}),
     )
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(present.DraftConflict):
         asyncio.run(
             present.save_draft(
                 {"id": "presentation", "user_instructions": "Published"},
@@ -565,7 +665,6 @@ def test_present_draft_rejects_stale_revision(monkeypatch) -> None:
                 expected_revision=2,
             )
         )
-    assert exc.value.status_code == 409
 
 
 def test_concurrent_draft_saves_with_same_revision_only_commit_once(monkeypatch) -> None:
@@ -586,18 +685,16 @@ def test_concurrent_draft_saves_with_same_revision_only_commit_once(monkeypatch)
     report = {"id": "presentation", "user_instructions": "Published"}
 
     async def save(title):
-        return await present.save_draft(
-            report, patch={"title": title}, expected_revision=0
-        )
+        return await present.save_draft(report, patch={"title": title}, expected_revision=0)
 
     async def run():
         return await asyncio.gather(save("First"), save("Second"), return_exceptions=True)
 
     results = asyncio.run(run())
     committed = [result for result in results if isinstance(result, dict)]
-    conflicts = [result for result in results if isinstance(result, HTTPException)]
+    conflicts = [result for result in results if isinstance(result, present.DraftConflict)]
     assert len(committed) == 1
-    assert len(conflicts) == 1 and conflicts[0].status_code == 409
+    assert len(conflicts) == 1
     assert config["popcorn_settings"]["_present_draft"]["revision"] == 1
 
 
@@ -713,3 +810,126 @@ def test_data_explanation_follows_language_and_actual_policy(language):
     assert screen["steps"][1]["image"] == "talk-public"
     assert screen["notes"][0] == service.DATA_COPY[language]["legal"]["client-managed"]
     assert screen["links"] == [service.DATA_COPY[language]["trust"]]
+
+
+def test_settings_write_is_refused_once_the_lock_was_lost(monkeypatch, _settings_lock_redis):
+    # A stall past the lease lets another writer in. The stalled writer must
+    # not then write its older settings over theirs.
+    from unittest.mock import AsyncMock
+
+    settings = service.default_settings(title="Room")
+
+    async def _config(report_id: str):  # noqa: ARG001
+        # The lease ran out while this read was in flight; someone else holds it.
+        _settings_lock_redis.values["popcorn:settings-write:room"] = "another-writer"
+        return {"id": "config", "popcorn_settings": settings}
+
+    update = AsyncMock()
+    monkeypatch.setattr(service, "get_latest_config", _config)
+    monkeypatch.setattr(service.async_directus, "update_item", update)
+
+    with pytest.raises(service.SettingsWriteLockError):
+        asyncio.run(
+            service.update_settings(
+                report={"id": "room", "user_instructions": "Room"}, patch={"show_qr": False}
+            )
+        )
+    update.assert_not_called()
+    # The other writer's lock is still theirs.
+    assert _settings_lock_redis.values["popcorn:settings-write:room"] == "another-writer"
+
+
+def test_lock_errors_are_a_retryable_503_not_a_500() -> None:
+    from fastapi.testclient import TestClient
+
+    from dembrane.main import app
+
+    assert issubclass(service.SettingsWriteLockError, service.LockUnavailable)
+    assert issubclass(service.PresentationCreateLockError, service.LockUnavailable)
+    handler = app.exception_handlers[service.LockUnavailable]
+    response = asyncio.run(
+        handler(None, service.SettingsWriteLockError("Settings are busy; try again"))
+    )
+    assert response.status_code == 503
+    assert response.headers["retry-after"] == "1"
+    assert b"Settings are busy" in response.body
+    del TestClient
+
+
+def test_a_bindings_patch_names_only_what_it_adopts() -> None:
+    # Two adopters each send the block they found. Neither may drop the other's.
+    current = service.default_settings(title="Room")
+    current["presentation"] = service.normalize_presentation(
+        {"blocks": ["popcorn", "tensions", "map"], "result_bindings": {"map": "M"}}
+    )
+    merged = service.merge_settings(
+        current,
+        {"presentation": {"result_bindings": {"tensions": "analysis:T"}}},
+        fallback_title="Room",
+    )
+    assert merged["presentation"]["result_bindings"] == {"map": "M", "tensions": "analysis:T"}
+    assert merged["presentation"]["blocks"] == ["popcorn", "tensions", "map"]
+
+
+def test_initial_adoption_is_decided_under_the_lock(monkeypatch) -> None:
+    from unittest.mock import AsyncMock
+
+    stored = service.default_settings(title="Room")
+    stored["presentation"] = service.normalize_presentation(
+        {"blocks": ["popcorn", "map"], "result_bindings": {}}
+    )
+    config = {"id": "config", "popcorn_settings": stored}
+
+    async def _update(collection, item_id, payload):  # noqa: ARG001
+        if collection == "canvas_config_revision":
+            config["popcorn_settings"] = payload["popcorn_settings"]
+
+    async def _available(_report, _project_id):
+        # While this adopter was looking, the host adopted a newer map.
+        config["popcorn_settings"]["presentation"]["result_bindings"] = {"map": "newer"}
+        return {"map": "older"}
+
+    monkeypatch.setattr(service, "get_latest_config", AsyncMock(side_effect=lambda _id: config))
+    monkeypatch.setattr(service.async_directus, "update_item", _update)
+    monkeypatch.setattr(service, "_invalidate_and_nudge", AsyncMock())
+    monkeypatch.setattr(present, "available_bindings", _available)
+
+    asyncio.run(
+        present.adopt_results({"id": "room", "user_instructions": "Room"}, "p", initial_only=True)
+    )
+    assert config["popcorn_settings"]["presentation"]["result_bindings"] == {"map": "newer"}
+
+
+def test_a_held_lock_renews_its_lease_and_notices_losing_it(_settings_lock_redis) -> None:
+    async def scenario() -> tuple[bool, bool]:
+        async with service._redis_lock(
+            "popcorn:test-lock",
+            ttl_seconds=0.03,
+            wait_seconds=0.1,
+            error=service.SettingsWriteLockError,
+            busy_message="busy",
+            unavailable_message="unavailable",
+            log_label="test",
+        ) as holder:
+            await asyncio.sleep(0.05)
+            renewed = await holder.still_held()
+            _settings_lock_redis.values["popcorn:test-lock"] = "another-writer"
+            await asyncio.sleep(0.03)
+            return renewed, await holder.still_held()
+
+    renewed, after_loss = asyncio.run(scenario())
+    assert renewed is True
+    assert _settings_lock_redis.renewals
+    assert after_loss is False
+
+
+def test_audience_map_answers_a_store_failure_with_503(monkeypatch) -> None:
+    from dembrane.analysis.contracts import AnalysisStoreError
+
+    async def _broken(*args, **kwargs):  # noqa: ARG001
+        raise AnalysisStoreError("connection reset")
+
+    monkeypatch.setattr(present, "_audience_map", _broken)
+    with pytest.raises(HTTPException) as caught:
+        asyncio.run(present.audience_map("p"))
+    assert caught.value.status_code == 503

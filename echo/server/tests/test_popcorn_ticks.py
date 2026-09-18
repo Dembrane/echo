@@ -365,9 +365,7 @@ def test_popcorn_only_presentation_flushes_originals_then_translates_incremental
     # The extractor's first write makes source wording readable before the
     # dispatcher adds a cache result in a later write.
     original_write = next(
-        write
-        for write in fake.state_writes
-        if (write["conversations"].get("c1") or {}).get("done")
+        write for write in fake.state_writes if (write["conversations"].get("c1") or {}).get("done")
     )
     assert not (original_write.get("translations") or {}).get("en")
     assert any(write.get("translations", {}).get("en") for write in fake.state_writes)
@@ -379,9 +377,12 @@ def test_presentation_manifest_selects_only_requested_analysis_blocks() -> None:
     assert ticks._selected_analysis_views(
         {"presentation": {"blocks": ["popcorn", "stakeholders"]}, "tabs": {}}
     ) == ("stakeholders",)
-    assert ticks._selected_analysis_views(
-        {"presentation": {"blocks": ["popcorn"]}, "tabs": {"tensions": True}}
-    ) == ()
+    assert (
+        ticks._selected_analysis_views(
+            {"presentation": {"blocks": ["popcorn"]}, "tabs": {"tensions": True}}
+        )
+        == ()
+    )
 
 
 def test_prepare_tensions_does_not_extract_popcorn_or_run_stakeholders(
@@ -671,6 +672,82 @@ def test_failed_translation_delivery_is_error_and_its_backup_retries_without_ana
     assert len(fake.created["agent_loop_run"]) == 1
     assert fake.items["agent_loop_run"]["request1"]["status"] == "ok"
     assert fake.items["agent_loop"]["loop1"]["failure_count"] == 0
+
+
+def test_translation_with_failed_batches_is_error_keeps_its_progress_and_retries(
+    fake: _FakeDirectus, monkeypatch
+) -> None:
+    # translate_texts swallows a failed provider batch and answers None for
+    # its texts. A job that leaves texts untranslated is not done: recorded
+    # "ok", the same-id backup would be dropped as a duplicate.
+    fake.items["agent_loop"]["loop1"]["status"] = "paused"
+    fake.items["agent_loop"]["loop1"]["popcorn_state"] = {
+        "run": 1,
+        "order": ["c1"],
+        "conversations": {
+            "c1": {
+                "id": "c1",
+                "done": True,
+                "items": [{"id": "one", "phrase": "Hallo"}, {"id": "two", "phrase": "Dag"}],
+            }
+        },
+        "quotes": [],
+        "analysis": None,
+        "translations": {},
+    }
+
+    async def _config(report_id: str):  # noqa: ARG001
+        return {
+            "popcorn_settings": {
+                "presentation": {"blocks": ["popcorn"], "language_policy": "explicit"},
+                "language": {"ui": "nl", "translate_to": "en"},
+            }
+        }
+
+    async def _room(**kwargs):  # noqa: ARG001
+        return {
+            "files": {
+                "session.json": {},
+                "popcorn/c1.json": {
+                    "revision": 1,
+                    "items": [{"id": "one", "phrase": "Hallo"}, {"id": "two", "phrase": "Dag"}],
+                },
+            }
+        }
+
+    provider_up = False
+    asked: list[list[str]] = []
+
+    async def _translate(texts: list[str], target: str, *, on_batch=None):
+        assert target == "en"
+        asked.append(list(texts))
+        known = {"Hallo": "Hello", "Dag": "Bye"}
+        answers = [known[t] if (provider_up or t == "Hallo") else None for t in texts]
+        if on_batch:
+            await on_batch(texts, answers)
+        return answers
+
+    monkeypatch.setattr(ticks, "get_latest_config", _config)
+    monkeypatch.setattr(ticks, "_room_bundle", _room)
+    monkeypatch.setattr(ticks, "translate_texts", _translate)
+
+    partial = asyncio.run(ticks.run_popcorn_tick("loop1", "translation", request_id="request2"))
+    assert partial["status"] == "error"
+    assert partial["run"]["status"] == "error"
+    assert partial["run"]["detail"] == (
+        "translation failed: translated 1 of 2 texts into en, 1 not translated"
+    )
+    # The batch that did succeed stays persisted.
+    assert any(
+        "Hello" in (write.get("translations", {}).get("en") or {}).values()
+        for write in fake.state_writes
+    )
+
+    provider_up = True
+    retried = asyncio.run(ticks.run_popcorn_tick("loop1", "translation", request_id="request2"))
+    assert retried["status"] == "ok"
+    assert retried["run"]["detail"] == "translated 1 of 1 texts into en"
+    assert asked == [["Hallo", "Dag"], ["Dag"]]
 
 
 def test_second_tick_only_rereads_changed_conversations(fake: _FakeDirectus, monkeypatch) -> None:

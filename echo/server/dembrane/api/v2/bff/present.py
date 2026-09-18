@@ -8,13 +8,11 @@ from fastapi import Depends, Request, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
 from dembrane.popcorn import present, service
-from dembrane.policies import meets_tier
-from dembrane.popcorn.bundle import forget_bundle, bundle_for_report
+from dembrane.popcorn.bundle import bundle_for_report
 from dembrane.api.feature_flags import require_present_enabled
 from dembrane.api.v2.bff._access import resolve_project_access
 from dembrane.api.v2.bff.popcorn import (
     PopcornSettingsBody,
-    _loop_of,
     _rate_limit,
     _require_popcorn,
 )
@@ -47,27 +45,23 @@ async def _draft_envelope(
 
 def _require_draft_revision(state: dict[str, Any], expected_revision: int) -> None:
     if state["revision"] != expected_revision:
-        raise HTTPException(status_code=409, detail="The presentation draft changed elsewhere.")
+        raise HTTPException(status_code=409, detail=present.DRAFT_CONFLICT_DETAIL)
 
 
 async def _validate_draft_settings(
     report: dict[str, Any], access: Any, settings: dict[str, Any]
 ) -> None:
-    if settings.get("show_branding") is False and not meets_tier(
-        str(access.tier or "free"), "changemaker"
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="Removing the dembrane mark requires the changemaker tier.",
+    try:
+        service.require_branding_tier(
+            str(access.tier or "free"), removes_branding=settings.get("show_branding") is False
         )
-    loop = await service.get_loop_for_report(str(report["id"]))
-    if service.is_synthetic_session(service.normalize_state((loop or {}).get("popcorn_state"))):
-        published = await service.load_settings_for(report)
-        if any(settings[name] != published[name] for name in ("disclosure", "notice")):
-            raise HTTPException(
-                status_code=409,
-                detail="A synthetic demo's disclosure and frame are set with the demo.",
-            )
+        await service.require_unlocked_frame(
+            report, await service.get_loop_for_report(str(report["id"])), proposed=settings
+        )
+    except service.BrandingTierRequired as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except service.SyntheticFrameLocked as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.get("/{presentation_id}/draft")
@@ -83,13 +77,7 @@ async def patch_draft(
 ) -> dict[str, Any]:
     report, access = await _require_popcorn(presentation_id, auth)
     access.require("project:update")
-    patch = body.patch.model_dump(exclude_none=True)
-    if "presentation" in patch:
-        blocks = patch["presentation"].get("blocks")
-        if blocks is not None:
-            patch["tabs"] = {kind: kind in blocks for kind in service.TOGGLEABLE_TABS}
-    if "language" in patch and "presentation" not in patch:
-        patch["presentation"] = {"language_policy": "explicit"}
+    patch = service.expand_settings_patch(body.patch.model_dump(exclude_none=True))
     current = await present.draft_state(report)
     _require_draft_revision(current, body.expected_revision)
     candidate = service.merge_settings(
@@ -98,9 +86,12 @@ async def patch_draft(
         fallback_title=str(report.get("user_instructions") or "Popcorn"),
     )
     await _validate_draft_settings(report, access, candidate)
-    state = await present.save_draft(
-        report, patch=patch, expected_revision=body.expected_revision
-    )
+    try:
+        state = await present.save_draft(
+            report, patch=patch, expected_revision=body.expected_revision
+        )
+    except present.DraftConflict as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     return await _draft_envelope(report, access.project, state)
 
 
@@ -114,19 +105,18 @@ async def publish_draft(
     draft = await present.draft_state(report)
     _require_draft_revision(draft, body.expected_revision)
     await _validate_draft_settings(report, access, draft["settings"])
-    state = await present.publish_draft(report, expected_revision=body.expected_revision)
+    try:
+        state = await present.publish_draft(report, expected_revision=body.expected_revision)
+    except present.DraftConflict as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     if state["settings"].get("public"):
         await service.ensure_public_token(report)
-    forget_bundle(str(report["id"]))
-    before_target = (
-        service.resolve_presentation_settings(before, access.project).get("language") or {}
-    ).get("translate_to")
-    target = (
-        service.resolve_presentation_settings(state["settings"], access.project).get("language") or {}
-    ).get("translate_to")
-    if target and target != before_target:
-        loop = await _loop_of(report)
-        await service.dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "translation")
+    try:
+        await service.retarget_translation(
+            report, before=before, after=state["settings"], project=access.project
+        )
+    except service.LoopNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     fresh = await service.async_directus.get_item("project_report", str(report["id"]))
     return await _draft_envelope(fresh or report, access.project, state)
 

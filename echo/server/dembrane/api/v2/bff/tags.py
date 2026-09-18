@@ -470,34 +470,23 @@ async def update_project(
     # project autosaves and presentations with an explicit target stay quiet.
     if "language" in payload and payload.get("language") != access.project.get("language"):
         from dembrane.popcorn import service as popcorn_service
-        from dembrane.canvas.events import publish_generation_nudge
-        from dembrane.popcorn.bundle import forget_bundle
 
         report = await popcorn_service.get_popcorn_report(project_id)
         if report:
             settings = await popcorn_service.load_settings_for(report)
             presentation = settings.get("presentation") or {}
-            before_target = (
-                popcorn_service.resolve_presentation_settings(settings, access.project).get(
-                    "language"
+            if presentation.get("language_policy") == "project":
+                # The same settings read against the project before and after
+                # the save; a presentation with its own target stays quiet.
+                await popcorn_service.retarget_translation(
+                    report,
+                    before=settings,
+                    after=settings,
+                    project=access.project,
+                    project_after=updated_project,
+                    nudge=True,
+                    require_loop=False,
                 )
-                or {}
-            ).get("translate_to")
-            after_target = (
-                popcorn_service.resolve_presentation_settings(settings, updated_project).get(
-                    "language"
-                )
-                or {}
-            ).get("translate_to")
-            if presentation.get("language_policy") == "project" and after_target != before_target:
-                report_id = str(report["id"])
-                forget_bundle(report_id)
-                await publish_generation_nudge(report_id)
-                loop = await popcorn_service.get_loop_for_report(report_id)
-                if loop:
-                    await popcorn_service.dispatch_popcorn_tick_now_with_safety(
-                        str(loop["id"]), "translation"
-                    )
 
     return updated_project
 

@@ -11,6 +11,13 @@ from datetime import datetime, timezone
 
 from dembrane.popcorn import service
 
+
+class DraftConflict(RuntimeError):
+    """The draft moved on since the editor last read it."""
+
+
+DRAFT_CONFLICT_DETAIL = "The presentation draft changed elsewhere."
+
 FALLBACK_TITLES = {
     "en": "Presentation",
     "nl": "Presentatie",
@@ -117,12 +124,10 @@ async def draft_state(report: dict[str, Any]) -> dict[str, Any]:
 async def save_draft(
     report: dict[str, Any], *, patch: dict[str, Any], expected_revision: int
 ) -> dict[str, Any]:
-    async with service.settings_write_lock(str(report["id"])):
+    async with service.settings_write_lock(str(report["id"])) as holder:
         state = await draft_state(report)
         if state["revision"] != expected_revision:
-            from fastapi import HTTPException
-
-            raise HTTPException(status_code=409, detail="The presentation draft changed elsewhere.")
+            raise DraftConflict(DRAFT_CONFLICT_DETAIL)
         fallback_title = str(report.get("user_instructions") or "Popcorn")
         settings = service.merge_settings(state["settings"], patch, fallback_title=fallback_title)
         saved_at = datetime.now(timezone.utc).isoformat()
@@ -134,11 +139,9 @@ async def save_draft(
             "saved_at": saved_at,
             "settings": settings,
         }
-        await service.async_directus.update_item(
-            "canvas_config_revision",
-            str(state["config"]["id"]),
-            {"popcorn_settings": raw},
-        )
+        # An autosave touches the draft container only: the room keeps the
+        # published title and hears nothing until the host publishes.
+        await service.write_config_settings(state["config"], raw, holder=holder)
         return {
             **state,
             "settings": settings,
@@ -148,12 +151,10 @@ async def save_draft(
 
 
 async def publish_draft(report: dict[str, Any], *, expected_revision: int) -> dict[str, Any]:
-    async with service.settings_write_lock(str(report["id"])):
+    async with service.settings_write_lock(str(report["id"])) as holder:
         state = await draft_state(report)
         if state["revision"] != expected_revision:
-            from fastapi import HTTPException
-
-            raise HTTPException(status_code=409, detail="The presentation draft changed elsewhere.")
+            raise DraftConflict(DRAFT_CONFLICT_DETAIL)
         saved_at = datetime.now(timezone.utc).isoformat()
         revision = state["revision"] + 1
         settings = dict(state["settings"])
@@ -162,26 +163,14 @@ async def publish_draft(report: dict[str, Any], *, expected_revision: int) -> di
             "saved_at": saved_at,
             "settings": state["settings"],
         }
-        await service.async_directus.update_item(
-            "canvas_config_revision",
-            str(state["config"]["id"]),
-            {"popcorn_settings": settings},
+        await service.write_settings(
+            report,
+            state["config"],
+            settings,
+            fallback_title=str(report.get("user_instructions") or "Popcorn"),
+            nudge=True,
+            holder=holder,
         )
-        fallback_title = str(report.get("user_instructions") or "Popcorn")
-        if state["settings"]["title"] != fallback_title:
-            await service.async_directus.update_item(
-                "project_report",
-                str(report["id"]),
-                {"user_instructions": state["settings"]["title"]},
-            )
-            loop = await service.get_loop_for_report(str(report["id"]))
-            if loop:
-                await service.async_directus.update_item(
-                    "agent_loop", str(loop["id"]), {"name": state["settings"]["title"]}
-                )
-        from dembrane.canvas.events import publish_generation_nudge
-
-        await publish_generation_nudge(str(report["id"]))
         return {
             **state,
             "published": state["settings"],
@@ -258,6 +247,28 @@ async def audience_map(
     settings: dict[str, Any] | None = None,
     node_limit: int | None = None,
     edge_limit: int | None = None,
+) -> dict[str, Any]:
+    from fastapi import HTTPException
+
+    from dembrane.map.store import MapStoreError
+    from dembrane.analysis.contracts import AnalysisStoreError
+
+    # The host's graph endpoint answers a store failure with 503; the room's
+    # screen gets the same, and keeps what it shows until the store is back.
+    try:
+        return await _audience_map(
+            project_id, settings=settings, node_limit=node_limit, edge_limit=edge_limit
+        )
+    except (MapStoreError, AnalysisStoreError) as exc:
+        raise HTTPException(status_code=503, detail="Map storage is unavailable.") from exc
+
+
+async def _audience_map(
+    project_id: str,
+    *,
+    settings: dict[str, Any] | None,
+    node_limit: int | None,
+    edge_limit: int | None,
 ) -> dict[str, Any]:
     from fastapi import HTTPException
 
@@ -378,22 +389,29 @@ async def available_bindings(report: dict[str, Any], project_id: str) -> dict[st
 async def adopt_results(
     report: dict[str, Any], project_id: str, *, initial_only: bool = False
 ) -> None:
-    settings = await service.load_settings_for(report)
-    manifest = settings.get("presentation") or {}
-    current = manifest.get("result_bindings") or {}
+    # Looking for results reads the analysis store and can take a while, so it
+    # happens outside the lock. What is bound now, and so what an initial
+    # adoption may still fill in, is read inside it: a binding the host adopted
+    # meanwhile is never replaced by an older one found before it.
     available = await available_bindings(report, project_id)
-    updates = {
-        block: identity
-        for block, identity in available.items()
-        if block in manifest.get("blocks", []) and (not initial_only or block not in current)
-    }
-    if updates:
-        await service.update_settings(
-            report=report, patch={"presentation": {"result_bindings": {**current, **updates}}}
-        )
-        from dembrane.popcorn.bundle import forget_bundle
-
-        forget_bundle(str(report["id"]))
+    if not available:
+        return
+    async with service.settings_write_lock(str(report["id"])) as holder:
+        manifest = (await service.load_settings_for(report)).get("presentation") or {}
+        current = manifest.get("result_bindings") or {}
+        updates = {
+            block: identity
+            for block, identity in available.items()
+            if block in manifest.get("blocks", [])
+            and current.get(block) != identity
+            and (not initial_only or block not in current)
+        }
+        if updates:
+            await service._update_settings_unlocked(
+                report=report,
+                patch={"presentation": {"result_bindings": updates}},
+                holder=holder,
+            )
 
 
 def _curate_map(payload: dict[str, Any], settings: dict[str, Any] | None) -> dict[str, Any]:

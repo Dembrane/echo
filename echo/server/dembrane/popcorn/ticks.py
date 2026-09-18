@@ -1175,6 +1175,10 @@ async def _snapshot_version(
     )
 
 
+class TranslationIncomplete(RuntimeError):
+    """Some texts came back untranslated. What did translate is already saved."""
+
+
 async def _translate_session(
     state: dict[str, Any],
     settings: dict[str, Any],
@@ -1182,9 +1186,14 @@ async def _translate_session(
     report_id: str,
     project_id: str,
     writer: _TickWriter | None = None,
+    require_complete: bool = False,
 ) -> str | None:
     """The host's translation brought up to date with what the room's deck
-    shows now. An outcome line, or None when nothing was owed."""
+    shows now. An outcome line, or None when nothing was owed.
+
+    A full tick asks again for what is missing on its next read. A
+    translation-only job has no next read, so it passes `require_complete`
+    and fails when texts are left over: its same-id backup may then retry."""
     target = target_language(settings)
     if not target:
         return None
@@ -1215,7 +1224,11 @@ async def _translate_session(
             await writer.flush()
 
     answers = await translate_texts(gaps, target, on_batch=store)
-    return f"translated {sum(1 for a in answers if a)} of {len(gaps)} texts into {target}"
+    outcome = f"translated {sum(1 for a in answers if a)} of {len(gaps)} texts into {target}"
+    left = len(missing_texts(files, table, target))
+    if require_complete and left:
+        raise TranslationIncomplete(f"{outcome}, {left} not translated")
+    return outcome
 
 
 async def run_popcorn_tick(
@@ -1335,7 +1348,9 @@ async def run_popcorn_tick(
         if callable(resolver):
             settings = resolver(settings, project if isinstance(project, dict) else {})
         analysis_views = _selected_analysis_views(settings)
-        prepare_kind = tick_kind.removeprefix("prepare:") if tick_kind.startswith("prepare:") else None
+        prepare_kind = (
+            tick_kind.removeprefix("prepare:") if tick_kind.startswith("prepare:") else None
+        )
         if prepare_kind == "popcorn":
             analysis_views = ()
         elif prepare_kind in ANALYSIS_VIEWS:
@@ -1349,6 +1364,7 @@ async def run_popcorn_tick(
                     report_id=report_id,
                     project_id=project_id,
                     writer=writer,
+                    require_complete=True,
                 )
             except Exception as exc:  # the room keeps its original words
                 detail = f"translation failed: {_failure_text(exc)}"
@@ -1525,9 +1541,7 @@ async def run_popcorn_tick(
                 )
 
         async def analysis_pass() -> None:
-            if not transcripts or not (
-                analysis_stale or extraction_work or tick_kind == "rerun"
-            ):
+            if not transcripts or not (analysis_stale or extraction_work or tick_kind == "rerun"):
                 return
             # A changed session is analysed whole; a session that only has a
             # view left stale (its last run failed) redoes that view alone.
