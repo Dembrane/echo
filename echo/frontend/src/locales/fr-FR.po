@@ -15,16 +15,6 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 
 #. js-lingui-explicit-id
-#: src/lib/directus.ts:53
-msgid "Something went wrong"
-msgstr ""
-
-#. js-lingui-explicit-id
-#: src/components/layout/TransitionCurtainProvider.tsx:197
-msgid "Welcome back"
-msgstr ""
-
-#. js-lingui-explicit-id
 #: src/lib/directus.ts:35
 msgid "You are not authenticated"
 msgstr "Vous n'êtes pas authentifié"
@@ -45,6 +35,11 @@ msgid "Server error"
 msgstr "Erreur serveur"
 
 #. js-lingui-explicit-id
+#: src/lib/directus.ts:53
+msgid "Something went wrong"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/components/layout/TransitionCurtainProvider.tsx:156
 msgid "We're preparing your workspace."
 msgstr "Nous préparons votre espace de travail."
@@ -53,6 +48,11 @@ msgstr "Nous préparons votre espace de travail."
 #: src/components/layout/TransitionCurtainProvider.tsx:189
 msgid "Preparing your dashboard"
 msgstr "Préparation de ton dashboard"
+
+#. js-lingui-explicit-id
+#: src/components/layout/TransitionCurtainProvider.tsx:197
+msgid "Welcome back"
+msgstr ""
 
 #: src/components/popcorn/PopcornStatus.tsx:45
 msgid " · {heldBack} held back"
@@ -741,7 +741,7 @@ msgstr ""
 msgid "1 history entry"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:659
+#: src/routes/project/present/PresentRoute.tsx:676
 #: src/components/popcorn/PopcornActions.tsx:137
 msgid "1 hour"
 msgstr ""
@@ -770,7 +770,7 @@ msgstr ""
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. Lorsqu'un événement de conversation ou de rapport se produit, nous envoyons automatiquement les données à votre URL"
 
-#: src/routes/project/present/PresentRoute.tsx:661
+#: src/routes/project/present/PresentRoute.tsx:678
 #: src/routes/project/canvas/CanvasRoute.tsx:214
 #: src/components/popcorn/PopcornActions.tsx:139
 msgid "24 hours"
@@ -800,13 +800,13 @@ msgstr ""
 msgid "6 to 15."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:660
+#: src/routes/project/present/PresentRoute.tsx:677
 #: src/routes/project/canvas/CanvasRoute.tsx:213
 #: src/components/popcorn/PopcornActions.tsx:138
 msgid "8 hours"
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:299
+#: src/components/popcorn/PopcornOpeningSettings.tsx:253
 msgid "A blue bar across the top of every tab, with your text and a link back to the opening."
 msgstr ""
 
@@ -880,11 +880,11 @@ msgstr ""
 msgid "A sample session, not your data. Yours will look like this."
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:223
+#: src/components/popcorn/PopcornOpeningSettings.tsx:177
 msgid "A screen before the countdown that says what the room is looking at."
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:334
+#: src/components/popcorn/PopcornOpeningSettings.tsx:288
 msgid "A screen that explains, step by step, what happens to the recordings. Its words follow this project's anonymization and legal basis."
 msgstr ""
 
@@ -912,11 +912,11 @@ msgstr ""
 msgid "A smoother conversation workspace"
 msgstr "Un espace de conversations plus fluide"
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:349
+#: src/components/popcorn/PopcornOpeningSettings.tsx:303
 msgid "A switch without words shows nothing on the screen."
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:167
+#: src/components/popcorn/PopcornOpeningSettings.tsx:121
 msgid "A title and subtitle before the countdown."
 msgstr ""
 
@@ -1605,7 +1605,7 @@ msgstr ""
 msgid "An object outside this view"
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:259
+#: src/components/popcorn/PopcornOpeningSettings.tsx:213
 msgid "An optional second screen after the disclosure."
 msgstr ""
 
@@ -1868,7 +1868,7 @@ msgstr "Êtes-vous sûr de vouloir supprimer votre avatar ?"
 msgid "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 msgstr "Êtes-vous sûr de vouloir supprimer votre logo personnalisé ? Le logo dembrane par défaut sera utilisé à la place."
 
-#: src/components/present/AudienceMapAdapter.tsx:97
+#: src/components/present/AudienceMapAdapter.tsx:123
 #: src/components/map/attributes.ts:61
 #: src/components/map/panels/NodeDetailCard.tsx:444
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:197
@@ -1883,7 +1883,7 @@ msgstr "Argument"
 msgid "Argument map"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:164
+#: src/components/present/AudienceMapAdapter.tsx:190
 #: src/components/map/MapPage.tsx:498
 msgid "Argument tree (MST)"
 msgstr ""
@@ -2022,11 +2022,11 @@ msgstr ""
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention ! Nous avons perdu les 60 dernières secondes de votre enregistrement en raison d'une interruption. Veuillez appuyer sur le bouton ci-dessous pour vous reconnecter."
 
-#: src/routes/project/present/PresentRoute.tsx:384
+#: src/routes/project/present/PresentRoute.tsx:396
 msgid "Audience language:"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:470
+#: src/routes/project/present/PresentRoute.tsx:483
 msgid "Audience preview"
 msgstr ""
 
@@ -2659,15 +2659,15 @@ msgstr ""
 msgid "Changes applied. You can fine-tune them anytime in project settings."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:827
+#: src/routes/project/present/PresentRoute.tsx:846
 msgid "Changes are saved as a draft. Publish when you’re ready to update the room screen."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:853
+#: src/routes/project/present/PresentRoute.tsx:872
 msgid "Changes could not be published or saved. Review your draft and try again."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:780
+#: src/routes/project/present/PresentRoute.tsx:799
 msgid "Changes could not be published. Try again."
 msgstr ""
 
@@ -2842,7 +2842,7 @@ msgstr "Choisir parmi vos autres projets"
 msgid "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:153
+#: src/routes/project/present/PresentRoute.tsx:165
 msgid "Choose the tabs your audience can explore."
 msgstr ""
 
@@ -3059,7 +3059,7 @@ msgid "Combined from {0} arguments"
 msgstr "Regroupé à partir de {0} arguments"
 
 #. placeholder {0}: selectedObject.detail.consolidation.memberCount
-#: src/components/present/AudienceMapAdapter.tsx:232
+#: src/components/present/AudienceMapAdapter.tsx:258
 msgid "Combines {0} items"
 msgstr ""
 
@@ -3196,7 +3196,7 @@ msgstr "Consentement"
 msgid "Consent-based processing is active without a privacy policy link. Add one where the legal basis is set: participants must be able to read the privacy policy."
 msgstr "Le traitement basé sur le consentement est actif sans lien vers la politique de confidentialité. Ajoutez-en un là où la base juridique est définie : les participants doivent pouvoir lire la politique de confidentialité."
 
-#: src/components/present/AudienceMapAdapter.tsx:99
+#: src/components/present/AudienceMapAdapter.tsx:125
 msgid "Consolidated argument"
 msgstr ""
 
@@ -3217,7 +3217,7 @@ msgstr ""
 msgid "Content"
 msgstr "Contenu"
 
-#: src/components/present/AudienceMapAdapter.tsx:88
+#: src/components/present/AudienceMapAdapter.tsx:114
 #: src/components/map/attributes.ts:281
 #: src/components/map/panels/shared.tsx:130
 msgid "Contested"
@@ -3520,7 +3520,7 @@ msgstr ""
 msgid "Could not load payments. Check auth and backend logs."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:889
+#: src/routes/project/present/PresentRoute.tsx:908
 msgid "Could not load the latest results. Try again."
 msgstr ""
 
@@ -3540,7 +3540,7 @@ msgstr ""
 msgid "Could not open the conversation list. Try again."
 msgstr "Impossible d'ouvrir la liste des conversations. Réessayez."
 
-#: src/components/present/hooks/index.ts:47
+#: src/components/present/hooks/index.ts:48
 msgid "Could not open the presentation. Try again."
 msgstr ""
 
@@ -3584,7 +3584,7 @@ msgstr "Retour non enregistré"
 msgid "Could not save tags"
 msgstr ""
 
-#: src/components/analysis/hooks/index.ts:251
+#: src/components/analysis/hooks/index.ts:257
 msgid "Could not save the change. Try again."
 msgstr ""
 
@@ -3608,7 +3608,7 @@ msgstr ""
 msgid "Could not send the report. Try again"
 msgstr "Impossible d'envoyer le signalement. Réessayez"
 
-#: src/components/analysis/hooks/index.ts:304
+#: src/components/analysis/hooks/index.ts:335
 msgid "Could not start this run. Try again."
 msgstr ""
 
@@ -3616,7 +3616,7 @@ msgstr ""
 msgid "Could not stop live"
 msgstr ""
 
-#: src/components/analysis/hooks/index.ts:314
+#: src/components/analysis/hooks/index.ts:354
 msgid "Could not stop this run. Try again."
 msgstr ""
 
@@ -3953,11 +3953,11 @@ msgstr ""
 msgid "Data ownership"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:130
+#: src/routes/project/present/PresentRoute.tsx:142
 msgid "Data policy"
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:150
+#: src/components/popcorn/PopcornOpeningSettings.tsx:104
 msgid "Data policy and disclosure"
 msgstr ""
 
@@ -4173,7 +4173,7 @@ msgstr ""
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr ""
 
-#: src/components/popcorn/PopcornVoiceSection.tsx:61
+#: src/components/popcorn/PopcornVoiceSection.tsx:60
 msgid "dembrane default"
 msgstr ""
 
@@ -4287,7 +4287,7 @@ msgstr ""
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:164
+#: src/routes/project/present/PresentRoute.tsx:176
 msgid "Different perspectives and trade-offs"
 msgstr ""
 
@@ -4316,7 +4316,7 @@ msgstr ""
 msgid "Discard this workspace?"
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:240
+#: src/components/popcorn/PopcornOpeningSettings.tsx:194
 msgid "Disclosure"
 msgstr ""
 
@@ -4346,7 +4346,7 @@ msgstr ""
 msgid "Dismissed. Nothing was changed."
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:156
+#: src/components/present/AudienceMapAdapter.tsx:182
 msgid "Display"
 msgstr ""
 
@@ -4401,7 +4401,7 @@ msgstr ""
 msgid "Done"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:723
+#: src/routes/project/present/PresentRoute.tsx:742
 msgid "Done editing"
 msgstr ""
 
@@ -4488,7 +4488,7 @@ msgstr ""
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: src/routes/project/present/PresentRoute.tsx:655
+#: src/routes/project/present/PresentRoute.tsx:672
 #: src/components/workspace/TierCapacityMatrix.tsx:102
 #: src/components/conversation/ConversationEdit.tsx:326
 msgid "Duration"
@@ -4550,7 +4550,7 @@ msgstr "ex. Résumé hebdomadaire des parties prenantes"
 msgid "e.g., Slack Notifications, Make Workflow"
 msgstr "par exemple : Notifications Slack, Make Workflow"
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:241
+#: src/components/popcorn/PopcornOpeningSettings.tsx:195
 msgid "Each line becomes a paragraph."
 msgstr ""
 
@@ -4617,7 +4617,7 @@ msgstr "Mode édition"
 msgid "Edit options"
 msgstr "Modifier les options"
 
-#: src/routes/project/present/PresentRoute.tsx:723
+#: src/routes/project/present/PresentRoute.tsx:742
 msgid "Edit presentation"
 msgstr ""
 
@@ -4792,7 +4792,7 @@ msgstr ""
 msgid "English"
 msgstr "Anglais"
 
-#: src/routes/project/present/PresentRoute.tsx:390
+#: src/routes/project/present/PresentRoute.tsx:402
 msgid "English fallback"
 msgstr ""
 
@@ -4808,7 +4808,7 @@ msgstr "Entrez un nom pour le nouveau conversation"
 msgid "Enter a name for your cloned project"
 msgstr "Entrez un nom pour votre projet cloné"
 
-#: src/routes/project/present/PresentRoute.tsx:447
+#: src/routes/project/present/PresentRoute.tsx:459
 msgid "Enter a presentation title"
 msgstr ""
 
@@ -4977,7 +4977,7 @@ msgstr "Tout semble bon – vous pouvez continuer."
 msgid "Evidence"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:254
+#: src/routes/project/present/PresentRoute.tsx:266
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:439
 msgid "Evidence and history"
 msgstr ""
@@ -5132,8 +5132,8 @@ msgstr ""
 #~ msgid "Fact-check"
 #~ msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:146
-#: src/components/present/AudienceMapAdapter.tsx:241
+#: src/components/present/AudienceMapAdapter.tsx:172
+#: src/components/present/AudienceMapAdapter.tsx:267
 #: src/components/map/attributes.ts:288
 msgid "Factual status"
 msgstr ""
@@ -5495,7 +5495,7 @@ msgstr ""
 msgid "Follow ongoing sessions in the live monitor."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:364
+#: src/routes/project/present/PresentRoute.tsx:376
 msgid "Follow project language"
 msgstr ""
 
@@ -5503,11 +5503,11 @@ msgstr ""
 msgid "Follow source citations from chat answers."
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:274
+#: src/components/popcorn/PopcornOpeningSettings.tsx:228
 msgid "Follow-up text"
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:258
+#: src/components/popcorn/PopcornOpeningSettings.tsx:212
 msgid "Follow-up title"
 msgstr ""
 
@@ -5529,7 +5529,7 @@ msgstr "Pour les utilisateurs avancés : Une clé secrète pour vérifier l'auth
 msgid "For an external organisation"
 msgstr ""
 
-#: src/components/popcorn/PopcornVoiceSection.tsx:84
+#: src/components/popcorn/PopcornVoiceSection.tsx:83
 msgid "For example: keep the members' own words, skip anything about named staff."
 msgstr ""
 
@@ -5575,7 +5575,7 @@ msgstr ""
 msgid "Forgot your password?"
 msgstr "Mot de passe oublié ?"
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:315
+#: src/components/popcorn/PopcornOpeningSettings.tsx:269
 msgid "Frame text"
 msgstr ""
 
@@ -5634,7 +5634,7 @@ msgstr "Transcription complète (lorsqu'elle est disponible)"
 msgid "Fullscreen"
 msgstr "Plein écran"
 
-#: src/components/present/AudienceScreen.tsx:1048
+#: src/components/present/AudienceScreen.tsx:960
 msgid "Fullscreen is unavailable in this browser."
 msgstr ""
 
@@ -5780,7 +5780,7 @@ msgstr ""
 msgid "Give me a list of 5-10 topics that are being discussed."
 msgstr "Donnez-moi une liste de 5 à 10 sujets qui sont discutés."
 
-#: src/components/popcorn/PopcornVoiceSection.tsx:205
+#: src/components/popcorn/PopcornVoiceSection.tsx:166
 #: src/components/popcorn/PopcornStart.tsx:96
 msgid "Give the session a title"
 msgstr ""
@@ -5804,8 +5804,8 @@ msgstr "Plein écran"
 msgid "Go home"
 msgstr "Retour à l'accueil"
 
-#: src/routes/project/present/PresentRoute.tsx:643
-#: src/routes/project/present/PresentRoute.tsx:674
+#: src/routes/project/present/PresentRoute.tsx:660
+#: src/routes/project/present/PresentRoute.tsx:693
 #: src/components/popcorn/PopcornActions.tsx:190
 msgid "Go live"
 msgstr ""
@@ -5971,7 +5971,7 @@ msgstr "Masquer les données"
 msgid "Hide detail"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:275
+#: src/routes/project/present/PresentRoute.tsx:287
 msgid "Hide from this presentation"
 msgstr ""
 
@@ -6084,7 +6084,7 @@ msgstr "Comment ça marche :"
 msgid "How many recordings do you expect in your first year?"
 msgstr ""
 
-#: src/components/popcorn/PopcornVoiceSection.tsx:52
+#: src/components/popcorn/PopcornVoiceSection.tsx:51
 msgid "How should the phrases sound?"
 msgstr ""
 
@@ -6156,7 +6156,7 @@ msgstr "IBAN"
 msgid "ID"
 msgstr "ID"
 
-#: src/routes/project/present/PresentRoute.tsx:161
+#: src/routes/project/present/PresentRoute.tsx:173
 msgid "Ideas and how they connect"
 msgstr ""
 
@@ -6248,7 +6248,7 @@ msgstr ""
 msgid "Included hours used up this month"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:90
+#: src/components/present/AudienceMapAdapter.tsx:116
 #: src/components/map/attributes.ts:282
 msgid "Inconclusive"
 msgstr ""
@@ -6302,7 +6302,7 @@ msgstr ""
 msgid "Inspect evidence for {label}"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:216
+#: src/routes/project/present/PresentRoute.tsx:228
 msgid "Inspect evidence or hide a finding from this presentation. Shared results stay available in Analysis."
 msgstr ""
 
@@ -6322,7 +6322,7 @@ msgstr "Instructions pour générer le résultat de la vérification"
 msgid "interview"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:127
+#: src/routes/project/present/PresentRoute.tsx:139
 msgid "Intro"
 msgstr ""
 
@@ -6330,11 +6330,11 @@ msgstr ""
 msgid "Introducing Popcorn"
 msgstr "Voici Popcorn"
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:193
+#: src/components/popcorn/PopcornOpeningSettings.tsx:147
 msgid "Introduction subtitle"
 msgstr "Sous-titre de l’introduction"
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:181
+#: src/components/popcorn/PopcornOpeningSettings.tsx:135
 msgid "Introduction title"
 msgstr "Titre de l’introduction"
 
@@ -6540,7 +6540,7 @@ msgstr "Italien (uniquement les fonctionnalités ECHO, Transcription et Résumé
 msgid "Italian for your core workflows"
 msgstr "L’italien pour vos fonctions essentielles"
 
-#: src/components/present/AudienceScreen.tsx:749
+#: src/components/present/AudienceScreen.tsx:658
 msgid "Its link may have been switched off. Ask the host."
 msgstr ""
 
@@ -6717,7 +6717,7 @@ msgstr ""
 msgid "Keep pending"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:649
+#: src/routes/project/present/PresentRoute.tsx:666
 msgid "Keep Popcorn up to date as conversations arrive. You can go live before the first recording."
 msgstr ""
 
@@ -6758,7 +6758,7 @@ msgstr ""
 msgid "Kind"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:359
+#: src/routes/project/present/PresentRoute.tsx:371
 #: src/features/sidebar/shell/UserMenu.tsx:119
 #: src/components/settings/LanguageSettingsCard.tsx:13
 #: src/components/report/UpdateReportModalButton.tsx:253
@@ -6931,13 +6931,13 @@ msgstr ""
 msgid "Lifetime cap"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:86
+#: src/components/present/AudienceMapAdapter.tsx:112
 #: src/components/map/attributes.ts:280
 #: src/components/map/panels/shared.tsx:128
 msgid "Likely false"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:84
+#: src/components/present/AudienceMapAdapter.tsx:110
 #: src/components/map/attributes.ts:279
 #: src/components/map/panels/shared.tsx:126
 msgid "Likely true"
@@ -7068,7 +7068,7 @@ msgstr ""
 msgid "live, reads every {every} min"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:700
+#: src/routes/project/present/PresentRoute.tsx:719
 msgid "Live. New conversations will feed Popcorn as they arrive."
 msgstr ""
 
@@ -7111,7 +7111,7 @@ msgstr "Chargement des journaux d'audit…"
 msgid "Loading collections..."
 msgstr "Chargement des collections..."
 
-#: src/routes/project/present/PresentRoute.tsx:845
+#: src/routes/project/present/PresentRoute.tsx:864
 msgid "Loading draft…"
 msgstr ""
 
@@ -7131,9 +7131,9 @@ msgstr ""
 msgid "Loading microphones..."
 msgstr "Chargement des microphones..."
 
-#: src/routes/project/present/PresentRoute.tsx:803
-#: src/routes/project/present/PresentRoute.tsx:930
-#: src/routes/project/present/PresentRoute.tsx:968
+#: src/routes/project/present/PresentRoute.tsx:822
+#: src/routes/project/present/PresentRoute.tsx:950
+#: src/routes/project/present/PresentRoute.tsx:988
 msgid "Loading presentation"
 msgstr ""
 
@@ -7184,7 +7184,7 @@ msgstr "Chargement…"
 msgid "Local argument map"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:170
+#: src/components/present/AudienceMapAdapter.tsx:196
 #: src/components/map/MapPage.tsx:533
 msgid "Local map"
 msgstr ""
@@ -7362,7 +7362,7 @@ msgstr ""
 msgid "Many maps were started just now. Try again in a moment."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:75
+#: src/routes/project/present/PresentRoute.tsx:87
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:158
 #: src/components/map/MapPage.tsx:997
 msgid "Map"
@@ -7380,7 +7380,7 @@ msgstr ""
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:411
+#: src/components/present/AudienceMapAdapter.tsx:453
 msgid "Map results are not ready yet."
 msgstr ""
 
@@ -7817,7 +7817,7 @@ msgstr ""
 msgid "Neighbor Attraction: {0}"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:141
+#: src/components/present/AudienceMapAdapter.tsx:167
 #: src/components/map/attributes.ts:248
 #: src/components/map/panels/shared.tsx:30
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:209
@@ -7952,7 +7952,7 @@ msgstr ""
 msgid "Next invoice"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:321
+#: src/routes/project/present/PresentRoute.tsx:333
 msgid "Next results"
 msgstr ""
 
@@ -7982,7 +7982,7 @@ msgstr ""
 msgid "No actions found"
 msgstr "Aucune action trouvée"
 
-#: src/components/present/AudienceScreen.tsx:918
+#: src/components/present/AudienceScreen.tsx:827
 msgid "No activities are selected for this presentation."
 msgstr ""
 
@@ -8140,7 +8140,7 @@ msgstr ""
 msgid "No map has been generated for this project yet."
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:325
+#: src/components/present/AudienceMapAdapter.tsx:351
 msgid "No map results are ready yet."
 msgstr ""
 
@@ -8781,7 +8781,7 @@ msgstr ""
 msgid "Open host guide"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:883
+#: src/routes/project/present/PresentRoute.tsx:902
 msgid "Open in Analysis"
 msgstr ""
 
@@ -8861,7 +8861,7 @@ msgstr "Ouvrir le guide de dépannage"
 msgid "Open What's new from the sidebar and watch the organisation, workspace and project walkthrough."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:192
+#: src/routes/project/present/PresentRoute.tsx:204
 msgid "Open with"
 msgstr ""
 
@@ -8877,11 +8877,11 @@ msgstr ""
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Ouvrez votre application d'authentification et entrez le code actuel à six chiffres."
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:151
+#: src/components/popcorn/PopcornOpeningSettings.tsx:105
 msgid "Opening and frame"
 msgstr ""
 
-#: src/components/present/AudienceScreen.tsx:797
+#: src/components/present/AudienceScreen.tsx:706
 msgid "Opening screens"
 msgstr ""
 
@@ -9111,7 +9111,7 @@ msgid "Owning organisation"
 msgstr ""
 
 #. placeholder {0}: resultPage + 1
-#: src/routes/project/present/PresentRoute.tsx:302
+#: src/routes/project/present/PresentRoute.tsx:314
 msgid "Page {0}"
 msgstr ""
 
@@ -9362,7 +9362,7 @@ msgstr ""
 msgid "People with access"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:163
+#: src/routes/project/present/PresentRoute.tsx:175
 msgid "People, groups and what matters to them"
 msgstr ""
 
@@ -9398,7 +9398,7 @@ msgstr "Téléphone"
 msgid "Phrase"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:861
+#: src/routes/project/present/PresentRoute.tsx:880
 msgid "phrases"
 msgstr ""
 
@@ -9493,7 +9493,7 @@ msgstr ""
 msgid "Plans, gathers, and checks its work across many conversations."
 msgstr ""
 
-#: src/components/present/AudienceScreen.tsx:1001
+#: src/components/present/AudienceScreen.tsx:913
 msgid "Playback and fullscreen"
 msgstr ""
 
@@ -9578,7 +9578,7 @@ msgstr ""
 msgid "Poor response"
 msgstr "Mauvaise réponse"
 
-#: src/routes/project/present/PresentRoute.tsx:76
+#: src/routes/project/present/PresentRoute.tsx:88
 #: src/routes/project/library/LibraryRoute.tsx:123
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:379
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:136
@@ -9593,7 +9593,7 @@ msgstr "Popcorn"
 msgid "Popcorn could not be loaded. Try again in a moment."
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:101
+#: src/components/present/AudienceMapAdapter.tsx:127
 msgid "Popcorn phrase"
 msgstr ""
 
@@ -9709,26 +9709,26 @@ msgstr ""
 msgid "Preparing your experience"
 msgstr "Préparation de votre expérience"
 
-#: src/routes/project/present/PresentRoute.tsx:606
-#: src/routes/project/present/PresentRoute.tsx:694
-#: src/routes/project/present/PresentRoute.tsx:957
+#: src/routes/project/present/PresentRoute.tsx:623
+#: src/routes/project/present/PresentRoute.tsx:713
+#: src/routes/project/present/PresentRoute.tsx:977
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:115
 msgid "Present"
 msgstr ""
 
-#: src/components/present/AudienceScreen.tsx:844
+#: src/components/present/AudienceScreen.tsx:753
 msgid "Presentation activities"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:613
+#: src/routes/project/present/PresentRoute.tsx:630
 msgid "Presentation controls"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:111
+#: src/routes/project/present/PresentRoute.tsx:123
 msgid "Presentation editor"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:444
+#: src/routes/project/present/PresentRoute.tsx:456
 msgid "Presentation title"
 msgstr ""
 
@@ -9748,7 +9748,7 @@ msgstr "Aperçu : Le rapide brun fox saute sur le chien paresseux."
 msgid "Previous"
 msgstr "Précédent"
 
-#: src/routes/project/present/PresentRoute.tsx:299
+#: src/routes/project/present/PresentRoute.tsx:311
 msgid "Previous results"
 msgstr ""
 
@@ -10017,8 +10017,8 @@ msgstr ""
 msgid "Publish"
 msgstr "Publier"
 
-#: src/routes/project/present/PresentRoute.tsx:736
-#: src/routes/project/present/PresentRoute.tsx:793
+#: src/routes/project/present/PresentRoute.tsx:755
+#: src/routes/project/present/PresentRoute.tsx:812
 msgid "Publish changes"
 msgstr ""
 
@@ -10860,7 +10860,7 @@ msgstr "Réinitialiser"
 msgid "Reset filters"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:334
+#: src/routes/project/present/PresentRoute.tsx:346
 msgid "Reset hidden findings"
 msgstr ""
 
@@ -10910,7 +10910,7 @@ msgstr ""
 msgid "Results"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:224
+#: src/routes/project/present/PresentRoute.tsx:236
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:158
 msgid "Results could not be loaded."
 msgstr ""
@@ -11030,7 +11030,7 @@ msgstr ""
 msgid "Review processing status for every conversation collected in this project."
 msgstr "Examiner le statut de traitement pour chaque conversation collectée dans ce projet."
 
-#: src/routes/project/present/PresentRoute.tsx:208
+#: src/routes/project/present/PresentRoute.tsx:220
 msgid "Review visible results"
 msgstr ""
 
@@ -11246,7 +11246,7 @@ msgstr ""
 msgid "Saving..."
 msgstr "Enregistrement..."
 
-#: src/components/popcorn/PopcornVoiceSection.tsx:75
+#: src/components/popcorn/PopcornVoiceSection.tsx:74
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr ""
 
@@ -11314,7 +11314,7 @@ msgstr "Rapports programmés et modèles personnalisés"
 msgid "Screen"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:406
+#: src/routes/project/present/PresentRoute.tsx:418
 msgid "Screen appearance"
 msgstr ""
 
@@ -11541,11 +11541,11 @@ msgstr ""
 msgid "Select a microphone"
 msgstr "Sélectionner un microphone"
 
-#: src/components/present/AudienceMapAdapter.tsx:254
+#: src/components/present/AudienceMapAdapter.tsx:280
 msgid "Select a node to see its details."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:350
+#: src/routes/project/present/PresentRoute.tsx:362
 msgid "Select a tab to show results on the screen."
 msgstr ""
 
@@ -11672,7 +11672,7 @@ msgstr "Sélectionner votre microphone:"
 msgid "Selected Files ({0}/{MAX_FILES})"
 msgstr "Fichiers sélectionnés ({0}/{MAX_FILES})"
 
-#: src/components/present/AudienceMapAdapter.tsx:175
+#: src/components/present/AudienceMapAdapter.tsx:201
 msgid "Selected item details"
 msgstr ""
 
@@ -11874,7 +11874,7 @@ msgstr "Configuration"
 msgid "Shape how participants verify outcomes"
 msgstr "Adaptez la vérification des résultats"
 
-#: src/routes/project/present/PresentRoute.tsx:686
+#: src/routes/project/present/PresentRoute.tsx:705
 #: src/components/project/ProjectSharingModal.tsx:525
 #: src/components/popcorn/PopcornShare.tsx:72
 msgid "Share"
@@ -11893,7 +11893,7 @@ msgstr ""
 msgid "Share portal"
 msgstr "Partager le portail"
 
-#: src/routes/project/present/PresentRoute.tsx:744
+#: src/routes/project/present/PresentRoute.tsx:763
 msgid "Share presentation"
 msgstr ""
 
@@ -11956,7 +11956,7 @@ msgstr ""
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Partager un projet privé avec une personne non membre propose désormais une invitation au lieu d’une erreur. L’accès est accordé quand elle rejoint l’espace de travail."
 
-#: src/routes/project/present/PresentRoute.tsx:162
+#: src/routes/project/present/PresentRoute.tsx:174
 msgid "Short phrases from the conversations"
 msgstr ""
 
@@ -11988,11 +11988,11 @@ msgstr ""
 msgid "Show {typePlural}"
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:222
+#: src/components/popcorn/PopcornOpeningSettings.tsx:176
 msgid "Show a disclosure"
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:298
+#: src/components/popcorn/PopcornOpeningSettings.tsx:252
 msgid "Show a frame"
 msgstr ""
 
@@ -12012,11 +12012,11 @@ msgstr "Afficher les données"
 msgid "Show detail"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:274
+#: src/routes/project/present/PresentRoute.tsx:286
 msgid "Show in this presentation"
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:166
+#: src/components/popcorn/PopcornOpeningSettings.tsx:120
 msgid "Show introduction"
 msgstr "Afficher l’introduction"
 
@@ -12076,7 +12076,7 @@ msgstr ""
 msgid "Show the invitation"
 msgstr "Afficher l'invitation"
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:333
+#: src/components/popcorn/PopcornOpeningSettings.tsx:287
 msgid "Show what happens to the data"
 msgstr ""
 
@@ -12121,7 +12121,7 @@ msgstr ""
 msgid "Showing your most recent completed report."
 msgstr "Affichage de votre dernier rapport terminé."
 
-#: src/components/popcorn/PopcornVoiceSection.tsx:201
+#: src/components/popcorn/PopcornVoiceSection.tsx:162
 msgid "Shown at the top of the screen."
 msgstr ""
 
@@ -12192,7 +12192,7 @@ msgstr ""
 msgid "Someone"
 msgstr ""
 
-#: src/components/popcorn/PopcornVoiceSection.tsx:74
+#: src/components/popcorn/PopcornVoiceSection.tsx:73
 msgid "Something else"
 msgstr ""
 
@@ -12360,12 +12360,12 @@ msgstr ""
 msgid "Stake"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:103
+#: src/components/present/AudienceMapAdapter.tsx:129
 #: src/components/map/attributes.ts:88
 msgid "Stakeholder"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:77
+#: src/routes/project/present/PresentRoute.tsx:89
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:66
 #: src/components/map/attributes.ts:89
 msgid "Stakeholders"
@@ -12507,7 +12507,7 @@ msgstr ""
 msgid "Stop coloring graph by valence"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:625
+#: src/routes/project/present/PresentRoute.tsx:642
 #: src/components/popcorn/PopcornActions.tsx:114
 msgid "Stop live"
 msgstr ""
@@ -12721,7 +12721,7 @@ msgstr "Valeur par défaut du système"
 msgid "System status"
 msgstr "État du système"
 
-#: src/routes/project/present/PresentRoute.tsx:133
+#: src/routes/project/present/PresentRoute.tsx:145
 msgid "Tabs"
 msgstr ""
 
@@ -12814,13 +12814,13 @@ msgstr ""
 msgid "Templates"
 msgstr "Modèles"
 
-#: src/components/present/AudienceMapAdapter.tsx:105
+#: src/components/present/AudienceMapAdapter.tsx:131
 #: src/components/map/attributes.ts:97
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:245
 msgid "Tension"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:78
+#: src/routes/project/present/PresentRoute.tsx:90
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:67
 #: src/components/map/attributes.ts:98
 msgid "Tensions"
@@ -12955,8 +12955,8 @@ msgstr ""
 msgid "the dembrane team"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:800
-#: src/routes/project/present/PresentRoute.tsx:809
+#: src/routes/project/present/PresentRoute.tsx:819
+#: src/routes/project/present/PresentRoute.tsx:828
 msgid "The draft could not be loaded."
 msgstr ""
 
@@ -13009,7 +13009,7 @@ msgstr ""
 msgid "The host guide is what facilitators read before they run a session."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:961
+#: src/routes/project/present/PresentRoute.tsx:981
 msgid "The host hasn’t prepared a presentation yet."
 msgstr ""
 
@@ -13055,7 +13055,7 @@ msgstr ""
 msgid "The map could not be generated. {0}"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:420
+#: src/components/present/AudienceMapAdapter.tsx:463
 msgid "The map could not be loaded."
 msgstr ""
 
@@ -13120,11 +13120,11 @@ msgstr ""
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:941
+#: src/routes/project/present/PresentRoute.tsx:961
 msgid "The presentation could not be loaded."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:936
+#: src/routes/project/present/PresentRoute.tsx:956
 msgid "The presentation could not be opened. Try again."
 msgstr ""
 
@@ -13153,7 +13153,7 @@ msgstr ""
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "Le rapport peut démarrer jusqu'à 5 minutes après l'heure choisie."
 
-#: src/components/popcorn/PopcornVoiceSection.tsx:62
+#: src/components/popcorn/PopcornVoiceSection.tsx:61
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr ""
 
@@ -13161,7 +13161,7 @@ msgstr ""
 msgid "the selected conversation"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:773
+#: src/routes/project/present/PresentRoute.tsx:792
 msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 msgstr ""
 
@@ -13419,7 +13419,7 @@ msgstr "Cette est une vue en direct du portail du participant. Vous devrez actua
 msgid "This is a map of every organisation and workspace you are a member of."
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:211
+#: src/components/popcorn/PopcornOpeningSettings.tsx:165
 msgid "This is a synthetic demo. Its disclosure and frame are set with the demo and always show."
 msgstr ""
 
@@ -13522,11 +13522,11 @@ msgstr ""
 msgid "This portal is not accepting new sessions right now."
 msgstr "Ce portail n’accepte pas de nouvelles sessions pour le moment."
 
-#: src/components/present/AudienceScreen.tsx:744
+#: src/components/present/AudienceScreen.tsx:653
 msgid "This presentation could not be loaded."
 msgstr ""
 
-#: src/components/present/AudienceScreen.tsx:742
+#: src/components/present/AudienceScreen.tsx:651
 msgid "This presentation is not available."
 msgstr ""
 
@@ -13756,7 +13756,7 @@ msgstr "Conseil : Utilisez le bouton de lecture (▶) pour envoyer un payload de
 msgid "Tip: You can also create a template from any chat message you send, or duplicate an existing template."
 msgstr "Astuce : Vous pouvez aussi créer un modèle à partir de n'importe quel message de chat que vous envoyez, ou dupliquer un modèle existant."
 
-#: src/components/popcorn/PopcornVoiceSection.tsx:200
+#: src/components/popcorn/PopcornVoiceSection.tsx:161
 #: src/components/conversation/ConversationEdit.tsx:385
 msgid "Title"
 msgstr "Titre"
@@ -14026,7 +14026,7 @@ msgstr "Déclencher des workflows automatisés dans des outils comme Zapier, Mak
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:965
+#: src/routes/project/present/PresentRoute.tsx:985
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:436
 #: src/routes/invite/MyInvitesRoute.tsx:222
 #: src/routes/invite/AcceptInviteRoute.tsx:557
@@ -14056,7 +14056,7 @@ msgstr ""
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr "Essayez de vous rapprocher un peu plus de votre microphone pour une meilleure qualité audio."
 
-#: src/components/present/AudienceScreen.tsx:751
+#: src/components/present/AudienceScreen.tsx:660
 msgid "Trying again…"
 msgstr ""
 
@@ -14127,8 +14127,8 @@ msgstr "Authentification à deux facteurs activée"
 #: src/routes/admin/AdminSettingsRoute.tsx:2707
 #: src/components/training/StaffTrainingPanel.tsx:148
 #: src/components/settings/AuditLogsCard.tsx:190
-#: src/components/present/AudienceMapAdapter.tsx:142
-#: src/components/present/AudienceMapAdapter.tsx:226
+#: src/components/present/AudienceMapAdapter.tsx:168
+#: src/components/present/AudienceMapAdapter.tsx:252
 #: src/components/map/attributes.ts:233
 msgid "Type"
 msgstr "Type"
@@ -14543,7 +14543,7 @@ msgstr "Utiliser la valeur héritée"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:871
+#: src/routes/project/present/PresentRoute.tsx:890
 msgid "Use latest results"
 msgstr ""
 
@@ -14781,7 +14781,7 @@ msgstr ""
 msgid "Visible edges raised to {applied} so the tree over {nodeLimit} nodes fits."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:213
+#: src/routes/project/present/PresentRoute.tsx:225
 msgid "Visible results"
 msgstr ""
 
@@ -14803,11 +14803,11 @@ msgstr ""
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:367
 #: src/components/voice/VoiceInputButton.tsx:39
-#: src/components/popcorn/PopcornVoiceSection.tsx:188
+#: src/components/popcorn/PopcornVoiceSection.tsx:149
 msgid "Voice"
 msgstr ""
 
-#: src/components/popcorn/PopcornVoiceSection.tsx:220
+#: src/components/popcorn/PopcornVoiceSection.tsx:181
 msgid "Voice changes apply the next time you prepare or update Popcorn results."
 msgstr ""
 
@@ -15218,7 +15218,7 @@ msgstr ""
 msgid "With external clients"
 msgstr ""
 
-#: src/components/popcorn/PopcornOpeningSettings.tsx:275
+#: src/components/popcorn/PopcornOpeningSettings.tsx:229
 msgid "With several lines, the first reads as a subtitle."
 msgstr ""
 
