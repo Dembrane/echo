@@ -11,6 +11,10 @@ const MAX_RETRY_MS = 15000;
  * reconnect. Events published while the stream was down are not replayed, so
  * reload whatever you show when `connected` arrives. `types` lists the event
  * names to deliver besides `connected`. Pass `null` as the url to stay idle.
+ *
+ * A stream the server ends (access withdrawn) looks like any other drop here:
+ * the hook keeps reconnecting and the browser never says why. List
+ * `disconnected` in `types` to hear about each drop and check for yourself.
  */
 export function useServerEvents(
 	url: string | null,
@@ -26,7 +30,9 @@ export function useServerEvents(
 
 	useEffect(() => {
 		if (!url) return;
-		const names = typesKey ? typesKey.split("|") : [];
+		const listed = typesKey ? typesKey.split("|") : [];
+		const names = listed.filter((name) => name !== "disconnected");
+		const tellDisconnected = listed.includes("disconnected");
 		let source: EventSource | null = null;
 		let closed = false;
 		let reconnectTimer: number | null = null;
@@ -62,6 +68,7 @@ export function useServerEvents(
 				source?.close();
 				source = null;
 				if (closed) return;
+				if (tellDisconnected) handlerRef.current({ type: "disconnected" });
 				reconnectTimer = window.setTimeout(connect, retryMs);
 				retryMs = Math.min(retryMs * 2, MAX_RETRY_MS);
 			};

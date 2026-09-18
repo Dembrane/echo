@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Accordion,
-	Alert,
 	Button,
 	Card,
 	Checkbox,
@@ -34,6 +33,7 @@ import {
 	EvidenceInspectionDrawer,
 	useAnalysisObjects,
 } from "@/components/analysis";
+import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
@@ -805,12 +805,11 @@ function Session({
 			</Modal>
 			{editing ? (
 				draft.query.isError ? (
-					<Alert>
-						<Trans>The draft could not be loaded.</Trans>
-						<Button variant="subtle" onClick={() => draft.query.refetch()}>
-							<Trans>Try again</Trans>
-						</Button>
-					</Alert>
+					<FetchErrorPanel
+						message={<Trans>The draft could not be loaded.</Trans>}
+						onRetry={() => void draft.query.refetch()}
+						testId="present-draft-error-panel"
+					/>
 				) : draft.query.data ? (
 					<SettingsSaveContext.Provider value={settingsEditor}>
 						<SaveStatus
@@ -938,12 +937,11 @@ export function PresentRoute() {
 					</Text>
 				)}
 				{query.isError ? (
-					<Alert>
-						<Trans>The presentation could not be loaded.</Trans>
-						<Button variant="subtle" onClick={() => query.refetch()}>
-							<Trans>Try again</Trans>
-						</Button>
-					</Alert>
+					<FetchErrorPanel
+						message={<Trans>The presentation could not be loaded.</Trans>}
+						onRetry={() => void query.refetch()}
+						testId="present-error-panel"
+					/>
 				) : query.data?.presentation ? (
 					<Session
 						key={query.data.presentation.id}

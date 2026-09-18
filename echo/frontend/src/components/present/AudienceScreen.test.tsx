@@ -14,7 +14,8 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { AudienceScreen } from "./AudienceScreen";
 import {
 	AUDIENCE_EVENT_REFRESH_MS,
-	PUBLIC_AUDIENCE_REVALIDATE_MS,
+	AUDIENCE_RETRY_MIN_MS,
+	AUDIENCE_SAFETY_REFRESH_MS,
 } from "./audienceContract";
 
 const { useServerEventsMock } = vi.hoisted(() => ({
@@ -374,8 +375,7 @@ describe("AudienceScreen lifecycle", () => {
 		).toBe(false);
 	});
 
-	it("clears public content when bounded revalidation finds a revoked token", async () => {
-		vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+	it("clears public content when the stream drops and the link was switched off", async () => {
 		const fetchMock = vi
 			.fn()
 			.mockResolvedValueOnce({
@@ -392,17 +392,130 @@ describe("AudienceScreen lifecycle", () => {
 
 		renderAudience({ publicToken: "revoked-token" });
 		expect(await screen.findByTestId("audience-map")).toBeTruthy();
-		expect(screen.getByTitle("Presentation")).toBeTruthy();
+		expect(useServerEventsMock.mock.calls.at(-1)?.[1]).toContain(
+			"disconnected",
+		);
 
-		act(() => vi.advanceTimersByTime(PUBLIC_AUDIENCE_REVALIDATE_MS));
+		// The server ends a revoked stream; the hook reports the drop.
+		const onEvent = useServerEventsMock.mock.calls.at(-1)?.[2];
+		act(() => onEvent({ type: "disconnected" }));
 
 		await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+		expect(
+			screen.getByText("This presentation is not available."),
+		).toBeTruthy();
 		expect(screen.queryByTestId("audience-map")).toBeNull();
 		expect(screen.queryByTitle("Presentation")).toBeNull();
 		expect(fetchMock).toHaveBeenCalledTimes(2);
 		expect(fetchMock.mock.calls[1]?.[0]).toContain(
 			"/v2/popcorn/public/revoked-token/audience",
 		);
+		// No reconnect loop against a link that is switched off.
+		expect(useServerEventsMock.mock.calls.at(-1)?.[0]).toBeNull();
+	});
+
+	it("keeps the room's screen through a failed read and tries again", async () => {
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce({
+				json: async () => response(["map"]),
+				ok: true,
+				status: 200,
+			})
+			.mockResolvedValueOnce({
+				json: async () => ({}),
+				ok: false,
+				status: 502,
+			})
+			.mockResolvedValueOnce({
+				json: async () => response(["map"]),
+				ok: true,
+				status: 200,
+			});
+		vi.stubGlobal("fetch", fetchMock);
+
+		renderAudience({ publicToken: "public-token" });
+		expect(await screen.findByTestId("audience-map")).toBeTruthy();
+
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		const onEvent = useServerEventsMock.mock.calls.at(-1)?.[2];
+		await act(async () => {
+			onEvent({ type: "disconnected" });
+			await Promise.resolve();
+			await Promise.resolve();
+		});
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+		expect(screen.queryByRole("alert")).toBeNull();
+		expect(screen.getByTestId("audience-map")).toBeTruthy();
+
+		await act(async () => {
+			vi.advanceTimersByTime(AUDIENCE_RETRY_MIN_MS);
+			await Promise.resolve();
+			await Promise.resolve();
+		});
+		expect(fetchMock).toHaveBeenCalledTimes(3);
+		expect(screen.getByTestId("audience-map")).toBeTruthy();
+	});
+
+	it("reads on the safety interval only, with no faster poll for public links", async () => {
+		vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+		const fetchMock = vi.fn().mockResolvedValue({
+			json: async () => response(["map"]),
+			ok: true,
+			status: 200,
+		});
+		vi.stubGlobal("fetch", fetchMock);
+
+		renderAudience({ publicToken: "public-token" });
+		expect(await screen.findByTestId("audience-map")).toBeTruthy();
+		const reads = fetchMock.mock.calls.length;
+
+		act(() => vi.advanceTimersByTime(AUDIENCE_SAFETY_REFRESH_MS - 1));
+		expect(fetchMock).toHaveBeenCalledTimes(reads);
+	});
+
+	it("disables the result tabs while the deck holds a locked opening", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				json: async () => response(["popcorn", "tensions"]),
+				ok: true,
+				status: 200,
+			}),
+		);
+		renderAudience({ presentationId: "presentation-1" });
+		const iframe = (await screen.findByTitle(
+			"Presentation",
+		)) as HTMLIFrameElement;
+		const opening = (open: boolean, locked: boolean) =>
+			act(() => {
+				window.dispatchEvent(
+					new MessageEvent("message", {
+						data: {
+							locked,
+							open,
+							presentationId: "presentation-1",
+							...(open ? { screen: "intro" } : {}),
+							source: "dembrane-present-deck",
+							type: "opening",
+							version: 1,
+						},
+						origin: new URL(iframe.src).origin,
+						source: iframe.contentWindow,
+					}),
+				);
+			});
+
+		// A synthetic demo: its disclosure cannot be skipped from the tabs.
+		opening(true, true);
+		const tensions = screen.getByRole("tab", { name: "Tensions" });
+		expect(tensions.hasAttribute("disabled")).toBe(true);
+
+		// The deck's own Continue flow finished.
+		opening(false, false);
+		expect(
+			screen.getByRole("tab", { name: "Tensions" }).hasAttribute("disabled"),
+		).toBe(false);
 	});
 
 	it("resends the current block after a verified deck ready event", async () => {

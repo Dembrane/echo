@@ -19,12 +19,11 @@ export function usePresentationDraft(
 	const client = useQueryClient();
 	const key = ["presentation-draft", id];
 	const revision = useRef(0);
+	const path = `/present/${encodeURIComponent(id)}`;
 	const query = useQuery({
 		enabled,
 		queryFn: async () => {
-			const draft = await bff.get<Draft>(
-				`/present/${encodeURIComponent(id)}/draft`,
-			);
+			const draft = await bff.get<Draft>(`${path}/draft`);
 			revision.current = draft.revision;
 			return draft;
 		},
@@ -35,21 +34,40 @@ export function usePresentationDraft(
 		revision.current = draft.revision;
 		client.setQueryData(key, draft);
 	};
+	const isConflict = (error: unknown) =>
+		(error as { status?: number } | null)?.status === 409;
+	const send = (patch: PopcornSettingsPatch) =>
+		bff.patch<Draft>(`${path}/draft`, {
+			expected_revision: revision.current,
+			patch,
+		});
 	const save = useMutation({
-		mutationFn: (patch: PopcornSettingsPatch) =>
-			bff.patch<Draft>(`/present/${encodeURIComponent(id)}/draft`, {
-				expected_revision: revision.current,
-				patch,
-			}),
+		// The draft moved on elsewhere (another tab, another host). A patch only
+		// names the fields this editor changed and the server merges it onto the
+		// latest draft, so it is sent once more against the revision found there.
+		mutationFn: async (patch: PopcornSettingsPatch) => {
+			try {
+				return await send(patch);
+			} catch (error) {
+				if (!isConflict(error)) throw error;
+				revision.current = (await bff.get<Draft>(`${path}/draft`)).revision;
+				return await send(patch);
+			}
+		},
 		mutationKey: key,
 		onSuccess: accept,
 		scope: { id: `presentation-draft-${id}` },
 	});
 	const publish = useMutation({
 		mutationFn: () =>
-			bff.post<Draft>(`/present/${encodeURIComponent(id)}/publish`, {
+			bff.post<Draft>(`${path}/publish`, {
 				expected_revision: revision.current,
 			}),
+		// Publishing a draft someone else changed is the host's call, not a
+		// silent retry: load what is there so the next Publish is against it.
+		onError: (error) => {
+			if (isConflict(error)) void client.invalidateQueries({ queryKey: key });
+		},
 		onSuccess: (draft) => {
 			accept(draft);
 			client.invalidateQueries({ queryKey: presentationKey(projectId) });

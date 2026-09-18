@@ -40,6 +40,29 @@ describe("audience presentation contract", () => {
 			),
 		).toBe(true);
 	});
+	it("accepts a locked opening and rejects a malformed lock", () => {
+		const source = {} as MessageEventSource;
+		const expected = {
+			origin: "https://example.test",
+			presentationId: "presentation-1",
+			source,
+		};
+		const opening = (locked: unknown) => ({
+			data: {
+				locked,
+				open: true,
+				presentationId: "presentation-1",
+				screen: "intro",
+				source: "dembrane-present-deck",
+				type: "opening",
+				version: 1,
+			},
+			origin: "https://example.test",
+			source,
+		});
+		expect(isDeckOpeningEvent(opening(true), expected)).toBe(true);
+		expect(isDeckOpeningEvent(opening("yes"), expected)).toBe(false);
+	});
 	it("isolates authenticated draft previews from published public URLs", () => {
 		const draft = audienceUrls({
 			draft: true,

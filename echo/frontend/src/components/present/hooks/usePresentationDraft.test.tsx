@@ -71,3 +71,52 @@ it("serializes edits with the latest revision and keeps the live cache unchanged
 	expect(client.getQueryState(liveKey)?.isInvalidated).toBe(true);
 	client.clear();
 });
+
+it("resends an edit once against the draft another host moved on, and leaves a conflicting publish to the host", async () => {
+	const client = new QueryClient({
+		defaultOptions: { queries: { retry: false } },
+	});
+	const envelope = (revision: number, title: string) => ({
+		has_changes: true,
+		presentation: { id: "p", settings: { title } },
+		revision,
+	});
+	const conflict = Object.assign(new Error("changed elsewhere"), {
+		status: 409,
+	});
+	vi.mocked(bff.get)
+		.mockResolvedValueOnce(envelope(2, "Published"))
+		.mockResolvedValue(envelope(6, "Their edit"));
+	vi.mocked(bff.patch)
+		.mockRejectedValueOnce(conflict)
+		.mockResolvedValueOnce(envelope(7, "My edit"));
+	vi.mocked(bff.post).mockRejectedValueOnce(conflict);
+	const wrapper = ({ children }: { children: ReactNode }) => (
+		<QueryClientProvider client={client}>{children}</QueryClientProvider>
+	);
+	const { result } = renderHook(
+		() => usePresentationDraft("project-1", "p", true),
+		{ wrapper },
+	);
+	await waitFor(() => expect(result.current.query.isSuccess).toBe(true));
+
+	await act(async () => {
+		await result.current.save.mutateAsync({ title: "My edit" });
+	});
+	expect(vi.mocked(bff.patch).mock.calls.map((call) => call[1])).toEqual([
+		{ expected_revision: 2, patch: { title: "My edit" } },
+		{ expected_revision: 6, patch: { title: "My edit" } },
+	]);
+
+	await act(async () => {
+		await result.current.publish.mutateAsync().catch(() => {});
+	});
+	expect(bff.post).toHaveBeenCalledOnce();
+	await waitFor(() =>
+		expect(
+			client.getQueryState(["presentation-draft", "p"])?.isInvalidated,
+		).toBe(false),
+	);
+	expect(vi.mocked(bff.get).mock.calls.length).toBeGreaterThanOrEqual(3);
+	client.clear();
+});

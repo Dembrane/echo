@@ -40,6 +40,8 @@ export type DeckReadyMessage = {
 };
 
 export type DeckOpeningMessage = {
+	/** The deck refuses `dismiss-opening` until its own Continue flow is done. */
+	locked?: boolean;
 	open: boolean;
 	presentationId: string;
 	screen?: "intro" | "data";
@@ -61,9 +63,15 @@ export type DeckChromeMessage = {
 	version: 1;
 };
 
-export const PUBLIC_AUDIENCE_REVALIDATE_MS = 30_000;
 export const AUDIENCE_EVENT_REFRESH_MS = 650;
 export const AUDIENCE_SAFETY_REFRESH_MS = 60_000;
+export const AUDIENCE_READ_TIMEOUT_MS = 15_000;
+export const AUDIENCE_RETRY_MIN_MS = 2_000;
+export const AUDIENCE_RETRY_MAX_MS = 30_000;
+// The link was switched off or access was withdrawn: clear the room's screen.
+export const AUDIENCE_GONE_STATUSES: ReadonlySet<number> = new Set([
+	401, 403, 404, 410,
+]);
 
 export const audienceUrls = ({
 	presentationId,
@@ -176,6 +184,7 @@ export const isDeckOpeningEvent = (
 		message.type === "opening" &&
 		message.presentationId === expected.presentationId &&
 		typeof message.open === "boolean" &&
+		(message.locked === undefined || typeof message.locked === "boolean") &&
 		(message.screen === undefined ||
 			message.screen === "intro" ||
 			message.screen === "data")

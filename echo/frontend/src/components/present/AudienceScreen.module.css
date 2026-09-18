@@ -111,6 +111,13 @@
 	font-weight: 400;
 }
 
+.tab[data-disabled],
+.tab[data-disabled]:hover {
+	color: var(--audience-ink-soft);
+	cursor: default;
+	opacity: 0.45;
+}
+
 .openingLinks {
 	display: flex;
 	align-items: center;
@@ -215,6 +222,12 @@
 	box-shadow: 0 6px 24px color-mix(in srgb, black 8%, transparent);
 }
 
+/* Wins over the iframe's full-width utility classes. */
+.contentFrame iframe.deckBesideQr {
+	right: auto;
+	width: calc(100% - min(180px, 24vw) - var(--audience-pad-x) - 1.4em - 1.5em);
+}
+
 .qrMinimized {
 	padding: 0;
 	border: 0;
@@ -294,6 +307,10 @@
 	.qrPanel {
 		right: var(--mantine-spacing-sm);
 		max-width: 112px;
+	}
+
+	.contentFrame iframe.deckBesideQr {
+		width: calc(100% - 112px - var(--mantine-spacing-sm) - 1em);
 	}
 }
 

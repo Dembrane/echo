@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const AUTOSAVE_DEBOUNCE_TIME = 1000;
 
@@ -15,6 +15,9 @@ export const useAutoSave = <T>({
 		initialLastSavedAt ? new Date(initialLastSavedAt) : new Date(),
 	);
 	const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const owed = useRef<{ data: T } | null>(null);
+	const latestOnSave = useRef(onSave);
+	latestOnSave.current = onSave;
 	const [isPendingSave, setIsPendingSave] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isError, setIsError] = useState(false);
@@ -44,15 +47,33 @@ export const useAutoSave = <T>({
 		clearTimeout(autoSaveTimer.current || undefined);
 		setIsPendingSave(true);
 
-		const timer = setTimeout(
-			() => triggerSave(formData, version),
-			AUTOSAVE_DEBOUNCE_TIME,
-		);
+		owed.current = { data: formData };
+		const timer = setTimeout(() => {
+			owed.current = null;
+			void triggerSave(formData, version);
+		}, AUTOSAVE_DEBOUNCE_TIME);
 		autoSaveTimer.current = timer;
 	};
 
+	// A field that unmounts inside its debounce saves now, not a second later:
+	// a Publish or a navigation right after the edit then sees it.
+	useEffect(
+		() => () => {
+			clearTimeout(autoSaveTimer.current || undefined);
+			const pending = owed.current;
+			owed.current = null;
+			if (pending) {
+				latestOnSave.current(pending.data).catch((e) => {
+					console.error("[useAutoSave] Save on unmount failed:", e);
+				});
+			}
+		},
+		[],
+	);
+
 	const triggerManualSave = async (formData: T) => {
 		clearTimeout(autoSaveTimer.current || undefined);
+		owed.current = null;
 		setIsPendingSave(true);
 		return await triggerSave(formData, ++generation.current);
 	};

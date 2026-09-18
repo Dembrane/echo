@@ -157,3 +157,5 @@ review before deployment, with particular attention to Ukrainian and Czech
 plural forms. Automated tests enforce key and placeholder coverage, not wording.
 
 - The Present bridge treats repeated current-block messages as acknowledgements, preserving the live phrase and bilingual timers across reconnects. The React room shell provides pause/resume through the timer-preserving visibility command.
+- The `opening` message to the shell carries `locked` while a synthetic demo's disclosure has not been continued through. The shell disables its result tabs for as long, since the deck refuses `dismiss-opening` then.
+- `armPopTimer` holds a timer armed while the screen is frozen and owes it in full on thaw, so data that lands during a pause (a translation over SSE) cannot run the bilingual handoff behind the paused screen.

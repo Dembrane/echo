@@ -58,6 +58,8 @@
         type: "opening",
         open,
         ...(screen ? { screen } : {}),
+        // A synthetic demo's disclosure cannot be skipped from the shell's tabs.
+        locked: open && isSynthetic() && !introDone,
       },
       EMBED.parentOrigin || location.origin,
     );
@@ -810,6 +812,13 @@
   function armPopTimer(rec, name, fn, delay) {
     clearTimeout(rec[name]);
     rec[`${name}Callback`] = fn;
+    if (screenFrozen) {
+      // Data that lands during a pause must not run the stage behind it: the
+      // timer is owed in full and starts when the screen thaws.
+      rec[name] = null;
+      rec[`${name}Remaining`] = Math.max(0, delay);
+      return;
+    }
     rec[`${name}Remaining`] = null;
     rec[`${name}Deadline`] = Date.now() + Math.max(0, delay);
     rec[name] = setTimeout(() => {

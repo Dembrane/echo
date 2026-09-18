@@ -68,4 +68,27 @@ describe("useAutoSave", () => {
 		act(() => vi.advanceTimersByTime(1_000));
 		expect(onSave).toHaveBeenCalledOnce();
 	});
+	it("saves a pending edit at once when its field unmounts", async () => {
+		const onSave = vi.fn().mockResolvedValue(undefined);
+		const { result, unmount } = renderHook(() => useAutoSave({ onSave }));
+
+		act(() => result.current.dispatchAutoSave("typed just before leaving"));
+		expect(onSave).not.toHaveBeenCalled();
+		unmount();
+
+		expect(onSave).toHaveBeenCalledExactlyOnceWith("typed just before leaving");
+		act(() => vi.advanceTimersByTime(1_000));
+		expect(onSave).toHaveBeenCalledOnce();
+	});
+
+	it("has nothing to save on unmount once the debounce has fired", async () => {
+		const onSave = vi.fn().mockResolvedValue(undefined);
+		const { result, unmount } = renderHook(() => useAutoSave({ onSave }));
+
+		act(() => result.current.dispatchAutoSave("saved"));
+		await act(async () => vi.advanceTimersByTime(1_000));
+		unmount();
+
+		expect(onSave).toHaveBeenCalledOnce();
+	});
 });

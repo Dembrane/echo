@@ -16,6 +16,10 @@ import { AudienceMapAdapter } from "./AudienceMapAdapter";
 import classes from "./AudienceScreen.module.css";
 import {
 	AUDIENCE_EVENT_REFRESH_MS,
+	AUDIENCE_GONE_STATUSES,
+	AUDIENCE_READ_TIMEOUT_MS,
+	AUDIENCE_RETRY_MAX_MS,
+	AUDIENCE_RETRY_MIN_MS,
 	AUDIENCE_SAFETY_REFRESH_MS,
 	audienceUrls,
 	type DeckChromeMessage,
@@ -25,7 +29,6 @@ import {
 	isDeckChromeEvent,
 	isDeckOpeningEvent,
 	isDeckReadyEvent,
-	PUBLIC_AUDIENCE_REVALIDATE_MS,
 	postDeckMessage,
 } from "./audienceContract";
 import {
@@ -224,14 +227,27 @@ export const AudienceScreen = ({
 	> | null>(null);
 	const deckReadyRef = useRef(false);
 	const pendingDeckRefreshRef = useRef(false);
+	const loadedAudienceUrlRef = useRef<string | null>(null);
+	const retryTimerRef = useRef<ReturnType<typeof globalThis.setTimeout> | null>(
+		null,
+	);
+	const retryDelayRef = useRef(AUDIENCE_RETRY_MIN_MS);
+	const reloadAudienceRef = useRef<
+		((signal?: AbortSignal) => Promise<void>) | null
+	>(null);
 	const [audience, setAudience] = useState<AudienceResponse | null>(null);
 	const [activeBlock, setActiveBlock] = useState<AudienceBlock | null>(null);
-	const [error, setError] = useState<string | null>(null);
+	// "gone": the link was switched off or access withdrawn. "failed": nothing
+	// has loaded yet and the read keeps being retried.
+	const [error, setError] = useState<"gone" | "failed" | "identity" | null>(
+		null,
+	);
 	const [eventRevision, setEventRevision] = useState(0);
 	const [playbackPaused, setPlaybackPaused] = useState(false);
 	const [fullscreen, setFullscreen] = useState(false);
 	const [fullscreenError, setFullscreenError] = useState(false);
 	const [openingOpen, setOpeningOpen] = useState(false);
+	const [openingLocked, setOpeningLocked] = useState(false);
 	const [openingScreen, setOpeningScreen] = useState<"intro" | "data" | null>(
 		null,
 	);
@@ -268,26 +284,39 @@ export const AudienceScreen = ({
 	);
 	const reloadAudience = useCallback(
 		async (signal?: AbortSignal) => {
+			if (retryTimerRef.current !== null) {
+				globalThis.clearTimeout(retryTimerRef.current);
+				retryTimerRef.current = null;
+			}
 			if (!urls) {
+				loadedAudienceUrlRef.current = null;
 				setAudience(null);
 				setActiveBlock(null);
-				setError("Missing presentation identity.");
+				setError("identity");
 				return;
 			}
 			const sequence = ++reloadSequenceRef.current;
+			const request = new AbortController();
+			const abort = () => request.abort();
+			signal?.addEventListener("abort", abort);
+			const timeout = globalThis.setTimeout(abort, AUDIENCE_READ_TIMEOUT_MS);
+			let gone = false;
 			try {
 				const response = await fetch(urls.audience, {
 					credentials: "include",
 					headers: { Accept: "application/json" },
-					signal,
+					signal: request.signal,
 				});
 				if (!response.ok) {
+					gone = AUDIENCE_GONE_STATUSES.has(response.status);
 					throw new Error(`Presentation request failed (${response.status})`);
 				}
 				const next = normalizeAudience(
 					(await response.json()) as AudienceResponse,
 				);
 				if (sequence !== reloadSequenceRef.current) return;
+				loadedAudienceUrlRef.current = urls.audience;
+				retryDelayRef.current = AUDIENCE_RETRY_MIN_MS;
 				setAudience(next);
 				setActiveBlock((current) =>
 					current && next.manifest.blocks.includes(current)
@@ -295,14 +324,40 @@ export const AudienceScreen = ({
 						: next.manifest.opening,
 				);
 				setError(null);
-			} catch (reason) {
+			} catch {
 				if (signal?.aborted || sequence !== reloadSequenceRef.current) return;
-				setAudience(null);
-				setActiveBlock(null);
-				setError(reason instanceof Error ? reason.message : String(reason));
+				// One bad read on venue wifi must not blank the room: what this
+				// presentation last showed stays up while the read is retried.
+				if (gone || loadedAudienceUrlRef.current !== urls.audience) {
+					loadedAudienceUrlRef.current = null;
+					setAudience(null);
+					setActiveBlock(null);
+					setError(gone ? "gone" : "failed");
+				}
+				if (!gone) {
+					const delay = retryDelayRef.current;
+					retryDelayRef.current = Math.min(delay * 2, AUDIENCE_RETRY_MAX_MS);
+					retryTimerRef.current = globalThis.setTimeout(() => {
+						retryTimerRef.current = null;
+						void reloadAudienceRef.current?.();
+					}, delay);
+				}
+			} finally {
+				globalThis.clearTimeout(timeout);
+				signal?.removeEventListener("abort", abort);
 			}
 		},
 		[urls],
+	);
+	reloadAudienceRef.current = reloadAudience;
+	useEffect(
+		() => () => {
+			if (retryTimerRef.current !== null) {
+				globalThis.clearTimeout(retryTimerRef.current);
+				retryTimerRef.current = null;
+			}
+		},
+		[],
 	);
 	const deckSrc = useMemo(() => {
 		if (!urls || !audience) return null;
@@ -366,7 +421,20 @@ export const AudienceScreen = ({
 		pendingDeckRefreshRef.current = false;
 	}, [urls?.events]);
 
-	useServerEvents(urls?.events ?? null, ["update"], scheduleEventRefresh);
+	// The server ends a stream whose access was withdrawn, and the browser
+	// cannot tell that from a network drop. Each drop asks the server instead.
+	const handleStreamEvent = useCallback(
+		(event: { type: string }) => {
+			if (event.type === "disconnected") void reloadAudience();
+			else scheduleEventRefresh();
+		},
+		[reloadAudience, scheduleEventRefresh],
+	);
+	useServerEvents(
+		error === "gone" ? null : (urls?.events ?? null),
+		["update", "disconnected"],
+		handleStreamEvent,
+	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: a saved draft revision must reload its audience projection.
 	useEffect(() => {
@@ -375,21 +443,15 @@ export const AudienceScreen = ({
 		return () => controller.abort();
 	}, [reloadAudience, draftRevision]);
 
+	// The same safety read the standalone deck makes: a lost nudge heals here,
+	// and a link that was switched back on comes back.
 	useEffect(() => {
 		const interval = globalThis.setInterval(
-			() => {
-				if (publicToken) {
-					requestDeckRefresh();
-					setEventRevision((current) => current + 1);
-					void reloadAudience();
-					return;
-				}
-				scheduleEventRefresh();
-			},
-			publicToken ? PUBLIC_AUDIENCE_REVALIDATE_MS : AUDIENCE_SAFETY_REFRESH_MS,
+			scheduleEventRefresh,
+			AUDIENCE_SAFETY_REFRESH_MS,
 		);
 		return () => globalThis.clearInterval(interval);
-	}, [publicToken, reloadAudience, requestDeckRefresh, scheduleEventRefresh]);
+	}, [scheduleEventRefresh]);
 
 	useEffect(() => {
 		if (!draft || !presentationId || draftRevision === 0) return;
@@ -589,6 +651,7 @@ export const AudienceScreen = ({
 				})
 			) {
 				setOpeningOpen(event.data.open);
+				setOpeningLocked(event.data.open && event.data.locked === true);
 				setOpeningScreen(event.data.open ? (event.data.screen ?? null) : null);
 				return;
 			}
@@ -641,7 +704,7 @@ export const AudienceScreen = ({
 
 	const handleKeyDown = useCallback(
 		(event: globalThis.KeyboardEvent) => {
-			if (!audience || !activeBlock) return;
+			if (!audience || !activeBlock || openingLocked) return;
 			if (
 				event.target instanceof Element &&
 				event.target.closest("input, textarea, select, [contenteditable=true]")
@@ -658,7 +721,7 @@ export const AudienceScreen = ({
 				];
 			selectBlock(next);
 		},
-		[activeBlock, audience, selectBlock],
+		[activeBlock, audience, openingLocked, selectBlock],
 	);
 
 	useEffect(() => {
@@ -675,7 +738,18 @@ export const AudienceScreen = ({
 			>
 				<div className="text-center">
 					<Text size="lg">
-						<Trans>This presentation could not be loaded.</Trans>
+						{error === "gone" ? (
+							<Trans>This presentation is not available.</Trans>
+						) : (
+							<Trans>This presentation could not be loaded.</Trans>
+						)}
+					</Text>
+					<Text size="sm" c="dimmed" mt="xs">
+						{error === "gone" ? (
+							<Trans>Its link may have been switched off. Ask the host.</Trans>
+						) : error === "failed" ? (
+							<Trans>Trying again…</Trans>
+						) : null}
 					</Text>
 				</div>
 			</div>
@@ -770,7 +844,12 @@ export const AudienceScreen = ({
 							aria-label={t`Presentation activities`}
 						>
 							{audience.manifest.blocks.map((block) => (
-								<Tabs.Tab className={classes.tab} key={block} value={block}>
+								<Tabs.Tab
+									className={classes.tab}
+									key={block}
+									value={block}
+									disabled={openingLocked}
+								>
 									{audienceCopy.blocks[block]}
 								</Tabs.Tab>
 							))}
@@ -807,6 +886,13 @@ export const AudienceScreen = ({
 						className={cn(
 							"absolute inset-0 h-full w-full border-0",
 							openingOpen && "z-10",
+							// Opening copy is read, not glanced at: it sits beside the QR
+							// card, never under it. The standalone deck's intro covered
+							// its QR; in the shell both are on screen together.
+							openingOpen &&
+								frameDetails.qrUrl &&
+								!qrMinimized &&
+								classes.deckBesideQr,
 							((activeBlock === "map" && !openingOpen) ||
 								(!deckReady && !openingOpen)) &&
 								"invisible pointer-events-none",
