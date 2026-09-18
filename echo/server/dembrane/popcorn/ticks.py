@@ -86,7 +86,8 @@ from dembrane.popcorn.grounding import ground_items
 from dembrane.popcorn.translate import (
     cache_key,
     missing_texts,
-    target_language,
+    popcorn_texts,
+    target_languages,
     translated_bundle,
     translatable_texts,
 )
@@ -465,28 +466,37 @@ class _TickWriter:
 class _IncrementalTranslator:
     """One bounded translation dispatcher inside the tick's single writer.
 
-    Extractors submit phrases after their original wording has been flushed.
-    A session has one dispatcher, so concurrent extractor completions cannot
-    pay twice for the same target, source text and translation policy.
+    Extractors submit phrases after their original wording has been flushed,
+    for every language the host asked for. A session has one dispatcher, so
+    concurrent extractor completions cannot pay twice for the same target,
+    source text and translation policy. A cache key carries its target, so one
+    in-flight set covers every language.
     """
 
-    def __init__(self, writer: _TickWriter, target: str) -> None:
+    def __init__(self, writer: _TickWriter, targets: list[str]) -> None:
         self.writer = writer
-        self.target = target
+        self.targets = targets
         translations = writer.state.setdefault("translations", {})
-        self.table: dict[str, str] = translations.setdefault(target, {})
+        self.tables: dict[str, dict[str, str]] = {
+            target: translations.setdefault(target, {}) for target in targets
+        }
         self._in_flight: set[str] = set()
         self._claim_lock = asyncio.Lock()
         self._dispatch = asyncio.Semaphore(1)
 
     async def submit(self, texts: list[str]) -> None:
+        for target in self.targets:
+            await self._submit_one(target, texts)
+
+    async def _submit_one(self, target: str, texts: list[str]) -> None:
+        table = self.tables[target]
         claimed: list[tuple[str, str]] = []
         async with self._claim_lock:
             for text in texts:
                 if not isinstance(text, str) or not text.strip():
                     continue
-                key = cache_key(text, self.target)
-                if key in self.table or key in self._in_flight:
+                key = cache_key(text, target)
+                if key in table or key in self._in_flight:
                     continue
                 self._in_flight.add(key)
                 claimed.append((key, text))
@@ -497,9 +507,9 @@ class _IncrementalTranslator:
             changed = False
             async with self._claim_lock:
                 for source, answer in zip(batch, answers, strict=True):
-                    key = cache_key(source, self.target)
-                    if answer and self.table.get(key) != answer:
-                        self.table[key] = answer
+                    key = cache_key(source, target)
+                    if answer and table.get(key) != answer:
+                        table[key] = answer
                         changed = True
             if changed:
                 await self.writer.flush()
@@ -509,7 +519,7 @@ class _IncrementalTranslator:
             # own 40-text batches, four-call ceiling and timeout.
             async with self._dispatch:
                 sources = [text for _, text in claimed]
-                await translate_texts(sources, self.target, on_batch=store)
+                await translate_texts(sources, target, on_batch=store)
         except Exception as exc:  # the flushed originals remain usable
             logger.warning("incremental popcorn translation failed: %s", exc)
         finally:
@@ -1189,13 +1199,18 @@ async def _translate_session(
     require_complete: bool = False,
 ) -> str | None:
     """The host's translation brought up to date with what the room's deck
-    shows now. An outcome line, or None when nothing was owed.
+    shows now, one language at a time. An outcome line naming each language,
+    or None when nothing was owed.
+
+    The first language carries the whole deck; the extra ones carry the popcorn
+    phrases alone. Every batch is written through the tick's own writer as it
+    lands, so a language reaches the room while the next is still on its way.
 
     A full tick asks again for what is missing on its next read. A
     translation-only job has no next read, so it passes `require_complete`
     and fails when texts are left over: its same-id backup may then retry."""
-    target = target_language(settings)
-    if not target:
+    targets = target_languages(settings)
+    if not targets:
         return None
     files = (
         await _room_bundle(
@@ -1203,31 +1218,45 @@ async def _translate_session(
         )
     )["files"]
     translations = state.setdefault("translations", {})
-    # Only the texts on the deck now are kept: a rerun's old phrases go.
-    shown = {cache_key(text, target) for text in translatable_texts(files)}
-    previous = translations.get(target) or {}
-    table = {k: v for k, v in previous.items() if k in shown}
-    translations[target] = table
-    gaps = missing_texts(files, table, target)
-    if not gaps:
-        if writer is not None and table != previous:
-            await writer.flush()
+    counted: list[str] = []
+    short: list[str] = []
+    for index, target in enumerate(targets):
+        texts = translatable_texts(files) if index == 0 else popcorn_texts(files)
+        # Only the texts on the deck now are kept: a rerun's old phrases go.
+        shown = {cache_key(text, target) for text in texts}
+        previous = translations.get(target) or {}
+        table = {k: v for k, v in previous.items() if k in shown}
+        translations[target] = table
+        gaps = missing_texts(files, table, target, texts)
+        if not gaps:
+            if writer is not None and table != previous:
+                await writer.flush()
+            continue
+
+        async def store(
+            batch: list[str],
+            answers: list[str | None],
+            target: str = target,
+            table: dict[str, str] = table,
+        ) -> None:
+            changed = False
+            for source, text in zip(batch, answers, strict=True):
+                if text and table.get(cache_key(source, target)) != text:
+                    table[cache_key(source, target)] = text
+                    changed = True
+            if changed and writer is not None:
+                await writer.flush()
+
+        answers = await translate_texts(gaps, target, on_batch=store)
+        counted.append(f"{sum(1 for a in answers if a)} of {len(gaps)} texts into {target}")
+        left = len(missing_texts(files, table, target, texts))
+        if left:
+            short.append(f"{left} not translated into {target}")
+    if not counted:
         return None
-
-    async def store(batch: list[str], answers: list[str | None]) -> None:
-        changed = False
-        for source, text in zip(batch, answers, strict=True):
-            if text and table.get(cache_key(source, target)) != text:
-                table[cache_key(source, target)] = text
-                changed = True
-        if changed and writer is not None:
-            await writer.flush()
-
-    answers = await translate_texts(gaps, target, on_batch=store)
-    outcome = f"translated {sum(1 for a in answers if a)} of {len(gaps)} texts into {target}"
-    left = len(missing_texts(files, table, target))
-    if require_complete and left:
-        raise TranslationIncomplete(f"{outcome}, {left} not translated")
+    outcome = "translated " + "; ".join(counted)
+    if require_complete and short:
+        raise TranslationIncomplete(f"{outcome}, {', '.join(short)}")
     return outcome
 
 
@@ -1484,10 +1513,9 @@ async def run_popcorn_tick(
         for t in extraction_work:
             state["conversations"][t["id"]]["done"] = False
         writer = _TickWriter(loop_id, report_id, state)
+        translation_targets = target_languages(settings)
         translator = (
-            _IncrementalTranslator(writer, target_language(settings))
-            if target_language(settings)
-            else None
+            _IncrementalTranslator(writer, translation_targets) if translation_targets else None
         )
         # The legend and the "listening…" stage need the transcript list before
         # any phrase lands, so the session is published before extraction starts.

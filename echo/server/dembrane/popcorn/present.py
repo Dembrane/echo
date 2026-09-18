@@ -26,6 +26,7 @@ TRANSLATION_FAILURE_PREFIX = "translation failed: "
 
 TRANSLATION_OFF: dict[str, Any] = {
     "target": None,
+    "targets": [],
     "total": 0,
     "translated": 0,
     "pending": 0,
@@ -158,11 +159,12 @@ async def _translation_status(
 ) -> dict[str, Any]:
     from dembrane.settings import get_settings
     from dembrane.popcorn.bundle import published_bundle
-    from dembrane.popcorn.translate import missing_texts, translatable_texts
+    from dembrane.popcorn.translate import missing_texts, popcorn_texts, translatable_texts
 
-    target = service.translation_target(settings, project)
-    if not target:
+    targets = service.translation_targets(settings, project)
+    if not targets:
         return dict(TRANSLATION_OFF)
+    target = targets[0]
     resolved = service.resolve_presentation_settings(settings, project)
     project_id = service._as_id(project.get("id")) or service._as_id(report.get("project_id"))
     # The room's deck in its original words, the files the tick counts. Only
@@ -180,9 +182,24 @@ async def _translation_status(
             bundle, project_id=project_id, settings=resolved, project=project, host=False
         )
     )["files"]
-    table = (state.get("translations") or {}).get(target) or {}
-    total = len(translatable_texts(files))
-    pending = len(missing_texts(files, table, target))
+    # The first language carries the whole deck, the extra ones the popcorn
+    # phrases alone. The totals are the host's one answer over all of them.
+    tables = state.get("translations") or {}
+    phrases = popcorn_texts(files)
+    rows = []
+    for index, code in enumerate(targets):
+        texts = translatable_texts(files) if index == 0 else phrases
+        owed = len(missing_texts(files, tables.get(code) or {}, code, texts))
+        rows.append(
+            {
+                "target": code,
+                "total": len(texts),
+                "translated": len(texts) - owed,
+                "pending": owed,
+            }
+        )
+    total = sum(row["total"] for row in rows)
+    pending = sum(row["pending"] for row in rows)
     failure = _translation_failure(run)
     source, _fallback = service.resolve_project_language(project.get("language"))
     if target == source and not total:
@@ -195,6 +212,7 @@ async def _translation_status(
         named = "incomplete" if failure else "translating"
     return {
         "target": target,
+        "targets": rows,
         "total": total,
         "translated": total - pending,
         "pending": pending,

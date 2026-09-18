@@ -31,6 +31,7 @@ from dembrane.popcorn.bundle import forget_bundle, bundle_for_report
 from dembrane.popcorn.service import (
     LIVE_HOURS,
     REPORT_KIND,
+    MAX_ALSO_LANGUAGES,
     LoopNotFound,
     BrandingTierRequired,
     SyntheticFrameLocked,
@@ -121,6 +122,9 @@ class PopcornLanguageBody(BaseModel):
     ui: Literal["auto"] | PopcornLanguageCode | None = None
     # "" asks for the original language again.
     translate_to: Literal[""] | PopcornLanguageCode | None = None
+    # The extra languages each popcorn phrase pops in, after the one above.
+    # The whole list is sent every time; [] asks for none.
+    also: list[PopcornLanguageCode] | None = Field(default=None, max_length=MAX_ALSO_LANGUAGES)
 
 
 class PresentationBody(BaseModel):

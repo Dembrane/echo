@@ -68,6 +68,7 @@ def test_language_policy_does_not_overwrite_saved_settings():
     assert service.resolve_presentation_settings(original, {"language": "nl"})["language"] == {
         "ui": "nl",
         "translate_to": "nl",
+        "also": [],
     }
     assert original["language"]["translate_to"] == ""
     original["presentation"]["language_policy"] = "explicit"
@@ -1077,12 +1078,36 @@ def test_translation_status_counts_what_is_still_owed(_own_deck) -> None:
     status = _status(_translating_settings(), _deck_state({cache_key("One", "en"): "One!"}))
     assert status == {
         "target": "en",
+        "targets": [{"target": "en", "total": 2, "translated": 1, "pending": 1}],
         "total": 2,
         "translated": 1,
         "pending": 1,
         "state": "translating",
         "detail": None,
     }
+
+
+def test_translation_status_totals_every_language_and_rows_each(_own_deck) -> None:
+    from dembrane.popcorn.translate import cache_key
+
+    settings = _translating_settings()
+    settings["language"]["also"] = ["fr"]
+    state = _deck_state({cache_key("One", "en"): "One!", cache_key("Two", "en"): "Two!"})
+    state["translations"]["fr"] = {cache_key("One", "fr"): "Un !"}
+    status = _status(settings, state)
+    assert status["targets"] == [
+        {"target": "en", "total": 2, "translated": 2, "pending": 0},
+        {"target": "fr", "total": 2, "translated": 1, "pending": 1},
+    ]
+    # The host reads one number for the lot, and the first language is still
+    # the one the panel names.
+    assert (status["target"], status["total"], status["translated"], status["pending"]) == (
+        "en",
+        4,
+        3,
+        1,
+    )
+    assert status["state"] == "translating"
 
 
 def test_translation_status_is_done_once_nothing_is_pending(_own_deck) -> None:
@@ -1165,6 +1190,7 @@ def test_payload_reports_translation_from_the_rows_it_already_read(monkeypatch, 
     )
     assert detail["translation_status"] == {
         "target": "en",
+        "targets": [{"target": "en", "total": 2, "translated": 1, "pending": 1}],
         "total": 2,
         "translated": 1,
         "pending": 1,

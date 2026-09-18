@@ -7,6 +7,11 @@ its source text, so a text is translated once however often the deck is
 rebuilt, and a rerun or a Library edit only costs the texts that changed. The
 bundle swaps the texts as its last step, after published objects are applied,
 so what is translated is what the room would otherwise read.
+
+A host can stack more languages on top of that one. The extra languages are
+for the popcorn phrases alone: every phrase pops in the room's own words
+first, then in each language the host asked for. Everything else on the deck
+keeps to the first language.
 """
 
 from __future__ import annotations
@@ -97,15 +102,43 @@ def translatable_texts(files: dict[str, Any]) -> list[str]:
     return list(seen)
 
 
+def popcorn_texts(files: dict[str, Any]) -> list[str]:
+    """Every distinct popcorn phrase on the deck, in first-seen order.
+    What an extra language translates, and nothing else."""
+    return translatable_texts(
+        {name: file for name, file in files.items() if name.startswith("popcorn/")}
+    )
+
+
 def missing_texts(
-    files: dict[str, Any], table: dict[str, str], target: str = ""
+    files: dict[str, Any],
+    table: dict[str, str],
+    target: str = "",
+    texts: list[str] | None = None,
 ) -> list[str]:
+    """What `table` still owes, over the whole deck or over `texts` alone."""
     key = (lambda text: cache_key(text, target)) if target else text_key
-    return [text for text in translatable_texts(files) if key(text) not in table]
+    wanted = translatable_texts(files) if texts is None else texts
+    return [text for text in wanted if key(text) not in table]
 
 
 def target_language(settings: dict[str, Any]) -> str:
     return str((settings.get("language") or {}).get("translate_to") or "")
+
+
+def target_languages(settings: dict[str, Any]) -> list[str]:
+    """Every language the results are translated into: the one that carries the
+    whole deck first, then the extra popcorn languages in the host's order."""
+    primary = target_language(settings)
+    if not primary:
+        return []
+    also = (settings.get("language") or {}).get("also")
+    extra = [
+        code
+        for code in (also if isinstance(also, list) else [])
+        if code in LANGUAGES and code != primary
+    ]
+    return [primary, *dict.fromkeys(extra)]
 
 
 def translated_bundle(
@@ -114,11 +147,13 @@ def translated_bundle(
     """`bundle` in the host's chosen language, as far as the tick has got.
     A text not translated yet shows in its original; the session says how
     many are still on their way."""
-    target = target_language(settings)
+    targets = target_languages(settings)
     files = bundle.get("files")
-    if not target or not isinstance(files, dict):
+    if not targets or not isinstance(files, dict):
         return bundle
-    table = ((state.get("translations") or {}).get(target)) or {}
+    target = targets[0]
+    tables = {code: ((state.get("translations") or {}).get(code)) or {} for code in targets}
+    table = tables[target]
 
     def translated_text(text: str) -> str:
         return table.get(cache_key(text, target), text)
@@ -136,8 +171,17 @@ def translated_bundle(
                 items.append(item)
                 continue
             source = item.get("phrase")
-            answer = table.get(cache_key(source, target)) if isinstance(source, str) else None
+            # Every language the host asked for, in their order, so the deck
+            # can pop the original and then each answer in turn.
+            stack: list[dict[str, str]] = []
+            for code in targets if isinstance(source, str) else []:
+                found = tables[code].get(cache_key(source, code))
+                if found and found != source:
+                    stack.append({"language": code, "text": found})
+            answer = stack[0]["text"] if stack and stack[0]["language"] == target else None
             out = dict(item)
+            if stack:
+                out["translations"] = stack
             if answer and answer != source:
                 out["translation"] = answer
                 out["translation_language"] = target
@@ -151,12 +195,17 @@ def translated_bundle(
         translated[name] = {**file, "items": items}
     session = translated.get("session.json")
     if isinstance(session, dict):
+        phrases = popcorn_texts(files)
+        pending = len(missing_texts(files, table, target))
+        for code in targets[1:]:
+            pending += len(missing_texts(files, tables[code], code, phrases))
         translated["session.json"] = {
             **session,
             "translation": {
                 "to": target,
+                "also": targets[1:],
                 "policy": TRANSLATION_POLICY_VERSION,
-                "pending": len(missing_texts(files, table, target)),
+                "pending": pending,
             },
         }
     return {**bundle, "files": translated}

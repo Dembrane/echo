@@ -343,16 +343,15 @@ def test_popcorn_only_presentation_flushes_originals_then_translates_incremental
                     "opening": "popcorn",
                     "language_policy": "explicit",
                 },
-                "language": {"ui": "en", "translate_to": "en"},
+                "language": {"ui": "en", "translate_to": "en", "also": ["fr"]},
             }
         }
 
-    translated: list[list[str]] = []
+    translated: list[tuple[str, list[str]]] = []
 
     async def _translate(texts: list[str], target: str, *, on_batch=None):
-        assert target == "en"
-        translated.append(list(texts))
-        answers = [f"EN {text}" for text in texts]
+        translated.append((target, list(texts)))
+        answers = [f"{target.upper()} {text}" for text in texts]
         if on_batch:
             await on_batch(texts, answers)
         return answers
@@ -369,6 +368,13 @@ def test_popcorn_only_presentation_flushes_originals_then_translates_incremental
     )
     assert not (original_write.get("translations") or {}).get("en")
     assert any(write.get("translations", {}).get("en") for write in fake.state_writes)
+    # The extra language rides the same early dispatch, and neither language is
+    # asked twice for a phrase: one in-flight set covers both.
+    assert {target for target, _texts in translated} == {"en", "fr"}
+    assert any(write.get("translations", {}).get("fr") for write in fake.state_writes)
+    for target in ("en", "fr"):
+        asked = [text for name, texts in translated if name == target for text in texts]
+        assert len(asked) == len(set(asked))
     assert not [call for call in calls if call.startswith("analysis:")]
 
 
@@ -462,7 +468,7 @@ def test_incremental_translation_deduplicates_concurrent_source_text(
     monkeypatch.setattr(ticks, "translate_texts", _translate)
 
     async def run() -> None:
-        dispatcher = ticks._IncrementalTranslator(writer, "en")
+        dispatcher = ticks._IncrementalTranslator(writer, ["en"])
         first = asyncio.create_task(dispatcher.submit(["same", "first only"]))
         await started.wait()
         second = asyncio.create_task(dispatcher.submit(["same"]))
@@ -735,7 +741,7 @@ def test_translation_with_failed_batches_is_error_keeps_its_progress_and_retries
     assert partial["status"] == "error"
     assert partial["run"]["status"] == "error"
     assert partial["run"]["detail"] == (
-        "translation failed: translated 1 of 2 texts into en, 1 not translated"
+        "translation failed: translated 1 of 2 texts into en, 1 not translated into en"
     )
     # The batch that did succeed stays persisted.
     assert any(

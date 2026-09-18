@@ -33,7 +33,7 @@ from dembrane.directus_async import async_directus
 from dembrane.scheduled_tasks import TASK_POPCORN_TICK, schedule_task
 from dembrane.popcorn.analysis import attributes
 from dembrane.popcorn.data_copy import DATA_COPY_EXTRA
-from dembrane.popcorn.translate import LANGUAGES
+from dembrane.popcorn.translate import LANGUAGES, target_languages
 
 REPORT_KIND = "popcorn"
 LOOP_KIND = "popcorn"
@@ -42,6 +42,10 @@ MIN_CADENCE_MINUTES = 1
 MAX_CADENCE_MINUTES = 120
 # How long live can be asked for, in hours.
 LIVE_HOURS = (1, 8, 24)
+# Extra languages a popcorn phrase may pop in, beside the one the results are
+# translated into. Every phrase pops once per language, so the deck has to
+# stay watchable.
+MAX_ALSO_LANGUAGES = 3
 STATE_VERSION = 2  # 2: one quote registry at the top of the state, validation per transcript
 SETTINGS_WRITE_LOCK_TTL_SECONDS = 30
 SETTINGS_WRITE_LOCK_WAIT_SECONDS = 5.0
@@ -416,15 +420,27 @@ def normalize_block(raw: Any, limits: dict[str, int]) -> dict[str, Any]:
     return block
 
 
-def normalize_language(raw: Any) -> dict[str, str]:
-    """The screen's own language (`auto` follows the project) and, when the
-    host asked for one, the language the results are translated into."""
+def normalize_language(raw: Any) -> dict[str, Any]:
+    """The screen's own language (`auto` follows the project), the language the
+    results are translated into when the host asked for one, and the extra
+    languages the popcorn phrases pop in after it.
+
+    The extra languages only have an effect beside a language for the results:
+    `target_languages` is what reads them, and it answers nothing without one.
+    """
     raw = raw if isinstance(raw, dict) else {}
     ui = str(raw.get("ui") or "auto")
     target = str(raw.get("translate_to") or "")
+    target = target if target in LANGUAGES else ""
+    also = raw.get("also")
     return {
         "ui": ui if ui in LANGUAGES else "auto",
-        "translate_to": target if target in LANGUAGES else "",
+        "translate_to": target,
+        "also": [
+            code
+            for code in dict.fromkeys(also if isinstance(also, list) else [])
+            if code in LANGUAGES and code != target
+        ][:MAX_ALSO_LANGUAGES],
     }
 
 
@@ -503,7 +519,13 @@ def resolve_presentation_settings(
     if not presentation or presentation.get("language_policy") != "project":
         return settings
     language, _reason = resolve_project_language(project.get("language"))
-    return {**settings, "language": {"ui": language, "translate_to": language}}
+    # The policy owns the language of the results, not the extra popcorn
+    # languages: those are the host's own choice and pass through.
+    also = normalize_language(settings.get("language"))["also"]
+    return {
+        **settings,
+        "language": {"ui": language, "translate_to": language, "also": also},
+    }
 
 
 def normalize_voice(raw: Any) -> dict[str, Any]:
@@ -1062,6 +1084,11 @@ def translation_target(settings: dict[str, Any], project: dict[str, Any]) -> str
     return str((resolved.get("language") or {}).get("translate_to") or "")
 
 
+def translation_targets(settings: dict[str, Any], project: dict[str, Any]) -> list[str]:
+    """Every language a tick owes, the results' language first."""
+    return target_languages(resolve_presentation_settings(settings, project))
+
+
 async def retarget_translation(
     report: dict[str, Any],
     *,
@@ -1077,10 +1104,11 @@ async def retarget_translation(
     The settings around the change are resolved against the project, or against
     `project_after` as well when the project row itself is what changed. With
     `nudge`, the cached bundle is dropped and the room told to reload before the
-    tick is dispatched. Returns whether the target changed.
+    tick is dispatched. Returns whether the languages changed: adding a popcorn
+    language is work owed just like picking another language for the results.
     """
-    target = translation_target(after, project_after or project)
-    if not target or target == translation_target(before, project):
+    targets = translation_targets(after, project_after or project)
+    if not targets or set(targets) == set(translation_targets(before, project)):
         return False
     report_id = str(report["id"])
     if nudge:
