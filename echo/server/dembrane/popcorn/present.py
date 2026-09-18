@@ -6,10 +6,13 @@ or schema migration is needed. Legacy sessions retain their IDs and links.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 from datetime import datetime, timezone
 
 from dembrane.popcorn import service
+
+logger = logging.getLogger("dembrane.popcorn.present")
 
 
 class DraftConflict(RuntimeError):
@@ -17,6 +20,18 @@ class DraftConflict(RuntimeError):
 
 
 DRAFT_CONFLICT_DETAIL = "The presentation draft changed elsewhere."
+
+# How a translation tick writes a failure into its run detail.
+TRANSLATION_FAILURE_PREFIX = "translation failed: "
+
+TRANSLATION_OFF: dict[str, Any] = {
+    "target": None,
+    "total": 0,
+    "translated": 0,
+    "pending": 0,
+    "state": "off",
+    "detail": None,
+}
 
 FALLBACK_TITLES = {
     "en": "Presentation",
@@ -80,12 +95,112 @@ async def ensure_default(project: dict[str, Any], actor_id: str) -> dict[str, An
 
 
 async def payload(report: dict[str, Any], project: dict[str, Any]) -> dict[str, Any]:
-    detail = await service.popcorn_payload(report)
+    capture: dict[str, Any] = {}
+    detail = await service.popcorn_payload(report, capture=capture)
     resolved = service.resolve_presentation_settings(detail["settings"], project)
     language, fallback = service.resolve_project_language(project.get("language"))
     detail["effective_language"] = resolved["language"]
     detail["project_language"] = {"code": language, "fallback": fallback}
+    detail["translation_status"] = await translation_status(
+        report,
+        project,
+        detail["settings"],
+        state=capture.get("state") or service.fresh_state(),
+        run=capture.get("run"),
+    )
     return detail
+
+
+def _translation_failure(run: dict[str, Any] | None) -> str | None:
+    """What the newest run said about a translation that did not finish.
+
+    A run row carries no kind of its own, and a translation tick is dispatched
+    the moment the host picks a language: it is the last thing to run, and the
+    only run that fails under this prefix.
+    """
+    run = run or {}
+    if run.get("status") != "error":
+        return None
+    detail = str(run.get("detail") or "")
+    if not detail.startswith(TRANSLATION_FAILURE_PREFIX):
+        return None
+    return detail[len(TRANSLATION_FAILURE_PREFIX) :] or None
+
+
+async def translation_status(
+    report: dict[str, Any],
+    project: dict[str, Any],
+    settings: dict[str, Any],
+    *,
+    state: dict[str, Any],
+    run: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """How far the chosen translation has got, beside the language options.
+
+    A pure read: it counts what a tick would still owe, and never dispatches
+    one, calls a model or writes. A deck that cannot be read leaves the panel
+    off rather than taking the whole payload down with it.
+    """
+    try:
+        return await _translation_status(report, project, settings, state=state, run=run)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("present: translation status unavailable for %s (%s)", report.get("id"), exc)
+        return dict(TRANSLATION_OFF)
+
+
+async def _translation_status(
+    report: dict[str, Any],
+    project: dict[str, Any],
+    settings: dict[str, Any],
+    *,
+    state: dict[str, Any],
+    run: dict[str, Any] | None,
+) -> dict[str, Any]:
+    from dembrane.settings import get_settings
+    from dembrane.popcorn.bundle import published_bundle
+    from dembrane.popcorn.translate import missing_texts, translatable_texts
+
+    target = service.translation_target(settings, project)
+    if not target:
+        return dict(TRANSLATION_OFF)
+    resolved = service.resolve_presentation_settings(settings, project)
+    project_id = service._as_id(project.get("id")) or service._as_id(report.get("project_id"))
+    # The room's deck in its original words, the files the tick counts. Only
+    # results carry translatable text, so the data screen's effective legal
+    # basis is left unresolved here and costs no read of its own.
+    bundle = service.build_bundle(
+        state=state,
+        settings=resolved,
+        report=report,
+        project=project,
+        participant_base_url=get_settings().urls.participant_base_url,
+    )
+    files = (
+        await published_bundle(
+            bundle, project_id=project_id, settings=resolved, project=project, host=False
+        )
+    )["files"]
+    table = (state.get("translations") or {}).get(target) or {}
+    total = len(translatable_texts(files))
+    pending = len(missing_texts(files, table, target))
+    failure = _translation_failure(run)
+    source, _fallback = service.resolve_project_language(project.get("language"))
+    if target == source and not total:
+        # The room is already speaking the target language and has nothing on
+        # the deck; there is no translation for the host to watch.
+        named = "off"
+    elif not pending:
+        named = "done"
+    else:
+        named = "incomplete" if failure else "translating"
+    return {
+        "target": target,
+        "total": total,
+        "translated": total - pending,
+        "pending": pending,
+        "state": named,
+        "detail": failure if named == "incomplete" else None,
+    }
 
 
 async def draft_state(report: dict[str, Any]) -> dict[str, Any]:
@@ -182,13 +297,23 @@ async def publish_draft(report: dict[str, Any], *, expected_revision: int) -> di
 async def draft_payload(
     report: dict[str, Any], project: dict[str, Any], settings: dict[str, Any]
 ) -> dict[str, Any]:
-    detail = await service.popcorn_payload(report)
+    capture: dict[str, Any] = {}
+    detail = await service.popcorn_payload(report, capture=capture)
     detail["settings"] = settings
     detail["name"] = settings["title"]
     resolved = service.resolve_presentation_settings(settings, project)
     language, fallback = service.resolve_project_language(project.get("language"))
     detail["effective_language"] = resolved["language"]
     detail["project_language"] = {"code": language, "fallback": fallback}
+    # The host is looking at what the draft will do, so the draft's own
+    # resolved language is the target reported here.
+    detail["translation_status"] = await translation_status(
+        report,
+        project,
+        settings,
+        state=capture.get("state") or service.fresh_state(),
+        run=capture.get("run"),
+    )
     return detail
 
 

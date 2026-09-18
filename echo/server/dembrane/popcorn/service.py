@@ -304,11 +304,13 @@ OPENING_BLOCKS: dict[str, dict[str, int]] = {
 
 # The data screen, step by step. Its words follow the project's
 # anonymisation and effective legal basis, never the host's typing, so the
-# screen cannot promise more than the platform does.
+# screen cannot promise more than the platform does. They say what happens to
+# the data and nothing about the shape of the event, so a host can show this
+# screen whatever the format is.
 DATA_COPY: dict[str, dict[str, Any]] = {
     "nl": {
         "title": "Dit gebeurt er stap voor stap met je gegevens",
-        "scan": "Eén persoon per gesprek scant de QR-code. Die telefoon maakt verbinding met dembrane.",
+        "scan": "Je scant de QR-code. Die telefoon maakt verbinding met dembrane.",
         "talk-anon": (
             "Het geluid wordt uitgeschreven. We halen namen die naar jou kunnen leiden uit het "
             "transcript, en de organisator kan de opname niet beluisteren. Geen training, geen gedoe."
@@ -318,9 +320,8 @@ DATA_COPY: dict[str, dict[str, Any]] = {
             "voor onderzoek."
         ),
         "understand": (
-            "Daarna analyseert dembrane alle gesprekken om te zien wat de groep echt belangrijk "
-            "vindt. Dat kan het volgende gesprek voeden: zo wordt een hele groep samen slimmer, "
-            "door de kracht van het gesprek."
+            "Daarna analyseert dembrane alle gesprekken om te zien wat de groep echt "
+            "belangrijk vindt."
         ),
         "legal": {
             "consent": (
@@ -342,16 +343,15 @@ DATA_COPY: dict[str, dict[str, Any]] = {
     },
     "en": {
         "title": "Here's what happens to your data, step by step",
-        "scan": "One person per conversation scans the QR code, and their phone connects with dembrane.",
+        "scan": "You scan the QR code, and that phone connects with dembrane.",
         "talk-anon": (
             "The audio is transcribed. We scrub the transcript of any names that could lead back "
             "to you, and your host cannot listen to the recording. No training, no nonsense."
         ),
         "talk-public": "The audio is transcribed and analysed. The host may use it for research.",
         "understand": (
-            "Then dembrane analyses all the conversations to identify what the group really "
-            "cares about. This can inform the next conversation: that's how a whole group gets "
-            "smarter, together, through the power of conversation."
+            "Then dembrane analyses all the conversations to identify what the group "
+            "really cares about."
         ),
         "legal": {
             "consent": (
@@ -456,21 +456,28 @@ def default_settings(*, title: str, client: str | None = None) -> dict[str, Any]
 
 
 def normalize_presentation(raw: Any) -> dict[str, Any] | None:
+    """The stored manifest as the room must read it.
+
+    Popcorn is where the screen absorbs latency: it has content while every
+    other block is still being made. So a presentation always carries it and
+    always opens on it. Settings saved before that rule, and a patch that asks
+    for another opening or drops Popcorn, are normalised rather than refused.
+    """
     if not isinstance(raw, dict):
         return None
     raw_blocks = raw.get("blocks")
     raw_blocks = raw_blocks if isinstance(raw_blocks, list) else ["popcorn"]
     selected = {b for b in raw_blocks if isinstance(b, str) and b in PRESENTATION_BLOCKS}
+    selected.add("popcorn")
     blocks = [block for block in PRESENTATION_BLOCKS if block in selected]
     hidden = raw.get("hidden_items")
     hidden = hidden if isinstance(hidden, list) else []
     bindings = raw.get("result_bindings")
     bindings = bindings if isinstance(bindings, dict) else {}
-    opening = raw.get("opening")
     return {
         "version": 1,
         "blocks": blocks,
-        "opening": opening if opening in blocks else (blocks[0] if blocks else None),
+        "opening": "popcorn",
         "language_policy": "project" if raw.get("language_policy") == "project" else "explicit",
         "hidden_items": list(dict.fromkeys(str(x) for x in hidden if isinstance(x, str)))[:2000],
         "result_bindings": {
@@ -1249,7 +1256,15 @@ def state_counts(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def popcorn_payload(report: dict[str, Any]) -> dict[str, Any]:
+async def popcorn_payload(
+    report: dict[str, Any], *, capture: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """The session as the dashboard reads it.
+
+    With `capture`, the rows this read already fetched are handed back in it.
+    A caller that needs the extraction state or the newest run itself then
+    costs no second read of the same loop.
+    """
     report_id = str(report["id"])
     loop = await get_loop_for_report(report_id)
     run = await get_latest_run(str(loop["id"])) if loop else None
@@ -1259,6 +1274,8 @@ async def popcorn_payload(report: dict[str, Any]) -> dict[str, Any]:
         (config or {}).get("popcorn_settings"), fallback_title=fallback_title
     )
     state = normalize_state((loop or {}).get("popcorn_state"))
+    if capture is not None:
+        capture.update({"loop": loop, "run": run, "config": config, "state": state})
     return {
         "id": report_id,
         "kind": REPORT_KIND,

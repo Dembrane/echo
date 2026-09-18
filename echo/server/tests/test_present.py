@@ -525,20 +525,29 @@ def test_presentation_blocks_always_follow_recipe_complexity_order() -> None:
         "map",
         "stakeholders",
     ]
-    assert settings["presentation"]["opening"] == "map"
+    assert settings["presentation"]["opening"] == "popcorn"
 
 
-def test_presentation_opening_falls_back_to_canonical_first_and_allows_empty() -> None:
+def test_presentation_always_carries_popcorn_and_opens_on_it() -> None:
     normalized = service.normalize_presentation(
         {"blocks": ["stakeholders", "tensions"], "opening": "map"}
     )
     assert normalized is not None
-    assert normalized["blocks"] == ["tensions", "stakeholders"]
-    assert normalized["opening"] == "tensions"
-    empty = service.normalize_presentation({"blocks": [], "opening": "popcorn"})
+    assert normalized["blocks"] == ["popcorn", "tensions", "stakeholders"]
+    assert normalized["opening"] == "popcorn"
+    empty = service.normalize_presentation({"blocks": [], "opening": "map"})
     assert empty is not None
-    assert empty["blocks"] == []
-    assert empty["opening"] is None
+    assert empty["blocks"] == ["popcorn"]
+    assert empty["opening"] == "popcorn"
+
+
+def test_legacy_settings_without_popcorn_read_as_popcorn_first() -> None:
+    settings = service.normalize_settings(
+        {"presentation": {"blocks": ["map"], "opening": "map"}},
+        fallback_title="Presentation",
+    )
+    assert settings["presentation"]["blocks"] == ["popcorn", "map"]
+    assert settings["presentation"]["opening"] == "popcorn"
 
 
 def test_audience_manifest_canonicalizes_existing_scrambled_settings() -> None:
@@ -554,7 +563,7 @@ def test_audience_manifest_canonicalizes_existing_scrambled_settings() -> None:
     assert manifest == {
         "version": 1,
         "blocks": ["popcorn", "tensions", "map", "stakeholders"],
-        "opening": "stakeholders",
+        "opening": "popcorn",
     }
 
 
@@ -595,9 +604,35 @@ def test_settings_save_response_canonicalizes_selected_blocks(monkeypatch) -> No
         "map",
         "stakeholders",
     ]
-    assert saved["presentation"]["opening"] == "map"
+    assert saved["presentation"]["opening"] == "popcorn"
     persisted = update_item.await_args.args[2]["popcorn_settings"]
     assert persisted["presentation"] == saved["presentation"]
+
+
+def test_a_patch_cannot_drop_popcorn_or_move_the_opening(monkeypatch) -> None:
+    from unittest.mock import AsyncMock
+
+    config = {
+        "id": "config",
+        "popcorn_settings": {
+            "title": "Presentation",
+            "presentation": {"blocks": ["popcorn", "map"], "opening": "popcorn"},
+        },
+    }
+    monkeypatch.setattr(service, "get_latest_config", AsyncMock(return_value=config))
+    monkeypatch.setattr(service.async_directus, "update_item", AsyncMock())
+
+    from dembrane.canvas import events
+
+    monkeypatch.setattr(events, "publish_generation_nudge", AsyncMock())
+    saved = asyncio.run(
+        service.update_settings(
+            report={"id": "presentation", "user_instructions": "Presentation"},
+            patch={"presentation": {"blocks": ["map"], "opening": "map"}},
+        )
+    )
+    assert saved["presentation"]["blocks"] == ["popcorn", "map"]
+    assert saved["presentation"]["opening"] == "popcorn"
 
 
 def test_present_draft_isolated_from_legacy_edits_until_publish(monkeypatch) -> None:
@@ -806,7 +841,9 @@ def test_start_reuses_adopted_results_without_legacy_state(monkeypatch, block):
                 }
             ),
         },
-        "counts": {"phrases": 0},
+        # Popcorn rides along in every presentation; phrases of its own keep
+        # this about the adopted block.
+        "counts": {"phrases": 2},
     }
     monkeypatch.setattr(present_api, "resolve_project_access", AsyncMock(return_value=access))
     monkeypatch.setattr(present, "ensure_default", AsyncMock(return_value={"id": "room"}))
@@ -838,6 +875,23 @@ def test_audience_assessments_only_carry_completed_visible_revisions():
     assert list(projected) == ["r"]
     assert projected["r"]["verdict"] == "contested"
     assert "private" not in str(projected)
+
+
+@pytest.mark.parametrize("language", ["en", "nl", "de", "fr", "es", "it", "uk", "cs"])
+def test_data_explanation_says_nothing_about_the_shape_of_the_event(language):
+    # The screen explains the data, so a host can show it whatever the format
+    # is: no one person per conversation, no next conversation to feed.
+    copy = service.DATA_COPY[language]
+    assert copy["understand"].count(".") == 1
+    assert copy["understand"].endswith(".")
+
+
+def test_data_explanation_keeps_the_dutch_wording_the_room_reads():
+    copy = service.DATA_COPY["nl"]
+    assert copy["scan"] == "Je scant de QR-code. Die telefoon maakt verbinding met dembrane."
+    assert copy["understand"] == (
+        "Daarna analyseert dembrane alle gesprekken om te zien wat de groep echt belangrijk vindt."
+    )
 
 
 @pytest.mark.parametrize("language", ["en", "nl", "de", "fr", "es", "it", "uk", "cs"])
@@ -972,6 +1026,183 @@ def test_a_held_lock_renews_its_lease_and_notices_losing_it(_settings_lock_redis
     assert after_loss is False
 
 
+def _deck_state(table: dict[str, str] | None = None) -> dict:
+    """A session with two phrases on the deck, and what is translated so far."""
+    state = service.fresh_state()
+    state["order"] = ["c1"]
+    state["conversations"] = {
+        "c1": {"items": [{"id": "i1", "phrase": "One"}, {"id": "i2", "phrase": "Two"}]}
+    }
+    if table is not None:
+        state["translations"] = {"en": table}
+    return state
+
+
+def _translating_settings(target: str = "en") -> dict:
+    settings = service.default_settings(title="Room")
+    settings["language"] = {"ui": "auto", "translate_to": target}
+    return settings
+
+
+@pytest.fixture
+def _own_deck(monkeypatch):
+    """No store behind the deck: the session's own files are what is counted."""
+    from dembrane.popcorn import bundle
+
+    async def published(bundle_in, **_kwargs):
+        return bundle_in
+
+    monkeypatch.setattr(bundle, "published_bundle", published)
+
+
+def _status(settings, state, run=None, project=None):
+    return asyncio.run(
+        present.translation_status(
+            {"id": "presentation", "project_id": "p"},
+            project or {"id": "p", "language": "nl"},
+            settings,
+            state=state,
+            run=run,
+        )
+    )
+
+
+def test_translation_status_is_off_without_a_target(_own_deck) -> None:
+    assert _status(service.default_settings(title="Room"), _deck_state()) == present.TRANSLATION_OFF
+
+
+def test_translation_status_counts_what_is_still_owed(_own_deck) -> None:
+    from dembrane.popcorn.translate import cache_key
+
+    status = _status(_translating_settings(), _deck_state({cache_key("One", "en"): "One!"}))
+    assert status == {
+        "target": "en",
+        "total": 2,
+        "translated": 1,
+        "pending": 1,
+        "state": "translating",
+        "detail": None,
+    }
+
+
+def test_translation_status_is_done_once_nothing_is_pending(_own_deck) -> None:
+    from dembrane.popcorn.translate import cache_key
+
+    table = {cache_key("One", "en"): "One!", cache_key("Two", "en"): "Two!"}
+    status = _status(_translating_settings(), _deck_state(table))
+    assert (status["state"], status["pending"], status["translated"]) == ("done", 0, 2)
+
+
+def test_translation_status_is_incomplete_when_the_last_run_gave_up(_own_deck) -> None:
+    from dembrane.popcorn.translate import cache_key
+
+    left_over = "translated 1 of 2 texts into en, 1 not translated"
+    status = _status(
+        _translating_settings(),
+        _deck_state({cache_key("One", "en"): "One!"}),
+        run={"status": "error", "detail": f"translation failed: {left_over}"},
+    )
+    assert status["state"] == "incomplete"
+    assert status["detail"] == left_over
+    # A failure of anything else leaves the translation still on its way.
+    other = _status(
+        _translating_settings(),
+        _deck_state({cache_key("One", "en"): "One!"}),
+        run={"status": "error", "detail": "popcorn extraction failed"},
+    )
+    assert (other["state"], other["detail"]) == ("translating", None)
+
+
+def test_translation_status_is_off_when_the_room_already_speaks_the_target(_own_deck) -> None:
+    status = _status(_translating_settings("nl"), service.fresh_state())
+    assert (status["state"], status["total"], status["target"]) == ("off", 0, "nl")
+
+
+def test_translation_status_never_writes_or_dispatches(monkeypatch, _own_deck) -> None:
+    from unittest.mock import AsyncMock
+
+    refuse = AsyncMock(side_effect=AssertionError("reading the editor must start no work"))
+    monkeypatch.setattr(service, "dispatch_popcorn_tick_now_with_safety", refuse)
+    monkeypatch.setattr(service.async_directus, "update_item", refuse)
+    monkeypatch.setattr(service, "get_loop_for_report", refuse)
+    assert _status(_translating_settings(), _deck_state())["pending"] == 2
+
+
+def test_translation_status_failure_leaves_the_rest_of_the_payload_standing(monkeypatch) -> None:
+    from dembrane.popcorn import bundle
+
+    async def broken(*_args, **_kwargs):
+        raise RuntimeError("deck objects unavailable")
+
+    monkeypatch.setattr(bundle, "published_bundle", broken)
+    assert _status(_translating_settings(), _deck_state()) == present.TRANSLATION_OFF
+
+
+def test_payload_reports_translation_from_the_rows_it_already_read(monkeypatch, _own_deck) -> None:
+    from unittest.mock import AsyncMock
+
+    from dembrane.popcorn.translate import cache_key
+
+    settings = _translating_settings()
+    loop = AsyncMock(
+        return_value={"id": "loop", "popcorn_state": _deck_state({cache_key("One", "en"): "One!"})}
+    )
+    monkeypatch.setattr(service, "get_loop_for_report", loop)
+    monkeypatch.setattr(
+        service,
+        "get_latest_run",
+        AsyncMock(return_value={"status": "error", "detail": "translation failed: provider down"}),
+    )
+    monkeypatch.setattr(
+        service,
+        "get_latest_config",
+        AsyncMock(return_value={"id": "config", "popcorn_settings": settings}),
+    )
+    monkeypatch.setattr(service, "next_read_at", AsyncMock(return_value=None))
+
+    detail = asyncio.run(
+        present.payload({"id": "presentation", "project_id": "p"}, {"id": "p", "language": "nl"})
+    )
+    assert detail["translation_status"] == {
+        "target": "en",
+        "total": 2,
+        "translated": 1,
+        "pending": 1,
+        "state": "incomplete",
+        "detail": "provider down",
+    }
+    # The status rides on the loop the payload already read.
+    assert loop.await_count == 1
+
+
+def test_draft_payload_reports_the_draft_target(monkeypatch, _own_deck) -> None:
+    from unittest.mock import AsyncMock
+
+    published = _translating_settings("")
+    monkeypatch.setattr(
+        service,
+        "get_loop_for_report",
+        AsyncMock(return_value={"id": "loop", "popcorn_state": _deck_state()}),
+    )
+    monkeypatch.setattr(service, "get_latest_run", AsyncMock(return_value=None))
+    monkeypatch.setattr(
+        service,
+        "get_latest_config",
+        AsyncMock(return_value={"id": "config", "popcorn_settings": published}),
+    )
+    monkeypatch.setattr(service, "next_read_at", AsyncMock(return_value=None))
+
+    detail = asyncio.run(
+        present.draft_payload(
+            {"id": "presentation", "project_id": "p"},
+            {"id": "p", "language": "nl"},
+            _translating_settings("de"),
+        )
+    )
+    assert detail["translation_status"]["target"] == "de"
+    assert detail["translation_status"]["state"] == "translating"
+
+
 def test_audience_map_answers_a_store_failure_with_503(monkeypatch) -> None:
     from dembrane.analysis.contracts import AnalysisStoreError
 
@@ -982,3 +1213,23 @@ def test_audience_map_answers_a_store_failure_with_503(monkeypatch) -> None:
     with pytest.raises(HTTPException) as caught:
         asyncio.run(present.audience_map("p"))
     assert caught.value.status_code == 503
+
+
+def test_translation_retry_dispatches_a_translation_only_job(monkeypatch) -> None:
+    from unittest.mock import AsyncMock
+
+    access = _Access()
+    monkeypatch.setattr(
+        present_api, "_require_popcorn", AsyncMock(return_value=({"id": "room"}, access))
+    )
+    monkeypatch.setattr(service, "get_loop_for_report", AsyncMock(return_value={"id": "loop1"}))
+    dispatch = AsyncMock()
+    monkeypatch.setattr(service, "dispatch_popcorn_tick_now_with_safety", dispatch)
+    monkeypatch.setattr(present, "payload", AsyncMock(return_value={"id": "room"}))
+
+    result = asyncio.run(present_api.retry_translation("room", SimpleNamespace(user_id="host")))
+
+    assert result == {"id": "room"}
+    assert access.required == ["project:update"]
+    # Translation only: never a manual or scheduled read of the transcripts.
+    dispatch.assert_awaited_once_with("loop1", "translation")

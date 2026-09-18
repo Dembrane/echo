@@ -356,6 +356,21 @@ async def adopt(presentation_id: str, auth: DependencyDirectusSession) -> dict[s
     return await present.payload(report, access.project)
 
 
+@router.post("/{presentation_id}/translate", status_code=202)
+async def retry_translation(
+    presentation_id: str, auth: DependencyDirectusSession
+) -> dict[str, Any]:
+    """Ask again for the texts a translation job left over. Translation only:
+    no transcripts are read and no analysis runs."""
+    report, access = await _require_popcorn(presentation_id, auth)
+    access.require("project:update")
+    loop = await service.get_loop_for_report(str(report["id"]))
+    if not loop:
+        raise HTTPException(status_code=404, detail="Popcorn loop not found")
+    await service.dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "translation")
+    return await present.payload(report, access.project)
+
+
 @router.get("/{presentation_id}/updates")
 async def updates(presentation_id: str, auth: DependencyDirectusSession) -> dict[str, Any]:
     report, access = await _require_popcorn(presentation_id, auth)
