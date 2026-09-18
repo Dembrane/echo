@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import asyncio
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 import dembrane.popcorn.service as service
 from scripts.popcorn_demo import export, prepare
@@ -158,7 +159,12 @@ def test_intro_partial_patch_keeps_copy(monkeypatch):
     async def publish(_report_id):
         pass
 
+    @asynccontextmanager
+    async def settings_lock(_report_id):
+        yield
+
     monkeypatch.setattr(service, "get_latest_config", config)
+    monkeypatch.setattr(service, "settings_write_lock", settings_lock)
     monkeypatch.setattr(service.async_directus, "update_item", update)
     import dembrane.canvas.events as events
 

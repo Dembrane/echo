@@ -1,8 +1,10 @@
 import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useContext } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { bff } from "@/lib/bff";
+import { SettingsSaveContext } from "../SettingsSaveContext";
 
 export type PopcornLoop = {
 	id?: string;
@@ -69,6 +71,7 @@ export type PopcornLanguage = {
 };
 
 export type PopcornSettings = {
+	presentation?: import("@/components/present/hooks").PresentationManifest;
 	intro: PopcornIntro;
 	disclosure: PopcornDisclosure;
 	notice: PopcornNotice;
@@ -135,8 +138,18 @@ export type LiveHours = 1 | 8 | 24;
 export type PopcornSettingsPatch = Partial<
 	Omit<
 		PopcornSettings,
-		"tabs" | "voice" | "intro" | "disclosure" | "notice" | "data" | "language"
+		| "tabs"
+		| "voice"
+		| "intro"
+		| "disclosure"
+		| "notice"
+		| "data"
+		| "language"
+		| "presentation"
 	> & {
+		presentation: Partial<
+			import("@/components/present/hooks").PresentationManifest
+		>;
 		intro: Partial<PopcornIntro>;
 		disclosure: Partial<PopcornDisclosure>;
 		notice: Partial<PopcornNotice>;
@@ -172,9 +185,9 @@ export const popcornEmbedSnippet = (token: string) =>
 
 const projectKey = (projectId: string) => ["project", projectId, "popcorn"];
 
-export const useProjectPopcorn = (projectId: string) =>
+export const useProjectPopcorn = (projectId: string, enabled = true) =>
 	useQuery({
-		enabled: !!projectId,
+		enabled: enabled && !!projectId,
 		queryFn: () =>
 			bff.get<PopcornProject>("/popcorn", { project_id: projectId }),
 		// No polling: the session page's event stream invalidates this query.
@@ -226,7 +239,12 @@ export const useCreatePopcornMutation = (projectId: string) => {
 				...payload,
 			}),
 		onError: () => toast.error(t`Could not run popcorn`),
-		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
+		onSuccess: (detail) => {
+			putPopcorn(queryClient, projectId, detail);
+			queryClient.invalidateQueries({
+				queryKey: ["project", projectId, "presentation"],
+			});
+		},
 	});
 };
 
@@ -235,14 +253,23 @@ export const usePopcornSettingsMutation = (
 	popcornId: string,
 ) => {
 	const queryClient = useQueryClient();
+	const editor = useContext(SettingsSaveContext);
 	return useMutation({
 		mutationFn: (patch: PopcornSettingsPatch) =>
-			bff.patch<PopcornDetail>(
-				`/popcorn/${encodeURIComponent(popcornId)}/settings`,
-				patch,
-			),
-		onError: () => toast.error(t`Could not save popcorn settings`),
-		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
+			editor
+				? editor.save(patch)
+				: bff.patch<PopcornDetail>(
+						`/popcorn/${encodeURIComponent(popcornId)}/settings`,
+						patch,
+					),
+		onError: () => toast.error(t`Could not save changes. Try again.`),
+		onSuccess: (detail) => {
+			if (editor) return;
+			putPopcorn(queryClient, projectId, detail);
+			queryClient.invalidateQueries({
+				queryKey: ["project", projectId, "presentation"],
+			});
+		},
 	});
 };
 
@@ -306,7 +333,12 @@ export const usePopcornLiveMutation = (
 				{ hours },
 			),
 		onError: () => toast.error(t`Could not go live`),
-		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
+		onSuccess: (detail) => {
+			putPopcorn(queryClient, projectId, detail);
+			queryClient.invalidateQueries({
+				queryKey: ["project", projectId, "presentation"],
+			});
+		},
 	});
 };
 
@@ -321,6 +353,11 @@ export const usePopcornStopLiveMutation = (
 				`/popcorn/${encodeURIComponent(popcornId)}/live/stop`,
 			),
 		onError: () => toast.error(t`Could not stop live`),
-		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
+		onSuccess: (detail) => {
+			putPopcorn(queryClient, projectId, detail);
+			queryClient.invalidateQueries({
+				queryKey: ["project", projectId, "presentation"],
+			});
+		},
 	});
 };

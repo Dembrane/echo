@@ -1277,6 +1277,15 @@ def default_reads() -> MapViewReads:
 
 
 async def map_view_hook(event: OutboxEvent, store: AnalysisStore) -> None:
+    if event.event_type == "revision_published":
+        if event.payload.get("type") in HOOK_TYPES:
+            await advance_map_view(
+                event.project_id,
+                store=store,
+                reads=default_reads(),
+                source_event_id=event.id,
+            )
+        return
     if event.event_type != "run_published":
         return
     try:

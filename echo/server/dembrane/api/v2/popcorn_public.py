@@ -27,9 +27,13 @@ from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.directus_async import async_directus
 from dembrane.popcorn.bundle import load_settings, bundle_for_report
 from dembrane.popcorn.service import get_report_by_public_token
-from dembrane.api.feature_flags import require_canvas_enabled
+from dembrane.api.feature_flags import (
+    require_popcorn_enabled,
+    require_present_enabled,
+    require_project_popcorn_enabled,
+)
 
-router = APIRouter(dependencies=[Depends(require_canvas_enabled)])
+router = APIRouter(dependencies=[Depends(require_popcorn_enabled)])
 
 NO_STORE = {"Cache-Control": "no-store"}
 # Tokens are urlsafe base64 from secrets.token_urlsafe; nothing else is a token.
@@ -61,12 +65,9 @@ async def _published_report(token: str) -> tuple[dict[str, Any], dict[str, Any]]
         raise HTTPException(status_code=404, detail="Not found")
     project_id = _as_id(report.get("project_id"))
     project = await async_directus.get_item("project", project_id) if project_id else None
-    if (
-        not isinstance(project, dict)
-        or project.get("deleted_at")
-        or not project.get("is_canvas_enabled")
-    ):
+    if not isinstance(project, dict) or project.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Not found")
+    require_project_popcorn_enabled(project)
     settings = await load_settings(report)
     if not settings.get("public"):
         raise HTTPException(status_code=404, detail="Not found")
@@ -81,14 +82,21 @@ async def _published_report(token: str) -> tuple[dict[str, Any], dict[str, Any]]
 async def public_popcorn_page(token: str, request: Request) -> HTMLResponse:
     await _page_limiter.check(_client_ip(request))
     try:
-        await _published_report(token)
+        report, _project = await _published_report(token)
     except HTTPException as exc:
         if exc.status_code != 404:
             raise
         # A person following a stale link gets a page in the deck's own voice,
         # not a JSON body.
         return HTMLResponse(render_not_live_page(), status_code=404, headers=NO_STORE)
-    return HTMLResponse(render_popcorn_page(embed={"mode": "public"}), headers=NO_STORE)
+    from dembrane.api.v2.bff.present import _deck_embed
+
+    embed = (
+        _deck_embed(str(report["id"]))
+        if request.query_params.get("embedded") == "1"
+        else {"mode": "public"}
+    )
+    return HTMLResponse(render_popcorn_page(embed=embed), headers=NO_STORE)
 
 
 @router.get("/{token}/logo.png")
@@ -163,4 +171,40 @@ async def public_popcorn_events(token: str, request: Request) -> StreamingRespon
         key=f"{token}:{client_ip}",
         max_streams_per_key=_MAX_EVENT_STREAMS_PER_VIEWER,
         still_allowed=lambda: _still_published(token),
+    )
+
+
+@router.get("/{token}/audience", dependencies=[Depends(require_present_enabled)])
+async def public_presentation(token: str, request: Request) -> JSONResponse:
+    from dembrane.popcorn.present import audience_manifest
+
+    await _data_limiter.check(_client_ip(request))
+    report, project = await _published_report(token)
+    settings = await load_settings(report)
+    return JSONResponse(
+        {
+            "id": str(report["id"]),
+            "manifest": audience_manifest(settings),
+            "bundle": await bundle_for_report(report, project, host=False),
+        },
+        headers=NO_STORE,
+    )
+
+
+@router.get("/{token}/map", dependencies=[Depends(require_present_enabled)])
+async def public_presentation_map(
+    token: str, request: Request, node_limit: int | None = None, edge_limit: int | None = None
+) -> JSONResponse:
+    from dembrane.popcorn.present import audience_map, audience_manifest
+
+    await _data_limiter.check(_client_ip(request))
+    report, project = await _published_report(token)
+    settings = await load_settings(report)
+    if "map" not in audience_manifest(settings)["blocks"]:
+        raise HTTPException(status_code=404, detail="Map is not in this presentation.")
+    return JSONResponse(
+        await audience_map(
+            str(project["id"]), settings=settings, node_limit=node_limit, edge_limit=edge_limit
+        ),
+        headers=NO_STORE,
     )

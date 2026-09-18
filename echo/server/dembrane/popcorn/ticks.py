@@ -84,7 +84,7 @@ from dembrane.popcorn.analysis import (
 from dembrane.popcorn.tensions import PROMPT_NAMES as TENSION_PROMPTS, run_pipeline
 from dembrane.popcorn.grounding import ground_items
 from dembrane.popcorn.translate import (
-    text_key,
+    cache_key,
     missing_texts,
     target_language,
     translated_bundle,
@@ -111,7 +111,14 @@ STAKEHOLDERS_TIMEOUT_SECONDS = 300
 MAX_CHARS_PER_CONVERSATION = 150_000
 ANALYSIS_VIEWS = ("tensions", "stakeholders")
 # Reads a host asked for, as opposed to the live chain's scheduled ticks.
-ON_REQUEST = ("manual", "rerun")
+ON_REQUEST = (
+    "manual",
+    "rerun",
+    "translation",
+    "prepare:popcorn",
+    "prepare:tensions",
+    "prepare:stakeholders",
+)
 RUN_LOCK_SECONDS = 5 * 60
 MANUAL_LOCK_WAIT_SECONDS = 180
 STALE_TICK_SECONDS = 90
@@ -176,17 +183,25 @@ async def _create_run(
     detail: str | None = None,
     request_id: str | None = None,
 ) -> dict[str, Any]:
-    result = await async_directus.create_item(
-        "agent_loop_run",
-        {
-            "id": request_id or generate_uuid(),
-            "loop_id": loop_id,
-            "status": status,
-            "detail": (detail or "")[:5000] or None,
-            "started_at": started_at.isoformat(),
-            "finished_at": _now().isoformat(),
-        },
-    )
+    run_id = request_id or generate_uuid()
+    payload = {
+        "id": run_id,
+        "loop_id": loop_id,
+        "status": status,
+        "detail": (detail or "")[:5000] or None,
+        "started_at": started_at.isoformat(),
+        "finished_at": _now().isoformat(),
+    }
+    # Immediate on-request ticks have a durable backup with the same id. An
+    # error is intentionally retried by that backup, which must replace the
+    # failed attempt instead of colliding with its already-created run row.
+    existing = await async_directus.get_item("agent_loop_run", run_id) if request_id else None
+    if existing and _as_id(existing.get("loop_id")) == loop_id:
+        result = await async_directus.update_item(
+            "agent_loop_run", run_id, {key: value for key, value in payload.items() if key != "id"}
+        )
+    else:
+        result = await async_directus.create_item("agent_loop_run", payload)
     return result["data"] if isinstance(result, dict) and "data" in result else result
 
 
@@ -276,7 +291,10 @@ async def _renew_run_lock(loop_id: str) -> None:
 
 
 async def _popcorn_enabled_for_loop(loop: dict[str, Any]) -> bool:
-    if not get_settings().feature_flags.enable_canvas:
+    flags = get_settings().feature_flags
+    present = bool(getattr(flags, "enable_present", False))
+    canvas = bool(getattr(flags, "enable_canvas", False))
+    if not present and not canvas:
         return False
     project_id = _as_id(loop.get("project_id"))
     if not project_id:
@@ -285,7 +303,9 @@ async def _popcorn_enabled_for_loop(loop: dict[str, Any]) -> bool:
         project = await async_directus.get_item("project", project_id)
     except Exception:
         return False
-    return bool(isinstance(project, dict) and project.get("is_canvas_enabled"))
+    if not isinstance(project, dict):
+        return False
+    return present or (canvas and bool(project.get("is_canvas_enabled")))
 
 
 async def _update_loop_after_tick(loop: dict[str, Any], *, status: str) -> None:
@@ -432,8 +452,69 @@ class _TickWriter:
             await async_directus.update_item(
                 "agent_loop", self.loop_id, {"popcorn_state": self.state}
             )
+            # The event reader asks for the authoritative bundle. Drop the
+            # process-local projection before waking it so this write, including
+            # a same-revision translation, is what the event delivers.
+            from dembrane.popcorn.bundle import forget_bundle
+
+            forget_bundle(self.report_id)
+            await publish_generation_nudge(self.report_id)
         await _renew_run_lock(self.loop_id)
-        await publish_generation_nudge(self.report_id)
+
+
+class _IncrementalTranslator:
+    """One bounded translation dispatcher inside the tick's single writer.
+
+    Extractors submit phrases after their original wording has been flushed.
+    A session has one dispatcher, so concurrent extractor completions cannot
+    pay twice for the same target, source text and translation policy.
+    """
+
+    def __init__(self, writer: _TickWriter, target: str) -> None:
+        self.writer = writer
+        self.target = target
+        translations = writer.state.setdefault("translations", {})
+        self.table: dict[str, str] = translations.setdefault(target, {})
+        self._in_flight: set[str] = set()
+        self._claim_lock = asyncio.Lock()
+        self._dispatch = asyncio.Semaphore(1)
+
+    async def submit(self, texts: list[str]) -> None:
+        claimed: list[tuple[str, str]] = []
+        async with self._claim_lock:
+            for text in texts:
+                if not isinstance(text, str) or not text.strip():
+                    continue
+                key = cache_key(text, self.target)
+                if key in self.table or key in self._in_flight:
+                    continue
+                self._in_flight.add(key)
+                claimed.append((key, text))
+        if not claimed:
+            return
+
+        async def store(batch: list[str], answers: list[str | None]) -> None:
+            changed = False
+            async with self._claim_lock:
+                for source, answer in zip(batch, answers, strict=True):
+                    key = cache_key(source, self.target)
+                    if answer and self.table.get(key) != answer:
+                        self.table[key] = answer
+                        changed = True
+            if changed:
+                await self.writer.flush()
+
+        try:
+            # One incremental call at a time. `translate_texts` enforces its
+            # own 40-text batches, four-call ceiling and timeout.
+            async with self._dispatch:
+                sources = [text for _, text in claimed]
+                await translate_texts(sources, self.target, on_batch=store)
+        except Exception as exc:  # the flushed originals remain usable
+            logger.warning("incremental popcorn translation failed: %s", exc)
+        finally:
+            async with self._claim_lock:
+                self._in_flight.difference_update(key for key, _ in claimed)
 
 
 class _Publisher:
@@ -591,6 +672,7 @@ async def _extract_one(
     host_note: str = "",
     known: set[tuple[str, ...]] | None = None,
     publisher: _Publisher | None = None,
+    translator: _IncrementalTranslator | None = None,
 ) -> None:
     cid = transcript["id"]
     entry = writer.state["conversations"][cid]
@@ -657,6 +739,14 @@ async def _extract_one(
             )
             outcomes.append(f"popcorn {cid[:8]}: FAILED {exc}")
     await writer.flush()
+    if translator is not None:
+        await translator.submit(
+            [
+                str(item["phrase"])
+                for item in entry.get("items") or []
+                if isinstance(item, dict) and item.get("phrase")
+            ]
+        )
     if publisher is not None:
         await publisher.conversation(writer.state, transcript)
 
@@ -965,10 +1055,24 @@ def _failure_text(exc: BaseException) -> str:
     return str(exc)[:300] or type(exc).__name__
 
 
-def _stale_views(state: dict[str, Any], analysis_fingerprint: str) -> list[str]:
+def _stale_views(
+    state: dict[str, Any], analysis_fingerprint: str, views: tuple[str, ...] = ANALYSIS_VIEWS
+) -> list[str]:
     """The analysis views not yet computed over this session's transcripts."""
     held = (state.get("analysis") or {}).get("fingerprints") or {}
-    return [kind for kind in ANALYSIS_VIEWS if held.get(kind) != analysis_fingerprint]
+    return [kind for kind in views if held.get(kind) != analysis_fingerprint]
+
+
+def _selected_analysis_views(settings: dict[str, Any]) -> tuple[str, ...]:
+    """Presentation-backed sessions prepare only blocks in their manifest.
+
+    Legacy sessions retain their historical behaviour. The presentation
+    marker lets the new Popcorn-only default avoid two unrelated model calls.
+    """
+    if not isinstance(settings.get("presentation"), dict):
+        return ANALYSIS_VIEWS
+    blocks = settings["presentation"].get("blocks") or []
+    return tuple(kind for kind in ANALYSIS_VIEWS if kind in blocks)
 
 
 def _commit_views(
@@ -1072,7 +1176,12 @@ async def _snapshot_version(
 
 
 async def _translate_session(
-    state: dict[str, Any], settings: dict[str, Any], *, report_id: str, project_id: str
+    state: dict[str, Any],
+    settings: dict[str, Any],
+    *,
+    report_id: str,
+    project_id: str,
+    writer: _TickWriter | None = None,
 ) -> str | None:
     """The host's translation brought up to date with what the room's deck
     shows now. An outcome line, or None when nothing was owed."""
@@ -1086,16 +1195,26 @@ async def _translate_session(
     )["files"]
     translations = state.setdefault("translations", {})
     # Only the texts on the deck now are kept: a rerun's old phrases go.
-    shown = {text_key(text) for text in translatable_texts(files)}
-    table = {k: v for k, v in (translations.get(target) or {}).items() if k in shown}
+    shown = {cache_key(text, target) for text in translatable_texts(files)}
+    previous = translations.get(target) or {}
+    table = {k: v for k, v in previous.items() if k in shown}
     translations[target] = table
-    gaps = missing_texts(files, table)
+    gaps = missing_texts(files, table, target)
     if not gaps:
+        if writer is not None and table != previous:
+            await writer.flush()
         return None
-    answers = await translate_texts(gaps, target)
-    for source, text in zip(gaps, answers, strict=True):
-        if text:
-            table[text_key(source)] = text
+
+    async def store(batch: list[str], answers: list[str | None]) -> None:
+        changed = False
+        for source, text in zip(batch, answers, strict=True):
+            if text and table.get(cache_key(source, target)) != text:
+                table[cache_key(source, target)] = text
+                changed = True
+        if changed and writer is not None:
+            await writer.flush()
+
+    answers = await translate_texts(gaps, target, on_batch=store)
     return f"translated {sum(1 for a in answers if a)} of {len(gaps)} texts into {target}"
 
 
@@ -1207,6 +1326,55 @@ async def run_popcorn_tick(
             (config or {}).get("popcorn_settings"),
             fallback_title=str(loop.get("name") or "Popcorn"),
         )
+        project = await async_directus.get_item("project", project_id)
+        # Bet 1 adds this resolver to keep "Project language" as a live
+        # policy. The fallback keeps a mixed-version worker safe during rollout.
+        from dembrane.popcorn import service as popcorn_service
+
+        resolver = getattr(popcorn_service, "resolve_presentation_settings", None)
+        if callable(resolver):
+            settings = resolver(settings, project if isinstance(project, dict) else {})
+        analysis_views = _selected_analysis_views(settings)
+        prepare_kind = tick_kind.removeprefix("prepare:") if tick_kind.startswith("prepare:") else None
+        if prepare_kind == "popcorn":
+            analysis_views = ()
+        elif prepare_kind in ANALYSIS_VIEWS:
+            analysis_views = (prepare_kind,)
+        if tick_kind == "translation":
+            writer = _TickWriter(loop_id, report_id, state)
+            try:
+                translated = await _translate_session(
+                    state,
+                    settings,
+                    report_id=report_id,
+                    project_id=project_id,
+                    writer=writer,
+                )
+            except Exception as exc:  # the room keeps its original words
+                detail = f"translation failed: {_failure_text(exc)}"
+                run = await _create_run(
+                    loop_id=loop_id,
+                    status="error",
+                    detail=detail,
+                    started_at=started_at,
+                    request_id=request_id,
+                )
+                await _update_loop_after_tick(loop, status="error")
+                await _enqueue_next_if_due(loop)
+                await _nudge_loop(loop)
+                return {"status": "error", "run": run, "state": state}
+            changed = bool(translated)
+            run = await _create_run(
+                loop_id=loop_id,
+                status="ok" if changed else "no_op",
+                detail=translated or "No translation work owed",
+                started_at=started_at,
+                request_id=request_id,
+            )
+            await _update_loop_after_tick(loop, status="ok")
+            await _enqueue_next_if_due(loop)
+            await _nudge_loop(loop)
+            return {"status": "ok" if changed else "no_op", "run": run, "state": state}
         host_note = voice_host_note(settings.get("voice"))
         transcripts = await gather_transcripts(
             project_id=project_id, acting_directus_user_id=acting_user_id
@@ -1249,22 +1417,30 @@ async def run_popcorn_tick(
         analysis_fingerprint = _fingerprint(
             "|".join(f"{t['id']}:{t['fingerprint']}" for t in transcripts)
         )
-        analysis_stale = bool(transcripts) and bool(_stale_views(state, analysis_fingerprint))
+        analysis_stale = bool(transcripts) and bool(
+            _stale_views(state, analysis_fingerprint, analysis_views)
+        )
 
-        owed = _pending_enrichment(state, transcripts)
+        prepares_popcorn = prepare_kind in (None, "popcorn")
+        extraction_work = changed if prepares_popcorn else []
+        owed = _pending_enrichment(state, transcripts) if prepares_popcorn else []
         # Nothing new, nothing owed, no view stale: nothing to do, whoever asked.
         # Only a rerun goes on regardless, because a rerun wiped the state.
-        if not changed and not analysis_stale and not owed and tick_kind != "rerun":
+        if not extraction_work and not analysis_stale and not owed and tick_kind != "rerun":
             # A translation the host asked for is the one thing left to do.
+            translation_writer = _TickWriter(loop_id, report_id, state)
             try:
                 translated = await _translate_session(
-                    state, settings, report_id=report_id, project_id=project_id
+                    state,
+                    settings,
+                    report_id=report_id,
+                    project_id=project_id,
+                    writer=translation_writer,
                 )
             except Exception as exc:  # noqa: BLE001
                 logger.warning("popcorn translation failed for %s: %s", report_id, exc)
                 translated = None
             if translated:
-                await _TickWriter(loop_id, report_id, state).flush()
                 run = await _create_run(
                     loop_id=loop_id,
                     status="ok",
@@ -1289,9 +1465,14 @@ async def run_popcorn_tick(
         state["run"] = int(state.get("run") or 0) + 1
         # A conversation being re-read shows as "reading" on the deck and the
         # host page until its extractor lands; its old phrases stay on screen.
-        for t in changed:
+        for t in extraction_work:
             state["conversations"][t["id"]]["done"] = False
         writer = _TickWriter(loop_id, report_id, state)
+        translator = (
+            _IncrementalTranslator(writer, target_language(settings))
+            if target_language(settings)
+            else None
+        )
         # The legend and the "listening…" stage need the transcript list before
         # any phrase lands, so the session is published before extraction starts.
         await writer.flush()
@@ -1300,7 +1481,7 @@ async def run_popcorn_tick(
         # What the tick reads reaches the shared store through the executor,
         # for the producer scopes it owns. See `_Publisher`.
         publisher = _Publisher(project_id, outcomes, host_note)
-        if changed:
+        if extraction_work:
             semaphore = asyncio.Semaphore(MAX_PARALLEL_EXTRACTORS)
             await asyncio.gather(
                 *(
@@ -1312,8 +1493,9 @@ async def run_popcorn_tick(
                         host_note,
                         known_by.get(t["id"], known_all),
                         publisher,
+                        translator,
                     )
-                    for t in changed
+                    for t in extraction_work
                 )
             )
 
@@ -1332,7 +1514,7 @@ async def run_popcorn_tick(
         # over the conversations re-read this tick (and any whose earlier pass
         # did not finish), and the session analysis.
         async def second_pass() -> None:
-            pending = _pending_enrichment(state, transcripts)
+            pending = _pending_enrichment(state, transcripts) if prepares_popcorn else []
             if pending:
                 enrich_semaphore = asyncio.Semaphore(MAX_PARALLEL_ENRICHMENT)
                 await asyncio.gather(
@@ -1343,14 +1525,16 @@ async def run_popcorn_tick(
                 )
 
         async def analysis_pass() -> None:
-            if not transcripts or not (analysis_stale or changed or tick_kind == "rerun"):
+            if not transcripts or not (
+                analysis_stale or extraction_work or tick_kind == "rerun"
+            ):
                 return
             # A changed session is analysed whole; a session that only has a
             # view left stale (its last run failed) redoes that view alone.
             views = (
-                ANALYSIS_VIEWS
-                if changed or tick_kind == "rerun"
-                else tuple(_stale_views(state, analysis_fingerprint))
+                analysis_views
+                if extraction_work or tick_kind == "rerun"
+                else tuple(_stale_views(state, analysis_fingerprint, analysis_views))
             )
             fresh = await _run_analysis_pass(
                 transcripts, outcomes, book, views=views, publisher=publisher
@@ -1372,17 +1556,20 @@ async def run_popcorn_tick(
             await writer.flush()
         try:
             translated = await _translate_session(
-                state, settings, report_id=report_id, project_id=project_id
+                state,
+                settings,
+                report_id=report_id,
+                project_id=project_id,
+                writer=writer,
             )
         except Exception as exc:  # the room keeps its original words
             translated = f"translation failed: {_failure_text(exc)}"
         if translated:
             outcomes.append(translated)
-            await writer.flush()
 
         detail = "; ".join(
             [
-                f"run {state['run']}: {len(changed)} of {len(transcripts)} conversations re-read"
+                f"run {state['run']}: {len(extraction_work)} of {len(transcripts)} conversations re-read"
                 + (" (rerun: the previous state wiped)" if tick_kind == "rerun" else "")
             ]
             + outcomes
@@ -1406,6 +1593,16 @@ async def run_popcorn_tick(
             )
         except Exception as exc:  # a failed snapshot must not fail the tick
             logger.warning("popcorn version snapshot failed for %s: %s", report_id, exc)
+        else:
+            if isinstance(settings.get("presentation"), dict):
+                try:
+                    from dembrane.popcorn.present import adopt_results
+
+                    report = await async_directus.get_item("project_report", report_id)
+                    if isinstance(report, dict):
+                        await adopt_results(report, project_id, initial_only=True)
+                except Exception as exc:  # audience keeps its existing bindings
+                    logger.warning("initial presentation result adoption failed: %s", exc)
         await _update_loop_after_tick(loop, status="ok")
         await _enqueue_next_if_due(loop)
         await _nudge_loop(loop)
@@ -1428,7 +1625,8 @@ async def run_popcorn_tick(
 
 async def reconcile_missing_popcorn_tick_tasks() -> int:
     """Backfill one pending scheduled tick for each active popcorn loop missing one."""
-    if not get_settings().feature_flags.enable_canvas:
+    flags = get_settings().feature_flags
+    if not getattr(flags, "enable_present", False) and not getattr(flags, "enable_canvas", False):
         return 0
     now = _now()
     loops = await async_directus.get_items(

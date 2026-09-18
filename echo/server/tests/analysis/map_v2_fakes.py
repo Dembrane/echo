@@ -203,6 +203,9 @@ class Access:
         if policy not in self.allowed:
             raise HTTPException(status_code=403, detail="Not allowed")
 
+    def allows(self, policy: str) -> bool:
+        return policy in self.allowed
+
 
 class Limiter:
     def __init__(self) -> None:

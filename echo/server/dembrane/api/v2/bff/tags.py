@@ -462,9 +462,44 @@ async def update_project(
         payload.update(legal_write.payload)
 
     updated = await async_directus.update_item("project", project_id, payload)
-    if isinstance(updated, dict) and "data" in updated:
-        return updated["data"]
-    return updated or {}
+    updated_project = updated.get("data") if isinstance(updated, dict) and "data" in updated else updated
+    updated_project = updated_project if isinstance(updated_project, dict) else {}
+
+    # A presentation that follows the project language treats this field as a
+    # live policy. Only a real effective-target change wakes it; unrelated
+    # project autosaves and presentations with an explicit target stay quiet.
+    if "language" in payload and payload.get("language") != access.project.get("language"):
+        from dembrane.popcorn import service as popcorn_service
+        from dembrane.canvas.events import publish_generation_nudge
+        from dembrane.popcorn.bundle import forget_bundle
+
+        report = await popcorn_service.get_popcorn_report(project_id)
+        if report:
+            settings = await popcorn_service.load_settings_for(report)
+            presentation = settings.get("presentation") or {}
+            before_target = (
+                popcorn_service.resolve_presentation_settings(settings, access.project).get(
+                    "language"
+                )
+                or {}
+            ).get("translate_to")
+            after_target = (
+                popcorn_service.resolve_presentation_settings(settings, updated_project).get(
+                    "language"
+                )
+                or {}
+            ).get("translate_to")
+            if presentation.get("language_policy") == "project" and after_target != before_target:
+                report_id = str(report["id"])
+                forget_bundle(report_id)
+                await publish_generation_nudge(report_id)
+                loop = await popcorn_service.get_loop_for_report(report_id)
+                if loop:
+                    await popcorn_service.dispatch_popcorn_tick_now_with_safety(
+                        str(loop["id"]), "translation"
+                    )
+
+    return updated_project
 
 
 @project_router.delete("/{project_id}")

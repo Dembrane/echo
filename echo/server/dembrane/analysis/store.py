@@ -1275,6 +1275,22 @@ class SqlAnalysisStore:
             )
             return {row["id"]: _revision(row) for row in await cursor.fetchall()}
 
+    async def current_revisions(
+        self, project_id: str, scope_ids: list[str] | None = None
+    ) -> dict[str, ObjectRevision]:
+        """Every published head in a project, keyed by object identity."""
+        async with self._cursor() as cursor:
+            await cursor.execute(
+                f"""SELECT {_select('r', REVISION_UUIDS, REVISION_PLAIN)}
+                    FROM analysis_object AS o
+                    JOIN analysis_object_revision AS r ON r.id = o.current_revision_id
+                    WHERE o.project_id = %s AND r.status = 'published'
+                      AND (%s::uuid[] IS NULL OR o.scope_id = ANY(%s::uuid[]))""",
+                (project_id, scope_ids, scope_ids),
+            )
+            rows = await cursor.fetchall()
+        return {revision.object_id: revision for row in rows if (revision := _revision(row))}
+
     @staticmethod
     def _revision_params(new: NewRevision, revision_id: str, number: int, status: str) -> dict[str, Any]:
         return {
@@ -1461,6 +1477,10 @@ class SqlAnalysisStore:
                             "revisionId": row["id"],
                             "type": new.type,
                             "origin": str(new.origin),
+                            "recipeId": new.provenance.recipe_id,
+                            "membershipExcluded": bool(
+                                new.provenance.extra.get("membershipExcluded")
+                            ),
                             "previousRevisionId": expected_revision_id,
                             "sequence": sequence,
                         }

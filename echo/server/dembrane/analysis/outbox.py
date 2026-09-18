@@ -52,7 +52,7 @@ _snapshot_hooks: list[SnapshotHook] = []
 
 # Modules whose import registers a following-view hook. A worker that only
 # dispatches imports none of them otherwise, so the dispatcher loads them.
-VIEW_HOOK_MODULES = ("dembrane.analysis.map_view",)
+VIEW_HOOK_MODULES = ("dembrane.analysis.map_view", "dembrane.popcorn.bundle")
 _view_hooks_loaded = False
 
 
@@ -122,7 +122,16 @@ def _event_doc(event: OutboxEvent) -> dict[str, Any]:
         **{
             k: v
             for k, v in event.payload.items()
-            if k in ("recipeId", "scopeKey", "viewId", "manifestHash", "objectId", "revisionId")
+            if k
+            in (
+                "recipeId",
+                "scopeKey",
+                "viewId",
+                "manifestHash",
+                "objectId",
+                "revisionId",
+                "membershipExcluded",
+            )
         },
     }
 

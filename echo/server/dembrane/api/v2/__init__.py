@@ -40,6 +40,7 @@ from dembrane.api.v2.bff.memory import router as bff_memory_router
 from dembrane.api.v2.onboarding import router as onboarding_router
 from dembrane.api.v2.workspaces import router as workspaces_router
 from dembrane.api.v2.bff.popcorn import router as bff_popcorn_router
+from dembrane.api.v2.bff.present import router as bff_present_router
 from dembrane.api.v2.bff.reports import (
     router as bff_reports_router,
     metric_router as bff_report_metric_router,
@@ -201,3 +202,5 @@ v2_router.include_router(
 # "Connect your agent" page uses. The MCP transport itself is mounted in main.py.
 v2_router.include_router(agent_router, prefix="/agent", tags=["v2:agent"])
 v2_router.include_router(agent_access_router, prefix="/agent-access", tags=["v2:agent-access"])
+
+v2_router.include_router(bff_present_router, prefix="/bff/present", tags=["v2:bff:present"])

@@ -240,6 +240,7 @@ class RevisionService:
         actor_id: str | None,
         reason: str | None,
         source_refs: Iterable[SourceRef] = (),
+        input_revision_ids: Iterable[str] = (),
         recipe_id: str | None = None,
         recipe_version: str | None = None,
         extra: dict[str, Any] | None = None,
@@ -254,6 +255,7 @@ class RevisionService:
             origin=origin,
             recipe_id=recipe_id,
             recipe_version=recipe_version,
+            input_revision_ids=tuple(sorted(set(input_revision_ids))),
             source_refs=tuple(source_refs),
             extra={**(extra or {}), **({"before": expected_revision_id} if expected_revision_id else {})},
         )
@@ -303,6 +305,13 @@ class RevisionService:
         """Append an authored revision. Raises `RevisionConflict` with the
         current head when `expected_revision_id` is no longer it."""
         record = await self._record(project_id, object_id)
+        previous = (await self.store.get_revisions(project_id, [expected_revision_id])).get(
+            expected_revision_id
+        )
+        if previous is None or previous.object_id != object_id:
+            raise ReferenceViolation(
+                f"revision {expected_revision_id} is not a published revision of this object"
+            )
         return await self._append(
             record,
             payload=payload,
@@ -310,6 +319,61 @@ class RevisionService:
             expected_revision_id=expected_revision_id,
             actor_id=actor_id,
             reason=reason,
+            source_refs=previous.provenance.source_refs,
+            input_revision_ids=previous.provenance.input_revision_ids,
+            recipe_id=previous.provenance.recipe_id,
+            recipe_version=previous.provenance.recipe_version,
+            extra={
+                "authoredFrom": expected_revision_id,
+                **(
+                    {"membershipExcluded": True}
+                    if previous.provenance.extra.get("membershipExcluded")
+                    else {}
+                ),
+            },
+        )
+
+    async def set_excluded(
+        self,
+        *,
+        project_id: str,
+        object_id: str,
+        expected_revision_id: str,
+        excluded: bool,
+        actor_id: str,
+        reason: str | None = None,
+    ) -> ObjectRevision:
+        """Append a reversible membership decision without altering content.
+
+        Keeping the decision in immutable authored history makes it survive
+        producer reruns and gives reconnecting views one current source of
+        truth. Snapshot assembly removes excluded heads from current views;
+        historical snapshots retain the revision they pinned.
+        """
+        record = await self._record(project_id, object_id)
+        previous = (await self.store.get_revisions(project_id, [expected_revision_id])).get(
+            expected_revision_id
+        )
+        if previous is None or previous.object_id != object_id:
+            raise ReferenceViolation(
+                f"revision {expected_revision_id} is not a published revision of this object"
+            )
+        return await self._append(
+            record,
+            payload=previous.payload,
+            origin=Origin.AUTHORED,
+            expected_revision_id=expected_revision_id,
+            actor_id=actor_id,
+            reason=reason,
+            source_refs=previous.provenance.source_refs,
+            input_revision_ids=previous.provenance.input_revision_ids,
+            recipe_id=previous.provenance.recipe_id,
+            recipe_version=previous.provenance.recipe_version,
+            extra={
+                "authoredFrom": expected_revision_id,
+                "membershipExcluded": excluded,
+            },
+            embedding_refs=previous.embedding_refs,
         )
 
     async def create_authored(
@@ -504,5 +568,8 @@ class RevisionService:
             actor_id=actor_id,
             reason=reason,
             source_refs=target.provenance.source_refs,
+            input_revision_ids=target.provenance.input_revision_ids,
+            recipe_id=target.provenance.recipe_id,
+            recipe_version=target.provenance.recipe_version,
             extra={"rollbackOf": to_revision_id},
         )

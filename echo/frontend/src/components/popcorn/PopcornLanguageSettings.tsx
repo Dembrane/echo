@@ -30,24 +30,28 @@ const DEFAULT_LANGUAGE: PopcornLanguage = { translate_to: "", ui: "auto" };
 export function PopcornLanguageSettings({
 	projectId,
 	popcorn,
+	embedded = false,
 }: {
 	projectId: string;
 	popcorn: PopcornDetail;
+	embedded?: boolean;
 }) {
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
 	const language = popcorn.settings.language ?? DEFAULT_LANGUAGE;
 
 	return (
 		<Paper
-			withBorder
+			withBorder={!embedded}
 			className="rounded-md"
-			p="lg"
+			p={embedded ? 0 : "lg"}
 			{...testId("popcorn-language")}
 		>
 			<Stack gap="md">
-				<Title order={4}>
-					<Trans>Language</Trans>
-				</Title>
+				{!embedded && (
+					<Title order={4}>
+						<Trans>Language</Trans>
+					</Title>
+				)}
 				<Select
 					size={FIELD_SIZE}
 					label={t`Screen language`}

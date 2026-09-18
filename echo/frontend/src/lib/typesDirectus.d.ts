@@ -289,7 +289,17 @@ interface Project {
 	is_enhanced_audio_processing_enabled: boolean | null;
 	is_get_reply_enabled: boolean | null;
 	is_project_notification_subscription_allowed: boolean | null;
-	language: "en" | "nl" | "multi" | null;
+	language:
+		| "cs"
+		| "de"
+		| "en"
+		| "es"
+		| "fr"
+		| "it"
+		| "multi"
+		| "nl"
+		| "uk"
+		| null;
 	name: string | null;
 	updated_at: string | null;
 	// Workspace-level privacy toggle — one of two legal values,

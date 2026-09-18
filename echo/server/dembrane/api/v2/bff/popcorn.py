@@ -49,13 +49,14 @@ from dembrane.popcorn.service import (
     ensure_public_token,
     get_loop_for_report,
     is_synthetic_session,
+    resolve_presentation_settings,
     dispatch_popcorn_tick_now_with_safety,
 )
-from dembrane.api.feature_flags import require_canvas_enabled, require_project_canvas_enabled
+from dembrane.api.feature_flags import require_popcorn_enabled, require_project_popcorn_enabled
 from dembrane.api.v2.bff._access import resolve_report_access, resolve_project_access
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
-router = APIRouter(dependencies=[Depends(require_canvas_enabled)])
+router = APIRouter(dependencies=[Depends(require_popcorn_enabled)])
 
 REFRESH_TTL_SECONDS = 20
 NO_STORE = {"Cache-Control": "no-store"}
@@ -118,7 +119,15 @@ class PopcornLanguageBody(BaseModel):
     translate_to: Literal[""] | PopcornLanguageCode | None = None
 
 
+class PresentationBody(BaseModel):
+    blocks: list[Literal["popcorn", "stakeholders", "tensions", "map"]] | None = Field(default=None, max_length=4)
+    opening: Literal["popcorn", "stakeholders", "tensions", "map"] | None = None
+    language_policy: Literal["project", "explicit"] | None = None
+    hidden_items: list[str] | None = Field(default=None, max_length=2000)
+
+
 class PopcornSettingsBody(BaseModel):
+    presentation: PresentationBody | None = None
     title: str | None = Field(default=None, min_length=1, max_length=160)
     client: str | None = Field(default=None, max_length=160)
     tabs: dict[str, bool] | None = None
@@ -165,7 +174,7 @@ async def _loop_of(report: dict[str, Any]) -> dict[str, Any]:
 
 async def _require_popcorn(popcorn_id: str, auth: DependencyDirectusSession) -> tuple[dict, Any]:
     access, report = await resolve_report_access(popcorn_id, auth)
-    require_project_canvas_enabled(access.project)
+    require_project_popcorn_enabled(access.project)
     access.require("project:read")
     if report.get("kind") != REPORT_KIND:
         raise HTTPException(status_code=404, detail="Popcorn not found")
@@ -180,7 +189,7 @@ async def get_project_popcorn(
     """The project's popcorn session, or before one exists `{"popcorn": null,
     "readiness": {...}}`: what a first read would find."""
     access = await resolve_project_access(project_id, auth)
-    require_project_canvas_enabled(access.project)
+    require_project_popcorn_enabled(access.project)
     access.require("project:read")
     report = await get_popcorn_report(project_id)
     if report:
@@ -197,7 +206,7 @@ async def create_project_popcorn(
     auth: DependencyDirectusSession,
 ) -> dict[str, Any]:
     access = await resolve_project_access(body.project_id, auth)
-    require_project_canvas_enabled(access.project)
+    require_project_popcorn_enabled(access.project)
     access.require("project:update")
     existing = await get_popcorn_report(body.project_id)
     if existing:
@@ -258,6 +267,17 @@ async def patch_popcorn_settings(
     report, access = await _require_popcorn(popcorn_id, auth)
     access.require("project:update")
     patch = body.model_dump(exclude_none=True)
+    if "presentation" in patch:
+        from dembrane.api.feature_flags import require_present_enabled
+
+        require_present_enabled()
+        blocks = patch["presentation"].get("blocks")
+        if blocks is not None:
+            patch["tabs"] = {kind: kind in blocks for kind in ("tensions", "stakeholders")}
+    if "language" in patch and "presentation" not in patch:
+        current_settings = await load_settings_for(report)
+        if current_settings.get("presentation"):
+            patch["presentation"] = {"language_policy": "explicit"}
     if {"disclosure", "notice"} & patch.keys():
         loop = await get_loop_for_report(str(report["id"]))
         if is_synthetic_session(normalize_state((loop or {}).get("popcorn_state"))):
@@ -275,13 +295,18 @@ async def patch_popcorn_settings(
     if patch.get("public"):
         await ensure_public_token(report)
     before = await load_settings_for(report)
-    await update_settings(report=report, patch=patch)
+    updated = await update_settings(report=report, patch=patch)
     forget_bundle(str(report["id"]))
-    target = (patch.get("language") or {}).get("translate_to")
-    if target and target != (before.get("language") or {}).get("translate_to"):
+    before_target = (
+        resolve_presentation_settings(before, access.project).get("language") or {}
+    ).get("translate_to")
+    target = (
+        resolve_presentation_settings(updated, access.project).get("language") or {}
+    ).get("translate_to")
+    if target and target != before_target:
         # A new language is translated now, not at the next scheduled read.
         loop = await _loop_of(report)
-        await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "manual")
+        await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "translation")
     fresh = await async_directus.get_item("project_report", str(report["id"]))
     return await popcorn_payload(fresh or report)
 

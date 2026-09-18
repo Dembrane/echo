@@ -7,7 +7,12 @@ from pathlib import Path
 import dembrane.popcorn.ticks as ticks
 import dembrane.popcorn.service as service
 from scripts.popcorn_demo import prepare
-from dembrane.popcorn.translate import text_key, missing_texts, translated_bundle
+from dembrane.popcorn.translate import (
+    TRANSLATION_POLICY_VERSION,
+    cache_key,
+    missing_texts,
+    translated_bundle,
+)
 
 FIXTURE = Path(__file__).resolve().parents[2] / "demos/deltawonen/fixture.json"
 
@@ -69,14 +74,38 @@ def test_results_stay_original_until_translated_and_say_what_is_pending():
     # Conversation labels are names, not results.
     assert not any(t.startswith("Tafel ") for t in texts)
 
-    state["translations"] = {"en": {text_key("Bewoners"): "Residents"}}
+    state["translations"] = {"en": {cache_key("Bewoners", "en"): "Residents"}}
     state = service.normalize_state(state)
     out = translated_bundle(bundle, state, settings)["files"]
     assert out["stakeholders.json"]["stakeholders"][0]["name"] == "Residents"
-    assert out["session.json"]["translation"] == {"to": "en", "pending": len(texts) - 1}
+    assert out["session.json"]["translation"] == {
+        "to": "en",
+        "policy": TRANSLATION_POLICY_VERSION,
+        "pending": len(texts) - 1,
+    }
     # The untranslated rest shows in the original, and the source bundle is untouched.
     assert out["tensions.json"]["tensions"][0]["poleA"] == "Vandaag betaalbaar wonen"
     assert files["stakeholders.json"]["stakeholders"][0]["name"] == "Bewoners"
+
+
+def test_popcorn_keeps_original_and_attaches_translation_to_the_same_identity():
+    _, state, settings = _demo()
+    settings["language"] = {"ui": "auto", "translate_to": "en"}
+    bundle = _bundle(state, settings)
+    name = next(name for name in bundle["files"] if name.startswith("popcorn/"))
+    source = bundle["files"][name]["items"][0]
+    answer = "Happiness begins when you can breathe at home"
+    state["translations"] = {
+        "en": {cache_key(source["phrase"], "en"): answer},
+    }
+
+    item = translated_bundle(bundle, state, settings)["files"][name]["items"][0]
+    assert item["id"] == source["id"]
+    assert item["phrase"] == source["phrase"]
+    assert item["translation"] == answer
+    assert item["translation_language"] == "en"
+    assert item["translation_policy"] == TRANSLATION_POLICY_VERSION
+    assert item["translation_ref"]["item_id"] == source["id"]
 
 
 def test_a_tick_translates_what_the_room_sees_and_keeps_only_current_texts(monkeypatch):
@@ -89,10 +118,13 @@ def test_a_tick_translates_what_the_room_sees_and_keeps_only_current_texts(monke
 
     asked: list[list[str]] = []
 
-    async def translate(texts, target):
+    async def translate(texts, target, *, on_batch=None):
         asked.append(texts)
         assert target == "en"
-        return [None if i == 0 else f"EN {t}" for i, t in enumerate(texts)]
+        answers = [None if i == 0 else f"EN {t}" for i, t in enumerate(texts)]
+        if on_batch:
+            await on_batch(texts, answers)
+        return answers
 
     monkeypatch.setattr(ticks, "_room_bundle", room_bundle)
     monkeypatch.setattr(ticks, "translate_texts", translate)

@@ -97,6 +97,14 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   flex: none;
 }
 
+/* The Present shell owns the persistent frame: navigation, notice, QR and
+   footer. Its deck iframe renders only the stage; standalone pages retain
+   their complete original chrome. */
+.present-shell .topbar { display: none; }
+.present-shell .session-notice,
+.present-shell .colophon,
+.present-shell .qr-panel { display: none; }
+
 .session-id { display: flex; flex-direction: column; padding-bottom: 0.8em; min-width: 0; }
 .session-title { font-weight: 500; font-size: 0.85em; letter-spacing: 0.01em; white-space: nowrap; }
 .session-meta { font-size: 0.7em; color: var(--ink-soft); }
@@ -628,8 +636,8 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   text-align: center;
   text-wrap: balance;   /* even lines, never a lone word on the last one */
   transform: translate(-50%, -50%) rotate(var(--tilt, 0deg));
-  animation: pop-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
-  transition: transform 0.18s ease;
+  animation: pop-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .pop.center { max-width: 88%; }
 /* hover: hold, straighten, expand, and reveal the group */
@@ -656,6 +664,12 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   letter-spacing: -0.01em;
   line-height: 1.3;
 }
+.pop-words { white-space: pre-wrap; }
+.pop-language-morph .pop-letter { display: inline; }
+.pop-language-morph .pop-letter-new {
+  display: inline-block;
+  animation: letter-lerp 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
 /* one size for every phrase; a phrase steps down only to fit the stage */
 .pop .pop-phrase { font-size: clamp(24px, 2.6vw, 42px); }
 .pop[data-weight="1"] .pop-phrase { font-size: clamp(19px, 1.9vw, 30px); }
@@ -664,9 +678,14 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .pop .attribution { display: block; margin-top: 0.6em; justify-content: center; }
 
 @keyframes pop-in {
-  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(var(--tilt, 0deg)); }
-  70%  { opacity: 1; transform: translate(-50%, -50%) scale(1.06) rotate(var(--tilt, 0deg)); }
+  0%   { opacity: 0; transform: translate(-54%, -46%) scale(0.86) rotate(-3deg); }
+  72%  { opacity: 1; transform: translate(-49%, -51%) scale(1.025) rotate(1deg); }
   100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(var(--tilt, 0deg)); }
+}
+@keyframes letter-lerp {
+  0%   { opacity: 0.2; transform: translateY(-0.24em) scale(0.72) rotate(-5deg); }
+  68%  { opacity: 1; transform: translateY(0.04em) scale(1.08) rotate(1deg); }
+  100% { opacity: 1; transform: none; }
 }
 
 /* the count to the first popcorn, then a spinner if it is late */
@@ -1010,6 +1029,7 @@ button.action-row:hover .action-sentence { color: var(--blue); }
 
 @media (prefers-reduced-motion: reduce) {
   .pop { animation: none; }
+  .pop-language-morph .pop-letter-new { animation: none; }
   .pop.pop-out { transition: none; }
   .live-dot { animation: none; opacity: 0.7; }
   .pole-block { animation: none; }

@@ -15,16 +15,23 @@ session never ends; the deck stays up and refresh keeps working.
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import secrets
+from uuid import NAMESPACE_URL, uuid5
 from typing import Any
 from datetime import datetime, timezone, timedelta
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
 
 from dembrane.utils import generate_uuid
 from dembrane.popcorn.qr import qr_svg_markup
 from dembrane.legal_basis import DEFAULT_LEGAL_BASIS
+from dembrane.redis_async import get_redis_client
 from dembrane.directus_async import async_directus
 from dembrane.scheduled_tasks import TASK_POPCORN_TICK, schedule_task
 from dembrane.popcorn.analysis import attributes
+from dembrane.popcorn.data_copy import DATA_COPY_EXTRA
 from dembrane.popcorn.translate import LANGUAGES
 
 REPORT_KIND = "popcorn"
@@ -35,10 +42,107 @@ MAX_CADENCE_MINUTES = 120
 # How long live can be asked for, in hours.
 LIVE_HOURS = (1, 8, 24)
 STATE_VERSION = 2  # 2: one quote registry at the top of the state, validation per transcript
+SETTINGS_WRITE_LOCK_TTL_SECONDS = 30
+SETTINGS_WRITE_LOCK_WAIT_SECONDS = 5.0
+PRESENTATION_CREATE_LOCK_TTL_SECONDS = 30
+PRESENTATION_CREATE_LOCK_WAIT_SECONDS = 5.0
 
-# Tabs the host can hide from the room. Popcorn itself is always shown: it is
-# the opening screen and the reason the deck exists.
+logger = logging.getLogger("dembrane.popcorn.service")
+
+
+class SettingsWriteLockError(RuntimeError):
+    pass
+
+
+class PresentationCreateLockError(RuntimeError):
+    pass
+
+
+@asynccontextmanager
+async def settings_write_lock(report_id: str) -> AsyncIterator[None]:
+    """Serialize read/merge/write of the report's shared settings JSON."""
+    key = f"popcorn:settings-write:{report_id}"
+    token = secrets.token_urlsafe(24)
+    try:
+        client = await get_redis_client()
+    except Exception as exc:
+        raise SettingsWriteLockError("Settings storage is temporarily unavailable") from exc
+    deadline = asyncio.get_running_loop().time() + SETTINGS_WRITE_LOCK_WAIT_SECONDS
+    while True:
+        try:
+            acquired = await client.set(
+                key, token, ex=SETTINGS_WRITE_LOCK_TTL_SECONDS, nx=True
+            )
+        except Exception as exc:
+            raise SettingsWriteLockError("Settings storage is temporarily unavailable") from exc
+        if acquired:
+            break
+        if asyncio.get_running_loop().time() >= deadline:
+            raise SettingsWriteLockError("Settings are busy; try again")
+        await asyncio.sleep(0.05)
+    try:
+        yield
+    finally:
+        script = (
+            'if redis.call("get", KEYS[1]) == ARGV[1] then '
+            'return redis.call("del", KEYS[1]) else return 0 end'
+        )
+        try:
+            result = client.eval(script, 1, key, token)
+            if asyncio.iscoroutine(result):
+                await result
+        except Exception:
+            logger.warning("Failed to release settings lock for %s", report_id, exc_info=True)
+
+
+@asynccontextmanager
+async def presentation_create_lock(project_id: str) -> AsyncIterator[None]:
+    """Serialize creation of the one presentation report owned by a project."""
+    key = f"popcorn:presentation-create:{project_id}"
+    token = secrets.token_urlsafe(24)
+    try:
+        client = await get_redis_client()
+    except Exception as exc:
+        raise PresentationCreateLockError("Presentation storage is temporarily unavailable") from exc
+    deadline = asyncio.get_running_loop().time() + PRESENTATION_CREATE_LOCK_WAIT_SECONDS
+    while True:
+        try:
+            acquired = await client.set(
+                key, token, ex=PRESENTATION_CREATE_LOCK_TTL_SECONDS, nx=True
+            )
+        except Exception as exc:
+            raise PresentationCreateLockError(
+                "Presentation storage is temporarily unavailable"
+            ) from exc
+        if acquired:
+            break
+        if asyncio.get_running_loop().time() >= deadline:
+            raise PresentationCreateLockError("Presentation creation is busy; try again")
+        await asyncio.sleep(0.05)
+    try:
+        yield
+    finally:
+        script = (
+            'if redis.call("get", KEYS[1]) == ARGV[1] then '
+            'return redis.call("del", KEYS[1]) else return 0 end'
+        )
+        try:
+            result = client.eval(script, 1, key, token)
+            if asyncio.iscoroutine(result):
+                await result
+        except Exception:
+            logger.warning(
+                "Failed to release presentation creation lock for %s",
+                project_id,
+                exc_info=True,
+            )
+
+# Legacy audience tabs mirrored from the selected presentation recipes.
 TOGGLEABLE_TABS = ("tensions", "stakeholders")
+
+# Presentation recipes always follow the audience's complexity progression.
+# The stored list records selection only; its incoming order is not meaningful.
+PRESENTATION_BLOCKS = ("popcorn", "tensions", "map", "stakeholders")
 
 # How the phrases should sound. The extractor prompt stays verbatim upstream;
 # each chosen preset adds one host note line to the user message, and the free
@@ -203,6 +307,8 @@ DATA_COPY: dict[str, dict[str, Any]] = {
     },
 }
 
+DATA_COPY.update(DATA_COPY_EXTRA)
+
 # What a synthetic demo says where its host left the words empty.
 SYNTHETIC_COPY: dict[str, dict[str, str]] = {
     "nl": {
@@ -283,6 +389,50 @@ def default_settings(*, title: str, client: str | None = None) -> dict[str, Any]
     }
 
 
+def normalize_presentation(raw: Any) -> dict[str, Any] | None:
+    if not isinstance(raw, dict):
+        return None
+    raw_blocks = raw.get("blocks")
+    raw_blocks = raw_blocks if isinstance(raw_blocks, list) else ["popcorn"]
+    selected = {b for b in raw_blocks if isinstance(b, str) and b in PRESENTATION_BLOCKS}
+    blocks = [block for block in PRESENTATION_BLOCKS if block in selected]
+    hidden = raw.get("hidden_items")
+    hidden = hidden if isinstance(hidden, list) else []
+    bindings = raw.get("result_bindings")
+    bindings = bindings if isinstance(bindings, dict) else {}
+    opening = raw.get("opening")
+    return {
+        "version": 1,
+        "blocks": blocks,
+        "opening": opening if opening in blocks else (blocks[0] if blocks else None),
+        "language_policy": "project" if raw.get("language_policy") == "project" else "explicit",
+        "hidden_items": list(dict.fromkeys(str(x) for x in hidden if isinstance(x, str)))[:2000],
+        "result_bindings": {
+            str(k): str(v)
+            for k, v in bindings.items()
+            if k in PRESENTATION_BLOCKS and isinstance(v, str)
+        },
+    }
+
+
+def resolve_project_language(value: Any) -> tuple[str, str | None]:
+    code = str(value or "").strip().lower().replace("_", "-").split("-")[0]
+    if code in LANGUAGES:
+        return code, None
+    return "en", "multilingual" if code == "multi" else "not_set"
+
+
+def resolve_presentation_settings(
+    settings: dict[str, Any], project: dict[str, Any]
+) -> dict[str, Any]:
+    """Resolve the saved policy without modifying it or starting processing."""
+    presentation = settings.get("presentation")
+    if not presentation or presentation.get("language_policy") != "project":
+        return settings
+    language, _reason = resolve_project_language(project.get("language"))
+    return {**settings, "language": {"ui": language, "translate_to": language}}
+
+
 def normalize_voice(raw: Any) -> dict[str, Any]:
     raw = raw if isinstance(raw, dict) else {}
     chosen = raw.get("presets")
@@ -303,9 +453,16 @@ def voice_host_note(voice: dict[str, Any] | None) -> str:
 
 def normalize_settings(raw: dict[str, Any] | None, *, fallback_title: str) -> dict[str, Any]:
     raw = raw if isinstance(raw, dict) else {}
+    recipe_settings = raw.get("recipe_settings")
+    recipe_settings = recipe_settings if isinstance(recipe_settings, dict) else {}
     tabs_value = raw.get("tabs")
     tabs_raw: dict[str, Any] = tabs_value if isinstance(tabs_value, dict) else {}
     return {
+        **(
+            {"presentation": normalize_presentation(raw["presentation"])}
+            if isinstance(raw.get("presentation"), dict)
+            else {}
+        ),
         "title": str(raw.get("title") or fallback_title).strip()[:160] or fallback_title,
         "client": str(raw.get("client") or "").strip()[:160],
         "tabs": {tab: bool(tabs_raw.get(tab, True)) for tab in TOGGLEABLE_TABS},
@@ -314,7 +471,10 @@ def normalize_settings(raw: dict[str, Any] | None, *, fallback_title: str) -> di
         # "made with dembrane" on the deck. Off is a Changemaker feature, like
         # whitelabel; the API enforces the tier, the setting only records it.
         "show_branding": bool(raw.get("show_branding", True)),
-        "voice": normalize_voice(raw.get("voice")),
+        "voice": normalize_voice(recipe_settings.get("voice", raw.get("voice"))),
+        "recipe_settings": {
+            "voice": normalize_voice(recipe_settings.get("voice", raw.get("voice")))
+        },
         **{name: normalize_block(raw.get(name), limits) for name, limits in OPENING_BLOCKS.items()},
         "language": normalize_language(raw.get("language")),
         # What the room's legend calls a conversation. A conversation's label is
@@ -500,60 +660,92 @@ async def create_popcorn(
     title: str,
     client: str | None,
     acting_directus_user_id: str,
+    start_processing: bool = True,
+    initial_settings: dict[str, Any] | None = None,
+    report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Create the report row, its settings revision, the loop in manual mode,
-    and one read straight away. Nothing is scheduled until the host goes live."""
+    and optionally one read. Nothing repeats until the host goes live."""
     cadence = DEFAULT_CADENCE_MINUTES
-    report = _data(
-        await async_directus.create_item(
-            "project_report",
-            {
-                "project_id": project_id,
-                "kind": REPORT_KIND,
-                "status": "published",
-                "user_instructions": title,
-                "content": "",
-                "public_token": secrets.token_urlsafe(24),
-                "user_created": acting_directus_user_id,
-            },
+    repairing = report is not None
+    if report is None:
+        report = _data(
+            await async_directus.create_item(
+                "project_report",
+                {
+                    "project_id": project_id,
+                    "kind": REPORT_KIND,
+                    "status": "published",
+                    "user_instructions": title,
+                    "content": "",
+                    "public_token": secrets.token_urlsafe(24),
+                    "user_created": acting_directus_user_id,
+                },
+            )
         )
-    )
     report_id = str(report["id"])
-    config = _data(
-        await async_directus.create_item(
-            "canvas_config_revision",
-            {
-                "id": generate_uuid(),
-                "report_id": report_id,
-                "brief": "",
-                "gather_spec": {"full_history": True},
-                "popcorn_settings": default_settings(title=title, client=client),
-                "cadence_minutes": cadence,
-                "created_by": acting_directus_user_id,
-                "note": "initial",
-            },
+    config = await get_latest_config(report_id) if repairing else None
+    if config is None:
+        config = _data(
+            await _create_once(
+                "canvas_config_revision",
+                {
+                    "id": str(uuid5(NAMESPACE_URL, f"popcorn:report:{report_id}:config")),
+                    "report_id": report_id,
+                    "brief": "",
+                    "gather_spec": {"full_history": True},
+                    "popcorn_settings": initial_settings
+                    or default_settings(title=title, client=client),
+                    "cadence_minutes": cadence,
+                    "created_by": acting_directus_user_id,
+                    "note": "initial",
+                },
+            )
         )
-    )
-    loop = _data(
-        await async_directus.create_item(
-            "agent_loop",
-            {
-                "id": generate_uuid(),
-                "project_id": project_id,
-                "report_id": report_id,
-                "name": title,
-                "status": "paused",
-                "expires_at": _now().isoformat(),
-                "cadence_minutes": cadence,
-                "acting_directus_user_id": acting_directus_user_id,
-                "failure_count": 0,
-                "caps": {"kind": LOOP_KIND},
-                "popcorn_state": fresh_state(),
-            },
+    loop = await get_loop_for_report(report_id) if repairing else None
+    if loop is None:
+        loop = _data(
+            await _create_once(
+                "agent_loop",
+                {
+                    "id": str(uuid5(NAMESPACE_URL, f"popcorn:report:{report_id}:loop")),
+                    "project_id": project_id,
+                    "report_id": report_id,
+                    "name": title,
+                    "status": "paused",
+                    "expires_at": _now().isoformat(),
+                    "cadence_minutes": cadence,
+                    "acting_directus_user_id": acting_directus_user_id,
+                    "failure_count": 0,
+                    "caps": {"kind": LOOP_KIND},
+                    "popcorn_state": fresh_state(),
+                },
+            )
         )
-    )
-    await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "manual")
+    if start_processing:
+        await dispatch_popcorn_tick_now_with_safety(str(loop["id"]), "manual")
     return {"report": report, "config": config, "loop": loop}
+
+
+async def _create_once(collection: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Deterministic primary keys make concurrent default creation converge.
+
+    Re-reading after a conflict also repairs partial creation on a retry. An
+    unavailable database is never mistaken for a successful creation.
+    """
+    identity = payload.get("id")
+    if identity:
+        existing = await async_directus.get_item(collection, str(identity))
+        if existing:
+            return existing
+    try:
+        return _data(await async_directus.create_item(collection, payload))
+    except Exception:
+        if identity:
+            existing = await async_directus.get_item(collection, str(identity))
+            if existing:
+                return existing
+        raise
 
 
 # ── versions ─────────────────────────────────────────────────────────
@@ -624,19 +816,10 @@ async def get_version_files(report_id: str, version_id: str) -> dict[str, Any] |
     return files if isinstance(files, dict) else None
 
 
-async def update_settings(
-    *,
-    report: dict[str, Any],
-    patch: dict[str, Any],
+def merge_settings(
+    current: dict[str, Any], patch: dict[str, Any], *, fallback_title: str
 ) -> dict[str, Any]:
-    """Update presentation settings in place. They are toggles, not analysis config,
-    so they do not earn a new revision the way a canvas brief does."""
-    report_id = str(report["id"])
-    config = await get_latest_config(report_id)
-    if not config:
-        raise RuntimeError("Popcorn settings revision not found")
-    fallback_title = str(report.get("user_instructions") or "Popcorn")
-    current = normalize_settings(config.get("popcorn_settings"), fallback_title=fallback_title)
+    """Apply the shared partial-settings semantics and normalize the result."""
     merged = dict(current)
     for key in ("title", "client", "public", "show_qr", "show_branding", "public_labels"):
         if key in patch and patch[key] is not None:
@@ -644,12 +827,45 @@ async def update_settings(
     for key in ("voice", "language", *OPENING_BLOCKS):
         if isinstance(patch.get(key), dict):
             merged[key] = {**current[key], **patch[key]}
+    if isinstance(patch.get("voice"), dict):
+        merged["recipe_settings"] = {"voice": merged["voice"]}
+    if isinstance(patch.get("presentation"), dict):
+        merged["presentation"] = {**(current.get("presentation") or {}), **patch["presentation"]}
     if isinstance(patch.get("tabs"), dict):
         merged["tabs"] = {
             **current["tabs"],
             **{k: bool(v) for k, v in patch["tabs"].items() if k in TOGGLEABLE_TABS},
         }
-    settings = normalize_settings(merged, fallback_title=fallback_title)
+    return normalize_settings(merged, fallback_title=fallback_title)
+
+
+async def update_settings(
+    *,
+    report: dict[str, Any],
+    patch: dict[str, Any],
+) -> dict[str, Any]:
+    """Update presentation settings in place. They are toggles, not analysis config,
+    so they do not earn a new revision the way a canvas brief does."""
+    async with settings_write_lock(str(report["id"])):
+        return await _update_settings_unlocked(report=report, patch=patch)
+
+
+async def _update_settings_unlocked(
+    *, report: dict[str, Any], patch: dict[str, Any]
+) -> dict[str, Any]:
+    report_id = str(report["id"])
+    config = await get_latest_config(report_id)
+    if not config:
+        raise RuntimeError("Popcorn settings revision not found")
+    fallback_title = str(report.get("user_instructions") or "Popcorn")
+    raw_settings = config.get("popcorn_settings")
+    raw_settings = raw_settings if isinstance(raw_settings, dict) else {}
+    current = normalize_settings(raw_settings, fallback_title=fallback_title)
+    settings = merge_settings(current, patch, fallback_title=fallback_title)
+    # Present keeps its unpublished editor state beside the published settings.
+    # Legacy settings mutations must never discard that reserved host-only value.
+    if isinstance(raw_settings.get("_present_draft"), dict):
+        settings["_present_draft"] = raw_settings["_present_draft"]
     await async_directus.update_item(
         "canvas_config_revision", str(config["id"]), {"popcorn_settings": settings}
     )
@@ -666,7 +882,8 @@ async def update_settings(
     from dembrane.canvas.events import publish_generation_nudge
 
     await publish_generation_nudge(report_id)
-    return settings
+    # Keep the reserved draft container out of every settings response.
+    return normalize_settings(settings, fallback_title=fallback_title)
 
 
 async def go_live(loop: dict[str, Any], *, hours: int) -> dict[str, Any]:
@@ -1084,7 +1301,7 @@ def data_screen(project: dict[str, Any], language: str) -> dict[str, Any]:
     """What happens to the room's data, from the project's own settings.
     `project["legal_basis"]` is the effective basis when the caller resolved
     it; a bare project row falls back to the platform default."""
-    copy = DATA_COPY["nl" if language == "nl" else "en"]
+    copy = DATA_COPY.get(language, DATA_COPY["en"])
     talk = "talk-anon" if project.get("anonymize_transcripts") else "talk-public"
     basis = str(project.get("legal_basis") or DEFAULT_LEGAL_BASIS)
     screen: dict[str, Any] = {

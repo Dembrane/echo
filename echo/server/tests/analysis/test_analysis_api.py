@@ -4,11 +4,13 @@ idempotency), run inspection and cancellation, objects, history and lineage."""
 from __future__ import annotations
 
 import uuid
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
 import dembrane.api.v2.bff.analysis as analysis_bff
+from dembrane.api import feature_flags
 from tests.map_fakes import PROJECT, OTHER_PROJECT
 from tests.analysis.helpers import Recorder
 from dembrane.map.fact_check import ASSESSMENT_RECIPE_ID
@@ -41,6 +43,11 @@ class _Env:
 def env(monkeypatch: pytest.MonkeyPatch, world: FixtureWorld) -> _Env:
     world.sources[PROJECT] = {C1: ["Trams are better.", "Buses are cheaper."], C2: ["Bikes are healthy."]}
     world.sources[OTHER_PROJECT] = {C1: ["Elsewhere."]}
+    monkeypatch.setattr(
+        feature_flags,
+        "get_settings",
+        lambda: SimpleNamespace(feature_flags=SimpleNamespace(enable_present=True)),
+    )
     return _Env(monkeypatch, MapWorld())
 
 
@@ -103,6 +110,23 @@ async def test_runs_are_inspected_with_read_access_and_cancelled_with_update(env
 
 
 @pytest.mark.asyncio
+async def test_project_run_history_is_bounded_newest_first_and_requires_read_access(env: _Env) -> None:
+    env.grants.grant(PROJECT, *WRITE)
+    first = (await env.call("POST", f"/projects/{PROJECT}/runs", {"recipe_id": WORDS})).json()["run"]
+    second = (await env.call("POST", f"/projects/{PROJECT}/runs", {"recipe_id": PAIRS})).json()["run"]
+    await inline(env.maps.store, WORDS, "foreign", project_id=OTHER_PROJECT)
+
+    env.grants.grant(PROJECT, *READ)
+    page = await env.call("GET", f"/projects/{PROJECT}/runs", params={"offset": "0", "limit": "1"})
+    assert page.status_code == 200
+    assert page.json()["total"] == 2
+    assert page.json()["runs"][0]["id"] == second["id"]
+    assert page.json()["runs"][0]["id"] != first["id"]
+    assert page.json()["runs"][0]["projectId"] == PROJECT
+    assert (await env.call("GET", f"/projects/{OTHER_PROJECT}/runs")).status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_objects_page_with_counts_history_and_pinned_lineage(env: _Env) -> None:
     access = env.grants.grant(PROJECT, *READ)
     await inline(env.maps.store, PAIRS, "pairs")
@@ -110,6 +134,9 @@ async def test_objects_page_with_counts_history_and_pinned_lineage(env: _Env) ->
 
     page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "2"})).json()
     assert page["snapshotId"] == snapshot.id and page["total"] == 4 and len(page["items"]) == 2
+    assert page["canEdit"] is False
+    assert page["items"][0]["payload"]["statement"]
+    assert "sourceRefs" in page["items"][0]["provenance"]
     assert page["counts"]["argument"] == 3 and page["counts"]["tension"] == 1
     assert [item["type"] for item in page["items"]] == ["argument", "argument"]
     assert access.required == ["project:read", "conversation:read"]
@@ -139,3 +166,115 @@ async def test_objects_page_with_counts_history_and_pinned_lineage(env: _Env) ->
     assert lineage["missing"] == [] and lineage["truncated"] is False
     edited = next(r for r in env.maps.store.revisions.values() if r.payload.get("statement") == "Trams are much better.")
     assert (await env.call("GET", f"/snapshots/{snapshot.id}/revisions/{edited.id}/lineage")).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_result_mutations_require_update_and_keep_conflict_and_membership_history(
+    env: _Env,
+) -> None:
+    env.grants.grant(PROJECT, *WRITE)
+    await inline(env.maps.store, WORDS, "editable")
+    original = next(
+        revision
+        for revision in env.maps.store.revisions.values()
+        if revision.payload.get("statement") == "Trams are better."
+    )
+    env.grants.grant(PROJECT, *READ)
+    path = f"/projects/{PROJECT}/objects/{original.object_id}"
+    denied = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {
+            "expected_revision_id": original.id,
+            "payload": {**original.payload, "statement": "Trams work better here."},
+        },
+    )
+    assert denied.status_code == 403
+
+    env.grants.grant(PROJECT, *WRITE)
+    edited_response = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {
+            "expected_revision_id": original.id,
+            "payload": {**original.payload, "statement": "Trams work better here."},
+            "reason": "Clearer wording",
+        },
+    )
+    assert edited_response.status_code == 200
+    edited = edited_response.json()["revision"]
+    assert edited["payload"]["statement"] == "Trams work better here."
+    assert edited["provenance"]["recipeId"] == WORDS
+
+    conflict = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {
+            "expected_revision_id": original.id,
+            "payload": {**original.payload, "statement": "Stale edit."},
+        },
+    )
+    assert conflict.status_code == 409
+    assert conflict.json()["detail"]["current"]["revisionId"] == edited["revisionId"]
+
+    excluded = (
+        await env.call(
+            "POST",
+            f"{path}/membership",
+            {
+                "expected_revision_id": edited["revisionId"],
+                "excluded": True,
+                "reason": "Withdrawn",
+            },
+        )
+    ).json()["revision"]
+    assert excluded["membershipExcluded"] is True
+    withdrawn = (
+        await env.call(
+            "GET",
+            f"/projects/{PROJECT}/objects",
+            params={"membership": "withdrawn"},
+        )
+    ).json()
+    assert withdrawn["canEdit"] is True
+    assert [item["objectId"] for item in withdrawn["items"]] == [original.object_id]
+    assert withdrawn["items"][0]["membershipExcluded"] is True
+    restored = (
+        await env.call(
+            "POST",
+            f"{path}/membership",
+            {
+                "expected_revision_id": excluded["revisionId"],
+                "excluded": False,
+            },
+        )
+    ).json()["revision"]
+    assert restored["membershipExcluded"] is False
+    history = (await env.call("GET", f"{path}/revisions")).json()["revisions"]
+    assert [revision["membershipExcluded"] for revision in history] == [False, False, True, False]
+
+
+@pytest.mark.asyncio
+async def test_result_mutations_are_hidden_when_present_is_disabled(
+    env: _Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    env.grants.grant(PROJECT, *WRITE)
+    await inline(env.maps.store, WORDS, "flagged")
+    original = next(iter(env.maps.store.revisions.values()))
+    monkeypatch.setattr(
+        feature_flags,
+        "get_settings",
+        lambda: SimpleNamespace(feature_flags=SimpleNamespace(enable_present=False)),
+    )
+    response = await env.call(
+        "POST",
+        f"/projects/{PROJECT}/objects/{original.object_id}/membership",
+        {"expected_revision_id": original.id, "excluded": True},
+    )
+    assert response.status_code == 404
+    assert (
+        await env.call(
+            "GET",
+            f"/projects/{PROJECT}/objects/{original.object_id}/revisions",
+        )
+    ).status_code == 200

@@ -14,7 +14,7 @@ import re
 import json
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Callable, Awaitable
 from pathlib import Path
 from functools import lru_cache
 
@@ -245,9 +245,23 @@ async def rewrite_question(*, transcript_id: str, transcript: str, phrase: str) 
     )
 
 
-async def translate_texts(texts: list[str], target: str) -> list[str | None]:
+TranslationBatchCallback = Callable[[list[str], list[str | None]], Awaitable[None]]
+
+
+async def translate_texts(
+    texts: list[str],
+    target: str,
+    *,
+    on_batch: TranslationBatchCallback | None = None,
+) -> list[str | None]:
     """`texts` in the target language, in order. A text the model left out
-    comes back as None and is asked for again on the next tick."""
+    comes back as None and is asked for again on the next tick.
+
+    `on_batch` is awaited as soon as each provider batch completes, before the
+    whole request joins. Concurrent batches may enter it concurrently, so the
+    callback owns storage serialization. Failed provider batches return None
+    entries and do not call it.
+    """
     semaphore = asyncio.Semaphore(TRANSLATE_PARALLEL)
 
     async def batch(start: int) -> list[str | None]:
@@ -275,9 +289,22 @@ async def translate_texts(texts: list[str], target: str) -> list[str | None]:
             index, text = entry.get("i"), entry.get("text")
             if isinstance(index, int) and 0 <= index < len(chunk) and isinstance(text, str):
                 out[index] = text.strip() or None
+        if on_batch is not None:
+            await on_batch(chunk, out)
         return out
 
-    results = await asyncio.gather(*(batch(i) for i in range(0, len(texts), TRANSLATE_BATCH)))
+    # Keep both active calls and scheduled coroutine objects bounded. This is
+    # reached by reconciliation too, where a long-lived presentation can owe
+    # hundreds of slide texts after a language change.
+    results: list[list[str | None]] = []
+    wave = TRANSLATE_BATCH * TRANSLATE_PARALLEL
+    for wave_start in range(0, len(texts), wave):
+        starts = range(
+            wave_start,
+            min(len(texts), wave_start + wave),
+            TRANSLATE_BATCH,
+        )
+        results.extend(await asyncio.gather(*(batch(i) for i in starts)))
     return [text for part in results for text in part]
 
 

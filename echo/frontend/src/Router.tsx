@@ -20,7 +20,7 @@ import { Verify } from "./components/participant/verify/Verify";
 import { VerifyArtefact } from "./components/participant/verify/VerifyArtefact";
 import { VerifySelection } from "./components/participant/verify/VerifySelection";
 import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
-import { ENABLE_CANVAS, ENABLE_MONITOR } from "./config";
+import { ENABLE_CANVAS, ENABLE_MONITOR, ENABLE_PRESENT } from "./config";
 import {
 	ParticipantConversationAudioRoute,
 	ParticipantConversationTextRoute,
@@ -34,6 +34,7 @@ import { ProjectMonitorRoute } from "./routes/project/ProjectMonitorRoute";
 import {
 	ProjectAccessRoute,
 	ProjectConversationsRoute,
+	ProjectExportRoute,
 	ProjectIntegrationsRoute,
 	ProjectPortalSettingsRoute,
 	ProjectSettingsRoute,
@@ -107,6 +108,18 @@ const CanvasRoute = createLazyNamedRoute(
 const PopcornRoute = createLazyNamedRoute(
 	() => import("./routes/project/popcorn/PopcornRoute"),
 	"PopcornRoute",
+);
+const PresentRoute = createLazyNamedRoute(
+	() => import("./routes/project/present/PresentRoute"),
+	"PresentRoute",
+);
+const ProjectAnalysisRoute = createLazyNamedRoute(
+	() => import("./routes/project/analysis/ProjectAnalysisRoute"),
+	"ProjectAnalysisRoute",
+);
+const AudienceScreenRoute = createLazyNamedRoute(
+	() => import("./components/present/AudienceScreen"),
+	"AudienceScreenRoute",
 );
 const MapRoute = createLazyNamedRoute(
 	() => import("./routes/project/map/MapRoute"),
@@ -276,12 +289,37 @@ const projectRouteChildren = [
 						],
 						path: "conversations/:conversationId",
 					},
+					...(ENABLE_PRESENT
+						? [
+								{ element: <PresentRoute />, path: "present" },
+								{
+									element: <PresentRoute />,
+									path: "present/:presentationId/edit",
+								},
+								{ element: <ProjectAnalysisRoute />, path: "analysis" },
+								{ element: <ProjectAnalysisRoute />, path: "analysis/:tab" },
+								{
+									element: <ProjectAnalysisRoute />,
+									path: "analysis/recipes/:recipeId",
+								},
+								{
+									element: (
+										<Navigate to="../../present" relative="path" replace />
+									),
+									path: "library/popcorn",
+								},
+							]
+						: []),
 					...(ENABLE_CANVAS
 						? [
 								{
 									children: [
 										{
-											element: <PopcornRoute />,
+											element: ENABLE_PRESENT ? (
+												<Navigate to="../../present" relative="path" replace />
+											) : (
+												<PopcornRoute />
+											),
 											path: "popcorn",
 										},
 										{
@@ -327,7 +365,7 @@ const projectRouteChildren = [
 						path: "upload",
 					},
 					{
-						element: <Navigate to="../integrations" replace />,
+						element: <ProjectExportRoute />,
 						path: "export",
 					},
 					{
@@ -351,6 +389,15 @@ const projectRouteChildren = [
 ];
 
 export const mainRouter = createBrowserRouter([
+	...(ENABLE_PRESENT
+		? [
+				{
+					element: <AudienceScreenRoute />,
+					path: "/present/screen/:presentationId",
+				},
+				{ element: <AudienceScreenRoute />, path: "/present/public/:token" },
+			]
+		: []),
 	{
 		children: [
 			{

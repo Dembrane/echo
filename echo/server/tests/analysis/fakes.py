@@ -533,6 +533,18 @@ class FakeAnalysisStore:
     async def get_revisions(self, project_id: str, revision_ids: list[str]) -> dict[str, ObjectRevision]:
         return {rid: self.revisions[rid] for rid in revision_ids if rid in self.revisions and self.revisions[rid].project_id == project_id}
 
+    async def current_revisions(
+        self, project_id: str, scope_ids: list[str] | None = None
+    ) -> dict[str, ObjectRevision]:
+        return {
+            record.id: self.revisions[record.current_revision_id]
+            for record in self.objects.values()
+            if record.project_id == project_id
+            and (scope_ids is None or record.scope_id in scope_ids)
+            and record.current_revision_id is not None
+            and record.current_revision_id in self.revisions
+        }
+
     def _new_revision(self, new: NewRevision, number: int, status: RevisionStatus, revision_id: str | None = None) -> ObjectRevision:
         now = self.clock.now()
         return ObjectRevision(
@@ -611,7 +623,21 @@ class FakeAnalysisStore:
             scope = self.scopes[record.scope_id]
             sequence = scope.publication_sequence + 1
             self.scopes[scope.id] = replace(scope, publication_sequence=sequence)
-            self._event(scope, sequence, "revision_published", payload={"objectId": record.id, "revisionId": revision.id, "type": record.type, "origin": str(new.origin)})
+            self._event(
+                scope,
+                sequence,
+                "revision_published",
+                payload={
+                    "objectId": record.id,
+                    "revisionId": revision.id,
+                    "type": record.type,
+                    "origin": str(new.origin),
+                    "recipeId": new.provenance.recipe_id,
+                    "membershipExcluded": bool(
+                        new.provenance.extra.get("membershipExcluded")
+                    ),
+                },
+            )
             self.fault("append:outbox")
             return revision
         except BaseException:

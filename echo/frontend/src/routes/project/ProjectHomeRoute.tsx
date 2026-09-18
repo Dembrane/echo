@@ -13,7 +13,6 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	BookOpenIcon,
 	ChatCircleDotsIcon,
 	FileTextIcon,
 	PaintBrushIcon,
@@ -28,6 +27,7 @@ import { getConversationStartTime } from "@/components/conversation/utils";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectById } from "@/components/project/hooks";
 import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
+import { ProjectHostGuideLink } from "@/components/project/ProjectHostGuideLink";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { ENABLE_MONITOR } from "@/config";
@@ -160,14 +160,7 @@ export const ProjectHomeRoute = () => {
 						>
 							<Trans>Portal editor</Trans>
 						</Button>
-						<Button
-							size="sm"
-							leftSection={<BookOpenIcon size={16} />}
-							variant="outline"
-							onClick={() => navigate(`${base}/host-guide`)}
-						>
-							<Trans>Host guide</Trans>
-						</Button>
+						<ProjectHostGuideLink projectId={projectId} />
 						<Button
 							size="sm"
 							leftSection={<FileTextIcon size={16} />}

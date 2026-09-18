@@ -18,6 +18,7 @@ import { LiveFunnelSection } from "@/components/conversation/LiveFunnelSection";
 import { LiveMonitorSection } from "@/components/conversation/LiveMonitorSection";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectById } from "@/components/project/hooks";
+import { ProjectHostGuideLink } from "@/components/project/ProjectHostGuideLink";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
 import { useConversationMonitor } from "@/hooks/useConversationMonitor";
 
@@ -93,12 +94,16 @@ export const ProjectMonitorRoute = () => {
 						</Text>
 					</Stack>
 					{sharingLink && (
-						<Tooltip label={t`Scan to join this project`} withArrow>
-							<Box className="w-[140px] shrink-0">
-								<QRCode value={sharingLink} />
-							</Box>
-						</Tooltip>
+						<Stack align="flex-end" gap="xs">
+							<ProjectHostGuideLink projectId={projectId} />
+							<Tooltip label={t`Scan to join this project`} withArrow>
+								<Box className="w-[140px] shrink-0">
+									<QRCode value={sharingLink} />
+								</Box>
+							</Tooltip>
+						</Stack>
 					)}
+					{!sharingLink && <ProjectHostGuideLink projectId={projectId} />}
 				</Group>
 
 				{projectId && (

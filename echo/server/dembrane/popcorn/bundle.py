@@ -1,9 +1,10 @@
 """Read side shared by the in-app and public popcorn pages.
 
-The presentation polls its data at up to five times a second while the stage
-is empty, and every viewer in the room may hold a tab open, so the bundle is
-memoised for a moment per report. The tick nudges the channel when it writes,
-and the stale window is shorter than the page's own poll interval.
+Connected presentations reload this authoritative bundle when the existing
+session SSE channel says that the tick wrote. Many viewers can react to the
+same nudge together, so the bundle is memoised briefly per report. Writers
+invalidate their local cache before publishing; readers retain a short delay
+to cover a nudge and bundle request landing on different API processes.
 
 Where the analysis writer owns a session's producer scopes, the deck's phrases,
 tensions and stakeholders are projected from the published revisions instead of
@@ -26,6 +27,7 @@ from dembrane.analysis import db
 from dembrane.settings import get_settings
 from dembrane.legal_basis import fetch_cascade_rows, resolve_effective_legal_basis
 from dembrane.directus_async import async_directus
+from dembrane.analysis.outbox import register_snapshot_hook
 from dembrane.popcorn.service import (
     TOGGLEABLE_TABS,
     build_bundle,
@@ -35,10 +37,24 @@ from dembrane.popcorn.service import (
     normalize_settings,
     get_loop_for_report,
     mark_synthetic_files,
+    resolve_presentation_settings,
 )
 from dembrane.popcorn.analysis import norm
 from dembrane.popcorn.translate import translated_bundle
-from dembrane.analysis.contracts import AnalysisStore, ObjectRevision, AnalysisStoreError
+from dembrane.analysis.contracts import (
+    OutboxEvent,
+    AnalysisStore,
+    ObjectRevision,
+    AnalysisStoreError,
+)
+from dembrane.analysis.snapshots import (
+    ProducerRef,
+    SnapshotRequest,
+    read_snapshot,
+    resolve_snapshot,
+    assemble_snapshot,
+    excluded_object_ids,
+)
 
 logger = logging.getLogger("dembrane.popcorn.bundle")
 
@@ -49,6 +65,8 @@ POPCORN_RECIPE_ID = "popcorn"
 TENSIONS_RECIPE_ID = "tensions"
 STAKEHOLDERS_RECIPE_ID = "stakeholders"
 DECK_RECIPES = (POPCORN_RECIPE_ID, TENSIONS_RECIPE_ID, STAKEHOLDERS_RECIPE_ID)
+DECK_VIEW_ID = "deck"
+DECK_SCOPE_KEY = "project"
 
 
 def _as_id(value: Any) -> str | None:
@@ -86,12 +104,34 @@ class DeckObjects:
         return not (self.popcorn or self.owns_tensions or self.owns_stakeholders)
 
 
-async def analysis_heads(project_id: str, dsn: str | None = None) -> list[dict[str, Any]]:
+async def analysis_heads(
+    project_id: str,
+    dsn: str | None = None,
+    *,
+    store: AnalysisStore | None = None,
+) -> list[dict[str, Any]]:
     """Each deck producer scope the executor owns, with its ready output. One
     query: the deck is polled, and a scope read per conversation would not do."""
+    in_memory_scopes = getattr(store, "scopes", None)
+    if isinstance(in_memory_scopes, dict):
+        return [
+            {
+                "recipe_id": scope.recipe_id,
+                "scope_key": scope.scope_key,
+                "scope_id": scope.id,
+                "run_id": scope.current_run_id,
+            }
+            for scope in in_memory_scopes.values()
+            if scope.project_id == project_id
+            and str(scope.kind) == "producer"
+            and str(scope.writer) == "analysis"
+            and scope.recipe_id in DECK_RECIPES
+            and scope.current_run_id
+        ]
     async with db.autocommit_cursor(dsn, AnalysisStoreError) as cursor:
         await cursor.execute(
-            """SELECT s.recipe_id, s.scope_key, r.output_manifest
+            """SELECT s.recipe_id, s.scope_key, s.id::text AS scope_id,
+                      s.current_run_id::text AS run_id
                  FROM analysis_scope s
                  JOIN analysis_run r ON r.id = s.current_run_id
                 WHERE s.project_id = %s AND s.kind = 'producer' AND s.writer = 'analysis'
@@ -101,13 +141,47 @@ async def analysis_heads(project_id: str, dsn: str | None = None) -> list[dict[s
         return [dict(row) for row in await cursor.fetchall()]
 
 
-def _manifest_ids(manifest: Any, type_id: str) -> list[str]:
-    objects = (manifest or {}).get("objects") or []
-    return [str(o["revisionId"]) for o in objects if o.get("type") == type_id]
+async def assemble_deck_snapshot(
+    project_id: str,
+    *,
+    store: AnalysisStore,
+    dsn: str | None = None,
+    source_event_id: str | None = None,
+):
+    heads = await analysis_heads(project_id, dsn, store=store)
+    if not heads:
+        return None
+    return await assemble_snapshot(
+        SnapshotRequest(
+            project_id=project_id,
+            view_id=DECK_VIEW_ID,
+            scope_key=DECK_SCOPE_KEY,
+            producers=tuple(
+                ProducerRef(str(head["recipe_id"]), str(head["scope_key"]))
+                for head in heads
+            ),
+            versions={"deckProjection": 1},
+            source_event_id=source_event_id,
+        ),
+        store=store,
+    )
+
+
+async def current_deck_snapshot(project_id: str, *, store: AnalysisStore):
+    return await resolve_snapshot(
+        store=store,
+        project_id=project_id,
+        view_id=DECK_VIEW_ID,
+        scope_key=DECK_SCOPE_KEY,
+    )
 
 
 async def load_deck_objects(
-    project_id: str, *, store: AnalysisStore | None = None, dsn: str | None = None
+    project_id: str,
+    *,
+    store: AnalysisStore | None = None,
+    dsn: str | None = None,
+    snapshot_id: str | None = None,
 ) -> DeckObjects:
     """The deck's objects as the analysis store holds them. An empty result
     means the session is still the legacy writer's, and the deck is built from
@@ -115,44 +189,48 @@ async def load_deck_objects(
     from dembrane.analysis.executor import default_store
 
     store = store or default_store()
-    heads = await analysis_heads(project_id, dsn)
-    if not heads:
+    snapshot = (
+        await resolve_snapshot(store=store, project_id=project_id, snapshot_id=snapshot_id)
+        if snapshot_id
+        else await current_deck_snapshot(project_id, store=store)
+    )
+    # Older projects may predate the publication hook that materializes deck
+    # views. Seed their first immutable view once; events advance it afterward.
+    if snapshot is None and snapshot_id is None:
+        snapshot = await assemble_deck_snapshot(project_id, store=store, dsn=dsn)
+    if snapshot is None:
         return DeckObjects()
-    wanted: dict[str, list[str]] = {}
-    relation_ids: list[str] = []
-    owns_tensions = owns_stakeholders = False
-    for head in heads:
-        manifest = head.get("output_manifest") or {}
-        recipe_id, scope_key = str(head["recipe_id"]), str(head["scope_key"])
-        if recipe_id == POPCORN_RECIPE_ID and scope_key.startswith("conversation:"):
-            wanted[scope_key] = _manifest_ids(manifest, "popcorn")
-        elif recipe_id == TENSIONS_RECIPE_ID:
-            owns_tensions = True
-            wanted["tensions"] = _manifest_ids(manifest, "tension")
-        elif recipe_id == STAKEHOLDERS_RECIPE_ID:
-            owns_stakeholders = True
-            wanted["stakeholders"] = _manifest_ids(manifest, "stakeholder")
-            relation_ids = [
-                str(r["relationId"])
-                for r in manifest.get("relations") or []
-                if r.get("type") == "stakeholder_relation"
-            ]
-    every = [rid for ids in wanted.values() for rid in ids]
-    revisions = await store.get_revisions(project_id, every) if every else {}
-    relations = await store.get_relations(project_id, relation_ids) if relation_ids else {}
-
-    def found(key: str) -> list[ObjectRevision]:
-        return [revisions[rid] for rid in wanted.get(key, []) if rid in revisions]
+    contents = await read_snapshot(snapshot, store=store)
+    producers = snapshot.manifest.get("producers") or []
+    popcorn: dict[str, list[ObjectRevision]] = {}
+    tensions: list[ObjectRevision] = []
+    stakeholders: list[ObjectRevision] = []
+    for revision in contents.revisions.values():
+        if revision.type == "popcorn":
+            conversation_id = next(
+                (
+                    source.conversation_id
+                    for source in revision.provenance.source_refs
+                    if source.conversation_id
+                ),
+                str(revision.provenance.extra.get("conversationId") or ""),
+            )
+            if conversation_id:
+                popcorn.setdefault(conversation_id, []).append(revision)
+        elif revision.type == "tension":
+            tensions.append(revision)
+        elif revision.type == "stakeholder":
+            stakeholders.append(revision)
 
     return DeckObjects(
-        popcorn={
-            key.split(":", 1)[1]: found(key) for key in wanted if key.startswith("conversation:")
-        },
-        tensions=found("tensions"),
-        stakeholders=found("stakeholders"),
-        relations=[relations[rid] for rid in relation_ids if rid in relations],
-        owns_tensions=owns_tensions,
-        owns_stakeholders=owns_stakeholders,
+        popcorn=popcorn,
+        tensions=tensions,
+        stakeholders=stakeholders,
+        relations=list(contents.relations.values()),
+        owns_tensions=any(p.get("recipeId") == TENSIONS_RECIPE_ID for p in producers),
+        owns_stakeholders=any(
+            p.get("recipeId") == STAKEHOLDERS_RECIPE_ID for p in producers
+        ),
     )
 
 
@@ -213,6 +291,8 @@ def _popcorn_item(
     entry: dict[str, Any] = {
         "id": str(extra.get("phraseId") or f"p-{conversation_id}-{revision.object_id[:8]}"),
         "phrase": phrase,
+        "objectId": revision.object_id,
+        "revisionId": revision.id,
     }
     if payload.get("question"):
         entry["question"] = True
@@ -242,6 +322,8 @@ def tension_slide(revision: ObjectRevision, index: int, register: Register) -> d
     payload = revision.payload
     return {
         "id": f"x{index}",
+        "objectId": revision.object_id,
+        "revisionId": revision.id,
         "poleA": payload["poleA"],
         "poleB": payload["poleB"],
         "knot": payload["knot"],
@@ -255,6 +337,8 @@ def _stakeholder(revision: ObjectRevision, index: int, register: Register) -> di
     evidence: dict[str, Any] = {"rung": payload["rung"]}
     return {
         "id": f"s{index}",
+        "objectId": revision.object_id,
+        "revisionId": revision.id,
         "name": payload["name"],
         "role": payload["role"],
         "stake": payload["stake"],
@@ -410,6 +494,42 @@ async def published_bundle(
     )
 
 
+async def apply_shared_withdrawals(
+    bundle: dict[str, Any], project_id: str | None, *, store: AnalysisStore | None = None
+) -> dict[str, Any]:
+    """Remove current withdrawals even from an older presentation binding."""
+    if not project_id:
+        return bundle
+    from dembrane.analysis.executor import default_store
+
+    store = store or default_store()
+    hidden = await excluded_object_ids(project_id, store=store)
+    if not hidden:
+        return bundle
+    files = {
+        name: dict(value) if isinstance(value, dict) else value
+        for name, value in bundle["files"].items()
+    }
+    for name, file in files.items():
+        if not isinstance(file, dict):
+            continue
+        for key in ("items", "tensions", "stakeholders"):
+            if isinstance(file.get(key), list):
+                file[key] = [
+                    item
+                    for item in file[key]
+                    if item.get("objectId", item.get("id")) not in hidden
+                ]
+        if name == "stakeholders.json":
+            kept = {item["id"] for item in file.get("stakeholders", [])}
+            file["relations"] = [
+                relation
+                for relation in file.get("relations", [])
+                if all(end in kept for end in relation.get("between", []))
+            ]
+    return {**bundle, "files": files}
+
+
 # ── the bundle the pages read ────────────────────────────────────────────
 
 
@@ -437,21 +557,23 @@ async def bundle_for_report(
     project: dict[str, Any] | None = None,
     *,
     host: bool = False,
+    settings_override: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     report_id = str(report["id"])
     cache_key = f"{report_id}:{'host' if host else 'public'}"
     now = time.monotonic()
-    cached = _cache.get(cache_key)
+    cached = _cache.get(cache_key) if settings_override is None else None
     if cached and now - cached[0] < BUNDLE_CACHE_SECONDS:
         return cached[1]
 
     loop = await get_loop_for_report(report_id)
-    settings = await load_settings(report)
+    settings = settings_override if settings_override is not None else await load_settings(report)
     if project is None:
         project_id = _as_id(report.get("project_id"))
         project = (
             await async_directus.get_item("project", project_id) if project_id else None
         ) or {}
+    settings = resolve_presentation_settings(settings, project)
     project = await with_effective_legal_basis(project, settings)
     state = normalize_state((loop or {}).get("popcorn_state"))
     urls = get_settings().urls
@@ -465,16 +587,26 @@ async def bundle_for_report(
         host=host,
         dev=bool(get_settings().feature_flags.serve_api_docs),
     )
+    resolved_project_id = _as_id(project.get("id")) or _as_id(report.get("project_id"))
     bundle = await published_bundle(
         bundle,
-        project_id=_as_id(project.get("id")) or _as_id(report.get("project_id")),
+        project_id=resolved_project_id,
         settings=settings,
         project=project,
         host=host,
         admin_base_url=urls.admin_base_url,
     )
+    bundle = await apply_result_bindings(
+        bundle,
+        report_id,
+        settings,
+        project_id=resolved_project_id,
+    )
     bundle = translated_bundle(bundle, state, settings)
-    _cache[cache_key] = (now, bundle)
+    bundle = await apply_shared_withdrawals(bundle, resolved_project_id)
+    bundle = curate_presentation(bundle, settings)
+    if settings_override is None:
+        _cache[cache_key] = (now, bundle)
     if len(_cache) > 512:
         oldest = sorted(_cache.items(), key=lambda item: item[1][0])[: len(_cache) - 256]
         for key, _ in oldest:
@@ -485,3 +617,142 @@ async def bundle_for_report(
 def forget_bundle(report_id: str) -> None:
     for key in (f"{report_id}:host", f"{report_id}:public"):
         _cache.pop(key, None)
+
+
+async def deck_view_hook(event: OutboxEvent, store: AnalysisStore) -> None:
+    """Advance the effective deck and wake connected screens after publication."""
+    if event.event_type not in ("run_published", "revision_published"):
+        return
+    if event.event_type == "run_published" and event.payload.get("recipeId") not in DECK_RECIPES:
+        return
+    if event.event_type == "revision_published" and event.payload.get("type") not in (
+        "popcorn",
+        "tension",
+        "stakeholder",
+    ):
+        return
+    snapshot = await assemble_deck_snapshot(
+        event.project_id,
+        store=store,
+        source_event_id=event.id,
+    )
+    if snapshot is None:
+        return
+    from dembrane.popcorn import service
+
+    report = await service.get_popcorn_report(event.project_id)
+    if report:
+        report_id = str(report["id"])
+        forget_bundle(report_id)
+        from dembrane.canvas.events import publish_generation_nudge
+
+        await publish_generation_nudge(report_id)
+
+
+register_snapshot_hook(deck_view_hook)
+
+
+def curate_presentation(bundle: dict[str, Any], settings: dict[str, Any]) -> dict[str, Any]:
+    """Presentation-local hiding never withdraws a shared finding."""
+    hidden = set((settings.get("presentation") or {}).get("hidden_items") or [])
+    if not hidden:
+        return bundle
+    files = {
+        name: dict(value) if isinstance(value, dict) else value
+        for name, value in bundle["files"].items()
+    }
+    for name, file in files.items():
+        if not isinstance(file, dict):
+            continue
+        for key in ("items", "tensions", "stakeholders"):
+            if isinstance(file.get(key), list):
+                file[key] = [
+                    item for item in file[key] if item.get("objectId", item.get("id")) not in hidden
+                ]
+        if name == "stakeholders.json":
+            kept = {item["id"] for item in file.get("stakeholders", [])}
+            file["relations"] = [
+                r
+                for r in file.get("relations", [])
+                if all(end in kept for end in r.get("between", []))
+            ]
+    return {**bundle, "files": files}
+
+
+async def apply_result_bindings(
+    bundle: dict[str, Any],
+    report_id: str,
+    settings: dict[str, Any],
+    *,
+    project_id: str | None = None,
+    store: AnalysisStore | None = None,
+) -> dict[str, Any]:
+    """Keep non-live slides on the host-adopted saved version.
+
+    Namespace pinned quote IDs because live Popcorn's registry keeps growing.
+    The immutable version remains scoped to its report by get_version_files.
+    """
+    from dembrane.popcorn.service import room_files, get_version_files
+
+    bindings = (settings.get("presentation") or {}).get("result_bindings") or {}
+    if not bindings:
+        return bundle
+    files = dict(bundle["files"])
+    quotes = list((files.get("quotes.json") or {}).get("quotes") or [])
+    loaded: dict[str, Any] = {}
+    for block in ("stakeholders", "tensions"):
+        version = bindings.get(block)
+        if not version or not (settings.get("tabs") or {}).get(block):
+            continue
+        if version not in loaded:
+            if str(version).startswith("analysis:") and project_id:
+                objects = await load_deck_objects(
+                    project_id,
+                    store=store,
+                    snapshot_id=str(version).split(":", 1)[1],
+                )
+                loaded[version] = apply_published_objects(
+                    {"files": {}},
+                    objects,
+                    settings=settings,
+                    project={"id": project_id},
+                    host=False,
+                )["files"]
+            else:
+                stored = await get_version_files(report_id, version)
+                loaded[version] = (
+                    room_files(stored, neutral_labels=settings.get("public_labels") != "names")
+                    if stored
+                    else None
+                )
+        pinned = loaded[version]
+        if not pinned:
+            continue
+        name = f"{block}.json"
+        if name not in pinned:
+            files.pop(name, None)
+            continue
+        prefix = f"{block}:{version}:"
+
+        def remap(value: Any, prefix: str = prefix) -> Any:
+            if isinstance(value, list):
+                return [remap(item) for item in value]
+            if not isinstance(value, dict):
+                return value
+            return {
+                key: [prefix + str(q) for q in val]
+                if key == "quoteIds" and isinstance(val, list)
+                else prefix + str(val)
+                if key == "quoteId"
+                else remap(val)
+                for key, val in value.items()
+            }
+
+        files[name] = remap(pinned[name])
+        quotes.extend(
+            {**quote, "id": prefix + str(quote["id"])}
+            for quote in (pinned.get("quotes.json") or {}).get("quotes", [])
+            if quote.get("id")
+        )
+    files["quotes.json"] = {"quotes": quotes}
+    return {**bundle, "files": files}

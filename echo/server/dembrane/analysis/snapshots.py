@@ -26,6 +26,7 @@ from dataclasses import field, replace, dataclass
 from dembrane.analysis import types
 from dembrane.analysis.hashing import HASH_VERSION, content_hash
 from dembrane.analysis.contracts import (
+    Origin,
     Relation,
     Snapshot,
     ScopeKind,
@@ -81,11 +82,27 @@ class _Current:
 CURRENT = _Current()
 
 
+async def excluded_object_ids(
+    project_id: str,
+    *,
+    store: AnalysisStore,
+    scope_ids: list[str] | None = None,
+) -> set[str]:
+    """Current durable withdrawals, applied even to pinned audience views."""
+    heads = await store.current_revisions(project_id, scope_ids)
+    return {
+        object_id
+        for object_id, revision in heads.items()
+        if revision.provenance.extra.get("membershipExcluded")
+    }
+
+
 async def build_manifest(request: SnapshotRequest, *, store: AnalysisStore) -> dict[str, Any]:
     producers: list[dict[str, Any]] = []
     candidates: dict[str, list[dict[str, Any]]] = {}
     relation_entries: dict[str, dict[str, Any]] = {}
     pinned_inputs: list[tuple[dict[str, Any], str]] = []
+    producer_scope_ids: list[str] = []
     for ref in request.producers:
         scope = await store.find_scope(
             project_id=request.project_id, kind=ScopeKind.PRODUCER, owner_id=ref.recipe_id, scope_key=ref.scope_key
@@ -105,6 +122,7 @@ async def build_manifest(request: SnapshotRequest, *, store: AnalysisStore) -> d
             "publicationSequence": manifest.get("publicationSequence"),
             "available": True,
         }
+        producer_scope_ids.append(scope.id)
         producers.append(entry)
         for obj in manifest.get("objects") or []:
             candidates.setdefault(str(obj["objectId"]), []).append({**obj, "producer": entry})
@@ -113,6 +131,7 @@ async def build_manifest(request: SnapshotRequest, *, store: AnalysisStore) -> d
         for rid in (manifest.get("inputs") or {}).get("revisionIds") or []:
             pinned_inputs.append((entry, str(rid)))
 
+    current = await store.current_revisions(request.project_id, producer_scope_ids)
     wanted = {str(o["revisionId"]) for group in candidates.values() for o in group}
     wanted |= {str(r[end]) for r in relation_entries.values() for end in ("from", "to")}
     wanted |= {rid for _entry, rid in pinned_inputs}
@@ -120,10 +139,25 @@ async def build_manifest(request: SnapshotRequest, *, store: AnalysisStore) -> d
 
     displayed: dict[str, ObjectRevision] = {}
     for object_id, group in candidates.items():
+        head = current.get(object_id)
+        if head is not None and head.provenance.origin == Origin.AUTHORED:
+            if not head.provenance.extra.get("membershipExcluded"):
+                displayed[object_id] = head
+            continue
         options = [revisions[str(o["revisionId"])] for o in group if str(o["revisionId"]) in revisions]
         if options:
             # One displayed revision per identity: the newest.
             displayed[object_id] = max(options, key=lambda r: r.revision_number)
+    # An authored head remains a member of its producer scope even when a
+    # later whole-scope run no longer emits that identity. Exclusion is an
+    # authored, reversible membership revision and is resolved here once.
+    for object_id, head in current.items():
+        if (
+            head.provenance.origin == Origin.AUTHORED
+            and not head.provenance.extra.get("membershipExcluded")
+            and object_id not in displayed
+        ):
+            displayed[object_id] = head
     displayed_ids = {r.id for r in displayed.values()}
 
     relations: list[dict[str, Any]] = []
@@ -317,7 +351,9 @@ def following_view_hook(
     another assembly advanced the view first."""
 
     async def hook(event: OutboxEvent, store: AnalysisStore) -> None:
-        if event.event_type != "run_published" or event.payload.get("recipeId") not in recipe_ids:
+        if event.event_type not in ("run_published", "revision_published"):
+            return
+        if event.payload.get("recipeId") not in recipe_ids:
             return
         request = build_request(event)
         if request is None:

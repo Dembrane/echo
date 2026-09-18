@@ -1,0 +1,65 @@
+.editor {
+	display: grid;
+	gap: var(--mantine-spacing-lg);
+	align-items: start;
+}
+
+.preview {
+	min-width: 0;
+	overflow: hidden;
+	border: 1px solid var(--mantine-color-default-border);
+	border-radius: var(--mantine-radius-lg);
+	background: var(--app-background);
+}
+
+.stage {
+	height: clamp(32rem, 68vh, 58rem);
+}
+
+.settings {
+	min-width: 0;
+	border: 1px solid var(--mantine-color-default-border);
+	border-radius: var(--mantine-radius-lg);
+	padding: var(--mantine-spacing-lg);
+}
+
+@media (min-width: 1440px) {
+	.editor {
+		grid-template-columns: minmax(0, 1fr) 360px;
+	}
+
+	.settings {
+		max-height: calc(100dvh - 13rem);
+		overflow-y: auto;
+	}
+
+	.preview {
+		position: sticky;
+		top: var(--mantine-spacing-md);
+	}
+}
+
+@media (max-width: 600px) {
+	.stage {
+		height: 60dvh;
+		min-height: 26rem;
+	}
+}
+
+.hostActions {
+	padding: var(--mantine-spacing-xs);
+	border: 1px solid
+		color-mix(in srgb, var(--mantine-color-primary-6) 25%, transparent);
+	border-radius: var(--mantine-radius-lg);
+	background: linear-gradient(
+		120deg,
+		color-mix(
+			in srgb,
+			var(--mantine-color-primary-6) 8%,
+			var(--app-background)
+		),
+		var(--app-background)
+	);
+	box-shadow: 0 4px 18px
+		color-mix(in srgb, var(--mantine-color-primary-6) 10%, transparent);
+}

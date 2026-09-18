@@ -15,6 +15,7 @@ import hashlib
 from typing import Any, Callable
 
 LANGUAGES = ("en", "nl", "de", "fr", "es", "it", "uk", "cs")
+TRANSLATION_POLICY_VERSION = "popcorn-room-v2"
 
 # The fields of each file that carry analysis text. Names typed on phones and
 # conversation labels are not results and stay as they are.
@@ -25,6 +26,14 @@ _RELATION_FIELDS = ("label", "detail")
 
 def text_key(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:20]
+
+
+def cache_key(
+    text: str, target: str, policy: str = TRANSLATION_POLICY_VERSION
+) -> str:
+    """A reusable translation key whose policy can change without stale reuse."""
+    value = f"{policy}\x1f{target}\x1f{text}"
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()[:20]
 
 
 def _swap(entry: Any, fields: tuple[str, ...], fn: Callable[[str], str]) -> Any:
@@ -88,8 +97,11 @@ def translatable_texts(files: dict[str, Any]) -> list[str]:
     return list(seen)
 
 
-def missing_texts(files: dict[str, Any], table: dict[str, str]) -> list[str]:
-    return [text for text in translatable_texts(files) if text_key(text) not in table]
+def missing_texts(
+    files: dict[str, Any], table: dict[str, str], target: str = ""
+) -> list[str]:
+    key = (lambda text: cache_key(text, target)) if target else text_key
+    return [text for text in translatable_texts(files) if key(text) not in table]
 
 
 def target_language(settings: dict[str, Any]) -> str:
@@ -107,11 +119,44 @@ def translated_bundle(
     if not target or not isinstance(files, dict):
         return bundle
     table = ((state.get("translations") or {}).get(target)) or {}
-    translated = _map_files(files, lambda text: table.get(text_key(text), text))
+
+    def translated_text(text: str) -> str:
+        return table.get(cache_key(text, target), text)
+
+    # Popcorn keeps its source wording and identity. The browser owns the
+    # original-first handoff; replacing `phrase` here used to make that
+    # impossible when a warm cache answered before the phrase reached stage.
+    translated = _map_files(files, translated_text)
+    for name, file in files.items():
+        if not name.startswith("popcorn/") or not isinstance(file, dict):
+            continue
+        items = []
+        for item in file.get("items") or []:
+            if not isinstance(item, dict):
+                items.append(item)
+                continue
+            source = item.get("phrase")
+            answer = table.get(cache_key(source, target)) if isinstance(source, str) else None
+            out = dict(item)
+            if answer and answer != source:
+                out["translation"] = answer
+                out["translation_language"] = target
+                out["translation_policy"] = TRANSLATION_POLICY_VERSION
+                out["translation_ref"] = {
+                    "source_key": text_key(str(source)),
+                    "item_id": str(item.get("id") or ""),
+                    "revision": file.get("revision"),
+                }
+            items.append(out)
+        translated[name] = {**file, "items": items}
     session = translated.get("session.json")
     if isinstance(session, dict):
         translated["session.json"] = {
             **session,
-            "translation": {"to": target, "pending": len(missing_texts(files, table))},
+            "translation": {
+                "to": target,
+                "policy": TRANSLATION_POLICY_VERSION,
+                "pending": len(missing_texts(files, table, target)),
+            },
         }
     return {**bundle, "files": translated}

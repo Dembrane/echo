@@ -11,6 +11,7 @@
   const EMBED = typeof window !== "undefined" && window.POPCORN_EMBED ? window.POPCORN_EMBED : null;
   const BUNDLE_MAX_AGE_MS = 250;
   if (EMBED) {
+    if (EMBED.presentationId) document.documentElement.classList.add("present-shell");
     // Every data path is relative to the page, so the address must end in a
     // slash; fix it here rather than with a redirect the server would have to
     // build from the request. The saved run to replay comes from the query
@@ -33,6 +34,53 @@
   // without EventSource.
   const LIVE = !!(EMBED && (EMBED.mode === "host" || EMBED.mode === "public") && !EMBED.version);
   const EVENTS = LIVE && typeof EventSource !== "undefined";
+  let shellRevision = 0;
+  const notifyShellReady = () => {
+    if (!EMBED?.presentationId || parent === window) return;
+    parent.postMessage(
+      {
+        source: "dembrane-present-deck",
+        version: 1,
+        presentationId: EMBED.presentationId,
+        type: "ready",
+        revision: ++shellRevision,
+      },
+      EMBED.parentOrigin || location.origin,
+    );
+  };
+  const notifyOpeningState = (open, screen) => {
+    if (!EMBED?.presentationId || parent === window) return;
+    parent.postMessage(
+      {
+        source: "dembrane-present-deck",
+        version: 1,
+        presentationId: EMBED.presentationId,
+        type: "opening",
+        open,
+        ...(screen ? { screen } : {}),
+      },
+      EMBED.parentOrigin || location.origin,
+    );
+  };
+  const notifyShellChrome = (progress, live) => {
+    if (!EMBED?.presentationId || parent === window) return;
+    const madeWith = document.querySelector(".made-with");
+    parent.postMessage(
+      {
+        source: "dembrane-present-deck",
+        version: 1,
+        presentationId: EMBED.presentationId,
+        type: "chrome",
+        progress: String(progress || "").trim(),
+        live: live === true,
+        madeWith: madeWith && !madeWith.hidden ? String(madeWith.textContent || "").trim() : "",
+        qrShow: tr("qr.show"),
+        qrFold: tr("qr.fold"),
+        qrLabel: tr("qr.voice"),
+      },
+      EMBED.parentOrigin || location.origin,
+    );
+  };
   // The server keeps a bundle for 0.5 s per process: a read on an update waits
   // just past that, with a little jitter so every screen in a room does not
   // ask in the same instant.
@@ -45,8 +93,17 @@
   const POLL_MS = 3000;           // slide files
   const POP_FAST_POLL_MS = 200;   // empty stage: reserve <500ms for detection + paint
   const POP_POLL_MS = 800;        // warm stage and validation updates
-  const POP_HOLD = 10000;    // solid reading time per phrase
-  const POP_FADE = 900;
+  // Prototype values from the presentation spec. A session may tune these
+  // after the projector throughput check without changing the renderer.
+  const playback = window.POPCORN_PLAYBACK || {};
+  const POP_READ_BASE = Number(playback.readBaseMs) || 3000;
+  const POP_READ_PER_WORD = Number(playback.readPerWordMs) || 500;
+  // Popcorn prompts produce short phrases. This ceiling is a safety bound for
+  // malformed/imported prose; normal text follows the formula exactly.
+  const POP_LANGUAGE_HARD_CAP = Number(playback.languageHardCapMs) || 24000;
+  const POP_RESIDENCY_CAP = Number(playback.residencyCapMs) || 24000;
+  const POP_TRANSITION_MS = Number(playback.transitionMs) || 200;
+  const POP_FADE = 400;
   const POP_GAP = 2400;      // stagger between spawns once the stage is warm
   const POP_MAX = 3;         // phrases the automatic flow keeps up at once (one per band)
   const POP_CAP = 5;         // phrases on stage at once, all told; a keyed pop past this sends the oldest away
@@ -106,6 +163,8 @@
       "tally.reading": "reading {pending} of {n}",
       "translation.done": "translated from the original language",
       "translation.pending": "translating {n}…",
+      "translation.original": "original",
+      "translation.visible": "translation · {language}",
       "pop.label": "popcorn: moments of recognition from the conversations",
       "pop.keys": "when the popcorns happened, and how the stage plays",
       "pop.timeline": "the popcorns over the day; hover one to pop it, click to hold or release it, drag the edges to crop",
@@ -269,6 +328,8 @@
       "tally.reading": "lezen: {pending} van {n}",
       "translation.done": "vertaald uit de oorspronkelijke taal",
       "translation.pending": "vertalen: nog {n}…",
+      "translation.original": "origineel",
+      "translation.visible": "vertaling · {language}",
       "pop.label": "popcorn: momenten van herkenning uit de gesprekken",
       "pop.keys": "wanneer de popcorns vielen, en hoe ze in beeld komen",
       "pop.timeline": "de popcorns over de dag; wijs er een aan om hem te tonen, klik om hem vast te houden of los te laten, sleep de randen om bij te snijden",
@@ -389,6 +450,14 @@
       "evidence.namedBy": "Genoemd door anderen; {name} sprak namens hen.",
     },
   };
+  // Audience languages are kept separate so upstream app.js merges stay
+  // readable. Their compact arrays follow the English insertion order.
+  const audienceI18n = window.POPCORN_AUDIENCE_I18N || {};
+  const audienceKeys = Object.keys(I18N.en);
+  Object.entries(audienceI18n.values || {}).forEach(([language, values]) => {
+    I18N[language] = Object.fromEntries(audienceKeys.map((key, index) => [key, values[index]]));
+    Object.assign(I18N[language], audienceI18n.plurals?.[language] || {});
+  });
   // The language the server gave the session; a demo's own language covers a
   // server that does not send one yet. Before the session loads: English.
   const pageLang = () => String(state.session?.language || state.session?.demo?.language || "en").toLowerCase().split("-")[0];
@@ -462,6 +531,9 @@
       cursor: 0,            // position in the time-ordered sequence
       countdown: null,      // { startedAt, beaconed } while the first read is in flight and nothing has landed
       tailStamp: "",        // the popcorn files as last drawn; a change redraws the list and the stage
+      bilingualNext: new Map(), // late translations owed their next fair slot
+      shownOriginal: new Map(), // item identity -> exact source wording already given a full appearance
+      shownTranslation: new Map(), // item identity -> exact translation already displayed
     },
     openThemes: new Set(),  // recommendation theme accordions the presenter has opened
     // deck tabs: null = list view; an item id (or "auto" = first) = horizontal slide deck
@@ -701,26 +773,50 @@
   document.body.appendChild(tip);
 
   let quoteOpen = false, screenFrozen = false, focusBeforeModal = null;
+  const freezeReasons = new Set();
   let openQuoteId = null, quoteHideTimer = null;
 
   // A quote modal stops the room's screen dead: no pointer or keyboard reaches
   // what is behind it, no phrase pops in or fades out, and any data that lands
   // while it is open waits to be drawn until it closes. Reading a quote aloud
   // should never be a race against the stage.
-  function freezeScreen(on) {
-    if (screenFrozen === on) return;
-    screenFrozen = on;
+  function freezeScreen(on, reason = "evidence") {
+    if (on) freezeReasons.add(reason); else freezeReasons.delete(reason);
+    const frozen = freezeReasons.size > 0;
+    if (screenFrozen === frozen) return;
+    screenFrozen = frozen;
     for (const rec of state.pop.live) {
-      if (on) {
-        clearTimeout(rec.timer);
+      if (frozen) {
+        for (const name of ["timer", "languageTimer", "morphTimer"]) {
+          if (!rec[name]) continue;
+          clearTimeout(rec[name]);
+          rec[`${name}Remaining`] = Math.max(0, (rec[`${name}Deadline`] || Date.now()) - Date.now());
+          rec[name] = null;
+        }
         rec.el.classList.remove("pop-out");   // un-fade anything caught mid-exit
-      } else if (rec.beginFade) {
-        rec.timer = setTimeout(rec.beginFade, POP_HOLD);
+      } else {
+        for (const name of ["timer", "languageTimer", "morphTimer"]) {
+          const fn = rec[`${name}Callback`];
+          const remaining = rec[`${name}Remaining`];
+          if (fn && Number.isFinite(remaining)) armPopTimer(rec, name, fn, remaining);
+        }
       }
     }
     document.querySelectorAll("header.topbar, #stage, footer.colophon")
-      .forEach((el) => { el.inert = on; });
-    if (!on && state.renderPending) { state.renderPending = false; renderActive(); }
+      .forEach((el) => { el.inert = frozen; });
+    if (!frozen && state.renderPending) { state.renderPending = false; renderActive(); }
+  }
+
+  function armPopTimer(rec, name, fn, delay) {
+    clearTimeout(rec[name]);
+    rec[`${name}Callback`] = fn;
+    rec[`${name}Remaining`] = null;
+    rec[`${name}Deadline`] = Date.now() + Math.max(0, delay);
+    rec[name] = setTimeout(() => {
+      rec[name] = null;
+      rec[`${name}Remaining`] = null;
+      fn();
+    }, Math.max(0, delay));
   }
   // only ever follow a link the data actually vouches for
   const httpUrl = (u) => (/^https?:\/\//i.test(u || "") ? u : null);
@@ -995,6 +1091,7 @@
     const screens = [];
     if (intro.enabled || disclosure.text) {
       screens.push({
+        kind: "intro",
         title: intro.title || session.title,
         subtitle: intro.subtitle || "",
         body: paragraphs(disclosure.text),
@@ -1005,10 +1102,10 @@
       // Of several paragraphs, the first reads as the subtitle.
       const body = paragraphs(disclosure.invitation_text);
       const subtitle = body.length > 1 ? body.shift() : "";
-      screens.push({ title: disclosure.invitation_title || "", subtitle, body, source: false });
+      screens.push({ kind: "intro", title: disclosure.invitation_title || "", subtitle, body, source: false });
     }
     // What happens to the data: its words come from the project's settings.
-    if (session.data) screens.push({ data: session.data });
+    if (session.data) screens.push({ kind: "data", data: session.data });
     return screens;
   }
 
@@ -1040,8 +1137,13 @@
     introDialog = dialog;
     introScreens = openingScreens();
     showIntroStep(step, how);
+    // A short preview can scroll to the bottom if the dialog autofocuses its
+    // Continue button. Start with the heading so the introduction stays legible.
+    const heading = dialog.querySelector("#intro-title");
+    heading?.setAttribute("tabindex", "-1");
+    heading?.setAttribute("autofocus", "");
     dialog.showModal();
-    dialog.querySelector(".intro-continue")?.focus();
+    dialog.scrollTop = 0;
   }
 
   function showIntroStep(step, how) {
@@ -1059,6 +1161,7 @@
     }
     const demo = isSynthetic();
     const screen = screens[n - 1];
+    notifyOpeningState(true, screen.kind);
     const last = n === screens.length;
     const eyebrow = (demo ? esc(tr("intro.demo")) : "popcorn")
       + (screens.length > 1 ? ` · ${String(n).padStart(2, "0")} / ${String(screens.length).padStart(2, "0")}` : "");
@@ -1080,7 +1183,10 @@
       showSlide("popcorn", null, { replace: true });
       stage.focus();
     };
-    button.focus();
+    const focusTarget = dialog.querySelector("#intro-title") || dialog.querySelector(".intro-content");
+    focusTarget?.setAttribute("tabindex", "-1");
+    focusTarget?.focus({ preventScroll: true });
+    dialog.scrollTop = 0;
   }
 
   function closeIntroduction() {
@@ -1088,6 +1194,7 @@
     introDialog?.close();
     introDialog?.remove();
     introDialog = null;
+    notifyOpeningState(false);
   }
 
   /* The QR panel invites the room to add its voice: the portal link as a brand
@@ -1233,6 +1340,7 @@
       const first = visibleSlides()[0];
       if (first) showSlide(parseHash().slide || first.id, parseHash().sub, { replace: true });
     }
+    notifyShellReady();
   }
 
   function visibleSlides() {
@@ -1282,7 +1390,7 @@
     }
     if (flow && link && link.textContent !== tr("chrome.flow")) link.textContent = tr("chrome.flow");
     const total = state.session?.transcripts?.length || 0;
-    if (!total) { el.textContent = ""; return; }
+    if (!total) { el.textContent = ""; notifyShellChrome("", false); return; }
     const done = [...state.popcorn.values()].filter((p) => p.done).length;
     const live = done < total;
     // The tally: what is on the wall, how much of it the second pass has
@@ -1305,9 +1413,11 @@
         ? `<span class="live-dot"></span>${esc(trn("progress.reading", total, { pending }))}`
         : esc(trn("progress.allRead", total));
       el.innerHTML = [head, ...tally.map(esc)].join(" · ");
+      notifyShellChrome(el.textContent, live);
       return;
     }
     el.innerHTML = [`${live ? '<span class="live-dot"></span>' : ""}${esc(trn("progress.read", total, { done }))}`, ...tally.map(esc)].join(" · ");
+    notifyShellChrome(el.textContent, live);
   }
 
   // The bundle's texts were translated on the server; the page only says so.
@@ -1402,7 +1512,7 @@
 
   /* ---------- popcorn ----------
      A stage, not a wall. Phrases pop in as agents land them, hold for a
-     solid read (POP_HOLD), then fade out. The first phrase to arrive takes
+     a word-count reading interval, then fades out. The first phrase to arrive takes
      centre stage; once the fresh queue is dry, phrases recycle so the
      screen never goes dead. */
 
@@ -1421,6 +1531,23 @@
   const popcornHasPendingFiles = () => (state.session?.transcripts || []).some((t) =>
     !state.dropped.has(`popcorn:${t.id}`) && !popcornSettled(state.popcorn.get(t.id)));
 
+  // Translation is layered onto a settled analysis file without changing its
+  // revision. Include the bilingual contract in the file identity so a late
+  // translation, policy revision or target-language change is still applied.
+  const popcornFileStamp = (data) => JSON.stringify([
+    data?.revision ?? 0,
+    data?.validated ? 1 : 0,
+    (data?.items || []).map((item) => [
+      item?.id || "",
+      item?.phrase || "",
+      item?.translation || "",
+      item?.translation_language || "",
+      item?.translation_policy || "",
+      item?.translation_ref?.source_key || "",
+      item?.translation_ref?.revision ?? "",
+    ]),
+  ]);
+
   // Fetch every transcript concurrently. Serial requests make the last table
   // pay for every earlier table's round trip, which is incompatible with a
   // two-second first-pop target.
@@ -1436,8 +1563,25 @@
       // A drop may have landed while this request was in flight; dropped data
       // always wins over the development server.
       if (!data || state.dropped.has(`popcorn:${t.id}`)) return;
-      if (cached && popcornSettled(cached) && data.revision === cached.revision) return;
+      if (cached && popcornSettled(cached) && popcornFileStamp(data) === popcornFileStamp(cached)) return;
       state.popcorn.set(t.id, data);
+      // A translation may land after its original has already left the stage.
+      // Book that exact wording before fresh/recycled originals, but never let
+      // an old identity skip the original after its source wording changed.
+      (data.items || []).forEach((item, idx) => {
+        const key = bilingualKey(t.id, idx, item);
+        const live = state.pop.live.some((rec) =>
+          bilingualKey(rec.tid, rec.idx, currentItem(rec)) === key
+          && !rec.el.classList.contains("pop-out"));
+        if (
+          item.translation
+          && state.pop.shownOriginal.get(key) === item.phrase
+          && state.pop.shownTranslation.get(key) !== item.translation
+          && !live
+        ) {
+          state.pop.bilingualNext.set(key, { tid: t.id, idx, itemId: item.id });
+        }
+      });
     });
     await Promise.all(jobs);
     renderProgress();
@@ -1456,7 +1600,7 @@
 
   // One string that moves whenever any popcorn file did.
   const popcornStamp = () => [...state.popcorn.entries()]
-    .map(([tid, d]) => `${tid}:${d.revision ?? 0}:${d.validated ? 1 : 0}:${(d.items || []).length}`)
+    .map(([tid, d]) => `${tid}:${popcornFileStamp(d)}`)
     .sort()
     .join("|");
 
@@ -1468,6 +1612,106 @@
     return (rec.itemId && items.find((i) => i.id === rec.itemId)) || (rec.itemId ? null : items[rec.idx]) || null;
   }
 
+  const phraseWords = (text) => String(text || "").trim().split(/\s+/u).filter(Boolean).length;
+  const languageReadMs = (text) => Math.min(
+    POP_LANGUAGE_HARD_CAP,
+    POP_READ_BASE + POP_READ_PER_WORD * phraseWords(text),
+  );
+  const bilingualKey = (tid, idx, item) => `${tid}:${item?.id || idx}`;
+  const phraseStateText = (item, translated = false) => {
+    const shown = translated ? { ...item, phrase: item.translation, verbatim: false } : item;
+    const text = phraseText(shown);
+    return shown.verbatim ? `“${text}”` : text;
+  };
+  function phraseStateHtml(item, translated = false) {
+    return `${kindIcon(item.kind)}<span class="pop-words">${esc(phraseStateText(item, translated))}</span>`;
+  }
+
+  function queueTranslatedAppearance(rec, item) {
+    state.pop.bilingualNext.set(bilingualKey(rec.tid, rec.idx, item), {
+      tid: rec.tid, idx: rec.idx, itemId: item.id,
+    });
+  }
+
+  function morphPopLanguage(rec, item, translated, done) {
+    if (rec.el.classList.contains("pop-out")) return;
+    const words = rec.el.querySelector(".pop-words");
+    if (!words) return;
+    const from = Array.from(words.textContent || "");
+    const to = Array.from(phraseStateText(item, translated));
+    const slots = Math.max(from.length, to.length);
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    rec.languagePhase = translated ? "morph-translation" : "morph-original";
+    rec.el.classList.add("pop-language-morph");
+
+    const finish = () => {
+      words.textContent = to.join("");
+      rec.el.classList.remove("pop-language-morph");
+      rec.languagePhase = translated ? "translation" : "original";
+      if (translated) {
+        state.pop.shownTranslation.set(bilingualKey(rec.tid, rec.idx, item), item.translation);
+      }
+      done?.();
+    };
+    if (reduceMotion || !slots || POP_TRANSITION_MS <= 0) { finish(); return; }
+
+    let revealed = 0;
+    const draw = () => {
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < slots; i++) {
+        const letter = document.createElement("span");
+        letter.className = "pop-letter" + (i === revealed - 1 ? " pop-letter-new" : "");
+        letter.textContent = i < revealed ? (to[i] || "") : (from[i] || "");
+        fragment.appendChild(letter);
+      }
+      words.replaceChildren(fragment);
+    };
+    const step = () => {
+      revealed += 1;
+      draw();
+      if (revealed >= slots) { finish(); return; }
+      armPopTimer(rec, "morphTimer", step, POP_TRANSITION_MS / slots);
+    };
+    armPopTimer(rec, "morphTimer", step, POP_TRANSITION_MS / slots);
+  }
+
+  function scheduleBilingualHandoff(rec, item) {
+    if (!item?.translation || rec.languagePhase !== "original" || rec.languageTimer) return;
+    const originalMs = languageReadMs(item.phrase);
+    const translatedMs = languageReadMs(item.translation);
+    const elapsed = Date.now() - rec.startedAt;
+    const handoffIn = Math.max(0, originalMs - elapsed);
+    if (rec.pinned) {
+      const cycle = (translated) => {
+        const current = currentItem(rec) || item;
+        if (!current.translation) return;
+        morphPopLanguage(rec, current, translated, () => {
+          armPopTimer(
+            rec,
+            "languageTimer",
+            () => cycle(!translated),
+            languageReadMs(translated ? current.translation : current.phrase),
+          );
+        });
+      };
+      armPopTimer(rec, "languageTimer", () => cycle(true), handoffIn);
+      return;
+    }
+    const fits = elapsed + handoffIn + POP_TRANSITION_MS + translatedMs <= POP_RESIDENCY_CAP;
+    if (!fits) {
+      queueTranslatedAppearance(rec, item);
+      return;
+    }
+    clearTimeout(rec.timer);
+    rec.timer = null;
+    armPopTimer(rec, "languageTimer", () => {
+      const current = currentItem(rec) || item;
+      morphPopLanguage(rec, current, true, () => {
+        armPopTimer(rec, "timer", rec.beginFade, languageReadMs(current.translation));
+      });
+    }, handoffIn);
+  }
+
   // Redraw the phrases on stage from the data as it is now: an icon and
   // quotation marks the second pass just earned, or a fade for a phrase it
   // held back.
@@ -1476,12 +1720,28 @@
       if (rec.el.classList.contains("pop-out")) continue;
       const item = currentItem(rec);
       if (!item) { rec.beginFade?.(); continue; }
+      const sourceChanged = item.phrase !== rec.sourcePhrase;
+      const targetChanged = item.translation_language !== rec.translationLanguage;
+      if (sourceChanged || targetChanged || (rec.languagePhase !== "original" && !item.translation)) {
+        clearTimeout(rec.languageTimer);
+        rec.languageTimer = null;
+        clearTimeout(rec.morphTimer);
+        rec.morphTimer = null;
+        rec.el.classList.remove("pop-language-morph");
+        rec.languagePhase = "original";
+        rec.sourcePhrase = item.phrase;
+        rec.translationLanguage = item.translation_language;
+        rec.startedAt = Date.now();
+        state.pop.bilingualNext.delete(bilingualKey(rec.tid, rec.idx, item));
+        armPopTimer(rec, "timer", rec.beginFade, languageReadMs(item.phrase));
+      }
       const phrase = rec.el.querySelector(".pop-phrase");
-      const html = `${kindIcon(item.kind)}${quotedPhrase(item)}`;
-      if (phrase && phrase.innerHTML !== html) phrase.innerHTML = html;
+      const html = phraseStateHtml(item, rec.languagePhase === "translation");
+      if (phrase && !rec.languagePhase.startsWith("morph-") && phrase.innerHTML !== html) phrase.innerHTML = html;
       const rooted = !!(item.quoteId && quoteById(item.quoteId));
       rec.el.classList.toggle("pop-rooted", rooted);
       rec.el.classList.toggle("pop-sourced", !rooted && !!(item.source && item.source.text));
+      scheduleBilingualHandoff(rec, item);
     }
   }
 
@@ -1654,7 +1914,11 @@
     const up = state.pop.live.find((l) => l.tid === tid && l.idx === idx);
     if (up) {
       if (toggle) leaveNow(up);
-      else if (up.beginFade) { clearTimeout(up.timer); up.el.classList.remove("pop-out"); up.timer = setTimeout(up.beginFade, POP_HOLD_PINNED); }
+      else if (up.beginFade) {
+        clearTimeout(up.timer);
+        up.el.classList.remove("pop-out");
+        armPopTimer(up, "timer", up.beginFade, POP_HOLD_PINNED);
+      }
     } else {
       const staying = state.pop.live.filter((l) => !l.el.classList.contains("pop-out"));
       while (staying.length >= POP_CAP) leaveNow(staying.shift());
@@ -2058,6 +2322,28 @@
     const notLast = (list) => list.find((id) => id !== state.pop.lastTid) ?? list[0];
     const len = (tid) => state.popcorn.get(tid)?.items?.length || 0;
 
+    // A translation that arrived too late, or whose full pair cannot fit the
+    // 24-second appearance budget, gets the next fair slot. Choose by the
+    // same least-recent conversation rule as fresh playback, so a busy table
+    // cannot starve the others and endless new originals cannot starve this.
+    const owed = [...state.pop.bilingualNext.entries()]
+      .filter(([, pick]) => {
+        const item = state.popcorn.get(pick.tid)?.items?.[pick.idx];
+        return item?.translation
+          && (!pick.itemId || item.id === pick.itemId)
+          && popVisible(pick.tid, pick.idx, ev)
+          && !isLive(pick.tid, pick.idx);
+      });
+    if (owed.length) {
+      owed.sort(([, a], [, b]) => byLeastRecent(a.tid, b.tid));
+      const [key, pick] = owed.find(([, p]) => p.tid !== state.pop.lastTid) || owed[0];
+      return {
+        ...pick,
+        translatedOnly: true,
+        commit: () => state.pop.bilingualNext.delete(key),
+      };
+    }
+
     // fresh: the next phrase this conversation has not shown yet, skipping what is hidden or cropped out
     const nextFresh = (tid) => {
       let idx = state.pop.fresh[tid] || 0;
@@ -2096,7 +2382,11 @@
   // phrase popped from the keys (pinned) lands anywhere free in the open
   // stage instead, tries a few spots to stay clear of the others, and
   // lingers far longer.
-  function spawnPop(stageEl, { tid, idx }, { center = false, pinned = false } = {}) {
+  function spawnPop(
+    stageEl,
+    { tid, idx, translatedOnly = false },
+    { center = false, pinned = false } = {},
+  ) {
     const item = state.popcorn.get(tid)?.items?.[idx];
     if (!item) return false;
 
@@ -2122,7 +2412,7 @@
     el.className = "pop" + (centerStage ? " center" : "") + (pinned ? " pinned" : "");
     el.dataset.weight = 2;   // one size; stepped down below only to fit
     el.style.setProperty("--tilt", `${hashTilt(item.phrase)}deg`);
-    el.innerHTML = `<span class="pop-phrase" style="--marker:${markerFor(tid)}">${kindIcon(item.kind)}${quotedPhrase(item)}</span>
+    el.innerHTML = `<span class="pop-phrase" aria-live="off" style="--marker:${markerFor(tid)}">${phraseStateHtml(item, translatedOnly)}</span>
       <span class="pop-att">${attribution(tid)}</span>`;
     stageEl.appendChild(el);
     // measure at the size it will settle at, not mid pop-in
@@ -2178,8 +2468,19 @@
     while (clashes() && w > 1) { el.dataset.weight = --w; clamp(); }
     el.style.animation = "";
 
-    const rec = { tid, idx, itemId: item.id, slot: slotIdx, el, pinned };
+    const rec = {
+      tid, idx, itemId: item.id, slot: slotIdx, el, pinned,
+      startedAt: Date.now(),
+      languagePhase: translatedOnly ? "translation" : "original",
+      sourcePhrase: item.phrase,
+      translationLanguage: item.translation_language,
+    };
     state.pop.live.push(rec);
+    if (!translatedOnly) {
+      state.pop.shownOriginal.set(bilingualKey(tid, idx, item), item.phrase);
+    } else if (item.translation) {
+      state.pop.shownTranslation.set(bilingualKey(tid, idx, item), item.translation);
+    }
     state.pop.lastSpawn = Date.now();
     if (!pinned) {
       state.pop.lastTid = tid;
@@ -2188,28 +2489,52 @@
     markDotsOnStage();
 
     const beginFade = () => {
+      clearTimeout(rec.languageTimer);
+      rec.languageTimer = null;
+      clearTimeout(rec.morphTimer);
+      rec.morphTimer = null;
+      rec.el.classList.remove("pop-language-morph");
       el.classList.add("pop-out");
       markDotsOnStage();
-      rec.timer = setTimeout(() => {
+      armPopTimer(rec, "timer", () => {
         el.remove();
         state.pop.live = state.pop.live.filter((l) => l !== rec);
       }, POP_FADE + 100);
     };
     rec.beginFade = beginFade;   // the freeze needs to stop and restart this
-    rec.timer = setTimeout(beginFade, pinned ? POP_HOLD_PINNED : POP_HOLD);
+    armPopTimer(
+      rec,
+      "timer",
+      beginFade,
+      pinned
+        ? POP_HOLD_PINNED
+        : languageReadMs(translatedOnly ? item.translation : item.phrase),
+    );
+    if (!translatedOnly) scheduleBilingualHandoff(rec, item);
 
     // hovering a popcorn holds it on stage; rooted popcorns raise their quote
     el.addEventListener("mouseenter", () => {
       clearTimeout(rec.timer);
+      rec.timer = null;
       el.classList.remove("pop-out");
     });
     el.addEventListener("mouseleave", () => {
-      if (!screenFrozen) rec.timer = setTimeout(beginFade, pinned ? POP_HOLD_PINNED : 3500);
+      if (!screenFrozen) armPopTimer(rec, "timer", beginFade, pinned ? POP_HOLD_PINNED : 3500);
     });
     // The opening click must not also read as a click outside the modal. The
     // item is read at click time: the second pass may have rooted it since.
     el.classList.toggle("pop-rooted", !!rooted);
     if (!rooted && item.source && item.source.text) el.classList.add("pop-sourced");
+    if (rooted || (item.source && item.source.text)) {
+      el.tabIndex = 0;
+      el.addEventListener("focus", () => {
+        clearTimeout(rec.timer);
+        rec.timer = null;
+      });
+      el.addEventListener("blur", () => {
+        if (!screenFrozen) armPopTimer(rec, "timer", beginFade, pinned ? POP_HOLD_PINNED : 3500);
+      });
+    }
     el.addEventListener("click", (ev) => {
       const cur = currentItem(rec) || item;
       if (cur.quoteId && quoteById(cur.quoteId)) {
@@ -4196,44 +4521,49 @@
 
   /* ---------- boot ---------- */
 
-  /* One stream for live data. Every update reads the session, the slides and
-     the popcorn files once. The server opens each stream with `connected`,
-     also after a reconnect, and that reads everything too: an update sent
-     while the stream was down is not replayed. */
+  /* Every live-data signal enters the same delayed reader. The delay steps
+     past the server's bundle cache; coalescing and serialization keep bursts
+     from rebuilding the stage concurrently. A shell command uses this path
+     too, so an embedded deck needs no second event stream. */
+  let eventRefreshTimer = null;
+  let eventRefreshReading = false;
+  let eventRefreshAgain = false;
+  const laterEventRefresh = () => EVENT_READ_DELAY_MS + Math.random() * EVENT_READ_JITTER_MS;
+  const readEventRefresh = async () => {
+    if (eventRefreshReading) { eventRefreshAgain = true; return; }
+    eventRefreshReading = true;
+    try {
+      bundleCache = { at: 0, promise: null };
+      await loadAll();
+      // loadAll has settled this read's bundle; the popcorn files come from
+      // it too, however long drawing the slides took.
+      bundleCache.at = Date.now();
+      await pollPopcorn();
+    } finally {
+      eventRefreshReading = false;
+      if (eventRefreshAgain) {
+        eventRefreshAgain = false;
+        scheduleEventRefresh(EVENT_READ_DELAY_MS);
+      }
+    }
+  };
+  const scheduleEventRefresh = (delay = laterEventRefresh()) => {
+    if (eventRefreshTimer) return;
+    eventRefreshTimer = setTimeout(() => {
+      eventRefreshTimer = null;
+      readEventRefresh().catch(() => {});
+    }, delay);
+  };
+
+  /* A standalone deck owns one stream. The server opens each stream with
+     `connected`, also after a reconnect, so a missed update is recovered. */
   function followServerEvents() {
-    let timer = null;
-    let reading = false;
-    let readAgain = false;
     let retryMs = 1000;
     let open = false;
-    // Every read waits just past the server's bundle cache, a `connected` one
-    // too: a reconnect answered from a bundle cached a moment before the
-    // update it missed would stay stale with no event to follow. First paint
-    // does not wait, because the boot read below is already under way.
-    const later = () => EVENT_READ_DELAY_MS + Math.random() * EVENT_READ_JITTER_MS;
-    const read = async () => {
-      if (reading) { readAgain = true; return; }
-      reading = true;
-      try {
-        bundleCache = { at: 0, promise: null };
-        await loadAll();
-        // loadAll has settled this read's bundle; the popcorn files come from
-        // it too, however long drawing the slides took.
-        bundleCache.at = Date.now();
-        await pollPopcorn();
-      } finally {
-        reading = false;
-        if (readAgain) { readAgain = false; schedule(EVENT_READ_DELAY_MS); }
-      }
-    };
-    const schedule = (delay) => {
-      if (timer) return;
-      timer = setTimeout(() => { timer = null; read(); }, delay);
-    };
     const connect = () => {
       const source = new EventSource("events", { withCredentials: true });
-      source.addEventListener("connected", () => { retryMs = 1000; open = true; schedule(later()); });
-      source.addEventListener("update", () => schedule(later()));
+      source.addEventListener("connected", () => { retryMs = 1000; open = true; scheduleEventRefresh(); });
+      source.addEventListener("update", () => scheduleEventRefresh());
       source.onerror = () => {
         open = false;
         // A network drop reconnects on its own; a refused stream (session
@@ -4241,7 +4571,7 @@
         if (source.readyState !== EventSource.CLOSED) return;
         // A public deck the host stopped publishing is refused too: one read
         // finds out, and its answer swaps the old deck for the not-live page.
-        schedule(later());
+        scheduleEventRefresh();
         setTimeout(connect, retryMs);
         retryMs = Math.min(retryMs * 2, 30000);
       };
@@ -4249,16 +4579,72 @@
     connect();
     // A publish can fail and no later event is promised, so while the stream
     // is open the deck also reads once a minute. A safety net, not a poll.
-    setInterval(() => { if (open) schedule(later()); }, SAFETY_READ_MS);
+    setInterval(() => { if (open) scheduleEventRefresh(); }, SAFETY_READ_MS);
   }
 
   if (!EMBED) restoreLocal();
+  // A hidden audience renderer performs no playback work. This is also the
+  // pause path used when a browser tab is backgrounded; evidence uses the
+  // same timer-preserving freeze above.
+  document.addEventListener("visibilitychange", () => {
+    freezeScreen(document.hidden, "visibility");
+  });
+  // Versioned shell bridge. The server supplies both values in the embed
+  // config; source-window, origin and presentation identity all have to agree.
+  // Hidden renderers stay mounted to preserve stage position while doing no
+  // playback work.
+  addEventListener("message", (event) => {
+    if (!EMBED?.presentationId || event.source !== parent) return;
+    const expectedOrigin = EMBED.parentOrigin || location.origin;
+    const message = event.data;
+    if (event.origin !== expectedOrigin || !message || typeof message !== "object") return;
+    if (
+      message.source !== "dembrane-present-shell"
+      || message.version !== 1
+      || message.presentationId !== EMBED.presentationId
+    ) return;
+    if (message.command === "dismiss-opening") {
+      // Tab clicks leave a normal introduction; initial synthetic disclosure
+      // still requires its existing Continue flow before it may be dismissed.
+      if (!isSynthetic() || introDone) {
+        introDone = true;
+        closeIntroduction();
+      }
+      return;
+    }
+    if (message.command === "refresh") {
+      // Refresh without reloading the iframe or losing its stage. The shared
+      // scheduler waits out the bundle cache and serializes update bursts.
+      scheduleEventRefresh();
+      return;
+    }
+    if (message.command === "visibility" && typeof message.visible === "boolean") {
+      freezeScreen(!message.visible, "shell");
+      return;
+    }
+    if (message.command === "opening" && ["intro", "data"].includes(message.screen)) {
+      const screens = openingScreens();
+      const index = screens.findIndex((screen) => screen.kind === message.screen);
+      if (index >= 0) openIntroduction(index + 1, "push");
+      return;
+    }
+    if (
+      message.command === "block"
+      && ["popcorn", "stakeholders", "tensions"].includes(message.block)
+      && visibleSlides().some((slide) => slide.id === message.block)
+      && state.active !== message.block
+    ) {
+      // Ready/reconnect acknowledgements repeat the current command. They
+      // must not rebuild the stage or restart a bilingual reading interval.
+      showSlide(message.block, null, { replace: true });
+    }
+  });
   loadAll().then(() => {
     const { slide, sub } = parseHash();
     if (slide) showSlide(slide, sub, { replace: true });
   });
-  if (EVENTS) followServerEvents();
-  else if (LIVE) setInterval(async () => { await loadAll(); await pollPopcorn(); }, POLL_MS);
+  if (EVENTS && !EMBED?.presentationId) followServerEvents();
+  else if (LIVE && !EMBED?.presentationId) setInterval(async () => { await loadAll(); await pollPopcorn(); }, POLL_MS);
   else if (!EMBED) setInterval(loadAll, POLL_MS);
   setInterval(popTick, 300);
 })();

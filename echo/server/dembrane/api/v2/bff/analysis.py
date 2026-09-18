@@ -15,9 +15,10 @@ import uuid
 import logging
 from typing import Any, Literal
 
-from fastapi import Query, APIRouter, HTTPException, status
+from fastapi import Query, Depends, APIRouter, HTTPException, status
 from pydantic import Field, BaseModel
 
+from dembrane.analysis import store as analysis_store
 from dembrane.analysis.store import SqlAnalysisStore
 from dembrane.api.rate_limit import RedisUserRateLimiter
 from dembrane.map.fact_check import ASSESSMENT_RECIPE_ID
@@ -41,13 +42,18 @@ from dembrane.analysis.map_view import (
     current_map_snapshot,
 )
 from dembrane.analysis.registry import recipes_metadata
+from dembrane.api.feature_flags import require_present_enabled
 from dembrane.analysis.contracts import (
     Run,
     Step,
     AnalysisStore,
+    ObjectRevision,
+    RevisionConflict,
     AnalysisStoreError,
+    ReferenceViolation,
     AnalysisValidationError,
 )
+from dembrane.analysis.revisions import RevisionService
 from dembrane.api.v2.bff._access import ResourceAccess, resolve_project_access
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
@@ -64,6 +70,7 @@ INTERNAL_RECIPES = frozenset({ASSESSMENT_RECIPE_ID})
 # Client idempotency keys live apart from the keys the platform makes itself.
 CLIENT_KEY_PREFIX = "client:"
 MAX_PAGE = 200
+EDITABLE_TYPES = frozenset({"argument", "popcorn", "stakeholder", "tension"})
 
 
 def get_store() -> AnalysisStore:
@@ -174,6 +181,19 @@ def run_doc(run: Run, steps: list[Step] | None = None) -> dict[str, Any]:
     return doc
 
 
+def revision_doc(revision: ObjectRevision) -> dict[str, Any]:
+    return {
+        **revision.envelope(),
+        "revisionNumber": revision.revision_number,
+        "status": str(revision.status),
+        "reason": revision.reason,
+        "publishedAt": _iso(revision.published_at),
+        "membershipExcluded": bool(
+            revision.provenance.extra.get("membershipExcluded")
+        ),
+    }
+
+
 # ── recipes ─────────────────────────────────────────────────────────────
 
 
@@ -195,6 +215,24 @@ class RunCreate(BaseModel):
     idempotency_key: str | None = Field(default=None, min_length=8, max_length=200)
     refresh_dependencies: bool = False
     retry_run_id: str | None = None
+
+
+class RevisionEdit(BaseModel):
+    expected_revision_id: str
+    payload: dict[str, Any]
+    reason: str | None = Field(default=None, max_length=1000)
+
+
+class RevisionRollback(BaseModel):
+    expected_revision_id: str
+    to_revision_id: str
+    reason: str | None = Field(default=None, max_length=1000)
+
+
+class MembershipDecision(BaseModel):
+    expected_revision_id: str
+    excluded: bool
+    reason: str | None = Field(default=None, max_length=1000)
 
 
 @router.post("/projects/{project_id}/runs", status_code=status.HTTP_202_ACCEPTED)
@@ -255,6 +293,74 @@ async def get_analysis_run(run_id: str, auth: DependencyDirectusSession) -> dict
     return {"run": run_doc(run, steps)}
 
 
+async def _project_runs(
+    store: AnalysisStore, project_id: str, *, offset: int, limit: int
+) -> tuple[list[Run], int]:
+    """Bounded project history without widening the shared store contract yet.
+
+    The in-memory store branch keeps the API unit-testable. Production uses
+    the SQL store's existing cursor and row mapper; this stays local to the
+    BFF until run-history reads are needed by another service.
+    """
+    in_memory = getattr(store, "runs", None)
+    if isinstance(in_memory, dict):
+        rows = [run for run in in_memory.values() if run.project_id == project_id]
+        rows.sort(key=lambda run: (str(run.created_at or ""), run.id), reverse=True)
+        return rows[offset : offset + limit], len(rows)
+    if not isinstance(store, SqlAnalysisStore):
+        raise AnalysisStoreError("run history is unavailable")
+    async with store._cursor() as cursor:  # noqa: SLF001 - local BFF read adapter
+        await cursor.execute(
+            "SELECT COUNT(*) AS total FROM analysis_run WHERE project_id = %s",
+            (project_id,),
+        )
+        count = await cursor.fetchone()
+        await cursor.execute(
+            f"""SELECT {analysis_store.RUN_COLUMNS} FROM analysis_run
+                WHERE project_id = %s
+                ORDER BY created_at DESC, id DESC
+                OFFSET %s LIMIT %s""",
+            (project_id, offset, limit),
+        )
+        rows = await cursor.fetchall()
+    return [analysis_store._run(row) for row in rows], int((count or {}).get("total", 0))
+
+
+@router.get("/projects/{project_id}/runs")
+async def list_analysis_runs(
+    project_id: str,
+    auth: DependencyDirectusSession,
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=MAX_PAGE),
+) -> dict[str, Any]:
+    """Newest-first processing history for one readable project."""
+    access = await _readable(project_id, auth)
+    try:
+        store = get_store()
+        runs, total = await _project_runs(store, project_id, offset=offset, limit=limit)
+        scopes = {
+            run.scope_id: await store.get_scope(run.scope_id)
+            for run in runs
+        }
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    return {
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+        "canRun": access.allows("project:update"),
+        "runs": [
+            {
+                **run_doc(run),
+                "scopeKey": scopes[run.scope_id].scope_key
+                if scopes.get(run.scope_id)
+                else None,
+            }
+            for run in runs
+        ],
+    }
+
+
 @router.post("/runs/{run_id}/cancel")
 async def cancel_analysis_run(run_id: str, auth: DependencyDirectusSession) -> dict[str, Any]:
     run, access = await _run(run_id, auth)
@@ -276,13 +382,14 @@ async def list_analysis_objects(
     type: str | None = Query(default=None),  # noqa: A002
     scope: str | None = Query(default=None),
     snapshot_id: str | None = Query(default=None),
+    membership: Literal["active", "withdrawn", "all"] = Query(default="active"),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=50, ge=1, le=MAX_PAGE),
 ) -> dict[str, Any]:
     """One page of the objects a map snapshot pins (the current one unless
     `snapshot_id` names another), with counts per type: the list an over-budget
     scope shows instead of a graph. No vectors."""
-    await _readable(project_id, auth)
+    access = await _readable(project_id, auth)
     if type is not None and type not in MAP_TYPES:
         raise HTTPException(status_code=422, detail=f"unknown object type {type!r}")
     store = get_store()
@@ -294,9 +401,35 @@ async def list_analysis_objects(
         else:
             snapshot = await current_map_snapshot(project_id, store=store, reads=get_reads(), follow=False)
         if snapshot is None:
-            return {"snapshotId": None, "counts": {t: 0 for t in MAP_TYPES}, "total": 0, "offset": offset, "limit": limit, "items": []}
-        entries = [o for o in snapshot.manifest.get("objects") or [] if o.get("type") in MAP_TYPES]
-        if scope:
+            entries = []
+        else:
+            entries = [
+                o
+                for o in snapshot.manifest.get("objects") or []
+                if o.get("type") in MAP_TYPES
+            ]
+        if membership != "active":
+            current = await store.current_revisions(project_id)
+            withdrawn = [
+                {
+                    "objectId": revision.object_id,
+                    "revisionId": revision.id,
+                    "type": revision.type,
+                }
+                for revision in current.values()
+                if revision.type in MAP_TYPES
+                and revision.provenance.extra.get("membershipExcluded")
+            ]
+            if membership == "withdrawn":
+                entries = withdrawn
+            else:
+                active_ids = {str(entry["objectId"]) for entry in entries}
+                entries.extend(
+                    entry
+                    for entry in withdrawn
+                    if str(entry["objectId"]) not in active_ids
+                )
+        if scope and snapshot is not None:
             members = await scope_object_ids(snapshot, scope, store=store)
             entries = [o for o in entries if str(o["objectId"]) in members]
         counts = {t: 0 for t in MAP_TYPES}
@@ -323,17 +456,27 @@ async def list_analysis_objects(
                 "revisionId": revision.id,
                 "type": revision.type,
                 "label": label_of(revision),
+                "payload": revision.payload,
+                "membershipExcluded": bool(
+                    revision.provenance.extra.get("membershipExcluded")
+                ),
                 "detail": project_detail(revision),
                 "attributes": revision.attributes,
-                "provenance": provenance_doc(revision),
+                "provenance": {
+                    **provenance_doc(revision),
+                    "sourceRefs": [
+                        source.as_json() for source in revision.provenance.source_refs
+                    ],
+                },
             }
         )
     return {
-        "snapshotId": snapshot.id,
+        "snapshotId": snapshot.id if snapshot else None,
         "counts": counts,
         "total": len(entries),
         "offset": offset,
         "limit": limit,
+        "canEdit": access.allows("project:update"),
         "items": items,
     }
 
@@ -359,17 +502,126 @@ async def get_object_history(project_id: str, object_id: str, auth: DependencyDi
             "revisionCount": record.revision_count,
         },
         "revisions": [
-            {
-                **revision.envelope(),
-                "revisionNumber": revision.revision_number,
-                "status": str(revision.status),
-                "reason": revision.reason,
-                "publishedAt": _iso(revision.published_at),
-            }
+            revision_doc(revision)
             for rid in ids
             if (revision := revisions.get(rid)) is not None
         ],
     }
+
+
+async def _editable_object(
+    project_id: str, object_id: str, auth: DependencyDirectusSession
+) -> tuple[Any, ResourceAccess]:
+    access = await _readable(project_id, auth)
+    access.require("project:update")
+    try:
+        record = await get_store().get_object(object_id) if _is_uuid(object_id) else None
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    if record is None or record.project_id != project_id:
+        raise _not_found("Object")
+    if record.type not in EDITABLE_TYPES:
+        raise HTTPException(status_code=422, detail="This result type is read-only.")
+    return record, access
+
+
+def _revision_conflict(exc: RevisionConflict) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={
+            "message": "This result changed while you were reviewing it.",
+            "objectId": exc.object_id,
+            "expectedRevisionId": exc.expected_revision_id,
+            "current": revision_doc(exc.current) if exc.current else None,
+        },
+    )
+
+
+@router.post(
+    "/projects/{project_id}/objects/{object_id}/revisions",
+    dependencies=[Depends(require_present_enabled)],
+)
+async def edit_analysis_object(
+    project_id: str,
+    object_id: str,
+    body: RevisionEdit,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    await _editable_object(project_id, object_id, auth)
+    try:
+        revision = await RevisionService(get_store()).author_edit(
+            project_id=project_id,
+            object_id=object_id,
+            expected_revision_id=body.expected_revision_id,
+            payload=body.payload,
+            actor_id=auth.user_id,
+            reason=body.reason,
+        )
+    except RevisionConflict as exc:
+        raise _revision_conflict(exc) from exc
+    except ReferenceViolation as exc:
+        raise _not_found("Revision") from exc
+    except AnalysisValidationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"revision": revision_doc(revision)}
+
+
+@router.post(
+    "/projects/{project_id}/objects/{object_id}/rollback",
+    dependencies=[Depends(require_present_enabled)],
+)
+async def rollback_analysis_object(
+    project_id: str,
+    object_id: str,
+    body: RevisionRollback,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    await _editable_object(project_id, object_id, auth)
+    try:
+        revision = await RevisionService(get_store()).rollback(
+            project_id=project_id,
+            object_id=object_id,
+            to_revision_id=body.to_revision_id,
+            expected_revision_id=body.expected_revision_id,
+            actor_id=auth.user_id,
+            reason=body.reason,
+        )
+    except RevisionConflict as exc:
+        raise _revision_conflict(exc) from exc
+    except ReferenceViolation as exc:
+        raise _not_found("Revision") from exc
+    except AnalysisValidationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"revision": revision_doc(revision)}
+
+
+@router.post(
+    "/projects/{project_id}/objects/{object_id}/membership",
+    dependencies=[Depends(require_present_enabled)],
+)
+async def set_analysis_object_membership(
+    project_id: str,
+    object_id: str,
+    body: MembershipDecision,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    await _editable_object(project_id, object_id, auth)
+    try:
+        revision = await RevisionService(get_store()).set_excluded(
+            project_id=project_id,
+            object_id=object_id,
+            expected_revision_id=body.expected_revision_id,
+            excluded=body.excluded,
+            actor_id=auth.user_id,
+            reason=body.reason,
+        )
+    except RevisionConflict as exc:
+        raise _revision_conflict(exc) from exc
+    except ReferenceViolation as exc:
+        raise _not_found("Revision") from exc
+    except AnalysisValidationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"revision": revision_doc(revision)}
 
 
 @router.get("/snapshots/{snapshot_id}/revisions/{revision_id}/lineage")
