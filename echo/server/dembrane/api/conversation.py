@@ -1281,8 +1281,24 @@ async def delete_conversation(
     await raise_if_conversation_not_found_or_not_authorized(
         conversation_id, auth, require="conversation:delete"
     )
+
+    from dembrane.api.participant import _meter
+
+    # Read the project before the delete so the live entry can be released after.
+    project_id: Optional[str] = None
+    try:
+        row = await run_in_thread_pool(conversation_service.get_by_id_or_raise, conversation_id)
+        project_id = (row or {}).get("project_id")
+        if isinstance(project_id, dict):
+            project_id = project_id.get("id")
+    except Exception:  # noqa: BLE001
+        project_id = None
+
     try:
         await run_in_thread_pool(conversation_service.delete, conversation_id)
+
+        if project_id:
+            await _meter(project_id, conversation_id, "close")
 
         try:
             await _invalidate_usage_cache_for_conversation(conversation_id)

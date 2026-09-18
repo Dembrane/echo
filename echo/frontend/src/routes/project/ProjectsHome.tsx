@@ -41,10 +41,10 @@ import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
-import { isOutsiderRole } from "@/lib/roles";
 import { Icons } from "@/icons";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { getDirectusErrorString } from "@/lib/directus";
+import { isOutsiderRole, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
 
@@ -212,6 +212,8 @@ export const ProjectsHomeRoute = () => {
 	const isOutsider = isOutsiderRole(workspace?.role);
 	const canCreateProject = !isOutsider && !user.data?.disable_create_project;
 	const canPinOnThisWorkspace = !isOutsider;
+	// Observers lack project:update; externals keep it.
+	const canEditProjects = !!workspace && !isReadOnlyRole(workspace.role);
 	const totallyEmpty =
 		allProjects.length === 0 &&
 		debouncedSearchValue === "" &&
@@ -479,6 +481,7 @@ export const ProjectsHomeRoute = () => {
 													}
 													isPinned={pinnedIds.has(project.id)}
 													canPin={canPin && canPinOnThisWorkspace}
+													canEdit={canEditProjects}
 													onSearchOwner={
 														isAdmin ? handleSearchOwner : undefined
 													}

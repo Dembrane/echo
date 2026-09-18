@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
 	Badge,
 	Button,
 	Card,
@@ -10,30 +11,43 @@ import {
 	Stack,
 	Text,
 	Title,
+	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
 	ChatCircleDotsIcon,
 	FileTextIcon,
 	PaintBrushIcon,
+	PencilSimpleIcon,
+	TargetIcon,
+	TextAaIcon,
 	UploadSimpleIcon,
 } from "@phosphor-icons/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router";
+import { InputModal } from "@/components/common/InputModal";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useInfiniteConversationsByProjectId } from "@/components/conversation/hooks";
 import { LiveMonitorSection } from "@/components/conversation/LiveMonitorSection";
 import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { getConversationStartTime } from "@/components/conversation/utils";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { useProjectById } from "@/components/project/hooks";
+import {
+	useProjectById,
+	useUpdateProjectByIdMutation,
+} from "@/components/project/hooks";
+import { KEY_TERMS_HASH } from "@/components/project/KeyTermsInput";
 import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
 import { ProjectHostGuideLink } from "@/components/project/ProjectHostGuideLink";
+import { PROJECT_CONTEXT_HASH } from "@/components/project/ProjectContextInput";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { ENABLE_MONITOR } from "@/config";
 import { useConversationMonitor } from "@/hooks/useConversationMonitor";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { isReadOnlyRole } from "@/lib/roles";
+import { testId } from "@/lib/testUtils";
 import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 
 const lineClampStyle = {
@@ -61,6 +75,12 @@ export const ProjectHomeRoute = () => {
 	const navigate = useI18nNavigate();
 	const { workspace } = useWorkspace();
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	const [renameOpened, renameHandlers] = useDisclosure(false);
+	const queryClient = useQueryClient();
+	const updateProject = useUpdateProjectByIdMutation();
+	// Observers lack project:update, so the rename and settings affordances
+	// are hidden rather than shown and answered with a 403.
+	const canEditProject = !!workspace && !isReadOnlyRole(workspace.role);
 
 	const projectQuery = useProjectById({
 		projectId: projectId ?? "",
@@ -116,9 +136,25 @@ export const ProjectHomeRoute = () => {
 			<Stack gap="xl">
 				<Stack gap={4}>
 					{project?.name ? (
-						<Title order={2} fw={500} style={{ color: "#2d2d2c" }}>
-							{project.name}
-						</Title>
+						<Group gap="xs" align="center" wrap="nowrap">
+							<Title order={2} fw={500} lineClamp={1}>
+								{project.name}
+							</Title>
+							{canEditProject && (
+								<Tooltip label={t`Rename project`}>
+									<ActionIcon
+										variant="subtle"
+										color="gray"
+										size="md"
+										aria-label={t`Rename project`}
+										onClick={renameHandlers.open}
+										{...testId("project-home-rename-button")}
+									>
+										<PencilSimpleIcon size={18} />
+									</ActionIcon>
+								</Tooltip>
+							)}
+						</Group>
 					) : (
 						<Skeleton height={32} width={240} />
 					)}
@@ -150,7 +186,7 @@ export const ProjectHomeRoute = () => {
 							variant="outline"
 							onClick={() => navigate(`${base}/upload`)}
 						>
-							<Trans>Upload</Trans>
+							<Trans>Upload audio</Trans>
 						</Button>
 						<Button
 							size="sm"
@@ -169,6 +205,32 @@ export const ProjectHomeRoute = () => {
 						>
 							<Trans>Report</Trans>
 						</Button>
+						{canEditProject && (
+							<>
+								<Button
+									size="sm"
+									leftSection={<TextAaIcon size={16} />}
+									variant="outline"
+									onClick={() =>
+										navigate(`${base}/portal-editor#${KEY_TERMS_HASH}`)
+									}
+									{...testId("project-home-set-key-terms")}
+								>
+									<Trans>Set key terms</Trans>
+								</Button>
+								<Button
+									size="sm"
+									leftSection={<TargetIcon size={16} />}
+									variant="outline"
+									onClick={() =>
+										navigate(`${base}/overview#${PROJECT_CONTEXT_HASH}`)
+									}
+									{...testId("project-home-set-project-context")}
+								>
+									<Trans>Set project context</Trans>
+								</Button>
+							</>
+						)}
 					</Group>
 				</Stack>
 
@@ -322,6 +384,35 @@ export const ProjectHomeRoute = () => {
 					</Stack>
 				)}
 			</Stack>
+			<InputModal
+				opened={renameOpened}
+				onClose={renameHandlers.close}
+				title={t`Rename project`}
+				label={<Trans>Project name</Trans>}
+				initialValue={project?.name ?? ""}
+				loading={updateProject.isPending}
+				onConfirm={(name) => {
+					if (!projectId || name === project?.name) {
+						renameHandlers.close();
+						return;
+					}
+					updateProject.mutate(
+						{ id: projectId, payload: { name } },
+						{
+							onSuccess: () => {
+								// Project lists on the workspace home and sidebar read
+								// the name from this cache, not from ["projects", id].
+								queryClient.invalidateQueries({
+									queryKey: ["v2", "workspace-projects"],
+								});
+								renameHandlers.close();
+							},
+						},
+					);
+				}}
+				data-testid="project-rename-modal"
+			/>
+
 			<UpgradeModal
 				opened={upgradeOpened}
 				onClose={upgradeHandlers.close}

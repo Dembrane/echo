@@ -22,6 +22,7 @@ import { initiateConversation as requestConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { getVisitorId } from "@/lib/visitorId";
 import { useInitiateConversationMutation } from "./hooks";
+import { resolvePortalMode } from "./recordingCap";
 
 const FormSchema = z.object({
 	email: z.string().optional(),
@@ -60,6 +61,11 @@ const autoStartedConversations = new Map<
 export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 	const navigate = useI18nNavigate();
 	const [searchParams] = useSearchParams();
+
+	// Text conversations never hold a recording slot, so they start with their
+	// own source and skip the concurrent recording cap on the server.
+	const portalMode = resolvePortalMode(searchParams);
+	const portalSource = portalMode === "text" ? "PORTAL_TEXT" : "PORTAL_AUDIO";
 
 	const defaultName =
 		searchParams.get("participant_name") ||
@@ -120,7 +126,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 
 			posthog.capture("conversation_started", {
 				project_id: project.id,
-				source: "PORTAL_AUDIO",
+				source: portalSource,
 			});
 			initiateConversation(
 				{
@@ -130,7 +136,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 					name: data.name ?? t`Participant`,
 					pin: "",
 					projectId: project.id,
-					source: "PORTAL_AUDIO",
+					source: portalSource,
 					tagIdList: data.tagIdList,
 					visitorId: getVisitorId(project.id),
 				},
@@ -141,7 +147,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 				},
 			);
 		},
-		[project.id, initiateConversation],
+		[project.id, initiateConversation, portalSource],
 	);
 
 	const nothingToAsk = portalHasNothingToAsk(project);
@@ -149,12 +155,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 
 	const goToConversation = useCallback(
 		(conversationId: string) => {
-			const mode =
-				searchParams.get("mode") ||
-				(searchParams.get("general_feedback") || searchParams.get("feedback")
-					? "text"
-					: "audio");
-			const pathSuffix = mode === "text" ? "/text" : "";
+			const pathSuffix = portalMode === "text" ? "/text" : "";
 			const searchStr = searchParams.toString();
 			const queryStr = searchStr ? `?${searchStr}` : "";
 
@@ -162,7 +163,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 				`/${project.id}/conversation/${conversationId}${pathSuffix}${queryStr}`,
 			);
 		},
-		[navigate, project.id, searchParams],
+		[navigate, portalMode, project.id, searchParams],
 	);
 
 	// Start on arrival when the host asked to skip onboarding and the required
@@ -189,14 +190,14 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		if (!pending) {
 			posthog.capture("conversation_started", {
 				project_id: project.id,
-				source: "PORTAL_AUDIO",
+				source: portalSource,
 			});
 			pending = requestConversation({
 				email: defaultEmail || undefined,
 				name: defaultName || t`Participant`,
 				pin: "",
 				projectId: project.id,
-				source: "PORTAL_AUDIO",
+				source: portalSource,
 				tagIdList: defaultTagIdList,
 				visitorId: getVisitorId(project.id),
 			});
@@ -230,6 +231,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		defaultTagIdList,
 		searchParams,
 		goToConversation,
+		portalSource,
 	]);
 
 	useEffect(() => {
