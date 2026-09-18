@@ -414,37 +414,35 @@ async def adopt_results(
             )
 
 
-def _curate_map(payload: dict[str, Any], settings: dict[str, Any] | None) -> dict[str, Any]:
-    hidden = set(((settings or {}).get("presentation") or {}).get("hidden_items") or [])
+def _without_nodes(payload: dict[str, Any], hidden: set[str]) -> dict[str, Any]:
+    """`payload` without the hidden objects' nodes, and without what only the
+    departed revisions carried. Fact checks are filtered where they are already
+    attached; curation runs before that, and adds no empty key of its own."""
     if not hidden:
         return payload
     nodes = [node for node in payload.get("nodes", []) if node.get("objectId") not in hidden]
     visible = {node["revisionId"] for node in nodes}
-    return {
+    projected = {
         **payload,
         "nodes": nodes,
         "unplaced": [rid for rid in payload.get("unplaced") or [] if rid in visible],
     }
+    if "fact_checks" in payload:
+        projected["fact_checks"] = {
+            rid: state for rid, state in (payload["fact_checks"] or {}).items() if rid in visible
+        }
+    return projected
+
+
+def _curate_map(payload: dict[str, Any], settings: dict[str, Any] | None) -> dict[str, Any]:
+    hidden = set(((settings or {}).get("presentation") or {}).get("hidden_items") or [])
+    return _without_nodes(payload, hidden)
 
 
 async def _withdraw_map(payload: dict[str, Any], project_id: str, store: Any) -> dict[str, Any]:
     from dembrane.analysis.snapshots import excluded_object_ids
 
-    excluded = await excluded_object_ids(project_id, store=store)
-    if not excluded:
-        return payload
-    nodes = [node for node in payload.get("nodes", []) if node.get("objectId") not in excluded]
-    visible = {node["revisionId"] for node in nodes}
-    return {
-        **payload,
-        "nodes": nodes,
-        "fact_checks": {
-            rid: state
-            for rid, state in (payload.get("fact_checks") or {}).items()
-            if rid in visible
-        },
-        "unplaced": [rid for rid in payload.get("unplaced") or [] if rid in visible],
-    }
+    return _without_nodes(payload, await excluded_object_ids(project_id, store=store))
 
 
 def audience_assessments(states: dict[str, Any], graph: dict[str, Any]) -> dict[str, Any]:

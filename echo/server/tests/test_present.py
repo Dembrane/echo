@@ -318,6 +318,55 @@ def test_map_projection_excludes_host_fields():
     assert result["nodes"][0]["label"] == "Finding"
 
 
+def test_map_hiding_takes_the_departed_revisions_with_it():
+    payload = {
+        "nodes": [
+            {"objectId": "keep", "revisionId": "r1"},
+            {"objectId": "gone", "revisionId": "r2"},
+        ],
+        "unplaced": ["r1", "r2"],
+    }
+    assert present._curate_map(payload, None) is payload
+    curated = present._curate_map(payload, {"presentation": {"hidden_items": ["gone"]}})
+    assert [node["objectId"] for node in curated["nodes"]] == ["keep"]
+    assert curated["unplaced"] == ["r1"]
+    # Curation runs before the fact checks are attached, so it invents no key.
+    assert "fact_checks" not in curated
+
+    class _Withdrawn:
+        async def current_revisions(self, project_id, scope_ids=None):  # noqa: ARG002
+            extra = {"membershipExcluded": True}
+            return {"gone": SimpleNamespace(provenance=SimpleNamespace(extra=extra))}
+
+    curated["fact_checks"] = {"r1": {"verdict": "true"}, "r2": {"verdict": "false"}}
+    withdrawn = asyncio.run(present._withdraw_map(curated, "p", _Withdrawn()))
+    assert withdrawn["fact_checks"] == {"r1": {"verdict": "true"}}
+    assert withdrawn["unplaced"] == ["r1"]
+
+
+def test_curating_the_bundle_drops_hidden_objects_and_their_relations():
+    from dembrane.popcorn.bundle import curate_presentation
+
+    bundle = {
+        "files": {
+            "popcorn.json": {"items": [{"objectId": "gone"}, {"objectId": "stays"}]},
+            "stakeholders.json": {
+                "stakeholders": [{"id": "a"}, {"id": "gone"}],
+                "relations": [{"between": ["a", "gone"]}, {"between": ["a", "a"]}],
+            },
+            "index.html": "<!doctype html>",
+        }
+    }
+    assert curate_presentation(bundle, {}) is bundle
+    files = curate_presentation(bundle, {"presentation": {"hidden_items": ["gone"]}})["files"]
+    assert files["popcorn.json"]["items"] == [{"objectId": "stays"}]
+    assert files["stakeholders.json"]["stakeholders"] == [{"id": "a"}]
+    assert files["stakeholders.json"]["relations"] == [{"between": ["a", "a"]}]
+    assert files["index.html"] == "<!doctype html>"
+    # The bundle handed in is left as it was; the caller may still be holding it.
+    assert len(bundle["files"]["popcorn.json"]["items"]) == 2
+
+
 class _Access:
     project = {"id": "p", "language": "nl"}
 

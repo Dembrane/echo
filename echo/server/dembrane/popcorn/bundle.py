@@ -157,8 +157,7 @@ async def assemble_deck_snapshot(
             view_id=DECK_VIEW_ID,
             scope_key=DECK_SCOPE_KEY,
             producers=tuple(
-                ProducerRef(str(head["recipe_id"]), str(head["scope_key"]))
-                for head in heads
+                ProducerRef(str(head["recipe_id"]), str(head["scope_key"])) for head in heads
             ),
             versions={"deckProjection": 1},
             source_event_id=source_event_id,
@@ -228,9 +227,7 @@ async def load_deck_objects(
         stakeholders=stakeholders,
         relations=list(contents.relations.values()),
         owns_tensions=any(p.get("recipeId") == TENSIONS_RECIPE_ID for p in producers),
-        owns_stakeholders=any(
-            p.get("recipeId") == STAKEHOLDERS_RECIPE_ID for p in producers
-        ),
+        owns_stakeholders=any(p.get("recipeId") == STAKEHOLDERS_RECIPE_ID for p in producers),
     )
 
 
@@ -494,16 +491,10 @@ async def published_bundle(
     )
 
 
-async def apply_shared_withdrawals(
-    bundle: dict[str, Any], project_id: str | None, *, store: AnalysisStore | None = None
-) -> dict[str, Any]:
-    """Remove current withdrawals even from an older presentation binding."""
-    if not project_id:
-        return bundle
-    from dembrane.analysis.executor import default_store
-
-    store = store or default_store()
-    hidden = await excluded_object_ids(project_id, store=store)
+def _without_objects(bundle: dict[str, Any], hidden: set[str]) -> dict[str, Any]:
+    """`bundle` without the hidden objects, wherever its files list them. A
+    stakeholder relation leaves with either of its ends: a line drawn to a
+    stakeholder who is no longer on the wall says something nobody meant."""
     if not hidden:
         return bundle
     files = {
@@ -516,9 +507,7 @@ async def apply_shared_withdrawals(
         for key in ("items", "tensions", "stakeholders"):
             if isinstance(file.get(key), list):
                 file[key] = [
-                    item
-                    for item in file[key]
-                    if item.get("objectId", item.get("id")) not in hidden
+                    item for item in file[key] if item.get("objectId", item.get("id")) not in hidden
                 ]
         if name == "stakeholders.json":
             kept = {item["id"] for item in file.get("stakeholders", [])}
@@ -528,6 +517,18 @@ async def apply_shared_withdrawals(
                 if all(end in kept for end in relation.get("between", []))
             ]
     return {**bundle, "files": files}
+
+
+async def apply_shared_withdrawals(
+    bundle: dict[str, Any], project_id: str | None, *, store: AnalysisStore | None = None
+) -> dict[str, Any]:
+    """Remove current withdrawals even from an older presentation binding."""
+    if not project_id:
+        return bundle
+    from dembrane.analysis.executor import default_store
+
+    store = store or default_store()
+    return _without_objects(bundle, await excluded_object_ids(project_id, store=store))
 
 
 # ── the bundle the pages read ────────────────────────────────────────────
@@ -655,28 +656,7 @@ register_snapshot_hook(deck_view_hook)
 def curate_presentation(bundle: dict[str, Any], settings: dict[str, Any]) -> dict[str, Any]:
     """Presentation-local hiding never withdraws a shared finding."""
     hidden = set((settings.get("presentation") or {}).get("hidden_items") or [])
-    if not hidden:
-        return bundle
-    files = {
-        name: dict(value) if isinstance(value, dict) else value
-        for name, value in bundle["files"].items()
-    }
-    for name, file in files.items():
-        if not isinstance(file, dict):
-            continue
-        for key in ("items", "tensions", "stakeholders"):
-            if isinstance(file.get(key), list):
-                file[key] = [
-                    item for item in file[key] if item.get("objectId", item.get("id")) not in hidden
-                ]
-        if name == "stakeholders.json":
-            kept = {item["id"] for item in file.get("stakeholders", [])}
-            file["relations"] = [
-                r
-                for r in file.get("relations", [])
-                if all(end in kept for end in r.get("between", []))
-            ]
-    return {**bundle, "files": files}
+    return _without_objects(bundle, hidden)
 
 
 async def apply_result_bindings(
