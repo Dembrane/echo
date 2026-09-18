@@ -3,6 +3,7 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
 	cleanup,
 	fireEvent,
@@ -93,12 +94,28 @@ beforeEach(() => {
 });
 
 describe("AudienceMapAdapter", () => {
-	const adapter = (active: boolean) => (
-		<I18nProvider i18n={i18n}>
-			<MantineProvider>
-				<AudienceMapAdapter active={active} endpoint="/audience/map" />
-			</MantineProvider>
-		</I18nProvider>
+	let client: QueryClient;
+
+	beforeEach(() => {
+		client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+	});
+
+	afterEach(() => {
+		client.clear();
+	});
+
+	const adapter = (active: boolean, revision = 0) => (
+		<QueryClientProvider client={client}>
+			<I18nProvider i18n={i18n}>
+				<MantineProvider>
+					<AudienceMapAdapter
+						active={active}
+						endpoint="/audience/map"
+						revision={revision}
+					/>
+				</MantineProvider>
+			</I18nProvider>
+		</QueryClientProvider>
 	);
 
 	it("does not request host capabilities while hidden and aborts an in-flight read", async () => {
@@ -121,6 +138,46 @@ describe("AudienceMapAdapter", () => {
 
 		view.rerender(adapter(false));
 		expect(signal?.aborted).toBe(true);
+	});
+
+	it("reads nothing while the Map tab is hidden, however many audience events arrive", async () => {
+		const fetchMock = vi.fn(
+			async () => new Response(JSON.stringify({}), { status: 200 }),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		const view = render(adapter(true, 1));
+		await screen.findByText("Audience tree renderer");
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+
+		view.rerender(adapter(false, 2));
+		view.rerender(adapter(false, 3));
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+
+		// The events that arrived while hidden are read once, on the way back.
+		view.rerender(adapter(true, 3));
+		await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+	});
+
+	it("keeps the graph on screen when a refetch fails", async () => {
+		let failNext = false;
+		const fetchMock = vi.fn(async () =>
+			failNext
+				? new Response("", { status: 503 })
+				: new Response(JSON.stringify({}), { status: 200 }),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		const view = render(adapter(true, 1));
+		expect(await screen.findByText("A result")).toBeTruthy();
+
+		failNext = true;
+		view.rerender(adapter(true, 2));
+		await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+		expect(screen.getByText("A result")).toBeTruthy();
+		expect(screen.getByText("Audience tree renderer")).toBeTruthy();
+		expect(screen.queryByText("The map could not be loaded.")).toBeNull();
 	});
 
 	it("disposes the geometry worker boundary when Map is hidden", async () => {

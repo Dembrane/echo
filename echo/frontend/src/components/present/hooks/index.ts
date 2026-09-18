@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { toast } from "@/components/common/Toaster";
 import type {
 	PopcornDetail,
@@ -45,7 +46,13 @@ export const useEnsurePresentation = (projectId: string) => {
 				`/present/projects/${encodeURIComponent(projectId)}/${prepare ? "start" : "default"}`,
 			),
 		onError: () => toast.error(t`Could not open the presentation. Try again.`),
-		onSuccess: (presentation) => {
+		onSuccess: (presentation, prepare) => {
+			// Ids and kinds only: never a title, a block's contents or a phrase.
+			posthog.capture("presentation_opened", {
+				prepared: prepare,
+				presentation_id: presentation.id,
+				project_id: projectId,
+			});
 			client.setQueryData(presentationKey(projectId), {
 				can_edit: true,
 				presentation,

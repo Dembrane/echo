@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useCallback } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
@@ -236,7 +237,12 @@ export function useAnalysisObjectHistory(projectId: string, objectId?: string) {
 	});
 }
 
-function useResultMutation(projectId: string, objectId: string, path: string) {
+function useResultMutation(
+	projectId: string,
+	objectId: string,
+	path: string,
+	event: string,
+) {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (body: Record<string, unknown>) =>
@@ -250,7 +256,17 @@ function useResultMutation(projectId: string, objectId: string, path: string) {
 			if (error.status === 409) return;
 			toast.error(t`Could not save the change. Try again.`);
 		},
-		onSuccess: () => {
+		onSuccess: ({ revision }, body) => {
+			// Ids and kinds only: never a payload field, a label or a review reason.
+			posthog.capture(event, {
+				object_id: objectId,
+				project_id: projectId,
+				result_type: revision.type,
+				// Withdrawn and restored are one event with a flag, not two.
+				...(typeof body.excluded === "boolean"
+					? { excluded: body.excluded }
+					: {}),
+			});
 			void queryClient.invalidateQueries({
 				queryKey: analysisKeys.history(projectId, objectId),
 			});
@@ -262,15 +278,30 @@ function useResultMutation(projectId: string, objectId: string, path: string) {
 }
 
 export function useEditAnalysisObject(projectId: string, objectId: string) {
-	return useResultMutation(projectId, objectId, "revisions");
+	return useResultMutation(
+		projectId,
+		objectId,
+		"revisions",
+		"analysis_result_edited",
+	);
 }
 
 export function useSetAnalysisMembership(projectId: string, objectId: string) {
-	return useResultMutation(projectId, objectId, "membership");
+	return useResultMutation(
+		projectId,
+		objectId,
+		"membership",
+		"analysis_result_membership_changed",
+	);
 }
 
 export function useRollbackAnalysisObject(projectId: string, objectId: string) {
-	return useResultMutation(projectId, objectId, "rollback");
+	return useResultMutation(
+		projectId,
+		objectId,
+		"rollback",
+		"analysis_result_rolled_back",
+	);
 }
 
 export function useAnalysisLineage(
@@ -302,8 +333,17 @@ export function useRequestAnalysisRun(projectId: string) {
 				idempotency_key: crypto.randomUUID(),
 			}),
 		onError: () => toast.error(t`Could not start this run. Try again.`),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: analysisKeys.runs(projectId) }),
+		onSuccess: (_data, body) => {
+			// Ids and kinds only: no scope key, no parameters, no participant text.
+			posthog.capture("analysis_run_requested", {
+				mode: body.mode ?? "refresh",
+				project_id: projectId,
+				recipe_id: body.recipe_id,
+			});
+			void queryClient.invalidateQueries({
+				queryKey: analysisKeys.runs(projectId),
+			});
+		},
 	});
 }
 
@@ -313,6 +353,11 @@ export function useCancelAnalysisRun(projectId: string) {
 		mutationFn: (runId: string) => bff.post(`/analysis/runs/${runId}/cancel`),
 		onError: () => toast.error(t`Could not stop this run. Try again.`),
 		onSuccess: (_data, runId) => {
+			// Ids only.
+			posthog.capture("analysis_run_cancelled", {
+				project_id: projectId,
+				run_id: runId,
+			});
 			queryClient.invalidateQueries({ queryKey: analysisKeys.runs(projectId) });
 			queryClient.invalidateQueries({ queryKey: analysisKeys.run(runId) });
 		},

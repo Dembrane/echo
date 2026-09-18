@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useRef } from "react";
 import type { PopcornSettingsPatch } from "@/components/popcorn/hooks";
 import { bff } from "@/lib/bff";
@@ -69,6 +70,11 @@ export function usePresentationDraft(
 			if (isConflict(error)) void client.invalidateQueries({ queryKey: key });
 		},
 		onSuccess: (draft) => {
+			// Ids only: never a title, a block's contents or a phrase.
+			posthog.capture("presentation_published", {
+				presentation_id: id,
+				project_id: projectId,
+			});
 			accept(draft);
 			client.invalidateQueries({ queryKey: presentationKey(projectId) });
 		},

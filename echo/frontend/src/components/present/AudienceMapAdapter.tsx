@@ -9,7 +9,8 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import {
 	budgetsToAdmit,
@@ -45,6 +46,31 @@ type AudienceMapAdapterProps = {
 
 type AudienceMapResponse = MapGraphResponse & {
 	fact_checks?: Record<string, unknown>;
+};
+
+/**
+ * The room's map lives outside the bff prefix (a public token, or a preview
+ * path), so the url is complete already and `bff.get` cannot build it. Errors
+ * carry `status` like bff's do, so callers read failures the same way.
+ *
+ * Null is "no snapshot yet" (404), which is a state of the room, not a failure.
+ */
+const readAudienceMap = async (
+	url: string,
+	signal: AbortSignal,
+): Promise<AudienceMapResponse | null> => {
+	const response = await fetch(url, {
+		credentials: "include",
+		headers: { Accept: "application/json" },
+		signal,
+	});
+	if (response.status === 404) return null;
+	if (!response.ok) {
+		throw Object.assign(new Error(`Map request failed (${response.status})`), {
+			status: response.status,
+		});
+	}
+	return (await response.json()) as AudienceMapResponse;
 };
 
 const FACT_CHECK_VERDICTS = new Set<FactCheckVerdict>([
@@ -352,13 +378,13 @@ export const AudienceMapAdapter = ({
 	revision = 0,
 	waitingLabel,
 }: AudienceMapAdapterProps) => {
-	const baseRequestKey = `${endpoint}:${revision}`;
+	const queryClient = useQueryClient();
 	const [admission, setAdmission] = useState<{
-		baseRequestKey: string;
+		endpoint: string;
 		budgets: MapBudgets;
 	} | null>(null);
 	const activeAdmission =
-		admission?.baseRequestKey === baseRequestKey ? admission.budgets : null;
+		admission?.endpoint === endpoint ? admission.budgets : null;
 	const requestEndpoint = useMemo(() => {
 		if (!activeAdmission) return endpoint;
 		const url = new URL(endpoint, globalThis.location.origin);
@@ -366,53 +392,70 @@ export const AudienceMapAdapter = ({
 		url.searchParams.set("edge_limit", String(activeAdmission.edgeLimit));
 		return url.toString();
 	}, [activeAdmission, endpoint]);
-	const requestKey = `${baseRequestKey}:${activeAdmission?.nodeLimit ?? "default"}:${activeAdmission?.edgeLimit ?? "default"}`;
-	const [result, setResult] = useState<{
-		requestKey: string;
-		error: string | null;
-		payload: AudienceMapResponse | null;
-	} | null>(null);
-	const current = result?.requestKey === requestKey ? result : null;
-	const payload = current?.payload ?? null;
-	const error = current?.error ?? null;
+	// `revision` is deliberately not in the key: a new audience event re-reads
+	// this same key, so the graph on the wall stays up while the read runs and
+	// survives a read that fails. A raised budget is a different read.
+	const queryKey = useMemo(
+		() => [
+			"presentation-audience-map",
+			endpoint,
+			activeAdmission?.nodeLimit ?? null,
+			activeAdmission?.edgeLimit ?? null,
+		],
+		[activeAdmission, endpoint],
+	);
+	const query = useQuery<AudienceMapResponse | null>({
+		// Hidden tab, no request.
+		enabled: active,
+		// The previous read of this same link, never another presentation's.
+		placeholderData: (previous, previousQuery) =>
+			previousQuery?.queryKey[1] === endpoint ? previous : undefined,
+		queryFn: ({ signal }) => readAudienceMap(requestEndpoint, signal),
+		queryKey,
+		refetchOnReconnect: false,
+		refetchOnWindowFocus: false,
+		// One read per event. A failed read keeps what the room is looking at.
+		retry: false,
+		staleTime: Number.POSITIVE_INFINITY,
+	});
+	const { refetch } = query;
 
+	const readRevision = useRef(revision);
 	useEffect(() => {
-		if (!active || payload) return;
-		const controller = new AbortController();
-		fetch(requestEndpoint, {
-			credentials: "include",
-			headers: { Accept: "application/json" },
-			signal: controller.signal,
-		})
-			.then(async (response) => {
-				if (response.status === 404) throw new Error("not-ready");
-				if (!response.ok)
-					throw new Error(`Map request failed (${response.status})`);
-				return (await response.json()) as AudienceMapResponse;
-			})
-			.then((next) => setResult({ error: null, payload: next, requestKey }))
-			.catch((reason: unknown) => {
-				if (controller.signal.aborted) return;
-				setResult({
-					error: reason instanceof Error ? reason.message : String(reason),
-					payload: null,
-					requestKey,
-				});
-			});
-		return () => controller.abort();
-	}, [active, payload, requestEndpoint, requestKey]);
+		if (!active || readRevision.current === revision) return;
+		readRevision.current = revision;
+		void refetch();
+	}, [active, refetch, revision]);
+
+	// Hidden means idle: an in-flight read is dropped rather than left to
+	// finish against a screen nobody is looking at.
+	useEffect(() => {
+		if (active) return;
+		void queryClient.cancelQueries({ queryKey });
+	}, [active, queryClient, queryKey]);
+
+	const payload = query.data ?? null;
 
 	if (!active) return null;
-	if (error) {
-		if (error === "not-ready") {
-			return (
-				<div className="flex h-full items-center justify-center p-6">
-					<Text size="lg" ta="center" maw={560}>
-						{waitingLabel ?? <Trans>Map results are not ready yet.</Trans>}
-					</Text>
-				</div>
-			);
-		}
+	// A 503 or a dropped read keeps the last graph, if there is one.
+	if (payload) {
+		return (
+			<AudienceMap
+				payload={payload}
+				onAdmit={(budgets) => setAdmission({ budgets, endpoint })}
+			/>
+		);
+	}
+	if (query.isSuccess) {
+		return (
+			<div className="flex h-full items-center justify-center p-6">
+				<Text size="lg" ta="center" maw={560}>
+					{waitingLabel ?? <Trans>Map results are not ready yet.</Trans>}
+				</Text>
+			</div>
+		);
+	}
+	if (query.isError) {
 		return (
 			<div className="flex h-full items-center justify-center p-6" role="alert">
 				<Stack gap="xs" align="center">
@@ -423,17 +466,9 @@ export const AudienceMapAdapter = ({
 			</div>
 		);
 	}
-	if (!payload) {
-		return (
-			<div className="relative h-full" aria-live="polite">
-				<DembraneLoadingSpinner isLoading showMessage={false} />
-			</div>
-		);
-	}
 	return (
-		<AudienceMap
-			payload={payload}
-			onAdmit={(budgets) => setAdmission({ baseRequestKey, budgets })}
-		/>
+		<div className="relative h-full" aria-live="polite">
+			<DembraneLoadingSpinner isLoading showMessage={false} />
+		</div>
 	);
 };
