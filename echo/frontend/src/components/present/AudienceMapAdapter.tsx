@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import {
 	Button,
@@ -18,10 +19,12 @@ import {
 	type MapBudgets,
 	maximumAdmittedNodes,
 } from "@/components/map/budgets";
+import type { EvidenceGroup } from "@/components/map/data/adapter";
 import { buildMapGraph } from "@/components/map/data/adapter";
 import type { MapGraphResponse } from "@/components/map/hooks";
 import { useMapGeometry } from "@/components/map/layout/useMapGeometry";
 import { OverBudgetState } from "@/components/map/panels/BudgetStates";
+import { ShowcasePanel } from "@/components/map/panels/ShowcasePanel";
 import { LocalMap } from "@/components/map/renderers/LocalMapGraph";
 import { MstMap } from "@/components/map/renderers/MstGraph";
 import {
@@ -29,6 +32,7 @@ import {
 	MapInteractionProvider,
 	useMapInteraction,
 } from "@/components/map/state/interactionStore";
+import { useShowcaseWalk } from "@/components/map/state/useShowcaseWalk";
 import type {
 	ColorBy,
 	FactCheckState,
@@ -43,6 +47,12 @@ type AudienceMapAdapterProps = {
 	revision?: number;
 	waitingLabel?: string;
 };
+
+/**
+ * The Showcase reads the projection and nothing else: the room sees no
+ * transcript quotes and no link back into the workspace.
+ */
+const NO_EVIDENCE: EvidenceGroup[] = [];
 
 type AudienceMapResponse = MapGraphResponse & {
 	fact_checks?: Record<string, unknown>;
@@ -137,17 +147,27 @@ const AudienceMapContent = ({
 	graph,
 	geometry,
 	edgeLimit,
+	showcase,
+	onShowcaseChange,
 }: {
 	nodes: MapGraphNode[];
 	graph: ReturnType<typeof buildMapGraph>;
 	geometry: ReturnType<typeof useMapGeometry>;
 	edgeLimit: number;
+	showcase: boolean;
+	onShowcaseChange: (next: boolean) => void;
 }) => {
+	const { i18n } = useLingui();
 	const selectedNodeId = useMapInteraction((state) => state.selectedNodeId);
 	const [showTree, setShowTree] = useState(true);
 	const [showLocal, setShowLocal] = useState(true);
 	const [showDetails, setShowDetails] = useState(true);
 	const [colorBy, setColorBy] = useState<ColorBy>("none");
+	// The tree renderer owns the walk's timer; this only keeps what it reports.
+	const walk = useShowcaseWalk();
+	const showcaseNode = walk.nodeId
+		? (nodes.find((node) => node.id === walk.nodeId) ?? null)
+		: null;
 	const selectedNode = nodes.find((node) => node.id === selectedNodeId) ?? null;
 	const selectedObject = selectedNode
 		? graph.objectsById.get(selectedNode.id)
@@ -185,6 +205,13 @@ const AudienceMapContent = ({
 					<Popover.Dropdown>
 						<Stack gap="xs">
 							<Checkbox
+								checked={showcase}
+								label={<Trans>Showcase</Trans>}
+								onChange={(event) =>
+									onShowcaseChange(event.currentTarget.checked)
+								}
+							/>
+							<Checkbox
 								checked={showTree}
 								disabled={showTree && visibleMaps === 1}
 								label={<Trans>Argument tree (MST)</Trans>}
@@ -211,9 +238,24 @@ const AudienceMapContent = ({
 			<div
 				className="grid min-h-0 flex-1 gap-2"
 				style={{
-					gridTemplateColumns: `${showTree && showLocal ? "minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1fr)"}${showDetails ? " minmax(14rem,0.4fr)" : ""}`,
+					gridTemplateColumns: `${showcase ? "minmax(14rem,0.5fr) " : ""}${showTree && showLocal ? "minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1fr)"}${showDetails ? " minmax(14rem,0.4fr)" : ""}`,
 				}}
 			>
+				{showcase && (
+					<Paper withBorder p="md" className="min-h-0 overflow-hidden">
+						<ShowcasePanel
+							node={showcaseNode}
+							// Everything the room reads comes from the projection: the
+							// statement, the assessment already in the payload, and no
+							// quotes or links back into the workspace.
+							evidence={NO_EVIDENCE}
+							factCheck={showcaseNode?.metadata.factCheck}
+							expiresAt={walk.expiresAt}
+							durationMs={walk.durationMs}
+							locale={i18n.locale}
+						/>
+					</Paper>
+				)}
 				{showTree && (
 					<section
 						className="min-h-0 overflow-hidden"
@@ -226,7 +268,10 @@ const AudienceMapContent = ({
 							edgeLimit={edgeLimit}
 							showRelationships={false}
 							colorBy={colorBy}
-							autoAdvance={false}
+							onActiveNodeChange={walk.onActiveNodeChange}
+							// The walk serves the Showcase, as it does on the host page:
+							// no Showcase, no timer.
+							autoAdvance={showcase}
 						/>
 					</section>
 				)}
@@ -240,6 +285,7 @@ const AudienceMapContent = ({
 							edgeLimit={edgeLimit}
 							showRelationships={false}
 							colorBy={colorBy}
+							onActiveNodeChange={walk.onActiveNodeChange}
 						/>
 					</section>
 				)}
@@ -290,9 +336,13 @@ const AudienceMapContent = ({
 const AudienceMap = ({
 	payload,
 	onAdmit,
+	showcase,
+	onShowcaseChange,
 }: {
 	payload: MapGraphResponse;
 	onAdmit: (budgets: MapBudgets) => void;
+	showcase: boolean;
+	onShowcaseChange: (next: boolean) => void;
 }) => {
 	const graph = useMemo(() => buildMapGraph(payload), [payload]);
 	const nodes = useMemo(() => {
@@ -361,6 +411,8 @@ const AudienceMap = ({
 				graph={graph}
 				geometry={geometry}
 				edgeLimit={budgets.edgeLimit}
+				showcase={showcase}
+				onShowcaseChange={onShowcaseChange}
 			/>
 		</MapInteractionProvider>
 	);
@@ -369,8 +421,8 @@ const AudienceMap = ({
 /**
  * A presentation-safe Map adapter. It reads a pre-sanitized projection and
  * never mounts host hooks for generation, fact checking, selection titles or
- * transcript links. The renderer is unmounted while hidden so its simulation
- * and worker stop doing background work.
+ * transcript links. The renderer is unmounted while hidden so its simulation,
+ * its worker and the Showcase's walk stop doing background work.
  */
 export const AudienceMapAdapter = ({
 	active,
@@ -383,6 +435,9 @@ export const AudienceMapAdapter = ({
 		endpoint: string;
 		budgets: MapBudgets;
 	} | null>(null);
+	// Above the hidden boundary: the graph unmounts while another block is on
+	// the wall, and the room comes back to the Showcase the host left running.
+	const [showcase, setShowcase] = useState(false);
 	const activeAdmission =
 		admission?.endpoint === endpoint ? admission.budgets : null;
 	const requestEndpoint = useMemo(() => {
@@ -443,6 +498,8 @@ export const AudienceMapAdapter = ({
 			<AudienceMap
 				payload={payload}
 				onAdmit={(budgets) => setAdmission({ budgets, endpoint })}
+				showcase={showcase}
+				onShowcaseChange={setShowcase}
 			/>
 		);
 	}

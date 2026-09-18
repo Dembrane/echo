@@ -5,16 +5,31 @@ import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+	act,
 	cleanup,
 	fireEvent,
 	render,
 	screen,
 	waitFor,
+	within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AudienceMapAdapter } from "./AudienceMapAdapter";
 
 const geometryDisposed = vi.hoisted(() => vi.fn());
+const walkStep = vi.hoisted(() => vi.fn());
+
+const node = (index: number, label: string) => ({
+	embedding: [0, index],
+	id: `revision-${index}`,
+	label,
+	metadata: {
+		objectId: `object-${index}`,
+		objectType: "argument",
+		revisionId: `revision-${index}`,
+		sizeScale: 1,
+	},
+});
 
 vi.mock("@/components/map/data/adapter", () => ({
 	buildMapGraph: () => ({
@@ -27,21 +42,16 @@ vi.mock("@/components/map/data/adapter", () => ({
 					type: "argument",
 				},
 			],
+			[
+				"revision-2",
+				{
+					detail: { statement: "A later result", type: "argument" },
+					type: "argument",
+				},
+			],
 		]),
 		overBudget: false,
-		placedNodes: [
-			{
-				embedding: [0, 1],
-				id: "revision-1",
-				label: "A result",
-				metadata: {
-					objectId: "object-1",
-					objectType: "argument",
-					revisionId: "revision-1",
-					sizeScale: 1,
-				},
-			},
-		],
+		placedNodes: [node(1, "A result"), node(2, "A later result")],
 		relations: [],
 		serverBudgets: { edgeLimit: 10, nodeLimit: 10 },
 	}),
@@ -57,9 +67,48 @@ vi.mock("@/components/map/layout/useMapGeometry", async () => {
 	};
 });
 
-vi.mock("@/components/map/renderers/MstGraph", () => ({
-	MstMap: () => <div>Audience tree renderer</div>,
-}));
+const WALK_INTERVAL_MS = 30_000;
+
+// Stands in for the renderer's random walk: it reports the node it stands on
+// and when it moves on, and runs no timer while `autoAdvance` is off.
+vi.mock("@/components/map/renderers/MstGraph", async () => {
+	const React = await import("react");
+	return {
+		DEFAULT_WALK_INTERVAL_MS: 30_000,
+		MstMap: ({
+			nodes,
+			autoAdvance,
+			onActiveNodeChange,
+		}: {
+			nodes: { id: string }[];
+			autoAdvance?: boolean;
+			onActiveNodeChange?: (
+				node: { id: string } | null,
+				expiresAt: number | null,
+				durationMs: number,
+			) => void;
+		}) => {
+			React.useEffect(() => {
+				if (!autoAdvance || !onActiveNodeChange || nodes.length === 0) return;
+				let step = 0;
+				let timer = 0;
+				const advance = () => {
+					walkStep();
+					onActiveNodeChange(
+						nodes[step % nodes.length],
+						Date.now() + 30_000,
+						30_000,
+					);
+					step += 1;
+					timer = window.setTimeout(advance, 30_000);
+				};
+				advance();
+				return () => window.clearTimeout(timer);
+			}, [autoAdvance, nodes, onActiveNodeChange]);
+			return <div>Audience tree renderer</div>;
+		},
+	};
+});
 
 vi.mock("@/components/map/renderers/LocalMapGraph", () => ({
 	LocalMap: () => <div>Audience local renderer</div>,
@@ -71,6 +120,8 @@ i18n.activate("en-US");
 afterEach(() => {
 	cleanup();
 	geometryDisposed.mockClear();
+	walkStep.mockClear();
+	vi.useRealTimers();
 	vi.unstubAllGlobals();
 });
 
@@ -225,5 +276,86 @@ describe("AudienceMapAdapter", () => {
 		).toBeTruthy();
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 		expect(fetchMock.mock.calls[0]?.[0]).toBe("/audience/map");
+	});
+
+	/**
+	 * Opens the display controls and hands back the Showcase toggle, so a test
+	 * can switch the walk on once its timers are the fake ones.
+	 */
+	const showcaseToggle = async () => {
+		fireEvent.click(screen.getByRole("button", { name: "Display" }));
+		return await screen.findByRole("checkbox", { name: "Showcase" });
+	};
+
+	const showcasePanel = () => screen.getByRole("region", { name: "Showcase" });
+
+	it("walks the map in the Showcase, reading the payload and nothing else", async () => {
+		const fetchMock = vi.fn(
+			async (_url: string, _init?: RequestInit) =>
+				new Response(
+					JSON.stringify({
+						fact_checks: {
+							"revision-1": {
+								checkedAt: "2026-09-18T00:00:00Z",
+								justification: "Supported by the prepared evidence.",
+								status: "done",
+								verdict: "true",
+							},
+						},
+					}),
+					{ status: 200 },
+				),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		render(adapter(true));
+		await screen.findByText("Audience tree renderer");
+		expect(screen.queryByRole("region", { name: "Showcase" })).toBeNull();
+
+		const toggle = await showcaseToggle();
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		fireEvent.click(toggle);
+		expect(within(showcasePanel()).getByText("A result")).toBeTruthy();
+		// The verdict on the wall is the assessment that came with the payload.
+		expect(within(showcasePanel()).getByText("Likely true")).toBeTruthy();
+
+		act(() => {
+			vi.advanceTimersByTime(WALK_INTERVAL_MS);
+		});
+		expect(within(showcasePanel()).getByText("A later result")).toBeTruthy();
+
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/audience/map"]);
+	});
+
+	it("stops the walk while the Map is hidden and picks it up again", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+		);
+
+		const view = render(adapter(true));
+		await screen.findByText("Audience tree renderer");
+		const toggle = await showcaseToggle();
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		fireEvent.click(toggle);
+		expect(walkStep).toHaveBeenCalledTimes(1);
+
+		act(() => {
+			vi.advanceTimersByTime(WALK_INTERVAL_MS);
+		});
+		expect(walkStep).toHaveBeenCalledTimes(2);
+
+		view.rerender(adapter(false));
+		expect(screen.queryByRole("region", { name: "Showcase" })).toBeNull();
+		act(() => {
+			vi.advanceTimersByTime(WALK_INTERVAL_MS * 4);
+		});
+		expect(walkStep).toHaveBeenCalledTimes(2);
+
+		// Back on the wall: the Showcase the host left on runs again.
+		view.rerender(adapter(true));
+		expect(walkStep).toHaveBeenCalledTimes(3);
+		expect(within(showcasePanel()).getByText("A result")).toBeTruthy();
 	});
 });

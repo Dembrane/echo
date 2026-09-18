@@ -78,13 +78,14 @@ import { ShowcasePanel } from "./panels/ShowcasePanel";
 import { SpotlightPanel } from "./panels/SpotlightPanel";
 import { mapVars } from "./panels/shared";
 import { LocalMap } from "./renderers/LocalMapGraph";
-import { DEFAULT_WALK_INTERVAL_MS, MstMap } from "./renderers/MstGraph";
+import { MstMap } from "./renderers/MstGraph";
 import {
 	MapInteractionProvider,
 	useMapInteraction,
 	useMapInteractionStore,
 } from "./state/interactionStore";
 import { type MapSettings, useMapSettings } from "./state/settings";
+import { useShowcaseWalk } from "./state/useShowcaseWalk";
 import type {
 	ColorBy,
 	FactCheckState,
@@ -284,12 +285,6 @@ type MapExperienceProps = {
 	offline: boolean;
 };
 
-type WalkState = {
-	nodeId: string | null;
-	expiresAt: number | null;
-	durationMs: number;
-};
-
 const EMPTY_EVIDENCE: never[] = [];
 
 const MapExperience = ({
@@ -344,16 +339,7 @@ const MapExperience = ({
 
 	const store = useMapInteractionStore();
 	const selectedNodeId = useMapInteraction((state) => state.selectedNodeId);
-	const [walk, setWalk] = useState<WalkState>({
-		durationMs: DEFAULT_WALK_INTERVAL_MS,
-		expiresAt: null,
-		nodeId: null,
-	});
-	const handleActiveNodeChange = useCallback(
-		(node: MapGraphNode | null, expiresAt: number | null, durationMs: number) =>
-			setWalk({ durationMs, expiresAt, nodeId: node?.id ?? null }),
-		[],
-	);
+	const walk = useShowcaseWalk();
 
 	const evidenceFor = useCallback(
 		(nodeId: string) => graph.evidenceById.get(nodeId) ?? EMPTY_EVIDENCE,
@@ -510,7 +496,7 @@ const MapExperience = ({
 							onEdgeCounts={setTreeEdgeCounts}
 							colorBy={colorBy}
 							darkMode={settings.darkMode}
-							onActiveNodeChange={handleActiveNodeChange}
+							onActiveNodeChange={walk.onActiveNodeChange}
 							timerActive={title.timerActive}
 							timerProgress={title.timerProgress}
 							// The walk serves the Showcase; it must not move the
@@ -546,7 +532,7 @@ const MapExperience = ({
 							onEdgeCounts={setLocalEdgeCounts}
 							colorBy={colorBy}
 							darkMode={settings.darkMode}
-							onActiveNodeChange={handleActiveNodeChange}
+							onActiveNodeChange={walk.onActiveNodeChange}
 							timerActive={title.timerActive}
 							timerProgress={title.timerProgress}
 						/>
