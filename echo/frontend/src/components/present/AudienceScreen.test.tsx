@@ -2,6 +2,7 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
 	act,
 	cleanup,
@@ -65,11 +66,13 @@ const renderAudience = (props: {
 	publicToken?: string;
 }) =>
 	render(
-		<I18nProvider i18n={i18n}>
-			<MantineProvider>
-				<AudienceScreen {...props} />
-			</MantineProvider>
-		</I18nProvider>,
+		<QueryClientProvider client={new QueryClient()}>
+			<I18nProvider i18n={i18n}>
+				<MantineProvider>
+					<AudienceScreen {...props} />
+				</MantineProvider>
+			</I18nProvider>
+		</QueryClientProvider>,
 	);
 
 const response = (
@@ -518,6 +521,41 @@ describe("AudienceScreen lifecycle", () => {
 		).toBe(false);
 	});
 
+	it("follows the page's event stream in an embedded preview and opens none of its own", async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			json: async () => response(["map"]),
+			ok: true,
+			status: 200,
+		});
+		vi.stubGlobal("fetch", fetchMock);
+		const client = new QueryClient();
+		const preview = (eventTick: number) => (
+			<QueryClientProvider client={client}>
+				<I18nProvider i18n={i18n}>
+					<MantineProvider>
+						<AudienceScreen
+							embedded
+							eventTick={eventTick}
+							presentationId="presentation-1"
+						/>
+					</MantineProvider>
+				</I18nProvider>
+			</QueryClientProvider>
+		);
+		const { rerender } = render(preview(0));
+		expect(await screen.findByTestId("audience-map")).toBeTruthy();
+		expect(useServerEventsMock.mock.calls.every(([url]) => url === null)).toBe(
+			true,
+		);
+		const reads = fetchMock.mock.calls.length;
+
+		// The page received an event on its stream.
+		rerender(preview(1));
+		await waitFor(() =>
+			expect(fetchMock.mock.calls.length).toBeGreaterThan(reads),
+		);
+	});
+
 	it("resends the current block after a verified deck ready event", async () => {
 		vi.stubGlobal(
 			"fetch",
@@ -685,5 +723,37 @@ describe("AudienceScreen lifecycle", () => {
 			expect.objectContaining({ command: "refresh" }),
 			expect.any(String),
 		);
+	});
+});
+
+describe("AudienceScreenRoute language", () => {
+	it("tells its page the presentation's interface language", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				json: async () => ({
+					bundle: { files: { "session.json": { ui_language: "nl" } } },
+					id: "presentation-1",
+					manifest: { blocks: ["map"], opening: "map", version: 1 },
+				}),
+				ok: true,
+				status: 200,
+			}),
+		);
+		const onLanguage = vi.fn();
+		render(
+			<QueryClientProvider client={new QueryClient()}>
+				<I18nProvider i18n={i18n}>
+					<MantineProvider>
+						<AudienceScreen
+							onLanguage={onLanguage}
+							publicToken="public-token"
+						/>
+					</MantineProvider>
+				</I18nProvider>
+			</QueryClientProvider>,
+		);
+		await waitFor(() => expect(onLanguage).toHaveBeenCalledWith("nl"));
+		expect(onLanguage).toHaveBeenCalledOnce();
 	});
 });

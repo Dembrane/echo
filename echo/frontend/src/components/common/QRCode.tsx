@@ -11,6 +11,8 @@ interface QRCodeProps {
 	ref?: Ref<HTMLDivElement>;
 	className?: string;
 	style?: CSSProperties;
+	/** Names the link for a screen reader; the code itself is an image. */
+	"aria-label"?: string;
 	"data-testid"?: string;
 }
 
@@ -20,6 +22,7 @@ export const QRCode = ({
 	ref,
 	className,
 	style,
+	"aria-label": ariaLabel,
 	"data-testid": dataTestId,
 }: QRCodeProps) => {
 	const [hovered, setHovered] = useState(false);
@@ -48,7 +51,12 @@ export const QRCode = ({
 
 	if (!href) {
 		return (
-			<div ref={ref} className={className} style={style} data-testid={dataTestId}>
+			<div
+				ref={ref}
+				className={className}
+				style={style}
+				data-testid={dataTestId}
+			>
 				{qrElement}
 			</div>
 		);
@@ -60,6 +68,7 @@ export const QRCode = ({
 			href={href}
 			target="_blank"
 			rel="noopener noreferrer"
+			aria-label={ariaLabel}
 			className={`relative block cursor-pointer overflow-hidden rounded-lg bg-white transition-all ${className ?? ""}`}
 			style={style}
 			data-testid={dataTestId}
@@ -70,9 +79,7 @@ export const QRCode = ({
 			<div
 				className="absolute inset-0 flex items-center justify-center rounded-lg transition-all print:hidden"
 				style={{
-					backgroundColor: hovered
-						? "rgba(65, 105, 225, 0.85)"
-						: "transparent",
+					backgroundColor: hovered ? "rgba(65, 105, 225, 0.85)" : "transparent",
 					opacity: hovered ? 1 : 0,
 				}}
 			>

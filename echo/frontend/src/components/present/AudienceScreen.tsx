@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Loader, Tabs, Text, Tooltip } from "@mantine/core";
@@ -10,16 +11,13 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { QRCode } from "@/components/common/QRCode";
+import { SUPPORTED_LANGUAGES } from "@/config";
 import { useServerEvents } from "@/hooks/useServerEvents";
 import { cn } from "@/lib/utils";
 import { AudienceMapAdapter } from "./AudienceMapAdapter";
 import classes from "./AudienceScreen.module.css";
 import {
 	AUDIENCE_EVENT_REFRESH_MS,
-	AUDIENCE_GONE_STATUSES,
-	AUDIENCE_READ_TIMEOUT_MS,
-	AUDIENCE_RETRY_MAX_MS,
-	AUDIENCE_RETRY_MIN_MS,
 	AUDIENCE_SAFETY_REFRESH_MS,
 	audienceUrls,
 	type DeckChromeMessage,
@@ -31,22 +29,8 @@ import {
 	isDeckReadyEvent,
 	postDeckMessage,
 } from "./audienceContract";
-import {
-	type PresentationBlock as AudienceBlock,
-	orderedBlocks,
-} from "./blocks";
-
-type AudienceResponse = {
-	id: string;
-	manifest: {
-		version: number;
-		blocks: AudienceBlock[];
-		opening: AudienceBlock | null;
-	};
-	bundle: {
-		files?: Record<string, unknown>;
-	};
-};
+import type { PresentationBlock as AudienceBlock } from "./blocks";
+import { useAudience } from "./hooks/useAudience";
 
 export type AudienceScreenProps = {
 	presentationId?: string;
@@ -54,6 +38,14 @@ export type AudienceScreenProps = {
 	embedded?: boolean;
 	draft?: boolean;
 	draftRevision?: number;
+	/**
+	 * The page around an embedded preview already follows this presentation's
+	 * event stream; each event it receives raises this number. With it set the
+	 * shell opens no stream of its own.
+	 */
+	eventTick?: number;
+	/** Told the presentation's interface language once it is known. */
+	onLanguage?: (code: string) => void;
 	className?: string;
 };
 
@@ -183,21 +175,6 @@ const AUDIENCE_COPY: Record<
 	},
 };
 
-const normalizeAudience = (value: AudienceResponse): AudienceResponse => {
-	const blocks = orderedBlocks(value.manifest.blocks ?? []);
-	return {
-		...value,
-		manifest: {
-			...value.manifest,
-			blocks,
-			opening:
-				value.manifest.opening && blocks.includes(value.manifest.opening)
-					? value.manifest.opening
-					: (blocks[0] ?? null),
-		},
-	};
-};
-
 const AudienceBranding = ({ copy }: { copy: string }) => {
 	const wordmark = "dembrane";
 	const index = copy.lastIndexOf(wordmark);
@@ -217,31 +194,18 @@ export const AudienceScreen = ({
 	embedded = false,
 	draft = false,
 	draftRevision = 0,
+	eventTick,
+	onLanguage,
 	className,
 }: AudienceScreenProps) => {
 	const iframeRef = useRef<HTMLIFrameElement>(null);
 	const shellRef = useRef<HTMLDivElement>(null);
-	const reloadSequenceRef = useRef(0);
 	const eventRefreshTimerRef = useRef<ReturnType<
 		typeof globalThis.setTimeout
 	> | null>(null);
 	const deckReadyRef = useRef(false);
 	const pendingDeckRefreshRef = useRef(false);
-	const loadedAudienceUrlRef = useRef<string | null>(null);
-	const retryTimerRef = useRef<ReturnType<typeof globalThis.setTimeout> | null>(
-		null,
-	);
-	const retryDelayRef = useRef(AUDIENCE_RETRY_MIN_MS);
-	const reloadAudienceRef = useRef<
-		((signal?: AbortSignal) => Promise<void>) | null
-	>(null);
-	const [audience, setAudience] = useState<AudienceResponse | null>(null);
 	const [activeBlock, setActiveBlock] = useState<AudienceBlock | null>(null);
-	// "gone": the link was switched off or access withdrawn. "failed": nothing
-	// has loaded yet and the read keeps being retried.
-	const [error, setError] = useState<"gone" | "failed" | "identity" | null>(
-		null,
-	);
 	const [eventRevision, setEventRevision] = useState(0);
 	const [playbackPaused, setPlaybackPaused] = useState(false);
 	const [fullscreen, setFullscreen] = useState(false);
@@ -282,83 +246,23 @@ export const AudienceScreen = ({
 		() => audienceUrls({ draft, presentationId, publicToken }),
 		[presentationId, publicToken, draft],
 	);
-	const reloadAudience = useCallback(
-		async (signal?: AbortSignal) => {
-			if (retryTimerRef.current !== null) {
-				globalThis.clearTimeout(retryTimerRef.current);
-				retryTimerRef.current = null;
-			}
-			if (!urls) {
-				loadedAudienceUrlRef.current = null;
-				setAudience(null);
-				setActiveBlock(null);
-				setError("identity");
-				return;
-			}
-			const sequence = ++reloadSequenceRef.current;
-			const request = new AbortController();
-			const abort = () => request.abort();
-			signal?.addEventListener("abort", abort);
-			const timeout = globalThis.setTimeout(abort, AUDIENCE_READ_TIMEOUT_MS);
-			let gone = false;
-			try {
-				const response = await fetch(urls.audience, {
-					credentials: "include",
-					headers: { Accept: "application/json" },
-					signal: request.signal,
-				});
-				if (!response.ok) {
-					gone = AUDIENCE_GONE_STATUSES.has(response.status);
-					throw new Error(`Presentation request failed (${response.status})`);
-				}
-				const next = normalizeAudience(
-					(await response.json()) as AudienceResponse,
-				);
-				if (sequence !== reloadSequenceRef.current) return;
-				loadedAudienceUrlRef.current = urls.audience;
-				retryDelayRef.current = AUDIENCE_RETRY_MIN_MS;
-				setAudience(next);
-				setActiveBlock((current) =>
-					current && next.manifest.blocks.includes(current)
-						? current
-						: next.manifest.opening,
-				);
-				setError(null);
-			} catch {
-				if (signal?.aborted || sequence !== reloadSequenceRef.current) return;
-				// One bad read on venue wifi must not blank the room: what this
-				// presentation last showed stays up while the read is retried.
-				if (gone || loadedAudienceUrlRef.current !== urls.audience) {
-					loadedAudienceUrlRef.current = null;
-					setAudience(null);
-					setActiveBlock(null);
-					setError(gone ? "gone" : "failed");
-				}
-				if (!gone) {
-					const delay = retryDelayRef.current;
-					retryDelayRef.current = Math.min(delay * 2, AUDIENCE_RETRY_MAX_MS);
-					retryTimerRef.current = globalThis.setTimeout(() => {
-						retryTimerRef.current = null;
-						void reloadAudienceRef.current?.();
-					}, delay);
-				}
-			} finally {
-				globalThis.clearTimeout(timeout);
-				signal?.removeEventListener("abort", abort);
-			}
-		},
-		[urls],
+	// "gone": the link was switched off or access withdrawn. "failed": nothing
+	// has loaded yet and the read keeps being retried.
+	const { audience, error, reload } = useAudience(
+		urls?.audience ?? null,
+		draftRevision,
 	);
-	reloadAudienceRef.current = reloadAudience;
-	useEffect(
-		() => () => {
-			if (retryTimerRef.current !== null) {
-				globalThis.clearTimeout(retryTimerRef.current);
-				retryTimerRef.current = null;
-			}
-		},
-		[],
-	);
+	const reloadAudience = useCallback(() => void reload(), [reload]);
+	// A reload keeps the block on screen when the presentation still has it.
+	useEffect(() => {
+		setActiveBlock((current) =>
+			!audience
+				? null
+				: current && audience.manifest.blocks.includes(current)
+					? current
+					: audience.manifest.opening,
+		);
+	}, [audience]);
 	const deckSrc = useMemo(() => {
 		if (!urls || !audience) return null;
 		const query = new URLSearchParams({
@@ -400,7 +304,7 @@ export const AudienceScreen = ({
 		eventRefreshTimerRef.current = globalThis.setTimeout(() => {
 			eventRefreshTimerRef.current = null;
 			setEventRevision((current) => current + 1);
-			void reloadAudience();
+			reloadAudience();
 		}, AUDIENCE_EVENT_REFRESH_MS);
 	}, [reloadAudience, requestDeckRefresh]);
 
@@ -425,23 +329,22 @@ export const AudienceScreen = ({
 	// cannot tell that from a network drop. Each drop asks the server instead.
 	const handleStreamEvent = useCallback(
 		(event: { type: string }) => {
-			if (event.type === "disconnected") void reloadAudience();
+			if (event.type === "disconnected") reloadAudience();
 			else scheduleEventRefresh();
 		},
 		[reloadAudience, scheduleEventRefresh],
 	);
 	useServerEvents(
-		error === "gone" ? null : (urls?.events ?? null),
+		error === "gone" || eventTick !== undefined ? null : (urls?.events ?? null),
 		["update", "disconnected"],
 		handleStreamEvent,
 	);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: a saved draft revision must reload its audience projection.
+	const seenEventTick = useRef(eventTick);
 	useEffect(() => {
-		const controller = new AbortController();
-		void reloadAudience(controller.signal);
-		return () => controller.abort();
-	}, [reloadAudience, draftRevision]);
+		if (eventTick === seenEventTick.current) return;
+		seenEventTick.current = eventTick;
+		scheduleEventRefresh();
+	}, [eventTick, scheduleEventRefresh]);
 
 	// The same safety read the standalone deck makes: a lost nudge heals here,
 	// and a link that was switched back on comes back.
@@ -457,7 +360,7 @@ export const AudienceScreen = ({
 		if (!draft || !presentationId || draftRevision === 0) return;
 		requestDeckRefresh();
 	}, [draft, draftRevision, presentationId, requestDeckRefresh]);
-	const audienceCopy = useMemo(() => {
+	const audienceCopyAndLanguage = useMemo(() => {
 		const session = audience?.bundle.files?.["session.json"] as
 			| { language?: unknown; ui_language?: unknown }
 			| undefined;
@@ -467,8 +370,13 @@ export const AudienceScreen = ({
 				: typeof session?.language === "string"
 					? session.language
 					: "en";
-		return AUDIENCE_COPY[language] ?? AUDIENCE_COPY.en;
+		return { copy: AUDIENCE_COPY[language] ?? AUDIENCE_COPY.en, language };
 	}, [audience]);
+	const audienceLanguage = audience ? audienceCopyAndLanguage.language : null;
+	useEffect(() => {
+		if (audienceLanguage) onLanguage?.(audienceLanguage);
+	}, [audienceLanguage, onLanguage]);
+	const audienceCopy = audienceCopyAndLanguage.copy;
 	const sessionIdentity = useMemo(() => {
 		const session = audience?.bundle.files?.["session.json"] as
 			| {
@@ -730,7 +638,8 @@ export const AudienceScreen = ({
 		return () => globalThis.removeEventListener("keydown", handleKeyDown);
 	}, [embedded, handleKeyDown]);
 
-	if (error) {
+	// No presentation id and no token: there is nothing to ask the server for.
+	if (error || !urls) {
 		return (
 			<div
 				className="flex h-full min-h-[24rem] items-center justify-center p-6"
@@ -966,6 +875,9 @@ export const AudienceScreen = ({
 								<QRCode
 									value={frameDetails.qrUrl}
 									href={frameDetails.qrUrl}
+									aria-label={
+										frameDetails.qrLabel || deckChrome?.qrLabel || "QR"
+									}
 									className={classes.qrCode}
 								/>
 								{(frameDetails.qrLabel || deckChrome?.qrLabel) && (
@@ -1057,10 +969,20 @@ export const AudienceScreenRoute = () => {
 		presentationId: string;
 		token: string;
 	}>();
+	// The whole page is the room's screen, so everything Lingui renders on it
+	// (the Map's controls) follows the presentation's language, not the last
+	// dashboard language this browser happened to store. Nothing is persisted.
+	const followLanguage = useCallback((code: string) => {
+		const locale = SUPPORTED_LANGUAGES.find(
+			(entry) => entry.split("-")[0] === code,
+		);
+		if (locale && i18n.locale !== locale) i18n.activate(locale);
+	}, []);
 	return (
 		<AudienceScreen
 			presentationId={presentationId}
 			publicToken={token}
+			onLanguage={followLanguage}
 			className="h-dvh min-h-dvh"
 		/>
 	);
