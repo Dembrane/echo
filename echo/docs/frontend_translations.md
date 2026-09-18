@@ -2,9 +2,11 @@
 
 We use **Lingui** with **React JS** for handling translations. This document outlines the steps to add and manage translations within our project.
 
+For volunteer translators, start with [Contributing translations](../../TRANSLATING.md). It includes browser-only contributions, translation rules, and the pull request and contributor agreement steps. This page covers the developer workflow for adding translatable text.
+
 ## Writing Good Copy
 
-Before writing translatable strings, review the [COPY_GUIDE.md](../frontend/COPY_GUIDE.md) for tone and style guidelines. Key principles:
+Before writing translatable strings, review the [style guide](../brand/STYLE_GUIDE.md) for tone and style guidelines. Key principles:
 
 - **Shortest possible, highest clarity** — say it in fewer words
 - **No jargon** — avoid technical terms users won't understand (e.g., "context limit" → "selection too large")
@@ -116,7 +118,7 @@ msgid "Some text"
 msgstr "Some text"
 ```
 
-For other language files (de-DE, es-ES, fr-FR, nl-NL), you should either:
+For other language files (de-DE, es-ES, fr-FR, nl-NL, it-IT, uk-UA, cs-CZ), you should either:
 
 1. Leave the `msgstr` empty for proper translation later by language experts
 2. Or provide appropriate translations in the target language
@@ -160,13 +162,15 @@ Run the following command to compile the messages:
 pnpm messages:compile
 ```
 
+Run these commands from `echo/frontend` relative to the repository root. Commit both the edited `.po` catalogs and generated `.ts` files. The `ci-i18n` workflow reruns extraction and compilation and checks that no catalog changes remain.
+
 ### Step 4: Verify Translations
 
 After adding the translations, you can verify them by running your React application and checking the translated messages in the UI.
 
 ## Commands Summary
 
-- `cd frontend && pnpm i`
+- From the repository root: `cd echo/frontend && pnpm install --frozen-lockfile`
 - Extract messages: `pnpm messages:extract`
 - Update translations by going to the frontend/src/locales/ folder and editing the .po files
 
