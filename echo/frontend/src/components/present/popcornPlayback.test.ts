@@ -25,7 +25,11 @@ function playback({ reducedMotion = false } = {}) {
 			},
 			children: [] as Array<{ textContent: string }>,
 		}),
-		createElement: () => ({ className: "", textContent: "" }),
+		createElement: () => ({
+			className: "",
+			setAttribute: () => {},
+			textContent: "",
+		}),
 	};
 	const context = {
 		armPopTimer: (
@@ -47,6 +51,7 @@ function playback({ reducedMotion = false } = {}) {
 		esc: (value: string) => value,
 		kindIcon: () => "",
 		POP_LANGUAGE_HARD_CAP: 24_000,
+		POP_LENS_MS: 1_100,
 		POP_READ_BASE: 3_000,
 		POP_READ_PER_WORD: 500,
 		POP_RESIDENCY_CAP: 24_000,
@@ -57,6 +62,7 @@ function playback({ reducedMotion = false } = {}) {
 		},
 		setTimeout,
 		state,
+		tr: (key: string) => key,
 		window: { matchMedia: () => ({ matches: reducedMotion }) },
 	};
 	runInNewContext(
@@ -81,25 +87,40 @@ function playback({ reducedMotion = false } = {}) {
 }
 
 function phraseElement(text: string) {
+	const marks: string[] = [];
 	const words = {
-		replaceChildren(fragment: { children: Array<{ textContent: string }> }) {
-			this.textContent = fragment.children
-				.map((child) => child.textContent)
-				.join("");
-		},
+		insertAdjacentHTML: (_where: string, html: string) => marks.push(html),
 		textContent: text,
 	};
+	const phrase = {
+		querySelector: (selector: string) =>
+			selector === ".pop-translated" && marks.length
+				? { remove: () => marks.splice(0) }
+				: null,
+	};
 	const classes = new Set<string>();
+	const lenses: unknown[] = [];
 	return {
+		classes,
 		el: {
+			appendChild: (child: unknown) => lenses.push(child),
 			classList: {
 				add: (name: string) => classes.add(name),
 				contains: (name: string) => classes.has(name),
 				remove: (name: string) => classes.delete(name),
 			},
 			querySelector: (selector: string) =>
-				selector === ".pop-words" ? words : null,
+				selector === ".pop-words"
+					? words
+					: selector === ".pop-phrase"
+						? phrase
+						: selector === ".pop-lens" && lenses.length
+							? { remove: () => lenses.splice(0) }
+							: null,
+			style: { setProperty: () => {} },
 		},
+		lenses,
+		marks,
 		words,
 	};
 }
@@ -109,7 +130,7 @@ afterEach(() => {
 });
 
 describe("Popcorn bilingual playback", () => {
-	it("gives each language its full word-count read around the letter morph", () => {
+	it("gives each language its full word-count read around the lens", () => {
 		vi.useFakeTimers();
 		vi.setSystemTime(new Date("2026-09-18T00:00:00Z"));
 		const api = playback();
@@ -139,15 +160,21 @@ describe("Popcorn bilingual playback", () => {
 		expect(phrase.words.textContent).toBe(item.phrase);
 		expect(beginFade).not.toHaveBeenCalled();
 
-		for (
-			let elapsed = 0;
-			elapsed < 200 && rec.languagePhase !== "translation";
-			elapsed++
-		) {
-			vi.advanceTimersByTime(1);
-		}
+		// The lens is over the phrase: the words change once, at its middle,
+		// out of focus, and the translation carries its mark.
+		vi.advanceTimersByTime(1);
+		expect(phrase.classes.has("pop-language-morph")).toBe(true);
+		expect(phrase.lenses).toHaveLength(1);
+		vi.advanceTimersByTime(549);
+		expect(phrase.words.textContent).toBe(item.phrase);
+		vi.advanceTimersByTime(1);
 		expect(phrase.words.textContent).toBe(item.translation);
+		expect(phrase.marks).toHaveLength(1);
+		expect(rec.languagePhase).toBe("morph-translation");
+		vi.advanceTimersByTime(550);
 		expect(rec.languagePhase).toBe("translation");
+		expect(phrase.classes.has("pop-language-morph")).toBe(false);
+		expect(phrase.lenses).toHaveLength(0);
 		expect(beginFade).not.toHaveBeenCalled();
 
 		vi.advanceTimersByTime(4_499);
@@ -156,14 +183,19 @@ describe("Popcorn bilingual playback", () => {
 		expect(beginFade).toHaveBeenCalledOnce();
 	});
 
-	it("renders no visible Original or Translation cue", () => {
+	it("closes a translated phrase with the translate mark and writes no caption", () => {
 		vi.useFakeTimers();
 		const api = playback();
 		const item = { phrase: "Original words", translation: "Vertaalde woorden" };
 		expect(api.phraseStateHtml(item)).toBe(
 			'<span class="pop-words">Original words</span>',
 		);
-		expect(api.phraseStateHtml(item, true)).toBe(
+		const translated = api.phraseStateHtml(item, true);
+		expect(translated).toContain(
+			'<span class="pop-words">Vertaalde woorden</span><svg class="pop-translated"',
+		);
+		// The mark is an icon with a name for screen readers, not words on stage.
+		expect(translated.replace(/<svg[\s\S]*<\/svg>/, "")).toBe(
 			'<span class="pop-words">Vertaalde woorden</span>',
 		);
 	});

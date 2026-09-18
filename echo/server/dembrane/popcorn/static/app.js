@@ -105,6 +105,8 @@
   const POP_LANGUAGE_HARD_CAP = Number(playback.languageHardCapMs) || 24000;
   const POP_RESIDENCY_CAP = Number(playback.residencyCapMs) || 24000;
   const POP_TRANSITION_MS = Number(playback.transitionMs) || 200;
+  // The language handoff is not a snap: a lens takes its time over a phrase.
+  const POP_LENS_MS = Number(playback.lensMs) || 1100;
   const POP_FADE = 400;
   const POP_GAP = 2400;      // stagger between spawns once the stage is warm
   const POP_MAX = 3;         // phrases the automatic flow keeps up at once (one per band)
@@ -804,6 +806,7 @@
         }
       }
     }
+    document.documentElement.classList.toggle("screen-frozen", frozen);
     document.querySelectorAll("header.topbar, #stage, footer.colophon")
       .forEach((el) => { el.inert = frozen; });
     if (!frozen && state.renderPending) { state.renderPending = false; renderActive(); }
@@ -1632,8 +1635,13 @@
     const text = phraseText(shown);
     return shown.verbatim ? `“${text}”` : text;
   };
+  // Phosphor "translate", bold like the kind icons. It closes a phrase shown
+  // in translation, so nobody takes the room's words for the translator's.
+  const TRANSLATE_ICON = "M250.73,210.63l-56-112a12,12,0,0,0-21.46,0l-20.52,41A84.2,84.2,0,0,1,114,126.22,107.48,107.48,0,0,0,139.33,68H160a12,12,0,0,0,0-24H108V32a12,12,0,0,0-24,0V44H32a12,12,0,0,0,0,24h83.13A83.69,83.69,0,0,1,96,110.35,84,84,0,0,1,83.6,91a12,12,0,1,0-21.81,10A107.55,107.55,0,0,0,78,126.24,83.54,83.54,0,0,1,32,140a12,12,0,0,0,0,24,107.47,107.47,0,0,0,64-21.07,108.4,108.4,0,0,0,45.39,19.44l-24.13,48.26a12,12,0,1,0,21.46,10.73L151.41,196h65.17l12.68,25.36a12,12,0,1,0,21.47-10.73ZM163.41,172,184,130.83,204.58,172Z";
+  const translatedMark = () =>
+    `<svg class="pop-translated" viewBox="0 0 256 256" aria-label="${esc(tr("translation.done"))}" role="img"><path d="${TRANSLATE_ICON}"/></svg>`;
   function phraseStateHtml(item, translated = false) {
-    return `${kindIcon(item.kind)}<span class="pop-words">${esc(phraseStateText(item, translated))}</span>`;
+    return `${kindIcon(item.kind)}<span class="pop-words">${esc(phraseStateText(item, translated))}</span>${translated ? translatedMark() : ""}`;
   }
 
   function queueTranslatedAppearance(rec, item) {
@@ -1642,46 +1650,43 @@
     });
   }
 
+  // One phrase, two languages: a round lens glides across it, the words go
+  // softly out of focus underneath, and come back into focus in the other
+  // language. The words change once, at the middle, while nobody can read them.
   function morphPopLanguage(rec, item, translated, done) {
     if (rec.el.classList.contains("pop-out")) return;
+    const phrase = rec.el.querySelector(".pop-phrase");
     const words = rec.el.querySelector(".pop-words");
-    if (!words) return;
-    const from = Array.from(words.textContent || "");
-    const to = Array.from(phraseStateText(item, translated));
-    const slots = Math.max(from.length, to.length);
+    if (!phrase || !words) return;
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
     rec.languagePhase = translated ? "morph-translation" : "morph-original";
-    rec.el.classList.add("pop-language-morph");
 
+    const swap = () => {
+      words.textContent = phraseStateText(item, translated);
+      phrase.querySelector(".pop-translated")?.remove();
+      if (translated) words.insertAdjacentHTML("afterend", translatedMark());
+    };
     const finish = () => {
-      words.textContent = to.join("");
       rec.el.classList.remove("pop-language-morph");
+      rec.el.querySelector(".pop-lens")?.remove();
       rec.languagePhase = translated ? "translation" : "original";
       if (translated) {
         state.pop.shownTranslation.set(bilingualKey(rec.tid, rec.idx, item), item.translation);
       }
       done?.();
     };
-    if (reduceMotion || !slots || POP_TRANSITION_MS <= 0) { finish(); return; }
+    if (reduceMotion || POP_LENS_MS <= 0) { swap(); finish(); return; }
 
-    let revealed = 0;
-    const draw = () => {
-      const fragment = document.createDocumentFragment();
-      for (let i = 0; i < slots; i++) {
-        const letter = document.createElement("span");
-        letter.className = "pop-letter" + (i === revealed - 1 ? " pop-letter-new" : "");
-        letter.textContent = i < revealed ? (to[i] || "") : (from[i] || "");
-        fragment.appendChild(letter);
-      }
-      words.replaceChildren(fragment);
-    };
-    const step = () => {
-      revealed += 1;
-      draw();
-      if (revealed >= slots) { finish(); return; }
-      armPopTimer(rec, "morphTimer", step, POP_TRANSITION_MS / slots);
-    };
-    armPopTimer(rec, "morphTimer", step, POP_TRANSITION_MS / slots);
+    rec.el.style.setProperty("--lens-ms", `${POP_LENS_MS}ms`);
+    const lens = document.createElement("span");
+    lens.className = "pop-lens";
+    lens.setAttribute("aria-hidden", "true");
+    rec.el.appendChild(lens);
+    rec.el.classList.add("pop-language-morph");
+    armPopTimer(rec, "morphTimer", () => {
+      swap();
+      armPopTimer(rec, "morphTimer", finish, POP_LENS_MS / 2);
+    }, POP_LENS_MS / 2);
   }
 
   function scheduleBilingualHandoff(rec, item) {
@@ -1706,7 +1711,7 @@
       armPopTimer(rec, "languageTimer", () => cycle(true), handoffIn);
       return;
     }
-    const fits = elapsed + handoffIn + POP_TRANSITION_MS + translatedMs <= POP_RESIDENCY_CAP;
+    const fits = elapsed + handoffIn + POP_LENS_MS + translatedMs <= POP_RESIDENCY_CAP;
     if (!fits) {
       queueTranslatedAppearance(rec, item);
       return;

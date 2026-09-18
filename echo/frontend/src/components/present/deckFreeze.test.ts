@@ -18,7 +18,10 @@ function deck() {
 	const context = {
 		clearTimeout,
 		Date,
-		document: { querySelectorAll: () => [] },
+		document: {
+			documentElement: { classList: { toggle: () => {} } },
+			querySelectorAll: () => [],
+		},
 		renderActive: () => {},
 		setTimeout,
 		state: { pop: { live: [rec] }, renderPending: false },

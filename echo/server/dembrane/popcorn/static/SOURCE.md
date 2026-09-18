@@ -125,7 +125,13 @@ evidence link and focus target. An unheld appearance is capped at 24 seconds;
 when both full intervals cannot fit, the translation takes the next fair slot.
 Evidence, page visibility and the presentation shell pause both stage and
 language timers. Reduced motion keeps the same intervals with an instant
-handoff. Normal motion uses a 200 ms directional snap and controlled settle.
+handoff. A phrase enters with a 200 ms directional snap and controlled settle.
+The language handoff is the opposite register, soft and round: over 1.1 s
+(`playback.lensMs`) a round lens glides across the phrase, the words go out of
+focus beneath it, change once at the middle, and come back into focus in the
+other language. A phrase shown in translation ends with Phosphor's translate
+mark, named for screen readers by `translation.done`; there is no Original or
+Translation caption. The shell's pause holds the lens as well as the timers.
 
 Opening patch: session.intro, session.disclosure and session.notice carry
 host-written opening copy for any session: an intro, a disclosure with an

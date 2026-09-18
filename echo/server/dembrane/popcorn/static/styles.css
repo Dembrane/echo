@@ -64,7 +64,8 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .intro-subtitle { font-size: 1.4em; max-width: 32em; }
 .intro-content > p { max-width: 43em; }
 .intro-source { border-top: 1px solid var(--hairline); padding-top: 1em; font-size: .85em; }
-.intro-continue { font: inherit; background: var(--blue); color: var(--parchment); border: none; padding: .8em 1.2em; cursor: pointer; }
+.intro-continue { font: inherit; background: var(--blue); color: var(--parchment); border: none; border-radius: 9999px; padding: .8em 1.6em; cursor: pointer; transition: background-color .15s ease; }
+.intro-continue:hover { background: var(--graphite); }
 .popcorn-intro { overflow-y: auto; }
 .intro-data { max-width: 64em; justify-content: flex-start; padding: 1.5em 0; }
 .intro-data h1 { font-size: clamp(1.8rem, 3.4vw, 3.2rem); max-width: 22em; }
@@ -665,11 +666,31 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   line-height: 1.3;
 }
 .pop-words { white-space: pre-wrap; }
-.pop-language-morph .pop-letter { display: inline; }
-.pop-language-morph .pop-letter-new {
-  display: inline-block;
-  animation: letter-lerp 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+/* The language handoff: the phrase goes softly out of focus and returns in
+   the other language while a round lens glides across it. Soft in, soft out. */
+.pop-language-morph .pop-phrase {
+  animation: lens-refocus var(--lens-ms, 1100ms) cubic-bezier(0.45, 0, 0.25, 1) both;
 }
+.pop-lens {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 3.4em;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  font-size: clamp(24px, 2.6vw, 42px);
+  background: radial-gradient(circle at 34% 30%, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.08) 46%, rgb(255 255 255 / 0) 70%);
+  border: 1.5px solid rgb(255 255 255 / 0.7);
+  box-shadow: 0 0.3em 1.1em rgb(45 45 44 / 0.16), inset 0 0 0.9em rgb(255 255 255 / 0.35);
+  -webkit-backdrop-filter: blur(2.5px) brightness(1.05);
+  backdrop-filter: blur(2.5px) brightness(1.05);
+  animation: lens-glide var(--lens-ms, 1100ms) cubic-bezier(0.45, 0, 0.25, 1) both;
+}
+.pop.center .pop-lens { font-size: clamp(32px, 3.6vw, 58px); }
+.pop-translated { width: 0.8em; height: 0.8em; vertical-align: -0.06em; margin-left: 0.36em; fill: currentColor; opacity: 0.55; }
+.screen-frozen .pop-language-morph .pop-phrase,
+.screen-frozen .pop-lens { animation-play-state: paused; }
 /* one size for every phrase; a phrase steps down only to fit the stage */
 .pop .pop-phrase { font-size: clamp(24px, 2.6vw, 42px); }
 .pop[data-weight="1"] .pop-phrase { font-size: clamp(19px, 1.9vw, 30px); }
@@ -682,10 +703,17 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   72%  { opacity: 1; transform: translate(-49%, -51%) scale(1.025) rotate(1deg); }
   100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(var(--tilt, 0deg)); }
 }
-@keyframes letter-lerp {
-  0%   { opacity: 0.2; transform: translateY(-0.24em) scale(0.72) rotate(-5deg); }
-  68%  { opacity: 1; transform: translateY(0.04em) scale(1.08) rotate(1deg); }
-  100% { opacity: 1; transform: none; }
+@keyframes lens-refocus {
+  0%   { filter: blur(0); opacity: 1; }
+  42%  { filter: blur(7px); opacity: 0.12; }
+  58%  { filter: blur(7px); opacity: 0.12; }
+  100% { filter: blur(0); opacity: 1; }
+}
+@keyframes lens-glide {
+  0%   { opacity: 0; transform: translate(-70%, -50%) scale(0.7); }
+  18%  { opacity: 1; transform: translate(-30%, -50%) scale(1); }
+  82%  { opacity: 1; }
+  100% { opacity: 0; left: 100%; transform: translate(-70%, -50%) scale(0.85); }
 }
 
 /* the count to the first popcorn, then a spinner if it is late */
@@ -1029,7 +1057,8 @@ button.action-row:hover .action-sentence { color: var(--blue); }
 
 @media (prefers-reduced-motion: reduce) {
   .pop { animation: none; }
-  .pop-language-morph .pop-letter-new { animation: none; }
+  .pop-language-morph .pop-phrase { animation: none; }
+  .pop-lens { display: none; }
   .pop.pop-out { transition: none; }
   .live-dot { animation: none; opacity: 0.7; }
   .pole-block { animation: none; }
