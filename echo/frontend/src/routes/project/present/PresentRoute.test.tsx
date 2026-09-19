@@ -243,7 +243,7 @@ describe("Reviewing the results on the screen", () => {
 			data: { items, limit: 100, snapshotId: "snap-1", total: 250 },
 		});
 		editing();
-		await openTab("Review visible results");
+		await openTab("Review results");
 		expect(
 			screen.queryByRole("button", { name: "Evidence and history" }),
 		).toBeNull();
@@ -285,7 +285,7 @@ describe("Reviewing the results on the screen", () => {
 			data: { items, limit: 100, snapshotId: "snap-1", total: 2 },
 		});
 		editing();
-		await openTab("Review visible results");
+		await openTab("Review results");
 		expect(
 			screen.getByRole("button", { name: "Show in this presentation" }),
 		).toBeTruthy();

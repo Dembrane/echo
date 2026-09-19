@@ -183,7 +183,7 @@ function Editor({
 							<Trans>Tabs</Trans>
 						</Tabs.Tab>
 						<Tabs.Tab value="results">
-							<Trans>Review visible results</Trans>
+							<Trans>Review results</Trans>
 						</Tabs.Tab>
 					</Tabs.List>
 					<Tabs.Panel value="intro" pt="md">
@@ -251,9 +251,6 @@ function Editor({
 					</Tabs.Panel>
 					<Tabs.Panel value="results" pt="md">
 						<Stack gap="sm">
-							<Title order={4}>
-								<Trans>Visible results</Trans>
-							</Title>
 							<Text size="sm">
 								<Trans>
 									Edit the wording, check the evidence, or hide a finding from
