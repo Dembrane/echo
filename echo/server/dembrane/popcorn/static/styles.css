@@ -29,6 +29,29 @@
   --m4: #FFD166;
   --m5: #FF9AA2;
 
+  /* pinned: these never follow the theme, because what they colour is an
+     object in the room rather than a surface of the page. */
+  /* graphite on a bright marker: a highlighted phrase is a sticky note, and a
+     sticky note does not invert when the lights go down */
+  --on-marker: #2D2D2C;
+  /* a filled blue surface keeps the brand blue with parchment on it. Only blue
+     used as text or as a thin line lifts on dark. */
+  --blue-fill: #4169E1;
+  --on-blue: #F6F4F1;
+
+  /* the QR card and the modules drawn on it. The pair turns over with the
+     room; the card's padding is the code's quiet zone, so it always carries
+     the colour the modules sit on. */
+  --qr-card: #F6F4F1;
+  --qr-ink: #2D2D2C;
+
+  /* the raised card over the ground: white on parchment, one step up on dark */
+  --paper: #FFFFFF;
+  /* a stakeholder card for a group that spoke for itself */
+  --card-voiced: #FFFFFF;
+  /* the kind legend asks for --ink; it is the page's ink by another name */
+  --ink: var(--graphite);
+
   --font: "DM Sans Local", "DM Sans", system-ui, sans-serif;
   --pad-x: clamp(24px, 4vw, 72px);
 }
@@ -53,6 +76,37 @@ body {
 a { color: var(--blue); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
+.session-notice { flex-shrink: 0; padding: .55em var(--pad-x); background: var(--blue-fill); color: var(--on-blue); font-size: .85em; }
+.session-notice[hidden] { display: none; }
+.session-notice button { font: inherit; color: inherit; background: none; border: none; text-decoration: underline; cursor: pointer; margin-left: 1em; }
+.popcorn-intro { width: 100vw; height: 100dvh; max-width: none; max-height: none; border: none; padding: var(--pad-x); background: var(--parchment); color: var(--graphite); font: inherit; }
+.popcorn-intro::backdrop { background: var(--parchment); }
+.intro-content { max-width: 52em; margin: auto; min-height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 1.4em; }
+.intro-eyebrow { color: var(--blue); text-transform: uppercase; letter-spacing: .12em; font-size: .8em; }
+.intro-content h1 { font-size: clamp(2rem, 5vw, 4.5rem); font-weight: 400; line-height: var(--display-leading); max-width: 15em; }
+.intro-subtitle { font-size: 1.4em; max-width: 32em; }
+.intro-content > p { max-width: 43em; }
+.intro-source { border-top: 1px solid var(--hairline); padding-top: 1em; font-size: .85em; }
+.intro-continue { font: inherit; background: var(--blue-fill); color: var(--on-blue); border: none; border-radius: 9999px; padding: .8em 1.6em; cursor: pointer; transition: background-color .15s ease; }
+.intro-continue:hover { background: var(--graphite); color: var(--on-blue); }
+.popcorn-intro { overflow-y: auto; }
+.intro-data { max-width: 64em; justify-content: flex-start; padding: 1.5em 0; }
+.intro-data h1 { font-size: clamp(1.8rem, 3.4vw, 3.2rem); max-width: 22em; }
+.data-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.6em; counter-reset: step; }
+.data-steps li { display: flex; flex-direction: column; gap: .6em; counter-increment: step; }
+.data-steps img { width: 100%; max-width: 13em; height: auto; aspect-ratio: 1; }
+.data-steps p::before { content: counter(step) ". "; color: var(--blue); }
+.data-notes { border-top: 1px solid var(--hairline); padding-top: 1em; font-size: .85em; max-width: 52em; }
+.data-notes p + p { margin-top: .4em; }
+@media (max-width: 720px) {
+  .data-steps { grid-template-columns: 1fr; }
+  .data-steps li { flex-direction: row; align-items: center; }
+  .data-steps img { width: 6.5em; flex: none; }
+}
+.qr-panel a { display: flex; flex-direction: column; align-items: center; color: inherit; }
+.pop-disclaimer-note { display: block; margin-top: .4em; }
+@media print { .session-notice { color: var(--graphite); border: 2px solid var(--graphite); } }
+
 :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 
 /* ---------- chrome ---------- */
@@ -66,6 +120,14 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   border-bottom: 1px solid var(--hairline);
   flex: none;
 }
+
+/* The Present shell owns the persistent frame: navigation, notice, QR and
+   footer. Its deck iframe renders only the stage; standalone pages retain
+   their complete original chrome. */
+.present-shell .topbar { display: none; }
+.present-shell .session-notice,
+.present-shell .colophon,
+.present-shell .qr-panel { display: none; }
 
 .session-id { display: flex; flex-direction: column; padding-bottom: 0.8em; min-width: 0; }
 .session-title { font-weight: 500; font-size: 0.85em; letter-spacing: 0.01em; white-space: nowrap; }
@@ -426,7 +488,10 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   align-items: center;
   gap: 0.45em;
   padding: 0.7em 0.7em 0.55em;
-  background: var(--parchment);
+  /* the padding is the code's quiet zone, so the card is the colour the
+     modules are drawn on */
+  background: var(--qr-card);
+  color: var(--qr-ink);
   border: 1px solid var(--hairline);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
   transform-origin: bottom right;
@@ -437,13 +502,18 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .qr-panel.minimised { padding: 0; border: none; background: transparent; box-shadow: none; }
 .qr-image { display: block; width: clamp(96px, 12vw, 200px); height: auto; aspect-ratio: 1; pointer-events: none; }
 .qr-image svg { display: block; width: 100%; height: 100%; }
-.qr-label { font-size: 0.72em; color: var(--ink-soft); letter-spacing: 0.01em; white-space: nowrap; }
+/* the server draws the modules as one stroked path and leaves the field
+   transparent, so the card's ink colours them in either room. The white disc
+   it puts behind the logomark is a circle, not a path, and stays light. */
+.qr-image svg path { stroke: var(--qr-ink); }
+/* the label and the fold button sit on the card, so they carry its ink */
+.qr-label { font-size: 0.72em; color: var(--qr-ink); opacity: 0.62; letter-spacing: 0.01em; white-space: nowrap; }
 .qr-min {
   position: absolute; top: 0.15em; right: 0.25em;
-  border: none; background: transparent; color: var(--ink-faint); font: inherit; font-size: 1em; line-height: 1;
+  border: none; background: transparent; color: var(--qr-ink); opacity: 0.38; font: inherit; font-size: 1em; line-height: 1;
   padding: 0.1em 0.3em; cursor: pointer;
 }
-.qr-min:hover { color: var(--graphite); }
+.qr-min:hover { opacity: 1; }
 .qr-chip {
   border: 1px solid var(--hairline); background: var(--parchment); color: var(--ink-soft);
   font: inherit; font-size: 0.72em; letter-spacing: 0.06em; padding: 0.45em 0.7em; cursor: pointer;
@@ -578,7 +648,7 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .tail-phrase {
   appearance: none; border: none; cursor: pointer; text-align: left;
   background: var(--marker);
-  color: inherit;
+  color: var(--on-marker);
   font: inherit;
   padding: 0.08em 0.35em;
   box-decoration-break: clone;
@@ -598,9 +668,13 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   text-align: center;
   text-wrap: balance;   /* even lines, never a lone word on the last one */
   transform: translate(-50%, -50%) rotate(var(--tilt, 0deg));
-  animation: pop-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
-  transition: transform 0.18s ease;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
+/* The entrance is a class the page takes off when it has played: left on the
+   element, it would start over each time a flip hands the animation back.
+   Linear overall: every stage of the pop carries its own easing. */
+.pop.pop-enter { z-index: 70; animation: pop-in var(--enter-ms, 1300ms) linear both; }
 .pop.center { max-width: 88%; }
 /* hover: hold, straighten, expand, and reveal the group */
 .pop:hover {
@@ -619,6 +693,9 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .pop-phrase {
   display: inline;
   background: var(--marker);
+  /* the phrase and its icons ride the marker, so they keep graphite in both
+     themes; currentColor carries it into .pop-kind and .pop-translated */
+  color: var(--on-marker);
   padding: 0.06em 0.3em;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
@@ -626,6 +703,36 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   letter-spacing: -0.01em;
   line-height: 1.3;
 }
+.pop-words { white-space: pre-wrap; }
+/* A popcorn pops once per language. It squats, jumps off the screen and
+   turns over in the air; it is edge-on at the top, where the words change,
+   so it lands in the next language. */
+.pop.pop-flip {
+  z-index: 70;
+  animation: pop-flip var(--flip-ms, 620ms) linear both;
+}
+.pop-translated-wrap { white-space: nowrap; }
+.pop-translated { width: 0.8em; height: 0.8em; vertical-align: -0.06em; margin-left: 0.36em; fill: currentColor; opacity: 0.55; }
+.pop-translated-code { margin-left: 0.22em; font-size: 0.52em; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; vertical-align: 0.12em; }
+
+/* The kernel: what draws the eye to where a phrase is about to pop. */
+.pop-kernel {
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 50%);
+  width: 0.7em;
+  aspect-ratio: 1;
+  pointer-events: none;
+  font-size: clamp(24px, 2.6vw, 42px);
+  background: var(--marker);
+  /* a slightly odd circle, not a perfect one, and no outline */
+  border-radius: 58% 42% 53% 47% / 46% 57% 43% 54%;
+  transform: translate(-50%, -50%) rotate(var(--tilt, 0deg));
+  animation: kernel var(--enter-ms, 1300ms) linear both;
+}
+.pop-kernel.center { font-size: clamp(32px, 3.6vw, 58px); }
+.screen-frozen .pop,
+.screen-frozen .pop-kernel { animation-play-state: paused; }
 /* one size for every phrase; a phrase steps down only to fit the stage */
 .pop .pop-phrase { font-size: clamp(24px, 2.6vw, 42px); }
 .pop[data-weight="1"] .pop-phrase { font-size: clamp(19px, 1.9vw, 30px); }
@@ -633,10 +740,56 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .pop.center[data-weight="1"] .pop-phrase { font-size: clamp(26px, 2.8vw, 46px); }
 .pop .attribution { display: block; margin-top: 0.6em; justify-content: center; }
 
+/* The pop, after the host's storyboard, as percentages of --enter-ms (1300 ms):
+   0-8%    pop...          the kernel appears
+   8-46%   tension builds  it sits there and swells, twice, a little more
+   46-62%  wiggle!
+   62-74%  Explode!        the phrase bursts out of it, a little way off the
+                           screen (toned down once: it came at the room too hard)
+   74-90%  --- Land ---    back down, a squash
+   90-100% settled at its tilt */
+@keyframes kernel {
+  0%   { opacity: 0; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(0); animation-timing-function: cubic-bezier(0.2, 1.7, 0.4, 1); }
+  8%   { opacity: 1; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1); animation-timing-function: ease-in-out; }
+  20%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.1); animation-timing-function: ease-in-out; }
+  27%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.02); animation-timing-function: ease-in-out; }
+  39%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.2); animation-timing-function: ease-in-out; }
+  46%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.12); }
+  50%  { transform: translate(-58%, -50%) rotate(calc(var(--tilt, 0deg) - 16deg)) scale(1.16); }
+  54%  { transform: translate(-42%, -53%) rotate(calc(var(--tilt, 0deg) + 14deg)) scale(1.2); }
+  58%  { transform: translate(-57%, -47%) rotate(calc(var(--tilt, 0deg) - 12deg)) scale(1.24); }
+  62%  { opacity: 1; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.3); animation-timing-function: cubic-bezier(0.12, 0.9, 0.2, 1); }
+  70%  { opacity: 0; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(4.5); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(4.5); }
+}
 @keyframes pop-in {
-  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(var(--tilt, 0deg)); }
-  70%  { opacity: 1; transform: translate(-50%, -50%) scale(1.06) rotate(var(--tilt, 0deg)); }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(var(--tilt, 0deg)); }
+  0%   { opacity: 0; transform: translate(-50%, -50%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(0.06); }
+  62%  { opacity: 0; transform: translate(-50%, -50%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(0.06); animation-timing-function: cubic-bezier(0.12, 0.9, 0.2, 1); }
+  66%  { opacity: 1; }
+  74%  { opacity: 1; transform: translate(-50%, -52.5%) perspective(900px) translateZ(140px) rotate(calc(var(--tilt, 0deg) * 1.4)) scale(1.08); animation-timing-function: cubic-bezier(0.55, 0, 0.85, 0.4); }
+  90%  { transform: translate(-50%, -49.5%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(1.03, 0.96); animation-timing-function: cubic-bezier(0.2, 1.4, 0.4, 1); }
+  100% { opacity: 1; transform: translate(-50%, -50%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(1); }
+}
+/* FLLLLIP, popped: a neighbour goes off under the phrase and knocks it over.
+   No wind-up. 0-6% the knock (a jolt and a kick of rotation), 6-36% thrown up
+   off the screen, most of the height and most of the turn at once, tumbling
+   top over bottom to edge-on, where the words change; 36-68% down hard on the
+   other side, a squash and an over-lean; 68-100% a little hop and it settles.
+   It stays where it is on the stage. --flip-dir picks which way it tumbles and
+   --kick how it was knocked, both at random per flip, so a stage of phrases
+   never flips in step. The tilt crosses over: the back of a tilted card leans
+   the other way. */
+@keyframes pop-flip {
+  0% { transform: translate(-50%, -50%) perspective(1100px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1)) rotateX(0deg) scale(1); animation-timing-function: cubic-bezier(0.3, 0, 0.1, 1); }
+  6% { transform: translate(-50%, -49.4%) perspective(1100px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1 + var(--kick, 0deg) * 1)) rotateX(0deg) scale(1.1, 0.86); animation-timing-function: cubic-bezier(0.08, 0.82, 0.25, 1); }
+  22% { transform: translate(-50%, -54%) perspective(1100px) translateZ(215px) rotate(calc(var(--tilt, 0deg) * 0.55 + var(--kick, 0deg) * 0.6)) rotateX(calc(64deg * var(--flip-dir, 1))) scale(1.14); animation-timing-function: linear; }
+  36% { transform: translate(-50%, -56%) perspective(1100px) translateZ(280px) rotate(calc(var(--tilt, 0deg) * 0.1)) rotateX(calc(90deg * var(--flip-dir, 1))) scale(1.1); animation-timing-function: step-end; }
+  36.01% { transform: translate(-50%, -56%) perspective(1100px) translateZ(280px) rotate(calc(var(--tilt, 0deg) * -0.1)) rotateX(calc(-90deg * var(--flip-dir, 1))) scale(1.1); animation-timing-function: linear; }
+  48% { transform: translate(-50%, -55%) perspective(1100px) translateZ(262px) rotate(calc(var(--tilt, 0deg) * -0.5)) rotateX(calc(-52deg * var(--flip-dir, 1))) scale(1.08); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.45); }
+  68% { transform: translate(-50%, -49%) perspective(1100px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1.5 + var(--kick, 0deg) * -0.5)) rotateX(0deg) scale(1.12, 0.84); animation-timing-function: cubic-bezier(0.08, 0.82, 0.25, 1); }
+  79% { transform: translate(-50%, -51.6%) perspective(1100px) translateZ(46px) rotate(calc(var(--tilt, 0deg) * -0.8)) rotateX(0deg) scale(0.97, 1.05); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.45); }
+  90% { transform: translate(-50%, -49.7%) perspective(1100px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1.12)) rotateX(0deg) scale(1.04, 0.95); animation-timing-function: ease-out; }
+  100% { transform: translate(-50%, -50%) perspective(1100px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1)) rotateX(0deg) scale(1); }
 }
 
 /* the count to the first popcorn, then a spinner if it is late */
@@ -706,7 +859,7 @@ button.action-row {
 .action-list > .action-row:first-child { border-top: none; }
 button.action-row:hover .action-sentence { color: var(--blue); }
 .action-sentence { font-size: clamp(21px, 1.9vw, 31px); font-weight: 400; line-height: 1.3; letter-spacing: -0.01em; }
-.action-sentence mark { background: var(--m3); color: inherit; padding: 0 0.1em; }
+.action-sentence mark { background: var(--m3); color: var(--on-marker); padding: 0 0.1em; }
 .row-theme { margin-left: auto; font-size: 0.68em; color: var(--ink-faint); white-space: nowrap; }
 .recommendation-list .action-sentence {
   flex: 1 1 42ch;
@@ -789,8 +942,9 @@ button.action-row:hover .action-sentence { color: var(--blue); }
   --pull: -8px; --tk: -0.7deg;
 }
 .pole-b {
-  background: var(--blue);
-  color: #fff;
+  /* a filled pole: the brand blue, not the lifted one, with parchment on it */
+  background: var(--blue-fill);
+  color: var(--on-blue);
   justify-self: start;
   text-align: center;
   --pull: 8px; --tk: 0.7deg;
@@ -888,7 +1042,7 @@ button.action-row:hover .action-sentence { color: var(--blue); }
    spoke about. An inferred group keeps the grey, marked by its tag and a
    dotted inner rule. Nothing here filters, so an inferred group with a
    high stake still survives to the coarsest view. */
-.stake-node.rung-voiced { --card: #FFFFFF; }
+.stake-node.rung-voiced { --card: var(--card-voiced); }
 .stake-node.rung-inferred { outline: 1px dotted var(--ink-faint); outline-offset: -4px; }
 .stake-node.rung-inferred .stake-name { color: var(--ink-soft); }
 .stake-node .rung-mark {
@@ -979,7 +1133,9 @@ button.action-row:hover .action-sentence { color: var(--blue); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pop { animation: none; }
+  .pop.pop-enter { animation: none; }
+  .pop.pop-flip { animation: none; }
+  .pop-kernel { display: none; }
   .pop.pop-out { transition: none; }
   .live-dot { animation: none; opacity: 0.7; }
   .pole-block { animation: none; }
@@ -1155,3 +1311,74 @@ details.theme-block[open] .theme-body { animation: rise-in 0.38s cubic-bezier(0.
 /* local development only: the footer's link to how popcorn works */
 .flow-link { margin-left: 1em; color: var(--ink-faint); text-decoration: none; border-bottom: 1px solid var(--hairline); }
 .flow-link:hover { color: var(--graphite); border-bottom-color: var(--graphite); }
+
+/* ---------- dark theme ----------
+   The host switches it on for the room; session.json carries
+   `theme: "light" | "dark"` and app.js writes it to <html data-theme>, so a
+   change lands on the next bundle read without a reload.
+
+   The tokens above are named for their colour and used for their role, and
+   the roles are what turn over: --parchment is the ground, --graphite is the
+   ink, whichever way round they are. So the names stay and the values swap.
+   Blue lifts to #7C9BFF wherever it is read as text or drawn as a hairline;
+   it stays #4169E1 (--blue-fill) wherever it is a filled surface with
+   parchment on it. The markers do not move at all. */
+
+:root[data-theme="dark"] {
+  --parchment: #1B1B1A;       /* the ground: a warm near-black, not a blue one */
+  --paper: #262625;           /* a card one step up off the ground */
+  --brand-grey: #2F2E2C;      /* a stakeholder card for a group spoken about */
+  --card-voiced: #44433E;     /* ...and the lighter one for a group that spoke */
+  --graphite: #F6F4F1;        /* the ink */
+  --ink-soft: rgba(246, 244, 241, 0.64);
+  --ink-faint: rgba(246, 244, 241, 0.40);
+  --hairline: #3A3A38;
+  --blue: #7C9BFF;            /* blue as text and as a line, lifted to clear */
+  --flow-neutral: #7C9BFF;    /* the neutral stakeholder line */
+  --qr-card: #1B1B1A;         /* the QR turns over too: light modules... */
+  --qr-ink: #F6F4F1;          /* ...on the dark card that is their quiet zone */
+}
+
+/* the continue button is filled blue; on dark its hover lifts rather than
+   going to ink, which would now be parchment */
+:root[data-theme="dark"] .intro-continue:hover { background: var(--blue); color: var(--on-marker); }
+
+/* the veils, the modal and the drop target all assumed a light page */
+:root[data-theme="dark"] .drop-veil { background: rgba(27, 27, 26, 0.9); }
+:root[data-theme="dark"] .quote-veil { background: rgba(0, 0, 0, 0.62); }
+:root[data-theme="dark"] .quote-tip {
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+}
+:root[data-theme="dark"] .qr-panel:not(.minimised) { box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5); }
+:root[data-theme="dark"] .qr-chip { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5); }
+
+/* the shuffle switch is a physical thing: a grey track and a light knob with
+   a graphite icon, the same object in both rooms */
+:root[data-theme="dark"] .pop-switch { background: #55554F; }
+:root[data-theme="dark"] .pop-switch-thumb {
+  background: #F6F4F1;
+  color: #2D2D2C;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+:root[data-theme="dark"] .pop-shuffle input:checked + .pop-switch .pop-switch-thumb { color: var(--blue-fill); }
+
+/* the crop window's tint has to be a shade lighter than the ground, not darker;
+   the whole session is still no window at all */
+:root[data-theme="dark"] .tl-window:not(.tl-window-all) { background: rgba(124, 155, 255, 0.14); }
+
+/* the little outlined tags carry ink at 78% either way */
+:root[data-theme="dark"] .rec-meta-tag,
+:root[data-theme="dark"] .rel-tag { color: rgba(246, 244, 241, 0.78); }
+
+/* the kind tooltip is an inverted chip on light; on dark it rises off the
+   ground instead of flashing white */
+:root[data-theme="dark"] .pop-kind-wrap::after { background: #3A3A38; color: var(--graphite); }
+
+/* the data-policy illustrations are line drawings in dark strokes on
+   transparent: they would vanish. Each has a dark twin (light strokes, dark
+   paper, the same fills) and the theme shows one of the pair. */
+.data-steps img.illustration-dark { display: none; }
+:root[data-theme="dark"] .data-steps img.illustration { display: none; }
+:root[data-theme="dark"] .data-steps img.illustration-dark { display: block; }

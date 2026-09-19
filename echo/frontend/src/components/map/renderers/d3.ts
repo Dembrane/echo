@@ -62,7 +62,8 @@ export interface ForceCenter<N extends SimulationNodeDatum> extends Force<N> {
 }
 
 export interface ForceCollide<N extends SimulationNodeDatum> extends Force<N> {
-	radius(radius: number): this;
+	/** A number, or a per-node radius; setting it re-reads every node's radius. */
+	radius(radius: number | ((node: N) => number)): this;
 	strength(strength: number): this;
 }
 
@@ -75,12 +76,20 @@ export interface ZoomTransform {
 	toString(): string;
 }
 
+export type ZoomExtent = [[number, number], [number, number]];
+
 export interface ZoomBehavior<E extends Element> {
 	(selection: Selection<E, unknown, null, undefined>): void;
 	scaleExtent(extent: [number, number]): this;
+	/** Viewport extent; without it d3 reads the SVG's own size attributes. */
+	extent(extent: ZoomExtent | (() => ZoomExtent)): this;
 	on(
 		typenames: string,
-		listener: (event: { transform: ZoomTransform }) => void,
+		listener: (event: {
+			transform: ZoomTransform;
+			/** The pointer or wheel event behind a user gesture; null for programmatic zooms. */
+			sourceEvent?: Event | null;
+		}) => void,
 	): this;
 	transform(
 		target:

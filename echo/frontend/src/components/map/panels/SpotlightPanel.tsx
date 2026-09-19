@@ -3,19 +3,29 @@ import { Trans } from "@lingui/react/macro";
 import { Anchor, Button, UnstyledButton } from "@mantine/core";
 import { memo } from "react";
 import { cn } from "@/lib/utils";
+import {
+	ATTRIBUTES,
+	attributeInputsOf,
+	FACT_CHECKABLE_TYPES,
+	isFactCheckEligible,
+} from "../attributes";
 import type { EvidenceGroup } from "../data/adapter";
 import { deriveDisplayVerdict } from "../graph/nodeStyle";
 import type { ColorBy, FactCheckState, MapGraphNode } from "../types";
-import { type ConversationHref, NodeDetailCard } from "./NodeDetailCard";
+import {
+	type ConversationHref,
+	NodeDetailCard,
+	type NodeInspection,
+} from "./NodeDetailCard";
 import {
 	CaptionText,
 	CHIP_CLASS,
 	formatTimestamp,
 	OPINION_CHIP_CLASS,
 	PanelHeader,
-	VALENCE_CHIP_CLASS,
 	VERDICT_CHIP_CLASS,
 	valenceBlurb,
+	valenceChipClass,
 	valenceLabel,
 	verdictLabel,
 } from "./shared";
@@ -23,7 +33,7 @@ import {
 type SpotlightPanelProps = {
 	node: MapGraphNode | null;
 	evidence: EvidenceGroup[];
-	/** The claim's current state; undefined for arguments. */
+	/** The claim's current state; undefined when not eligible. */
 	factCheck: FactCheckState | undefined;
 	colorBy: ColorBy;
 	onColorByChange: (colorBy: ColorBy) => void;
@@ -33,11 +43,12 @@ type SpotlightPanelProps = {
 	onCancelFactCheck: (nodeId: string) => void;
 	conversationHref?: ConversationHref;
 	locale?: string;
+	inspection?: NodeInspection | null;
 };
 
 const ACTIVE_RING = "ring-2 ring-offset-1 ring-gray-400";
 
-/** The shared selected node: statement, evidence, chips and fact-checking. */
+/** The shared selected node: its type's details, chips and fact-checking. */
 export const SpotlightPanel = memo(function SpotlightPanel({
 	node,
 	evidence,
@@ -49,19 +60,24 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 	onCancelFactCheck,
 	conversationHref,
 	locale,
+	inspection = null,
 }: SpotlightPanelProps) {
-	const isClaim = node?.metadata.kind === "claim";
-	const isArgument = node?.metadata.kind === "argument";
-	const valence = node ? (node.metadata.valence ?? "neutral") : undefined;
-	const verdict = isClaim ? deriveDisplayVerdict(factCheck) : undefined;
+	const type = node?.metadata.objectType ?? "argument";
+	const eligible = node
+		? isFactCheckEligible(attributeInputsOf(node.metadata))
+		: false;
+	const argumentType = FACT_CHECKABLE_TYPES.has(type);
+	const valenceApplies = ATTRIBUTES.valence.appliesTo.includes(type);
+	const valence = node?.metadata.valence;
+	const verdict = eligible ? deriveDisplayVerdict(factCheck) : undefined;
 
 	const valenceActive = colorBy === "valence";
 	const verdictActive = colorBy === "factCheck";
 
-	const factCheckTag = isArgument
-		? { className: OPINION_CHIP_CLASS, label: t`Opinion` }
-		: verdict
-			? { className: VERDICT_CHIP_CLASS[verdict], label: verdictLabel(verdict) }
+	const factCheckTag = verdict
+		? { className: VERDICT_CHIP_CLASS[verdict], label: verdictLabel(verdict) }
+		: argumentType
+			? { className: OPINION_CHIP_CLASS, label: t`Opinion` }
 			: undefined;
 
 	const timestamp = formatTimestamp(node?.metadata.createdAt, locale);
@@ -84,62 +100,61 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 							conversationHref={conversationHref}
 							titleSize="small"
 							collapsibleQuotes
+							inspection={inspection}
 						/>
 
-						{(valence || factCheckTag) && (
-							<div className="flex flex-wrap gap-1.5">
-								{valence && (
-									<UnstyledButton
-										onClick={() =>
-											onColorByChange(valenceActive ? "none" : "valence")
-										}
-										aria-pressed={valenceActive}
-										title={
-											valenceActive
-												? t`Stop coloring graph by valence`
-												: t`Color graph by valence`
-										}
-										className={cn(
-											CHIP_CLASS,
-											"transition-opacity hover:opacity-80",
-											VALENCE_CHIP_CLASS[valence],
-											valenceActive && ACTIVE_RING,
-										)}
-									>
-										{valenceLabel(valence)}
-									</UnstyledButton>
-								)}
-								{factCheckTag && (
-									<UnstyledButton
-										onClick={() =>
-											onColorByChange(verdictActive ? "none" : "factCheck")
-										}
-										aria-pressed={verdictActive}
-										title={
-											verdictActive
-												? t`Stop coloring graph by fact-check`
-												: t`Color graph by fact-check`
-										}
-										className={cn(
-											CHIP_CLASS,
-											"transition-opacity hover:opacity-80",
-											factCheckTag.className,
-											verdictActive && ACTIVE_RING,
-										)}
-									>
-										{factCheckTag.label}
-									</UnstyledButton>
-								)}
-							</div>
-						)}
+						<div className="flex flex-wrap gap-1.5">
+							{valenceApplies && (
+								<UnstyledButton
+									onClick={() =>
+										onColorByChange(valenceActive ? "none" : "valence")
+									}
+									aria-pressed={valenceActive}
+									title={
+										valenceActive
+											? t`Stop coloring graph by valence`
+											: t`Color graph by valence`
+									}
+									className={cn(
+										CHIP_CLASS,
+										"transition-opacity hover:opacity-80",
+										valenceChipClass(valence),
+										valenceActive && ACTIVE_RING,
+									)}
+								>
+									{valenceLabel(valence)}
+								</UnstyledButton>
+							)}
+							{factCheckTag && (
+								<UnstyledButton
+									onClick={() =>
+										onColorByChange(verdictActive ? "none" : "factCheck")
+									}
+									aria-pressed={verdictActive}
+									title={
+										verdictActive
+											? t`Stop coloring graph by factual status`
+											: t`Color graph by factual status`
+									}
+									className={cn(
+										CHIP_CLASS,
+										"transition-opacity hover:opacity-80",
+										factCheckTag.className,
+										verdictActive && ACTIVE_RING,
+									)}
+								>
+									{factCheckTag.label}
+								</UnstyledButton>
+							)}
+						</div>
 
-						{valenceActive && valence && (
+						{valenceActive && valenceApplies && (
 							<p className="text-xs">{valenceBlurb(valence)}</p>
 						)}
 
 						{verdictActive && (
 							<div className="space-y-2">
-								{isArgument && (
+								{!eligible && argumentType && (
 									<p className="text-xs">
 										<Trans>
 											Arguments express stances or preferences and aren't
@@ -148,7 +163,13 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 									</p>
 								)}
 
-								{isClaim && status === "idle" && canFactCheck && (
+								{!eligible && !argumentType && (
+									<p className="text-xs">
+										<Trans>Factual status does not apply to this object.</Trans>
+									</p>
+								)}
+
+								{eligible && status === "idle" && canFactCheck && (
 									<Button
 										size="compact-sm"
 										radius="xl"
@@ -159,13 +180,13 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 									</Button>
 								)}
 
-								{isClaim && status === "idle" && !canFactCheck && (
+								{eligible && status === "idle" && !canFactCheck && (
 									<CaptionText>
 										<Trans>This claim has not been fact-checked.</Trans>
 									</CaptionText>
 								)}
 
-								{isClaim && status === "processing" && (
+								{eligible && status === "processing" && (
 									<div className="flex items-center justify-between gap-2 text-xs">
 										<div className="flex items-center gap-2">
 											<span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-primary" />
@@ -175,7 +196,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 											<Button
 												size="compact-xs"
 												variant="subtle"
-												radius="xl"
+												radius={0}
 												onClick={() => onCancelFactCheck(node.id)}
 											>
 												<Trans>Cancel</Trans>
@@ -184,7 +205,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 									</div>
 								)}
 
-								{isClaim && factCheck?.status === "done" && (
+								{eligible && factCheck?.status === "done" && (
 									<div className="space-y-2">
 										<p className="text-xs">{factCheck.justification}</p>
 										{factCheck.sources.length > 0 && (
@@ -208,6 +229,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 											<Button
 												size="compact-xs"
 												variant="subtle"
+												radius={0}
 												onClick={() => onFactCheck(node.id, { force: true })}
 											>
 												<Trans>Re-check</Trans>
@@ -216,7 +238,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 									</div>
 								)}
 
-								{isClaim && factCheck?.status === "error" && (
+								{eligible && factCheck?.status === "error" && (
 									<div className="space-y-2">
 										<p
 											className="text-xs"
@@ -228,7 +250,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 											<Button
 												size="compact-xs"
 												variant="outline"
-												radius="xl"
+												radius={0}
 												onClick={() => onFactCheck(node.id)}
 											>
 												<Trans>Retry</Trans>

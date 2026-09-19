@@ -84,6 +84,36 @@ def default_deps() -> GenerationDeps:
     )
 
 
+Extract = Callable[..., Awaitable[tuple[dict[str, Any], dict[str, int]]]]
+
+
+async def read_conversation(
+    transcript: recipe.Transcript,
+    extract: Extract,
+    *,
+    between_windows: Callable[[], Awaitable[None]] | None = None,
+) -> list[tuple[dict[str, Any], dict[str, int]]]:
+    """One extraction call per window of a conversation, in order: each raw
+    answer with its token usage, before grounding. `between_windows` is
+    awaited after every window but the last (a long conversation's keepalive).
+    Shared with the `arguments` recipe, which saves these answers as its
+    extraction artifact and grounds them in a step of their own."""
+    windows = recipe.transcript_windows(transcript.text)
+    answers: list[tuple[dict[str, Any], dict[str, int]]] = []
+    for index, window in enumerate(windows):
+        answers.append(
+            await extract(
+                conversation_id=transcript.id,
+                window=window,
+                window_index=index,
+                window_count=len(windows),
+            )
+        )
+        if between_windows is not None and index < len(windows) - 1:
+            await between_windows()
+    return answers
+
+
 def _leaf_exceptions(exc: BaseException) -> list[BaseException]:
     if isinstance(exc, BaseExceptionGroup):
         return [leaf for inner in exc.exceptions for leaf in _leaf_exceptions(inner)]
@@ -222,27 +252,24 @@ async def _generate(row: dict[str, Any], store: MapStore, deps: GenerationDeps) 
     await save("extracting")
     semaphore = asyncio.Semaphore(EXTRACTION_CONCURRENCY)
 
+    async def keep_alive() -> None:
+        async with lock:
+            await save("extracting", force=False, interval=WINDOW_HEARTBEAT_SECONDS)
+
     async def extract_one(transcript: recipe.Transcript) -> None:
         async with semaphore:
             try:
-                windows = recipe.transcript_windows(transcript.text)
+                answers = await read_conversation(
+                    transcript, deps.extract, between_windows=keep_alive
+                )
                 shaped: list[list[dict[str, Any]]] = []
                 dropped = 0
                 conversation_usage: Counter[str] = Counter()
-                for index, window in enumerate(windows):
-                    raw, used = await deps.extract(
-                        conversation_id=transcript.id,
-                        window=window,
-                        window_index=index,
-                        window_count=len(windows),
-                    )
+                for index, (raw, used) in enumerate(answers):
                     candidates, lost = recipe.shape_extraction(raw, transcript, window_index=index)
                     shaped.append(candidates)
                     dropped += lost
                     conversation_usage.update(used)
-                    if index < len(windows) - 1:
-                        async with lock:
-                            await save("extracting", force=False, interval=WINDOW_HEARTBEAT_SECONDS)
             except (GenerationStopped, MapStoreError):
                 raise
             except Exception as exc:
@@ -256,7 +283,7 @@ async def _generate(row: dict[str, Any], store: MapStore, deps: GenerationDeps) 
                 return
         entry = {
             "text_hash": transcript.text_hash,
-            "windows": len(windows),
+            "windows": len(answers),
             "dropped": dropped,
             "usage": dict(conversation_usage),
             "candidates": recipe.merge_conversation_candidates(shaped),

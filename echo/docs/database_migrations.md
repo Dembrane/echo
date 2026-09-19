@@ -51,3 +51,62 @@ leaves the SQL-managed column and indexes in place. To roll back, revert the
 application and keep this schema and its data; never drop the shared `vector`
 extension. `add_map_schema.py` in the same folder is the Directus script the
 snapshot was pulled from, kept for a fresh local database without a push.
+
+6. Shared analysis objects and recipe runs (`analysis_scope`, `analysis_run`,
+   `analysis_step`, `analysis_object`, `analysis_object_revision`,
+   `analysis_relation`, `analysis_snapshot`, `analysis_outbox`,
+   `analysis_request_key`, plus `map_result.manifest_version` and
+   `map_result.snapshot_id`). The collections, fields and foreign keys come
+   from the snapshot push in step 2. The unique keys the lifecycle relies on
+   (accepted idempotency keys, request order, one step per run, revision
+   numbers, one publication sequence per scope, one snapshot per source event),
+   the composite and partial indexes, the CHECK constraints on statuses and hash
+   versions and the same-project and immutability triggers are SQL-only. Deploy
+   in this order:
+
+   1. Push the snapshot (step 2).
+   2. Run the Map SQL (step 5), then this script:
+
+```bash
+psql -h postgres -p 5432 -U dembrane -v ON_ERROR_STOP=1 \
+    -f echo/directus/migrations/add_analysis_constraints.sql
+```
+
+   3. Deploy the API, the ticks worker (`prod-worker-ticks.sh` serves
+      `task_analysis_run` and `task_analysis_outbox_dispatch`) and the
+      scheduler (`task_analysis_outbox_sweep`, every minute), in that order or
+      together. Nothing writes the new tables before the application that uses
+      them is deployed, and existing `map_result` rows read as
+      `manifest_version = 1`.
+
+   4. Popcorn sessions saved before this change (their phrases, tensions and
+      stakeholders) become analysis objects, and their producer scopes pass to
+      the executor, through `dembrane/analysis/popcorn_import.py`. Run it once
+      per deployment, before the ticks worker starts publishing:
+
+```bash
+uv run python -m dembrane.analysis.popcorn_import --dry-run
+uv run python -m dembrane.analysis.popcorn_import
+```
+
+      Per scope it marks the writer `legacy`, which fences the executor off it;
+      imports with `uuid5` ids, so a second run writes nothing and moves no
+      fence; then drains (it waits for that session's popcorn run lock to be
+      free) and marks the writer `analysis` with the fence bumped, which refuses
+      the importer from then on. There is never a moment with two writers.
+      `--no-transfer` imports and leaves the scopes `legacy`; running it again
+      hands them over. To reverse one scope, call
+      `dembrane.analysis.popcorn_import.transfer_to_legacy`: the executor is
+      fenced off, every published object and run is kept, and the tick serves
+      the deck from its own state again. A scope with nothing to import belongs
+      to the executor from the start, so import an existing session before the
+      tick begins publishing it.
+
+The script is idempotent, runs in one transaction and stops on the first error;
+it refuses to run before the push. Its indexes never use Directus's
+`{table}_{field}_index` names and none is single-column, so a pull still writes
+`is_indexed: false` for these fields and a later push leaves every SQL object in
+place. To roll back, stop the analysis actors, revert the application and keep
+the schema and its data. `add_analysis_schema.py` in the same folder is the
+Directus script the snapshot was pulled from, kept for a local database without
+a push.

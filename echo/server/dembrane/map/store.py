@@ -14,10 +14,7 @@ result is only ready when its vectors are durable.
 from __future__ import annotations
 
 import uuid
-import asyncio
 import logging
-import weakref
-import threading
 from typing import Any, Iterable, Protocol, AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -25,31 +22,17 @@ import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
 
-from dembrane.settings import get_settings
+# The per-loop connection bound and the DSN live with the analysis store, which
+# shares them; MAX_CONNECTIONS_PER_LOOP is re-exported for Map's tests.
+from dembrane.analysis.db import (
+    MAX_CONNECTIONS_PER_LOOP as MAX_CONNECTIONS_PER_LOOP,
+    database_dsn as _dsn,
+    connection_slots as _connection_slots,
+)
 
 logger = logging.getLogger("dembrane.map.store")
 
 ACTIVE_STATUSES = ("queued", "extracting", "embedding")
-
-# Every store call opens its own connection, and a generation saves eight
-# vectors at a time, so a process never holds more than this many at once per
-# event loop. Per loop because a semaphore belongs to the loop it first waits
-# on, and a worker process runs coroutines on more than one loop over its life.
-MAX_CONNECTIONS_PER_LOOP = 4
-_connection_slots_by_loop: weakref.WeakKeyDictionary[
-    asyncio.AbstractEventLoop, asyncio.Semaphore
-] = weakref.WeakKeyDictionary()
-_connection_slots_lock = threading.Lock()
-
-
-def _connection_slots() -> asyncio.Semaphore:
-    loop = asyncio.get_running_loop()
-    with _connection_slots_lock:
-        slots = _connection_slots_by_loop.get(loop)
-        if slots is None:
-            slots = asyncio.Semaphore(MAX_CONNECTIONS_PER_LOOP)
-            _connection_slots_by_loop[loop] = slots
-        return slots
 
 
 def new_lease() -> str:
@@ -94,14 +77,6 @@ def parse_vector(text: str) -> list[float]:
         raise MapStoreError("unreadable vector from the database")
     inner = body[1:-1].strip()
     return [float(part) for part in inner.split(",")] if inner else []
-
-
-def _dsn() -> str:
-    url = str(get_settings().database.database_url)
-    for prefix in ("postgresql+psycopg://", "postgresql+psycopg2://", "postgres://"):
-        if url.startswith(prefix):
-            return "postgresql://" + url[len(prefix) :]
-    return url
 
 
 class MapStore(Protocol):

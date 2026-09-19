@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Badge, Group, LoadingOverlay, Stack, Tooltip } from "@mantine/core";
+import { Group, LoadingOverlay, Stack, Tooltip } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { IconLock } from "@tabler/icons-react";
 import { useParams } from "react-router";
@@ -46,12 +46,13 @@ export const ProjectOverviewLayout = () => {
 			)}
 			<TabsWithRouter
 				basePath="/w/:workspaceId/projects/:projectId"
-					tabs={[
-						{ label: t`Portal Editor`, value: "portal-editor" },
-						{ label: t`Project Settings`, value: "overview" },
-						{ label: t`Access`, value: "access" },
-						{ label: t`Usage`, value: "usage" },
-					]}
+				tabs={[
+					{ label: t`Portal editor`, value: "portal-editor" },
+					{ label: t`General`, value: "overview" },
+					{ label: t`Access`, value: "access" },
+					{ label: t`Usage`, value: "usage" },
+					{ label: t`Export`, value: "export" },
+				]}
 				loading={projectQuery.isLoading}
 				{...testId("project-overview-tabs")}
 			/>

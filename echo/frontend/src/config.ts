@@ -167,7 +167,8 @@ export const COMMUNITY_SLACK_URL =
 // the sidebar sent people somewhere the rest of the app had left.
 // Dutch lives at index.nl-NL.html, not README.nl-NL.html; both verified live.
 export const DOCS_URL_EN = "https://docs.dembrane.com/" as const;
-export const DOCS_URL_NL = "https://docs.dembrane.com/index.nl-NL.html" as const;
+export const DOCS_URL_NL =
+	"https://docs.dembrane.com/index.nl-NL.html" as const;
 
 export const getDocumentationUrl = (locale = "en-US") =>
 	locale === "nl-NL" ? DOCS_URL_NL : DOCS_URL_EN;
@@ -201,6 +202,8 @@ export const ENABLE_MONITOR = true;
 // Project Library, dynamic canvases and Popcorn. On everywhere; each project
 // still opts in through the experimental toggle (project.is_canvas_enabled).
 export const ENABLE_CANVAS = true;
+// Enable with the server ENABLE_PRESENT rollout; existing Canvas remains independent.
+export const ENABLE_PRESENT = byEnv({ local: true }, false);
 // Map fixture mode: `?fixture=50|150|200` on the Map page renders synthetic
 // data with no network requests, for performance checks. Local only.
 export const ENABLE_MAP_FIXTURES = byEnv({ local: true }, false);

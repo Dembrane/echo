@@ -49,11 +49,11 @@ const PROJECT_SECTION_LABELS: Record<string, string> = {
 	export: "Export",
 	home: "Overview",
 	"host-guide": "Host guide",
-	integrations: "Integrations",
+	integrations: "Automation",
 	library: "Library",
 	map: "Map",
 	monitor: "Monitor",
-	overview: "Settings",
+	overview: "Manage",
 	popcorn: "Popcorn",
 	portal: "Portal editor",
 	"portal-editor": "Portal editor",
@@ -275,13 +275,12 @@ export const AppBreadcrumbs = () => {
 						label: projectQuery.data.name,
 					});
 				}
-				out.push({ label: "Settings" });
+				out.push({ label: "Manage" });
 				const section = params.section;
 				if (section === "access") out.push({ label: "Access" });
 				else if (section === "usage") out.push({ label: "Usage" });
+				else if (section === "export") out.push({ label: "Export" });
 				else if (section === "overview") out.push({ label: "General" });
-				else if (section === "integrations")
-					out.push({ label: "Integrations & Export" });
 				return out;
 			}
 		}

@@ -22,6 +22,8 @@ import {
 import { PopcornActions } from "@/components/popcorn/PopcornActions";
 import { PopcornHistory } from "@/components/popcorn/PopcornHistory";
 import { PopcornIntroModal } from "@/components/popcorn/PopcornIntroModal";
+import { PopcornLanguageSettings } from "@/components/popcorn/PopcornLanguageSettings";
+import { PopcornOpeningSettings } from "@/components/popcorn/PopcornOpeningSettings";
 import { PopcornScreenSettings } from "@/components/popcorn/PopcornScreenSettings";
 import { PopcornShare } from "@/components/popcorn/PopcornShare";
 import { PopcornStart } from "@/components/popcorn/PopcornStart";
@@ -104,6 +106,8 @@ function PopcornSession({
 				<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
 					<PopcornStatus popcorn={popcorn} />
 					<PopcornScreenSettings projectId={projectId} popcorn={popcorn} />
+					<PopcornLanguageSettings projectId={projectId} popcorn={popcorn} />
+					<PopcornOpeningSettings projectId={projectId} popcorn={popcorn} />
 					<PopcornVoiceSection projectId={projectId} popcorn={popcorn} />
 					<PopcornShare projectId={projectId} popcorn={popcorn} />
 					<PopcornHistory popcorn={popcorn} />

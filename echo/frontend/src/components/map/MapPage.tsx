@@ -16,6 +16,7 @@ import {
 	type CSSProperties,
 	type ReactNode,
 	useCallback,
+	useEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -25,48 +26,72 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import {
+	budgetState,
+	budgetsToAdmit,
+	LEGACY_BUDGET_BOUNDS,
+	type MapBudgets,
+	maximumAdmittedNodes,
+	resolveBudgets,
+} from "./budgets";
+import {
 	buildMapGraph,
 	factCheckFor,
 	factCheckSignature,
+	isMapPayloadV2,
 	type MapGraphData,
 	withFactChecks,
 } from "./data/adapter";
-import { fixtureMapResult } from "./data/fixture";
-import { buildMST } from "./graph/mst";
+import { fixtureMapData, type MapFixtureId } from "./data/fixture";
+import { relatedObjects } from "./data/relations";
+import { filterNodesByType, typesKey, zeroTypeCounts } from "./data/scope";
 import { MAP_EDGE_GREY } from "./graph/nodeStyle";
 import {
 	type FactCheckStates,
 	isAttemptRunning,
 	type MapAttempt,
-	type MapResult,
+	type MapGraphResponse,
 	useGenerateMap,
 	useMapEvents,
+	useMapGraph,
 	useProjectMap,
+	useProjectMapSummary,
 } from "./hooks";
 import {
 	pendingClaimIds,
 	useAutoFactCheck,
 	useMapFactCheck,
 } from "./hooks/useMapFactCheck";
+import { useMapUrlState } from "./hooks/useMapUrlState";
 import {
 	type TitleRequester,
 	useSelectionTitle,
 } from "./hooks/useSelectionTitle";
+import type { EdgeCounts } from "./layout/edgeBudget";
+import { EMPTY_EDGES, useMapGeometry } from "./layout/useMapGeometry";
+import { EmptyArgumentsState, OverBudgetState } from "./panels/BudgetStates";
 import { ExplorePanel } from "./panels/ExplorePanel";
 import { Legend } from "./panels/Legend";
 import { MapSettingsMenu } from "./panels/MapSettingsMenu";
-import type { ConversationHref } from "./panels/NodeDetailCard";
+import type { ConversationHref, NodeInspection } from "./panels/NodeDetailCard";
+import { ResultList } from "./panels/ResultList";
 import { ShowcasePanel } from "./panels/ShowcasePanel";
 import { SpotlightPanel } from "./panels/SpotlightPanel";
 import { mapVars } from "./panels/shared";
 import { LocalMap } from "./renderers/LocalMapGraph";
-import { DEFAULT_WALK_INTERVAL_MS, MstMap } from "./renderers/MstGraph";
+import { MstMap } from "./renderers/MstGraph";
 import {
 	MapInteractionProvider,
 	useMapInteraction,
+	useMapInteractionStore,
 } from "./state/interactionStore";
 import { type MapSettings, useMapSettings } from "./state/settings";
-import type { FactCheckState, MapGraphNode } from "./types";
+import { useShowcaseWalk } from "./state/useShowcaseWalk";
+import type {
+	ColorBy,
+	FactCheckState,
+	MapGraphNode,
+	ObjectType,
+} from "./types";
 
 // ---------------------------------------------------------------------------
 // Map-scoped theme. Light follows the app; dark only paints the map area.
@@ -125,14 +150,14 @@ const progressLabel = (attempt: MapAttempt): string => {
 };
 
 const GenerationControls = ({
-	current,
+	hasResult,
 	attempt,
 	readOnly,
 	isStarting,
 	nothingToRead,
 	onGenerate,
 }: {
-	current: MapResult | null;
+	hasResult: boolean;
 	attempt: MapAttempt | null;
 	readOnly: boolean;
 	isStarting: boolean;
@@ -152,14 +177,15 @@ const GenerationControls = ({
 	const failed = attempt?.status === "failed";
 	return (
 		<Button
-			variant={current ? "outline" : undefined}
+			variant={hasResult ? "outline" : undefined}
+			radius={hasResult ? 0 : undefined}
 			loading={isStarting}
-			disabled={!current && nothingToRead}
+			disabled={!hasResult && nothingToRead}
 			onClick={onGenerate}
 		>
 			{failed ? (
 				<Trans>Try again</Trans>
-			) : current ? (
+			) : hasResult ? (
 				<Trans>Regenerate</Trans>
 			) : (
 				<Trans>Generate map</Trans>
@@ -184,6 +210,8 @@ const SPAN_ALL: Record<number, string> = {
 	12: "col-span-12",
 };
 
+const EMPTY_NODES: MapGraphNode[] = [];
+
 const fixtureTitle: TitleRequester = (_resultId, nodeIds, signal) =>
 	new Promise((resolve, reject) => {
 		const timer = setTimeout(
@@ -197,18 +225,43 @@ const fixtureTitle: TitleRequester = (_resultId, nodeIds, signal) =>
 		});
 	});
 
+/** Says when the edge budget leaves connections undrawn. */
+const EdgeCountNote = ({ counts }: { counts: EdgeCounts | null }) => {
+	if (!counts || counts.drawn >= counts.available) return null;
+	const { drawn, available } = counts;
+	return (
+		<p className="text-xs">
+			<Trans>
+				Showing {drawn} of {available} connections
+			</Trans>
+		</p>
+	);
+};
+
 const MapSectionHeader = ({
 	title,
 	count,
+	edgeCounts = null,
+	layoutFailed = false,
 }: {
 	title: ReactNode;
 	count: number;
+	edgeCounts?: EdgeCounts | null;
+	/** The page's own copy; the layout's raw error is never shown. */
+	layoutFailed?: boolean;
 }) => (
 	<div
-		className="flex items-center justify-between border-b pb-1"
+		className="flex items-center justify-between gap-2 border-b pb-1"
 		style={{ borderColor: mapVars.border }}
 	>
 		<h2 className="text-xs font-light uppercase tracking-wider">{title}</h2>
+		{layoutFailed ? (
+			<p className="text-xs" role="alert">
+				<Trans>The layout could not be computed for this scope.</Trans>
+			</p>
+		) : (
+			<EdgeCountNote counts={edgeCounts} />
+		)}
 		<p className="text-xs">
 			<Plural value={count} one="# argument" other="# arguments" />
 		</p>
@@ -216,10 +269,14 @@ const MapSectionHeader = ({
 );
 
 type MapExperienceProps = {
-	resultId: string;
 	graph: MapGraphData;
+	/** Visible arguments with a vector. */
+	placedNodes: MapGraphNode[];
+	visibleIds: ReadonlySet<string>;
+	budgets: MapBudgets;
+	colorBy: ColorBy;
+	onColorByChange: (colorBy: ColorBy) => void;
 	settings: MapSettings;
-	onSettingsChange: (patch: Partial<MapSettings>) => void;
 	factCheckStates: FactCheckStates;
 	onFactCheck: (nodeId: string, options?: { force?: boolean }) => void;
 	onCancelFactCheck: (nodeId: string) => void;
@@ -228,17 +285,16 @@ type MapExperienceProps = {
 	offline: boolean;
 };
 
-type WalkState = {
-	nodeId: string | null;
-	expiresAt: number | null;
-	durationMs: number;
-};
+const EMPTY_EVIDENCE: never[] = [];
 
 const MapExperience = ({
-	resultId,
 	graph,
+	placedNodes,
+	visibleIds,
+	budgets,
+	colorBy,
+	onColorByChange,
 	settings,
-	onSettingsChange,
 	factCheckStates,
 	onFactCheck,
 	onCancelFactCheck,
@@ -247,7 +303,6 @@ const MapExperience = ({
 	offline,
 }: MapExperienceProps) => {
 	const { i18n } = useLingui();
-	const { placedNodes } = graph;
 
 	// Renderers restyle from node metadata. Rebuild their node array only
 	// when a displayed verdict changes, never for other fact-check fields.
@@ -257,29 +312,42 @@ const MapExperience = ({
 		() => withFactChecks(placedNodes, factCheckStates),
 		[placedNodes, signature],
 	);
-	const mstEdges = useMemo(() => buildMST(placedNodes), [placedNodes]);
+	// One layout per argument set and budget, shared by both renderers and titles.
+	const drawsMap = settings.showTree || settings.showClusters;
+	const geometry = useMapGeometry(drawsMap ? placedNodes : EMPTY_NODES, {
+		nodeLimit: budgets.nodeLimit,
+	});
+	const mstEdges = geometry.mstEdges;
+	const layoutFailed = geometry.status === "error";
+	// Drawn and available connections per renderer, for the omitted-lines note.
+	const [treeEdgeCounts, setTreeEdgeCounts] = useState<EdgeCounts | null>(null);
+	const [localEdgeCounts, setLocalEdgeCounts] = useState<EdgeCounts | null>(
+		null,
+	);
 	const nodesById = useMemo(
 		() => new Map(graph.allNodes.map((node) => [node.id, node] as const)),
 		[graph.allNodes],
 	);
 
 	const title = useSelectionTitle({
-		edges: mstEdges,
+		edges: geometry.status === "ready" ? mstEdges : EMPTY_EDGES,
 		nodes: placedNodes,
 		request: offline ? fixtureTitle : undefined,
-		resultId,
+		resultId: graph.resultId,
+		snapshotId: graph.snapshotId,
 	});
 
+	const store = useMapInteractionStore();
 	const selectedNodeId = useMapInteraction((state) => state.selectedNodeId);
-	const [walk, setWalk] = useState<WalkState>({
-		durationMs: DEFAULT_WALK_INTERVAL_MS,
-		expiresAt: null,
-		nodeId: null,
-	});
-	const handleActiveNodeChange = useCallback(
-		(node: MapGraphNode | null, expiresAt: number | null, durationMs: number) =>
-			setWalk({ durationMs, expiresAt, nodeId: node?.id ?? null }),
-		[],
+	const walk = useShowcaseWalk();
+
+	const evidenceFor = useCallback(
+		(nodeId: string) => graph.evidenceById.get(nodeId) ?? EMPTY_EVIDENCE,
+		[graph],
+	);
+	const selectNode = useCallback(
+		(nodeId: string) => store.setSelectedNodeId(nodeId),
+		[store],
 	);
 
 	const withState = (
@@ -301,6 +369,37 @@ const MapExperience = ({
 		walk.nodeId ? nodesById.get(walk.nodeId) : undefined,
 	);
 
+	// Selecting never changes the filters; hidden related objects are listed
+	// with an explicit reveal instead.
+	const spotlightInspection = useMemo<NodeInspection | null>(
+		() =>
+			selectedNodeId && nodesById.has(selectedNodeId)
+				? {
+						evidenceFor,
+						object: graph.objectsById.get(selectedNodeId) ?? null,
+						onSelect: selectNode,
+						related: relatedObjects(
+							selectedNodeId,
+							graph,
+							nodesById,
+							visibleIds,
+						),
+					}
+				: null,
+		[evidenceFor, graph, nodesById, selectNode, selectedNodeId, visibleIds],
+	);
+	const showcaseInspection = useMemo<NodeInspection | null>(
+		() =>
+			walk.nodeId && nodesById.has(walk.nodeId)
+				? {
+						evidenceFor,
+						object: graph.objectsById.get(walk.nodeId) ?? null,
+						related: [],
+					}
+				: null,
+		[evidenceFor, graph, nodesById, walk.nodeId],
+	);
+
 	const { showExplore, showShowcase, showSpotlight, showTree, showClusters } =
 		settings;
 	const hasLeftPanel = showExplore || showShowcase || showSpotlight;
@@ -318,14 +417,6 @@ const MapExperience = ({
 			: hasLeftPanel
 				? "col-span-4"
 				: "col-span-6";
-
-	const onColorByChange = useCallback(
-		(colorBy: MapSettings["colorBy"]) => onSettingsChange({ colorBy }),
-		[onSettingsChange],
-	);
-
-	const emptyEvidence = useMemo(() => [], []);
-
 	return (
 		<div className="grid h-full min-h-0 grid-cols-12 grid-rows-[minmax(0,1fr)] gap-2">
 			{hasLeftPanel && (
@@ -337,16 +428,17 @@ const MapExperience = ({
 								evidence={
 									(spotlight.node &&
 										graph.evidenceById.get(spotlight.node.id)) ||
-									emptyEvidence
+									EMPTY_EVIDENCE
 								}
 								factCheck={spotlight.factCheck}
-								colorBy={settings.colorBy}
+								colorBy={colorBy}
 								onColorByChange={onColorByChange}
 								canFactCheck={canFactCheck}
 								onFactCheck={onFactCheck}
 								onCancelFactCheck={onCancelFactCheck}
 								conversationHref={conversationHref}
 								locale={i18n.locale}
+								inspection={spotlightInspection}
 							/>
 						</div>
 					)}
@@ -369,13 +461,14 @@ const MapExperience = ({
 								node={showcase.node}
 								evidence={
 									(showcase.node && graph.evidenceById.get(showcase.node.id)) ||
-									emptyEvidence
+									EMPTY_EVIDENCE
 								}
 								factCheck={showcase.factCheck}
 								expiresAt={walk.expiresAt}
 								durationMs={walk.durationMs}
 								conversationHref={conversationHref}
 								locale={i18n.locale}
+								inspection={showcaseInspection}
 							/>
 						</div>
 					)}
@@ -390,13 +483,20 @@ const MapExperience = ({
 					<MapSectionHeader
 						title={<Trans>Argument tree (MST)</Trans>}
 						count={graphNodes.length}
+						edgeCounts={treeEdgeCounts}
+						layoutFailed={layoutFailed}
 					/>
 					<div className="mt-3 min-h-0 flex-1 overflow-hidden">
 						<MstMap
 							nodes={graphNodes}
-							colorBy={settings.colorBy}
+							mstEdges={mstEdges}
+							relations={graph.relations}
+							edgeLimit={budgets.edgeLimit}
+							showRelationships={settings.showRelationships}
+							onEdgeCounts={setTreeEdgeCounts}
+							colorBy={colorBy}
 							darkMode={settings.darkMode}
-							onActiveNodeChange={handleActiveNodeChange}
+							onActiveNodeChange={walk.onActiveNodeChange}
 							timerActive={title.timerActive}
 							timerProgress={title.timerProgress}
 							// The walk serves the Showcase; it must not move the
@@ -405,7 +505,7 @@ const MapExperience = ({
 						/>
 					</div>
 					{settings.showLegend && (
-						<Legend colorBy={settings.colorBy} darkMode={settings.darkMode} />
+						<Legend colorBy={colorBy} darkMode={settings.darkMode} />
 					)}
 				</section>
 			)}
@@ -418,13 +518,21 @@ const MapExperience = ({
 					<MapSectionHeader
 						title={<Trans>Local map</Trans>}
 						count={graphNodes.length}
+						edgeCounts={localEdgeCounts}
+						layoutFailed={layoutFailed}
 					/>
 					<div className="mt-3 min-h-0 flex-1 overflow-hidden">
 						<LocalMap
 							nodes={graphNodes}
-							colorBy={settings.colorBy}
+							neighbours={geometry.neighbours}
+							mstEdges={mstEdges}
+							relations={graph.relations}
+							edgeLimit={budgets.edgeLimit}
+							showRelationships={settings.showRelationships}
+							onEdgeCounts={setLocalEdgeCounts}
+							colorBy={colorBy}
 							darkMode={settings.darkMode}
-							onActiveNodeChange={handleActiveNodeChange}
+							onActiveNodeChange={walk.onActiveNodeChange}
 							timerActive={title.timerActive}
 							timerProgress={title.timerProgress}
 						/>
@@ -452,65 +560,244 @@ const MapExperience = ({
 // Page
 // ---------------------------------------------------------------------------
 
-/** One graph per result id: a refetch of the same revision keeps node identity. */
-function useStableGraph(current: MapResult | null): MapGraphData | null {
+/** What makes two responses the same graph: a refetch keeps node identity. */
+const graphIdentity = (response: MapGraphResponse): string => {
+	if (isMapPayloadV2(response)) {
+		return [
+			"v2",
+			response.snapshot?.id,
+			typesKey(response.scope?.types ?? []),
+			response.scope?.resultScope ?? "",
+			response.budgets?.nodeLimit,
+			response.budgets?.edgeLimit,
+			response.overBudget ? "over" : "fits",
+			response.nodes?.length ?? 0,
+		].join("|");
+	}
+	return `v1|${response.id}`;
+};
+
+function useStableGraph(
+	response: MapGraphResponse | null,
+): MapGraphData | null {
 	const ref = useRef<{ id: string; graph: MapGraphData } | null>(null);
-	if (!current) return null;
-	if (ref.current?.id !== current.id) {
-		ref.current = { graph: buildMapGraph(current), id: current.id };
+	if (!response) return null;
+	const id = graphIdentity(response);
+	if (ref.current?.id !== id) {
+		ref.current = { graph: buildMapGraph(response), id };
 	}
 	return ref.current.graph;
 }
 
+const MapSurface = ({
+	darkMode,
+	children,
+}: {
+	darkMode: boolean;
+	children: ReactNode;
+}) => (
+	<div
+		className="min-h-0 flex-1 p-2"
+		style={{
+			...(darkMode ? DARK_VARS : {}),
+			backgroundColor: mapVars.surface,
+			color: mapVars.text,
+			minHeight: 480,
+		}}
+		data-map-dark={darkMode || undefined}
+	>
+		{children}
+	</div>
+);
+
 const EMPTY_STATES: FactCheckStates = {};
+const ARGUMENT_TYPES: ObjectType[] = ["argument", "deduplicated_argument"];
+
+const resultToken = (response: MapGraphResponse): string =>
+	isMapPayloadV2(response)
+		? (response.snapshot?.id ?? "")
+		: (response.snapshot_id ?? response.id);
+
+type MapAdmission = {
+	key: string;
+	projectId: string;
+	scope: string | null;
+	resultToken: string;
+	budgets: MapBudgets;
+};
+
+const admissionKey = (
+	projectId: string,
+	response: MapGraphResponse,
+	scope: string | null,
+	count: number,
+): string => {
+	return [projectId, resultToken(response), scope ?? "", count].join("|");
+};
 
 export type MapPageProps = {
 	projectId: string;
 	workspaceId?: string | null;
-	/** Fixture mode (local only): synthetic nodes, no requests. */
-	fixtureCount?: number | null;
+	/** Fixture mode (local only): synthetic objects, no requests. */
+	fixture?: MapFixtureId | null;
 };
 
-export const MapPage = ({
-	projectId,
-	workspaceId,
-	fixtureCount,
-}: MapPageProps) => {
-	const offline = Boolean(fixtureCount);
+export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
+	const offline = Boolean(fixture);
 	const { workspace, workspaceId: contextWorkspaceId } = useWorkspace();
 	const readOnly = isReadOnlyRole(workspace?.role);
 	const [settings, updateSettings] = useMapSettings();
+	const [urlState, setUrlState] = useMapUrlState();
+	const [admission, setAdmission] = useState<MapAdmission | null>(null);
+	const [showUnplaced, setShowUnplaced] = useState(false);
 
-	const fixture = useMemo(
-		() => (fixtureCount ? fixtureMapResult(fixtureCount) : null),
-		[fixtureCount],
+	const fixtureData = useMemo(
+		() => (fixture ? fixtureMapData(fixture) : null),
+		[fixture],
 	);
 
-	const mapQuery = useProjectMap(offline ? "" : projectId);
+	const mapQuery = useProjectMapSummary(offline ? "" : projectId);
 	useMapEvents(offline ? "" : projectId);
 	const generate = useGenerateMap(projectId);
 
-	const current = fixture ? fixture.result : (mapQuery.data?.current ?? null);
-	const attempt = fixture ? null : (mapQuery.data?.attempt ?? null);
-	const graph = useStableGraph(current);
-	const resultId = current?.id ?? "";
+	const projectResultToken = mapQuery.data?.current
+		? resultToken(mapQuery.data.current)
+		: null;
+	const admissionForRequest =
+		admission?.projectId === projectId &&
+		admission.scope === urlState.scope &&
+		(projectResultToken === null ||
+			admission.resultToken === projectResultToken)
+			? admission.budgets
+			: null;
+	const graphQuery = useMapGraph(
+		projectId,
+		{
+			edgeLimit: admissionForRequest?.edgeLimit ?? settings.edgeLimit,
+			nodeLimit: admissionForRequest?.nodeLimit ?? settings.nodeLimit,
+			scope: urlState.scope,
+			// The server chooses current complete consolidation or originals. An
+			// explicit historical scope remains pinned to its requested result.
+			types: null,
+		},
+		{ enabled: !offline },
+	);
+	const legacyMapQuery = useProjectMap(offline ? "" : projectId, {
+		enabled: !offline && graphQuery.data === null,
+	});
+	// The previous graph stays on screen while a new scope loads.
+	const isRefreshing = !offline && graphQuery.isPlaceholderData;
 
+	// The v2 graph, else the legacy result while the graph endpoint is missing.
+	const response: MapGraphResponse | null = fixtureData
+		? fixtureData.response
+		: graphQuery.data === null
+			? (legacyMapQuery.data?.current ?? null)
+			: (graphQuery.data ?? null);
+	const graph = useStableGraph(response);
+	const attempt = fixtureData ? null : (mapQuery.data?.attempt ?? null);
+
+	const bounds = graph?.budgetBounds ?? LEGACY_BUDGET_BOUNDS;
+	const budgetResolution = useMemo(
+		() =>
+			resolveBudgets(
+				{ edgeLimit: settings.edgeLimit, nodeLimit: settings.nodeLimit },
+				bounds,
+			),
+		[bounds, settings.edgeLimit, settings.nodeLimit],
+	);
+	const counts = useMemo(() => graph?.counts ?? zeroTypeCounts(), [graph]);
+	const scopedArgumentTypes = useMemo(() => {
+		if (graph?.version === 1) return ["argument"] as ObjectType[];
+		const scoped = graph?.scope.types?.filter((type) =>
+			ARGUMENT_TYPES.includes(type),
+		);
+		if (!scoped || scoped.length === 0) return [];
+		// Defensive compatibility for old mixed responses: a consolidation
+		// replaces originals and must never render beside them.
+		return scoped.includes("deduplicated_argument")
+			? (["deduplicated_argument"] as ObjectType[])
+			: (["argument"] as ObjectType[]);
+	}, [graph]);
+	const argumentCount = scopedArgumentTypes.reduce(
+		(total, type) => total + (counts[type] ?? 0),
+		0,
+	);
+	const currentAdmissionKey =
+		response && graph
+			? admissionKey(projectId, response, urlState.scope, argumentCount)
+			: null;
+	const activeAdmission =
+		admission && admission.key === currentAdmissionKey ? admission : null;
+	useEffect(() => {
+		if (!admission) return;
+		const changedScope =
+			admission.projectId !== projectId || admission.scope !== urlState.scope;
+		const changedResult =
+			(currentAdmissionKey !== null && admission.key !== currentAdmissionKey) ||
+			(projectResultToken !== null &&
+				admission.resultToken !== projectResultToken);
+		if (changedScope || changedResult) setAdmission(null);
+	}, [
+		admission,
+		currentAdmissionKey,
+		projectId,
+		projectResultToken,
+		urlState.scope,
+	]);
+	const budgets = activeAdmission?.budgets ?? budgetResolution.budgets;
+	const visibleSet = useMemo(
+		() => new Set<ObjectType>(scopedArgumentTypes),
+		[scopedArgumentTypes],
+	);
+
+	// Filters narrow the nodes before any geometry; colour never does.
+	const listNodes = useMemo(
+		() => (graph ? filterNodesByType(graph.allNodes, visibleSet) : EMPTY_NODES),
+		[graph, visibleSet],
+	);
+	const placedNodes = useMemo(
+		() =>
+			graph ? filterNodesByType(graph.placedNodes, visibleSet) : EMPTY_NODES,
+		[graph, visibleSet],
+	);
+	const visibleIds = useMemo(
+		() => new Set(listNodes.map((node) => node.id)),
+		[listNodes],
+	);
+	const unplacedIds = useMemo(
+		() => new Set((graph?.unplaced ?? []).map((item) => item.id)),
+		[graph],
+	);
+
+	const visibleCount = graph?.overBudget ? argumentCount : listNodes.length;
+	const entry =
+		graph?.overBudget && !activeAdmission
+			? "overBudget"
+			: budgetState(visibleCount, budgets.nodeLimit);
+
+	const colorBy = urlState.colorBy ?? settings.colorBy;
+	const handleColorByChange = useCallback(
+		(next: ColorBy) => {
+			updateSettings({ colorBy: next });
+			setUrlState({ colorBy: next });
+		},
+		[setUrlState, updateSettings],
+	);
+	const resultId = graph?.resultId ?? "";
 	const factCheck = useMapFactCheck({
-		initialStates: fixture?.factChecks,
+		initialStates: fixtureData?.factChecks,
 		offline,
 		readOnly,
 		resultId,
 	});
 	const factCheckStates = factCheck.states ?? EMPTY_STATES;
-	const placedNodes = graph?.placedNodes;
 	const { ready: factCheckReady, runAll } = factCheck;
 
 	useAutoFactCheck({
 		enabled:
-			!readOnly &&
-			settings.autoFactCheckClaims &&
-			settings.colorBy === "factCheck",
-		nodes: placedNodes ?? [],
+			!readOnly && settings.autoFactCheckClaims && colorBy === "factCheck",
+		nodes: placedNodes,
 		ready: factCheckReady,
 		resultId,
 		runAll,
@@ -519,8 +806,7 @@ export const MapPage = ({
 
 	// Before the saved states load every claim looks idle: nothing is pending.
 	const pendingClaims = useMemo(
-		() =>
-			factCheckReady ? pendingClaimIds(placedNodes ?? [], factCheckStates) : [],
+		() => (factCheckReady ? pendingClaimIds(placedNodes, factCheckStates) : []),
 		[factCheckReady, placedNodes, factCheckStates],
 	);
 	const handleFactCheckAll = useCallback(
@@ -540,34 +826,74 @@ export const MapPage = ({
 		[linkWorkspaceId, offline, projectId],
 	);
 
-	const argumentCount = current?.arguments.length ?? 0;
-	const conversationCount = current?.conversations.length ?? 0;
-	const sourceCount = fixture
+	const sourceCount = fixtureData
 		? null
 		: (mapQuery.data?.source?.conversations_with_transcripts ?? null);
 	const nothingToRead = sourceCount === 0;
-	const countsLine = current
-		? t`${plural(argumentCount, { one: "# argument", other: "# arguments" })} from ${plural(conversationCount, { one: "# conversation", other: "# conversations" })}`
+	const conversationCount = graph?.conversationCount ?? 0;
+	const countsLine = graph
+		? graph.version === 1
+			? t`${plural(argumentCount, { one: "# argument", other: "# arguments" })} from ${plural(conversationCount, { one: "# conversation", other: "# conversations" })}`
+			: plural(argumentCount, { one: "# argument", other: "# arguments" })
 		: null;
 
-	const isLoading = !offline && mapQuery.isLoading;
+	const isLoading =
+		!offline &&
+		(mapQuery.isLoading ||
+			graphQuery.isLoading ||
+			(graphQuery.data === null &&
+				legacyMapQuery.isFetching &&
+				!legacyMapQuery.data));
+	const isError =
+		!offline &&
+		(graphQuery.isError ||
+			(graphQuery.data === null && legacyMapQuery.isError));
 	const failedAttempt = attempt?.status === "failed" ? attempt : null;
-	const unplacedCount = graph?.unplaced.length ?? 0;
+	const unplacedCount = listNodes.length - placedNodes.length;
+
+	const experience = graph && (
+		<MapInteractionProvider key={resultId}>
+			<MapExperience
+				graph={graph}
+				placedNodes={placedNodes}
+				visibleIds={visibleIds}
+				budgets={budgets}
+				colorBy={colorBy}
+				onColorByChange={handleColorByChange}
+				settings={settings}
+				factCheckStates={factCheckStates}
+				onFactCheck={factCheck.run}
+				onCancelFactCheck={factCheck.cancel}
+				canFactCheck={!readOnly}
+				conversationHref={conversationHref}
+				offline={offline}
+			/>
+		</MapInteractionProvider>
+	);
 
 	let body: ReactNode;
 	if (isLoading) {
 		body = (
 			<Stack gap="md" className="px-4 md:px-6">
-				<Skeleton height={420} radius="md" />
+				<Skeleton height={420} radius={0} />
 			</Stack>
 		);
-	} else if (!offline && mapQuery.isError) {
+	} else if (isRefreshing && activeAdmission) {
+		body = (
+			<Group gap="xs" className="px-4 md:px-6" aria-live="polite">
+				<Loader size={16} color="primary" />
+				<Text size="sm">
+					<Trans>Loading the map.</Trans>
+				</Text>
+			</Group>
+		);
+	} else if (isError) {
 		body = (
 			<Text className="px-4 md:px-6">
 				<Trans>The map could not be loaded. Try again in a moment.</Trans>
 			</Text>
 		);
-	} else if (!current || !graph) {
+	} else if (!graph) {
 		body = (
 			<Stack gap="sm" className="max-w-2xl px-4 md:px-6">
 				{isAttemptRunning(attempt) ? (
@@ -598,7 +924,7 @@ export const MapPage = ({
 				)}
 			</Stack>
 		);
-	} else if (current.arguments.length === 0) {
+	} else if (entry === "empty" && graph.version === 1) {
 		body = (
 			<Stack gap="sm" className="max-w-2xl px-4 md:px-6">
 				<Text>
@@ -615,34 +941,37 @@ export const MapPage = ({
 				</Text>
 			</Stack>
 		);
-	} else {
+	} else if (entry === "empty") {
 		body = (
-			<div
-				className="min-h-0 flex-1 p-2"
-				style={{
-					...(settings.darkMode ? DARK_VARS : {}),
-					backgroundColor: mapVars.surface,
-					color: mapVars.text,
-					minHeight: 480,
-				}}
-				data-map-dark={settings.darkMode || undefined}
-			>
-				<MapInteractionProvider key={resultId}>
-					<MapExperience
-						resultId={resultId}
-						graph={graph}
-						settings={settings}
-						onSettingsChange={updateSettings}
-						factCheckStates={factCheckStates}
-						onFactCheck={factCheck.run}
-						onCancelFactCheck={factCheck.cancel}
-						canFactCheck={!readOnly}
-						conversationHref={conversationHref}
-						offline={offline}
-					/>
-				</MapInteractionProvider>
+			<div className="px-4 md:px-6">
+				<EmptyArgumentsState />
 			</div>
 		);
+	} else if (entry === "overBudget") {
+		const admit = budgetsToAdmit(visibleCount, budgets, bounds);
+		body = (
+			<Stack gap="md" className="min-h-0 flex-1">
+				<div className="px-4 md:px-6">
+					<OverBudgetState
+						count={visibleCount}
+						admit={admit}
+						maximumCount={maximumAdmittedNodes(bounds)}
+						onRaise={(next) => {
+							if (!currentAdmissionKey || !response) return;
+							setAdmission({
+								budgets: next,
+								key: currentAdmissionKey,
+								projectId,
+								resultToken: resultToken(response),
+								scope: urlState.scope,
+							});
+						}}
+					/>
+				</div>
+			</Stack>
+		);
+	} else {
+		body = <MapSurface darkMode={settings.darkMode}>{experience}</MapSurface>;
 	}
 
 	return (
@@ -662,7 +991,7 @@ export const MapPage = ({
 				<Group gap="sm" wrap="nowrap">
 					{!offline && (
 						<GenerationControls
-							current={current}
+							hasResult={Boolean(graph)}
 							attempt={attempt}
 							readOnly={readOnly}
 							isStarting={generate.isPending}
@@ -670,10 +999,14 @@ export const MapPage = ({
 							onGenerate={() => generate.mutate()}
 						/>
 					)}
-					{current && current.arguments.length > 0 && (
+					{graph && argumentCount > 0 && (
 						<MapSettingsMenu
 							settings={settings}
 							onChange={updateSettings}
+							colorBy={colorBy}
+							onColorByChange={handleColorByChange}
+							budgets={budgetResolution}
+							bounds={bounds}
 							pendingClaimCount={pendingClaims.length}
 							onFactCheckAll={handleFactCheckAll}
 							canFactCheck={!readOnly}
@@ -682,11 +1015,15 @@ export const MapPage = ({
 				</Group>
 			</div>
 
-			{(failedAttempt || unplacedCount > 0) && (
+			{(failedAttempt ||
+				unplacedCount > 0 ||
+				urlState.scope ||
+				(isRefreshing && !activeAdmission) ||
+				(graph?.stale.length ?? 0) > 0) && (
 				<Stack gap={4} className="px-4 pb-2 md:px-6">
 					{failedAttempt && (
 						<Notice>
-							{current ? (
+							{graph ? (
 								<Trans>
 									The last generation failed, so this is still the previous map.{" "}
 									{failedAttempt.error ?? ""}
@@ -705,9 +1042,60 @@ export const MapPage = ({
 								one="# argument could not be placed on the map."
 								other="# arguments could not be placed on the map."
 							/>
+							<Button
+								size="compact-sm"
+								variant="subtle"
+								radius={0}
+								onClick={() => setShowUnplaced((shown) => !shown)}
+							>
+								{showUnplaced ? (
+									<Trans>Hide missing arguments</Trans>
+								) : (
+									<Trans>Inspect missing arguments</Trans>
+								)}
+							</Button>
 						</Notice>
 					)}
+					{(graph?.stale.length ?? 0) > 0 && (
+						<Notice>
+							<Trans>Some arguments are based on an earlier analysis.</Trans>
+						</Notice>
+					)}
+					{urlState.scope && (
+						<Group gap="xs">
+							<Text size="sm">
+								<Trans>Showing the arguments of one result.</Trans>
+							</Text>
+							<Button
+								size="compact-sm"
+								variant="subtle"
+								radius={0}
+								onClick={() => setUrlState({ scope: null })}
+							>
+								<Trans>Show current arguments</Trans>
+							</Button>
+						</Group>
+					)}
+					{isRefreshing && !activeAdmission && (
+						<Group gap="xs" aria-live="polite">
+							<Loader size={14} color="primary" />
+							<Text size="sm">
+								<Trans>
+									Loading the new scope. The current map stays until then.
+								</Trans>
+							</Text>
+						</Group>
+					)}
 				</Stack>
+			)}
+
+			{showUnplaced && unplacedCount > 0 && (
+				<div className="px-4 pb-2 md:px-6">
+					<ResultList
+						nodes={listNodes.filter((node) => unplacedIds.has(node.id))}
+						unplacedIds={unplacedIds}
+					/>
+				</div>
 			)}
 
 			{body}

@@ -1,8 +1,10 @@
 import { t } from "@lingui/core/macro";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { OBJECT_TYPE_STYLES } from "../attributes";
+import type { MapProvenanceInfo, StakeholderRung } from "../data/adapter";
 import type { DisplayVerdict } from "../graph/nodeStyle";
-import type { MapValence } from "../types";
+import type { MapValence, ObjectType } from "../types";
 
 // Panel colours follow the map-scoped variables MapPage sets for light and
 // dark, so the map's dark mode never touches the rest of the app.
@@ -17,14 +19,17 @@ export const mapVars = {
 	text: "var(--map-text)",
 } as const;
 
-export const valenceLabel = (valence: MapValence): string => {
+/** A missing valence is "Not assessed", never neutral. */
+export const valenceLabel = (valence: MapValence | undefined): string => {
 	switch (valence) {
 		case "positive":
 			return t`Positive`;
 		case "negative":
 			return t`Negative`;
-		default:
+		case "neutral":
 			return t`Neutral`;
+		default:
+			return t`Not assessed`;
 	}
 };
 
@@ -34,16 +39,86 @@ export const VALENCE_CHIP_CLASS: Record<MapValence, string> = {
 	positive: "bg-springGreen text-graphite",
 };
 
-export const valenceBlurb = (valence: MapValence): string => {
+export const NOT_ASSESSED_CHIP_CLASS =
+	"border border-gray-300 bg-transparent text-current";
+
+export const valenceChipClass = (valence: MapValence | undefined): string =>
+	valence ? VALENCE_CHIP_CLASS[valence] : NOT_ASSESSED_CHIP_CLASS;
+
+export const valenceBlurb = (valence: MapValence | undefined): string => {
 	switch (valence) {
 		case "positive":
 			return t`This argument expresses support, agreement, or a positive stance toward its subject.`;
 		case "negative":
 			return t`This argument expresses opposition, disagreement, or concern.`;
-		default:
+		case "neutral":
 			return t`This argument is observational or balanced, neither for nor against.`;
+		default:
+			return t`The valence of this object has not been assessed.`;
 	}
 };
+
+export const relationLabel = (type: string): string => {
+	switch (type) {
+		case "supports_pole_a":
+			return t`Supports pole A`;
+		case "supports_pole_b":
+			return t`Supports pole B`;
+		case "derived_from":
+			return t`Combined from`;
+		case "holds_position":
+			return t`Holds position`;
+		case "affected_by":
+			return t`Affected by`;
+		default:
+			return type.split("_").join(" ");
+	}
+};
+
+export const basisLabel = (basis: "extracted" | "inferred" | "authored") => {
+	switch (basis) {
+		case "extracted":
+			return t`From the transcript`;
+		case "authored":
+			return t`Added by a host`;
+		default:
+			return t`Inferred`;
+	}
+};
+
+export const rungLabel = (rung: StakeholderRung | null): string => {
+	switch (rung) {
+		case "voiced":
+			return t`Voiced in a conversation`;
+		case "named":
+			return t`Named by participants`;
+		case "inferred":
+			return t`Inferred`;
+		default:
+			return t`Not recorded`;
+	}
+};
+
+export const originLabel = (provenance: MapProvenanceInfo): string => {
+	if (provenance.legacy) return t`Earlier map result`;
+	switch (provenance.origin) {
+		case "generated":
+			return t`Generated`;
+		case "authored":
+			return t`Added by a host`;
+		default:
+			return t`Imported`;
+	}
+};
+
+/** The type's colour dot, as nodes show it under Type colouring. */
+export const TypeDot = ({ type }: { type: ObjectType }) => (
+	<span
+		aria-hidden="true"
+		className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+		style={{ backgroundColor: OBJECT_TYPE_STYLES[type].color }}
+	/>
+);
 
 export const verdictLabel = (verdict: DisplayVerdict): string => {
 	switch (verdict) {

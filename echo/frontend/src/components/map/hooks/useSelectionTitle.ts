@@ -2,7 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { centralityOrder } from "../graph/mst";
 import { useMapInteractionStore } from "../state/interactionStore";
 import type { Edge, MapGraphNode } from "../types";
-import { type HttpError, requestSelectionTitle } from "./index";
+import {
+	type HttpError,
+	requestSelectionTitle,
+	type SelectionTitleContext,
+} from "./index";
 
 /** A settled highlight must hold this long before it is titled. */
 export const TITLE_DELAY_MS = 1500;
@@ -30,10 +34,13 @@ export type TitleRequester = (
 	resultId: string,
 	nodeIds: string[],
 	signal: AbortSignal,
+	context?: SelectionTitleContext,
 ) => Promise<{ title: string }>;
 
 export type UseSelectionTitleOptions = {
 	resultId: string | null;
+	/** The snapshot the nodes belong to; null for a legacy result. */
+	snapshotId?: string | null;
 	/** The placed nodes the renderers show. */
 	nodes: ReadonlyArray<MapGraphNode>;
 	/** The MST over those nodes, for centrality order. */
@@ -67,6 +74,7 @@ type Pending = { key: string; controller: AbortController };
  */
 export function useSelectionTitle({
 	resultId,
+	snapshotId = null,
 	nodes,
 	edges,
 	request = requestSelectionTitle,
@@ -82,8 +90,8 @@ export function useSelectionTitle({
 	const [timerRun, setTimerRun] = useState<number | null>(null);
 	const [timerProgress, setTimerProgress] = useState(0);
 
-	const latestRef = useRef({ edges, nodes, request, resultId });
-	latestRef.current = { edges, nodes, request, resultId };
+	const latestRef = useRef({ edges, nodes, request, resultId, snapshotId });
+	latestRef.current = { edges, nodes, request, resultId, snapshotId };
 
 	const historyRef = useRef<Distillation[]>([]);
 	const selectedRef = useRef<string | null>(null);
@@ -178,9 +186,22 @@ export function useSelectionTitle({
 
 	const startRequest = useCallback(
 		(nodeIds: string[]) => {
-			const { request: send, resultId: id } = latestRef.current;
+			const {
+				request: send,
+				resultId: id,
+				snapshotId: snapshot,
+				nodes: graphNodes,
+			} = latestRef.current;
 			if (!id) return;
 			const key = selectionKey(id, nodeIds);
+			const revisionOf = new Map(
+				graphNodes.map((node) => [node.id, node.metadata.revisionId] as const),
+			);
+			// Titles are asked for exact revisions of one snapshot.
+			const context: SelectionTitleContext = {
+				revisionIds: nodeIds.map((nodeId) => revisionOf.get(nodeId) ?? nodeId),
+				snapshotId: snapshot ?? null,
+			};
 
 			const cached = cacheRef.current.get(key);
 			if (cached !== undefined) {
@@ -202,7 +223,7 @@ export function useSelectionTitle({
 				return true;
 			};
 
-			send(id, nodeIds, pending.controller.signal).then(
+			send(id, nodeIds, pending.controller.signal, context).then(
 				(response) => {
 					const title = response?.title?.trim() ?? "";
 					if (title) cacheRef.current.set(key, title);

@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import {
+	keepPreviousData,
 	type QueryClient,
 	useMutation,
 	useQuery,
@@ -10,7 +11,14 @@ import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { type ServerEvent, useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
-import type { FactCheckState, MapKind, MapValence } from "../types";
+import { budgetRequestParams, type CustomBudgets } from "../budgets";
+import type {
+	FactCheckState,
+	MapEpistemicKind,
+	MapKind,
+	MapValence,
+	ObjectType,
+} from "../types";
 
 // ---------------------------------------------------------------------------
 // API shapes (server: dembrane/api/v2/bff/map.py)
@@ -56,6 +64,8 @@ export type MapStats = {
 
 export type MapResult = {
 	id: string;
+	/** Snapshot identity included by the project summary compatibility payload. */
+	snapshot_id?: string | null;
 	status: "ready";
 	created_at: string | null;
 	completed_at: string | null;
@@ -66,6 +76,95 @@ export type MapResult = {
 	conversations: MapConversation[];
 	arguments: MapArgument[];
 	missing_embeddings: string[];
+};
+
+// Map payload v2 (docs/superpowers/plans/2026-09-15-recipes-mixed-map-plan.md).
+
+export type MapStaleRef = {
+	revisionId: string;
+	reason?: string;
+	[key: string]: unknown;
+};
+
+export type MapPayloadBudgets = {
+	nodeLimit: number;
+	edgeLimit: number;
+	defaults: { nodeLimit: number; edgeLimit: number };
+	ceilings?: { nodeLimit?: number; edgeLimit?: number };
+};
+
+export type MapProvenance = {
+	runId: string;
+	recipeId?: string;
+	recipeVersion?: string;
+	origin: "generated" | "authored" | "imported";
+};
+
+export type MapPayloadNode = {
+	objectId: string;
+	revisionId: string;
+	type: ObjectType;
+	label: string;
+	/** Type-specific projection; parsed defensively by the adapter. */
+	detail: unknown;
+	attributes: { valence?: MapValence; epistemicKind?: MapEpistemicKind };
+	factCheck?: {
+		eligible: boolean;
+		claimKey?: string;
+		assessmentRevisionId?: string;
+	};
+	provenance: MapProvenance;
+	/** Null: listed as unplaced. */
+	embedding: number[] | null;
+};
+
+export type MapPayloadRelation = {
+	id: string;
+	type: string;
+	from: string;
+	to: string;
+	basis: "extracted" | "inferred" | "authored";
+};
+
+export type MapPayloadV2 = {
+	version: 2;
+	snapshot: {
+		id: string;
+		createdAt: string;
+		parentId: string | null;
+		stale: MapStaleRef[];
+	};
+	budgets: MapPayloadBudgets;
+	/** In the snapshot, before filtering. */
+	counts: Record<ObjectType, number>;
+	scope: { types: ObjectType[]; resultScope?: string };
+	/** True: nodes and vectors omitted. */
+	overBudget: boolean;
+	embedding: { key: string; model: string; dims: number };
+	nodes: MapPayloadNode[];
+	/** Endpoints are revision ids. */
+	relations: MapPayloadRelation[];
+	/** Revision ids without vectors. */
+	unplaced: string[];
+	/**
+	 * Proposed: objects outside `nodes` that relations point at, so the
+	 * inspector can name them and offer to reveal their type.
+	 */
+	related?: Array<{
+		objectId: string;
+		revisionId: string;
+		type: ObjectType;
+		label: string;
+	}>;
+};
+
+/** What the graph endpoint returns: v2, or a legacy v1 result. */
+export type MapGraphResponse = MapPayloadV2 | MapResult;
+
+export type MapGraphParams = CustomBudgets & {
+	/** Null leaves the type selection to the server. */
+	types: ObjectType[] | null;
+	scope: string | null;
 };
 
 export type MapAttemptStatus = "queued" | "extracting" | "embedding" | "failed";
@@ -92,7 +191,7 @@ export type MapAttempt = {
 };
 
 export type ProjectMapState = {
-	current: MapResult | null;
+	current: MapGraphResponse | null;
 	attempt: MapAttempt | null;
 	// What a generation would read. Null when the count could not be made.
 	source?: { conversations_with_transcripts: number | null } | null;
@@ -115,7 +214,23 @@ export const mapKeys = {
 	all: ["map"] as const,
 	factChecks: (resultId: string) =>
 		["map", "result", resultId, "fact-checks"] as const,
+	// Under the project key, so a project invalidation reloads the graph too.
+	graph: (projectId: string, params: MapGraphParams) =>
+		[
+			"map",
+			"project",
+			projectId,
+			"graph",
+			{
+				edgeLimit: params.edgeLimit,
+				nodeLimit: params.nodeLimit,
+				scope: params.scope,
+				types: params.types ? [...params.types].sort() : null,
+			},
+		] as const,
 	project: (projectId: string) => ["map", "project", projectId] as const,
+	projectLegacy: (projectId: string) =>
+		["map", "project", projectId, "legacy"] as const,
 	results: ["map", "result"] as const,
 };
 
@@ -126,12 +241,67 @@ const enc = encodeURIComponent;
 // ---------------------------------------------------------------------------
 
 /** The project's current map revision and any newer attempt. */
-export const useProjectMap = (projectId: string) =>
+export const useProjectMap = (
+	projectId: string,
+	{ enabled = true }: { enabled?: boolean } = {},
+) =>
+	useQuery({
+		enabled: enabled && !!projectId,
+		queryFn: () => bff.get<ProjectMapState>(`/map/projects/${enc(projectId)}`),
+		queryKey: mapKeys.projectLegacy(projectId),
+		// A result carries every vector; the event stream says when to reload.
+		refetchOnWindowFocus: false,
+	});
+
+/** Project state without graph vectors, used before large-map admission. */
+export const useProjectMapSummary = (projectId: string) =>
 	useQuery({
 		enabled: !!projectId,
-		queryFn: () => bff.get<ProjectMapState>(`/map/projects/${enc(projectId)}`),
+		queryFn: () =>
+			bff.get<ProjectMapState>(`/map/projects/${enc(projectId)}`, {
+				metadata_only: true,
+			}),
 		queryKey: mapKeys.project(projectId),
-		// A result carries every vector; the event stream says when to reload.
+		refetchOnWindowFocus: false,
+	});
+
+/** Query parameters of the graph request. */
+export const mapGraphRequestParams = (params: MapGraphParams) => ({
+	...budgetRequestParams(params),
+	...(params.scope ? { scope: params.scope } : {}),
+	// An empty list is sent as an empty value: no types selected.
+	...(params.types ? { types: params.types.join(",") } : {}),
+});
+
+/**
+ * The bounded graph for one type selection, scope and budget. The server
+ * counts before it loads vectors and omits nodes when the scope is over
+ * budget. The previous graph stays while a new scope loads.
+ *
+ * Resolves to null when the server has no graph endpoint yet (404), so the
+ * page can fall back to the project's legacy result.
+ */
+export const useMapGraph = (
+	projectId: string,
+	params: MapGraphParams,
+	{ enabled = true }: { enabled?: boolean } = {},
+) =>
+	useQuery({
+		enabled: enabled && !!projectId,
+		placeholderData: keepPreviousData,
+		queryFn: async (): Promise<MapGraphResponse | null> => {
+			try {
+				return await bff.get<MapGraphResponse>(
+					`/map/projects/${enc(projectId)}/graph`,
+					mapGraphRequestParams(params),
+				);
+			} catch (error) {
+				// TODO(lead): drop this fallback once the v2 graph endpoint ships.
+				if ((error as HttpError)?.status === 404) return null;
+				throw error;
+			}
+		},
+		queryKey: mapKeys.graph(projectId, params),
 		refetchOnWindowFocus: false,
 	});
 
@@ -278,17 +448,29 @@ export const useCancelFactCheck = () =>
  * tied to the selection it was made for and aborted when that selection is
  * gone. Throws an HttpError carrying the status on failure.
  */
+export type SelectionTitleContext = {
+	/** The snapshot the selection was made in; null for a legacy result. */
+	snapshotId?: string | null;
+	/** The exact revisions selected, most central first. */
+	revisionIds?: string[];
+};
+
 export async function requestSelectionTitle(
 	resultId: string,
 	nodeIds: string[],
 	signal?: AbortSignal,
+	context?: SelectionTitleContext,
 ): Promise<SelectionTitleResponse> {
 	const url = new URL(
 		`${API_BASE_URL}/v2/bff/map/results/${enc(resultId)}/title`,
 		typeof window !== "undefined" ? window.location.origin : "http://localhost",
 	);
 	const res = await fetch(url.toString(), {
-		body: JSON.stringify({ node_ids: nodeIds }),
+		body: JSON.stringify({
+			node_ids: nodeIds,
+			...(context?.snapshotId ? { snapshot_id: context.snapshotId } : {}),
+			...(context?.revisionIds ? { revision_ids: context.revisionIds } : {}),
+		}),
 		credentials: "include",
 		headers: { "Content-Type": "application/json" },
 		method: "POST",
@@ -315,6 +497,8 @@ const MAP_EVENT_TYPES = [
 	"ready",
 	"superseded",
 	"failed",
+	"needs_review",
+	"cancelled",
 	"fact_check",
 ] as const;
 
@@ -347,6 +531,12 @@ export function applyProgressEvent(
 			: attempt.status;
 	return { ...state, attempt: { ...attempt, progress, status } };
 }
+
+/** The id fact-checks are keyed under: a v2 snapshot id or a v1 result id. */
+const currentResultId = (current: MapGraphResponse): string | null =>
+	"version" in current && current.version === 2
+		? (current.snapshot?.id ?? null)
+		: ((current as MapResult).id ?? null);
 
 /** Fact-check events arriving within this window share one refetch. */
 export const FACT_CHECK_REFETCH_DELAY_MS = 300;
@@ -394,10 +584,21 @@ export const useMapEvents = (projectId: string) => {
 					if (factCheckTimerRef.current) return;
 					factCheckTimerRef.current = setTimeout(() => {
 						factCheckTimerRef.current = null;
-						const resultId = queryClient.getQueryData<ProjectMapState>(
+						const current = queryClient.getQueryData<ProjectMapState>(
 							mapKeys.project(projectId),
-						)?.current?.id;
-						if (!resultId) return;
+						)?.current;
+						const resultId = current ? currentResultId(current) : null;
+						if (!resultId) {
+							// The graph comes from its own query: refresh every
+							// result's states rather than miss the one on screen.
+							void queryClient.invalidateQueries({
+								predicate: (query) =>
+									query.queryKey[0] === "map" &&
+									query.queryKey[1] === "result" &&
+									query.queryKey[3] === "fact-checks",
+							});
+							return;
+						}
 						void queryClient.invalidateQueries({
 							queryKey: mapKeys.factChecks(resultId),
 						});
@@ -414,7 +615,7 @@ export const useMapEvents = (projectId: string) => {
 
 	useServerEvents(
 		projectId
-			? `${API_BASE_URL}/v2/bff/map/projects/${enc(projectId)}/events`
+			? `${API_BASE_URL}/v2/bff/map/projects/${enc(projectId)}/events?runs=1`
 			: null,
 		MAP_EVENT_TYPES,
 		onEvent,

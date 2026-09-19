@@ -11,15 +11,30 @@ import {
 	type PairForce,
 } from "../graph/forces";
 import { calculateInitialPositions } from "../graph/layout";
-import { buildLocalMapForces, type LocalMapLink } from "../graph/localMap";
+import {
+	buildLocalMapForces,
+	LOCAL_MAP_SEED,
+	type LocalMapLink,
+	type LocalMapNeighbours,
+	seededRandom,
+} from "../graph/localMap";
 import { buildMST, cosineDistanceGuarded } from "../graph/mst";
 import { newestNodeIds } from "../graph/nodeSet";
-import { MAP_HIGHLIGHT, MAP_NEIGHBOUR_LINK_RED } from "../graph/nodeStyle";
+import { MAP_NEIGHBOUR_LINK_RED, mapHighlight } from "../graph/nodeStyle";
+import { type EdgeCounts, selectLocalMapEdges } from "../layout/edgeBudget";
 import {
 	useMapInteraction,
 	useMapInteractionStore,
 } from "../state/interactionStore";
-import type { ColorBy, MapGraphNode } from "../types";
+import type { ColorBy, Edge, MapGraphNode, MapRelation } from "../types";
+import {
+	AUTO_FIT_EVERY_TICKS,
+	armAutoFit,
+	autoFit,
+	cancelAutoFit,
+	createAutoFitState,
+	FIT_PADDING_SCALE,
+} from "./autoFit";
 import {
 	type BaseType,
 	d3,
@@ -34,11 +49,14 @@ import {
 } from "./d3";
 import {
 	EMPTY_NODE_IDS,
+	type GeometryBuild,
 	useContainerSize,
-	useGeometryNodes,
+	useNodeRadius,
 	useNodeStyleLookup,
 	usePulseTimer,
 	useReleaseOwnedHighlight,
+	useRendererGeometry,
+	useReportEdgeCounts,
 } from "./hooks";
 import {
 	MapChromeButton,
@@ -47,10 +65,15 @@ import {
 	RangeSetting,
 } from "./MapChrome";
 import { DEFAULT_WALK_INTERVAL_MS } from "./MstGraph";
+import {
+	drawRelationPositions,
+	joinRelationLines,
+	type RelationLineSelection,
+} from "./relations";
 
 /**
- * LocalMap graph: a force-directed implementation of LocalMAP. Computes k-NN
- * and further pairs from the nodes' embeddings and runs them as custom d3
+ * LocalMap graph: a force-directed implementation of LocalMAP. Runs k-NN and
+ * further pairs (from the layout result, or computed here) as custom d3
  * forces. The simulation is created once and updated in place.
  */
 
@@ -61,6 +84,12 @@ interface InternalNode extends SimulationNodeDatum {
 type LineSelection = Selection<SVGLineElement, LocalMapLink, BaseType, unknown>;
 type CircleSelection = Selection<
 	SVGCircleElement,
+	InternalNode,
+	SVGGElement,
+	unknown
+>;
+type CountSelection = Selection<
+	SVGTextElement,
 	InternalNode,
 	SVGGElement,
 	unknown
@@ -76,15 +105,34 @@ export interface LocalMapGraphProps {
 	timerActive?: boolean;
 	timerProgress?: number;
 	className?: string;
+	/** Base node radius; each node's size scale multiplies it. */
 	nodeRadius?: number;
 	backgroundColor?: string;
 	recentNodeIds?: string[];
 	/**
-	 * Draw the nearest-neighbour links. Off in Map (Jorim, September 15th
-	 * 2026): the neighbour forces still shape the layout, but the red lines are
-	 * not shown.
+	 * Draw nearest-neighbour links, a deterministic subset within the edge
+	 * budget. Off in Map (Jorim, September 15th 2026): the neighbour forces
+	 * still shape the layout, drawn or not.
 	 */
 	showNeighbourLinks?: boolean;
+	/**
+	 * Neighbour and further pairs from useMapGeometry. Without them the graph
+	 * computes its own.
+	 */
+	neighbours?: LocalMapNeighbours;
+	/** Tree edges for the initial layout, from the same result. */
+	mstEdges?: Edge[];
+	/**
+	 * Explicit relationships between nodes (revision ids). Drawn as dashed
+	 * overlays; they never enter the neighbour forces.
+	 */
+	relations?: MapRelation[];
+	/** Visible-edge budget, shared by relationship and neighbour lines. */
+	edgeLimit: number;
+	/** Draw every relationship within the budget, not only the selected node's. */
+	showRelationships?: boolean;
+	/** Drawn and available connection counts, called when they change. */
+	onEdgeCounts?: (counts: EdgeCounts) => void;
 }
 
 /** The forces the running simulation was last configured with. */
@@ -92,7 +140,33 @@ type AppliedForces = {
 	width: number;
 	height: number;
 	params: LocalMapForceParams;
-	nodeRadius: number;
+	/** Node radii the collision force was initialised with. */
+	radiusSignature: string;
+};
+
+const EMPTY_LINKS: LocalMapLink[] = [];
+const EMPTY_RELATIONS: MapRelation[] = [];
+
+/**
+ * The synchronous path: tree and neighbour pairs computed here when no
+ * layout result is given, with the same versioned seed as the worker.
+ */
+const buildOwnGeometry = (
+	nodes: ReadonlyArray<MapGraphNode>,
+): GeometryBuild => {
+	if (!nodes.length) {
+		return { mstEdges: [], neighbours: { fpLinks: [], nnLinks: [] } };
+	}
+	const { nnLinks, fpLinks } = buildLocalMapForces(
+		nodes,
+		0.2,
+		2.0,
+		seededRandom(LOCAL_MAP_SEED),
+	);
+	return {
+		mstEdges: buildMST(nodes, cosineDistanceGuarded),
+		neighbours: { fpLinks, nnLinks },
+	};
 };
 
 const forceOf = <F,>(
@@ -103,7 +177,9 @@ const forceOf = <F,>(
 /** Link endpoints are ids (no d3.forceLink resolves them); look the nodes up. */
 const drawPositions = (
 	lines: LineSelection | null,
+	relationLines: RelationLineSelection | null,
 	circles: CircleSelection | null,
+	counts: CountSelection | null,
 	nodeById: Map<string, InternalNode>,
 ) => {
 	lines
@@ -111,7 +187,9 @@ const drawPositions = (
 		.attr("y1", (d) => nodeById.get(d.source)?.y ?? null)
 		.attr("x2", (d) => nodeById.get(d.target)?.x ?? null)
 		.attr("y2", (d) => nodeById.get(d.target)?.y ?? null);
+	drawRelationPositions(relationLines, nodeById);
 	circles?.attr("cx", (d) => d.x ?? 0).attr("cy", (d) => d.y ?? 0);
+	counts?.attr("x", (d) => d.x ?? 0).attr("y", (d) => d.y ?? 0);
 };
 
 export const LocalMapGraph = ({
@@ -128,6 +206,12 @@ export const LocalMapGraph = ({
 	showNeighbourLinks = false,
 	backgroundColor = "transparent",
 	recentNodeIds = EMPTY_NODE_IDS,
+	neighbours: providedNeighbours,
+	mstEdges: providedMstEdges,
+	relations = EMPTY_RELATIONS,
+	edgeLimit,
+	showRelationships = false,
+	onEdgeCounts,
 }: LocalMapGraphProps) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -145,11 +229,14 @@ export const LocalMapGraph = ({
 	> | null>(null);
 	const zoomRef = useRef<ZoomBehavior<SVGSVGElement> | null>(null);
 	const savedTransformRef = useRef<ZoomTransform | null>(null);
+	const autoFitRef = useRef(createAutoFitState());
 	const positionCacheRef = useRef<
 		Map<string, { x: number; y: number; vx: number; vy: number }>
 	>(new Map());
 	const lineSelectionRef = useRef<LineSelection | null>(null);
+	const relationSelectionRef = useRef<RelationLineSelection | null>(null);
 	const circleSelectionRef = useRef<CircleSelection | null>(null);
+	const countSelectionRef = useRef<CountSelection | null>(null);
 	const pulseSelectionRef = useRef<CircleSelection | null>(null);
 	const startPulse = usePulseTimer(pulseSelectionRef);
 	const linkOpacityRef = useRef<(link: LocalMapLink) => number>(() => 0.3);
@@ -163,6 +250,10 @@ export const LocalMapGraph = ({
 		[recentNodeIds],
 	);
 	const styleOf = useNodeStyleLookup(nodes, colorBy, darkMode);
+	const { radiusOf, signature: radiusSignature } = useNodeRadius(
+		nodes,
+		nodeRadius,
+	);
 	const nodeById = useMemo(
 		() => new Map(nodes.map((node) => [node.id, node])),
 		[nodes],
@@ -173,6 +264,10 @@ export const LocalMapGraph = ({
 	nodeByIdRef.current = nodeById;
 	const nodeRadiusRef = useRef(nodeRadius);
 	nodeRadiusRef.current = nodeRadius;
+	const radiusOfRef = useRef(radiusOf);
+	radiusOfRef.current = radiusOf;
+	const radiusSignatureRef = useRef(radiusSignature);
+	radiusSignatureRef.current = radiusSignature;
 	const onNodeClickRef = useRef(onNodeClick);
 	onNodeClickRef.current = onNodeClick;
 	const onNodeHoverRef = useRef(onNodeHover);
@@ -281,34 +376,27 @@ export const LocalMapGraph = ({
 		setChargeFraction(LOCAL_MAP_FORCE_DEFAULTS.chargeFraction);
 	}, []);
 
-	// Geometry, rebuilt only when ids or any vector component change
-	const geometryNodes = useGeometryNodes(nodes);
+	// Geometry, once per node set (ids and vectors): the layout result when
+	// given and matching these nodes, otherwise the last one that did
+	const geometry = useRendererGeometry(
+		nodes,
+		{ mstEdges: providedMstEdges, neighbours: providedNeighbours },
+		buildOwnGeometry,
+	);
+	const geometryNodes = geometry.nodes;
+	const mstEdges = geometry.mstEdges;
+	const centerId = geometry.centerId;
+	const nnLinks = geometry.neighbours?.nnLinks ?? EMPTY_LINKS;
+	const fpLinks = geometry.neighbours?.fpLinks ?? EMPTY_LINKS;
 	// Clear this panel's hover highlight when its nodes leave or the map unmounts
 	useReleaseOwnedHighlight("local-hover", geometryNodes);
 
-	// MST edges for initial positioning
-	const mstEdges = useMemo(
-		() =>
-			geometryNodes.length
-				? buildMST(geometryNodes, cosineDistanceGuarded)
-				: [],
-		[geometryNodes],
-	);
-
 	// Initial positions from the MST structure at a fixed viewport size
 	const initialPositions = useMemo(
-		() => calculateInitialPositions(geometryNodes, mstEdges, 800, 600),
-		[geometryNodes, mstEdges],
+		() =>
+			calculateInitialPositions(geometryNodes, mstEdges, 800, 600, centerId),
+		[geometryNodes, mstEdges, centerId],
 	);
-
-	// LocalMap forces (final phase uses only NN + FP)
-	const { nnLinks, fpLinks } = useMemo(() => {
-		if (!geometryNodes.length) {
-			return { fpLinks: [], nnLinks: [] };
-		}
-		const forces = buildLocalMapForces(geometryNodes);
-		return { fpLinks: forces.fpLinks, nnLinks: forces.nnLinks };
-	}, [geometryNodes]);
 
 	// Defensive copy of nodes to prevent D3 mutations from affecting React state.
 	// Seeds positions from the position cache, or initialPositions on first render.
@@ -365,6 +453,35 @@ export const LocalMapGraph = ({
 	const simulationNodeByIdRef = useRef(simulationNodeById);
 	simulationNodeByIdRef.current = simulationNodeById;
 
+	// Lines inside the visible-edge budget. Which lines are drawn never
+	// changes the neighbour forces: those always get every pair.
+	const placedNodeIds = useMemo(
+		() => new Set(geometryNodes.map((node) => node.id)),
+		[geometryNodes],
+	);
+	const edgeSelection = useMemo(
+		() =>
+			selectLocalMapEdges({
+				edgeLimit,
+				neighbourLinks: nnLinks,
+				nodeIds: placedNodeIds,
+				relations,
+				selectedId,
+				showNeighbourLinks,
+				showRelationships,
+			}),
+		[
+			edgeLimit,
+			nnLinks,
+			placedNodeIds,
+			relations,
+			selectedId,
+			showNeighbourLinks,
+			showRelationships,
+		],
+	);
+	useReportEdgeCounts(edgeSelection.counts, onEdgeCounts);
+
 	// Prune stale cache entries when nodes change
 	useEffect(() => {
 		const currentIds = new Set(geometryNodes.map((n) => n.id));
@@ -406,7 +523,14 @@ export const LocalMapGraph = ({
 					// Node position in screen coordinates
 					const screenX = node.x * transform.k + transform.x;
 					const screenY = node.y * transform.k + transform.y;
-					const distance = Math.hypot(screenX - x, screenY - y);
+					// A larger node reaches the cursor sooner by its extra radius
+					const extraRadius =
+						Math.max(0, radiusOfRef.current(node.id) - nodeRadiusRef.current) *
+						transform.k;
+					const distance = Math.max(
+						0,
+						Math.hypot(screenX - x, screenY - y) - extraRadius,
+					);
 
 					if (distance <= HIGHLIGHT_RADIUS) {
 						highlighted.add(node.id);
@@ -522,10 +646,12 @@ export const LocalMapGraph = ({
 		gRef.current = g;
 
 		g.append("g").attr("class", "nn-links-group");
+		g.append("g").attr("class", "relations-group");
 		g.append("g")
 			.attr("class", "nodes-group")
 			.append("g")
 			.attr("class", "circle-nodes");
+		g.append("g").attr("class", "merge-counts").attr("pointer-events", "none");
 		overlayRef.current = svg
 			.append("g")
 			.attr("class", "cursor-layer")
@@ -534,9 +660,16 @@ export const LocalMapGraph = ({
 		const zoom = d3
 			.zoom<SVGSVGElement>()
 			.scaleExtent([0.1, 4])
+			// The measured panel, not the SVG's own attributes
+			.extent(() => [
+				[0, 0],
+				[sizeRef.current.width, sizeRef.current.height],
+			])
 			.on("zoom", (event) => {
 				g.attr("transform", event.transform.toString());
 				savedTransformRef.current = event.transform;
+				// A wheel or pan by the user: stop fitting until the node set changes
+				if (event.sourceEvent) autoFitRef.current.userZoomed = true;
 			});
 
 		svg.call(zoom);
@@ -547,16 +680,19 @@ export const LocalMapGraph = ({
 		}
 
 		return () => {
+			cancelAutoFit(svgElement, autoFitRef.current);
 			svg.on(".zoom", null);
 			zoomRef.current = null;
 			gRef.current = null;
 			overlayRef.current = null;
 			lineSelectionRef.current = null;
+			relationSelectionRef.current = null;
 			circleSelectionRef.current = null;
+			countSelectionRef.current = null;
 			pulseSelectionRef.current = null;
 			svg.selectAll("*").remove();
 		};
-	}, []);
+	}, [sizeRef]);
 
 	// Clean up simulation on unmount
 	useEffect(() => {
@@ -604,6 +740,9 @@ export const LocalMapGraph = ({
 			existing.nodes(simulationNodes);
 			nnForceRef.current?.setLinks(nnLinks);
 			fpForceRef.current?.setLinks(fpLinks);
+			// A new node set is fitted afresh, in either direction while it settles
+			cancelAutoFit(svgRef.current, autoFitRef.current);
+			armAutoFit(autoFitRef.current, { resetUserZoom: true });
 
 			// Gentle restart; low alpha avoids disrupting settled nodes
 			if (!pausedRef.current) {
@@ -615,7 +754,6 @@ export const LocalMapGraph = ({
 		// First time: create the simulation with forces at the measured size
 		const size = measure();
 		const current = paramsRef.current;
-		const radius = nodeRadiusRef.current;
 
 		const nnForce = createNearestNeighbourForce<InternalNode>(
 			nnLinks,
@@ -651,7 +789,10 @@ export const LocalMapGraph = ({
 				"collision",
 				d3
 					.forceCollide<InternalNode>()
-					.radius(radius * current.collisionRadius)
+					.radius(
+						(d) =>
+							radiusOfRef.current(d.id) * paramsRef.current.collisionRadius,
+					)
 					.strength(1.0),
 			)
 			.alpha(0.8)
@@ -680,7 +821,9 @@ export const LocalMapGraph = ({
 
 			drawPositions(
 				lineSelectionRef.current,
+				relationSelectionRef.current,
 				circleSelectionRef.current,
+				countSelectionRef.current,
 				simulationNodeByIdRef.current,
 			);
 
@@ -694,23 +837,56 @@ export const LocalMapGraph = ({
 					y: node.y ?? 0,
 				});
 			}
+
+			// Keep the map inside its panel
+			const fitState = autoFitRef.current;
+			fitState.tick++;
+			if (fitState.tick % AUTO_FIT_EVERY_TICKS === 0) {
+				autoFit({
+					animate: true,
+					nodes: simulation.nodes(),
+					padding: (node) => radiusOfRef.current(node.id) * FIT_PADDING_SCALE,
+					respectUserZoom: true,
+					size: sizeRef.current,
+					state: fitState,
+					svgElement: svgRef.current,
+					zoom: zoomRef.current,
+				});
+			}
 		});
 
 		if (pausedRef.current) simulation.stop();
 
 		simulationRef.current = simulation;
+
+		// Fit the first layout at once, not on a later tick: a paused map or a
+		// background tab may not tick for a long while
+		armAutoFit(autoFitRef.current, { resetUserZoom: true });
+		autoFit({
+			animate: false,
+			nodes: simulationNodes,
+			padding: (node) => radiusOfRef.current(node.id) * FIT_PADDING_SCALE,
+			respectUserZoom: true,
+			size,
+			state: autoFitRef.current,
+			svgElement: svgRef.current,
+			zoom: zoomRef.current,
+		});
 		appliedRef.current = {
 			height: size.height,
-			nodeRadius: radius,
 			params: current,
+			radiusSignature: radiusSignatureRef.current,
 			width: size.width,
 		};
-	}, [simulationNodes, nnLinks, fpLinks, measure]);
+	}, [simulationNodes, nnLinks, fpLinks, measure, sizeRef]);
 
 	// DOM updates with the enter/update/exit pattern
 	useEffect(() => {
 		const g = gRef.current;
 		if (!g) return;
+
+		// Hover outline, cursor ring and timer arc, in this theme's blue.
+		const highlight = mapHighlight(darkMode);
 
 		const touchesHighlight = (link: LocalMapLink) =>
 			combinedHighlightedNodeIds.has(link.source) ||
@@ -729,13 +905,14 @@ export const LocalMapGraph = ({
 		};
 		linkOpacityRef.current = opacityFor;
 
-		// NN links, only with showNeighbourLinks: emphasised near highlighted
-		// nodes, new lines fading in over 600 ms towards their target opacity.
-		// Hidden, the join has no data and the forces are unaffected.
+		// NN links, only with showNeighbourLinks and only within the budget:
+		// emphasised near highlighted nodes, new lines fading in over 600 ms
+		// towards their target opacity. Hidden, the join has no data and the
+		// forces are unaffected.
 		const lineSelection = g
 			.select(".nn-links-group")
 			.selectAll<SVGLineElement, LocalMapLink>("line")
-			.data(showNeighbourLinks ? nnLinks : [], (d) => `${d.source}-${d.target}`)
+			.data(edgeSelection.neighbours, (d) => `${d.source}-${d.target}`)
 			.join(
 				(enter) =>
 					enter
@@ -758,6 +935,13 @@ export const LocalMapGraph = ({
 			)
 			.attr("stroke-width", widthFor);
 
+		// Relationship overlays, sharing the budget with the neighbour lines
+		const relationSelection = joinRelationLines(
+			g.select<SVGGElement>(".relations-group"),
+			edgeSelection.relations,
+			darkMode,
+		);
+
 		// MN and FP links are invisible (only forces, no visual)
 
 		// Radius scale by selection state. Hover highlights are an outline, not a scale change.
@@ -774,7 +958,7 @@ export const LocalMapGraph = ({
 			if (combinedHighlightedNodeIds.has(id)) {
 				const distance = combinedHighlightedNodesDistance.get(id) ?? 1.0;
 				const strokeWidth = Math.max(1.5, 3 - distance * 1.5);
-				return { stroke: MAP_HIGHLIGHT, strokeWidth };
+				return { stroke: highlight, strokeWidth };
 			}
 			const base = styleOf(id);
 			return { stroke: base.stroke, strokeWidth: base.strokeWidth };
@@ -820,19 +1004,58 @@ export const LocalMapGraph = ({
 			.attr("fill", (d) => styleOf(d.id).fill)
 			.attr("stroke", (d) => outlineFor(d.id).stroke)
 			.attr("stroke-width", (d) => outlineFor(d.id).strokeWidth)
-			.attr("r", (d) => nodeRadius * scaleFor(d.id))
+			.attr("r", (d) => radiusOf(d.id) * scaleFor(d.id))
 			.attr("opacity", (d) => (styleOf(d.id).pulse ? 0.9 : 1))
 			.select("title")
 			.text((d) => nodeById.get(d.id)?.label || d.id);
 
+		const countSelection = g
+			.select<SVGGElement>(".merge-counts")
+			.selectAll<SVGTextElement, InternalNode>("text.merge-count")
+			.data(
+				simulationNodes.filter(
+					(d) =>
+						(nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0) > 1,
+				),
+				(d) => d.id,
+			)
+			.join("text")
+			.attr("class", "merge-count")
+			.attr("role", "img")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central")
+			.attr("font-size", 12)
+			.attr("font-weight", 700)
+			.attr("fill", "var(--map-surface, white)")
+			.attr("stroke", "var(--map-text, black)")
+			.attr("stroke-width", 0.75)
+			.attr("stroke-linejoin", "round")
+			.attr("paint-order", "stroke")
+			.attr(
+				"aria-label",
+				(d) =>
+					t`Combined from ${nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0} arguments`,
+			)
+			.text(
+				(d) => nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? "",
+			);
+
 		lineSelectionRef.current = lineSelection;
+		relationSelectionRef.current = relationSelection;
 		circleSelectionRef.current = circleSelection;
+		countSelectionRef.current = countSelection;
 		pulseSelectionRef.current = circleSelection.filter(
 			(d) => styleOf(d.id).pulse,
 		);
 		startPulse();
 		// Place entered elements at once instead of waiting for the next tick
-		drawPositions(lineSelection, circleSelection, simulationNodeById);
+		drawPositions(
+			lineSelection,
+			relationSelection,
+			circleSelection,
+			countSelection,
+			simulationNodeById,
+		);
 
 		const overlay = overlayRef.current;
 		if (!overlay) return;
@@ -845,7 +1068,7 @@ export const LocalMapGraph = ({
 			.join("circle")
 			.attr("class", "cursor-overlay")
 			.attr("fill", "none")
-			.attr("stroke", MAP_HIGHLIGHT)
+			.attr("stroke", highlight)
 			.attr("stroke-width", 2)
 			.attr("stroke-dasharray", "5,5")
 			.attr("pointer-events", "none")
@@ -867,18 +1090,18 @@ export const LocalMapGraph = ({
 			.data(timerArcData)
 			.join("path")
 			.attr("class", "timer-arc")
-			.attr("fill", MAP_HIGHLIGHT)
+			.attr("fill", highlight)
 			.attr("pointer-events", "none")
 			.attr("transform", (d) => `translate(${d.x},${d.y})`)
 			.attr("d", arcGenerator);
 	}, [
 		simulationNodes,
 		simulationNodeById,
-		nnLinks,
-		showNeighbourLinks,
+		edgeSelection,
+		darkMode,
 		selectedId,
 		nodeById,
-		nodeRadius,
+		radiusOf,
 		styleOf,
 		recentNodeIdsSet,
 		combinedHighlightedNodeIds,
@@ -911,6 +1134,8 @@ export const LocalMapGraph = ({
 
 		applied.width = dimensions.width;
 		applied.height = dimensions.height;
+		// A new panel size may need a larger zoom as well as a smaller one
+		armAutoFit(autoFitRef.current);
 		if (!pausedRef.current) {
 			simulation.alpha(Math.max(simulation.alpha(), 0.1)).restart();
 		}
@@ -920,8 +1145,7 @@ export const LocalMapGraph = ({
 	useEffect(() => {
 		const simulation = simulationRef.current;
 		const applied = appliedRef.current;
-		if (!simulation || !applied) return;
-		if (applied.params === params && applied.nodeRadius === nodeRadius) return;
+		if (!simulation || !applied || applied.params === params) return;
 
 		forceOf<ForceManyBody<InternalNode>>(simulation, "charge")
 			?.strength(params.chargeStrength)
@@ -933,16 +1157,38 @@ export const LocalMapGraph = ({
 			.setCMed(params.cMed)
 			.setDAdj(params.dAdj);
 		fpForceRef.current?.setStrength(params.fpStrength);
+		// Re-reads the collision multiplier (paramsRef) for every node
 		forceOf<ForceCollide<InternalNode>>(simulation, "collision")?.radius(
-			nodeRadius * params.collisionRadius,
+			(d) =>
+				radiusOfRef.current((d as InternalNode).id) *
+				paramsRef.current.collisionRadius,
 		);
 
 		applied.params = params;
-		applied.nodeRadius = nodeRadius;
 		if (!pausedRef.current) {
 			simulation.alpha(Math.max(simulation.alpha(), 0.5)).restart();
 		}
-	}, [params, nodeRadius]);
+	}, [params]);
+
+	// Node sizes: collision radii in place, without restarting the layout
+	useEffect(() => {
+		const simulation = simulationRef.current;
+		const applied = appliedRef.current;
+		if (
+			!simulation ||
+			!applied ||
+			applied.radiusSignature === radiusSignature
+		) {
+			return;
+		}
+
+		forceOf<ForceCollide<InternalNode>>(simulation, "collision")?.radius(
+			(d) =>
+				radiusOfRef.current((d as InternalNode).id) *
+				paramsRef.current.collisionRadius,
+		);
+		applied.radiusSignature = radiusSignature;
+	}, [radiusSignature]);
 
 	const pauseLabel = paused ? t`Resume physics` : t`Pause physics`;
 

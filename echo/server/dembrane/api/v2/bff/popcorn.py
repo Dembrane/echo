@@ -16,17 +16,25 @@ from pydantic import Field, BaseModel
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 
 from dembrane import live_events
-from dembrane.policies import meets_tier
 from dembrane.settings import get_settings
 from dembrane.analytics import capture_event
 from dembrane.redis_async import get_redis_client
-from dembrane.popcorn.view import LOGO_PATH, render_flow_page, render_popcorn_page
+from dembrane.popcorn.view import (
+    LOGO_PATH,
+    ILLUSTRATIONS,
+    render_flow_page,
+    render_popcorn_page,
+)
 from dembrane.canvas.events import generation_channel
 from dembrane.directus_async import async_directus
 from dembrane.popcorn.bundle import forget_bundle, bundle_for_report
 from dembrane.popcorn.service import (
     LIVE_HOURS,
     REPORT_KIND,
+    MAX_ALSO_LANGUAGES,
+    LoopNotFound,
+    BrandingTierRequired,
+    SyntheticFrameLocked,
     go_live,
     readiness,
     stop_live,
@@ -42,13 +50,18 @@ from dembrane.popcorn.service import (
     get_popcorn_report,
     ensure_public_token,
     get_loop_for_report,
+    retarget_translation,
+    expand_settings_patch,
+    require_branding_tier,
+    require_unlocked_frame,
+    presentation_create_lock,
     dispatch_popcorn_tick_now_with_safety,
 )
-from dembrane.api.feature_flags import require_canvas_enabled, require_project_canvas_enabled
+from dembrane.api.feature_flags import require_popcorn_enabled, require_project_popcorn_enabled
 from dembrane.api.v2.bff._access import resolve_report_access, resolve_project_access
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
-router = APIRouter(dependencies=[Depends(require_canvas_enabled)])
+router = APIRouter(dependencies=[Depends(require_popcorn_enabled)])
 
 REFRESH_TTL_SECONDS = 20
 NO_STORE = {"Cache-Control": "no-store"}
@@ -80,7 +93,49 @@ class PopcornVoiceBody(BaseModel):
     note: str | None = Field(default=None, max_length=600)
 
 
+class PopcornIntroBody(BaseModel):
+    enabled: bool | None = None
+    title: str | None = Field(default=None, max_length=160)
+    subtitle: str | None = Field(default=None, max_length=600)
+
+
+class PopcornDisclosureBody(BaseModel):
+    enabled: bool | None = None
+    text: str | None = Field(default=None, max_length=600)
+    invitation_title: str | None = Field(default=None, max_length=160)
+    invitation_text: str | None = Field(default=None, max_length=600)
+
+
+class PopcornNoticeBody(BaseModel):
+    enabled: bool | None = None
+    text: str | None = Field(default=None, max_length=160)
+
+
+class PopcornDataBody(BaseModel):
+    enabled: bool | None = None
+
+
+PopcornLanguageCode = Literal["en", "nl", "de", "fr", "es", "it", "uk", "cs"]
+
+
+class PopcornLanguageBody(BaseModel):
+    ui: Literal["auto"] | PopcornLanguageCode | None = None
+    # "" asks for the original language again.
+    translate_to: Literal[""] | PopcornLanguageCode | None = None
+    # The extra languages each popcorn phrase pops in, after the one above.
+    # The whole list is sent every time; [] asks for none.
+    also: list[PopcornLanguageCode] | None = Field(default=None, max_length=MAX_ALSO_LANGUAGES)
+
+
+class PresentationBody(BaseModel):
+    blocks: list[Literal["popcorn", "stakeholders", "tensions", "map"]] | None = Field(default=None, max_length=4)
+    opening: Literal["popcorn", "stakeholders", "tensions", "map"] | None = None
+    language_policy: Literal["project", "explicit"] | None = None
+    hidden_items: list[str] | None = Field(default=None, max_length=2000)
+
+
 class PopcornSettingsBody(BaseModel):
+    presentation: PresentationBody | None = None
     title: str | None = Field(default=None, min_length=1, max_length=160)
     client: str | None = Field(default=None, max_length=160)
     tabs: dict[str, bool] | None = None
@@ -89,6 +144,11 @@ class PopcornSettingsBody(BaseModel):
     show_branding: bool | None = None
     public_labels: Literal["names", "neutral"] | None = None
     voice: PopcornVoiceBody | None = None
+    intro: PopcornIntroBody | None = None
+    disclosure: PopcornDisclosureBody | None = None
+    notice: PopcornNoticeBody | None = None
+    data: PopcornDataBody | None = None
+    language: PopcornLanguageBody | None = None
 
 
 class LiveBody(BaseModel):
@@ -122,7 +182,7 @@ async def _loop_of(report: dict[str, Any]) -> dict[str, Any]:
 
 async def _require_popcorn(popcorn_id: str, auth: DependencyDirectusSession) -> tuple[dict, Any]:
     access, report = await resolve_report_access(popcorn_id, auth)
-    require_project_canvas_enabled(access.project)
+    require_project_popcorn_enabled(access.project)
     access.require("project:read")
     if report.get("kind") != REPORT_KIND:
         raise HTTPException(status_code=404, detail="Popcorn not found")
@@ -137,7 +197,7 @@ async def get_project_popcorn(
     """The project's popcorn session, or before one exists `{"popcorn": null,
     "readiness": {...}}`: what a first read would find."""
     access = await resolve_project_access(project_id, auth)
-    require_project_canvas_enabled(access.project)
+    require_project_popcorn_enabled(access.project)
     access.require("project:read")
     report = await get_popcorn_report(project_id)
     if report:
@@ -154,17 +214,20 @@ async def create_project_popcorn(
     auth: DependencyDirectusSession,
 ) -> dict[str, Any]:
     access = await resolve_project_access(body.project_id, auth)
-    require_project_canvas_enabled(access.project)
+    require_project_popcorn_enabled(access.project)
     access.require("project:update")
-    existing = await get_popcorn_report(body.project_id)
-    if existing:
-        return await popcorn_payload(existing)
-    created = await create_popcorn(
-        project_id=body.project_id,
-        title=body.title.strip(),
-        client=(body.client or "").strip() or None,
-        acting_directus_user_id=auth.user_id,
-    )
+    # The same lock the default presentation takes: a read followed by a create
+    # is one session per project only while nobody else is between the two.
+    async with presentation_create_lock(body.project_id):
+        existing = await get_popcorn_report(body.project_id)
+        if existing:
+            return await popcorn_payload(existing)
+        created = await create_popcorn(
+            project_id=body.project_id,
+            title=body.title.strip(),
+            client=(body.client or "").strip() or None,
+            acting_directus_user_id=auth.user_id,
+        )
     if body.voice is not None:
         await update_settings(
             report=created["report"], patch={"voice": body.voice.model_dump(exclude_none=True)}
@@ -190,6 +253,16 @@ async def sample_view_logo(auth: DependencyDirectusSession) -> FileResponse:  # 
     return FileResponse(LOGO_PATH, media_type="image/png")
 
 
+@router.get("/sample/view/illustrations/{name}.webp")
+async def sample_view_illustration(
+    name: str,
+    auth: DependencyDirectusSession,  # noqa: ARG001
+) -> FileResponse:
+    if name not in ILLUSTRATIONS:
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(ILLUSTRATIONS[name], media_type="image/webp")
+
+
 @router.get("/{popcorn_id}")
 async def get_popcorn(popcorn_id: str, auth: DependencyDirectusSession) -> dict[str, Any]:
     report, _access = await _require_popcorn(popcorn_id, auth)
@@ -205,17 +278,30 @@ async def patch_popcorn_settings(
     report, access = await _require_popcorn(popcorn_id, auth)
     access.require("project:update")
     patch = body.model_dump(exclude_none=True)
-    if patch.get("show_branding") is False and not meets_tier(
-        str(access.tier or "free"), "changemaker"
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="Removing the dembrane mark requires the changemaker tier.",
+    if "presentation" in patch:
+        from dembrane.api.feature_flags import require_present_enabled
+
+        require_present_enabled()
+    try:
+        if {"disclosure", "notice"} & patch.keys():
+            await require_unlocked_frame(report, await get_loop_for_report(str(report["id"])))
+        require_branding_tier(
+            str(access.tier or "free"), removes_branding=patch.get("show_branding") is False
         )
+    except SyntheticFrameLocked as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except BrandingTierRequired as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
     if patch.get("public"):
         await ensure_public_token(report)
-    await update_settings(report=report, patch=patch)
-    forget_bundle(str(report["id"]))
+    before = await load_settings_for(report)
+    patch = expand_settings_patch(patch, presentation_exists=bool(before.get("presentation")))
+    updated = await update_settings(report=report, patch=patch)
+    try:
+        # A new language is translated now, not at the next scheduled read.
+        await retarget_translation(report, before=before, after=updated, project=access.project)
+    except LoopNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     fresh = await async_directus.get_item("project_report", str(report["id"]))
     return await popcorn_payload(fresh or report)
 
@@ -391,6 +477,20 @@ async def popcorn_view_logo(popcorn_id: str, auth: DependencyDirectusSession) ->
     await _require_popcorn(popcorn_id, auth)
     return FileResponse(
         LOGO_PATH, media_type="image/png", headers={"Cache-Control": "private, max-age=86400"}
+    )
+
+
+@router.get("/{popcorn_id}/view/illustrations/{name}.webp")
+async def popcorn_view_illustration(
+    popcorn_id: str, name: str, auth: DependencyDirectusSession
+) -> FileResponse:
+    if name not in ILLUSTRATIONS:
+        raise HTTPException(status_code=404, detail="Not found")
+    await _require_popcorn(popcorn_id, auth)
+    return FileResponse(
+        ILLUSTRATIONS[name],
+        media_type="image/webp",
+        headers={"Cache-Control": "private, max-age=86400"},
     )
 
 

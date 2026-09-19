@@ -1,0 +1,63 @@
+{
+  "id": "opposing-positions",
+  "description": "Opposing positions on the same topic. Opposite valence is kept apart by code; two criticisms pointing in opposite directions share a valence and are kept apart by verification. A true paraphrase of one criticism merges.",
+  "embedding_model": "text-embedding-004",
+  "inputs": [
+    {
+      "id": "op1",
+      "statement": "The four-day school week should be introduced in the municipality.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-1", "quote": "a four-day school week would be good for us"}],
+      "embedding": [1, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "op2",
+      "statement": "The four-day school week should not be introduced in the municipality.",
+      "epistemic_kind": "argument",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-2", "quote": "no four-day school week, please, not here"}],
+      "embedding": [1, 0, 0, 0, 0, 0.1]
+    },
+    {
+      "id": "op3",
+      "statement": "The rent cap is too strict for small landlords.",
+      "epistemic_kind": "argument",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-1", "quote": "the rent cap is too strict for small landlords"}],
+      "embedding": [0, 1, 0, 0, 0, 0]
+    },
+    {
+      "id": "op4",
+      "statement": "The rent cap is too weak to protect tenants.",
+      "epistemic_kind": "argument",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-3", "quote": "that cap does nothing, it is far too weak for tenants"}],
+      "embedding": [0, 1, 0.2, 0, 0, 0]
+    },
+    {
+      "id": "op5",
+      "statement": "A rent cap protects tenants from sudden increases.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-2", "quote": "the cap protects tenants from sudden jumps"}],
+      "embedding": [0, 1, 0, 0.2, 0, 0]
+    },
+    {
+      "id": "op6",
+      "statement": "The rent cap is far too strict on small landlords.",
+      "epistemic_kind": "argument",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-4", "quote": "small landlords get squeezed, the cap is far too strict"}],
+      "embedding": [0, 1, 0, 0, 0.1, 0]
+    }
+  ],
+  "should_merge": [["op3", "op6"]],
+  "must_not_merge": [
+    {"pair": ["op1", "op2"], "guard": "code", "why": "For versus against."},
+    {"pair": ["op3", "op4"], "guard": "model", "why": "Too strict versus too weak, both negative."},
+    {"pair": ["op4", "op6"], "guard": "model", "why": "Too weak versus too strict, both negative."},
+    {"pair": ["op4", "op5"], "guard": "code", "why": "Criticism versus endorsement."},
+    {"pair": ["op3", "op5"], "guard": "code", "why": "Criticism versus endorsement."}
+  ]
+}

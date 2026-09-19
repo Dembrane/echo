@@ -1,8 +1,10 @@
 import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useContext } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { bff } from "@/lib/bff";
+import { SettingsSaveContext } from "../SettingsSaveContext";
 
 export type PopcornLoop = {
 	id?: string;
@@ -30,7 +32,55 @@ export type PopcornVoice = {
 	note: string;
 };
 
+export type PopcornIntro = {
+	enabled: boolean;
+	title: string;
+	subtitle: string;
+};
+
+// A screen before the countdown, with an optional follow-up screen.
+export type PopcornDisclosure = {
+	enabled: boolean;
+	text: string;
+	invitation_title: string;
+	invitation_text: string;
+};
+
+// The bar above every tab of the screen.
+export type PopcornNotice = { enabled: boolean; text: string };
+
+// The screen that explains what happens to the data. Its words follow the
+// project's anonymisation and legal basis.
+export type PopcornData = { enabled: boolean };
+
+export type PopcornLanguageCode =
+	| "en"
+	| "nl"
+	| "de"
+	| "fr"
+	| "es"
+	| "it"
+	| "uk"
+	| "cs";
+
+// The screen's own language ("auto" follows the project) and the language the
+// results are translated into ("" keeps them as spoken). `also` stacks up to
+// three more languages on the popcorn phrases alone: each phrase pops once per
+// language, the original first. A server that does not know the field sends
+// nothing, so every reader treats it as empty.
+export type PopcornLanguage = {
+	ui: "auto" | PopcornLanguageCode;
+	translate_to: "" | PopcornLanguageCode;
+	also?: PopcornLanguageCode[];
+};
+
 export type PopcornSettings = {
+	presentation?: import("@/components/present/hooks").PresentationManifest;
+	intro: PopcornIntro;
+	disclosure: PopcornDisclosure;
+	notice: PopcornNotice;
+	data: PopcornData;
+	language?: PopcornLanguage;
 	title: string;
 	client: string;
 	tabs: PopcornTabs;
@@ -72,6 +122,8 @@ export type PopcornDetail = {
 	created_at?: string | null;
 	updated_at?: string | null;
 	settings: PopcornSettings;
+	// A synthetic demo always shows its disclosure and notice.
+	synthetic?: boolean;
 	public_token?: string | null;
 	loop?: PopcornLoop | null;
 	counts: PopcornCounts;
@@ -88,7 +140,25 @@ export type PopcornProject = {
 export type LiveHours = 1 | 8 | 24;
 
 export type PopcornSettingsPatch = Partial<
-	Omit<PopcornSettings, "tabs" | "voice"> & {
+	Omit<
+		PopcornSettings,
+		| "tabs"
+		| "voice"
+		| "intro"
+		| "disclosure"
+		| "notice"
+		| "data"
+		| "language"
+		| "presentation"
+	> & {
+		presentation: Partial<
+			import("@/components/present/hooks").PresentationManifest
+		>;
+		intro: Partial<PopcornIntro>;
+		disclosure: Partial<PopcornDisclosure>;
+		notice: Partial<PopcornNotice>;
+		data: Partial<PopcornData>;
+		language: Partial<PopcornLanguage>;
 		tabs: Partial<PopcornTabs>;
 		voice: Partial<PopcornVoice>;
 	}
@@ -119,9 +189,9 @@ export const popcornEmbedSnippet = (token: string) =>
 
 const projectKey = (projectId: string) => ["project", projectId, "popcorn"];
 
-export const useProjectPopcorn = (projectId: string) =>
+export const useProjectPopcorn = (projectId: string, enabled = true) =>
 	useQuery({
-		enabled: !!projectId,
+		enabled: enabled && !!projectId,
 		queryFn: () =>
 			bff.get<PopcornProject>("/popcorn", { project_id: projectId }),
 		// No polling: the session page's event stream invalidates this query.
@@ -173,7 +243,12 @@ export const useCreatePopcornMutation = (projectId: string) => {
 				...payload,
 			}),
 		onError: () => toast.error(t`Could not run popcorn`),
-		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
+		onSuccess: (detail) => {
+			putPopcorn(queryClient, projectId, detail);
+			queryClient.invalidateQueries({
+				queryKey: ["project", projectId, "presentation"],
+			});
+		},
 	});
 };
 
@@ -182,14 +257,23 @@ export const usePopcornSettingsMutation = (
 	popcornId: string,
 ) => {
 	const queryClient = useQueryClient();
+	const editor = useContext(SettingsSaveContext);
 	return useMutation({
 		mutationFn: (patch: PopcornSettingsPatch) =>
-			bff.patch<PopcornDetail>(
-				`/popcorn/${encodeURIComponent(popcornId)}/settings`,
-				patch,
-			),
-		onError: () => toast.error(t`Could not save popcorn settings`),
-		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
+			editor
+				? editor.save(patch)
+				: bff.patch<PopcornDetail>(
+						`/popcorn/${encodeURIComponent(popcornId)}/settings`,
+						patch,
+					),
+		onError: () => toast.error(t`Could not save changes. Try again.`),
+		onSuccess: (detail) => {
+			if (editor) return;
+			putPopcorn(queryClient, projectId, detail);
+			queryClient.invalidateQueries({
+				queryKey: ["project", projectId, "presentation"],
+			});
+		},
 	});
 };
 
@@ -253,7 +337,12 @@ export const usePopcornLiveMutation = (
 				{ hours },
 			),
 		onError: () => toast.error(t`Could not go live`),
-		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
+		onSuccess: (detail) => {
+			putPopcorn(queryClient, projectId, detail);
+			queryClient.invalidateQueries({
+				queryKey: ["project", projectId, "presentation"],
+			});
+		},
 	});
 };
 
@@ -268,6 +357,11 @@ export const usePopcornStopLiveMutation = (
 				`/popcorn/${encodeURIComponent(popcornId)}/live/stop`,
 			),
 		onError: () => toast.error(t`Could not stop live`),
-		onSuccess: (detail) => putPopcorn(queryClient, projectId, detail),
+		onSuccess: (detail) => {
+			putPopcorn(queryClient, projectId, detail);
+			queryClient.invalidateQueries({
+				queryKey: ["project", projectId, "presentation"],
+			});
+		},
 	});
 };
