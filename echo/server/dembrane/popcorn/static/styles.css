@@ -90,6 +90,13 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .intro-continue { font: inherit; background: var(--blue-fill); color: var(--on-blue); border: none; border-radius: 9999px; padding: .8em 1.6em; cursor: pointer; transition: background-color .15s ease; }
 .intro-continue:hover { background: var(--graphite); color: var(--on-blue); }
 .popcorn-intro { overflow-y: auto; }
+/* A host who may edit types straight into the opening's words. Outlines and a
+   wash only, so the words sit exactly where the room will see them. */
+.popcorn-intro [data-edit] { cursor: text; border-radius: .2em; outline: 1px dashed transparent; outline-offset: .3em; transition: outline-color .15s ease, background-color .15s ease; }
+/* With an editable heading the screen itself takes the resting focus: no ring around the page. */
+.popcorn-intro .intro-content:focus-visible { outline: none; }
+.popcorn-intro [data-edit]:hover { outline-color: color-mix(in srgb, currentColor 35%, transparent); }
+.popcorn-intro [data-edit]:focus { outline: 2px solid var(--blue); background: color-mix(in srgb, currentColor 6%, transparent); white-space: pre-wrap; }
 .intro-data { max-width: 64em; justify-content: flex-start; padding: 1.5em 0; }
 .intro-data h1 { font-size: clamp(1.8rem, 3.4vw, 3.2rem); max-width: 22em; }
 .data-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.6em; counter-reset: step; }
@@ -1065,12 +1072,10 @@ button.action-row:hover .action-sentence { color: var(--blue); }
 .stake-node:active { cursor: grabbing; }
 .stake-node.dim { opacity: 0.3; }
 .stake-name { font-size: clamp(17px, 1.5vw, 24px); font-weight: 420; line-height: var(--display-leading); letter-spacing: -0.01em; }
-.stake-role { font-size: 0.72em; color: var(--ink-soft); }
 
-/* dense mode (10+ groups): name-only chips, smaller labels */
+/* dense mode (10+ groups): smaller chips and labels */
 .stake-map.dense .stake-node { padding: 0.45em 0.75em; max-width: 17ch; }
 .stake-map.dense .stake-name { font-size: clamp(15px, 1.15vw, 19px); }
-.stake-map.dense .stake-role { display: none; }
 .stake-map.dense .stake-line-label { font-size: 0.62em; max-width: 18ch; padding: 0.1em 0.4em; }
 
 /* stake drives card size, so the coarse read is "who has the most riding on

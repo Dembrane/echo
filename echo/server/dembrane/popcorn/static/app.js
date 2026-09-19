@@ -280,7 +280,7 @@
       "rung.voiced": "voiced",
       "rung.named": "named",
       "rung.inferred": "inferred",
-      "bring.title": "who to bring in next",
+      "bring.title": "who you could involve next",
       "bring.why": "Ranked by what is at stake for them against how well the transcripts actually evidence them. Groups who spoke for themselves are not listed.",
       "bring.spokenFor": "spoken for by {name}",
       "bring.another": "another group",
@@ -445,7 +445,7 @@
       "rung.voiced": "zelf aan het woord",
       "rung.named": "genoemd",
       "rung.inferred": "afgeleid",
-      "bring.title": "wie betrek je hierna",
+      "bring.title": "wie je nog zou kunnen betrekken",
       "bring.why": "Gerangschikt op wat er voor hen op het spel staat, afgezet tegen hoe goed de transcripten dat echt laten zien. Groepen die zelf aan het woord waren, staan er niet bij.",
       "bring.spokenFor": "{name} sprak namens hen",
       "bring.another": "een andere groep",
@@ -1045,7 +1045,7 @@
     renderQrPanel();
     renderDisclaimer();
     if (relabel) {
-      if (introOpen) showIntroStep(introStep, "none");
+      if (introOpen && !introEditing) showIntroStep(introStep, "none");
       if (state.active) {
         renderTabs();
         if (screenFrozen) state.renderPending = true; else renderActive();
@@ -1124,13 +1124,18 @@
         subtitle: intro.subtitle || "",
         body: paragraphs(disclosure.text),
         source: isSynthetic() && session.demo.public_sources_only === true,
+        // Without the introduction switched on the title is the session's own.
+        fields: { title: intro.enabled ? "intro.title" : "", subtitle: intro.enabled ? "intro.subtitle" : "", body: "disclosure.text" },
       });
     }
     if (disclosure.invitation_title || disclosure.invitation_text) {
       // Of several paragraphs, the first reads as the subtitle.
       const body = paragraphs(disclosure.invitation_text);
       const subtitle = body.length > 1 ? body.shift() : "";
-      screens.push({ kind: "intro", title: disclosure.invitation_title || "", subtitle, body, source: false });
+      screens.push({
+        kind: "intro", title: disclosure.invitation_title || "", subtitle, body, source: false,
+        fields: { title: "disclosure.invitation_title", subtitle: "disclosure.invitation_text", body: "disclosure.invitation_text" },
+      });
     }
     // What happens to the data: its words come from the project's settings.
     if (session.data) screens.push({ kind: "data", data: session.data });
@@ -1171,7 +1176,7 @@
     showIntroStep(step, how);
     // A short preview can scroll to the bottom if the dialog autofocuses its
     // Continue button. Start with the heading so the introduction stays legible.
-    const heading = dialog.querySelector("#intro-title");
+    const heading = dialog.querySelector("#intro-title:not([data-edit])");
     heading?.setAttribute("tabindex", "-1");
     heading?.setAttribute("autofocus", "");
     dialog.showModal();
@@ -1203,7 +1208,7 @@
     const continueHtml = `<button class="intro-continue" type="button">${esc(next)}</button>`;
     dialog.innerHTML = screen.data
       ? `<div class="intro-content intro-data">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${dataScreenHtml(screen.data)}${continueHtml}</div>`
-      : `<div class="intro-content">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${screen.title ? `<h1 id="intro-title">${esc(screen.title)}</h1>` : ""}${screen.subtitle ? `<p class="intro-subtitle">${esc(screen.subtitle)}</p>` : ""}${screen.body.map((p) => `<p>${esc(p)}</p>`).join("")}${screen.source ? `<p class="intro-source">${esc(tr("intro.publicOnly"))}</p>` : ""}${continueHtml}</div>`;
+      : `<div class="intro-content">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${screen.title ? `<h1 id="intro-title"${editMark(screen.fields?.title)}>${esc(screen.title)}</h1>` : ""}${screen.subtitle ? `<p class="intro-subtitle"${editMark(screen.fields?.subtitle)}>${esc(screen.subtitle)}</p>` : ""}${screen.body.map((p) => `<p${editMark(screen.fields?.body)}>${esc(p)}</p>`).join("")}${screen.source ? `<p class="intro-source">${esc(tr("intro.publicOnly"))}</p>` : ""}${continueHtml}</div>`;
     const back = dialog.querySelector(".intro-back");
     if (back) back.onclick = () => history.back();
     const button = dialog.querySelector(".intro-continue");
@@ -1215,10 +1220,115 @@
       showSlide("popcorn", null, { replace: true });
       stage.focus();
     };
-    const focusTarget = dialog.querySelector("#intro-title") || dialog.querySelector(".intro-content");
+    wireIntroEditing(dialog);
+    // An editable heading would open with a caret in it: rest on the screen instead.
+    const focusTarget = dialog.querySelector("#intro-title:not([data-edit])") || dialog.querySelector(".intro-content");
     focusTarget?.setAttribute("tabindex", "-1");
     focusTarget?.focus({ preventScroll: true });
     dialog.scrollTop = 0;
+  }
+
+  // Inline editing of the opening's words. Only the Present shell can switch it
+  // on (its `editing` command), and only for a host who may edit: the deck
+  // never saves anything itself, it hands the new text to the shell, which
+  // patches the same draft the presentation editor writes. A synthetic demo's
+  // frame is locked, and the data screen's words belong to the project.
+  const INTRO_EDIT_LIMITS = {
+    "intro.title": 160, "intro.subtitle": 600, "disclosure.text": 600,
+    "disclosure.invitation_title": 160, "disclosure.invitation_text": 600,
+  };
+  // An empty title or disclosure would leave the screen without its words.
+  const INTRO_EDIT_REQUIRED = new Set(["intro.title", "disclosure.text", "disclosure.invitation_title"]);
+  const INTRO_EDIT_SINGLE = new Set(["intro.title", "intro.subtitle", "disclosure.invitation_title"]);
+  let introEditable = false;
+  let introEditing = null;    // the element with the caret in it
+  let introLastEdit = null;   // { field, previous }: put back if the shell refuses it
+  const canEditIntro = () => introEditable && !isSynthetic();
+  const editMark = (field) => (field && canEditIntro() ? ` data-edit="${esc(field)}"` : "");
+  const sessionField = (field, value) => {
+    const [block, key] = field.split(".");
+    const session = state.session || {};
+    if (value === undefined) return String(session[block]?.[key] ?? "");
+    session[block] = { ...(session[block] || {}), [key]: value };
+    return value;
+  };
+  function setIntroEditable(editable) {
+    if (introEditable === editable) return;
+    introEditable = editable;
+    if (!introOpen || introEditing) return;
+    introScreens = openingScreens();
+    showIntroStep(introStep, "none");
+  }
+  function rejectIntroEdit(field) {
+    if (!introLastEdit || introLastEdit.field !== field) return;
+    sessionField(field, introLastEdit.previous);
+    introLastEdit = null;
+    if (!introOpen || introEditing) return;
+    introScreens = openingScreens();
+    showIntroStep(introStep, "none");
+  }
+  function wireIntroEditing(dialog) {
+    for (const el of dialog.querySelectorAll("[data-edit]")) {
+      const field = el.dataset.edit;
+      try { el.contentEditable = "plaintext-only"; } catch { el.contentEditable = "true"; }
+      el.spellcheck = false;
+      let before = null;      // the text of every element of this field, at focus
+      let cancelled = false;
+      const siblings = () => [...dialog.querySelectorAll("[data-edit]")].filter((node) => node.dataset.edit === field);
+      el.addEventListener("focus", () => {
+        introEditing = el;
+        cancelled = false;
+        before = siblings().map((node) => node.textContent);
+      });
+      // Typing is typing: no slide, tab or shortcut handler hears these keys.
+      el.addEventListener("keydown", (event) => {
+        event.stopPropagation();
+        if (event.key === "Escape") {
+          event.preventDefault();
+          cancelled = true;
+          siblings().forEach((node, i) => { if (before && before[i] !== undefined) node.textContent = before[i]; });
+          el.blur();
+        } else if (event.key === "Enter" && (event.metaKey || event.ctrlKey || INTRO_EDIT_SINGLE.has(field))) {
+          event.preventDefault();
+          el.blur();
+        }
+      });
+      for (const type of ["keyup", "keypress"]) el.addEventListener(type, (event) => event.stopPropagation());
+      el.addEventListener("paste", (event) => {
+        if (el.contentEditable === "plaintext-only") return;
+        event.preventDefault();
+        document.execCommand("insertText", false, event.clipboardData?.getData("text/plain") || "");
+      });
+      el.addEventListener("blur", () => {
+        if (introEditing === el) introEditing = null;
+        if (cancelled || !before) return;
+        const previous = sessionField(field);
+        const blank = previous.includes("\n\n") ? "\n\n" : "\n";
+        const parts = siblings().map((node) => (node.innerText ?? node.textContent ?? "").replace(/\u00a0/g, " "));
+        let value = INTRO_EDIT_SINGLE.has(field)
+          ? parts.join(" ").replace(/\s+/g, " ").trim()
+          : parts.flatMap(paragraphs).join(blank);
+        value = value.slice(0, INTRO_EDIT_LIMITS[field] || 600).trim();
+        const same = value === (INTRO_EDIT_SINGLE.has(field) ? previous.trim() : paragraphs(previous).join(blank));
+        if (same || (!value && INTRO_EDIT_REQUIRED.has(field))) {
+          siblings().forEach((node, i) => { if (before[i] !== undefined) node.textContent = before[i]; });
+          return;
+        }
+        introLastEdit = { field, previous };
+        sessionField(field, value);
+        parent.postMessage(
+          { source: "dembrane-present-deck", version: 1, presentationId: EMBED.presentationId, type: "edit", field, value },
+          EMBED.parentOrigin || location.origin,
+        );
+        // Paragraphs may have been added, split or emptied: lay the screen out
+        // again, once a click that took the caret away (Continue) has landed.
+        setTimeout(() => {
+          if (!introOpen || introEditing || introDialog !== dialog) return;
+          introScreens = openingScreens();
+          showIntroStep(introStep, "none");
+        }, 250);
+      });
+    }
   }
 
   function closeIntroduction() {
@@ -3023,21 +3133,17 @@
     // DOM and the ladder decides who is visible at each detail level, ranked
     // by stake so the coarse view cannot delete the groups nobody talked
     // about. Sliding interpolates between precomputed rungs.
-    const detail = state.stakeDetail ?? 1;
     const items = all;
     const byId = (id) => items.find((s) => s.id === id);
     const q = (state.searches.stakeholders || "").trim().toLowerCase();
     const matched = (s) => !q || `${s.name} ${s.role || ""} ${s.stake || ""}`.toLowerCase().includes(q);
-    const nMatch = items.filter(matched).length;
-    const toolsHtml = searchTools("stakeholders", tr("stake.search"),
-      q ? trn("stake.countMatch", items.length, { shown: nMatch }) : trn("stake.count", items.length));
-    // past ~9 groups the map goes dense: compact name-only cards, taller canvas
+    // The room's stakeholder map carries no search bar and no detail slider:
+    // every group is drawn at full detail. The search state and the wiring
+    // below stay inert without their inputs.
+    const toolsHtml = "";
+    // past ~9 groups the map goes dense: compact cards, taller canvas
     const dense = items.length > 9;
-    const sliderHtml = all.length > 5 ? `<div class="map-tools">
-        <label for="stake-detail">${esc(tr("stake.detail"))}</label>
-        <input type="range" id="stake-detail" min="0" max="1" step="0.01" value="${detail}">
-        <span class="map-count">${esc(trn("stake.groups", all.length, { shown: items.length }))}</span>
-      </div>` : "";
+    const sliderHtml = "";
     // The key is swatches with one or two words each; the prose lives in
     // the tooltips and the relation slides.
     const legendHtml = `<div class="flow-key" aria-label="${esc(tr("stake.key"))}">
@@ -3436,7 +3542,6 @@
         return `<button class="stake-node rung-${rung}${matched(n.s) ? "" : " dim"}" data-id="${esc(n.id)}" style="--stake-scale:${scale}">
           ${rung === "inferred" ? `<span class="rung-mark">${esc(rungWord(rung))}</span>` : ""}
           <span class="stake-name">${esc(n.s.name)}</span>
-          ${n.s.role ? `<span class="stake-role">${esc(n.s.role)}</span>` : ""}
         </button>`;
       }).join("");
 
@@ -4741,6 +4846,14 @@
     }
     if (message.command === "visibility" && typeof message.visible === "boolean") {
       freezeScreen(!message.visible, "shell");
+      return;
+    }
+    if (message.command === "editing" && typeof message.editable === "boolean") {
+      setIntroEditable(message.editable);
+      return;
+    }
+    if (message.command === "edit-rejected" && typeof message.field === "string") {
+      rejectIntroEdit(message.field);
       return;
     }
     if (message.command === "theme" && ["light", "dark"].includes(message.theme)) {
