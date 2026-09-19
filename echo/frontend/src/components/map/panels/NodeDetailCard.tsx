@@ -45,6 +45,11 @@ export type NodeInspection = {
 	onReveal?: (type: ObjectType) => void;
 	/** Explicit mixed-object views may opt into revealing related types. */
 	canRevealRelatedTypes?: boolean;
+	/**
+	 * False where the payload withholds provenance (the room's projection):
+	 * the source line would otherwise state a default as if it were known.
+	 */
+	provenance?: boolean;
 };
 
 type NodeDetailCardProps = {
@@ -515,7 +520,9 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 				</Section>
 			)}
 
-			{object && <Provenance object={object} />}
+			{object && inspection?.provenance !== false && (
+				<Provenance object={object} />
+			)}
 		</div>
 	);
 });

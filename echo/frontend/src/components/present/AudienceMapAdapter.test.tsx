@@ -31,38 +31,53 @@ const node = (index: number, label: string) => ({
 	},
 });
 
-vi.mock("@/components/map/data/adapter", () => ({
+const mapObject = (index: number, statement: string) => ({
+	detail: { statement, type: "argument" },
+	factCheck: { claimKey: null, eligible: false },
+	objectId: `object-${index}`,
+	provenance: {
+		legacy: false,
+		origin: "imported",
+		recipeId: null,
+		recipeVersion: null,
+		runId: null,
+	},
+	revisionId: `revision-${index}`,
+	type: "argument",
+});
+
+vi.mock("@/components/map/data/adapter", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@/components/map/data/adapter")>()),
 	buildMapGraph: () => ({
+		allNodes: [node(1, "A result"), node(2, "A later result")],
 		budgetBounds: null,
+		counts: { argument: 2 },
+		evidenceById: new Map(),
 		objectsById: new Map([
-			[
-				"revision-1",
-				{
-					detail: { statement: "A result", type: "argument" },
-					type: "argument",
-				},
-			],
-			[
-				"revision-2",
-				{
-					detail: { statement: "A later result", type: "argument" },
-					type: "argument",
-				},
-			],
+			["revision-1", mapObject(1, "A result")],
+			["revision-2", mapObject(2, "A later result")],
 		]),
 		overBudget: false,
 		placedNodes: [node(1, "A result"), node(2, "A later result")],
+		relatedStubs: new Map(),
 		relations: [],
+		resultId: "snapshot-1",
 		serverBudgets: { edgeLimit: 10, nodeLimit: 10 },
+		snapshotId: "snapshot-1",
 	}),
 }));
 
 vi.mock("@/components/map/layout/useMapGeometry", async () => {
 	const React = await import("react");
 	return {
+		EMPTY_EDGES: [],
 		useMapGeometry: () => {
 			React.useEffect(() => () => geometryDisposed(), []);
-			return { mstEdges: [], neighbours: { fpLinks: [], nnLinks: [] } };
+			return {
+				mstEdges: [],
+				neighbours: { fpLinks: [], nnLinks: [] },
+				status: "ready",
+			};
 		},
 	};
 });
@@ -163,7 +178,12 @@ describe("AudienceMapAdapter", () => {
 		client.clear();
 	});
 
-	const adapter = (active: boolean, revision = 0, theme?: "light" | "dark") => (
+	const adapter = (
+		active: boolean,
+		revision = 0,
+		theme?: "light" | "dark",
+		titles?: boolean,
+	) => (
 		<QueryClientProvider client={client}>
 			<I18nProvider i18n={i18n}>
 				<MantineProvider>
@@ -172,6 +192,7 @@ describe("AudienceMapAdapter", () => {
 						endpoint="/audience/map"
 						revision={revision}
 						theme={theme}
+						titles={titles}
 					/>
 				</MantineProvider>
 			</I18nProvider>
@@ -248,8 +269,8 @@ describe("AudienceMapAdapter", () => {
 		const view = render(adapter(true));
 		await screen.findByText("Audience tree renderer");
 		expect(screen.getByText("Audience local renderer")).toBeTruthy();
-		fireEvent.click(screen.getByRole("button", { name: "Display" }));
-		fireEvent.click(await screen.findByRole("checkbox", { name: "Local map" }));
+		fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
+		fireEvent.click(await screen.findByRole("checkbox", { name: "Clusters" }));
 		expect(screen.queryByText("Audience local renderer")).toBeNull();
 		expect(screen.getByText("Audience tree renderer")).toBeTruthy();
 
@@ -279,10 +300,14 @@ describe("AudienceMapAdapter", () => {
 		render(adapter(true));
 
 		expect(await screen.findByText("A result")).toBeTruthy();
-		expect(screen.getByText("Likely true")).toBeTruthy();
+		// As on the host's page, the verdict chip colours the map by factual
+		// status and opens the justification that came with the payload.
+		fireEvent.click(screen.getByRole("button", { name: "Likely true" }));
 		expect(
 			screen.getByText("Supported by the prepared evidence."),
 		).toBeTruthy();
+		// The room reads verdicts; it never starts, repeats or cancels a check.
+		expect(screen.queryByRole("button", { name: "Re-check" })).toBeNull();
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 		expect(fetchMock.mock.calls[0]?.[0]).toBe("/audience/map");
 	});
@@ -292,7 +317,7 @@ describe("AudienceMapAdapter", () => {
 	 * can switch the walk on once its timers are the fake ones.
 	 */
 	const showcaseToggle = async () => {
-		fireEvent.click(screen.getByRole("button", { name: "Display" }));
+		fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
 		return await screen.findByRole("checkbox", { name: "Showcase" });
 	};
 
@@ -366,6 +391,36 @@ describe("AudienceMapAdapter", () => {
 		view.rerender(adapter(true));
 		expect(walkStep).toHaveBeenCalledTimes(3);
 		expect(within(showcasePanel()).getByText("A result")).toBeTruthy();
+	});
+
+	it("offers no model-written titles to a viewer who is not signed in", async () => {
+		const fetchMock = vi.fn(
+			async (_url: string, _init?: RequestInit) =>
+				new Response(JSON.stringify({}), { status: 200 }),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		render(adapter(true));
+		await screen.findByText("Audience tree renderer");
+		expect(screen.queryByRole("region", { name: "Explore" })).toBeNull();
+		fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
+		await screen.findByRole("checkbox", { name: "Showcase" });
+		expect(screen.queryByRole("checkbox", { name: "Explore" })).toBeNull();
+		// The room's switch and the server's budget are not this menu's.
+		expect(screen.queryByRole("checkbox", { name: "Dark mode" })).toBeNull();
+		expect(screen.queryByText("Map budget")).toBeNull();
+		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/audience/map"]);
+	});
+
+	it("gives a signed-in viewer the host page's Explore panel", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+		);
+
+		render(adapter(true, 0, undefined, true));
+		await screen.findByText("Audience tree renderer");
+		expect(screen.getByRole("region", { name: "Explore" })).toBeTruthy();
 	});
 
 	it("leaves the Map exactly as the host page has it by default", async () => {

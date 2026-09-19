@@ -1,18 +1,8 @@
-import { useLingui } from "@lingui/react";
-import { Trans } from "@lingui/react/macro";
-import {
-	Button,
-	Checkbox,
-	Group,
-	Paper,
-	Popover,
-	SegmentedControl,
-	Stack,
-	Text,
-} from "@mantine/core";
+import { Plural, Trans } from "@lingui/react/macro";
+import { Group, Stack, Text } from "@mantine/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CSSProperties, ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import {
 	budgetsToAdmit,
@@ -20,26 +10,30 @@ import {
 	type MapBudgets,
 	maximumAdmittedNodes,
 } from "@/components/map/budgets";
-import type { EvidenceGroup } from "@/components/map/data/adapter";
 import { buildMapGraph } from "@/components/map/data/adapter";
-import type { MapGraphResponse } from "@/components/map/hooks";
-import { useMapGeometry } from "@/components/map/layout/useMapGeometry";
+import type { FactCheckStates, MapGraphResponse } from "@/components/map/hooks";
+import {
+	MAP_LIGHT_VARS,
+	MapExperience,
+	MapSurface,
+} from "@/components/map/MapExperience";
 import { OverBudgetState } from "@/components/map/panels/BudgetStates";
-import { ShowcasePanel } from "@/components/map/panels/ShowcasePanel";
-import { LocalMap } from "@/components/map/renderers/LocalMapGraph";
-import { MstMap } from "@/components/map/renderers/MstGraph";
+import {
+	type MapSettingsControl,
+	MapSettingsMenu,
+} from "@/components/map/panels/MapSettingsMenu";
 import {
 	createMapInteractionStore,
 	MapInteractionProvider,
-	useMapInteraction,
 } from "@/components/map/state/interactionStore";
-import { useShowcaseWalk } from "@/components/map/state/useShowcaseWalk";
+import {
+	DEFAULT_MAP_SETTINGS,
+	type MapSettings,
+} from "@/components/map/state/settings";
 import type {
 	ColorBy,
 	FactCheckState,
 	FactCheckVerdict,
-	MapGraphNode,
-	ObjectType,
 } from "@/components/map/types";
 
 type AudienceMapAdapterProps = {
@@ -52,6 +46,12 @@ type AudienceMapAdapterProps = {
 	 * Map page exactly, so the default changes nothing.
 	 */
 	theme?: "light" | "dark";
+	/**
+	 * Whether the viewer is signed in. Only then may a settled highlight be
+	 * titled: that request runs a model behind the host's session, and a
+	 * public link has no session to send. Off, no such request is made.
+	 */
+	titles?: boolean;
 };
 
 /**
@@ -91,12 +91,6 @@ const DARK_MAP_VARS = {
 	"--map-surface-raised": "#262625",
 	"--map-text": "#F6F4F1",
 } as CSSProperties;
-
-/**
- * The Showcase reads the projection and nothing else: the room sees no
- * transcript quotes and no link back into the workspace.
- */
-const NO_EVIDENCE: EvidenceGroup[] = [];
 
 type AudienceMapResponse = MapGraphResponse & {
 	fact_checks?: Record<string, unknown>;
@@ -157,266 +151,82 @@ const readAssessment = (value: unknown): FactCheckState | undefined => {
 	};
 };
 
-const assessmentLabel = (assessment: FactCheckState) => {
-	if (assessment.status !== "done") return null;
-	switch (assessment.verdict) {
-		case "true":
-			return <Trans>Likely true</Trans>;
-		case "false":
-			return <Trans>Likely false</Trans>;
-		case "contested":
-			return <Trans>Contested</Trans>;
-		case "unknown":
-			return <Trans>Inconclusive</Trans>;
-	}
-};
+const EMPTY_STATES: FactCheckStates = {};
 
-const objectTypeLabel = (type: ObjectType) => {
-	switch (type) {
-		case "argument":
-			return <Trans>Argument</Trans>;
-		case "deduplicated_argument":
-			return <Trans>Consolidated argument</Trans>;
-		case "popcorn":
-			return <Trans>Popcorn phrase</Trans>;
-		case "stakeholder":
-			return <Trans>Stakeholder</Trans>;
-		case "tension":
-			return <Trans>Tension</Trans>;
-	}
-};
+/** The room never starts, refreshes or cancels a factual check. */
+const noFactCheck = () => {};
 
-const AudienceMapContent = ({
-	nodes,
-	graph,
-	geometry,
-	edgeLimit,
-	showcase,
-	onShowcaseChange,
-	dark,
-}: {
-	nodes: MapGraphNode[];
-	graph: ReturnType<typeof buildMapGraph>;
-	geometry: ReturnType<typeof useMapGeometry>;
-	edgeLimit: number;
-	showcase: boolean;
-	onShowcaseChange: (next: boolean) => void;
-	dark: boolean;
-}) => {
-	const { i18n } = useLingui();
-	const selectedNodeId = useMapInteraction((state) => state.selectedNodeId);
-	const [showTree, setShowTree] = useState(true);
-	const [showLocal, setShowLocal] = useState(true);
-	const [showDetails, setShowDetails] = useState(true);
-	const [colorBy, setColorBy] = useState<ColorBy>("none");
-	// The tree renderer owns the walk's timer; this only keeps what it reports.
-	const walk = useShowcaseWalk();
-	const showcaseNode = walk.nodeId
-		? (nodes.find((node) => node.id === walk.nodeId) ?? null)
-		: null;
-	const selectedNode = nodes.find((node) => node.id === selectedNodeId) ?? null;
-	const selectedObject = selectedNode
-		? graph.objectsById.get(selectedNode.id)
-		: null;
-	const assessment = selectedNode?.metadata.factCheck;
-	const hasAssessments = nodes.some((node) => node.metadata.factCheck);
-	const visibleMaps = Number(showTree) + Number(showLocal);
-
-	return (
-		<div className="flex h-full min-h-0 flex-col gap-2 p-3">
-			<Group justify="space-between" gap="xs" wrap="wrap">
-				<SegmentedControl
-					size="xs"
-					value={colorBy}
-					onChange={(value) => setColorBy(value as ColorBy)}
-					data={[
-						{ label: <Trans>Neutral</Trans>, value: "none" },
-						{ label: <Trans>Type</Trans>, value: "type" },
-						...(hasAssessments
-							? [
-									{
-										label: <Trans>Factual status</Trans>,
-										value: "factCheck",
-									},
-								]
-							: []),
-					]}
-				/>
-				<Popover position="bottom-end" shadow="md" width={220}>
-					<Popover.Target>
-						<Button size="xs" variant="subtle">
-							<Trans>Display</Trans>
-						</Button>
-					</Popover.Target>
-					<Popover.Dropdown>
-						<Stack gap="xs">
-							<Checkbox
-								checked={showcase}
-								label={<Trans>Showcase</Trans>}
-								onChange={(event) =>
-									onShowcaseChange(event.currentTarget.checked)
-								}
-							/>
-							<Checkbox
-								checked={showTree}
-								disabled={showTree && visibleMaps === 1}
-								label={<Trans>Argument tree (MST)</Trans>}
-								onChange={(event) => setShowTree(event.currentTarget.checked)}
-							/>
-							<Checkbox
-								checked={showLocal}
-								disabled={showLocal && visibleMaps === 1}
-								label={<Trans>Local map</Trans>}
-								onChange={(event) => setShowLocal(event.currentTarget.checked)}
-							/>
-							<Checkbox
-								checked={showDetails}
-								label={<Trans>Selected item details</Trans>}
-								onChange={(event) =>
-									setShowDetails(event.currentTarget.checked)
-								}
-							/>
-						</Stack>
-					</Popover.Dropdown>
-				</Popover>
-			</Group>
-
-			<div
-				className="grid min-h-0 flex-1 gap-2"
-				style={{
-					gridTemplateColumns: `${showcase ? "minmax(14rem,0.5fr) " : ""}${showTree && showLocal ? "minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1fr)"}${showDetails ? " minmax(14rem,0.4fr)" : ""}`,
-				}}
-			>
-				{showcase && (
-					<Paper withBorder p="md" className="min-h-0 overflow-hidden">
-						<ShowcasePanel
-							node={showcaseNode}
-							// Everything the room reads comes from the projection: the
-							// statement, the assessment already in the payload, and no
-							// quotes or links back into the workspace.
-							evidence={NO_EVIDENCE}
-							factCheck={showcaseNode?.metadata.factCheck}
-							expiresAt={walk.expiresAt}
-							durationMs={walk.durationMs}
-							locale={i18n.locale}
-						/>
-					</Paper>
-				)}
-				{showTree && (
-					<section
-						className="min-h-0 overflow-hidden"
-						aria-label="Argument tree"
-					>
-						<MstMap
-							nodes={nodes}
-							mstEdges={geometry.mstEdges}
-							relations={graph.relations}
-							edgeLimit={edgeLimit}
-							showRelationships={false}
-							colorBy={colorBy}
-							darkMode={dark}
-							onActiveNodeChange={walk.onActiveNodeChange}
-							// The walk serves the Showcase, as it does on the host page:
-							// no Showcase, no timer.
-							autoAdvance={showcase}
-						/>
-					</section>
-				)}
-				{showLocal && (
-					<section className="min-h-0 overflow-hidden" aria-label="Local map">
-						<LocalMap
-							nodes={nodes}
-							neighbours={geometry.neighbours}
-							mstEdges={geometry.mstEdges}
-							relations={graph.relations}
-							edgeLimit={edgeLimit}
-							showRelationships={false}
-							colorBy={colorBy}
-							darkMode={dark}
-							onActiveNodeChange={walk.onActiveNodeChange}
-						/>
-					</section>
-				)}
-				{showDetails && (
-					<Paper withBorder p="md" className="min-h-0 overflow-auto">
-						{selectedNode ? (
-							<Stack gap="xs">
-								<Text fw={600}>{selectedNode.label}</Text>
-								<Text size="xs" c="dimmed">
-									<Trans>Type</Trans>:{" "}
-									{objectTypeLabel(selectedNode.metadata.objectType)}
-								</Text>
-								{selectedObject?.detail.type === "deduplicated_argument" &&
-									selectedObject.detail.consolidation && (
-										<Text size="sm">
-											<Trans>
-												Combines{" "}
-												{selectedObject.detail.consolidation.memberCount} items
-											</Trans>
-										</Text>
-									)}
-								{assessment && assessment.status === "done" && (
-									<Stack gap={4} mt="xs">
-										<Text size="xs" tt="uppercase" c="dimmed">
-											<Trans>Factual status</Trans>
-										</Text>
-										<Text size="sm" fw={600}>
-											{assessmentLabel(assessment)}
-										</Text>
-										{assessment.justification && (
-											<Text size="sm">{assessment.justification}</Text>
-										)}
-									</Stack>
-								)}
-							</Stack>
-						) : (
-							<Text size="sm" c="dimmed">
-								<Trans>Select a node to see its details.</Trans>
-							</Text>
-						)}
-					</Paper>
-				)}
-			</div>
-		</div>
-	);
-};
+/**
+ * The room's dark switch is the shell's, the budget is the server's, and the
+ * projection carries no relations to draw.
+ */
+const ROOM_HIDDEN_CONTROLS: MapSettingsControl[] = [
+	"darkMode",
+	"showRelationships",
+];
+const ROOM_HIDDEN_CONTROLS_WITHOUT_TITLES: MapSettingsControl[] = [
+	...ROOM_HIDDEN_CONTROLS,
+	"showExplore",
+];
 
 const AudienceMap = ({
 	payload,
 	onAdmit,
-	showcase,
-	onShowcaseChange,
+	settings,
+	onSettingsChange,
 	dark,
+	titles,
 }: {
 	payload: MapGraphResponse;
 	onAdmit: (budgets: MapBudgets) => void;
-	showcase: boolean;
-	onShowcaseChange: (next: boolean) => void;
+	settings: MapSettings;
+	onSettingsChange: (patch: Partial<MapSettings>) => void;
 	dark: boolean;
+	titles: boolean;
 }) => {
 	const graph = useMemo(() => buildMapGraph(payload), [payload]);
-	const nodes = useMemo(() => {
+	// Audience projections expose an existing display classification, never
+	// the capability to start or refresh a factual check.
+	const factCheckStates = useMemo(() => {
 		const assessments = (payload as AudienceMapResponse).fact_checks ?? {};
-		return graph.placedNodes.map((node) => {
+		const states: FactCheckStates = {};
+		for (const node of graph.placedNodes) {
 			const assessment = readAssessment(assessments[node.id]);
-			if (!assessment) return node;
-			return {
+			if (assessment) states[node.id] = assessment;
+		}
+		return Object.keys(states).length > 0 ? states : EMPTY_STATES;
+	}, [graph.placedNodes, payload]);
+	const nodes = useMemo(
+		() =>
+			graph.placedNodes.map((node) => ({
 				...node,
 				metadata: {
 					...node.metadata,
-					factCheck: assessment,
-					// Audience projections expose an existing display classification,
-					// never the capability to start or refresh a factual check.
-					factCheckEligible: true,
+					// The projection withholds eligibility. An assessed node shows
+					// its verdict; any other follows its own kind, so an unchecked
+					// claim reads as unverified and never as an opinion.
+					factCheckEligible: factCheckStates[node.id] ? true : undefined,
 				},
-			};
-		});
-	}, [graph.placedNodes, payload]);
+			})),
+		[factCheckStates, graph.placedNodes],
+	);
+	const visibleIds = useMemo(
+		() => new Set(graph.allNodes.map((node) => node.id)),
+		[graph.allNodes],
+	);
+	// The same nodes the panels look up, with the room's eligibility.
+	const roomGraph = useMemo(() => {
+		const byId = new Map(nodes.map((node) => [node.id, node] as const));
+		return {
+			...graph,
+			allNodes: graph.allNodes.map((node) => byId.get(node.id) ?? node),
+			placedNodes: nodes,
+		};
+	}, [graph, nodes]);
 	const budgets =
 		graph.serverBudgets ??
 		graph.budgetBounds?.defaults ??
 		LEGACY_BUDGET_BOUNDS.defaults;
-	const geometry = useMapGeometry(nodes, { nodeLimit: budgets.nodeLimit });
 	const [store] = useState(() =>
 		createMapInteractionStore({ selectedNodeId: nodes[0]?.id ?? null }),
 	);
@@ -425,6 +235,14 @@ const AudienceMap = ({
 		if (selected && nodes.some((node) => node.id === selected)) return;
 		store.setSelectedNodeId(nodes[0]?.id ?? null);
 	}, [nodes, store]);
+	const roomSettings = useMemo(
+		() => ({ ...settings, darkMode: dark, showRelationships: false }),
+		[dark, settings],
+	);
+	const handleColorByChange = useCallback(
+		(colorBy: ColorBy) => onSettingsChange({ colorBy }),
+		[onSettingsChange],
+	);
 
 	if (graph.overBudget) {
 		const count = Object.values(graph.counts).reduce(
@@ -455,25 +273,59 @@ const AudienceMap = ({
 	}
 
 	return (
-		<MapInteractionProvider store={store}>
-			<AudienceMapContent
-				nodes={nodes}
-				graph={graph}
-				geometry={geometry}
-				edgeLimit={budgets.edgeLimit}
-				showcase={showcase}
-				onShowcaseChange={onShowcaseChange}
-				dark={dark}
-			/>
-		</MapInteractionProvider>
+		<div
+			className="flex h-full min-h-0 flex-col"
+			// Dark is relit on the themed root; light is the host page's own.
+			style={dark ? undefined : MAP_LIGHT_VARS}
+		>
+			<Group justify="space-between" gap="xs" wrap="nowrap" px="sm" pt="xs">
+				<Text size="sm">
+					<Plural value={nodes.length} one="# argument" other="# arguments" />
+				</Text>
+				<MapSettingsMenu
+					settings={roomSettings}
+					onChange={onSettingsChange}
+					colorBy={settings.colorBy}
+					onColorByChange={handleColorByChange}
+					canFactCheck={false}
+					hide={
+						titles ? ROOM_HIDDEN_CONTROLS : ROOM_HIDDEN_CONTROLS_WITHOUT_TITLES
+					}
+					withinPortal={false}
+				/>
+			</Group>
+			<MapSurface darkMode={false}>
+				<MapInteractionProvider store={store}>
+					<MapExperience
+						graph={roomGraph}
+						placedNodes={nodes}
+						visibleIds={visibleIds}
+						budgets={budgets}
+						colorBy={settings.colorBy}
+						onColorByChange={handleColorByChange}
+						settings={roomSettings}
+						factCheckStates={factCheckStates}
+						onFactCheck={noFactCheck}
+						onCancelFactCheck={noFactCheck}
+						canFactCheck={false}
+						offline={false}
+						titles={titles}
+						// The projection strips provenance along with the quotes.
+						provenance={false}
+					/>
+				</MapInteractionProvider>
+			</MapSurface>
+		</div>
 	);
 };
 
 /**
- * A presentation-safe Map adapter. It reads a pre-sanitized projection and
- * never mounts host hooks for generation, fact checking, selection titles or
- * transcript links. The renderer is unmounted while hidden so its simulation,
- * its worker and the Showcase's walk stop doing background work.
+ * A presentation-safe Map adapter. It draws the host page's own maps and
+ * panels over a pre-sanitized projection: no quotes, no links back into the
+ * workspace, and never the host hooks for generation or fact checking.
+ * Selection titles are the one host request, and only for a signed-in viewer.
+ * The renderer is unmounted while hidden so its simulation, its worker and
+ * the Showcase's walk stop doing background work.
  */
 export const AudienceMapAdapter = ({
 	active,
@@ -481,6 +333,7 @@ export const AudienceMapAdapter = ({
 	revision = 0,
 	waitingLabel,
 	theme = "light",
+	titles = false,
 }: AudienceMapAdapterProps) => {
 	const dark = theme === "dark";
 	const queryClient = useQueryClient();
@@ -489,8 +342,15 @@ export const AudienceMapAdapter = ({
 		budgets: MapBudgets;
 	} | null>(null);
 	// Above the hidden boundary: the graph unmounts while another block is on
-	// the wall, and the room comes back to the Showcase the host left running.
-	const [showcase, setShowcase] = useState(false);
+	// the wall, and the room comes back to the panels and the Showcase the host
+	// left running. Kept in memory only: rooms share an origin with each other
+	// and with the host's own saved Map settings.
+	const [settings, setSettings] = useState<MapSettings>(DEFAULT_MAP_SETTINGS);
+	const updateSettings = useCallback(
+		(patch: Partial<MapSettings>) =>
+			setSettings((current) => ({ ...current, ...patch })),
+		[],
+	);
 	const activeAdmission =
 		admission?.endpoint === endpoint ? admission.budgets : null;
 	const requestEndpoint = useMemo(() => {
@@ -563,9 +423,10 @@ export const AudienceMapAdapter = ({
 			<AudienceMap
 				payload={payload}
 				onAdmit={(budgets) => setAdmission({ budgets, endpoint })}
-				showcase={showcase}
-				onShowcaseChange={setShowcase}
+				settings={settings}
+				onSettingsChange={updateSettings}
 				dark={dark}
+				titles={titles}
 			/>,
 		);
 	}

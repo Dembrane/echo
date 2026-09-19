@@ -31,15 +31,30 @@ type MapSettingsMenuProps = {
 	/** The colour mode in effect, which the URL may set. */
 	colorBy: ColorBy;
 	onColorByChange: (colorBy: ColorBy) => void;
-	/** The budgets in effect and every change made to the saved values. */
-	budgets: BudgetResolution;
-	bounds: MapBudgetBounds;
+	/**
+	 * The budgets in effect and every change made to the saved values. Left
+	 * out where the server owns the budget (the presentation's room screen).
+	 */
+	budgets?: BudgetResolution;
+	bounds?: MapBudgetBounds;
 	/** Idle and error claims a check may start. */
-	pendingClaimCount: number;
-	onFactCheckAll: () => void;
+	pendingClaimCount?: number;
+	onFactCheckAll?: () => void;
 	/** False for read-only roles: no fact-check controls. */
 	canFactCheck: boolean;
+	/** Controls this surface does not own, such as the room's dark switch. */
+	hide?: ReadonlyArray<MapSettingsControl>;
+	/**
+	 * False keeps the menu inside the surface that opens it, so it follows that
+	 * surface's colours and stays visible while the surface is fullscreen.
+	 */
+	withinPortal?: boolean;
 };
+
+export type MapSettingsControl =
+	| "showExplore"
+	| "showRelationships"
+	| "darkMode";
 
 const PANEL_TOGGLES: { key: keyof MapSettings; label: () => string }[] = [
 	{ key: "showExplore", label: () => t`Explore` },
@@ -71,8 +86,75 @@ export const budgetAdjustmentLabel = (
 	}
 };
 
+const NOTHING_HIDDEN: ReadonlyArray<MapSettingsControl> = [];
+
 const readBudget = (value: string | number): number | null =>
 	typeof value === "number" && Number.isFinite(value) ? value : null;
+
+/** The host's own node and edge budget, over the deployment's bounds. */
+const BudgetControls = ({
+	settings,
+	onChange,
+	budgets,
+	bounds,
+}: Pick<MapSettingsMenuProps, "settings" | "onChange"> & {
+	budgets: BudgetResolution;
+	bounds: MapBudgetBounds;
+}) => {
+	const applied = budgets.budgets;
+	const defaultNodes = bounds.defaults.nodeLimit;
+	const defaultEdges = bounds.defaults.edgeLimit;
+	const hasCustomBudgets =
+		settings.nodeLimit !== null || settings.edgeLimit !== null;
+	return (
+		<Stack gap="xs">
+			<Text size="xs" className="uppercase tracking-widest">
+				<Trans>Map budget</Trans>
+			</Text>
+			<NumberInput
+				size="xs"
+				label={t`Nodes`}
+				description={t`Default ${defaultNodes}`}
+				min={1}
+				step={1}
+				allowDecimal={false}
+				radius={0}
+				value={settings.nodeLimit ?? applied.nodeLimit}
+				onChange={(value) => onChange({ nodeLimit: readBudget(value) })}
+			/>
+			<NumberInput
+				size="xs"
+				label={t`Visible edges`}
+				description={t`Default ${defaultEdges}`}
+				min={1}
+				step={1}
+				allowDecimal={false}
+				radius={0}
+				value={settings.edgeLimit ?? applied.edgeLimit}
+				onChange={(value) => onChange({ edgeLimit: readBudget(value) })}
+			/>
+			{budgets.adjustments.length > 0 && (
+				<Stack gap={4} role="status">
+					{budgets.adjustments.map((adjustment) => (
+						<Text key={`${adjustment.field}-${adjustment.reason}`} size="xs">
+							{budgetAdjustmentLabel(adjustment, applied.nodeLimit)}
+						</Text>
+					))}
+				</Stack>
+			)}
+			{hasCustomBudgets && (
+				<Button
+					size="compact-xs"
+					variant="subtle"
+					radius={0}
+					onClick={() => onChange({ edgeLimit: null, nodeLimit: null })}
+				>
+					<Trans>Use the default budget</Trans>
+				</Button>
+			)}
+		</Stack>
+	);
+};
 
 /** Panel visibility, colour mode, budgets, fact-check options and dark mode. */
 export const MapSettingsMenu = ({
@@ -82,23 +164,19 @@ export const MapSettingsMenu = ({
 	onColorByChange,
 	budgets,
 	bounds,
-	pendingClaimCount,
+	pendingClaimCount = 0,
 	onFactCheckAll,
 	canFactCheck,
+	hide = NOTHING_HIDDEN,
+	withinPortal = true,
 }: MapSettingsMenuProps) => {
-	const applied = budgets.budgets;
-	const defaultNodes = bounds.defaults.nodeLimit;
-	const defaultEdges = bounds.defaults.edgeLimit;
-	const hasCustomBudgets =
-		settings.nodeLimit !== null || settings.edgeLimit !== null;
-
 	return (
 		<Popover
 			position="bottom-end"
 			shadow="xl"
 			width={300}
 			radius={0}
-			withinPortal
+			withinPortal={withinPortal}
 		>
 			<Popover.Target>
 				<ActionIcon
@@ -118,7 +196,9 @@ export const MapSettingsMenu = ({
 					</Text>
 
 					<Stack gap="xs">
-						{PANEL_TOGGLES.map(({ key, label }) => (
+						{PANEL_TOGGLES.filter(
+							({ key }) => !hide.includes(key as MapSettingsControl),
+						).map(({ key, label }) => (
 							<Checkbox
 								key={key}
 								size="sm"
@@ -129,14 +209,16 @@ export const MapSettingsMenu = ({
 								}
 							/>
 						))}
-						<Checkbox
-							size="sm"
-							label={t`Relationships`}
-							checked={settings.showRelationships}
-							onChange={(event) =>
-								onChange({ showRelationships: event.currentTarget.checked })
-							}
-						/>
+						{!hide.includes("showRelationships") && (
+							<Checkbox
+								size="sm"
+								label={t`Relationships`}
+								checked={settings.showRelationships}
+								onChange={(event) =>
+									onChange({ showRelationships: event.currentTarget.checked })
+								}
+							/>
+						)}
 					</Stack>
 
 					<Divider />
@@ -162,7 +244,7 @@ export const MapSettingsMenu = ({
 						</Stack>
 					</Radio.Group>
 
-					{colorBy === "factCheck" && canFactCheck && (
+					{colorBy === "factCheck" && canFactCheck && onFactCheckAll && (
 						<>
 							<Divider />
 							<Checkbox
@@ -189,68 +271,32 @@ export const MapSettingsMenu = ({
 						</>
 					)}
 
-					<Divider />
+					{budgets && bounds && (
+						<>
+							<Divider />
+							<BudgetControls
+								settings={settings}
+								onChange={onChange}
+								budgets={budgets}
+								bounds={bounds}
+							/>
+						</>
+					)}
 
-					<Stack gap="xs">
-						<Text size="xs" className="uppercase tracking-widest">
-							<Trans>Map budget</Trans>
-						</Text>
-						<NumberInput
-							size="xs"
-							label={t`Nodes`}
-							description={t`Default ${defaultNodes}`}
-							min={1}
-							step={1}
-							allowDecimal={false}
-							radius={0}
-							value={settings.nodeLimit ?? applied.nodeLimit}
-							onChange={(value) => onChange({ nodeLimit: readBudget(value) })}
-						/>
-						<NumberInput
-							size="xs"
-							label={t`Visible edges`}
-							description={t`Default ${defaultEdges}`}
-							min={1}
-							step={1}
-							allowDecimal={false}
-							radius={0}
-							value={settings.edgeLimit ?? applied.edgeLimit}
-							onChange={(value) => onChange({ edgeLimit: readBudget(value) })}
-						/>
-						{budgets.adjustments.length > 0 && (
-							<Stack gap={4} role="status">
-								{budgets.adjustments.map((adjustment) => (
-									<Text
-										key={`${adjustment.field}-${adjustment.reason}`}
-										size="xs"
-									>
-										{budgetAdjustmentLabel(adjustment, applied.nodeLimit)}
-									</Text>
-								))}
-							</Stack>
-						)}
-						{hasCustomBudgets && (
-							<Button
-								size="compact-xs"
-								variant="subtle"
-								radius={0}
-								onClick={() => onChange({ edgeLimit: null, nodeLimit: null })}
-							>
-								<Trans>Use the default budget</Trans>
-							</Button>
-						)}
-					</Stack>
+					{!hide.includes("darkMode") && (
+						<>
+							<Divider />
 
-					<Divider />
-
-					<Checkbox
-						size="sm"
-						label={t`Dark mode`}
-						checked={settings.darkMode}
-						onChange={(event) =>
-							onChange({ darkMode: event.currentTarget.checked })
-						}
-					/>
+							<Checkbox
+								size="sm"
+								label={t`Dark mode`}
+								checked={settings.darkMode}
+								onChange={(event) =>
+									onChange({ darkMode: event.currentTarget.checked })
+								}
+							/>
+						</>
+					)}
 				</Stack>
 			</Popover.Dropdown>
 		</Popover>

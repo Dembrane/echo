@@ -42,13 +42,20 @@ const deferredRequester = () => {
 	return { calls, request };
 };
 
-const setup = (request: TitleRequester) => {
+const setup = (request: TitleRequester, enabled = true) => {
 	const store = createMapInteractionStore();
 	const wrapper = ({ children }: { children: ReactNode }) => (
 		<MapInteractionProvider store={store}>{children}</MapInteractionProvider>
 	);
 	const hook = renderHook(
-		() => useSelectionTitle({ edges, nodes, request, resultId: "result-1" }),
+		() =>
+			useSelectionTitle({
+				edges,
+				enabled,
+				nodes,
+				request,
+				resultId: "result-1",
+			}),
 		{ wrapper },
 	);
 	return { hook, store };
@@ -112,6 +119,17 @@ describe("useSelectionTitle", () => {
 		expect(state.selectedDistillationId).toBe(state.history[0].id);
 		expect(store.getState().highlightSource).toBe("history");
 		expect(store.getState().highlightedNodeIds).toEqual(new Set(selection));
+	});
+
+	it("runs no timer and sends nothing while it is switched off", async () => {
+		const { request } = deferredRequester();
+		const { hook, store } = setup(request, false);
+
+		settle(store, ids(0, 4, 8, 12));
+		expect(hook.result.current.timerActive).toBe(false);
+		await wait(TITLE_DELAY_MS * 2);
+		expect(request).not.toHaveBeenCalled();
+		expect(hook.result.current.isProcessing).toBe(false);
 	});
 
 	it("sends every settled id, most central first", async () => {

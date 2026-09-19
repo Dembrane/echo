@@ -46,6 +46,11 @@ export type UseSelectionTitleOptions = {
 	/** The MST over those nodes, for centrality order. */
 	edges: ReadonlyArray<Edge>;
 	request?: TitleRequester;
+	/**
+	 * False where titles must never be asked for (a viewer who is not signed
+	 * in): no timer runs and no request is made.
+	 */
+	enabled?: boolean;
 };
 
 const setsEqual = (a: ReadonlySet<string>, b: ReadonlySet<string>) => {
@@ -78,6 +83,7 @@ export function useSelectionTitle({
 	nodes,
 	edges,
 	request = requestSelectionTitle,
+	enabled = true,
 }: UseSelectionTitleOptions) {
 	const store = useMapInteractionStore();
 
@@ -90,8 +96,15 @@ export function useSelectionTitle({
 	const [timerRun, setTimerRun] = useState<number | null>(null);
 	const [timerProgress, setTimerProgress] = useState(0);
 
-	const latestRef = useRef({ edges, nodes, request, resultId, snapshotId });
-	latestRef.current = { edges, nodes, request, resultId, snapshotId };
+	const latestRef = useRef({
+		edges,
+		enabled,
+		nodes,
+		request,
+		resultId,
+		snapshotId,
+	});
+	latestRef.current = { edges, enabled, nodes, request, resultId, snapshotId };
 
 	const historyRef = useRef<Distillation[]>([]);
 	const selectedRef = useRef<string | null>(null);
@@ -191,8 +204,9 @@ export function useSelectionTitle({
 				resultId: id,
 				snapshotId: snapshot,
 				nodes: graphNodes,
+				enabled: mayAsk,
 			} = latestRef.current;
-			if (!id) return;
+			if (!id || !mayAsk) return;
 			const key = selectionKey(id, nodeIds);
 			const revisionOf = new Map(
 				graphNodes.map((node) => [node.id, node.metadata.revisionId] as const),
@@ -339,7 +353,17 @@ export function useSelectionTitle({
 		timeoutRef.current = setTimeout(() => fire(ids), TITLE_DELAY_MS);
 	}, [abortPending, clearTimer, fire, setError, setSelected, store]);
 
-	useEffect(() => store.subscribe(handleChange), [store, handleChange]);
+	useEffect(() => {
+		if (!enabled) return;
+		return store.subscribe(handleChange);
+	}, [enabled, store, handleChange]);
+
+	// Switched off mid-selection: nothing pending may still land.
+	useEffect(() => {
+		if (enabled) return;
+		clearTimer();
+		abortPending();
+	}, [abortPending, clearTimer, enabled]);
 
 	// Cursor arc progress, capped at half a circle.
 	useEffect(() => {
