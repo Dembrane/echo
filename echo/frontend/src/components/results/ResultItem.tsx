@@ -1,7 +1,7 @@
 import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { ArrowsLeftRightIcon, PencilSimpleIcon } from "@phosphor-icons/react";
-import { type ReactNode, useState } from "react";
+import { ArrowsLeftRightIcon, QuotesIcon } from "@phosphor-icons/react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
 	type AnalysisObject,
 	type AnalysisRevision,
@@ -84,7 +84,17 @@ export function ResultStage({
 	const fields = resultFields(item);
 	const fallback = item.label ?? "";
 	const primary = primaryText(item.type, fields, fallback);
-	const step = sizeStep(primary);
+	// A tension is read as two poles, each in half the card: the longer pole
+	// sets the size, against half the measure.
+	const step =
+		item.type === "tension" && (fields.poleA || fields.poleB)
+			? sizeStep(
+					[String(fields.poleA ?? ""), String(fields.poleB ?? "")].reduce(
+						(longer, pole) => (pole.length > longer.length ? pole : longer),
+					),
+					2,
+				)
+			: sizeStep(primary);
 	const sizeClass = classes[`size${step}`];
 	const shown = (quotes ?? resultQuotes(item)).slice(0, QUOTE_LIMIT);
 	const counted = evidence ?? resultEvidence(item);
@@ -100,70 +110,84 @@ export function ResultStage({
 			className={[classes.stage, className].filter(Boolean).join(" ")}
 			data-testid="result-stage"
 		>
-			{item.type === "tension" ? (
-				<p className={`${classes.finding} ${sizeClass} ${classes.poles}`}>
-					<span>{String(fields.poleA ?? "")}</span>
-					<ArrowsLeftRightIcon
-						aria-hidden
-						className={classes.arrows}
-						size={Math.max(18, 30 - step * 4)}
-					/>
-					<span>{String(fields.poleB ?? "")}</span>
-				</p>
-			) : (
-				<p className={`${classes.finding} ${sizeClass}`}>{primary}</p>
-			)}
+			<div className={classes.card}>
+				<div className={classes.head}>
+					{item.type === "tension" ? (
+						<p className={`${classes.finding} ${sizeClass} ${classes.poles}`}>
+							<span>{String(fields.poleA ?? "")}</span>
+							{/* Sized in em, so the arrows keep step with the words. */}
+							<ArrowsLeftRightIcon
+								aria-hidden
+								className={classes.arrows}
+								size="0.8em"
+							/>
+							<span>{String(fields.poleB ?? "")}</span>
+						</p>
+					) : (
+						<p className={`${classes.finding} ${sizeClass}`}>{primary}</p>
+					)}
 
-			{item.type === "tension" && Boolean(fields.knot) && (
-				<p className={classes.second}>{String(fields.knot)}</p>
-			)}
-			{item.type === "tension" && Boolean(fields.toResolve) && (
-				<p className={classes.stance}>
-					<Trans>To resolve</Trans>: {String(fields.toResolve)}
-				</p>
-			)}
-			{item.type === "stakeholder" && Boolean(fields.role) && (
-				<p className={classes.second}>{String(fields.role)}</p>
-			)}
-			{item.type === "stakeholder" && Boolean(fields.stake) && (
-				<p className={classes.stance}>{String(fields.stake)}</p>
-			)}
-			{rung && <p className={classes.tag}>{rung}</p>}
-			{stance && <p className={classes.stance}>{stance}</p>}
-
-			{shown.length > 0 && (
-				<div className={classes.quotes} data-testid="result-quotes">
-					{shown.map((quote, index) => (
-						<blockquote
-							// Quotes repeat across findings; position keeps them apart.
-							// biome-ignore lint/suspicious/noArrayIndexKey: quotes have no id
-							key={index}
-							className={classes.quote}
-						>
-							{quote}
-						</blockquote>
-					))}
-				</div>
-			)}
-
-			<p className={classes.meta}>
-				<span>{evidenceLine(counted)}</span>
-				{edited && (
-					<span className={classes.edited} data-testid="result-edited">
-						<PencilSimpleIcon aria-hidden size={12} />
-						<Trans>edited</Trans>
-					</span>
-				)}
-			</p>
-
-			{factCheck && (
-				<div className={classes.verdict}>
-					<p className={classes.line}>{factCheck.verdict}</p>
-					{factCheck.justification && (
-						<p className={classes.line}>{factCheck.justification}</p>
+					{item.type === "tension" && Boolean(fields.knot) && (
+						<p className={classes.second}>{String(fields.knot)}</p>
+					)}
+					{item.type === "tension" && Boolean(fields.toResolve) && (
+						<p className={classes.stance}>
+							<Trans>To resolve</Trans>: {String(fields.toResolve)}
+						</p>
+					)}
+					{item.type === "stakeholder" && Boolean(fields.role) && (
+						<p className={classes.second}>{String(fields.role)}</p>
+					)}
+					{item.type === "stakeholder" && Boolean(fields.stake) && (
+						<p className={classes.stance}>{String(fields.stake)}</p>
+					)}
+					{rung && <p className={classes.tag}>{rung}</p>}
+					{stance && <p className={classes.stance}>{stance}</p>}
+					{/* The mark belongs to the finding's words and sits with them, above
+					    the seam: nothing under it was ever edited. The word alone; the
+					    pencil glyph is for a pop or a map node, where a word will not
+					    fit. */}
+					{edited && (
+						<p className={classes.edited} data-testid="result-edited">
+							<Trans>edited</Trans>
+						</p>
 					)}
 				</div>
-			)}
+
+				{/* What people said, and how much of it there is: one group. */}
+				<div className={classes.evidence}>
+					{shown.length > 0 && (
+						<div className={classes.quotes} data-testid="result-quotes">
+							{shown.map((quote, index) => (
+								<blockquote
+									// Quotes repeat across findings; position keeps them apart.
+									// biome-ignore lint/suspicious/noArrayIndexKey: quotes have no id
+									key={index}
+									className={classes.quote}
+								>
+									<QuotesIcon
+										aria-hidden
+										className={classes.mark}
+										weight="fill"
+									/>
+									<span className={classes.quoteText}>{quote}</span>
+								</blockquote>
+							))}
+						</div>
+					)}
+
+					<p className={classes.meta}>{evidenceLine(counted)}</p>
+				</div>
+
+				{factCheck && (
+					<div className={classes.verdict}>
+						<p className={classes.verdictWord}>{factCheck.verdict}</p>
+						{factCheck.justification && (
+							<p className={classes.line}>{factCheck.justification}</p>
+						)}
+					</div>
+				)}
+			</div>
 		</article>
 	);
 }
@@ -216,52 +240,79 @@ function ReasonStep({
 }) {
 	const [reason, setReason] = useState("");
 	const [tooShort, setTooShort] = useState(false);
+	const field = useRef<HTMLTextAreaElement>(null);
+	// The host asked for this step, so the caret is already in the field.
+	useEffect(() => {
+		field.current?.focus();
+	}, []);
+
+	const send = () => {
+		const written = reason.trim();
+		// The server enforces the real minimum; this only keeps a host from
+		// sending a reason nobody could read later.
+		if (written.length < 4) {
+			setTooShort(true);
+			field.current?.focus();
+			return;
+		}
+		onConfirm(written);
+	};
+
 	return (
 		<div className={classes.reasonStep} data-testid={testId}>
-			{/* Labelled above, never as a placeholder. */}
-			<label className={classes.reasonLabel} htmlFor={`${testId}-field`}>
-				{label}
-			</label>
-			<textarea
-				id={`${testId}-field`}
-				className={classes.reasonField}
-				rows={2}
-				value={reason}
-				onChange={(event) => {
-					setReason(event.currentTarget.value);
-					setTooShort(false);
-				}}
-			/>
-			{tooShort && (
-				<p className={classes.note}>
-					<Trans>A few more words, so someone reading later understands.</Trans>
-				</p>
-			)}
-			<div className={classes.reasonActions}>
-				<button
-					type="button"
-					className={classes.control}
-					disabled={pending}
-					onClick={() => {
-						const written = reason.trim();
-						// The server enforces the real minimum; this only keeps a host
-						// from sending a reason nobody could read later.
-						if (written.length < 4) {
-							setTooShort(true);
-							return;
-						}
-						onConfirm(written);
+			<div className={classes.reasonInner}>
+				{/* Labelled above, never as a placeholder. */}
+				<label className={classes.reasonLabel} htmlFor={`${testId}-field`}>
+					{label}
+				</label>
+				<textarea
+					ref={field}
+					id={`${testId}-field`}
+					className={classes.reasonField}
+					rows={2}
+					value={reason}
+					aria-describedby={tooShort ? `${testId}-note` : undefined}
+					onChange={(event) => {
+						setReason(event.currentTarget.value);
+						setTooShort(false);
 					}}
-				>
-					{confirmLabel}
-				</button>
-				<button
-					type="button"
-					className={`${classes.control} ${classes.quiet}`}
-					onClick={onCancel}
-				>
-					<Trans>Cancel</Trans>
-				</button>
+					onKeyDown={(event) => {
+						// Escape backs out one step, and only one.
+						if (event.key === "Escape") {
+							event.stopPropagation();
+							onCancel();
+						}
+						if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+							event.preventDefault();
+							if (!pending) send();
+						}
+					}}
+				/>
+				{/* Always in the tree, so a screen reader hears the words arrive. */}
+				<p className={classes.note} id={`${testId}-note`} aria-live="polite">
+					{tooShort && (
+						<Trans>
+							A few more words, so someone reading later understands.
+						</Trans>
+					)}
+				</p>
+				<div className={classes.reasonActions}>
+					<button
+						type="button"
+						className={`${classes.control} ${classes.confirm}`}
+						disabled={pending}
+						onClick={send}
+					>
+						{confirmLabel}
+					</button>
+					<button
+						type="button"
+						className={`${classes.control} ${classes.cancel}`}
+						onClick={onCancel}
+					>
+						<Trans>Cancel</Trans>
+					</button>
+				</div>
 			</div>
 		</div>
 	);
@@ -306,7 +357,9 @@ function HistoryTimeline({
 							<p className={classes.line}>{revision.reason}</p>
 						)}
 						{before && before !== after && (
-							<p className={`${classes.wording} ${classes.before}`}>{before}</p>
+							<del className={`${classes.wording} ${classes.before}`}>
+								{before}
+							</del>
 						)}
 						{after && <p className={classes.wording}>{after}</p>}
 						{index > 0 && (
@@ -462,6 +515,89 @@ export function ResultItem({
 
 				{canEdit && (
 					<div className={classes.margin} data-testid="result-workbench">
+						{/* What a host can do comes first, at the height of the finding,
+						    so a long history never pushes it out of reach. The gentlest
+						    control leads and the heaviest closes the group. */}
+						<section className={`${classes.section} ${classes.actions}`}>
+							{conflict && (
+								<p className={classes.notice} data-testid="result-conflict">
+									<Trans>
+										Someone changed this while you had it open. Open it again to
+										see their version.
+									</Trans>
+								</p>
+							)}
+							{onShowToRoom && (
+								<button
+									type="button"
+									className={`${classes.control} ${classes.primary}`}
+									onClick={onShowToRoom}
+								>
+									<Trans>Show to the room</Trans>
+								</button>
+							)}
+							{onEditWords && (
+								<button
+									type="button"
+									className={classes.control}
+									onClick={() => onEditWords(item)}
+								>
+									<Trans>Change the words</Trans>
+								</button>
+							)}
+							{holdBack && (
+								<button
+									type="button"
+									className={classes.control}
+									onClick={() => holdBack.onChange(!holdBack.held)}
+								>
+									{holdBack.held ? (
+										<Trans>Put back in this presentation</Trans>
+									) : (
+										<Trans>Not in this presentation</Trans>
+									)}
+								</button>
+							)}
+							{withdrawn ? (
+								<>
+									<p className={classes.line}>
+										<Trans>Withdrawn from the analysis.</Trans>
+									</p>
+									<button
+										type="button"
+										className={classes.control}
+										disabled={pending}
+										onClick={restore}
+									>
+										<Trans>Restore to the analysis</Trans>
+									</button>
+								</>
+							) : step === "withdraw" ? (
+								<ReasonStep
+									testId="result-withdraw-reason"
+									label={
+										<Trans>
+											Why? One sentence, for the people you work with and anyone
+											who checks later.
+										</Trans>
+									}
+									confirmLabel={<Trans>Withdraw from the analysis</Trans>}
+									pending={membership.isPending}
+									onCancel={() => setStep("rest")}
+									onConfirm={withdraw}
+								/>
+							) : (
+								<button
+									type="button"
+									className={classes.control}
+									disabled={pending}
+									onClick={() => setStep("withdraw")}
+								>
+									<Trans>Withdraw from the analysis</Trans>
+								</button>
+							)}
+						</section>
+
 						<section className={classes.section}>
 							<p className={classes.sectionTitle}>
 								<Trans>History</Trans>
@@ -513,88 +649,8 @@ export function ResultItem({
 							</p>
 						</section>
 
-						<section className={classes.section}>
-							{conflict && (
-								<p className={classes.note} data-testid="result-conflict">
-									<Trans>
-										Someone changed this while you had it open. Open it again to
-										see their version.
-									</Trans>
-								</p>
-							)}
-							{withdrawn ? (
-								<>
-									<p className={classes.line}>
-										<Trans>Withdrawn from the analysis.</Trans>
-									</p>
-									<button
-										type="button"
-										className={classes.control}
-										disabled={pending}
-										onClick={restore}
-									>
-										<Trans>Restore to the analysis</Trans>
-									</button>
-								</>
-							) : step === "withdraw" ? (
-								<ReasonStep
-									testId="result-withdraw-reason"
-									label={
-										<Trans>
-											Why? One sentence, for the people you work with and anyone
-											who checks later.
-										</Trans>
-									}
-									confirmLabel={<Trans>Withdraw from the analysis</Trans>}
-									pending={membership.isPending}
-									onCancel={() => setStep("rest")}
-									onConfirm={withdraw}
-								/>
-							) : (
-								<button
-									type="button"
-									className={classes.control}
-									disabled={pending}
-									onClick={() => setStep("withdraw")}
-								>
-									<Trans>Withdraw from the analysis</Trans>
-								</button>
-							)}
-							{holdBack && (
-								<button
-									type="button"
-									className={classes.control}
-									onClick={() => holdBack.onChange(!holdBack.held)}
-								>
-									{holdBack.held ? (
-										<Trans>Put back in this presentation</Trans>
-									) : (
-										<Trans>Not in this presentation</Trans>
-									)}
-								</button>
-							)}
-							{onEditWords && (
-								<button
-									type="button"
-									className={classes.control}
-									onClick={() => onEditWords(item)}
-								>
-									<Trans>Change the words</Trans>
-								</button>
-							)}
-							{onShowToRoom && (
-								<button
-									type="button"
-									className={classes.control}
-									onClick={onShowToRoom}
-								>
-									<Trans>Show to the room</Trans>
-								</button>
-							)}
-						</section>
-
 						{(analysisHref || mapHref || onClose) && (
-							<section className={classes.section}>
+							<section className={`${classes.section} ${classes.actions}`}>
 								{analysisHref && (
 									<I18nLink className={classes.link} to={analysisHref}>
 										<Trans>Open in Analysis</Trans>

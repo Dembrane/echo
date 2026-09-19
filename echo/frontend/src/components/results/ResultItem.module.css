@@ -3,12 +3,18 @@
    `server/dembrane/popcorn/static/styles.css` (its token block and its dark
    theme at the bottom).
 
+   The tokens sit on the item and on the stage card, because the map takes the
+   card alone.
+
    Dark follows the nearest `[data-theme="dark"]`, which is what the audience
    shell and the deck both set. The dashboard has no dark mode of its own, so
    nothing here reads the operating system: a projector laptop in dark mode
-   must not surprise a room. */
+   must not surprise a room. An item told the room is dark turns its card over
+   and leaves the margin in the dashboard's ink, because the margin still sits
+   on the dashboard's page. */
 
-.item {
+.item,
+.stage {
 	--parchment: #f6f4f1;
 	--paper: #ffffff;
 	--graphite: #2d2d2c;
@@ -16,6 +22,7 @@
 	--hairline: #e6e3df;
 	--ink-soft: rgba(45, 45, 44, 0.62);
 	--ink-faint: rgba(45, 45, 44, 0.38);
+	--ink-tag: rgba(45, 45, 44, 0.78);
 	--curve: cubic-bezier(0.25, 0.8, 0.3, 1);
 
 	container-type: inline-size;
@@ -25,7 +32,8 @@
 }
 
 :global([data-theme="dark"]) .item,
-.item[data-theme="dark"] {
+:global([data-theme="dark"]) .stage,
+.item[data-theme="dark"] .stage {
 	--parchment: #1b1b1a;
 	--paper: #262625;
 	--graphite: #f6f4f1;
@@ -33,12 +41,13 @@
 	--hairline: #3a3a38;
 	--ink-soft: rgba(246, 244, 241, 0.64);
 	--ink-faint: rgba(246, 244, 241, 0.4);
+	--ink-tag: rgba(246, 244, 241, 0.78);
 }
 
 .layout {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 19rem;
-	gap: 1.5rem;
+	gap: 2rem;
 	align-items: start;
 }
 
@@ -46,132 +55,232 @@
 	grid-template-columns: minmax(0, 1fr);
 }
 
-/* Under 900 px the margin goes below the card rather than beside it. */
+/* Under 900 px the margin goes below the card rather than beside it, and
+   keeps a reading measure instead of running the card's full width. */
 @container (max-width: 900px) {
 	.layout {
 		grid-template-columns: minmax(0, 1fr);
+		gap: 1.5rem;
+	}
+
+	/* Below the card the margin keeps the card's text edge, not its border. */
+	.margin {
+		max-width: 40rem;
+		padding-inline: clamp(24px, 5cqi, 48px);
 	}
 }
 
-/* The stage card is what a room gets. */
+/* The stage card is what a room gets. The stage measures itself, so the card
+   sets its type against its own width: the same card in a map panel, beside
+   the margin, or across a screen. Everything inside is spaced in the card's
+   own em. */
 .stage {
-	background: var(--parchment);
-	border: 1px solid var(--hairline);
-	padding: clamp(1.1rem, 2.4cqi, 2rem);
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
 	min-width: 0;
 }
 
+/* The dashboard's own face is a single light cut that flattens every weight.
+   The card takes the real variable cut, the one the app keeps for surfaces
+   that need their weights, so 320 and 380 read here as they do in the room. */
+.card {
+	background: var(--parchment);
+	border: 1px solid var(--hairline);
+	display: flex;
+	flex-direction: column;
+	font-family: var(--app-content-bold-font-family, inherit);
+	font-size: clamp(16px, 2.3cqi, 20px);
+	gap: 1.6em;
+	/* A touch less on top: the headline's own leading adds to it. */
+	padding: clamp(20px, 4.4cqi, 42px) clamp(24px, 5cqi, 48px)
+		clamp(22px, 5cqi, 48px);
+}
+
+/* The finding and the lines that belong to it. */
+.head {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55em;
+}
+
+/* The deck's headline: weight 380, tight leading, a measure short enough to
+   be read across a room. */
 .finding {
+	font-weight: 380;
 	margin: 0;
-	font-weight: 320;
-	letter-spacing: -0.012em;
-	line-height: 1.24;
 	overflow-wrap: anywhere;
+	text-wrap: balance;
 }
 
 /* Three steps by length. Nothing is ever cut. */
 .size1 {
-	font-size: clamp(26px, 3.4cqi, 44px);
+	font-size: clamp(26px, 5cqi, 48px);
+	letter-spacing: -0.015em;
+	line-height: 1.15;
+	max-width: 22ch;
 }
 
 .size2 {
-	font-size: clamp(22px, 2.4cqi, 32px);
+	font-size: clamp(22px, 3.7cqi, 34px);
+	letter-spacing: -0.012em;
+	line-height: 1.2;
+	max-width: 30ch;
 }
 
 .size3 {
-	font-size: clamp(18px, 1.7cqi, 24px);
+	font-size: clamp(18px, 2.7cqi, 24px);
+	letter-spacing: -0.006em;
+	line-height: 1.32;
+	max-width: 46ch;
+	text-wrap: pretty;
 }
 
+/* A tension is two poles held level, the blue arrows between them. Short
+   poles sit together as one phrase; a long one wraps in what the other
+   leaves, and two long ones share the card. */
 .poles {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	gap: 0.5em;
+	align-items: center;
+	column-gap: 0.55em;
+	display: grid;
+	grid-template-columns: auto auto auto;
+	justify-content: start;
+	max-width: none;
+	row-gap: 0.3em;
 }
 
 .arrows {
 	color: var(--blue);
-	flex: none;
-	align-self: center;
+	justify-self: start;
+	min-height: 20px;
+	min-width: 20px;
+}
+
+/* In a narrow card the poles stack and the arrows turn to follow them. */
+@container (max-width: 30rem) {
+	.poles {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.arrows {
+		transform: rotate(90deg);
+	}
 }
 
 .second {
 	color: var(--ink-soft);
-	font-size: 1rem;
 	margin: 0;
+	max-width: 46ch;
 }
 
 .stance {
 	color: var(--ink-soft);
-	font-size: 0.9375rem;
+	font-size: 0.875em;
 	margin: 0;
+	max-width: 52ch;
 }
 
 /* The deck's hairline tag: a rung, stated only when it is not "voiced". */
 .tag {
 	align-self: flex-start;
-	border: 1px solid var(--hairline);
-	color: var(--ink-soft);
-	font-size: 0.75rem;
+	border: 1px solid var(--ink-faint);
+	color: var(--ink-tag);
+	font-size: 0.75em;
+	font-weight: 380;
+	line-height: 1.15;
+	margin: 0.15em 0 0;
 	padding: 0.2em 0.6em;
+}
+
+/* One hairline in the card, at the one seam that matters: above it is what
+   the analysis says, below it is what people said. */
+.evidence {
+	border-top: 1px solid var(--hairline);
+	display: flex;
+	flex-direction: column;
+	gap: 1.1em;
+	padding-top: 1.4em;
 }
 
 .quotes {
 	display: flex;
 	flex-direction: column;
-	gap: 0.75rem;
-	border-top: 1px solid var(--hairline);
-	padding-top: 1rem;
+	gap: 0.95em;
 	margin: 0;
+	max-width: 31em;
 }
 
+/* The quote modal's voice at the card's scale. The mark hangs in the card's
+   padding, so the finding, the quotes and the count keep one left edge. */
 .quote {
-	border-left: 2px solid var(--hairline);
 	color: var(--graphite);
-	font-size: 1rem;
+	letter-spacing: -0.006em;
+	line-height: 1.36;
 	margin: 0;
-	padding-left: 0.85rem;
-	/* Three lines each, so no single quote takes the card. */
+	position: relative;
+}
+
+/* Phosphor draws a closing mark; turned over it opens the quote, as the
+   deck's does. */
+.mark {
+	color: var(--blue);
+	height: 0.8em;
+	left: -1.05em;
+	position: absolute;
+	top: 0.17em;
+	transform: rotate(180deg);
+	width: 0.8em;
+}
+
+/* Three lines each, so no single quote takes the card. */
+.quoteText {
 	display: -webkit-box;
+	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 3;
 	line-clamp: 3;
-	-webkit-box-orient: vertical;
 	overflow: hidden;
 }
 
+/* The count is the evidence's caption. */
 .meta {
 	color: var(--ink-soft);
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.6em;
-	font-size: 0.75rem;
-	align-items: center;
+	font-size: 0.75em;
+	margin: 0;
 }
 
-/* The quiet mark, the way a message shows it was edited: it does not open. */
+/* The quiet mark, the way a message shows it was edited: one word under the
+   words it is about, in the caption's size and ink. It does not open and
+   never moves. */
 .edited {
 	color: var(--ink-soft);
-	display: inline-flex;
-	align-items: center;
-	gap: 0.3em;
+	font-size: 0.75em;
+	margin: 0;
 }
 
 .verdict {
 	border-top: 1px solid var(--hairline);
-	color: var(--ink-soft);
-	font-size: 0.875rem;
-	padding-top: 1rem;
+	display: flex;
+	flex-direction: column;
+	font-size: 0.875em;
+	gap: 0.35em;
+	padding-top: 1.3em;
 }
 
-/* The workbench margin, in dashboard type beside the card. */
+.verdict > * {
+	max-width: 35.4em;
+}
+
+.verdictWord {
+	color: var(--graphite);
+	font-weight: 450;
+	margin: 0;
+}
+
+/* The workbench margin, in the dashboard's type beside the card. */
 .margin {
 	display: flex;
 	flex-direction: column;
-	gap: 1.25rem;
-	font-size: 0.875rem;
+	font-size: var(--app-font-size-sm, 0.9375rem);
+	font-weight: 400;
+	gap: 1.75rem;
+	line-height: 1.45;
 	min-width: 0;
 }
 
@@ -181,11 +290,17 @@
 	gap: 0.5rem;
 }
 
+/* Text controls carry their own height, so a group of them needs no gap. */
+.actions {
+	gap: 0;
+}
+
+/* Sentence case, weight 500, like the list's group headers. The dashboard's
+   face has one weight, so the title borrows the variable cut to have its 500. */
 .sectionTitle {
-	color: var(--ink-soft);
-	font-size: 0.75rem;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
+	color: var(--graphite);
+	font-family: var(--app-content-bold-font-family, inherit);
+	font-weight: 500;
 	margin: 0;
 }
 
@@ -194,21 +309,45 @@
 	margin: 0;
 }
 
+/* Said in words and in full ink: something the host has to know. */
+.notice {
+	color: var(--graphite);
+	margin: 0 0 0.5rem;
+}
+
+.note {
+	color: var(--ink-soft);
+	margin: 0;
+}
+
+.note:empty {
+	display: none;
+}
+
+/* Hairlines between entries, the way rows are kept apart everywhere else. */
 .timeline {
 	display: flex;
 	flex-direction: column;
-	gap: 0.9rem;
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
 
 .entry {
-	border-left: 1px solid var(--hairline);
+	border-top: 1px solid var(--hairline);
 	display: flex;
 	flex-direction: column;
-	gap: 0.25rem;
-	padding-left: 0.75rem;
+	gap: 0.2rem;
+	padding: 0.7rem 0;
+}
+
+.entry:first-child {
+	border-top: 0;
+	padding-top: 0;
+}
+
+.entry:last-child {
+	padding-bottom: 0;
 }
 
 .entryHead {
@@ -216,26 +355,52 @@
 	margin: 0;
 }
 
+/* The wording an entry produced, in full ink: it is what the room read. */
 .wording {
-	color: var(--ink-soft);
-	margin: 0;
+	color: var(--graphite);
+	display: block;
+	margin: 0.15rem 0 0;
 	overflow-wrap: anywhere;
 }
 
+/* The wording it replaced stays readable: soft words, a fainter line. */
 .before {
+	color: var(--ink-soft);
 	text-decoration: line-through;
+	text-decoration-color: var(--ink-faint);
+	text-decoration-thickness: 1px;
+}
+
+.before + .wording {
+	margin-top: 0;
 }
 
 /* Controls rest at faint ink and come up on hover, on focus, and wherever
-   there is no hover to wait for. */
+   there is no hover to wait for. A control is a line of text 36 px tall; its
+   target reaches 4 px further each way, to 44, without the rows growing. */
+.control,
+.link {
+	align-items: center;
+	align-self: flex-start;
+	display: inline-flex;
+	min-height: 2.25rem;
+	position: relative;
+}
+
+.control::after,
+.link::after {
+	content: "";
+	inset: -4px;
+	position: absolute;
+}
+
 .control {
 	background: none;
 	border: 0;
 	color: var(--ink-faint);
 	cursor: pointer;
 	font: inherit;
-	min-height: 44px;
-	padding: 0.4em 0;
+	padding: 0;
 	text-align: left;
 	transition: color 0.15s var(--curve);
 }
@@ -253,20 +418,58 @@
 
 .control:disabled {
 	cursor: default;
-	opacity: 0.6;
+	opacity: 0.5;
 }
 
+/* Inside a history entry or beside a confirm: a single line, its target
+   reaching into the space around it. */
 .quiet {
-	min-height: 0;
-	padding: 0;
-	font-size: 0.8125rem;
+	min-height: 1.5rem;
+}
+
+.quiet::after {
+	inset: -10px -4px;
+}
+
+/* The one control that speaks to the room. */
+.control.primary,
+.control.primary:hover,
+.control.primary:focus-visible {
+	color: var(--blue);
+}
+
+.control.primary:hover {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+/* The step's own action, in full ink, underlined the way the deck underlines
+   a source. */
+.control.confirm {
+	color: var(--graphite);
+	text-decoration: underline;
+	text-decoration-color: var(--ink-faint);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 4px;
+	transition: text-decoration-color 0.15s var(--curve);
+}
+
+.control.confirm:hover,
+.control.confirm:focus-visible {
+	text-decoration-color: currentColor;
+}
+
+.control.cancel {
+	color: var(--ink-soft);
+}
+
+.control.cancel:hover,
+.control.cancel:focus-visible {
+	color: var(--graphite);
 }
 
 .link {
 	color: var(--blue);
-	min-height: 44px;
-	display: inline-flex;
-	align-items: center;
 	text-decoration: none;
 }
 
@@ -280,12 +483,26 @@
 	outline-offset: 2px;
 }
 
-/* The reason step expands inside the item; nothing opens over it. */
+/* The reason step grows inside the item, pushing what follows down over
+   180 ms; nothing opens over anything. It starts at the height of the control
+   it replaces, so what follows only ever moves down. The inner box clips
+   while it grows, with 4 px of room so a focus ring is never cut. */
 .reasonStep {
+	animation: grow 0.18s var(--curve) both;
+	display: grid;
+	grid-template-rows: 1fr;
+	min-height: 2.25rem;
+	padding-bottom: 0.25rem;
+}
+
+.reasonInner {
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
-	animation: rise 0.18s var(--curve);
+	margin: -4px;
+	min-height: 0;
+	overflow: hidden;
+	padding: 4px;
 }
 
 .reasonLabel {
@@ -293,36 +510,49 @@
 	margin: 0;
 }
 
+/* Paper on parchment: the one place the host writes. Never under 16 px, so a
+   phone does not zoom the page on focus. */
 .reasonField {
 	background: var(--paper);
 	border: 1px solid var(--hairline);
+	border-radius: 0;
 	color: var(--graphite);
+	display: block;
 	font: inherit;
-	min-height: 44px;
-	padding: 0.5em 0.6em;
+	font-size: max(16px, 1em);
+	line-height: 1.4;
+	min-height: 4.25rem;
+	padding: 0.55em 0.7em;
 	resize: vertical;
+	transition: border-color 0.15s var(--curve);
 	width: 100%;
 }
 
+.reasonField:hover {
+	border-color: var(--ink-faint);
+}
+
+/* The ring sits on the hairline rather than outside it: one line, not two. */
+.item .reasonField:focus-visible {
+	border-color: var(--blue);
+	outline-offset: -1px;
+}
+
 .reasonActions {
-	display: flex;
-	gap: 1rem;
 	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 1.25rem;
 }
 
-.note {
-	color: var(--ink-soft);
-	margin: 0;
+.reasonActions > .control {
+	align-self: center;
 }
 
-@keyframes rise {
+@keyframes grow {
 	from {
+		grid-template-rows: 0fr;
 		opacity: 0;
-		transform: translateY(-2px);
-	}
-	to {
-		opacity: 1;
-		transform: none;
 	}
 }
 
@@ -331,7 +561,9 @@
 		animation: none;
 	}
 
-	.control {
+	.control,
+	.control.confirm,
+	.reasonField {
 		transition: none;
 	}
 }

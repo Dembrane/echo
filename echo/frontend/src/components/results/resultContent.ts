@@ -82,11 +82,15 @@ export function primaryText(type: string, fields: Bag, fallback = ""): string {
 
 /**
  * Three steps, never a truncation: a short finding is read across the room, a
- * long one settles into dashboard type rather than losing its tail.
+ * long one settles into reading type rather than losing its tail. The
+ * thresholds are the deck's own (`sizeOf` in the popcorn `app.js`), so a
+ * finding steps down here where it would on a slide. `columns` is how many
+ * share the measure: a tension's pole has half of it.
  */
-export function sizeStep(value: string): 1 | 2 | 3 {
-	if (value.length <= 70) return 1;
-	if (value.length <= 180) return 2;
+export function sizeStep(value: string, columns = 1): 1 | 2 | 3 {
+	const length = value.length * columns;
+	if (length <= 60) return 1;
+	if (length <= 120) return 2;
 	return 3;
 }
 
