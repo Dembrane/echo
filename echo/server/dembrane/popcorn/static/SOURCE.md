@@ -194,6 +194,29 @@ The six audience dictionaries are draft translations and require native-speaker
 review before deployment, with particular attention to Ukrainian and Czech
 plural forms. Automated tests enforce key and placeholder coverage, not wording.
 
+Dark theme patch: the room screen has a dark mode the host switches on.
+`session.json` carries `theme: "light" | "dark"`, default light, and anything
+else reads as light. `applySession` writes it to `<html data-theme>` beside the
+language, so a change reaches the room on the next bundle read without a
+reload. The sheet's tokens are named for their colour and used for their role,
+so `:root[data-theme="dark"]` redefines them by role rather than renaming them:
+`--parchment` is the ground (`#1B1B1A`, with `--paper` `#262625` a step up),
+`--graphite` is the ink (`#F6F4F1`), and `--hairline`, `--ink-soft`,
+`--ink-faint` and `--brand-grey` follow. `--blue` lifts to `#7C9BFF` wherever
+blue is read as text or drawn as a hairline. Four tokens are pinned in the base
+`:root` and never redefined, because what they colour is an object in the room
+rather than a surface of the page: `--on-marker` (graphite on a bright marker,
+because a highlighted phrase is a sticky note and a sticky note does not
+invert), `--qr-card` and `--qr-ink` (the portal panel stays a light card with
+dark modules so a phone can scan it off the projector; the same pair carries
+the data-policy line drawings and the knob of the shuffle switch), and
+`--blue-fill` with `--on-blue` (a filled blue surface keeps `#4169E1` with
+parchment on it: the notice bar, the continue button, the blue tension pole).
+The markers themselves do not move. The data-policy illustrations are dark
+strokes on transparency, so on dark they sit on a light panel instead of being
+inverted, and the stakeholder legend's swatches read their fills from the
+tokens rather than from literals.
+
 - The Present bridge treats repeated current-block messages as acknowledgements, preserving the live phrase and bilingual timers across reconnects. The React room shell provides pause/resume through the timer-preserving visibility command.
 - The `opening` message to the shell carries `locked` while a synthetic demo's disclosure has not been continued through. The shell disables its result tabs for as long, since the deck refuses `dismiss-opening` then.
 - `armPopTimer` holds a timer armed while the screen is frozen and owes it in full on thaw, so data that lands during a pause (a translation over SSE) cannot run the bilingual handoff behind the paused screen.

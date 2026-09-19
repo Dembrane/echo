@@ -142,6 +142,7 @@ class PopcornSettingsBody(BaseModel):
     public: bool | None = None
     show_qr: bool | None = None
     show_branding: bool | None = None
+    theme: Literal["light", "dark"] | None = None
     public_labels: Literal["names", "neutral"] | None = None
     voice: PopcornVoiceBody | None = None
     intro: PopcornIntroBody | None = None

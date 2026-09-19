@@ -1,18 +1,49 @@
-.shell {
+/* Five role tokens carry the room's theme. Every rule below reads them, so the
+   dark screen is one block of values rather than a second set of rules. The
+   frame (its notice bar and border) and the QR card opt out on purpose. */
+.shell,
+.state {
+	--audience-bg: var(--mantine-color-parchment-6);
+	--audience-panel: var(--mantine-color-parchment-6);
+	--audience-ink: var(--mantine-color-graphite-6);
+	--audience-accent: var(--mantine-color-primary-6);
 	--audience-hairline: color-mix(
 		in srgb,
-		var(--mantine-color-graphite-6) 10%,
-		var(--mantine-color-parchment-6)
+		var(--audience-ink) 10%,
+		var(--audience-bg)
 	);
-	--audience-ink-soft: color-mix(
-		in srgb,
-		var(--mantine-color-graphite-6) 62%,
-		transparent
-	);
+	--audience-ink-soft: color-mix(in srgb, var(--audience-ink) 62%, transparent);
+}
+
+/* Warm near-black, parchment ink, blue lifted where it is text or a thin
+   line. Filled blue surfaces keep the brand's royal blue. */
+.shell[data-theme="dark"],
+.state[data-theme="dark"] {
+	--audience-bg: #1b1b1a;
+	--audience-panel: #262625;
+	--audience-ink: #f6f4f1;
+	--audience-accent: #7c9bff;
+	--audience-hairline: #3a3a38;
+	--audience-ink-soft: color-mix(in srgb, var(--audience-ink) 64%, transparent);
+	--mantine-color-dimmed: var(--audience-ink-soft);
+}
+
+/* The loader and the error text render before the shell exists. They follow
+   the theme once one is known, and stay on the page background before that. */
+.state {
+	background: var(--audience-bg);
+	color: var(--audience-ink);
+}
+
+.state[data-theme="dark"] {
+	--loader-color: var(--audience-accent);
+}
+
+.shell {
 	--audience-pad-x: clamp(24px, 4vw, 72px);
 
-	background: var(--mantine-color-parchment-6);
-	color: var(--mantine-color-graphite-6);
+	background: var(--audience-bg);
+	color: var(--audience-ink);
 	font-family: "DM Sans Variable", sans-serif;
 	font-feature-settings:
 		"ss01" 1,
@@ -33,7 +64,7 @@
 	gap: 2em;
 	padding: 0.9em var(--audience-pad-x) 0;
 	border-bottom: 1px solid var(--audience-hairline);
-	background: var(--mantine-color-parchment-6);
+	background: var(--audience-panel);
 	flex: none;
 }
 
@@ -95,13 +126,13 @@
 
 .tab:hover,
 .openingTab:hover {
-	color: var(--mantine-color-graphite-6);
+	color: var(--audience-ink);
 }
 
 .tab[data-active],
 .openingTab[data-active] {
-	border-bottom-color: var(--mantine-color-primary-6);
-	color: var(--mantine-color-primary-6);
+	border-bottom-color: var(--audience-accent);
+	color: var(--audience-accent);
 	font-weight: 500;
 }
 
@@ -118,6 +149,13 @@
 	opacity: 0.45;
 }
 
+/* Parchment thinned twice over near-black disappears; dimming less keeps the
+   tab plainly unavailable and still readable. */
+.shell[data-theme="dark"] .tab[data-disabled],
+.shell[data-theme="dark"] .tab[data-disabled]:hover {
+	opacity: 0.7;
+}
+
 .openingLinks {
 	display: flex;
 	align-items: center;
@@ -126,7 +164,8 @@
 }
 
 /* A frame, not a banner: the notice is the top edge and the same colour goes
-   round the other three sides of the whole screen. */
+   round the other three sides of the whole screen. A filled blue surface, so
+   it keeps the brand's royal blue and its parchment text in both themes. */
 .shell[data-framed] {
 	--audience-frame: clamp(6px, 0.55vw, 12px);
 
@@ -174,7 +213,7 @@
 	min-width: 0;
 	padding: 0.45em var(--audience-pad-x);
 	border-top: 1px solid var(--audience-hairline);
-	background: var(--mantine-color-parchment-6);
+	background: var(--audience-panel);
 	color: var(--audience-ink-soft);
 	font-size: 0.68em;
 }
@@ -190,7 +229,7 @@
 	width: 0.55em;
 	height: 0.55em;
 	border-radius: 50%;
-	background: var(--mantine-color-primary-6);
+	background: var(--audience-accent);
 	animation: breathe 1.6s ease-in-out infinite;
 }
 
@@ -202,7 +241,7 @@
 }
 
 .wordmark {
-	color: var(--mantine-color-graphite-6);
+	color: var(--audience-ink);
 	font-weight: 500;
 }
 
@@ -213,10 +252,25 @@
 }
 
 .control {
-	color: var(--mantine-color-graphite-6);
+	color: var(--audience-ink);
+
+	--ai-color: var(--audience-ink);
+	--ai-hover: color-mix(in srgb, var(--audience-ink) 12%, transparent);
 }
 
+/* A light card in both themes: a phone camera reads dark modules on a light
+   field, so the card relights the tokens its own contents read. */
 .qrPanel {
+	--audience-bg: var(--mantine-color-parchment-6);
+	--audience-ink: var(--mantine-color-graphite-6);
+	--audience-accent: var(--mantine-color-primary-6);
+	--audience-hairline: color-mix(
+		in srgb,
+		var(--audience-ink) 10%,
+		var(--audience-bg)
+	);
+	--audience-ink-soft: color-mix(in srgb, var(--audience-ink) 62%, transparent);
+
 	position: absolute;
 	right: var(--audience-pad-x);
 	bottom: 1.2em;
@@ -228,7 +282,7 @@
 	max-width: min(180px, 24vw);
 	padding: 0.7em 0.7em 0.55em;
 	border: 1px solid var(--audience-hairline);
-	background: var(--mantine-color-parchment-6);
+	background: var(--audience-bg);
 	box-shadow: 0 6px 24px color-mix(in srgb, black 8%, transparent);
 }
 
@@ -264,8 +318,8 @@
 	appearance: none;
 	padding: 0.35em 0.5em;
 	border: 1px solid var(--audience-hairline);
-	background: var(--mantine-color-parchment-6);
-	color: var(--mantine-color-primary-6);
+	background: var(--audience-bg);
+	color: var(--audience-accent);
 	font: inherit;
 	cursor: pointer;
 }
@@ -333,4 +387,16 @@
 
 .shell:fullscreen {
 	height: 100dvh;
+}
+
+/* Floats out of the shell into a portal, so it is handed the theme directly
+   and inverts against whatever the room is lit with. */
+.tooltip {
+	background: var(--mantine-color-graphite-6);
+	color: var(--mantine-color-parchment-6);
+}
+
+.tooltip[data-theme="dark"] {
+	background: var(--mantine-color-parchment-6);
+	color: var(--mantine-color-graphite-6);
 }

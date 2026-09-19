@@ -9,6 +9,12 @@
      data/<file> read comes from one bundle document instead of separate
      files, and the drag-and-drop / localStorage demo paths are off. */
   const EMBED = typeof window !== "undefined" && window.POPCORN_EMBED ? window.POPCORN_EMBED : null;
+  // The shell knows the room's theme before it mounts this page and says so in
+  // the address, so a dark room does not flash light until the bundle lands.
+  // The session's own `theme` takes over as soon as it is read.
+  if (typeof location !== "undefined" && new URLSearchParams(location.search).get("theme") === "dark") {
+    document.documentElement.dataset.theme = "dark";
+  }
   const BUNDLE_MAX_AGE_MS = 250;
   if (EMBED) {
     if (EMBED.presentationId) document.documentElement.classList.add("present-shell");
@@ -1019,6 +1025,12 @@
   function applySession() {
     const session = state.session;
     if (!session) return;
+    // The room's theme is the host's switch, carried by the session the same
+    // way its language is. Every (re)load of the session passes through here,
+    // including the live refreshes, so turning the lights down in the host's
+    // settings reaches the room without a reload. Anything but "dark" is the
+    // parchment room.
+    document.documentElement.dataset.theme = session.theme === "dark" ? "dark" : "light";
     const lang = pageLang();
     const relabel = lang !== shownLang;
     if (relabel) {
@@ -3033,9 +3045,9 @@
       <span><svg width="34" height="12" aria-hidden="true"><line x1="1" y1="3" x2="33" y2="3" stroke="${sentColor(0)}" stroke-width="1.2"/><line x1="1" y1="9" x2="33" y2="9" stroke="${sentColor(0)}" stroke-width="3.6"/></svg>${esc(tr("stake.intensity"))}</span>
       <span>${esc(tr("stake.strained"))}<svg width="58" height="8" aria-hidden="true">${SENT_STEPS.map((c, i, all) => `<line x1="${1 + i * 56 / all.length}" y1="4" x2="${1 + (i + 1) * 56 / all.length}" y2="4" stroke="${c}" stroke-width="2.5"/>`).join("")}</svg>${esc(tr("stake.working"))}</span>
       <span><svg width="34" height="8" aria-hidden="true"><line x1="1" y1="4" x2="33" y2="4" stroke="${sentColor(0)}" stroke-width="2.5" stroke-dasharray="5 4"/></svg>${esc(tr("stake.unowned"))}</span>
-      <span><svg width="16" height="12" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="9" fill="#FFFFFF" stroke="#2D2D2C" stroke-opacity="0.25"/></svg>${esc(tr("stake.voiced"))}</span>
-      <span><svg width="16" height="12" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="9" fill="#EAE8E5" stroke="#2D2D2C" stroke-opacity="0.25"/></svg>${esc(tr("stake.spokenFor"))}</span>
-      <span><svg width="16" height="12" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="9" fill="#EAE8E5" stroke="#2D2D2C" stroke-opacity="0.25"/><rect x="4" y="4" width="8" height="4" fill="none" stroke="#2D2D2C" stroke-opacity="0.5" stroke-dasharray="1 1.2"/></svg>${esc(tr("rung.inferred"))}</span>
+      <span><svg width="16" height="12" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="9" style="fill:var(--card-voiced);stroke:var(--graphite);stroke-opacity:0.25"/></svg>${esc(tr("stake.voiced"))}</span>
+      <span><svg width="16" height="12" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="9" style="fill:var(--brand-grey);stroke:var(--graphite);stroke-opacity:0.25"/></svg>${esc(tr("stake.spokenFor"))}</span>
+      <span><svg width="16" height="12" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="9" style="fill:var(--brand-grey);stroke:var(--graphite);stroke-opacity:0.25"/><rect x="4" y="4" width="8" height="4" style="fill:none;stroke:var(--graphite);stroke-opacity:0.5" stroke-dasharray="1 1.2"/></svg>${esc(tr("rung.inferred"))}</span>
     </div>`;
     const bring = bringInList(all);
     const bringHtml = bring.length ? `<section class="bring-in">

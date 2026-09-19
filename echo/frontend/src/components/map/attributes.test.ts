@@ -8,6 +8,7 @@ import {
 	OBJECT_TYPE_STYLES,
 	OBJECT_TYPES,
 	resolveAttribute,
+	resolveMapColor,
 	sizeScaleFor,
 	stateLabels,
 } from "./attributes";
@@ -135,6 +136,36 @@ describe("type styles", () => {
 			OBJECT_TYPES.map((type) => OBJECT_TYPE_STYLES[type].color),
 		);
 		expect(colours.size).toBe(OBJECT_TYPES.length);
+	});
+});
+
+describe("resolveMapColor", () => {
+	const GRAPHITE = "#2D2D2C";
+	const SOFT_PARCHMENT = "#B4B3B1";
+
+	it("is the identity in light mode", () => {
+		expect(resolveMapColor(GRAPHITE, false)).toBe(GRAPHITE);
+		for (const type of OBJECT_TYPES) {
+			const { color } = OBJECT_TYPE_STYLES[type];
+			expect(resolveMapColor(color, false)).toBe(color);
+		}
+		for (const row of legendEntries("factCheck")) {
+			expect(resolveMapColor(row.color, false)).toBe(row.color);
+		}
+	});
+
+	it("lifts graphite to a soft parchment in dark mode", () => {
+		expect(resolveMapColor(GRAPHITE, true)).toBe(SOFT_PARCHMENT);
+		expect(resolveMapColor("#2d2d2c", true)).toBe(SOFT_PARCHMENT);
+	});
+
+	it("leaves every non-graphite palette entry alone in dark mode", () => {
+		for (const colorBy of ["type", "valence", "factCheck"] as const) {
+			for (const row of legendEntries(colorBy)) {
+				if (row.color.toUpperCase() === GRAPHITE) continue;
+				expect(resolveMapColor(row.color, true)).toBe(row.color);
+			}
+		}
 	});
 });
 

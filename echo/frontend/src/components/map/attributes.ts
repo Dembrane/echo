@@ -21,6 +21,32 @@ export const MAP_NOT_ASSESSED_GREY = "#E5E7EB";
 /** An attribute that does not apply to the node's type. */
 export const MAP_NOT_APPLICABLE_GREY = "#CBD5E1";
 
+/**
+ * Graphite is the ink of a parchment page. On the room screen's near-black
+ * background it all but disappears, so dark mode lifts it to a softened
+ * parchment: bright enough to see, quiet enough to keep reading as "we do
+ * not know" beside the brighter verdict colours.
+ */
+// Soft parchment (70% of it over the dark room), as an opaque colour: a
+// see-through node would let the tree's edges show through it.
+export const MAP_DARK_GRAPHITE = "#B4B3B1";
+
+/**
+ * Colours whose light-page value has no contrast on a dark room screen, with
+ * what they become there. Every other palette value already carries its own
+ * contrast and passes through untouched.
+ */
+const DARK_LIFTS: Readonly<Record<string, string>> = {
+	[baseColors.graphite]: MAP_DARK_GRAPHITE,
+};
+
+/**
+ * One palette colour as the current theme draws it. Light mode is the
+ * identity, so the host's Map page is unchanged.
+ */
+export const resolveMapColor = (color: string, darkMode: boolean): string =>
+	(darkMode ? DARK_LIFTS[color.toUpperCase()] : undefined) ?? color;
+
 // ---------------------------------------------------------------------------
 // Object types
 // ---------------------------------------------------------------------------

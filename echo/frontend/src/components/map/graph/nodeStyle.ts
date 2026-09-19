@@ -4,6 +4,7 @@ import {
 	attributeFor,
 	attributeInputsOf,
 	resolveAttribute,
+	resolveMapColor,
 	sizeScaleFor,
 } from "../attributes";
 import type { ColorBy, MapGraphNode } from "../types";
@@ -21,6 +22,17 @@ export const MAP_NEIGHBOUR_LINK_RED = "#FF0000";
 
 /** Hover outline, cursor ring and timer arc. */
 export const MAP_HIGHLIGHT = baseColors.institutionBlue;
+
+/**
+ * The same highlight for the dark room screen. Institution blue reads well on
+ * parchment but sinks into a near-black background, so dark mode borrows the
+ * audience shell's lifted blue, the one it already uses for thin lines.
+ */
+export const MAP_HIGHLIGHT_DARK = "#7C9BFF";
+
+/** Hover outline, cursor ring and timer arc as the current theme draws them. */
+export const mapHighlight = (darkMode: boolean): string =>
+	darkMode ? MAP_HIGHLIGHT_DARK : MAP_HIGHLIGHT;
 
 export interface NodeStyle {
 	fill: string;
@@ -54,7 +66,7 @@ export const getNodeStyleFromInputs = (
 	const { colorBy, darkMode = false } = options;
 	const value = resolveAttribute(attributeFor(colorBy), inputs);
 	return {
-		fill: value.color,
+		fill: resolveMapColor(value.color, darkMode),
 		filter: darkMode ? "none" : LIGHT_SHADOW,
 		label: value.label,
 		pulse: value.pulse,

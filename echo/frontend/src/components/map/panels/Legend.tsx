@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { memo } from "react";
-import { legendEntries } from "../attributes";
+import { legendEntries, resolveMapColor } from "../attributes";
 import { getNodeStyleFromInputs } from "../graph/nodeStyle";
 import type { ColorBy } from "../types";
 import { mapVars } from "./shared";
@@ -15,7 +15,8 @@ export const Legend = memo(function Legend({
 }) {
 	const rows = legendEntries(colorBy);
 	if (rows.length === 0) return null;
-	// The swatches carry the same shadow as the nodes they explain.
+	// The swatches carry the same shadow, and the same theme-resolved fills,
+	// as the nodes they explain.
 	const { filter } = getNodeStyleFromInputs({}, { colorBy, darkMode });
 
 	return (
@@ -33,7 +34,13 @@ export const Legend = memo(function Legend({
 			{rows.map((row) => (
 				<div key={row.key} className="flex items-center gap-2">
 					<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-						<circle cx="8" cy="8" r="5" fill={row.color} style={{ filter }} />
+						<circle
+							cx="8"
+							cy="8"
+							r="5"
+							fill={resolveMapColor(row.color, darkMode)}
+							style={{ filter }}
+						/>
 					</svg>
 					<span>{row.label}</span>
 				</div>

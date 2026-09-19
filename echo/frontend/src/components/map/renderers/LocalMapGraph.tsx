@@ -20,7 +20,7 @@ import {
 } from "../graph/localMap";
 import { buildMST, cosineDistanceGuarded } from "../graph/mst";
 import { newestNodeIds } from "../graph/nodeSet";
-import { MAP_HIGHLIGHT, MAP_NEIGHBOUR_LINK_RED } from "../graph/nodeStyle";
+import { MAP_NEIGHBOUR_LINK_RED, mapHighlight } from "../graph/nodeStyle";
 import { type EdgeCounts, selectLocalMapEdges } from "../layout/edgeBudget";
 import {
 	useMapInteraction,
@@ -885,6 +885,9 @@ export const LocalMapGraph = ({
 		const g = gRef.current;
 		if (!g) return;
 
+		// Hover outline, cursor ring and timer arc, in this theme's blue.
+		const highlight = mapHighlight(darkMode);
+
 		const touchesHighlight = (link: LocalMapLink) =>
 			combinedHighlightedNodeIds.has(link.source) ||
 			combinedHighlightedNodeIds.has(link.target);
@@ -955,7 +958,7 @@ export const LocalMapGraph = ({
 			if (combinedHighlightedNodeIds.has(id)) {
 				const distance = combinedHighlightedNodesDistance.get(id) ?? 1.0;
 				const strokeWidth = Math.max(1.5, 3 - distance * 1.5);
-				return { stroke: MAP_HIGHLIGHT, strokeWidth };
+				return { stroke: highlight, strokeWidth };
 			}
 			const base = styleOf(id);
 			return { stroke: base.stroke, strokeWidth: base.strokeWidth };
@@ -1065,7 +1068,7 @@ export const LocalMapGraph = ({
 			.join("circle")
 			.attr("class", "cursor-overlay")
 			.attr("fill", "none")
-			.attr("stroke", MAP_HIGHLIGHT)
+			.attr("stroke", highlight)
 			.attr("stroke-width", 2)
 			.attr("stroke-dasharray", "5,5")
 			.attr("pointer-events", "none")
@@ -1087,7 +1090,7 @@ export const LocalMapGraph = ({
 			.data(timerArcData)
 			.join("path")
 			.attr("class", "timer-arc")
-			.attr("fill", MAP_HIGHLIGHT)
+			.attr("fill", highlight)
 			.attr("pointer-events", "none")
 			.attr("transform", (d) => `translate(${d.x},${d.y})`)
 			.attr("d", arcGenerator);

@@ -78,10 +78,12 @@ vi.mock("@/components/map/renderers/MstGraph", async () => {
 		MstMap: ({
 			nodes,
 			autoAdvance,
+			darkMode,
 			onActiveNodeChange,
 		}: {
 			nodes: { id: string }[];
 			autoAdvance?: boolean;
+			darkMode?: boolean;
 			onActiveNodeChange?: (
 				node: { id: string } | null,
 				expiresAt: number | null,
@@ -105,13 +107,19 @@ vi.mock("@/components/map/renderers/MstGraph", async () => {
 				advance();
 				return () => window.clearTimeout(timer);
 			}, [autoAdvance, nodes, onActiveNodeChange]);
-			return <div>Audience tree renderer</div>;
+			return (
+				<div data-dark={darkMode ? "true" : "false"}>
+					Audience tree renderer
+				</div>
+			);
 		},
 	};
 });
 
 vi.mock("@/components/map/renderers/LocalMapGraph", () => ({
-	LocalMap: () => <div>Audience local renderer</div>,
+	LocalMap: ({ darkMode }: { darkMode?: boolean }) => (
+		<div data-dark={darkMode ? "true" : "false"}>Audience local renderer</div>
+	),
 }));
 
 i18n.load("en-US", {});
@@ -155,7 +163,7 @@ describe("AudienceMapAdapter", () => {
 		client.clear();
 	});
 
-	const adapter = (active: boolean, revision = 0) => (
+	const adapter = (active: boolean, revision = 0, theme?: "light" | "dark") => (
 		<QueryClientProvider client={client}>
 			<I18nProvider i18n={i18n}>
 				<MantineProvider>
@@ -163,6 +171,7 @@ describe("AudienceMapAdapter", () => {
 						active={active}
 						endpoint="/audience/map"
 						revision={revision}
+						theme={theme}
 					/>
 				</MantineProvider>
 			</I18nProvider>
@@ -357,5 +366,56 @@ describe("AudienceMapAdapter", () => {
 		view.rerender(adapter(true));
 		expect(walkStep).toHaveBeenCalledTimes(3);
 		expect(within(showcasePanel()).getByText("A result")).toBeTruthy();
+	});
+
+	it("leaves the Map exactly as the host page has it by default", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+		);
+
+		render(adapter(true));
+		const tree = await screen.findByText("Audience tree renderer");
+		const root = screen.getByTestId("audience-map-root");
+		expect(root.getAttribute("data-theme")).toBeNull();
+		expect(root.style.getPropertyValue("--map-surface")).toBe("");
+		expect(tree.getAttribute("data-dark")).toBe("false");
+		expect(
+			screen.getByText("Audience local renderer").getAttribute("data-dark"),
+		).toBe("false");
+	});
+
+	it("relights the Map's own variables when the room is dark", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+		);
+
+		render(adapter(true, 0, "dark"));
+		const tree = await screen.findByText("Audience tree renderer");
+		const root = screen.getByTestId("audience-map-root");
+		expect(root.getAttribute("data-theme")).toBe("dark");
+		expect(root.style.getPropertyValue("--map-text")).toBe("#F6F4F1");
+		expect(root.style.getPropertyValue("--map-surface")).toBe("#1B1B1A");
+		// Mantine's panels in this app follow the two app variables, so the
+		// panels, the detail card and the waiting line come with them.
+		expect(root.style.getPropertyValue("--app-background")).toBe("#262625");
+		expect(tree.getAttribute("data-dark")).toBe("true");
+		expect(
+			screen.getByText("Audience local renderer").getAttribute("data-dark"),
+		).toBe("true");
+	});
+
+	it("keeps the waiting state inside the themed root", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response("", { status: 404 })),
+		);
+
+		render(adapter(true, 0, "dark"));
+		const waiting = await screen.findByText("Map results are not ready yet.");
+		const root = screen.getByTestId("audience-map-root");
+		expect(root.contains(waiting)).toBe(true);
+		expect(root.getAttribute("data-theme")).toBe("dark");
 	});
 });

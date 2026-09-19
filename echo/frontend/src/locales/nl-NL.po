@@ -85,7 +85,7 @@ msgstr "\"ECHO\" binnenkort beschikbaar"
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Verkennen\" binnenkort beschikbaar"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:124
+#: src/components/popcorn/PopcornScreenSettings.tsx:156
 msgid "\"made with dembrane\" stays on the screen."
 msgstr ""
 
@@ -1337,7 +1337,7 @@ msgstr "<0>{totalCount, plural, one {# extra gesprek} other {# extra gesprekken}
 msgid "select.all.modal.loading.title"
 msgstr "Gesprekken toevoegen"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1272
+#: src/components/map/renderers/LocalMapGraph.tsx:1275
 msgid "Additional Forces"
 msgstr ""
 
@@ -1881,8 +1881,8 @@ msgstr "Weet je zeker dat je je avatar wilt verwijderen?"
 msgid "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 msgstr "Weet je zeker dat je je aangepaste logo wilt verwijderen? Het standaard dembrane-logo wordt in plaats daarvan gebruikt."
 
-#: src/components/present/AudienceMapAdapter.tsx:133
-#: src/components/map/attributes.ts:61
+#: src/components/present/AudienceMapAdapter.tsx:177
+#: src/components/map/attributes.ts:87
 #: src/components/map/panels/NodeDetailCard.tsx:444
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:197
 msgid "Argument"
@@ -1892,17 +1892,17 @@ msgstr "Argument"
 #~ msgid "Argument (not fact-checked)"
 #~ msgstr ""
 
-#: src/components/map/renderers/MstGraph.tsx:1153
+#: src/components/map/renderers/MstGraph.tsx:1156
 msgid "Argument map"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:217
+#: src/components/present/AudienceMapAdapter.tsx:263
 #: src/components/map/MapPage.tsx:484
 msgid "Argument tree (MST)"
 msgstr ""
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:63
-#: src/components/map/attributes.ts:62
+#: src/components/map/attributes.ts:88
 msgid "Arguments"
 msgstr ""
 
@@ -2180,7 +2180,7 @@ msgstr "Avatar verwijderd"
 msgid "Avatar updated"
 msgstr "Avatar bijgewerkt"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1241
+#: src/components/map/renderers/LocalMapGraph.tsx:1244
 msgid "Avg low-dim distance (default: 10)"
 msgstr ""
 
@@ -2420,7 +2420,7 @@ msgid "By tag"
 msgstr "Op trefwoord"
 
 #. placeholder {0}: cMed.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1230
+#: src/components/map/renderers/LocalMapGraph.tsx:1233
 msgid "C_Med: {0}"
 msgstr ""
 
@@ -2664,7 +2664,7 @@ msgstr "Je eigen rol wijzigen?"
 msgid "Change your password from settings without contacting support."
 msgstr "Wijzig je wachtwoord in de instellingen zonder contact met ondersteuning."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:127
+#: src/components/popcorn/PopcornScreenSettings.tsx:159
 msgid "Changemaker plan takes it off"
 msgstr ""
 
@@ -2697,7 +2697,7 @@ msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resulta
 #~ msgstr ""
 
 #. placeholder {0}: chargeFraction.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1297
+#: src/components/map/renderers/LocalMapGraph.tsx:1300
 msgid "Charge Distance (viewport fraction): {0}"
 msgstr ""
 
@@ -2778,7 +2778,7 @@ msgstr "Chats krijgen automatische titels."
 msgid "Chats set to Czech answer in Czech instead of English."
 msgstr "Chats die op Tsjechisch staan, antwoorden in het Tsjechisch in plaats van Engels."
 
-#: src/components/map/attributes.ts:285
+#: src/components/map/attributes.ts:311
 msgid "Check failed"
 msgstr ""
 
@@ -2816,7 +2816,7 @@ msgstr "Live gesprekken controleren"
 msgid "Checking your session."
 msgstr "Je sessie wordt gecontroleerd."
 
-#: src/components/map/attributes.ts:284
+#: src/components/map/attributes.ts:310
 #: src/components/map/panels/shared.tsx:132
 #: src/components/map/panels/SpotlightPanel.tsx:193
 msgid "Checking…"
@@ -3035,7 +3035,7 @@ msgid "Collection"
 msgstr "Collectie"
 
 #. placeholder {0}: collisionRadius.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1286
+#: src/components/map/renderers/LocalMapGraph.tsx:1289
 msgid "Collision Radius: {0}x"
 msgstr ""
 
@@ -3065,14 +3065,14 @@ msgstr ""
 
 #. placeholder {0}: nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0
 #. placeholder {0}: consolidation.memberCount
-#: src/components/map/renderers/MstGraph.tsx:1059
-#: src/components/map/renderers/LocalMapGraph.tsx:1034
+#: src/components/map/renderers/MstGraph.tsx:1062
+#: src/components/map/renderers/LocalMapGraph.tsx:1037
 #: src/components/map/panels/NodeDetailCard.tsx:117
 msgid "Combined from {0} arguments"
 msgstr "Samengevoegd uit {0} argumenten"
 
 #. placeholder {0}: selectedObject.detail.consolidation.memberCount
-#: src/components/present/AudienceMapAdapter.tsx:304
+#: src/components/present/AudienceMapAdapter.tsx:352
 msgid "Combines {0} items"
 msgstr ""
 
@@ -3209,7 +3209,7 @@ msgstr "Toestemming"
 msgid "Consent-based processing is active without a privacy policy link. Add one where the legal basis is set: participants must be able to read the privacy policy."
 msgstr "Verwerking op basis van toestemming is actief zonder link naar het privacybeleid. Voeg er een toe waar de rechtsgrondslag is ingesteld: deelnemers moeten het privacybeleid kunnen lezen."
 
-#: src/components/present/AudienceMapAdapter.tsx:135
+#: src/components/present/AudienceMapAdapter.tsx:179
 msgid "Consolidated argument"
 msgstr ""
 
@@ -3230,8 +3230,8 @@ msgstr "Neem contact op met de beheerder als dit onverwacht was."
 msgid "Content"
 msgstr "Inhoud"
 
-#: src/components/present/AudienceMapAdapter.tsx:124
-#: src/components/map/attributes.ts:281
+#: src/components/present/AudienceMapAdapter.tsx:168
+#: src/components/map/attributes.ts:307
 #: src/components/map/panels/shared.tsx:130
 msgid "Contested"
 msgstr ""
@@ -3273,7 +3273,7 @@ msgstr "Doorgaan"
 msgid "Contributing nodes ({0})"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1302
+#: src/components/map/renderers/LocalMapGraph.tsx:1305
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr ""
 
@@ -3520,7 +3520,7 @@ msgstr "Sjabloon kon niet worden verwijderd"
 msgid "Could not generate a summary. Please try again."
 msgstr "Er kon geen samenvatting worden gegenereerd. Probeer het opnieuw."
 
-#: src/components/popcorn/hooks/index.ts:339
+#: src/components/popcorn/hooks/index.ts:342
 msgid "Could not go live"
 msgstr ""
 
@@ -3561,7 +3561,7 @@ msgstr ""
 msgid "Could not preview this canvas right now."
 msgstr "Kon nu geen voorbeeld van dit canvas laden."
 
-#: src/components/popcorn/hooks/index.ts:295
+#: src/components/popcorn/hooks/index.ts:298
 msgid "Could not refresh popcorn"
 msgstr ""
 
@@ -3569,11 +3569,11 @@ msgstr ""
 msgid "Could not refresh this canvas"
 msgstr "Kon dit canvas niet verversen"
 
-#: src/components/popcorn/hooks/index.ts:319
+#: src/components/popcorn/hooks/index.ts:322
 msgid "Could not rerun popcorn"
 msgstr ""
 
-#: src/components/popcorn/hooks/index.ts:245
+#: src/components/popcorn/hooks/index.ts:248
 msgid "Could not run popcorn"
 msgstr ""
 
@@ -3581,7 +3581,7 @@ msgstr ""
 msgid "Could not save"
 msgstr "Kon niet opslaan"
 
-#: src/components/popcorn/hooks/index.ts:269
+#: src/components/popcorn/hooks/index.ts:272
 msgid "Could not save changes. Try again."
 msgstr ""
 
@@ -3625,7 +3625,7 @@ msgstr "Je melding kon niet worden verzonden. Probeer het opnieuw"
 msgid "Could not start this run. Try again."
 msgstr ""
 
-#: src/components/popcorn/hooks/index.ts:359
+#: src/components/popcorn/hooks/index.ts:362
 msgid "Could not stop live"
 msgstr ""
 
@@ -3937,7 +3937,7 @@ msgid "Czech conversations, Czech answers"
 msgstr "Tsjechische gesprekken, Tsjechische antwoorden"
 
 #. placeholder {0}: dAdj.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1240
+#: src/components/map/renderers/LocalMapGraph.tsx:1243
 msgid "d̄_adj: {0}"
 msgstr ""
 
@@ -3949,8 +3949,16 @@ msgstr "Gevaar"
 msgid "Danger zone"
 msgstr "Gevarenzone"
 
+#: src/components/popcorn/PopcornScreenSettings.tsx:103
+msgid "Dark"
+msgstr ""
+
 #: src/components/map/panels/MapSettingsMenu.tsx:248
 msgid "Dark mode"
+msgstr ""
+
+#: src/components/popcorn/PopcornScreenSettings.tsx:93
+msgid "Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it."
 msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:832
@@ -4016,15 +4024,15 @@ msgstr "De uitnodiging voor {subjectName} weigeren? Je kunt vragen om hem later 
 msgid "Decline this access request? The requester won't be notified and would need to request access again."
 msgstr "Dit toegangsverzoek weigeren? De aanvrager krijgt geen melding en zou opnieuw toegang moeten aanvragen."
 
-#: src/components/map/attributes.ts:69
+#: src/components/map/attributes.ts:95
 msgid "Deduplicate arguments"
 msgstr ""
 
-#: src/components/map/attributes.ts:70
+#: src/components/map/attributes.ts:96
 msgid "Deduplicated argument"
 msgstr ""
 
-#: src/components/map/attributes.ts:71
+#: src/components/map/attributes.ts:97
 msgid "Deduplicated arguments"
 msgstr ""
 
@@ -4359,7 +4367,7 @@ msgstr "Genegeerd"
 msgid "Dismissed. Nothing was changed."
 msgstr "Afgewezen. Er is niets gewijzigd."
 
-#: src/components/present/AudienceMapAdapter.tsx:202
+#: src/components/present/AudienceMapAdapter.tsx:248
 msgid "Display"
 msgstr ""
 
@@ -4368,7 +4376,7 @@ msgid "Display name"
 msgstr "Weergavenaam"
 
 #. placeholder {0}: linkDistanceQuadratic.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:1197
+#: src/components/map/renderers/MstGraph.tsx:1200
 msgid "Dissimilar links: {0}"
 msgstr ""
 
@@ -5156,9 +5164,9 @@ msgstr ""
 #~ msgid "Fact-check"
 #~ msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:192
-#: src/components/present/AudienceMapAdapter.tsx:313
-#: src/components/map/attributes.ts:288
+#: src/components/present/AudienceMapAdapter.tsx:238
+#: src/components/present/AudienceMapAdapter.tsx:361
+#: src/components/map/attributes.ts:314
 msgid "Factual status"
 msgstr ""
 
@@ -5364,7 +5372,7 @@ msgid "Fair password"
 msgstr "Redelijk wachtwoord"
 
 #. placeholder {0}: fpStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1263
+#: src/components/map/renderers/LocalMapGraph.tsx:1266
 msgid "Far Pair Repulsion: {0}"
 msgstr ""
 
@@ -5575,15 +5583,15 @@ msgstr "voor het dembrane-team"
 msgid "For you"
 msgstr "Voor jou"
 
-#: src/components/map/renderers/MstGraph.tsx:1157
+#: src/components/map/renderers/MstGraph.tsx:1160
 msgid "Force Graph Settings"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1250
+#: src/components/map/renderers/LocalMapGraph.tsx:1253
 msgid "Force Multipliers"
 msgstr ""
 
-#: src/components/map/renderers/MstGraph.tsx:1166
+#: src/components/map/renderers/MstGraph.tsx:1169
 msgid "Force Parameters"
 msgstr ""
 
@@ -5658,7 +5666,7 @@ msgstr "Volledig transcript (wanneer beschikbaar)"
 msgid "Fullscreen"
 msgstr "Volledig scherm"
 
-#: src/components/present/AudienceScreen.tsx:964
+#: src/components/present/AudienceScreen.tsx:1013
 msgid "Fullscreen is unavailable in this browser."
 msgstr ""
 
@@ -5670,12 +5678,12 @@ msgid "General"
 msgstr "Algemeen"
 
 #. placeholder {0}: chargeStrength.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1211
+#: src/components/map/renderers/MstGraph.tsx:1214
 msgid "General repulsion force: {0}"
 msgstr ""
 
 #. placeholder {0}: Math.abs(chargeStrength)
-#: src/components/map/renderers/LocalMapGraph.tsx:1276
+#: src/components/map/renderers/LocalMapGraph.tsx:1279
 msgid "General Repulsion: {0}"
 msgstr ""
 
@@ -5705,7 +5713,7 @@ msgstr "Genereer gesprekstitels automatisch, met een optie om dit uit te schakel
 msgid "Generate library"
 msgstr "Bibliotheek genereren"
 
-#: src/components/map/attributes.ts:60
+#: src/components/map/attributes.ts:86
 #: src/components/map/MapPage.tsx:191
 msgid "Generate map"
 msgstr ""
@@ -5721,7 +5729,7 @@ msgstr "Nu genereren"
 msgid "Generate now instead"
 msgstr "Nu genereren"
 
-#: src/components/map/attributes.ts:78
+#: src/components/map/attributes.ts:104
 msgid "Generate popcorn"
 msgstr ""
 
@@ -5729,7 +5737,7 @@ msgstr ""
 msgid "Generate secret"
 msgstr "Geheim genereren"
 
-#: src/components/map/attributes.ts:87
+#: src/components/map/attributes.ts:113
 msgid "Generate stakeholders"
 msgstr ""
 
@@ -5737,7 +5745,7 @@ msgstr ""
 msgid "Generate Summary"
 msgstr "Samenvatting genereren"
 
-#: src/components/map/attributes.ts:96
+#: src/components/map/attributes.ts:122
 msgid "Generate tensions"
 msgstr ""
 
@@ -6272,8 +6280,8 @@ msgstr "Inbegrepen uren opgebruikt"
 msgid "Included hours used up this month"
 msgstr "Inbegrepen uren deze maand opgebruikt"
 
-#: src/components/present/AudienceMapAdapter.tsx:126
-#: src/components/map/attributes.ts:282
+#: src/components/present/AudienceMapAdapter.tsx:170
+#: src/components/map/attributes.ts:308
 msgid "Inconclusive"
 msgstr ""
 
@@ -6564,7 +6572,7 @@ msgstr "Italiaans (alleen ECHO-functies, Transcriptie en Samenvattingen)"
 msgid "Italian for your core workflows"
 msgstr "Italiaans voor je belangrijkste workflows"
 
-#: src/components/present/AudienceScreen.tsx:658
+#: src/components/present/AudienceScreen.tsx:691
 msgid "Its link may have been switched off. Ask the host."
 msgstr ""
 
@@ -6681,11 +6689,11 @@ msgstr "Eén."
 msgid "Just previewed. Give it a moment."
 msgstr "Net een preview gemaakt. Even geduld."
 
-#: src/components/popcorn/hooks/index.ts:316
+#: src/components/popcorn/hooks/index.ts:319
 msgid "Just read. Give it a moment."
 msgstr ""
 
-#: src/components/popcorn/hooks/index.ts:292
+#: src/components/popcorn/hooks/index.ts:295
 #: src/components/canvas/hooks/index.ts:263
 msgid "Just refreshed. Give it a moment."
 msgstr "Net bijgewerkt. Even geduld."
@@ -6893,7 +6901,7 @@ msgid "Legal entity name"
 msgstr "Naam rechtspersoon"
 
 #: src/components/map/panels/MapSettingsMenu.tsx:50
-#: src/components/map/panels/Legend.tsx:31
+#: src/components/map/panels/Legend.tsx:32
 msgid "Legend"
 msgstr ""
 
@@ -6955,14 +6963,18 @@ msgstr "Licenties verleend"
 msgid "Lifetime cap"
 msgstr "Levenslange limiet"
 
-#: src/components/present/AudienceMapAdapter.tsx:122
-#: src/components/map/attributes.ts:280
+#: src/components/popcorn/PopcornScreenSettings.tsx:102
+msgid "Light"
+msgstr ""
+
+#: src/components/present/AudienceMapAdapter.tsx:166
+#: src/components/map/attributes.ts:306
 #: src/components/map/panels/shared.tsx:128
 msgid "Likely false"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:120
-#: src/components/map/attributes.ts:279
+#: src/components/present/AudienceMapAdapter.tsx:164
+#: src/components/map/attributes.ts:305
 #: src/components/map/panels/shared.tsx:126
 msgid "Likely true"
 msgstr ""
@@ -7204,24 +7216,24 @@ msgstr "Bezig met laden..."
 msgid "Loading…"
 msgstr "Bezig met laden…"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1201
+#: src/components/map/renderers/LocalMapGraph.tsx:1204
 msgid "Local argument map"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:223
+#: src/components/present/AudienceMapAdapter.tsx:269
 #: src/components/map/MapPage.tsx:519
 msgid "Local map"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1222
+#: src/components/map/renderers/LocalMapGraph.tsx:1225
 msgid "LocalMap Forces"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1226
+#: src/components/map/renderers/LocalMapGraph.tsx:1229
 msgid "LocalMAP Paper Parameters"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1213
+#: src/components/map/renderers/LocalMapGraph.tsx:1216
 msgid "LocalMap Settings"
 msgstr ""
 
@@ -7404,7 +7416,7 @@ msgstr ""
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:510
+#: src/components/present/AudienceMapAdapter.tsx:576
 msgid "Map results are not ready yet."
 msgstr ""
 
@@ -7484,12 +7496,12 @@ msgstr ""
 msgid "MCP URL"
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1231
+#: src/components/map/renderers/LocalMapGraph.tsx:1234
 msgid "Medium distance threshold (default: 10)"
 msgstr ""
 
 #. placeholder {0}: linkDistanceLinear.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:1185
+#: src/components/map/renderers/MstGraph.tsx:1188
 msgid "Medium distances: {0}"
 msgstr ""
 
@@ -7587,7 +7599,7 @@ msgid "min {minimum}"
 msgstr ""
 
 #. placeholder {0}: linkDistanceConstant.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1171
+#: src/components/map/renderers/MstGraph.tsx:1174
 msgid "Minimum link length: {0}"
 msgstr ""
 
@@ -7810,7 +7822,7 @@ msgstr ""
 msgid "Named ways of working your team can reuse."
 msgstr "Werkwijzen met een naam die je team opnieuw kan gebruiken."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:93
+#: src/components/popcorn/PopcornScreenSettings.tsx:125
 msgid "Names on the legend"
 msgstr ""
 
@@ -7830,19 +7842,19 @@ msgstr "Meer toegang nodig? Vraag de persoon die je heeft uitgenodigd om je toe 
 msgid "Needs attention"
 msgstr "Vereist aandacht"
 
-#: src/components/map/attributes.ts:247
+#: src/components/map/attributes.ts:273
 #: src/components/map/panels/shared.tsx:28
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:208
 msgid "Negative"
 msgstr ""
 
 #. placeholder {0}: nnStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1254
+#: src/components/map/renderers/LocalMapGraph.tsx:1257
 msgid "Neighbor Attraction: {0}"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:187
-#: src/components/map/attributes.ts:248
+#: src/components/present/AudienceMapAdapter.tsx:233
+#: src/components/map/attributes.ts:274
 #: src/components/map/panels/shared.tsx:30
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:209
 msgid "Neutral"
@@ -8006,7 +8018,7 @@ msgstr "Geen accounts"
 msgid "No actions found"
 msgstr "Geen acties gevonden"
 
-#: src/components/present/AudienceScreen.tsx:831
+#: src/components/present/AudienceScreen.tsx:871
 msgid "No activities are selected for this presentation."
 msgstr ""
 
@@ -8018,7 +8030,7 @@ msgstr ""
 msgid "No agents connected yet."
 msgstr ""
 
-#: src/components/map/attributes.ts:59
+#: src/components/map/attributes.ts:85
 msgid "No arguments saved yet."
 msgstr ""
 
@@ -8064,7 +8076,7 @@ msgstr "Nog geen chats."
 msgid "No collections found"
 msgstr "Geen collecties gevonden"
 
-#: src/components/map/attributes.ts:214
+#: src/components/map/attributes.ts:240
 msgid "No colour"
 msgstr ""
 
@@ -8110,7 +8122,7 @@ msgstr "Nog geen gesprekken."
 msgid "No conversations yet. You can schedule a report now and conversations will be included once they are added."
 msgstr "Nog geen gesprekken. Je kunt nu een rapport plannen en gesprekken worden opgenomen zodra ze zijn toegevoegd."
 
-#: src/components/map/attributes.ts:68
+#: src/components/map/attributes.ts:94
 msgid "No deduplicated arguments saved yet."
 msgstr ""
 
@@ -8164,7 +8176,7 @@ msgstr "Geen logo ingesteld. De standaard van dembrane wordt gebruikt."
 msgid "No map has been generated for this project yet."
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:401
+#: src/components/present/AudienceMapAdapter.tsx:451
 msgid "No map results are ready yet."
 msgstr ""
 
@@ -8267,7 +8279,7 @@ msgstr "Geen pdf beschikbaar voor deze factuur."
 msgid "No pending invites"
 msgstr "Geen openstaande uitnodigingen"
 
-#: src/components/map/attributes.ts:77
+#: src/components/map/attributes.ts:103
 msgid "No popcorn saved yet."
 msgstr ""
 
@@ -8332,7 +8344,7 @@ msgstr "Geen selecteerbare gesprekken"
 msgid "No source quote was recorded for this result."
 msgstr ""
 
-#: src/components/map/attributes.ts:86
+#: src/components/map/attributes.ts:112
 msgid "No stakeholders saved yet."
 msgstr ""
 
@@ -8353,7 +8365,7 @@ msgstr "Er zijn nog geen trefwoorden toegevoegd aan dit project. Voeg een trefwo
 msgid "No templates match '{searchQuery}'"
 msgstr "Geen templates gevonden voor '{searchQuery}'"
 
-#: src/components/map/attributes.ts:95
+#: src/components/map/attributes.ts:121
 msgid "No tensions saved yet."
 msgstr ""
 
@@ -8430,7 +8442,7 @@ msgstr "Geen werkruimtes komen overeen met \"{search}\"."
 msgid "Nodes"
 msgstr ""
 
-#: src/components/map/attributes.ts:216
+#: src/components/map/attributes.ts:242
 msgid "None"
 msgstr ""
 
@@ -8447,12 +8459,12 @@ msgstr "Geen geldig e-mailadres."
 msgid "select.all.modal.not.added"
 msgstr "Niet toegevoegd"
 
-#: src/components/map/attributes.ts:250
-#: src/components/map/attributes.ts:278
+#: src/components/map/attributes.ts:276
+#: src/components/map/attributes.ts:304
 msgid "Not applicable"
 msgstr ""
 
-#: src/components/map/attributes.ts:249
+#: src/components/map/attributes.ts:275
 #: src/components/map/panels/shared.tsx:32
 msgid "Not assessed"
 msgstr ""
@@ -8622,7 +8634,7 @@ msgstr "uit"
 msgid "Off"
 msgstr "Uit"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:94
+#: src/components/popcorn/PopcornScreenSettings.tsx:126
 msgid "Off numbers the conversations. On shows the name typed on the phone, which may be a person's."
 msgstr ""
 
@@ -8905,7 +8917,7 @@ msgstr "Open je authenticator-app en voer de huidige zescijferige code in."
 msgid "Opening and frame"
 msgstr "Opening en kader"
 
-#: src/components/present/AudienceScreen.tsx:727
+#: src/components/present/AudienceScreen.tsx:767
 msgid "Opening screens"
 msgstr ""
 
@@ -9276,7 +9288,7 @@ msgstr "Wachtwoorden komen niet overeen"
 msgid "Paste it into any page. It stays live."
 msgstr ""
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1190
+#: src/components/map/renderers/LocalMapGraph.tsx:1193
 msgid "Pause physics"
 msgstr ""
 
@@ -9516,7 +9528,7 @@ msgstr "Plannen"
 msgid "Plans, gathers, and checks its work across many conversations."
 msgstr "Plant, verzamelt en controleert het eigen werk over veel gesprekken."
 
-#: src/components/present/AudienceScreen.tsx:917
+#: src/components/present/AudienceScreen.tsx:958
 msgid "Playback and fullscreen"
 msgstr ""
 
@@ -9607,8 +9619,8 @@ msgstr "Slecht antwoord"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:136
 #: src/components/popcorn/PopcornStart.tsx:55
 #: src/components/popcorn/PopcornIntroModal.tsx:24
-#: src/components/map/attributes.ts:79
-#: src/components/map/attributes.ts:80
+#: src/components/map/attributes.ts:105
+#: src/components/map/attributes.ts:106
 msgid "Popcorn"
 msgstr ""
 
@@ -9620,7 +9632,7 @@ msgstr ""
 msgid "Popcorn could not be loaded. Try again in a moment."
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:137
+#: src/components/present/AudienceMapAdapter.tsx:181
 msgid "Popcorn phrase"
 msgstr ""
 
@@ -9686,7 +9698,7 @@ msgstr "Portaltitel"
 msgid "Portal tutorial"
 msgstr "Portaltutorial"
 
-#: src/components/map/attributes.ts:246
+#: src/components/map/attributes.ts:272
 #: src/components/map/panels/shared.tsx:26
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:207
 msgid "Positive"
@@ -9743,7 +9755,7 @@ msgstr "Uw ervaring voorbereiden"
 msgid "Present"
 msgstr ""
 
-#: src/components/present/AudienceScreen.tsx:774
+#: src/components/present/AudienceScreen.tsx:814
 msgid "Presentation activities"
 msgstr ""
 
@@ -10073,7 +10085,7 @@ msgstr "Haal de meest impactvolle quotes uit deze sessie"
 msgid "Put {name} on dembrane-managed billing at the {tier} tier? No automatic Mollie charges or auto-expiry."
 msgstr "{name} op facturatie beheerd door dembrane zetten, op het {tier}-niveau? Geen automatische afschrijvingen via Mollie en niets dat automatisch verloopt."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:82
+#: src/components/popcorn/PopcornScreenSettings.tsx:114
 msgid "QR code"
 msgstr ""
 
@@ -10211,7 +10223,7 @@ msgstr ""
 msgid "Reading conversations {done} of {total}"
 msgstr ""
 
-#: src/components/popcorn/hooks/index.ts:322
+#: src/components/popcorn/hooks/index.ts:325
 msgid "Reading everything again"
 msgstr ""
 
@@ -10223,7 +10235,7 @@ msgstr "Projectcontext lezen"
 msgid "Reading project settings"
 msgstr "Projectinstellingen lezen"
 
-#: src/components/popcorn/hooks/index.ts:298
+#: src/components/popcorn/hooks/index.ts:301
 msgid "Reading the conversations again"
 msgstr ""
 
@@ -10956,7 +10968,7 @@ msgstr "Resultaten staan in de taal die mensen spraken. Kies een taal om elke po
 msgid "participant.button.stop.resume"
 msgstr "Hervatten"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1190
+#: src/components/map/renderers/LocalMapGraph.tsx:1193
 msgid "Resume physics"
 msgstr ""
 
@@ -11342,7 +11354,7 @@ msgstr "Ingepland"
 msgid "Scheduled reports and custom templates"
 msgstr "Geplande rapporten en eigen templates"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:47
+#: src/components/popcorn/PopcornScreenSettings.tsx:57
 msgid "Screen"
 msgstr ""
 
@@ -11353,6 +11365,10 @@ msgstr ""
 #: src/components/popcorn/PopcornLanguageSettings.tsx:113
 msgid "Screen language"
 msgstr "Taal van het scherm"
+
+#: src/components/popcorn/PopcornScreenSettings.tsx:92
+msgid "Screen theme"
+msgstr ""
 
 #: src/components/common/ScrollToBottom.tsx:19
 #: src/components/common/ScrollToBottom.tsx:24
@@ -11573,7 +11589,7 @@ msgstr "Selecteer een gesprek om verder te gaan"
 msgid "Select a microphone"
 msgstr "Selecteer een microfoon"
 
-#: src/components/present/AudienceMapAdapter.tsx:326
+#: src/components/present/AudienceMapAdapter.tsx:374
 msgid "Select a node to see its details."
 msgstr ""
 
@@ -11704,7 +11720,7 @@ msgstr "Selecteer een microfoon"
 msgid "Selected Files ({0}/{MAX_FILES})"
 msgstr "Geselecteerde bestanden ({0}/{MAX_FILES})"
 
-#: src/components/present/AudienceMapAdapter.tsx:228
+#: src/components/present/AudienceMapAdapter.tsx:274
 msgid "Selected item details"
 msgstr ""
 
@@ -12004,7 +12020,7 @@ msgstr "Kortste eerst"
 msgid "Show"
 msgstr "Toon"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:107
+#: src/components/popcorn/PopcornScreenSettings.tsx:139
 msgid "Show \"made with dembrane\" on the screen"
 msgstr ""
 
@@ -12116,7 +12132,7 @@ msgstr "Laat zien wat er met de gegevens gebeurt"
 msgid "Show your own logo to participants, available on request."
 msgstr "Toon je eigen logo aan deelnemers, beschikbaar op aanvraag."
 
-#: src/components/present/AudienceMapAdapter.tsx:209
+#: src/components/present/AudienceMapAdapter.tsx:255
 #: src/components/map/panels/ShowcasePanel.tsx:86
 #: src/components/map/panels/ShowcasePanel.tsx:89
 #: src/components/map/panels/MapSettingsMenu.tsx:46
@@ -12393,18 +12409,18 @@ msgstr "Door dembrane aangemaakt"
 msgid "Stake"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:139
-#: src/components/map/attributes.ts:88
+#: src/components/present/AudienceMapAdapter.tsx:183
+#: src/components/map/attributes.ts:114
 msgid "Stakeholder"
 msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:99
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:66
-#: src/components/map/attributes.ts:89
+#: src/components/map/attributes.ts:115
 msgid "Stakeholders"
 msgstr ""
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:67
+#: src/components/popcorn/PopcornScreenSettings.tsx:77
 msgid "Stakeholders tab"
 msgstr ""
 
@@ -12847,19 +12863,19 @@ msgstr "Sjabloon bijgewerkt"
 msgid "Templates"
 msgstr "Sjablonen"
 
-#: src/components/present/AudienceMapAdapter.tsx:141
-#: src/components/map/attributes.ts:97
+#: src/components/present/AudienceMapAdapter.tsx:185
+#: src/components/map/attributes.ts:123
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:245
 msgid "Tension"
 msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:100
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:67
-#: src/components/map/attributes.ts:98
+#: src/components/map/attributes.ts:124
 msgid "Tensions"
 msgstr ""
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:54
+#: src/components/popcorn/PopcornScreenSettings.tsx:64
 msgid "Tensions tab"
 msgstr ""
 
@@ -13075,7 +13091,7 @@ msgstr "De link is misschien privé, of hij is verplaatst. Vraag degene die de l
 msgid "The link may have been removed, or it was sent to a different email address. Ask the inviter to send a new one."
 msgstr "Misschien is de link verwijderd, of is hij naar een ander e-mailadres gestuurd. Vraag degene die je heeft uitgenodigd om een nieuwe te sturen."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:83
+#: src/components/popcorn/PopcornScreenSettings.tsx:115
 msgid "The link to add a voice, in the corner of the stage."
 msgstr ""
 
@@ -13088,7 +13104,7 @@ msgstr ""
 msgid "The map could not be generated. {0}"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:520
+#: src/components/present/AudienceMapAdapter.tsx:586
 msgid "The map could not be loaded."
 msgstr ""
 
@@ -13173,7 +13189,7 @@ msgstr "Het project gaat over op de Business Source License 1.1."
 msgid "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 msgstr "De projectcontext wordt gelezen door transcriptie, chatantwoorden en canvasgeneratie, dus een wijziging hier raakt meer dan een scherm."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:55
+#: src/components/popcorn/PopcornScreenSettings.tsx:65
 msgid "The pulls between what people want, verified against the conversations."
 msgstr ""
 
@@ -13567,11 +13583,11 @@ msgstr ""
 msgid "This portal is not accepting new sessions right now."
 msgstr "Deze portal accepteert nu geen nieuwe sessies."
 
-#: src/components/present/AudienceScreen.tsx:653
+#: src/components/present/AudienceScreen.tsx:686
 msgid "This presentation could not be loaded."
 msgstr ""
 
-#: src/components/present/AudienceScreen.tsx:651
+#: src/components/present/AudienceScreen.tsx:684
 msgid "This presentation is not available."
 msgstr ""
 
@@ -14064,7 +14080,7 @@ msgid "Tree"
 msgstr ""
 
 #. placeholder {0}: mstRepulsionCoeff.toFixed(3)
-#: src/components/map/renderers/MstGraph.tsx:1223
+#: src/components/map/renderers/MstGraph.tsx:1226
 msgid "Tree repulsion factor: {0}"
 msgstr ""
 
@@ -14115,7 +14131,7 @@ msgstr "Probeer het"
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr "Probeer een beetje dichter bij je microfoon te komen voor betere geluidskwaliteit."
 
-#: src/components/present/AudienceScreen.tsx:660
+#: src/components/present/AudienceScreen.tsx:693
 msgid "Trying again…"
 msgstr ""
 
@@ -14186,9 +14202,9 @@ msgstr "Tweestapsverificatie aangezet"
 #: src/routes/admin/AdminSettingsRoute.tsx:2707
 #: src/components/training/StaffTrainingPanel.tsx:148
 #: src/components/settings/AuditLogsCard.tsx:190
-#: src/components/present/AudienceMapAdapter.tsx:188
-#: src/components/present/AudienceMapAdapter.tsx:298
-#: src/components/map/attributes.ts:233
+#: src/components/present/AudienceMapAdapter.tsx:234
+#: src/components/present/AudienceMapAdapter.tsx:346
+#: src/components/map/attributes.ts:259
 msgid "Type"
 msgstr "Type"
 
@@ -14345,7 +14361,7 @@ msgstr "Naamloze methodologie"
 msgid "Untitled report"
 msgstr "Naamloos rapport"
 
-#: src/components/map/attributes.ts:283
+#: src/components/map/attributes.ts:309
 #: src/components/map/panels/shared.tsx:134
 msgid "Unverified"
 msgstr ""
@@ -14664,7 +14680,7 @@ msgstr "Gebruikt fixture-data."
 msgid "Using webhooks? We'd love to hear from you"
 msgstr "Gebruik webhooks? We zouden graag van je horen"
 
-#: src/components/map/attributes.ts:253
+#: src/components/map/attributes.ts:279
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:204
 msgid "Valence"
 msgstr ""
@@ -15257,7 +15273,7 @@ msgstr "Wie dit project kan zien en eraan kan samenwerken."
 msgid "Who can see this project?"
 msgstr "Wie kan dit project zien?"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:68
+#: src/components/popcorn/PopcornScreenSettings.tsx:78
 msgid "Who holds a stake, and how they relate."
 msgstr ""
 
@@ -15928,7 +15944,7 @@ msgstr "Je abonnement is inactief. Activeer het opnieuw om leden toe te voegen."
 msgid "Your plan is managed by dembrane. Contact your account manager to make changes."
 msgstr "Je abonnement wordt beheerd door dembrane. Neem contact op met je accountmanager om wijzigingen te maken."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:108
+#: src/components/popcorn/PopcornScreenSettings.tsx:140
 msgid "Your plan lets you take the mark off."
 msgstr ""
 

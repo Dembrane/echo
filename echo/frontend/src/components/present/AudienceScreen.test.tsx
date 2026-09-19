@@ -736,6 +736,93 @@ describe("AudienceScreen lifecycle", () => {
 	});
 });
 
+describe("AudienceScreen theme", () => {
+	const themed = (theme?: unknown) => ({
+		...response(["popcorn"]),
+		bundle: {
+			files: {
+				"session.json": { ui_language: "en", ...(theme ? { theme } : {}) },
+			},
+		},
+	});
+	const shell = async () =>
+		(await screen.findByTestId("audience-frame-footer"))
+			.parentElement as HTMLElement;
+
+	it("lights the room's screen dark when the session asks for it", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				json: async () => themed("dark"),
+				ok: true,
+				status: 200,
+			}),
+		);
+		renderAudience({ presentationId: "presentation-1" });
+		expect((await shell()).getAttribute("data-theme")).toBe("dark");
+	});
+
+	it("stays light with no theme and with a theme it does not know", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				json: async () => themed(),
+				ok: true,
+				status: 200,
+			}),
+		);
+		renderAudience({ presentationId: "presentation-1" });
+		expect((await shell()).getAttribute("data-theme")).toBeNull();
+		cleanup();
+
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				json: async () => themed("midnight"),
+				ok: true,
+				status: 200,
+			}),
+		);
+		renderAudience({ presentationId: "presentation-1" });
+		expect((await shell()).getAttribute("data-theme")).toBeNull();
+	});
+
+	it("follows the theme a reload brings back", async () => {
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce({
+				json: async () => themed(),
+				ok: true,
+				status: 200,
+			})
+			.mockResolvedValueOnce({
+				json: async () => themed("dark"),
+				ok: true,
+				status: 200,
+			});
+		vi.stubGlobal("fetch", fetchMock);
+
+		renderAudience({ presentationId: "presentation-1" });
+		expect((await shell()).getAttribute("data-theme")).toBeNull();
+
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		const onEvent = useServerEventsMock.mock.calls.at(-1)?.[2];
+		act(() => onEvent({ type: "update" }));
+		await act(async () => {
+			vi.advanceTimersByTime(AUDIENCE_EVENT_REFRESH_MS);
+			await Promise.resolve();
+			await Promise.resolve();
+		});
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+		// Fake timers are running, so this reads the tree rather than waiting.
+		expect(
+			screen
+				.getByTestId("audience-frame-footer")
+				.parentElement?.getAttribute("data-theme"),
+		).toBe("dark");
+	});
+});
+
 describe("AudienceScreenRoute language", () => {
 	it("tells its page the presentation's interface language", async () => {
 		vi.stubGlobal(

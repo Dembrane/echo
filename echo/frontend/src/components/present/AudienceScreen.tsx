@@ -263,12 +263,26 @@ export const AudienceScreen = ({
 					: audience.manifest.opening,
 		);
 	}, [audience]);
+	// The theme the deck is mounted with, per presentation. It only spares a
+	// dark room a light first paint: later changes reach the deck through its
+	// own session read, and must not change this address (that would reload it).
+	const mountedThemeRef = useRef<{ id: string; dark: boolean } | null>(null);
 	const deckSrc = useMemo(() => {
 		if (!urls || !audience) return null;
+		if (mountedThemeRef.current?.id !== audience.id) {
+			const session = audience.bundle.files?.["session.json"] as
+				| { theme?: unknown }
+				| undefined;
+			mountedThemeRef.current = {
+				dark: session?.theme === "dark",
+				id: audience.id,
+			};
+		}
 		const query = new URLSearchParams({
 			embedded: "1",
 			presentationId: audience.id,
 			...(embedded ? { preview: "1" } : {}),
+			...(mountedThemeRef.current.dark ? { theme: "dark" } : {}),
 		});
 		return `${urls.deck}?${query}`;
 	}, [audience, urls, embedded]);
@@ -421,6 +435,21 @@ export const AudienceScreen = ({
 					: "popcorn",
 		};
 	}, [audience]);
+	// The host picks the room's theme in the editor; the projection carries it.
+	// Anything but the word "dark" is the light screen we have always shipped.
+	const sessionTheme = useMemo(() => {
+		if (!audience) return null;
+		const session = audience.bundle.files?.["session.json"] as
+			| { theme?: unknown }
+			| undefined;
+		return session?.theme === "dark" ? "dark" : "light";
+	}, [audience]);
+	// A reload that fails keeps the room on the theme it is already lit with,
+	// so the loader and the error text do not flash a parchment page at it.
+	const lastThemeRef = useRef<"dark" | "light" | null>(null);
+	if (sessionTheme) lastThemeRef.current = sessionTheme;
+	const audienceTheme = sessionTheme ?? lastThemeRef.current;
+	const darkTheme = audienceTheme === "dark" ? "dark" : undefined;
 	const frameDetails = useMemo(() => {
 		const files = audience?.bundle.files ?? {};
 		const session = files["session.json"] as
@@ -642,7 +671,11 @@ export const AudienceScreen = ({
 	if (error || !urls) {
 		return (
 			<div
-				className="flex h-full min-h-[24rem] items-center justify-center p-6"
+				className={cn(
+					"flex h-full min-h-[24rem] items-center justify-center p-6",
+					audienceTheme && classes.state,
+				)}
+				data-theme={darkTheme}
 				role="alert"
 			>
 				<div className="text-center">
@@ -668,7 +701,11 @@ export const AudienceScreen = ({
 	if (!audience) {
 		return (
 			<div
-				className="flex h-full min-h-[24rem] items-center justify-center"
+				className={cn(
+					"flex h-full min-h-[24rem] items-center justify-center",
+					audienceTheme && classes.state,
+				)}
+				data-theme={darkTheme}
 				aria-live="polite"
 			>
 				<Loader color="primary" />
@@ -692,6 +729,9 @@ export const AudienceScreen = ({
 			)}
 			data-opening={openingOpen || undefined}
 			data-framed={frameDetails.notice ? true : undefined}
+			// The deck iframe reads the same field from the same session and
+			// themes itself; it is never told.
+			data-theme={darkTheme}
 		>
 			{/* The frame goes round the whole screen: its notice is the top edge,
 			    above the title and the tabs, and its colour runs down both sides
@@ -846,6 +886,7 @@ export const AudienceScreen = ({
 								active={activeBlock === "map" && !openingOpen}
 								endpoint={urls?.map ?? ""}
 								revision={eventRevision + draftRevision}
+								theme={audienceTheme ?? "light"}
 								waitingLabel={audienceCopy.waiting}
 							/>
 						</div>
@@ -919,6 +960,10 @@ export const AudienceScreen = ({
 						{activeBlock === "popcorn" && !openingOpen && (
 							<Tooltip
 								label={playbackPaused ? audienceCopy.play : audienceCopy.pause}
+								classNames={{ tooltip: classes.tooltip }}
+								// The tooltip floats out of the shell, so it carries the
+								// theme itself instead of inheriting it.
+								data-theme={darkTheme}
 							>
 								<ActionIcon
 									className={classes.control}
@@ -939,7 +984,11 @@ export const AudienceScreen = ({
 								</ActionIcon>
 							</Tooltip>
 						)}
-						<Tooltip label={audienceCopy.fullscreen}>
+						<Tooltip
+							label={audienceCopy.fullscreen}
+							classNames={{ tooltip: classes.tooltip }}
+							data-theme={darkTheme}
+						>
 							<ActionIcon
 								className={classes.control}
 								variant="subtle"

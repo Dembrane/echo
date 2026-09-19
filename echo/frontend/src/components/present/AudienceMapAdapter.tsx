@@ -11,6 +11,7 @@ import {
 	Text,
 } from "@mantine/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import {
@@ -46,7 +47,50 @@ type AudienceMapAdapterProps = {
 	endpoint: string;
 	revision?: number;
 	waitingLabel?: string;
+	/**
+	 * The room's theme, read from the same session field the shell reads.
+	 * "light" is the host's Map page exactly, so the default changes nothing.
+	 */
+	theme?: "light" | "dark";
 };
+
+/**
+ * The Map already speaks two colour languages: the `--map-*` variables
+ * MapPage scopes to its own page, and this app's `--app-background` /
+ * `--app-text`, which every Mantine component in `src/theme.tsx` is pinned
+ * to. Relighting both on one element under the shell turns the whole tab
+ * dark without switching Mantine's colour scheme, which the light dashboard
+ * around an embedded preview is still running in.
+ *
+ * The values are the audience shell's, not MapPage's: near-black room,
+ * `#262625` panels, parchment ink, blue lifted to `#7C9BFF` where it is text
+ * or a thin line.
+ */
+const DARK_MAP_VARS = {
+	"--app-background": "#262625",
+	"--app-text": "#F6F4F1",
+	"--mantine-color-default": "#262625",
+	"--mantine-color-default-border": "#3A3A38",
+	"--mantine-color-default-color": "#F6F4F1",
+	"--mantine-color-default-hover": "#3A3A38",
+	"--mantine-color-dimmed": "color-mix(in srgb, #F6F4F1 64%, transparent)",
+	"--mantine-color-text": "#F6F4F1",
+	"--mantine-color-white": "#262625",
+	"--map-accent-border": "color-mix(in srgb, #7C9BFF 60%, transparent)",
+	"--map-accent-surface": "color-mix(in srgb, #7C9BFF 22%, transparent)",
+	"--map-accent-text": "#7C9BFF",
+	"--map-border": "#3A3A38",
+	"--map-card": "color-mix(in srgb, #F6F4F1 8%, transparent)",
+	// MapPage's dark mode keeps the light edge grey; over a near-black room it
+	// glares, so the audience draws its edges as thinned parchment.
+	"--map-edge": "color-mix(in srgb, #F6F4F1 45%, transparent)",
+	"--map-error": "#FF9AA2",
+	"--map-muted": "color-mix(in srgb, #F6F4F1 64%, transparent)",
+	"--map-relation": "#F6F4F1",
+	"--map-surface": "#1B1B1A",
+	"--map-surface-raised": "#262625",
+	"--map-text": "#F6F4F1",
+} as CSSProperties;
 
 /**
  * The Showcase reads the projection and nothing else: the room sees no
@@ -149,6 +193,7 @@ const AudienceMapContent = ({
 	edgeLimit,
 	showcase,
 	onShowcaseChange,
+	dark,
 }: {
 	nodes: MapGraphNode[];
 	graph: ReturnType<typeof buildMapGraph>;
@@ -156,6 +201,7 @@ const AudienceMapContent = ({
 	edgeLimit: number;
 	showcase: boolean;
 	onShowcaseChange: (next: boolean) => void;
+	dark: boolean;
 }) => {
 	const { i18n } = useLingui();
 	const selectedNodeId = useMapInteraction((state) => state.selectedNodeId);
@@ -268,6 +314,7 @@ const AudienceMapContent = ({
 							edgeLimit={edgeLimit}
 							showRelationships={false}
 							colorBy={colorBy}
+							darkMode={dark}
 							onActiveNodeChange={walk.onActiveNodeChange}
 							// The walk serves the Showcase, as it does on the host page:
 							// no Showcase, no timer.
@@ -285,6 +332,7 @@ const AudienceMapContent = ({
 							edgeLimit={edgeLimit}
 							showRelationships={false}
 							colorBy={colorBy}
+							darkMode={dark}
 							onActiveNodeChange={walk.onActiveNodeChange}
 						/>
 					</section>
@@ -338,11 +386,13 @@ const AudienceMap = ({
 	onAdmit,
 	showcase,
 	onShowcaseChange,
+	dark,
 }: {
 	payload: MapGraphResponse;
 	onAdmit: (budgets: MapBudgets) => void;
 	showcase: boolean;
 	onShowcaseChange: (next: boolean) => void;
+	dark: boolean;
 }) => {
 	const graph = useMemo(() => buildMapGraph(payload), [payload]);
 	const nodes = useMemo(() => {
@@ -413,6 +463,7 @@ const AudienceMap = ({
 				edgeLimit={budgets.edgeLimit}
 				showcase={showcase}
 				onShowcaseChange={onShowcaseChange}
+				dark={dark}
 			/>
 		</MapInteractionProvider>
 	);
@@ -429,7 +480,9 @@ export const AudienceMapAdapter = ({
 	endpoint,
 	revision = 0,
 	waitingLabel,
+	theme = "light",
 }: AudienceMapAdapterProps) => {
+	const dark = theme === "dark";
 	const queryClient = useQueryClient();
 	const [admission, setAdmission] = useState<{
 		endpoint: string;
@@ -492,40 +545,53 @@ export const AudienceMapAdapter = ({
 	const payload = query.data ?? null;
 
 	if (!active) return null;
+	// One themed root over every state, so the graph, the panels, the detail
+	// card, the waiting line and the error all read the same variables.
+	const inTheme = (content: ReactNode) => (
+		<div
+			className="h-full"
+			data-theme={dark ? "dark" : undefined}
+			data-testid="audience-map-root"
+			style={dark ? DARK_MAP_VARS : undefined}
+		>
+			{content}
+		</div>
+	);
 	// A 503 or a dropped read keeps the last graph, if there is one.
 	if (payload) {
-		return (
+		return inTheme(
 			<AudienceMap
 				payload={payload}
 				onAdmit={(budgets) => setAdmission({ budgets, endpoint })}
 				showcase={showcase}
 				onShowcaseChange={setShowcase}
-			/>
+				dark={dark}
+			/>,
 		);
 	}
 	if (query.isSuccess) {
-		return (
+		return inTheme(
 			<div className="flex h-full items-center justify-center p-6">
 				<Text size="lg" ta="center" maw={560}>
 					{waitingLabel ?? <Trans>Map results are not ready yet.</Trans>}
 				</Text>
-			</div>
+			</div>,
 		);
 	}
 	if (query.isError) {
-		return (
+		return inTheme(
 			<div className="flex h-full items-center justify-center p-6" role="alert">
 				<Stack gap="xs" align="center">
 					<Text size="lg">
 						<Trans>The map could not be loaded.</Trans>
 					</Text>
 				</Stack>
-			</div>
+			</div>,
 		);
 	}
-	return (
+	return inTheme(
 		<div className="relative h-full" aria-live="polite">
 			<DembraneLoadingSpinner isLoading showMessage={false} />
-		</div>
+		</div>,
 	);
 };
