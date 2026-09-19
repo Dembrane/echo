@@ -370,6 +370,7 @@ def test_curating_the_bundle_drops_hidden_objects_and_their_relations():
 
 class _Access:
     project = {"id": "p", "language": "nl"}
+    tier = "free"
 
     def __init__(self) -> None:
         self.required: list[str] = []
@@ -1259,3 +1260,198 @@ def test_translation_retry_dispatches_a_translation_only_job(monkeypatch) -> Non
     assert access.required == ["project:update"]
     # Translation only: never a manual or scheduled read of the transcripts.
     dispatch.assert_awaited_once_with("loop1", "translation")
+
+
+def _opening_room(monkeypatch, *, draft: dict | None = None):
+    """A published presentation in memory, with an optional stored draft."""
+    from unittest.mock import AsyncMock
+
+    from dembrane.canvas import events
+
+    report = {"id": "presentation", "user_instructions": "Published"}
+    settings = service.default_settings(title="Published")
+    if draft is not None:
+        settings["_present_draft"] = {
+            "revision": 4,
+            "saved_at": "earlier",
+            "settings": service.merge_settings(settings, draft, fallback_title="Published"),
+        }
+    config = {"id": "config", "popcorn_settings": settings}
+    nudge = AsyncMock()
+
+    async def update_item(collection, _identity, data):
+        if collection == "canvas_config_revision":
+            config.update(data)
+        return {"data": data}
+
+    monkeypatch.setattr(service, "get_latest_config", AsyncMock(return_value=config))
+    monkeypatch.setattr(service.async_directus, "update_item", update_item)
+    monkeypatch.setattr(service, "get_loop_for_report", AsyncMock(return_value=None))
+    monkeypatch.setattr(events, "publish_generation_nudge", nudge)
+    return report, config, nudge
+
+
+def _opening_api(monkeypatch, report, access):
+    from unittest.mock import AsyncMock
+
+    monkeypatch.setattr(present_api, "_require_popcorn", AsyncMock(return_value=(report, access)))
+    monkeypatch.setattr(
+        present, "draft_payload", AsyncMock(side_effect=lambda _r, _p, s: {"settings": s})
+    )
+
+
+def test_opening_edit_goes_live_and_leaves_the_rest_of_the_draft_alone(monkeypatch) -> None:
+    report, config, nudge = _opening_room(
+        monkeypatch,
+        draft={"title": "Unfinished", "show_qr": True, "intro": {"subtitle": "Draft words"}},
+    )
+    access = _Access()
+    _opening_api(monkeypatch, report, access)
+
+    body = present_api.OpeningPublishBody(patch={"intro": {"title": "Welcome, Millbrook"}})
+    result = asyncio.run(
+        present_api.publish_opening("presentation", body, SimpleNamespace(user_id="host"))
+    )
+
+    assert access.required == ["project:update"]
+    published = service.normalize_settings(config["popcorn_settings"], fallback_title="Published")
+    before = service.default_settings(title="Published")
+    # The room has the new words and nothing else the draft was holding.
+    assert published["intro"]["title"] == "Welcome, Millbrook"
+    assert published["intro"]["subtitle"] == before["intro"]["subtitle"]
+    assert published["title"] == "Published"
+    assert published["show_qr"] == before["show_qr"]
+    # The draft has them too, beside its own unpublished changes.
+    stored = config["popcorn_settings"]["_present_draft"]
+    assert stored["revision"] == 5
+    assert stored["settings"]["intro"] == {
+        **before["intro"],
+        "title": "Welcome, Millbrook",
+        "subtitle": "Draft words",
+    }
+    assert stored["settings"]["title"] == "Unfinished"
+    assert stored["settings"]["show_qr"] is True
+    assert result["revision"] == 5
+    assert result["has_changes"] is True
+    assert result["presentation"]["settings"]["intro"]["title"] == "Welcome, Millbrook"
+    nudge.assert_awaited_once()
+
+    # Publishing the draft later keeps the words instead of bringing old ones back.
+    asyncio.run(present.publish_draft(report, expected_revision=5))
+    visible = service.normalize_settings(config["popcorn_settings"], fallback_title="Published")
+    assert visible["intro"]["title"] == "Welcome, Millbrook"
+    assert visible["title"] == "Unfinished"
+
+
+def test_opening_edit_without_a_stored_draft_leaves_nothing_unpublished(monkeypatch) -> None:
+    report, config, _nudge = _opening_room(monkeypatch)
+    _opening_api(monkeypatch, report, _Access())
+
+    body = present_api.OpeningPublishBody(
+        patch={"disclosure": {"invitation_title": "Join in", "text": ""}}
+    )
+    result = asyncio.run(
+        present_api.publish_opening("presentation", body, SimpleNamespace(user_id="host"))
+    )
+
+    assert "_present_draft" not in config["popcorn_settings"]
+    assert config["popcorn_settings"]["disclosure"]["invitation_title"] == "Join in"
+    assert result["has_changes"] is False
+    assert result["revision"] == 0
+
+
+def test_opening_edit_requires_project_update(monkeypatch) -> None:
+    report, config, nudge = _opening_room(monkeypatch)
+    before = dict(config["popcorn_settings"])
+
+    class _Refused(_Access):
+        def require(self, permission: str) -> None:
+            super().require(permission)
+            raise HTTPException(status_code=403, detail="Forbidden")
+
+    access = _Refused()
+    _opening_api(monkeypatch, report, access)
+    body = present_api.OpeningPublishBody(patch={"intro": {"title": "Nope"}})
+    with pytest.raises(HTTPException) as caught:
+        asyncio.run(
+            present_api.publish_opening("presentation", body, SimpleNamespace(user_id="guest"))
+        )
+    assert caught.value.status_code == 403
+    assert access.required == ["project:update"]
+    assert config["popcorn_settings"] == before
+    nudge.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "patch",
+    [
+        {"title": "A new name"},
+        {"show_qr": True},
+        {"intro": {"enabled": False}},
+        {"disclosure": {"enabled": False}},
+        {"notice": {"text": "Hello"}},
+        {"presentation": {"blocks": ["popcorn"]}},
+        {"intro": {"title": "x" * 161}},
+        {"intro": {"subtitle": "x" * 601}},
+        {"disclosure": {"text": "x" * 601}},
+        {"disclosure": {"invitation_title": "x" * 161}},
+        {"disclosure": {"invitation_text": "x" * 601}},
+    ],
+)
+def test_opening_edit_takes_only_the_opening_words_within_their_limits(patch) -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        present_api.OpeningPublishBody(patch=patch)
+
+
+def test_opening_edit_accepts_the_words_at_their_limits() -> None:
+    present_api.OpeningPublishBody(
+        patch={
+            "intro": {"title": "x" * 160, "subtitle": "x" * 600},
+            "disclosure": {
+                "text": "x" * 600,
+                "invitation_title": "x" * 160,
+                "invitation_text": "x" * 600,
+            },
+        }
+    )
+
+
+@pytest.mark.parametrize("patch", [{}, {"intro": {}}])
+def test_opening_edit_that_names_no_field_is_refused(monkeypatch, patch) -> None:
+    report, config, nudge = _opening_room(monkeypatch)
+    _opening_api(monkeypatch, report, _Access())
+    before = dict(config["popcorn_settings"])
+    with pytest.raises(HTTPException) as caught:
+        asyncio.run(
+            present_api.publish_opening(
+                "presentation",
+                present_api.OpeningPublishBody(patch=patch),
+                SimpleNamespace(user_id="host"),
+            )
+        )
+    assert caught.value.status_code == 422
+    assert config["popcorn_settings"] == before
+    nudge.assert_not_awaited()
+
+
+def test_opening_edit_cannot_reword_a_synthetic_demo_frame(monkeypatch) -> None:
+    from unittest.mock import AsyncMock
+
+    report, config, nudge = _opening_room(monkeypatch)
+    _opening_api(monkeypatch, report, _Access())
+    before = dict(config["popcorn_settings"])
+    monkeypatch.setattr(
+        service,
+        "require_unlocked_frame",
+        AsyncMock(side_effect=service.SyntheticFrameLocked("locked")),
+    )
+    body = present_api.OpeningPublishBody(patch={"disclosure": {"text": "Mine now"}})
+    with pytest.raises(HTTPException) as caught:
+        asyncio.run(
+            present_api.publish_opening("presentation", body, SimpleNamespace(user_id="host"))
+        )
+    assert caught.value.status_code == 409
+    assert config["popcorn_settings"] == before
+    nudge.assert_not_awaited()

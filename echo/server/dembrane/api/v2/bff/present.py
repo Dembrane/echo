@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import Depends, Request, APIRouter, HTTPException
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, ConfigDict
 
 from dembrane.popcorn import present, service
 from dembrane.popcorn.bundle import bundle_for_report
@@ -28,6 +28,32 @@ class DraftPatchBody(BaseModel):
 
 class DraftPublishBody(BaseModel):
     expected_revision: int = Field(ge=0)
+
+
+class OpeningIntroWords(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    title: str | None = Field(default=None, max_length=160)
+    subtitle: str | None = Field(default=None, max_length=600)
+
+
+class OpeningDisclosureWords(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    text: str | None = Field(default=None, max_length=600)
+    invitation_title: str | None = Field(default=None, max_length=160)
+    invitation_text: str | None = Field(default=None, max_length=600)
+
+
+class OpeningWordsPatch(BaseModel):
+    """The words a host may type on the slide itself, and nothing else."""
+
+    model_config = ConfigDict(extra="forbid")
+    intro: OpeningIntroWords | None = None
+    disclosure: OpeningDisclosureWords | None = None
+
+
+class OpeningPublishBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    patch: OpeningWordsPatch
 
 
 async def _draft_envelope(
@@ -119,6 +145,27 @@ async def publish_draft(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     fresh = await service.async_directus.get_item("project_report", str(report["id"]))
     return await _draft_envelope(fresh or report, access.project, state)
+
+
+@router.post("/{presentation_id}/opening")
+async def publish_opening(
+    presentation_id: str, body: OpeningPublishBody, auth: DependencyDirectusSession
+) -> dict[str, Any]:
+    """An edit typed on the live slide: those words go to the room and into the
+    draft together, and whatever else the draft holds stays unpublished."""
+    report, access = await _require_popcorn(presentation_id, auth)
+    access.require("project:update")
+    patch = {
+        block: words for block, words in body.patch.model_dump(exclude_none=True).items() if words
+    }
+    if not patch:
+        raise HTTPException(status_code=422, detail="The patch names no opening field.")
+
+    async def validate(published: dict[str, Any]) -> None:
+        await _validate_draft_settings(report, access, published)
+
+    state = await present.publish_opening(report, patch=patch, validate=validate)
+    return await _draft_envelope(report, access.project, state)
 
 
 @router.get("/{presentation_id}/draft/audience")

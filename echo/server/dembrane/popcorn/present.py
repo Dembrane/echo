@@ -312,6 +312,55 @@ async def publish_draft(report: dict[str, Any], *, expected_revision: int) -> di
         }
 
 
+async def publish_opening(
+    report: dict[str, Any], *, patch: dict[str, Any], validate: Any = None
+) -> dict[str, Any]:
+    """Put a few words of the opening live and leave the rest of the draft alone.
+
+    The patch is merged onto the published settings and onto the draft in one
+    write, so the room reads the new words now and a later publish does not
+    bring the old ones back. It merges field by field under the write lock, so
+    it asks for no revision; a stored draft still moves to the next revision,
+    which sends an editor open elsewhere to read it back. `validate` is awaited
+    with the published settings the write would leave, before anything is stored.
+    """
+    async with service.settings_write_lock(str(report["id"])) as holder:
+        state = await draft_state(report)
+        fallback_title = str(report.get("user_instructions") or "Popcorn")
+        published = service.merge_settings(state["published"], patch, fallback_title=fallback_title)
+        if validate is not None:
+            await validate(published)
+        settings = service.merge_settings(state["settings"], patch, fallback_title=fallback_title)
+        raw = state["config"].get("popcorn_settings")
+        revision, saved_at = state["revision"], state["saved_at"]
+        stored = dict(published)
+        # Without a stored draft the draft simply reads as the published
+        # settings, and keeps following them.
+        if isinstance(raw, dict) and isinstance(raw.get("_present_draft"), dict):
+            revision += 1
+            saved_at = datetime.now(timezone.utc).isoformat()
+            stored["_present_draft"] = {
+                "revision": revision,
+                "saved_at": saved_at,
+                "settings": settings,
+            }
+        await service.write_settings(
+            report,
+            state["config"],
+            stored,
+            fallback_title=fallback_title,
+            nudge=True,
+            holder=holder,
+        )
+        return {
+            **state,
+            "published": published,
+            "settings": settings,
+            "revision": revision,
+            "saved_at": saved_at,
+        }
+
+
 async def draft_payload(
     report: dict[str, Any], project: dict[str, Any], settings: dict[str, Any]
 ) -> dict[str, Any]:

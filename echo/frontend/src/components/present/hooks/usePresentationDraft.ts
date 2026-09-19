@@ -67,9 +67,13 @@ export function mergeDraftSettings(
 	return merged as PopcornSettings;
 }
 
-const withPatch = (draft: Draft, patch: PopcornSettingsPatch): Draft => ({
+const withPatch = (
+	draft: Draft,
+	patch: PopcornSettingsPatch,
+	has_changes = true,
+): Draft => ({
 	...draft,
-	has_changes: true,
+	has_changes,
 	presentation: {
 		...draft.presentation,
 		settings: mergeDraftSettings(draft.presentation.settings, patch),
@@ -170,34 +174,59 @@ export function usePresentationDraft(
 		},
 		scope: { id: `presentation-draft-${id}` },
 	});
-	return { publish, query, save };
+	// Words typed on a slide the room is looking at. The server writes them to
+	// the published presentation and to the draft in one go and leaves the rest
+	// of the draft unpublished. It shares the saves' scope, so it never overtakes
+	// an autosave, and it merges by field on the server, so it sends no revision.
+	const publishOpening = useMutation({
+		mutationFn: (patch: PopcornSettingsPatch) =>
+			bff.post<Draft>(`${path}/opening`, { patch }),
+		mutationKey: key,
+		onError: () => {
+			void client.invalidateQueries({ queryKey: key });
+		},
+		onMutate: async (patch: PopcornSettingsPatch) => {
+			await client.cancelQueries({ queryKey: key });
+			const previous = client.getQueryData<Draft>(key);
+			applied.current += 1;
+			// The words are live as well, so they add nothing unpublished.
+			if (previous)
+				client.setQueryData(
+					key,
+					withPatch(previous, patch, previous.has_changes),
+				);
+		},
+		onSuccess: (draft) => {
+			accept(draft);
+			const project = projectId || draft.presentation.project_id;
+			if (project)
+				client.invalidateQueries({ queryKey: presentationKey(project) });
+			client.invalidateQueries({ queryKey: ["presentation-audience"] });
+		},
+		scope: { id: `presentation-draft-${id}` },
+	});
+	return { publish, publishOpening, query, save };
 }
 
 /**
- * The save behind typing into the opening's words on the slide itself. It is
- * the editor's own draft patch, so the editor's fields and the slide never
- * disagree. `live` is a screen showing the published presentation: there an
- * edit is published at once, but only when the draft held nothing else, so a
- * host's unfinished changes in the editor never reach the room by accident.
- * With other changes waiting the edit stays in the draft until they publish.
- * Undefined until the draft has loaded, which only happens for a host who may
- * edit: nobody else is offered the affordance.
+ * The save behind typing into the opening's words on the slide itself. `live`
+ * is a screen showing the published presentation: there the edited words go to
+ * the room at once and into the draft with them, while anything else waiting
+ * in the draft stays unpublished. Elsewhere it is the editor's own draft patch,
+ * so the editor's fields and the slide never disagree. Undefined until the
+ * draft has loaded, which only happens for a host who may edit: nobody else is
+ * offered the affordance.
  */
 export function useOpeningInlineEdit(
 	draft: ReturnType<typeof usePresentationDraft>,
 	live: boolean,
 ) {
 	const { mutateAsync: save } = draft.save;
-	const { mutateAsync: publish } = draft.publish;
-	const clean = useRef(false);
-	clean.current = draft.query.data?.has_changes === false;
+	const { mutateAsync: publishOpening } = draft.publishOpening;
 	const edit = useCallback(
-		async (patch: PopcornSettingsPatch) => {
-			const wasClean = clean.current;
-			await save(patch);
-			if (live && wasClean) await publish();
-		},
-		[live, publish, save],
+		(patch: PopcornSettingsPatch) =>
+			live ? publishOpening(patch) : save(patch),
+		[live, publishOpening, save],
 	);
 	return draft.query.isSuccess ? edit : undefined;
 }
