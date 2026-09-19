@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import type {
 	PopcornSettings,
 	PopcornSettingsPatch,
@@ -99,6 +99,10 @@ export function usePresentationDraft(
 		},
 		queryKey: key,
 		refetchOnWindowFocus: false,
+		// Signed out or not allowed to edit is an answer, not a failure to retry.
+		retry: (count, error) =>
+			count < 3 &&
+			![401, 403, 404].includes((error as { status?: number }).status ?? 0),
 	});
 	const accept = (draft: Draft) => {
 		revision.current = draft.revision;
@@ -159,7 +163,7 @@ export function usePresentationDraft(
 			// Ids only: never a title, a block's contents or a phrase.
 			posthog.capture("presentation_published", {
 				presentation_id: id,
-				project_id: projectId,
+				project_id: projectId || draft.presentation.project_id,
 			});
 			accept(draft);
 			client.invalidateQueries({ queryKey: presentationKey(projectId) });
@@ -167,4 +171,33 @@ export function usePresentationDraft(
 		scope: { id: `presentation-draft-${id}` },
 	});
 	return { publish, query, save };
+}
+
+/**
+ * The save behind typing into the opening's words on the slide itself. It is
+ * the editor's own draft patch, so the editor's fields and the slide never
+ * disagree. `live` is a screen showing the published presentation: there an
+ * edit is published at once, but only when the draft held nothing else, so a
+ * host's unfinished changes in the editor never reach the room by accident.
+ * With other changes waiting the edit stays in the draft until they publish.
+ * Undefined until the draft has loaded, which only happens for a host who may
+ * edit: nobody else is offered the affordance.
+ */
+export function useOpeningInlineEdit(
+	draft: ReturnType<typeof usePresentationDraft>,
+	live: boolean,
+) {
+	const { mutateAsync: save } = draft.save;
+	const { mutateAsync: publish } = draft.publish;
+	const clean = useRef(false);
+	clean.current = draft.query.data?.has_changes === false;
+	const edit = useCallback(
+		async (patch: PopcornSettingsPatch) => {
+			const wasClean = clean.current;
+			await save(patch);
+			if (live && wasClean) await publish();
+		},
+		[live, publish, save],
+	);
+	return draft.query.isSuccess ? edit : undefined;
 }

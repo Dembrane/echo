@@ -167,9 +167,7 @@
    round the other three sides of the whole screen. A filled blue surface, so
    it keeps the brand's royal blue and its parchment text in both themes. */
 .shell[data-framed] {
-	--audience-frame: clamp(6px, 0.55vw, 12px);
-
-	border: var(--audience-frame) solid var(--mantine-color-primary-6);
+	border: 1px solid var(--mantine-color-primary-6);
 	border-top: 0;
 }
 
@@ -300,38 +298,6 @@
 .contentFrame iframe.deckBesideQr {
 	right: auto;
 	width: calc(100% - min(180px, 24vw) - var(--audience-pad-x) - 1.4em - 1.5em);
-}
-
-.qrMinimized {
-	padding: 0;
-	border: 0;
-	background: transparent;
-	box-shadow: none;
-}
-
-.qrMinimize {
-	position: absolute;
-	top: 0.15em;
-	right: 0.25em;
-	appearance: none;
-	padding: 0.1em 0.3em;
-	border: 0;
-	background: transparent;
-	color: var(--audience-ink-soft);
-	font: inherit;
-	font-size: 1em;
-	line-height: 1;
-	cursor: pointer;
-}
-
-.qrChip {
-	appearance: none;
-	padding: 0.35em 0.5em;
-	border: 1px solid var(--audience-hairline);
-	background: var(--audience-bg);
-	color: var(--audience-accent);
-	font: inherit;
-	cursor: pointer;
 }
 
 .qrCode {

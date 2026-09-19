@@ -8,11 +8,13 @@ import {
 	MoonIcon,
 	PauseIcon,
 	PlayIcon,
+	QrCodeIcon,
 	SunIcon,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { QRCode } from "@/components/common/QRCode";
+import type { PopcornSettingsPatch } from "@/components/popcorn/hooks";
 import { SUPPORTED_LANGUAGES } from "@/config";
 import { useServerEvents } from "@/hooks/useServerEvents";
 import { cn } from "@/lib/utils";
@@ -28,6 +30,7 @@ import {
 	deckThemeCommand,
 	deckVisibilityCommand,
 	isDeckChromeEvent,
+	isDeckEditEvent,
 	isDeckOpeningEvent,
 	isDeckReadyEvent,
 	postDeckMessage,
@@ -35,6 +38,10 @@ import {
 import type { PresentationBlock as AudienceBlock } from "./blocks";
 import { useAudience } from "./hooks/useAudience";
 import { type AudienceTheme, useAudienceTheme } from "./hooks/useAudienceTheme";
+import {
+	useOpeningInlineEdit,
+	usePresentationDraft,
+} from "./hooks/usePresentationDraft";
 
 export type AudienceScreenProps = {
 	presentationId?: string;
@@ -48,6 +55,14 @@ export type AudienceScreenProps = {
 	 * shell opens no stream of its own.
 	 */
 	eventTick?: number;
+	/**
+	 * A host who may edit types straight into the opening's words on the slide.
+	 * Given, the deck makes those words editable and each finished edit arrives
+	 * here as the settings patch the presentation editor would have sent; a
+	 * rejected promise puts the old words back. The room's public link never
+	 * edits, whatever is passed.
+	 */
+	onEditOpening?: (patch: PopcornSettingsPatch) => Promise<unknown>;
 	/** Told the presentation's interface language once it is known. */
 	onLanguage?: (code: string) => void;
 	className?: string;
@@ -217,6 +232,7 @@ export const AudienceScreen = ({
 	draft = false,
 	draftRevision = 0,
 	eventTick,
+	onEditOpening,
 	onLanguage,
 	className,
 }: AudienceScreenProps) => {
@@ -246,6 +262,8 @@ export const AudienceScreen = ({
 		qrShow: string;
 	} | null>(null);
 	const [qrMinimized, setQrMinimized] = useState(embedded);
+	const qrToggleLabel =
+		(qrMinimized ? deckChrome?.qrShow : deckChrome?.qrFold) || "QR";
 	// The room's own switch, in the footer beside play and fullscreen. It is
 	// known before any data loads, so every state of this screen is lit by it.
 	const [theme, setTheme] = useAudienceTheme();
@@ -320,6 +338,57 @@ export const AudienceScreen = ({
 		deckReadyRef.current = false;
 		setDeckChrome(null);
 	}, [deckSrc]);
+
+	// Typing happens inside the deck's own page, so no key handler of this
+	// shell hears it. The deck only offers it when told to here, after every
+	// ready (a reloaded deck starts plain), and never saves anything itself.
+	const canEditOpening = Boolean(onEditOpening) && !publicToken;
+	const onEditOpeningRef = useRef(onEditOpening);
+	onEditOpeningRef.current = onEditOpening;
+	useEffect(() => {
+		if (!audienceId) return;
+		const expected = () => ({
+			origin: deckOrigin,
+			presentationId: audienceId,
+			source: iframeRef.current?.contentWindow ?? null,
+		});
+		const shell = {
+			presentationId: audienceId,
+			source: "dembrane-present-shell",
+			version: 1,
+		} as const;
+		const deckWindow = () => iframeRef.current?.contentWindow ?? null;
+		// A deck is plain until told otherwise, so a viewer's deck hears nothing.
+		if (!canEditOpening) return;
+		const tell = (editable = true) =>
+			postDeckMessage(deckWindow(), deckOrigin, {
+				...shell,
+				command: "editing",
+				editable,
+			});
+		tell();
+		const handleDeckEdit = (event: MessageEvent) => {
+			if (!isDeckEditEvent(event, expected())) {
+				if (isDeckReadyEvent(event, expected())) tell();
+				return;
+			}
+			const { field, value } = event.data;
+			const [block, key] = field.split(".");
+			const patch = { [block]: { [key]: value } } as PopcornSettingsPatch;
+			(async () => onEditOpeningRef.current?.(patch))().catch(() =>
+				postDeckMessage(deckWindow(), deckOrigin, {
+					...shell,
+					command: "edit-rejected",
+					field,
+				}),
+			);
+		};
+		globalThis.addEventListener("message", handleDeckEdit);
+		return () => {
+			globalThis.removeEventListener("message", handleDeckEdit);
+			tell(false);
+		};
+	}, [audienceId, canEditOpening, deckOrigin]);
 
 	const requestDeckRefresh = useCallback(() => {
 		pendingDeckRefreshRef.current = true;
@@ -900,51 +969,32 @@ export const AudienceScreen = ({
 								endpoint={urls?.map ?? ""}
 								revision={eventRevision + draftRevision}
 								theme={theme}
+								// A public link is opened without a session, so it never
+								// asks for a model-written title. The host's own screen and
+								// the preview are behind the session already.
+								titles={!publicToken}
 								waitingLabel={audienceCopy.waiting}
 							/>
 						</div>
 					)}
 				</Tabs.Panel>
-				{frameDetails.qrUrl && (
+				{frameDetails.qrUrl && !qrMinimized && (
 					<aside
-						className={cn(classes.qrPanel, qrMinimized && classes.qrMinimized)}
+						className={classes.qrPanel}
 						aria-label={frameDetails.qrLabel || deckChrome?.qrLabel || "QR"}
 						data-testid="audience-qr"
 					>
-						{qrMinimized ? (
-							<button
-								type="button"
-								className={classes.qrChip}
-								aria-label={deckChrome?.qrShow || "QR"}
-								onClick={() => setQrMinimized(false)}
-							>
-								QR
-							</button>
-						) : (
-							<>
-								<button
-									type="button"
-									className={classes.qrMinimize}
-									aria-label={deckChrome?.qrFold || "QR"}
-									onClick={() => setQrMinimized(true)}
-								>
-									−
-								</button>
-								<QRCode
-									value={frameDetails.qrUrl}
-									href={frameDetails.qrUrl}
-									aria-label={
-										frameDetails.qrLabel || deckChrome?.qrLabel || "QR"
-									}
-									className={classes.qrCode}
-									inverted={dark}
-								/>
-								{(frameDetails.qrLabel || deckChrome?.qrLabel) && (
-									<span className={classes.qrLabel}>
-										{frameDetails.qrLabel || deckChrome?.qrLabel}
-									</span>
-								)}
-							</>
+						<QRCode
+							value={frameDetails.qrUrl}
+							href={frameDetails.qrUrl}
+							aria-label={frameDetails.qrLabel || deckChrome?.qrLabel || "QR"}
+							className={classes.qrCode}
+							inverted={dark}
+						/>
+						{(frameDetails.qrLabel || deckChrome?.qrLabel) && (
+							<span className={classes.qrLabel}>
+								{frameDetails.qrLabel || deckChrome?.qrLabel}
+							</span>
 						)}
 					</aside>
 				)}
@@ -995,6 +1045,26 @@ export const AudienceScreen = ({
 									) : (
 										<PauseIcon size={20} />
 									)}
+								</ActionIcon>
+							</Tooltip>
+						)}
+						{frameDetails.qrUrl && (
+							<Tooltip
+								label={qrToggleLabel}
+								classNames={{ tooltip: classes.tooltip }}
+								data-theme={darkTheme}
+							>
+								<ActionIcon
+									className={classes.control}
+									variant="subtle"
+									size="lg"
+									radius="md"
+									aria-label={qrToggleLabel}
+									aria-pressed={!qrMinimized}
+									onClick={() => setQrMinimized((minimized) => !minimized)}
+									data-testid="audience-qr-toggle"
+								>
+									<QrCodeIcon size={20} />
 								</ActionIcon>
 							</Tooltip>
 						)}
@@ -1065,10 +1135,20 @@ export const AudienceScreenRoute = () => {
 		);
 		if (locale && i18n.locale !== locale) i18n.activate(locale);
 	}, []);
+	// The host's own screen (signed in, by presentation id) lets a host who may
+	// edit type into the opening. The draft only loads for such a host; the
+	// room's public link never asks for it.
+	const draft = usePresentationDraft(
+		"",
+		presentationId ?? "",
+		Boolean(presentationId) && !token,
+	);
+	const editOpening = useOpeningInlineEdit(draft, true);
 	return (
 		<AudienceScreen
 			presentationId={presentationId}
 			publicToken={token}
+			onEditOpening={editOpening}
 			onLanguage={followLanguage}
 			className="h-dvh min-h-dvh"
 		/>

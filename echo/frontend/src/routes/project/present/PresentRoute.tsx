@@ -63,7 +63,10 @@ import {
 	SettingsSaveContext,
 	useSettingsFlush,
 } from "@/components/popcorn/SettingsSaveContext";
-import { AudienceScreen } from "@/components/present/AudienceScreen";
+import {
+	AudienceScreen,
+	type AudienceScreenProps,
+} from "@/components/present/AudienceScreen";
 import {
 	orderedBlocks,
 	PRESENTATION_BLOCKS,
@@ -77,6 +80,7 @@ import {
 } from "@/components/present/hooks";
 import {
 	presentationDraftKey,
+	useOpeningInlineEdit,
 	usePresentationDraft,
 } from "@/components/present/hooks/usePresentationDraft";
 import { TranslationStatus } from "@/components/present/TranslationStatus";
@@ -145,7 +149,12 @@ function Editor({
 	]);
 	return (
 		<div className={classes.editor}>
-			<Preview presentation={presentation} draft revision={revision} />
+			<Preview
+				presentation={presentation}
+				draft
+				revision={revision}
+				onEditOpening={save.mutateAsync}
+			/>
 			<Stack className={classes.settings} gap="lg">
 				<Group justify="space-between">
 					<Text fw={500}>
@@ -172,6 +181,9 @@ function Editor({
 						</Tabs.Tab>
 						<Tabs.Tab value="activities">
 							<Trans>Tabs</Trans>
+						</Tabs.Tab>
+						<Tabs.Tab value="results">
+							<Trans>Review visible results</Trans>
 						</Tabs.Tab>
 					</Tabs.List>
 					<Tabs.Panel value="intro" pt="md">
@@ -235,134 +247,117 @@ function Editor({
 									/>
 								);
 							})}
-							<Accordion variant="default">
-								<Accordion.Item value="findings">
-									<Accordion.Control>
-										<Trans>Review visible results</Trans>
-									</Accordion.Control>
-									<Accordion.Panel>
-										<Stack gap="sm">
-											<Title order={4}>
-												<Trans>Visible results</Trans>
-											</Title>
-											<Text size="sm">
-												<Trans>
-													Edit the wording, check the evidence, or hide a
-													finding from this presentation. Shared results stay
-													available in Analysis.
-												</Trans>
-											</Text>
-											{results.isError && (
-												<Text>
-													<Trans>Results could not be loaded.</Trans>
-												</Text>
-											)}
-											<Stack gap={0}>
-												{results.data?.items
-													.filter((item) =>
-														selected.includes(BLOCK_BY_TYPE[item.type]),
-													)
-													.map((item) => {
-														const away = hidden.includes(item.objectId);
-														const label = item.label ?? item.objectId;
-														const block = BLOCK_BY_TYPE[item.type];
-														return (
-															<Group
-																key={item.objectId}
-																className={`${classes.row} ${away ? classes.rowHidden : ""}`}
-																gap="sm"
-																justify="space-between"
-																wrap="nowrap"
-																{...testId(`present-result-${item.objectId}`)}
-															>
-																<Group
-																	gap="xs"
-																	wrap="nowrap"
-																	className={classes.rowLabel}
-																>
-																	<Text size="sm" truncate title={label}>
-																		{label}
-																	</Text>
-																	{block && (
-																		<Badge
-																			size="xs"
-																			variant="outline"
-																			style={{ flexShrink: 0 }}
-																		>
-																			{blockLabel(block)}
-																		</Badge>
-																	)}
-																</Group>
-																<ResultRowActions
-																	hidden={away}
-																	onEdit={() => setInspected(item)}
-																	onToggleHidden={() =>
-																		save.mutate({
-																			presentation: {
-																				hidden_items: away
-																					? hidden.filter(
-																							(id) => id !== item.objectId,
-																						)
-																					: [...hidden, item.objectId],
-																			},
-																		})
-																	}
-																	testIdPrefix={`present-result-${item.objectId}`}
-																/>
-															</Group>
-														);
-													})}
-											</Stack>
-											{results.data &&
-												results.data.total > results.data.limit && (
-													<Group justify="center">
-														<Pagination
-															size="sm"
-															value={resultPage + 1}
-															total={Math.max(
-																1,
-																Math.ceil(
-																	results.data.total / results.data.limit,
-																),
-															)}
-															onChange={(page) =>
-																setParams((previous) => {
-																	const next = new URLSearchParams(previous);
-																	next.set("resultsPage", String(page - 1));
-																	return next;
-																})
-															}
-														/>
-													</Group>
-												)}
-											{!!hidden.length && (
-												<Group>
-													<Button
-														variant="subtle"
-														size="compact-sm"
-														onClick={() =>
-															save.mutate({
-																presentation: { hidden_items: [] },
-															})
-														}
-													>
-														<Trans>
-															Reset hidden findings ({hidden.length})
-														</Trans>
-													</Button>
+						</Stack>
+					</Tabs.Panel>
+					<Tabs.Panel value="results" pt="md">
+						<Stack gap="sm">
+							<Title order={4}>
+								<Trans>Visible results</Trans>
+							</Title>
+							<Text size="sm">
+								<Trans>
+									Edit the wording, check the evidence, or hide a finding from
+									this presentation. Shared results stay available in Analysis.
+								</Trans>
+							</Text>
+							{results.isError && (
+								<Text>
+									<Trans>Results could not be loaded.</Trans>
+								</Text>
+							)}
+							<Stack gap={0}>
+								{results.data?.items
+									.filter((item) => selected.includes(BLOCK_BY_TYPE[item.type]))
+									.map((item) => {
+										const away = hidden.includes(item.objectId);
+										const label = item.label ?? item.objectId;
+										const block = BLOCK_BY_TYPE[item.type];
+										return (
+											<Group
+												key={item.objectId}
+												className={`${classes.row} ${away ? classes.rowHidden : ""}`}
+												gap="sm"
+												justify="space-between"
+												wrap="nowrap"
+												{...testId(`present-result-${item.objectId}`)}
+											>
+												<Group
+													gap="xs"
+													wrap="nowrap"
+													className={classes.rowLabel}
+												>
+													<Text size="sm" truncate title={label}>
+														{label}
+													</Text>
+													{block && (
+														<Badge
+															size="xs"
+															variant="outline"
+															style={{ flexShrink: 0 }}
+														>
+															{blockLabel(block)}
+														</Badge>
+													)}
 												</Group>
-											)}
-											<EvidenceInspectionDrawer
-												projectId={projectId}
-												snapshotId={results.data?.snapshotId}
-												item={inspected}
-												opened={!!inspected}
-												onClose={() => setInspected(null)}
-											/>
-										</Stack>
-									</Accordion.Panel>
-								</Accordion.Item>
-							</Accordion>
+												<ResultRowActions
+													hidden={away}
+													onEdit={() => setInspected(item)}
+													onToggleHidden={() =>
+														save.mutate({
+															presentation: {
+																hidden_items: away
+																	? hidden.filter((id) => id !== item.objectId)
+																	: [...hidden, item.objectId],
+															},
+														})
+													}
+													testIdPrefix={`present-result-${item.objectId}`}
+												/>
+											</Group>
+										);
+									})}
+							</Stack>
+							{results.data && results.data.total > results.data.limit && (
+								<Group justify="center">
+									<Pagination
+										size="sm"
+										value={resultPage + 1}
+										total={Math.max(
+											1,
+											Math.ceil(results.data.total / results.data.limit),
+										)}
+										onChange={(page) =>
+											setParams((previous) => {
+												const next = new URLSearchParams(previous);
+												next.set("resultsPage", String(page - 1));
+												return next;
+											})
+										}
+									/>
+								</Group>
+							)}
+							{!!hidden.length && (
+								<Group>
+									<Button
+										variant="subtle"
+										size="compact-sm"
+										onClick={() =>
+											save.mutate({
+												presentation: { hidden_items: [] },
+											})
+										}
+									>
+										<Trans>Reset hidden findings ({hidden.length})</Trans>
+									</Button>
+								</Group>
+							)}
+							<EvidenceInspectionDrawer
+								projectId={projectId}
+								snapshotId={results.data?.snapshotId}
+								item={inspected}
+								opened={!!inspected}
+								onClose={() => setInspected(null)}
+							/>
 						</Stack>
 					</Tabs.Panel>
 				</Tabs>
@@ -482,10 +477,12 @@ function Preview({
 	presentation,
 	draft = false,
 	revision = 0,
+	onEditOpening,
 }: {
 	presentation: Presentation;
 	draft?: boolean;
 	revision?: number;
+	onEditOpening?: AudienceScreenProps["onEditOpening"];
 }) {
 	const eventTick = useContext(PresentationEventTick);
 	// The room's screen at its own size, shrunk to fit the column. At the
@@ -516,6 +513,7 @@ function Preview({
 						draft={draft}
 						draftRevision={revision}
 						eventTick={eventTick}
+						onEditOpening={onEditOpening}
 						className={classes.screen}
 					/>
 				</div>
@@ -589,8 +587,10 @@ function Session({
 	const draft = usePresentationDraft(
 		projectId,
 		presentation.id,
-		editing || sharing,
+		// A host who may edit also types into the opening on the preview below.
+		canEdit,
 	);
+	const editOpeningLive = useOpeningInlineEdit(draft, true);
 	const flushers = useRef(new Set<() => Promise<void>>());
 	const [pendingFields, setPendingFields] = useState(new Set<string>());
 	const [publishing, setPublishing] = useState(false);
@@ -899,7 +899,10 @@ function Session({
 						</Text>
 					)
 				) : (
-					<Preview presentation={presentation} />
+					<Preview
+						presentation={presentation}
+						onEditOpening={editOpeningLive}
+					/>
 				)}
 				{publishError && (
 					<Text role="alert" size="sm">

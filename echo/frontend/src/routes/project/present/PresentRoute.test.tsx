@@ -194,6 +194,10 @@ const openPanel = async (name: string) => {
 	fireEvent.click(await screen.findByRole("button", { name }));
 };
 
+const openTab = async (name: string) => {
+	fireEvent.click(await screen.findByRole("tab", { name }));
+};
+
 describe("Choosing what the room sees", () => {
 	it("opens with Popcorn, which cannot be switched off or swapped for another tab", async () => {
 		editing();
@@ -239,7 +243,7 @@ describe("Reviewing the results on the screen", () => {
 			data: { items, limit: 100, snapshotId: "snap-1", total: 250 },
 		});
 		editing();
-		await openPanel("Review visible results");
+		await openTab("Review visible results");
 		expect(
 			screen.queryByRole("button", { name: "Evidence and history" }),
 		).toBeNull();
@@ -281,7 +285,7 @@ describe("Reviewing the results on the screen", () => {
 			data: { items, limit: 100, snapshotId: "snap-1", total: 2 },
 		});
 		editing();
-		await openPanel("Review visible results");
+		await openTab("Review visible results");
 		expect(
 			screen.getByRole("button", { name: "Show in this presentation" }),
 		).toBeTruthy();

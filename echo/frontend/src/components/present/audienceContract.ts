@@ -31,6 +31,20 @@ export type DeckCommand =
 			version: 1;
 	  }
 	| {
+			command: "editing";
+			editable: boolean;
+			presentationId: string;
+			source: "dembrane-present-shell";
+			version: 1;
+	  }
+	| {
+			command: "edit-rejected";
+			field: OpeningEditField;
+			presentationId: string;
+			source: "dembrane-present-shell";
+			version: 1;
+	  }
+	| {
 			command: "theme";
 			presentationId: string;
 			source: "dembrane-present-shell";
@@ -54,6 +68,26 @@ export type DeckOpeningMessage = {
 	screen?: "intro" | "data";
 	source: "dembrane-present-deck";
 	type: "opening";
+	version: 1;
+};
+
+// The words of the opening a host may type into on the slide itself. Each is
+// a settings field the presentation editor also writes.
+export const OPENING_EDIT_FIELDS = [
+	"intro.title",
+	"intro.subtitle",
+	"disclosure.text",
+	"disclosure.invitation_title",
+	"disclosure.invitation_text",
+] as const;
+export type OpeningEditField = (typeof OPENING_EDIT_FIELDS)[number];
+
+export type DeckEditMessage = {
+	field: OpeningEditField;
+	presentationId: string;
+	source: "dembrane-present-deck";
+	type: "edit";
+	value: string;
 	version: 1;
 };
 
@@ -206,6 +240,32 @@ export const isDeckOpeningEvent = (
 		(message.screen === undefined ||
 			message.screen === "intro" ||
 			message.screen === "data")
+	);
+};
+
+export const isDeckEditEvent = (
+	event: Pick<MessageEvent, "data" | "origin" | "source">,
+	expected: {
+		origin: string;
+		presentationId: string;
+		source: MessageEventSource | null;
+	},
+): event is Pick<
+	MessageEvent<DeckEditMessage>,
+	"data" | "origin" | "source"
+> => {
+	if (event.origin !== expected.origin || event.source !== expected.source) {
+		return false;
+	}
+	if (!event.data || typeof event.data !== "object") return false;
+	const message = event.data as Partial<DeckEditMessage>;
+	return (
+		message.source === "dembrane-present-deck" &&
+		message.version === 1 &&
+		message.type === "edit" &&
+		message.presentationId === expected.presentationId &&
+		typeof message.value === "string" &&
+		(OPENING_EDIT_FIELDS as readonly unknown[]).includes(message.field)
 	);
 };
 

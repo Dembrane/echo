@@ -5,6 +5,7 @@ import {
 	deckOpeningCommand,
 	deckThemeCommand,
 	deckVisibilityCommand,
+	isDeckEditEvent,
 	isDeckOpeningEvent,
 	isDeckReadyEvent,
 	postDeckMessage,
@@ -172,5 +173,33 @@ describe("audience presentation contract", () => {
 				expected,
 			),
 		).toBe(false);
+	});
+
+	it("accepts an opening edit only from its own deck and for a known field", () => {
+		const frame = {} as Window;
+		const expected = {
+			origin: "https://api.example",
+			presentationId: "presentation-1",
+			source: frame,
+		};
+		const data = {
+			field: "intro.title",
+			presentationId: "presentation-1",
+			source: "dembrane-present-deck",
+			type: "edit",
+			value: "Welcome",
+			version: 1,
+		};
+		const from = (patch: object, origin = "https://api.example") =>
+			isDeckEditEvent(
+				{ data: { ...data, ...patch }, origin, source: frame },
+				expected,
+			);
+		expect(from({})).toBe(true);
+		expect(from({}, "https://attacker.example")).toBe(false);
+		expect(from({ field: "title" })).toBe(false);
+		expect(from({ field: "notice.text" })).toBe(false);
+		expect(from({ value: 3 })).toBe(false);
+		expect(from({ presentationId: "presentation-2" })).toBe(false);
 	});
 });
