@@ -95,6 +95,8 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .popcorn-intro [data-edit] { cursor: text; border-radius: .2em; outline: 1px dashed transparent; outline-offset: .3em; transition: outline-color .15s ease, background-color .15s ease; }
 /* With an editable heading the screen itself takes the resting focus: no ring around the page. */
 .popcorn-intro .intro-content:focus-visible { outline: none; }
+/* An empty optional field, shown to an editing host only: the words are drawn here, never in the text. */
+.popcorn-intro [data-edit][data-placeholder]:empty::before { content: attr(data-placeholder); opacity: .45; }
 .popcorn-intro [data-edit]:hover { outline-color: color-mix(in srgb, currentColor 35%, transparent); }
 .popcorn-intro [data-edit]:focus { outline: 2px solid var(--blue); background: color-mix(in srgb, currentColor 6%, transparent); white-space: pre-wrap; }
 .intro-data { max-width: 64em; justify-content: flex-start; padding: 1.5em 0; }

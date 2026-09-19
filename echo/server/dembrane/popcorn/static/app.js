@@ -155,6 +155,8 @@
       "intro.continue": "Continue →",
       "intro.start": "Start popcorn →",
       "intro.back": "← back",
+      "intro.addSubtitle": "add a subtitle",
+      "intro.addText": "add text",
       "intro.publicOnly": "Only public data was used to create this example",
       "quote.title": "Quoted transcript excerpt",
       "quote.close": "Close quote",
@@ -320,6 +322,8 @@
       "intro.continue": "Verder →",
       "intro.start": "Bekijk de popcorn →",
       "intro.back": "← terug",
+      "intro.addSubtitle": "voeg een ondertitel toe",
+      "intro.addText": "voeg tekst toe",
       "intro.publicOnly": "Voor dit voorbeeld zijn alleen openbare gegevens gebruikt",
       "quote.title": "Citaat uit het transcript",
       "quote.close": "Citaat sluiten",
@@ -1206,9 +1210,21 @@
     // the quiet look of the footer's text button; styles.css has no rule of its own for this
     const backHtml = n > 1 ? `<button class="intro-back reset-data" type="button">${esc(tr("intro.back"))}</button>` : "";
     const continueHtml = `<button class="intro-continue" type="button">${esc(next)}</button>`;
+    // For a host who is editing, an optional field that is still empty keeps
+    // its place: an empty element whose placeholder is drawn by the stylesheet
+    // (never text of its own, so never saved). The audience gets no element.
+    const fields = screen.fields || {};
+    const emptyMark = (field, key) => (editMark(field) ? `${editMark(field)} data-placeholder="${esc(tr(key))}"` : "");
+    const subtitleHtml = screen.data ? "" : screen.subtitle
+      ? `<p class="intro-subtitle"${editMark(fields.subtitle)}>${esc(screen.subtitle)}</p>`
+      : fields.subtitle !== fields.body && emptyMark(fields.subtitle, "intro.addSubtitle")
+        ? `<p class="intro-subtitle"${emptyMark(fields.subtitle, "intro.addSubtitle")}></p>` : "";
+    const bodyHtml = screen.data ? "" : screen.body.length || screen.subtitle && fields.subtitle === fields.body
+      ? screen.body.map((p) => `<p${editMark(fields.body)}>${esc(p)}</p>`).join("")
+      : emptyMark(fields.body, "intro.addText") ? `<p${emptyMark(fields.body, "intro.addText")}></p>` : "";
     dialog.innerHTML = screen.data
       ? `<div class="intro-content intro-data">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${dataScreenHtml(screen.data)}${continueHtml}</div>`
-      : `<div class="intro-content">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${screen.title ? `<h1 id="intro-title"${editMark(screen.fields?.title)}>${esc(screen.title)}</h1>` : ""}${screen.subtitle ? `<p class="intro-subtitle"${editMark(screen.fields?.subtitle)}>${esc(screen.subtitle)}</p>` : ""}${screen.body.map((p) => `<p${editMark(screen.fields?.body)}>${esc(p)}</p>`).join("")}${screen.source ? `<p class="intro-source">${esc(tr("intro.publicOnly"))}</p>` : ""}${continueHtml}</div>`;
+      : `<div class="intro-content">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${screen.title ? `<h1 id="intro-title"${editMark(screen.fields?.title)}>${esc(screen.title)}</h1>` : ""}${subtitleHtml}${bodyHtml}${screen.source ? `<p class="intro-source">${esc(tr("intro.publicOnly"))}</p>` : ""}${continueHtml}</div>`;
     const back = dialog.querySelector(".intro-back");
     if (back) back.onclick = () => history.back();
     const button = dialog.querySelector(".intro-continue");
@@ -1294,6 +1310,9 @@
         }
       });
       for (const type of ["keyup", "keypress"]) el.addEventListener(type, (event) => event.stopPropagation());
+      // A browser leaves a stray line break in an emptied field: take it out,
+      // so the field is `:empty` again and its placeholder comes back.
+      el.addEventListener("input", () => { if (el.firstChild && !el.textContent.trim()) el.textContent = ""; });
       el.addEventListener("paste", (event) => {
         if (el.contentEditable === "plaintext-only") return;
         event.preventDefault();
@@ -1316,6 +1335,7 @@
         }
         introLastEdit = { field, previous };
         sessionField(field, value);
+        if (!value) siblings().forEach((node) => { node.textContent = ""; });
         parent.postMessage(
           { source: "dembrane-present-deck", version: 1, presentationId: EMBED.presentationId, type: "edit", field, value },
           EMBED.parentOrigin || location.origin,

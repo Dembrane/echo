@@ -4,7 +4,7 @@ window.POPCORN_AUDIENCE_I18N = {
   values: {
     de: [
       "Folien","Sitzung","erstellt mit {brand}","so funktioniert Popcorn","Popcorn","Empfehlungen","Spannungen","Interessengruppen",
-      "Synthetische Demo","Über dieses Beispiel","über diese Sitzung","Warum wir das zeigen →","Weiter →","Popcorn starten →","← zurück","Für dieses Beispiel wurden nur öffentliche Daten verwendet",
+      "Synthetische Demo","Über dieses Beispiel","über diese Sitzung","Warum wir das zeigen →","Weiter →","Popcorn starten →","← zurück","Untertitel hinzufügen","Text hinzufügen","Für dieses Beispiel wurden nur öffentliche Daten verwendet",
       "Zitierter Transkriptauszug","Zitat schließen","Transkript öffnen ↗","dieses Zitat vollständig lesen","Warum dieser Satz","Schließen","warum dieser Satz · ähnlichste Passage, kein Zitat","Gespräch öffnen ↗",
       "deine Stimme einbringen","scannen und deine Stimme einbringen","scannen und dembrane Feedback geben","QR-Code anzeigen","QR-Code einklappen","QR-Code: {label}",
       "{pending} von {n} Gespräch wird gelesen…","{pending} von {n} Gesprächen werden gelesen…","{n} Gespräch · alles gelesen","{n} Gespräche · alles gelesen","{n} Gespräch · {done} gelesen","{n} Gespräche · {done} gelesen",
@@ -21,7 +21,7 @@ window.POPCORN_AUDIENCE_I18N = {
     ],
     fr: [
       "diapositives","session","créé avec {brand}","comment fonctionne popcorn","popcorn","recommandations","tensions","parties prenantes",
-      "Démo synthétique","À propos de cet exemple","à propos de cette session","Pourquoi nous montrons ceci →","Continuer →","Lancer popcorn →","← retour","Seules des données publiques ont servi à créer cet exemple",
+      "Démo synthétique","À propos de cet exemple","à propos de cette session","Pourquoi nous montrons ceci →","Continuer →","Lancer popcorn →","← retour","ajouter un sous-titre","ajouter du texte","Seules des données publiques ont servi à créer cet exemple",
       "Extrait cité de la transcription","Fermer la citation","Ouvrir la transcription ↗","lire cette citation en entier","Pourquoi cette phrase","Fermer","pourquoi cette phrase · passage le plus proche, pas une citation","Ouvrir la conversation ↗",
       "ajoutez votre voix","scannez pour ajouter votre voix","scannez pour donner votre avis à dembrane","afficher le code QR","replier le code QR","Code QR : {label}",
       "lecture de {pending} conversation sur {n}…","lecture de {pending} conversations sur {n}…","{n} conversation · tout est lu","{n} conversations · tout est lu","{n} conversation · {done} lue","{n} conversations · {done} lues",
@@ -38,7 +38,7 @@ window.POPCORN_AUDIENCE_I18N = {
     ],
     es: [
       "diapositivas","sesión","hecho con {brand}","cómo funciona popcorn","popcorn","recomendaciones","tensiones","partes interesadas",
-      "Demostración sintética","Sobre este ejemplo","sobre esta sesión","Por qué mostramos esto →","Continuar →","Iniciar popcorn →","← volver","Para crear este ejemplo solo se usaron datos públicos",
+      "Demostración sintética","Sobre este ejemplo","sobre esta sesión","Por qué mostramos esto →","Continuar →","Iniciar popcorn →","← volver","añadir un subtítulo","añadir texto","Para crear este ejemplo solo se usaron datos públicos",
       "Fragmento citado de la transcripción","Cerrar cita","Abrir la transcripción ↗","leer esta cita completa","Por qué esta frase","Cerrar","por qué esta frase · pasaje más cercano, no es una cita","Abrir la conversación ↗",
       "añade tu voz","escanea para añadir tu voz","escanea para compartir comentarios con dembrane","mostrar el código QR","plegar el código QR","Código QR: {label}",
       "leyendo {pending} de {n} conversación…","leyendo {pending} de {n} conversaciones…","{n} conversación · todo leído","{n} conversaciones · todo leído","{n} conversación · {done} leída","{n} conversaciones · {done} leídas",
@@ -55,7 +55,7 @@ window.POPCORN_AUDIENCE_I18N = {
     ],
     it: [
       "diapositive","sessione","creato con {brand}","come funziona popcorn","popcorn","raccomandazioni","tensioni","portatori di interesse",
-      "Demo sintetica","Informazioni su questo esempio","informazioni su questa sessione","Perché mostriamo questo →","Continua →","Avvia popcorn →","← indietro","Per creare questo esempio sono stati usati solo dati pubblici",
+      "Demo sintetica","Informazioni su questo esempio","informazioni su questa sessione","Perché mostriamo questo →","Continua →","Avvia popcorn →","← indietro","aggiungi un sottotitolo","aggiungi testo","Per creare questo esempio sono stati usati solo dati pubblici",
       "Estratto citato dalla trascrizione","Chiudi citazione","Apri la trascrizione ↗","leggi tutta la citazione","Perché questa frase","Chiudi","perché questa frase · passaggio più vicino, non è una citazione","Apri la conversazione ↗",
       "fai sentire la tua voce","scansiona per far sentire la tua voce","scansiona per dare un feedback a dembrane","mostra il codice QR","ripiega il codice QR","Codice QR: {label}",
       "lettura di {pending} conversazione su {n}…","lettura di {pending} conversazioni su {n}…","{n} conversazione · tutto letto","{n} conversazioni · tutto letto","{n} conversazione · {done} letta","{n} conversazioni · {done} lette",
@@ -72,7 +72,7 @@ window.POPCORN_AUDIENCE_I18N = {
     ],
     uk: [
       "слайди","сесія","створено з {brand}","як працює popcorn","popcorn","рекомендації","суперечності","зацікавлені сторони",
-      "Синтетична демонстрація","Про цей приклад","про цю сесію","Чому ми це показуємо →","Продовжити →","Запустити popcorn →","← назад","Для створення цього прикладу використано лише відкриті дані",
+      "Синтетична демонстрація","Про цей приклад","про цю сесію","Чому ми це показуємо →","Продовжити →","Запустити popcorn →","← назад","додати підзаголовок","додати текст","Для створення цього прикладу використано лише відкриті дані",
       "Цитований уривок стенограми","Закрити цитату","Відкрити стенограму ↗","прочитати цитату повністю","Чому ця фраза","Закрити","чому ця фраза · найближчий уривок, не цитата","Відкрити розмову ↗",
       "додайте свій голос","відскануйте, щоб додати свій голос","відскануйте, щоб поділитися відгуком із dembrane","показати QR-код","згорнути QR-код","QR-код: {label}",
       "прочитано {pending} з {n} розмови…","прочитано {pending} з {n} розмов…","{n} розмова · усе прочитано","{n} розмов · усе прочитано","{n} розмова · прочитано {done}","{n} розмов · прочитано {done}",
@@ -89,7 +89,7 @@ window.POPCORN_AUDIENCE_I18N = {
     ],
     cs: [
       "snímky","setkání","vytvořeno pomocí {brand}","jak popcorn funguje","popcorn","doporučení","napětí","zainteresované strany",
-      "Syntetická ukázka","O tomto příkladu","o tomto setkání","Proč to ukazujeme →","Pokračovat →","Spustit popcorn →","← zpět","K vytvoření tohoto příkladu byla použita pouze veřejná data",
+      "Syntetická ukázka","O tomto příkladu","o tomto setkání","Proč to ukazujeme →","Pokračovat →","Spustit popcorn →","← zpět","přidat podtitul","přidat text","K vytvoření tohoto příkladu byla použita pouze veřejná data",
       "Citovaný úryvek přepisu","Zavřít citát","Otevřít přepis ↗","přečíst celý citát","Proč tato věta","Zavřít","proč tato věta · nejbližší pasáž, není to citát","Otevřít rozhovor ↗",
       "přidejte svůj hlas","naskenujte a přidejte svůj hlas","naskenujte a pošlete zpětnou vazbu dembrane","zobrazit QR kód","složit QR kód","QR kód: {label}",
       "čte se {pending} z {n} rozhovoru…","čte se {pending} z {n} rozhovorů…","{n} rozhovor · vše přečteno","{n} rozhovorů · vše přečteno","{n} rozhovor · {done} přečten","{n} rozhovorů · {done} přečteno",

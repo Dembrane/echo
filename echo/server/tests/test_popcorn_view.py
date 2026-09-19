@@ -31,7 +31,7 @@ def test_audience_translations_cover_keys_and_placeholders() -> None:
     rows = re.findall(r'^      "([^"]+)": ("(?:[^"\\]|\\.)*"),$', english_block, re.M)
     keys = [key for key, _value in rows]
     english = [json.loads(value) for _key, value in rows]
-    assert len(keys) == 163
+    assert len(keys) == 165
 
     def placeholders(value: str) -> list[str]:
         return sorted(re.findall(r"\{[^}]+\}", value))
