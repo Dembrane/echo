@@ -33,25 +33,16 @@
 	height: 100%;
 }
 
-.row {
-	padding: var(--mantine-spacing-xs) var(--mantine-spacing-xs);
-	border-bottom: 1px solid var(--mantine-color-default-border);
-}
-
-.row:last-child {
-	border-bottom: 0;
-}
-
-.rowHidden {
-	opacity: 0.55;
-}
-
-.rowLabel {
-	min-width: 0;
-	flex: 1;
-}
-
 .settings {
+	min-width: 0;
+	border: 1px solid var(--mantine-color-default-border);
+	border-radius: var(--mantine-radius-lg);
+	padding: var(--mantine-spacing-lg);
+}
+
+/* The results review is a row of its own under the preview and the editor, as
+   wide as the page. */
+.results {
 	min-width: 0;
 	border: 1px solid var(--mantine-color-default-border);
 	border-radius: var(--mantine-radius-lg);

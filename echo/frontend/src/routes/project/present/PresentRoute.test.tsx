@@ -9,6 +9,7 @@ import {
 	render,
 	screen,
 	waitFor,
+	within,
 } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import {
@@ -194,10 +195,6 @@ const openPanel = async (name: string) => {
 	fireEvent.click(await screen.findByRole("button", { name }));
 };
 
-const openTab = async (name: string) => {
-	fireEvent.click(await screen.findByRole("tab", { name }));
-};
-
 describe("Choosing what the room sees", () => {
 	it("opens with Popcorn, which cannot be switched off or swapped for another tab", async () => {
 		editing();
@@ -242,8 +239,11 @@ describe("Reviewing the results on the screen", () => {
 		results.mockReturnValue({
 			data: { items, limit: 100, snapshotId: "snap-1", total: 250 },
 		});
-		editing();
-		await openTab("Review results");
+		show();
+		await openPanel("Review results");
+		// The results panel is its own place: the presentation editor stays shut.
+		expect(screen.getByTestId("present-results-panel")).toBeTruthy();
+		expect(screen.queryByText("Presentation editor")).toBeNull();
 		expect(
 			screen.queryByRole("button", { name: "Evidence and history" }),
 		).toBeNull();
@@ -284,10 +284,9 @@ describe("Reviewing the results on the screen", () => {
 		results.mockReturnValue({
 			data: { items, limit: 100, snapshotId: "snap-1", total: 2 },
 		});
-		editing();
-		await openTab("Review results");
+		show("/projects/empty/present?results=1");
 		expect(
-			screen.getByRole("button", { name: "Show in this presentation" }),
+			await screen.findByRole("button", { name: "Show in this presentation" }),
 		).toBeTruthy();
 		fireEvent.click(
 			screen.getByRole("button", { name: "Reset hidden findings (1)" }),
@@ -295,6 +294,47 @@ describe("Reviewing the results on the screen", () => {
 		expect(saveSettings).toHaveBeenCalledWith({
 			presentation: { hidden_items: [] },
 		});
+	});
+});
+
+describe("Keeping the presentation and its results apart", () => {
+	it("leaves results out of the presentation editor's tabs", async () => {
+		editing();
+		expect(await screen.findByRole("tab", { name: "Tabs" })).toBeTruthy();
+		expect(screen.queryByRole("tab", { name: "Review results" })).toBeNull();
+		expect(screen.queryByTestId("present-results-panel")).toBeNull();
+	});
+
+	it("opens both panels at once, and closes the results on their own", async () => {
+		editing();
+		await openPanel("Review results");
+		expect(screen.getByText("Presentation editor")).toBeTruthy();
+		fireEvent.click(
+			within(screen.getByTestId("present-results-panel")).getByRole("button", {
+				name: "Close results review",
+			}),
+		);
+		await waitFor(() =>
+			expect(screen.queryByTestId("present-results-panel")).toBeNull(),
+		);
+		expect(screen.getByText("Presentation editor")).toBeTruthy();
+	});
+
+	it("opens the results panel for a link to the tab it used to be", async () => {
+		show("/projects/empty/present?edit=1&section=results");
+		expect(await screen.findByTestId("present-results-panel")).toBeTruthy();
+		// The editor falls back to its own first stop.
+		expect(
+			screen.getByRole("tab", { name: "Tabs" }).getAttribute("aria-selected"),
+		).toBe("true");
+	});
+
+	it("offers Publish from the results panel, since a hidden finding waits in the draft", async () => {
+		show("/projects/empty/present?results=1");
+		expect(
+			await screen.findByRole("button", { name: "Publish changes" }),
+		).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Done reviewing" })).toBeTruthy();
 	});
 });
 

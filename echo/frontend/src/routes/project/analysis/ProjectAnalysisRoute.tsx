@@ -849,7 +849,12 @@ export function ProjectAnalysisRoute() {
 		? `/w/${workspaceId}/projects/${projectId}`
 		: `/projects/${projectId}`;
 	const section = params.get("section");
-	const returnPath = `${projectPath}/present?edit=1${section ? `&section=${encodeURIComponent(section)}` : ""}`;
+	// From the results panel the way back is the results panel; from the
+	// presentation editor it is the editor's section.
+	const returnPath =
+		section === "results"
+			? `${projectPath}/present?results=1`
+			: `${projectPath}/present?edit=1${section ? `&section=${encodeURIComponent(section)}` : ""}`;
 	return (
 		<PageContainer width="xl">
 			<Stack gap="xl">
