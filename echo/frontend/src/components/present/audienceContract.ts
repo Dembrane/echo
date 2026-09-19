@@ -29,6 +29,13 @@ export type DeckCommand =
 			screen: "intro" | "data";
 			source: "dembrane-present-shell";
 			version: 1;
+	  }
+	| {
+			command: "theme";
+			presentationId: string;
+			source: "dembrane-present-shell";
+			theme: "light" | "dark";
+			version: 1;
 	  };
 
 export type DeckReadyMessage = {
@@ -127,6 +134,17 @@ export const deckOpeningCommand = (
 	presentationId,
 	screen,
 	source: "dembrane-present-shell",
+	version: 1,
+});
+
+export const deckThemeCommand = (
+	presentationId: string,
+	theme: "light" | "dark",
+): DeckCommand => ({
+	command: "theme",
+	presentationId,
+	source: "dembrane-present-shell",
+	theme,
 	version: 1,
 });
 

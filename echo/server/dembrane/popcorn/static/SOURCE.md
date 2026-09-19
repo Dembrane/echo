@@ -194,27 +194,36 @@ The six audience dictionaries are draft translations and require native-speaker
 review before deployment, with particular attention to Ukrainian and Czech
 plural forms. Automated tests enforce key and placeholder coverage, not wording.
 
-Dark theme patch: the room screen has a dark mode the host switches on.
-`session.json` carries `theme: "light" | "dark"`, default light, and anything
-else reads as light. `applySession` writes it to `<html data-theme>` beside the
-language, so a change reaches the room on the next bundle read without a
+Dark theme patch: the room screen has a dark mode, and the switch is on the
+screen itself, in the footer beside play and fullscreen. The session carries no
+theme. The shell remembers the choice per browser and tells this page over the
+versioned bridge: `{command: "theme", theme: "light" | "dark"}`, handled beside
+`visibility`, which writes `<html data-theme>`. On its own this page reads
+`?theme=dark` from its address at first paint and nothing else; that is also
+how the shell spares a dark room a light first paint, so the address is fixed
+when the deck is mounted and a later flip travels as a command rather than a
 reload. The sheet's tokens are named for their colour and used for their role,
 so `:root[data-theme="dark"]` redefines them by role rather than renaming them:
 `--parchment` is the ground (`#1B1B1A`, with `--paper` `#262625` a step up),
 `--graphite` is the ink (`#F6F4F1`), and `--hairline`, `--ink-soft`,
 `--ink-faint` and `--brand-grey` follow. `--blue` lifts to `#7C9BFF` wherever
-blue is read as text or drawn as a hairline. Four tokens are pinned in the base
-`:root` and never redefined, because what they colour is an object in the room
-rather than a surface of the page: `--on-marker` (graphite on a bright marker,
-because a highlighted phrase is a sticky note and a sticky note does not
-invert), `--qr-card` and `--qr-ink` (the portal panel stays a light card with
-dark modules so a phone can scan it off the projector; the same pair carries
-the data-policy line drawings and the knob of the shuffle switch), and
-`--blue-fill` with `--on-blue` (a filled blue surface keeps `#4169E1` with
-parchment on it: the notice bar, the continue button, the blue tension pole).
+blue is read as text or drawn as a hairline. `--qr-card` and `--qr-ink` turn
+over with the room: the portal panel is a dark card with light modules in a
+dark room, because the card's padding is the code's quiet zone and has to carry
+the colour the modules are drawn on. The server draws the code as one stroked
+path over a transparent field, so `.qr-image svg path` takes its stroke from
+`--qr-ink`; the white disc behind the logomark is a circle and stays light in
+both rooms. Three tokens are pinned in the base `:root` and never redefined,
+because what they colour is an object in the room rather than a surface of the
+page: `--on-marker` (graphite on a bright marker, because a highlighted phrase
+is a sticky note and a sticky note does not invert), and `--blue-fill` with
+`--on-blue` (a filled blue surface keeps `#4169E1` with parchment on it: the
+notice bar, the continue button, the blue tension pole). The knob of the
+shuffle switch is the same kind of object and keeps its own light literals.
 The markers themselves do not move. The data-policy illustrations are dark
-strokes on transparency, so on dark they sit on a light panel instead of being
-inverted, and the stakeholder legend's swatches read their fills from the
+strokes on transparency, so each has a dark twin beside it (`<name>-dark.webp`:
+light strokes, dark paper, the same fills, made by
+`scripts/popcorn_dark_illustrations.py`) and the theme shows one of the pair, and the stakeholder legend's swatches read their fills from the
 tokens rather than from literals.
 
 - The Present bridge treats repeated current-block messages as acknowledgements, preserving the live phrase and bilingual timers across reconnects. The React room shell provides pause/resume through the timer-preserving visibility command.

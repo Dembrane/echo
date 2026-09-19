@@ -84,7 +84,7 @@ msgstr "\"ECHO\" available soon"
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Explore\" available soon"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:156
+#: src/components/popcorn/PopcornScreenSettings.tsx:124
 msgid "\"made with dembrane\" stays on the screen."
 msgstr "\"made with dembrane\" stays on the screen."
 
@@ -2666,7 +2666,7 @@ msgstr "Change your own role?"
 msgid "Change your password from settings without contacting support."
 msgstr "Change your password from settings without contacting support."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:159
+#: src/components/popcorn/PopcornScreenSettings.tsx:127
 msgid "Changemaker plan takes it off"
 msgstr "Changemaker plan takes it off"
 
@@ -3522,7 +3522,7 @@ msgstr "Could not delete template"
 msgid "Could not generate a summary. Please try again."
 msgstr "Could not generate a summary. Please try again."
 
-#: src/components/popcorn/hooks/index.ts:342
+#: src/components/popcorn/hooks/index.ts:339
 msgid "Could not go live"
 msgstr "Could not go live"
 
@@ -3563,7 +3563,7 @@ msgstr "Could not open the presentation. Try again."
 msgid "Could not preview this canvas right now."
 msgstr "Could not preview this canvas right now."
 
-#: src/components/popcorn/hooks/index.ts:298
+#: src/components/popcorn/hooks/index.ts:295
 msgid "Could not refresh popcorn"
 msgstr "Could not refresh popcorn"
 
@@ -3571,11 +3571,11 @@ msgstr "Could not refresh popcorn"
 msgid "Could not refresh this canvas"
 msgstr "Could not refresh this canvas"
 
-#: src/components/popcorn/hooks/index.ts:322
+#: src/components/popcorn/hooks/index.ts:319
 msgid "Could not rerun popcorn"
 msgstr "Could not rerun popcorn"
 
-#: src/components/popcorn/hooks/index.ts:248
+#: src/components/popcorn/hooks/index.ts:245
 msgid "Could not run popcorn"
 msgstr "Could not run popcorn"
 
@@ -3583,7 +3583,7 @@ msgstr "Could not run popcorn"
 msgid "Could not save"
 msgstr "Could not save"
 
-#: src/components/popcorn/hooks/index.ts:272
+#: src/components/popcorn/hooks/index.ts:269
 msgid "Could not save changes. Try again."
 msgstr "Could not save changes. Try again."
 
@@ -3627,7 +3627,7 @@ msgstr "Could not send the report. Try again"
 msgid "Could not start this run. Try again."
 msgstr "Could not start this run. Try again."
 
-#: src/components/popcorn/hooks/index.ts:362
+#: src/components/popcorn/hooks/index.ts:359
 msgid "Could not stop live"
 msgstr "Could not stop live"
 
@@ -3952,16 +3952,16 @@ msgid "Danger zone"
 msgstr "Danger zone"
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:103
-msgid "Dark"
-msgstr "Dark"
+#~ msgid "Dark"
+#~ msgstr "Dark"
 
 #: src/components/map/panels/MapSettingsMenu.tsx:248
 msgid "Dark mode"
 msgstr "Dark mode"
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:93
-msgid "Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it."
-msgstr "Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it."
+#~ msgid "Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it."
+#~ msgstr "Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:832
 msgid "Dashboard URL (direct link to conversation overview)"
@@ -5668,7 +5668,7 @@ msgstr "Full transcript (when available)"
 msgid "Fullscreen"
 msgstr "Fullscreen"
 
-#: src/components/present/AudienceScreen.tsx:1013
+#: src/components/present/AudienceScreen.tsx:1047
 msgid "Fullscreen is unavailable in this browser."
 msgstr "Fullscreen is unavailable in this browser."
 
@@ -6574,7 +6574,7 @@ msgstr "Italian (only ECHO features, Transcription and Summaries)"
 msgid "Italian for your core workflows"
 msgstr "Italian for your core workflows"
 
-#: src/components/present/AudienceScreen.tsx:691
+#: src/components/present/AudienceScreen.tsx:704
 msgid "Its link may have been switched off. Ask the host."
 msgstr "Its link may have been switched off. Ask the host."
 
@@ -6691,11 +6691,11 @@ msgstr "Just one."
 msgid "Just previewed. Give it a moment."
 msgstr "Just previewed. Give it a moment."
 
-#: src/components/popcorn/hooks/index.ts:319
+#: src/components/popcorn/hooks/index.ts:316
 msgid "Just read. Give it a moment."
 msgstr "Just read. Give it a moment."
 
-#: src/components/popcorn/hooks/index.ts:295
+#: src/components/popcorn/hooks/index.ts:292
 #: src/components/canvas/hooks/index.ts:263
 msgid "Just refreshed. Give it a moment."
 msgstr "Just refreshed. Give it a moment."
@@ -6966,8 +6966,8 @@ msgid "Lifetime cap"
 msgstr "Lifetime cap"
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:102
-msgid "Light"
-msgstr "Light"
+#~ msgid "Light"
+#~ msgstr "Light"
 
 #: src/components/present/AudienceMapAdapter.tsx:166
 #: src/components/map/attributes.ts:306
@@ -7824,7 +7824,7 @@ msgstr "Named by participants"
 msgid "Named ways of working your team can reuse."
 msgstr "Named ways of working your team can reuse."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:125
+#: src/components/popcorn/PopcornScreenSettings.tsx:93
 msgid "Names on the legend"
 msgstr "Names on the legend"
 
@@ -8020,7 +8020,7 @@ msgstr "No accounts"
 msgid "No actions found"
 msgstr "No actions found"
 
-#: src/components/present/AudienceScreen.tsx:871
+#: src/components/present/AudienceScreen.tsx:884
 msgid "No activities are selected for this presentation."
 msgstr "No activities are selected for this presentation."
 
@@ -8636,7 +8636,7 @@ msgstr "off"
 msgid "Off"
 msgstr "Off"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:126
+#: src/components/popcorn/PopcornScreenSettings.tsx:94
 msgid "Off numbers the conversations. On shows the name typed on the phone, which may be a person's."
 msgstr "Off numbers the conversations. On shows the name typed on the phone, which may be a person's."
 
@@ -8919,7 +8919,7 @@ msgstr "Open your authenticator app and enter the current six-digit code."
 msgid "Opening and frame"
 msgstr "Opening and frame"
 
-#: src/components/present/AudienceScreen.tsx:767
+#: src/components/present/AudienceScreen.tsx:778
 msgid "Opening screens"
 msgstr "Opening screens"
 
@@ -9530,7 +9530,7 @@ msgstr "Plans"
 msgid "Plans, gathers, and checks its work across many conversations."
 msgstr "Plans, gathers, and checks its work across many conversations."
 
-#: src/components/present/AudienceScreen.tsx:958
+#: src/components/present/AudienceScreen.tsx:972
 msgid "Playback and fullscreen"
 msgstr "Playback and fullscreen"
 
@@ -9757,7 +9757,7 @@ msgstr "Preparing your experience"
 msgid "Present"
 msgstr "Present"
 
-#: src/components/present/AudienceScreen.tsx:814
+#: src/components/present/AudienceScreen.tsx:825
 msgid "Presentation activities"
 msgstr "Presentation activities"
 
@@ -10087,7 +10087,7 @@ msgstr "Pull out the most impactful quotes from this session"
 msgid "Put {name} on dembrane-managed billing at the {tier} tier? No automatic Mollie charges or auto-expiry."
 msgstr "Put {name} on dembrane-managed billing at the {tier} tier? No automatic Mollie charges or auto-expiry."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:114
+#: src/components/popcorn/PopcornScreenSettings.tsx:82
 msgid "QR code"
 msgstr "QR code"
 
@@ -10225,7 +10225,7 @@ msgstr "Reading conversations"
 msgid "Reading conversations {done} of {total}"
 msgstr "Reading conversations {done} of {total}"
 
-#: src/components/popcorn/hooks/index.ts:325
+#: src/components/popcorn/hooks/index.ts:322
 msgid "Reading everything again"
 msgstr "Reading everything again"
 
@@ -10237,7 +10237,7 @@ msgstr "Reading project context"
 msgid "Reading project settings"
 msgstr "Reading project settings"
 
-#: src/components/popcorn/hooks/index.ts:301
+#: src/components/popcorn/hooks/index.ts:298
 msgid "Reading the conversations again"
 msgstr "Reading the conversations again"
 
@@ -11356,7 +11356,7 @@ msgstr "Scheduled"
 msgid "Scheduled reports and custom templates"
 msgstr "Scheduled reports and custom templates"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:57
+#: src/components/popcorn/PopcornScreenSettings.tsx:47
 msgid "Screen"
 msgstr "Screen"
 
@@ -11369,8 +11369,8 @@ msgid "Screen language"
 msgstr "Screen language"
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:92
-msgid "Screen theme"
-msgstr "Screen theme"
+#~ msgid "Screen theme"
+#~ msgstr "Screen theme"
 
 #: src/components/common/ScrollToBottom.tsx:19
 #: src/components/common/ScrollToBottom.tsx:24
@@ -12022,7 +12022,7 @@ msgstr "Shortest First"
 msgid "Show"
 msgstr "Show"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:139
+#: src/components/popcorn/PopcornScreenSettings.tsx:107
 msgid "Show \"made with dembrane\" on the screen"
 msgstr "Show \"made with dembrane\" on the screen"
 
@@ -12422,7 +12422,7 @@ msgstr "Stakeholder"
 msgid "Stakeholders"
 msgstr "Stakeholders"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:77
+#: src/components/popcorn/PopcornScreenSettings.tsx:67
 msgid "Stakeholders tab"
 msgstr "Stakeholders tab"
 
@@ -12877,7 +12877,7 @@ msgstr "Tension"
 msgid "Tensions"
 msgstr "Tensions"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:64
+#: src/components/popcorn/PopcornScreenSettings.tsx:54
 msgid "Tensions tab"
 msgstr "Tensions tab"
 
@@ -13093,7 +13093,7 @@ msgstr "The link may be private, or it may have moved. Ask the person who shared
 msgid "The link may have been removed, or it was sent to a different email address. Ask the inviter to send a new one."
 msgstr "The link may have been removed, or it was sent to a different email address. Ask the inviter to send a new one."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:115
+#: src/components/popcorn/PopcornScreenSettings.tsx:83
 msgid "The link to add a voice, in the corner of the stage."
 msgstr "The link to add a voice, in the corner of the stage."
 
@@ -13191,7 +13191,7 @@ msgstr "The project adopts the Business Source License 1.1."
 msgid "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 msgstr "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:65
+#: src/components/popcorn/PopcornScreenSettings.tsx:55
 msgid "The pulls between what people want, verified against the conversations."
 msgstr "The pulls between what people want, verified against the conversations."
 
@@ -13585,11 +13585,11 @@ msgstr "This phrase is a question"
 msgid "This portal is not accepting new sessions right now."
 msgstr "This portal is not accepting new sessions right now."
 
-#: src/components/present/AudienceScreen.tsx:686
+#: src/components/present/AudienceScreen.tsx:699
 msgid "This presentation could not be loaded."
 msgstr "This presentation could not be loaded."
 
-#: src/components/present/AudienceScreen.tsx:684
+#: src/components/present/AudienceScreen.tsx:697
 msgid "This presentation is not available."
 msgstr "This presentation is not available."
 
@@ -14135,7 +14135,7 @@ msgstr "Try it"
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr "Try moving a bit closer to your microphone for better sound quality."
 
-#: src/components/present/AudienceScreen.tsx:693
+#: src/components/present/AudienceScreen.tsx:706
 msgid "Trying again…"
 msgstr "Trying again…"
 
@@ -15277,7 +15277,7 @@ msgstr "Who can see and collaborate on this project."
 msgid "Who can see this project?"
 msgstr "Who can see this project?"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:78
+#: src/components/popcorn/PopcornScreenSettings.tsx:68
 msgid "Who holds a stake, and how they relate."
 msgstr "Who holds a stake, and how they relate."
 
@@ -15948,7 +15948,7 @@ msgstr "Your plan is inactive. Reactivate it to add members."
 msgid "Your plan is managed by dembrane. Contact your account manager to make changes."
 msgstr "Your plan is managed by dembrane. Contact your account manager to make changes."
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:140
+#: src/components/popcorn/PopcornScreenSettings.tsx:108
 msgid "Your plan lets you take the mark off."
 msgstr "Your plan lets you take the mark off."
 

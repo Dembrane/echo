@@ -9,9 +9,10 @@
      data/<file> read comes from one bundle document instead of separate
      files, and the drag-and-drop / localStorage demo paths are off. */
   const EMBED = typeof window !== "undefined" && window.POPCORN_EMBED ? window.POPCORN_EMBED : null;
-  // The shell knows the room's theme before it mounts this page and says so in
-  // the address, so a dark room does not flash light until the bundle lands.
-  // The session's own `theme` takes over as soon as it is read.
+  // The theme is the room screen's own switch. The shell knows it before it
+  // mounts this page and says so in the address, so a dark room has no light
+  // first paint; a later flip arrives as a `theme` command. On its own, this
+  // page reads the address and nothing else.
   if (typeof location !== "undefined" && new URLSearchParams(location.search).get("theme") === "dark") {
     document.documentElement.dataset.theme = "dark";
   }
@@ -1025,12 +1026,6 @@
   function applySession() {
     const session = state.session;
     if (!session) return;
-    // The room's theme is the host's switch, carried by the session the same
-    // way its language is. Every (re)load of the session passes through here,
-    // including the live refreshes, so turning the lights down in the host's
-    // settings reaches the room without a reload. Anything but "dark" is the
-    // parchment room.
-    document.documentElement.dataset.theme = session.theme === "dark" ? "dark" : "light";
     const lang = pageLang();
     const relabel = lang !== shownLang;
     if (relabel) {
@@ -1143,9 +1138,13 @@
   }
 
   const ILLUSTRATION_NAMES = new Set(["scan", "talk-anon", "talk-public", "understand"]);
+  // Each drawing has a dark twin beside it (ink and paper trade places, the
+  // fills stay). Both load, so the screen's theme switch is only a style change.
+  const illustrationHtml = (name) => ["", "-dark"].map((twin) =>
+    `<img class="illustration${twin}" src="illustrations/${name}${twin}.webp" alt="" width="480" height="480" loading="eager">`).join("");
   function dataScreenHtml(data) {
     const steps = (data.steps || []).map((step) => `<li>${ILLUSTRATION_NAMES.has(step.image)
-      ? `<img src="illustrations/${step.image}.webp" alt="" width="480" height="480" loading="eager">` : ""}<p>${esc(step.text)}</p></li>`).join("");
+      ? illustrationHtml(step.image) : ""}<p>${esc(step.text)}</p></li>`).join("");
     const links = (data.links || []).filter((l) => /^https?:\/\//.test(l.url || ""))
       .map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.label)}</a>`).join(" · ");
     return `<h1 id="intro-title">${esc(data.title)}</h1><ol class="data-steps">${steps}</ol><div class="data-notes">${(data.notes || []).map((n) => `<p>${esc(n)}</p>`).join("")}${links ? `<p>${links}</p>` : ""}</div>`;
@@ -4742,6 +4741,12 @@
     }
     if (message.command === "visibility" && typeof message.visible === "boolean") {
       freezeScreen(!message.visible, "shell");
+      return;
+    }
+    if (message.command === "theme" && ["light", "dark"].includes(message.theme)) {
+      // The switch is on the room's screen; the shell tells this page which
+      // room it is standing in, on every flip and again after a reload.
+      document.documentElement.dataset.theme = message.theme;
       return;
     }
     if (message.command === "opening" && ["intro", "data"].includes(message.screen)) {

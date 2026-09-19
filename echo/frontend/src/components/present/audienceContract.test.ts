@@ -3,6 +3,7 @@ import {
 	audienceUrls,
 	deckBlockCommand,
 	deckOpeningCommand,
+	deckThemeCommand,
 	deckVisibilityCommand,
 	isDeckOpeningEvent,
 	isDeckReadyEvent,
@@ -117,6 +118,13 @@ describe("audience presentation contract", () => {
 			block: "tensions",
 			presentationId: "presentation-1",
 			source: "dembrane-present-shell",
+			version: 1,
+		});
+		expect(deckThemeCommand("presentation-1", "dark")).toEqual({
+			command: "theme",
+			presentationId: "presentation-1",
+			source: "dembrane-present-shell",
+			theme: "dark",
 			version: 1,
 		});
 	});

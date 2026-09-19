@@ -87,9 +87,6 @@ export type PopcornSettings = {
 	public: boolean;
 	show_qr: boolean;
 	show_branding: boolean;
-	// The room's own theme, chosen by the host. A server that does not know
-	// the field sends nothing, so every reader falls back to light.
-	theme?: "light" | "dark";
 	// What the room's legend calls a conversation: the name typed on the
 	// phone, or a number.
 	public_labels: "names" | "neutral";

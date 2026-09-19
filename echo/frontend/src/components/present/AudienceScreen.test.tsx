@@ -737,89 +737,67 @@ describe("AudienceScreen lifecycle", () => {
 });
 
 describe("AudienceScreen theme", () => {
-	const themed = (theme?: unknown) => ({
-		...response(["popcorn"]),
-		bundle: {
-			files: {
-				"session.json": { ui_language: "en", ...(theme ? { theme } : {}) },
-			},
-		},
-	});
+	const served = () =>
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				json: async () => response(["popcorn"]),
+				ok: true,
+				status: 200,
+			}),
+		);
 	const shell = async () =>
 		(await screen.findByTestId("audience-frame-footer"))
 			.parentElement as HTMLElement;
+	const at = (search: string) =>
+		window.history.replaceState(null, "", `/present/room${search}`);
 
-	it("lights the room's screen dark when the session asks for it", async () => {
-		vi.stubGlobal(
-			"fetch",
-			vi.fn().mockResolvedValue({
-				json: async () => themed("dark"),
-				ok: true,
-				status: 200,
-			}),
-		);
-		renderAudience({ presentationId: "presentation-1" });
-		expect((await shell()).getAttribute("data-theme")).toBe("dark");
+	afterEach(() => {
+		at("");
+		window.localStorage.clear();
 	});
 
-	it("stays light with no theme and with a theme it does not know", async () => {
-		vi.stubGlobal(
-			"fetch",
-			vi.fn().mockResolvedValue({
-				json: async () => themed(),
-				ok: true,
-				status: 200,
-			}),
-		);
-		renderAudience({ presentationId: "presentation-1" });
-		expect((await shell()).getAttribute("data-theme")).toBeNull();
-		cleanup();
-
-		vi.stubGlobal(
-			"fetch",
-			vi.fn().mockResolvedValue({
-				json: async () => themed("midnight"),
-				ok: true,
-				status: 200,
-			}),
-		);
-		renderAudience({ presentationId: "presentation-1" });
-		expect((await shell()).getAttribute("data-theme")).toBeNull();
-	});
-
-	it("follows the theme a reload brings back", async () => {
-		const fetchMock = vi
-			.fn()
-			.mockResolvedValueOnce({
-				json: async () => themed(),
-				ok: true,
-				status: 200,
-			})
-			.mockResolvedValueOnce({
-				json: async () => themed("dark"),
-				ok: true,
-				status: 200,
-			});
-		vi.stubGlobal("fetch", fetchMock);
-
+	it("turns the whole screen over from its own switch, and tells the deck", async () => {
+		served();
 		renderAudience({ presentationId: "presentation-1" });
 		expect((await shell()).getAttribute("data-theme")).toBeNull();
 
-		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-		const onEvent = useServerEventsMock.mock.calls.at(-1)?.[2];
-		act(() => onEvent({ type: "update" }));
-		await act(async () => {
-			vi.advanceTimersByTime(AUDIENCE_EVENT_REFRESH_MS);
-			await Promise.resolve();
-			await Promise.resolve();
+		const iframe = (await screen.findByTitle(
+			"Presentation",
+		)) as HTMLIFrameElement;
+		const postMessage = vi.spyOn(iframe.contentWindow as Window, "postMessage");
+		const toggle = screen.getByTestId("audience-theme-toggle");
+		expect(toggle.getAttribute("aria-label")).toBe("Dark screen");
+		expect(toggle.getAttribute("aria-pressed")).toBe("false");
+
+		act(() => {
+			fireEvent.click(toggle);
 		});
-		expect(fetchMock).toHaveBeenCalledTimes(2);
-		// Fake timers are running, so this reads the tree rather than waiting.
-		expect(
-			screen
-				.getByTestId("audience-frame-footer")
-				.parentElement?.getAttribute("data-theme"),
-		).toBe("dark");
+
+		expect((await shell()).getAttribute("data-theme")).toBe("dark");
+		expect(toggle.getAttribute("aria-label")).toBe("Light screen");
+		expect(toggle.getAttribute("aria-pressed")).toBe("true");
+		expect(postMessage).toHaveBeenCalledWith(
+			expect.objectContaining({ command: "theme", theme: "dark" }),
+			new URL(iframe.src).origin,
+		);
+		// Telling the deck must not move it: a new address would reload it.
+		expect((screen.getByTitle("Presentation") as HTMLIFrameElement).src).toBe(
+			iframe.src,
+		);
+	});
+
+	it("opens on the theme a host handed out in the link", async () => {
+		at("?theme=dark");
+		served();
+		renderAudience({ presentationId: "presentation-1" });
+
+		expect((await shell()).getAttribute("data-theme")).toBe("dark");
+		const iframe = (await screen.findByTitle(
+			"Presentation",
+		)) as HTMLIFrameElement;
+		// The deck is mounted dark, so a dark room has no light first paint.
+		expect(iframe.src).toContain("theme=dark");
 	});
 });
 

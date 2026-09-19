@@ -48,8 +48,8 @@ type AudienceMapAdapterProps = {
 	revision?: number;
 	waitingLabel?: string;
 	/**
-	 * The room's theme, read from the same session field the shell reads.
-	 * "light" is the host's Map page exactly, so the default changes nothing.
+	 * The room's theme, the one its own switch is set to. "light" is the host's
+	 * Map page exactly, so the default changes nothing.
 	 */
 	theme?: "light" | "dark";
 };

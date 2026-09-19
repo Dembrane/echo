@@ -5,8 +5,10 @@ import { ActionIcon, Loader, Tabs, Text, Tooltip } from "@mantine/core";
 import {
 	ArrowsInIcon,
 	ArrowsOutIcon,
+	MoonIcon,
 	PauseIcon,
 	PlayIcon,
+	SunIcon,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
@@ -23,6 +25,7 @@ import {
 	type DeckChromeMessage,
 	deckBlockCommand,
 	deckOpeningCommand,
+	deckThemeCommand,
 	deckVisibilityCommand,
 	isDeckChromeEvent,
 	isDeckOpeningEvent,
@@ -31,6 +34,7 @@ import {
 } from "./audienceContract";
 import type { PresentationBlock as AudienceBlock } from "./blocks";
 import { useAudience } from "./hooks/useAudience";
+import { type AudienceTheme, useAudienceTheme } from "./hooks/useAudienceTheme";
 
 export type AudienceScreenProps = {
 	presentationId?: string;
@@ -57,6 +61,8 @@ const AUDIENCE_COPY: Record<
 		pause: string;
 		play: string;
 		fullscreen: string;
+		darkScreen: string;
+		lightScreen: string;
 		intro: string;
 		dataPolicy: string;
 	}
@@ -68,9 +74,11 @@ const AUDIENCE_COPY: Record<
 			stakeholders: "Zainteresované strany",
 			tensions: "Napětí",
 		},
+		darkScreen: "Tmavá obrazovka",
 		dataPolicy: "Zásady pro data",
 		fullscreen: "Celá obrazovka",
 		intro: "Úvod",
+		lightScreen: "Světlá obrazovka",
 		pause: "Pozastavit",
 		play: "Přehrát",
 		waiting: "Výsledky se připravují.",
@@ -82,9 +90,11 @@ const AUDIENCE_COPY: Record<
 			stakeholders: "Interessengruppen",
 			tensions: "Spannungsfelder",
 		},
+		darkScreen: "Dunkler Bildschirm",
 		dataPolicy: "Datenrichtlinie",
 		fullscreen: "Vollbild",
 		intro: "Einführung",
+		lightScreen: "Heller Bildschirm",
 		pause: "Pause",
 		play: "Abspielen",
 		waiting: "Die Ergebnisse werden vorbereitet.",
@@ -96,9 +106,11 @@ const AUDIENCE_COPY: Record<
 			stakeholders: "Stakeholders",
 			tensions: "Tensions",
 		},
+		darkScreen: "Dark screen",
 		dataPolicy: "Data policy",
 		fullscreen: "Fullscreen",
 		intro: "Introduction",
+		lightScreen: "Light screen",
 		pause: "Pause",
 		play: "Play",
 		waiting: "The results are being prepared.",
@@ -110,9 +122,11 @@ const AUDIENCE_COPY: Record<
 			stakeholders: "Grupos de interés",
 			tensions: "Tensiones",
 		},
+		darkScreen: "Pantalla oscura",
 		dataPolicy: "Política de datos",
 		fullscreen: "Pantalla completa",
 		intro: "Introducción",
+		lightScreen: "Pantalla clara",
 		pause: "Pausar",
 		play: "Reproducir",
 		waiting: "Los resultados se están preparando.",
@@ -124,9 +138,11 @@ const AUDIENCE_COPY: Record<
 			stakeholders: "Parties prenantes",
 			tensions: "Tensions",
 		},
+		darkScreen: "Écran sombre",
 		dataPolicy: "Politique des données",
 		fullscreen: "Plein écran",
 		intro: "Introduction",
+		lightScreen: "Écran clair",
 		pause: "Pause",
 		play: "Lire",
 		waiting: "Les résultats sont en cours de préparation.",
@@ -138,9 +154,11 @@ const AUDIENCE_COPY: Record<
 			stakeholders: "Portatori di interesse",
 			tensions: "Tensioni",
 		},
+		darkScreen: "Schermo scuro",
 		dataPolicy: "Politica sui dati",
 		fullscreen: "Schermo intero",
 		intro: "Introduzione",
+		lightScreen: "Schermo chiaro",
 		pause: "Pausa",
 		play: "Riprendi",
 		waiting: "I risultati sono in preparazione.",
@@ -152,9 +170,11 @@ const AUDIENCE_COPY: Record<
 			stakeholders: "Belanghebbenden",
 			tensions: "Spanningen",
 		},
+		darkScreen: "Donker scherm",
 		dataPolicy: "Databeleid",
 		fullscreen: "Volledig scherm",
 		intro: "Introductie",
+		lightScreen: "Licht scherm",
 		pause: "Pauzeren",
 		play: "Afspelen",
 		waiting: "De resultaten worden voorbereid.",
@@ -166,9 +186,11 @@ const AUDIENCE_COPY: Record<
 			stakeholders: "Зацікавлені сторони",
 			tensions: "Суперечності",
 		},
+		darkScreen: "Темний екран",
 		dataPolicy: "Політика даних",
 		fullscreen: "На весь екран",
 		intro: "Вступ",
+		lightScreen: "Світлий екран",
 		pause: "Пауза",
 		play: "Відтворити",
 		waiting: "Результати готуються.",
@@ -224,6 +246,11 @@ export const AudienceScreen = ({
 		qrShow: string;
 	} | null>(null);
 	const [qrMinimized, setQrMinimized] = useState(embedded);
+	// The room's own switch, in the footer beside play and fullscreen. It is
+	// known before any data loads, so every state of this screen is lit by it.
+	const [theme, setTheme] = useAudienceTheme();
+	const dark = theme === "dark";
+	const darkTheme = dark ? "dark" : undefined;
 	const openingPresentationRef = useRef<string | null>(null);
 	useEffect(() => {
 		const changed = () =>
@@ -263,20 +290,14 @@ export const AudienceScreen = ({
 					: audience.manifest.opening,
 		);
 	}, [audience]);
-	// The theme the deck is mounted with, per presentation. It only spares a
-	// dark room a light first paint: later changes reach the deck through its
-	// own session read, and must not change this address (that would reload it).
+	// The theme this presentation's deck was mounted with. It only spares a dark
+	// room a light first paint: a later flip is told over the bridge, and must
+	// not change this address (that would reload the deck).
 	const mountedThemeRef = useRef<{ id: string; dark: boolean } | null>(null);
 	const deckSrc = useMemo(() => {
 		if (!urls || !audience) return null;
 		if (mountedThemeRef.current?.id !== audience.id) {
-			const session = audience.bundle.files?.["session.json"] as
-				| { theme?: unknown }
-				| undefined;
-			mountedThemeRef.current = {
-				dark: session?.theme === "dark",
-				id: audience.id,
-			};
+			mountedThemeRef.current = { dark, id: audience.id };
 		}
 		const query = new URLSearchParams({
 			embedded: "1",
@@ -285,7 +306,7 @@ export const AudienceScreen = ({
 			...(mountedThemeRef.current.dark ? { theme: "dark" } : {}),
 		});
 		return `${urls.deck}?${query}`;
-	}, [audience, urls, embedded]);
+	}, [audience, urls, embedded, dark]);
 	const deckOrigin = useMemo(
 		() =>
 			urls
@@ -435,21 +456,6 @@ export const AudienceScreen = ({
 					: "popcorn",
 		};
 	}, [audience]);
-	// The host picks the room's theme in the editor; the projection carries it.
-	// Anything but the word "dark" is the light screen we have always shipped.
-	const sessionTheme = useMemo(() => {
-		if (!audience) return null;
-		const session = audience.bundle.files?.["session.json"] as
-			| { theme?: unknown }
-			| undefined;
-		return session?.theme === "dark" ? "dark" : "light";
-	}, [audience]);
-	// A reload that fails keeps the room on the theme it is already lit with,
-	// so the loader and the error text do not flash a parchment page at it.
-	const lastThemeRef = useRef<"dark" | "light" | null>(null);
-	if (sessionTheme) lastThemeRef.current = sessionTheme;
-	const audienceTheme = sessionTheme ?? lastThemeRef.current;
-	const darkTheme = audienceTheme === "dark" ? "dark" : undefined;
 	const frameDetails = useMemo(() => {
 		const files = audience?.bundle.files ?? {};
 		const session = files["session.json"] as
@@ -525,7 +531,7 @@ export const AudienceScreen = ({
 
 	const postDeckCommand = useCallback(
 		(
-			command: "block" | "visibility" | "opening",
+			command: "block" | "visibility" | "opening" | "theme",
 			extra: Record<string, unknown>,
 		) => {
 			if (!audience) return;
@@ -534,10 +540,12 @@ export const AudienceScreen = ({
 					? deckVisibilityCommand(audience.id, extra.visible === true)
 					: command === "opening"
 						? deckOpeningCommand(audience.id, extra.screen as "intro" | "data")
-						: deckBlockCommand(
-								audience.id,
-								extra.block as Exclude<AudienceBlock, "map">,
-							);
+						: command === "theme"
+							? deckThemeCommand(audience.id, extra.theme as AudienceTheme)
+							: deckBlockCommand(
+									audience.id,
+									extra.block as Exclude<AudienceBlock, "map">,
+								);
 			postDeckMessage(
 				iframeRef.current?.contentWindow ?? null,
 				deckOrigin,
@@ -546,6 +554,11 @@ export const AudienceScreen = ({
 		},
 		[audience, deckOrigin],
 	);
+
+	// The deck paints its own page, so it is told which room it is standing in.
+	useEffect(() => {
+		postDeckCommand("theme", { theme });
+	}, [postDeckCommand, theme]);
 
 	useEffect(() => {
 		if (!activeBlock) return;
@@ -673,7 +686,7 @@ export const AudienceScreen = ({
 			<div
 				className={cn(
 					"flex h-full min-h-[24rem] items-center justify-center p-6",
-					audienceTheme && classes.state,
+					classes.state,
 				)}
 				data-theme={darkTheme}
 				role="alert"
@@ -703,7 +716,7 @@ export const AudienceScreen = ({
 			<div
 				className={cn(
 					"flex h-full min-h-[24rem] items-center justify-center",
-					audienceTheme && classes.state,
+					classes.state,
 				)}
 				data-theme={darkTheme}
 				aria-live="polite"
@@ -729,8 +742,6 @@ export const AudienceScreen = ({
 			)}
 			data-opening={openingOpen || undefined}
 			data-framed={frameDetails.notice ? true : undefined}
-			// The deck iframe reads the same field from the same session and
-			// themes itself; it is never told.
 			data-theme={darkTheme}
 		>
 			{/* The frame goes round the whole screen: its notice is the top edge,
@@ -851,6 +862,8 @@ export const AudienceScreen = ({
 								"invisible pointer-events-none",
 						)}
 						onLoad={() => {
+							// A deck that reloaded is told the room again.
+							postDeckCommand("theme", { theme });
 							postDeckCommand("visibility", {
 								visible:
 									(openingOpen || (activeBlock !== "map" && deckReady)) &&
@@ -886,7 +899,7 @@ export const AudienceScreen = ({
 								active={activeBlock === "map" && !openingOpen}
 								endpoint={urls?.map ?? ""}
 								revision={eventRevision + draftRevision}
-								theme={audienceTheme ?? "light"}
+								theme={theme}
 								waitingLabel={audienceCopy.waiting}
 							/>
 						</div>
@@ -924,6 +937,7 @@ export const AudienceScreen = ({
 										frameDetails.qrLabel || deckChrome?.qrLabel || "QR"
 									}
 									className={classes.qrCode}
+									inverted={dark}
 								/>
 								{(frameDetails.qrLabel || deckChrome?.qrLabel) && (
 									<span className={classes.qrLabel}>
@@ -984,6 +998,26 @@ export const AudienceScreen = ({
 								</ActionIcon>
 							</Tooltip>
 						)}
+						<Tooltip
+							label={dark ? audienceCopy.lightScreen : audienceCopy.darkScreen}
+							classNames={{ tooltip: classes.tooltip }}
+							data-theme={darkTheme}
+						>
+							<ActionIcon
+								className={classes.control}
+								variant="subtle"
+								size="lg"
+								radius="md"
+								aria-label={
+									dark ? audienceCopy.lightScreen : audienceCopy.darkScreen
+								}
+								aria-pressed={dark}
+								onClick={() => setTheme(dark ? "light" : "dark")}
+								data-testid="audience-theme-toggle"
+							>
+								{dark ? <SunIcon size={20} /> : <MoonIcon size={20} />}
+							</ActionIcon>
+						</Tooltip>
 						<Tooltip
 							label={audienceCopy.fullscreen}
 							classNames={{ tooltip: classes.tooltip }}

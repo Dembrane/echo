@@ -34,16 +34,16 @@
   /* graphite on a bright marker: a highlighted phrase is a sticky note, and a
      sticky note does not invert when the lights go down */
   --on-marker: #2D2D2C;
-  /* the QR panel stays a light card with dark modules so a phone can read it
-     off the projector. The same pair carries the other two surfaces that have
-     to stay light in a dark room: the data-policy line drawings and the knob
-     of the shuffle switch. */
-  --qr-card: #F6F4F1;
-  --qr-ink: #2D2D2C;
   /* a filled blue surface keeps the brand blue with parchment on it. Only blue
      used as text or as a thin line lifts on dark. */
   --blue-fill: #4169E1;
   --on-blue: #F6F4F1;
+
+  /* the QR card and the modules drawn on it. The pair turns over with the
+     room; the card's padding is the code's quiet zone, so it always carries
+     the colour the modules sit on. */
+  --qr-card: #F6F4F1;
+  --qr-ink: #2D2D2C;
 
   /* the raised card over the ground: white on parchment, one step up on dark */
   --paper: #FFFFFF;
@@ -488,7 +488,8 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   align-items: center;
   gap: 0.45em;
   padding: 0.7em 0.7em 0.55em;
-  /* pinned light: a phone has to read the modules off the projector */
+  /* the padding is the code's quiet zone, so the card is the colour the
+     modules are drawn on */
   background: var(--qr-card);
   color: var(--qr-ink);
   border: 1px solid var(--hairline);
@@ -501,7 +502,11 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
 .qr-panel.minimised { padding: 0; border: none; background: transparent; box-shadow: none; }
 .qr-image { display: block; width: clamp(96px, 12vw, 200px); height: auto; aspect-ratio: 1; pointer-events: none; }
 .qr-image svg { display: block; width: 100%; height: 100%; }
-/* the label and the fold button sit on the pinned card, so they carry its ink */
+/* the server draws the modules as one stroked path and leaves the field
+   transparent, so the card's ink colours them in either room. The white disc
+   it puts behind the logomark is a circle, not a path, and stays light. */
+.qr-image svg path { stroke: var(--qr-ink); }
+/* the label and the fold button sit on the card, so they carry its ink */
 .qr-label { font-size: 0.72em; color: var(--qr-ink); opacity: 0.62; letter-spacing: 0.01em; white-space: nowrap; }
 .qr-min {
   position: absolute; top: 0.15em; right: 0.25em;
@@ -1330,6 +1335,8 @@ details.theme-block[open] .theme-body { animation: rise-in 0.38s cubic-bezier(0.
   --hairline: #3A3A38;
   --blue: #7C9BFF;            /* blue as text and as a line, lifted to clear */
   --flow-neutral: #7C9BFF;    /* the neutral stakeholder line */
+  --qr-card: #1B1B1A;         /* the QR turns over too: light modules... */
+  --qr-ink: #F6F4F1;          /* ...on the dark card that is their quiet zone */
 }
 
 /* the continue button is filled blue; on dark its hover lifts rather than
@@ -1351,8 +1358,8 @@ details.theme-block[open] .theme-body { animation: rise-in 0.38s cubic-bezier(0.
    a graphite icon, the same object in both rooms */
 :root[data-theme="dark"] .pop-switch { background: #55554F; }
 :root[data-theme="dark"] .pop-switch-thumb {
-  background: var(--qr-card);
-  color: var(--qr-ink);
+  background: #F6F4F1;
+  color: #2D2D2C;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 :root[data-theme="dark"] .pop-shuffle input:checked + .pop-switch .pop-switch-thumb { color: var(--blue-fill); }
@@ -1370,6 +1377,8 @@ details.theme-block[open] .theme-body { animation: rise-in 0.38s cubic-bezier(0.
 :root[data-theme="dark"] .pop-kind-wrap::after { background: #3A3A38; color: var(--graphite); }
 
 /* the data-policy illustrations are line drawings in dark strokes on
-   transparent: they would vanish. They keep their own colours and sit on a
-   light panel instead of being inverted. */
-:root[data-theme="dark"] .data-steps img { background: var(--qr-card); padding: 0.5em; }
+   transparent: they would vanish. Each has a dark twin (light strokes, dark
+   paper, the same fills) and the theme shows one of the pair. */
+.data-steps img.illustration-dark { display: none; }
+:root[data-theme="dark"] .data-steps img.illustration { display: none; }
+:root[data-theme="dark"] .data-steps img.illustration-dark { display: block; }

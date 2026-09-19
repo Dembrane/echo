@@ -464,7 +464,6 @@ def default_settings(*, title: str, client: str | None = None) -> dict[str, Any]
         "public": False,
         "show_qr": False,
         "show_branding": True,
-        "theme": "light",
         "voice": {"presets": [], "note": ""},
         "public_labels": "neutral",
         **{name: normalize_block(None, limits) for name, limits in OPENING_BLOCKS.items()},
@@ -567,9 +566,6 @@ def normalize_settings(raw: dict[str, Any] | None, *, fallback_title: str) -> di
         # "made with dembrane" on the deck. Off is a Changemaker feature, like
         # whitelabel; the API enforces the tier, the setting only records it.
         "show_branding": bool(raw.get("show_branding", True)),
-        # The room's own theme, chosen by the host. Light is the default a
-        # settings file written before this rule falls back to.
-        "theme": "dark" if raw.get("theme") == "dark" else "light",
         "voice": normalize_voice(recipe_settings.get("voice", raw.get("voice"))),
         "recipe_settings": {
             "voice": normalize_voice(recipe_settings.get("voice", raw.get("voice")))
@@ -970,15 +966,7 @@ def merge_settings(
 ) -> dict[str, Any]:
     """Apply the shared partial-settings semantics and normalize the result."""
     merged = dict(current)
-    for key in (
-        "title",
-        "client",
-        "public",
-        "show_qr",
-        "show_branding",
-        "theme",
-        "public_labels",
-    ):
+    for key in ("title", "client", "public", "show_qr", "show_branding", "public_labels"):
         if key in patch and patch[key] is not None:
             merged[key] = patch[key]
     for key in ("voice", "language", *OPENING_BLOCKS):
@@ -1385,9 +1373,6 @@ def build_bundle(
         "client": settings.get("client") or "",
         "date": _session_date(report.get("date_created")),
         "branding": bool(settings.get("show_branding", True)),
-        # The room's theme travels with the bundle, so the draft preview and
-        # the published screen each read the value they were built from.
-        "theme": "dark" if settings.get("theme") == "dark" else "light",
         "intro": settings.get("intro") or {},
         "transcripts": [
             _transcript_entry(conversations[cid], cid, index, show_names)

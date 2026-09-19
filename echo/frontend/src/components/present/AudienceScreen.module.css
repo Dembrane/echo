@@ -258,8 +258,9 @@
 	--ai-hover: color-mix(in srgb, var(--audience-ink) 12%, transparent);
 }
 
-/* A light card in both themes: a phone camera reads dark modules on a light
-   field, so the card relights the tokens its own contents read. */
+/* The card turns over with the room: dark modules on a light card, light
+   modules on a dark field. Its padding is the code's quiet zone, so the card
+   has to carry the same colour the modules are drawn on. */
 .qrPanel {
 	--audience-bg: var(--mantine-color-parchment-6);
 	--audience-ink: var(--mantine-color-graphite-6);
@@ -284,6 +285,15 @@
 	border: 1px solid var(--audience-hairline);
 	background: var(--audience-bg);
 	box-shadow: 0 6px 24px color-mix(in srgb, black 8%, transparent);
+}
+
+.shell[data-theme="dark"] .qrPanel {
+	--audience-bg: #1b1b1a;
+	--audience-ink: #f6f4f1;
+	--audience-accent: #7c9bff;
+	--audience-hairline: #3a3a38;
+
+	box-shadow: 0 6px 24px color-mix(in srgb, black 50%, transparent);
 }
 
 /* Wins over the iframe's full-width utility classes. */

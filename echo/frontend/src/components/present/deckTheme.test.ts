@@ -21,10 +21,15 @@ const darkRoot = styles.slice(
 	styles.indexOf("}", styles.indexOf(':root[data-theme="dark"] {')),
 );
 
-// applySession, on its own: the session's language and theme reaching the page
+// applySession, on its own: the session's language reaching the page
 const applySource = source.slice(
 	source.indexOf('  let shownLang = "en";'),
 	source.indexOf("  // The session's date in the page's language;"),
+);
+// the shell bridge, on its own: the room's switch reaching the page
+const receiver = source.slice(
+	source.indexOf('  addEventListener("message", (event) => {'),
+	source.indexOf("  loadAll().then(() => {"),
 );
 
 function deck(session: Record<string, unknown> | null) {
@@ -58,6 +63,35 @@ function deck(session: Record<string, unknown> | null) {
 	return documentElement;
 }
 
+// The shell's message, with the checks the receiver makes before it reads a
+// command: same parent window, same origin, same presentation.
+function told(theme: unknown) {
+	const documentElement: { dataset: Record<string, string> } = { dataset: {} };
+	let receive: (event: unknown) => void = () => {};
+	const parent = {};
+	runInNewContext(receiver, {
+		addEventListener: (_name: string, callback: typeof receive) => {
+			receive = callback;
+		},
+		document: { documentElement },
+		EMBED: { parentOrigin: "https://host.example", presentationId: "room" },
+		location: { origin: "https://api.example" },
+		parent,
+	});
+	receive({
+		data: {
+			command: "theme",
+			presentationId: "room",
+			source: "dembrane-present-shell",
+			theme,
+			version: 1,
+		},
+		origin: "https://host.example",
+		source: parent,
+	});
+	return documentElement;
+}
+
 describe("deck dark theme", () => {
 	it("redefines the role tokens under :root[data-theme=dark]", () => {
 		expect(darkRoot).toContain(':root[data-theme="dark"]');
@@ -86,15 +120,32 @@ describe("deck dark theme", () => {
 	});
 
 	it("pins the theme-independent tokens in the base :root only", () => {
-		for (const token of ["--on-marker", "--qr-card", "--qr-ink"]) {
+		for (const token of ["--on-marker", "--blue-fill", "--on-blue"]) {
 			expect(baseRoot).toMatch(new RegExp(`${token}:\\s*#`));
 			expect(darkRoot).not.toContain(`${token}:`);
 		}
 		// a highlighted phrase is a sticky note: graphite ink, never inverted
 		expect(baseRoot).toMatch(/--on-marker:\s*#2D2D2C/i);
-		// the QR panel stays a light card with dark modules, so phones can scan it
+	});
+
+	it("turns the QR card over with the room", () => {
+		// the card is the code's quiet zone, so it carries the colour the
+		// modules are drawn on: dark on light, then light on dark
 		expect(baseRoot).toMatch(/--qr-card:\s*#F6F4F1/i);
 		expect(baseRoot).toMatch(/--qr-ink:\s*#2D2D2C/i);
+		expect(darkRoot).toMatch(/--qr-card:\s*#1B1B1A/i);
+		expect(darkRoot).toMatch(/--qr-ink:\s*#F6F4F1/i);
+		// the server draws one stroked path over a transparent field
+		const modules = styles.slice(
+			styles.indexOf(".qr-image svg path {"),
+			styles.indexOf("}", styles.indexOf(".qr-image svg path {")),
+		);
+		expect(modules).toContain("stroke: var(--qr-ink)");
+		const panel = styles.slice(
+			styles.indexOf(".qr-panel {\n"),
+			styles.indexOf("}", styles.indexOf(".qr-panel {\n")),
+		);
+		expect(panel).toContain("background: var(--qr-card)");
 	});
 
 	it("colours the phrase on the marker with the pinned ink", () => {
@@ -112,19 +163,21 @@ describe("deck dark theme", () => {
 		expect(tail).toContain("color: var(--on-marker)");
 	});
 
-	it("takes the theme from the session on every apply", () => {
-		expect(deck({ theme: "dark" }).dataset.theme).toBe("dark");
-		expect(deck({ theme: "light" }).dataset.theme).toBe("light");
+	it("takes the theme from the shell's command", () => {
+		expect(told("dark").dataset.theme).toBe("dark");
+		expect(told("light").dataset.theme).toBe("light");
 	});
 
-	it("falls back to the light room for a missing or junk theme", () => {
-		expect(deck({}).dataset.theme).toBe("light");
-		expect(deck({ theme: "DARK" }).dataset.theme).toBe("light");
-		expect(deck({ theme: "midnight" }).dataset.theme).toBe("light");
-		expect(deck({ theme: true as unknown as string }).dataset.theme).toBe("light");
+	it("leaves the room lit as it is for a theme it cannot read", () => {
+		expect(told("DARK").dataset.theme).toBeUndefined();
+		expect(told("midnight").dataset.theme).toBeUndefined();
+		expect(told(true).dataset.theme).toBeUndefined();
+		expect(told(undefined).dataset.theme).toBeUndefined();
 	});
 
-	it("leaves the page alone when there is no session yet", () => {
+	it("does not read a theme off the session", () => {
+		expect(deck({ theme: "dark" }).dataset.theme).toBeUndefined();
+		expect(deck({}).dataset.theme).toBeUndefined();
 		expect(deck(null).dataset.theme).toBeUndefined();
 	});
 });

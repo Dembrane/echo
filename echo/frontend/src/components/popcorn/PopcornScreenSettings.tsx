@@ -1,16 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Badge,
-	Group,
-	Input,
-	Paper,
-	SegmentedControl,
-	Stack,
-	Switch,
-	Text,
-	Title,
-} from "@mantine/core";
+import { Badge, Group, Paper, Stack, Switch, Text, Title } from "@mantine/core";
 import {
 	type PopcornDetail,
 	usePopcornSettingsMutation,
@@ -87,28 +77,6 @@ export function PopcornScreenSettings({
 						/>
 					</>
 				)}
-				<Input.Wrapper
-					size={FIELD_SIZE}
-					label={t`Screen theme`}
-					description={t`Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it.`}
-					inputWrapperOrder={["label", "input", "description"]}
-				>
-					<div>
-						<SegmentedControl
-							size={FIELD_SIZE}
-							value={popcorn.settings.theme ?? "light"}
-							disabled={busy}
-							data={[
-								{ label: t`Light`, value: "light" },
-								{ label: t`Dark`, value: "dark" },
-							]}
-							onChange={(value) =>
-								settings.mutate({ theme: value as "light" | "dark" })
-							}
-							{...testId("popcorn-theme-control")}
-						/>
-					</div>
-				</Input.Wrapper>
 				<Switch
 					size={FIELD_SIZE}
 					label={t`QR code`}
