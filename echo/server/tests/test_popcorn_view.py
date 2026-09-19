@@ -4,7 +4,7 @@ import re
 import json
 from pathlib import Path
 
-from dembrane.popcorn.view import render_flow_page, render_popcorn_page
+from dembrane.popcorn.view import ILLUSTRATIONS, render_flow_page, render_popcorn_page
 
 
 def test_page_is_self_contained_and_carries_embed_config() -> None:
@@ -87,3 +87,16 @@ def test_present_shell_can_reopen_named_opening_screens() -> None:
     assert 'type: "opening"' in html
     assert "notifyOpeningState(true, screen.kind)" in html
     assert "notifyOpeningState(false)" in html
+
+
+def test_every_drawing_has_a_dark_twin_the_deck_can_ask_for() -> None:
+    light = {name for name in ILLUSTRATIONS if not name.endswith("-dark")}
+    assert light == {"scan", "talk-anon", "talk-public", "understand"}
+    assert {f"{name}-dark" for name in light} == set(ILLUSTRATIONS) - light
+    for path in ILLUSTRATIONS.values():
+        assert path.is_file(), path
+    # The deck asks for both of a pair by these names.
+    static = Path(__file__).parents[1] / "dembrane" / "popcorn" / "static"
+    app = (static / "app.js").read_text(encoding="utf-8")
+    assert 'src="illustrations/${name}${twin}.webp"' in app
+
