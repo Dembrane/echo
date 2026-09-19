@@ -10,7 +10,6 @@ import { PresentResultsPanel } from "./PresentResultsPanel";
 
 const offsets: number[] = [];
 vi.mock("@/components/analysis", () => ({
-	EvidenceInspectionDrawer: () => null,
 	useAnalysisObjects: (
 		_project: string,
 		_type: undefined,

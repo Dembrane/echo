@@ -10,12 +10,8 @@ import {
 	Text,
 } from "@mantine/core";
 import { useState } from "react";
-import { useSearchParams } from "react-router";
-import {
-	type AnalysisObject,
-	EvidenceInspectionDrawer,
-	useAnalysisObjects,
-} from "@/components/analysis";
+import { useParams, useSearchParams } from "react-router";
+import { type AnalysisObject, useAnalysisObjects } from "@/components/analysis";
 import { ResultRowActions } from "@/components/analysis/ResultRowActions";
 import { usePopcornSettingsMutation } from "@/components/popcorn/hooks";
 import {
@@ -24,6 +20,7 @@ import {
 	type PresentationBlock,
 } from "@/components/present/blocks";
 import type { Presentation } from "@/components/present/hooks";
+import { ResultItem } from "@/components/results";
 import { testId } from "@/lib/testUtils";
 import { blockLabel } from "./blockLabel";
 import classes from "./PresentResultsPanel.module.css";
@@ -56,6 +53,7 @@ export function PresentResultsPanel({
 	onClose: () => void;
 	className?: string;
 }) {
+	const { workspaceId } = useParams<{ workspaceId?: string }>();
 	const [params, setParams] = useSearchParams();
 	const resultPage = Math.max(0, Number(params.get("resultsPage")) || 0);
 	const results = useAnalysisObjects(
@@ -65,6 +63,8 @@ export function PresentResultsPanel({
 		resultPage * 100,
 	);
 	const [inspected, setInspected] = useState<AnalysisObject | null>(null);
+	// The way to the full picture of a finding, kept so the host can come back.
+	const analysisPath = `${workspaceId ? `/w/${workspaceId}` : ""}/projects/${projectId}/analysis?returnTo=present&section=results`;
 	const save = usePopcornSettingsMutation(projectId, presentation.id);
 	const hidden = presentation.settings.presentation?.hidden_items ?? [];
 	const selected = orderedBlocks([
@@ -104,43 +104,58 @@ export function PresentResultsPanel({
 						const label = item.label ?? item.objectId;
 						const block = BLOCK_BY_TYPE[item.type];
 						return (
-							<Group
-								key={item.objectId}
-								className={`${classes.row} ${away ? classes.rowHidden : ""}`}
-								gap="sm"
-								justify="space-between"
-								wrap="nowrap"
-								{...testId(`present-result-${item.objectId}`)}
-							>
-								<Group gap="xs" wrap="nowrap" className={classes.rowLabel}>
-									<Text size="sm" truncate title={label}>
-										{label}
-									</Text>
-									{block && (
-										<Badge
-											size="xs"
-											variant="outline"
-											style={{ flexShrink: 0 }}
-										>
-											{blockLabel(block)}
-										</Badge>
-									)}
+							<Stack gap={0} key={item.objectId}>
+								<Group
+									className={`${classes.row} ${away ? classes.rowHidden : ""}`}
+									gap="sm"
+									justify="space-between"
+									wrap="nowrap"
+									{...testId(`present-result-${item.objectId}`)}
+								>
+									<Group gap="xs" wrap="nowrap" className={classes.rowLabel}>
+										<Text size="sm" truncate title={label}>
+											{label}
+										</Text>
+										{block && (
+											<Badge
+												size="xs"
+												variant="outline"
+												style={{ flexShrink: 0 }}
+											>
+												{blockLabel(block)}
+											</Badge>
+										)}
+									</Group>
+									<ResultRowActions
+										hidden={away}
+										onEdit={() =>
+											setInspected((current) =>
+												current?.objectId === item.objectId ? null : item,
+											)
+										}
+										onToggleHidden={() =>
+											save.mutate({
+												presentation: {
+													hidden_items: away
+														? hidden.filter((id) => id !== item.objectId)
+														: [...hidden, item.objectId],
+												},
+											})
+										}
+										testIdPrefix={`present-result-${item.objectId}`}
+									/>
 								</Group>
-								<ResultRowActions
-									hidden={away}
-									onEdit={() => setInspected(item)}
-									onToggleHidden={() =>
-										save.mutate({
-											presentation: {
-												hidden_items: away
-													? hidden.filter((id) => id !== item.objectId)
-													: [...hidden, item.objectId],
-											},
-										})
-									}
-									testIdPrefix={`present-result-${item.objectId}`}
-								/>
-							</Group>
+								{/* The finding opens where it stands, never over the panel. */}
+								{inspected?.objectId === item.objectId && (
+									<ResultItem
+										projectId={projectId}
+										item={item}
+										canEdit={Boolean(results.data?.canEdit)}
+										analysisHref={analysisPath}
+										onClose={() => setInspected(null)}
+									/>
+								)}
+							</Stack>
 						);
 					})}
 			</Stack>
@@ -180,13 +195,6 @@ export function PresentResultsPanel({
 					/>
 				)}
 			</Group>
-			<EvidenceInspectionDrawer
-				projectId={projectId}
-				snapshotId={results.data?.snapshotId}
-				item={inspected}
-				opened={!!inspected}
-				onClose={() => setInspected(null)}
-			/>
 		</Stack>
 	);
 }

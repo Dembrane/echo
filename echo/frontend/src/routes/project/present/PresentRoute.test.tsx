@@ -31,7 +31,6 @@ vi.mock("@/hooks/useServerEvents", () => ({ useServerEvents: vi.fn() }));
 vi.mock("@/hooks/useI18nNavigate", () => ({ useI18nNavigate: () => vi.fn() }));
 const results = vi.fn(() => ({}) as Record<string, unknown>);
 vi.mock("@/components/analysis", () => ({
-	EvidenceInspectionDrawer: () => null,
 	useAnalysisObjects: () => results(),
 }));
 // The preview scales the room's screen to the column it sits in, so the column

@@ -532,6 +532,10 @@ msgstr "{conversationCount} gesprekken • Bewerkt {0}"
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} geselecteerd"
 
+#: src/components/results/ResultItem.tsx:63
+msgid "{conversations, plural, one {# conversation} other {# conversations}}"
+msgstr "{conversations, plural, one {# gesprek} other {# gesprekken}}"
+
 #: src/components/popcorn/PopcornStart.tsx:66
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr ""
@@ -637,6 +641,10 @@ msgstr "{pickedCount, plural, one {Gericht op # gesprek} other {Gericht op # ges
 #: src/routes/project/chat/NewChatRoute.tsx:603
 msgid "{pickedCount, plural, one {Using # conversation} other {Using # conversations}}"
 msgstr "{pickedCount, plural, one {# gesprek in gebruik} other {# gesprekken in gebruik}}"
+
+#: src/components/results/ResultItem.tsx:62
+msgid "{quotes, plural, one {# quote} other {# quotes}}"
+msgstr "{quotes, plural, one {# citaat} other {# citaten}}"
 
 #: src/components/report/ReportRenderer.tsx:81
 msgid "{readingNow} reading now"
@@ -839,6 +847,10 @@ msgstr "Bij een downgrade gelden de downgrade-effecten uit de matrix en krijgen 
 msgid "A downgrade limits features immediately."
 msgstr "Een downgrade beperkt functies direct."
 
+#: src/components/results/ResultItem.tsx:237
+msgid "A few more words, so someone reading later understands."
+msgstr "Nog een paar woorden, zodat iemand die dit later leest het begrijpt."
+
 #: src/components/canvas/CanvasFrame.tsx:111
 msgid "A first version will appear here when it is ready."
 msgstr "Zodra de eerste versie klaar is, verschijnt die hier."
@@ -850,6 +862,10 @@ msgstr "Een vriendelijke naam om dit webhook te identificeren"
 #: src/components/release/releaseHistory.ts:480
 msgid "A Help us translate link invites community translations. Full Italian interface translation is not included."
 msgstr "Een link Help ons vertalen nodigt uit om mee te vertalen. Een volledige Italiaanse interfacevertaling is niet inbegrepen."
+
+#: src/components/results/ResultItem.tsx:296
+msgid "A host"
+msgstr "Een host"
 
 #: src/components/project/ProjectExperimentalSection.tsx:52
 msgid "A live page in your Library, and live slides for the room, both made from your conversations while a session runs. Early beta: they may change or be removed."
@@ -932,6 +948,10 @@ msgstr "Een schakelaar zonder tekst toont niets op het scherm."
 #: src/components/popcorn/PopcornOpeningSettings.tsx:121
 msgid "A title and subtitle before the countdown."
 msgstr "Een titel en ondertitel voor het aftellen."
+
+#: src/components/results/ResultItem.tsx:174
+msgid "A typo"
+msgstr "Een typfout"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:48
 msgid "a workspace"
@@ -1401,7 +1421,7 @@ msgstr "Geavanceerd"
 msgid "Advanced (Tips and best practices)"
 msgstr "Geavanceerd (Tips en best practices)"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:526
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:531
 msgid "Advanced details"
 msgstr ""
 
@@ -1413,6 +1433,10 @@ msgstr "Geavanceerde instellingen"
 #: src/components/map/panels/shared.tsx:72
 msgid "Affected by"
 msgstr ""
+
+#: src/components/results/ResultItem.tsx:51
+msgid "Against"
+msgstr "Tegen"
 
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:79
 #: src/components/agent-access/AgentGrantsCard.tsx:85
@@ -1464,7 +1488,7 @@ msgstr "Alle collecties"
 msgid "All Conversations"
 msgstr "Alle gesprekken"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:465
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:470
 msgid "all eligible project conversations"
 msgstr ""
 
@@ -1604,6 +1628,10 @@ msgstr ""
 msgid "An assembly."
 msgstr "Een burgerberaad."
 
+#: src/components/results/ResultItem.tsx:184
+msgid "An earlier wording restored"
+msgstr "Een eerdere formulering hersteld"
+
 #. placeholder {0}: participantCount !== undefined ? participantCount : t`loading...`
 #. placeholder {1}: participantCount === 1 ? "" : "s"
 #: src/routes/project/report/ProjectReportRoute.tsx:1446
@@ -1622,7 +1650,7 @@ msgstr "Er is een fout opgetreden."
 msgid "An event or a workshop."
 msgstr "Een evenement of workshop."
 
-#: src/components/map/panels/NodeDetailCard.tsx:182
+#: src/components/map/panels/NodeDetailCard.tsx:181
 msgid "An object outside this view"
 msgstr ""
 
@@ -1634,12 +1662,12 @@ msgstr "Een optioneel tweede scherm na de disclaimer."
 msgid "An unexpected error occurred. Reloading or returning home usually helps."
 msgstr "Er ging iets onverwachts mis. Opnieuw laden of teruggaan naar home helpt meestal."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:864
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:869
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:146
 msgid "Analysis"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:841
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:846
 msgid "Analysis | dembrane"
 msgstr ""
 
@@ -1887,8 +1915,7 @@ msgid "Are you sure you want to remove your custom logo? The default dembrane lo
 msgstr "Weet je zeker dat je je aangepaste logo wilt verwijderen? Het standaard dembrane-logo wordt in plaats daarvan gebruikt."
 
 #: src/components/map/attributes.ts:87
-#: src/components/map/panels/NodeDetailCard.tsx:449
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:197
+#: src/components/map/panels/NodeDetailCard.tsx:419
 msgid "Argument"
 msgstr "Argument"
 
@@ -1909,7 +1936,7 @@ msgstr ""
 msgid "Arguments"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:159
+#: src/components/map/panels/SpotlightPanel.tsx:158
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr ""
 
@@ -2454,6 +2481,7 @@ msgstr "Kun je ons meer vertellen?"
 #: src/components/training/TrainingRowActions.tsx:298
 #: src/components/training/RequestTrainingModal.tsx:97
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
+#: src/components/results/ResultItem.tsx:263
 #: src/components/project/ProjectSharingModal.tsx:317
 #: src/components/project/ProjectSharingModal.tsx:498
 #: src/components/project/ProjectDangerZone.tsx:149
@@ -2465,7 +2493,7 @@ msgstr "Kun je ons meer vertellen?"
 #: src/components/organisation/CreateOrganisationModal.tsx:204
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:284
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:366
-#: src/components/map/panels/SpotlightPanel.tsx:202
+#: src/components/map/panels/SpotlightPanel.tsx:201
 #: src/components/invite/InviteModal.tsx:762
 #: src/components/goal/ProjectGoalSection.tsx:143
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
@@ -2648,6 +2676,10 @@ msgstr ""
 msgid "Change role"
 msgstr "Rol wijzigen"
 
+#: src/components/results/ResultItem.tsx:582
+msgid "Change the words"
+msgstr "De woorden aanpassen"
+
 #: src/routes/admin/AdminSettingsRoute.tsx:626
 #: src/routes/admin/AdminSettingsRoute.tsx:668
 #: src/routes/admin/AdminSettingsRoute.tsx:670
@@ -2821,16 +2853,16 @@ msgstr "Je sessie wordt gecontroleerd."
 
 #: src/components/map/attributes.ts:310
 #: src/components/map/panels/shared.tsx:132
-#: src/components/map/panels/SpotlightPanel.tsx:193
+#: src/components/map/panels/SpotlightPanel.tsx:192
 msgid "Checking…"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:543
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:748
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:548
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:753
 msgid "Checks"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:499
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:504
 msgid "Choose a conversation"
 msgstr ""
 
@@ -2879,8 +2911,8 @@ msgid "City"
 msgstr "Plaats"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:198
-msgid "Claim"
-msgstr ""
+#~ msgid "Claim"
+#~ msgstr ""
 
 #: src/components/map/panels/Legend.tsx:26
 #~ msgid "Claim · checking…"
@@ -2931,6 +2963,10 @@ msgstr "{cleared} van {total} gesprekken gewist"
 msgid "Clearer sources in chat"
 msgstr "Duidelijkere bronnen in chat"
 
+#: src/components/results/ResultItem.tsx:176
+msgid "Clearer words, same meaning"
+msgstr "Duidelijker gezegd, zelfde betekenis"
+
 #: src/components/release/releaseHistory.ts:242
 msgid "Clearer workspace access for admins"
 msgstr "Duidelijkere workspacetoegang voor beheerders"
@@ -2943,7 +2979,7 @@ msgstr "Klik op \"Upload bestanden\" wanneer je klaar bent om de upload te start
 msgid "Click a conversation tag to add it to your filters."
 msgstr "Klik op een gesprekstag om die aan je filters toe te voegen."
 
-#: src/components/map/panels/SpotlightPanel.tsx:270
+#: src/components/map/panels/SpotlightPanel.tsx:269
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr ""
 
@@ -2997,6 +3033,8 @@ msgstr "Project klonen"
 msgid "Clone Project"
 msgstr "Project klonen"
 
+#: src/components/results/ResultItem.tsx:614
+#: src/components/results/ResultItem.tsx:624
 #: src/components/dropzone/UploadConversationDropzone.tsx:872
 #: src/components/conversation/ConversationLinks.tsx:110
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3012,7 +3050,7 @@ msgstr "Sluiten"
 msgid "Close and go to dembrane"
 msgstr "Sluiten en naar dembrane"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:715
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:720
 msgid "Close details"
 msgstr ""
 
@@ -3050,11 +3088,11 @@ msgstr ""
 #~ msgid "Color graph by fact-check"
 #~ msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:137
+#: src/components/map/panels/SpotlightPanel.tsx:136
 msgid "Color graph by factual status"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:116
+#: src/components/map/panels/SpotlightPanel.tsx:115
 msgid "Color graph by valence"
 msgstr ""
 
@@ -3074,7 +3112,7 @@ msgstr ""
 #. placeholder {0}: consolidation.memberCount
 #: src/components/map/renderers/MstGraph.tsx:1062
 #: src/components/map/renderers/LocalMapGraph.tsx:1037
-#: src/components/map/panels/NodeDetailCard.tsx:122
+#: src/components/map/panels/NodeDetailCard.tsx:121
 msgid "Combined from {0} arguments"
 msgstr "Samengevoegd uit {0} argumenten"
 
@@ -3602,7 +3640,7 @@ msgstr "Feedback niet opgeslagen"
 msgid "Could not save tags"
 msgstr "Kon tags niet opslaan"
 
-#: src/components/analysis/hooks/index.ts:257
+#: src/components/analysis/hooks/index.ts:264
 msgid "Could not save the change. Try again."
 msgstr ""
 
@@ -3626,7 +3664,7 @@ msgstr "De uitnodigings-e-mail kon niet worden verstuurd. Controleer de e-mailco
 msgid "Could not send the report. Try again"
 msgstr "Je melding kon niet worden verzonden. Probeer het opnieuw"
 
-#: src/components/analysis/hooks/index.ts:335
+#: src/components/analysis/hooks/index.ts:342
 msgid "Could not start this run. Try again."
 msgstr ""
 
@@ -3634,7 +3672,7 @@ msgstr ""
 msgid "Could not stop live"
 msgstr ""
 
-#: src/components/analysis/hooks/index.ts:354
+#: src/components/analysis/hooks/index.ts:361
 msgid "Could not stop this run. Try again."
 msgstr ""
 
@@ -3812,7 +3850,7 @@ msgstr "Maak rapport"
 msgid "Create template"
 msgstr "Template aanmaken"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:370
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:375
 msgid "Create the presentation settings to choose how Popcorn phrases should sound. This does not prepare any results."
 msgstr ""
 
@@ -3825,7 +3863,7 @@ msgstr "Maak view aan"
 msgid "Create View"
 msgstr "Maak view aan"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:381
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:386
 msgid "Create voice settings"
 msgstr ""
 
@@ -4045,7 +4083,7 @@ msgstr ""
 msgid "Deep Dive"
 msgstr "Deep Dive"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:243
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:248
 #: src/routes/admin/AdminSettingsRoute.tsx:3161
 #: src/routes/admin/AdminSettingsRoute.tsx:3181
 #: src/components/project/ProjectPortalEditor.tsx:825
@@ -4175,6 +4213,7 @@ msgstr "Verwijderd succesvol"
 msgid "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 msgstr "Een organisatie verwijderen doen we samen met support. Mail <0>support@dembrane.com</0> en we lopen het met je door. Alle werkruimtes moeten eerst leeg zijn en verwijderd."
 
+#: src/components/results/ResultItem.tsx:296
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:212
 #: src/components/methodology/ProjectMethodologySection.tsx:128
 msgid "dembrane"
@@ -4676,8 +4715,8 @@ msgid "Edit reports directly in dembrane."
 msgstr "Bewerk rapporten direct in dembrane."
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:180
-msgid "Edit result"
-msgstr ""
+#~ msgid "Edit result"
+#~ msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/report/ReportEditor.tsx:127
@@ -4699,6 +4738,10 @@ msgstr ""
 #: src/components/release/releaseHistory.ts:338
 msgid "Edit your display name and upload, crop or remove your profile picture."
 msgstr "Bewerk je weergavenaam en upload, snijd bij of verwijder je profielfoto."
+
+#: src/components/results/ResultItem.tsx:154
+msgid "edited"
+msgstr "aangepast"
 
 #. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
 #: src/components/project/ProjectListItem.tsx:252
@@ -5015,19 +5058,19 @@ msgstr "Iedereen op de lijst is getraind."
 msgid "participant.alert.microphone.access.success"
 msgstr "Alles lijkt goed – je kunt doorgaan."
 
-#: src/components/map/panels/NodeDetailCard.tsx:347
+#: src/components/map/panels/NodeDetailCard.tsx:322
 msgid "Evidence"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:439
-msgid "Evidence and history"
-msgstr ""
+#~ msgid "Evidence and history"
+#~ msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:282
-msgid "Evidence level"
-msgstr ""
+#~ msgid "Evidence level"
+#~ msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:353
+#: src/components/map/panels/NodeDetailCard.tsx:328
 msgid "Evidenced connections"
 msgstr ""
 
@@ -5165,7 +5208,7 @@ msgstr ""
 msgid "Fact check all ({pendingClaimCount})"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:179
+#: src/components/map/panels/SpotlightPanel.tsx:178
 msgid "Fact check this claim"
 msgstr ""
 
@@ -5177,7 +5220,7 @@ msgstr ""
 msgid "Factual status"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:168
+#: src/components/map/panels/SpotlightPanel.tsx:167
 msgid "Factual status does not apply to this object."
 msgstr ""
 
@@ -5506,8 +5549,8 @@ msgid "First name"
 msgstr "Voornaam"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:235
-msgid "First pole"
-msgstr ""
+#~ msgid "First pole"
+#~ msgstr ""
 
 #: src/routes/project/library/LibraryRoute.tsx:72
 #: src/components/methodology/ProjectMethodologySection.tsx:86
@@ -5553,6 +5596,10 @@ msgstr "Titel van het vervolgscherm"
 #: src/components/settings/FontSizeSettingsCard.tsx:68
 msgid "Font Size"
 msgstr "Lettergrootte"
+
+#: src/components/results/ResultItem.tsx:50
+msgid "For"
+msgstr "Voor"
 
 #. placeholder {0}: targetOrganisation.name
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:428
@@ -5985,7 +6032,7 @@ msgstr "Hoi {firstName}"
 msgid "Hidden"
 msgstr "Verborgen"
 
-#: src/components/map/panels/NodeDetailCard.tsx:214
+#: src/components/map/panels/NodeDetailCard.tsx:213
 msgid "Hidden by the Objects filter"
 msgstr ""
 
@@ -6054,9 +6101,13 @@ msgstr "Hoogtepunt"
 msgid "Highlight specific Concept"
 msgstr "Specifiek Concept markeren"
 
+#: src/components/results/ResultItem.tsx:467
+msgid "History"
+msgstr "Geschiedenis"
+
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:511
-msgid "History could not be loaded."
-msgstr ""
+#~ msgid "History could not be loaded."
+#~ msgstr ""
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:353
 msgid "History note"
@@ -6244,9 +6295,10 @@ msgstr "Beeldstijl"
 msgid "Images must be under {MAX_FILE_MB}MB"
 msgstr "Afbeeldingen mogen maximaal {MAX_FILE_MB}MB zijn"
 
+#: src/components/results/ResultItem.tsx:502
 #: src/components/map/panels/shared.tsx:110
 msgid "Imported"
-msgstr ""
+msgstr "Geïmporteerd"
 
 #: src/components/chat/AgenticChatPanel.tsx:1870
 msgid "Improve my setup"
@@ -6295,11 +6347,11 @@ msgstr ""
 msgid "Incorrect or made up"
 msgstr "Onjuist of verzonnen"
 
+#: src/components/results/ResultItem.tsx:57
 #: src/components/map/panels/shared.tsx:85
 #: src/components/map/panels/shared.tsx:96
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:287
 msgid "Inferred"
-msgstr ""
+msgstr "Afgeleid"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:935
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:949
@@ -6314,11 +6366,11 @@ msgstr "Begin"
 msgid "Innovator or higher"
 msgstr "Innovator of hoger"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:730
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:735
 msgid "Inputs"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:490
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:495
 msgid "Inputs and instructions"
 msgstr ""
 
@@ -6336,7 +6388,7 @@ msgstr "Inzichten"
 #~ msgid "Inspect evidence"
 #~ msgstr ""
 
-#: src/components/analysis/AnalysisResultsList.tsx:47
+#: src/components/analysis/AnalysisResultsList.tsx:54
 msgid "Inspect evidence for {label}"
 msgstr ""
 
@@ -6506,8 +6558,8 @@ msgid "Invoicing"
 msgstr "Facturatie"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:292
-msgid "Invoked by"
-msgstr ""
+#~ msgid "Invoked by"
+#~ msgstr ""
 
 #: src/components/settings/AuditLogsCard.tsx:289
 msgid "IP Address"
@@ -6793,8 +6845,12 @@ msgid "Kickback %"
 msgstr "Kickback %"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:194
-msgid "Kind"
-msgstr ""
+#~ msgid "Kind"
+#~ msgstr ""
+
+#: src/components/results/ResultItem.tsx:186
+msgid "Kind of change not recorded"
+msgstr "Soort wijziging niet vastgelegd"
 
 #: src/routes/project/present/PresentRoute.tsx:210
 #: src/features/sidebar/shell/UserMenu.tsx:119
@@ -6984,8 +7040,8 @@ msgid "Likely true"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:550
-msgid "Lineage could not be loaded."
-msgstr ""
+#~ msgid "Lineage could not be loaded."
+#~ msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:65
 msgid "Link"
@@ -7117,8 +7173,8 @@ msgid "Living canvas and popcorn"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:318
-msgid "Load latest revision"
-msgstr ""
+#~ msgid "Load latest revision"
+#~ msgstr ""
 
 #: src/components/billing/BillingManager.tsx:839
 msgid "Load more"
@@ -7463,7 +7519,7 @@ msgstr "Training als voltooid markeren"
 msgid "Marks {orgName} as a partner. Its workspaces self-identify internal vs external client use on creation."
 msgstr "Markeert {orgName} als partner. De werkruimtes geven bij het aanmaken zelf aan of ze voor intern of extern klantgebruik zijn."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:253
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:258
 msgid "max {maximum}"
 msgstr ""
 
@@ -7597,7 +7653,7 @@ msgstr "Methodologie bijgewerkt"
 msgid "Microphone access is still denied. Please check your settings and try again."
 msgstr "Toegang tot de microfoon wordt nog steeds geweigerd. Controleer uw instellingen en probeer het opnieuw."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:248
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:253
 msgid "min {minimum}"
 msgstr ""
 
@@ -7766,7 +7822,6 @@ msgstr "Mijn sjablonen"
 #: src/components/common/RedactedText.tsx:42
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:131
 #: src/components/chat/CanvasSuggestionCard.tsx:88
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:265
 msgid "Name"
 msgstr "Naam"
 
@@ -7816,10 +7871,10 @@ msgstr "naam@voorbeeld.com"
 msgid "name@example.com, name2@example.com"
 msgstr "naam@voorbeeld.com, naam2@voorbeeld.com"
 
+#: src/components/results/ResultItem.tsx:56
 #: src/components/map/panels/shared.tsx:94
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:286
 msgid "Named by participants"
-msgstr ""
+msgstr "Genoemd door deelnemers"
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:163
 msgid "Named ways of working your team can reuse."
@@ -7830,8 +7885,8 @@ msgid "Names on the legend"
 msgstr ""
 
 #: src/components/map/panels/NodeDetailCard.tsx:297
-msgid "Narrative"
-msgstr ""
+#~ msgid "Narrative"
+#~ msgstr ""
 
 #: src/components/chat/templates.ts:89
 msgid "Narratives (English)"
@@ -7847,7 +7902,6 @@ msgstr "Vereist aandacht"
 
 #: src/components/map/attributes.ts:273
 #: src/components/map/panels/shared.tsx:28
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:208
 msgid "Negative"
 msgstr ""
 
@@ -7858,7 +7912,6 @@ msgstr ""
 
 #: src/components/map/attributes.ts:274
 #: src/components/map/panels/shared.tsx:30
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:209
 msgid "Neutral"
 msgstr ""
 
@@ -7982,7 +8035,7 @@ msgstr "Volgende"
 msgid "participant.verify.instructions.button.next"
 msgstr "Volgende"
 
-#: src/components/map/panels/ShowcasePanel.tsx:142
+#: src/components/map/panels/ShowcasePanel.tsx:141
 msgid "Next change in <0>{remainingSeconds}s</0>"
 msgstr ""
 
@@ -8082,7 +8135,7 @@ msgstr "Geen collecties gevonden"
 msgid "No colour"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:224
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:229
 msgid "No configurable parameters."
 msgstr ""
 
@@ -8132,7 +8185,7 @@ msgstr ""
 msgid "No default set (client-managed applies)"
 msgstr "Geen standaard ingesteld (door client beheerd geldt)"
 
-#: src/components/map/panels/NodeDetailCard.tsx:357
+#: src/components/map/panels/NodeDetailCard.tsx:332
 msgid "No evidenced connections."
 msgstr ""
 
@@ -8160,12 +8213,16 @@ msgstr "Geen verdere kosten"
 msgid "No goal yet. Set one here, or let the assistant interview you in chat."
 msgstr "Nog geen doel. Stel er hier een in, of laat de assistent je erover interviewen in de chat."
 
+#: src/components/results/ResultItem.tsx:284
+msgid "No history yet."
+msgstr "Nog geen geschiedenis."
+
 #: src/components/invite/InviteModal.tsx:456
 msgid "No invites went out. Check the list below."
 msgstr "Er zijn geen uitnodigingen verstuurd. Bekijk de lijst hieronder."
 
-#: src/components/map/panels/NodeDetailCard.tsx:312
-#: src/components/map/panels/NodeDetailCard.tsx:321
+#: src/components/map/panels/NodeDetailCard.tsx:293
+#: src/components/map/panels/NodeDetailCard.tsx:302
 msgid "No linked arguments."
 msgstr ""
 
@@ -8216,7 +8273,7 @@ msgstr "Noch geen nieuwe feedback gedetecteerd. Ga door met je gesprek en probee
 msgid "No new invites needed. Check the list below."
 msgstr "Geen nieuwe uitnodigingen nodig. Bekijk de lijst hieronder."
 
-#: src/components/map/panels/NodeDetailCard.tsx:418
+#: src/components/map/panels/NodeDetailCard.tsx:392
 msgid "No node selected."
 msgstr ""
 
@@ -8310,7 +8367,7 @@ msgstr "Geen projecten gevonden."
 msgid "No recent activity"
 msgstr "Geen recente activiteit"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:553
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:558
 msgid "No recipe checks declared."
 msgstr ""
 
@@ -8334,7 +8391,7 @@ msgstr "Nog geen rapporten"
 msgid "No results"
 msgstr "Geen resultaten"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:799
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:804
 msgid "No runs yet"
 msgstr ""
 
@@ -8343,8 +8400,8 @@ msgid "No selectable conversations"
 msgstr "Geen selecteerbare gesprekken"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:474
-msgid "No source quote was recorded for this result."
-msgstr ""
+#~ msgid "No source quote was recorded for this result."
+#~ msgstr ""
 
 #: src/components/map/attributes.ts:112
 msgid "No stakeholders saved yet."
@@ -8480,7 +8537,11 @@ msgstr "Niet beschikbaar"
 msgid "Not enabled by an admin of {0}"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:216
+#: src/components/results/ResultItem.tsx:572
+msgid "Not in this presentation"
+msgstr "Niet in deze presentatie"
+
+#: src/components/map/panels/NodeDetailCard.tsx:215
 msgid "Not in this view"
 msgstr ""
 
@@ -8501,8 +8562,6 @@ msgid "Not placed on the map"
 msgstr ""
 
 #: src/components/map/panels/shared.tsx:98
-#: src/components/map/panels/NodeDetailCard.tsx:342
-#: src/components/map/panels/NodeDetailCard.tsx:345
 msgid "Not recorded"
 msgstr ""
 
@@ -8799,7 +8858,6 @@ msgstr "Open chatdocumentatie"
 #: src/components/conversation/ProjectConversationsPanel.tsx:406
 #: src/components/conversation/ProjectConversationsPanel.tsx:410
 #: src/components/conversation/ConversationDrilldownModal.tsx:237
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:496
 msgid "Open conversation"
 msgstr "Gesprek openen"
 
@@ -8820,8 +8878,9 @@ msgid "Open host guide"
 msgstr "Hostgids openen"
 
 #: src/routes/project/present/PresentRoute.tsx:861
+#: src/components/results/ResultItem.tsx:600
 msgid "Open in Analysis"
-msgstr ""
+msgstr "Openen in Analyse"
 
 #: src/components/chat/CanvasSuggestionCard.tsx:230
 msgid "Open in library"
@@ -9106,7 +9165,7 @@ msgstr "resultaten"
 msgid "Outcomes"
 msgstr "Resultaten"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:733
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:738
 msgid "Output objects"
 msgstr ""
 
@@ -9432,8 +9491,8 @@ msgid "Phone"
 msgstr "Telefoon"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:218
-msgid "Phrase"
-msgstr ""
+#~ msgid "Phrase"
+#~ msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:839
 msgid "phrases"
@@ -9604,12 +9663,12 @@ msgid "PNG, JPEG, or WebP. Will be cropped to a circle."
 msgstr "PNG, JPEG of WebP. Wordt bijgesneden tot een cirkel."
 
 #: src/components/map/panels/NodeDetailCard.tsx:290
-msgid "Pole A"
-msgstr ""
+#~ msgid "Pole A"
+#~ msgstr ""
 
 #: src/components/map/panels/NodeDetailCard.tsx:293
-msgid "Pole B"
-msgstr ""
+#~ msgid "Pole B"
+#~ msgstr ""
 
 #: src/components/feedback/ResponseFeedbackControls.tsx:163
 msgid "Poor response"
@@ -9617,7 +9676,7 @@ msgstr "Slecht antwoord"
 
 #: src/routes/project/present/blockLabel.ts:7
 #: src/routes/project/library/LibraryRoute.tsx:123
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:379
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:384
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:136
 #: src/components/popcorn/PopcornStart.tsx:55
 #: src/components/popcorn/PopcornIntroModal.tsx:24
@@ -9702,7 +9761,6 @@ msgstr "Portaltutorial"
 
 #: src/components/map/attributes.ts:272
 #: src/components/map/panels/shared.tsx:26
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:207
 msgid "Positive"
 msgstr ""
 
@@ -9718,11 +9776,11 @@ msgstr "compliment"
 msgid "Prefer talking? Press record and just say it."
 msgstr "Praat je liever? Druk op opnemen en vertel het gewoon."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:802
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:807
 msgid "Preparation and updates will appear here."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:434
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:439
 msgid "Prepare"
 msgstr ""
 
@@ -9730,7 +9788,11 @@ msgstr ""
 msgid "Prepare sessions with an editable host guide next to the QR code."
 msgstr "Bereid sessies voor met een bewerkbare hostgids naast de QR-code."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:579
+#: src/components/results/ResultItem.tsx:504
+msgid "Prepared by an analysis run"
+msgstr "Voorbereid door een analyse"
+
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:584
 msgid "Preparing"
 msgstr ""
 
@@ -10064,8 +10126,8 @@ msgid "Publish changes"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:335
-msgid "Publish revision"
-msgstr ""
+#~ msgid "Publish revision"
+#~ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1097
 msgid "Publish this report first to show the portal link"
@@ -10087,6 +10149,10 @@ msgstr "Haal de meest impactvolle quotes uit deze sessie"
 msgid "Put {name} on dembrane-managed billing at the {tier} tier? No automatic Mollie charges or auto-expiry."
 msgstr "{name} op facturatie beheerd door dembrane zetten, op het {tier}-niveau? Geen automatische afschrijvingen via Mollie en niets dat automatisch verloopt."
 
+#: src/components/results/ResultItem.tsx:570
+msgid "Put back in this presentation"
+msgstr "Terugzetten in deze presentatie"
+
 #: src/components/popcorn/PopcornScreenSettings.tsx:82
 msgid "QR code"
 msgstr ""
@@ -10096,14 +10162,14 @@ msgid "Question"
 msgstr "Vraag"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:252
-msgid "Question to resolve"
-msgstr ""
+#~ msgid "Question to resolve"
+#~ msgstr ""
 
 #: src/components/chat/AgenticIntroModal.tsx:69
 msgid "Questions about how dembrane works, not only about your data."
 msgstr "Vragen over hoe dembrane werkt, niet alleen over je data."
 
-#: src/components/map/panels/NodeDetailCard.tsx:504
+#: src/components/map/panels/NodeDetailCard.tsx:485
 msgid "Quotes ({quoteCount})"
 msgstr ""
 
@@ -10121,7 +10187,7 @@ msgstr "Snelheidslimiet bereikt"
 msgid "Rating"
 msgstr "Beoordeling"
 
-#: src/components/map/panels/SpotlightPanel.tsx:235
+#: src/components/map/panels/SpotlightPanel.tsx:234
 msgid "Re-check"
 msgstr ""
 
@@ -10173,7 +10239,7 @@ msgstr "Lees productaankondigingen in het dashboard."
 msgid "Read replies as they arrive."
 msgstr "Lees antwoorden terwijl ze binnenkomen."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:867
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:872
 msgid "Read shared findings, inspect their evidence and see how they were produced."
 msgstr ""
 
@@ -10186,7 +10252,7 @@ msgstr "Lees de gids voor problemen met transcripties en samenvattingen"
 msgid "Read-only"
 msgstr "Alleen-lezen"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:531
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:536
 msgid "Read-only steps"
 msgstr ""
 
@@ -10263,8 +10329,8 @@ msgid "Reason"
 msgstr "Reden"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:301
-msgid "Reason for this change"
-msgstr ""
+#~ msgid "Reason for this change"
+#~ msgstr ""
 
 #. placeholder {0}: note.reason
 #: src/components/chat/InsightNoteCard.tsx:216
@@ -10279,19 +10345,24 @@ msgstr "Recente betalingen over alle accounts"
 msgid "recently"
 msgstr "onlangs"
 
-#: src/components/map/panels/NodeDetailCard.tsx:384
-msgid "Recipe: {recipe}"
-msgstr ""
+#: src/components/results/ResultItem.tsx:511
+msgid "Recipe not recorded"
+msgstr "Recept niet vastgelegd"
 
-#: src/components/map/panels/NodeDetailCard.tsx:386
+#: src/components/results/ResultItem.tsx:509
+#: src/components/map/panels/NodeDetailCard.tsx:359
+msgid "Recipe: {recipe}"
+msgstr "Recept: {recipe}"
+
+#: src/components/map/panels/NodeDetailCard.tsx:361
 msgid "Recipe: not recorded"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:892
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:897
 msgid "Recipes"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:657
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:662
 msgid "Recipes could not be loaded."
 msgstr ""
 
@@ -10483,8 +10554,8 @@ msgstr "Samenvatting wordt opnieuw gemaakt. Even wachten..."
 msgid "Register | dembrane"
 msgstr "Registreer | dembrane"
 
-#: src/components/map/panels/NodeDetailCard.tsx:325
-#: src/components/map/panels/NodeDetailCard.tsx:518
+#: src/components/map/panels/NodeDetailCard.tsx:306
+#: src/components/map/panels/NodeDetailCard.tsx:499
 #: src/components/map/panels/MapSettingsMenu.tsx:215
 msgid "Relationships"
 msgstr ""
@@ -10906,7 +10977,7 @@ msgstr "Filters resetten"
 #~ msgstr ""
 
 #. placeholder {0}: hidden.length
-#: src/routes/project/present/PresentResultsPanel.tsx:160
+#: src/routes/project/present/PresentResultsPanel.tsx:175
 msgid "Reset hidden findings ({0})"
 msgstr ""
 
@@ -10930,27 +11001,48 @@ msgstr "Feedback op antwoord"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:357
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:409
-msgid "Restore earlier wording"
-msgstr ""
+#~ msgid "Restore earlier wording"
+#~ msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:347
-msgid "Restore result"
-msgstr ""
+#~ msgid "Restore result"
+#~ msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:411
-msgid "Restore revision"
-msgstr ""
+#~ msgid "Restore revision"
+#~ msgstr ""
 
-#. placeholder {0}: rollbackRevision?.revisionNumber ?? ""
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:410
-msgid "Restore revision {0} as a new revision?"
-msgstr ""
+#~ msgid "Restore revision {0} as a new revision?"
+#~ msgstr ""
+
+#: src/components/results/ResultItem.tsx:319
+msgid "Restore this wording"
+msgstr "Deze formulering herstellen"
+
+#: src/components/results/ResultItem.tsx:536
+msgid "Restore to the analysis"
+msgstr "Terugzetten in de analyse"
+
+#. placeholder {0}: revision.revisionNumber
+#: src/components/results/ResultItem.tsx:438
+msgid "Restored the wording of revision {0}"
+msgstr "De formulering van versie {0} hersteld"
+
+#: src/components/results/ResultItem.tsx:182
+#: src/components/results/ResultItem.tsx:429
+msgid "Restored to the analysis"
+msgstr "Teruggezet in de analyse"
+
+#: src/components/results/ResultItem.tsx:486
+msgid "Restoring that wording."
+msgstr "Die formulering wordt hersteld."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:117
 msgid "Result type"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:889
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:894
 #: src/components/popcorn/PopcornLanguageSettings.tsx:132
 #: src/components/map/panels/ResultList.tsx:40
 msgid "Results"
@@ -11017,7 +11109,7 @@ msgstr "Hertranscriptie gestart. Nieuw gesprek wordt binnenkort beschikbaar."
 #: src/routes/project/chat/ProjectChatRoute.tsx:842
 #: src/components/workspace/UsageCard.tsx:108
 #: src/components/workspace/OrganisationUsageRollup.tsx:494
-#: src/components/map/panels/SpotlightPanel.tsx:256
+#: src/components/map/panels/SpotlightPanel.tsx:255
 #: src/components/map/panels/ExplorePanel.tsx:118
 #: src/components/common/FetchErrorPanel.tsx:35
 msgid "Retry"
@@ -11036,7 +11128,7 @@ msgstr "Opnieuw uploaden"
 msgid "Return home"
 msgstr "Terug naar home"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:875
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:880
 msgid "Return to presentation"
 msgstr ""
 
@@ -11096,24 +11188,22 @@ msgid "participant.concrete.action.button.revise"
 msgstr "Aanpassen"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:526
-msgid "Revision"
-msgstr ""
+#~ msgid "Revision"
+#~ msgstr ""
 
-#. placeholder {0}: revision.revisionNumber
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:373
-msgid "Revision {0}"
-msgstr ""
+#~ msgid "Revision {0}"
+#~ msgstr ""
 
 #: src/components/settings/AuditLogsCard.tsx:609
 msgid "Revision #{revisionNumber}"
 msgstr "Revisie #{revisionNumber}"
 
 #: src/components/goal/ProjectGoalSection.tsx:183
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:506
 msgid "Revision history"
 msgstr "Versiegeschiedenis"
 
-#: src/components/map/panels/NodeDetailCard.tsx:391
+#: src/components/map/panels/NodeDetailCard.tsx:366
 msgid "Revision history is not available yet."
 msgstr ""
 
@@ -11153,9 +11243,7 @@ msgstr ""
 msgid "Right-click to highlight"
 msgstr "Rechtsklikken om te markeren"
 
-#: src/components/map/panels/NodeDetailCard.tsx:341
 #: src/components/invite/RoleSelect.tsx:78
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:270
 msgid "Role"
 msgstr "Rol"
 
@@ -11184,23 +11272,23 @@ msgstr "Rijen per pagina"
 msgid "Run"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:590
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:595
 msgid "Run again from scratch"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:705
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:710
 msgid "Run details could not be loaded."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:609
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:614
 msgid "Run fresh generation"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:781
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:786
 msgid "Run history could not be loaded."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:595
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:600
 msgid "Run this recipe again for {scopeLabel}. Existing published results stay visible until the fresh generation is ready."
 msgstr ""
 
@@ -11212,7 +11300,7 @@ msgstr "Voer de transcriptie opnieuw uit voor een bestaand gesprek."
 msgid "Running"
 msgstr "Bezig"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:895
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:900
 msgid "Runs"
 msgstr ""
 
@@ -11542,8 +11630,8 @@ msgid "Seats full"
 msgstr "Plekken vol"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:240
-msgid "Second pole"
-msgstr ""
+#~ msgid "Second pole"
+#~ msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:447
 msgid "Secret"
@@ -12040,7 +12128,7 @@ msgstr "Toon {hidden} meer"
 msgid "Show {overflow} more"
 msgstr "Nog {overflow} tonen"
 
-#: src/components/map/panels/NodeDetailCard.tsx:228
+#: src/components/map/panels/NodeDetailCard.tsx:227
 msgid "Show {typePlural}"
 msgstr ""
 
@@ -12098,6 +12186,10 @@ msgstr "Meer tonen"
 msgid "Show more versions"
 msgstr "Meer versies tonen"
 
+#: src/components/results/ResultItem.tsx:605
+msgid "Show on the map"
+msgstr "Laat op de kaart zien"
+
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:371
 msgid "Show only what changed"
 msgstr "Alleen wijzigingen tonen"
@@ -12131,6 +12223,10 @@ msgstr "Volledige tekst tonen"
 #: src/components/project/ProjectPortalEditor.tsx:1426
 msgid "Show the invitation"
 msgstr "Toon de uitnodiging"
+
+#: src/components/results/ResultItem.tsx:591
+msgid "Show to the room"
+msgstr "Laat aan de zaal zien"
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:287
 msgid "Show what happens to the data"
@@ -12248,6 +12344,10 @@ msgstr "Een deel van de recente audio kon niet worden getranscribeerd. De opname
 msgid "Someone"
 msgstr "Iemand"
 
+#: src/components/results/ResultItem.tsx:519
+msgid "Someone changed this while you had it open. Open it again to see their version."
+msgstr "Iemand heeft dit aangepast terwijl jij het open had. Open het opnieuw om die versie te zien."
+
 #: src/components/popcorn/PopcornVoiceSection.tsx:73
 msgid "Something else"
 msgstr ""
@@ -12342,20 +12442,19 @@ msgstr "Sorteer"
 msgid "Source {0}"
 msgstr "Bron {0}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:498
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:503
 msgid "Source conversation"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:487
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:470
+#: src/components/map/panels/NodeDetailCard.tsx:468
 msgid "Source evidence"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:133
+#: src/components/map/panels/NodeDetailCard.tsx:132
 msgid "Source statement unavailable"
 msgstr "Bronstelling niet beschikbaar"
 
-#: src/components/map/panels/NodeDetailCard.tsx:378
+#: src/components/map/panels/NodeDetailCard.tsx:353
 msgid "Source: {origin}"
 msgstr ""
 
@@ -12413,8 +12512,8 @@ msgstr "Door dembrane aangemaakt"
 
 #: src/components/map/panels/NodeDetailCard.tsx:344
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:275
-msgid "Stake"
-msgstr ""
+#~ msgid "Stake"
+#~ msgstr ""
 
 #: src/components/map/attributes.ts:114
 msgid "Stakeholder"
@@ -12486,8 +12585,8 @@ msgid "Starts"
 msgstr "Begint"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:185
-msgid "Statement"
-msgstr ""
+#~ msgid "Statement"
+#~ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1700
 #: src/routes/admin/AdminSettingsRoute.tsx:2686
@@ -12530,7 +12629,7 @@ msgstr "Blijft actueel tot morgen {0}"
 msgid "Step {0} of {STEP_COUNT}"
 msgstr "Stap {0} van {STEP_COUNT}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:738
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:743
 msgid "Steps and logs"
 msgstr ""
 
@@ -12554,11 +12653,11 @@ msgstr "Stop"
 #~ msgid "Stop coloring graph by fact-check"
 #~ msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:136
+#: src/components/map/panels/SpotlightPanel.tsx:135
 msgid "Stop coloring graph by factual status"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:115
+#: src/components/map/panels/SpotlightPanel.tsx:114
 msgid "Stop coloring graph by valence"
 msgstr ""
 
@@ -12573,7 +12672,7 @@ msgstr ""
 msgid "Stop recording and turn it into text"
 msgstr "Opname stoppen en omzetten naar tekst"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:765
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:770
 msgid "Stop run"
 msgstr ""
 
@@ -12724,11 +12823,11 @@ msgstr "Supporttoegang aangezet"
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Ondersteunde formaten: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
-#: src/components/map/panels/NodeDetailCard.tsx:306
+#: src/components/map/panels/NodeDetailCard.tsx:287
 msgid "Supporting pole A"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:315
+#: src/components/map/panels/NodeDetailCard.tsx:296
 msgid "Supporting pole B"
 msgstr ""
 
@@ -12829,8 +12928,8 @@ msgid "Tapping Record twice no longer creates duplicate conversations."
 msgstr "Twee keer op Opnemen tikken maakt geen dubbele gesprekken meer aan."
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:544
-msgid "Technical lineage"
-msgstr ""
+#~ msgid "Technical lineage"
+#~ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1168
 msgid "Tell the workspace admins what you need access for. This note is optional."
@@ -12870,7 +12969,6 @@ msgid "Templates"
 msgstr "Sjablonen"
 
 #: src/components/map/attributes.ts:123
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:245
 msgid "Tension"
 msgstr ""
 
@@ -12973,8 +13071,8 @@ msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "De assistent stelt voor om {headlineFields} bij te werken. Wacht op jou."
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:326
-msgid "The change could not be published."
-msgstr ""
+#~ msgid "The change could not be published."
+#~ msgstr ""
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:279
 #: src/components/settings/TwoFactorSettingsCard.tsx:290
@@ -13059,6 +13157,10 @@ msgstr "Het gratis plan bevat één rapport."
 msgid "The goal guides reports, canvases, and assistant suggestions for this project."
 msgstr "Het doel stuurt de rapporten, canvassen en suggesties van de assistent in dit project."
 
+#: src/components/results/ResultItem.tsx:471
+msgid "The history could not be loaded."
+msgstr "De geschiedenis kon niet worden geladen."
+
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:86
 msgid "The host guide is what facilitators read before they run a session."
 msgstr "De hostgids is wat begeleiders lezen voordat ze een sessie draaien."
@@ -13129,6 +13231,10 @@ msgstr ""
 msgid "The map loads after you choose to open it."
 msgstr "De kaart wordt geladen nadat je kiest om hem te openen."
 
+#: src/components/results/ResultItem.tsx:178
+msgid "The meaning"
+msgstr "De betekenis"
+
 #: src/components/release/releaseHistory.ts:233
 msgid "The members page shows a loading state instead of briefly claiming there are no members."
 msgstr "De ledenpagina toont een laadstatus in plaats van kort te zeggen dat er geen leden zijn."
@@ -13158,7 +13264,7 @@ msgstr ""
 msgid "The organisation this invite was for has been deleted. There's nothing to join."
 msgstr "De organisatie waarvoor deze uitnodiging was, is verwijderd. Er is niets om aan deel te nemen."
 
-#: src/components/map/panels/NodeDetailCard.tsx:148
+#: src/components/map/panels/NodeDetailCard.tsx:147
 msgid "The original statements are unavailable for this older result."
 msgstr "De oorspronkelijke stellingen zijn niet beschikbaar voor dit oudere resultaat."
 
@@ -13198,7 +13304,7 @@ msgstr "De projectcontext wordt gelezen door transcriptie, chatantwoorden en can
 msgid "The pulls between what people want, verified against the conversations."
 msgstr ""
 
-#: src/components/map/panels/ShowcasePanel.tsx:120
+#: src/components/map/panels/ShowcasePanel.tsx:119
 msgid "The random walk will surface nodes here once available."
 msgstr ""
 
@@ -13211,7 +13317,7 @@ msgstr "Het rapport kan tot 5 minuten na de gekozen tijd starten."
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:464
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:469
 msgid "the selected conversation"
 msgstr ""
 
@@ -13391,7 +13497,7 @@ msgstr "Dit canvas kon niet worden bijgewerkt."
 msgid "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 msgstr "Dit verandert hoe transcripten vanaf nu worden opgeslagen. Gesprekken die al zijn opgenomen behouden de vorm waarin ze zijn bewaard."
 
-#: src/components/map/panels/SpotlightPanel.tsx:185
+#: src/components/map/panels/SpotlightPanel.tsx:184
 msgid "This claim has not been fact-checked."
 msgstr ""
 
@@ -13581,8 +13687,8 @@ msgid "this person"
 msgstr "deze persoon"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:224
-msgid "This phrase is a question"
-msgstr ""
+#~ msgid "This phrase is a question"
+#~ msgstr ""
 
 #: src/components/participant/ParticipantShareModal.tsx:153
 msgid "This portal is not accepting new sessions right now."
@@ -13666,8 +13772,8 @@ msgid "This request took too long, so I stopped it. Send it again and I'll retry
 msgstr "Dit verzoek duurde te lang, dus ik heb het gestopt. Stuur het opnieuw, dan probeer ik het nog een keer."
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:309
-msgid "This result changed while you were reviewing it."
-msgstr ""
+#~ msgid "This result changed while you were reviewing it."
+#~ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:687
 msgid "This returns the account to standard free billing."
@@ -13677,7 +13783,7 @@ msgstr "Hiermee gaat het account terug naar standaard gratis facturering."
 msgid "This returns the workspace to your organisation's shared billing and removes its external data owner."
 msgstr "Hiermee komt de werkruimte terug bij de gedeelde facturering van je organisatie en wordt de externe data-eigenaar verwijderd."
 
-#: src/components/analysis/AnalysisResultsList.tsx:88
+#: src/components/analysis/AnalysisResultsList.tsx:95
 msgid "This revision is unavailable."
 msgstr ""
 
@@ -13797,6 +13903,11 @@ msgstr "Niveau gewijzigd"
 msgid "Time"
 msgstr "Tijd"
 
+#: src/components/results/ResultItem.tsx:191
+#: src/components/results/ResultItem.tsx:194
+msgid "Time not recorded"
+msgstr "Tijd niet vastgelegd"
+
 #: src/components/conversation/LiveFunnelSection.tsx:64
 #: src/components/conversation/ConversationDrilldownModal.tsx:69
 msgid "Timeline"
@@ -13855,9 +13966,9 @@ msgstr "Om een nieuwe tag toe te wijzen, maak je deze eerst aan in de portalinst
 msgid "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 msgstr "Om iemand te promoveren tot lid van de werkruimte, voeg je deze persoon eerst toe aan de organisatie en nodig je daarna opnieuw uit vanuit de werkruimte."
 
-#: src/components/map/panels/NodeDetailCard.tsx:302
+#: src/components/results/ResultItem.tsx:122
 msgid "To resolve"
-msgstr ""
+msgstr "Uit te zoeken"
 
 #: src/components/billing/BillingManager.tsx:681
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
@@ -14106,7 +14217,7 @@ msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Problemen met inloggen? Neem contact op via support@dembrane.com."
 
 #: src/routes/project/present/PresentRoute.tsx:944
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:436
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:441
 #: src/routes/invite/MyInvitesRoute.tsx:222
 #: src/routes/invite/AcceptInviteRoute.tsx:557
 #: src/components/project/ProjectAccessGuard.tsx:109
@@ -14396,7 +14507,7 @@ msgstr "Binnenkort"
 msgid "Update"
 msgstr "Bijwerken"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:437
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:442
 msgid "Update results"
 msgstr ""
 
@@ -14667,7 +14778,7 @@ msgstr "Gebruikersinstellingen"
 msgid "Username"
 msgstr "Gebruikersnaam"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:511
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:516
 msgid "Uses eligible conversations across this project."
 msgstr ""
 
@@ -14684,7 +14795,6 @@ msgid "Using webhooks? We'd love to hear from you"
 msgstr "Gebruik webhooks? We zouden graag van je horen"
 
 #: src/components/map/attributes.ts:279
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:204
 msgid "Valence"
 msgstr ""
 
@@ -14834,7 +14944,7 @@ msgstr "Uitnodiging bekijken"
 msgid "View recipes"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:583
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:588
 msgid "View results"
 msgstr ""
 
@@ -14879,7 +14989,7 @@ msgstr "Zichtbaar voor iedereen in deze werkruimte. Laat uit om het persoonlijk 
 msgid "Visitor details"
 msgstr "Bezoekersgegevens"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:367
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:372
 #: src/components/voice/VoiceInputButton.tsx:39
 #: src/components/popcorn/PopcornVoiceSection.tsx:149
 msgid "Voice"
@@ -14894,8 +15004,8 @@ msgid "Voice input respects the free plan's recording limit."
 msgstr "Spraakinvoer houdt rekening met de opnamelimiet van het gratis abonnement."
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:285
-msgid "Voiced directly"
-msgstr ""
+#~ msgid "Voiced directly"
+#~ msgstr ""
 
 #: src/components/map/panels/shared.tsx:92
 msgid "Voiced in a conversation"
@@ -14913,7 +15023,7 @@ msgstr ""
 msgid "Waiting for the first conversation with a transcript."
 msgstr ""
 
-#: src/components/map/panels/ShowcasePanel.tsx:147
+#: src/components/map/panels/ShowcasePanel.tsx:146
 msgid "Waiting for the next node"
 msgstr ""
 
@@ -15249,6 +15359,10 @@ msgstr "Als iemand de QR-code scant, is dat één gesprek. Als 50 mensen hem teg
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Wanneer de samenvatting klaar is (bevat zowel transcript als samenvatting)"
 
+#: src/components/results/ResultItem.tsx:496
+msgid "Where this came from"
+msgstr "Waar dit vandaan komt"
+
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:253
 msgid "Where would you like to go?"
 msgstr "Waar wil je naartoe?"
@@ -15284,6 +15398,10 @@ msgstr ""
 msgid "Who on your team holds a current training license. Book a training from your organisation's Training view."
 msgstr "Wie in je team een actuele trainingslicentie heeft. Boek een training via de Training-weergave van je organisatie."
 
+#: src/components/results/ResultItem.tsx:543
+msgid "Why? One sentence, for the people you work with and anyone who checks later."
+msgstr "Waarom? Eén zin, voor je collega's en voor wie dit later naloopt."
+
 #: src/components/report/CreateReportForm.tsx:219
 msgid "will be included in your report"
 msgstr "wordt in je rapport opgenomen"
@@ -15300,20 +15418,33 @@ msgstr "Met externe klanten"
 msgid "With several lines, the first reads as a subtitle."
 msgstr "Bij meerdere regels is de eerste de ondertitel."
 
+#: src/components/results/ResultItem.tsx:548
+#: src/components/results/ResultItem.tsx:560
+msgid "Withdraw from the analysis"
+msgstr "Terugtrekken uit de analyse"
+
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:349
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:395
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:397
-msgid "Withdraw result"
-msgstr ""
+#~ msgid "Withdraw result"
+#~ msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:396
-msgid "Withdraw this result from current Map and presentation views? Its revision history will remain available."
-msgstr ""
+#~ msgid "Withdraw this result from current Map and presentation views? Its revision history will remain available."
+#~ msgstr ""
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:136
-#: src/components/analysis/AnalysisResultsList.tsx:68
+#: src/components/analysis/AnalysisResultsList.tsx:75
 msgid "Withdrawn"
 msgstr ""
+
+#: src/components/results/ResultItem.tsx:180
+msgid "Withdrawn from the analysis"
+msgstr "Teruggetrokken uit de analyse"
+
+#: src/components/results/ResultItem.tsx:528
+msgid "Withdrawn from the analysis."
+msgstr "Teruggetrokken uit de analyse."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:502
 msgid "Within my organisation"
@@ -15458,6 +15589,10 @@ msgstr "Wilt u deze tag toevoegen aan uw huidige filters?"
 #: src/components/release/releaseHistory.ts:393
 msgid "Write custom host prompts for participant verification."
 msgstr "Schrijf eigen hostprompts voor verificatie door deelnemers."
+
+#: src/components/results/ResultItem.tsx:500
+msgid "Written by a host"
+msgstr "Geschreven door een host"
 
 #: src/routes/auth/Register.tsx:282
 msgid "Wrong address? Change email"

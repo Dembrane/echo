@@ -1,0 +1,337 @@
+/* The results components carry the deck's tokens, scoped to themselves: the
+   room and the dashboard should show a finding the same way. Values come from
+   `server/dembrane/popcorn/static/styles.css` (its token block and its dark
+   theme at the bottom).
+
+   Dark follows the nearest `[data-theme="dark"]`, which is what the audience
+   shell and the deck both set. The dashboard has no dark mode of its own, so
+   nothing here reads the operating system: a projector laptop in dark mode
+   must not surprise a room. */
+
+.item {
+	--parchment: #f6f4f1;
+	--paper: #ffffff;
+	--graphite: #2d2d2c;
+	--blue: #4169e1;
+	--hairline: #e6e3df;
+	--ink-soft: rgba(45, 45, 44, 0.62);
+	--ink-faint: rgba(45, 45, 44, 0.38);
+	--curve: cubic-bezier(0.25, 0.8, 0.3, 1);
+
+	container-type: inline-size;
+	color: var(--graphite);
+	font-weight: 320;
+	line-height: 1.42;
+}
+
+:global([data-theme="dark"]) .item,
+.item[data-theme="dark"] {
+	--parchment: #1b1b1a;
+	--paper: #262625;
+	--graphite: #f6f4f1;
+	--blue: #7c9bff;
+	--hairline: #3a3a38;
+	--ink-soft: rgba(246, 244, 241, 0.64);
+	--ink-faint: rgba(246, 244, 241, 0.4);
+}
+
+.layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 19rem;
+	gap: 1.5rem;
+	align-items: start;
+}
+
+.layout.stageOnly {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+/* Under 900 px the margin goes below the card rather than beside it. */
+@container (max-width: 900px) {
+	.layout {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* The stage card is what a room gets. */
+.stage {
+	background: var(--parchment);
+	border: 1px solid var(--hairline);
+	padding: clamp(1.1rem, 2.4cqi, 2rem);
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	min-width: 0;
+}
+
+.finding {
+	margin: 0;
+	font-weight: 320;
+	letter-spacing: -0.012em;
+	line-height: 1.24;
+	overflow-wrap: anywhere;
+}
+
+/* Three steps by length. Nothing is ever cut. */
+.size1 {
+	font-size: clamp(26px, 3.4cqi, 44px);
+}
+
+.size2 {
+	font-size: clamp(22px, 2.4cqi, 32px);
+}
+
+.size3 {
+	font-size: clamp(18px, 1.7cqi, 24px);
+}
+
+.poles {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5em;
+}
+
+.arrows {
+	color: var(--blue);
+	flex: none;
+	align-self: center;
+}
+
+.second {
+	color: var(--ink-soft);
+	font-size: 1rem;
+	margin: 0;
+}
+
+.stance {
+	color: var(--ink-soft);
+	font-size: 0.9375rem;
+	margin: 0;
+}
+
+/* The deck's hairline tag: a rung, stated only when it is not "voiced". */
+.tag {
+	align-self: flex-start;
+	border: 1px solid var(--hairline);
+	color: var(--ink-soft);
+	font-size: 0.75rem;
+	padding: 0.2em 0.6em;
+}
+
+.quotes {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	border-top: 1px solid var(--hairline);
+	padding-top: 1rem;
+	margin: 0;
+}
+
+.quote {
+	border-left: 2px solid var(--hairline);
+	color: var(--graphite);
+	font-size: 1rem;
+	margin: 0;
+	padding-left: 0.85rem;
+	/* Three lines each, so no single quote takes the card. */
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.meta {
+	color: var(--ink-soft);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6em;
+	font-size: 0.75rem;
+	align-items: center;
+}
+
+/* The quiet mark, the way a message shows it was edited: it does not open. */
+.edited {
+	color: var(--ink-soft);
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+}
+
+.verdict {
+	border-top: 1px solid var(--hairline);
+	color: var(--ink-soft);
+	font-size: 0.875rem;
+	padding-top: 1rem;
+}
+
+/* The workbench margin, in dashboard type beside the card. */
+.margin {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	font-size: 0.875rem;
+	min-width: 0;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.sectionTitle {
+	color: var(--ink-soft);
+	font-size: 0.75rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	margin: 0;
+}
+
+.line {
+	color: var(--ink-soft);
+	margin: 0;
+}
+
+.timeline {
+	display: flex;
+	flex-direction: column;
+	gap: 0.9rem;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.entry {
+	border-left: 1px solid var(--hairline);
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	padding-left: 0.75rem;
+}
+
+.entryHead {
+	color: var(--graphite);
+	margin: 0;
+}
+
+.wording {
+	color: var(--ink-soft);
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.before {
+	text-decoration: line-through;
+}
+
+/* Controls rest at faint ink and come up on hover, on focus, and wherever
+   there is no hover to wait for. */
+.control {
+	background: none;
+	border: 0;
+	color: var(--ink-faint);
+	cursor: pointer;
+	font: inherit;
+	min-height: 44px;
+	padding: 0.4em 0;
+	text-align: left;
+	transition: color 0.15s var(--curve);
+}
+
+.control:hover,
+.control:focus-visible {
+	color: var(--graphite);
+}
+
+@media (hover: none) {
+	.control {
+		color: var(--graphite);
+	}
+}
+
+.control:disabled {
+	cursor: default;
+	opacity: 0.6;
+}
+
+.quiet {
+	min-height: 0;
+	padding: 0;
+	font-size: 0.8125rem;
+}
+
+.link {
+	color: var(--blue);
+	min-height: 44px;
+	display: inline-flex;
+	align-items: center;
+	text-decoration: none;
+}
+
+.link:hover {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.item :focus-visible {
+	outline: 2px solid var(--blue);
+	outline-offset: 2px;
+}
+
+/* The reason step expands inside the item; nothing opens over it. */
+.reasonStep {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	animation: rise 0.18s var(--curve);
+}
+
+.reasonLabel {
+	color: var(--graphite);
+	margin: 0;
+}
+
+.reasonField {
+	background: var(--paper);
+	border: 1px solid var(--hairline);
+	color: var(--graphite);
+	font: inherit;
+	min-height: 44px;
+	padding: 0.5em 0.6em;
+	resize: vertical;
+	width: 100%;
+}
+
+.reasonActions {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+}
+
+.note {
+	color: var(--ink-soft);
+	margin: 0;
+}
+
+@keyframes rise {
+	from {
+		opacity: 0;
+		transform: translateY(-2px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.reasonStep {
+		animation: none;
+	}
+
+	.control {
+		transition: none;
+	}
+}

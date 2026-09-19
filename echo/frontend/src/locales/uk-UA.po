@@ -531,6 +531,10 @@ msgstr "{conversationCount} Conversations • Edited {0}"
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} selected"
 
+#: src/components/results/ResultItem.tsx:63
+msgid "{conversations, plural, one {# conversation} other {# conversations}}"
+msgstr "{conversations, plural, one {# розмова} few {# розмови} many {# розмов} other {# розмови}}"
+
 #: src/components/popcorn/PopcornStart.tsx:66
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr ""
@@ -636,6 +640,10 @@ msgstr ""
 #: src/routes/project/chat/NewChatRoute.tsx:603
 msgid "{pickedCount, plural, one {Using # conversation} other {Using # conversations}}"
 msgstr ""
+
+#: src/components/results/ResultItem.tsx:62
+msgid "{quotes, plural, one {# quote} other {# quotes}}"
+msgstr "{quotes, plural, one {# цитата} few {# цитати} many {# цитат} other {# цитати}}"
 
 #: src/components/report/ReportRenderer.tsx:81
 msgid "{readingNow} reading now"
@@ -838,6 +846,10 @@ msgstr ""
 msgid "A downgrade limits features immediately."
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:237
+msgid "A few more words, so someone reading later understands."
+msgstr "Ще кілька слів, щоб зрозумів той, хто читатиме пізніше."
+
 #: src/components/canvas/CanvasFrame.tsx:111
 msgid "A first version will appear here when it is ready."
 msgstr ""
@@ -849,6 +861,10 @@ msgstr "A friendly name to identify this webhook"
 #: src/components/release/releaseHistory.ts:480
 msgid "A Help us translate link invites community translations. Full Italian interface translation is not included."
 msgstr ""
+
+#: src/components/results/ResultItem.tsx:296
+msgid "A host"
+msgstr "Ведучий"
 
 #: src/components/project/ProjectExperimentalSection.tsx:52
 msgid "A live page in your Library, and live slides for the room, both made from your conversations while a session runs. Early beta: they may change or be removed."
@@ -931,6 +947,10 @@ msgstr ""
 #: src/components/popcorn/PopcornOpeningSettings.tsx:121
 msgid "A title and subtitle before the countdown."
 msgstr ""
+
+#: src/components/results/ResultItem.tsx:174
+msgid "A typo"
+msgstr "Помилка друку"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:48
 msgid "a workspace"
@@ -1400,7 +1420,7 @@ msgstr "Advanced"
 msgid "Advanced (Tips and best practices)"
 msgstr "Advanced (Tips and best practices)"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:526
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:531
 msgid "Advanced details"
 msgstr ""
 
@@ -1412,6 +1432,10 @@ msgstr "Advanced Settings"
 #: src/components/map/panels/shared.tsx:72
 msgid "Affected by"
 msgstr ""
+
+#: src/components/results/ResultItem.tsx:51
+msgid "Against"
+msgstr "Проти"
 
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:79
 #: src/components/agent-access/AgentGrantsCard.tsx:85
@@ -1463,7 +1487,7 @@ msgstr "All collections"
 msgid "All Conversations"
 msgstr "All Conversations"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:465
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:470
 msgid "all eligible project conversations"
 msgstr ""
 
@@ -1603,6 +1627,10 @@ msgstr ""
 msgid "An assembly."
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:184
+msgid "An earlier wording restored"
+msgstr "Відновлено попереднє формулювання"
+
 #. placeholder {0}: participantCount !== undefined ? participantCount : t`loading...`
 #. placeholder {1}: participantCount === 1 ? "" : "s"
 #: src/routes/project/report/ProjectReportRoute.tsx:1446
@@ -1621,7 +1649,7 @@ msgstr "An error occurred."
 msgid "An event or a workshop."
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:182
+#: src/components/map/panels/NodeDetailCard.tsx:181
 msgid "An object outside this view"
 msgstr ""
 
@@ -1633,12 +1661,12 @@ msgstr ""
 msgid "An unexpected error occurred. Reloading or returning home usually helps."
 msgstr "Сталася неочікувана помилка. Зазвичай допомагає перезавантаження сторінки або повернення на головну."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:864
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:869
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:146
 msgid "Analysis"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:841
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:846
 msgid "Analysis | dembrane"
 msgstr ""
 
@@ -1889,8 +1917,7 @@ msgid "Are you sure you want to remove your custom logo? The default dembrane lo
 msgstr "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 
 #: src/components/map/attributes.ts:87
-#: src/components/map/panels/NodeDetailCard.tsx:449
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:197
+#: src/components/map/panels/NodeDetailCard.tsx:419
 msgid "Argument"
 msgstr "Аргумент"
 
@@ -1911,7 +1938,7 @@ msgstr ""
 msgid "Arguments"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:159
+#: src/components/map/panels/SpotlightPanel.tsx:158
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr ""
 
@@ -2456,6 +2483,7 @@ msgstr ""
 #: src/components/training/TrainingRowActions.tsx:298
 #: src/components/training/RequestTrainingModal.tsx:97
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
+#: src/components/results/ResultItem.tsx:263
 #: src/components/project/ProjectSharingModal.tsx:317
 #: src/components/project/ProjectSharingModal.tsx:498
 #: src/components/project/ProjectDangerZone.tsx:149
@@ -2467,7 +2495,7 @@ msgstr ""
 #: src/components/organisation/CreateOrganisationModal.tsx:204
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:284
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:366
-#: src/components/map/panels/SpotlightPanel.tsx:202
+#: src/components/map/panels/SpotlightPanel.tsx:201
 #: src/components/invite/InviteModal.tsx:762
 #: src/components/goal/ProjectGoalSection.tsx:143
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
@@ -2650,6 +2678,10 @@ msgstr ""
 msgid "Change role"
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:582
+msgid "Change the words"
+msgstr "Змінити формулювання"
+
 #: src/routes/admin/AdminSettingsRoute.tsx:626
 #: src/routes/admin/AdminSettingsRoute.tsx:668
 #: src/routes/admin/AdminSettingsRoute.tsx:670
@@ -2823,16 +2855,16 @@ msgstr ""
 
 #: src/components/map/attributes.ts:310
 #: src/components/map/panels/shared.tsx:132
-#: src/components/map/panels/SpotlightPanel.tsx:193
+#: src/components/map/panels/SpotlightPanel.tsx:192
 msgid "Checking…"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:543
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:748
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:548
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:753
 msgid "Checks"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:499
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:504
 msgid "Choose a conversation"
 msgstr ""
 
@@ -2881,8 +2913,8 @@ msgid "City"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:198
-msgid "Claim"
-msgstr ""
+#~ msgid "Claim"
+#~ msgstr ""
 
 #: src/components/map/panels/Legend.tsx:26
 #~ msgid "Claim · checking…"
@@ -2933,6 +2965,10 @@ msgstr ""
 msgid "Clearer sources in chat"
 msgstr "Зрозуміліші джерела в чаті"
 
+#: src/components/results/ResultItem.tsx:176
+msgid "Clearer words, same meaning"
+msgstr "Зрозуміліші слова, той самий зміст"
+
 #: src/components/release/releaseHistory.ts:242
 msgid "Clearer workspace access for admins"
 msgstr "Зрозуміліший доступ для адміністраторів"
@@ -2945,7 +2981,7 @@ msgstr "Click \"Upload Files\" when you're ready to start the upload process."
 msgid "Click a conversation tag to add it to your filters."
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:270
+#: src/components/map/panels/SpotlightPanel.tsx:269
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr ""
 
@@ -2999,6 +3035,8 @@ msgstr "Clone project"
 msgid "Clone Project"
 msgstr "Clone Project"
 
+#: src/components/results/ResultItem.tsx:614
+#: src/components/results/ResultItem.tsx:624
 #: src/components/dropzone/UploadConversationDropzone.tsx:872
 #: src/components/conversation/ConversationLinks.tsx:110
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3014,7 +3052,7 @@ msgstr "Close"
 msgid "Close and go to dembrane"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:715
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:720
 msgid "Close details"
 msgstr ""
 
@@ -3052,11 +3090,11 @@ msgstr ""
 #~ msgid "Color graph by fact-check"
 #~ msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:137
+#: src/components/map/panels/SpotlightPanel.tsx:136
 msgid "Color graph by factual status"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:116
+#: src/components/map/panels/SpotlightPanel.tsx:115
 msgid "Color graph by valence"
 msgstr ""
 
@@ -3076,7 +3114,7 @@ msgstr ""
 #. placeholder {0}: consolidation.memberCount
 #: src/components/map/renderers/MstGraph.tsx:1062
 #: src/components/map/renderers/LocalMapGraph.tsx:1037
-#: src/components/map/panels/NodeDetailCard.tsx:122
+#: src/components/map/panels/NodeDetailCard.tsx:121
 msgid "Combined from {0} arguments"
 msgstr "Об’єднано з {0} аргументів"
 
@@ -3604,7 +3642,7 @@ msgstr "Відгук не збережено"
 msgid "Could not save tags"
 msgstr ""
 
-#: src/components/analysis/hooks/index.ts:257
+#: src/components/analysis/hooks/index.ts:264
 msgid "Could not save the change. Try again."
 msgstr ""
 
@@ -3628,7 +3666,7 @@ msgstr ""
 msgid "Could not send the report. Try again"
 msgstr "Не вдалося надіслати повідомлення. Спробуйте ще раз"
 
-#: src/components/analysis/hooks/index.ts:335
+#: src/components/analysis/hooks/index.ts:342
 msgid "Could not start this run. Try again."
 msgstr ""
 
@@ -3636,7 +3674,7 @@ msgstr ""
 msgid "Could not stop live"
 msgstr ""
 
-#: src/components/analysis/hooks/index.ts:354
+#: src/components/analysis/hooks/index.ts:361
 msgid "Could not stop this run. Try again."
 msgstr ""
 
@@ -3814,7 +3852,7 @@ msgstr "Create Report"
 msgid "Create template"
 msgstr "Create template"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:370
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:375
 msgid "Create the presentation settings to choose how Popcorn phrases should sound. This does not prepare any results."
 msgstr ""
 
@@ -3827,7 +3865,7 @@ msgstr "Create View"
 msgid "Create View"
 msgstr "Create View"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:381
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:386
 msgid "Create voice settings"
 msgstr ""
 
@@ -4047,7 +4085,7 @@ msgstr ""
 msgid "Deep Dive"
 msgstr "Deep Dive"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:243
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:248
 #: src/routes/admin/AdminSettingsRoute.tsx:3161
 #: src/routes/admin/AdminSettingsRoute.tsx:3181
 #: src/components/project/ProjectPortalEditor.tsx:825
@@ -4177,6 +4215,7 @@ msgstr "Deleted successfully"
 msgid "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:296
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:212
 #: src/components/methodology/ProjectMethodologySection.tsx:128
 msgid "dembrane"
@@ -4678,8 +4717,8 @@ msgid "Edit reports directly in dembrane."
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:180
-msgid "Edit result"
-msgstr ""
+#~ msgid "Edit result"
+#~ msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/report/ReportEditor.tsx:127
@@ -4701,6 +4740,10 @@ msgstr ""
 #: src/components/release/releaseHistory.ts:338
 msgid "Edit your display name and upload, crop or remove your profile picture."
 msgstr ""
+
+#: src/components/results/ResultItem.tsx:154
+msgid "edited"
+msgstr "змінено"
 
 #. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
 #: src/components/project/ProjectListItem.tsx:252
@@ -5017,19 +5060,19 @@ msgstr ""
 msgid "participant.alert.microphone.access.success"
 msgstr "Everything looks good – you can continue."
 
-#: src/components/map/panels/NodeDetailCard.tsx:347
+#: src/components/map/panels/NodeDetailCard.tsx:322
 msgid "Evidence"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:439
-msgid "Evidence and history"
-msgstr ""
+#~ msgid "Evidence and history"
+#~ msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:282
-msgid "Evidence level"
-msgstr ""
+#~ msgid "Evidence level"
+#~ msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:353
+#: src/components/map/panels/NodeDetailCard.tsx:328
 msgid "Evidenced connections"
 msgstr ""
 
@@ -5167,7 +5210,7 @@ msgstr ""
 msgid "Fact check all ({pendingClaimCount})"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:179
+#: src/components/map/panels/SpotlightPanel.tsx:178
 msgid "Fact check this claim"
 msgstr ""
 
@@ -5179,7 +5222,7 @@ msgstr ""
 msgid "Factual status"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:168
+#: src/components/map/panels/SpotlightPanel.tsx:167
 msgid "Factual status does not apply to this object."
 msgstr ""
 
@@ -5508,8 +5551,8 @@ msgid "First name"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:235
-msgid "First pole"
-msgstr ""
+#~ msgid "First pole"
+#~ msgstr ""
 
 #: src/routes/project/library/LibraryRoute.tsx:72
 #: src/components/methodology/ProjectMethodologySection.tsx:86
@@ -5555,6 +5598,10 @@ msgstr ""
 #: src/components/settings/FontSizeSettingsCard.tsx:68
 msgid "Font Size"
 msgstr "Font Size"
+
+#: src/components/results/ResultItem.tsx:50
+msgid "For"
+msgstr "За"
 
 #. placeholder {0}: targetOrganisation.name
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:428
@@ -5987,7 +6034,7 @@ msgstr ""
 msgid "Hidden"
 msgstr "Hidden"
 
-#: src/components/map/panels/NodeDetailCard.tsx:214
+#: src/components/map/panels/NodeDetailCard.tsx:213
 msgid "Hidden by the Objects filter"
 msgstr ""
 
@@ -6056,9 +6103,13 @@ msgstr "Варто уваги"
 msgid "Highlight specific Concept"
 msgstr "Highlight specific Concept"
 
+#: src/components/results/ResultItem.tsx:467
+msgid "History"
+msgstr "Історія"
+
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:511
-msgid "History could not be loaded."
-msgstr ""
+#~ msgid "History could not be loaded."
+#~ msgstr ""
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:353
 msgid "History note"
@@ -6246,9 +6297,10 @@ msgstr ""
 msgid "Images must be under {MAX_FILE_MB}MB"
 msgstr "Зображення мають бути менші за {MAX_FILE_MB} МБ"
 
+#: src/components/results/ResultItem.tsx:502
 #: src/components/map/panels/shared.tsx:110
 msgid "Imported"
-msgstr ""
+msgstr "Імпортовано"
 
 #: src/components/chat/AgenticChatPanel.tsx:1870
 msgid "Improve my setup"
@@ -6297,11 +6349,11 @@ msgstr ""
 msgid "Incorrect or made up"
 msgstr "Неправильно або вигадано"
 
+#: src/components/results/ResultItem.tsx:57
 #: src/components/map/panels/shared.tsx:85
 #: src/components/map/panels/shared.tsx:96
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:287
 msgid "Inferred"
-msgstr ""
+msgstr "Виведено"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:935
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:949
@@ -6316,11 +6368,11 @@ msgstr ""
 msgid "Innovator or higher"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:730
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:735
 msgid "Inputs"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:490
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:495
 msgid "Inputs and instructions"
 msgstr ""
 
@@ -6338,7 +6390,7 @@ msgstr "Insights"
 #~ msgid "Inspect evidence"
 #~ msgstr ""
 
-#: src/components/analysis/AnalysisResultsList.tsx:47
+#: src/components/analysis/AnalysisResultsList.tsx:54
 msgid "Inspect evidence for {label}"
 msgstr ""
 
@@ -6508,8 +6560,8 @@ msgid "Invoicing"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:292
-msgid "Invoked by"
-msgstr ""
+#~ msgid "Invoked by"
+#~ msgstr ""
 
 #: src/components/settings/AuditLogsCard.tsx:289
 msgid "IP Address"
@@ -6795,8 +6847,12 @@ msgid "Kickback %"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:194
-msgid "Kind"
-msgstr ""
+#~ msgid "Kind"
+#~ msgstr ""
+
+#: src/components/results/ResultItem.tsx:186
+msgid "Kind of change not recorded"
+msgstr "Тип зміни не зафіксовано"
 
 #: src/routes/project/present/PresentRoute.tsx:210
 #: src/features/sidebar/shell/UserMenu.tsx:119
@@ -6986,8 +7042,8 @@ msgid "Likely true"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:550
-msgid "Lineage could not be loaded."
-msgstr ""
+#~ msgid "Lineage could not be loaded."
+#~ msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:65
 msgid "Link"
@@ -7119,8 +7175,8 @@ msgid "Living canvas and popcorn"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:318
-msgid "Load latest revision"
-msgstr ""
+#~ msgid "Load latest revision"
+#~ msgstr ""
 
 #: src/components/billing/BillingManager.tsx:839
 msgid "Load more"
@@ -7465,7 +7521,7 @@ msgstr ""
 msgid "Marks {orgName} as a partner. Its workspaces self-identify internal vs external client use on creation."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:253
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:258
 msgid "max {maximum}"
 msgstr ""
 
@@ -7599,7 +7655,7 @@ msgstr ""
 msgid "Microphone access is still denied. Please check your settings and try again."
 msgstr "Microphone access is still denied. Please check your settings and try again."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:248
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:253
 msgid "min {minimum}"
 msgstr ""
 
@@ -7768,7 +7824,6 @@ msgstr "My templates"
 #: src/components/common/RedactedText.tsx:42
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:131
 #: src/components/chat/CanvasSuggestionCard.tsx:88
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:265
 msgid "Name"
 msgstr "Name"
 
@@ -7818,10 +7873,10 @@ msgstr ""
 msgid "name@example.com, name2@example.com"
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:56
 #: src/components/map/panels/shared.tsx:94
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:286
 msgid "Named by participants"
-msgstr ""
+msgstr "Названо учасниками"
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:163
 msgid "Named ways of working your team can reuse."
@@ -7832,8 +7887,8 @@ msgid "Names on the legend"
 msgstr ""
 
 #: src/components/map/panels/NodeDetailCard.tsx:297
-msgid "Narrative"
-msgstr ""
+#~ msgid "Narrative"
+#~ msgstr ""
 
 #: src/components/chat/templates.ts:89
 msgid "Narratives (English)"
@@ -7849,7 +7904,6 @@ msgstr ""
 
 #: src/components/map/attributes.ts:273
 #: src/components/map/panels/shared.tsx:28
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:208
 msgid "Negative"
 msgstr ""
 
@@ -7860,7 +7914,6 @@ msgstr ""
 
 #: src/components/map/attributes.ts:274
 #: src/components/map/panels/shared.tsx:30
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:209
 msgid "Neutral"
 msgstr ""
 
@@ -7984,7 +8037,7 @@ msgstr "Next"
 msgid "participant.verify.instructions.button.next"
 msgstr "Next"
 
-#: src/components/map/panels/ShowcasePanel.tsx:142
+#: src/components/map/panels/ShowcasePanel.tsx:141
 msgid "Next change in <0>{remainingSeconds}s</0>"
 msgstr ""
 
@@ -8084,7 +8137,7 @@ msgstr "No collections found"
 msgid "No colour"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:224
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:229
 msgid "No configurable parameters."
 msgstr ""
 
@@ -8134,7 +8187,7 @@ msgstr ""
 msgid "No default set (client-managed applies)"
 msgstr "Типове значення не встановлено (діє керування клієнтом)"
 
-#: src/components/map/panels/NodeDetailCard.tsx:357
+#: src/components/map/panels/NodeDetailCard.tsx:332
 msgid "No evidenced connections."
 msgstr ""
 
@@ -8162,12 +8215,16 @@ msgstr ""
 msgid "No goal yet. Set one here, or let the assistant interview you in chat."
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:284
+msgid "No history yet."
+msgstr "Історії поки немає."
+
 #: src/components/invite/InviteModal.tsx:456
 msgid "No invites went out. Check the list below."
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:312
-#: src/components/map/panels/NodeDetailCard.tsx:321
+#: src/components/map/panels/NodeDetailCard.tsx:293
+#: src/components/map/panels/NodeDetailCard.tsx:302
 msgid "No linked arguments."
 msgstr ""
 
@@ -8218,7 +8275,7 @@ msgstr "No new feedback detected yet. Please continue your discussion and try ag
 msgid "No new invites needed. Check the list below."
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:418
+#: src/components/map/panels/NodeDetailCard.tsx:392
 msgid "No node selected."
 msgstr ""
 
@@ -8312,7 +8369,7 @@ msgstr ""
 msgid "No recent activity"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:553
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:558
 msgid "No recipe checks declared."
 msgstr ""
 
@@ -8336,7 +8393,7 @@ msgstr "No reports yet"
 msgid "No results"
 msgstr "No results"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:799
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:804
 msgid "No runs yet"
 msgstr ""
 
@@ -8345,8 +8402,8 @@ msgid "No selectable conversations"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:474
-msgid "No source quote was recorded for this result."
-msgstr ""
+#~ msgid "No source quote was recorded for this result."
+#~ msgstr ""
 
 #: src/components/map/attributes.ts:112
 msgid "No stakeholders saved yet."
@@ -8482,7 +8539,11 @@ msgstr "Not available"
 msgid "Not enabled by an admin of {0}"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:216
+#: src/components/results/ResultItem.tsx:572
+msgid "Not in this presentation"
+msgstr "Не в цій презентації"
+
+#: src/components/map/panels/NodeDetailCard.tsx:215
 msgid "Not in this view"
 msgstr ""
 
@@ -8503,8 +8564,6 @@ msgid "Not placed on the map"
 msgstr ""
 
 #: src/components/map/panels/shared.tsx:98
-#: src/components/map/panels/NodeDetailCard.tsx:342
-#: src/components/map/panels/NodeDetailCard.tsx:345
 msgid "Not recorded"
 msgstr ""
 
@@ -8801,7 +8860,6 @@ msgstr ""
 #: src/components/conversation/ProjectConversationsPanel.tsx:406
 #: src/components/conversation/ProjectConversationsPanel.tsx:410
 #: src/components/conversation/ConversationDrilldownModal.tsx:237
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:496
 msgid "Open conversation"
 msgstr ""
 
@@ -8822,8 +8880,9 @@ msgid "Open host guide"
 msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:861
+#: src/components/results/ResultItem.tsx:600
 msgid "Open in Analysis"
-msgstr ""
+msgstr "Відкрити в аналізі"
 
 #: src/components/chat/CanvasSuggestionCard.tsx:230
 msgid "Open in library"
@@ -9108,7 +9167,7 @@ msgstr "outcomes"
 msgid "Outcomes"
 msgstr "Outcomes"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:733
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:738
 msgid "Output objects"
 msgstr ""
 
@@ -9434,8 +9493,8 @@ msgid "Phone"
 msgstr "Phone"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:218
-msgid "Phrase"
-msgstr ""
+#~ msgid "Phrase"
+#~ msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:839
 msgid "phrases"
@@ -9606,12 +9665,12 @@ msgid "PNG, JPEG, or WebP. Will be cropped to a circle."
 msgstr "PNG, JPEG, or WebP. Will be cropped to a circle."
 
 #: src/components/map/panels/NodeDetailCard.tsx:290
-msgid "Pole A"
-msgstr ""
+#~ msgid "Pole A"
+#~ msgstr ""
 
 #: src/components/map/panels/NodeDetailCard.tsx:293
-msgid "Pole B"
-msgstr ""
+#~ msgid "Pole B"
+#~ msgstr ""
 
 #: src/components/feedback/ResponseFeedbackControls.tsx:163
 msgid "Poor response"
@@ -9619,7 +9678,7 @@ msgstr "Погана відповідь"
 
 #: src/routes/project/present/blockLabel.ts:7
 #: src/routes/project/library/LibraryRoute.tsx:123
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:379
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:384
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:136
 #: src/components/popcorn/PopcornStart.tsx:55
 #: src/components/popcorn/PopcornIntroModal.tsx:24
@@ -9704,7 +9763,6 @@ msgstr ""
 
 #: src/components/map/attributes.ts:272
 #: src/components/map/panels/shared.tsx:26
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:207
 msgid "Positive"
 msgstr ""
 
@@ -9720,11 +9778,11 @@ msgstr ""
 msgid "Prefer talking? Press record and just say it."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:802
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:807
 msgid "Preparation and updates will appear here."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:434
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:439
 msgid "Prepare"
 msgstr ""
 
@@ -9732,7 +9790,11 @@ msgstr ""
 msgid "Prepare sessions with an editable host guide next to the QR code."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:579
+#: src/components/results/ResultItem.tsx:504
+msgid "Prepared by an analysis run"
+msgstr "Підготовлено аналізом"
+
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:584
 msgid "Preparing"
 msgstr ""
 
@@ -10066,8 +10128,8 @@ msgid "Publish changes"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:335
-msgid "Publish revision"
-msgstr ""
+#~ msgid "Publish revision"
+#~ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1097
 msgid "Publish this report first to show the portal link"
@@ -10089,6 +10151,10 @@ msgstr "Pull out the most impactful quotes from this session"
 msgid "Put {name} on dembrane-managed billing at the {tier} tier? No automatic Mollie charges or auto-expiry."
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:570
+msgid "Put back in this presentation"
+msgstr "Повернути в цю презентацію"
+
 #: src/components/popcorn/PopcornScreenSettings.tsx:82
 msgid "QR code"
 msgstr ""
@@ -10098,14 +10164,14 @@ msgid "Question"
 msgstr "Запитання"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:252
-msgid "Question to resolve"
-msgstr ""
+#~ msgid "Question to resolve"
+#~ msgstr ""
 
 #: src/components/chat/AgenticIntroModal.tsx:69
 msgid "Questions about how dembrane works, not only about your data."
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:504
+#: src/components/map/panels/NodeDetailCard.tsx:485
 msgid "Quotes ({quoteCount})"
 msgstr ""
 
@@ -10123,7 +10189,7 @@ msgstr ""
 msgid "Rating"
 msgstr "Оцінка"
 
-#: src/components/map/panels/SpotlightPanel.tsx:235
+#: src/components/map/panels/SpotlightPanel.tsx:234
 msgid "Re-check"
 msgstr ""
 
@@ -10175,7 +10241,7 @@ msgstr ""
 msgid "Read replies as they arrive."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:867
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:872
 msgid "Read shared findings, inspect their evidence and see how they were produced."
 msgstr ""
 
@@ -10188,7 +10254,7 @@ msgstr ""
 msgid "Read-only"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:531
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:536
 msgid "Read-only steps"
 msgstr ""
 
@@ -10265,8 +10331,8 @@ msgid "Reason"
 msgstr "Причина"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:301
-msgid "Reason for this change"
-msgstr ""
+#~ msgid "Reason for this change"
+#~ msgstr ""
 
 #. placeholder {0}: note.reason
 #: src/components/chat/InsightNoteCard.tsx:216
@@ -10281,19 +10347,24 @@ msgstr ""
 msgid "recently"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:384
-msgid "Recipe: {recipe}"
-msgstr ""
+#: src/components/results/ResultItem.tsx:511
+msgid "Recipe not recorded"
+msgstr "Рецепт не зафіксовано"
 
-#: src/components/map/panels/NodeDetailCard.tsx:386
+#: src/components/results/ResultItem.tsx:509
+#: src/components/map/panels/NodeDetailCard.tsx:359
+msgid "Recipe: {recipe}"
+msgstr "Рецепт: {recipe}"
+
+#: src/components/map/panels/NodeDetailCard.tsx:361
 msgid "Recipe: not recorded"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:892
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:897
 msgid "Recipes"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:657
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:662
 msgid "Recipes could not be loaded."
 msgstr ""
 
@@ -10485,8 +10556,8 @@ msgstr "Regenerating the summary. Please wait..."
 msgid "Register | dembrane"
 msgstr "Register | dembrane"
 
-#: src/components/map/panels/NodeDetailCard.tsx:325
-#: src/components/map/panels/NodeDetailCard.tsx:518
+#: src/components/map/panels/NodeDetailCard.tsx:306
+#: src/components/map/panels/NodeDetailCard.tsx:499
 #: src/components/map/panels/MapSettingsMenu.tsx:215
 msgid "Relationships"
 msgstr ""
@@ -10908,7 +10979,7 @@ msgstr ""
 #~ msgstr ""
 
 #. placeholder {0}: hidden.length
-#: src/routes/project/present/PresentResultsPanel.tsx:160
+#: src/routes/project/present/PresentResultsPanel.tsx:175
 msgid "Reset hidden findings ({0})"
 msgstr ""
 
@@ -10932,27 +11003,48 @@ msgstr "Відгук про відповідь"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:357
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:409
-msgid "Restore earlier wording"
-msgstr ""
+#~ msgid "Restore earlier wording"
+#~ msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:347
-msgid "Restore result"
-msgstr ""
+#~ msgid "Restore result"
+#~ msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:411
-msgid "Restore revision"
-msgstr ""
+#~ msgid "Restore revision"
+#~ msgstr ""
 
-#. placeholder {0}: rollbackRevision?.revisionNumber ?? ""
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:410
-msgid "Restore revision {0} as a new revision?"
-msgstr ""
+#~ msgid "Restore revision {0} as a new revision?"
+#~ msgstr ""
+
+#: src/components/results/ResultItem.tsx:319
+msgid "Restore this wording"
+msgstr "Відновити це формулювання"
+
+#: src/components/results/ResultItem.tsx:536
+msgid "Restore to the analysis"
+msgstr "Повернути в аналіз"
+
+#. placeholder {0}: revision.revisionNumber
+#: src/components/results/ResultItem.tsx:438
+msgid "Restored the wording of revision {0}"
+msgstr "Відновлено формулювання версії {0}"
+
+#: src/components/results/ResultItem.tsx:182
+#: src/components/results/ResultItem.tsx:429
+msgid "Restored to the analysis"
+msgstr "Повернуто в аналіз"
+
+#: src/components/results/ResultItem.tsx:486
+msgid "Restoring that wording."
+msgstr "Відновлюємо це формулювання."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:117
 msgid "Result type"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:889
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:894
 #: src/components/popcorn/PopcornLanguageSettings.tsx:132
 #: src/components/map/panels/ResultList.tsx:40
 msgid "Results"
@@ -11019,7 +11111,7 @@ msgstr "Retranscription started. New conversation will be available soon."
 #: src/routes/project/chat/ProjectChatRoute.tsx:842
 #: src/components/workspace/UsageCard.tsx:108
 #: src/components/workspace/OrganisationUsageRollup.tsx:494
-#: src/components/map/panels/SpotlightPanel.tsx:256
+#: src/components/map/panels/SpotlightPanel.tsx:255
 #: src/components/map/panels/ExplorePanel.tsx:118
 #: src/components/common/FetchErrorPanel.tsx:35
 msgid "Retry"
@@ -11038,7 +11130,7 @@ msgstr "Retry Upload"
 msgid "Return home"
 msgstr "Повернутися на головну"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:875
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:880
 msgid "Return to presentation"
 msgstr ""
 
@@ -11098,24 +11190,22 @@ msgid "participant.concrete.action.button.revise"
 msgstr "Revise"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:526
-msgid "Revision"
-msgstr ""
+#~ msgid "Revision"
+#~ msgstr ""
 
-#. placeholder {0}: revision.revisionNumber
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:373
-msgid "Revision {0}"
-msgstr ""
+#~ msgid "Revision {0}"
+#~ msgstr ""
 
 #: src/components/settings/AuditLogsCard.tsx:609
 msgid "Revision #{revisionNumber}"
 msgstr "Revision #{revisionNumber}"
 
 #: src/components/goal/ProjectGoalSection.tsx:183
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:506
 msgid "Revision history"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:391
+#: src/components/map/panels/NodeDetailCard.tsx:366
 msgid "Revision history is not available yet."
 msgstr ""
 
@@ -11155,9 +11245,7 @@ msgstr ""
 msgid "Right-click to highlight"
 msgstr "Right-click to highlight"
 
-#: src/components/map/panels/NodeDetailCard.tsx:341
 #: src/components/invite/RoleSelect.tsx:78
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:270
 msgid "Role"
 msgstr ""
 
@@ -11186,23 +11274,23 @@ msgstr "Rows per page"
 msgid "Run"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:590
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:595
 msgid "Run again from scratch"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:705
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:710
 msgid "Run details could not be loaded."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:609
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:614
 msgid "Run fresh generation"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:781
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:786
 msgid "Run history could not be loaded."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:595
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:600
 msgid "Run this recipe again for {scopeLabel}. Existing published results stay visible until the fresh generation is ready."
 msgstr ""
 
@@ -11214,7 +11302,7 @@ msgstr ""
 msgid "Running"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:895
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:900
 msgid "Runs"
 msgstr ""
 
@@ -11544,8 +11632,8 @@ msgid "Seats full"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:240
-msgid "Second pole"
-msgstr ""
+#~ msgid "Second pole"
+#~ msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:447
 msgid "Secret"
@@ -12042,7 +12130,7 @@ msgstr ""
 msgid "Show {overflow} more"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:228
+#: src/components/map/panels/NodeDetailCard.tsx:227
 msgid "Show {typePlural}"
 msgstr ""
 
@@ -12100,6 +12188,10 @@ msgstr "Show more"
 msgid "Show more versions"
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:605
+msgid "Show on the map"
+msgstr "Показати на карті"
+
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:371
 msgid "Show only what changed"
 msgstr ""
@@ -12133,6 +12225,10 @@ msgstr ""
 #: src/components/project/ProjectPortalEditor.tsx:1426
 msgid "Show the invitation"
 msgstr "Показувати запрошення"
+
+#: src/components/results/ResultItem.tsx:591
+msgid "Show to the room"
+msgstr "Показати залу"
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:287
 msgid "Show what happens to the data"
@@ -12250,6 +12346,10 @@ msgstr ""
 msgid "Someone"
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:519
+msgid "Someone changed this while you had it open. Open it again to see their version."
+msgstr "Хтось змінив це, поки воно було у вас відкрите. Відкрийте знову, щоб побачити їхню версію."
+
 #: src/components/popcorn/PopcornVoiceSection.tsx:73
 msgid "Something else"
 msgstr ""
@@ -12344,20 +12444,19 @@ msgstr "Sort"
 msgid "Source {0}"
 msgstr "Source {0}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:498
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:503
 msgid "Source conversation"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:487
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:470
+#: src/components/map/panels/NodeDetailCard.tsx:468
 msgid "Source evidence"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:133
+#: src/components/map/panels/NodeDetailCard.tsx:132
 msgid "Source statement unavailable"
 msgstr "Початкове твердження недоступне"
 
-#: src/components/map/panels/NodeDetailCard.tsx:378
+#: src/components/map/panels/NodeDetailCard.tsx:353
 msgid "Source: {origin}"
 msgstr ""
 
@@ -12415,8 +12514,8 @@ msgstr ""
 
 #: src/components/map/panels/NodeDetailCard.tsx:344
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:275
-msgid "Stake"
-msgstr ""
+#~ msgid "Stake"
+#~ msgstr ""
 
 #: src/components/map/attributes.ts:114
 msgid "Stakeholder"
@@ -12488,8 +12587,8 @@ msgid "Starts"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:185
-msgid "Statement"
-msgstr ""
+#~ msgid "Statement"
+#~ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1700
 #: src/routes/admin/AdminSettingsRoute.tsx:2686
@@ -12532,7 +12631,7 @@ msgstr ""
 msgid "Step {0} of {STEP_COUNT}"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:738
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:743
 msgid "Steps and logs"
 msgstr ""
 
@@ -12556,11 +12655,11 @@ msgstr "Stop"
 #~ msgid "Stop coloring graph by fact-check"
 #~ msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:136
+#: src/components/map/panels/SpotlightPanel.tsx:135
 msgid "Stop coloring graph by factual status"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:115
+#: src/components/map/panels/SpotlightPanel.tsx:114
 msgid "Stop coloring graph by valence"
 msgstr ""
 
@@ -12575,7 +12674,7 @@ msgstr ""
 msgid "Stop recording and turn it into text"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:765
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:770
 msgid "Stop run"
 msgstr ""
 
@@ -12726,11 +12825,11 @@ msgstr ""
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
-#: src/components/map/panels/NodeDetailCard.tsx:306
+#: src/components/map/panels/NodeDetailCard.tsx:287
 msgid "Supporting pole A"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:315
+#: src/components/map/panels/NodeDetailCard.tsx:296
 msgid "Supporting pole B"
 msgstr ""
 
@@ -12831,8 +12930,8 @@ msgid "Tapping Record twice no longer creates duplicate conversations."
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:544
-msgid "Technical lineage"
-msgstr ""
+#~ msgid "Technical lineage"
+#~ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1168
 msgid "Tell the workspace admins what you need access for. This note is optional."
@@ -12872,7 +12971,6 @@ msgid "Templates"
 msgstr "Templates"
 
 #: src/components/map/attributes.ts:123
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:245
 msgid "Tension"
 msgstr ""
 
@@ -12975,8 +13073,8 @@ msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:326
-msgid "The change could not be published."
-msgstr ""
+#~ msgid "The change could not be published."
+#~ msgstr ""
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:279
 #: src/components/settings/TwoFactorSettingsCard.tsx:290
@@ -13061,6 +13159,10 @@ msgstr ""
 msgid "The goal guides reports, canvases, and assistant suggestions for this project."
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:471
+msgid "The history could not be loaded."
+msgstr "Не вдалося завантажити історію."
+
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:86
 msgid "The host guide is what facilitators read before they run a session."
 msgstr ""
@@ -13131,6 +13233,10 @@ msgstr ""
 msgid "The map loads after you choose to open it."
 msgstr "Мапа завантажиться після того, як ви вирішите її відкрити."
 
+#: src/components/results/ResultItem.tsx:178
+msgid "The meaning"
+msgstr "Зміст"
+
 #: src/components/release/releaseHistory.ts:233
 msgid "The members page shows a loading state instead of briefly claiming there are no members."
 msgstr ""
@@ -13160,7 +13266,7 @@ msgstr ""
 msgid "The organisation this invite was for has been deleted. There's nothing to join."
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:148
+#: src/components/map/panels/NodeDetailCard.tsx:147
 msgid "The original statements are unavailable for this older result."
 msgstr "Початкові твердження недоступні для цього старішого результату."
 
@@ -13200,7 +13306,7 @@ msgstr ""
 msgid "The pulls between what people want, verified against the conversations."
 msgstr ""
 
-#: src/components/map/panels/ShowcasePanel.tsx:120
+#: src/components/map/panels/ShowcasePanel.tsx:119
 msgid "The random walk will surface nodes here once available."
 msgstr ""
 
@@ -13213,7 +13319,7 @@ msgstr "The report may start up to 5 minutes after the chosen time."
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:464
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:469
 msgid "the selected conversation"
 msgstr ""
 
@@ -13393,7 +13499,7 @@ msgstr ""
 msgid "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:185
+#: src/components/map/panels/SpotlightPanel.tsx:184
 msgid "This claim has not been fact-checked."
 msgstr ""
 
@@ -13583,8 +13689,8 @@ msgid "this person"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:224
-msgid "This phrase is a question"
-msgstr ""
+#~ msgid "This phrase is a question"
+#~ msgstr ""
 
 #: src/components/participant/ParticipantShareModal.tsx:153
 msgid "This portal is not accepting new sessions right now."
@@ -13668,8 +13774,8 @@ msgid "This request took too long, so I stopped it. Send it again and I'll retry
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:309
-msgid "This result changed while you were reviewing it."
-msgstr ""
+#~ msgid "This result changed while you were reviewing it."
+#~ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:687
 msgid "This returns the account to standard free billing."
@@ -13679,7 +13785,7 @@ msgstr ""
 msgid "This returns the workspace to your organisation's shared billing and removes its external data owner."
 msgstr ""
 
-#: src/components/analysis/AnalysisResultsList.tsx:88
+#: src/components/analysis/AnalysisResultsList.tsx:95
 msgid "This revision is unavailable."
 msgstr ""
 
@@ -13799,6 +13905,11 @@ msgstr ""
 msgid "Time"
 msgstr "Час"
 
+#: src/components/results/ResultItem.tsx:191
+#: src/components/results/ResultItem.tsx:194
+msgid "Time not recorded"
+msgstr "Час не зафіксовано"
+
 #: src/components/conversation/LiveFunnelSection.tsx:64
 #: src/components/conversation/ConversationDrilldownModal.tsx:69
 msgid "Timeline"
@@ -13857,9 +13968,9 @@ msgstr ""
 msgid "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:302
+#: src/components/results/ResultItem.tsx:122
 msgid "To resolve"
-msgstr ""
+msgstr "Треба вирішити"
 
 #: src/components/billing/BillingManager.tsx:681
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
@@ -14110,7 +14221,7 @@ msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:944
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:436
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:441
 #: src/routes/invite/MyInvitesRoute.tsx:222
 #: src/routes/invite/AcceptInviteRoute.tsx:557
 #: src/components/project/ProjectAccessGuard.tsx:109
@@ -14400,7 +14511,7 @@ msgstr "Незабаром"
 msgid "Update"
 msgstr "Update"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:437
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:442
 msgid "Update results"
 msgstr ""
 
@@ -14671,7 +14782,7 @@ msgstr ""
 msgid "Username"
 msgstr "Username"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:511
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:516
 msgid "Uses eligible conversations across this project."
 msgstr ""
 
@@ -14688,7 +14799,6 @@ msgid "Using webhooks? We'd love to hear from you"
 msgstr "Using webhooks? We'd love to hear from you"
 
 #: src/components/map/attributes.ts:279
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:204
 msgid "Valence"
 msgstr ""
 
@@ -14838,7 +14948,7 @@ msgstr ""
 msgid "View recipes"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:583
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:588
 msgid "View results"
 msgstr ""
 
@@ -14883,7 +14993,7 @@ msgstr ""
 msgid "Visitor details"
 msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:367
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:372
 #: src/components/voice/VoiceInputButton.tsx:39
 #: src/components/popcorn/PopcornVoiceSection.tsx:149
 msgid "Voice"
@@ -14898,8 +15008,8 @@ msgid "Voice input respects the free plan's recording limit."
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:285
-msgid "Voiced directly"
-msgstr ""
+#~ msgid "Voiced directly"
+#~ msgstr ""
 
 #: src/components/map/panels/shared.tsx:92
 msgid "Voiced in a conversation"
@@ -14917,7 +15027,7 @@ msgstr ""
 msgid "Waiting for the first conversation with a transcript."
 msgstr ""
 
-#: src/components/map/panels/ShowcasePanel.tsx:147
+#: src/components/map/panels/ShowcasePanel.tsx:146
 msgid "Waiting for the next node"
 msgstr ""
 
@@ -15253,6 +15363,10 @@ msgstr ""
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "When the summary is ready (includes both transcript and summary)"
 
+#: src/components/results/ResultItem.tsx:496
+msgid "Where this came from"
+msgstr "Звідки це"
+
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:253
 msgid "Where would you like to go?"
 msgstr ""
@@ -15288,6 +15402,10 @@ msgstr ""
 msgid "Who on your team holds a current training license. Book a training from your organisation's Training view."
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:543
+msgid "Why? One sentence, for the people you work with and anyone who checks later."
+msgstr "Чому? Одне речення, для колег і для тих, хто перевірятиме пізніше."
+
 #: src/components/report/CreateReportForm.tsx:219
 msgid "will be included in your report"
 msgstr "will be included in your report"
@@ -15304,20 +15422,33 @@ msgstr ""
 msgid "With several lines, the first reads as a subtitle."
 msgstr ""
 
+#: src/components/results/ResultItem.tsx:548
+#: src/components/results/ResultItem.tsx:560
+msgid "Withdraw from the analysis"
+msgstr "Вилучити з аналізу"
+
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:349
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:395
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:397
-msgid "Withdraw result"
-msgstr ""
+#~ msgid "Withdraw result"
+#~ msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:396
-msgid "Withdraw this result from current Map and presentation views? Its revision history will remain available."
-msgstr ""
+#~ msgid "Withdraw this result from current Map and presentation views? Its revision history will remain available."
+#~ msgstr ""
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:136
-#: src/components/analysis/AnalysisResultsList.tsx:68
+#: src/components/analysis/AnalysisResultsList.tsx:75
 msgid "Withdrawn"
 msgstr ""
+
+#: src/components/results/ResultItem.tsx:180
+msgid "Withdrawn from the analysis"
+msgstr "Вилучено з аналізу"
+
+#: src/components/results/ResultItem.tsx:528
+msgid "Withdrawn from the analysis."
+msgstr "Вилучено з аналізу."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:502
 msgid "Within my organisation"
@@ -15462,6 +15593,10 @@ msgstr "Would you like to add this tag to your current filters?"
 #: src/components/release/releaseHistory.ts:393
 msgid "Write custom host prompts for participant verification."
 msgstr ""
+
+#: src/components/results/ResultItem.tsx:500
+msgid "Written by a host"
+msgstr "Написано ведучим"
 
 #: src/routes/auth/Register.tsx:282
 msgid "Wrong address? Change email"

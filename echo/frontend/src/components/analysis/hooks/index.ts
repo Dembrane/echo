@@ -81,6 +81,13 @@ export type AnalysisRevision = {
 	publishedAt?: string | null;
 	membershipExcluded: boolean;
 	provenance?: Record<string, unknown>;
+	/** Who published it. Absent on revisions a run produced. */
+	actorId?: string | null;
+	/**
+	 * What the host said they changed. The server is growing this field; old
+	 * and generated revisions have none and read as "not recorded".
+	 */
+	changeKind?: string | null;
 };
 
 export type AnalysisObjectsPage = {

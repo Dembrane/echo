@@ -98,7 +98,6 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 							node={node}
 							evidence={evidence}
 							conversationHref={conversationHref}
-							titleSize="small"
 							collapsibleQuotes
 							inspection={inspection}
 						/>

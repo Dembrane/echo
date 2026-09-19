@@ -88,14 +88,15 @@ const renderCard = (nodeId: string, visible: ObjectType[]) => {
 describe("inspector per type", () => {
 	it("shows a tension's poles, narrative, question and support per pole", () => {
 		const inspection = renderCard("rev-tension-0", ["tension"]);
-		expect(screen.getByText("Pole A")).toBeTruthy();
+		// The poles, the knot and the question are on the stage card now, in the
+		// tension's own shape rather than under labels.
+		expect(screen.getByTestId("result-stage")).toBeTruthy();
 		expect(screen.getByText("Synthetic pole A 0")).toBeTruthy();
 		expect(screen.getByText("Synthetic pole B 0")).toBeTruthy();
-		expect(screen.getByText("Narrative")).toBeTruthy();
 		expect(
 			screen.getByText("Two groups read synthetic topic 0 in opposite ways."),
 		).toBeTruthy();
-		expect(screen.getByText("To resolve")).toBeTruthy();
+		expect(screen.getByText(/To resolve:/)).toBeTruthy();
 		expect(screen.getByText("Supporting pole A")).toBeTruthy();
 		expect(screen.getByText("Supporting pole B")).toBeTruthy();
 		// Supporting arguments carry their evidence.
@@ -136,7 +137,8 @@ describe("inspector per type", () => {
 
 	it("shows a stakeholder's role, stake, evidence rung and connections", () => {
 		renderCard("rev-stakeholder-0", ["stakeholder"]);
-		expect(screen.getByText("Role")).toBeTruthy();
+		// Name, role and stake read as the stage card shows them.
+		expect(screen.getByTestId("result-stage")).toBeTruthy();
 		expect(screen.getByText("Synthetic role 0")).toBeTruthy();
 		expect(screen.getByText("Synthetic stake 0")).toBeTruthy();
 		expect(screen.getByText("Voiced in a conversation")).toBeTruthy();

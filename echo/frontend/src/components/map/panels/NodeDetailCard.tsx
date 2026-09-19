@@ -4,13 +4,13 @@ import { Anchor, Button, UnstyledButton } from "@mantine/core";
 import { CaretRightIcon } from "@phosphor-icons/react";
 import { memo, type ReactNode, useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
+import { ResultStage } from "@/components/results";
 import { cn } from "@/lib/utils";
 import { OBJECT_TYPE_STYLES } from "../attributes";
 import type {
 	EvidenceGroup,
 	MapObjectInfo,
 	StakeholderDetail,
-	TensionDetail,
 } from "../data/adapter";
 import {
 	DERIVED_FROM,
@@ -57,7 +57,6 @@ type NodeDetailCardProps = {
 	/** Quotes per source conversation. */
 	evidence: EvidenceGroup[];
 	conversationHref?: ConversationHref;
-	titleSize?: "small" | "large";
 	collapsibleQuotes?: boolean;
 	inspection?: NodeInspection | null;
 };
@@ -276,33 +275,15 @@ const RelatedList = ({
 	);
 
 const TensionSections = ({
-	detail,
 	inspection,
 	conversationHref,
 }: {
-	detail: TensionDetail;
 	inspection: NodeInspection;
 	conversationHref?: ConversationHref;
 }) => {
 	const support = tensionSupport(inspection.related);
 	return (
 		<div className="space-y-3" data-testid="tension-inspector">
-			<Section title={<Trans>Pole A</Trans>}>
-				<p className="text-sm">{detail.poleA}</p>
-			</Section>
-			<Section title={<Trans>Pole B</Trans>}>
-				<p className="text-sm">{detail.poleB}</p>
-			</Section>
-			{detail.knot && (
-				<Section title={<Trans>Narrative</Trans>}>
-					<p className="text-sm">{detail.knot}</p>
-				</Section>
-			)}
-			{detail.toResolve && (
-				<Section title={<Trans>To resolve</Trans>}>
-					<p className="text-sm">{detail.toResolve}</p>
-				</Section>
-			)}
 			<Section title={<Trans>Supporting pole A</Trans>}>
 				<RelatedList
 					items={support.poleA}
@@ -338,12 +319,6 @@ const StakeholderSections = ({
 	inspection: NodeInspection;
 }) => (
 	<div className="space-y-3" data-testid="stakeholder-inspector">
-		<Section title={<Trans>Role</Trans>}>
-			<p className="text-sm">{detail.role || t`Not recorded`}</p>
-		</Section>
-		<Section title={<Trans>Stake</Trans>}>
-			<p className="text-sm">{detail.stake || t`Not recorded`}</p>
-		</Section>
 		<Section title={<Trans>Evidence</Trans>}>
 			<p className="text-sm">
 				{rungLabel(detail.rung)}
@@ -406,7 +381,6 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 	node,
 	evidence,
 	conversationHref,
-	titleSize = "large",
 	collapsibleQuotes = false,
 	inspection = null,
 }: NodeDetailCardProps) {
@@ -424,10 +398,6 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 		(total, group) => total + group.quotes.length,
 		0,
 	);
-	const titleClass =
-		titleSize === "large"
-			? "text-lg font-medium leading-tight"
-			: "text-base font-medium leading-snug";
 	const type = node.metadata.objectType;
 	const object = inspection?.object ?? null;
 	const detail = object?.detail;
@@ -463,11 +433,22 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 					{typeLabel}
 				</p>
 			)}
-			<p className={titleClass}>{node.label ?? node.id}</p>
+			{/* The finding in its kind's shape, the way a room would get it. The
+			    map keeps its own evidence below, attributed and linked, because
+			    the stage's quotes are unattributed and the audience payload
+			    carries none at all. */}
+			<ResultStage
+				item={{
+					detail: object?.detail,
+					label: node.label ?? node.id,
+					type: type ?? "argument",
+				}}
+				quotes={[]}
+				evidence={{ conversations: evidence.length, quotes: quoteCount }}
+			/>
 
 			{inspection && detail?.type === "tension" && (
 				<TensionSections
-					detail={detail}
 					inspection={inspection}
 					conversationHref={conversationHref}
 				/>

@@ -22,7 +22,6 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { AnalysisResultsList } from "@/components/analysis/AnalysisResultsList";
-import { EvidenceInspectionDrawer } from "@/components/analysis/EvidenceInspectionDrawer";
 import {
 	type AnalysisObject,
 	type AnalysisRecipe,
@@ -46,6 +45,7 @@ import {
 	useProjectPopcorn,
 } from "@/components/popcorn/hooks";
 import { PopcornVoiceSection } from "@/components/popcorn/PopcornVoiceSection";
+import { ResultItem } from "@/components/results";
 import { useRecipeParameters } from "./useRecipeParameters";
 
 type AnalysisTab = "results" | "recipes" | "runs";
@@ -188,10 +188,24 @@ function ResultsView({
 			{data && data.total > 0 && (
 				<AnalysisResultsList
 					counts={data.counts}
+					expandedObjectId={selected?.objectId ?? null}
+					renderExpanded={(item) => (
+						<ResultItem
+							projectId={projectId}
+							item={item}
+							canEdit={Boolean(data.canEdit)}
+							mapHref={mapPath}
+							onClose={() => setSelected(null)}
+						/>
+					)}
 					items={data.items}
 					labels={labels}
 					limit={data.limit}
-					onInspect={setSelected}
+					onInspect={(item) =>
+						setSelected((current) =>
+							current?.objectId === item.objectId ? null : item,
+						)
+					}
 					onPageChange={(nextPage) => {
 						const next = new URLSearchParams(params);
 						nextPage === 1
@@ -203,15 +217,6 @@ function ResultsView({
 					total={data.total}
 				/>
 			)}
-			<EvidenceInspectionDrawer
-				projectId={projectId}
-				workspaceId={workspaceId}
-				snapshotId={data?.snapshotId}
-				item={selected}
-				editable={Boolean(data?.canEdit)}
-				opened={Boolean(selected)}
-				onClose={() => setSelected(null)}
-			/>
 		</Stack>
 	);
 }
