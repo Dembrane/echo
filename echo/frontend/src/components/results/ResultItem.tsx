@@ -244,9 +244,11 @@ export function ResultStage({
 						</div>
 					)}
 
-					<p className={classes.meta}>
-						{evidenceWords(counted, conversationName)}
-					</p>
+					{evidenceWords(counted, conversationName) && (
+						<p className={classes.meta}>
+							{evidenceWords(counted, conversationName)}
+						</p>
+					)}
 				</div>
 
 				{factCheck && (

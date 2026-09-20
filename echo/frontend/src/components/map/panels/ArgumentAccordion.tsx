@@ -23,6 +23,8 @@ export const AT_REST = 20;
 const SEPARATOR = " · ";
 
 function evidenceWords(quotes: number, conversations: number): string {
+	// The room's payload carries no evidence; say nothing rather than zero.
+	if (!quotes && !conversations) return "";
 	const quoteWords = plural(quotes, { one: "# quote", other: "# quotes" });
 	const conversationWords = plural(conversations, {
 		one: "# conversation",

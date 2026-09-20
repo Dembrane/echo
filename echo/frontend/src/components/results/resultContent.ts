@@ -235,6 +235,9 @@ export function evidenceWords(
 	// Named, so the plural's own variables carry the wording the catalogs
 	// already hold.
 	const { conversations, quotes } = evidence;
+	// Nothing to count is nothing to say: the room's payload carries no
+	// evidence, and "0 conversations" would read as a finding nobody made.
+	if (!quotes && !conversations) return "";
 	if (namesOneConversation(evidence, name))
 		return plural(quotes, {
 			one: `# quote from ${name}`,

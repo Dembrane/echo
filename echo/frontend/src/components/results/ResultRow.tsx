@@ -308,7 +308,9 @@ export function ResultRow({
 								{attention && (
 									<>
 										<span>{attention}</span>
-										<span aria-hidden>{EVIDENCE_SEPARATOR}</span>
+										{evidenceWords(evidence, item.conversationName) && (
+											<span aria-hidden>{EVIDENCE_SEPARATOR}</span>
+										)}
 									</>
 								)}
 								{evidenceWords(evidence, item.conversationName)}
