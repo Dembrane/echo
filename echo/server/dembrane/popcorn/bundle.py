@@ -37,6 +37,7 @@ from dembrane.popcorn.service import (
     normalize_settings,
     get_loop_for_report,
     mark_synthetic_files,
+    referenced_quote_ids,
     resolve_presentation_settings,
 )
 from dembrane.popcorn.analysis import norm
@@ -492,9 +493,12 @@ async def published_bundle(
 
 
 def _without_objects(bundle: dict[str, Any], hidden: set[str]) -> dict[str, Any]:
-    """`bundle` without the hidden objects, wherever its files list them. A
-    stakeholder relation leaves with either of its ends: a line drawn to a
-    stakeholder who is no longer on the wall says something nobody meant."""
+    """`bundle` without the hidden objects, wherever its files list them, and
+    without the quotes only they carried. A stakeholder relation leaves with
+    either of its ends: a line drawn to a stakeholder who is no longer on the
+    wall says something nobody meant. A finding leaves with its passages: the
+    registry in `quotes.json` is what a viewer can read, so a quote no visible
+    finding still cites has no business being served."""
     if not hidden:
         return bundle
     files = {
@@ -516,7 +520,28 @@ def _without_objects(bundle: dict[str, Any], hidden: set[str]) -> dict[str, Any]
                 for relation in file.get("relations", [])
                 if all(end in kept for end in relation.get("between", []))
             ]
-    return {**bundle, "files": files}
+    return {**bundle, "files": _without_orphan_quotes(files)}
+
+
+def _without_orphan_quotes(files: dict[str, Any]) -> dict[str, Any]:
+    """The registry after a projection: every quote something still on the deck
+    cites, in the order it was minted. A quote two findings share stays as long
+    as one of them does."""
+    registry = files.get("quotes.json")
+    if not isinstance(registry, dict) or not isinstance(registry.get("quotes"), list):
+        return files
+    cited: set[str] = set()
+    for name, file in files.items():
+        if name != "quotes.json":
+            cited |= referenced_quote_ids(file)
+    kept = [
+        quote
+        for quote in registry["quotes"]
+        if not isinstance(quote, dict) or str(quote.get("id")) in cited
+    ]
+    if len(kept) == len(registry["quotes"]):
+        return files
+    return {**files, "quotes.json": {**registry, "quotes": kept}}
 
 
 async def apply_shared_withdrawals(
