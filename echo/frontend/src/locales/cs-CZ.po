@@ -422,6 +422,11 @@ msgstr ""
 msgid "{0} of {1} trained"
 msgstr ""
 
+#. placeholder {0}: shown.length
+#: src/components/results/curate/ArgumentsTab.tsx:330
+msgid "{0} of {total}"
+msgstr ""
+
 #. placeholder {0}: pendingInvites.length
 #: src/components/project/ProjectSharingModal.tsx:458
 msgid "{0} people aren't in this workspace yet."
@@ -441,6 +446,7 @@ msgstr ""
 
 #. placeholder {0}: item.attentionActor
 #: src/components/results/ResultRow.tsx:75
+#: src/components/results/curate/CurateMeta.tsx:71
 msgid "{0} reworded this"
 msgstr "{0} to přeformuloval"
 
@@ -594,6 +600,10 @@ msgstr "{finishedConversationsCount, plural, one {Currently # conversation is re
 
 #: src/components/common/MoveHistory.tsx:47
 msgid "{from} → {to}"
+msgstr ""
+
+#: src/components/results/curate/CuratePanel.tsx:286
+msgid "{hiddenCount} hidden"
 msgstr ""
 
 #: src/components/pricing/PricingBookingStep.tsx:350
@@ -782,7 +792,7 @@ msgstr ""
 msgid "1 history entry"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:571
+#: src/routes/project/present/PresentRoute.tsx:584
 #: src/components/popcorn/PopcornActions.tsx:137
 msgid "1 hour"
 msgstr ""
@@ -811,7 +821,7 @@ msgstr ""
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. When a conversation or report event happens, we automatically send the data to your URL"
 
-#: src/routes/project/present/PresentRoute.tsx:573
+#: src/routes/project/present/PresentRoute.tsx:586
 #: src/routes/project/canvas/CanvasRoute.tsx:214
 #: src/components/popcorn/PopcornActions.tsx:139
 msgid "24 hours"
@@ -841,7 +851,7 @@ msgstr ""
 msgid "6 to 15."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:572
+#: src/routes/project/present/PresentRoute.tsx:585
 #: src/routes/project/canvas/CanvasRoute.tsx:213
 #: src/components/popcorn/PopcornActions.tsx:138
 msgid "8 hours"
@@ -867,7 +877,7 @@ msgstr ""
 msgid "A downgrade limits features immediately."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:377
+#: src/components/results/ResultItem.tsx:417
 #: src/components/results/ReasonPrompt.tsx:217
 msgid "A few more words, so someone reading later understands."
 msgstr "Ještě pár slov, aby to pochopil i někdo, kdo to bude číst později."
@@ -884,7 +894,11 @@ msgstr "A friendly name to identify this webhook"
 msgid "A Help us translate link invites community translations. Full Italian interface translation is not included."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:430
+#: src/components/results/ResultItem.tsx:657
+msgid "a host"
+msgstr ""
+
+#: src/components/results/ResultItem.tsx:467
 msgid "A host"
 msgstr "Hostitel"
 
@@ -971,7 +985,7 @@ msgid "A title and subtitle before the countdown."
 msgstr ""
 
 #: src/components/results/resultEditing.tsx:448
-#: src/components/results/ResultItem.tsx:275
+#: src/components/results/ResultItem.tsx:283
 msgid "A typo"
 msgstr "Překlep"
 
@@ -1188,6 +1202,10 @@ msgstr ""
 
 #: src/components/goal/ProjectGoalSection.tsx:64
 msgid "Add a project goal before saving."
+msgstr ""
+
+#: src/components/results/curate/CurateMeta.tsx:202
+msgid "add a reason"
 msgstr ""
 
 #: src/components/workspace/gateWalls.ts:137
@@ -1457,11 +1475,13 @@ msgid "Affected by"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:107
+#: src/components/results/curate/ArgumentsTab.tsx:44
+#: src/components/results/curate/ArgumentsTab.tsx:305
 #: src/components/map/panels/ArgumentAccordion.tsx:186
 msgid "against"
 msgstr "proti"
 
-#: src/components/results/ResultItem.tsx:74
+#: src/components/results/ResultItem.tsx:82
 msgid "Against"
 msgstr "Proti"
 
@@ -1494,6 +1514,7 @@ msgstr ""
 #: src/routes/admin/AdminSettingsRoute.tsx:2764
 #: src/components/workspace/OrganisationUsageRollup.tsx:564
 #: src/components/training/StaffTrainingPanel.tsx:117
+#: src/components/results/curate/ArgumentsTab.tsx:301
 #: src/components/project/ProjectUsageAndSharing.tsx:257
 msgid "All"
 msgstr "All"
@@ -1509,6 +1530,10 @@ msgstr "All actions"
 #: src/components/settings/AuditLogsCard.tsx:483
 msgid "All collections"
 msgstr "All collections"
+
+#: src/components/results/curate/ArgumentsTab.tsx:320
+msgid "All conversations"
+msgstr ""
 
 #: src/components/conversation/ConversationLinks.tsx:84
 msgid "All Conversations"
@@ -1633,7 +1658,7 @@ msgstr ""
 msgid "Always on, it lives on our website"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:167
+#: src/routes/project/present/PresentRoute.tsx:169
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr ""
 
@@ -1658,7 +1683,7 @@ msgstr ""
 msgid "An assembly."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:285
+#: src/components/results/ResultItem.tsx:293
 msgid "An earlier wording restored"
 msgstr "Obnoveno dřívější znění"
 
@@ -1802,6 +1827,7 @@ msgid "Another admin or owner will need to restore you."
 msgstr "Another admin or owner will need to restore you."
 
 #: src/components/results/ResultRow.tsx:314
+#: src/components/results/curate/CurateMeta.tsx:159
 msgid "another reason"
 msgstr "jiný důvod"
 
@@ -2113,7 +2139,7 @@ msgstr "Attention! We lost the last 60 seconds or so of your recording due to so
 msgid "Audience language:"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:366
+#: src/routes/project/present/PresentRoute.tsx:372
 msgid "Audience preview"
 msgstr ""
 
@@ -2529,7 +2555,7 @@ msgstr ""
 #: src/components/training/TrainingRowActions.tsx:298
 #: src/components/training/RequestTrainingModal.tsx:97
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
-#: src/components/results/ResultItem.tsx:396
+#: src/components/results/ResultItem.tsx:436
 #: src/components/results/ReasonPrompt.tsx:180
 #: src/components/results/ReasonPrompt.tsx:236
 #: src/components/project/ProjectSharingModal.tsx:317
@@ -2726,7 +2752,7 @@ msgstr ""
 msgid "Change role"
 msgstr "Change role"
 
-#: src/routes/project/present/PresentResultsPanel.tsx:112
+#: src/routes/project/present/PresentResultsPanel.tsx:124
 msgid "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 msgstr "Uprav slova, přečti si doklady, nebo nech zjištění mimo tuto prezentaci. Sdílené výsledky zůstávají v Analýze."
 
@@ -2761,15 +2787,15 @@ msgstr ""
 msgid "Changes applied. You can fine-tune them anytime in project settings."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:721
+#: src/routes/project/present/PresentRoute.tsx:734
 msgid "Changes are saved as a draft. Publish when you’re ready to update the room screen."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:761
+#: src/routes/project/present/PresentRoute.tsx:776
 msgid "Changes could not be published or saved. Review your draft and try again."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:674
+#: src/routes/project/present/PresentRoute.tsx:687
 msgid "Changes could not be published. Try again."
 msgstr ""
 
@@ -2944,7 +2970,7 @@ msgstr "Choose from your other projects"
 msgid "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:157
+#: src/routes/project/present/PresentRoute.tsx:159
 msgid "Choose the tabs your audience can explore."
 msgstr ""
 
@@ -3018,7 +3044,7 @@ msgid "Clearer sources in chat"
 msgstr "Jasnější zdroje v chatu"
 
 #: src/components/results/resultEditing.tsx:451
-#: src/components/results/ResultItem.tsx:277
+#: src/components/results/ResultItem.tsx:285
 msgid "Clearer words, same meaning"
 msgstr "Jasnější slova, stejný význam"
 
@@ -3090,8 +3116,8 @@ msgstr "Clone Project"
 
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
-#: src/components/results/ResultItem.tsx:783
-#: src/components/results/ResultItem.tsx:793
+#: src/components/results/ResultItem.tsx:864
+#: src/components/results/ResultItem.tsx:874
 #: src/components/dropzone/UploadConversationDropzone.tsx:872
 #: src/components/conversation/ConversationLinks.tsx:110
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3166,6 +3192,7 @@ msgid "Columns"
 msgstr "Columns"
 
 #: src/components/results/ResultRow.tsx:97
+#: src/components/results/curate/ArgumentsTab.tsx:176
 msgid "combined"
 msgstr "sloučeno"
 
@@ -3399,6 +3426,8 @@ msgid "conversation"
 msgstr "conversation"
 
 #: src/features/sidebar/hooks/useSearchHits.ts:224
+#: src/components/results/curate/ArgumentsTab.tsx:311
+#: src/components/results/curate/ArgumentsTab.tsx:357
 #: src/components/map/attributes.ts:420
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:449
 #: src/components/conversation/ConversationDrilldownModal.tsx:298
@@ -3656,7 +3685,7 @@ msgstr ""
 msgid "Could not load payments. Check auth and backend logs."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:797
+#: src/routes/project/present/PresentRoute.tsx:812
 msgid "Could not load the latest results. Try again."
 msgstr ""
 
@@ -4096,7 +4125,7 @@ msgstr ""
 msgid "Data ownership"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:134
+#: src/routes/project/present/PresentRoute.tsx:136
 msgid "Data policy"
 msgstr ""
 
@@ -4110,6 +4139,11 @@ msgstr ""
 #: src/components/billing/BillingManager.tsx:758
 msgid "Date"
 msgstr "Date"
+
+#: src/components/results/ResultItem.tsx:335
+#: src/components/results/ResultItem.tsx:338
+msgid "Date not recorded"
+msgstr ""
 
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:148
 msgid "Date range"
@@ -4292,7 +4326,6 @@ msgstr "Deleted successfully"
 msgid "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 msgstr "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 
-#: src/components/results/ResultItem.tsx:430
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:212
 #: src/components/methodology/ProjectMethodologySection.tsx:128
 msgid "dembrane"
@@ -4431,7 +4464,7 @@ msgstr "Didn't get it? Check spam or junk first. The message comes from dembrane
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:172
+#: src/routes/project/present/PresentRoute.tsx:174
 msgid "Different perspectives and trade-offs"
 msgstr ""
 
@@ -4636,7 +4669,7 @@ msgstr ""
 msgid "Duplicate"
 msgstr "Duplicate"
 
-#: src/routes/project/present/PresentRoute.tsx:567
+#: src/routes/project/present/PresentRoute.tsx:580
 #: src/components/workspace/TierCapacityMatrix.tsx:102
 #: src/components/conversation/ConversationEdit.tsx:326
 msgid "Duration"
@@ -4819,7 +4852,7 @@ msgid "Edit your display name and upload, crop or remove your profile picture."
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:95
-#: src/components/results/ResultItem.tsx:210
+#: src/components/results/ResultItem.tsx:218
 msgid "edited"
 msgstr "upraveno"
 
@@ -4827,6 +4860,10 @@ msgstr "upraveno"
 #: src/components/project/ProjectListItem.tsx:252
 msgid "Edited {0}"
 msgstr "Edited {0}"
+
+#: src/components/results/ResultItem.tsx:794
+msgid "Edited by {editedBy}, {editedOn}"
+msgstr ""
 
 #: src/components/release/releaseHistory.ts:766
 msgid "Editing a conversation no longer triggers the affected save error."
@@ -4973,7 +5010,7 @@ msgstr "Enter a name for the new conversation"
 msgid "Enter a name for your cloned project"
 msgstr "Enter a name for your cloned project"
 
-#: src/routes/project/present/PresentRoute.tsx:336
+#: src/routes/project/present/PresentRoute.tsx:340
 msgid "Enter a presentation title"
 msgstr ""
 
@@ -5292,9 +5329,9 @@ msgstr ""
 msgid "Fact check this claim"
 msgstr ""
 
-#: src/components/map/panels/MapSettingsMenu.tsx:89
-#~ msgid "Fact-check"
-#~ msgstr ""
+#: src/components/results/curate/ArgumentsTab.tsx:370
+msgid "Fact-check"
+msgstr ""
 
 #: src/components/map/attributes.ts:385
 msgid "Factual status"
@@ -5678,11 +5715,13 @@ msgid "Font Size"
 msgstr "Font Size"
 
 #: src/components/results/ResultRow.tsx:106
+#: src/components/results/curate/ArgumentsTab.tsx:42
+#: src/components/results/curate/ArgumentsTab.tsx:303
 #: src/components/map/panels/ArgumentAccordion.tsx:184
 msgid "for"
 msgstr "pro"
 
-#: src/components/results/ResultItem.tsx:73
+#: src/components/results/ResultItem.tsx:81
 msgid "For"
 msgstr "Pro"
 
@@ -5805,7 +5844,7 @@ msgstr "Full transcript (when available)"
 msgid "Fullscreen"
 msgstr "Fullscreen"
 
-#: src/components/present/AudienceScreen.tsx:1114
+#: src/components/present/AudienceScreen.tsx:1134
 msgid "Fullscreen is unavailable in this browser."
 msgstr ""
 
@@ -5975,8 +6014,8 @@ msgstr "Go Fullscreen"
 msgid "Go home"
 msgstr "Go home"
 
-#: src/routes/project/present/PresentRoute.tsx:555
-#: src/routes/project/present/PresentRoute.tsx:588
+#: src/routes/project/present/PresentRoute.tsx:568
+#: src/routes/project/present/PresentRoute.tsx:601
 #: src/components/popcorn/PopcornActions.tsx:190
 msgid "Go live"
 msgstr ""
@@ -6127,6 +6166,7 @@ msgid "Hidden from organisation members. Organisation admins can still find and 
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:350
+#: src/components/results/curate/CurateMeta.tsx:173
 msgid "hidden from this presentation"
 msgstr ""
 
@@ -6137,7 +6177,11 @@ msgstr "Hidden gem"
 #: src/components/results/ResultRow.tsx:294
 #: src/components/results/ResultRow.tsx:419
 #: src/components/results/ResultRow.tsx:423
-#: src/components/results/ResultItem.tsx:660
+#: src/components/results/ResultItem.tsx:725
+#: src/components/results/curate/StakeholdersTab.tsx:134
+#: src/components/results/curate/CurateMeta.tsx:100
+#: src/components/results/curate/CurateMeta.tsx:104
+#: src/components/results/curate/ArgumentsTab.tsx:383
 #: src/components/conversation/ConversationEdit.tsx:348
 msgid "Hide"
 msgstr "Skrýt"
@@ -6194,9 +6238,17 @@ msgstr "Za pozornost"
 msgid "Highlight specific Concept"
 msgstr "Highlight specific Concept"
 
+#: src/components/results/ResultItem.tsx:807
+msgid "history"
+msgstr ""
+
 #: src/components/results/ResultItem.tsx:716
-msgid "History"
-msgstr "Historie"
+#~ msgid "History"
+#~ msgstr "Historie"
+
+#: src/components/results/curate/CurateOpen.tsx:211
+msgid "History / details"
+msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:511
 #~ msgid "History could not be loaded."
@@ -6271,6 +6323,10 @@ msgstr ""
 msgid "How should the phrases sound?"
 msgstr ""
 
+#: src/components/results/curate/StakeholdersTab.tsx:130
+msgid "How they were named"
+msgstr ""
+
 #: src/components/project/ProjectBasicEdit.tsx:129
 #~ msgid ""
 #~ "How would you describe to a colleague what are you trying to accomplish with this project?\n"
@@ -6339,7 +6395,7 @@ msgstr "IBAN"
 msgid "ID"
 msgstr "ID"
 
-#: src/routes/project/present/PresentRoute.tsx:169
+#: src/routes/project/present/PresentRoute.tsx:171
 msgid "Ideas and how they connect"
 msgstr ""
 
@@ -6388,10 +6444,17 @@ msgstr ""
 msgid "Images must be under {MAX_FILE_MB}MB"
 msgstr "Obrázky musí být menší než {MAX_FILE_MB} MB"
 
-#: src/components/results/ResultItem.tsx:751
 #: src/components/map/panels/shared.tsx:110
 msgid "Imported"
 msgstr "Importováno"
+
+#: src/components/results/ResultItem.tsx:318
+msgid "Imported from an earlier analysis"
+msgstr ""
+
+#: src/components/results/ResultItem.tsx:325
+msgid "Imported from an earlier analysis, {day}"
+msgstr ""
 
 #: src/components/chat/AgenticChatPanel.tsx:1870
 msgid "Improve my setup"
@@ -6444,7 +6507,7 @@ msgstr ""
 msgid "Incorrect or made up"
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:81
+#: src/components/results/ResultItem.tsx:89
 #: src/components/map/panels/shared.tsx:85
 #: src/components/map/panels/shared.tsx:96
 msgid "Inferred"
@@ -6509,7 +6572,7 @@ msgstr "Instructions for generating the verification outcome"
 msgid "interview"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:131
+#: src/routes/project/present/PresentRoute.tsx:133
 msgid "Intro"
 msgstr ""
 
@@ -6727,7 +6790,7 @@ msgstr "Italian (only ECHO features, Transcription and Summaries)"
 msgid "Italian for your core workflows"
 msgstr "Italština pro hlavní postupy"
 
-#: src/components/present/AudienceScreen.tsx:769
+#: src/components/present/AudienceScreen.tsx:789
 msgid "Its link may have been switched off. Ask the host."
 msgstr ""
 
@@ -6908,7 +6971,7 @@ msgstr ""
 msgid "Keep pending"
 msgstr "Keep pending"
 
-#: src/routes/project/present/PresentRoute.tsx:561
+#: src/routes/project/present/PresentRoute.tsx:574
 msgid "Keep Popcorn up to date as conversations arrive. You can go live before the first recording."
 msgstr ""
 
@@ -6949,9 +7012,13 @@ msgstr "Kickback %"
 msgid "Kind"
 msgstr "Druh"
 
-#: src/components/results/ResultItem.tsx:287
+#: src/components/results/ResultItem.tsx:295
 msgid "Kind of change not recorded"
 msgstr "Druh změny nebyl zaznamenán"
+
+#: src/components/results/curate/CurateTabs.tsx:76
+msgid "Kinds of finding"
+msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:207
 #: src/features/sidebar/shell/UserMenu.tsx:119
@@ -7265,7 +7332,7 @@ msgstr ""
 msgid "live, reads every {every} min"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:614
+#: src/routes/project/present/PresentRoute.tsx:627
 msgid "Live. New conversations will feed Popcorn as they arrive."
 msgstr ""
 
@@ -7308,7 +7375,7 @@ msgstr "Loading audit logs…"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
-#: src/routes/project/present/PresentRoute.tsx:753
+#: src/routes/project/present/PresentRoute.tsx:768
 msgid "Loading draft…"
 msgstr ""
 
@@ -7328,9 +7395,9 @@ msgstr ""
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
-#: src/routes/project/present/PresentRoute.tsx:697
-#: src/routes/project/present/PresentRoute.tsx:828
-#: src/routes/project/present/PresentRoute.tsx:866
+#: src/routes/project/present/PresentRoute.tsx:710
+#: src/routes/project/present/PresentRoute.tsx:843
+#: src/routes/project/present/PresentRoute.tsx:881
 msgid "Loading presentation"
 msgstr ""
 
@@ -7560,6 +7627,7 @@ msgstr ""
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:158
+#: src/components/results/curate/CurateTabs.tsx:17
 #: src/components/map/MapPage.tsx:545
 msgid "Map"
 msgstr ""
@@ -7790,6 +7858,7 @@ msgstr ""
 msgid "Monitor"
 msgstr "Monitor"
 
+#: src/components/results/curate/CurateOpen.tsx:81
 #: src/components/chat/ChatTemplatesMenu.tsx:363
 msgid "more"
 msgstr "more"
@@ -7919,6 +7988,7 @@ msgstr "My templates"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:708
 #: src/routes/project/CreateProjectRoute.tsx:211
 #: src/routes/project/CreateProjectRoute.tsx:322
+#: src/components/results/curate/StakeholdersTab.tsx:121
 #: src/components/project/ProjectBasicEdit.tsx:105
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:382
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:253
@@ -7976,7 +8046,7 @@ msgstr "name@example.com"
 msgid "name@example.com, name2@example.com"
 msgstr "name@example.com, name2@example.com"
 
-#: src/components/results/ResultItem.tsx:80
+#: src/components/results/ResultItem.tsx:88
 #: src/components/map/panels/shared.tsx:94
 msgid "Named by participants"
 msgstr "Zmíněno účastníky"
@@ -8030,6 +8100,7 @@ msgid "Never"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:64
+#: src/components/results/curate/CurateMeta.tsx:60
 msgid "new"
 msgstr "nové"
 
@@ -8186,7 +8257,7 @@ msgstr ""
 msgid "No actions found"
 msgstr "No actions found"
 
-#: src/components/present/AudienceScreen.tsx:949
+#: src/components/present/AudienceScreen.tsx:969
 msgid "No activities are selected for this presentation."
 msgstr ""
 
@@ -8335,8 +8406,8 @@ msgid "No goal yet. Set one here, or let the assistant interview you in chat."
 msgstr ""
 
 #: src/components/results/ResultItem.tsx:418
-msgid "No history yet."
-msgstr "Zatím žádná historie."
+#~ msgid "No history yet."
+#~ msgstr "Zatím žádná historie."
 
 #: src/components/invite/InviteModal.tsx:456
 msgid "No invites went out. Check the list below."
@@ -8351,6 +8422,10 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1727
 msgid "No logo set. dembrane default will be used."
 msgstr "No logo set. dembrane default will be used."
+
+#: src/components/results/curate/CuratePanel.tsx:45
+msgid "No map arguments yet. They appear after the first analysis."
+msgstr ""
 
 #: src/components/map/MapPage.tsx:476
 msgid "No map has been generated for this project yet."
@@ -8463,6 +8538,10 @@ msgstr "No pending invites"
 msgid "No popcorn saved yet."
 msgstr ""
 
+#: src/components/results/curate/CuratePanel.tsx:37
+msgid "No popcorn yet. They appear after the first analysis."
+msgstr ""
+
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:123
 msgid "No prepared results yet"
 msgstr ""
@@ -8483,6 +8562,10 @@ msgstr "No projects found for search term"
 #: src/components/workspace/OrganisationProjectsTable.tsx:196
 msgid "No projects match."
 msgstr "No projects match."
+
+#: src/components/results/curate/CurateOpen.tsx:266
+msgid "No quotes were kept with this finding."
+msgstr ""
 
 #: src/components/conversation/LiveMonitorSection.tsx:676
 msgid "No recent activity"
@@ -8528,6 +8611,10 @@ msgstr "No selectable conversations"
 msgid "No stakeholders saved yet."
 msgstr ""
 
+#: src/components/results/curate/CuratePanel.tsx:41
+msgid "No stakeholders yet. They appear after the first analysis."
+msgstr ""
+
 #: src/routes/project/ProjectHomeRoute.tsx:307
 #: src/components/conversation/ProjectConversationsPanel.tsx:435
 msgid "No summary yet"
@@ -8547,6 +8634,10 @@ msgstr "No templates match '{searchQuery}'"
 
 #: src/components/map/attributes.ts:161
 msgid "No tensions saved yet."
+msgstr ""
+
+#: src/components/results/curate/CuratePanel.tsx:39
+msgid "No tensions yet. They appear after the first analysis."
 msgstr ""
 
 #: src/components/training/StaffTrainingPanel.tsx:130
@@ -8673,6 +8764,10 @@ msgstr "ne v této prezentaci"
 #~ msgid "Not in this presentation"
 #~ msgstr "Ne v této prezentaci"
 
+#: src/components/results/curate/CuratePanel.tsx:298
+msgid "Not in this presentation."
+msgstr ""
+
 #: src/components/map/panels/NodeDetailCard.tsx:237
 msgid "Not in this view"
 msgstr ""
@@ -8765,6 +8860,10 @@ msgstr "Nothing here for you yet."
 msgid "nothing here yet"
 msgstr ""
 
+#: src/components/results/curate/CuratePanel.tsx:198
+msgid "Nothing is hidden from this presentation."
+msgstr ""
+
 #: src/components/chat/InsightNoteCard.tsx:102
 msgid "Nothing is sent until you send it. Edit anything below first."
 msgstr ""
@@ -8816,6 +8915,7 @@ msgstr ""
 msgid "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 msgstr ""
 
+#: src/components/results/curate/CurateTabs.tsx:103
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:170
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:349
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:540
@@ -8832,6 +8932,7 @@ msgid "Off numbers the conversations. On shows the name typed on the phone, whic
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:301
+#: src/components/results/curate/CurateMeta.tsx:152
 msgid "off topic for this room"
 msgstr "mimo téma pro tento sál"
 
@@ -8883,6 +8984,7 @@ msgid "One big event at the end of the year"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:68
+#: src/components/results/curate/CurateMeta.tsx:64
 msgid "one conversation only"
 msgstr "jen z jednoho rozhovoru"
 
@@ -8899,15 +9001,18 @@ msgid "One number"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:70
+#: src/components/results/curate/CurateMeta.tsx:66
 msgid "one quote only"
 msgstr "jen jeden citát"
 
 #: src/components/results/ResultRow.tsx:289
+#: src/components/results/curate/CurateMeta.tsx:140
 msgid "One sentence, for the people you work with and anyone who checks later."
 msgstr "Jedna věta, pro kolegy a pro toho, kdo to bude později kontrolovat."
 
 #: src/components/results/ResultRow.tsx:216
-#: src/components/results/ResultItem.tsx:144
+#: src/components/results/ResultItem.tsx:152
+#: src/components/results/curate/TensionsTab.tsx:76
 msgid "One side of this tension"
 msgstr "Jedna strana tohoto napětí"
 
@@ -9032,8 +9137,9 @@ msgstr "Open for participation"
 msgid "Open host guide"
 msgstr "Open host guide"
 
-#: src/routes/project/present/PresentRoute.tsx:791
-#: src/components/results/ResultItem.tsx:769
+#: src/routes/project/present/PresentRoute.tsx:806
+#: src/components/results/ResultItem.tsx:850
+#: src/components/results/curate/CurateOpen.tsx:202
 msgid "Open in Analysis"
 msgstr "Otevřít v analýze"
 
@@ -9133,7 +9239,7 @@ msgstr "Open your authenticator app and enter the current six-digit code."
 msgid "Opening and frame"
 msgstr ""
 
-#: src/components/present/AudienceScreen.tsx:843
+#: src/components/present/AudienceScreen.tsx:863
 msgid "Opening screens"
 msgstr ""
 
@@ -9613,7 +9719,7 @@ msgstr "People"
 msgid "People with access"
 msgstr "People with access"
 
-#: src/routes/project/present/PresentRoute.tsx:171
+#: src/routes/project/present/PresentRoute.tsx:173
 msgid "People, groups and what matters to them"
 msgstr ""
 
@@ -9649,7 +9755,7 @@ msgstr "Phone"
 #~ msgid "Phrase"
 #~ msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:769
+#: src/routes/project/present/PresentRoute.tsx:784
 msgid "phrases"
 msgstr ""
 
@@ -9744,7 +9850,7 @@ msgstr "Plans"
 msgid "Plans, gathers, and checks its work across many conversations."
 msgstr ""
 
-#: src/components/present/AudienceScreen.tsx:1019
+#: src/components/present/AudienceScreen.tsx:1039
 msgid "Playback and fullscreen"
 msgstr ""
 
@@ -9834,6 +9940,7 @@ msgstr ""
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:356
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:136
 #: src/components/results/ResultsList.tsx:40
+#: src/components/results/curate/CurateTabs.tsx:11
 #: src/components/popcorn/PopcornStart.tsx:55
 #: src/components/popcorn/PopcornIntroModal.tsx:24
 #: src/components/map/attributes.ts:145
@@ -9944,9 +10051,13 @@ msgstr ""
 msgid "Prepare sessions with an editable host guide next to the QR code."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:753
+#: src/components/results/ResultItem.tsx:322
 msgid "Prepared by an analysis run"
 msgstr "Připraveno analýzou"
+
+#: src/components/results/ResultItem.tsx:329
+msgid "Prepared by an analysis run, {day}"
+msgstr ""
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:556
 msgid "Preparing"
@@ -9968,26 +10079,26 @@ msgstr ""
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
 
-#: src/routes/project/present/PresentRoute.tsx:518
-#: src/routes/project/present/PresentRoute.tsx:608
-#: src/routes/project/present/PresentRoute.tsx:855
+#: src/routes/project/present/PresentRoute.tsx:531
+#: src/routes/project/present/PresentRoute.tsx:621
+#: src/routes/project/present/PresentRoute.tsx:870
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:115
 msgid "Present"
 msgstr ""
 
-#: src/components/present/AudienceScreen.tsx:890
+#: src/components/present/AudienceScreen.tsx:910
 msgid "Presentation activities"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:525
+#: src/routes/project/present/PresentRoute.tsx:538
 msgid "Presentation controls"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:115
+#: src/routes/project/present/PresentRoute.tsx:117
 msgid "Presentation editor"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:333
+#: src/routes/project/present/PresentRoute.tsx:337
 msgid "Presentation title"
 msgstr ""
 
@@ -10276,8 +10387,8 @@ msgstr ""
 msgid "Publish"
 msgstr "Publish"
 
-#: src/routes/project/present/PresentRoute.tsx:631
-#: src/routes/project/present/PresentRoute.tsx:687
+#: src/routes/project/present/PresentRoute.tsx:644
+#: src/routes/project/present/PresentRoute.tsx:700
 msgid "Publish changes"
 msgstr ""
 
@@ -10508,10 +10619,10 @@ msgid "recently"
 msgstr ""
 
 #: src/components/results/ResultItem.tsx:760
-msgid "Recipe not recorded"
-msgstr "Recept nebyl zaznamenán"
+#~ msgid "Recipe not recorded"
+#~ msgstr "Recept nebyl zaznamenán"
 
-#: src/components/results/ResultItem.tsx:758
+#: src/components/results/ResultItem.tsx:828
 #: src/components/map/panels/NodeDetailCard.tsx:381
 msgid "Recipe: {recipe}"
 msgstr "Recept: {recipe}"
@@ -10891,6 +11002,7 @@ msgid "Reopen"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:300
+#: src/components/results/curate/CurateMeta.tsx:151
 msgid "repeats another finding"
 msgstr "opakuje jiné zjištění"
 
@@ -11166,7 +11278,9 @@ msgstr ""
 
 #: src/components/results/ResultRow.tsx:406
 #: src/components/results/ResultRow.tsx:410
-#: src/components/results/ResultItem.tsx:660
+#: src/components/results/ResultItem.tsx:725
+#: src/components/results/curate/CurateMeta.tsx:87
+#: src/components/results/curate/CurateMeta.tsx:91
 msgid "Restore"
 msgstr "Vrátit"
 
@@ -11196,16 +11310,16 @@ msgstr "Vrátit"
 #~ msgstr "Vrátit do analýzy"
 
 #. placeholder {0}: revision.revisionNumber
-#: src/components/results/ResultItem.tsx:599
+#: src/components/results/ResultItem.tsx:642
 msgid "Restored the wording of revision {0}"
 msgstr "Obnoveno znění verze {0}"
 
-#: src/components/results/ResultItem.tsx:283
-#: src/components/results/ResultItem.tsx:590
+#: src/components/results/ResultItem.tsx:291
+#: src/components/results/ResultItem.tsx:633
 msgid "Restored to the analysis"
 msgstr "Vráceno do analýzy"
 
-#: src/components/results/ResultItem.tsx:735
+#: src/components/results/ResultItem.tsx:841
 msgid "Restoring that wording."
 msgstr "Obnovujeme toto znění."
 
@@ -11219,7 +11333,7 @@ msgstr "Obnovujeme toto znění."
 msgid "Results"
 msgstr ""
 
-#: src/routes/project/present/PresentResultsPanel.tsx:125
+#: src/routes/project/present/PresentResultsPanel.tsx:138
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:115
 msgid "Results could not be loaded."
 msgstr "Výsledky se nepodařilo načíst."
@@ -11339,8 +11453,8 @@ msgstr ""
 msgid "Review processing status for every conversation collected in this project."
 msgstr "Review processing status for every conversation collected in this project."
 
-#: src/routes/project/present/PresentResultsPanel.tsx:103
-#: src/routes/project/present/PresentResultsPanel.tsx:109
+#: src/routes/project/present/PresentResultsPanel.tsx:115
+#: src/routes/project/present/PresentResultsPanel.tsx:121
 msgid "Review results"
 msgstr "Zkontrolovat výsledky"
 
@@ -11413,6 +11527,7 @@ msgstr ""
 msgid "Right-click to highlight"
 msgstr "Right-click to highlight"
 
+#: src/components/results/curate/StakeholdersTab.tsx:124
 #: src/components/invite/RoleSelect.tsx:78
 msgid "Role"
 msgstr "Role"
@@ -11490,6 +11605,7 @@ msgstr ""
 #: src/components/settings/AccountSettingsCard.tsx:195
 #: src/components/results/resultEditing.tsx:445
 #: src/components/results/ReasonPrompt.tsx:229
+#: src/components/results/curate/CurateMeta.tsx:145
 #: src/components/project/CustomTopicModal.tsx:260
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:373
 #: src/components/goal/ProjectGoalSection.tsx:150
@@ -11678,6 +11794,10 @@ msgstr ""
 #: src/components/conversation/ProjectConversationsPanel.tsx:753
 msgid "Search and select the conversations for this chat."
 msgstr "Search and select the conversations for this chat."
+
+#: src/components/results/curate/ArgumentsTab.tsx:276
+msgid "Search arguments"
+msgstr ""
 
 #: src/components/training/StaffTrainingPanel.tsx:107
 msgid "Search by organisation"
@@ -12203,7 +12323,7 @@ msgstr "Setup"
 msgid "Shape how participants verify outcomes"
 msgstr "Urči, jak účastníci ověřují výsledky"
 
-#: src/routes/project/present/PresentRoute.tsx:600
+#: src/routes/project/present/PresentRoute.tsx:613
 #: src/components/project/ProjectSharingModal.tsx:525
 #: src/components/popcorn/PopcornShare.tsx:72
 msgid "Share"
@@ -12222,7 +12342,7 @@ msgstr ""
 msgid "Share portal"
 msgstr "Sdílet portál"
 
-#: src/routes/project/present/PresentRoute.tsx:638
+#: src/routes/project/present/PresentRoute.tsx:651
 msgid "Share presentation"
 msgstr ""
 
@@ -12285,7 +12405,7 @@ msgstr "Shared with {0} and {overflow} others"
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Při sdílení soukromého projektu s nečlenem se nyní místo chyby nabídne pozvánka. Přístup získá po připojení k pracovnímu prostoru."
 
-#: src/routes/project/present/PresentRoute.tsx:170
+#: src/routes/project/present/PresentRoute.tsx:172
 msgid "Short phrases from the conversations"
 msgstr ""
 
@@ -12325,12 +12445,15 @@ msgstr ""
 msgid "Show a frame"
 msgstr ""
 
+#. placeholder {0}: shown.length
 #. placeholder {0}: ordered.length
+#: src/components/results/curate/ArgumentsTab.tsx:411
 #: src/components/map/panels/ArgumentAccordion.tsx:299
 msgid "Show all {0}"
 msgstr "Zobrazit všech {0}"
 
 #: src/components/results/ResultsList.tsx:413
+#: src/components/results/curate/CuratePanel.tsx:244
 msgid "Show all {total}"
 msgstr "Zobrazit všech {total}"
 
@@ -12380,7 +12503,7 @@ msgstr "Show more"
 msgid "Show more versions"
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:774
+#: src/components/results/ResultItem.tsx:855
 msgid "Show on the map"
 msgstr "Zobrazit na mapě"
 
@@ -12418,7 +12541,7 @@ msgstr ""
 msgid "Show the invitation"
 msgstr "Zobrazit pozvánku"
 
-#: src/components/results/ResultItem.tsx:651
+#: src/components/results/ResultItem.tsx:716
 msgid "Show to the room"
 msgstr "Ukázat sálu"
 
@@ -12538,7 +12661,7 @@ msgstr ""
 msgid "Someone"
 msgstr "Someone"
 
-#: src/components/results/ResultItem.tsx:639
+#: src/components/results/ResultItem.tsx:704
 msgid "Someone changed this while you had it open. Open it again to see their version."
 msgstr "Někdo to změnil, zatímco jsi to měl otevřené. Otevři to znovu a uvidíš jeho verzi."
 
@@ -12547,6 +12670,7 @@ msgid "Someone else"
 msgstr "Někdo jiný"
 
 #: src/components/results/ResultRow.tsx:77
+#: src/components/results/curate/CurateMeta.tsx:73
 msgid "Someone reworded this"
 msgstr "Někdo to přeformuloval"
 
@@ -12720,10 +12844,9 @@ msgstr "Staff only"
 msgid "Staff-created"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:344
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:275
-#~ msgid "Stake"
-#~ msgstr ""
+#: src/components/results/curate/StakeholdersTab.tsx:127
+msgid "Stake"
+msgstr ""
 
 #: src/components/map/attributes.ts:154
 msgid "Stakeholder"
@@ -12732,12 +12855,17 @@ msgstr ""
 #: src/routes/project/present/blockLabel.ts:8
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:63
 #: src/components/results/ResultsList.tsx:44
+#: src/components/results/curate/CurateTabs.tsx:15
 #: src/components/map/attributes.ts:155
 msgid "Stakeholders"
 msgstr "Zainteresovaní"
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:67
 msgid "Stakeholders tab"
+msgstr ""
+
+#: src/components/results/curate/ArgumentsTab.tsx:344
+msgid "Stance"
 msgstr ""
 
 #: src/components/invite/RoleSelect.tsx:42
@@ -12795,9 +12923,9 @@ msgstr ""
 msgid "Starts"
 msgstr "Starts"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:185
-#~ msgid "Statement"
-#~ msgstr ""
+#: src/components/results/curate/ArgumentsTab.tsx:340
+msgid "Statement"
+msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1700
 #: src/routes/admin/AdminSettingsRoute.tsx:2686
@@ -12877,7 +13005,7 @@ msgstr ""
 msgid "Stop coloring graph by valence"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:537
+#: src/routes/project/present/PresentRoute.tsx:550
 #: src/components/popcorn/PopcornActions.tsx:114
 msgid "Stop live"
 msgstr ""
@@ -13091,7 +13219,7 @@ msgstr "Systémová výchozí hodnota"
 msgid "System status"
 msgstr "System status"
 
-#: src/routes/project/present/PresentRoute.tsx:137
+#: src/routes/project/present/PresentRoute.tsx:139
 msgid "Tabs"
 msgstr ""
 
@@ -13191,6 +13319,7 @@ msgstr ""
 #: src/routes/project/present/blockLabel.ts:9
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:64
 #: src/components/results/ResultsList.tsx:42
+#: src/components/results/curate/CurateTabs.tsx:13
 #: src/components/map/attributes.ts:164
 msgid "Tensions"
 msgstr "Napětí"
@@ -13332,8 +13461,8 @@ msgstr ""
 msgid "the dembrane team"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:694
-#: src/routes/project/present/PresentRoute.tsx:703
+#: src/routes/project/present/PresentRoute.tsx:707
+#: src/routes/project/present/PresentRoute.tsx:716
 msgid "The draft could not be loaded."
 msgstr ""
 
@@ -13355,6 +13484,8 @@ msgstr ""
 
 #: src/components/results/ResultRow.tsx:72
 #: src/components/results/ResultRow.tsx:94
+#: src/components/results/curate/CurateMeta.tsx:68
+#: src/components/results/curate/ArgumentsTab.tsx:56
 msgid "the fact-check disagrees"
 msgstr "faktická kontrola říká něco jiného"
 
@@ -13387,7 +13518,7 @@ msgstr ""
 msgid "The goal guides reports, canvases, and assistant suggestions for this project."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:720
+#: src/components/results/ResultItem.tsx:836
 msgid "The history could not be loaded."
 msgstr "Historii se nepodařilo načíst."
 
@@ -13395,7 +13526,7 @@ msgstr "Historii se nepodařilo načíst."
 msgid "The host guide is what facilitators read before they run a session."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:859
+#: src/routes/project/present/PresentRoute.tsx:874
 msgid "The host hasn’t prepared a presentation yet."
 msgstr ""
 
@@ -13462,7 +13593,7 @@ msgid "The map loads after you choose to open it."
 msgstr "Mapa se načte, až ji otevřete."
 
 #: src/components/results/resultEditing.tsx:455
-#: src/components/results/ResultItem.tsx:279
+#: src/components/results/ResultItem.tsx:287
 msgid "The meaning"
 msgstr "Význam"
 
@@ -13482,7 +13613,8 @@ msgstr ""
 msgid "The microphone is still blocked. Change it in your browser settings, then check again."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:166
+#: src/components/results/ResultItem.tsx:174
+#: src/components/results/curate/StakeholdersTab.tsx:45
 msgid "The name of this stakeholder"
 msgstr "Jméno tohoto zainteresovaného"
 
@@ -13504,7 +13636,8 @@ msgid "The original statements are unavailable for this older result."
 msgstr "Původní tvrzení nejsou pro tento starší výsledek k dispozici."
 
 #: src/components/results/ResultRow.tsx:230
-#: src/components/results/ResultItem.tsx:157
+#: src/components/results/ResultItem.tsx:165
+#: src/components/results/curate/TensionsTab.tsx:88
 msgid "The other side of this tension"
 msgstr "Druhá strana tohoto napětí"
 
@@ -13520,11 +13653,11 @@ msgstr ""
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:839
+#: src/routes/project/present/PresentRoute.tsx:854
 msgid "The presentation could not be loaded."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:834
+#: src/routes/project/present/PresentRoute.tsx:849
 msgid "The presentation could not be opened. Try again."
 msgstr ""
 
@@ -13565,7 +13698,7 @@ msgstr "Druhý řádek tohoto zjištění"
 msgid "the selected conversation"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:667
+#: src/routes/project/present/PresentRoute.tsx:680
 msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 msgstr ""
 
@@ -13618,8 +13751,10 @@ msgid "The words around the results: tabs, buttons and explanations."
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:241
-#: src/components/results/ResultItem.tsx:164
-#: src/components/results/ResultItem.tsx:168
+#: src/components/results/ResultItem.tsx:172
+#: src/components/results/ResultItem.tsx:176
+#: src/components/results/curate/PopcornTab.tsx:67
+#: src/components/results/curate/ArgumentsTab.tsx:168
 msgid "The words of this finding"
 msgstr "Slova tohoto zjištění"
 
@@ -13944,11 +14079,11 @@ msgstr "this person"
 msgid "This portal is not accepting new sessions right now."
 msgstr "Tento portál nyní nepřijímá nové relace."
 
-#: src/components/present/AudienceScreen.tsx:764
+#: src/components/present/AudienceScreen.tsx:784
 msgid "This presentation could not be loaded."
 msgstr ""
 
-#: src/components/present/AudienceScreen.tsx:762
+#: src/components/present/AudienceScreen.tsx:782
 msgid "This presentation is not available."
 msgstr ""
 
@@ -14045,7 +14180,8 @@ msgstr ""
 msgid "This sets the language participants see in the portal, including the questions they are asked."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:194
+#: src/components/results/ResultItem.tsx:202
+#: src/components/results/curate/StakeholdersTab.tsx:53
 msgid "This stakeholder's role"
 msgstr "Role tohoto zainteresovaného"
 
@@ -14157,8 +14293,8 @@ msgstr ""
 msgid "Time"
 msgstr "Time"
 
-#: src/components/results/ResultItem.tsx:292
-#: src/components/results/ResultItem.tsx:295
+#: src/components/results/ResultItem.tsx:300
+#: src/components/results/ResultItem.tsx:303
 msgid "Time not recorded"
 msgstr "Čas nebyl zaznamenán"
 
@@ -14220,9 +14356,13 @@ msgstr ""
 msgid "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 msgstr "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 
-#: src/components/results/ResultItem.tsx:184
+#: src/components/results/ResultItem.tsx:192
 msgid "To resolve"
 msgstr "K vyřešení"
+
+#: src/components/results/curate/TensionsTab.tsx:103
+msgid "To resolve:"
+msgstr ""
 
 #: src/components/billing/BillingManager.tsx:681
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
@@ -14472,7 +14612,7 @@ msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Trouble logging in? Contact support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:863
+#: src/routes/project/present/PresentRoute.tsx:878
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:413
 #: src/routes/invite/MyInvitesRoute.tsx:222
 #: src/routes/invite/AcceptInviteRoute.tsx:557
@@ -14504,7 +14644,7 @@ msgstr ""
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr "Try moving a bit closer to your microphone for better sound quality."
 
-#: src/components/present/AudienceScreen.tsx:771
+#: src/components/present/AudienceScreen.tsx:791
 msgid "Trying again…"
 msgstr ""
 
@@ -14629,11 +14769,12 @@ msgstr ""
 #: src/routes/project/chat/NewChatRoute.tsx:312
 #: src/components/results/resultEditing.tsx:539
 #: src/components/results/ResultRow.tsx:367
+#: src/components/results/curate/CurateMeta.tsx:186
 #: src/components/chat/AgenticChatPanel.tsx:1662
 msgid "Undo"
 msgstr "Undo"
 
-#: src/components/results/ResultItem.tsx:674
+#: src/components/results/ResultItem.tsx:739
 msgid "Undo withdrawal"
 msgstr "Zrušit stažení"
 
@@ -14995,7 +15136,7 @@ msgstr "Použít zděděnou hodnotu"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:779
+#: src/routes/project/present/PresentRoute.tsx:794
 msgid "Use latest results"
 msgstr ""
 
@@ -15013,7 +15154,7 @@ msgstr "Use Shift + Enter to add a new line"
 msgid "Use the default budget"
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:455
+#: src/components/results/ResultItem.tsx:493
 msgid "Use this wording"
 msgstr "Použít toto znění"
 
@@ -15524,7 +15665,8 @@ msgstr ""
 msgid "What happened? Paste a screenshot here to attach it"
 msgstr "Co se stalo? Vložte sem snímek obrazovky a přiložte ho"
 
-#: src/components/results/ResultItem.tsx:199
+#: src/components/results/ResultItem.tsx:207
+#: src/components/results/curate/StakeholdersTab.tsx:62
 msgid "What is at stake here"
 msgstr "Co je tu v sázce"
 
@@ -15556,7 +15698,8 @@ msgstr ""
 msgid "What this project is consuming this cycle."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:178
+#: src/components/results/ResultItem.tsx:186
+#: src/components/results/curate/TensionsTab.tsx:97
 msgid "What this tension is about"
 msgstr "O čem toto napětí je"
 
@@ -15568,7 +15711,8 @@ msgstr ""
 msgid "What were the key moments in this conversation?"
 msgstr "What were the key moments in this conversation?"
 
-#: src/components/results/ResultItem.tsx:188
+#: src/components/results/ResultItem.tsx:196
+#: src/components/results/curate/TensionsTab.tsx:108
 msgid "What would resolve this tension"
 msgstr "Co by toto napětí vyřešilo"
 
@@ -15643,8 +15787,8 @@ msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "When the summary is ready (includes both transcript and summary)"
 
 #: src/components/results/ResultItem.tsx:745
-msgid "Where this came from"
-msgstr "Odkud to pochází"
+#~ msgid "Where this came from"
+#~ msgstr "Odkud to pochází"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:253
 msgid "Where would you like to go?"
@@ -15682,11 +15826,13 @@ msgid "Who on your team holds a current training license. Book a training from y
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:286
+#: src/components/results/curate/CurateMeta.tsx:138
 msgid "Why not in this presentation?"
 msgstr "Proč ne v této prezentaci?"
 
 #: src/components/results/resultEditing.tsx:440
-#: src/components/results/ResultItem.tsx:681
+#: src/components/results/ResultItem.tsx:746
+#: src/components/results/curate/CurateOpen.tsx:142
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
 msgstr "Proč? Jedna věta, pro kolegy a pro toho, kdo to bude později kontrolovat."
 
@@ -15706,21 +15852,26 @@ msgstr ""
 msgid "With several lines, the first reads as a subtitle."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:686
-#: src/components/results/ResultItem.tsx:709
+#: src/components/results/ResultItem.tsx:751
+#: src/components/results/ResultItem.tsx:774
+#: src/components/results/curate/CurateOpen.tsx:147
 msgid "Withdraw"
 msgstr "Stáhnout"
 
-#: src/components/results/ResultItem.tsx:683
-#: src/components/results/ResultItem.tsx:706
-#~ msgid "Withdraw from the analysis"
-#~ msgstr "Stáhnout z analýzy"
+#: src/components/results/curate/CurateOpen.tsx:153
+#: src/components/results/curate/CurateOpen.tsx:195
+msgid "Withdraw from the analysis"
+msgstr "Stáhnout z analýzy"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:349
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:395
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:397
 #~ msgid "Withdraw result"
 #~ msgstr ""
+
+#: src/components/results/curate/CurateOpen.tsx:140
+msgid "Withdraw this from the analysis?"
+msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:396
 #~ msgid "Withdraw this result from current Map and presentation views? Its revision history will remain available."
@@ -15734,11 +15885,12 @@ msgstr "staženo"
 msgid "Withdrawn"
 msgstr "Staženo"
 
-#: src/components/results/ResultItem.tsx:281
+#: src/components/results/ResultItem.tsx:289
+#: src/components/results/curate/CurateOpen.tsx:185
 msgid "Withdrawn from the analysis"
 msgstr "Staženo z analýzy"
 
-#: src/components/results/ResultItem.tsx:666
+#: src/components/results/ResultItem.tsx:731
 msgid "Withdrawn from the analysis."
 msgstr "Staženo z analýzy."
 
@@ -15886,9 +16038,13 @@ msgstr "Would you like to add this tag to your current filters?"
 msgid "Write custom host prompts for participant verification."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:749
+#: src/components/results/ResultItem.tsx:320
 msgid "Written by a host"
 msgstr "Napsal hostitel"
+
+#: src/components/results/ResultItem.tsx:327
+msgid "Written by a host, {day}"
+msgstr ""
 
 #: src/routes/auth/Register.tsx:282
 msgid "Wrong address? Change email"
