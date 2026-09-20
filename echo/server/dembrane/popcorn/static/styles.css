@@ -994,6 +994,30 @@ button.action-row:hover .action-sentence { color: var(--blue); }
 /* ---------- stakeholder map ---------- */
 
 .stake-map { position: relative; height: clamp(380px, 64vh, 640px); }
+
+/* The stakeholders slide gives the map and its key the whole visible stage:
+   the viewport minus the chrome that is actually on screen above and below it
+   (--deck-chrome, measured in app.js; zero in the Present shell, where the
+   topbar and colophon are hidden). The stage runs flush so the fold, not the
+   stage's padding, owns the spacing, and "who you could involve next" begins
+   exactly under the fold. */
+.stage.stage-fold { padding: 0; }
+.stake-fold {
+  height: calc(100vh - var(--deck-chrome, 0px));
+  height: calc(100dvh - var(--deck-chrome, 0px));
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(20px, 3vh, 44px) var(--pad-x) clamp(14px, 2vh, 28px);
+}
+/* the map takes whatever the key leaves; height: auto overrides the inline
+   dense height, min-height: 0 lets it shrink inside the flex column */
+.stake-fold .stake-map { flex: 1 1 auto; height: auto; min-height: 220px; }
+.stake-fold .flow-key { flex: none; }
+.stake-view .bring-in {
+  margin: 0;
+  padding: clamp(32px, 5vh, 72px) var(--pad-x) clamp(28px, 4vh, 56px);
+}
 .stake-map svg { position: absolute; inset: 0; }
 /* Line colour carries sentiment in five steps: hot red (strained) through
    magenta, royal blue (neutral) and a bluish green to pure green (working),
