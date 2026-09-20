@@ -137,12 +137,14 @@ input.filterControl:hover {
 	align-items: baseline;
 	display: flex;
 	flex-wrap: wrap;
-	font-size: var(--app-font-size-xs, 0.75rem);
+	font-size: 0.8125rem;
 	gap: 0 0.75rem;
 	margin-bottom: -1.25rem;
 }
 
 .jumpLink {
+	/* The name and its count are two flex items: the space between them is a gap. */
+	gap: 0.3em;
 	min-height: 2rem;
 }
 
