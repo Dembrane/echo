@@ -254,6 +254,15 @@
 	margin: 0;
 }
 
+/* The prompt, and what it leaves behind, under the words it is about: the
+   dashboard's type, never the card's, so it reads as the host's business. */
+.aside {
+	font-family: var(--app-font-family, inherit);
+	font-size: var(--app-font-size-sm, 0.9375rem);
+	font-weight: 400;
+	margin-top: 0.4em;
+}
+
 .verdict {
 	border-top: 1px solid var(--hairline);
 	display: flex;

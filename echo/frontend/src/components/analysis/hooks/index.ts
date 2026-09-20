@@ -68,6 +68,20 @@ export type AnalysisObject = {
 	provenance?: Record<string, unknown>;
 	missing?: boolean;
 	membershipExcluded?: boolean;
+	/**
+	 * Why this finding needs the host's eye, where the server sorted for it
+	 * (`sort=attention`, spec section 4). The list endpoint is growing the
+	 * field; until it sends one, no row rises and the list keeps its order.
+	 */
+	attention?:
+		| "new"
+		| "one_conversation"
+		| "one_quote"
+		| "fact_check"
+		| "reworded"
+		| null;
+	/** Who reworded it, for "Anna reworded this". */
+	attentionActor?: string | null;
 };
 
 export type AnalysisRevision = {

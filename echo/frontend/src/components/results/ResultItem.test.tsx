@@ -274,6 +274,43 @@ describe("the workbench margin", () => {
 		});
 	});
 
+	it("gives the caret back to the control that opened the reason step", async () => {
+		show({ canEdit: true });
+		fireEvent.click(
+			screen.getByRole("button", { name: "Withdraw from the analysis" }),
+		);
+		await screen.findByTestId("result-withdraw-reason");
+		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await waitFor(() =>
+			expect(document.activeElement?.textContent).toBe(
+				"Withdraw from the analysis",
+			),
+		);
+	});
+
+	it("changes the words on the card, with the list's own prompt", async () => {
+		const editWords = vi.fn().mockResolvedValue({ revisionId: "rev-3" });
+		show({
+			canEdit: true,
+			onEditWords: { editWords, undoWords: vi.fn() },
+		});
+		fireEvent.click(screen.getByTestId("result-edit-phrase"));
+		fireEvent.change(screen.getByTestId("result-words-phrase"), {
+			target: { value: "We keep the library opn" },
+		});
+		fireEvent.keyDown(screen.getByTestId("result-words-phrase"), {
+			key: "Enter",
+		});
+		fireEvent.click(await screen.findByRole("button", { name: "A typo" }));
+		await waitFor(() => expect(editWords).toHaveBeenCalled());
+		expect(editWords.mock.calls[0][0]).toMatchObject({
+			changeKind: "typo",
+			expectedRevisionId: "rev-2",
+			field: "phrase",
+			words: "We keep the library opn",
+		});
+	});
+
 	it("restores a wording against the revision it came from", async () => {
 		show({ canEdit: true });
 		const restore = await screen.findByRole("button", {

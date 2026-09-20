@@ -1,4 +1,10 @@
 export {
+	type ReasonChoice,
+	type ReasonOption,
+	ReasonPrompt,
+	type ReasonPromptProps,
+} from "./ReasonPrompt";
+export {
 	type ResultFactCheck,
 	ResultItem,
 	type ResultItemProps,
@@ -6,8 +12,24 @@ export {
 	type ResultStageProps,
 } from "./ResultItem";
 export {
+	type ResultDensity,
+	ResultRow,
+	type ResultRowProps,
+} from "./ResultRow";
+export {
+	GROUP_ORDER,
+	type ResultGroupKey,
+	type ResultsFilter,
+	ResultsList,
+	type ResultsListProps,
+} from "./ResultsList";
+export {
 	type ChangeKind,
 	changeKindOf,
+	type EditableField,
+	editableFields,
+	factCheckVerdict,
+	fieldWords,
 	isEdited,
 	isResultKind,
 	primaryText,
@@ -19,3 +41,10 @@ export {
 	resultQuotes,
 	sizeStep,
 } from "./resultContent";
+export {
+	type HoldBackAdapter,
+	type ResultActions,
+	useResultActions,
+	type WordsChangeKind,
+	type WordsEditInput,
+} from "./useResultActions";

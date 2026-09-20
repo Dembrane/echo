@@ -14,6 +14,7 @@ import classes from "./ResultItem.module.css";
 import {
 	type ChangeKind,
 	changeKindOf,
+	type EditableField,
 	isEdited,
 	primaryText,
 	QUOTE_LIMIT,
@@ -24,6 +25,14 @@ import {
 	revisionWording,
 	sizeStep,
 } from "./resultContent";
+import {
+	EditAftermath,
+	EditableWords,
+	useWordsEdit,
+	type WordsEdit,
+	WordsPrompt,
+} from "./resultEditing";
+import type { ResultActions } from "./useResultActions";
 
 /** What the fact-check says about an argument, where a presentation shows it. */
 export type ResultFactCheck = {
@@ -43,6 +52,11 @@ export type ResultStageProps = {
 	evidence?: ResultEvidence;
 	factCheck?: ResultFactCheck | null;
 	className?: string;
+	/**
+	 * Given by a host's item: the finding's words become editable where they
+	 * stand, with the same prompt the list's rows use. A room never gets one.
+	 */
+	edit?: WordsEdit | null;
 };
 
 const stanceWord = (fields: Record<string, unknown>): ReactNode => {
@@ -76,6 +90,7 @@ function evidenceLine({ conversations, quotes }: ResultEvidence): string {
  */
 export function ResultStage({
 	className,
+	edit,
 	evidence,
 	factCheck,
 	item,
@@ -104,6 +119,14 @@ export function ResultStage({
 		item.type === "stakeholder" && fields.rung !== "voiced"
 			? rungWord(fields.rung)
 			: null;
+	// The same words, read or written in place. Without an editor they are
+	// simply the words, which is what a room gets.
+	const words = (field: EditableField, value: string, label: string) =>
+		edit?.editable ? (
+			<EditableWords edit={edit} field={field} label={label} words={value} />
+		) : (
+			value
+		);
 
 	return (
 		<article
@@ -114,32 +137,67 @@ export function ResultStage({
 				<div className={classes.head}>
 					{item.type === "tension" ? (
 						<p className={`${classes.finding} ${sizeClass} ${classes.poles}`}>
-							<span>{String(fields.poleA ?? "")}</span>
+							<span>
+								{words(
+									"poleA",
+									String(fields.poleA ?? ""),
+									t`One side of this tension`,
+								)}
+							</span>
 							{/* Sized in em, so the arrows keep step with the words. */}
 							<ArrowsLeftRightIcon
 								aria-hidden
 								className={classes.arrows}
 								size="0.8em"
 							/>
-							<span>{String(fields.poleB ?? "")}</span>
+							<span>
+								{words(
+									"poleB",
+									String(fields.poleB ?? ""),
+									t`The other side of this tension`,
+								)}
+							</span>
 						</p>
 					) : (
-						<p className={`${classes.finding} ${sizeClass}`}>{primary}</p>
+						<p className={`${classes.finding} ${sizeClass}`}>
+							{item.type === "popcorn"
+								? words("phrase", primary, t`The words of this finding`)
+								: item.type === "stakeholder"
+									? words("name", primary, t`The name of this stakeholder`)
+									: item.type.endsWith("argument")
+										? words("statement", primary, t`The words of this finding`)
+										: primary}
+						</p>
 					)}
 
 					{item.type === "tension" && Boolean(fields.knot) && (
-						<p className={classes.second}>{String(fields.knot)}</p>
+						<p className={classes.second}>
+							{words(
+								"knot",
+								String(fields.knot),
+								t`What this tension is about`,
+							)}
+						</p>
 					)}
 					{item.type === "tension" && Boolean(fields.toResolve) && (
 						<p className={classes.stance}>
-							<Trans>To resolve</Trans>: {String(fields.toResolve)}
+							<Trans>To resolve</Trans>:{" "}
+							{words(
+								"toResolve",
+								String(fields.toResolve),
+								t`What would resolve this tension`,
+							)}
 						</p>
 					)}
 					{item.type === "stakeholder" && Boolean(fields.role) && (
-						<p className={classes.second}>{String(fields.role)}</p>
+						<p className={classes.second}>
+							{words("role", String(fields.role), t`This stakeholder's role`)}
+						</p>
 					)}
 					{item.type === "stakeholder" && Boolean(fields.stake) && (
-						<p className={classes.stance}>{String(fields.stake)}</p>
+						<p className={classes.stance}>
+							{words("stake", String(fields.stake), t`What is at stake here`)}
+						</p>
 					)}
 					{rung && <p className={classes.tag}>{rung}</p>}
 					{stance && <p className={classes.stance}>{stance}</p>}
@@ -151,6 +209,17 @@ export function ResultStage({
 						<p className={classes.edited} data-testid="result-edited">
 							<Trans>edited</Trans>
 						</p>
+					)}
+					{/* What changed is asked here, under the words it is about, in the
+					    margin's own type. */}
+					{edit?.editable && (
+						<div className={classes.aside}>
+							{edit.asking ? (
+								<WordsPrompt edit={edit} testId="result-item-change-prompt" />
+							) : (
+								<EditAftermath edit={edit} />
+							)}
+						</div>
 					)}
 				</div>
 
@@ -393,10 +462,11 @@ export type ResultItemProps = ResultStageProps & {
 	/** Closes the item where the page offers a way out. */
 	onClose?: () => void;
 	/**
-	 * Seam for step 4: editing the words in place. No control is drawn until a
-	 * page passes this.
+	 * Rewording in place. Given the list's actions, every field a host may
+	 * change becomes editable where it stands on the card, with the same
+	 * prompt the rows use.
 	 */
-	onEditWords?: (item: AnalysisObject) => void;
+	onEditWords?: Pick<ResultActions, "editWords" | "undoWords"> | null;
 	/** Seam for step 5: holding a finding back from one presentation. */
 	holdBack?: { held: boolean; onChange: (held: boolean) => void } | null;
 	/** Seam for step 6: putting the card on the room screen. */
@@ -428,6 +498,9 @@ export function ResultItem({
 	theme,
 }: ResultItemProps) {
 	const [step, setStep] = useState<"rest" | "withdraw">("rest");
+	// The control that opened the reason step, so the caret goes back to it.
+	const withdrawControl = useRef<HTMLButtonElement>(null);
+	const actionsGroup = useRef<HTMLElement>(null);
 	const [restoring, setRestoring] = useState<AnalysisRevision | null>(null);
 	const [conflict, setConflict] = useState(false);
 	const [shown, setShown] = useState(item.revisionId);
@@ -436,6 +509,11 @@ export function ResultItem({
 		projectId,
 		canEdit ? item.objectId : undefined,
 	);
+	const edit = useWordsEdit({
+		actions: canEdit ? (onEditWords ?? null) : null,
+		actorName,
+		item,
+	});
 	const membership = useSetAnalysisMembership(projectId, item.objectId);
 	const rollback = useRollbackAnalysisObject(projectId, item.objectId);
 	const pending = membership.isPending || rollback.isPending;
@@ -461,6 +539,14 @@ export function ResultItem({
 		setStep("rest");
 		setRestoring(null);
 		setConflict(false);
+		// The step is over: the caret goes back where the host left it, or to
+		// the control that took its place.
+		window.setTimeout(() => {
+			const back =
+				withdrawControl.current ??
+				actionsGroup.current?.querySelector<HTMLElement>("button");
+			back?.focus();
+		}, 0);
 	};
 
 	const withdraw = (reason: string) =>
@@ -510,6 +596,7 @@ export function ResultItem({
 					item={item}
 					quotes={quotes}
 					evidence={evidence}
+					edit={edit}
 					factCheck={factCheck}
 				/>
 
@@ -518,7 +605,10 @@ export function ResultItem({
 						{/* What a host can do comes first, at the height of the finding,
 						    so a long history never pushes it out of reach. The gentlest
 						    control leads and the heaviest closes the group. */}
-						<section className={`${classes.section} ${classes.actions}`}>
+						<section
+							ref={actionsGroup}
+							className={`${classes.section} ${classes.actions}`}
+						>
 							{conflict && (
 								<p className={classes.notice} data-testid="result-conflict">
 									<Trans>
@@ -534,15 +624,6 @@ export function ResultItem({
 									onClick={onShowToRoom}
 								>
 									<Trans>Show to the room</Trans>
-								</button>
-							)}
-							{onEditWords && (
-								<button
-									type="button"
-									className={classes.control}
-									onClick={() => onEditWords(item)}
-								>
-									<Trans>Change the words</Trans>
 								</button>
 							)}
 							{holdBack && (
@@ -583,11 +664,20 @@ export function ResultItem({
 									}
 									confirmLabel={<Trans>Withdraw from the analysis</Trans>}
 									pending={membership.isPending}
-									onCancel={() => setStep("rest")}
+									onCancel={() => {
+										setStep("rest");
+										// Back to the control that opened the step, never to the
+										// top of the page.
+										window.setTimeout(
+											() => withdrawControl.current?.focus(),
+											0,
+										);
+									}}
 									onConfirm={withdraw}
 								/>
 							) : (
 								<button
+									ref={withdrawControl}
 									type="button"
 									className={classes.control}
 									disabled={pending}

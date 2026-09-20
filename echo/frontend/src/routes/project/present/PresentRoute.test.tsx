@@ -234,36 +234,39 @@ describe("Reviewing the results on the screen", () => {
 		{ label: "Another phrase", objectId: "obj-2", type: "popcorn" },
 	];
 
-	it("puts edit and hide on the row as named icons, and pages with a pager", async () => {
+	it("asks why a finding is not in this presentation, then saves it away", async () => {
 		results.mockReturnValue({
-			data: { items, limit: 100, snapshotId: "snap-1", total: 250 },
+			canEdit: true,
+			data: {
+				canEdit: true,
+				items,
+				limit: 100,
+				snapshotId: "snap-1",
+				total: 2,
+			},
 		});
 		show();
 		await openPanel("Review results");
 		// The results panel is its own place: the presentation editor stays shut.
 		expect(screen.getByTestId("present-results-panel")).toBeTruthy();
 		expect(screen.queryByText("Presentation editor")).toBeNull();
-		expect(
-			screen.queryByRole("button", { name: "Evidence and history" }),
-		).toBeNull();
-		expect(
-			screen.getAllByRole("button", {
-				name: "Edit wording, see evidence and history",
-			}),
-		).toHaveLength(2);
+		// Nothing is numbered: no pager, no badges.
+		expect(screen.queryByRole("button", { name: "3" })).toBeNull();
 		fireEvent.click(
 			screen.getAllByRole("button", {
-				name: "Hide from this presentation",
+				name: "Not in this presentation",
 			})[0],
+		);
+		expect(screen.getByText("Why not in this presentation?")).toBeTruthy();
+		fireEvent.click(
+			screen.getByRole("button", { name: "repeats another finding" }),
 		);
 		expect(saveSettings).toHaveBeenCalledWith({
 			presentation: { hidden_items: ["obj-1"] },
 		});
-		expect(screen.getByRole("button", { name: "3" })).toBeTruthy();
-		expect(screen.queryByRole("button", { name: "Next results" })).toBeNull();
 	});
 
-	it("offers the way back for hidden findings, with the count", async () => {
+	it("dims a held-back finding and offers to put it back", async () => {
 		const hidden = {
 			...presentation,
 			settings: {
@@ -281,15 +284,23 @@ describe("Reviewing the results on the screen", () => {
 			return { can_edit: true, presentation: hidden };
 		});
 		results.mockReturnValue({
-			data: { items, limit: 100, snapshotId: "snap-1", total: 2 },
+			data: {
+				canEdit: true,
+				items,
+				limit: 100,
+				snapshotId: "snap-1",
+				total: 2,
+			},
 		});
 		show("/projects/empty/present?results=1");
-		expect(
-			await screen.findByRole("button", { name: "Show in this presentation" }),
-		).toBeTruthy();
-		fireEvent.click(
-			screen.getByRole("button", { name: "Reset hidden findings (1)" }),
+		const back = await screen.findByRole("button", {
+			name: "Put back in this presentation",
+		});
+		expect(screen.getByTestId("result-row-obj-1").closest("li")).toHaveProperty(
+			"dataset.held",
+			"true",
 		);
+		fireEvent.click(back);
 		expect(saveSettings).toHaveBeenCalledWith({
 			presentation: { hidden_items: [] },
 		});

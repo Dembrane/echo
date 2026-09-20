@@ -45,6 +45,48 @@ const KINDS: ResultKind[] = [
 export const isResultKind = (type: string): type is ResultKind =>
 	(KINDS as string[]).includes(type);
 
+/**
+ * The fields a host may reword. The server keeps the real allowlist; this one
+ * decides what the screen offers, and the two are meant to read the same.
+ */
+export type EditableField =
+	| "phrase"
+	| "poleA"
+	| "poleB"
+	| "knot"
+	| "toResolve"
+	| "name"
+	| "role"
+	| "stake"
+	| "statement";
+
+const FIELDS_BY_KIND: Record<string, EditableField[]> = {
+	argument: ["statement"],
+	deduplicated_argument: ["statement"],
+	popcorn: ["phrase"],
+	stakeholder: ["name", "role", "stake"],
+	tension: ["poleA", "poleB", "knot", "toResolve"],
+};
+
+/** Every field of this kind a host may reword, in the order they read. */
+export const editableFields = (type: string): EditableField[] =>
+	FIELDS_BY_KIND[type] ?? [];
+
+/** The fields the first line of a row is made of. A tension has two. */
+export const primaryFields = (type: string): EditableField[] =>
+	type === "tension" ? ["poleA", "poleB"] : editableFields(type).slice(0, 1);
+
+/** Where a sentence is expected, Enter makes a line and Cmd/Ctrl+Enter commits. */
+const MULTILINE = new Set<EditableField>([
+	"knot",
+	"toResolve",
+	"stake",
+	"statement",
+]);
+
+export const isMultiline = (field: EditableField): boolean =>
+	MULTILINE.has(field);
+
 type Bag = Record<string, unknown>;
 
 const bag = (value: unknown): Bag =>
@@ -175,6 +217,35 @@ export function isEdited(item: {
 	if (text(bag(item.provenance).origin) !== "authored") return false;
 	const kind = changeKindOf(item);
 	return kind === null || !MEMBERSHIP_KINDS.has(kind);
+}
+
+/** The words of one field, as the host would read them. */
+export function fieldWords(
+	item: { payload?: Bag | null; detail?: unknown },
+	field: EditableField,
+): string {
+	return text(resultFields(item)[field]);
+}
+
+/** The second line of a row: the knot, the role, and nothing for a popcorn. */
+export function secondaryField(type: string): EditableField | null {
+	if (type === "tension") return "knot";
+	if (type === "stakeholder") return "role";
+	return null;
+}
+
+/**
+ * What a fact-check said about this finding, where the object carries one. The
+ * list endpoint is growing this field; until then most objects have none.
+ */
+export function factCheckVerdict(item: {
+	attributes?: Bag | null;
+	detail?: unknown;
+}): string | null {
+	const attributes = bag(item.attributes);
+	const assessment = bag(attributes.assessment ?? bag(item.detail).assessment);
+	const verdict = assessment.verdict ?? attributes.verdict;
+	return typeof verdict === "string" && verdict ? verdict : null;
 }
 
 /** The wording of a revision, for the before and after of a history entry. */

@@ -1,0 +1,476 @@
+/* The list carries the same tokens as the item, from the deck's own stylesheet
+   (`server/dembrane/popcorn/static/styles.css`), so a finding reads the same
+   in a row, in the item and on the wall. Dark follows the nearest
+   `[data-theme="dark"]`, never the operating system. */
+
+.list {
+	--parchment: #f6f4f1;
+	--paper: #ffffff;
+	--graphite: #2d2d2c;
+	--blue: #4169e1;
+	--hairline: #e6e3df;
+	--ink-soft: rgba(45, 45, 44, 0.62);
+	--ink-faint: rgba(45, 45, 44, 0.38);
+	--curve: cubic-bezier(0.25, 0.8, 0.3, 1);
+
+	color: var(--graphite);
+	display: flex;
+	flex-direction: column;
+	font-size: var(--app-font-size-sm, 0.9375rem);
+	gap: 2rem;
+	line-height: 1.45;
+}
+
+:global([data-theme="dark"]) .list {
+	--parchment: #1b1b1a;
+	--paper: #262625;
+	--graphite: #f6f4f1;
+	--blue: #7c9bff;
+	--hairline: #3a3a38;
+	--ink-soft: rgba(246, 244, 241, 0.64);
+	--ink-faint: rgba(246, 244, 241, 0.4);
+}
+
+/* The thin filter row: three labels in the list's own type, no chrome. */
+.filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.25rem;
+}
+
+.filterLabel {
+	align-items: baseline;
+	color: var(--ink-soft);
+	display: inline-flex;
+	gap: 0.5rem;
+}
+
+.filterControl {
+	background: none;
+	border: 0;
+	border-bottom: 1px solid var(--hairline);
+	color: var(--graphite);
+	font: inherit;
+	min-height: 2.25rem;
+	padding: 0 0.15rem;
+}
+
+.filterControl:hover {
+	border-bottom-color: var(--ink-faint);
+}
+
+.group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+/* Sentence case, weight 500, the count in faint ink. */
+.groupHead {
+	color: var(--graphite);
+	font-family: var(--app-content-bold-font-family, inherit);
+	font-size: 1em;
+	font-weight: 500;
+	margin: 0 0 0.35rem;
+}
+
+.count {
+	color: var(--ink-faint);
+	font-weight: 400;
+}
+
+.rows {
+	display: flex;
+	flex-direction: column;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+/* Hairlines between rows, nothing around them. */
+.row {
+	border-top: 1px solid var(--hairline);
+}
+
+.row:first-child {
+	border-top: 0;
+}
+
+.rowBody {
+	align-items: start;
+	cursor: pointer;
+	display: flex;
+	gap: 1.5rem;
+	justify-content: space-between;
+	padding: 0.7rem 0;
+}
+
+/* Held back from this presentation: the row dims where it stands. */
+.row[data-held] .rowBody {
+	opacity: 0.55;
+}
+
+.rowText {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	min-width: 0;
+}
+
+.primary {
+	align-items: baseline;
+	color: var(--graphite);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 0.45em;
+	margin: 0;
+}
+
+.arrows {
+	color: var(--blue);
+	flex: none;
+	min-height: 14px;
+	min-width: 14px;
+}
+
+.second {
+	color: var(--ink-soft);
+	margin: 0;
+	max-width: 60ch;
+}
+
+/* The primary line clamps at two lines, three in the check density. The clamp
+   lifts before the caret lands, so nothing moves under the host's hand. */
+.clamp2,
+.clamp3 {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	text-align: left;
+}
+
+.clamp2 {
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+}
+
+.clamp3 {
+	-webkit-line-clamp: 3;
+	line-clamp: 3;
+}
+
+/* The words at rest are a control that looks like nothing: same type, same
+   place, so clicking them changes them without the row moving. */
+.wordsButton {
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: text;
+	font: inherit;
+	margin: 0;
+	max-width: 100%;
+	overflow-wrap: anywhere;
+	padding: 0;
+	text-align: left;
+}
+
+/* The box sits exactly over the words, sized by the sizer behind it. */
+.editing {
+	display: inline-grid;
+	max-width: 100%;
+	min-width: 6ch;
+}
+
+.editing > * {
+	grid-area: 1 / 1;
+}
+
+.sizer {
+	overflow-wrap: anywhere;
+	visibility: hidden;
+	white-space: pre-wrap;
+}
+
+.words {
+	background: none;
+	border: 0;
+	color: var(--graphite);
+	font: inherit;
+	margin: 0;
+	overflow: hidden;
+	overflow-wrap: anywhere;
+	padding: 0;
+	resize: none;
+	white-space: pre-wrap;
+}
+
+.words[data-edit]:focus-visible {
+	outline: 2px solid var(--blue);
+	outline-offset: 3px;
+}
+
+/* New words, not yet sent: they wait here while the prompt is open. */
+.waiting {
+	color: var(--ink-soft);
+}
+
+.meta {
+	display: grid;
+	font-size: var(--app-font-size-xs, 0.75rem);
+	margin-top: 0.15rem;
+	min-height: 1.4rem;
+}
+
+/* The prompt takes the meta line over rather than pushing it aside. */
+.metaSwap {
+	align-items: baseline;
+	animation: fade 0.12s var(--curve) both;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 1rem;
+	grid-area: 1 / 1;
+	justify-content: space-between;
+	width: 100%;
+}
+
+.metaLine {
+	color: var(--ink-soft);
+	margin: 0;
+}
+
+.metaState {
+	color: var(--ink-soft);
+	display: flex;
+	gap: 0.75rem;
+	margin: 0;
+}
+
+/* The one thing in the list that is blue. */
+.fresh {
+	color: var(--blue);
+}
+
+.rowControls {
+	display: flex;
+	flex: none;
+	gap: 1.25rem;
+}
+
+/* One graphite rule under the rows that rose, and nothing else. */
+.rule {
+	border-top: 1px solid var(--graphite);
+	margin: 0.4rem 0;
+}
+
+.opened {
+	padding: 0.5rem 0 1.25rem;
+}
+
+.empty {
+	color: var(--ink-soft);
+	margin: 0;
+}
+
+/* Controls rest at faint ink and come up on hover, on focus, and wherever
+   there is no hover to wait for. 44 px of target around a line of text. */
+.control {
+	align-items: center;
+	align-self: flex-start;
+	background: none;
+	border: 0;
+	color: var(--ink-faint);
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	min-height: 2.25rem;
+	padding: 0;
+	position: relative;
+	text-align: left;
+	transition: color 0.15s var(--curve);
+}
+
+.control::after {
+	content: "";
+	inset: -4px;
+	position: absolute;
+}
+
+.control:hover,
+.control:focus-visible {
+	color: var(--graphite);
+}
+
+@media (hover: none) {
+	.control {
+		color: var(--graphite);
+	}
+}
+
+.control:disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+
+.control.quiet {
+	min-height: 1.25rem;
+}
+
+.control.quiet::after {
+	inset: -12px -4px;
+}
+
+.control.cancel {
+	color: var(--ink-soft);
+}
+
+.control.cancel:hover,
+.control.cancel:focus-visible {
+	color: var(--graphite);
+}
+
+.control.confirm {
+	color: var(--graphite);
+	text-decoration: underline;
+	text-decoration-color: var(--ink-faint);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 4px;
+}
+
+.control.confirm:hover,
+.control.confirm:focus-visible {
+	text-decoration-color: currentColor;
+}
+
+.showAll {
+	margin-top: 0.25rem;
+}
+
+.list :focus-visible {
+	outline: 2px solid var(--blue);
+	outline-offset: 2px;
+}
+
+/* The prompt: one line of question and its answers, in the meta line's own
+   size. Only a reason grows the row, by one labelled field over 180 ms. */
+.prompt {
+	align-items: baseline;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 1rem;
+	width: 100%;
+}
+
+.promptQuestion {
+	color: var(--graphite);
+	margin: 0;
+}
+
+.promptOptions {
+	align-items: baseline;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 1rem;
+}
+
+.promptField {
+	animation: grow 0.18s var(--curve) both;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	max-width: 40rem;
+	width: 100%;
+}
+
+.promptLabel {
+	color: var(--graphite);
+}
+
+.field {
+	background: var(--paper);
+	border: 1px solid var(--hairline);
+	border-radius: 0;
+	color: var(--graphite);
+	font: inherit;
+	/* Never under 16 px, so a phone does not zoom the page on focus. */
+	font-size: max(16px, 1em);
+	line-height: 1.4;
+	padding: 0.5em 0.65em;
+	resize: vertical;
+	width: 100%;
+}
+
+.list .field:focus-visible {
+	border-color: var(--blue);
+	outline-offset: -1px;
+}
+
+.note {
+	color: var(--ink-soft);
+	margin: 0;
+}
+
+.note:empty {
+	display: none;
+}
+
+/* Said in full ink: something the host has to know. */
+.notice {
+	color: var(--graphite);
+	margin: 0;
+}
+
+/* Both wordings, one under the other, each one a control. */
+.conflict {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+/* Headers first, then rows in the row's own shape. */
+.skeleton {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	padding: 0.7rem 0;
+}
+
+.ghost {
+	background: var(--hairline);
+	height: 0.9rem;
+	width: 7rem;
+}
+
+.ghostLine {
+	background: var(--hairline);
+	display: block;
+	height: 0.8rem;
+	width: min(28rem, 70%);
+}
+
+.ghostShort {
+	width: min(14rem, 40%);
+}
+
+@keyframes fade {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes grow {
+	from {
+		opacity: 0;
+		transform: translateY(-2px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.metaSwap,
+	.promptField {
+		animation: none;
+	}
+
+	.control {
+		transition: none;
+	}
+}

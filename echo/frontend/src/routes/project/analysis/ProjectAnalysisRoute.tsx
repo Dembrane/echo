@@ -21,7 +21,6 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
-import { AnalysisResultsList } from "@/components/analysis/AnalysisResultsList";
 import {
 	type AnalysisObject,
 	type AnalysisRecipe,
@@ -45,17 +44,14 @@ import {
 	useProjectPopcorn,
 } from "@/components/popcorn/hooks";
 import { PopcornVoiceSection } from "@/components/popcorn/PopcornVoiceSection";
-import { ResultItem } from "@/components/results";
+import {
+	ResultItem,
+	ResultsList,
+	useResultActions,
+} from "@/components/results";
 import { useRecipeParameters } from "./useRecipeParameters";
 
 type AnalysisTab = "results" | "recipes" | "runs";
-const resultTypes = [
-	"argument",
-	"deduplicated_argument",
-	"popcorn",
-	"tension",
-	"stakeholder",
-];
 const activeStatuses = new Set(["queued", "running", "waiting_for_inputs"]);
 // A function, not a constant: `t` has to run with a locale active, which is
 // only true once something renders.
@@ -93,65 +89,23 @@ function ResultsView({
 	const [params, setParams] = useSearchParams();
 	const type = params.get("type") || undefined;
 	const membership = params.get("membership") || "active";
-	const parsedPage = Number(params.get("page") ?? "1");
-	const page =
-		Number.isSafeInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
-	const objects = useAnalysisObjects(
-		projectId,
-		type,
-		membership,
-		(page - 1) * 100,
-	);
+	const query = params.get("q") ?? "";
+	const objects = useAnalysisObjects(projectId, type, membership);
 	const [selected, setSelected] = useState<AnalysisObject | null>(null);
+	const actions = useResultActions({ projectId });
 	const data = objects.data;
-	const labels = resultTypeLabels();
 	const mapPath = workspaceId
 		? `/w/${workspaceId}/projects/${projectId}/map`
 		: `/projects/${projectId}/map`;
+	// The filter row writes to the address, like every other filter here.
+	const write = (next: URLSearchParams) => setParams(next, { replace: true });
 	return (
 		<Stack gap="lg">
-			<Paper withBorder radius="sm" p="sm">
-				<Group justify="space-between" align="end" gap="sm">
-					<Group align="end" gap="sm">
-						<Select
-							label={t`Result type`}
-							clearable
-							value={type ?? null}
-							data={resultTypes.map((value) => ({
-								label: labels[value],
-								value,
-							}))}
-							onChange={(value) => {
-								const next = new URLSearchParams(params);
-								value ? next.set("type", value) : next.delete("type");
-								next.delete("page");
-								setParams(next, { replace: true });
-							}}
-						/>
-						<Select
-							label={t`Membership`}
-							value={membership}
-							data={[
-								{ label: t`Current`, value: "active" },
-								{ label: t`Withdrawn`, value: "withdrawn" },
-								{ label: t`All`, value: "all" },
-							]}
-							onChange={(value) => {
-								const next = new URLSearchParams(params);
-								value && value !== "active"
-									? next.set("membership", value)
-									: next.delete("membership");
-								next.delete("page");
-								setParams(next, { replace: true });
-							}}
-						/>
-					</Group>
-					<Button component={I18nLink} to={mapPath} variant="outline">
-						<Trans>Open Map</Trans>
-					</Button>
-				</Group>
-			</Paper>
-			{objects.isLoading && <Loader />}
+			<Group justify="end">
+				<Button component={I18nLink} to={mapPath} variant="outline">
+					<Trans>Open Map</Trans>
+				</Button>
+			</Group>
 			{objects.isError && (
 				<FetchErrorPanel
 					onRetry={() => objects.refetch()}
@@ -185,36 +139,49 @@ function ResultsView({
 					</Stack>
 				</Paper>
 			)}
-			{data && data.total > 0 && (
-				<AnalysisResultsList
-					counts={data.counts}
-					expandedObjectId={selected?.objectId ?? null}
-					renderExpanded={(item) => (
-						<ResultItem
-							projectId={projectId}
-							item={item}
-							canEdit={Boolean(data.canEdit)}
-							mapHref={mapPath}
-							onClose={() => setSelected(null)}
-						/>
-					)}
-					items={data.items}
-					labels={labels}
-					limit={data.limit}
-					onInspect={(item) =>
+			{!objects.isError && (!data || data.total > 0) && (
+				<ResultsList
+					actions={actions}
+					canEdit={Boolean(data?.canEdit)}
+					counts={data?.counts}
+					density="check"
+					filter={{
+						kind: type ?? null,
+						onChange: (next) => {
+							const search = new URLSearchParams(params);
+							if (next.kind !== undefined)
+								next.kind
+									? search.set("type", next.kind)
+									: search.delete("type");
+							if (next.status !== undefined)
+								next.status && next.status !== "active"
+									? search.set("membership", next.status)
+									: search.delete("membership");
+							if (next.query !== undefined)
+								next.query ? search.set("q", next.query) : search.delete("q");
+							write(search);
+						},
+						query,
+						status: membership,
+					}}
+					items={data?.items ?? []}
+					loading={objects.isLoading}
+					onOpen={(item) =>
 						setSelected((current) =>
 							current?.objectId === item.objectId ? null : item,
 						)
 					}
-					onPageChange={(nextPage) => {
-						const next = new URLSearchParams(params);
-						nextPage === 1
-							? next.delete("page")
-							: next.set("page", String(nextPage));
-						setParams(next);
-					}}
-					page={page}
-					total={data.total}
+					openObjectId={selected?.objectId ?? null}
+					renderItem={(item) => (
+						<ResultItem
+							canEdit={Boolean(data?.canEdit)}
+							item={item}
+							mapHref={mapPath}
+							onClose={() => setSelected(null)}
+							onEditWords={actions}
+							projectId={projectId}
+						/>
+					)}
 				/>
 			)}
 		</Stack>

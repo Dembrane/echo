@@ -35,8 +35,14 @@ async function parseError(res: Response): Promise<Error> {
 	const data = await res.json().catch(() => ({}));
 	const detail =
 		typeof data?.detail === "string" ? data.detail : `HTTP ${res.status}`;
-	const error = new Error(detail) as Error & { status?: number };
+	const error = new Error(detail) as Error & {
+		status?: number;
+		detail?: unknown;
+	};
 	error.status = res.status;
+	// A 409 answers with a body, not a sentence: the conflicting revision, for
+	// the screen that has to show both wordings.
+	error.detail = data?.detail;
 	return error;
 }
 
