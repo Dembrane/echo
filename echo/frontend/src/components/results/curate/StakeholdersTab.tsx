@@ -2,121 +2,45 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import type { AnalysisObject } from "@/components/analysis/hooks";
 import { rungWord } from "../ResultItem";
-import { fieldWords, resultFields } from "../resultContent";
-import { EditableWords, useWordsEdit } from "../resultEditing";
 import {
-	attentionPhrase,
-	HideControl,
-	QuietLine,
-	WordsStep,
-} from "./CurateMeta";
+	conversationWords,
+	evidenceGroups,
+	fieldWords,
+	resultFields,
+} from "../resultContent";
+import { AttentionLead } from "./CurateMeta";
 import { CurateOpen } from "./CurateOpen";
+import {
+	CurateRow,
+	CurateTable,
+	RowWords,
+	type TableProps,
+} from "./CurateTable";
 import classes from "./curate.module.css";
-import { openOnClick, type ShapeProps } from "./shape";
-import { useHide } from "./useHide";
 
-function StakeholderRow({
-	actions,
-	analysisHref,
-	canEdit,
-	item,
-	onOpen,
-	open,
-	projectId,
-}: ShapeProps & { item: AnalysisObject; open: boolean; onOpen: () => void }) {
-	const hide = useHide({ actions, objectId: item.objectId });
-	const edit = useWordsEdit({ actions: canEdit ? actions : null, item });
-	// The rung is stated only when it is not "voiced", which is the expected
-	// one: a column saying "voiced" on every row says nothing.
-	const rung = rungWord(resultFields(item).rung);
-
-	return (
-		<>
-			<tr
-				className={classes.bodyRow}
-				data-held={hide.held || undefined}
-				data-testid={`curate-stakeholder-${item.objectId}`}
-				onClick={(event) => openOnClick(event, onOpen)}
-			>
-				<td className={classes.statement}>
-					<EditableWords
-						edit={edit}
-						field="name"
-						label={t`The name of this stakeholder`}
-						words={fieldWords(item, "name") || (item.label ?? "")}
-					/>
-				</td>
-				<td className={classes.cell}>
-					<EditableWords
-						edit={edit}
-						field="role"
-						label={t`This stakeholder's role`}
-						words={fieldWords(item, "role")}
-					/>
-				</td>
-				<td className={classes.cell}>
-					<EditableWords
-						clamp={classes.clamp2}
-						edit={edit}
-						field="stake"
-						label={t`What is at stake here`}
-						words={fieldWords(item, "stake")}
-					/>
-				</td>
-				<td className={classes.cell}>{rung}</td>
-				<td className={classes.controlCell}>
-					<HideControl hide={hide} />
-				</td>
-			</tr>
-			{(hide.held || hide.asking || attentionPhrase(item) || edit.asking) && (
-				<tr>
-					<td className={classes.openedCell} colSpan={5}>
-						<WordsStep edit={edit} objectId={item.objectId} />
-						<QuietLine
-							actions={actions}
-							hide={hide}
-							lead={attentionPhrase(item)}
-							objectId={item.objectId}
-						/>
-					</td>
-				</tr>
-			)}
-			{open && (
-				<tr>
-					<td className={classes.openedCell} colSpan={5}>
-						<CurateOpen
-							actions={actions}
-							analysisHref={analysisHref}
-							canEdit={canEdit}
-							item={item}
-							projectId={projectId}
-						/>
-					</td>
-				</tr>
-			)}
-		</>
-	);
-}
+const COLUMNS = 6;
 
 /**
  * The stakeholders: a few of them, three short fields each, all three
- * rewordable where they stand. A short table, no filters: there is nothing
- * here a host has to search through.
+ * rewordable in place under the pencil. The rung is said after the name only
+ * when it is not "voiced", which is the expected one.
  */
 export function StakeholdersTab({
 	items,
 	onOpen,
 	openObjectId,
 	...shape
-}: ShapeProps & {
+}: TableProps & {
 	items: AnalysisObject[];
 	openObjectId: string | null;
 	onOpen: (item: AnalysisObject) => void;
 }) {
+	const ids = items.map((item) => item.objectId);
 	return (
-		<table className={classes.table} data-testid="curate-stakeholders">
-			<thead>
-				<tr>
+		<CurateTable
+			actions={shape.actions}
+			heads={
+				<>
 					<th scope="col">
 						<Trans>Name</Trans>
 					</th>
@@ -127,26 +51,71 @@ export function StakeholdersTab({
 						<Trans>Stake</Trans>
 					</th>
 					<th scope="col">
-						<Trans>How they were named</Trans>
+						<Trans>Source</Trans>
 					</th>
-					<th scope="col">
-						<span className={classes.said}>
-							<Trans>Hide</Trans>
-						</span>
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				{items.map((item) => (
-					<StakeholderRow
+				</>
+			}
+			ids={ids}
+			selection={shape.selection}
+			testId="curate-stakeholders"
+		>
+			{items.map((item) => {
+				const rung = rungWord(resultFields(item).rung);
+				return (
+					<CurateRow
 						{...shape}
+						cells={(edit) => (
+							<>
+								<td className={classes.statement}>
+									<AttentionLead item={item} />
+									<RowWords
+										edit={edit}
+										field="name"
+										label={t`The name of this stakeholder`}
+										words={fieldWords(item, "name") || (item.label ?? "")}
+									/>
+									{rung && <span className={classes.rung}> {rung}</span>}
+								</td>
+								<td className={classes.cell}>
+									<RowWords
+										edit={edit}
+										field="role"
+										label={t`This stakeholder's role`}
+										words={fieldWords(item, "role")}
+									/>
+								</td>
+								<td className={`${classes.cell} ${classes.clamp2}`}>
+									<RowWords
+										edit={edit}
+										field="stake"
+										label={t`What is at stake here`}
+										words={fieldWords(item, "stake")}
+									/>
+								</td>
+								<td className={classes.cell}>
+									{conversationWords(item, evidenceGroups(item)[0])}
+								</td>
+							</>
+						)}
+						columns={COLUMNS}
+						ids={ids}
 						item={item}
 						key={item.objectId}
 						onOpen={() => onOpen(item)}
 						open={openObjectId === item.objectId}
+						opened={() => (
+							<CurateOpen
+								actions={shape.actions}
+								analysisHref={shape.analysisHref}
+								canEdit={shape.canEdit}
+								item={item}
+								projectId={shape.projectId}
+							/>
+						)}
+						testId={`curate-stakeholder-${item.objectId}`}
 					/>
-				))}
-			</tbody>
-		</table>
+				);
+			})}
+		</CurateTable>
 	);
 }

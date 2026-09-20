@@ -10,7 +10,12 @@ import type { Presentation } from "@/components/present/hooks";
 import { PresentResultsPanel } from "./PresentResultsPanel";
 
 vi.mock("@/lib/bff", () => ({
-	bff: { get: vi.fn().mockResolvedValue({ revisions: [] }), post: vi.fn() },
+	bff: {
+		delete: vi.fn().mockResolvedValue({ myFeedback: null }),
+		get: vi.fn().mockResolvedValue({ revisions: [] }),
+		post: vi.fn(),
+		put: vi.fn().mockResolvedValue({ myFeedback: null }),
+	},
 }));
 const items = [
 	{
@@ -112,7 +117,7 @@ describe("The four tabs of the results panel", () => {
 		expect(tabs.map((tab) => tab.textContent)).toEqual([
 			"Popcorn1",
 			"Tensions1off",
-			"Map0off",
+			"Arguments0off",
 			"Stakeholders0off",
 		]);
 		// The one the presentation shows leads, and is the one being read.
@@ -126,8 +131,6 @@ describe("The four tabs of the results panel", () => {
 		expect(
 			screen.getByTestId("curate-tab-tensions").getAttribute("aria-selected"),
 		).toBe("true");
-		// A tension is an open card: no caret, no accordion. The pole names its
-		// own quotes, so it reads twice on the card.
 		expect(screen.getAllByText("Open longer").length).toBeGreaterThan(0);
 		expect(screen.getByText("Who pays for the waiting")).toBeTruthy();
 		fireEvent.click(screen.getByTestId("curate-tab-popcorn"));
@@ -170,43 +173,39 @@ describe("The four tabs of the results panel", () => {
 describe("Hiding a finding from this presentation", () => {
 	it("takes one click, with no reason asked for", () => {
 		show();
-		fireEvent.click(screen.getByRole("button", { name: "Hide" }));
+		fireEvent.click(
+			screen.getByRole("button", { name: "Hide from this presentation" }),
+		);
 		expect(save).toHaveBeenCalledWith({
 			presentation: { hidden_items: ["obj-1"] },
 		});
 		expect(screen.queryByText("Why not in this presentation?")).toBeNull();
-	});
-
-	it("says so in words, and offers Undo and a reason", () => {
-		show();
-		fireEvent.click(screen.getByRole("button", { name: "Hide" }));
-		expect(screen.getByTestId("curate-held-obj-1")).toBeTruthy();
-		expect(screen.getByTestId("curate-undo-obj-1")).toBeTruthy();
-		fireEvent.click(screen.getByTestId("curate-add-reason-obj-1"));
-		expect(screen.getByText("Why not in this presentation?")).toBeTruthy();
-		fireEvent.click(
-			screen.getByRole("button", { name: "off topic for this room" }),
-		);
-		expect(screen.getByText("off topic for this room")).toBeTruthy();
+		// No quiet line, no countdown: the eye is the whole of it.
+		expect(screen.queryByTestId("curate-held-obj-1")).toBeNull();
+		expect(screen.queryByText("add a reason")).toBeNull();
 	});
 
 	it("counts what is hidden and filters the tab down to it", () => {
 		show();
 		expect(screen.queryByTestId("curate-hidden-filter")).toBeNull();
-		fireEvent.click(screen.getByRole("button", { name: "Hide" }));
+		fireEvent.click(
+			screen.getByRole("button", { name: "Hide from this presentation" }),
+		);
 		const filter = screen.getByTestId("curate-hidden-filter");
 		expect(filter.textContent).toBe("1 hidden");
 		fireEvent.click(filter);
 		expect(filter.getAttribute("aria-pressed")).toBe("true");
-		// Restoring is on the same glyph, in the same place, always.
-		expect(screen.getByRole("button", { name: "Restore" })).toBeTruthy();
+		// Showing it again is on the same glyph, in the same place, always.
+		expect(screen.getByRole("button", { name: "Show again" })).toBeTruthy();
 	});
 
 	it("puts a finding back on the eye it was taken out with", () => {
 		show();
-		fireEvent.click(screen.getByRole("button", { name: "Hide" }));
+		fireEvent.click(
+			screen.getByRole("button", { name: "Hide from this presentation" }),
+		);
 		save.mockClear();
-		fireEvent.click(screen.getByRole("button", { name: "Restore" }));
+		fireEvent.click(screen.getByRole("button", { name: "Show again" }));
 		expect(save).toHaveBeenCalledWith({
 			presentation: { hidden_items: [] },
 		});

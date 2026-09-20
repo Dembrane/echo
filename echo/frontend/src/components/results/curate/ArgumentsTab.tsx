@@ -10,17 +10,15 @@ import {
 	factCheckVerdict,
 	fieldWords,
 } from "../resultContent";
-import { EditableWords, useWordsEdit } from "../resultEditing";
-import {
-	attentionPhrase,
-	HideControl,
-	QuietLine,
-	WordsStep,
-} from "./CurateMeta";
+import { AttentionLead } from "./CurateMeta";
 import { CurateOpen } from "./CurateOpen";
+import {
+	CurateRow,
+	CurateTable,
+	RowWords,
+	type TableProps,
+} from "./CurateTable";
 import classes from "./curate.module.css";
-import { openOnClick, type ShapeProps } from "./shape";
-import { useHide } from "./useHide";
 
 /** Twenty-five rows of a table is a screenful; the rest waits to be asked for. */
 export const ARGUMENTS_AT_REST = 25;
@@ -138,90 +136,7 @@ function SortHead({
 	);
 }
 
-function ArgumentRow({
-	actions,
-	analysisHref,
-	canEdit,
-	item,
-	onOpen,
-	open,
-	projectId,
-}: ShapeProps & { item: AnalysisObject; open: boolean; onOpen: () => void }) {
-	const hide = useHide({ actions, objectId: item.objectId });
-	const edit = useWordsEdit({ actions: canEdit ? actions : null, item });
-	const justification = factCheckJustification(item);
-	const verdict = factCheckWords(item);
-
-	return (
-		<>
-			<tr
-				className={classes.bodyRow}
-				data-held={hide.held || undefined}
-				data-testid={`curate-argument-${item.objectId}`}
-				onClick={(event) => openOnClick(event, onOpen)}
-			>
-				<td className={classes.statement}>
-					<EditableWords
-						clamp={classes.clamp2}
-						edit={edit}
-						field="statement"
-						label={t`The words of this finding`}
-						words={fieldWords(item, "statement") || (item.label ?? "")}
-					/>
-					{/* A combined argument reads the same as any other; the word says
-					    what it is without a badge to say it in. */}
-					{item.type === "deduplicated_argument" && (
-						<span className={classes.cell}>
-							{" "}
-							<Trans>combined</Trans>
-						</span>
-					)}
-				</td>
-				<td className={classes.cell}>{stanceWords(stanceOf(item))}</td>
-				<td className={classes.cell}>{conversationOf(item)}</td>
-				<td className={classes.cell}>{verdict}</td>
-				<td className={classes.controlCell}>
-					<HideControl hide={hide} />
-				</td>
-			</tr>
-			{(hide.held || hide.asking || attentionPhrase(item) || edit.asking) && (
-				<tr>
-					<td className={classes.openedCell} colSpan={5}>
-						<WordsStep edit={edit} objectId={item.objectId} />
-						<QuietLine
-							actions={actions}
-							hide={hide}
-							lead={attentionPhrase(item)}
-							objectId={item.objectId}
-						/>
-					</td>
-				</tr>
-			)}
-			{open && (
-				<tr>
-					<td className={classes.openedCell} colSpan={5}>
-						<CurateOpen
-							actions={actions}
-							analysisHref={analysisHref}
-							canEdit={canEdit}
-							item={item}
-							projectId={projectId}
-							verdict={
-								justification ? (
-									<>
-										{verdict} {justification}
-									</>
-								) : null
-							}
-						/>
-					</td>
-				</tr>
-			)}
-		</>
-	);
-}
-
-export type ArgumentsTabProps = ShapeProps & {
+export type ArgumentsTabProps = TableProps & {
 	items: AnalysisObject[];
 	openObjectId: string | null;
 	onOpen: (item: AnalysisObject) => void;
@@ -267,6 +182,16 @@ export function ArgumentsTab({
 
 	// Sorting or filtering over a first page would be a lie about the whole.
 	const askForAll = () => onNeedsAll();
+	const ids = visible.map((item) => item.objectId);
+
+	const onSort = (column: SortColumn) => {
+		askForAll();
+		setSort((old) =>
+			old?.column === column
+				? { ascending: !old.ascending, column }
+				: { ascending: true, column },
+		);
+	};
 
 	return (
 		<div className={classes.tableWrap}>
@@ -333,70 +258,102 @@ export function ArgumentsTab({
 				</span>
 			</div>
 
-			<table className={classes.table} data-testid="curate-arguments">
-				<thead>
-					<tr>
+			<CurateTable
+				actions={shape.actions}
+				heads={
+					<>
 						<th scope="col">
 							<Trans>Statement</Trans>
 						</th>
 						<SortHead
 							column="stance"
 							label={<Trans>Stance</Trans>}
-							onSort={(column) => {
-								askForAll();
-								setSort((old) =>
-									old?.column === column
-										? { ascending: !old.ascending, column }
-										: { ascending: true, column },
-								);
-							}}
+							onSort={onSort}
 							sort={sort}
 						/>
 						<SortHead
 							column="conversation"
-							label={<Trans>Conversation</Trans>}
-							onSort={(column) => {
-								askForAll();
-								setSort((old) =>
-									old?.column === column
-										? { ascending: !old.ascending, column }
-										: { ascending: true, column },
-								);
-							}}
+							label={<Trans>Source</Trans>}
+							onSort={onSort}
 							sort={sort}
 						/>
 						<SortHead
 							column="factCheck"
 							label={<Trans>Fact-check</Trans>}
-							onSort={(column) => {
-								askForAll();
-								setSort((old) =>
-									old?.column === column
-										? { ascending: !old.ascending, column }
-										: { ascending: true, column },
-								);
-							}}
+							onSort={onSort}
 							sort={sort}
 						/>
-						<th scope="col">
-							<span className={classes.said}>
-								<Trans>Hide</Trans>
-							</span>
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					{visible.map((item) => (
-						<ArgumentRow
+					</>
+				}
+				ids={ids}
+				selection={shape.selection}
+				testId="curate-arguments"
+			>
+				{visible.map((item) => {
+					const justification = factCheckJustification(item);
+					const verdict = factCheckWords(item);
+					return (
+						<CurateRow
 							{...shape}
+							cells={(edit) => (
+								<>
+									<td className={classes.statement}>
+										<AttentionLead item={item} />
+										<RowWords
+											edit={edit}
+											field="statement"
+											label={t`The words of this finding`}
+											words={
+												fieldWords(item, "statement") || (item.label ?? "")
+											}
+										/>
+										{/* A combined argument reads the same as any other; the
+										    word says what it is without a badge to say it in. */}
+										{item.type === "deduplicated_argument" && (
+											<span className={classes.cell}>
+												{" "}
+												<Trans>combined</Trans>
+											</span>
+										)}
+									</td>
+									<td className={classes.cell}>
+										{stanceWords(stanceOf(item))}
+									</td>
+									<td className={`${classes.cell} ${classes.clamp2}`}>
+										{conversationOf(item)}
+									</td>
+									<td className={`${classes.cell} ${classes.clamp2}`}>
+										{verdict}
+									</td>
+								</>
+							)}
+							columns={6}
+							ids={ids}
 							item={item}
 							key={item.objectId}
 							onOpen={() => onOpen(item)}
 							open={openObjectId === item.objectId}
+							opened={() => (
+								<CurateOpen
+									actions={shape.actions}
+									analysisHref={shape.analysisHref}
+									canEdit={shape.canEdit}
+									item={item}
+									projectId={shape.projectId}
+									verdict={
+										justification ? (
+											<>
+												{verdict} {justification}
+											</>
+										) : null
+									}
+								/>
+							)}
+							testId={`curate-argument-${item.objectId}`}
 						/>
-					))}
-				</tbody>
-			</table>
+					);
+				})}
+			</CurateTable>
 
 			{!all && shown.length > visible.length && (
 				<button

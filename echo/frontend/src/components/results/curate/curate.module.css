@@ -146,127 +146,17 @@
 	margin: 0;
 }
 
-/* ── Popcorn ──────────────────────────────────────────────────────────────
-   One line per phrase, the conversation beside it. Two columns where there
-   is room, reading top to bottom in each; the keyboard follows the DOM, so
-   the order a host tabs through is the order the server sent. */
-
-.pops {
-	column-gap: 2.5rem;
-	display: flex;
-	flex-direction: column;
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-
-@container (min-width: 64rem) {
-	.pops {
-		columns: 2;
-		display: block;
-	}
-
-	.pops > li {
-		break-inside: avoid;
-	}
-}
-
-.pop {
-	border-top: 1px solid var(--hairline);
-}
-
-.pop:first-child {
-	border-top: 0;
-}
-
-.popBody {
-	align-items: baseline;
-	column-gap: 0.75rem;
-	cursor: pointer;
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto;
-	min-height: 2.5rem;
-	padding: 0.35rem 0;
-}
-
-.popWords {
-	color: var(--graphite);
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0 0.6rem;
-	margin: 0;
-	min-width: 0;
-}
-
-.pop[data-held] .popWords {
-	opacity: 0.55;
-}
-
-/* The conversation rides at the end of the phrase's line and gives way
-   first; under a narrow panel it drops under the phrase. */
-.popWhere {
-	color: var(--ink-soft);
-	font-size: var(--app-font-size-xs, 0.75rem);
-	flex: 1 1 auto;
-	min-width: 0;
-	overflow: hidden;
-	text-align: right;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-@container (max-width: 34rem) {
-	.popWords {
-		flex-direction: column;
-	}
-
-	.popWhere {
-		text-align: left;
-	}
-}
-
-/* ── Tensions ─────────────────────────────────────────────────────────────
-   No list and no accordion: every tension is an open card. */
-
-.cards {
-	display: flex;
-	flex-direction: column;
-	gap: 1.5rem;
-	list-style: none;
-	margin: 0;
-	max-width: 56rem;
-	padding: 0;
-}
-
-.card {
-	border-top: 1px solid var(--hairline);
-	display: flex;
-	flex-direction: column;
-	gap: 0.4rem;
-	padding-top: 1rem;
-}
-
-.cardWords {
-	display: flex;
-	flex-direction: column;
-	gap: 0.4rem;
-}
-
-.card[data-held] .cardWords {
-	opacity: 0.55;
-}
+/* ── A tension in a row ───────────────────────────────────────────────────
+   Both poles on one line with the arrows between them, the knot under them
+   in soft ink: the shape a tension has, inside the one table. */
 
 .poles {
 	align-items: baseline;
 	color: var(--graphite);
 	display: flex;
 	flex-wrap: wrap;
-	font-family: var(--app-content-bold-font-family, inherit);
-	font-size: 1.25rem;
-	font-weight: 400;
 	gap: 0 0.45em;
-	line-height: 1.3;
-	margin: 0;
+	line-height: 1.35;
 }
 
 /* The arrows travel with the second pole, so a tension that wraps never
@@ -287,16 +177,19 @@
 	transform: translateY(0.12em);
 }
 
+.knot,
+.resolve {
+	display: block;
+	text-wrap: pretty;
+}
+
 .knot {
 	color: var(--ink-soft);
-	margin: 0;
-	text-wrap: pretty;
 }
 
 .resolve {
 	color: var(--graphite);
 	margin: 0;
-	text-wrap: pretty;
 }
 
 .resolveLabel {
@@ -309,7 +202,6 @@
 	display: grid;
 	gap: 1rem 2rem;
 	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-	margin-top: 0.5rem;
 }
 
 .poleGroupHead {
@@ -318,24 +210,10 @@
 	margin: 0 0 0.35rem;
 }
 
-.cardFoot {
-	align-items: baseline;
-	display: flex;
-	flex-wrap: wrap;
-	font-size: var(--app-font-size-xs, 0.75rem);
-	gap: 0 1.25rem;
-	justify-content: space-between;
-	margin-top: 0.5rem;
-}
-
-.footActions {
-	align-items: baseline;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0 1.25rem;
-}
-
-/* ── Tables: map arguments and stakeholders ───────────────────────────── */
+/* ── The one table ───────────────────────────────────────────────────────
+   A tick, the finding, what is known about it, and the five tools. Four
+   kinds of finding read as one list of decisions, which is what a host is
+   actually making here. */
 
 .tableWrap {
 	width: 100%;
@@ -343,7 +221,7 @@
 
 .table {
 	border-collapse: collapse;
-	table-layout: fixed;
+	table-layout: auto;
 	width: 100%;
 }
 
@@ -356,42 +234,50 @@
 
 .table thead th {
 	border-bottom: 1px solid var(--hairline);
-	color: var(--ink-soft);
-	font-size: var(--app-font-size-xs, 0.75rem);
-	font-weight: 400;
-	padding-bottom: 0.4rem;
+	color: var(--graphite);
+	font-weight: 500;
+	padding-bottom: 0.5rem;
 }
 
 .table tbody tr {
 	border-top: 1px solid var(--hairline);
 }
 
-.table tbody tr:first-child {
-	border-top: 0;
-}
-
 .bodyRow {
 	cursor: pointer;
 }
 
+/* A finding kept out of this presentation greys as a whole row. A tint, not
+   an opacity: the words stay as legible as the rest. */
+.bodyRow[data-held] {
+	background: color-mix(in srgb, var(--graphite) 6%, transparent);
+}
+
+/* The first column never clamps: a phrase is the thing being read, and a
+   phrase with its tail cut off is a different phrase. */
 .statement {
 	color: var(--graphite);
 	overflow-wrap: anywhere;
+	text-wrap: pretty;
 }
 
-/* A statement clamps at two lines; the clamp lifts before the caret lands, so
-   nothing moves under the host's hand. */
+/* The columns beside it may settle at two lines. */
 .clamp2 {
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 2;
 	line-clamp: 2;
 	overflow: hidden;
-	text-align: left;
 }
 
-/* Said to a screen reader and to nobody else: the column of eyes has a name
-   at its head without a word standing over it. */
+/* The attention word over the finding's own words. */
+.attention {
+	color: var(--ink-soft);
+	display: block;
+	font-size: var(--app-font-size-xs, 0.75rem);
+}
+
+/* Said to a screen reader and to nobody else. */
 .said {
 	clip-path: inset(50%);
 	height: 1px;
@@ -406,9 +292,9 @@
 	overflow-wrap: anywhere;
 }
 
-.bodyRow[data-held] .statement,
-.bodyRow[data-held] .cell {
-	opacity: 0.55;
+.rung {
+	color: var(--ink-soft);
+	font-size: var(--app-font-size-xs, 0.75rem);
 }
 
 /* The one column that is a control at its head: the caret says which way. */
@@ -436,11 +322,7 @@
 
 .sortHead:hover,
 .sortHead:focus-visible {
-	color: var(--graphite);
-}
-
-.sortHead[aria-sort]:not([aria-sort="none"]) {
-	color: var(--graphite);
+	color: var(--blue);
 }
 
 .caret {
@@ -448,19 +330,212 @@
 	flex: none;
 }
 
-.controlCell {
+/* ── The tick ─────────────────────────────────────────────────────────── */
+
+.pickCell {
+	padding-right: 0.75rem;
+	width: 1.5rem;
+}
+
+.tick {
+	accent-color: var(--blue);
+	cursor: pointer;
+	height: 1rem;
+	margin: 0;
+	width: 1rem;
+}
+
+/* One decision about many, over the table: text, never a toolbar. */
+.bulk {
+	align-items: baseline;
+	color: var(--ink-soft);
+	display: flex;
+	flex-wrap: wrap;
+	font-size: var(--app-font-size-xs, 0.75rem);
+	gap: 0 1.25rem;
+	min-height: 2rem;
+}
+
+.bulkCount {
+	color: var(--graphite);
+}
+
+/* ── The tools ────────────────────────────────────────────────────────── */
+
+.toolsCell {
 	padding-right: 0;
 	text-align: right;
-	width: 2.75rem;
+	white-space: nowrap;
+	width: 11rem;
+}
+
+.tools {
+	display: flex;
+	gap: 0.15rem;
+	justify-content: flex-end;
+}
+
+.toolWrap {
+	display: inline-flex;
+}
+
+/*
+ * Each tool keeps its place whether it is shown or not: opacity, never
+ * display, so nothing on the row moves when the pointer arrives and every
+ * tool stays in the tab order for a host who never uses one.
+ */
+.tool {
+	align-items: center;
+	background: none;
+	border: 0;
+	color: var(--ink-rest);
+	cursor: pointer;
+	display: inline-flex;
+	height: 2rem;
+	justify-content: center;
+	opacity: 0;
+	padding: 0;
+	transition:
+		opacity 0.12s var(--curve),
+		color 0.12s var(--curve);
+	width: 2rem;
+}
+
+.tool:hover {
+	color: var(--graphite);
+}
+
+/* A tool that is on says so in blue, and says it whether or not the row is
+   under the pointer. */
+.tool[data-on] {
+	color: var(--blue);
+	opacity: 1;
+}
+
+.bodyRow:hover .tool,
+.bodyRow:focus-within .tool,
+.tool:focus-visible {
+	opacity: 1;
+}
+
+@media (hover: none) {
+	.tool {
+		opacity: 1;
+	}
+}
+
+/* ── The feedback popover ─────────────────────────────────────────────── */
+
+.popover {
+	color: var(--graphite);
+	font-size: var(--app-font-size-sm, 0.9375rem);
+}
+
+.feedback {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.feedbackHead {
+	font-weight: 500;
+	margin: 0;
+}
+
+.feedbackSub {
+	color: var(--ink-soft);
+	font-size: var(--app-font-size-xs, 0.75rem);
+	margin: 0 0 0.35rem;
+}
+
+.feedback .tick {
+	flex: none;
+}
+
+.feedback label {
+	align-items: center;
+	cursor: pointer;
+	display: flex;
+	gap: 0.5rem;
+	min-height: 1.85rem;
+}
+
+.sendLine {
+	align-items: center;
+	display: flex;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}
+
+.noteField {
+	background: none;
+	border: 1px solid var(--hairline);
+	border-radius: 2px;
+	color: var(--graphite);
+	flex: 1 1 auto;
+	font: inherit;
+	min-width: 0;
+	padding: 0.35rem 0.5rem;
+}
+
+.send {
+	align-items: center;
+	background: none;
+	border: 1px solid var(--hairline);
+	border-radius: 2px;
+	color: var(--graphite);
+	cursor: pointer;
+	display: inline-flex;
+	height: 2rem;
+	justify-content: center;
+	margin-left: auto;
+	width: 2rem;
+}
+
+.send:hover {
+	border-color: var(--blue);
+	color: var(--blue);
+}
+
+.thanks {
+	margin: 0;
+}
+
+.nextStep {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.nextButton {
+	align-items: center;
+	background: none;
+	border: 1px solid var(--hairline);
+	border-radius: 2px;
+	color: var(--graphite);
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	gap: 0.4rem;
+	min-height: 2.25rem;
+	padding: 0 0.6rem;
+}
+
+.nextButton:hover {
+	border-color: var(--blue);
+	color: var(--blue);
+}
+
+.stepCell {
+	padding: 0 0 0.5rem;
 }
 
 .openedCell {
 	padding: 0 0 1.25rem;
 }
 
-/* Under a narrow panel the table stops being a table: each row is two lines
-   of words with its control beside them. */
-@container (max-width: 40rem) {
+/* Under a narrow panel the table stops being a table: each row is a stack of
+   lines with its tools always in view. */
+@container (max-width: 34rem) {
 	.table,
 	.table tbody,
 	.table tbody tr,
@@ -475,32 +550,38 @@
 
 	.table tbody tr {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-columns: auto minmax(0, 1fr);
+		padding: 0.5rem 0;
 	}
 
 	.table td {
+		grid-column: 2;
 		padding: 0.1rem 0;
 	}
 
-	.table td.statement {
+	.table td.pickCell {
 		grid-column: 1;
-		padding-top: 0.6rem;
+		grid-row: 1;
+		padding-right: 0.75rem;
 	}
 
 	.table td.cell {
 		font-size: var(--app-font-size-xs, 0.75rem);
-		grid-column: 1;
 	}
 
-	.table td.controlCell {
-		grid-column: 2;
-		grid-row: 1 / span 2;
-		text-align: right;
+	.table td.toolsCell {
+		justify-self: start;
+		text-align: left;
+		width: auto;
 	}
 
+	.toolsCell .tool {
+		opacity: 1;
+	}
+
+	.table td.stepCell,
 	.table td.openedCell {
 		grid-column: 1 / -1;
-		padding-bottom: 1rem;
 	}
 }
 
@@ -815,19 +896,29 @@ input.filterControl:hover {
 	width: min(16rem, 48%);
 }
 
-.ghostCard {
-	border-top: 1px solid var(--hairline);
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-	padding-top: 1rem;
+/* ── Edit mode ────────────────────────────────────────────────────────────
+   Every field of the row becomes a box in place, in the same type the words
+   were read in, so nothing about the row changes but the caret. */
+
+.words {
+	background: var(--paper);
+	border: 1px solid var(--hairline);
+	border-radius: 2px;
+	color: var(--graphite);
+	display: block;
+	field-sizing: content;
+	font: inherit;
+	line-height: inherit;
+	margin: -0.15rem 0;
+	padding: 0.15rem 0.35rem;
+	resize: none;
+	width: 100%;
 }
 
-.ghostPoles {
-	background: var(--hairline);
-	display: block;
-	height: 1rem;
-	width: min(28rem, 70%);
+.words:focus-visible {
+	border-color: var(--blue);
+	outline: 2px solid var(--blue);
+	outline-offset: -1px;
 }
 
 @keyframes fade {

@@ -104,6 +104,21 @@ export function PresentResultsPanel({
 					},
 				});
 			},
+			// A selection is one decision, so it is one write: the route takes the
+			// whole list, and eleven writes of it would race each other.
+			setManyHeld: (objectIds, held) => {
+				setDecided((old) => ({
+					...old,
+					...Object.fromEntries(objectIds.map((id) => [id, held])),
+				}));
+				save.mutate({
+					presentation: {
+						hidden_items: held
+							? [...new Set([...hidden, ...objectIds])]
+							: hidden.filter((id) => !objectIds.includes(id)),
+					},
+				});
+			},
 		}),
 		[hidden, pending, save.mutate],
 	);

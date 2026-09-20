@@ -6,6 +6,7 @@ import {
 	PRESENTATION_BLOCKS,
 	type PresentationBlock,
 } from "@/components/present/blocks";
+import { useResultFeedback } from "../feedback/useResultFeedback";
 import { risesForAttention } from "../resultContent";
 import type { ResultActions } from "../useResultActions";
 import { ARGUMENTS_AT_REST, ArgumentsTab } from "./ArgumentsTab";
@@ -15,6 +16,7 @@ import { POPCORN_AT_REST, PopcornTab } from "./PopcornTab";
 import { StakeholdersTab } from "./StakeholdersTab";
 import type { ShapeProps } from "./shape";
 import { TensionsTab } from "./TensionsTab";
+import { useSelection } from "./useSelection";
 
 /** The types of finding each tab draws from. */
 export const TYPES_IN_TAB: Record<PresentationBlock, string[]> = {
@@ -42,40 +44,30 @@ function Empty({ block }: { block: PresentationBlock }) {
 					No stakeholders yet. They appear after the first analysis.
 				</Trans>
 			) : (
-				<Trans>
-					No map arguments yet. They appear after the first analysis.
-				</Trans>
+				<Trans>No arguments yet. They appear after the first analysis.</Trans>
 			)}
 		</p>
 	);
 }
 
 /**
- * Waiting, in the shape of what is coming: rows for the tables, two card
- * ghosts for the tensions. No spinner — a spinner says only that something is
- * happening, and the host already knows that.
+ * Waiting, in the shape of what is coming: rows, in the table every tab is
+ * drawn in. No spinner — a spinner says only that something is happening, and
+ * the host already knows that.
  */
-function Skeleton({ block }: { block: PresentationBlock }) {
-	if (block === "tensions")
-		return (
-			<div className={classes.cards} data-testid="curate-loading">
-				{[0, 1].map((card) => (
-					<div className={classes.ghostCard} key={card}>
-						<span className={classes.ghostPoles} />
-						<span className={classes.ghostLine} />
-						<span className={`${classes.ghostLine} ${classes.ghostShort}`} />
-					</div>
-				))}
-			</div>
-		);
+function Skeleton() {
 	return (
-		<ul className={classes.ghostRows} data-testid="curate-loading">
-			{[0, 1, 2, 3, 4].map((line) => (
-				<li className={classes.ghostRow} key={line}>
-					<span className={classes.ghostLine} />
-				</li>
-			))}
-		</ul>
+		<table className={classes.table} data-testid="curate-loading">
+			<tbody>
+				{[0, 1, 2, 3, 4].map((line) => (
+					<tr className={classes.ghostRow} key={line}>
+						<td>
+							<span className={classes.ghostLine} />
+						</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
 	);
 }
 
@@ -122,6 +114,11 @@ export function CuratePanel({
 	const [open, setOpen] = useState<string | null>(null);
 	const [showingHidden, setShowingHidden] = useState(false);
 	const [allPopcorn, setAllPopcorn] = useState(false);
+	// The ticks belong to the tab they were made in, and the thumbs to the
+	// whole panel: one hook, so a rating made in one tab is the same rating
+	// the row shows when the host comes back to it.
+	const selection = useSelection();
+	const feedback = useResultFeedback(shape.projectId);
 	// The order a finding has when the panel opens is the order it keeps, so
 	// nothing moves under the host's hand while they work.
 	const places = useRef(new Map<string, { rank: number; risen: boolean }>());
@@ -188,10 +185,10 @@ export function CuratePanel({
 	const onOpen = (item: AnalysisObject) =>
 		setOpen((current) => (current === item.objectId ? null : item.objectId));
 
-	const shapeProps = { ...shape, actions };
+	const shapeProps = { ...shape, actions, feedback, selection };
 
 	const body = () => {
-		if (loading) return <Skeleton block={selected} />;
+		if (loading) return <Skeleton />;
 		if (shown.length === 0)
 			return showingHidden ? (
 				<p className={classes.empty}>
@@ -201,7 +198,14 @@ export function CuratePanel({
 				<Empty block={selected} />
 			);
 		if (selected === "tensions")
-			return <TensionsTab {...shapeProps} items={shown} />;
+			return (
+				<TensionsTab
+					{...shapeProps}
+					items={shown}
+					onOpen={onOpen}
+					openObjectId={open}
+				/>
+			);
 		if (selected === "stakeholders")
 			return (
 				<StakeholdersTab
@@ -261,6 +265,7 @@ export function CuratePanel({
 					setOpen(null);
 					setShowingHidden(false);
 					setAllPopcorn(false);
+					selection.clear();
 				}}
 				selected={selected}
 			/>

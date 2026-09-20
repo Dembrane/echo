@@ -1,31 +1,24 @@
-import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Tooltip } from "@mantine/core";
-import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import type { AnalysisObject } from "@/components/analysis/hooks";
-import { ReasonPrompt } from "../ReasonPrompt";
 import {
 	EditAftermath,
+	type EditView,
 	hasAftermath,
-	type WordsEdit,
 	WordsPrompt,
 } from "../resultEditing";
-import type { ResultActions } from "../useResultActions";
 import classes from "./curate.module.css";
-import type { Hide } from "./useHide";
 
 /**
  * What the host is being asked about the words they just changed, and what
- * came of it. It opens under the finding it belongs to rather than taking a
- * line over, because these shapes have no line to spare: a popcorn row is one
- * line, a table cell is a cell.
+ * came of it. It opens under the row it belongs to rather than taking a line
+ * over, because these shapes have no line to spare: a row is a row.
  */
 export function WordsStep({
 	edit,
 	objectId,
 }: {
-	edit: WordsEdit;
+	edit: EditView;
 	objectId: string;
 }): ReactNode {
 	if (edit.asking)
@@ -78,133 +71,11 @@ export function attentionPhrase(
 }
 
 /**
- * The eye. Hiding is one click and no question; restoring is the same click
- * back, and lives on the same glyph in the same place, always.
+ * The attention word over the finding's own words: a small line in soft ink,
+ * leading the first column rather than sitting in one of its own.
  */
-export function HideControl({ hide }: { hide: Hide }) {
-	if (!hide.canHide) return null;
-	return hide.held ? (
-		<Tooltip label={t`Restore`}>
-			<button
-				ref={hide.control}
-				type="button"
-				aria-label={t`Restore`}
-				className={`${classes.control} ${classes.icon}`}
-				data-testid={`curate-restore-${hide.objectId}`}
-				onClick={hide.show}
-			>
-				<EyeIcon aria-hidden size={16} />
-			</button>
-		</Tooltip>
-	) : (
-		<Tooltip label={t`Hide`}>
-			<button
-				ref={hide.control}
-				type="button"
-				aria-label={t`Hide`}
-				className={`${classes.control} ${classes.icon}`}
-				data-testid={`curate-hide-${hide.objectId}`}
-				onClick={hide.hide}
-			>
-				<EyeSlashIcon aria-hidden size={16} />
-			</button>
-		</Tooltip>
-	);
-}
-
-/**
- * The line under a finding: what it is made of, or that it is not in this
- * presentation and the two ways out of that. A hidden finding says so in
- * words, because dimmed words alone say nothing; the reason is the host's to
- * add, never a toll on the way through.
- */
-export function QuietLine({
-	actions,
-	hide,
-	lead,
-	objectId,
-}: {
-	actions: ResultActions;
-	hide: Hide;
-	/** What this line says when nothing has been hidden. */
-	lead?: ReactNode;
-	objectId: string;
-}) {
-	if (hide.asking)
-		return (
-			<div className={`${classes.step} ${classes.quietLine}`}>
-				<ReasonPrompt
-					testId={`curate-reason-${objectId}`}
-					question={<Trans>Why not in this presentation?</Trans>}
-					reasonLabel={
-						<Trans>
-							One sentence, for the people you work with and anyone who checks
-							later.
-						</Trans>
-					}
-					confirmLabel={<Trans>Save</Trans>}
-					options={[
-						// The last reasons this browser used, each said once, then the
-						// way to say something else.
-						...[
-							...actions.heldBackReasons,
-							t`repeats another finding`,
-							t`off topic for this room`,
-						]
-							.filter((reason, index, all) => all.indexOf(reason) === index)
-							.slice(0, 3)
-							.map((reason) => ({ key: reason, label: reason, reason })),
-						{
-							key: "other",
-							label: t`another reason`,
-							needsReason: true,
-						},
-					]}
-					onCancel={hide.stopAsking}
-					onConfirm={({ reason }) => hide.saveReason(reason ?? "")}
-				/>
-			</div>
-		);
-
-	if (hide.held)
-		return (
-			<p className={classes.quietLine} data-testid={`curate-held-${objectId}`}>
-				<span>
-					<Trans>hidden from this presentation</Trans>
-				</span>
-				{hide.undoable && (
-					<>
-						<span aria-hidden className={classes.dot}>
-							·
-						</span>
-						<button
-							type="button"
-							className={`${classes.control} ${classes.quiet} ${classes.confirm}`}
-							data-testid={`curate-undo-${objectId}`}
-							onClick={hide.show}
-						>
-							<Trans>Undo</Trans>
-						</button>
-					</>
-				)}
-				<span aria-hidden className={classes.dot}>
-					·
-				</span>
-				{hide.reason ? (
-					<span>{hide.reason}</span>
-				) : (
-					<button
-						type="button"
-						className={`${classes.control} ${classes.quiet} ${classes.confirm}`}
-						data-testid={`curate-add-reason-${objectId}`}
-						onClick={hide.askReason}
-					>
-						<Trans>add a reason</Trans>
-					</button>
-				)}
-			</p>
-		);
-
-	if (!lead) return null;
-	return <p className={classes.quietLine}>{lead}</p>;
+export function AttentionLead({ item }: { item: AnalysisObject }): ReactNode {
+	const said = attentionPhrase(item);
+	if (!said) return null;
+	return <span className={classes.attention}>{said}</span>;
 }

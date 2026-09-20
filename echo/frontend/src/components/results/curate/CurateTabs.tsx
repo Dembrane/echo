@@ -14,7 +14,9 @@ export const tabWords = (block: PresentationBlock): string => {
 		case "stakeholders":
 			return t`Stakeholders`;
 		default:
-			return t`Map`;
+			// The block is still `map` on the wire; the room calls them arguments,
+			// and so does everything a host reads.
+			return t`Arguments`;
 	}
 };
 

@@ -4,7 +4,6 @@ import {
 	type AnalysisObject,
 	useSetAnalysisMembership,
 } from "@/components/analysis/hooks";
-import { I18nLink } from "@/components/common/i18nLink";
 import { ReasonPrompt } from "../ReasonPrompt";
 import { ResultItem } from "../ResultItem";
 import {
@@ -195,12 +194,6 @@ export function CurateActions({
 								<Trans>Withdraw from the analysis</Trans>
 							</button>
 						))}
-					<I18nLink
-						className={`${classes.control} ${classes.quiet}`}
-						to={analysisHref}
-					>
-						<Trans>Open in Analysis</Trans>
-					</I18nLink>
 					<button
 						type="button"
 						className={`${classes.control} ${classes.quiet}`}

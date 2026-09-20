@@ -58,6 +58,10 @@ const bag = (value: unknown): Record<string, unknown> =>
 		? (value as Record<string, unknown>)
 		: {};
 
+/** Whether two wordings are close enough that the prompt rests on "A typo". */
+export const typoLike = (before: string, after: string): boolean =>
+	distance(before.trim(), after.trim()) <= TYPO_DISTANCE;
+
 /** How far apart two wordings are, cheaply: enough to spot a typo fix. */
 function distance(before: string, after: string): number {
 	if (before === after) return 0;
@@ -422,12 +426,42 @@ export function EditableWords({
 	);
 }
 
+/**
+ * What the prompt and the line after it read. `useWordsEdit` answers to it,
+ * and so does the curate panel's row-wide edit, which holds several fields at
+ * once: the question, the conflict and the failure are said in one set of
+ * words wherever a host rewords a finding.
+ */
+export type EditView = {
+	/** The host has been asked what they changed and has not answered yet. */
+	asking?: boolean;
+	typoLikely: boolean;
+	draft?: {
+		saving?: boolean;
+		refused?: boolean;
+		failed?: boolean;
+	} | null;
+	conflict?: {
+		mine: string;
+		theirs: string;
+		who: string;
+	} | null;
+	saved?: { kind: WordsChangeKind } | null;
+	undoFailed?: boolean;
+	restore: () => void;
+	save: (kind: WordsChangeKind, reason?: string) => unknown;
+	commit: () => void;
+	keepMine: () => void;
+	keepTheirs: () => void;
+	undo: () => unknown;
+};
+
 /** The words the prompt offers, and the one the caret rests on. */
 export function WordsPrompt({
 	edit,
 	testId,
 }: {
-	edit: WordsEdit;
+	edit: EditView;
 	testId?: string;
 }) {
 	return (
@@ -468,11 +502,11 @@ export function WordsPrompt({
 }
 
 /** Whether the edit has left something in the meta line to say. */
-export const hasAftermath = (edit: WordsEdit): boolean =>
+export const hasAftermath = (edit: EditView): boolean =>
 	Boolean(edit.conflict || edit.undoFailed || edit.draft?.failed || edit.saved);
 
 /** What the meta line says after a save, a failure or a conflict. */
-export function EditAftermath({ edit }: { edit: WordsEdit }): ReactNode {
+export function EditAftermath({ edit }: { edit: EditView }): ReactNode {
 	if (edit.conflict)
 		return (
 			// Whose words in the small print, the words themselves to be read and

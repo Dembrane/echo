@@ -45,6 +45,12 @@ export type WordsUndoInput = {
 export type HoldBackAdapter = {
 	isHeld: (objectId: string) => boolean;
 	setHeld: (objectId: string, held: boolean, reason: string) => void;
+	/**
+	 * The same decision about many findings at once. The draft's `hidden_items`
+	 * is written whole, so a set of eleven is one write and not eleven racing
+	 * ones. An adapter without it falls back to one call per finding.
+	 */
+	setManyHeld?: (objectIds: string[], held: boolean) => void;
 };
 
 const REASON_STORE = "dembrane.holdBackReasons";
@@ -120,6 +126,8 @@ export type ResultActions = {
 	/** Present only. Null where a list has no presentation behind it. */
 	holdBack: ((objectId: string, reason: string) => void) | null;
 	showAgain: ((objectId: string, reason: string) => void) | null;
+	/** Hide or show a whole selection in one write. Null without a presentation. */
+	holdBackMany?: ((objectIds: string[], held: boolean) => void) | null;
 	/** Reasons to offer first, the last one used leading. */
 	heldBackReasons: string[];
 	/**
@@ -207,6 +215,17 @@ export function useResultActions({
 					rememberReason(reason);
 					if (reason.trim()) reasons.current.set(objectId, reason.trim());
 					holdBack.setHeld(objectId, true, reason);
+				}
+			: null,
+		holdBackMany: holdBack
+			? (objectIds, held) => {
+					for (const objectId of objectIds) reasons.current.delete(objectId);
+					if (holdBack.setManyHeld) {
+						holdBack.setManyHeld(objectIds, held);
+						return;
+					}
+					for (const objectId of objectIds)
+						holdBack.setHeld(objectId, held, "");
 				}
 			: null,
 		isHeld: holdBack ? holdBack.isHeld : () => false,

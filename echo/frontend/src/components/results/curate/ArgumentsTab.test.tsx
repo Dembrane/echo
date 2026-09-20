@@ -8,11 +8,18 @@ import { useState } from "react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { AnalysisObject } from "@/components/analysis/hooks";
+import { useResultFeedback } from "../feedback/useResultFeedback";
 import type { ResultActions } from "../useResultActions";
 import { ArgumentsTab, filterArguments, sortArguments } from "./ArgumentsTab";
+import { useSelection } from "./useSelection";
 
 vi.mock("@/lib/bff", () => ({
-	bff: { get: vi.fn().mockResolvedValue({ revisions: [] }), post: vi.fn() },
+	bff: {
+		delete: vi.fn().mockResolvedValue({ myFeedback: null }),
+		get: vi.fn().mockResolvedValue({ revisions: [] }),
+		post: vi.fn(),
+		put: vi.fn().mockResolvedValue({ myFeedback: null }),
+	},
 }));
 
 const argument = (
@@ -55,6 +62,7 @@ function useTestActions(): ResultActions {
 		heldReason: () => undefined,
 		holdBack: (objectId: string) =>
 			setHeld((old) => [...new Set([...old, objectId])]),
+		holdBackMany: () => {},
 		isHeld: (objectId: string) => held.includes(objectId),
 		pending: false,
 		showAgain: (objectId: string) =>
@@ -80,12 +88,16 @@ afterEach(() => {
 
 function Table({ onNeedsAll }: { onNeedsAll: () => void }) {
 	const actions = useTestActions();
+	const feedback = useResultFeedback("project");
+	const selection = useSelection();
 	return (
 		<ArgumentsTab
 			actions={actions}
 			analysisHref="/analysis"
 			canEdit
+			feedback={feedback}
 			items={items}
+			selection={selection}
 			onNeedsAll={onNeedsAll}
 			onOpen={() => {}}
 			openObjectId={null}
@@ -168,7 +180,7 @@ describe("The map arguments table", () => {
 		expect(screen.getByRole("table")).toBeTruthy();
 		expect(
 			screen.getAllByRole("columnheader").map((head) => head.textContent),
-		).toEqual(["Statement", "Stance", "Conversation", "Fact-check", "Hide"]);
+		).toEqual(["", "Statement", "Stance", "Source", "Fact-check", "Tools"]);
 		// The stance filter says the same two words above the table.
 		expect(screen.getAllByText("for").length).toBe(2);
 		expect(screen.getAllByText("against").length).toBe(3);
@@ -213,13 +225,16 @@ describe("The map arguments table", () => {
 		expect(screen.getByText("combined")).toBeTruthy();
 	});
 
-	it("hides a row in one click and dims it where it stands", () => {
+	it("hides a row in one click and greys it where it stands", () => {
 		show();
-		fireEvent.click(screen.getAllByRole("button", { name: "Hide" })[0]);
+		fireEvent.click(
+			screen.getAllByRole("button", {
+				name: "Hide from this presentation",
+			})[0],
+		);
 		expect(screen.getByTestId("curate-argument-a1")).toHaveProperty(
 			"dataset.held",
 			"true",
 		);
-		expect(screen.getByTestId("curate-held-a1")).toBeTruthy();
 	});
 });
