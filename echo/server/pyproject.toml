@@ -80,6 +80,9 @@ dependencies = [
     "pyasn1>=0.6.3",
     "segno>=1.6.6",
     "mcp==2.1.1",
+    "anyio>=4.13.0",
+    "cryptography>=48.0.1",
+    "tornado>=6.5.7",
 ]
 
 [tool.setuptools]
