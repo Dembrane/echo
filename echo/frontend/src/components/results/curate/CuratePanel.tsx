@@ -2,7 +2,10 @@ import { Trans } from "@lingui/react/macro";
 import { Switch } from "@mantine/core";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import type { AnalysisObject } from "@/components/analysis/hooks";
-import type { PresentationBlock } from "@/components/present/blocks";
+import {
+	PRESENTATION_BLOCKS,
+	type PresentationBlock,
+} from "@/components/present/blocks";
 import { risesForAttention } from "../resultContent";
 import type { ResultActions } from "../useResultActions";
 import { ARGUMENTS_AT_REST, ArgumentsTab } from "./ArgumentsTab";
@@ -157,16 +160,16 @@ export function CuratePanel({
 			0,
 		) || all.length;
 	const tabCounts = Object.fromEntries(
-		(Object.keys(TYPES_IN_TAB) as PresentationBlock[]).map((block) => [
+		PRESENTATION_BLOCKS.map((block) => [
 			block,
 			TYPES_IN_TAB[block].reduce((sum, type) => sum + (counts[type] ?? 0), 0) ||
 				items.filter((item) => tabOfType(item.type) === block).length,
 		]),
 	) as Record<PresentationBlock, number>;
 
-	const off = (Object.keys(TYPES_IN_TAB) as PresentationBlock[]).filter(
-		(block) => !blocks.includes(block),
-	);
+	// The room's own order, so a tab that is off still stands where the room
+	// would have met it.
+	const off = PRESENTATION_BLOCKS.filter((block) => !blocks.includes(block));
 	// On blocks in the order the room meets them, then the ones that are off.
 	const order = [...blocks, ...off];
 	const isOff = off.includes(selected);

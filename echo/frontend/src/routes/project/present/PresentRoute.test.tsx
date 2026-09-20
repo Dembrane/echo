@@ -239,7 +239,7 @@ describe("Reviewing the results on the screen", () => {
 		{ label: "Another phrase", objectId: "obj-2", type: "popcorn" },
 	];
 
-	it("asks why a finding is not in this presentation, then saves it away", async () => {
+	it("keeps a finding out of this presentation in one click, then lets a reason follow", async () => {
 		results.mockReturnValue({
 			canEdit: true,
 			counts: { popcorn: 2 },
@@ -254,13 +254,17 @@ describe("Reviewing the results on the screen", () => {
 		// Nothing is numbered: no pager, no badges.
 		expect(screen.queryByRole("button", { name: "3" })).toBeNull();
 		fireEvent.click(screen.getAllByRole("button", { name: "Hide" })[0]);
-		expect(screen.getByText("Why not in this presentation?")).toBeTruthy();
-		fireEvent.click(
-			screen.getByRole("button", { name: "repeats another finding" }),
-		);
+		// Hiding is an editorial decision, not a confession: it is saved on the
+		// click, and the reason is offered afterwards rather than charged for.
 		expect(saveSettings).toHaveBeenCalledWith({
 			presentation: { hidden_items: ["obj-1"] },
 		});
+		expect(screen.queryByText("Why not in this presentation?")).toBeNull();
+		fireEvent.click(screen.getByTestId("curate-add-reason-obj-1"));
+		fireEvent.click(
+			screen.getByRole("button", { name: "repeats another finding" }),
+		);
+		expect(screen.getByText("repeats another finding")).toBeTruthy();
 	});
 
 	it("dims a held-back finding and offers to put it back", async () => {
@@ -289,7 +293,7 @@ describe("Reviewing the results on the screen", () => {
 		});
 		show("/projects/empty/present?results=1");
 		const back = await screen.findByRole("button", { name: "Restore" });
-		expect(screen.getByTestId("result-row-obj-1").closest("li")).toHaveProperty(
+		expect(screen.getByTestId("curate-pop-obj-1").closest("li")).toHaveProperty(
 			"dataset.held",
 			"true",
 		);

@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Stack, Text } from "@mantine/core";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { useResultsList, useResultsVisit } from "@/components/analysis";
 import { usePopcornSettingsMutation } from "@/components/popcorn/hooks";
@@ -80,19 +80,32 @@ export function PresentResultsPanel({
 	 * the page by `useResultActions`; the curation log endpoint is what will
 	 * make it outlive a reload, and nothing on this screen moves when it lands.
 	 */
+	// The click is the decision, so the row dims on the click and not on the
+	// round trip. What this page decided leads; the draft catches up and the
+	// two agree, and an entry that agrees is dropped.
+	const [decided, setDecided] = useState<Record<string, boolean>>({});
+	const pending = useMemo(() => {
+		const kept: Record<string, boolean> = {};
+		for (const [objectId, held] of Object.entries(decided))
+			if (hidden.includes(objectId) !== held) kept[objectId] = held;
+		return kept;
+	}, [decided, hidden]);
+
 	const holdBack: HoldBackAdapter = useMemo(
 		() => ({
-			isHeld: (objectId) => hidden.includes(objectId),
-			setHeld: (objectId, held) =>
+			isHeld: (objectId) => pending[objectId] ?? hidden.includes(objectId),
+			setHeld: (objectId, held) => {
+				setDecided((old) => ({ ...old, [objectId]: held }));
 				save.mutate({
 					presentation: {
 						hidden_items: held
-							? [...hidden, objectId]
+							? [...new Set([...hidden, objectId])]
 							: hidden.filter((id) => id !== objectId),
 					},
-				}),
+				});
+			},
 		}),
-		[hidden, save.mutate],
+		[hidden, pending, save.mutate],
 	);
 	const actions = useResultActions({ holdBack, projectId });
 
