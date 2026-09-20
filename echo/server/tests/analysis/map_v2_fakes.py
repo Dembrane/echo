@@ -241,12 +241,13 @@ async def asgi_call(
     json: Any = None,
     headers: dict[str, str] | None = None,
     params: dict[str, str] | None = None,
+    user_id: str = "du1",
 ) -> Any:
     app = FastAPI()
     app.include_router(router, prefix=prefix)
 
     async def _session() -> DirectusSession:
-        return DirectusSession(user_id="du1", is_admin=False, access_token="t", client=None)
+        return DirectusSession(user_id=user_id, is_admin=False, access_token="t", client=None)
 
     app.dependency_overrides[require_directus_session] = _session
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:

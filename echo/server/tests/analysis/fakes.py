@@ -93,6 +93,9 @@ class FakeAnalysisStore:
         self.embeddings: dict[str, dict[str, Any]] = {}
         # (project_id, user_id) -> when this host last opened the results list.
         self.last_opened: dict[tuple[str, str], datetime] = {}
+        # (project_id, object_id, actor_id) -> that host's thumb on that
+        # finding. One row per host per finding; clearing removes it.
+        self.feedback: dict[tuple[str, str, str], dict[str, Any]] = {}
         self.calls: Counter[str] = Counter()
         self.raise_on: dict[str, BaseException] = {}
 

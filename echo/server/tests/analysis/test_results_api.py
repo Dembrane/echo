@@ -39,8 +39,17 @@ class _Env:
         monkeypatch.setattr(analysis_bff, "get_executor_deps", lambda: self.rec.deps())
         monkeypatch.setattr(analysis_bff, "_run_limiter", self.limiter)
 
-    async def call(self, method: str, path: str, json: Any = None, params: dict[str, str] | None = None) -> Any:
-        return await asgi_call(analysis_bff.router, BASE, method, path, json=json, params=params)
+    async def call(
+        self,
+        method: str,
+        path: str,
+        json: Any = None,
+        params: dict[str, str] | None = None,
+        user_id: str = "du1",
+    ) -> Any:
+        return await asgi_call(
+            analysis_bff.router, BASE, method, path, json=json, params=params, user_id=user_id
+        )
 
     def revision(self, statement: str) -> Any:
         return next(
@@ -566,3 +575,262 @@ async def test_last_opened_is_the_hosts_own_and_starts_empty(env: _Env) -> None:
 
     env.grants.access.pop(PROJECT)
     assert (await env.call("GET", path)).status_code == 404
+
+
+# ── what this host thinks of a finding ──────────────────────────────────
+
+
+def _feedback_path(object_id: str) -> str:
+    return f"/projects/{PROJECT}/objects/{object_id}/feedback"
+
+
+async def _one_finding(env: _Env) -> Any:
+    await _prepared(env)
+    return env.revision("Trams are better.")
+
+
+@pytest.mark.asyncio
+async def test_a_thumb_is_written_carried_overwritten_and_taken_back(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+
+    up = await env.call(
+        "PUT",
+        path,
+        {
+            "revision_id": finding.id,
+            "rating": "up",
+            "tags": ["recognizable", "other"],
+            "note": "  This is how the room sounded.  ",
+        },
+    )
+    assert up.status_code == 200
+    assert up.json()["myFeedback"] == {
+        "rating": "up",
+        "tags": ["recognizable", "other"],
+        "note": "This is how the room sounded.",
+        "revisionId": finding.id,
+    }
+
+    # The list carries the host's own thumb, on the row it belongs to.
+    page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "50"})).json()
+    rated = next(item for item in page["items"] if item["objectId"] == finding.object_id)
+    assert rated["myFeedback"]["rating"] == "up"
+    assert all(
+        item["myFeedback"] is None
+        for item in page["items"]
+        if item["objectId"] != finding.object_id
+    )
+
+    # A second rating overwrites the first: one row, not two opinions.
+    down = await env.call(
+        "PUT",
+        path,
+        {"revision_id": finding.id, "rating": "down", "tags": ["not_relevant"]},
+    )
+    assert down.json()["myFeedback"] == {
+        "rating": "down",
+        "tags": ["not_relevant"],
+        "revisionId": finding.id,
+    }
+    assert len(env.maps.store.feedback) == 1
+
+    cleared = await env.call("DELETE", path)
+    assert cleared.status_code == 200 and cleared.json()["myFeedback"] is None
+    # Taken back means gone: nothing remembers the rating was there.
+    assert env.maps.store.feedback == {}
+    page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "50"})).json()
+    assert all(item["myFeedback"] is None for item in page["items"])
+
+
+@pytest.mark.asyncio
+async def test_a_reason_from_the_other_polarity_is_refused(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+
+    wrong = await env.call(
+        "PUT", path, {"revision_id": finding.id, "rating": "up", "tags": ["tone_deaf"]}
+    )
+    assert wrong.status_code == 422 and "tone_deaf" in wrong.json()["detail"]
+
+    invented = await env.call(
+        "PUT", path, {"revision_id": finding.id, "rating": "down", "tags": ["lovely"]}
+    )
+    assert invented.status_code == 422
+
+    # Nothing of a refused write reaches the table.
+    assert env.maps.store.feedback == {}
+    assert (
+        await env.call(
+            "PUT", path, {"revision_id": finding.id, "rating": "down", "tags": ["tone_deaf"]}
+        )
+    ).status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_a_note_is_kept_only_where_other_is_ticked(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+
+    without = await env.call(
+        "PUT",
+        path,
+        {"revision_id": finding.id, "rating": "up", "tags": ["relevant"], "note": "Lovely."},
+    )
+    assert "note" not in without.json()["myFeedback"]
+
+    with_other = await env.call(
+        "PUT",
+        path,
+        {"revision_id": finding.id, "rating": "up", "tags": ["other"], "note": "Lovely."},
+    )
+    assert with_other.json()["myFeedback"]["note"] == "Lovely."
+
+    # Whitespace is not a note, and a note longer than the field is refused
+    # rather than silently cut.
+    blank = await env.call(
+        "PUT", path, {"revision_id": finding.id, "rating": "up", "tags": ["other"], "note": "   "}
+    )
+    assert "note" not in blank.json()["myFeedback"]
+    long = await env.call(
+        "PUT", path, {"revision_id": finding.id, "rating": "up", "tags": ["other"], "note": "x" * 501}
+    )
+    assert long.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_the_wording_a_host_rated_is_what_the_row_records(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+    await env.call("PUT", path, {"revision_id": finding.id, "rating": "down", "tags": []})
+
+    reworded = await RevisionService(env.maps.store).author_edit(
+        project_id=PROJECT,
+        object_id=finding.object_id,
+        expected_revision_id=finding.id,
+        payload={**finding.payload, "statement": "Trams work better here."},
+        actor_id="du1",
+        change_kind="clarity",
+    )
+    # The thumb still names the wording it was about; nothing was invalidated.
+    page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "50"})).json()
+    row = next(item for item in page["items"] if item["objectId"] == finding.object_id)
+    assert row["myFeedback"]["revisionId"] == finding.id != reworded.id
+
+    # Rating the new wording moves the record on.
+    again = await env.call("PUT", path, {"revision_id": reworded.id, "rating": "up", "tags": []})
+    assert again.json()["myFeedback"]["revisionId"] == reworded.id
+
+    # A revision of another object is not a wording of this finding.
+    other = env.revision("Bikes are healthy.")
+    assert (
+        await env.call("PUT", path, {"revision_id": other.id, "rating": "up", "tags": []})
+    ).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_one_hosts_thumb_is_never_anothers(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+    await env.call(
+        "PUT",
+        path,
+        {"revision_id": finding.id, "rating": "down", "tags": ["other"], "note": "Not us."},
+        user_id="du1",
+    )
+
+    listed = f"/projects/{PROJECT}/objects"
+    theirs = (await env.call("GET", listed, params={"limit": "50"}, user_id="du2")).json()
+    assert all(item["myFeedback"] is None for item in theirs["items"])
+    # And the note of the first host is nowhere in what the second is sent.
+    assert "Not us." not in str(theirs)
+
+    # Their own thumb is their own row, beside the first.
+    await env.call(
+        "PUT", path, {"revision_id": finding.id, "rating": "up", "tags": []}, user_id="du2"
+    )
+    assert len(env.maps.store.feedback) == 2
+    mine = (await env.call("GET", listed, params={"limit": "50"}, user_id="du1")).json()
+    rated = next(item for item in mine["items"] if item["objectId"] == finding.object_id)
+    assert rated["myFeedback"]["rating"] == "down"
+
+    # Clearing takes back one host's row and leaves the other's.
+    await env.call("DELETE", path, user_id="du1")
+    assert list(env.maps.store.feedback) == [(PROJECT, finding.object_id, "du2")]
+
+
+@pytest.mark.asyncio
+async def test_reading_the_analysis_is_enough_to_rate_it(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+    # A collaborator who may read the findings but not reword them.
+    env.grants.grant(PROJECT, *READ)
+    assert (
+        await env.call("PUT", path, {"revision_id": finding.id, "rating": "up", "tags": []})
+    ).status_code == 200
+    # Rewording is still refused: rating is not editing.
+    reword = await env.call(
+        "POST",
+        f"/projects/{PROJECT}/objects/{finding.object_id}/revisions",
+        {"expected_revision_id": finding.id, "patch": {"statement": "Mine now."}},
+    )
+    assert reword.status_code == 403
+
+    # A project this host cannot reach is a 404, not a refusal that says it exists.
+    env.grants.access.pop(PROJECT)
+    assert (
+        await env.call("PUT", path, {"revision_id": finding.id, "rating": "up", "tags": []})
+    ).status_code == 404
+    assert (await env.call("DELETE", path)).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_feedback_is_not_in_any_payload_the_room_reads(env: _Env) -> None:
+    """A thumb never becomes part of a finding.
+
+    The deck and the audience map are built from revisions and snapshots. This
+    asserts the two places a leak could start: the stored objects, which the
+    deck projects, and the audience map projection, which is an allowlist.
+    """
+    from dembrane.popcorn import present
+
+    finding = await _one_finding(env)
+    await env.call(
+        "PUT",
+        _feedback_path(finding.object_id),
+        {
+            "revision_id": finding.id,
+            "rating": "down",
+            "tags": ["tone_deaf", "other"],
+            "note": "The room never said this.",
+        },
+    )
+
+    # Nothing of the thumb reached a revision, an object or a snapshot: the
+    # audience bundle is assembled from exactly these.
+    stored = str(
+        [
+            [revision.payload for revision in env.maps.store.revisions.values()],
+            [snapshot.manifest for snapshot in env.maps.store.snapshots.values()],
+            [record.__dict__ for record in env.maps.store.objects.values()],
+        ]
+    )
+    for trace in ("myFeedback", "feedback", "tone_deaf", "The room never said this."):
+        assert trace not in stored
+
+    # And a node that somehow carried one loses it in the audience projection.
+    projected = present.sanitize_map(
+        {
+            "nodes": [
+                {
+                    "objectId": finding.object_id,
+                    "revisionId": finding.id,
+                    "type": "argument",
+                    "label": "Trams are better.",
+                    "myFeedback": {"rating": "down", "note": "The room never said this."},
+                }
+            ]
+        }
+    )
+    assert "myFeedback" not in projected["nodes"][0]
+    assert "never said this" not in str(projected)

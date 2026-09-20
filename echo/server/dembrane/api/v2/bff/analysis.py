@@ -19,11 +19,12 @@ from dataclasses import replace, dataclass
 
 from fastapi import Query, Depends, APIRouter, HTTPException, status
 from pydantic import Field, BaseModel
+from psycopg.types.json import Json
 
-from dembrane.directus_async import async_directus
 from dembrane.analysis import store as analysis_store, types
 from dembrane.analysis.store import SqlAnalysisStore
 from dembrane.api.rate_limit import RedisUserRateLimiter
+from dembrane.directus_async import async_directus
 from dembrane.map.fact_check import ASSESSMENT_RECIPE_ID
 from dembrane.analysis.executor import (
     RunRequest,
@@ -762,12 +763,20 @@ async def list_analysis_objects(
         if len(conversations) == 1:
             alone[revision.id] = next(iter(conversations))
     names = await _conversation_names(project_id, sorted(set(alone.values())))
+    # This host's own thumbs on this page, in one read rather than one per row.
+    try:
+        mine = await _read_feedback(
+            store, project_id, auth.user_id, [str(entry["objectId"]) for entry in page]
+        )
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
     items = []
     for entry in page:
         revision = revisions.get(str(entry["revisionId"]))
         if revision is None:
             items.append({"objectId": entry["objectId"], "revisionId": entry["revisionId"], "type": entry["type"], "missing": True})
             continue
+        my_feedback = _feedback_doc(mine.get(revision.object_id))
         mark = marks.get(revision.object_id, AuthoredMark())
         quotes, conversations = _evidence_counts(revision)
         phrase, actor = attention.get(str(entry["objectId"]), (None, None))
@@ -797,6 +806,10 @@ async def list_analysis_objects(
                 if conversations == 1
                 else None,
                 "verdict": verdicts.get(revision.id),
+                # This host's own thumb, and nobody else's. Never in an
+                # audience payload: the deck is built from revisions, and a
+                # thumb is not one.
+                "myFeedback": my_feedback,
                 "attention": phrase,
                 "attentionActor": actor,
                 "provenance": {
@@ -1092,6 +1105,244 @@ async def set_results_last_opened(
     except AnalysisStoreError as exc:
         raise _unavailable() from exc
     return {"openedAt": _iso(opened_at)}
+
+
+# ── what this host thinks of a finding ──────────────────────────────────
+#
+# One row per host per object, in `analysis_feedback`, by the same precedent as
+# `analysis_last_opened`: the host's own state, not the project's. It is
+# feedback on how well the analysis read the room, for dembrane and the team.
+# It changes nothing the room sees, writes no revision, and is in no audit
+# trail. Reading the analysis is therefore enough to leave it: a collaborator
+# who may read a finding but not reword it has an opinion worth having, and
+# saying so costs the project nothing.
+#
+# Clearing deletes the row rather than setting a `cleared_at`. A retracted
+# opinion is not evidence of anything: keeping it dormant would keep a note the
+# host asked to take back, and would make every read filter for it. One live
+# row per (project, object, actor) also makes re-rating a plain upsert. How
+# often hosts retract is an analytics question, and the client already sends an
+# event per rating.
+
+FEEDBACK_TAGS: dict[str, frozenset[str]] = {
+    "up": frozenset({"recognizable", "relevant", "felt_heard", "other"}),
+    "down": frozenset({"not_recognizable", "not_relevant", "tone_deaf", "other"}),
+}
+# The tag that makes the note worth keeping. Ticking nothing else and writing a
+# note is a note about nothing, so it is dropped.
+NOTE_TAG = "other"
+MAX_NOTE = 500
+
+
+class FeedbackWrite(BaseModel):
+    # The revision the host was looking at: the thumb is about that wording.
+    revision_id: str
+    rating: Literal["up", "down"]
+    tags: list[str] = Field(default_factory=list, max_length=len(FEEDBACK_TAGS["down"]))
+    note: str | None = Field(default=None, max_length=MAX_NOTE)
+
+
+def _feedback_doc(row: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not row:
+        return None
+    doc: dict[str, Any] = {
+        "rating": str(row["rating"]),
+        "tags": list(row.get("tags") or []),
+        "revisionId": str(row["revision_id"]),
+    }
+    if row.get("note"):
+        doc["note"] = str(row["note"])
+    return doc
+
+
+def _checked_feedback(body: FeedbackWrite) -> tuple[list[str], str | None]:
+    """The tags and the note this write keeps, or a 422 saying which tag is
+    wrong. A tag from the other polarity is not a typo: thumbs up with
+    `tone_deaf` means the client and the host disagree about what was clicked."""
+    allowed = FEEDBACK_TAGS[body.rating]
+    tags: list[str] = []
+    for tag in body.tags:
+        if tag not in allowed:
+            raise HTTPException(
+                status_code=422,
+                detail=f"{tag!r} is not a reason for a thumbs {body.rating}.",
+            )
+        if tag not in tags:
+            tags.append(tag)
+    note = (body.note or "").strip()
+    # The note belongs to `other`. Without it there is nothing it explains.
+    return tags, note if note and NOTE_TAG in tags else None
+
+
+async def _read_feedback(
+    store: AnalysisStore, project_id: str, user_id: str | None, object_ids: list[str]
+) -> dict[str, dict[str, Any]]:
+    """This host's feedback on the objects of one page, in one read. Nobody
+    else's ever leaves the server."""
+    if not user_id or not object_ids:
+        return {}
+    wanted = sorted({str(object_id) for object_id in object_ids})
+    in_memory = getattr(store, "feedback", None)
+    if isinstance(in_memory, dict):
+        return {
+            object_id: dict(row)
+            for (pid, object_id, actor), row in in_memory.items()
+            if pid == project_id and actor == user_id and object_id in set(wanted)
+        }
+    if not isinstance(store, SqlAnalysisStore):
+        raise AnalysisStoreError("feedback is unavailable")
+    async with store._cursor() as cursor:  # noqa: SLF001 - local BFF read adapter
+        await cursor.execute(
+            """SELECT object_id::text AS object_id, revision_id::text AS revision_id,
+                      rating, tags, note
+               FROM analysis_feedback
+               WHERE project_id = %s AND actor_id = %s
+                 AND object_id = ANY(%s::uuid[])""",
+            (project_id, user_id, wanted),
+        )
+        rows = await cursor.fetchall()
+    return {str(row["object_id"]): dict(row) for row in rows}
+
+
+async def _write_feedback(
+    store: AnalysisStore,
+    *,
+    project_id: str,
+    object_id: str,
+    revision_id: str,
+    actor_id: str,
+    rating: str,
+    tags: list[str],
+    note: str | None,
+) -> dict[str, Any]:
+    row = {
+        "object_id": object_id,
+        "revision_id": revision_id,
+        "rating": rating,
+        "tags": tags,
+        "note": note,
+    }
+    in_memory = getattr(store, "feedback", None)
+    if isinstance(in_memory, dict):
+        in_memory[(project_id, object_id, actor_id)] = row
+        return row
+    if not isinstance(store, SqlAnalysisStore):
+        raise AnalysisStoreError("feedback is unavailable")
+    async with store._transaction() as cursor:  # noqa: SLF001 - local BFF write adapter
+        await cursor.execute(
+            """INSERT INTO analysis_feedback
+                   (id, project_id, object_id, revision_id, actor_id, rating, tags, note,
+                    created_at, updated_at)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, now(), now())
+               ON CONFLICT (project_id, object_id, actor_id)
+               DO UPDATE SET revision_id = EXCLUDED.revision_id,
+                             rating = EXCLUDED.rating,
+                             tags = EXCLUDED.tags,
+                             note = EXCLUDED.note,
+                             updated_at = now()
+               RETURNING object_id::text AS object_id, revision_id::text AS revision_id,
+                         rating, tags, note""",
+            (
+                str(uuid.uuid4()),
+                project_id,
+                object_id,
+                revision_id,
+                actor_id,
+                rating,
+                Json(tags),
+                note,
+            ),
+        )
+        written = await cursor.fetchone()
+    return dict(written or row)
+
+
+async def _clear_feedback(
+    store: AnalysisStore, *, project_id: str, object_id: str, actor_id: str
+) -> None:
+    in_memory = getattr(store, "feedback", None)
+    if isinstance(in_memory, dict):
+        in_memory.pop((project_id, object_id, actor_id), None)
+        return
+    if not isinstance(store, SqlAnalysisStore):
+        raise AnalysisStoreError("feedback is unavailable")
+    async with store._transaction() as cursor:  # noqa: SLF001 - local BFF write adapter
+        await cursor.execute(
+            """DELETE FROM analysis_feedback
+               WHERE project_id = %s AND object_id = %s AND actor_id = %s""",
+            (project_id, object_id, actor_id),
+        )
+
+
+async def _rateable_object(
+    project_id: str, object_id: str, auth: DependencyDirectusSession
+) -> Any:
+    """Any host who may read the analysis may rate a finding of it."""
+    await _readable(project_id, auth)
+    if not auth.user_id:
+        raise _not_found("Host")
+    try:
+        record = await get_store().get_object(object_id) if _is_uuid(object_id) else None
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    if record is None or record.project_id != project_id:
+        raise _not_found("Object")
+    return record
+
+
+@router.put("/projects/{project_id}/objects/{object_id}/feedback")
+async def rate_analysis_object(
+    project_id: str,
+    object_id: str,
+    body: FeedbackWrite,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """This host's thumb on one finding, with the reasons they ticked.
+
+    The rating overwrites whatever this host said before, and records the
+    revision they were reading, because a thumbs down is about that wording.
+    """
+    record = await _rateable_object(project_id, object_id, auth)
+    tags, note = _checked_feedback(body)
+    if not _is_uuid(body.revision_id):
+        raise _not_found("Revision")
+    try:
+        revision = (
+            await get_store().get_revisions(project_id, [body.revision_id])
+        ).get(body.revision_id)
+        if revision is None or revision.object_id != record.id:
+            raise _not_found("Revision")
+        row = await _write_feedback(
+            get_store(),
+            project_id=project_id,
+            object_id=record.id,
+            revision_id=body.revision_id,
+            actor_id=auth.user_id,
+            rating=body.rating,
+            tags=tags,
+            note=note,
+        )
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    return {"myFeedback": _feedback_doc(row)}
+
+
+@router.delete("/projects/{project_id}/objects/{object_id}/feedback")
+async def clear_analysis_object_feedback(
+    project_id: str, object_id: str, auth: DependencyDirectusSession
+) -> dict[str, Any]:
+    """Take the thumb back. The row goes; nothing remembers it was there."""
+    record = await _rateable_object(project_id, object_id, auth)
+    try:
+        await _clear_feedback(
+            get_store(),
+            project_id=project_id,
+            object_id=record.id,
+            actor_id=auth.user_id,
+        )
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    return {"myFeedback": None}
 
 
 @router.get("/snapshots/{snapshot_id}/revisions/{revision_id}/lineage")
