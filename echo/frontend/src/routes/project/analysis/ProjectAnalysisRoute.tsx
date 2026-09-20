@@ -27,13 +27,14 @@ import {
 	type AnalysisRun,
 	type AnalysisSource,
 	useAnalysisEvents,
-	useAnalysisObjects,
 	useAnalysisRecipes,
 	useAnalysisRun,
 	useAnalysisRuns,
 	useAnalysisSources,
 	useCancelAnalysisRun,
 	useRequestAnalysisRun,
+	useResultsList,
+	useResultsVisit,
 } from "@/components/analysis/hooks";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -90,10 +91,12 @@ function ResultsView({
 	const type = params.get("type") || undefined;
 	const membership = params.get("membership") || "active";
 	const query = params.get("q") ?? "";
-	const objects = useAnalysisObjects(projectId, type, membership);
+	const objects = useResultsList(projectId, { membership, type });
+	// What is new is new since the host last opened this list; leaving it marks
+	// it seen.
+	useResultsVisit(projectId);
 	const [selected, setSelected] = useState<AnalysisObject | null>(null);
 	const actions = useResultActions({ projectId });
-	const data = objects.data;
 	const mapPath = workspaceId
 		? `/w/${workspaceId}/projects/${projectId}/map`
 		: `/projects/${projectId}/map`;
@@ -113,7 +116,7 @@ function ResultsView({
 					testId="analysis-results-error"
 				/>
 			)}
-			{data && data.total === 0 && (
+			{!objects.isLoading && !objects.isError && objects.total === 0 && (
 				<Paper withBorder p="xl">
 					<Stack gap="sm">
 						<Title order={3}>
@@ -139,11 +142,11 @@ function ResultsView({
 					</Stack>
 				</Paper>
 			)}
-			{!objects.isError && (!data || data.total > 0) && (
+			{!objects.isError && (objects.isLoading || objects.total > 0) && (
 				<ResultsList
 					actions={actions}
-					canEdit={Boolean(data?.canEdit)}
-					counts={data?.counts}
+					canEdit={objects.canEdit}
+					counts={objects.counts}
 					density="check"
 					filter={{
 						kind: type ?? null,
@@ -164,8 +167,10 @@ function ResultsView({
 						query,
 						status: membership,
 					}}
-					items={data?.items ?? []}
+					items={objects.items}
 					loading={objects.isLoading}
+					loadingTypes={objects.loadingTypes}
+					onLoadMore={objects.loadMore}
 					onOpen={(item) =>
 						setSelected((current) =>
 							current?.objectId === item.objectId ? null : item,
@@ -174,7 +179,7 @@ function ResultsView({
 					openObjectId={selected?.objectId ?? null}
 					renderItem={(item) => (
 						<ResultItem
-							canEdit={Boolean(data?.canEdit)}
+							canEdit={objects.canEdit}
 							item={item}
 							mapHref={mapPath}
 							onClose={() => setSelected(null)}

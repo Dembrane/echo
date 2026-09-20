@@ -10,17 +10,12 @@ import { API_BASE_URL } from "@/config";
  * `{detail: string}` on failure.
  */
 
-type Params = Record<
-	string,
-	string | number | boolean | null | undefined
->;
+type Params = Record<string, string | number | boolean | null | undefined>;
 
 function buildUrl(path: string, params?: Params): string {
 	const url = new URL(
 		`${API_BASE_URL}/v2/bff${path}`,
-		typeof window !== "undefined"
-			? window.location.origin
-			: "http://localhost",
+		typeof window !== "undefined" ? window.location.origin : "http://localhost",
 	);
 	if (params) {
 		for (const [k, v] of Object.entries(params)) {
@@ -47,19 +42,17 @@ async function parseError(res: Response): Promise<Error> {
 }
 
 export const bff = {
-	async get<T = unknown>(path: string, params?: Params): Promise<T> {
-		const res = await fetch(buildUrl(path, params), {
+	async delete<T = unknown>(path: string): Promise<T> {
+		const res = await fetch(buildUrl(path), {
 			credentials: "include",
+			method: "DELETE",
 		});
 		if (!res.ok) throw await parseError(res);
 		return (await res.json()) as T;
 	},
-	async post<T = unknown>(path: string, body?: unknown): Promise<T> {
-		const res = await fetch(buildUrl(path), {
-			body: body === undefined ? undefined : JSON.stringify(body),
+	async get<T = unknown>(path: string, params?: Params): Promise<T> {
+		const res = await fetch(buildUrl(path, params), {
 			credentials: "include",
-			headers: body === undefined ? undefined : { "Content-Type": "application/json" },
-			method: "POST",
 		});
 		if (!res.ok) throw await parseError(res);
 		return (await res.json()) as T;
@@ -68,16 +61,31 @@ export const bff = {
 		const res = await fetch(buildUrl(path), {
 			body: body === undefined ? undefined : JSON.stringify(body),
 			credentials: "include",
-			headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+			headers:
+				body === undefined ? undefined : { "Content-Type": "application/json" },
 			method: "PATCH",
 		});
 		if (!res.ok) throw await parseError(res);
 		return (await res.json()) as T;
 	},
-	async delete<T = unknown>(path: string): Promise<T> {
+	async post<T = unknown>(path: string, body?: unknown): Promise<T> {
 		const res = await fetch(buildUrl(path), {
+			body: body === undefined ? undefined : JSON.stringify(body),
 			credentials: "include",
-			method: "DELETE",
+			headers:
+				body === undefined ? undefined : { "Content-Type": "application/json" },
+			method: "POST",
+		});
+		if (!res.ok) throw await parseError(res);
+		return (await res.json()) as T;
+	},
+	async put<T = unknown>(path: string, body?: unknown): Promise<T> {
+		const res = await fetch(buildUrl(path), {
+			body: body === undefined ? undefined : JSON.stringify(body),
+			credentials: "include",
+			headers:
+				body === undefined ? undefined : { "Content-Type": "application/json" },
+			method: "PUT",
 		});
 		if (!res.ok) throw await parseError(res);
 		return (await res.json()) as T;

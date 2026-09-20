@@ -7,6 +7,7 @@ import {
 	useState,
 } from "react";
 import classes from "./ResultsList.module.css";
+import { WITHDRAW_REASON_MIN } from "./resultContent";
 
 export type ReasonOption = {
 	/** What the caller gets back: a change kind, or a suggestion's own id. */
@@ -16,6 +17,11 @@ export type ReasonOption = {
 	reason?: string;
 	/** Grows the prompt by one labelled field; the choice needs a sentence. */
 	needsReason?: boolean;
+	/**
+	 * How many characters that sentence needs, trimmed. The same number the
+	 * server keeps for this kind of change; never shown to the host.
+	 */
+	minimum?: number;
 };
 
 export type ReasonChoice = { key: string; reason?: string };
@@ -29,13 +35,19 @@ export type ReasonPromptProps = {
 	reasonLabel?: ReactNode;
 	confirmLabel?: ReactNode;
 	pending?: boolean;
+	/**
+	 * The server refused the reason after all. The prompt stays open with the
+	 * host's words in it and asks the same thing in the same line.
+	 */
+	refused?: boolean;
 	onCancel: () => void;
 	onConfirm: (choice: ReasonChoice) => void;
 	testId?: string;
 	className?: string;
 };
 
-const MINIMUM = 4;
+/** What a reason needs where the caller names no number of its own. */
+const MINIMUM = WITHDRAW_REASON_MIN;
 
 /**
  * The one line that asks what changed. It takes over the meta line it is
@@ -52,6 +64,7 @@ export function ReasonPrompt({
 	pending,
 	question,
 	reasonLabel,
+	refused,
 	testId = "reason-prompt",
 }: ReasonPromptProps) {
 	const [asked, setAsked] = useState<ReasonOption | null>(null);
@@ -86,9 +99,9 @@ export function ReasonPrompt({
 	const send = () => {
 		if (!asked) return;
 		const written = reason.trim();
-		// The server enforces the real minimum; this only keeps a host from
-		// sending a reason nobody could read later.
-		if (written.length < MINIMUM) {
+		// The same minimum the server keeps, so a reason it would refuse is never
+		// sent and the host is asked here, in the line they are reading.
+		if (written.length < (asked.minimum ?? MINIMUM)) {
 			setTooShort(true);
 			field.current?.focus();
 			return;
@@ -200,7 +213,7 @@ export function ReasonPrompt({
 							id={`${testId}-note`}
 							aria-live="polite"
 						>
-							{tooShort && (
+							{(tooShort || refused) && (
 								<Trans>
 									A few more words, so someone reading later understands.
 								</Trans>

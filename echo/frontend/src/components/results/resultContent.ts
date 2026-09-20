@@ -8,6 +8,15 @@ export type ResultKind =
 	| "argument"
 	| "deduplicated_argument";
 
+/**
+ * What a reason has to be, trimmed, before anything is sent. The server keeps
+ * the same two numbers (`check_change_kind` in `dembrane/analysis/revisions.py`)
+ * and the host never sees either of them: under the minimum the prompt asks for
+ * a few more words.
+ */
+export const MEANING_REASON_MIN = 12;
+export const WITHDRAW_REASON_MIN = 4;
+
 export type ResultEvidence = {
 	quotes: number;
 	conversations: number;
@@ -168,13 +177,25 @@ export function resultQuotes(item: {
 }
 
 /**
- * The evidence count, from what this object carries and nothing else. A
- * payload that withholds its quotes counts the conversations it names.
+ * The evidence count. The server counts it for the list, over the whole
+ * payload; a reader that carries only a sanitized object (the map) counts what
+ * it has, and a payload that withholds its quotes counts the conversations it
+ * names.
  */
 export function resultEvidence(item: {
 	detail?: unknown;
 	provenance?: Bag | null;
+	quoteCount?: number;
+	conversationCount?: number;
 }): ResultEvidence {
+	if (
+		typeof item.quoteCount === "number" ||
+		typeof item.conversationCount === "number"
+	)
+		return {
+			conversations: item.conversationCount ?? 0,
+			quotes: item.quoteCount ?? 0,
+		};
 	const conversations = new Set<string>();
 	let quotes = 0;
 	for (const group of groups(item)) {
@@ -207,13 +228,17 @@ export function changeKindOf(revision: {
 const MEMBERSHIP_KINDS = new Set<ChangeKind>(["withdraw", "restore"]);
 
 /**
- * Whether a host has reworded this finding. Withdrawing and restoring are
- * authored too, and they change no words, so they leave no mark.
+ * Whether a host has reworded this finding. The server reads the whole history
+ * and says so outright; a reader without that field reads the revision it has,
+ * where withdrawing and restoring are authored too and leave no mark, because
+ * they change no words.
  */
 export function isEdited(item: {
 	changeKind?: unknown;
+	edited?: boolean;
 	provenance?: Bag | null;
 }): boolean {
+	if (typeof item.edited === "boolean") return item.edited;
 	if (text(bag(item.provenance).origin) !== "authored") return false;
 	const kind = changeKindOf(item);
 	return kind === null || !MEMBERSHIP_KINDS.has(kind);
@@ -235,13 +260,16 @@ export function secondaryField(type: string): EditableField | null {
 }
 
 /**
- * What a fact-check said about this finding, where the object carries one. The
- * list endpoint is growing this field; until then most objects have none.
+ * What a fact-check said about this finding. The list endpoint sends the
+ * verdict of this very revision; elsewhere it is read from what the object
+ * carries, and most objects carry none.
  */
 export function factCheckVerdict(item: {
 	attributes?: Bag | null;
 	detail?: unknown;
+	verdict?: string | null;
 }): string | null {
+	if (typeof item.verdict === "string" && item.verdict) return item.verdict;
 	const attributes = bag(item.attributes);
 	const assessment = bag(attributes.assessment ?? bag(item.detail).assessment);
 	const verdict = assessment.verdict ?? attributes.verdict;

@@ -1,7 +1,12 @@
 import { t } from "@lingui/core/macro";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	useMutation,
+	useQueries,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import posthog from "posthog-js";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { useServerEvents } from "@/hooks/useServerEvents";
@@ -82,6 +87,20 @@ export type AnalysisObject = {
 		| null;
 	/** Who reworded it, for "Anna reworded this". */
 	attentionActor?: string | null;
+	/** When a host last reworded it, and who: the server's own reading. */
+	lastAuthoredAt?: string | null;
+	lastAuthoredBy?: string | null;
+	/**
+	 * Whether a host changed the words, whatever kind of change they called it:
+	 * the public mark's own word. Absent where a reader (the map) carries no
+	 * history, and then the row reads the provenance it has.
+	 */
+	edited?: boolean;
+	/** What the finding rests on, counted by the server. */
+	quoteCount?: number;
+	conversationCount?: number;
+	/** The latest fact-check verdict of this revision. */
+	verdict?: string | null;
 };
 
 export type AnalysisRevision = {
@@ -124,6 +143,8 @@ export const analysisKeys = {
 	all: ["analysis"] as const,
 	history: (projectId: string, objectId: string) =>
 		[...analysisKeys.all, projectId, "object", objectId, "history"] as const,
+	lastOpened: (projectId: string) =>
+		[...analysisKeys.all, projectId, "last-opened"] as const,
 	lineage: (snapshotId: string, revisionId: string) =>
 		[
 			...analysisKeys.all,
@@ -227,23 +248,174 @@ export function useAnalysisEvents(projectId: string) {
 	);
 }
 
-export function useAnalysisObjects(
+/** One request, one page of one kind. */
+export const RESULTS_PAGE = 50;
+
+/** The kinds the list groups, each paged on its own. */
+export const RESULT_TYPES = [
+	"popcorn",
+	"tension",
+	"stakeholder",
+	"argument",
+	"deduplicated_argument",
+];
+
+export type ResultsList = {
+	items: AnalysisObject[];
+	/** Per type, over the whole list: what a group header counts. */
+	counts: Record<string, number>;
+	total: number;
+	canEdit: boolean;
+	snapshotId: string | null;
+	isLoading: boolean;
+	isError: boolean;
+	refetch: () => void;
+	/** Types whose next page is on its way, for the quiet skeleton row. */
+	loadingTypes: string[];
+	/** Ask for the next page of these types. Nothing to fetch, nothing sent. */
+	loadMore: (types: string[]) => void;
+};
+
+/**
+ * The findings of a project, one page per kind, sorted by what needs this
+ * host's eye.
+ *
+ * Every finding is reachable without a pager: a group asks for its next page
+ * where it stands, and the pages of a kind stack in the order the server gave
+ * them. Each page is its own query, so a save invalidates them all together
+ * and the list comes back whole.
+ */
+export function useResultsList(
 	projectId: string,
-	type?: string,
-	membership = "active",
-	offset = 0,
-) {
-	return useQuery({
+	{ membership = "active", type }: { membership?: string; type?: string } = {},
+): ResultsList {
+	const [pages, setPages] = useState<Record<string, number>>({});
+	const types = type ? [type] : RESULT_TYPES;
+	const wanted = types.flatMap((kind) =>
+		Array.from({ length: pages[kind] ?? 1 }, (_, page) => ({ kind, page })),
+	);
+	const queries = useQueries({
+		queries: wanted.map(({ kind, page }) => ({
+			enabled: Boolean(projectId),
+			queryFn: () =>
+				bff.get<AnalysisObjectsPage>(
+					`/analysis/projects/${projectId}/objects`,
+					{
+						limit: RESULTS_PAGE,
+						membership,
+						offset: page * RESULTS_PAGE,
+						sort: "attention",
+						type: kind,
+					},
+				),
+			queryKey: analysisKeys.objects(
+				projectId,
+				kind,
+				membership,
+				page * RESULTS_PAGE,
+			),
+		})),
+	});
+
+	const items: AnalysisObject[] = [];
+	const loaded: Record<string, number> = {};
+	// A kind is drained when its last page came back short of a full one: the
+	// counts say what a group holds, the pages say what is left to ask for.
+	const drained: Record<string, boolean> = {};
+	const loadingTypes: string[] = [];
+	let counts: Record<string, number> = {};
+	let canEdit = false;
+	let snapshotId: string | null = null;
+	let isLoading = false;
+	let isError = false;
+	wanted.forEach(({ kind, page }, index) => {
+		const query = queries[index];
+		if (!query) return;
+		if (query.isError) isError = true;
+		if (query.isPending) {
+			if (page === 0) isLoading = true;
+			else if (!loadingTypes.includes(kind)) loadingTypes.push(kind);
+			return;
+		}
+		const data = query.data;
+		if (!data) return;
+		items.push(...data.items);
+		loaded[kind] = (loaded[kind] ?? 0) + data.items.length;
+		if (data.items.length < RESULTS_PAGE) drained[kind] = true;
+		// Counts are the whole list's, whichever page answered.
+		if (Object.keys(counts).length === 0) counts = data.counts ?? {};
+		canEdit = canEdit || data.canEdit;
+		snapshotId = snapshotId ?? data.snapshotId;
+	});
+
+	// Written afresh each render, because what has arrived is what decides
+	// whether there is another page to ask for. The caller holds it in a ref.
+	const loadMore = (asked: string[]) =>
+		setPages((current) => {
+			const next = { ...current };
+			let grew = false;
+			for (const kind of asked) {
+				if (drained[kind]) continue;
+				if ((loaded[kind] ?? 0) >= (counts[kind] ?? 0)) continue;
+				// One page at a time: nothing is asked for twice while it is on
+				// its way.
+				if ((next[kind] ?? 1) > (loaded[kind] ?? 0) / RESULTS_PAGE) continue;
+				next[kind] = (next[kind] ?? 1) + 1;
+				grew = true;
+			}
+			return grew ? next : current;
+		});
+
+	const refetch = () => {
+		for (const query of queries) void query.refetch();
+	};
+
+	return {
+		canEdit,
+		counts,
+		isError,
+		isLoading,
+		items,
+		loadingTypes,
+		loadMore,
+		refetch,
+		snapshotId,
+		total: types.reduce((sum, kind) => sum + (counts[kind] ?? 0), 0),
+	};
+}
+
+/**
+ * A visit to the results list.
+ *
+ * The list is read against when this host last opened it, so the server can
+ * say what is new. The mark is written when the host leaves the list, once, so
+ * "new" holds for the whole visit and answers again on the next one. A host
+ * who has never opened it has no mark, and then nothing is new.
+ */
+export function useResultsVisit(projectId: string) {
+	const opened = useQuery({
 		enabled: Boolean(projectId),
 		queryFn: () =>
-			bff.get<AnalysisObjectsPage>(`/analysis/projects/${projectId}/objects`, {
-				limit: 100,
-				membership,
-				offset,
-				type,
-			}),
-		queryKey: analysisKeys.objects(projectId, type, membership, offset),
+			bff.get<{ openedAt: string | null }>(
+				`/analysis/projects/${projectId}/results/last-opened`,
+			),
+		queryKey: analysisKeys.lastOpened(projectId),
+		staleTime: Number.POSITIVE_INFINITY,
 	});
+	const marked = useRef(false);
+	useEffect(() => {
+		marked.current = false;
+		return () => {
+			if (!projectId || marked.current) return;
+			marked.current = true;
+			void bff
+				.put(`/analysis/projects/${projectId}/results/last-opened`)
+				// Nothing to say to the host: the worst of a lost mark is that a
+				// finding reads as new once more.
+				.catch(() => {});
+		};
+	}, [projectId]);
+	return opened.data?.openedAt ?? null;
 }
 
 export function useAnalysisObjectHistory(projectId: string, objectId?: string) {
@@ -272,9 +444,10 @@ function useResultMutation(
 				body,
 			),
 		// A 409 is the review conflict the drawer resolves on screen, with the
-		// latest revision to load; a toast would only talk over it.
+		// latest revision to load; a 422 is the reason the step asks for again,
+		// in the line the host is reading. A toast would only talk over either.
 		onError: (error: Error & { status?: number }) => {
-			if (error.status === 409) return;
+			if (error.status === 409 || error.status === 422) return;
 			toast.error(t`Could not save the change. Try again.`);
 		},
 		onSuccess: ({ revision }, body) => {

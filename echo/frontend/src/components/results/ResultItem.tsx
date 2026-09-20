@@ -24,6 +24,7 @@ import {
 	resultQuotes,
 	revisionWording,
 	sizeStep,
+	WITHDRAW_REASON_MIN,
 } from "./resultContent";
 import {
 	EditAftermath,
@@ -296,14 +297,20 @@ function whenWord(value?: string | null): string {
 function ReasonStep({
 	label,
 	confirmLabel,
+	minimum = WITHDRAW_REASON_MIN,
 	pending,
+	refused,
 	onCancel,
 	onConfirm,
 	testId,
 }: {
 	label: ReactNode;
 	confirmLabel: ReactNode;
+	/** What the reason needs, trimmed: the server's own minimum. */
+	minimum?: number;
 	pending?: boolean;
+	/** The server refused the reason: the step asks again, same words. */
+	refused?: boolean;
 	onCancel: () => void;
 	onConfirm: (reason: string) => void;
 	testId: string;
@@ -318,9 +325,9 @@ function ReasonStep({
 
 	const send = () => {
 		const written = reason.trim();
-		// The server enforces the real minimum; this only keeps a host from
-		// sending a reason nobody could read later.
-		if (written.length < 4) {
+		// The same minimum the server keeps, so a reason it would refuse is never
+		// sent and the host is asked here instead.
+		if (written.length < minimum) {
 			setTooShort(true);
 			field.current?.focus();
 			return;
@@ -341,7 +348,7 @@ function ReasonStep({
 					className={classes.reasonField}
 					rows={2}
 					value={reason}
-					aria-describedby={tooShort ? `${testId}-note` : undefined}
+					aria-describedby={tooShort || refused ? `${testId}-note` : undefined}
 					onChange={(event) => {
 						setReason(event.currentTarget.value);
 						setTooShort(false);
@@ -360,7 +367,7 @@ function ReasonStep({
 				/>
 				{/* Always in the tree, so a screen reader hears the words arrive. */}
 				<p className={classes.note} id={`${testId}-note`} aria-live="polite">
-					{tooShort && (
+					{(tooShort || refused) && (
 						<Trans>
 							A few more words, so someone reading later understands.
 						</Trans>
@@ -504,6 +511,8 @@ export function ResultItem({
 	const actionsGroup = useRef<HTMLElement>(null);
 	const [restoring, setRestoring] = useState<AnalysisRevision | null>(null);
 	const [conflict, setConflict] = useState(false);
+	// The server would not take the reason: the step stays open and asks again.
+	const [refused, setRefused] = useState(false);
 	const [shown, setShown] = useState(item.revisionId);
 	// History is the workbench's; a reader without the margin never fetches it.
 	const history = useAnalysisObjectHistory(
@@ -528,18 +537,24 @@ export function ResultItem({
 		setStep("rest");
 		setRestoring(null);
 		setConflict(false);
+		setRefused(false);
 	}
 
 	const onError = (error: unknown) => {
-		if ((error as { status?: number } | undefined)?.status === 409) {
+		const status = (error as { status?: number } | undefined)?.status;
+		if (status === 409) {
 			setConflict(true);
 			void history.refetch();
 		}
+		// A reason the server will not take is asked for again, in the line the
+		// host is reading, and never called a failed save.
+		if (status === 422) setRefused(true);
 	};
 	const settle = () => {
 		setStep("rest");
 		setRestoring(null);
 		setConflict(false);
+		setRefused(false);
 		// The step is over: the caret goes back where the host left it, or to
 		// the control that took its place.
 		window.setTimeout(() => {
@@ -665,8 +680,10 @@ export function ResultItem({
 									}
 									confirmLabel={<Trans>Withdraw from the analysis</Trans>}
 									pending={membership.isPending}
+									refused={refused}
 									onCancel={() => {
 										setStep("rest");
+										setRefused(false);
 										// Back to the control that opened the step, never to the
 										// top of the page.
 										window.setTimeout(

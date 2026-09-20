@@ -274,6 +274,54 @@ describe("the workbench margin", () => {
 		});
 	});
 
+	it("takes a short reason for a withdrawal, and asks again if the server will not", async () => {
+		show({ canEdit: true });
+		fireEvent.click(
+			screen.getByRole("button", { name: "Withdraw from the analysis" }),
+		);
+		await screen.findByTestId("result-withdraw-reason");
+		// Four characters is what the server takes for a withdrawal: a host who
+		// has said it is never stopped here.
+		fireEvent.change(screen.getByRole("textbox"), {
+			target: { value: "dupe" },
+		});
+		fireEvent.click(
+			screen.getByRole("button", { name: "Withdraw from the analysis" }),
+		);
+		await waitFor(() => expect(bff.post).toHaveBeenCalled());
+		expect(
+			screen.queryByText(
+				"A few more words, so someone reading later understands.",
+			),
+		).toBeNull();
+	});
+
+	it("asks for more words where the server refused the reason", async () => {
+		vi.mocked(bff.post).mockRejectedValueOnce(
+			Object.assign(new Error("a few more words"), { status: 422 }),
+		);
+		show({ canEdit: true });
+		fireEvent.click(
+			screen.getByRole("button", { name: "Withdraw from the analysis" }),
+		);
+		await screen.findByTestId("result-withdraw-reason");
+		fireEvent.change(screen.getByRole("textbox"), {
+			target: { value: "dupe" },
+		});
+		fireEvent.click(
+			screen.getByRole("button", { name: "Withdraw from the analysis" }),
+		);
+		expect(
+			await screen.findByText(
+				"A few more words, so someone reading later understands.",
+			),
+		).toBeTruthy();
+		// The step is still open, with the host's words in it.
+		expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe(
+			"dupe",
+		);
+	});
+
 	it("gives the caret back to the control that opened the reason step", async () => {
 		show({ canEdit: true });
 		fireEvent.click(

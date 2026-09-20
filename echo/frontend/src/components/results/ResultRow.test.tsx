@@ -143,6 +143,30 @@ describe("one skeleton, four fillings", () => {
 		expect(screen.getByText("for")).toBeTruthy();
 	});
 
+	it("counts the evidence the server counted, and its own where it must", () => {
+		show({
+			density: "check",
+			item: {
+				...popcorn,
+				conversationCount: 9,
+				edited: true,
+				quoteCount: 12,
+				verdict: "contested",
+			},
+		});
+		// The server read the whole payload; the row's two source refs are the
+		// fallback for a reader that carries no counts.
+		expect(screen.getByText("12 quotes · 9 conversations")).toBeTruthy();
+		const state = screen.getByTestId("result-state-obj-1").textContent ?? "";
+		expect(state).toContain("the fact-check disagrees");
+		expect(state).toContain("edited");
+		cleanup();
+
+		show({ density: "check", item: popcorn });
+		expect(screen.getByText("2 quotes · 2 conversations")).toBeTruthy();
+		expect(screen.queryByTestId("result-state-obj-1")).toBeNull();
+	});
+
 	it("says the state in words in the check density, and nowhere else", () => {
 		const edited = {
 			...popcorn,
@@ -227,7 +251,6 @@ describe("changing the words in place", () => {
 			expectedRevisionId: "rev-2",
 			field: "phrase",
 			objectId: "obj-1",
-			payload: { phrase: "We keep the library open" },
 			reason: undefined,
 			words: "We keep the library opn",
 		});
@@ -246,6 +269,19 @@ describe("changing the words in place", () => {
 			),
 		).toBeTruthy();
 		expect(editWords).not.toHaveBeenCalled();
+
+		// Eleven characters is what the server would refuse, so nothing is sent
+		// and the host reads the same line, never a number.
+		fireEvent.change(screen.getByRole("textbox"), {
+			target: { value: "we agreed " },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+		expect(editWords).not.toHaveBeenCalled();
+		expect(
+			screen.getByText(
+				"A few more words, so someone reading later understands.",
+			),
+		).toBeTruthy();
 
 		fireEvent.change(screen.getByRole("textbox"), {
 			target: { value: "The Sunday opening was agreed in the second session" },
@@ -309,6 +345,30 @@ describe("changing the words in place", () => {
 		expect(choice.textContent).toContain("We keep the library open longer");
 		expect(choice.textContent).toContain("Anna");
 		expect(choice.textContent).toContain("We keep the library opn");
+	});
+
+	it("asks again, in the same words, when the server refuses the reason", async () => {
+		editWords.mockRejectedValue(
+			Object.assign(new Error("a few more words"), { status: 422 }),
+		);
+		show();
+		const box = reword("We keep the library open on Sundays too");
+		fireEvent.keyDown(box, { key: "Enter" });
+		fireEvent.click(await screen.findByRole("button", { name: "The meaning" }));
+		fireEvent.change(screen.getByRole("textbox"), {
+			target: { value: "Agreed in the second session" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+		expect(
+			await screen.findByText(
+				"A few more words, so someone reading later understands.",
+			),
+		).toBeTruthy();
+		// Not a failed save, and the host's sentence is still in the field.
+		expect(screen.queryByTestId("result-save-failed")).toBeNull();
+		expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe(
+			"Agreed in the second session",
+		);
 	});
 
 	it("keeps the host's words when the save fails", async () => {

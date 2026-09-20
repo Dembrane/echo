@@ -15,8 +15,6 @@ export type WordsEditInput = {
 	objectId: string;
 	/** The revision the host was reading when they started typing. */
 	expectedRevisionId: string;
-	/** The payload as it stands, so only the one field differs. */
-	payload: Record<string, unknown>;
 	field: EditableField;
 	words: string;
 	changeKind: WordsChangeKind;
@@ -149,20 +147,18 @@ export function useResultActions({
 			expectedRevisionId,
 			field,
 			objectId,
-			payload,
 			reason,
 			words,
 		}: WordsEditInput) => {
-			// The endpoint takes a whole payload (`RevisionEdit` in
-			// `server/dembrane/api/v2/bff/analysis.py`); the spec's `patch` of
-			// allowlisted fields is step 2 and has not landed. Until it does, the
-			// payload goes back as it came with the one field changed, which is
-			// what the allowlist would have let through anyway.
+			// The one field that changed, and nothing else: the endpoint takes a
+			// patch of allowlisted fields (`RevisionEdit` in
+			// `server/dembrane/api/v2/bff/analysis.py`) and keeps the rest of the
+			// payload as it stands, evidence and quotes included.
 			const { revision } = await edit.mutateAsync({
 				body: {
 					change_kind: changeKind,
 					expected_revision_id: expectedRevisionId,
-					payload: { ...payload, [field]: words },
+					patch: { [field]: words },
 					reason,
 				},
 				objectId,

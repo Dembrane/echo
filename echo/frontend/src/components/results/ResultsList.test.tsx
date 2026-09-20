@@ -95,6 +95,74 @@ describe("the list", () => {
 		expect(screen.getByText("Phrase 24")).toBeTruthy();
 	});
 
+	it("counts what the server holds, not the page, and asks for the rest", () => {
+		const onLoadMore = vi.fn();
+		const page = Array.from({ length: 50 }, (_, index) => phrase(index));
+		show({ counts: { popcorn: 140 }, items: page, onLoadMore });
+		// Everything is reachable, and the way to it says how much there is.
+		expect(
+			screen.getByTestId("results-show-all-popcorn").textContent,
+		).toContain("140");
+		expect(screen.queryByText("Phrase 20")).toBeNull();
+		// The first page holds more than the twenty at rest: nothing is asked for
+		// until the host opens the group.
+		expect(onLoadMore).not.toHaveBeenCalled();
+
+		fireEvent.click(screen.getByTestId("results-show-all-popcorn"));
+		expect(onLoadMore).toHaveBeenCalledWith(["popcorn"]);
+		// Opened, the button is gone and no numbered pager takes its place.
+		expect(screen.queryByTestId("results-show-all-popcorn")).toBeNull();
+	});
+
+	it("asks for the risen rows and twenty, where a page holds fewer", () => {
+		const onLoadMore = vi.fn();
+		const risen = Array.from({ length: 15 }, (_, index) => ({
+			...phrase(index),
+			attention: "new" as const,
+		}));
+		show({ counts: { popcorn: 140 }, items: risen, onLoadMore });
+		expect(onLoadMore).toHaveBeenCalledWith(["popcorn"]);
+	});
+
+	it("waits for a page in the row's own skeleton, and asks once", () => {
+		const onLoadMore = vi.fn();
+		const page = Array.from({ length: 30 }, (_, index) => phrase(index));
+		const { rerender } = show({
+			counts: { popcorn: 140 },
+			items: page,
+			onLoadMore,
+		});
+		fireEvent.click(screen.getByTestId("results-show-all-popcorn"));
+		expect(onLoadMore).toHaveBeenCalledTimes(1);
+		rerender(
+			<I18nProvider i18n={i18n}>
+				<ResultsList
+					actions={actions}
+					canEdit
+					counts={{ popcorn: 140 }}
+					density="curate"
+					items={page}
+					loadingTypes={["popcorn"]}
+					onLoadMore={onLoadMore}
+					onOpen={() => {}}
+					renderItem={() => null}
+				/>
+			</I18nProvider>,
+		);
+		expect(screen.getByTestId("results-loading-popcorn")).toBeTruthy();
+		// The same page is not asked for twice while it is on its way.
+		expect(onLoadMore).toHaveBeenCalledTimes(1);
+	});
+
+	it("stops asking once it holds everything the count promised", () => {
+		const onLoadMore = vi.fn();
+		const all = Array.from({ length: 25 }, (_, index) => phrase(index));
+		show({ counts: { popcorn: 25 }, items: all, onLoadMore });
+		fireEvent.click(screen.getByTestId("results-show-all-popcorn"));
+		expect(onLoadMore).not.toHaveBeenCalled();
+		expect(screen.getByText("Phrase 24")).toBeTruthy();
+	});
+
 	it("shows nothing as new on a first visit, and no rule", () => {
 		show();
 		expect(screen.queryByTestId("results-rule")).toBeNull();

@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Fragment, type ReactNode, useRef, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import type { AnalysisObject } from "@/components/analysis/hooks";
 import { type ResultDensity, ResultRow } from "./ResultRow";
 import classes from "./ResultsList.module.css";
@@ -59,8 +59,15 @@ export type ResultsListProps = {
 	canEdit: boolean;
 	loading?: boolean;
 	error?: ReactNode;
-	/** Counts per type from the endpoint, where the page has more than a page. */
+	/** Counts per type from the endpoint, over the whole list, not the page. */
 	counts?: Record<string, number>;
+	/**
+	 * The next page of these types, please. A group asks when it is opened, and
+	 * again until it holds everything the counts promise.
+	 */
+	onLoadMore?: (types: string[]) => void;
+	/** Types whose next page is on its way. */
+	loadingTypes?: string[];
 	/** The order the presentation shows its blocks in. */
 	groupOrder?: ResultGroupKey[];
 	/** Groups whose block is off in this presentation. */
@@ -126,11 +133,17 @@ export function ResultsList({
 	groupsOff = [],
 	items,
 	loading,
+	loadingTypes = [],
+	onLoadMore,
 	onOpen,
 	openObjectId,
 	renderItem,
 }: ResultsListProps) {
 	const [opened, setOpened] = useState<ResultGroupKey[]>([]);
+	// The host asks for more pages; the asking itself never changes what the
+	// list draws, so the effect reads the latest hand through a ref.
+	const ask = useRef(onLoadMore);
+	ask.current = onLoadMore;
 	// The order a row has when the list opens is the order it keeps, so nothing
 	// moves under the host's hand while they work.
 	const places = useRef(new Map<string, { rank: number; risen: boolean }>());
@@ -141,6 +154,68 @@ export function ResultsList({
 				risen: Boolean(item.attention),
 			});
 
+	const shown = filter
+		? items.filter((item) => matches(item, filter.query))
+		: items;
+	const order = groupOrder ?? GROUP_ORDER;
+
+	const groups = order
+		.map((key) => {
+			// What this host has of the group, whatever the search hides.
+			const held = items.filter((item) => groupOf(item.type) === key).length;
+			const inGroup = shown
+				.filter((item) => groupOf(item.type) === key)
+				.sort((one, two) => {
+					const a = places.current.get(one.objectId);
+					const b = places.current.get(two.objectId);
+					if (a?.risen !== b?.risen) return a?.risen ? -1 : 1;
+					return (a?.rank ?? 0) - (b?.rank ?? 0);
+				});
+			// What this group holds altogether, from the server's count per type.
+			const total =
+				TYPES_IN_GROUP[key].reduce(
+					(sum, type) => sum + (counts?.[type] ?? 0),
+					0,
+				) || inGroup.length;
+			const risen = inGroup.filter(
+				(item) => places.current.get(item.objectId)?.risen,
+			).length;
+			const all = opened.includes(key);
+			// At rest a group shows what rose and twenty more; opened, everything.
+			const room = all ? total : risen + AT_REST;
+			return {
+				all,
+				held,
+				inGroup,
+				key,
+				// A page on its way for this kind: one quiet skeleton row.
+				loading: TYPES_IN_GROUP[key].some((type) =>
+					loadingTypes.includes(type),
+				),
+				risen,
+				total,
+				visible: inGroup.slice(0, room),
+				// More is promised than this host holds: ask for the next page.
+				wants: held < Math.min(room, total),
+			};
+		})
+		// Empty groups are omitted, whether their block is on or off.
+		.filter((group) => group.inGroup.length > 0);
+
+	// One signature, so the list asks once per page and stops when it has
+	// everything the counts promised.
+	const asking = groups
+		.filter((group) => group.wants)
+		.map((group) => `${group.key}:${group.held}`)
+		.join(",");
+	useEffect(() => {
+		if (!asking) return;
+		for (const part of asking.split(",")) {
+			const key = part.split(":")[0] as ResultGroupKey;
+			ask.current?.(TYPES_IN_GROUP[key]);
+		}
+	}, [asking]);
+
 	if (error) return <div className={classes.list}>{error}</div>;
 	if (loading)
 		return (
@@ -148,11 +223,6 @@ export function ResultsList({
 				<Skeletons />
 			</div>
 		);
-
-	const shown = filter
-		? items.filter((item) => matches(item, filter.query))
-		: items;
-	const order = groupOrder ?? GROUP_ORDER;
 
 	return (
 		<div className={[classes.list, className].filter(Boolean).join(" ")}>
@@ -218,28 +288,8 @@ export function ResultsList({
 				</p>
 			)}
 
-			{order.map((key) => {
+			{groups.map(({ all, key, loading: more, risen, total, visible }) => {
 				const off = groupsOff.includes(key);
-				const inGroup = shown
-					.filter((item) => groupOf(item.type) === key)
-					.sort((one, two) => {
-						const a = places.current.get(one.objectId);
-						const b = places.current.get(two.objectId);
-						if (a?.risen !== b?.risen) return a?.risen ? -1 : 1;
-						return (a?.rank ?? 0) - (b?.rank ?? 0);
-					});
-				// Empty groups are omitted, whether their block is on or off.
-				if (inGroup.length === 0) return null;
-				const total =
-					TYPES_IN_GROUP[key].reduce(
-						(sum, type) => sum + (counts?.[type] ?? 0),
-						0,
-					) || inGroup.length;
-				const risen = inGroup.filter(
-					(item) => places.current.get(item.objectId)?.risen,
-				).length;
-				const all = opened.includes(key);
-				const visible = all ? inGroup : inGroup.slice(0, risen + AT_REST);
 				return (
 					<section className={classes.group} key={key}>
 						<h3 className={classes.groupHead}>
@@ -275,15 +325,30 @@ export function ResultsList({
 											</ResultRow>
 										</Fragment>
 									))}
+									{/* A page on its way sits where its rows will: one row
+									    in the row's own skeleton, no spinner. */}
+									{more && (
+										<li
+											className={classes.row}
+											data-testid={`results-loading-${key}`}
+										>
+											<div className={classes.skeleton}>
+												<span className={classes.ghostLine} />
+												<span
+													className={`${classes.ghostLine} ${classes.ghostShort}`}
+												/>
+											</div>
+										</li>
+									)}
 								</ul>
-								{visible.length < inGroup.length && (
+								{!all && visible.length < total && (
 									<button
 										type="button"
 										className={`${classes.control} ${classes.showAll}`}
 										data-testid={`results-show-all-${key}`}
 										onClick={() => setOpened((keys) => [...keys, key])}
 									>
-										<Trans>Show all {inGroup.length}</Trans>
+										<Trans>Show all {total}</Trans>
 									</button>
 								)}
 							</>

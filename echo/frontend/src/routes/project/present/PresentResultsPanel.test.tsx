@@ -13,29 +13,28 @@ vi.mock("@/lib/bff", () => ({
 	bff: { get: vi.fn().mockResolvedValue({ revisions: [] }), post: vi.fn() },
 }));
 vi.mock("@/components/analysis", () => ({
-	useAnalysisObjects: () => ({
-		data: {
-			canEdit: true,
-			counts: { popcorn: 1, tension: 1 },
-			items: [
-				{
-					objectId: "obj-1",
-					payload: { phrase: "A short phrase" },
-					revisionId: "rev-1",
-					type: "popcorn",
-				},
-				{
-					objectId: "obj-2",
-					payload: { poleA: "Open longer", poleB: "Pay people" },
-					revisionId: "rev-2",
-					type: "tension",
-				},
-			],
-			limit: 100,
-			snapshotId: "snap-1",
-			total: 2,
-		},
+	useResultsList: () => ({
+		canEdit: true,
+		counts: { popcorn: 1, tension: 1 },
+		items: [
+			{
+				objectId: "obj-1",
+				payload: { phrase: "A short phrase" },
+				revisionId: "rev-1",
+				type: "popcorn",
+			},
+			{
+				objectId: "obj-2",
+				payload: { poleA: "Open longer", poleB: "Pay people" },
+				revisionId: "rev-2",
+				type: "tension",
+			},
+		],
+		loadingTypes: [],
+		loadMore: () => {},
+		total: 2,
 	}),
+	useResultsVisit: () => null,
 }));
 const save = vi.fn();
 vi.mock("@/components/popcorn/hooks", () => ({

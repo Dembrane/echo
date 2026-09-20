@@ -3,7 +3,11 @@ import { Trans } from "@lingui/react/macro";
 import { CloseButton, Group, Stack, Text } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
-import { type AnalysisObject, useAnalysisObjects } from "@/components/analysis";
+import {
+	type AnalysisObject,
+	useResultsList,
+	useResultsVisit,
+} from "@/components/analysis";
 import { usePopcornSettingsMutation } from "@/components/popcorn/hooks";
 import {
 	ALWAYS_ON_BLOCK,
@@ -45,9 +49,12 @@ export function PresentResultsPanel({
 	className?: string;
 }) {
 	const { workspaceId } = useParams<{ workspaceId?: string }>();
-	// One page of findings, opened in place. There is no pager: a long group
-	// says "Show all" where it stands.
-	const results = useAnalysisObjects(projectId);
+	// One page of findings per kind, opened in place. There is no pager: a long
+	// group says "Show all" where it stands and asks for what it still needs.
+	const results = useResultsList(projectId);
+	// What is new is new since the host last opened this list; leaving it marks
+	// it seen.
+	useResultsVisit(projectId);
 	const [inspected, setInspected] = useState<AnalysisObject | null>(null);
 	// The way to the full picture of a finding, kept so the host can come back.
 	const analysisPath = `${workspaceId ? `/w/${workspaceId}` : ""}/projects/${projectId}/analysis?returnTo=present&section=results`;
@@ -114,8 +121,8 @@ export function PresentResultsPanel({
 			</Text>
 			<ResultsList
 				actions={actions}
-				canEdit={Boolean(results.data?.canEdit)}
-				counts={results.data?.counts}
+				canEdit={results.canEdit}
+				counts={results.counts}
 				density="curate"
 				error={
 					results.isError ? (
@@ -126,8 +133,10 @@ export function PresentResultsPanel({
 				}
 				groupOrder={[...groupOrder, ...groupsOff]}
 				groupsOff={groupsOff}
-				items={results.data?.items ?? []}
+				items={results.items}
 				loading={results.isLoading}
+				loadingTypes={results.loadingTypes}
+				onLoadMore={results.loadMore}
 				onOpen={(item) =>
 					setInspected((current) =>
 						current?.objectId === item.objectId ? null : item,
@@ -137,7 +146,7 @@ export function PresentResultsPanel({
 				renderItem={(item) => (
 					<ResultItem
 						analysisHref={analysisPath}
-						canEdit={Boolean(results.data?.canEdit)}
+						canEdit={results.canEdit}
 						item={item}
 						onClose={() => setInspected(null)}
 						onEditWords={actions}

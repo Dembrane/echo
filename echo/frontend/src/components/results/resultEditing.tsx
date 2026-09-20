@@ -14,7 +14,7 @@ import {
 	type EditableField,
 	fieldWords,
 	isMultiline,
-	resultFields,
+	MEANING_REASON_MIN,
 } from "./resultContent";
 import type { ResultActions, WordsChangeKind } from "./useResultActions";
 
@@ -34,6 +34,8 @@ type Draft = {
 	asking: boolean;
 	saving: boolean;
 	failed: boolean;
+	/** The server would not take the reason: the prompt asks again. */
+	refused: boolean;
 };
 
 type Saved = {
@@ -153,6 +155,7 @@ export function useWordsEdit({
 			failed: false,
 			field,
 			fromRevisionId: item.revisionId,
+			refused: false,
 			saving: false,
 			text: fieldWords(item, field),
 		});
@@ -176,7 +179,12 @@ export function useWordsEdit({
 				restFocus();
 				return null;
 			}
-			return { ...current, asking: true, failed: false };
+			return {
+				...current,
+				asking: true,
+				failed: false,
+				refused: false,
+			};
 		});
 	};
 
@@ -187,14 +195,19 @@ export function useWordsEdit({
 	) => {
 		if (!actions || !draft) return;
 		const words = draft.text.trim();
-		setDraft({ ...draft, asking: true, failed: false, saving: true });
+		setDraft({
+			...draft,
+			asking: true,
+			failed: false,
+			refused: false,
+			saving: true,
+		});
 		try {
 			const revision = await actions.editWords({
 				changeKind: kind,
 				expectedRevisionId: against ?? draft.fromRevisionId,
 				field: draft.field,
 				objectId: item.objectId,
-				payload: resultFields(item),
 				reason,
 				words,
 			});
@@ -226,8 +239,27 @@ export function useWordsEdit({
 				setDraft(null);
 				return;
 			}
+			if (failure.status === 422) {
+				// The reason is what the server refused. The prompt stays open and
+				// asks for it in the same words it would have, rather than telling
+				// the host their save failed.
+				setDraft({
+					...draft,
+					asking: true,
+					failed: false,
+					refused: true,
+					saving: false,
+				});
+				return;
+			}
 			// The words are the host's work: they stay in the field.
-			setDraft({ ...draft, asking: false, failed: true, saving: false });
+			setDraft({
+				...draft,
+				asking: false,
+				failed: true,
+				refused: false,
+				saving: false,
+			});
 		}
 	};
 
@@ -257,6 +289,7 @@ export function useWordsEdit({
 			failed: false,
 			field: conflict.field,
 			fromRevisionId: conflict.theirRevisionId,
+			refused: false,
 			saving: false,
 			text: conflict.mine,
 		});
@@ -410,6 +443,7 @@ export function WordsPrompt({
 				</Trans>
 			}
 			confirmLabel={<Trans>Save</Trans>}
+			refused={edit.draft?.refused}
 			options={[
 				{ key: "typo", label: <Trans>A typo</Trans> },
 				{
@@ -419,6 +453,9 @@ export function WordsPrompt({
 				{
 					key: "meaning",
 					label: <Trans>The meaning</Trans>,
+					// A change of meaning is the one a colleague has to be able to
+					// read later: the server asks for a sentence, and so does this.
+					minimum: MEANING_REASON_MIN,
 					needsReason: true,
 				},
 			]}

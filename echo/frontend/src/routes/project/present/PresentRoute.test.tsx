@@ -29,9 +29,10 @@ vi.mock("@/lib/bff", () => ({
 }));
 vi.mock("@/hooks/useServerEvents", () => ({ useServerEvents: vi.fn() }));
 vi.mock("@/hooks/useI18nNavigate", () => ({ useI18nNavigate: () => vi.fn() }));
-const results = vi.fn(() => ({}) as Record<string, unknown>);
+const results = vi.fn(() => ({ items: [] }) as Record<string, unknown>);
 vi.mock("@/components/analysis", () => ({
-	useAnalysisObjects: () => results(),
+	useResultsList: () => results(),
+	useResultsVisit: () => null,
 }));
 // The preview scales the room's screen to the column it sits in, so the column
 // has to have a width here.
@@ -110,7 +111,7 @@ afterEach(() => {
 	cleanup();
 	vi.restoreAllMocks();
 	vi.clearAllMocks();
-	results.mockReturnValue({});
+	results.mockReturnValue({ items: [] });
 });
 function show(entry = "/projects/empty/present") {
 	const client = new QueryClient({
@@ -237,13 +238,10 @@ describe("Reviewing the results on the screen", () => {
 	it("asks why a finding is not in this presentation, then saves it away", async () => {
 		results.mockReturnValue({
 			canEdit: true,
-			data: {
-				canEdit: true,
-				items,
-				limit: 100,
-				snapshotId: "snap-1",
-				total: 2,
-			},
+			counts: { popcorn: 2 },
+			items,
+			loadingTypes: [],
+			total: 2,
 		});
 		show();
 		await openPanel("Review results");
@@ -284,13 +282,11 @@ describe("Reviewing the results on the screen", () => {
 			return { can_edit: true, presentation: hidden };
 		});
 		results.mockReturnValue({
-			data: {
-				canEdit: true,
-				items,
-				limit: 100,
-				snapshotId: "snap-1",
-				total: 2,
-			},
+			canEdit: true,
+			counts: { popcorn: 2 },
+			items,
+			loadingTypes: [],
+			total: 2,
 		});
 		show("/projects/empty/present?results=1");
 		const back = await screen.findByRole("button", {

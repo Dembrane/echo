@@ -31,14 +31,13 @@ beforeEach(() => {
 afterEach(() => vi.clearAllMocks());
 
 describe("what a host does to a finding", () => {
-	it("sends the kind with the payload, changed in the one field", async () => {
+	it("sends the kind with a patch of the one field that changed", async () => {
 		const actions = setUp();
 		await actions.current.editWords({
 			changeKind: "clarity",
 			expectedRevisionId: "rev-2",
 			field: "phrase",
 			objectId: "obj-1",
-			payload: { phrase: "Old words", question: false },
 			words: "New words",
 		});
 		expect(vi.mocked(bff.post).mock.calls[0][0]).toBe(
@@ -47,8 +46,8 @@ describe("what a host does to a finding", () => {
 		expect(vi.mocked(bff.post).mock.calls[0][1]).toEqual({
 			change_kind: "clarity",
 			expected_revision_id: "rev-2",
-			// Only the one allowlisted field differs; the rest goes back as it came.
-			payload: { phrase: "New words", question: false },
+			// The one allowlisted field, and nothing else: no evidence, no quotes.
+			patch: { phrase: "New words" },
 			reason: undefined,
 		});
 	});
