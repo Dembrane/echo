@@ -447,7 +447,7 @@ function HistoryTimeline({
 								disabled={pending}
 								onClick={() => onRestore(revision)}
 							>
-								<Trans>Restore this wording</Trans>
+								<Trans>Use this wording</Trans>
 							</button>
 						)}
 					</li>
@@ -652,11 +652,7 @@ export function ResultItem({
 									className={classes.control}
 									onClick={() => holdBack.onChange(!holdBack.held)}
 								>
-									{holdBack.held ? (
-										<Trans>Put back in this presentation</Trans>
-									) : (
-										<Trans>Not in this presentation</Trans>
-									)}
+									{holdBack.held ? <Trans>Restore</Trans> : <Trans>Hide</Trans>}
 								</button>
 							)}
 							{withdrawn ? (
@@ -670,7 +666,7 @@ export function ResultItem({
 										disabled={pending}
 										onClick={restore}
 									>
-										<Trans>Restore to the analysis</Trans>
+										<Trans>Undo withdrawal</Trans>
 									</button>
 								</>
 							) : step === "withdraw" ? (
@@ -682,7 +678,7 @@ export function ResultItem({
 											who checks later.
 										</Trans>
 									}
-									confirmLabel={<Trans>Withdraw from the analysis</Trans>}
+									confirmLabel={<Trans>Withdraw</Trans>}
 									pending={membership.isPending}
 									refused={refused}
 									onCancel={() => {
@@ -705,7 +701,7 @@ export function ResultItem({
 									disabled={pending}
 									onClick={() => setStep("withdraw")}
 								>
-									<Trans>Withdraw from the analysis</Trans>
+									<Trans>Withdraw</Trans>
 								</button>
 							)}
 						</section>

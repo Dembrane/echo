@@ -268,7 +268,7 @@ export function ResultRow({
 										checks later.
 									</Trans>
 								}
-								confirmLabel={<Trans>Not in this presentation</Trans>}
+								confirmLabel={<Trans>Hide</Trans>}
 								options={[
 									// Three suggestions, the last reason used first, each said
 									// once; then the way to say something else.
@@ -336,11 +336,11 @@ export function ResultRow({
 				<div className={classes.rowControls}>
 					{holdable &&
 						(held ? (
-							<Tooltip label={t`Put back in this presentation`}>
+							<Tooltip label={t`Restore`}>
 								<button
 									ref={holdControl}
 									type="button"
-									aria-label={t`Put back in this presentation`}
+									aria-label={t`Restore`}
 									className={`${classes.control} ${classes.icon}`}
 									data-testid={`result-show-again-${item.objectId}`}
 									onClick={() => actions.showAgain?.(item.objectId, "")}
@@ -349,11 +349,11 @@ export function ResultRow({
 								</button>
 							</Tooltip>
 						) : (
-							<Tooltip label={t`Not in this presentation`}>
+							<Tooltip label={t`Hide`}>
 								<button
 									ref={holdControl}
 									type="button"
-									aria-label={t`Not in this presentation`}
+									aria-label={t`Hide`}
 									className={`${classes.control} ${classes.icon}`}
 									data-testid={`result-hold-back-${item.objectId}`}
 									onClick={() => setHolding(true)}

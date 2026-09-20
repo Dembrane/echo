@@ -259,15 +259,11 @@ describe("the workbench margin", () => {
 
 	it("will not withdraw without a reason, and sends the kind with it", async () => {
 		show({ canEdit: true });
-		fireEvent.click(
-			screen.getByRole("button", { name: "Withdraw from the analysis" }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
 		const step = await screen.findByTestId("result-withdraw-reason");
 		expect(step).toBeTruthy();
 
-		fireEvent.click(
-			screen.getByRole("button", { name: "Withdraw from the analysis" }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
 		expect(
 			screen.getByText(
 				"A few more words, so someone reading later understands.",
@@ -278,9 +274,7 @@ describe("the workbench margin", () => {
 		fireEvent.change(screen.getByRole("textbox"), {
 			target: { value: "It repeats the finding above it" },
 		});
-		fireEvent.click(
-			screen.getByRole("button", { name: "Withdraw from the analysis" }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
 		await waitFor(() => expect(bff.post).toHaveBeenCalled());
 		expect(vi.mocked(bff.post).mock.calls[0][0]).toContain("/membership");
 		expect(vi.mocked(bff.post).mock.calls[0][1]).toEqual({
@@ -293,18 +287,14 @@ describe("the workbench margin", () => {
 
 	it("takes a short reason for a withdrawal, and asks again if the server will not", async () => {
 		show({ canEdit: true });
-		fireEvent.click(
-			screen.getByRole("button", { name: "Withdraw from the analysis" }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
 		await screen.findByTestId("result-withdraw-reason");
 		// Four characters is what the server takes for a withdrawal: a host who
 		// has said it is never stopped here.
 		fireEvent.change(screen.getByRole("textbox"), {
 			target: { value: "dupe" },
 		});
-		fireEvent.click(
-			screen.getByRole("button", { name: "Withdraw from the analysis" }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
 		await waitFor(() => expect(bff.post).toHaveBeenCalled());
 		expect(
 			screen.queryByText(
@@ -318,16 +308,12 @@ describe("the workbench margin", () => {
 			Object.assign(new Error("a few more words"), { status: 422 }),
 		);
 		show({ canEdit: true });
-		fireEvent.click(
-			screen.getByRole("button", { name: "Withdraw from the analysis" }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
 		await screen.findByTestId("result-withdraw-reason");
 		fireEvent.change(screen.getByRole("textbox"), {
 			target: { value: "dupe" },
 		});
-		fireEvent.click(
-			screen.getByRole("button", { name: "Withdraw from the analysis" }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
 		expect(
 			await screen.findByText(
 				"A few more words, so someone reading later understands.",
@@ -341,15 +327,11 @@ describe("the workbench margin", () => {
 
 	it("gives the caret back to the control that opened the reason step", async () => {
 		show({ canEdit: true });
-		fireEvent.click(
-			screen.getByRole("button", { name: "Withdraw from the analysis" }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
 		await screen.findByTestId("result-withdraw-reason");
 		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 		await waitFor(() =>
-			expect(document.activeElement?.textContent).toBe(
-				"Withdraw from the analysis",
-			),
+			expect(document.activeElement?.textContent).toBe("Withdraw"),
 		);
 	});
 
@@ -379,7 +361,7 @@ describe("the workbench margin", () => {
 	it("restores a wording against the revision it came from", async () => {
 		show({ canEdit: true });
 		const restore = await screen.findByRole("button", {
-			name: "Restore this wording",
+			name: "Use this wording",
 		});
 		fireEvent.click(restore);
 		await waitFor(() => expect(bff.post).toHaveBeenCalled());

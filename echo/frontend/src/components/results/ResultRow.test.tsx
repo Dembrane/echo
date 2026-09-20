@@ -491,15 +491,13 @@ describe("holding a finding back", () => {
 			"dataset.held",
 			"true",
 		);
-		expect(
-			screen.getByRole("button", { name: "Put back in this presentation" }),
-		).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Restore" })).toBeTruthy();
 	});
 
 	it("gives the row's actions as icons, with the words in the label", () => {
 		show();
 		const hold = screen.getByTestId("result-hold-back-obj-1");
-		expect(hold.getAttribute("aria-label")).toBe("Not in this presentation");
+		expect(hold.getAttribute("aria-label")).toBe("Hide");
 		expect(hold.textContent).toBe("");
 		expect(hold.querySelector("svg")).toBeTruthy();
 		const open = screen.getByTestId("result-open-obj-1");

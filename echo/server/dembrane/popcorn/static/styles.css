@@ -137,6 +137,16 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .present-shell .session-notice,
 .present-shell .colophon,
 .present-shell .qr-panel { display: none; }
+/* Inside the shell the deck is no longer a page of its own: it is the content
+   of a frame whose header, footer and map tab all sit at
+   `--audience-pad-x: clamp(12px, 2vw, 36px)`. Repeat that value here so the
+   first word of a slide starts under the first word of the header. The deck's
+   iframe is flush to the left edge of the window, so the two agree exactly
+   whenever the iframe is as wide as the window; with the QR card open the
+   iframe is narrower and its `2vw` is a little smaller, off by a few pixels
+   in the middle of the clamp. Closing that gap would mean the shell passing
+   its own measured inset in. */
+.present-shell { --pad-x: clamp(12px, 2vw, 36px); }
 
 .session-id { display: flex; flex-direction: column; padding-bottom: 0.8em; min-width: 0; }
 .session-title { font-weight: 500; font-size: 0.85em; letter-spacing: 0.01em; white-space: nowrap; }
