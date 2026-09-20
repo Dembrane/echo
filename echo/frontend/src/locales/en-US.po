@@ -423,7 +423,7 @@ msgid "{0} of {1} trained"
 msgstr "{0} of {1} trained"
 
 #. placeholder {0}: shown.length
-#: src/components/results/curate/ArgumentsTab.tsx:330
+#: src/components/results/curate/ArgumentsTab.tsx:255
 msgid "{0} of {total}"
 msgstr "{0} of {total}"
 
@@ -446,7 +446,7 @@ msgstr "{0} phrases"
 
 #. placeholder {0}: item.attentionActor
 #: src/components/results/ResultRow.tsx:75
-#: src/components/results/curate/CurateMeta.tsx:71
+#: src/components/results/curate/CurateMeta.tsx:64
 msgid "{0} reworded this"
 msgstr "{0} reworded this"
 
@@ -468,6 +468,11 @@ msgstr "{0} seat(s) paid for this period and unused. Invite someone to fill them
 #: src/components/billing/BillingManager.tsx:1255
 msgid "{0} seats"
 msgstr "{0} seats"
+
+#. placeholder {0}: chosen.length
+#: src/components/results/curate/CurateTable.tsx:90
+msgid "{0} selected"
+msgstr "{0} selected"
 
 #. placeholder {0}: isAnnual ? "Yearly" : "Monthly"
 #. placeholder {1}: eur(withPendingValue)
@@ -553,6 +558,7 @@ msgid "{conversationCount} selected"
 msgstr "{conversationCount} selected"
 
 #: src/components/results/resultContent.ts:267
+#: src/components/results/curate/TensionsTab.tsx:56
 #: src/components/map/panels/ArgumentAccordion.tsx:29
 msgid "{conversations, plural, one {# conversation} other {# conversations}}"
 msgstr "{conversations, plural, one {# conversation} other {# conversations}}"
@@ -602,7 +608,7 @@ msgstr "{finishedConversationsCount, plural, one {Currently # conversation is re
 msgid "{from} → {to}"
 msgstr "{from} → {to}"
 
-#: src/components/results/curate/CuratePanel.tsx:286
+#: src/components/results/curate/CuratePanel.tsx:304
 msgid "{hiddenCount} hidden"
 msgstr "{hiddenCount} hidden"
 
@@ -984,7 +990,7 @@ msgstr "A switch without words shows nothing on the screen."
 msgid "A title and subtitle before the countdown."
 msgstr "A title and subtitle before the countdown."
 
-#: src/components/results/resultEditing.tsx:448
+#: src/components/results/resultEditing.tsx:482
 #: src/components/results/ResultItem.tsx:283
 msgid "A typo"
 msgstr "A typo"
@@ -1205,8 +1211,8 @@ msgid "Add a project goal before saving."
 msgstr "Add a project goal before saving."
 
 #: src/components/results/curate/CurateMeta.tsx:202
-msgid "add a reason"
-msgstr "add a reason"
+#~ msgid "add a reason"
+#~ msgstr "add a reason"
 
 #: src/components/workspace/gateWalls.ts:137
 msgid "add a workspace"
@@ -1475,8 +1481,8 @@ msgid "Affected by"
 msgstr "Affected by"
 
 #: src/components/results/ResultRow.tsx:107
-#: src/components/results/curate/ArgumentsTab.tsx:44
-#: src/components/results/curate/ArgumentsTab.tsx:305
+#: src/components/results/curate/ArgumentsTab.tsx:42
+#: src/components/results/curate/ArgumentsTab.tsx:230
 #: src/components/map/panels/ArgumentAccordion.tsx:186
 msgid "against"
 msgstr "against"
@@ -1514,7 +1520,7 @@ msgstr "Agentic chat"
 #: src/routes/admin/AdminSettingsRoute.tsx:2764
 #: src/components/workspace/OrganisationUsageRollup.tsx:564
 #: src/components/training/StaffTrainingPanel.tsx:117
-#: src/components/results/curate/ArgumentsTab.tsx:301
+#: src/components/results/curate/ArgumentsTab.tsx:226
 #: src/components/project/ProjectUsageAndSharing.tsx:257
 msgid "All"
 msgstr "All"
@@ -1531,7 +1537,7 @@ msgstr "All actions"
 msgid "All collections"
 msgstr "All collections"
 
-#: src/components/results/curate/ArgumentsTab.tsx:320
+#: src/components/results/curate/ArgumentsTab.tsx:245
 msgid "All conversations"
 msgstr "All conversations"
 
@@ -1827,7 +1833,6 @@ msgid "Another admin or owner will need to restore you."
 msgstr "Another admin or owner will need to restore you."
 
 #: src/components/results/ResultRow.tsx:314
-#: src/components/results/curate/CurateMeta.tsx:159
 msgid "another reason"
 msgstr "another reason"
 
@@ -2001,6 +2006,7 @@ msgstr "Argument tree (MST)"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:60
 #: src/components/results/ResultsList.tsx:267
+#: src/components/results/curate/CurateTabs.tsx:19
 #: src/components/map/attributes.ts:128
 #: src/components/map/panels/ArgumentAccordion.tsx:142
 msgid "Arguments"
@@ -2752,7 +2758,7 @@ msgstr "change project settings"
 msgid "Change role"
 msgstr "Change role"
 
-#: src/routes/project/present/PresentResultsPanel.tsx:124
+#: src/routes/project/present/PresentResultsPanel.tsx:139
 msgid "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 msgstr "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 
@@ -3014,6 +3020,7 @@ msgstr "City"
 #~ msgid "Claim · unverified"
 #~ msgstr "Claim · unverified"
 
+#: src/components/results/curate/CurateTable.tsx:114
 #: src/components/conversation/ProjectConversationsPanel.tsx:907
 msgid "Clear"
 msgstr "Clear"
@@ -3043,7 +3050,7 @@ msgstr "Cleared {cleared} of {total} conversations"
 msgid "Clearer sources in chat"
 msgstr "Clearer sources in chat"
 
-#: src/components/results/resultEditing.tsx:451
+#: src/components/results/resultEditing.tsx:485
 #: src/components/results/ResultItem.tsx:285
 msgid "Clearer words, same meaning"
 msgstr "Clearer words, same meaning"
@@ -3192,7 +3199,7 @@ msgid "Columns"
 msgstr "Columns"
 
 #: src/components/results/ResultRow.tsx:97
-#: src/components/results/curate/ArgumentsTab.tsx:176
+#: src/components/results/curate/ArgumentsTab.tsx:315
 msgid "combined"
 msgstr "combined"
 
@@ -3426,8 +3433,7 @@ msgid "conversation"
 msgstr "conversation"
 
 #: src/features/sidebar/hooks/useSearchHits.ts:224
-#: src/components/results/curate/ArgumentsTab.tsx:311
-#: src/components/results/curate/ArgumentsTab.tsx:357
+#: src/components/results/curate/ArgumentsTab.tsx:236
 #: src/components/map/attributes.ts:420
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:449
 #: src/components/conversation/ConversationDrilldownModal.tsx:298
@@ -3749,7 +3755,7 @@ msgstr "Could not save feedback"
 msgid "Could not save tags"
 msgstr "Could not save tags"
 
-#: src/components/analysis/hooks/index.ts:457
+#: src/components/analysis/hooks/index.ts:469
 msgid "Could not save the change. Try again."
 msgstr "Could not save the change. Try again."
 
@@ -3773,7 +3779,7 @@ msgstr "Could not send the invite email. Check email configuration."
 msgid "Could not send the report. Try again"
 msgstr "Could not send the report. Try again"
 
-#: src/components/analysis/hooks/index.ts:535
+#: src/components/analysis/hooks/index.ts:547
 msgid "Could not start this run. Try again."
 msgstr "Could not start this run. Try again."
 
@@ -3781,7 +3787,7 @@ msgstr "Could not start this run. Try again."
 msgid "Could not stop live"
 msgstr "Could not stop live"
 
-#: src/components/analysis/hooks/index.ts:554
+#: src/components/analysis/hooks/index.ts:566
 msgid "Could not stop this run. Try again."
 msgstr "Could not stop this run. Try again."
 
@@ -4760,6 +4766,8 @@ msgstr "Early features you can try on this project before they are ready for eve
 msgid "participant.button.echo"
 msgstr "ECHO"
 
+#: src/components/results/curate/RowTools.tsx:290
+#: src/components/results/curate/RowTools.tsx:336
 #: src/components/project/PortalSettingsOverview.tsx:116
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:647
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:234
@@ -5329,7 +5337,7 @@ msgstr "Fact check all ({pendingClaimCount})"
 msgid "Fact check this claim"
 msgstr "Fact check this claim"
 
-#: src/components/results/curate/ArgumentsTab.tsx:370
+#: src/components/results/curate/ArgumentsTab.tsx:282
 msgid "Fact-check"
 msgstr "Fact-check"
 
@@ -5561,6 +5569,10 @@ msgstr "Feedback portal"
 msgid "Feedback sent"
 msgstr "Feedback sent"
 
+#: src/components/results/curate/RowTools.tsx:37
+msgid "Felt heard"
+msgstr "Felt heard"
+
 #. placeholder {0}: errorFile.file.name
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
 #: src/components/dropzone/UploadConversationDropzone.tsx:577
@@ -5715,8 +5727,8 @@ msgid "Font Size"
 msgstr "Font Size"
 
 #: src/components/results/ResultRow.tsx:106
-#: src/components/results/curate/ArgumentsTab.tsx:42
-#: src/components/results/curate/ArgumentsTab.tsx:303
+#: src/components/results/curate/ArgumentsTab.tsx:40
+#: src/components/results/curate/ArgumentsTab.tsx:228
 #: src/components/map/panels/ArgumentAccordion.tsx:184
 msgid "for"
 msgstr "for"
@@ -6084,6 +6096,10 @@ msgstr "Goal"
 msgid "Goal saved"
 msgstr "Goal saved"
 
+#: src/components/results/curate/RowTools.tsx:228
+msgid "Good finding"
+msgstr "Good finding"
+
 #: src/components/feedback/ResponseFeedbackControls.tsx:147
 msgid "Good response"
 msgstr "Good response"
@@ -6166,7 +6182,6 @@ msgid "Hidden from organisation members. Organisation admins can still find and 
 msgstr "Hidden from organisation members. Organisation admins can still find and join."
 
 #: src/components/results/ResultRow.tsx:350
-#: src/components/results/curate/CurateMeta.tsx:173
 msgid "hidden from this presentation"
 msgstr "hidden from this presentation"
 
@@ -6178,10 +6193,8 @@ msgstr "Hidden gem"
 #: src/components/results/ResultRow.tsx:419
 #: src/components/results/ResultRow.tsx:423
 #: src/components/results/ResultItem.tsx:725
-#: src/components/results/curate/StakeholdersTab.tsx:134
-#: src/components/results/curate/CurateMeta.tsx:100
-#: src/components/results/curate/CurateMeta.tsx:104
-#: src/components/results/curate/ArgumentsTab.tsx:383
+#: src/components/results/curate/RowTools.tsx:302
+#: src/components/results/curate/CurateTable.tsx:98
 #: src/components/conversation/ConversationEdit.tsx:348
 msgid "Hide"
 msgstr "Hide"
@@ -6194,9 +6207,9 @@ msgstr "Hide data"
 msgid "Hide detail"
 msgstr "Hide detail"
 
-#: src/components/analysis/ResultRowActions.tsx:44
-#~ msgid "Hide from this presentation"
-#~ msgstr "Hide from this presentation"
+#: src/components/results/curate/RowTools.tsx:327
+msgid "Hide from this presentation"
+msgstr "Hide from this presentation"
 
 #: src/components/map/MapPage.tsx:614
 msgid "Hide missing arguments"
@@ -6246,7 +6259,7 @@ msgstr "history"
 #~ msgid "History"
 #~ msgstr "History"
 
-#: src/components/results/curate/CurateOpen.tsx:211
+#: src/components/results/curate/CurateOpen.tsx:204
 msgid "History / details"
 msgstr "History / details"
 
@@ -6324,8 +6337,8 @@ msgid "How should the phrases sound?"
 msgstr "How should the phrases sound?"
 
 #: src/components/results/curate/StakeholdersTab.tsx:130
-msgid "How they were named"
-msgstr "How they were named"
+#~ msgid "How they were named"
+#~ msgstr "How they were named"
 
 #: src/components/project/ProjectBasicEdit.tsx:129
 #~ msgid ""
@@ -6471,6 +6484,10 @@ msgstr "In the analysis"
 #: src/routes/settings/AgentConsentRoute.tsx:267
 msgid "In which organisations"
 msgstr "In which organisations"
+
+#: src/components/results/curate/RowTools.tsx:135
+msgid "In your own words"
+msgstr "In your own words"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1521
 #: src/routes/admin/AdminSettingsRoute.tsx:1743
@@ -7016,7 +7033,7 @@ msgstr "Kind"
 msgid "Kind of change not recorded"
 msgstr "Kind of change not recorded"
 
-#: src/components/results/curate/CurateTabs.tsx:76
+#: src/components/results/curate/CurateTabs.tsx:78
 msgid "Kinds of finding"
 msgstr "Kinds of finding"
 
@@ -7094,6 +7111,10 @@ msgstr "Learn more about webhooks"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:463
 msgid "Leave empty to keep existing"
 msgstr "Leave empty to keep existing"
+
+#: src/components/results/curate/RowTools.tsx:108
+msgid "Leave feedback"
+msgstr "Leave feedback"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1119
 msgid "Leave now"
@@ -7627,7 +7648,6 @@ msgstr "Many maps were started just now. Try again in a moment."
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:158
-#: src/components/results/curate/CurateTabs.tsx:17
 #: src/components/map/MapPage.tsx:545
 msgid "Map"
 msgstr "Map"
@@ -7858,7 +7878,7 @@ msgstr "Mollie is not configured in this environment, so no live transactions ar
 msgid "Monitor"
 msgstr "Monitor"
 
-#: src/components/results/curate/CurateOpen.tsx:81
+#: src/components/results/curate/CurateOpen.tsx:80
 #: src/components/chat/ChatTemplatesMenu.tsx:363
 msgid "more"
 msgstr "more"
@@ -7988,7 +8008,7 @@ msgstr "My templates"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:708
 #: src/routes/project/CreateProjectRoute.tsx:211
 #: src/routes/project/CreateProjectRoute.tsx:322
-#: src/components/results/curate/StakeholdersTab.tsx:121
+#: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:105
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:382
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:253
@@ -8100,7 +8120,7 @@ msgid "Never"
 msgstr "Never"
 
 #: src/components/results/ResultRow.tsx:64
-#: src/components/results/curate/CurateMeta.tsx:60
+#: src/components/results/curate/CurateMeta.tsx:53
 msgid "new"
 msgstr "new"
 
@@ -8278,6 +8298,10 @@ msgstr "No arguments saved yet."
 msgid "No arguments were found in this project's conversations."
 msgstr "No arguments were found in this project's conversations."
 
+#: src/components/results/curate/CuratePanel.tsx:47
+msgid "No arguments yet. They appear after the first analysis."
+msgstr "No arguments yet. They appear after the first analysis."
+
 #: src/components/settings/AuditLogsCard.tsx:630
 msgid "No audit logs match the current filters."
 msgstr "No audit logs match the current filters."
@@ -8424,8 +8448,8 @@ msgid "No logo set. dembrane default will be used."
 msgstr "No logo set. dembrane default will be used."
 
 #: src/components/results/curate/CuratePanel.tsx:45
-msgid "No map arguments yet. They appear after the first analysis."
-msgstr "No map arguments yet. They appear after the first analysis."
+#~ msgid "No map arguments yet. They appear after the first analysis."
+#~ msgstr "No map arguments yet. They appear after the first analysis."
 
 #: src/components/map/MapPage.tsx:476
 msgid "No map has been generated for this project yet."
@@ -8538,7 +8562,7 @@ msgstr "No pending invites"
 msgid "No popcorn saved yet."
 msgstr "No popcorn saved yet."
 
-#: src/components/results/curate/CuratePanel.tsx:37
+#: src/components/results/curate/CuratePanel.tsx:39
 msgid "No popcorn yet. They appear after the first analysis."
 msgstr "No popcorn yet. They appear after the first analysis."
 
@@ -8563,7 +8587,7 @@ msgstr "No projects found for search term"
 msgid "No projects match."
 msgstr "No projects match."
 
-#: src/components/results/curate/CurateOpen.tsx:266
+#: src/components/results/curate/CurateOpen.tsx:259
 msgid "No quotes were kept with this finding."
 msgstr "No quotes were kept with this finding."
 
@@ -8611,7 +8635,7 @@ msgstr "No selectable conversations"
 msgid "No stakeholders saved yet."
 msgstr "No stakeholders saved yet."
 
-#: src/components/results/curate/CuratePanel.tsx:41
+#: src/components/results/curate/CuratePanel.tsx:43
 msgid "No stakeholders yet. They appear after the first analysis."
 msgstr "No stakeholders yet. They appear after the first analysis."
 
@@ -8636,7 +8660,7 @@ msgstr "No templates match '{searchQuery}'"
 msgid "No tensions saved yet."
 msgstr "No tensions saved yet."
 
-#: src/components/results/curate/CuratePanel.tsx:39
+#: src/components/results/curate/CuratePanel.tsx:41
 msgid "No tensions yet. They appear after the first analysis."
 msgstr "No tensions yet. They appear after the first analysis."
 
@@ -8725,6 +8749,10 @@ msgstr "None in this view."
 msgid "None scheduled"
 msgstr "None scheduled"
 
+#: src/components/results/curate/RowTools.tsx:228
+msgid "Not a good finding"
+msgstr "Not a good finding"
+
 #: src/components/invite/EmailChipsInput.tsx:374
 msgid "Not a valid email."
 msgstr "Not a valid email."
@@ -8764,7 +8792,7 @@ msgstr "not in this presentation"
 #~ msgid "Not in this presentation"
 #~ msgstr "Not in this presentation"
 
-#: src/components/results/curate/CuratePanel.tsx:298
+#: src/components/results/curate/CuratePanel.tsx:316
 msgid "Not in this presentation."
 msgstr "Not in this presentation."
 
@@ -8788,9 +8816,17 @@ msgstr "Not on managed billing. Set to managed to invoice this account at the {t
 msgid "Not placed on the map"
 msgstr "Not placed on the map"
 
+#: src/components/results/curate/RowTools.tsx:39
+msgid "Not recognizable"
+msgstr "Not recognizable"
+
 #: src/components/map/panels/shared.tsx:98
 msgid "Not recorded"
 msgstr "Not recorded"
+
+#: src/components/results/curate/RowTools.tsx:41
+msgid "Not relevant"
+msgstr "Not relevant"
 
 #: src/components/billing/BillingManager.tsx:1232
 msgid "Not renewing"
@@ -8860,7 +8896,7 @@ msgstr "Nothing here for you yet."
 msgid "nothing here yet"
 msgstr "nothing here yet"
 
-#: src/components/results/curate/CuratePanel.tsx:198
+#: src/components/results/curate/CuratePanel.tsx:202
 msgid "Nothing is hidden from this presentation."
 msgstr "Nothing is hidden from this presentation."
 
@@ -8915,7 +8951,7 @@ msgstr "Observers are free, read-only guests. To give edit access, remove them a
 msgid "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 msgstr "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 
-#: src/components/results/curate/CurateTabs.tsx:103
+#: src/components/results/curate/CurateTabs.tsx:105
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:170
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:349
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:540
@@ -8932,7 +8968,6 @@ msgid "Off numbers the conversations. On shows the name typed on the phone, whic
 msgstr "Off numbers the conversations. On shows the name typed on the phone, which may be a person's."
 
 #: src/components/results/ResultRow.tsx:301
-#: src/components/results/curate/CurateMeta.tsx:152
 msgid "off topic for this room"
 msgstr "off topic for this room"
 
@@ -8984,7 +9019,7 @@ msgid "One big event at the end of the year"
 msgstr "One big event at the end of the year"
 
 #: src/components/results/ResultRow.tsx:68
-#: src/components/results/curate/CurateMeta.tsx:64
+#: src/components/results/curate/CurateMeta.tsx:57
 msgid "one conversation only"
 msgstr "one conversation only"
 
@@ -9001,18 +9036,17 @@ msgid "One number"
 msgstr "One number"
 
 #: src/components/results/ResultRow.tsx:70
-#: src/components/results/curate/CurateMeta.tsx:66
+#: src/components/results/curate/CurateMeta.tsx:59
 msgid "one quote only"
 msgstr "one quote only"
 
 #: src/components/results/ResultRow.tsx:289
-#: src/components/results/curate/CurateMeta.tsx:140
 msgid "One sentence, for the people you work with and anyone who checks later."
 msgstr "One sentence, for the people you work with and anyone who checks later."
 
 #: src/components/results/ResultRow.tsx:216
 #: src/components/results/ResultItem.tsx:152
-#: src/components/results/curate/TensionsTab.tsx:76
+#: src/components/results/curate/TensionsTab.tsx:110
 msgid "One side of this tension"
 msgstr "One side of this tension"
 
@@ -9139,7 +9173,8 @@ msgstr "Open host guide"
 
 #: src/routes/project/present/PresentRoute.tsx:806
 #: src/components/results/ResultItem.tsx:850
-#: src/components/results/curate/CurateOpen.tsx:202
+#: src/components/results/curate/RowTools.tsx:345
+#: src/components/results/curate/RowTools.tsx:348
 msgid "Open in Analysis"
 msgstr "Open in Analysis"
 
@@ -9397,6 +9432,10 @@ msgstr "Original language"
 #: src/components/feedback/reasons.ts:27
 msgid "Other"
 msgstr "Other"
+
+#: src/components/results/curate/RowTools.tsx:45
+msgid "Other, namely"
+msgstr "Other, namely"
 
 #: src/components/release/releaseHistory.ts:803
 msgid "Our first major release"
@@ -9956,9 +9995,9 @@ msgstr "Popcorn also in"
 msgid "Popcorn could not be loaded. Try again in a moment."
 msgstr "Popcorn could not be loaded. Try again in a moment."
 
-#: src/components/present/AudienceMapAdapter.tsx:181
-#~ msgid "Popcorn phrase"
-#~ msgstr "Popcorn phrase"
+#: src/components/results/curate/PopcornTab.tsx:50
+msgid "Popcorn phrase"
+msgstr "Popcorn phrase"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:62
 msgid "Popcorn phrases"
@@ -10639,6 +10678,10 @@ msgstr "Recipes"
 msgid "Recipes could not be loaded."
 msgstr "Recipes could not be loaded."
 
+#: src/components/results/curate/RowTools.tsx:33
+msgid "Recognizable"
+msgstr "Recognizable"
+
 #: src/components/settings/TwoFactorSettingsCard.tsx:338
 msgid "Recommended apps"
 msgstr "Recommended apps"
@@ -10851,6 +10894,10 @@ msgstr "Release video"
 msgid "Release video: {0}"
 msgstr "Release video: {0}"
 
+#: src/components/results/curate/RowTools.tsx:35
+msgid "Relevant"
+msgstr "Relevant"
+
 #: src/components/error/ErrorPage.tsx:84
 #: src/components/error/ErrorBoundary.tsx:54
 msgid "Reload page"
@@ -11002,7 +11049,6 @@ msgid "Reopen"
 msgstr "Reopen"
 
 #: src/components/results/ResultRow.tsx:300
-#: src/components/results/curate/CurateMeta.tsx:151
 msgid "repeats another finding"
 msgstr "repeats another finding"
 
@@ -11279,8 +11325,6 @@ msgstr "Response feedback"
 #: src/components/results/ResultRow.tsx:406
 #: src/components/results/ResultRow.tsx:410
 #: src/components/results/ResultItem.tsx:725
-#: src/components/results/curate/CurateMeta.tsx:87
-#: src/components/results/curate/CurateMeta.tsx:91
 msgid "Restore"
 msgstr "Restore"
 
@@ -11333,7 +11377,7 @@ msgstr "Restoring that wording."
 msgid "Results"
 msgstr "Results"
 
-#: src/routes/project/present/PresentResultsPanel.tsx:138
+#: src/routes/project/present/PresentResultsPanel.tsx:153
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:115
 msgid "Results could not be loaded."
 msgstr "Results could not be loaded."
@@ -11453,8 +11497,8 @@ msgstr "Review my project settings and suggest improvements."
 msgid "Review processing status for every conversation collected in this project."
 msgstr "Review processing status for every conversation collected in this project."
 
-#: src/routes/project/present/PresentResultsPanel.tsx:115
-#: src/routes/project/present/PresentResultsPanel.tsx:121
+#: src/routes/project/present/PresentResultsPanel.tsx:130
+#: src/routes/project/present/PresentResultsPanel.tsx:136
 msgid "Review results"
 msgstr "Review results"
 
@@ -11527,7 +11571,7 @@ msgstr "Revoked"
 msgid "Right-click to highlight"
 msgstr "Right-click to highlight"
 
-#: src/components/results/curate/StakeholdersTab.tsx:124
+#: src/components/results/curate/StakeholdersTab.tsx:48
 #: src/components/invite/RoleSelect.tsx:78
 msgid "Role"
 msgstr "Role"
@@ -11603,9 +11647,8 @@ msgstr "Sample popcorn session"
 #: src/components/settings/LegalBasisCard.tsx:232
 #: src/components/settings/ChangePasswordCard.tsx:101
 #: src/components/settings/AccountSettingsCard.tsx:195
-#: src/components/results/resultEditing.tsx:445
+#: src/components/results/resultEditing.tsx:479
 #: src/components/results/ReasonPrompt.tsx:229
-#: src/components/results/curate/CurateMeta.tsx:145
 #: src/components/project/CustomTopicModal.tsx:260
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:373
 #: src/components/goal/ProjectGoalSection.tsx:150
@@ -11662,15 +11705,15 @@ msgstr "Saved"
 msgid "Saved appearance settings apply when the page first loads."
 msgstr "Saved appearance settings apply when the page first loads."
 
-#: src/components/results/resultEditing.tsx:532
+#: src/components/results/resultEditing.tsx:566
 msgid "Saved as a change of meaning."
 msgstr "Saved as a change of meaning."
 
-#: src/components/results/resultEditing.tsx:528
+#: src/components/results/resultEditing.tsx:562
 msgid "Saved as a typo."
 msgstr "Saved as a typo."
 
-#: src/components/results/resultEditing.tsx:530
+#: src/components/results/resultEditing.tsx:564
 msgid "Saved as clearer words."
 msgstr "Saved as clearer words."
 
@@ -11795,7 +11838,7 @@ msgstr "Search account, workspace, organisation, email, tier"
 msgid "Search and select the conversations for this chat."
 msgstr "Search and select the conversations for this chat."
 
-#: src/components/results/curate/ArgumentsTab.tsx:276
+#: src/components/results/curate/ArgumentsTab.tsx:201
 msgid "Search arguments"
 msgstr "Search arguments"
 
@@ -12069,6 +12112,10 @@ msgstr "Select conversations and find exact quotes"
 msgid "Select conversations from sidebar"
 msgstr "Select conversations from sidebar"
 
+#: src/components/results/curate/CurateTable.tsx:126
+msgid "Select every finding shown"
+msgstr "Select every finding shown"
+
 #: src/components/release/releaseHistory.ts:470
 msgid "Select multiple conversations"
 msgstr "Select multiple conversations"
@@ -12093,6 +12140,10 @@ msgstr "Select the instructions that will be shown to participants when they sta
 #: src/components/project/ProjectPortalEditor.tsx:789
 msgid "Select the type of feedback or engagement you want to encourage."
 msgstr "Select the type of feedback or engagement you want to encourage."
+
+#: src/components/results/curate/CurateTable.tsx:200
+msgid "Select this finding"
+msgstr "Select this finding"
 
 #: src/components/project/ProjectPortalEditor.tsx:684
 msgid "Select tutorial"
@@ -12156,6 +12207,10 @@ msgstr "Send"
 #: src/components/invite/InviteModal.tsx:776
 msgid "Send {0} invites"
 msgstr "Send {0} invites"
+
+#: src/components/results/curate/RowTools.tsx:145
+msgid "Send feedback"
+msgstr "Send feedback"
 
 #: src/components/project/ProjectSharingModal.tsx:511
 #: src/components/invite/InviteModal.tsx:778
@@ -12445,15 +12500,20 @@ msgstr "Show a disclosure"
 msgid "Show a frame"
 msgstr "Show a frame"
 
+#: src/components/results/curate/RowTools.tsx:327
+#: src/components/results/curate/CurateTable.tsx:106
+msgid "Show again"
+msgstr "Show again"
+
 #. placeholder {0}: shown.length
 #. placeholder {0}: ordered.length
-#: src/components/results/curate/ArgumentsTab.tsx:411
+#: src/components/results/curate/ArgumentsTab.tsx:368
 #: src/components/map/panels/ArgumentAccordion.tsx:299
 msgid "Show all {0}"
 msgstr "Show all {0}"
 
 #: src/components/results/ResultsList.tsx:413
-#: src/components/results/curate/CuratePanel.tsx:244
+#: src/components/results/curate/CuratePanel.tsx:255
 msgid "Show all {total}"
 msgstr "Show all {total}"
 
@@ -12665,16 +12725,16 @@ msgstr "Someone"
 msgid "Someone changed this while you had it open. Open it again to see their version."
 msgstr "Someone changed this while you had it open. Open it again to see their version."
 
-#: src/components/results/resultEditing.tsx:79
+#: src/components/results/resultEditing.tsx:83
 msgid "Someone else"
 msgstr "Someone else"
 
 #: src/components/results/ResultRow.tsx:77
-#: src/components/results/curate/CurateMeta.tsx:73
+#: src/components/results/curate/CurateMeta.tsx:66
 msgid "Someone reworded this"
 msgstr "Someone reworded this"
 
-#: src/components/results/resultEditing.tsx:504
+#: src/components/results/resultEditing.tsx:538
 msgid "Someone reworded this after you did. Their words stand. Open it to read them"
 msgstr "Someone reworded this after you did. Their words stand. Open it to read them"
 
@@ -12767,6 +12827,13 @@ msgstr "Sorry, we cannot process this request due to an LLM provider's content p
 msgid "Sort"
 msgstr "Sort"
 
+#: src/components/results/curate/TensionsTab.tsx:84
+#: src/components/results/curate/StakeholdersTab.tsx:54
+#: src/components/results/curate/PopcornTab.tsx:53
+#: src/components/results/curate/ArgumentsTab.tsx:276
+msgid "Source"
+msgstr "Source"
+
 #. placeholder {0}: index + 1
 #: src/components/chat/Sources.tsx:51
 msgid "Source {0}"
@@ -12844,7 +12911,7 @@ msgstr "Staff only"
 msgid "Staff-created"
 msgstr "Staff-created"
 
-#: src/components/results/curate/StakeholdersTab.tsx:127
+#: src/components/results/curate/StakeholdersTab.tsx:51
 msgid "Stake"
 msgstr "Stake"
 
@@ -12864,7 +12931,7 @@ msgstr "Stakeholders"
 msgid "Stakeholders tab"
 msgstr "Stakeholders tab"
 
-#: src/components/results/curate/ArgumentsTab.tsx:344
+#: src/components/results/curate/ArgumentsTab.tsx:270
 msgid "Stance"
 msgstr "Stance"
 
@@ -12923,7 +12990,7 @@ msgstr "Started recording"
 msgid "Starts"
 msgstr "Starts"
 
-#: src/components/results/curate/ArgumentsTab.tsx:340
+#: src/components/results/curate/ArgumentsTab.tsx:266
 msgid "Statement"
 msgstr "Statement"
 
@@ -13312,6 +13379,7 @@ msgstr "Template updated"
 msgid "Templates"
 msgstr "Templates"
 
+#: src/components/results/curate/TensionsTab.tsx:81
 #: src/components/map/attributes.ts:163
 msgid "Tension"
 msgstr "Tension"
@@ -13372,11 +13440,15 @@ msgstr "Thank you! We will get in touch as soon as possible. You can also write 
 msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
 msgstr "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
 
+#: src/components/results/curate/RowTools.tsx:277
+msgid "Thanks! That helps a lot."
+msgstr "Thanks! That helps a lot."
+
 #: src/routes/auth/Login.tsx:203
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "That code didn't work. Try again with a fresh code from your authenticator app."
 
-#: src/components/results/resultEditing.tsx:513
+#: src/components/results/resultEditing.tsx:547
 msgid "That did not save. Your words are still here."
 msgstr "That did not save. Your words are still here."
 
@@ -13484,8 +13556,8 @@ msgstr "The fact-check could not be started."
 
 #: src/components/results/ResultRow.tsx:72
 #: src/components/results/ResultRow.tsx:94
-#: src/components/results/curate/CurateMeta.tsx:68
-#: src/components/results/curate/ArgumentsTab.tsx:56
+#: src/components/results/curate/CurateMeta.tsx:61
+#: src/components/results/curate/ArgumentsTab.tsx:54
 msgid "the fact-check disagrees"
 msgstr "the fact-check disagrees"
 
@@ -13592,7 +13664,7 @@ msgstr "The map is being generated. It appears here when it is ready."
 msgid "The map loads after you choose to open it."
 msgstr "The map loads after you choose to open it."
 
-#: src/components/results/resultEditing.tsx:455
+#: src/components/results/resultEditing.tsx:489
 #: src/components/results/ResultItem.tsx:287
 msgid "The meaning"
 msgstr "The meaning"
@@ -13614,7 +13686,7 @@ msgid "The microphone is still blocked. Change it in your browser settings, then
 msgstr "The microphone is still blocked. Change it in your browser settings, then check again."
 
 #: src/components/results/ResultItem.tsx:174
-#: src/components/results/curate/StakeholdersTab.tsx:45
+#: src/components/results/curate/StakeholdersTab.tsx:74
 msgid "The name of this stakeholder"
 msgstr "The name of this stakeholder"
 
@@ -13637,7 +13709,7 @@ msgstr "The original statements are unavailable for this older result."
 
 #: src/components/results/ResultRow.tsx:230
 #: src/components/results/ResultItem.tsx:165
-#: src/components/results/curate/TensionsTab.tsx:88
+#: src/components/results/curate/TensionsTab.tsx:122
 msgid "The other side of this tension"
 msgstr "The other side of this tension"
 
@@ -13753,8 +13825,8 @@ msgstr "The words around the results: tabs, buttons and explanations."
 #: src/components/results/ResultRow.tsx:241
 #: src/components/results/ResultItem.tsx:172
 #: src/components/results/ResultItem.tsx:176
-#: src/components/results/curate/PopcornTab.tsx:67
-#: src/components/results/curate/ArgumentsTab.tsx:168
+#: src/components/results/curate/PopcornTab.tsx:74
+#: src/components/results/curate/ArgumentsTab.tsx:305
 msgid "The words of this finding"
 msgstr "The words of this finding"
 
@@ -14181,7 +14253,7 @@ msgid "This sets the language participants see in the portal, including the ques
 msgstr "This sets the language participants see in the portal, including the questions they are asked."
 
 #: src/components/results/ResultItem.tsx:202
-#: src/components/results/curate/StakeholdersTab.tsx:53
+#: src/components/results/curate/StakeholdersTab.tsx:83
 msgid "This stakeholder's role"
 msgstr "This stakeholder's role"
 
@@ -14277,6 +14349,10 @@ msgstr "Tick anything that applies."
 msgid "Tick anything that fits."
 msgstr "Tick anything that fits."
 
+#: src/components/results/curate/RowTools.tsx:111
+msgid "Tick as many as relevant"
+msgstr "Tick as many as relevant"
+
 #: src/routes/project/CreateProjectRoute.tsx:386
 #: src/routes/admin/AdminSettingsRoute.tsx:1581
 #: src/routes/admin/AdminSettingsRoute.tsx:2660
@@ -14360,13 +14436,18 @@ msgstr "To promote to a workspace member, add this person to the organisation fi
 msgid "To resolve"
 msgstr "To resolve"
 
-#: src/components/results/curate/TensionsTab.tsx:103
+#: src/components/results/curate/TensionsTab.tsx:141
+#: src/components/results/curate/TensionsTab.tsx:199
 msgid "To resolve:"
 msgstr "To resolve:"
 
 #: src/components/billing/BillingManager.tsx:681
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
 msgstr "To talk about what you need, email <0>support@dembrane.com</0>."
+
+#: src/components/results/curate/RowTools.tsx:43
+msgid "Tone deaf"
+msgstr "Tone deaf"
 
 #. js-lingui-explicit-id
 #: src/components/conversation/SelectAllConfirmationModal.tsx:565
@@ -14394,6 +14475,10 @@ msgstr "Too many to list here. The assistant reads through them in batches."
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:82
 msgid "Tool"
 msgstr "Tool"
+
+#: src/components/results/curate/CurateTable.tsx:133
+msgid "Tools"
+msgstr "Tools"
 
 #: src/components/project/hooks/index.ts:671
 msgid "Topic created successfully"
@@ -14616,7 +14701,7 @@ msgstr "Trouble logging in? Contact support@dembrane.com."
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:413
 #: src/routes/invite/MyInvitesRoute.tsx:222
 #: src/routes/invite/AcceptInviteRoute.tsx:557
-#: src/components/results/resultEditing.tsx:520
+#: src/components/results/resultEditing.tsx:554
 #: src/components/project/ProjectAccessGuard.tsx:109
 #: src/components/pricing/PricingTextInput.tsx:330
 #: src/components/present/TranslationStatus.tsx:143
@@ -14767,9 +14852,8 @@ msgstr "Under your organisation"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:566
 #: src/routes/project/chat/NewChatRoute.tsx:312
-#: src/components/results/resultEditing.tsx:539
+#: src/components/results/resultEditing.tsx:573
 #: src/components/results/ResultRow.tsx:367
-#: src/components/results/curate/CurateMeta.tsx:186
 #: src/components/chat/AgenticChatPanel.tsx:1662
 msgid "Undo"
 msgstr "Undo"
@@ -15640,7 +15724,7 @@ msgstr "What are you trying to learn?"
 msgid "What data is sent?"
 msgstr "What data is sent?"
 
-#: src/components/results/resultEditing.tsx:436
+#: src/components/results/resultEditing.tsx:470
 msgid "What did you change?"
 msgstr "What did you change?"
 
@@ -15666,7 +15750,7 @@ msgid "What happened? Paste a screenshot here to attach it"
 msgstr "What happened? Paste a screenshot here to attach it"
 
 #: src/components/results/ResultItem.tsx:207
-#: src/components/results/curate/StakeholdersTab.tsx:62
+#: src/components/results/curate/StakeholdersTab.tsx:91
 msgid "What is at stake here"
 msgstr "What is at stake here"
 
@@ -15699,7 +15783,7 @@ msgid "What this project is consuming this cycle."
 msgstr "What this project is consuming this cycle."
 
 #: src/components/results/ResultItem.tsx:186
-#: src/components/results/curate/TensionsTab.tsx:97
+#: src/components/results/curate/TensionsTab.tsx:131
 msgid "What this tension is about"
 msgstr "What this tension is about"
 
@@ -15712,7 +15796,7 @@ msgid "What were the key moments in this conversation?"
 msgstr "What were the key moments in this conversation?"
 
 #: src/components/results/ResultItem.tsx:196
-#: src/components/results/curate/TensionsTab.tsx:108
+#: src/components/results/curate/TensionsTab.tsx:146
 msgid "What would resolve this tension"
 msgstr "What would resolve this tension"
 
@@ -15826,13 +15910,12 @@ msgid "Who on your team holds a current training license. Book a training from y
 msgstr "Who on your team holds a current training license. Book a training from your organisation's Training view."
 
 #: src/components/results/ResultRow.tsx:286
-#: src/components/results/curate/CurateMeta.tsx:138
 msgid "Why not in this presentation?"
 msgstr "Why not in this presentation?"
 
-#: src/components/results/resultEditing.tsx:440
+#: src/components/results/resultEditing.tsx:474
 #: src/components/results/ResultItem.tsx:746
-#: src/components/results/curate/CurateOpen.tsx:142
+#: src/components/results/curate/CurateOpen.tsx:141
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
 msgstr "Why? One sentence, for the people you work with and anyone who checks later."
 
@@ -15854,12 +15937,12 @@ msgstr "With several lines, the first reads as a subtitle."
 
 #: src/components/results/ResultItem.tsx:751
 #: src/components/results/ResultItem.tsx:774
-#: src/components/results/curate/CurateOpen.tsx:147
+#: src/components/results/curate/CurateOpen.tsx:146
 msgid "Withdraw"
 msgstr "Withdraw"
 
-#: src/components/results/curate/CurateOpen.tsx:153
-#: src/components/results/curate/CurateOpen.tsx:195
+#: src/components/results/curate/CurateOpen.tsx:152
+#: src/components/results/curate/CurateOpen.tsx:194
 msgid "Withdraw from the analysis"
 msgstr "Withdraw from the analysis"
 
@@ -15869,7 +15952,7 @@ msgstr "Withdraw from the analysis"
 #~ msgid "Withdraw result"
 #~ msgstr "Withdraw result"
 
-#: src/components/results/curate/CurateOpen.tsx:140
+#: src/components/results/curate/CurateOpen.tsx:139
 msgid "Withdraw this from the analysis?"
 msgstr "Withdraw this from the analysis?"
 
@@ -15886,7 +15969,7 @@ msgid "Withdrawn"
 msgstr "Withdrawn"
 
 #: src/components/results/ResultItem.tsx:289
-#: src/components/results/curate/CurateOpen.tsx:185
+#: src/components/results/curate/CurateOpen.tsx:184
 msgid "Withdrawn from the analysis"
 msgstr "Withdrawn from the analysis"
 
@@ -16572,7 +16655,7 @@ msgstr "Your Views"
 msgid "Your workspace is waiting for you. Click continue to collaborate."
 msgstr "Your workspace is waiting for you. Click continue to collaborate."
 
-#: src/components/results/resultEditing.tsx:495
+#: src/components/results/resultEditing.tsx:529
 msgid "Yours"
 msgstr "Yours"
 

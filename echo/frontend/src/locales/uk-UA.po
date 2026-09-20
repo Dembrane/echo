@@ -423,7 +423,7 @@ msgid "{0} of {1} trained"
 msgstr ""
 
 #. placeholder {0}: shown.length
-#: src/components/results/curate/ArgumentsTab.tsx:330
+#: src/components/results/curate/ArgumentsTab.tsx:255
 msgid "{0} of {total}"
 msgstr ""
 
@@ -446,7 +446,7 @@ msgstr ""
 
 #. placeholder {0}: item.attentionActor
 #: src/components/results/ResultRow.tsx:75
-#: src/components/results/curate/CurateMeta.tsx:71
+#: src/components/results/curate/CurateMeta.tsx:64
 msgid "{0} reworded this"
 msgstr "{0} це переписав"
 
@@ -467,6 +467,11 @@ msgstr ""
 #: src/components/invite/WorkspaceSelectList.tsx:128
 #: src/components/billing/BillingManager.tsx:1255
 msgid "{0} seats"
+msgstr ""
+
+#. placeholder {0}: chosen.length
+#: src/components/results/curate/CurateTable.tsx:90
+msgid "{0} selected"
 msgstr ""
 
 #. placeholder {0}: isAnnual ? "Yearly" : "Monthly"
@@ -553,6 +558,7 @@ msgid "{conversationCount} selected"
 msgstr "{conversationCount} selected"
 
 #: src/components/results/resultContent.ts:267
+#: src/components/results/curate/TensionsTab.tsx:56
 #: src/components/map/panels/ArgumentAccordion.tsx:29
 msgid "{conversations, plural, one {# conversation} other {# conversations}}"
 msgstr "{conversations, plural, one {# розмова} few {# розмови} many {# розмов} other {# розмови}}"
@@ -602,7 +608,7 @@ msgstr "{finishedConversationsCount, plural, one {Currently # conversation is re
 msgid "{from} → {to}"
 msgstr ""
 
-#: src/components/results/curate/CuratePanel.tsx:286
+#: src/components/results/curate/CuratePanel.tsx:304
 msgid "{hiddenCount} hidden"
 msgstr ""
 
@@ -984,7 +990,7 @@ msgstr ""
 msgid "A title and subtitle before the countdown."
 msgstr ""
 
-#: src/components/results/resultEditing.tsx:448
+#: src/components/results/resultEditing.tsx:482
 #: src/components/results/ResultItem.tsx:283
 msgid "A typo"
 msgstr "Помилка друку"
@@ -1205,8 +1211,8 @@ msgid "Add a project goal before saving."
 msgstr ""
 
 #: src/components/results/curate/CurateMeta.tsx:202
-msgid "add a reason"
-msgstr ""
+#~ msgid "add a reason"
+#~ msgstr ""
 
 #: src/components/workspace/gateWalls.ts:137
 msgid "add a workspace"
@@ -1475,8 +1481,8 @@ msgid "Affected by"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:107
-#: src/components/results/curate/ArgumentsTab.tsx:44
-#: src/components/results/curate/ArgumentsTab.tsx:305
+#: src/components/results/curate/ArgumentsTab.tsx:42
+#: src/components/results/curate/ArgumentsTab.tsx:230
 #: src/components/map/panels/ArgumentAccordion.tsx:186
 msgid "against"
 msgstr "проти"
@@ -1514,7 +1520,7 @@ msgstr ""
 #: src/routes/admin/AdminSettingsRoute.tsx:2764
 #: src/components/workspace/OrganisationUsageRollup.tsx:564
 #: src/components/training/StaffTrainingPanel.tsx:117
-#: src/components/results/curate/ArgumentsTab.tsx:301
+#: src/components/results/curate/ArgumentsTab.tsx:226
 #: src/components/project/ProjectUsageAndSharing.tsx:257
 msgid "All"
 msgstr "All"
@@ -1531,7 +1537,7 @@ msgstr "All actions"
 msgid "All collections"
 msgstr "All collections"
 
-#: src/components/results/curate/ArgumentsTab.tsx:320
+#: src/components/results/curate/ArgumentsTab.tsx:245
 msgid "All conversations"
 msgstr ""
 
@@ -1827,7 +1833,6 @@ msgid "Another admin or owner will need to restore you."
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:314
-#: src/components/results/curate/CurateMeta.tsx:159
 msgid "another reason"
 msgstr "інша причина"
 
@@ -2001,6 +2006,7 @@ msgstr ""
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:60
 #: src/components/results/ResultsList.tsx:267
+#: src/components/results/curate/CurateTabs.tsx:19
 #: src/components/map/attributes.ts:128
 #: src/components/map/panels/ArgumentAccordion.tsx:142
 msgid "Arguments"
@@ -2752,7 +2758,7 @@ msgstr ""
 msgid "Change role"
 msgstr ""
 
-#: src/routes/project/present/PresentResultsPanel.tsx:124
+#: src/routes/project/present/PresentResultsPanel.tsx:139
 msgid "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 msgstr "Зміни слова, прочитай докази або залиш висновок поза цією презентацією. Спільні результати лишаються в Аналізі."
 
@@ -3014,6 +3020,7 @@ msgstr ""
 #~ msgid "Claim · unverified"
 #~ msgstr ""
 
+#: src/components/results/curate/CurateTable.tsx:114
 #: src/components/conversation/ProjectConversationsPanel.tsx:907
 msgid "Clear"
 msgstr ""
@@ -3043,7 +3050,7 @@ msgstr ""
 msgid "Clearer sources in chat"
 msgstr "Зрозуміліші джерела в чаті"
 
-#: src/components/results/resultEditing.tsx:451
+#: src/components/results/resultEditing.tsx:485
 #: src/components/results/ResultItem.tsx:285
 msgid "Clearer words, same meaning"
 msgstr "Зрозуміліші слова, той самий зміст"
@@ -3192,7 +3199,7 @@ msgid "Columns"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:97
-#: src/components/results/curate/ArgumentsTab.tsx:176
+#: src/components/results/curate/ArgumentsTab.tsx:315
 msgid "combined"
 msgstr "об'єднано"
 
@@ -3426,8 +3433,7 @@ msgid "conversation"
 msgstr "conversation"
 
 #: src/features/sidebar/hooks/useSearchHits.ts:224
-#: src/components/results/curate/ArgumentsTab.tsx:311
-#: src/components/results/curate/ArgumentsTab.tsx:357
+#: src/components/results/curate/ArgumentsTab.tsx:236
 #: src/components/map/attributes.ts:420
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:449
 #: src/components/conversation/ConversationDrilldownModal.tsx:298
@@ -3749,7 +3755,7 @@ msgstr "Відгук не збережено"
 msgid "Could not save tags"
 msgstr ""
 
-#: src/components/analysis/hooks/index.ts:457
+#: src/components/analysis/hooks/index.ts:469
 msgid "Could not save the change. Try again."
 msgstr ""
 
@@ -3773,7 +3779,7 @@ msgstr ""
 msgid "Could not send the report. Try again"
 msgstr "Не вдалося надіслати повідомлення. Спробуйте ще раз"
 
-#: src/components/analysis/hooks/index.ts:535
+#: src/components/analysis/hooks/index.ts:547
 msgid "Could not start this run. Try again."
 msgstr ""
 
@@ -3781,7 +3787,7 @@ msgstr ""
 msgid "Could not stop live"
 msgstr ""
 
-#: src/components/analysis/hooks/index.ts:554
+#: src/components/analysis/hooks/index.ts:566
 msgid "Could not stop this run. Try again."
 msgstr ""
 
@@ -4760,6 +4766,8 @@ msgstr ""
 msgid "participant.button.echo"
 msgstr "ECHO"
 
+#: src/components/results/curate/RowTools.tsx:290
+#: src/components/results/curate/RowTools.tsx:336
 #: src/components/project/PortalSettingsOverview.tsx:116
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:647
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:234
@@ -5329,7 +5337,7 @@ msgstr ""
 msgid "Fact check this claim"
 msgstr ""
 
-#: src/components/results/curate/ArgumentsTab.tsx:370
+#: src/components/results/curate/ArgumentsTab.tsx:282
 msgid "Fact-check"
 msgstr ""
 
@@ -5561,6 +5569,10 @@ msgstr "Feedback portal"
 msgid "Feedback sent"
 msgstr "Відгук надіслано"
 
+#: src/components/results/curate/RowTools.tsx:37
+msgid "Felt heard"
+msgstr ""
+
 #. placeholder {0}: errorFile.file.name
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
 #: src/components/dropzone/UploadConversationDropzone.tsx:577
@@ -5715,8 +5727,8 @@ msgid "Font Size"
 msgstr "Font Size"
 
 #: src/components/results/ResultRow.tsx:106
-#: src/components/results/curate/ArgumentsTab.tsx:42
-#: src/components/results/curate/ArgumentsTab.tsx:303
+#: src/components/results/curate/ArgumentsTab.tsx:40
+#: src/components/results/curate/ArgumentsTab.tsx:228
 #: src/components/map/panels/ArgumentAccordion.tsx:184
 msgid "for"
 msgstr "за"
@@ -6084,6 +6096,10 @@ msgstr ""
 msgid "Goal saved"
 msgstr ""
 
+#: src/components/results/curate/RowTools.tsx:228
+msgid "Good finding"
+msgstr ""
+
 #: src/components/feedback/ResponseFeedbackControls.tsx:147
 msgid "Good response"
 msgstr "Гарна відповідь"
@@ -6166,7 +6182,6 @@ msgid "Hidden from organisation members. Organisation admins can still find and 
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:350
-#: src/components/results/curate/CurateMeta.tsx:173
 msgid "hidden from this presentation"
 msgstr ""
 
@@ -6178,10 +6193,8 @@ msgstr "Hidden gem"
 #: src/components/results/ResultRow.tsx:419
 #: src/components/results/ResultRow.tsx:423
 #: src/components/results/ResultItem.tsx:725
-#: src/components/results/curate/StakeholdersTab.tsx:134
-#: src/components/results/curate/CurateMeta.tsx:100
-#: src/components/results/curate/CurateMeta.tsx:104
-#: src/components/results/curate/ArgumentsTab.tsx:383
+#: src/components/results/curate/RowTools.tsx:302
+#: src/components/results/curate/CurateTable.tsx:98
 #: src/components/conversation/ConversationEdit.tsx:348
 msgid "Hide"
 msgstr "Сховати"
@@ -6194,9 +6207,9 @@ msgstr "Hide data"
 msgid "Hide detail"
 msgstr ""
 
-#: src/components/analysis/ResultRowActions.tsx:44
-#~ msgid "Hide from this presentation"
-#~ msgstr ""
+#: src/components/results/curate/RowTools.tsx:327
+msgid "Hide from this presentation"
+msgstr ""
 
 #: src/components/map/MapPage.tsx:614
 msgid "Hide missing arguments"
@@ -6246,7 +6259,7 @@ msgstr ""
 #~ msgid "History"
 #~ msgstr "Історія"
 
-#: src/components/results/curate/CurateOpen.tsx:211
+#: src/components/results/curate/CurateOpen.tsx:204
 msgid "History / details"
 msgstr ""
 
@@ -6324,8 +6337,8 @@ msgid "How should the phrases sound?"
 msgstr ""
 
 #: src/components/results/curate/StakeholdersTab.tsx:130
-msgid "How they were named"
-msgstr ""
+#~ msgid "How they were named"
+#~ msgstr ""
 
 #: src/components/project/ProjectBasicEdit.tsx:129
 #~ msgid ""
@@ -6470,6 +6483,10 @@ msgstr "В аналізі"
 
 #: src/routes/settings/AgentConsentRoute.tsx:267
 msgid "In which organisations"
+msgstr ""
+
+#: src/components/results/curate/RowTools.tsx:135
+msgid "In your own words"
 msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1521
@@ -7016,7 +7033,7 @@ msgstr "Вид"
 msgid "Kind of change not recorded"
 msgstr "Тип зміни не зафіксовано"
 
-#: src/components/results/curate/CurateTabs.tsx:76
+#: src/components/results/curate/CurateTabs.tsx:78
 msgid "Kinds of finding"
 msgstr ""
 
@@ -7094,6 +7111,10 @@ msgstr "Learn more about webhooks"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:463
 msgid "Leave empty to keep existing"
 msgstr "Leave empty to keep existing"
+
+#: src/components/results/curate/RowTools.tsx:108
+msgid "Leave feedback"
+msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1119
 msgid "Leave now"
@@ -7627,7 +7648,6 @@ msgstr ""
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:158
-#: src/components/results/curate/CurateTabs.tsx:17
 #: src/components/map/MapPage.tsx:545
 msgid "Map"
 msgstr ""
@@ -7858,7 +7878,7 @@ msgstr ""
 msgid "Monitor"
 msgstr ""
 
-#: src/components/results/curate/CurateOpen.tsx:81
+#: src/components/results/curate/CurateOpen.tsx:80
 #: src/components/chat/ChatTemplatesMenu.tsx:363
 msgid "more"
 msgstr "more"
@@ -7988,7 +8008,7 @@ msgstr "My templates"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:708
 #: src/routes/project/CreateProjectRoute.tsx:211
 #: src/routes/project/CreateProjectRoute.tsx:322
-#: src/components/results/curate/StakeholdersTab.tsx:121
+#: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:105
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:382
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:253
@@ -8100,7 +8120,7 @@ msgid "Never"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:64
-#: src/components/results/curate/CurateMeta.tsx:60
+#: src/components/results/curate/CurateMeta.tsx:53
 msgid "new"
 msgstr "нове"
 
@@ -8278,6 +8298,10 @@ msgstr ""
 msgid "No arguments were found in this project's conversations."
 msgstr "У розмовах цього проєкту не знайдено аргументів."
 
+#: src/components/results/curate/CuratePanel.tsx:47
+msgid "No arguments yet. They appear after the first analysis."
+msgstr ""
+
 #: src/components/settings/AuditLogsCard.tsx:630
 msgid "No audit logs match the current filters."
 msgstr "No audit logs match the current filters."
@@ -8424,8 +8448,8 @@ msgid "No logo set. dembrane default will be used."
 msgstr ""
 
 #: src/components/results/curate/CuratePanel.tsx:45
-msgid "No map arguments yet. They appear after the first analysis."
-msgstr ""
+#~ msgid "No map arguments yet. They appear after the first analysis."
+#~ msgstr ""
 
 #: src/components/map/MapPage.tsx:476
 msgid "No map has been generated for this project yet."
@@ -8538,7 +8562,7 @@ msgstr ""
 msgid "No popcorn saved yet."
 msgstr ""
 
-#: src/components/results/curate/CuratePanel.tsx:37
+#: src/components/results/curate/CuratePanel.tsx:39
 msgid "No popcorn yet. They appear after the first analysis."
 msgstr ""
 
@@ -8563,7 +8587,7 @@ msgstr "No projects found for search term"
 msgid "No projects match."
 msgstr ""
 
-#: src/components/results/curate/CurateOpen.tsx:266
+#: src/components/results/curate/CurateOpen.tsx:259
 msgid "No quotes were kept with this finding."
 msgstr ""
 
@@ -8611,7 +8635,7 @@ msgstr ""
 msgid "No stakeholders saved yet."
 msgstr ""
 
-#: src/components/results/curate/CuratePanel.tsx:41
+#: src/components/results/curate/CuratePanel.tsx:43
 msgid "No stakeholders yet. They appear after the first analysis."
 msgstr ""
 
@@ -8636,7 +8660,7 @@ msgstr "No templates match '{searchQuery}'"
 msgid "No tensions saved yet."
 msgstr ""
 
-#: src/components/results/curate/CuratePanel.tsx:39
+#: src/components/results/curate/CuratePanel.tsx:41
 msgid "No tensions yet. They appear after the first analysis."
 msgstr ""
 
@@ -8725,6 +8749,10 @@ msgstr "Немає в цьому вигляді."
 msgid "None scheduled"
 msgstr ""
 
+#: src/components/results/curate/RowTools.tsx:228
+msgid "Not a good finding"
+msgstr ""
+
 #: src/components/invite/EmailChipsInput.tsx:374
 msgid "Not a valid email."
 msgstr ""
@@ -8764,7 +8792,7 @@ msgstr "не в цій презентації"
 #~ msgid "Not in this presentation"
 #~ msgstr "Не в цій презентації"
 
-#: src/components/results/curate/CuratePanel.tsx:298
+#: src/components/results/curate/CuratePanel.tsx:316
 msgid "Not in this presentation."
 msgstr ""
 
@@ -8788,8 +8816,16 @@ msgstr ""
 msgid "Not placed on the map"
 msgstr ""
 
+#: src/components/results/curate/RowTools.tsx:39
+msgid "Not recognizable"
+msgstr ""
+
 #: src/components/map/panels/shared.tsx:98
 msgid "Not recorded"
+msgstr ""
+
+#: src/components/results/curate/RowTools.tsx:41
+msgid "Not relevant"
 msgstr ""
 
 #: src/components/billing/BillingManager.tsx:1232
@@ -8860,7 +8896,7 @@ msgstr ""
 msgid "nothing here yet"
 msgstr ""
 
-#: src/components/results/curate/CuratePanel.tsx:198
+#: src/components/results/curate/CuratePanel.tsx:202
 msgid "Nothing is hidden from this presentation."
 msgstr ""
 
@@ -8915,7 +8951,7 @@ msgstr ""
 msgid "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 msgstr ""
 
-#: src/components/results/curate/CurateTabs.tsx:103
+#: src/components/results/curate/CurateTabs.tsx:105
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:170
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:349
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:540
@@ -8932,7 +8968,6 @@ msgid "Off numbers the conversations. On shows the name typed on the phone, whic
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:301
-#: src/components/results/curate/CurateMeta.tsx:152
 msgid "off topic for this room"
 msgstr "не на тему для цієї зали"
 
@@ -8984,7 +9019,7 @@ msgid "One big event at the end of the year"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:68
-#: src/components/results/curate/CurateMeta.tsx:64
+#: src/components/results/curate/CurateMeta.tsx:57
 msgid "one conversation only"
 msgstr "лише з однієї розмови"
 
@@ -9001,18 +9036,17 @@ msgid "One number"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:70
-#: src/components/results/curate/CurateMeta.tsx:66
+#: src/components/results/curate/CurateMeta.tsx:59
 msgid "one quote only"
 msgstr "лише одна цитата"
 
 #: src/components/results/ResultRow.tsx:289
-#: src/components/results/curate/CurateMeta.tsx:140
 msgid "One sentence, for the people you work with and anyone who checks later."
 msgstr "Одне речення, для колег і для тих, хто перевірятиме пізніше."
 
 #: src/components/results/ResultRow.tsx:216
 #: src/components/results/ResultItem.tsx:152
-#: src/components/results/curate/TensionsTab.tsx:76
+#: src/components/results/curate/TensionsTab.tsx:110
 msgid "One side of this tension"
 msgstr "Одна сторона цього напруження"
 
@@ -9139,7 +9173,8 @@ msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:806
 #: src/components/results/ResultItem.tsx:850
-#: src/components/results/curate/CurateOpen.tsx:202
+#: src/components/results/curate/RowTools.tsx:345
+#: src/components/results/curate/RowTools.tsx:348
 msgid "Open in Analysis"
 msgstr "Відкрити в аналізі"
 
@@ -9397,6 +9432,10 @@ msgstr ""
 #: src/components/feedback/reasons.ts:27
 msgid "Other"
 msgstr "Інше"
+
+#: src/components/results/curate/RowTools.tsx:45
+msgid "Other, namely"
+msgstr ""
 
 #: src/components/release/releaseHistory.ts:803
 msgid "Our first major release"
@@ -9956,9 +9995,9 @@ msgstr ""
 msgid "Popcorn could not be loaded. Try again in a moment."
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:181
-#~ msgid "Popcorn phrase"
-#~ msgstr ""
+#: src/components/results/curate/PopcornTab.tsx:50
+msgid "Popcorn phrase"
+msgstr ""
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:62
 msgid "Popcorn phrases"
@@ -10639,6 +10678,10 @@ msgstr ""
 msgid "Recipes could not be loaded."
 msgstr ""
 
+#: src/components/results/curate/RowTools.tsx:33
+msgid "Recognizable"
+msgstr ""
+
 #: src/components/settings/TwoFactorSettingsCard.tsx:338
 msgid "Recommended apps"
 msgstr "Recommended apps"
@@ -10851,6 +10894,10 @@ msgstr ""
 msgid "Release video: {0}"
 msgstr "Відео випуску: {0}"
 
+#: src/components/results/curate/RowTools.tsx:35
+msgid "Relevant"
+msgstr ""
+
 #: src/components/error/ErrorPage.tsx:84
 #: src/components/error/ErrorBoundary.tsx:54
 msgid "Reload page"
@@ -11002,7 +11049,6 @@ msgid "Reopen"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:300
-#: src/components/results/curate/CurateMeta.tsx:151
 msgid "repeats another finding"
 msgstr "повторює інший висновок"
 
@@ -11279,8 +11325,6 @@ msgstr "Відгук про відповідь"
 #: src/components/results/ResultRow.tsx:406
 #: src/components/results/ResultRow.tsx:410
 #: src/components/results/ResultItem.tsx:725
-#: src/components/results/curate/CurateMeta.tsx:87
-#: src/components/results/curate/CurateMeta.tsx:91
 msgid "Restore"
 msgstr "Повернути"
 
@@ -11333,7 +11377,7 @@ msgstr "Відновлюємо це формулювання."
 msgid "Results"
 msgstr ""
 
-#: src/routes/project/present/PresentResultsPanel.tsx:138
+#: src/routes/project/present/PresentResultsPanel.tsx:153
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:115
 msgid "Results could not be loaded."
 msgstr "Не вдалося завантажити результати."
@@ -11453,8 +11497,8 @@ msgstr ""
 msgid "Review processing status for every conversation collected in this project."
 msgstr "Review processing status for every conversation collected in this project."
 
-#: src/routes/project/present/PresentResultsPanel.tsx:115
-#: src/routes/project/present/PresentResultsPanel.tsx:121
+#: src/routes/project/present/PresentResultsPanel.tsx:130
+#: src/routes/project/present/PresentResultsPanel.tsx:136
 msgid "Review results"
 msgstr "Переглянути результати"
 
@@ -11527,7 +11571,7 @@ msgstr ""
 msgid "Right-click to highlight"
 msgstr "Right-click to highlight"
 
-#: src/components/results/curate/StakeholdersTab.tsx:124
+#: src/components/results/curate/StakeholdersTab.tsx:48
 #: src/components/invite/RoleSelect.tsx:78
 msgid "Role"
 msgstr ""
@@ -11603,9 +11647,8 @@ msgstr ""
 #: src/components/settings/LegalBasisCard.tsx:232
 #: src/components/settings/ChangePasswordCard.tsx:101
 #: src/components/settings/AccountSettingsCard.tsx:195
-#: src/components/results/resultEditing.tsx:445
+#: src/components/results/resultEditing.tsx:479
 #: src/components/results/ReasonPrompt.tsx:229
-#: src/components/results/curate/CurateMeta.tsx:145
 #: src/components/project/CustomTopicModal.tsx:260
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:373
 #: src/components/goal/ProjectGoalSection.tsx:150
@@ -11662,15 +11705,15 @@ msgstr ""
 msgid "Saved appearance settings apply when the page first loads."
 msgstr ""
 
-#: src/components/results/resultEditing.tsx:532
+#: src/components/results/resultEditing.tsx:566
 msgid "Saved as a change of meaning."
 msgstr "Збережено як зміну змісту."
 
-#: src/components/results/resultEditing.tsx:528
+#: src/components/results/resultEditing.tsx:562
 msgid "Saved as a typo."
 msgstr "Збережено як помилку друку."
 
-#: src/components/results/resultEditing.tsx:530
+#: src/components/results/resultEditing.tsx:564
 msgid "Saved as clearer words."
 msgstr "Збережено як зрозуміліші слова."
 
@@ -11795,7 +11838,7 @@ msgstr ""
 msgid "Search and select the conversations for this chat."
 msgstr "Знайдіть і виберіть розмови для цього чату."
 
-#: src/components/results/curate/ArgumentsTab.tsx:276
+#: src/components/results/curate/ArgumentsTab.tsx:201
 msgid "Search arguments"
 msgstr ""
 
@@ -12069,6 +12112,10 @@ msgstr "Select conversations and find exact quotes"
 msgid "Select conversations from sidebar"
 msgstr "Select conversations from sidebar"
 
+#: src/components/results/curate/CurateTable.tsx:126
+msgid "Select every finding shown"
+msgstr ""
+
 #: src/components/release/releaseHistory.ts:470
 msgid "Select multiple conversations"
 msgstr "Вибір кількох розмов"
@@ -12093,6 +12140,10 @@ msgstr "Select the instructions that will be shown to participants when they sta
 #: src/components/project/ProjectPortalEditor.tsx:789
 msgid "Select the type of feedback or engagement you want to encourage."
 msgstr "Select the type of feedback or engagement you want to encourage."
+
+#: src/components/results/curate/CurateTable.tsx:200
+msgid "Select this finding"
+msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:684
 msgid "Select tutorial"
@@ -12155,6 +12206,10 @@ msgstr "Send"
 #: src/components/project/ProjectSharingModal.tsx:509
 #: src/components/invite/InviteModal.tsx:776
 msgid "Send {0} invites"
+msgstr ""
+
+#: src/components/results/curate/RowTools.tsx:145
+msgid "Send feedback"
 msgstr ""
 
 #: src/components/project/ProjectSharingModal.tsx:511
@@ -12445,15 +12500,20 @@ msgstr ""
 msgid "Show a frame"
 msgstr ""
 
+#: src/components/results/curate/RowTools.tsx:327
+#: src/components/results/curate/CurateTable.tsx:106
+msgid "Show again"
+msgstr ""
+
 #. placeholder {0}: shown.length
 #. placeholder {0}: ordered.length
-#: src/components/results/curate/ArgumentsTab.tsx:411
+#: src/components/results/curate/ArgumentsTab.tsx:368
 #: src/components/map/panels/ArgumentAccordion.tsx:299
 msgid "Show all {0}"
 msgstr "Показати всі {0}"
 
 #: src/components/results/ResultsList.tsx:413
-#: src/components/results/curate/CuratePanel.tsx:244
+#: src/components/results/curate/CuratePanel.tsx:255
 msgid "Show all {total}"
 msgstr "Показати всі {total}"
 
@@ -12665,16 +12725,16 @@ msgstr ""
 msgid "Someone changed this while you had it open. Open it again to see their version."
 msgstr "Хтось змінив це, поки воно було у вас відкрите. Відкрийте знову, щоб побачити їхню версію."
 
-#: src/components/results/resultEditing.tsx:79
+#: src/components/results/resultEditing.tsx:83
 msgid "Someone else"
 msgstr "Хтось інший"
 
 #: src/components/results/ResultRow.tsx:77
-#: src/components/results/curate/CurateMeta.tsx:73
+#: src/components/results/curate/CurateMeta.tsx:66
 msgid "Someone reworded this"
 msgstr "Хтось це переписав"
 
-#: src/components/results/resultEditing.tsx:504
+#: src/components/results/resultEditing.tsx:538
 msgid "Someone reworded this after you did. Their words stand. Open it to read them"
 msgstr "Хтось переписав це після тебе. Його слова лишаються. Відкрий, щоб прочитати"
 
@@ -12767,6 +12827,13 @@ msgstr "Sorry, we cannot process this request due to an LLM provider's content p
 msgid "Sort"
 msgstr "Sort"
 
+#: src/components/results/curate/TensionsTab.tsx:84
+#: src/components/results/curate/StakeholdersTab.tsx:54
+#: src/components/results/curate/PopcornTab.tsx:53
+#: src/components/results/curate/ArgumentsTab.tsx:276
+msgid "Source"
+msgstr ""
+
 #. placeholder {0}: index + 1
 #: src/components/chat/Sources.tsx:51
 msgid "Source {0}"
@@ -12844,7 +12911,7 @@ msgstr ""
 msgid "Staff-created"
 msgstr ""
 
-#: src/components/results/curate/StakeholdersTab.tsx:127
+#: src/components/results/curate/StakeholdersTab.tsx:51
 msgid "Stake"
 msgstr ""
 
@@ -12864,7 +12931,7 @@ msgstr "Зацікавлені"
 msgid "Stakeholders tab"
 msgstr ""
 
-#: src/components/results/curate/ArgumentsTab.tsx:344
+#: src/components/results/curate/ArgumentsTab.tsx:270
 msgid "Stance"
 msgstr ""
 
@@ -12923,7 +12990,7 @@ msgstr ""
 msgid "Starts"
 msgstr ""
 
-#: src/components/results/curate/ArgumentsTab.tsx:340
+#: src/components/results/curate/ArgumentsTab.tsx:266
 msgid "Statement"
 msgstr ""
 
@@ -13312,6 +13379,7 @@ msgstr ""
 msgid "Templates"
 msgstr "Templates"
 
+#: src/components/results/curate/TensionsTab.tsx:81
 #: src/components/map/attributes.ts:163
 msgid "Tension"
 msgstr ""
@@ -13372,11 +13440,15 @@ msgstr ""
 msgid "Thanks for filling this in. Check your mail for the confirmation of the call. If you have any questions for us you can always contact us at info@dembrane.com"
 msgstr ""
 
+#: src/components/results/curate/RowTools.tsx:277
+msgid "Thanks! That helps a lot."
+msgstr ""
+
 #: src/routes/auth/Login.tsx:203
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "That code didn't work. Try again with a fresh code from your authenticator app."
 
-#: src/components/results/resultEditing.tsx:513
+#: src/components/results/resultEditing.tsx:547
 msgid "That did not save. Your words are still here."
 msgstr "Не збереглося. Твої слова лишилися."
 
@@ -13484,8 +13556,8 @@ msgstr ""
 
 #: src/components/results/ResultRow.tsx:72
 #: src/components/results/ResultRow.tsx:94
-#: src/components/results/curate/CurateMeta.tsx:68
-#: src/components/results/curate/ArgumentsTab.tsx:56
+#: src/components/results/curate/CurateMeta.tsx:61
+#: src/components/results/curate/ArgumentsTab.tsx:54
 msgid "the fact-check disagrees"
 msgstr "перевірка фактів каже інше"
 
@@ -13592,7 +13664,7 @@ msgstr ""
 msgid "The map loads after you choose to open it."
 msgstr "Мапа завантажиться після того, як ви вирішите її відкрити."
 
-#: src/components/results/resultEditing.tsx:455
+#: src/components/results/resultEditing.tsx:489
 #: src/components/results/ResultItem.tsx:287
 msgid "The meaning"
 msgstr "Зміст"
@@ -13614,7 +13686,7 @@ msgid "The microphone is still blocked. Change it in your browser settings, then
 msgstr ""
 
 #: src/components/results/ResultItem.tsx:174
-#: src/components/results/curate/StakeholdersTab.tsx:45
+#: src/components/results/curate/StakeholdersTab.tsx:74
 msgid "The name of this stakeholder"
 msgstr "Ім'я цієї зацікавленої сторони"
 
@@ -13637,7 +13709,7 @@ msgstr "Початкові твердження недоступні для ць
 
 #: src/components/results/ResultRow.tsx:230
 #: src/components/results/ResultItem.tsx:165
-#: src/components/results/curate/TensionsTab.tsx:88
+#: src/components/results/curate/TensionsTab.tsx:122
 msgid "The other side of this tension"
 msgstr "Інша сторона цього напруження"
 
@@ -13753,8 +13825,8 @@ msgstr ""
 #: src/components/results/ResultRow.tsx:241
 #: src/components/results/ResultItem.tsx:172
 #: src/components/results/ResultItem.tsx:176
-#: src/components/results/curate/PopcornTab.tsx:67
-#: src/components/results/curate/ArgumentsTab.tsx:168
+#: src/components/results/curate/PopcornTab.tsx:74
+#: src/components/results/curate/ArgumentsTab.tsx:305
 msgid "The words of this finding"
 msgstr "Слова цього висновку"
 
@@ -14181,7 +14253,7 @@ msgid "This sets the language participants see in the portal, including the ques
 msgstr ""
 
 #: src/components/results/ResultItem.tsx:202
-#: src/components/results/curate/StakeholdersTab.tsx:53
+#: src/components/results/curate/StakeholdersTab.tsx:83
 msgid "This stakeholder's role"
 msgstr "Роль цієї зацікавленої сторони"
 
@@ -14277,6 +14349,10 @@ msgstr ""
 msgid "Tick anything that fits."
 msgstr ""
 
+#: src/components/results/curate/RowTools.tsx:111
+msgid "Tick as many as relevant"
+msgstr ""
+
 #: src/routes/project/CreateProjectRoute.tsx:386
 #: src/routes/admin/AdminSettingsRoute.tsx:1581
 #: src/routes/admin/AdminSettingsRoute.tsx:2660
@@ -14360,12 +14436,17 @@ msgstr ""
 msgid "To resolve"
 msgstr "Треба вирішити"
 
-#: src/components/results/curate/TensionsTab.tsx:103
+#: src/components/results/curate/TensionsTab.tsx:141
+#: src/components/results/curate/TensionsTab.tsx:199
 msgid "To resolve:"
 msgstr ""
 
 #: src/components/billing/BillingManager.tsx:681
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
+msgstr ""
+
+#: src/components/results/curate/RowTools.tsx:43
+msgid "Tone deaf"
 msgstr ""
 
 #. js-lingui-explicit-id
@@ -14393,6 +14474,10 @@ msgstr ""
 #: src/components/chat/agenticToolActivity.ts:85
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:82
 msgid "Tool"
+msgstr ""
+
+#: src/components/results/curate/CurateTable.tsx:133
+msgid "Tools"
 msgstr ""
 
 #: src/components/project/hooks/index.ts:671
@@ -14616,7 +14701,7 @@ msgstr ""
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:413
 #: src/routes/invite/MyInvitesRoute.tsx:222
 #: src/routes/invite/AcceptInviteRoute.tsx:557
-#: src/components/results/resultEditing.tsx:520
+#: src/components/results/resultEditing.tsx:554
 #: src/components/project/ProjectAccessGuard.tsx:109
 #: src/components/pricing/PricingTextInput.tsx:330
 #: src/components/present/TranslationStatus.tsx:143
@@ -14767,9 +14852,8 @@ msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:566
 #: src/routes/project/chat/NewChatRoute.tsx:312
-#: src/components/results/resultEditing.tsx:539
+#: src/components/results/resultEditing.tsx:573
 #: src/components/results/ResultRow.tsx:367
-#: src/components/results/curate/CurateMeta.tsx:186
 #: src/components/chat/AgenticChatPanel.tsx:1662
 msgid "Undo"
 msgstr "Undo"
@@ -15640,7 +15724,7 @@ msgstr ""
 msgid "What data is sent?"
 msgstr "What data is sent?"
 
-#: src/components/results/resultEditing.tsx:436
+#: src/components/results/resultEditing.tsx:470
 msgid "What did you change?"
 msgstr "Що ти змінив?"
 
@@ -15666,7 +15750,7 @@ msgid "What happened? Paste a screenshot here to attach it"
 msgstr "Що сталося? Вставте сюди знімок екрана, щоб додати його"
 
 #: src/components/results/ResultItem.tsx:207
-#: src/components/results/curate/StakeholdersTab.tsx:62
+#: src/components/results/curate/StakeholdersTab.tsx:91
 msgid "What is at stake here"
 msgstr "Що тут на кону"
 
@@ -15699,7 +15783,7 @@ msgid "What this project is consuming this cycle."
 msgstr ""
 
 #: src/components/results/ResultItem.tsx:186
-#: src/components/results/curate/TensionsTab.tsx:97
+#: src/components/results/curate/TensionsTab.tsx:131
 msgid "What this tension is about"
 msgstr "Про що це напруження"
 
@@ -15712,7 +15796,7 @@ msgid "What were the key moments in this conversation?"
 msgstr "What were the key moments in this conversation?"
 
 #: src/components/results/ResultItem.tsx:196
-#: src/components/results/curate/TensionsTab.tsx:108
+#: src/components/results/curate/TensionsTab.tsx:146
 msgid "What would resolve this tension"
 msgstr "Що розв'язало б це напруження"
 
@@ -15826,13 +15910,12 @@ msgid "Who on your team holds a current training license. Book a training from y
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:286
-#: src/components/results/curate/CurateMeta.tsx:138
 msgid "Why not in this presentation?"
 msgstr "Чому не в цій презентації?"
 
-#: src/components/results/resultEditing.tsx:440
+#: src/components/results/resultEditing.tsx:474
 #: src/components/results/ResultItem.tsx:746
-#: src/components/results/curate/CurateOpen.tsx:142
+#: src/components/results/curate/CurateOpen.tsx:141
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
 msgstr "Чому? Одне речення, для колег і для тих, хто перевірятиме пізніше."
 
@@ -15854,12 +15937,12 @@ msgstr ""
 
 #: src/components/results/ResultItem.tsx:751
 #: src/components/results/ResultItem.tsx:774
-#: src/components/results/curate/CurateOpen.tsx:147
+#: src/components/results/curate/CurateOpen.tsx:146
 msgid "Withdraw"
 msgstr "Відкликати"
 
-#: src/components/results/curate/CurateOpen.tsx:153
-#: src/components/results/curate/CurateOpen.tsx:195
+#: src/components/results/curate/CurateOpen.tsx:152
+#: src/components/results/curate/CurateOpen.tsx:194
 msgid "Withdraw from the analysis"
 msgstr "Вилучити з аналізу"
 
@@ -15869,7 +15952,7 @@ msgstr "Вилучити з аналізу"
 #~ msgid "Withdraw result"
 #~ msgstr ""
 
-#: src/components/results/curate/CurateOpen.tsx:140
+#: src/components/results/curate/CurateOpen.tsx:139
 msgid "Withdraw this from the analysis?"
 msgstr ""
 
@@ -15886,7 +15969,7 @@ msgid "Withdrawn"
 msgstr "Вилучено"
 
 #: src/components/results/ResultItem.tsx:289
-#: src/components/results/curate/CurateOpen.tsx:185
+#: src/components/results/curate/CurateOpen.tsx:184
 msgid "Withdrawn from the analysis"
 msgstr "Вилучено з аналізу"
 
@@ -16572,7 +16655,7 @@ msgstr "Your Views"
 msgid "Your workspace is waiting for you. Click continue to collaborate."
 msgstr ""
 
-#: src/components/results/resultEditing.tsx:495
+#: src/components/results/resultEditing.tsx:529
 msgid "Yours"
 msgstr "Твої"
 
