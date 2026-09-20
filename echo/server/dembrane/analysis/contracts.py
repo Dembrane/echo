@@ -381,6 +381,10 @@ class ObjectRevision:
     embedding_refs: dict[str, Any] | None = None
     actor_id: str | None = None
     reason: str | None = None
+    # What the host said they changed. Null on generated revisions and on
+    # everything written before the audit trail asked: "not recorded", never
+    # backfilled.
+    change_kind: str | None = None
     created_at: datetime | None = None
     published_at: datetime | None = None
 
@@ -398,6 +402,8 @@ class ObjectRevision:
         }
         if self.actor_id is not None:
             out["actorId"] = self.actor_id
+        if self.change_kind is not None:
+            out["changeKind"] = self.change_kind
         if self.parent_revision_id is not None:
             out["parentRevisionId"] = self.parent_revision_id
         return out
@@ -560,6 +566,7 @@ class NewRevision:
     embedding_refs: dict[str, Any] | None = None
     actor_id: str | None = None
     reason: str | None = None
+    change_kind: str | None = None
     # A fixed id makes a repeat import land on the same row.
     revision_id: str | None = None
 

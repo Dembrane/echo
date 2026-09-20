@@ -121,7 +121,7 @@ REVISION_UUIDS = ("id", "project_id", "object_id", "run_id", "parent_revision_id
 REVISION_PLAIN = (
     "revision_number", "type", "schema_version", "status", "origin", "payload", "attributes",
     "provenance", "content_hash", "hash_version", "embedding_refs", "actor_id", "reason",
-    "created_at", "published_at",
+    "change_kind", "created_at", "published_at",
 )  # fmt: skip
 RELATION_UUIDS = (
     "id", "project_id", "from_revision_id", "to_revision_id", "from_object_id", "to_object_id",
@@ -291,6 +291,7 @@ def _revision(row: dict[str, Any]) -> ObjectRevision:
         embedding_refs=row["embedding_refs"],
         actor_id=row["actor_id"],
         reason=row["reason"],
+        change_kind=row.get("change_kind"),
         created_at=row["created_at"],
         published_at=row["published_at"],
     )
