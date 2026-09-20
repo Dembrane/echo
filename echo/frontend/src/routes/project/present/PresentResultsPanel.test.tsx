@@ -93,9 +93,7 @@ describe("The results panel on its own", () => {
 
 	it("holds a finding back through the save it is given, and never closes", () => {
 		show();
-		fireEvent.click(
-			screen.getByRole("button", { name: "Not in this presentation" }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: "Hide" }));
 		fireEvent.click(
 			screen.getByRole("button", { name: "off topic for this room" }),
 		);

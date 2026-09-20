@@ -253,11 +253,7 @@ describe("Reviewing the results on the screen", () => {
 		expect(screen.getByText("Presentation editor")).toBeTruthy();
 		// Nothing is numbered: no pager, no badges.
 		expect(screen.queryByRole("button", { name: "3" })).toBeNull();
-		fireEvent.click(
-			screen.getAllByRole("button", {
-				name: "Not in this presentation",
-			})[0],
-		);
+		fireEvent.click(screen.getAllByRole("button", { name: "Hide" })[0]);
 		expect(screen.getByText("Why not in this presentation?")).toBeTruthy();
 		fireEvent.click(
 			screen.getByRole("button", { name: "repeats another finding" }),
@@ -292,9 +288,7 @@ describe("Reviewing the results on the screen", () => {
 			total: 2,
 		});
 		show("/projects/empty/present?results=1");
-		const back = await screen.findByRole("button", {
-			name: "Put back in this presentation",
-		});
+		const back = await screen.findByRole("button", { name: "Restore" });
 		expect(screen.getByTestId("result-row-obj-1").closest("li")).toHaveProperty(
 			"dataset.held",
 			"true",
