@@ -60,8 +60,10 @@ import {
 } from "@/components/present/AudienceScreen";
 import {
 	ALWAYS_ON_BLOCK,
+	blocksPatch,
 	orderedBlocks,
 	PRESENTATION_BLOCKS,
+	type PresentationBlock,
 } from "@/components/present/blocks";
 import {
 	type Presentation,
@@ -177,13 +179,11 @@ function Editor({
 									onChange={(event) => {
 										if (locked) return;
 										save.mutate({
-											presentation: {
-												blocks: orderedBlocks(
-													event.currentTarget.checked
-														? [...selected, block]
-														: selected.filter((item) => item !== block),
-												),
-											},
+											presentation: blocksPatch(
+												selected,
+												block,
+												event.currentTarget.checked,
+											),
 										});
 									}}
 									styles={{
@@ -293,14 +293,18 @@ function DraftPreview({
 	projectId,
 	presentation,
 	revision,
+	block,
 }: {
 	projectId: string;
 	presentation: Presentation;
 	revision: number;
+	/** The tab the results panel below is on, so the preview shows the same. */
+	block?: PresentationBlock | null;
 }) {
 	const save = usePopcornSettingsMutation(projectId, presentation.id);
 	return (
 		<Preview
+			block={block}
 			presentation={presentation}
 			draft
 			revision={revision}
@@ -347,11 +351,13 @@ function Preview({
 	draft = false,
 	revision = 0,
 	onEditOpening,
+	block,
 }: {
 	presentation: Presentation;
 	draft?: boolean;
 	revision?: number;
 	onEditOpening?: AudienceScreenProps["onEditOpening"];
+	block?: PresentationBlock | null;
 }) {
 	const eventTick = useContext(PresentationEventTick);
 	// The room's screen at its own size, shrunk to fit the column. At the
@@ -378,6 +384,7 @@ function Preview({
 				>
 					<AudienceScreen
 						presentationId={presentation.id}
+						block={block}
 						embedded
 						draft={draft}
 						draftRevision={revision}
@@ -466,6 +473,12 @@ function Session({
 	const [pendingFields, setPendingFields] = useState(new Set<string>());
 	const [publishing, setPublishing] = useState(false);
 	const [publishError, setPublishError] = useState(false);
+	// The tab the results panel is on. The preview follows it, so choosing
+	// "Tensions" to review them puts the room's own tensions slide beside the
+	// list. Nothing here ever reaches the screen in the room.
+	const [previewBlock, setPreviewBlock] = useState<PresentationBlock | null>(
+		null,
+	);
 	// A field that leaves takes its unsaved words with it, so it writes them on
 	// its way out: closing the editor used to be the moment for that, and the
 	// editor no longer closes. Leaving the page unmounts the fields and this
@@ -730,6 +743,7 @@ function Session({
 								<Stack gap="lg">
 									<div className={classes.editor}>
 										<DraftPreview
+											block={previewBlock}
 											projectId={projectId}
 											presentation={draft.query.data.presentation}
 											revision={draft.query.data.revision}
@@ -742,6 +756,7 @@ function Session({
 									{/* Outside the preview-and-editor row, so it spans the page. */}
 									<PresentResultsPanel
 										className={classes.results}
+										onTabChange={setPreviewBlock}
 										projectId={projectId}
 										presentation={draft.query.data.presentation}
 									/>

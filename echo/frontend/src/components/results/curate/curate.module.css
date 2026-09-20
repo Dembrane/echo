@@ -1,0 +1,865 @@
+/* The curate face of the results: four tabs, each shaped for its data. Same
+   tokens as `ResultsList.module.css`, from the deck's own stylesheet, so a
+   finding reads the same in a row, in a table, on a card and on the wall.
+   Dark follows the nearest `[data-theme="dark"]`, never the operating system. */
+
+.panel {
+	--parchment: #f6f4f1;
+	--paper: #ffffff;
+	--graphite: #2d2d2c;
+	--blue: #4169e1;
+	--hairline: #e6e3df;
+	--ink-soft: rgba(45, 45, 44, 0.72);
+	--ink-rest: rgba(45, 45, 44, 0.62);
+	--ink-faint: rgba(45, 45, 44, 0.38);
+	--ink-tag: rgba(45, 45, 44, 0.78);
+	--curve: cubic-bezier(0.25, 0.8, 0.3, 1);
+	--line: calc(1.45 * var(--app-font-size-sm, 0.9375rem));
+
+	/* The panel answers to the room it is given, not to the window: the two
+	   columns of popcorn and the table's narrow shape are read from here. */
+	container-type: inline-size;
+	color: var(--graphite);
+	display: flex;
+	flex-direction: column;
+	font-size: var(--app-font-size-sm, 0.9375rem);
+	gap: 1rem;
+	line-height: 1.45;
+}
+
+:global([data-theme="dark"]) .panel {
+	--parchment: #1b1b1a;
+	--paper: #262625;
+	--graphite: #f6f4f1;
+	--blue: #7c9bff;
+	--hairline: #3a3a38;
+	--ink-soft: rgba(246, 244, 241, 0.74);
+	--ink-rest: rgba(246, 244, 241, 0.64);
+	--ink-faint: rgba(246, 244, 241, 0.4);
+	--ink-tag: rgba(246, 244, 241, 0.78);
+}
+
+.panel :focus-visible {
+	outline: 2px solid var(--blue);
+	outline-offset: 2px;
+}
+
+/* The tab row, in the deck's own manner: the name, its count beside it, a
+   3 px rule under the one being read. The hairline runs the width of the row
+   so the tabs sit on a line rather than floating. */
+.tabs {
+	border-bottom: 1px solid var(--hairline);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 clamp(0.9rem, 3cqi, 2rem);
+	margin-bottom: -0.25rem;
+}
+
+.tab {
+	align-items: baseline;
+	appearance: none;
+	background: none;
+	border: 0;
+	border-bottom: 3px solid transparent;
+	color: var(--graphite);
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	gap: 0.35em;
+	margin-bottom: -1px;
+	min-height: 2.75rem;
+	padding: 0.4rem 0.1rem 0.6rem;
+	transition: color 0.15s var(--curve);
+	white-space: nowrap;
+}
+
+.tab:hover {
+	color: var(--blue);
+}
+
+.tab[aria-selected="true"] {
+	border-bottom-color: var(--blue);
+	color: var(--blue);
+	font-weight: 500;
+}
+
+.tabCount {
+	color: var(--ink-rest);
+	font-variant-numeric: tabular-nums;
+	font-weight: 400;
+}
+
+.tab[aria-selected="true"] .tabCount {
+	color: var(--blue);
+}
+
+/* A tab whose block is off in this presentation says so in the row. */
+.tabOff {
+	color: var(--ink-soft);
+	font-weight: 400;
+}
+
+/* The line over each panel: what is hidden, how many are shown. */
+.panelHead {
+	align-items: baseline;
+	color: var(--ink-soft);
+	display: flex;
+	flex-wrap: wrap;
+	font-size: var(--app-font-size-xs, 0.75rem);
+	gap: 0 1rem;
+	justify-content: space-between;
+	min-height: 1.4rem;
+}
+
+.headWords {
+	align-items: baseline;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 1rem;
+}
+
+.count {
+	color: var(--ink-rest);
+	font-variant-numeric: tabular-nums;
+}
+
+/* A tab whose block is off: one line, the switch that turns it on, and the
+   findings under it dimmed the way a hidden row's words are. */
+.offNotice {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1rem;
+}
+
+.offLine {
+	color: var(--ink-soft);
+	margin: 0;
+}
+
+.dimmed {
+	opacity: 0.55;
+}
+
+.empty {
+	color: var(--ink-soft);
+	margin: 0;
+}
+
+/* ── Popcorn ──────────────────────────────────────────────────────────────
+   One line per phrase, the conversation beside it. Two columns where there
+   is room, reading top to bottom in each; the keyboard follows the DOM, so
+   the order a host tabs through is the order the server sent. */
+
+.pops {
+	column-gap: 2.5rem;
+	display: flex;
+	flex-direction: column;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+@container (min-width: 64rem) {
+	.pops {
+		columns: 2;
+		display: block;
+	}
+
+	.pops > li {
+		break-inside: avoid;
+	}
+}
+
+.pop {
+	border-top: 1px solid var(--hairline);
+}
+
+.pop:first-child {
+	border-top: 0;
+}
+
+.popBody {
+	align-items: baseline;
+	column-gap: 0.75rem;
+	cursor: pointer;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	min-height: 2.5rem;
+	padding: 0.35rem 0;
+}
+
+.popWords {
+	color: var(--graphite);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 0.6rem;
+	margin: 0;
+	min-width: 0;
+}
+
+.pop[data-held] .popWords {
+	opacity: 0.55;
+}
+
+/* The conversation rides at the end of the phrase's line and gives way
+   first; under a narrow panel it drops under the phrase. */
+.popWhere {
+	color: var(--ink-soft);
+	font-size: var(--app-font-size-xs, 0.75rem);
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-align: right;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+@container (max-width: 34rem) {
+	.popWords {
+		flex-direction: column;
+	}
+
+	.popWhere {
+		text-align: left;
+	}
+}
+
+/* ── Tensions ─────────────────────────────────────────────────────────────
+   No list and no accordion: every tension is an open card. */
+
+.cards {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	list-style: none;
+	margin: 0;
+	max-width: 56rem;
+	padding: 0;
+}
+
+.card {
+	border-top: 1px solid var(--hairline);
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	padding-top: 1rem;
+}
+
+.cardWords {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.card[data-held] .cardWords {
+	opacity: 0.55;
+}
+
+.poles {
+	align-items: baseline;
+	color: var(--graphite);
+	display: flex;
+	flex-wrap: wrap;
+	font-family: var(--app-content-bold-font-family, inherit);
+	font-size: 1.25rem;
+	font-weight: 400;
+	gap: 0 0.45em;
+	line-height: 1.3;
+	margin: 0;
+}
+
+/* The arrows travel with the second pole, so a tension that wraps never
+   leaves the glyph hanging at a line's end. */
+.pole {
+	align-items: baseline;
+	display: inline-flex;
+	gap: 0.45em;
+	max-width: 100%;
+	min-width: 0;
+}
+
+.arrows {
+	color: var(--blue);
+	flex: none;
+	min-height: 14px;
+	min-width: 14px;
+	transform: translateY(0.12em);
+}
+
+.knot {
+	color: var(--ink-soft);
+	margin: 0;
+	text-wrap: pretty;
+}
+
+.resolve {
+	color: var(--graphite);
+	margin: 0;
+	text-wrap: pretty;
+}
+
+.resolveLabel {
+	color: var(--ink-soft);
+}
+
+/* Quotes under the pole they support, or in one list where the payload does
+   not say which. */
+.poleGroups {
+	display: grid;
+	gap: 1rem 2rem;
+	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+	margin-top: 0.5rem;
+}
+
+.poleGroupHead {
+	color: var(--ink-soft);
+	font-size: var(--app-font-size-xs, 0.75rem);
+	margin: 0 0 0.35rem;
+}
+
+.cardFoot {
+	align-items: baseline;
+	display: flex;
+	flex-wrap: wrap;
+	font-size: var(--app-font-size-xs, 0.75rem);
+	gap: 0 1.25rem;
+	justify-content: space-between;
+	margin-top: 0.5rem;
+}
+
+.footActions {
+	align-items: baseline;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 1.25rem;
+}
+
+/* ── Tables: map arguments and stakeholders ───────────────────────────── */
+
+.tableWrap {
+	width: 100%;
+}
+
+.table {
+	border-collapse: collapse;
+	table-layout: fixed;
+	width: 100%;
+}
+
+.table th,
+.table td {
+	padding: 0.55rem 0.75rem 0.55rem 0;
+	text-align: left;
+	vertical-align: top;
+}
+
+.table thead th {
+	border-bottom: 1px solid var(--hairline);
+	color: var(--ink-soft);
+	font-size: var(--app-font-size-xs, 0.75rem);
+	font-weight: 400;
+	padding-bottom: 0.4rem;
+}
+
+.table tbody tr {
+	border-top: 1px solid var(--hairline);
+}
+
+.table tbody tr:first-child {
+	border-top: 0;
+}
+
+.bodyRow {
+	cursor: pointer;
+}
+
+.statement {
+	color: var(--graphite);
+	overflow-wrap: anywhere;
+}
+
+/* A statement clamps at two lines; the clamp lifts before the caret lands, so
+   nothing moves under the host's hand. */
+.clamp2 {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+	text-align: left;
+}
+
+/* Said to a screen reader and to nobody else: the column of eyes has a name
+   at its head without a word standing over it. */
+.said {
+	clip-path: inset(50%);
+	height: 1px;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}
+
+.cell {
+	color: var(--ink-soft);
+	overflow-wrap: anywhere;
+}
+
+.bodyRow[data-held] .statement,
+.bodyRow[data-held] .cell {
+	opacity: 0.55;
+}
+
+/* The one column that is a control at its head: the caret says which way. */
+.sortHead {
+	align-items: baseline;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	gap: 0.3em;
+	min-height: 1.75rem;
+	padding: 0;
+	position: relative;
+	text-align: left;
+	transition: color 0.15s var(--curve);
+}
+
+.sortHead::after {
+	content: "";
+	inset: -6px -4px;
+	position: absolute;
+}
+
+.sortHead:hover,
+.sortHead:focus-visible {
+	color: var(--graphite);
+}
+
+.sortHead[aria-sort]:not([aria-sort="none"]) {
+	color: var(--graphite);
+}
+
+.caret {
+	color: var(--ink-rest);
+	flex: none;
+}
+
+.controlCell {
+	padding-right: 0;
+	text-align: right;
+	width: 2.75rem;
+}
+
+.openedCell {
+	padding: 0 0 1.25rem;
+}
+
+/* Under a narrow panel the table stops being a table: each row is two lines
+   of words with its control beside them. */
+@container (max-width: 40rem) {
+	.table,
+	.table tbody,
+	.table tbody tr,
+	.table td {
+		display: block;
+		width: auto;
+	}
+
+	.table thead {
+		display: none;
+	}
+
+	.table tbody tr {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+
+	.table td {
+		padding: 0.1rem 0;
+	}
+
+	.table td.statement {
+		grid-column: 1;
+		padding-top: 0.6rem;
+	}
+
+	.table td.cell {
+		font-size: var(--app-font-size-xs, 0.75rem);
+		grid-column: 1;
+	}
+
+	.table td.controlCell {
+		grid-column: 2;
+		grid-row: 1 / span 2;
+		text-align: right;
+	}
+
+	.table td.openedCell {
+		grid-column: 1 / -1;
+		padding-bottom: 1rem;
+	}
+}
+
+/* The thin line over the arguments table: a search, a stance, a
+   conversation, and how many of the whole are being read. */
+.filters {
+	align-items: baseline;
+	color: var(--ink-soft);
+	display: flex;
+	flex-wrap: wrap;
+	font-size: var(--app-font-size-xs, 0.75rem);
+	gap: 0 1.5rem;
+	justify-content: space-between;
+}
+
+.filterGroup {
+	align-items: baseline;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 1.5rem;
+}
+
+.filterLabel {
+	align-items: baseline;
+	color: var(--ink-faint);
+	display: inline-flex;
+	gap: 0.4rem;
+}
+
+.filterControl {
+	background: none;
+	border: 0;
+	border-radius: 0;
+	color: var(--ink-soft);
+	cursor: pointer;
+	field-sizing: content;
+	font: inherit;
+	min-height: 2.25rem;
+	padding: 0;
+	transition: color 0.15s var(--curve);
+}
+
+.filterControl:hover,
+.filterControl:focus-visible {
+	color: var(--graphite);
+}
+
+input.filterControl {
+	border-bottom: 1px solid var(--hairline);
+	color: var(--graphite);
+	cursor: text;
+	min-height: 0;
+	padding: 0.15rem 0;
+	width: 11rem;
+}
+
+input.filterControl:hover {
+	border-bottom-color: var(--ink-faint);
+}
+
+@media (pointer: coarse) {
+	.filterControl {
+		font-size: 16px;
+	}
+}
+
+/* The stance filter: three words, the chosen one in full ink. */
+.toggles {
+	align-items: baseline;
+	display: inline-flex;
+	gap: 0 0.75rem;
+}
+
+.toggle[aria-pressed="true"] {
+	color: var(--graphite);
+	text-decoration: underline;
+	text-decoration-color: var(--ink-faint);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 4px;
+}
+
+/* ── The opened finding ───────────────────────────────────────────────────
+   Not the stage card: what the row lacks. The evidence, and one quiet line
+   of what a host can do with it. */
+
+.opened {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	max-width: 56rem;
+	padding: 0.5rem 0 0.25rem;
+}
+
+.quotes {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.quote {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	margin: 0;
+}
+
+.quoteText {
+	color: var(--graphite);
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
+	line-clamp: 3;
+	margin: 0;
+	overflow: hidden;
+	text-wrap: pretty;
+}
+
+.quoteText[data-open] {
+	display: block;
+	-webkit-line-clamp: none;
+	line-clamp: none;
+}
+
+.quoteWhere {
+	color: var(--ink-soft);
+	font-size: var(--app-font-size-xs, 0.75rem);
+	margin: 0;
+}
+
+/* The phrase inside the sentence it was cut from. Weight, never colour: a
+   highlight would be the fifth thing on the page asking to be looked at. */
+.cut {
+	font-family: var(--app-content-bold-font-family, inherit);
+	font-weight: 500;
+}
+
+.verdict {
+	border-top: 1px solid var(--hairline);
+	color: var(--ink-soft);
+	margin: 0;
+	padding-top: 0.5rem;
+}
+
+.actionsBlock {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.actionsLine {
+	align-items: baseline;
+	display: flex;
+	flex-wrap: wrap;
+	font-size: var(--app-font-size-xs, 0.75rem);
+	gap: 0 1.25rem;
+}
+
+/* The workbench, one click deeper: the stage card and the margin, opened in
+   place under the finding it belongs to. */
+.workbench {
+	border-top: 1px solid var(--hairline);
+	padding-top: 0.75rem;
+}
+
+/* ── Controls and the quiet line ──────────────────────────────────────── */
+
+.control {
+	align-items: center;
+	align-self: flex-start;
+	background: none;
+	border: 0;
+	color: var(--ink-soft);
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	min-height: 2.25rem;
+	padding: 0;
+	position: relative;
+	text-align: left;
+	transition: color 0.15s var(--curve);
+}
+
+.control::after {
+	content: "";
+	inset: -4px;
+	position: absolute;
+}
+
+.control:hover,
+.control:focus-visible {
+	color: var(--graphite);
+}
+
+@media (hover: none) {
+	.control {
+		color: var(--graphite);
+	}
+}
+
+.control:disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+
+/* A control that says itself in a glyph: 36 px square with 4 px of reach
+   each way, so a column of them down a table keeps one edge. */
+.control.icon {
+	color: var(--ink-rest);
+	justify-content: center;
+	width: 2.25rem;
+}
+
+.control.quiet {
+	min-height: 1.25rem;
+}
+
+.control.quiet::after {
+	inset: -12px -6px;
+}
+
+.control.confirm {
+	color: var(--graphite);
+	text-decoration: underline;
+	text-decoration-color: var(--ink-faint);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 4px;
+	transition: text-decoration-color 0.15s var(--curve);
+}
+
+.control.confirm:hover,
+.control.confirm:focus-visible {
+	text-decoration-color: currentColor;
+}
+
+.showAll {
+	align-self: stretch;
+	border-top: 1px solid var(--hairline);
+	min-height: 2.75rem;
+}
+
+/* The quiet line under a finding: what it is made of, or that it is hidden
+   and the ways out of that. */
+.quietLine {
+	align-items: baseline;
+	color: var(--ink-soft);
+	display: flex;
+	flex-wrap: wrap;
+	font-size: var(--app-font-size-xs, 0.75rem);
+	gap: 0 0.75rem;
+	margin: 0;
+	min-height: 1.4rem;
+}
+
+.fresh {
+	color: var(--blue);
+}
+
+.dot {
+	color: var(--ink-faint);
+}
+
+.step {
+	animation: fade 0.12s var(--curve) both;
+	width: 100%;
+}
+
+/* ── Skeletons ────────────────────────────────────────────────────────── */
+
+.ghostLine {
+	background: var(--hairline);
+	background-clip: content-box;
+	box-sizing: content-box;
+	display: block;
+	height: 0.55rem;
+	padding-block: calc((var(--line) - 0.55rem) / 2);
+	width: min(22rem, 62%);
+}
+
+.ghostShort {
+	height: 0.4rem;
+	margin-top: 0.35rem;
+	padding-block: 0.5rem;
+	width: min(11rem, 34%);
+}
+
+.ghostRows {
+	display: flex;
+	flex-direction: column;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.ghostRow {
+	border-top: 1px solid var(--hairline);
+	padding: 0.55rem 0;
+}
+
+.ghostRow:first-child {
+	border-top: 0;
+}
+
+.ghostRow:nth-child(2) .ghostLine {
+	width: min(30rem, 78%);
+}
+
+.ghostRow:nth-child(3) .ghostLine {
+	width: min(16rem, 48%);
+}
+
+.ghostCard {
+	border-top: 1px solid var(--hairline);
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding-top: 1rem;
+}
+
+.ghostPoles {
+	background: var(--hairline);
+	display: block;
+	height: 1rem;
+	width: min(28rem, 70%);
+}
+
+@keyframes fade {
+	from {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.step {
+		animation: none;
+	}
+
+	.control,
+	.control.confirm,
+	.filterControl,
+	.sortHead,
+	.tab {
+		transition: none;
+	}
+}
+
+/* The panel under the tabs: the head line, the shape, and whatever the shape
+   opens. It takes the focus ring a tabpanel is given without a border. */
+.tabPanel {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	min-width: 0;
+}
+
+.tabPanel:focus-visible {
+	outline: 2px solid var(--blue);
+	outline-offset: 4px;
+}

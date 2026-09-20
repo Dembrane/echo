@@ -1,59 +1,64 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Stack, Text } from "@mantine/core";
-import { useMemo, useState } from "react";
-import { useParams } from "react-router";
-import {
-	type AnalysisObject,
-	useResultsList,
-	useResultsVisit,
-} from "@/components/analysis";
+import { useMemo } from "react";
+import { useParams, useSearchParams } from "react-router";
+import { useResultsList, useResultsVisit } from "@/components/analysis";
 import { usePopcornSettingsMutation } from "@/components/popcorn/hooks";
 import {
 	ALWAYS_ON_BLOCK,
+	blocksPatch,
 	orderedBlocks,
+	PRESENTATION_BLOCKS,
 	type PresentationBlock,
 } from "@/components/present/blocks";
 import type { Presentation } from "@/components/present/hooks";
-import {
-	type HoldBackAdapter,
-	type ResultGroupKey,
-	ResultItem,
-	ResultsList,
-	useResultActions,
-} from "@/components/results";
+import { type HoldBackAdapter, useResultActions } from "@/components/results";
+import { CuratePanel } from "@/components/results/curate/CuratePanel";
 import { testId } from "@/lib/testUtils";
 
-// Which group of the list a block draws its findings from.
-const GROUP_BY_BLOCK: Record<PresentationBlock, ResultGroupKey> = {
-	map: "argument",
-	popcorn: "popcorn",
-	stakeholders: "stakeholder",
-	tensions: "tension",
-};
+/**
+ * Which tab this panel is on, kept in the address so a reload comes back to
+ * it. `?results=1` opened this panel before it had tabs and still does: any
+ * value that is not one of the four names falls through to the first tab the
+ * presentation shows.
+ */
+export const RESULTS_PARAM = "results";
+
+export function resultsTab(
+	params: URLSearchParams,
+	blocks: PresentationBlock[],
+): PresentationBlock {
+	const asked = params.get(RESULTS_PARAM);
+	return (PRESENTATION_BLOCKS as readonly string[]).includes(asked ?? "")
+		? (asked as PresentationBlock)
+		: (blocks[0] ?? ALWAYS_ON_BLOCK);
+}
 
 /**
- * The results the room will see, for the host to reword, hold back or read in
- * full. A sibling of the presentation editor, not a part of it: that one is
- * the style and structure of the screen, this one is what the screen says.
+ * The results the room will see, for the host to reword, hide or read the
+ * evidence of. A sibling of the presentation editor, not a part of it: that
+ * one is the style and structure of the screen, this one is what the screen
+ * says.
  */
 export function PresentResultsPanel({
 	projectId,
 	presentation,
 	className,
+	onTabChange,
 }: {
 	projectId: string;
 	presentation: Presentation;
 	className?: string;
+	/** Told which tab is being read, so the preview above can follow. */
+	onTabChange?: (block: PresentationBlock) => void;
 }) {
 	const { workspaceId } = useParams<{ workspaceId?: string }>();
-	// One page of findings per kind, opened in place. There is no pager: a long
-	// group says "Show all" where it stands and asks for what it still needs.
+	const [params, setParams] = useSearchParams();
 	const results = useResultsList(projectId);
 	// What is new is new since the host last opened this list; leaving it marks
 	// it seen.
 	useResultsVisit(projectId);
-	const [inspected, setInspected] = useState<AnalysisObject | null>(null);
 	// The way to the full picture of a finding, kept so the host can come back.
 	const analysisPath = `${workspaceId ? `/w/${workspaceId}` : ""}/projects/${projectId}/analysis?returnTo=present&section=results`;
 	const save = usePopcornSettingsMutation(projectId, presentation.id);
@@ -65,20 +70,20 @@ export function PresentResultsPanel({
 		...(presentation.settings.presentation?.blocks ?? []),
 		ALWAYS_ON_BLOCK,
 	]);
+	const selected = resultsTab(params, blocks);
 
 	/**
-	 * Step 5 replaces this adapter and nothing else on this screen.
-	 *
-	 * Today holding a finding back writes its id into the presentation draft's
-	 * `hidden_items`, which keeps no reason, so the reason the host gives is
-	 * collected by the prompt and dropped here. When the curation log endpoint
-	 * exists, this becomes a post of `{ object_id, action, reason }` and the
-	 * prompt, the suggestions and the dimmed row stay exactly as they are.
+	 * Hiding a finding writes its id into the presentation draft's
+	 * `hidden_items`, which keeps no reason and needs none: the settings route
+	 * takes a list of ids (`PresentationBody` in `dembrane/api/v2/bff/popcorn.py`)
+	 * and validates nothing else. The reason a host chooses to add is kept for
+	 * the page by `useResultActions`; the curation log endpoint is what will
+	 * make it outlive a reload, and nothing on this screen moves when it lands.
 	 */
 	const holdBack: HoldBackAdapter = useMemo(
 		() => ({
 			isHeld: (objectId) => hidden.includes(objectId),
-			setHeld: (objectId, held, _reason) =>
+			setHeld: (objectId, held) =>
 				save.mutate({
 					presentation: {
 						hidden_items: held
@@ -90,12 +95,6 @@ export function PresentResultsPanel({
 		[hidden, save.mutate],
 	);
 	const actions = useResultActions({ holdBack, projectId });
-
-	const groupOrder = blocks.map((block) => GROUP_BY_BLOCK[block]);
-	// A kind whose block is off still has a header, and says so in words.
-	const groupsOff = (Object.keys(GROUP_BY_BLOCK) as PresentationBlock[])
-		.filter((block) => !blocks.includes(block))
-		.map((block) => GROUP_BY_BLOCK[block]);
 
 	return (
 		<Stack
@@ -114,11 +113,12 @@ export function PresentResultsPanel({
 					presentation. Shared results stay available in Analysis.
 				</Trans>
 			</Text>
-			<ResultsList
+			<CuratePanel
 				actions={actions}
+				analysisHref={analysisPath}
+				blocks={blocks}
 				canEdit={results.canEdit}
 				counts={results.counts}
-				density="curate"
 				error={
 					results.isError ? (
 						<Text>
@@ -126,28 +126,30 @@ export function PresentResultsPanel({
 						</Text>
 					) : null
 				}
-				groupOrder={[...groupOrder, ...groupsOff]}
-				groupsOff={groupsOff}
 				items={results.items}
 				loading={results.isLoading}
-				loadingTypes={results.loadingTypes}
 				onLoadMore={results.loadMore}
-				onOpen={(item) =>
-					setInspected((current) =>
-						current?.objectId === item.objectId ? null : item,
-					)
+				onSelect={(block) => {
+					setParams(
+						(old) => {
+							const next = new URLSearchParams(old);
+							next.set(RESULTS_PARAM, block);
+							return next;
+						},
+						{ replace: true },
+					);
+					onTabChange?.(block);
+				}}
+				// The editor's own switch, through the editor's own patch: one
+				// write path for turning a tab on, wherever the host does it.
+				onTurnOn={
+					results.canEdit
+						? (block) =>
+								save.mutate({ presentation: blocksPatch(blocks, block, true) })
+						: null
 				}
-				openObjectId={inspected?.objectId ?? null}
-				renderItem={(item) => (
-					<ResultItem
-						analysisHref={analysisPath}
-						canEdit={results.canEdit}
-						item={item}
-						onClose={() => setInspected(null)}
-						onEditWords={actions}
-						projectId={projectId}
-					/>
-				)}
+				projectId={projectId}
+				selected={selected}
 			/>
 		</Stack>
 	);

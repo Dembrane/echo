@@ -422,7 +422,7 @@ export function tensionQuotes(item: {
 	const raw = resultFields(item).quotes;
 	if (!Array.isArray(raw)) return [];
 	return raw
-		.map((entry) => {
+		.map((entry): PoleQuote => {
 			const quote = bag(entry);
 			const pole = quote.pole;
 			return {
