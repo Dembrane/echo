@@ -4,6 +4,7 @@ import { ArrowsLeftRightIcon } from "@phosphor-icons/react";
 import { type ReactNode, useRef, useState } from "react";
 import type { AnalysisObject } from "@/components/analysis/hooks";
 import { ReasonPrompt } from "./ReasonPrompt";
+import { rungWord } from "./ResultItem";
 import classes from "./ResultsList.module.css";
 import {
 	factCheckVerdict,
@@ -11,6 +12,7 @@ import {
 	isEdited,
 	primaryFields,
 	resultEvidence,
+	resultFields,
 	secondaryField,
 } from "./resultContent";
 import {
@@ -81,13 +83,20 @@ function stateWords(item: AnalysisObject): ReactNode[] {
 	const words: ReactNode[] = [];
 	if (item.membershipExcluded) words.push(<Trans key="w">withdrawn</Trans>);
 	const verdict = factCheckVerdict(item);
-	if (verdict === "false" || verdict === "contested")
+	// Said once: a row that rose for its fact-check already leads with it.
+	if (
+		(verdict === "false" || verdict === "contested") &&
+		item.attention !== "fact_check"
+	)
 		words.push(<Trans key="f">the fact-check disagrees</Trans>);
 	if (isEdited(item)) words.push(<Trans key="e">edited</Trans>);
 	if (item.type === "deduplicated_argument")
 		words.push(<Trans key="c">combined</Trans>);
 	return words.slice(0, 2);
 }
+
+/** Anything in the row that answers for itself, so a click on it is its own. */
+const OWN_CONTROLS = "button, a, input, textarea, select, label, [data-step]";
 
 function stanceWords(item: AnalysisObject): ReactNode {
 	const valence = item.payload?.valence;
@@ -113,6 +122,9 @@ export function ResultRow({
 }: ResultRowProps) {
 	const [holding, setHolding] = useState(false);
 	const holdControl = useRef<HTMLButtonElement>(null);
+	// The meta line fades when a step takes it over and when it comes back,
+	// never when the list first draws.
+	const stepped = useRef(false);
 	const edit = useWordsEdit({
 		actions: canEdit ? actions : null,
 		actorName,
@@ -127,6 +139,13 @@ export function ResultRow({
 	const states = density === "check" ? stateWords(item) : [];
 	const clamp = density === "check" ? classes.clamp3 : classes.clamp2;
 	const aftermath = hasAftermath(edit);
+	// Holding back is Present's, and a host's: everywhere else the row has one
+	// control, and a narrow list leaves it beside the words.
+	const holdable = density === "curate" && canEdit && Boolean(actions.holdBack);
+	const rung =
+		item.type === "stakeholder" ? rungWord(resultFields(item).rung) : null;
+	if (edit.asking || holding || aftermath) stepped.current = true;
+	const stepClass = `${classes.metaSwap} ${classes.step}`;
 
 	const endHold = () => {
 		setHolding(false);
@@ -141,9 +160,18 @@ export function ResultRow({
 			<div
 				aria-expanded={open}
 				className={classes.rowBody}
+				data-solo={holdable ? undefined : ""}
 				data-testid={`result-row-${item.objectId}`}
 				onClick={(event) => {
-					if (event.target !== event.currentTarget) return;
+					// The row opens the item from anywhere that is not a control of
+					// its own: the words, a step in the meta line, the buttons.
+					const own = (event.target as Element).closest(OWN_CONTROLS);
+					if (
+						own &&
+						own !== event.currentTarget &&
+						event.currentTarget.contains(own)
+					)
+						return;
 					onOpen();
 				}}
 				onKeyDown={(event) => {
@@ -166,18 +194,21 @@ export function ResultRow({
 								label={t`One side of this tension`}
 								words={fieldWords(item, "poleA")}
 							/>
-							<ArrowsLeftRightIcon
-								aria-hidden
-								className={classes.arrows}
-								size="0.9em"
-							/>
-							<EditableWords
-								clamp={clamp}
-								edit={edit}
-								field="poleB"
-								label={t`The other side of this tension`}
-								words={fieldWords(item, "poleB")}
-							/>
+							{/* The arrows travel with the second pole when the line wraps. */}
+							<span className={classes.pole}>
+								<ArrowsLeftRightIcon
+									aria-hidden
+									className={classes.arrows}
+									size="0.9em"
+								/>
+								<EditableWords
+									clamp={clamp}
+									edit={edit}
+									field="poleB"
+									label={t`The other side of this tension`}
+									words={fieldWords(item, "poleB")}
+								/>
+							</span>
 						</p>
 					) : (
 						<p className={classes.primary}>
@@ -191,6 +222,7 @@ export function ResultRow({
 									(item.label ?? "")
 								}
 							/>
+							{rung && <span className={classes.tag}>{rung}</span>}
 						</p>
 					)}
 
@@ -207,93 +239,93 @@ export function ResultRow({
 					{item.type.endsWith("argument") && (
 						<p className={classes.second}>{stanceWords(item)}</p>
 					)}
+				</div>
 
-					{/* The meta line: what the row is made of, or what the host is
-					    being asked, in the same place, with a crossfade. */}
-					<div className={classes.meta}>
-						{edit.asking ? (
-							<div className={classes.metaSwap} key="prompt">
-								<WordsPrompt
-									edit={edit}
-									testId={`result-change-prompt-${item.objectId}`}
-								/>
-							</div>
-						) : holding ? (
-							<div className={classes.metaSwap} key="hold">
-								<ReasonPrompt
-									testId={`result-hold-prompt-${item.objectId}`}
-									question={<Trans>Why not in this presentation?</Trans>}
-									reasonLabel={
-										<Trans>
-											Why? One sentence, for the people you work with and anyone
-											who checks later.
-										</Trans>
-									}
-									confirmLabel={<Trans>Not in this presentation</Trans>}
-									options={[
-										...actions.heldBackReasons.slice(0, 2).map((reason) => ({
-											key: reason,
-											label: reason,
-											reason,
-										})),
-										{
-											key: "repeats",
-											label: t`repeats another finding`,
-											reason: t`repeats another finding`,
-										},
-										{
-											key: "off-topic",
-											label: t`off topic for this room`,
-											reason: t`off topic for this room`,
-										},
-										{
-											key: "other",
-											label: t`another reason`,
-											needsReason: true,
-										},
-									].slice(0, 4)}
-									onCancel={endHold}
-									onConfirm={({ reason }) => {
-										actions.holdBack?.(item.objectId, reason ?? "");
-										endHold();
-									}}
-								/>
-							</div>
-						) : aftermath ? (
-							<div className={classes.metaSwap} key="aftermath">
-								<EditAftermath edit={edit} />
-							</div>
-						) : (
-							<div className={classes.metaSwap} key="rest">
-								<p className={classes.metaLine}>
-									{attention && (
-										<>
-											<span>{attention}</span>
-											<span aria-hidden>{EVIDENCE_SEPARATOR}</span>
-										</>
-									)}
-									{evidenceWords(evidence.quotes, evidence.conversations)}
-								</p>
-								{states.length > 0 && (
-									<p
-										className={classes.metaState}
-										data-testid={`result-state-${item.objectId}`}
-									>
-										{states.map((word, index) => (
-											// biome-ignore lint/suspicious/noArrayIndexKey: two words in a fixed order
-											<span key={index}>{word}</span>
-										))}
-									</p>
+				{/* The meta line: what the row is made of, or what the host is
+				    being asked, in the same place, with a crossfade. It runs under
+				    the words and the controls both. */}
+				<div className={classes.meta}>
+					{edit.asking ? (
+						<div className={stepClass} data-step="" key="prompt">
+							<WordsPrompt
+								edit={edit}
+								testId={`result-change-prompt-${item.objectId}`}
+							/>
+						</div>
+					) : holding ? (
+						<div className={stepClass} data-step="" key="hold">
+							<ReasonPrompt
+								testId={`result-hold-prompt-${item.objectId}`}
+								question={<Trans>Why not in this presentation?</Trans>}
+								// The question above it already asks why.
+								reasonLabel={
+									<Trans>
+										One sentence, for the people you work with and anyone who
+										checks later.
+									</Trans>
+								}
+								confirmLabel={<Trans>Not in this presentation</Trans>}
+								options={[
+									// Three suggestions, the last reason used first, each said
+									// once; then the way to say something else.
+									...[
+										...actions.heldBackReasons,
+										t`repeats another finding`,
+										t`off topic for this room`,
+									]
+										.filter(
+											(reason, index, all) => all.indexOf(reason) === index,
+										)
+										.slice(0, 3)
+										.map((reason) => ({ key: reason, label: reason, reason })),
+									{
+										key: "other",
+										label: t`another reason`,
+										needsReason: true,
+									},
+								]}
+								onCancel={endHold}
+								onConfirm={({ reason }) => {
+									actions.holdBack?.(item.objectId, reason ?? "");
+									endHold();
+								}}
+							/>
+						</div>
+					) : aftermath ? (
+						<div className={stepClass} data-step="" key="aftermath">
+							<EditAftermath edit={edit} />
+						</div>
+					) : (
+						<div
+							className={`${stepped.current ? stepClass : classes.metaSwap} ${classes.rest}`}
+							key="rest"
+						>
+							<p className={classes.metaLine}>
+								{attention && (
+									<>
+										<span>{attention}</span>
+										<span aria-hidden>{EVIDENCE_SEPARATOR}</span>
+									</>
 								)}
-							</div>
-						)}
-					</div>
+								{evidenceWords(evidence.quotes, evidence.conversations)}
+							</p>
+							{states.length > 0 && (
+								<p
+									className={classes.metaState}
+									data-testid={`result-state-${item.objectId}`}
+								>
+									{states.map((word, index) => (
+										// biome-ignore lint/suspicious/noArrayIndexKey: two words in a fixed order
+										<span key={index}>{word}</span>
+									))}
+								</p>
+							)}
+						</div>
+					)}
 				</div>
 
 				<div className={classes.rowControls}>
-					{density === "curate" &&
-						canEdit &&
-						actions.holdBack &&
+					{holdable &&
 						(held ? (
 							<button
 								ref={holdControl}

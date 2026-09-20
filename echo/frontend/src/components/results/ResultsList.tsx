@@ -91,7 +91,9 @@ function matches(item: AnalysisObject, query: string): boolean {
 function Skeletons() {
 	return (
 		<div className={classes.group} data-testid="results-loading">
-			<p className={`${classes.groupHead} ${classes.ghost}`} />
+			<p className={classes.groupHead}>
+				<span className={classes.ghost} />
+			</p>
 			<ul className={classes.rows}>
 				{[0, 1, 2, 3].map((line) => (
 					<li className={classes.row} key={line}>
@@ -203,7 +205,16 @@ export function ResultsList({
 
 			{shown.length === 0 && (
 				<p className={classes.empty} data-testid="results-empty">
-					<Trans>No findings yet. They appear after the first analysis.</Trans>
+					{/* A search that finds nothing is not an analysis that found
+					    nothing, and the list does not say so. */}
+					{filter &&
+					(filter.query.trim() || filter.kind || filter.status !== "active") ? (
+						<Trans>No findings match.</Trans>
+					) : (
+						<Trans>
+							No findings yet. They appear after the first analysis.
+						</Trans>
+					)}
 				</p>
 			)}
 

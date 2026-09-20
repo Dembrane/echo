@@ -438,20 +438,26 @@ export const hasAftermath = (edit: WordsEdit): boolean =>
 export function EditAftermath({ edit }: { edit: WordsEdit }): ReactNode {
 	if (edit.conflict)
 		return (
+			// Whose words in the small print, the words themselves to be read and
+			// compared: each line is the control that keeps it.
 			<div className={classes.conflict} data-testid="result-conflict-choice">
 				<button
 					type="button"
-					className={classes.control}
+					className={classes.wording}
 					onClick={edit.keepTheirs}
 				>
-					{edit.conflict.who}: {edit.conflict.theirs}
+					<span>{edit.conflict.who}</span>
+					<span className={classes.wordingWords}>{edit.conflict.theirs}</span>
 				</button>
 				<button
 					type="button"
-					className={classes.control}
+					className={classes.wording}
 					onClick={edit.keepMine}
 				>
-					<Trans>Yours</Trans>: {edit.conflict.mine}
+					<span>
+						<Trans>Yours</Trans>
+					</span>
+					<span className={classes.wordingWords}>{edit.conflict.mine}</span>
 				</button>
 			</div>
 		);
@@ -467,7 +473,15 @@ export function EditAftermath({ edit }: { edit: WordsEdit }): ReactNode {
 	if (edit.draft?.failed)
 		return (
 			<p className={classes.notice} data-testid="result-save-failed">
-				<Trans>That did not save. Your words are still here. Try again</Trans>
+				<Trans>That did not save. Your words are still here.</Trans>{" "}
+				{/* Letting go of the words asks again; so does this. */}
+				<button
+					type="button"
+					className={`${classes.control} ${classes.quiet} ${classes.confirm}`}
+					onClick={edit.commit}
+				>
+					<Trans>Try again</Trans>
+				</button>
 			</p>
 		);
 	if (edit.saved)
@@ -482,7 +496,7 @@ export function EditAftermath({ edit }: { edit: WordsEdit }): ReactNode {
 				)}{" "}
 				<button
 					type="button"
-					className={`${classes.control} ${classes.quiet}`}
+					className={`${classes.control} ${classes.quiet} ${classes.confirm}`}
 					onClick={() => void edit.undo()}
 				>
 					<Trans>Undo</Trans>

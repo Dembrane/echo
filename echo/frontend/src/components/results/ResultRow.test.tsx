@@ -159,6 +159,51 @@ describe("one skeleton, four fillings", () => {
 	});
 });
 
+describe("what the row says once", () => {
+	it("tags a stakeholder's rung, unless it is voiced", () => {
+		const stakeholder = (rung: string): AnalysisObject => ({
+			objectId: "obj-3",
+			payload: { name: "The evening cleaners", role: "After six", rung },
+			revisionId: "rev-b",
+			type: "stakeholder",
+		});
+		show({ item: stakeholder("named") });
+		expect(screen.getByText("Named by participants")).toBeTruthy();
+		cleanup();
+
+		show({ item: stakeholder("voiced") });
+		expect(screen.queryByText("Named by participants")).toBeNull();
+	});
+
+	it("does not repeat a fact-check the row already rose for", () => {
+		const argument: AnalysisObject = {
+			attention: "fact_check",
+			attributes: { assessment: { verdict: "contested" } },
+			objectId: "obj-4",
+			payload: { statement: "Open on Sundays", valence: "positive" },
+			revisionId: "rev-c",
+			type: "argument",
+		};
+		show({ density: "check", item: argument });
+		expect(screen.getAllByText("the fact-check disagrees")).toHaveLength(1);
+		cleanup();
+
+		show({ density: "check", item: { ...argument, attention: null } });
+		expect(screen.getByTestId("result-state-obj-4").textContent).toContain(
+			"the fact-check disagrees",
+		);
+	});
+
+	it("opens from anywhere in the row that is not a control of its own", () => {
+		const onOpen = vi.fn();
+		show({ onOpen });
+		fireEvent.click(screen.getByText("2 quotes · 2 conversations"));
+		expect(onOpen).toHaveBeenCalledTimes(1);
+		fireEvent.click(screen.getByTestId("result-edit-phrase"));
+		expect(onOpen).toHaveBeenCalledTimes(1);
+	});
+});
+
 describe("changing the words in place", () => {
 	it("asks what changed, and blur never discards", async () => {
 		show();
@@ -311,6 +356,42 @@ describe("holding a finding back", () => {
 		);
 		expect(
 			screen.getByRole("button", { name: "Put back in this presentation" }),
+		).toBeTruthy();
+	});
+
+	it("offers three suggestions, each once, and always a way to say something else", () => {
+		render(
+			<I18nProvider i18n={i18n}>
+				<ul>
+					<ResultRow
+						actions={{
+							...actions(),
+							heldBackReasons: [
+								"said twice already",
+								"off topic for this room",
+							],
+						}}
+						canEdit
+						density="curate"
+						item={popcorn}
+						onOpen={() => {}}
+						open={false}
+					/>
+				</ul>
+			</I18nProvider>,
+		);
+		fireEvent.click(screen.getByTestId("result-hold-back-obj-1"));
+		const prompt = screen.getByTestId("result-hold-prompt-obj-1");
+		expect(prompt.querySelectorAll("[data-option]")).toHaveLength(4);
+		expect(
+			screen.getAllByRole("button", { name: "off topic for this room" }),
+		).toHaveLength(1);
+		fireEvent.click(screen.getByRole("button", { name: "another reason" }));
+		// The question already asked why; the label does not ask again.
+		expect(
+			screen.getByLabelText(
+				"One sentence, for the people you work with and anyone who checks later.",
+			),
 		).toBeTruthy();
 	});
 });

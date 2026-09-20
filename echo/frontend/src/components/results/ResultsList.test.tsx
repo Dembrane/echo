@@ -67,7 +67,24 @@ describe("the list", () => {
 
 	it("says so where there is nothing to read yet", () => {
 		show({ items: [] });
-		expect(screen.getByTestId("results-empty")).toBeTruthy();
+		expect(screen.getByTestId("results-empty").textContent).toContain(
+			"No findings yet",
+		);
+	});
+
+	it("does not blame the analysis when a search finds nothing", () => {
+		show({
+			density: "check",
+			filter: {
+				kind: null,
+				onChange: vi.fn(),
+				query: "zebra",
+				status: "active",
+			},
+		});
+		expect(screen.getByTestId("results-empty").textContent).toBe(
+			"No findings match.",
+		);
 	});
 
 	it("shows twenty of a long group, then all of it in place", () => {

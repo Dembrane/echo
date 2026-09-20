@@ -143,73 +143,86 @@ export function ReasonPrompt({
 			<p className={classes.promptQuestion}>{question}</p>
 			{!asked && (
 				<div className={classes.promptOptions}>
-					{options.map((option) => (
+					{options.map((option, index) => (
 						<button
 							key={option.key}
 							type="button"
-							className={classes.control}
+							className={`${classes.control} ${classes.quiet} ${classes.option}`}
 							data-option={option.key}
 							disabled={pending}
 							onClick={() => choose(option)}
 						>
-							{option.label}
+							{/* The key that gives this answer, for a host with keys. */}
+							<span aria-hidden className={classes.key}>
+								{index + 1}
+							</span>
+							<span className={classes.optionWords}>{option.label}</span>
 						</button>
 					))}
 					<button
 						type="button"
-						className={`${classes.control} ${classes.cancel}`}
+						className={`${classes.control} ${classes.quiet} ${classes.cancel}`}
 						onClick={onCancel}
 					>
 						<Trans>Cancel</Trans>
 					</button>
 				</div>
 			)}
+			{/* The answer given stays where the answers stood, so the field under
+			    it is read as the second half of one sentence. */}
+			{asked && <p className={classes.chosen}>{asked.label}</p>}
 			{asked && (
 				<div className={classes.promptField}>
-					<label className={classes.promptLabel} htmlFor={`${testId}-field`}>
-						{reasonLabel}
-					</label>
-					<textarea
-						ref={field}
-						id={`${testId}-field`}
-						className={classes.field}
-						rows={2}
-						value={reason}
-						aria-describedby={`${testId}-note`}
-						onChange={(event) => {
-							setReason(event.currentTarget.value);
-							setTooShort(false);
-						}}
-						onKeyDown={(event) => {
-							if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-								event.preventDefault();
-								if (!pending) send();
-							}
-						}}
-					/>
-					<p className={classes.note} id={`${testId}-note`} aria-live="polite">
-						{tooShort && (
-							<Trans>
-								A few more words, so someone reading later understands.
-							</Trans>
-						)}
-					</p>
-					<div className={classes.promptOptions}>
-						<button
-							type="button"
-							className={`${classes.control} ${classes.confirm}`}
-							disabled={pending}
-							onClick={send}
+					<div className={classes.promptInner}>
+						<label className={classes.promptLabel} htmlFor={`${testId}-field`}>
+							{reasonLabel}
+						</label>
+						<textarea
+							ref={field}
+							id={`${testId}-field`}
+							className={classes.field}
+							rows={2}
+							value={reason}
+							aria-describedby={`${testId}-note`}
+							onChange={(event) => {
+								setReason(event.currentTarget.value);
+								setTooShort(false);
+							}}
+							onKeyDown={(event) => {
+								if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+									event.preventDefault();
+									if (!pending) send();
+								}
+							}}
+						/>
+						<p
+							className={classes.note}
+							id={`${testId}-note`}
+							aria-live="polite"
 						>
-							{confirmLabel ?? <Trans>Save</Trans>}
-						</button>
-						<button
-							type="button"
-							className={`${classes.control} ${classes.cancel}`}
-							onClick={onCancel}
-						>
-							<Trans>Cancel</Trans>
-						</button>
+							{tooShort && (
+								<Trans>
+									A few more words, so someone reading later understands.
+								</Trans>
+							)}
+						</p>
+						<div className={classes.promptActions}>
+							<button
+								type="button"
+								className={`${classes.control} ${classes.confirm}`}
+								disabled={pending}
+								onClick={send}
+							>
+								{confirmLabel ?? <Trans>Save</Trans>}
+							</button>
+							<button
+								type="button"
+								className={`${classes.control} ${classes.cancel}`}
+								onClick={onCancel}
+							>
+								<Trans>Cancel</Trans>
+							</button>
+						</div>
 					</div>
 				</div>
 			)}

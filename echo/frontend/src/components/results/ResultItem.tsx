@@ -66,7 +66,8 @@ const stanceWord = (fields: Record<string, unknown>): ReactNode => {
 	return null;
 };
 
-const rungWord = (rung: unknown): ReactNode => {
+/** The rung in words. Nothing for "voiced", which is the expected one. */
+export const rungWord = (rung: unknown): ReactNode => {
 	if (rung === "named") return <Trans>Named by participants</Trans>;
 	if (rung === "inferred") return <Trans>Inferred</Trans>;
 	return null;

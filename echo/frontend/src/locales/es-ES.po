@@ -431,10 +431,9 @@ msgid "{0} phrases"
 msgstr ""
 
 #. placeholder {0}: item.attentionActor
-#: src/components/results/ResultRow.tsx:70
+#: src/components/results/ResultRow.tsx:72
 msgid "{0} reworded this"
 msgstr "{0} reformuló esto"
-
 
 #. placeholder {0}: line.addedSeats
 #. placeholder {1}: fmtEur(line.proratedNow)
@@ -538,8 +537,8 @@ msgstr "{conversationCount} conversaciones • Editado {0}"
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} seleccionadas"
 
-#: src/components/results/ResultRow.tsx:44
-#: src/components/results/ResultItem.tsx:77
+#: src/components/results/ResultRow.tsx:46
+#: src/components/results/ResultItem.tsx:78
 msgid "{conversations, plural, one {# conversation} other {# conversations}}"
 msgstr "{conversations, plural, one {# conversación} other {# conversaciones}}"
 
@@ -649,8 +648,8 @@ msgstr ""
 msgid "{pickedCount, plural, one {Using # conversation} other {Using # conversations}}"
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:43
-#: src/components/results/ResultItem.tsx:76
+#: src/components/results/ResultRow.tsx:45
+#: src/components/results/ResultItem.tsx:77
 msgid "{quotes, plural, one {# quote} other {# quotes}}"
 msgstr "{quotes, plural, one {# cita} other {# citas}}"
 
@@ -855,8 +854,8 @@ msgstr ""
 msgid "A downgrade limits features immediately."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:363
-#: src/components/results/ReasonPrompt.tsx:192
+#: src/components/results/ResultItem.tsx:364
+#: src/components/results/ReasonPrompt.tsx:204
 msgid "A few more words, so someone reading later understands."
 msgstr "Unas palabras más, para que alguien que lo lea después lo entienda."
 
@@ -872,7 +871,7 @@ msgstr "Un nombre amigable para identificar este webhook"
 msgid "A Help us translate link invites community translations. Full Italian interface translation is not included."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:416
+#: src/components/results/ResultItem.tsx:417
 msgid "A host"
 msgstr "Un anfitrión"
 
@@ -958,8 +957,8 @@ msgstr ""
 msgid "A title and subtitle before the countdown."
 msgstr ""
 
-#: src/components/results/resultEditing.tsx:403
-#: src/components/results/ResultItem.tsx:267
+#: src/components/results/resultEditing.tsx:414
+#: src/components/results/ResultItem.tsx:268
 msgid "A typo"
 msgstr "Una errata"
 
@@ -1444,10 +1443,9 @@ msgstr "Configuración Avanzada"
 msgid "Affected by"
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:95
+#: src/components/results/ResultRow.tsx:104
 msgid "against"
 msgstr "en contra"
-
 
 #: src/components/results/ResultItem.tsx:65
 msgid "Against"
@@ -1510,10 +1508,9 @@ msgstr ""
 msgid "All files were uploaded successfully."
 msgstr "Todas las archivos se han subido correctamente."
 
-#: src/components/results/ResultsList.tsx:168
+#: src/components/results/ResultsList.tsx:170
 msgid "All kinds"
 msgstr "Todos los tipos"
-
 
 #: src/routes/project/ProjectsHome.tsx:342
 msgid "All projects"
@@ -1647,7 +1644,7 @@ msgstr ""
 msgid "An assembly."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:277
+#: src/components/results/ResultItem.tsx:278
 msgid "An earlier wording restored"
 msgstr "Se restauró una redacción anterior"
 
@@ -1785,10 +1782,9 @@ msgstr ""
 msgid "Another admin or owner will need to restore you."
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:251
+#: src/components/results/ResultRow.tsx:283
 msgid "another reason"
 msgstr "otra razón"
-
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:826
 msgid "Any tag"
@@ -1959,11 +1955,10 @@ msgid "Argument tree (MST)"
 msgstr ""
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:59
-#: src/components/results/ResultsList.tsx:172
+#: src/components/results/ResultsList.tsx:174
 #: src/components/map/attributes.ts:88
 msgid "Arguments"
 msgstr "Argumentos"
-
 
 #: src/components/map/panels/SpotlightPanel.tsx:158
 msgid "Arguments express stances or preferences and aren't fact-checked."
@@ -2433,10 +2428,9 @@ msgstr "Reserve una llamada con nosotros"
 msgid "Book a certified training to keep using dembrane in high-risk settings."
 msgstr ""
 
-#: src/components/results/ResultsList.tsx:187
+#: src/components/results/ResultsList.tsx:189
 msgid "Both"
 msgstr "Ambos"
-
 
 #: src/components/project/ProjectPortalEditor.tsx:859
 msgid "Brainstorm Ideas"
@@ -2515,9 +2509,9 @@ msgstr ""
 #: src/components/training/TrainingRowActions.tsx:298
 #: src/components/training/RequestTrainingModal.tsx:97
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
-#: src/components/results/ResultItem.tsx:382
-#: src/components/results/ReasonPrompt.tsx:163
-#: src/components/results/ReasonPrompt.tsx:211
+#: src/components/results/ResultItem.tsx:383
+#: src/components/results/ReasonPrompt.tsx:167
+#: src/components/results/ReasonPrompt.tsx:223
 #: src/components/project/ProjectSharingModal.tsx:317
 #: src/components/project/ProjectSharingModal.tsx:498
 #: src/components/project/ProjectDangerZone.tsx:149
@@ -2715,7 +2709,6 @@ msgstr ""
 #: src/routes/project/present/PresentResultsPanel.tsx:110
 msgid "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 msgstr "Cambia las palabras, lee las pruebas o deja un hallazgo fuera de esta presentación. Los resultados compartidos siguen disponibles en Análisis."
-
 
 #: src/components/results/ResultItem.tsx:582
 #~ msgid "Change the words"
@@ -3004,8 +2997,8 @@ msgstr ""
 msgid "Clearer sources in chat"
 msgstr "Fuentes más claras en el chat"
 
-#: src/components/results/resultEditing.tsx:406
-#: src/components/results/ResultItem.tsx:269
+#: src/components/results/resultEditing.tsx:417
+#: src/components/results/ResultItem.tsx:270
 msgid "Clearer words, same meaning"
 msgstr "Palabras más claras, el mismo significado"
 
@@ -3075,9 +3068,9 @@ msgstr "Clonar proyecto"
 msgid "Clone Project"
 msgstr "Clonar proyecto"
 
-#: src/components/results/ResultRow.tsx:324
-#: src/components/results/ResultItem.tsx:760
-#: src/components/results/ResultItem.tsx:770
+#: src/components/results/ResultRow.tsx:356
+#: src/components/results/ResultItem.tsx:761
+#: src/components/results/ResultItem.tsx:771
 #: src/components/dropzone/UploadConversationDropzone.tsx:872
 #: src/components/conversation/ConversationLinks.tsx:110
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3147,15 +3140,13 @@ msgstr ""
 msgid "Columns"
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:88
+#: src/components/results/ResultRow.tsx:94
 msgid "combined"
 msgstr "combinado"
 
-
-#: src/components/results/ResultsList.tsx:173
+#: src/components/results/ResultsList.tsx:175
 msgid "Combined arguments"
 msgstr "Argumentos combinados"
-
 
 #: src/components/map/panels/shared.tsx:68
 msgid "Combined from"
@@ -4265,12 +4256,11 @@ msgstr "Eliminado con éxito"
 msgid "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:416
+#: src/components/results/ResultItem.tsx:417
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:212
 #: src/components/methodology/ProjectMethodologySection.tsx:128
 msgid "dembrane"
 msgstr "dembrane"
-
 
 #: src/components/methodology/ProjectMethodologySection.tsx:124
 msgid "dembrane - the default"
@@ -4792,8 +4782,8 @@ msgstr "Editar Webhook"
 msgid "Edit your display name and upload, crop or remove your profile picture."
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:86
-#: src/components/results/ResultItem.tsx:210
+#: src/components/results/ResultRow.tsx:92
+#: src/components/results/ResultItem.tsx:211
 msgid "edited"
 msgstr "editado"
 
@@ -5651,10 +5641,9 @@ msgstr ""
 msgid "Font Size"
 msgstr "Tamaño de fuente"
 
-#: src/components/results/ResultRow.tsx:94
+#: src/components/results/ResultRow.tsx:103
 msgid "for"
 msgstr "a favor"
-
 
 #: src/components/results/ResultItem.tsx:64
 msgid "For"
@@ -6160,7 +6149,7 @@ msgstr "Destacado"
 msgid "Highlight specific Concept"
 msgstr "Concepto específico resaltado"
 
-#: src/components/results/ResultItem.tsx:693
+#: src/components/results/ResultItem.tsx:694
 msgid "History"
 msgstr "Historial"
 
@@ -6354,7 +6343,7 @@ msgstr ""
 msgid "Images must be under {MAX_FILE_MB}MB"
 msgstr "Las imágenes deben pesar menos de {MAX_FILE_MB} MB"
 
-#: src/components/results/ResultItem.tsx:728
+#: src/components/results/ResultItem.tsx:729
 #: src/components/map/panels/shared.tsx:110
 msgid "Imported"
 msgstr "Importado"
@@ -6367,10 +6356,9 @@ msgstr ""
 msgid "Improvements"
 msgstr "Mejoras"
 
-#: src/components/results/ResultsList.tsx:185
+#: src/components/results/ResultsList.tsx:187
 msgid "In the analysis"
 msgstr "En el análisis"
-
 
 #: src/routes/settings/AgentConsentRoute.tsx:267
 msgid "In which organisations"
@@ -6411,7 +6399,7 @@ msgstr ""
 msgid "Incorrect or made up"
 msgstr "Incorrecto o inventado"
 
-#: src/components/results/ResultItem.tsx:71
+#: src/components/results/ResultItem.tsx:72
 #: src/components/map/panels/shared.tsx:85
 #: src/components/map/panels/shared.tsx:96
 msgid "Inferred"
@@ -6908,12 +6896,11 @@ msgstr ""
 msgid "Kickback %"
 msgstr ""
 
-#: src/components/results/ResultsList.tsx:160
+#: src/components/results/ResultsList.tsx:162
 msgid "Kind"
 msgstr "Tipo"
 
-
-#: src/components/results/ResultItem.tsx:279
+#: src/components/results/ResultItem.tsx:280
 msgid "Kind of change not recorded"
 msgstr "Tipo de cambio no registrado"
 
@@ -7536,7 +7523,6 @@ msgstr ""
 msgid "Map arguments"
 msgstr "Argumentos del Map"
 
-
 #: src/components/map/panels/MapSettingsMenu.tsx:112
 msgid "Map budget"
 msgstr ""
@@ -7941,7 +7927,7 @@ msgstr ""
 msgid "name@example.com, name2@example.com"
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:70
+#: src/components/results/ResultItem.tsx:71
 #: src/components/map/panels/shared.tsx:94
 msgid "Named by participants"
 msgstr "Mencionado por participantes"
@@ -7990,10 +7976,9 @@ msgstr ""
 msgid "Never"
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:59
+#: src/components/results/ResultRow.tsx:61
 msgid "new"
 msgstr "nuevo"
-
 
 #: src/routes/organisation/OrganisationRoute.tsx:1666
 #: src/components/workspace/TierStatusBadge.tsx:37
@@ -8280,10 +8265,13 @@ msgstr ""
 msgid "No feedback yet."
 msgstr "Todavía no hay valoraciones."
 
-#: src/components/results/ResultsList.tsx:206
+#: src/components/results/ResultsList.tsx:212
+msgid "No findings match."
+msgstr "Ningún hallazgo coincide."
+
+#: src/components/results/ResultsList.tsx:214
 msgid "No findings yet. They appear after the first analysis."
 msgstr "Todavía no hay hallazgos. Aparecen después del primer análisis."
-
 
 #: src/components/billing/BillingManager.tsx:1300
 msgid "No further charges"
@@ -8293,7 +8281,7 @@ msgstr ""
 msgid "No goal yet. Set one here, or let the assistant interview you in chat."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:404
+#: src/components/results/ResultItem.tsx:405
 msgid "No history yet."
 msgstr "Todavía no hay historial."
 
@@ -8617,14 +8605,13 @@ msgstr "No disponible"
 msgid "Not enabled by an admin of {0}"
 msgstr ""
 
-#: src/components/results/ResultsList.tsx:239
+#: src/components/results/ResultsList.tsx:250
 msgid "not in this presentation"
 msgstr "no en esta presentación"
 
-
-#: src/components/results/ResultRow.tsx:232
-#: src/components/results/ResultRow.tsx:315
-#: src/components/results/ResultItem.tsx:638
+#: src/components/results/ResultRow.tsx:267
+#: src/components/results/ResultRow.tsx:347
+#: src/components/results/ResultItem.tsx:639
 msgid "Not in this presentation"
 msgstr "No en esta presentación"
 
@@ -8786,11 +8773,9 @@ msgstr ""
 msgid "Off numbers the conversations. On shows the name typed on the phone, which may be a person's."
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:246
-#: src/components/results/ResultRow.tsx:247
+#: src/components/results/ResultRow.tsx:274
 msgid "off topic for this room"
 msgstr "fuera de tema para esta sala"
-
 
 #: src/components/conversation/monitorGrouping.ts:76
 #: src/components/conversation/StatePill.tsx:39
@@ -8839,10 +8824,9 @@ msgstr "Una vez que reciba {objectLabel}, léalo en voz alta y comparta en voz a
 msgid "One big event at the end of the year"
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:63
+#: src/components/results/ResultRow.tsx:65
 msgid "one conversation only"
 msgstr "de una sola conversación"
-
 
 #: src/components/pricing/questions.ts:156
 msgid "One day in October"
@@ -8856,16 +8840,18 @@ msgstr ""
 msgid "One number"
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:65
+#: src/components/results/ResultRow.tsx:67
 msgid "one quote only"
 msgstr "una sola cita"
 
+#: src/components/results/ResultRow.tsx:262
+msgid "One sentence, for the people you work with and anyone who checks later."
+msgstr "Una frase, para tus colegas y para quien lo revise después."
 
-#: src/components/results/ResultRow.tsx:166
-#: src/components/results/ResultItem.tsx:144
+#: src/components/results/ResultRow.tsx:194
+#: src/components/results/ResultItem.tsx:145
 msgid "One side of this tension"
 msgstr "Un lado de esta tensión"
-
 
 #: src/components/auth/PasswordRequirements.tsx:66
 msgid "One symbol"
@@ -8942,7 +8928,7 @@ msgstr "¡Ups! Parece que se denegó el acceso al micrófono. ¡No te preocupes!
 #: src/routes/organisation/OrganisationExternalView.tsx:121
 #: src/routes/admin/AdminSettingsRoute.tsx:2730
 #: src/routes/admin/AdminSettingsRoute.tsx:2768
-#: src/components/results/ResultRow.tsx:324
+#: src/components/results/ResultRow.tsx:356
 #: src/components/project/ProjectCard.tsx:62
 #: src/components/popcorn/PopcornHistory.tsx:73
 #: src/components/aspect/AspectCard.tsx:45
@@ -8988,7 +8974,7 @@ msgid "Open host guide"
 msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:861
-#: src/components/results/ResultItem.tsx:746
+#: src/components/results/ResultItem.tsx:747
 msgid "Open in Analysis"
 msgstr "Abrir en Análisis"
 
@@ -9796,7 +9782,6 @@ msgstr "Mala respuesta"
 msgid "Popcorn"
 msgstr "Popcorn"
 
-
 #: src/components/popcorn/PopcornLanguageSettings.tsx:68
 msgid "Popcorn also in"
 msgstr ""
@@ -9900,7 +9885,7 @@ msgstr ""
 msgid "Prepare sessions with an editable host guide next to the QR code."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:730
+#: src/components/results/ResultItem.tsx:731
 msgid "Prepared by an analysis run"
 msgstr "Preparado por un análisis"
 
@@ -10261,8 +10246,8 @@ msgstr "Saca las citas más potentes de esta sesión"
 msgid "Put {name} on dembrane-managed billing at the {tier} tier? No automatic Mollie charges or auto-expiry."
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:305
-#: src/components/results/ResultItem.tsx:636
+#: src/components/results/ResultRow.tsx:337
+#: src/components/results/ResultItem.tsx:637
 msgid "Put back in this presentation"
 msgstr "Devolver a esta presentación"
 
@@ -10458,11 +10443,11 @@ msgstr ""
 msgid "recently"
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:737
+#: src/components/results/ResultItem.tsx:738
 msgid "Recipe not recorded"
 msgstr "Receta no registrada"
 
-#: src/components/results/ResultItem.tsx:735
+#: src/components/results/ResultItem.tsx:736
 #: src/components/map/panels/NodeDetailCard.tsx:359
 msgid "Recipe: {recipe}"
 msgstr "Receta: {recipe}"
@@ -10841,11 +10826,9 @@ msgstr ""
 msgid "Reopen"
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:241
-#: src/components/results/ResultRow.tsx:242
+#: src/components/results/ResultRow.tsx:273
 msgid "repeats another finding"
 msgstr "repite otro hallazgo"
-
 
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:367
 msgid "Replay"
@@ -11134,25 +11117,25 @@ msgstr "Comentarios sobre la respuesta"
 #~ msgid "Restore revision {0} as a new revision?"
 #~ msgstr ""
 
-#: src/components/results/ResultItem.tsx:441
+#: src/components/results/ResultItem.tsx:442
 msgid "Restore this wording"
 msgstr "Restaurar esta redacción"
 
-#: src/components/results/ResultItem.tsx:653
+#: src/components/results/ResultItem.tsx:654
 msgid "Restore to the analysis"
 msgstr "Devolver al análisis"
 
 #. placeholder {0}: revision.revisionNumber
-#: src/components/results/ResultItem.tsx:577
+#: src/components/results/ResultItem.tsx:578
 msgid "Restored the wording of revision {0}"
 msgstr "Se restauró la redacción de la revisión {0}"
 
-#: src/components/results/ResultItem.tsx:275
-#: src/components/results/ResultItem.tsx:568
+#: src/components/results/ResultItem.tsx:276
+#: src/components/results/ResultItem.tsx:569
 msgid "Restored to the analysis"
 msgstr "Devuelto al análisis"
 
-#: src/components/results/ResultItem.tsx:712
+#: src/components/results/ResultItem.tsx:713
 msgid "Restoring that wording."
 msgstr "Se está restaurando esa redacción."
 
@@ -11170,7 +11153,6 @@ msgstr ""
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:112
 msgid "Results could not be loaded."
 msgstr "No se pudieron cargar los resultados."
-
 
 #: src/components/popcorn/PopcornLanguageSettings.tsx:133
 msgid "Results show in the language people spoke. Choose a language to translate every popcorn, quote, tension and stakeholder for this presentation; the originals are kept."
@@ -11437,8 +11419,8 @@ msgstr ""
 #: src/components/settings/LegalBasisCard.tsx:232
 #: src/components/settings/ChangePasswordCard.tsx:101
 #: src/components/settings/AccountSettingsCard.tsx:195
-#: src/components/results/resultEditing.tsx:401
-#: src/components/results/ReasonPrompt.tsx:204
+#: src/components/results/resultEditing.tsx:412
+#: src/components/results/ReasonPrompt.tsx:216
 #: src/components/project/CustomTopicModal.tsx:260
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:373
 #: src/components/goal/ProjectGoalSection.tsx:150
@@ -11495,20 +11477,17 @@ msgstr ""
 msgid "Saved appearance settings apply when the page first loads."
 msgstr ""
 
-#: src/components/results/resultEditing.tsx:470
+#: src/components/results/resultEditing.tsx:495
 msgid "Saved as a change of meaning."
 msgstr "Guardado como cambio de significado."
 
-
-#: src/components/results/resultEditing.tsx:466
+#: src/components/results/resultEditing.tsx:491
 msgid "Saved as a typo."
 msgstr "Guardado como errata."
 
-
-#: src/components/results/resultEditing.tsx:468
+#: src/components/results/resultEditing.tsx:493
 msgid "Saved as clearer words."
 msgstr "Guardado como palabras más claras."
-
 
 #: src/components/goal/GoalSuggestionCard.tsx:74
 msgid "Saved as this project's goal."
@@ -11608,7 +11587,7 @@ msgid "Scroll to bottom"
 msgstr "Desplazarse al final"
 
 #: src/features/sidebar/blocks/SearchBlock.tsx:89
-#: src/components/results/ResultsList.tsx:191
+#: src/components/results/ResultsList.tsx:193
 #: src/components/conversation/ProjectConversationsPanel.tsx:795
 #: src/components/conversation/MoveConversationButton.tsx:158
 msgid "Search"
@@ -12278,10 +12257,9 @@ msgid "Show a frame"
 msgstr ""
 
 #. placeholder {0}: inGroup.length
-#: src/components/results/ResultsList.tsx:275
+#: src/components/results/ResultsList.tsx:286
 msgid "Show all {0}"
 msgstr "Mostrar los {0}"
-
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:149
 msgid "Show audio player"
@@ -12329,7 +12307,7 @@ msgstr "Mostrar más"
 msgid "Show more versions"
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:751
+#: src/components/results/ResultItem.tsx:752
 msgid "Show on the map"
 msgstr "Ver en el mapa"
 
@@ -12367,7 +12345,7 @@ msgstr ""
 msgid "Show the invitation"
 msgstr "Mostrar la invitación"
 
-#: src/components/results/ResultItem.tsx:626
+#: src/components/results/ResultItem.tsx:627
 msgid "Show to the room"
 msgstr "Mostrar a la sala"
 
@@ -12487,7 +12465,7 @@ msgstr ""
 msgid "Someone"
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:614
+#: src/components/results/ResultItem.tsx:615
 msgid "Someone changed this while you had it open. Open it again to see their version."
 msgstr "Alguien cambió esto mientras lo tenías abierto. Ábrelo otra vez para ver su versión."
 
@@ -12495,16 +12473,13 @@ msgstr "Alguien cambió esto mientras lo tenías abierto. Ábrelo otra vez para 
 msgid "Someone else"
 msgstr "Otra persona"
 
-
-#: src/components/results/ResultRow.tsx:72
+#: src/components/results/ResultRow.tsx:74
 msgid "Someone reworded this"
 msgstr "Alguien reformuló esto"
 
-
-#: src/components/results/resultEditing.tsx:450
+#: src/components/results/resultEditing.tsx:467
 msgid "Someone reworded this after you did. Their words stand. Open it to read them"
 msgstr "Alguien reformuló esto después que tú. Sus palabras quedan. Ábrelo para leerlas"
-
 
 #: src/components/popcorn/PopcornVoiceSection.tsx:73
 msgid "Something else"
@@ -12684,7 +12659,6 @@ msgstr ""
 msgid "Stakeholders"
 msgstr "Partes interesadas"
 
-
 #: src/components/popcorn/PopcornScreenSettings.tsx:67
 msgid "Stakeholders tab"
 msgstr ""
@@ -12752,7 +12726,7 @@ msgstr ""
 #: src/routes/admin/AdminSettingsRoute.tsx:2686
 #: src/components/workspace/OrganisationUsageRollup.tsx:426
 #: src/components/training/StaffTrainingPanel.tsx:160
-#: src/components/results/ResultsList.tsx:177
+#: src/components/results/ResultsList.tsx:179
 #: src/components/report/ConversationStatusTable.tsx:62
 #: src/components/popcorn/PopcornStatus.tsx:36
 #: src/components/billing/BillingManager.tsx:767
@@ -13140,7 +13114,6 @@ msgstr ""
 msgid "Tensions"
 msgstr "Tensiones"
 
-
 #: src/components/popcorn/PopcornScreenSettings.tsx:54
 msgid "Tensions tab"
 msgstr ""
@@ -13193,10 +13166,13 @@ msgstr ""
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Ese código no funcionó. Inténtalo de nuevo con un código nuevo de tu aplicación de autenticación."
 
-#: src/components/results/resultEditing.tsx:459
-msgid "That did not save. Your words are still here. Try again"
-msgstr "No se guardó. Tus palabras siguen aquí. Inténtalo de nuevo"
+#: src/components/results/resultEditing.tsx:476
+msgid "That did not save. Your words are still here."
+msgstr "No se guardó. Tus palabras siguen aquí."
 
+#: src/components/results/resultEditing.tsx:459
+#~ msgid "That did not save. Your words are still here. Try again"
+#~ msgstr "No se guardó. Tus palabras siguen aquí. Inténtalo de nuevo"
 
 #: src/components/pricing/PricingConfigurator.tsx:815
 msgid "That didn't send. Your answers are still here, so try again."
@@ -13296,11 +13272,10 @@ msgstr ""
 msgid "The fact-check could not be started."
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:67
-#: src/components/results/ResultRow.tsx:85
+#: src/components/results/ResultRow.tsx:69
+#: src/components/results/ResultRow.tsx:91
 msgid "the fact-check disagrees"
 msgstr "la verificación dice otra cosa"
-
 
 #: src/components/release/releaseHistory.ts:95
 msgid "The feedback form can prefill your email address."
@@ -13331,7 +13306,7 @@ msgstr ""
 msgid "The goal guides reports, canvases, and assistant suggestions for this project."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:697
+#: src/components/results/ResultItem.tsx:698
 msgid "The history could not be loaded."
 msgstr "No se pudo cargar el historial."
 
@@ -13405,8 +13380,8 @@ msgstr ""
 msgid "The map loads after you choose to open it."
 msgstr "El mapa se carga después de elegir abrirlo."
 
-#: src/components/results/resultEditing.tsx:410
-#: src/components/results/ResultItem.tsx:271
+#: src/components/results/resultEditing.tsx:421
+#: src/components/results/ResultItem.tsx:272
 msgid "The meaning"
 msgstr "El significado"
 
@@ -13426,10 +13401,9 @@ msgstr ""
 msgid "The microphone is still blocked. Change it in your browser settings, then check again."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:166
+#: src/components/results/ResultItem.tsx:167
 msgid "The name of this stakeholder"
 msgstr "El nombre de esta parte interesada"
-
 
 #: src/components/release/releaseHistory.ts:264
 msgid "The new sidebar brings organisations, workspaces, members and settings together."
@@ -13448,11 +13422,10 @@ msgstr ""
 msgid "The original statements are unavailable for this older result."
 msgstr "Las declaraciones originales no están disponibles para este resultado anterior."
 
-#: src/components/results/ResultRow.tsx:178
-#: src/components/results/ResultItem.tsx:157
+#: src/components/results/ResultRow.tsx:208
+#: src/components/results/ResultItem.tsx:158
 msgid "The other side of this tension"
 msgstr "El otro lado de esta tensión"
-
 
 #: src/components/chat/ChatHistoryMessage.tsx:204
 msgid "The page this answer refers to."
@@ -13503,10 +13476,9 @@ msgstr "El informe puede comenzar hasta 5 minutos después de la hora elegida."
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:202
+#: src/components/results/ResultRow.tsx:234
 msgid "The second line of this finding"
 msgstr "La segunda línea de este hallazgo"
-
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:436
 msgid "the selected conversation"
@@ -13564,12 +13536,11 @@ msgstr "La URL del webhook y los eventos se clonarán. Necesitarás volver a int
 msgid "The words around the results: tabs, buttons and explanations."
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:188
-#: src/components/results/ResultItem.tsx:164
-#: src/components/results/ResultItem.tsx:168
+#: src/components/results/ResultRow.tsx:219
+#: src/components/results/ResultItem.tsx:165
+#: src/components/results/ResultItem.tsx:169
 msgid "The words of this finding"
 msgstr "Las palabras de este hallazgo"
-
 
 #: src/routes/invite/AcceptInviteRoute.tsx:233
 #: src/routes/invite/AcceptInviteRoute.tsx:416
@@ -13993,10 +13964,9 @@ msgstr ""
 msgid "This sets the language participants see in the portal, including the questions they are asked."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:194
+#: src/components/results/ResultItem.tsx:195
 msgid "This stakeholder's role"
 msgstr "El papel de esta parte interesada"
-
 
 #: src/components/project/ProjectPortalEditor.tsx:1300
 msgid "This title is shown to participants when they start a conversation"
@@ -14106,8 +14076,8 @@ msgstr ""
 msgid "Time"
 msgstr "Hora"
 
-#: src/components/results/ResultItem.tsx:284
-#: src/components/results/ResultItem.tsx:287
+#: src/components/results/ResultItem.tsx:285
+#: src/components/results/ResultItem.tsx:288
 msgid "Time not recorded"
 msgstr "Hora no registrada"
 
@@ -14169,7 +14139,7 @@ msgstr ""
 msgid "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:184
+#: src/components/results/ResultItem.tsx:185
 msgid "To resolve"
 msgstr "Por resolver"
 
@@ -14425,12 +14395,13 @@ msgstr ""
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:408
 #: src/routes/invite/MyInvitesRoute.tsx:222
 #: src/routes/invite/AcceptInviteRoute.tsx:557
+#: src/components/results/resultEditing.tsx:483
 #: src/components/project/ProjectAccessGuard.tsx:109
 #: src/components/pricing/PricingTextInput.tsx:330
 #: src/components/present/TranslationStatus.tsx:143
 #: src/components/map/MapPage.tsx:123
 msgid "Try again"
-msgstr ""
+msgstr "Reintentar"
 
 #: src/routes/project/library/LibraryRoute.tsx:207
 msgid "Try again in a moment."
@@ -14575,7 +14546,7 @@ msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:566
 #: src/routes/project/chat/NewChatRoute.tsx:312
-#: src/components/results/resultEditing.tsx:477
+#: src/components/results/resultEditing.tsx:502
 #: src/components/chat/AgenticChatPanel.tsx:1662
 msgid "Undo"
 msgstr "Deshacer"
@@ -15438,10 +15409,9 @@ msgstr ""
 msgid "What data is sent?"
 msgstr "¿Qué datos se envían?"
 
-#: src/components/results/resultEditing.tsx:392
+#: src/components/results/resultEditing.tsx:403
 msgid "What did you change?"
 msgstr "¿Qué has cambiado?"
-
 
 #: src/routes/onboarding/OnboardingRoute.tsx:495
 msgid "What do you plan to use dembrane for?"
@@ -15464,10 +15434,9 @@ msgstr ""
 msgid "What happened? Paste a screenshot here to attach it"
 msgstr "¿Qué ha pasado? Pegue aquí una captura de pantalla para adjuntarla"
 
-#: src/components/results/ResultItem.tsx:199
+#: src/components/results/ResultItem.tsx:200
 msgid "What is at stake here"
 msgstr "Qué está en juego aquí"
-
 
 #: src/components/pricing/PricingConfigurator.tsx:1041
 msgid "What is it?"
@@ -15497,10 +15466,9 @@ msgstr ""
 msgid "What this project is consuming this cycle."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:178
+#: src/components/results/ResultItem.tsx:179
 msgid "What this tension is about"
 msgstr "De qué trata esta tensión"
-
 
 #: src/components/feedback/ResponseFeedbackControls.tsx:183
 msgid "What went wrong?"
@@ -15510,10 +15478,9 @@ msgstr "¿Qué ha fallado?"
 msgid "What were the key moments in this conversation?"
 msgstr "¿Cuáles fueron los momentos clave de esta conversación?"
 
-#: src/components/results/ResultItem.tsx:188
+#: src/components/results/ResultItem.tsx:189
 msgid "What would resolve this tension"
 msgstr "Qué resolvería esta tensión"
-
 
 #: src/components/chat/ChatModeSelector.tsx:266
 msgid "What would you like to explore?"
@@ -15585,7 +15552,7 @@ msgstr ""
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Cuando el resumen esté listo (incluye tanto la transcripción como el resumen)"
 
-#: src/components/results/ResultItem.tsx:722
+#: src/components/results/ResultItem.tsx:723
 msgid "Where this came from"
 msgstr "De dónde viene esto"
 
@@ -15624,14 +15591,12 @@ msgstr ""
 msgid "Who on your team holds a current training license. Book a training from your organisation's Training view."
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:225
+#: src/components/results/ResultRow.tsx:259
 msgid "Why not in this presentation?"
 msgstr "¿Por qué no en esta presentación?"
 
-
-#: src/components/results/resultEditing.tsx:396
-#: src/components/results/ResultRow.tsx:227
-#: src/components/results/ResultItem.tsx:660
+#: src/components/results/resultEditing.tsx:407
+#: src/components/results/ResultItem.tsx:661
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
 msgstr "¿Por qué? Una frase, para tus colegas y para quien lo revise después."
 
@@ -15651,8 +15616,8 @@ msgstr ""
 msgid "With several lines, the first reads as a subtitle."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:665
-#: src/components/results/ResultItem.tsx:686
+#: src/components/results/ResultItem.tsx:666
+#: src/components/results/ResultItem.tsx:687
 msgid "Withdraw from the analysis"
 msgstr "Retirar del análisis"
 
@@ -15666,21 +15631,19 @@ msgstr "Retirar del análisis"
 #~ msgid "Withdraw this result from current Map and presentation views? Its revision history will remain available."
 #~ msgstr ""
 
-#: src/components/results/ResultRow.tsx:82
+#: src/components/results/ResultRow.tsx:84
 msgid "withdrawn"
 msgstr "retirado"
 
-
-#: src/components/results/ResultsList.tsx:186
+#: src/components/results/ResultsList.tsx:188
 msgid "Withdrawn"
 msgstr "Retirado"
 
-
-#: src/components/results/ResultItem.tsx:273
+#: src/components/results/ResultItem.tsx:274
 msgid "Withdrawn from the analysis"
 msgstr "Retirado del análisis"
 
-#: src/components/results/ResultItem.tsx:645
+#: src/components/results/ResultItem.tsx:646
 msgid "Withdrawn from the analysis."
 msgstr "Retirado del análisis."
 
@@ -15828,7 +15791,7 @@ msgstr "¿Te gustaría añadir esta etiqueta a tus filtros actuales?"
 msgid "Write custom host prompts for participant verification."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:726
+#: src/components/results/ResultItem.tsx:727
 msgid "Written by a host"
 msgstr "Escrito por un anfitrión"
 
@@ -16358,10 +16321,9 @@ msgstr "Tus Vistas"
 msgid "Your workspace is waiting for you. Click continue to collaborate."
 msgstr ""
 
-#: src/components/results/resultEditing.tsx:443
+#: src/components/results/resultEditing.tsx:458
 msgid "Yours"
 msgstr "Las tuyas"
-
 
 #: src/components/invite/InviteModal.tsx:701
 msgid "yr"
