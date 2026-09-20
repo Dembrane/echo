@@ -123,11 +123,7 @@ export function useResultFeedback(projectId: string): ResultFeedbackActions {
 	});
 
 	const rate = useCallback(
-		(
-			objectId: string,
-			revisionId: string,
-			feedback: ResultFeedback | null,
-		) => {
+		(objectId: string, revisionId: string, feedback: ResultFeedback | null) => {
 			setOverlay((current) => ({ ...current, [objectId]: feedback }));
 			write.mutate({ feedback, objectId, revisionId });
 		},
