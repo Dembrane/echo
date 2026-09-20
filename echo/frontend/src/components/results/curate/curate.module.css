@@ -466,16 +466,21 @@
 	margin: 0 0 0.35rem;
 }
 
-.feedback .tick {
-	flex: none;
-}
-
-.feedback label {
+/* A label with its box: the table's own tick is a square, this is a line. */
+.feedbackTick {
 	align-items: center;
 	cursor: pointer;
 	display: flex;
 	gap: 0.5rem;
 	min-height: 1.85rem;
+}
+
+.feedbackTick input {
+	accent-color: var(--blue);
+	flex: none;
+	height: 1rem;
+	margin: 0;
+	width: 1rem;
 }
 
 .sendLine {

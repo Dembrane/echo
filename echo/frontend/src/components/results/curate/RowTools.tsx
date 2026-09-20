@@ -111,7 +111,7 @@ function FeedbackForm({
 				<Trans>Tick as many as relevant</Trans>
 			</p>
 			{FEEDBACK_TAGS[rating].map((tag) => (
-				<label className={classes.tick} key={tag}>
+				<label className={classes.feedbackTick} key={tag}>
 					<input
 						checked={tags.includes(tag)}
 						data-testid={`curate-tag-${tag}`}

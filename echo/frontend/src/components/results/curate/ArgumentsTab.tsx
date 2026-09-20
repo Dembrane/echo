@@ -298,7 +298,7 @@ export function ArgumentsTab({
 							cells={(edit) => (
 								<>
 									<td className={classes.statement}>
-										<AttentionLead item={item} />
+										<AttentionLead item={item} thin={false} />
 										<RowWords
 											edit={edit}
 											field="statement"

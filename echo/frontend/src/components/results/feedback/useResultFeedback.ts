@@ -90,7 +90,9 @@ export function useResultFeedback(projectId: string): ResultFeedbackActions {
 			objectId: string;
 			revisionId: string;
 			feedback: ResultFeedback | null;
-		}) => {
+		}): Promise<{
+			myFeedback: (ResultFeedback & { revisionId: string }) | null;
+		}> => {
 			const path = `/analysis/projects/${projectId}/objects/${objectId}/feedback`;
 			return feedback === null
 				? bff.delete<{ myFeedback: null }>(path)

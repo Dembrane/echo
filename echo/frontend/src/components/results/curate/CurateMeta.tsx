@@ -74,8 +74,15 @@ export function attentionPhrase(
  * The attention word over the finding's own words: a small line in soft ink,
  * leading the first column rather than sitting in one of its own.
  */
-export function AttentionLead({ item }: { item: AnalysisObject }): ReactNode {
-	const said = attentionPhrase(item);
+export function AttentionLead({
+	item,
+	thin = true,
+}: {
+	item: AnalysisObject;
+	/** Whether "one quote only" is worth saying: not where nearly every row is. */
+	thin?: boolean;
+}): ReactNode {
+	const said = attentionPhrase(item, { thin });
 	if (!said) return null;
 	return <span className={classes.attention}>{said}</span>;
 }
