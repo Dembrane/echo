@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from collections.abc import Sequence
 from datetime import datetime, timezone
 
 from dembrane.popcorn import service
@@ -393,8 +394,61 @@ def audience_manifest(settings: dict[str, Any]) -> dict[str, Any]:
     return {k: manifest[k] for k in ("version", "blocks", "opening")}
 
 
-def sanitize_map(payload: dict[str, Any]) -> dict[str, Any]:
+def _node_conversations(node: dict[str, Any]) -> list[str]:
+    """The conversations behind one node, one entry per contributing member.
+
+    A merge repeats a conversation once per member that came from it, so the
+    map can weight a blend of their colours; anything else names each of its
+    own source conversations once.
+    """
+    def named(evidence: Any) -> list[str]:
+        return [
+            str(item["conversationId"])
+            for item in (evidence or [])
+            if isinstance(item, dict) and item.get("conversationId")
+        ]
+
+    detail = node.get("detail")
+    detail = detail if isinstance(detail, dict) else {}
+    consolidation = detail.get("consolidation")
+    members = (consolidation or {}).get("members") if isinstance(consolidation, dict) else None
+    if members:
+        return [
+            conversation_id
+            for member in members
+            if isinstance(member, dict)
+            for conversation_id in named(member.get("evidence"))
+        ]
+    return named(detail.get("evidence"))
+
+
+def conversation_slots(payload: dict[str, Any], order: Sequence[str]) -> dict[str, list[int]]:
+    """A palette slot per conversation, per node, and nothing else about it.
+
+    `order` is the popcorn session's own conversation order, oldest first,
+    which is how the deck hands its markers out. Mirroring it here is what
+    makes one conversation the same colour on the stage and on the map. A
+    conversation the session does not list (a map built before it joined)
+    takes the next slot after the ones it does, in first-seen order.
+
+    The slots are the only thing the room is told: never an id, never a name,
+    never how many conversations one argument touched beyond its own colours.
+    """
+    slot_of = {str(cid): index for index, cid in enumerate(order)}
+    slots: dict[str, list[int]] = {}
+    for node in payload.get("nodes", []):
+        found = []
+        for conversation_id in _node_conversations(node):
+            if conversation_id not in slot_of:
+                slot_of[conversation_id] = len(slot_of)
+            found.append(slot_of[conversation_id])
+        slots[str(node.get("revisionId"))] = sorted(found)
+    return slots
+
+
+def sanitize_map(payload: dict[str, Any], order: Sequence[str] = ()) -> dict[str, Any]:
     """Explicit audience projection: no passages, source IDs or host detail URLs."""
+    slots = conversation_slots(payload, order)
     nodes = []
     for node in payload.get("nodes", []):
         detail = node.get("detail") or {}
@@ -408,6 +462,7 @@ def sanitize_map(payload: dict[str, Any]) -> dict[str, Any]:
                 "detail": {"consolidation": {"memberCount": consolidation["memberCount"]}}
                 if consolidation.get("memberCount")
                 else {},
+                "conversations": slots.get(str(node.get("revisionId"))) or [],
                 "provenance": {},
                 "factCheck": {"eligible": False},
             }
@@ -433,12 +488,24 @@ def sanitize_map(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+async def conversation_order(report: dict[str, Any] | None) -> list[str]:
+    """The popcorn session's conversations, oldest first, which is the order
+    the deck hands its marker colours out in. Empty where there is no session
+    state yet; the map then keeps its own first-seen order."""
+    if not report:
+        return []
+    loop = await service.get_loop_for_report(str(report["id"]))
+    state = service.normalize_state((loop or {}).get("popcorn_state"))
+    return [str(cid) for cid in state.get("order") or []]
+
+
 async def audience_map(
     project_id: str,
     *,
     settings: dict[str, Any] | None = None,
     node_limit: int | None = None,
     edge_limit: int | None = None,
+    report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     from fastapi import HTTPException
 
@@ -449,7 +516,11 @@ async def audience_map(
     # screen gets the same, and keeps what it shows until the store is back.
     try:
         return await _audience_map(
-            project_id, settings=settings, node_limit=node_limit, edge_limit=edge_limit
+            project_id,
+            settings=settings,
+            node_limit=node_limit,
+            edge_limit=edge_limit,
+            report=report,
         )
     except (MapStoreError, AnalysisStoreError) as exc:
         raise HTTPException(status_code=503, detail="Map storage is unavailable.") from exc
@@ -461,6 +532,7 @@ async def _audience_map(
     settings: dict[str, Any] | None,
     node_limit: int | None,
     edge_limit: int | None,
+    report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     from fastapi import HTTPException
 
@@ -481,6 +553,8 @@ async def _audience_map(
     except BudgetError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     store, reads = SqlAnalysisStore(), SqlMapViewReads()
+    # The colours the room already saw on the popcorn stage.
+    order = await conversation_order(report)
     # Audience reads never advance a snapshot or trigger any processing.
     bound = ((settings or {}).get("presentation") or {}).get("result_bindings", {}).get("map")
     snapshot = (
@@ -508,7 +582,10 @@ async def _audience_map(
         row = await legacy_store.get_result(newest.id)
         if row:
             projected = _curate_map(
-                sanitize_map(await legacy_graph_payload(row, query, store=legacy_store)), settings
+                sanitize_map(
+                    await legacy_graph_payload(row, query, store=legacy_store), order
+                ),
+                settings,
             )
             projected["fact_checks"] = audience_assessments(
                 await map_service.fact_check_states(row, legacy_store), projected
@@ -516,7 +593,7 @@ async def _audience_map(
             return await _withdraw_map(projected, project_id, store)
     if snapshot:
         projected = _curate_map(
-            sanitize_map(await graph_payload(snapshot, query, store=store)), settings
+            sanitize_map(await graph_payload(snapshot, query, store=store), order), settings
         )
         # Read only the assessments pinned to these exact revisions. No cold
         # cache or audience interaction can start a factual check.

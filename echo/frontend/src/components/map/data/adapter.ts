@@ -147,6 +147,8 @@ export type MapGraphData = {
 	stale: MapStaleRef[];
 	/** Source conversations of a legacy result; null when unknown. */
 	conversationCount: number | null;
+	/** How many conversation colours this payload asks the legend for. */
+	conversationSlotCount: number;
 };
 
 export const isMapPayloadV2 = (value: unknown): value is MapPayloadV2 =>
@@ -426,6 +428,12 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 	const evidenceById = new Map<string, EvidenceGroup[]>();
 	const objectsById = new Map<string, MapObjectInfo>();
 	const allNodes: MapGraphNode[] = [];
+	// Which conversation every node came from, one entry per contributing
+	// member, and when that conversation started. The slots themselves are
+	// assigned once every node has been read, below.
+	const sourcesById = new Map<string, string[]>();
+	const slotsById = new Map<string, number[]>();
+	const startedAt = new Map<string, string>();
 
 	for (const item of data.nodes) {
 		if (!isObjectType(item.type) || !item.revisionId) continue;
@@ -447,6 +455,36 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 		const detailRecord = asRecord(item.detail);
 
 		const parsedDetail = parseDetail(type, label, item.detail);
+		// A merge counts once per member, so a blend follows the weight of each
+		// conversation in it; anything else counts each of its conversations once.
+		const members =
+			parsedDetail.type === "argument" ||
+			parsedDetail.type === "deduplicated_argument"
+				? parsedDetail.consolidation?.members
+				: undefined;
+		const sources = members?.length
+			? members.flatMap((member) =>
+					member.evidence.map((group) => group.conversationId),
+				)
+			: evidence.map((entry) => entry.conversation_id);
+		sourcesById.set(id, sources);
+		if (Array.isArray(item.conversations)) {
+			slotsById.set(
+				id,
+				item.conversations.filter(
+					(slot): slot is number => Number.isInteger(slot) && slot >= 0,
+				),
+			);
+		}
+		for (const entry of evidence) {
+			const known = startedAt.get(entry.conversation_id);
+			const at = entry.created_at ?? "";
+			if (at && (known === undefined || at < known)) {
+				startedAt.set(entry.conversation_id, at);
+			} else if (known === undefined) {
+				startedAt.set(entry.conversation_id, "");
+			}
+		}
 		objectsById.set(id, {
 			detail: parsedDetail,
 			factCheck: {
@@ -484,6 +522,8 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 				conversationIds: Array.from(
 					new Set(evidence.map((entry) => entry.conversation_id)),
 				),
+				// Filled in below, once every node's conversations are known.
+				conversationSlots: [],
 				createdAt: asStringOrNull(
 					detailRecord.created_at,
 					detailRecord.createdAt,
@@ -499,6 +539,33 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 				valence,
 			},
 		});
+	}
+
+	// Palette slots, in the order popcorn hands its markers out: oldest
+	// conversation first, so a conversation keeps its colour as later ones
+	// join. The room's projection assigns the slots itself and says so per
+	// node; there the ids never leave the server.
+	const slotOf = new Map<string, number>(
+		Array.from(startedAt.entries())
+			.sort(
+				(a, b) =>
+					(a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0) ||
+					(a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0),
+			)
+			.map(([conversationId], slot) => [conversationId, slot] as const),
+	);
+	let conversationSlotCount = slotOf.size;
+	for (const node of allNodes) {
+		const given = slotsById.get(node.id);
+		const slots =
+			given ??
+			(sourcesById.get(node.id) ?? [])
+				.map((conversationId) => slotOf.get(conversationId))
+				.filter((slot): slot is number => slot !== undefined);
+		node.metadata.conversationSlots = [...slots].sort((a, b) => a - b);
+		for (const slot of slots) {
+			conversationSlotCount = Math.max(conversationSlotCount, slot + 1);
+		}
 	}
 
 	const partition = partitionByEmbedding(allNodes);
@@ -559,6 +626,7 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 			? { ceilings: data.budgets.ceilings, defaults: data.budgets.defaults }
 			: null,
 		conversationCount: data.conversationCount,
+		conversationSlotCount,
 		counts,
 		evidenceById,
 		objectsById,

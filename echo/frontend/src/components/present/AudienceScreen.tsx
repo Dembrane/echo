@@ -38,10 +38,6 @@ import {
 import type { PresentationBlock as AudienceBlock } from "./blocks";
 import { useAudience } from "./hooks/useAudience";
 import { type AudienceTheme, useAudienceTheme } from "./hooks/useAudienceTheme";
-import {
-	useOpeningInlineEdit,
-	usePresentationDraft,
-} from "./hooks/usePresentationDraft";
 
 export type AudienceScreenProps = {
 	presentationId?: string;
@@ -961,6 +957,7 @@ export const AudienceScreen = ({
 						<div
 							className={cn(
 								"absolute inset-0",
+								classes.mapPane,
 								(activeBlock !== "map" || openingOpen) && "hidden",
 							)}
 						>
@@ -1135,20 +1132,13 @@ export const AudienceScreenRoute = () => {
 		);
 		if (locale && i18n.locale !== locale) i18n.activate(locale);
 	}, []);
-	// The host's own screen (signed in, by presentation id) lets a host who may
-	// edit type into the opening. The draft only loads for such a host; the
-	// room's public link never asks for it.
-	const draft = usePresentationDraft(
-		"",
-		presentationId ?? "",
-		Boolean(presentationId) && !token,
-	);
-	const editOpening = useOpeningInlineEdit(draft, true);
+	// The room screen is for showing, not for writing: the opening slides are
+	// reworded in the dashboard's preview on the Present page, never on the
+	// projector. Without `onEditOpening` the deck never gets the editing command.
 	return (
 		<AudienceScreen
 			presentationId={presentationId}
 			publicToken={token}
-			onEditOpening={editOpening}
 			onLanguage={followLanguage}
 			className="h-dvh min-h-dvh"
 		/>

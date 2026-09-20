@@ -201,6 +201,7 @@ async def draft_map(
         settings=settings,
         node_limit=node_limit,
         edge_limit=edge_limit,
+        report=report,
     )
 
 
@@ -292,7 +293,11 @@ async def presentation_map(
     if "map" not in present.audience_manifest(settings)["blocks"]:
         raise HTTPException(status_code=404, detail="Map is not in this presentation.")
     return await present.audience_map(
-        str(access.project["id"]), settings=settings, node_limit=node_limit, edge_limit=edge_limit
+        str(access.project["id"]),
+        settings=settings,
+        node_limit=node_limit,
+        edge_limit=edge_limit,
+        report=report,
     )
 
 

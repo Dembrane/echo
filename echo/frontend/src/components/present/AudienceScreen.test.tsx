@@ -13,6 +13,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { AudienceScreen } from "./AudienceScreen";
+import shell from "./AudienceScreen.module.css";
 import {
 	AUDIENCE_EVENT_REFRESH_MS,
 	AUDIENCE_RETRY_MIN_MS,
@@ -386,6 +387,28 @@ describe("AudienceScreen lifecycle", () => {
 				.queryByTestId("audience-map")
 				?.parentElement?.className.includes("hidden"),
 		).toBe(false);
+	});
+
+	it("insets the map on the same edge as the header and the footer", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				json: async () => response(["map"]),
+				ok: true,
+				status: 200,
+			}),
+		);
+
+		renderAudience({ publicToken: "token" });
+		const pane = (await screen.findByTestId("audience-map")).parentElement;
+		// One edge for the whole screen: the pane keeps it, and the map adds
+		// none of its own.
+		expect(pane?.classList.contains(shell.mapPane)).toBe(true);
+		expect(
+			screen
+				.getByTestId("audience-frame-footer")
+				.classList.contains(shell.footer),
+		).toBe(true);
 	});
 
 	it("clears public content when the stream drops and the link was switched off", async () => {

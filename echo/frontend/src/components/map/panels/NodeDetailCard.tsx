@@ -384,7 +384,9 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 	collapsibleQuotes = false,
 	inspection = null,
 }: NodeDetailCardProps) {
-	const [quotesOpen, setQuotesOpen] = useState(false);
+	// Evidence is what an argument is made of, so the panel shows it rather
+	// than only counting it. It still folds away for a long merge.
+	const [quotesOpen, setQuotesOpen] = useState(true);
 
 	if (!node) {
 		return (

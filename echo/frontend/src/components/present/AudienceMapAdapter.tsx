@@ -278,7 +278,9 @@ const AudienceMap = ({
 			// Dark is relit on the themed root; light is the host page's own.
 			style={dark ? undefined : MAP_LIGHT_VARS}
 		>
-			<Group justify="space-between" gap="xs" wrap="nowrap" px="sm" pt="xs">
+			{/* The room's pane already keeps the screen's edge, so this row and
+			    the surface under it add none of their own. */}
+			<Group justify="space-between" gap="xs" wrap="nowrap" px={0} pt="xs">
 				<Text size="sm">
 					<Plural value={nodes.length} one="# argument" other="# arguments" />
 				</Text>
@@ -294,7 +296,7 @@ const AudienceMap = ({
 					withinPortal={false}
 				/>
 			</Group>
-			<MapSurface darkMode={false}>
+			<MapSurface darkMode={false} inset={false}>
 				<MapInteractionProvider store={store}>
 					<MapExperience
 						graph={roomGraph}

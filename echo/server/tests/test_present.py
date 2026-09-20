@@ -317,6 +317,60 @@ def test_map_projection_excludes_host_fields():
     assert result["nodes"][0]["factCheck"] == {"eligible": False}
     assert result["nodes"][0]["detail"]["consolidation"] == {"memberCount": 3}
     assert result["nodes"][0]["label"] == "Finding"
+    # Members that are not evidence documents carry no conversation at all.
+    assert result["nodes"][0]["conversations"] == []
+
+
+def test_the_audience_map_names_conversations_only_by_their_colour_slot():
+    graph = {
+        "nodes": [
+            {
+                "objectId": "o1",
+                "revisionId": "r1",
+                "type": "argument",
+                "detail": {"evidence": [{"conversationId": "c-late", "quotes": ["A passage."]}]},
+            },
+            {
+                "objectId": "o2",
+                "revisionId": "r2",
+                "type": "deduplicated_argument",
+                "detail": {
+                    "evidence": [{"conversationId": "c-first"}, {"conversationId": "c-late"}],
+                    "consolidation": {
+                        "memberCount": 3,
+                        "members": [
+                            {"evidence": [{"conversationId": "c-late"}]},
+                            {"evidence": [{"conversationId": "c-first"}]},
+                            {"evidence": [{"conversationId": "c-late"}]},
+                        ],
+                    },
+                },
+            },
+            {"objectId": "o3", "revisionId": "r3", "type": "argument", "detail": {}},
+        ]
+    }
+    # The popcorn session's order, oldest first: the same slot the deck's
+    # marker colours are handed out in.
+    result = present.sanitize_map(graph, ["c-first", "c-late"])
+    nodes = {node["revisionId"]: node for node in result["nodes"]}
+    assert nodes["r1"]["conversations"] == [1]
+    # One entry per member, so the map can weight a blend two-to-one.
+    assert nodes["r2"]["conversations"] == [0, 1, 1]
+    assert nodes["r3"]["conversations"] == []
+    # Nothing about the conversations themselves reaches the room.
+    assert "c-first" not in str(result) and "c-late" not in str(result)
+
+
+def test_conversations_outside_the_session_take_the_next_slots_in_order():
+    graph = {
+        "nodes": [
+            {"revisionId": "r1", "detail": {"evidence": [{"conversationId": "c-new"}]}},
+            {"revisionId": "r2", "detail": {"evidence": [{"conversationId": "c-known"}]}},
+            {"revisionId": "r3", "detail": {"evidence": [{"conversationId": "c-newer"}]}},
+        ]
+    }
+    slots = present.conversation_slots(graph, ["c-known"])
+    assert slots == {"r1": [1], "r2": [0], "r3": [2]}
 
 
 def test_map_hiding_takes_the_departed_revisions_with_it():

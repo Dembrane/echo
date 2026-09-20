@@ -1,4 +1,9 @@
-export type ColorBy = "none" | "type" | "valence" | "factCheck";
+export type ColorBy =
+	| "none"
+	| "type"
+	| "valence"
+	| "factCheck"
+	| "conversation";
 
 /** Shared contract with the renderers: every node on the Map is one typed object. */
 export type ObjectType =
@@ -66,6 +71,12 @@ export type MapGraphNode = {
 		factCheck?: FactCheckState;
 		quotes: string[];
 		conversationIds: string[];
+		/**
+		 * Palette slots of the conversations behind this node, one entry per
+		 * contributing member: a merge repeats a slot per member, so a blend can
+		 * be weighted. Ascending, and empty where the payload says nothing.
+		 */
+		conversationSlots?: number[];
 		createdAt: string | null;
 	};
 };

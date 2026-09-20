@@ -340,3 +340,93 @@ describe("buildMapGraph with a legacy v1 result", () => {
 		expect(graph.conversationCount).toBe(result.conversations.length);
 	});
 });
+
+describe("conversations behind a node", () => {
+	const evidence = (conversationId: string, createdAt: string) => ({
+		conversationId,
+		createdAt,
+		quotes: [`Something said in ${conversationId}`],
+	});
+
+	it("gives every conversation a slot, oldest first, as popcorn does", () => {
+		const graph = buildMapGraph(
+			payload({
+				nodes: [
+					node({
+						detail: { evidence: [evidence("c-late", "2026-09-02T10:00:00Z")] },
+						revisionId: "rev-late",
+					}),
+					node({
+						detail: { evidence: [evidence("c-first", "2026-09-01T09:00:00Z")] },
+						revisionId: "rev-first",
+					}),
+				],
+			}),
+		);
+		const slotsOf = (id: string) =>
+			graph.allNodes.find((item) => item.id === id)?.metadata.conversationSlots;
+		expect(slotsOf("rev-first")).toEqual([0]);
+		expect(slotsOf("rev-late")).toEqual([1]);
+		expect(graph.conversationSlotCount).toBe(2);
+	});
+
+	it("counts a merge once per member, so a blend can be weighted", () => {
+		const graph = buildMapGraph(
+			payload({
+				nodes: [
+					node({
+						detail: {
+							consolidation: {
+								memberCount: 3,
+								members: [
+									{
+										evidence: [evidence("c-b", "2026-09-02T10:00:00Z")],
+										objectId: "m1",
+										revisionId: "mr1",
+										statement: "One",
+									},
+									{
+										evidence: [evidence("c-a", "2026-09-01T10:00:00Z")],
+										objectId: "m2",
+										revisionId: "mr2",
+										statement: "Two",
+									},
+									{
+										evidence: [evidence("c-b", "2026-09-02T10:00:00Z")],
+										objectId: "m3",
+										revisionId: "mr3",
+										statement: "Three",
+									},
+								],
+							},
+							evidence: [
+								evidence("c-a", "2026-09-01T10:00:00Z"),
+								evidence("c-b", "2026-09-02T10:00:00Z"),
+							],
+							statement: "Combined",
+						},
+						revisionId: "rev-merged",
+						type: "deduplicated_argument",
+					}),
+				],
+			}),
+		);
+		expect(graph.allNodes[0].metadata.conversationSlots).toEqual([0, 1, 1]);
+	});
+
+	it("takes the slots the room's projection assigns, ids and all withheld", () => {
+		const graph = buildMapGraph(
+			payload({
+				nodes: [
+					node({
+						conversations: [0, 2, 2],
+						detail: {},
+						revisionId: "rev-room",
+					}),
+				],
+			}),
+		);
+		expect(graph.allNodes[0].metadata.conversationSlots).toEqual([0, 2, 2]);
+		expect(graph.conversationSlotCount).toBe(3);
+	});
+});

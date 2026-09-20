@@ -47,6 +47,46 @@ const DARK_LIFTS: Readonly<Record<string, string>> = {
 export const resolveMapColor = (color: string, darkMode: boolean): string =>
 	(darkMode ? DARK_LIFTS[color.toUpperCase()] : undefined) ?? color;
 
+/**
+ * The deck's categorical markers, `--m0` to `--m5` in
+ * `server/dembrane/popcorn/static/styles.css`. One marker per conversation,
+ * never semantic, and pinned: the deck keeps these exact values in both
+ * themes, because what they colour is an object in the room rather than a
+ * surface of the page. The map keeps them pinned too, so a conversation reads
+ * the same on the popcorn stage and on the map.
+ */
+export const MARKER_COLORS: ReadonlyArray<string> = [
+	"#00FFFF",
+	"#1EFFA1",
+	"#FFC2FF",
+	"#F4FF81",
+	"#FFD166",
+	"#FF9AA2",
+];
+
+/**
+ * The colour of one conversation's palette slot. Past the six brand accents
+ * the deck keeps generating highlighter colours by the golden angle; this is
+ * that rule, so slot seven onward matches the stage as well.
+ */
+export const conversationColor = (slot: number): string => {
+	const index = Number.isFinite(slot) && slot > 0 ? Math.floor(slot) : 0;
+	if (index < MARKER_COLORS.length) return MARKER_COLORS[index];
+	return `hsl(${Math.round((index * 137.508) % 360)} 95% 80%)`;
+};
+
+/**
+ * The colours a node is drawn with: one per contributing member, so a merge
+ * from several conversations blends them in slot order and by weight. A node
+ * the payload says nothing about keeps the neutral grey.
+ */
+export const conversationColors = (
+	slots: ReadonlyArray<number> | undefined,
+): string[] => {
+	if (!slots || slots.length === 0) return [];
+	return [...slots].sort((a, b) => a - b).map(conversationColor);
+};
+
 // ---------------------------------------------------------------------------
 // Object types
 // ---------------------------------------------------------------------------
@@ -142,6 +182,8 @@ export const FACT_CHECKABLE_TYPES: ReadonlySet<ObjectType> = new Set([
 
 /** The node metadata an attribute reads. Every field may be absent. */
 export type AttributeInputs = {
+	/** Palette slots of the conversations behind the node, one per member. */
+	conversationSlots?: ReadonlyArray<number>;
 	objectType?: ObjectType;
 	epistemicKind?: MapEpistemicKind;
 	/** @deprecated read through `epistemicKind`. */
@@ -154,6 +196,7 @@ export type AttributeInputs = {
 export const attributeInputsOf = (
 	metadata: Partial<MapGraphNode["metadata"]> | undefined,
 ): AttributeInputs => ({
+	conversationSlots: metadata?.conversationSlots,
 	epistemicKind: metadata?.epistemicKind,
 	factCheck: metadata?.factCheck,
 	factCheckEligible: metadata?.factCheckEligible,
@@ -210,6 +253,11 @@ export type AttributeValue = {
 	label: string;
 	color: string;
 	pulse: boolean;
+	/**
+	 * Two or more colours the node is drawn from instead of one flat fill,
+	 * in the order they are blended. Empty where one colour says it all.
+	 */
+	blend: string[];
 };
 
 export type LegendEntry = { key: string; label: string; color: string };
@@ -232,7 +280,30 @@ export type AttributeDefinition = {
 	entries: () => ReadonlyArray<{ key: string; label: string }>;
 	/** Keys the legend lists; defaults to every entry. */
 	legendKeys?: ReadonlyArray<string>;
+	/**
+	 * Values an attribute cannot list ahead of time, such as one colour per
+	 * conversation. Answers for a key the fixed palette does not hold.
+	 */
+	resolve?: (key: string) => { color: string; label: string } | undefined;
+	/** Colours a node is blended from, where one fill will not do. */
+	blend?: (inputs: AttributeInputs) => string[];
 };
+
+/** The palette slot key of one conversation, in the attribute's own words. */
+export const SLOT_KEY_PREFIX = "slot-";
+
+export const slotKey = (slot: number): string => `${SLOT_KEY_PREFIX}${slot}`;
+
+/** The slot a key stands for, or null where the key is not a slot. */
+export const slotOfKey = (key: string): number | null => {
+	if (!key.startsWith(SLOT_KEY_PREFIX)) return null;
+	const slot = Number(key.slice(SLOT_KEY_PREFIX.length));
+	return Number.isInteger(slot) && slot >= 0 ? slot : null;
+};
+
+/** How a conversation is named where its name is withheld: by its place. */
+export const conversationSlotLabel = (slot: number): string =>
+	t`Conversation ${slot + 1}`;
 
 const NONE: AttributeDefinition = {
 	accessor: () => "none",
@@ -329,7 +400,43 @@ const FACTUAL_STATUS: AttributeDefinition = {
 	valueType: "category",
 };
 
+/**
+ * One colour per conversation, the deck's own assignment. A node takes the
+ * colour of the conversation it came from; a merge is blended from its
+ * members' colours, weighted by how many members each conversation gave.
+ * The slots themselves are opaque: the room is never told whose conversation
+ * a colour stands for.
+ */
+const CONVERSATION: AttributeDefinition = {
+	accessor: (inputs) => {
+		const slots = inputs.conversationSlots;
+		if (!slots || slots.length === 0) return undefined;
+		return slotKey(Math.min(...slots));
+	},
+	appliesTo: OBJECT_TYPES,
+	blend: (inputs) => conversationColors(inputs.conversationSlots),
+	entries: () => [{ key: "not_recorded", label: t`Source not recorded` }],
+	id: "conversation",
+	label: () => t`Conversation`,
+	// The legend lists the conversations the payload actually carries, so it
+	// is built from the nodes rather than from these entries.
+	legendKeys: [],
+	missing: "not_recorded",
+	notApplicable: "not_recorded",
+	palette: { not_recorded: MAP_NOT_ASSESSED_GREY },
+	resolve: (key) => {
+		const slot = slotOfKey(key);
+		if (slot === null) return undefined;
+		return {
+			color: conversationColor(slot),
+			label: conversationSlotLabel(slot),
+		};
+	},
+	valueType: "category",
+};
+
 export const ATTRIBUTES: Readonly<Record<ColorBy, AttributeDefinition>> = {
+	conversation: CONVERSATION,
 	factCheck: FACTUAL_STATUS,
 	none: NONE,
 	type: TYPE,
@@ -338,6 +445,7 @@ export const ATTRIBUTES: Readonly<Record<ColorBy, AttributeDefinition>> = {
 
 /** Colour modes in the order the settings menu offers them. */
 export const COLOR_BY_OPTIONS: ReadonlyArray<ColorBy> = [
+	"conversation",
 	"none",
 	"type",
 	"valence",
@@ -357,16 +465,20 @@ export function resolveAttribute(
 ): AttributeValue {
 	const type = inputs.objectType ?? "argument";
 	let key: string;
+	let dynamic: { color: string; label: string } | undefined;
 	if (!definition.appliesTo.includes(type)) {
 		key = definition.notApplicable;
 	} else {
 		key = definition.accessor(inputs) ?? definition.missing;
-		if (!(key in definition.palette)) key = definition.missing;
+		dynamic = definition.resolve?.(key);
+		if (!dynamic && !(key in definition.palette)) key = definition.missing;
 	}
+	const blend = dynamic ? (definition.blend?.(inputs) ?? []) : [];
 	return {
-		color: definition.palette[key] ?? MAP_NEUTRAL_GREY,
+		blend: blend.length > 1 ? blend : [],
+		color: dynamic?.color ?? definition.palette[key] ?? MAP_NEUTRAL_GREY,
 		key,
-		label: labelFor(definition, key),
+		label: dynamic?.label ?? labelFor(definition, key),
 		pulse: definition.pulsing?.has(key) ?? false,
 	};
 }

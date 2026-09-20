@@ -114,6 +114,13 @@ export type MapPayloadNode = {
 		assessmentRevisionId?: string;
 	};
 	provenance: MapProvenance;
+	/**
+	 * Palette slots of the conversations behind this node, one entry per
+	 * contributing member. The room's projection carries these in place of the
+	 * conversations themselves, so the map can colour by conversation without
+	 * being told which conversation it is.
+	 */
+	conversations?: number[];
 	/** Null: listed as unplaced. */
 	embedding: number[] | null;
 };
