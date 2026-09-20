@@ -38,36 +38,57 @@ const popcorn: AnalysisObject = {
 			{ conversationId: "c-3", quote: "Closing it would be the end." },
 		],
 	},
-	revisionId: "rev-2",
+	revisionId: "rev-5",
 	type: "popcorn",
 };
 
+/** A run's own bookkeeping: the same words again, provenance and nothing else. */
+const machine = (
+	n: number,
+	phrase: string,
+	day: string,
+	origin = "generated",
+) => ({
+	membershipExcluded: false,
+	objectId: "obj-1",
+	payload: { phrase },
+	provenance: { origin },
+	publishedAt: `2026-09-${day}T09:00:00Z`,
+	revisionId: `rev-${n}`,
+	revisionNumber: n,
+	status: "published",
+	type: "popcorn",
+});
+
+const human = (
+	n: number,
+	phrase: string,
+	day: string,
+	actorId: string,
+	changeKind: string | null,
+) => ({
+	actorId,
+	changeKind,
+	membershipExcluded: false,
+	objectId: "obj-1",
+	payload: { phrase },
+	provenance: { origin: "authored" },
+	publishedAt: `2026-09-${day}T09:00:00Z`,
+	reason: null,
+	revisionId: `rev-${n}`,
+	revisionNumber: n,
+	status: "published",
+	type: "popcorn",
+});
+
 const revisions = [
-	{
-		membershipExcluded: false,
-		objectId: "obj-1",
-		payload: { phrase: "We keep the libary open" },
-		provenance: { origin: "generated" },
-		publishedAt: "2026-09-18T09:00:00Z",
-		revisionId: "rev-1",
-		revisionNumber: 1,
-		status: "published",
-		type: "popcorn",
-	},
-	{
-		actorId: "user-1",
-		changeKind: "typo",
-		membershipExcluded: false,
-		objectId: "obj-1",
-		payload: { phrase: "We keep the library open" },
-		provenance: { origin: "authored" },
-		publishedAt: "2026-09-19T09:00:00Z",
-		reason: null,
-		revisionId: "rev-2",
-		revisionNumber: 2,
-		status: "published",
-		type: "popcorn",
-	},
+	machine(1, "We keep the libary open", "16", "imported"),
+	// A rerun that changed the provenance and not a word.
+	machine(2, "We keep the libary open", "17"),
+	human(3, "We keep the libary open, always", "18", "user-2", null),
+	// The vector repair backfill, over the host's own wording.
+	machine(4, "We keep the libary open, always", "18"),
+	human(5, "We keep the library open", "19", "user-1", "typo"),
 ];
 
 beforeAll(() => {
@@ -77,7 +98,7 @@ beforeAll(() => {
 
 beforeEach(() => {
 	vi.mocked(bff.get).mockResolvedValue({ object: {}, revisions });
-	vi.mocked(bff.post).mockResolvedValue({ revision: revisions[1] });
+	vi.mocked(bff.post).mockResolvedValue({ revision: revisions[4] });
 });
 
 afterEach(() => {
@@ -259,18 +280,76 @@ describe("the workbench margin", () => {
 		expect(screen.getByTestId("result-workbench")).toBeTruthy();
 	});
 
-	it("shows who, when, the kind, and 'not recorded' where none was kept", async () => {
-		show({ actorName: () => "Anna", canEdit: true });
-		expect(await screen.findByTestId("result-history")).toBeTruthy();
+	it("says the machine's origin once, and keeps the history closed", async () => {
+		show({ canEdit: true });
+		// The first revision was imported, so that is where this came from: one
+		// line with the day, and never an entry per rerun.
+		expect(
+			await screen.findByText(/Imported from an earlier analysis, /),
+		).toBeTruthy();
+		expect(screen.queryByTestId("result-history")).toBeNull();
+		expect(screen.queryByText("History")).toBeNull();
+		expect(screen.queryByText("Kind of change not recorded")).toBeNull();
+	});
+
+	it("shows no history line at all where no one has touched the finding", async () => {
+		vi.mocked(bff.get).mockResolvedValue({
+			object: {},
+			revisions: [
+				machine(1, "We keep the library open", "16"),
+				machine(2, "We keep the library open", "17"),
+				machine(3, "We keep the library open", "17"),
+			],
+		});
+		show({ canEdit: true });
+		expect(
+			await screen.findByText(/Prepared by an analysis run, /),
+		).toBeTruthy();
+		expect(screen.queryByTestId("result-history-line")).toBeNull();
+		expect(screen.queryByRole("button", { name: "history" })).toBeNull();
+	});
+
+	it("summarises a host's edits in one line and opens the timeline in place", async () => {
+		show({
+			actorName: (id) => (id === "user-1" ? "Anna" : undefined),
+			canEdit: true,
+		});
+		const line = await screen.findByTestId("result-history-line");
+		expect(line.textContent).toContain("Edited by Anna");
+		const control = screen.getByRole("button", { name: "history" });
+		expect(control.getAttribute("aria-expanded")).toBe("false");
+
+		fireEvent.click(control);
+		expect(screen.getByTestId("result-history")).toBeTruthy();
+		expect(control.getAttribute("aria-expanded")).toBe("true");
+		// Two people's revisions, and none of the three the machine wrote.
+		expect(screen.getByTestId("result-history").children).toHaveLength(2);
 		expect(screen.getByText("A typo")).toBeTruthy();
+		// A person's revision with no kind recorded still says so.
 		expect(screen.getByText("Kind of change not recorded")).toBeTruthy();
 		expect(screen.getByText(/Anna ·/)).toBeTruthy();
-		expect(screen.getByText(/dembrane ·/)).toBeTruthy();
-		// The before and after of the wording that changed: struck through in
-		// the entry that replaced it, and plain in the entry that produced it.
-		const before = screen.getAllByText("We keep the libary open");
-		expect(before).toHaveLength(2);
-		expect(before[0].className).toContain("before");
+		// The name is unknown for the other host, and the machine names no one.
+		expect(screen.getByText(/A host ·/)).toBeTruthy();
+		expect(screen.queryByText(/dembrane ·/)).toBeNull();
+		// The recipe lives at the foot of the history, not in the margin.
+		expect(screen.getByText(/Recipe: popcorn/)).toBeTruthy();
+
+		// Escape closes it one step, and the caret goes back to the word.
+		fireEvent.keyDown(control, { key: "Escape" });
+		expect(screen.queryByTestId("result-history")).toBeNull();
+		expect(document.activeElement).toBe(control);
+	});
+
+	it("takes the 'before' from the revision right before it, machines included", async () => {
+		show({ canEdit: true });
+		fireEvent.click(await screen.findByRole("button", { name: "history" }));
+		// The typo's entry struck through the wording the backfill carried
+		// forward, which is the one the room was reading.
+		const struck = screen.getAllByText("We keep the libary open, always");
+		expect(struck[0].className).toContain("before");
+		// And the earlier edit struck through what the import said.
+		const first = screen.getByText("We keep the libary open");
+		expect(first.className).toContain("before");
 	});
 
 	it("will not withdraw without a reason, and sends the kind with it", async () => {
@@ -296,7 +375,7 @@ describe("the workbench margin", () => {
 		expect(vi.mocked(bff.post).mock.calls[0][1]).toEqual({
 			change_kind: "withdraw",
 			excluded: true,
-			expected_revision_id: "rev-2",
+			expected_revision_id: "rev-5",
 			reason: "It repeats the finding above it",
 		});
 	});
@@ -368,14 +447,24 @@ describe("the workbench margin", () => {
 		await waitFor(() => expect(editWords).toHaveBeenCalled());
 		expect(editWords.mock.calls[0][0]).toMatchObject({
 			changeKind: "typo",
-			expectedRevisionId: "rev-2",
+			expectedRevisionId: "rev-5",
 			field: "phrase",
 			words: "We keep the library opn",
 		});
 	});
 
+	it("offers a wording only where it differs from the one on the card", async () => {
+		show({ canEdit: true });
+		fireEvent.click(await screen.findByRole("button", { name: "history" }));
+		// Two entries, one offer: the newest wording is the one being read.
+		expect(
+			screen.getAllByRole("button", { name: "Use this wording" }),
+		).toHaveLength(1);
+	});
+
 	it("restores a wording against the revision it came from", async () => {
 		show({ canEdit: true });
+		fireEvent.click(await screen.findByRole("button", { name: "history" }));
 		const restore = await screen.findByRole("button", {
 			name: "Use this wording",
 		});
@@ -384,8 +473,8 @@ describe("the workbench margin", () => {
 		expect(vi.mocked(bff.post).mock.calls[0][0]).toContain("/rollback");
 		expect(vi.mocked(bff.post).mock.calls[0][1]).toMatchObject({
 			change_kind: "rollback",
-			expected_revision_id: "rev-2",
-			to_revision_id: "rev-1",
+			expected_revision_id: "rev-5",
+			to_revision_id: "rev-3",
 		});
 	});
 });

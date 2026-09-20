@@ -1,7 +1,13 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ArrowsLeftRightIcon, QuotesIcon } from "@phosphor-icons/react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+	type KeyboardEvent as ReactKeyboardEvent,
+	type ReactNode,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import {
 	type AnalysisObject,
 	type AnalysisRevision,
@@ -12,10 +18,13 @@ import {
 import { I18nLink } from "@/components/common/i18nLink";
 import classes from "./ResultItem.module.css";
 import {
+	analysisOrigin,
 	type ChangeKind,
 	changeKindOf,
 	type EditableField,
 	evidenceWords,
+	type HistoryEntry,
+	humanHistory,
 	isEdited,
 	primaryText,
 	QUOTE_LIMIT,
@@ -23,7 +32,6 @@ import {
 	resultEvidence,
 	resultFields,
 	resultQuotes,
-	revisionWording,
 	sizeStep,
 	WITHDRAW_REASON_MIN,
 } from "./resultContent";
@@ -299,6 +307,38 @@ function whenWord(value?: string | null): string {
 			}).format(at);
 }
 
+/**
+ * The one line the machine gets. Whatever a run did afterwards (a repair, a
+ * rerun that changed no words) it is still the same origin, so it is said
+ * once, with the day the finding first appeared.
+ */
+const originWords = (origin: string, day: string | null): ReactNode => {
+	if (!day)
+		return origin === "imported" ? (
+			<Trans>Imported from an earlier analysis</Trans>
+		) : origin === "authored" ? (
+			<Trans>Written by a host</Trans>
+		) : (
+			<Trans>Prepared by an analysis run</Trans>
+		);
+	return origin === "imported" ? (
+		<Trans>Imported from an earlier analysis, {day}</Trans>
+	) : origin === "authored" ? (
+		<Trans>Written by a host, {day}</Trans>
+	) : (
+		<Trans>Prepared by an analysis run, {day}</Trans>
+	);
+};
+
+/** The day alone: what the origin line and the one-line summary are about. */
+function dayWord(value?: string | null): string {
+	if (!value) return t`Date not recorded`;
+	const at = new Date(value);
+	return Number.isNaN(at.getTime())
+		? t`Date not recorded`
+		: new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(at);
+}
+
 /** A step that asks for a reason and will not send without one. */
 function ReasonStep({
 	label,
@@ -401,33 +441,30 @@ function ReasonStep({
 	);
 }
 
+/**
+ * What people did to this finding, newest first. Machine revisions are not
+ * entries here: they are the origin line above, and a host reading a history
+ * is reading hands, not the pipeline's bookkeeping.
+ */
 function HistoryTimeline({
-	revisions,
+	entries,
 	actorName,
+	onKeyDown,
 	onRestore,
 	pending,
 }: {
-	revisions: AnalysisRevision[];
+	entries: HistoryEntry[];
 	actorName?: (actorId: string) => string | undefined;
+	/** Escape closes the history from inside it too. */
+	onKeyDown?: (event: ReactKeyboardEvent) => void;
 	onRestore: (revision: AnalysisRevision) => void;
 	pending: boolean;
 }) {
-	if (revisions.length === 0)
-		return (
-			<p className={classes.line}>
-				<Trans>No history yet.</Trans>
-			</p>
-		);
-	// Newest first: the last thing that happened is what a host looks for.
-	const entries = [...revisions].reverse();
 	return (
 		<ol className={classes.timeline} data-testid="result-history">
-			{entries.map((revision, index) => {
-				const previous = entries[index + 1];
-				const before = previous ? revisionWording(previous) : "";
-				const after = revisionWording(revision);
+			{entries.map(({ after, before, offerRestore, revision }) => {
 				const actor = revision.actorId ? actorName?.(revision.actorId) : null;
-				const who = revision.actorId ? (actor ?? t`A host`) : t`dembrane`;
+				const who = actor ?? t`A host`;
 				return (
 					<li className={classes.entry} key={revision.revisionId}>
 						<p className={classes.entryHead}>
@@ -445,12 +482,13 @@ function HistoryTimeline({
 							</del>
 						)}
 						{after && <p className={classes.wording}>{after}</p>}
-						{index > 0 && (
+						{offerRestore && (
 							<button
 								type="button"
 								className={`${classes.control} ${classes.quiet}`}
 								disabled={pending}
 								onClick={() => onRestore(revision)}
+								onKeyDown={onKeyDown}
 							>
 								<Trans>Use this wording</Trans>
 							</button>
@@ -512,8 +550,12 @@ export function ResultItem({
 	theme,
 }: ResultItemProps) {
 	const [step, setStep] = useState<"rest" | "withdraw">("rest");
+	// History is closed by default: almost every finding has none of it, and
+	// the ones that do are read on purpose.
+	const [historyOpen, setHistoryOpen] = useState(false);
 	// The control that opened the reason step, so the caret goes back to it.
 	const withdrawControl = useRef<HTMLButtonElement>(null);
+	const historyControl = useRef<HTMLButtonElement>(null);
 	const actionsGroup = useRef<HTMLElement>(null);
 	const [restoring, setRestoring] = useState<AnalysisRevision | null>(null);
 	const [conflict, setConflict] = useState(false);
@@ -540,6 +582,7 @@ export function ResultItem({
 	// half-finished step over words that have since changed.
 	if (shown !== item.revisionId) {
 		setShown(item.revisionId);
+		setHistoryOpen(false);
 		setStep("rest");
 		setRestoring(null);
 		setConflict(false);
@@ -602,7 +645,29 @@ export function ResultItem({
 			{ onError, onSuccess: settle },
 		);
 
-	const origin = String(provenance.origin ?? "");
+	// Only what people did, against the wording the host is reading.
+	const revisions = history.data?.revisions ?? [];
+	const entries = humanHistory(
+		revisions,
+		primaryText(item.type, resultFields(item)),
+	);
+	const prepared = analysisOrigin(revisions, item);
+	const lastHuman = entries[0]?.revision;
+	const editor = lastHuman?.actorId ? actorName?.(lastHuman.actorId) : null;
+	const editedBy = editor ?? t`a host`;
+	const editedOn = dayWord(lastHuman?.publishedAt ?? item.lastAuthoredAt);
+	// The history is asked for, so the host is told when it will not load. On a
+	// finding no one ever touched there is nothing to miss and nothing to say.
+	const historyLost =
+		history.isError && (isEdited(item) || Boolean(item.lastAuthoredAt));
+	const historyId = `result-history-${item.objectId}`;
+	// Escape closes the history, one step and no further: never the item too.
+	const closeHistory = (event: ReactKeyboardEvent) => {
+		if (event.key !== "Escape" || !historyOpen) return;
+		event.stopPropagation();
+		setHistoryOpen(false);
+		historyControl.current?.focus();
+	};
 	const recipe = [provenance.recipeId, provenance.recipeVersion]
 		.filter(Boolean)
 		.join(" · ");
@@ -711,55 +776,71 @@ export function ResultItem({
 							)}
 						</section>
 
-						<section className={classes.section}>
-							<p className={classes.sectionTitle}>
-								<Trans>History</Trans>
+						{/* Where this finding came from, and what people have done to it
+						    since: an origin line, and a history only where there is one.
+						    Escape closes the history, one step and no further. */}
+						<section
+							className={classes.section}
+							data-testid="result-provenance"
+						>
+							<p className={classes.line}>
+								{originWords(
+									prepared.origin,
+									prepared.at ? dayWord(prepared.at) : null,
+								)}
 							</p>
-							{history.isError ? (
+							{entries.length > 0 && (
+								<p className={classes.line} data-testid="result-history-line">
+									<Trans>
+										Edited by {editedBy}, {editedOn}
+									</Trans>
+									{" · "}
+									<button
+										ref={historyControl}
+										type="button"
+										aria-controls={historyId}
+										aria-expanded={historyOpen}
+										className={`${classes.control} ${classes.quiet} ${classes.inline}`}
+										onClick={() => setHistoryOpen(!historyOpen)}
+										onKeyDown={closeHistory}
+									>
+										<Trans>history</Trans>
+									</button>
+								</p>
+							)}
+							{entries.length > 0 && historyOpen && (
+								<div className={classes.history} id={historyId}>
+									<div className={classes.historyInner}>
+										<HistoryTimeline
+											entries={entries}
+											actorName={actorName}
+											onKeyDown={closeHistory}
+											pending={pending}
+											onRestore={(revision) => {
+												setRestoring(revision);
+												restoreWording(revision);
+											}}
+										/>
+										{/* The recipe is a machine's footnote, kept where a host
+										    who is already reading the history can find it. */}
+										{recipe && (
+											<p className={classes.recipe}>
+												<Trans>Recipe: {recipe}</Trans>
+											</p>
+										)}
+									</div>
+								</div>
+							)}
+							{historyLost && (
 								<p className={classes.line}>
 									<Trans>The history could not be loaded.</Trans>
 								</p>
-							) : (
-								<HistoryTimeline
-									revisions={history.data?.revisions ?? []}
-									actorName={actorName}
-									pending={pending}
-									onRestore={(revision) => {
-										setRestoring(revision);
-										restoreWording(revision);
-									}}
-								/>
 							)}
 							{restoring && rollback.isPending && (
 								<p className={classes.line}>
 									<Trans>Restoring that wording.</Trans>
 								</p>
 							)}
-						</section>
-
-						<section
-							className={classes.section}
-							data-testid="result-provenance"
-						>
-							<p className={classes.sectionTitle}>
-								<Trans>Where this came from</Trans>
-							</p>
-							<p className={classes.line}>
-								{origin === "authored" ? (
-									<Trans>Written by a host</Trans>
-								) : origin === "imported" ? (
-									<Trans>Imported</Trans>
-								) : (
-									<Trans>Prepared by an analysis run</Trans>
-								)}
-							</p>
-							<p className={classes.line}>
-								{recipe ? (
-									<Trans>Recipe: {recipe}</Trans>
-								) : (
-									<Trans>Recipe not recorded</Trans>
-								)}
-							</p>
 						</section>
 
 						{(analysisHref || mapHref || onClose) && (

@@ -386,6 +386,33 @@
 	margin-top: 0;
 }
 
+/* The history opens in place, under the line that summarises it: it grows
+   over 180 ms and pushes what follows down, the way the reason step does. */
+.history {
+	animation: grow 0.18s var(--curve) both;
+	display: grid;
+	grid-template-rows: 1fr;
+}
+
+.historyInner {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	margin: -4px;
+	min-height: 0;
+	overflow: hidden;
+	padding: 4px;
+}
+
+/* The machine's footnote at the foot of what people did: the quietest type
+   in the margin, and the only thing here nobody is asked to read. */
+.recipe {
+	color: var(--ink-faint);
+	font-size: 0.875em;
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
 /* Controls in the margin rest quietly and come up on hover, on focus, and
    wherever there is no hover to wait for. Quiet is not unreadable: "Withdraw"
    and "Close" are words a host has to be able to read without reaching for
@@ -444,6 +471,28 @@
 
 .quiet::after {
 	inset: -10px -4px;
+}
+
+/* A control that is a word inside a sentence: it sits on the line it belongs
+   to, underlined so it reads as something to press, and takes no height of
+   its own. Its target still reaches into the space around the line. */
+.control.inline {
+	align-self: auto;
+	display: inline;
+	min-height: 0;
+	text-decoration: underline;
+	text-decoration-color: var(--ink-faint);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+
+.control.inline::after {
+	inset: -10px -4px;
+}
+
+.control.inline:hover,
+.control.inline:focus-visible {
+	text-decoration-color: currentColor;
 }
 
 /* The one control that speaks to the room. */
@@ -572,6 +621,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.history,
 	.reasonStep {
 		animation: none;
 	}

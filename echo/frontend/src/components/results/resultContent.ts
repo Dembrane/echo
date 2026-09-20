@@ -341,3 +341,216 @@ export function factCheckVerdict(item: {
 export function revisionWording(revision: AnalysisRevision): string {
 	return primaryText(revision.type, bag(revision.payload));
 }
+
+/** One conversation's worth of evidence, as the curate views read it. */
+export type EvidenceGroup = {
+	conversationId: string;
+	/** The conversation's own name, where the payload carries one. */
+	label: string;
+	quotes: string[];
+};
+
+/**
+ * The evidence of a finding, grouped by conversation. The server sends
+ * `detail.evidence` for arguments and popcorn as the recipe wrote it, and
+ * synthesises it for tensions and stakeholders from their flat `quotes`
+ * (`_quotes_as_evidence` in `dembrane/analysis/map_view.py`), which keeps the
+ * conversation but not the name.
+ */
+export function evidenceGroups(item: {
+	detail?: unknown;
+	provenance?: Bag | null;
+}): EvidenceGroup[] {
+	const fromDetail = groups(item)
+		.map((group) => ({
+			conversationId: text(group.conversationId),
+			label: text((group as Bag).label),
+			quotes: (Array.isArray(group.quotes) ? group.quotes : [])
+				.map(text)
+				.filter(Boolean),
+		}))
+		.filter((group) => group.quotes.length > 0 || group.conversationId);
+	if (fromDetail.length > 0) return fromDetail;
+	// A reader with only the provenance refs: one quote each, gathered by the
+	// conversation they came from.
+	const byConversation = new Map<string, EvidenceGroup>();
+	for (const ref of sourceRefs(item)) {
+		const quote = text(ref.quote);
+		if (!quote) continue;
+		const conversationId = text(ref.conversationId);
+		const group = byConversation.get(conversationId) ?? {
+			conversationId,
+			label: "",
+			quotes: [],
+		};
+		group.quotes.push(quote);
+		byConversation.set(conversationId, group);
+	}
+	return [...byConversation.values()];
+}
+
+/**
+ * What to call a conversation in a list a host is reading. The payload names
+ * it where the recipe recorded a label; otherwise the only name on the wire is
+ * the top-level one, which the server sends when a finding rests on a single
+ * conversation. Nameless is nameless: the line says nothing rather than an id.
+ */
+export function conversationWords(
+	item: { conversationName?: string | null; conversationCount?: number },
+	group?: Pick<EvidenceGroup, "label"> | null,
+): string {
+	if (group?.label) return group.label;
+	return text(item.conversationName);
+}
+
+/** A quote of a tension, and which pole it stands for where that was kept. */
+export type PoleQuote = {
+	text: string;
+	conversationId: string;
+	pole: "A" | "B" | null;
+};
+
+/**
+ * A tension's own quotes, each with the pole it supports. The tensions recipe
+ * writes `pole` on every quote (`recipes/tensions.py`); tensions imported from
+ * an older popcorn carry none, and those read as one list.
+ */
+export function tensionQuotes(item: {
+	payload?: Bag | null;
+	detail?: unknown;
+}): PoleQuote[] {
+	const raw = resultFields(item).quotes;
+	if (!Array.isArray(raw)) return [];
+	return raw
+		.map((entry) => {
+			const quote = bag(entry);
+			const pole = quote.pole;
+			return {
+				conversationId: text(quote.conversationId),
+				pole: pole === "A" || pole === "B" ? pole : null,
+				text: text(quote.text),
+			};
+		})
+		.filter((quote) => quote.text);
+}
+
+/** Whether a tension's quotes say which pole they stand for. */
+export const hasPoles = (quotes: PoleQuote[]): boolean =>
+	quotes.some((quote) => quote.pole !== null);
+
+/**
+ * Why a fact-check said what it said, where the reader has it. The results
+ * list endpoint sends the verdict alone (`_verdicts` in the bff's
+ * `analysis.py`); a reader that carries the whole assessment shows the
+ * sentence under it.
+ */
+export function factCheckJustification(item: {
+	attributes?: Bag | null;
+	detail?: unknown;
+}): string {
+	const attributes = bag(item.attributes);
+	const assessment = bag(attributes.assessment ?? bag(item.detail).assessment);
+	return text(assessment.justification ?? attributes.justification);
+}
+
+/**
+ * Where a phrase sits inside the sentence it was cut from, by plain
+ * case-insensitive match. Nothing found is nothing marked: the quote is read
+ * as it stands rather than guessed at.
+ */
+export function cutFrom(
+	quote: string,
+	phrase: string,
+): { before: string; match: string; after: string } | null {
+	const needle = phrase.trim();
+	if (!needle) return null;
+	const at = quote.toLowerCase().indexOf(needle.toLowerCase());
+	if (at < 0) return null;
+	return {
+		after: quote.slice(at + needle.length),
+		before: quote.slice(0, at),
+		match: quote.slice(at, at + needle.length),
+	};
+}
+
+/** What made a revision: "generated", "imported", "authored", or nothing. */
+export function revisionOrigin(revision: { provenance?: Bag | null }): string {
+	return text(bag(revision.provenance).origin);
+}
+
+/**
+ * Whether a person made this revision. History is what people did: a run's
+ * own bookkeeping (a vector repair, a rerun that changed the provenance and
+ * not a word) is not something anyone did to the finding. `origin` is the
+ * server's word for it and rides on every revision; an actor is the fallback
+ * where a revision carries no origin at all.
+ */
+export function isHumanRevision(revision: {
+	actorId?: string | null;
+	provenance?: Bag | null;
+}): boolean {
+	const origin = revisionOrigin(revision);
+	if (origin === "authored") return true;
+	if (origin) return false;
+	return Boolean(revision.actorId);
+}
+
+/** One line of history: a person's revision, and the wording it replaced. */
+export type HistoryEntry = {
+	revision: AnalysisRevision;
+	/**
+	 * The wording of the revision immediately before it in the full list,
+	 * machine ones included, so the diff stays true.
+	 */
+	before: string;
+	after: string;
+	/** Whether this wording is one the host can bring back. */
+	offerRestore: boolean;
+};
+
+/**
+ * The timeline, newest first: only what people did. `current` is the wording
+ * on the card, so the host is never offered the words already in front of
+ * them, and never the same words twice.
+ */
+export function humanHistory(
+	revisions: AnalysisRevision[],
+	current: string,
+): HistoryEntry[] {
+	const entries: HistoryEntry[] = [];
+	// The list arrives oldest first, which is where a "before" comes from.
+	revisions.forEach((revision, index) => {
+		if (!isHumanRevision(revision)) return;
+		const previous = revisions[index - 1];
+		entries.push({
+			after: revisionWording(revision),
+			before: previous ? revisionWording(previous) : "",
+			offerRestore: false,
+			revision,
+		});
+	});
+	entries.reverse();
+	const offered = new Set<string>();
+	return entries.map((entry) => {
+		const offerRestore =
+			Boolean(entry.after) &&
+			entry.after !== current &&
+			!offered.has(entry.after);
+		if (offerRestore) offered.add(entry.after);
+		return { ...entry, offerRestore };
+	});
+}
+
+/**
+ * Where a finding came from, in one line's worth of facts: what made its
+ * first revision, and when. The machine is an origin, not a history.
+ */
+export function analysisOrigin(
+	revisions: AnalysisRevision[],
+	item?: { provenance?: Bag | null },
+): { origin: string; at: string | null } {
+	const first = revisions[0];
+	if (first)
+		return { at: first.publishedAt ?? null, origin: revisionOrigin(first) };
+	return { at: null, origin: item ? revisionOrigin(item) : "" };
+}
