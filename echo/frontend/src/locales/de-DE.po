@@ -1456,7 +1456,7 @@ msgid "Affected by"
 msgstr ""
 
 #: src/components/results/ResultRow.tsx:106
-#: src/components/map/panels/ArgumentAccordion.tsx:180
+#: src/components/map/panels/ArgumentAccordion.tsx:186
 msgid "against"
 msgstr "dagegen"
 
@@ -1679,7 +1679,7 @@ msgstr "Ein Fehler ist aufgetreten."
 msgid "An event or a workshop."
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:181
+#: src/components/map/panels/NodeDetailCard.tsx:195
 msgid "An object outside this view"
 msgstr ""
 
@@ -1735,7 +1735,7 @@ msgstr ""
 "Hinweis: Wenn die Ähnlichkeiten/Unterschiede zu oberflächlich sind, lassen Sie es mich wissen, wir brauchen komplexeres Material zu analysieren."
 
 #. placeholder {0}: conversations - NAMED_CONVERSATIONS
-#: src/components/map/panels/Legend.tsx:73
+#: src/components/map/panels/Legend.tsx:80
 msgid "and {0} more conversations"
 msgstr "und {0} weitere Gespräche"
 
@@ -1956,7 +1956,7 @@ msgid "Are you sure you want to remove your custom logo? The default dembrane lo
 msgstr "Sind Sie sicher, dass Sie Ihr benutzerdefiniertes Logo entfernen möchten? Stattdessen wird das Standard-dembrane-Logo verwendet."
 
 #: src/components/map/attributes.ts:127
-#: src/components/map/panels/NodeDetailCard.tsx:421
+#: src/components/map/panels/NodeDetailCard.tsx:435
 msgid "Argument"
 msgstr "Argument"
 
@@ -1975,7 +1975,7 @@ msgstr ""
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:60
 #: src/components/results/ResultsList.tsx:244
 #: src/components/map/attributes.ts:128
-#: src/components/map/panels/ArgumentAccordion.tsx:136
+#: src/components/map/panels/ArgumentAccordion.tsx:142
 msgid "Arguments"
 msgstr "Argumente"
 
@@ -3089,8 +3089,8 @@ msgstr "Projekt klonen"
 
 #: src/components/results/ResultRow.tsx:365
 #: src/components/results/ResultRow.tsx:368
-#: src/components/results/ResultItem.tsx:782
-#: src/components/results/ResultItem.tsx:792
+#: src/components/results/ResultItem.tsx:778
+#: src/components/results/ResultItem.tsx:788
 #: src/components/dropzone/UploadConversationDropzone.tsx:872
 #: src/components/conversation/ConversationLinks.tsx:110
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3173,7 +3173,7 @@ msgid "Combined from"
 msgstr ""
 
 #. placeholder {0}: consolidation.memberCount
-#: src/components/map/panels/ArgumentAccordion.tsx:193
+#: src/components/map/panels/ArgumentAccordion.tsx:199
 msgid "combined from {0}"
 msgstr "zusammengefasst aus {0}"
 
@@ -3181,7 +3181,7 @@ msgstr "zusammengefasst aus {0}"
 #. placeholder {0}: consolidation.memberCount
 #: src/components/map/renderers/MstGraph.tsx:1079
 #: src/components/map/renderers/LocalMapGraph.tsx:1054
-#: src/components/map/panels/NodeDetailCard.tsx:121
+#: src/components/map/panels/NodeDetailCard.tsx:133
 msgid "Combined from {0} arguments"
 msgstr "Aus {0} Argumenten zusammengeführt"
 
@@ -4897,7 +4897,7 @@ msgstr ""
 msgid "Enable 2FA"
 msgstr "2FA aktivieren"
 
-#: src/components/map/MapExperience.tsx:458
+#: src/components/map/MapExperience.tsx:459
 msgid "Enable a visualization from the panel settings menu"
 msgstr ""
 
@@ -5133,7 +5133,7 @@ msgstr ""
 msgid "participant.alert.microphone.access.success"
 msgstr "Alles sieht gut aus – Sie können fortfahren."
 
-#: src/components/map/panels/NodeDetailCard.tsx:322
+#: src/components/map/panels/NodeDetailCard.tsx:336
 msgid "Evidence"
 msgstr ""
 
@@ -5145,7 +5145,7 @@ msgstr ""
 #~ msgid "Evidence level"
 #~ msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:328
+#: src/components/map/panels/NodeDetailCard.tsx:342
 msgid "Evidenced connections"
 msgstr ""
 
@@ -5673,7 +5673,7 @@ msgid "Font Size"
 msgstr "Schriftgröße"
 
 #: src/components/results/ResultRow.tsx:105
-#: src/components/map/panels/ArgumentAccordion.tsx:178
+#: src/components/map/panels/ArgumentAccordion.tsx:184
 msgid "for"
 msgstr "dafür"
 
@@ -6112,7 +6112,7 @@ msgstr ""
 msgid "Hidden"
 msgstr "Verborgen"
 
-#: src/components/map/panels/NodeDetailCard.tsx:213
+#: src/components/map/panels/NodeDetailCard.tsx:227
 msgid "Hidden by the Objects filter"
 msgstr ""
 
@@ -6128,7 +6128,7 @@ msgstr "Verborgener Schatz"
 #: src/components/results/ResultRow.tsx:271
 #: src/components/results/ResultRow.tsx:352
 #: src/components/results/ResultRow.tsx:356
-#: src/components/results/ResultItem.tsx:658
+#: src/components/results/ResultItem.tsx:655
 #: src/components/conversation/ConversationEdit.tsx:348
 msgid "Hide"
 msgstr "Verstecken"
@@ -6185,7 +6185,7 @@ msgstr "Highlight"
 msgid "Highlight specific Concept"
 msgstr "Bestimmtes Konzept hervorheben"
 
-#: src/components/results/ResultItem.tsx:715
+#: src/components/results/ResultItem.tsx:711
 msgid "History"
 msgstr "Verlauf"
 
@@ -6379,7 +6379,7 @@ msgstr ""
 msgid "Images must be under {MAX_FILE_MB}MB"
 msgstr "Bilder dürfen höchstens {MAX_FILE_MB}MB groß sein"
 
-#: src/components/results/ResultItem.tsx:750
+#: src/components/results/ResultItem.tsx:746
 #: src/components/map/panels/shared.tsx:110
 msgid "Imported"
 msgstr "Importiert"
@@ -7051,7 +7051,7 @@ msgid "Legal entity name"
 msgstr ""
 
 #: src/components/map/panels/MapSettingsMenu.tsx:65
-#: src/components/map/panels/Legend.tsx:55
+#: src/components/map/panels/Legend.tsx:62
 msgid "Legend"
 msgstr ""
 
@@ -7368,7 +7368,7 @@ msgstr "Laden…"
 msgid "Local argument map"
 msgstr ""
 
-#: src/components/map/MapExperience.tsx:426
+#: src/components/map/MapExperience.tsx:427
 msgid "Local map"
 msgstr ""
 
@@ -7541,7 +7541,7 @@ msgstr ""
 msgid "Many fact-checks were started just now. Try again in a moment."
 msgstr ""
 
-#: src/components/map/hooks/index.ts:338
+#: src/components/map/hooks/index.ts:345
 msgid "Many maps were started just now. Try again in a moment."
 msgstr ""
 
@@ -7567,7 +7567,7 @@ msgstr ""
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:439
+#: src/components/present/AudienceMapAdapter.tsx:443
 msgid "Map results are not ready yet."
 msgstr ""
 
@@ -8002,7 +8002,7 @@ msgstr ""
 msgid "Neighbor Attraction: {0}"
 msgstr ""
 
-#: src/components/map/panels/ArgumentAccordion.tsx:206
+#: src/components/map/panels/ArgumentAccordion.tsx:212
 msgid "Neighbours in the tree"
 msgstr "Nachbarn im Baum"
 
@@ -8285,7 +8285,7 @@ msgstr ""
 msgid "No default set (client-managed applies)"
 msgstr "Kein Standard festgelegt (Client-verwaltet gilt)"
 
-#: src/components/map/panels/NodeDetailCard.tsx:332
+#: src/components/map/panels/NodeDetailCard.tsx:346
 msgid "No evidenced connections."
 msgstr ""
 
@@ -8329,8 +8329,8 @@ msgstr "Noch kein Verlauf."
 msgid "No invites went out. Check the list below."
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:293
-#: src/components/map/panels/NodeDetailCard.tsx:302
+#: src/components/map/panels/NodeDetailCard.tsx:307
+#: src/components/map/panels/NodeDetailCard.tsx:316
 msgid "No linked arguments."
 msgstr ""
 
@@ -8381,7 +8381,7 @@ msgstr "Noch kein neues Feedback erkannt. Bitte fahren Sie mit Ihrer Diskussion 
 msgid "No new invites needed. Check the list below."
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:394
+#: src/components/map/panels/NodeDetailCard.tsx:408
 msgid "No node selected."
 msgstr ""
 
@@ -8613,7 +8613,7 @@ msgstr ""
 msgid "None"
 msgstr ""
 
-#: src/components/map/panels/ArgumentAccordion.tsx:210
+#: src/components/map/panels/ArgumentAccordion.tsx:216
 msgid "None in this view."
 msgstr "Keine in dieser Ansicht."
 
@@ -8660,7 +8660,7 @@ msgstr "nicht in dieser Präsentation"
 #~ msgid "Not in this presentation"
 #~ msgstr "Nicht in dieser Präsentation"
 
-#: src/components/map/panels/NodeDetailCard.tsx:215
+#: src/components/map/panels/NodeDetailCard.tsx:229
 msgid "Not in this view"
 msgstr ""
 
@@ -9020,7 +9020,7 @@ msgid "Open host guide"
 msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:791
-#: src/components/results/ResultItem.tsx:768
+#: src/components/results/ResultItem.tsx:764
 msgid "Open in Analysis"
 msgstr "In der Analyse öffnen"
 
@@ -9931,7 +9931,7 @@ msgstr ""
 msgid "Prepare sessions with an editable host guide next to the QR code."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:752
+#: src/components/results/ResultItem.tsx:748
 msgid "Prepared by an analysis run"
 msgstr "Von einem Analysedurchlauf erstellt"
 
@@ -10314,11 +10314,11 @@ msgstr "Frage"
 msgid "Questions about how dembrane works, not only about your data."
 msgstr ""
 
-#: src/components/map/panels/ArgumentAccordion.tsx:242
+#: src/components/map/panels/ArgumentAccordion.tsx:248
 msgid "Quotes"
 msgstr "Zitate"
 
-#: src/components/map/panels/NodeDetailCard.tsx:487
+#: src/components/map/panels/NodeDetailCard.tsx:501
 msgid "Quotes ({quoteCount})"
 msgstr ""
 
@@ -10494,16 +10494,16 @@ msgstr ""
 msgid "recently"
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:759
+#: src/components/results/ResultItem.tsx:755
 msgid "Recipe not recorded"
 msgstr "Rezept nicht festgehalten"
 
-#: src/components/results/ResultItem.tsx:757
-#: src/components/map/panels/NodeDetailCard.tsx:359
+#: src/components/results/ResultItem.tsx:753
+#: src/components/map/panels/NodeDetailCard.tsx:373
 msgid "Recipe: {recipe}"
 msgstr "Rezept: {recipe}"
 
-#: src/components/map/panels/NodeDetailCard.tsx:361
+#: src/components/map/panels/NodeDetailCard.tsx:375
 msgid "Recipe: not recorded"
 msgstr ""
 
@@ -10703,8 +10703,8 @@ msgstr "Zusammenfassung wird neu erstellt. Kurz warten ..."
 msgid "Register | dembrane"
 msgstr "Registrieren | dembrane"
 
-#: src/components/map/panels/NodeDetailCard.tsx:306
-#: src/components/map/panels/NodeDetailCard.tsx:501
+#: src/components/map/panels/NodeDetailCard.tsx:320
+#: src/components/map/panels/NodeDetailCard.tsx:515
 #: src/components/map/panels/MapSettingsMenu.tsx:215
 msgid "Relationships"
 msgstr ""
@@ -11153,7 +11153,7 @@ msgstr "Feedback zur Antwort"
 
 #: src/components/results/ResultRow.tsx:339
 #: src/components/results/ResultRow.tsx:343
-#: src/components/results/ResultItem.tsx:656
+#: src/components/results/ResultItem.tsx:655
 msgid "Restore"
 msgstr "Zurückholen"
 
@@ -11192,7 +11192,7 @@ msgstr "Die Formulierung von Version {0} wiederhergestellt"
 msgid "Restored to the analysis"
 msgstr "In die Analyse zurückgeholt"
 
-#: src/components/results/ResultItem.tsx:734
+#: src/components/results/ResultItem.tsx:730
 msgid "Restoring that wording."
 msgstr "Diese Formulierung wird wiederhergestellt."
 
@@ -11360,7 +11360,7 @@ msgstr "Revision #{revisionNumber}"
 msgid "Revision history"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:366
+#: src/components/map/panels/NodeDetailCard.tsx:380
 msgid "Revision history is not available yet."
 msgstr ""
 
@@ -12300,7 +12300,7 @@ msgstr ""
 msgid "Show {overflow} more"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:227
+#: src/components/map/panels/NodeDetailCard.tsx:241
 msgid "Show {typePlural}"
 msgstr ""
 
@@ -12313,7 +12313,7 @@ msgid "Show a frame"
 msgstr ""
 
 #. placeholder {0}: ordered.length
-#: src/components/map/panels/ArgumentAccordion.tsx:272
+#: src/components/map/panels/ArgumentAccordion.tsx:299
 msgid "Show all {0}"
 msgstr "Alle {0} anzeigen"
 
@@ -12367,7 +12367,7 @@ msgstr "Mehr anzeigen"
 msgid "Show more versions"
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:773
+#: src/components/results/ResultItem.tsx:769
 msgid "Show on the map"
 msgstr "Auf der Karte zeigen"
 
@@ -12639,7 +12639,7 @@ msgstr "Quelle {0}"
 msgid "Source conversation"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:470
+#: src/components/map/panels/NodeDetailCard.tsx:484
 msgid "Source evidence"
 msgstr ""
 
@@ -12647,11 +12647,11 @@ msgstr ""
 msgid "Source not recorded"
 msgstr "Quelle nicht erfasst"
 
-#: src/components/map/panels/NodeDetailCard.tsx:132
+#: src/components/map/panels/NodeDetailCard.tsx:146
 msgid "Source statement unavailable"
 msgstr "Quellaussage nicht verfügbar"
 
-#: src/components/map/panels/NodeDetailCard.tsx:353
+#: src/components/map/panels/NodeDetailCard.tsx:367
 msgid "Source: {origin}"
 msgstr ""
 
@@ -13022,11 +13022,11 @@ msgstr ""
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Unterstützte Formate: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
-#: src/components/map/panels/NodeDetailCard.tsx:287
+#: src/components/map/panels/NodeDetailCard.tsx:301
 msgid "Supporting pole A"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:296
+#: src/components/map/panels/NodeDetailCard.tsx:310
 msgid "Supporting pole B"
 msgstr ""
 
@@ -13370,7 +13370,7 @@ msgstr ""
 msgid "The goal guides reports, canvases, and assistant suggestions for this project."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:719
+#: src/components/results/ResultItem.tsx:715
 msgid "The history could not be loaded."
 msgstr "Der Verlauf konnte nicht geladen werden."
 
@@ -13424,7 +13424,7 @@ msgstr ""
 msgid "The map could not be generated. {0}"
 msgstr ""
 
-#: src/components/present/AudienceMapAdapter.tsx:449
+#: src/components/present/AudienceMapAdapter.tsx:453
 msgid "The map could not be loaded."
 msgstr ""
 
@@ -13432,7 +13432,7 @@ msgstr ""
 msgid "The map could not be loaded. Try again in a moment."
 msgstr ""
 
-#: src/components/map/hooks/index.ts:341
+#: src/components/map/hooks/index.ts:348
 msgid "The map could not be started."
 msgstr ""
 
@@ -13482,7 +13482,7 @@ msgstr ""
 msgid "The organisation this invite was for has been deleted. There's nothing to join."
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:147
+#: src/components/map/panels/NodeDetailCard.tsx:161
 msgid "The original statements are unavailable for this older result."
 msgstr "Die ursprünglichen Aussagen sind für dieses ältere Ergebnis nicht verfügbar."
 
@@ -14613,7 +14613,7 @@ msgstr ""
 msgid "Undo"
 msgstr "Rückgängig"
 
-#: src/components/results/ResultItem.tsx:673
+#: src/components/results/ResultItem.tsx:669
 msgid "Undo withdrawal"
 msgstr "Zurückziehen rückgängig machen"
 
@@ -15622,7 +15622,7 @@ msgstr ""
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Wenn die Zusammenfassung bereit ist (beinhaltet Transkript und Zusammenfassung)"
 
-#: src/components/results/ResultItem.tsx:744
+#: src/components/results/ResultItem.tsx:740
 msgid "Where this came from"
 msgstr "Woher das kommt"
 
@@ -15666,7 +15666,7 @@ msgid "Why not in this presentation?"
 msgstr "Warum nicht in dieser Präsentation?"
 
 #: src/components/results/resultEditing.tsx:440
-#: src/components/results/ResultItem.tsx:680
+#: src/components/results/ResultItem.tsx:676
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
 msgstr "Warum? Ein Satz, für die Menschen, mit denen du arbeitest, und für alle, die das später prüfen."
 
@@ -15686,8 +15686,8 @@ msgstr ""
 msgid "With several lines, the first reads as a subtitle."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:685
-#: src/components/results/ResultItem.tsx:708
+#: src/components/results/ResultItem.tsx:681
+#: src/components/results/ResultItem.tsx:704
 msgid "Withdraw"
 msgstr "Zurückziehen"
 
@@ -15718,7 +15718,7 @@ msgstr "Zurückgezogen"
 msgid "Withdrawn from the analysis"
 msgstr "Aus der Analyse zurückgezogen"
 
-#: src/components/results/ResultItem.tsx:665
+#: src/components/results/ResultItem.tsx:661
 msgid "Withdrawn from the analysis."
 msgstr "Aus der Analyse zurückgezogen."
 
@@ -15866,7 +15866,7 @@ msgstr "Möchten Sie dieses Tag zu Ihren aktuellen Filtern hinzufügen?"
 msgid "Write custom host prompts for participant verification."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:748
+#: src/components/results/ResultItem.tsx:744
 msgid "Written by a host"
 msgstr "Von einem Host geschrieben"
 
@@ -15990,7 +15990,7 @@ msgstr ""
 msgid "You do not have permission to fact-check claims."
 msgstr ""
 
-#: src/components/map/hooks/index.ts:334
+#: src/components/map/hooks/index.ts:341
 msgid "You do not have permission to generate a map."
 msgstr ""
 

@@ -1455,7 +1455,7 @@ msgid "Affected by"
 msgstr "Affected by"
 
 #: src/components/results/ResultRow.tsx:106
-#: src/components/map/panels/ArgumentAccordion.tsx:180
+#: src/components/map/panels/ArgumentAccordion.tsx:186
 msgid "against"
 msgstr "against"
 
@@ -1678,7 +1678,7 @@ msgstr "An error occurred."
 msgid "An event or a workshop."
 msgstr "An event or a workshop."
 
-#: src/components/map/panels/NodeDetailCard.tsx:181
+#: src/components/map/panels/NodeDetailCard.tsx:195
 msgid "An object outside this view"
 msgstr "An object outside this view"
 
@@ -1734,7 +1734,7 @@ msgstr ""
 "Note: If the similarities/differences are too superficial, let me know we need more complex material to analyze."
 
 #. placeholder {0}: conversations - NAMED_CONVERSATIONS
-#: src/components/map/panels/Legend.tsx:73
+#: src/components/map/panels/Legend.tsx:80
 msgid "and {0} more conversations"
 msgstr "and {0} more conversations"
 
@@ -1955,7 +1955,7 @@ msgid "Are you sure you want to remove your custom logo? The default dembrane lo
 msgstr "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 
 #: src/components/map/attributes.ts:127
-#: src/components/map/panels/NodeDetailCard.tsx:421
+#: src/components/map/panels/NodeDetailCard.tsx:435
 msgid "Argument"
 msgstr "Argument"
 
@@ -1974,7 +1974,7 @@ msgstr "Argument tree (MST)"
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:60
 #: src/components/results/ResultsList.tsx:244
 #: src/components/map/attributes.ts:128
-#: src/components/map/panels/ArgumentAccordion.tsx:136
+#: src/components/map/panels/ArgumentAccordion.tsx:142
 msgid "Arguments"
 msgstr "Arguments"
 
@@ -3088,8 +3088,8 @@ msgstr "Clone Project"
 
 #: src/components/results/ResultRow.tsx:365
 #: src/components/results/ResultRow.tsx:368
-#: src/components/results/ResultItem.tsx:782
-#: src/components/results/ResultItem.tsx:792
+#: src/components/results/ResultItem.tsx:778
+#: src/components/results/ResultItem.tsx:788
 #: src/components/dropzone/UploadConversationDropzone.tsx:872
 #: src/components/conversation/ConversationLinks.tsx:110
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3172,7 +3172,7 @@ msgid "Combined from"
 msgstr "Combined from"
 
 #. placeholder {0}: consolidation.memberCount
-#: src/components/map/panels/ArgumentAccordion.tsx:193
+#: src/components/map/panels/ArgumentAccordion.tsx:199
 msgid "combined from {0}"
 msgstr "combined from {0}"
 
@@ -3180,7 +3180,7 @@ msgstr "combined from {0}"
 #. placeholder {0}: consolidation.memberCount
 #: src/components/map/renderers/MstGraph.tsx:1079
 #: src/components/map/renderers/LocalMapGraph.tsx:1054
-#: src/components/map/panels/NodeDetailCard.tsx:121
+#: src/components/map/panels/NodeDetailCard.tsx:133
 msgid "Combined from {0} arguments"
 msgstr "Combined from {0} arguments"
 
@@ -4896,7 +4896,7 @@ msgstr "Enable"
 msgid "Enable 2FA"
 msgstr "Enable 2FA"
 
-#: src/components/map/MapExperience.tsx:458
+#: src/components/map/MapExperience.tsx:459
 msgid "Enable a visualization from the panel settings menu"
 msgstr "Enable a visualization from the panel settings menu"
 
@@ -5132,7 +5132,7 @@ msgstr "Everyone on the roster is trained."
 msgid "participant.alert.microphone.access.success"
 msgstr "Everything looks good – you can continue."
 
-#: src/components/map/panels/NodeDetailCard.tsx:322
+#: src/components/map/panels/NodeDetailCard.tsx:336
 msgid "Evidence"
 msgstr "Evidence"
 
@@ -5144,7 +5144,7 @@ msgstr "Evidence"
 #~ msgid "Evidence level"
 #~ msgstr "Evidence level"
 
-#: src/components/map/panels/NodeDetailCard.tsx:328
+#: src/components/map/panels/NodeDetailCard.tsx:342
 msgid "Evidenced connections"
 msgstr "Evidenced connections"
 
@@ -5672,7 +5672,7 @@ msgid "Font Size"
 msgstr "Font Size"
 
 #: src/components/results/ResultRow.tsx:105
-#: src/components/map/panels/ArgumentAccordion.tsx:178
+#: src/components/map/panels/ArgumentAccordion.tsx:184
 msgid "for"
 msgstr "for"
 
@@ -6111,7 +6111,7 @@ msgstr "Hi {firstName}"
 msgid "Hidden"
 msgstr "Hidden"
 
-#: src/components/map/panels/NodeDetailCard.tsx:213
+#: src/components/map/panels/NodeDetailCard.tsx:227
 msgid "Hidden by the Objects filter"
 msgstr "Hidden by the Objects filter"
 
@@ -6127,7 +6127,7 @@ msgstr "Hidden gem"
 #: src/components/results/ResultRow.tsx:271
 #: src/components/results/ResultRow.tsx:352
 #: src/components/results/ResultRow.tsx:356
-#: src/components/results/ResultItem.tsx:658
+#: src/components/results/ResultItem.tsx:655
 #: src/components/conversation/ConversationEdit.tsx:348
 msgid "Hide"
 msgstr "Hide"
@@ -6184,7 +6184,7 @@ msgstr "Highlight"
 msgid "Highlight specific Concept"
 msgstr "Highlight specific Concept"
 
-#: src/components/results/ResultItem.tsx:715
+#: src/components/results/ResultItem.tsx:711
 msgid "History"
 msgstr "History"
 
@@ -6378,7 +6378,7 @@ msgstr "Image style"
 msgid "Images must be under {MAX_FILE_MB}MB"
 msgstr "Images must be under {MAX_FILE_MB}MB"
 
-#: src/components/results/ResultItem.tsx:750
+#: src/components/results/ResultItem.tsx:746
 #: src/components/map/panels/shared.tsx:110
 msgid "Imported"
 msgstr "Imported"
@@ -7050,7 +7050,7 @@ msgid "Legal entity name"
 msgstr "Legal entity name"
 
 #: src/components/map/panels/MapSettingsMenu.tsx:65
-#: src/components/map/panels/Legend.tsx:55
+#: src/components/map/panels/Legend.tsx:62
 msgid "Legend"
 msgstr "Legend"
 
@@ -7367,7 +7367,7 @@ msgstr "Loading…"
 msgid "Local argument map"
 msgstr "Local argument map"
 
-#: src/components/map/MapExperience.tsx:426
+#: src/components/map/MapExperience.tsx:427
 msgid "Local map"
 msgstr "Local map"
 
@@ -7540,7 +7540,7 @@ msgstr "Manages members, workspaces, and organisation settings."
 msgid "Many fact-checks were started just now. Try again in a moment."
 msgstr "Many fact-checks were started just now. Try again in a moment."
 
-#: src/components/map/hooks/index.ts:338
+#: src/components/map/hooks/index.ts:345
 msgid "Many maps were started just now. Try again in a moment."
 msgstr "Many maps were started just now. Try again in a moment."
 
@@ -7566,7 +7566,7 @@ msgstr "Map budget"
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 
-#: src/components/present/AudienceMapAdapter.tsx:439
+#: src/components/present/AudienceMapAdapter.tsx:443
 msgid "Map results are not ready yet."
 msgstr "Map results are not ready yet."
 
@@ -8001,7 +8001,7 @@ msgstr "Negative"
 msgid "Neighbor Attraction: {0}"
 msgstr "Neighbor Attraction: {0}"
 
-#: src/components/map/panels/ArgumentAccordion.tsx:206
+#: src/components/map/panels/ArgumentAccordion.tsx:212
 msgid "Neighbours in the tree"
 msgstr "Neighbours in the tree"
 
@@ -8284,7 +8284,7 @@ msgstr "No deduplicated arguments saved yet."
 msgid "No default set (client-managed applies)"
 msgstr "No default set (client-managed applies)"
 
-#: src/components/map/panels/NodeDetailCard.tsx:332
+#: src/components/map/panels/NodeDetailCard.tsx:346
 msgid "No evidenced connections."
 msgstr "No evidenced connections."
 
@@ -8328,8 +8328,8 @@ msgstr "No history yet."
 msgid "No invites went out. Check the list below."
 msgstr "No invites went out. Check the list below."
 
-#: src/components/map/panels/NodeDetailCard.tsx:293
-#: src/components/map/panels/NodeDetailCard.tsx:302
+#: src/components/map/panels/NodeDetailCard.tsx:307
+#: src/components/map/panels/NodeDetailCard.tsx:316
 msgid "No linked arguments."
 msgstr "No linked arguments."
 
@@ -8380,7 +8380,7 @@ msgstr "No new feedback detected yet. Please continue your discussion and try ag
 msgid "No new invites needed. Check the list below."
 msgstr "No new invites needed. Check the list below."
 
-#: src/components/map/panels/NodeDetailCard.tsx:394
+#: src/components/map/panels/NodeDetailCard.tsx:408
 msgid "No node selected."
 msgstr "No node selected."
 
@@ -8612,7 +8612,7 @@ msgstr "Nodes"
 msgid "None"
 msgstr "None"
 
-#: src/components/map/panels/ArgumentAccordion.tsx:210
+#: src/components/map/panels/ArgumentAccordion.tsx:216
 msgid "None in this view."
 msgstr "None in this view."
 
@@ -8659,7 +8659,7 @@ msgstr "not in this presentation"
 #~ msgid "Not in this presentation"
 #~ msgstr "Not in this presentation"
 
-#: src/components/map/panels/NodeDetailCard.tsx:215
+#: src/components/map/panels/NodeDetailCard.tsx:229
 msgid "Not in this view"
 msgstr "Not in this view"
 
@@ -9019,7 +9019,7 @@ msgid "Open host guide"
 msgstr "Open host guide"
 
 #: src/routes/project/present/PresentRoute.tsx:791
-#: src/components/results/ResultItem.tsx:768
+#: src/components/results/ResultItem.tsx:764
 msgid "Open in Analysis"
 msgstr "Open in Analysis"
 
@@ -9930,7 +9930,7 @@ msgstr "Prepare"
 msgid "Prepare sessions with an editable host guide next to the QR code."
 msgstr "Prepare sessions with an editable host guide next to the QR code."
 
-#: src/components/results/ResultItem.tsx:752
+#: src/components/results/ResultItem.tsx:748
 msgid "Prepared by an analysis run"
 msgstr "Prepared by an analysis run"
 
@@ -10313,11 +10313,11 @@ msgstr "Question"
 msgid "Questions about how dembrane works, not only about your data."
 msgstr "Questions about how dembrane works, not only about your data."
 
-#: src/components/map/panels/ArgumentAccordion.tsx:242
+#: src/components/map/panels/ArgumentAccordion.tsx:248
 msgid "Quotes"
 msgstr "Quotes"
 
-#: src/components/map/panels/NodeDetailCard.tsx:487
+#: src/components/map/panels/NodeDetailCard.tsx:501
 msgid "Quotes ({quoteCount})"
 msgstr "Quotes ({quoteCount})"
 
@@ -10493,16 +10493,16 @@ msgstr "Recent payments across all accounts"
 msgid "recently"
 msgstr "recently"
 
-#: src/components/results/ResultItem.tsx:759
+#: src/components/results/ResultItem.tsx:755
 msgid "Recipe not recorded"
 msgstr "Recipe not recorded"
 
-#: src/components/results/ResultItem.tsx:757
-#: src/components/map/panels/NodeDetailCard.tsx:359
+#: src/components/results/ResultItem.tsx:753
+#: src/components/map/panels/NodeDetailCard.tsx:373
 msgid "Recipe: {recipe}"
 msgstr "Recipe: {recipe}"
 
-#: src/components/map/panels/NodeDetailCard.tsx:361
+#: src/components/map/panels/NodeDetailCard.tsx:375
 msgid "Recipe: not recorded"
 msgstr "Recipe: not recorded"
 
@@ -10702,8 +10702,8 @@ msgstr "Regenerating the summary. Please wait..."
 msgid "Register | dembrane"
 msgstr "Register | dembrane"
 
-#: src/components/map/panels/NodeDetailCard.tsx:306
-#: src/components/map/panels/NodeDetailCard.tsx:501
+#: src/components/map/panels/NodeDetailCard.tsx:320
+#: src/components/map/panels/NodeDetailCard.tsx:515
 #: src/components/map/panels/MapSettingsMenu.tsx:215
 msgid "Relationships"
 msgstr "Relationships"
@@ -11152,7 +11152,7 @@ msgstr "Response feedback"
 
 #: src/components/results/ResultRow.tsx:339
 #: src/components/results/ResultRow.tsx:343
-#: src/components/results/ResultItem.tsx:656
+#: src/components/results/ResultItem.tsx:655
 msgid "Restore"
 msgstr "Restore"
 
@@ -11191,7 +11191,7 @@ msgstr "Restored the wording of revision {0}"
 msgid "Restored to the analysis"
 msgstr "Restored to the analysis"
 
-#: src/components/results/ResultItem.tsx:734
+#: src/components/results/ResultItem.tsx:730
 msgid "Restoring that wording."
 msgstr "Restoring that wording."
 
@@ -11359,7 +11359,7 @@ msgstr "Revision #{revisionNumber}"
 msgid "Revision history"
 msgstr "Revision history"
 
-#: src/components/map/panels/NodeDetailCard.tsx:366
+#: src/components/map/panels/NodeDetailCard.tsx:380
 msgid "Revision history is not available yet."
 msgstr "Revision history is not available yet."
 
@@ -12299,7 +12299,7 @@ msgstr "Show {hidden} more"
 msgid "Show {overflow} more"
 msgstr "Show {overflow} more"
 
-#: src/components/map/panels/NodeDetailCard.tsx:227
+#: src/components/map/panels/NodeDetailCard.tsx:241
 msgid "Show {typePlural}"
 msgstr "Show {typePlural}"
 
@@ -12312,7 +12312,7 @@ msgid "Show a frame"
 msgstr "Show a frame"
 
 #. placeholder {0}: ordered.length
-#: src/components/map/panels/ArgumentAccordion.tsx:272
+#: src/components/map/panels/ArgumentAccordion.tsx:299
 msgid "Show all {0}"
 msgstr "Show all {0}"
 
@@ -12366,7 +12366,7 @@ msgstr "Show more"
 msgid "Show more versions"
 msgstr "Show more versions"
 
-#: src/components/results/ResultItem.tsx:773
+#: src/components/results/ResultItem.tsx:769
 msgid "Show on the map"
 msgstr "Show on the map"
 
@@ -12638,7 +12638,7 @@ msgstr "Source {0}"
 msgid "Source conversation"
 msgstr "Source conversation"
 
-#: src/components/map/panels/NodeDetailCard.tsx:470
+#: src/components/map/panels/NodeDetailCard.tsx:484
 msgid "Source evidence"
 msgstr "Source evidence"
 
@@ -12646,11 +12646,11 @@ msgstr "Source evidence"
 msgid "Source not recorded"
 msgstr "Source not recorded"
 
-#: src/components/map/panels/NodeDetailCard.tsx:132
+#: src/components/map/panels/NodeDetailCard.tsx:146
 msgid "Source statement unavailable"
 msgstr "Source statement unavailable"
 
-#: src/components/map/panels/NodeDetailCard.tsx:353
+#: src/components/map/panels/NodeDetailCard.tsx:367
 msgid "Source: {origin}"
 msgstr "Source: {origin}"
 
@@ -13021,11 +13021,11 @@ msgstr "Support access turned on"
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
-#: src/components/map/panels/NodeDetailCard.tsx:287
+#: src/components/map/panels/NodeDetailCard.tsx:301
 msgid "Supporting pole A"
 msgstr "Supporting pole A"
 
-#: src/components/map/panels/NodeDetailCard.tsx:296
+#: src/components/map/panels/NodeDetailCard.tsx:310
 msgid "Supporting pole B"
 msgstr "Supporting pole B"
 
@@ -13369,7 +13369,7 @@ msgstr "The free plan includes one report."
 msgid "The goal guides reports, canvases, and assistant suggestions for this project."
 msgstr "The goal guides reports, canvases, and assistant suggestions for this project."
 
-#: src/components/results/ResultItem.tsx:719
+#: src/components/results/ResultItem.tsx:715
 msgid "The history could not be loaded."
 msgstr "The history could not be loaded."
 
@@ -13423,7 +13423,7 @@ msgstr "The live popcorn deck and the canvases built for this project live here.
 msgid "The map could not be generated. {0}"
 msgstr "The map could not be generated. {0}"
 
-#: src/components/present/AudienceMapAdapter.tsx:449
+#: src/components/present/AudienceMapAdapter.tsx:453
 msgid "The map could not be loaded."
 msgstr "The map could not be loaded."
 
@@ -13431,7 +13431,7 @@ msgstr "The map could not be loaded."
 msgid "The map could not be loaded. Try again in a moment."
 msgstr "The map could not be loaded. Try again in a moment."
 
-#: src/components/map/hooks/index.ts:341
+#: src/components/map/hooks/index.ts:348
 msgid "The map could not be started."
 msgstr "The map could not be started."
 
@@ -13481,7 +13481,7 @@ msgstr "The node budget must be a whole number above zero, so {applied} applies.
 msgid "The organisation this invite was for has been deleted. There's nothing to join."
 msgstr "The organisation this invite was for has been deleted. There's nothing to join."
 
-#: src/components/map/panels/NodeDetailCard.tsx:147
+#: src/components/map/panels/NodeDetailCard.tsx:161
 msgid "The original statements are unavailable for this older result."
 msgstr "The original statements are unavailable for this older result."
 
@@ -14614,7 +14614,7 @@ msgstr "Under your organisation"
 msgid "Undo"
 msgstr "Undo"
 
-#: src/components/results/ResultItem.tsx:673
+#: src/components/results/ResultItem.tsx:669
 msgid "Undo withdrawal"
 msgstr "Undo withdrawal"
 
@@ -15623,7 +15623,7 @@ msgstr "When someone scans the QR code, that is one conversation. If 50 people s
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "When the summary is ready (includes both transcript and summary)"
 
-#: src/components/results/ResultItem.tsx:744
+#: src/components/results/ResultItem.tsx:740
 msgid "Where this came from"
 msgstr "Where this came from"
 
@@ -15667,7 +15667,7 @@ msgid "Why not in this presentation?"
 msgstr "Why not in this presentation?"
 
 #: src/components/results/resultEditing.tsx:440
-#: src/components/results/ResultItem.tsx:680
+#: src/components/results/ResultItem.tsx:676
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
 msgstr "Why? One sentence, for the people you work with and anyone who checks later."
 
@@ -15687,8 +15687,8 @@ msgstr "With external clients"
 msgid "With several lines, the first reads as a subtitle."
 msgstr "With several lines, the first reads as a subtitle."
 
-#: src/components/results/ResultItem.tsx:685
-#: src/components/results/ResultItem.tsx:708
+#: src/components/results/ResultItem.tsx:681
+#: src/components/results/ResultItem.tsx:704
 msgid "Withdraw"
 msgstr "Withdraw"
 
@@ -15719,7 +15719,7 @@ msgstr "Withdrawn"
 msgid "Withdrawn from the analysis"
 msgstr "Withdrawn from the analysis"
 
-#: src/components/results/ResultItem.tsx:665
+#: src/components/results/ResultItem.tsx:661
 msgid "Withdrawn from the analysis."
 msgstr "Withdrawn from the analysis."
 
@@ -15867,7 +15867,7 @@ msgstr "Would you like to add this tag to your current filters?"
 msgid "Write custom host prompts for participant verification."
 msgstr "Write custom host prompts for participant verification."
 
-#: src/components/results/ResultItem.tsx:748
+#: src/components/results/ResultItem.tsx:744
 msgid "Written by a host"
 msgstr "Written by a host"
 
@@ -15991,7 +15991,7 @@ msgstr "You cannot manage MCP access for this organisation."
 msgid "You do not have permission to fact-check claims."
 msgstr "You do not have permission to fact-check claims."
 
-#: src/components/map/hooks/index.ts:334
+#: src/components/map/hooks/index.ts:341
 msgid "You do not have permission to generate a map."
 msgstr "You do not have permission to generate a map."
 

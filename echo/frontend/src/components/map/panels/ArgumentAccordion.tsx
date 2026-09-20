@@ -3,7 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { ArrowElbowDownRightIcon } from "@phosphor-icons/react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import rows from "@/components/results/ResultsList.module.css";
-import { deriveDisplayVerdict } from "../attributes";
+import { conversationColor, deriveDisplayVerdict } from "../attributes";
 import type { EvidenceGroup } from "../data/adapter";
 import { adjacencyOf, centralityOrder } from "../graph/mst";
 import {
@@ -23,7 +23,7 @@ export const AT_REST = 20;
 const SEPARATOR = " · ";
 
 function evidenceWords(quotes: number, conversations: number): string {
-	// The room's payload carries no evidence; say nothing rather than zero.
+	// A finding with nothing to count says nothing rather than zero.
 	if (!quotes && !conversations) return "";
 	const quoteWords = plural(quotes, { one: "# quote", other: "# quotes" });
 	const conversationWords = plural(conversations, {
@@ -47,7 +47,9 @@ export type ArgumentAccordionProps = {
 type Row = {
 	node: MapGraphNode;
 	neighbours: string[];
-	quotes: string[];
+	/** Quotes under the conversation they were spoken in. */
+	evidence: EvidenceGroup[];
+	quotes: number;
 	conversations: number;
 };
 
@@ -90,11 +92,15 @@ export const ArgumentAccordion = memo(function ArgumentAccordion({
 			return [
 				{
 					conversations: evidence.length,
+					evidence,
 					neighbours: Array.from(adjacency.get(id) ?? []).filter((other) =>
 						byId.has(other),
 					),
 					node,
-					quotes: evidence.flatMap((group) => group.quotes),
+					quotes: evidence.reduce(
+						(total, group) => total + group.quotes.length,
+						0,
+					),
 				},
 			];
 		});
@@ -183,7 +189,7 @@ export const ArgumentAccordion = memo(function ArgumentAccordion({
 									</div>
 									<div className={rows.meta}>
 										<p className={rows.metaLine}>
-											{evidenceWords(row.quotes.length, row.conversations)}
+											{evidenceWords(row.quotes, row.conversations)}
 										</p>
 										{(verdict || consolidation) && (
 											<p className={rows.metaState}>
@@ -234,26 +240,47 @@ export const ArgumentAccordion = memo(function ArgumentAccordion({
 												</ul>
 											)}
 										</div>
-										{/* A room's projection carries no quotes, and says nothing
-										    rather than showing an empty heading. */}
-										{row.quotes.length > 0 && (
+										{/* A finding with nothing behind it says nothing rather
+										    than showing an empty heading. */}
+										{row.quotes > 0 && (
 											<div>
 												<p className={classes.heading}>
 													<Trans>Quotes</Trans>
 												</p>
-												<div className={classes.quotes}>
-													{row.quotes.map((quote, index) => (
-														<blockquote
-															className={classes.quote}
-															// Quotes repeat across arguments; position keeps
-															// them apart.
-															// biome-ignore lint/suspicious/noArrayIndexKey: quotes have no id
-															key={index}
-														>
-															{quote}
-														</blockquote>
-													))}
-												</div>
+												{row.evidence.map((group) => (
+													<div
+														className={classes.group}
+														key={group.conversationId}
+													>
+														<p className={classes.source}>
+															{group.slot !== null && (
+																<span
+																	aria-hidden
+																	className={classes.dot}
+																	style={{
+																		backgroundColor: conversationColor(
+																			group.slot,
+																		),
+																	}}
+																/>
+															)}
+															{group.label}
+														</p>
+														<div className={classes.quotes}>
+															{group.quotes.map((quote, index) => (
+																<blockquote
+																	className={classes.quote}
+																	// Quotes repeat across arguments; position
+																	// keeps them apart.
+																	// biome-ignore lint/suspicious/noArrayIndexKey: quotes have no id
+																	key={index}
+																>
+																	{quote}
+																</blockquote>
+															))}
+														</div>
+													</div>
+												))}
 											</div>
 										)}
 									</div>

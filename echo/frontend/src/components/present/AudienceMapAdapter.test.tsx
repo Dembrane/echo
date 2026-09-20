@@ -51,8 +51,23 @@ vi.mock("@/components/map/data/adapter", async (importOriginal) => ({
 	buildMapGraph: () => ({
 		allNodes: [node(1, "A result"), node(2, "A later result")],
 		budgetBounds: null,
+		conversationNames: new Map([[1, "Ada"]]),
 		counts: { argument: 2 },
-		evidenceById: new Map(),
+		// The room's projection now carries the evidence behind a finding,
+		// under the palette slot it was spoken in.
+		evidenceById: new Map([
+			[
+				"revision-1",
+				[
+					{
+						conversationId: "slot:1",
+						label: "Ada",
+						quotes: ["The bins are always full."],
+						slot: 1,
+					},
+				],
+			],
+		]),
 		objectsById: new Map([
 			["revision-1", mapObject(1, "A result")],
 			["revision-2", mapObject(2, "A later result")],
@@ -422,6 +437,23 @@ describe("AudienceMapAdapter", () => {
 		render(adapter(true, 0, undefined, true));
 		await screen.findByText("Audience tree renderer");
 		expect(screen.getByRole("region", { name: "Explore" })).toBeTruthy();
+	});
+
+	it("shows the evidence behind a finding, attributed and linking nowhere", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+		);
+
+		render(adapter(true));
+		await screen.findByText("Audience tree renderer");
+		expect(
+			(await screen.findAllByText("The bins are always full.")).length,
+		).toBeGreaterThan(0);
+		// The conversation is named because the presentation said it may be.
+		expect(screen.getAllByText("Ada").length).toBeGreaterThan(0);
+		// Nothing on the room's surface opens a conversation.
+		expect(screen.queryByRole("link")).toBeNull();
 	});
 
 	it("leaves the Map exactly as the host page has it by default", async () => {

@@ -1,5 +1,6 @@
 import {
 	attributeInputsOf,
+	conversationSlotLabel,
 	deriveDisplayVerdict,
 	isFactCheckEligible,
 	isObjectType,
@@ -34,6 +35,12 @@ export type EvidenceGroup = {
 	conversationId: string;
 	label: string;
 	quotes: string[];
+	/**
+	 * The conversation's palette slot, so quotes carry the colour the map and
+	 * the legend give that conversation. Null where the payload places no
+	 * conversation in the deck's order.
+	 */
+	slot: number | null;
 };
 
 export type UnplacedObject = {
@@ -130,6 +137,13 @@ export type MapGraphData = {
 	unplaced: UnplacedObject[];
 	/** Quotes per source conversation, by node id. */
 	evidenceById: Map<string, EvidenceGroup[]>;
+	/**
+	 * What to call the conversation in a palette slot. The host map reads the
+	 * names off its own evidence; the room's map has them only where the
+	 * presentation's names-on-the-legend setting put them in the payload, and
+	 * otherwise numbers the conversations.
+	 */
+	conversationNames: Map<number, string>;
 	objectsById: Map<string, MapObjectInfo>;
 	/** Explicit relations with node (revision) ids as endpoints. */
 	relations: MapRelation[];
@@ -187,31 +201,47 @@ const BASES: ReadonlySet<string> = new Set([
 	"authored",
 ]);
 
-const parseEvidence = (value: unknown): MapEvidence[] => {
+/**
+ * Evidence as the adapter reads it. The room's projection names no
+ * conversation: it gives the palette slot the quotes were spoken in, and the
+ * conversation's id stands in for it locally so the grouping is the same code
+ * on both surfaces.
+ */
+type ParsedEvidence = MapEvidence & { slot: number | null };
+
+/** The stand-in id of a conversation the payload only gives a slot for. */
+const slotId = (slot: number): string => `slot:${slot}`;
+
+const parseEvidence = (value: unknown): ParsedEvidence[] => {
 	if (!Array.isArray(value)) return [];
-	const evidence: MapEvidence[] = [];
+	const evidence: ParsedEvidence[] = [];
 	for (const item of value) {
 		const record = asRecord(item);
-		const conversationId = asString(
-			record.conversation_id,
-			record.conversationId,
-		);
+		const raw = record.conversation;
+		const slot =
+			typeof raw === "number" && Number.isInteger(raw) && raw >= 0 ? raw : null;
+		const conversationId =
+			asString(record.conversation_id, record.conversationId) ||
+			(slot === null ? "" : slotId(slot));
 		if (!conversationId) continue;
 		evidence.push({
 			conversation_id: conversationId,
 			created_at: asStringOrNull(record.created_at, record.createdAt),
-			label: asString(record.label) || conversationId,
+			// A room's group carries no label; it is given one from the slot,
+			// once every node has been read.
+			label: asString(record.label),
 			quotes: Array.isArray(record.quotes)
 				? record.quotes.filter(
 						(quote): quote is string => typeof quote === "string",
 					)
 				: [],
+			slot,
 		});
 	}
 	return evidence;
 };
 
-const groupEvidence = (evidence: MapEvidence[]): EvidenceGroup[] => {
+const groupEvidence = (evidence: ParsedEvidence[]): EvidenceGroup[] => {
 	const groups = new Map<string, EvidenceGroup>();
 	for (const item of evidence) {
 		const existing = groups.get(item.conversation_id);
@@ -222,6 +252,7 @@ const groupEvidence = (evidence: MapEvidence[]): EvidenceGroup[] => {
 				conversationId: item.conversation_id,
 				label: item.label,
 				quotes: [...(item.quotes ?? [])],
+				slot: item.slot,
 			});
 		}
 	}
@@ -256,8 +287,11 @@ const parseConsolidation = (
 		const member = asRecord(value);
 		const objectId = asString(member.objectId, member.object_id);
 		const revisionId = asString(member.revisionId, member.revision_id);
-		if (!objectId || !revisionId || objectIds.has(objectId)) return undefined;
-		objectIds.add(objectId);
+		// The room's projection carries a member's statement and its quotes and
+		// no identity at all; its place in the list is the only key it needs.
+		const key = objectId || `member-${members.length}`;
+		if (!revisionId !== !objectId || objectIds.has(key)) return undefined;
+		objectIds.add(key);
 		members.push({
 			evidence: groupEvidence(parseEvidence(member.evidence)),
 			objectId,
@@ -309,8 +343,29 @@ const parseDetail = (
 	}
 };
 
+/**
+ * Gives every group the conversation's slot and what to call it: the name the
+ * payload carries, else the name on the host's own evidence, else the
+ * conversation's place in the deck's order ("Conversation 2").
+ */
+const nameGroups = (
+	groups: ReadonlyArray<EvidenceGroup>,
+	slotOf: ReadonlyMap<string, number>,
+	names: ReadonlyMap<number, string>,
+): void => {
+	for (const group of groups) {
+		const slot = group.slot ?? slotOf.get(group.conversationId) ?? null;
+		group.slot = slot;
+		const named = slot === null ? undefined : names.get(slot);
+		group.label =
+			named ||
+			group.label ||
+			(slot === null ? group.conversationId : conversationSlotLabel(slot));
+	}
+};
+
 /** Source evidence of a projection: `evidence` when it is a list, else `quotes`. */
-const detailEvidence = (raw: unknown): MapEvidence[] => {
+const detailEvidence = (raw: unknown): ParsedEvidence[] => {
 	const detail = asRecord(raw);
 	return Array.isArray(detail.evidence)
 		? parseEvidence(detail.evidence)
@@ -335,6 +390,20 @@ type Normalised = {
 	scope: { types: ObjectType[] | null; resultScope: string | null };
 	stale: MapStaleRef[];
 	conversationCount: number | null;
+	/** Names the payload itself gives the palette slots; empty on a host map. */
+	conversationNames: Map<number, string>;
+};
+
+/** `{"0": "Ada"}` as slots, ignoring anything that is not a named slot. */
+const parseConversationNames = (value: unknown): Map<number, string> => {
+	const names = new Map<number, string>();
+	if (!value || typeof value !== "object" || Array.isArray(value)) return names;
+	for (const [key, name] of Object.entries(value as Record<string, unknown>)) {
+		const slot = Number(key);
+		if (!Number.isInteger(slot) || slot < 0) continue;
+		if (typeof name === "string" && name.trim()) names.set(slot, name.trim());
+	}
+	return names;
 };
 
 /** A v1 result as `argument` objects with legacy provenance. */
@@ -343,6 +412,7 @@ const fromLegacy = (result: MapResult): Normalised => ({
 	conversationCount: Array.isArray(result.conversations)
 		? result.conversations.length
 		: null,
+	conversationNames: new Map(),
 	counts: null,
 	nodes: (result.arguments ?? []).map(
 		(argument): MapPayloadNode => ({
@@ -388,6 +458,7 @@ const fromLegacy = (result: MapResult): Normalised => ({
 const fromV2 = (payload: MapPayloadV2): Normalised => ({
 	budgets: payload.budgets ?? null,
 	conversationCount: null,
+	conversationNames: parseConversationNames(payload.conversationNames),
 	counts: payload.counts ?? null,
 	nodes: payload.overBudget ? [] : (payload.nodes ?? []),
 	overBudget: Boolean(payload.overBudget),
@@ -434,6 +505,9 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 	const sourcesById = new Map<string, string[]>();
 	const slotsById = new Map<string, number[]>();
 	const startedAt = new Map<string, string>();
+	// Every group on the map, so one pass can give them all their slot and
+	// their name once the slots are known.
+	const groups: EvidenceGroup[] = [];
 
 	for (const item of data.nodes) {
 		if (!isObjectType(item.type) || !item.revisionId) continue;
@@ -441,7 +515,9 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 		const id = item.revisionId;
 		const label = asString(item.label);
 		const evidence = detailEvidence(item.detail);
-		evidenceById.set(id, groupEvidence(evidence));
+		const nodeGroups = groupEvidence(evidence);
+		evidenceById.set(id, nodeGroups);
+		groups.push(...nodeGroups);
 
 		const rawKind = item.attributes?.epistemicKind;
 		const epistemicKind: MapEpistemicKind | undefined =
@@ -462,6 +538,7 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 			parsedDetail.type === "deduplicated_argument"
 				? parsedDetail.consolidation?.members
 				: undefined;
+		for (const member of members ?? []) groups.push(...member.evidence);
 		const sources = members?.length
 			? members.flatMap((member) =>
 					member.evidence.map((group) => group.conversationId),
@@ -568,6 +645,21 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 		}
 	}
 
+	// The host map always knows whose conversation a colour stands for: the
+	// name rides along on its own evidence. The room's map knows only what the
+	// payload was allowed to say.
+	const conversationNames = new Map(data.conversationNames);
+	if (conversationNames.size === 0) {
+		for (const group of groups) {
+			const slot = group.slot ?? slotOf.get(group.conversationId);
+			if (slot === undefined || slot === null) continue;
+			if (group.label && !conversationNames.has(slot)) {
+				conversationNames.set(slot, group.label);
+			}
+		}
+	}
+	nameGroups(groups, slotOf, conversationNames);
+
 	const partition = partitionByEmbedding(allNodes);
 	const unplaced: UnplacedObject[] = [...partition.invalid];
 	const reported = new Set(unplaced.map((item) => item.id));
@@ -626,6 +718,7 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 			? { ceilings: data.budgets.ceilings, defaults: data.budgets.defaults }
 			: null,
 		conversationCount: data.conversationCount,
+		conversationNames,
 		conversationSlotCount,
 		counts,
 		evidenceById,

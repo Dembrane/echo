@@ -188,6 +188,7 @@ describe("inspector per type", () => {
 												conversationId: "conversation-1",
 												label: "Conversation one",
 												quotes: ["Pinned source quote"],
+												slot: 0,
 											},
 										],
 										objectId: "source-1",
@@ -261,6 +262,32 @@ describe("inspector per type", () => {
 				"The original statements are unavailable for this older result.",
 			),
 		).toBeTruthy();
+	});
+
+	it("shows the room's quotes under their conversation, in its colour", () => {
+		const node = nodesById.get("rev-argument-0") as MapGraphNode;
+		render(
+			<Providers>
+				<NodeDetailCard
+					node={node}
+					evidence={[
+						{
+							conversationId: "slot:1",
+							label: "Conversation 2",
+							quotes: ["The bins are always full."],
+							slot: 1,
+						},
+					]}
+				/>
+			</Providers>,
+		);
+		expect(screen.getByText("Conversation 2")).toBeTruthy();
+		expect(screen.getByText("The bins are always full.")).toBeTruthy();
+		// The dot the legend gives that conversation, so the quote is read in
+		// the colour it was spoken in.
+		expect(screen.getByTestId("quote-group-slot-1")).toBeTruthy();
+		// The room's surface links nowhere: no conversation to open.
+		expect(screen.queryByRole("link")).toBeNull();
 	});
 });
 

@@ -78,7 +78,11 @@ A finding as it reads now. Where a host changed its words, whatever kind of chan
 
 Decided by Jorim on September 20th 2026: the word is "edited" / "aangepast", nothing longer. In the check density the row's state word is the same word.
 
+Decided by Jorim on September 20th 2026: every public presentation shows its evidence. The quotes reach the room whether or not a finding is spotlit, and the presentation's names-on-the-legend setting decides whether the room is told which conversation said them. With it off, no name leaves the server and the room reads "Conversation 1", "Conversation 2", in the order the deck hands its marker colours out. The conversation legend on the map is on by default, now that Conversation is the default colour mode.
+
 **One audience projection.** The bundle, the map payload and the spotlight all pass through one visibility rule: a held-back or withdrawn finding leaves with everything only it referenced, its quotes included. (Today `_without_objects` leaves those quotes in `quotes.json`; that fix is already spun off as its own task and lands first.)
+
+The map payload carries, per visible node, its quotes as plain text grouped by the conversation's opaque palette slot (`detail.evidence: [{conversation, quotes}]`), the same per member of a deduplicated argument (statement and quotes, no member identity), and `conversationNames` slot to name only where the setting is on. It never carries conversation ids, chunk ids, timestamps, dashboard urls, provenance, actor ids or fact-check eligibility. A conversation left with nothing on the map after curation loses its name too.
 
 ## 8. The result item
 
@@ -86,7 +90,7 @@ Decided by Jorim on September 20th 2026: the word is "edited" / "aangepast", not
 
 **The workbench is the stage with a margin.** History (who, when, kind, reason, before and after, "restore this wording"), provenance, the two controls, "open in Analysis" or "show on the map", and **Show to the room** sit beside the card in dashboard type, or below it under 900 px. No tabs. Every sub-step expands inside the item; nothing opens over it.
 
-**Show to the room.** "Show to the room" / "Laat aan de zaal zien": the margin fades, the card stays, and under it "On the room screen now. Close it". The room gets the quote modal's entrance (veil and card, 150 ms) with the stage paused. Spotlight is stored state on the presentation: object, effective revision, a version number. The existing bare `update` event tells screens to refetch it; every read rechecks that the finding is still visible in this presentation and authorises the public link the way the deck bundle does; a stale close conflicts instead of closing someone else's newer spotlight. Quotes reach a public viewer only through a spotlit finding. An unspotlit stage card on a public surface shows the finding and its evidence count, no quotes.
+**Show to the room.** "Show to the room" / "Laat aan de zaal zien": the margin fades, the card stays, and under it "On the room screen now. Close it". The room gets the quote modal's entrance (veil and card, 150 ms) with the stage paused. Spotlight is stored state on the presentation: object, effective revision, a version number. The existing bare `update` event tells screens to refetch it; every read rechecks that the finding is still visible in this presentation and authorises the public link the way the deck bundle does; a stale close conflicts instead of closing someone else's newer spotlight. A spotlight is how a finding takes the whole screen, not how its quotes get out: a public stage card carries its evidence count and, on the map, its quotes under the conversation that spoke them (September 20th 2026).
 
 While the deck is an iframe the React shell draws the card above it. When the deck moves into React this replaces its quote modal.
 
@@ -107,7 +111,7 @@ Loading: headers first, then skeleton rows in the row skeleton, hairline colour,
 
 ## 11. Testing
 
-Unit tests per part. `useResultActions` against a mocked API: optimistic update, undo bound to its revision, two-host undo conflict, failed save keeps the words. Server: allowlist rejects evidence edits; kind and reason rules per operation; rollback keeps membership; curation log under concurrent hides, hide then show then hide keeps all three entries; legacy id-only entries and legacy clients still work during rollout; the old settings route no longer hides; snapshots follow an authored revision and not a generated one; the audience projection drops orphaned quotes; spotlight answers only while the finding is visible, never quotes for anything unspotlit, stale close conflicts. One walk through on the local stack, both densities, light and dark, room screen beside it, including fifteen findings held back in a row to feel whether the reason step is bearable minutes before doors open.
+Unit tests per part. `useResultActions` against a mocked API: optimistic update, undo bound to its revision, two-host undo conflict, failed save keeps the words. Server: allowlist rejects evidence edits; kind and reason rules per operation; rollback keeps membership; curation log under concurrent hides, hide then show then hide keeps all three entries; legacy id-only entries and legacy clients still work during rollout; the old settings route no longer hides; snapshots follow an authored revision and not a generated one; the audience projection drops orphaned quotes; the map payload carries the evidence and no source of it, names it only where the setting says so, and a held-back or withdrawn finding takes its quotes with it; spotlight answers only while the finding is visible, stale close conflicts. One walk through on the local stack, both densities, light and dark, room screen beside it, including fifteen findings held back in a row to feel whether the reason step is bearable minutes before doors open.
 
 ## 12. Order of work
 

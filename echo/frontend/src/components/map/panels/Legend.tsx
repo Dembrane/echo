@@ -20,11 +20,18 @@ export const Legend = memo(function Legend({
 	colorBy,
 	darkMode,
 	conversations = 0,
+	names,
 }: {
 	colorBy: ColorBy;
 	darkMode: boolean;
 	/** Conversations on this map; the conversation legend is built from them. */
 	conversations?: number;
+	/**
+	 * What to call the conversation in a slot. The host map has every name;
+	 * the room's has them where the presentation says the room may read them,
+	 * and numbers the rest.
+	 */
+	names?: ReadonlyMap<number, string>;
 }) {
 	const rows: LegendEntry[] =
 		colorBy === "conversation"
@@ -33,7 +40,7 @@ export const Legend = memo(function Legend({
 					(_value, slot) => ({
 						color: conversationColor(slot),
 						key: slotKey(slot),
-						label: conversationSlotLabel(slot),
+						label: names?.get(slot) || conversationSlotLabel(slot),
 					}),
 				)
 			: legendEntries(colorBy);

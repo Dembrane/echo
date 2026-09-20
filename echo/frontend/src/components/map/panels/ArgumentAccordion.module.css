@@ -56,6 +56,30 @@
 	transform: translateY(0.15em);
 }
 
+/* One conversation's quotes, under the conversation they were spoken in. */
+.group + .group {
+	margin-top: 0.75rem;
+}
+
+.source {
+	align-items: center;
+	color: var(--ink-faint);
+	display: flex;
+	font-size: var(--app-font-size-xs, 0.75rem);
+	gap: 0.4rem;
+	letter-spacing: 0.06em;
+	margin: 0 0 0.4rem;
+	text-transform: uppercase;
+}
+
+/* The colour the legend and the nodes give this conversation. */
+.dot {
+	border-radius: 50%;
+	flex: none;
+	height: 0.5rem;
+	width: 0.5rem;
+}
+
 .quotes {
 	display: flex;
 	flex-direction: column;

@@ -6,7 +6,7 @@ import { memo, type ReactNode, useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ResultStage } from "@/components/results";
 import { cn } from "@/lib/utils";
-import { OBJECT_TYPE_STYLES } from "../attributes";
+import { conversationColor, OBJECT_TYPE_STYLES } from "../attributes";
 import type {
 	EvidenceGroup,
 	MapObjectInfo,
@@ -73,20 +73,32 @@ const QuoteGroups = ({
 			const href = conversationHref?.(group.conversationId) ?? null;
 			return (
 				<div key={group.conversationId} className="space-y-1.5">
-					{href ? (
-						<Anchor
-							component={I18nLink}
-							to={href}
-							size="xs"
-							className="font-semibold uppercase tracking-wider"
-						>
-							{group.label}
-						</Anchor>
-					) : (
-						<CaptionText className="font-semibold uppercase tracking-wider">
-							{group.label}
-						</CaptionText>
-					)}
+					<span className="flex items-center gap-1.5">
+						{/* The dot the legend and the nodes use for this conversation,
+						    so a quote is read in the colour it was spoken in. */}
+						{group.slot !== null && (
+							<span
+								aria-hidden
+								className="inline-block size-2 shrink-0 rounded-full"
+								data-testid={`quote-group-slot-${group.slot}`}
+								style={{ backgroundColor: conversationColor(group.slot) }}
+							/>
+						)}
+						{href ? (
+							<Anchor
+								component={I18nLink}
+								to={href}
+								size="xs"
+								className="font-semibold uppercase tracking-wider"
+							>
+								{group.label}
+							</Anchor>
+						) : (
+							<CaptionText className="font-semibold uppercase tracking-wider">
+								{group.label}
+							</CaptionText>
+						)}
+					</span>
 					{group.quotes.map((quote, index) => (
 						<blockquote
 							// Quotes repeat across arguments; position keeps them apart.
@@ -124,7 +136,9 @@ const ConsolidationMembers = ({
 				<ol className="space-y-3" data-testid="consolidation-members">
 					{consolidation.members.map((member, index) => (
 						<li
-							key={member.objectId}
+							// The room's members carry no identity; their place in the
+							// merge is what tells them apart.
+							key={member.objectId || `member-${index}`}
 							className="space-y-1 text-sm leading-snug"
 						>
 							<p>
@@ -435,10 +449,10 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 					{typeLabel}
 				</p>
 			)}
-			{/* The finding in its kind's shape, the way a room would get it. The
-			    map keeps its own evidence below, attributed and linked, because
-			    the stage's quotes are unattributed and the audience payload
-			    carries none at all. */}
+			{/* The finding in its kind's shape, the way a room would get it,
+			    with what there is to count. The quotes themselves stay below it
+			    rather than riding on the stage: there they are attributed, in
+			    their conversation's colour, and no passage is read twice. */}
 			<ResultStage
 				item={{
 					detail: object?.detail,

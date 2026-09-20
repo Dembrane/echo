@@ -72,6 +72,7 @@ const evidence: Record<string, EvidenceGroup[]> = {
 			conversationId: "c1",
 			label: "Conversation one",
 			quotes: ["It is the timetable, nothing else."],
+			slot: 0,
 		},
 	],
 };
@@ -158,6 +159,35 @@ describe("the arguments under the map", () => {
 		expect(store.getState().selectedNodeId).toBe("leaf-c");
 		fireEvent.click(screen.getByTestId("map-argument-row-leaf-c"));
 		expect(store.getState().selectedNodeId).toBeNull();
+	});
+
+	it("groups an opened row's quotes under the conversations they came from", () => {
+		const store = createMapInteractionStore({ selectedNodeId: "hub" });
+		renderList({
+			evidence: {
+				hub: [
+					{
+						conversationId: "slot:0",
+						label: "Conversation 1",
+						quotes: ["It is the timetable, nothing else.", "Every morning."],
+						slot: 0,
+					},
+					{
+						conversationId: "slot:1",
+						label: "Ada",
+						quotes: ["The fare went up too."],
+						slot: 1,
+					},
+				],
+			},
+			store,
+		});
+		expect(screen.getByText("Quotes")).toBeTruthy();
+		expect(screen.getByText("Conversation 1")).toBeTruthy();
+		expect(screen.getByText("Ada")).toBeTruthy();
+		expect(screen.getByText("Every morning.")).toBeTruthy();
+		// The count line has something to count again.
+		expect(screen.getByText("3 quotes · 2 conversations")).toBeTruthy();
 	});
 
 	it("says nothing about quotes where the payload carries none", () => {

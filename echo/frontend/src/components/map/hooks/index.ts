@@ -149,6 +149,13 @@ export type MapPayloadV2 = {
 	overBudget: boolean;
 	embedding: { key: string; model: string; dims: number };
 	nodes: MapPayloadNode[];
+	/**
+	 * What to call the conversation in a palette slot, by slot. The room's
+	 * projection carries it only where the presentation's names-on-the-legend
+	 * setting is on; without it the room numbers the conversations itself. The
+	 * host payload leaves it out: its evidence names them already.
+	 */
+	conversationNames?: Record<string, string>;
 	/** Endpoints are revision ids. */
 	relations: MapPayloadRelation[];
 	/** Revision ids without vectors. */

@@ -412,6 +412,7 @@ export const MapExperience = ({
 								colorBy={colorBy}
 								darkMode={settings.darkMode}
 								conversations={graph.conversationSlotCount}
+								names={graph.conversationNames}
 							/>
 						)}
 					</section>
