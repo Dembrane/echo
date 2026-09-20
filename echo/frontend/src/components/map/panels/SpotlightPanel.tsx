@@ -1,16 +1,21 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Anchor, Button, UnstyledButton } from "@mantine/core";
-import { memo } from "react";
+import { type CSSProperties, memo } from "react";
 import { cn } from "@/lib/utils";
 import {
 	ATTRIBUTES,
 	attributeInputsOf,
+	conversationColor,
+	conversationColors,
+	conversationSlotLabel,
 	FACT_CHECKABLE_TYPES,
 	isFactCheckEligible,
+	slotKey,
 } from "../attributes";
 import type { EvidenceGroup } from "../data/adapter";
 import { deriveDisplayVerdict } from "../graph/nodeStyle";
+import { blendBackground } from "../renderers/gradients";
 import type { ColorBy, FactCheckState, MapGraphNode } from "../types";
 import {
 	type ConversationHref,
@@ -42,11 +47,89 @@ type SpotlightPanelProps = {
 	onFactCheck: (nodeId: string, options?: { force?: boolean }) => void;
 	onCancelFactCheck: (nodeId: string) => void;
 	conversationHref?: ConversationHref;
+	/**
+	 * What to call the conversation in a palette slot. The host map has every
+	 * name; the room's has them only where the presentation says the room may
+	 * read them, and the rest are named by their place.
+	 */
+	conversationNames?: ReadonlyMap<number, string>;
 	locale?: string;
 	inspection?: NodeInspection | null;
 };
 
 const ACTIVE_RING = "ring-2 ring-offset-1 ring-gray-400";
+
+/**
+ * Ink on a marker colour: the deck's `--on-marker`, which is graphite and
+ * stays graphite in both themes, because a marker is an object in the room
+ * rather than a surface of the page.
+ */
+const ON_MARKER_CLASS = "text-graphite";
+
+/** How many conversations get a chit of their own before they are counted. */
+const NAMED_CHITS = 3;
+
+/**
+ * The conversations behind the node, in the colours the map gives them: one
+ * chit each while they can be told apart, and past that a single chit in the
+ * node's own weighted blend. Clicking any of them colours the map by
+ * conversation.
+ */
+const ConversationChits = ({
+	slots,
+	names,
+	active,
+	onToggle,
+}: {
+	/** Palette slots behind the node, one entry per contributing member. */
+	slots: ReadonlyArray<number>;
+	names?: ReadonlyMap<number, string>;
+	active: boolean;
+	onToggle: () => void;
+}) => {
+	if (slots.length === 0) return null;
+	const unique = Array.from(new Set(slots)).sort((a, b) => a - b);
+	const title = active
+		? t`Stop coloring graph by conversation`
+		: t`Color graph by conversation`;
+	const chit = (key: string, label: string, style: CSSProperties) => (
+		<UnstyledButton
+			key={key}
+			onClick={onToggle}
+			aria-pressed={active}
+			title={title}
+			data-testid={`conversation-chit-${key}`}
+			className={cn(
+				CHIP_CLASS,
+				ON_MARKER_CLASS,
+				"transition-opacity hover:opacity-80",
+				active && ACTIVE_RING,
+			)}
+			style={style}
+		>
+			{label}
+		</UnstyledButton>
+	);
+	if (unique.length > NAMED_CHITS) {
+		return chit(
+			"many",
+			plural(unique.length, {
+				one: "# conversation",
+				other: "# conversations",
+			}),
+			{ backgroundImage: blendBackground(conversationColors(slots)) },
+		);
+	}
+	return (
+		<>
+			{unique.map((slot) =>
+				chit(slotKey(slot), names?.get(slot) || conversationSlotLabel(slot), {
+					backgroundColor: conversationColor(slot),
+				}),
+			)}
+		</>
+	);
+};
 
 /** The shared selected node: its type's details, chips and fact-checking. */
 export const SpotlightPanel = memo(function SpotlightPanel({
@@ -59,6 +142,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 	onFactCheck,
 	onCancelFactCheck,
 	conversationHref,
+	conversationNames,
 	locale,
 	inspection = null,
 }: SpotlightPanelProps) {
@@ -73,6 +157,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 
 	const valenceActive = colorBy === "valence";
 	const verdictActive = colorBy === "factCheck";
+	const conversationActive = colorBy === "conversation";
 
 	const factCheckTag = verdict
 		? { className: VERDICT_CHIP_CLASS[verdict], label: verdictLabel(verdict) }
@@ -103,6 +188,14 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 						/>
 
 						<div className="flex flex-wrap gap-1.5">
+							<ConversationChits
+								slots={node.metadata.conversationSlots ?? []}
+								names={conversationNames}
+								active={conversationActive}
+								onToggle={() =>
+									onColorByChange(conversationActive ? "none" : "conversation")
+								}
+							/>
 							{valenceApplies && (
 								<UnstyledButton
 									onClick={() =>

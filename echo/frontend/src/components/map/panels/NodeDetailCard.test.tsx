@@ -277,6 +277,12 @@ describe("inspector per type", () => {
 							quotes: ["The bins are always full."],
 							slot: 1,
 						},
+						{
+							conversationId: "slot:2",
+							label: "Conversation 3",
+							quotes: ["Ours are emptied twice a week."],
+							slot: 2,
+						},
 					]}
 				/>
 			</Providers>,
@@ -288,6 +294,30 @@ describe("inspector per type", () => {
 		expect(screen.getByTestId("quote-group-slot-1")).toBeTruthy();
 		// The room's surface links nowhere: no conversation to open.
 		expect(screen.queryByRole("link")).toBeNull();
+	});
+
+	it("drops the heading when every quote came from one conversation", () => {
+		const node = nodesById.get("rev-argument-0") as MapGraphNode;
+		render(
+			<Providers>
+				<NodeDetailCard
+					node={node}
+					evidence={[
+						{
+							conversationId: "slot:1",
+							label: "Conversation 2",
+							quotes: ["The bins are always full."],
+							slot: 1,
+						},
+					]}
+				/>
+			</Providers>,
+		);
+		// The node's chit already names the conversation; the heading and its
+		// dot would only say it again.
+		expect(screen.queryByText("Conversation 2")).toBeNull();
+		expect(screen.queryByTestId("quote-group-slot-1")).toBeNull();
+		expect(screen.getByText("The bins are always full.")).toBeTruthy();
 	});
 });
 
@@ -348,5 +378,96 @@ describe("Spotlight fact-check controls", () => {
 		expect(
 			screen.queryByRole("button", { name: "Fact check this claim" }),
 		).toBeNull();
+	});
+});
+
+describe("Spotlight conversation chits", () => {
+	const argumentNode = nodesById.get("rev-argument-0") as MapGraphNode;
+	const withSlots = (slots: number[]): MapGraphNode => ({
+		...argumentNode,
+		metadata: { ...argumentNode.metadata, conversationSlots: slots },
+	});
+
+	const renderSpotlight = (
+		node: MapGraphNode,
+		options: {
+			colorBy?: "conversation" | "valence";
+			names?: ReadonlyMap<number, string>;
+			onColorByChange?: () => void;
+		} = {},
+	) => {
+		const onColorByChange = options.onColorByChange ?? vi.fn();
+		render(
+			<Providers>
+				<SpotlightPanel
+					node={node}
+					evidence={[]}
+					factCheck={undefined}
+					colorBy={options.colorBy ?? "valence"}
+					onColorByChange={onColorByChange}
+					conversationNames={options.names}
+					canFactCheck
+					onFactCheck={vi.fn()}
+					onCancelFactCheck={vi.fn()}
+				/>
+			</Providers>,
+		);
+		return onColorByChange;
+	};
+
+	it("names the conversation the payload names, in its marker colour", () => {
+		renderSpotlight(withSlots([1]), {
+			names: new Map([[1, "Room by the canal"]]),
+		});
+		const chit = screen.getByTestId("conversation-chit-slot-1");
+		expect(chit.textContent).toBe("Room by the canal");
+		// The marker the map and the legend give slot 1, with graphite on it.
+		expect(chit.getAttribute("style")).toContain("rgb(30, 255, 161)");
+		expect(chit.className).toContain("text-graphite");
+	});
+
+	it("numbers a conversation the payload does not name", () => {
+		renderSpotlight(withSlots([1]));
+		expect(screen.getByTestId("conversation-chit-slot-1").textContent).toBe(
+			"Conversation 2",
+		);
+	});
+
+	it("colours the map by conversation when clicked", () => {
+		const onColorByChange = renderSpotlight(withSlots([0]));
+		fireEvent.click(screen.getByTestId("conversation-chit-slot-0"));
+		expect(onColorByChange).toHaveBeenCalledWith("conversation");
+	});
+
+	it("shows the selected ring while the map is coloured by conversation", () => {
+		renderSpotlight(withSlots([0]), { colorBy: "conversation" });
+		const chit = screen.getByTestId("conversation-chit-slot-0");
+		expect(chit.getAttribute("aria-pressed")).toBe("true");
+		expect(chit.className).toContain("ring-2");
+	});
+
+	it("gives a merge of three conversations a chit each, in slot order", () => {
+		renderSpotlight(withSlots([2, 0, 0, 1]));
+		const chits = screen.getAllByTestId(/conversation-chit-/);
+		expect(chits.map((chit) => chit.textContent)).toEqual([
+			"Conversation 1",
+			"Conversation 2",
+			"Conversation 3",
+		]);
+	});
+
+	it("counts past three, filled with the node's own weighted blend", () => {
+		renderSpotlight(withSlots([0, 0, 0, 1, 2, 3]));
+		const chit = screen.getByTestId("conversation-chit-many");
+		expect(chit.textContent).toBe("4 conversations");
+		const style = chit.getAttribute("style") ?? "";
+		expect(style).toContain("linear-gradient(135deg");
+		// Slot 0 gave half the members, so its band is the widest.
+		expect(style).toContain("rgb(0, 255, 255) 25%");
+	});
+
+	it("shows no chit for a node the payload places nowhere", () => {
+		renderSpotlight(withSlots([]));
+		expect(screen.queryAllByTestId(/conversation-chit-/)).toHaveLength(0);
 	});
 });

@@ -156,7 +156,9 @@ msgid "{0, plural, one {# conversation will be hidden along with it.} other {# c
 msgstr "{0, plural, one {# gesprek wordt hiermee ook verborgen.} other {# gesprekken worden hiermee ook verborgen.}}"
 
 #. placeholder {0}: p.conversation_count
+#. placeholder {0}: unique.length
 #: src/components/workspace/OrganisationUsageRollup.tsx:875
+#: src/components/map/panels/SpotlightPanel.tsx:116
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# gesprek} other {# gesprekken}}"
 
@@ -1679,7 +1681,7 @@ msgstr "Er is een fout opgetreden."
 msgid "An event or a workshop."
 msgstr "Een evenement of workshop."
 
-#: src/components/map/panels/NodeDetailCard.tsx:195
+#: src/components/map/panels/NodeDetailCard.tsx:203
 msgid "An object outside this view"
 msgstr ""
 
@@ -1953,7 +1955,7 @@ msgid "Are you sure you want to remove your custom logo? The default dembrane lo
 msgstr "Weet je zeker dat je je aangepaste logo wilt verwijderen? Het standaard dembrane-logo wordt in plaats daarvan gebruikt."
 
 #: src/components/map/attributes.ts:127
-#: src/components/map/panels/NodeDetailCard.tsx:435
+#: src/components/map/panels/NodeDetailCard.tsx:446
 msgid "Argument"
 msgstr "Argument"
 
@@ -1965,7 +1967,7 @@ msgstr "Argument"
 msgid "Argument map"
 msgstr ""
 
-#: src/components/map/MapExperience.tsx:387
+#: src/components/map/MapExperience.tsx:388
 msgid "Argument tree (MST)"
 msgstr ""
 
@@ -1976,7 +1978,7 @@ msgstr ""
 msgid "Arguments"
 msgstr "Argumenten"
 
-#: src/components/map/panels/SpotlightPanel.tsx:158
+#: src/components/map/panels/SpotlightPanel.tsx:251
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr ""
 
@@ -2539,7 +2541,7 @@ msgstr "Kun je ons meer vertellen?"
 #: src/components/organisation/CreateOrganisationModal.tsx:204
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:284
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:366
-#: src/components/map/panels/SpotlightPanel.tsx:201
+#: src/components/map/panels/SpotlightPanel.tsx:294
 #: src/components/invite/InviteModal.tsx:762
 #: src/components/goal/ProjectGoalSection.tsx:143
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
@@ -2903,7 +2905,7 @@ msgstr "Je sessie wordt gecontroleerd."
 
 #: src/components/map/attributes.ts:381
 #: src/components/map/panels/shared.tsx:132
-#: src/components/map/panels/SpotlightPanel.tsx:192
+#: src/components/map/panels/SpotlightPanel.tsx:285
 msgid "Checking…"
 msgstr ""
 
@@ -3030,7 +3032,7 @@ msgstr "Klik op \"Upload bestanden\" wanneer je klaar bent om de upload te start
 msgid "Click a conversation tag to add it to your filters."
 msgstr "Klik op een gesprekstag om die aan je filters toe te voegen."
 
-#: src/components/map/panels/SpotlightPanel.tsx:269
+#: src/components/map/panels/SpotlightPanel.tsx:362
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr ""
 
@@ -3137,15 +3139,19 @@ msgstr "Collectie"
 msgid "Collision Radius: {0}x"
 msgstr ""
 
+#: src/components/map/panels/SpotlightPanel.tsx:94
+msgid "Color graph by conversation"
+msgstr "Kleur de grafiek per gesprek"
+
 #: src/components/map/panels/SpotlightPanel.tsx:121
 #~ msgid "Color graph by fact-check"
 #~ msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:136
+#: src/components/map/panels/SpotlightPanel.tsx:229
 msgid "Color graph by factual status"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:115
+#: src/components/map/panels/SpotlightPanel.tsx:208
 msgid "Color graph by valence"
 msgstr ""
 
@@ -3178,7 +3184,7 @@ msgstr "samengevoegd uit {0}"
 #. placeholder {0}: consolidation.memberCount
 #: src/components/map/renderers/MstGraph.tsx:1079
 #: src/components/map/renderers/LocalMapGraph.tsx:1054
-#: src/components/map/panels/NodeDetailCard.tsx:133
+#: src/components/map/panels/NodeDetailCard.tsx:141
 msgid "Combined from {0} arguments"
 msgstr "Samengevoegd uit {0} argumenten"
 
@@ -4894,7 +4900,7 @@ msgstr ""
 msgid "Enable 2FA"
 msgstr "2FA inschakelen"
 
-#: src/components/map/MapExperience.tsx:459
+#: src/components/map/MapExperience.tsx:460
 msgid "Enable a visualization from the panel settings menu"
 msgstr ""
 
@@ -5130,7 +5136,7 @@ msgstr "Iedereen op de lijst is getraind."
 msgid "participant.alert.microphone.access.success"
 msgstr "Alles lijkt goed – je kunt doorgaan."
 
-#: src/components/map/panels/NodeDetailCard.tsx:336
+#: src/components/map/panels/NodeDetailCard.tsx:344
 msgid "Evidence"
 msgstr ""
 
@@ -5142,7 +5148,7 @@ msgstr ""
 #~ msgid "Evidence level"
 #~ msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:342
+#: src/components/map/panels/NodeDetailCard.tsx:350
 msgid "Evidenced connections"
 msgstr ""
 
@@ -5280,7 +5286,7 @@ msgstr ""
 msgid "Fact check all ({pendingClaimCount})"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:178
+#: src/components/map/panels/SpotlightPanel.tsx:271
 msgid "Fact check this claim"
 msgstr ""
 
@@ -5292,7 +5298,7 @@ msgstr ""
 msgid "Factual status"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:167
+#: src/components/map/panels/SpotlightPanel.tsx:260
 msgid "Factual status does not apply to this object."
 msgstr ""
 
@@ -6109,7 +6115,7 @@ msgstr "Hoi {firstName}"
 msgid "Hidden"
 msgstr "Verborgen"
 
-#: src/components/map/panels/NodeDetailCard.tsx:227
+#: src/components/map/panels/NodeDetailCard.tsx:235
 msgid "Hidden by the Objects filter"
 msgstr ""
 
@@ -7365,7 +7371,7 @@ msgstr "Bezig met laden…"
 msgid "Local argument map"
 msgstr ""
 
-#: src/components/map/MapExperience.tsx:427
+#: src/components/map/MapExperience.tsx:428
 msgid "Local map"
 msgstr ""
 
@@ -8282,7 +8288,7 @@ msgstr ""
 msgid "No default set (client-managed applies)"
 msgstr "Geen standaard ingesteld (door client beheerd geldt)"
 
-#: src/components/map/panels/NodeDetailCard.tsx:346
+#: src/components/map/panels/NodeDetailCard.tsx:354
 msgid "No evidenced connections."
 msgstr ""
 
@@ -8326,8 +8332,8 @@ msgstr "Nog geen geschiedenis."
 msgid "No invites went out. Check the list below."
 msgstr "Er zijn geen uitnodigingen verstuurd. Bekijk de lijst hieronder."
 
-#: src/components/map/panels/NodeDetailCard.tsx:307
-#: src/components/map/panels/NodeDetailCard.tsx:316
+#: src/components/map/panels/NodeDetailCard.tsx:315
+#: src/components/map/panels/NodeDetailCard.tsx:324
 msgid "No linked arguments."
 msgstr ""
 
@@ -8378,7 +8384,7 @@ msgstr "Noch geen nieuwe feedback gedetecteerd. Ga door met je gesprek en probee
 msgid "No new invites needed. Check the list below."
 msgstr "Geen nieuwe uitnodigingen nodig. Bekijk de lijst hieronder."
 
-#: src/components/map/panels/NodeDetailCard.tsx:408
+#: src/components/map/panels/NodeDetailCard.tsx:416
 msgid "No node selected."
 msgstr ""
 
@@ -8657,7 +8663,7 @@ msgstr "niet in deze presentatie"
 #~ msgid "Not in this presentation"
 #~ msgstr "Niet in deze presentatie"
 
-#: src/components/map/panels/NodeDetailCard.tsx:229
+#: src/components/map/panels/NodeDetailCard.tsx:237
 msgid "Not in this view"
 msgstr ""
 
@@ -9121,7 +9127,7 @@ msgstr "Opening en kader"
 msgid "Opening screens"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:80
+#: src/components/map/panels/SpotlightPanel.tsx:165
 msgid "Opinion"
 msgstr ""
 
@@ -10315,7 +10321,7 @@ msgstr "Vragen over hoe dembrane werkt, niet alleen over je data."
 msgid "Quotes"
 msgstr "Citaten"
 
-#: src/components/map/panels/NodeDetailCard.tsx:501
+#: src/components/map/panels/NodeDetailCard.tsx:516
 msgid "Quotes ({quoteCount})"
 msgstr ""
 
@@ -10333,7 +10339,7 @@ msgstr "Snelheidslimiet bereikt"
 msgid "Rating"
 msgstr "Beoordeling"
 
-#: src/components/map/panels/SpotlightPanel.tsx:234
+#: src/components/map/panels/SpotlightPanel.tsx:327
 msgid "Re-check"
 msgstr ""
 
@@ -10496,11 +10502,11 @@ msgid "Recipe not recorded"
 msgstr "Recept niet vastgelegd"
 
 #: src/components/results/ResultItem.tsx:753
-#: src/components/map/panels/NodeDetailCard.tsx:373
+#: src/components/map/panels/NodeDetailCard.tsx:381
 msgid "Recipe: {recipe}"
 msgstr "Recept: {recipe}"
 
-#: src/components/map/panels/NodeDetailCard.tsx:375
+#: src/components/map/panels/NodeDetailCard.tsx:383
 msgid "Recipe: not recorded"
 msgstr ""
 
@@ -10700,8 +10706,8 @@ msgstr "Samenvatting wordt opnieuw gemaakt. Even wachten..."
 msgid "Register | dembrane"
 msgstr "Registreer | dembrane"
 
-#: src/components/map/panels/NodeDetailCard.tsx:320
-#: src/components/map/panels/NodeDetailCard.tsx:515
+#: src/components/map/panels/NodeDetailCard.tsx:328
+#: src/components/map/panels/NodeDetailCard.tsx:531
 #: src/components/map/panels/MapSettingsMenu.tsx:215
 msgid "Relationships"
 msgstr ""
@@ -11264,7 +11270,7 @@ msgstr "Hertranscriptie gestart. Nieuw gesprek wordt binnenkort beschikbaar."
 #: src/routes/project/chat/ProjectChatRoute.tsx:842
 #: src/components/workspace/UsageCard.tsx:108
 #: src/components/workspace/OrganisationUsageRollup.tsx:494
-#: src/components/map/panels/SpotlightPanel.tsx:255
+#: src/components/map/panels/SpotlightPanel.tsx:348
 #: src/components/map/panels/ExplorePanel.tsx:118
 #: src/components/common/FetchErrorPanel.tsx:35
 msgid "Retry"
@@ -11357,7 +11363,7 @@ msgstr "Revisie #{revisionNumber}"
 msgid "Revision history"
 msgstr "Versiegeschiedenis"
 
-#: src/components/map/panels/NodeDetailCard.tsx:380
+#: src/components/map/panels/NodeDetailCard.tsx:388
 msgid "Revision history is not available yet."
 msgstr ""
 
@@ -12297,7 +12303,7 @@ msgstr "Toon {hidden} meer"
 msgid "Show {overflow} more"
 msgstr "Nog {overflow} tonen"
 
-#: src/components/map/panels/NodeDetailCard.tsx:241
+#: src/components/map/panels/NodeDetailCard.tsx:249
 msgid "Show {typePlural}"
 msgstr ""
 
@@ -12636,7 +12642,7 @@ msgstr "Bron {0}"
 msgid "Source conversation"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:484
+#: src/components/map/panels/NodeDetailCard.tsx:495
 msgid "Source evidence"
 msgstr ""
 
@@ -12644,11 +12650,11 @@ msgstr ""
 msgid "Source not recorded"
 msgstr "Bron niet vastgelegd"
 
-#: src/components/map/panels/NodeDetailCard.tsx:146
+#: src/components/map/panels/NodeDetailCard.tsx:154
 msgid "Source statement unavailable"
 msgstr "Bronstelling niet beschikbaar"
 
-#: src/components/map/panels/NodeDetailCard.tsx:367
+#: src/components/map/panels/NodeDetailCard.tsx:375
 msgid "Source: {origin}"
 msgstr ""
 
@@ -12685,8 +12691,8 @@ msgstr "Specifieke details - Geselecteerde gesprekken"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr "Chat met Specifieke details respecteert handmatige gespreksselectie."
 
-#: src/components/map/panels/SpotlightPanel.tsx:90
-#: src/components/map/panels/SpotlightPanel.tsx:93
+#: src/components/map/panels/SpotlightPanel.tsx:175
+#: src/components/map/panels/SpotlightPanel.tsx:178
 #: src/components/map/panels/MapSettingsMenu.tsx:62
 msgid "Spotlight"
 msgstr ""
@@ -12845,15 +12851,19 @@ msgstr "Stop"
 msgid "participant.button.stop"
 msgstr "Stop"
 
+#: src/components/map/panels/SpotlightPanel.tsx:93
+msgid "Stop coloring graph by conversation"
+msgstr "Stop met kleuren per gesprek"
+
 #: src/components/map/panels/SpotlightPanel.tsx:120
 #~ msgid "Stop coloring graph by fact-check"
 #~ msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:135
+#: src/components/map/panels/SpotlightPanel.tsx:228
 msgid "Stop coloring graph by factual status"
 msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:114
+#: src/components/map/panels/SpotlightPanel.tsx:207
 msgid "Stop coloring graph by valence"
 msgstr ""
 
@@ -13019,11 +13029,11 @@ msgstr "Supporttoegang aangezet"
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Ondersteunde formaten: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
-#: src/components/map/panels/NodeDetailCard.tsx:301
+#: src/components/map/panels/NodeDetailCard.tsx:309
 msgid "Supporting pole A"
 msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:310
+#: src/components/map/panels/NodeDetailCard.tsx:318
 msgid "Supporting pole B"
 msgstr ""
 
@@ -13479,7 +13489,7 @@ msgstr ""
 msgid "The organisation this invite was for has been deleted. There's nothing to join."
 msgstr "De organisatie waarvoor deze uitnodiging was, is verwijderd. Er is niets om aan deel te nemen."
 
-#: src/components/map/panels/NodeDetailCard.tsx:161
+#: src/components/map/panels/NodeDetailCard.tsx:169
 msgid "The original statements are unavailable for this older result."
 msgstr "De oorspronkelijke stellingen zijn niet beschikbaar voor dit oudere resultaat."
 
@@ -13727,7 +13737,7 @@ msgstr "Dit canvas kon niet worden bijgewerkt."
 msgid "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 msgstr "Dit verandert hoe transcripten vanaf nu worden opgeslagen. Gesprekken die al zijn opgenomen behouden de vorm waarin ze zijn bewaard."
 
-#: src/components/map/panels/SpotlightPanel.tsx:184
+#: src/components/map/panels/SpotlightPanel.tsx:277
 msgid "This claim has not been fact-checked."
 msgstr ""
 

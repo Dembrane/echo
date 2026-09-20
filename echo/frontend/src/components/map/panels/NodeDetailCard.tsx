@@ -64,41 +64,49 @@ type NodeDetailCardProps = {
 const QuoteGroups = ({
 	evidence,
 	conversationHref,
+	headings = true,
 }: {
 	evidence: EvidenceGroup[];
 	conversationHref?: ConversationHref;
+	/**
+	 * False where the conversation is already named above the quotes, as the
+	 * node's own chit names it: the heading would then say it twice.
+	 */
+	headings?: boolean;
 }) => (
 	<div className="space-y-3">
 		{evidence.map((group) => {
 			const href = conversationHref?.(group.conversationId) ?? null;
 			return (
 				<div key={group.conversationId} className="space-y-1.5">
-					<span className="flex items-center gap-1.5">
-						{/* The dot the legend and the nodes use for this conversation,
+					{headings && (
+						<span className="flex items-center gap-1.5">
+							{/* The dot the legend and the nodes use for this conversation,
 						    so a quote is read in the colour it was spoken in. */}
-						{group.slot !== null && (
-							<span
-								aria-hidden
-								className="inline-block size-2 shrink-0 rounded-full"
-								data-testid={`quote-group-slot-${group.slot}`}
-								style={{ backgroundColor: conversationColor(group.slot) }}
-							/>
-						)}
-						{href ? (
-							<Anchor
-								component={I18nLink}
-								to={href}
-								size="xs"
-								className="font-semibold uppercase tracking-wider"
-							>
-								{group.label}
-							</Anchor>
-						) : (
-							<CaptionText className="font-semibold uppercase tracking-wider">
-								{group.label}
-							</CaptionText>
-						)}
-					</span>
+							{group.slot !== null && (
+								<span
+									aria-hidden
+									className="inline-block size-2 shrink-0 rounded-full"
+									data-testid={`quote-group-slot-${group.slot}`}
+									style={{ backgroundColor: conversationColor(group.slot) }}
+								/>
+							)}
+							{href ? (
+								<Anchor
+									component={I18nLink}
+									to={href}
+									size="xs"
+									className="font-semibold uppercase tracking-wider"
+								>
+									{group.label}
+								</Anchor>
+							) : (
+								<CaptionText className="font-semibold uppercase tracking-wider">
+									{group.label}
+								</CaptionText>
+							)}
+						</span>
+					)}
 					{group.quotes.map((quote, index) => (
 						<blockquote
 							// Quotes repeat across arguments; position keeps them apart.
@@ -414,6 +422,9 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 		(total, group) => total + group.quotes.length,
 		0,
 	);
+	// One conversation needs no heading over its quotes: the node's chit
+	// already names it. Several do, so a quote is read where it was spoken.
+	const headings = evidence.length > 1;
 	const type = node.metadata.objectType;
 	const object = inspection?.object ?? null;
 	const detail = object?.detail;
@@ -485,7 +496,11 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 				</p>
 			)}
 			{quoteCount > 0 && !collapsibleQuotes && (
-				<QuoteGroups evidence={evidence} conversationHref={conversationHref} />
+				<QuoteGroups
+					evidence={evidence}
+					conversationHref={conversationHref}
+					headings={headings}
+				/>
 			)}
 			{quoteCount > 0 && collapsibleQuotes && (
 				<div>
@@ -505,6 +520,7 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 							<QuoteGroups
 								evidence={evidence}
 								conversationHref={conversationHref}
+								headings={headings}
 							/>
 						</div>
 					)}

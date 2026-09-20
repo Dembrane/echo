@@ -155,7 +155,9 @@ msgid "{0, plural, one {# conversation will be hidden along with it.} other {# c
 msgstr "{0, plural, one {# conversation will be hidden along with it.} other {# conversations will be hidden along with it.}}"
 
 #. placeholder {0}: p.conversation_count
+#. placeholder {0}: unique.length
 #: src/components/workspace/OrganisationUsageRollup.tsx:875
+#: src/components/map/panels/SpotlightPanel.tsx:116
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# conversation} other {# conversations}}"
 
@@ -1678,7 +1680,7 @@ msgstr "An error occurred."
 msgid "An event or a workshop."
 msgstr "An event or a workshop."
 
-#: src/components/map/panels/NodeDetailCard.tsx:195
+#: src/components/map/panels/NodeDetailCard.tsx:203
 msgid "An object outside this view"
 msgstr "An object outside this view"
 
@@ -1955,7 +1957,7 @@ msgid "Are you sure you want to remove your custom logo? The default dembrane lo
 msgstr "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 
 #: src/components/map/attributes.ts:127
-#: src/components/map/panels/NodeDetailCard.tsx:435
+#: src/components/map/panels/NodeDetailCard.tsx:446
 msgid "Argument"
 msgstr "Argument"
 
@@ -1967,7 +1969,7 @@ msgstr "Argument"
 msgid "Argument map"
 msgstr "Argument map"
 
-#: src/components/map/MapExperience.tsx:387
+#: src/components/map/MapExperience.tsx:388
 msgid "Argument tree (MST)"
 msgstr "Argument tree (MST)"
 
@@ -1978,7 +1980,7 @@ msgstr "Argument tree (MST)"
 msgid "Arguments"
 msgstr "Arguments"
 
-#: src/components/map/panels/SpotlightPanel.tsx:158
+#: src/components/map/panels/SpotlightPanel.tsx:251
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr "Arguments express stances or preferences and aren't fact-checked."
 
@@ -2541,7 +2543,7 @@ msgstr "Can you tell us more?"
 #: src/components/organisation/CreateOrganisationModal.tsx:204
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:284
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:366
-#: src/components/map/panels/SpotlightPanel.tsx:201
+#: src/components/map/panels/SpotlightPanel.tsx:294
 #: src/components/invite/InviteModal.tsx:762
 #: src/components/goal/ProjectGoalSection.tsx:143
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
@@ -2905,7 +2907,7 @@ msgstr "Checking your session."
 
 #: src/components/map/attributes.ts:381
 #: src/components/map/panels/shared.tsx:132
-#: src/components/map/panels/SpotlightPanel.tsx:192
+#: src/components/map/panels/SpotlightPanel.tsx:285
 msgid "Checking…"
 msgstr "Checking…"
 
@@ -3032,7 +3034,7 @@ msgstr "Click \"Upload Files\" when you're ready to start the upload process."
 msgid "Click a conversation tag to add it to your filters."
 msgstr "Click a conversation tag to add it to your filters."
 
-#: src/components/map/panels/SpotlightPanel.tsx:269
+#: src/components/map/panels/SpotlightPanel.tsx:362
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Click a node in the tree or cluster map to spotlight it here."
 
@@ -3139,15 +3141,19 @@ msgstr "Collection"
 msgid "Collision Radius: {0}x"
 msgstr "Collision Radius: {0}x"
 
+#: src/components/map/panels/SpotlightPanel.tsx:94
+msgid "Color graph by conversation"
+msgstr "Color graph by conversation"
+
 #: src/components/map/panels/SpotlightPanel.tsx:121
 #~ msgid "Color graph by fact-check"
 #~ msgstr "Color graph by fact-check"
 
-#: src/components/map/panels/SpotlightPanel.tsx:136
+#: src/components/map/panels/SpotlightPanel.tsx:229
 msgid "Color graph by factual status"
 msgstr "Color graph by factual status"
 
-#: src/components/map/panels/SpotlightPanel.tsx:115
+#: src/components/map/panels/SpotlightPanel.tsx:208
 msgid "Color graph by valence"
 msgstr "Color graph by valence"
 
@@ -3180,7 +3186,7 @@ msgstr "combined from {0}"
 #. placeholder {0}: consolidation.memberCount
 #: src/components/map/renderers/MstGraph.tsx:1079
 #: src/components/map/renderers/LocalMapGraph.tsx:1054
-#: src/components/map/panels/NodeDetailCard.tsx:133
+#: src/components/map/panels/NodeDetailCard.tsx:141
 msgid "Combined from {0} arguments"
 msgstr "Combined from {0} arguments"
 
@@ -4896,7 +4902,7 @@ msgstr "Enable"
 msgid "Enable 2FA"
 msgstr "Enable 2FA"
 
-#: src/components/map/MapExperience.tsx:459
+#: src/components/map/MapExperience.tsx:460
 msgid "Enable a visualization from the panel settings menu"
 msgstr "Enable a visualization from the panel settings menu"
 
@@ -5132,7 +5138,7 @@ msgstr "Everyone on the roster is trained."
 msgid "participant.alert.microphone.access.success"
 msgstr "Everything looks good – you can continue."
 
-#: src/components/map/panels/NodeDetailCard.tsx:336
+#: src/components/map/panels/NodeDetailCard.tsx:344
 msgid "Evidence"
 msgstr "Evidence"
 
@@ -5144,7 +5150,7 @@ msgstr "Evidence"
 #~ msgid "Evidence level"
 #~ msgstr "Evidence level"
 
-#: src/components/map/panels/NodeDetailCard.tsx:342
+#: src/components/map/panels/NodeDetailCard.tsx:350
 msgid "Evidenced connections"
 msgstr "Evidenced connections"
 
@@ -5282,7 +5288,7 @@ msgstr "Fact check all"
 msgid "Fact check all ({pendingClaimCount})"
 msgstr "Fact check all ({pendingClaimCount})"
 
-#: src/components/map/panels/SpotlightPanel.tsx:178
+#: src/components/map/panels/SpotlightPanel.tsx:271
 msgid "Fact check this claim"
 msgstr "Fact check this claim"
 
@@ -5294,7 +5300,7 @@ msgstr "Fact check this claim"
 msgid "Factual status"
 msgstr "Factual status"
 
-#: src/components/map/panels/SpotlightPanel.tsx:167
+#: src/components/map/panels/SpotlightPanel.tsx:260
 msgid "Factual status does not apply to this object."
 msgstr "Factual status does not apply to this object."
 
@@ -6111,7 +6117,7 @@ msgstr "Hi {firstName}"
 msgid "Hidden"
 msgstr "Hidden"
 
-#: src/components/map/panels/NodeDetailCard.tsx:227
+#: src/components/map/panels/NodeDetailCard.tsx:235
 msgid "Hidden by the Objects filter"
 msgstr "Hidden by the Objects filter"
 
@@ -7367,7 +7373,7 @@ msgstr "Loading…"
 msgid "Local argument map"
 msgstr "Local argument map"
 
-#: src/components/map/MapExperience.tsx:427
+#: src/components/map/MapExperience.tsx:428
 msgid "Local map"
 msgstr "Local map"
 
@@ -8284,7 +8290,7 @@ msgstr "No deduplicated arguments saved yet."
 msgid "No default set (client-managed applies)"
 msgstr "No default set (client-managed applies)"
 
-#: src/components/map/panels/NodeDetailCard.tsx:346
+#: src/components/map/panels/NodeDetailCard.tsx:354
 msgid "No evidenced connections."
 msgstr "No evidenced connections."
 
@@ -8328,8 +8334,8 @@ msgstr "No history yet."
 msgid "No invites went out. Check the list below."
 msgstr "No invites went out. Check the list below."
 
-#: src/components/map/panels/NodeDetailCard.tsx:307
-#: src/components/map/panels/NodeDetailCard.tsx:316
+#: src/components/map/panels/NodeDetailCard.tsx:315
+#: src/components/map/panels/NodeDetailCard.tsx:324
 msgid "No linked arguments."
 msgstr "No linked arguments."
 
@@ -8380,7 +8386,7 @@ msgstr "No new feedback detected yet. Please continue your discussion and try ag
 msgid "No new invites needed. Check the list below."
 msgstr "No new invites needed. Check the list below."
 
-#: src/components/map/panels/NodeDetailCard.tsx:408
+#: src/components/map/panels/NodeDetailCard.tsx:416
 msgid "No node selected."
 msgstr "No node selected."
 
@@ -8659,7 +8665,7 @@ msgstr "not in this presentation"
 #~ msgid "Not in this presentation"
 #~ msgstr "Not in this presentation"
 
-#: src/components/map/panels/NodeDetailCard.tsx:229
+#: src/components/map/panels/NodeDetailCard.tsx:237
 msgid "Not in this view"
 msgstr "Not in this view"
 
@@ -9123,7 +9129,7 @@ msgstr "Opening and frame"
 msgid "Opening screens"
 msgstr "Opening screens"
 
-#: src/components/map/panels/SpotlightPanel.tsx:80
+#: src/components/map/panels/SpotlightPanel.tsx:165
 msgid "Opinion"
 msgstr "Opinion"
 
@@ -10317,7 +10323,7 @@ msgstr "Questions about how dembrane works, not only about your data."
 msgid "Quotes"
 msgstr "Quotes"
 
-#: src/components/map/panels/NodeDetailCard.tsx:501
+#: src/components/map/panels/NodeDetailCard.tsx:516
 msgid "Quotes ({quoteCount})"
 msgstr "Quotes ({quoteCount})"
 
@@ -10335,7 +10341,7 @@ msgstr "Rate limited"
 msgid "Rating"
 msgstr "Rating"
 
-#: src/components/map/panels/SpotlightPanel.tsx:234
+#: src/components/map/panels/SpotlightPanel.tsx:327
 msgid "Re-check"
 msgstr "Re-check"
 
@@ -10498,11 +10504,11 @@ msgid "Recipe not recorded"
 msgstr "Recipe not recorded"
 
 #: src/components/results/ResultItem.tsx:753
-#: src/components/map/panels/NodeDetailCard.tsx:373
+#: src/components/map/panels/NodeDetailCard.tsx:381
 msgid "Recipe: {recipe}"
 msgstr "Recipe: {recipe}"
 
-#: src/components/map/panels/NodeDetailCard.tsx:375
+#: src/components/map/panels/NodeDetailCard.tsx:383
 msgid "Recipe: not recorded"
 msgstr "Recipe: not recorded"
 
@@ -10702,8 +10708,8 @@ msgstr "Regenerating the summary. Please wait..."
 msgid "Register | dembrane"
 msgstr "Register | dembrane"
 
-#: src/components/map/panels/NodeDetailCard.tsx:320
-#: src/components/map/panels/NodeDetailCard.tsx:515
+#: src/components/map/panels/NodeDetailCard.tsx:328
+#: src/components/map/panels/NodeDetailCard.tsx:531
 #: src/components/map/panels/MapSettingsMenu.tsx:215
 msgid "Relationships"
 msgstr "Relationships"
@@ -11266,7 +11272,7 @@ msgstr "Retranscription started. New conversation will be available soon."
 #: src/routes/project/chat/ProjectChatRoute.tsx:842
 #: src/components/workspace/UsageCard.tsx:108
 #: src/components/workspace/OrganisationUsageRollup.tsx:494
-#: src/components/map/panels/SpotlightPanel.tsx:255
+#: src/components/map/panels/SpotlightPanel.tsx:348
 #: src/components/map/panels/ExplorePanel.tsx:118
 #: src/components/common/FetchErrorPanel.tsx:35
 msgid "Retry"
@@ -11359,7 +11365,7 @@ msgstr "Revision #{revisionNumber}"
 msgid "Revision history"
 msgstr "Revision history"
 
-#: src/components/map/panels/NodeDetailCard.tsx:380
+#: src/components/map/panels/NodeDetailCard.tsx:388
 msgid "Revision history is not available yet."
 msgstr "Revision history is not available yet."
 
@@ -12299,7 +12305,7 @@ msgstr "Show {hidden} more"
 msgid "Show {overflow} more"
 msgstr "Show {overflow} more"
 
-#: src/components/map/panels/NodeDetailCard.tsx:241
+#: src/components/map/panels/NodeDetailCard.tsx:249
 msgid "Show {typePlural}"
 msgstr "Show {typePlural}"
 
@@ -12638,7 +12644,7 @@ msgstr "Source {0}"
 msgid "Source conversation"
 msgstr "Source conversation"
 
-#: src/components/map/panels/NodeDetailCard.tsx:484
+#: src/components/map/panels/NodeDetailCard.tsx:495
 msgid "Source evidence"
 msgstr "Source evidence"
 
@@ -12646,11 +12652,11 @@ msgstr "Source evidence"
 msgid "Source not recorded"
 msgstr "Source not recorded"
 
-#: src/components/map/panels/NodeDetailCard.tsx:146
+#: src/components/map/panels/NodeDetailCard.tsx:154
 msgid "Source statement unavailable"
 msgstr "Source statement unavailable"
 
-#: src/components/map/panels/NodeDetailCard.tsx:367
+#: src/components/map/panels/NodeDetailCard.tsx:375
 msgid "Source: {origin}"
 msgstr "Source: {origin}"
 
@@ -12687,8 +12693,8 @@ msgstr "Specific Details - Selected conversations"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr "Specific Details chat respects manual conversation selection."
 
-#: src/components/map/panels/SpotlightPanel.tsx:90
-#: src/components/map/panels/SpotlightPanel.tsx:93
+#: src/components/map/panels/SpotlightPanel.tsx:175
+#: src/components/map/panels/SpotlightPanel.tsx:178
 #: src/components/map/panels/MapSettingsMenu.tsx:62
 msgid "Spotlight"
 msgstr "Spotlight"
@@ -12847,15 +12853,19 @@ msgstr "Stop"
 msgid "participant.button.stop"
 msgstr "Stop"
 
+#: src/components/map/panels/SpotlightPanel.tsx:93
+msgid "Stop coloring graph by conversation"
+msgstr "Stop coloring graph by conversation"
+
 #: src/components/map/panels/SpotlightPanel.tsx:120
 #~ msgid "Stop coloring graph by fact-check"
 #~ msgstr "Stop coloring graph by fact-check"
 
-#: src/components/map/panels/SpotlightPanel.tsx:135
+#: src/components/map/panels/SpotlightPanel.tsx:228
 msgid "Stop coloring graph by factual status"
 msgstr "Stop coloring graph by factual status"
 
-#: src/components/map/panels/SpotlightPanel.tsx:114
+#: src/components/map/panels/SpotlightPanel.tsx:207
 msgid "Stop coloring graph by valence"
 msgstr "Stop coloring graph by valence"
 
@@ -13021,11 +13031,11 @@ msgstr "Support access turned on"
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
-#: src/components/map/panels/NodeDetailCard.tsx:301
+#: src/components/map/panels/NodeDetailCard.tsx:309
 msgid "Supporting pole A"
 msgstr "Supporting pole A"
 
-#: src/components/map/panels/NodeDetailCard.tsx:310
+#: src/components/map/panels/NodeDetailCard.tsx:318
 msgid "Supporting pole B"
 msgstr "Supporting pole B"
 
@@ -13481,7 +13491,7 @@ msgstr "The node budget must be a whole number above zero, so {applied} applies.
 msgid "The organisation this invite was for has been deleted. There's nothing to join."
 msgstr "The organisation this invite was for has been deleted. There's nothing to join."
 
-#: src/components/map/panels/NodeDetailCard.tsx:161
+#: src/components/map/panels/NodeDetailCard.tsx:169
 msgid "The original statements are unavailable for this older result."
 msgstr "The original statements are unavailable for this older result."
 
@@ -13729,7 +13739,7 @@ msgstr "This canvas could not update."
 msgid "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 msgstr "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 
-#: src/components/map/panels/SpotlightPanel.tsx:184
+#: src/components/map/panels/SpotlightPanel.tsx:277
 msgid "This claim has not been fact-checked."
 msgstr "This claim has not been fact-checked."
 

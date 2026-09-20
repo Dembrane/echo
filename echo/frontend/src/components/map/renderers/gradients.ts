@@ -43,6 +43,20 @@ export function blendStops(colors: ReadonlyArray<string>): GradientStop[] {
 	return stops;
 }
 
+/**
+ * The same blend as a CSS background, for the panels: a chit that stands for
+ * several conversations is filled the way their node is drawn, corner to
+ * corner and weighted the same. Empty where there is nothing to blend.
+ */
+export function blendBackground(colors: ReadonlyArray<string>): string {
+	const stops = blendStops(colors);
+	if (stops.length === 0) return "";
+	const bands = stops
+		.map((stop) => `${stop.color} ${Math.round(stop.offset * 1000) / 10}%`)
+		.join(", ");
+	return `linear-gradient(135deg, ${bands})`;
+}
+
 /** An id for one node's gradient that is safe in a `url(#…)` reference. */
 export const gradientId = (prefix: string, nodeId: string): string =>
 	`${prefix}-${nodeId}`.replace(/[^A-Za-z0-9_-]/g, "_");

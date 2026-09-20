@@ -339,6 +339,7 @@ export const MapExperience = ({
 									onFactCheck={onFactCheck}
 									onCancelFactCheck={onCancelFactCheck}
 									conversationHref={conversationHref}
+									conversationNames={graph.conversationNames}
 									locale={i18n.locale}
 									inspection={spotlightInspection}
 								/>
