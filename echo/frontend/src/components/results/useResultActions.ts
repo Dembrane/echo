@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import {
 	type AnalysisRevision,
 	analysisKeys,
@@ -122,6 +122,13 @@ export type ResultActions = {
 	showAgain: ((objectId: string, reason: string) => void) | null;
 	/** Reasons to offer first, the last one used leading. */
 	heldBackReasons: string[];
+	/**
+	 * Why this finding is not in the presentation, where this host said so on
+	 * this page. Nothing keeps it yet: `hidden_items` is a list of ids, so a
+	 * reason given before a reload is gone. The curation log of step 5 is what
+	 * makes this outlive the page, and the row's wording does not change.
+	 */
+	heldReason: (objectId: string) => string | undefined;
 	pending: boolean;
 };
 
@@ -140,6 +147,9 @@ export function useResultActions({
 }): ResultActions {
 	const edit = useWrite(projectId, "revisions", "analysis_result_edited");
 	const rollback = useWrite(projectId, "rollback", "analysis_result_undone");
+	// The reasons given on this page, so the row can say why a finding is not
+	// in the presentation rather than only dimming.
+	const reasons = useRef(new Map<string, string>());
 
 	const editWords = useCallback(
 		async ({
@@ -191,16 +201,21 @@ export function useResultActions({
 	return {
 		editWords,
 		heldBackReasons,
+		heldReason: (objectId) => reasons.current.get(objectId),
 		holdBack: holdBack
 			? (objectId, reason) => {
 					rememberReason(reason);
+					if (reason.trim()) reasons.current.set(objectId, reason.trim());
 					holdBack.setHeld(objectId, true, reason);
 				}
 			: null,
 		isHeld: holdBack ? holdBack.isHeld : () => false,
 		pending: edit.isPending || rollback.isPending,
 		showAgain: holdBack
-			? (objectId, reason) => holdBack.setHeld(objectId, false, reason)
+			? (objectId, reason) => {
+					reasons.current.delete(objectId);
+					holdBack.setHeld(objectId, false, reason);
+				}
 			: null,
 		undoWords,
 	};

@@ -3,6 +3,7 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import {
+	act,
 	cleanup,
 	fireEvent,
 	render,
@@ -40,10 +41,12 @@ const undoWords = vi.fn();
 const holdBack = vi.fn();
 const showAgain = vi.fn();
 let held: string[] = [];
+let reasons: Record<string, string> = {};
 
 const actions = (): ResultActions => ({
 	editWords,
 	heldBackReasons: [],
+	heldReason: (objectId) => reasons[objectId],
 	holdBack,
 	isHeld: (objectId) => held.includes(objectId),
 	pending: false,
@@ -64,6 +67,7 @@ beforeAll(() => {
 
 beforeEach(() => {
 	held = [];
+	reasons = {};
 	editWords.mockResolvedValue({ revisionId: "rev-3" });
 	undoWords.mockResolvedValue({ revisionId: "rev-4" });
 });
@@ -73,24 +77,27 @@ afterEach(() => {
 	vi.clearAllMocks();
 });
 
+/** The row as it stands, reading whatever `held` and `reasons` now say. */
+const tree = (props: Partial<Parameters<typeof ResultRow>[0]> = {}) => (
+	<I18nProvider i18n={i18n}>
+		<MantineProvider>
+			<ul>
+				<ResultRow
+					actions={actions()}
+					canEdit
+					density="curate"
+					item={popcorn}
+					onOpen={() => {}}
+					open={false}
+					{...props}
+				/>
+			</ul>
+		</MantineProvider>
+	</I18nProvider>
+);
+
 function show(props: Partial<Parameters<typeof ResultRow>[0]> = {}) {
-	return render(
-		<I18nProvider i18n={i18n}>
-			<MantineProvider>
-				<ul>
-					<ResultRow
-						actions={actions()}
-						canEdit
-						density="curate"
-						item={popcorn}
-						onOpen={() => {}}
-						open={false}
-						{...props}
-					/>
-				</ul>
-			</MantineProvider>
-		</I18nProvider>,
-	);
+	return render(tree(props));
 }
 
 /** Click the words, replace them, and let them go. */
@@ -293,6 +300,31 @@ describe("what the row says once", () => {
 		);
 	});
 
+	it("says nothing twice while the item under it is open", () => {
+		const tension: AnalysisObject = {
+			conversationCount: 2,
+			objectId: "obj-2",
+			payload: {
+				knot: "Opening hours against staffing",
+				poleA: "Open longer",
+				poleB: "Pay people properly",
+			},
+			quoteCount: 4,
+			revisionId: "rev-a",
+			type: "tension",
+		};
+		show({ item: tension, open: false });
+		expect(screen.getByText("Opening hours against staffing")).toBeTruthy();
+		expect(screen.getByText("4 quotes · 2 conversations")).toBeTruthy();
+		cleanup();
+
+		// The card below says all of it: the row keeps its first line alone.
+		show({ item: tension, open: true });
+		expect(screen.getByText("Open longer")).toBeTruthy();
+		expect(screen.queryByText("Opening hours against staffing")).toBeNull();
+		expect(screen.queryByText("4 quotes · 2 conversations")).toBeNull();
+	});
+
 	it("opens from anywhere in the row that is not a control of its own", () => {
 		const onOpen = vi.fn();
 		show({ onOpen });
@@ -492,6 +524,53 @@ describe("holding a finding back", () => {
 			"true",
 		);
 		expect(screen.getByRole("button", { name: "Restore" })).toBeTruthy();
+	});
+
+	it("says it is held back in words, with the reason and a way straight back", () => {
+		const { rerender } = show();
+		fireEvent.click(screen.getByTestId("result-hold-back-obj-1"));
+		fireEvent.click(
+			screen.getByRole("button", { name: "off topic for this room" }),
+		);
+		held = ["obj-1"];
+		reasons = { "obj-1": "off topic for this room" };
+		rerender(tree());
+
+		const line = screen.getByTestId("result-held-obj-1");
+		expect(line.textContent).toContain("hidden from this presentation");
+		expect(line.textContent).toContain("off topic for this room");
+		// The row no longer counts its evidence: what matters is that it is out.
+		expect(screen.queryByText("2 quotes · 2 conversations")).toBeNull();
+
+		fireEvent.click(screen.getByTestId("result-undo-hold-obj-1"));
+		expect(showAgain).toHaveBeenCalledWith("obj-1", "");
+	});
+
+	it("keeps the line and lets the undo go after ten seconds", () => {
+		vi.useFakeTimers();
+		try {
+			const { rerender } = show();
+			fireEvent.click(screen.getByTestId("result-hold-back-obj-1"));
+			fireEvent.click(
+				screen.getByRole("button", { name: "repeats another finding" }),
+			);
+			held = ["obj-1"];
+			reasons = { "obj-1": "repeats another finding" };
+			rerender(tree());
+			expect(screen.getByTestId("result-undo-hold-obj-1")).toBeTruthy();
+
+			act(() => {
+				vi.advanceTimersByTime(10_000);
+			});
+			expect(screen.queryByTestId("result-undo-hold-obj-1")).toBeNull();
+			// The row still says where the finding went, and the eye is the way back.
+			expect(screen.getByTestId("result-held-obj-1").textContent).toContain(
+				"repeats another finding",
+			);
+			expect(screen.getByRole("button", { name: "Restore" })).toBeTruthy();
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 
 	it("gives the row's actions as icons, with the words in the label", () => {

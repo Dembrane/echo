@@ -8,7 +8,7 @@ import {
 	EyeIcon,
 	EyeSlashIcon,
 } from "@phosphor-icons/react";
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import type { AnalysisObject } from "@/components/analysis/hooks";
 import { ReasonPrompt } from "./ReasonPrompt";
 import { rungWord } from "./ResultItem";
@@ -28,6 +28,7 @@ import {
 	EditAftermath,
 	EditableWords,
 	hasAftermath,
+	UNDO_SECONDS,
 	useWordsEdit,
 	WordsPrompt,
 } from "./resultEditing";
@@ -123,6 +124,10 @@ export function ResultRow({
 	open,
 }: ResultRowProps) {
 	const [holding, setHolding] = useState(false);
+	// The ten seconds after this host held the finding back, in which the row
+	// offers the way straight out of it again.
+	const [undoable, setUndoable] = useState(false);
+	const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const holdControl = useRef<HTMLButtonElement>(null);
 	// The meta line fades when a step takes it over and when it comes back,
 	// never when the list first draws.
@@ -148,13 +153,26 @@ export function ResultRow({
 	const holdable = density === "curate" && canEdit && Boolean(actions.holdBack);
 	const rung =
 		item.type === "stakeholder" ? rungWord(resultFields(item).rung) : null;
-	if (edit.asking || holding || aftermath) stepped.current = true;
+	// A step the host is in the middle of: it keeps the meta line even while
+	// the item under the row is open.
+	const stepping = edit.asking || holding || aftermath;
+	if (stepping) stepped.current = true;
 	const stepClass = `${classes.metaSwap} ${classes.step}`;
 
 	const endHold = () => {
 		setHolding(false);
 		holdControl.current?.focus();
 	};
+
+	// The timer belongs to the row: it stops when the row goes.
+	useEffect(
+		() => () => {
+			if (undoTimer.current) clearTimeout(undoTimer.current);
+		},
+		[],
+	);
+
+	const heldReason = held ? actions.heldReason(item.objectId) : undefined;
 
 	return (
 		<li className={classes.row} data-held={held || undefined}>
@@ -230,7 +248,10 @@ export function ResultRow({
 						</p>
 					)}
 
-					{second && secondWords && (
+					{/* Open, the card under the row says all of this in the room's own
+					    type: the row keeps its first line, as the place the item hangs
+					    from, and says nothing twice. */}
+					{!open && second && secondWords && (
 						<p className={classes.second}>
 							<EditableWords
 								edit={edit}
@@ -240,95 +261,141 @@ export function ResultRow({
 							/>
 						</p>
 					)}
-					{item.type.endsWith("argument") && (
+					{!open && item.type.endsWith("argument") && (
 						<p className={classes.second}>{stanceWords(item)}</p>
 					)}
 				</div>
 
 				{/* The meta line: what the row is made of, or what the host is
 				    being asked, in the same place, with a crossfade. It runs under
-				    the words and the controls both. */}
-				<div className={classes.meta}>
-					{edit.asking ? (
-						<div className={stepClass} data-step="" key="prompt">
-							<WordsPrompt
-								edit={edit}
-								testId={`result-change-prompt-${item.objectId}`}
-							/>
-						</div>
-					) : holding ? (
-						<div className={stepClass} data-step="" key="hold">
-							<ReasonPrompt
-								testId={`result-hold-prompt-${item.objectId}`}
-								question={<Trans>Why not in this presentation?</Trans>}
-								// The question above it already asks why.
-								reasonLabel={
-									<Trans>
-										One sentence, for the people you work with and anyone who
-										checks later.
-									</Trans>
-								}
-								confirmLabel={<Trans>Hide</Trans>}
-								options={[
-									// Three suggestions, the last reason used first, each said
-									// once; then the way to say something else.
-									...[
-										...actions.heldBackReasons,
-										t`repeats another finding`,
-										t`off topic for this room`,
-									]
-										.filter(
-											(reason, index, all) => all.indexOf(reason) === index,
-										)
-										.slice(0, 3)
-										.map((reason) => ({ key: reason, label: reason, reason })),
-									{
-										key: "other",
-										label: t`another reason`,
-										needsReason: true,
-									},
-								]}
-								onCancel={endHold}
-								onConfirm={({ reason }) => {
-									actions.holdBack?.(item.objectId, reason ?? "");
-									endHold();
-								}}
-							/>
-						</div>
-					) : aftermath ? (
-						<div className={stepClass} data-step="" key="aftermath">
-							<EditAftermath edit={edit} />
-						</div>
-					) : (
-						<div
-							className={`${stepped.current ? stepClass : classes.metaSwap} ${classes.rest}`}
-							key="rest"
-						>
-							<p className={classes.metaLine}>
-								{attention && (
-									<>
-										<span>{attention}</span>
-										{evidenceWords(evidence, item.conversationName) && (
-											<span aria-hidden>{EVIDENCE_SEPARATOR}</span>
+				    the words and the controls both. An open row keeps it only for a
+				    step the host is in the middle of: the evidence is on the card. */}
+				{(stepping || !open) && (
+					<div className={classes.meta}>
+						{edit.asking ? (
+							<div className={stepClass} data-step="" key="prompt">
+								<WordsPrompt
+									edit={edit}
+									testId={`result-change-prompt-${item.objectId}`}
+								/>
+							</div>
+						) : holding ? (
+							<div className={stepClass} data-step="" key="hold">
+								<ReasonPrompt
+									testId={`result-hold-prompt-${item.objectId}`}
+									question={<Trans>Why not in this presentation?</Trans>}
+									// The question above it already asks why.
+									reasonLabel={
+										<Trans>
+											One sentence, for the people you work with and anyone who
+											checks later.
+										</Trans>
+									}
+									confirmLabel={<Trans>Hide</Trans>}
+									options={[
+										// Three suggestions, the last reason used first, each said
+										// once; then the way to say something else.
+										...[
+											...actions.heldBackReasons,
+											t`repeats another finding`,
+											t`off topic for this room`,
+										]
+											.filter(
+												(reason, index, all) => all.indexOf(reason) === index,
+											)
+											.slice(0, 3)
+											.map((reason) => ({
+												key: reason,
+												label: reason,
+												reason,
+											})),
+										{
+											key: "other",
+											label: t`another reason`,
+											needsReason: true,
+										},
+									]}
+									onCancel={endHold}
+									onConfirm={({ reason }) => {
+										actions.holdBack?.(item.objectId, reason ?? "");
+										// For the next ten seconds the row offers the way back,
+										// the way a saved edit does.
+										setUndoable(true);
+										if (undoTimer.current) clearTimeout(undoTimer.current);
+										undoTimer.current = setTimeout(
+											() => setUndoable(false),
+											UNDO_SECONDS * 1000,
+										);
+										endHold();
+									}}
+								/>
+							</div>
+						) : aftermath ? (
+							<div className={stepClass} data-step="" key="aftermath">
+								<EditAftermath edit={edit} />
+							</div>
+						) : (
+							<div
+								className={`${stepped.current ? stepClass : classes.metaSwap} ${classes.rest}`}
+								key="rest"
+							>
+								{held ? (
+									// A held finding says so in words, in the line that would
+									// otherwise count its evidence: the dimmed words alone say
+									// nothing. The reason stands as the host gave it.
+									<p
+										className={classes.metaLine}
+										data-testid={`result-held-${item.objectId}`}
+									>
+										<Trans>hidden from this presentation</Trans>
+										{heldReason && (
+											<>
+												<span aria-hidden>{EVIDENCE_SEPARATOR}</span>
+												{heldReason}
+											</>
+										)}{" "}
+										{undoable && actions.showAgain && (
+											<button
+												type="button"
+												className={`${classes.control} ${classes.quiet} ${classes.confirm}`}
+												data-testid={`result-undo-hold-${item.objectId}`}
+												onClick={() => {
+													actions.showAgain?.(item.objectId, "");
+													setUndoable(false);
+												}}
+											>
+												<Trans>Undo</Trans>
+											</button>
 										)}
-									</>
+									</p>
+								) : (
+									<p className={classes.metaLine}>
+										{attention && (
+											<>
+												<span>{attention}</span>
+												{evidenceWords(evidence, item.conversationName) && (
+													<span aria-hidden>{EVIDENCE_SEPARATOR}</span>
+												)}
+											</>
+										)}
+										{evidenceWords(evidence, item.conversationName)}
+									</p>
 								)}
-								{evidenceWords(evidence, item.conversationName)}
-							</p>
-							{states.length > 0 && (
-								<p
-									className={classes.metaState}
-									data-testid={`result-state-${item.objectId}`}
-								>
-									{states.map((word, index) => (
-										// biome-ignore lint/suspicious/noArrayIndexKey: two words in a fixed order
-										<span key={index}>{word}</span>
-									))}
-								</p>
-							)}
-						</div>
-					)}
-				</div>
+								{states.length > 0 && (
+									<p
+										className={classes.metaState}
+										data-testid={`result-state-${item.objectId}`}
+									>
+										{states.map((word, index) => (
+											// biome-ignore lint/suspicious/noArrayIndexKey: two words in a fixed order
+											<span key={index}>{word}</span>
+										))}
+									</p>
+								)}
+							</div>
+						)}
+					</div>
+				)}
 
 				{/* The row's actions, in the conversations table's manner: icons at
 				    the right edge, the words they stand for in the tooltip and the

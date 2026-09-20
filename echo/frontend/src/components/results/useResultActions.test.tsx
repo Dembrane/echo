@@ -82,6 +82,15 @@ describe("what a host does to a finding", () => {
 		);
 	});
 
+	it("keeps the reason for the row to say, and lets it go on the way back", () => {
+		const adapter: HoldBackAdapter = { isHeld: () => false, setHeld: vi.fn() };
+		const actions = setUp(adapter);
+		actions.current.holdBack?.("obj-1", "off topic for this room");
+		expect(actions.current.heldReason("obj-1")).toBe("off topic for this room");
+		actions.current.showAgain?.("obj-1", "");
+		expect(actions.current.heldReason("obj-1")).toBeUndefined();
+	});
+
 	it("holds nothing back where there is no presentation behind the list", () => {
 		const actions = setUp();
 		expect(actions.current.holdBack).toBeNull();
