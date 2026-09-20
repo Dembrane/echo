@@ -20,7 +20,9 @@
 	--graphite: #2d2d2c;
 	--blue: #4169e1;
 	--hairline: #e6e3df;
-	--ink-soft: rgba(45, 45, 44, 0.62);
+	/* Soft ink carries words and is readable on parchment; faint ink is for
+	   the lines and underlines nobody is asked to read. */
+	--ink-soft: rgba(45, 45, 44, 0.72);
 	--ink-faint: rgba(45, 45, 44, 0.38);
 	--ink-tag: rgba(45, 45, 44, 0.78);
 	--curve: cubic-bezier(0.25, 0.8, 0.3, 1);
@@ -39,7 +41,7 @@
 	--graphite: #f6f4f1;
 	--blue: #7c9bff;
 	--hairline: #3a3a38;
-	--ink-soft: rgba(246, 244, 241, 0.64);
+	--ink-soft: rgba(246, 244, 241, 0.74);
 	--ink-faint: rgba(246, 244, 241, 0.4);
 	--ink-tag: rgba(246, 244, 241, 0.78);
 }
@@ -384,9 +386,13 @@
 	margin-top: 0;
 }
 
-/* Controls rest at faint ink and come up on hover, on focus, and wherever
-   there is no hover to wait for. A control is a line of text 36 px tall; its
-   target reaches 4 px further each way, to 44, without the rows growing. */
+/* Controls in the margin rest quietly and come up on hover, on focus, and
+   wherever there is no hover to wait for. Quiet is not unreadable: "Withdraw"
+   and "Close" are words a host has to be able to read without reaching for
+   them, so they rest in soft ink and never look switched off. Blue is kept
+   for the one control that leaves this page. A control is a line of text 36 px
+   tall; its target reaches 4 px further each way, to 44, without the rows
+   growing. */
 .control,
 .link {
 	align-items: center;
@@ -406,7 +412,7 @@
 .control {
 	background: none;
 	border: 0;
-	color: var(--ink-faint);
+	color: var(--ink-soft);
 	cursor: pointer;
 	font: inherit;
 	padding: 0;

@@ -204,6 +204,22 @@ describe("the stage card", () => {
 		expect(screen.getByText("4 quotes · 3 conversations")).toBeTruthy();
 	});
 
+	it("ends with its words where there is no evidence to show", () => {
+		// A tension in a list carries neither quotes nor counts: the seam and the
+		// space under it would be a hairline over nothing.
+		show({
+			item: {
+				objectId: "obj-t",
+				payload: { poleA: "Open longer", poleB: "Pay people properly" },
+				revisionId: "rev-t",
+				type: "tension",
+			},
+		});
+		expect(screen.queryByTestId("result-quotes")).toBeNull();
+		const card = screen.getByTestId("result-stage").firstElementChild;
+		expect(card?.lastElementChild?.className).toContain("head");
+	});
+
 	it("marks a reworded finding, and leaves a generated one unmarked", () => {
 		show();
 		expect(screen.queryByTestId("result-edited")).toBeNull();

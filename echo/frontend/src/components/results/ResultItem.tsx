@@ -30,6 +30,7 @@ import {
 import {
 	EditAftermath,
 	EditableWords,
+	hasAftermath,
 	useWordsEdit,
 	type WordsEdit,
 	WordsPrompt,
@@ -211,7 +212,7 @@ export function ResultStage({
 					)}
 					{/* What changed is asked here, under the words it is about, in the
 					    margin's own type. */}
-					{edit?.editable && (
+					{edit?.editable && (edit.asking || hasAftermath(edit)) && (
 						<div className={classes.aside}>
 							{edit.asking ? (
 								<WordsPrompt edit={edit} testId="result-item-change-prompt" />
@@ -222,34 +223,38 @@ export function ResultStage({
 					)}
 				</div>
 
-				{/* What people said, and how much of it there is: one group. */}
-				<div className={classes.evidence}>
-					{shown.length > 0 && (
-						<div className={classes.quotes} data-testid="result-quotes">
-							{shown.map((quote, index) => (
-								<blockquote
-									// Quotes repeat across findings; position keeps them apart.
-									// biome-ignore lint/suspicious/noArrayIndexKey: quotes have no id
-									key={index}
-									className={classes.quote}
-								>
-									<QuotesIcon
-										aria-hidden
-										className={classes.mark}
-										weight="fill"
-									/>
-									<span className={classes.quoteText}>{quote}</span>
-								</blockquote>
-							))}
-						</div>
-					)}
+				{/* What people said, and how much of it there is: one group. A
+				    finding carrying neither, as a tension in a list does, has no
+				    seam and no space under it: the card ends with its words. */}
+				{(shown.length > 0 || evidenceWords(counted, conversationName)) && (
+					<div className={classes.evidence}>
+						{shown.length > 0 && (
+							<div className={classes.quotes} data-testid="result-quotes">
+								{shown.map((quote, index) => (
+									<blockquote
+										// Quotes repeat across findings; position keeps them apart.
+										// biome-ignore lint/suspicious/noArrayIndexKey: quotes have no id
+										key={index}
+										className={classes.quote}
+									>
+										<QuotesIcon
+											aria-hidden
+											className={classes.mark}
+											weight="fill"
+										/>
+										<span className={classes.quoteText}>{quote}</span>
+									</blockquote>
+								))}
+							</div>
+						)}
 
-					{evidenceWords(counted, conversationName) && (
-						<p className={classes.meta}>
-							{evidenceWords(counted, conversationName)}
-						</p>
-					)}
-				</div>
+						{evidenceWords(counted, conversationName) && (
+							<p className={classes.meta}>
+								{evidenceWords(counted, conversationName)}
+							</p>
+						)}
+					</div>
+				)}
 
 				{factCheck && (
 					<div className={classes.verdict}>
