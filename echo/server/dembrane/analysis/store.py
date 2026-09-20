@@ -1313,16 +1313,18 @@ class SqlAnalysisStore:
             "embedding_refs": _json(new.embedding_refs),
             "actor_id": new.actor_id,
             "reason": new.reason,
+            "change_kind": new.change_kind,
         }
 
     _INSERT_REVISION = f"""INSERT INTO analysis_object_revision
             (id, project_id, object_id, revision_number, type, schema_version, status, origin,
              payload, attributes, provenance, content_hash, hash_version, run_id,
-             parent_revision_id, embedding_refs, actor_id, reason, created_at, published_at)
+             parent_revision_id, embedding_refs, actor_id, reason, change_kind, created_at,
+             published_at)
         VALUES (%(id)s, %(project_id)s, %(object_id)s, %(number)s, %(type)s, %(schema_version)s,
                 %(status)s, %(origin)s, %(payload)s, %(attributes)s, %(provenance)s,
                 %(content_hash)s, 'c14n-v1', %(run_id)s, %(parent_revision_id)s,
-                %(embedding_refs)s, %(actor_id)s, %(reason)s, now(),
+                %(embedding_refs)s, %(actor_id)s, %(reason)s, %(change_kind)s, now(),
                 CASE WHEN %(published)s THEN now() END)
         RETURNING {REVISION_COLUMNS}"""
 

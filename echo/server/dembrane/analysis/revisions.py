@@ -45,6 +45,60 @@ from dembrane.analysis.contracts import (
     AnalysisValidationError,
 )
 
+# What a host says they changed. Nullable: generated revisions have none, and
+# so does everything written before the audit trail asked. Nothing is
+# backfilled; a null reads as "not recorded".
+WORDING_KINDS = ("typo", "clarity", "meaning")
+CHANGE_KINDS = (*WORDING_KINDS, "withdraw", "restore", "rollback")
+# "Why? One sentence, for the people you work with and anyone who checks
+# later." A sentence, not a shrug, and not an essay. A withdrawal must be
+# explained too, but it is often explained in three words ("herhaalt #4"), so
+# it only has to be written.
+REASON_MIN = 12
+WITHDRAW_REASON_MIN = 4
+REASON_MAX = 1000
+
+
+def _clean_reason(reason: str | None) -> str:
+    return " ".join(str(reason or "").split())
+
+
+def check_change_kind(
+    operation: str, change_kind: str | None, reason: str | None
+) -> str | None:
+    """The rules per operation, enforced for every client that names a kind.
+
+    A client that names none is a client from before the audit trail: it still
+    writes, and its revision reads as "not recorded". Once both clients send a
+    kind this becomes required (spec section 12, step 4).
+    """
+    if change_kind is None:
+        return None
+    kind = str(change_kind)
+    if kind not in CHANGE_KINDS:
+        raise AnalysisValidationError(
+            f"{kind!r} is not a kind of change: {', '.join(CHANGE_KINDS)}"
+        )
+    allowed = {
+        "edit": WORDING_KINDS,
+        "exclude": ("withdraw",),
+        "include": ("restore",),
+        "rollback": ("rollback",),
+    }[operation]
+    if kind not in allowed:
+        raise AnalysisValidationError(
+            f"a {operation} is recorded as {' or '.join(allowed)}, not as {kind!r}"
+        )
+    trimmed = _clean_reason(reason)
+    minimum = {"meaning": REASON_MIN, "withdraw": WITHDRAW_REASON_MIN}.get(kind, 0)
+    if len(trimmed) < minimum:
+        raise AnalysisValidationError(
+            "a few more words, so someone reading later understands why"
+        )
+    if len(trimmed) > REASON_MAX:
+        raise AnalysisValidationError(f"a reason is at most {REASON_MAX} characters")
+    return kind
+
 
 @dataclass(frozen=True)
 class StagedRevision:
@@ -246,6 +300,7 @@ class RevisionService:
         extra: dict[str, Any] | None = None,
         revision_id: str | None = None,
         embedding_refs: dict[str, Any] | None = None,
+        change_kind: str | None = None,
     ) -> ObjectRevision:
         definition = types.get_object_type(record.type)
         clean = types.validate_payload(record.type, payload)
@@ -280,6 +335,7 @@ class RevisionService:
                 parent_revision_id=expected_revision_id,
                 actor_id=actor_id,
                 reason=reason,
+                change_kind=change_kind,
                 revision_id=revision_id,
                 embedding_refs=embedding_refs,
             ),
@@ -301,9 +357,11 @@ class RevisionService:
         payload: dict[str, Any],
         actor_id: str,
         reason: str | None = None,
+        change_kind: str | None = None,
     ) -> ObjectRevision:
         """Append an authored revision. Raises `RevisionConflict` with the
         current head when `expected_revision_id` is no longer it."""
+        kind = check_change_kind("edit", change_kind, reason)
         record = await self._record(project_id, object_id)
         previous = (await self.store.get_revisions(project_id, [expected_revision_id])).get(
             expected_revision_id
@@ -331,6 +389,7 @@ class RevisionService:
                     else {}
                 ),
             },
+            change_kind=kind,
         )
 
     async def set_excluded(
@@ -342,6 +401,7 @@ class RevisionService:
         excluded: bool,
         actor_id: str,
         reason: str | None = None,
+        change_kind: str | None = None,
     ) -> ObjectRevision:
         """Append a reversible membership decision without altering content.
 
@@ -350,6 +410,7 @@ class RevisionService:
         truth. Snapshot assembly removes excluded heads from current views;
         historical snapshots retain the revision they pinned.
         """
+        kind = check_change_kind("exclude" if excluded else "include", change_kind, reason)
         record = await self._record(project_id, object_id)
         previous = (await self.store.get_revisions(project_id, [expected_revision_id])).get(
             expected_revision_id
@@ -374,6 +435,7 @@ class RevisionService:
                 "membershipExcluded": excluded,
             },
             embedding_refs=previous.embedding_refs,
+            change_kind=kind,
         )
 
     async def create_authored(
@@ -554,12 +616,24 @@ class RevisionService:
         expected_revision_id: str,
         actor_id: str,
         reason: str | None = None,
+        change_kind: str | None = None,
     ) -> ObjectRevision:
-        """A new authored revision carrying an older revision's content."""
+        """A new authored revision carrying an older revision's content.
+
+        Only the wording travels back. Whether the finding is withdrawn is a
+        separate decision, taken later and still standing: restoring an older
+        wording keeps the finding's withdrawn or active state, and only
+        `set_excluded` changes that.
+        """
+        kind = check_change_kind("rollback", change_kind, reason)
         record = await self._record(project_id, object_id)
-        target = (await self.store.get_revisions(project_id, [to_revision_id])).get(to_revision_id)
+        wanted = [to_revision_id, expected_revision_id]
+        found = await self.store.get_revisions(project_id, wanted)
+        target = found.get(to_revision_id)
         if target is None or target.object_id != object_id or target.status != RevisionStatus.PUBLISHED:
             raise ReferenceViolation(f"revision {to_revision_id} is not a published revision of this object")
+        current = found.get(expected_revision_id)
+        excluded = bool((current.provenance.extra if current else {}).get("membershipExcluded"))
         return await self._append(
             record,
             payload=target.payload,
@@ -571,5 +645,9 @@ class RevisionService:
             input_revision_ids=target.provenance.input_revision_ids,
             recipe_id=target.provenance.recipe_id,
             recipe_version=target.provenance.recipe_version,
-            extra={"rollbackOf": to_revision_id},
+            extra={
+                "rollbackOf": to_revision_id,
+                **({"membershipExcluded": True} if excluded else {}),
+            },
+            change_kind=kind,
         )

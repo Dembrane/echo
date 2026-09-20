@@ -368,6 +368,90 @@ def test_curating_the_bundle_drops_hidden_objects_and_their_relations():
     assert len(bundle["files"]["popcorn.json"]["items"]) == 2
 
 
+def _quoting_bundle() -> dict:
+    """A deck where q1 belongs to the hidden phrase alone, q2 to the phrase
+    that stays, q3 to both, and q4 to a stakeholder relation's aspect."""
+    return {
+        "files": {
+            "popcorn/c1.json": {
+                "items": [
+                    {"objectId": "gone", "phrase": "Bins", "quoteId": "q1"},
+                    {"objectId": "stays", "phrase": "Trams", "quoteId": "q2"},
+                ]
+            },
+            "tensions.json": {"tensions": [{"objectId": "gone", "quoteIds": ["q1", "q3"]}]},
+            "stakeholders.json": {
+                "stakeholders": [
+                    {"id": "s1", "objectId": "keeper", "quoteIds": ["q3"]},
+                    {"id": "s2", "objectId": "gone", "quoteIds": []},
+                ],
+                "relations": [
+                    {"between": ["s1", "s2"], "aspects": [{"kind": "power", "quoteIds": ["q4"]}]}
+                ],
+            },
+            "quotes.json": {
+                "quotes": [
+                    {"id": "q1", "transcript": "c1", "text": "Bins overflow on Fridays."},
+                    {"id": "q2", "transcript": "c1", "text": "The tram is packed."},
+                    {"id": "q3", "transcript": "c1", "text": "Both, really."},
+                    {"id": "q4", "transcript": "c1", "text": "The council decides."},
+                ]
+            },
+            "index.html": "<!doctype html>",
+        }
+    }
+
+
+def test_a_hidden_finding_leaves_with_the_quotes_only_it_cited():
+    from dembrane.popcorn.bundle import curate_presentation
+
+    bundle = _quoting_bundle()
+    files = curate_presentation(bundle, {"presentation": {"hidden_items": ["gone"]}})["files"]
+    kept = [quote["id"] for quote in files["quotes.json"]["quotes"]]
+    # q1 was the hidden phrase's and the hidden tension's: it goes, with its
+    # words. q3 the hidden tension shared with a stakeholder who stays.
+    assert kept == ["q2", "q3"]
+    assert "Bins overflow" not in str(files["quotes.json"])
+    # q4 hung on a relation that left with its end, so it goes too.
+    assert "The council decides." not in str(files)
+    # The bundle handed in still has all four; the caller may be holding it.
+    assert len(bundle["files"]["quotes.json"]["quotes"]) == 4
+
+
+def test_a_withdrawn_finding_leaves_with_its_quotes_on_every_read(monkeypatch):
+    from dembrane.popcorn import bundle as bundle_module
+
+    monkeypatch.setattr(bundle_module, "excluded_object_ids", _excluded_is_gone)
+    projected = asyncio.run(
+        bundle_module.apply_shared_withdrawals(_quoting_bundle(), "p", store=SimpleNamespace())
+    )
+    quotes = projected["files"]["quotes.json"]["quotes"]
+    assert [quote["id"] for quote in quotes] == ["q2", "q3"]
+
+
+async def _excluded_is_gone(project_id, *, store=None):  # noqa: ARG001
+    return {"gone"}
+
+
+def test_the_audience_map_carries_no_quotes_for_curation_to_leak():
+    # `_curate_map` has no equivalent leak: `sanitize_map` runs first and drops
+    # every node's detail, so no passage ever reaches the payload it curates.
+    sanitized = present.sanitize_map(
+        {
+            "nodes": [
+                {
+                    "objectId": "gone",
+                    "revisionId": "r1",
+                    "type": "tension",
+                    "detail": {"quotes": [{"text": "A passage."}]},
+                }
+            ]
+        }
+    )
+    assert "A passage." not in str(sanitized)
+    assert present._curate_map(sanitized, {"presentation": {"hidden_items": ["gone"]}})["nodes"] == []
+
+
 class _Access:
     project = {"id": "p", "language": "nl"}
     tier = "free"

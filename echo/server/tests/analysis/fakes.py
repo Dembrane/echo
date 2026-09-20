@@ -14,7 +14,7 @@ import copy
 import math
 import uuid
 from typing import Any, Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from collections import Counter
 from dataclasses import replace
 
@@ -91,6 +91,8 @@ class FakeAnalysisStore:
         self.snapshots: dict[str, Snapshot] = {}
         self.outbox: dict[str, OutboxEvent] = {}
         self.embeddings: dict[str, dict[str, Any]] = {}
+        # (project_id, user_id) -> when this host last opened the results list.
+        self.last_opened: dict[tuple[str, str], datetime] = {}
         self.calls: Counter[str] = Counter()
         self.raise_on: dict[str, BaseException] = {}
 
@@ -564,6 +566,7 @@ class FakeAnalysisStore:
             embedding_refs=copy.deepcopy(new.embedding_refs),
             actor_id=new.actor_id,
             reason=new.reason,
+            change_kind=new.change_kind,
             created_at=now,
             published_at=now if status == RevisionStatus.PUBLISHED else None,
         )

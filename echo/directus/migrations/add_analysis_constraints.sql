@@ -1,7 +1,7 @@
 -- Shared analysis objects and recipe runs: the SQL-only half of the schema.
 -- Idempotent and transactional; safe to run again.
 --
--- Run after add_analysis_schema.py (which creates the nine collections and
+-- Run after add_analysis_schema.py (which creates the ten collections and
 -- the two map_result fields):
 --   psql -v ON_ERROR_STOP=1 -f add_analysis_constraints.sql
 --
@@ -31,7 +31,8 @@ BEGIN
         OR to_regclass('analysis_relation') IS NULL
         OR to_regclass('analysis_snapshot') IS NULL
         OR to_regclass('analysis_outbox') IS NULL
-        OR to_regclass('analysis_request_key') IS NULL THEN
+        OR to_regclass('analysis_request_key') IS NULL
+        OR to_regclass('analysis_last_opened') IS NULL THEN
         RAISE EXCEPTION 'analysis collections are missing: run add_analysis_schema.py first';
     END IF;
     IF NOT EXISTS (
@@ -43,6 +44,9 @@ BEGIN
     ) OR NOT EXISTS (
         SELECT 1 FROM pg_attribute
         WHERE attrelid = to_regclass('analysis_snapshot') AND attname = 'source_event_id' AND NOT attisdropped
+    ) OR NOT EXISTS (
+        SELECT 1 FROM pg_attribute
+        WHERE attrelid = to_regclass('analysis_object_revision') AND attname = 'change_kind' AND NOT attisdropped
     ) THEN
         RAISE EXCEPTION 'analysis fields are missing: run add_analysis_schema.py first';
     END IF;
@@ -114,6 +118,15 @@ SELECT pg_temp.analysis_add_check('analysis_object_revision', 'analysis_object_r
        OR ((provenance::jsonb ->> 'runId') IS NOT NULL AND (provenance::jsonb ->> 'recipeId') IS NOT NULL)$c$);
 SELECT pg_temp.analysis_add_check('analysis_object_revision', 'analysis_object_revision_published_at',
     $c$status <> 'published' OR published_at IS NOT NULL$c$);
+-- What the host said they changed. Null is "not recorded": generated
+-- revisions have none, and neither has anything written before the audit
+-- trail asked. Nothing is backfilled.
+SELECT pg_temp.analysis_add_check('analysis_object_revision', 'analysis_object_revision_change_kind_valid',
+    $c$change_kind IS NULL
+       OR change_kind IN ('typo', 'clarity', 'meaning', 'withdraw', 'restore', 'rollback')$c$);
+-- Only a host records a kind, and only on a revision they wrote.
+SELECT pg_temp.analysis_add_check('analysis_object_revision', 'analysis_object_revision_change_kind_authored',
+    $c$change_kind IS NULL OR origin = 'authored'$c$);
 
 SELECT pg_temp.analysis_add_check('analysis_relation', 'analysis_relation_basis_valid',
     $c$basis IN ('extracted', 'inferred', 'authored')$c$);
@@ -140,6 +153,9 @@ SELECT pg_temp.analysis_add_check('analysis_outbox', 'analysis_outbox_counters_v
 SELECT pg_temp.analysis_add_check('analysis_request_key', 'analysis_request_key_mode_valid',
     $c$mode IN ('refresh', 'regenerate', 'retry')$c$);
 
+SELECT pg_temp.analysis_add_check('analysis_last_opened', 'analysis_last_opened_user_present',
+    $c$length(btrim(user_id)) > 0$c$);
+
 SELECT pg_temp.analysis_add_check('map_result', 'map_result_manifest_version_valid',
     $c$manifest_version IN (1, 2)$c$);
 
@@ -158,6 +174,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS analysis_run_project_idempotency
 -- flight or retried a failed run: a repeated transport request returns its run.
 CREATE UNIQUE INDEX IF NOT EXISTS analysis_request_key_project_key
     ON analysis_request_key (project_id, idempotency_key);
+-- One row per host per project: the results list has one last-opened time,
+-- and marking it opened again writes that row rather than another.
+CREATE UNIQUE INDEX IF NOT EXISTS analysis_last_opened_project_user
+    ON analysis_last_opened (project_id, user_id);
 -- Request order is unique within a scope; publication compares it.
 CREATE UNIQUE INDEX IF NOT EXISTS analysis_run_scope_request_order
     ON analysis_run (scope_id, request_order);
@@ -386,6 +406,7 @@ BEGIN
         OR NEW.provenance::jsonb IS DISTINCT FROM OLD.provenance::jsonb
         OR NEW.embedding_refs::jsonb IS DISTINCT FROM OLD.embedding_refs::jsonb
         OR NEW.content_hash IS DISTINCT FROM OLD.content_hash
+        OR NEW.change_kind IS DISTINCT FROM OLD.change_kind
         OR NEW.published_at IS DISTINCT FROM OLD.published_at
         OR (NEW.run_id IS DISTINCT FROM OLD.run_id AND NEW.run_id IS NOT NULL)
         OR (NEW.parent_revision_id IS DISTINCT FROM OLD.parent_revision_id AND NEW.parent_revision_id IS NOT NULL)
