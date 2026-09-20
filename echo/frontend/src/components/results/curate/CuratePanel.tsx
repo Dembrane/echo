@@ -86,6 +86,12 @@ export type CuratePanelProps = ShapeProps & {
 	onSelect: (block: PresentationBlock) => void;
 	/** Turning a block on from here, through the editor's own write path. */
 	onTurnOn?: ((block: PresentationBlock) => void) | null;
+	/**
+	 * The row under the tabs, where the findings are held in more than one
+	 * language: original, English, Dutch. Nothing is drawn here until that row
+	 * is given, and the tabs sit straight on the table without it.
+	 */
+	languages?: ReactNode;
 	actions: ResultActions;
 };
 
@@ -106,6 +112,7 @@ export function CuratePanel({
 	items,
 	loading,
 	onLoadMore,
+	languages,
 	onSelect,
 	onTurnOn,
 	selected,
@@ -269,6 +276,12 @@ export function CuratePanel({
 				}}
 				selected={selected}
 			/>
+
+			{languages && (
+				<div className={classes.languageRow} data-testid="curate-languages">
+					{languages}
+				</div>
+			)}
 
 			<div
 				aria-labelledby={tabId(selected)}

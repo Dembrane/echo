@@ -99,6 +99,17 @@
 	font-weight: 400;
 }
 
+/* The row under the tabs, where there is more than one language to read the
+   findings in. Empty and absent until that row is given. */
+.languageRow {
+	align-items: center;
+	border-bottom: 1px solid var(--hairline);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 1rem;
+	padding-bottom: 0.5rem;
+}
+
 /* The line over each panel: what is hidden, how many are shown. */
 .panelHead {
 	align-items: baseline;
@@ -429,6 +440,13 @@
 .popover {
 	color: var(--graphite);
 	font-size: var(--app-font-size-sm, 0.9375rem);
+}
+
+/* The dropdown is drawn in a portal, outside the panel, so it carries the
+   panel's own ring with it. */
+.popover :focus-visible {
+	outline: 2px solid var(--blue);
+	outline-offset: 2px;
 }
 
 .feedback {
@@ -936,7 +954,8 @@ input.filterControl:hover {
 	.control.confirm,
 	.filterControl,
 	.sortHead,
-	.tab {
+	.tab,
+	.tool {
 		transition: none;
 	}
 }

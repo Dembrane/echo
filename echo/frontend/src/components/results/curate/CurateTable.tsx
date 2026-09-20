@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 import type { AnalysisObject } from "@/components/analysis/hooks";
 import type { ResultFeedbackActions } from "../feedback/useResultFeedback";
 import { type EditableField, isMultiline } from "../resultContent";
+import { hasAftermath } from "../resultEditing";
 import { WordsStep } from "./CurateMeta";
 import classes from "./curate.module.css";
 import { RowTools } from "./RowTools";
@@ -218,7 +219,7 @@ export function CurateRow({
 			    not in the wireframes; the audit trail is what keeps it. Deleting
 			    this one block and the `asking` gate in `useRowEdit.commit` takes
 			    the question out and leaves everything else standing. */}
-			{(edit.asking || edit.prompt.conflict || edit.prompt.saved) && (
+			{(edit.asking || hasAftermath(edit.prompt)) && (
 				<tr>
 					<td className={classes.stepCell} colSpan={columns}>
 						<WordsStep edit={edit.prompt} objectId={item.objectId} />
