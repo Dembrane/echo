@@ -107,6 +107,18 @@ export type AnalysisObject = {
 	conversationName?: string | null;
 	/** The latest fact-check verdict of this revision. */
 	verdict?: string | null;
+	/**
+	 * What the host asking for the list thinks of this finding's quality: their
+	 * own thumb, nobody else's, and never in an audience payload. Absent where a
+	 * reader carries no feedback; null where this host has not rated it.
+	 * `revisionId` is the wording they were rating.
+	 */
+	myFeedback?: {
+		rating: "up" | "down";
+		tags: string[];
+		note?: string;
+		revisionId: string;
+	} | null;
 };
 
 export type AnalysisRevision = {
