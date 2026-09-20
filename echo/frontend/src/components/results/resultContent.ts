@@ -225,6 +225,26 @@ export const namesOneConversation = (
 	Boolean(evidence.quotes > 0 && evidence.conversations === 1 && name);
 
 /**
+ * Whether a row rises to the top of its group. "one quote only" and "one
+ * conversation only" say nothing an evidence line reading "1 quote from
+ * Marloes" has not already said: the row keeps its phrase-less place among
+ * the rest rather than taking one of the twenty a group shows at rest.
+ */
+export function risesForAttention(item: {
+	attention?: string | null;
+	conversationName?: string | null;
+	detail?: unknown;
+	provenance?: Bag | null;
+	quoteCount?: number;
+	conversationCount?: number;
+}): boolean {
+	if (!item.attention) return false;
+	if (item.attention !== "one_quote" && item.attention !== "one_conversation")
+		return true;
+	return !namesOneConversation(resultEvidence(item), item.conversationName);
+}
+
+/**
  * What a finding rests on, in words. One conversation with a name says which
  * one, and then says it once: the count of conversations is in the sentence.
  */

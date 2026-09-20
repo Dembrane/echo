@@ -9,7 +9,12 @@
 	--graphite: #2d2d2c;
 	--blue: #4169e1;
 	--hairline: #e6e3df;
-	--ink-soft: rgba(45, 45, 44, 0.62);
+	/* Three inks, and the two that carry words are readable on the dashboard's
+	   own parchment: soft ink for small print at 4.5:1, resting ink for a
+	   control that says itself in a glyph or a number at 3:1, faint ink for
+	   the lines and underlines that are not asked to be read. */
+	--ink-soft: rgba(45, 45, 44, 0.72);
+	--ink-rest: rgba(45, 45, 44, 0.62);
 	--ink-faint: rgba(45, 45, 44, 0.38);
 	--ink-tag: rgba(45, 45, 44, 0.78);
 	--curve: cubic-bezier(0.25, 0.8, 0.3, 1);
@@ -33,7 +38,8 @@
 	--graphite: #f6f4f1;
 	--blue: #7c9bff;
 	--hairline: #3a3a38;
-	--ink-soft: rgba(246, 244, 241, 0.64);
+	--ink-soft: rgba(246, 244, 241, 0.74);
+	--ink-rest: rgba(246, 244, 241, 0.64);
 	--ink-faint: rgba(246, 244, 241, 0.4);
 	--ink-tag: rgba(246, 244, 241, 0.78);
 }
@@ -104,18 +110,44 @@ input.filterControl:hover {
 	gap: 0.25rem;
 }
 
-/* Sentence case, weight 500, the count in faint ink. */
+/* Sentence case, weight 500, the count beside it. The header holds the top of
+   whatever scrolls the list, on the page's own ground, so the kind a host is
+   reading is never off the screen. */
 .groupHead {
+	background: var(--app-background, var(--parchment));
 	color: var(--graphite);
 	font-family: var(--app-content-bold-font-family, inherit);
 	font-size: 1em;
 	font-weight: 500;
 	margin: 0 0 0.35rem;
+	padding-block: 0.35rem;
+	position: sticky;
+	top: 0;
+	z-index: 1;
 }
 
 .count {
-	color: var(--ink-faint);
+	color: var(--ink-rest);
 	font-weight: 400;
+}
+
+/* The kinds this list holds, as one line of small print under the words that
+   introduce it: a way between the groups, never a toolbar. */
+.jump {
+	align-items: baseline;
+	display: flex;
+	flex-wrap: wrap;
+	font-size: var(--app-font-size-xs, 0.75rem);
+	gap: 0 0.75rem;
+	margin-bottom: -1.25rem;
+}
+
+.jumpLink {
+	min-height: 2rem;
+}
+
+.dot {
+	color: var(--ink-faint);
 }
 
 .rows {
@@ -146,13 +178,18 @@ input.filterControl:hover {
 }
 
 /* The words and the controls share the first line; the meta line runs under
-   both, so the prompt that takes it over has the whole row to speak in. */
+   both, so the prompt that takes it over has the whole row to speak in.
+   The whole body keeps a reading measure, controls and all: on a wide screen
+   the hide and open icons stay beside the words they act on, and the prompt
+   that opens under them opens where the host is looking. The opened item is
+   not in here: it takes the width it needs. */
 .rowBody {
 	align-items: start;
 	column-gap: 1.5rem;
 	cursor: pointer;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) auto;
+	max-width: 48rem;
 	padding: 0.7rem 0;
 }
 
@@ -165,10 +202,10 @@ input.filterControl:hover {
 	min-width: 0;
 }
 
-/* Held back from this presentation: the words dim where they stand. The
-   controls keep their ink, because one of them is the way back. */
-.row[data-held] .rowText,
-.row[data-held] .rest {
+/* Held back from this presentation: the words dim where they stand. The small
+   print keeps its ink, because it is the line that says so in words, and so do
+   the controls, because one of them is the way back. */
+.row[data-held] .rowText {
 	opacity: 0.55;
 }
 
@@ -183,7 +220,6 @@ input.filterControl:hover {
 	font-weight: 400;
 	gap: 0 0.45em;
 	margin: 0;
-	max-width: 40rem;
 }
 
 /* The arrows travel with the second pole, so a tension that wraps reads
@@ -219,7 +255,6 @@ input.filterControl:hover {
 .second {
 	color: var(--ink-soft);
 	margin: 0;
-	max-width: 40rem;
 	text-wrap: pretty;
 }
 
@@ -378,15 +413,17 @@ input.filterControl:hover {
 	margin: 0;
 }
 
-/* Controls rest at faint ink and come up on hover, on focus, and wherever
-   there is no hover to wait for. A line of text 36 px tall whose target
-   reaches 4 px further each way, to 44, without anything growing. */
+/* Controls rest quietly and come up on hover, on focus, and wherever there is
+   no hover to wait for. Quiet is not unreadable: a control made of words rests
+   in soft ink, a control made of a glyph in resting ink. A line of text 36 px
+   tall whose target reaches 4 px further each way, to 44, without anything
+   growing. */
 .control {
 	align-items: center;
 	align-self: flex-start;
 	background: none;
 	border: 0;
-	color: var(--ink-faint);
+	color: var(--ink-soft);
 	cursor: pointer;
 	display: inline-flex;
 	font: inherit;
@@ -422,6 +459,7 @@ input.filterControl:hover {
 /* A control that says itself in a glyph: square, so a column of them keeps
    one edge, and 36 px of it with 4 px of reach each way, to 44. */
 .control.icon {
+	color: var(--ink-rest);
 	justify-content: center;
 	width: 2.25rem;
 }
@@ -502,6 +540,22 @@ input.filterControl:hover {
 	gap: 0 1rem;
 }
 
+/* The answers are the one thing in the list a host aims at minutes before
+   doors open: a size up from the small print around them, and a 32 px target
+   made of room rather than bulk. A finger gets 44. */
+.promptOptions > .control {
+	font-size: 0.8125rem;
+	min-height: 2rem;
+	padding-block: 0.3rem;
+}
+
+@media (pointer: coarse) {
+	.promptOptions > .control,
+	.promptActions > .control {
+		min-height: 2.75rem;
+	}
+}
+
 /* An answer is read before it is pressed, so it never rests at faint ink. */
 .control.option {
 	color: var(--graphite);
@@ -517,7 +571,7 @@ input.filterControl:hover {
 
 /* The key that gives this answer. Nothing to press where there are no keys. */
 .key {
-	color: var(--ink-faint);
+	color: var(--ink-rest);
 	font-variant-numeric: tabular-nums;
 	margin-right: 0.4em;
 }

@@ -11,6 +11,7 @@ import type { ResultActions } from "./useResultActions";
 const actions: ResultActions = {
 	editWords: vi.fn(),
 	heldBackReasons: [],
+	heldReason: () => undefined,
 	holdBack: null,
 	isHeld: () => false,
 	pending: false,
@@ -102,6 +103,39 @@ describe("the list", () => {
 		expect(screen.queryByText("Phrase 24")).toBeNull();
 		fireEvent.click(screen.getByTestId("results-show-all-popcorn"));
 		expect(screen.getByText("Phrase 24")).toBeTruthy();
+	});
+
+	it("is twenty rows tall at rest, however many rose", () => {
+		// Twenty-five rows rose: the group is still twenty rows, and the rest
+		// wait behind the one way to them.
+		const risen = Array.from({ length: 25 }, (_, index) => ({
+			...phrase(index),
+			attention: "new" as const,
+		}));
+		show({ items: [...risen, phrase(99)] });
+		expect(screen.getAllByText("new")).toHaveLength(20);
+		expect(screen.queryByText("Phrase 20")).toBeNull();
+		fireEvent.click(screen.getByTestId("results-show-all-popcorn"));
+		expect(screen.getByText("Phrase 24")).toBeTruthy();
+		expect(screen.getByText("Phrase 99")).toBeTruthy();
+	});
+
+	it("leaves a row where its evidence line already says how thin it is", () => {
+		// "1 quote from Marloes" has said it: the phrase is not printed, and the
+		// row does not take one of the twenty either.
+		const named = {
+			...phrase(2),
+			attention: "one_quote" as const,
+			conversationCount: 1,
+			conversationName: "Marloes",
+			quoteCount: 1,
+		};
+		show({ items: [phrase(1), named] });
+		expect(screen.queryByTestId("results-rule")).toBeNull();
+		const rows = [...screen.getByRole("list").children].map(
+			(row) => row.textContent ?? "",
+		);
+		expect(rows[0]).toContain("Phrase 1");
 	});
 
 	it("counts what the server holds, not the page, and asks for the rest", () => {
@@ -243,6 +277,23 @@ describe("the list", () => {
 			target: { value: "Phrase 1" },
 		});
 		expect(filter.onChange).toHaveBeenCalledWith({ query: "Phrase 1" });
+	});
+
+	it("offers a way between the groups, with the counts in it", () => {
+		show({ counts: { popcorn: 59, tension: 4 } });
+		const jump = screen.getByTestId("results-jump");
+		expect(jump.textContent).toContain("Popcorn 59");
+		expect(jump.textContent).toContain("Tensions 4");
+		const into = vi.fn();
+		const head = document.getElementById("results-group-tension");
+		if (head) head.scrollIntoView = into;
+		fireEvent.click(screen.getByTestId("results-jump-tension"));
+		expect(into).toHaveBeenCalled();
+		cleanup();
+
+		// One group is the group the host is in: nothing to go between.
+		show({ items: [phrase(1)] });
+		expect(screen.queryByTestId("results-jump")).toBeNull();
 	});
 
 	it("collapses a group whose block is off in this presentation", () => {

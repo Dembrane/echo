@@ -4,7 +4,12 @@ import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import type { AnalysisObject } from "@/components/analysis/hooks";
 import { type ResultDensity, ResultRow } from "./ResultRow";
 import classes from "./ResultsList.module.css";
-import { fieldWords, primaryFields, secondaryField } from "./resultContent";
+import {
+	fieldWords,
+	primaryFields,
+	risesForAttention,
+	secondaryField,
+} from "./resultContent";
 import type { ResultActions } from "./useResultActions";
 
 export type ResultGroupKey = "popcorn" | "tension" | "argument" | "stakeholder";
@@ -42,8 +47,25 @@ const groupWords = (key: ResultGroupKey): string => {
 	}
 };
 
-/** A group shows its risen rows plus twenty, then opens in place. */
+/**
+ * A group shows twenty rows, then opens in place. What rose leads those
+ * twenty; a row that rose beyond them waits behind "Show all" with the rest,
+ * so a group of 146 is twenty rows tall until the host asks for more.
+ */
 const AT_REST = 20;
+
+/** The header a jump link scrolls to. */
+const headId = (key: ResultGroupKey) => `results-group-${key}`;
+
+const stillness = (): boolean => {
+	try {
+		return Boolean(
+			window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
+		);
+	} catch {
+		return false;
+	}
+};
 
 export type ResultsFilter = {
 	kind: string | null;
@@ -151,7 +173,7 @@ export function ResultsList({
 		if (!places.current.has(item.objectId))
 			places.current.set(item.objectId, {
 				rank: places.current.size,
-				risen: Boolean(item.attention),
+				risen: risesForAttention(item),
 			});
 
 	const shown = filter
@@ -181,8 +203,9 @@ export function ResultsList({
 				(item) => places.current.get(item.objectId)?.risen,
 			).length;
 			const all = opened.includes(key);
-			// At rest a group shows what rose and twenty more; opened, everything.
-			const room = all ? total : risen + AT_REST;
+			// At rest a group is twenty rows tall, whatever rose into them;
+			// opened, it is everything.
+			const room = all ? total : AT_REST;
 			return {
 				all,
 				held,
@@ -273,6 +296,42 @@ export function ResultsList({
 				</div>
 			)}
 
+			{/* One quiet line: the kinds this list holds, each a way into its own
+			    group, so a host in the map arguments can get back to the popcorn
+			    without scrolling through them. */}
+			{groups.length > 1 && (
+				<nav
+					aria-label={t`Jump to a kind`}
+					className={classes.jump}
+					data-testid="results-jump"
+				>
+					{groups.map(({ key, total }, index) => (
+						<Fragment key={key}>
+							{index > 0 && (
+								<span aria-hidden className={classes.dot}>
+									·
+								</span>
+							)}
+							<button
+								type="button"
+								className={`${classes.control} ${classes.jumpLink}`}
+								data-testid={`results-jump-${key}`}
+								onClick={() =>
+									document.getElementById(headId(key))?.scrollIntoView?.({
+										// The deck's curve, or nothing at all where the host has
+										// asked for nothing to move.
+										behavior: stillness() ? "auto" : "smooth",
+										block: "start",
+									})
+								}
+							>
+								{groupWords(key)} <span className={classes.count}>{total}</span>
+							</button>
+						</Fragment>
+					))}
+				</nav>
+			)}
+
 			{shown.length === 0 && (
 				<p className={classes.empty} data-testid="results-empty">
 					{/* A search that finds nothing is not an analysis that found
@@ -292,7 +351,10 @@ export function ResultsList({
 				const off = groupsOff.includes(key);
 				return (
 					<section className={classes.group} key={key}>
-						<h3 className={classes.groupHead}>
+						{/* The header holds the top of the scroller while its own rows
+						    pass under it, so the host always knows which kind they
+						    are reading. */}
+						<h3 className={classes.groupHead} id={headId(key)}>
 							{groupWords(key)} <span className={classes.count}>{total}</span>
 						</h3>
 						{off ? (
