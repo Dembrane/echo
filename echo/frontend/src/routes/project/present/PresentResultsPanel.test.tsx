@@ -61,7 +61,7 @@ afterEach(() => {
 	vi.clearAllMocks();
 });
 
-function show(entry = "/present", onClose = vi.fn()) {
+function show(entry = "/present") {
 	const client = new QueryClient({
 		defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
 	});
@@ -73,14 +73,12 @@ function show(entry = "/present", onClose = vi.fn()) {
 						<PresentResultsPanel
 							projectId="project"
 							presentation={presentation}
-							onClose={onClose}
 						/>
 					</MemoryRouter>
 				</MantineProvider>
 			</QueryClientProvider>
 		</I18nProvider>,
 	);
-	return onClose;
 }
 
 describe("The results panel on its own", () => {
@@ -93,8 +91,8 @@ describe("The results panel on its own", () => {
 		expect(screen.queryByText("Open longer")).toBeNull();
 	});
 
-	it("holds a finding back through the save it is given, and closes on request", () => {
-		const onClose = show();
+	it("holds a finding back through the save it is given, and never closes", () => {
+		show();
 		fireEvent.click(
 			screen.getByRole("button", { name: "Not in this presentation" }),
 		);
@@ -104,10 +102,10 @@ describe("The results panel on its own", () => {
 		expect(save).toHaveBeenCalledWith({
 			presentation: { hidden_items: ["obj-1"] },
 		});
-		fireEvent.click(
-			screen.getByRole("button", { name: "Close results review" }),
-		);
-		expect(onClose).toHaveBeenCalled();
+		// The panel is part of the dashboard: there is nothing to close.
+		expect(
+			screen.queryByRole("button", { name: "Close results review" }),
+		).toBeNull();
 	});
 
 	it("opens the finding under its own row", () => {

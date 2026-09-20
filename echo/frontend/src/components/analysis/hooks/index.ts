@@ -99,6 +99,12 @@ export type AnalysisObject = {
 	/** What the finding rests on, counted by the server. */
 	quoteCount?: number;
 	conversationCount?: number;
+	/**
+	 * The conversation a finding rests on, where it rests on only one: the name
+	 * the conversations table shows, so the meta line can say "1 quote from
+	 * Marloes". For logged-in hosts only, and never in an audience payload.
+	 */
+	conversationName?: string | null;
 	/** The latest fact-check verdict of this revision. */
 	verdict?: string | null;
 };

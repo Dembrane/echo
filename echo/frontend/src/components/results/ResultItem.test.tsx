@@ -101,6 +101,23 @@ function show(props: Partial<Parameters<typeof ResultItem>[0]> = {}) {
 }
 
 describe("the stage card", () => {
+	it("names the one conversation for a host, and never for a room", () => {
+		const alone = {
+			...popcorn,
+			conversationCount: 1,
+			conversationName: "Marloes",
+			quoteCount: 2,
+		};
+		show({ canEdit: true, item: alone });
+		expect(screen.getByText("2 quotes from Marloes")).toBeTruthy();
+		cleanup();
+
+		// The same card on a room screen or a public link counts and names no one.
+		show({ item: alone });
+		expect(screen.getByText("2 quotes · 1 conversation")).toBeTruthy();
+		expect(screen.queryByText(/Marloes/)).toBeNull();
+	});
+
 	it("gives each kind its own shape", () => {
 		show();
 		expect(screen.getByText("We keep the library open")).toBeTruthy();

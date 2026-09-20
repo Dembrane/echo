@@ -409,6 +409,53 @@ async def test_the_list_says_what_a_finding_rests_on_and_whose_hands_were_on_it(
 
 
 @pytest.mark.asyncio
+async def test_a_finding_from_one_conversation_says_which_one(
+    env: _Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One batched read for the page, and a name only where there is one
+    conversation to name."""
+    await _prepared(env)
+    env.enrich("Trams are better.", conversations=(C1, C2), quotes=2)
+    alone = env.revision("Bikes are healthy.")
+    asked: list[list[str]] = []
+
+    async def names(project_id: str, ids: list[str]) -> dict[str, str]:
+        assert project_id == PROJECT
+        asked.append(ids)
+        return {cid: f"Marloes {cid[-1]}" for cid in ids}
+
+    monkeypatch.setattr(analysis_bff, "_conversation_names", names)
+    page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "50"})).json()
+    by_object = {item["objectId"]: item for item in page["items"]}
+
+    # One read for the whole page, and only the rows that rest on a single
+    # conversation are in it: the two-conversation finding is not.
+    assert len(asked) == 1
+    assert set(asked[0]) <= {C1, C2} and asked[0] == sorted(set(asked[0]))
+    assert by_object[alone.object_id]["conversationName"] in {"Marloes 1", "Marloes 2"}
+    assert by_object[alone.object_id]["conversationCount"] == 1
+    # Several conversations: the row counts them and names none.
+    spread = by_object[env.revision("Trams are better.").object_id]
+    assert spread["conversationCount"] == 2 and spread["conversationName"] is None
+
+
+@pytest.mark.asyncio
+async def test_a_conversation_without_a_name_leaves_the_count_alone(
+    env: _Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await _prepared(env)
+    alone = env.revision("Bikes are healthy.")
+
+    async def nothing(project_id: str, ids: list[str]) -> dict[str, str]:
+        return {}
+
+    monkeypatch.setattr(analysis_bff, "_conversation_names", nothing)
+    page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "50"})).json()
+    row = next(item for item in page["items"] if item["objectId"] == alone.object_id)
+    assert row["conversationName"] is None and row["quoteCount"] == 1
+
+
+@pytest.mark.asyncio
 async def test_attention_rises_before_paging_and_counts_the_whole_type(env: _Env) -> None:
     world_sources = env.maps.store
     await _prepared(env)

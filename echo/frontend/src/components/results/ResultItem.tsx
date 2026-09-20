@@ -1,4 +1,4 @@
-import { plural, t } from "@lingui/core/macro";
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ArrowsLeftRightIcon, QuotesIcon } from "@phosphor-icons/react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -15,6 +15,7 @@ import {
 	type ChangeKind,
 	changeKindOf,
 	type EditableField,
+	evidenceWords,
 	isEdited,
 	primaryText,
 	QUOTE_LIMIT,
@@ -51,6 +52,12 @@ export type ResultStageProps = {
 	quotes?: string[];
 	/** Overrides the count the object carries, where the caller knows better. */
 	evidence?: ResultEvidence;
+	/**
+	 * The conversation this finding rests on, where it rests on only one. A
+	 * host's card says "1 quote from Marloes"; a room's and a public viewer's
+	 * never carry a name and read the counts alone.
+	 */
+	conversationName?: string | null;
 	factCheck?: ResultFactCheck | null;
 	className?: string;
 	/**
@@ -74,17 +81,6 @@ export const rungWord = (rung: unknown): ReactNode => {
 	return null;
 };
 
-function evidenceLine({ conversations, quotes }: ResultEvidence): string {
-	const quoteWords = plural(quotes, { one: "# quote", other: "# quotes" });
-	const conversationWords = plural(conversations, {
-		one: "# conversation",
-		other: "# conversations",
-	});
-	if (!quotes) return conversationWords;
-	if (!conversations) return quoteWords;
-	return `${quoteWords} · ${conversationWords}`;
-}
-
 /**
  * The stage card: pixel for pixel what a room gets. The finding in its kind's
  * shape, three type sizes by length and never truncated, at most three quotes
@@ -92,6 +88,7 @@ function evidenceLine({ conversations, quotes }: ResultEvidence): string {
  */
 export function ResultStage({
 	className,
+	conversationName,
 	edit,
 	evidence,
 	factCheck,
@@ -247,7 +244,9 @@ export function ResultStage({
 						</div>
 					)}
 
-					<p className={classes.meta}>{evidenceLine(counted)}</p>
+					<p className={classes.meta}>
+						{evidenceWords(counted, conversationName)}
+					</p>
 				</div>
 
 				{factCheck && (
@@ -612,6 +611,9 @@ export function ResultItem({
 					item={item}
 					quotes={quotes}
 					evidence={evidence}
+					// A name only for a host: the same card on a room screen or a
+					// public link counts, and names no one.
+					conversationName={canEdit ? item.conversationName : undefined}
 					edit={edit}
 					factCheck={factCheck}
 				/>

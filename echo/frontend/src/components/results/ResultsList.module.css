@@ -348,7 +348,8 @@ input.filterControl:hover {
 	display: flex;
 	flex: none;
 	font-size: var(--app-font-size-xs, 0.75rem);
-	gap: 1.25rem;
+	/* Icons sit close, the way the conversations table's row actions do. */
+	gap: 0.5rem;
 	grid-column: 2;
 	grid-row: 1;
 	margin-block: calc((var(--line) - 2.25rem) / 2);
@@ -416,6 +417,13 @@ input.filterControl:hover {
 .control:disabled {
 	cursor: default;
 	opacity: 0.5;
+}
+
+/* A control that says itself in a glyph: square, so a column of them keeps
+   one edge, and 36 px of it with 4 px of reach each way, to 44. */
+.control.icon {
+	justify-content: center;
+	width: 2.25rem;
 }
 
 /* Inside a line of small print: one line tall, its target reaching into the

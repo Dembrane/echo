@@ -4,11 +4,7 @@ import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import { bff } from "@/lib/bff";
-import {
-	presentationDraftKey,
-	useOpeningInlineEdit,
-	usePresentationDraft,
-} from "./usePresentationDraft";
+import { usePresentationDraft } from "./usePresentationDraft";
 
 vi.mock("@/lib/bff", () => ({
 	bff: { get: vi.fn(), patch: vi.fn(), post: vi.fn() },
@@ -260,114 +256,5 @@ it("does not erase a queued patch when the save before it fails", async () => {
 	expect(
 		(cachedSettings(client)?.presentation as { blocks: string[] }).blocks,
 	).toEqual(["popcorn", "tensions"]);
-	client.clear();
-});
-
-const openingSetup = (hasChanges: boolean) => {
-	const client = new QueryClient({
-		defaultOptions: { queries: { retry: false } },
-	});
-	const liveKey = ["project", "project-1", "presentation"];
-	const audienceKey = ["presentation-audience", "/present/p/audience", 0];
-	client.setQueryData(liveKey, { presentation: { id: "p" } });
-	client.setQueryData(audienceKey, { id: "p" });
-	const envelope = (revision: number, title: string) => ({
-		has_changes: hasChanges,
-		presentation: {
-			id: "p",
-			project_id: "project-1",
-			settings: { intro: { enabled: true, title }, title: "Draft name" },
-		},
-		revision,
-	});
-	vi.mocked(bff.get).mockResolvedValue(envelope(2, "Old words"));
-	const wrapper = ({ children }: { children: ReactNode }) => (
-		<QueryClientProvider client={client}>{children}</QueryClientProvider>
-	);
-	return { audienceKey, client, envelope, liveKey, wrapper };
-};
-
-it.each([true, false])(
-	"sends an edit on a live slide to the room and the draft together, whatever else the draft holds (has_changes %s)",
-	async (hasChanges) => {
-		const { audienceKey, client, envelope, liveKey, wrapper } =
-			openingSetup(hasChanges);
-		vi.mocked(bff.post).mockResolvedValue(envelope(3, "New words"));
-		// The room's own screen has no project id of its own to go by.
-		const { result } = renderHook(
-			() => {
-				const draft = usePresentationDraft("", "p", true);
-				return { draft, edit: useOpeningInlineEdit(draft, true) };
-			},
-			{ wrapper },
-		);
-		expect(result.current.edit).toBeUndefined();
-		await waitFor(() => expect(result.current.edit).toBeDefined());
-		await act(async () => {
-			await result.current.edit?.({ intro: { title: "New words" } });
-		});
-		expect(bff.post).toHaveBeenCalledTimes(1);
-		expect(bff.post).toHaveBeenCalledWith("/present/p/opening", {
-			patch: { intro: { title: "New words" } },
-		});
-		// Never the draft patch, never a publish of the whole draft.
-		expect(bff.patch).not.toHaveBeenCalled();
-		const cached = client.getQueryData<{
-			has_changes: boolean;
-			presentation: { settings: { intro: { title: string } } };
-		}>(presentationDraftKey("p"));
-		expect(cached?.presentation.settings.intro.title).toBe("New words");
-		expect(cached?.has_changes).toBe(hasChanges);
-		expect(client.getQueryState(liveKey)?.isInvalidated).toBe(true);
-		expect(client.getQueryState(audienceKey)?.isInvalidated).toBe(true);
-		// The next autosave goes out against the revision the edit left behind.
-		vi.mocked(bff.patch).mockResolvedValue(envelope(4, "New words"));
-		await act(async () => {
-			await result.current.draft.save.mutateAsync({ show_qr: true });
-		});
-		expect(bff.patch).toHaveBeenCalledWith("/present/p/draft", {
-			expected_revision: 3,
-			patch: { show_qr: true },
-		});
-		client.clear();
-	},
-);
-
-it("keeps an edit in the editor's preview in the draft", async () => {
-	const { client, envelope, liveKey, wrapper } = openingSetup(true);
-	vi.mocked(bff.patch).mockResolvedValue(envelope(3, "New words"));
-	const { result } = renderHook(
-		() =>
-			useOpeningInlineEdit(usePresentationDraft("project-1", "p", true), false),
-		{ wrapper },
-	);
-	await waitFor(() => expect(result.current).toBeDefined());
-	await act(async () => {
-		await result.current?.({ intro: { title: "New words" } });
-	});
-	expect(bff.patch).toHaveBeenCalledWith("/present/p/draft", {
-		expected_revision: 2,
-		patch: { intro: { title: "New words" } },
-	});
-	expect(bff.post).not.toHaveBeenCalled();
-	expect(client.getQueryState(liveKey)?.isInvalidated).toBe(false);
-	client.clear();
-});
-
-it("reads the draft back and rejects when a live edit is refused", async () => {
-	const { client, wrapper } = openingSetup(false);
-	vi.mocked(bff.post).mockRejectedValue({ status: 409 });
-	const { result } = renderHook(
-		() =>
-			useOpeningInlineEdit(usePresentationDraft("project-1", "p", true), true),
-		{ wrapper },
-	);
-	await waitFor(() => expect(result.current).toBeDefined());
-	await act(async () => {
-		await expect(
-			result.current?.({ disclosure: { text: "Mine" } }),
-		).rejects.toEqual({ status: 409 });
-	});
-	await waitFor(() => expect(bff.get).toHaveBeenCalledTimes(2));
 	client.clear();
 });

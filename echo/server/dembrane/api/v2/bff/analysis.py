@@ -20,6 +20,7 @@ from dataclasses import replace, dataclass
 from fastapi import Query, Depends, APIRouter, HTTPException, status
 from pydantic import Field, BaseModel
 
+from dembrane.directus_async import async_directus
 from dembrane.analysis import store as analysis_store, types
 from dembrane.analysis.store import SqlAnalysisStore
 from dembrane.api.rate_limit import RedisUserRateLimiter
@@ -525,7 +526,7 @@ async def _authored_marks(
     }
 
 
-def _evidence_counts(revision: ObjectRevision) -> tuple[int, int]:
+def _evidence(revision: ObjectRevision) -> tuple[int, set[str]]:
     """How much a finding rests on: quotes, and the conversations they come
     from. An argument and a phrase carry evidence per conversation; a tension
     and a stakeholder carry quotes that each name their own."""
@@ -544,7 +545,46 @@ def _evidence_counts(revision: ObjectRevision) -> tuple[int, int]:
         quotes += 1
         if quote.get("conversationId"):
             conversations.add(str(quote["conversationId"]))
+    return quotes, conversations
+
+
+def _evidence_counts(revision: ObjectRevision) -> tuple[int, int]:
+    """The two numbers a row shows: quotes, and how many conversations."""
+    quotes, conversations = _evidence(revision)
     return quotes, len(conversations)
+
+
+async def _conversation_names(project_id: str, ids: list[str]) -> dict[str, str]:
+    """The display name of each conversation, in one read: the title where
+    there is one, else the participant's name, the way the conversations table
+    reads them. A conversation with neither is left out and its finding says
+    the count alone. Names are for hosts: only a reader who already has
+    conversation access gets this far.
+    """
+    if not ids:
+        return {}
+    try:
+        rows = await async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {"id": {"_in": ids}, "project_id": {"_eq": project_id}},
+                    "fields": ["id", "title", "participant_name"],
+                    "limit": len(ids),
+                }
+            },
+        )
+    except Exception:  # noqa: BLE001 - a name is a nicety, never the answer
+        logger.warning("could not read conversation names for %s", project_id, exc_info=True)
+        return {}
+    names: dict[str, str] = {}
+    for row in rows or []:
+        if not isinstance(row, dict) or not row.get("id"):
+            continue
+        name = str(row.get("title") or "").strip() or str(row.get("participant_name") or "").strip()
+        if name:
+            names[str(row["id"])] = name
+    return names
 
 
 async def _verdicts(
@@ -710,6 +750,18 @@ async def list_analysis_objects(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except AnalysisStoreError as exc:
         raise _unavailable() from exc
+    # A finding whose quotes all come from one conversation says which one, so
+    # the meta line reads "1 quote from Marloes" rather than counting to one
+    # twice. One read for the whole page, and only for the rows that need it.
+    alone: dict[str, str] = {}
+    for entry in page:
+        revision = revisions.get(str(entry["revisionId"]))
+        if revision is None:
+            continue
+        _, conversations = _evidence(revision)
+        if len(conversations) == 1:
+            alone[revision.id] = next(iter(conversations))
+    names = await _conversation_names(project_id, sorted(set(alone.values())))
     items = []
     for entry in page:
         revision = revisions.get(str(entry["revisionId"]))
@@ -739,6 +791,11 @@ async def list_analysis_objects(
                 "edited": mark.edited,
                 "quoteCount": quotes,
                 "conversationCount": conversations,
+                # Only where there is one conversation, and null when it has
+                # no name of its own.
+                "conversationName": names.get(alone.get(revision.id, ""))
+                if conversations == 1
+                else None,
                 "verdict": verdicts.get(revision.id),
                 "attention": phrase,
                 "attentionActor": actor,

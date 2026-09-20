@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { CloseButton, Group, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import {
@@ -40,12 +40,10 @@ const GROUP_BY_BLOCK: Record<PresentationBlock, ResultGroupKey> = {
 export function PresentResultsPanel({
 	projectId,
 	presentation,
-	onClose,
 	className,
 }: {
 	projectId: string;
 	presentation: Presentation;
-	onClose: () => void;
 	className?: string;
 }) {
 	const { workspaceId } = useParams<{ workspaceId?: string }>();
@@ -107,12 +105,9 @@ export function PresentResultsPanel({
 			gap="sm"
 			{...testId("present-results-panel")}
 		>
-			<Group justify="space-between" wrap="nowrap">
-				<Text fw={500}>
-					<Trans>Review results</Trans>
-				</Text>
-				<CloseButton aria-label={t`Close results review`} onClick={onClose} />
-			</Group>
+			<Text fw={500}>
+				<Trans>Review results</Trans>
+			</Text>
 			<Text size="sm">
 				<Trans>
 					Change the wording, read the evidence, or keep a finding out of this

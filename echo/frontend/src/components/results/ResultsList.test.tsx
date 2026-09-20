@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
+import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { AnalysisObject } from "@/components/analysis/hooks";
@@ -34,6 +35,12 @@ const tension: AnalysisObject = {
 beforeAll(() => {
 	i18n.load("en", {});
 	i18n.activate("en");
+	window.matchMedia = vi.fn().mockImplementation((media) => ({
+		addEventListener() {},
+		matches: false,
+		media,
+		removeEventListener() {},
+	}));
 });
 
 afterEach(() => {
@@ -44,15 +51,17 @@ afterEach(() => {
 function show(props: Partial<ResultsListProps> = {}) {
 	return render(
 		<I18nProvider i18n={i18n}>
-			<ResultsList
-				actions={actions}
-				canEdit
-				density="curate"
-				items={[phrase(1), tension]}
-				onOpen={() => {}}
-				renderItem={() => null}
-				{...props}
-			/>
+			<MantineProvider>
+				<ResultsList
+					actions={actions}
+					canEdit
+					density="curate"
+					items={[phrase(1), tension]}
+					onOpen={() => {}}
+					renderItem={() => null}
+					{...props}
+				/>
+			</MantineProvider>
 		</I18nProvider>,
 	);
 }
@@ -136,17 +145,19 @@ describe("the list", () => {
 		expect(onLoadMore).toHaveBeenCalledTimes(1);
 		rerender(
 			<I18nProvider i18n={i18n}>
-				<ResultsList
-					actions={actions}
-					canEdit
-					counts={{ popcorn: 140 }}
-					density="curate"
-					items={page}
-					loadingTypes={["popcorn"]}
-					onLoadMore={onLoadMore}
-					onOpen={() => {}}
-					renderItem={() => null}
-				/>
+				<MantineProvider>
+					<ResultsList
+						actions={actions}
+						canEdit
+						counts={{ popcorn: 140 }}
+						density="curate"
+						items={page}
+						loadingTypes={["popcorn"]}
+						onLoadMore={onLoadMore}
+						onOpen={() => {}}
+						renderItem={() => null}
+					/>
+				</MantineProvider>
 			</I18nProvider>,
 		);
 		expect(screen.getByTestId("results-loading-popcorn")).toBeTruthy();
@@ -195,14 +206,16 @@ describe("the list", () => {
 		const { rerender } = show({ items: [phrase(1), risen] });
 		rerender(
 			<I18nProvider i18n={i18n}>
-				<ResultsList
-					actions={actions}
-					canEdit
-					density="curate"
-					items={[phrase(1), { ...risen, attention: null }]}
-					onOpen={() => {}}
-					renderItem={() => null}
-				/>
+				<MantineProvider>
+					<ResultsList
+						actions={actions}
+						canEdit
+						density="curate"
+						items={[phrase(1), { ...risen, attention: null }]}
+						onOpen={() => {}}
+						renderItem={() => null}
+					/>
+				</MantineProvider>
 			</I18nProvider>,
 		);
 		const rows = [...screen.getByRole("list").children].map(

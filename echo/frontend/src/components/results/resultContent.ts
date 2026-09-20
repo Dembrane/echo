@@ -1,3 +1,4 @@
+import { plural } from "@lingui/core/macro";
 import type { AnalysisRevision } from "@/components/analysis/hooks";
 
 /** The kinds a finding can take. Anything else renders as its label alone. */
@@ -210,6 +211,43 @@ export function resultEvidence(item: {
 		if (text(ref.quote) && groups(item).length === 0) quotes += 1;
 	}
 	return { conversations: conversations.size, quotes };
+}
+
+/**
+ * Whether the evidence can be said as "1 quote from Marloes": every quote
+ * comes from one conversation, and a host is reading, so the name is there.
+ * A room and a public viewer never carry the name and always read the counts.
+ */
+export const namesOneConversation = (
+	evidence: ResultEvidence,
+	name?: string | null,
+): boolean =>
+	Boolean(evidence.quotes > 0 && evidence.conversations === 1 && name);
+
+/**
+ * What a finding rests on, in words. One conversation with a name says which
+ * one, and then says it once: the count of conversations is in the sentence.
+ */
+export function evidenceWords(
+	evidence: ResultEvidence,
+	name?: string | null,
+): string {
+	// Named, so the plural's own variables carry the wording the catalogs
+	// already hold.
+	const { conversations, quotes } = evidence;
+	if (namesOneConversation(evidence, name))
+		return plural(quotes, {
+			one: `# quote from ${name}`,
+			other: `# quotes from ${name}`,
+		});
+	const quoteWords = plural(quotes, { one: "# quote", other: "# quotes" });
+	const conversationWords = plural(conversations, {
+		one: "# conversation",
+		other: "# conversations",
+	});
+	if (!quotes) return conversationWords;
+	if (!conversations) return quoteWords;
+	return `${quoteWords} · ${conversationWords}`;
 }
 
 /** What a revision says it changed, or null when nothing was recorded. */

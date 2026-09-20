@@ -1,15 +1,24 @@
-import { plural, t } from "@lingui/core/macro";
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { ArrowsLeftRightIcon } from "@phosphor-icons/react";
+import { Tooltip } from "@mantine/core";
+import {
+	ArrowsLeftRightIcon,
+	CaretDownIcon,
+	CaretUpIcon,
+	EyeIcon,
+	EyeSlashIcon,
+} from "@phosphor-icons/react";
 import { type ReactNode, useRef, useState } from "react";
 import type { AnalysisObject } from "@/components/analysis/hooks";
 import { ReasonPrompt } from "./ReasonPrompt";
 import { rungWord } from "./ResultItem";
 import classes from "./ResultsList.module.css";
 import {
+	evidenceWords,
 	factCheckVerdict,
 	fieldWords,
 	isEdited,
+	namesOneConversation,
 	primaryFields,
 	resultEvidence,
 	resultFields,
@@ -41,19 +50,12 @@ export type ResultRowProps = {
 
 const EVIDENCE_SEPARATOR = " · ";
 
-function evidenceWords(quotes: number, conversations: number): string {
-	const quoteWords = plural(quotes, { one: "# quote", other: "# quotes" });
-	const conversationWords = plural(conversations, {
-		one: "# conversation",
-		other: "# conversations",
-	});
-	if (!quotes) return conversationWords;
-	if (!conversations) return quoteWords;
-	return `${quoteWords}${EVIDENCE_SEPARATOR}${conversationWords}`;
-}
-
-/** One phrase per risen row, and only "new" in blue. */
-function attentionPhrase(item: AnalysisObject): ReactNode {
+/**
+ * One phrase per risen row, and only "new" in blue. `named` is a row whose
+ * evidence already reads "1 quote from Marloes": the sentence has said how
+ * thin it is, so the phrase says nothing more. The row keeps its place.
+ */
+function attentionPhrase(item: AnalysisObject, named: boolean): ReactNode {
 	switch (item.attention) {
 		case "new":
 			return (
@@ -62,9 +64,9 @@ function attentionPhrase(item: AnalysisObject): ReactNode {
 				</span>
 			);
 		case "one_conversation":
-			return <Trans>one conversation only</Trans>;
+			return named ? null : <Trans>one conversation only</Trans>;
 		case "one_quote":
-			return <Trans>one quote only</Trans>;
+			return named ? null : <Trans>one quote only</Trans>;
 		case "fact_check":
 			return <Trans>the fact-check disagrees</Trans>;
 		case "reworded":
@@ -135,7 +137,9 @@ export function ResultRow({
 	const second = secondaryField(item.type);
 	const secondWords = second ? fieldWords(item, second) : "";
 	const evidence = resultEvidence(item);
-	const attention = attentionPhrase(item);
+	// The name is a host's: an audience payload carries none.
+	const named = namesOneConversation(evidence, item.conversationName);
+	const attention = attentionPhrase(item, named);
 	const states = density === "check" ? stateWords(item) : [];
 	const clamp = density === "check" ? classes.clamp3 : classes.clamp2;
 	const aftermath = hasAftermath(edit);
@@ -307,7 +311,7 @@ export function ResultRow({
 										<span aria-hidden>{EVIDENCE_SEPARATOR}</span>
 									</>
 								)}
-								{evidenceWords(evidence.quotes, evidence.conversations)}
+								{evidenceWords(evidence, item.conversationName)}
 							</p>
 							{states.length > 0 && (
 								<p
@@ -324,37 +328,53 @@ export function ResultRow({
 					)}
 				</div>
 
+				{/* The row's actions, in the conversations table's manner: icons at
+				    the right edge, the words they stand for in the tooltip and the
+				    label, faint until a hand comes near. */}
 				<div className={classes.rowControls}>
 					{holdable &&
 						(held ? (
-							<button
-								ref={holdControl}
-								type="button"
-								className={classes.control}
-								data-testid={`result-show-again-${item.objectId}`}
-								onClick={() => actions.showAgain?.(item.objectId, "")}
-							>
-								<Trans>Put back in this presentation</Trans>
-							</button>
+							<Tooltip label={t`Put back in this presentation`}>
+								<button
+									ref={holdControl}
+									type="button"
+									aria-label={t`Put back in this presentation`}
+									className={`${classes.control} ${classes.icon}`}
+									data-testid={`result-show-again-${item.objectId}`}
+									onClick={() => actions.showAgain?.(item.objectId, "")}
+								>
+									<EyeIcon aria-hidden size={16} />
+								</button>
+							</Tooltip>
 						) : (
-							<button
-								ref={holdControl}
-								type="button"
-								className={classes.control}
-								data-testid={`result-hold-back-${item.objectId}`}
-								onClick={() => setHolding(true)}
-							>
-								<Trans>Not in this presentation</Trans>
-							</button>
+							<Tooltip label={t`Not in this presentation`}>
+								<button
+									ref={holdControl}
+									type="button"
+									aria-label={t`Not in this presentation`}
+									className={`${classes.control} ${classes.icon}`}
+									data-testid={`result-hold-back-${item.objectId}`}
+									onClick={() => setHolding(true)}
+								>
+									<EyeSlashIcon aria-hidden size={16} />
+								</button>
+							</Tooltip>
 						))}
-					<button
-						type="button"
-						className={classes.control}
-						data-testid={`result-open-${item.objectId}`}
-						onClick={onOpen}
-					>
-						{open ? <Trans>Close</Trans> : <Trans>Open</Trans>}
-					</button>
+					<Tooltip label={open ? t`Close` : t`Open`}>
+						<button
+							type="button"
+							aria-label={open ? t`Close` : t`Open`}
+							className={`${classes.control} ${classes.icon}`}
+							data-testid={`result-open-${item.objectId}`}
+							onClick={onOpen}
+						>
+							{open ? (
+								<CaretUpIcon aria-hidden size={16} />
+							) : (
+								<CaretDownIcon aria-hidden size={16} />
+							)}
+						</button>
+					</Tooltip>
 				</div>
 			</div>
 			{/* The item opens under the row, inside the list. */}
