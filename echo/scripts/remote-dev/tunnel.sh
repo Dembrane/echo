@@ -41,9 +41,10 @@ for p in $PORTS; do
     FORWARD_ARGS+=(-L "${p}:localhost:${p}")
 done
 
-log_step "Forwarding"
-# Right-align the scheme so every "://" lines up.
-for p in $PORTS; do
+# Print one port's row, with the scheme right-aligned so every "://" lines up.
+# An optional second argument is appended to the description.
+print_port() {
+    local p="$1" note="${2:-}" scheme desc
     case "$p" in
         5173) scheme=http;       desc="admin dashboard (admin@dembrane.com / admin)" ;;
         5174) scheme=http;       desc="participant portal" ;;
@@ -53,13 +54,23 @@ for p in $PORTS; do
         5432) scheme=postgresql; desc="postgres (dembrane/dembrane)" ;;
         9000) scheme=http;       desc="minio S3 API" ;;
         9001) scheme=http;       desc="minio console" ;;
-        *)    printf '  %13s%s\n' "" "localhost:$p"; continue ;;
+        *)    printf '  %13s%s\n' "" "localhost:$p"; return ;;
     esac
-    printf '  %10s://localhost:%-5s  %s\n' "$scheme" "$p" "$desc"
+    printf '  %10s://localhost:%-5s  %s%s\n' "$scheme" "$p" "$desc" "$note"
+}
+
+log_step "Forwarding"
+for p in $PORTS; do
+    print_port "$p"
 done
+# minio's ports are not forwarded while it is off, but list them anyway so
+# people know it exists and that uploads depend on it.
 if ! minio_enabled; then
-    echo "  (minio is off, so uploads and recordings fail. Enable with:"
-    echo "   $RD_MINIO_ENABLE_HINT)"
+    print_port 9000 "   [off, not forwarded]"
+    print_port 9001 "  [off, not forwarded]"
+    echo
+    echo "  minio is off, so uploads and recordings fail. Enable with:"
+    echo "    $RD_MINIO_ENABLE_HINT"
 fi
 echo
 log_info "Tunnel is open. Leave this running; ctrl-c to close."
