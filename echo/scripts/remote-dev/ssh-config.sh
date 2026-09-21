@@ -2,8 +2,8 @@
 # Writes two SSH host entries into ~/.ssh/config, inside a managed block that
 # this script owns and rewrites in place. Your own entries are never touched.
 #
-#   echo-devbox       the VM itself
-#   echo-devcontainer the devcontainer, reached by jumping through the VM
+#   dembrane-devbox       the VM itself
+#   dembrane-devcontainer the devcontainer, reached by jumping through the VM
 #
 # Zed should connect to the second one. That is what puts the language servers
 # (ruff, ty, biome) and the toolchain (uv, pnpm, node) in the same place as the

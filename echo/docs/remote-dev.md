@@ -48,7 +48,7 @@ remote machine. Connect to the **container**, not the VM, so those servers see
 the same `uv` environment and `node_modules` as the code.
 
 1. `cmd-shift-P`, "projects: open remote"
-2. Add host: `echo-devcontainer`
+2. Add host: `dembrane-devcontainer`
 3. Open path: `/workspaces/echo`
 
 `ssh-config.sh` has already written that host into `~/.ssh/config`, with a
@@ -58,9 +58,9 @@ the same `uv` environment and `node_modules` as the code.
 
 Two options:
 
-- **Remote-SSH** to `echo-devcontainer`, same as Zed. Simple, and the extension
+- **Remote-SSH** to `dembrane-devcontainer`, same as Zed. Simple, and the extension
   list in `devcontainer.json` does not install automatically.
-- **Remote-SSH to `echo-devbox`, then "Reopen in Container"**. Slower to start,
+- **Remote-SSH to `dembrane-devbox`, then "Reopen in Container"**. Slower to start,
   but this path does honour `devcontainer.json`, so the extensions and
   `portsAttributes` come along.
 

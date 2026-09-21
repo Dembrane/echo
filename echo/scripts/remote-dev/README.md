@@ -24,7 +24,7 @@ Then, in a terminal tab you leave open:
 ./tunnel.sh        # forwards 5173, 5174, 8000, 8055, 5432 to localhost
 ```
 
-And in Zed: `cmd-shift-P`, "projects: open remote", host `echo-devcontainer`,
+And in Zed: `cmd-shift-P`, "projects: open remote", host `dembrane-devcontainer`,
 path `/workspaces/echo`.
 
 Start the dev processes the same way you would locally:
@@ -82,10 +82,10 @@ tunnel.sh ──┴────────────────► │  agen
 
 Two SSH host entries get written:
 
-- `echo-devbox` reaches the VM. Useful for `docker` commands and logs.
-- `echo-devcontainer` reaches the container, by `ProxyJump` through the VM.
+- `dembrane-devbox` reaches the VM. Useful for `docker` commands and logs.
+- `dembrane-devcontainer` reaches the container, by `ProxyJump` through the VM.
 
-Zed connects to `echo-devcontainer`. That is what puts the language servers
+Zed connects to `dembrane-devcontainer`. That is what puts the language servers
 from `.zed/settings.json` (ruff, ty, biome) and the toolchain (uv, pnpm, node
 22) in the same place as the code.
 

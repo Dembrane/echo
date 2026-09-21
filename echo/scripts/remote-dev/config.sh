@@ -32,7 +32,15 @@
 : "${RD_ORG_DOMAIN:=dembrane.com}"
 : "${RD_ORG_ID:=535152468605}"
 
-: "${RD_INSTANCE_NAME:=echo-devbox}"
+# Instance names must be unique within a project and zone, so the default
+# carries the system username. That way two people pointed at the same project
+# do not collide, and an instance in a shared project says who owns it.
+#
+# GCE names allow lowercase letters, digits and hyphens only, and must start
+# with a letter, so the username is slugged rather than used verbatim. `tr -c`
+# also rewrites the trailing newline, hence the trim.
+RD_USER_SLUG="$(whoami | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed 's/^-*//; s/-*$//')"
+: "${RD_INSTANCE_NAME:=dembrane-devbox-${RD_USER_SLUG}}"
 
 # Start small and grow. Machine type is not baked into the disk, so ./resize.sh
 # can move you up a size in about a minute (stop, change, start) without
@@ -69,8 +77,13 @@
 # SSH host aliases written into ~/.ssh/config by ssh-config.sh.
 # RD_SSH_HOST reaches the VM itself; RD_SSH_CONTAINER_HOST tunnels through it
 # into the devcontainer's own sshd, which is what Zed should connect to.
-: "${RD_SSH_HOST:=echo-devbox}"
-: "${RD_SSH_CONTAINER_HOST:=echo-devcontainer}"
+#
+# These deliberately do NOT carry the username the way RD_INSTANCE_NAME does.
+# They are aliases in your own ~/.ssh/config, so there is nobody to collide
+# with, and keeping them fixed means the Zed setup instructions and the docs
+# name the same host for everyone.
+: "${RD_SSH_HOST:=dembrane-devbox}"
+: "${RD_SSH_CONTAINER_HOST:=dembrane-devcontainer}"
 
 # The devcontainer's sshd, as published by docker-compose.yml (2222 -> 22).
 # This port is never opened in the GCP firewall. It is only reachable by
