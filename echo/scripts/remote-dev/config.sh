@@ -96,17 +96,23 @@ RD_USER_SLUG="$(whoami | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed '
 # jumping through the VM's own sshd on port 22.
 : "${RD_CONTAINER_SSH_PORT:=2222}"
 
-# Ports forwarded to your laptop by tunnel.sh. These are deliberately
-# identical on both ends: the compose file hardcodes localhost origins
-# (CORS_ORIGIN=http://localhost:5173, PUBLIC_URL=http://localhost:8055), so
-# keeping the same numbers locally means none of that config needs to change.
-: "${RD_FORWARD_PORTS:=5173 5174 8000 8055 5432 9000 9001}"
-
 # Compose files, relative to echo/.devcontainer/.
 # Add docker-compose-s3.yml here if you need minio; the server is configured
 # to talk to it (STORAGE_S3_ENDPOINT=http://minio:9000) but it is not in the
 # base compose file.
 : "${RD_COMPOSE_FILES:=docker-compose.yml}"
+
+# Ports forwarded to your laptop by tunnel.sh. These are deliberately
+# identical on both ends: the compose file hardcodes localhost origins
+# (CORS_ORIGIN=http://localhost:5173, PUBLIC_URL=http://localhost:8055), so
+# keeping the same numbers locally means none of that config needs to change.
+# minio's ports are only published by docker-compose-s3.yml, so they are only
+# forwarded when that file is enabled.
+RD_DEFAULT_PORTS="5173 5174 8000 8055 5432"
+case " $RD_COMPOSE_FILES " in
+    *" docker-compose-s3.yml "*) RD_DEFAULT_PORTS="$RD_DEFAULT_PORTS 9000 9001" ;;
+esac
+: "${RD_FORWARD_PORTS:=$RD_DEFAULT_PORTS}"
 
 # Env files copied up by sync-env.sh, relative to the echo/ directory.
 # directus/.env is required by the compose file; the others are optional.
