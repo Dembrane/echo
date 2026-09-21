@@ -95,6 +95,12 @@ else
     log_warn "Could not read billing status (this needs the Cloud Billing API and billing.viewer). Skipping the check."
 fi
 
+# The helpers in lib.sh read RD_PROJECT, and the machine-type check below needs
+# the Compute API on. Enabling here rather than in create.sh means the size
+# menu can actually verify its answers instead of guessing.
+RD_PROJECT="$PROJECT"
+require_compute_api
+
 log_step "Zone"
 echo "Pick the zone closest to you. SSH round-trip time is the single biggest"
 echo "factor in how the remote editor feels, and it has nothing to do with"
@@ -102,9 +108,62 @@ echo "where production runs."
 ZONE="$(ask "Zone" "${RD_ZONE:-$(suggest_zone)}")"
 
 log_step "Machine size"
-echo "Starting small is the cheap default. Machine type is not baked into the"
-echo "disk, so ./resize.sh moves you up a size in about a minute later."
-MACHINE="$(ask "Machine type" "$RD_MACHINE_TYPE")"
+cat <<'EOF'
+Starting small is the cheap default. Machine type is not baked into the disk,
+so ./resize.sh moves you up a size in about a minute without losing anything.
+
+                   vCPU  RAM    approx/mo    notes
+  1) e2-standard-2    2    8GB      ~$50      containers only, tight
+  2) e2-standard-4    4   16GB     ~$100      recommended starting point
+  3) e2-standard-8    8   32GB     ~$200      comfortable with all of mprocs
+  4) e2-standard-16  16   64GB     ~$400      heavy builds, rarely needed
+  5) other                                    type any GCP machine type
+
+Prices are list price for a VM left running 24/7, and vary by region. Stopping
+the VM when you are not using it (./stop.sh) is worth more than picking a
+smaller size: an 8-hour workday is roughly a quarter of these numbers.
+
+Sizing for this stack: 5 containers (postgres, valkey, directus, agent, the
+devcontainer) idle at around 3GB. Option 1 runs those but leaves little room
+for the 7 mprocs processes on top, and image builds will swap. Option 2 is the
+honest floor for day-to-day work. Go to option 3 if builds or the three
+dramatiq workers start fighting each other.
+EOF
+
+# A curated menu beats `gcloud compute machine-types list`, which returns
+# several hundred rows and none of the context above. The escape hatch covers
+# anything else.
+CHOICE="$(ask "Choose 1-5" "2")"
+case "$CHOICE" in
+    1) MACHINE="e2-standard-2" ;;
+    2) MACHINE="e2-standard-4" ;;
+    3) MACHINE="e2-standard-8" ;;
+    4) MACHINE="e2-standard-16" ;;
+    5) MACHINE="$(ask "Machine type" "$RD_MACHINE_TYPE")" ;;
+    # Someone who types a machine type instead of a number meant that.
+    e2-*|n2-*|n2d-*|c3-*|c4-*|t2d-*|n1-*|custom-*) MACHINE="$CHOICE" ;;
+    *) die "Not a valid choice: $CHOICE" ;;
+esac
+
+# Machine families are not available in every zone, and a bad pairing fails at
+# create time with a less obvious message than this one.
+#
+# --quiet and </dev/null matter here: if the Compute API were somehow still
+# off, gcloud would prompt to enable it, and with output redirected that prompt
+# is invisible while it waits on stdin.
+SPEC="$(gcloud compute machine-types describe "$MACHINE" \
+    --zone "$ZONE" --project "$PROJECT" --quiet \
+    --format='value(guestCpus,memoryMb)' 2>/dev/null </dev/null || true)"
+
+if [ -n "$SPEC" ]; then
+    CPUS="$(echo "$SPEC" | awk '{print $1}')"
+    RAM_GB="$(echo "$SPEC" | awk '{printf "%.0f", $2/1024}')"
+    log_info "$MACHINE available in $ZONE: ${CPUS} vCPU, ${RAM_GB}GB RAM"
+else
+    log_warn "Could not confirm '$MACHINE' is available in $ZONE."
+    log_warn "See what is: gcloud compute machine-types list --zones=$ZONE --project=$PROJECT"
+    confirm "Use it anyway?" "n" || die "Stopped. Re-run ./init.sh to pick another size."
+fi
 
 log_step "Instance name"
 INSTANCE="$(ask "Instance name" "$RD_INSTANCE_NAME")"
