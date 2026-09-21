@@ -42,18 +42,20 @@ for p in $PORTS; do
 done
 
 log_step "Forwarding"
+# Right-align the scheme so every "://" lines up.
 for p in $PORTS; do
     case "$p" in
-        5173) echo "  http://localhost:5173   admin dashboard (admin@dembrane.com / admin)" ;;
-        5174) echo "  http://localhost:5174   participant portal" ;;
-        8000) echo "  http://localhost:8000   backend API (docs at /docs)" ;;
-        8055) echo "  http://localhost:8055   directus (admin@dembrane.com / admin)" ;;
-        8001) echo "  http://localhost:8001   agent service" ;;
-        5432) echo "  postgresql://localhost:5432   postgres (dembrane/dembrane)" ;;
-        9000) echo "  http://localhost:9000   minio S3 API" ;;
-        9001) echo "  http://localhost:9001   minio console" ;;
-        *)    echo "  localhost:$p" ;;
+        5173) scheme=http;       desc="admin dashboard (admin@dembrane.com / admin)" ;;
+        5174) scheme=http;       desc="participant portal" ;;
+        8000) scheme=http;       desc="backend API (docs at /docs)" ;;
+        8055) scheme=http;       desc="directus (admin@dembrane.com / admin)" ;;
+        8001) scheme=http;       desc="agent service" ;;
+        5432) scheme=postgresql; desc="postgres (dembrane/dembrane)" ;;
+        9000) scheme=http;       desc="minio S3 API" ;;
+        9001) scheme=http;       desc="minio console" ;;
+        *)    printf '  %13s%s\n' "" "localhost:$p"; continue ;;
     esac
+    printf '  %10s://localhost:%-5s  %s\n' "$scheme" "$p" "$desc"
 done
 if ! minio_enabled; then
     echo "  (minio is off, so uploads and recordings fail. Enable with:"
