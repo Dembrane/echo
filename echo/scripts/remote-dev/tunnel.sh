@@ -44,7 +44,7 @@ done
 log_step "Forwarding"
 for p in $PORTS; do
     case "$p" in
-        5173) echo "  http://localhost:5173   admin dashboard" ;;
+        5173) echo "  http://localhost:5173   admin dashboard (admin@dembrane.com / admin)" ;;
         5174) echo "  http://localhost:5174   participant portal" ;;
         8000) echo "  http://localhost:8000   backend API (docs at /docs)" ;;
         8055) echo "  http://localhost:8055   directus (admin@dembrane.com / admin)" ;;
