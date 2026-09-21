@@ -26,6 +26,9 @@ fi
 
 log_step "Containers"
 vm_compose "ps" 2>/dev/null || log_warn "Could not reach docker on the VM."
+if ! minio_enabled; then
+    log_warn "minio is off, so file uploads and recordings fail. Enable with: $RD_MINIO_ENABLE_HINT"
+fi
 
 log_step "Directus schema"
 # A quick check, not a full diff: it catches a schema that was never pushed or
