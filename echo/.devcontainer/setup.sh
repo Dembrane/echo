@@ -75,7 +75,9 @@ install_fnm() {
     log_info "Installing fnm..."
     curl -fsSL https://fnm.vercel.app/install | bash
 
-    ensure_line_in_file "$BASHRC" 'eval "$(fnm env --use-on-cd)"'
+    # --shell bash: fnm's shell inference walks the process tree and fails in
+    # some container exec contexts.
+    ensure_line_in_file "$BASHRC" 'eval "$(fnm env --use-on-cd --shell bash)"'
     log_info "fnm installed"
 }
 
@@ -83,7 +85,10 @@ activate_fnm_env() {
     if [ -d "$FNM_DIR" ]; then
         export PATH="$FNM_DIR:$PATH"
     fi
-    command_exists fnm && eval "$(fnm env --use-on-cd)" 2>/dev/null || true
+    # --shell bash: on a first run .bashrc has not been sourced yet, so this is
+    # the only thing putting node on PATH. Inference failing here leaves
+    # install_node without FNM_MULTISHELL_PATH.
+    command_exists fnm && eval "$(fnm env --use-on-cd --shell bash)" 2>/dev/null || true
 }
 
 install_node() {
