@@ -57,10 +57,16 @@ RD_USER_SLUG="$(whoami | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed '
 : "${RD_MACHINE_TYPE:=e2-standard-4}"
 
 # Disks can grow online but can never shrink, so starting small is the only
-# reversible choice. 100GB holds the images for this stack (postgres+pgvector,
-# directus, the server base image) plus node_modules and uv caches with room
-# to spare. Grow it with: ./resize.sh --disk 200GB
-: "${RD_DISK_SIZE:=100GB}"
+# reversible choice. You also pay for the disk while the VM is stopped, which
+# makes an oversized one the bill that never goes away.
+#
+# Measured steady state is around 20 to 25GB: ~4.3GB of Ubuntu and snaps,
+# ~2.2GB for node_modules and the uv venv, ~10GB of images and build layers
+# for the five compose services, and ~2GB of pnpm and uv caches. 50GB leaves
+# roughly 2x headroom for docker build cache growing over months.
+#
+# Grow it with: ./resize.sh --disk 100GB
+: "${RD_DISK_SIZE:=50GB}"
 : "${RD_DISK_TYPE:=pd-balanced}"
 
 : "${RD_IMAGE_FAMILY:=ubuntu-2404-lts-amd64}"

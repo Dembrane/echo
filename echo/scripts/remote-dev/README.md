@@ -45,7 +45,7 @@ cd /workspaces/echo && mprocs
 ```
 
 `./stop.sh` matters. A running `e2-standard-4` is roughly $100/month; stopped,
-you pay only for the 100GB disk, which is about $10/month. The disk keeps
+you pay only for the 50GB disk, which is about $6/month. The disk keeps
 everything: the repo, uncommitted work, docker images, `node_modules`, the
 postgres data directory.
 
@@ -146,14 +146,26 @@ most OOMs into slowness rather than failure. If it still dies, go up a size:
 **Bootstrap seems stuck.** `./ssh.sh --vm`, then
 `tail -f /var/log/dembrane-bootstrap.log`.
 
+**`create.sh` warns that the disk is larger than the image.** Expected and
+harmless. gcloud prints this whenever the boot disk exceeds the 10GB image,
+and it only matters for operating systems that cannot resize their own root
+partition. The Ubuntu cloud image can, and does so on first boot. Confirm with
+`./ssh.sh --vm --command 'df -h /'`: the reported size should match the disk,
+not 10GB.
+
+**Running low on disk.** `./resize.sh --disk 100GB`, then reboot so the
+filesystem grows into it. Reclaiming space is usually easier: `./ssh.sh --vm`
+then `docker system prune -a` clears old build layers, which are what actually
+accumulate over time.
+
 ## Cost
 
 Rough us/canada list prices, running vs stopped:
 
 | Shape | vCPU / RAM | 24/7 | 8h x 21 days | Stopped (disk only) |
 |---|---|---|---|---|
-| `e2-standard-4` | 4 / 16GB | ~$100/mo | ~$23/mo | ~$10/mo |
-| `e2-standard-8` | 8 / 32GB | ~$200/mo | ~$46/mo | ~$10/mo |
+| `e2-standard-4` | 4 / 16GB | ~$100/mo | ~$23/mo | ~$6/mo |
+| `e2-standard-8` | 8 / 32GB | ~$200/mo | ~$46/mo | ~$6/mo |
 
 The gap between columns one and two is `./stop.sh`. Consider a shell alias or a
 calendar reminder.
