@@ -135,3 +135,20 @@ compose_file_args() {
 vm_compose() {
     vm_ssh "cd '$RD_REPO_DIR/echo/.devcontainer' && docker compose $(compose_file_args) $*"
 }
+
+# Run SQL in the postgres container, printing bare values (-tA). Uses the
+# postgres service rather than the devcontainer so it works before setup.sh
+# has installed psql.
+vm_psql() {
+    vm_compose "exec -T postgres psql -U dembrane -d dembrane -v ON_ERROR_STOP=1 -tAc $(printf '%q' "$1")"
+}
+
+# Partial unique indexes from docs/database_migrations.md. directus-sync does
+# not manage them, and the invite race fix relies on them.
+RD_MEMBERSHIP_INDEXES="org_membership_active_org_user_uniq workspace_membership_active_ws_user_uniq"
+RD_MEMBERSHIP_INDEXES_SQL="
+SET client_min_messages = warning;
+CREATE UNIQUE INDEX IF NOT EXISTS org_membership_active_org_user_uniq
+    ON org_membership (org_id, user_id) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS workspace_membership_active_ws_user_uniq
+    ON workspace_membership (workspace_id, user_id) WHERE deleted_at IS NULL;"
