@@ -75,6 +75,9 @@ else
 fi
 
 log_step "Ready"
+if ! minio_enabled; then
+    log_warn "minio is off, so file uploads and recordings fail. Enable with: $RD_MINIO_ENABLE_HINT"
+fi
 cat <<EOF
   ./ssh-config.sh   write the SSH host entries (run once, and after each start)
   ./tunnel.sh       forward ports to localhost so your browser can reach the app

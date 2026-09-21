@@ -49,12 +49,16 @@ for p in $PORTS; do
         8000) echo "  http://localhost:8000   backend API (docs at /docs)" ;;
         8055) echo "  http://localhost:8055   directus (admin@dembrane.com / admin)" ;;
         8001) echo "  http://localhost:8001   agent service" ;;
-        5432) echo "  localhost:5432          postgres (dembrane/dembrane)" ;;
+        5432) echo "  postgresql://localhost:5432   postgres (dembrane/dembrane)" ;;
         9000) echo "  http://localhost:9000   minio S3 API" ;;
         9001) echo "  http://localhost:9001   minio console" ;;
         *)    echo "  localhost:$p" ;;
     esac
 done
+if ! minio_enabled; then
+    echo "  (minio is off, so uploads and recordings fail. Enable with:"
+    echo "   $RD_MINIO_ENABLE_HINT)"
+fi
 echo
 log_info "Tunnel is open. Leave this running; ctrl-c to close."
 

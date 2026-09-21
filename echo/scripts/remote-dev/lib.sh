@@ -136,6 +136,16 @@ vm_compose() {
     vm_ssh "cd '$RD_REPO_DIR/echo/.devcontainer' && docker compose $(compose_file_args) $*"
 }
 
+# minio is opt-in through docker-compose-s3.yml. The devcontainer points the
+# server at it either way, so file uploads fail while it is off.
+RD_MINIO_ENABLE_HINT='RD_COMPOSE_FILES="docker-compose.yml docker-compose-s3.yml" in local.env, then ./up.sh --skip-setup'
+minio_enabled() {
+    case " $RD_COMPOSE_FILES " in
+        *" docker-compose-s3.yml "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 # Run SQL in the postgres container, printing bare values (-tA). Uses the
 # postgres service rather than the devcontainer so it works before setup.sh
 # has installed psql.
