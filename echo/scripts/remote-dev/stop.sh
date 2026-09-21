@@ -21,9 +21,11 @@ fi
 
 # Stopping the VM pulls the rug from under running containers. Postgres
 # survives an abrupt shutdown, but a clean compose stop avoids the recovery
-# pass and any half-written directus uploads.
+# pass and any half-written directus uploads. This stops every container in the
+# project: one left running, like minio with its restart policy, comes back on
+# its own at the next boot while the rest stay down.
 log_step "Stopping containers"
-vm_compose "stop" 2>/dev/null || log_warn "Could not stop containers cleanly; continuing."
+vm_compose_project "stop" 2>/dev/null || log_warn "Could not stop containers cleanly; continuing."
 
 log_step "Stopping '$RD_INSTANCE_NAME'"
 gc_zone instances stop "$RD_INSTANCE_NAME" --quiet
