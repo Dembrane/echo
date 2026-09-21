@@ -27,6 +27,26 @@ fi
 log_step "Containers"
 vm_compose "ps" 2>/dev/null || log_warn "Could not reach docker on the VM."
 
+log_step "Directus schema"
+# A quick check, not a full diff: it catches a schema that was never pushed or
+# is missing collections, but not changed fields. For those, run
+# `./sync.sh diff` in the container's directus/ directory.
+EXPECTED="$(vm_ssh "ls '$RD_REPO_DIR/echo/directus/sync/snapshot/collections' | wc -l" 2>/dev/null | tr -dc '0-9')"
+APPLIED="$(vm_psql "select count(*) from directus_collections" 2>/dev/null | tr -dc '0-9')"
+INDEX_LIST="'$(echo "$RD_MEMBERSHIP_INDEXES" | sed "s/ /','/g")'"
+INDEXES="$(vm_psql "select count(*) from pg_indexes where indexname in ($INDEX_LIST)" 2>/dev/null | tr -dc '0-9')"
+if [ -z "$APPLIED" ] || [ -z "$EXPECTED" ]; then
+    log_warn "Could not read the schema state. Is directus up? See the containers above."
+elif [ "$APPLIED" -lt "$EXPECTED" ]; then
+    log_warn "Schema not applied: $APPLIED of $EXPECTED collections. Run ./up.sh --skip-setup"
+else
+    log_info "$APPLIED of $EXPECTED collections present."
+fi
+INDEXES_EXPECTED="$(echo "$RD_MEMBERSHIP_INDEXES" | wc -w | tr -dc '0-9')"
+if [ -n "$INDEXES" ] && [ "$INDEXES" -lt "$INDEXES_EXPECTED" ]; then
+    log_warn "Membership indexes missing ($INDEXES of $INDEXES_EXPECTED). Run ./up.sh --skip-setup"
+fi
+
 log_step "Resources"
 vm_ssh "echo '--- memory ---'; free -h; echo; echo '--- disk ---'; df -h / | tail -n +1; echo; echo '--- load ---'; uptime" 2>/dev/null \
     || log_warn "Could not read resource usage."

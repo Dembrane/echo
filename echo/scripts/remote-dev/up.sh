@@ -3,10 +3,12 @@
 #   1. copies .env files up
 #   2. docker compose up -d (postgres, valkey, directus, agent, devcontainer)
 #   3. runs the devcontainer's own setup.sh (node, pnpm, uv, deps, sshd)
-#   4. installs your public key into the devcontainer so Zed can connect
+#   4. pushes the directus schema and the membership indexes
+#   5. installs your public key into the devcontainer so Zed can connect
 #
-# Safe to re-run. setup.sh is idempotent and compose only recreates what
-# changed, so this doubles as the "bring it back after a reboot" command.
+# Safe to re-run. setup.sh is idempotent, compose only recreates what changed,
+# and the schema push only applies differences, so this doubles as the "bring
+# it back after a reboot" command.
 
 RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
@@ -38,6 +40,22 @@ if [ "$SKIP_SETUP" = false ]; then
 else
     log_warn "Skipping setup.sh (--skip-setup)"
 fi
+
+log_step "Applying the directus schema"
+# directus boots with only its system tables. The app schema lives in
+# directus/sync/ and is otherwise pushed by hand (docs/database_migrations.md).
+# A push also removes what the snapshot lacks, so the database follows the
+# checked-out branch, older ones included.
+container_exec "for _ in \$(seq 60); do curl -sf http://directus:8055/server/ping >/dev/null && exit 0; sleep 2; done; exit 1" \
+    || die "directus did not answer within 2 minutes. See: ./ssh.sh --vm, then docker compose logs directus"
+# sync.sh logs at debug level, so keep the output only for when it fails.
+# Retried because a busy directus answers 503 now and then, and a push is
+# idempotent.
+container_exec "cd /workspaces/echo/directus && for n in 1 2 3; do ./sync.sh -u http://directus:8055 -e admin@dembrane.com -p admin push >/tmp/directus-sync.log 2>&1 && exit 0; echo \"Push attempt \$n failed.\"; sleep 5; done; tail -40 /tmp/directus-sync.log; exit 1" \
+    || die "Schema push failed. Full log in the devcontainer at /tmp/directus-sync.log"
+vm_psql "$RD_MEMBERSHIP_INDEXES_SQL" >/dev/null \
+    || die "Could not create the membership indexes."
+log_info "Schema and indexes are current. Restart the server in mprocs if it is already running."
 
 log_step "Installing your SSH key into the devcontainer"
 # setup.sh starts sshd inside the container with a default root password. Key
