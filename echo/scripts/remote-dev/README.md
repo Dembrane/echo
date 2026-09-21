@@ -34,6 +34,12 @@ Start the dev processes the same way you would locally:
 cd /workspaces/echo && mprocs
 ```
 
+The app ports stay empty until mprocs is running, and the first load can take a
+few minutes while vite pre-bundles. Log in at http://localhost:5173 with
+`admin@dembrane.com` / `admin`, the directus admin that `docker-compose.yml`
+creates on first boot. There is no demo data: projects and conversations start
+empty.
+
 ## Daily loop
 
 ```sh
