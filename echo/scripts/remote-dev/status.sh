@@ -25,7 +25,8 @@ if [ "$(instance_status)" != "RUNNING" ]; then
 fi
 
 log_step "Containers"
-vm_compose "ps" 2>/dev/null || log_warn "Could not reach docker on the VM."
+# --all lists stopped containers too, which is usually what is wrong.
+vm_compose_project "ps --all" 2>/dev/null || log_warn "Could not reach docker on the VM."
 if ! minio_enabled; then
     log_warn "minio is off, so file uploads and recordings fail. Enable with: $RD_MINIO_ENABLE_HINT"
 fi
@@ -34,10 +35,13 @@ log_step "Directus schema"
 # A quick check, not a full diff: it catches a schema that was never pushed or
 # is missing collections, but not changed fields. For those, run
 # `./sync.sh diff` in the container's directus/ directory.
-EXPECTED="$(vm_ssh "ls '$RD_REPO_DIR/echo/directus/sync/snapshot/collections' | wc -l" 2>/dev/null | tr -dc '0-9')"
-APPLIED="$(vm_psql "select count(*) from directus_collections" 2>/dev/null | tr -dc '0-9')"
+# `|| true` keeps a failed query (postgres down) from exiting the script under
+# `set -e`, so the warning below gets printed instead. `tr` runs on the laptop,
+# and macOS's BSD tr has no long flags, hence -dc.
+EXPECTED="$(vm_ssh "ls '$RD_REPO_DIR/echo/directus/sync/snapshot/collections' | wc --lines" 2>/dev/null | tr -dc '0-9' || true)"
+APPLIED="$(vm_psql "select count(*) from directus_collections" 2>/dev/null | tr -dc '0-9' || true)"
 INDEX_LIST="'$(echo "$RD_MEMBERSHIP_INDEXES" | sed "s/ /','/g")'"
-INDEXES="$(vm_psql "select count(*) from pg_indexes where indexname in ($INDEX_LIST)" 2>/dev/null | tr -dc '0-9')"
+INDEXES="$(vm_psql "select count(*) from pg_indexes where indexname in ($INDEX_LIST)" 2>/dev/null | tr -dc '0-9' || true)"
 if [ -z "$APPLIED" ] || [ -z "$EXPECTED" ]; then
     log_warn "Could not read the schema state. Is directus up? See the containers above."
 elif [ "$APPLIED" -lt "$EXPECTED" ]; then

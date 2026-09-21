@@ -136,6 +136,15 @@ vm_compose() {
     vm_ssh "cd '$RD_REPO_DIR/echo/.devcontainer' && docker compose $(compose_file_args) $*"
 }
 
+# Run `docker compose ...` against every container in the project, whichever
+# compose files started it. vm_compose only sees the services in
+# RD_COMPOSE_FILES, so it misses minio when that was started by hand or
+# RD_COMPOSE_FILES changed since. compose names the project after the
+# .devcontainer directory.
+vm_compose_project() {
+    vm_ssh "docker compose --project-name devcontainer $*"
+}
+
 # minio is opt-in through docker-compose-s3.yml. The devcontainer points the
 # server at it either way, so file uploads fail while it is off.
 RD_MINIO_ENABLE_HINT='RD_COMPOSE_FILES="docker-compose.yml docker-compose-s3.yml" in local.env, then ./up.sh --skip-setup'
