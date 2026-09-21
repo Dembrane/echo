@@ -2,6 +2,9 @@
 set -euo pipefail
 
 NODE_VERSION="${NODE_VERSION:-22}"
+# Pinned to match the version CI installs. Unpinned, this tracks latest, and
+# pnpm 12 fails the frontend install outright.
+PNPM_VERSION="${PNPM_VERSION:-10}"
 PYTHON_VERSION="${PYTHON_VERSION:-3.11}"
 PNPM_STORE="${PNPM_STORE:-/home/node/.local/share/pnpm/store}"
 FNM_DIR="$HOME/.local/share/fnm"
@@ -112,7 +115,7 @@ install_node() {
 }
 
 install_pnpm() {
-    if command_exists pnpm; then
+    if command_exists pnpm && [[ $(pnpm --version) == ${PNPM_VERSION}.* ]]; then
         log_info "pnpm already installed: $(pnpm --version)"
         return
     fi
@@ -122,8 +125,12 @@ install_pnpm() {
         return 1
     fi
 
+    if command_exists pnpm; then
+        log_warn "pnpm $(pnpm --version) found, replacing with $PNPM_VERSION"
+    fi
+
     log_info "Installing pnpm globally..."
-    npm install -g pnpm
+    npm install -g "pnpm@${PNPM_VERSION}"
     pnpm config set store-dir "$PNPM_STORE" || true
     log_info "pnpm installed: $(pnpm --version)"
 }
