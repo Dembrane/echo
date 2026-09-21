@@ -6,6 +6,7 @@ NODE_VERSION="${NODE_VERSION:-22}"
 # pnpm 12 fails the frontend install outright.
 PNPM_VERSION="${PNPM_VERSION:-10}"
 PYTHON_VERSION="${PYTHON_VERSION:-3.11}"
+MPROCS_VERSION="${MPROCS_VERSION:-0.7.3}"
 PNPM_STORE="${PNPM_STORE:-/home/node/.local/share/pnpm/store}"
 FNM_DIR="$HOME/.local/share/fnm"
 UV_BIN_DIR="$HOME/.local/bin"
@@ -181,6 +182,20 @@ install_uv() {
     fi
     export PATH="$UV_BIN_DIR:$PATH"
     log_info "uv installed: $(uv --version)"
+}
+
+# Runs the dev processes defined in mprocs.yaml.
+install_mprocs() {
+    if command_exists mprocs; then
+        log_info "mprocs already installed: $(mprocs --version)"
+        return
+    fi
+
+    ensure_apt_packages curl ca-certificates
+    log_info "Installing mprocs $MPROCS_VERSION..."
+    curl -fsSL "https://github.com/pvolok/mprocs/releases/download/v${MPROCS_VERSION}/mprocs-${MPROCS_VERSION}-linux-$(uname -m)-musl.tar.gz" \
+        | tar -xz -C /usr/local/bin mprocs
+    log_info "mprocs installed: $(mprocs --version)"
 }
 
 ensure_uv_python() {
@@ -477,6 +492,7 @@ main() {
     fi
 
     install_uv
+    install_mprocs
 
     if [ "$SKIP_PYTHON" = "false" ]; then
         ensure_uv_python
