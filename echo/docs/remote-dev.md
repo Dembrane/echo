@@ -102,7 +102,7 @@ opens port 22 and nothing else.
 ## Cost control
 
 This is the part that bites. A running `e2-standard-4` is roughly $100/month.
-Stopped, you pay only for the disk, around $10/month.
+Stopped, you pay only for the disk, around $6/month for the default 50GB.
 
 ```sh
 ./stop.sh    # end of day
