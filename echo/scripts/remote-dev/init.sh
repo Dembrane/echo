@@ -71,15 +71,29 @@ echo "Each person runs their own sandbox project rather than sharing one, so"
 echo "the VM, its disk and its billing stay yours alone."
 echo
 echo "Projects your account can see:"
-gcloud projects list --format='table(projectId,name,projectNumber)' 2>/dev/null | sed 's/^/  /' \
-    || log_warn "  (none listed)"
+# An expired token returns no projects, which reads as "my project is gone".
+# Keep stderr so that case can be named instead of shown as an empty list.
+PROJECT_LIST="$(gcloud projects list --format='table(projectId,name,projectNumber)' 2>&1)" || {
+    is_reauth_error "$PROJECT_LIST" && die_reauth
+    log_warn "  (could not list projects: $PROJECT_LIST)"
+    PROJECT_LIST=""
+}
+if [ -n "$PROJECT_LIST" ]; then
+    echo "$PROJECT_LIST" | sed 's/^/  /'
+fi
 echo
 PROJECT="$(ask "Project id" "${RD_PROJECT:-}")"
 [ -n "$PROJECT" ] || die "A project id is required."
 
-gcloud projects describe "$PROJECT" >/dev/null 2>&1 \
-    || die "Cannot access project '$PROJECT'. Check the id, or create it first:
+PROJECT_STATE="$(gcloud projects describe "$PROJECT" --format='value(lifecycleState)' 2>&1)" || {
+    is_reauth_error "$PROJECT_STATE" && die_reauth
+    die "Cannot access project '$PROJECT'. Check the id, or create it first:
   gcloud projects create $PROJECT --organization=$ORG_ID"
+}
+if [ "$PROJECT_STATE" = "DELETE_REQUESTED" ]; then
+    die "Project '$PROJECT' is scheduled for deletion. Restore it within 30
+days of the request with: gcloud projects undelete $PROJECT"
+fi
 
 # A project without billing will accept the create call and then fail on quota
 # in a way that is hard to read, so check it up front.
