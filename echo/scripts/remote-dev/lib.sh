@@ -39,14 +39,59 @@ gc_zone() { gcloud --project "$RD_PROJECT" compute "$@" --zone "$RD_ZONE"; }
 gc_ssh() { gcloud --project "$RD_PROJECT" compute ssh "$RD_INSTANCE_NAME" --zone "$RD_ZONE" "$@"; }
 gc_scp() { gcloud --project "$RD_PROJECT" compute scp --zone "$RD_ZONE" "$@"; }
 
+# Only checks that a credential is on disk. It cannot tell whether that
+# credential still refreshes; require_gcloud's live API call does that.
 require_auth() {
     command -v gcloud >/dev/null 2>&1 \
         || die "gcloud not found. Install the Google Cloud CLI: https://cloud.google.com/sdk/docs/install"
 
-    local account
-    account="$(gcloud auth list --filter=status:ACTIVE --format='value(account)' 2>/dev/null | head -1)"
-    [ -n "$account" ] || die "No active gcloud account. Run: gcloud auth login"
-    log_info "Authenticated as $account"
+    RD_GCLOUD_ACCOUNT="$(gcloud auth list --filter=status:ACTIVE --format='value(account)' 2>/dev/null | head -1)"
+    [ -n "$RD_GCLOUD_ACCOUNT" ] || die "No active gcloud account. Run: gcloud auth login"
+    log_info "Authenticated as $RD_GCLOUD_ACCOUNT"
+}
+
+# An expired refresh token fails every API call, so without this the caller
+# sees "cannot access project" and concludes the project is gone.
+die_reauth() {
+    die "gcloud credentials for '${RD_GCLOUD_ACCOUNT:-your account}' have expired.
+
+Renew them, then re-run this script. Naming the account matters: a bare
+'gcloud auth login' signs in as whoever the browser is signed in as, and
+leaves that account active instead.
+
+  gcloud auth login ${RD_GCLOUD_ACCOUNT:-<account>}
+
+Nothing in GCP has changed. An expired token makes every project and instance
+look missing, because the API rejects the call before it looks anything up."
+}
+
+# `gcloud auth login` without an account argument logs in as whoever the
+# browser happens to be signed in as, and makes that one active. A personal
+# account then sees none of the org's projects, which reads as the project
+# having vanished. Point at the other credentials already on disk.
+account_hint() {
+    local others
+    others="$(gcloud auth list --format='value(account)' 2>/dev/null \
+        | grep -vxF "${RD_GCLOUD_ACCOUNT:-}" || true)"
+    [ -n "$others" ] || return 0
+
+    local preferred
+    preferred="$(echo "$others" | grep -F "@${RD_ORG_DOMAIN:-}" | head -1 || true)"
+    [ -n "$preferred" ] || preferred="$(echo "$others" | head -1)"
+
+    printf '\n%s\n\n  gcloud auth login %s\n' \
+        "You are also logged in as: $(echo "$others" | tr '\n' ',' | sed 's/,$//; s/,/, /g')
+If '$RD_PROJECT' belongs to one of those, switch to it. That also renews an
+expired token, which 'gcloud config set account' on its own does not:" "$preferred"
+}
+
+is_reauth_error() {
+    case "$1" in
+        *"Reauthentication failed"*|*"Reauthentication required"*) return 0 ;;
+        *"refreshing your current auth tokens"*|*"invalid_grant"*)  return 0 ;;
+        *"credentials are no longer valid"*|*"do not have valid credentials"*) return 0 ;;
+        *) return 1 ;;
+    esac
 }
 
 # RD_PROJECT and RD_ZONE are per-person and have no committed default, so a
@@ -61,8 +106,29 @@ It will ask which GCP project and zone to use and write them to local.env (gitig
 require_gcloud() {
     require_auth
     require_config
-    gcloud projects describe "$RD_PROJECT" >/dev/null 2>&1 \
-        || die "Cannot access project '$RD_PROJECT'. Check the project id and that your account has access."
+
+    # First live API call of every script, so it is where a stale token, a
+    # project pending deletion, and a genuine permissions problem get told
+    # apart. They all surface as the same failed describe otherwise.
+    local out
+    out="$(gcloud projects describe "$RD_PROJECT" --format='value(lifecycleState)' 2>&1)" || {
+        is_reauth_error "$out" && die_reauth
+        die "'${RD_GCLOUD_ACCOUNT:-your account}' cannot access project '$RD_PROJECT'.
+$(account_hint)
+Check the project id too. gcloud said:
+
+$out"
+    }
+
+    # A deleted project lingers for 30 days before it is purged, and describe
+    # still succeeds during that window, so the state has to be read.
+    if [ "$out" = "DELETE_REQUESTED" ]; then
+        die "Project '$RD_PROJECT' is scheduled for deletion.
+
+GCP keeps it for 30 days, so it can be brought back:
+
+  gcloud projects undelete $RD_PROJECT"
+    fi
 }
 
 # Compute is not enabled on a fresh project. Enabling is idempotent and takes
