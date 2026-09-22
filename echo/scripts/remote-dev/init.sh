@@ -106,6 +106,9 @@ echo "Pick the zone closest to you. SSH round-trip time is the single biggest"
 echo "factor in how the remote editor feels, and it has nothing to do with"
 echo "where production runs."
 ZONE="$(ask "Zone" "${RD_ZONE:-$(suggest_zone)}")"
+# Mirrors the RD_PROJECT assignment above, so the gc_* wrappers below describe
+# the instance in the zone just chosen rather than the one local.env remembers.
+RD_ZONE="$ZONE"
 
 log_step "Machine size"
 cat <<'EOF'
@@ -137,6 +140,19 @@ EOF
 # Offer the current size as the default, so a re-run keeps it. config.sh
 # defaults to e2-standard-4, which makes 2 the default on a first run. Any
 # other type defaults to 5, whose prompt then offers that type.
+#
+# "Current" means what GCP reports, not what local.env last recorded. A resize
+# done from the console, or one that stopped before writing local.env, leaves
+# that file stale, and a stale default here silently shrinks the VM the next
+# time anyone runs ./create.sh.
+LIVE_MACHINE="$( { gc_zone instances describe "$RD_INSTANCE_NAME" \
+    --format='value(machineType)' 2>/dev/null || true; } | sed 's|.*/||' )"
+if [ -n "$LIVE_MACHINE" ] && [ "$LIVE_MACHINE" != "$RD_MACHINE_TYPE" ]; then
+    log_warn "local.env says $RD_MACHINE_TYPE, but '$RD_INSTANCE_NAME' is really $LIVE_MACHINE."
+    log_warn "Offering the real size. Press enter to keep it."
+    RD_MACHINE_TYPE="$LIVE_MACHINE"
+fi
+
 case "$RD_MACHINE_TYPE" in
     e2-standard-2)  CHOICE_DEFAULT=1 ;;
     e2-standard-4)  CHOICE_DEFAULT=2 ;;
@@ -179,6 +195,15 @@ fi
 log_step "Instance name"
 INSTANCE="$(ask "Instance name" "$RD_INSTANCE_NAME")"
 
+# Not prompted for: disks only ever grow, and ./resize.sh --disk is where that
+# happens. This just carries the size forward, preferring the real disk over
+# local.env for the same reason the machine type does, so writing local.env
+# cannot quietly undo a resize.
+LIVE_DISK="$(gc compute disks describe "$RD_INSTANCE_NAME" --zone "$RD_ZONE" \
+    --format='value(sizeGb)' 2>/dev/null || true)"
+DISK_SIZE="${LIVE_DISK:+${LIVE_DISK}GB}"
+DISK_SIZE="${DISK_SIZE:-$RD_DISK_SIZE}"
+
 log_step "File storage (minio)"
 echo "minio stores uploaded audio and participant recordings. Without it the"
 echo "rest of the app works, but uploads and recordings fail. It is off unless"
@@ -207,6 +232,7 @@ cat > "$LOCAL_ENV" <<EOF
 RD_PROJECT="$PROJECT"
 RD_ZONE="$ZONE"
 RD_MACHINE_TYPE="$MACHINE"
+RD_DISK_SIZE="$DISK_SIZE"
 RD_INSTANCE_NAME="$INSTANCE"
 RD_ORG_DOMAIN="$ORG_DOMAIN"
 RD_ORG_ID="$ORG_ID"

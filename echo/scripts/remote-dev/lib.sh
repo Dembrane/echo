@@ -145,6 +145,22 @@ vm_compose_project() {
     vm_ssh "docker compose --project-name devcontainer $*"
 }
 
+# Write a single setting into local.env, updating the line if it is already
+# there and appending it if not. Scripts that change a setting on GCP call this
+# so the next run agrees with reality, rather than leaving local.env to drift.
+persist_local_env() {
+    local key="$1" value="$2" file="$RD_SCRIPT_DIR/local.env"
+    [ -f "$file" ] || return 0
+    if grep -q "^$key=" "$file"; then
+        # -i.bak then remove: BSD sed requires the suffix, GNU sed accepts it.
+        sed -i.bak "s|^$key=.*|$key=\"$value\"|" "$file"
+        rm -f "$file.bak"
+    else
+        echo "$key=\"$value\"" >> "$file"
+    fi
+    log_info "Set $key=\"$value\" in local.env"
+}
+
 # minio is opt-in through docker-compose-s3.yml. The devcontainer points the
 # server at it either way, so file uploads fail while it is off.
 RD_MINIO_ENABLE_HINT='re-run ./init.sh and answer y to "Run minio?" (or add docker-compose-s3.yml to RD_COMPOSE_FILES in local.env), then ./up.sh --skip-setup'
