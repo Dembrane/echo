@@ -140,6 +140,17 @@ That also forwards 9000 (S3 API) and 9001 (console). Both take `dembrane` /
 `dembrane`: the root user doubles as the access key, which is why
 `STORAGE_S3_KEY` and `STORAGE_S3_SECRET` carry the same pair.
 
+The server hands the browser presigned upload URLs built from
+`STORAGE_S3_ENDPOINT`, so they point at `http://minio:9000` — a name only the
+compose network resolves. Map it to the forwarded port on your laptop, or
+recordings fail with `ERR_NAME_NOT_RESOLVED`:
+
+```sh
+sudo sh -c 'echo "127.0.0.1 minio  # dembrane remote-dev" >> /etc/hosts'
+```
+
+`status.sh` and `tunnel.sh` say so while that entry is missing.
+
 Answering `n` later turns it back off, and the next `./up.sh` removes the
 container. Its `minio_data` directory on the VM is left alone, so turning it on
 again keeps whatever was uploaded.

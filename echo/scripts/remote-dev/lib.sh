@@ -155,6 +155,15 @@ minio_enabled() {
     esac
 }
 
+# The server hands the browser presigned URLs built from STORAGE_S3_ENDPOINT,
+# which is http://minio:9000 inside the compose network. Your browser cannot
+# resolve that name, so uploads fail with ERR_NAME_NOT_RESOLVED until you point
+# it at the forwarded port.
+RD_MINIO_HOSTS_HINT='sudo sh -c '"'"'echo "127.0.0.1 minio  # dembrane remote-dev" >> /etc/hosts'"'"''
+minio_host_resolves() {
+    grep -qE '^[[:space:]]*127\.0\.0\.1[[:space:]]+minio([[:space:]#]|$)' /etc/hosts 2>/dev/null
+}
+
 # Run SQL in the postgres container, printing bare values (-tA). Uses the
 # postgres service rather than the devcontainer so it works before setup.sh
 # has installed psql.
