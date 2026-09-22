@@ -70,7 +70,28 @@ postgres data directory.
 | `ssh-config.sh` | Writes the `~/.ssh/config` block. `--remove` to clean up. |
 | `tunnel.sh` | Port forwards. Foreground, ctrl-c to close. |
 | `sync-env.sh` | Re-copies the gitignored `.env` files up. |
+| `sync-code.sh` | Pushes your laptop's tracked files up. `--dry-run` to preview. |
 | `destroy.sh` | Deletes the VM and disk. Asks you to type the name. |
+
+## Editing code
+
+The VM has its own clone and nothing syncs code into it, so edits on your laptop
+do not reach the dev servers. Normally you edit on the VM directly, with Zed
+connected to `dembrane-devcontainer`, and Vite's HMR reloads as you save.
+
+When you do have changes only on your laptop, push a branch and pull it on the
+VM, or copy the working tree straight up:
+
+```sh
+./sync-code.sh --dry-run    # see what would move
+./sync-code.sh              # every tracked file, uncommitted edits included
+./sync-code.sh echo/frontend
+```
+
+It copies git-tracked files only (`.env` files have `sync-env.sh`) and never
+deletes, but it does overwrite, and it leaves the VM's branch alone — so its
+`git status` will show your changes as local modifications on whatever commit it
+happens to sit on. It warns first if the VM has uncommitted changes of its own.
 
 ## How it fits together
 
