@@ -30,7 +30,7 @@ from dembrane.popcorn.service import (
 SALES_PORTAL = Path(__file__).resolve().parents[2] / "demos/sales-portal.json"
 
 
-def identity(slug: str, kind: str) -> str:
+def synthetic_uuid(slug: str, kind: str) -> str:
     return str(uuid5(NAMESPACE_URL, f"dembrane:synthetic-demo:{slug}:{kind}"))
 
 
@@ -87,7 +87,7 @@ def prepare(fixture: dict, portals: str | dict[str, str]) -> tuple[dict, dict]:
     # fixture's analysis cites phrase ids; they become the quote ids here.
     quote_ids: dict[str, str] = {}
     for conversation in fixture["conversations"]:
-        cid = identity(slug, conversation["id"])
+        cid = synthetic_uuid(slug, conversation["id"])
         lines = [line.split(": ", 1)[-1] for line in conversation["transcript"].splitlines()]
         items = []
         for item in conversation["items"]:
@@ -215,7 +215,7 @@ async def seed_sales_portal(language: str, workspace_id: str, owner_id: str) -> 
     feedback. One per language; the same words go to production through
     `dembrane_update_project`."""
     copy = json.loads(SALES_PORTAL.read_text())[language if language == "nl" else "en"]
-    pid = identity("sales-portal", language)
+    pid = synthetic_uuid("sales-portal", language)
     await upsert(
         "project",
         pid,
@@ -236,7 +236,7 @@ async def seed(
     from dembrane.directus_async import async_directus
 
     slug = fixture["slug"]
-    pid, config_id, loop_id = [identity(slug, key) for key in ("project", "config", "loop")]
+    pid, config_id, loop_id = [synthetic_uuid(slug, key) for key in ("project", "config", "loop")]
 
     await upsert(
         "project",
@@ -253,7 +253,7 @@ async def seed(
         },
     )
     for conv in fixture["conversations"]:
-        cid = identity(slug, conv["id"])
+        cid = synthetic_uuid(slug, conv["id"])
         await upsert(
             "conversation",
             cid,
@@ -271,7 +271,7 @@ async def seed(
         )
         await upsert(
             "conversation_chunk",
-            identity(slug, conv["id"] + ":chunk"),
+            synthetic_uuid(slug, conv["id"] + ":chunk"),
             {
                 "conversation_id": cid,
                 "transcript": conv["transcript"],

@@ -25,7 +25,7 @@ import argparse
 from typing import Any
 from pathlib import Path
 
-from popcorn_demo import identity, tagged_portal_url
+from popcorn_demo import synthetic_uuid, tagged_portal_url
 
 from dembrane.popcorn import ticks as T
 from dembrane.popcorn.view import LOGO_PATH, ILLUSTRATIONS, render_popcorn_page
@@ -62,7 +62,7 @@ def load_corpus(demo: Path, slug: str) -> list[dict[str, Any]]:
         text = "\n".join(c.strip() for c in conv["chunks"] if c.strip())
         out.append(
             {
-                "id": identity(slug, conv["id"]),
+                "id": synthetic_uuid(slug, conv["id"]),
                 "key": conv["id"],
                 "label": conv["label"],
                 "short": conv["track"] if len(conv["track"]) <= 24 else conv["track"][:23] + "…",
