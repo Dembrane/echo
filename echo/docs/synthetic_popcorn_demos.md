@@ -2,7 +2,7 @@
 
 ## Scope
 
-A host supplies an organisation's website and a brief. The reusable [popcorn-demo skill](../../skills/popcorn-demo/SKILL.md) researches the organisation, creates a fictional corpus, and uses dembrane MCP to build a separate Echo project and Popcorn demo. The first example is deltaWonen's Bondgenotendag, around the meaning of geluk.
+A host supplies an organisation's website and a brief. The reusable [popcorn-demo skill](../../skills/popcorn-demo/SKILL.md) researches the organisation, creates a fictional corpus, and uses dembrane MCP to build a separate Echo project and Popcorn demo. The repository carries one worked example for an invented housing corporation; demos about real organisations name who dembrane is talking to, so they stay outside this public repository.
 
 The skill is the orchestration layer. This version needs no dedicated generator API, job system, catalogue management interface or separate demo application. Use existing projects, existing Popcorn extraction, a small collection of demo links and the presenter changes below. The eventual destination is `https://demo.dembrain.com/<organisation>`; domain configuration and deployment are still unverified.
 
@@ -39,7 +39,7 @@ A switch without words shows nothing. The dashboard edits the opening in one "Op
 Synthetic sessions have this opening:
 
 1. Mandatory disclosure: every story, quote and perspective is invented for demonstration, not real workshop findings. Its words, the invitation's and the frame's belong to the demo: they are set in `demo` with the synthetic marking, never read from the host's settings, and empty words become standard synthetic copy in the demo's language. Refresh and deep links show it too.
-2. Invitation, the disclosure's follow-up screen: explain that the real value comes from listening to real stakeholders, including their disagreements and uncertainty. The standard copy is generic; deltaWonen's fixture sets its own, which looks forward to hearing their bondgenoten and real stories.
+2. Invitation, the disclosure's follow-up screen: explain that the real value comes from listening to real stakeholders, including their disagreements and uncertainty. The standard copy is generic; the example fixture sets its own, which looks forward to hearing its partners' real stories.
 3. Explicit start, then the 3, 2, 1 countdown and existing Popcorn experience.
 
 The frame is likewise always on for synthetic sessions, so a synthetic label remains visible on every presenter tab and detail view, with a way to reopen the introduction. Nobody sets or clears the synthetic marking from the dashboard: only the demo tooling writes it (the local helper now, the MCP upsert later). For a synthetic session the dashboard leaves the disclosure and frame controls out, and the settings API answers 409 to an edit of either; the host still controls the intro, the data screen and the languages. Shared bundles retain synthetic metadata on presentation data. Inside the deck, a synthetic session reads like a real run: its phrases, tensions and stakeholders carry quotes and evidence, with no per-item "invented" wording; the frame and the opening carry the provenance.
@@ -48,13 +48,11 @@ The QR and adjacent clickable link open dembrane's sales portal: a separate, rea
 
 The local implementation stores `synthetic`, `public_sources_only`, `language`, `portal_url`, `portal_urls` (per language), `disclosure` and `notice` under `agent_loop.popcorn_state.demo`. Normalisation, reruns and bundle generation preserve it independently of optional intro settings. This does not yet establish immutable project-wide provenance outside Popcorn; demo projects must remain isolated from real research.
 
-## deltaWonen local example
+## Local example
 
-Title: “Wat betekent geluk voor jullie?” Subtitle: “Een denkbeeldige Bondgenotendag voor deltaWonen. Een voorproefje van luisteren met dembrane.”
+Voorbeeld Wonen is an invented housing corporation. Title: “Wat betekent geluk voor jullie?” Subtitle: “Een denkbeeldige Partnerdag voor Voorbeeld Wonen. Een voorproefje van luisteren met dembrane.” Security, belonging, agency and collaboration are fictional discussion lenses. See [research](../demos/example/research.md).
 
-Public sources describe “Ruimte voor Geluk” through woongeluk, leefgeluk and werkgeluk. Security, belonging, agency and collaboration are fictional discussion lenses, not official pillars or event outcomes. The 2030 horizon remains unverified. See [research](../demos/deltawonen/research.md).
-
-The prototype contains five fictional conversations and thirty phrases, each found word for word in its transcript, with four quote-backed tensions and six stakeholder groups. It uses an authored fixture, not a completed model extraction; its fingerprints are stamped the way a tick stamps a read, so a refresh or a translation request leaves the authored deck alone. The [local helper](../demos/README.md) seeds local Echo and a local sales portal, and exports the actual presenter with a simple collection page. It is a development aid, not the production MCP path.
+The example contains five fictional conversations and thirty phrases, each found word for word in its transcript, with four quote-backed tensions and six stakeholder groups. It uses an authored fixture, not a completed model extraction; its fingerprints are stamped the way a tick stamps a read, so a refresh or a translation request leaves the authored deck alone. The [local helper](../demos/README.md) seeds local Echo and a local sales portal, and exports the actual presenter with a simple collection page. It is a development aid, not the production MCP path.
 
 ## Acceptance
 
@@ -70,6 +68,6 @@ The prototype contains five fictional conversations and thirty phrases, each fou
 
 ## Delivery status
 
-Implemented locally: reusable skill, optional intro, disclosure, notice, data and language settings for every session, result translation in the tick, mandatory synthetic opening, invitation, data screen, countdown, persistent labels, sales portal QR, deltaWonen research/fixture, local Echo seeding and static export.
+Implemented locally: reusable skill, optional intro, disclosure, notice, data and language settings for every session, result translation in the tick, mandatory synthetic opening, invitation, data screen, countdown, persistent labels, sales portal QR, the fictional example fixture, local Echo seeding, echo-next seeding and static export.
 
 Remaining for the complete MCP workflow: expose the missing write and Popcorn operations, connect the MCP server, and test a full authenticated run. Hosted deployment to `demo.dembrain.com` is separate and has not happened. No private email was accessed for this example.

@@ -19,7 +19,7 @@ from dembrane.popcorn.translate import (
     translatable_texts,
 )
 
-FIXTURE = Path(__file__).resolve().parents[2] / "demos/deltawonen/fixture.json"
+FIXTURE = Path(__file__).resolve().parents[2] / "demos/example/fixture.json"
 
 
 def _demo():

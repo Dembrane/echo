@@ -40,10 +40,10 @@ Include the requested exact sentence only when supported:
 
 That sentence alone is not a synthetic disclosure. If substantive private material informed generation, omit it or use truthful provenance copy. A user-provided event label can describe the scenario without claiming it is public evidence or an actual event outcome.
 
-## deltaWonen example
+## Worked example
 
-Use Dutch. Suggested title: “Wat betekent geluk voor jullie?” Suggested subtitle: “Een denkbeeldige Bondgenotendag voor deltaWonen. Een voorproefje van luisteren met dembrane.” Refer to the real stakeholders as bondgenoten in the invitation.
+Echo is a public repository, so a demo about a real organisation never goes into it: it would name who dembrane is talking to. Keep that demo's folder elsewhere and pass it to the tools with `--demo`.
 
-Public research in the Echo prototype concerns “Ruimte voor Geluk”, woongeluk, leefgeluk and werkgeluk. Verify these against current primary sources when creating a new demo. Do not assert a 2030 deadline, event date, attendees or official success pillars without evidence. Security, belonging, agency and collaboration can be invented discussion lenses if explicitly labelled as such.
+Do not assert an event date, attendees, deadlines or official priorities without evidence. Discussion lenses can be invented if explicitly labelled as such.
 
-In an Echo checkout, `echo/demos/deltawonen/research.md` and `fixture.json` are the reviewed local example. They contain five fictional conversations and thirty phrases. That size is an example, not a requirement for every sector. The fixture was manually authored, not extracted by a model run.
+In an Echo checkout, `echo/demos/example/research.md` and `fixture.json` are the reviewed example, for an invented housing corporation. They contain five fictional conversations and thirty phrases. That size is an example, not a requirement for every sector. The fixture was manually authored, not extracted by a model run.

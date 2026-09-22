@@ -1,4 +1,4 @@
-"""Run the real popcorn pipeline over the invented MozFest corpus, in process.
+"""Run the real popcorn pipeline over a synthetic demo's invented corpus, in process.
 
 The same functions the tick calls (first pass, gates, grounding, second pass,
 tensions pipeline, stakeholders, translation), with no Directus row behind
@@ -6,9 +6,14 @@ them: a pilot and QA pass before the corpus is seeded into an environment,
 where that environment's own tick reads it again. Writes the session state and
 a static export of the real presenter for review.
 
+A demo is a folder: `session.json` (slug, organisation, and per language the
+title, subtitle and synthetic copy), `corpus/NN-*.json` (the invented
+conversations) and `out/`, where this writes. Demos about a real organisation
+live outside this repository; `--demo` points at one.
+
 From echo/server, inside the dev container:
-    PYTHONPATH=.:scripts uv run python ../demos/mozfest-2026/run_local.py \
-        --portal-url http://LAN-IP:5174/en-US/<sales-portal>/start
+    PYTHONPATH=.:scripts uv run python ../demos/run_demo.py --demo <folder> \
+        --portal-url en=http://LAN-IP:5174/en-US/<sales-portal>/start
 """
 
 from __future__ import annotations
@@ -20,25 +25,24 @@ import argparse
 from typing import Any
 from pathlib import Path
 
+from popcorn_demo import identity, tagged_portal_url
+
 from dembrane.popcorn import ticks as T
+from dembrane.popcorn.view import LOGO_PATH, ILLUSTRATIONS, render_popcorn_page
 from dembrane.popcorn.flags import known_shingles, introduced_names
 from dembrane.popcorn.model import translate_texts
 from dembrane.popcorn.service import fresh_state, build_bundle, default_settings
 from dembrane.popcorn.analysis import QuoteBook
-from dembrane.popcorn.view import LOGO_PATH, ILLUSTRATIONS, render_popcorn_page
 from dembrane.popcorn.translate import (
     cache_key,
-    popcorn_texts,
     missing_texts,
+    popcorn_texts,
     target_languages,
-    translatable_texts,
     translated_bundle,
+    translatable_texts,
 )
 
-from popcorn_demo import identity, tagged_portal_url
-
-HERE = Path(__file__).resolve().parent
-SLUG = "mozfest-2026"
+TOOLS = Path(__file__).resolve().parent
 
 
 class Writer:
@@ -51,14 +55,14 @@ class Writer:
         return None
 
 
-def load_corpus() -> list[dict[str, Any]]:
+def load_corpus(demo: Path, slug: str) -> list[dict[str, Any]]:
     out = []
-    for path in sorted((HERE / "corpus").glob("[0-9][0-9]-*.json")):
+    for path in sorted((demo / "corpus").glob("[0-9][0-9]-*.json")):
         conv = json.loads(path.read_text())
         text = "\n".join(c.strip() for c in conv["chunks"] if c.strip())
         out.append(
             {
-                "id": identity(SLUG, conv["id"]),
+                "id": identity(slug, conv["id"]),
                 "key": conv["id"],
                 "label": conv["label"],
                 "short": conv["track"] if len(conv["track"]) <= 24 else conv["track"][:23] + "…",
@@ -73,7 +77,7 @@ def load_corpus() -> list[dict[str, Any]]:
 
 def settings_for(fixture: dict[str, Any], language: str) -> dict[str, Any]:
     settings = default_settings(title=fixture["title"][language], client=fixture["organisation"])
-    other = "es" if language == "en" else "en"
+    also = [code for code in fixture["title"] if code != language]
     settings.update(
         {
             "show_qr": True,
@@ -85,7 +89,7 @@ def settings_for(fixture: dict[str, Any], language: str) -> dict[str, Any]:
                 "subtitle": fixture["subtitle"][language],
             },
             "data": {"enabled": True},
-            "language": {"ui": language, "translate_to": language, "also": [other]},
+            "language": {"ui": language, "translate_to": language, "also": also},
         }
     )
     return settings
@@ -215,6 +219,7 @@ def export_deck(slug: str, language: str, state: dict, settings: dict, output: P
 
 async def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--demo", type=Path, required=True, help="the demo's folder")
     parser.add_argument("--portal-url", action="append", default=[], help="LANG=URL, repeatable")
     parser.add_argument("--reuse", action="store_true", help="translate and export the saved read")
     parser.add_argument(
@@ -222,12 +227,15 @@ async def main() -> None:
         action="store_true",
         help="read the analysis views again over the saved read, into out/analysis-N.json",
     )
-    parser.add_argument("--output", type=Path, default=HERE.parent / ".preview")
+    parser.add_argument("--output", type=Path, default=TOOLS / ".preview")
     args = parser.parse_args()
-    fixture = json.loads((HERE / "session.json").read_text())
-    portals = {k: tagged_portal_url(v, SLUG) for k, v in (p.split("=", 1) for p in args.portal_url)}
-    transcripts = load_corpus()
-    read_path = HERE / "out" / "read.json"
+    demo: Path = args.demo.resolve()
+    out = demo / "out"
+    fixture = json.loads((demo / "session.json").read_text())
+    slug = fixture["slug"]
+    portals = {k: tagged_portal_url(v, slug) for k, v in (p.split("=", 1) for p in args.portal_url)}
+    transcripts = load_corpus(demo, slug)
+    read_path = out / "read.json"
     read_path.parent.mkdir(exist_ok=True)
     if args.reanalyse:
         state = json.loads(read_path.read_text())
@@ -242,8 +250,8 @@ async def main() -> None:
         )
         outcomes: list[str] = []
         fresh = await T._run_analysis_pass([by_id[c] for c in state["order"]], outcomes, book)
-        n = len(list((HERE / "out").glob("analysis-*.json"))) + 1
-        (HERE / "out" / f"analysis-{n}.json").write_text(
+        n = len(list(out.glob("analysis-*.json"))) + 1
+        (out / f"analysis-{n}.json").write_text(
             json.dumps({"fresh": fresh, "quotes": list(book.quotes)}, ensure_ascii=False, indent=1)
         )
         print("\n".join(outcomes))
@@ -255,18 +263,18 @@ async def main() -> None:
         read_path.write_text(json.dumps(state, ensure_ascii=False, indent=1))
         print("\n".join(outcomes))
     project = {"anonymize_transcripts": True}
-    for language in ("en", "es"):
+    for language in fixture["title"]:
         session = json.loads(json.dumps(state))
         settings = settings_for(fixture, language)
         print(language, "; ".join(await translate(session, settings, project)) or "nothing owed")
         session["demo"] = demo_marking(fixture, language, portals)
-        (HERE / "out" / f"state-{language}.json").write_text(
+        (out / f"state-{language}.json").write_text(
             json.dumps(session, ensure_ascii=False, indent=1)
         )
-        (HERE / "out" / f"settings-{language}.json").write_text(
+        (out / f"settings-{language}.json").write_text(
             json.dumps(settings, ensure_ascii=False, indent=1)
         )
-        deck = export_deck(f"{SLUG}-{language}", language, session, settings, args.output)
+        deck = export_deck(f"{slug}-{language}", language, session, settings, args.output)
         print(f"exported {deck}/")
 
 

@@ -1,19 +1,23 @@
-"""Seed the reviewed MozFest demo into a dembrane environment (echo-next).
+"""Seed a reviewed synthetic demo into a dembrane staging environment (echo-next).
 
 The demo tooling's write, the way the local helper (`scripts/popcorn_demo.py
---seed-local`) does it, for one named staging environment: two synthetic
-projects (English and Spanish), each with the eight invented conversations,
-a Popcorn session carrying the reviewed read and its translations, and the
-synthetic marking only this tooling writes. Plus the sales portal projects
-the QR opens, one per language, words from `sales-portal.json` and below.
+--seed-local`) does it, for one named staging environment: one synthetic
+project per language in the demo's `session.json`, each with the invented
+conversations from `corpus/`, a Popcorn session carrying the reviewed read
+from `out/` (made by `run_demo.py`) and the synthetic marking only this
+tooling writes. Plus the sales portal projects the QR opens, one per
+language, words from `sales-portal.json`.
+
+Demos about a real organisation live outside this repository; `--demo`
+points at one.
 
 Every id is deterministic, so a rerun updates this demo and nothing else.
 The loop stays in manual mode: nothing reads until a host presses Refresh or
 Rerun, and a Rerun reads the same conversations again on that environment.
 
-Needs a Directus admin static token for the target, in MOZFEST_DIRECTUS_TOKEN:
+Needs a Directus admin static token for the target, in DEMO_DIRECTUS_TOKEN:
 
-    MOZFEST_DIRECTUS_TOKEN=... python3 seed.py \
+    DEMO_DIRECTUS_TOKEN=... python3 seed_demo.py --demo <folder> \
         --directus-url https://directus.echo-next.dembrane.com \
         --portal-base-url https://portal.echo-next.dembrane.com \
         --api-base-url https://api.echo-next.dembrane.com \
@@ -34,16 +38,13 @@ from urllib.parse import urlparse, urlencode
 
 import httpx
 
-HERE = Path(__file__).resolve().parent
-SLUG = "mozfest-2026"
+TOOLS = Path(__file__).resolve().parent
 PRODUCTION_HOSTS = {"directus.dembrane.com", "api.dembrane.com", "dashboard.dembrane.com"}
 PARTICIPANT_CODES = {"en": "en-US", "es": "es-ES", "nl": "nl-NL"}
-SPANISH_PORTAL = {
-    "name": "dembrane feedback · demo QR (es)",
-    "default_conversation_title": "Has escaneado el código QR de una demo",
-    "default_conversation_description": "La demo no contiene grabaciones reales y no cambia si grabas algo.\n\nEste portal recoge, en cambio, comentarios para el equipo de dembrane.\n\n**¿Tienes algo que contarle a dembrane? ¡Comparte tu historia!**",
-    "default_conversation_finish_text": "Gracias por compartir tu historia con el equipo de dembrane.",
-    "legal_basis": "dembrane-events",
+SUMMARY = {
+    "en": "Synthetic demo. An invented conversation. No real participants.",
+    "es": "Demo sintética. Una conversación inventada. Sin participantes reales.",
+    "nl": "Synthetische demo. Een verzonnen gesprek. Geen echte deelnemers.",
 }
 
 
@@ -63,9 +64,7 @@ class Directus:
         self.dry_run = dry_run
 
     def find(self, collection: str, flt: dict) -> list[dict]:
-        r = self.client.get(
-            f"/items/{collection}", params={"filter": json.dumps(flt), "limit": 1}
-        )
+        r = self.client.get(f"/items/{collection}", params={"filter": json.dumps(flt), "limit": 1})
         r.raise_for_status()
         return r.json()["data"]
 
@@ -92,17 +91,18 @@ class Directus:
         return r.json()["data"]
 
 
-def portal_start(base: str, project_id: str, language: str) -> str:
+def portal_start(base: str, project_id: str, language: str, slug: str) -> str:
     code = PARTICIPANT_CODES[language]
-    query = urlencode({"utm_source": "popcorn_demo", "utm_campaign": SLUG})
+    query = urlencode({"utm_source": "popcorn_demo", "utm_campaign": slug})
     return f"{base.rstrip('/')}/{code}/{project_id}/start?{query}"
 
 
-def seed_sales_portals(d: Directus, args: argparse.Namespace) -> dict[str, str]:
-    words = json.loads((HERE.parent / "sales-portal.json").read_text())
-    words["es"] = SPANISH_PORTAL
+def seed_sales_portals(
+    d: Directus, args: argparse.Namespace, languages: list[str], slug: str
+) -> dict[str, str]:
+    words = json.loads((TOOLS / "sales-portal.json").read_text())
     urls = {}
-    for language in ("en", "es"):
+    for language in languages:
         pid = identity("sales-portal", language)
         d.upsert(
             "project",
@@ -115,34 +115,38 @@ def seed_sales_portals(d: Directus, args: argparse.Namespace) -> dict[str, str]:
                 "is_conversation_allowed": True,
             },
         )
-        urls[language] = portal_start(args.portal_base_url, pid, language)
+        urls[language] = portal_start(args.portal_base_url, pid, language, slug)
     return urls
 
 
-def remapped(state: dict, language: str) -> dict:
+def remapped(state: dict, language: str, demo: Path, slug: str) -> dict:
     """The reviewed read, with its conversation ids moved to this project's
     conversations. Ids are UUIDs, so a whole-text swap touches nothing else."""
     text = json.dumps(state, ensure_ascii=False)
-    for path in sorted((HERE / "corpus").glob("[0-9][0-9]-*.json")):
+    for path in sorted((demo / "corpus").glob("[0-9][0-9]-*.json")):
         key = json.loads(path.read_text())["id"]
-        text = text.replace(identity(SLUG, key), identity(SLUG, f"{language}:{key}"))
+        text = text.replace(identity(slug, key), identity(slug, f"{language}:{key}"))
     return json.loads(text)
 
 
-def seed_language(d: Directus, args: argparse.Namespace, language: str, portals: dict) -> dict:
-    session = json.loads((HERE / "session.json").read_text())
-    research = (HERE / "research.md").read_text()
-    state = remapped(json.loads((HERE / "out" / f"state-{language}.json").read_text()), language)
-    settings = json.loads((HERE / "out" / f"settings-{language}.json").read_text())
+def seed_language(
+    d: Directus, args: argparse.Namespace, language: str, portals: dict, demo: Path, session: dict
+) -> dict:
+    slug = session["slug"]
+    research = (demo / "research.md").read_text()
+    state = remapped(
+        json.loads((demo / "out" / f"state-{language}.json").read_text()), language, demo, slug
+    )
+    settings = json.loads((demo / "out" / f"settings-{language}.json").read_text())
     state["demo"]["portal_url"] = portals[language]
     state["demo"]["portal_urls"] = portals
     title = session["title"][language]
-    pid = identity(SLUG, f"project-{language}")
+    pid = identity(slug, f"project-{language}")
     d.upsert(
         "project",
         pid,
         {
-            "name": f"[SYNTHETIC] MozFest 2026 · {title} ({language.upper()})",
+            "name": f"[SYNTHETIC] {session['organisation']} · {title} ({language.upper()})",
             "language": language,
             "workspace_id": args.workspace_id,
             "directus_user_id": args.owner_id,
@@ -152,13 +156,10 @@ def seed_language(d: Directus, args: argparse.Namespace, language: str, portals:
             "context": research,
         },
     )
-    summary = {
-        "en": "Synthetic demo. An invented conversation for an imagined MozFest 2026. No real participants.",
-        "es": "Demo sintética. Una conversación inventada para una MozFest 2026 imaginada. Sin participantes reales.",
-    }[language]
-    for path in sorted((HERE / "corpus").glob("[0-9][0-9]-*.json")):
+    summary = (session.get("summary") or {}).get(language) or SUMMARY.get(language, SUMMARY["en"])
+    for path in sorted((demo / "corpus").glob("[0-9][0-9]-*.json")):
         conv = json.loads(path.read_text())
-        cid = identity(SLUG, f"{language}:{conv['id']}")
+        cid = identity(slug, f"{language}:{conv['id']}")
         chunks = [c.strip() for c in conv["chunks"] if c.strip()]
         d.upsert(
             "conversation",
@@ -179,7 +180,7 @@ def seed_language(d: Directus, args: argparse.Namespace, language: str, portals:
         for index, chunk in enumerate(chunks):
             d.upsert(
                 "conversation_chunk",
-                identity(SLUG, f"{language}:{conv['id']}:chunk:{index:03d}"),
+                identity(slug, f"{language}:{conv['id']}:chunk:{index:03d}"),
                 {
                     "conversation_id": cid,
                     "transcript": chunk,
@@ -204,7 +205,7 @@ def seed_language(d: Directus, args: argparse.Namespace, language: str, portals:
     rid = str(report["id"])
     d.upsert(
         "canvas_config_revision",
-        identity(SLUG, f"config-{language}"),
+        identity(slug, f"config-{language}"),
         {
             "report_id": rid,
             "brief": research,
@@ -212,12 +213,12 @@ def seed_language(d: Directus, args: argparse.Namespace, language: str, portals:
             "popcorn_settings": settings,
             "cadence_minutes": 2,
             "created_by": args.owner_id,
-            "note": "Synthetic MozFest demo: read by the popcorn pipeline over invented transcripts.",
+            "note": f"Synthetic {session['organisation']} demo: read by the popcorn pipeline over invented transcripts.",
         },
     )
     d.upsert(
         "agent_loop",
-        identity(SLUG, f"loop-{language}"),
+        identity(slug, f"loop-{language}"),
         {
             "project_id": pid,
             "report_id": rid,
@@ -239,7 +240,10 @@ def seed_language(d: Directus, args: argparse.Namespace, language: str, portals:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument("--demo", type=Path, required=True, help="the demo's folder")
     parser.add_argument("--directus-url", required=True)
     parser.add_argument("--portal-base-url", required=True)
     parser.add_argument("--api-base-url", required=True)
@@ -247,20 +251,25 @@ def main() -> None:
     parser.add_argument("--owner-id", required=True)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
-    hosts = {urlparse(u).hostname for u in (args.directus_url, args.portal_base_url, args.api_base_url)}
+    hosts = {
+        urlparse(u).hostname for u in (args.directus_url, args.portal_base_url, args.api_base_url)
+    }
     if hosts & PRODUCTION_HOSTS:
         sys.exit("This seed is for a staging environment; production waits for the MCP upsert.")
-    token = os.environ.get("MOZFEST_DIRECTUS_TOKEN")
+    token = os.environ.get("DEMO_DIRECTUS_TOKEN")
     if not token:
-        sys.exit("Set MOZFEST_DIRECTUS_TOKEN to a Directus admin static token for the target.")
+        sys.exit("Set DEMO_DIRECTUS_TOKEN to a Directus admin static token for the target.")
+    demo: Path = args.demo.resolve()
+    session = json.loads((demo / "session.json").read_text())
+    languages = list(session["title"])
     d = Directus(args.directus_url, token, args.dry_run)
-    portals = seed_sales_portals(d, args)
-    result = {"sales_portals": portals}
-    for language in ("en", "es"):
-        result[language] = seed_language(d, args, language, portals)
+    portals = seed_sales_portals(d, args, languages, session["slug"])
+    result: dict = {"sales_portals": portals}
+    for language in languages:
+        result[language] = seed_language(d, args, language, portals, demo, session)
     print(json.dumps(result, indent=2, ensure_ascii=False))
     if not args.dry_run:
-        (HERE / "out" / f"seeded-{urlparse(args.directus_url).hostname}.json").write_text(
+        (demo / "out" / f"seeded-{urlparse(args.directus_url).hostname}.json").write_text(
             json.dumps(result, indent=2, ensure_ascii=False)
         )
 

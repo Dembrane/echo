@@ -242,7 +242,7 @@ async def seed(
         "project",
         pid,
         {
-            "name": f"[SYNTHETISCH] {fixture['organisation']} · Bondgenotendag",
+            "name": f"[SYNTHETISCH] {fixture['organisation']} · {fixture.get('event') or fixture['title']}",
             "language": "nl",
             "workspace_id": workspace_id,
             "directus_user_id": owner_id,
@@ -359,7 +359,7 @@ async def seed_local(args: argparse.Namespace, fixture: dict) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--fixture", type=Path, default=Path("../demos/deltawonen/fixture.json"))
+    parser.add_argument("--fixture", type=Path, default=Path("../demos/example/fixture.json"))
     parser.add_argument(
         "--base-url",
         default="http://localhost:5190",

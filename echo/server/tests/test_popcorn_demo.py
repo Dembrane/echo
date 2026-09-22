@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 import dembrane.popcorn.service as service
 from scripts.popcorn_demo import export, prepare
 
-FIXTURE = Path(__file__).resolve().parents[2] / "demos/deltawonen/fixture.json"
+FIXTURE = Path(__file__).resolve().parents[2] / "demos/example/fixture.json"
 
 
 def test_default_intro_off_and_bounded_plain_text():
@@ -208,7 +208,7 @@ def test_synthetic_provenance_survives_normalisation_and_hidden_intro():
     # The QR opens the sales portal, never the real project's own portal.
     assert session["qr"]["url"] == (
         "https://portal.example.test/nl-NL/sales/start"
-        "?utm_source=popcorn_demo&utm_campaign=deltawonen"
+        "?utm_source=popcorn_demo&utm_campaign=voorbeeldwonen"
     )
     assert len(session["transcripts"]) == 5
     phrases = [
@@ -241,7 +241,7 @@ def test_export_is_read_only_and_does_not_publish_raw_transcripts(tmp_path):
         },
     )
     assert state["demo"]["portal_urls"]["en"].endswith(
-        "?x=1&utm_source=popcorn_demo&utm_campaign=deltawonen"
+        "?x=1&utm_source=popcorn_demo&utm_campaign=voorbeeldwonen"
     )
     # The QR speaks the screen's language: the English portal for an English screen.
     for ui, lang, label in (
@@ -255,7 +255,7 @@ def test_export_is_read_only_and_does_not_publish_raw_transcripts(tmp_path):
         assert qr == {**qr, "url": state["demo"]["portal_urls"][lang], "label": label}
     settings["language"] = {"ui": "auto", "translate_to": ""}
     export(fixture, state, settings, tmp_path)
-    deck = tmp_path / "deltawonen"
+    deck = tmp_path / "voorbeeldwonen"
     assert not (deck / "join").exists()
     page = (deck / "index.html").read_text()
     assert '"mode": "sample"' in page
