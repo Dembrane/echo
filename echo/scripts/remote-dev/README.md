@@ -89,7 +89,7 @@ VM, or copy the working tree straight up:
 ```
 
 It copies git-tracked files only (`.env` files have `sync-env.sh`) and never
-deletes, but it does overwrite, and it leaves the VM's branch alone — so its
+deletes, but it does overwrite, and it leaves the VM's branch alone, so its
 `git status` will show your changes as local modifications on whatever commit it
 happens to sit on. It warns first if the VM has uncommitted changes of its own.
 
@@ -162,7 +162,7 @@ That also forwards 9000 (S3 API) and 9001 (console). Both take `dembrane` /
 `STORAGE_S3_KEY` and `STORAGE_S3_SECRET` carry the same pair.
 
 The server hands the browser presigned upload URLs built from
-`STORAGE_S3_ENDPOINT`, so they point at `http://minio:9000` — a name only the
+`STORAGE_S3_ENDPOINT`, so they point at `http://minio:9000`, a name only the
 compose network resolves. Map it to the forwarded port on your laptop, or
 recordings fail with `ERR_NAME_NOT_RESOLVED`:
 

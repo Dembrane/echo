@@ -30,6 +30,9 @@ require_running
 # above echo/, and remote paths are relative to it, so both ends agree.
 RD_REPO_ROOT="$(cd "$RD_ECHO_ROOT/.." && pwd)"
 
+# Both stay empty in the common case, and macOS ships bash 3.2, where `set -u`
+# treats an empty array expansion as unbound. Hence the ${arr[@]+...} guards at
+# the use sites below.
 DRY_RUN=()
 PATHSPEC=()
 for arg in "$@"; do
@@ -64,9 +67,9 @@ log_info "$RD_REPO_ROOT -> $RD_SSH_HOST:$RD_REPO_DIR"
 # survives the spaces and unicode that plain `find` piping would mangle. No
 # --delete: a file you have not got is far more often one the VM needs than one
 # it should lose.
-git -C "$RD_REPO_ROOT" ls-files -z -- "${PATHSPEC[@]}" \
+git -C "$RD_REPO_ROOT" ls-files -z -- ${PATHSPEC[@]+"${PATHSPEC[@]}"} \
     | rsync --archive --compress --human-readable \
-        "${DRY_RUN[@]}" \
+        ${DRY_RUN[@]+"${DRY_RUN[@]}"} \
         --files-from=- --from0 \
         --rsh=ssh \
         "$RD_REPO_ROOT/" "$RD_SSH_HOST:$RD_REPO_DIR/"
