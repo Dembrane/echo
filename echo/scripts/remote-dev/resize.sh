@@ -43,6 +43,7 @@ if [ -n "$NEW_DISK" ]; then
     log_step "Resizing disk to $NEW_DISK"
     gc compute disks resize "$RD_INSTANCE_NAME" --zone "$RD_ZONE" --size "$NEW_DISK" --quiet
     log_info "Disk resized. The filesystem grows automatically on next boot."
+    persist_local_env RD_DISK_SIZE "$NEW_DISK"
 fi
 
 if [ -n "$NEW_MACHINE" ]; then
@@ -62,15 +63,7 @@ if [ -n "$NEW_MACHINE" ]; then
     fi
 
     # Persist the new size so create.sh would rebuild at the same shape.
-    if [ -f "$RD_SCRIPT_DIR/local.env" ]; then
-        if grep -q '^RD_MACHINE_TYPE=' "$RD_SCRIPT_DIR/local.env"; then
-            sed -i.bak "s|^RD_MACHINE_TYPE=.*|RD_MACHINE_TYPE=\"$NEW_MACHINE\"|" "$RD_SCRIPT_DIR/local.env"
-            rm -f "$RD_SCRIPT_DIR/local.env.bak"
-        else
-            echo "RD_MACHINE_TYPE=\"$NEW_MACHINE\"" >> "$RD_SCRIPT_DIR/local.env"
-        fi
-        log_info "Updated RD_MACHINE_TYPE in local.env"
-    fi
+    persist_local_env RD_MACHINE_TYPE "$NEW_MACHINE"
 fi
 
 log_step "Done"
