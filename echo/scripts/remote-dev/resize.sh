@@ -75,5 +75,14 @@ fi
 
 log_step "Done"
 if [ -n "$NEW_MACHINE" ]; then
-    log_warn "The VM rebooted, so the containers are down. Bring them back with: ./up.sh"
+    # Run up.sh, not `docker compose up`: the reboot recreates the containers,
+    # and a fresh devcontainer starts with an empty authorized_keys, so only
+    # up.sh's key install gets Zed back in. The tunnel died with the VM too.
+    log_warn "The VM rebooted, so the containers are down."
+    echo
+    echo "  Bring the stack back, which also reinstalls your SSH key:"
+    echo "    ./up.sh"
+    echo
+    echo "  Then reopen port forwarding in its own tab:"
+    echo "    ./tunnel.sh"
 fi
