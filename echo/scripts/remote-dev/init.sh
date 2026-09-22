@@ -133,7 +133,18 @@ EOF
 # A curated menu beats `gcloud compute machine-types list`, which returns
 # several hundred rows and none of the context above. The escape hatch covers
 # anything else.
-CHOICE="$(ask "Choose 1-5" "2")"
+#
+# Offer the current size as the default, so a re-run keeps it. config.sh
+# defaults to e2-standard-4, which makes 2 the default on a first run. Any
+# other type defaults to 5, whose prompt then offers that type.
+case "$RD_MACHINE_TYPE" in
+    e2-standard-2)  CHOICE_DEFAULT=1 ;;
+    e2-standard-4)  CHOICE_DEFAULT=2 ;;
+    e2-standard-8)  CHOICE_DEFAULT=3 ;;
+    e2-standard-16) CHOICE_DEFAULT=4 ;;
+    *)              CHOICE_DEFAULT=5 ;;
+esac
+CHOICE="$(ask "Choose 1-5" "$CHOICE_DEFAULT")"
 case "$CHOICE" in
     1) MACHINE="e2-standard-2" ;;
     2) MACHINE="e2-standard-4" ;;
@@ -168,6 +179,23 @@ fi
 log_step "Instance name"
 INSTANCE="$(ask "Instance name" "$RD_INSTANCE_NAME")"
 
+log_step "File storage (minio)"
+echo "minio stores uploaded audio and participant recordings. Without it the"
+echo "rest of the app works, but uploads and recordings fail. It is off unless"
+echo "you turn it on, and adds one container."
+# Offer the current setting as the default, so a re-run keeps it.
+if minio_enabled; then MINIO_DEFAULT=y; else MINIO_DEFAULT=n; fi
+# Rebuild the list from what is already set, so any other compose files
+# someone added by hand survive.
+COMPOSE_FILES=""
+for f in $RD_COMPOSE_FILES; do
+    [ "$f" = "docker-compose-s3.yml" ] || COMPOSE_FILES="$COMPOSE_FILES $f"
+done
+if confirm "Run minio?" "$MINIO_DEFAULT"; then
+    COMPOSE_FILES="$COMPOSE_FILES docker-compose-s3.yml"
+fi
+COMPOSE_FILES="${COMPOSE_FILES# }"
+
 log_step "Writing local.env"
 cat > "$LOCAL_ENV" <<EOF
 # Written by ./init.sh on $(date -u '+%Y-%m-%d %H:%M UTC'). Gitignored.
@@ -182,6 +210,9 @@ RD_MACHINE_TYPE="$MACHINE"
 RD_INSTANCE_NAME="$INSTANCE"
 RD_ORG_DOMAIN="$ORG_DOMAIN"
 RD_ORG_ID="$ORG_ID"
+
+# Add docker-compose-s3.yml to run minio, then ./up.sh --skip-setup.
+RD_COMPOSE_FILES="$COMPOSE_FILES"
 EOF
 
 log_info "Wrote $LOCAL_ENV"

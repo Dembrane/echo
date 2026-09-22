@@ -147,7 +147,7 @@ vm_compose_project() {
 
 # minio is opt-in through docker-compose-s3.yml. The devcontainer points the
 # server at it either way, so file uploads fail while it is off.
-RD_MINIO_ENABLE_HINT='RD_COMPOSE_FILES="docker-compose.yml docker-compose-s3.yml" in local.env, then ./up.sh --skip-setup'
+RD_MINIO_ENABLE_HINT='re-run ./init.sh and answer y to "Run minio?" (or add docker-compose-s3.yml to RD_COMPOSE_FILES in local.env), then ./up.sh --skip-setup'
 minio_enabled() {
     case " $RD_COMPOSE_FILES " in
         *" docker-compose-s3.yml "*) return 0 ;;

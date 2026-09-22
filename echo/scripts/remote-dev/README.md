@@ -127,8 +127,10 @@ RD_MACHINE_TYPE=c4-standard-16 ./create.sh
 minio is off by default, but the devcontainer points the server at it
 (`STORAGE_S3_ENDPOINT=http://minio:9000`) either way, so file uploads and
 recordings fail until you turn it on. `up.sh`, `status.sh` and `tunnel.sh` say
-so while it is off. To enable it, add this to `local.env` and run
-`./up.sh --skip-setup`:
+so while it is off. To enable it, re-run `./init.sh` and answer `y` to "Run
+minio?" (the other questions default to your current values), then run
+`./up.sh --skip-setup`. That writes this line to `local.env`, which you can
+also edit by hand:
 
 ```sh
 RD_COMPOSE_FILES="docker-compose.yml docker-compose-s3.yml"
