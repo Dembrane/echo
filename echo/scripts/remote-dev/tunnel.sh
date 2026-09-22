@@ -51,9 +51,9 @@ print_port() {
         8000) scheme=http;       desc="backend API (docs at /docs)" ;;
         8055) scheme=http;       desc="directus (admin@dembrane.com / admin)" ;;
         8001) scheme=http;       desc="agent service" ;;
-        5432) scheme=postgresql; desc="postgres (dembrane/dembrane)" ;;
-        9000) scheme=http;       desc="minio S3 API (dembrane/dembrane)" ;;
-        9001) scheme=http;       desc="minio console (dembrane/dembrane)" ;;
+        5432) scheme=postgresql; desc="postgres (dembrane / dembrane)" ;;
+        9000) scheme=http;       desc="minio S3 API (dembrane / dembrane)" ;;
+        9001) scheme=http;       desc="minio console (dembrane / dembrane)" ;;
         *)    printf '  %13s%s\n' "" "localhost:$p"; return ;;
     esac
     printf '  %10s://localhost:%-5s  %s%s\n' "$scheme" "$p" "$desc" "$note"
