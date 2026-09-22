@@ -8,11 +8,21 @@ RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # scripts/remote-dev -> scripts -> echo
 RD_ECHO_ROOT="$(cd "$RD_SCRIPT_DIR/../.." && pwd)"
 
-# local.env wins over config.sh defaults but loses to explicit env vars,
-# because config.sh uses `: "${VAR:=default}"` assignment.
+# Precedence: explicit env var, then local.env, then the config.sh default.
+#
+# config.sh gives way to both because it assigns with `: "${VAR:=default}"`,
+# but local.env is a generated file of plain assignments, so sourcing it would
+# overwrite an env var the caller passed. `RD_ZONE=... ./create.sh` would then
+# silently build in the zone local.env remembers. Snapshot the exported RD_*
+# vars, source, and put them back.
 if [ -f "$RD_SCRIPT_DIR/local.env" ]; then
+    RD_ENV_OVERRIDES="$(export -p | grep -E '^(export |declare -x )RD_[A-Za-z0-9_]*=' || true)"
     # shellcheck disable=SC1091
     source "$RD_SCRIPT_DIR/local.env"
+    if [ -n "$RD_ENV_OVERRIDES" ]; then
+        eval "$RD_ENV_OVERRIDES"
+    fi
+    unset RD_ENV_OVERRIDES
 fi
 # shellcheck disable=SC1091
 source "$RD_SCRIPT_DIR/config.sh"
