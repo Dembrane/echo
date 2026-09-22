@@ -1,0 +1,52 @@
+{
+  "id": "exact-duplicates",
+  "description": "The same statement extracted from three conversations, differing only in case and spacing, merges. Identical words with a different valence never merge.",
+  "embedding_model": "text-embedding-004",
+  "inputs": [
+    {
+      "id": "ex1",
+      "statement": "The city should plant more trees in the old harbour district.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-1", "quote": "we really need more trees down by the old harbour"}],
+      "embedding": [1, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "ex2",
+      "statement": "the city should plant more trees in the  old harbour district.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-2", "quote": "plant trees in the harbour district, it is all stone there"}],
+      "embedding": [1, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "ex3",
+      "statement": "The city should plant more trees in the old harbour district.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-3", "quote": "more green in the old harbour, trees mostly"}],
+      "embedding": [1, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "ex4",
+      "statement": "Parking in the centre costs too much.",
+      "epistemic_kind": "argument",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-1", "quote": "parking in the centre is just too expensive"}],
+      "embedding": [0, 1, 0, 0, 0, 0]
+    },
+    {
+      "id": "ex5",
+      "statement": "Parking in the centre costs too much.",
+      "epistemic_kind": "argument",
+      "valence": "neutral",
+      "evidence": [{"conversation_id": "conv-4", "quote": "some people say parking in the centre costs too much"}],
+      "embedding": [0, 1, 0, 0, 0, 0]
+    }
+  ],
+  "should_merge": [["ex1", "ex2", "ex3"]],
+  "must_not_merge": [
+    {"pair": ["ex4", "ex5"], "guard": "code", "why": "Identical words, different valence."},
+    {"pair": ["ex1", "ex4"], "guard": "code", "why": "Unrelated statements, far apart."}
+  ]
+}

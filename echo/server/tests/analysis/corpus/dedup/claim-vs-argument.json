@@ -1,0 +1,63 @@
+{
+  "id": "claim-vs-argument",
+  "description": "A claim and an argument about the same fact never merge. Two claims that report the same fact merge; two claims with different figures do not.",
+  "embedding_model": "text-embedding-004",
+  "inputs": [
+    {
+      "id": "ca1",
+      "statement": "The library's opening hours were cut from six days to four last year.",
+      "epistemic_kind": "claim",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-1", "quote": "they cut the library from six days to four last year"}],
+      "embedding": [1, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "ca2",
+      "statement": "Cutting the library's opening hours last year was the wrong choice.",
+      "epistemic_kind": "argument",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-2", "quote": "cutting the library hours was the wrong call"}],
+      "embedding": [1, 0.1, 0, 0, 0, 0]
+    },
+    {
+      "id": "ca3",
+      "statement": "The library's opening hours were reduced from six to four days a week last year.",
+      "epistemic_kind": "claim",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-3", "quote": "since last year the library is open four days instead of six"}],
+      "embedding": [1, 0, 0.1, 0, 0, 0]
+    },
+    {
+      "id": "ca4",
+      "statement": "Air pollution causes about 30 percent of asthma cases in the city.",
+      "epistemic_kind": "claim",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-1", "quote": "about thirty percent of asthma here comes from the air"}],
+      "embedding": [0, 1, 0, 0, 0, 0]
+    },
+    {
+      "id": "ca5",
+      "statement": "Air pollution causes about half of asthma cases in the city.",
+      "epistemic_kind": "claim",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-4", "quote": "half of all the asthma cases are because of air pollution"}],
+      "embedding": [0, 1, 0.1, 0, 0, 0]
+    },
+    {
+      "id": "ca6",
+      "statement": "Air pollution in the city worries me more than traffic noise.",
+      "epistemic_kind": "argument",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-2", "quote": "the air worries me more than the noise does"}],
+      "embedding": [0, 1, 0, 0.3, 0, 0]
+    }
+  ],
+  "should_merge": [["ca1", "ca3"]],
+  "must_not_merge": [
+    {"pair": ["ca1", "ca2"], "guard": "code", "why": "Claim versus argument."},
+    {"pair": ["ca2", "ca3"], "guard": "code", "why": "Argument versus claim."},
+    {"pair": ["ca4", "ca5"], "guard": "model", "why": "Different figures: 30 percent versus half."},
+    {"pair": ["ca4", "ca6"], "guard": "code", "why": "Claim versus argument."},
+    {"pair": ["ca5", "ca6"], "guard": "code", "why": "Claim versus argument."}
+  ]
+}

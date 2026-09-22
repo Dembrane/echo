@@ -1,0 +1,17 @@
+.row {
+	padding: var(--mantine-spacing-xs) var(--mantine-spacing-xs);
+	border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.row:last-child {
+	border-bottom: 0;
+}
+
+.rowHidden {
+	opacity: 0.55;
+}
+
+.rowLabel {
+	min-width: 0;
+	flex: 1;
+}

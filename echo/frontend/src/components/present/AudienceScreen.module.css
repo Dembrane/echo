@@ -1,0 +1,378 @@
+/* Five role tokens carry the room's theme. Every rule below reads them, so the
+   dark screen is one block of values rather than a second set of rules. The
+   frame (its notice bar and border) and the QR card opt out on purpose. */
+.shell,
+.state {
+	--audience-bg: var(--mantine-color-parchment-6);
+	--audience-panel: var(--mantine-color-parchment-6);
+	--audience-ink: var(--mantine-color-graphite-6);
+	--audience-accent: var(--mantine-color-primary-6);
+	--audience-hairline: color-mix(
+		in srgb,
+		var(--audience-ink) 10%,
+		var(--audience-bg)
+	);
+	--audience-ink-soft: color-mix(in srgb, var(--audience-ink) 62%, transparent);
+}
+
+/* Warm near-black, parchment ink, blue lifted where it is text or a thin
+   line. Filled blue surfaces keep the brand's royal blue. */
+.shell[data-theme="dark"],
+.state[data-theme="dark"] {
+	--audience-bg: #1b1b1a;
+	--audience-panel: #262625;
+	--audience-ink: #f6f4f1;
+	--audience-accent: #7c9bff;
+	--audience-hairline: #3a3a38;
+	--audience-ink-soft: color-mix(in srgb, var(--audience-ink) 64%, transparent);
+	--mantine-color-dimmed: var(--audience-ink-soft);
+}
+
+/* The loader and the error text render before the shell exists. They follow
+   the theme once one is known, and stay on the page background before that. */
+.state {
+	background: var(--audience-bg);
+	color: var(--audience-ink);
+}
+
+.state[data-theme="dark"] {
+	--loader-color: var(--audience-accent);
+}
+
+.shell {
+	--audience-pad-x: clamp(24px, 4vw, 72px);
+
+	background: var(--audience-bg);
+	color: var(--audience-ink);
+	font-family: "DM Sans Variable", sans-serif;
+	font-feature-settings:
+		"ss01" 1,
+		"ss02" 1,
+		"ss03" 1,
+		"ss04" 1,
+		"ss05" 1,
+		"ss06" 1;
+	font-size: clamp(16px, 1.35vw, 21px);
+	font-weight: 320;
+	line-height: 1.42;
+}
+
+.chrome {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 2em;
+	padding: 0.9em var(--audience-pad-x) 0;
+	border-bottom: 1px solid var(--audience-hairline);
+	background: var(--audience-panel);
+	flex: none;
+}
+
+.sessionId {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding-bottom: 0.8em;
+}
+
+.sessionTitle {
+	font-size: 0.85em;
+	font-weight: 500;
+	letter-spacing: 0.01em;
+	white-space: nowrap;
+}
+
+.sessionMeta {
+	color: var(--audience-ink-soft);
+	font-size: 0.7em;
+}
+
+.navigation {
+	display: flex;
+	align-items: stretch;
+	gap: clamp(0.8em, 2vw, 2em);
+	min-width: 0;
+	margin-left: auto;
+	overflow-x: auto;
+}
+
+.tabs {
+	flex: none;
+}
+
+.tabList {
+	display: flex;
+	gap: clamp(0.8em, 2vw, 2em);
+	flex-wrap: nowrap;
+	border-bottom: 0;
+}
+
+.tab,
+.openingTab {
+	appearance: none;
+	background: none;
+	border: 0;
+	border-bottom: 3px solid transparent;
+	color: var(--audience-ink-soft);
+	flex-shrink: 0;
+	padding: 0.5em 0.1em 0.9em;
+	font: inherit;
+	font-size: 0.85em;
+	font-weight: 400;
+	text-transform: lowercase;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.tab:hover,
+.openingTab:hover {
+	color: var(--audience-ink);
+}
+
+.tab[data-active],
+.openingTab[data-active] {
+	border-bottom-color: var(--audience-accent);
+	color: var(--audience-accent);
+	font-weight: 500;
+}
+
+.shell[data-opening] .tab[data-active] {
+	border-bottom-color: transparent;
+	color: var(--audience-ink-soft);
+	font-weight: 400;
+}
+
+.tab[data-disabled],
+.tab[data-disabled]:hover {
+	color: var(--audience-ink-soft);
+	cursor: default;
+	opacity: 0.45;
+}
+
+/* Parchment thinned twice over near-black disappears; dimming less keeps the
+   tab plainly unavailable and still readable. */
+.shell[data-theme="dark"] .tab[data-disabled],
+.shell[data-theme="dark"] .tab[data-disabled]:hover {
+	opacity: 0.7;
+}
+
+.openingLinks {
+	display: flex;
+	align-items: center;
+	gap: clamp(0.8em, 2vw, 2em);
+	flex-shrink: 0;
+}
+
+/* A frame, not a banner: the notice is the top edge and the same colour goes
+   round the other three sides of the whole screen. A filled blue surface, so
+   it keeps the brand's royal blue and its parchment text in both themes. */
+.shell[data-framed] {
+	border: 1px solid var(--mantine-color-primary-6);
+	border-top: 0;
+}
+
+.notice {
+	display: flex;
+	flex-shrink: 0;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1em;
+	padding: 0.5em var(--audience-pad-x);
+	background: var(--mantine-color-primary-6);
+	color: var(--mantine-color-parchment-6);
+	font-size: 0.85em;
+}
+
+.notice button {
+	appearance: none;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	cursor: pointer;
+}
+
+.contentFrame {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.footer {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: space-between;
+	min-width: 0;
+	padding: 0.45em var(--audience-pad-x);
+	border-top: 1px solid var(--audience-hairline);
+	background: var(--audience-panel);
+	color: var(--audience-ink-soft);
+	font-size: 0.68em;
+}
+
+.progress {
+	display: flex;
+	align-items: center;
+	gap: 0.6em;
+	min-width: 0;
+}
+
+.liveDot {
+	width: 0.55em;
+	height: 0.55em;
+	border-radius: 50%;
+	background: var(--audience-accent);
+	animation: breathe 1.6s ease-in-out infinite;
+}
+
+.footerEnd {
+	display: flex;
+	align-items: center;
+	gap: 1.2em;
+	margin-left: auto;
+}
+
+.wordmark {
+	color: var(--audience-ink);
+	font-weight: 500;
+}
+
+.controls {
+	display: flex;
+	align-items: center;
+	gap: 0.15em;
+}
+
+.control {
+	color: var(--audience-ink);
+
+	--ai-color: var(--audience-ink);
+	--ai-hover: color-mix(in srgb, var(--audience-ink) 12%, transparent);
+}
+
+/* The card turns over with the room: dark modules on a light card, light
+   modules on a dark field. Its padding is the code's quiet zone, so the card
+   has to carry the same colour the modules are drawn on. */
+.qrPanel {
+	--audience-bg: var(--mantine-color-parchment-6);
+	--audience-ink: var(--mantine-color-graphite-6);
+	--audience-accent: var(--mantine-color-primary-6);
+	--audience-hairline: color-mix(
+		in srgb,
+		var(--audience-ink) 10%,
+		var(--audience-bg)
+	);
+	--audience-ink-soft: color-mix(in srgb, var(--audience-ink) 62%, transparent);
+
+	position: absolute;
+	right: var(--audience-pad-x);
+	bottom: 1.2em;
+	z-index: 20;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.45em;
+	max-width: min(180px, 24vw);
+	padding: 0.7em 0.7em 0.55em;
+	border: 1px solid var(--audience-hairline);
+	background: var(--audience-bg);
+	box-shadow: 0 6px 24px color-mix(in srgb, black 8%, transparent);
+}
+
+.shell[data-theme="dark"] .qrPanel {
+	--audience-bg: #1b1b1a;
+	--audience-ink: #f6f4f1;
+	--audience-accent: #7c9bff;
+	--audience-hairline: #3a3a38;
+
+	box-shadow: 0 6px 24px color-mix(in srgb, black 50%, transparent);
+}
+
+/* Wins over the iframe's full-width utility classes. */
+.contentFrame iframe.deckBesideQr {
+	right: auto;
+	width: calc(100% - min(180px, 24vw) - var(--audience-pad-x) - 1.4em - 1.5em);
+}
+
+.qrCode {
+	display: block;
+	width: clamp(80px, 12vw, 180px);
+	max-width: 100%;
+	aspect-ratio: 1;
+	border-radius: 0;
+}
+
+.qrLabel {
+	overflow: hidden;
+	max-width: 100%;
+	color: var(--audience-ink-soft);
+	font-size: 0.72em;
+	letter-spacing: 0.01em;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+@keyframes breathe {
+	0%,
+	100% {
+		opacity: 0.25;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+@media (max-width: 900px) {
+	.chrome {
+		align-items: flex-start;
+		flex-direction: column;
+		gap: 0;
+	}
+
+	.navigation {
+		width: 100%;
+		margin-left: 0;
+	}
+
+	.footer {
+		padding-inline: var(--mantine-spacing-sm);
+	}
+
+	.qrPanel {
+		right: var(--mantine-spacing-sm);
+		max-width: 112px;
+	}
+
+	.contentFrame iframe.deckBesideQr {
+		width: calc(100% - 112px - var(--mantine-spacing-sm) - 1em);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.liveDot {
+		animation: none;
+		opacity: 0.7;
+	}
+}
+
+.shell:fullscreen {
+	height: 100dvh;
+}
+
+/* Floats out of the shell into a portal, so it is handed the theme directly
+   and inverts against whatever the room is lit with. */
+.tooltip {
+	background: var(--mantine-color-graphite-6);
+	color: var(--mantine-color-parchment-6);
+}
+
+.tooltip[data-theme="dark"] {
+	background: var(--mantine-color-parchment-6);
+	color: var(--mantine-color-graphite-6);
+}

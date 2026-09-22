@@ -38,6 +38,7 @@ import {
 } from "@/components/project/hooks";
 import { KEY_TERMS_HASH } from "@/components/project/KeyTermsInput";
 import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
+import { ProjectHostGuideLink } from "@/components/project/ProjectHostGuideLink";
 import { PROJECT_CONTEXT_HASH } from "@/components/project/ProjectContextInput";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
@@ -195,6 +196,7 @@ export const ProjectHomeRoute = () => {
 						>
 							<Trans>Portal editor</Trans>
 						</Button>
+						<ProjectHostGuideLink projectId={projectId} />
 						<Button
 							size="sm"
 							leftSection={<FileTextIcon size={16} />}

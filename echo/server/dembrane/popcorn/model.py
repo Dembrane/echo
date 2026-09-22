@@ -14,7 +14,7 @@ import re
 import json
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Callable, Awaitable
 from pathlib import Path
 from functools import lru_cache
 
@@ -30,6 +30,7 @@ VALIDATE_PROMPT = "popcorn-validate"
 KIND_PROMPT = "popcorn-kind"
 QUESTION_PROMPT = "popcorn-question"
 STAKEHOLDERS_PROMPT = "stakeholders-v0.9"
+TRANSLATE_PROMPT = "popcorn-translate"
 
 # Gemini counts its thinking against maxOutputTokens, and the analysis calls
 # think by default, so a tight cap truncates the JSON mid-array.
@@ -48,6 +49,38 @@ ENRICH_MAX_TOKENS = 8000
 EXTRACT_TIMEOUT_SECONDS = 60
 ENRICH_TIMEOUT_SECONDS = 120
 ANALYSIS_TIMEOUT_SECONDS = 300
+TRANSLATE_TIMEOUT_SECONDS = 120
+# Texts per translation call, and calls at once: a session's deck is a few
+# hundred short texts, so a first translation is a handful of calls.
+TRANSLATE_BATCH = 40
+TRANSLATE_PARALLEL = 4
+TRANSLATE_MAX_TOKENS = 16000
+
+LANGUAGE_NAMES = {
+    "en": "English",
+    "nl": "Dutch",
+    "de": "German",
+    "fr": "French",
+    "es": "Spanish",
+    "it": "Italian",
+    "uk": "Ukrainian",
+    "cs": "Czech",
+}
+
+TRANSLATE_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "translations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"i": {"type": "integer"}, "text": {"type": "string"}},
+                "required": ["i", "text"],
+            },
+        }
+    },
+    "required": ["translations"],
+}
 
 
 def popcorn_model() -> MODELS:
@@ -210,6 +243,69 @@ async def rewrite_question(*, transcript_id: str, transcript: str, phrase: str) 
         fast=False,
         timeout=ENRICH_TIMEOUT_SECONDS,
     )
+
+
+TranslationBatchCallback = Callable[[list[str], list[str | None]], Awaitable[None]]
+
+
+async def translate_texts(
+    texts: list[str],
+    target: str,
+    *,
+    on_batch: TranslationBatchCallback | None = None,
+) -> list[str | None]:
+    """`texts` in the target language, in order. A text the model left out
+    comes back as None and is asked for again on the next tick.
+
+    `on_batch` is awaited as soon as each provider batch completes, before the
+    whole request joins. Concurrent batches may enter it concurrently, so the
+    callback owns storage serialization. Failed provider batches return None
+    entries and do not call it.
+    """
+    semaphore = asyncio.Semaphore(TRANSLATE_PARALLEL)
+
+    async def batch(start: int) -> list[str | None]:
+        chunk = texts[start : start + TRANSLATE_BATCH]
+        payload = {
+            "target": LANGUAGE_NAMES[target],
+            "texts": [{"i": i, "text": text} for i, text in enumerate(chunk)],
+        }
+        out: list[str | None] = [None] * len(chunk)
+        try:
+            async with semaphore:
+                answer = await _structured_completion(
+                    system_prompt=prompt_text(TRANSLATE_PROMPT),
+                    user_text=json.dumps(payload, ensure_ascii=False),
+                    schema=TRANSLATE_SCHEMA,
+                    max_tokens=TRANSLATE_MAX_TOKENS,
+                    fast=True,
+                    timeout=TRANSLATE_TIMEOUT_SECONDS,
+                )
+        except Exception as exc:  # noqa: BLE001
+            # One failed batch leaves its texts in the original until the next tick.
+            logger.warning("popcorn translation batch failed: %s", exc)
+            return out
+        for entry in answer.get("translations") or []:
+            index, text = entry.get("i"), entry.get("text")
+            if isinstance(index, int) and 0 <= index < len(chunk) and isinstance(text, str):
+                out[index] = text.strip() or None
+        if on_batch is not None:
+            await on_batch(chunk, out)
+        return out
+
+    # Keep both active calls and scheduled coroutine objects bounded. This is
+    # reached by reconciliation too, where a long-lived presentation can owe
+    # hundreds of slide texts after a language change.
+    results: list[list[str | None]] = []
+    wave = TRANSLATE_BATCH * TRANSLATE_PARALLEL
+    for wave_start in range(0, len(texts), wave):
+        starts = range(
+            wave_start,
+            min(len(texts), wave_start + wave),
+            TRANSLATE_BATCH,
+        )
+        results.extend(await asyncio.gather(*(batch(i) for i in starts)))
+    return [text for part in results for text in part]
 
 
 async def analysis_call(

@@ -858,6 +858,23 @@ protobuf==6.33.6 \
     #   grpc-google-iam-v1
     #   grpcio-status
     #   proto-plus
+psycopg==3.3.5 \
+    --hash=sha256:ce5aa5cdb4f9379f00f487590e5890bfa7df9a164648c969ffa628505e21af4e \
+    --hash=sha256:d0a3d9ccf5788af054cbd745278cb02401b5c312aeaafbf2c6144460aec47da4
+    # via dembrane
+psycopg-binary==3.3.5 ; implementation_name != 'pypy' \
+    --hash=sha256:06de14ac978a2d53e864069fb5487075c6e3cfb0740f1bfd7017bc8b9942067f \
+    --hash=sha256:1344fd57a19737554670e67aecabd4fb37cd7937f2925840009645d641117e5a \
+    --hash=sha256:2719fe19a4da752c4110cc767716d0a5bdb760d1153d89018bb7c9c61717bde5 \
+    --hash=sha256:7b443f943abfe35aa5a776630cea27c9348aa66659286cee0b99084332252080 \
+    --hash=sha256:893ce86a4b997f6ca1261a7826db2506727332a6ff66646fa7f024b39b5e630e \
+    --hash=sha256:a5e45e4bb68656253ce5c7a344c0a425c293581eba954d7fd7c2e4b2dc9f3038 \
+    --hash=sha256:af5084124fb2fd16557073822519dfe8c389636a16adef661a4c0c3918733171 \
+    --hash=sha256:c6bd84e4cf67930f26f015dec33f615472b9c5871d46408efe112dbc1bc021de \
+    --hash=sha256:ca8af7c0454cdce235d4aedcb5528857468f1490202d25e24fc7af40e176d563 \
+    --hash=sha256:d8b66353b20e79bf7ac0a80f03ae97f522ccbbf909d687eec62f112e56c0276d \
+    --hash=sha256:fdbeb38c9b7ca8fa57a7bda3802bedb62f4494ad3dd46c7dd36dc3f77fd5093f
+    # via psycopg
 pyarrow==24.0.0 \
     --hash=sha256:0b3537c00fb8d384f15ac1e79b6eb6db04a16514c8c1d22e59a9b95c8ba42868 \
     --hash=sha256:14e31a3c9e35f1ab6356c6378f6f72830e6d2d5f1791df3774a7b097d18a6a1e \
@@ -1344,6 +1361,7 @@ typing-extensions==4.15.0 \
     #   mypy
     #   openai
     #   opentelemetry-api
+    #   psycopg
     #   pydantic
     #   pydantic-core
     #   pytest-asyncio
@@ -1361,6 +1379,7 @@ tzdata==2026.2 \
     # via
     #   kombu
     #   pandas
+    #   psycopg
     #   tzlocal
 tzlocal==5.3.1 \
     --hash=sha256:cceffc7edecefea1f595541dbd6e990cb1ea3d19bf01b2809f362a03dd7921fd \

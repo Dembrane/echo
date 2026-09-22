@@ -1,23 +1,29 @@
 import { Trans } from "@lingui/react/macro";
 import {
 	AppWindowIcon,
-	BookOpenIcon,
 	BooksIcon,
 	BroadcastIcon,
-	ChartLineIcon,
 	ChatCircleDotsIcon,
 	ChatCircleTextIcon,
 	FileTextIcon,
 	GearIcon,
+	GraphIcon,
 	PaintBrushIcon,
+	PlayIcon,
 	PopcornIcon,
-	UsersThreeIcon,
+	RobotIcon,
+	SparkleIcon,
 } from "@phosphor-icons/react";
 import { useLocation, useParams } from "react-router";
 import { useProjectChatsCountQuery } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
-import { ENABLE_CANVAS, ENABLE_MONITOR } from "@/config";
+import {
+	ENABLE_CANVAS,
+	ENABLE_MONITOR,
+	ENABLE_PRESENT,
+	ENABLE_WEBHOOKS,
+} from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
@@ -57,6 +63,8 @@ export const ProjectHomeView = () => {
 		!popcornActive &&
 		(pathname.includes(`/projects/${projectId}/library`) ||
 			pathname.includes(`/projects/${projectId}/canvases/`));
+	const isWorkspaceAdmin =
+		workspace?.role === "admin" || workspace?.role === "owner";
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
@@ -82,22 +90,37 @@ export const ProjectHomeView = () => {
 				/>
 			)}
 			<NavItem
-				to={`${base}/portal-editor`}
-				label={<Trans>Portal editor</Trans>}
-				icon={PaintBrushIcon}
+				to={`${base}/conversations`}
+				label={<Trans>Conversations</Trans>}
+				icon={ChatCircleTextIcon}
+				badge={conversationsCountQuery.data || undefined}
 			/>
-			{ENABLE_MONITOR && (
+			<div className="mt-2 flex flex-col gap-0.5">
 				<NavItem
-					to={`${base}/monitor`}
-					label={<Trans>Monitor</Trans>}
-					icon={BroadcastIcon}
-					badge={<Trans>Beta</Trans>}
+					to={`${base}/portal-editor`}
+					label={<Trans>Portal editor</Trans>}
+					icon={PaintBrushIcon}
 				/>
-			)}
+				{ENABLE_MONITOR && (
+					<NavItem
+						to={`${base}/monitor`}
+						label={<Trans>Monitor</Trans>}
+						icon={BroadcastIcon}
+						badge={<Trans>Beta</Trans>}
+					/>
+				)}
+				{ENABLE_PRESENT && (
+					<NavItem
+						to={`${base}/present`}
+						label={<Trans>Present</Trans>}
+						icon={PlayIcon}
+					/>
+				)}
+			</div>
 			{/* Library is the canvas surface: the env flag mounts the routes,
 			    but each project also opts in via the experimental toggle in
 			    project settings (is_canvas_enabled). */}
-			{ENABLE_CANVAS && project?.is_canvas_enabled && (
+			{!ENABLE_PRESENT && ENABLE_CANVAS && project?.is_canvas_enabled && (
 				<NavItem
 					to={`${base}/library`}
 					label={<Trans>Library</Trans>}
@@ -107,7 +130,7 @@ export const ProjectHomeView = () => {
 			)}
 			{/* Popcorn lives in the Library but earns a shortcut. Before the
 			    project opts in, the page itself explains and offers to turn it on. */}
-			{ENABLE_CANVAS && (
+			{!ENABLE_PRESENT && ENABLE_CANVAS && (
 				<NavItem
 					to={`${base}/library/popcorn`}
 					label={<Trans>Popcorn</Trans>}
@@ -116,37 +139,38 @@ export const ProjectHomeView = () => {
 					active={popcornActive}
 				/>
 			)}
-			<NavItem
-				to={`${base}/host-guide`}
-				label={<Trans>Host guide</Trans>}
-				icon={BookOpenIcon}
-			/>
-			<NavItem
-				to={`${base}/report`}
-				label={<Trans>Report</Trans>}
-				icon={FileTextIcon}
-			/>
-			<NavItem
-				to={`${base}/conversations`}
-				label={<Trans>Conversations</Trans>}
-				icon={ChatCircleTextIcon}
-				badge={conversationsCountQuery.data || undefined}
-			/>
-			<NavItem
-				to={`${base}/access`}
-				label={<Trans>Access</Trans>}
-				icon={UsersThreeIcon}
-			/>
-			<NavItem
-				to={`${base}/usage`}
-				label={<Trans>Usage</Trans>}
-				icon={ChartLineIcon}
-			/>
-			{/* Settings is the last clickable item, directly after the rest of
-				    the project items. */}
+			<div className="mt-2 flex flex-col gap-0.5">
+				{ENABLE_PRESENT && (
+					<NavItem
+						to={`${base}/analysis`}
+						label={<Trans>Analysis</Trans>}
+						icon={SparkleIcon}
+					/>
+				)}
+				<NavItem
+					to={`${base}/report`}
+					label={<Trans>Report</Trans>}
+					icon={FileTextIcon}
+				/>
+				{!ENABLE_PRESENT && (
+					<NavItem
+						to={`${base}/map`}
+						label={<Trans>Map</Trans>}
+						icon={GraphIcon}
+						badge={<Trans>Beta</Trans>}
+					/>
+				)}
+				{ENABLE_WEBHOOKS && isWorkspaceAdmin && (
+					<NavItem
+						to={`${base}/integrations`}
+						label={<Trans>Automation</Trans>}
+						icon={RobotIcon}
+					/>
+				)}
+			</div>
 			<NavItem
 				to={`${base}/overview`}
-				label={<Trans>Settings</Trans>}
+				label={<Trans>Manage</Trans>}
 				icon={GearIcon}
 				pushes
 			/>

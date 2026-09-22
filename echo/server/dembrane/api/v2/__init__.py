@@ -14,6 +14,7 @@ from dembrane.api.v2.auth import router as auth_router
 from dembrane.api.v2.orgs import router as orgs_router
 from dembrane.api.v2.admin import router as admin_router
 from dembrane.api.v2.agent import router as agent_router
+from dembrane.api.v2.bff.map import router as bff_map_router
 from dembrane.api.v2.billing import (
     router as billing_router,
     webhook_router as billing_webhook_router,
@@ -39,11 +40,13 @@ from dembrane.api.v2.bff.memory import router as bff_memory_router
 from dembrane.api.v2.onboarding import router as onboarding_router
 from dembrane.api.v2.workspaces import router as workspaces_router
 from dembrane.api.v2.bff.popcorn import router as bff_popcorn_router
+from dembrane.api.v2.bff.present import router as bff_present_router
 from dembrane.api.v2.bff.reports import (
     router as bff_reports_router,
     metric_router as bff_report_metric_router,
 )
 from dembrane.api.v2.agent_access import router as agent_access_router
+from dembrane.api.v2.bff.analysis import router as bff_analysis_router
 from dembrane.api.v2.bff.canvases import router as bff_canvases_router
 from dembrane.api.v2.admin_managed import router as admin_managed_router
 from dembrane.api.v2.notifications import router as notifications_router
@@ -160,6 +163,10 @@ v2_router.include_router(
     bff_canvases_router, prefix="/bff/canvases", tags=["v2:bff:canvases"]
 )
 v2_router.include_router(bff_popcorn_router, prefix="/bff/popcorn", tags=["v2:bff:popcorn"])
+v2_router.include_router(bff_map_router, prefix="/bff/map", tags=["v2:bff:map"])
+v2_router.include_router(
+    bff_analysis_router, prefix="/bff/analysis", tags=["v2:bff:analysis"]
+)
 v2_router.include_router(
     popcorn_public_router, prefix="/popcorn/public", tags=["v2:popcorn-public"]
 )
@@ -195,3 +202,5 @@ v2_router.include_router(
 # "Connect your agent" page uses. The MCP transport itself is mounted in main.py.
 v2_router.include_router(agent_router, prefix="/agent", tags=["v2:agent"])
 v2_router.include_router(agent_access_router, prefix="/agent-access", tags=["v2:agent-access"])
+
+v2_router.include_router(bff_present_router, prefix="/bff/present", tags=["v2:bff:present"])

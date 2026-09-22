@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Box,
-	Button,
 	Checkbox,
 	Group,
 	Paper,
@@ -11,12 +10,14 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { SaveStatus } from "@/components/form/SaveStatus";
 import {
 	type PopcornDetail,
 	type PopcornVoice,
 	usePopcornSettingsMutation,
 } from "@/components/popcorn/hooks";
+import { useSettingsDraft } from "@/components/popcorn/useSettingsDraft";
 import { PricingTextInput } from "@/components/pricing/PricingTextInput";
 import { testId } from "@/lib/testUtils";
 
@@ -92,32 +93,48 @@ export function VoiceFields({
 	);
 }
 
-// The session's title and voice, saved together. A changed voice re-reads
-// every conversation on the next read, so the section says so.
+type VoiceSettingsDraft = {
+	title: string;
+	voice: PopcornVoice;
+};
+
+const voiceSettingsFrom = (popcorn: PopcornDetail): VoiceSettingsDraft => ({
+	title: popcorn.settings.title,
+	voice: popcorn.settings.voice ?? EMPTY_VOICE,
+});
+
+// Legacy Popcorn settings edit the session title and voice together. Analysis
+// embeds only voice because presentation naming belongs to Present.
 export function PopcornVoiceSection({
 	projectId,
 	popcorn,
+	showTitle = true,
 }: {
 	projectId: string;
 	popcorn: PopcornDetail;
+	showTitle?: boolean;
 }) {
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
-	const [title, setTitle] = useState(popcorn.settings.title);
-	const [voice, setVoice] = useState<PopcornVoice>(
-		popcorn.settings.voice ?? EMPTY_VOICE,
-	);
-	const [titleError, setTitleError] = useState<string | null>(null);
-
-	useEffect(() => {
-		setTitle(popcorn.settings.title);
-		setVoice(popcorn.settings.voice ?? EMPTY_VOICE);
-	}, [popcorn.settings]);
-
-	const current = popcorn.settings.voice ?? EMPTY_VOICE;
-	const voiceChanged =
-		voice.note.trim() !== current.note ||
-		voice.presets.join(",") !== current.presets.join(",");
-	const titleChanged = title.trim() !== popcorn.settings.title;
+	const { changeDraft, draft, isError, isPendingSave, isSaving, lastSavedAt } =
+		useSettingsDraft<VoiceSettingsDraft>({
+			flushErrorMessage: "Could not save voice settings",
+			identity: `${projectId}:${popcorn.id}:${showTitle ? "title-and-voice" : "voice"}`,
+			initialLastSavedAt: popcorn.updated_at ?? undefined,
+			// A presentation without a title is refused rather than saved, so the
+			// draft stays dirty and SaveStatus shows the error.
+			save: async (next) => {
+				if (showTitle && !next.title.trim())
+					throw new Error("A presentation title is required.");
+				await settings.mutateAsync({
+					...(showTitle ? { title: next.title.trim() } : {}),
+					voice: {
+						note: next.voice.note.trim(),
+						presets: next.voice.presets,
+					},
+				});
+			},
+			serverValue: voiceSettingsFrom(popcorn),
+		});
 
 	return (
 		<Paper
@@ -127,48 +144,45 @@ export function PopcornVoiceSection({
 			{...testId("popcorn-voice")}
 		>
 			<Stack gap="md">
-				<Title order={4}>
-					<Trans>Voice</Trans>
-				</Title>
-				<TextInput
-					label={t`Title`}
-					description={t`Shown at the top of the screen.`}
-					size={FIELD_SIZE}
-					value={title}
-					error={titleError}
-					maxLength={160}
-					onChange={(event) => {
-						setTitle(event.currentTarget.value);
-						setTitleError(null);
-					}}
-					{...testId("popcorn-title-edit-input")}
-				/>
-				<VoiceFields projectId={projectId} voice={voice} onChange={setVoice} />
-				{voiceChanged ? (
-					<Text size="sm">
-						<Trans>Changing the voice re-reads every conversation.</Trans>
-					</Text>
-				) : null}
-				<Group justify="flex-end">
-					<Button
-						size={FIELD_SIZE}
-						disabled={!voiceChanged && !titleChanged}
-						loading={settings.isPending}
-						onClick={() => {
-							if (!title.trim()) {
-								setTitleError(t`Give the session a title`);
-								return;
-							}
-							settings.mutate({
-								title: title.trim(),
-								voice: { note: voice.note.trim(), presets: voice.presets },
-							});
-						}}
-						{...testId("popcorn-title-save")}
-					>
-						<Trans>Save</Trans>
-					</Button>
+				<Group justify="space-between">
+					<Title order={4}>
+						<Trans>Voice</Trans>
+					</Title>
+					<SaveStatus
+						formErrors={{}}
+						isError={isError}
+						isPendingSave={isPendingSave}
+						isSaving={isSaving}
+						savedAt={lastSavedAt}
+					/>
 				</Group>
+				{showTitle && (
+					<TextInput
+						label={t`Title`}
+						description={t`Shown at the top of the screen.`}
+						size={FIELD_SIZE}
+						value={draft.title}
+						error={
+							!draft.title.trim() ? t`Give the session a title` : undefined
+						}
+						maxLength={160}
+						onChange={(event) =>
+							changeDraft({ ...draft, title: event.currentTarget.value })
+						}
+						{...testId("popcorn-title-edit-input")}
+					/>
+				)}
+				<VoiceFields
+					projectId={projectId}
+					voice={draft.voice}
+					onChange={(voice) => changeDraft({ ...draft, voice })}
+				/>
+				<Text size="sm">
+					<Trans>
+						Voice changes apply the next time you prepare or update Popcorn
+						results.
+					</Trans>
+				</Text>
 			</Stack>
 		</Paper>
 	);
