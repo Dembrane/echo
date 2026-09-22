@@ -136,7 +136,9 @@ also edit by hand:
 RD_COMPOSE_FILES="docker-compose.yml docker-compose-s3.yml"
 ```
 
-That also forwards 9000 (S3 API) and 9001 (console, `dembrane` / `dembrane`).
+That also forwards 9000 (S3 API) and 9001 (console). Both take `dembrane` /
+`dembrane`: the root user doubles as the access key, which is why
+`STORAGE_S3_KEY` and `STORAGE_S3_SECRET` carry the same pair.
 
 Answering `n` later turns it back off, and the next `./up.sh` removes the
 container. Its `minio_data` directory on the VM is left alone, so turning it on

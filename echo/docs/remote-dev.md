@@ -79,12 +79,12 @@ foreground. Leave it in its own terminal tab.
 
 | Local | Service |
 |---|---|
-| 5173 | admin dashboard |
+| 5173 | admin dashboard (`admin@dembrane.com` / `admin`) |
 | 5174 | participant portal |
 | 8000 | backend API (`/docs` for the OpenAPI UI) |
 | 8055 | directus (`admin@dembrane.com` / `admin`) |
 | 5432 | postgres (`dembrane` / `dembrane`) |
-| 9000, 9001 | minio, if enabled |
+| 9000, 9001 | minio S3 API and console, if enabled (`dembrane` / `dembrane`) |
 
 The mapping is 1:1 on purpose. `docker-compose.yml` hardcodes localhost origins:
 
