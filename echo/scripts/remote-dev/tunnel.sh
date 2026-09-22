@@ -71,6 +71,11 @@ if ! minio_enabled; then
     echo
     echo "  minio is off, so uploads and recordings fail. Enable with:"
     echo "    $RD_MINIO_ENABLE_HINT"
+elif ! minio_host_resolves; then
+    echo
+    echo "  The browser gets upload URLs on http://minio:9000, which only resolves"
+    echo "  inside the compose network. Point it at this tunnel with:"
+    echo "    $RD_MINIO_HOSTS_HINT"
 fi
 echo
 log_info "Tunnel is open. Leave this running; ctrl-c to close."

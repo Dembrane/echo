@@ -29,6 +29,9 @@ log_step "Containers"
 vm_compose_project "ps --all" 2>/dev/null || log_warn "Could not reach docker on the VM."
 if ! minio_enabled; then
     log_warn "minio is off, so file uploads and recordings fail. Enable with: $RD_MINIO_ENABLE_HINT"
+elif ! minio_host_resolves; then
+    log_warn "No 'minio' entry in /etc/hosts, so the browser cannot resolve the upload URLs. Add one with:"
+    log_warn "  $RD_MINIO_HOSTS_HINT"
 fi
 
 log_step "Directus schema"
