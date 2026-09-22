@@ -302,9 +302,10 @@ async def deck(presentation_id: str, auth: DependencyDirectusSession):
 
     from dembrane.popcorn.view import render_popcorn_page
 
-    await _require_popcorn(presentation_id, auth)
+    # Embed the id the lookup returned, never the raw path value.
+    report, _access = await _require_popcorn(presentation_id, auth)
     return HTMLResponse(
-        render_popcorn_page(embed=_deck_embed(presentation_id)),
+        render_popcorn_page(embed=_deck_embed(str(report["id"]))),
         headers={"Cache-Control": "no-store"},
     )
 

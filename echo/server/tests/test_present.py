@@ -1455,3 +1455,15 @@ def test_opening_edit_cannot_reword_a_synthetic_demo_frame(monkeypatch) -> None:
     assert caught.value.status_code == 409
     assert config["popcorn_settings"] == before
     nudge.assert_not_awaited()
+
+
+def test_the_deck_page_embeds_the_looked_up_id_not_the_path_value(monkeypatch) -> None:
+    async def require(presentation_id, auth):  # noqa: ARG001
+        return {"id": 7}, SimpleNamespace()
+
+    monkeypatch.setattr(present_api, "_require_popcorn", require)
+    hostile = "</script><script>alert(1)</script>"
+    response = asyncio.run(present_api.deck(hostile, SimpleNamespace(user_id="host")))
+    body = response.body.decode()
+    assert '"presentationId": "7"' in body
+    assert "alert(1)" not in body
