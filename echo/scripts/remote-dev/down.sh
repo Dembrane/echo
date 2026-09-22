@@ -15,12 +15,15 @@ source "$RD_SCRIPT_DIR/lib.sh"
 require_gcloud
 require_running
 
+# --remove-orphans so this takes everything down, including a service the
+# configured compose files no longer define. minio becomes exactly that once
+# it is turned off, and it would otherwise keep running after a "down".
 if [ "${1:-}" = "--volumes" ]; then
     log_warn "Removing containers and named volumes."
-    vm_compose "down --volumes"
+    vm_compose "down --volumes --remove-orphans"
 else
     log_step "Stopping containers"
-    vm_compose "down"
+    vm_compose "down --remove-orphans"
 fi
 
 log_info "Containers stopped. Bring them back with ./up.sh"

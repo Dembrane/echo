@@ -138,6 +138,10 @@ RD_COMPOSE_FILES="docker-compose.yml docker-compose-s3.yml"
 
 That also forwards 9000 (S3 API) and 9001 (console, `dembrane` / `dembrane`).
 
+Answering `n` later turns it back off, and the next `./up.sh` removes the
+container. Its `minio_data` directory on the VM is left alone, so turning it on
+again keeps whatever was uploaded.
+
 ## Troubleshooting
 
 **`./up.sh` fails on a missing `directus/.env`.** The compose file requires it.

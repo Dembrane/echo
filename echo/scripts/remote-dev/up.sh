@@ -27,8 +27,18 @@ log_step "Starting containers"
 log_info "The first run builds the directus, agent and server images. Expect 5 to 15 minutes."
 vm_compose "up -d --build"
 
+# Turning minio off only drops docker-compose-s3.yml from RD_COMPOSE_FILES, and
+# a service compose no longer knows about is an orphan it leaves running. Remove
+# it by name rather than passing --remove-orphans, which would also take out
+# anything else started in this project by hand.
+if ! minio_enabled; then
+    vm_compose_project "rm --stop --force minio" >/dev/null 2>&1 || true
+fi
+
 log_step "Container state"
-vm_compose "ps"
+# Project-wide, so a container the configured compose files no longer define
+# still shows up instead of silently running.
+vm_compose_project "ps"
 
 if [ "$SKIP_SETUP" = false ]; then
     log_step "Running devcontainer setup.sh"
