@@ -202,8 +202,10 @@ export const ENABLE_MONITOR = true;
 // Project Library, dynamic canvases and Popcorn. On everywhere; each project
 // still opts in through the experimental toggle (project.is_canvas_enabled).
 export const ENABLE_CANVAS = true;
-// Enable with the server ENABLE_PRESENT rollout; existing Canvas remains independent.
-export const ENABLE_PRESENT = byEnv({ local: true }, false);
+// Present: the room's screen, Analysis and the Map. On everywhere, together with
+// the server's ENABLE_PRESENT; it takes the Canvas entry's place in a project's
+// navigation. Kill switch: flip to false / byEnv to disable an env.
+export const ENABLE_PRESENT = true;
 // Map fixture mode: `?fixture=50|150|200` on the Map page renders synthetic
 // data with no network requests, for performance checks. Local only.
 export const ENABLE_MAP_FIXTURES = byEnv({ local: true }, false);
