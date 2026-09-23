@@ -1,14 +1,14 @@
 import pytest
 
 from dembrane import audio_utils
-from dembrane.audio_utils import (
-    get_file_format_from_file_path,
-    get_mime_type_from_file_path,
-    split_audio_chunk,
-)
-from dembrane.directus import directus
 from dembrane.s3 import s3_client
 from dembrane.service import conversation_service
+from dembrane.directus import directus
+from dembrane.audio_utils import (
+    split_audio_chunk,
+    get_mime_type_from_file_path,
+    get_file_format_from_file_path,
+)
 
 
 @pytest.mark.parametrize(
@@ -97,7 +97,7 @@ def test_split_audio_chunk_preserves_path_and_converts_uppercase_extension(monke
     monkeypatch.setattr(
         s3_client,
         "head_object",
-        lambda Bucket, Key: {"ContentLength": 1000},
+        lambda **_kw: {"ContentLength": 1000},
     )
 
     result = split_audio_chunk(chunk_id, output_format="mp3")
