@@ -66,7 +66,7 @@
         open,
         ...(screen ? { screen } : {}),
         // A synthetic demo's disclosure cannot be skipped from the shell's tabs.
-        locked: open && isSynthetic() && !introDone,
+        locked: open && disclosureGated(),
       },
       EMBED.parentOrigin || location.origin,
     );
@@ -1087,6 +1087,11 @@
   let introStep = 0;          // the screen on show, as in #intro/N
   let introReached = 0;       // the furthest screen this page load has shown
   const isSynthetic = () => state.session?.demo?.synthetic === true;
+  // The room reads a synthetic demo's disclosure through before its tabs open.
+  // The host's preview on the Present page is not the room: the server marks
+  // that page (only behind the session), and its tabs stay open.
+  const PREVIEW = EMBED?.preview === true;
+  const disclosureGated = () => isSynthetic() && !introDone && !PREVIEW;
   const hasOpening = () => !!(state.session?.intro?.enabled || state.session?.disclosure?.text || state.session?.data);
   const paragraphs = (text) => String(text || "").split("\n").map((p) => p.trim()).filter(Boolean);
   function applyIntroduction() {
@@ -4883,9 +4888,9 @@
       || message.presentationId !== EMBED.presentationId
     ) return;
     if (message.command === "dismiss-opening") {
-      // Tab clicks leave a normal introduction; initial synthetic disclosure
-      // still requires its existing Continue flow before it may be dismissed.
-      if (!isSynthetic() || introDone) {
+      // Tab clicks leave a normal introduction; in the room, a synthetic
+      // disclosure still requires its Continue flow before it may be dismissed.
+      if (!disclosureGated()) {
         introDone = true;
         closeIntroduction();
       }

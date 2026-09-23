@@ -227,7 +227,7 @@ light strokes, dark paper, the same fills, made by
 tokens rather than from literals.
 
 - The Present bridge treats repeated current-block messages as acknowledgements, preserving the live phrase and bilingual timers across reconnects. The React room shell provides pause/resume through the timer-preserving visibility command.
-- The `opening` message to the shell carries `locked` while a synthetic demo's disclosure has not been continued through. The shell disables its result tabs for as long, since the deck refuses `dismiss-opening` then.
+- The `opening` message to the shell carries `locked` while a synthetic demo's disclosure has not been continued through. The shell disables its result tabs for as long, since the deck refuses `dismiss-opening` then. The host's preview on the Present page is exempt: the session-only deck routes set `EMBED.preview` when the shell asks with `?preview=1`, and that deck neither locks nor refuses. The room's public link never carries it.
 - `armPopTimer` holds a timer armed while the screen is frozen and owes it in full on thaw, so data that lands during a pause (a translation over SSE) cannot run the bilingual handoff behind the paused screen.
 - The stakeholder map renders neither upstream's search bar nor its detail slider: the room sees every group at full detail. The ladder, `state.stakeDetail` and the search wiring stay in place, inert without their inputs, so an upstream merge still applies.
 - The stakeholder map's node cards carry the name only (plus the inferred marker); the role line and its styles are gone. Relation labels and tooltips keep their descriptions, and a group's own slide still shows role and stake. `bring.title` reads "who you could involve next" / "wie je nog zou kunnen betrekken".

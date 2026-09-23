@@ -1865,3 +1865,17 @@ def test_the_deck_page_embeds_the_looked_up_id_not_the_path_value(monkeypatch) -
     body = response.body.decode()
     assert '"presentationId": "7"' in body
     assert "alert(1)" not in body
+
+
+def test_only_the_hosts_preview_is_marked_as_a_preview(monkeypatch) -> None:
+    async def require(presentation_id, auth):  # noqa: ARG001
+        return {"id": 7}, SimpleNamespace(require=lambda _scope: None)
+
+    monkeypatch.setattr(present_api, "_require_popcorn", require)
+    auth = SimpleNamespace(user_id="host")
+    screen = asyncio.run(present_api.deck("7", auth)).body.decode()
+    preview = asyncio.run(present_api.deck("7", auth, preview=True)).body.decode()
+    draft = asyncio.run(present_api.draft_deck("7", auth, preview=True)).body.decode()
+    assert '"preview": true' not in screen
+    assert '"preview": true' in preview
+    assert '"preview": true' in draft

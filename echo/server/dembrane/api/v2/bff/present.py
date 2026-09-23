@@ -302,7 +302,7 @@ async def presentation_map(
 
 
 @router.get("/{presentation_id}/deck/")
-async def deck(presentation_id: str, auth: DependencyDirectusSession):
+async def deck(presentation_id: str, auth: DependencyDirectusSession, preview: bool = False):
     from fastapi.responses import HTMLResponse
 
     from dembrane.popcorn.view import render_popcorn_page
@@ -310,13 +310,15 @@ async def deck(presentation_id: str, auth: DependencyDirectusSession):
     # Embed the id the lookup returned, never the raw path value.
     report, _access = await _require_popcorn(presentation_id, auth)
     return HTMLResponse(
-        render_popcorn_page(embed=_deck_embed(str(report["id"]))),
+        render_popcorn_page(embed=_deck_embed(str(report["id"]), preview=preview)),
         headers={"Cache-Control": "no-store"},
     )
 
 
 @router.get("/{presentation_id}/draft/deck/")
-async def draft_deck(presentation_id: str, auth: DependencyDirectusSession):
+async def draft_deck(
+    presentation_id: str, auth: DependencyDirectusSession, preview: bool = False
+):
     from fastapi.responses import HTMLResponse
 
     from dembrane.popcorn.view import render_popcorn_page
@@ -324,7 +326,7 @@ async def draft_deck(presentation_id: str, auth: DependencyDirectusSession):
     report, access = await _require_popcorn(presentation_id, auth)
     access.require("project:update")
     return HTMLResponse(
-        render_popcorn_page(embed=_deck_embed(str(report["id"]))),
+        render_popcorn_page(embed=_deck_embed(str(report["id"]), preview=preview)),
         headers={"Cache-Control": "no-store"},
     )
 
@@ -388,7 +390,7 @@ async def deck_illustration(presentation_id: str, name: str, auth: DependencyDir
     return FileResponse(ILLUSTRATIONS[name], media_type="image/webp")
 
 
-def _deck_embed(presentation_id: str) -> dict[str, Any]:
+def _deck_embed(presentation_id: str, *, preview: bool = False) -> dict[str, Any]:
     from urllib.parse import urlsplit
 
     from dembrane.settings import get_settings
@@ -398,6 +400,9 @@ def _deck_embed(presentation_id: str) -> dict[str, Any]:
         "mode": "public",
         "presentationId": presentation_id,
         "parentOrigin": f"{origin.scheme}://{origin.netloc}",
+        # The host's preview on the Present page, behind the session. The room's
+        # public link has its own route and never says this.
+        **({"preview": True} if preview else {}),
     }
 
 
