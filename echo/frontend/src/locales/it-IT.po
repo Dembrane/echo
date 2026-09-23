@@ -2277,7 +2277,7 @@ msgstr ""
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:109
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:138
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:160
-#: src/features/sidebar/blocks/HelpBlock.tsx:83
+#: src/features/sidebar/blocks/HelpBlock.tsx:76
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:248
 #: src/components/project/ProjectPortalEditor.tsx:1474
@@ -3178,7 +3178,7 @@ msgstr "Confirm your password to generate a new secret for your authenticator ap
 msgid "Connect"
 msgstr ""
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:81
+#: src/features/sidebar/blocks/HelpBlock.tsx:74
 #: src/components/agent-access/AgentAccessSection.tsx:147
 msgid "Connect your agent"
 msgstr ""
@@ -3227,7 +3227,7 @@ msgid "Consolidated arguments"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:27
-#: src/features/sidebar/blocks/HelpBlock.tsx:107
+#: src/features/sidebar/blocks/HelpBlock.tsx:122
 msgid "Contact support"
 msgstr ""
 
@@ -4405,7 +4405,7 @@ msgid "Do you want to stay in the loop?"
 msgstr "Do you want to stay in the loop?"
 
 #: src/features/sidebar/views/HelpView.tsx:35
-#: src/features/sidebar/blocks/HelpBlock.tsx:94
+#: src/features/sidebar/blocks/HelpBlock.tsx:99
 #: src/components/chat/ChatHistoryMessage.tsx:197
 msgid "Documentation"
 msgstr "Documentation"
@@ -5392,7 +5392,7 @@ msgid "participant.modal.echo.info.title"
 msgstr "Feature available soon"
 
 #: src/features/sidebar/views/HelpView.tsx:65
-#: src/features/sidebar/blocks/HelpBlock.tsx:74
+#: src/features/sidebar/blocks/HelpBlock.tsx:62
 msgid "Feedback"
 msgstr ""
 
@@ -5964,8 +5964,9 @@ msgid "have your recordings transcribed"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:25
-#: src/features/sidebar/blocks/HelpBlock.tsx:51
-#: src/features/sidebar/blocks/HelpBlock.tsx:64
+#: src/features/sidebar/blocks/HelpBlock.tsx:188
+#: src/features/sidebar/blocks/HelpBlock.tsx:203
+#: src/features/sidebar/blocks/HelpBlock.tsx:217
 msgid "Help"
 msgstr ""
 
@@ -9527,7 +9528,7 @@ msgid "Plan ends"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:52
-#: src/features/sidebar/blocks/HelpBlock.tsx:103
+#: src/features/sidebar/blocks/HelpBlock.tsx:113
 msgid "Planned"
 msgstr ""
 
@@ -10708,7 +10709,7 @@ msgid "Report already generating"
 msgstr "Report already generating"
 
 #: src/features/sidebar/views/HelpView.tsx:58
-#: src/features/sidebar/blocks/HelpBlock.tsx:67
+#: src/features/sidebar/blocks/HelpBlock.tsx:50
 #: src/components/feedback/ReportIssueModal.tsx:180
 msgid "Report an issue"
 msgstr "Segnala un problema"
@@ -12782,7 +12783,7 @@ msgid "System default"
 msgstr "Predefinito di sistema"
 
 #: src/features/sidebar/views/HelpView.tsx:49
-#: src/features/sidebar/blocks/HelpBlock.tsx:100
+#: src/features/sidebar/blocks/HelpBlock.tsx:110
 msgid "System status"
 msgstr ""
 
@@ -15195,7 +15196,7 @@ msgstr "What were the key moments in this conversation?"
 msgid "What would you like to explore?"
 msgstr "What would you like to explore?"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:88
+#: src/features/sidebar/blocks/HelpBlock.tsx:87
 #: src/components/release/ReleaseVideoModal.tsx:310
 msgid "What's new"
 msgstr ""
