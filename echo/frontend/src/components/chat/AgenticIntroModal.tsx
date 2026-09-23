@@ -1,8 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Button, Group, List, Modal, Stack, Text } from "@mantine/core";
-import { IconSparkles } from "@tabler/icons-react";
-import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
+import { AgenticMark } from "@/components/chat/AgenticMark";
 import { testId } from "@/lib/testUtils";
 
 export const AgenticIntroModal = ({
@@ -35,7 +34,7 @@ export const AgenticIntroModal = ({
 			<List
 				spacing="md"
 				size="sm"
-				icon={<IconSparkles size={14} color={MODE_COLORS.agentic.primary} />}
+				icon={<AgenticMark size={16} />}
 				styles={{ itemWrapper: { alignItems: "baseline" } }}
 			>
 				<List.Item>
