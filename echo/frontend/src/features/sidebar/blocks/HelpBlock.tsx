@@ -7,6 +7,7 @@ import {
 	Note,
 	PlugsConnected,
 	Pulse,
+	Question,
 	Sparkle,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
@@ -14,8 +15,12 @@ import { ReleaseVideoModal } from "@/components/release/ReleaseVideoModal";
 import { ENABLE_RELEASE_VIDEO_MODAL, getDocumentationUrl } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useHelpModals } from "../hooks/useHelpModals";
+import { useSidebarOverlayLink } from "../hooks/useSidebarOverlayLink";
+import { useSidebarView } from "../hooks/useSidebarView";
 import { NavButton } from "../primitives/NavButton";
+import { NavItem } from "../primitives/NavItem";
 import { SectionLabel } from "../primitives/SectionLabel";
+import { useInRail } from "../shell/rail";
 
 export const HelpBlock = () => {
 	const { language } = useParams();
@@ -25,6 +30,32 @@ export const HelpBlock = () => {
 	// own state. It also shows itself once per release without being asked.
 	const [releaseRequested, release] = useDisclosure(false);
 	const docUrl = getDocumentationUrl(language);
+	const inRail = useInRail();
+	const helpLink = useSidebarOverlayLink("help");
+	const { overlay } = useSidebarView();
+
+	const releaseModal = ENABLE_RELEASE_VIDEO_MODAL ? (
+		<ReleaseVideoModal
+			requested={releaseRequested}
+			onRequestedClose={release.close}
+		/>
+	) : null;
+
+	// Seven icons would crowd the rail; one opens the Help view instead. The
+	// release modal stays mounted so it still shows itself once per release.
+	if (inRail) {
+		return (
+			<>
+				<NavItem
+					to={helpLink}
+					label={<Trans>Help</Trans>}
+					icon={Question}
+					active={overlay === "help"}
+				/>
+				{releaseModal}
+			</>
+		);
+	}
 
 	return (
 		<>
@@ -81,12 +112,7 @@ export const HelpBlock = () => {
 					}}
 				/>
 			</div>
-			{ENABLE_RELEASE_VIDEO_MODAL ? (
-				<ReleaseVideoModal
-					requested={releaseRequested}
-					onRequestedClose={release.close}
-				/>
-			) : null}
+			{releaseModal}
 		</>
 	);
 };

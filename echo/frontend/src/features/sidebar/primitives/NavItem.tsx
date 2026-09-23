@@ -4,8 +4,10 @@ import type { ReactNode } from "react";
 import { NavLink, useMatch, useParams, useResolvedPath } from "react-router";
 import { SUPPORTED_LANGUAGES } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
+import { cn } from "@/lib/utils";
 import { TIMINGS } from "../animations/motion";
 import { useSidebarView } from "../hooks/useSidebarView";
+import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
 
 interface NavItemProps {
 	to: string;
@@ -41,6 +43,13 @@ export const BADGE_TONES = {
 		backgroundColor: "rgba(255, 209, 102, 0.35)",
 		color: "#2d2d2c",
 	},
+} as const;
+
+// Rail dots for badges that ask for attention. Counts and labels ("Beta")
+// move into the tooltip instead.
+const RAIL_DOT_COLORS = {
+	notification: "#4169e1",
+	pending: "#FFD166",
 } as const;
 
 function useLocalePath(to: string): string {
@@ -83,6 +92,72 @@ export const NavItem = ({
 	// active under it and fight the overlay's row for the shared pill layoutId.
 	const { overlay } = useSidebarView();
 	const active = forcedActive ?? (match != null && !overlay);
+	const inRail = useInRail();
+
+	if (inRail) {
+		// The rail is icons only; a row without one (an inset sub-row) stays in
+		// the full sidebar.
+		if (!Icon) return null;
+		const name = (
+			<>
+				{label}
+				{badge != null ? <> {badge}</> : null}
+			</>
+		);
+		const dot =
+			badge != null && badgeTone !== "muted" ? (
+				<span
+					data-testid="rail-badge-dot"
+					aria-hidden="true"
+					className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full ring-2 ring-parchment"
+					style={{ backgroundColor: RAIL_DOT_COLORS[badgeTone] }}
+				/>
+			) : null;
+
+		if (disabled) {
+			return (
+				<RailTip label={name}>
+					<div
+						className={cn(RAIL_ITEM_CLASS, "cursor-not-allowed opacity-60")}
+						style={{ color: "rgba(45, 45, 44, 0.55)" }}
+						aria-disabled="true"
+					>
+						<Icon size={18} aria-hidden="true" />
+						<span className="sr-only">{name}</span>
+					</div>
+				</RailTip>
+			);
+		}
+
+		return (
+			<RailTip label={name}>
+				<NavLink
+					to={localePath}
+					end={end}
+					className={cn(RAIL_ITEM_CLASS, !active && "hover:bg-black/[0.04]")}
+					style={{
+						color: active
+							? (accent ?? "#4169e1")
+							: muted
+								? "rgba(45, 45, 44, 0.55)"
+								: (accent ?? "#2d2d2c"),
+					}}
+				>
+					{active && (
+						<motion.span
+							layoutId="sidebar-active-pill"
+							transition={TIMINGS.activePill}
+							className="absolute inset-0 rounded-md"
+							style={{ backgroundColor: "rgba(65, 105, 225, 0.08)" }}
+						/>
+					)}
+					<Icon size={18} className="relative" aria-hidden="true" />
+					<span className="sr-only">{name}</span>
+					{dot}
+				</NavLink>
+			</RailTip>
+		);
+	}
 
 	if (disabled) {
 		return (

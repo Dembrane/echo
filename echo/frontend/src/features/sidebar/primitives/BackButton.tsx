@@ -1,6 +1,8 @@
 import { ArrowLeft } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
+import { cn } from "@/lib/utils";
+import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
 
 interface BackButtonProps {
 	to: string;
@@ -12,6 +14,22 @@ interface BackButtonProps {
 }
 
 export const BackButton = ({ to, label, center }: BackButtonProps) => {
+	const inRail = useInRail();
+
+	if (inRail) {
+		return (
+			<RailTip label={label}>
+				<I18nLink
+					to={to}
+					className={cn(RAIL_ITEM_CLASS, "text-graphite hover:bg-black/[0.04]")}
+				>
+					<ArrowLeft size={16} aria-hidden="true" />
+					<span className="sr-only">{label}</span>
+				</I18nLink>
+			</RailTip>
+		);
+	}
+
 	if (center) {
 		return (
 			<div className="sticky top-0 z-10 -mx-1.5 -mt-1.5 bg-parchment px-1.5 pt-1.5">

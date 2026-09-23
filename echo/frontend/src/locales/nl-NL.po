@@ -1016,6 +1016,7 @@ msgstr "Toegangsverzoeken"
 #: src/routes/admin/AdminSettingsRoute.tsx:1578
 #: src/routes/admin/AdminSettingsRoute.tsx:2644
 #: src/routes/admin/AdminSettingsRoute.tsx:3087
+#: src/features/sidebar/shell/UserMenu.tsx:80
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:132
 msgid "Account"
@@ -1371,7 +1372,7 @@ msgstr "Pas de basislettergrootte voor de interface aan"
 msgid "Admin"
 msgstr "Beheerder"
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:143
+#: src/features/sidebar/views/user/UserHomeView.tsx:146
 msgid "Admin dashboard"
 msgstr "Beheerdersdashboard"
 
@@ -2274,7 +2275,7 @@ msgstr ""
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:109
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:138
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:160
-#: src/features/sidebar/blocks/HelpBlock.tsx:52
+#: src/features/sidebar/blocks/HelpBlock.tsx:83
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:248
 #: src/components/project/ProjectPortalEditor.tsx:1474
@@ -2917,7 +2918,7 @@ msgstr "Filters wissen"
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:274
 #: src/routes/project/ProjectsHome.tsx:364
 #: src/routes/project/chat/NewChatRoute.tsx:172
-#: src/features/sidebar/blocks/SearchBlock.tsx:136
+#: src/features/sidebar/blocks/SearchBlock.tsx:159
 #: src/components/invite/WorkspaceSelectList.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:802
 msgid "Clear search"
@@ -3175,7 +3176,7 @@ msgstr "Bevestig je wachtwoord om een nieuw geheim voor je authenticator-app te 
 msgid "Connect"
 msgstr ""
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:50
+#: src/features/sidebar/blocks/HelpBlock.tsx:81
 #: src/components/agent-access/AgentAccessSection.tsx:147
 msgid "Connect your agent"
 msgstr ""
@@ -3224,7 +3225,7 @@ msgid "Consolidated arguments"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:27
-#: src/features/sidebar/blocks/HelpBlock.tsx:76
+#: src/features/sidebar/blocks/HelpBlock.tsx:107
 msgid "Contact support"
 msgstr "Contact met support"
 
@@ -3782,7 +3783,7 @@ msgstr "Maak eigen chattemplates (bèta), of kopieer en bewerk een ingebouwde te
 msgid "library.create"
 msgstr "Maak bibliotheek aan"
 
-#: src/features/sidebar/shell/UserMenu.tsx:145
+#: src/features/sidebar/shell/UserMenu.tsx:165
 msgid "Create new organisation"
 msgstr "Nieuwe organisatie aanmaken"
 
@@ -4402,7 +4403,7 @@ msgid "Do you want to stay in the loop?"
 msgstr "Wil je op de hoogte blijven?"
 
 #: src/features/sidebar/views/HelpView.tsx:35
-#: src/features/sidebar/blocks/HelpBlock.tsx:63
+#: src/features/sidebar/blocks/HelpBlock.tsx:94
 #: src/components/chat/ChatHistoryMessage.tsx:197
 msgid "Documentation"
 msgstr "Documentatie"
@@ -5122,8 +5123,8 @@ msgstr "24 uur verlengen"
 #: src/routes/organisation/OrganisationRoute.tsx:1888
 #: src/routes/organisation/OrganisationExternalView.tsx:63
 #: src/lib/roles.ts:15
-#: src/features/sidebar/views/user/UserHomeView.tsx:113
-#: src/features/sidebar/views/org/OrgHomeView.tsx:148
+#: src/features/sidebar/views/user/UserHomeView.tsx:115
+#: src/features/sidebar/views/org/OrgHomeView.tsx:149
 #: src/components/project/ProjectUsageAndSharing.tsx:319
 #: src/components/invite/RoleSelect.tsx:60
 msgid "External"
@@ -5389,7 +5390,7 @@ msgid "participant.modal.echo.info.title"
 msgstr "Functie binnenkort beschikbaar"
 
 #: src/features/sidebar/views/HelpView.tsx:65
-#: src/features/sidebar/blocks/HelpBlock.tsx:43
+#: src/features/sidebar/blocks/HelpBlock.tsx:74
 msgid "Feedback"
 msgstr "Feedback"
 
@@ -5798,7 +5799,7 @@ msgid "participant.refine.go.deeper.description"
 msgstr "Krijg direct een reactie van dembrane om het gesprek te verdiepen."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:691
-#: src/features/sidebar/views/user/UserHomeView.tsx:81
+#: src/features/sidebar/views/user/UserHomeView.tsx:82
 msgid "Get started"
 msgstr "Aan de slag"
 
@@ -5961,7 +5962,8 @@ msgid "have your recordings transcribed"
 msgstr "je opnames te laten transcriberen"
 
 #: src/features/sidebar/views/HelpView.tsx:25
-#: src/features/sidebar/blocks/HelpBlock.tsx:33
+#: src/features/sidebar/blocks/HelpBlock.tsx:51
+#: src/features/sidebar/blocks/HelpBlock.tsx:64
 msgid "Help"
 msgstr "Help"
 
@@ -6066,7 +6068,7 @@ msgstr "Notitie bij wijziging"
 msgid "Holds position"
 msgstr ""
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:76
+#: src/features/sidebar/views/user/UserHomeView.tsx:77
 msgid "Home"
 msgstr "Home"
 
@@ -6797,7 +6799,7 @@ msgid "Kind"
 msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:210
-#: src/features/sidebar/shell/UserMenu.tsx:119
+#: src/features/sidebar/shell/UserMenu.tsx:139
 #: src/components/settings/LanguageSettingsCard.tsx:13
 #: src/components/report/UpdateReportModalButton.tsx:253
 #: src/components/report/UpdateReportModalButton.tsx:326
@@ -7294,7 +7296,7 @@ msgstr "Logo verwijderd"
 msgid "Logo updated"
 msgstr "Logo bijgewerkt"
 
-#: src/features/sidebar/shell/UserMenu.tsx:155
+#: src/features/sidebar/shell/UserMenu.tsx:175
 msgid "Logout"
 msgstr "Uitloggen"
 
@@ -7537,8 +7539,8 @@ msgstr "leden"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:798
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:819
 #: src/routes/organisation/OrganisationRoute.tsx:889
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:75
-#: src/features/sidebar/views/org/OrgHomeView.tsx:118
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
+#: src/features/sidebar/views/org/OrgHomeView.tsx:119
 #: src/components/workspace/UsageCard.tsx:213
 #: src/components/project/ProjectUsageAndSharing.tsx:228
 #: src/components/project/ProjectUsageAndSharing.tsx:259
@@ -7925,7 +7927,7 @@ msgid "New Password"
 msgstr "Nieuw wachtwoord"
 
 #: src/routes/project/CreateProjectRoute.tsx:194
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:65
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:68
 msgid "New project"
 msgstr "Nieuw project"
 
@@ -8183,7 +8185,7 @@ msgid "No map results are ready yet."
 msgstr ""
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:682
-#: src/features/sidebar/blocks/SearchBlock.tsx:156
+#: src/features/sidebar/blocks/SearchBlock.tsx:179
 msgid "No matches"
 msgstr "Geen resultaten"
 
@@ -8835,6 +8837,11 @@ msgstr "Kaart openen"
 msgid "Open Map"
 msgstr ""
 
+#: src/features/sidebar/shell/SidebarHeader.tsx:36
+#: src/features/sidebar/shell/SidebarHeader.tsx:40
+msgid "Open menu"
+msgstr "Menu openen"
+
 #: src/routes/admin/AdminSettingsRoute.tsx:2801
 msgid "Open Mollie dashboard"
 msgstr "Mollie-dashboard openen"
@@ -8987,7 +8994,7 @@ msgstr "Alleen organisatie"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:474
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:716
 #: src/routes/onboarding/OnboardingRoute.tsx:122
-#: src/features/sidebar/views/org/OrgHomeView.tsx:76
+#: src/features/sidebar/views/org/OrgHomeView.tsx:77
 #: src/features/sidebar/hooks/useSearchHits.ts:134
 #: src/components/training/StaffTrainingPanel.tsx:139
 #: src/components/organisation/CreateOrganisationModal.tsx:174
@@ -9045,7 +9052,7 @@ msgstr "Alleen organisatie"
 msgid "Organisation usage"
 msgstr "Organisatiegebruik"
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:94
+#: src/features/sidebar/views/user/UserHomeView.tsx:96
 #: src/components/agent-access/AgentGrantsCard.tsx:94
 msgid "Organisations"
 msgstr "Organisaties"
@@ -9122,9 +9129,9 @@ msgstr "Overschreven voor dit project"
 msgid "Override for this project"
 msgstr "Overschrijven voor dit project"
 
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:59
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:62
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:81
-#: src/features/sidebar/views/org/OrgHomeView.tsx:112
+#: src/features/sidebar/views/org/OrgHomeView.tsx:113
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:47
 #: src/components/chat/ChatModeBanner.tsx:36
 msgid "Overview"
@@ -9505,7 +9512,7 @@ msgstr "Vastgezet"
 msgid "Pinned is full (max 5)"
 msgstr "Vastgepind is vol (max 5)"
 
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:89
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:92
 msgid "Pinned projects"
 msgstr "Vastgezette projecten"
 
@@ -9518,7 +9525,7 @@ msgid "Plan ends"
 msgstr "Plan eindigt"
 
 #: src/features/sidebar/views/HelpView.tsx:52
-#: src/features/sidebar/blocks/HelpBlock.tsx:72
+#: src/features/sidebar/blocks/HelpBlock.tsx:103
 msgid "Planned"
 msgstr "Gepland"
 
@@ -10490,7 +10497,7 @@ msgid "Relationships"
 msgstr ""
 
 #: src/routes/ReleaseNotesRoute.tsx:21
-#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:143
+#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:141
 msgid "Release notes"
 msgstr "Release notes"
 
@@ -10699,7 +10706,7 @@ msgid "Report already generating"
 msgstr "Rapport wordt al gegenereerd"
 
 #: src/features/sidebar/views/HelpView.tsx:58
-#: src/features/sidebar/blocks/HelpBlock.tsx:36
+#: src/features/sidebar/blocks/HelpBlock.tsx:67
 #: src/components/feedback/ReportIssueModal.tsx:180
 msgid "Report an issue"
 msgstr "Probleem melden"
@@ -11383,7 +11390,8 @@ msgstr "Taal van het scherm"
 msgid "Scroll to bottom"
 msgstr "Scroll naar beneden"
 
-#: src/features/sidebar/blocks/SearchBlock.tsx:89
+#: src/features/sidebar/blocks/SearchBlock.tsx:88
+#: src/features/sidebar/blocks/SearchBlock.tsx:111
 #: src/components/conversation/ProjectConversationsPanel.tsx:795
 #: src/components/conversation/MoveConversationButton.tsx:158
 msgid "Search"
@@ -11461,7 +11469,7 @@ msgid "Search projects..."
 msgstr "Zoek projecten..."
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:288
-#: src/features/sidebar/blocks/SearchBlock.tsx:146
+#: src/features/sidebar/blocks/SearchBlock.tsx:169
 msgid "Search results"
 msgstr "Zoekresultaten"
 
@@ -11518,7 +11526,7 @@ msgid "Searching transcripts for \"{0}\""
 msgstr "Transcripten doorzoeken op \"{0}\""
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:296
-#: src/features/sidebar/blocks/SearchBlock.tsx:154
+#: src/features/sidebar/blocks/SearchBlock.tsx:177
 msgid "Searching…"
 msgstr "Zoeken…"
 
@@ -11571,7 +11579,7 @@ msgstr "Bekijk upgrade-opties"
 msgid "See when transcription is in progress."
 msgstr "Zie wanneer transcriptie bezig is."
 
-#: src/features/sidebar/shell/UserMenu.tsx:49
+#: src/features/sidebar/shell/UserMenu.tsx:52
 msgid "See you soon"
 msgstr "Tot snel"
 
@@ -11862,16 +11870,16 @@ msgstr "Zet op beheerde facturatie"
 msgid "Set up with the assistant after creating"
 msgstr "Na het aanmaken instellen met de assistent"
 
-#: src/features/sidebar/shell/UserMenu.tsx:101
+#: src/features/sidebar/shell/UserMenu.tsx:121
 msgid "Set up workspace"
 msgstr "Werkruimte instellen"
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:85
+#: src/features/sidebar/views/user/UserHomeView.tsx:86
 msgid "Set up your first organisation"
 msgstr "Stel je eerste organisatie in"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:592
-#: src/features/sidebar/views/user/UserHomeView.tsx:127
+#: src/features/sidebar/views/user/UserHomeView.tsx:129
 msgid "Set up your organisation"
 msgstr "Stel je organisatie in"
 
@@ -11894,10 +11902,10 @@ msgstr "Instellen"
 #: src/routes/settings/UserSettingsRoute.tsx:62
 #: src/routes/project/ProjectsHome.tsx:247
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:28
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:80
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:83
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
-#: src/features/sidebar/views/org/OrgHomeView.tsx:130
+#: src/features/sidebar/views/org/OrgHomeView.tsx:131
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
 #: src/components/layout/ParticipantHeader.tsx:124
 #: src/components/layout/ParticipantHeader.tsx:125
@@ -11922,7 +11930,7 @@ msgid "Settings updated"
 msgstr "Instellingen bijgewerkt"
 
 #: src/routes/project/CreateProjectRoute.tsx:373
-#: src/features/sidebar/views/user/UserHomeView.tsx:74
+#: src/features/sidebar/views/user/UserHomeView.tsx:75
 msgid "Setup"
 msgstr "Instellen"
 
@@ -12399,7 +12407,7 @@ msgid "Spotlight"
 msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3259
-#: src/features/sidebar/shell/UserMenu.tsx:132
+#: src/features/sidebar/shell/UserMenu.tsx:152
 msgid "Staff"
 msgstr "Personeel"
 
@@ -12772,7 +12780,7 @@ msgid "System default"
 msgstr "Systeemstandaard"
 
 #: src/features/sidebar/views/HelpView.tsx:49
-#: src/features/sidebar/blocks/HelpBlock.tsx:69
+#: src/features/sidebar/blocks/HelpBlock.tsx:100
 msgid "System status"
 msgstr "Systeemstatus"
 
@@ -13288,7 +13296,7 @@ msgstr "Het scherm is vergrendeld of het tabblad is niet actief. De opname pauze
 msgid "Theme"
 msgstr "Thema"
 
-#: src/features/sidebar/shell/UserMenu.tsx:75
+#: src/features/sidebar/shell/UserMenu.tsx:94
 msgid "there"
 msgstr "daar"
 
@@ -13935,7 +13943,7 @@ msgid "Trained until {until}"
 msgstr "Getraind tot {until}"
 
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:46
-#: src/features/sidebar/views/org/OrgHomeView.tsx:123
+#: src/features/sidebar/views/org/OrgHomeView.tsx:124
 #: src/components/training/WorkspaceTrainingPanel.tsx:37
 #: src/components/training/TrainingRoster.tsx:47
 #: src/components/training/OrgTrainingPanel.tsx:68
@@ -14334,7 +14342,7 @@ msgid "until {0}"
 msgstr "tot {0}"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1647
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:95
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:98
 #: src/components/workspace/OrganisationProjectsTable.tsx:236
 msgid "Untitled"
 msgstr "Naamloos"
@@ -14659,7 +14667,7 @@ msgstr "Gebruikt op je facturen. Prijzen zijn exclusief btw."
 msgid "Used the wrong address? <0>Register again</0>."
 msgstr "Verkeerd adres gebruikt? <0>Registreer opnieuw</0>."
 
-#: src/features/sidebar/shell/UserMenu.tsx:139
+#: src/features/sidebar/shell/UserMenu.tsx:159
 msgid "User settings"
 msgstr "Gebruikersinstellingen"
 
@@ -15183,7 +15191,7 @@ msgstr "Wat waren de belangrijkste momenten in dit gesprek?"
 msgid "What would you like to explore?"
 msgstr "Wat wil je verkennen?"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:57
+#: src/features/sidebar/blocks/HelpBlock.tsx:88
 #: src/components/release/ReleaseVideoModal.tsx:310
 msgid "What's new"
 msgstr "Wat is er nieuw"
@@ -15422,7 +15430,7 @@ msgstr "werkruimtes"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1439
 #: src/routes/admin/AdminSettingsRoute.tsx:1688
-#: src/features/sidebar/views/org/OrgHomeView.tsx:140
+#: src/features/sidebar/views/org/OrgHomeView.tsx:141
 msgid "Workspaces"
 msgstr "Werkruimtes"
 
@@ -15513,7 +15521,7 @@ msgstr "Je zit op het gratis plan."
 msgid "You are on the free plan. There is no payment to manage yet."
 msgstr "Je zit op het gratis plan. Er is nog niets te betalen."
 
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:53
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:55
 msgid "You are the data owner"
 msgstr "Jij bent de data-eigenaar"
 
@@ -15599,7 +15607,7 @@ msgstr "Je hebt geen rechten om werkruimtes aan te maken in die organisatie. We 
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "Je hebt geen rechten om uit te nodigen voor een werkruimte in deze organisatie."
 
-#: src/features/sidebar/shell/UserMenu.tsx:110
+#: src/features/sidebar/shell/UserMenu.tsx:130
 msgid "You have a pending invite"
 msgstr "Je hebt een openstaande uitnodiging"
 

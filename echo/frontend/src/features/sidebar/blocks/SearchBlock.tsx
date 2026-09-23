@@ -6,7 +6,9 @@ import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { cn } from "@/lib/utils";
 import { type SearchHit, useSearchHits } from "../hooks/useSearchHits";
+import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
 import classes from "./SearchBlock.module.css";
 
 export const SearchBlock = () => {
@@ -18,6 +20,7 @@ export const SearchBlock = () => {
 	const navigate = useNavigate();
 	const [shortcut, setShortcut] = useState("⌘K");
 	const searchInputRef = useRef<HTMLInputElement>(null);
+	const inRail = useInRail();
 
 	useEffect(() => {
 		const isMac =
@@ -78,26 +81,46 @@ export const SearchBlock = () => {
 
 	return (
 		<>
-			<UnstyledButton
-				onClick={open}
-				className="flex h-[30px] items-center gap-2 rounded-md px-2 text-sm transition-colors hover:bg-black/[0.04]"
-				style={{ color: "#2d2d2c", width: "100%" }}
-				aria-label="Search"
-			>
-				<MagnifyingGlassIcon size={16} />
-				<span>
-					<Trans>Search</Trans>
-				</span>
-				<span
-					className="ml-auto rounded px-1.5 py-0.5 text-xs"
-					style={{
-						backgroundColor: "rgba(45, 45, 44, 0.06)",
-						color: "rgba(45, 45, 44, 0.55)",
-					}}
+			{inRail ? (
+				<RailTip
+					label={
+						<>
+							<Trans>Search</Trans>{" "}
+							<span className="opacity-70">{shortcut}</span>
+						</>
+					}
 				>
-					{shortcut}
-				</span>
-			</UnstyledButton>
+					<UnstyledButton
+						onClick={open}
+						className={cn(RAIL_ITEM_CLASS, "hover:bg-black/[0.04]")}
+						style={{ color: "#2d2d2c" }}
+						aria-label="Search"
+					>
+						<MagnifyingGlassIcon size={18} aria-hidden="true" />
+					</UnstyledButton>
+				</RailTip>
+			) : (
+				<UnstyledButton
+					onClick={open}
+					className="flex h-[30px] items-center gap-2 rounded-md px-2 text-sm transition-colors hover:bg-black/[0.04]"
+					style={{ color: "#2d2d2c", width: "100%" }}
+					aria-label="Search"
+				>
+					<MagnifyingGlassIcon size={16} />
+					<span>
+						<Trans>Search</Trans>
+					</span>
+					<span
+						className="ml-auto rounded px-1.5 py-0.5 text-xs"
+						style={{
+							backgroundColor: "rgba(45, 45, 44, 0.06)",
+							color: "rgba(45, 45, 44, 0.55)",
+						}}
+					>
+						{shortcut}
+					</span>
+				</UnstyledButton>
+			)}
 
 			<Modal
 				opened={opened}
