@@ -51,23 +51,24 @@ def get_file_format_from_file_path(file_path: str) -> str:
 
 
 def get_mime_type_from_file_path(file_path: str) -> str:
-    if file_path.endswith(".wav"):
+    fmt = get_file_format_from_file_path(file_path)
+    if fmt == "wav":
         return "audio/wav"
-    elif file_path.endswith(".mp3"):
+    elif fmt == "mp3":
         return "audio/mp3"
-    elif file_path.endswith(".ogg"):
+    elif fmt == "ogg":
         return "audio/ogg"
-    elif file_path.endswith(".flac"):
+    elif fmt == "flac":
         return "audio/flac"
-    elif file_path.endswith(".webm"):
+    elif fmt == "webm":
         return "audio/webm"
-    elif file_path.endswith(".opus"):
+    elif fmt == "opus":
         return "audio/opus"
-    elif file_path.endswith(".m4a"):
+    elif fmt == "m4a":
         return "audio/m4a"
-    elif file_path.endswith(".mp4"):
+    elif fmt == "mp4":
         return "video/mp4"
-    elif file_path.endswith(".mpeg"):
+    elif fmt == "mpeg":
         return "video/mpeg"
     else:
         raise ValueError(f"Unsupported file type: {file_path}")
@@ -802,7 +803,8 @@ def split_audio_chunk(
         # Extract just the filename part from the URL path
         original_file_path = get_sanitized_s3_key(original_chunk["path"])
         # Create new output path with changed extension
-        output_file_path = original_file_path.replace(chunk_file_format, output_format)
+        base, _ = os.path.splitext(original_file_path)
+        output_file_path = f"{base}.{output_format}"
 
         # Do the conversion
         convert_and_save_to_s3(
