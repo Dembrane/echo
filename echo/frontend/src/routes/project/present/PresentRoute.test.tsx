@@ -57,6 +57,7 @@ vi.mock("@/components/popcorn/PopcornShare", () => ({
 	PopcornShare: () => <div>Sharing settings</div>,
 }));
 const saveSettings = vi.fn();
+const refreshPopcorn = vi.fn();
 vi.mock("@/components/popcorn/hooks", () => ({
 	usePopcornLiveMutation: () => ({ mutate: vi.fn() }),
 	usePopcornSettingsMutation: () => ({
@@ -64,6 +65,10 @@ vi.mock("@/components/popcorn/hooks", () => ({
 		mutateAsync: vi.fn(),
 	}),
 	usePopcornStopLiveMutation: () => ({ mutate: vi.fn() }),
+	useRefreshPopcornMutation: () => ({
+		isPending: false,
+		mutate: refreshPopcorn,
+	}),
 }));
 
 const presentation = {
@@ -150,13 +155,14 @@ describe("Preparing the room before recordings", () => {
 			"/present/projects/empty/default",
 		);
 	});
-	it("keeps Go live and Share beside Present, and opens the screen without a processing request", async () => {
+	it("keeps Go live, Refresh and Share beside Present, and opens the screen without a processing request", async () => {
 		const open = vi.spyOn(window, "open").mockReturnValue(null);
 		show();
 		const present = await screen.findByRole("button", {
 			name: "Present",
 		});
 		expect(screen.getByRole("button", { name: "Go live" })).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Refresh" })).toBeTruthy();
 		expect(screen.getByRole("button", { name: "Share" })).toBeTruthy();
 		fireEvent.click(present);
 		expect(open).toHaveBeenCalledWith(
@@ -165,6 +171,14 @@ describe("Preparing the room before recordings", () => {
 			"noopener",
 		);
 		expect(bff.post).not.toHaveBeenCalled();
+	});
+	it("allows refreshing popcorn phrases on demand", async () => {
+		show();
+		const refreshButton = await screen.findByRole("button", {
+			name: "Refresh",
+		});
+		fireEvent.click(refreshButton);
+		expect(refreshPopcorn).toHaveBeenCalledOnce();
 	});
 	it("scales the room's screen down instead of squeezing it into the column", async () => {
 		show();

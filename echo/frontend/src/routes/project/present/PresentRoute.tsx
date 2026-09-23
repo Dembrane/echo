@@ -19,6 +19,7 @@ import {
 import { useDisclosure, useElementSize } from "@mantine/hooks";
 import {
 	ArrowSquareOutIcon,
+	ArrowsClockwiseIcon,
 	BroadcastIcon,
 	ListChecksIcon,
 	MonitorIcon,
@@ -44,6 +45,7 @@ import {
 	usePopcornLiveMutation,
 	usePopcornSettingsMutation,
 	usePopcornStopLiveMutation,
+	useRefreshPopcornMutation,
 } from "@/components/popcorn/hooks";
 import {
 	PopcornAlsoLanguages,
@@ -434,6 +436,7 @@ function Session({
 	);
 	const live = usePopcornLiveMutation(projectId, presentation.id);
 	const stop = usePopcornStopLiveMutation(projectId, presentation.id);
+	const refresh = useRefreshPopcornMutation(projectId, presentation.id);
 	const [hours, setHours] = useState<LiveHours>(8);
 	const [eventTick, setEventTick] = useState(0);
 	useServerEvents(
@@ -622,6 +625,17 @@ function Session({
 									</Popover.Dropdown>
 								</Popover>
 							))}
+						{canEdit && (
+							<Button
+								variant="outline"
+								leftSection={<ArrowsClockwiseIcon size={18} />}
+								loading={refresh.isPending}
+								onClick={() => refresh.mutate()}
+								{...testId("present-refresh-button")}
+							>
+								<Trans>Refresh</Trans>
+							</Button>
+						)}
 						{canEdit && (
 							<Button
 								variant="outline"
