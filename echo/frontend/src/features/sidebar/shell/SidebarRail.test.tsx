@@ -284,15 +284,32 @@ describe("section labels and lists of things", () => {
 });
 
 describe("help in the rail", () => {
-	it("folds into one icon that opens the Help view", () => {
+	it("is one question mark that bubbles the help icons out in place", () => {
 		renderIn(<HelpBlock />, { url: "/en-US/o" });
-		const links = screen.getAllByRole("link");
-		expect(links).toHaveLength(1);
-		expect(links[0].getAttribute("aria-label") ?? links[0].textContent).toBe(
-			"Help",
-		);
-		expect(links[0].getAttribute("href")).toBe("/en-US/o?sidebar=help");
-		expect(screen.queryByRole("button")).toBeNull();
+		const help = screen.getByRole("button", { name: "Help" });
+		expect(help.getAttribute("aria-expanded")).toBe("false");
+		expect(screen.queryByRole("button", { name: "Feedback" })).toBeNull();
+
+		fireEvent.click(help);
+		expect(help.getAttribute("aria-expanded")).toBe("true");
+		expect(screen.getByRole("button", { name: "Feedback" })).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Report an issue" })).toBeTruthy();
+		// It opens in place: nothing navigates.
+		expect(screen.queryByRole("link")).toBeNull();
+		expect(location()).toBe("/en-US/o");
+	});
+
+	it("tucks the icons back in on a second click or Escape", () => {
+		renderIn(<HelpBlock />, { url: "/en-US/o" });
+		const help = screen.getByRole("button", { name: "Help" });
+		fireEvent.click(help);
+		fireEvent.click(help);
+		expect(help.getAttribute("aria-expanded")).toBe("false");
+		fireEvent.click(help);
+		fireEvent.keyDown(screen.getByRole("button", { name: "Feedback" }), {
+			key: "Escape",
+		});
+		expect(help.getAttribute("aria-expanded")).toBe("false");
 	});
 });
 
