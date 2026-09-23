@@ -60,6 +60,7 @@ from dembrane.analysis.contracts import (
     Run,
     Step,
     NewRun,
+    Origin,
     RunMode,
     Relation,
     StepKind,
@@ -89,6 +90,8 @@ BUSY_RETRY_SECONDS = 30
 # During a long step the lease is renewed this often, far inside its deadline.
 KEEPALIVE_SECONDS = 60.0
 MANIFEST_VERSION = 1
+# A run publishes again this many times when hosts keep editing its objects.
+PUBLISH_ATTEMPTS = 3
 
 
 def live_channel(project_id: str) -> str:
@@ -217,15 +220,22 @@ def computation_manifest(manifest: Mapping[str, Any] | None, partitioned: Iterab
     every = "dependencies" in parts
     out = {key: value for key, value in manifest.items() if key not in parts and key != "dependencies"}
     out["dependencies"] = {
-        name: {
-            "recipeId": dependency.get("recipeId"),
-            "scopeKey": dependency.get("scopeKey"),
-            "output": None
-            if every or f"dependencies.{name}" in parts
-            else dependency.get("outputFingerprint") or dependency.get("manifestHash"),
-        }
+        name: _dependency_computation(dependency, partitioned=every or f"dependencies.{name}" in parts)
         for name, dependency in sorted((manifest.get("dependencies") or {}).items())
     }
+    return out
+
+
+def _dependency_computation(dependency: Mapping[str, Any], *, partitioned: bool) -> dict[str, Any]:
+    out: dict[str, Any] = {
+        "recipeId": dependency.get("recipeId"),
+        "scopeKey": dependency.get("scopeKey"),
+        "output": None if partitioned else dependency.get("outputFingerprint") or dependency.get("manifestHash"),
+    }
+    # What a host withdrew changes the computation, unless each step already
+    # names the revisions it consumes.
+    if dependency.get("withdrawnObjectIds") and not partitioned:
+        out["withdrawn"] = list(dependency["withdrawnObjectIds"])
     return out
 
 
@@ -280,7 +290,9 @@ def _compatible(run: Run, recipe: Recipe, parameters: Mapping[str, Any], context
     )
 
 
-def _pinned(name: str, recipe_id: str, scope_key: str, run: Run) -> PinnedOutput:
+def _pinned(
+    name: str, recipe_id: str, scope_key: str, run: Run, withdrawn: Iterable[str] = ()
+) -> PinnedOutput:
     return PinnedOutput(
         name=name,
         recipe_id=recipe_id,
@@ -288,7 +300,21 @@ def _pinned(name: str, recipe_id: str, scope_key: str, run: Run) -> PinnedOutput
         scope_id=run.scope_id,
         run_id=run.id,
         manifest=run.output_manifest or {},
+        withdrawn=tuple(sorted(withdrawn)),
     )
+
+
+async def _pin(store: AnalysisStore, name: str, recipe_id: str, scope_key: str, run: Run) -> PinnedOutput:
+    """A ready output as a consumer pins it now: an object a host excluded
+    is withdrawn, so an exclusion reaches every recipe downstream."""
+    objects = {str(o["objectId"]) for o in (run.output_manifest or {}).get("objects") or []}
+    heads = await store.current_revisions(run.project_id, [run.scope_id]) if objects else {}
+    withdrawn = [
+        object_id
+        for object_id, head in heads.items()
+        if object_id in objects and head.provenance.extra.get("membershipExcluded")
+    ]
+    return _pinned(name, recipe_id, scope_key, run, withdrawn)
 
 
 async def _current_ready(store: AnalysisStore, scope_id: str) -> Run | None:
@@ -412,7 +438,7 @@ async def request_run(
             if current is not None and _compatible(
                 current, node_recipe, node.parameters, _node_context(node_recipe, request)
             ):
-                pinned[node.key] = _pinned(node.key, node.recipe_id, node.scope_key, current)
+                pinned[node.key] = await _pin(store, node.key, node.recipe_id, node.scope_key, current)
                 continue
         # Anything else is requested. Equivalent work already in flight is
         # joined by the request's own dedupe, which compares the whole
@@ -432,7 +458,7 @@ async def request_run(
         )
         dependency_runs.append(outcome.run)
         if outcome.run.status == RunStatus.READY:
-            pinned[node.key] = _pinned(node.key, node.recipe_id, node.scope_key, outcome.run)
+            pinned[node.key] = await _pin(store, node.key, node.recipe_id, node.scope_key, outcome.run)
         else:
             waiting[node.key] = outcome.run
     root = await _request_node(
@@ -981,6 +1007,39 @@ class RecipeContext:
             self.metrics["relationsStaged"] += 1
         return relation
 
+    async def yield_to_authored(self, object_ids: Iterable[str]) -> bool:
+        """Objects a host edited while this run worked keep the host's
+        revision: the output names it, and a relation that pointed at this
+        run's revision of the object points at it instead. False when an
+        object changed any other way."""
+        swapped: dict[str, ObjectRevision] = {}
+        for object_id in object_ids:
+            staged = self.objects.get(object_id)
+            record = await self.store.get_object(object_id)
+            head_id = record.current_revision_id if record else None
+            head = (await self.store.get_revisions(self.project_id, [head_id])).get(head_id) if head_id else None
+            if staged is None or record is None or head is None or head.provenance.origin != Origin.AUTHORED:
+                return False
+            swapped[staged.revision.id] = head
+            self.objects[object_id] = StagedRevision(object=record, revision=head, reused=True)
+        moved = [r for r in self.relations.values() if r.from_revision_id in swapped or r.to_revision_id in swapped]
+        if not moved:
+            return True
+        known = {s.revision.id: s.revision for s in self.objects.values()}
+        known.update(await self.store.get_revisions(self.project_id, list(self.input_revision_ids)))
+        for relation in moved:
+            del self.relations[relation.id]
+            ends = [swapped.get(end) or known[end] for end in (relation.from_revision_id, relation.to_revision_id)]
+            await self.relate(
+                relation.type,
+                ends[0],
+                ends[1],
+                basis=str(relation.basis),
+                attributes=relation.attributes,
+                source_refs=[SourceRef.from_json(ref) for ref in relation.provenance.get("sourceRefs") or []],
+            )
+        return True
+
     async def input_revisions(self, name: str | None = None) -> list[ObjectRevision]:
         """A dependency's pinned output revisions (by input name), or every
         pinned input revision, in manifest order."""
@@ -1083,16 +1142,6 @@ class RecipeContext:
         checks.extend(self.step_checks)
         if self.recipe.validate is not None:
             checks.extend(await self.recipe.validate(self))
-        review = sorted(s.object.id for s in self.objects.values() if s.needs_review)
-        if review:
-            checks.append(
-                CheckOutcome(
-                    check="authored-head",
-                    status=CheckStatus.NEEDS_REVIEW,
-                    evidence={"objects": review},
-                    message="A generated update would replace authored text.",
-                )
-            )
         return checks
 
 
@@ -1123,8 +1172,9 @@ async def _pin_dependencies(store: AnalysisStore, recipe: Recipe, run: Run, scop
     names = plan.root_node.dependencies
     if not names:
         return {}
+    recorded: Mapping[str, Any] = (run.input_manifest or {}).get("dependencies") or {}
     if run.input_manifest is not None:
-        ids = [str(d.get("runId")) for d in (run.input_manifest.get("dependencies") or {}).values()]
+        ids = [str(d.get("runId")) for d in recorded.values()]
     else:
         ids = list(run.depends_on)
     by_scope = {r.scope_id: r for r in [await store.get_run(rid) for rid in ids] if r is not None}
@@ -1137,7 +1187,12 @@ async def _pin_dependencies(store: AnalysisStore, recipe: Recipe, run: Run, scop
         chosen = by_scope.get(scope.id) if scope else None
         if chosen is None or chosen.status != RunStatus.READY or not chosen.output_manifest:
             raise RecipeFailed("A recipe this run depends on has no ready output.")
-        pinned[name] = _pinned(name, node.recipe_id, node.scope_key, chosen)
+        if run.input_manifest is not None:
+            # Replay what was withdrawn when the inputs were pinned.
+            withdrawn = (recorded.get(name) or {}).get("withdrawnObjectIds") or ()
+            pinned[name] = _pinned(name, node.recipe_id, node.scope_key, chosen, withdrawn)
+        else:
+            pinned[name] = await _pin(store, name, node.recipe_id, node.scope_key, chosen)
     return pinned
 
 
@@ -1210,14 +1265,21 @@ async def _execute(ctx: RecipeContext) -> str:
     await ctx.progress("running", force=True)
     await ctx.recipe.execute(ctx)
     await ctx.progress("validating", force=True)
-    checks = await ctx.validate()
-    if any(c.status == CheckStatus.FAILED for c in checks):
-        raise ValidationFailed(checks)
-    manifest = ctx.candidate_manifest(checks)
-    check_docs = [c.as_json() for c in checks]
-    if any(c.status == CheckStatus.NEEDS_REVIEW for c in checks):
-        return await _needs_review(ctx, manifest, check_docs)
-    result = await store.publish_run(run.id, ctx.lease, manifest=manifest, checks=check_docs, metrics=ctx.metrics_doc())
+    for attempt in range(1, PUBLISH_ATTEMPTS + 1):
+        checks = await ctx.validate()
+        if any(c.status == CheckStatus.FAILED for c in checks):
+            raise ValidationFailed(checks)
+        manifest = ctx.candidate_manifest(checks)
+        check_docs = [c.as_json() for c in checks]
+        if any(c.status == CheckStatus.NEEDS_REVIEW for c in checks):
+            return await _needs_review(ctx, manifest, check_docs)
+        result = await store.publish_run(run.id, ctx.lease, manifest=manifest, checks=check_docs, metrics=ctx.metrics_doc())
+        # A host edited one of this run's objects while it worked: the edit
+        # stands, and the run publishes the rest around it.
+        if result.outcome != "conflict" or attempt == PUBLISH_ATTEMPTS:
+            break
+        if not await ctx.yield_to_authored(result.conflicts):
+            break
     if result.outcome == "inactive":
         raise RunStopped()
     if result.outcome == "conflict":

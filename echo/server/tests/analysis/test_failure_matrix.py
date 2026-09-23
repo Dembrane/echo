@@ -385,16 +385,15 @@ async def test_row_lease_order_and_expected_head_decide_competing_writes() -> No
     assert conflict.value.current is not None and conflict.value.current.id == winner.id
     assert store.objects[head.object_id].current_revision_id == winner.id
 
-    # A generated run that would replace the authored head waits for review and
-    # leaves the ready output current.
-    current = await _current(store, "arguments")
+    # A generated run meets the authored head and keeps it: the run publishes,
+    # the host's edit stays the head, and no generated revision is written.
     regenerated = await request_run(_request("arguments", "g9", mode="regenerate"), store=store, deps=deps)
-    assert await run_worker(regenerated.run.id, store=store, deps=deps) == "needs_review"
+    assert await run_worker(regenerated.run.id, store=store, deps=deps) == "ready"
     assert store.objects[head.object_id].current_revision_id == winner.id
-    assert (await _current(store, "arguments")).id == current.id
+    assert (await _current(store, "arguments")).id == regenerated.run.id
     assert [
-        v.status for v in store.revisions.values() if v.run_id == regenerated.run.id and v.object_id == head.object_id
-    ] == [RevisionStatus.CANDIDATE]
+        v for v in store.revisions.values() if v.run_id == regenerated.run.id and v.object_id == head.object_id
+    ] == []
 
 
 # ── row 8: re-check a claim after a snapshot was shared ─────────────────

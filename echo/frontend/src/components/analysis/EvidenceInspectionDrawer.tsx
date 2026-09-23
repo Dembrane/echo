@@ -87,6 +87,9 @@ function ResultEditor({
 		item.payload ?? {},
 	);
 	const [excluded, setExcluded] = useState(Boolean(item.membershipExcluded));
+	// Tensions and merged arguments are built from arguments, so withdrawing
+	// one reaches them too.
+	const feedsOthers = item.type === "argument";
 	const [reason, setReason] = useState("");
 	const [withdrawOpened, withdrawModal] = useDisclosure(false);
 	const [rollbackOpened, rollbackModal] = useDisclosure(false);
@@ -350,6 +353,14 @@ function ResultEditor({
 					)}
 				</Button>
 			</Group>
+			{excluded && feedsOthers && (
+				<Text size="sm" c="dimmed">
+					<Trans>
+						Tensions and merged arguments leave this argument out from their
+						next update. Restoring it brings it back.
+					</Trans>
+				</Text>
+			)}
 			{history.length > 1 && (
 				<Accordion variant="contained">
 					<Accordion.Item value="rollback">
@@ -393,7 +404,11 @@ function ResultEditor({
 				onClose={withdrawModal.close}
 				onConfirm={() => decideMembership(true)}
 				title={t`Withdraw result`}
-				message={t`Withdraw this result from current Map and presentation views? Its revision history will remain available.`}
+				message={
+					feedsOthers
+						? t`Withdraw this argument from current Map and presentation views? Tensions and merged arguments leave it out too, from their next update. Its revision history will remain available.`
+						: t`Withdraw this result from current Map and presentation views? Its revision history will remain available.`
+				}
 				confirmLabel={<Trans>Withdraw result</Trans>}
 				confirmColor="red"
 				loading={membership.isPending}

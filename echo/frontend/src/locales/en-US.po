@@ -1890,7 +1890,7 @@ msgstr "Are you sure you want to remove your custom logo? The default dembrane l
 
 #: src/components/map/attributes.ts:87
 #: src/components/map/panels/NodeDetailCard.tsx:449
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:197
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:200
 msgid "Argument"
 msgstr "Argument"
 
@@ -2880,7 +2880,7 @@ msgstr "Choose your preferred theme for the interface"
 msgid "City"
 msgstr "City"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:198
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:201
 msgid "Claim"
 msgstr "Claim"
 
@@ -4677,7 +4677,7 @@ msgstr "Edit reports directly"
 msgid "Edit reports directly in dembrane."
 msgstr "Edit reports directly in dembrane."
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:180
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:183
 msgid "Edit result"
 msgstr "Edit result"
 
@@ -5021,11 +5021,11 @@ msgstr "Everything looks good – you can continue."
 msgid "Evidence"
 msgstr "Evidence"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:439
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:454
 msgid "Evidence and history"
 msgstr "Evidence and history"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:282
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:285
 msgid "Evidence level"
 msgstr "Evidence level"
 
@@ -5507,7 +5507,7 @@ msgstr "Finishing"
 msgid "First name"
 msgstr "First name"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:235
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:238
 msgid "First pole"
 msgstr "First pole"
 
@@ -6056,7 +6056,7 @@ msgstr "Highlight"
 msgid "Highlight specific Concept"
 msgstr "Highlight specific Concept"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:511
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:526
 msgid "History could not be loaded."
 msgstr "History could not be loaded."
 
@@ -6299,7 +6299,7 @@ msgstr "Incorrect or made up"
 
 #: src/components/map/panels/shared.tsx:85
 #: src/components/map/panels/shared.tsx:96
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:287
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:290
 msgid "Inferred"
 msgstr "Inferred"
 
@@ -6507,7 +6507,7 @@ msgstr "Invoices"
 msgid "Invoicing"
 msgstr "Invoicing"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:292
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:295
 msgid "Invoked by"
 msgstr "Invoked by"
 
@@ -6794,7 +6794,7 @@ msgstr "Key terms tell transcription how to spell the names and words that matte
 msgid "Kickback %"
 msgstr "Kickback %"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:194
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:197
 msgid "Kind"
 msgstr "Kind"
 
@@ -6985,7 +6985,7 @@ msgstr "Likely false"
 msgid "Likely true"
 msgstr "Likely true"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:550
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:565
 msgid "Lineage could not be loaded."
 msgstr "Lineage could not be loaded."
 
@@ -7118,7 +7118,7 @@ msgstr "Live. New conversations will feed Popcorn as they arrive."
 msgid "Living canvas and popcorn"
 msgstr "Living canvas and popcorn"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:318
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:321
 msgid "Load latest revision"
 msgstr "Load latest revision"
 
@@ -7768,7 +7768,7 @@ msgstr "My templates"
 #: src/components/common/RedactedText.tsx:42
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:131
 #: src/components/chat/CanvasSuggestionCard.tsx:88
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:265
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:268
 msgid "Name"
 msgstr "Name"
 
@@ -7819,7 +7819,7 @@ msgid "name@example.com, name2@example.com"
 msgstr "name@example.com, name2@example.com"
 
 #: src/components/map/panels/shared.tsx:94
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:286
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:289
 msgid "Named by participants"
 msgstr "Named by participants"
 
@@ -7849,7 +7849,7 @@ msgstr "Needs attention"
 
 #: src/components/map/attributes.ts:273
 #: src/components/map/panels/shared.tsx:28
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:208
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:211
 msgid "Negative"
 msgstr "Negative"
 
@@ -7860,7 +7860,7 @@ msgstr "Neighbor Attraction: {0}"
 
 #: src/components/map/attributes.ts:274
 #: src/components/map/panels/shared.tsx:30
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:209
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:212
 msgid "Neutral"
 msgstr "Neutral"
 
@@ -8344,7 +8344,7 @@ msgstr "No runs yet"
 msgid "No selectable conversations"
 msgstr "No selectable conversations"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:474
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:489
 msgid "No source quote was recorded for this result."
 msgstr "No source quote was recorded for this result."
 
@@ -8801,7 +8801,7 @@ msgstr "Open chat documentation"
 #: src/components/conversation/ProjectConversationsPanel.tsx:406
 #: src/components/conversation/ProjectConversationsPanel.tsx:410
 #: src/components/conversation/ConversationDrilldownModal.tsx:237
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:496
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:511
 msgid "Open conversation"
 msgstr "Open conversation"
 
@@ -9433,7 +9433,7 @@ msgstr "Personal information will be replaced with placeholders. Audio playback,
 msgid "Phone"
 msgstr "Phone"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:218
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:221
 msgid "Phrase"
 msgstr "Phrase"
 
@@ -9704,7 +9704,7 @@ msgstr "Portal tutorial"
 
 #: src/components/map/attributes.ts:272
 #: src/components/map/panels/shared.tsx:26
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:207
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:210
 msgid "Positive"
 msgstr "Positive"
 
@@ -10065,7 +10065,7 @@ msgstr "Publish"
 msgid "Publish changes"
 msgstr "Publish changes"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:335
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:338
 msgid "Publish revision"
 msgstr "Publish revision"
 
@@ -10097,7 +10097,7 @@ msgstr "QR code"
 msgid "Question"
 msgstr "Question"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:252
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:255
 msgid "Question to resolve"
 msgstr "Question to resolve"
 
@@ -10264,7 +10264,7 @@ msgstr "Ready to connect your tools? Add a webhook to automatically receive conv
 msgid "Reason"
 msgstr "Reason"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:301
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:304
 msgid "Reason for this change"
 msgstr "Reason for this change"
 
@@ -10930,21 +10930,21 @@ msgstr "Reset to default"
 msgid "Response feedback"
 msgstr "Response feedback"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:357
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:409
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:368
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:424
 msgid "Restore earlier wording"
 msgstr "Restore earlier wording"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:347
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:350
 msgid "Restore result"
 msgstr "Restore result"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:411
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:426
 msgid "Restore revision"
 msgstr "Restore revision"
 
 #. placeholder {0}: rollbackRevision?.revisionNumber ?? ""
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:410
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:425
 msgid "Restore revision {0} as a new revision?"
 msgstr "Restore revision {0} as a new revision?"
 
@@ -11097,12 +11097,12 @@ msgstr "Review, edit, and open every conversation in this project."
 msgid "participant.concrete.action.button.revise"
 msgstr "Revise"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:526
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:541
 msgid "Revision"
 msgstr "Revision"
 
 #. placeholder {0}: revision.revisionNumber
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:373
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:384
 msgid "Revision {0}"
 msgstr "Revision {0}"
 
@@ -11111,7 +11111,7 @@ msgid "Revision #{revisionNumber}"
 msgstr "Revision #{revisionNumber}"
 
 #: src/components/goal/ProjectGoalSection.tsx:183
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:506
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:521
 msgid "Revision history"
 msgstr "Revision history"
 
@@ -11157,7 +11157,7 @@ msgstr "Right-click to highlight"
 
 #: src/components/map/panels/NodeDetailCard.tsx:341
 #: src/components/invite/RoleSelect.tsx:78
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:270
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:273
 msgid "Role"
 msgstr "Role"
 
@@ -11543,7 +11543,7 @@ msgstr "Seats"
 msgid "Seats full"
 msgstr "Seats full"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:240
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:243
 msgid "Second pole"
 msgstr "Second pole"
 
@@ -12349,7 +12349,7 @@ msgid "Source conversation"
 msgstr "Source conversation"
 
 #: src/components/map/panels/NodeDetailCard.tsx:487
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:470
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:485
 msgid "Source evidence"
 msgstr "Source evidence"
 
@@ -12414,7 +12414,7 @@ msgid "Staff-created"
 msgstr "Staff-created"
 
 #: src/components/map/panels/NodeDetailCard.tsx:344
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:275
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:278
 msgid "Stake"
 msgstr "Stake"
 
@@ -12487,7 +12487,7 @@ msgstr "Started recording"
 msgid "Starts"
 msgstr "Starts"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:185
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:188
 msgid "Statement"
 msgstr "Statement"
 
@@ -12830,7 +12830,7 @@ msgstr "Take some time to create an outcome that makes your contribution concret
 msgid "Tapping Record twice no longer creates duplicate conversations."
 msgstr "Tapping Record twice no longer creates duplicate conversations."
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:544
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:559
 msgid "Technical lineage"
 msgstr "Technical lineage"
 
@@ -12872,7 +12872,7 @@ msgid "Templates"
 msgstr "Templates"
 
 #: src/components/map/attributes.ts:123
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:245
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:248
 msgid "Tension"
 msgstr "Tension"
 
@@ -12881,6 +12881,10 @@ msgstr "Tension"
 #: src/components/map/attributes.ts:124
 msgid "Tensions"
 msgstr "Tensions"
+
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:358
+msgid "Tensions and merged arguments leave this argument out from their next update. Restoring it brings it back."
+msgstr "Tensions and merged arguments leave this argument out from their next update. Restoring it brings it back."
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:54
 msgid "Tensions tab"
@@ -12974,7 +12978,7 @@ msgstr "The assistant forgets it in every future chat."
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "The assistant suggests updating {headlineFields}. Waiting on you."
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:326
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:329
 msgid "The change could not be published."
 msgstr "The change could not be published."
 
@@ -13582,7 +13586,7 @@ msgstr "This part of the page failed to load. Reloading usually fixes it. If it 
 msgid "this person"
 msgstr "this person"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:224
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:227
 msgid "This phrase is a question"
 msgstr "This phrase is a question"
 
@@ -13667,7 +13671,7 @@ msgstr "This request has expired"
 msgid "This request took too long, so I stopped it. Send it again and I'll retry."
 msgstr "This request took too long, so I stopped it. Send it again and I'll retry."
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:309
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:312
 msgid "This result changed while you were reviewing it."
 msgstr "This result changed while you were reviewing it."
 
@@ -14688,7 +14692,7 @@ msgid "Using webhooks? We'd love to hear from you"
 msgstr "Using webhooks? We'd love to hear from you"
 
 #: src/components/map/attributes.ts:279
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:204
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:207
 msgid "Valence"
 msgstr "Valence"
 
@@ -14897,7 +14901,7 @@ msgstr "Voice changes apply the next time you prepare or update Popcorn results.
 msgid "Voice input respects the free plan's recording limit."
 msgstr "Voice input respects the free plan's recording limit."
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:285
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:288
 msgid "Voiced directly"
 msgstr "Voiced directly"
 
@@ -15304,13 +15308,17 @@ msgstr "With external clients"
 msgid "With several lines, the first reads as a subtitle."
 msgstr "With several lines, the first reads as a subtitle."
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:349
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:395
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:397
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:352
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:406
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:412
 msgid "Withdraw result"
 msgstr "Withdraw result"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:396
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:409
+msgid "Withdraw this argument from current Map and presentation views? Tensions and merged arguments leave it out too, from their next update. Its revision history will remain available."
+msgstr "Withdraw this argument from current Map and presentation views? Tensions and merged arguments leave it out too, from their next update. Its revision history will remain available."
+
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:410
 msgid "Withdraw this result from current Map and presentation views? Its revision history will remain available."
 msgstr "Withdraw this result from current Map and presentation views? Its revision history will remain available."
 
