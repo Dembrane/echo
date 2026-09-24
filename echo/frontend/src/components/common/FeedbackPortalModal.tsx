@@ -10,10 +10,8 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { UsersThree } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import {
-	COMMUNITY_SLACK_URL,
 	getProductFeedbackUrl,
 	getSecurityReportFormUrl,
 } from "@/config";
@@ -154,18 +152,7 @@ export const FeedbackPortalModal = ({
 
 				<Divider />
 
-				<Group justify="space-between" gap="sm" align="center">
-					<Anchor
-						href={COMMUNITY_SLACK_URL}
-						target="_blank"
-						rel="noopener noreferrer"
-						size="sm"
-					>
-						<Group gap={6} wrap="nowrap">
-							<UsersThree size={16} />
-							<Trans>Join our Slack community</Trans>
-						</Group>
-					</Anchor>
+				<Group justify="flex-end" gap="sm" align="center">
 					<Button
 						variant="subtle"
 						size="md"

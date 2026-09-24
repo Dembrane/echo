@@ -5,10 +5,9 @@ import {
 	EnvelopeSimple,
 	Note,
 	Pulse,
-	Users,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
-import { COMMUNITY_SLACK_URL, getDocumentationUrl } from "@/config";
+import { getDocumentationUrl } from "@/config";
 import { useHelpModals } from "../hooks/useHelpModals";
 import { useSidebarView } from "../hooks/useSidebarView";
 import { NavButton } from "../primitives/NavButton";
@@ -36,14 +35,6 @@ export const HelpView = () => {
 				icon={Note}
 				external
 				onClick={() => window.open(docUrl, "_blank", "noopener,noreferrer")}
-			/>
-			<NavButton
-				label={<Trans>Slack community</Trans>}
-				icon={Users}
-				external
-				onClick={() =>
-					window.open(COMMUNITY_SLACK_URL, "_blank", "noopener,noreferrer")
-				}
 			/>
 			<NavButton
 				label={<Trans>System status</Trans>}
