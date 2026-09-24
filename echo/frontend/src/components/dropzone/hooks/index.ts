@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
-import { initiateAndUploadConversationChunk } from "@/lib/api";
+import {
+	type ConversationUploadFailure,
+	initiateAndUploadConversationChunk,
+} from "@/lib/api";
 
 export const useUploadConversation = () => {
 	const queryClient = useQueryClient();
@@ -18,7 +22,12 @@ export const useUploadConversation = () => {
 			onProgress?: (fileName: string, progress: number) => void;
 			source?: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT";
 		}) => initiateAndUploadConversationChunk(payload),
-		onError: (error) => {
+		onError: (error, variables) => {
+			posthog.capture("conversation_upload_failed", {
+				failed_count: variables.chunks.length,
+				file_count: variables.chunks.length,
+				project_id: variables.projectId,
+			});
 			toast.error(
 				`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`,
 			);
@@ -28,16 +37,37 @@ export const useUploadConversation = () => {
 			// to prevent them from overwriting our optimistic update
 			queryClient.cancelQueries({ queryKey: ["conversations"] });
 		},
-		onSuccess: () => {
+		onSuccess: (results, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["conversations"],
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["projects"],
 			});
+
+			// Per-file failures resolve the mutation, so read them from the results.
+			const failures = results.filter(
+				(result): result is ConversationUploadFailure => "error" in result,
+			);
+			if (failures.length > 0) {
+				posthog.capture("conversation_upload_failed", {
+					failed_count: failures.length,
+					file_count: variables.chunks.length,
+					project_id: variables.projectId,
+					stage: failures[0].stage,
+				});
+				return;
+			}
+
+			posthog.capture("conversation_upload_succeeded", {
+				file_count: variables.chunks.length,
+				project_id: variables.projectId,
+			});
 			toast.success("Conversation(s) uploaded successfully");
 		},
-		retry: 3, // Reduced retry count to avoid too many duplicate attempts
+		// No retry: the upload already retries the S3 post, and a rerun would
+		// create a new conversation for every file again.
+		retry: false,
 	});
 };
 
