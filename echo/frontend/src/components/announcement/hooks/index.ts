@@ -12,7 +12,6 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
-import posthog from "posthog-js";
 import { useEffect } from "react";
 import useSessionStorageState from "use-session-storage-state";
 import { useCurrentUser } from "@/components/auth/hooks";
@@ -26,43 +25,38 @@ export const useLatestAnnouncement = () => {
 	return useQuery({
 		// Without a user this 403s on every cold load.
 		enabled: !!currentUser?.id,
+		meta: { errorName: "announcement.latest" },
 		queryFn: async () => {
-			try {
-				const response = await directus.request(
-					readItems("announcement", {
-						deep: {
-							activity: {
-								_filter: {
-									user_id: {
-										_eq: currentUser?.id,
-									},
+			const response = await directus.request(
+				readItems("announcement", {
+					deep: {
+						activity: {
+							_filter: {
+								user_id: {
+									_eq: currentUser?.id,
 								},
 							},
 						},
-						fields: [
-							"id",
-							"created_at",
-							"expires_at",
-							"level",
-							{
-								translations: ["id", "languages_code", "title", "message"],
-							},
-							{
-								activity: ["id", "user_id", "announcement_activity", "read"],
-							},
-						],
-						filter: notExpiredFilter(),
-						limit: 1,
-						sort: ["-created_at"],
-					}),
-				);
+					},
+					fields: [
+						"id",
+						"created_at",
+						"expires_at",
+						"level",
+						{
+							translations: ["id", "languages_code", "title", "message"],
+						},
+						{
+							activity: ["id", "user_id", "announcement_activity", "read"],
+						},
+					],
+					filter: notExpiredFilter(),
+					limit: 1,
+					sort: ["-created_at"],
+				}),
+			);
 
-				return response.length > 0 ? response[0] : null;
-			} catch (error) {
-				posthog.captureException(error);
-				console.error("Error fetching latest announcement:", error);
-				throw error;
-			}
+			return response.length > 0 ? response[0] : null;
 		},
 		queryKey: ["announcements", "latest"],
 		retry: 2,
@@ -94,49 +88,44 @@ export const useInfiniteAnnouncements = ({
 			nextOffset?: number;
 		}) => lastPage.nextOffset,
 		initialPageParam: 0,
+		meta: { errorName: "announcement.infinite" },
 		queryFn: async ({ pageParam = 0 }) => {
-			try {
-				const response: Announcement[] = await directus.request<Announcement[]>(
-					readItems("announcement", {
-						deep: {
-							activity: {
-								_filter: {
-									user_id: {
-										_eq: currentUser?.id,
-									},
+			const response: Announcement[] = await directus.request<Announcement[]>(
+				readItems("announcement", {
+					deep: {
+						activity: {
+							_filter: {
+								user_id: {
+									_eq: currentUser?.id,
 								},
 							},
 						},
-						fields: [
-							"id",
-							"created_at",
-							"expires_at",
-							"level",
-							{
-								translations: ["id", "languages_code", "title", "message"],
-							},
-							{
-								activity: ["id", "user_id", "announcement_activity", "read"],
-							},
-						],
-						filter: notExpiredFilter(),
-						limit: initialLimit,
-						offset: pageParam * initialLimit,
-						sort: ["-created_at"],
-						...query,
-					}),
-				);
+					},
+					fields: [
+						"id",
+						"created_at",
+						"expires_at",
+						"level",
+						{
+							translations: ["id", "languages_code", "title", "message"],
+						},
+						{
+							activity: ["id", "user_id", "announcement_activity", "read"],
+						},
+					],
+					filter: notExpiredFilter(),
+					limit: initialLimit,
+					offset: pageParam * initialLimit,
+					sort: ["-created_at"],
+					...query,
+				}),
+			);
 
-				return {
-					announcements: response,
-					nextOffset:
-						response.length === initialLimit ? pageParam + 1 : undefined,
-				};
-			} catch (error) {
-				posthog.captureException(error);
-				console.error("Error fetching announcements:", error);
-				throw error;
-			}
+			return {
+				announcements: response,
+				nextOffset:
+					response.length === initialLimit ? pageParam + 1 : undefined,
+			};
 		},
 		queryKey: ["announcements", "infinite", currentUser?.id, query],
 	});
@@ -145,6 +134,7 @@ export const useInfiniteAnnouncements = ({
 export const useMarkAsReadMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
+		meta: { errorName: "announcement.markAsRead" },
 		mutationFn: async ({
 			announcementId,
 			activityIds,
@@ -155,29 +145,22 @@ export const useMarkAsReadMutation = () => {
 			activityIds?: string[];
 			userId?: string;
 		}) => {
-			try {
-				// Update in place; a second row would pile up on every toggle.
-				if (activityIds && activityIds.length > 0) {
-					return await directus.request(
-						updateItems("announcement_activity", activityIds, {
-							read: true,
-						} as any),
-					);
-				}
-
+			// Update in place; a second row would pile up on every toggle.
+			if (activityIds && activityIds.length > 0) {
 				return await directus.request(
-					createItems("announcement_activity", {
-						announcement_activity: announcementId,
+					updateItems("announcement_activity", activityIds, {
 						read: true,
-						...(userId ? { user_id: userId } : {}),
 					} as any),
 				);
-			} catch (error) {
-				toast.error(t`Failed to mark announcement as read`);
-				posthog.captureException(error);
-				console.error("Error in mutationFn:", error);
-				throw error;
 			}
+
+			return await directus.request(
+				createItems("announcement_activity", {
+					announcement_activity: announcementId,
+					read: true,
+					...(userId ? { user_id: userId } : {}),
+				} as any),
+			);
 		},
 		onError: (
 			err,
@@ -280,25 +263,19 @@ export const useMarkAsUnreadMutation = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
+		meta: { errorName: "announcement.markAsUnread" },
 		mutationFn: async ({
 			activityIds,
 		}: {
 			announcementId: string;
 			activityIds: string[];
 		}) => {
-			try {
-				const updates = activityIds.map((id) =>
-					directus.request(
-						updateItem("announcement_activity", id, { read: false } as any),
-					),
-				);
-				return await Promise.all(updates);
-			} catch (error) {
-				toast.error(t`Failed to mark announcement as unread`);
-				posthog.captureException(error);
-				console.error("Error in markAsUnread mutationFn:", error);
-				throw error;
-			}
+			const updates = activityIds.map((id) =>
+				directus.request(
+					updateItem("announcement_activity", id, { read: false } as any),
+				),
+			);
+			return await Promise.all(updates);
 		},
 		onError: (
 			err,
@@ -387,70 +364,63 @@ export const useMarkAllAsReadMutation = () => {
 	const { data: currentUser } = useCurrentUser();
 
 	return useMutation({
+		meta: { errorName: "announcement.markAllAsRead" },
 		mutationFn: async () => {
-			try {
-				// `deep._filter` scopes the rows to me and, unlike a permission, holds
-				// for admins too, who would otherwise overwrite other people's rows.
-				const liveAnnouncements = (await directus.request(
-					readItems("announcement", {
-						deep: {
-							activity: { _filter: { user_id: { _eq: currentUser?.id } } },
-						},
-						fields: ["id", { activity: ["id", "read"] }],
-						filter: notExpiredFilter(),
-						limit: -1,
-					}),
-				)) as {
-					id: string;
-					activity?: { id: string; read?: boolean | null }[];
-				}[];
+			// `deep._filter` scopes the rows to me and, unlike a permission, holds
+			// for admins too, who would otherwise overwrite other people's rows.
+			const liveAnnouncements = (await directus.request(
+				readItems("announcement", {
+					deep: {
+						activity: { _filter: { user_id: { _eq: currentUser?.id } } },
+					},
+					fields: ["id", { activity: ["id", "read"] }],
+					filter: notExpiredFilter(),
+					limit: -1,
+				}),
+			)) as {
+				id: string;
+				activity?: { id: string; read?: boolean | null }[];
+			}[];
 
-				const unreadAnnouncements = liveAnnouncements.filter((announcement) =>
-					isUnreadByMe(announcement.activity),
+			const unreadAnnouncements = liveAnnouncements.filter((announcement) =>
+				isUnreadByMe(announcement.activity),
+			);
+
+			const activityIdsToUpdate = unreadAnnouncements.flatMap((announcement) =>
+				(announcement.activity ?? []).map((activity) => activity.id),
+			);
+			const announcementsToCreate = unreadAnnouncements.filter(
+				(announcement) => (announcement.activity ?? []).length === 0,
+			);
+
+			const results = [];
+
+			if (activityIdsToUpdate.length > 0) {
+				results.push(
+					await directus.request(
+						updateItems("announcement_activity", activityIdsToUpdate, {
+							read: true,
+						} as any),
+					),
 				);
-
-				const activityIdsToUpdate = unreadAnnouncements.flatMap(
-					(announcement) =>
-						(announcement.activity ?? []).map((activity) => activity.id),
-				);
-				const announcementsToCreate = unreadAnnouncements.filter(
-					(announcement) => (announcement.activity ?? []).length === 0,
-				);
-
-				const results = [];
-
-				if (activityIdsToUpdate.length > 0) {
-					results.push(
-						await directus.request(
-							updateItems("announcement_activity", activityIdsToUpdate, {
-								read: true,
-							} as any),
-						),
-					);
-				}
-
-				if (announcementsToCreate.length > 0) {
-					results.push(
-						await directus.request(
-							createItems(
-								"announcement_activity",
-								announcementsToCreate.map((announcement) => ({
-									announcement_activity: announcement.id,
-									read: true,
-									...(currentUser?.id ? { user_id: currentUser.id } : {}),
-								})) as any,
-							),
-						),
-					);
-				}
-
-				return results;
-			} catch (error) {
-				toast.error(t`Failed to mark all announcements as read`);
-				posthog.captureException(error);
-				console.error("Error in markAllAsRead mutationFn:", error);
-				throw error;
 			}
+
+			if (announcementsToCreate.length > 0) {
+				results.push(
+					await directus.request(
+						createItems(
+							"announcement_activity",
+							announcementsToCreate.map((announcement) => ({
+								announcement_activity: announcement.id,
+								read: true,
+								...(currentUser?.id ? { user_id: currentUser.id } : {}),
+							})) as any,
+						),
+					),
+				);
+			}
+
+			return results;
 		},
 		onError: (err, _variables, context) => {
 			// If the mutation fails, use the context returned from onMutate to roll back
@@ -547,34 +517,29 @@ const useAnnouncementSummary = <T>(select: (rows: SummaryRow[]) => T) => {
 
 	return useQuery({
 		enabled: !!currentUser?.id,
+		meta: { errorName: "announcement.summary" },
 		queryFn: async () => {
-			try {
-				if (!currentUser?.id) {
-					return [] as SummaryRow[];
-				}
-
-				return (await directus.request(
-					readItems("announcement", {
-						deep: {
-							activity: { _filter: { user_id: { _eq: currentUser.id } } },
-						},
-						fields: [
-							"id",
-							"created_at",
-							"level",
-							{ translations: ["id", "languages_code", "title"] },
-							{ activity: ["read"] },
-						],
-						filter: notExpiredFilter(),
-						limit: -1,
-						sort: ["-created_at"],
-					}),
-				)) as SummaryRow[];
-			} catch (error) {
-				posthog.captureException(error);
-				console.error("Error fetching announcement summary:", error);
-				throw error;
+			if (!currentUser?.id) {
+				return [] as SummaryRow[];
 			}
+
+			return (await directus.request(
+				readItems("announcement", {
+					deep: {
+						activity: { _filter: { user_id: { _eq: currentUser.id } } },
+					},
+					fields: [
+						"id",
+						"created_at",
+						"level",
+						{ translations: ["id", "languages_code", "title"] },
+						{ activity: ["read"] },
+					],
+					filter: notExpiredFilter(),
+					limit: -1,
+					sort: ["-created_at"],
+				}),
+			)) as SummaryRow[];
 		},
 		queryKey: ["announcements", "summary", currentUser?.id],
 		refetchInterval: 60_000,
@@ -607,42 +572,37 @@ export const useWhatsNewAnnouncements = ({
 
 	return useQuery({
 		enabled,
+		meta: { errorName: "announcement.whatsNew" },
 		queryFn: async () => {
-			try {
-				const response: Announcement[] = await directus.request<Announcement[]>(
-					readItems("announcement", {
-						deep: {
-							activity: {
-								_filter: {
-									user_id: {
-										_eq: currentUser?.id,
-									},
+			const response: Announcement[] = await directus.request<Announcement[]>(
+				readItems("announcement", {
+					deep: {
+						activity: {
+							_filter: {
+								user_id: {
+									_eq: currentUser?.id,
 								},
 							},
 						},
-						fields: [
-							"id",
-							"created_at",
-							"expires_at",
-							"level",
-							{
-								translations: ["id", "languages_code", "title", "message"],
-							},
-							{
-								activity: ["id", "user_id", "announcement_activity", "read"],
-							},
-						],
-						limit: 50,
-						sort: ["-created_at"],
-					}),
-				);
+					},
+					fields: [
+						"id",
+						"created_at",
+						"expires_at",
+						"level",
+						{
+							translations: ["id", "languages_code", "title", "message"],
+						},
+						{
+							activity: ["id", "user_id", "announcement_activity", "read"],
+						},
+					],
+					limit: 50,
+					sort: ["-created_at"],
+				}),
+			);
 
-				return response;
-			} catch (error) {
-				posthog.captureException(error);
-				console.error("Error fetching what's new announcements:", error);
-				throw error;
-			}
+			return response;
 		},
 		queryKey: ["announcements", "whats-new"],
 		retry: 2,
