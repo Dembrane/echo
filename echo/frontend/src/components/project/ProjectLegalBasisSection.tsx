@@ -30,7 +30,7 @@ import {
 	type LegalBasisValue,
 } from "@/components/settings/LegalBasisCard";
 import { API_BASE_URL } from "@/config";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useLanguage } from "@/hooks/useLanguage";
 
 type LegalSource = "project" | "workspace" | "legacy_user" | "default";
 
@@ -127,7 +127,7 @@ export const ProjectLegalBasisSection = ({
 	projectId: string;
 }) => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
-	const navigate = useI18nNavigate();
+	const { language } = useLanguage();
 	const queryClient = useQueryClient();
 	const { data: user } = useCurrentUser();
 	const isDembraneUser = (user?.email ?? "")
@@ -264,13 +264,13 @@ export const ProjectLegalBasisSection = ({
 										) : (
 											<span />
 										)}
+										{/* New tab keeps the editor form the host is filling in */}
 										<Anchor
 											size="sm"
 											fw={600}
-											onClick={() =>
-												navigate(`/w/${workspaceId}/settings/general`)
-											}
-											style={{ cursor: "pointer" }}
+											href={`/${language}/w/${workspaceId}/settings/general`}
+											target="_blank"
+											rel="noopener noreferrer"
 										>
 											<Group gap={4} wrap="nowrap">
 												<Trans>Workspace settings</Trans>
