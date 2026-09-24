@@ -28,6 +28,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
+import { useSidebarView } from "../../hooks/useSidebarView";
 
 export const ProjectHomeView = () => {
 	const { workspaceId, projectId } = useParams<{
@@ -36,6 +37,7 @@ export const ProjectHomeView = () => {
 	}>();
 	const { pathname } = useLocation();
 	const { workspace } = useWorkspace();
+	const { params } = useSidebarView();
 	// Observers are read-only and have no chat access. Hide the Ask tab and skip
 	// its count query (it 403s for them); passing "" disables the query.
 	const isObserver = isReadOnlyRole(workspace?.role);
@@ -84,6 +86,11 @@ export const ProjectHomeView = () => {
 			{!isObserver && (
 				<NavItem
 					to={`${base}/chats/new`}
+					state={
+						params.conversationId
+							? { selectedConversationIds: [params.conversationId] }
+							: undefined
+					}
 					label={<Trans>Ask</Trans>}
 					icon={ChatCircleDotsIcon}
 					badge={chatsCountQuery.data || undefined}

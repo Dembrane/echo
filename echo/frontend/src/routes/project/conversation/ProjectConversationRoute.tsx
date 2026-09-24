@@ -15,7 +15,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useClipboard, useDisclosure } from "@mantine/hooks";
-import { DetectiveIcon } from "@phosphor-icons/react";
+import { ChatCircleDotsIcon, DetectiveIcon } from "@phosphor-icons/react";
 import {
 	IconLock,
 	IconRefresh,
@@ -47,7 +47,10 @@ import {
 	ENABLE_DISPLAY_CONVERSATION_LINKS,
 	TRANSCRIPT_TROUBLESHOOTING_DOCS_URL,
 } from "@/config";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { generateConversationSummary } from "@/lib/api";
+import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 
 const getTagText = (tag: ConversationProjectTag) => {
@@ -61,7 +64,11 @@ const hasVerifiedArtifacts = (conversation: Conversation) =>
 	) ?? false;
 
 export const ProjectConversationRoute = () => {
-	const { conversationId, projectId } = useParams();
+	const { conversationId, projectId, workspaceId } = useParams();
+	const navigate = useI18nNavigate();
+	const { workspace } = useWorkspace();
+	const isObserver = isReadOnlyRole(workspace?.role);
+	const resolvedWorkspaceId = workspaceId ?? workspace?.id;
 	const queryClient = useQueryClient();
 
 	const conversationQuery = useConversationById({
@@ -165,72 +172,101 @@ export const ProjectConversationRoute = () => {
 
 			{/* Header: name, title, tags. Created-on and duration live on the list page only. */}
 			<Stack gap="xs" {...testId("conversation-detail-header")}>
-				<Group gap="sm" align="center" wrap="wrap">
-					<Title order={1}>{primary}</Title>
-					{verified && (
-						<Tooltip label={t`Has verified artifacts`}>
-							<ThemeIcon
-								variant="subtle"
-								color="primary"
-								size={22}
-								aria-label={t`Verified artifacts`}
-							>
-								<IconRosetteDiscountCheck size={20} />
-							</ThemeIcon>
-						</Tooltip>
-					)}
-					{isAnonymized && (
-						<Tooltip label={t`Anonymized conversation`}>
-							<ThemeIcon
-								variant="subtle"
-								color="primary"
-								size={22}
-								aria-label={t`Anonymized conversation`}
-							>
-								<DetectiveIcon size={20} />
-							</ThemeIcon>
-						</Tooltip>
-					)}
-					{isLocked && (
+				<Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
+					<Stack gap="xs" className="min-w-0 flex-1">
+						<Group gap="sm" align="center" wrap="wrap">
+							<Title order={1}>{primary}</Title>
+							{verified && (
+								<Tooltip label={t`Has verified artifacts`}>
+									<ThemeIcon
+										variant="subtle"
+										color="primary"
+										size={22}
+										aria-label={t`Verified artifacts`}
+									>
+										<IconRosetteDiscountCheck size={20} />
+									</ThemeIcon>
+								</Tooltip>
+							)}
+							{isAnonymized && (
+								<Tooltip label={t`Anonymized conversation`}>
+									<ThemeIcon
+										variant="subtle"
+										color="primary"
+										size={22}
+										aria-label={t`Anonymized conversation`}
+									>
+										<DetectiveIcon size={20} />
+									</ThemeIcon>
+								</Tooltip>
+							)}
+							{isLocked && (
+								<Tooltip
+									label={t`Upgrade your workspace to view this conversation`}
+								>
+									<Badge
+										size="sm"
+										color="primary"
+										variant="light"
+										leftSection={<IconLock size={12} />}
+									>
+										<Trans>Locked</Trans>
+									</Badge>
+								</Tooltip>
+							)}
+						</Group>
+						{conversation?.title && conversation?.participant_name && (
+							<Text size="sm" c="dimmed">
+								{conversation.participant_name}
+							</Text>
+						)}
+						{tags.length > 0 && (
+							<Group gap={6} wrap="wrap">
+								{tags.map((tag) => {
+									const tagText = getTagText(tag);
+									if (!tagText) return null;
+									return (
+										<Badge
+											key={tag.id}
+											size="xs"
+											variant="light"
+											color="gray"
+											radius="sm"
+											classNames={{ label: "!text-graphite" }}
+										>
+											{tagText}
+										</Badge>
+									);
+								})}
+							</Group>
+						)}
+					</Stack>
+					{!isObserver && (
 						<Tooltip
 							label={t`Upgrade your workspace to view this conversation`}
+							disabled={!isLocked}
 						>
-							<Badge
-								size="sm"
-								color="primary"
+							<Button
 								variant="light"
-								leftSection={<IconLock size={12} />}
+								size="sm"
+								leftSection={<ChatCircleDotsIcon size={18} />}
+								disabled={isLocked}
+								onClick={() => {
+									if (!conversationId) return;
+									navigate(
+										`/w/${resolvedWorkspaceId}/projects/${projectId}/chats/new`,
+										{
+											state: { selectedConversationIds: [conversationId] },
+										},
+									);
+								}}
+								{...testId("conversation-ask-button")}
 							>
-								<Trans>Locked</Trans>
-							</Badge>
+								<Trans>Ask</Trans>
+							</Button>
 						</Tooltip>
 					)}
 				</Group>
-				{conversation?.title && conversation?.participant_name && (
-					<Text size="sm" c="dimmed">
-						{conversation.participant_name}
-					</Text>
-				)}
-				{tags.length > 0 && (
-					<Group gap={6} wrap="wrap">
-						{tags.map((tag) => {
-							const tagText = getTagText(tag);
-							if (!tagText) return null;
-							return (
-								<Badge
-									key={tag.id}
-									size="xs"
-									variant="light"
-									color="gray"
-									radius="sm"
-									classNames={{ label: "!text-graphite" }}
-								>
-									{tagText}
-								</Badge>
-							);
-						})}
-					</Group>
-				)}
 			</Stack>
 
 			{/*
