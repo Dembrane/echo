@@ -13,9 +13,12 @@ import {
 	USE_PARTICIPANT_ROUTER,
 } from "./config";
 import { recoverFromChunkFailure } from "./lib/appVersion";
+import { dropNetworkFaultExceptions } from "./lib/networkFaults";
 
 posthog.init(POSTHOG_TOKEN, {
 	api_host: POSTHOG_HOST,
+	// Connectivity drops on the visitor's side are not app defects.
+	before_send: [dropNetworkFaultExceptions],
 	// Error tracking: autocapture unhandled errors and promise rejections.
 	// React render errors are reported separately via ErrorBoundary.
 	capture_exceptions: {
