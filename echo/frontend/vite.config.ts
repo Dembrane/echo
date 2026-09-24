@@ -158,6 +158,12 @@ export default defineConfig(({ mode }) => {
 					},
 				},
 			},
+			// "hidden" emits .map files without a sourceMappingURL comment, so the
+			// maps are never referenced from the served bundles. CI injects a chunk
+			// id and uploads them to PostHog error tracking, then deletes them (see
+			// the Vercel deploy workflows), so real portal crashes symbolicate
+			// instead of arriving minified.
+			sourcemap: "hidden",
 		},
 		define: {
 			__APP_BUILD_ID__: JSON.stringify(buildId),
