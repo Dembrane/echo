@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Common helpers. Every script in this directory sources this file, which in
+# Common helpers. Every script in commands/ sources this file, which in
 # turn sources config.sh and the optional local.env override.
 
 set -euo pipefail
 
 RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RD_COMMANDS_DIR="$RD_SCRIPT_DIR/commands"
 # scripts/remote-dev -> scripts -> echo
 RD_ECHO_ROOT="$(cd "$RD_SCRIPT_DIR/../.." && pwd)"
 
@@ -12,9 +13,9 @@ RD_ECHO_ROOT="$(cd "$RD_SCRIPT_DIR/../.." && pwd)"
 #
 # config.sh gives way to both because it assigns with `: "${VAR:=default}"`,
 # but local.env is a generated file of plain assignments, so sourcing it would
-# overwrite an env var the caller passed. `RD_ZONE=... ./create.sh` would then
-# silently build in the zone local.env remembers. Snapshot the exported RD_*
-# vars, source, and put them back.
+# overwrite an env var the caller passed. `RD_ZONE=... ./scripts/remote-dev.sh create`
+# would then silently build in the zone local.env remembers. Snapshot the
+# exported RD_* vars, source, and put them back.
 if [ -f "$RD_SCRIPT_DIR/local.env" ]; then
     RD_ENV_OVERRIDES="$(export -p | grep -E '^(export |declare -x )RD_[A-Za-z0-9_]*=' || true)"
     # shellcheck disable=SC1091
@@ -108,7 +109,7 @@ is_reauth_error() {
 # missing value means init has not run rather than a typo somewhere.
 require_config() {
     if [ -z "${RD_PROJECT:-}" ] || [ -z "${RD_ZONE:-}" ]; then
-        die "Not configured yet. Run: ./init.sh
+        die "Not configured yet. Run: ./scripts/remote-dev.sh init
 It will ask which GCP project and zone to use and write them to local.env (gitignored)."
     fi
 }
@@ -166,7 +167,7 @@ instance_ip() {
 }
 
 require_instance() {
-    instance_exists || die "Instance '$RD_INSTANCE_NAME' does not exist. Run: ./create.sh"
+    instance_exists || die "Instance '$RD_INSTANCE_NAME' does not exist. Run: ./scripts/remote-dev.sh create"
 }
 
 require_running() {
@@ -174,7 +175,7 @@ require_running() {
     local status
     status="$(instance_status)"
     [ "$status" = "RUNNING" ] \
-        || die "Instance '$RD_INSTANCE_NAME' is $status, not RUNNING. Run: ./start.sh"
+        || die "Instance '$RD_INSTANCE_NAME' is $status, not RUNNING. Run: ./scripts/remote-dev.sh start"
 }
 
 # Run a command on the VM over gcloud's SSH wrapper, which manages the
@@ -239,7 +240,7 @@ persist_local_env() {
 
 # minio is opt-in through docker-compose-s3.yml. The devcontainer points the
 # server at it either way, so file uploads fail while it is off.
-RD_MINIO_ENABLE_HINT='re-run ./init.sh and answer y to "Run minio?" (or add docker-compose-s3.yml to RD_COMPOSE_FILES in local.env), then ./up.sh --skip-setup'
+RD_MINIO_ENABLE_HINT='re-run ./scripts/remote-dev.sh init and answer y to "Run minio?" (or add docker-compose-s3.yml to RD_COMPOSE_FILES in local.env), then ./scripts/remote-dev.sh up --skip-setup'
 minio_enabled() {
     case " $RD_COMPOSE_FILES " in
         *" docker-compose-s3.yml "*) return 0 ;;
@@ -272,3 +273,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS org_membership_active_org_user_uniq
     ON org_membership (org_id, user_id) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS workspace_membership_active_ws_user_uniq
     ON workspace_membership (workspace_id, user_id) WHERE deleted_at IS NULL;"
+
+# --- Help --------------------------------------------------------------------
+
+# Print a script's own header comment block as its help text, so the
+# explanation lives next to the code rather than in a duplicate usage string.
+header_help() {
+    awk 'NR > 1 && !/^#/ { exit } NR > 1' "$1" | sed 's/^#\{1,\} \{0,1\}//'
+}
+
+# Every command calls this first, so `./scripts/remote-dev.sh <command> --help`
+# works uniformly.
+handle_help() {
+    case "${1:-}" in
+        -h|--help) header_help "$2"; exit 0 ;;
+    esac
+}

@@ -26,11 +26,11 @@ and `mprocs` works as it always did. Only the hardware moves.
 ## Setup
 
 ```sh
-cd echo/scripts/remote-dev
-./init.sh && ./create.sh && ./up.sh
+cd echo
+./scripts/remote-dev.sh init && ./scripts/remote-dev.sh create && ./scripts/remote-dev.sh up
 ```
 
-`init.sh` asks which project and zone to use and writes them to `local.env`,
+`init` asks which project and zone to use and writes them to `local.env`,
 which is gitignored. Personal values are never committed; only team-wide
 defaults live in `config.sh`.
 
@@ -51,7 +51,7 @@ the same `uv` environment and `node_modules` as the code.
 2. Add host: `dembrane-devcontainer`
 3. Open path: `/workspaces/echo`
 
-`ssh-config.sh` has already written that host into `~/.ssh/config`, with a
+`ssh-config` has already written that host into `~/.ssh/config`, with a
 `ProxyJump` through the VM.
 
 ### VS Code / Cursor
@@ -67,15 +67,15 @@ Two options:
 ### Plain terminal
 
 ```sh
-./ssh.sh                      # shell in the container, at /workspaces/echo
-./ssh.sh --vm                 # shell on the VM
-./ssh.sh uv run pytest        # one-shot command in the container
+./scripts/remote-dev.sh ssh                # shell in the container, at /workspaces/echo
+./scripts/remote-dev.sh ssh --vm           # shell on the VM
+./scripts/remote-dev.sh ssh uv run pytest  # one-shot command in the container
 ```
 
 ## Ports
 
-`./tunnel.sh` forwards the dev ports to your laptop over SSH and stays in the
-foreground. Leave it in its own terminal tab.
+`./scripts/remote-dev.sh tunnel` forwards the dev ports to your laptop over SSH
+and stays in the foreground. Leave it in its own terminal tab.
 
 | Local | Service |
 |---|---|
@@ -105,20 +105,20 @@ This is the part that bites. A running `e2-standard-4` is roughly $100/month.
 Stopped, you pay only for the disk, around $6/month for the default 50GB.
 
 ```sh
-./stop.sh    # end of day
-./start.sh   # next morning
+./scripts/remote-dev.sh stop   # end of day
+./scripts/remote-dev.sh start  # next morning
 ```
 
 Stopping keeps everything on disk: the repo, uncommitted work, docker images,
-`node_modules`, the postgres data directory. Only `destroy.sh` throws work away,
+`node_modules`, the postgres data directory. Only `destroy` throws work away,
 and it makes you type the instance name first.
 
 Start on `e2-standard-4` and upsize only when it hurts. Machine type is not
 baked into the disk, so moving up takes about a minute and loses nothing:
 
 ```sh
-./resize.sh e2-standard-8
-./up.sh                     # containers do not survive the reboot
+./scripts/remote-dev.sh resize e2-standard-8
+./scripts/remote-dev.sh up                    # containers do not survive the reboot
 ```
 
 ## Optional: DevPod
@@ -126,7 +126,7 @@ baked into the disk, so moving up takes about a minute and loses nothing:
 The scripts above are deliberately plain: `gcloud`, `ssh`, `docker compose`,
 all readable and all in the repo. [DevPod](https://devpod.sh) is a layer on top
 that reads `devcontainer.json` directly and manages provisioning itself, so
-`devpod up` replaces `create.sh` and `up.sh`.
+`devpod up` replaces `create` and `up`.
 
 It is worth adding once the VM path is proven, not before. Two reasons to wait:
 
@@ -150,12 +150,12 @@ devpod ssh --configure-ssh  # writes a host entry Zed can use
 
 Two things still need doing by hand, because DevPod does not know about them:
 
-- The gitignored `.env` files. `sync-env.sh` handles this for the script path;
+- The gitignored `.env` files. `sync-env` handles this for the script path;
   under DevPod you copy them up yourself.
 - `setup.sh` runs as `postCreateCommand`, which DevPod does honour, so that part
   is free.
 
-Keep `stop.sh` in mind either way. `devpod stop` is the equivalent, and
+Keep `stop` in mind either way. `devpod stop` is the equivalent, and
 forgetting it costs the same.
 
 ## Related

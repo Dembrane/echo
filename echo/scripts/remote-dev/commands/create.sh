@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Creates the dev VM: enables the Compute API if needed, makes sure an SSH
-# firewall rule exists, boots an Ubuntu instance, and runs bootstrap-vm.sh to
-# install docker and clone the repo.
+# Creates the VM, installs docker, clones the repo and writes the SSH hosts.
+#
+# Enables the Compute API if needed, makes sure an SSH firewall rule exists,
+# boots an Ubuntu instance, and runs bootstrap-vm.sh to install docker and
+# clone the repo.
 #
 # Idempotent. If the instance already exists this reports its state and exits
 # without touching it.
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 log_step "Preflight"
 require_gcloud
@@ -17,8 +19,8 @@ log_info "Project $RD_PROJECT, zone $RD_ZONE"
 
 if instance_exists; then
     log_warn "Instance '$RD_INSTANCE_NAME' already exists (state: $(instance_status))."
-    log_info "To start it:   ./start.sh"
-    log_info "To replace it: ./destroy.sh && ./create.sh"
+    log_info "To start it:   ./scripts/remote-dev.sh start"
+    log_info "To replace it: ./scripts/remote-dev.sh destroy && ./scripts/remote-dev.sh create"
     exit 0
 fi
 
@@ -72,7 +74,7 @@ done
 echo
 
 log_step "Waiting for bootstrap (docker install + repo clone)"
-log_info "Live log: ./ssh.sh --vm tail -f /var/log/dembrane-bootstrap.log"
+log_info "Live log: ./scripts/remote-dev.sh ssh --vm tail -f /var/log/dembrane-bootstrap.log"
 for i in $(seq 1 60); do
     if vm_ssh "test -f /var/lib/dembrane-bootstrap-done" >/dev/null 2>&1; then
         log_info "Bootstrap complete"
@@ -88,14 +90,14 @@ echo
 # credentials. Surface that clearly instead of letting up.sh fail later.
 if ! vm_ssh "test -d '$RD_REPO_DIR/.git'" >/dev/null 2>&1; then
     log_warn "The repo was not cloned (likely a private repo with no credentials on the VM)."
-    log_warn "SSH in and clone it manually, then re-run ./up.sh:"
-    log_warn "  ./ssh.sh --vm"
+    log_warn "SSH in and clone it manually, then re-run ./scripts/remote-dev.sh up:"
+    log_warn "  ./scripts/remote-dev.sh ssh --vm"
     log_warn "  gh auth login && git clone $RD_REPO_URL $RD_REPO_DIR"
     exit 1
 fi
 
 # A new VM gets a new IP, so an alias from an earlier VM would dial the old one.
-"$RD_SCRIPT_DIR/ssh-config.sh"
+"$RD_COMMANDS_DIR/ssh-config.sh"
 
 log_step "Done"
 cat <<EOF
@@ -104,8 +106,9 @@ cat <<EOF
   Repo: $RD_REPO_DIR
 
 Next:
-  ./up.sh          copy env files up, start the stack, install dependencies
+  ./scripts/remote-dev.sh up  copy env files up, start the stack, install dependencies
 
-Remember to ./stop.sh when you are done for the day. A stopped VM bills only
-for its disk, which is a few dollars a month rather than a few hundred.
+Remember to ./scripts/remote-dev.sh stop when you are done for the day. A
+stopped VM bills only for its disk, which is a few dollars a month rather than
+a few hundred.
 EOF

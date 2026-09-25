@@ -2,15 +2,16 @@
 # Stops the containers but leaves the VM running.
 #
 # Use this to free memory on a small VM without waiting out a full VM restart.
-# To stop paying for compute, use ./stop.sh instead.
+# To stop paying for compute, use ./scripts/remote-dev.sh stop instead.
 #
-#   ./down.sh            stop containers, keep volumes
-#   ./down.sh --volumes  also delete named volumes (the bind-mounted
-#                        postgres_data/redis_data directories survive either way)
+#   ./scripts/remote-dev.sh down            stop containers, keep volumes
+#   ./scripts/remote-dev.sh down --volumes  also delete named volumes (the
+#                                           bind-mounted postgres_data/redis_data
+#                                           directories survive either way)
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 require_gcloud
 require_running
@@ -26,4 +27,4 @@ else
     vm_compose "down --remove-orphans"
 fi
 
-log_info "Containers stopped. Bring them back with ./up.sh"
+log_info "Containers stopped. Bring them back with ./scripts/remote-dev.sh up"

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Shows what is running: the VM, its size, the containers, and disk usage.
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 require_gcloud
 
 log_step "Instance"
 if ! instance_exists; then
-    log_warn "'$RD_INSTANCE_NAME' does not exist in $RD_ZONE. Create it with ./create.sh"
+    log_warn "'$RD_INSTANCE_NAME' does not exist in $RD_ZONE. Create it with ./scripts/remote-dev.sh create"
     exit 0
 fi
 
@@ -20,7 +20,7 @@ DISK_GB="$(gc compute disks describe "$RD_INSTANCE_NAME" --zone "$RD_ZONE" --for
 log_info "Boot disk: ${DISK_GB}GB $RD_DISK_TYPE"
 
 if [ "$(instance_status)" != "RUNNING" ]; then
-    log_warn "Instance is not running, so there is nothing else to report. Start it with ./start.sh"
+    log_warn "Instance is not running, so there is nothing else to report. Start it with ./scripts/remote-dev.sh start"
     exit 0
 fi
 
@@ -48,13 +48,13 @@ INDEXES="$(vm_psql "select count(*) from pg_indexes where indexname in ($INDEX_L
 if [ -z "$APPLIED" ] || [ -z "$EXPECTED" ]; then
     log_warn "Could not read the schema state. Is directus up? See the containers above."
 elif [ "$APPLIED" -lt "$EXPECTED" ]; then
-    log_warn "Schema not applied: $APPLIED of $EXPECTED collections. Run ./up.sh --skip-setup"
+    log_warn "Schema not applied: $APPLIED of $EXPECTED collections. Run ./scripts/remote-dev.sh up --skip-setup"
 else
     log_info "$APPLIED of $EXPECTED collections present."
 fi
 INDEXES_EXPECTED="$(echo "$RD_MEMBERSHIP_INDEXES" | wc -w | tr -dc '0-9')"
 if [ -n "$INDEXES" ] && [ "$INDEXES" -lt "$INDEXES_EXPECTED" ]; then
-    log_warn "Membership indexes missing ($INDEXES of $INDEXES_EXPECTED). Run ./up.sh --skip-setup"
+    log_warn "Membership indexes missing ($INDEXES of $INDEXES_EXPECTED). Run ./scripts/remote-dev.sh up --skip-setup"
 fi
 
 log_step "Resources"
@@ -68,5 +68,5 @@ FIRST_PORT="$(echo "$RD_FORWARD_PORTS" | awk '{print $1}')"
 if nc -z localhost "$FIRST_PORT" 2>/dev/null; then
     log_info "Port $FIRST_PORT is reachable on localhost. The tunnel looks up."
 else
-    log_warn "Port $FIRST_PORT is not reachable locally. Open the tunnel with: ./tunnel.sh"
+    log_warn "Port $FIRST_PORT is not reachable locally. Open the tunnel with: ./scripts/remote-dev.sh tunnel"
 fi

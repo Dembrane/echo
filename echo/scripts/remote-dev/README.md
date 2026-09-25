@@ -9,28 +9,33 @@ and the same `.devcontainer/setup.sh` run, just on rented hardware.
 
 ## Quick start
 
-```sh
-cd echo/scripts/remote-dev
+Everything goes through one entry point, run from `echo/`:
 
-./init.sh          # asks which GCP project and zone; writes local.env
-./create.sh        # creates the VM, installs docker, clones the repo,
-                   # and adds the SSH hosts Zed connects through
-./up.sh            # copies .env files up, starts the stack, installs deps
+```sh
+cd echo
+
+./scripts/remote-dev.sh init    # asks which GCP project and zone; writes local.env
+./scripts/remote-dev.sh create  # creates the VM, installs docker, clones the repo,
+                                # and adds the SSH hosts Zed connects through
+./scripts/remote-dev.sh up      # copies .env files up, starts the stack, installs deps
 ```
 
 Then, in a terminal tab you leave open:
 
 ```sh
-./tunnel.sh        # forwards 5173, 5174, 8000, 8055, 5432 to localhost
+./scripts/remote-dev.sh tunnel  # forwards 5173, 5174, 8000, 8055, 5432 to localhost
 ```
 
-And in Zed: `cmd-shift-P`, "projects: open remote", host `dembrane-devcontainer`,
-path `/workspaces/echo`.
+`./scripts/remote-dev.sh` on its own lists every command, and
+`./scripts/remote-dev.sh <command> --help` explains one.
+
+And in Zed: `cmd-shift-P`, "projects: open remote", host
+`dembrane-devcontainer`, path `/workspaces/echo`.
 
 Start the dev processes the same way you would locally:
 
 ```sh
-./ssh.sh
+./scripts/remote-dev.sh ssh
 cd /workspaces/echo && mprocs
 ```
 
@@ -43,35 +48,39 @@ empty.
 ## Daily loop
 
 ```sh
-./start.sh     # boot the VM, refresh the SSH config
-./up.sh        # bring the containers back
-./tunnel.sh    # forward ports (leave running)
+./scripts/remote-dev.sh start   # boot the VM, refresh the SSH config
+./scripts/remote-dev.sh up      # bring the containers back
+./scripts/remote-dev.sh tunnel  # forward ports (leave running)
 # ... work ...
-./stop.sh      # when you are done
+./scripts/remote-dev.sh stop    # when you are done
 ```
 
-`./stop.sh` matters. A running `e2-standard-4` is roughly $100/month; stopped,
-you pay only for the 50GB disk, which is about $6/month. The disk keeps
-everything: the repo, uncommitted work, docker images, `node_modules`, the
-postgres data directory.
+`stop` matters. A running `e2-standard-4` is roughly $100/month; stopped, you
+pay only for the 50GB disk, which is about $6/month. The disk keeps everything:
+the repo, uncommitted work, docker images, `node_modules`, the postgres data
+directory.
 
 ## Commands
 
-| Script | What it does |
+Each command is a script in `commands/`, and
+`./scripts/remote-dev.sh <command>` runs it. `lib.sh`, `config.sh` and
+`bootstrap-vm.sh` are shared plumbing, not commands.
+
+| Command | What it does |
 |---|---|
-| `init.sh` | First-run setup. Prompts for project, zone, size. Writes `local.env`. |
-| `create.sh` | Creates the VM, installs docker, clones the repo. Idempotent. |
-| `up.sh` | Syncs `.env` files, `docker compose up -d --build`, runs `setup.sh`, installs your SSH key. |
-| `down.sh` | Stops containers, leaves the VM up. |
-| `start.sh` / `stop.sh` | VM power. `stop.sh` shuts containers down cleanly first. |
-| `status.sh` | VM state, container state, memory, disk, load, tunnel check. |
-| `resize.sh` | `./resize.sh e2-standard-8` or `./resize.sh --disk 200GB`. |
-| `ssh.sh` | Shell in the devcontainer. `--vm` for the host instead. |
-| `ssh-config.sh` | Writes the `~/.ssh/config` block. `--remove` to clean up. |
-| `tunnel.sh` | Port forwards. Foreground, ctrl-c to close. |
-| `sync-env.sh` | Re-copies the gitignored `.env` files up. |
-| `sync-code.sh` | Pushes your laptop's tracked files up. `--dry-run` to preview. |
-| `destroy.sh` | Deletes the VM and disk. Asks you to type the name. |
+| `init` | First-run setup. Prompts for project, zone, size. Writes `local.env`. |
+| `create` | Creates the VM, installs docker, clones the repo. Idempotent. |
+| `up` | Syncs `.env` files, `docker compose up -d --build`, runs `setup.sh`, installs your SSH key. |
+| `down` | Stops containers, leaves the VM up. |
+| `start` / `stop` | VM power. `stop` shuts containers down cleanly first. |
+| `status` | VM state, container state, memory, disk, load, tunnel check. |
+| `resize` | `resize e2-standard-8` or `resize --disk 200GB`. |
+| `ssh` | Shell in the devcontainer. `--vm` for the host instead. |
+| `ssh-config` | Writes the `~/.ssh/config` block. `--remove` to clean up. |
+| `tunnel` | Port forwards. Foreground, ctrl-c to close. |
+| `sync-env` | Re-copies the gitignored `.env` files up. |
+| `sync-code` | Pushes your laptop's tracked files up. `--dry-run` to preview. |
+| `destroy` | Deletes the VM and disk. Asks you to type the name. |
 
 ## Editing code
 
@@ -83,12 +92,12 @@ When you do have changes only on your laptop, push a branch and pull it on the
 VM, or copy the working tree straight up:
 
 ```sh
-./sync-code.sh --dry-run    # see what would move
-./sync-code.sh              # every tracked file, uncommitted edits included
-./sync-code.sh echo/frontend
+./scripts/remote-dev.sh sync-code --dry-run  # see what would move
+./scripts/remote-dev.sh sync-code            # every tracked file, uncommitted edits included
+./scripts/remote-dev.sh sync-code echo/frontend
 ```
 
-It copies git-tracked files only (`.env` files have `sync-env.sh`) and never
+It copies git-tracked files only (`.env` files have `sync-env`) and never
 deletes, but it does overwrite, and it leaves the VM's branch alone, so its
 `git status` will show your changes as local modifications on whatever commit it
 happens to sit on. It warns first if the VM has uncommitted changes of its own.
@@ -100,7 +109,7 @@ your laptop                    GCP VM (ubuntu 24.04)
 -----------                    ---------------------
 Zed  ──ssh──┐                  ┌─ docker compose ─────────────┐
             │  port 22         │  postgres  valkey  directus  │
-tunnel.sh ──┴────────────────► │  agent                       │
+tunnel ─────┴────────────────► │  agent                       │
                                │  devcontainer ── sshd :22 ───┼─┐
                                │    /workspaces/echo          │ │
                                └──────────────────────────────┘ │
@@ -125,7 +134,7 @@ from `.zed/settings.json` (ruff, ty, biome) and the toolchain (uv, pnpm, node
   get onto the VM first.
 - App ports (5173, 8000, 8055, 5432) travel inside the SSH tunnel and bind to
   your laptop's loopback. They are never exposed.
-- `setup.sh` sets a default container root password (`dembrane`). `up.sh`
+- `setup.sh` sets a default container root password (`dembrane`). `up`
   installs your public key so you do not depend on it, but the password is
   still set. This is acceptable only because 2222 is not publicly reachable.
 
@@ -142,16 +151,16 @@ personal values (project, zone, instance name) and is gitignored. An explicit
 env var beats both:
 
 ```sh
-RD_MACHINE_TYPE=c4-standard-16 ./create.sh
+RD_MACHINE_TYPE=c4-standard-16 ./scripts/remote-dev.sh create
 ```
 
 minio is off by default, but the devcontainer points the server at it
 (`STORAGE_S3_ENDPOINT=http://minio:9000`) either way, so file uploads and
-recordings fail until you turn it on. `up.sh`, `status.sh` and `tunnel.sh` say
-so while it is off. To enable it, re-run `./init.sh` and answer `y` to "Run
-minio?" (the other questions default to your current values), then run
-`./up.sh --skip-setup`. That writes this line to `local.env`, which you can
-also edit by hand:
+recordings fail until you turn it on. `up`, `status` and `tunnel` say so while
+it is off. To enable it, re-run `./scripts/remote-dev.sh init` and answer `y` to
+"Run minio?" (the other questions default to your current values), then run
+`./scripts/remote-dev.sh up --skip-setup`. That writes this line to `local.env`,
+which you can also edit by hand:
 
 ```sh
 RD_COMPOSE_FILES="docker-compose.yml docker-compose-s3.yml"
@@ -170,42 +179,43 @@ recordings fail with `ERR_NAME_NOT_RESOLVED`:
 sudo sh -c 'echo "127.0.0.1 minio  # dembrane remote-dev" >> /etc/hosts'
 ```
 
-`status.sh` and `tunnel.sh` say so while that entry is missing.
+`status` and `tunnel` say so while that entry is missing.
 
-Answering `n` later turns it back off, and the next `./up.sh` removes the
-container. Its `minio_data` directory on the VM is left alone, so turning it on
-again keeps whatever was uploaded.
+Answering `n` later turns it back off, and the next `./scripts/remote-dev.sh up`
+removes the container. Its `minio_data` directory on the VM is left alone, so
+turning it on again keeps whatever was uploaded.
 
 ## Troubleshooting
 
-**`./up.sh` fails on a missing `directus/.env`.** The compose file requires it.
-`cp echo/directus/.env.sample echo/directus/.env`, fill it in, re-run.
+**`./scripts/remote-dev.sh up` fails on a missing `directus/.env`.** The compose
+file requires it. `cp echo/directus/.env.sample echo/directus/.env`, fill it in,
+re-run.
 
 **The repo did not clone.** The startup script has no git credentials, so a
-private repo fails there. `./ssh.sh --vm`, authenticate, clone into the path
-`create.sh` printed, then re-run `./up.sh`.
+private repo fails there. `./scripts/remote-dev.sh ssh --vm`, authenticate,
+clone into the path `create` printed, then re-run `./scripts/remote-dev.sh up`.
 
-**Zed cannot connect after a restart.** The external IP is ephemeral and
-changes on every boot. `./start.sh` re-runs `ssh-config.sh` for you; if you
-started the VM from the console instead, run `./ssh-config.sh` by hand.
+**Zed cannot connect after a restart.** The external IP is ephemeral and changes
+on every boot. `./scripts/remote-dev.sh start` re-runs `ssh-config` for you; if
+you started the VM from the console instead, run `ssh-config` by hand.
 
 **A build gets OOM-killed.** `bootstrap-vm.sh` adds 4GB of swap, which turns
 most OOMs into slowness rather than failure. If it still dies, go up a size:
-`./resize.sh e2-standard-8`.
+`./scripts/remote-dev.sh resize e2-standard-8`.
 
-**Bootstrap seems stuck.** `./ssh.sh --vm tail -f /var/log/dembrane-bootstrap.log`.
+**Bootstrap seems stuck.** `./scripts/remote-dev.sh ssh --vm tail -f /var/log/dembrane-bootstrap.log`.
 
-**`create.sh` warns that the disk is larger than the image.** Expected and
-harmless. gcloud prints this whenever the boot disk exceeds the 10GB image,
-and it only matters for operating systems that cannot resize their own root
+**`create` warns that the disk is larger than the image.** Expected and
+harmless. gcloud prints this whenever the boot disk exceeds the 10GB image, and
+it only matters for operating systems that cannot resize their own root
 partition. The Ubuntu cloud image can, and does so on first boot. Confirm with
-`./ssh.sh --vm --command 'df -h /'`: the reported size should match the disk,
-not 10GB.
+`./scripts/remote-dev.sh ssh --vm --command 'df -h /'`: the reported size should
+match the disk, not 10GB.
 
-**Running low on disk.** `./resize.sh --disk 100GB`, then reboot so the
-filesystem grows into it. Reclaiming space is usually easier: `./ssh.sh --vm`
-then `docker system prune -a` clears old build layers, which are what actually
-accumulate over time.
+**Running low on disk.** `./scripts/remote-dev.sh resize --disk 100GB`, then
+reboot so the filesystem grows into it. Reclaiming space is usually easier:
+`./scripts/remote-dev.sh ssh --vm` then `docker system prune -a` clears old
+build layers, which are what actually accumulate over time.
 
 ## Cost
 
@@ -216,8 +226,8 @@ Rough us/canada list prices, running vs stopped:
 | `e2-standard-4` | 4 / 16GB | ~$100/mo | ~$23/mo | ~$6/mo |
 | `e2-standard-8` | 8 / 32GB | ~$200/mo | ~$46/mo | ~$6/mo |
 
-The gap between columns one and two is `./stop.sh`. Consider a shell alias or a
-calendar reminder.
+The gap between columns one and two is `./scripts/remote-dev.sh stop`. Consider
+a shell alias or a calendar reminder.
 
 ## Related
 
