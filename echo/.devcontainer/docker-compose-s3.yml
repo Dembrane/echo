@@ -6,13 +6,15 @@ services:
     ports:
       - 9000:9000
       - 9001:9001
-    # Start the server first, then create the bucket once it answers.
+    # Start the server first, then create the buckets once it answers: dembrane
+    # for the app, celld for docker-compose-celld.yml's fleet state.
     entrypoint: >
       /bin/sh -c "
       silo server /mnt/data --console-address :9001 &
       until mc alias set local http://localhost:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD >/dev/null 2>&1; do sleep 1; done;
       mc mb --ignore-existing local/dembrane;
       mc anonymous set download local/dembrane;
+      mc mb --ignore-existing local/celld;
       wait"
     environment:
       - MINIO_ROOT_USER=dembrane

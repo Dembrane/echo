@@ -1,0 +1,23 @@
+services:
+  celld:
+    # Self-hosted Workers and Durable Objects (https://celld.dev). Its state
+    # lives in minio's celld bucket, so this file needs docker-compose-s3.yml.
+    image: ghcr.io/denoland/celld:0.5.1
+    # A non-loopback --listen requires an explicit --internal-listen. Keep the
+    # operator API on the container's own loopback.
+    command: ["--listen", "0.0.0.0:8787", "--internal-listen", "127.0.0.1:8788"]
+    ports:
+      - 8787:8787
+    environment:
+      - CELLD_BUCKET=s3://celld
+      - S3_ENDPOINT=http://minio:9000
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=dembrane
+      - AWS_SECRET_ACCESS_KEY=dembrane
+      # Pick up a `celld deploy` within seconds instead of the default 30.
+      - CELLD_DEPLOY_POLL_S=5
+    depends_on:
+      - minio
+    restart: unless-stopped
+    networks:
+      - dembrane-network

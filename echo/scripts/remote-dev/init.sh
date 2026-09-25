@@ -234,11 +234,28 @@ if minio_enabled; then MINIO_DEFAULT=y; else MINIO_DEFAULT=n; fi
 # someone added by hand survive.
 COMPOSE_FILES=""
 for f in $RD_COMPOSE_FILES; do
-    [ "$f" = "docker-compose-s3.yml" ] || COMPOSE_FILES="$COMPOSE_FILES $f"
+    case "$f" in
+        docker-compose-s3.yml|docker-compose-celld.yml) ;;
+        *) COMPOSE_FILES="$COMPOSE_FILES $f" ;;
+    esac
 done
-if confirm "Run minio?" "$MINIO_DEFAULT"; then
-    COMPOSE_FILES="$COMPOSE_FILES docker-compose-s3.yml"
+RUN_MINIO=false
+confirm "Run minio?" "$MINIO_DEFAULT" && RUN_MINIO=true
+
+log_step "Workers (celld)"
+echo "celld runs Cloudflare-style Workers and Durable Objects, with its state in"
+echo "minio. Nothing in the app needs it; it is for trying apps from celld-apps/."
+if celld_enabled; then CELLD_DEFAULT=y; else CELLD_DEFAULT=n; fi
+RUN_CELLD=false
+if confirm "Run celld?" "$CELLD_DEFAULT"; then
+    RUN_CELLD=true
+    if [ "$RUN_MINIO" = false ]; then
+        log_info "celld stores its state in minio, so minio is on too."
+        RUN_MINIO=true
+    fi
 fi
+[ "$RUN_MINIO" = true ] && COMPOSE_FILES="$COMPOSE_FILES docker-compose-s3.yml"
+[ "$RUN_CELLD" = true ] && COMPOSE_FILES="$COMPOSE_FILES docker-compose-celld.yml"
 COMPOSE_FILES="${COMPOSE_FILES# }"
 
 log_step "Writing local.env"
@@ -257,7 +274,8 @@ RD_INSTANCE_NAME="$INSTANCE"
 RD_ORG_DOMAIN="$ORG_DOMAIN"
 RD_ORG_ID="$ORG_ID"
 
-# Add docker-compose-s3.yml to run minio, then ./up.sh --skip-setup.
+# Add docker-compose-s3.yml to run minio, and docker-compose-celld.yml as well
+# to run celld, then ./up.sh --skip-setup.
 RD_COMPOSE_FILES="$COMPOSE_FILES"
 EOF
 

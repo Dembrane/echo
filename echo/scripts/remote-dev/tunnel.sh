@@ -54,6 +54,7 @@ print_port() {
         5432) scheme=postgresql; desc="postgres (dembrane / dembrane)" ;;
         9000) scheme=http;       desc="minio S3 API (dembrane / dembrane)" ;;
         9001) scheme=http;       desc="minio console (dembrane / dembrane)" ;;
+        8787) scheme=http;       desc="celld workers (deploy with ./celld-deploy.sh)" ;;
         *)    printf '  %13s%s\n' "" "localhost:$p"; return ;;
     esac
     printf '  %10s://localhost:%-5s  %s%s\n' "$scheme" "$p" "$desc" "$note"

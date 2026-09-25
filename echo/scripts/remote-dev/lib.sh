@@ -247,6 +247,16 @@ minio_enabled() {
     esac
 }
 
+# celld is opt-in through docker-compose-celld.yml, and keeps its state in
+# minio, so turning it on in init.sh turns minio on too.
+RD_CELLD_ENABLE_HINT='re-run ./init.sh and answer y to "Run celld?" (or add docker-compose-s3.yml and docker-compose-celld.yml to RD_COMPOSE_FILES in local.env), then ./up.sh --skip-setup'
+celld_enabled() {
+    case " $RD_COMPOSE_FILES " in
+        *" docker-compose-celld.yml "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 # The server hands the browser presigned URLs built from STORAGE_S3_ENDPOINT,
 # which is http://minio:9000 inside the compose network. Your browser cannot
 # resolve that name, so uploads fail with ERR_NAME_NOT_RESOLVED until you point
