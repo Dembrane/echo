@@ -108,7 +108,11 @@ export const LoadingStage = () => {
 		const linger = setTimeout(() => {
 			setPhase((p) => (p === "shown" ? "leaving" : p));
 		}, LINGER_MS);
-		const leave = setTimeout(() => setPhase("hidden"), LINGER_MS + LEAVE_MS);
+		// Once gone, the next wait opens on the next quote.
+		const leave = setTimeout(() => {
+			setPhase("hidden");
+			setIndex((i) => (i + 1) % LOADING_QUOTES.length);
+		}, LINGER_MS + LEAVE_MS);
 		return () => {
 			clearTimeout(linger);
 			clearTimeout(leave);
