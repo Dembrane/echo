@@ -52,7 +52,9 @@ services:
       # request, which outgrew the 1mb default in September 2026.
       - MAX_PAYLOAD_SIZE=10mb
       - CORS_ENABLED=true
-      - CORS_ORIGIN=http://localhost:5173,http://localhost:5174
+      # For the celld-apps that log in here: 8787 is celld on the VM
+      # (docker-compose-celld.yml), 9877-9879 their `pnpm dev` ports.
+      - CORS_ORIGIN=http://localhost:5173,http://localhost:5174,http://localhost:8787,http://localhost:9877,http://localhost:9878,http://localhost:9879
       - CORS_CREDENTIALS=true
       - SESSION_COOKIE_SECURE=false
       - SESSION_COOKIE_SAME_SITE=lax
