@@ -4,6 +4,10 @@
 
 set -euo pipefail
 
+# gcloud catches ctrl-c and exits 1 instead of dying from the signal, so bash
+# would treat it as an ordinary failure and carry on with the next step.
+trap 'exit 130' INT
+
 RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RD_COMMANDS_DIR="$RD_SCRIPT_DIR/commands"
 # scripts/remote-dev -> scripts -> echo
