@@ -118,6 +118,31 @@ fi
 # A new VM gets a new IP, so an alias from an earlier VM would dial the old one.
 "$RD_COMMANDS_DIR/ssh-config.sh"
 
+# Even a clone of your branch lacks unpushed commits and uncommitted edits, and
+# up runs whatever the VM has. Only offered now, while the VM has no work of
+# its own for the copy to overwrite.
+log_step "Your working tree"
+DIRTY="$(git -C "$RD_REPO_ROOT" status --porcelain --untracked-files=no)"
+if [ -n "$CLONE_BRANCH" ] && [ -z "$DIRTY" ] && [ "$CLONE_SHA" = "$(git -C "$RD_REPO_ROOT" rev-parse HEAD)" ]; then
+    log_info "The VM's clone matches your checkout. Nothing to copy."
+else
+    if [ -n "$CLONE_BRANCH" ]; then
+        log_info "The VM cloned $CLONE_BRANCH at ${CLONE_SHA:0:8}, and you are at $(git -C "$RD_REPO_ROOT" rev-parse --short=8 HEAD)."
+    else
+        log_info "The VM cloned the default branch, and you are on ${LOCAL_BRANCH:-a detached HEAD}."
+    fi
+    if [ -n "$DIRTY" ]; then
+        log_info "These uncommitted changes would be copied too:"
+        echo "$DIRTY" | sed 's/^/    /'
+    fi
+    # Opening /dev/tty, not testing it: the node exists even with no terminal.
+    if { : </dev/tty; } 2>/dev/null && confirm "Copy your working tree to the VM?" "y"; then
+        "$RD_COMMANDS_DIR/sync-code.sh"
+    else
+        log_info "Skipped. Copy it later with: ./scripts/remote-dev.sh sync-code"
+    fi
+fi
+
 log_step "Done"
 cat <<EOF
   VM:  $RD_INSTANCE_NAME ($RD_MACHINE_TYPE) in $RD_ZONE
