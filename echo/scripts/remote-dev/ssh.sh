@@ -3,6 +3,8 @@
 #
 #   ./ssh.sh               shell inside the devcontainer, in /workspaces/echo
 #   ./ssh.sh --vm          shell on the VM itself (docker, logs, disk)
+#   ./ssh.sh --vm <command...>  run a command on the VM and exit
+#   ./ssh.sh --vm --flag...     extra flags go to gcloud compute ssh
 #   ./ssh.sh <command...>  run a command in the devcontainer and exit
 #
 # The devcontainer shell is a login shell, which matters: fnm, node, pnpm and
@@ -18,7 +20,13 @@ require_running
 if [ "${1:-}" = "--vm" ]; then
     shift
     log_info "Connecting to the VM ($(instance_ip))"
-    vm_ssh_interactive "$@"
+    # A leading flag is for gcloud, as in --command '...'. Anything else is a
+    # command to run; -t so one like tail -f stops on ctrl-c.
+    if [ $# -gt 0 ] && [ "${1#-}" = "$1" ]; then
+        gc_ssh --command "$*" -- -t
+    else
+        vm_ssh_interactive "$@"
+    fi
     exit $?
 fi
 
