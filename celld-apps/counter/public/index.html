@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>counter</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 36rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+    code { background: #f0f0f0; padding: 0 0.25rem; border-radius: 3px; }
+    button { font: inherit; padding: 0.25rem 0.75rem; }
+  </style>
+</head>
+<body>
+  <h1>counter</h1>
+  <p>A <a href="https://celld.dev">celld</a> demo. This page is a static asset; the routes below are the Worker.</p>
+
+  <p>
+    <button id="increment">Increment</button>
+    count: <strong id="count">?</strong>
+  </p>
+
+  <ul>
+    <li><code>GET /count?name=NAME</code> increments and returns the counter NAME</li>
+    <li><code>GET /files</code> lists stored files</li>
+    <li><code>PUT /files/KEY</code> stores the request body as KEY</li>
+    <li><code>GET /files/KEY</code> reads KEY back</li>
+  </ul>
+
+  <script>
+    document.getElementById("increment").addEventListener("click", async () => {
+      const { n } = await (await fetch("/count?name=default")).json();
+      document.getElementById("count").textContent = n;
+    });
+  </script>
+</body>
+</html>

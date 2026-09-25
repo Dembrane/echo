@@ -1,5 +1,6 @@
 // A Durable Object counter plus an R2 file store. Both keep their state in the
-// fleet bucket, so it survives restarts of the celld container.
+// fleet bucket, so it survives restarts of the celld container. GET / is
+// served from public/ before this Worker runs.
 
 export class Counter {
   constructor(state) {
@@ -11,12 +12,6 @@ export class Counter {
     return Response.json({ n });
   }
 }
-
-const USAGE = `GET  /count?name=NAME   increment and return the counter NAME
-GET  /files            list stored files
-PUT  /files/KEY        store the request body as KEY
-GET  /files/KEY        read KEY back
-`;
 
 export default {
   async fetch(request, env) {
@@ -53,6 +48,6 @@ export default {
       return new Response("Method not allowed.\n", { status: 405 });
     }
 
-    return new Response(USAGE);
+    return new Response("Not found.\n", { status: 404 });
   },
 };

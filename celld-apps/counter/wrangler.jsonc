@@ -6,5 +6,6 @@
     "bindings": [{ "name": "COUNTER", "class_name": "Counter" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Counter"] }],
-  "r2_buckets": [{ "binding": "FILES", "bucket_name": "counter-files" }]
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "counter-files" }],
+  "assets": { "directory": "./public" }
 }
