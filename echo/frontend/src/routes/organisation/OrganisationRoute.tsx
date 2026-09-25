@@ -40,6 +40,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { OrgAgentAccessPanel } from "@/components/agent-access/OrgAgentAccessPanel";
 import { OrgBillingTab } from "@/components/billing/BillingManager";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
 import { InviteModal } from "@/components/invite/InviteModal";
@@ -670,11 +671,7 @@ export const OrganisationRoute = () => {
 	}, [members, search, roleFilter, myAppUserId]);
 
 	if (organisationLoading) {
-		return (
-			<Center style={{ height: "60vh" }}>
-				<Loader size="sm" color="gray" />
-			</Center>
-		);
+		return <BeautifulLoading />;
 	}
 
 	// Distinct from the "not found" branch below — a 5xx is not a 404.

@@ -7,10 +7,10 @@ import {
 	Button,
 	Card,
 	Group,
-	Loader,
 	NumberInput,
 	Paper,
 	Select,
+	Skeleton,
 	Stack,
 	Switch,
 	Tabs,
@@ -63,6 +63,18 @@ const resultTypeLabels = (): Record<string, string> => ({
 	stakeholder: t`Stakeholders`,
 	tension: t`Tensions`,
 });
+
+/** The cards a tab is about to show, as quiet shapes, while they load. */
+function CardsSkeleton({ count, height }: { count: number; height: number }) {
+	return (
+		<Stack gap="sm" aria-busy="true">
+			{Array.from({ length: count }, (_, i) => (
+				// biome-ignore lint/suspicious/noArrayIndexKey: placeholders with no identity
+				<Skeleton key={i} height={height} radius="sm" />
+			))}
+		</Stack>
+	);
+}
 
 function dateLabel(value?: string | null) {
 	return value
@@ -621,7 +633,7 @@ function RecipesView({
 		(needsSources && sources.isLoading) ||
 		(needsPopcornVoice && popcorn.isLoading)
 	)
-		return <Loader />;
+		return <CardsSkeleton count={3} height={132} />;
 	if (recipes.isError || runs.isError || sources.isError || popcorn.isError)
 		return (
 			<FetchErrorPanel
@@ -675,7 +687,7 @@ function RunDetail({
 }) {
 	const detail = useAnalysisRun(runId);
 	const cancel = useCancelAnalysisRun(projectId);
-	if (detail.isLoading) return <Loader />;
+	if (detail.isLoading) return <CardsSkeleton count={1} height={112} />;
 	if (!detail.data)
 		return (
 			<Alert color="red" variant="outline">
@@ -750,7 +762,7 @@ function RunDetail({
 function RunsView({ projectId }: { projectId: string }) {
 	const runs = useAnalysisRuns(projectId);
 	const [selected, setSelected] = useState<string>();
-	if (runs.isLoading) return <Loader />;
+	if (runs.isLoading) return <CardsSkeleton count={4} height={66} />;
 	if (runs.isError)
 		return (
 			<FetchErrorPanel

@@ -1,8 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
+import { Alert, Divider, Stack } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -102,7 +103,7 @@ export const ProjectSettingsRoute = () => {
 			px={{ base: "1rem", md: "2rem" }}
 			py={{ base: "2rem", md: "4rem" }}
 		>
-			{projectQuery.isLoading && <LoadingOverlay visible />}
+			{projectQuery.isLoading && <BeautifulLoading overlay />}
 			{projectQuery.isError && (
 				<Alert variant="outline" color="red">
 					<Trans>Error loading project</Trans>
@@ -222,7 +223,7 @@ export const ProjectExportRoute = () => {
 	return (
 		<PageContainer>
 			<Stack gap="3rem" className="relative">
-				{projectQuery.isLoading && <LoadingOverlay visible />}
+				{projectQuery.isLoading && <BeautifulLoading overlay />}
 				{projectQuery.isError && (
 					<Alert variant="outline" color="red">
 						<Trans>Error loading project</Trans>
@@ -301,7 +302,7 @@ export const ProjectPortalSettingsRoute = () => {
 			px={{ base: "1rem", md: "2rem" }}
 			py={{ base: "2rem", md: "4rem" }}
 		>
-			{isLoading && <LoadingOverlay visible />}
+			{isLoading && <BeautifulLoading overlay />}
 			{isError && (
 				<Alert variant="outline" color="red">
 					<Trans>Error loading project</Trans>
@@ -340,7 +341,7 @@ export const ProjectAccessRoute = () => {
 			px={{ base: "1rem", md: "2rem" }}
 			py={{ base: "2rem", md: "4rem" }}
 		>
-			{projectQuery.isLoading && <LoadingOverlay visible />}
+			{projectQuery.isLoading && <BeautifulLoading overlay />}
 			{projectQuery.isError && (
 				<Alert variant="outline" color="red">
 					<Trans>Error loading project</Trans>

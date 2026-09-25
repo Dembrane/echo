@@ -1,8 +1,9 @@
 import { t } from "@lingui/core/macro";
-import { Group, LoadingOverlay, Stack, Tooltip } from "@mantine/core";
+import { Group, Stack, Tooltip } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { IconLock } from "@tabler/icons-react";
 import { useParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { useProjectById } from "@/components/project/hooks";
 import { testId } from "@/lib/testUtils";
 import { TabsWithRouter } from "./TabsWithRouter";
@@ -36,7 +37,7 @@ export const ProjectOverviewLayout = () => {
 			className="relative px-2 py-4"
 			style={{ backgroundColor: "var(--app-background)" }}
 		>
-			<LoadingOverlay visible={projectQuery.isLoading} />
+			{projectQuery.isLoading && <BeautifulLoading overlay />}
 			{project && isPrivate && (
 				<Group gap={8} align="center" wrap="nowrap" px="xs">
 					<Tooltip label={t`Private · only invited people can see this`}>

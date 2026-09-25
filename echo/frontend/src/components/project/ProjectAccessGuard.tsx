@@ -1,9 +1,10 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Center, Loader, Stack, Text, Title } from "@mantine/core";
+import { Button, Center, Stack, Text, Title } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
@@ -60,11 +61,7 @@ export const ProjectAccessGuard = ({ children }: { children: ReactNode }) => {
 	if (!projectId) return <>{children}</>;
 
 	if (isLoading) {
-		return (
-			<Center style={{ height: "60vh" }}>
-				<Loader size="sm" color="gray" />
-			</Center>
-		);
+		return <BeautifulLoading />;
 	}
 
 	if (data && data.ok) {
