@@ -6,9 +6,12 @@ export class Counter {
   constructor(state) {
     this.state = state;
   }
-  async fetch() {
-    const n = ((await this.state.storage.get("n")) ?? 0) + 1;
-    await this.state.storage.put("n", n);
+  async fetch(request) {
+    let n = (await this.state.storage.get("n")) ?? 0;
+    if (request.method === "POST") {
+      n++;
+      await this.state.storage.put("n", n);
+    }
     return Response.json({ n });
   }
 }

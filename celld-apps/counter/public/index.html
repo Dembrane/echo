@@ -20,17 +20,20 @@
   </p>
 
   <ul>
-    <li><code>GET /count?name=NAME</code> increments and returns the counter NAME</li>
+    <li><code>GET /count?name=NAME</code> returns the counter NAME</li>
+    <li><code>POST /count?name=NAME</code> increments it and returns the new value</li>
     <li><code>GET /files</code> lists stored files</li>
     <li><code>PUT /files/KEY</code> stores the request body as KEY</li>
     <li><code>GET /files/KEY</code> reads KEY back</li>
   </ul>
 
   <script>
-    document.getElementById("increment").addEventListener("click", async () => {
-      const { n } = await (await fetch("/count?name=default")).json();
+    async function count(method) {
+      const { n } = await (await fetch("/count?name=default", { method })).json();
       document.getElementById("count").textContent = n;
-    });
+    }
+    document.getElementById("increment").addEventListener("click", () => count("POST"));
+    count("GET");
   </script>
 </body>
 </html>
