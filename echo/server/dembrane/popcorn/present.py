@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from collections.abc import Sequence
 from datetime import datetime, timezone
+from collections.abc import Sequence
 
 from dembrane.popcorn import service
 
