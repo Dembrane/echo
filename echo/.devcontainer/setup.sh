@@ -314,11 +314,6 @@ AcceptEnv LANG LC_*
 Subsystem sftp /usr/lib/openssh/sftp-server
 CONF
 
-    # SSH sessions start with a clean environment, so the compose
-    # `environment:` block (DIRECTUS_TOKEN, DATABASE_URL, ...) would never
-    # reach them. PAM loads /etc/environment into each session.
-    tr '\0' '\n' < /proc/1/environ | grep -v -E '^(PATH|HOME|HOSTNAME)=' > /etc/environment
-
     # Set a default root password so initial SSH works
     # (override in your own setup with ssh-copy-id to switch to key auth)
     if ! passwd -S root 2>/dev/null | grep -q "^root P "; then

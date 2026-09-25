@@ -95,6 +95,9 @@ services:
       - 5173:5173
       - 5174:5174
       - 2222:22
+    # Only processes started through `docker exec` see these (VS Code's
+    # Dev Containers, `docker compose exec`). SSH sessions on 2222 start with a
+    # clean environment and miss them. server/.env overrides any of them.
     environment:
       - DIRECTUS_SECRET=secret
       - DIRECTUS_TOKEN=admin
