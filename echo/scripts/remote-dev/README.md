@@ -13,9 +13,9 @@ and the same `.devcontainer/setup.sh` run, just on rented hardware.
 cd echo/scripts/remote-dev
 
 ./init.sh          # asks which GCP project and zone; writes local.env
-./create.sh        # creates the VM, installs docker, clones the repo
+./create.sh        # creates the VM, installs docker, clones the repo,
+                   # and adds the SSH hosts Zed connects through
 ./up.sh            # copies .env files up, starts the stack, installs deps
-./ssh-config.sh    # adds the SSH hosts Zed connects through
 ```
 
 Then, in a terminal tab you leave open:

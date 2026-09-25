@@ -94,6 +94,9 @@ if ! vm_ssh "test -d '$RD_REPO_DIR/.git'" >/dev/null 2>&1; then
     exit 1
 fi
 
+# A new VM gets a new IP, so an alias from an earlier VM would dial the old one.
+"$RD_SCRIPT_DIR/ssh-config.sh"
+
 log_step "Done"
 cat <<EOF
   VM:  $RD_INSTANCE_NAME ($RD_MACHINE_TYPE) in $RD_ZONE
@@ -102,7 +105,6 @@ cat <<EOF
 
 Next:
   ./up.sh          copy env files up, start the stack, install dependencies
-  ./ssh-config.sh  add the SSH host entries Zed connects through
 
 Remember to ./stop.sh when you are done for the day. A stopped VM bills only
 for its disk, which is a few dollars a month rather than a few hundred.

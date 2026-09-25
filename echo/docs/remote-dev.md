@@ -27,7 +27,7 @@ and `mprocs` works as it always did. Only the hardware moves.
 
 ```sh
 cd echo/scripts/remote-dev
-./init.sh && ./create.sh && ./up.sh && ./ssh-config.sh
+./init.sh && ./create.sh && ./up.sh
 ```
 
 `init.sh` asks which project and zone to use and writes them to `local.env`,

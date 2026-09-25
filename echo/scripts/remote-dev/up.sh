@@ -89,7 +89,7 @@ if ! minio_enabled; then
     log_warn "minio is off, so file uploads and recordings fail. Enable with: $RD_MINIO_ENABLE_HINT"
 fi
 cat <<EOF
-  ./ssh-config.sh   write the SSH host entries (run once, and after each start)
+  ./ssh-config.sh   refresh the SSH host entries, if the VM was started outside ./start.sh
   ./tunnel.sh       forward ports to localhost so your browser can reach the app
   ./ssh.sh          shell into the devcontainer
 
