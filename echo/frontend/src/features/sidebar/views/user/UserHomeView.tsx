@@ -16,6 +16,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { isOutsiderRole } from "@/lib/roles";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
+import { FullOnly } from "../../shell/rail";
 
 export const UserHomeView = () => {
 	const { workspaces, isLoading } = useWorkspace();
@@ -88,55 +89,57 @@ export const UserHomeView = () => {
 				</>
 			) : (
 				<>
-					{internalOrgs.length > 0 && (
-						<>
-							<SectionLabel>
-								<Trans>Organisations</Trans>
-							</SectionLabel>
-							{internalOrgs.map((org) => (
-								<NavItem
-									key={org.id}
-									to={`/o/${org.id}/overview`}
-									label={org.name}
-									icon={Buildings}
-									pushes
-								/>
-							))}
-						</>
-					)}
-					{externalOrgs.map((org) => (
-						<NavItem
-							key={org.id}
-							to={`/o/${org.id}/overview`}
-							label={org.name}
-							icon={Buildings}
-							badge={<Trans>External</Trans>}
-							pushes
-						/>
-					))}
-					{ownsNoOrg && (
-						<button
-							type="button"
-							onClick={createOrgHandlers.open}
-							className="relative flex h-[30px] items-center gap-2 rounded-md px-2 text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
-							style={{ color: "#4169e1" }}
-							data-testid="sidebar-create-org"
-						>
-							<Plus size={16} />
-							<span className="truncate">
-								<Trans>Set up your organisation</Trans>
-							</span>
-						</button>
-					)}
-					{workspacesWithoutOrg.map((workspace) => (
-						<NavItem
-							key={workspace.id}
-							to={`/w/${workspace.id}/home`}
-							label={workspace.name}
-							icon={Folders}
-							pushes
-						/>
-					))}
+					<FullOnly>
+						{internalOrgs.length > 0 && (
+							<>
+								<SectionLabel>
+									<Trans>Organisations</Trans>
+								</SectionLabel>
+								{internalOrgs.map((org) => (
+									<NavItem
+										key={org.id}
+										to={`/o/${org.id}/overview`}
+										label={org.name}
+										icon={Buildings}
+										pushes
+									/>
+								))}
+							</>
+						)}
+						{externalOrgs.map((org) => (
+							<NavItem
+								key={org.id}
+								to={`/o/${org.id}/overview`}
+								label={org.name}
+								icon={Buildings}
+								badge={<Trans>External</Trans>}
+								pushes
+							/>
+						))}
+						{ownsNoOrg && (
+							<button
+								type="button"
+								onClick={createOrgHandlers.open}
+								className="relative flex h-[30px] items-center gap-2 rounded-md px-2 text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
+								style={{ color: "#4169e1" }}
+								data-testid="sidebar-create-org"
+							>
+								<Plus size={16} />
+								<span className="truncate">
+									<Trans>Set up your organisation</Trans>
+								</span>
+							</button>
+						)}
+						{workspacesWithoutOrg.map((workspace) => (
+							<NavItem
+								key={workspace.id}
+								to={`/w/${workspace.id}/home`}
+								label={workspace.name}
+								icon={Folders}
+								pushes
+							/>
+						))}
+					</FullOnly>
 					{isStaff && (
 						<NavItem
 							to="/admin"

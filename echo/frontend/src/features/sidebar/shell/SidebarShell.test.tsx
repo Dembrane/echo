@@ -69,15 +69,6 @@ it("mobile open: fixed overlay dialog with backdrop", () => {
 	expect(aside?.getAttribute("aria-modal")).toBe("true");
 });
 
-it("mobile collapsed: hidden, no backdrop", () => {
-	stubMatchMedia(true);
-	window.localStorage.setItem("dembrane.sidebar.collapsed", "true");
-	renderShell();
-	expect(screen.queryByTestId("sidebar-mobile-backdrop")).toBeNull();
-	const aside = document.querySelector("aside");
-	expect(aside?.style.width).toBe("0px");
-});
-
 it("tapping the backdrop closes the drawer", () => {
 	stubMatchMedia(true);
 	renderShell();
