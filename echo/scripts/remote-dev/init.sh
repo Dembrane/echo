@@ -53,12 +53,18 @@ require_auth
 
 log_step "Organization"
 echo "Organizations your account can see:"
-gcloud organizations list 2>/dev/null | sed 's/^/  /' || log_warn "  (none listed)"
+# The first live API call here. Keep stderr so an expired token is named
+# instead of shown as an empty list, the same as the project list below.
+ORG_LIST="$(gcloud organizations list 2>&1)" || {
+    is_reauth_error "$ORG_LIST" && die_reauth
+    ORG_LIST=""
+}
+if [ -n "$ORG_LIST" ]; then echo "$ORG_LIST" | sed 's/^/  /'; else log_warn "  (none listed)"; fi
 echo
 echo "dembrane contributors should keep the default. Override it if you are"
 echo "running this from your own unaffiliated account."
 ORG_DOMAIN="$(ask "Organization domain" "$RD_ORG_DOMAIN")"
-ORG_ID="$(gcloud organizations list --format='value(ID)' --filter="displayName=$ORG_DOMAIN" 2>/dev/null | head -1)"
+ORG_ID="$(gcloud organizations list --format='value(ID)' --filter="displayName=$ORG_DOMAIN" 2>/dev/null | head -1 || true)"
 if [ -z "$ORG_ID" ]; then
     log_warn "Could not resolve an org id for '$ORG_DOMAIN'. Continuing without one; it is only used to filter the project list."
     ORG_ID="$RD_ORG_ID"
