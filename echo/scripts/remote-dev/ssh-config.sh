@@ -9,8 +9,8 @@
 # (ruff, ty, biome) and the toolchain (uv, pnpm, node) in the same place as the
 # code, which is the whole point of using the devcontainer at all.
 #
-# The VM's external IP is ephemeral and changes on every start, so ./start.sh
-# re-runs this automatically.
+# The VM's external IP is ephemeral and changes on every start, so ./create.sh
+# and ./start.sh run this automatically.
 #
 #   ./ssh-config.sh           write or refresh the block
 #   ./ssh-config.sh --remove  delete the block

@@ -267,10 +267,10 @@ cat "$LOCAL_ENV" | grep -v '^#' | grep -v '^$' | sed 's/^/  /'
 
 log_step "Next"
 cat <<EOF
-  ./create.sh      create the VM, install docker, clone the repo
+  ./create.sh      create the VM, install docker, clone the repo,
+                   and add the SSH host entries Zed connects through
   ./up.sh          bring the stack up and install dependencies
-  ./ssh-config.sh  add the SSH host entries Zed connects through
 
-Or run all three at once:
-  ./create.sh && ./up.sh && ./ssh-config.sh
+Or run both at once:
+  ./create.sh && ./up.sh
 EOF
