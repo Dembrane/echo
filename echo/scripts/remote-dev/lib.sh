@@ -39,6 +39,25 @@ log_step()  { echo -e "\n\033[1;36m==>\033[0m \033[1m$1\033[0m"; }
 
 die() { log_error "$1"; exit 1; }
 
+# Prompt with a default. Reads from the terminal rather than stdin so this
+# still behaves if the script is piped.
+ask() {
+    local prompt="$1" default="${2:-}" answer
+    if [ -n "$default" ]; then
+        read -r -p "$(echo -e "\033[1;36m?\033[0m $prompt [\033[1m$default\033[0m]: ")" answer </dev/tty
+        echo "${answer:-$default}"
+    else
+        read -r -p "$(echo -e "\033[1;36m?\033[0m $prompt: ")" answer </dev/tty
+        echo "$answer"
+    fi
+}
+
+confirm() {
+    local answer
+    answer="$(ask "$1 (y/n)" "${2:-y}")"
+    [[ "$answer" =~ ^[Yy] ]]
+}
+
 # Every gcloud call goes through these wrappers so the pinned project and zone
 # can never be forgotten at a call site.
 gc() { gcloud --project "$RD_PROJECT" "$@"; }

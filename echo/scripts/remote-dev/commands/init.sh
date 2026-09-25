@@ -12,25 +12,6 @@ handle_help "${1:-}" "$0"
 
 LOCAL_ENV="$RD_SCRIPT_DIR/local.env"
 
-# Prompt with a default. Reads from the terminal rather than stdin so this
-# still behaves if the script is piped.
-ask() {
-    local prompt="$1" default="${2:-}" answer
-    if [ -n "$default" ]; then
-        read -r -p "$(echo -e "\033[1;36m?\033[0m $prompt [\033[1m$default\033[0m]: ")" answer </dev/tty
-        echo "${answer:-$default}"
-    else
-        read -r -p "$(echo -e "\033[1;36m?\033[0m $prompt: ")" answer </dev/tty
-        echo "$answer"
-    fi
-}
-
-confirm() {
-    local answer
-    answer="$(ask "$1 (y/n)" "${2:-y}")"
-    [[ "$answer" =~ ^[Yy] ]]
-}
-
 # The zone that matters is the one nearest you, since SSH latency dominates
 # how a remote editor feels. Guess from the machine's timezone, which is a
 # decent proxy and always overridable.
