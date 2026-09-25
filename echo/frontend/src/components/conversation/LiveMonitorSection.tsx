@@ -16,8 +16,8 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import {
 	BatteryLowIcon,
-	BroadcastIcon,
 	CaretRightIcon,
+	ChartBarIcon,
 	MicrophoneIcon,
 	WarningCircleIcon,
 	WifiSlashIcon,
@@ -39,8 +39,8 @@ import {
 	type MonitorStatusGroup,
 	monitorStatusGroup,
 	type SettledStatus,
-	settleStatusGroups,
 	STATUS_GROUP_ORDER,
+	settleStatusGroups,
 	statusGroupLabel,
 } from "./monitorGrouping";
 import { StatePill, stateColor } from "./StatePill";
@@ -539,7 +539,7 @@ const MonitorGroupSection = ({
 			<Collapse in={opened}>
 				<Stack gap="xs">
 					<SimpleGrid
-						cols={{ base: 2, sm: 3, md: 4, lg: 5, xl: 6 }}
+						cols={{ base: 2, lg: 5, md: 4, sm: 3, xl: 6 }}
 						spacing="xs"
 					>
 						{visible.map((conversation) => (
@@ -671,7 +671,7 @@ export const LiveMonitorSection = ({
 		return (
 			<Card withBorder p="lg" radius="sm">
 				<Stack gap="xs" align="center">
-					<BroadcastIcon size={24} />
+					<ChartBarIcon size={24} />
 					<Text size="sm" fw={500}>
 						<Trans>No recent activity</Trans>
 					</Text>
@@ -692,7 +692,7 @@ export const LiveMonitorSection = ({
 				{!hideHeader && (
 					<Group justify="space-between" align="center" gap="sm">
 						<Group gap="xs" align="center">
-							<BroadcastIcon size={16} />
+							<ChartBarIcon size={16} />
 							<Text size="xs" tt="uppercase">
 								<Trans>Live monitoring</Trans>
 							</Text>

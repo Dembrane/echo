@@ -204,7 +204,11 @@ async def public_presentation_map(
         raise HTTPException(status_code=404, detail="Map is not in this presentation.")
     return JSONResponse(
         await audience_map(
-            str(project["id"]), settings=settings, node_limit=node_limit, edge_limit=edge_limit
+            str(project["id"]),
+            settings=settings,
+            node_limit=node_limit,
+            edge_limit=edge_limit,
+            report=report,
         ),
         headers=NO_STORE,
     )

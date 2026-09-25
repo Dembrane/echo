@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Idempotent Directus migration for shared analysis objects and recipe runs.
 
-Creates nine collections, each with a CASCADE relation to `project`:
+Creates eleven collections, each with a CASCADE relation to `project`:
 
 - `analysis_scope`: one producer scope (a recipe over a declared input scope)
   or one view scope. Holds the next request order, the current ready run or
@@ -19,6 +19,11 @@ Creates nine collections, each with a CASCADE relation to `project`:
 - `analysis_snapshot`: an immutable view manifest.
 - `analysis_outbox`: a publication event, inserted in the publication
   transaction and dispatched afterwards.
+- `analysis_last_opened`: one row per host per project, holding when that host
+  last opened the results list.
+- `analysis_feedback`: one row per host per finding, holding that host's thumb
+  on the analysis's quality, the reasons they ticked and the wording they were
+  reading. These two are the only per-host tables.
 - `analysis_request_key`: every idempotency key a request was accepted under,
   mapped to the run that answers it (a key that joined equivalent work in
   flight, or retried a failed run, keeps returning that run).
@@ -71,9 +76,14 @@ RELATION = "analysis_relation"
 SNAPSHOT = "analysis_snapshot"
 OUTBOX = "analysis_outbox"
 REQUEST_KEY = "analysis_request_key"
+LAST_OPENED = "analysis_last_opened"
+FEEDBACK = "analysis_feedback"
 MAP_RESULT = "map_result"
 
-COLLECTIONS = (SCOPE, RUN, STEP, OBJECT, REVISION, RELATION, SNAPSHOT, OUTBOX, REQUEST_KEY)
+COLLECTIONS = (
+    SCOPE, RUN, STEP, OBJECT, REVISION, RELATION, SNAPSHOT, OUTBOX, REQUEST_KEY, LAST_OPENED,
+    FEEDBACK,
+)  # fmt: skip
 
 
 def _string(
@@ -254,6 +264,42 @@ def revision_fields() -> list[dict[str, Any]]:
         text_field(c, "reason", sort=18),
         _created(c, 19),
         timestamp_field(c, "published_at", sort=20),
+        # What the host said they changed: typo, clarity, meaning, withdraw,
+        # restore, rollback. Null on generated revisions and on everything
+        # written before the audit trail asked; nothing is backfilled.
+        _string(c, "change_kind", sort=21, length=16, required=False),
+    ]
+
+
+def last_opened_fields() -> list[dict[str, Any]]:
+    """One row per host per project: when they last opened the results list.
+    The host's own state, so `what is new since I last looked` has an answer
+    that survives a new browser. No row means a first visit, and then nothing
+    is new."""
+    c = LAST_OPENED
+    return [
+        _project(c),
+        _string(c, "user_id", sort=3, length=64, required=True),
+        timestamp_field(c, "opened_at", sort=4),
+    ]
+
+
+def feedback_fields() -> list[dict[str, Any]]:
+    """One row per host per finding: what that host thinks of the analysis's
+    quality, with the wording they were reading. Feedback for dembrane and the
+    team, never an edit: it changes nothing the room sees, writes no revision
+    and is in no audit trail. Clearing a rating deletes the row."""
+    c = FEEDBACK
+    return [
+        _project(c),
+        _uuid_ref(c, "object_id", OBJECT, sort=3, required=True),
+        _uuid_ref(c, "revision_id", REVISION, sort=4, required=True),
+        _string(c, "actor_id", sort=5, length=64, required=True),
+        _string(c, "rating", sort=6, length=8, required=True),
+        json_field(c, "tags", sort=7, required=True),
+        text_field(c, "note", sort=8),
+        _created(c, 9),
+        _updated(c, 10),
     ]
 
 
@@ -368,6 +414,8 @@ RELATIONS: tuple[tuple[str, str, str, str], ...] = (
     (OUTBOX, "snapshot_id", SNAPSHOT, "SET NULL"),
     (REQUEST_KEY, "run_id", RUN, "CASCADE"),
     (REQUEST_KEY, "scope_id", SCOPE, "CASCADE"),
+    (FEEDBACK, "object_id", OBJECT, "CASCADE"),
+    (FEEDBACK, "revision_id", REVISION, "CASCADE"),
     (MAP_RESULT, "snapshot_id", SNAPSHOT, "SET NULL"),
 )
 
@@ -403,6 +451,8 @@ def ensure_analysis_schema(dx: Directus) -> None:
         SNAPSHOT: snapshot_fields(),
         OUTBOX: outbox_fields(),
         REQUEST_KEY: request_key_fields(),
+        LAST_OPENED: last_opened_fields(),
+        FEEDBACK: feedback_fields(),
     }
     # Collections first: the tables reference each other in a cycle (a scope
     # points at its current run, a run at its scope), so every table exists

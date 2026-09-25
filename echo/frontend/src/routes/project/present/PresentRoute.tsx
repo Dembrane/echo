@@ -20,9 +20,7 @@ import { useDisclosure, useElementSize } from "@mantine/hooks";
 import {
 	ArrowSquareOutIcon,
 	BroadcastIcon,
-	ListChecksIcon,
 	MonitorIcon,
-	PencilSimpleIcon,
 	ShareNetworkIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -62,8 +60,10 @@ import {
 } from "@/components/present/AudienceScreen";
 import {
 	ALWAYS_ON_BLOCK,
+	blocksPatch,
 	orderedBlocks,
 	PRESENTATION_BLOCKS,
+	type PresentationBlock,
 } from "@/components/present/blocks";
 import {
 	type Presentation,
@@ -73,7 +73,6 @@ import {
 } from "@/components/present/hooks";
 import {
 	presentationDraftKey,
-	useOpeningInlineEdit,
 	usePresentationDraft,
 } from "@/components/present/hooks/usePresentationDraft";
 import { TranslationStatus } from "@/components/present/TranslationStatus";
@@ -180,13 +179,11 @@ function Editor({
 									onChange={(event) => {
 										if (locked) return;
 										save.mutate({
-											presentation: {
-												blocks: orderedBlocks(
-													event.currentTarget.checked
-														? [...selected, block]
-														: selected.filter((item) => item !== block),
-												),
-											},
+											presentation: blocksPatch(
+												selected,
+												block,
+												event.currentTarget.checked,
+											),
 										});
 									}}
 									styles={{
@@ -296,14 +293,18 @@ function DraftPreview({
 	projectId,
 	presentation,
 	revision,
+	block,
 }: {
 	projectId: string;
 	presentation: Presentation;
 	revision: number;
+	/** The tab the results panel below is on, so the preview shows the same. */
+	block?: PresentationBlock | null;
 }) {
 	const save = usePopcornSettingsMutation(projectId, presentation.id);
 	return (
 		<Preview
+			block={block}
 			presentation={presentation}
 			draft
 			revision={revision}
@@ -350,11 +351,13 @@ function Preview({
 	draft = false,
 	revision = 0,
 	onEditOpening,
+	block,
 }: {
 	presentation: Presentation;
 	draft?: boolean;
 	revision?: number;
 	onEditOpening?: AudienceScreenProps["onEditOpening"];
+	block?: PresentationBlock | null;
 }) {
 	const eventTick = useContext(PresentationEventTick);
 	// The room's screen at its own size, shrunk to fit the column. At the
@@ -381,6 +384,7 @@ function Preview({
 				>
 					<AudienceScreen
 						presentationId={presentation.id}
+						block={block}
 						embedded
 						draft={draft}
 						draftRevision={revision}
@@ -407,9 +411,9 @@ function Session({
 	canEdit: boolean;
 	opening: boolean;
 }) {
-	const [params, setParams] = useSearchParams();
+	const [params] = useSearchParams();
 	const navigate = useI18nNavigate();
-	const { workspaceId, presentationId } = useParams();
+	const { workspaceId } = useParams();
 	const client = useQueryClient();
 	const updates = useQuery({
 		queryFn: () =>
@@ -453,27 +457,10 @@ function Session({
 				client.invalidateQueries({ queryKey: draftKey });
 		},
 	);
-	const editing = canEdit && (params.get("edit") === "1" || !!presentationId);
-	// The results panel has its own state, so a host can review what the room
-	// will read without opening the presentation editor.
-	const reviewing =
-		canEdit &&
-		(params.get("results") === "1" ||
-			params.get("section") === RESULTS_SECTION);
-	const setReviewing = (on: boolean) =>
-		setParams((old) => {
-			const next = new URLSearchParams(old);
-			if (on) next.set("results", "1");
-			else {
-				next.delete("results");
-				next.delete("resultsPage");
-				if (next.get("section") === RESULTS_SECTION) next.delete("section");
-			}
-			return next;
-		});
-	// Both panels work on the draft, so either one puts the draft on the preview
-	// and Publish within reach.
-	const drafting = editing || reviewing;
+	// A host who may edit always has both: the presentation editor and the
+	// results panel are the dashboard, not a mode it can be put into. The
+	// preview shows the draft and Publish is always within reach.
+	const drafting = canEdit;
 	const [sharing, share] = useDisclosure(false);
 	const [liveOptions, liveDisclosure] = useDisclosure(false);
 	const draft = usePresentationDraft(
@@ -482,15 +469,25 @@ function Session({
 		// A host who may edit also types into the opening on the preview below.
 		canEdit,
 	);
-	const editOpeningLive = useOpeningInlineEdit(draft, true);
 	const flushers = useRef(new Set<() => Promise<void>>());
 	const [pendingFields, setPendingFields] = useState(new Set<string>());
 	const [publishing, setPublishing] = useState(false);
 	const [publishError, setPublishError] = useState(false);
+	// The tab the results panel is on. The preview follows it, so choosing
+	// "Tensions" to review them puts the room's own tensions slide beside the
+	// list. Nothing here ever reaches the screen in the room.
+	const [previewBlock, setPreviewBlock] = useState<PresentationBlock | null>(
+		null,
+	);
+	// A field that leaves takes its unsaved words with it, so it writes them on
+	// its way out: closing the editor used to be the moment for that, and the
+	// editor no longer closes. Leaving the page unmounts the fields and this
+	// runs for each of them; Publish still flushes them all first.
 	const registerFlush = useCallback((flush: () => Promise<void>) => {
 		flushers.current.add(flush);
 		return () => {
 			flushers.current.delete(flush);
+			void flush().catch(() => {});
 		};
 	}, []);
 	const setFieldPending = useCallback(
@@ -523,21 +520,6 @@ function Session({
 			setPublishError(true);
 		} finally {
 			setPublishing(false);
-		}
-	};
-	const closeEditor = async () => {
-		try {
-			for (const flush of flushers.current) await flush();
-			if (presentationId)
-				navigate(`/w/${workspaceId}/projects/${projectId}/present`);
-			else
-				setParams((old) => {
-					const next = new URLSearchParams(old);
-					next.set("edit", "0");
-					return next;
-				});
-		} catch {
-			setPublishError(true);
 		}
 	};
 	return (
@@ -648,50 +630,19 @@ function Session({
 					</Text>
 				)}
 				{canEdit && (
-					<Group justify="space-between">
-						<Group gap="xs">
-							<Button
-								variant="subtle"
-								disabled={publishing}
-								leftSection={<PencilSimpleIcon size={18} />}
-								onClick={() => {
-									if (editing) {
-										void closeEditor();
-										return;
-									}
-									setParams((old) => {
-										const next = new URLSearchParams(old);
-										next.set("edit", "1");
-										return next;
-									});
-								}}
-							>
-								{editing ? t`Done editing` : t`Edit presentation`}
-							</Button>
-							<Button
-								variant="subtle"
-								disabled={publishing}
-								aria-pressed={reviewing}
-								leftSection={<ListChecksIcon size={18} />}
-								onClick={() => setReviewing(!reviewing)}
-							>
-								{reviewing ? t`Done reviewing` : t`Review results`}
-							</Button>
-						</Group>
-						{drafting && (
-							<Button
-								onClick={() => void publishChanges()}
-								loading={publishing}
-								disabled={
-									!draft.query.data ||
-									draft.save.isPending ||
-									draft.save.isError ||
-									(!draft.query.data.has_changes && !pendingFields.size)
-								}
-							>
-								<Trans>Publish changes</Trans>
-							</Button>
-						)}
+					<Group justify="flex-end">
+						<Button
+							onClick={() => void publishChanges()}
+							loading={publishing}
+							disabled={
+								!draft.query.data ||
+								draft.save.isPending ||
+								draft.save.isError ||
+								(!draft.query.data.has_changes && !pendingFields.size)
+							}
+						>
+							<Trans>Publish changes</Trans>
+						</Button>
 					</Group>
 				)}
 				<Modal
@@ -790,28 +741,25 @@ function Session({
 								style={{ border: 0, margin: 0, minWidth: 0, padding: 0 }}
 							>
 								<Stack gap="lg">
-									<div className={editing ? classes.editor : undefined}>
+									<div className={classes.editor}>
 										<DraftPreview
+											block={previewBlock}
 											projectId={projectId}
 											presentation={draft.query.data.presentation}
 											revision={draft.query.data.revision}
 										/>
-										{editing && (
-											<Editor
-												projectId={projectId}
-												presentation={draft.query.data.presentation}
-											/>
-										)}
-									</div>
-									{/* Outside the preview-and-editor row, so it spans the page. */}
-									{reviewing && (
-										<PresentResultsPanel
-											className={classes.results}
+										<Editor
 											projectId={projectId}
 											presentation={draft.query.data.presentation}
-											onClose={() => setReviewing(false)}
 										/>
-									)}
+									</div>
+									{/* Outside the preview-and-editor row, so it spans the page. */}
+									<PresentResultsPanel
+										className={classes.results}
+										onTabChange={setPreviewBlock}
+										projectId={projectId}
+										presentation={draft.query.data.presentation}
+									/>
 								</Stack>
 							</fieldset>
 						</SettingsSaveContext.Provider>
@@ -821,10 +769,7 @@ function Session({
 						</Text>
 					)
 				) : (
-					<Preview
-						presentation={presentation}
-						onEditOpening={editOpeningLive}
-					/>
+					<Preview presentation={presentation} />
 				)}
 				{publishError && (
 					<Text role="alert" size="sm">
@@ -854,7 +799,7 @@ function Session({
 							variant="subtle"
 							onClick={() =>
 								navigate(
-									`/w/${workspaceId}/projects/${projectId}/analysis?returnTo=present&section=${encodeURIComponent(reviewing && !editing ? RESULTS_SECTION : editorSection(params))}`,
+									`/w/${workspaceId}/projects/${projectId}/analysis?returnTo=present&section=${encodeURIComponent(editorSection(params))}`,
 								)
 							}
 						>
@@ -876,7 +821,6 @@ export function PresentRoute() {
 	const { projectId = "" } = useParams();
 	const query = usePresentation(projectId);
 	const ensure = useEnsurePresentation(projectId);
-	const [, setParams] = useSearchParams();
 	const initializing = useRef<string | null>(null);
 	useEffect(() => {
 		if (
@@ -886,18 +830,8 @@ export function PresentRoute() {
 		)
 			return;
 		initializing.current = projectId;
-		ensure.mutate(false, {
-			onSuccess: () =>
-				setParams(
-					(old) => {
-						const next = new URLSearchParams(old);
-						next.set("edit", "1");
-						return next;
-					},
-					{ replace: true },
-				),
-		});
-	}, [projectId, query.data, ensure.mutate, setParams]);
+		ensure.mutate(false);
+	}, [projectId, query.data, ensure.mutate]);
 	const open = () => {
 		if (!query.data?.presentation) return;
 		window.open(

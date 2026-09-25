@@ -1,7 +1,15 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { GearIcon, PauseIcon, PlayIcon } from "@phosphor-icons/react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	memo,
+	useCallback,
+	useEffect,
+	useId,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
 	createFurtherPairForce,
 	createNearestNeighbourForce,
@@ -47,6 +55,7 @@ import {
 	type ZoomBehavior,
 	type ZoomTransform,
 } from "./d3";
+import { resolveNodeFills } from "./gradients";
 import {
 	EMPTY_NODE_IDS,
 	type GeometryBuild,
@@ -250,6 +259,9 @@ export const LocalMapGraph = ({
 		[recentNodeIds],
 	);
 	const styleOf = useNodeStyleLookup(nodes, colorBy, darkMode);
+	// Own namespace for this panel's gradient defs: both renderers can be
+	// on the page, and a node is blended in each of them.
+	const blendPrefix = useId();
 	const { radiusOf, signature: radiusSignature } = useNodeRadius(
 		nodes,
 		nodeRadius,
@@ -1000,8 +1012,13 @@ export const LocalMapGraph = ({
 			"filter",
 			simulationNodes.length ? styleOf(simulationNodes[0].id).filter : "none",
 		);
+		// A node with members from several conversations is drawn from their
+		// colours; every other keeps its flat fill.
+		const fillOf = svgRef.current
+			? resolveNodeFills(svgRef.current, blendPrefix, simulationNodes, styleOf)
+			: (id: string) => styleOf(id).fill;
 		circleSelection
-			.attr("fill", (d) => styleOf(d.id).fill)
+			.attr("fill", (d) => fillOf(d.id))
 			.attr("stroke", (d) => outlineFor(d.id).stroke)
 			.attr("stroke-width", (d) => outlineFor(d.id).strokeWidth)
 			.attr("r", (d) => radiusOf(d.id) * scaleFor(d.id))
@@ -1103,6 +1120,7 @@ export const LocalMapGraph = ({
 		nodeById,
 		radiusOf,
 		styleOf,
+		blendPrefix,
 		recentNodeIdsSet,
 		combinedHighlightedNodeIds,
 		combinedHighlightedNodesDistance,

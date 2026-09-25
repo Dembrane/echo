@@ -25,12 +25,14 @@ import { useInitializeChatModeMutation } from "./hooks";
 
 // Color palette from design spec - shared across chat components
 export const MODE_COLORS = {
+	// Brand Spring Green. Used as a fill (the mark, the selected card's
+	// disc), never as text; the chat itself stays neutral.
 	agentic: {
-		badge: "teal",
-		border: "#1EFFA1", // spring green border
-		lighter: "rgba(30, 255, 161, 0.1)", // very subtle green bg
-		primary: "#1EFFA1", // spring green
-		shadow: "rgba(30, 255, 161, 0.12)", // subtle green shadow
+		badge: "springGreen",
+		border: "#1EFFA1",
+		lighter: "rgba(30, 255, 161, 0.1)",
+		primary: "#1EFFA1",
+		shadow: "rgba(30, 255, 161, 0.12)",
 	},
 	deep_dive: {
 		badge: "cyan",
@@ -163,7 +165,9 @@ const ModeCard = ({
 										</Badge>
 									)}
 								</Group>
-								<Text size="sm">{subtitle}</Text>
+								<Text size="sm">
+									{subtitle}
+								</Text>
 							</Stack>
 						</Group>
 					</Group>
@@ -272,32 +276,32 @@ export const ChatModeSelector = ({
 				    have chat_mode="overview" keep working, but nothing creates a
 				    new one. */}
 				<Stack gap="lg">
-					{ENABLE_AGENTIC_CHAT && (
-						<ModeCard
-							mode="agentic"
-							title={t`Agentic`}
-							subtitle={t`Delegate multi-step analysis with live tool execution`}
-							examples={getAgenticExamples()}
-							icon={IconSparkles}
-							isBeta
-							atLimit={atChatLimit}
-							selectedMode={selectedMode}
-							isLoading={isLoading}
-							onSelectMode={handleSelectMode}
-						/>
-					)}
-
+				{ENABLE_AGENTIC_CHAT && (
 					<ModeCard
-						mode="deep_dive"
-						title={t`Specific Details`}
-						subtitle={t`Select conversations and find exact quotes`}
-						examples={getDeepDiveExamples()}
-						icon={IconMessageCircle}
+						mode="agentic"
+						title={t`Agentic`}
+						subtitle={t`Delegate multi-step analysis with live tool execution`}
+						examples={getAgenticExamples()}
+						icon={IconSparkles}
+						isBeta
 						atLimit={atChatLimit}
 						selectedMode={selectedMode}
 						isLoading={isLoading}
 						onSelectMode={handleSelectMode}
 					/>
+				)}
+
+				<ModeCard
+					mode="deep_dive"
+					title={t`Specific Details`}
+					subtitle={t`Select conversations and find exact quotes`}
+					examples={getDeepDiveExamples()}
+					icon={IconMessageCircle}
+					atLimit={atChatLimit}
+					selectedMode={selectedMode}
+					isLoading={isLoading}
+					onSelectMode={handleSelectMode}
+				/>
 				</Stack>
 			</Stack>
 		</Box>

@@ -1,0 +1,46 @@
+{
+  "collection": "analysis_last_opened",
+  "field": "opened_at",
+  "type": "timestamp",
+  "meta": {
+    "collection": "analysis_last_opened",
+    "conditions": null,
+    "display": "datetime",
+    "display_options": {
+      "relative": true
+    },
+    "field": "opened_at",
+    "group": null,
+    "hidden": false,
+    "interface": "datetime",
+    "note": "When this host last opened the results list of this project.",
+    "options": null,
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 4,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "half"
+  },
+  "schema": {
+    "name": "opened_at",
+    "table": "analysis_last_opened",
+    "data_type": "timestamp with time zone",
+    "default_value": null,
+    "max_length": null,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": false,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

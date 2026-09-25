@@ -20,7 +20,6 @@ import {
 import { useEffect, useState } from "react";
 import { testId } from "@/lib/testUtils";
 import type { AgenticPlan, PlanStepStatus } from "./agenticPlan";
-import { MODE_COLORS } from "./ChatModeSelector";
 
 const StepIcon = ({ status }: { status: PlanStepStatus }) => {
 	// Every icon sits in the same 18px box so ticking a step off never moves
@@ -83,10 +82,6 @@ export const AgenticPlanCard = ({ plan }: { plan: AgenticPlan }) => {
 				withBorder
 				radius="md"
 				className="w-full max-w-full px-3 py-2 md:max-w-[80%]"
-				style={{
-					backgroundColor: MODE_COLORS.agentic.lighter,
-					borderColor: MODE_COLORS.agentic.border,
-				}}
 			>
 				<UnstyledButton
 					onClick={() => setOpen((value) => !value)}

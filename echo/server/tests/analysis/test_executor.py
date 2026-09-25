@@ -280,7 +280,7 @@ async def test_a_crash_inside_publication_changes_nothing(world: FixtureWorld, p
 
 
 @pytest.mark.asyncio
-async def test_a_generated_update_over_an_authored_head_waits_for_review(world: FixtureWorld) -> None:
+async def test_a_generated_update_over_an_authored_head_keeps_the_authored_head(world: FixtureWorld) -> None:
     _seed(world)
     store, rec = FakeAnalysisStore(), Recorder()
     first_id = await _ready(store, rec, _request(idempotency_key="k1"))
@@ -302,12 +302,13 @@ async def test_a_generated_update_over_an_authored_head_waits_for_review(world: 
     assert [e.event_type for e in store.outbox.values()].count("revision_published") == 1
 
     regenerate = await request_run(_request(mode="regenerate", idempotency_key="g1"), store=store, deps=rec.deps())
-    assert await run_worker(regenerate.run.id, store=store, deps=rec.deps()) == "needs_review"
+    assert await run_worker(regenerate.run.id, store=store, deps=rec.deps()) == "ready"
     run = await store.get_run(regenerate.run.id)
-    assert run is not None and run.status == RunStatus.NEEDS_REVIEW and "candidateManifest" in run.progress
+    assert run is not None and run.status == RunStatus.READY and run.id != first_id
     assert store.objects[target.object_id].current_revision_id == edited.id
-    assert (await store.get_scope(run.scope_id)).current_run_id == first_id  # type: ignore[union-attr]
-    assert [v.status for v in store.revisions.values() if v.run_id == run.id] == [RevisionStatus.CANDIDATE]
+    assert (await store.get_scope(run.scope_id)).current_run_id == run.id  # type: ignore[union-attr]
+    assert {o["revisionId"] for o in run.output_manifest["objects"] if o["objectId"] == target.object_id} == {edited.id}  # type: ignore[index]
+    assert [v for v in store.revisions.values() if v.run_id == run.id and v.object_id == target.object_id] == []
 
 
 @pytest.mark.asyncio

@@ -39,8 +39,12 @@
 	--loader-color: var(--audience-accent);
 }
 
+/* One edge for the whole screen: the notice, the header, the content and the
+   footer all inset by this, so nothing overhangs anything else. Half of what
+   the deck's own `--pad-x` is, because the room's chrome is a frame around
+   the content rather than a page of its own. */
 .shell {
-	--audience-pad-x: clamp(24px, 4vw, 72px);
+	--audience-pad-x: clamp(12px, 2vw, 36px);
 
 	background: var(--audience-bg);
 	color: var(--audience-ink);
@@ -201,6 +205,12 @@
 	flex: 1;
 	min-height: 0;
 	overflow: hidden;
+}
+
+/* The Kaart tab's own pane. The map's chrome starts exactly where the header
+   and the footer start; its two panels keep their small gutter inside that. */
+.mapPane {
+	padding-inline: var(--audience-pad-x);
 }
 
 .footer {

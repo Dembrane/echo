@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 from datetime import datetime, timezone
+from collections.abc import Sequence
 
 from dembrane.popcorn import service
 
@@ -393,26 +394,175 @@ def audience_manifest(settings: dict[str, Any]) -> dict[str, Any]:
     return {k: manifest[k] for k in ("version", "blocks", "opening")}
 
 
-def sanitize_map(payload: dict[str, Any]) -> dict[str, Any]:
-    """Explicit audience projection: no passages, source IDs or host detail URLs."""
+def _evidence_of(detail: Any) -> list[dict[str, Any]]:
+    """One detail's evidence documents, whichever shape carried them.
+
+    A projection that kept a flat quote list instead of evidence groups is
+    read the same way the host's own map view reads it, so the slots and the
+    passages behind a node always agree.
+    """
+    detail = detail if isinstance(detail, dict) else {}
+    evidence = detail.get("evidence")
+    if isinstance(evidence, list):
+        return [
+            item for item in evidence if isinstance(item, dict) and item.get("conversationId")
+        ]
+    quotes = detail.get("quotes")
+    if isinstance(quotes, list):
+        grouped: dict[str, list[str]] = {}
+        for quote in quotes:
+            if isinstance(quote, dict) and quote.get("conversationId") and quote.get("text"):
+                grouped.setdefault(str(quote["conversationId"]), []).append(str(quote["text"]))
+        return [{"conversationId": cid, "quotes": texts} for cid, texts in grouped.items()]
+    return []
+
+
+def _member_details(detail: Any) -> list[dict[str, Any]]:
+    """The member documents of a deduplicated argument, or nothing."""
+    detail = detail if isinstance(detail, dict) else {}
+    consolidation = detail.get("consolidation")
+    members = consolidation.get("members") if isinstance(consolidation, dict) else None
+    return [member for member in members or [] if isinstance(member, dict)]
+
+
+def _node_conversations(node: dict[str, Any]) -> list[str]:
+    """The conversations behind one node, one entry per contributing member.
+
+    A merge repeats a conversation once per member that came from it, so the
+    map can weight a blend of their colours; anything else names each of its
+    own source conversations once.
+    """
+
+    def named(evidence: list[dict[str, Any]]) -> list[str]:
+        return [str(item["conversationId"]) for item in evidence]
+
+    detail = node.get("detail")
+    detail = detail if isinstance(detail, dict) else {}
+    members = _member_details(detail)
+    if members:
+        return [
+            conversation_id
+            for member in members
+            for conversation_id in named(_evidence_of(member))
+        ]
+    return named(_evidence_of(detail))
+
+
+def _audience_evidence(
+    evidence: list[dict[str, Any]], slot_of: dict[str, int]
+) -> list[dict[str, Any]]:
+    """Evidence as the room may read it: quotes under a palette slot.
+
+    The same shape the host payload uses, with the conversation's opaque slot
+    in place of its id, and nothing else a conversation could be traced by.
+    A conversation the slot map does not know contributed nothing visible and
+    is dropped rather than given a colour of its own here.
+    """
+    grouped: dict[int, list[str]] = {}
+    for item in evidence:
+        slot = slot_of.get(str(item["conversationId"]))
+        if slot is None:
+            continue
+        quotes = [
+            str(quote) for quote in item.get("quotes") or [] if isinstance(quote, str) and quote
+        ]
+        grouped.setdefault(slot, []).extend(quotes)
+    return [{"conversation": slot, "quotes": quotes} for slot, quotes in sorted(grouped.items())]
+
+
+def _slot_map(
+    payload: dict[str, Any], order: Sequence[str]
+) -> tuple[dict[str, int], dict[str, list[int]]]:
+    """The palette slot of every conversation on this map, and per node."""
+    slot_of = {str(cid): index for index, cid in enumerate(order)}
+    slots: dict[str, list[int]] = {}
+    for node in payload.get("nodes", []):
+        found = []
+        for conversation_id in _node_conversations(node):
+            if conversation_id not in slot_of:
+                slot_of[conversation_id] = len(slot_of)
+            found.append(slot_of[conversation_id])
+        slots[str(node.get("revisionId"))] = sorted(found)
+    return slot_of, slots
+
+
+def conversation_slots(payload: dict[str, Any], order: Sequence[str]) -> dict[str, list[int]]:
+    """A palette slot per conversation, per node, and nothing else about it.
+
+    `order` is the popcorn session's own conversation order, oldest first,
+    which is how the deck hands its markers out. Mirroring it here is what
+    makes one conversation the same colour on the stage and on the map. A
+    conversation the session does not list (a map built before it joined)
+    takes the next slot after the ones it does, in first-seen order.
+
+    The slots are the only thing the room is told about a conversation beyond
+    its name, which travels separately and only where the host asked for it:
+    never an id, never how many conversations one argument touched beyond its
+    own colours.
+    """
+    return _slot_map(payload, order)[1]
+
+
+def sanitize_map(
+    payload: dict[str, Any],
+    order: Sequence[str] = (),
+    names: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Explicit audience projection: the evidence, never its sources.
+
+    Every visible node carries its quotes as plain text under the palette slot
+    of the conversation they were spoken in, and a deduplicated argument the
+    same per member, in the host payload's own shape. What stays behind:
+    conversation and chunk ids, timestamps, dashboard urls, provenance, actor
+    ids, fact-check eligibility.
+
+    `names` is the session's conversation labels by id, passed only when the
+    presentation's names-on-the-legend setting is on. Without it no name
+    leaves the server and the room numbers the conversations itself.
+    """
+    slot_of, slots = _slot_map(payload, order)
     nodes = []
     for node in payload.get("nodes", []):
         detail = node.get("detail") or {}
         consolidation = detail.get("consolidation") or {}
+        projected: dict[str, Any] = {}
+        member_count = consolidation.get("memberCount")
+        if member_count:
+            merged: dict[str, Any] = {"memberCount": member_count}
+            members = [
+                {
+                    "statement": str(member.get("statement") or ""),
+                    "evidence": _audience_evidence(_evidence_of(member), slot_of),
+                }
+                for member in _member_details(detail)
+            ]
+            # A lineage the projection could not read in full would leave the
+            # room counting members it cannot see; the count alone is honest.
+            if members and len(members) == member_count:
+                merged["members"] = members
+            projected["consolidation"] = merged
+        evidence = _audience_evidence(_evidence_of(detail), slot_of)
+        if evidence:
+            projected["evidence"] = evidence
         nodes.append(
             {
                 **{
                     k: node.get(k)
                     for k in ("objectId", "revisionId", "type", "label", "embedding", "attributes")
                 },
-                "detail": {"consolidation": {"memberCount": consolidation["memberCount"]}}
-                if consolidation.get("memberCount")
-                else {},
+                "detail": projected,
+                "conversations": slots.get(str(node.get("revisionId"))) or [],
                 "provenance": {},
                 "factCheck": {"eligible": False},
             }
         )
+    conversation_names = {
+        str(slot): str(names.get(conversation_id) or "").strip()
+        for conversation_id, slot in slot_of.items()
+        if names and str(names.get(conversation_id) or "").strip()
+    }
     return {
+        "conversationNames": conversation_names,
         **{
             k: payload.get(k)
             for k in (
@@ -433,12 +583,43 @@ def sanitize_map(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+async def conversation_legend(
+    report: dict[str, Any] | None,
+) -> tuple[list[str], dict[str, str]]:
+    """The popcorn session's conversations, oldest first, with what the deck
+    calls each of them.
+
+    The order is how the deck hands its marker colours out; the names are the
+    deck's own legend labels, the name typed on the phone. A conversation that
+    was never named has no entry here, and the room numbers it, exactly as the
+    deck's legend does. Empty where there is no session state yet; the map
+    then keeps its own first-seen order."""
+    if not report:
+        return [], {}
+    loop = await service.get_loop_for_report(str(report["id"]))
+    state = service.normalize_state((loop or {}).get("popcorn_state"))
+    conversations = state.get("conversations") or {}
+    order = [str(cid) for cid in state.get("order") or []]
+    names = {
+        cid: str((conversations.get(cid) or {}).get("label") or "").strip()
+        for cid in order
+        if str((conversations.get(cid) or {}).get("label") or "").strip()
+    }
+    return order, names
+
+
+async def conversation_order(report: dict[str, Any] | None) -> list[str]:
+    """The popcorn session's conversation order alone; see `conversation_legend`."""
+    return (await conversation_legend(report))[0]
+
+
 async def audience_map(
     project_id: str,
     *,
     settings: dict[str, Any] | None = None,
     node_limit: int | None = None,
     edge_limit: int | None = None,
+    report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     from fastapi import HTTPException
 
@@ -449,7 +630,11 @@ async def audience_map(
     # screen gets the same, and keeps what it shows until the store is back.
     try:
         return await _audience_map(
-            project_id, settings=settings, node_limit=node_limit, edge_limit=edge_limit
+            project_id,
+            settings=settings,
+            node_limit=node_limit,
+            edge_limit=edge_limit,
+            report=report,
         )
     except (MapStoreError, AnalysisStoreError) as exc:
         raise HTTPException(status_code=503, detail="Map storage is unavailable.") from exc
@@ -461,6 +646,7 @@ async def _audience_map(
     settings: dict[str, Any] | None,
     node_limit: int | None,
     edge_limit: int | None,
+    report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     from fastapi import HTTPException
 
@@ -481,6 +667,10 @@ async def _audience_map(
     except BudgetError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     store, reads = SqlAnalysisStore(), SqlMapViewReads()
+    # The colours the room already saw on the popcorn stage, and the legend's
+    # own names where the presentation says the room may read them.
+    order, labels = await conversation_legend(report)
+    names = labels if (settings or {}).get("public_labels") == "names" else None
     # Audience reads never advance a snapshot or trigger any processing.
     bound = ((settings or {}).get("presentation") or {}).get("result_bindings", {}).get("map")
     snapshot = (
@@ -508,7 +698,10 @@ async def _audience_map(
         row = await legacy_store.get_result(newest.id)
         if row:
             projected = _curate_map(
-                sanitize_map(await legacy_graph_payload(row, query, store=legacy_store)), settings
+                sanitize_map(
+                    await legacy_graph_payload(row, query, store=legacy_store), order, names
+                ),
+                settings,
             )
             projected["fact_checks"] = audience_assessments(
                 await map_service.fact_check_states(row, legacy_store), projected
@@ -516,7 +709,8 @@ async def _audience_map(
             return await _withdraw_map(projected, project_id, store)
     if snapshot:
         projected = _curate_map(
-            sanitize_map(await graph_payload(snapshot, query, store=store)), settings
+            sanitize_map(await graph_payload(snapshot, query, store=store), order, names),
+            settings,
         )
         # Read only the assessments pinned to these exact revisions. No cold
         # cache or audience interaction can start a factual check.
@@ -608,8 +802,10 @@ async def adopt_results(
 
 def _without_nodes(payload: dict[str, Any], hidden: set[str]) -> dict[str, Any]:
     """`payload` without the hidden objects' nodes, and without what only the
-    departed revisions carried. Fact checks are filtered where they are already
-    attached; curation runs before that, and adds no empty key of its own."""
+    departed revisions carried: their quotes leave inside their own node, and a
+    conversation left with nothing on the map loses its name too. Fact checks
+    are filtered where they are already attached; curation runs before that,
+    and adds no empty key of its own."""
     if not hidden:
         return payload
     nodes = [node for node in payload.get("nodes", []) if node.get("objectId") not in hidden]
@@ -619,6 +815,15 @@ def _without_nodes(payload: dict[str, Any], hidden: set[str]) -> dict[str, Any]:
         "nodes": nodes,
         "unplaced": [rid for rid in payload.get("unplaced") or [] if rid in visible],
     }
+    if isinstance(payload.get("conversationNames"), dict):
+        standing = {
+            str(slot) for node in nodes for slot in node.get("conversations") or []
+        }
+        projected["conversationNames"] = {
+            slot: name
+            for slot, name in payload["conversationNames"].items()
+            if slot in standing
+        }
     if "fact_checks" in payload:
         projected["fact_checks"] = {
             rid: state for rid, state in (payload["fact_checks"] or {}).items() if rid in visible

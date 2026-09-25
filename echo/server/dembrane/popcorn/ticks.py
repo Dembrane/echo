@@ -71,6 +71,7 @@ from dembrane.popcorn.service import (
     get_latest_config,
     normalize_settings,
     enqueue_popcorn_tick,
+    referenced_quote_ids,
 )
 from dembrane.popcorn.analysis import (
     MAX_ANALYSIS_CHARS,
@@ -922,27 +923,9 @@ def _carry_forward(
     return kept, carried, redropped
 
 
-def _referenced_quote_ids(value: Any) -> set[str]:
-    ids: set[str] = set()
-    if isinstance(value, dict):
-        qid = value.get("quoteId")
-        if isinstance(qid, str):
-            ids.add(qid)
-        qids = value.get("quoteIds")
-        if isinstance(qids, list):
-            ids.update(str(q) for q in qids)
-        for v in value.values():
-            if isinstance(v, (dict, list)):
-                ids |= _referenced_quote_ids(v)
-    elif isinstance(value, list):
-        for v in value:
-            ids |= _referenced_quote_ids(v)
-    return ids
-
-
 def _referenced_quotes(state: dict[str, Any], quotes: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """The registry after a run: every quote something on the deck still cites."""
-    ids = _referenced_quote_ids(state.get("conversations") or {}) | _referenced_quote_ids(
+    ids = referenced_quote_ids(state.get("conversations") or {}) | referenced_quote_ids(
         state.get("analysis") or {}
     )
     return [q for q in quotes if q.get("id") in ids]
@@ -1110,7 +1093,7 @@ def _commit_views(
             analysis["updated"][kind] = now
             continue
         kept = previous.get(kind)
-        if kept and _referenced_quote_ids(kept) - held_quotes:
+        if kept and referenced_quote_ids(kept) - held_quotes:
             outcomes.append(f"{kind}: previous slide dropped, it cited a conversation that is gone")
             kept = None
         analysis[kind] = kept

@@ -1260,6 +1260,27 @@ async def load_settings_for(report: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def referenced_quote_ids(value: Any) -> set[str]:
+    """Every quote id anything in this structure still cites, under either of
+    the two names the deck reads them by: `quoteId` on a phrase, `quoteIds` on
+    a tension, a stakeholder or an aspect."""
+    ids: set[str] = set()
+    if isinstance(value, dict):
+        qid = value.get("quoteId")
+        if isinstance(qid, str):
+            ids.add(qid)
+        qids = value.get("quoteIds")
+        if isinstance(qids, list):
+            ids.update(str(q) for q in qids)
+        for nested in value.values():
+            if isinstance(nested, (dict, list)):
+                ids |= referenced_quote_ids(nested)
+    elif isinstance(value, list):
+        for nested in value:
+            ids |= referenced_quote_ids(nested)
+    return ids
+
+
 def state_counts(state: dict[str, Any]) -> dict[str, Any]:
     conversations = state.get("conversations") or {}
     phrases = sum(len(c.get("items") or []) for c in conversations.values())

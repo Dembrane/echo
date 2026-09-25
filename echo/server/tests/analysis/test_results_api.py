@@ -1,0 +1,836 @@
+"""The results endpoints a host curates with: what may be reworded, what the
+host says they changed, what needs their eye, and when they last looked.
+
+Everything here is additive. A client from before the audit trail sends no
+`change_kind` and no patch, and still writes.
+"""
+
+from __future__ import annotations
+
+from types import SimpleNamespace
+from typing import Any
+from dataclasses import replace
+
+import pytest
+
+import dembrane.api.v2.bff.analysis as analysis_bff
+from dembrane.api import feature_flags
+from tests.map_fakes import PROJECT
+from tests.analysis.helpers import Recorder
+from dembrane.analysis.revisions import RevisionService
+from tests.analysis.map_v2_fakes import READ, WRITE, Grants, Limiter, MapWorld, inline, asgi_call
+from tests.analysis.fixture_recipes import WORDS, ASSESS, FixtureWorld
+
+BASE = "/api/v2/bff/analysis"
+C1 = "aaaaaaaa-0000-4000-8000-000000000001"
+C2 = "aaaaaaaa-0000-4000-8000-000000000002"
+C3 = "aaaaaaaa-0000-4000-8000-000000000003"
+
+
+class _Env:
+    def __init__(self, monkeypatch: pytest.MonkeyPatch, maps: MapWorld) -> None:
+        self.maps = maps
+        self.grants = Grants()
+        self.rec = Recorder()
+        self.limiter = Limiter()
+        monkeypatch.setattr(analysis_bff, "resolve_project_access", self.grants.resolve)
+        monkeypatch.setattr(analysis_bff, "get_store", lambda: maps.store)
+        monkeypatch.setattr(analysis_bff, "get_reads", lambda: maps.reads)
+        monkeypatch.setattr(analysis_bff, "get_executor_deps", lambda: self.rec.deps())
+        monkeypatch.setattr(analysis_bff, "_run_limiter", self.limiter)
+
+    async def call(
+        self,
+        method: str,
+        path: str,
+        json: Any = None,
+        params: dict[str, str] | None = None,
+        user_id: str = "du1",
+    ) -> Any:
+        return await asgi_call(
+            analysis_bff.router, BASE, method, path, json=json, params=params, user_id=user_id
+        )
+
+    def revision(self, statement: str) -> Any:
+        return next(
+            revision
+            for revision in self.maps.store.revisions.values()
+            if revision.payload.get("statement") == statement
+        )
+
+    def enrich(self, statement: str, *, conversations: tuple[str, ...], quotes: int) -> Any:
+        """Give one argument evidence from more than one conversation, the way
+        a real extraction does. The fixture recipe roots every statement in one
+        quote of one conversation, which would make every row thin."""
+        revision = self.revision(statement)
+        evidence = [
+            {"conversationId": cid, "quotes": [f"{statement} ({cid}:{n})" for n in range(quotes)]}
+            for cid in conversations
+        ]
+        enriched = replace(revision, payload={**revision.payload, "evidence": evidence})
+        self.maps.store.revisions[revision.id] = enriched
+        return enriched
+
+
+@pytest.fixture
+def env(monkeypatch: pytest.MonkeyPatch, world: FixtureWorld) -> _Env:
+    world.sources[PROJECT] = {
+        C1: ["Trams are better.", "Buses are cheaper."],
+        C2: ["Bikes are healthy."],
+    }
+    monkeypatch.setattr(
+        feature_flags,
+        "get_settings",
+        lambda: SimpleNamespace(feature_flags=SimpleNamespace(enable_present=True)),
+    )
+    return _Env(monkeypatch, MapWorld())
+
+
+async def _prepared(env: _Env) -> Any:
+    env.grants.grant(PROJECT, *WRITE)
+    await inline(env.maps.store, WORDS, "words")
+    return await env.maps.advance()
+
+
+# ── the allowlist ───────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_only_the_words_may_differ_from_the_head(env: _Env) -> None:
+    await _prepared(env)
+    original = env.revision("Trams are better.")
+    path = f"/projects/{PROJECT}/objects/{original.object_id}"
+
+    evidence = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {
+            "expected_revision_id": original.id,
+            "payload": {**original.payload, "evidence": [{"conversationId": C2, "quotes": ["Invented."]}]},
+        },
+    )
+    assert evidence.status_code == 422
+    assert "evidence" in evidence.json()["detail"]
+
+    valence = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {"expected_revision_id": original.id, "payload": {**original.payload, "valence": "negative"}},
+    )
+    assert valence.status_code == 422 and "valence" in valence.json()["detail"]
+
+    # The whole payload with one field changed is what a client sends today.
+    edited = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {
+            "expected_revision_id": original.id,
+            "payload": {**original.payload, "statement": "Trams work better here."},
+            "change_kind": "clarity",
+        },
+    )
+    assert edited.status_code == 200
+    assert edited.json()["revision"]["payload"]["statement"] == "Trams work better here."
+    # The evidence travelled with the finding, untouched.
+    assert edited.json()["revision"]["payload"]["evidence"] == original.payload["evidence"]
+
+
+@pytest.mark.asyncio
+async def test_a_patch_of_allowlisted_fields_is_applied_onto_the_head(env: _Env) -> None:
+    await _prepared(env)
+    original = env.revision("Bikes are healthy.")
+    path = f"/projects/{PROJECT}/objects/{original.object_id}"
+
+    refused = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {"expected_revision_id": original.id, "patch": {"evidence": []}},
+    )
+    assert refused.status_code == 422 and "evidence" in refused.json()["detail"]
+
+    both = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {"expected_revision_id": original.id, "patch": {"statement": "x"}, "payload": original.payload},
+    )
+    assert both.status_code == 422
+
+    patched = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {
+            "expected_revision_id": original.id,
+            "patch": {"statement": "Cycling is healthy."},
+            "change_kind": "typo",
+        },
+    )
+    assert patched.status_code == 200
+    revision = patched.json()["revision"]
+    assert revision["payload"]["statement"] == "Cycling is healthy."
+    assert revision["payload"]["evidence"] == original.payload["evidence"]
+    assert revision["changeKind"] == "typo"
+
+
+@pytest.mark.asyncio
+async def test_every_allowed_field_of_every_type_may_be_reworded(env: _Env) -> None:
+    env.grants.grant(PROJECT, *WRITE)
+    service = RevisionService(env.maps.store)
+    cases: dict[str, tuple[dict[str, Any], dict[str, Any]]] = {
+        "popcorn": (
+            {"phrase": "Bins overflow", "question": False, "evidence": []},
+            {"phrase": "The bins overflow"},
+        ),
+        "tension": (
+            {"poleA": "Fast", "poleB": "Safe", "knot": "Both at once.", "toResolve": "Which first?", "quotes": []},
+            {"poleA": "Quick", "poleB": "Safer", "knot": "Both, really.", "toResolve": "Which comes first?"},
+        ),
+        "stakeholder": (
+            {
+                "name": "Cyclists",
+                "role": "Daily riders",
+                "stake": "Safe lanes",
+                "rung": "voiced",
+                "weight": {"stake": 0.5, "mentions": 0.5},
+                "quotes": [],
+            },
+            {"name": "People on bikes", "role": "Riders", "stake": "Lanes that feel safe"},
+        ),
+        "deduplicated_argument": (
+            {
+                "statement": "Trams win.",
+                "epistemicKind": "argument",
+                "evidence": [],
+                "consolidation": {"strategy": "merge", "memberCount": 2, "verification": "verified"},
+            },
+            {"statement": "Trams win on time."},
+        ),
+    }
+    for type_id, (payload, patch) in cases.items():
+        created = await service.create_authored(
+            project_id=PROJECT, type_id=type_id, payload=payload, actor_id="du1"
+        )
+        path = f"/projects/{PROJECT}/objects/{created.object_id}/revisions"
+        response = await env.call(
+            "POST", path, {"expected_revision_id": created.id, "patch": patch, "change_kind": "clarity"}
+        )
+        assert response.status_code == 200, (type_id, response.json())
+        for field, value in patch.items():
+            assert response.json()["revision"]["payload"][field] == value
+        # And the grounds of the same object cannot be touched.
+        head = response.json()["revision"]
+        refused = await env.call(
+            "POST", path, {"expected_revision_id": head["revisionId"], "patch": {"rung": "inferred"}}
+        )
+        assert refused.status_code == 422
+
+
+# ── what the host says they changed ─────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_the_kind_is_accepted_not_required_and_ruled_per_operation(env: _Env) -> None:
+    await _prepared(env)
+    original = env.revision("Trams are better.")
+    path = f"/projects/{PROJECT}/objects/{original.object_id}"
+
+    # A client from before the audit trail sends no kind, and still writes.
+    legacy = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {"expected_revision_id": original.id, "payload": {**original.payload, "statement": "Trams are best."}},
+    )
+    assert legacy.status_code == 200 and legacy.json()["revision"]["changeKind"] is None
+    head = legacy.json()["revision"]["revisionId"]
+
+    unknown = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {"expected_revision_id": head, "patch": {"statement": "x."}, "change_kind": "vandalism"},
+    )
+    assert unknown.status_code == 422
+
+    wrong = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {"expected_revision_id": head, "patch": {"statement": "x."}, "change_kind": "withdraw"},
+    )
+    assert wrong.status_code == 422
+
+    unexplained = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {"expected_revision_id": head, "patch": {"statement": "Buses are better."}, "change_kind": "meaning"},
+    )
+    assert unexplained.status_code == 422
+
+    too_short = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {
+            "expected_revision_id": head,
+            "patch": {"statement": "Buses are better."},
+            "change_kind": "meaning",
+            "reason": "  no  ",
+        },
+    )
+    assert too_short.status_code == 422
+
+    meant = await env.call(
+        "POST",
+        f"{path}/revisions",
+        {
+            "expected_revision_id": head,
+            "patch": {"statement": "Buses are better."},
+            "change_kind": "meaning",
+            "reason": "The room said buses, not trams.",
+        },
+    )
+    assert meant.status_code == 200
+    assert meant.json()["revision"]["changeKind"] == "meaning"
+    assert meant.json()["revision"]["actorId"] == "du1"
+    head = meant.json()["revision"]["revisionId"]
+
+    unreasoned = await env.call(
+        "POST",
+        f"{path}/membership",
+        {"expected_revision_id": head, "excluded": True, "change_kind": "withdraw"},
+    )
+    assert unreasoned.status_code == 422
+
+    as_restore = await env.call(
+        "POST",
+        f"{path}/membership",
+        {"expected_revision_id": head, "excluded": True, "change_kind": "restore", "reason": "Off topic"},
+    )
+    assert as_restore.status_code == 422
+
+    withdrawn = await env.call(
+        "POST",
+        f"{path}/membership",
+        {"expected_revision_id": head, "excluded": True, "change_kind": "withdraw", "reason": "Off topic here"},
+    )
+    assert withdrawn.status_code == 200
+    assert withdrawn.json()["revision"]["changeKind"] == "withdraw"
+
+    restored = await env.call(
+        "POST",
+        f"{path}/membership",
+        {"expected_revision_id": withdrawn.json()["revision"]["revisionId"], "excluded": False, "change_kind": "restore"},
+    )
+    assert restored.status_code == 200 and restored.json()["revision"]["changeKind"] == "restore"
+
+    history = (await env.call("GET", f"{path}/revisions")).json()["revisions"]
+    assert [revision["changeKind"] for revision in history] == [
+        None,
+        None,
+        "meaning",
+        "withdraw",
+        "restore",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_a_rollback_keeps_the_finding_withdrawn(env: _Env) -> None:
+    await _prepared(env)
+    original = env.revision("Buses are cheaper.")
+    path = f"/projects/{PROJECT}/objects/{original.object_id}"
+
+    edited = (
+        await env.call(
+            "POST",
+            f"{path}/revisions",
+            {
+                "expected_revision_id": original.id,
+                "patch": {"statement": "Buses cost less."},
+                "change_kind": "clarity",
+            },
+        )
+    ).json()["revision"]
+    withdrawn = (
+        await env.call(
+            "POST",
+            f"{path}/membership",
+            {
+                "expected_revision_id": edited["revisionId"],
+                "excluded": True,
+                "change_kind": "withdraw",
+                "reason": "Repeats the tram finding",
+            },
+        )
+    ).json()["revision"]
+
+    as_typo = await env.call(
+        "POST",
+        f"{path}/rollback",
+        {"expected_revision_id": withdrawn["revisionId"], "to_revision_id": original.id, "change_kind": "typo"},
+    )
+    assert as_typo.status_code == 422
+
+    rolled = await env.call(
+        "POST",
+        f"{path}/rollback",
+        {
+            "expected_revision_id": withdrawn["revisionId"],
+            "to_revision_id": original.id,
+            "change_kind": "rollback",
+        },
+    )
+    assert rolled.status_code == 200
+    revision = rolled.json()["revision"]
+    assert revision["payload"]["statement"] == "Buses are cheaper."
+    # Only the wording travelled back. The withdrawal was a separate decision
+    # and still stands.
+    assert revision["membershipExcluded"] is True
+    assert revision["changeKind"] == "rollback"
+    assert revision["provenance"]["extra"]["rollbackOf"] == original.id
+
+
+# ── what needs the host's eye ───────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_the_list_says_what_a_finding_rests_on_and_whose_hands_were_on_it(env: _Env) -> None:
+    await _prepared(env)
+    env.enrich("Trams are better.", conversations=(C1, C2), quotes=2)
+    original = env.revision("Trams are better.")
+    await env.call(
+        "POST",
+        f"/projects/{PROJECT}/objects/{original.object_id}/revisions",
+        {"expected_revision_id": original.id, "patch": {"statement": "Trams run better."}, "change_kind": "typo"},
+    )
+
+    page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "50"})).json()
+    by_object = {item["objectId"]: item for item in page["items"]}
+    edited = by_object[original.object_id]
+    assert edited["edited"] is True
+    assert edited["lastAuthoredBy"] == "du1"
+    assert edited["lastAuthoredAt"]
+    assert (edited["quoteCount"], edited["conversationCount"]) == (4, 2)
+    assert edited["verdict"] is None
+
+    untouched = by_object[env.revision("Bikes are healthy.").object_id]
+    assert untouched["edited"] is False
+    assert untouched["lastAuthoredAt"] is None and untouched["lastAuthoredBy"] is None
+    assert (untouched["quoteCount"], untouched["conversationCount"]) == (1, 1)
+    # Without sort=attention nothing is ranked, and the order is what it was.
+    assert untouched["attention"] is None
+    assert page["counts"]["argument"] == 3
+
+
+@pytest.mark.asyncio
+async def test_a_finding_from_one_conversation_says_which_one(
+    env: _Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One batched read for the page, and a name only where there is one
+    conversation to name."""
+    await _prepared(env)
+    env.enrich("Trams are better.", conversations=(C1, C2), quotes=2)
+    alone = env.revision("Bikes are healthy.")
+    asked: list[list[str]] = []
+
+    async def names(project_id: str, ids: list[str]) -> dict[str, str]:
+        assert project_id == PROJECT
+        asked.append(ids)
+        return {cid: f"Marloes {cid[-1]}" for cid in ids}
+
+    monkeypatch.setattr(analysis_bff, "_conversation_names", names)
+    page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "50"})).json()
+    by_object = {item["objectId"]: item for item in page["items"]}
+
+    # One read for the whole page, and only the rows that rest on a single
+    # conversation are in it: the two-conversation finding is not.
+    assert len(asked) == 1
+    assert set(asked[0]) <= {C1, C2} and asked[0] == sorted(set(asked[0]))
+    assert by_object[alone.object_id]["conversationName"] in {"Marloes 1", "Marloes 2"}
+    assert by_object[alone.object_id]["conversationCount"] == 1
+    # Several conversations: the row counts them and names none.
+    spread = by_object[env.revision("Trams are better.").object_id]
+    assert spread["conversationCount"] == 2 and spread["conversationName"] is None
+
+
+@pytest.mark.asyncio
+async def test_a_conversation_without_a_name_leaves_the_count_alone(
+    env: _Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await _prepared(env)
+    alone = env.revision("Bikes are healthy.")
+
+    async def nothing(project_id: str, ids: list[str]) -> dict[str, str]:
+        return {}
+
+    monkeypatch.setattr(analysis_bff, "_conversation_names", nothing)
+    page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "50"})).json()
+    row = next(item for item in page["items"] if item["objectId"] == alone.object_id)
+    assert row["conversationName"] is None and row["quoteCount"] == 1
+
+
+@pytest.mark.asyncio
+async def test_attention_rises_before_paging_and_counts_the_whole_type(env: _Env) -> None:
+    world_sources = env.maps.store
+    await _prepared(env)
+    # Two findings that rest on enough to be quiet, one that does not.
+    env.enrich("Trams are better.", conversations=(C1, C2), quotes=2)
+    env.enrich("Buses are cheaper.", conversations=(C1, C2), quotes=2)
+    thin = env.revision("Bikes are healthy.")
+    trams = env.revision("Trams are better.")
+    buses = env.revision("Buses are cheaper.")
+
+    # This host looked just now: nothing that already existed is new.
+    env.maps.store.last_opened[(PROJECT, "du1")] = env.maps.clock.peek()
+
+    # A colleague rewords one of the quiet findings afterwards.
+    await RevisionService(world_sources).author_edit(
+        project_id=PROJECT,
+        object_id=buses.object_id,
+        expected_revision_id=buses.id,
+        payload={**buses.payload, "statement": "Buses cost less."},
+        actor_id="du2",
+        change_kind="clarity",
+    )
+
+    page = (
+        await env.call(
+            "GET", f"/projects/{PROJECT}/objects", params={"sort": "attention", "limit": "2"}
+        )
+    ).json()
+    risen = [(item["objectId"], item["attention"], item["attentionActor"]) for item in page["items"]]
+    assert risen[0] == (thin.object_id, "one_conversation", None)
+    assert risen[1] == (buses.object_id, "reworded", "du2")
+    # Paging did not happen before the sort: the quiet row is on page two.
+    assert page["total"] == 3 and page["counts"]["argument"] == 3
+    second = (
+        await env.call(
+            "GET",
+            f"/projects/{PROJECT}/objects",
+            params={"sort": "attention", "limit": "2", "offset": "2"},
+        )
+    ).json()
+    assert [(item["objectId"], item["attention"]) for item in second["items"]] == [
+        (trams.object_id, None)
+    ]
+    # The host's own rewording never rises for the host who made it.
+    assert all(item["attentionActor"] != "du1" for item in page["items"])
+
+
+@pytest.mark.asyncio
+async def test_a_finding_from_after_the_last_visit_reads_as_new(
+    env: _Env, world: FixtureWorld
+) -> None:
+    await _prepared(env)
+    env.enrich("Trams are better.", conversations=(C1, C2), quotes=2)
+    env.enrich("Buses are cheaper.", conversations=(C1, C2), quotes=2)
+    env.enrich("Bikes are healthy.", conversations=(C1, C2), quotes=2)
+    env.maps.store.last_opened[(PROJECT, "du1")] = env.maps.clock.peek()
+
+    # A later run reads one more conversation.
+    world.sources[PROJECT][C3] = ["Ferries are slow."]
+    await inline(env.maps.store, WORDS, "words-again")
+    await env.maps.advance()
+    env.enrich("Ferries are slow.", conversations=(C1, C3), quotes=2)
+
+    page = (
+        await env.call("GET", f"/projects/{PROJECT}/objects", params={"sort": "attention", "limit": "10"})
+    ).json()
+    assert page["items"][0]["attention"] == "new"
+    assert page["items"][0]["payload"]["statement"] == "Ferries are slow."
+    assert [item["attention"] for item in page["items"][1:]] == [None, None, None]
+
+
+@pytest.mark.asyncio
+async def test_a_fact_check_that_disagrees_rises_with_its_verdict(env: _Env, world: FixtureWorld) -> None:
+    world.claims = {"Trams are better."}
+    world.verdict = "contested"
+    await _prepared(env)
+    env.enrich("Trams are better.", conversations=(C1, C2), quotes=2)
+    await inline(env.maps.store, ASSESS, "assess")
+    await env.maps.advance()
+    env.enrich("Trams are better.", conversations=(C1, C2), quotes=2)
+
+    page = (
+        await env.call("GET", f"/projects/{PROJECT}/objects", params={"sort": "attention", "limit": "10"})
+    ).json()
+    checked = next(
+        item for item in page["items"] if item["payload"].get("statement") == "Trams are better."
+    )
+    assert checked["verdict"] == "contested"
+    assert checked["attention"] == "fact_check"
+
+
+# ── when this host last looked ──────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_last_opened_is_the_hosts_own_and_starts_empty(env: _Env) -> None:
+    env.grants.grant(PROJECT, *READ)
+    path = f"/projects/{PROJECT}/results/last-opened"
+    first = await env.call("GET", path)
+    assert first.status_code == 200 and first.json()["openedAt"] is None
+
+    marked = await env.call("PUT", path)
+    assert marked.status_code == 200 and marked.json()["openedAt"]
+    again = await env.call("GET", path)
+    assert again.json()["openedAt"] == marked.json()["openedAt"]
+    # One row per host per project, written by the server's clock.
+    assert list(env.maps.store.last_opened) == [(PROJECT, "du1")]
+
+    env.grants.access.pop(PROJECT)
+    assert (await env.call("GET", path)).status_code == 404
+
+
+# ── what this host thinks of a finding ──────────────────────────────────
+
+
+def _feedback_path(object_id: str) -> str:
+    return f"/projects/{PROJECT}/objects/{object_id}/feedback"
+
+
+async def _one_finding(env: _Env) -> Any:
+    await _prepared(env)
+    return env.revision("Trams are better.")
+
+
+@pytest.mark.asyncio
+async def test_a_thumb_is_written_carried_overwritten_and_taken_back(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+
+    up = await env.call(
+        "PUT",
+        path,
+        {
+            "revision_id": finding.id,
+            "rating": "up",
+            "tags": ["recognizable", "other"],
+            "note": "  This is how the room sounded.  ",
+        },
+    )
+    assert up.status_code == 200
+    assert up.json()["myFeedback"] == {
+        "rating": "up",
+        "tags": ["recognizable", "other"],
+        "note": "This is how the room sounded.",
+        "revisionId": finding.id,
+    }
+
+    # The list carries the host's own thumb, on the row it belongs to.
+    page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "50"})).json()
+    rated = next(item for item in page["items"] if item["objectId"] == finding.object_id)
+    assert rated["myFeedback"]["rating"] == "up"
+    assert all(
+        item["myFeedback"] is None
+        for item in page["items"]
+        if item["objectId"] != finding.object_id
+    )
+
+    # A second rating overwrites the first: one row, not two opinions.
+    down = await env.call(
+        "PUT",
+        path,
+        {"revision_id": finding.id, "rating": "down", "tags": ["not_relevant"]},
+    )
+    assert down.json()["myFeedback"] == {
+        "rating": "down",
+        "tags": ["not_relevant"],
+        "revisionId": finding.id,
+    }
+    assert len(env.maps.store.feedback) == 1
+
+    cleared = await env.call("DELETE", path)
+    assert cleared.status_code == 200 and cleared.json()["myFeedback"] is None
+    # Taken back means gone: nothing remembers the rating was there.
+    assert env.maps.store.feedback == {}
+    page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "50"})).json()
+    assert all(item["myFeedback"] is None for item in page["items"])
+
+
+@pytest.mark.asyncio
+async def test_a_reason_from_the_other_polarity_is_refused(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+
+    wrong = await env.call(
+        "PUT", path, {"revision_id": finding.id, "rating": "up", "tags": ["tone_deaf"]}
+    )
+    assert wrong.status_code == 422 and "tone_deaf" in wrong.json()["detail"]
+
+    invented = await env.call(
+        "PUT", path, {"revision_id": finding.id, "rating": "down", "tags": ["lovely"]}
+    )
+    assert invented.status_code == 422
+
+    # Nothing of a refused write reaches the table.
+    assert env.maps.store.feedback == {}
+    assert (
+        await env.call(
+            "PUT", path, {"revision_id": finding.id, "rating": "down", "tags": ["tone_deaf"]}
+        )
+    ).status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_a_note_is_kept_only_where_other_is_ticked(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+
+    without = await env.call(
+        "PUT",
+        path,
+        {"revision_id": finding.id, "rating": "up", "tags": ["relevant"], "note": "Lovely."},
+    )
+    assert "note" not in without.json()["myFeedback"]
+
+    with_other = await env.call(
+        "PUT",
+        path,
+        {"revision_id": finding.id, "rating": "up", "tags": ["other"], "note": "Lovely."},
+    )
+    assert with_other.json()["myFeedback"]["note"] == "Lovely."
+
+    # Whitespace is not a note, and a note longer than the field is refused
+    # rather than silently cut.
+    blank = await env.call(
+        "PUT", path, {"revision_id": finding.id, "rating": "up", "tags": ["other"], "note": "   "}
+    )
+    assert "note" not in blank.json()["myFeedback"]
+    long = await env.call(
+        "PUT", path, {"revision_id": finding.id, "rating": "up", "tags": ["other"], "note": "x" * 501}
+    )
+    assert long.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_the_wording_a_host_rated_is_what_the_row_records(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+    await env.call("PUT", path, {"revision_id": finding.id, "rating": "down", "tags": []})
+
+    reworded = await RevisionService(env.maps.store).author_edit(
+        project_id=PROJECT,
+        object_id=finding.object_id,
+        expected_revision_id=finding.id,
+        payload={**finding.payload, "statement": "Trams work better here."},
+        actor_id="du1",
+        change_kind="clarity",
+    )
+    # The thumb still names the wording it was about; nothing was invalidated.
+    page = (await env.call("GET", f"/projects/{PROJECT}/objects", params={"limit": "50"})).json()
+    row = next(item for item in page["items"] if item["objectId"] == finding.object_id)
+    assert row["myFeedback"]["revisionId"] == finding.id != reworded.id
+
+    # Rating the new wording moves the record on.
+    again = await env.call("PUT", path, {"revision_id": reworded.id, "rating": "up", "tags": []})
+    assert again.json()["myFeedback"]["revisionId"] == reworded.id
+
+    # A revision of another object is not a wording of this finding.
+    other = env.revision("Bikes are healthy.")
+    assert (
+        await env.call("PUT", path, {"revision_id": other.id, "rating": "up", "tags": []})
+    ).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_one_hosts_thumb_is_never_anothers(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+    await env.call(
+        "PUT",
+        path,
+        {"revision_id": finding.id, "rating": "down", "tags": ["other"], "note": "Not us."},
+        user_id="du1",
+    )
+
+    listed = f"/projects/{PROJECT}/objects"
+    theirs = (await env.call("GET", listed, params={"limit": "50"}, user_id="du2")).json()
+    assert all(item["myFeedback"] is None for item in theirs["items"])
+    # And the note of the first host is nowhere in what the second is sent.
+    assert "Not us." not in str(theirs)
+
+    # Their own thumb is their own row, beside the first.
+    await env.call(
+        "PUT", path, {"revision_id": finding.id, "rating": "up", "tags": []}, user_id="du2"
+    )
+    assert len(env.maps.store.feedback) == 2
+    mine = (await env.call("GET", listed, params={"limit": "50"}, user_id="du1")).json()
+    rated = next(item for item in mine["items"] if item["objectId"] == finding.object_id)
+    assert rated["myFeedback"]["rating"] == "down"
+
+    # Clearing takes back one host's row and leaves the other's.
+    await env.call("DELETE", path, user_id="du1")
+    assert list(env.maps.store.feedback) == [(PROJECT, finding.object_id, "du2")]
+
+
+@pytest.mark.asyncio
+async def test_reading_the_analysis_is_enough_to_rate_it(env: _Env) -> None:
+    finding = await _one_finding(env)
+    path = _feedback_path(finding.object_id)
+    # A collaborator who may read the findings but not reword them.
+    env.grants.grant(PROJECT, *READ)
+    assert (
+        await env.call("PUT", path, {"revision_id": finding.id, "rating": "up", "tags": []})
+    ).status_code == 200
+    # Rewording is still refused: rating is not editing.
+    reword = await env.call(
+        "POST",
+        f"/projects/{PROJECT}/objects/{finding.object_id}/revisions",
+        {"expected_revision_id": finding.id, "patch": {"statement": "Mine now."}},
+    )
+    assert reword.status_code == 403
+
+    # A project this host cannot reach is a 404, not a refusal that says it exists.
+    env.grants.access.pop(PROJECT)
+    assert (
+        await env.call("PUT", path, {"revision_id": finding.id, "rating": "up", "tags": []})
+    ).status_code == 404
+    assert (await env.call("DELETE", path)).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_feedback_is_not_in_any_payload_the_room_reads(env: _Env) -> None:
+    """A thumb never becomes part of a finding.
+
+    The deck and the audience map are built from revisions and snapshots. This
+    asserts the two places a leak could start: the stored objects, which the
+    deck projects, and the audience map projection, which is an allowlist.
+    """
+    from dembrane.popcorn import present
+
+    finding = await _one_finding(env)
+    await env.call(
+        "PUT",
+        _feedback_path(finding.object_id),
+        {
+            "revision_id": finding.id,
+            "rating": "down",
+            "tags": ["tone_deaf", "other"],
+            "note": "The room never said this.",
+        },
+    )
+
+    # Nothing of the thumb reached a revision, an object or a snapshot: the
+    # audience bundle is assembled from exactly these.
+    stored = str(
+        [
+            [revision.payload for revision in env.maps.store.revisions.values()],
+            [snapshot.manifest for snapshot in env.maps.store.snapshots.values()],
+            [record.__dict__ for record in env.maps.store.objects.values()],
+        ]
+    )
+    for trace in ("myFeedback", "feedback", "tone_deaf", "The room never said this."):
+        assert trace not in stored
+
+    # And a node that somehow carried one loses it in the audience projection.
+    projected = present.sanitize_map(
+        {
+            "nodes": [
+                {
+                    "objectId": finding.object_id,
+                    "revisionId": finding.id,
+                    "type": "argument",
+                    "label": "Trams are better.",
+                    "myFeedback": {"rating": "down", "note": "The room never said this."},
+                }
+            ]
+        }
+    )
+    assert "myFeedback" not in projected["nodes"][0]
+    assert "never said this" not in str(projected)

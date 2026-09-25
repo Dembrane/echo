@@ -278,7 +278,9 @@ const AudienceMap = ({
 			// Dark is relit on the themed root; light is the host page's own.
 			style={dark ? undefined : MAP_LIGHT_VARS}
 		>
-			<Group justify="space-between" gap="xs" wrap="nowrap" px="sm" pt="xs">
+			{/* The room's pane already keeps the screen's edge, so this row and
+			    the surface under it add none of their own. */}
+			<Group justify="space-between" gap="xs" wrap="nowrap" px={0} pt="xs">
 				<Text size="sm">
 					<Plural value={nodes.length} one="# argument" other="# arguments" />
 				</Text>
@@ -294,7 +296,7 @@ const AudienceMap = ({
 					withinPortal={false}
 				/>
 			</Group>
-			<MapSurface darkMode={false}>
+			<MapSurface darkMode={false} inset={false}>
 				<MapInteractionProvider store={store}>
 					<MapExperience
 						graph={roomGraph}
@@ -310,7 +312,9 @@ const AudienceMap = ({
 						canFactCheck={false}
 						offline={false}
 						titles={titles}
-						// The projection strips provenance along with the quotes.
+						// The projection carries the evidence but never its sources,
+						// so the panels must not state a provenance they were not
+						// given, and no quote links back into the workspace.
 						provenance={false}
 					/>
 				</MapInteractionProvider>
@@ -321,8 +325,10 @@ const AudienceMap = ({
 
 /**
  * A presentation-safe Map adapter. It draws the host page's own maps and
- * panels over a pre-sanitized projection: no quotes, no links back into the
- * workspace, and never the host hooks for generation or fact checking.
+ * panels over a pre-sanitized projection: the quotes behind every finding,
+ * under the conversation's colour and never its name unless the presentation
+ * says so, no links back into the workspace, and never the host hooks for
+ * generation or fact checking.
  * Selection titles are the one host request, and only for a signed-in viewer.
  * The renderer is unmounted while hidden so its simulation, its worker and
  * the Showcase's walk stop doing background work.
