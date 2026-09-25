@@ -67,7 +67,10 @@ const toolStart = (
 type PlanDraft = {
 	id: string;
 	ackSeq: number;
+	/** The ack's own message: the first assistant message after the ack and
+	 * before any other work starts. Never a later answer. */
 	anchorSeq: number | null;
+	workStarted: boolean;
 	titles: string[];
 	done: number;
 	notes: (string | null)[];
@@ -103,6 +106,7 @@ export const derivePlans = (
 		if (
 			draft &&
 			draft.anchorSeq === null &&
+			!draft.workStarted &&
 			event.event_type === "assistant.message" &&
 			event.seq > draft.ackSeq
 		) {
@@ -111,6 +115,9 @@ export const derivePlans = (
 
 		const start = toolStart(event);
 		if (!start) continue;
+		if (draft && start.name !== "ack" && start.name !== "updatePlan") {
+			draft.workStarted = true;
+		}
 
 		if (start.name === "ack") {
 			const titles = toStepTitles(start.input.plan);
@@ -135,6 +142,7 @@ export const derivePlans = (
 			current = {
 				ackSeq: event.seq,
 				anchorSeq: null,
+				workStarted: false,
 				done: 0,
 				id: `plan-${event.seq}`,
 				notes: titles.map(() => null),
