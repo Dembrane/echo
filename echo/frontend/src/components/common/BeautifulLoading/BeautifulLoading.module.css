@@ -1,22 +1,39 @@
-/* Parchment, the sketches and a quote, side by side. The page behind stays
-   parchment from the first frame; the sketches and the quote fade in a beat
-   later, so a page that arrives quickly never flashes a quote. */
+/* Parchment, the sketches and a quote, side by side. Each waiting part of
+   the page is parchment from the first frame (.root); the one stage over the
+   content area (.stageHost) fades the sketches and the quote in a beat later,
+   so a page that arrives quickly never flashes a quote. */
 
 .root {
+	width: 100%;
+	min-height: min(70dvh, 560px);
+	background: var(--app-background, #f6f4f1);
+}
+
+/* Fixed over the content area, measured from the app shell. z-index stays
+   under Mantine's popovers (300) and the inbox (50), so the rail's tooltips
+   and the inbox read above it. */
+.stageHost {
 	--ink: var(--app-text, #2d2d2c);
 	--ink-soft: color-mix(in srgb, var(--ink) 62%, transparent);
+	position: fixed;
+	z-index: 10;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 100%;
-	min-height: min(70dvh, 560px);
 	padding: 2rem 1.5rem;
 	background: var(--app-background, #f6f4f1);
 	color: var(--ink);
+	transition:
+		left 240ms cubic-bezier(0.25, 0.8, 0.3, 1),
+		width 240ms cubic-bezier(0.25, 0.8, 0.3, 1),
+		opacity 160ms ease-out;
 }
 
-/* Over content already on screen. z-index stays under Mantine's popovers
-   (300), so tooltips from the sidebar rail keep reading above it. */
+.leaving {
+	opacity: 0;
+}
+
+/* Over content already on screen. */
 .overlay {
 	position: absolute;
 	inset: 0;
@@ -125,6 +142,10 @@
 	.stage,
 	.quote {
 		animation-name: fade;
+	}
+
+	.stageHost {
+		transition: opacity 160ms ease-out;
 	}
 
 	@keyframes fade {
