@@ -87,7 +87,7 @@ afterEach(() => {
 	vi.clearAllMocks();
 });
 
-function show() {
+function show(shown: typeof item & { membershipExcluded?: boolean } = item) {
 	const client = new QueryClient({
 		defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
 	});
@@ -99,7 +99,7 @@ function show() {
 						<EvidenceInspectionDrawer
 							projectId="project-1"
 							snapshotId={null}
-							item={item}
+							item={shown}
 							editable
 							opened
 							onClose={() => {}}
@@ -131,5 +131,46 @@ describe("a result that changed while the host was editing it", () => {
 		await waitFor(() => expect(load.hasAttribute("disabled")).toBe(false));
 		fireEvent.click(load);
 		await waitFor(() => expect(phrase.value).toBe("someone else's wording"));
+	});
+});
+
+const argument = {
+	label: "Buses are cheaper.",
+	objectId: "obj-9",
+	payload: { statement: "Buses are cheaper." },
+	revisionId: "rev-9",
+	type: "argument",
+};
+const DOWNSTREAM = /Tensions and merged arguments/;
+
+describe("withdrawing a result", () => {
+	it("tells the host an argument also leaves tensions and merged arguments", async () => {
+		show(argument as unknown as typeof item);
+		fireEvent.click(
+			await screen.findByRole("button", { name: "Withdraw result" }),
+		);
+
+		expect(await screen.findByText(DOWNSTREAM)).toBeTruthy();
+	});
+
+	it("says nothing about tensions for a result nothing else reads", async () => {
+		show();
+		fireEvent.click(
+			await screen.findByRole("button", { name: "Withdraw result" }),
+		);
+
+		expect(
+			await screen.findByText(/Withdraw this result from current Map/),
+		).toBeTruthy();
+		expect(screen.queryByText(DOWNSTREAM)).toBeNull();
+	});
+
+	it("keeps the downstream note beside a withdrawn argument", async () => {
+		show({ ...argument, membershipExcluded: true } as unknown as typeof item);
+
+		expect(
+			await screen.findByRole("button", { name: "Restore result" }),
+		).toBeTruthy();
+		expect(screen.getByText(DOWNSTREAM)).toBeTruthy();
 	});
 });
