@@ -24,6 +24,25 @@ if instance_exists; then
     exit 0
 fi
 
+# Clone the branch you are on, so the VM has what the stack depends on with a
+# clean git status. It has to exist on RD_REPO_URL, which may not be where you
+# push: a branch on your fork alone falls back to the default branch, and the
+# working-tree sync at the end carries it up instead.
+RD_REPO_ROOT="$(cd "$RD_ECHO_ROOT/.." && pwd)"
+LOCAL_BRANCH="$(git -C "$RD_REPO_ROOT" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+CLONE_BRANCH=""
+CLONE_SHA=""
+if [ -n "$LOCAL_BRANCH" ]; then
+    # No prompt: a private RD_REPO_URL would otherwise stop here for a password.
+    CLONE_SHA="$(GIT_TERMINAL_PROMPT=0 git ls-remote --heads "$RD_REPO_URL" "refs/heads/$LOCAL_BRANCH" 2>/dev/null | cut -f1 || true)"
+fi
+if [ -n "$CLONE_SHA" ]; then
+    CLONE_BRANCH="$LOCAL_BRANCH"
+    log_info "The VM will clone $CLONE_BRANCH"
+else
+    log_info "${LOCAL_BRANCH:-Your checkout} is not on $RD_REPO_URL, so the VM will clone its default branch"
+fi
+
 # The default network usually ships with default-allow-ssh, but a project
 # created from a custom template may not have it. Only port 22 is ever opened.
 # The devcontainer's own sshd on 2222 stays private and is reached by jumping
@@ -52,7 +71,7 @@ gc compute instances create "$RD_INSTANCE_NAME" \
     --boot-disk-type="$RD_DISK_TYPE" \
     --boot-disk-device-name="$RD_INSTANCE_NAME" \
     --metadata-from-file=startup-script="$RD_SCRIPT_DIR/bootstrap-vm.sh" \
-    --metadata="dembrane-repo-url=$RD_REPO_URL,dembrane-repo-dir=$RD_REPO_DIR,dembrane-user=$RD_REMOTE_USER" \
+    --metadata="dembrane-repo-url=$RD_REPO_URL,dembrane-repo-dir=$RD_REPO_DIR,dembrane-user=$RD_REMOTE_USER${CLONE_BRANCH:+,dembrane-repo-branch=$CLONE_BRANCH}" \
     --labels="purpose=dev,managed-by=remote-dev-scripts" \
     --scopes=cloud-platform
 
