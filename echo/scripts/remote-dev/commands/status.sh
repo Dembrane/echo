@@ -1,11 +1,28 @@
 #!/usr/bin/env bash
-# Shows what is running: the VM, its size, the containers, and disk usage.
+# Shows what is running: the enabled APIs, the VM, its size, the containers,
+# and disk usage.
 
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
 handle_help "${1:-}" "$0"
 
 require_gcloud
+
+# Before the instance checks, which exit early: the APIs belong to the project
+# and are worth seeing even with no VM. The metrics pages can be grouped by
+# credential, which shows which account made the calls.
+log_step "APIs"
+if ENABLED_APIS="$(gc services list --enabled --format='value(config.name)' 2>/dev/null)"; then
+    for api in $RD_APIS; do
+        if echo "$ENABLED_APIS" | grep -qx "$api"; then
+            log_info "$api enabled: $(api_metrics_url "$api")"
+        else
+            log_warn "$api not enabled"
+        fi
+    done
+else
+    log_warn "Could not list the enabled APIs on '$RD_PROJECT'."
+fi
 
 log_step "Instance"
 if ! instance_exists; then

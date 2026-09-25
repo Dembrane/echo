@@ -182,6 +182,13 @@ require_api() {
 
 require_compute_api() { require_api compute.googleapis.com "Compute Engine"; }
 
+# Every API the commands above enable, so status can report on each one.
+RD_APIS="compute.googleapis.com aiplatform.googleapis.com"
+
+api_metrics_url() {
+    echo "https://console.cloud.google.com/apis/api/$1/metrics?project=$RD_PROJECT"
+}
+
 instance_exists() {
     gc_zone instances describe "$RD_INSTANCE_NAME" --format='value(name)' >/dev/null 2>&1
 }
