@@ -19,6 +19,14 @@
     count: <strong id="count">?</strong>
   </p>
 
+  <p>
+    <input type="file" id="file">
+    <button id="upload">Upload</button>
+  </p>
+  <p>Stored files:</p>
+  <ul id="files"></ul>
+
+  <h2>Routes</h2>
   <ul>
     <li><code>GET /count?name=NAME</code> returns the counter NAME</li>
     <li><code>POST /count?name=NAME</code> increments it and returns the new value</li>
@@ -34,6 +42,28 @@
     }
     document.getElementById("increment").addEventListener("click", () => count("POST"));
     count("GET");
+
+    async function listFiles() {
+      const files = await (await fetch("/files")).json();
+      document.getElementById("files").replaceChildren(...files.map(({ key, size }) => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = "/files/" + encodeURIComponent(key);
+        a.textContent = key;
+        li.append(a, ` (${size} bytes)`);
+        return li;
+      }));
+    }
+    document.getElementById("upload").addEventListener("click", async () => {
+      const file = document.getElementById("file").files[0];
+      if (!file) return;
+      // R2 list() mangles non-ASCII and % in keys, so the file links would
+      // 404: https://github.com/denoland/celld/issues/232
+      const key = file.name.replace(/[^A-Za-z0-9._\- ]/g, "_");
+      await fetch("/files/" + encodeURIComponent(key), { method: "PUT", body: file });
+      listFiles();
+    });
+    listFiles();
   </script>
 </body>
 </html>

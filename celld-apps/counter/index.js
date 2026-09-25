@@ -31,7 +31,7 @@ export default {
     }
 
     if (url.pathname.startsWith("/files/")) {
-      const key = url.pathname.slice("/files/".length);
+      const key = decodeURIComponent(url.pathname.slice("/files/".length));
       if (request.method === "PUT") {
         await env.FILES.put(key, request.body, {
           httpMetadata: {
