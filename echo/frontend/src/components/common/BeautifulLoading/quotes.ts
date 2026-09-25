@@ -111,4 +111,65 @@ export const LOADING_QUOTES: LoadingQuote[] = [
 		source: "Wikiquote: Tao Te Ching, ch. 17",
 		text: 'Of a good leader, who talks little, when his work is done, his aims fulfilled, they will all say, "We did this ourselves."',
 	},
+	// The people our quarters are named after, A to K, one line each.
+	{
+		author: "Audre Lorde",
+		source:
+			'"The Transformation of Silence into Language and Action" (MLA panel, 28 December 1977), in Sister Outsider (Crossing Press, 1984), p. 44',
+		text: "It is not difference which immobilizes us, but silence. And there are so many silences to be broken.",
+	},
+	{
+		author: "Baruch Spinoza",
+		source:
+			"Political Treatise (Tractatus Politicus), ch. 1, §4. Translated by R. H. M. Elwes, The Chief Works of Benedict de Spinoza, vol. I (George Bell & Sons, 1891), around p. 288",
+		text: "I have laboured carefully, not to mock, lament, or execrate, but to understand human actions.",
+	},
+	{
+		author: "Clarissa Pinkola Estés",
+		source:
+			'Women Who Run With the Wolves (Ballantine, 1992), Introduction, "Singing Over the Bones"',
+		text: "Stories are medicine. I have been taken with stories since I heard my first. They have such power, they do not require that we do, be, act anything—we need only listen.",
+	},
+	{
+		author: "Esther Dyson",
+		source:
+			"Her own motto, named by her in an OpenCorporates trustee Q&A (8 October 2019)",
+		text: "Always make new mistakes.",
+	},
+	{
+		author: "Florence Nightingale",
+		source:
+			'Notes on Nursing: What It Is, and What It Is Not (1859/60), ch. III "Petty Management"',
+		text: "How can I provide for this right thing to be always done?",
+	},
+	{
+		author: "Heinrich Hertz",
+		source:
+			'"On the Relations between Light and Electricity", lecture at Heidelberg, 20 September 1889. Translated by D. E. Jones and G. A. Schott, Miscellaneous Papers (Macmillan, 1896), p. 327, the closing sentence',
+		text: "There is no lack of eager and practised explorers: how can we feel otherwise than hopeful of the success of future attempts?",
+	},
+	{
+		author: "Iris Murdoch",
+		source:
+			'"The Sublime and the Good", Chicago Review 13, no. 3 (Autumn 1959), p. 51. Reprinted in Existentialists and Mystics (1997)',
+		text: "Love is the extremely difficult realisation that something other than oneself is real.",
+	},
+	{
+		author: "Jürgen Habermas",
+		source:
+			"Knowledge and Human Interests (1965 lecture), Appendix, tr. Jeremy J. Shapiro (Beacon, 1971), p. 314",
+		text: "What raises us out of nature is the only thing whose nature we can know: language.",
+	},
+	{
+		author: "Karl Popper",
+		source:
+			'The Open Society and Its Enemies, vol. II, ch. 24 "The Revolt against Reason", section I (Routledge, 1945), p. 213; p. 225 in later editions',
+		text: "I may be wrong and you may be right, and by an effort, we may get nearer to the truth.",
+	},
+	{
+		author: "Dwayne the plumber",
+		source:
+			"dembrane's own: the Q4 2024 quarter, when we put our hands in the pipes",
+		text: "Be a plumber.",
+	},
 ];
