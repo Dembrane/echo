@@ -1031,7 +1031,7 @@ msgstr ""
 #: src/routes/project/CreateProjectRoute.tsx:360
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:31
 #: src/components/project/ProjectUsageAndSharing.tsx:212
-#: src/components/layout/ProjectOverviewLayout.tsx:52
+#: src/components/layout/ProjectOverviewLayout.tsx:53
 msgid "Access"
 msgstr "Access"
 
@@ -5087,10 +5087,10 @@ msgstr "Error cloning project"
 msgid "Error creating report"
 msgstr "Error creating report"
 
-#: src/routes/project/ProjectRoutes.tsx:108
-#: src/routes/project/ProjectRoutes.tsx:228
-#: src/routes/project/ProjectRoutes.tsx:307
-#: src/routes/project/ProjectRoutes.tsx:346
+#: src/routes/project/ProjectRoutes.tsx:109
+#: src/routes/project/ProjectRoutes.tsx:229
+#: src/routes/project/ProjectRoutes.tsx:308
+#: src/routes/project/ProjectRoutes.tsx:347
 msgid "Error loading project"
 msgstr "Error loading project"
 
@@ -5269,7 +5269,7 @@ msgstr "Exploring {conversationCount} conversations"
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:41
 #: src/components/settings/AuditLogsCard.tsx:436
 #: src/components/project/ProjectExportSection.tsx:18
-#: src/components/layout/ProjectOverviewLayout.tsx:54
+#: src/components/layout/ProjectOverviewLayout.tsx:55
 msgid "Export"
 msgstr "Export"
 
@@ -5861,7 +5861,7 @@ msgstr ""
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:34
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:26
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:36
-#: src/components/layout/ProjectOverviewLayout.tsx:51
+#: src/components/layout/ProjectOverviewLayout.tsx:52
 msgid "General"
 msgstr "General"
 
@@ -7367,6 +7367,7 @@ msgstr ""
 
 #: src/routes/project/library/LibraryRoute.tsx:130
 #: src/components/common/DembraneLoadingSpinner/index.tsx:24
+#: src/components/common/BeautifulLoading/index.tsx:53
 msgid "Loading"
 msgstr "Loading"
 
@@ -9091,7 +9092,7 @@ msgstr "Právní základ mohou měnit pouze administrátoři workspace."
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Only workspace admins can change these settings. Ask an admin if something needs updating."
 
-#: src/routes/project/ProjectRoutes.tsx:195
+#: src/routes/project/ProjectRoutes.tsx:196
 msgid "Only workspace admins can manage project automation."
 msgstr ""
 
@@ -10017,7 +10018,7 @@ msgstr ""
 
 #: src/routes/project/ProjectHomeRoute.tsx:197
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:100
-#: src/components/layout/ProjectOverviewLayout.tsx:50
+#: src/components/layout/ProjectOverviewLayout.tsx:51
 msgid "Portal editor"
 msgstr "Portal editor"
 
@@ -10183,7 +10184,7 @@ msgstr "URL zásad ochrany osobních údajů"
 msgid "Private"
 msgstr "Private"
 
-#: src/components/layout/ProjectOverviewLayout.tsx:42
+#: src/components/layout/ProjectOverviewLayout.tsx:43
 msgid "Private · only invited people can see this"
 msgstr "Private · only invited people can see this"
 
@@ -10338,7 +10339,7 @@ msgstr ""
 msgid "project overview"
 msgstr ""
 
-#: src/components/layout/ProjectOverviewLayout.tsx:26
+#: src/components/layout/ProjectOverviewLayout.tsx:27
 msgid "Project Overview | dembrane"
 msgstr "Project Overview | dembrane"
 
@@ -15156,7 +15157,7 @@ msgstr "URL must start with http:// or https://"
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:36
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:42
 #: src/components/project/ProjectUsageAndSharing.tsx:416
-#: src/components/layout/ProjectOverviewLayout.tsx:53
+#: src/components/layout/ProjectOverviewLayout.tsx:54
 msgid "Usage"
 msgstr "Usage"
 
@@ -15637,7 +15638,7 @@ msgstr "Webhook"
 msgid "Webhook URL"
 msgstr "Webhook URL"
 
-#: src/routes/project/ProjectRoutes.tsx:202
+#: src/routes/project/ProjectRoutes.tsx:203
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:938
 msgid "Webhooks"
 msgstr "Webhooks"
@@ -15646,7 +15647,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 
-#: src/routes/project/ProjectRoutes.tsx:190
+#: src/routes/project/ProjectRoutes.tsx:191
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks are not enabled for this environment."
 

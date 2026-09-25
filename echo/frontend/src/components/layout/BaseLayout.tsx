@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
-import { Outlet } from "react-router";
+import { Outlet, useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { AppSidebar, useSidebarView } from "@/features/sidebar";
 import { AppBreadcrumbs } from "@/features/sidebar/breadcrumbs/AppBreadcrumbs";
 import { InboxView } from "@/features/sidebar/views/InboxView";
@@ -31,6 +32,9 @@ const SidebarFailure = () => (
 export const BaseLayout = ({ children }: PropsWithChildren) => {
 	const { isAuthenticated } = useAuthenticated();
 	const { overlay } = useSidebarView();
+	// `?loading` holds the page in its loading state, to look at the loader.
+	const [searchParams] = useSearchParams();
+	const holdLoading = searchParams.has("loading");
 
 	return (
 		<TransitionCurtainProvider>
@@ -44,8 +48,14 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 					<main className="relative flex flex-1 flex-col overflow-hidden">
 						{isAuthenticated ? <AppBreadcrumbs /> : null}
 						<div className="flex-1 overflow-auto" data-app-scroll-root>
-							<Outlet />
-							{children}
+							{holdLoading ? (
+								<BeautifulLoading />
+							) : (
+								<>
+									<Outlet />
+									{children}
+								</>
+							)}
 						</div>
 						{overlay === "inbox" && (
 							<div

@@ -1032,7 +1032,7 @@ msgstr "Voorwaarden geaccepteerd"
 #: src/routes/project/CreateProjectRoute.tsx:360
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:31
 #: src/components/project/ProjectUsageAndSharing.tsx:212
-#: src/components/layout/ProjectOverviewLayout.tsx:52
+#: src/components/layout/ProjectOverviewLayout.tsx:53
 msgid "Access"
 msgstr "Toegang"
 
@@ -5085,10 +5085,10 @@ msgstr "Fout bij het klonen van het project"
 msgid "Error creating report"
 msgstr "Fout bij het maken van het rapport"
 
-#: src/routes/project/ProjectRoutes.tsx:108
-#: src/routes/project/ProjectRoutes.tsx:228
-#: src/routes/project/ProjectRoutes.tsx:307
-#: src/routes/project/ProjectRoutes.tsx:346
+#: src/routes/project/ProjectRoutes.tsx:109
+#: src/routes/project/ProjectRoutes.tsx:229
+#: src/routes/project/ProjectRoutes.tsx:308
+#: src/routes/project/ProjectRoutes.tsx:347
 msgid "Error loading project"
 msgstr "Fout bij laden van project"
 
@@ -5267,7 +5267,7 @@ msgstr "{conversationCount} gesprekken aan het verkennen"
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:41
 #: src/components/settings/AuditLogsCard.tsx:436
 #: src/components/project/ProjectExportSection.tsx:18
-#: src/components/layout/ProjectOverviewLayout.tsx:54
+#: src/components/layout/ProjectOverviewLayout.tsx:55
 msgid "Export"
 msgstr "Exporteer"
 
@@ -5859,7 +5859,7 @@ msgstr ""
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:34
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:26
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:36
-#: src/components/layout/ProjectOverviewLayout.tsx:51
+#: src/components/layout/ProjectOverviewLayout.tsx:52
 msgid "General"
 msgstr "Algemeen"
 
@@ -7365,6 +7365,7 @@ msgstr "Meer laden"
 
 #: src/routes/project/library/LibraryRoute.tsx:130
 #: src/components/common/DembraneLoadingSpinner/index.tsx:24
+#: src/components/common/BeautifulLoading/index.tsx:53
 msgid "Loading"
 msgstr "Bezig met laden"
 
@@ -9089,7 +9090,7 @@ msgstr "Alleen werkruimtebeheerders kunnen de rechtsgrondslag wijzigen."
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Alleen werkruimtebeheerders kunnen deze instellingen wijzigen. Vraag een beheerder als er iets bijgewerkt moet worden."
 
-#: src/routes/project/ProjectRoutes.tsx:195
+#: src/routes/project/ProjectRoutes.tsx:196
 msgid "Only workspace admins can manage project automation."
 msgstr ""
 
@@ -10015,7 +10016,7 @@ msgstr "portal-editor"
 
 #: src/routes/project/ProjectHomeRoute.tsx:197
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:100
-#: src/components/layout/ProjectOverviewLayout.tsx:50
+#: src/components/layout/ProjectOverviewLayout.tsx:51
 msgid "Portal editor"
 msgstr "Portaalbewerker"
 
@@ -10181,7 +10182,7 @@ msgstr "URL van het privacybeleid"
 msgid "Private"
 msgstr "Privé"
 
-#: src/components/layout/ProjectOverviewLayout.tsx:42
+#: src/components/layout/ProjectOverviewLayout.tsx:43
 msgid "Private · only invited people can see this"
 msgstr "Privé · alleen genodigden kunnen dit zien"
 
@@ -10336,7 +10337,7 @@ msgstr "Projectopties"
 msgid "project overview"
 msgstr "projectoverzicht"
 
-#: src/components/layout/ProjectOverviewLayout.tsx:26
+#: src/components/layout/ProjectOverviewLayout.tsx:27
 msgid "Project Overview | dembrane"
 msgstr "Project Overzicht | dembrane"
 
@@ -15152,7 +15153,7 @@ msgstr "URL moet beginnen met http:// of https://"
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:36
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:42
 #: src/components/project/ProjectUsageAndSharing.tsx:416
-#: src/components/layout/ProjectOverviewLayout.tsx:53
+#: src/components/layout/ProjectOverviewLayout.tsx:54
 msgid "Usage"
 msgstr "Gebruik"
 
@@ -15633,7 +15634,7 @@ msgstr "Webhook"
 msgid "Webhook URL"
 msgstr "Webhook URL"
 
-#: src/routes/project/ProjectRoutes.tsx:202
+#: src/routes/project/ProjectRoutes.tsx:203
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:938
 msgid "Webhooks"
 msgstr "Webhooks"
@@ -15642,7 +15643,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks zijn geautomatiseerde berichten die van een app naar een andere worden verzonden wanneer iets gebeurt. Denk aan ze als een \"notificatiesysteem\" voor uw andere tools."
 
-#: src/routes/project/ProjectRoutes.tsx:190
+#: src/routes/project/ProjectRoutes.tsx:191
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks zijn niet ingeschakeld voor deze omgeving."
 
