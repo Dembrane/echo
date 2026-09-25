@@ -149,7 +149,11 @@ GCP keeps it for 30 days, so it can be brought back:
 # Compute is not enabled on a fresh project. Enabling is idempotent and takes
 # up to a minute the first time, so only call the API when it is actually off.
 require_compute_api() {
-    if gc services list --enabled --format='value(config.name)' 2>/dev/null | grep -qx 'compute.googleapis.com'; then
+    local enabled
+    # A failed listing is not proof the API is off, so do not enable on one.
+    enabled="$(gc services list --enabled --format='value(config.name)')" \
+        || die "Could not list the enabled APIs on '$RD_PROJECT'."
+    if echo "$enabled" | grep -qx 'compute.googleapis.com'; then
         return 0
     fi
     log_warn "compute.googleapis.com is not enabled on '$RD_PROJECT'. Enabling now (this can take a minute)."
