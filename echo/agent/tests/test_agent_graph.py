@@ -151,7 +151,7 @@ def _fake_vertex_chat(monkeypatch):
             def from_service_account_info(info, scopes=None):
                 return _FakeCredentials(info, scopes)
 
-    monkeypatch.setattr(agent, "ChatVertexAI", _FakeChatVertexAI)
+    monkeypatch.setattr(agent, "_VertexChat", _FakeChatVertexAI)
     monkeypatch.setattr(agent, "service_account", _FakeServiceAccountModule)
     return _FakeChatVertexAI, _FakeCredentials
 
@@ -189,7 +189,7 @@ def test_build_llm_uses_adc_when_no_explicit_credentials(monkeypatch):
     assert isinstance(llm, fake_chat)
     assert llm.kwargs["credentials"] is None
     assert llm.kwargs["project"] == "adc-project"
-    assert llm.kwargs["api_endpoint"] == "aiplatform.googleapis.com"
+    assert llm.kwargs["api_endpoint"] == "aiplatform.eu.rep.googleapis.com"
     get_settings.cache_clear()
 
 
@@ -208,6 +208,80 @@ def test_build_llm_falls_back_to_service_account_project_id(monkeypatch):
     assert llm.kwargs["project"] == "sa-project"
     assert llm.kwargs["location"] == "eu"
     assert isinstance(llm.kwargs["credentials"], fake_creds)
+    get_settings.cache_clear()
+
+
+def _fake_vertex_chat_with_tools(monkeypatch, failing_models):
+    from langchain_core.runnables import RunnableLambda
+
+    fake_chat, _ = _fake_vertex_chat(monkeypatch)
+    built: list[dict] = []
+
+    def _bind_tools(self, _tools):
+        model = self.kwargs["model_name"]
+
+        def _call(_messages):
+            if model in failing_models:
+                raise RuntimeError(f"429 Resource exhausted ({model})")
+            return AIMessage(content=f"answered by {model}")
+
+        return RunnableLambda(_call)
+
+    original_init = fake_chat.__init__
+
+    def _init(self, **kwargs):
+        original_init(self, **kwargs)
+        built.append(kwargs)
+
+    monkeypatch.setattr(fake_chat, "__init__", _init)
+    monkeypatch.setattr(fake_chat, "bind_tools", _bind_tools, raising=False)
+    return built
+
+
+def test_fallback_models_answer_in_order_when_earlier_ones_fail(monkeypatch):
+    get_settings.cache_clear()
+    monkeypatch.setenv("LLM_MODEL", "gemini-3.8-flash")
+    monkeypatch.setenv("LLM_FALLBACK_MODELS", "gemini-3.7-flash, gemini-3.5-flash")
+    built = _fake_vertex_chat_with_tools(
+        monkeypatch, failing_models={"gemini-3.8-flash", "gemini-3.7-flash"}
+    )
+
+    response = agent._bind_tools_with_fallbacks([]).invoke([HumanMessage(content="hi")])
+
+    assert response.content == "answered by gemini-3.5-flash"
+    assert [kwargs["model_name"] for kwargs in built] == [
+        "gemini-3.8-flash",
+        "gemini-3.7-flash",
+        "gemini-3.5-flash",
+    ]
+    # Models with a fallback behind them fail over fast; the last keeps the
+    # library's default retries.
+    assert [kwargs.get("max_retries") for kwargs in built] == [1, 1, None]
+    get_settings.cache_clear()
+
+
+def test_healthy_primary_answers_without_touching_fallbacks(monkeypatch):
+    get_settings.cache_clear()
+    monkeypatch.setenv("LLM_MODEL", "gemini-3.8-flash")
+    monkeypatch.setenv("LLM_FALLBACK_MODELS", "gemini-3.7-flash,gemini-3.5-flash")
+    _fake_vertex_chat_with_tools(monkeypatch, failing_models=set())
+
+    response = agent._bind_tools_with_fallbacks([]).invoke([HumanMessage(content="hi")])
+
+    assert response.content == "answered by gemini-3.8-flash"
+    get_settings.cache_clear()
+
+
+def test_no_fallback_models_builds_the_primary_alone(monkeypatch):
+    get_settings.cache_clear()
+    monkeypatch.setenv("LLM_MODEL", "gemini-3.8-flash")
+    monkeypatch.delenv("LLM_FALLBACK_MODELS", raising=False)
+    built = _fake_vertex_chat_with_tools(monkeypatch, failing_models=set())
+
+    agent._bind_tools_with_fallbacks([])
+
+    assert [kwargs["model_name"] for kwargs in built] == ["gemini-3.8-flash"]
+    assert "max_retries" not in built[0]
     get_settings.cache_clear()
 
 

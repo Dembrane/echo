@@ -50,10 +50,9 @@ from dembrane.analysis.contracts import (
 class StagedRevision:
     object: ObjectRecord
     revision: ObjectRevision
-    # The published head already says exactly this: no new revision was written.
+    # No new revision was written: the published head already says exactly
+    # this, or a host authored the head and it stands.
     reused: bool
-    # Staged as a candidate over an authored head.
-    needs_review: bool
 
 
 def revision_content_hash(
@@ -145,9 +144,11 @@ class RevisionService:
             project_id=run.project_id, type=type_id, lineage_key=lineage_key, scope_id=run.scope_id
         )
         head = await self._head(record)
+        if head is not None and head.provenance.origin == Origin.AUTHORED:
+            # A host's edit or exclusion stays the head until a host changes it.
+            return StagedRevision(object=record, revision=head, reused=True)
         if head is not None and head.content_hash == hashed and _same_embedding(head.embedding_refs, embedding_refs):
-            return StagedRevision(object=record, revision=head, reused=True, needs_review=False)
-        over_authored = head is not None and head.provenance.origin == Origin.AUTHORED
+            return StagedRevision(object=record, revision=head, reused=True)
         revision = await self.store.stage_revision(
             run.id,
             lease,
@@ -161,7 +162,7 @@ class RevisionService:
                 attributes=attributes,
                 provenance=provenance,
                 content_hash=hashed,
-                status=RevisionStatus.CANDIDATE if over_authored else RevisionStatus.STAGED,
+                status=RevisionStatus.STAGED,
                 run_id=run.id,
                 parent_revision_id=head.id if head else None,
                 embedding_refs=embedding_refs,
@@ -169,7 +170,7 @@ class RevisionService:
         )
         if revision is None:
             return None
-        return StagedRevision(object=record, revision=revision, reused=False, needs_review=over_authored)
+        return StagedRevision(object=record, revision=revision, reused=False)
 
     async def stage_relation(
         self,
