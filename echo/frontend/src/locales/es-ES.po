@@ -1724,7 +1724,6 @@ msgid "An unexpected error occurred. Reloading or returning home usually helps."
 msgstr "Ha ocurrido un error inesperado. Recargar la página o volver al inicio suele ayudar."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:841
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:146
 msgid "Analysis"
 msgstr ""
 
@@ -2020,7 +2019,7 @@ msgstr ""
 msgid "Arranged with dembrane"
 msgstr ""
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:87
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:86
 msgid "Ask"
 msgstr "Preguntar"
 
@@ -2270,7 +2269,7 @@ msgstr ""
 msgid "Automatically send conversation data to your other tools and services when events occur."
 msgstr "Enviar automáticamente los datos de la conversación a tus otras herramientas y servicios cuando ocurran eventos."
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:166
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:159
 msgid "Automation"
 msgstr ""
 
@@ -2374,9 +2373,11 @@ msgstr ""
 #: src/routes/project/popcorn/PopcornRoute.tsx:98
 #: src/routes/project/library/LibraryRoute.tsx:126
 #: src/routes/project/chat/NewChatRoute.tsx:702
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:109
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:108
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:116
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:138
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:160
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:149
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:161
 #: src/features/sidebar/blocks/HelpBlock.tsx:76
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:248
@@ -3506,7 +3507,7 @@ msgstr ""
 msgid "conversations"
 msgstr "conversaciones"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:94
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:93
 #: src/components/workspace/OrganisationProjectsTable.tsx:219
 #: src/components/project/ProjectUsageAndSharing.tsx:452
 #: src/components/conversation/ProjectConversationsPanel.tsx:741
@@ -7574,7 +7575,7 @@ msgid "Make private"
 msgstr ""
 
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:23
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:173
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:167
 #: src/components/training/StaffTrainingPanel.tsx:168
 #: src/components/project/ProjectSharingStrip.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:391
@@ -7643,7 +7644,7 @@ msgid "Many maps were started just now. Try again in a moment."
 msgstr ""
 
 #: src/routes/project/present/blockLabel.ts:6
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:158
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:147
 #: src/components/map/MapPage.tsx:545
 msgid "Map"
 msgstr ""
@@ -7870,7 +7871,7 @@ msgid "Mollie is not configured in this environment, so no live transactions are
 msgstr ""
 
 #: src/routes/project/ProjectMonitorRoute.tsx:83
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:107
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:106
 msgid "Monitor"
 msgstr ""
 
@@ -9470,7 +9471,7 @@ msgid "Override for this project"
 msgstr "Sobrescribir para este proyecto"
 
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:62
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:81
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:80
 #: src/features/sidebar/views/org/OrgHomeView.tsx:113
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:47
 #: src/components/chat/ChatModeBanner.tsx:47
@@ -10016,7 +10017,7 @@ msgid "portal editor"
 msgstr ""
 
 #: src/routes/project/ProjectHomeRoute.tsx:197
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:101
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:100
 #: src/components/layout/ProjectOverviewLayout.tsx:50
 msgid "Portal editor"
 msgstr ""
@@ -10113,7 +10114,7 @@ msgstr "Preparando tu experiencia"
 #: src/routes/project/present/PresentRoute.tsx:531
 #: src/routes/project/present/PresentRoute.tsx:621
 #: src/routes/project/present/PresentRoute.tsx:870
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:115
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:114
 msgid "Present"
 msgstr ""
 
@@ -10231,7 +10232,7 @@ msgstr ""
 msgid "project"
 msgstr ""
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:75
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:74
 #: src/features/sidebar/hooks/useSearchHits.ts:164
 #: src/features/sidebar/hooks/useSearchHits.ts:207
 #: src/features/sidebar/hooks/useSearchHits.ts:208
@@ -11064,7 +11065,7 @@ msgstr ""
 
 #: src/routes/project/ProjectHomeRoute.tsx:206
 #: src/routes/project/report/ProjectReportRoute.tsx:185
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:152
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:153
 #: src/components/report/ReportRenderer.tsx:75
 #: src/components/report/ReportModalNavigationButton.tsx:91
 msgid "Report"
