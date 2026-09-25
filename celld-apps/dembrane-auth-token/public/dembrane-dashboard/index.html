@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dembrane Dashboard Stand-in</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    .layout { flex: 1; display: flex; min-height: 0; }
+    nav {
+      width: 300px; flex-shrink: 0; display: flex; flex-direction: column;
+      background: var(--panel); border-right: 1px solid var(--border); padding: 16px 12px;
+    }
+    nav .brand { font-weight: 700; padding: 4px 8px 16px; }
+    nav .item { padding: 6px 8px; border-radius: 6px; color: var(--muted); }
+    nav .spacer { flex: 1; }
+    main { flex: 1; padding: 32px; max-width: 760px; }
+
+    /* Bottom-left user picker, like the real app's. */
+    details.picker { position: relative; }
+    details.picker summary {
+      list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px;
+      padding: 8px; border-radius: 8px; border: 1px solid var(--border);
+    }
+    details.picker summary::-webkit-details-marker { display: none; }
+    details.picker summary .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .avatar {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      display: grid; place-items: center; font-size: 0.8rem; font-weight: 700;
+      background: var(--accent); color: var(--accent-text);
+    }
+    .who { min-width: 0; line-height: 1.2; }
+    .who small { display: block; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .menu {
+      /* At least as wide as the picker, and wider if an email needs it. */
+      position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 1;
+      width: max-content; min-width: 100%; max-width: calc(100vw - 24px);
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 4px;
+      box-shadow: 0 6px 24px rgb(0 0 0 / 0.15);
+    }
+    .menu button { display: flex; width: 100%; gap: 10px; align-items: center; border: 0; text-align: left; }
+    .menu button:hover { background: var(--bg); }
+    .menu .row { display: flex; align-items: center; }
+    .menu .row > button:first-child { flex: 1; min-width: 0; }
+    .menu .remove { width: auto; flex-shrink: 0; padding: 4px 8px; color: var(--muted); }
+    .menu .remove:hover { color: var(--error); }
+    .menu hr { border: 0; border-top: 1px solid var(--border); margin: 4px 0; }
+    .menu .heading { font-size: 0.75rem; color: var(--muted); padding: 6px 8px 2px; }
+    .menu .check { margin-left: auto; color: var(--accent); }
+    .menu button[aria-current] { cursor: default; }
+    .avatar.icon { background: transparent; color: var(--muted); border: 1px solid var(--border); font-size: 1rem; }
+    .chevron { margin-left: auto; color: var(--muted); }
+
+    .claims { display: grid; grid-template-columns: max-content 1fr; gap: 2px 16px; margin-top: 16px; }
+    .claims dt { color: var(--muted); }
+    .claims dd { margin: 0; }
+    .flash { animation: flash 1.2s ease-out; }
+    @keyframes flash { from { background: var(--warn-bg); } }
+
+    @media (max-width: 700px) {
+      .layout { flex-direction: column-reverse; }
+      nav { width: auto; border-right: 0; border-top: 1px solid var(--border); }
+      nav .item, nav .brand, nav .spacer { display: none; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">Placeholder: pretend this is <strong>dashboard.dembrane.com</strong>, on a different domain from the demo (demo-token.example.com).</div>
+
+  <div class="layout">
+    <nav>
+      <div class="brand">dembrane</div>
+      <div class="item">Home</div>
+      <div class="item">Projects</div>
+      <div class="item">Settings</div>
+      <div class="spacer"></div>
+
+      <details class="picker" id="picker">
+        <summary title="Switch account"><span class="avatar" id="picker-avatar">?</span><span class="who" id="picker-who">…</span><span class="chevron" aria-hidden="true">⌃</span></summary>
+        <div class="menu" id="picker-menu"></div>
+      </details>
+    </nav>
+
+    <main>
+      <h1>Your dashboard</h1>
+      <p class="muted">In a real integration, this link would sit somewhere in the dembrane app.</p>
+
+      <section class="panel" id="link-panel" hidden>
+        <a class="button primary" id="demo-link" href="#">Open realtime demo →</a>
+        <div class="url mono" id="demo-url"></div>
+        <dl class="claims mono">
+          <dt>id</dt><dd id="claim-id"></dd>
+          <dt>admin_access</dt><dd id="claim-admin"></dd>
+          <dt>expires in</dt><dd><span id="claim-exp"></span> <span class="muted hint" id="refresh-hint"></span></dd>
+        </dl>
+        <p class="muted" id="link-note"></p>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { accounts, claimsOf, currentAccount, loginUrl, refreshDirectus, removeAccount, secondsLeft, setCurrent } from "./accounts.js";
+
+    const $ = (id) => document.getElementById(id);
+    let account = currentAccount(); // the Directus account behind the link
+    let link = null; // the { token, claims } in the link right now
+
+    // Every token the dashboard hands out has at least this long left, so the
+    // link survives a click and the exchange at /auth/. /demo-token/ refreshes its
+    // own session at 30s, which must stay below this: a handoff always brings
+    // back more time than the demo's threshold, so it can't bounce straight back.
+    const REFRESH_AT = 60;
+    const formatLeft = (s) => `${Math.floor(s / 60)}:${String(Math.max(s % 60, 0)).padStart(2, "0")}`;
+    $("refresh-hint").textContent = `(auto-refreshes at ${formatLeft(REFRESH_AT)})`;
+
+    // A token with at least REFRESH_AT seconds left for the current account, or
+    // null if there is none or it can't be refreshed (then it's dropped from
+    // the switcher, and you log in to it again).
+    async function freshToken() {
+      if (!account) return null;
+      if (secondsLeft(claimsOf(account.accessToken)) < REFRESH_AT) {
+        try { account = await refreshDirectus(account); } catch { removeAccount(account.id); account = null; return null; }
+      }
+      return account.accessToken;
+    }
+
+    function renderExpiry() {
+      const left = secondsLeft(link.claims);
+      $("claim-exp").textContent = formatLeft(left);
+    }
+
+    const linkFor = (token, ret = "/demo-token/") => `/auth/?return=${encodeURIComponent(ret)}#token=${token}`;
+
+    // --- Rendering ----------------------------------------------------------
+    // A user with no role may read its own id but not its email.
+    const esc = (text) => String(text).replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+    const labelOf = (account) => esc(account.email ?? account.id);
+
+    // Standard account-switcher menu: every account you've added (the current
+    // one ticked), then "Add another account…" and "Log out".
+    function renderPicker() {
+      const name = account ? labelOf(account) : "Not logged in";
+      $("picker-avatar").textContent = name[0].toUpperCase();
+      $("picker-who").innerHTML = `${name}<small>${account ? "Directus" : "log in to continue"}</small>`;
+
+      const menu = $("picker-menu");
+      menu.innerHTML = '<div class="heading">Switch account</div>';
+      const option = (icon, label, sub, onClick, isCurrent = false, onRemove = null) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.innerHTML = `<span class="avatar${/\w/.test(icon) ? "" : " icon"}">${icon}</span>` +
+          `<span class="who">${label}${sub ? `<small>${sub}</small>` : ""}</span>` +
+          (isCurrent ? '<span class="check" aria-label="current account">✓</span>' : "");
+        if (isCurrent) b.setAttribute("aria-current", "true");
+        b.addEventListener("click", () => {
+          $("picker").open = false;
+          if (!isCurrent) onClick();
+        });
+        if (!onRemove) return menu.append(b);
+
+        // A separate button beside it (a button can't hold another button).
+        const row = document.createElement("div");
+        row.className = "row";
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "remove";
+        remove.textContent = "×";
+        remove.title = remove.ariaLabel = `Remove ${label} from this list`;
+        remove.addEventListener("click", onRemove);
+        row.append(b, remove);
+        menu.append(row);
+      };
+      for (const saved of accounts()) {
+        const label = labelOf(saved);
+        const isCurrent = saved.id === account?.id;
+        // Removing the current account is logging out of it; removing another
+        // just drops it from the list, leaving the menu open.
+        const onRemove = isCurrent ? logOut : () => { removeAccount(saved.id); renderPicker(); };
+        option(label[0].toUpperCase(), label, "Directus", () => select(saved), isCurrent, onRemove);
+      }
+      menu.append(document.createElement("hr"));
+      option("+", "Add another account…", "", () => (location.href = loginUrl("/dembrane-dashboard/")));
+      if (account) option("⎋", "Log out", "", logOut);
+    }
+
+    // Forget the current account. Switch to another one if there is one,
+    // otherwise go to the login page.
+    function logOut() {
+      removeAccount(account.id);
+      const next = accounts()[0];
+      if (next) select(next);
+      else location.href = loginUrl("/dembrane-dashboard/");
+    }
+
+    async function select(chosen) {
+      account = chosen;
+      setCurrent(chosen.id);
+      renderPicker();
+      await updateLink("Switched account");
+    }
+
+    async function updateLink(note) {
+      const token = await freshToken();
+      if (!token) {
+        // No Directus account (or it can't be refreshed): off to the login
+        // page, which comes back here afterwards.
+        location.replace(loginUrl(location.pathname + location.search));
+        return;
+      }
+      $("link-panel").hidden = false;
+      const changed = link?.token !== token;
+      link = { token, claims: claimsOf(token) };
+
+      const href = linkFor(token);
+      $("demo-link").href = href;
+      $("demo-url").textContent = new URL(href, location.origin).href;
+      $("claim-id").textContent = link.claims.id;
+      $("claim-admin").textContent = String(link.claims.admin_access === true);
+      renderExpiry();
+      if (changed) {
+        $("demo-url").classList.remove("flash");
+        void $("demo-url").offsetWidth; // restart the animation
+        $("demo-url").classList.add("flash");
+        $("link-note").textContent = `${note ?? "New token"} at ${new Date().toLocaleTimeString()}.`;
+      }
+    }
+
+    // Keep the link valid: refresh the token once it has REFRESH_AT seconds left.
+    let refreshing = false;
+    setInterval(async () => {
+      if (!link) return;
+      renderExpiry();
+      if (secondsLeft(link.claims) < REFRESH_AT && !refreshing) {
+        refreshing = true;
+        await updateLink("Refreshed with the Directus refresh token").finally(() => (refreshing = false));
+      }
+    }, 1000);
+
+    // --- Handoff: the demo sent us here for a fresh link --------------------
+    // /dembrane-dashboard/?handoff=1&return=/demo-token/ → go straight back with a
+    // new token, no clicks needed (like OAuth's silent re-authentication).
+    const params = new URLSearchParams(location.search);
+    const handoffReturn = params.get("handoff") === "1" ? params.get("return") ?? "/demo-token/" : null;
+
+    // If there's no token to hand back, updateLink() sends us to the login
+    // page, which returns to this same handoff URL afterwards.
+    async function continueHandoff() {
+      const token = await freshToken();
+      if (token) location.replace(linkFor(token, handoffReturn));
+      return token;
+    }
+
+    renderPicker();
+    if (!handoffReturn || !(await continueHandoff())) await updateLink();
+  </script>
+</body>
+</html>

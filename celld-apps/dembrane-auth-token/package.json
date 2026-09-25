@@ -1,0 +1,23 @@
+{
+  "name": "dembrane-auth-token",
+  "version": "1.0.0",
+  "description": "Gate a Cloudflare Durable Object on dembrane (Directus) login",
+  "scripts": {
+    "dev": "celld dev --port 9877",
+    "typecheck": "tsc"
+  },
+  "license": "MIT",
+  "packageManager": "pnpm@10.34.5",
+  "dependencies": {
+    "hono": "^4.13.8"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  },
+  "private": true,
+  "type": "module",
+  "pnpm": {
+    "ignoredBuiltDependencies": ["esbuild"]
+  }
+}

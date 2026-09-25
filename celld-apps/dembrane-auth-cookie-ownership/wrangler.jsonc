@@ -1,0 +1,34 @@
+{
+  "name": "dembrane-auth-cookie-ownership",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-23",
+
+  // Static pages in ./public. Only /api/* runs the Worker first; everything
+  // else is served straight from the assets (and falls through to the Worker
+  // if no file matches, e.g. `/`).
+  "assets": {
+    "directory": "./public",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // One User Durable Object per dembrane user, addressed by user id, one
+  // Project per dembrane project, addressed by project id, and a single
+  // Directory for state shared by everyone (the user list, settings).
+  "durable_objects": {
+    "bindings": [
+      { "name": "USER", "class_name": "User" },
+      { "name": "PROJECT", "class_name": "Project" },
+      { "name": "DIRECTORY", "class_name": "Directory" }
+    ]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["User", "Project", "Directory"] }],
+
+  "vars": {
+    // The Directus the pages log in to and the Worker asks for profiles:
+    // ../directus. Its session cookie's domain must include the Worker's
+    // host for the cookie to reach it.
+    "DIRECTUS_URL": "http://localhost:8055"
+  }
+  // Secrets (not here): DIRECTUS_SECRET and DIRECTUS_TOKEN — .dev.vars locally,
+  // `wrangler secret put` when deployed.
+}

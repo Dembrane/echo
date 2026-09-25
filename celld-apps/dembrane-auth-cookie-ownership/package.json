@@ -1,0 +1,23 @@
+{
+  "name": "dembrane-auth-cookie-ownership",
+  "version": "1.0.0",
+  "description": "Gate Cloudflare Durable Objects on dembrane's (Directus's) session cookie and organisation ownership",
+  "scripts": {
+    "dev": "celld dev --port 9879",
+    "typecheck": "tsc"
+  },
+  "license": "MIT",
+  "packageManager": "pnpm@10.34.5",
+  "dependencies": {
+    "hono": "^4.13.8"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  },
+  "private": true,
+  "type": "module",
+  "pnpm": {
+    "ignoredBuiltDependencies": ["esbuild"]
+  }
+}
