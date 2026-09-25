@@ -23,6 +23,14 @@ export type ToolActivity = {
 
 const MAX_RAW_LENGTH = 4000;
 
+// Tools that talk to the host (the ack message, the plan) rather than look
+// anything up. They never render as work steps.
+const HOST_UPDATE_TOOL_NAMES = new Set([
+	"sendProgressUpdate",
+	"ack",
+	"updatePlan",
+]);
+
 const asObject = (value: unknown): AnyObject | null => {
 	if (value && typeof value === "object") return value as AnyObject;
 	return null;
@@ -203,9 +211,9 @@ const parseToolEvent = (event: AgenticRunEvent): ParsedToolEvent | null => {
 			data?.name,
 			outputKwargs?.name,
 		) ?? "tool";
-	// Its output already appears in the thread as a message; a step row
-	// would say the same thing twice.
-	if (toolName === "sendProgressUpdate") return null;
+	// Its output already appears in the thread as a message, and the plan
+	// has its own card; a step row would say the same thing twice.
+	if (HOST_UPDATE_TOOL_NAMES.has(toolName)) return null;
 	const callId = firstString(
 		payload?.run_id,
 		payload?.runId,
@@ -488,14 +496,14 @@ export const parseCanvasSuggestion = (
 				payload.gather_spec && typeof payload.gather_spec === "object"
 					? (payload.gather_spec as Record<string, unknown>)
 					: null,
+			name,
+			projectId: String(payload.project_id ?? ""),
+			proposed_at: activity.timestamp,
 			tabs: Array.isArray(payload.tabs)
 				? (payload.tabs.filter(
 						(tab: unknown) => tab && typeof tab === "object",
 					) as Array<Record<string, unknown>>)
 				: null,
-			name,
-			proposed_at: activity.timestamp,
-			projectId: String(payload.project_id ?? ""),
 			target_canvas_id:
 				typeof payload.target_canvas_id === "string"
 					? payload.target_canvas_id

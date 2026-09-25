@@ -1,3 +1,4 @@
+import re
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
@@ -111,28 +112,25 @@ def _tool_call_response(
     )
 
 
+def _runtime_note(invocation: list[object]) -> str | None:
+    head = invocation[0] if invocation else None
+    content = getattr(head, "content", None)
+    if getattr(head, "type", None) != "system" or not isinstance(content, str):
+        return None
+    _, marker, note = content.partition(agent.RUNTIME_NOTE_HEADING)
+    return note.strip() if marker else None
+
+
 def _extract_automatic_nudges(invocations: list[list[object]]) -> list[str]:
-    nudges: list[str] = []
-    for invocation in invocations:
-        for message in invocation:
-            if getattr(message, "type", None) != "human":
-                continue
-            content = getattr(message, "content", None)
-            if isinstance(content, str) and content.startswith("<Automatic Nudge>"):
-                nudges.append(content)
-    return nudges
+    return [note for invocation in invocations if (note := _runtime_note(invocation))]
 
 
 def _count_corrective_retry_invocations(invocations: list[list[object]]) -> int:
-    count = 0
-    for invocation in invocations:
-        if any(
-            getattr(message, "type", None) in ("system", "human")
-            and getattr(message, "content", None) == POST_NUDGE_CONTINUATION_SYSTEM_PROMPT
-            for message in invocation
-        ):
-            count += 1
-    return count
+    return sum(
+        1
+        for invocation in invocations
+        if POST_NUDGE_CONTINUATION_SYSTEM_PROMPT in (_runtime_note(invocation) or "")
+    )
 
 
 def _fake_vertex_chat(monkeypatch):
@@ -151,7 +149,7 @@ def _fake_vertex_chat(monkeypatch):
             def from_service_account_info(info, scopes=None):
                 return _FakeCredentials(info, scopes)
 
-    monkeypatch.setattr(agent, "ChatVertexAI", _FakeChatVertexAI)
+    monkeypatch.setattr(agent, "_VertexChat", _FakeChatVertexAI)
     monkeypatch.setattr(agent, "service_account", _FakeServiceAccountModule)
     return _FakeChatVertexAI, _FakeCredentials
 
@@ -189,7 +187,7 @@ def test_build_llm_uses_adc_when_no_explicit_credentials(monkeypatch):
     assert isinstance(llm, fake_chat)
     assert llm.kwargs["credentials"] is None
     assert llm.kwargs["project"] == "adc-project"
-    assert llm.kwargs["api_endpoint"] == "aiplatform.googleapis.com"
+    assert llm.kwargs["api_endpoint"] == "aiplatform.eu.rep.googleapis.com"
     get_settings.cache_clear()
 
 
@@ -208,6 +206,80 @@ def test_build_llm_falls_back_to_service_account_project_id(monkeypatch):
     assert llm.kwargs["project"] == "sa-project"
     assert llm.kwargs["location"] == "eu"
     assert isinstance(llm.kwargs["credentials"], fake_creds)
+    get_settings.cache_clear()
+
+
+def _fake_vertex_chat_with_tools(monkeypatch, failing_models):
+    from langchain_core.runnables import RunnableLambda
+
+    fake_chat, _ = _fake_vertex_chat(monkeypatch)
+    built: list[dict] = []
+
+    def _bind_tools(self, _tools):
+        model = self.kwargs["model_name"]
+
+        def _call(_messages):
+            if model in failing_models:
+                raise RuntimeError(f"429 Resource exhausted ({model})")
+            return AIMessage(content=f"answered by {model}")
+
+        return RunnableLambda(_call)
+
+    original_init = fake_chat.__init__
+
+    def _init(self, **kwargs):
+        original_init(self, **kwargs)
+        built.append(kwargs)
+
+    monkeypatch.setattr(fake_chat, "__init__", _init)
+    monkeypatch.setattr(fake_chat, "bind_tools", _bind_tools, raising=False)
+    return built
+
+
+def test_fallback_models_answer_in_order_when_earlier_ones_fail(monkeypatch):
+    get_settings.cache_clear()
+    monkeypatch.setenv("LLM_MODEL", "gemini-3.8-flash")
+    monkeypatch.setenv("LLM_FALLBACK_MODELS", "gemini-3.7-flash, gemini-3.5-flash")
+    built = _fake_vertex_chat_with_tools(
+        monkeypatch, failing_models={"gemini-3.8-flash", "gemini-3.7-flash"}
+    )
+
+    response = agent._bind_tools_with_fallbacks([]).invoke([HumanMessage(content="hi")])
+
+    assert response.content == "answered by gemini-3.5-flash"
+    assert [kwargs["model_name"] for kwargs in built] == [
+        "gemini-3.8-flash",
+        "gemini-3.7-flash",
+        "gemini-3.5-flash",
+    ]
+    # Models with a fallback behind them fail over fast; the last keeps the
+    # library's default retries.
+    assert [kwargs.get("max_retries") for kwargs in built] == [1, 1, None]
+    get_settings.cache_clear()
+
+
+def test_healthy_primary_answers_without_touching_fallbacks(monkeypatch):
+    get_settings.cache_clear()
+    monkeypatch.setenv("LLM_MODEL", "gemini-3.8-flash")
+    monkeypatch.setenv("LLM_FALLBACK_MODELS", "gemini-3.7-flash,gemini-3.5-flash")
+    _fake_vertex_chat_with_tools(monkeypatch, failing_models=set())
+
+    response = agent._bind_tools_with_fallbacks([]).invoke([HumanMessage(content="hi")])
+
+    assert response.content == "answered by gemini-3.8-flash"
+    get_settings.cache_clear()
+
+
+def test_no_fallback_models_builds_the_primary_alone(monkeypatch):
+    get_settings.cache_clear()
+    monkeypatch.setenv("LLM_MODEL", "gemini-3.8-flash")
+    monkeypatch.delenv("LLM_FALLBACK_MODELS", raising=False)
+    built = _fake_vertex_chat_with_tools(monkeypatch, failing_models=set())
+
+    agent._bind_tools_with_fallbacks([])
+
+    assert [kwargs["model_name"] for kwargs in built] == ["gemini-3.8-flash"]
+    assert "max_retries" not in built[0]
     get_settings.cache_clear()
 
 
@@ -317,7 +389,7 @@ async def test_create_agent_graph_nudge_flow_can_continue_via_progress_tool_call
 
 
 @pytest.mark.asyncio
-async def test_create_agent_graph_retries_once_after_nudge_when_model_returns_text_only():
+async def test_text_reply_after_a_nudge_is_the_answer_not_retried():
     llm = SequenceLLM(
         responses=[
             _tool_call_response(1),
@@ -326,8 +398,37 @@ async def test_create_agent_graph_retries_once_after_nudge_when_model_returns_te
             _tool_call_response(4),
             _tool_call_response(5),
             _tool_call_response(6),
-            AIMessage(content="Progress update but no tool call."),
-            AIMessage(content="Still text-only after retry."),
+            AIMessage(content="Here is what I found."),
+        ]
+    )
+    graph = create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+    )
+
+    result = await graph.ainvoke(
+        {"messages": [HumanMessage(content="hello")]},
+        config={"configurable": {"thread_id": "thread-text-after-nudge"}},
+    )
+
+    nudges = _extract_automatic_nudges(llm.invocations)
+    assert len(nudges) == 1
+    assert "6 tool calls" in nudges[0]
+    assert _count_corrective_retry_invocations(llm.invocations) == 0
+    assert result["messages"][-1].content == "Here is what I found."
+
+
+@pytest.mark.asyncio
+async def test_nudges_never_reach_the_model_as_a_message():
+    """A nudge sent as a user turn reads as the host speaking, and the model
+    answers it in the chat. It rides in the system instruction instead."""
+    llm = SequenceLLM(
+        responses=[
+            *[_tool_call_response(index) for index in range(1, 7)],
+            AIMessage(content=""),
+            AIMessage(content="done"),
         ]
     )
     graph = create_agent_graph(
@@ -339,13 +440,14 @@ async def test_create_agent_graph_retries_once_after_nudge_when_model_returns_te
 
     await graph.ainvoke(
         {"messages": [HumanMessage(content="hello")]},
-        config={"configurable": {"thread_id": "thread-single-retry-after-nudge"}},
+        config={"configurable": {"thread_id": "thread-nudge-channel"}},
     )
 
-    nudges = _extract_automatic_nudges(llm.invocations)
-    assert len(nudges) >= 1
-    assert all("6 tool calls" in nudge for nudge in nudges)
-    assert _count_corrective_retry_invocations(llm.invocations) == 1
+    for invocation in llm.invocations:
+        humans = [m for m in invocation if getattr(m, "type", None) == "human"]
+        assert [m.content for m in humans] == ["hello"]
+        # Vertex rejects a request that ends on the model's own turn.
+        assert getattr(invocation[-1], "type", None) != "ai"
 
 
 @pytest.mark.asyncio
@@ -790,3 +892,211 @@ def test_replayed_history_old_tool_names_are_normalized_to_new_names():
     )
     normalized_tool = _normalize_message_tool_names(tool_message, recognized)
     assert normalized_tool.name == "reachOutToDembraneSupport"
+
+
+@pytest.mark.asyncio
+async def test_ack_and_update_plan_payloads():
+    llm = SequenceLLM(responses=[AIMessage(content="done")])
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+    )
+    tool_map = {tool.name: tool for tool in llm.bound_tools}
+
+    ack_payload = await tool_map["ack"].ainvoke(
+        {"message": "You want the main themes.", "plan": ["Read the conversations", " ", "Group themes"]}
+    )
+    assert ack_payload == {
+        "kind": "progress_update",
+        "update": "You want the main themes.",
+        "plan": ["Read the conversations", "Group themes"],
+        "visible_to_user": True,
+    }
+    plan_payload = await tool_map["updatePlan"].ainvoke(
+        {"steps": ["Read the conversations", "Group themes"], "done": 5, "note": "12 read"}
+    )
+    assert plan_payload == {
+        "kind": "plan",
+        "steps": ["Read the conversations", "Group themes"],
+        "done": 2,
+        "note": "12 read",
+        "visible_to_user": False,
+    }
+
+
+def _tool_messages(result) -> list:
+    return [m for m in result["messages"] if getattr(m, "type", None) == "tool"]
+
+
+@pytest.mark.asyncio
+async def test_identical_call_is_answered_from_the_earlier_result_not_run_again(monkeypatch):
+    runs: list[str] = []
+    llm = SequenceLLM(
+        responses=[
+            _tool_call_response(1, tool_name="readGoal"),
+            _tool_call_response(2, tool_name="readGoal"),
+            AIMessage(content="done"),
+        ]
+    )
+    graph = create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+    )
+    tool_map = {tool.name: tool for tool in llm.bound_tools}
+    original = tool_map["readGoal"].coroutine
+
+    async def _counting(*args, **kwargs):
+        runs.append("readGoal")
+        return {"goal": "g"}
+
+    monkeypatch.setattr(tool_map["readGoal"], "coroutine", _counting)
+
+    result = await graph.ainvoke(
+        {"messages": [HumanMessage(content="hello")]},
+        config={"configurable": {"thread_id": "repeat-guard"}},
+    )
+
+    assert runs == ["readGoal"]
+    tool_messages = _tool_messages(result)
+    assert agent.REPEATED_CALL_MESSAGE in tool_messages[1].content
+    assert result["messages"][-1].content == "done"
+    assert original is not None
+
+
+@pytest.mark.asyncio
+async def test_third_repeat_tells_the_model_to_stop_and_answer(monkeypatch):
+    llm = SequenceLLM(
+        responses=[
+            _tool_call_response(1, tool_name="readGoal"),
+            _tool_call_response(2, tool_name="readGoal"),
+            _tool_call_response(3, tool_name="readGoal"),
+            _tool_call_response(4, tool_name="readGoal"),
+            AIMessage(content="done"),
+        ]
+    )
+    graph = create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+    )
+    tool_map = {tool.name: tool for tool in llm.bound_tools}
+
+    async def _goal(*args, **kwargs):
+        return {"goal": "g"}
+
+    monkeypatch.setattr(tool_map["readGoal"], "coroutine", _goal)
+
+    result = await graph.ainvoke(
+        {"messages": [HumanMessage(content="hello")]},
+        config={"configurable": {"thread_id": "repeat-stop"}},
+    )
+
+    contents = [m.content for m in _tool_messages(result)]
+    assert contents[1] == agent.REPEATED_CALL_MESSAGE
+    assert contents[2] == agent.REPEATED_CALL_MESSAGE
+    assert contents[3] == agent.REPEATED_CALL_STOP_MESSAGE
+
+
+@pytest.mark.asyncio
+async def test_same_result_three_times_in_a_row_adds_a_note(monkeypatch):
+    llm = SequenceLLM(
+        responses=[
+            _tool_call_response(1, tool_name="findConversationsByKeywords", args={"keywords": "a"}),
+            _tool_call_response(2, tool_name="findConversationsByKeywords", args={"keywords": "b"}),
+            _tool_call_response(3, tool_name="findConversationsByKeywords", args={"keywords": "c"}),
+            AIMessage(content="done"),
+        ]
+    )
+    graph = create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+    )
+    tool_map = {tool.name: tool for tool in llm.bound_tools}
+
+    async def _empty(*args, **kwargs):
+        return {"conversations": []}
+
+    monkeypatch.setattr(tool_map["findConversationsByKeywords"], "coroutine", _empty)
+
+    result = await graph.ainvoke(
+        {"messages": [HumanMessage(content="hello")]},
+        config={"configurable": {"thread_id": "same-result"}},
+    )
+
+    contents = [m.content for m in _tool_messages(result)]
+    assert "returned the same result" not in contents[1]
+    assert "returned the same result" in contents[2]
+
+
+@pytest.mark.asyncio
+async def test_repeated_host_updates_are_never_skipped():
+    llm = SequenceLLM(
+        responses=[
+            _tool_call_response(1, tool_name="updatePlan", args={"steps": ["a", "b"], "done": 1}),
+            _tool_call_response(2, tool_name="updatePlan", args={"steps": ["a", "b"], "done": 1}),
+            AIMessage(content="done"),
+        ]
+    )
+    graph = create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+    )
+
+    result = await graph.ainvoke(
+        {"messages": [HumanMessage(content="hello")]},
+        config={"configurable": {"thread_id": "host-updates"}},
+    )
+
+    assert all(
+        agent.REPEATED_CALL_MESSAGE not in str(m.content) for m in _tool_messages(result)
+    )
+
+
+# The chat places cards by when a tool ran, so a message can land before or
+# after the card it mentions. Any position word the model reads about the UI
+# will be wrong some of the time; the prompt and tool descriptions carry none.
+POSITION_WORDS = re.compile(
+    r"\b(above|below|beneath|underneath|to the (left|right))\b", re.IGNORECASE
+)
+# The one allowed use: the rule that forbids position words quotes them.
+POSITION_RULE_QUOTE = '"above", "below", "here", or "on the left/right"'
+
+
+@pytest.mark.parametrize("canvas_enabled", [True, False])
+def test_prompt_never_tells_the_model_where_ui_lands(canvas_enabled):
+    prompt = agent.system_prompt_for(canvas_enabled).replace(POSITION_RULE_QUOTE, "")
+    offending = [line for line in prompt.splitlines() if POSITION_WORDS.search(line)]
+    # "Be honest above all" is about priority, not layout.
+    offending = [line for line in offending if "honest above all" not in line]
+    assert offending == []
+
+
+def test_tool_descriptions_never_tell_the_model_where_ui_lands():
+    llm = SequenceLLM(responses=[AIMessage(content="done")])
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=MemoryClientFactory(),
+        canvas_enabled=True,
+    )
+    offending = {
+        tool.name: tool.description
+        for tool in llm.bound_tools
+        if POSITION_WORDS.search(tool.description or "")
+    }
+    assert offending == {}
+
+
+def test_repetition_guard_messages_carry_no_position_words():
+    for message in (agent.REPEATED_CALL_MESSAGE, agent.REPEATED_CALL_STOP_MESSAGE):
+        assert not POSITION_WORDS.search(message)

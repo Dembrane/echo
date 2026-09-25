@@ -51,8 +51,23 @@ vi.mock("@/components/map/data/adapter", async (importOriginal) => ({
 	buildMapGraph: () => ({
 		allNodes: [node(1, "A result"), node(2, "A later result")],
 		budgetBounds: null,
+		conversationNames: new Map([[1, "Ada"]]),
 		counts: { argument: 2 },
-		evidenceById: new Map(),
+		// The room's projection now carries the evidence behind a finding,
+		// under the palette slot it was spoken in.
+		evidenceById: new Map([
+			[
+				"revision-1",
+				[
+					{
+						conversationId: "slot:1",
+						label: "Ada",
+						quotes: ["The bins are always full."],
+						slot: 1,
+					},
+				],
+			],
+		]),
 		objectsById: new Map([
 			["revision-1", mapObject(1, "A result")],
 			["revision-2", mapObject(2, "A later result")],
@@ -250,13 +265,14 @@ describe("AudienceMapAdapter", () => {
 		vi.stubGlobal("fetch", fetchMock);
 
 		const view = render(adapter(true, 1));
-		expect(await screen.findByText("A result")).toBeTruthy();
+		// The label reads in the Spotlight and again in the list under the map.
+		expect((await screen.findAllByText("A result")).length).toBeGreaterThan(0);
 
 		failNext = true;
 		view.rerender(adapter(true, 2));
 		await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 
-		expect(screen.getByText("A result")).toBeTruthy();
+		expect(screen.getAllByText("A result").length).toBeGreaterThan(0);
 		expect(screen.getByText("Audience tree renderer")).toBeTruthy();
 		expect(screen.queryByText("The map could not be loaded.")).toBeNull();
 	});
@@ -299,7 +315,7 @@ describe("AudienceMapAdapter", () => {
 
 		render(adapter(true));
 
-		expect(await screen.findByText("A result")).toBeTruthy();
+		expect((await screen.findAllByText("A result")).length).toBeGreaterThan(0);
 		// As on the host's page, the verdict chip colours the map by factual
 		// status and opens the justification that came with the payload.
 		fireEvent.click(screen.getByRole("button", { name: "Likely true" }));
@@ -421,6 +437,23 @@ describe("AudienceMapAdapter", () => {
 		render(adapter(true, 0, undefined, true));
 		await screen.findByText("Audience tree renderer");
 		expect(screen.getByRole("region", { name: "Explore" })).toBeTruthy();
+	});
+
+	it("shows the evidence behind a finding, attributed and linking nowhere", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+		);
+
+		render(adapter(true));
+		await screen.findByText("Audience tree renderer");
+		expect(
+			(await screen.findAllByText("The bins are always full.")).length,
+		).toBeGreaterThan(0);
+		// The conversation is named because the presentation said it may be.
+		expect(screen.getAllByText("Ada").length).toBeGreaterThan(0);
+		// Nothing on the room's surface opens a conversation.
+		expect(screen.queryByRole("link")).toBeNull();
 	});
 
 	it("leaves the Map exactly as the host page has it by default", async () => {

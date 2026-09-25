@@ -88,14 +88,15 @@ const renderCard = (nodeId: string, visible: ObjectType[]) => {
 describe("inspector per type", () => {
 	it("shows a tension's poles, narrative, question and support per pole", () => {
 		const inspection = renderCard("rev-tension-0", ["tension"]);
-		expect(screen.getByText("Pole A")).toBeTruthy();
+		// The poles, the knot and the question are on the stage card now, in the
+		// tension's own shape rather than under labels.
+		expect(screen.getByTestId("result-stage")).toBeTruthy();
 		expect(screen.getByText("Synthetic pole A 0")).toBeTruthy();
 		expect(screen.getByText("Synthetic pole B 0")).toBeTruthy();
-		expect(screen.getByText("Narrative")).toBeTruthy();
 		expect(
 			screen.getByText("Two groups read synthetic topic 0 in opposite ways."),
 		).toBeTruthy();
-		expect(screen.getByText("To resolve")).toBeTruthy();
+		expect(screen.getByText(/To resolve:/)).toBeTruthy();
 		expect(screen.getByText("Supporting pole A")).toBeTruthy();
 		expect(screen.getByText("Supporting pole B")).toBeTruthy();
 		// Supporting arguments carry their evidence.
@@ -136,7 +137,8 @@ describe("inspector per type", () => {
 
 	it("shows a stakeholder's role, stake, evidence rung and connections", () => {
 		renderCard("rev-stakeholder-0", ["stakeholder"]);
-		expect(screen.getByText("Role")).toBeTruthy();
+		// Name, role and stake read as the stage card shows them.
+		expect(screen.getByTestId("result-stage")).toBeTruthy();
 		expect(screen.getByText("Synthetic role 0")).toBeTruthy();
 		expect(screen.getByText("Synthetic stake 0")).toBeTruthy();
 		expect(screen.getByText("Voiced in a conversation")).toBeTruthy();
@@ -186,6 +188,7 @@ describe("inspector per type", () => {
 												conversationId: "conversation-1",
 												label: "Conversation one",
 												quotes: ["Pinned source quote"],
+												slot: 0,
 											},
 										],
 										objectId: "source-1",
@@ -260,6 +263,62 @@ describe("inspector per type", () => {
 			),
 		).toBeTruthy();
 	});
+
+	it("shows the room's quotes under their conversation, in its colour", () => {
+		const node = nodesById.get("rev-argument-0") as MapGraphNode;
+		render(
+			<Providers>
+				<NodeDetailCard
+					node={node}
+					evidence={[
+						{
+							conversationId: "slot:1",
+							label: "Conversation 2",
+							quotes: ["The bins are always full."],
+							slot: 1,
+						},
+						{
+							conversationId: "slot:2",
+							label: "Conversation 3",
+							quotes: ["Ours are emptied twice a week."],
+							slot: 2,
+						},
+					]}
+				/>
+			</Providers>,
+		);
+		expect(screen.getByText("Conversation 2")).toBeTruthy();
+		expect(screen.getByText("The bins are always full.")).toBeTruthy();
+		// The dot the legend gives that conversation, so the quote is read in
+		// the colour it was spoken in.
+		expect(screen.getByTestId("quote-group-slot-1")).toBeTruthy();
+		// The room's surface links nowhere: no conversation to open.
+		expect(screen.queryByRole("link")).toBeNull();
+	});
+
+	it("drops the heading when every quote came from one conversation", () => {
+		const node = nodesById.get("rev-argument-0") as MapGraphNode;
+		render(
+			<Providers>
+				<NodeDetailCard
+					node={node}
+					evidence={[
+						{
+							conversationId: "slot:1",
+							label: "Conversation 2",
+							quotes: ["The bins are always full."],
+							slot: 1,
+						},
+					]}
+				/>
+			</Providers>,
+		);
+		// The node's chit already names the conversation; the heading and its
+		// dot would only say it again.
+		expect(screen.queryByText("Conversation 2")).toBeNull();
+		expect(screen.queryByTestId("quote-group-slot-1")).toBeNull();
+		expect(screen.getByText("The bins are always full.")).toBeTruthy();
+	});
 });
 
 describe("Spotlight fact-check controls", () => {
@@ -319,5 +378,96 @@ describe("Spotlight fact-check controls", () => {
 		expect(
 			screen.queryByRole("button", { name: "Fact check this claim" }),
 		).toBeNull();
+	});
+});
+
+describe("Spotlight conversation chits", () => {
+	const argumentNode = nodesById.get("rev-argument-0") as MapGraphNode;
+	const withSlots = (slots: number[]): MapGraphNode => ({
+		...argumentNode,
+		metadata: { ...argumentNode.metadata, conversationSlots: slots },
+	});
+
+	const renderSpotlight = (
+		node: MapGraphNode,
+		options: {
+			colorBy?: "conversation" | "valence";
+			names?: ReadonlyMap<number, string>;
+			onColorByChange?: () => void;
+		} = {},
+	) => {
+		const onColorByChange = options.onColorByChange ?? vi.fn();
+		render(
+			<Providers>
+				<SpotlightPanel
+					node={node}
+					evidence={[]}
+					factCheck={undefined}
+					colorBy={options.colorBy ?? "valence"}
+					onColorByChange={onColorByChange}
+					conversationNames={options.names}
+					canFactCheck
+					onFactCheck={vi.fn()}
+					onCancelFactCheck={vi.fn()}
+				/>
+			</Providers>,
+		);
+		return onColorByChange;
+	};
+
+	it("names the conversation the payload names, in its marker colour", () => {
+		renderSpotlight(withSlots([1]), {
+			names: new Map([[1, "Room by the canal"]]),
+		});
+		const chit = screen.getByTestId("conversation-chit-slot-1");
+		expect(chit.textContent).toBe("Room by the canal");
+		// The marker the map and the legend give slot 1, with graphite on it.
+		expect(chit.getAttribute("style")).toContain("rgb(30, 255, 161)");
+		expect(chit.className).toContain("text-graphite");
+	});
+
+	it("numbers a conversation the payload does not name", () => {
+		renderSpotlight(withSlots([1]));
+		expect(screen.getByTestId("conversation-chit-slot-1").textContent).toBe(
+			"Conversation 2",
+		);
+	});
+
+	it("colours the map by conversation when clicked", () => {
+		const onColorByChange = renderSpotlight(withSlots([0]));
+		fireEvent.click(screen.getByTestId("conversation-chit-slot-0"));
+		expect(onColorByChange).toHaveBeenCalledWith("conversation");
+	});
+
+	it("shows the selected ring while the map is coloured by conversation", () => {
+		renderSpotlight(withSlots([0]), { colorBy: "conversation" });
+		const chit = screen.getByTestId("conversation-chit-slot-0");
+		expect(chit.getAttribute("aria-pressed")).toBe("true");
+		expect(chit.className).toContain("ring-2");
+	});
+
+	it("gives a merge of three conversations a chit each, in slot order", () => {
+		renderSpotlight(withSlots([2, 0, 0, 1]));
+		const chits = screen.getAllByTestId(/conversation-chit-/);
+		expect(chits.map((chit) => chit.textContent)).toEqual([
+			"Conversation 1",
+			"Conversation 2",
+			"Conversation 3",
+		]);
+	});
+
+	it("counts past three, filled with the node's own weighted blend", () => {
+		renderSpotlight(withSlots([0, 0, 0, 1, 2, 3]));
+		const chit = screen.getByTestId("conversation-chit-many");
+		expect(chit.textContent).toBe("4 conversations");
+		const style = chit.getAttribute("style") ?? "";
+		expect(style).toContain("linear-gradient(135deg");
+		// Slot 0 gave half the members, so its band is the widest.
+		expect(style).toContain("rgb(0, 255, 255) 25%");
+	});
+
+	it("shows no chit for a node the payload places nowhere", () => {
+		renderSpotlight(withSlots([]));
+		expect(screen.queryAllByTestId(/conversation-chit-/)).toHaveLength(0);
 	});
 });

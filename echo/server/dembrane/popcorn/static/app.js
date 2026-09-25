@@ -66,7 +66,7 @@
         open,
         ...(screen ? { screen } : {}),
         // A synthetic demo's disclosure cannot be skipped from the shell's tabs.
-        locked: open && isSynthetic() && !introDone,
+        locked: open && disclosureGated(),
       },
       EMBED.parentOrigin || location.origin,
     );
@@ -1087,6 +1087,11 @@
   let introStep = 0;          // the screen on show, as in #intro/N
   let introReached = 0;       // the furthest screen this page load has shown
   const isSynthetic = () => state.session?.demo?.synthetic === true;
+  // The room reads a synthetic demo's disclosure through before its tabs open.
+  // The host's preview on the Present page is not the room: the server marks
+  // that page (only behind the session), and its tabs stay open.
+  const PREVIEW = EMBED?.preview === true;
+  const disclosureGated = () => isSynthetic() && !introDone && !PREVIEW;
   const hasOpening = () => !!(state.session?.intro?.enabled || state.session?.disclosure?.text || state.session?.data);
   const paragraphs = (text) => String(text || "").split("\n").map((p) => p.trim()).filter(Boolean);
   function applyIntroduction() {
@@ -1668,6 +1673,8 @@
   function renderActive() {
     // popcorn manages its own geometry: the stage ends exactly at the fold
     stage.classList.toggle("stage-flush", state.active === "popcorn");
+    // only the stakeholders slide puts a fold of its own in the stage
+    stage.classList.toggle("stage-fold", state.active === "stakeholders");
     const slide = SLIDES.find((s) => s.id === state.active);
     if (slide) slide.render();
   }
@@ -3144,6 +3151,21 @@
   // the precomputed ladder — never re-runs the solver
   let stakePaintHook = null;
 
+  // How much of the viewport the deck's own chrome takes above and below the
+  // stage. Measured rather than assumed: the topbar, the session notice and
+  // the colophon are each display:none in some mode (the Present shell hides
+  // all three), and an element that is not laid out measures zero. The stage
+  // is the rest, so a slide that wants the fold asks for
+  // calc(100dvh - var(--deck-chrome)).
+  function measureDeckChrome() {
+    let h = 0;
+    for (const sel of [".topbar", ".session-notice", ".colophon"]) {
+      const el = document.querySelector(sel);
+      if (el) h += el.offsetHeight || 0;
+    }
+    document.documentElement.style.setProperty("--deck-chrome", `${h}px`);
+  }
+
   function renderStakeholders() {
     const data = state.slides.get("stakeholders");
     if (!data) return;
@@ -3188,7 +3210,12 @@
         </span>
       </li>`).join("")}</ol>
     </section>` : "";
-    const listHtml = `${sliderHtml}<div class="stake-map${dense ? " dense" : ""}" id="stake-map"${dense ? ` style="height:${Math.min(680, 320 + items.length * 26)}px"` : ""}></div>${legendHtml}${bringHtml}`;
+    // In the tail of an open group's deck the map keeps its own height; on the
+    // stakeholders slide itself the fold sizes it (see .stake-fold), so the
+    // dense height is only ever an inline height in the tail.
+    const mapHtml = (sized) => `<div class="stake-map${dense ? " dense" : ""}" id="stake-map"${
+      sized && dense ? ` style="height:${Math.min(680, 320 + items.length * 26)}px"` : ""}></div>`;
+    const listHtml = `${sliderHtml}${mapHtml(true)}${legendHtml}${bringHtml}`;
 
 
     // Inbound edges count as well as outbound: relationships are authored
@@ -3268,9 +3295,20 @@
 
     const slide = (s) => relStage(s);
 
-    stage.classList.toggle("stage-flush", !!state.deck.stakeholders && items.length > 0);
-    if (state.deck.stakeholders && items.length) {
+    const deckOpen = !!state.deck.stakeholders && items.length > 0;
+    stage.classList.toggle("stage-flush", deckOpen);
+    // The map owns the fold: with no group open the stage runs flush and the
+    // fold below takes the whole visible stage, so "who you could involve
+    // next" begins under it and is reached by scrolling.
+    stage.classList.toggle("stage-fold", !deckOpen && items.length > 0);
+    if (deckOpen) {
       deckView({ tab: "stakeholders", items, slideHtml: slide, toolsHtml, listHtml, hint: tr("stake.map") });
+    } else if (items.length) {
+      measureDeckChrome();
+      stage.innerHTML = `<section class="stake-view" aria-label="${esc(labelOf("stakeholders"))}">
+          <div class="stake-fold">${toolsHtml}${sliderHtml}${mapHtml(false)}${legendHtml}</div>
+          ${bringHtml}
+        </section>`;
     } else {
       stage.innerHTML = `<section aria-label="${esc(labelOf("stakeholders"))}">${toolsHtml}${listHtml}</section>`;
     }
@@ -4850,9 +4888,9 @@
       || message.presentationId !== EMBED.presentationId
     ) return;
     if (message.command === "dismiss-opening") {
-      // Tab clicks leave a normal introduction; initial synthetic disclosure
-      // still requires its existing Continue flow before it may be dismissed.
-      if (!isSynthetic() || introDone) {
+      // Tab clicks leave a normal introduction; in the room, a synthetic
+      // disclosure still requires its Continue flow before it may be dismissed.
+      if (!disclosureGated()) {
         introDone = true;
         closeIntroduction();
       }

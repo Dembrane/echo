@@ -4,6 +4,7 @@ import { useIsMobile } from "../hooks/useIsMobile";
 import { useSidebarState } from "../hooks/useSidebarState";
 import { MobileSidebarAutoClose } from "./MobileSidebarAutoClose";
 import { ResizeHandle } from "./ResizeHandle";
+import { RAIL_WIDTH, RailProvider } from "./rail";
 
 interface SidebarShellProps {
 	children: ReactNode;
@@ -13,15 +14,16 @@ interface SidebarShellProps {
 
 // Flush-left full-height rail. Parchment background, no shadow — the
 // main content panel is the floating piece, not the sidebar.
-// Below the md breakpoint the open rail renders as a fixed drawer with backdrop.
+// Collapsed, it stays as a narrow rail of icons, on phones too.
+// Below the md breakpoint the open sidebar renders as a fixed drawer with backdrop.
 export const SidebarShell = ({
 	children,
 	header,
 	footer,
 }: SidebarShellProps) => {
-	const { width, setCollapsed } = useSidebarState();
+	const { width, collapsed, setCollapsed } = useSidebarState();
 	const isMobile = useIsMobile();
-	const mobileOpen = isMobile && width > 0;
+	const mobileOpen = isMobile && !collapsed;
 
 	return (
 		<>
@@ -47,26 +49,27 @@ export const SidebarShell = ({
 				style={{
 					backgroundColor: "#f6f4f1",
 					borderColor: "rgba(45, 45, 44, 0.08)",
-					borderRight: width === 0 ? "none" : undefined,
-					overflow: width === 0 ? "hidden" : undefined,
-					width,
+					width: collapsed ? RAIL_WIDTH : width,
 				}}
 			>
-				{header ?? null}
-				<div className="flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
-					<div className="flex min-h-full flex-col">{children}</div>
-				</div>
-				{footer ? (
-					<div
-						className="flex flex-col gap-0.5 border-t p-1.5"
-						style={{
-							borderColor: "rgba(45, 45, 44, 0.06)",
-							paddingBottom: "max(0.375rem, env(safe-area-inset-bottom, 0px))",
-						}}
-					>
-						{footer}
+				<RailProvider inRail={collapsed}>
+					{header ?? null}
+					<div className="flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+						<div className="flex min-h-full flex-col">{children}</div>
 					</div>
-				) : null}
+					{footer ? (
+						<div
+							className="flex flex-col gap-0.5 border-t p-1.5"
+							style={{
+								borderColor: "rgba(45, 45, 44, 0.06)",
+								paddingBottom:
+									"max(0.375rem, env(safe-area-inset-bottom, 0px))",
+							}}
+						>
+							{footer}
+						</div>
+					) : null}
+				</RailProvider>
 				<ResizeHandle />
 			</aside>
 			<MobileSidebarAutoClose />

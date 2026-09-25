@@ -24,16 +24,16 @@ const store = (value: unknown) =>
 	window.localStorage.setItem(MAP_SETTINGS_STORAGE_KEY, JSON.stringify(value));
 
 describe("map settings", () => {
-	it("starts from DDW's panels, neutral colouring and the deployment budgets", () => {
+	it("starts from DDW's panels, conversation colouring and the deployment budgets", () => {
 		expect(readMapSettings()).toEqual({
 			autoFactCheckClaims: false,
-			colorBy: "none",
+			colorBy: "conversation",
 			darkMode: false,
 			edgeLimit: null,
 			nodeLimit: null,
 			showClusters: true,
 			showExplore: true,
-			showLegend: false,
+			showLegend: true,
 			showRelationships: false,
 			showShowcase: false,
 			showSpotlight: true,
@@ -73,14 +73,14 @@ describe("map settings", () => {
 
 		store({ colorBy: "rainbow", showLegend: true, showTree: "yes" });
 		const settings = readMapSettings();
-		expect(settings.colorBy).toBe("none");
+		expect(settings.colorBy).toBe("conversation");
 		expect(settings.showLegend).toBe(true);
 		expect(settings.showTree).toBe(true);
 	});
 });
 
 describe("settings migration", () => {
-	it.each(["none", "valence", "factCheck"] as const)(
+	it.each(["valence", "factCheck"] as const)(
 		"keeps a version 1 colour mode of %s and every panel choice",
 		(colorBy) => {
 			store({
@@ -127,8 +127,28 @@ describe("settings migration", () => {
 		expect(settings).not.toHaveProperty("types");
 	});
 
-	it("migrates retired type colouring to neutral", () => {
+	it("moves a host who never picked a colour onto the conversations", () => {
+		// Neutral was the default before version 4, so a saved "none" is the
+		// old default rather than a choice. Retired type colouring resolved to
+		// neutral and travels the same way.
+		store({ colorBy: "none", version: 3 });
+		expect(readMapSettings().colorBy).toBe("conversation");
 		store({ colorBy: "type", version: 2 });
+		expect(readMapSettings().colorBy).toBe("conversation");
+	});
+
+	it("shows the legend to a host who never turned it on", () => {
+		// Off was the default before version 5, so a saved false is the old
+		// default rather than a choice. A host who turned it off since keeps
+		// the quiet map.
+		store({ showLegend: false, version: 4 });
+		expect(readMapSettings().showLegend).toBe(true);
+		store({ showLegend: false, version: MAP_SETTINGS_VERSION });
+		expect(readMapSettings().showLegend).toBe(false);
+	});
+
+	it("keeps neutral once a host has chosen it", () => {
+		store({ colorBy: "none", version: MAP_SETTINGS_VERSION });
 		expect(readMapSettings().colorBy).toBe("none");
 	});
 

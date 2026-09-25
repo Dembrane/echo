@@ -9,9 +9,12 @@ export const MAP_SETTINGS_STORAGE_KEY = "dembrane-map-settings";
  * Version 1 had panels, colour mode, auto fact-check and dark mode, without
  * a version field. Version 2 adds the Type colour mode, custom budgets, the
  * Relationships control and the saved type selection. Version 3 retires the
- * type selection and resolves Type colouring to neutral.
+ * type selection and resolves Type colouring to neutral. Version 4 colours by
+ * conversation by default, and moves a host who never chose another mode onto
+ * it. Version 5 shows the legend by default, now that the colours stand for
+ * conversations and need saying, and moves a host who never turned it on.
  */
-export const MAP_SETTINGS_VERSION = 3;
+export const MAP_SETTINGS_VERSION = 5;
 
 export type MapSettings = {
 	showExplore: boolean;
@@ -32,13 +35,13 @@ export type MapSettings = {
 
 export const DEFAULT_MAP_SETTINGS: MapSettings = {
 	autoFactCheckClaims: false,
-	colorBy: "none",
+	colorBy: "conversation",
 	darkMode: false,
 	edgeLimit: null,
 	nodeLimit: null,
 	showClusters: true,
 	showExplore: true,
-	showLegend: false,
+	showLegend: true,
 	showRelationships: false,
 	showShowcase: false,
 	showSpotlight: true,
@@ -71,13 +74,23 @@ export function migrateMapSettings(
 	stored: Record<string, unknown>,
 ): MapSettings {
 	const settings: MapSettings = { ...DEFAULT_MAP_SETTINGS };
+	const version =
+		typeof stored.version === "number" ? stored.version : MAP_SETTINGS_VERSION;
 	for (const key of BOOLEAN_KEYS) {
+		// Off was the old default, so a host who never touched the legend has
+		// it saved off. They meet it once; a host who turned it off since keeps
+		// it off.
+		if (key === "showLegend" && version < 5) continue;
 		if (typeof stored[key] === "boolean") settings[key] = stored[key];
 	}
 	if (isColorBy(stored.colorBy)) {
 		// Type colouring belonged to the mixed-object surface. Old saved values
 		// now resolve to the neutral argument map.
-		settings.colorBy = stored.colorBy === "type" ? "none" : stored.colorBy;
+		const saved = stored.colorBy === "type" ? "none" : stored.colorBy;
+		// Neutral was the old default, so a host who never picked a mode has it
+		// saved. They meet the conversation colours once; a host who did pick
+		// keeps what they picked.
+		settings.colorBy = version < 4 && saved === "none" ? "conversation" : saved;
 	}
 	if (isPositiveInteger(stored.nodeLimit))
 		settings.nodeLimit = stored.nodeLimit;

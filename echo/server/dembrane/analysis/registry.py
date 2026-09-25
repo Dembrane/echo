@@ -111,7 +111,9 @@ def output_fingerprint(manifest: Mapping[str, Any]) -> str:
 
 @dataclass(frozen=True)
 class PinnedOutput:
-    """A dependency's exact ready output, pinned before the consumer runs."""
+    """A dependency's exact ready output, pinned before the consumer runs.
+    Objects a host excluded when it was pinned are withdrawn: the consumer
+    never sees them."""
 
     name: str
     recipe_id: str
@@ -119,6 +121,7 @@ class PinnedOutput:
     scope_id: str
     run_id: str
     manifest: Mapping[str, Any]
+    withdrawn: tuple[str, ...] = ()
 
     @property
     def manifest_hash(self) -> str:
@@ -126,7 +129,12 @@ class PinnedOutput:
 
     @property
     def revision_ids(self) -> list[str]:
-        return [str(item["revisionId"]) for item in self.manifest.get("objects") or []]
+        withdrawn = set(self.withdrawn)
+        return [
+            str(item["revisionId"])
+            for item in self.manifest.get("objects") or []
+            if str(item["objectId"]) not in withdrawn
+        ]
 
     def as_json(self) -> dict[str, Any]:
         return {
@@ -137,6 +145,7 @@ class PinnedOutput:
             "manifestHash": self.manifest_hash,
             "outputFingerprint": output_fingerprint(self.manifest),
             "revisionIds": self.revision_ids,
+            **({"withdrawnObjectIds": sorted(self.withdrawn)} if self.withdrawn else {}),
         }
 
 

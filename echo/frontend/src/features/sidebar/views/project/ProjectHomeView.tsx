@@ -2,17 +2,16 @@ import { Trans } from "@lingui/react/macro";
 import {
 	AppWindowIcon,
 	BooksIcon,
-	BroadcastIcon,
+	ChartBarIcon,
 	ChatCircleDotsIcon,
 	ChatCircleTextIcon,
+	DeviceMobileIcon,
 	FileTextIcon,
 	GearIcon,
 	GraphIcon,
-	PaintBrushIcon,
 	PlayIcon,
 	PopcornIcon,
 	RobotIcon,
-	SparkleIcon,
 } from "@phosphor-icons/react";
 import { useLocation, useParams } from "react-router";
 import { useProjectChatsCountQuery } from "@/components/chat/hooks";
@@ -99,13 +98,13 @@ export const ProjectHomeView = () => {
 				<NavItem
 					to={`${base}/portal-editor`}
 					label={<Trans>Portal editor</Trans>}
-					icon={PaintBrushIcon}
+					icon={DeviceMobileIcon}
 				/>
 				{ENABLE_MONITOR && (
 					<NavItem
 						to={`${base}/monitor`}
 						label={<Trans>Monitor</Trans>}
-						icon={BroadcastIcon}
+						icon={ChartBarIcon}
 						badge={<Trans>Beta</Trans>}
 					/>
 				)}
@@ -114,6 +113,7 @@ export const ProjectHomeView = () => {
 						to={`${base}/present`}
 						label={<Trans>Present</Trans>}
 						icon={PlayIcon}
+						badge={<Trans>Beta</Trans>}
 					/>
 				)}
 			</div>
@@ -140,31 +140,25 @@ export const ProjectHomeView = () => {
 				/>
 			)}
 			<div className="mt-2 flex flex-col gap-0.5">
-				{ENABLE_PRESENT && (
-					<NavItem
-						to={`${base}/analysis`}
-						label={<Trans>Analysis</Trans>}
-						icon={SparkleIcon}
-					/>
-				)}
+				{/* Map takes Analysis's place in the sidebar; /analysis stays
+				    routed for existing links but is not listed. */}
+				<NavItem
+					to={`${base}/map`}
+					label={<Trans>Map</Trans>}
+					icon={GraphIcon}
+					badge={<Trans>Beta</Trans>}
+				/>
 				<NavItem
 					to={`${base}/report`}
 					label={<Trans>Report</Trans>}
 					icon={FileTextIcon}
 				/>
-				{!ENABLE_PRESENT && (
-					<NavItem
-						to={`${base}/map`}
-						label={<Trans>Map</Trans>}
-						icon={GraphIcon}
-						badge={<Trans>Beta</Trans>}
-					/>
-				)}
 				{ENABLE_WEBHOOKS && isWorkspaceAdmin && (
 					<NavItem
 						to={`${base}/integrations`}
 						label={<Trans>Automation</Trans>}
 						icon={RobotIcon}
+						badge={<Trans>Beta</Trans>}
 					/>
 				)}
 			</div>

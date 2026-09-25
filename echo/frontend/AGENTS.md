@@ -113,6 +113,7 @@ Rules:
 
 Chat mode accents are theme-independent (consistent identification across themes), defined in `src/components/chat/ChatModeSelector.tsx` `MODE_COLORS`:
 
+- Agentic: Spring Green `#1EFFA1` (the green the retired Overview mode had)
 - Overview: Spring Green `#1EFFA1`
 - Deep Dive: Cyan `#00FFFF`
 

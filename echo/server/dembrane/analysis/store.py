@@ -121,7 +121,7 @@ REVISION_UUIDS = ("id", "project_id", "object_id", "run_id", "parent_revision_id
 REVISION_PLAIN = (
     "revision_number", "type", "schema_version", "status", "origin", "payload", "attributes",
     "provenance", "content_hash", "hash_version", "embedding_refs", "actor_id", "reason",
-    "created_at", "published_at",
+    "change_kind", "created_at", "published_at",
 )  # fmt: skip
 RELATION_UUIDS = (
     "id", "project_id", "from_revision_id", "to_revision_id", "from_object_id", "to_object_id",
@@ -291,6 +291,7 @@ def _revision(row: dict[str, Any]) -> ObjectRevision:
         embedding_refs=row["embedding_refs"],
         actor_id=row["actor_id"],
         reason=row["reason"],
+        change_kind=row.get("change_kind"),
         created_at=row["created_at"],
         published_at=row["published_at"],
     )
@@ -1312,16 +1313,18 @@ class SqlAnalysisStore:
             "embedding_refs": _json(new.embedding_refs),
             "actor_id": new.actor_id,
             "reason": new.reason,
+            "change_kind": new.change_kind,
         }
 
     _INSERT_REVISION = f"""INSERT INTO analysis_object_revision
             (id, project_id, object_id, revision_number, type, schema_version, status, origin,
              payload, attributes, provenance, content_hash, hash_version, run_id,
-             parent_revision_id, embedding_refs, actor_id, reason, created_at, published_at)
+             parent_revision_id, embedding_refs, actor_id, reason, change_kind, created_at,
+             published_at)
         VALUES (%(id)s, %(project_id)s, %(object_id)s, %(number)s, %(type)s, %(schema_version)s,
                 %(status)s, %(origin)s, %(payload)s, %(attributes)s, %(provenance)s,
                 %(content_hash)s, 'c14n-v1', %(run_id)s, %(parent_revision_id)s,
-                %(embedding_refs)s, %(actor_id)s, %(reason)s, now(),
+                %(embedding_refs)s, %(actor_id)s, %(reason)s, %(change_kind)s, now(),
                 CASE WHEN %(published)s THEN now() END)
         RETURNING {REVISION_COLUMNS}"""
 

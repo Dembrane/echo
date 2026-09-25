@@ -3,8 +3,10 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
 	ATTRIBUTES,
 	type AttributeInputs,
+	conversationColor,
 	isFactCheckEligible,
 	legendEntries,
+	MARKER_COLORS,
 	OBJECT_TYPE_STYLES,
 	OBJECT_TYPES,
 	resolveAttribute,
@@ -221,5 +223,50 @@ describe("shared style resolver", () => {
 			valence: { label: "Not assessed" },
 		});
 		expect(getNodeStyleFromInputs({}, { colorBy: "none" }).pulse).toBe(false);
+	});
+});
+
+describe("colouring by conversation", () => {
+	it("gives a conversation the deck's own marker colour", () => {
+		const inputs = { conversationSlots: [2], objectType: "argument" as const };
+		const style = getNodeStyleFromInputs(inputs, { colorBy: "conversation" });
+		// `--m2` in the deck's stylesheet, pinned in both themes.
+		expect(style.fill).toBe("#FFC2FF");
+		expect(
+			getNodeStyleFromInputs(inputs, {
+				colorBy: "conversation",
+				darkMode: true,
+			}).fill,
+		).toBe("#FFC2FF");
+		expect(style.label).toBe("Conversation 3");
+		expect(style.blend).toEqual([]);
+	});
+
+	it("keeps generating colours past the six brand accents", () => {
+		expect(conversationColor(6)).toBe("hsl(105 95% 80%)");
+		expect(conversationColor(0)).toBe(MARKER_COLORS[0]);
+	});
+
+	it("blends a merge from its members' colours, weighted and in order", () => {
+		const style = getNodeStyleFromInputs(
+			{ conversationSlots: [1, 0, 1], objectType: "deduplicated_argument" },
+			{ colorBy: "conversation" },
+		);
+		expect(style.blend).toEqual([
+			MARKER_COLORS[0],
+			MARKER_COLORS[1],
+			MARKER_COLORS[1],
+		]);
+		// The flat fill stays the lowest slot, for anything that cannot blend.
+		expect(style.fill).toBe(MARKER_COLORS[0]);
+	});
+
+	it("says so where the payload names no conversation", () => {
+		const style = getNodeStyleFromInputs(
+			{ conversationSlots: [], objectType: "argument" },
+			{ colorBy: "conversation" },
+		);
+		expect(style.label).toBe("Source not recorded");
+		expect(style.blend).toEqual([]);
 	});
 });

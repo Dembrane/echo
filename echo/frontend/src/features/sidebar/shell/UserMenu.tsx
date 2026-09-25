@@ -24,6 +24,8 @@ import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvi
 import { CreateOrganisationModal } from "@/components/organisation/CreateOrganisationModal";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
+import { cn } from "@/lib/utils";
+import { RAIL_ITEM_CLASS, RailTip, useInRail } from "./rail";
 
 // Docs, Slack, and feedback intentionally live in HelpBlock (rendered
 // directly above this row in the sidebar footer), so this menu only
@@ -37,6 +39,7 @@ export const UserMenu = () => {
 	const navigate = useI18nNavigate();
 	const { runTransition } = useTransitionCurtain();
 	const [createOrgOpened, createOrgHandlers] = useDisclosure(false);
+	const inRail = useInRail();
 
 	if (!isAuthenticated || !user) return null;
 
@@ -64,32 +67,49 @@ export const UserMenu = () => {
 				offset={8}
 				keepMounted
 			>
-				<Menu.Target>
-					<UnstyledButton
-						className="flex h-[36px] w-full items-center gap-2 rounded-md px-2 transition-colors hover:bg-black/[0.04]"
-						style={{ color: "#2d2d2c" }}
-					>
-						<UserAvatar size={22} />
-						<Box className="min-w-0 flex-1 text-left">
-							<Text size="xs" lh={1.1} truncate>
-								{user.first_name ?? t`there`}
-							</Text>
-							<Text size="xs" c="dimmed" lh={1.1} truncate>
-								{user.email ?? ""}
-							</Text>
-						</Box>
-						{/* Visible affordance that the row opens a menu (settings +
-					    logout). The whole row is the menu target; the dots just
-					    signal it. */}
-						<DotsThree
-							size={18}
-							weight="bold"
-							className="shrink-0"
-							style={{ color: "rgba(45, 45, 44, 0.55)" }}
-							aria-hidden="true"
-						/>
-					</UnstyledButton>
-				</Menu.Target>
+				{inRail ? (
+					// The avatar alone; its name shows beside it, like every rail item.
+					<RailTip label={user.first_name ?? user.email ?? ""}>
+						<Menu.Target>
+							<UnstyledButton
+								className={cn(RAIL_ITEM_CLASS, "hover:bg-black/[0.04]")}
+								style={{ color: "#2d2d2c" }}
+							>
+								<UserAvatar size={24} />
+								<span className="sr-only">
+									{user.first_name ?? user.email ?? t`Account`}
+								</span>
+							</UnstyledButton>
+						</Menu.Target>
+					</RailTip>
+				) : (
+					<Menu.Target>
+						<UnstyledButton
+							className="flex h-[36px] w-full items-center gap-2 rounded-md px-2 transition-colors hover:bg-black/[0.04]"
+							style={{ color: "#2d2d2c" }}
+						>
+							<UserAvatar size={22} />
+							<Box className="min-w-0 flex-1 text-left">
+								<Text size="xs" lh={1.1} truncate>
+									{user.first_name ?? t`there`}
+								</Text>
+								<Text size="xs" c="dimmed" lh={1.1} truncate>
+									{user.email ?? ""}
+								</Text>
+							</Box>
+							{/* Visible affordance that the row opens a menu (settings +
+						    logout). The whole row is the menu target; the dots just
+						    signal it. */}
+							<DotsThree
+								size={18}
+								weight="bold"
+								className="shrink-0"
+								style={{ color: "rgba(45, 45, 44, 0.55)" }}
+								aria-hidden="true"
+							/>
+						</UnstyledButton>
+					</Menu.Target>
+				)}
 
 				<Menu.Dropdown className="py-2 [&_.mantine-Menu-item]:my-0.5">
 					{needsOnboarding && (
