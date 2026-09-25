@@ -41,6 +41,10 @@ export default {
         });
         return new Response(null, { status: 204 });
       }
+      if (request.method === "DELETE") {
+        await env.FILES.delete(key);
+        return new Response(null, { status: 204 });
+      }
       if (request.method === "GET") {
         const object = await env.FILES.get(key);
         if (object === null) return new Response("Not found.\n", { status: 404 });

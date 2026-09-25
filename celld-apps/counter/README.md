@@ -23,6 +23,7 @@ curl -X POST localhost:8787/count?name=a  # {"n":2}
 curl -X PUT --data hello localhost:8787/files/greeting
 curl localhost:8787/files/greeting        # hello
 curl localhost:8787/files                 # [{"key":"greeting","size":5}]
+curl -X DELETE localhost:8787/files/greeting
 ```
 
 The objects are visible in the minio console (http://localhost:9001, bucket

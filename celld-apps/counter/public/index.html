@@ -33,6 +33,7 @@
     <li><code>GET /files</code> lists stored files</li>
     <li><code>PUT /files/KEY</code> stores the request body as KEY</li>
     <li><code>GET /files/KEY</code> reads KEY back</li>
+    <li><code>DELETE /files/KEY</code> deletes KEY</li>
   </ul>
 
   <script>
@@ -50,7 +51,14 @@
         const a = document.createElement("a");
         a.href = "/files/" + encodeURIComponent(key);
         a.textContent = key;
-        li.append(a, ` (${size} bytes)`);
+        const remove = document.createElement("button");
+        remove.textContent = "×";
+        remove.title = "Delete " + key;
+        remove.addEventListener("click", async () => {
+          await fetch(a.href, { method: "DELETE" });
+          listFiles();
+        });
+        li.append(a, ` (${size} bytes) `, remove);
         return li;
       }));
     }
