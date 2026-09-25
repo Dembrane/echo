@@ -3,17 +3,17 @@
 #
 # This file holds team-wide defaults only. Anything specific to one person
 # (GCP project, instance name, preferred zone) has no default here and is
-# written to local.env by ./init.sh on first run. local.env is gitignored.
+# written to local.env by init on first run. local.env is gitignored.
 #
 # Precedence, highest first:
-#   1. An env var:            RD_MACHINE_TYPE=c4-standard-16 ./create.sh
-#   2. local.env              (written by ./init.sh, gitignored, per-person)
+#   1. An env var:            RD_MACHINE_TYPE=c4-standard-16 ./scripts/remote-dev.sh create
+#   2. local.env              (written by init, gitignored, per-person)
 #   3. The defaults below     (team-wide, committed)
 #
 # Nothing here is secret. Secrets live in the .env files that sync-env.sh
 # copies up, and those are never committed.
 
-# --- Per-person. No defaults on purpose. Set by ./init.sh. ---------------
+# --- Per-person. No defaults on purpose. Set by init. --------------------
 
 # The GCP project that owns the dev VM. Everyone runs their own sandbox
 # project rather than sharing one, so there is deliberately no default: a
@@ -22,13 +22,13 @@
 
 # Zone drives SSH round-trip time, which is the single biggest factor in how
 # a remote editor feels. Pick the zone closest to you, not the one closest to
-# production. ./init.sh suggests one based on your machine's timezone.
+# production. init suggests one based on your machine's timezone.
 : "${RD_ZONE:=}"
 
-# --- Team-wide defaults. ./init.sh still confirms these interactively. ---
+# --- Team-wide defaults. init still confirms these interactively. --------
 
 # The dembrane GCP organization. Contributors outside the org override this
-# during init; it is only used to filter the project list ./init.sh offers.
+# during init; it is only used to filter the project list init offers.
 : "${RD_ORG_DOMAIN:=dembrane.com}"
 : "${RD_ORG_ID:=535152468605}"
 
@@ -42,7 +42,7 @@
 RD_USER_SLUG="$(whoami | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed 's/^-*//; s/-*$//')"
 : "${RD_INSTANCE_NAME:=dembrane-devbox-${RD_USER_SLUG}}"
 
-# Start small and grow. Machine type is not baked into the disk, so ./resize.sh
+# Start small and grow. Machine type is not baked into the disk, so resize
 # can move you up a size in about a minute (stop, change, start) without
 # rebuilding anything. Paying for headroom you have not proven you need is the
 # more expensive mistake.
@@ -52,8 +52,8 @@ RD_USER_SLUG="$(whoami | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed '
 # scheduler, and both vite dev servers) alongside a directus build, expect it
 # to feel tight. Upsize when it actually hurts:
 #
-#   ./resize.sh e2-standard-8    # 8 vCPU / 32GB
-#   ./resize.sh e2-standard-16   # 16 vCPU / 64GB
+#   ./scripts/remote-dev.sh resize e2-standard-8   # 8 vCPU / 32GB
+#   ./scripts/remote-dev.sh resize e2-standard-16  # 16 vCPU / 64GB
 : "${RD_MACHINE_TYPE:=e2-standard-4}"
 
 # Disks can grow online but can never shrink, so starting small is the only
@@ -65,7 +65,7 @@ RD_USER_SLUG="$(whoami | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed '
 # for the five compose services, and ~2GB of pnpm and uv caches. 50GB leaves
 # roughly 2x headroom for docker build cache growing over months.
 #
-# Grow it with: ./resize.sh --disk 100GB
+# Grow it with: ./scripts/remote-dev.sh resize --disk 100GB
 : "${RD_DISK_SIZE:=50GB}"
 : "${RD_DISK_TYPE:=pd-balanced}"
 

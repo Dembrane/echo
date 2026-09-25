@@ -7,9 +7,9 @@
 #
 # Run this again any time you change a local .env.
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 require_gcloud
 require_running

@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# First-run setup. Asks which GCP org, project and zone to use, then writes
-# them to local.env (gitignored) so the other scripts can run unattended.
+# First-run setup: asks for the GCP project, zone and VM size; writes local.env.
+#
+# Answers go to local.env (gitignored) so the other commands can run unattended.
 #
 # Re-running is safe: current values are offered as defaults, so you can press
 # enter through the parts you do not want to change.
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 LOCAL_ENV="$RD_SCRIPT_DIR/local.env"
 
@@ -133,7 +134,7 @@ RD_ZONE="$ZONE"
 log_step "Machine size"
 cat <<'EOF'
 Starting small is the cheap default. Machine type is not baked into the disk,
-so ./resize.sh moves you up a size in about a minute without losing anything.
+so ./scripts/remote-dev.sh resize moves you up a size in about a minute without losing anything.
 
                    vCPU  RAM    approx/mo    notes
   1) e2-standard-2    2    8GB      ~$50      containers only, tight
@@ -143,7 +144,7 @@ so ./resize.sh moves you up a size in about a minute without losing anything.
   5) other                                    type any GCP machine type
 
 Prices are list price for a VM left running 24/7, and vary by region. Stopping
-the VM when you are not using it (./stop.sh) is worth more than picking a
+the VM when you are not using it (./scripts/remote-dev.sh stop) is worth more than picking a
 smaller size: an 8-hour workday is roughly a quarter of these numbers.
 
 Sizing for this stack: 5 containers (postgres, valkey, directus, agent, the
@@ -164,7 +165,7 @@ EOF
 # "Current" means what GCP reports, not what local.env last recorded. A resize
 # done from the console, or one that stopped before writing local.env, leaves
 # that file stale, and a stale default here silently shrinks the VM the next
-# time anyone runs ./create.sh.
+# time anyone runs ./scripts/remote-dev.sh create.
 LIVE_MACHINE="$( { gc_zone instances describe "$RD_INSTANCE_NAME" \
     --format='value(machineType)' 2>/dev/null || true; } | sed 's|.*/||' )"
 if [ -n "$LIVE_MACHINE" ] && [ "$LIVE_MACHINE" != "$RD_MACHINE_TYPE" ]; then
@@ -209,13 +210,13 @@ if [ -n "$SPEC" ]; then
 else
     log_warn "Could not confirm '$MACHINE' is available in $ZONE."
     log_warn "See what is: gcloud compute machine-types list --zones=$ZONE --project=$PROJECT"
-    confirm "Use it anyway?" "n" || die "Stopped. Re-run ./init.sh to pick another size."
+    confirm "Use it anyway?" "n" || die "Stopped. Re-run ./scripts/remote-dev.sh init to pick another size."
 fi
 
 log_step "Instance name"
 INSTANCE="$(ask "Instance name" "$RD_INSTANCE_NAME")"
 
-# Not prompted for: disks only ever grow, and ./resize.sh --disk is where that
+# Not prompted for: disks only ever grow, and `resize --disk` is where that
 # happens. This just carries the size forward, preferring the real disk over
 # local.env for the same reason the machine type does, so writing local.env
 # cannot quietly undo a resize.
@@ -243,11 +244,12 @@ COMPOSE_FILES="${COMPOSE_FILES# }"
 
 log_step "Writing local.env"
 cat > "$LOCAL_ENV" <<EOF
-# Written by ./init.sh on $(date -u '+%Y-%m-%d %H:%M UTC'). Gitignored.
+# Written by ./scripts/remote-dev.sh init on $(date -u '+%Y-%m-%d %H:%M UTC'). Gitignored.
 #
-# Per-person settings for the remote dev VM. Edit freely, or re-run ./init.sh
-# to regenerate. Team-wide defaults live in config.sh; anything you set here
-# overrides them, and an explicit env var overrides both.
+# Per-person settings for the remote dev VM. Edit freely, or re-run
+# ./scripts/remote-dev.sh init to regenerate. Team-wide defaults live in
+# config.sh; anything you set here overrides them, and an explicit env var
+# overrides both.
 
 RD_PROJECT="$PROJECT"
 RD_ZONE="$ZONE"
@@ -257,7 +259,8 @@ RD_INSTANCE_NAME="$INSTANCE"
 RD_ORG_DOMAIN="$ORG_DOMAIN"
 RD_ORG_ID="$ORG_ID"
 
-# Add docker-compose-s3.yml to run minio, then ./up.sh --skip-setup.
+# Add docker-compose-s3.yml to run minio, then run:
+#   ./scripts/remote-dev.sh up --skip-setup
 RD_COMPOSE_FILES="$COMPOSE_FILES"
 EOF
 
@@ -267,10 +270,10 @@ cat "$LOCAL_ENV" | grep -v '^#' | grep -v '^$' | sed 's/^/  /'
 
 log_step "Next"
 cat <<EOF
-  ./create.sh      create the VM, install docker, clone the repo,
-                   and add the SSH host entries Zed connects through
-  ./up.sh          bring the stack up and install dependencies
+  ./scripts/remote-dev.sh create  create the VM, install docker, clone the repo,
+                                 and add the SSH host entries Zed connects through
+  ./scripts/remote-dev.sh up      bring the stack up and install dependencies
 
 Or run both at once:
-  ./create.sh && ./up.sh
+  ./scripts/remote-dev.sh create && ./scripts/remote-dev.sh up
 EOF

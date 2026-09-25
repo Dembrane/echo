@@ -3,12 +3,12 @@
 #
 # Everything on the VM goes with it: uncommitted work, the postgres data
 # directory, directus uploads, and all docker images. Push anything you care
-# about first. If you only want to stop paying for compute, use ./stop.sh
+# about first. If you only want to stop paying for compute, use `stop`
 # instead, which keeps the disk.
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 require_gcloud
 
@@ -34,4 +34,4 @@ log_step "Deleting"
 gc_zone instances delete "$RD_INSTANCE_NAME" --quiet --delete-disks=all
 log_info "Deleted."
 
-log_info "Remove the stale SSH host entries with: ./ssh-config.sh --remove"
+log_info "Remove the stale SSH host entries with: ./scripts/remote-dev.sh ssh-config --remove"

@@ -6,9 +6,9 @@
 # everything: the repo, docker images, node_modules, the postgres data
 # directory, and any uncommitted work.
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 require_gcloud
 require_instance
@@ -30,4 +30,4 @@ vm_compose_project "stop" 2>/dev/null || log_warn "Could not stop containers cle
 log_step "Stopping '$RD_INSTANCE_NAME'"
 gc_zone instances stop "$RD_INSTANCE_NAME" --quiet
 
-log_info "Stopped. Disk is retained; restart with ./start.sh"
+log_info "Stopped. Disk is retained; restart with ./scripts/remote-dev.sh start"

@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# Opens a shell.
+# Opens a shell in the devcontainer, or on the VM with --vm.
 #
-#   ./ssh.sh               shell inside the devcontainer, in /workspaces/echo
-#   ./ssh.sh --vm          shell on the VM itself (docker, logs, disk)
-#   ./ssh.sh --vm <command...>  run a command on the VM and exit
-#   ./ssh.sh --vm --flag...     extra flags go to gcloud compute ssh
-#   ./ssh.sh <command...>  run a command in the devcontainer and exit
+#   ./scripts/remote-dev.sh ssh                    shell inside the devcontainer, in /workspaces/echo
+#   ./scripts/remote-dev.sh ssh --vm               shell on the VM itself (docker, logs, disk)
+#   ./scripts/remote-dev.sh ssh --vm <command...>  run a command on the VM and exit
+#   ./scripts/remote-dev.sh ssh --vm --flag...     extra flags go to gcloud compute ssh
+#   ./scripts/remote-dev.sh ssh <command...>       run a command in the devcontainer and exit
 #
 # The devcontainer shell is a login shell, which matters: fnm, node, pnpm and
 # uv are put on PATH by ~/.bashrc, so a non-login shell cannot find them.
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 require_gcloud
 require_running

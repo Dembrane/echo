@@ -15,13 +15,13 @@
 # a quick fix, but the VM's HEAD may sit on a different commit than yours, so
 # prefer a branch push for anything you want to keep.
 #
-#   ./sync-code.sh                 copy every tracked file
-#   ./sync-code.sh --dry-run       list what would be copied, change nothing
-#   ./sync-code.sh echo/frontend   copy only what is tracked under this path
+#   ./scripts/remote-dev.sh sync-code                copy every tracked file
+#   ./scripts/remote-dev.sh sync-code --dry-run      list what would be copied, change nothing
+#   ./scripts/remote-dev.sh sync-code echo/frontend  copy only what is tracked under this path
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 require_gcloud
 require_running
@@ -46,16 +46,16 @@ done
 command -v rsync >/dev/null 2>&1 || die "rsync not found. Install it: brew install rsync"
 
 # rsync goes over the ssh alias rather than `gcloud compute ssh`, which has no
-# way to act as a plain transport. ssh-config.sh writes the alias, and ./create.sh
-# and ./start.sh refresh it whenever the VM's ephemeral IP changes.
+# way to act as a plain transport. ssh-config.sh writes the alias, and create
+# and start refresh it whenever the VM's ephemeral IP changes.
 grep -qE "^Host .*\b$RD_SSH_HOST\b" "$HOME/.ssh/config" 2>/dev/null \
-    || die "No '$RD_SSH_HOST' entry in ~/.ssh/config. Write one with: ./ssh-config.sh"
+    || die "No '$RD_SSH_HOST' entry in ~/.ssh/config. Write one with: ./scripts/remote-dev.sh ssh-config"
 # A VM started from the console skips that refresh, and rsync would then time
 # out dialing the old IP.
 ALIAS_IP="$(ssh -G "$RD_SSH_HOST" 2>/dev/null | awk '$1 == "hostname" { print $2 }')"
 VM_IP="$(instance_ip)"
 [ "$ALIAS_IP" = "$VM_IP" ] \
-    || die "'$RD_SSH_HOST' in ~/.ssh/config points at $ALIAS_IP, but the VM is at $VM_IP. Refresh it with: ./ssh-config.sh"
+    || die "'$RD_SSH_HOST' in ~/.ssh/config points at $ALIAS_IP, but the VM is at $VM_IP. Refresh it with: ./scripts/remote-dev.sh ssh-config"
 
 # The VM's own uncommitted edits are about to be overwritten wherever they
 # overlap with yours, and unlike a git merge nothing will say so afterwards.
