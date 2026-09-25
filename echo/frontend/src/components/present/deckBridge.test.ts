@@ -174,3 +174,51 @@ describe("vendored deck live ownership", () => {
 		expect(styles).not.toContain("body:not(.present-shell) .colophon");
 	});
 });
+
+describe("vendored deck demo disclosure", () => {
+	const gate = source.slice(
+		source.indexOf("  const isSynthetic = "),
+		source.indexOf("  const hasOpening = "),
+	);
+
+	function deck(preview: boolean) {
+		let receive: (event: unknown) => void = () => {};
+		const parent = {};
+		const closeIntroduction = vi.fn();
+		const context = {
+			addEventListener: (_name: string, callback: typeof receive) => {
+				receive = callback;
+			},
+			closeIntroduction,
+			EMBED: {
+				parentOrigin: "https://host.example",
+				presentationId: "room",
+				...(preview ? { preview: true } : {}),
+			},
+			introDone: false,
+			location: { origin: "https://api.example" },
+			parent,
+			state: { session: { demo: { synthetic: true } } },
+		};
+		runInNewContext(`${gate}\n${receiver}`, context);
+		receive({
+			data: {
+				command: "dismiss-opening",
+				presentationId: "room",
+				source: "dembrane-present-shell",
+				version: 1,
+			},
+			origin: "https://host.example",
+			source: parent,
+		});
+		return { closeIntroduction };
+	}
+
+	it("keeps the room on a synthetic demo's disclosure when a tab is clicked", () => {
+		expect(deck(false).closeIntroduction).not.toHaveBeenCalled();
+	});
+
+	it("lets the host's preview leave the disclosure for a tab", () => {
+		expect(deck(true).closeIntroduction).toHaveBeenCalledOnce();
+	});
+});

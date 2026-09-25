@@ -340,3 +340,206 @@ describe("buildMapGraph with a legacy v1 result", () => {
 		expect(graph.conversationCount).toBe(result.conversations.length);
 	});
 });
+
+describe("conversations behind a node", () => {
+	const evidence = (conversationId: string, createdAt: string) => ({
+		conversationId,
+		createdAt,
+		quotes: [`Something said in ${conversationId}`],
+	});
+
+	it("gives every conversation a slot, oldest first, as popcorn does", () => {
+		const graph = buildMapGraph(
+			payload({
+				nodes: [
+					node({
+						detail: { evidence: [evidence("c-late", "2026-09-02T10:00:00Z")] },
+						revisionId: "rev-late",
+					}),
+					node({
+						detail: { evidence: [evidence("c-first", "2026-09-01T09:00:00Z")] },
+						revisionId: "rev-first",
+					}),
+				],
+			}),
+		);
+		const slotsOf = (id: string) =>
+			graph.allNodes.find((item) => item.id === id)?.metadata.conversationSlots;
+		expect(slotsOf("rev-first")).toEqual([0]);
+		expect(slotsOf("rev-late")).toEqual([1]);
+		expect(graph.conversationSlotCount).toBe(2);
+	});
+
+	it("counts a merge once per member, so a blend can be weighted", () => {
+		const graph = buildMapGraph(
+			payload({
+				nodes: [
+					node({
+						detail: {
+							consolidation: {
+								memberCount: 3,
+								members: [
+									{
+										evidence: [evidence("c-b", "2026-09-02T10:00:00Z")],
+										objectId: "m1",
+										revisionId: "mr1",
+										statement: "One",
+									},
+									{
+										evidence: [evidence("c-a", "2026-09-01T10:00:00Z")],
+										objectId: "m2",
+										revisionId: "mr2",
+										statement: "Two",
+									},
+									{
+										evidence: [evidence("c-b", "2026-09-02T10:00:00Z")],
+										objectId: "m3",
+										revisionId: "mr3",
+										statement: "Three",
+									},
+								],
+							},
+							evidence: [
+								evidence("c-a", "2026-09-01T10:00:00Z"),
+								evidence("c-b", "2026-09-02T10:00:00Z"),
+							],
+							statement: "Combined",
+						},
+						revisionId: "rev-merged",
+						type: "deduplicated_argument",
+					}),
+				],
+			}),
+		);
+		expect(graph.allNodes[0].metadata.conversationSlots).toEqual([0, 1, 1]);
+	});
+
+	it("takes the slots the room's projection assigns, ids and all withheld", () => {
+		const graph = buildMapGraph(
+			payload({
+				nodes: [
+					node({
+						conversations: [0, 2, 2],
+						detail: {},
+						revisionId: "rev-room",
+					}),
+				],
+			}),
+		);
+		expect(graph.allNodes[0].metadata.conversationSlots).toEqual([0, 2, 2]);
+		expect(graph.conversationSlotCount).toBe(3);
+	});
+});
+
+describe("the evidence on the room's map", () => {
+	const roomNode = node({
+		conversations: [0, 1],
+		detail: {
+			consolidation: {
+				memberCount: 2,
+				members: [
+					{
+						evidence: [{ conversation: 0, quotes: ["The tram is late."] }],
+						statement: "The tram is late every morning",
+					},
+					{
+						evidence: [{ conversation: 1, quotes: ["They never keep time."] }],
+						statement: "Trams never keep time",
+					},
+				],
+			},
+			evidence: [
+				{ conversation: 0, quotes: ["The tram is late."] },
+				{ conversation: 1, quotes: ["They never keep time."] },
+			],
+			statement: "Trams run late",
+		},
+		revisionId: "rev-room",
+		type: "deduplicated_argument",
+	});
+
+	it("numbers the conversations where the payload gives no names", () => {
+		const graph = buildMapGraph(payload({ nodes: [roomNode] }));
+		expect(graph.evidenceById.get("rev-room")).toEqual([
+			{
+				conversationId: "slot:0",
+				label: "Conversation 1",
+				quotes: ["The tram is late."],
+				slot: 0,
+			},
+			{
+				conversationId: "slot:1",
+				label: "Conversation 2",
+				quotes: ["They never keep time."],
+				slot: 1,
+			},
+		]);
+		expect(graph.conversationNames.size).toBe(0);
+	});
+
+	it("names them where the presentation put the names in the payload", () => {
+		const graph = buildMapGraph(
+			payload({
+				conversationNames: { "0": "Ada", "1": "Ben" },
+				nodes: [roomNode],
+			}),
+		);
+		expect(
+			graph.evidenceById.get("rev-room")?.map((group) => group.label),
+		).toEqual(["Ada", "Ben"]);
+		expect(graph.conversationNames.get(1)).toBe("Ben");
+	});
+
+	it("reads a merge whose members carry a statement and no identity", () => {
+		const graph = buildMapGraph(payload({ nodes: [roomNode] }));
+		const detail = graph.objectsById.get("rev-room")?.detail;
+		expect(detail?.type).toBe("deduplicated_argument");
+		const consolidation =
+			detail?.type === "deduplicated_argument"
+				? detail.consolidation
+				: undefined;
+		expect(consolidation?.memberCount).toBe(2);
+		expect(consolidation?.members.map((member) => member.statement)).toEqual([
+			"The tram is late every morning",
+			"Trams never keep time",
+		]);
+		expect(consolidation?.members[1].evidence).toEqual([
+			{
+				conversationId: "slot:1",
+				label: "Conversation 2",
+				quotes: ["They never keep time."],
+				slot: 1,
+			},
+		]);
+		expect(graph.allNodes[0].metadata.consolidation).toEqual({
+			memberCount: 2,
+		});
+	});
+
+	it("refuses a member that is half identified, which is malformed", () => {
+		const graph = buildMapGraph(
+			payload({
+				nodes: [
+					node({
+						detail: {
+							consolidation: {
+								memberCount: 2,
+								members: [
+									{ evidence: [], objectId: "m1", statement: "One" },
+									{ evidence: [], statement: "Two" },
+								],
+							},
+							statement: "Combined",
+						},
+						revisionId: "rev-broken",
+						type: "deduplicated_argument",
+					}),
+				],
+			}),
+		);
+		const detail = graph.objectsById.get("rev-broken")?.detail;
+		expect(
+			detail?.type === "deduplicated_argument" ? detail.consolidation : "gone",
+		).toBeUndefined();
+	});
+});

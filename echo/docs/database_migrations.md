@@ -102,6 +102,22 @@ uv run python -m dembrane.analysis.popcorn_import
       to the executor from the start, so import an existing session before the
       tick begins publishing it.
 
+7. Host feedback on a finding (`analysis_feedback`). One row per host per
+   finding: a thumb up or down on the analysis's quality, the reasons ticked,
+   an optional note and the revision the host was reading. It is feedback for
+   dembrane and the team, not an edit: nothing the room sees depends on it, no
+   revision is written and it is in no audience payload. The collection, its
+   fields and its three foreign keys come from the snapshot push in step 2; the
+   unique key `(project_id, object_id, actor_id)`, the CHECK constraints on the
+   rating, the tags array and the note length, and the same-project guard
+   trigger come from `add_analysis_constraints.sql` in step 6, which now also
+   refuses to run before this collection exists. Additive: nothing else reads
+   or writes the table, and the API deploys in either order.
+
+   Clearing a rating deletes the row. A retracted opinion is not evidence of
+   anything, so there is no `cleared_at` to filter for and no note kept that
+   the host asked to take back.
+
 The script is idempotent, runs in one transaction and stops on the first error;
 it refuses to run before the push. Its indexes never use Directus's
 `{table}_{field}_index` names and none is single-column, so a pull still writes

@@ -44,6 +44,13 @@ export interface NodeStyle {
 	pulse: boolean;
 	/** The state the fill stands for, such as "Not assessed". */
 	label: string;
+	/**
+	 * Two or more colours the node is drawn from, in blend order. A merge from
+	 * several conversations is one node with several sources, so the renderers
+	 * paint it as a gradient rather than picking a winner. Empty means the flat
+	 * `fill` says it all.
+	 */
+	blend: string[];
 }
 
 export interface NodeStyleOptions {
@@ -66,6 +73,7 @@ export const getNodeStyleFromInputs = (
 	const { colorBy, darkMode = false } = options;
 	const value = resolveAttribute(attributeFor(colorBy), inputs);
 	return {
+		blend: value.blend.map((color) => resolveMapColor(color, darkMode)),
 		fill: resolveMapColor(value.color, darkMode),
 		filter: darkMode ? "none" : LIGHT_SHADOW,
 		label: value.label,

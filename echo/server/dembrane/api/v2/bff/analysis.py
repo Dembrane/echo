@@ -14,13 +14,17 @@ from __future__ import annotations
 import uuid
 import logging
 from typing import Any, Literal
+from datetime import datetime, timezone
+from dataclasses import replace, dataclass
 
 from fastapi import Query, Depends, APIRouter, HTTPException, status
 from pydantic import Field, BaseModel
+from psycopg.types.json import Json
 
-from dembrane.analysis import store as analysis_store
+from dembrane.analysis import store as analysis_store, types
 from dembrane.analysis.store import SqlAnalysisStore
 from dembrane.api.rate_limit import RedisUserRateLimiter
+from dembrane.directus_async import async_directus
 from dembrane.map.fact_check import ASSESSMENT_RECIPE_ID
 from dembrane.analysis.executor import (
     RunRequest,
@@ -31,6 +35,7 @@ from dembrane.analysis.executor import (
 )
 from dembrane.analysis.map_view import (
     MAP_TYPES,
+    ARGUMENT_TYPES,
     MapViewReads,
     SqlMapViewReads,
     UnknownResultScope,
@@ -46,14 +51,16 @@ from dembrane.api.feature_flags import require_present_enabled
 from dembrane.analysis.contracts import (
     Run,
     Step,
+    Origin,
     AnalysisStore,
     ObjectRevision,
+    RevisionStatus,
     RevisionConflict,
     AnalysisStoreError,
     ReferenceViolation,
     AnalysisValidationError,
 )
-from dembrane.analysis.revisions import RevisionService
+from dembrane.analysis.revisions import WORDING_KINDS, RevisionService
 from dembrane.api.v2.bff._access import ResourceAccess, resolve_project_access
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
@@ -70,7 +77,19 @@ INTERNAL_RECIPES = frozenset({ASSESSMENT_RECIPE_ID})
 # Client idempotency keys live apart from the keys the platform makes itself.
 CLIENT_KEY_PREFIX = "client:"
 MAX_PAGE = 200
-EDITABLE_TYPES = frozenset({"argument", "popcorn", "stakeholder", "tension"})
+EDITABLE_TYPES = frozenset(
+    {"argument", "deduplicated_argument", "popcorn", "stakeholder", "tension"}
+)
+# The words of a finding, and nothing else. Evidence, quotes, consolidation and
+# the rest of a payload are what the analysis found; a host rewords a finding,
+# never its grounds. Enforced here for every client, never by a form alone.
+EDITABLE_FIELDS: dict[str, frozenset[str]] = {
+    "argument": frozenset({"statement"}),
+    "deduplicated_argument": frozenset({"statement"}),
+    "popcorn": frozenset({"phrase"}),
+    "stakeholder": frozenset({"name", "role", "stake"}),
+    "tension": frozenset({"poleA", "poleB", "knot", "toResolve"}),
+}
 
 
 def get_store() -> AnalysisStore:
@@ -187,6 +206,10 @@ def revision_doc(revision: ObjectRevision) -> dict[str, Any]:
         "revisionNumber": revision.revision_number,
         "status": str(revision.status),
         "reason": revision.reason,
+        # Null on generated revisions and on everything written before the
+        # audit trail asked: the history reads that as "not recorded".
+        "changeKind": revision.change_kind,
+        "actorId": revision.actor_id,
         "publishedAt": _iso(revision.published_at),
         "membershipExcluded": bool(
             revision.provenance.extra.get("membershipExcluded")
@@ -219,20 +242,27 @@ class RunCreate(BaseModel):
 
 class RevisionEdit(BaseModel):
     expected_revision_id: str
-    payload: dict[str, Any]
+    # A whole payload with the reworded field in it, or a patch of allowlisted
+    # fields applied onto the revision the host was reading. Either way only
+    # allowlisted fields may end up different.
+    payload: dict[str, Any] | None = None
+    patch: dict[str, Any] | None = None
     reason: str | None = Field(default=None, max_length=1000)
+    change_kind: str | None = Field(default=None, max_length=16)
 
 
 class RevisionRollback(BaseModel):
     expected_revision_id: str
     to_revision_id: str
     reason: str | None = Field(default=None, max_length=1000)
+    change_kind: str | None = Field(default=None, max_length=16)
 
 
 class MembershipDecision(BaseModel):
     expected_revision_id: str
     excluded: bool
     reason: str | None = Field(default=None, max_length=1000)
+    change_kind: str | None = Field(default=None, max_length=16)
 
 
 @router.post("/projects/{project_id}/runs", status_code=status.HTTP_202_ACCEPTED)
@@ -372,6 +402,241 @@ async def cancel_analysis_run(run_id: str, auth: DependencyDirectusSession) -> d
     return {"run": run_doc(cancelled or run)}
 
 
+# ── what needs the host's eye ───────────────────────────────────────────
+
+# One phrase per risen row, in the order the spec names them: what is new,
+# then what rests on thin evidence, then a fact-check that disagrees, then a
+# rewording by someone else.
+ATTENTION_ORDER = ("new", "one_conversation", "one_quote", "fact_check", "reworded")
+VERDICTS_THAT_DISAGREE = ("false", "contested")
+
+
+def _attention_rank(phrase: str | None) -> int:
+    """Risen rows first, in the order of their phrases; everything else after,
+    in the order it already had."""
+    return ATTENTION_ORDER.index(phrase) if phrase in ATTENTION_ORDER else len(ATTENTION_ORDER)
+
+
+@dataclass(frozen=True)
+class AuthoredMark:
+    """What one object's history says about hands on it: when it first
+    appeared, and the last time a host reworded it."""
+
+    first_at: datetime | None = None
+    last_wording_at: datetime | None = None
+    last_wording_by: str | None = None
+    wording_count: int = 0
+
+    @property
+    def edited(self) -> bool:
+        return self.wording_count > 0
+
+
+def _utc(value: Any) -> datetime | None:
+    if not isinstance(value, datetime):
+        return None
+    return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+
+def _is_wording(revision: ObjectRevision) -> bool:
+    """An authored revision that changed the words.
+
+    A kind says so outright. A revision from before the audit trail says so by
+    what it is not: a membership decision records `membershipExcluded`, a
+    rollback records `rollbackOf`, and an edit records neither. A legacy edit
+    of an already withdrawn finding carries the withdrawal forward and is the
+    one case this reads as no edit; nothing written from now on is ambiguous.
+    """
+    if revision.status != RevisionStatus.PUBLISHED or revision.provenance.origin != Origin.AUTHORED:
+        return False
+    if revision.change_kind is not None:
+        return revision.change_kind in WORDING_KINDS
+    extra = revision.provenance.extra or {}
+    return bool(extra.get("authoredFrom")) and "rollbackOf" not in extra and "membershipExcluded" not in extra
+
+
+# The same rule in SQL, over a `json` provenance column.
+_WORDING_SQL = """(origin = 'authored' AND (
+        change_kind IN ('typo', 'clarity', 'meaning')
+        OR (change_kind IS NULL
+            AND provenance -> 'extra' ->> 'authoredFrom' IS NOT NULL
+            AND provenance -> 'extra' ->> 'rollbackOf' IS NULL
+            AND provenance -> 'extra' ->> 'membershipExcluded' IS NULL)))"""
+
+
+async def _authored_marks(
+    store: AnalysisStore, project_id: str, object_ids: list[str]
+) -> dict[str, AuthoredMark]:
+    """Per object: when it appeared and who last reworded it.
+
+    One read for the whole list, because the attention sort runs before
+    pagination. The in-memory branch keeps the BFF unit-testable; production
+    groups the revision rows in one statement. Like `_project_runs`, this stays
+    a local read adapter until another service needs it.
+    """
+    wanted = set(object_ids)
+    if not wanted:
+        return {}
+    in_memory = getattr(store, "revisions", None)
+    if isinstance(in_memory, dict):
+        marks: dict[str, AuthoredMark] = {}
+        for revision in in_memory.values():
+            if revision.project_id != project_id or revision.object_id not in wanted:
+                continue
+            if revision.status != RevisionStatus.PUBLISHED:
+                continue
+            mark = marks.get(revision.object_id, AuthoredMark())
+            at = _utc(revision.created_at)
+            first = mark.first_at if mark.first_at and at and mark.first_at <= at else at or mark.first_at
+            if not _is_wording(revision):
+                marks[revision.object_id] = replace(mark, first_at=first)
+                continue
+            newer = mark.last_wording_at is None or (at is not None and at >= mark.last_wording_at)
+            marks[revision.object_id] = AuthoredMark(
+                first_at=first,
+                last_wording_at=at if newer else mark.last_wording_at,
+                last_wording_by=revision.actor_id if newer else mark.last_wording_by,
+                wording_count=mark.wording_count + 1,
+            )
+        return marks
+    if not isinstance(store, SqlAnalysisStore):
+        raise AnalysisStoreError("object history is unavailable")
+    async with store._cursor() as cursor:  # noqa: SLF001 - local BFF read adapter
+        await cursor.execute(
+            f"""SELECT object_id::text AS object_id,
+                       MIN(created_at) AS first_at,
+                       MAX(created_at) FILTER (WHERE {_WORDING_SQL}) AS last_wording_at,
+                       COUNT(*) FILTER (WHERE {_WORDING_SQL}) AS wording_count,
+                       (array_agg(actor_id ORDER BY created_at DESC, revision_number DESC)
+                            FILTER (WHERE {_WORDING_SQL}))[1] AS last_wording_by
+                FROM analysis_object_revision
+                WHERE project_id = %s AND status = 'published'
+                  AND object_id = ANY(%s::uuid[])
+                GROUP BY object_id""",
+            (project_id, sorted(wanted)),
+        )
+        rows = await cursor.fetchall()
+    return {
+        str(row["object_id"]): AuthoredMark(
+            first_at=_utc(row["first_at"]),
+            last_wording_at=_utc(row["last_wording_at"]),
+            last_wording_by=row["last_wording_by"],
+            wording_count=int(row["wording_count"] or 0),
+        )
+        for row in rows
+    }
+
+
+def _evidence(revision: ObjectRevision) -> tuple[int, set[str]]:
+    """How much a finding rests on: quotes, and the conversations they come
+    from. An argument and a phrase carry evidence per conversation; a tension
+    and a stakeholder carry quotes that each name their own."""
+    payload = revision.payload
+    quotes = 0
+    conversations: set[str] = set()
+    for item in payload.get("evidence") or []:
+        if not isinstance(item, dict):
+            continue
+        quotes += len(item.get("quotes") or [])
+        if item.get("conversationId"):
+            conversations.add(str(item["conversationId"]))
+    for quote in payload.get("quotes") or []:
+        if not isinstance(quote, dict):
+            continue
+        quotes += 1
+        if quote.get("conversationId"):
+            conversations.add(str(quote["conversationId"]))
+    return quotes, conversations
+
+
+def _evidence_counts(revision: ObjectRevision) -> tuple[int, int]:
+    """The two numbers a row shows: quotes, and how many conversations."""
+    quotes, conversations = _evidence(revision)
+    return quotes, len(conversations)
+
+
+async def _conversation_names(project_id: str, ids: list[str]) -> dict[str, str]:
+    """The display name of each conversation, in one read: the title where
+    there is one, else the participant's name, the way the conversations table
+    reads them. A conversation with neither is left out and its finding says
+    the count alone. Names are for hosts: only a reader who already has
+    conversation access gets this far.
+    """
+    if not ids:
+        return {}
+    try:
+        rows = await async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {"id": {"_in": ids}, "project_id": {"_eq": project_id}},
+                    "fields": ["id", "title", "participant_name"],
+                    "limit": len(ids),
+                }
+            },
+        )
+    except Exception:  # noqa: BLE001 - a name is a nicety, never the answer
+        logger.warning("could not read conversation names for %s", project_id, exc_info=True)
+        return {}
+    names: dict[str, str] = {}
+    for row in rows or []:
+        if not isinstance(row, dict) or not row.get("id"):
+            continue
+        name = str(row.get("title") or "").strip() or str(row.get("participant_name") or "").strip()
+        if name:
+            names[str(row["id"])] = name
+    return names
+
+
+async def _verdicts(
+    store: AnalysisStore, project_id: str, revisions: list[ObjectRevision]
+) -> dict[str, str]:
+    """The latest fact-check verdict per revision, for the revisions that can
+    have one. An assessment of superseded wording is not this revision's."""
+    ids = [r.id for r in revisions if r.type in ARGUMENT_TYPES]
+    if not ids:
+        return {}
+    assessments = await store.assessments_for(project_id, ids)
+    out: dict[str, str] = {}
+    for revision_id, assessment in assessments.items():
+        verdict = str(assessment.payload.get("verdict") or "")
+        if verdict in ("true", "false", "contested", "unknown"):
+            out[revision_id] = verdict
+    return out
+
+
+def _attention(
+    *,
+    revision: ObjectRevision | None,
+    mark: AuthoredMark,
+    verdict: str | None,
+    last_opened: datetime | None,
+    viewer: str | None,
+) -> tuple[str | None, str | None]:
+    if revision is None:
+        # A row whose revision the store could not answer for says "missing",
+        # and nothing else.
+        return None, None
+    quotes, conversations = _evidence_counts(revision)
+    if last_opened and mark.first_at and mark.first_at > last_opened:
+        return "new", None
+    if conversations <= 1:
+        return "one_conversation", None
+    if quotes <= 1:
+        return "one_quote", None
+    if verdict in VERDICTS_THAT_DISAGREE:
+        return "fact_check", None
+    if (
+        last_opened
+        and mark.last_wording_at
+        and mark.last_wording_at > last_opened
+        and mark.last_wording_by
+        and mark.last_wording_by != viewer
+    ):
+        return "reworded", mark.last_wording_by
+    return None, None
+
+
 # ── objects ─────────────────────────────────────────────────────────────
 
 
@@ -383,12 +648,19 @@ async def list_analysis_objects(
     scope: str | None = Query(default=None),
     snapshot_id: str | None = Query(default=None),
     membership: Literal["active", "withdrawn", "all"] = Query(default="active"),
+    sort: Literal["default", "attention"] = Query(default="default"),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=50, ge=1, le=MAX_PAGE),
 ) -> dict[str, Any]:
     """One page of the objects a map snapshot pins (the current one unless
     `snapshot_id` names another), with counts per type: the list an over-budget
-    scope shows instead of a graph. No vectors."""
+    scope shows instead of a graph. No vectors.
+
+    `sort=attention` raises the rows that need this host's eye, within each
+    type and before paging, so the phrase and the page agree. The order is set
+    by what the store says now: a row the host deals with loses its phrase on
+    the next read, and keeps its place until the list is opened again.
+    """
     access = await _readable(project_id, auth)
     if type is not None and type not in MAP_TYPES:
         raise HTTPException(status_code=422, detail=f"unknown object type {type!r}")
@@ -438,10 +710,64 @@ async def list_analysis_objects(
         if type is not None:
             entries = [o for o in entries if o["type"] == type]
         entries.sort(key=lambda o: (MAP_TYPES.index(str(o["type"])), str(o["objectId"])))
-        page = entries[offset : offset + limit]
-        revisions = await store.get_revisions(project_id, [str(o["revisionId"]) for o in page])
+        attention: dict[str, tuple[str | None, str | None]] = {}
+        if sort == "attention" and entries:
+            # Everything the sort reads, for every row, in three reads: the
+            # revisions, their histories and their fact-checks.
+            revisions = await store.get_revisions(
+                project_id, [str(o["revisionId"]) for o in entries]
+            )
+            marks = await _authored_marks(
+                store, project_id, [str(o["objectId"]) for o in entries]
+            )
+            verdicts = await _verdicts(store, project_id, list(revisions.values()))
+            last_opened = await _read_last_opened(store, project_id, auth.user_id)
+            for entry in entries:
+                revision = revisions.get(str(entry["revisionId"]))
+                attention[str(entry["objectId"])] = _attention(
+                    revision=revision,
+                    mark=marks.get(str(entry["objectId"]), AuthoredMark()),
+                    verdict=verdicts.get(str(entry["revisionId"])),
+                    last_opened=last_opened,
+                    viewer=auth.user_id,
+                )
+            entries.sort(
+                key=lambda o: (
+                    MAP_TYPES.index(str(o["type"])),
+                    _attention_rank(attention.get(str(o["objectId"]), (None, None))[0]),
+                )
+            )
+            page = entries[offset : offset + limit]
+        else:
+            page = entries[offset : offset + limit]
+            revisions = await store.get_revisions(
+                project_id, [str(o["revisionId"]) for o in page]
+            )
+            marks = await _authored_marks(
+                store, project_id, [str(o["objectId"]) for o in page]
+            )
+            verdicts = await _verdicts(store, project_id, list(revisions.values()))
     except UnknownResultScope as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    # A finding whose quotes all come from one conversation says which one, so
+    # the meta line reads "1 quote from Marloes" rather than counting to one
+    # twice. One read for the whole page, and only for the rows that need it.
+    alone: dict[str, str] = {}
+    for entry in page:
+        revision = revisions.get(str(entry["revisionId"]))
+        if revision is None:
+            continue
+        _, conversations = _evidence(revision)
+        if len(conversations) == 1:
+            alone[revision.id] = next(iter(conversations))
+    names = await _conversation_names(project_id, sorted(set(alone.values())))
+    # This host's own thumbs on this page, in one read rather than one per row.
+    try:
+        mine = await _read_feedback(
+            store, project_id, auth.user_id, [str(entry["objectId"]) for entry in page]
+        )
     except AnalysisStoreError as exc:
         raise _unavailable() from exc
     items = []
@@ -450,6 +776,10 @@ async def list_analysis_objects(
         if revision is None:
             items.append({"objectId": entry["objectId"], "revisionId": entry["revisionId"], "type": entry["type"], "missing": True})
             continue
+        my_feedback = _feedback_doc(mine.get(revision.object_id))
+        mark = marks.get(revision.object_id, AuthoredMark())
+        quotes, conversations = _evidence_counts(revision)
+        phrase, actor = attention.get(str(entry["objectId"]), (None, None))
         items.append(
             {
                 "objectId": revision.object_id,
@@ -462,6 +792,26 @@ async def list_analysis_objects(
                 ),
                 "detail": project_detail(revision),
                 "attributes": revision.attributes,
+                # What the row says about hands and grounds. `edited` is the
+                # public mark's own word: a host changed the words, whatever
+                # kind of change they called it.
+                "lastAuthoredAt": _iso(mark.last_wording_at),
+                "lastAuthoredBy": mark.last_wording_by,
+                "edited": mark.edited,
+                "quoteCount": quotes,
+                "conversationCount": conversations,
+                # Only where there is one conversation, and null when it has
+                # no name of its own.
+                "conversationName": names.get(alone.get(revision.id, ""))
+                if conversations == 1
+                else None,
+                "verdict": verdicts.get(revision.id),
+                # This host's own thumb, and nobody else's. Never in an
+                # audience payload: the deck is built from revisions, and a
+                # thumb is not one.
+                "myFeedback": my_feedback,
+                "attention": phrase,
+                "attentionActor": actor,
                 "provenance": {
                     **provenance_doc(revision),
                     "sourceRefs": [
@@ -525,6 +875,52 @@ async def _editable_object(
     return record, access
 
 
+async def _edited_payload(
+    project_id: str, record: Any, body: RevisionEdit
+) -> dict[str, Any]:
+    """The payload this edit writes, with only the words changed.
+
+    The host sends either a patch of allowlisted fields or the whole payload
+    with one field reworded; both are measured against the revision they were
+    reading, and any other difference is refused by name. Payloads are compared
+    as their type normalises them, so trimmed whitespace is not a change.
+    """
+    allowed = EDITABLE_FIELDS.get(record.type, frozenset())
+    if (body.payload is None) == (body.patch is None):
+        raise HTTPException(
+            status_code=422, detail="Send either the payload or a patch of fields to change."
+        )
+    try:
+        base = (await get_store().get_revisions(project_id, [body.expected_revision_id])).get(
+            body.expected_revision_id
+        )
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    if base is None or base.object_id != record.id:
+        raise _not_found("Revision")
+    if body.patch is not None:
+        refused = sorted(set(body.patch) - allowed)
+        if refused:
+            raise HTTPException(
+                status_code=422,
+                detail=f"{refused[0]} cannot be edited here.",
+            )
+        return {**base.payload, **body.patch}
+    try:
+        wanted = types.validate_payload(record.type, body.payload)
+    except AnalysisValidationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    changed = sorted(
+        key
+        for key in set(wanted) | set(base.payload)
+        if wanted.get(key) != base.payload.get(key)
+    )
+    refused = [key for key in changed if key not in allowed]
+    if refused:
+        raise HTTPException(status_code=422, detail=f"{refused[0]} cannot be edited here.")
+    return wanted
+
+
 def _revision_conflict(exc: RevisionConflict) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_409_CONFLICT,
@@ -547,15 +943,17 @@ async def edit_analysis_object(
     body: RevisionEdit,
     auth: DependencyDirectusSession,
 ) -> dict[str, Any]:
-    await _editable_object(project_id, object_id, auth)
+    record, _access = await _editable_object(project_id, object_id, auth)
+    payload = await _edited_payload(project_id, record, body)
     try:
         revision = await RevisionService(get_store()).author_edit(
             project_id=project_id,
             object_id=object_id,
             expected_revision_id=body.expected_revision_id,
-            payload=body.payload,
+            payload=payload,
             actor_id=auth.user_id,
             reason=body.reason,
+            change_kind=body.change_kind,
         )
     except RevisionConflict as exc:
         raise _revision_conflict(exc) from exc
@@ -585,6 +983,7 @@ async def rollback_analysis_object(
             expected_revision_id=body.expected_revision_id,
             actor_id=auth.user_id,
             reason=body.reason,
+            change_kind=body.change_kind,
         )
     except RevisionConflict as exc:
         raise _revision_conflict(exc) from exc
@@ -614,6 +1013,7 @@ async def set_analysis_object_membership(
             excluded=body.excluded,
             actor_id=auth.user_id,
             reason=body.reason,
+            change_kind=body.change_kind,
         )
     except RevisionConflict as exc:
         raise _revision_conflict(exc) from exc
@@ -622,6 +1022,327 @@ async def set_analysis_object_membership(
     except AnalysisValidationError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {"revision": revision_doc(revision)}
+
+
+# ── when this host last opened the list ─────────────────────────────────
+#
+# One row per host per project, in `analysis_last_opened`: the smallest thing
+# that can answer "what is new since I last looked". It is the host's own
+# state, not the project's, so reading the project is enough to read and write
+# it, and a host who has never opened the list has no row: on a first visit
+# nothing is new.
+
+
+async def _read_last_opened(
+    store: AnalysisStore, project_id: str, user_id: str | None
+) -> datetime | None:
+    if not user_id:
+        return None
+    in_memory = getattr(store, "last_opened", None)
+    if isinstance(in_memory, dict):
+        return _utc(in_memory.get((project_id, user_id)))
+    if not isinstance(store, SqlAnalysisStore):
+        raise AnalysisStoreError("last opened is unavailable")
+    async with store._cursor() as cursor:  # noqa: SLF001 - local BFF read adapter
+        await cursor.execute(
+            """SELECT opened_at FROM analysis_last_opened
+               WHERE project_id = %s AND user_id = %s""",
+            (project_id, user_id),
+        )
+        row = await cursor.fetchone()
+    return _utc((row or {}).get("opened_at"))
+
+
+async def _write_last_opened(
+    store: AnalysisStore, project_id: str, user_id: str, opened_at: datetime
+) -> datetime:
+    in_memory = getattr(store, "last_opened", None)
+    if isinstance(in_memory, dict):
+        in_memory[(project_id, user_id)] = opened_at
+        return opened_at
+    if not isinstance(store, SqlAnalysisStore):
+        raise AnalysisStoreError("last opened is unavailable")
+    async with store._transaction() as cursor:  # noqa: SLF001 - local BFF write adapter
+        await cursor.execute(
+            """INSERT INTO analysis_last_opened (id, project_id, user_id, opened_at)
+               VALUES (%s, %s, %s, %s)
+               ON CONFLICT (project_id, user_id)
+               DO UPDATE SET opened_at = EXCLUDED.opened_at
+               RETURNING opened_at""",
+            (str(uuid.uuid4()), project_id, user_id, opened_at),
+        )
+        row = await cursor.fetchone()
+    return _utc((row or {}).get("opened_at")) or opened_at
+
+
+@router.get("/projects/{project_id}/results/last-opened")
+async def get_results_last_opened(
+    project_id: str, auth: DependencyDirectusSession
+) -> dict[str, Any]:
+    """When this host last opened the results list of this project. Null the
+    first time, and then nothing is new."""
+    await _readable(project_id, auth)
+    try:
+        opened_at = await _read_last_opened(get_store(), project_id, auth.user_id)
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    return {"openedAt": _iso(opened_at)}
+
+
+@router.put("/projects/{project_id}/results/last-opened")
+async def set_results_last_opened(
+    project_id: str, auth: DependencyDirectusSession
+) -> dict[str, Any]:
+    """Mark the list opened now. The time is the server's: a clock the host
+    cannot set decides what counts as new."""
+    await _readable(project_id, auth)
+    if not auth.user_id:
+        raise _not_found("Host")
+    try:
+        opened_at = await _write_last_opened(
+            get_store(), project_id, auth.user_id, datetime.now(timezone.utc)
+        )
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    return {"openedAt": _iso(opened_at)}
+
+
+# ── what this host thinks of a finding ──────────────────────────────────
+#
+# One row per host per object, in `analysis_feedback`, by the same precedent as
+# `analysis_last_opened`: the host's own state, not the project's. It is
+# feedback on how well the analysis read the room, for dembrane and the team.
+# It changes nothing the room sees, writes no revision, and is in no audit
+# trail. Reading the analysis is therefore enough to leave it: a collaborator
+# who may read a finding but not reword it has an opinion worth having, and
+# saying so costs the project nothing.
+#
+# Clearing deletes the row rather than setting a `cleared_at`. A retracted
+# opinion is not evidence of anything: keeping it dormant would keep a note the
+# host asked to take back, and would make every read filter for it. One live
+# row per (project, object, actor) also makes re-rating a plain upsert. How
+# often hosts retract is an analytics question, and the client already sends an
+# event per rating.
+
+FEEDBACK_TAGS: dict[str, frozenset[str]] = {
+    "up": frozenset({"recognizable", "relevant", "felt_heard", "other"}),
+    "down": frozenset({"not_recognizable", "not_relevant", "tone_deaf", "other"}),
+}
+# The tag that makes the note worth keeping. Ticking nothing else and writing a
+# note is a note about nothing, so it is dropped.
+NOTE_TAG = "other"
+MAX_NOTE = 500
+
+
+class FeedbackWrite(BaseModel):
+    # The revision the host was looking at: the thumb is about that wording.
+    revision_id: str
+    rating: Literal["up", "down"]
+    tags: list[str] = Field(default_factory=list, max_length=len(FEEDBACK_TAGS["down"]))
+    note: str | None = Field(default=None, max_length=MAX_NOTE)
+
+
+def _feedback_doc(row: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not row:
+        return None
+    doc: dict[str, Any] = {
+        "rating": str(row["rating"]),
+        "tags": list(row.get("tags") or []),
+        "revisionId": str(row["revision_id"]),
+    }
+    if row.get("note"):
+        doc["note"] = str(row["note"])
+    return doc
+
+
+def _checked_feedback(body: FeedbackWrite) -> tuple[list[str], str | None]:
+    """The tags and the note this write keeps, or a 422 saying which tag is
+    wrong. A tag from the other polarity is not a typo: thumbs up with
+    `tone_deaf` means the client and the host disagree about what was clicked."""
+    allowed = FEEDBACK_TAGS[body.rating]
+    tags: list[str] = []
+    for tag in body.tags:
+        if tag not in allowed:
+            raise HTTPException(
+                status_code=422,
+                detail=f"{tag!r} is not a reason for a thumbs {body.rating}.",
+            )
+        if tag not in tags:
+            tags.append(tag)
+    note = (body.note or "").strip()
+    # The note belongs to `other`. Without it there is nothing it explains.
+    return tags, note if note and NOTE_TAG in tags else None
+
+
+async def _read_feedback(
+    store: AnalysisStore, project_id: str, user_id: str | None, object_ids: list[str]
+) -> dict[str, dict[str, Any]]:
+    """This host's feedback on the objects of one page, in one read. Nobody
+    else's ever leaves the server."""
+    if not user_id or not object_ids:
+        return {}
+    wanted = sorted({str(object_id) for object_id in object_ids})
+    in_memory = getattr(store, "feedback", None)
+    if isinstance(in_memory, dict):
+        return {
+            object_id: dict(row)
+            for (pid, object_id, actor), row in in_memory.items()
+            if pid == project_id and actor == user_id and object_id in set(wanted)
+        }
+    if not isinstance(store, SqlAnalysisStore):
+        raise AnalysisStoreError("feedback is unavailable")
+    async with store._cursor() as cursor:  # noqa: SLF001 - local BFF read adapter
+        await cursor.execute(
+            """SELECT object_id::text AS object_id, revision_id::text AS revision_id,
+                      rating, tags, note
+               FROM analysis_feedback
+               WHERE project_id = %s AND actor_id = %s
+                 AND object_id = ANY(%s::uuid[])""",
+            (project_id, user_id, wanted),
+        )
+        rows = await cursor.fetchall()
+    return {str(row["object_id"]): dict(row) for row in rows}
+
+
+async def _write_feedback(
+    store: AnalysisStore,
+    *,
+    project_id: str,
+    object_id: str,
+    revision_id: str,
+    actor_id: str,
+    rating: str,
+    tags: list[str],
+    note: str | None,
+) -> dict[str, Any]:
+    row = {
+        "object_id": object_id,
+        "revision_id": revision_id,
+        "rating": rating,
+        "tags": tags,
+        "note": note,
+    }
+    in_memory = getattr(store, "feedback", None)
+    if isinstance(in_memory, dict):
+        in_memory[(project_id, object_id, actor_id)] = row
+        return row
+    if not isinstance(store, SqlAnalysisStore):
+        raise AnalysisStoreError("feedback is unavailable")
+    async with store._transaction() as cursor:  # noqa: SLF001 - local BFF write adapter
+        await cursor.execute(
+            """INSERT INTO analysis_feedback
+                   (id, project_id, object_id, revision_id, actor_id, rating, tags, note,
+                    created_at, updated_at)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, now(), now())
+               ON CONFLICT (project_id, object_id, actor_id)
+               DO UPDATE SET revision_id = EXCLUDED.revision_id,
+                             rating = EXCLUDED.rating,
+                             tags = EXCLUDED.tags,
+                             note = EXCLUDED.note,
+                             updated_at = now()
+               RETURNING object_id::text AS object_id, revision_id::text AS revision_id,
+                         rating, tags, note""",
+            (
+                str(uuid.uuid4()),
+                project_id,
+                object_id,
+                revision_id,
+                actor_id,
+                rating,
+                Json(tags),
+                note,
+            ),
+        )
+        written = await cursor.fetchone()
+    return dict(written or row)
+
+
+async def _clear_feedback(
+    store: AnalysisStore, *, project_id: str, object_id: str, actor_id: str
+) -> None:
+    in_memory = getattr(store, "feedback", None)
+    if isinstance(in_memory, dict):
+        in_memory.pop((project_id, object_id, actor_id), None)
+        return
+    if not isinstance(store, SqlAnalysisStore):
+        raise AnalysisStoreError("feedback is unavailable")
+    async with store._transaction() as cursor:  # noqa: SLF001 - local BFF write adapter
+        await cursor.execute(
+            """DELETE FROM analysis_feedback
+               WHERE project_id = %s AND object_id = %s AND actor_id = %s""",
+            (project_id, object_id, actor_id),
+        )
+
+
+async def _rateable_object(
+    project_id: str, object_id: str, auth: DependencyDirectusSession
+) -> Any:
+    """Any host who may read the analysis may rate a finding of it."""
+    await _readable(project_id, auth)
+    if not auth.user_id:
+        raise _not_found("Host")
+    try:
+        record = await get_store().get_object(object_id) if _is_uuid(object_id) else None
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    if record is None or record.project_id != project_id:
+        raise _not_found("Object")
+    return record
+
+
+@router.put("/projects/{project_id}/objects/{object_id}/feedback")
+async def rate_analysis_object(
+    project_id: str,
+    object_id: str,
+    body: FeedbackWrite,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """This host's thumb on one finding, with the reasons they ticked.
+
+    The rating overwrites whatever this host said before, and records the
+    revision they were reading, because a thumbs down is about that wording.
+    """
+    record = await _rateable_object(project_id, object_id, auth)
+    tags, note = _checked_feedback(body)
+    if not _is_uuid(body.revision_id):
+        raise _not_found("Revision")
+    try:
+        revision = (
+            await get_store().get_revisions(project_id, [body.revision_id])
+        ).get(body.revision_id)
+        if revision is None or revision.object_id != record.id:
+            raise _not_found("Revision")
+        row = await _write_feedback(
+            get_store(),
+            project_id=project_id,
+            object_id=record.id,
+            revision_id=body.revision_id,
+            actor_id=auth.user_id,
+            rating=body.rating,
+            tags=tags,
+            note=note,
+        )
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    return {"myFeedback": _feedback_doc(row)}
+
+
+@router.delete("/projects/{project_id}/objects/{object_id}/feedback")
+async def clear_analysis_object_feedback(
+    project_id: str, object_id: str, auth: DependencyDirectusSession
+) -> dict[str, Any]:
+    """Take the thumb back. The row goes; nothing remembers it was there."""
+    record = await _rateable_object(project_id, object_id, auth)
+    try:
+        await _clear_feedback(
+            get_store(),
+            project_id=project_id,
+            object_id=record.id,
+            actor_id=auth.user_id,
+        )
+    except AnalysisStoreError as exc:
+        raise _unavailable() from exc
+    return {"myFeedback": None}
 
 
 @router.get("/snapshots/{snapshot_id}/revisions/{revision_id}/lineage")

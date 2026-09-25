@@ -137,6 +137,16 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .present-shell .session-notice,
 .present-shell .colophon,
 .present-shell .qr-panel { display: none; }
+/* Inside the shell the deck is no longer a page of its own: it is the content
+   of a frame whose header, footer and map tab all sit at
+   `--audience-pad-x: clamp(12px, 2vw, 36px)`. Repeat that value here so the
+   first word of a slide starts under the first word of the header. The deck's
+   iframe is flush to the left edge of the window, so the two agree exactly
+   whenever the iframe is as wide as the window; with the QR card open the
+   iframe is narrower and its `2vw` is a little smaller, off by a few pixels
+   in the middle of the clamp. Closing that gap would mean the shell passing
+   its own measured inset in. */
+.present-shell { --pad-x: clamp(12px, 2vw, 36px); }
 
 .session-id { display: flex; flex-direction: column; padding-bottom: 0.8em; min-width: 0; }
 .session-title { font-weight: 500; font-size: 0.85em; letter-spacing: 0.01em; white-space: nowrap; }
@@ -994,6 +1004,30 @@ button.action-row:hover .action-sentence { color: var(--blue); }
 /* ---------- stakeholder map ---------- */
 
 .stake-map { position: relative; height: clamp(380px, 64vh, 640px); }
+
+/* The stakeholders slide gives the map and its key the whole visible stage:
+   the viewport minus the chrome that is actually on screen above and below it
+   (--deck-chrome, measured in app.js; zero in the Present shell, where the
+   topbar and colophon are hidden). The stage runs flush so the fold, not the
+   stage's padding, owns the spacing, and "who you could involve next" begins
+   exactly under the fold. */
+.stage.stage-fold { padding: 0; }
+.stake-fold {
+  height: calc(100vh - var(--deck-chrome, 0px));
+  height: calc(100dvh - var(--deck-chrome, 0px));
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(20px, 3vh, 44px) var(--pad-x) clamp(14px, 2vh, 28px);
+}
+/* the map takes whatever the key leaves; height: auto overrides the inline
+   dense height, min-height: 0 lets it shrink inside the flex column */
+.stake-fold .stake-map { flex: 1 1 auto; height: auto; min-height: 220px; }
+.stake-fold .flow-key { flex: none; }
+.stake-view .bring-in {
+  margin: 0;
+  padding: clamp(32px, 5vh, 72px) var(--pad-x) clamp(28px, 4vh, 56px);
+}
 .stake-map svg { position: absolute; inset: 0; }
 /* Line colour carries sentiment in five steps: hot red (strained) through
    magenta, royal blue (neutral) and a bluish green to pure green (working),
