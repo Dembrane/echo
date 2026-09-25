@@ -42,8 +42,18 @@ if [ "$(instance_status)" != "RUNNING" ]; then
 fi
 
 log_step "Containers"
-# --all lists stopped containers too, which is usually what is wrong.
-vm_compose_project "ps --all" 2>/dev/null || log_warn "Could not reach docker on the VM."
+# --all lists stopped containers too, which is usually what is wrong. Trimmed
+# to fit narrower terminals: no name (service says the same), image truncated
+# with … like docker's command column, and ports as published->target (one
+# number when they match) without the IPv4/IPv6 addresses. Unpublished ports
+# are in parentheses.
+# A range has no column name, so the header is printed here and `column`
+# aligns it; macOS's BSD column has no long flags, hence -t -s.
+if CONTAINERS="$(vm_compose_project "ps --all --format '{{.Service}}\t{{if gt (len .Image) 40}}{{truncate .Image 39}}…{{else}}{{.Image}}{{end}}\t{{.Command}}\t{{.RunningFor}}\t{{.Status}}\t{{range .Publishers}}{{if .PublishedPort}}{{if eq .URL \"0.0.0.0\"}}{{.PublishedPort}}{{if ne .PublishedPort .TargetPort}}->{{.TargetPort}}{{end}} {{end}}{{else}}({{.TargetPort}}) {{end}}{{end}}'" 2>/dev/null)"; then
+    printf 'SERVICE\tIMAGE\tCOMMAND\tCREATED\tSTATUS\tPORTS\n%s\n' "$CONTAINERS" | column -t -s "$(printf '\t')"
+else
+    log_warn "Could not reach docker on the VM."
+fi
 if ! minio_enabled; then
     log_warn "minio is off, so file uploads and recordings fail. Enable with: $RD_MINIO_ENABLE_HINT"
 elif ! minio_host_resolves; then
