@@ -217,10 +217,12 @@ pin_uv_python() {
     ensure_uv_python
 
     if safe_pushd "$target_dir"; then
-        if uv python pin "${PYTHON_VERSION}" 2>/dev/null; then
+        # Checked first because the pin is committed, and `uv python pin 3.11`
+        # would rewrite it to the newest 3.11 patch uv happens to have.
+        if [ -f .python-version ]; then
+            log_info "Python already pinned to $(cat .python-version) for $(basename "$target_dir")"
+        elif uv python pin "${PYTHON_VERSION}" 2>/dev/null; then
             log_info "Pinned Python ${PYTHON_VERSION} for $(basename "$target_dir")"
-        elif [ -f .python-version ]; then
-            log_info "Python already pinned for $(basename "$target_dir")"
         else
             log_warn "Failed to pin Python for $(basename "$target_dir")"
         fi
