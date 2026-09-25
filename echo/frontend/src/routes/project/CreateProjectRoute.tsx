@@ -2,10 +2,8 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Button,
-	Center,
 	Container,
 	Group,
-	Loader,
 	Paper,
 	Radio,
 	Stack,
@@ -20,6 +18,7 @@ import { modals } from "@mantine/modals";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { toast } from "@/components/common/Toaster";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
 import { KeyTermsInput } from "@/components/project/KeyTermsInput";
@@ -176,11 +175,7 @@ export const CreateProjectRoute = () => {
 	};
 
 	if (!workspace) {
-		return (
-			<Center style={{ height: "60vh" }}>
-				<Loader size="sm" color="gray" />
-			</Center>
-		);
+		return <BeautifulLoading />;
 	}
 
 	const canAdvanceFromName = name.trim().length > 0;

@@ -1,6 +1,7 @@
 import { Trans } from "@lingui/react/macro";
-import { Alert, Loader, Stack, Text } from "@mantine/core";
+import { Alert, Stack, Text } from "@mantine/core";
 import { useOrgTrainingRoster } from "./hooks";
+import { TrainingPanelSkeleton } from "./TrainingPanelSkeleton";
 import { TrainingRoster } from "./TrainingRoster";
 
 interface WorkspaceTrainingPanelProps {
@@ -20,7 +21,7 @@ export const WorkspaceTrainingPanel = ({
 	const { data: roster, isLoading } = useOrgTrainingRoster(orgId);
 
 	if (isLoading) {
-		return <Loader size="sm" />;
+		return <TrainingPanelSkeleton />;
 	}
 	if (!roster) {
 		return (

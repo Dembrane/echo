@@ -31,6 +31,9 @@ interface BeautifulLoadingProps {
 	/** Cover the positioned parent (for content that is already on screen)
 	 * instead of taking a place in the flow. */
 	overlay?: boolean;
+	/** The sketches alone, without a quote: for participants, who came to
+	 * speak, not to be spoken to. */
+	quiet?: boolean;
 	className?: string;
 }
 
@@ -40,9 +43,10 @@ interface BeautifulLoadingProps {
  * arrives. */
 export const BeautifulLoading = ({
 	overlay = false,
+	quiet = false,
 	className,
 }: BeautifulLoadingProps) => {
-	useLayoutEffect(() => loadingStore.hold(), []);
+	useLayoutEffect(() => loadingStore.hold(quiet), [quiet]);
 
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: <output> is for a calculation's result; this is a region that is waiting
@@ -89,11 +93,18 @@ const sameBox = (a: Box, b: Box) =>
  * lives once, at the root of the app, so it never restarts between the steps
  * of a load. */
 export const LoadingStage = () => {
-	const waiting = useSyncExternalStore(
+	const mode = useSyncExternalStore(
 		loadingStore.subscribe,
 		loadingStore.getSnapshot,
-		() => false,
+		() => "none" as const,
 	);
+	const waiting = mode !== "none";
+	// The last mode that waited, kept through the linger and the fade out.
+	const [lastQuiet, setLastQuiet] = useState(false);
+	useEffect(() => {
+		if (mode !== "none") setLastQuiet(mode === "quiet");
+	}, [mode]);
+	const quiet = mode === "none" ? lastQuiet : mode === "quiet";
 	const [phase, setPhase] = useState<"hidden" | "shown" | "leaving">("hidden");
 	const [box, setBox] = useState<Box | null>(null);
 	const [index, setIndex] = useState(() =>
@@ -136,13 +147,13 @@ export const LoadingStage = () => {
 	}, [visible]);
 
 	useEffect(() => {
-		if (!visible) return;
+		if (!visible || quiet) return;
 		const id = setInterval(
 			() => setIndex((i) => (i + 1) % LOADING_QUOTES.length),
 			QUOTE_MS,
 		);
 		return () => clearInterval(id);
-	}, [visible]);
+	}, [visible, quiet]);
 
 	if (!visible || !box) return null;
 
@@ -154,7 +165,7 @@ export const LoadingStage = () => {
 			style={box}
 			aria-hidden="true"
 		>
-			<div className={classes.stage}>
+			<div className={cn(classes.stage, quiet && classes.quiet)}>
 				<span className={classes.sketches}>
 					<img
 						src={LOADING_SKETCHES_SRC}
@@ -164,17 +175,19 @@ export const LoadingStage = () => {
 						decoding="sync"
 					/>
 				</span>
-				<figure key={index} className={classes.quote}>
-					<blockquote
-						className={cn(
-							classes.text,
-							quote.text.length > LONG_QUOTE && classes.long,
-						)}
-					>
-						{quote.text}
-					</blockquote>
-					<figcaption className={classes.author}>{quote.author}</figcaption>
-				</figure>
+				{!quiet && (
+					<figure key={index} className={classes.quote}>
+						<blockquote
+							className={cn(
+								classes.text,
+								quote.text.length > LONG_QUOTE && classes.long,
+							)}
+						>
+							{quote.text}
+						</blockquote>
+						<figcaption className={classes.author}>{quote.author}</figcaption>
+					</figure>
+				)}
 			</div>
 		</div>
 	);

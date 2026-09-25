@@ -6,7 +6,6 @@ import {
 	Chip,
 	Divider,
 	Group,
-	LoadingOverlay,
 	Paper,
 	Stack,
 	Text,
@@ -145,13 +144,13 @@ export const ParticipantPostConversation = () => {
 					</Trans>
 				</Text>
 				<Box className="relative">
-					<LoadingOverlay visible={project.isLoading} />
 					<Group gap="sm" wrap="wrap">
 						<Button
 							size="md"
 							variant="outline"
 							leftSection={<IconQrcode size={18} />}
 							onClick={openShare}
+							disabled={project.isLoading}
 							{...testId("portal-finish-show-qr-button")}
 						>
 							<Trans>Show QR Code</Trans>

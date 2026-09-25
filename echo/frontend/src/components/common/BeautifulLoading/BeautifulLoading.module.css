@@ -49,6 +49,11 @@
 	animation: arrive 600ms cubic-bezier(0.25, 0.8, 0.3, 1) 180ms both;
 }
 
+/* The sketches alone, for participants. */
+.quiet {
+	grid-template-columns: auto;
+}
+
 /* The sprite strip slides behind a square window; percentages keep the steps
    exact at any size, since the strip is always 42 windows tall. */
 .sketches {
@@ -124,6 +129,10 @@
 		justify-items: center;
 		gap: 1.5rem;
 		text-align: center;
+	}
+
+	.quiet {
+		grid-template-columns: auto;
 	}
 
 	.sketches {

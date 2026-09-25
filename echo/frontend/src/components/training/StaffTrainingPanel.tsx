@@ -3,7 +3,6 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Badge,
 	Group,
-	Loader,
 	SegmentedControl,
 	Stack,
 	Table,
@@ -13,6 +12,7 @@ import {
 } from "@mantine/core";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
+import { TrainingPanelSkeleton } from "./TrainingPanelSkeleton";
 import { TrainingRowActions } from "./TrainingRowActions";
 import { type StaffTrainingRow, useStaffTrainings } from "./staffHooks";
 
@@ -85,7 +85,7 @@ export const StaffTrainingPanel = () => {
 	}, [trainings, orgQuery, statusFilter]);
 
 	if (isLoading) {
-		return <Loader size="sm" />;
+		return <TrainingPanelSkeleton />;
 	}
 
 	return (

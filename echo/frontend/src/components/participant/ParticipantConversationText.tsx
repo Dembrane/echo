@@ -1,14 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Box,
-	Button,
-	Group,
-	LoadingOverlay,
-	Modal,
-	Stack,
-	Text,
-} from "@mantine/core";
+import { Box, Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
 	IconCheck,
@@ -20,6 +12,7 @@ import {
 import clsx from "clsx";
 import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { I18nLink } from "@/components/common/i18nLink";
 import {
 	useConversationChunksQuery,
@@ -93,7 +86,7 @@ export const ParticipantConversationText = () => {
 	};
 
 	if (conversationQuery.isLoading || projectQuery.isLoading) {
-		return <LoadingOverlay visible />;
+		return <BeautifulLoading quiet className="min-h-dvh" />;
 	}
 
 	// Check if conversation is not present or failed to load

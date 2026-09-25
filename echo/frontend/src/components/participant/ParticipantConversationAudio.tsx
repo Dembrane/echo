@@ -1,15 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Box,
-	Button,
-	Group,
-	Loader,
-	LoadingOverlay,
-	Modal,
-	Stack,
-	Text,
-} from "@mantine/core";
+import { Box, Button, Group, Loader, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure, useLocalStorage, useWindowEvent } from "@mantine/hooks";
 import { ArticleNyTimesIcon } from "@phosphor-icons/react";
 import {
@@ -24,6 +15,7 @@ import Cookies from "js-cookie";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ENABLE_CONVERSATION_HEALTH, ENABLE_MONITOR } from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -46,7 +38,6 @@ import { ScrollToBottomButton } from "../common/ScrollToBottom";
 import { toast } from "../common/Toaster";
 import { useProjectSharingLink } from "../project/ProjectQRCode";
 import { ConversationErrorView } from "./ConversationErrorView";
-
 import {
 	useConversationChunksQuery,
 	useConversationQuery,
@@ -695,7 +686,7 @@ export const ParticipantConversationAudio = () => {
 	};
 
 	if (conversationQuery.isLoading || projectQuery.isLoading) {
-		return <LoadingOverlay visible />;
+		return <BeautifulLoading quiet className="min-h-dvh" />;
 	}
 
 	// Check if conversation is not present or failed to load

@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Alert, Loader, Stack, Text } from "@mantine/core";
+import { Alert, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useMemo, useState } from "react";
 import {
@@ -10,6 +10,7 @@ import {
 } from "./hooks";
 import { RequestTrainingModal } from "./RequestTrainingModal";
 import { TrainingCatalog } from "./TrainingCatalog";
+import { TrainingPanelSkeleton } from "./TrainingPanelSkeleton";
 import { TrainingRoster } from "./TrainingRoster";
 
 interface OrgTrainingPanelProps {
@@ -58,7 +59,7 @@ export const OrgTrainingPanel = ({ orgId }: OrgTrainingPanelProps) => {
 	};
 
 	if (catalogLoading || rosterLoading) {
-		return <Loader size="sm" />;
+		return <TrainingPanelSkeleton />;
 	}
 
 	return (

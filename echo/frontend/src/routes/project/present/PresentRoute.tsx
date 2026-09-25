@@ -34,6 +34,7 @@ import {
 	useState,
 } from "react";
 import { useParams, useSearchParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -840,7 +841,7 @@ export function PresentRoute() {
 			"noopener",
 		);
 	};
-	if (query.isLoading) return <Loader aria-label={t`Loading presentation`} />;
+	if (query.isLoading) return <BeautifulLoading />;
 	return (
 		<PageContainer width="full" density="tight">
 			<Stack gap="lg">
