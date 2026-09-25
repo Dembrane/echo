@@ -70,7 +70,7 @@ Each command is a script in `commands/`, and
 |---|---|
 | `init` | First-run setup. Prompts for project, zone, size. Writes `local.env`. |
 | `create` | Creates the VM, installs docker, clones the repo. Idempotent. |
-| `up` | Syncs `.env` files, `docker compose up -d --build`, runs `setup.sh`, installs your SSH key. |
+| `up` | Offers to add the devcontainer defaults to `server/.env`, syncs `.env` files, `docker compose up -d --build`, runs `setup.sh`, installs your SSH key. |
 | `down` | Stops containers, leaves the VM up. |
 | `start` / `stop` | VM power. `stop` shuts containers down cleanly first. |
 | `status` | VM state, container state, memory, disk, load, tunnel check. |

@@ -3,7 +3,7 @@
 #
 # In order:
 #   0. offers to copy your working tree up, if the VM's differs
-#   1. copies .env files up
+#   1. offers to add the devcontainer defaults to server/.env, copies .env files up
 #   2. docker compose up -d (postgres, valkey, directus, agent, devcontainer)
 #   3. runs the devcontainer's own setup.sh (node, pnpm, uv, deps, sshd)
 #   4. pushes the directus schema and the membership indexes
@@ -75,6 +75,35 @@ if [ -n "$MISSING" ]; then
     VM_BRANCH="$(vm_ssh "git -C '$RD_REPO_DIR' rev-parse --abbrev-ref HEAD" 2>/dev/null || echo unknown)"
     die "The VM's checkout (on $VM_BRANCH) has no $(echo "$MISSING" | paste -sd, - | sed 's/,/, /g'), which your local.env asks for.
 Copy it up with ./scripts/remote-dev.sh sync-code echo/.devcontainer, or push your branch and check it out on the VM."
+fi
+
+log_step "Checking server/.env for the devcontainer's defaults"
+# The compose `environment:` block only reaches `docker exec` sessions, and Zed
+# connects over SSH, so its terminals need the same values in server/.env.
+COMPOSE_FILE="$RD_ECHO_ROOT/.devcontainer/docker-compose.yml"
+SERVER_ENV="$RD_ECHO_ROOT/server/.env"
+COMPOSE_ENV="$(awk '
+    /^  devcontainer:/ { in_svc = 1; next }
+    in_svc && /^  [a-z]/ { exit }
+    in_svc && /^    environment:/ { in_env = 1; next }
+    in_env && /^      - / { sub(/^      - /, ""); print; next }
+    in_env && /^    [a-z]/ { exit }
+' "$COMPOSE_FILE")"
+MISSING_ENV=""
+while IFS= read -r line; do
+    grep -q "^${line%%=*}=" "$SERVER_ENV" 2>/dev/null || MISSING_ENV+="$line"$'\n'
+done <<<"$COMPOSE_ENV"
+if [ -z "$MISSING_ENV" ]; then
+    log_info "server/.env has every variable docker-compose.yml gives the devcontainer"
+else
+    log_warn "server/.env lacks these, which SSH sessions (Zed's included) would then run without:"
+    printf '%s' "$MISSING_ENV" | sed 's/^/    /'
+    if { : </dev/tty; } 2>/dev/null && confirm "Add them to server/.env?" "y"; then
+        printf '\n# devcontainer defaults from .devcontainer/docker-compose.yml\n%s' "$MISSING_ENV" >>"$SERVER_ENV"
+        log_info "Added $(printf '%s' "$MISSING_ENV" | wc -l | tr -d ' ') line(s) to server/.env"
+    else
+        log_warn "Leaving server/.env as it is. The server will fail to start from an SSH terminal."
+    fi
 fi
 
 log_step "Syncing env files"
