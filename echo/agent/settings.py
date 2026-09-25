@@ -27,8 +27,10 @@ class Settings(BaseSettings):
         default=None, alias="VERTEX_CREDENTIALS"
     )
     gcp_sa_json: Optional[dict[str, Any]] = Field(default=None, alias="GCP_SA_JSON")
+    # Graph steps, two per tool round. Sized above the worker's 150-call
+    # backstop so the repetition guard, not this, ends a runaway turn.
     agent_graph_recursion_limit: int = Field(
-        default=80,
+        default=320,
         alias="AGENT_GRAPH_RECURSION_LIMIT",
     )
     agent_cors_origins: str = Field(

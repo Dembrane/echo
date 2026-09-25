@@ -18,7 +18,13 @@ from dembrane.agentic_client import (
     AgenticUpstreamError,
     stream_agent_events,
 )
-from dembrane.agentic_runtime import clear_cancel, publish_live_event, is_cancel_requested
+from dembrane.directus_async import async_directus
+from dembrane.agentic_runtime import (
+    clear_cancel,
+    publish_live_event,
+    is_cancel_requested,
+    live_event_subscriber_count,
+)
 from dembrane.service.agentic import AgenticRunService
 from dembrane.api.feature_flags import project_canvas_enabled
 
@@ -26,7 +32,10 @@ logger = getLogger("dembrane.agentic_worker")
 
 AGENT_CANCELLED_ERROR_CODE = "AGENT_CANCELLED"
 AGENT_CANCELLED_MESSAGE = "Run cancelled by user"
-MAX_TOOL_CALLS_PER_TURN = 20
+# A backstop, not a budget: the agent stops repeated calls itself (identical
+# arguments, or the same result coming back), so a long legitimate turn runs to
+# completion and only a runaway one reaches this.
+MAX_TOOL_CALLS_PER_TURN = 150
 # Full-text snapshots are quadratic in message length, so throttle and back
 # off as the text grows; on_chat_model_end always flushes the final snapshot.
 DRAFT_PUBLISH_INTERVAL_SECONDS = 0.15
@@ -42,8 +51,14 @@ def _draft_publish_interval(text_length: int) -> float:
     if text_length >= DRAFT_PUBLISH_MEDIUM_TEXT_CHARS:
         return DRAFT_PUBLISH_MEDIUM_INTERVAL_SECONDS
     return DRAFT_PUBLISH_INTERVAL_SECONDS
+
+
 MAX_TOOL_CALLS_PER_RUN = MAX_TOOL_CALLS_PER_TURN * 10
-TOOL_LIMIT_EXEMPT_TOOL_NAMES = {"sendProgressUpdate"}
+# ack posts a message the host reads (the first one carries the plan);
+# updatePlan only ticks plan steps off and posts nothing.
+PROGRESS_TOOL_NAMES = {"sendProgressUpdate", "ack"}
+PLAN_TOOL_NAME = "updatePlan"
+TOOL_LIMIT_EXEMPT_TOOL_NAMES = PROGRESS_TOOL_NAMES | {PLAN_TOOL_NAME}
 # Host-facing, in the agent's own voice. "Tool calls" are an internal concept
 # and must never leak into what the host reads.
 TOOL_LIMIT_SAFETY_MESSAGE = (
@@ -56,7 +71,7 @@ RUN_TOOL_LIMIT_SAFETY_MESSAGE = (
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 4
 AUTOMATIC_NUDGE_TEMPLATE = (
     "<Automatic Nudge> You have made {tool_call_count} tool calls without sending an assistant update. "
-    "Call `sendProgressUpdate` now with a concise update and next steps, then continue research with "
+    "Call `ack` now with a concise update, then continue research with "
     "another tool call if evidence is still missing. Only return plain text with no tool call if you "
     "are concluding."
 )
@@ -362,7 +377,7 @@ def _build_automatic_nudge_content(*, tool_calls_without_assistant_message: int)
 
 
 def _extract_progress_message_from_tool_end(event: dict[str, Any]) -> Optional[str]:
-    if str(event.get("name") or "") != "sendProgressUpdate":
+    if str(event.get("name") or "") not in PROGRESS_TOOL_NAMES:
         return None
 
     data = event.get("data")
@@ -684,6 +699,58 @@ async def _resolve_run_app_user_id(run: dict) -> str | None:
         return None
 
 
+RUN_FINISHED_EVENT_CODE = "AGENTIC_RUN_FINISHED"
+RUN_STOPPED_EVENT_CODE = "AGENTIC_RUN_STOPPED"
+
+
+async def _notify_if_unwatched(
+    *,
+    run_id: str,
+    project_id: str,
+    project_chat_id: str,
+    app_user_id: str | None,
+    finished: bool,
+) -> None:
+    """Tell the host their answer is ready when nobody is watching the chat.
+
+    The host may close the tab once the plan is up; the turn keeps running on
+    the server. When the turn ends with no stream subscribed to the run, an
+    inbox notification links back to the chat. Best effort: never raises.
+    """
+    if not app_user_id or not project_chat_id:
+        return
+    try:
+        if await live_event_subscriber_count(run_id) > 0:
+            return
+        from dembrane import notifications
+
+        project = await async_directus.get_item("project", project_id) or {}
+        workspace = project.get("workspace_id")
+        workspace_id = str(workspace.get("id") if isinstance(workspace, dict) else workspace or "")
+        chat = await async_directus.get_item("project_chat", project_chat_id) or {}
+        chat_name = str(chat.get("name") or "").strip() or None
+        if finished:
+            title = f"Your answer in {chat_name} is ready" if chat_name else "Your answer is ready"
+        else:
+            title = (
+                f"{chat_name} stopped before it finished"
+                if chat_name
+                else "Your chat stopped before it finished"
+            )
+        await notifications.emit(
+            audience_user_id=app_user_id,
+            event_code=RUN_FINISHED_EVENT_CODE if finished else RUN_STOPPED_EVENT_CODE,
+            title=title,
+            action="NAVIGATE_CHAT",
+            ref_workspace_id=workspace_id or None,
+            ref_project_id=project_id,
+            ref_chat_id=project_chat_id,
+            params={"chat_name": chat_name} if chat_name else None,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Run %s finished but the notification failed: %s", run_id, exc)
+
+
 async def _triggering_message_id(
     *,
     svc: AgenticRunService,
@@ -821,16 +888,14 @@ async def process_agentic_run(
             if (
                 not flush
                 and last_publish_at is not None
-                and now - last_publish_at
-                < _draft_publish_interval(len(draft_texts[message_id]))
+                and now - last_publish_at < _draft_publish_interval(len(draft_texts[message_id]))
             ):
                 return
             sanitized = _sanitize_host_visible_assistant_content(draft_texts[message_id])
             if not sanitized or sanitized == draft_published_texts.get(message_id):
                 return
             if any(
-                placeholder.startswith(sanitized)
-                for placeholder in INTERNAL_PLACEHOLDER_CONTENTS
+                placeholder.startswith(sanitized) for placeholder in INTERNAL_PLACEHOLDER_CONTENTS
             ):
                 # A growing draft hits placeholder prefixes ("(calling") before
                 # the sanitizer can match the full string; hold those back.
@@ -872,7 +937,9 @@ async def process_agentic_run(
             if model_message_id and model_message_id in draft_texts:
                 # Flush the throttled tail; the final snapshot carries the full text.
                 await _maybe_publish_draft(model_message_id, flush=True)
-            model_has_progress_tool_call = "sendProgressUpdate" in model_tool_calls
+            model_has_progress_tool_call = any(
+                name in model_tool_calls for name in PROGRESS_TOOL_NAMES
+            )
             if model_has_progress_tool_call:
                 # The tool's output is this turn's visible message; sharing the
                 # message_id lets the streamed narration draft resolve into it.
@@ -903,7 +970,13 @@ async def process_agentic_run(
                     counted_tool_start_count += 1
                 tool_calls_without_assistant_message += 1
 
-                if not has_sent_progress_intro:
+                if tool_name in TOOL_LIMIT_EXEMPT_TOOL_NAMES:
+                    # An ack or a plan tick is what the host sees move, so it
+                    # counts as an update: no nudge for the calls before it.
+                    has_sent_progress_intro = True
+                    tool_calls_without_assistant_message = 0
+                    nudged_tool_call_milestones.clear()
+                elif not has_sent_progress_intro:
                     # Don't post a synthetic "starting with `toolName`" line: it
                     # leaks raw tool names, is English-only, and the frontend
                     # already renders humane tool activity. The agent's own
@@ -931,7 +1004,9 @@ async def process_agentic_run(
                             {
                                 "hidden": True,
                                 "origin": "automatic_nudge",
-                                "role": "user",
+                                # The app, not the host: never shown or
+                                # replayed as a chat message.
+                                "role": "runtime",
                                 "content": nudge_content,
                                 "tool_calls_without_assistant_message": tool_calls_without_assistant_message,
                                 "total_tool_calls": total_tool_start_count,
@@ -1028,6 +1103,13 @@ async def process_agentic_run(
                 "completed",
                 latest_output=latest_output,
             )
+            await _notify_if_unwatched(
+                run_id=run_id,
+                project_id=project_id,
+                project_chat_id=project_chat_id,
+                app_user_id=app_user_id,
+                finished=True,
+            )
         await capture_event(
             chat_distinct_id,
             "server_chat_response_received",
@@ -1070,6 +1152,13 @@ async def process_agentic_run(
             latest_error=str(exc),
             latest_error_code="AGENT_TIMEOUT",
         )
+        await _notify_if_unwatched(
+            run_id=run_id,
+            project_id=project_id,
+            project_chat_id=project_chat_id,
+            app_user_id=app_user_id,
+            finished=False,
+        )
     except AgenticUpstreamError as exc:
         logger.warning("Run %s failed upstream: %s", run_id, exc)
         await _emit_chat_error(exc.error_code)
@@ -1085,6 +1174,13 @@ async def process_agentic_run(
             "failed",
             latest_error=exc.message,
             latest_error_code=exc.error_code,
+        )
+        await _notify_if_unwatched(
+            run_id=run_id,
+            project_id=project_id,
+            project_chat_id=project_chat_id,
+            app_user_id=app_user_id,
+            finished=False,
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception("Run %s failed unexpectedly", run_id)
@@ -1102,6 +1198,13 @@ async def process_agentic_run(
             "failed",
             latest_error=exc_str,
             latest_error_code="AGENT_UNEXPECTED_ERROR",
+        )
+        await _notify_if_unwatched(
+            run_id=run_id,
+            project_id=project_id,
+            project_chat_id=project_chat_id,
+            app_user_id=app_user_id,
+            finished=False,
         )
     finally:
         await clear_cancel(run_id, turn_seq)
