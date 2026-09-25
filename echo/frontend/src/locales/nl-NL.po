@@ -546,7 +546,7 @@ msgid "{conversationCount} Conversations • Edited {0}"
 msgstr "{conversationCount} gesprekken • Bewerkt {0}"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:891
-#: src/components/chat/ChatModeBanner.tsx:56
+#: src/components/chat/ChatModeBanner.tsx:67
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} geselecteerd"
 
@@ -1491,8 +1491,8 @@ msgid "Agent run failed"
 msgstr "Agent-run mislukt"
 
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:51
-#: src/components/chat/ChatModeSelector.tsx:280
-#: src/components/chat/ChatModeBanner.tsx:38
+#: src/components/chat/ChatModeSelector.tsx:282
+#: src/components/chat/ChatModeBanner.tsx:49
 msgid "Agentic"
 msgstr "Agentisch"
 
@@ -1500,7 +1500,7 @@ msgstr "Agentisch"
 msgid "Agentic - Tool-driven execution"
 msgstr "Agentisch - Tool-gestuurd uitvoering"
 
-#: src/components/chat/AgenticIntroModal.tsx:23
+#: src/components/chat/AgenticIntroModal.tsx:22
 msgid "Agentic chat"
 msgstr "Agentische chat"
 
@@ -2027,7 +2027,7 @@ msgstr "Vraag een admin van de werkruimte om een uitnodiging, of kies een andere
 msgid "Ask a workspace admin to invite this collaborator."
 msgstr "Vraag een werkruimtebeheerder om deze persoon uit te nodigen."
 
-#: src/components/chat/AgenticIntroModal.tsx:66
+#: src/components/chat/AgenticIntroModal.tsx:65
 msgid "Ask about the app."
 msgstr "Stel vragen over de app."
 
@@ -2372,9 +2372,9 @@ msgstr ""
 #: src/components/project/ProjectExperimentalSection.tsx:48
 #: src/components/map/MapPage.tsx:548
 #: src/components/conversation/RetranscribeConversation.tsx:156
-#: src/components/chat/ChatModeSelector.tsx:152
-#: src/components/chat/ChatModeBanner.tsx:45
-#: src/components/chat/AgenticIntroModal.tsx:26
+#: src/components/chat/ChatModeSelector.tsx:154
+#: src/components/chat/ChatModeBanner.tsx:56
+#: src/components/chat/AgenticIntroModal.tsx:25
 #: src/components/agent-access/AgentAccessSection.tsx:150
 msgid "Beta"
 msgstr "Bèta"
@@ -2836,7 +2836,7 @@ msgstr "Chat verwijderd"
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Chat is niet beschikbaar op jouw toegangsniveau. Neem contact op met je werkruimtebeheerder om een upgrade aan te vragen."
 
-#: src/components/chat/ChatModeSelector.tsx:162
+#: src/components/chat/ChatModeSelector.tsx:164
 msgid "Chat limit reached"
 msgstr "Chatlimiet bereikt"
 
@@ -3884,7 +3884,7 @@ msgstr "Maak"
 msgid "Create a new webhook from scratch"
 msgstr "Een nieuwe webhook vanaf nul maken"
 
-#: src/components/chat/ChatModeSelector.tsx:61
+#: src/components/chat/ChatModeSelector.tsx:63
 msgid "Create a research brief from recent conversations"
 msgstr "Een onderzoeksbrief maken van recente gesprekken"
 
@@ -4205,7 +4205,7 @@ msgstr ""
 msgid "Default {defaultNodes}"
 msgstr ""
 
-#: src/components/chat/ChatModeSelector.tsx:281
+#: src/components/chat/ChatModeSelector.tsx:283
 msgid "Delegate multi-step analysis with live tool execution"
 msgstr "Multistap analyse delegeren met live tool uitvoering"
 
@@ -4632,7 +4632,7 @@ msgstr "Download transcript opties"
 msgid "DPA"
 msgstr "DPA"
 
-#: src/components/chat/ChatModeSelector.tsx:63
+#: src/components/chat/ChatModeSelector.tsx:65
 msgid "Draft next actions and organize them by priority"
 msgstr "Ontwerp volgende acties en organiseer ze op basis van prioriteit"
 
@@ -5247,7 +5247,7 @@ msgstr "Bekijk het dembrane/pilot-archief"
 msgid "Exploring"
 msgstr "Verkennen"
 
-#: src/components/chat/ChatModeBanner.tsx:52
+#: src/components/chat/ChatModeBanner.tsx:63
 msgid "Exploring {conversationCount} conversations"
 msgstr "{conversationCount} gesprekken aan het verkennen"
 
@@ -5609,7 +5609,7 @@ msgstr "Filter op collectie"
 msgid "Filter by name or id"
 msgstr "Filter op naam of id"
 
-#: src/components/chat/ChatModeSelector.tsx:62
+#: src/components/chat/ChatModeSelector.tsx:64
 msgid "Find contradictions and suggest follow-up questions"
 msgstr "Vind tegenstrijdigheden en voeg volgende vragen voor"
 
@@ -6141,7 +6141,7 @@ msgstr "Help"
 #~ msgid "Help me figure it out"
 #~ msgstr "Help me op weg"
 
-#: src/components/chat/AgenticIntroModal.tsx:56
+#: src/components/chat/AgenticIntroModal.tsx:55
 msgid "Help setting up your project."
 msgstr "Hulp bij het opzetten van je project."
 
@@ -7267,7 +7267,7 @@ msgstr ""
 msgid "Live & recent"
 msgstr "Live en recent"
 
-#: src/components/chat/ChatModeBanner.tsx:54
+#: src/components/chat/ChatModeBanner.tsx:65
 msgid "Live agent execution mode"
 msgstr "Live agent uitvoermodus"
 
@@ -7582,7 +7582,7 @@ msgstr "Leden beheren"
 msgid "Manage organisation billing"
 msgstr "Facturatie van organisatie beheren"
 
-#: src/components/chat/ChatTemplatesMenu.tsx:368
+#: src/components/chat/ChatTemplatesMenu.tsx:370
 msgid "Manage templates"
 msgstr "Templates beheren"
 
@@ -7856,7 +7856,7 @@ msgid "Monitor"
 msgstr "Monitoren"
 
 #: src/components/results/curate/CurateOpen.tsx:80
-#: src/components/chat/ChatTemplatesMenu.tsx:363
+#: src/components/chat/ChatTemplatesMenu.tsx:365
 msgid "more"
 msgstr "meer"
 
@@ -7954,7 +7954,7 @@ msgstr "Naar een andere werkruimte verplaatsen"
 msgid "Move to Project"
 msgstr "Verplaats naar project"
 
-#: src/components/chat/AgenticIntroModal.tsx:44
+#: src/components/chat/AgenticIntroModal.tsx:43
 msgid "Multi-step analysis."
 msgstr "Analyse in meerdere stappen."
 
@@ -8766,7 +8766,7 @@ msgstr ""
 #: src/components/pricing/PricingConfigurator.tsx:835
 #: src/components/popcorn/PopcornIntroModal.tsx:54
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:216
-#: src/components/chat/AgenticIntroModal.tsx:78
+#: src/components/chat/AgenticIntroModal.tsx:77
 msgid "Not now"
 msgstr "Niet nu"
 
@@ -9452,7 +9452,7 @@ msgstr "Overschrijven voor dit project"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:81
 #: src/features/sidebar/views/org/OrgHomeView.tsx:113
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:47
-#: src/components/chat/ChatModeBanner.tsx:36
+#: src/components/chat/ChatModeBanner.tsx:47
 msgid "Overview"
 msgstr "Overzicht"
 
@@ -9795,7 +9795,7 @@ msgstr "Kies iemand uit je organisatie of typ een e-mailadres om uit te nodigen.
 msgid "Pick one"
 msgstr "Kies er een"
 
-#: src/components/chat/ChatModeSelector.tsx:269
+#: src/components/chat/ChatModeSelector.tsx:271
 msgid "Pick the approach that fits your question"
 msgstr "Kies de aanpak die past bij je vraag"
 
@@ -9852,7 +9852,7 @@ msgstr "Gepland"
 msgid "Plans"
 msgstr "Plannen"
 
-#: src/components/chat/AgenticIntroModal.tsx:47
+#: src/components/chat/AgenticIntroModal.tsx:46
 msgid "Plans, gathers, and checks its work across many conversations."
 msgstr "Plant, verzamelt en controleert het eigen werk over veel gesprekken."
 
@@ -10414,7 +10414,7 @@ msgstr "Publiceer dit rapport om een deellink te krijgen"
 msgid "Published"
 msgstr "Gepubliceerd"
 
-#: src/components/chat/ChatModeSelector.tsx:56
+#: src/components/chat/ChatModeSelector.tsx:58
 msgid "Pull out the most impactful quotes from this session"
 msgstr "Haal de meest impactvolle quotes uit deze sessie"
 
@@ -10434,7 +10434,7 @@ msgstr "Vraag"
 #~ msgid "Question to resolve"
 #~ msgstr ""
 
-#: src/components/chat/AgenticIntroModal.tsx:69
+#: src/components/chat/AgenticIntroModal.tsx:68
 msgid "Questions about how dembrane works, not only about your data."
 msgstr "Vragen over hoe dembrane werkt, niet alleen over je data."
 
@@ -12054,11 +12054,11 @@ msgstr "Gesprek selecteren"
 msgid "Select conversations"
 msgstr "Gesprekken selecteren"
 
-#: src/components/chat/ChatModeSelector.tsx:295
+#: src/components/chat/ChatModeSelector.tsx:297
 msgid "Select conversations and find exact quotes"
 msgstr "Selecteer gesprekken en vind exacte quotes"
 
-#: src/components/chat/ChatModeBanner.tsx:58
+#: src/components/chat/ChatModeBanner.tsx:69
 msgid "Select conversations from sidebar"
 msgstr "Selecteer gesprekken in de sidebar"
 
@@ -12829,8 +12829,8 @@ msgstr "Spreek een vraag in en controleer de tekst voordat je die verstuurt."
 #~ msgid "Specific Context"
 #~ msgstr "Specifieke context"
 
-#: src/components/chat/ChatModeSelector.tsx:294
-#: src/components/chat/ChatModeBanner.tsx:40
+#: src/components/chat/ChatModeSelector.tsx:296
+#: src/components/chat/ChatModeBanner.tsx:51
 msgid "Specific Details"
 msgstr "Specifieke details"
 
@@ -12897,8 +12897,8 @@ msgstr "Vaste richtlijnen die de assistent meekrijgt in elke projectchat in deze
 msgid "Start a chat"
 msgstr "Start een chat"
 
-#: src/components/chat/AgenticIntroModal.tsx:82
-#: src/components/chat/AgenticIntroModal.tsx:85
+#: src/components/chat/AgenticIntroModal.tsx:81
+#: src/components/chat/AgenticIntroModal.tsx:84
 msgid "Start a new chat"
 msgstr "Start een nieuwe chat"
 
@@ -13099,7 +13099,7 @@ msgid "Suggested verification prompt"
 msgstr "Voorgestelde verificatievraag"
 
 #: src/components/library/LibraryTemplatesMenu.tsx:33
-#: src/components/chat/ChatTemplatesMenu.tsx:289
+#: src/components/chat/ChatTemplatesMenu.tsx:291
 msgid "Suggested:"
 msgstr "Aanbevelingen:"
 
@@ -13131,7 +13131,7 @@ msgstr "Samenvattingen passen zich aan de complexiteit van het gesprek aan."
 msgid "Summarize"
 msgstr "Samenvatten"
 
-#: src/components/chat/ChatModeSelector.tsx:55
+#: src/components/chat/ChatModeSelector.tsx:57
 msgid "Summarize this interview into a shareable article"
 msgstr "Vat dit interview samen in een artikel dat je kunt delen"
 
@@ -14665,7 +14665,7 @@ msgstr "Probeer het zo meteen opnieuw."
 msgid "Try Agentic instead"
 msgstr "Probeer Agentic"
 
-#: src/components/chat/ChatModeSelector.tsx:181
+#: src/components/chat/ChatModeSelector.tsx:183
 msgid "Try asking"
 msgstr "Vraag bijvoorbeeld"
 
@@ -15471,7 +15471,7 @@ msgstr ""
 msgid "Waiting to start"
 msgstr ""
 
-#: src/components/chat/AgenticIntroModal.tsx:59
+#: src/components/chat/AgenticIntroModal.tsx:58
 msgid "Walks you through setup and suggests next steps."
 msgstr "Loopt de installatie met je door en stelt volgende stappen voor."
 
@@ -15739,7 +15739,7 @@ msgstr "Waar deze spanning over gaat"
 msgid "What went wrong?"
 msgstr "Wat ging er mis?"
 
-#: src/components/chat/ChatModeSelector.tsx:57
+#: src/components/chat/ChatModeSelector.tsx:59
 msgid "What were the key moments in this conversation?"
 msgstr "Wat waren de belangrijkste momenten in dit gesprek?"
 
@@ -15748,7 +15748,7 @@ msgstr "Wat waren de belangrijkste momenten in dit gesprek?"
 msgid "What would resolve this tension"
 msgstr "Wat deze spanning zou oplossen"
 
-#: src/components/chat/ChatModeSelector.tsx:266
+#: src/components/chat/ChatModeSelector.tsx:268
 msgid "What would you like to explore?"
 msgstr "Wat wil je verkennen?"
 

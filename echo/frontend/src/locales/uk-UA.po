@@ -545,7 +545,7 @@ msgid "{conversationCount} Conversations • Edited {0}"
 msgstr "{conversationCount} Conversations • Edited {0}"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:891
-#: src/components/chat/ChatModeBanner.tsx:56
+#: src/components/chat/ChatModeBanner.tsx:67
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} selected"
 
@@ -1490,8 +1490,8 @@ msgid "Agent run failed"
 msgstr ""
 
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:51
-#: src/components/chat/ChatModeSelector.tsx:280
-#: src/components/chat/ChatModeBanner.tsx:38
+#: src/components/chat/ChatModeSelector.tsx:282
+#: src/components/chat/ChatModeBanner.tsx:49
 msgid "Agentic"
 msgstr "Agentic"
 
@@ -1499,7 +1499,7 @@ msgstr "Agentic"
 msgid "Agentic - Tool-driven execution"
 msgstr "Agentic - Tool-driven execution"
 
-#: src/components/chat/AgenticIntroModal.tsx:23
+#: src/components/chat/AgenticIntroModal.tsx:22
 msgid "Agentic chat"
 msgstr ""
 
@@ -2029,7 +2029,7 @@ msgstr ""
 msgid "Ask a workspace admin to invite this collaborator."
 msgstr ""
 
-#: src/components/chat/AgenticIntroModal.tsx:66
+#: src/components/chat/AgenticIntroModal.tsx:65
 msgid "Ask about the app."
 msgstr ""
 
@@ -2374,9 +2374,9 @@ msgstr ""
 #: src/components/project/ProjectExperimentalSection.tsx:48
 #: src/components/map/MapPage.tsx:548
 #: src/components/conversation/RetranscribeConversation.tsx:156
-#: src/components/chat/ChatModeSelector.tsx:152
-#: src/components/chat/ChatModeBanner.tsx:45
-#: src/components/chat/AgenticIntroModal.tsx:26
+#: src/components/chat/ChatModeSelector.tsx:154
+#: src/components/chat/ChatModeBanner.tsx:56
+#: src/components/chat/AgenticIntroModal.tsx:25
 #: src/components/agent-access/AgentAccessSection.tsx:150
 msgid "Beta"
 msgstr "Beta"
@@ -2838,7 +2838,7 @@ msgstr ""
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr ""
 
-#: src/components/chat/ChatModeSelector.tsx:162
+#: src/components/chat/ChatModeSelector.tsx:164
 msgid "Chat limit reached"
 msgstr ""
 
@@ -3886,7 +3886,7 @@ msgstr "Create"
 msgid "Create a new webhook from scratch"
 msgstr "Create a new webhook from scratch"
 
-#: src/components/chat/ChatModeSelector.tsx:61
+#: src/components/chat/ChatModeSelector.tsx:63
 msgid "Create a research brief from recent conversations"
 msgstr "Create a research brief from recent conversations"
 
@@ -4207,7 +4207,7 @@ msgstr ""
 msgid "Default {defaultNodes}"
 msgstr ""
 
-#: src/components/chat/ChatModeSelector.tsx:281
+#: src/components/chat/ChatModeSelector.tsx:283
 msgid "Delegate multi-step analysis with live tool execution"
 msgstr "Delegate multi-step analysis with live tool execution"
 
@@ -4634,7 +4634,7 @@ msgstr "Download Transcript Options"
 msgid "DPA"
 msgstr ""
 
-#: src/components/chat/ChatModeSelector.tsx:63
+#: src/components/chat/ChatModeSelector.tsx:65
 msgid "Draft next actions and organize them by priority"
 msgstr "Draft next actions and organize them by priority"
 
@@ -5249,7 +5249,7 @@ msgstr "Переглянути архів dembrane/pilot"
 msgid "Exploring"
 msgstr ""
 
-#: src/components/chat/ChatModeBanner.tsx:52
+#: src/components/chat/ChatModeBanner.tsx:63
 msgid "Exploring {conversationCount} conversations"
 msgstr "Exploring {conversationCount} conversations"
 
@@ -5611,7 +5611,7 @@ msgstr "Filter by collection"
 msgid "Filter by name or id"
 msgstr ""
 
-#: src/components/chat/ChatModeSelector.tsx:62
+#: src/components/chat/ChatModeSelector.tsx:64
 msgid "Find contradictions and suggest follow-up questions"
 msgstr "Find contradictions and suggest follow-up questions"
 
@@ -6143,7 +6143,7 @@ msgstr ""
 #~ msgid "Help me figure it out"
 #~ msgstr ""
 
-#: src/components/chat/AgenticIntroModal.tsx:56
+#: src/components/chat/AgenticIntroModal.tsx:55
 msgid "Help setting up your project."
 msgstr ""
 
@@ -7269,7 +7269,7 @@ msgstr ""
 msgid "Live & recent"
 msgstr ""
 
-#: src/components/chat/ChatModeBanner.tsx:54
+#: src/components/chat/ChatModeBanner.tsx:65
 msgid "Live agent execution mode"
 msgstr "Live agent execution mode"
 
@@ -7584,7 +7584,7 @@ msgstr ""
 msgid "Manage organisation billing"
 msgstr ""
 
-#: src/components/chat/ChatTemplatesMenu.tsx:368
+#: src/components/chat/ChatTemplatesMenu.tsx:370
 msgid "Manage templates"
 msgstr "Manage templates"
 
@@ -7858,7 +7858,7 @@ msgid "Monitor"
 msgstr ""
 
 #: src/components/results/curate/CurateOpen.tsx:80
-#: src/components/chat/ChatTemplatesMenu.tsx:363
+#: src/components/chat/ChatTemplatesMenu.tsx:365
 msgid "more"
 msgstr "more"
 
@@ -7956,7 +7956,7 @@ msgstr ""
 msgid "Move to Project"
 msgstr "Move to Project"
 
-#: src/components/chat/AgenticIntroModal.tsx:44
+#: src/components/chat/AgenticIntroModal.tsx:43
 msgid "Multi-step analysis."
 msgstr ""
 
@@ -8768,7 +8768,7 @@ msgstr ""
 #: src/components/pricing/PricingConfigurator.tsx:835
 #: src/components/popcorn/PopcornIntroModal.tsx:54
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:216
-#: src/components/chat/AgenticIntroModal.tsx:78
+#: src/components/chat/AgenticIntroModal.tsx:77
 msgid "Not now"
 msgstr ""
 
@@ -9454,7 +9454,7 @@ msgstr "Перевизначити для цього проєкту"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:81
 #: src/features/sidebar/views/org/OrgHomeView.tsx:113
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:47
-#: src/components/chat/ChatModeBanner.tsx:36
+#: src/components/chat/ChatModeBanner.tsx:47
 msgid "Overview"
 msgstr "Overview"
 
@@ -9797,7 +9797,7 @@ msgstr ""
 msgid "Pick one"
 msgstr ""
 
-#: src/components/chat/ChatModeSelector.tsx:269
+#: src/components/chat/ChatModeSelector.tsx:271
 msgid "Pick the approach that fits your question"
 msgstr "Pick the approach that fits your question"
 
@@ -9854,7 +9854,7 @@ msgstr ""
 msgid "Plans"
 msgstr ""
 
-#: src/components/chat/AgenticIntroModal.tsx:47
+#: src/components/chat/AgenticIntroModal.tsx:46
 msgid "Plans, gathers, and checks its work across many conversations."
 msgstr ""
 
@@ -10416,7 +10416,7 @@ msgstr "Publish this report to get a share link"
 msgid "Published"
 msgstr "Published"
 
-#: src/components/chat/ChatModeSelector.tsx:56
+#: src/components/chat/ChatModeSelector.tsx:58
 msgid "Pull out the most impactful quotes from this session"
 msgstr "Pull out the most impactful quotes from this session"
 
@@ -10436,7 +10436,7 @@ msgstr "Запитання"
 #~ msgid "Question to resolve"
 #~ msgstr ""
 
-#: src/components/chat/AgenticIntroModal.tsx:69
+#: src/components/chat/AgenticIntroModal.tsx:68
 msgid "Questions about how dembrane works, not only about your data."
 msgstr ""
 
@@ -12056,11 +12056,11 @@ msgstr ""
 msgid "Select conversations"
 msgstr ""
 
-#: src/components/chat/ChatModeSelector.tsx:295
+#: src/components/chat/ChatModeSelector.tsx:297
 msgid "Select conversations and find exact quotes"
 msgstr "Select conversations and find exact quotes"
 
-#: src/components/chat/ChatModeBanner.tsx:58
+#: src/components/chat/ChatModeBanner.tsx:69
 msgid "Select conversations from sidebar"
 msgstr "Select conversations from sidebar"
 
@@ -12831,8 +12831,8 @@ msgstr ""
 #~ msgid "Specific Context"
 #~ msgstr "Specific Context"
 
-#: src/components/chat/ChatModeSelector.tsx:294
-#: src/components/chat/ChatModeBanner.tsx:40
+#: src/components/chat/ChatModeSelector.tsx:296
+#: src/components/chat/ChatModeBanner.tsx:51
 msgid "Specific Details"
 msgstr "Specific Details"
 
@@ -12899,8 +12899,8 @@ msgstr ""
 msgid "Start a chat"
 msgstr ""
 
-#: src/components/chat/AgenticIntroModal.tsx:82
-#: src/components/chat/AgenticIntroModal.tsx:85
+#: src/components/chat/AgenticIntroModal.tsx:81
+#: src/components/chat/AgenticIntroModal.tsx:84
 msgid "Start a new chat"
 msgstr ""
 
@@ -13101,7 +13101,7 @@ msgid "Suggested verification prompt"
 msgstr ""
 
 #: src/components/library/LibraryTemplatesMenu.tsx:33
-#: src/components/chat/ChatTemplatesMenu.tsx:289
+#: src/components/chat/ChatTemplatesMenu.tsx:291
 msgid "Suggested:"
 msgstr "Suggested:"
 
@@ -13133,7 +13133,7 @@ msgstr ""
 msgid "Summarize"
 msgstr "Summarize"
 
-#: src/components/chat/ChatModeSelector.tsx:55
+#: src/components/chat/ChatModeSelector.tsx:57
 msgid "Summarize this interview into a shareable article"
 msgstr "Summarize this interview into a shareable article"
 
@@ -14669,7 +14669,7 @@ msgstr ""
 msgid "Try Agentic instead"
 msgstr ""
 
-#: src/components/chat/ChatModeSelector.tsx:181
+#: src/components/chat/ChatModeSelector.tsx:183
 msgid "Try asking"
 msgstr "Try asking"
 
@@ -15475,7 +15475,7 @@ msgstr ""
 msgid "Waiting to start"
 msgstr ""
 
-#: src/components/chat/AgenticIntroModal.tsx:59
+#: src/components/chat/AgenticIntroModal.tsx:58
 msgid "Walks you through setup and suggests next steps."
 msgstr ""
 
@@ -15743,7 +15743,7 @@ msgstr "Про що це напруження"
 msgid "What went wrong?"
 msgstr "Що пішло не так?"
 
-#: src/components/chat/ChatModeSelector.tsx:57
+#: src/components/chat/ChatModeSelector.tsx:59
 msgid "What were the key moments in this conversation?"
 msgstr "What were the key moments in this conversation?"
 
@@ -15752,7 +15752,7 @@ msgstr "What were the key moments in this conversation?"
 msgid "What would resolve this tension"
 msgstr "Що розв'язало б це напруження"
 
-#: src/components/chat/ChatModeSelector.tsx:266
+#: src/components/chat/ChatModeSelector.tsx:268
 msgid "What would you like to explore?"
 msgstr "What would you like to explore?"
 
