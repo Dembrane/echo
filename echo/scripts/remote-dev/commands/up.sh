@@ -2,6 +2,7 @@
 # Brings the whole stack up on the VM and installs dependencies.
 #
 # In order:
+#   0. offers to copy your working tree up, if the VM's differs
 #   1. copies .env files up
 #   2. docker compose up -d (postgres, valkey, directus, agent, devcontainer)
 #   3. runs the devcontainer's own setup.sh (node, pnpm, uv, deps, sshd)
@@ -21,6 +22,37 @@ SKIP_SETUP=false
 
 require_gcloud
 require_running
+
+# The VM runs its own checkout, which nothing keeps in step with yours, so up
+# would otherwise start whatever compose files and code the VM last had.
+log_step "Comparing your working tree with the VM's"
+if CHANGED="$("$RD_COMMANDS_DIR/sync-code.sh" --check)"; then
+    if [ -z "$CHANGED" ]; then
+        log_info "The VM has the same tracked files as you"
+    else
+        log_warn "$(echo "$CHANGED" | wc -l | tr -d ' ') tracked file(s) differ from the VM's:"
+        echo "$CHANGED" | head -15 | sed 's/^/    /'
+        if [ "$(echo "$CHANGED" | wc -l)" -gt 15 ]; then echo "    ..."; fi
+        # A differing file the VM has edited is probably work done there, in
+        # Zed, which a copy would overwrite.
+        VM_EDITED="$(vm_ssh "cd '$RD_REPO_DIR' && git diff --name-only HEAD" 2>/dev/null || true)"
+        OVERLAP="$(comm -12 <(echo "$CHANGED" | sort) <(echo "$VM_EDITED" | sort))"
+        DEFAULT="y"
+        if [ -n "$OVERLAP" ]; then
+            log_warn "The VM has uncommitted edits of its own to $(echo "$OVERLAP" | wc -l | tr -d ' ') of them, which copying would overwrite:"
+            echo "$OVERLAP" | head -15 | sed 's/^/    /'
+            DEFAULT="n"
+        fi
+        # Opening /dev/tty, not testing it: the node exists even with no terminal.
+        if { : </dev/tty; } 2>/dev/null && confirm "Copy your working tree to the VM first?" "$DEFAULT"; then
+            "$RD_COMMANDS_DIR/sync-code.sh"
+        else
+            log_info "Leaving the VM's files as they are. Copy yours later with: ./scripts/remote-dev.sh sync-code"
+        fi
+    fi
+else
+    log_warn "Could not compare with the VM, so starting it with whatever it has."
+fi
 
 # The VM has its own checkout, so a compose file that exists only on your
 # branch is missing there, and docker's "no such file" does not say why.

@@ -26,18 +26,17 @@ fi
 
 # Clone the branch you are on, so the VM has what the stack depends on with a
 # clean git status. It has to exist on RD_REPO_URL, which may not be where you
-# push: a branch on your fork alone falls back to the default branch, and the
-# working-tree sync at the end carries it up instead.
-RD_REPO_ROOT="$(cd "$RD_ECHO_ROOT/.." && pwd)"
-LOCAL_BRANCH="$(git -C "$RD_REPO_ROOT" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+# push: a branch on your fork alone falls back to the default branch, and up
+# offers to copy your working tree over it.
+LOCAL_BRANCH="$(git -C "$RD_ECHO_ROOT/.." symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
 CLONE_BRANCH=""
-CLONE_SHA=""
 if [ -n "$LOCAL_BRANCH" ]; then
     # No prompt: a private RD_REPO_URL would otherwise stop here for a password.
-    CLONE_SHA="$(GIT_TERMINAL_PROMPT=0 git ls-remote --heads "$RD_REPO_URL" "refs/heads/$LOCAL_BRANCH" 2>/dev/null | cut -f1 || true)"
+    if GIT_TERMINAL_PROMPT=0 git ls-remote --exit-code --heads "$RD_REPO_URL" "refs/heads/$LOCAL_BRANCH" >/dev/null 2>&1; then
+        CLONE_BRANCH="$LOCAL_BRANCH"
+    fi
 fi
-if [ -n "$CLONE_SHA" ]; then
-    CLONE_BRANCH="$LOCAL_BRANCH"
+if [ -n "$CLONE_BRANCH" ]; then
     log_info "The VM will clone $CLONE_BRANCH"
 else
     log_info "${LOCAL_BRANCH:-Your checkout} is not on $RD_REPO_URL, so the VM will clone its default branch"
@@ -117,31 +116,6 @@ fi
 
 # A new VM gets a new IP, so an alias from an earlier VM would dial the old one.
 "$RD_COMMANDS_DIR/ssh-config.sh"
-
-# Even a clone of your branch lacks unpushed commits and uncommitted edits, and
-# up runs whatever the VM has. Only offered now, while the VM has no work of
-# its own for the copy to overwrite.
-log_step "Your working tree"
-DIRTY="$(git -C "$RD_REPO_ROOT" status --porcelain --untracked-files=no)"
-if [ -n "$CLONE_BRANCH" ] && [ -z "$DIRTY" ] && [ "$CLONE_SHA" = "$(git -C "$RD_REPO_ROOT" rev-parse HEAD)" ]; then
-    log_info "The VM's clone matches your checkout. Nothing to copy."
-else
-    if [ -n "$CLONE_BRANCH" ]; then
-        log_info "The VM cloned $CLONE_BRANCH at ${CLONE_SHA:0:8}, and you are at $(git -C "$RD_REPO_ROOT" rev-parse --short=8 HEAD)."
-    else
-        log_info "The VM cloned the default branch, and you are on ${LOCAL_BRANCH:-a detached HEAD}."
-    fi
-    if [ -n "$DIRTY" ]; then
-        log_info "These uncommitted changes would be copied too:"
-        echo "$DIRTY" | sed 's/^/    /'
-    fi
-    # Opening /dev/tty, not testing it: the node exists even with no terminal.
-    if { : </dev/tty; } 2>/dev/null && confirm "Copy your working tree to the VM?" "y"; then
-        "$RD_COMMANDS_DIR/sync-code.sh"
-    else
-        log_info "Skipped. Copy it later with: ./scripts/remote-dev.sh sync-code"
-    fi
-fi
 
 log_step "Done"
 cat <<EOF
