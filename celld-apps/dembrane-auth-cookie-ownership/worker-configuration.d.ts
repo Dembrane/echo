@@ -10,6 +10,7 @@ interface __BaseEnv_Env {
 	USER: DurableObjectNamespace<import("./src/index").User>;
 	PROJECT: DurableObjectNamespace<import("./src/index").Project>;
 	DIRECTORY: DurableObjectNamespace<import("./src/index").Directory>;
+	ASSETS: Fetcher;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {

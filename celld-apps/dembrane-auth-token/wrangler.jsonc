@@ -8,7 +8,11 @@
   // if no file matches, e.g. `/`).
   "assets": {
     "directory": "./public",
-    "run_worker_first": ["/api/*"]
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
+    // celld serves no index.html for /dir/, so the Worker does (see the end
+    // of src/index.ts). "none" stops celld redirecting /dir/index.html there.
+    "html_handling": "none"
   },
 
   // One User Durable Object per dembrane user, addressed by user id, and a

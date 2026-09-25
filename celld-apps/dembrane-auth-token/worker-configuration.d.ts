@@ -7,6 +7,7 @@ interface __BaseEnv_Env {
 	DIRECTUS_SECRET: string;
 	USER: DurableObjectNamespace<import("./src/index").User>;
 	DIRECTORY: DurableObjectNamespace<import("./src/index").Directory>;
+	ASSETS: Fetcher;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {

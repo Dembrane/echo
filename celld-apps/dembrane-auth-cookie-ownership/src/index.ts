@@ -168,4 +168,8 @@ app.onError((err, c) => {
   return c.json({ error: "something went wrong (is Directus running?)" }, 500);
 });
 
+// celld has no directory index: /dir/ falls through to here, so serve
+// /dir/index.html for it.
+app.get("*", (c) => (c.req.path.endsWith("/") ? c.env.ASSETS.fetch(new URL("index.html", c.req.url)) : c.notFound()));
+
 export default app;
