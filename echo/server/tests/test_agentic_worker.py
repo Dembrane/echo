@@ -2651,3 +2651,85 @@ async def test_turn_end_notifies_only_when_nobody_is_watching(
         assert call["action"] == "NAVIGATE_CHAT"
         assert call["ref_chat_id"] == "chat-1"
         assert call["ref_workspace_id"] == "workspace-1"
+
+
+@pytest.mark.asyncio
+async def test_ack_worded_as_pure_status_still_reaches_the_chat(monkeypatch) -> None:
+    """The narration filter drops "I'm looking into X" from the model's free
+    text. An ack is that sentence on purpose, and on echo-next it vanished,
+    leaving the plan with no message to sit under."""
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    fake_chat_service = _FakeChatService()
+    ack_text = "I'm looking into what participants said went wrong during the session."
+
+    async def _fake_stream(**_kwargs: object):
+        yield {"type": "on_tool_start", "name": "ack"}
+        yield {
+            "type": "on_tool_end",
+            "name": "ack",
+            "data": {
+                "output": {
+                    "lc": 1,
+                    "type": "constructor",
+                    "id": ["langchain", "schema", "messages", "ToolMessage"],
+                    "kwargs": {
+                        "content": json.dumps(
+                            {
+                                "kind": "progress_update",
+                                "update": ack_text,
+                                "plan": ["Find the conversations", "Read them"],
+                                "visible_to_user": True,
+                            }
+                        )
+                    },
+                }
+            },
+        }
+        yield {"type": "assistant.message", "content": "Final answer."}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", fake_chat_service)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="What went wrong?",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    assistant_contents = [
+        event["payload"]["content"] for event in events if event["event_type"] == "assistant.message"
+    ]
+    assert assistant_contents[0] == ack_text
+    assert fake_chat_service.created_messages[0]["text"] == ack_text
+
+
+def test_model_status_narration_is_still_dropped_from_free_text() -> None:
+    assert _sanitize_host_visible_assistant_content("I'm looking into the transcripts.") is None
+    assert (
+        _sanitize_host_visible_assistant_content(
+            "I'm looking into the transcripts.", keep_status_narration=True
+        )
+        == "I'm looking into the transcripts."
+    )

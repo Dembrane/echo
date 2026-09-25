@@ -119,8 +119,14 @@ def _is_pure_status_narration(content: str) -> bool:
     return all(STATUS_NARRATION_SENTENCE_RE.match(sentence) for sentence in sentences)
 
 
-def _sanitize_host_visible_assistant_content(content: str) -> Optional[str]:
-    """Normalize assistant text before it becomes visible to a host."""
+def _sanitize_host_visible_assistant_content(
+    content: str, *, keep_status_narration: bool = False
+) -> Optional[str]:
+    """Normalize assistant text before it becomes visible to a host.
+
+    Pure status narration ("I'm looking into X") is dropped from the model's
+    free text, where it is filler. An `ack` is status by design, so its caller
+    keeps it with `keep_status_narration`."""
     normalized = content.strip()
     if not normalized or normalized in INTERNAL_PLACEHOLDER_CONTENTS:
         return None
@@ -131,7 +137,7 @@ def _sanitize_host_visible_assistant_content(content: str) -> Optional[str]:
         normalized = normalized[0].upper() + normalized[1:]
     if PARENTHETICAL_PLANNING_RE.match(normalized):
         return None
-    if _is_pure_status_narration(normalized):
+    if not keep_status_narration and _is_pure_status_narration(normalized):
         return None
     previous = None
     while previous != normalized:
@@ -631,10 +637,13 @@ async def _append_assistant_message(
     content: str,
     project_chat_id: str,
     message_id: Optional[str] = None,
+    keep_status_narration: bool = False,
 ) -> Optional[str]:
     # Never emit or persist internal placeholders / empty turns as host-facing
     # messages — they only fragment the chat and leak the Gemini crutch text.
-    sanitized_content = _sanitize_host_visible_assistant_content(content)
+    sanitized_content = _sanitize_host_visible_assistant_content(
+        content, keep_status_narration=keep_status_narration
+    )
     if sanitized_content is None:
         return None
     event_payload: dict[str, Any] = {"content": sanitized_content}
@@ -1062,6 +1071,7 @@ async def process_agentic_run(
                         content=progress_message,
                         project_chat_id=project_chat_id,
                         message_id=pending_progress_message_id,
+                        keep_status_narration=True,
                     )
                     pending_progress_message_id = None
                     if persisted_content is not None:

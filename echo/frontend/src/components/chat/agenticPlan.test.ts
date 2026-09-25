@@ -148,4 +148,21 @@ describe("derivePlans", () => {
 
 		expect(derivePlans(events, "running")).toEqual([]);
 	});
+
+	it("sits under the question, not the answer, when the ack message is missing", () => {
+		// echo-next, 25 Sep: the ack's message was dropped, so the first
+		// assistant message after the ack was the final answer.
+		seq = 0;
+		const events = [
+			event("user.message"),
+			toolStart("ack", { message: "Looking into it.", plan: PLAN }),
+			toolStart("listProjectConversations", {}),
+			toolStart("updatePlan", { done: 3, steps: PLAN }),
+			event("assistant.message", { content: "Here is the answer." }),
+		];
+
+		const [plan] = derivePlans(events, "completed");
+
+		expect(plan.sortSeq).toBe(2.5);
+	});
 });
