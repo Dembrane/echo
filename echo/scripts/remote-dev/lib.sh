@@ -165,20 +165,22 @@ GCP keeps it for 30 days, so it can be brought back:
     fi
 }
 
-# Compute is not enabled on a fresh project. Enabling is idempotent and takes
-# up to a minute the first time, so only call the API when it is actually off.
-require_compute_api() {
-    local enabled
+# APIs are not enabled on a fresh project. Enabling is idempotent and takes up
+# to a minute the first time, so only call the API when it is actually off.
+require_api() {
+    local service="$1" label="$2" enabled
     # A failed listing is not proof the API is off, so do not enable on one.
     enabled="$(gc services list --enabled --format='value(config.name)')" \
         || die "Could not list the enabled APIs on '$RD_PROJECT'."
-    if echo "$enabled" | grep -qx 'compute.googleapis.com'; then
+    if echo "$enabled" | grep -qx "$service"; then
         return 0
     fi
-    log_warn "compute.googleapis.com is not enabled on '$RD_PROJECT'. Enabling now (this can take a minute)."
-    gc services enable compute.googleapis.com
-    log_info "Compute Engine API enabled"
+    log_warn "$service is not enabled on '$RD_PROJECT'. Enabling now (this can take a minute)."
+    gc services enable "$service"
+    log_info "$label API enabled"
 }
+
+require_compute_api() { require_api compute.googleapis.com "Compute Engine"; }
 
 instance_exists() {
     gc_zone instances describe "$RD_INSTANCE_NAME" --format='value(name)' >/dev/null 2>&1
