@@ -11,12 +11,10 @@ import { testId } from "@/lib/testUtils";
  *
  * A participant has just spent ten minutes talking into their phone at
  * somebody else's event. This is the one moment they are a lead, so the card
- * uses one illustration and one button. The button opens the website's needs
- * form in a new tab, with the project the participant was in on the URL. The
- * site writes that onto the row as `project_id`, so the enquiry is a website
- * enquiry like any other (a WEB- reference, `mount: site`, the daily digest
- * and the booking notice) and still reads as "was at this event". One write
- * path for every lead; nothing downstream has to know about the portal.
+ * uses one illustration and one button. The button opens the website's page
+ * for participants in a new tab, with the project the participant was in on
+ * the URL, at the introduction to Eve or Pauline they can send to someone who
+ * runs big events (see `eventEnquiryUrl`).
  *
  * Hosts on a paid plan can switch the card off per project
  * (`is_dembrane_event_cta_enabled`); the free tier always shows it. That

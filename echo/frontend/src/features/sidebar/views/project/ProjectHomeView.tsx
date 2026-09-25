@@ -2,13 +2,13 @@ import { Trans } from "@lingui/react/macro";
 import {
 	AppWindowIcon,
 	BooksIcon,
-	BroadcastIcon,
+	ChartBarIcon,
 	ChatCircleDotsIcon,
 	ChatCircleTextIcon,
+	DeviceMobileIcon,
 	FileTextIcon,
 	GearIcon,
 	GraphIcon,
-	PaintBrushIcon,
 	PlayIcon,
 	PopcornIcon,
 	RobotIcon,
@@ -99,13 +99,13 @@ export const ProjectHomeView = () => {
 				<NavItem
 					to={`${base}/portal-editor`}
 					label={<Trans>Portal editor</Trans>}
-					icon={PaintBrushIcon}
+					icon={DeviceMobileIcon}
 				/>
 				{ENABLE_MONITOR && (
 					<NavItem
 						to={`${base}/monitor`}
 						label={<Trans>Monitor</Trans>}
-						icon={BroadcastIcon}
+						icon={ChartBarIcon}
 						badge={<Trans>Beta</Trans>}
 					/>
 				)}

@@ -37,7 +37,7 @@ msgstr "Error del servidor"
 #. js-lingui-explicit-id
 #: src/lib/directus.ts:53
 msgid "Something went wrong"
-msgstr ""
+msgstr "Algo salió mal"
 
 #. js-lingui-explicit-id
 #: src/components/layout/TransitionCurtainProvider.tsx:156
@@ -52,7 +52,7 @@ msgstr "Preparando tu dashboard"
 #. js-lingui-explicit-id
 #: src/components/layout/TransitionCurtainProvider.tsx:197
 msgid "Welcome back"
-msgstr ""
+msgstr "Bienvenido de nuevo"
 
 #: src/components/popcorn/PopcornStatus.tsx:45
 msgid " · {heldBack} held back"
@@ -195,14 +195,6 @@ msgstr ""
 #: src/components/settings/MyAccessCard.tsx:203
 msgid "{0, plural, one {# project} other {# projects}}"
 msgstr ""
-
-#: src/components/results/resultContent.ts:236
-#~ msgid "{0, plural, one {# quote from {name}} other {# quotes from {name}}}"
-#~ msgstr ""
-
-#: src/components/results/resultContent.ts:240
-#~ msgid "{0, plural, one {# quote} other {# quotes}}"
-#~ msgstr ""
 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
@@ -1079,6 +1071,7 @@ msgstr ""
 #: src/routes/admin/AdminSettingsRoute.tsx:1578
 #: src/routes/admin/AdminSettingsRoute.tsx:2644
 #: src/routes/admin/AdminSettingsRoute.tsx:3087
+#: src/features/sidebar/shell/UserMenu.tsx:80
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:132
 msgid "Account"
@@ -1210,10 +1203,6 @@ msgstr ""
 #: src/components/goal/ProjectGoalSection.tsx:64
 msgid "Add a project goal before saving."
 msgstr ""
-
-#: src/components/results/curate/CurateMeta.tsx:202
-#~ msgid "add a reason"
-#~ msgstr ""
 
 #: src/components/workspace/gateWalls.ts:137
 msgid "add a workspace"
@@ -1438,7 +1427,7 @@ msgstr "Ajustar el tamaño de la fuente base para la interfaz"
 msgid "Admin"
 msgstr ""
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:143
+#: src/features/sidebar/views/user/UserHomeView.tsx:146
 msgid "Admin dashboard"
 msgstr ""
 
@@ -2378,7 +2367,7 @@ msgstr ""
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:109
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:138
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:160
-#: src/features/sidebar/blocks/HelpBlock.tsx:52
+#: src/features/sidebar/blocks/HelpBlock.tsx:76
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:248
 #: src/components/project/ProjectPortalEditor.tsx:1474
@@ -2763,10 +2752,6 @@ msgstr ""
 msgid "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 msgstr "Cambia las palabras, lee las pruebas o deja un hallazgo fuera de esta presentación. Los resultados compartidos siguen disponibles en Análisis."
 
-#: src/components/results/ResultItem.tsx:582
-#~ msgid "Change the words"
-#~ msgstr "Cambiar las palabras"
-
 #: src/routes/admin/AdminSettingsRoute.tsx:626
 #: src/routes/admin/AdminSettingsRoute.tsx:668
 #: src/routes/admin/AdminSettingsRoute.tsx:670
@@ -2997,7 +2982,7 @@ msgstr "Elige el tema que prefieras para la interfaz"
 msgid "City"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:198
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:201
 #~ msgid "Claim"
 #~ msgstr ""
 
@@ -3037,7 +3022,7 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:274
 #: src/routes/project/ProjectsHome.tsx:364
 #: src/routes/project/chat/NewChatRoute.tsx:172
-#: src/features/sidebar/blocks/SearchBlock.tsx:136
+#: src/features/sidebar/blocks/SearchBlock.tsx:159
 #: src/components/invite/WorkspaceSelectList.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:802
 msgid "Clear search"
@@ -3145,7 +3130,7 @@ msgstr ""
 msgid "Close details"
 msgstr ""
 
-#: src/routes/project/present/PresentResultsPanel.tsx:114
+#: src/routes/project/present/PresentResultsPanel.tsx:86
 #~ msgid "Close results review"
 #~ msgstr "Cerrar la revisión de resultados"
 
@@ -3322,7 +3307,7 @@ msgstr "Confirma tu contraseña para generar un nuevo secreto para tu aplicació
 msgid "Connect"
 msgstr ""
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:50
+#: src/features/sidebar/blocks/HelpBlock.tsx:74
 #: src/components/agent-access/AgentAccessSection.tsx:147
 msgid "Connect your agent"
 msgstr ""
@@ -3371,7 +3356,7 @@ msgid "Consolidated arguments"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:27
-#: src/features/sidebar/blocks/HelpBlock.tsx:76
+#: src/features/sidebar/blocks/HelpBlock.tsx:122
 msgid "Contact support"
 msgstr ""
 
@@ -3936,7 +3921,7 @@ msgstr ""
 msgid "library.create"
 msgstr "Crear biblioteca"
 
-#: src/features/sidebar/shell/UserMenu.tsx:145
+#: src/features/sidebar/shell/UserMenu.tsx:165
 msgid "Create new organisation"
 msgstr ""
 
@@ -4342,7 +4327,7 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr ""
 
-#: src/components/participant/DembraneEventCta.tsx:63
+#: src/components/participant/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
 msgstr "¿dembrane en tu evento?"
 
@@ -4560,7 +4545,7 @@ msgid "Do you want to stay in the loop?"
 msgstr "¿Quieres estar en el bucle?"
 
 #: src/features/sidebar/views/HelpView.tsx:35
-#: src/features/sidebar/blocks/HelpBlock.tsx:63
+#: src/features/sidebar/blocks/HelpBlock.tsx:99
 #: src/components/chat/ChatHistoryMessage.tsx:197
 msgid "Documentation"
 msgstr "Documentación"
@@ -4585,11 +4570,11 @@ msgstr ""
 msgid "Done"
 msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:641
+#: src/routes/project/present/PresentRoute.tsx:669
 #~ msgid "Done editing"
 #~ msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:650
+#: src/routes/project/present/PresentRoute.tsx:678
 #~ msgid "Done reviewing"
 #~ msgstr "Terminar la revisión"
 
@@ -4811,7 +4796,7 @@ msgstr "Modo edición"
 msgid "Edit options"
 msgstr "Editar opciones"
 
-#: src/routes/project/present/PresentRoute.tsx:641
+#: src/routes/project/present/PresentRoute.tsx:669
 #~ msgid "Edit presentation"
 #~ msgstr ""
 
@@ -4835,7 +4820,7 @@ msgstr "Edita informes directamente"
 msgid "Edit reports directly in dembrane."
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:180
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:183
 #~ msgid "Edit result"
 #~ msgstr ""
 
@@ -5188,11 +5173,11 @@ msgstr "Acceso al micrófono verificado con éxito"
 msgid "Evidence"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:439
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:454
 #~ msgid "Evidence and history"
 #~ msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:282
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:285
 #~ msgid "Evidence level"
 #~ msgstr ""
 
@@ -5291,8 +5276,8 @@ msgstr ""
 #: src/routes/organisation/OrganisationRoute.tsx:1888
 #: src/routes/organisation/OrganisationExternalView.tsx:63
 #: src/lib/roles.ts:15
-#: src/features/sidebar/views/user/UserHomeView.tsx:113
-#: src/features/sidebar/views/org/OrgHomeView.tsx:148
+#: src/features/sidebar/views/user/UserHomeView.tsx:115
+#: src/features/sidebar/views/org/OrgHomeView.tsx:149
 #: src/components/project/ProjectUsageAndSharing.tsx:319
 #: src/components/invite/RoleSelect.tsx:60
 msgid "External"
@@ -5558,7 +5543,7 @@ msgid "participant.modal.echo.info.title"
 msgstr "Función disponible pronto"
 
 #: src/features/sidebar/views/HelpView.tsx:65
-#: src/features/sidebar/blocks/HelpBlock.tsx:43
+#: src/features/sidebar/blocks/HelpBlock.tsx:62
 msgid "Feedback"
 msgstr ""
 
@@ -5678,7 +5663,7 @@ msgstr ""
 msgid "First name"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:235
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:238
 #~ msgid "First pole"
 #~ msgstr ""
 
@@ -5982,7 +5967,7 @@ msgid "participant.refine.go.deeper.description"
 msgstr "Obtén una respuesta inmediata de dembrane para ayudarte a profundizar en la conversación."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:691
-#: src/features/sidebar/views/user/UserHomeView.tsx:81
+#: src/features/sidebar/views/user/UserHomeView.tsx:82
 msgid "Get started"
 msgstr ""
 
@@ -6149,7 +6134,9 @@ msgid "have your recordings transcribed"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:25
-#: src/features/sidebar/blocks/HelpBlock.tsx:33
+#: src/features/sidebar/blocks/HelpBlock.tsx:188
+#: src/features/sidebar/blocks/HelpBlock.tsx:203
+#: src/features/sidebar/blocks/HelpBlock.tsx:217
 msgid "Help"
 msgstr ""
 
@@ -6256,15 +6243,11 @@ msgstr "Concepto específico resaltado"
 msgid "history"
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:716
-#~ msgid "History"
-#~ msgstr "Historial"
-
 #: src/components/results/curate/CurateOpen.tsx:204
 msgid "History / details"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:511
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:526
 #~ msgid "History could not be loaded."
 #~ msgstr ""
 
@@ -6276,7 +6259,7 @@ msgstr ""
 msgid "Holds position"
 msgstr ""
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:76
+#: src/features/sidebar/views/user/UserHomeView.tsx:77
 msgid "Home"
 msgstr "Inicio"
 
@@ -6336,10 +6319,6 @@ msgstr ""
 #: src/components/popcorn/PopcornVoiceSection.tsx:51
 msgid "How should the phrases sound?"
 msgstr ""
-
-#: src/components/results/curate/StakeholdersTab.tsx:130
-#~ msgid "How they were named"
-#~ msgstr ""
 
 #: src/components/project/ProjectBasicEdit.tsx:129
 #~ msgid ""
@@ -6566,7 +6545,7 @@ msgstr "Insights"
 #~ msgid "Inspect evidence"
 #~ msgstr ""
 
-#: src/components/analysis/AnalysisResultsList.tsx:54
+#: src/components/analysis/AnalysisResultsList.tsx:47
 #~ msgid "Inspect evidence for {label}"
 #~ msgstr ""
 
@@ -6735,7 +6714,7 @@ msgstr ""
 msgid "Invoicing"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:292
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:295
 #~ msgid "Invoked by"
 #~ msgstr ""
 
@@ -7039,7 +7018,7 @@ msgid "Kinds of finding"
 msgstr ""
 
 #: src/routes/project/present/PresentRoute.tsx:207
-#: src/features/sidebar/shell/UserMenu.tsx:119
+#: src/features/sidebar/shell/UserMenu.tsx:139
 #: src/components/settings/LanguageSettingsCard.tsx:13
 #: src/components/report/UpdateReportModalButton.tsx:253
 #: src/components/report/UpdateReportModalButton.tsx:326
@@ -7229,7 +7208,7 @@ msgstr ""
 msgid "Likely true"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:550
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:565
 #~ msgid "Lineage could not be loaded."
 #~ msgstr ""
 
@@ -7362,7 +7341,7 @@ msgstr ""
 msgid "Living canvas and popcorn"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:318
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:321
 #~ msgid "Load latest revision"
 #~ msgstr ""
 
@@ -7540,7 +7519,7 @@ msgstr "Logo eliminado"
 msgid "Logo updated"
 msgstr "Logo actualizado"
 
-#: src/features/sidebar/shell/UserMenu.tsx:155
+#: src/features/sidebar/shell/UserMenu.tsx:175
 msgid "Logout"
 msgstr "Cerrar sesión"
 
@@ -7787,8 +7766,8 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:798
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:819
 #: src/routes/organisation/OrganisationRoute.tsx:889
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:75
-#: src/features/sidebar/views/org/OrgHomeView.tsx:118
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
+#: src/features/sidebar/views/org/OrgHomeView.tsx:119
 #: src/components/workspace/UsageCard.tsx:213
 #: src/components/project/ProjectUsageAndSharing.tsx:228
 #: src/components/project/ProjectUsageAndSharing.tsx:259
@@ -8183,7 +8162,7 @@ msgid "New Password"
 msgstr "Nueva Contraseña"
 
 #: src/routes/project/CreateProjectRoute.tsx:194
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:65
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:68
 msgid "New project"
 msgstr ""
 
@@ -8430,10 +8409,6 @@ msgstr ""
 msgid "No goal yet. Set one here, or let the assistant interview you in chat."
 msgstr ""
 
-#: src/components/results/ResultItem.tsx:418
-#~ msgid "No history yet."
-#~ msgstr "Todavía no hay historial."
-
 #: src/components/invite/InviteModal.tsx:456
 msgid "No invites went out. Check the list below."
 msgstr ""
@@ -8448,10 +8423,6 @@ msgstr ""
 msgid "No logo set. dembrane default will be used."
 msgstr ""
 
-#: src/components/results/curate/CuratePanel.tsx:45
-#~ msgid "No map arguments yet. They appear after the first analysis."
-#~ msgstr ""
-
 #: src/components/map/MapPage.tsx:476
 msgid "No map has been generated for this project yet."
 msgstr ""
@@ -8461,7 +8432,7 @@ msgid "No map results are ready yet."
 msgstr ""
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:682
-#: src/features/sidebar/blocks/SearchBlock.tsx:156
+#: src/features/sidebar/blocks/SearchBlock.tsx:179
 msgid "No matches"
 msgstr ""
 
@@ -8628,7 +8599,7 @@ msgstr ""
 msgid "No selectable conversations"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:474
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:489
 #~ msgid "No source quote was recorded for this result."
 #~ msgstr ""
 
@@ -8785,13 +8756,6 @@ msgstr ""
 #: src/components/results/ResultsList.tsx:362
 msgid "not in this presentation"
 msgstr "no en esta presentación"
-
-#: src/components/results/ResultRow.tsx:271
-#: src/components/results/ResultRow.tsx:350
-#: src/components/results/ResultRow.tsx:354
-#: src/components/results/ResultItem.tsx:656
-#~ msgid "Not in this presentation"
-#~ msgstr "No en esta presentación"
 
 #: src/components/results/curate/CuratePanel.tsx:316
 msgid "Not in this presentation."
@@ -9191,6 +9155,11 @@ msgstr "Abrir mapa"
 msgid "Open Map"
 msgstr ""
 
+#: src/features/sidebar/shell/SidebarHeader.tsx:36
+#: src/features/sidebar/shell/SidebarHeader.tsx:40
+msgid "Open menu"
+msgstr "Abrir menú"
+
 #: src/routes/admin/AdminSettingsRoute.tsx:2801
 msgid "Open Mollie dashboard"
 msgstr ""
@@ -9343,7 +9312,7 @@ msgstr ""
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:474
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:716
 #: src/routes/onboarding/OnboardingRoute.tsx:122
-#: src/features/sidebar/views/org/OrgHomeView.tsx:76
+#: src/features/sidebar/views/org/OrgHomeView.tsx:77
 #: src/features/sidebar/hooks/useSearchHits.ts:134
 #: src/components/training/StaffTrainingPanel.tsx:139
 #: src/components/organisation/CreateOrganisationModal.tsx:174
@@ -9401,7 +9370,7 @@ msgstr ""
 msgid "Organisation usage"
 msgstr ""
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:94
+#: src/features/sidebar/views/user/UserHomeView.tsx:96
 #: src/components/agent-access/AgentGrantsCard.tsx:94
 msgid "Organisations"
 msgstr ""
@@ -9482,9 +9451,9 @@ msgstr "Sobrescrito para este proyecto"
 msgid "Override for this project"
 msgstr "Sobrescribir para este proyecto"
 
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:59
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:62
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:81
-#: src/features/sidebar/views/org/OrgHomeView.tsx:112
+#: src/features/sidebar/views/org/OrgHomeView.tsx:113
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:47
 #: src/components/chat/ChatModeBanner.tsx:36
 msgid "Overview"
@@ -9791,7 +9760,7 @@ msgstr "La información personal será reemplazada por marcadores. La reproducci
 msgid "Phone"
 msgstr "Teléfono"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:218
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:221
 #~ msgid "Phrase"
 #~ msgstr ""
 
@@ -9865,7 +9834,7 @@ msgstr ""
 msgid "Pinned is full (max 5)"
 msgstr "Fijados está lleno (máx. 5)"
 
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:89
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:92
 msgid "Pinned projects"
 msgstr ""
 
@@ -9878,7 +9847,7 @@ msgid "Plan ends"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:52
-#: src/features/sidebar/blocks/HelpBlock.tsx:72
+#: src/features/sidebar/blocks/HelpBlock.tsx:113
 msgid "Planned"
 msgstr ""
 
@@ -10432,7 +10401,7 @@ msgstr "Publicar"
 msgid "Publish changes"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:335
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:338
 #~ msgid "Publish revision"
 #~ msgstr ""
 
@@ -10456,12 +10425,6 @@ msgstr "Saca las citas más potentes de esta sesión"
 msgid "Put {name} on dembrane-managed billing at the {tier} tier? No automatic Mollie charges or auto-expiry."
 msgstr ""
 
-#: src/components/results/ResultRow.tsx:337
-#: src/components/results/ResultRow.tsx:341
-#: src/components/results/ResultItem.tsx:654
-#~ msgid "Put back in this presentation"
-#~ msgstr "Devolver a esta presentación"
-
 #: src/components/popcorn/PopcornScreenSettings.tsx:82
 msgid "QR code"
 msgstr ""
@@ -10470,7 +10433,7 @@ msgstr ""
 msgid "Question"
 msgstr "Pregunta"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:252
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:255
 #~ msgid "Question to resolve"
 #~ msgstr ""
 
@@ -10641,7 +10604,7 @@ msgstr "¿Listo para conectar tus herramientas? Agrega un webhook para recibir a
 msgid "Reason"
 msgstr "Motivo"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:301
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:304
 #~ msgid "Reason for this change"
 #~ msgstr ""
 
@@ -10657,10 +10620,6 @@ msgstr ""
 #: src/components/goal/ProjectGoalSection.tsx:42
 msgid "recently"
 msgstr ""
-
-#: src/components/results/ResultItem.tsx:760
-#~ msgid "Recipe not recorded"
-#~ msgstr "Receta no registrada"
 
 #: src/components/results/ResultItem.tsx:828
 #: src/components/map/panels/NodeDetailCard.tsx:381
@@ -10878,7 +10837,7 @@ msgid "Relationships"
 msgstr ""
 
 #: src/routes/ReleaseNotesRoute.tsx:21
-#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:143
+#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:141
 msgid "Release notes"
 msgstr "Notas de versión"
 
@@ -11095,7 +11054,7 @@ msgid "Report already generating"
 msgstr "El informe ya se está generando"
 
 #: src/features/sidebar/views/HelpView.tsx:58
-#: src/features/sidebar/blocks/HelpBlock.tsx:36
+#: src/features/sidebar/blocks/HelpBlock.tsx:50
 #: src/components/feedback/ReportIssueModal.tsx:180
 msgid "Report an issue"
 msgstr "Informar de un problema"
@@ -11301,7 +11260,7 @@ msgstr ""
 #~ msgid "Reset hidden findings"
 #~ msgstr ""
 
-#: src/routes/project/present/PresentResultsPanel.tsx:175
+#: src/routes/project/present/PresentResultsPanel.tsx:160
 #~ msgid "Reset hidden findings ({0})"
 #~ msgstr ""
 
@@ -11329,30 +11288,22 @@ msgstr "Comentarios sobre la respuesta"
 msgid "Restore"
 msgstr "Restaurar"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:357
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:409
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:368
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:424
 #~ msgid "Restore earlier wording"
 #~ msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:347
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:350
 #~ msgid "Restore result"
 #~ msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:411
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:426
 #~ msgid "Restore revision"
 #~ msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:410
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:425
 #~ msgid "Restore revision {0} as a new revision?"
 #~ msgstr ""
-
-#: src/components/results/ResultItem.tsx:448
-#~ msgid "Restore this wording"
-#~ msgstr "Restaurar esta redacción"
-
-#: src/components/results/ResultItem.tsx:671
-#~ msgid "Restore to the analysis"
-#~ msgstr "Devolver al análisis"
 
 #. placeholder {0}: revision.revisionNumber
 #: src/components/results/ResultItem.tsx:642
@@ -11516,11 +11467,11 @@ msgstr ""
 msgid "participant.concrete.action.button.revise"
 msgstr "revisar"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:526
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:541
 #~ msgid "Revision"
 #~ msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:373
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:384
 #~ msgid "Revision {0}"
 #~ msgstr ""
 
@@ -11815,7 +11766,8 @@ msgstr ""
 msgid "Scroll to bottom"
 msgstr "Desplazarse al final"
 
-#: src/features/sidebar/blocks/SearchBlock.tsx:89
+#: src/features/sidebar/blocks/SearchBlock.tsx:88
+#: src/features/sidebar/blocks/SearchBlock.tsx:111
 #: src/components/results/ResultsList.tsx:286
 #: src/components/conversation/ProjectConversationsPanel.tsx:795
 #: src/components/conversation/MoveConversationButton.tsx:158
@@ -11898,7 +11850,7 @@ msgid "Search projects..."
 msgstr "Buscar proyectos..."
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:288
-#: src/features/sidebar/blocks/SearchBlock.tsx:146
+#: src/features/sidebar/blocks/SearchBlock.tsx:169
 msgid "Search results"
 msgstr ""
 
@@ -11955,7 +11907,7 @@ msgid "Searching transcripts for \"{0}\""
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:296
-#: src/features/sidebar/blocks/SearchBlock.tsx:154
+#: src/features/sidebar/blocks/SearchBlock.tsx:177
 msgid "Searching…"
 msgstr ""
 
@@ -11978,7 +11930,7 @@ msgstr ""
 msgid "Seats full"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:240
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:243
 #~ msgid "Second pole"
 #~ msgstr ""
 
@@ -12008,7 +11960,7 @@ msgstr ""
 msgid "See when transcription is in progress."
 msgstr ""
 
-#: src/features/sidebar/shell/UserMenu.tsx:49
+#: src/features/sidebar/shell/UserMenu.tsx:52
 msgid "See you soon"
 msgstr "Hasta pronto"
 
@@ -12311,16 +12263,16 @@ msgstr ""
 msgid "Set up with the assistant after creating"
 msgstr ""
 
-#: src/features/sidebar/shell/UserMenu.tsx:101
+#: src/features/sidebar/shell/UserMenu.tsx:121
 msgid "Set up workspace"
 msgstr ""
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:85
+#: src/features/sidebar/views/user/UserHomeView.tsx:86
 msgid "Set up your first organisation"
 msgstr ""
 
 #: src/routes/onboarding/OnboardingRoute.tsx:592
-#: src/features/sidebar/views/user/UserHomeView.tsx:127
+#: src/features/sidebar/views/user/UserHomeView.tsx:129
 msgid "Set up your organisation"
 msgstr ""
 
@@ -12343,10 +12295,10 @@ msgstr ""
 #: src/routes/settings/UserSettingsRoute.tsx:62
 #: src/routes/project/ProjectsHome.tsx:247
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:28
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:80
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:83
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
-#: src/features/sidebar/views/org/OrgHomeView.tsx:130
+#: src/features/sidebar/views/org/OrgHomeView.tsx:131
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
 #: src/components/layout/ParticipantHeader.tsx:124
 #: src/components/layout/ParticipantHeader.tsx:125
@@ -12371,7 +12323,7 @@ msgid "Settings updated"
 msgstr ""
 
 #: src/routes/project/CreateProjectRoute.tsx:373
-#: src/features/sidebar/views/user/UserHomeView.tsx:74
+#: src/features/sidebar/views/user/UserHomeView.tsx:75
 msgid "Setup"
 msgstr ""
 
@@ -12900,7 +12852,7 @@ msgid "Spotlight"
 msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3259
-#: src/features/sidebar/shell/UserMenu.tsx:132
+#: src/features/sidebar/shell/UserMenu.tsx:152
 msgid "Staff"
 msgstr ""
 
@@ -13283,7 +13235,7 @@ msgid "System default"
 msgstr "Valor predeterminado del sistema"
 
 #: src/features/sidebar/views/HelpView.tsx:49
-#: src/features/sidebar/blocks/HelpBlock.tsx:69
+#: src/features/sidebar/blocks/HelpBlock.tsx:110
 msgid "System status"
 msgstr ""
 
@@ -13339,7 +13291,7 @@ msgstr "Tómate un tiempo para crear un resultado que haga tu contribución conc
 msgid "Tapping Record twice no longer creates duplicate conversations."
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:544
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:559
 #~ msgid "Technical lineage"
 #~ msgstr ""
 
@@ -13392,6 +13344,10 @@ msgstr ""
 #: src/components/map/attributes.ts:164
 msgid "Tensions"
 msgstr "Tensiones"
+
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:358
+#~ msgid "Tensions and merged arguments leave this argument out from their next update. Restoring it brings it back."
+#~ msgstr ""
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:54
 msgid "Tensions tab"
@@ -13453,10 +13409,6 @@ msgstr "Ese código no funcionó. Inténtalo de nuevo con un código nuevo de tu
 msgid "That did not save. Your words are still here."
 msgstr "No se guardó. Tus palabras siguen aquí."
 
-#: src/components/results/resultEditing.tsx:459
-#~ msgid "That did not save. Your words are still here. Try again"
-#~ msgstr "No se guardó. Tus palabras siguen aquí. Inténtalo de nuevo"
-
 #: src/components/pricing/PricingConfigurator.tsx:815
 msgid "That didn't send. Your answers are still here, so try again."
 msgstr ""
@@ -13497,7 +13449,7 @@ msgstr ""
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:326
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:329
 #~ msgid "The change could not be published."
 #~ msgstr ""
 
@@ -13852,7 +13804,7 @@ msgstr ""
 msgid "Theme"
 msgstr "Tema"
 
-#: src/features/sidebar/shell/UserMenu.tsx:75
+#: src/features/sidebar/shell/UserMenu.tsx:94
 msgid "there"
 msgstr ""
 
@@ -14144,7 +14096,7 @@ msgstr "Esta parte de la página no se ha cargado. Recargarla suele solucionarlo
 msgid "this person"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:224
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:227
 #~ msgid "This phrase is a question"
 #~ msgstr ""
 
@@ -14229,7 +14181,7 @@ msgstr ""
 msgid "This request took too long, so I stopped it. Send it again and I'll retry."
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:309
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:312
 #~ msgid "This result changed while you were reviewing it."
 #~ msgstr ""
 
@@ -14241,7 +14193,7 @@ msgstr ""
 msgid "This returns the workspace to your organisation's shared billing and removes its external data owner."
 msgstr ""
 
-#: src/components/analysis/AnalysisResultsList.tsx:95
+#: src/components/analysis/AnalysisResultsList.tsx:88
 #~ msgid "This revision is unavailable."
 #~ msgstr ""
 
@@ -14526,7 +14478,7 @@ msgid "Trained until {until}"
 msgstr ""
 
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:46
-#: src/features/sidebar/views/org/OrgHomeView.tsx:123
+#: src/features/sidebar/views/org/OrgHomeView.tsx:124
 #: src/components/training/WorkspaceTrainingPanel.tsx:37
 #: src/components/training/TrainingRoster.tsx:47
 #: src/components/training/OrgTrainingPanel.tsx:68
@@ -14934,7 +14886,7 @@ msgid "until {0}"
 msgstr ""
 
 #: src/routes/organisation/OrganisationRoute.tsx:1647
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:95
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:98
 #: src/components/workspace/OrganisationProjectsTable.tsx:236
 msgid "Untitled"
 msgstr ""
@@ -15263,7 +15215,7 @@ msgstr ""
 msgid "Used the wrong address? <0>Register again</0>."
 msgstr ""
 
-#: src/features/sidebar/shell/UserMenu.tsx:139
+#: src/features/sidebar/shell/UserMenu.tsx:159
 msgid "User settings"
 msgstr ""
 
@@ -15496,7 +15448,7 @@ msgstr ""
 msgid "Voice input respects the free plan's recording limit."
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:285
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:288
 #~ msgid "Voiced directly"
 #~ msgstr ""
 
@@ -15805,7 +15757,7 @@ msgstr "Qué resolvería esta tensión"
 msgid "What would you like to explore?"
 msgstr "¿Qué te gustaría explorar?"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:57
+#: src/features/sidebar/blocks/HelpBlock.tsx:87
 #: src/components/release/ReleaseVideoModal.tsx:310
 msgid "What's new"
 msgstr ""
@@ -15870,10 +15822,6 @@ msgstr ""
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:797
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Cuando el resumen esté listo (incluye tanto la transcripción como el resumen)"
-
-#: src/components/results/ResultItem.tsx:745
-#~ msgid "Where this came from"
-#~ msgstr "De dónde viene esto"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:253
 msgid "Where would you like to go?"
@@ -15947,17 +15895,21 @@ msgstr "Retirar"
 msgid "Withdraw from the analysis"
 msgstr "Retirar del análisis"
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:349
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:395
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:397
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:352
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:406
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:412
 #~ msgid "Withdraw result"
+#~ msgstr ""
+
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:409
+#~ msgid "Withdraw this argument from current Map and presentation views? Tensions and merged arguments leave it out too, from their next update. Its revision history will remain available."
 #~ msgstr ""
 
 #: src/components/results/curate/CurateOpen.tsx:139
 msgid "Withdraw this from the analysis?"
 msgstr ""
 
-#: src/components/analysis/EvidenceInspectionDrawer.tsx:396
+#: src/components/analysis/EvidenceInspectionDrawer.tsx:410
 #~ msgid "Withdraw this result from current Map and presentation views? Its revision history will remain available."
 #~ msgstr ""
 
@@ -16085,7 +16037,7 @@ msgstr ""
 
 #: src/routes/organisation/OrganisationRoute.tsx:1439
 #: src/routes/admin/AdminSettingsRoute.tsx:1688
-#: src/features/sidebar/views/org/OrgHomeView.tsx:140
+#: src/features/sidebar/views/org/OrgHomeView.tsx:141
 msgid "Workspaces"
 msgstr ""
 
@@ -16184,7 +16136,7 @@ msgstr ""
 msgid "You are on the free plan. There is no payment to manage yet."
 msgstr ""
 
-#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:53
+#: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:55
 msgid "You are the data owner"
 msgstr ""
 
@@ -16270,7 +16222,7 @@ msgstr ""
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr ""
 
-#: src/features/sidebar/shell/UserMenu.tsx:110
+#: src/features/sidebar/shell/UserMenu.tsx:130
 msgid "You have a pending invite"
 msgstr ""
 

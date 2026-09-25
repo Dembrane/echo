@@ -9,6 +9,7 @@ import { isAdminRole, isOutsiderRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
+import { FullOnly } from "../../shell/rail";
 
 export const WorkspaceHomeView = () => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
@@ -43,15 +44,17 @@ export const WorkspaceHomeView = () => {
 			<BackButton to={backTo} label={workspace?.name ?? backLabel} center />
 
 			{workspace?.is_data_owner && (
-				<Badge
-					color="primary"
-					variant="light"
-					radius="sm"
-					className="mx-auto my-1"
-					data-testid="data-owner-badge"
-				>
-					<Trans>You are the data owner</Trans>
-				</Badge>
+				<FullOnly>
+					<Badge
+						color="primary"
+						variant="light"
+						radius="sm"
+						className="mx-auto my-1"
+						data-testid="data-owner-badge"
+					>
+						<Trans>You are the data owner</Trans>
+					</Badge>
+				</FullOnly>
 			)}
 
 			<NavItem
@@ -84,7 +87,7 @@ export const WorkspaceHomeView = () => {
 				</>
 			)}
 			{pinnedProjects.length > 0 && (
-				<>
+				<FullOnly>
 					<SectionLabel>
 						<Trans>Pinned projects</Trans>
 					</SectionLabel>
@@ -97,7 +100,7 @@ export const WorkspaceHomeView = () => {
 							pushes
 						/>
 					))}
-				</>
+				</FullOnly>
 			)}
 		</nav>
 	);

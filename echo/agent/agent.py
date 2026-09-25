@@ -1,15 +1,17 @@
 from logging import getLogger
 import json
 import re
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Literal, Optional
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 
 from copilotkit.langgraph import CopilotKitState
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.runnables import Runnable
 from langchain_core.tools import tool
 from google.oauth2 import service_account
 from langchain_google_vertexai import ChatVertexAI
+from langchain_google_vertexai._client_utils import _get_async_prediction_client
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
@@ -867,7 +869,36 @@ POST_NUDGE_CONTINUATION_SYSTEM_PROMPT = (
 VERTEX_AUTH_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 
 
-def _build_llm() -> ChatVertexAI:
+class _VertexChat(ChatVertexAI):
+    """ChatVertexAI whose async client always uses async gRPC.
+
+    langchain-google-vertexai treats any host other than aiplatform.googleapis.com
+    as a custom proxy and keeps the sync transport for the async client, so every
+    ainvoke against the EU multi-region host (aiplatform.eu.rep.googleapis.com)
+    fails with "GenerateContentResponse can't be used in 'await' expression".
+    """
+
+    @property
+    def async_prediction_client(self) -> Any:
+        if self.async_client is None:
+            self.async_client = _get_async_prediction_client(
+                endpoint_version=self.endpoint_version,
+                credentials=self.credentials,
+                client_options=self.client_options,
+                transport="grpc_asyncio",
+                user_agent=self._user_agent,
+            )
+        return self.async_client
+
+
+# A model with a fallback behind it retries once, so a 429 reaches the next
+# model in seconds instead of after ChatVertexAI's six backoff retries.
+PRIMARY_MAX_RETRIES_WITH_FALLBACK = 1
+
+
+def _build_llm(
+    model_name: Optional[str] = None, max_retries: Optional[int] = None
+) -> ChatVertexAI:
     settings = get_settings()
 
     credentials = None
@@ -881,13 +912,36 @@ def _build_llm() -> ChatVertexAI:
         if not project:
             project = credentials_payload.get("project_id")
 
-    return ChatVertexAI(
-        model_name=settings.llm_model,
+    extra: dict[str, Any] = {}
+    if max_retries is not None:
+        extra["max_retries"] = max_retries
+    return _VertexChat(
+        model_name=model_name or settings.llm_model,
         project=project,
         location=settings.vertex_location,
         api_endpoint=settings.vertex_api_endpoint or None,
         credentials=credentials,
+        **extra,
     )
+
+
+def _bind_tools_with_fallbacks(tools: list[Any]) -> Runnable:
+    """The primary model with tools, then each LLM_FALLBACK_MODELS entry in order.
+
+    A fallback only runs when the model before it raises (an error or a 429);
+    it is not a load balancer.
+    """
+    fallback_models = get_settings().llm_fallback_model_list
+    if not fallback_models:
+        return _build_llm().bind_tools(tools)
+    chain = [_build_llm(max_retries=PRIMARY_MAX_RETRIES_WITH_FALLBACK)]
+    chain += [
+        _build_llm(model, max_retries=PRIMARY_MAX_RETRIES_WITH_FALLBACK)
+        for model in fallback_models[:-1]
+    ]
+    chain.append(_build_llm(fallback_models[-1]))
+    bound = [model.bind_tools(tools) for model in chain]
+    return bound[0].with_fallbacks(bound[1:])
 
 
 def create_agent_graph(
@@ -2421,8 +2475,7 @@ def create_agent_graph(
     system_prompt = system_prompt_for(canvas_enabled) + knowledge.prompt_section(
         docs_base_url=docs_base_url
     )
-    configured_llm = llm or _build_llm()
-    llm_with_tools = configured_llm.bind_tools(tools)
+    llm_with_tools = llm.bind_tools(tools) if llm else _bind_tools_with_fallbacks(tools)
     tool_names = {tool.name for tool in tools}
     # The fused-call splitter and history normalization also recognize the OLD
     # tool names, so a replayed history that concatenated or named an old tool

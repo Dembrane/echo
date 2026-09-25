@@ -278,7 +278,7 @@ class FeatureFlagSettings(BaseSettings):
         validation_alias=AliasChoices("ENABLE_CANVAS", "FEATURE_FLAGS__ENABLE_CANVAS"),
     )
     enable_present: bool = Field(
-        default=False,
+        default=True,
         alias="ENABLE_PRESENT",
         validation_alias=AliasChoices("ENABLE_PRESENT", "FEATURE_FLAGS__ENABLE_PRESENT"),
     )
