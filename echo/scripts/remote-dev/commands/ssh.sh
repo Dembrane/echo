@@ -21,9 +21,11 @@ if [ "${1:-}" = "--vm" ]; then
     shift
     log_info "Connecting to the VM ($(instance_ip))"
     # A leading flag is for gcloud, as in --command '...'. Anything else is a
-    # command to run; -t so one like tail -f stops on ctrl-c.
+    # command to run; -t so one like tail -f stops on ctrl-c. The trap turns
+    # that ctrl-c into a plain exit 130: a command killed by the signal makes
+    # ssh exit 255, which gcloud reports as a connection failure.
     if [ $# -gt 0 ] && [ "${1#-}" = "$1" ]; then
-        gc_ssh --command "$*" -- -t
+        gc_ssh --command "trap 'exit 130' INT; $*" -- -t
     else
         vm_ssh_interactive "$@"
     fi
