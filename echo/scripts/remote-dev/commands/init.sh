@@ -249,6 +249,17 @@ log_info "Wrote $LOCAL_ENV"
 echo
 cat "$LOCAL_ENV" | grep -v '^#' | grep -v '^$' | sed 's/^/  /'
 
+log_step "Vertex AI credentials (optional)"
+echo "Chat, reports and transcription call Vertex AI. This can set up a service"
+echo "account in '$PROJECT' and write its key to server/.env and agent/.env."
+echo "Skip it if you already have credentials, or run it later with:"
+echo "  ./scripts/remote-dev.sh vertex"
+# Offer yes only while there is nothing to overwrite.
+if grep -q '^GCP_SA_JSON=..' "$RD_ECHO_ROOT/server/.env" 2>/dev/null; then VERTEX_DEFAULT=n; else VERTEX_DEFAULT=y; fi
+if confirm "Set up Vertex AI now?" "$VERTEX_DEFAULT"; then
+    "$RD_COMMANDS_DIR/vertex.sh"
+fi
+
 log_step "Next"
 cat <<EOF
   ./scripts/remote-dev.sh create  create the VM, install docker, clone the repo,
