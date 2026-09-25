@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Forwards the dev ports from the VM to your laptop and stays in the
-# foreground. Leave it running in its own terminal tab; ctrl-c closes it.
+# Forwards the dev ports to localhost. Leave it running; ctrl-c closes it.
+#
+# Stays in the foreground, so give it its own terminal tab.
 #
 # Ports are mapped 1:1 on purpose. docker-compose.yml hardcodes localhost
 # origins (CORS_ORIGIN=http://localhost:5173, PUBLIC_URL=http://localhost:8055,
@@ -11,12 +12,12 @@
 # Nothing is exposed publicly. The GCP firewall only ever opens port 22; every
 # one of these ports travels inside the SSH connection.
 #
-#   ./tunnel.sh              forward the default port set
-#   ./tunnel.sh 5173 8000    forward only these
+#   ./scripts/remote-dev.sh tunnel            forward the default port set
+#   ./scripts/remote-dev.sh tunnel 5173 8000  forward only these
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 require_gcloud
 require_running
@@ -54,7 +55,7 @@ print_port() {
         5432) scheme=postgresql; desc="postgres (dembrane / dembrane)" ;;
         9000) scheme=http;       desc="minio S3 API (dembrane / dembrane)" ;;
         9001) scheme=http;       desc="minio console (dembrane / dembrane)" ;;
-        8787) scheme=http;       desc="celld workers (deploy with ./celld-deploy.sh)" ;;
+        8787) scheme=http;       desc="celld workers (deploy with ./scripts/remote-dev.sh celld-deploy)" ;;
         *)    printf '  %13s%s\n' "" "localhost:$p"; return ;;
     esac
     printf '  %10s://localhost:%-5s  %s%s\n' "$scheme" "$p" "$desc" "$note"

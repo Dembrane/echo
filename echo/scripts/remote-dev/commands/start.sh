@@ -4,9 +4,9 @@
 # The external IP is ephemeral, so it changes on every start. That is why this
 # re-runs ssh-config.sh: without it, Zed would keep dialing yesterday's IP.
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 require_gcloud
 require_instance
@@ -31,10 +31,10 @@ for i in $(seq 1 30); do
 done
 echo
 
-"$RD_SCRIPT_DIR/ssh-config.sh"
+"$RD_COMMANDS_DIR/ssh-config.sh"
 
 log_step "Next"
 cat <<EOF
 The containers do not auto-start after a reboot. Bring the stack back with:
-  ./up.sh
+  ./scripts/remote-dev.sh up
 EOF

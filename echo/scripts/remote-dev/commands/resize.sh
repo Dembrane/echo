@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Change the VM's machine type, its disk size, or both.
+# Changes the VM's machine type, its disk size, or both.
 #
-#   ./resize.sh e2-standard-8          # more CPU and RAM
-#   ./resize.sh --disk 200GB           # more disk
-#   ./resize.sh e2-standard-8 --disk 200GB
+#   ./scripts/remote-dev.sh resize e2-standard-8  # more CPU and RAM
+#   ./scripts/remote-dev.sh resize --disk 200GB   # more disk
+#   ./scripts/remote-dev.sh resize e2-standard-8 --disk 200GB
 #
 # Machine type changes require the VM to be stopped, so this stops and
 # restarts it for you. Nothing on the disk is touched, so the stack and all
@@ -11,9 +11,9 @@
 #
 # Disks can only grow, never shrink. That is a GCP limit, not a script one.
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 NEW_MACHINE=""
 NEW_DISK=""
@@ -21,7 +21,7 @@ NEW_DISK=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --disk) NEW_DISK="$2"; shift 2 ;;
-        -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) header_help "$0"; exit 0 ;;
         -*) die "Unknown option: $1" ;;
         *) NEW_MACHINE="$1"; shift ;;
     esac
@@ -74,8 +74,8 @@ if [ -n "$NEW_MACHINE" ]; then
     log_warn "The VM rebooted, so the containers are down."
     echo
     echo "  Bring the stack back, which also reinstalls your SSH key:"
-    echo "    ./up.sh"
+    echo "    ./scripts/remote-dev.sh up"
     echo
     echo "  Then reopen port forwarding in its own tab:"
-    echo "    ./tunnel.sh"
+    echo "    ./scripts/remote-dev.sh tunnel"
 fi

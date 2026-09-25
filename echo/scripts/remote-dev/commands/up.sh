@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Brings the whole stack up on the VM:
+# Brings the whole stack up on the VM and installs dependencies.
+#
+# In order:
 #   1. copies .env files up
 #   2. docker compose up -d (postgres, valkey, directus, agent, devcontainer)
 #   3. runs the devcontainer's own setup.sh (node, pnpm, uv, deps, sshd)
@@ -10,9 +12,9 @@
 # and the schema push only applies differences, so this doubles as the "bring
 # it back after a reboot" command.
 
-RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$RD_SCRIPT_DIR/lib.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
+handle_help "${1:-}" "$0"
 
 SKIP_SETUP=false
 [ "${1:-}" = "--skip-setup" ] && SKIP_SETUP=true
@@ -26,11 +28,11 @@ MISSING="$(vm_ssh "cd '$RD_REPO_DIR/echo/.devcontainer' && for f in $RD_COMPOSE_
 if [ -n "$MISSING" ]; then
     VM_BRANCH="$(vm_ssh "git -C '$RD_REPO_DIR' rev-parse --abbrev-ref HEAD" 2>/dev/null || echo unknown)"
     die "The VM's checkout (on $VM_BRANCH) has no $(echo "$MISSING" | paste -sd, - | sed 's/,/, /g'), which your local.env asks for.
-Copy your working tree up with ./sync-code.sh, or push your branch and check it out on the VM."
+Copy your working tree up with ./scripts/remote-dev.sh sync-code, or push your branch and check it out on the VM."
 fi
 
 log_step "Syncing env files"
-"$RD_SCRIPT_DIR/sync-env.sh"
+"$RD_COMMANDS_DIR/sync-env.sh"
 
 log_step "Starting containers"
 log_info "The first run builds the directus, agent and server images. Expect 5 to 15 minutes."
@@ -69,7 +71,7 @@ log_step "Applying the directus schema"
 # A push also removes what the snapshot lacks, so the database follows the
 # checked-out branch, older ones included.
 container_exec "for _ in \$(seq 60); do curl -sf http://directus:8055/server/ping >/dev/null && exit 0; sleep 2; done; exit 1" \
-    || die "directus did not answer within 2 minutes. See: ./ssh.sh --vm, then docker compose logs directus"
+    || die "directus did not answer within 2 minutes. See: ./scripts/remote-dev.sh ssh --vm, then docker compose logs directus"
 # sync.sh logs at debug level, so keep the output only for when it fails.
 # Retried because a busy directus answers 503 now and then, and a push is
 # idempotent.
@@ -101,19 +103,19 @@ if ! minio_enabled; then
     log_warn "minio is off, so file uploads and recordings fail. Enable with: $RD_MINIO_ENABLE_HINT"
 fi
 cat <<EOF
-  ./ssh-config.sh   refresh the SSH host entries, if the VM was started outside ./start.sh
-  ./tunnel.sh       forward ports to localhost so your browser can reach the app
-  ./ssh.sh          shell into the devcontainer
+  ./scripts/remote-dev.sh ssh-config  refresh the SSH host entries, if the VM was started from the console
+  ./scripts/remote-dev.sh tunnel      forward ports to localhost so your browser can reach the app
+  ./scripts/remote-dev.sh ssh         shell into the devcontainer
 
 Then in Zed: cmd-shift-P, "projects: open remote", host "$RD_SSH_CONTAINER_HOST",
 and open /workspaces/echo.
 
 Start the dev processes from inside the container with mprocs:
-  ./ssh.sh
+  ./scripts/remote-dev.sh ssh
   cd /workspaces/echo && mprocs
 EOF
 if celld_enabled; then
     echo
     echo "celld is on. Deploy an app from your laptop, with the tunnel open:"
-    echo "  ./celld-deploy.sh ../../../celld-apps/counter"
+    echo "  ./scripts/remote-dev.sh celld-deploy ../celld-apps/counter"
 fi
