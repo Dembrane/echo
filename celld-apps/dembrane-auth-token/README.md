@@ -28,14 +28,24 @@ It needs a Directus to log in to. The quickest is [`directus`](https://github.co
 ## Run it
 
 ```sh
-(cd path/to/cloudflare-examples/examples/directus && pnpm install && pnpm db:setup && pnpm start)   # in another terminal
+../../echo/scripts/remote-dev/tunnel.sh   # in another terminal, for the VM's Directus on :8055
 
 pnpm install
-cp .dev.vars.example .dev.vars   # DIRECTUS_SECRET, matching ../directus's SECRET
+cp .dev.vars.example .dev.vars
 pnpm dev                         # http://localhost:9877
 ```
 
-Open <http://localhost:9877>. It redirects to `/dembrane-dashboard/`, which sends you to its login page. Each example has its own port (the cookie ones use 9878 and 9879), so you can run them side by side.
+Open <http://localhost:9877> (not 127.0.0.1: Directus allows `localhost` origins, and its cookie is for `localhost`). It redirects to `/dembrane-dashboard/`, which sends you to its login page. Each example has its own port (the cookie ones use 9878 and 9879), so you can run them side by side.
+
+## Run it on the remote dev VM
+
+With celld on and `./tunnel.sh` open (see [../counter/README.md](../counter/README.md)):
+
+```sh
+pnpm run deploy
+```
+
+Open http://localhost:8787 and log in as a user of the VM's Directus, such as `admin@dembrane.com` / `admin`. The VM's celld runs one app at a time, so this replaces whatever was deployed there before. The vars in `wrangler.jsonc` are the VM's values, and `.dev.vars` overrides them for `pnpm dev`.
 
 ## The flow
 
@@ -112,7 +122,7 @@ The quickest option is [`directus`](https://github.com/patcon/cloudflare-example
 
 The browser talks to Directus directly; the Worker never sees a password.
 
-The token only carries `id`, `role`, `app_access` and `admin_access`. For your name, `POST /api/session` calls Directus's `/users/me` once at login, passing on your own token, so Directus applies your role's permissions and the Worker needs no credentials of its own. It saves the result in your Durable Object, and `/api/me` returns it. This needs the Worker to reach `DIRECTUS_URL` (the one in `wrangler.jsonc`, not whichever URL you typed on the login page). If it can't, you still log in, and just show as "Directus user".
+The token only carries `id`, `role`, `app_access` and `admin_access`. For your name, `POST /api/session` calls Directus's `/users/me` once at login, passing on your own token, so Directus applies your role's permissions and the Worker needs no credentials of its own. It saves the result in your Durable Object, and `/api/me` returns it. This needs the Worker to reach `DIRECTUS_URL` (from `.dev.vars` or `wrangler.jsonc`, not whichever URL you typed on the login page). If it can't, you still log in, and just show as "Directus user".
 
 The list of users works the same way. `POST /api/users/refresh` passes the admin's token on to Directus's `/users`. The Worker checks `admin_access` first and answers anyone else with a 403. It doesn't rely on the page hiding the button, or on Directus, which would answer a non-admin with just themselves. If Directus can't be reached, the admin gets a 502 and the saved list stays as it was. The page does this for you on an admin's first visit, when nothing is saved yet.
 
@@ -138,4 +148,3 @@ wrangler.jsonc         Durable Object binding, static assets, vars
 - **Sharing `DIRECTUS_SECRET`.** Anything holding it can create valid dembrane tokens, so the Worker becomes as sensitive as the backend. A token issued only for the Worker, signed with its own secret, avoids this.
 - **Logout is only noticed when the token expires.** The JWT is checked locally. FastAPI has exactly the same behaviour today.
 - **Tokens in `localStorage`** (the fake dashboard's real login) are acceptable in a demo only.
-- **Local only.** This copy runs with `celld dev`. `celld deploy` has no secrets, so running it on the VM would mean passing `DIRECTUS_SECRET` as a plain var.

@@ -1,4 +1,3 @@
-DIRECTUS_SECRET=dev-secret-change-me
-# A Directus token the Worker reads organisations and projects with.
-# ../directus's ADMIN_TOKEN.
-DIRECTUS_TOKEN=admin
+# `pnpm dev` runs the Worker on your laptop, which reaches the VM's Directus
+# through ./tunnel.sh. The rest of wrangler.jsonc's vars apply as they are.
+DIRECTUS_URL=http://localhost:8055

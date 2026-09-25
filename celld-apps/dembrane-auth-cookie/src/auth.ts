@@ -2,11 +2,11 @@ import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 import { verify } from "hono/jwt";
 
-// Directus's own session cookie (its SESSION_COOKIE_NAME), set when you log in
-// with `mode: "session"`. The Worker never sets it; it only reads it. The
-// browser sends it here because the Worker is inside the cookie's domain:
-// .dembrane.com in production, and localhost locally (cookies ignore the port).
-export const SESSION_COOKIE = "dembrane_session_token";
+// Directus's own session cookie is named by DIRECTUS_SESSION_COOKIE (its
+// SESSION_COOKIE_NAME), set when you log in with `mode: "session"`. The Worker
+// never sets it; it only reads it. The browser sends it here because the Worker
+// is inside the cookie's domain: .dembrane.com in production, and localhost
+// locally (cookies ignore the port).
 
 // The claims Directus puts in its JWTs. dembrane's backend reads `id` and
 // `admin_access` (see require_directus_session in dependency_auth.py); so do we.
@@ -50,7 +50,7 @@ const fromOurOrigin = (req: Request) =>
 export const requireDirectusSession = createMiddleware<AuthEnv>(async (c, next) => {
   const header = c.req.header("authorization");
   const bearer = header?.startsWith("Bearer ") ? header.slice("Bearer ".length) : undefined;
-  const token = bearer ?? getCookie(c, SESSION_COOKIE);
+  const token = bearer ?? getCookie(c, c.env.DIRECTUS_SESSION_COOKIE);
   if (!token) return c.json({ error: "not logged in" }, 401);
   if (!bearer && !isSafeMethod(c.req.method) && !fromOurOrigin(c.req.raw)) {
     return c.json({ error: "cross-origin request" }, 403);

@@ -14,7 +14,7 @@ const directory = (env: Env) => env.DIRECTORY.getByName("directory");
 app.get("/", (c) => c.redirect("/dembrane-dashboard/"));
 
 // Public config for the pages.
-app.get("/api/config", (c) => c.json({ directusUrl: c.env.DIRECTUS_URL }));
+app.get("/api/config", (c) => c.json({ directusUrl: c.env.DIRECTUS_PUBLIC_URL }));
 
 // The link handoff: trade the token from the link for our own cookie.
 app.post("/api/session", async (c) => {

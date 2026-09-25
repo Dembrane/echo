@@ -25,14 +25,14 @@ Everything else is the same as `dembrane-auth-cookie`: the Worker reads Directus
 ## Run it
 
 ```sh
-(cd path/to/cloudflare-examples/examples/directus && pnpm install && pnpm db:setup && pnpm start)   # in another terminal
+../../echo/scripts/remote-dev/tunnel.sh   # in another terminal, for the VM's Directus on :8055
 
 pnpm install
-cp .dev.vars.example .dev.vars   # DIRECTUS_SECRET and DIRECTUS_TOKEN, matching ../directus
+cp .dev.vars.example .dev.vars
 pnpm dev                         # http://localhost:9879
 ```
 
-Open <http://localhost:9879>, and log in as one of `../directus`'s seeded users. It seeds two organisations (with `pnpm db:setup`, or `pnpm seed` on an existing database):
+Open <http://localhost:9879> (not 127.0.0.1: Directus allows `localhost` origins, and its cookie is for `localhost`), and log in as a user of the VM's Directus, such as `admin@dembrane.com` / `admin`. It has no organisations yet, so add an `org`, an `org_membership` and a `project` in its admin app (http://localhost:8055/admin) first. The [`directus`](https://github.com/patcon/cloudflare-examples/tree/main/examples/directus) example seeds these, which the rules below are easiest to follow with:
 
 | Organisation | Owner | Members | Projects |
 |---|---|---|---|
@@ -42,6 +42,16 @@ Open <http://localhost:9879>, and log in as one of `../directus`'s seeded users.
 So Alice can increment both of her projects and can't see Bob's. Bob can increment Park redesign, and sees Alice's projects but can't increment them. Admin sees and increments everything.
 
 Each example has its own port (`dembrane-auth-token` uses 9877, `dembrane-auth-cookie` 9878), so you can run them side by side.
+
+## Run it on the remote dev VM
+
+With celld on and `./tunnel.sh` open (see [../counter/README.md](../counter/README.md)):
+
+```sh
+pnpm run deploy
+```
+
+Open http://localhost:8787 and log in as a user of the VM's Directus, such as `admin@dembrane.com` / `admin`. The VM's Directus has no seeded organisations, so add an `org`, an `org_membership` and a `project` in its admin app (http://localhost:8055/admin) first. The VM's celld runs one app at a time, so this replaces whatever was deployed there before. The vars in `wrangler.jsonc` are the VM's values, and `.dev.vars` overrides them for `pnpm dev`.
 
 ## How the Worker knows your role
 
@@ -105,4 +115,3 @@ Everything in [`dembrane-auth-cookie`'s list](../dembrane-auth-cookie#going-to-p
 - **The service token.** `DIRECTUS_TOKEN` can read every organisation and project. Give the Worker a Directus user and policy of its own that can only read `org_membership`, `org` and `project` (just the fields above), not an admin token. Or have the Worker call a small dembrane backend endpoint that answers "what's this user's role in the org of project X?", so the rules live in one place (`policies.py`).
 - **Two Directus calls per project request.** Fine for a demo. For real traffic, cache memberships briefly (in the user's Durable Object, say), and accept that a change of owner then takes that long to apply.
 - **Workspaces are skipped.** In dembrane, access to a project also goes through the workspace: `workspace_membership`, the workspace's `visibility`, and private projects (`inheritance.py`). Organisation owners get in on any workspace visibility, which is the case shown here.
-- **Local only.** This copy runs with `celld dev`. `celld deploy` has no secrets, so running it on the VM would mean passing `DIRECTUS_SECRET` as a plain var.

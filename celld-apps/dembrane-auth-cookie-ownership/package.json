@@ -4,6 +4,7 @@
   "description": "Gate Cloudflare Durable Objects on dembrane's (Directus's) session cookie and organisation ownership",
   "scripts": {
     "dev": "celld dev --port 9879",
+    "deploy": "../../echo/scripts/remote-dev/celld-deploy.sh .",
     "typecheck": "tsc"
   },
   "license": "MIT",

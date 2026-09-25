@@ -1,1 +1,3 @@
-DIRECTUS_SECRET=dev-secret-change-me
+# `pnpm dev` runs the Worker on your laptop, which reaches the VM's Directus
+# through ./tunnel.sh. The rest of wrangler.jsonc's vars apply as they are.
+DIRECTUS_URL=http://localhost:8055

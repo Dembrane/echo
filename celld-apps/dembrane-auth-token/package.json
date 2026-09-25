@@ -4,6 +4,7 @@
   "description": "Gate a Cloudflare Durable Object on dembrane (Directus) login",
   "scripts": {
     "dev": "celld dev --port 9877",
+    "deploy": "../../echo/scripts/remote-dev/celld-deploy.sh .",
     "typecheck": "tsc"
   },
   "license": "MIT",

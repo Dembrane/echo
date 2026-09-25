@@ -22,14 +22,24 @@ It's built for [`directus`](https://github.com/patcon/cloudflare-examples/tree/m
 ## Run it
 
 ```sh
-(cd path/to/cloudflare-examples/examples/directus && pnpm install && pnpm db:setup && pnpm start)   # in another terminal
+../../echo/scripts/remote-dev/tunnel.sh   # in another terminal, for the VM's Directus on :8055
 
 pnpm install
-cp .dev.vars.example .dev.vars   # DIRECTUS_SECRET, matching ../directus's SECRET
+cp .dev.vars.example .dev.vars
 pnpm dev                         # http://localhost:9878
 ```
 
-Open <http://localhost:9878>. It redirects to `/demo-cookie/`, which sends you to `/login/` until you're logged in. Each example has its own port (`dembrane-auth-token` uses 9877, `dembrane-auth-cookie-ownership` 9879), so you can run them side by side.
+Open <http://localhost:9878> (not 127.0.0.1: Directus allows `localhost` origins, and its cookie is for `localhost`). It redirects to `/demo-cookie/`, which sends you to `/login/` until you're logged in. Each example has its own port (`dembrane-auth-token` uses 9877, `dembrane-auth-cookie-ownership` 9879), so you can run them side by side.
+
+## Run it on the remote dev VM
+
+With celld on and `./tunnel.sh` open (see [../counter/README.md](../counter/README.md)):
+
+```sh
+pnpm run deploy
+```
+
+Open http://localhost:8787 and log in as a user of the VM's Directus, such as `admin@dembrane.com` / `admin`. The VM's celld runs one app at a time, so this replaces whatever was deployed there before. The vars in `wrangler.jsonc` are the VM's values, and `.dev.vars` overrides them for `pnpm dev`.
 
 ## Why it works locally
 
@@ -111,4 +121,3 @@ wrangler.jsonc         Durable Object bindings, static assets, vars
 - **Sharing `DIRECTUS_SECRET`.** Anything holding it can create valid dembrane tokens, so the Worker becomes as sensitive as the backend.
 - **Logout is only noticed when the token expires.** The browser forgets the cookie at once, but the Worker checks the JWT locally, so a copied token stays valid until `exp`. Session tokens last a day by default rather than 15 minutes. FastAPI behaves the same way today.
 - **Every host in the domain can set the cookie.** Any `*.dembrane.com` page can write a cookie for `.dembrane.com`, so a compromised subdomain could log visitors in to another account. It can't forge one, since the Worker still checks the signature.
-- **Local only.** This copy runs with `celld dev`. `celld deploy` has no secrets, so running it on the VM would mean passing `DIRECTUS_SECRET` as a plain var.

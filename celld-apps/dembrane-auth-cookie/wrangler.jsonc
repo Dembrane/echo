@@ -21,11 +21,16 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["User", "Directory"] }],
 
+  // Values for the remote dev VM, where `pnpm run deploy` puts this. They are
+  // the dev stack's own (echo/.devcontainer/docker-compose.yml), not real
+  // secrets. `pnpm dev` overrides them from .dev.vars.
   "vars": {
-    // The Directus the pages log in to and the Worker asks for profiles:
-    // ../directus. Its session cookie's domain must include the Worker's
-    // host for the cookie to reach it.
-    "DIRECTUS_URL": "http://localhost:8055"
+    // The Directus the pages log in to (through ./tunnel.sh)...
+    "DIRECTUS_PUBLIC_URL": "http://localhost:8055",
+    // ...and the same one as the Worker reaches it, from the celld container.
+    "DIRECTUS_URL": "http://directus:8055",
+    "DIRECTUS_SECRET": "secret",
+    // Directus's SESSION_COOKIE_NAME. The dev stack leaves it at the default.
+    "DIRECTUS_SESSION_COOKIE": "directus_session_token"
   }
-  // Secret (not here): DIRECTUS_SECRET — .dev.vars locally, `wrangler secret put` when deployed.
 }
