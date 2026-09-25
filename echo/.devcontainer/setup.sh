@@ -81,6 +81,7 @@ install_fnm() {
 
     # --shell bash: fnm's shell inference walks the process tree and fails in
     # some container exec contexts.
+    # See: https://github.com/Schniz/fnm/tree/master#bash
     ensure_line_in_file "$BASHRC" 'eval "$(fnm env --use-on-cd --shell bash)"'
     log_info "fnm installed"
 }
