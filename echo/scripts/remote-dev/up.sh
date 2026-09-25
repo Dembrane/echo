@@ -20,6 +20,15 @@ SKIP_SETUP=false
 require_gcloud
 require_running
 
+# The VM has its own checkout, so a compose file that exists only on your
+# branch is missing there, and docker's "no such file" does not say why.
+MISSING="$(vm_ssh "cd '$RD_REPO_DIR/echo/.devcontainer' && for f in $RD_COMPOSE_FILES; do [ -f \"\$f\" ] || echo \"\$f\"; done" || true)"
+if [ -n "$MISSING" ]; then
+    VM_BRANCH="$(vm_ssh "git -C '$RD_REPO_DIR' rev-parse --abbrev-ref HEAD" 2>/dev/null || echo unknown)"
+    die "The VM's checkout (on $VM_BRANCH) has no $(echo "$MISSING" | paste -sd, - | sed 's/,/, /g'), which your local.env asks for.
+Copy your working tree up with ./sync-code.sh, or push your branch and check it out on the VM."
+fi
+
 log_step "Syncing env files"
 "$RD_SCRIPT_DIR/sync-env.sh"
 
