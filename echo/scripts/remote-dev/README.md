@@ -71,6 +71,7 @@ postgres data directory.
 | `tunnel.sh` | Port forwards. Foreground, ctrl-c to close. |
 | `sync-env.sh` | Re-copies the gitignored `.env` files up. |
 | `sync-code.sh` | Pushes your laptop's tracked files up. `--dry-run` to preview. |
+| `celld-deploy.sh` | `./celld-deploy.sh DIR` deploys a celld app through the tunnel. |
 | `destroy.sh` | Deletes the VM and disk. Asks you to type the name. |
 
 ## Editing code
@@ -175,6 +176,20 @@ sudo sh -c 'echo "127.0.0.1 minio  # dembrane remote-dev" >> /etc/hosts'
 Answering `n` later turns it back off, and the next `./up.sh` removes the
 container. Its `minio_data` directory on the VM is left alone, so turning it on
 again keeps whatever was uploaded.
+
+[celld](https://celld.dev) (self-hosted Workers and Durable Objects) is opt-in
+the same way: answer `y` to "Run celld?" in `./init.sh`, which adds
+`docker-compose-celld.yml` and turns minio on too, since celld keeps its state
+in minio's `celld` bucket. The tunnel then forwards 8787 to the node. Deploy
+from your laptop, with `celld` and `esbuild` on your PATH and the tunnel open:
+
+```sh
+./celld-deploy.sh ../../../celld-apps/counter
+```
+
+`celld deploy` only writes to the bucket, so it needs no address for the node,
+which picks the new version up within five seconds. See
+`celld-apps/counter/README.md` for what to curl.
 
 ## Troubleshooting
 
