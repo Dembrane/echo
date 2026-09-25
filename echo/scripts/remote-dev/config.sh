@@ -114,6 +114,12 @@ case " $RD_COMPOSE_FILES " in
 esac
 : "${RD_FORWARD_PORTS:=$RD_DEFAULT_PORTS}"
 
+# The service account vertex.sh creates in your project, so the server and
+# agent can call Vertex AI. Its email is derived from this and RD_PROJECT.
+# It carries the username for the same reason RD_INSTANCE_NAME does. GCP caps
+# service account ids at 30 characters, so a long username is cut short.
+: "${RD_VERTEX_SA_NAME:=$(printf '%s' "dembrane-vertex-$RD_USER_SLUG" | cut -c1-30 | sed 's/-*$//')}"
+
 # Env files copied up by sync-env.sh, relative to the echo/ directory.
 # directus/.env is required by the compose file; the others are optional.
 : "${RD_ENV_FILES:=directus/.env server/.env agent/.env}"

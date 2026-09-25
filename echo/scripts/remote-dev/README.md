@@ -15,6 +15,7 @@ Everything goes through one entry point, run from `echo/`:
 cd echo
 
 ./scripts/remote-dev.sh init    # asks which GCP project and zone; writes local.env
+                                # and offers to set up Vertex AI credentials
 ./scripts/remote-dev.sh create  # creates the VM, installs docker, clones the repo,
                                 # and adds the SSH hosts Zed connects through
 ./scripts/remote-dev.sh up      # copies .env files up, starts the stack, installs deps
@@ -69,6 +70,7 @@ Each command is a script in `commands/`, and
 | Command | What it does |
 |---|---|
 | `init` | First-run setup. Prompts for project, zone, size. Writes `local.env`. |
+| `vertex` | Sets up a Vertex AI service account in your project and writes its key to `server/.env` and `agent/.env`. `--new-key` replaces the key. |
 | `create` | Creates the VM, installs docker, clones the repo. Idempotent. |
 | `up` | Offers to add the devcontainer defaults to `server/.env`, syncs `.env` files, `docker compose up -d --build`, runs `setup.sh`, installs your SSH key. |
 | `down` | Stops containers, leaves the VM up. |

@@ -38,6 +38,24 @@ Pick the zone closest to **you**, not closest to production. SSH round-trip
 time is the single biggest factor in how a remote editor feels, and it has
 nothing to do with where the app is deployed.
 
+### Vertex AI credentials
+
+Chat, reports, transcription and the agent all call Vertex AI, which needs a
+service-account key in `GCP_SA_JSON`. `init` offers to set this up, or run it
+on its own:
+
+```sh
+./scripts/remote-dev.sh vertex
+```
+
+It enables the Vertex AI API in your project, creates a
+`dembrane-dev-vertex` service account with only `roles/aiplatform.user`, and
+writes its key plus the model settings into `server/.env` and `agent/.env`.
+Anything you already set is left alone. `TEXT_FAST` gets Gemini Flash rather
+than the sample's Claude on Vertex, which would need enabling by hand in the
+project's Model Garden. Only local files change, so it helps a laptop
+devcontainer as much as the VM; `up` copies them over.
+
 ## Editor setup
 
 ### Zed
