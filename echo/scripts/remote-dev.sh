@@ -62,4 +62,11 @@ if [ ! -f "$RD_TARGET" ]; then
     exit 1
 fi
 
+# A full-width rule naming the command, so runs chained with && are easy to
+# tell apart. On stderr, so `ssh --vm cat ... > file` output stays clean.
+RD_BANNER="━━ remote-dev $RD_COMMAND${*:+ $*} "
+RD_COLS="$(tput cols 2>/dev/null || echo 80)"
+while [ "${#RD_BANNER}" -lt "$RD_COLS" ]; do RD_BANNER="${RD_BANNER}━"; done
+echo -e "\n\033[1;35m$RD_BANNER\033[0m" >&2
+
 exec "$RD_TARGET" "$@"
