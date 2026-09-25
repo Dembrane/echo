@@ -1,4 +1,5 @@
 from logging import getLogger
+import hashlib
 import json
 import re
 from typing import Any, Callable, Literal, Optional
@@ -6,8 +7,8 @@ from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 
 from copilotkit.langgraph import CopilotKitState
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.runnables import Runnable
+from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
+from langchain_core.runnables import Runnable, RunnableConfig
 from langchain_core.tools import tool
 from google.oauth2 import service_account
 from langchain_google_vertexai import ChatVertexAI
@@ -70,7 +71,32 @@ UI_TOOLS = frozenset(
         "editInsight",
         "retractInsight",
         "sendProgressUpdate",
+        "ack",
+        "updatePlan",
     }
+)
+
+# Tools that report to the host rather than look anything up. They never count
+# as repeats and their calls reset the "silent work" counter.
+HOST_UPDATE_TOOL_NAMES = frozenset({"sendProgressUpdate", "ack", "updatePlan"})
+
+# Repetition guard. An identical call (same tool, same arguments) inside one
+# turn is answered from the earlier result instead of running again, and the
+# same result coming back several times in a row is pointed out to the model.
+# After REPEAT_CALLS_BEFORE_STOP skipped repeats the model is told to answer.
+IDENTICAL_RESULTS_BEFORE_NOTE = 3
+REPEAT_CALLS_BEFORE_STOP = 3
+REPEATED_CALL_MESSAGE = (
+    "Not run again: you already made this exact call earlier in this turn. "
+    "Use that result, or change the arguments."
+)
+REPEATED_CALL_STOP_MESSAGE = (
+    "Not run again: you keep repeating calls you already made. Stop calling "
+    "tools and write your answer from what you have."
+)
+IDENTICAL_RESULTS_NOTE = (
+    "\n\n(Note: your last {count} lookups returned the same result. Try a "
+    "different approach or answer from what you have.)"
 )
 
 # Unregistered (with their prompt section stripped) when the chat's project has
@@ -152,6 +178,10 @@ Hosts run projects; participants contribute conversations through the portal or 
   Describe the work in human terms ("I looked through the transcripts"). If you
   have to stop before finishing, say so plainly ("I stopped short of digging
   into X") and offer to go deeper if they want.
+- Never say where something sits on the screen. You cannot see the layout:
+  cards, proposals, plans and messages land in an order you do not control.
+  Name the thing instead ("the tag suggestion", "the proposal card", "my
+  earlier answer"), never "above", "below", "here", or "on the left/right".
 - Write "dembrane" in lowercase, even at the start of a sentence.
 - Do not use em dashes. Use periods, commas, or colons.
 - Say "participants" and "hosts", never "users".
@@ -306,7 +336,17 @@ instructions need a subject (a concept, a comparison) and the host gave none,
 ask one focused question first.
 
 ## Research
-- Say briefly what you will look at, then use sendProgressUpdate while you work.
+- When a request needs more than one lookup, your first action is ack: one
+  short sentence restating what the host asked, and a plan of 2 to 5
+  high-level steps in plain language (what you will do, never tool names). The
+  host sees this at once, can close the page, and is notified when you finish.
+- After every finished step call updatePlan with the full plan and how many
+  steps are done, plus a one-line note on what that step found (a result, not
+  a restatement of the step; "nothing on this" is a result). It posts nothing,
+  it only ticks the step off. Revise the remaining steps the same way when
+  what you learned changes them.
+- Use ack again only for a finding the host should read mid-way.
+- Skip the plan for a question you can answer with a single lookup or none.
   Conclude with plain text only when you are done.
 - Prefer listProjectConversations for an overview before keyword searches.
 - findConversationsByKeywords works best with 2-4 focused keywords, not sentences.
@@ -314,16 +354,16 @@ ask one focused question first.
   you need (or search every pattern) in one step instead of one call at a time.
   When several independent lookups would answer the question, request them
   together rather than sequentially.
-- You have at most 20 steps per turn. Spend them on distinct questions, not
-  retries. If a step returns a guardrail warning, stop searching and answer from
-  what you have.
+- Spend steps on distinct questions, not retries. Repeating a call you already
+  made returns nothing new. If a step returns a guardrail warning, stop
+  searching and answer from what you have.
 
 ## Citations
 - Ground every claim about the project in tool results.
 - To keep the response clean, never put raw conversation citation tags directly inline in your main text. Instead, use standard Markdown footnote superscript tags (like [^1], [^2]) inline where you cite a source.
-- At the very end of your response, list the footnote definitions. Do not write any header above them (no "Sources", no "Footnotes"): the app renders the footnote list under its own localized sources header, so a header from you shows up as a duplicate. Group multiple citations of the same conversation or chunk into a single unique footnote entry to avoid clutter.
-- Each footnote definition at the bottom must carry the exact citation tag in the format `[^1]: [conversation_id:<id>;chunk_id:<chunk_id>]` when a chunk id is available, otherwise `[^1]: [conversation_id:<id>]`.
-- Quote with attribution inside your footnote definitions or inline text: "[Participant Name]: quoted text".
+- At the very end of your response, list the footnote definitions with no header (no "Sources", no "Footnotes"): the app turns each footnote into a clickable source and hides the definitions, so a header from you shows up as stray text. Group multiple citations of the same conversation or chunk into a single unique footnote entry to avoid clutter.
+- Each footnote definition at the bottom must carry the exact citation tag in the format `[^1]: [conversation_id:<id>;chunk_id:<chunk_id>]` when a chunk id is available, otherwise `[^1]: [conversation_id:<id>]`, followed on the same line by one short sentence on why this source supports the claim (what the participant said or showed). The app shows that sentence when the host clicks the footnote, so make it specific, under 25 words, and never a bare restatement of the claim.
+- Quote with attribution inline: "[Participant Name]: quoted text".
 - Keep footnote numbering sequential starting from 1 (e.g., [^1], [^2], [^3]). Every inline footnote tag must have exactly one corresponding footnote definition at the bottom.
 - If there are no claims to cite from the conversations, omit the footnotes entirely.
 - A few well-chosen quotes beat many.
@@ -338,7 +378,7 @@ ask one focused question first.
   summarization, but tags remain draft organization for the host to review.
 - Tags are the host-visible portal vocabulary. When the host asks to add or
   remove tags, read getProjectTags first, then use proposeTagsUpdate(add,
-  remove, summary). The host sees the tag proposal below your message and
+  remove, summary). The host sees a tag suggestion card in the chat and
   applies it themselves. Say "I've suggested tag changes", never "I've updated
   your tags". Only propose removing a tag the host names explicitly; never
   clear tags participants may already be using on their own.
@@ -437,9 +477,8 @@ that history. If you make a review judgment about confusing history, missing
 receipts, or a weak canvas audit trail, quietly call recordInsight.
 After proposing a canvas, do not ask the host to tell you when it is applied.
 The chat records that automatically.
-When you propose a canvas or an update, the proposal card appears RIGHT HERE in
-this chat, directly above or below your message depending on the interface layout. Say "review and apply it" or
-similar. Never tell the host the proposal is in their Library or dashboard: the
+When you propose a canvas or an update, a proposal card appears in this chat.
+Say "review and apply it" or similar. Never tell the host the proposal is in their Library or dashboard: the
 Library holds live canvases, not proposals, and sending the host there to find
 a proposal is a dead end ("The update proposal is ready in your Library" is the
 named counterexample).
@@ -852,18 +891,31 @@ def _is_empty_ai_turn(message: Any) -> bool:
 
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 6
 AUTOMATIC_NUDGE_TEMPLATE = (
-    "<Automatic Nudge> This is a system reminder, not a message from the host. "
     "You have made {tool_call_count} tool calls without telling the host anything. "
     "Choose exactly one: (a) if you have enough evidence, write your final answer "
-    "to the host now, or (b) call `sendProgressUpdate` with one short sentence on "
-    "what you found so far, then continue. Never reply to this reminder itself."
+    "to the host now, or (b) call `ack` with one short sentence on "
+    "what you found so far, then continue."
 )
 POST_NUDGE_CONTINUATION_SYSTEM_PROMPT = (
-    "Your last message may have been a reaction to the system reminder rather "
-    "than an answer for the host. If the task is complete, write your final "
-    "answer to the host now. If not, call `sendProgressUpdate` and continue "
-    "with the next tool call."
+    "Your last attempt answered nobody: it was neither a tool call nor an answer "
+    "for the host. If the task is complete, write your final answer to the host "
+    "now. If not, call `ack` and continue with the next tool call."
 )
+# Runtime notes travel in the system instruction for one model call, never as a
+# message. Gemini has only user and model turns, so a note sent as a user turn
+# reads as the host speaking (the model answers it in the chat) and a retry that
+# ends on the model's own turn is rejected by Vertex ("Requests ending with a
+# model turn are not supported").
+RUNTIME_NOTE_HEADING = "## Runtime note (from the app, not the host)"
+
+
+def _with_runtime_note(messages: list[Any], note: str) -> list[Any]:
+    """The same invocation with `note` added to its leading system message."""
+    head, *rest = messages
+    return [
+        SystemMessage(content=f"{head.content}\n\n{RUNTIME_NOTE_HEADING}\n{note}"),
+        *rest,
+    ]
 
 
 VERTEX_AUTH_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
@@ -944,6 +996,22 @@ def _bind_tools_with_fallbacks(tools: list[Any]) -> Runnable:
     return bound[0].with_fallbacks(bound[1:])
 
 
+PLAN_MAX_STEPS = 6
+
+
+def _tool_call_key(name: str, args: Any) -> str:
+    try:
+        canonical = json.dumps(args, sort_keys=True, default=str)
+    except (TypeError, ValueError):
+        canonical = repr(args)
+    return hashlib.sha256(f"{name}\x00{canonical}".encode()).hexdigest()
+
+
+def _result_digest(content: Any) -> str:
+    text = content if isinstance(content, str) else json.dumps(content, sort_keys=True, default=str)
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
 def create_agent_graph(
     project_id: str,
     bearer_token: str,
@@ -999,6 +1067,13 @@ def create_agent_graph(
                 # Treat the text as an assistant update before counting new tool calls.
                 if _coerce_message_text(getattr(message, "content", None)):
                     tool_calls_since_assistant_update = 0
+                if any(
+                    isinstance(call, dict) and call.get("name") in HOST_UPDATE_TOOL_NAMES
+                    for call in tool_calls
+                ):
+                    # A plan or progress card is an update the host can see.
+                    tool_calls_since_assistant_update = 0
+                    continue
                 tool_calls_since_assistant_update += len(tool_calls)
                 continue
 
@@ -1845,6 +1920,45 @@ def create_agent_graph(
         return payload
 
     @tool
+    async def ack(message: str, plan: list[str] | None = None) -> dict[str, Any]:
+        """Reply to the host at once without concluding the run. Your first action
+        on a request that needs research: restate what they asked in one short
+        sentence and pass `plan`, 2 to 5 high-level steps in plain language (no
+        tool names). Later calls post a mid-way finding worth reading; pass a new
+        `plan` only when the plan changes. Renders as a message with the plan's
+        step list under it."""
+        normalized_message = message.strip()
+        if not normalized_message:
+            raise ValueError("message is required")
+        steps = [step.strip() for step in (plan or []) if step and step.strip()]
+        return {
+            "kind": "progress_update",
+            "update": normalized_message,
+            "plan": steps[:PLAN_MAX_STEPS],
+            "visible_to_user": True,
+        }
+
+    @tool
+    async def updatePlan(steps: list[str], done: int, note: str = "") -> dict[str, Any]:
+        """Tick plan steps off after every finished step; posts nothing. `steps`
+        is the full plan as it stands (finished steps first, unchanged; revise
+        only the unfinished tail), `done` how many leading steps are complete
+        (len(steps) when all are), `note` one line on what the step just
+        finished found."""
+        normalized_steps = [step.strip() for step in steps if step and step.strip()][
+            :PLAN_MAX_STEPS
+        ]
+        if not normalized_steps:
+            raise ValueError("steps are required")
+        return {
+            "kind": "plan",
+            "steps": normalized_steps,
+            "done": max(0, min(int(done), len(normalized_steps))),
+            "note": note.strip(),
+            "visible_to_user": False,
+        }
+
+    @tool
     async def sendProgressUpdate(update: str, next_steps: str = "") -> dict[str, Any]:
         """Emit a user-visible progress update without concluding the run.
         Renders a card in the chat UI."""
@@ -2446,6 +2560,8 @@ def create_agent_graph(
         proposeTagsUpdate,
         proposeCustomVerificationTopic,
         proposeCanvas,
+        ack,
+        updatePlan,
         sendProgressUpdate,
         listProjectChats,
         readChat,
@@ -2571,9 +2687,11 @@ def create_agent_graph(
         # an assistant update.
         automatic_nudge = _build_automatic_nudge(raw_messages)
         nudge_milestone: int | None = None
+        nudge_content = ""
+        base_messages = invocation_messages
         if automatic_nudge:
             nudge_content, nudge_milestone = automatic_nudge
-            invocation_messages.append(HumanMessage(content=nudge_content))
+            invocation_messages = _with_runtime_note(base_messages, nudge_content)
 
         response = _normalize_fused_tool_calls(
             await llm_with_tools.ainvoke(invocation_messages),
@@ -2584,15 +2702,20 @@ def create_agent_graph(
             nudge_milestone is not None
             and nudge_milestone not in nudge_retry_milestones
             and not _message_has_tool_calls(response)
+            and _is_empty_ai_turn(response)
         )
         if should_retry_after_nudge:
+            # Only an empty reply is retried: a written answer is the answer.
+            # The retry does not replay that empty turn, so the request still
+            # ends where the conversation does.
             nudge_retry_milestones.add(nudge_milestone)
-            retry_messages = list(invocation_messages)
-            if not _is_empty_ai_turn(response):
-                retry_messages.append(response)
-            retry_messages.append(HumanMessage(content=POST_NUDGE_CONTINUATION_SYSTEM_PROMPT))
             response = _normalize_fused_tool_calls(
-                await llm_with_tools.ainvoke(retry_messages),
+                await llm_with_tools.ainvoke(
+                    _with_runtime_note(
+                        base_messages,
+                        f"{nudge_content}\n{POST_NUDGE_CONTINUATION_SYSTEM_PROMPT}",
+                    )
+                ),
                 recognized_tool_names,
             )
 
@@ -2606,9 +2729,73 @@ def create_agent_graph(
             "Continue with available evidence, avoid repeating failing calls, and summarize constraints."
         )
 
+    tool_node = ToolNode(tools, handle_tool_errors=_handle_tool_error)
+    # Per turn: the graph is built for one request, so these reset every turn.
+    seen_call_keys: set[str] = set()
+    recent_result_digests: list[str] = []
+    skipped_repeat_count = 0
+
+    async def run_tools(state: dict, config: RunnableConfig) -> dict:
+        nonlocal skipped_repeat_count
+        messages = state.get("messages", [])
+        last_message = messages[-1]
+        to_run: list[dict] = []
+        skipped: dict[str, ToolMessage] = {}
+        for call in last_message.tool_calls:
+            name = call.get("name", "")
+            if name in HOST_UPDATE_TOOL_NAMES:
+                to_run.append(call)
+                continue
+            key = _tool_call_key(name, call.get("args"))
+            if key in seen_call_keys:
+                skipped_repeat_count += 1
+                skipped[call["id"]] = ToolMessage(
+                    content=REPEATED_CALL_STOP_MESSAGE
+                    if skipped_repeat_count >= REPEAT_CALLS_BEFORE_STOP
+                    else REPEATED_CALL_MESSAGE,
+                    tool_call_id=call["id"],
+                    name=name,
+                )
+                continue
+            seen_call_keys.add(key)
+            to_run.append(call)
+
+        ran: dict[str, ToolMessage] = {}
+        if to_run:
+            filtered = AIMessage(
+                content=last_message.content,
+                tool_calls=to_run,
+                id=getattr(last_message, "id", None),
+            )
+            result = await tool_node.ainvoke(
+                {**state, "messages": [*messages[:-1], filtered]}, config
+            )
+            for message in result.get("messages", []):
+                if isinstance(message, ToolMessage):
+                    ran[message.tool_call_id] = message
+
+        ordered: list[ToolMessage] = []
+        for call in last_message.tool_calls:
+            message = skipped.get(call["id"]) or ran.get(call["id"])
+            if message is None:
+                continue
+            if call["id"] in ran and call.get("name") not in HOST_UPDATE_TOOL_NAMES:
+                recent_result_digests.append(_result_digest(message.content))
+                window = recent_result_digests[-IDENTICAL_RESULTS_BEFORE_NOTE:]
+                if len(window) == IDENTICAL_RESULTS_BEFORE_NOTE and len(set(window)) == 1:
+                    note = IDENTICAL_RESULTS_NOTE.format(count=IDENTICAL_RESULTS_BEFORE_NOTE)
+                    if isinstance(message.content, str):
+                        message = ToolMessage(
+                            content=message.content + note,
+                            tool_call_id=message.tool_call_id,
+                            name=message.name,
+                        )
+            ordered.append(message)
+        return {"messages": ordered}
+
     workflow = StateGraph(CopilotKitState)
     workflow.add_node("agent", call_model)
-    workflow.add_node("tools", ToolNode(tools, handle_tool_errors=_handle_tool_error))
+    workflow.add_node("tools", run_tools)
 
     workflow.set_entry_point("agent")
     workflow.add_conditional_edges("agent", should_continue, {"tools": "tools", END: END})

@@ -472,7 +472,7 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "host guide: guidance for sharing the portal" in prompt
     assert "never describe dashboard navigation beyond these surfaces" in prompt
     # Proposal cards live in the chat, never "in your Library".
-    assert "the proposal card appears right here in" in prompt
+    assert "a proposal card appears in this chat" in prompt
     assert "never tell the host the proposal is in their library" in prompt
     assert "give the actual link via getportallink" in prompt
     assert "never invent tabs, buttons, or menus" in prompt
@@ -485,9 +485,11 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "[conversation_id:<id>;chunk_id:<chunk_id>]" in SYSTEM_PROMPT
     assert "[conversation_id:<id>]" in SYSTEM_PROMPT
     assert "footnote" in prompt
-    # The frontend renders the footnote list under its own localized header;
-    # a model-written one duplicates it (ChatHistoryMessage.tsx)
-    assert "do not write any header above them" in prompt
+    # The frontend turns footnotes into popovers and hides the definitions; a
+    # model-written header would be left behind as stray text (agenticCitations.ts)
+    assert 'footnote definitions with no header (no "sources", no "footnotes")' in prompt
+    # The popover shows why each source was cited.
+    assert "one short sentence on why this source supports the claim" in prompt
     assert "worked from summaries only" in prompt
     assert "read the full transcript" in prompt
     assert "never fabricate quotes" in prompt

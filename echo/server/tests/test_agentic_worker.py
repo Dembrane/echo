@@ -7,6 +7,8 @@ from dembrane.api.agentic import _build_initial_agent_prompt_content
 from dembrane.agentic_focus import FOCUS_BLOCK_OPEN, FOCUS_BLOCK_CLOSE, format_focus_block
 from dembrane.agentic_client import AgenticTimeoutError, AgenticUpstreamError
 from dembrane.agentic_worker import (
+    MAX_TOOL_CALLS_PER_RUN,
+    MAX_TOOL_CALLS_PER_TURN,
     TOOL_LIMIT_SAFETY_MESSAGE,
     AGENT_CANCELLED_ERROR_CODE,
     RUN_TOOL_LIMIT_SAFETY_MESSAGE,
@@ -18,6 +20,17 @@ from dembrane.agentic_worker import (
     _sanitize_host_visible_assistant_content,
 )
 from dembrane.service.agentic import AgenticRunService
+
+
+@pytest.fixture(autouse=True)
+def _someone_is_watching(monkeypatch):
+    """Runs in these tests have a viewer, so no inbox notification is sent
+    unless a test says otherwise."""
+
+    async def _one(_run_id: str) -> int:
+        return 1
+
+    monkeypatch.setattr("dembrane.agentic_worker.live_event_subscriber_count", _one)
 
 
 def _build_service() -> AgenticRunService:
@@ -538,10 +551,10 @@ async def test_process_agentic_run_logs_hidden_nudge_without_midpoint_fallback(m
     assert nudge_payload == {
         "hidden": True,
         "origin": "automatic_nudge",
-        "role": "user",
+        "role": "runtime",
         "content": (
             "<Automatic Nudge> You have made 4 tool calls without sending an assistant update. "
-            "Call `sendProgressUpdate` now with a concise update and next steps, then continue research "
+            "Call `ack` now with a concise update, then continue research "
             "with another tool call if evidence is still missing. Only return plain text with no tool "
             "call if you are concluding."
         ),
@@ -911,7 +924,7 @@ async def test_process_agentic_run_keeps_tool_call_limit_safety(monkeypatch) -> 
         **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
-        for index in range(20):
+        for index in range(MAX_TOOL_CALLS_PER_TURN):
             yield {"type": "on_tool_start", "name": f"tool-{index + 1}"}
             yield {"type": "on_tool_end", "name": f"tool-{index + 1}", "data": {"output": {}}}
 
@@ -971,7 +984,7 @@ async def test_process_agentic_run_resets_tool_budget_for_appended_turn(monkeypa
     ):
         streams.append(user_message)
         if user_message == "first request":
-            for index in range(19):
+            for index in range(MAX_TOOL_CALLS_PER_TURN - 1):
                 yield {"type": "on_tool_start", "name": f"first-{index + 1}"}
                 yield {"type": "on_tool_end", "name": f"first-{index + 1}", "data": {"output": {}}}
             service.append_event(run["id"], "user.message", {"content": "second request"})
@@ -1033,7 +1046,7 @@ async def test_process_agentic_run_resets_tool_budget_for_appended_turn(monkeypa
 async def test_process_agentic_run_has_run_lifetime_backstop(monkeypatch) -> None:
     service = _build_service()
     run = service.create_run(project_id="project-1", directus_user_id="user-1")
-    for index in range(199):
+    for index in range(MAX_TOOL_CALLS_PER_RUN - 1):
         service.append_event(run["id"], "on_tool_start", {"name": f"old-{index + 1}"})
 
     async def _fake_stream(**_context: object):
@@ -1085,7 +1098,7 @@ async def test_process_agentic_run_allows_19_non_exempt_tool_calls(monkeypatch) 
         **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
-        for index in range(19):
+        for index in range(MAX_TOOL_CALLS_PER_TURN - 1):
             yield {"type": "on_tool_start", "name": f"tool-{index + 1}"}
             yield {"type": "on_tool_end", "name": f"tool-{index + 1}", "data": {"output": {}}}
         yield {"type": "assistant.message", "content": "final answer"}
@@ -1216,7 +1229,7 @@ async def test_process_agentic_run_tool_limit_does_not_repeat_last_update(monkey
                 }
             },
         }
-        for index in range(20):
+        for index in range(MAX_TOOL_CALLS_PER_TURN):
             yield {"type": "on_tool_start", "name": f"tool-{index + 1}"}
             yield {"type": "on_tool_end", "name": f"tool-{index + 1}", "data": {"output": {}}}
 
@@ -2474,9 +2487,9 @@ async def test_failure_analytics_carry_the_code_without_the_text(monkeypatch) ->
 # --- the safety pause quotes the host, and only the host ---------------------
 
 
-def _twenty_tool_calls_stream():
+def _turn_limit_tool_calls_stream():
     async def _fake_stream(**_kwargs: object):
-        for index in range(20):
+        for index in range(MAX_TOOL_CALLS_PER_TURN):
             yield {"type": "on_tool_start", "name": f"tool-{index + 1}"}
             yield {"type": "on_tool_end", "name": f"tool-{index + 1}", "data": {"output": {}}}
 
@@ -2492,7 +2505,7 @@ async def _run_to_tool_limit(
     host_user_message: str | None,
 ) -> str:
     _patch_worker_runtime(monkeypatch)
-    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _twenty_tool_calls_stream())
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _turn_limit_tool_calls_stream())
 
     await process_agentic_run(
         run_id=run_id,
@@ -2591,3 +2604,50 @@ async def test_tool_limit_message_quotes_nothing_without_a_host_message(monkeypa
 
     assert latest_output == TOOL_LIMIT_SAFETY_MESSAGE
     assert "confidential" not in latest_output
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("subscribers", "finished", "expected_titles"),
+    [
+        (0, True, ["Your answer in Themes is ready"]),
+        (0, False, ["Themes stopped before it finished"]),
+        (1, True, []),
+    ],
+)
+async def test_turn_end_notifies_only_when_nobody_is_watching(
+    monkeypatch, subscribers, finished, expected_titles
+) -> None:
+    from dembrane import agentic_worker
+
+    async def _count(_run_id: str) -> int:
+        return subscribers
+
+    async def _get_item(collection: str, _item_id: str) -> dict:
+        if collection == "project":
+            return {"workspace_id": {"id": "workspace-1"}}
+        return {"name": "Themes"}
+
+    emitted: list[dict] = []
+
+    async def _emit(**kwargs):
+        emitted.append(kwargs)
+        return "notification-1"
+
+    monkeypatch.setattr(agentic_worker, "live_event_subscriber_count", _count)
+    monkeypatch.setattr(agentic_worker.async_directus, "get_item", _get_item)
+    monkeypatch.setattr("dembrane.notifications.emit", _emit)
+
+    await agentic_worker._notify_if_unwatched(
+        run_id="run-1",
+        project_id="project-1",
+        project_chat_id="chat-1",
+        app_user_id="app-user-1",
+        finished=finished,
+    )
+
+    assert [call["title"] for call in emitted] == expected_titles
+    for call in emitted:
+        assert call["action"] == "NAVIGATE_CHAT"
+        assert call["ref_chat_id"] == "chat-1"
+        assert call["ref_workspace_id"] == "workspace-1"

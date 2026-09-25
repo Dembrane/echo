@@ -97,7 +97,6 @@ vi.mock("@/lib/api", async (importOriginal) => {
 			status: runState.status,
 		})),
 		stopAgenticRun: stopAgenticRunMock,
-		transcribeStateless: transcribeMock,
 		// Never resolves: an in-flight run is one whose stream is still open, and
 		// resolving would let the panel re-read the status and settle.
 		streamAgenticRun: vi.fn(
@@ -107,6 +106,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
 				return new Promise(() => {});
 			},
 		),
+		transcribeStateless: transcribeMock,
 	};
 });
 
@@ -198,6 +198,7 @@ vi.mock("./ChatHistoryMessage", () => ({
 }));
 
 import { AgenticChatPanel, enrichAgenticContent } from "./AgenticChatPanel";
+import { decodeCitationHref } from "./agenticCitations";
 
 const at = (seq: number) =>
 	new Date(Date.UTC(2026, 7, 1, 10, seq)).toISOString();
@@ -663,13 +664,43 @@ describe("enrichAgenticContent, footnote citations", () => {
 			workspaceId: "workspace-1",
 		});
 
-	it("turns footnote definition tags into rich transcript links", () => {
-		const enriched = enrich(
-			`Parking came up often[^1].\n\n[^1]: [conversation_id:${CONVERSATION_ID};chunk_id:chunk-9]`,
+	const citationHrefs = (enriched: string) =>
+		[...enriched.matchAll(/\]\((#agentic-cite:[^)]+)\)/g)].map((match) =>
+			decodeCitationHref(match[1]),
 		);
 
-		expect(enriched).toContain("[^1]: [Maria's transcript excerpt](");
-		expect(enriched).toContain("#chunk-chunk-9");
+	it("turns a footnote into a popover link and drops the sources list", () => {
+		const enriched = enrich(
+			`Parking came up often[^1].\n\n[^1]: [conversation_id:${CONVERSATION_ID};chunk_id:chunk-9] Maria said the bus stops too early (after 9pm).`,
+		);
+
+		expect(enriched.startsWith("Parking came up often[1](#agentic-cite:")).toBe(
+			true,
+		);
+		expect(enriched).not.toContain("[^1]:");
 		expect(enriched).not.toContain("conversation_id:");
+		const [data] = citationHrefs(enriched);
+		expect(data).toEqual({
+			href: `/en-US/w/workspace-1/projects/project-1/conversations/${CONVERSATION_ID}#chunk-chunk-9`,
+			name: "Maria",
+			reason: "Maria said the bus stops too early (after 9pm).",
+		});
+	});
+
+	it("keeps a citation without a reason clickable", () => {
+		const enriched = enrich(
+			`Parking came up[^1].\n\n[^1]: [conversation_id:${CONVERSATION_ID}]`,
+		);
+
+		expect(citationHrefs(enriched)[0]?.reason).toBeNull();
+	});
+
+	it("leaves a docs footnote as markdown", () => {
+		const enriched = enrich(
+			"See the docs[^1].\n\n[^1]: users/host/chat-and-ask.md",
+		);
+
+		expect(enriched).toContain("[^1]: users/host/chat-and-ask.md");
+		expect(enriched).toContain("See the docs[^1].");
 	});
 });

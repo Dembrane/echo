@@ -158,3 +158,15 @@ body {
 	background-color: var(--scrollbar-thumb-hover);
 }
 
+
+/* A plan step's check pops in as the agent ticks it off (AgenticPlanCard). */
+@keyframes plan-tick {
+	from {
+		opacity: 0;
+		transform: scale(0.4);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}

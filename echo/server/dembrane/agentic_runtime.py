@@ -96,6 +96,14 @@ async def publish_live_event(run_id: str, event_json: str) -> None:
     await client.publish(live_event_channel(run_id), event_json)
 
 
+async def live_event_subscriber_count(run_id: str) -> int:
+    """How many streams are listening to this run right now (0 when the host
+    closed the chat)."""
+    client = await get_redis_client()
+    counts = await client.pubsub_numsub(live_event_channel(run_id))
+    return int(counts[0][1]) if counts else 0
+
+
 @asynccontextmanager
 async def subscribe_live_events(run_id: str) -> AsyncIterator[PubSub]:
     client = await get_redis_client()
