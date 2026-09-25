@@ -196,7 +196,7 @@ export const ProjectHomeRoute = () => {
 						>
 							<Trans>Portal editor</Trans>
 						</Button>
-						<ProjectHostGuideLink projectId={projectId} />
+						<ProjectHostGuideLink projectId={projectId} variant="outline" />
 						<Button
 							size="sm"
 							leftSection={<FileTextIcon size={16} />}
