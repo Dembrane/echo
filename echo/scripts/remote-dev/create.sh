@@ -72,7 +72,7 @@ done
 echo
 
 log_step "Waiting for bootstrap (docker install + repo clone)"
-log_info "Live log: ./ssh.sh --vm then tail -f /var/log/dembrane-bootstrap.log"
+log_info "Live log: ./ssh.sh --vm tail -f /var/log/dembrane-bootstrap.log"
 for i in $(seq 1 60); do
     if vm_ssh "test -f /var/lib/dembrane-bootstrap-done" >/dev/null 2>&1; then
         log_info "Bootstrap complete"

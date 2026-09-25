@@ -193,8 +193,7 @@ started the VM from the console instead, run `./ssh-config.sh` by hand.
 most OOMs into slowness rather than failure. If it still dies, go up a size:
 `./resize.sh e2-standard-8`.
 
-**Bootstrap seems stuck.** `./ssh.sh --vm`, then
-`tail -f /var/log/dembrane-bootstrap.log`.
+**Bootstrap seems stuck.** `./ssh.sh --vm tail -f /var/log/dembrane-bootstrap.log`.
 
 **`create.sh` warns that the disk is larger than the image.** Expected and
 harmless. gcloud prints this whenever the boot disk exceeds the 10GB image,
