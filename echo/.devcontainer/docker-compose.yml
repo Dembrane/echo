@@ -48,6 +48,9 @@ services:
       - DB_DATABASE=dembrane
       - DB_EXCLUDE_TABLES=lightrag_chunk_graph_map,lightrag_doc_chunks,lightrag_doc_full,lightrag_doc_status,lightrag_llm_cache,lightrag_vdb_entity,lightrag_vdb_relation,lightrag_vdb_transcript
       - WEBSOCKETS_ENABLED=true
+      # A schema push into an empty database sends the whole snapshot in one
+      # request, which outgrew the 1mb default in September 2026.
+      - MAX_PAYLOAD_SIZE=10mb
       - CORS_ENABLED=true
       - CORS_ORIGIN=http://localhost:5173,http://localhost:5174
       - CORS_CREDENTIALS=true
