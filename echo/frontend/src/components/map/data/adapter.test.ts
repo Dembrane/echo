@@ -75,9 +75,17 @@ describe("buildMapGraph", () => {
 		expect(node.metadata.conversationIds).toEqual(["c1", "c2"]);
 		expect(node.metadata.createdAt).toBe("2026-09-01T10:00:00Z");
 		expect(graph.evidenceById.get("a")).toEqual([
-			{ conversationId: "c1", label: "One", quotes: ["q1", "q2", "q4"] },
-			{ conversationId: "c2", label: "Two", quotes: ["q3"] },
+			{
+				conversationId: "c1",
+				label: "One",
+				quotes: ["q1", "q2", "q4"],
+				slot: 0,
+			},
+			{ conversationId: "c2", label: "Two", quotes: ["q3"], slot: 1 },
 		]);
+		// The host map names its own conversations, so the legend can too.
+		expect(graph.conversationNames.get(0)).toBe("One");
+		expect(graph.conversationNames.get(1)).toBe("Two");
 	});
 
 	it("surfaces every argument it cannot place instead of dropping it", () => {

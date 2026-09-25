@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import asyncio
 from types import SimpleNamespace
 
@@ -317,6 +318,307 @@ def test_map_projection_excludes_host_fields():
     assert result["nodes"][0]["factCheck"] == {"eligible": False}
     assert result["nodes"][0]["detail"]["consolidation"] == {"memberCount": 3}
     assert result["nodes"][0]["label"] == "Finding"
+    # Members that are not evidence documents carry no conversation at all.
+    assert result["nodes"][0]["conversations"] == []
+
+
+def test_the_audience_map_names_conversations_only_by_their_colour_slot():
+    graph = {
+        "nodes": [
+            {
+                "objectId": "o1",
+                "revisionId": "r1",
+                "type": "argument",
+                "detail": {"evidence": [{"conversationId": "c-late", "quotes": ["A passage."]}]},
+            },
+            {
+                "objectId": "o2",
+                "revisionId": "r2",
+                "type": "deduplicated_argument",
+                "detail": {
+                    "evidence": [{"conversationId": "c-first"}, {"conversationId": "c-late"}],
+                    "consolidation": {
+                        "memberCount": 3,
+                        "members": [
+                            {"evidence": [{"conversationId": "c-late"}]},
+                            {"evidence": [{"conversationId": "c-first"}]},
+                            {"evidence": [{"conversationId": "c-late"}]},
+                        ],
+                    },
+                },
+            },
+            {"objectId": "o3", "revisionId": "r3", "type": "argument", "detail": {}},
+        ]
+    }
+    # The popcorn session's order, oldest first: the same slot the deck's
+    # marker colours are handed out in.
+    result = present.sanitize_map(graph, ["c-first", "c-late"])
+    nodes = {node["revisionId"]: node for node in result["nodes"]}
+    assert nodes["r1"]["conversations"] == [1]
+    # One entry per member, so the map can weight a blend two-to-one.
+    assert nodes["r2"]["conversations"] == [0, 1, 1]
+    assert nodes["r3"]["conversations"] == []
+    # Nothing about the conversations themselves reaches the room.
+    assert "c-first" not in str(result) and "c-late" not in str(result)
+
+
+def test_conversations_outside_the_session_take_the_next_slots_in_order():
+    graph = {
+        "nodes": [
+            {"revisionId": "r1", "detail": {"evidence": [{"conversationId": "c-new"}]}},
+            {"revisionId": "r2", "detail": {"evidence": [{"conversationId": "c-known"}]}},
+            {"revisionId": "r3", "detail": {"evidence": [{"conversationId": "c-newer"}]}},
+        ]
+    }
+    slots = present.conversation_slots(graph, ["c-known"])
+    assert slots == {"r1": [1], "r2": [0], "r3": [2]}
+
+
+# The room's map with the evidence on it (September 20th 2026).
+
+_UUID = re.compile(r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b")
+
+_FORBIDDEN_KEYS = {
+    "conversationId",
+    "conversation_id",
+    "chunkId",
+    "chunk_id",
+    "createdAt",
+    "created_at",
+    "url",
+    "href",
+    "dashboardUrl",
+    "actorId",
+    "userId",
+    "runId",
+    "recipeId",
+    "location",
+    "source",
+    "review",
+    "coverage",
+}
+
+
+def _walk(value, path=""):
+    """Every (path, key, value) in a payload, however deeply nested."""
+    if isinstance(value, dict):
+        for key, child in value.items():
+            yield f"{path}.{key}", key, child
+            yield from _walk(child, f"{path}.{key}")
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            yield f"{path}[{index}]", None, child
+            yield from _walk(child, f"{path}[{index}]")
+
+
+def _evidenced_graph():
+    """A host graph with everything the room must not be told on it."""
+    return {
+        "version": 2,
+        "nodes": [
+            {
+                "objectId": "11111111-1111-4111-8111-111111111111",
+                "revisionId": "22222222-2222-4222-8222-222222222222",
+                "type": "argument",
+                "label": "The bins overflow",
+                "embedding": [0.1, 0.2],
+                "attributes": {"valence": "negative", "epistemicKind": "claim"},
+                "detail": {
+                    "statement": "The bins overflow",
+                    "createdAt": "2026-09-01T10:00:00Z",
+                    "evidence": [
+                        {
+                            "conversationId": "c-late",
+                            "label": "Ben",
+                            "createdAt": "2026-09-01T10:00:00Z",
+                            "quotes": ["The bins are always full.", "Nobody empties them."],
+                        },
+                        {"conversationId": "c-first", "label": "Ada", "quotes": ["Same here."]},
+                    ],
+                },
+                "provenance": {
+                    "runId": "33333333-3333-4333-8333-333333333333",
+                    "recipeId": "arguments",
+                    "origin": "generated",
+                },
+                "factCheck": {"eligible": True, "claimKey": "bins"},
+            },
+            {
+                "objectId": "44444444-4444-4444-8444-444444444444",
+                "revisionId": "55555555-5555-4555-8555-555555555555",
+                "type": "deduplicated_argument",
+                "label": "Trams run late",
+                "embedding": [0.3, 0.4],
+                "attributes": {},
+                "detail": {
+                    "statement": "Trams run late",
+                    "evidence": [{"conversationId": "c-first", "quotes": ["The tram is late."]}],
+                    "consolidation": {
+                        "memberCount": 2,
+                        "members": [
+                            {
+                                "objectId": "66666666-6666-4666-8666-666666666666",
+                                "revisionId": "77777777-7777-4777-8777-777777777777",
+                                "statement": "The tram is late every morning",
+                                "evidence": [
+                                    {
+                                        "conversationId": "c-first",
+                                        "label": "Ada",
+                                        "createdAt": "2026-09-01T09:00:00Z",
+                                        "quotes": ["The tram is late every morning."],
+                                    }
+                                ],
+                            },
+                            {
+                                "objectId": "88888888-8888-4888-8888-888888888888",
+                                "revisionId": "99999999-9999-4999-8999-999999999999",
+                                "statement": "Trams never keep time",
+                                "evidence": [
+                                    {"conversationId": "c-late", "quotes": ["They never keep time."]}
+                                ],
+                            },
+                        ],
+                    },
+                },
+                "provenance": {"runId": "33333333-3333-4333-8333-333333333333"},
+                "factCheck": {"eligible": False},
+            },
+        ],
+        "snapshot": {
+            "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            "createdAt": "2026-09-01T12:00:00Z",
+            "stale": [{"revisionId": "22222222-2222-4222-8222-222222222222"}],
+        },
+        "relations": [{"from": "22222222-2222-4222-8222-222222222222", "to": "x"}],
+        "related": [{"objectId": "x", "label": "Elsewhere"}],
+        "unplaced": [],
+    }
+
+
+def test_the_legend_names_come_from_the_decks_own_conversation_labels(monkeypatch):
+    async def loop(report_id):  # noqa: ARG001
+        return {
+            "popcorn_state": {
+                "order": ["c-first", "c-late"],
+                "conversations": {
+                    "c-first": {"label": "Ada", "short": "Ada"},
+                    "c-late": {"label": "  "},
+                },
+            }
+        }
+
+    monkeypatch.setattr(service, "get_loop_for_report", loop)
+    order, names = asyncio.run(present.conversation_legend({"id": "r"}))
+    assert order == ["c-first", "c-late"]
+    # The same source and the same fallback as the deck's own legend: a
+    # conversation nobody named is a number, here and on the stage.
+    assert names == {"c-first": "Ada"}
+    assert asyncio.run(present.conversation_legend(None)) == ([], {})
+
+
+def test_the_audience_map_carries_the_quotes_under_the_conversations_colour():
+    result = present.sanitize_map(_evidenced_graph(), ["c-first", "c-late"])
+    nodes = {node["revisionId"]: node for node in result["nodes"]}
+    argument = nodes["22222222-2222-4222-8222-222222222222"]
+    # Slot order, not the order the host's evidence happened to be in.
+    assert argument["detail"]["evidence"] == [
+        {"conversation": 0, "quotes": ["Same here."]},
+        {
+            "conversation": 1,
+            "quotes": ["The bins are always full.", "Nobody empties them."],
+        },
+    ]
+    merged = nodes["55555555-5555-4555-8555-555555555555"]
+    assert merged["detail"]["consolidation"]["memberCount"] == 2
+    assert merged["detail"]["consolidation"]["members"] == [
+        {
+            "statement": "The tram is late every morning",
+            "evidence": [{"conversation": 0, "quotes": ["The tram is late every morning."]}],
+        },
+        {
+            "statement": "Trams never keep time",
+            "evidence": [{"conversation": 1, "quotes": ["They never keep time."]}],
+        },
+    ]
+    assert merged["detail"]["evidence"] == [
+        {"conversation": 0, "quotes": ["The tram is late."]}
+    ]
+
+
+def test_the_audience_map_hands_out_no_ids_with_the_evidence():
+    result = present.sanitize_map(_evidenced_graph(), ["c-first", "c-late"])
+    # Node identity, and the snapshot the room is looking at: the ids the
+    # screen itself needs. Nothing that could name a conversation or a person.
+    allowed = {
+        ".snapshot.id",
+        ".nodes[0].objectId",
+        ".nodes[0].revisionId",
+        ".nodes[1].objectId",
+        ".nodes[1].revisionId",
+    }
+    for path, key, value in _walk(result):
+        if isinstance(value, str):
+            assert not _UUID.search(value) or path in allowed, path
+        # The snapshot says when the room's picture was taken, which is the
+        # screen's own time and belongs to no conversation.
+        if key is not None and not path.startswith(".snapshot"):
+            assert key not in _FORBIDDEN_KEYS, path
+    assert "c-first" not in str(result) and "c-late" not in str(result)
+    assert result["nodes"][0]["provenance"] == {}
+    assert result["nodes"][0]["factCheck"] == {"eligible": False}
+    assert result["relations"] == [] and result["related"] == []
+    assert result["snapshot"] == {
+        "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        "createdAt": "2026-09-01T12:00:00Z",
+    }
+
+
+def test_the_audience_map_names_conversations_only_where_the_setting_says_so():
+    graph = _evidenced_graph()
+    names = {"c-first": "Ada", "c-late": "Ben"}
+    silent = present.sanitize_map(graph, ["c-first", "c-late"])
+    assert silent["conversationNames"] == {}
+    assert "Ada" not in str(silent) and "Ben" not in str(silent)
+    named = present.sanitize_map(graph, ["c-first", "c-late"], names)
+    assert named["conversationNames"] == {"0": "Ada", "1": "Ben"}
+    # The name is the only thing added; the quotes read the same either way.
+    assert named["nodes"] == silent["nodes"]
+
+
+def test_a_conversation_the_deck_never_named_keeps_its_number():
+    named = present.sanitize_map(
+        _evidenced_graph(), ["c-first", "c-late"], {"c-late": "Ben", "c-first": "  "}
+    )
+    assert named["conversationNames"] == {"1": "Ben"}
+
+
+def test_a_merge_the_projection_cannot_read_in_full_shows_no_members():
+    graph = _evidenced_graph()
+    graph["nodes"][1]["detail"]["consolidation"]["members"].pop()
+    result = present.sanitize_map(graph, ["c-first", "c-late"])
+    consolidation = result["nodes"][1]["detail"]["consolidation"]
+    assert consolidation == {"memberCount": 2}
+    assert "They never keep time." not in str(result)
+
+
+def test_a_withdrawn_finding_takes_its_quotes_off_the_audience_map():
+    sanitized = present.sanitize_map(
+        _evidenced_graph(), ["c-first", "c-late"], {"c-first": "Ada", "c-late": "Ben"}
+    )
+
+    class _Withdrawn:
+        async def current_revisions(self, project_id, scope_ids=None):  # noqa: ARG002
+            return {
+                "44444444-4444-4444-8444-444444444444": SimpleNamespace(
+                    provenance=SimpleNamespace(extra={"membershipExcluded": True})
+                )
+            }
+
+    withdrawn = asyncio.run(present._withdraw_map(sanitized, "p", _Withdrawn()))
+    assert [node["label"] for node in withdrawn["nodes"]] == ["The bins overflow"]
+    for passage in ("The tram is late.", "The tram is late every morning.", "They never keep time."):
+        assert passage not in str(withdrawn)
+    assert withdrawn["conversationNames"] == {"0": "Ada", "1": "Ben"}
 
 
 def test_map_hiding_takes_the_departed_revisions_with_it():
@@ -366,6 +668,102 @@ def test_curating_the_bundle_drops_hidden_objects_and_their_relations():
     assert files["index.html"] == "<!doctype html>"
     # The bundle handed in is left as it was; the caller may still be holding it.
     assert len(bundle["files"]["popcorn.json"]["items"]) == 2
+
+
+def _quoting_bundle() -> dict:
+    """A deck where q1 belongs to the hidden phrase alone, q2 to the phrase
+    that stays, q3 to both, and q4 to a stakeholder relation's aspect."""
+    return {
+        "files": {
+            "popcorn/c1.json": {
+                "items": [
+                    {"objectId": "gone", "phrase": "Bins", "quoteId": "q1"},
+                    {"objectId": "stays", "phrase": "Trams", "quoteId": "q2"},
+                ]
+            },
+            "tensions.json": {"tensions": [{"objectId": "gone", "quoteIds": ["q1", "q3"]}]},
+            "stakeholders.json": {
+                "stakeholders": [
+                    {"id": "s1", "objectId": "keeper", "quoteIds": ["q3"]},
+                    {"id": "s2", "objectId": "gone", "quoteIds": []},
+                ],
+                "relations": [
+                    {"between": ["s1", "s2"], "aspects": [{"kind": "power", "quoteIds": ["q4"]}]}
+                ],
+            },
+            "quotes.json": {
+                "quotes": [
+                    {"id": "q1", "transcript": "c1", "text": "Bins overflow on Fridays."},
+                    {"id": "q2", "transcript": "c1", "text": "The tram is packed."},
+                    {"id": "q3", "transcript": "c1", "text": "Both, really."},
+                    {"id": "q4", "transcript": "c1", "text": "The council decides."},
+                ]
+            },
+            "index.html": "<!doctype html>",
+        }
+    }
+
+
+def test_a_hidden_finding_leaves_with_the_quotes_only_it_cited():
+    from dembrane.popcorn.bundle import curate_presentation
+
+    bundle = _quoting_bundle()
+    files = curate_presentation(bundle, {"presentation": {"hidden_items": ["gone"]}})["files"]
+    kept = [quote["id"] for quote in files["quotes.json"]["quotes"]]
+    # q1 was the hidden phrase's and the hidden tension's: it goes, with its
+    # words. q3 the hidden tension shared with a stakeholder who stays.
+    assert kept == ["q2", "q3"]
+    assert "Bins overflow" not in str(files["quotes.json"])
+    # q4 hung on a relation that left with its end, so it goes too.
+    assert "The council decides." not in str(files)
+    # The bundle handed in still has all four; the caller may be holding it.
+    assert len(bundle["files"]["quotes.json"]["quotes"]) == 4
+
+
+def test_a_withdrawn_finding_leaves_with_its_quotes_on_every_read(monkeypatch):
+    from dembrane.popcorn import bundle as bundle_module
+
+    monkeypatch.setattr(bundle_module, "excluded_object_ids", _excluded_is_gone)
+    projected = asyncio.run(
+        bundle_module.apply_shared_withdrawals(_quoting_bundle(), "p", store=SimpleNamespace())
+    )
+    quotes = projected["files"]["quotes.json"]["quotes"]
+    assert [quote["id"] for quote in quotes] == ["q2", "q3"]
+
+
+async def _excluded_is_gone(project_id, *, store=None):  # noqa: ARG001
+    return {"gone"}
+
+
+def test_a_hidden_findings_quotes_leave_the_audience_map_with_it():
+    # September 20th 2026: the room reads the evidence, so curation has real
+    # passages to take with it. A hidden finding takes its own quotes, and the
+    # conversation left with nothing on the map loses its name too.
+    sanitized = present.sanitize_map(
+        {
+            "nodes": [
+                {
+                    "objectId": "gone",
+                    "revisionId": "r1",
+                    "type": "tension",
+                    "detail": {"quotes": [{"conversationId": "c-1", "text": "A passage."}]},
+                },
+                {
+                    "objectId": "stays",
+                    "revisionId": "r2",
+                    "type": "argument",
+                    "detail": {"evidence": [{"conversationId": "c-2", "quotes": ["Kept."]}]},
+                },
+            ]
+        },
+        ["c-1", "c-2"],
+        {"c-1": "Ada", "c-2": "Ben"},
+    )
+    assert "A passage." in str(sanitized)
+    curated = present._curate_map(sanitized, {"presentation": {"hidden_items": ["gone"]}})
+    assert [node["objectId"] for node in curated["nodes"]] == ["stays"]
+    assert "A passage." not in str(curated)
+    assert curated["conversationNames"] == {"1": "Ben"}
 
 
 class _Access:
@@ -1467,3 +1865,17 @@ def test_the_deck_page_embeds_the_looked_up_id_not_the_path_value(monkeypatch) -
     body = response.body.decode()
     assert '"presentationId": "7"' in body
     assert "alert(1)" not in body
+
+
+def test_only_the_hosts_preview_is_marked_as_a_preview(monkeypatch) -> None:
+    async def require(presentation_id, auth):  # noqa: ARG001
+        return {"id": 7}, SimpleNamespace(require=lambda _scope: None)
+
+    monkeypatch.setattr(present_api, "_require_popcorn", require)
+    auth = SimpleNamespace(user_id="host")
+    screen = asyncio.run(present_api.deck("7", auth)).body.decode()
+    preview = asyncio.run(present_api.deck("7", auth, preview=True)).body.decode()
+    draft = asyncio.run(present_api.draft_deck("7", auth, preview=True)).body.decode()
+    assert '"preview": true' not in screen
+    assert '"preview": true' in preview
+    assert '"preview": true' in draft

@@ -4,13 +4,13 @@ import { Anchor, Button, UnstyledButton } from "@mantine/core";
 import { CaretRightIcon } from "@phosphor-icons/react";
 import { memo, type ReactNode, useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
+import { ResultStage } from "@/components/results";
 import { cn } from "@/lib/utils";
-import { OBJECT_TYPE_STYLES } from "../attributes";
+import { conversationColor, OBJECT_TYPE_STYLES } from "../attributes";
 import type {
 	EvidenceGroup,
 	MapObjectInfo,
 	StakeholderDetail,
-	TensionDetail,
 } from "../data/adapter";
 import {
 	DERIVED_FROM,
@@ -57,7 +57,6 @@ type NodeDetailCardProps = {
 	/** Quotes per source conversation. */
 	evidence: EvidenceGroup[];
 	conversationHref?: ConversationHref;
-	titleSize?: "small" | "large";
 	collapsibleQuotes?: boolean;
 	inspection?: NodeInspection | null;
 };
@@ -65,28 +64,48 @@ type NodeDetailCardProps = {
 const QuoteGroups = ({
 	evidence,
 	conversationHref,
+	headings = true,
 }: {
 	evidence: EvidenceGroup[];
 	conversationHref?: ConversationHref;
+	/**
+	 * False where the conversation is already named above the quotes, as the
+	 * node's own chit names it: the heading would then say it twice.
+	 */
+	headings?: boolean;
 }) => (
 	<div className="space-y-3">
 		{evidence.map((group) => {
 			const href = conversationHref?.(group.conversationId) ?? null;
 			return (
 				<div key={group.conversationId} className="space-y-1.5">
-					{href ? (
-						<Anchor
-							component={I18nLink}
-							to={href}
-							size="xs"
-							className="font-semibold uppercase tracking-wider"
-						>
-							{group.label}
-						</Anchor>
-					) : (
-						<CaptionText className="font-semibold uppercase tracking-wider">
-							{group.label}
-						</CaptionText>
+					{headings && (
+						<span className="flex items-center gap-1.5">
+							{/* The dot the legend and the nodes use for this conversation,
+						    so a quote is read in the colour it was spoken in. */}
+							{group.slot !== null && (
+								<span
+									aria-hidden
+									className="inline-block size-2 shrink-0 rounded-full"
+									data-testid={`quote-group-slot-${group.slot}`}
+									style={{ backgroundColor: conversationColor(group.slot) }}
+								/>
+							)}
+							{href ? (
+								<Anchor
+									component={I18nLink}
+									to={href}
+									size="xs"
+									className="font-semibold uppercase tracking-wider"
+								>
+									{group.label}
+								</Anchor>
+							) : (
+								<CaptionText className="font-semibold uppercase tracking-wider">
+									{group.label}
+								</CaptionText>
+							)}
+						</span>
 					)}
 					{group.quotes.map((quote, index) => (
 						<blockquote
@@ -125,7 +144,9 @@ const ConsolidationMembers = ({
 				<ol className="space-y-3" data-testid="consolidation-members">
 					{consolidation.members.map((member, index) => (
 						<li
-							key={member.objectId}
+							// The room's members carry no identity; their place in the
+							// merge is what tells them apart.
+							key={member.objectId || `member-${index}`}
 							className="space-y-1 text-sm leading-snug"
 						>
 							<p>
@@ -276,33 +297,15 @@ const RelatedList = ({
 	);
 
 const TensionSections = ({
-	detail,
 	inspection,
 	conversationHref,
 }: {
-	detail: TensionDetail;
 	inspection: NodeInspection;
 	conversationHref?: ConversationHref;
 }) => {
 	const support = tensionSupport(inspection.related);
 	return (
 		<div className="space-y-3" data-testid="tension-inspector">
-			<Section title={<Trans>Pole A</Trans>}>
-				<p className="text-sm">{detail.poleA}</p>
-			</Section>
-			<Section title={<Trans>Pole B</Trans>}>
-				<p className="text-sm">{detail.poleB}</p>
-			</Section>
-			{detail.knot && (
-				<Section title={<Trans>Narrative</Trans>}>
-					<p className="text-sm">{detail.knot}</p>
-				</Section>
-			)}
-			{detail.toResolve && (
-				<Section title={<Trans>To resolve</Trans>}>
-					<p className="text-sm">{detail.toResolve}</p>
-				</Section>
-			)}
 			<Section title={<Trans>Supporting pole A</Trans>}>
 				<RelatedList
 					items={support.poleA}
@@ -338,12 +341,6 @@ const StakeholderSections = ({
 	inspection: NodeInspection;
 }) => (
 	<div className="space-y-3" data-testid="stakeholder-inspector">
-		<Section title={<Trans>Role</Trans>}>
-			<p className="text-sm">{detail.role || t`Not recorded`}</p>
-		</Section>
-		<Section title={<Trans>Stake</Trans>}>
-			<p className="text-sm">{detail.stake || t`Not recorded`}</p>
-		</Section>
 		<Section title={<Trans>Evidence</Trans>}>
 			<p className="text-sm">
 				{rungLabel(detail.rung)}
@@ -406,11 +403,12 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 	node,
 	evidence,
 	conversationHref,
-	titleSize = "large",
 	collapsibleQuotes = false,
 	inspection = null,
 }: NodeDetailCardProps) {
-	const [quotesOpen, setQuotesOpen] = useState(false);
+	// Evidence is what an argument is made of, so the panel shows it rather
+	// than only counting it. It still folds away for a long merge.
+	const [quotesOpen, setQuotesOpen] = useState(true);
 
 	if (!node) {
 		return (
@@ -424,10 +422,9 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 		(total, group) => total + group.quotes.length,
 		0,
 	);
-	const titleClass =
-		titleSize === "large"
-			? "text-lg font-medium leading-tight"
-			: "text-base font-medium leading-snug";
+	// One conversation needs no heading over its quotes: the node's chit
+	// already names it. Several do, so a quote is read where it was spoken.
+	const headings = evidence.length > 1;
 	const type = node.metadata.objectType;
 	const object = inspection?.object ?? null;
 	const detail = object?.detail;
@@ -463,11 +460,22 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 					{typeLabel}
 				</p>
 			)}
-			<p className={titleClass}>{node.label ?? node.id}</p>
+			{/* The finding in its kind's shape, the way a room would get it,
+			    with what there is to count. The quotes themselves stay below it
+			    rather than riding on the stage: there they are attributed, in
+			    their conversation's colour, and no passage is read twice. */}
+			<ResultStage
+				item={{
+					detail: object?.detail,
+					label: node.label ?? node.id,
+					type: type ?? "argument",
+				}}
+				quotes={[]}
+				evidence={{ conversations: evidence.length, quotes: quoteCount }}
+			/>
 
 			{inspection && detail?.type === "tension" && (
 				<TensionSections
-					detail={detail}
 					inspection={inspection}
 					conversationHref={conversationHref}
 				/>
@@ -488,7 +496,11 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 				</p>
 			)}
 			{quoteCount > 0 && !collapsibleQuotes && (
-				<QuoteGroups evidence={evidence} conversationHref={conversationHref} />
+				<QuoteGroups
+					evidence={evidence}
+					conversationHref={conversationHref}
+					headings={headings}
+				/>
 			)}
 			{quoteCount > 0 && collapsibleQuotes && (
 				<div>
@@ -508,6 +520,7 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 							<QuoteGroups
 								evidence={evidence}
 								conversationHref={conversationHref}
+								headings={headings}
 							/>
 						</div>
 					)}

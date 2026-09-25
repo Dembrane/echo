@@ -38,10 +38,6 @@ import {
 import type { PresentationBlock as AudienceBlock } from "./blocks";
 import { useAudience } from "./hooks/useAudience";
 import { type AudienceTheme, useAudienceTheme } from "./hooks/useAudienceTheme";
-import {
-	useOpeningInlineEdit,
-	usePresentationDraft,
-} from "./hooks/usePresentationDraft";
 
 export type AudienceScreenProps = {
 	presentationId?: string;
@@ -65,6 +61,14 @@ export type AudienceScreenProps = {
 	onEditOpening?: (patch: PopcornSettingsPatch) => Promise<unknown>;
 	/** Told the presentation's interface language once it is known. */
 	onLanguage?: (code: string) => void;
+	/**
+	 * The tab a preview is asked to show. The results panel below an embedded
+	 * preview sets it when the host changes tabs there, so the three faces of
+	 * the same four names stay together. A block this presentation does not
+	 * have is ignored, and the room's own screen is never driven from here:
+	 * this only ever reaches the preview the host is looking at.
+	 */
+	block?: AudienceBlock | null;
 	className?: string;
 };
 
@@ -234,6 +238,7 @@ export const AudienceScreen = ({
 	eventTick,
 	onEditOpening,
 	onLanguage,
+	block,
 	className,
 }: AudienceScreenProps) => {
 	const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -721,6 +726,17 @@ export const AudienceScreen = ({
 		[audience, deckOrigin],
 	);
 
+	// The results panel below an embedded preview says which tab it is on, and
+	// the preview follows: one click, three faces of the same four names. It
+	// goes through `selectBlock` rather than around it, so the opening is
+	// dismissed the way it is for a click on the tab itself, and a block this
+	// presentation does not have is left alone.
+	useEffect(() => {
+		if (!block || !audience?.manifest.blocks.includes(block)) return;
+		if (block === activeBlock) return;
+		selectBlock(block);
+	}, [activeBlock, audience, block, selectBlock]);
+
 	const handleKeyDown = useCallback(
 		(event: globalThis.KeyboardEvent) => {
 			if (!audience || !activeBlock || openingLocked) return;
@@ -961,6 +977,7 @@ export const AudienceScreen = ({
 						<div
 							className={cn(
 								"absolute inset-0",
+								classes.mapPane,
 								(activeBlock !== "map" || openingOpen) && "hidden",
 							)}
 						>
@@ -1135,20 +1152,13 @@ export const AudienceScreenRoute = () => {
 		);
 		if (locale && i18n.locale !== locale) i18n.activate(locale);
 	}, []);
-	// The host's own screen (signed in, by presentation id) lets a host who may
-	// edit type into the opening. The draft only loads for such a host; the
-	// room's public link never asks for it.
-	const draft = usePresentationDraft(
-		"",
-		presentationId ?? "",
-		Boolean(presentationId) && !token,
-	);
-	const editOpening = useOpeningInlineEdit(draft, true);
+	// The room screen is for showing, not for writing: the opening slides are
+	// reworded in the dashboard's preview on the Present page, never on the
+	// projector. Without `onEditOpening` the deck never gets the editing command.
 	return (
 		<AudienceScreen
 			presentationId={presentationId}
 			publicToken={token}
-			onEditOpening={editOpening}
 			onLanguage={followLanguage}
 			className="h-dvh min-h-dvh"
 		/>

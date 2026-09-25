@@ -1,6 +1,8 @@
 import { ArrowLeft } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
+import { cn } from "@/lib/utils";
+import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
 
 interface ViewHeaderProps {
 	to: string;
@@ -8,6 +10,21 @@ interface ViewHeaderProps {
 }
 
 export const ViewHeader = ({ to, title }: ViewHeaderProps) => {
+	if (useInRail()) {
+		return (
+			<RailTip label={title}>
+				<I18nLink
+					to={to}
+					className={cn(RAIL_ITEM_CLASS, "hover:bg-black/[0.04]")}
+					style={{ color: "#2d2d2c" }}
+				>
+					<ArrowLeft size={16} aria-hidden="true" />
+					<span className="sr-only">{title}</span>
+				</I18nLink>
+			</RailTip>
+		);
+	}
+
 	return (
 		<I18nLink
 			to={to}

@@ -1,7 +1,7 @@
 -- Shared analysis objects and recipe runs: the SQL-only half of the schema.
 -- Idempotent and transactional; safe to run again.
 --
--- Run after add_analysis_schema.py (which creates the nine collections and
+-- Run after add_analysis_schema.py (which creates the ten collections and
 -- the two map_result fields):
 --   psql -v ON_ERROR_STOP=1 -f add_analysis_constraints.sql
 --
@@ -31,7 +31,9 @@ BEGIN
         OR to_regclass('analysis_relation') IS NULL
         OR to_regclass('analysis_snapshot') IS NULL
         OR to_regclass('analysis_outbox') IS NULL
-        OR to_regclass('analysis_request_key') IS NULL THEN
+        OR to_regclass('analysis_request_key') IS NULL
+        OR to_regclass('analysis_last_opened') IS NULL
+        OR to_regclass('analysis_feedback') IS NULL THEN
         RAISE EXCEPTION 'analysis collections are missing: run add_analysis_schema.py first';
     END IF;
     IF NOT EXISTS (
@@ -43,6 +45,9 @@ BEGIN
     ) OR NOT EXISTS (
         SELECT 1 FROM pg_attribute
         WHERE attrelid = to_regclass('analysis_snapshot') AND attname = 'source_event_id' AND NOT attisdropped
+    ) OR NOT EXISTS (
+        SELECT 1 FROM pg_attribute
+        WHERE attrelid = to_regclass('analysis_object_revision') AND attname = 'change_kind' AND NOT attisdropped
     ) THEN
         RAISE EXCEPTION 'analysis fields are missing: run add_analysis_schema.py first';
     END IF;
@@ -114,6 +119,15 @@ SELECT pg_temp.analysis_add_check('analysis_object_revision', 'analysis_object_r
        OR ((provenance::jsonb ->> 'runId') IS NOT NULL AND (provenance::jsonb ->> 'recipeId') IS NOT NULL)$c$);
 SELECT pg_temp.analysis_add_check('analysis_object_revision', 'analysis_object_revision_published_at',
     $c$status <> 'published' OR published_at IS NOT NULL$c$);
+-- What the host said they changed. Null is "not recorded": generated
+-- revisions have none, and neither has anything written before the audit
+-- trail asked. Nothing is backfilled.
+SELECT pg_temp.analysis_add_check('analysis_object_revision', 'analysis_object_revision_change_kind_valid',
+    $c$change_kind IS NULL
+       OR change_kind IN ('typo', 'clarity', 'meaning', 'withdraw', 'restore', 'rollback')$c$);
+-- Only a host records a kind, and only on a revision they wrote.
+SELECT pg_temp.analysis_add_check('analysis_object_revision', 'analysis_object_revision_change_kind_authored',
+    $c$change_kind IS NULL OR origin = 'authored'$c$);
 
 SELECT pg_temp.analysis_add_check('analysis_relation', 'analysis_relation_basis_valid',
     $c$basis IN ('extracted', 'inferred', 'authored')$c$);
@@ -140,6 +154,22 @@ SELECT pg_temp.analysis_add_check('analysis_outbox', 'analysis_outbox_counters_v
 SELECT pg_temp.analysis_add_check('analysis_request_key', 'analysis_request_key_mode_valid',
     $c$mode IN ('refresh', 'regenerate', 'retry')$c$);
 
+SELECT pg_temp.analysis_add_check('analysis_last_opened', 'analysis_last_opened_user_present',
+    $c$length(btrim(user_id)) > 0$c$);
+
+-- A thumb is up or down; the reasons are a json array of stable keys, and the
+-- note is short. Which keys belong to which polarity is the API's to say: the
+-- lists grow with the product, and a CHECK over them would need a migration
+-- every time a reason is added.
+SELECT pg_temp.analysis_add_check('analysis_feedback', 'analysis_feedback_actor_present',
+    $c$length(btrim(actor_id)) > 0$c$);
+SELECT pg_temp.analysis_add_check('analysis_feedback', 'analysis_feedback_rating_valid',
+    $c$rating IN ('up', 'down')$c$);
+SELECT pg_temp.analysis_add_check('analysis_feedback', 'analysis_feedback_tags_are_an_array',
+    $c$json_typeof(tags) = 'array'$c$);
+SELECT pg_temp.analysis_add_check('analysis_feedback', 'analysis_feedback_note_length',
+    $c$note IS NULL OR length(note) <= 500$c$);
+
 SELECT pg_temp.analysis_add_check('map_result', 'map_result_manifest_version_valid',
     $c$manifest_version IN (1, 2)$c$);
 
@@ -158,6 +188,13 @@ CREATE UNIQUE INDEX IF NOT EXISTS analysis_run_project_idempotency
 -- flight or retried a failed run: a repeated transport request returns its run.
 CREATE UNIQUE INDEX IF NOT EXISTS analysis_request_key_project_key
     ON analysis_request_key (project_id, idempotency_key);
+-- One row per host per project: the results list has one last-opened time,
+-- and marking it opened again writes that row rather than another.
+CREATE UNIQUE INDEX IF NOT EXISTS analysis_last_opened_project_user
+    ON analysis_last_opened (project_id, user_id);
+-- One row per host per finding: rating again overwrites, and clearing deletes.
+CREATE UNIQUE INDEX IF NOT EXISTS analysis_feedback_project_object_actor
+    ON analysis_feedback (project_id, object_id, actor_id);
 -- Request order is unique within a scope; publication compares it.
 CREATE UNIQUE INDEX IF NOT EXISTS analysis_run_scope_request_order
     ON analysis_run (scope_id, request_order);
@@ -386,6 +423,7 @@ BEGIN
         OR NEW.provenance::jsonb IS DISTINCT FROM OLD.provenance::jsonb
         OR NEW.embedding_refs::jsonb IS DISTINCT FROM OLD.embedding_refs::jsonb
         OR NEW.content_hash IS DISTINCT FROM OLD.content_hash
+        OR NEW.change_kind IS DISTINCT FROM OLD.change_kind
         OR NEW.published_at IS DISTINCT FROM OLD.published_at
         OR (NEW.run_id IS DISTINCT FROM OLD.run_id AND NEW.run_id IS NOT NULL)
         OR (NEW.parent_revision_id IS DISTINCT FROM OLD.parent_revision_id AND NEW.parent_revision_id IS NOT NULL)
@@ -513,6 +551,24 @@ BEGIN
 END
 $$;
 
+CREATE OR REPLACE FUNCTION analysis_feedback_guard() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM analysis_object o WHERE o.id = NEW.object_id AND o.project_id = NEW.project_id
+    ) THEN
+        PERFORM analysis_reference_violation('analysis_feedback.object_id must belong to the same project');
+    END IF;
+    -- The wording the host was rating, and of the finding they were rating.
+    IF NOT EXISTS (
+        SELECT 1 FROM analysis_object_revision r
+        WHERE r.id = NEW.revision_id AND r.project_id = NEW.project_id AND r.object_id = NEW.object_id
+    ) THEN
+        PERFORM analysis_reference_violation('analysis_feedback.revision_id must be a revision of this object');
+    END IF;
+    RETURN NEW;
+END
+$$;
+
 CREATE OR REPLACE FUNCTION map_result_snapshot_guard() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
     IF NEW.snapshot_id IS NOT NULL
@@ -553,6 +609,9 @@ CREATE OR REPLACE TRIGGER analysis_outbox_guard
 CREATE OR REPLACE TRIGGER analysis_request_key_guard
     BEFORE INSERT OR UPDATE ON analysis_request_key
     FOR EACH ROW EXECUTE FUNCTION analysis_request_key_guard();
+CREATE OR REPLACE TRIGGER analysis_feedback_guard
+    BEFORE INSERT OR UPDATE ON analysis_feedback
+    FOR EACH ROW EXECUTE FUNCTION analysis_feedback_guard();
 CREATE OR REPLACE TRIGGER map_result_snapshot_guard
     BEFORE INSERT OR UPDATE OF snapshot_id, project_id ON map_result
     FOR EACH ROW EXECUTE FUNCTION map_result_snapshot_guard();

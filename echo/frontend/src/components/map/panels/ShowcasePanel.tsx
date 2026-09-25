@@ -94,7 +94,6 @@ export const ShowcasePanel = memo(function ShowcasePanel({
 							node={node}
 							evidence={evidence}
 							conversationHref={conversationHref}
-							titleSize="large"
 							inspection={inspection}
 						/>
 

@@ -8,7 +8,6 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useConversationById } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useSidebarState } from "../hooks/useSidebarState";
 import { useSidebarView } from "../hooks/useSidebarView";
 
 interface Crumb {
@@ -94,7 +93,6 @@ export const AppBreadcrumbs = () => {
 	const isPopcornPath = pathname
 		.replace(/\/$/, "")
 		.endsWith("/library/popcorn");
-	const { collapsed } = useSidebarState();
 	const { orgId: routeOrgId, organisationId } = useParams<{
 		orgId?: string;
 		organisationId?: string;
@@ -307,7 +305,7 @@ export const AppBreadcrumbs = () => {
 			aria-label="Breadcrumb"
 			style={{
 				color: "rgba(45, 45, 44, 0.55)",
-				paddingLeft: collapsed ? "52px" : "16px",
+				paddingLeft: "16px",
 				paddingRight: "16px",
 			}}
 		>
