@@ -1,11 +1,19 @@
 services:
   minio:
-    image: minio/minio:latest
+    # minio/minio is no longer published. SILO is a community fork that takes
+    # the same env vars and ports; its server binary is `silo`.
+    image: docker.io/pgsty/silo:RELEASE.2026-09-16T00-00-00Z
     ports:
       - 9000:9000
       - 9001:9001
+    # Start the server first, then create the bucket once it answers.
     entrypoint: >
-      /bin/sh -c " /usr/bin/mc config host add myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD; /usr/bin/mc mb --ignore-existing myminio/dembrane; /usr/bin/mc policy set download myminio/dembrane; minio server /mnt/data --console-address ":9001" "
+      /bin/sh -c "
+      silo server /mnt/data --console-address :9001 &
+      until mc alias set local http://localhost:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD >/dev/null 2>&1; do sleep 1; done;
+      mc mb --ignore-existing local/dembrane;
+      mc anonymous set download local/dembrane;
+      wait"
     environment:
       - MINIO_ROOT_USER=dembrane
       - MINIO_ROOT_PASSWORD=dembrane
@@ -13,3 +21,7 @@ services:
     volumes:
       - ./minio_data:/mnt/data
     restart: unless-stopped
+    # The base services are all on this network. Without it minio would get its
+    # own, and http://minio:9000 would not resolve from the devcontainer.
+    networks:
+      - dembrane-network

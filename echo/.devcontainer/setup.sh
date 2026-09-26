@@ -2,7 +2,11 @@
 set -euo pipefail
 
 NODE_VERSION="${NODE_VERSION:-22}"
+# Pinned to match the version CI installs. Unpinned, this tracks latest, and
+# pnpm 12 fails the frontend install outright.
+PNPM_VERSION="${PNPM_VERSION:-10}"
 PYTHON_VERSION="${PYTHON_VERSION:-3.11}"
+MPROCS_VERSION="${MPROCS_VERSION:-0.7.3}"
 PNPM_STORE="${PNPM_STORE:-/home/node/.local/share/pnpm/store}"
 FNM_DIR="$HOME/.local/share/fnm"
 UV_BIN_DIR="$HOME/.local/bin"
@@ -75,7 +79,10 @@ install_fnm() {
     log_info "Installing fnm..."
     curl -fsSL https://fnm.vercel.app/install | bash
 
-    ensure_line_in_file "$BASHRC" 'eval "$(fnm env --use-on-cd)"'
+    # --shell bash: fnm's shell inference walks the process tree and fails in
+    # some container exec contexts.
+    # See: https://github.com/Schniz/fnm/tree/master#bash
+    ensure_line_in_file "$BASHRC" 'eval "$(fnm env --use-on-cd --shell bash)"'
     log_info "fnm installed"
 }
 
@@ -83,7 +90,10 @@ activate_fnm_env() {
     if [ -d "$FNM_DIR" ]; then
         export PATH="$FNM_DIR:$PATH"
     fi
-    command_exists fnm && eval "$(fnm env --use-on-cd)" 2>/dev/null || true
+    # --shell bash: on a first run .bashrc has not been sourced yet, so this is
+    # the only thing putting node on PATH. Inference failing here leaves
+    # install_node without FNM_MULTISHELL_PATH.
+    command_exists fnm && eval "$(fnm env --use-on-cd --shell bash)" 2>/dev/null || true
 }
 
 install_node() {
@@ -107,7 +117,7 @@ install_node() {
 }
 
 install_pnpm() {
-    if command_exists pnpm; then
+    if command_exists pnpm && [[ $(pnpm --version) == ${PNPM_VERSION}.* ]]; then
         log_info "pnpm already installed: $(pnpm --version)"
         return
     fi
@@ -117,8 +127,12 @@ install_pnpm() {
         return 1
     fi
 
+    if command_exists pnpm; then
+        log_warn "pnpm $(pnpm --version) found, replacing with $PNPM_VERSION"
+    fi
+
     log_info "Installing pnpm globally..."
-    npm install -g pnpm
+    npm install -g "pnpm@${PNPM_VERSION}"
     pnpm config set store-dir "$PNPM_STORE" || true
     log_info "pnpm installed: $(pnpm --version)"
 }
@@ -171,6 +185,20 @@ install_uv() {
     log_info "uv installed: $(uv --version)"
 }
 
+# Runs the dev processes defined in mprocs.yaml.
+install_mprocs() {
+    if command_exists mprocs; then
+        log_info "mprocs already installed: $(mprocs --version)"
+        return
+    fi
+
+    ensure_apt_packages curl ca-certificates
+    log_info "Installing mprocs $MPROCS_VERSION..."
+    curl -fsSL "https://github.com/pvolok/mprocs/releases/download/v${MPROCS_VERSION}/mprocs-${MPROCS_VERSION}-linux-$(uname -m)-musl.tar.gz" \
+        | tar -xz -C /usr/local/bin mprocs
+    log_info "mprocs installed: $(mprocs --version)"
+}
+
 ensure_uv_python() {
     if ! command_exists uv; then
         log_error "uv not available"
@@ -190,10 +218,12 @@ pin_uv_python() {
     ensure_uv_python
 
     if safe_pushd "$target_dir"; then
-        if uv python pin "${PYTHON_VERSION}" 2>/dev/null; then
+        # Checked first because the pin is committed, and `uv python pin 3.11`
+        # would rewrite it to the newest 3.11 patch uv happens to have.
+        if [ -f .python-version ]; then
+            log_info "Python already pinned to $(cat .python-version) for $(basename "$target_dir")"
+        elif uv python pin "${PYTHON_VERSION}" 2>/dev/null; then
             log_info "Pinned Python ${PYTHON_VERSION} for $(basename "$target_dir")"
-        elif [ -f .python-version ]; then
-            log_info "Python already pinned for $(basename "$target_dir")"
         else
             log_warn "Failed to pin Python for $(basename "$target_dir")"
         fi
@@ -465,6 +495,7 @@ main() {
     fi
 
     install_uv
+    install_mprocs
 
     if [ "$SKIP_PYTHON" = "false" ]; then
         ensure_uv_python

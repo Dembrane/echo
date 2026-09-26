@@ -3036,7 +3036,7 @@ msgstr "Filters wissen"
 msgid "Clear search"
 msgstr "Zoekopdracht wissen"
 
-#: src/components/conversation/hooks/index.ts:540
+#: src/components/conversation/hooks/index.ts:539
 msgid "Cleared {cleared} of {total} conversations"
 msgstr "{cleared} van {total} gesprekken gewist"
 
@@ -3440,7 +3440,7 @@ msgstr "Gesprek"
 msgid "Conversation {0}"
 msgstr "Gesprek {0}"
 
-#: src/components/conversation/hooks/index.ts:378
+#: src/components/conversation/hooks/index.ts:377
 msgid "Conversation added to chat"
 msgstr "Gesprek toegevoegd aan chat"
 
@@ -3469,7 +3469,7 @@ msgstr "Gespreksnamen verschijnen in de Library en het eindscherm van het portaa
 msgid "Conversation pages and data loading are streamlined."
 msgstr "Gesprekspagina's en het laden van gegevens zijn vereenvoudigd."
 
-#: src/components/conversation/hooks/index.ts:494
+#: src/components/conversation/hooks/index.ts:493
 msgid "Conversation removed from chat"
 msgstr "Gesprek verwijderd uit chat"
 
@@ -3512,7 +3512,7 @@ msgstr "gesprekken"
 msgid "Conversations"
 msgstr "Gesprekken"
 
-#: src/components/conversation/hooks/index.ts:530
+#: src/components/conversation/hooks/index.ts:529
 msgid "Conversations cleared"
 msgstr "Gesprekken gewist"
 
@@ -5354,12 +5354,12 @@ msgstr ""
 msgid "Failed"
 msgstr "Mislukt"
 
-#: src/components/conversation/hooks/index.ts:313
+#: src/components/conversation/hooks/index.ts:312
 msgid "Failed to add conversation to chat"
 msgstr "Fout bij het toevoegen van het gesprek aan de chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/components/conversation/hooks/index.ts:308
+#: src/components/conversation/hooks/index.ts:307
 msgid "Failed to add conversation to chat{0}"
 msgstr "Fout bij het toevoegen van het gesprek aan de chat{0}"
 
@@ -5373,8 +5373,8 @@ msgstr "Mislukt om gesprekken aan context toe te voegen"
 msgid "Failed to approve outcome. Please try again."
 msgstr "Fout bij het goedkeuren van het resultaat. Probeer het opnieuw."
 
-#: src/components/conversation/hooks/index.ts:521
-#: src/components/conversation/hooks/index.ts:537
+#: src/components/conversation/hooks/index.ts:520
+#: src/components/conversation/hooks/index.ts:536
 msgid "Failed to clear conversations"
 msgstr "Gesprekken wissen is mislukt"
 
@@ -5471,12 +5471,12 @@ msgstr "Opnieuw laden is mislukt. Probeer het opnieuw."
 msgid "Failed to remove avatar"
 msgstr "Kan avatar niet verwijderen"
 
-#: src/components/conversation/hooks/index.ts:439
+#: src/components/conversation/hooks/index.ts:438
 msgid "Failed to remove conversation from chat"
 msgstr "Fout bij het verwijderen van het gesprek uit de chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/components/conversation/hooks/index.ts:434
+#: src/components/conversation/hooks/index.ts:433
 msgid "Failed to remove conversation from chat{0}"
 msgstr "Fout bij het verwijderen van het gesprek uit de chat{0}"
 
@@ -5488,7 +5488,7 @@ msgstr "Fout bij het verwijderen van het logo"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Opnieuw plannen mislukt. Kies een tijdstip verder in de toekomst en probeer het opnieuw."
 
-#: src/components/conversation/hooks/index.ts:637
+#: src/components/conversation/hooks/index.ts:634
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 
@@ -7451,7 +7451,7 @@ msgstr "bezig met laden..."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:164
 #: src/components/conversation/ConversationAccordion.tsx:119
-#: src/components/conversation/hooks/index.ts:351
+#: src/components/conversation/hooks/index.ts:350
 msgid "Loading..."
 msgstr "Bezig met laden..."
 
