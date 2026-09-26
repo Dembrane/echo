@@ -4,38 +4,43 @@
 # Run:  mprocs          (opens the TUI with all services)
 # Keys: j/k select · s start · x stop · r restart · a (or X) stop-all · q quit
 # Tip:  mprocs --names server,workers   to launch a subset
+
 procs:
   server:
-    shell: "uv run uvicorn dembrane.main:app --host 0.0.0.0 --port 8000 --reload --loop asyncio"
+    # `exec` replaces `sh` (dash), which is swalling stop signals;
+    # otherwise stop signals from `mprocs` orphan processes on quit or restart.
+    shell: "exec uv run uvicorn dembrane.main:app --host 0.0.0.0 --port 8000 --reload --loop asyncio"
     cwd: server
 
-  # Each dramatiq process serves Prometheus metrics on 9191 by default, so each needs its own port.
   workers:
-    shell: "uv run dramatiq-gevent --queues network --processes 1 --threads 10 dembrane.tasks"
+    shell: "exec uv run dramatiq-gevent --queues network --processes 1 --threads 10 dembrane.tasks"
     cwd: server
     env:
+      # Each dramatiq process tries to serve metrics on 9191 by default. Even
+      # though we don't collect metrics here, since workers don't have their
+      # own container, we increment ports so they don't collide & error.
       dramatiq_prom_port: "9191"
 
   workers-cpu:
-    shell: "uv run dramatiq --queues cpu --processes 1 --threads 1 dembrane.tasks"
+    shell: "exec uv run dramatiq --queues cpu --processes 1 --threads 1 dembrane.tasks"
     cwd: server
     env:
       dramatiq_prom_port: "9192"
 
   workers-ticks:
-    shell: "uv run dramatiq --queues ticks --processes 1 --threads 4 dembrane.tasks"
+    shell: "exec uv run dramatiq --queues ticks --processes 1 --threads 4 dembrane.tasks"
     cwd: server
     env:
       dramatiq_prom_port: "9193"
 
   scheduler:
-    shell: "uv run python -m dembrane.scheduler"
+    shell: "exec uv run python -m dembrane.scheduler"
     cwd: server
 
   admin-dashboard:
-    shell: "pnpm run dev"
+    shell: "exec pnpm run dev"
     cwd: frontend
 
   participant-portal:
-    shell: "pnpm run participant:dev"
+    shell: "exec pnpm run participant:dev"
     cwd: frontend
