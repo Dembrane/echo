@@ -53,6 +53,12 @@ if CONTAINERS="$(vm_compose_project "ps --all --format '{{.Service}}\t{{if gt (l
 else
     log_warn "Could not reach docker on the VM."
 fi
+ORPHANS="$(container_orphans || true)"
+if [ -n "$ORPHANS" ]; then
+    log_warn "Processes left over from an earlier mprocs, still running with the .env they started with:"
+    echo "$ORPHANS" | awk -F'\t' '{print "  " $2 "  " $3}'
+    log_warn "Stop them with ./scripts/remote-dev.sh ssh, which offers to before opening the shell."
+fi
 if ! minio_enabled; then
     log_warn "minio is off, so file uploads and recordings fail. Enable with: $RD_MINIO_ENABLE_HINT"
 elif ! minio_host_resolves; then

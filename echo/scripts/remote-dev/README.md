@@ -75,7 +75,7 @@ Each command is a script in `commands/`, and
 | `up` | Offers to add the devcontainer defaults to `server/.env`, syncs `.env` files, `docker compose up -d --build`, runs `setup.sh`, pushes the Directus schema and applies the SQL-only migrations, installs your SSH key. |
 | `down` | Stops containers, leaves the VM up. |
 | `start` / `stop` | VM power. `stop` shuts containers down cleanly first. |
-| `status` | Enabled APIs with links to their usage metrics, VM state, container state, memory, disk, load, tunnel check. |
+| `status` | Enabled APIs with links to their usage metrics, VM state, container state, processes left over from an earlier mprocs, memory, disk, load, tunnel check. |
 | `resize` | `resize e2-standard-8` or `resize --disk 200GB`. |
 | `ssh` | Shell in the devcontainer, after offering to stop processes left over from an earlier mprocs. `--vm` for the host instead. |
 | `ssh-config` | Writes the `~/.ssh/config` block. `--remove` to clean up. |
