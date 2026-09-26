@@ -107,6 +107,7 @@ services:
       - ADMIN_BASE_URL=http://localhost:5173
       - PARTICIPANT_BASE_URL=http://localhost:5174
       - DIRECTUS_BASE_URL=http://directus:8055
+      - AGENT_SERVICE_URL=http://agent:8001
       - DISABLE_SENTRY=1
       - SERVE_API_DOCS=1
       - DISABLE_REDACTION=1
