@@ -152,6 +152,9 @@ container_exec "cd /workspaces/echo/directus && for n in 1 2 3; do ./sync.sh -u 
     || { stale_hint echo/directus; die "Schema push failed. Full log in the devcontainer at /tmp/directus-sync.log"; }
 vm_psql "$RD_MEMBERSHIP_INDEXES_SQL" >/dev/null \
     || die "Could not create the membership indexes."
+for f in $RD_SQL_MIGRATIONS; do
+    vm_psql_file "$f" >/dev/null || die "Could not apply $f. psql's error is above."
+done
 log_info "Schema and indexes are current. Restart the server in mprocs if it is already running."
 
 log_step "Installing your SSH key into the devcontainer"

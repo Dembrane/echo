@@ -300,6 +300,20 @@ vm_psql() {
     vm_compose "exec -T postgres psql -U dembrane -d dembrane -v ON_ERROR_STOP=1 -tAc $(printf '%q' "$1")"
 }
 
+# Run one of the repo's SQL files in the postgres container. The file is read
+# from the VM's checkout and piped in, since the postgres container does not
+# mount the repo. PGOPTIONS hides the "already exists, skipping" notices an
+# idempotent re-run prints for every object.
+vm_psql_file() {
+    vm_ssh "cd '$RD_REPO_DIR/echo/.devcontainer' && docker compose $(compose_file_args) exec -T --env PGOPTIONS='-c client_min_messages=warning' postgres psql -U dembrane -d dembrane -v ON_ERROR_STOP=1 --quiet --file - < '$RD_REPO_DIR/echo/$1'"
+}
+
+# The SQL-only halves of the Map and analysis schemas, in the order
+# docs/database_migrations.md gives (steps 5 and 6). Directus sync cannot create
+# the pgvector column or the unique keys, and without them every Map read fails
+# with a 503. Both are idempotent.
+RD_SQL_MIGRATIONS="directus/migrations/add_map_vectors.sql directus/migrations/add_analysis_constraints.sql"
+
 # Partial unique indexes from docs/database_migrations.md. directus-sync does
 # not manage them, and the invite race fix relies on them.
 RD_MEMBERSHIP_INDEXES="org_membership_active_org_user_uniq workspace_membership_active_ws_user_uniq"
