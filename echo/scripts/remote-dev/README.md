@@ -80,6 +80,7 @@ Each command is a script in `commands/`, and
 | `ssh` | Shell in the devcontainer. `--vm` for the host instead. |
 | `ssh-config` | Writes the `~/.ssh/config` block. `--remove` to clean up. |
 | `tunnel` | Port forwards. Foreground, ctrl-c to close. |
+| `seed` | Seeds the demo project from `demos/example/` (five finished conversations) into your workspace, for trying the Map. Run after your first login. `--workspace <id>` when there are several. |
 | `sync-env` | Re-copies the gitignored `.env` files up. |
 | `sync-code` | Pushes your laptop's tracked files up. `--dry-run` to preview. |
 | `destroy` | Deletes the VM and disk. Asks you to type the name. |

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Shows what is running: the enabled APIs, the VM, its size, the containers,
-# and disk usage.
+# Shows what is running: APIs, the VM, its size, the containers, and disk usage.
 
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
