@@ -14,9 +14,12 @@ log_step "APIs"
 if ENABLED_APIS="$(gc services list --enabled --format='value(config.name)' 2>/dev/null)"; then
     for api in $RD_APIS; do
         if echo "$ENABLED_APIS" | grep -qx "$api"; then
-            log_info "$api enabled: $(api_metrics_url "$api")"
+            log_info "✓ $api"
+            log_info "    metrics:  $(api_metrics_url "$api")"
+            DASHBOARD="$(api_dashboard_url "$api")"
+            [ -z "$DASHBOARD" ] || log_info "    by model: $DASHBOARD"
         else
-            log_warn "$api not enabled"
+            log_warn "✗ $api not enabled"
         fi
     done
 else

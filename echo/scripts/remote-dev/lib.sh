@@ -189,6 +189,15 @@ api_metrics_url() {
     echo "https://console.cloud.google.com/apis/api/$1/metrics?project=$RD_PROJECT"
 }
 
+# A Cloud Monitoring dashboard for an API, where there is a more useful one than
+# the metrics page. Vertex AI's breaks usage down by model.
+api_dashboard_url() {
+    case "$1" in
+        aiplatform.googleapis.com)
+            echo "https://console.cloud.google.com/monitoring/dashboards/integration/vertex_ai.vertex-ai-model-garden?project=$RD_PROJECT" ;;
+    esac
+}
+
 instance_exists() {
     gc_zone instances describe "$RD_INSTANCE_NAME" --format='value(name)' >/dev/null 2>&1
 }
