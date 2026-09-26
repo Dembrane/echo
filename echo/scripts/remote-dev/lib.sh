@@ -314,6 +314,44 @@ vm_psql_file() {
 # with a 503. Both are idempotent.
 RD_SQL_MIGRATIONS="directus/migrations/add_map_vectors.sql directus/migrations/add_analysis_constraints.sql"
 
+# Dev servers and workers left behind by an mprocs that died with its SSH
+# session. They are reparented to init and keep serving ports and taking jobs
+# from the queues with whatever .env they started with. Everything mprocs.yaml
+# starts runs under mprocs, so PPID 1 is the tell. Prints
+# "pid<TAB>start time<TAB>command".
+read -r -d '' RD_ORPHANS_LIST <<'EOF' || true
+ps -eo pid=,ppid=,lstart=,args= | awk '$2 == 1 && / (uv run (uvicorn|dramatiq|python -m dembrane)|pnpm run) / {
+    cmd = $8; for (i = 9; i <= NF; i++) cmd = cmd " " $i
+    print $1 "\t" $4 " " $5 " " $6 "\t" cmd
+}'
+EOF
+
+container_orphans() {
+    container_exec "$RD_ORPHANS_LIST" 2>/dev/null
+}
+
+# Stops each orphan with the processes under it, since uv run and pnpm do not
+# always take their children down with them. SIGKILL whatever is left after
+# 10 seconds.
+read -r -d '' RD_ORPHANS_STOP <<'EOF' || true
+tree() { echo "$1"; for c in $(ps -o pid= --ppid "$1"); do tree "$c"; done; }
+pids=""
+for p in $(orphans | cut -f1); do pids="$pids $(tree "$p")"; done
+[ -n "${pids// }" ] || exit 0
+kill -TERM $pids 2>/dev/null
+for _ in $(seq 10); do
+    left=""; for p in $pids; do [ -d "/proc/$p" ] && left="$left $p"; done
+    [ -z "$left" ] && exit 0
+    sleep 1
+done
+kill -KILL $left 2>/dev/null
+EOF
+
+stop_container_orphans() {
+    container_exec "orphans() { $RD_ORPHANS_LIST; }
+$RD_ORPHANS_STOP"
+}
+
 # Partial unique indexes from docs/database_migrations.md. directus-sync does
 # not manage them, and the invite race fix relies on them.
 RD_MEMBERSHIP_INDEXES="org_membership_active_org_user_uniq workspace_membership_active_ws_user_uniq"

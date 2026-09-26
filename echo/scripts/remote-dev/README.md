@@ -77,7 +77,7 @@ Each command is a script in `commands/`, and
 | `start` / `stop` | VM power. `stop` shuts containers down cleanly first. |
 | `status` | Enabled APIs with links to their usage metrics, VM state, container state, memory, disk, load, tunnel check. |
 | `resize` | `resize e2-standard-8` or `resize --disk 200GB`. |
-| `ssh` | Shell in the devcontainer. `--vm` for the host instead. |
+| `ssh` | Shell in the devcontainer, after offering to stop processes left over from an earlier mprocs. `--vm` for the host instead. |
 | `ssh-config` | Writes the `~/.ssh/config` block. `--remove` to clean up. |
 | `tunnel` | Port forwards. Foreground, ctrl-c to close. |
 | `seed` | Seeds the demo project from `demos/example/` (five finished conversations) into your workspace, for trying the Map. Run after your first login. `--workspace <id>` when there are several. |

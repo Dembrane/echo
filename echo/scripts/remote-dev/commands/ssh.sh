@@ -37,6 +37,22 @@ if [ $# -gt 0 ]; then
     exit $?
 fi
 
+# A dropped SSH session can kill mprocs without stopping what it started.
+# Checked here because this is where you are about to start mprocs again, and
+# the leftovers would otherwise keep taking jobs next to the new workers.
+ORPHANS="$(container_orphans || true)"
+if [ -n "$ORPHANS" ]; then
+    log_warn "Processes left over from an earlier mprocs, still running with the .env they started with:"
+    echo "$ORPHANS" | awk -F'\t' '{print "  " $2 "  " $3}'
+    if confirm "Stop them? A job one of them is running may be cut short"; then
+        if stop_container_orphans; then
+            log_info "Stopped"
+        else
+            log_warn "Could not stop them all. Check with ./scripts/remote-dev.sh status"
+        fi
+    fi
+fi
+
 log_info "Connecting to the devcontainer"
 # -t forces a TTY through both hops so the interactive shell behaves.
 # No `exec`: gc_ssh is a shell function, not a binary.
