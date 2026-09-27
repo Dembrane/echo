@@ -191,6 +191,30 @@ export const schema = defineSchema({
       secret: true,
     }),
   },
+  agentic: {
+    enableCanvas: key("ENABLE_CANVAS", bool.default(false), {
+      description:
+        "Canvas beta, globally. A project also needs its own toggle before canvas routes and the assistant's canvas tools exist.",
+    }),
+    modelGroup: key(
+      "AGENTIC_MODEL_GROUP",
+      z.enum(["text_fast", "multi_modal_fast", "multi_modal_pro"]).default("multi_modal_pro"),
+      { description: "Model group the chat assistant and chat replies run on." },
+    ),
+    runTimeoutSeconds: key("AGENTIC_RUN_TIMEOUT_SECONDS", int.min(30).default(600), {
+      description: "Longest one assistant turn may run before it ends as timed out.",
+    }),
+    sseHeartbeatSeconds: key("AGENTIC_SSE_HEARTBEAT_SECONDS", int.min(1).default(10), {
+      description: "Heartbeat interval of run event streams, so proxies keep them open.",
+    }),
+    turnConcurrency: key("AGENTIC_TURN_CONCURRENCY", int.min(1).default(8), {
+      description: "Assistant turns one worker instance runs at once.",
+    }),
+    docsDir: key("AGENTIC_DOCS_DIR", z.string().default(""), {
+      description:
+        "Product docs the assistant reads and cites. Empty uses the repository's docs/ folder.",
+    }),
+  },
   account: {
     inviteHashSecret: key("INVITE_HASH_SECRET", z.string().min(16), {
       description:

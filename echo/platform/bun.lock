@@ -15,7 +15,9 @@
       "dependencies": {
         "@echo/access": "workspace:*",
         "@echo/account": "workspace:*",
+        "@echo/agentic": "workspace:*",
         "@echo/auth": "workspace:*",
+        "@echo/chats": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
@@ -58,6 +60,7 @@
       "name": "@echo/worker",
       "dependencies": {
         "@echo/account": "workspace:*",
+        "@echo/agentic": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
@@ -99,6 +102,30 @@
         "zod": "^4.1.0",
       },
     },
+    "packages/agentic": {
+      "name": "@echo/agentic",
+      "dependencies": {
+        "@ai-sdk/provider": "*",
+        "@echo/access": "workspace:*",
+        "@echo/chats": "workspace:*",
+        "@echo/config": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/notifications": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "ai": "^7.0.118",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
+      },
+    },
     "packages/auth": {
       "name": "@echo/auth",
       "dependencies": {
@@ -107,6 +134,26 @@
         "@echo/db": "workspace:*",
         "better-auth": "^1.7.6",
         "drizzle-orm": "^0.45.3",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
+      },
+    },
+    "packages/chats": {
+      "name": "@echo/chats",
+      "dependencies": {
+        "@ai-sdk/provider": "*",
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "ai": "^7.0.118",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
         "postgres": "^3.4.9",
         "zod": "^4.1.0",
       },
@@ -348,9 +395,13 @@
 
     "@echo/account": ["@echo/account@workspace:packages/account"],
 
+    "@echo/agentic": ["@echo/agentic@workspace:packages/agentic"],
+
     "@echo/api": ["@echo/api@workspace:apps/api"],
 
     "@echo/auth": ["@echo/auth@workspace:packages/auth"],
+
+    "@echo/chats": ["@echo/chats@workspace:packages/chats"],
 
     "@echo/config": ["@echo/config@workspace:packages/config"],
 

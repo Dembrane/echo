@@ -1,35 +1,32 @@
 {
-  "name": "@echo/api",
+  "name": "@echo/agentic",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "dev": "bun --watch src/main.ts",
-    "start": "bun src/main.ts",
     "test": "bun test"
   },
   "dependencies": {
+    "@ai-sdk/provider": "*",
     "@echo/access": "workspace:*",
-    "@echo/account": "workspace:*",
-    "@echo/agentic": "workspace:*",
-    "@echo/auth": "workspace:*",
     "@echo/chats": "workspace:*",
     "@echo/config": "workspace:*",
     "@echo/core": "workspace:*",
     "@echo/db": "workspace:*",
     "@echo/http": "workspace:*",
+    "@echo/legacy-shape": "workspace:*",
     "@echo/llm": "workspace:*",
-    "@echo/mail": "workspace:*",
     "@echo/notifications": "workspace:*",
     "@echo/observability": "workspace:*",
     "@echo/projects": "workspace:*",
     "@echo/queue": "workspace:*",
-    "@echo/ratelimit": "workspace:*",
-    "@echo/storage": "workspace:*",
-    "@echo/tenancy": "workspace:*",
-    "@echo/webhooks": "workspace:*",
-    "@hono/zod-openapi": "^1.1.0",
+    "@echo/realtime": "workspace:*",
+    "ai": "^7.0.118",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.9.0",
+    "postgres": "^3.4.9",
     "zod": "^4.1.0"
   }
 }

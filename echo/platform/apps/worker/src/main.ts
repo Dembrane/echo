@@ -15,6 +15,7 @@ const loaded = loadSections([
   "webhooks",
   "http",
   "mail",
+  "agentic",
 ]);
 const config = loaded.values;
 const service = "echo-worker";

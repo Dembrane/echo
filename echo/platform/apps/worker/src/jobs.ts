@@ -1,6 +1,8 @@
 import { emailHandler, reconcileAccountSeats, reconcileHandler, sendEmail } from "@echo/account";
+import { agenticWorker } from "@echo/agentic";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
+import { createModels } from "@echo/llm";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
 import {
@@ -37,7 +39,7 @@ export interface Registration {
 export function registrations(deps: {
   logger: Logger;
   db: Db;
-  config: Pick<Config, "webhooks">;
+  config: Pick<Config, "webhooks" | "llm" | "agentic" | "http">;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
   /** Lets a job enqueue follow-up jobs (the support timers send email). */
@@ -91,5 +93,22 @@ export function registrations(deps: {
       },
     },
     tenancyWorker(deps),
+    agenticWorker({
+      db,
+      logger,
+      config,
+      models: createModels({
+        vertexProject: config.llm.vertexProject,
+        vertexLocation: config.llm.vertexLocation,
+        groups: {
+          text_fast: config.llm.textFast,
+          multi_modal_fast: config.llm.multiModalFast,
+          multi_modal_pro: config.llm.multiModalPro,
+        },
+        embeddingModel: config.llm.embeddingModel,
+        embeddingLocation: config.llm.embeddingLocation,
+        embeddingDimensions: config.llm.embeddingDimensions,
+      }),
+    }),
   ];
 }

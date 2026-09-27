@@ -1,5 +1,7 @@
 import { DrizzleAccessStore } from "@echo/access";
 import { accountRoutes } from "@echo/account";
+import { agenticRoutes } from "@echo/agentic";
+import { chatRoutes, posthogCapture } from "@echo/chats";
 import { notificationRoutes } from "@echo/notifications";
 import { projectRoutes } from "@echo/projects";
 import { queueSink, tenancyRoutes } from "@echo/tenancy";
@@ -51,6 +53,9 @@ export function buildApp(deps: Deps) {
       inviteSecret: deps.config.account.inviteHashSecret,
     }),
   );
+  const capture = posthogCapture(deps.config.http.dashboardUrl, deps.logger);
+  app.route("/", chatRoutes({ ...deps, capture }));
+  app.route("/", agenticRoutes({ ...deps, capture }));
   app.onError(onError);
   app.notFound(notFound);
   return app;
