@@ -337,11 +337,36 @@ export function literal<const V extends string>(...values: V[]): Type<V> {
   };
 }
 
-export function list<T>(item: Type<T>): Type<T[]> {
+export function list<T>(item: Type<T>, opts: { min?: number; max?: number } = {}): Type<T[]> {
   return {
     parse(v, loc, issues) {
       if (!Array.isArray(v)) {
         issues.push(issue("list_type", loc, "Input should be a valid list", v));
+        return FAIL;
+      }
+      // Field(min_length/max_length=N) on a list: pydantic checks the length before the items.
+      if (opts.min !== undefined && v.length < opts.min) {
+        issues.push(
+          issue(
+            "too_short",
+            loc,
+            `List should have at least ${opts.min} item${opts.min === 1 ? "" : "s"} after validation, not ${v.length}`,
+            v,
+            { field_type: "List", min_length: opts.min, actual_length: v.length },
+          ),
+        );
+        return FAIL;
+      }
+      if (opts.max !== undefined && v.length > opts.max) {
+        issues.push(
+          issue(
+            "too_long",
+            loc,
+            `List should have at most ${opts.max} item${opts.max === 1 ? "" : "s"} after validation, not ${v.length}`,
+            v,
+            { field_type: "List", max_length: opts.max, actual_length: v.length },
+          ),
+        );
         return FAIL;
       }
       const out: T[] = [];

@@ -9,4 +9,4 @@ export {
   type WorkOptions,
 } from "./queue";
 export { ExecutorHeartbeat } from "./recovery";
-export { startWorkflow, step, workflow } from "./workflow";
+export { currentWorkflowId, durableSleep, startWorkflow, step, workflow } from "./workflow";

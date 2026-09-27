@@ -3,7 +3,7 @@ import { createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
 import { describe, loadSections } from "@echo/config";
 import { AudioUrls } from "@echo/conversations";
 import { createDb } from "@echo/db";
-import { createModels } from "@echo/llm";
+import { createModels, vertexCompleter, vertexEmbedder } from "@echo/llm";
 import { type Mailer, SendGridMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
 import { Queue } from "@echo/queue";
@@ -25,6 +25,9 @@ const loaded = loadSections([
   "media",
   "billing",
   "support",
+  "analysis",
+  "canvas",
+  "reports",
 ]);
 const config = loaded.values;
 const service = "echo-worker";
@@ -72,8 +75,9 @@ const billing = createBilling({
     dashboardUrl: config.http.dashboardUrl,
   },
 });
-// The conversation pipeline's capabilities: the audio bucket, ffmpeg (the media service in
-// the cloud, in-process locally), Gemini transcription and the model groups.
+// The model groups serve the conversation pipeline (with the audio bucket, ffmpeg from the
+// media service in the cloud or in-process locally, and Gemini transcription) and the
+// analysis, map, canvas and report jobs, which also embed.
 const models = createModels({
   vertexProject: config.llm.vertexProject,
   vertexLocation: config.llm.vertexLocation,
@@ -103,6 +107,18 @@ const media = config.media.url
     })
   : new LocalMedia();
 
+const completer = vertexCompleter(models, {
+  groups: {
+    text_fast: config.llm.textFast,
+    multi_modal_fast: config.llm.multiModalFast,
+    multi_modal_pro: config.llm.multiModalPro,
+  },
+});
+const embedder = vertexEmbedder(models, {
+  project: config.llm.vertexProject,
+  location: config.llm.embeddingLocation,
+  model: config.llm.embeddingModel,
+});
 const regs = registrations({
   logger,
   db: database.db,
@@ -126,6 +142,8 @@ const regs = registrations({
     now: () => new Date(),
     webhooks: { enabled: config.webhooks.enabled, dashboardUrl: config.http.dashboardUrl },
   },
+  completer,
+  embedder,
 });
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);

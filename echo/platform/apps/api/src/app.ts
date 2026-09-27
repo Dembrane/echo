@@ -1,6 +1,8 @@
 import { DrizzleAccessStore } from "@echo/access";
 import { accountRoutes } from "@echo/account";
+import { analysisRoutes } from "@echo/analysis";
 import { billingRoutes, mollieWebhookRoutes } from "@echo/billing";
+import { canvasRoutes } from "@echo/canvas";
 import {
   AudioUrls,
   type ConversationsDeps,
@@ -8,10 +10,13 @@ import {
   PARTICIPANT_TOKEN_HEADER,
   ParticipantTokens,
 } from "@echo/conversations";
-import { reportRoutes, responseRoutes } from "@echo/feedback";
+import { reportRoutes as feedbackReportRoutes, responseRoutes } from "@echo/feedback";
+import { vertexCompleter, vertexEmbedder } from "@echo/llm";
+import { mapRoutes } from "@echo/map";
 import { notificationRoutes } from "@echo/notifications";
 import { pricingRoutes } from "@echo/pricing";
 import { projectRoutes } from "@echo/projects";
+import { reportRoutes } from "@echo/reports";
 import { staffRoutes } from "@echo/staff";
 import { statsRoutes } from "@echo/stats";
 import { FilesystemStorage, localStorageHandler } from "@echo/storage";
@@ -57,6 +62,66 @@ export function buildApp(deps: Deps) {
     }),
   );
   app.route("/", notificationRoutes(deps));
+  app.route("/", reportRoutes(deps));
+  app.route(
+    "/",
+    analysisRoutes({
+      ...deps,
+      jobs: deps.queue,
+      completer: vertexCompleter(deps.models, {
+        groups: {
+          text_fast: deps.config.llm.textFast,
+          multi_modal_fast: deps.config.llm.multiModalFast,
+          multi_modal_pro: deps.config.llm.multiModalPro,
+        },
+      }),
+      embedder: vertexEmbedder(deps.models, {
+        project: deps.config.llm.vertexProject,
+        location: deps.config.llm.embeddingLocation,
+        model: deps.config.llm.embeddingModel,
+      }),
+      enablePresent: deps.config.analysis.enablePresent,
+      embeddingModel: deps.config.llm.embeddingModel,
+      embeddingLocation: deps.config.llm.embeddingLocation,
+    }),
+  );
+  app.route(
+    "/",
+    mapRoutes({
+      ...deps,
+      jobs: deps.queue,
+      completer: vertexCompleter(deps.models, {
+        groups: {
+          text_fast: deps.config.llm.textFast,
+          multi_modal_fast: deps.config.llm.multiModalFast,
+          multi_modal_pro: deps.config.llm.multiModalPro,
+        },
+      }),
+      embedder: vertexEmbedder(deps.models, {
+        project: deps.config.llm.vertexProject,
+        location: deps.config.llm.embeddingLocation,
+        model: deps.config.llm.embeddingModel,
+      }),
+      embeddingModel: deps.config.llm.embeddingModel,
+      embeddingLocation: deps.config.llm.embeddingLocation,
+      nodeLimitCeiling: deps.config.analysis.nodeLimitCeiling ?? null,
+      edgeLimitCeiling: deps.config.analysis.edgeLimitCeiling ?? null,
+    }),
+  );
+  app.route(
+    "/",
+    canvasRoutes({
+      ...deps,
+      completer: vertexCompleter(deps.models, {
+        groups: {
+          text_fast: deps.config.llm.textFast,
+          multi_modal_fast: deps.config.llm.multiModalFast,
+          multi_modal_pro: deps.config.llm.multiModalPro,
+        },
+      }),
+      canvasEnabled: deps.config.canvas.enabled,
+    }),
+  );
   app.route(
     "/",
     tenancyRoutes({
@@ -73,7 +138,7 @@ export function buildApp(deps: Deps) {
   app.route("/", trainingRoutes(deps));
   app.route(
     "/",
-    reportRoutes({ ...deps, storage: deps.files, apiBaseUrl: deps.config.http.publicUrl }),
+    feedbackReportRoutes({ ...deps, storage: deps.files, apiBaseUrl: deps.config.http.publicUrl }),
   );
   app.route("/", responseRoutes(deps));
   app.route("/", pricingRoutes({ ...deps, storage: deps.files }));

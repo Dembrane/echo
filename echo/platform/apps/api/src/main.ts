@@ -1,13 +1,16 @@
 import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@echo/access";
 import { render, sendEmail } from "@echo/account";
+import { analysisJobs } from "@echo/analysis";
 import { HttpMedia, LocalMedia, metadataIdToken } from "@echo/audio";
 import { createAuth, identityAccount } from "@echo/auth";
 import { billingApiJobs, createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
+import { canvasApiJobs } from "@echo/canvas";
 import { describe, loadConfig, publicValues } from "@echo/config";
 import { conversationApiJobs } from "@echo/conversations";
 import { createDb } from "@echo/db";
 import { createModels } from "@echo/llm";
 import { type Mailer, MemoryMailer, SendGridMailer } from "@echo/mail";
+import { mapJobs } from "@echo/map";
 import { Notifier } from "@echo/notifications";
 import { createLogger, initTracing } from "@echo/observability";
 import { projectJobs } from "@echo/projects";
@@ -99,6 +102,9 @@ const queueReady = (async () => {
         ...tenancyApiJobs,
         ...billingApiJobs,
         ...conversationApiJobs,
+        ...analysisJobs,
+        ...mapJobs,
+        ...canvasApiJobs,
         sendEmail,
       ]);
       return;
@@ -233,7 +239,12 @@ const app = buildApp({
 });
 
 // reusePort lets several processes share the port when one instance has more than one core.
-const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 255, reusePort: true });
+const server = Bun.serve({
+  port: config.http.port,
+  fetch: app.fetch,
+  idleTimeout: 255,
+  reusePort: true,
+});
 logger.info({ port: server.port, config: describe(loaded) }, "api started");
 
 // Cloud Run sends SIGTERM and allows 10s: stop taking requests, finish in-flight ones, flush.
