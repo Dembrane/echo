@@ -64,9 +64,9 @@ export class Hub {
   /** Registers before returning, so the caller can announce `connected` knowing nothing is missed after it. */
   subscribe(channels: readonly string[], fn: Listener): () => void {
     for (const ch of channels) {
-      let set = this.listeners.get(ch);
-      if (!set) this.listeners.set(ch, (set = new Set()));
+      const set = this.listeners.get(ch) ?? new Set<Listener>();
       set.add(fn);
+      this.listeners.set(ch, set);
     }
     return () => {
       for (const ch of channels) {
