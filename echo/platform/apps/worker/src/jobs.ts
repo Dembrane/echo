@@ -1,11 +1,12 @@
 import { emailHandler, sendEmail } from "@echo/account";
+import { agenticWorker } from "@echo/agentic";
 import { analysisWorker } from "@echo/analysis";
 import { type Billing, billingRegistration } from "@echo/billing";
 import { canvasWorker } from "@echo/canvas";
 import type { Config } from "@echo/config";
 import { conversationWorker, liveRecordings, type PipelineDeps } from "@echo/conversations";
 import type { Db } from "@echo/db";
-import type { Completer, Embedder } from "@echo/llm";
+import type { Completer, Embedder, Models } from "@echo/llm";
 import type { Mailer } from "@echo/mail";
 import { mapWorker } from "@echo/map";
 import type { Logger } from "@echo/observability";
@@ -45,7 +46,16 @@ export function registrations(deps: {
   db: Db;
   config: Pick<
     Config,
-    "webhooks" | "billing" | "support" | "llm" | "analysis" | "canvas" | "reports"
+    | "webhooks"
+    | "billing"
+    | "support"
+    | "llm"
+    | "analysis"
+    | "canvas"
+    | "reports"
+    | "agentic"
+    | "http"
+    | "database"
   >;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
@@ -61,6 +71,8 @@ export function registrations(deps: {
   completer: Completer;
   /** Embeddings of analysis objects. */
   embedder: Embedder;
+  /** The model groups the chat assistant runs on. */
+  models: Models;
 }): Registration[] {
   const { logger, db, config } = deps;
   // Pricing bookings and overage notices share the team's webhook.
@@ -155,6 +167,13 @@ export function registrations(deps: {
         embeddingModel: config.llm.embeddingModel,
         embeddingLocation: config.llm.embeddingLocation,
       },
+    }),
+    agenticWorker({
+      db,
+      logger,
+      config,
+      databaseUrl: config.database.url,
+      models: deps.models,
     }),
   ];
 }

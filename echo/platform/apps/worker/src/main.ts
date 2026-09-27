@@ -28,6 +28,7 @@ const loaded = loadSections([
   "analysis",
   "canvas",
   "reports",
+  "agentic",
 ]);
 const config = loaded.values;
 const service = "echo-worker";
@@ -77,7 +78,7 @@ const billing = createBilling({
 });
 // The model groups serve the conversation pipeline (with the audio bucket, ffmpeg from the
 // media service in the cloud or in-process locally, and Gemini transcription) and the
-// analysis, map, canvas and report jobs, which also embed.
+// analysis, map, canvas and report jobs, which also embed, and the chat assistant.
 const models = createModels({
   vertexProject: config.llm.vertexProject,
   vertexLocation: config.llm.vertexLocation,
@@ -144,6 +145,7 @@ const regs = registrations({
   },
   completer,
   embedder,
+  models,
 });
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);

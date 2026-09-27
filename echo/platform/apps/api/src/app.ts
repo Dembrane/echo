@@ -1,8 +1,10 @@
 import { DrizzleAccessStore } from "@echo/access";
 import { accountRoutes } from "@echo/account";
+import { agenticRoutes } from "@echo/agentic";
 import { analysisRoutes } from "@echo/analysis";
 import { billingRoutes, mollieWebhookRoutes } from "@echo/billing";
 import { canvasRoutes } from "@echo/canvas";
+import { chatRoutes, posthogCapture } from "@echo/chats";
 import {
   AudioUrls,
   type ConversationsDeps,
@@ -180,6 +182,9 @@ export function buildApp(deps: Deps) {
       app.all(store.routePath, (c) => handle(c.req.raw));
       app.all(`${store.routePath}/*`, (c) => handle(c.req.raw));
     }
+  const capture = posthogCapture(deps.config.http.dashboardUrl, deps.logger);
+  app.route("/", chatRoutes({ ...deps, capture }));
+  app.route("/", agenticRoutes({ ...deps, capture }));
   app.onError(onError);
   app.notFound(notFound);
   return app;

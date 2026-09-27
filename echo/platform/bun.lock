@@ -15,11 +15,13 @@
       "dependencies": {
         "@echo/access": "workspace:*",
         "@echo/account": "workspace:*",
+        "@echo/agentic": "workspace:*",
         "@echo/analysis": "workspace:*",
         "@echo/audio": "workspace:*",
         "@echo/auth": "workspace:*",
         "@echo/billing": "workspace:*",
         "@echo/canvas": "workspace:*",
+        "@echo/chats": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/conversations": "workspace:*",
         "@echo/core": "workspace:*",
@@ -87,6 +89,7 @@
       "name": "@echo/worker",
       "dependencies": {
         "@echo/account": "workspace:*",
+        "@echo/agentic": "workspace:*",
         "@echo/analysis": "workspace:*",
         "@echo/audio": "workspace:*",
         "@echo/billing": "workspace:*",
@@ -138,6 +141,31 @@
         "@echo/storage": "workspace:*",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
+        "zod": "^4.1.0",
+      },
+    },
+    "packages/agentic": {
+      "name": "@echo/agentic",
+      "dependencies": {
+        "@ai-sdk/provider": "*",
+        "@dbos-inc/dbos-sdk": "^5.1.10",
+        "@echo/access": "workspace:*",
+        "@echo/chats": "workspace:*",
+        "@echo/config": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/notifications": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "ai": "^7.0.118",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
         "zod": "^4.1.0",
       },
     },
@@ -214,6 +242,27 @@
       },
       "devDependencies": {
         "@echo/config": "workspace:*",
+      },
+    },
+    "packages/chats": {
+      "name": "@echo/chats",
+      "dependencies": {
+        "@ai-sdk/provider": "*",
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "ai": "^7.0.118",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "js-tiktoken": "^1.0.21",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
       },
     },
     "packages/config": {
@@ -640,6 +689,8 @@
 
     "@echo/account": ["@echo/account@workspace:packages/account"],
 
+    "@echo/agentic": ["@echo/agentic@workspace:packages/agentic"],
+
     "@echo/analysis": ["@echo/analysis@workspace:packages/analysis"],
 
     "@echo/api": ["@echo/api@workspace:apps/api"],
@@ -651,6 +702,8 @@
     "@echo/billing": ["@echo/billing@workspace:packages/billing"],
 
     "@echo/canvas": ["@echo/canvas@workspace:packages/canvas"],
+
+    "@echo/chats": ["@echo/chats@workspace:packages/chats"],
 
     "@echo/config": ["@echo/config@workspace:packages/config"],
 

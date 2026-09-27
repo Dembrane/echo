@@ -262,6 +262,30 @@ export const schema = defineSchema({
         "Token budget of a report prompt: 80% of the smallest multi_modal_pro context, as the Python router computed it when the model was unknown to it.",
     }),
   },
+  agentic: {
+    modelGroup: key(
+      "AGENTIC_MODEL_GROUP",
+      z.enum(["text_fast", "multi_modal_fast", "multi_modal_pro"]).default("multi_modal_pro"),
+      { description: "Model group the chat assistant and chat replies run on." },
+    ),
+    runTimeoutSeconds: key("AGENTIC_RUN_TIMEOUT_SECONDS", int.min(30).default(600), {
+      description: "Longest one assistant turn may run before it ends as timed out.",
+    }),
+    sseHeartbeatSeconds: key("AGENTIC_SSE_HEARTBEAT_SECONDS", int.min(1).default(10), {
+      description: "Heartbeat interval of run event streams, so proxies keep them open.",
+    }),
+    turnConcurrency: key("AGENTIC_TURN_CONCURRENCY", int.min(1).default(8), {
+      description: "Assistant turns one worker instance runs at once.",
+    }),
+    docsDir: key("AGENTIC_DOCS_DIR", z.string().default(""), {
+      description:
+        "Product docs the assistant reads and cites. Empty uses the repository's docs/ folder.",
+    }),
+    skillsDir: key("AGENTIC_SKILLS_DIR", z.string().default(""), {
+      description:
+        "Skill files the assistant can read. Empty uses packages/agentic/skills from the source tree.",
+    }),
+  },
   account: {
     inviteHashSecret: key("INVITE_HASH_SECRET", z.string().min(16), {
       description:
