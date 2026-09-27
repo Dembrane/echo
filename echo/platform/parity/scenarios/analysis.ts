@@ -71,6 +71,9 @@ export default scenarios([
     method: "POST",
     path: `${A}/projects/${p1}/runs`,
     body: { recipe_id: "tensions", parameters: { input_set: "arguments" } },
+    // A waiting run's fingerprint hashes the id of the dependency run it waits on, which
+    // each side mints anew; every other column is compared.
+    ignoreFields: ["request_fingerprint"],
   },
   {
     name: "analysis run: tensions needs its parameter",
