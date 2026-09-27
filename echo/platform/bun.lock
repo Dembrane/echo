@@ -27,6 +27,7 @@
         "@echo/notifications": "workspace:*",
         "@echo/observability": "workspace:*",
         "@echo/popcorn": "workspace:*",
+        "@echo/present": "workspace:*",
         "@echo/pricing": "workspace:*",
         "@echo/projects": "workspace:*",
         "@echo/queue": "workspace:*",
@@ -243,6 +244,18 @@
         "hono": "^4.9.0",
         "postgres": "^3.4.9",
         "zod": "^4.1.0",
+      },
+    },
+    "packages/present": {
+      "name": "@echo/present",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/popcorn": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "hono": "^4.9.0",
       },
     },
     "packages/pricing": {
@@ -502,6 +515,8 @@
     "@echo/parity": ["@echo/parity@workspace:parity"],
 
     "@echo/popcorn": ["@echo/popcorn@workspace:packages/popcorn"],
+
+    "@echo/present": ["@echo/present@workspace:packages/present"],
 
     "@echo/pricing": ["@echo/pricing@workspace:packages/pricing"],
 

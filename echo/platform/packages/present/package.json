@@ -1,0 +1,20 @@
+{
+  "name": "@echo/present",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@echo/access": "workspace:*",
+    "@echo/core": "workspace:*",
+    "@echo/http": "workspace:*",
+    "@echo/legacy-shape": "workspace:*",
+    "@echo/popcorn": "workspace:*",
+    "@echo/realtime": "workspace:*",
+    "hono": "^4.9.0"
+  }
+}

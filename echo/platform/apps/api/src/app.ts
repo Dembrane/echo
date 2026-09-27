@@ -4,7 +4,6 @@ import { billingRoutes, mollieWebhookRoutes } from "@echo/billing";
 import { reportRoutes, responseRoutes } from "@echo/feedback";
 import { notificationRoutes } from "@echo/notifications";
 import {
-  mapNotReady,
   noCapture,
   popcornDeps,
   popcornFlags,
@@ -14,6 +13,7 @@ import {
   queueDispatch,
   sqlDeckAnalysis,
 } from "@echo/popcorn";
+import { presentRoutes, publicAudienceMap, sqlMapStore } from "@echo/present";
 import { pricingRoutes } from "@echo/pricing";
 import { projectRoutes } from "@echo/projects";
 import { sharedHub } from "@echo/realtime";
@@ -98,7 +98,9 @@ export function buildApp(deps: Deps) {
       ? noCapture
       : posthogCapture(deps.config.http.dashboardUrl, deps.logger);
   app.route("/", popcornRoutes({ ...popcorn, access: deps.access, hub, capture }));
-  app.route("/", publicRoutes({ ...popcorn, hub, audienceMap: mapNotReady }));
+  const presentDeps = { ...popcorn, access: deps.access, hub, map: sqlMapStore(sql) };
+  app.route("/", presentRoutes(presentDeps));
+  app.route("/", publicRoutes({ ...popcorn, hub, audienceMap: publicAudienceMap(presentDeps) }));
   app.onError(onError);
   app.notFound(notFound);
   return app;

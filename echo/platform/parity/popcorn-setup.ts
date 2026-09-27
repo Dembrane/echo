@@ -225,3 +225,27 @@ export function versions(): string[] {
 }
 
 export const P1_CANVAS = `update project set is_canvas_enabled = true where id = '${projects.p1}'`;
+
+// ── Present (appended by the Present port; the popcorn helpers above stay as they are) ──
+
+/** A presentation manifest as normalize_presentation stores it. */
+export function manifest(over: Record<string, unknown> = {}) {
+  return {
+    version: 1,
+    blocks: ["popcorn", "tensions"],
+    opening: "popcorn",
+    language_policy: "explicit",
+    hidden_items: [],
+    result_bindings: {},
+    ...over,
+  };
+}
+
+/** A stored editor draft beside the published settings. */
+export function presentDraft(revision: number, over: Record<string, unknown> = {}) {
+  return {
+    revision,
+    saved_at: "2026-09-01T09:45:00.123456+00:00",
+    settings: settings({ title: "Draft title", presentation: manifest(), ...over }),
+  };
+}
