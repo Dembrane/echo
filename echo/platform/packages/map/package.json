@@ -10,18 +10,19 @@
   },
   "dependencies": {
     "@echo/access": "workspace:*",
+    "@echo/analysis": "workspace:*",
     "@echo/core": "workspace:*",
     "@echo/db": "workspace:*",
     "@echo/http": "workspace:*",
     "@echo/legacy-shape": "workspace:*",
     "@echo/llm": "workspace:*",
     "@echo/observability": "workspace:*",
+    "@echo/projects": "workspace:*",
     "@echo/queue": "workspace:*",
     "@echo/ratelimit": "workspace:*",
     "@echo/realtime": "workspace:*",
     "hono": "^4.9.0",
     "postgres": "^3.4.9",
-    "zod": "^4.1.0",
-    "@echo/analysis": "workspace:*"
+    "zod": "^4.1.0"
   }
 }

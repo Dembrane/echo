@@ -211,6 +211,12 @@ export const schema = defineSchema({
         "Global canvas switch. Even on, a project opts in with its experimental toggle; off answers every canvas route with 404.",
     }),
   },
+  reports: {
+    maxContextTokens: key("REPORT_MAX_CONTEXT_TOKENS", int.min(1000).default(102_400), {
+      description:
+        "Token budget of a report prompt: 80% of the smallest multi_modal_pro context, as the Python router computed it when the model was unknown to it.",
+    }),
+  },
   account: {
     inviteHashSecret: key("INVITE_HASH_SECRET", z.string().min(16), {
       description:

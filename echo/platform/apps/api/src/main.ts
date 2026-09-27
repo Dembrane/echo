@@ -1,10 +1,13 @@
 import { Access, DrizzleAccessStore } from "@echo/access";
 import { reconcileAccountSeats, render, sendEmail } from "@echo/account";
+import { analysisJobs } from "@echo/analysis";
 import { createAuth, identityAccount } from "@echo/auth";
+import { canvasApiJobs } from "@echo/canvas";
 import { describe, loadConfig, publicValues } from "@echo/config";
 import { createDb } from "@echo/db";
 import { createModels } from "@echo/llm";
 import { type Mailer, MemoryMailer, SendGridMailer } from "@echo/mail";
+import { mapJobs } from "@echo/map";
 import { Notifier } from "@echo/notifications";
 import { createLogger, initTracing } from "@echo/observability";
 import { projectJobs } from "@echo/projects";
@@ -91,6 +94,9 @@ const queueReady = (async () => {
         ...projectJobs,
         ...webhookJobs,
         ...tenancyApiJobs,
+        ...analysisJobs,
+        ...mapJobs,
+        ...canvasApiJobs,
         sendEmail,
         reconcileAccountSeats,
       ]);

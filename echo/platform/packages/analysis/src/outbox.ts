@@ -101,10 +101,71 @@ export const CONSUMERS: readonly (readonly [string, Consumer])[] = [
 /** Effects inside the platform, reconciled even after an event is dead. */
 export const INTERNAL_CONSUMERS = ["wake_waiting", "view_snapshots"];
 
+/** Runs one unit of dispatch work; the workflow passes DBOS's step so each consumer is checkpointed. */
+export type StepRunner = <T>(name: string, fn: () => Promise<T>) => Promise<T>;
+const inline: StepRunner = (_name, fn) => fn();
+
+type ConsumerOutcome =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly failure: string }
+  | { readonly lost: true };
+
 /**
- * Claims due events (or the one named) and runs each consumer not yet done. A failing
- * consumer is retried with its event later while the others still run and are recorded.
+ * Runs each consumer not yet done on one claimed event, recording each success on the
+ * event, then settles it: delivered, or put back with backoff when a consumer failed.
+ * Consumers are isolated: one that fails is retried later while the others are recorded.
  */
+export async function dispatchEvent(
+  store: AnalysisStore,
+  deps: OutboxDeps,
+  event: OutboxEvent,
+  claim: string,
+  run: StepRunner = inline,
+  consumers: readonly (readonly [string, Consumer])[] = CONSUMERS,
+): Promise<"delivered" | "retried" | "lost"> {
+  const failures: string[] = [];
+  for (const [name, consumer] of consumers) {
+    if (name in event.consumers) continue;
+    const outcome = await run<ConsumerOutcome>(`consumer:${name}`, async () => {
+      try {
+        await consumer(event, store, deps);
+      } catch (err) {
+        const e = err as Error;
+        deps.executor.logger?.warn(
+          {
+            event_id: event.id,
+            event_type: event.eventType,
+            consumer: name,
+            attempt: event.attempts,
+          },
+          "analysis outbox consumer failed",
+        );
+        return {
+          ok: false,
+          failure: `${e?.constructor?.name ?? "Error"}: ${String(e?.message ?? err).slice(0, 300)} (consumer ${name})`,
+        };
+      }
+      // Another dispatcher reclaimed the event after this claim expired.
+      if (!(await store.markConsumerDone(event.id, claim, name))) return { lost: true };
+      return { ok: true };
+    });
+    if ("lost" in outcome) return "lost";
+    if (!outcome.ok) failures.push(outcome.failure);
+  }
+  return run("settle", async () => {
+    if (failures.length) {
+      await store.retryOutbox(event.id, claim, {
+        error: failures.join("; "),
+        delaySeconds: backoffSeconds(event.attempts),
+        maxAttempts: MAX_ATTEMPTS,
+      });
+      return "retried" as const;
+    }
+    return (await store.finishOutbox(event.id, claim)) ? ("delivered" as const) : ("lost" as const);
+  });
+}
+
+/** Claims due events (or the one named) and dispatches each. */
 export async function dispatchEvents(
   store: AnalysisStore,
   deps: OutboxDeps,
@@ -126,52 +187,7 @@ export async function dispatchEvents(
   const report: DispatchReport = { claimed: events.length, delivered: 0, retried: 0, lost: 0 };
   for (const event of events) {
     try {
-      const failures: string[] = [];
-      let lost = false;
-      for (const [name, consumer] of o.consumers ?? CONSUMERS) {
-        if (name in event.consumers) continue;
-        try {
-          await consumer(event, store, deps);
-        } catch (err) {
-          const e = err as Error;
-          failures.push(
-            `${e?.constructor?.name ?? "Error"}: ${String(e?.message ?? err).slice(0, 300)} (consumer ${name})`,
-          );
-          deps.executor.logger?.warn(
-            {
-              event_id: event.id,
-              event_type: event.eventType,
-              consumer: name,
-              attempt: event.attempts,
-            },
-            "analysis outbox consumer failed",
-          );
-          continue;
-        }
-        if (!(await store.markConsumerDone(event.id, o.claim, name))) {
-          lost = true;
-          break;
-        }
-      }
-      if (lost) {
-        // Another dispatcher reclaimed it after our claim expired.
-        report.lost++;
-        continue;
-      }
-      if (failures.length) {
-        await store.retryOutbox(event.id, o.claim, {
-          error: failures.join("; "),
-          delaySeconds: backoffSeconds(event.attempts),
-          maxAttempts: MAX_ATTEMPTS,
-        });
-        report.retried++;
-        continue;
-      }
-      if (!(await store.finishOutbox(event.id, o.claim))) {
-        report.lost++;
-        continue;
-      }
-      report.delivered++;
+      report[await dispatchEvent(store, deps, event, o.claim, inline, o.consumers ?? CONSUMERS)]++;
     } catch (err) {
       // The claim expires and a later dispatch picks the event up again.
       deps.executor.logger?.warn(

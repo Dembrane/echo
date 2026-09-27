@@ -1,708 +1,638 @@
 {
- "texts": {
-  "c1000000-0000-4000-8000-000000000001": "We need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nThe council plan says every street gets a lane by next year.",
-  "c1000000-0000-4000-8000-000000000002": "Typed answer: the cycle lanes end abruptly at the ring road.\nI would rather cycle than drive if it felt safe.",
-  "c1000000-0000-4000-8000-000000000003": "We should keep the parking free for residents, people need their cars.\nMaybe we could put the bus money into the roads instead."
- },
- "arguments": [
-  {
-   "revisionId": "r1",
-   "objectId": "o1",
-   "kind": "claim",
-   "statement": "Charging points near the flats are far too few.",
-   "evidence": [
-    [
-     "c1000000-0000-4000-8000-000000000001",
-     "the waiting list is months long",
-     {
-      "offset": 12,
-      "basis": "collapsed-casefold-v1"
-     }
-    ]
-   ]
+  "texts": {
+    "c1000000-0000-4000-8000-000000000001": "We need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nThe council plan says every street gets a lane by next year.",
+    "c1000000-0000-4000-8000-000000000002": "Typed answer: the cycle lanes end abruptly at the ring road.\nI would rather cycle than drive if it felt safe.",
+    "c1000000-0000-4000-8000-000000000003": "We should keep the parking free for residents, people need their cars.\nMaybe we could put the bus money into the roads instead."
   },
-  {
-   "revisionId": "r2",
-   "objectId": "o2",
-   "kind": "argument",
-   "statement": "Buses should run later at night so people can leave the car.",
-   "evidence": [
-    [
-     "c1000000-0000-4000-8000-000000000001",
-     "Buses stop running at eleven",
-     null
-    ]
-   ]
-  },
-  {
-   "revisionId": "r3",
-   "objectId": "o3",
-   "kind": "argument",
-   "statement": "Cycle lanes should continue past the ring road.",
-   "evidence": [
-    [
-     "c1000000-0000-4000-8000-000000000002",
-     "the cycle lanes end abruptly at the ring road",
-     {
-      "offset": 12,
-      "basis": "collapsed-casefold-v1"
-     }
-    ]
-   ]
-  },
-  {
-   "revisionId": "r4",
-   "objectId": "o4",
-   "kind": "argument",
-   "statement": "Resident parking must stay free.",
-   "evidence": [
-    [
-     "c1000000-0000-4000-8000-000000000003",
-     "keep the parking free for residents",
-     null
-    ],
-    [
-     "c1000000-0000-4000-8000-000000000002",
-     "I would rather cycle than drive",
-     null
-    ]
-   ]
-  },
-  {
-   "revisionId": "r5",
-   "objectId": "o5",
-   "kind": "argument",
-   "statement": "Maybe the bus money should go to roads instead.",
-   "evidence": [
-    [
-     "c1000000-0000-4000-8000-000000000003",
-     "put the bus money into... the roads instead",
-     null
-    ]
-   ]
-  },
-  {
-   "revisionId": "r6",
-   "objectId": "o6",
-   "kind": "argument",
-   "statement": "An argument with no evidence at all.",
-   "evidence": []
-  },
-  {
-   "revisionId": "r7",
-   "objectId": "o7",
-   "kind": "claim",
-   "statement": "An argument whose quote is nowhere.",
-   "evidence": [
-    [
-     "c1000000-0000-4000-8000-000000000002",
-     "words nobody ever said here",
-     null
-    ]
-   ]
-  }
- ],
- "calls": [
-  {
-   "system": "11f3811e2c7f54b5228613c80981ea115dc48dd250c4dca4c2abcb29c8953d9b",
-   "user": "QUESTION: How should street space be shared?\nPOLE A: Keep the street as it is\nPOLE B: Change the street for other modes\n\nARGUMENTS START\nP1 [claim] Charging points near the flats are far too few.\n   said: \"the waiting list is months long\"\nP4 [argument] Resident parking must stay free.\n   said: \"keep the parking free for residents\"\n   said: \"I would rather cycle than drive\"\nP5 [argument] Maybe the bus money should go to roads instead.\n   said: \"put the bus money into... the roads instead\"\nP3 [argument] Cycle lanes should continue past the ring road.\n   said: \"the cycle lanes end abruptly at the ring road\"\nARGUMENTS END",
-   "thinking": true,
-   "answer": {
-    "supporters": [
-     {
-      "id": "P1",
-      "pole": "A",
-      "strength": 0.9,
-      "why": "P1 holds A"
-     },
-     {
-      "id": "P4",
-      "pole": "A",
-      "strength": 0.8,
-      "why": "P4 holds A"
-     },
-     {
-      "id": "P5",
-      "pole": "B",
-      "strength": 0.7,
-      "why": "P5 holds B"
-     },
-     {
-      "id": "P3",
-      "pole": "B",
-      "strength": 0.6,
-      "why": "P3 holds B"
-     },
-     {
-      "id": "P77",
-      "pole": "A",
-      "strength": 1,
-      "why": "not proposed"
-     }
-    ]
-   }
-  },
-  {
-   "system": "68e508dfbc6ce9a1b83277d275d90194583415849d4b75181f77be14bb6fa62a",
-   "user": "QUESTION: How should street space be shared?\nPOLE A: Keep the street as it is\nPOLE B: Change the street for other modes\nHOLDING A: \"the waiting list is months long\" | \"keep the parking free for residents\"\nHOLDING B: \"put the bus money into... the roads instead\" | \"the cycle lanes end abruptly at the ring road\"\nWHAT COLLIDES: P5 pulls against P1\nFACETS OF THE SAME PULL, FOUND IN OTHER ROOMS (a middle course among them belongs in the knot, not as a resolution but as what the room reached for):\n- Cycle lanes should continue past the ring road.  /  Resident parking must stay free.",
-   "thinking": true,
-   "answer": {
-    "poleA": "Keep the street as it is",
-    "poleB": "Change the street for cycling",
-    "knot": "Free parking eases daily life, but it takes the space safe cycle lanes need.",
-    "toResolve": "How much street space should parking keep?"
-   }
-  },
-  {
-   "system": "a25f9fdb8e61c482dd4b05b7dc970564c2c283f7ba11a8a9e547f0b711d639ae",
-   "user": "QUESTION: How should street space be shared?\nPOLE A: Keep the street as it is\nPOLE B: Change the street for other modes\nHOLDING A: \"the waiting list is months long\" | \"keep the parking free for residents\"\nHOLDING B: \"put the bus money into... the roads instead\" | \"the cycle lanes end abruptly at the ring road\"\nWHAT COLLIDES: P5 pulls against P1\nFACETS OF THE SAME PULL, FOUND IN OTHER ROOMS (a middle course among them belongs in the knot, not as a resolution but as what the room reached for):\n- Cycle lanes should continue past the ring road.  /  Resident parking must stay free.",
-   "thinking": true,
-   "answer": {
-    "poleA": "Keep the street",
-    "poleB": "Change the street for bikes and buses",
-    "knot": "Cars keep their space but cycling stays unsafe and and slow",
-    "toResolve": "How should the street be shared"
-   }
-  },
-  {
-   "system": "b049848dca1c42c98bac33981f18da8e92ccc640e4e7deab1f5801e4a5cd1213",
-   "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000001\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nThe council plan says every street gets a lane by next year.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000001\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000002\nTyped answer: the cycle lanes end abruptly at the ring road.\nI would rather cycle than drive if it felt safe.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000002\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] A council plan for lanes\n  what the rooms did: argued about it\n- [ignored] A rumour\n  what the rooms did: ignored\n  (its quote was not found in the transcripts)\n\nFLAGGED ON THE QUESTION: Who gets P2?\nFlagged because: P2 pulls against P3\n\nTHE PAIR:\nA (a speaker in Conversation 1, argument): Buses should run later at night so people can leave the car.\n   said: \"Buses stop running at eleven\"\nB (a speaker in Conversation 2, argument): Cycle lanes should continue past the ring road.\n   said: \"the cycle lanes end abruptly at the ring road\"",
-   "thinking": true,
-   "answer": {
-    "valid": false,
-    "opposed": false,
-    "question": "",
-    "reason": "they do not answer one question",
-    "poleA": "",
-    "poleB": ""
-   }
-  },
-  {
-   "system": "b049848dca1c42c98bac33981f18da8e92ccc640e4e7deab1f5801e4a5cd1213",
-   "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000001\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nThe council plan says every street gets a lane by next year.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000001\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000003\nWe should keep the parking free for residents, people need their cars.\nMaybe we could put the bus money into the roads instead.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000003\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] A council plan for lanes\n  what the rooms did: argued about it\n- [ignored] A rumour\n  what the rooms did: ignored\n  (its quote was not found in the transcripts)\n\nFLAGGED ON THE QUESTION: Who gets P5?\nFlagged because: P5 pulls against P1\n\nTHE PAIR:\nA (a speaker in Conversation 1, claim): Charging points near the flats are far too few.\n   said: \"the waiting list is months long\"\nB (a speaker in Conversation 3, argument): Maybe the bus money should go to roads instead.\n   said: \"put the bus money into... the roads instead\"",
-   "thinking": true,
-   "answer": {
-    "valid": true,
-    "opposed": true,
-    "question": "How should street space be shared?",
-    "reason": "they answer one question oppositely",
-    "poleA": "Keep the street as it is",
-    "poleB": "Change the street for other modes"
-   }
-  },
-  {
-   "system": "b049848dca1c42c98bac33981f18da8e92ccc640e4e7deab1f5801e4a5cd1213",
-   "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000001\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nThe council plan says every street gets a lane by next year.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000001\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] A council plan for lanes\n  what the rooms did: argued about it\n- [ignored] A rumour\n  what the rooms did: ignored\n  (its quote was not found in the transcripts)\n\nFLAGGED ON THE QUESTION: Who gets P1?\nFlagged because: P1 pulls against P2\n\nTHE PAIR:\nA (a speaker in Conversation 1, claim): Charging points near the flats are far too few.\n   said: \"the waiting list is months long\"\nB (a speaker in Conversation 1, argument): Buses should run later at night so people can leave the car.\n   said: \"Buses stop running at eleven\"",
-   "thinking": true,
-   "answer": {
-    "valid": false,
-    "opposed": false,
-    "question": "",
-    "reason": "they do not answer one question",
-    "poleA": "",
-    "poleB": ""
-   }
-  },
-  {
-   "system": "b049848dca1c42c98bac33981f18da8e92ccc640e4e7deab1f5801e4a5cd1213",
-   "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000002\nTyped answer: the cycle lanes end abruptly at the ring road.\nI would rather cycle than drive if it felt safe.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000002\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000003\nWe should keep the parking free for residents, people need their cars.\nMaybe we could put the bus money into the roads instead.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000003\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] A council plan for lanes\n  what the rooms did: argued about it\n- [ignored] A rumour\n  what the rooms did: ignored\n  (its quote was not found in the transcripts)\n\nFLAGGED ON THE QUESTION: Who gets P3?\nFlagged because: P3 pulls against P4\n\nTHE PAIR:\nA (a speaker in Conversation 2, argument): Cycle lanes should continue past the ring road.\n   said: \"the cycle lanes end abruptly at the ring road\"\nB (speakers in Conversation 3 and Conversation 2, argument): Resident parking must stay free.\n   said: \"keep the parking free for residents\"\n   said: \"I would rather cycle than drive\"",
-   "thinking": true,
-   "answer": {
-    "valid": true,
-    "opposed": true,
-    "question": "How should street space be shared?",
-    "reason": "they answer one question oppositely",
-    "poleA": "Keep the street as it is",
-    "poleB": "Change the street for other modes"
-   }
-  },
-  {
-   "system": "b049848dca1c42c98bac33981f18da8e92ccc640e4e7deab1f5801e4a5cd1213",
-   "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000002\nTyped answer: the cycle lanes end abruptly at the ring road.\nI would rather cycle than drive if it felt safe.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000002\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000003\nWe should keep the parking free for residents, people need their cars.\nMaybe we could put the bus money into the roads instead.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000003\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] A council plan for lanes\n  what the rooms did: argued about it\n- [ignored] A rumour\n  what the rooms did: ignored\n  (its quote was not found in the transcripts)\n\nFLAGGED ON THE QUESTION: Who gets P4?\nFlagged because: P4 pulls against P5\n\nTHE PAIR:\nA (speakers in Conversation 3 and Conversation 2, argument): Resident parking must stay free.\n   said: \"keep the parking free for residents\"\n   said: \"I would rather cycle than drive\"\nB (a speaker in Conversation 3, argument): Maybe the bus money should go to roads instead.\n   said: \"put the bus money into... the roads instead\"",
-   "thinking": true,
-   "answer": {
-    "valid": false,
-    "opposed": false,
-    "question": "",
-    "reason": "they do not answer one question",
-    "poleA": "",
-    "poleB": ""
-   }
-  },
-  {
-   "system": "c6298e4b92141bc128f000270b77297843313c07ce3f936756079d9366ee2059",
-   "user": "KEPT:\nx1: Keep the street as it is / Change the street for other modes\n\nNEW: Keep the street as it is / Change the street for other modes\n  (from: P3 pulls against P4)",
-   "thinking": false,
-   "answer": {
-    "same_as": "x1",
-    "swapped": true,
-    "why": "the same pull from another room"
-   }
-  },
-  {
-   "system": "e453e57a84e933f6960e24c0ac18a8852744ebb50c62b657950f13da5a0005a4",
-   "user": "ARGUMENTS START\nP1 [T1 · a speaker in Conversation 1 · claim] Charging points near the flats are far too few.\nP2 [T1 · a speaker in Conversation 1 · argument] Buses should run later at night so people can leave the car.\nP3 [T2 · a speaker in Conversation 2 · argument] Cycle lanes should continue past the ring road.\nP4 [T3 · speakers in Conversation 3 and Conversation 2 · argument] Resident parking must stay free.\nP5 [T3 · a speaker in Conversation 3 · argument · hedged] Maybe the bus money should go to roads instead.\nARGUMENTS END\n\nFOCAL POSITIONS: P1, P2, P3, P4, P5",
-   "thinking": true,
-   "answer": {
-    "collisions": [
-     {
-      "focal": "P1",
-      "other": "P2",
-      "question": "Who gets P1?",
-      "why": "P1 pulls against P2",
-      "zero_sum": 0.5
-     },
-     {
-      "focal": "P2",
-      "other": "P3",
-      "question": "Who gets P2?",
-      "why": "P2 pulls against P3",
-      "zero_sum": 0.6
-     },
-     {
-      "focal": "P3",
-      "other": "P4",
-      "question": "Who gets P3?",
-      "why": "P3 pulls against P4",
-      "zero_sum": 0.7
-     },
-     {
-      "focal": "P4",
-      "other": "P5",
-      "question": "Who gets P4?",
-      "why": "P4 pulls against P5",
-      "zero_sum": 0.8
-     },
-     {
-      "focal": "P5",
-      "other": "P1",
-      "question": "Who gets P5?",
-      "why": "P5 pulls against P1",
-      "zero_sum": 0.9
-     },
-     {
-      "focal": "P1",
-      "other": "P99",
-      "question": "x",
-      "why": "x",
-      "zero_sum": 0.9
-     },
-     {
-      "focal": "P1",
-      "other": "P5",
-      "question": "low",
-      "why": "low",
-      "zero_sum": 0.1
-     }
-    ]
-   }
-  },
-  {
-   "system": "f38f3c5f74b14f1e87e2703c748ee31cb0f5487871f14c860624f0eed1a59f2d",
-   "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000001\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nThe council plan says every street gets a lane by next year.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000001\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000002\nTyped answer: the cycle lanes end abruptly at the ring road.\nI would rather cycle than drive if it felt safe.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000002\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000003\nWe should keep the parking free for residents, people need their cars.\nMaybe we could put the bus money into the roads instead.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000003",
-   "thinking": true,
-   "answer": {
-    "handed": [
-     {
-      "text": "A council plan for lanes",
-      "quote": "the council plan says",
-      "transcript": "c1000000-0000-4000-8000-000000000002",
-      "response": "argued about it",
-      "status": "argued"
-     },
-     {
-      "text": "A rumour",
-      "quote": "nobody heard this",
-      "transcript": "c1000000-0000-4000-8000-000000000003",
-      "response": "ignored",
-      "status": "ignored"
-     }
-    ]
-   }
-  }
- ],
- "result": {
-  "status": "ok",
-  "input_set": "raw",
-  "input_revision_ids": [
-   "r1",
-   "r2",
-   "r3",
-   "r4",
-   "r5",
-   "r6",
-   "r7"
+  "arguments": [
+    {
+      "revisionId": "r1",
+      "objectId": "o1",
+      "kind": "claim",
+      "statement": "Charging points near the flats are far too few.",
+      "evidence": [
+        [
+          "c1000000-0000-4000-8000-000000000001",
+          "the waiting list is months long",
+          {
+            "offset": 12,
+            "basis": "collapsed-casefold-v1"
+          }
+        ]
+      ]
+    },
+    {
+      "revisionId": "r2",
+      "objectId": "o2",
+      "kind": "argument",
+      "statement": "Buses should run later at night so people can leave the car.",
+      "evidence": [["c1000000-0000-4000-8000-000000000001", "Buses stop running at eleven", null]]
+    },
+    {
+      "revisionId": "r3",
+      "objectId": "o3",
+      "kind": "argument",
+      "statement": "Cycle lanes should continue past the ring road.",
+      "evidence": [
+        [
+          "c1000000-0000-4000-8000-000000000002",
+          "the cycle lanes end abruptly at the ring road",
+          {
+            "offset": 12,
+            "basis": "collapsed-casefold-v1"
+          }
+        ]
+      ]
+    },
+    {
+      "revisionId": "r4",
+      "objectId": "o4",
+      "kind": "argument",
+      "statement": "Resident parking must stay free.",
+      "evidence": [
+        ["c1000000-0000-4000-8000-000000000003", "keep the parking free for residents", null],
+        ["c1000000-0000-4000-8000-000000000002", "I would rather cycle than drive", null]
+      ]
+    },
+    {
+      "revisionId": "r5",
+      "objectId": "o5",
+      "kind": "argument",
+      "statement": "Maybe the bus money should go to roads instead.",
+      "evidence": [
+        [
+          "c1000000-0000-4000-8000-000000000003",
+          "put the bus money into... the roads instead",
+          null
+        ]
+      ]
+    },
+    {
+      "revisionId": "r6",
+      "objectId": "o6",
+      "kind": "argument",
+      "statement": "An argument with no evidence at all.",
+      "evidence": []
+    },
+    {
+      "revisionId": "r7",
+      "objectId": "o7",
+      "kind": "claim",
+      "statement": "An argument whose quote is nowhere.",
+      "evidence": [["c1000000-0000-4000-8000-000000000002", "words nobody ever said here", null]]
+    }
   ],
-  "tensions": [
-   {
-    "key": "x1",
-    "pole_a": "Keep the street as it is",
-    "pole_b": "Change the street for cycling",
-    "knot": "Free parking eases daily life, but it takes the space safe cycle lanes need.",
-    "to_resolve": "How much street space should parking keep?",
-    "quote_ids": [
-     "q1",
-     "q2",
-     "q4",
-     "q5"
+  "calls": [
+    {
+      "system": "11f3811e2c7f54b5228613c80981ea115dc48dd250c4dca4c2abcb29c8953d9b",
+      "user": "QUESTION: How should street space be shared?\nPOLE A: Keep the street as it is\nPOLE B: Change the street for other modes\n\nARGUMENTS START\nP1 [claim] Charging points near the flats are far too few.\n   said: \"the waiting list is months long\"\nP4 [argument] Resident parking must stay free.\n   said: \"keep the parking free for residents\"\n   said: \"I would rather cycle than drive\"\nP5 [argument] Maybe the bus money should go to roads instead.\n   said: \"put the bus money into... the roads instead\"\nP3 [argument] Cycle lanes should continue past the ring road.\n   said: \"the cycle lanes end abruptly at the ring road\"\nARGUMENTS END",
+      "thinking": true,
+      "answer": {
+        "supporters": [
+          {
+            "id": "P1",
+            "pole": "A",
+            "strength": 0.9,
+            "why": "P1 holds A"
+          },
+          {
+            "id": "P4",
+            "pole": "A",
+            "strength": 0.8,
+            "why": "P4 holds A"
+          },
+          {
+            "id": "P5",
+            "pole": "B",
+            "strength": 0.7,
+            "why": "P5 holds B"
+          },
+          {
+            "id": "P3",
+            "pole": "B",
+            "strength": 0.6,
+            "why": "P3 holds B"
+          },
+          {
+            "id": "P77",
+            "pole": "A",
+            "strength": 1,
+            "why": "not proposed"
+          }
+        ]
+      }
+    },
+    {
+      "system": "68e508dfbc6ce9a1b83277d275d90194583415849d4b75181f77be14bb6fa62a",
+      "user": "QUESTION: How should street space be shared?\nPOLE A: Keep the street as it is\nPOLE B: Change the street for other modes\nHOLDING A: \"the waiting list is months long\" | \"keep the parking free for residents\"\nHOLDING B: \"put the bus money into... the roads instead\" | \"the cycle lanes end abruptly at the ring road\"\nWHAT COLLIDES: P5 pulls against P1\nFACETS OF THE SAME PULL, FOUND IN OTHER ROOMS (a middle course among them belongs in the knot, not as a resolution but as what the room reached for):\n- Cycle lanes should continue past the ring road.  /  Resident parking must stay free.",
+      "thinking": true,
+      "answer": {
+        "poleA": "Keep the street as it is",
+        "poleB": "Change the street for cycling",
+        "knot": "Free parking eases daily life, but it takes the space safe cycle lanes need.",
+        "toResolve": "How much street space should parking keep?"
+      }
+    },
+    {
+      "system": "a25f9fdb8e61c482dd4b05b7dc970564c2c283f7ba11a8a9e547f0b711d639ae",
+      "user": "QUESTION: How should street space be shared?\nPOLE A: Keep the street as it is\nPOLE B: Change the street for other modes\nHOLDING A: \"the waiting list is months long\" | \"keep the parking free for residents\"\nHOLDING B: \"put the bus money into... the roads instead\" | \"the cycle lanes end abruptly at the ring road\"\nWHAT COLLIDES: P5 pulls against P1\nFACETS OF THE SAME PULL, FOUND IN OTHER ROOMS (a middle course among them belongs in the knot, not as a resolution but as what the room reached for):\n- Cycle lanes should continue past the ring road.  /  Resident parking must stay free.",
+      "thinking": true,
+      "answer": {
+        "poleA": "Keep the street",
+        "poleB": "Change the street for bikes and buses",
+        "knot": "Cars keep their space but cycling stays unsafe and and slow",
+        "toResolve": "How should the street be shared"
+      }
+    },
+    {
+      "system": "b049848dca1c42c98bac33981f18da8e92ccc640e4e7deab1f5801e4a5cd1213",
+      "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000001\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nThe council plan says every street gets a lane by next year.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000001\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000002\nTyped answer: the cycle lanes end abruptly at the ring road.\nI would rather cycle than drive if it felt safe.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000002\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] A council plan for lanes\n  what the rooms did: argued about it\n- [ignored] A rumour\n  what the rooms did: ignored\n  (its quote was not found in the transcripts)\n\nFLAGGED ON THE QUESTION: Who gets P2?\nFlagged because: P2 pulls against P3\n\nTHE PAIR:\nA (a speaker in Conversation 1, argument): Buses should run later at night so people can leave the car.\n   said: \"Buses stop running at eleven\"\nB (a speaker in Conversation 2, argument): Cycle lanes should continue past the ring road.\n   said: \"the cycle lanes end abruptly at the ring road\"",
+      "thinking": true,
+      "answer": {
+        "valid": false,
+        "opposed": false,
+        "question": "",
+        "reason": "they do not answer one question",
+        "poleA": "",
+        "poleB": ""
+      }
+    },
+    {
+      "system": "b049848dca1c42c98bac33981f18da8e92ccc640e4e7deab1f5801e4a5cd1213",
+      "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000001\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nThe council plan says every street gets a lane by next year.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000001\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000003\nWe should keep the parking free for residents, people need their cars.\nMaybe we could put the bus money into the roads instead.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000003\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] A council plan for lanes\n  what the rooms did: argued about it\n- [ignored] A rumour\n  what the rooms did: ignored\n  (its quote was not found in the transcripts)\n\nFLAGGED ON THE QUESTION: Who gets P5?\nFlagged because: P5 pulls against P1\n\nTHE PAIR:\nA (a speaker in Conversation 1, claim): Charging points near the flats are far too few.\n   said: \"the waiting list is months long\"\nB (a speaker in Conversation 3, argument): Maybe the bus money should go to roads instead.\n   said: \"put the bus money into... the roads instead\"",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "opposed": true,
+        "question": "How should street space be shared?",
+        "reason": "they answer one question oppositely",
+        "poleA": "Keep the street as it is",
+        "poleB": "Change the street for other modes"
+      }
+    },
+    {
+      "system": "b049848dca1c42c98bac33981f18da8e92ccc640e4e7deab1f5801e4a5cd1213",
+      "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000001\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nThe council plan says every street gets a lane by next year.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000001\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] A council plan for lanes\n  what the rooms did: argued about it\n- [ignored] A rumour\n  what the rooms did: ignored\n  (its quote was not found in the transcripts)\n\nFLAGGED ON THE QUESTION: Who gets P1?\nFlagged because: P1 pulls against P2\n\nTHE PAIR:\nA (a speaker in Conversation 1, claim): Charging points near the flats are far too few.\n   said: \"the waiting list is months long\"\nB (a speaker in Conversation 1, argument): Buses should run later at night so people can leave the car.\n   said: \"Buses stop running at eleven\"",
+      "thinking": true,
+      "answer": {
+        "valid": false,
+        "opposed": false,
+        "question": "",
+        "reason": "they do not answer one question",
+        "poleA": "",
+        "poleB": ""
+      }
+    },
+    {
+      "system": "b049848dca1c42c98bac33981f18da8e92ccc640e4e7deab1f5801e4a5cd1213",
+      "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000002\nTyped answer: the cycle lanes end abruptly at the ring road.\nI would rather cycle than drive if it felt safe.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000002\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000003\nWe should keep the parking free for residents, people need their cars.\nMaybe we could put the bus money into the roads instead.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000003\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] A council plan for lanes\n  what the rooms did: argued about it\n- [ignored] A rumour\n  what the rooms did: ignored\n  (its quote was not found in the transcripts)\n\nFLAGGED ON THE QUESTION: Who gets P3?\nFlagged because: P3 pulls against P4\n\nTHE PAIR:\nA (a speaker in Conversation 2, argument): Cycle lanes should continue past the ring road.\n   said: \"the cycle lanes end abruptly at the ring road\"\nB (speakers in Conversation 3 and Conversation 2, argument): Resident parking must stay free.\n   said: \"keep the parking free for residents\"\n   said: \"I would rather cycle than drive\"",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "opposed": true,
+        "question": "How should street space be shared?",
+        "reason": "they answer one question oppositely",
+        "poleA": "Keep the street as it is",
+        "poleB": "Change the street for other modes"
+      }
+    },
+    {
+      "system": "b049848dca1c42c98bac33981f18da8e92ccc640e4e7deab1f5801e4a5cd1213",
+      "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000002\nTyped answer: the cycle lanes end abruptly at the ring road.\nI would rather cycle than drive if it felt safe.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000002\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000003\nWe should keep the parking free for residents, people need their cars.\nMaybe we could put the bus money into the roads instead.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000003\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] A council plan for lanes\n  what the rooms did: argued about it\n- [ignored] A rumour\n  what the rooms did: ignored\n  (its quote was not found in the transcripts)\n\nFLAGGED ON THE QUESTION: Who gets P4?\nFlagged because: P4 pulls against P5\n\nTHE PAIR:\nA (speakers in Conversation 3 and Conversation 2, argument): Resident parking must stay free.\n   said: \"keep the parking free for residents\"\n   said: \"I would rather cycle than drive\"\nB (a speaker in Conversation 3, argument): Maybe the bus money should go to roads instead.\n   said: \"put the bus money into... the roads instead\"",
+      "thinking": true,
+      "answer": {
+        "valid": false,
+        "opposed": false,
+        "question": "",
+        "reason": "they do not answer one question",
+        "poleA": "",
+        "poleB": ""
+      }
+    },
+    {
+      "system": "c6298e4b92141bc128f000270b77297843313c07ce3f936756079d9366ee2059",
+      "user": "KEPT:\nx1: Keep the street as it is / Change the street for other modes\n\nNEW: Keep the street as it is / Change the street for other modes\n  (from: P3 pulls against P4)",
+      "thinking": false,
+      "answer": {
+        "same_as": "x1",
+        "swapped": true,
+        "why": "the same pull from another room"
+      }
+    },
+    {
+      "system": "e453e57a84e933f6960e24c0ac18a8852744ebb50c62b657950f13da5a0005a4",
+      "user": "ARGUMENTS START\nP1 [T1 · a speaker in Conversation 1 · claim] Charging points near the flats are far too few.\nP2 [T1 · a speaker in Conversation 1 · argument] Buses should run later at night so people can leave the car.\nP3 [T2 · a speaker in Conversation 2 · argument] Cycle lanes should continue past the ring road.\nP4 [T3 · speakers in Conversation 3 and Conversation 2 · argument] Resident parking must stay free.\nP5 [T3 · a speaker in Conversation 3 · argument · hedged] Maybe the bus money should go to roads instead.\nARGUMENTS END\n\nFOCAL POSITIONS: P1, P2, P3, P4, P5",
+      "thinking": true,
+      "answer": {
+        "collisions": [
+          {
+            "focal": "P1",
+            "other": "P2",
+            "question": "Who gets P1?",
+            "why": "P1 pulls against P2",
+            "zero_sum": 0.5
+          },
+          {
+            "focal": "P2",
+            "other": "P3",
+            "question": "Who gets P2?",
+            "why": "P2 pulls against P3",
+            "zero_sum": 0.6
+          },
+          {
+            "focal": "P3",
+            "other": "P4",
+            "question": "Who gets P3?",
+            "why": "P3 pulls against P4",
+            "zero_sum": 0.7
+          },
+          {
+            "focal": "P4",
+            "other": "P5",
+            "question": "Who gets P4?",
+            "why": "P4 pulls against P5",
+            "zero_sum": 0.8
+          },
+          {
+            "focal": "P5",
+            "other": "P1",
+            "question": "Who gets P5?",
+            "why": "P5 pulls against P1",
+            "zero_sum": 0.9
+          },
+          {
+            "focal": "P1",
+            "other": "P99",
+            "question": "x",
+            "why": "x",
+            "zero_sum": 0.9
+          },
+          {
+            "focal": "P1",
+            "other": "P5",
+            "question": "low",
+            "why": "low",
+            "zero_sum": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "system": "f38f3c5f74b14f1e87e2703c748ee31cb0f5487871f14c860624f0eed1a59f2d",
+      "user": "TRANSCRIPT id: c1000000-0000-4000-8000-000000000001\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nThe council plan says every street gets a lane by next year.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000001\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000002\nTyped answer: the cycle lanes end abruptly at the ring road.\nI would rather cycle than drive if it felt safe.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000002\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000003\nWe should keep the parking free for residents, people need their cars.\nMaybe we could put the bus money into the roads instead.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000003",
+      "thinking": true,
+      "answer": {
+        "handed": [
+          {
+            "text": "A council plan for lanes",
+            "quote": "the council plan says",
+            "transcript": "c1000000-0000-4000-8000-000000000002",
+            "response": "argued about it",
+            "status": "argued"
+          },
+          {
+            "text": "A rumour",
+            "quote": "nobody heard this",
+            "transcript": "c1000000-0000-4000-8000-000000000003",
+            "response": "ignored",
+            "status": "ignored"
+          }
+        ]
+      }
+    }
+  ],
+  "result": {
+    "status": "ok",
+    "input_set": "raw",
+    "input_revision_ids": ["r1", "r2", "r3", "r4", "r5", "r6", "r7"],
+    "tensions": [
+      {
+        "key": "x1",
+        "pole_a": "Keep the street as it is",
+        "pole_b": "Change the street for cycling",
+        "knot": "Free parking eases daily life, but it takes the space safe cycle lanes need.",
+        "to_resolve": "How much street space should parking keep?",
+        "quote_ids": ["q1", "q2", "q4", "q5"],
+        "quotes": [
+          {
+            "id": "q1",
+            "conversation_id": "c1000000-0000-4000-8000-000000000001",
+            "text": "the waiting list is months long",
+            "location": {
+              "offset": 12,
+              "basis": "collapsed-casefold-v1"
+            }
+          },
+          {
+            "id": "q2",
+            "conversation_id": "c1000000-0000-4000-8000-000000000003",
+            "text": "keep the parking free for residents",
+            "location": null
+          },
+          {
+            "id": "q4",
+            "conversation_id": "c1000000-0000-4000-8000-000000000003",
+            "text": "put the bus money into... the roads instead",
+            "location": null
+          },
+          {
+            "id": "q5",
+            "conversation_id": "c1000000-0000-4000-8000-000000000002",
+            "text": "the cycle lanes end abruptly at the ring road",
+            "location": {
+              "offset": 12,
+              "basis": "collapsed-casefold-v1"
+            }
+          }
+        ],
+        "supporters_a": [
+          {
+            "revision_id": "r1",
+            "object_id": "o1",
+            "member_revision_ids": [],
+            "quote_ids": ["q1"],
+            "strength": 0.9,
+            "why": "P1 holds A"
+          },
+          {
+            "revision_id": "r4",
+            "object_id": "o4",
+            "member_revision_ids": [],
+            "quote_ids": ["q2", "q3"],
+            "strength": 0.8,
+            "why": "P4 holds A"
+          }
+        ],
+        "supporters_b": [
+          {
+            "revision_id": "r5",
+            "object_id": "o5",
+            "member_revision_ids": [],
+            "quote_ids": ["q4"],
+            "strength": 0.7,
+            "why": "P5 holds B"
+          },
+          {
+            "revision_id": "r3",
+            "object_id": "o3",
+            "member_revision_ids": [],
+            "quote_ids": ["q5"],
+            "strength": 0.6,
+            "why": "P3 holds B"
+          }
+        ],
+        "screen_flags": [],
+        "question": "How should street space be shared?"
+      }
+    ],
+    "relations": [
+      {
+        "type": "supports_pole_a",
+        "from_revision_id": "r1",
+        "to_tension": "x1",
+        "basis": "extracted",
+        "check": {
+          "step": "support",
+          "prompt": "tensions-support-v1",
+          "strength": 0.9,
+          "why": "P1 holds A",
+          "via": "pair",
+          "pair": ["r1", "r5"],
+          "verify": "they answer one question oppositely",
+          "question": "How should street space be shared?",
+          "evidence": "argument evidence grounded in its source"
+        }
+      },
+      {
+        "type": "supports_pole_a",
+        "from_revision_id": "r4",
+        "to_tension": "x1",
+        "basis": "extracted",
+        "check": {
+          "step": "support",
+          "prompt": "tensions-support-v1",
+          "strength": 0.8,
+          "why": "P4 holds A",
+          "via": "facet",
+          "pair": ["r3", "r4"],
+          "verify": "they answer one question oppositely",
+          "question": "How should street space be shared?",
+          "evidence": "argument evidence grounded in its source",
+          "dedupe": {
+            "prompt": "sha256:c6298e4b92141bc1",
+            "why": "the same pull from another room",
+            "swapped": true
+          }
+        }
+      },
+      {
+        "type": "supports_pole_b",
+        "from_revision_id": "r5",
+        "to_tension": "x1",
+        "basis": "extracted",
+        "check": {
+          "step": "support",
+          "prompt": "tensions-support-v1",
+          "strength": 0.7,
+          "why": "P5 holds B",
+          "via": "pair",
+          "pair": ["r1", "r5"],
+          "verify": "they answer one question oppositely",
+          "question": "How should street space be shared?",
+          "evidence": "argument evidence grounded in its source"
+        }
+      },
+      {
+        "type": "supports_pole_b",
+        "from_revision_id": "r3",
+        "to_tension": "x1",
+        "basis": "extracted",
+        "check": {
+          "step": "support",
+          "prompt": "tensions-support-v1",
+          "strength": 0.6,
+          "why": "P3 holds B",
+          "via": "facet",
+          "pair": ["r3", "r4"],
+          "verify": "they answer one question oppositely",
+          "question": "How should street space be shared?",
+          "evidence": "argument evidence grounded in its source",
+          "dedupe": {
+            "prompt": "sha256:c6298e4b92141bc1",
+            "why": "the same pull from another room",
+            "swapped": true
+          }
+        }
+      }
     ],
     "quotes": [
-     {
-      "id": "q1",
-      "conversation_id": "c1000000-0000-4000-8000-000000000001",
-      "text": "the waiting list is months long",
-      "location": {
-       "offset": 12,
-       "basis": "collapsed-casefold-v1"
+      {
+        "id": "q1",
+        "conversation_id": "c1000000-0000-4000-8000-000000000001",
+        "text": "the waiting list is months long",
+        "location": {
+          "offset": 12,
+          "basis": "collapsed-casefold-v1"
+        }
+      },
+      {
+        "id": "q2",
+        "conversation_id": "c1000000-0000-4000-8000-000000000003",
+        "text": "keep the parking free for residents",
+        "location": null
+      },
+      {
+        "id": "q3",
+        "conversation_id": "c1000000-0000-4000-8000-000000000002",
+        "text": "I would rather cycle than drive",
+        "location": null
+      },
+      {
+        "id": "q4",
+        "conversation_id": "c1000000-0000-4000-8000-000000000003",
+        "text": "put the bus money into... the roads instead",
+        "location": null
+      },
+      {
+        "id": "q5",
+        "conversation_id": "c1000000-0000-4000-8000-000000000002",
+        "text": "the cycle lanes end abruptly at the ring road",
+        "location": {
+          "offset": 12,
+          "basis": "collapsed-casefold-v1"
+        }
       }
-     },
-     {
-      "id": "q2",
-      "conversation_id": "c1000000-0000-4000-8000-000000000003",
-      "text": "keep the parking free for residents",
-      "location": null
-     },
-     {
-      "id": "q4",
-      "conversation_id": "c1000000-0000-4000-8000-000000000003",
-      "text": "put the bus money into... the roads instead",
-      "location": null
-     },
-     {
-      "id": "q5",
-      "conversation_id": "c1000000-0000-4000-8000-000000000002",
-      "text": "the cycle lanes end abruptly at the ring road",
-      "location": {
-       "offset": 12,
-       "basis": "collapsed-casefold-v1"
-      }
-     }
     ],
-    "supporters_a": [
-     {
-      "revision_id": "r1",
-      "object_id": "o1",
-      "member_revision_ids": [],
-      "quote_ids": [
-       "q1"
+    "coverage": {
+      "arguments": 7,
+      "positions": 5,
+      "conversations": 3,
+      "conversations_with_evidence": 3,
+      "without_evidence": ["r6"],
+      "without_source": [],
+      "evidence_not_found": ["r7"],
+      "trimmed": [],
+      "members_missing": {},
+      "both_poles_skipped": [],
+      "rejected_pairs": [
+        {
+          "pair": ["r4", "r5"],
+          "opposed": false,
+          "reason": "they do not answer one question"
+        },
+        {
+          "pair": ["r2", "r3"],
+          "opposed": false,
+          "reason": "they do not answer one question"
+        },
+        {
+          "pair": ["r1", "r2"],
+          "opposed": false,
+          "reason": "they do not answer one question"
+        }
       ],
-      "strength": 0.9,
-      "why": "P1 holds A"
-     },
-     {
-      "revision_id": "r4",
-      "object_id": "o4",
-      "member_revision_ids": [],
-      "quote_ids": [
-       "q2",
-       "q3"
-      ],
-      "strength": 0.8,
-      "why": "P4 holds A"
-     }
-    ],
-    "supporters_b": [
-     {
-      "revision_id": "r5",
-      "object_id": "o5",
-      "member_revision_ids": [],
-      "quote_ids": [
-       "q4"
-      ],
-      "strength": 0.7,
-      "why": "P5 holds B"
-     },
-     {
-      "revision_id": "r3",
-      "object_id": "o3",
-      "member_revision_ids": [],
-      "quote_ids": [
-       "q5"
-      ],
-      "strength": 0.6,
-      "why": "P3 holds B"
-     }
-    ],
-    "screen_flags": [],
-    "question": "How should street space be shared?"
-   }
-  ],
-  "relations": [
-   {
-    "type": "supports_pole_a",
-    "from_revision_id": "r1",
-    "to_tension": "x1",
-    "basis": "extracted",
-    "check": {
-     "step": "support",
-     "prompt": "tensions-support-v1",
-     "strength": 0.9,
-     "why": "P1 holds A",
-     "via": "pair",
-     "pair": [
-      "r1",
-      "r5"
-     ],
-     "verify": "they answer one question oppositely",
-     "question": "How should street space be shared?",
-     "evidence": "argument evidence grounded in its source"
-    }
-   },
-   {
-    "type": "supports_pole_a",
-    "from_revision_id": "r4",
-    "to_tension": "x1",
-    "basis": "extracted",
-    "check": {
-     "step": "support",
-     "prompt": "tensions-support-v1",
-     "strength": 0.8,
-     "why": "P4 holds A",
-     "via": "facet",
-     "pair": [
-      "r3",
-      "r4"
-     ],
-     "verify": "they answer one question oppositely",
-     "question": "How should street space be shared?",
-     "evidence": "argument evidence grounded in its source",
-     "dedupe": {
-      "prompt": "sha256:c6298e4b92141bc1",
-      "why": "the same pull from another room",
-      "swapped": true
-     }
-    }
-   },
-   {
-    "type": "supports_pole_b",
-    "from_revision_id": "r5",
-    "to_tension": "x1",
-    "basis": "extracted",
-    "check": {
-     "step": "support",
-     "prompt": "tensions-support-v1",
-     "strength": 0.7,
-     "why": "P5 holds B",
-     "via": "pair",
-     "pair": [
-      "r1",
-      "r5"
-     ],
-     "verify": "they answer one question oppositely",
-     "question": "How should street space be shared?",
-     "evidence": "argument evidence grounded in its source"
-    }
-   },
-   {
-    "type": "supports_pole_b",
-    "from_revision_id": "r3",
-    "to_tension": "x1",
-    "basis": "extracted",
-    "check": {
-     "step": "support",
-     "prompt": "tensions-support-v1",
-     "strength": 0.6,
-     "why": "P3 holds B",
-     "via": "facet",
-     "pair": [
-      "r3",
-      "r4"
-     ],
-     "verify": "they answer one question oppositely",
-     "question": "How should street space be shared?",
-     "evidence": "argument evidence grounded in its source",
-     "dedupe": {
-      "prompt": "sha256:c6298e4b92141bc1",
-      "why": "the same pull from another room",
-      "swapped": true
-     }
-    }
-   }
-  ],
-  "quotes": [
-   {
-    "id": "q1",
-    "conversation_id": "c1000000-0000-4000-8000-000000000001",
-    "text": "the waiting list is months long",
-    "location": {
-     "offset": 12,
-     "basis": "collapsed-casefold-v1"
-    }
-   },
-   {
-    "id": "q2",
-    "conversation_id": "c1000000-0000-4000-8000-000000000003",
-    "text": "keep the parking free for residents",
-    "location": null
-   },
-   {
-    "id": "q3",
-    "conversation_id": "c1000000-0000-4000-8000-000000000002",
-    "text": "I would rather cycle than drive",
-    "location": null
-   },
-   {
-    "id": "q4",
-    "conversation_id": "c1000000-0000-4000-8000-000000000003",
-    "text": "put the bus money into... the roads instead",
-    "location": null
-   },
-   {
-    "id": "q5",
-    "conversation_id": "c1000000-0000-4000-8000-000000000002",
-    "text": "the cycle lanes end abruptly at the ring road",
-    "location": {
-     "offset": 12,
-     "basis": "collapsed-casefold-v1"
-    }
-   }
-  ],
-  "coverage": {
-   "arguments": 7,
-   "positions": 5,
-   "conversations": 3,
-   "conversations_with_evidence": 3,
-   "without_evidence": [
-    "r6"
-   ],
-   "without_source": [],
-   "evidence_not_found": [
-    "r7"
-   ],
-   "trimmed": [],
-   "members_missing": {},
-   "both_poles_skipped": [],
-   "rejected_pairs": [
-    {
-     "pair": [
-      "r4",
-      "r5"
-     ],
-     "opposed": false,
-     "reason": "they do not answer one question"
+      "unsupported": [],
+      "support_rejected": 0,
+      "support_capped": 0,
+      "framing": "assessed",
+      "thin": false,
+      "note": null
     },
-    {
-     "pair": [
-      "r2",
-      "r3"
-     ],
-     "opposed": false,
-     "reason": "they do not answer one question"
+    "counts": {
+      "arguments": 7,
+      "positions": 5,
+      "handed": 2,
+      "handed_verified": 1,
+      "candidates": 5,
+      "found_pairs": 5,
+      "cross_table": 4,
+      "verified": 2,
+      "rejected": 3,
+      "merged": 1,
+      "both_poles_skipped": 0,
+      "kept": 1,
+      "unsupported_after_support": 0,
+      "support_rejected": 0,
+      "support_capped": 0,
+      "unsupported_gate": 0,
+      "flagged": 0,
+      "tensions": 1
     },
-    {
-     "pair": [
-      "r1",
-      "r2"
-     ],
-     "opposed": false,
-     "reason": "they do not answer one question"
-    }
-   ],
-   "unsupported": [],
-   "support_rejected": 0,
-   "support_capped": 0,
-   "framing": "assessed",
-   "thin": false,
-   "note": null
+    "usage": {
+      "calls": 11,
+      "retries": 0,
+      "calls_by_stage": {
+        "handed": 1,
+        "collisions": 1,
+        "verify": 5,
+        "dedupe": 1,
+        "support": 1,
+        "write": 2
+      },
+      "wall_ms": 0,
+      "tokens": null
+    },
+    "prompt_versions": {
+      "handed": "tensions-handed-v1",
+      "collisions": "tensions-collisions-v1",
+      "verify": "tensions-verify-v1",
+      "support": "tensions-support-v1",
+      "write": "tensions-write-v1",
+      "dedupe": "sha256:c6298e4b92141bc1"
+    },
+    "gate_flags": [],
+    "suggestion": "refresh_arguments",
+    "recipe_id": "tensions",
+    "recipe_version": "tensions-from-arguments-v2"
   },
-  "counts": {
-   "arguments": 7,
-   "positions": 5,
-   "handed": 2,
-   "handed_verified": 1,
-   "candidates": 5,
-   "found_pairs": 5,
-   "cross_table": 4,
-   "verified": 2,
-   "rejected": 3,
-   "merged": 1,
-   "both_poles_skipped": 0,
-   "kept": 1,
-   "unsupported_after_support": 0,
-   "support_rejected": 0,
-   "support_capped": 0,
-   "unsupported_gate": 0,
-   "flagged": 0,
-   "tensions": 1
-  },
-  "usage": {
-   "calls": 11,
-   "retries": 0,
-   "calls_by_stage": {
-    "handed": 1,
-    "collisions": 1,
-    "verify": 5,
-    "dedupe": 1,
-    "support": 1,
-    "write": 2
-   },
-   "wall_ms": 0,
-   "tokens": null
-  },
-  "prompt_versions": {
-   "handed": "tensions-handed-v1",
-   "collisions": "tensions-collisions-v1",
-   "verify": "tensions-verify-v1",
-   "support": "tensions-support-v1",
-   "write": "tensions-write-v1",
-   "dedupe": "sha256:c6298e4b92141bc1"
-  },
-  "gate_flags": [],
-  "suggestion": "refresh_arguments",
-  "recipe_id": "tensions",
-  "recipe_version": "tensions-from-arguments-v2"
- },
- "thin": {
-  "status": "insufficient_coverage",
-  "input_set": "raw",
-  "input_revision_ids": [
-   "r1",
-   "r2"
-  ],
-  "tensions": [],
-  "relations": [],
-  "quotes": [],
-  "coverage": {
-   "arguments": 2,
-   "positions": 2,
-   "conversations": 3,
-   "conversations_with_evidence": 1,
-   "without_evidence": [],
-   "without_source": [],
-   "evidence_not_found": [],
-   "trimmed": [],
-   "members_missing": {},
-   "both_poles_skipped": [],
-   "rejected_pairs": [],
-   "unsupported": [],
-   "support_rejected": 0,
-   "support_capped": 0,
-   "framing": "not_assessed",
-   "thin": true,
-   "note": "1 conversation(s) have arguments whose evidence was found in their source; tensions need at least 2. Refresh the arguments, or add source passages for the conversations listed."
-  },
-  "counts": {
-   "arguments": 2,
-   "positions": 2
-  },
-  "usage": {
-   "calls": 0,
-   "retries": 0,
-   "calls_by_stage": {},
-   "wall_ms": 0,
-   "tokens": null
-  },
-  "prompt_versions": {
-   "handed": "tensions-handed-v1",
-   "collisions": "tensions-collisions-v1",
-   "verify": "tensions-verify-v1",
-   "support": "tensions-support-v1",
-   "write": "tensions-write-v1",
-   "dedupe": "sha256:c6298e4b92141bc1"
-  },
-  "gate_flags": [],
-  "suggestion": "refresh_arguments",
-  "recipe_id": "tensions",
-  "recipe_version": "tensions-from-arguments-v2"
- }
+  "thin": {
+    "status": "insufficient_coverage",
+    "input_set": "raw",
+    "input_revision_ids": ["r1", "r2"],
+    "tensions": [],
+    "relations": [],
+    "quotes": [],
+    "coverage": {
+      "arguments": 2,
+      "positions": 2,
+      "conversations": 3,
+      "conversations_with_evidence": 1,
+      "without_evidence": [],
+      "without_source": [],
+      "evidence_not_found": [],
+      "trimmed": [],
+      "members_missing": {},
+      "both_poles_skipped": [],
+      "rejected_pairs": [],
+      "unsupported": [],
+      "support_rejected": 0,
+      "support_capped": 0,
+      "framing": "not_assessed",
+      "thin": true,
+      "note": "1 conversation(s) have arguments whose evidence was found in their source; tensions need at least 2. Refresh the arguments, or add source passages for the conversations listed."
+    },
+    "counts": {
+      "arguments": 2,
+      "positions": 2
+    },
+    "usage": {
+      "calls": 0,
+      "retries": 0,
+      "calls_by_stage": {},
+      "wall_ms": 0,
+      "tokens": null
+    },
+    "prompt_versions": {
+      "handed": "tensions-handed-v1",
+      "collisions": "tensions-collisions-v1",
+      "verify": "tensions-verify-v1",
+      "support": "tensions-support-v1",
+      "write": "tensions-write-v1",
+      "dedupe": "sha256:c6298e4b92141bc1"
+    },
+    "gate_flags": [],
+    "suggestion": "refresh_arguments",
+    "recipe_id": "tensions",
+    "recipe_version": "tensions-from-arguments-v2"
+  }
 }

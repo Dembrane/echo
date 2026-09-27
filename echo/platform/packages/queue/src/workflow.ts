@@ -29,3 +29,16 @@ export function startWorkflow<Args extends unknown[], R>(
 ) {
   return DBOS.startWorkflow(fn, { workflowID: id, ...(queueName && { queueName }) });
 }
+
+/**
+ * A durable pause inside a workflow: the wake-up time is checkpointed, so a worker that
+ * dies while waiting is replaced by one that sleeps only the remainder.
+ */
+export function durableSleep(ms: number): Promise<void> {
+  return DBOS.sleep(ms);
+}
+
+/** The id of the workflow the caller runs in, or null outside one. */
+export function currentWorkflowId(): string | null {
+  return DBOS.workflowID ?? null;
+}

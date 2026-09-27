@@ -1,8 +1,11 @@
 import { emailHandler, reconcileAccountSeats, reconcileHandler, sendEmail } from "@echo/account";
+import { analysisWorker } from "@echo/analysis";
+import { canvasWorker } from "@echo/canvas";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
 import type { Completer, Embedder } from "@echo/llm";
 import type { Mailer } from "@echo/mail";
+import { mapWorker } from "@echo/map";
 import type { Logger } from "@echo/observability";
 import {
   createLibrary,
@@ -12,6 +15,7 @@ import {
   runCreateView,
 } from "@echo/projects";
 import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
+import { reportsWorker } from "@echo/reports";
 import { type JobSink, tenancyWorker } from "@echo/tenancy";
 import { dispatchWebhook, httpDeliver, runDispatch, webhooksStorage } from "@echo/webhooks";
 import { z } from "zod";
@@ -38,7 +42,7 @@ export interface Registration {
 export function registrations(deps: {
   logger: Logger;
   db: Db;
-  config: Pick<Config, "webhooks" | "llm" | "analysis" | "canvas">;
+  config: Pick<Config, "webhooks" | "llm" | "analysis" | "canvas" | "reports">;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
   /** Lets a job enqueue follow-up jobs (the support timers send email). */
@@ -96,5 +100,32 @@ export function registrations(deps: {
       },
     },
     tenancyWorker(deps),
+    canvasWorker({
+      db: deps.db,
+      logger,
+      completer: deps.completer,
+      canvasEnabled: config.canvas.enabled,
+    }),
+    reportsWorker(deps),
+    analysisWorker({
+      db: deps.db,
+      logger,
+      completer: deps.completer,
+      embedder: deps.embedder,
+      config: {
+        embeddingModel: config.llm.embeddingModel,
+        embeddingLocation: config.llm.embeddingLocation,
+      },
+    }),
+    mapWorker({
+      db: deps.db,
+      logger,
+      completer: deps.completer,
+      embedder: deps.embedder,
+      config: {
+        embeddingModel: config.llm.embeddingModel,
+        embeddingLocation: config.llm.embeddingLocation,
+      },
+    }),
   ];
 }

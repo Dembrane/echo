@@ -152,14 +152,19 @@ export interface VertexEmbedderConfig {
   readonly model: string;
 }
 
-/** Vertex embeddings; the identity strings match what the Python deployment recorded. */
+/**
+ * Vertex embeddings; the identity strings match what the Python deployment recorded. The
+ * model client is resolved on first use, so composing an app never touches it.
+ */
 export function vertexEmbedder(models: Models, cfg: VertexEmbedderConfig): Embedder {
-  const { model, dimensions } = models.embedding();
   return {
     model: `vertex_ai/${cfg.model}`,
     endpoint: `vertex:${cfg.project}:${cfg.location}`,
-    dimensions,
+    get dimensions() {
+      return models.embedding().dimensions;
+    },
     async embed(text) {
+      const { model } = models.embedding();
       const result = await (model as EmbeddingModelV4).doEmbed({
         values: [text.replaceAll("\n", " ").trim()],
       });

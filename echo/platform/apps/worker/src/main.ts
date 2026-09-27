@@ -18,6 +18,7 @@ const loaded = loadSections([
   "mail",
   "analysis",
   "canvas",
+  "reports",
 ]);
 const config = loaded.values;
 const service = "echo-worker";
