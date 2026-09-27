@@ -249,3 +249,27 @@ resource "google_service_account_iam_member" "deployer_acts_as_web" {
   role               = "roles/iam.serviceAccountUser"
   member             = google_service_account.deployer.member
 }
+
+# Signs invite links. Must equal Directus's SECRET wherever Directus-era invite links are
+# still in inboxes (next, prod) until cutover; the preview has none, so it is random.
+resource "random_password" "invite_hash_secret" {
+  length  = 64
+  special = false
+}
+resource "google_secret_manager_secret" "invite_hash_secret" {
+  secret_id = "${local.name}-invite-hash-secret"
+  replication {
+    user_managed {
+      replicas { location = var.region }
+    }
+  }
+}
+resource "google_secret_manager_secret_version" "invite_hash_secret" {
+  secret      = google_secret_manager_secret.invite_hash_secret.id
+  secret_data = random_password.invite_hash_secret.result
+}
+resource "google_secret_manager_secret_iam_member" "api_invite_hash_secret" {
+  secret_id = google_secret_manager_secret.invite_hash_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = google_service_account.api.member
+}

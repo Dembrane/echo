@@ -1,11 +1,15 @@
 import type { Access } from "@echo/access";
-import type { Auth } from "@echo/auth";
+import type { Jobs } from "@echo/account";
+import type { Auth, IdentityAccount } from "@echo/auth";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
 import type { Env, Signed } from "@echo/http";
 import type { Models } from "@echo/llm";
+import type { Notifier } from "@echo/notifications";
 import type { Logger, Tracer } from "@echo/observability";
 import type { Queue } from "@echo/queue";
+import type { RateLimiter } from "@echo/ratelimit";
+import type { ObjectStorage } from "@echo/storage";
 import type { Deliver } from "@echo/webhooks";
 
 /** Everything the HTTP app needs, built whole in main.ts and replaced with fakes in tests. */
@@ -26,6 +30,14 @@ export interface Deps {
   readonly queue: Pick<Queue, "enqueue">;
   /** Sends outbound webhooks for the test button; a fake in tests. */
   readonly deliverWebhook: Deliver;
+  /** Self-service identity changes on Better Auth's tables. */
+  readonly identity: IdentityAccount;
+  readonly notifier: Notifier;
+  readonly limiter: RateLimiter;
+  /** Producer side of the queue: the API enqueues, the worker runs. */
+  readonly jobs: Jobs;
+  /** Uploaded files (avatars, logos) in the bucket Directus serves from until cutover. */
+  readonly files: ObjectStorage;
 }
 
 export type { Env, Signed };

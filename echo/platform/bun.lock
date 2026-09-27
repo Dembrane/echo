@@ -21,9 +21,13 @@
         "@echo/db": "workspace:*",
         "@echo/http": "workspace:*",
         "@echo/llm": "workspace:*",
+        "@echo/mail": "workspace:*",
+        "@echo/notifications": "workspace:*",
         "@echo/observability": "workspace:*",
         "@echo/projects": "workspace:*",
         "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/storage": "workspace:*",
         "@echo/webhooks": "workspace:*",
         "@hono/zod-openapi": "^1.1.0",
         "drizzle-orm": "^0.45.3",
@@ -52,15 +56,16 @@
     "apps/worker": {
       "name": "@echo/worker",
       "dependencies": {
+        "@echo/account": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/llm": "workspace:*",
+        "@echo/mail": "workspace:*",
         "@echo/observability": "workspace:*",
         "@echo/projects": "workspace:*",
         "@echo/queue": "workspace:*",
         "@echo/webhooks": "workspace:*",
-        "zod": "^4.1.0",
         "zod": "^4.1.0",
       },
     },
@@ -75,16 +80,27 @@
     "packages/account": {
       "name": "@echo/account",
       "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/auth": "workspace:*",
+        "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/http": "workspace:*",
+        "@echo/mail": "workspace:*",
+        "@echo/notifications": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/storage": "workspace:*",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
+        "zod": "^4.1.0",
       },
     },
     "packages/auth": {
       "name": "@echo/auth",
       "dependencies": {
+        "@better-auth/utils": "0.4.2",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "better-auth": "^1.7.6",
@@ -139,6 +155,20 @@
         "ai": "^7.0.118",
       },
     },
+    "packages/mail": {
+      "name": "@echo/mail",
+    },
+    "packages/notifications": {
+      "name": "@echo/notifications",
+      "dependencies": {
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+      },
+    },
     "packages/observability": {
       "name": "@echo/observability",
       "dependencies": {
@@ -187,6 +217,14 @@
         "@echo/db": "workspace:*",
       },
     },
+    "packages/ratelimit": {
+      "name": "@echo/ratelimit",
+      "dependencies": {
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+      },
+    },
     "packages/realtime": {
       "name": "@echo/realtime",
       "dependencies": {
@@ -219,6 +257,8 @@
     "parity": {
       "name": "@echo/parity",
       "dependencies": {
+        "@better-auth/utils": "0.4.2",
+        "better-auth": "^1.7.6",
         "postgres": "^3.4.9",
       },
     },
@@ -304,7 +344,11 @@
 
     "@echo/llm": ["@echo/llm@workspace:packages/llm"],
 
+    "@echo/mail": ["@echo/mail@workspace:packages/mail"],
+
     "@echo/migrate": ["@echo/migrate@workspace:apps/migrate"],
+
+    "@echo/notifications": ["@echo/notifications@workspace:packages/notifications"],
 
     "@echo/observability": ["@echo/observability@workspace:packages/observability"],
 
@@ -313,6 +357,8 @@
     "@echo/projects": ["@echo/projects@workspace:packages/projects"],
 
     "@echo/queue": ["@echo/queue@workspace:packages/queue"],
+
+    "@echo/ratelimit": ["@echo/ratelimit@workspace:packages/ratelimit"],
 
     "@echo/realtime": ["@echo/realtime@workspace:packages/realtime"],
 

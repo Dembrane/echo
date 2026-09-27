@@ -61,7 +61,7 @@ run("auth on Directus-created users", () => {
     ).rejects.toThrow();
   });
 
-  test("a new signup also gets the directus_users and app_user rows the schema points at", async () => {
+  test("a new signup gets the directus_users row the schema points at, and no app_user until onboarding", async () => {
     const email = `new-${Date.now()}@example.com`;
     const res = await auth.api.signUpEmail({
       body: { email, password: "a-long-enough-password", name: "New Person" },
@@ -70,13 +70,14 @@ run("auth on Directus-created users", () => {
       .select()
       .from(schema.directus_users)
       .where(eq(schema.directus_users.id, res.user.id));
-    const [a] = await database.db
+    const app = await database.db
       .select()
       .from(schema.app_user)
       .where(eq(schema.app_user.directus_user_id, res.user.id));
     expect(d?.email).toBe(email);
     expect(d?.first_name).toBe("New");
-    expect(a?.email).toBe(email);
+    expect(d?.status).toBe("unverified");
+    expect(app).toHaveLength(0);
   });
 
   test("an email code is sent and signs the user in", async () => {

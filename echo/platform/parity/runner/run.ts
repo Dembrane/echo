@@ -8,7 +8,7 @@
  */
 import { Glob } from "bun";
 import { call, NEW, newToken, OLD, oldToken } from "./clients";
-import { applySetup, diff, reset, snapshot } from "./db";
+import { diff, reset, runSetup, snapshot } from "./db";
 import { normalize } from "./normalize";
 import type { Scenario } from "./scenario";
 
@@ -32,15 +32,24 @@ async function side(
   s: Scenario,
 ) {
   await reset();
-  await applySetup(s.setup ?? []);
   await Bun.sleep(50);
+  // Sign in before the setup runs, so a setup that turns on two-factor or suspends the
+  // user still leaves the scenario a session to act with.
   const t = await token(s.as);
+  if (s.setup) await runSetup(s.setup);
   const before = await snapshot();
   const res = await call(base, t, s);
   const changes = diff(before, await snapshot());
   return { ...res, changes };
 }
 
+async function dump(name: string, a: string, b: string) {
+  const base = `${here}.parity-out/${name.replace(/[^a-z0-9]+/gi, "_")}`;
+  await Bun.write(`${base}.old.json`, a);
+  await Bun.write(`${base}.new.json`, b);
+}
+
+const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
 const seedIds = await collectSeedIds();
 const files = [...new Glob("scenarios/**/*.ts").scanSync(here)].sort();
 let pass = 0;
@@ -51,14 +60,17 @@ for (const file of files) {
   for (const s of list) {
     if (filter && !file.includes(filter) && !s.name.includes(filter)) continue;
     const ignore = new Set(s.ignoreFields ?? []);
+    const ids = new Set(seedIds);
+    const setupText = typeof s.setup === "string" ? s.setup : (s.setup ?? []).join("\n");
+    for (const m of setupText.match(UUID_RE) ?? []) ids.add(m.toLowerCase());
     const [o, n] = [await side(OLD, oldToken, s), await side(NEW, newToken, s)];
     const a = JSON.stringify(
-      normalize({ status: o.status, body: o.body, changes: o.changes }, seedIds, ignore),
+      normalize({ status: o.status, body: o.body, changes: o.changes }, ids, ignore),
       null,
       1,
     );
     const b = JSON.stringify(
-      normalize({ status: n.status, body: n.body, changes: n.changes }, seedIds, ignore),
+      normalize({ status: n.status, body: n.body, changes: n.changes }, ids, ignore),
       null,
       1,
     );
@@ -67,13 +79,14 @@ for (const file of files) {
     if (ok) {
       pass++;
       out(`  ok    ${s.name}${s.differs ? `  (differs on purpose: ${s.differs})` : ""}`);
+      // A deliberate difference is only as good as its review: keep both sides to read.
+      if (s.differs) await dump(s.name, a, b);
     } else {
       fail++;
       failures.push(s.name);
       out(`  FAIL  ${s.name}`);
       if (!same) {
-        await Bun.write(`${here}.parity-out/${s.name.replace(/[^a-z0-9]+/gi, "_")}.old.json`, a);
-        await Bun.write(`${here}.parity-out/${s.name.replace(/[^a-z0-9]+/gi, "_")}.new.json`, b);
+        await dump(s.name, a, b);
         out(`        old ${o.status}, new ${n.status}; full captures in parity/.parity-out/`);
       } else out("        marked as differing, but both sides now match: remove the note");
     }

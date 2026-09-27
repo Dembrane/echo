@@ -1,3 +1,4 @@
+import { BadRequestError, ForbiddenError } from "@echo/core";
 import type { AccountStorage } from "./storage";
 
 const EXPIRING_SOON_DAYS = 30;
@@ -112,4 +113,36 @@ export function flagsHighRisk(answers: unknown): boolean {
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+
+/**
+ * Updates display_name and merges settings keys into the stored settings. The merge runs
+ * on a row lock so two tabs saving different keys at once keep both (the old API used a
+ * Redis lock for the same reason).
+ */
+export async function updateMe(
+  store: AccountStorage,
+  who: { directusUserId: string },
+  body: { display_name: string | null; settings: Record<string, unknown> | null },
+  now: Date,
+) {
+  if (body.display_name === null && body.settings === null)
+    throw new BadRequestError("Nothing to update");
+  const user = await store.appUser(who.directusUserId);
+  if (!user) throw new ForbiddenError("User not onboarded");
+  await store.updateAppUserLocked(user.id, now, (fresh) => {
+    const patch: { display_name?: string; settings?: Record<string, unknown> } = {};
+    // display_name lands in email subjects ("{inviter} invited you"), so CR/LF never pass.
+    if (body.display_name !== null) patch.display_name = cleanName(body.display_name);
+    if (body.settings !== null) {
+      const existing = isRecord(fresh.settings) ? fresh.settings : {};
+      patch.settings = { ...existing, ...body.settings };
+    }
+    return patch;
+  });
+  return { status: "success" };
+}
+
+export function cleanName(v: string): string {
+  return v.replace(/\r/g, " ").replace(/\n/g, " ").trim();
 }

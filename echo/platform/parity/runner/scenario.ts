@@ -13,16 +13,27 @@ export interface Scenario {
   readonly as: As;
   readonly method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   readonly path: string;
+  /** JSON body; a function (sync or async) is evaluated per side at call time, for time-based codes. */
   readonly body?: unknown;
+  /** Multipart form fields instead of a JSON body; a file is { filename, type, base64 }. */
+  readonly form?: Record<string, string | FormFile>;
+  readonly headers?: Record<string, string>;
   readonly query?: Record<string, string>;
-  readonly differs?: string;
   /**
-   * SQL run on the fresh database before the request, on both sides, for states the seed
-   * does not hold (an observer's visible project, a scheduled report). Not part of the diff.
+   * SQL run on the fresh copy before the request, identically for both sides, for state
+   * the seed does not have (invites, an observer's visible project, a scheduled report).
+   * One script or a list of statements; ids it inserts count as seed ids. Not in the diff.
    */
-  readonly setup?: readonly string[];
+  readonly setup?: string | readonly string[];
+  readonly differs?: string;
   /** Response fields whose values legitimately change per run (besides timestamps and new ids). */
   readonly ignoreFields?: readonly string[];
+}
+
+export interface FormFile {
+  readonly filename: string;
+  readonly type: string;
+  readonly base64: string;
 }
 
 export function scenarios(list: Scenario[]): Scenario[] {

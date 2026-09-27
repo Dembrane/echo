@@ -1,4 +1,5 @@
 import { accountRoutes } from "@echo/account";
+import { notificationRoutes } from "@echo/notifications";
 import { projectRoutes } from "@echo/projects";
 import { webhookRoutes } from "@echo/webhooks";
 import { Hono } from "hono";
@@ -37,6 +38,7 @@ export function buildApp(deps: Deps) {
       dashboardUrl: deps.config.http.dashboardUrl,
     }),
   );
+  app.route("/", notificationRoutes(deps));
   app.onError(onError);
   app.notFound(notFound);
   return app;

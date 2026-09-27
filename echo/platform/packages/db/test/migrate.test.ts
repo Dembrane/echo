@@ -2,6 +2,15 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import postgres from "postgres";
 import { migrate } from "../src/migrate";
 
+// Counted from the journal so a new migration does not require editing this test.
+const journal = (await Bun.file(
+  new URL("../migrations/meta/_journal.json", import.meta.url),
+).json()) as {
+  entries: unknown[];
+};
+const TOTAL = journal.entries.length;
+const BASELINE = 2;
+
 // Needs a scratch Postgres with pgvector: TEST_DATABASE_ADMIN_URL=postgres://u:p@host:5432/postgres
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const base = admin?.slice(0, admin.lastIndexOf("/"));
@@ -19,7 +28,7 @@ run("migrate", () => {
 
   test("builds an empty database from the chain, then does nothing on a second run", async () => {
     const first = await migrate(`${base}/mig_fresh`);
-    expect(first).toEqual({ adoptedBaseline: false, applied: 4 });
+    expect(first).toEqual({ adoptedBaseline: false, applied: TOTAL });
     const second = await migrate(`${base}/mig_fresh`);
     expect(second).toEqual({ adoptedBaseline: false, applied: 0 });
   });
@@ -32,6 +41,6 @@ run("migrate", () => {
     const r = await migrate(`${base}/mig_adopt`);
     expect(r.adoptedBaseline).toBe(true);
     // The baseline is recorded, not run; later migrations run normally.
-    expect(r.applied).toBe(2);
+    expect(r.applied).toBe(TOTAL - BASELINE);
   });
 });

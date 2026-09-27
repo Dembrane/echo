@@ -4,7 +4,8 @@ const VOLATILE_KEY =
   /(^|_)(at|date_created|date_updated|timestamp|last_access|last_used_at|expires)$|^(created|updated)(At|_at)?$/i;
 
 /**
- * Makes two captures comparable: timestamps become <time>, ids minted during the scenario
+ * Makes two captures comparable: timestamps become <time:shape> (the value is dropped but
+ * its format kept, so raw Postgres text where the frontend expects ISO still fails), ids minted during the scenario
  * become <new-1>, <new-2> in order of appearance (ids from the seed stay, since they carry
  * meaning), and ignored fields are dropped. Keys are sorted so order never counts.
  */
@@ -17,8 +18,8 @@ export function normalize(
   const walk = (v: unknown, key?: string): unknown => {
     if (key && ignore.has(key)) return "<ignored>";
     if (typeof v === "string") {
-      if (key && VOLATILE_KEY.test(key) && ISO.test(v)) return "<time>";
-      if (ISO.test(v) && !Number.isNaN(Date.parse(v))) return "<time>";
+      if (key && VOLATILE_KEY.test(key) && ISO.test(v)) return timeShape(v);
+      if (ISO.test(v) && !Number.isNaN(Date.parse(v))) return timeShape(v);
       return v.replace(UUID, (m) => {
         const low = m.toLowerCase();
         if (seedIds.has(low)) return low;
@@ -26,7 +27,7 @@ export function normalize(
         return minted.get(low) as string;
       });
     }
-    if (v instanceof Date) return "<time>";
+    if (v instanceof Date) return "<time:date>";
     if (Array.isArray(v)) return v.map((x) => walk(x));
     if (v && typeof v === "object") {
       return Object.fromEntries(
@@ -38,4 +39,9 @@ export function normalize(
     return v;
   };
   return walk(value);
+}
+
+/** The format of a timestamp without its value: digits become d. */
+function timeShape(v: string): string {
+  return `<time:${v.replace(/\d/g, "d")}>`;
 }

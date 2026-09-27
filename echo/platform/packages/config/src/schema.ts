@@ -150,6 +150,62 @@ export const schema = defineSchema({
       secret: true,
     }),
   },
+  mail: {
+    sendgridApiKey: key("SENDGRID_API_KEY", z.string().optional(), {
+      description: "SendGrid key. Unset logs each email instead of sending it (local, test).",
+      secret: true,
+    }),
+    sendgridRegion: key("SENDGRID_REGION", z.enum(["global", "eu"]).default("eu"), {
+      description: "SendGrid data residency. eu keeps recipient data in the EU; needs an EU key.",
+    }),
+    fromEmail: key("EMAIL_FROM", z.email().default("do-not-reply@dembrane.com"), {
+      description: "Sender address of every transactional email.",
+    }),
+    fromName: key("EMAIL_FROM_NAME", z.string().default("dembrane"), {
+      description: "Sender name of every transactional email.",
+    }),
+  },
+  files: {
+    directusLocation: key("FILES_DIRECTUS_LOCATION", z.string().default("s3"), {
+      description:
+        "Directus storage location name written on uploaded avatars and logos, so Directus keeps serving them until cutover.",
+    }),
+    localRoot: key("FILES_LOCAL_ROOT", z.string().default(".data/files"), {
+      description: "Where uploads land when no bucket is configured (local, test).",
+    }),
+    s3Endpoint: key("FILES_S3_ENDPOINT", z.url().optional(), {
+      description: "S3 endpoint of the bucket Directus stores files in. Unset uses localRoot.",
+    }),
+    s3Bucket: key("FILES_S3_BUCKET", z.string().optional(), {
+      description: "Bucket Directus stores files in (its storage root).",
+    }),
+    s3Region: key("FILES_S3_REGION", z.string().default("auto"), {
+      description: "Region of that bucket.",
+    }),
+    s3AccessKeyId: key("FILES_S3_ACCESS_KEY_ID", z.string().optional(), {
+      description: "Access key for that bucket.",
+      secret: true,
+    }),
+    s3SecretAccessKey: key("FILES_S3_SECRET_ACCESS_KEY", z.string().optional(), {
+      description: "Secret key for that bucket.",
+      secret: true,
+    }),
+  },
+  account: {
+    inviteHashSecret: key("INVITE_HASH_SECRET", z.string().min(16), {
+      description:
+        "Signs invite links. Must equal Directus's SECRET until cutover, or every link already sent stops working.",
+      secret: true,
+    }),
+    onboardingFollowupInbox: key(
+      "ONBOARDING_FOLLOWUP_INBOX",
+      z.email().default("training@dembrane.com"),
+      {
+        description:
+          "Who hears about onboarding answers that need a partner or training follow-up.",
+      },
+    ),
+  },
 });
 
 export type Schema = typeof schema;

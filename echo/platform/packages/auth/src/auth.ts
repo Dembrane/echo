@@ -2,8 +2,9 @@ import type { Db } from "@echo/db";
 import { schema } from "@echo/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError } from "better-auth/api";
 import { bearer, emailOTP, twoFactor } from "better-auth/plugins";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export interface AuthOptions {
   readonly db: Db;
@@ -16,7 +17,15 @@ export interface AuthOptions {
   readonly google?: { readonly clientId: string; readonly clientSecret: string } | undefined;
   /** Delivers the one-time sign-in code. */
   readonly sendCode: (email: string, code: string, purpose: string) => Promise<void>;
-  /** Directus role every new signup gets while Directus tables still back foreign keys. */
+  /**
+   * Delivers the email-verification link of a new signup. `url` is Better Auth's own
+   * verify URL; `token` lets the caller build the dashboard link the email should carry.
+   */
+  readonly sendVerification?: (email: string, url: string, token: string) => Promise<void>;
+  /**
+   * Directus role every new signup gets while Directus tables still back foreign keys.
+   * Null reads Directus's public registration role, so each environment keeps its own.
+   */
   readonly defaultDirectusRoleId: string | null;
 }
 
@@ -43,10 +52,31 @@ export function createAuth(opts: AuthOptions) {
     }),
     emailAndPassword: {
       enabled: true,
+      // Unverified signups cannot sign in, as with Directus's verified public registration.
+      requireEmailVerification: true,
       minPasswordLength: 8,
+      maxPasswordLength: 256,
       password: {
         hash: (password) => Bun.password.hash(password, { algorithm: "argon2id" }),
         verify: ({ hash, password }) => Bun.password.verify(password, hash),
+      },
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      sendVerificationEmail: async ({ user, url, token }) => {
+        await opts.sendVerification?.(user.email, url, token);
+      },
+      // The Directus row of a verified signup becomes active, as Directus's verify did.
+      afterEmailVerification: async (user) => {
+        await opts.db
+          .update(schema.directus_users)
+          .set({ status: "active" })
+          .where(
+            and(
+              eq(schema.directus_users.id, user.id),
+              eq(schema.directus_users.status, "unverified"),
+            ),
+          );
       },
     },
     ...(opts.google && {
@@ -78,42 +108,54 @@ export function createAuth(opts: AuthOptions) {
     databaseHooks: {
       user: {
         create: {
-          // Until the contract phase, every user also has the rows the rest of the schema
-          // points at: directus_users (foreign keys) and app_user (memberships).
+          // Until the contract phase, every user also has the directus_users row the rest
+          // of the schema points at. The app_user row is not made here: creating it is what
+          // completes onboarding (POST /api/v2/onboarding/complete), which /me reports.
           after: async (user) => {
-            await opts.db.transaction(async (tx) => {
-              const [first, ...rest] = (user.name ?? "").split(" ");
-              await tx
-                .insert(schema.directus_users)
-                .values({
-                  id: user.id,
-                  email: user.email,
-                  first_name: first || null,
-                  last_name: rest.join(" ") || null,
-                  status: "active",
-                  role: opts.defaultDirectusRoleId,
-                  provider: "default",
-                })
-                .onConflictDoNothing();
-              const existing = await tx
-                .select({ id: schema.app_user.id })
-                .from(schema.app_user)
-                .where(eq(schema.app_user.directus_user_id, user.id))
-                .limit(1);
-              if (existing.length === 0) {
-                await tx.insert(schema.app_user).values({
-                  id: Bun.randomUUIDv7(),
-                  directus_user_id: user.id,
-                  email: user.email,
-                  display_name: user.name || null,
-                });
-              }
-            });
+            const role = opts.defaultDirectusRoleId ?? (await publicRegistrationRole(opts.db));
+            const [first, ...rest] = (user.name ?? "").split(" ");
+            await opts.db
+              .insert(schema.directus_users)
+              .values({
+                id: user.id,
+                email: user.email,
+                first_name: first || null,
+                last_name: rest.join(" ") || null,
+                status: user.emailVerified ? "active" : "unverified",
+                role,
+                provider: "default",
+              })
+              .onConflictDoNothing();
+          },
+        },
+      },
+      session: {
+        create: {
+          // A suspended or archived user (account deletion requested, staff action) gets no
+          // session. Unverified is left to Better Auth, which refuses password sign-in until
+          // the email is verified and verifies it on a code sign-in.
+          before: async (session) => {
+            const [row] = await opts.db
+              .select({ status: schema.directus_users.status })
+              .from(schema.directus_users)
+              .where(eq(schema.directus_users.id, session.userId))
+              .limit(1);
+            if (row?.status === "suspended" || row?.status === "archived")
+              throw new APIError("FORBIDDEN", { message: "This account is not active" });
           },
         },
       },
     },
   });
+}
+
+/** Directus's role for public signups (Basic User on prod). */
+async function publicRegistrationRole(db: Db): Promise<string | null> {
+  const [row] = await db
+    .select({ role: schema.directus_settings.public_registration_role })
+    .from(schema.directus_settings)
+    .limit(1);
+  return row?.role ?? null;
 }
 
 export type Auth = ReturnType<typeof createAuth>;

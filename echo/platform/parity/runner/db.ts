@@ -11,6 +11,8 @@ const IGNORED_TABLES = new Set([
   "directus_revisions",
   "auth_session",
   "auth_verification",
+  // Rate-limit counters: the old API keeps them in Redis.
+  "platform_rate_limit",
 ]);
 
 export async function reset(template = "parity_template_platform"): Promise<void> {
@@ -25,8 +27,9 @@ export async function reset(template = "parity_template_platform"): Promise<void
   await Bun.$`docker exec parity-valkey-1 valkey-cli flushall`.quiet();
 }
 
-/** Applies a scenario's setup statements to the scenario database. */
-export async function applySetup(statements: readonly string[]): Promise<void> {
+/** Runs a scenario's setup on the scenario database: one script, or statements in order. */
+export async function runSetup(setup: string | readonly string[]): Promise<void> {
+  const statements = typeof setup === "string" ? [setup] : setup;
   if (!statements.length) return;
   const sql = postgres(DB_URL, { max: 1, onnotice: () => {} });
   try {
@@ -71,17 +74,31 @@ export interface RowChange {
   readonly row: Record<string, unknown>;
 }
 
+/**
+ * Changed rows by table and kind. Updates and deletes touch rows that existed before, so
+ * they sort by primary key; physical order after an UPDATE says nothing about behaviour.
+ * Inserts keep their order, since their keys are minted per run.
+ */
 export function diff(before: Snapshot, after: Snapshot): RowChange[] {
-  const changes: RowChange[] = [];
+  const changes: (RowChange & { key: string; seq: number })[] = [];
+  let seq = 0;
   for (const [table, rows] of after) {
     const old = before.get(table) ?? new Map();
     for (const [k, row] of rows) {
       const prev = old.get(k);
-      if (!prev) changes.push({ table, kind: "insert", row });
+      if (!prev) changes.push({ table, kind: "insert", row, key: "", seq: seq++ });
       else if (JSON.stringify(prev) !== JSON.stringify(row))
-        changes.push({ table, kind: "update", row });
+        changes.push({ table, kind: "update", row, key: k, seq: seq++ });
     }
-    for (const [k, row] of old) if (!rows.has(k)) changes.push({ table, kind: "delete", row });
+    for (const [k, row] of old)
+      if (!rows.has(k)) changes.push({ table, kind: "delete", row, key: k, seq: seq++ });
   }
-  return changes.sort((a, b) => `${a.table}${a.kind}`.localeCompare(`${b.table}${b.kind}`));
+  return changes
+    .sort(
+      (a, b) =>
+        `${a.table}${a.kind}`.localeCompare(`${b.table}${b.kind}`) ||
+        a.key.localeCompare(b.key) ||
+        a.seq - b.seq,
+    )
+    .map(({ table, kind, row }) => ({ table, kind, row }));
 }

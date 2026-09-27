@@ -1,24 +1,71 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/config" },
-    { "path": "packages/observability" },
-    { "path": "packages/db" },
-    { "path": "packages/core" },
-    { "path": "packages/queue" },
-    { "path": "packages/storage" },
-    { "path": "packages/access" },
-    { "path": "packages/auth" },
-    { "path": "packages/http" },
-    { "path": "packages/account" },
-    { "path": "packages/llm" },
-    { "path": "packages/realtime" },
-    { "path": "packages/legacy-shape" },
-    { "path": "packages/projects" },
-    { "path": "packages/webhooks" },
-    { "path": "apps/api" },
-    { "path": "apps/worker" },
-    { "path": "apps/migrate" },
-    { "path": "apps/web" }
+    {
+      "path": "packages/config"
+    },
+    {
+      "path": "packages/observability"
+    },
+    {
+      "path": "packages/db"
+    },
+    {
+      "path": "packages/core"
+    },
+    {
+      "path": "packages/queue"
+    },
+    {
+      "path": "packages/storage"
+    },
+    {
+      "path": "packages/access"
+    },
+    {
+      "path": "packages/auth"
+    },
+    {
+      "path": "packages/http"
+    },
+    {
+      "path": "packages/account"
+    },
+    {
+      "path": "packages/llm"
+    },
+    {
+      "path": "packages/realtime"
+    },
+    {
+      "path": "packages/legacy-shape"
+    },
+    {
+      "path": "packages/projects"
+    },
+    {
+      "path": "packages/webhooks"
+    },
+    {
+      "path": "packages/notifications"
+    },
+    {
+      "path": "packages/ratelimit"
+    },
+    {
+      "path": "packages/mail"
+    },
+    {
+      "path": "apps/api"
+    },
+    {
+      "path": "apps/worker"
+    },
+    {
+      "path": "apps/migrate"
+    },
+    {
+      "path": "apps/web"
+    }
   ]
 }

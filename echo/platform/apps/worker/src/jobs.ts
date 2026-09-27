@@ -1,5 +1,7 @@
+import { emailHandler, reconcileAccountSeats, reconcileHandler, sendEmail } from "@echo/account";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
+import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
 import {
   createLibrary,
@@ -28,13 +30,18 @@ export interface Registration {
   register(queue: Queue): Promise<void>;
 }
 
+/** What job handlers may use; built once in main.ts. */
+
 /** Every job this worker runs. Namespaces add their registration here as they move over. */
-export function registrations(deps: {
-  logger: Logger;
-  db: Db;
-  config: Pick<Config, "webhooks">;
-}): Registration[] {
-  const { logger, db, config } = deps;
+/** What the worker's jobs need, built once in main.ts. */
+export interface WorkerDeps {
+  readonly db: Db;
+  readonly mailer: Mailer;
+  readonly config: Pick<Config, "webhooks">;
+}
+
+export function registrations(logger: Logger, deps: WorkerDeps): Registration[] {
+  const { db, config } = deps;
   return [
     {
       jobs: [heartbeat],
@@ -65,6 +72,17 @@ export function registrations(deps: {
         // Deliveries wait on other people's servers, so many run at once.
         await queue.work(dispatchWebhook, { concurrency: 20 }, (p) =>
           runDispatch({ store, deliver, logger }, p),
+        );
+      },
+    },
+    {
+      jobs: [sendEmail, reconcileAccountSeats],
+      async register(queue) {
+        await queue.work(sendEmail, { concurrency: 10 }, emailHandler(deps.mailer, logger));
+        await queue.work(
+          reconcileAccountSeats,
+          { concurrency: 2 },
+          reconcileHandler(deps.db, logger),
         );
       },
     },

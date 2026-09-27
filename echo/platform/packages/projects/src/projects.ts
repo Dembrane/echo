@@ -422,7 +422,8 @@ export async function setVisibility(
     // A deleted workspace grants nobody a role, so it reads as no access, as before.
     if (err instanceof NotFoundError) throw new ForbiddenError("No access to this project");
     if (!(err instanceof ForbiddenError)) throw err;
-    const tierGate = err.details?.requiredTier !== undefined;
+    const details = err.details;
+    const tierGate = !!details && !Array.isArray(details) && "requiredTier" in details;
     if (!tierGate) throw new ForbiddenError("Only workspace admins can change project visibility");
     const current = project.visibility || "workspace";
     if (current === visibility) return { status: "unchanged", visibility: current };

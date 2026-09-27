@@ -4,6 +4,7 @@ import { Access, MemoryAccessStore } from "@echo/access";
 import { loadConfig, publicValues } from "@echo/config";
 import { NotFoundError } from "@echo/core";
 import { createLogger, initTracing } from "@echo/observability";
+import { MemoryRateCounter, RateLimiter } from "@echo/ratelimit";
 import { buildApp } from "../src/app";
 import type { Deps } from "../src/deps";
 
@@ -11,6 +12,7 @@ const loaded = loadConfig({
   APP_ENV: "test",
   DATABASE_URL: "postgres://u@h/d",
   AUTH_SECRET: "s".repeat(48),
+  INVITE_HASH_SECRET: "i".repeat(32),
 });
 const lines: Record<string, unknown>[] = [];
 const sink = new Writable({
@@ -37,6 +39,11 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     models: {} as Deps["models"],
     queue: { enqueue: async () => null },
     deliverWebhook: async () => ({ status: 200, text: "" }),
+    identity: {} as Deps["identity"],
+    notifier: {} as Deps["notifier"],
+    limiter: new RateLimiter(new MemoryRateCounter()),
+    jobs: { enqueue: async () => null },
+    files: {} as Deps["files"],
     ...overrides,
   };
 }

@@ -1,11 +1,16 @@
 import { Access, DrizzleAccessStore } from "@echo/access";
-import { createAuth } from "@echo/auth";
+import { reconcileAccountSeats, render, sendEmail } from "@echo/account";
+import { createAuth, identityAccount } from "@echo/auth";
 import { describe, loadConfig, publicValues } from "@echo/config";
 import { createDb } from "@echo/db";
 import { createModels } from "@echo/llm";
+import { type Mailer, MemoryMailer, SendGridMailer } from "@echo/mail";
+import { Notifier } from "@echo/notifications";
 import { createLogger, initTracing } from "@echo/observability";
 import { projectJobs } from "@echo/projects";
 import { Queue } from "@echo/queue";
+import { PostgresRateCounter, RateLimiter } from "@echo/ratelimit";
+import { FilesystemStorage, S3Storage } from "@echo/storage";
 import { httpDeliver, webhookJobs } from "@echo/webhooks";
 import { buildApp } from "./app";
 import { principalLookup } from "./principals";
@@ -29,6 +34,18 @@ const tracing = initTracing({
 });
 const database = createDb({ url: config.database.url, poolMax: config.database.poolMax });
 
+// Auth emails go out inside the request: the person is waiting for the code or the link.
+const mailer: Mailer = config.mail.sendgridApiKey
+  ? new SendGridMailer({
+      apiKey: config.mail.sendgridApiKey,
+      fromEmail: config.mail.fromEmail,
+      fromName: config.mail.fromName,
+      region: config.mail.sendgridRegion,
+    })
+  : new MemoryMailer();
+if (!config.mail.sendgridApiKey)
+  logger.warn("no SENDGRID_API_KEY: emails are kept in memory, not sent");
+
 const auth = createAuth({
   db: database.db,
   secret: config.auth.secret,
@@ -40,19 +57,62 @@ const auth = createAuth({
     config.auth.googleClientId && config.auth.googleClientSecret
       ? { clientId: config.auth.googleClientId, clientSecret: config.auth.googleClientSecret }
       : undefined,
-  // The mail package replaces this before any environment offers email codes to users.
-  sendCode: async (email, _code, purpose) => {
-    logger.warn(
-      { purpose, to_domain: email.split("@")[1] },
-      "email code requested but no mailer is configured",
-    );
+  sendCode: async (email, code, purpose) => {
+    await mailer.send({
+      to: email,
+      subject: "Your dembrane sign-in code",
+      ...render({ template: "sign_in_code", data: { code } }),
+      tags: ["sign_in_code", purpose],
+    });
+  },
+  // The link carries the dashboard page the signup named (Directus's verification_url
+  // contract), which then confirms the token with Better Auth.
+  sendVerification: async (email, url, token) => {
+    const page = new URL(url).searchParams.get("callbackURL");
+    const link = page ? `${page}${page.includes("?") ? "&" : "?"}token=${token}` : url;
+    await mailer.send({
+      to: email,
+      subject: "Verify your email",
+      ...render({ template: "verify_email", data: { verify_url: link } }),
+      tags: ["verify_email"],
+    });
   },
   defaultDirectusRoleId: null,
 });
 
-// The API only sends jobs; creating their queues up front lets it send before a worker ran.
+// The API only enqueues: a DBOS client, no executor. Boot does not wait on it, so a
+// database that is briefly unreachable does not keep the API from serving; enqueues wait.
 const queue = new Queue(config.database.url, logger, tracing.tracer, { maxConnections: 2 });
-await queue.start([...projectJobs, ...webhookJobs]);
+const queueReady = (async () => {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await queue.start([...projectJobs, ...webhookJobs, sendEmail, reconcileAccountSeats]);
+      return;
+    } catch (err) {
+      logger.warn(
+        { err: { message: (err as Error).message }, attempt },
+        "queue not ready, retrying",
+      );
+      await Bun.sleep(Math.min(attempt, 10) * 1000);
+    }
+  }
+})();
+const enqueuer = {
+  enqueue: (async (def, payload, opts) => {
+    await queueReady;
+    return queue.enqueue(def, payload, opts);
+  }) as Queue["enqueue"],
+};
+
+const files = config.files.s3Bucket
+  ? new S3Storage({
+      endpoint: config.files.s3Endpoint ?? "",
+      bucket: config.files.s3Bucket,
+      region: config.files.s3Region,
+      accessKeyId: config.files.s3AccessKeyId ?? "",
+      secretAccessKey: config.files.s3SecretAccessKey ?? "",
+    })
+  : new FilesystemStorage(config.files.localRoot, config.http.publicUrl);
 
 const app = buildApp({
   config,
@@ -76,8 +136,22 @@ const app = buildApp({
     embeddingLocation: config.llm.embeddingLocation,
     embeddingDimensions: config.llm.embeddingDimensions,
   }),
-  queue,
+  queue: enqueuer,
   deliverWebhook: httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets }),
+  identity: identityAccount(auth, database.db),
+  notifier: new Notifier(database.db, logger),
+  limiter: new RateLimiter(new PostgresRateCounter(database.db), undefined, (err, limit) =>
+    logger.error(
+      {
+        err: { message: (err as Error).message },
+        limit: limit.name,
+        signal: "ratelimit.store_failed",
+      },
+      "rate limit store failed; request not limited",
+    ),
+  ),
+  jobs: enqueuer,
+  files,
 });
 
 const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 255 });
