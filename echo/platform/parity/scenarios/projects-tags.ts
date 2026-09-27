@@ -1,0 +1,173 @@
+import { projects, tags } from "../fixtures";
+import { extra, P1_RUN, P2_OPEN, P2_TAG } from "../projects-setup";
+import { scenarios } from "../runner/scenario";
+
+const { p1, p2 } = projects;
+const T = "/api/v2/bff/tags";
+const R = "/api/v2/bff/analysis-runs";
+
+export default scenarios([
+  // ── /api/v2/bff/tags ──────────────────────────────────────────────
+  { name: "tags list: owner", as: "alice", method: "GET", path: T, query: { project_id: p1 } },
+  {
+    name: "tags list: observer",
+    as: "rita",
+    method: "GET",
+    path: T,
+    query: { project_id: p2 },
+    setup: [P2_OPEN, P2_TAG],
+  },
+  { name: "tags list: project required", as: "alice", method: "GET", path: T },
+  { name: "tags list: other tenant", as: "bob", method: "GET", path: T, query: { project_id: p1 } },
+  {
+    name: "tags list: anonymous",
+    as: "anonymous",
+    method: "GET",
+    path: T,
+    query: { project_id: p1 },
+  },
+  {
+    name: "tags create: owner",
+    as: "alice",
+    method: "POST",
+    path: T,
+    body: { project_id: p1, text: "housing", sort: 3 },
+  },
+  {
+    name: "tags create: without sort",
+    as: "admin",
+    method: "POST",
+    path: T,
+    body: { project_id: p1, text: "noise" },
+  },
+  {
+    name: "tags create: validation",
+    as: "alice",
+    method: "POST",
+    path: T,
+    body: { text: 5, sort: "x" },
+  },
+  {
+    name: "tags create: observer refused",
+    as: "rita",
+    method: "POST",
+    path: T,
+    body: { project_id: p2, text: "x" },
+    setup: [P2_OPEN],
+  },
+  {
+    name: "tags create: other tenant",
+    as: "bob",
+    method: "POST",
+    path: T,
+    body: { project_id: p1, text: "x" },
+  },
+  {
+    name: "tags update: owner",
+    as: "alice",
+    method: "PATCH",
+    path: `${T}/${tags.p1Energy}`,
+    body: { text: "Energy", sort: 5 },
+  },
+  {
+    name: "tags update: nothing to update",
+    as: "alice",
+    method: "PATCH",
+    path: `${T}/${tags.p1Energy}`,
+    body: { text: null },
+  },
+  {
+    name: "tags update: missing tag",
+    as: "alice",
+    method: "PATCH",
+    path: `${T}/${extra.tag}`,
+    body: { text: "x" },
+  },
+  {
+    name: "tags update: other tenant",
+    as: "bob",
+    method: "PATCH",
+    path: `${T}/${tags.p1Energy}`,
+    body: { text: "x" },
+  },
+  {
+    name: "tags update: observer refused",
+    as: "rita",
+    method: "PATCH",
+    path: `${T}/${extra.tag}`,
+    body: { text: "x" },
+    setup: [P2_OPEN, P2_TAG],
+  },
+  {
+    name: "tags delete: owner, links go too",
+    as: "alice",
+    method: "DELETE",
+    path: `${T}/${tags.p1Energy}`,
+  },
+  {
+    name: "tags delete: other tenant",
+    as: "bob",
+    method: "DELETE",
+    path: `${T}/${tags.p1Mobility}`,
+  },
+  { name: "tags delete: bad id", as: "alice", method: "DELETE", path: `${T}/not-a-uuid` },
+
+  // ── /api/v2/bff/analysis-runs ─────────────────────────────────────
+  {
+    name: "analysis runs list: none",
+    as: "alice",
+    method: "GET",
+    path: R,
+    query: { project_id: p1 },
+  },
+  {
+    name: "analysis runs list: one",
+    as: "alice",
+    method: "GET",
+    path: R,
+    query: { project_id: p1, limit: "5" },
+    setup: [P1_RUN],
+  },
+  {
+    name: "analysis runs list: bad limit",
+    as: "alice",
+    method: "GET",
+    path: R,
+    query: { project_id: p1, limit: "500" },
+  },
+  {
+    name: "analysis runs list: other tenant",
+    as: "bob",
+    method: "GET",
+    path: R,
+    query: { project_id: p1 },
+  },
+  {
+    name: "analysis runs get: owner",
+    as: "alice",
+    method: "GET",
+    path: `${R}/${extra.run}`,
+    setup: [P1_RUN],
+  },
+  { name: "analysis runs get: missing", as: "alice", method: "GET", path: `${R}/${extra.run}` },
+  {
+    name: "analysis runs get: other tenant",
+    as: "bob",
+    method: "GET",
+    path: `${R}/${extra.run}`,
+    setup: [P1_RUN],
+  },
+  {
+    name: "analysis runs new chunks: counted since the run",
+    as: "alice",
+    method: "GET",
+    path: `${R}/${extra.run}/new-chunks-count`,
+    setup: [P1_RUN],
+  },
+  {
+    name: "analysis runs new chunks: missing run",
+    as: "alice",
+    method: "GET",
+    path: `${R}/${extra.run}/new-chunks-count`,
+  },
+]);
