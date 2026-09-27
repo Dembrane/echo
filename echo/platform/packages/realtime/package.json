@@ -1,0 +1,18 @@
+{
+  "name": "@echo/realtime",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@echo/core": "workspace:*",
+    "@echo/db": "workspace:*",
+    "@echo/observability": "workspace:*",
+    "hono": "^4.9.0",
+    "postgres": "^3.4.9"
+  }
+}

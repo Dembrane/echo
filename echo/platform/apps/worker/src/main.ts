@@ -11,6 +11,7 @@ const logger = createLogger({
   release: config.app.release,
   env: config.app.env,
   level: config.observability.logLevel,
+  ...(config.observability.gcpProject && { gcpProject: config.observability.gcpProject }),
 });
 const tracing = initTracing({
   service,

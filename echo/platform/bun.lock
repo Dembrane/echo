@@ -137,6 +137,16 @@
         "zod": "^4.1.0",
       },
     },
+    "packages/realtime": {
+      "name": "@echo/realtime",
+      "dependencies": {
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+      },
+    },
     "packages/storage": {
       "name": "@echo/storage",
     },
@@ -227,6 +237,8 @@
     "@echo/parity": ["@echo/parity@workspace:parity"],
 
     "@echo/queue": ["@echo/queue@workspace:packages/queue"],
+
+    "@echo/realtime": ["@echo/realtime@workspace:packages/realtime"],
 
     "@echo/storage": ["@echo/storage@workspace:packages/storage"],
 

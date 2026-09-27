@@ -8,5 +8,5 @@ export default {
     portalUrl: "http://localhost:5174",
   },
   database: { poolMax: 5 },
-  observability: { traceSampleRatio: 1 },
+  observability: { gcpProject: "dembrane-echo", traceSampleRatio: 1 },
 } satisfies Environment;

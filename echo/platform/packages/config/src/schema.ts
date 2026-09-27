@@ -66,6 +66,10 @@ export const schema = defineSchema({
     otlpEndpoint: key("OTEL_EXPORTER_OTLP_ENDPOINT", z.url().optional(), {
       description: "Where traces and metrics go. Unset disables export; logs still go to stdout.",
     }),
+    gcpProject: key("GCP_PROJECT", z.string().optional(), {
+      description:
+        "Project that owns traces; set in GCP so each log line links to its trace in Cloud Trace.",
+    }),
     traceSampleRatio: key("TRACE_SAMPLE_RATIO", z.coerce.number().min(0).max(1).default(0.1), {
       description: "Share of requests traced end to end.",
     }),
