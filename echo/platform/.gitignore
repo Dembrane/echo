@@ -7,3 +7,5 @@ dist
 .roundtrip
 .roundtrip-src
 introspected
+# echo/.gitignore ignores *.sql for Directus dumps; migrations and checks here are source.
+!*.sql
