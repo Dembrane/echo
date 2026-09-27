@@ -1,5 +1,6 @@
 import { accountRoutes } from "@echo/account";
 import { billingRoutes, mollieWebhookRoutes } from "@echo/billing";
+import { trainingRoutes } from "@echo/training";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
@@ -28,6 +29,7 @@ export function buildApp(deps: Deps) {
   app.route("/", accountRoutes(deps));
   app.route("/", billingRoutes(deps));
   app.route("/", mollieWebhookRoutes(deps));
+  app.route("/", trainingRoutes(deps));
   app.onError(onError);
   app.notFound(notFound);
   return app;
