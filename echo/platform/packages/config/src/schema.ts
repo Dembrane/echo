@@ -191,6 +191,26 @@ export const schema = defineSchema({
       secret: true,
     }),
   },
+  analysis: {
+    enablePresent: key("ENABLE_PRESENT", bool.default(true), {
+      description:
+        "Present rollout switch. Off hides host edits of analysis results (reword, roll back, withdraw) with a 404.",
+    }),
+    nodeLimitCeiling: key("ANALYSIS_NODE_LIMIT_CEILING", int.min(1).optional(), {
+      description:
+        "Most nodes a map view may draw. A host budget above it is refused, never clamped. Unset: no ceiling.",
+    }),
+    edgeLimitCeiling: key("ANALYSIS_EDGE_LIMIT_CEILING", int.min(1).optional(), {
+      description:
+        "Most edges a map view may draw. A host budget above it is refused, never clamped. Unset: no ceiling.",
+    }),
+  },
+  canvas: {
+    enabled: key("ENABLE_CANVAS", bool.default(true), {
+      description:
+        "Global canvas switch. Even on, a project opts in with its experimental toggle; off answers every canvas route with 404.",
+    }),
+  },
   account: {
     inviteHashSecret: key("INVITE_HASH_SECRET", z.string().min(16), {
       description:

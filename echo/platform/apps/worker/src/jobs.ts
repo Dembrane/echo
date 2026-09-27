@@ -1,6 +1,7 @@
 import { emailHandler, reconcileAccountSeats, reconcileHandler, sendEmail } from "@echo/account";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
+import type { Completer, Embedder } from "@echo/llm";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
 import {
@@ -37,13 +38,17 @@ export interface Registration {
 export function registrations(deps: {
   logger: Logger;
   db: Db;
-  config: Pick<Config, "webhooks">;
+  config: Pick<Config, "webhooks" | "llm" | "analysis" | "canvas">;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
   /** Lets a job enqueue follow-up jobs (the support timers send email). */
   jobs: JobSink;
   /** Where email buttons point. */
   dashboardUrl: string;
+  /** Language model calls of the analysis, map, canvas and report jobs. */
+  completer: Completer;
+  /** Embeddings of analysis objects. */
+  embedder: Embedder;
 }): Registration[] {
   const { logger, db, config } = deps;
   return [

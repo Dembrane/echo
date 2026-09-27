@@ -161,6 +161,28 @@ export class Queue {
     );
   }
 
+  /**
+   * Registers a durable workflow under a job definition: the handler is the workflow body,
+   * its side effects happen in `step`s (from this package), and a crashed run resumes at
+   * its first unfinished step. Producers enqueue it like any job, inside their
+   * transaction; the definition's retry settings do not apply, because each step carries
+   * its own retry and timeout. Must be called before run().
+   */
+  async workflow<J extends JobDefinition>(
+    def: J,
+    opts: WorkOptions,
+    handler: (
+      payload: Parsed<J>,
+      job: { id: string; attempt: number; signal: AbortSignal },
+    ) => Promise<void>,
+  ): Promise<void> {
+    if (this.running) throw new Error(`register ${def.name} before run()`);
+    this.defs.set(def.name, def);
+    this.concurrency.set(def.name, opts.concurrency);
+    const run = this.wrap(def, handler as Handler);
+    DBOS.registerWorkflow(async (envelope: Envelope) => run(envelope, 0), { name: def.name });
+  }
+
   /** A cron schedule in a named timezone; each tick runs once across all instances. */
   async schedule<J extends JobDefinition>(
     def: J,

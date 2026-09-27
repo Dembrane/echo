@@ -15,18 +15,22 @@
       "dependencies": {
         "@echo/access": "workspace:*",
         "@echo/account": "workspace:*",
+        "@echo/analysis": "workspace:*",
         "@echo/auth": "workspace:*",
+        "@echo/canvas": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/http": "workspace:*",
         "@echo/llm": "workspace:*",
         "@echo/mail": "workspace:*",
+        "@echo/map": "workspace:*",
         "@echo/notifications": "workspace:*",
         "@echo/observability": "workspace:*",
         "@echo/projects": "workspace:*",
         "@echo/queue": "workspace:*",
         "@echo/ratelimit": "workspace:*",
+        "@echo/reports": "workspace:*",
         "@echo/storage": "workspace:*",
         "@echo/tenancy": "workspace:*",
         "@echo/webhooks": "workspace:*",
@@ -58,14 +62,18 @@
       "name": "@echo/worker",
       "dependencies": {
         "@echo/account": "workspace:*",
+        "@echo/analysis": "workspace:*",
+        "@echo/canvas": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/llm": "workspace:*",
         "@echo/mail": "workspace:*",
+        "@echo/map": "workspace:*",
         "@echo/observability": "workspace:*",
         "@echo/projects": "workspace:*",
         "@echo/queue": "workspace:*",
+        "@echo/reports": "workspace:*",
         "@echo/tenancy": "workspace:*",
         "@echo/webhooks": "workspace:*",
         "zod": "^4.1.0",
@@ -99,6 +107,24 @@
         "zod": "^4.1.0",
       },
     },
+    "packages/analysis": {
+      "name": "@echo/analysis",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
+      },
+    },
     "packages/auth": {
       "name": "@echo/auth",
       "dependencies": {
@@ -107,6 +133,25 @@
         "@echo/db": "workspace:*",
         "better-auth": "^1.7.6",
         "drizzle-orm": "^0.45.3",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
+      },
+    },
+    "packages/canvas": {
+      "name": "@echo/canvas",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/analysis": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "hono": "^4.9.0",
         "postgres": "^3.4.9",
         "zod": "^4.1.0",
       },
@@ -159,6 +204,25 @@
     },
     "packages/mail": {
       "name": "@echo/mail",
+    },
+    "packages/map": {
+      "name": "@echo/map",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/analysis": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
+      },
     },
     "packages/notifications": {
       "name": "@echo/notifications",
@@ -235,6 +299,24 @@
         "@echo/observability": "workspace:*",
         "hono": "^4.9.0",
         "postgres": "^3.4.9",
+      },
+    },
+    "packages/reports": {
+      "name": "@echo/reports",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
       },
     },
     "packages/storage": {
@@ -348,9 +430,13 @@
 
     "@echo/account": ["@echo/account@workspace:packages/account"],
 
+    "@echo/analysis": ["@echo/analysis@workspace:packages/analysis"],
+
     "@echo/api": ["@echo/api@workspace:apps/api"],
 
     "@echo/auth": ["@echo/auth@workspace:packages/auth"],
+
+    "@echo/canvas": ["@echo/canvas@workspace:packages/canvas"],
 
     "@echo/config": ["@echo/config@workspace:packages/config"],
 
@@ -365,6 +451,8 @@
     "@echo/llm": ["@echo/llm@workspace:packages/llm"],
 
     "@echo/mail": ["@echo/mail@workspace:packages/mail"],
+
+    "@echo/map": ["@echo/map@workspace:packages/map"],
 
     "@echo/migrate": ["@echo/migrate@workspace:apps/migrate"],
 
@@ -381,6 +469,8 @@
     "@echo/ratelimit": ["@echo/ratelimit@workspace:packages/ratelimit"],
 
     "@echo/realtime": ["@echo/realtime@workspace:packages/realtime"],
+
+    "@echo/reports": ["@echo/reports@workspace:packages/reports"],
 
     "@echo/storage": ["@echo/storage@workspace:packages/storage"],
 

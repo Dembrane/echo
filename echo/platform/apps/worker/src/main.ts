@@ -1,5 +1,6 @@
 import { describe, loadSections } from "@echo/config";
 import { createDb } from "@echo/db";
+import { createModels, vertexCompleter, vertexEmbedder } from "@echo/llm";
 import { type Mailer, SendGridMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
 import { Queue } from "@echo/queue";
@@ -15,6 +16,8 @@ const loaded = loadSections([
   "webhooks",
   "http",
   "mail",
+  "analysis",
+  "canvas",
 ]);
 const config = loaded.values;
 const service = "echo-worker";
@@ -49,6 +52,31 @@ const mailer: Mailer = config.mail.sendgridApiKey
       send: async (msg) =>
         logger.warn({ subject: msg.subject, tags: msg.tags }, "mail not sent: no SendGrid key"),
     };
+// Language model groups and embeddings for the analysis, map, canvas and report jobs.
+const models = createModels({
+  vertexProject: config.llm.vertexProject,
+  vertexLocation: config.llm.vertexLocation,
+  groups: {
+    text_fast: config.llm.textFast,
+    multi_modal_fast: config.llm.multiModalFast,
+    multi_modal_pro: config.llm.multiModalPro,
+  },
+  embeddingModel: config.llm.embeddingModel,
+  embeddingLocation: config.llm.embeddingLocation,
+  embeddingDimensions: config.llm.embeddingDimensions,
+});
+const completer = vertexCompleter(models, {
+  groups: {
+    text_fast: config.llm.textFast,
+    multi_modal_fast: config.llm.multiModalFast,
+    multi_modal_pro: config.llm.multiModalPro,
+  },
+});
+const embedder = vertexEmbedder(models, {
+  project: config.llm.vertexProject,
+  location: config.llm.embeddingLocation,
+  model: config.llm.embeddingModel,
+});
 const regs = registrations({
   logger,
   db: database.db,
@@ -56,6 +84,8 @@ const regs = registrations({
   mailer,
   jobs: queueSink(queue),
   dashboardUrl: config.http.dashboardUrl,
+  completer,
+  embedder,
 });
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);
