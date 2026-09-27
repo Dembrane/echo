@@ -61,8 +61,8 @@ jobs:
           for app in api worker migrate; do
             docker buildx build --load --provenance=false \
               --cache-from type=gha,scope=$app --cache-to type=gha,mode=max,scope=$app \
-              -f echo/platform/apps/$app/Dockerfile --build-arg RELEASE=${{ github.sha }} \
-              -t echo-$app:${{ github.sha }} echo/platform
+              -f apps/$app/Dockerfile --build-arg RELEASE=${{ github.sha }} \
+              -t echo-$app:${{ github.sha }} .
           done
       - name: Container starts and answers
         run: |
