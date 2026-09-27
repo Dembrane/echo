@@ -10,6 +10,9 @@
     }
   },
   "overrides": [
-    { "includes": ["**/test/**", "**/*.test.ts"], "linter": { "rules": { "style": { "noNonNullAssertion": "off" } } } }
+    {
+      "includes": ["**/test/**", "**/*.test.ts"],
+      "linter": { "rules": { "style": { "noNonNullAssertion": "off" } } }
+    }
   ]
 }

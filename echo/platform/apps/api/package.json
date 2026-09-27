@@ -1,0 +1,19 @@
+{
+  "name": "@echo/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/main.ts",
+    "start": "bun src/main.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@echo/config": "workspace:*",
+    "@echo/core": "workspace:*",
+    "@echo/db": "workspace:*",
+    "@echo/observability": "workspace:*",
+    "@hono/zod-openapi": "^1.1.0",
+    "hono": "^4.9.0",
+    "zod": "^4.1.0"
+  }
+}

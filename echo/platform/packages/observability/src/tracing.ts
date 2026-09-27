@@ -2,6 +2,7 @@ import {
   context,
   propagation,
   type Span,
+  SpanKind,
   SpanStatusCode,
   type Tracer,
   trace,
@@ -76,4 +77,5 @@ export async function inSpan<T>(
   });
 }
 
-export { context, propagation, trace };
+export type { Tracer };
+export { context, propagation, SpanKind, SpanStatusCode, trace };

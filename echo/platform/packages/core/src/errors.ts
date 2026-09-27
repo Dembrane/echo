@@ -1,0 +1,45 @@
+/**
+ * The only errors services throw on purpose. One HTTP handler maps them to the response
+ * envelope `{ error: { code, message, details? } }`; anything else becomes a 500 whose
+ * details stay in the logs.
+ */
+export abstract class PlatformError extends Error {
+  abstract readonly status: number;
+  abstract readonly code: string;
+  constructor(
+    message: string,
+    readonly details?: Record<string, unknown>,
+  ) {
+    super(message);
+    this.name = new.target.name;
+  }
+}
+
+export class ValidationError extends PlatformError {
+  readonly status = 422;
+  readonly code = "validation_failed";
+}
+export class UnauthenticatedError extends PlatformError {
+  readonly status = 401;
+  readonly code = "unauthenticated";
+}
+export class ForbiddenError extends PlatformError {
+  readonly status = 403;
+  readonly code = "forbidden";
+}
+export class NotFoundError extends PlatformError {
+  readonly status = 404;
+  readonly code = "not_found";
+}
+export class ConflictError extends PlatformError {
+  readonly status = 409;
+  readonly code = "conflict";
+}
+export class RateLimitedError extends PlatformError {
+  readonly status = 429;
+  readonly code = "rate_limited";
+}
+export class UnavailableError extends PlatformError {
+  readonly status = 503;
+  readonly code = "unavailable";
+}

@@ -2,7 +2,10 @@
   "name": "@echo/platform",
   "private": true,
   "type": "module",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "bun --filter @echo/api dev",
     "check": "bun run lint && bun run typecheck && bun test",
