@@ -106,6 +106,7 @@
       "name": "@echo/agentic",
       "dependencies": {
         "@ai-sdk/provider": "*",
+        "@dbos-inc/dbos-sdk": "^5.1.10",
         "@echo/access": "workspace:*",
         "@echo/chats": "workspace:*",
         "@echo/config": "workspace:*",
@@ -154,6 +155,7 @@
         "ai": "^7.0.118",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
+        "js-tiktoken": "^1.0.21",
         "postgres": "^3.4.9",
         "zod": "^4.1.0",
       },
@@ -656,6 +658,8 @@
     "is-what": ["is-what@4.1.16", "", {}, "sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A=="],
 
     "jose": ["jose@6.2.12", "", {}, "sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw=="],
+
+    "js-tiktoken": ["js-tiktoken@1.0.21", "", { "dependencies": { "base64-js": "^1.5.1" } }, "sha512-biOj/6M5qdgx5TKjDnFT1ymSpM5tbd3ylwDtrQvFQSu0Z7bBYko2dF+W/aUkXUPuk6IVpRxk/3Q2sHOzGlS36g=="],
 
     "json-bigint": ["json-bigint@1.0.0", "", { "dependencies": { "bignumber.js": "^9.0.0" } }, "sha512-SiPv/8VpZuWbvLSMtTDU8hEfrZWg/mH/nV/b4o0CYbSxu1UIQPLdwKOCIyLQX+VIPO5vrLX3i8qtqFyhdPSUSQ=="],
 

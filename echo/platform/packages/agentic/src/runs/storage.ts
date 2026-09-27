@@ -47,7 +47,7 @@ export function runsStorage(db: Db) {
            latest_output, latest_error, latest_error_code, started_at, completed_at,
            created_at, updated_at)
         values (${v.id}, ${v.projectId}, ${v.chatId}, ${v.directusUserId}, 'queued', 0,
-                null, null, null, null, null, ${at}, ${at})`;
+                null, null, null, null, null, ${at}, null)`;
       return (await self.get(v.id)) as Row;
     },
 
@@ -123,7 +123,7 @@ export function runsStorage(db: Db) {
         const [row] = await tx`
           insert into project_agentic_run_event
             (project_agentic_run_id, seq, event_type, payload, timestamp)
-          values (${runId}, ${seq}, ${eventType}, ${tx.json(payload as postgres.JSONValue)}, ${now.toISOString()})
+          values (${runId}, ${seq}, ${eventType}, ${JSON.stringify(payload ?? null)}::json, ${now.toISOString()})
           returning *`;
         await tx`
           update project_agentic_run set last_event_seq = ${seq}, updated_at = ${now.toISOString()}
@@ -153,6 +153,24 @@ export function runsStorage(db: Db) {
       return row ? eventRow(row as Row) : null;
     },
 
+    /**
+     * The chat's copy of an assistant message. The id is derived from the turn and step, so
+     * a step replayed after a crash rewrites the same row instead of adding a second one.
+     * Directus stamped date_created on create and date_updated only on a later update.
+     */
+    async persistChatMessage(v: {
+      id: string;
+      chatId: string;
+      from: "assistant" | "user";
+      text: string;
+      now: Date;
+    }): Promise<void> {
+      const at = v.now.toISOString();
+      await sql`
+        insert into project_chat_message (id, project_chat_id, message_from, text, date_created, date_updated)
+        values (${v.id}, ${v.chatId}, ${v.from}, ${v.text}, ${at}, null)
+        on conflict (id) do update set text = excluded.text, date_updated = ${at}`;
+    },
     /**
      * Removes what a crashed attempt of an agent step wrote after `afterSeq`, so the step
      * can run again without doubling tool activity in the chat. Only agent-written event

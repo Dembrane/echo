@@ -1,6 +1,6 @@
 import type { Logger } from "@echo/observability";
 import { Hub, publish } from "@echo/realtime";
-import type postgres from "postgres";
+import postgres from "postgres";
 import type { Row } from "./storage";
 
 /** The realtime channel of one run; carried inside the shared echo_live notification. */
@@ -91,7 +91,7 @@ export function sharedHub(sql: postgres.Sql, logger: Logger): Promise<Hub> {
   return ready.then(() => h);
 }
 
-// Presence: an open stream holds a shared advisory lock keyed by its run on one reserved
+// Presence: an open stream holds a shared advisory lock keyed by its run on one dedicated
 // connection per API process. The worker counts holders in pg_locks to decide whether the
 // host is watching. Locks vanish with their connection, so a crashed API leaves nothing.
 const PRESENCE_CLASS = 72_1427;
@@ -106,7 +106,32 @@ export function presenceKey(runId: string): number {
   return h & 0x7fffffff;
 }
 
-let reserved: Promise<postgres.ReservedSql> | null = null;
+let presence: postgres.Sql | null = null;
+
+/**
+ * The connection presence locks live on: its own one-connection client with the pool's
+ * settings. Not a reserved pool connection: postgres.js crashes the process when a
+ * reserved connection is used after the server dropped it, while a client reconnects.
+ * A reconnect drops the locks, which only makes an open stream look unwatched.
+ */
+function presenceClient(sql: postgres.Sql): postgres.Sql {
+  if (!presence) {
+    const o = sql.options as unknown as Record<string, unknown>;
+    presence = postgres({
+      host: o.host,
+      port: o.port,
+      path: o.path,
+      user: o.user,
+      pass: o.pass,
+      database: o.database,
+      ssl: o.ssl,
+      max: 1,
+      idle_timeout: 0,
+      onnotice: () => {},
+    } as postgres.Options<Record<string, postgres.PostgresType>>);
+  }
+  return presence;
+}
 
 /** Marks one open stream on a run; the returned function ends it. Best effort. */
 export async function watchRun(
@@ -115,13 +140,7 @@ export async function watchRun(
   logger?: Logger,
 ): Promise<() => Promise<void>> {
   try {
-    if (!reserved) {
-      reserved = sql.reserve();
-      reserved.catch(() => {
-        reserved = null;
-      });
-    }
-    const conn = await reserved;
+    const conn = presenceClient(sql);
     const key = presenceKey(runId);
     await conn`select pg_advisory_lock_shared(${PRESENCE_CLASS}, ${key})`;
     return async () => {
