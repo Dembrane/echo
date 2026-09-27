@@ -4,6 +4,7 @@ import { secureHeaders } from "hono/secure-headers";
 import type { Deps, Env } from "./deps";
 import { correlation } from "./middleware/correlation";
 import { notFound, onError } from "./middleware/errors";
+import { session } from "./middleware/session";
 import { systemRoutes } from "./routes/system";
 
 /** Pure composition: no I/O at build time, so tests call app.request() with fake deps. */
@@ -19,6 +20,8 @@ export function buildApp(deps: Deps) {
       exposeHeaders: ["x-request-id"],
     }),
   );
+  app.on(["GET", "POST"], "/api/auth/*", (c) => deps.auth.handler(c.req.raw));
+  app.use("/api/*", session(deps));
   app.route("/", systemRoutes(deps));
   app.onError(onError);
   app.notFound(notFound);

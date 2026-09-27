@@ -60,6 +60,23 @@ export const schema = defineSchema({
       description: "Share of requests traced end to end.",
     }),
   },
+  auth: {
+    secret: key("AUTH_SECRET", z.string().min(32), {
+      description: "Signs sessions and tokens. Rotating it signs everyone out.",
+      secret: true,
+    }),
+    cookieDomain: key("AUTH_COOKIE_DOMAIN", z.string().optional(), {
+      description:
+        "Parent domain shared by dashboard, portal and API, so one sign-in covers all three.",
+    }),
+    googleClientId: key("AUTH_GOOGLE_CLIENT_ID", z.string().optional(), {
+      description: "Google sign-in. Unset hides the option.",
+    }),
+    googleClientSecret: key("AUTH_GOOGLE_CLIENT_SECRET", z.string().optional(), {
+      description: "Google sign-in secret.",
+      secret: true,
+    }),
+  },
 });
 
 export type Schema = typeof schema;

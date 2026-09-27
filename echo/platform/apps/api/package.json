@@ -14,6 +14,9 @@
     "@echo/observability": "workspace:*",
     "@hono/zod-openapi": "^1.1.0",
     "hono": "^4.9.0",
-    "zod": "^4.1.0"
+    "zod": "^4.1.0",
+    "@echo/auth": "workspace:*",
+    "@echo/access": "workspace:*",
+    "drizzle-orm": "^0.45.3"
   }
 }

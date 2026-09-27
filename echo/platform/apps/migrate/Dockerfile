@@ -6,6 +6,8 @@ COPY package.json bun.lock ./
 COPY apps/migrate/package.json apps/migrate/
 COPY packages/db/package.json packages/db/
 COPY packages/queue/package.json packages/queue/
+COPY packages/auth/package.json packages/auth/
+COPY packages/core/package.json packages/core/
 COPY packages/observability/package.json packages/observability/
 RUN bun install --frozen-lockfile --production --ignore-scripts
 COPY . .

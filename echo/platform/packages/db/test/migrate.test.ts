@@ -19,7 +19,7 @@ run("migrate", () => {
 
   test("builds an empty database from the chain, then does nothing on a second run", async () => {
     const first = await migrate(`${base}/mig_fresh`);
-    expect(first).toEqual({ adoptedBaseline: false, applied: 2 });
+    expect(first).toEqual({ adoptedBaseline: false, applied: 3 });
     const second = await migrate(`${base}/mig_fresh`);
     expect(second).toEqual({ adoptedBaseline: false, applied: 0 });
   });
@@ -31,6 +31,7 @@ run("migrate", () => {
     await db.end();
     const r = await migrate(`${base}/mig_adopt`);
     expect(r.adoptedBaseline).toBe(true);
-    expect(r.applied).toBe(0);
+    // The baseline is recorded, not run; later migrations run normally.
+    expect(r.applied).toBe(1);
   });
 });

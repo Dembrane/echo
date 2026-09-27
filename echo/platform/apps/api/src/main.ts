@@ -1,7 +1,10 @@
+import { Access, DrizzleAccessStore } from "@echo/access";
+import { createAuth } from "@echo/auth";
 import { describe, loadConfig, publicValues } from "@echo/config";
 import { createDb } from "@echo/db";
 import { createLogger, initTracing } from "@echo/observability";
 import { buildApp } from "./app";
+import { principalLookup } from "./principals";
 
 const loaded = loadConfig();
 const config = loaded.values;
@@ -21,12 +24,36 @@ const tracing = initTracing({
 });
 const database = createDb({ url: config.database.url, poolMax: config.database.poolMax });
 
+const auth = createAuth({
+  db: database.db,
+  secret: config.auth.secret,
+  baseURL: config.http.publicUrl,
+  trustedOrigins: [config.http.dashboardUrl, config.http.portalUrl],
+  cookieDomain: config.auth.cookieDomain,
+  secureCookies: config.app.env !== "local" && config.app.env !== "test",
+  google:
+    config.auth.googleClientId && config.auth.googleClientSecret
+      ? { clientId: config.auth.googleClientId, clientSecret: config.auth.googleClientSecret }
+      : undefined,
+  // The mail package replaces this before any environment offers email codes to users.
+  sendCode: async (email, _code, purpose) => {
+    logger.warn(
+      { purpose, to_domain: email.split("@")[1] },
+      "email code requested but no mailer is configured",
+    );
+  },
+  defaultDirectusRoleId: null,
+});
+
 const app = buildApp({
   config,
   publicConfig: publicValues(loaded),
   logger,
   tracer: tracing.tracer,
   pingDb: database.ping,
+  auth,
+  principalFor: principalLookup(database.db),
+  access: new Access(new DrizzleAccessStore(database.db)),
 });
 
 const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 255 });

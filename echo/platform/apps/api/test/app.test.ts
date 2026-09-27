@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { Writable } from "node:stream";
+import { Access, MemoryAccessStore } from "@echo/access";
 import { loadConfig, publicValues } from "@echo/config";
 import { NotFoundError } from "@echo/core";
 import { createLogger, initTracing } from "@echo/observability";
@@ -9,6 +10,7 @@ import type { Deps } from "../src/deps";
 const loaded = loadConfig({
   APP_ENV: "test",
   DATABASE_URL: "postgres://u@h/d",
+  AUTH_SECRET: "s".repeat(48),
 });
 const lines: Record<string, unknown>[] = [];
 const sink = new Writable({
@@ -25,6 +27,12 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     logger: createLogger({ service: "t", release: "r", env: "test", level: "info" }, sink),
     tracer: initTracing({ service: "t", release: "r", env: "test", sampleRatio: 1 }).tracer,
     pingDb: async () => 1,
+    auth: {
+      handler: async () => new Response("auth"),
+      api: { getSession: async () => null },
+    } as unknown as Deps["auth"],
+    principalFor: async () => null,
+    access: new Access(new MemoryAccessStore()),
     ...overrides,
   };
 }

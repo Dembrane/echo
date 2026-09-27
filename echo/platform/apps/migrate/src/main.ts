@@ -1,4 +1,5 @@
-import { grantRuntimeRole, migrate } from "@echo/db";
+import { syncIdentitiesFromDirectus } from "@echo/auth/sync";
+import { connect, grantRuntimeRole, migrate } from "@echo/db";
 import { installQueueSchema } from "@echo/queue";
 
 /**
@@ -20,6 +21,11 @@ const result = await migrate(url);
 log("schema migrated", result);
 await installQueueSchema(url);
 log("queue schema ready");
+// Until cutover, users keep being created through Directus; copying them on every deploy
+// lets each one sign in to the new stack with the same password or Google account.
+const sql = connect(url, { max: 1, onnotice: () => {} });
+log("identities synced", await syncIdentitiesFromDirectus(sql));
+await sql.end();
 if (role) {
   await grantRuntimeRole(url, role, ["public", "pgboss"]);
   log("runtime role granted", { role });

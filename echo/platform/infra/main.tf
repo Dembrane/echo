@@ -214,3 +214,27 @@ resource "google_service_account_iam_member" "deployer_wif" {
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repo}"
 }
+
+# ── Auth ──────────────────────────────────────────────────────────────────
+# Signs sessions. Rotating it (taint and apply) signs everyone out.
+resource "random_password" "auth_secret" {
+  length  = 64
+  special = false
+}
+resource "google_secret_manager_secret" "auth_secret" {
+  secret_id = "${local.name}-auth-secret"
+  replication {
+    user_managed {
+      replicas { location = var.region }
+    }
+  }
+}
+resource "google_secret_manager_secret_version" "auth_secret" {
+  secret      = google_secret_manager_secret.auth_secret.id
+  secret_data = random_password.auth_secret.result
+}
+resource "google_secret_manager_secret_iam_member" "api_auth_secret" {
+  secret_id = google_secret_manager_secret.auth_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = google_service_account.api.member
+}

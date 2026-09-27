@@ -8,6 +8,8 @@ COPY packages/config/package.json packages/config/
 COPY packages/core/package.json packages/core/
 COPY packages/db/package.json packages/db/
 COPY packages/observability/package.json packages/observability/
+COPY packages/auth/package.json packages/auth/
+COPY packages/access/package.json packages/access/
 RUN bun install --frozen-lockfile --production --ignore-scripts
 COPY . .
 ARG RELEASE=dev

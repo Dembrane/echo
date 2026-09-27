@@ -68,7 +68,7 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Container starts and answers
         run: |
-          docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d echo-api:${{ github.sha }}
+          docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d -e AUTH_SECRET=smoke-test-secret-that-is-long-enough-000 echo-api:${{ github.sha }}
           for i in $(seq 1 25); do curl -sf localhost:8080/health && exit 0; sleep 0.2; done
           docker logs api; exit 1
 
@@ -120,7 +120,7 @@ jobs:
             --image $REGISTRY/api:$TAG \
             --service-account echo-preview-api@$PROJECT.iam.gserviceaccount.com \
             --add-cloudsql-instances $SQL \
-            --set-secrets DATABASE_URL=echo-preview-database-url:latest \
+            --set-secrets DATABASE_URL=echo-preview-database-url:latest,AUTH_SECRET=echo-preview-auth-secret:latest \
             --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG \
             --cpu 1 --memory 512Mi --concurrency 80 --min-instances 0 --max-instances 4 \
             --timeout 3600 --cpu-boost --allow-unauthenticated --quiet
