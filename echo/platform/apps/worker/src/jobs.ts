@@ -39,7 +39,7 @@ export interface Registration {
 export function registrations(deps: {
   logger: Logger;
   db: Db;
-  config: Pick<Config, "webhooks" | "llm" | "agentic" | "http">;
+  config: Pick<Config, "webhooks" | "llm" | "agentic" | "http" | "database">;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
   /** Lets a job enqueue follow-up jobs (the support timers send email). */
@@ -97,6 +97,7 @@ export function registrations(deps: {
       db,
       logger,
       config,
+      databaseUrl: config.database.url,
       models: createModels({
         vertexProject: config.llm.vertexProject,
         vertexLocation: config.llm.vertexLocation,
