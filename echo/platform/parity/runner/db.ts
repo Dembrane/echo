@@ -13,6 +13,8 @@ const IGNORED_TABLES = new Set([
   "auth_verification",
   // Rate-limit counters: the old API keeps them in Redis.
   "platform_rate_limit",
+  // New-only: the old API has no staff audit. Its rows are asserted by the staff tests.
+  "staff_audit_event",
 ]);
 
 export async function reset(template = "parity_template_platform"): Promise<void> {

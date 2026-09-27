@@ -4,7 +4,6 @@ export {
   type JobSink,
   MemoryJobSink,
   queueSink,
-  reconcileSeatsJob,
   tenancyApiJobs,
   tenancyWorker,
 } from "./jobs";

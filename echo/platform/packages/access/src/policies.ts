@@ -148,3 +148,29 @@ export function normaliseRole(raw: string): WorkspaceRole | null {
   if (raw === "viewer") return "member";
   return isWorkspaceRole(raw) ? raw : null;
 }
+
+/**
+ * What a staff support session may do (CTO decision 8.4). A session the customer opened
+ * with the standing toggle is read-only; one they approved through a request may also
+ * act as an admin, but never on consent, members or deletion.
+ */
+export const SUPPORT_READ_ONLY: ReadonlySet<Policy> = new Set([
+  "project:read",
+  "conversation:read",
+  "report:view",
+  "workspace:view_usage",
+]);
+
+export const SUPPORT_APPROVED: ReadonlySet<Policy> = new Set(
+  [...ROLE_POLICIES.admin].filter(
+    (p) =>
+      ![
+        "member:invite",
+        "member:manage",
+        "settings:manage",
+        "project:delete",
+        "report:delete",
+        "conversation:delete",
+      ].includes(p),
+  ),
+);

@@ -1,0 +1,27 @@
+{
+  "name": "@echo/billing",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@echo/access": "workspace:*",
+    "@echo/config": "workspace:*",
+    "@echo/core": "workspace:*",
+    "@echo/db": "workspace:*",
+    "@echo/http": "workspace:*",
+    "@echo/mail": "workspace:*",
+    "@echo/observability": "workspace:*",
+    "@echo/queue": "workspace:*",
+    "drizzle-orm": "^0.45.3",
+    "hono": "^4.9.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "postgres": "^3.4.9"
+  }
+}

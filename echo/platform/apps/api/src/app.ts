@@ -1,8 +1,14 @@
 import { DrizzleAccessStore } from "@echo/access";
 import { accountRoutes } from "@echo/account";
+import { billingRoutes, mollieWebhookRoutes } from "@echo/billing";
+import { reportRoutes, responseRoutes } from "@echo/feedback";
 import { notificationRoutes } from "@echo/notifications";
+import { pricingRoutes } from "@echo/pricing";
 import { projectRoutes } from "@echo/projects";
+import { staffRoutes } from "@echo/staff";
+import { statsRoutes } from "@echo/stats";
 import { queueSink, tenancyRoutes } from "@echo/tenancy";
+import { trainingRoutes } from "@echo/training";
 import { webhookRoutes } from "@echo/webhooks";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -51,6 +57,17 @@ export function buildApp(deps: Deps) {
       inviteSecret: deps.config.account.inviteHashSecret,
     }),
   );
+  app.route("/", billingRoutes(deps));
+  app.route("/", mollieWebhookRoutes(deps));
+  app.route("/", staffRoutes(deps));
+  app.route("/", trainingRoutes(deps));
+  app.route(
+    "/",
+    reportRoutes({ ...deps, storage: deps.files, apiBaseUrl: deps.config.http.publicUrl }),
+  );
+  app.route("/", responseRoutes(deps));
+  app.route("/", pricingRoutes({ ...deps, storage: deps.files }));
+  app.route("/", statsRoutes(deps));
   app.onError(onError);
   app.notFound(notFound);
   return app;

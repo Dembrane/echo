@@ -1,6 +1,7 @@
-import { Access, DrizzleAccessStore } from "@echo/access";
-import { reconcileAccountSeats, render, sendEmail } from "@echo/account";
+import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@echo/access";
+import { render, sendEmail } from "@echo/account";
 import { createAuth, identityAccount } from "@echo/auth";
+import { billingApiJobs, createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
 import { describe, loadConfig, publicValues } from "@echo/config";
 import { createDb } from "@echo/db";
 import { createModels } from "@echo/llm";
@@ -91,8 +92,8 @@ const queueReady = (async () => {
         ...projectJobs,
         ...webhookJobs,
         ...tenancyApiJobs,
+        ...billingApiJobs,
         sendEmail,
-        reconcileAccountSeats,
       ]);
       return;
     } catch (err) {
@@ -120,6 +121,20 @@ const files = config.files.s3Bucket
       secretAccessKey: config.files.s3SecretAccessKey ?? "",
     })
   : new FilesystemStorage(config.files.localRoot, config.http.publicUrl);
+
+const billing = createBilling({
+  db: database.db,
+  mollie: config.billing.mollieApiKey
+    ? new HttpMollie(config.billing.mollieApiKey)
+    : new UnconfiguredMollie(),
+  mailer,
+  logger,
+  billingConfig: {
+    webhookUrl: config.billing.mollieWebhookUrl ?? null,
+    forceReconcileFailure: config.billing.forceReconcileFailure,
+    dashboardUrl: config.http.dashboardUrl,
+  },
+});
 
 const app = buildApp({
   config,
@@ -159,6 +174,10 @@ const app = buildApp({
   ),
   jobs: enqueuer,
   files,
+  staffAudit: new DrizzleStaffAudit(database.db),
+  mailer,
+  billing,
+  siteToken: config.site.apiToken ?? config.support.forwardWebhookToken ?? null,
 });
 
 const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 255 });

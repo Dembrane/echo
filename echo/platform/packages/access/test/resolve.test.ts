@@ -188,3 +188,33 @@ describe("authorize", () => {
     expect((await access.project(ada, "p", "project:delete", now)).role).toBe("admin");
   });
 });
+
+describe("staff support sessions", () => {
+  const access = () => new Access(store);
+  test("a session from the standing toggle is read-only", async () => {
+    ws("w");
+    project("p", "w", { visibility: "private" });
+    member("w", "admin", { source: "staff_support" });
+    await access().project(ada, "p", "project:read", now);
+    await access().workspace(ada, "w", "workspace:view_usage", now);
+    await expect(access().project(ada, "p", "project:update", now)).rejects.toThrow(
+      "A staff support session cannot do this",
+    );
+    await expect(access().workspace(ada, "w", "settings:manage", now)).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+  });
+
+  test("an approved session acts as admin but never on consent, members or deletion", async () => {
+    ws("w");
+    project("p", "w");
+    member("w", "admin", { source: "staff_support", supportApproved: true });
+    await access().project(ada, "p", "project:update", now);
+    await access().workspace(ada, "w", "workspace:export", now);
+    for (const p of ["settings:manage", "member:manage", "member:invite"] as const)
+      await expect(access().workspace(ada, "w", p, now)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(access().project(ada, "p", "project:delete", now)).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+  });
+});

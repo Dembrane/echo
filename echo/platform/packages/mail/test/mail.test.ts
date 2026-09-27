@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { MemoryMailer, SendGridMailer } from "../src";
+import { escapeHtml, MemoryMailer, SendGridMailer } from "../src";
 
 test("sendgrid posts one multipart message to the regional host", async () => {
   const calls: { url: string; body: Record<string, unknown> }[] = [];
@@ -41,4 +41,10 @@ test("the memory mailer records what would have been sent", async () => {
   const mailer = new MemoryMailer();
   await mailer.send({ to: "a@x.nl", subject: "s", html: "h", text: "t" });
   expect(mailer.sent).toHaveLength(1);
+});
+
+test("html escaping matches Jinja autoescape", () => {
+  expect(escapeHtml(`<a href="x">'&'</a>`)).toBe(
+    "&lt;a href=&#34;x&#34;&gt;&#39;&amp;&#39;&lt;/a&gt;",
+  );
 });

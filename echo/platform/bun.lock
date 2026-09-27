@@ -16,19 +16,25 @@
         "@echo/access": "workspace:*",
         "@echo/account": "workspace:*",
         "@echo/auth": "workspace:*",
+        "@echo/billing": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
+        "@echo/feedback": "workspace:*",
         "@echo/http": "workspace:*",
         "@echo/llm": "workspace:*",
         "@echo/mail": "workspace:*",
         "@echo/notifications": "workspace:*",
         "@echo/observability": "workspace:*",
+        "@echo/pricing": "workspace:*",
         "@echo/projects": "workspace:*",
         "@echo/queue": "workspace:*",
         "@echo/ratelimit": "workspace:*",
+        "@echo/staff": "workspace:*",
+        "@echo/stats": "workspace:*",
         "@echo/storage": "workspace:*",
         "@echo/tenancy": "workspace:*",
+        "@echo/training": "workspace:*",
         "@echo/webhooks": "workspace:*",
         "@hono/zod-openapi": "^1.1.0",
         "drizzle-orm": "^0.45.3",
@@ -58,12 +64,14 @@
       "name": "@echo/worker",
       "dependencies": {
         "@echo/account": "workspace:*",
+        "@echo/billing": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/llm": "workspace:*",
         "@echo/mail": "workspace:*",
         "@echo/observability": "workspace:*",
+        "@echo/pricing": "workspace:*",
         "@echo/projects": "workspace:*",
         "@echo/queue": "workspace:*",
         "@echo/tenancy": "workspace:*",
@@ -84,6 +92,7 @@
       "dependencies": {
         "@echo/access": "workspace:*",
         "@echo/auth": "workspace:*",
+        "@echo/billing": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
@@ -111,6 +120,25 @@
         "zod": "^4.1.0",
       },
     },
+    "packages/billing": {
+      "name": "@echo/billing",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/config": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/mail": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "zod": "^4.1.0",
+      },
+      "devDependencies": {
+        "postgres": "^3.4.9",
+      },
+    },
     "packages/config": {
       "name": "@echo/config",
       "bin": {
@@ -131,6 +159,20 @@
       },
       "devDependencies": {
         "drizzle-kit": "^0.31.11",
+      },
+    },
+    "packages/feedback": {
+      "name": "@echo/feedback",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/billing": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/storage": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
       },
     },
     "packages/http": {
@@ -181,6 +223,21 @@
         "@opentelemetry/sdk-trace-base": "^2.0.0",
         "@opentelemetry/semantic-conventions": "^1.37.0",
         "pino": "^10.0.0",
+      },
+    },
+    "packages/pricing": {
+      "name": "@echo/pricing",
+      "dependencies": {
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/storage": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "zod": "^4.1.0",
       },
     },
     "packages/projects": {
@@ -237,6 +294,37 @@
         "postgres": "^3.4.9",
       },
     },
+    "packages/staff": {
+      "name": "@echo/staff",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/billing": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/mail": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "zod": "^4.1.0",
+      },
+      "devDependencies": {
+        "postgres": "^3.4.9",
+      },
+    },
+    "packages/stats": {
+      "name": "@echo/stats",
+      "dependencies": {
+        "@echo/billing": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+      },
+    },
     "packages/storage": {
       "name": "@echo/storage",
     },
@@ -244,6 +332,7 @@
       "name": "@echo/tenancy",
       "dependencies": {
         "@echo/access": "workspace:*",
+        "@echo/billing": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/http": "workspace:*",
@@ -256,6 +345,20 @@
         "hono": "^4.9.0",
         "postgres": "^3.4.9",
         "zod": "^4.1.0",
+      },
+    },
+    "packages/training": {
+      "name": "@echo/training",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/billing": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/mail": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
       },
     },
     "packages/webhooks": {
@@ -352,11 +455,15 @@
 
     "@echo/auth": ["@echo/auth@workspace:packages/auth"],
 
+    "@echo/billing": ["@echo/billing@workspace:packages/billing"],
+
     "@echo/config": ["@echo/config@workspace:packages/config"],
 
     "@echo/core": ["@echo/core@workspace:packages/core"],
 
     "@echo/db": ["@echo/db@workspace:packages/db"],
+
+    "@echo/feedback": ["@echo/feedback@workspace:packages/feedback"],
 
     "@echo/http": ["@echo/http@workspace:packages/http"],
 
@@ -374,6 +481,8 @@
 
     "@echo/parity": ["@echo/parity@workspace:parity"],
 
+    "@echo/pricing": ["@echo/pricing@workspace:packages/pricing"],
+
     "@echo/projects": ["@echo/projects@workspace:packages/projects"],
 
     "@echo/queue": ["@echo/queue@workspace:packages/queue"],
@@ -382,9 +491,15 @@
 
     "@echo/realtime": ["@echo/realtime@workspace:packages/realtime"],
 
+    "@echo/staff": ["@echo/staff@workspace:packages/staff"],
+
+    "@echo/stats": ["@echo/stats@workspace:packages/stats"],
+
     "@echo/storage": ["@echo/storage@workspace:packages/storage"],
 
     "@echo/tenancy": ["@echo/tenancy@workspace:packages/tenancy"],
+
+    "@echo/training": ["@echo/training@workspace:packages/training"],
 
     "@echo/web": ["@echo/web@workspace:apps/web"],
 

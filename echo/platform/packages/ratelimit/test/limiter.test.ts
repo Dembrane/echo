@@ -29,3 +29,10 @@ test("a failing counter store fails open and reports it", async () => {
   await limiter.check({ name: "t", capacity: 1, windowSeconds: 60 }, "u");
   expect(seen).toEqual(["t"]);
 });
+
+test("the per-user check refuses a caller without a user id", async () => {
+  const limiter = new RateLimiter(new MemoryRateCounter());
+  await expect(
+    limiter.checkUser({ name: "t", capacity: 1, windowSeconds: 60 }, ""),
+  ).rejects.toThrow("Authenticated user required.");
+});

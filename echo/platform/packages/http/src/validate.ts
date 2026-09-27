@@ -118,12 +118,17 @@ export function bool(): Field<boolean> {
   };
 }
 
-/** Pydantic's lax integer: whole numbers, and strings of digits (query parameters). */
-export function int(): Field<number> {
+/**
+ * Pydantic's lax integer: whole numbers, booleans (JSON bodies), and strings of digits
+ * (query parameters), with the `ge` and `le` bounds of `Field(ge=, le=)`.
+ */
+export function int(opts: { ge?: number; le?: number } = {}): Field<number> {
   return {
     parse(input, loc, issues) {
-      if (typeof input === "number" && Number.isInteger(input)) return input;
-      if (typeof input === "number") {
+      let n: number;
+      if (typeof input === "boolean") n = input ? 1 : 0;
+      else if (typeof input === "number" && Number.isInteger(input)) n = input;
+      else if (typeof input === "number") {
         issues.push(
           issue(
             "int_from_float",
@@ -133,22 +138,95 @@ export function int(): Field<number> {
           ),
         );
         return INVALID;
-      }
-      if (typeof input === "string") {
+      } else if (typeof input === "string") {
         const t = input.trim();
-        if (/^[+-]?\d+$/.test(t)) return Number.parseInt(t, 10);
+        if (!/^[+-]?\d+$/.test(t)) {
+          issues.push(
+            issue(
+              "int_parsing",
+              loc,
+              "Input should be a valid integer, unable to parse string as an integer",
+              input,
+            ),
+          );
+          return INVALID;
+        }
+        n = Number.parseInt(t, 10);
+      } else {
+        issues.push(issue("int_type", loc, "Input should be a valid integer", input));
+        return INVALID;
+      }
+      if (opts.ge !== undefined && n < opts.ge) {
         issues.push(
           issue(
-            "int_parsing",
+            "greater_than_equal",
             loc,
-            "Input should be a valid integer, unable to parse string as an integer",
+            `Input should be greater than or equal to ${opts.ge}`,
             input,
+            { ge: opts.ge },
           ),
         );
         return INVALID;
       }
-      issues.push(issue("int_type", loc, "Input should be a valid integer", input));
-      return INVALID;
+      if (opts.le !== undefined && n > opts.le) {
+        issues.push(
+          issue("less_than_equal", loc, `Input should be less than or equal to ${opts.le}`, input, {
+            le: opts.le,
+          }),
+        );
+        return INVALID;
+      }
+      return n;
+    },
+  };
+}
+
+/** Pydantic's lax float: numbers, booleans and numeric strings, with the `gt` and `ge` bounds. */
+export function num(opts: { gt?: number; ge?: number } = {}): Field<number> {
+  return {
+    parse(input, loc, issues) {
+      let n: number;
+      if (typeof input === "number" && Number.isFinite(input)) n = input;
+      else if (typeof input === "boolean") n = input ? 1 : 0;
+      else if (typeof input === "string") {
+        const t = input.trim();
+        n = t === "" ? Number.NaN : Number(t);
+        if (Number.isNaN(n)) {
+          issues.push(
+            issue(
+              "float_parsing",
+              loc,
+              "Input should be a valid number, unable to parse string as a number",
+              input,
+            ),
+          );
+          return INVALID;
+        }
+      } else {
+        issues.push(issue("float_type", loc, "Input should be a valid number", input));
+        return INVALID;
+      }
+      if (opts.gt !== undefined && !(n > opts.gt)) {
+        issues.push(
+          issue("greater_than", loc, `Input should be greater than ${opts.gt}`, input, {
+            gt: opts.gt,
+          }),
+        );
+        return INVALID;
+      }
+      if (opts.ge !== undefined && n < opts.ge) {
+        issues.push(
+          issue(
+            "greater_than_equal",
+            loc,
+            `Input should be greater than or equal to ${opts.ge}`,
+            input,
+            { ge: opts.ge },
+          ),
+        );
+        return INVALID;
+      }
+      return n;
     },
   };
 }
@@ -164,7 +242,8 @@ export function dict(): Field<Record<string, unknown>> {
   };
 }
 
-export function list<T>(item: Field<T>): Field<T[]> {
+/** `list[T]`, with pydantic's `Field(min_length=)` checked after the items. */
+export function list<T>(item: Field<T>, opts: { min?: number } = {}): Field<T[]> {
   return {
     parse(input, loc, issues) {
       if (!Array.isArray(input)) {
@@ -178,7 +257,20 @@ export function list<T>(item: Field<T>): Field<T[]> {
         if (r === INVALID) bad = true;
         else out.push(r);
       });
-      return bad ? INVALID : out;
+      if (bad) return INVALID;
+      if (opts.min !== undefined && out.length < opts.min) {
+        issues.push(
+          issue(
+            "too_short",
+            loc,
+            `List should have at least ${opts.min} item${opts.min === 1 ? "" : "s"} after validation, not ${out.length}`,
+            input,
+            { field_type: "List", min_length: opts.min, actual_length: out.length },
+          ),
+        );
+        return INVALID;
+      }
+      return out;
     },
   };
 }
@@ -312,22 +404,46 @@ function parseFields<S extends Shape>(
   loc: Loc,
   issues: Issue[],
   missingInput: unknown,
-): Parsed<S> {
+): { value: Parsed<S>; set: Set<string> } {
   const out: Record<string, unknown> = {};
+  const set = new Set<string>();
   for (const [name, field] of Object.entries(shape)) {
     if (!(name in source) || source[name] === undefined) {
       if (field.fallback) out[name] = field.fallback.value;
       else issues.push(issue("missing", [...loc, name], "Field required", missingInput));
       continue;
     }
+    set.add(name);
     const v = field.parse(source[name], [...loc, name], issues);
     if (v !== INVALID) out[name] = v;
   }
-  return out as Parsed<S>;
+  return { value: out as Parsed<S>, set };
 }
 
 function fail(issues: Issue[]): never {
   throw new ValidationError("Request validation failed", issues);
+}
+
+/** The request parts validation reads: query parameters and the raw body text. */
+export interface RawRequest {
+  readonly query: Record<string, string>;
+  /** The body text, or null when the request carried none. */
+  readonly body: string | null;
+}
+
+export async function rawRequest(req: {
+  query(): Record<string, string>;
+  text(): Promise<string>;
+}): Promise<RawRequest> {
+  const text = await req.text();
+  return { query: req.query(), body: text.trim() ? text : null };
+}
+
+export interface Validated<Q extends Shape, B extends Shape> {
+  readonly query: Parsed<Q>;
+  readonly body: Parsed<B>;
+  /** Body fields the client actually sent, pydantic's model_fields_set. */
+  readonly bodySet: ReadonlySet<string>;
 }
 
 /**
@@ -338,39 +454,46 @@ function fail(issues: Issue[]): never {
 export async function validate<Q extends Shape, B extends Shape>(
   c: Context,
   spec: { query?: Q; body?: B },
-): Promise<{ query: Parsed<Q>; body: Parsed<B> }> {
+): Promise<Validated<Q, B>> {
+  return validateRaw(await rawRequest(c.req), spec);
+}
+
+/** `validate` over request parts already read, for payloads that do not come from `c`. */
+export function validateRaw<Q extends Shape, B extends Shape>(
+  raw: RawRequest,
+  spec: { query?: Q; body?: B },
+): Validated<Q, B> {
   const issues: Issue[] = [];
   let query = {} as Parsed<Q>;
-  if (spec.query) {
-    const raw = c.req.query();
-    query = parseFields(spec.query, raw, ["query"], issues, null);
-  }
+  if (spec.query) query = parseFields(spec.query, raw.query, ["query"], issues, null).value;
   let body = {} as Parsed<B>;
+  let bodySet: ReadonlySet<string> = new Set();
   if (spec.body) {
-    const raw = await readJson(c);
-    if (raw === undefined) {
+    const parsed = readJson(raw.body);
+    if (parsed === undefined) {
       issues.push(issue("missing", ["body"], "Field required", null));
-    } else if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    } else if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
       issues.push(
         issue(
           "model_attributes_type",
           ["body"],
           "Input should be a valid dictionary or object to extract fields from",
-          raw,
+          parsed,
         ),
       );
     } else {
-      body = parseFields(spec.body, raw as Record<string, unknown>, ["body"], issues, raw);
+      const r = parseFields(spec.body, parsed as Record<string, unknown>, ["body"], issues, parsed);
+      body = r.value;
+      bodySet = r.set;
     }
   }
   if (issues.length) fail(issues);
-  return { query, body };
+  return { query, body, bodySet };
 }
 
 /** The JSON body, or undefined when there is none. Invalid JSON is FastAPI's json_invalid. */
-async function readJson(c: Context): Promise<unknown> {
-  const text = await c.req.text();
-  if (!text.trim()) return undefined;
+function readJson(text: string | null): unknown {
+  if (text === null || !text.trim()) return undefined;
   try {
     return JSON.parse(text);
   } catch {

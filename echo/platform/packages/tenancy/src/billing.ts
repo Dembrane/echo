@@ -1,8 +1,8 @@
+import { reconcileAccountSeats } from "@echo/billing";
 import { newId } from "@echo/core";
 import type { schema } from "@echo/db";
 import { type Conn, iso } from "./db";
 import type { JobSink } from "./jobs";
-import { reconcileSeatsJob } from "./jobs";
 import {
   type BillingAccountRow,
   billingAccountById,
@@ -131,13 +131,16 @@ export async function updateAccount(
   await updateBillingAccount(db, accountId, { ...patch, updated_at: iso(now) });
 }
 
-/** Asks billing to re-price the account for its new seat count, in the same transaction. */
+/**
+ * Asks billing to re-price the account for its new seat count, in the transaction that
+ * changed the seats, so no seat change goes unbilled. Billing owns the handler.
+ */
 export async function reconcileSeats(
   jobs: JobSink,
   tx: Conn,
   accountId: string | null | undefined,
 ) {
-  if (accountId) await jobs.enqueue(reconcileSeatsJob, { accountId }, { tx });
+  if (accountId) await jobs.enqueue(reconcileAccountSeats, { accountId }, { tx });
 }
 
 export async function accountOfWorkspace(

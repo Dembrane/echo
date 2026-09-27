@@ -206,6 +206,41 @@ export const schema = defineSchema({
       },
     ),
   },
+  billing: {
+    mollieApiKey: key("MOLLIE_API_KEY", z.string().optional(), {
+      description: "Mollie key. test_ keys use Mollie test mode; unset turns paid checkout off.",
+      secret: true,
+    }),
+    mollieWebhookUrl: key("MOLLIE_WEBHOOK_URL", z.url().optional(), {
+      description:
+        "Public URL Mollie posts payment updates to. Unset relies on the return sync and the reconcile schedule.",
+    }),
+    forceReconcileFailure: key("MOLLIE_FORCE_RECONCILE_FAILURE", bool.default(false), {
+      description:
+        "Test mode only: makes every seat reconcile fail so the fix-your-payment path can be exercised.",
+    }),
+    customerJobs: key("BILLING_CUSTOMER_JOBS", z.enum(["on", "off"]).default("off"), {
+      description:
+        "Whether scheduled billing jobs may email customers or change their tier. Off outside prod, so a copy of prod data never mails real customers.",
+    }),
+  },
+  support: {
+    forwardWebhookUrl: key("SUPPORT_WEBHOOK_URL", z.url().optional(), {
+      description:
+        "Where support requests and pricing bookings are forwarded to reach the team. Unset turns forwarding off.",
+    }),
+    forwardWebhookToken: key("ECHO_SUPPORT_WEBHOOK_TOKEN", z.string().optional(), {
+      description: "Shared token sent as X-Echo-Support-Token with every forward.",
+      secret: true,
+    }),
+  },
+  site: {
+    apiToken: key("SITE_API_TOKEN", z.string().optional(), {
+      description:
+        "Token the public website sends as X-Site-Token to write pricing configurations. Falls back to ECHO_SUPPORT_WEBHOOK_TOKEN; unset closes the route (503).",
+      secret: true,
+    }),
+  },
 });
 
 export type Schema = typeof schema;

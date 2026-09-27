@@ -1,8 +1,10 @@
-import { emailHandler, reconcileAccountSeats, reconcileHandler, sendEmail } from "@echo/account";
+import { emailHandler, sendEmail } from "@echo/account";
+import { type Billing, billingRegistration, noLiveRecordings } from "@echo/billing";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
+import { environmentName, httpForwarder, pricingRegistration, pricingStorage } from "@echo/pricing";
 import {
   createLibrary,
   createView,
@@ -31,21 +33,26 @@ export interface Registration {
   register(queue: Queue): Promise<void>;
 }
 
-/** What job handlers may use; built once in main.ts. */
-
 /** Every job this worker runs. Namespaces add their registration here as they move over. */
 export function registrations(deps: {
   logger: Logger;
   db: Db;
-  config: Pick<Config, "webhooks">;
+  config: Pick<Config, "webhooks" | "billing" | "support">;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
   /** Lets a job enqueue follow-up jobs (the support timers send email). */
   jobs: JobSink;
   /** Where email buttons point. */
   dashboardUrl: string;
+  /** Mollie, the billing store and its notifier, shared by the billing jobs. */
+  billing: Billing;
 }): Registration[] {
   const { logger, db, config } = deps;
+  // Pricing bookings and overage notices share the team's webhook.
+  const teamWebhook =
+    config.support.forwardWebhookUrl && config.support.forwardWebhookToken
+      ? httpForwarder(config.support.forwardWebhookUrl, config.support.forwardWebhookToken)
+      : null;
   return [
     {
       jobs: [heartbeat],
@@ -80,16 +87,32 @@ export function registrations(deps: {
       },
     },
     {
-      jobs: [sendEmail, reconcileAccountSeats],
+      jobs: [sendEmail],
       async register(queue) {
         await queue.work(sendEmail, { concurrency: 10 }, emailHandler(deps.mailer, logger));
-        await queue.work(
-          reconcileAccountSeats,
-          { concurrency: 2 },
-          reconcileHandler(deps.db, logger),
-        );
       },
     },
     tenancyWorker(deps),
+    billingRegistration({
+      billing: deps.billing,
+      mailer: deps.mailer,
+      logger,
+      customerJobs: config.billing.customerJobs === "on",
+      dashboardUrl: deps.dashboardUrl,
+      overage: {
+        db,
+        // The portal's presence store has not moved over; every tier's cap is unset, so no
+        // episode can open meanwhile.
+        live: noLiveRecordings,
+        forwarder: teamWebhook,
+        environment: environmentName(deps.dashboardUrl),
+      },
+    }),
+    pricingRegistration({
+      store: pricingStorage(db),
+      forwarder: teamWebhook,
+      environment: environmentName(deps.dashboardUrl),
+      logger,
+    }),
   ];
 }

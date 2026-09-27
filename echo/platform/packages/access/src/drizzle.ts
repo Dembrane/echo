@@ -10,6 +10,7 @@ const {
   project,
   project_membership,
   billing_account,
+  support_access_request,
 } = schema;
 
 export class DrizzleAccessStore implements AccessStore {
@@ -51,6 +52,7 @@ export class DrizzleAccessStore implements AccessStore {
   async workspaceMembership(workspaceId: string, appUserId: string, now: Date) {
     const [row] = await this.db
       .select({
+        id: workspace_membership.id,
         role: workspace_membership.role,
         customPolicies: workspace_membership.custom_policies,
         source: workspace_membership.source,
@@ -68,7 +70,23 @@ export class DrizzleAccessStore implements AccessStore {
         ),
       )
       .limit(1);
-    return row ?? null;
+    if (!row) return null;
+    const { id, ...membership } = row;
+    if (membership.source !== "staff_support") return membership;
+    // An approval resolved in the last 24 hours is what lets a support session act.
+    const since = new Date(now.getTime() - 86_400_000).toISOString();
+    const approved = await this.db
+      .select({ id: support_access_request.id })
+      .from(support_access_request)
+      .where(
+        and(
+          eq(support_access_request.membership_id, id),
+          eq(support_access_request.status, "approved"),
+          gt(support_access_request.resolved_at, since),
+        ),
+      )
+      .limit(1);
+    return { ...membership, supportApproved: approved.length > 0 };
   }
 
   async orgRole(orgId: string, appUserId: string) {
