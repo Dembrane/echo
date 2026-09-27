@@ -1,6 +1,8 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
-  "files": { "includes": ["**", "!**/dist", "!**/migrations/meta", "!**/introspected", "!**/*.local.ts"] },
+  "files": {
+    "includes": ["**", "!**/dist", "!**/migrations/meta", "!**/introspected", "!**/*.local.ts"]
+  },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
   "linter": {
     "rules": {
