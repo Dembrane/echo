@@ -31,3 +31,6 @@ if (role) {
   log("runtime role granted", { role });
 }
 log("migration job complete", { ms: Math.round(performance.now() - started) });
+// A one-shot job ends here. DBOS's scheduler can keep timers alive after shutdown, and a
+// job that never exits holds the rollout until Cloud Run's task timeout.
+process.exit(0);
