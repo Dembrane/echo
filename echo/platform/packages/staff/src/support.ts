@@ -430,7 +430,7 @@ export class SupportAccess {
   /** The request timer: expires a still-pending request; a decision that raced it wins. */
   async expireRequest(requestId: string): Promise<boolean> {
     const req = await this.s.request(requestId);
-    if (!req || req.status !== "pending") return false;
+    if (req?.status !== "pending") return false;
     await this.s.updateRequest(requestId, {
       status: "expired",
       resolved_at: pyIso(this.d.clock()),
