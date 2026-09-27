@@ -105,8 +105,8 @@ export function chatsStorage(db: Db) {
     },
 
     /**
-     * Inserts a chat message. Directus stamped date_created and date_updated on create
-     * (both special fields), and nested used/added conversation links in the same request.
+     * Inserts a chat message. Directus stamped date_created on create (date_updated only
+     * on later updates) and wrote nested used/added conversation links in the same request.
      */
     async createMessage(values: {
       id: string;
@@ -122,9 +122,9 @@ export function chatsStorage(db: Db) {
       return self.sql().begin(async (tx) => {
         const [row] = await tx`
           insert into project_chat_message
-            (id, project_chat_id, message_from, text, template_key, date_created, date_updated)
+            (id, project_chat_id, message_from, text, template_key, date_created)
           values (${values.id}, ${values.chatId}, ${values.from}, ${values.text},
-                  ${values.templateKey ?? null}, ${at}, ${at})
+                  ${values.templateKey ?? null}, ${at})
           on conflict (id) do nothing
           returning *`;
         for (const cid of values.usedConversationIds ?? [])
@@ -137,17 +137,18 @@ export function chatsStorage(db: Db) {
       }) as Promise<Row>;
     },
 
-    async setChatName(chatId: string, name: string | null, now: Date) {
+    /** `by` is who made the change; system writes (a generated title) leave user_updated alone. */
+    async setChatName(chatId: string, name: string | null, now: Date, by?: string) {
       await db
         .update(project_chat)
-        .set({ name, date_updated: now.toISOString() })
+        .set({ name, date_updated: now.toISOString(), ...(by && { user_updated: by }) })
         .where(eq(project_chat.id, chatId));
     },
 
-    async setChatMode(chatId: string, mode: string, now: Date) {
+    async setChatMode(chatId: string, mode: string, now: Date, by?: string) {
       await db
         .update(project_chat)
-        .set({ chat_mode: mode, date_updated: now.toISOString() })
+        .set({ chat_mode: mode, date_updated: now.toISOString(), ...(by && { user_updated: by }) })
         .where(eq(project_chat.id, chatId));
     },
 
@@ -163,6 +164,271 @@ export function chatsStorage(db: Db) {
           ),
         );
       return Number(row?.n ?? 0);
+    },
+
+    // ── chat items as Directus served them ────────────────────────────
+
+    /** Every column plus the o2m/m2m id lists, as a Directus create or update answered. */
+    async chatItem(id: string): Promise<Row | null> {
+      if (!isUuid(id)) return null;
+      const sql = self.sql();
+      const [row] = await sql`select * from project_chat where id = ${id}`;
+      if (!row) return null;
+      const msgs =
+        await sql`select id from project_chat_message where project_chat_id = ${id} order by id`;
+      const used =
+        await sql`select id from project_chat_conversation where project_chat_id = ${id} order by id`;
+      return {
+        ...directusRow(row as Row),
+        project_chat_messages: msgs.map((r) => r.id),
+        used_conversations: used.map((r) => r.id),
+      };
+    },
+
+    async messageItem(id: string): Promise<Row | null> {
+      if (!isUuid(id)) return null;
+      const sql = self.sql();
+      const [row] = await sql`select * from project_chat_message where id = ${id}`;
+      if (!row) return null;
+      const used =
+        await sql`select id from project_chat_message_conversation where project_chat_message_id = ${id} order by id`;
+      const added =
+        await sql`select id from project_chat_message_conversation_1 where project_chat_message_id = ${id} order by id`;
+      return {
+        ...directusRow(row as Row),
+        used_conversations: used.map((r) => r.id),
+        added_conversations: added.map((r) => r.id),
+      };
+    },
+
+    async insertChat(values: {
+      id: string;
+      projectId: string;
+      name?: string;
+      userCreated: string;
+      now: Date;
+    }) {
+      const at = values.now.toISOString();
+      await self.sql()`
+        insert into project_chat (id, project_id, name, user_created, date_created)
+        values (${values.id}, ${values.projectId}, ${values.name ?? null}, ${values.userCreated}, ${at})`;
+    },
+
+    async updateChat(id: string, values: Record<string, unknown>, userUpdated: string, now: Date) {
+      const sql = self.sql();
+      await sql`
+        update project_chat set ${sql(values as Record<string, postgres.ParameterOrJSON<never>>)},
+          user_updated = ${userUpdated}, date_updated = ${now.toISOString()}
+        where id = ${id}`;
+    },
+
+    async softDeleteChat(id: string, at: string, now: Date, by: string) {
+      await self.sql()`
+        update project_chat set deleted_at = ${at}, date_updated = ${now.toISOString()},
+          user_updated = ${by} where id = ${id}`;
+    },
+
+    /** The BFF chat list: live chats of a project, newest first, with optional filters. */
+    async listChats(q: {
+      projectId: string;
+      hasMessages: boolean;
+      search: string;
+      limit: number;
+      offset: number;
+      visibleTo: string | null;
+    }): Promise<{ rows: Row[]; total: number }> {
+      const sql = self.sql();
+      const where = sql`
+        c.project_id = ${q.projectId} and c.deleted_at is null
+        ${q.hasMessages ? sql`and exists (select 1 from project_chat_message m where m.project_chat_id = c.id)` : sql``}
+        ${q.search ? sql`and c.name ilike ${`%${q.search}%`}` : sql``}
+        ${q.visibleTo ? sql`and (c.is_private is not true or c.user_created = ${q.visibleTo})` : sql``}`;
+      const rows = await sql`
+        select c.id, c.project_id, c.date_created, c.date_updated, c.name, c.chat_mode
+        from project_chat c where ${where}
+        order by c.date_created desc, c.id
+        limit ${q.limit} offset ${q.offset}`;
+      const [n] = await sql`select count(*)::int as n from project_chat c where ${where}`;
+      return { rows: rows.map((r) => directusRow(r as Row)), total: Number(n?.n ?? 0) };
+    },
+
+    // ── messages ──────────────────────────────────────────────────────
+
+    /**
+     * Messages of a chat in date order (chat_service.list_messages). `withRelations` adds
+     * the used and added conversations each message carries, junction-id sorted.
+     */
+    async messages(
+      chatId: string,
+      opts: { withRelations: boolean; order: "asc" | "desc"; limit?: number },
+    ): Promise<Row[]> {
+      const sql = self.sql();
+      const rows = await sql`
+        select id, project_chat_id, message_from, text, tokens_count, template_key, date_created
+        from project_chat_message where project_chat_id = ${chatId}
+        order by date_created ${opts.order === "desc" ? sql`desc` : sql`asc`} , id
+        limit ${opts.limit ?? 1000}`;
+      const out = rows.map((r) => directusRow(r as Row));
+      if (!opts.withRelations || !out.length) return out;
+      const ids = out.map((r) => r.id as string);
+      const used = await sql`
+        select j.id, j.project_chat_message_id as mid, c.id as cid, c.participant_name, c.summary, c.duration
+        from project_chat_message_conversation j left join conversation c on c.id = j.conversation_id
+        where j.project_chat_message_id = any(${ids}) order by j.id`;
+      const added = await sql`
+        select j.id, j.project_chat_message_id as mid, c.id as cid, c.participant_name
+        from project_chat_message_conversation_1 j left join conversation c on c.id = j.conversation_id
+        where j.project_chat_message_id = any(${ids}) order by j.id`;
+      for (const m of out) {
+        m.used_conversations = used
+          .filter((u) => u.mid === m.id)
+          .map((u) => ({
+            id: u.id,
+            conversation_id: u.cid
+              ? {
+                  id: u.cid,
+                  participant_name: u.participant_name,
+                  summary: u.summary,
+                  duration: u.duration,
+                }
+              : null,
+          }));
+        m.added_conversations = added
+          .filter((u) => u.mid === m.id)
+          .map((u) => ({
+            id: u.id,
+            conversation_id: u.cid ? { id: u.cid, participant_name: u.participant_name } : null,
+          }));
+      }
+      return out;
+    },
+
+    /** The BFF message list, with the added conversations expanded for the "Context added" line. */
+    async bffMessages(chatId: string, limit: number): Promise<Row[]> {
+      const sql = self.sql();
+      const rows = await sql`
+        select id, date_created, message_from, text, template_key, tokens_count, project_chat_id
+        from project_chat_message where project_chat_id = ${chatId}
+        order by date_created asc , id limit ${limit}`;
+      const out = rows.map((r) => directusRow(r as Row));
+      if (!out.length) return out;
+      const ids = out.map((r) => r.id as string);
+      const used = await sql`
+        select id, project_chat_message_id as mid from project_chat_message_conversation
+        where project_chat_message_id = any(${ids}) order by id`;
+      const added = await sql`
+        select j.id, j.project_chat_message_id as mid, c.id as cid, c.participant_name
+        from project_chat_message_conversation_1 j left join conversation c on c.id = j.conversation_id
+        where j.project_chat_message_id = any(${ids}) order by j.id`;
+      return out.map((m) => ({
+        id: m.id,
+        date_created: m.date_created,
+        message_from: m.message_from,
+        text: m.text,
+        template_key: m.template_key,
+        tokens_count: m.tokens_count,
+        used_conversations: used.filter((u) => u.mid === m.id).map((u) => u.id),
+        added_conversations: added
+          .filter((u) => u.mid === m.id)
+          .map((u) => ({
+            id: u.id,
+            conversation_id: u.cid ? { id: u.cid, participant_name: u.participant_name } : null,
+          })),
+        project_chat_id: m.project_chat_id,
+      }));
+    },
+
+    async message(id: string): Promise<Row | null> {
+      if (!isUuid(id)) return null;
+      const [row] = await self.sql()`select * from project_chat_message where id = ${id}`;
+      return row ? directusRow(row as Row) : null;
+    },
+
+    async updateMessage(id: string, values: Record<string, unknown>, now: Date) {
+      const sql = self.sql();
+      await sql`
+        update project_chat_message set ${sql(values as Record<string, postgres.ParameterOrJSON<never>>)},
+          date_updated = ${now.toISOString()}
+        where id = ${id}`;
+    },
+
+    /** Deletes a message; its junction rows are set null by the foreign keys, as Directus left them. */
+    async deleteMessage(id: string) {
+      await self.sql()`delete from project_chat_message where id = ${id}`;
+    },
+
+    async lastAssistantMessage(chatId: string): Promise<string | null> {
+      const [row] = await self.sql()`
+        select text from project_chat_message
+        where project_chat_id = ${chatId} and message_from = 'assistant'
+        order by date_created desc limit 1`;
+      return (row?.text as string | null) ?? null;
+    },
+
+    /** Recent user questions: this chat first, then the project's other recent chats. */
+    async recentUserQueries(projectId: string, chatId: string | null, limit: number) {
+      const sql = self.sql();
+      const out: string[] = [];
+      if (chatId) {
+        const rows = await sql`
+          select text from project_chat_message
+          where project_chat_id = ${chatId} and message_from = 'user'
+          order by date_created desc limit ${limit}`;
+        for (const r of rows) {
+          const t = String(r.text ?? "").trim();
+          if (t && !out.includes(t)) out.push(t);
+        }
+      }
+      if (out.length < limit) {
+        const chats = await sql`
+          select id from project_chat where project_id = ${projectId} and deleted_at is null
+          order by date_created desc limit 10`;
+        const others = chats.map((c) => c.id as string).filter((id) => id !== chatId);
+        if (others.length) {
+          const rows = await sql`
+            select text from project_chat_message
+            where project_chat_id = any(${others}) and message_from = 'user'
+            order by date_created desc limit ${limit - out.length}`;
+          for (const r of rows) {
+            const t = String(r.text ?? "").trim();
+            if (t && !out.includes(t)) {
+              out.push(t);
+              if (out.length >= limit) break;
+            }
+          }
+        }
+      }
+      return out.slice(0, limit);
+    },
+
+    // ── chat context links ────────────────────────────────────────────
+
+    async attachConversations(chatId: string, conversationIds: readonly string[]) {
+      if (!conversationIds.length) return;
+      const sql = self.sql();
+      await sql`
+        insert into project_chat_conversation ${sql(
+          conversationIds.map((conversation_id) => ({ conversation_id, project_chat_id: chatId })),
+        )}`;
+    },
+
+    async detachConversation(chatId: string, conversationId: string) {
+      await self.sql()`
+        delete from project_chat_conversation
+        where project_chat_id = ${chatId} and conversation_id = ${conversationId}`;
+    },
+
+    /** Conversations attached to a chat with their summaries (deep-dive suggestions), max 50. */
+    async lockedConversationsWithSummaries(chatId: string) {
+      const rows = await self.sql()`
+        select c.id, c.participant_name, c.summary
+        from project_chat_conversation j join conversation c on c.id = j.conversation_id
+        where j.project_chat_id = ${chatId} order by j.id limit 50`;
+      return rows.map((r) => ({
+        id: r.id as string,
+        name: (r.participant_name as string | null) ?? "Unknown",
+        summary: r.summary as string | null,
+      }));
     },
   };
   return self;
