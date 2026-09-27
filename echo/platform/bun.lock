@@ -24,6 +24,7 @@
         "@echo/mail": "workspace:*",
         "@echo/observability": "workspace:*",
         "@echo/staff": "workspace:*",
+        "@echo/training": "workspace:*",
         "@hono/zod-openapi": "^1.1.0",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
@@ -174,6 +175,20 @@
     "packages/storage": {
       "name": "@echo/storage",
     },
+    "packages/training": {
+      "name": "@echo/training",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/billing": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/mail": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+      },
+    },
     "parity": {
       "name": "@echo/parity",
       "dependencies": {
@@ -253,6 +268,8 @@
     "@echo/staff": ["@echo/staff@workspace:packages/staff"],
 
     "@echo/storage": ["@echo/storage@workspace:packages/storage"],
+
+    "@echo/training": ["@echo/training@workspace:packages/training"],
 
     "@echo/worker": ["@echo/worker@workspace:apps/worker"],
 
