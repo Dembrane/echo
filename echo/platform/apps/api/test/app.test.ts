@@ -5,6 +5,7 @@ import { loadConfig, publicValues } from "@echo/config";
 import { NotFoundError } from "@echo/core";
 import { createLogger, initTracing } from "@echo/observability";
 import { MemoryRateCounter, RateLimiter } from "@echo/ratelimit";
+import { MemoryJobSink } from "@echo/tenancy";
 import { buildApp } from "../src/app";
 import type { Deps } from "../src/deps";
 
@@ -105,4 +106,19 @@ test("unknown routes get the same envelope", async () => {
   const res = await buildApp(deps()).request("/nope");
   expect(res.status).toBe(404);
   expect(await res.json()).toEqual({ detail: "Not Found" });
+});
+
+test("tenancy routes are registered: tier capacities are public, workspaces need a session", async () => {
+  const app = buildApp(deps());
+  const caps = await app.request("/api/v2/workspaces/tier-capacities");
+  expect(caps.status).toBe(200);
+  expect(((await caps.json()) as { tier: string }[]).map((c) => c.tier)).toEqual([
+    "free",
+    "innovator",
+    "changemaker",
+    "guardian",
+  ]);
+  const list = await app.request("/api/v2/workspaces");
+  expect(list.status).toBe(401);
+  expect(await list.json()).toEqual({ detail: "Invalid session" });
 });

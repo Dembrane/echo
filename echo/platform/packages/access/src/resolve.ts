@@ -57,7 +57,7 @@ export async function resolveWorkspace(
     };
   }
   if (!workspace.orgId) return null;
-  const derived = deriveFromOrg(
+  const derived = deriveWorkspaceRole(
     workspace,
     await store.orgRole(workspace.orgId, who.appUserId),
     who.appUserId,
@@ -65,8 +65,12 @@ export async function resolveWorkspace(
   return derived ? { workspace, role: derived, source: "inherited", extra: [] } : null;
 }
 
-function deriveFromOrg(
-  ws: WorkspaceRow,
+/**
+ * The org-derived part of the ladder, pure. Exported so rollups that list who can reach a
+ * workspace (member counts, previews) count exactly what access grants.
+ */
+export function deriveWorkspaceRole(
+  ws: Pick<WorkspaceRow, "stickyRemoved" | "visibility" | "inheritOrgMembers">,
   orgRole: string | null,
   appUserId: string,
 ): WorkspaceRole | null {

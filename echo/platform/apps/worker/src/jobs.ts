@@ -11,6 +11,7 @@ import {
   runCreateView,
 } from "@echo/projects";
 import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
+import { type JobSink, tenancyWorker } from "@echo/tenancy";
 import { dispatchWebhook, httpDeliver, runDispatch, webhooksStorage } from "@echo/webhooks";
 import { z } from "zod";
 
@@ -33,15 +34,18 @@ export interface Registration {
 /** What job handlers may use; built once in main.ts. */
 
 /** Every job this worker runs. Namespaces add their registration here as they move over. */
-/** What the worker's jobs need, built once in main.ts. */
-export interface WorkerDeps {
-  readonly db: Db;
-  readonly mailer: Mailer;
-  readonly config: Pick<Config, "webhooks">;
-}
-
-export function registrations(logger: Logger, deps: WorkerDeps): Registration[] {
-  const { db, config } = deps;
+export function registrations(deps: {
+  logger: Logger;
+  db: Db;
+  config: Pick<Config, "webhooks">;
+  /** Sends the email jobs enqueue. */
+  mailer: Mailer;
+  /** Lets a job enqueue follow-up jobs (the support timers send email). */
+  jobs: JobSink;
+  /** Where email buttons point. */
+  dashboardUrl: string;
+}): Registration[] {
+  const { logger, db, config } = deps;
   return [
     {
       jobs: [heartbeat],
@@ -86,5 +90,6 @@ export function registrations(logger: Logger, deps: WorkerDeps): Registration[] 
         );
       },
     },
+    tenancyWorker(deps),
   ];
 }

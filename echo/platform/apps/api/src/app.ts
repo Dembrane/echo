@@ -1,6 +1,8 @@
+import { DrizzleAccessStore } from "@echo/access";
 import { accountRoutes } from "@echo/account";
 import { notificationRoutes } from "@echo/notifications";
 import { projectRoutes } from "@echo/projects";
+import { queueSink, tenancyRoutes } from "@echo/tenancy";
 import { webhookRoutes } from "@echo/webhooks";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -39,6 +41,16 @@ export function buildApp(deps: Deps) {
     }),
   );
   app.route("/", notificationRoutes(deps));
+  app.route(
+    "/",
+    tenancyRoutes({
+      db: deps.db,
+      accessStore: new DrizzleAccessStore(deps.db),
+      jobs: queueSink(deps.queue),
+      dashboardUrl: deps.config.http.dashboardUrl,
+      inviteSecret: deps.config.account.inviteHashSecret,
+    }),
+  );
   app.onError(onError);
   app.notFound(notFound);
   return app;

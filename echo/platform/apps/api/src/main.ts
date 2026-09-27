@@ -11,6 +11,7 @@ import { projectJobs } from "@echo/projects";
 import { Queue } from "@echo/queue";
 import { PostgresRateCounter, RateLimiter } from "@echo/ratelimit";
 import { FilesystemStorage, S3Storage } from "@echo/storage";
+import { tenancyApiJobs } from "@echo/tenancy";
 import { httpDeliver, webhookJobs } from "@echo/webhooks";
 import { buildApp } from "./app";
 import { principalLookup } from "./principals";
@@ -86,7 +87,13 @@ const queue = new Queue(config.database.url, logger, tracing.tracer, { maxConnec
 const queueReady = (async () => {
   for (let attempt = 1; ; attempt++) {
     try {
-      await queue.start([...projectJobs, ...webhookJobs, sendEmail, reconcileAccountSeats]);
+      await queue.start([
+        ...projectJobs,
+        ...webhookJobs,
+        ...tenancyApiJobs,
+        sendEmail,
+        reconcileAccountSeats,
+      ]);
       return;
     } catch (err) {
       logger.warn(

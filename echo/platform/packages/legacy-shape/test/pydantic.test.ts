@@ -128,3 +128,20 @@ test("booleans accept Python's words and refuse others", async () => {
   const bad = await issues(() => p.validate(req('{"a":"maybe","b":[1]}'), { body: M }));
   expect(bad.map((i) => i.type)).toEqual(["bool_parsing", "bool_type"]);
 });
+
+// Captured from the Python API's EmailStr fields.
+test("EmailStr refusals carry email-validator's reason and no docs url", async () => {
+  const Invite = p.model({ email: p.required(p.email()) });
+  expect(await issues(() => p.validate(req('{"email":"nope"}'), { body: Invite }))).toEqual([
+    {
+      type: "value_error",
+      loc: ["body", "email"],
+      msg: "value is not a valid email address: An email address must have an @-sign.",
+      input: "nope",
+      ctx: { reason: "An email address must have an @-sign." },
+    },
+  ]);
+  const ok = await p.validate(req('{"email":"Ann@Example.ORG"}'), { body: Invite });
+  expect(ok.body.data.email).toBe("Ann@example.org");
+  expect(p.emailProblem("a@x.test")).toContain("special-use");
+});

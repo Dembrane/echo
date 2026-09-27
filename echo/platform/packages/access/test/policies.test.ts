@@ -5,6 +5,7 @@ import {
   POLICIES,
   type Policy,
   roleHas,
+  stickyRemovedIds,
   WORKSPACE_ROLES,
   type WorkspaceRole,
 } from "../src";
@@ -74,4 +75,16 @@ test("tiers rank free < innovator < changemaker < guardian; legacy literals neve
   expect(meetsTier("free", "innovator")).toBe(false);
   expect(meetsTier("pioneer", "innovator")).toBe(false);
   expect(meetsTier(null, "changemaker")).toBe(true);
+});
+
+test("sticky removals read the {user_id} tombstones the old API writes, and bare ids", () => {
+  expect(
+    stickyRemovedIds([
+      { user_id: "u1", removed_at: "2026-09-01T00:00:00Z", removed_by: "u9" },
+      "u2",
+      { removed_at: "no user" },
+      7,
+    ]),
+  ).toEqual(["u1", "u2"]);
+  expect(stickyRemovedIds(null)).toEqual([]);
 });

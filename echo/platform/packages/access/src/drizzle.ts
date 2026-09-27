@@ -42,9 +42,7 @@ export class DrizzleAccessStore implements AccessStore {
         | "invite_only"
         | "private",
       deleted: row.deletedAt !== null,
-      stickyRemoved: Array.isArray(settings.sticky_removed)
-        ? settings.sticky_removed.map(String)
-        : [],
+      stickyRemoved: stickyRemovedIds(settings.sticky_removed),
       inheritOrgMembers: settings.inherit_organisation_members === true,
       tier: row.tier ?? null,
     };
@@ -123,4 +121,18 @@ export class DrizzleAccessStore implements AccessStore {
       .limit(1);
     return rows.length > 0;
   }
+}
+
+/**
+ * Tombstones are stored as `{user_id, removed_at, removed_by}` objects by the old API and
+ * the tenancy namespace; bare ids are accepted too. Anything else never matches a user.
+ */
+export function stickyRemovedIds(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((t) => {
+    if (typeof t === "string") return [t];
+    if (t && typeof t === "object" && typeof (t as { user_id?: unknown }).user_id === "string")
+      return [(t as { user_id: string }).user_id];
+    return [];
+  });
 }

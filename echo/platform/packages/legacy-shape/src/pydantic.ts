@@ -170,6 +170,70 @@ export function bool(): Type<boolean> {
   };
 }
 
+// ── EmailStr, as the email-validator package behind it words its refusals ──
+
+const SPECIAL_USE = new Set(["arpa", "invalid", "local", "localhost", "onion", "test"]);
+const LOCAL_ATOM = /^[A-Za-z0-9!#$%&'*+\-/=?^_`{|}~.\u0080-\uFFFF]+$/;
+
+/** The reason email-validator gives for the common mistakes, or null when the address is valid. */
+export function emailProblem(email: string): string | null {
+  if (email.length > 2048) return "Length must not exceed 2048 characters";
+  const at = email.lastIndexOf("@");
+  if (at < 0) return "An email address must have an @-sign.";
+  const local = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  if (!local) return "There must be something before the @-sign.";
+  if (!domain) return "There must be something after the @-sign.";
+  if (!LOCAL_ATOM.test(local)) {
+    const bad = [...new Set([...local].filter((ch) => !LOCAL_ATOM.test(ch)))];
+    return `The email address contains invalid characters before the @-sign: ${bad
+      .map((c) => (c === " " ? "SPACE" : `'${c}'`))
+      .join(", ")}.`;
+  }
+  if (local.startsWith(".")) return "An email address cannot start with a period.";
+  if (local.endsWith("."))
+    return "An email address cannot have a period immediately before the @-sign.";
+  if (local.includes("..")) return "An email address cannot have two periods in a row.";
+  const d = domain.toLowerCase();
+  if (!/^[a-z0-9.\-\u0080-\uffff]+$/.test(d))
+    return "The part after the @-sign contains invalid characters.";
+  if (d.startsWith("."))
+    return "An email address cannot have a period immediately after the @-sign.";
+  if (d.endsWith(".")) return "An email address cannot end with a period.";
+  if (d.includes("..")) return "An email address cannot have two periods in a row.";
+  if (!d.includes(".")) return "The part after the @-sign is not valid. It should have a period.";
+  const tld = d.slice(d.lastIndexOf(".") + 1);
+  if (SPECIAL_USE.has(tld) || SPECIAL_USE.has(d))
+    return "The part after the @-sign is a special-use or reserved name that cannot be used with email.";
+  if (/^\d+$/.test(tld)) return "The part after the @-sign is not valid IDNA.";
+  return null;
+}
+
+/** pydantic's EmailStr: a value_error without a docs url, and the domain lowercased on success. */
+export function email(): Type<string> {
+  return {
+    parse(v, loc, issues) {
+      if (typeof v !== "string") {
+        issues.push(issue("string_type", loc, "Input should be a valid string", v));
+        return FAIL;
+      }
+      const reason = emailProblem(v);
+      if (reason) {
+        issues.push({
+          type: "value_error",
+          loc,
+          msg: `value is not a valid email address: ${reason}`,
+          input: v,
+          ctx: { reason },
+        });
+        return FAIL;
+      }
+      const at = v.lastIndexOf("@");
+      return `${v.slice(0, at)}@${v.slice(at + 1).toLowerCase()}`;
+    },
+  };
+}
+
 /** Literal["a", "b"]: pydantic quotes each value and joins the last with "or". */
 export function literal<const V extends string>(...values: V[]): Type<V> {
   const quoted = values.map((x) => `'${x}'`);
@@ -224,7 +288,7 @@ export function nullable<T>(inner: Type<T>): Type<T | null> {
   return { parse: (v, loc, issues) => (v === null ? null : inner.parse(v, loc, issues)) };
 }
 
-interface FieldSpec<T> {
+export interface FieldSpec<T> {
   readonly type: Type<T>;
   readonly required: boolean;
   readonly fallback?: () => T;

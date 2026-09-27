@@ -28,6 +28,7 @@
         "@echo/queue": "workspace:*",
         "@echo/ratelimit": "workspace:*",
         "@echo/storage": "workspace:*",
+        "@echo/tenancy": "workspace:*",
         "@echo/webhooks": "workspace:*",
         "@hono/zod-openapi": "^1.1.0",
         "drizzle-orm": "^0.45.3",
@@ -65,6 +66,7 @@
         "@echo/observability": "workspace:*",
         "@echo/projects": "workspace:*",
         "@echo/queue": "workspace:*",
+        "@echo/tenancy": "workspace:*",
         "@echo/webhooks": "workspace:*",
         "zod": "^4.1.0",
       },
@@ -238,6 +240,24 @@
     "packages/storage": {
       "name": "@echo/storage",
     },
+    "packages/tenancy": {
+      "name": "@echo/tenancy",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/mail": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/storage": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
+      },
+    },
     "packages/webhooks": {
       "name": "@echo/webhooks",
       "dependencies": {
@@ -363,6 +383,8 @@
     "@echo/realtime": ["@echo/realtime@workspace:packages/realtime"],
 
     "@echo/storage": ["@echo/storage@workspace:packages/storage"],
+
+    "@echo/tenancy": ["@echo/tenancy@workspace:packages/tenancy"],
 
     "@echo/web": ["@echo/web@workspace:apps/web"],
 

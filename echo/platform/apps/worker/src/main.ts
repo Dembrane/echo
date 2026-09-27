@@ -1,12 +1,21 @@
 import { describe, loadSections } from "@echo/config";
 import { createDb } from "@echo/db";
-import { type Mailer, MemoryMailer, SendGridMailer } from "@echo/mail";
+import { type Mailer, SendGridMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
 import { Queue } from "@echo/queue";
+import { queueSink } from "@echo/tenancy";
 import { registrations } from "./jobs";
 
 // Only what the worker reads: it never serves sign-in, so it is not given the auth secret.
-const loaded = loadSections(["app", "database", "observability", "llm", "webhooks", "mail"]);
+const loaded = loadSections([
+  "app",
+  "database",
+  "observability",
+  "llm",
+  "webhooks",
+  "http",
+  "mail",
+]);
 const config = loaded.values;
 const service = "echo-worker";
 const logger = createLogger({
@@ -28,6 +37,7 @@ const queue = new Queue(config.database.url, logger, tracing.tracer, {
   maxConnections: config.database.poolMax,
 });
 const database = createDb({ url: config.database.url, poolMax: config.database.poolMax });
+// Without a SendGrid key (local, preview) mail is logged, never sent.
 const mailer: Mailer = config.mail.sendgridApiKey
   ? new SendGridMailer({
       apiKey: config.mail.sendgridApiKey,
@@ -35,10 +45,18 @@ const mailer: Mailer = config.mail.sendgridApiKey
       fromName: config.mail.fromName,
       region: config.mail.sendgridRegion,
     })
-  : new MemoryMailer();
-if (!config.mail.sendgridApiKey)
-  logger.warn("no SENDGRID_API_KEY: emails are kept in memory, not sent");
-const regs = registrations(logger, { db: database.db, mailer, config });
+  : {
+      send: async (msg) =>
+        logger.warn({ subject: msg.subject, tags: msg.tags }, "mail not sent: no SendGrid key"),
+    };
+const regs = registrations({
+  logger,
+  db: database.db,
+  config,
+  mailer,
+  jobs: queueSink(queue),
+  dashboardUrl: config.http.dashboardUrl,
+});
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);
 await queue.run();
