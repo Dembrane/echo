@@ -1,4 +1,7 @@
+import { createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
 import { describe, loadConfig } from "@echo/config";
+import { createDb } from "@echo/db";
+import { type Mailer, SendGridMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
 import { Queue } from "@echo/queue";
 import { registrations } from "./jobs";
@@ -23,7 +26,36 @@ const tracing = initTracing({
 const queue = new Queue(config.database.url, logger, tracing.tracer, {
   maxConnections: config.database.poolMax,
 });
-const regs = registrations(logger);
+const database = createDb({ url: config.database.url, poolMax: config.database.poolMax });
+// Without a SendGrid key sends are logged, never delivered.
+const mailer: Mailer = config.mail.sendgridApiKey
+  ? new SendGridMailer({
+      apiKey: config.mail.sendgridApiKey,
+      region: config.mail.sendgridRegion,
+      fromEmail: config.mail.fromEmail,
+      fromName: config.mail.fromName,
+    })
+  : {
+      send: async (m) =>
+        logger.warn(
+          { tags: m.tags, to_domain: m.to.split("@")[1] },
+          "email not sent: no mailer configured",
+        ),
+    };
+const billing = createBilling({
+  db: database.db,
+  mollie: config.billing.mollieApiKey
+    ? new HttpMollie(config.billing.mollieApiKey)
+    : new UnconfiguredMollie(),
+  mailer,
+  logger,
+  billingConfig: {
+    webhookUrl: config.billing.mollieWebhookUrl ?? null,
+    forceReconcileFailure: config.billing.forceReconcileFailure,
+    dashboardUrl: config.http.dashboardUrl,
+  },
+});
+const regs = registrations({ logger, config, mailer, billing });
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);
 logger.info(
@@ -48,7 +80,7 @@ async function shutdown(signal: string) {
   logger.info({ signal }, "worker stopping");
   clearInterval(signals);
   await queue.stop();
-  await tracing.shutdown();
+  await Promise.allSettled([database.close(), tracing.shutdown()]);
   process.exit(0);
 }
 process.on("SIGTERM", () => void shutdown("SIGTERM"));

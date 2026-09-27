@@ -1,3 +1,6 @@
+import { type Billing, billingRegistration } from "@echo/billing";
+import type { Config } from "@echo/config";
+import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
 import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
 import { z } from "zod";
@@ -18,8 +21,17 @@ export interface Registration {
   register(queue: Queue): Promise<void>;
 }
 
+/** What job handlers are built from; made once in main.ts. */
+export interface WorkerDeps {
+  readonly logger: Logger;
+  readonly config: Config;
+  readonly mailer: Mailer;
+  readonly billing: Billing;
+}
+
 /** Every job this worker runs. Namespaces add their registration here as they move over. */
-export function registrations(logger: Logger): Registration[] {
+export function registrations(deps: WorkerDeps): Registration[] {
+  const { logger } = deps;
   return [
     {
       jobs: [heartbeat],
@@ -30,5 +42,12 @@ export function registrations(logger: Logger): Registration[] {
         await queue.schedule(heartbeat, "* * * * *", {});
       },
     },
+    billingRegistration({
+      billing: deps.billing,
+      mailer: deps.mailer,
+      logger,
+      customerJobs: deps.config.billing.customerJobs === "on",
+      dashboardUrl: deps.config.http.dashboardUrl,
+    }),
   ];
 }

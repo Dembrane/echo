@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test";
 import { Writable } from "node:stream";
-import { Access, MemoryAccessStore } from "@echo/access";
+import { Access, MemoryAccessStore, MemoryStaffAudit } from "@echo/access";
+import type { Billing } from "@echo/billing";
 import { loadConfig, publicValues } from "@echo/config";
 import { NotFoundError } from "@echo/core";
+import { MemoryMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
 import { buildApp } from "../src/app";
 import type { Deps } from "../src/deps";
@@ -34,6 +36,9 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     principalFor: async () => null,
     access: new Access(new MemoryAccessStore()),
     db: {} as Deps["db"],
+    staffAudit: new MemoryStaffAudit(),
+    mailer: new MemoryMailer(),
+    billing: { service: {}, store: {}, notifier: {} } as unknown as Billing,
     ...overrides,
   };
 }

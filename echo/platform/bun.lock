@@ -16,10 +16,12 @@
         "@echo/access": "workspace:*",
         "@echo/account": "workspace:*",
         "@echo/auth": "workspace:*",
+        "@echo/billing": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/http": "workspace:*",
+        "@echo/mail": "workspace:*",
         "@echo/observability": "workspace:*",
         "@hono/zod-openapi": "^1.1.0",
         "drizzle-orm": "^0.45.3",
@@ -38,8 +40,11 @@
     "apps/worker": {
       "name": "@echo/worker",
       "dependencies": {
+        "@echo/billing": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/mail": "workspace:*",
         "@echo/observability": "workspace:*",
         "@echo/queue": "workspace:*",
         "zod": "^4.1.0",
@@ -74,6 +79,22 @@
         "zod": "^4.1.0",
       },
     },
+    "packages/billing": {
+      "name": "@echo/billing",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/config": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/mail": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "zod": "^4.1.0",
+      },
+    },
     "packages/config": {
       "name": "@echo/config",
       "bin": {
@@ -104,6 +125,9 @@
         "@echo/observability": "workspace:*",
         "hono": "^4.9.0",
       },
+    },
+    "packages/mail": {
+      "name": "@echo/mail",
     },
     "packages/observability": {
       "name": "@echo/observability",
@@ -185,6 +209,8 @@
 
     "@echo/auth": ["@echo/auth@workspace:packages/auth"],
 
+    "@echo/billing": ["@echo/billing@workspace:packages/billing"],
+
     "@echo/config": ["@echo/config@workspace:packages/config"],
 
     "@echo/core": ["@echo/core@workspace:packages/core"],
@@ -192,6 +218,8 @@
     "@echo/db": ["@echo/db@workspace:packages/db"],
 
     "@echo/http": ["@echo/http@workspace:packages/http"],
+
+    "@echo/mail": ["@echo/mail@workspace:packages/mail"],
 
     "@echo/migrate": ["@echo/migrate@workspace:apps/migrate"],
 

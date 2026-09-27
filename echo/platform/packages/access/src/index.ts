@@ -9,4 +9,16 @@ export {
   resolveWorkspace,
   type WorkspaceAccess,
 } from "./resolve";
+export {
+  DrizzleStaffAudit,
+  hasStaffPolicy,
+  MemoryStaffAudit,
+  requireStaff,
+  STAFF_POLICIES,
+  type StaffAudit,
+  type StaffAuditEntry,
+  type StaffPolicy,
+  type StaffSubject,
+  staffPoliciesOf,
+} from "./staff";
 export type { AccessStore, MembershipRow, ProjectRow, WorkspaceRow } from "./store";

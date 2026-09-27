@@ -77,6 +77,40 @@ export const schema = defineSchema({
       secret: true,
     }),
   },
+  mail: {
+    sendgridApiKey: key("SENDGRID_API_KEY", z.string().optional(), {
+      description:
+        "SendGrid key for transactional email. Unset logs sends instead of delivering them.",
+      secret: true,
+    }),
+    sendgridRegion: key("SENDGRID_REGION", z.enum(["eu", "global"]).default("eu"), {
+      description: "SendGrid data residency. eu keeps recipient data in EU data centres.",
+    }),
+    fromEmail: key("EMAIL_FROM", z.string().default("do-not-reply@dembrane.com"), {
+      description: "Sender address of transactional email.",
+    }),
+    fromName: key("EMAIL_FROM_NAME", z.string().default("dembrane"), {
+      description: "Sender name of transactional email.",
+    }),
+  },
+  billing: {
+    mollieApiKey: key("MOLLIE_API_KEY", z.string().optional(), {
+      description: "Mollie key. test_ keys use Mollie test mode; unset turns paid checkout off.",
+      secret: true,
+    }),
+    mollieWebhookUrl: key("MOLLIE_WEBHOOK_URL", z.url().optional(), {
+      description:
+        "Public URL Mollie posts payment updates to. Unset relies on the return sync and the reconcile schedule.",
+    }),
+    forceReconcileFailure: key("MOLLIE_FORCE_RECONCILE_FAILURE", bool.default(false), {
+      description:
+        "Test mode only: makes every seat reconcile fail so the fix-your-payment path can be exercised.",
+    }),
+    customerJobs: key("BILLING_CUSTOMER_JOBS", z.enum(["on", "off"]).default("off"), {
+      description:
+        "Whether scheduled billing jobs may email customers or change their tier. Off outside prod, so a copy of prod data never mails real customers.",
+    }),
+  },
 });
 
 export type Schema = typeof schema;

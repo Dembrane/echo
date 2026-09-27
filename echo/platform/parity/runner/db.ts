@@ -11,6 +11,8 @@ const IGNORED_TABLES = new Set([
   "directus_revisions",
   "auth_session",
   "auth_verification",
+  // New-only: the old API has no staff audit. Its rows are asserted by the staff tests.
+  "staff_audit_event",
 ]);
 
 export async function reset(template = "parity_template_platform"): Promise<void> {

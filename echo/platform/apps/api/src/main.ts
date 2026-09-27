@@ -1,7 +1,9 @@
-import { Access, DrizzleAccessStore } from "@echo/access";
+import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@echo/access";
 import { createAuth } from "@echo/auth";
+import { createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
 import { describe, loadConfig, publicValues } from "@echo/config";
 import { createDb } from "@echo/db";
+import { type Mailer, SendGridMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
 import { buildApp } from "./app";
 import { principalLookup } from "./principals";
@@ -45,6 +47,35 @@ const auth = createAuth({
   defaultDirectusRoleId: null,
 });
 
+// Without a SendGrid key (local, parity) sends are logged, never delivered.
+const mailer: Mailer = config.mail.sendgridApiKey
+  ? new SendGridMailer({
+      apiKey: config.mail.sendgridApiKey,
+      region: config.mail.sendgridRegion,
+      fromEmail: config.mail.fromEmail,
+      fromName: config.mail.fromName,
+    })
+  : {
+      send: async (m) =>
+        logger.warn(
+          { tags: m.tags, to_domain: m.to.split("@")[1] },
+          "email not sent: no mailer configured",
+        ),
+    };
+const billing = createBilling({
+  db: database.db,
+  mollie: config.billing.mollieApiKey
+    ? new HttpMollie(config.billing.mollieApiKey)
+    : new UnconfiguredMollie(),
+  mailer,
+  logger,
+  billingConfig: {
+    webhookUrl: config.billing.mollieWebhookUrl ?? null,
+    forceReconcileFailure: config.billing.forceReconcileFailure,
+    dashboardUrl: config.http.dashboardUrl,
+  },
+});
+
 const app = buildApp({
   config,
   publicConfig: publicValues(loaded),
@@ -55,6 +86,9 @@ const app = buildApp({
   principalFor: principalLookup(database.db),
   access: new Access(new DrizzleAccessStore(database.db)),
   db: database.db,
+  staffAudit: new DrizzleStaffAudit(database.db),
+  mailer,
+  billing,
 });
 
 const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 255 });

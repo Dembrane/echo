@@ -3566,3 +3566,4 @@ export const verification_topic = pgTable(
   ],
 );
 export * from "./auth";
+export * from "./staff";
