@@ -1,0 +1,126 @@
+import type { Db } from "@echo/db";
+import { schema } from "@echo/db";
+import { and, eq, gt, isNull, or } from "drizzle-orm";
+import type { AccessStore } from "./store";
+
+const {
+  workspace,
+  workspace_membership,
+  org_membership,
+  project,
+  project_membership,
+  billing_account,
+} = schema;
+
+export class DrizzleAccessStore implements AccessStore {
+  constructor(private readonly db: Db) {}
+
+  async workspace(id: string) {
+    const [row] = await this.db
+      .select({
+        id: workspace.id,
+        orgId: workspace.org_id,
+        visibility: workspace.visibility,
+        deletedAt: workspace.deleted_at,
+        settings: workspace.settings,
+        tier: billing_account.tier,
+      })
+      .from(workspace)
+      .leftJoin(billing_account, eq(billing_account.id, workspace.billing_account_id))
+      .where(eq(workspace.id, id))
+      .limit(1);
+    if (!row) return null;
+    const settings = (row.settings ?? {}) as {
+      sticky_removed?: unknown;
+      inherit_organisation_members?: unknown;
+    };
+    return {
+      id: row.id,
+      orgId: row.orgId,
+      visibility: (row.visibility ?? "open_to_organisation") as
+        | "open_to_organisation"
+        | "invite_only"
+        | "private",
+      deleted: row.deletedAt !== null,
+      stickyRemoved: Array.isArray(settings.sticky_removed)
+        ? settings.sticky_removed.map(String)
+        : [],
+      inheritOrgMembers: settings.inherit_organisation_members === true,
+      tier: row.tier ?? null,
+    };
+  }
+
+  async workspaceMembership(workspaceId: string, appUserId: string, now: Date) {
+    const [row] = await this.db
+      .select({
+        role: workspace_membership.role,
+        customPolicies: workspace_membership.custom_policies,
+        source: workspace_membership.source,
+      })
+      .from(workspace_membership)
+      .where(
+        and(
+          eq(workspace_membership.workspace_id, workspaceId),
+          eq(workspace_membership.user_id, appUserId),
+          isNull(workspace_membership.deleted_at),
+          or(
+            isNull(workspace_membership.expires_at),
+            gt(workspace_membership.expires_at, now.toISOString()),
+          ),
+        ),
+      )
+      .limit(1);
+    return row ?? null;
+  }
+
+  async orgRole(orgId: string, appUserId: string) {
+    const [row] = await this.db
+      .select({ role: org_membership.role })
+      .from(org_membership)
+      .where(
+        and(
+          eq(org_membership.org_id, orgId),
+          eq(org_membership.user_id, appUserId),
+          isNull(org_membership.deleted_at),
+        ),
+      )
+      .limit(1);
+    return row?.role ?? null;
+  }
+
+  async project(id: string) {
+    const [row] = await this.db
+      .select({
+        id: project.id,
+        workspaceId: project.workspace_id,
+        visibility: project.visibility,
+        deletedAt: project.deleted_at,
+        legacyOwner: project.directus_user_id,
+      })
+      .from(project)
+      .where(eq(project.id, id))
+      .limit(1);
+    if (!row) return null;
+    return {
+      id: row.id,
+      workspaceId: row.workspaceId,
+      visibility: row.visibility === "private" ? ("private" as const) : ("workspace" as const),
+      deleted: row.deletedAt !== null,
+      legacyOwnerDirectusUserId: row.legacyOwner,
+    };
+  }
+
+  async hasProjectShare(projectId: string, appUserId: string) {
+    const rows = await this.db
+      .select({ id: project_membership.id })
+      .from(project_membership)
+      .where(
+        and(
+          eq(project_membership.project_id, projectId),
+          eq(project_membership.user_id, appUserId),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  }
+}

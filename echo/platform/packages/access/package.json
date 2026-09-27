@@ -1,0 +1,16 @@
+{
+  "name": "@echo/access",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@echo/core": "workspace:*",
+    "@echo/db": "workspace:*",
+    "drizzle-orm": "^0.45.3"
+  }
+}

@@ -39,6 +39,14 @@
         "zod": "^4.1.0",
       },
     },
+    "packages/access": {
+      "name": "@echo/access",
+      "dependencies": {
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+      },
+    },
     "packages/config": {
       "name": "@echo/config",
       "bin": {
@@ -108,6 +116,8 @@
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.5.14", "", { "os": "win32", "cpu": "x64" }, "sha512-oJWmBhoHsnhUKIke+0gXDX0mltJrWHA1UyHsrTlXwX0TL64ilVZAo+TYZm97baecV0esBdpzy3k96q+09JaZUQ=="],
 
     "@drizzle-team/brocli": ["@drizzle-team/brocli@0.10.2", "", {}, "sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w=="],
+
+    "@echo/access": ["@echo/access@workspace:packages/access"],
 
     "@echo/api": ["@echo/api@workspace:apps/api"],
 
