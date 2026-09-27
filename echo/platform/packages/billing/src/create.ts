@@ -19,6 +19,7 @@ export interface BillingWiring {
 
 export interface Billing {
   readonly service: BillingService;
+  readonly mollie: Mollie;
   readonly store: BillingStore;
   readonly notifier: Notifier;
 }
@@ -46,5 +47,5 @@ export function createBilling(w: BillingWiring): Billing {
     tryLock: pgTryLock(w.db),
     clock: w.clock ?? (() => new Date()),
   });
-  return { service, store, notifier };
+  return { service, store, notifier, mollie: w.mollie };
 }

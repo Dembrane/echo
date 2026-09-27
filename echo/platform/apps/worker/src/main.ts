@@ -55,7 +55,7 @@ const billing = createBilling({
     dashboardUrl: config.http.dashboardUrl,
   },
 });
-const regs = registrations({ logger, config, mailer, billing });
+const regs = registrations({ logger, config, db: database.db, mailer, billing });
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);
 logger.info(

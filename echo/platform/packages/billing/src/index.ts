@@ -43,6 +43,7 @@ export {
   MollieError,
   type MollieObject,
   meta,
+  str,
   UnconfiguredMollie,
 } from "./mollie";
 export { applyDiscount, money2, pyRound } from "./money";

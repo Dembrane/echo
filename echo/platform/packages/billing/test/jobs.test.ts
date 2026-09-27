@@ -11,7 +11,12 @@ import {
 import { ACC, logger, logLines, NOW, U, WS1, WS2, world } from "./helpers";
 
 function deps(w: ReturnType<typeof world>, customerJobs = true) {
-  const billing = { service: w.service, store: w.store, notifier: w.notifier } as Billing;
+  const billing: Billing = {
+    service: w.service,
+    store: w.store,
+    notifier: w.notifier,
+    mollie: w.mollie,
+  };
   return {
     billing,
     mailer: w.mailer,

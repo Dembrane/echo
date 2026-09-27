@@ -1,8 +1,10 @@
 import { type Billing, billingRegistration } from "@echo/billing";
 import type { Config } from "@echo/config";
+import type { Db } from "@echo/db";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
 import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
+import { staffRegistration } from "@echo/staff";
 import { z } from "zod";
 
 /**
@@ -25,6 +27,7 @@ export interface Registration {
 export interface WorkerDeps {
   readonly logger: Logger;
   readonly config: Config;
+  readonly db: Db;
   readonly mailer: Mailer;
   readonly billing: Billing;
 }
@@ -47,6 +50,13 @@ export function registrations(deps: WorkerDeps): Registration[] {
       mailer: deps.mailer,
       logger,
       customerJobs: deps.config.billing.customerJobs === "on",
+      dashboardUrl: deps.config.http.dashboardUrl,
+    }),
+    staffRegistration({
+      db: deps.db,
+      billing: deps.billing,
+      mailer: deps.mailer,
+      logger,
       dashboardUrl: deps.config.http.dashboardUrl,
     }),
   ];

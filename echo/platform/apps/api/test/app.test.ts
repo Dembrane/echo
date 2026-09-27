@@ -38,7 +38,7 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     db: {} as Deps["db"],
     staffAudit: new MemoryStaffAudit(),
     mailer: new MemoryMailer(),
-    billing: { service: {}, store: {}, notifier: {} } as unknown as Billing,
+    billing: { service: {}, store: {}, notifier: {}, mollie: {} } as unknown as Billing,
     ...overrides,
   };
 }
