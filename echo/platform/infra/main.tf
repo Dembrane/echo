@@ -125,6 +125,10 @@ resource "google_service_account" "api" {
   account_id   = "${local.name}-api"
   display_name = "echo ${var.env} API runtime"
 }
+resource "google_service_account" "worker" {
+  account_id   = "${local.name}-worker"
+  display_name = "echo ${var.env} worker runtime"
+}
 resource "google_service_account" "migrate" {
   account_id   = "${local.name}-migrate"
   display_name = "echo ${var.env} migration job"
@@ -139,6 +143,17 @@ resource "google_project_iam_member" "api" {
   project  = var.project
   role     = each.value
   member   = google_service_account.api.member
+}
+resource "google_project_iam_member" "worker" {
+  for_each = toset(["roles/cloudsql.client", "roles/cloudtrace.agent", "roles/aiplatform.user", "roles/monitoring.metricWriter"])
+  project  = var.project
+  role     = each.value
+  member   = google_service_account.worker.member
+}
+resource "google_secret_manager_secret_iam_member" "worker_db" {
+  secret_id = google_secret_manager_secret.db["DATABASE_URL"].id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = google_service_account.worker.member
 }
 resource "google_project_iam_member" "migrate" {
   project = var.project
@@ -158,7 +173,8 @@ resource "google_secret_manager_secret_iam_member" "migrate_db" {
 
 # The deployer pushes images and rolls out services and jobs as the runtime identities.
 resource "google_project_iam_member" "deployer" {
-  for_each = toset(["roles/run.developer"])
+  # run.admin, not run.developer: making the API reachable sets its IAM policy.
+  for_each = toset(["roles/run.admin"])
   project  = var.project
   role     = each.value
   member   = google_service_account.deployer.member
@@ -170,7 +186,7 @@ resource "google_artifact_registry_repository_iam_member" "deployer" {
   member     = google_service_account.deployer.member
 }
 resource "google_service_account_iam_member" "deployer_acts_as" {
-  for_each           = { api = google_service_account.api.name, migrate = google_service_account.migrate.name }
+  for_each           = { api = google_service_account.api.name, worker = google_service_account.worker.name, migrate = google_service_account.migrate.name }
   service_account_id = each.value
   role               = "roles/iam.serviceAccountUser"
   member             = google_service_account.deployer.member

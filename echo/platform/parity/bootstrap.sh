@@ -29,6 +29,10 @@ llm_src="${ECHO_LLM_ENV:-$HOME/orca/echo/echo/server/.env}"
 if ! grep -q '^LLM__' .env.parity && [[ -f "$llm_src" ]]; then
   grep -E '^(LLM__|EMBEDDING_|GOOGLE_APPLICATION_CREDENTIALS=|ENABLE_CANVAS=)' "$llm_src" >> .env.parity
 fi
+if ! grep -q '^PARITY_AGENT_ACCESS_TOKEN=' .env.parity; then
+  echo "PARITY_AGENT_ACCESS_TOKEN=dbr_at_$(openssl rand -hex 24)" >> .env.parity
+  echo "PARITY_AGENT_REFRESH_TOKEN=dbr_rt_$(openssl rand -hex 24)" >> .env.parity
+fi
 set -a; source .env.parity; set +a
 
 dc() { docker compose -f "$here/compose.yml" --env-file "$here/.env.parity" "$@"; }
@@ -62,6 +66,21 @@ if [[ -z "${SKIP_SCHEMA_CHECK:-}" ]]; then
   echo "== schema vs echo-next"
   "$here/schema-check.sh"
 fi
+
+echo "== Python API startup seed (languages, default verification topics)"
+# main.py's lifespan writes these on first start; doing it here keeps them in the
+# template instead of letting whichever API starts first create them.
+log="$here/.last-startup-seed.log"
+PARITY_API_PORT=8199 setsid "$here/run-old-api.sh" > "$log" 2>&1 &
+api_pid=$!
+for _ in $(seq 1 90); do
+  curl -sf http://127.0.0.1:8199/api/health >/dev/null && break
+  kill -0 $api_pid 2>/dev/null || { tail -20 "$log"; exit 1; }
+  sleep 1
+done
+grep -q "Application startup complete" "$log" || { tail -20 "$log"; exit 1; }
+kill -INT -- -"$api_pid" 2>/dev/null || true
+wait $api_pid 2>/dev/null || true
 
 echo "== seed"
 (cd "$here" && bun seed.ts)

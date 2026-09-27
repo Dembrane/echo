@@ -52,7 +52,7 @@ run("queue", () => {
     await a.unsafe("create database queue_test");
     await a.end();
     sql = postgres(url, { max: 2, onnotice: () => {} });
-    queue = new Queue(url, logger, tracer);
+    queue = new Queue(url, logger, tracer, { manageSchema: true });
     await queue.start([greet, committed, flaky]);
   });
   afterAll(async () => {

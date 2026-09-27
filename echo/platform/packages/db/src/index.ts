@@ -3,6 +3,7 @@ import postgres from "postgres";
 import * as schema from "./schema";
 import * as relations from "./schema/relations";
 
+export { grantRuntimeRole, type MigrateResult, migrate } from "./migrate";
 export { schema };
 export type Db = ReturnType<typeof createDb>["db"];
 

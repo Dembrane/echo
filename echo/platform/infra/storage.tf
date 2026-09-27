@@ -49,9 +49,11 @@ resource "google_secret_manager_secret_version" "storage" {
   secret      = google_secret_manager_secret.storage[each.key].id
   secret_data = each.value
 }
-resource "google_secret_manager_secret_iam_member" "api_storage" {
-  for_each  = local.storage_secrets
-  secret_id = google_secret_manager_secret.storage[each.key].id
+resource "google_secret_manager_secret_iam_member" "storage_readers" {
+  for_each = {
+    for pair in setproduct(keys(local.storage_secrets), ["api", "worker"]) : "${pair[0]}-${pair[1]}" => pair
+  }
+  secret_id = google_secret_manager_secret.storage[each.value[0]].id
   role      = "roles/secretmanager.secretAccessor"
-  member    = google_service_account.api.member
+  member    = each.value[1] == "api" ? google_service_account.api.member : google_service_account.worker.member
 }

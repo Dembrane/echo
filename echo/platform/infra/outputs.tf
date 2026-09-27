@@ -25,3 +25,6 @@ output "secrets" {
 output "uploads_bucket" {
   value = google_storage_bucket.uploads.name
 }
+output "worker_service_account" {
+  value = google_service_account.worker.email
+}

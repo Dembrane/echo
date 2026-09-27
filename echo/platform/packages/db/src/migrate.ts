@@ -3,7 +3,8 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate as drizzleMigrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 
-const MIGRATIONS = new URL("../migrations", import.meta.url).pathname;
+// A compiled binary carries no source tree, so the image ships the folder and points here.
+const MIGRATIONS = process.env.MIGRATIONS_DIR ?? new URL("../migrations", import.meta.url).pathname;
 const BASELINE_TAGS = ["0000_baseline", "0001_baseline_guards"];
 // Any fixed number works; every migrating process must use the same one.
 const LOCK_KEY = 72_1405_2026;
@@ -71,6 +72,43 @@ async function one<T>(query: postgres.PendingQuery<postgres.Row[]>): Promise<T> 
   const [row] = await query;
   if (!row) throw new Error("scalar query returned no row");
   return row.v as T;
+}
+
+/**
+ * Gives the runtime login data rights and nothing else: no DDL, no ownership. Default
+ * privileges cover tables later migrations create, so a new table never needs a manual grant.
+ */
+export async function grantRuntimeRole(
+  url: string,
+  role: string,
+  schemas: readonly string[],
+): Promise<void> {
+  if (!/^[a-z_][a-z0-9_]*$/.test(role)) throw new Error(`invalid role name ${role}`);
+  const sql = postgres(url, { max: 1, onnotice: () => {} });
+  try {
+    for (const schema of schemas) {
+      if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error(`invalid schema name ${schema}`);
+      await sql.unsafe(`grant usage on schema ${schema} to ${role}`);
+      await sql.unsafe(
+        `grant select, insert, update, delete on all tables in schema ${schema} to ${role}`,
+      );
+      await sql.unsafe(
+        `grant usage, select, update on all sequences in schema ${schema} to ${role}`,
+      );
+      await sql.unsafe(`grant execute on all functions in schema ${schema} to ${role}`);
+      await sql.unsafe(
+        `alter default privileges in schema ${schema} grant select, insert, update, delete on tables to ${role}`,
+      );
+      await sql.unsafe(
+        `alter default privileges in schema ${schema} grant usage, select, update on sequences to ${role}`,
+      );
+      await sql.unsafe(
+        `alter default privileges in schema ${schema} grant execute on functions to ${role}`,
+      );
+    }
+  } finally {
+    await sql.end();
+  }
 }
 
 if (import.meta.main) {

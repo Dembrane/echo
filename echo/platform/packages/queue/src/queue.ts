@@ -38,6 +38,24 @@ export interface QueueHealth {
   readonly deferred: number;
 }
 
+/** Creates or upgrades pg-boss's schema. Run by the migration job with the owner login. */
+export async function installQueueSchema(
+  connectionString: string,
+  schema = "pgboss",
+): Promise<void> {
+  const boss = new PgBoss({
+    connectionString,
+    schema,
+    max: 1,
+    supervise: false,
+    schedule: false,
+    migrate: true,
+    createSchema: true,
+  });
+  await boss.start();
+  await boss.stop({ graceful: false });
+}
+
 export class Queue {
   private readonly boss: PgBoss;
   private readonly defs = new Map<string, JobDefinition>();
@@ -46,13 +64,21 @@ export class Queue {
     connectionString: string,
     private readonly logger: Logger,
     private readonly tracer: Tracer,
-    opts: { readonly schema?: string; readonly maxConnections?: number } = {},
+    opts: {
+      readonly schema?: string;
+      readonly maxConnections?: number;
+      /** Local and tests only. In deployed environments the migration job owns the schema and the app login has no DDL rights. */
+      readonly manageSchema?: boolean;
+    } = {},
   ) {
+    const manage = opts.manageSchema ?? false;
     this.boss = new PgBoss({
       connectionString,
       schema: opts.schema ?? "pgboss",
       max: opts.maxConnections ?? 4,
       application_name: "echo-queue",
+      migrate: manage,
+      createSchema: manage,
     });
     this.boss.on("error", (err) => this.logger.error({ err }, "queue error"));
   }

@@ -12,7 +12,7 @@ const int = z.coerce.number().int();
  */
 export const schema = defineSchema({
   app: {
-    env: key("APP_ENV", z.enum(["local", "test", "next", "prod"]), {
+    env: key("APP_ENV", z.enum(["local", "test", "preview", "next", "prod"]), {
       description: "Which environment file applies. Set by the deployment, never by hand in code.",
       public: true,
     }),
