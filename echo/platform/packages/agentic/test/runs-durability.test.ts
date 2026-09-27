@@ -76,7 +76,11 @@ run("agent turn survives a worker crash", () => {
     procs.push(second);
     await until(async () => {
       const [r] = await sql`select status from project_agentic_run where id = ${ids.run}`;
-      return r?.status === "completed";
+      // Analytics fire after the status write, so wait for both before asserting.
+      return (
+        r?.status === "completed" &&
+        lines().includes("worker-b capture server_chat_response_received")
+      );
     });
 
     const events = await sql`

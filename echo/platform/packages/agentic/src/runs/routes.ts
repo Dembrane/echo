@@ -1,4 +1,4 @@
-import { chatsStorage } from "@echo/chats";
+import { chatsStorage, generateTitle } from "@echo/chats";
 import { type Env, requireUser } from "@echo/http";
 import { p } from "@echo/legacy-shape";
 import { Hono } from "hono";
@@ -43,8 +43,7 @@ export function runRoutes(deps: AgenticRoutesDeps) {
     queue: deps.queue,
     logger: deps.logger,
     now,
-    // TODO(parent): bind generateTitle from @echo/chats (with deps.models) once it is exported.
-    generateTitle: async () => null,
+    generateTitle: (text, language) => generateTitle(deps.models, text, language),
   };
   const stream = {
     store,

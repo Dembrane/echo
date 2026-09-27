@@ -92,7 +92,8 @@ export function bindAgentData(deps: BindingDeps, who: Signed, ctx: TurnContext):
     canvasHistory: (canvasId, limit) => canvas.canvasHistory(c, who, p, chat, canvasId, limit),
     editCanvas: (canvasId, instruction, html) =>
       canvas.editCanvas(c, who, p, chat, canvasId, instruction, html),
-    addCanvasHostItem: (canvasId, body) => canvas.addCanvasHostItem(c, who, p, chat, canvasId, body),
+    addCanvasHostItem: (canvasId, body) =>
+      canvas.addCanvasHostItem(c, who, p, chat, canvasId, body),
     removeCanvasHostItem: (canvasId, body) =>
       canvas.removeCanvasHostItem(c, who, p, chat, canvasId, body),
     canvasLoop: (canvasId, action) => canvas.canvasLoop(c, who, p, chat, canvasId, action),
