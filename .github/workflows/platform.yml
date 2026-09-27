@@ -56,16 +56,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3
-      - name: Build API image
-        uses: docker/build-push-action@v6
-        with:
-          context: echo/platform
-          file: echo/platform/apps/api/Dockerfile
-          build-args: RELEASE=${{ github.sha }}
-          tags: echo-api:${{ github.sha }}
-          load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Build images
+        run: |
+          for app in api worker migrate; do
+            docker buildx build --load --provenance=false \
+              --cache-from type=gha,scope=$app --cache-to type=gha,mode=max,scope=$app \
+              -f echo/platform/apps/$app/Dockerfile --build-arg RELEASE=${{ github.sha }} \
+              -t echo-$app:${{ github.sha }} echo/platform
+          done
       - name: Container starts and answers
         run: |
           docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d -e AUTH_SECRET=smoke-test-secret-that-is-long-enough-000 echo-api:${{ github.sha }}

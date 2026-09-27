@@ -2,15 +2,10 @@
 # Build context: echo/platform.
 FROM oven/bun:1.4 AS build
 WORKDIR /src
-COPY package.json bun.lock ./
-COPY apps/migrate/package.json apps/migrate/
-COPY packages/db/package.json packages/db/
-COPY packages/queue/package.json packages/queue/
-COPY packages/auth/package.json packages/auth/
-COPY packages/core/package.json packages/core/
-COPY packages/observability/package.json packages/observability/
-RUN bun install --frozen-lockfile --production --ignore-scripts
+# The whole workspace, then the lockfile install: a hand-kept list of package manifests
+# breaks every time a dependency between packages is added. Bun installs in about a second.
 COPY . .
+RUN bun install --frozen-lockfile --production --ignore-scripts
 RUN bun build apps/migrate/src/main.ts --compile --minify --target=bun-linux-x64 --outfile /out/migrate
 
 FROM gcr.io/distroless/cc-debian12:nonroot

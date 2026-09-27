@@ -2,19 +2,10 @@
 # Build context: echo/platform. One static binary, no node_modules at runtime.
 FROM oven/bun:1.4 AS build
 WORKDIR /src
-COPY package.json bun.lock ./
-COPY apps/api/package.json apps/api/
-COPY packages/config/package.json packages/config/
-COPY packages/core/package.json packages/core/
-COPY packages/db/package.json packages/db/
-COPY packages/observability/package.json packages/observability/
-COPY packages/auth/package.json packages/auth/
-COPY packages/access/package.json packages/access/
-COPY packages/http/package.json packages/http/
-COPY packages/account/package.json packages/account/
-COPY packages/llm/package.json packages/llm/
-RUN bun install --frozen-lockfile --production --ignore-scripts
+# The whole workspace, then the lockfile install: a hand-kept list of package manifests
+# breaks every time a dependency between packages is added. Bun installs in about a second.
 COPY . .
+RUN bun install --frozen-lockfile --production --ignore-scripts
 ARG RELEASE=dev
 RUN bun build apps/api/src/main.ts --compile --minify --sourcemap --target=bun-linux-x64 --outfile /out/api
 
