@@ -25,7 +25,7 @@ export class Access {
   ): Promise<ProjectAccess> {
     const access = await resolveProject(this.store, projectId, who, now);
     if (!access) throw new NotFoundError("Project not found");
-    check(access.role, policy, access.extra, access.tier);
+    check(access.role, policy, access.extra, access.tier, access.limitedTo);
     return access;
   }
 
@@ -37,7 +37,7 @@ export class Access {
   ): Promise<WorkspaceAccess> {
     const access = await resolveWorkspace(this.store, workspaceId, who, now);
     if (!access) throw new NotFoundError("Workspace not found");
-    check(access.role, policy, access.extra, access.workspace.tier);
+    check(access.role, policy, access.extra, access.workspace.tier, access.limitedTo);
     return access;
   }
 }
@@ -47,7 +47,10 @@ function check(
   policy: Policy,
   extra: readonly Policy[],
   tier: string | null,
+  limitedTo?: ReadonlySet<Policy>,
 ) {
+  if (limitedTo && !limitedTo.has(policy))
+    throw new ForbiddenError("A staff support session cannot do this");
   if (!roleHas(role, policy, extra))
     throw new ForbiddenError("You do not have permission to do this");
   const required = TIER_REQUIRED[policy];

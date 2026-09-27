@@ -13,6 +13,11 @@ export interface MembershipRow {
   readonly role: string;
   readonly customPolicies: unknown;
   readonly source: string;
+  /**
+   * Staff support rows only: a workspace admin approved this session in the last 24
+   * hours (a support access request resolved as approved for this membership).
+   */
+  readonly supportApproved?: boolean;
 }
 
 export interface ProjectRow {
