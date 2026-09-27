@@ -262,7 +262,19 @@ export const v = {
     }, true);
   },
 
-  /** Any JSON value, as pydantic `Any` / `dict`. */
+  /** A JSON object, as pydantic `dict[str, Any]`. */
+  dict() {
+    return field<Record<string, unknown>>((input, loc) => {
+      if (input !== null && typeof input === "object" && !Array.isArray(input))
+        return { ok: true, value: input as Record<string, unknown> };
+      return {
+        ok: false,
+        errors: [err("dict_type", loc, "Input should be a valid dictionary", input)],
+      };
+    }, true);
+  },
+
+  /** Any JSON value, as pydantic `Any`. */
   any() {
     return field<unknown>((input) => ({ ok: true, value: input }), true);
   },

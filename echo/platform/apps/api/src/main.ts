@@ -5,6 +5,7 @@ import { describe, loadConfig, publicValues } from "@echo/config";
 import { createDb } from "@echo/db";
 import { type Mailer, SendGridMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
+import { FilesystemStorage, S3Storage } from "@echo/storage";
 import { buildApp } from "./app";
 import { principalLookup } from "./principals";
 
@@ -76,6 +77,18 @@ const billing = createBilling({
   },
 });
 
+// Without an S3 endpoint objects live on local disk (local development and parity).
+const storage =
+  config.storage.s3Endpoint && config.storage.s3Bucket
+    ? new S3Storage({
+        endpoint: config.storage.s3Endpoint,
+        bucket: config.storage.s3Bucket,
+        region: config.storage.s3Region,
+        accessKeyId: config.storage.s3Key ?? "",
+        secretAccessKey: config.storage.s3Secret ?? "",
+      })
+    : new FilesystemStorage(config.storage.localDir, config.http.publicUrl);
+
 const app = buildApp({
   config,
   publicConfig: publicValues(loaded),
@@ -89,6 +102,8 @@ const app = buildApp({
   staffAudit: new DrizzleStaffAudit(database.db),
   mailer,
   billing,
+  storage,
+  siteToken: config.site.apiToken ?? config.support.forwardWebhookToken ?? null,
 });
 
 const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 255 });

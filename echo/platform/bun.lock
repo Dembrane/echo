@@ -20,9 +20,13 @@
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
+        "@echo/feedback": "workspace:*",
         "@echo/http": "workspace:*",
         "@echo/mail": "workspace:*",
         "@echo/observability": "workspace:*",
+        "@echo/pricing": "workspace:*",
+        "@echo/stats": "workspace:*",
+        "@echo/storage": "workspace:*",
         "@hono/zod-openapi": "^1.1.0",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
@@ -46,6 +50,7 @@
         "@echo/db": "workspace:*",
         "@echo/mail": "workspace:*",
         "@echo/observability": "workspace:*",
+        "@echo/pricing": "workspace:*",
         "@echo/queue": "workspace:*",
         "zod": "^4.1.0",
       },
@@ -117,6 +122,19 @@
         "drizzle-kit": "^0.31.11",
       },
     },
+    "packages/feedback": {
+      "name": "@echo/feedback",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/billing": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/storage": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+      },
+    },
     "packages/http": {
       "name": "@echo/http",
       "dependencies": {
@@ -141,6 +159,20 @@
         "pino": "^10.0.0",
       },
     },
+    "packages/pricing": {
+      "name": "@echo/pricing",
+      "dependencies": {
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/storage": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "zod": "^4.1.0",
+      },
+    },
     "packages/queue": {
       "name": "@echo/queue",
       "dependencies": {
@@ -148,6 +180,17 @@
         "pg-boss": "^12.5.0",
         "postgres": "^3.4.9",
         "zod": "^4.1.0",
+      },
+    },
+    "packages/stats": {
+      "name": "@echo/stats",
+      "dependencies": {
+        "@echo/billing": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
       },
     },
     "packages/storage": {
@@ -217,6 +260,8 @@
 
     "@echo/db": ["@echo/db@workspace:packages/db"],
 
+    "@echo/feedback": ["@echo/feedback@workspace:packages/feedback"],
+
     "@echo/http": ["@echo/http@workspace:packages/http"],
 
     "@echo/mail": ["@echo/mail@workspace:packages/mail"],
@@ -227,7 +272,11 @@
 
     "@echo/parity": ["@echo/parity@workspace:parity"],
 
+    "@echo/pricing": ["@echo/pricing@workspace:packages/pricing"],
+
     "@echo/queue": ["@echo/queue@workspace:packages/queue"],
+
+    "@echo/stats": ["@echo/stats@workspace:packages/stats"],
 
     "@echo/storage": ["@echo/storage@workspace:packages/storage"],
 

@@ -1,7 +1,9 @@
 import { type Billing, billingRegistration } from "@echo/billing";
 import type { Config } from "@echo/config";
+import type { Db } from "@echo/db";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
+import { environmentName, httpForwarder, pricingRegistration, pricingStorage } from "@echo/pricing";
 import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
 import { z } from "zod";
 
@@ -27,6 +29,7 @@ export interface WorkerDeps {
   readonly config: Config;
   readonly mailer: Mailer;
   readonly billing: Billing;
+  readonly db: Db;
 }
 
 /** Every job this worker runs. Namespaces add their registration here as they move over. */
@@ -48,6 +51,18 @@ export function registrations(deps: WorkerDeps): Registration[] {
       logger,
       customerJobs: deps.config.billing.customerJobs === "on",
       dashboardUrl: deps.config.http.dashboardUrl,
+    }),
+    pricingRegistration({
+      store: pricingStorage(deps.db),
+      forwarder:
+        deps.config.support.forwardWebhookUrl && deps.config.support.forwardWebhookToken
+          ? httpForwarder(
+              deps.config.support.forwardWebhookUrl,
+              deps.config.support.forwardWebhookToken,
+            )
+          : null,
+      environment: environmentName(deps.config.http.dashboardUrl),
+      logger,
     }),
   ];
 }

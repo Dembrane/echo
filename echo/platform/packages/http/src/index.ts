@@ -21,6 +21,7 @@ export function requireUser(c: Ctx): Signed {
   if (!p) throw new UnauthenticatedError("Invalid session");
   return p;
 }
+export { RateLimiter } from "./rate-limit";
 export {
   type Field,
   type Infer,

@@ -111,6 +111,45 @@ export const schema = defineSchema({
         "Whether scheduled billing jobs may email customers or change their tier. Off outside prod, so a copy of prod data never mails real customers.",
     }),
   },
+  storage: {
+    s3Endpoint: key("STORAGE_S3_ENDPOINT", z.url().optional(), {
+      description: "S3 API endpoint of the object store. Unset stores objects on local disk.",
+    }),
+    s3Bucket: key("STORAGE_S3_BUCKET", z.string().optional(), {
+      description: "Bucket for uploads and attachments.",
+    }),
+    s3Region: key("STORAGE_S3_REGION", z.string().default("auto"), {
+      description: "Region the S3 API signs requests for.",
+    }),
+    s3Key: key("STORAGE_S3_KEY", z.string().optional(), {
+      description: "Access key id of the object store.",
+      secret: true,
+    }),
+    s3Secret: key("STORAGE_S3_SECRET", z.string().optional(), {
+      description: "Secret access key of the object store.",
+      secret: true,
+    }),
+    localDir: key("STORAGE_LOCAL_DIR", z.string().default(".storage"), {
+      description: "Directory used as the object store when no S3 endpoint is set.",
+    }),
+  },
+  support: {
+    forwardWebhookUrl: key("SUPPORT_WEBHOOK_URL", z.url().optional(), {
+      description:
+        "Where support requests and pricing bookings are forwarded to reach the team. Unset turns forwarding off.",
+    }),
+    forwardWebhookToken: key("ECHO_SUPPORT_WEBHOOK_TOKEN", z.string().optional(), {
+      description: "Shared token sent as X-Echo-Support-Token with every forward.",
+      secret: true,
+    }),
+  },
+  site: {
+    apiToken: key("SITE_API_TOKEN", z.string().optional(), {
+      description:
+        "Token the public website sends as X-Site-Token to write pricing configurations. Falls back to ECHO_SUPPORT_WEBHOOK_TOKEN; unset closes the route (503).",
+      secret: true,
+    }),
+  },
 });
 
 export type Schema = typeof schema;

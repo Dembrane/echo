@@ -6,6 +6,7 @@ import type { Db } from "@echo/db";
 import type { Env, Signed } from "@echo/http";
 import type { Mailer } from "@echo/mail";
 import type { Logger, Tracer } from "@echo/observability";
+import type { ObjectStorage } from "@echo/storage";
 
 /** Everything the HTTP app needs, built whole in main.ts and replaced with fakes in tests. */
 export interface Deps {
@@ -24,6 +25,9 @@ export interface Deps {
   readonly staffAudit: StaffAudit;
   readonly mailer: Mailer;
   readonly billing: Billing;
+  readonly storage: ObjectStorage;
+  /** The website's pricing token; null closes the site route. */
+  readonly siteToken: string | null;
 }
 
 export type { Env, Signed };
