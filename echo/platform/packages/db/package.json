@@ -2,13 +2,21 @@
   "name": "@echo/db",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts", "./schema": "./src/schema/index.ts" },
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts"
+  },
   "scripts": {
     "introspect": "drizzle-kit pull --config drizzle.introspect.config.ts",
     "generate": "drizzle-kit generate",
     "migrate": "bun src/migrate.ts",
     "test": "bun test"
   },
-  "dependencies": { "drizzle-orm": "^0.45.3", "postgres": "^3.4.9" },
-  "devDependencies": { "drizzle-kit": "^0.31.11" }
+  "dependencies": {
+    "drizzle-orm": "^0.45.3",
+    "postgres": "^3.4.9"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.11"
+  }
 }

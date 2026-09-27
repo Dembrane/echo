@@ -1,12 +1,19 @@
-import { context, propagation, type Span, SpanStatusCode, trace, type Tracer } from "@opentelemetry/api";
+import {
+  context,
+  propagation,
+  type Span,
+  SpanStatusCode,
+  type Tracer,
+  trace,
+} from "@opentelemetry/api";
 import { W3CTraceContextPropagator } from "@opentelemetry/core";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import {
   BasicTracerProvider,
   BatchSpanProcessor,
-  TraceIdRatioBasedSampler,
   ParentBasedSampler,
+  TraceIdRatioBasedSampler,
 } from "@opentelemetry/sdk-trace-base";
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic-conventions";
 
@@ -43,7 +50,10 @@ export function initTracing(opts: TracingOptions): Tracing {
   });
   trace.setGlobalTracerProvider(provider);
   propagation.setGlobalPropagator(new W3CTraceContextPropagator());
-  return { tracer: trace.getTracer(opts.service, opts.release), shutdown: () => provider.shutdown() };
+  return {
+    tracer: trace.getTracer(opts.service, opts.release),
+    shutdown: () => provider.shutdown(),
+  };
 }
 
 /** Runs fn inside a span, recording failure and always ending the span. */

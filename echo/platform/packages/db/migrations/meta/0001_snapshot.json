@@ -64,39 +64,27 @@
         "access_request_actioned_by_foreign": {
           "name": "access_request_actioned_by_foreign",
           "tableFrom": "access_request",
-          "columnsFrom": [
-            "actioned_by"
-          ],
+          "columnsFrom": ["actioned_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "access_request_user_id_foreign": {
           "name": "access_request_user_id_foreign",
           "tableFrom": "access_request",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "access_request_workspace_id_foreign": {
           "name": "access_request_workspace_id_foreign",
           "tableFrom": "access_request",
-          "columnsFrom": [
-            "workspace_id"
-          ],
+          "columnsFrom": ["workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -698,26 +686,18 @@
         "agent_loop_project_id_foreign": {
           "name": "agent_loop_project_id_foreign",
           "tableFrom": "agent_loop",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "agent_loop_report_id_foreign": {
           "name": "agent_loop_report_id_foreign",
           "tableFrom": "agent_loop",
-          "columnsFrom": [
-            "report_id"
-          ],
+          "columnsFrom": ["report_id"],
           "tableTo": "project_report",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -781,26 +761,18 @@
         "agent_loop_run_generation_id_foreign": {
           "name": "agent_loop_run_generation_id_foreign",
           "tableFrom": "agent_loop_run",
-          "columnsFrom": [
-            "generation_id"
-          ],
+          "columnsFrom": ["generation_id"],
           "tableTo": "canvas_generation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "agent_loop_run_loop_id_foreign": {
           "name": "agent_loop_run_loop_id_foreign",
           "tableFrom": "agent_loop_run",
-          "columnsFrom": [
-            "loop_id"
-          ],
+          "columnsFrom": ["loop_id"],
           "tableTo": "agent_loop",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -1027,9 +999,7 @@
       "uniqueConstraints": {
         "agent_token_token_hash_unique": {
           "name": "agent_token_token_hash_unique",
-          "columns": [
-            "token_hash"
-          ],
+          "columns": ["token_hash"],
           "nullsNotDistinct": false
         }
       },
@@ -1137,39 +1107,27 @@
         "analysis_feedback_object_id_foreign": {
           "name": "analysis_feedback_object_id_foreign",
           "tableFrom": "analysis_feedback",
-          "columnsFrom": [
-            "object_id"
-          ],
+          "columnsFrom": ["object_id"],
           "tableTo": "analysis_object",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_feedback_project_id_foreign": {
           "name": "analysis_feedback_project_id_foreign",
           "tableFrom": "analysis_feedback",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_feedback_revision_id_foreign": {
           "name": "analysis_feedback_revision_id_foreign",
           "tableFrom": "analysis_feedback",
-          "columnsFrom": [
-            "revision_id"
-          ],
+          "columnsFrom": ["revision_id"],
           "tableTo": "analysis_object_revision",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1254,13 +1212,9 @@
         "analysis_last_opened_project_id_foreign": {
           "name": "analysis_last_opened_project_id_foreign",
           "tableFrom": "analysis_last_opened",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1371,39 +1325,27 @@
         "analysis_object_current_revision_id_foreign": {
           "name": "analysis_object_current_revision_id_foreign",
           "tableFrom": "analysis_object",
-          "columnsFrom": [
-            "current_revision_id"
-          ],
+          "columnsFrom": ["current_revision_id"],
           "tableTo": "analysis_object_revision",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "analysis_object_project_id_foreign": {
           "name": "analysis_object_project_id_foreign",
           "tableFrom": "analysis_object",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_object_scope_id_foreign": {
           "name": "analysis_object_scope_id_foreign",
           "tableFrom": "analysis_object",
-          "columnsFrom": [
-            "scope_id"
-          ],
+          "columnsFrom": ["scope_id"],
           "tableTo": "analysis_scope",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -1627,52 +1569,36 @@
         "analysis_object_revision_object_id_foreign": {
           "name": "analysis_object_revision_object_id_foreign",
           "tableFrom": "analysis_object_revision",
-          "columnsFrom": [
-            "object_id"
-          ],
+          "columnsFrom": ["object_id"],
           "tableTo": "analysis_object",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_object_revision_parent_revision_id_foreign": {
           "name": "analysis_object_revision_parent_revision_id_foreign",
           "tableFrom": "analysis_object_revision",
-          "columnsFrom": [
-            "parent_revision_id"
-          ],
+          "columnsFrom": ["parent_revision_id"],
           "tableTo": "analysis_object_revision",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "analysis_object_revision_project_id_foreign": {
           "name": "analysis_object_revision_project_id_foreign",
           "tableFrom": "analysis_object_revision",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_object_revision_run_id_foreign": {
           "name": "analysis_object_revision_run_id_foreign",
           "tableFrom": "analysis_object_revision",
-          "columnsFrom": [
-            "run_id"
-          ],
+          "columnsFrom": ["run_id"],
           "tableTo": "analysis_run",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -1876,52 +1802,36 @@
         "analysis_outbox_project_id_foreign": {
           "name": "analysis_outbox_project_id_foreign",
           "tableFrom": "analysis_outbox",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_outbox_run_id_foreign": {
           "name": "analysis_outbox_run_id_foreign",
           "tableFrom": "analysis_outbox",
-          "columnsFrom": [
-            "run_id"
-          ],
+          "columnsFrom": ["run_id"],
           "tableTo": "analysis_run",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "analysis_outbox_scope_id_foreign": {
           "name": "analysis_outbox_scope_id_foreign",
           "tableFrom": "analysis_outbox",
-          "columnsFrom": [
-            "scope_id"
-          ],
+          "columnsFrom": ["scope_id"],
           "tableTo": "analysis_scope",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_outbox_snapshot_id_foreign": {
           "name": "analysis_outbox_snapshot_id_foreign",
           "tableFrom": "analysis_outbox",
-          "columnsFrom": [
-            "snapshot_id"
-          ],
+          "columnsFrom": ["snapshot_id"],
           "tableTo": "analysis_snapshot",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -2152,78 +2062,54 @@
         "analysis_relation_from_object_id_foreign": {
           "name": "analysis_relation_from_object_id_foreign",
           "tableFrom": "analysis_relation",
-          "columnsFrom": [
-            "from_object_id"
-          ],
+          "columnsFrom": ["from_object_id"],
           "tableTo": "analysis_object",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_relation_from_revision_id_foreign": {
           "name": "analysis_relation_from_revision_id_foreign",
           "tableFrom": "analysis_relation",
-          "columnsFrom": [
-            "from_revision_id"
-          ],
+          "columnsFrom": ["from_revision_id"],
           "tableTo": "analysis_object_revision",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_relation_project_id_foreign": {
           "name": "analysis_relation_project_id_foreign",
           "tableFrom": "analysis_relation",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_relation_run_id_foreign": {
           "name": "analysis_relation_run_id_foreign",
           "tableFrom": "analysis_relation",
-          "columnsFrom": [
-            "run_id"
-          ],
+          "columnsFrom": ["run_id"],
           "tableTo": "analysis_run",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "analysis_relation_to_object_id_foreign": {
           "name": "analysis_relation_to_object_id_foreign",
           "tableFrom": "analysis_relation",
-          "columnsFrom": [
-            "to_object_id"
-          ],
+          "columnsFrom": ["to_object_id"],
           "tableTo": "analysis_object",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_relation_to_revision_id_foreign": {
           "name": "analysis_relation_to_revision_id_foreign",
           "tableFrom": "analysis_relation",
-          "columnsFrom": [
-            "to_revision_id"
-          ],
+          "columnsFrom": ["to_revision_id"],
           "tableTo": "analysis_object_revision",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -2348,39 +2234,27 @@
         "analysis_request_key_project_id_foreign": {
           "name": "analysis_request_key_project_id_foreign",
           "tableFrom": "analysis_request_key",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_request_key_run_id_foreign": {
           "name": "analysis_request_key_run_id_foreign",
           "tableFrom": "analysis_request_key",
-          "columnsFrom": [
-            "run_id"
-          ],
+          "columnsFrom": ["run_id"],
           "tableTo": "analysis_run",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_request_key_scope_id_foreign": {
           "name": "analysis_request_key_scope_id_foreign",
           "tableFrom": "analysis_request_key",
-          "columnsFrom": [
-            "scope_id"
-          ],
+          "columnsFrom": ["scope_id"],
           "tableTo": "analysis_scope",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -2782,39 +2656,27 @@
         "analysis_run_project_id_foreign": {
           "name": "analysis_run_project_id_foreign",
           "tableFrom": "analysis_run",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_run_reused_run_id_foreign": {
           "name": "analysis_run_reused_run_id_foreign",
           "tableFrom": "analysis_run",
-          "columnsFrom": [
-            "reused_run_id"
-          ],
+          "columnsFrom": ["reused_run_id"],
           "tableTo": "analysis_run",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "analysis_run_scope_id_foreign": {
           "name": "analysis_run_scope_id_foreign",
           "tableFrom": "analysis_run",
-          "columnsFrom": [
-            "scope_id"
-          ],
+          "columnsFrom": ["scope_id"],
           "tableTo": "analysis_scope",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -3026,39 +2888,27 @@
         "analysis_scope_current_run_id_foreign": {
           "name": "analysis_scope_current_run_id_foreign",
           "tableFrom": "analysis_scope",
-          "columnsFrom": [
-            "current_run_id"
-          ],
+          "columnsFrom": ["current_run_id"],
           "tableTo": "analysis_run",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "analysis_scope_current_snapshot_id_foreign": {
           "name": "analysis_scope_current_snapshot_id_foreign",
           "tableFrom": "analysis_scope",
-          "columnsFrom": [
-            "current_snapshot_id"
-          ],
+          "columnsFrom": ["current_snapshot_id"],
           "tableTo": "analysis_snapshot",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "analysis_scope_project_id_foreign": {
           "name": "analysis_scope_project_id_foreign",
           "tableFrom": "analysis_scope",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -3231,39 +3081,27 @@
         "analysis_snapshot_parent_snapshot_id_foreign": {
           "name": "analysis_snapshot_parent_snapshot_id_foreign",
           "tableFrom": "analysis_snapshot",
-          "columnsFrom": [
-            "parent_snapshot_id"
-          ],
+          "columnsFrom": ["parent_snapshot_id"],
           "tableTo": "analysis_snapshot",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "analysis_snapshot_project_id_foreign": {
           "name": "analysis_snapshot_project_id_foreign",
           "tableFrom": "analysis_snapshot",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_snapshot_scope_id_foreign": {
           "name": "analysis_snapshot_scope_id_foreign",
           "tableFrom": "analysis_snapshot",
-          "columnsFrom": [
-            "scope_id"
-          ],
+          "columnsFrom": ["scope_id"],
           "tableTo": "analysis_scope",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -3471,39 +3309,27 @@
         "analysis_step_project_id_foreign": {
           "name": "analysis_step_project_id_foreign",
           "tableFrom": "analysis_step",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "analysis_step_reused_step_id_foreign": {
           "name": "analysis_step_reused_step_id_foreign",
           "tableFrom": "analysis_step",
-          "columnsFrom": [
-            "reused_step_id"
-          ],
+          "columnsFrom": ["reused_step_id"],
           "tableTo": "analysis_step",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "analysis_step_run_id_foreign": {
           "name": "analysis_step_run_id_foreign",
           "tableFrom": "analysis_step",
-          "columnsFrom": [
-            "run_id"
-          ],
+          "columnsFrom": ["run_id"],
           "tableTo": "analysis_run",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -3590,26 +3416,18 @@
         "announcement_user_created_foreign": {
           "name": "announcement_user_created_foreign",
           "tableFrom": "announcement",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "announcement_user_updated_foreign": {
           "name": "announcement_user_updated_foreign",
           "tableFrom": "announcement",
-          "columnsFrom": [
-            "user_updated"
-          ],
+          "columnsFrom": ["user_updated"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3685,39 +3503,27 @@
         "announcement_activity_announcement_activity_foreign": {
           "name": "announcement_activity_announcement_activity_foreign",
           "tableFrom": "announcement_activity",
-          "columnsFrom": [
-            "announcement_activity"
-          ],
+          "columnsFrom": ["announcement_activity"],
           "tableTo": "announcement",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "announcement_activity_user_created_foreign": {
           "name": "announcement_activity_user_created_foreign",
           "tableFrom": "announcement_activity",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "announcement_activity_user_updated_foreign": {
           "name": "announcement_activity_user_updated_foreign",
           "tableFrom": "announcement_activity",
-          "columnsFrom": [
-            "user_updated"
-          ],
+          "columnsFrom": ["user_updated"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3769,26 +3575,18 @@
         "announcement_translations_announcement_id_foreign": {
           "name": "announcement_translations_announcement_id_foreign",
           "tableFrom": "announcement_translations",
-          "columnsFrom": [
-            "announcement_id"
-          ],
+          "columnsFrom": ["announcement_id"],
           "tableTo": "announcement",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "announcement_translations_languages_code_foreign": {
           "name": "announcement_translations_languages_code_foreign",
           "tableFrom": "announcement_translations",
-          "columnsFrom": [
-            "languages_code"
-          ],
+          "columnsFrom": ["languages_code"],
           "tableTo": "languages",
-          "columnsTo": [
-            "code"
-          ],
+          "columnsTo": ["code"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -3868,9 +3666,7 @@
       "uniqueConstraints": {
         "app_user_directus_user_id_unique": {
           "name": "app_user_directus_user_id_unique",
-          "columns": [
-            "directus_user_id"
-          ],
+          "columns": ["directus_user_id"],
           "nullsNotDistinct": false
         }
       },
@@ -3946,13 +3742,9 @@
         "aspect_view_id_foreign": {
           "name": "aspect_view_id_foreign",
           "tableFrom": "aspect",
-          "columnsFrom": [
-            "view_id"
-          ],
+          "columnsFrom": ["view_id"],
           "tableTo": "view",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -4009,26 +3801,18 @@
         "aspect_segment_aspect_foreign": {
           "name": "aspect_segment_aspect_foreign",
           "tableFrom": "aspect_segment",
-          "columnsFrom": [
-            "aspect"
-          ],
+          "columnsFrom": ["aspect"],
           "tableTo": "aspect",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "aspect_segment_segment_foreign": {
           "name": "aspect_segment_segment_foreign",
           "tableFrom": "aspect_segment",
-          "columnsFrom": [
-            "segment"
-          ],
+          "columnsFrom": ["segment"],
           "tableTo": "conversation_segment",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -4262,52 +4046,36 @@
         "billing_account_account_manager_id_foreign": {
           "name": "billing_account_account_manager_id_foreign",
           "tableFrom": "billing_account",
-          "columnsFrom": [
-            "account_manager_id"
-          ],
+          "columnsFrom": ["account_manager_id"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "billing_account_created_by_foreign": {
           "name": "billing_account_created_by_foreign",
           "tableFrom": "billing_account",
-          "columnsFrom": [
-            "created_by"
-          ],
+          "columnsFrom": ["created_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "billing_account_org_id_foreign": {
           "name": "billing_account_org_id_foreign",
           "tableFrom": "billing_account",
-          "columnsFrom": [
-            "org_id"
-          ],
+          "columnsFrom": ["org_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "billing_account_workspace_id_foreign": {
           "name": "billing_account_workspace_id_foreign",
           "tableFrom": "billing_account",
-          "columnsFrom": [
-            "workspace_id"
-          ],
+          "columnsFrom": ["workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -4385,13 +4153,9 @@
         "canvas_config_revision_report_id_foreign": {
           "name": "canvas_config_revision_report_id_foreign",
           "tableFrom": "canvas_config_revision",
-          "columnsFrom": [
-            "report_id"
-          ],
+          "columnsFrom": ["report_id"],
           "tableTo": "project_report",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -4462,26 +4226,18 @@
         "canvas_generation_config_revision_id_foreign": {
           "name": "canvas_generation_config_revision_id_foreign",
           "tableFrom": "canvas_generation",
-          "columnsFrom": [
-            "config_revision_id"
-          ],
+          "columnsFrom": ["config_revision_id"],
           "tableTo": "canvas_config_revision",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "canvas_generation_report_id_foreign": {
           "name": "canvas_generation_report_id_foreign",
           "tableFrom": "canvas_generation",
-          "columnsFrom": [
-            "report_id"
-          ],
+          "columnsFrom": ["report_id"],
           "tableTo": "project_report",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -4644,13 +4400,9 @@
         "conversation_project_id_foreign": {
           "name": "conversation_project_id_foreign",
           "tableFrom": "conversation",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -4739,39 +4491,27 @@
         "conversation_artifact_conversation_id_foreign": {
           "name": "conversation_artifact_conversation_id_foreign",
           "tableFrom": "conversation_artifact",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "conversation_artifact_user_created_foreign": {
           "name": "conversation_artifact_user_created_foreign",
           "tableFrom": "conversation_artifact",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "conversation_artifact_user_updated_foreign": {
           "name": "conversation_artifact_user_updated_foreign",
           "tableFrom": "conversation_artifact",
-          "columnsFrom": [
-            "user_updated"
-          ],
+          "columnsFrom": ["user_updated"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -4951,13 +4691,9 @@
         "conversation_chunk_conversation_id_foreign": {
           "name": "conversation_chunk_conversation_id_foreign",
           "tableFrom": "conversation_chunk",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -5046,26 +4782,18 @@
         "conversation_link_source_conversation_id_foreign": {
           "name": "conversation_link_source_conversation_id_foreign",
           "tableFrom": "conversation_link",
-          "columnsFrom": [
-            "source_conversation_id"
-          ],
+          "columnsFrom": ["source_conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "conversation_link_target_conversation_id_foreign": {
           "name": "conversation_link_target_conversation_id_foreign",
           "tableFrom": "conversation_link",
-          "columnsFrom": [
-            "target_conversation_id"
-          ],
+          "columnsFrom": ["target_conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -5104,26 +4832,18 @@
         "conversation_project_tag_conversation_id_foreign": {
           "name": "conversation_project_tag_conversation_id_foreign",
           "tableFrom": "conversation_project_tag",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "conversation_project_tag_project_tag_id_foreign": {
           "name": "conversation_project_tag_project_tag_id_foreign",
           "tableFrom": "conversation_project_tag",
-          "columnsFrom": [
-            "project_tag_id"
-          ],
+          "columnsFrom": ["project_tag_id"],
           "tableTo": "project_tag",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -5188,13 +4908,9 @@
         "conversation_reply_reply_foreign": {
           "name": "conversation_reply_reply_foreign",
           "tableFrom": "conversation_reply",
-          "columnsFrom": [
-            "reply"
-          ],
+          "columnsFrom": ["reply"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -5265,13 +4981,9 @@
         "conversation_segment_conversation_id_foreign": {
           "name": "conversation_segment_conversation_id_foreign",
           "tableFrom": "conversation_segment",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -5310,26 +5022,18 @@
         "conversation_segment_conversation_chunk_co__1f8deab8_foreign": {
           "name": "conversation_segment_conversation_chunk_co__1f8deab8_foreign",
           "tableFrom": "conversation_segment_conversation_chunk",
-          "columnsFrom": [
-            "conversation_chunk_id"
-          ],
+          "columnsFrom": ["conversation_chunk_id"],
           "tableTo": "conversation_chunk",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "conversation_segment_conversation_chunk_co__4f4b4f4e_foreign": {
           "name": "conversation_segment_conversation_chunk_co__4f4b4f4e_foreign",
           "tableFrom": "conversation_segment_conversation_chunk",
-          "columnsFrom": [
-            "conversation_segment_id"
-          ],
+          "columnsFrom": ["conversation_segment_id"],
           "tableTo": "conversation_segment",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -5380,39 +5084,27 @@
         "directus_access_policy_foreign": {
           "name": "directus_access_policy_foreign",
           "tableFrom": "directus_access",
-          "columnsFrom": [
-            "policy"
-          ],
+          "columnsFrom": ["policy"],
           "tableTo": "directus_policies",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "directus_access_role_foreign": {
           "name": "directus_access_role_foreign",
           "tableFrom": "directus_access",
-          "columnsFrom": [
-            "role"
-          ],
+          "columnsFrom": ["role"],
           "tableTo": "directus_roles",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "directus_access_user_foreign": {
           "name": "directus_access_user_foreign",
           "tableFrom": "directus_access",
-          "columnsFrom": [
-            "user"
-          ],
+          "columnsFrom": ["user"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -5627,13 +5319,9 @@
         "directus_collections_group_foreign": {
           "name": "directus_collections_group_foreign",
           "tableFrom": "directus_collections",
-          "columnsFrom": [
-            "group"
-          ],
+          "columnsFrom": ["group"],
           "tableTo": "directus_collections",
-          "columnsTo": [
-            "collection"
-          ],
+          "columnsTo": ["collection"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -5704,26 +5392,18 @@
         "directus_comments_user_created_foreign": {
           "name": "directus_comments_user_created_foreign",
           "tableFrom": "directus_comments",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "directus_comments_user_updated_foreign": {
           "name": "directus_comments_user_updated_foreign",
           "tableFrom": "directus_comments",
-          "columnsFrom": [
-            "user_updated"
-          ],
+          "columnsFrom": ["user_updated"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -5788,13 +5468,9 @@
         "directus_dashboards_user_created_foreign": {
           "name": "directus_dashboards_user_created_foreign",
           "tableFrom": "directus_dashboards",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -6155,39 +5831,27 @@
         "directus_files_folder_foreign": {
           "name": "directus_files_folder_foreign",
           "tableFrom": "directus_files",
-          "columnsFrom": [
-            "folder"
-          ],
+          "columnsFrom": ["folder"],
           "tableTo": "directus_folders",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "directus_files_modified_by_foreign": {
           "name": "directus_files_modified_by_foreign",
           "tableFrom": "directus_files",
-          "columnsFrom": [
-            "modified_by"
-          ],
+          "columnsFrom": ["modified_by"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "directus_files_uploaded_by_foreign": {
           "name": "directus_files_uploaded_by_foreign",
           "tableFrom": "directus_files",
-          "columnsFrom": [
-            "uploaded_by"
-          ],
+          "columnsFrom": ["uploaded_by"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -6283,13 +5947,9 @@
         "directus_flows_user_created_foreign": {
           "name": "directus_flows_user_created_foreign",
           "tableFrom": "directus_flows",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -6298,9 +5958,7 @@
       "uniqueConstraints": {
         "directus_flows_operation_unique": {
           "name": "directus_flows_operation_unique",
-          "columns": [
-            "operation"
-          ],
+          "columns": ["operation"],
           "nullsNotDistinct": false
         }
       },
@@ -6336,13 +5994,9 @@
         "directus_folders_parent_foreign": {
           "name": "directus_folders_parent_foreign",
           "tableFrom": "directus_folders",
-          "columnsFrom": [
-            "parent"
-          ],
+          "columnsFrom": ["parent"],
           "tableTo": "directus_folders",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -6451,26 +6105,18 @@
         "directus_notifications_recipient_foreign": {
           "name": "directus_notifications_recipient_foreign",
           "tableFrom": "directus_notifications",
-          "columnsFrom": [
-            "recipient"
-          ],
+          "columnsFrom": ["recipient"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "directus_notifications_sender_foreign": {
           "name": "directus_notifications_sender_foreign",
           "tableFrom": "directus_notifications",
-          "columnsFrom": [
-            "sender"
-          ],
+          "columnsFrom": ["sender"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -6564,52 +6210,36 @@
         "directus_operations_flow_foreign": {
           "name": "directus_operations_flow_foreign",
           "tableFrom": "directus_operations",
-          "columnsFrom": [
-            "flow"
-          ],
+          "columnsFrom": ["flow"],
           "tableTo": "directus_flows",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "directus_operations_reject_foreign": {
           "name": "directus_operations_reject_foreign",
           "tableFrom": "directus_operations",
-          "columnsFrom": [
-            "reject"
-          ],
+          "columnsFrom": ["reject"],
           "tableTo": "directus_operations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "directus_operations_resolve_foreign": {
           "name": "directus_operations_resolve_foreign",
           "tableFrom": "directus_operations",
-          "columnsFrom": [
-            "resolve"
-          ],
+          "columnsFrom": ["resolve"],
           "tableTo": "directus_operations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "directus_operations_user_created_foreign": {
           "name": "directus_operations_user_created_foreign",
           "tableFrom": "directus_operations",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -6618,16 +6248,12 @@
       "uniqueConstraints": {
         "directus_operations_resolve_unique": {
           "name": "directus_operations_resolve_unique",
-          "columns": [
-            "resolve"
-          ],
+          "columns": ["resolve"],
           "nullsNotDistinct": false
         },
         "directus_operations_reject_unique": {
           "name": "directus_operations_reject_unique",
-          "columns": [
-            "reject"
-          ],
+          "columns": ["reject"],
           "nullsNotDistinct": false
         }
       },
@@ -6738,26 +6364,18 @@
         "directus_panels_dashboard_foreign": {
           "name": "directus_panels_dashboard_foreign",
           "tableFrom": "directus_panels",
-          "columnsFrom": [
-            "dashboard"
-          ],
+          "columnsFrom": ["dashboard"],
           "tableTo": "directus_dashboards",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "directus_panels_user_created_foreign": {
           "name": "directus_panels_user_created_foreign",
           "tableFrom": "directus_panels",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -6826,13 +6444,9 @@
         "directus_permissions_policy_foreign": {
           "name": "directus_permissions_policy_foreign",
           "tableFrom": "directus_permissions",
-          "columnsFrom": [
-            "policy"
-          ],
+          "columnsFrom": ["policy"],
           "tableTo": "directus_policies",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -6998,26 +6612,18 @@
         "directus_presets_role_foreign": {
           "name": "directus_presets_role_foreign",
           "tableFrom": "directus_presets",
-          "columnsFrom": [
-            "role"
-          ],
+          "columnsFrom": ["role"],
           "tableTo": "directus_roles",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "directus_presets_user_foreign": {
           "name": "directus_presets_user_foreign",
           "tableFrom": "directus_presets",
-          "columnsFrom": [
-            "user"
-          ],
+          "columnsFrom": ["user"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -7160,39 +6766,27 @@
         "directus_revisions_activity_foreign": {
           "name": "directus_revisions_activity_foreign",
           "tableFrom": "directus_revisions",
-          "columnsFrom": [
-            "activity"
-          ],
+          "columnsFrom": ["activity"],
           "tableTo": "directus_activity",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "directus_revisions_parent_foreign": {
           "name": "directus_revisions_parent_foreign",
           "tableFrom": "directus_revisions",
-          "columnsFrom": [
-            "parent"
-          ],
+          "columnsFrom": ["parent"],
           "tableTo": "directus_revisions",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "directus_revisions_version_foreign": {
           "name": "directus_revisions_version_foreign",
           "tableFrom": "directus_revisions",
-          "columnsFrom": [
-            "version"
-          ],
+          "columnsFrom": ["version"],
           "tableTo": "directus_versions",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -7244,13 +6838,9 @@
         "directus_roles_parent_foreign": {
           "name": "directus_roles_parent_foreign",
           "tableFrom": "directus_roles",
-          "columnsFrom": [
-            "parent"
-          ],
+          "columnsFrom": ["parent"],
           "tableTo": "directus_roles",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -7319,26 +6909,18 @@
         "directus_sessions_share_foreign": {
           "name": "directus_sessions_share_foreign",
           "tableFrom": "directus_sessions",
-          "columnsFrom": [
-            "share"
-          ],
+          "columnsFrom": ["share"],
           "tableTo": "directus_shares",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "directus_sessions_user_foreign": {
           "name": "directus_sessions_user_foreign",
           "tableFrom": "directus_sessions",
-          "columnsFrom": [
-            "user"
-          ],
+          "columnsFrom": ["user"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -7641,78 +7223,54 @@
         "directus_settings_project_logo_foreign": {
           "name": "directus_settings_project_logo_foreign",
           "tableFrom": "directus_settings",
-          "columnsFrom": [
-            "project_logo"
-          ],
+          "columnsFrom": ["project_logo"],
           "tableTo": "directus_files",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "directus_settings_public_background_foreign": {
           "name": "directus_settings_public_background_foreign",
           "tableFrom": "directus_settings",
-          "columnsFrom": [
-            "public_background"
-          ],
+          "columnsFrom": ["public_background"],
           "tableTo": "directus_files",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "directus_settings_public_favicon_foreign": {
           "name": "directus_settings_public_favicon_foreign",
           "tableFrom": "directus_settings",
-          "columnsFrom": [
-            "public_favicon"
-          ],
+          "columnsFrom": ["public_favicon"],
           "tableTo": "directus_files",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "directus_settings_public_foreground_foreign": {
           "name": "directus_settings_public_foreground_foreign",
           "tableFrom": "directus_settings",
-          "columnsFrom": [
-            "public_foreground"
-          ],
+          "columnsFrom": ["public_foreground"],
           "tableTo": "directus_files",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "directus_settings_public_registration_role_foreign": {
           "name": "directus_settings_public_registration_role_foreign",
           "tableFrom": "directus_settings",
-          "columnsFrom": [
-            "public_registration_role"
-          ],
+          "columnsFrom": ["public_registration_role"],
           "tableTo": "directus_roles",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "directus_settings_storage_default_folder_foreign": {
           "name": "directus_settings_storage_default_folder_foreign",
           "tableFrom": "directus_settings",
-          "columnsFrom": [
-            "storage_default_folder"
-          ],
+          "columnsFrom": ["storage_default_folder"],
           "tableTo": "directus_folders",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -7807,39 +7365,27 @@
         "directus_shares_collection_foreign": {
           "name": "directus_shares_collection_foreign",
           "tableFrom": "directus_shares",
-          "columnsFrom": [
-            "collection"
-          ],
+          "columnsFrom": ["collection"],
           "tableTo": "directus_collections",
-          "columnsTo": [
-            "collection"
-          ],
+          "columnsTo": ["collection"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "directus_shares_role_foreign": {
           "name": "directus_shares_role_foreign",
           "tableFrom": "directus_shares",
-          "columnsFrom": [
-            "role"
-          ],
+          "columnsFrom": ["role"],
           "tableTo": "directus_roles",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "directus_shares_user_created_foreign": {
           "name": "directus_shares_user_created_foreign",
           "tableFrom": "directus_shares",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -7908,18 +7454,12 @@
       "uniqueConstraints": {
         "directus_sync_id_map_table_local_id_unique": {
           "name": "directus_sync_id_map_table_local_id_unique",
-          "columns": [
-            "table",
-            "local_id"
-          ],
+          "columns": ["table", "local_id"],
           "nullsNotDistinct": false
         },
         "directus_sync_id_map_table_sync_id_unique": {
           "name": "directus_sync_id_map_table_sync_id_unique",
-          "columns": [
-            "table",
-            "sync_id"
-          ],
+          "columns": ["table", "sync_id"],
           "nullsNotDistinct": false
         }
       },
@@ -8182,26 +7722,18 @@
         "directus_users_role_foreign": {
           "name": "directus_users_role_foreign",
           "tableFrom": "directus_users",
-          "columnsFrom": [
-            "role"
-          ],
+          "columnsFrom": ["role"],
           "tableTo": "directus_roles",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "directus_users_whitelabel_logo_foreign": {
           "name": "directus_users_whitelabel_logo_foreign",
           "tableFrom": "directus_users",
-          "columnsFrom": [
-            "whitelabel_logo"
-          ],
+          "columnsFrom": ["whitelabel_logo"],
           "tableTo": "directus_files",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -8210,23 +7742,17 @@
       "uniqueConstraints": {
         "directus_users_email_unique": {
           "name": "directus_users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "nullsNotDistinct": false
         },
         "directus_users_token_unique": {
           "name": "directus_users_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "nullsNotDistinct": false
         },
         "directus_users_external_identifier_unique": {
           "name": "directus_users_external_identifier_unique",
-          "columns": [
-            "external_identifier"
-          ],
+          "columns": ["external_identifier"],
           "nullsNotDistinct": false
         }
       },
@@ -8312,39 +7838,27 @@
         "directus_versions_collection_foreign": {
           "name": "directus_versions_collection_foreign",
           "tableFrom": "directus_versions",
-          "columnsFrom": [
-            "collection"
-          ],
+          "columnsFrom": ["collection"],
           "tableTo": "directus_collections",
-          "columnsTo": [
-            "collection"
-          ],
+          "columnsTo": ["collection"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "directus_versions_user_created_foreign": {
           "name": "directus_versions_user_created_foreign",
           "tableFrom": "directus_versions",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "directus_versions_user_updated_foreign": {
           "name": "directus_versions_user_updated_foreign",
           "tableFrom": "directus_versions",
-          "columnsFrom": [
-            "user_updated"
-          ],
+          "columnsFrom": ["user_updated"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -8435,13 +7949,9 @@
         "directus_webhooks_migrated_flow_foreign": {
           "name": "directus_webhooks_migrated_flow_foreign",
           "tableFrom": "directus_webhooks",
-          "columnsFrom": [
-            "migrated_flow"
-          ],
+          "columnsFrom": ["migrated_flow"],
           "tableTo": "directus_flows",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -8500,13 +8010,9 @@
         "insight_project_analysis_run_id_foreign": {
           "name": "insight_project_analysis_run_id_foreign",
           "tableFrom": "insight",
-          "columnsFrom": [
-            "project_analysis_run_id"
-          ],
+          "columnsFrom": ["project_analysis_run_id"],
           "tableTo": "project_analysis_run",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -8640,13 +8146,9 @@
         "map_embedding_project_id_foreign": {
           "name": "map_embedding_project_id_foreign",
           "tableFrom": "map_embedding",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -8807,13 +8309,9 @@
         "map_fact_check_project_id_foreign": {
           "name": "map_fact_check_project_id_foreign",
           "tableFrom": "map_fact_check",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -8980,26 +8478,18 @@
         "map_result_project_id_foreign": {
           "name": "map_result_project_id_foreign",
           "tableFrom": "map_result",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "map_result_snapshot_id_foreign": {
           "name": "map_result_snapshot_id_foreign",
           "tableFrom": "map_result",
-          "columnsFrom": [
-            "snapshot_id"
-          ],
+          "columnsFrom": ["snapshot_id"],
           "tableTo": "analysis_snapshot",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -9089,13 +8579,9 @@
         "methodology_workspace_id_foreign": {
           "name": "methodology_workspace_id_foreign",
           "tableFrom": "methodology",
-          "columnsFrom": [
-            "workspace_id"
-          ],
+          "columnsFrom": ["workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -9154,13 +8640,9 @@
         "methodology_version_methodology_id_foreign": {
           "name": "methodology_version_methodology_id_foreign",
           "tableFrom": "methodology_version",
-          "columnsFrom": [
-            "methodology_id"
-          ],
+          "columnsFrom": ["methodology_id"],
           "tableTo": "methodology",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -9270,26 +8752,18 @@
         "model_response_feedback_project_id_foreign": {
           "name": "model_response_feedback_project_id_foreign",
           "tableFrom": "model_response_feedback",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "model_response_feedback_user_id_foreign": {
           "name": "model_response_feedback_user_id_foreign",
           "tableFrom": "model_response_feedback",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -9444,104 +8918,72 @@
         "notification_actor_user_id_foreign": {
           "name": "notification_actor_user_id_foreign",
           "tableFrom": "notification",
-          "columnsFrom": [
-            "actor_user_id"
-          ],
+          "columnsFrom": ["actor_user_id"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "notification_audience_user_id_foreign": {
           "name": "notification_audience_user_id_foreign",
           "tableFrom": "notification",
-          "columnsFrom": [
-            "audience_user_id"
-          ],
+          "columnsFrom": ["audience_user_id"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "notification_ref_chat_id_foreign": {
           "name": "notification_ref_chat_id_foreign",
           "tableFrom": "notification",
-          "columnsFrom": [
-            "ref_chat_id"
-          ],
+          "columnsFrom": ["ref_chat_id"],
           "tableTo": "project_chat",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "notification_ref_conversation_id_foreign": {
           "name": "notification_ref_conversation_id_foreign",
           "tableFrom": "notification",
-          "columnsFrom": [
-            "ref_conversation_id"
-          ],
+          "columnsFrom": ["ref_conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "notification_ref_invite_id_foreign": {
           "name": "notification_ref_invite_id_foreign",
           "tableFrom": "notification",
-          "columnsFrom": [
-            "ref_invite_id"
-          ],
+          "columnsFrom": ["ref_invite_id"],
           "tableTo": "workspace_invite",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "notification_ref_org_id_foreign": {
           "name": "notification_ref_org_id_foreign",
           "tableFrom": "notification",
-          "columnsFrom": [
-            "ref_org_id"
-          ],
+          "columnsFrom": ["ref_org_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "notification_ref_project_id_foreign": {
           "name": "notification_ref_project_id_foreign",
           "tableFrom": "notification",
-          "columnsFrom": [
-            "ref_project_id"
-          ],
+          "columnsFrom": ["ref_project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "notification_ref_workspace_id_foreign": {
           "name": "notification_ref_workspace_id_foreign",
           "tableFrom": "notification",
-          "columnsFrom": [
-            "ref_workspace_id"
-          ],
+          "columnsFrom": ["ref_workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -9640,13 +9082,9 @@
         "org_created_by_foreign": {
           "name": "org_created_by_foreign",
           "tableFrom": "org",
-          "columnsFrom": [
-            "created_by"
-          ],
+          "columnsFrom": ["created_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -9770,26 +9208,18 @@
         "org_invite_invited_by_foreign": {
           "name": "org_invite_invited_by_foreign",
           "tableFrom": "org_invite",
-          "columnsFrom": [
-            "invited_by"
-          ],
+          "columnsFrom": ["invited_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "org_invite_org_id_foreign": {
           "name": "org_invite_org_id_foreign",
           "tableFrom": "org_invite",
-          "columnsFrom": [
-            "org_id"
-          ],
+          "columnsFrom": ["org_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -9862,26 +9292,18 @@
         "org_membership_org_id_foreign": {
           "name": "org_membership_org_id_foreign",
           "tableFrom": "org_membership",
-          "columnsFrom": [
-            "org_id"
-          ],
+          "columnsFrom": ["org_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "org_membership_user_id_foreign": {
           "name": "org_membership_user_id_foreign",
           "tableFrom": "org_membership",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -10094,16 +9516,12 @@
       "uniqueConstraints": {
         "pricing_configuration_reference_unique": {
           "name": "pricing_configuration_reference_unique",
-          "columns": [
-            "reference"
-          ],
+          "columns": ["reference"],
           "nullsNotDistinct": false
         },
         "pricing_configuration_config_session_id_unique": {
           "name": "pricing_configuration_config_session_id_unique",
-          "columns": [
-            "config_session_id"
-          ],
+          "columns": ["config_session_id"],
           "nullsNotDistinct": false
         }
       },
@@ -10228,65 +9646,45 @@
         "processing_status_conversation_chunk_id_foreign": {
           "name": "processing_status_conversation_chunk_id_foreign",
           "tableFrom": "processing_status",
-          "columnsFrom": [
-            "conversation_chunk_id"
-          ],
+          "columnsFrom": ["conversation_chunk_id"],
           "tableTo": "conversation_chunk",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "processing_status_conversation_id_foreign": {
           "name": "processing_status_conversation_id_foreign",
           "tableFrom": "processing_status",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "processing_status_parent_foreign": {
           "name": "processing_status_parent_foreign",
           "tableFrom": "processing_status",
-          "columnsFrom": [
-            "parent"
-          ],
+          "columnsFrom": ["parent"],
           "tableTo": "processing_status",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "processing_status_project_analysis_run_id_foreign": {
           "name": "processing_status_project_analysis_run_id_foreign",
           "tableFrom": "processing_status",
-          "columnsFrom": [
-            "project_analysis_run_id"
-          ],
+          "columnsFrom": ["project_analysis_run_id"],
           "tableTo": "project_analysis_run",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "processing_status_project_id_foreign": {
           "name": "processing_status_project_id_foreign",
           "tableFrom": "processing_status",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -10564,39 +9962,27 @@
         "project_directus_user_id_foreign": {
           "name": "project_directus_user_id_foreign",
           "tableFrom": "project",
-          "columnsFrom": [
-            "directus_user_id"
-          ],
+          "columnsFrom": ["directus_user_id"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "project_methodology_version_id_foreign": {
           "name": "project_methodology_version_id_foreign",
           "tableFrom": "project",
-          "columnsFrom": [
-            "methodology_version_id"
-          ],
+          "columnsFrom": ["methodology_version_id"],
           "tableTo": "methodology_version",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "project_workspace_id_foreign": {
           "name": "project_workspace_id_foreign",
           "tableFrom": "project",
-          "columnsFrom": [
-            "workspace_id"
-          ],
+          "columnsFrom": ["workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -10706,26 +10092,18 @@
         "project_agentic_run_project_chat_id_foreign": {
           "name": "project_agentic_run_project_chat_id_foreign",
           "tableFrom": "project_agentic_run",
-          "columnsFrom": [
-            "project_chat_id"
-          ],
+          "columnsFrom": ["project_chat_id"],
           "tableTo": "project_chat",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "project_agentic_run_project_id_foreign": {
           "name": "project_agentic_run_project_id_foreign",
           "tableFrom": "project_agentic_run",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -10784,13 +10162,9 @@
         "project_agentic_run_event_project_agentic_run_id_foreign": {
           "name": "project_agentic_run_event_project_agentic_run_id_foreign",
           "tableFrom": "project_agentic_run_event",
-          "columnsFrom": [
-            "project_agentic_run_id"
-          ],
+          "columnsFrom": ["project_agentic_run_id"],
           "tableTo": "project_agentic_run",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -10837,13 +10211,9 @@
         "project_analysis_run_project_id_foreign": {
           "name": "project_analysis_run_project_id_foreign",
           "tableFrom": "project_analysis_run",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -10934,39 +10304,27 @@
         "project_chat_project_id_foreign": {
           "name": "project_chat_project_id_foreign",
           "tableFrom": "project_chat",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "project_chat_user_created_foreign": {
           "name": "project_chat_user_created_foreign",
           "tableFrom": "project_chat",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "project_chat_user_updated_foreign": {
           "name": "project_chat_user_updated_foreign",
           "tableFrom": "project_chat",
-          "columnsFrom": [
-            "user_updated"
-          ],
+          "columnsFrom": ["user_updated"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -11005,26 +10363,18 @@
         "project_chat_conversation_conversation_id_foreign": {
           "name": "project_chat_conversation_conversation_id_foreign",
           "tableFrom": "project_chat_conversation",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "project_chat_conversation_project_chat_id_foreign": {
           "name": "project_chat_conversation_project_chat_id_foreign",
           "tableFrom": "project_chat_conversation",
-          "columnsFrom": [
-            "project_chat_id"
-          ],
+          "columnsFrom": ["project_chat_id"],
           "tableTo": "project_chat",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -11095,13 +10445,9 @@
         "project_chat_message_project_chat_id_foreign": {
           "name": "project_chat_message_project_chat_id_foreign",
           "tableFrom": "project_chat_message",
-          "columnsFrom": [
-            "project_chat_id"
-          ],
+          "columnsFrom": ["project_chat_id"],
           "tableTo": "project_chat",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -11140,26 +10486,18 @@
         "project_chat_message_conversation_conversation_id_foreign": {
           "name": "project_chat_message_conversation_conversation_id_foreign",
           "tableFrom": "project_chat_message_conversation",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "project_chat_message_conversation_project___3af13f9a_foreign": {
           "name": "project_chat_message_conversation_project___3af13f9a_foreign",
           "tableFrom": "project_chat_message_conversation",
-          "columnsFrom": [
-            "project_chat_message_id"
-          ],
+          "columnsFrom": ["project_chat_message_id"],
           "tableTo": "project_chat_message",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -11198,26 +10536,18 @@
         "project_chat_message_conversation_1_conversation_id_foreign": {
           "name": "project_chat_message_conversation_1_conversation_id_foreign",
           "tableFrom": "project_chat_message_conversation_1",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "project_chat_message_conversation_1_projec__225db2e8_foreign": {
           "name": "project_chat_message_conversation_1_projec__225db2e8_foreign",
           "tableFrom": "project_chat_message_conversation_1",
-          "columnsFrom": [
-            "project_chat_message_id"
-          ],
+          "columnsFrom": ["project_chat_message_id"],
           "tableTo": "project_chat_message",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -11283,13 +10613,9 @@
         "project_goal_revision_project_id_foreign": {
           "name": "project_goal_revision_project_id_foreign",
           "tableFrom": "project_goal_revision",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -11348,39 +10674,27 @@
         "project_membership_granted_by_foreign": {
           "name": "project_membership_granted_by_foreign",
           "tableFrom": "project_membership",
-          "columnsFrom": [
-            "granted_by"
-          ],
+          "columnsFrom": ["granted_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "project_membership_project_id_foreign": {
           "name": "project_membership_project_id_foreign",
           "tableFrom": "project_membership",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "project_membership_user_id_foreign": {
           "name": "project_membership_user_id_foreign",
           "tableFrom": "project_membership",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -11503,26 +10817,18 @@
         "project_report_project_id_foreign": {
           "name": "project_report_project_id_foreign",
           "tableFrom": "project_report",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "project_report_user_created_foreign": {
           "name": "project_report_user_created_foreign",
           "tableFrom": "project_report",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -11581,13 +10887,9 @@
         "project_report_metric_project_report_id_foreign": {
           "name": "project_report_metric_project_report_id_foreign",
           "tableFrom": "project_report_metric",
-          "columnsFrom": [
-            "project_report_id"
-          ],
+          "columnsFrom": ["project_report_id"],
           "tableTo": "project_report",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -11665,13 +10967,9 @@
         "project_report_notification_participants_c__5f83ce3c_foreign": {
           "name": "project_report_notification_participants_c__5f83ce3c_foreign",
           "tableFrom": "project_report_notification_participants",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "conversation",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -11731,13 +11029,9 @@
         "project_tag_project_id_foreign": {
           "name": "project_tag_project_id_foreign",
           "tableFrom": "project_tag",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -11832,39 +11126,27 @@
         "project_webhook_project_id_foreign": {
           "name": "project_webhook_project_id_foreign",
           "tableFrom": "project_webhook",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "project_webhook_user_created_foreign": {
           "name": "project_webhook_user_created_foreign",
           "tableFrom": "project_webhook",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "project_webhook_user_updated_foreign": {
           "name": "project_webhook_user_updated_foreign",
           "tableFrom": "project_webhook",
-          "columnsFrom": [
-            "user_updated"
-          ],
+          "columnsFrom": ["user_updated"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -11980,26 +11262,18 @@
         "prompt_template_user_created_foreign": {
           "name": "prompt_template_user_created_foreign",
           "tableFrom": "prompt_template",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "prompt_template_workspace_id_foreign": {
           "name": "prompt_template_workspace_id_foreign",
           "tableFrom": "prompt_template",
-          "columnsFrom": [
-            "workspace_id"
-          ],
+          "columnsFrom": ["workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -12080,13 +11354,9 @@
         "recording_overage_billing_account_id_foreign": {
           "name": "recording_overage_billing_account_id_foreign",
           "tableFrom": "recording_overage",
-          "columnsFrom": [
-            "billing_account_id"
-          ],
+          "columnsFrom": ["billing_account_id"],
           "tableTo": "billing_account",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -12163,39 +11433,27 @@
         "referral_ledger_created_by_staff_id_foreign": {
           "name": "referral_ledger_created_by_staff_id_foreign",
           "tableFrom": "referral_ledger",
-          "columnsFrom": [
-            "created_by_staff_id"
-          ],
+          "columnsFrom": ["created_by_staff_id"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "referral_ledger_partner_team_id_foreign": {
           "name": "referral_ledger_partner_team_id_foreign",
           "tableFrom": "referral_ledger",
-          "columnsFrom": [
-            "partner_team_id"
-          ],
+          "columnsFrom": ["partner_team_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "referral_ledger_workspace_id_foreign": {
           "name": "referral_ledger_workspace_id_foreign",
           "tableFrom": "referral_ledger",
-          "columnsFrom": [
-            "workspace_id"
-          ],
+          "columnsFrom": ["workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -12397,39 +11655,27 @@
         "support_access_event_actor_user_id_foreign": {
           "name": "support_access_event_actor_user_id_foreign",
           "tableFrom": "support_access_event",
-          "columnsFrom": [
-            "actor_user_id"
-          ],
+          "columnsFrom": ["actor_user_id"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "support_access_event_staff_user_id_foreign": {
           "name": "support_access_event_staff_user_id_foreign",
           "tableFrom": "support_access_event",
-          "columnsFrom": [
-            "staff_user_id"
-          ],
+          "columnsFrom": ["staff_user_id"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "support_access_event_workspace_id_foreign": {
           "name": "support_access_event_workspace_id_foreign",
           "tableFrom": "support_access_event",
-          "columnsFrom": [
-            "workspace_id"
-          ],
+          "columnsFrom": ["workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -12527,52 +11773,36 @@
         "support_access_request_membership_id_foreign": {
           "name": "support_access_request_membership_id_foreign",
           "tableFrom": "support_access_request",
-          "columnsFrom": [
-            "membership_id"
-          ],
+          "columnsFrom": ["membership_id"],
           "tableTo": "workspace_membership",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "support_access_request_requested_by_foreign": {
           "name": "support_access_request_requested_by_foreign",
           "tableFrom": "support_access_request",
-          "columnsFrom": [
-            "requested_by"
-          ],
+          "columnsFrom": ["requested_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "support_access_request_resolved_by_foreign": {
           "name": "support_access_request_resolved_by_foreign",
           "tableFrom": "support_access_request",
-          "columnsFrom": [
-            "resolved_by"
-          ],
+          "columnsFrom": ["resolved_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "support_access_request_workspace_id_foreign": {
           "name": "support_access_request_workspace_id_foreign",
           "tableFrom": "support_access_request",
-          "columnsFrom": [
-            "workspace_id"
-          ],
+          "columnsFrom": ["workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -12788,26 +12018,18 @@
         "training_org_id_foreign": {
           "name": "training_org_id_foreign",
           "tableFrom": "training",
-          "columnsFrom": [
-            "org_id"
-          ],
+          "columnsFrom": ["org_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "training_requested_by_foreign": {
           "name": "training_requested_by_foreign",
           "tableFrom": "training",
-          "columnsFrom": [
-            "requested_by"
-          ],
+          "columnsFrom": ["requested_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -12883,52 +12105,36 @@
         "training_license_app_user_id_foreign": {
           "name": "training_license_app_user_id_foreign",
           "tableFrom": "training_license",
-          "columnsFrom": [
-            "app_user_id"
-          ],
+          "columnsFrom": ["app_user_id"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "training_license_granted_by_foreign": {
           "name": "training_license_granted_by_foreign",
           "tableFrom": "training_license",
-          "columnsFrom": [
-            "granted_by"
-          ],
+          "columnsFrom": ["granted_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "training_license_org_id_foreign": {
           "name": "training_license_org_id_foreign",
           "tableFrom": "training_license",
-          "columnsFrom": [
-            "org_id"
-          ],
+          "columnsFrom": ["org_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "training_license_training_id_foreign": {
           "name": "training_license_training_id_foreign",
           "tableFrom": "training_license",
-          "columnsFrom": [
-            "training_id"
-          ],
+          "columnsFrom": ["training_id"],
           "tableTo": "training",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -13099,39 +12305,27 @@
         "verification_topic_project_id_foreign": {
           "name": "verification_topic_project_id_foreign",
           "tableFrom": "verification_topic",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "verification_topic_user_created_foreign": {
           "name": "verification_topic_user_created_foreign",
           "tableFrom": "verification_topic",
-          "columnsFrom": [
-            "user_created"
-          ],
+          "columnsFrom": ["user_created"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "verification_topic_user_updated_foreign": {
           "name": "verification_topic_user_updated_foreign",
           "tableFrom": "verification_topic",
-          "columnsFrom": [
-            "user_updated"
-          ],
+          "columnsFrom": ["user_updated"],
           "tableTo": "directus_users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -13179,26 +12373,18 @@
         "verification_topic_translations_languages_code_foreign": {
           "name": "verification_topic_translations_languages_code_foreign",
           "tableFrom": "verification_topic_translations",
-          "columnsFrom": [
-            "languages_code"
-          ],
+          "columnsFrom": ["languages_code"],
           "tableTo": "languages",
-          "columnsTo": [
-            "code"
-          ],
+          "columnsTo": ["code"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "verification_topic_translations_verificati__34868e89_foreign": {
           "name": "verification_topic_translations_verificati__34868e89_foreign",
           "tableFrom": "verification_topic_translations",
-          "columnsFrom": [
-            "verification_topic_key"
-          ],
+          "columnsFrom": ["verification_topic_key"],
           "tableTo": "verification_topic",
-          "columnsTo": [
-            "key"
-          ],
+          "columnsTo": ["key"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -13283,13 +12469,9 @@
         "view_project_analysis_run_id_foreign": {
           "name": "view_project_analysis_run_id_foreign",
           "tableFrom": "view",
-          "columnsFrom": [
-            "project_analysis_run_id"
-          ],
+          "columnsFrom": ["project_analysis_run_id"],
           "tableTo": "project_analysis_run",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -13480,91 +12662,63 @@
         "workspace_billed_to_team_id_foreign": {
           "name": "workspace_billed_to_team_id_foreign",
           "tableFrom": "workspace",
-          "columnsFrom": [
-            "billed_to_team_id"
-          ],
+          "columnsFrom": ["billed_to_team_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "workspace_billed_to_workspace_id_foreign": {
           "name": "workspace_billed_to_workspace_id_foreign",
           "tableFrom": "workspace",
-          "columnsFrom": [
-            "billed_to_workspace_id"
-          ],
+          "columnsFrom": ["billed_to_workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "workspace_billing_account_id_foreign": {
           "name": "workspace_billing_account_id_foreign",
           "tableFrom": "workspace",
-          "columnsFrom": [
-            "billing_account_id"
-          ],
+          "columnsFrom": ["billing_account_id"],
           "tableTo": "billing_account",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "workspace_created_by_foreign": {
           "name": "workspace_created_by_foreign",
           "tableFrom": "workspace",
-          "columnsFrom": [
-            "created_by"
-          ],
+          "columnsFrom": ["created_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "workspace_effective_client_team_id_foreign": {
           "name": "workspace_effective_client_team_id_foreign",
           "tableFrom": "workspace",
-          "columnsFrom": [
-            "effective_client_team_id"
-          ],
+          "columnsFrom": ["effective_client_team_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "workspace_handoff_target_team_id_foreign": {
           "name": "workspace_handoff_target_team_id_foreign",
           "tableFrom": "workspace",
-          "columnsFrom": [
-            "handoff_target_team_id"
-          ],
+          "columnsFrom": ["handoff_target_team_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "workspace_org_id_foreign": {
           "name": "workspace_org_id_foreign",
           "tableFrom": "workspace",
-          "columnsFrom": [
-            "org_id"
-          ],
+          "columnsFrom": ["org_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -13664,39 +12818,27 @@
         "workspace_invite_invited_by_foreign": {
           "name": "workspace_invite_invited_by_foreign",
           "tableFrom": "workspace_invite",
-          "columnsFrom": [
-            "invited_by"
-          ],
+          "columnsFrom": ["invited_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "workspace_invite_project_id_foreign": {
           "name": "workspace_invite_project_id_foreign",
           "tableFrom": "workspace_invite",
-          "columnsFrom": [
-            "project_id"
-          ],
+          "columnsFrom": ["project_id"],
           "tableTo": "project",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "workspace_invite_workspace_id_foreign": {
           "name": "workspace_invite_workspace_id_foreign",
           "tableFrom": "workspace_invite",
-          "columnsFrom": [
-            "workspace_id"
-          ],
+          "columnsFrom": ["workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -13798,26 +12940,18 @@
         "workspace_membership_user_id_foreign": {
           "name": "workspace_membership_user_id_foreign",
           "tableFrom": "workspace_membership",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "workspace_membership_workspace_id_foreign": {
           "name": "workspace_membership_workspace_id_foreign",
           "tableFrom": "workspace_membership",
-          "columnsFrom": [
-            "workspace_id"
-          ],
+          "columnsFrom": ["workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -13987,65 +13121,45 @@
         "workspace_request_decided_by_foreign": {
           "name": "workspace_request_decided_by_foreign",
           "tableFrom": "workspace_request",
-          "columnsFrom": [
-            "decided_by"
-          ],
+          "columnsFrom": ["decided_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "workspace_request_org_id_foreign": {
           "name": "workspace_request_org_id_foreign",
           "tableFrom": "workspace_request",
-          "columnsFrom": [
-            "org_id"
-          ],
+          "columnsFrom": ["org_id"],
           "tableTo": "org",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "workspace_request_requested_by_foreign": {
           "name": "workspace_request_requested_by_foreign",
           "tableFrom": "workspace_request",
-          "columnsFrom": [
-            "requested_by"
-          ],
+          "columnsFrom": ["requested_by"],
           "tableTo": "app_user",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "workspace_request_resulting_workspace_id_foreign": {
           "name": "workspace_request_resulting_workspace_id_foreign",
           "tableFrom": "workspace_request",
-          "columnsFrom": [
-            "resulting_workspace_id"
-          ],
+          "columnsFrom": ["resulting_workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "workspace_request_workspace_id_foreign": {
           "name": "workspace_request_workspace_id_foreign",
           "tableFrom": "workspace_request",
-          "columnsFrom": [
-            "workspace_id"
-          ],
+          "columnsFrom": ["workspace_id"],
           "tableTo": "workspace",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }

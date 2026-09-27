@@ -18,7 +18,13 @@ const opts = { service: "api", release: "abc123", env: "test", level: "debug", g
 test("writes Cloud Logging shaped JSON with severity and message", () => {
   const { lines, stream } = capture();
   createLogger(opts, stream).warn({ route: "/x" }, "slow");
-  expect(lines[0]).toMatchObject({ severity: "WARNING", message: "slow", service: "api", release: "abc123", route: "/x" });
+  expect(lines[0]).toMatchObject({
+    severity: "WARNING",
+    message: "slow",
+    service: "api",
+    release: "abc123",
+    route: "/x",
+  });
 });
 
 test("stamps the request id and trace link from the current correlation", () => {
