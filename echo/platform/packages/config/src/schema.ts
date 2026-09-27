@@ -60,20 +60,6 @@ export const schema = defineSchema({
       description: "Share of requests traced end to end.",
     }),
   },
-  auth: {
-    secret: key("AUTH_SECRET", z.string().min(32), {
-      description: "Signs sessions and tokens. Rotating it signs everyone out.",
-      secret: true,
-    }),
-    cookieDomain: key("AUTH_COOKIE_DOMAIN", z.string().optional(), {
-      description:
-        "Parent domain shared by dashboard, portal and API, so one sign-in covers all three.",
-    }),
-    emailCodeSignIn: key("AUTH_EMAIL_CODE_SIGN_IN", bool.default(true), {
-      description: "Offer sign-in with a one-time code sent by email.",
-      public: true,
-    }),
-  },
 });
 
 export type Schema = typeof schema;

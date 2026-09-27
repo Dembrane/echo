@@ -1,0 +1,12 @@
+{
+  "name": "echo platform",
+  "image": "oven/bun:1.4-debian",
+  "runArgs": ["--network=host"],
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "postCreateCommand": "bun install && docker compose up -d --wait db && bun run db:migrate",
+  "customizations": { "vscode": { "extensions": ["biomejs.biome", "oven.bun-vscode"] } },
+  "remoteEnv": { "APP_ENV": "local" }
+}

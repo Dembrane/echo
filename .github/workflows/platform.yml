@@ -1,0 +1,73 @@
+name: platform
+
+# Checks for echo/platform, the Bun rewrite. Every job runs from echo/platform.
+on:
+  pull_request:
+    paths: ["echo/platform/**", ".github/workflows/platform.yml"]
+  push:
+    branches: [feat/bun-migration]
+    paths: ["echo/platform/**", ".github/workflows/platform.yml"]
+
+concurrency:
+  group: platform-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: echo/platform
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.1-pg16
+        env: { POSTGRES_USER: echo, POSTGRES_PASSWORD: echo, POSTGRES_DB: postgres }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U echo" --health-interval 2s --health-retries 30
+    env:
+      TEST_DATABASE_ADMIN_URL: postgres://echo:echo@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version-file: echo/platform/.bun-version }
+      - run: bun install --frozen-lockfile
+      - name: Lint and format
+        run: bunx biome ci .
+      - name: Types
+        run: bun run typecheck
+      - name: Config is declared, valid in every environment, and read
+        run: bun run config check
+      - name: Schema and migrations agree
+        working-directory: echo/platform/packages/db
+        run: |
+          out=$(bunx drizzle-kit generate < /dev/null)
+          echo "$out"
+          echo "$out" | grep -q "No schema changes"
+      - name: Tests
+        run: bun test
+
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: check
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: echo/platform
+          file: echo/platform/apps/api/Dockerfile
+          build-args: RELEASE=${{ github.sha }}
+          tags: echo-api:${{ github.sha }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Container starts and answers
+        run: |
+          docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d echo-api:${{ github.sha }}
+          for i in $(seq 1 25); do curl -sf localhost:8080/healthz && exit 0; sleep 0.2; done
+          docker logs api; exit 1

@@ -7,13 +7,16 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun --filter @echo/api dev",
+    "dev": "bun --env-file=.env.local --filter @echo/api dev",
     "check": "bun run lint && bun run typecheck && bun test",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "typecheck": "tsc -b",
+    "typecheck": "tsc -b --noEmit false --emitDeclarationOnly",
     "db:generate": "bun --filter @echo/db generate",
-    "db:migrate": "bun --filter @echo/db migrate"
+    "db:migrate": "bun --env-file=.env.local packages/db/src/migrate.ts",
+    "setup": "scripts/setup.sh",
+    "config": "bun packages/config/src/cli.ts",
+    "test": "bun test"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.0",

@@ -1,0 +1,17 @@
+# Local infrastructure: Postgres is the only stateful dependency. `bun run setup` starts it,
+# applies migrations and seeds a demo org.
+services:
+  db:
+    image: pgvector/pgvector:0.8.1-pg16
+    environment:
+      POSTGRES_USER: echo
+      POSTGRES_PASSWORD: echo
+      POSTGRES_DB: echo
+    ports: ["${ECHO_DB_PORT:-5433}:5432"]
+    volumes: [db:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U echo -d echo"]
+      interval: 2s
+      retries: 30
+volumes:
+  db:

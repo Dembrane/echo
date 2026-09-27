@@ -8,5 +8,4 @@ export default {
   },
   database: { poolMax: 10 },
   observability: { traceSampleRatio: 0.1 },
-  auth: { cookieDomain: "dembrane.com" },
 } satisfies Environment;

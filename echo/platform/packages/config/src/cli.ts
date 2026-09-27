@@ -42,7 +42,11 @@ async function unreadKeys(root: string): Promise<string[]> {
     if (f.startsWith("packages/config/")) continue;
     code += await Bun.file(`${root}/${f}`).text();
   }
-  return [...walk(schema)].map(([path]) => path).filter((p) => !code.includes(`.${p}`));
+  // Public keys are read by browsers through /config.json, so they count as read.
+  return [...walk(schema)]
+    .filter(([, k]) => k.meta.visibility !== "public")
+    .map(([path]) => path)
+    .filter((p) => !code.includes(`.${p}`));
 }
 
 const [cmd, a, b] = process.argv.slice(2);

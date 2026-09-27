@@ -9,7 +9,6 @@ import type { Deps } from "../src/deps";
 const loaded = loadConfig({
   APP_ENV: "test",
   DATABASE_URL: "postgres://u@h/d",
-  AUTH_SECRET: "s".repeat(48),
 });
 const lines: Record<string, unknown>[] = [];
 const sink = new Writable({
@@ -51,7 +50,7 @@ test("config.json serves only public keys", async () => {
   >;
   expect(body.http?.publicUrl).toBe("http://api.test");
   expect(body.database).toBeUndefined();
-  expect(body.auth).toEqual({ emailCodeSignIn: true });
+  expect(Object.keys(body).sort()).toEqual(["app", "http"]);
 });
 
 test("every response carries a request id, and the access log line has it", async () => {
