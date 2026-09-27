@@ -24,3 +24,17 @@ export function loadConfig(
   const file = name && name in environments ? environments[name] : undefined;
   return load(schema, file, processEnv);
 }
+
+/**
+ * Loads only the sections an app reads, so a process that never touches the database
+ * (the web server) is not asked for its secrets.
+ */
+export function loadSections<K extends keyof Schema>(
+  sections: readonly K[],
+  processEnv: Record<string, string | undefined> = process.env,
+): Loaded<Pick<Schema, K>> {
+  const name = processEnv.APP_ENV as EnvironmentName | undefined;
+  const file = name && name in environments ? environments[name] : undefined;
+  const picked = Object.fromEntries(sections.map((s) => [s, schema[s]])) as Pick<Schema, K>;
+  return load(picked, file, processEnv);
+}

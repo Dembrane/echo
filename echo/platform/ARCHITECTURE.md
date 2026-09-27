@@ -11,7 +11,7 @@ Bun + Cloud Run system; each choice and deviation is a decision record in
 | App | Runs | Scales on |
 |---|---|---|
 | `apps/api` | HTTP: dashboard, portal, iOS app, MCP, webhooks in | requests (Cloud Run service) |
-| `apps/worker` | pg-boss jobs that wait on the network, agent runs, ticks, schedules | always on, small (Cloud Run worker pool) |
+| `apps/worker` | DBOS jobs and durable workflows that wait on the network, agent runs, ticks, schedules | always on, small (Cloud Run worker pool) |
 | `apps/media` | ffmpeg work handed over by the worker, one job per instance | requests, 0 to N (internal Cloud Run service) |
 | `apps/web` | the React frontend, served as static files | requests |
 | migrations | `packages/db/src/migrate.ts` before every rollout | Cloud Run job |
@@ -25,7 +25,7 @@ capabilities, capabilities use nothing above them.
 
 **Capabilities** (no business rules): `config`, `observability`, `db`, `core` (errors,
 ids, operation context), `auth` (Better Auth), `access` (roles and policies, one resolver),
-`queue` (pg-boss), `mail`, `storage` (S3 API: GCS, Spaces, MinIO), `llm` (model groups with fallback),
+`queue` (DBOS: jobs, durable workflows, schedules), `mail`, `storage` (S3 API: GCS, Spaces, MinIO), `llm` (model groups with fallback),
 `transcription`, `audio` (ffmpeg), `billing` (Mollie), `analytics` (PostHog), `webhooks`,
 `flags`, `realtime` (LISTEN/NOTIFY to SSE).
 
@@ -40,7 +40,7 @@ packages/<ns>/src/
   routes.ts     Hono sub-app, zod request and response schemas, no business logic
   service.ts    the operations; first argument is always the operation context
   storage.ts    Drizzle queries; every method takes the tenant scope first
-  jobs.ts       pg-boss handlers, idempotent on a key the producer sets
+  jobs.ts       jobs and workflows (DBOS), idempotent on a key the producer sets
   index.ts      what other packages may import
 ```
 

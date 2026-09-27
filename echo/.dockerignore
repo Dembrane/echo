@@ -1,0 +1,19 @@
+# Context for images built from echo/ (the platform web image): only frontend/ and platform/.
+**/node_modules
+**/dist
+**/.env*
+server
+agent
+directus
+cypress
+demos
+docs
+brand
+tools
+scripts
+frontend/e2e
+platform/parity/.parity-out
+platform/packages/db/introspected
+platform/infra
+**/*.local.ts
+**/*.tsbuildinfo

@@ -238,3 +238,14 @@ resource "google_secret_manager_secret_iam_member" "api_auth_secret" {
   role      = "roles/secretmanager.secretAccessor"
   member    = google_service_account.api.member
 }
+
+# The web servers serve static files and forward /api; they need no secrets or data access.
+resource "google_service_account" "web" {
+  account_id   = "${local.name}-web"
+  display_name = "echo ${var.env} dashboard and portal"
+}
+resource "google_service_account_iam_member" "deployer_acts_as_web" {
+  service_account_id = google_service_account.web.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = google_service_account.deployer.member
+}

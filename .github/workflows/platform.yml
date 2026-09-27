@@ -3,10 +3,10 @@ name: platform
 # Checks for echo/platform, the Bun rewrite. Every job runs from echo/platform.
 on:
   pull_request:
-    paths: ["echo/platform/**", ".github/workflows/platform.yml"]
+    paths: ["echo/platform/**", "echo/frontend/**", ".github/workflows/platform.yml"]
   push:
     branches: [feat/bun-migration]
-    paths: ["echo/platform/**", ".github/workflows/platform.yml"]
+    paths: ["echo/platform/**", "echo/frontend/**", ".github/workflows/platform.yml"]
 
 concurrency:
   group: platform-${{ github.ref }}
@@ -64,6 +64,10 @@ jobs:
               -f apps/$app/Dockerfile --build-arg RELEASE=${{ github.sha }} \
               -t echo-$app:${{ github.sha }} .
           done
+          # The web image builds the frontend too, from the echo/ context.
+          docker buildx build --load --provenance=false \
+            --cache-from type=gha,scope=web --cache-to type=gha,mode=max,scope=web \
+            -f apps/web/Dockerfile --build-arg RELEASE=${{ github.sha }} -t echo-web:${{ github.sha }} ..
       - name: Container starts and answers
         run: |
           docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d -e AUTH_SECRET=smoke-test-secret-that-is-long-enough-000 echo-api:${{ github.sha }}
@@ -103,6 +107,9 @@ jobs:
               --cache-from type=gha,scope=$app --cache-to type=gha,mode=max,scope=$app \
               -f apps/$app/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/$app:$TAG .
           done
+          docker buildx build --push --provenance=false \
+            --cache-from type=gha,scope=web --cache-to type=gha,mode=max,scope=web \
+            -f apps/web/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/web:$TAG ..
       - name: Migrate
         run: |
           gcloud run jobs deploy echo-preview-migrate --project $PROJECT --region $REGION \
@@ -131,9 +138,25 @@ jobs:
             --set-secrets DATABASE_URL=echo-preview-database-url:latest \
             --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG \
             --cpu 1 --memory 512Mi --instances 1 --quiet
+      - name: Deploy dashboard and portal
+        run: |
+          for role in dashboard portal; do
+            gcloud run deploy echo-preview-$role --project $PROJECT --region $REGION \
+              --image $REGISTRY/web:$TAG \
+              --service-account echo-preview-web@$PROJECT.iam.gserviceaccount.com \
+              --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG,WEB_ROLE=$role \
+              --cpu 1 --memory 256Mi --concurrency 200 --min-instances 0 --max-instances 3 \
+              --allow-unauthenticated --quiet
+          done
       - name: Live smoke test
         run: |
           url=$(gcloud run services describe echo-preview-api --project $PROJECT --region $REGION --format 'value(status.url)')
           curl -sf "$url/ready"
           release=$(curl -sf "$url/health" | jq -r .release)
           test "$release" = "$TAG" || { echo "serving $release, expected $TAG"; exit 1; }
+          for role in dashboard portal; do
+            web=$(gcloud run services describe echo-preview-$role --project $PROJECT --region $REGION --format 'value(status.url)')
+            curl -sf "$web/runtime-config.js" | grep -q "\"role\":\"$role\""
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$web/api/v2/me")
+            test "$code" = 401 || { echo "$role /api proxy answered $code, expected 401"; exit 1; }
+          done

@@ -60,7 +60,7 @@ test("config.json serves only public keys", async () => {
   >;
   expect(body.http?.publicUrl).toBe("http://api.test");
   expect(body.database).toBeUndefined();
-  expect(Object.keys(body).sort()).toEqual(["app", "http"]);
+  expect(Object.keys(body).sort()).toEqual(["app", "http", "web"]);
 });
 
 test("every response carries a request id, and the access log line has it", async () => {

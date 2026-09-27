@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { defineSchema, key } from "./define";
 
-const bool = z
-  .union([z.boolean(), z.enum(["true", "false", "1", "0"])])
-  .transform((v) => v === true || v === "true" || v === "1");
 const int = z.coerce.number().int();
 /** A list from an environment file, or comma-separated from an environment variable. */
 const list = z.union([
@@ -72,6 +69,20 @@ export const schema = defineSchema({
     }),
     traceSampleRatio: key("TRACE_SAMPLE_RATIO", z.coerce.number().min(0).max(1).default(0.1), {
       description: "Share of requests traced end to end.",
+    }),
+  },
+  web: {
+    role: key("WEB_ROLE", z.enum(["dashboard", "portal"]).default("dashboard"), {
+      description:
+        "Which app a web server instance serves: the dashboard for hosts, or the portal for participants.",
+      public: true,
+    }),
+    apiOrigin: key("WEB_API_ORIGIN", z.url().optional(), {
+      description:
+        "Where the web server forwards /api. Same-origin keeps sign-in cookies first-party on any host.",
+    }),
+    distDir: key("WEB_DIST_DIR", z.string().default("/app/dist"), {
+      description: "The built frontend the web server serves.",
     }),
   },
   llm: {

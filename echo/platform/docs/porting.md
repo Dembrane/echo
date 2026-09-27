@@ -20,7 +20,7 @@ the same package.
 packages/<ns>/src/routes.ts    Hono sub-app. Parse and validate input, call the service, shape output. No SQL, no access rules.
 packages/<ns>/src/service.ts   Operations. Take the caller (Signed from @echo/http) first. Pure where possible.
 packages/<ns>/src/storage.ts   Drizzle queries only.
-packages/<ns>/src/jobs.ts      Job definitions (defineJob) and handlers, idempotent on a producer-set key.
+packages/<ns>/src/jobs.ts      Jobs (defineJob + queue.work) and durable workflows (workflow + step from @echo/queue).
 packages/<ns>/test/            Unit tests for rules and services.
 parity/scenarios/<ns>.ts       Parity scenarios for every route.
 ```
@@ -51,6 +51,14 @@ are the only shared files you touch.
   does not exist yet, in `packages/<capability>`, with the fake used by tests.
 - Comments say why and what the impact is, never how we got here. No em dashes anywhere.
   Match the existing style: small files, explicit types at boundaries, no `any`.
+
+## Background work
+
+Plain jobs: `defineJob` and `queue.work`, enqueued with `queue.enqueue(def, payload, { tx })`
+inside the transaction that causes them. Multi-step flows that Python repairs with crons
+(sagas, runs with phases): one `workflow` whose side effects happen in `step`s, started with
+an id that makes a second start a no-op. Steps must be idempotent. Read
+docs/decisions/0007-durable-workflows-with-dbos.md before writing a workflow.
 
 ## Proving parity
 

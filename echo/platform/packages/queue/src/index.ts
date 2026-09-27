@@ -4,5 +4,8 @@ export {
   installQueueSchema,
   Queue,
   type QueueHealth,
+  WORKFLOW_VERSION,
   type WorkOptions,
 } from "./queue";
+export { ExecutorHeartbeat } from "./recovery";
+export { startWorkflow, step, workflow } from "./workflow";

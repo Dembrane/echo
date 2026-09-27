@@ -4,7 +4,7 @@ import { installQueueSchema } from "@echo/queue";
 
 /**
  * The Cloud Run job that runs before every rollout, with the owner login: schema
- * migrations, then pg-boss's schema, then data rights for the runtime login. A failure
+ * migrations, then the DBOS queue schema, then data rights for the runtime login. A failure
  * stops the deploy before any new revision takes traffic.
  */
 const url = process.env.MIGRATION_DATABASE_URL;
@@ -27,7 +27,7 @@ const sql = connect(url, { max: 1, onnotice: () => {} });
 log("identities synced", await syncIdentitiesFromDirectus(sql));
 await sql.end();
 if (role) {
-  await grantRuntimeRole(url, role, ["public", "pgboss"]);
+  await grantRuntimeRole(url, role, ["public", "dbos"]);
   log("runtime role granted", { role });
 }
 log("migration job complete", { ms: Math.round(performance.now() - started) });

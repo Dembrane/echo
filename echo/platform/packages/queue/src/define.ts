@@ -11,7 +11,7 @@ export interface JobDefinition<S extends z.ZodType = z.ZodType> {
   readonly retryLimit: number;
   readonly retryDelaySeconds: number;
   readonly retryBackoff: boolean;
-  /** How long one attempt may run before pg-boss treats it as failed and retries. */
+  /** How long one attempt may run before the attempt is treated as failed and retried. */
   readonly expireInSeconds: number;
   /** `singleton` keeps at most one queued or active job per singleton key. */
   readonly policy: "standard" | "singleton" | "stately";

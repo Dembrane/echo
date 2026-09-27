@@ -4,9 +4,10 @@ import type { Environment } from "../src";
 export default {
   http: {
     publicUrl: "https://echo-preview-api-86405194907.europe-west4.run.app",
-    dashboardUrl: "http://localhost:5173",
-    portalUrl: "http://localhost:5174",
+    dashboardUrl: "https://echo-preview-dashboard-86405194907.europe-west4.run.app",
+    portalUrl: "https://echo-preview-portal-86405194907.europe-west4.run.app",
   },
   database: { poolMax: 5 },
   observability: { gcpProject: "dembrane-echo", traceSampleRatio: 1 },
+  web: { apiOrigin: "https://echo-preview-api-86405194907.europe-west4.run.app" },
 } satisfies Environment;

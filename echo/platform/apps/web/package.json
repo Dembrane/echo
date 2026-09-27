@@ -1,0 +1,14 @@
+{
+  "name": "@echo/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/main.ts",
+    "start": "bun src/main.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@echo/config": "workspace:*",
+    "@echo/observability": "workspace:*"
+  }
+}

@@ -9,9 +9,20 @@
     "test": "bun test"
   },
   "dependencies": {
-    "pg-boss": "^12.5.0",
     "zod": "^4.1.0",
     "@echo/observability": "workspace:*",
-    "postgres": "^3.4.9"
+    "postgres": "^3.4.9",
+    "@dbos-inc/dbos-sdk": "^5.1.10",
+    "@opentelemetry/context-async-hooks": "^2.0.0",
+    "@opentelemetry/exporter-logs-otlp-proto": "*",
+    "@opentelemetry/exporter-trace-otlp-proto": "*",
+    "@opentelemetry/sdk-logs": "*",
+    "@opentelemetry/api-logs": "*",
+    "winston": "^3.17.0",
+    "winston-transport": "^4.9.0",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@echo/db": "workspace:*"
   }
 }

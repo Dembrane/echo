@@ -13,6 +13,19 @@
 
 export type AppEnvironment = "production" | "next" | "testing" | "local";
 
+// Deployments on the platform's web server (echo/platform/apps/web) inject these
+// through /runtime-config.js before any module loads, so one build runs in every
+// environment. Absent in dev and on Vercel, where hostname detection below applies.
+interface RuntimeConfig {
+	env: AppEnvironment;
+	role: "dashboard" | "portal";
+	apiBase: string;
+	dashboardUrl: string;
+	portalUrl: string;
+}
+const RUNTIME = (globalThis as { __ECHO_RUNTIME__?: RuntimeConfig })
+	.__ECHO_RUNTIME__;
+
 const ENV_HOSTNAMES: Record<"production" | "next" | "testing", string[]> = {
 	next: ["dashboard.echo-next.dembrane.com", "portal.echo-next.dembrane.com"],
 	production: ["dashboard.dembrane.com", "portal.dembrane.com"],
@@ -25,6 +38,7 @@ const ENV_HOSTNAMES: Record<"production" | "next" | "testing", string[]> = {
 const LOCAL_HOSTNAMES = ["localhost", "127.0.0.1", "0.0.0.0"];
 
 export const APP_ENVIRONMENT: AppEnvironment = (() => {
+	if (RUNTIME) return RUNTIME.env;
 	if (typeof window === "undefined") return "production";
 	const { host, hostname } = window.location;
 	for (const [env, hosts] of Object.entries(ENV_HOSTNAMES)) {
@@ -70,27 +84,25 @@ const dembraneHost = (subdomain: string): string =>
 // The portal (participant) and dashboard (admin) apps share this codebase.
 // Deployed portals are portal.* hosts; locally the participant dev server is
 // the one on port 5174 (`pnpm participant:dev`).
-export const USE_PARTICIPANT_ROUTER = Boolean(
-	globalThis.window?.location.hostname.startsWith("portal.") ||
-		globalThis.window?.location.port === "5174",
-);
+export const USE_PARTICIPANT_ROUTER = RUNTIME
+	? RUNTIME.role === "portal"
+	: Boolean(
+			globalThis.window?.location.hostname.startsWith("portal.") ||
+				globalThis.window?.location.port === "5174",
+		);
 
-export const ADMIN_BASE_URL = byEnv(
-	{ local: "http://localhost:5173" },
-	dembraneHost("dashboard"),
-);
+export const ADMIN_BASE_URL =
+	RUNTIME?.dashboardUrl ??
+	byEnv({ local: "http://localhost:5173" }, dembraneHost("dashboard"));
 
-export const PARTICIPANT_BASE_URL = byEnv(
-	{ local: "http://localhost:5174" },
-	dembraneHost("portal"),
-);
+export const PARTICIPANT_BASE_URL =
+	RUNTIME?.portalUrl ??
+	byEnv({ local: "http://localhost:5174" }, dembraneHost("portal"));
 
 // FastAPI mounts its routes under /api; locally the Vite proxy forwards
 // same-origin /api to localhost:8000.
-export const API_BASE_URL = byEnv(
-	{ local: "/api" },
-	`${dembraneHost("api")}/api`,
-);
+export const API_BASE_URL =
+	RUNTIME?.apiBase ?? byEnv({ local: "/api" }, `${dembraneHost("api")}/api`);
 
 export const DIRECTUS_PUBLIC_URL = byEnv(
 	// Local dev goes through the Vite proxy so cookies stay same-origin.

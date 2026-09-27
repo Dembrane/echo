@@ -1,9 +1,10 @@
-import { describe, loadConfig } from "@echo/config";
+import { describe, loadSections } from "@echo/config";
 import { createLogger, initTracing } from "@echo/observability";
 import { Queue } from "@echo/queue";
 import { registrations } from "./jobs";
 
-const loaded = loadConfig();
+// Only what the worker reads: it never serves sign-in, so it is not given the auth secret.
+const loaded = loadSections(["app", "database", "observability", "llm"]);
 const config = loaded.values;
 const service = "echo-worker";
 const logger = createLogger({
@@ -27,6 +28,7 @@ const queue = new Queue(config.database.url, logger, tracing.tracer, {
 const regs = registrations(logger);
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);
+await queue.run();
 logger.info(
   { jobs: regs.flatMap((r) => r.jobs.map((j) => j.name)), config: describe(loaded) },
   "worker started",

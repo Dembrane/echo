@@ -2,7 +2,7 @@ import postgres from "postgres";
 
 /**
  * Opens postgres.js from a connection URL. Cloud Run reaches Cloud SQL through a unix
- * socket written as `?host=/cloudsql/<instance>` (the form node-postgres and pg-boss
+ * socket written as `?host=/cloudsql/<instance>` (the form node-postgres and DBOS
  * read); postgres.js needs that as an explicit socket path, so it is translated here once.
  */
 export function connect(

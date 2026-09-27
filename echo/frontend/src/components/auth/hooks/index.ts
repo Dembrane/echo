@@ -1,17 +1,19 @@
-import {
-	passwordRequest,
-	passwordReset,
-	registerUserVerify,
-} from "@directus/sdk";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useLocation, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
-import { ADMIN_BASE_URL, API_BASE_URL } from "@/config";
+import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { emitAuthCacheBoundary } from "@/lib/authCacheBoundary";
-import { directus } from "@/lib/directus";
+import {
+	hasSession,
+	requestPasswordReset,
+	resetPassword,
+	signIn,
+	signOut,
+	verifyEmail,
+} from "@/lib/auth";
 import { isAuthPath } from "../utils/authPaths";
 import { throwWithMessage } from "../utils/errorUtils";
 
@@ -61,8 +63,8 @@ export const useResetPasswordMutation = () => {
 			password: string;
 		}) => {
 			try {
-				const response = await directus.request(passwordReset(token, password));
-				return response;
+				await resetPassword(token, password);
+				return true;
 			} catch (e) {
 				throwWithMessage(e);
 			}
@@ -86,10 +88,8 @@ export const useRequestPasswordResetMutation = () => {
 	return useMutation({
 		mutationFn: async (email: string) => {
 			try {
-				const response = await directus.request(
-					passwordRequest(email, `${ADMIN_BASE_URL}/password-reset`),
-				);
-				return response;
+				await requestPasswordReset(email);
+				return true;
 			} catch (e) {
 				throwWithMessage(e);
 			}
@@ -109,8 +109,7 @@ export const useVerifyMutation = (doRedirect = true) => {
 
 	return useMutation({
 		mutationFn: async (data: { token: string }) => {
-			// 15s ceiling — without it, a hung Directus / proxy would
-			// leave the page spinning forever (original infinite-loading bug).
+			// 15s ceiling: a hung API or proxy must not leave the page spinning.
 			const timeout = new Promise<never>((_, reject) =>
 				setTimeout(
 					() => reject(new Error("Verification timed out. Try again.")),
@@ -119,7 +118,7 @@ export const useVerifyMutation = (doRedirect = true) => {
 			);
 			try {
 				const response = await Promise.race([
-					directus.request(registerUserVerify(data.token)),
+					verifyEmail(data.token),
 					timeout,
 				]);
 				return response;
@@ -186,12 +185,7 @@ export const useLoginMutation = () => {
 			password: string;
 			otp?: string;
 		}) => {
-			return directus.login(
-				{ email, password },
-				{
-					otp: otp || undefined,
-				},
-			);
+			return signIn(email, password, otp || undefined);
 		},
 		onSuccess: async () => {
 			// Clear everything, not an allowlist: a targeted list silently leaks
@@ -222,7 +216,7 @@ export const useLogoutMutation = () => {
 			doRedirect: boolean;
 		}) => {
 			try {
-				await directus.logout();
+				await signOut();
 			} catch (e) {
 				const status = (e as { response?: { status?: number } })?.response
 					?.status;
@@ -274,7 +268,7 @@ export const useAuthenticated = (doRedirect = false, enabled = true) => {
 		// portal) disable the query so no refresh call is fired at all.
 		enabled,
 		queryFn: async () => {
-			await directus.refresh();
+			if (!(await hasSession())) throw new Error("No session");
 			return true as const;
 		},
 		queryKey: ["auth", "session"],

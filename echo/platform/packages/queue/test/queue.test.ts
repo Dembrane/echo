@@ -1,9 +1,10 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { Writable } from "node:stream";
+import { migrate } from "@echo/db";
 import { createLogger, initTracing, withCorrelation } from "@echo/observability";
 import postgres from "postgres";
 import { z } from "zod";
-import { defineJob, Queue } from "../src";
+import { defineJob, installQueueSchema, Queue } from "../src";
 
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
@@ -32,8 +33,10 @@ const flaky = defineJob("test.flaky", z.object({ n: z.number() }), {
   retryDelaySeconds: 1,
   retryBackoff: false,
 });
+const once = defineJob("test.once", z.object({ k: z.string() }));
+const tick = defineJob("test.tick", z.object({}), { policy: "singleton", retryLimit: 0 });
 
-async function until(check: () => boolean, ms = 15_000) {
+async function until(check: () => boolean, ms = 20_000) {
   const end = Date.now() + ms;
   while (!check()) {
     if (Date.now() > end) throw new Error("timed out waiting");
@@ -41,19 +44,45 @@ async function until(check: () => boolean, ms = 15_000) {
   }
 }
 
-run("queue", () => {
-  // pg-boss polls every 2s by default, so these tests wait on real time.
-  setDefaultTimeout(20_000);
+run("queue on DBOS", () => {
+  setDefaultTimeout(30_000);
   let queue: Queue;
   let sql: postgres.Sql;
+  const greeted: string[] = [];
+  const committedNames: string[] = [];
+  const onceRuns: string[] = [];
+  let flakyAttempts = 0;
+  let ticks = 0;
+
   beforeAll(async () => {
     const a = postgres(admin as string, { max: 1, onnotice: () => {} });
-    await a.unsafe("drop database if exists queue_test");
+    await a.unsafe("drop database if exists queue_test with (force)");
     await a.unsafe("create database queue_test");
     await a.end();
+    await migrate(url);
+    await installQueueSchema(url);
     sql = postgres(url, { max: 2, onnotice: () => {} });
-    queue = new Queue(url, logger, tracer, { manageSchema: true });
-    await queue.start([greet, committed, flaky]);
+    queue = new Queue(url, logger, tracer);
+    await queue.start([greet, committed, flaky, once, tick]);
+    await queue.work(greet, { concurrency: 2 }, async (p) => {
+      greeted.push(p.name);
+    });
+    await queue.work(committed, { concurrency: 1 }, async (p) => {
+      committedNames.push(p.name);
+    });
+    await queue.work(flaky, { concurrency: 1 }, async () => {
+      flakyAttempts++;
+      if (flakyAttempts < 2) throw new Error("transient");
+    });
+    await queue.work(once, { concurrency: 1 }, async (p) => {
+      onceRuns.push(p.k);
+      await Bun.sleep(300);
+    });
+    await queue.work(tick, { concurrency: 1 }, async () => {
+      ticks++;
+    });
+    await queue.schedule(tick, "* * * * * *", {});
+    await queue.run();
   });
   afterAll(async () => {
     await queue.stop();
@@ -61,15 +90,12 @@ run("queue", () => {
   });
 
   test("a job runs with its payload and carries the request that caused it", async () => {
-    const seen: { name: string }[] = [];
-    await queue.work(greet, { concurrency: 2 }, async (p) => {
-      seen.push(p);
-    });
     await withCorrelation({ requestId: "req-42" }, () => queue.enqueue(greet, { name: "ada" }));
-    await until(() => seen.length === 1);
-    expect(seen[0]).toEqual({ name: "ada" });
+    await until(() => greeted.includes("ada"));
     await until(() => lines.some((l) => l.message === "job done" && l.job === "test.greet"));
-    expect(lines.find((l) => l.message === "job done")?.caused_by_request_id).toBe("req-42");
+    expect(
+      lines.find((l) => l.message === "job done" && l.job === "test.greet")?.caused_by_request_id,
+    ).toBe("req-42");
   });
 
   test("an invalid payload is refused at enqueue, not discovered by the worker", async () => {
@@ -83,35 +109,46 @@ run("queue", () => {
         throw new Error("rollback");
       })
       .catch(() => {});
+    await Bun.sleep(1500);
+    expect(greeted).not.toContain("ghost");
     const rows =
-      await sql`select 1 from pgboss.job where name = 'test.greet' and data->'payload'->>'name' = 'ghost'`;
+      await sql`select 1 from dbos.workflow_status where name = 'test.greet' and inputs like '%ghost%'`;
     expect(rows.length).toBe(0);
   });
 
   test("a job enqueued in a committed transaction runs", async () => {
-    const seen: string[] = [];
-    await queue.work(committed, { concurrency: 1 }, async (p) => {
-      seen.push(p.name);
-    });
     await sql.begin(async (tx) => {
-      await queue.enqueue(committed, { name: "committed" }, { tx });
+      await queue.enqueue(committed, { name: "kept" }, { tx });
     });
-    await until(() => seen.includes("committed"));
+    await until(() => committedNames.includes("kept"));
   });
 
   test("a failing job is retried until it succeeds", async () => {
-    let attempts = 0;
-    await queue.work(flaky, { concurrency: 1 }, async () => {
-      attempts++;
-      if (attempts < 2) throw new Error("transient");
-    });
     await queue.enqueue(flaky, { n: 1 });
-    await until(() => attempts >= 2);
-    const health = await queue.health();
-    expect(health.map((h) => h.name).sort()).toEqual([
+    await until(() => flakyAttempts >= 2);
+  });
+
+  test("a singleton key keeps one queued or running job per key", async () => {
+    const a = await queue.enqueue(once, { k: "x" }, { singletonKey: "x" });
+    const b = await queue.enqueue(once, { k: "x" }, { singletonKey: "x" });
+    expect(b).toBe(a);
+    await until(() => onceRuns.length >= 1);
+    await Bun.sleep(800);
+    expect(onceRuns).toEqual(["x"]);
+  });
+
+  test("a schedule fires", async () => {
+    await until(() => ticks >= 2);
+  });
+
+  test("health reports every queue", async () => {
+    const h = await queue.health();
+    expect(h.map((q) => q.name).sort()).toEqual([
       "test.committed",
       "test.flaky",
       "test.greet",
+      "test.once",
+      "test.tick",
     ]);
   });
 });

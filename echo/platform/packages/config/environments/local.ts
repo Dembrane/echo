@@ -8,4 +8,5 @@ export default {
     portalUrl: "http://localhost:5174",
   },
   observability: { logLevel: "debug", traceSampleRatio: 1 },
+  web: { apiOrigin: "http://localhost:8080", distDir: "../frontend/dist" },
 } satisfies Environment;
