@@ -33,7 +33,7 @@ DEMO_DIRECTUS_TOKEN=<directus admin static token> python3 seed_demo.py --demo <f
     --workspace-id <workspace> --owner-id <directus user> --dry-run
 ```
 
-Drop `--dry-run` to write. The environment needs the synthetic presenter deployed and its migrations run (`echo/docs/database_migrations.md`).
+Drop `--dry-run` to write. On the Bun platform, where Directus is gone, add `--platform` and set `DEMO_API_TOKEN` to a staff session token instead of `DEMO_DIRECTUS_TOKEN` and `--directus-url`: the staff route `POST /api/v2/admin/popcorn/demos` writes the same rows with the same ids and returns the same links. The environment needs the synthetic presenter deployed and its migrations run (`echo/docs/database_migrations.md`).
 
 ## The local helper
 

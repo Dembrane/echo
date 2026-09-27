@@ -5,6 +5,7 @@ import { reportRoutes, responseRoutes } from "@echo/feedback";
 import { notificationRoutes } from "@echo/notifications";
 import {
   noCapture,
+  popcornDemoRoutes,
   popcornDeps,
   popcornFlags,
   popcornRoutes,
@@ -101,6 +102,18 @@ export function buildApp(deps: Deps) {
   const presentDeps = { ...popcorn, access: deps.access, hub, map: sqlMapStore(sql) };
   app.route("/", presentRoutes(presentDeps));
   app.route("/", publicRoutes({ ...popcorn, hub, audienceMap: publicAudienceMap(presentDeps) }));
+  app.route(
+    "/",
+    popcornDemoRoutes({
+      db: deps.db,
+      staffAudit: deps.staffAudit,
+      ownUrls: [
+        deps.config.http.publicUrl,
+        deps.config.http.dashboardUrl,
+        deps.config.http.portalUrl,
+      ],
+    }),
+  );
   app.onError(onError);
   app.notFound(notFound);
   return app;

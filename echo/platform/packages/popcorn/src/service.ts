@@ -13,7 +13,18 @@ import {
   withoutObjects,
 } from "./deck";
 import { publishNudge } from "./events";
-import { asId, dict, isRecord, type Json, orStr, pyEqual, pyIso, strip, truthy } from "./py";
+import {
+  asId,
+  dict,
+  directusTime,
+  isRecord,
+  type Json,
+  orStr,
+  pyEqual,
+  pyIso,
+  strip,
+  truthy,
+} from "./py";
 import {
   DEFAULT_CADENCE_MINUTES,
   defaultSettings,
@@ -95,11 +106,7 @@ export function tokenUrlsafe(bytes = 24): string {
 }
 
 /** A Directus timestamp field as the dashboard read it. */
-const iso = (v: unknown): string | null => {
-  if (v === null || v === undefined) return null;
-  if (v instanceof Date) return v.toISOString();
-  return String(v);
-};
+const iso = (v: unknown): string | null => directusTime(v);
 
 // ── locks ─────────────────────────────────────────────────────────────
 

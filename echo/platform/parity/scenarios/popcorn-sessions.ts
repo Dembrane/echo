@@ -189,7 +189,14 @@ export default scenarios([
     setup: session(),
   },
   { name: "popcorn detail: missing", as: "alice", method: "GET", path: one(99) },
-  { name: "popcorn detail: not a number", as: "alice", method: "GET", path: one("abc") },
+  {
+    name: "popcorn detail: not a number",
+    as: "alice",
+    method: "GET",
+    path: one("abc"),
+    differs:
+      "a malformed report id answers 404 Report not found, not the 500 Directus's refusal became",
+  },
   { name: "popcorn detail: a plain report", as: "alice", method: "GET", path: one(1) },
   {
     name: "popcorn detail: deleted",

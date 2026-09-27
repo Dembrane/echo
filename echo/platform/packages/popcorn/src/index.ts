@@ -12,6 +12,8 @@ export {
 export { buildBundle } from "./bundle";
 export { type Capture, noCapture, posthogCapture } from "./capture";
 export { type DeckAnalysis, DeckUnavailable, sqlDeckAnalysis } from "./deck";
+export { demoIdentity, PRODUCTION_HOSTS, seedDemo } from "./demo";
+export { type DemoRoutesDeps, popcornDemoRoutes } from "./demo-routes";
 export { publishNudge, updateStream } from "./events";
 export { popcornApiJobs, popcornTick, queueDispatch } from "./jobs";
 export {
@@ -79,3 +81,4 @@ export {
 } from "./storage";
 export { missingTexts, popcornTexts, translatableTexts } from "./translate";
 export { renderPopcornPage } from "./view";
+export { type PopcornWorkerDeps, popcornWorker } from "./worker";

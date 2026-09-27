@@ -28,7 +28,9 @@ export function queueDispatch(queue: Pick<Queue, "enqueue">) {
     await queue.enqueue(
       popcornTick,
       { loopId: r.loopId, tickKind: r.tickKind, requestId: r.requestId },
-      { tx, singletonKey: r.requestId },
+      // DBOS refuses deduplication inside a caller-owned transaction; the tick itself
+      // makes a second delivery of one request id a no-op.
+      { tx },
     );
   };
 }
