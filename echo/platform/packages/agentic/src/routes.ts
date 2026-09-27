@@ -7,6 +7,9 @@ import type { Models } from "@echo/llm";
 import type { Logger } from "@echo/observability";
 import type { Queue } from "@echo/queue";
 import { Hono } from "hono";
+import { canvasRoutes } from "./canvas/routes";
+import { dataRoutes, memoryBffRoutes } from "./data/routes";
+import { runRoutes } from "./runs/routes";
 
 export interface AgenticRoutesDeps {
   readonly db: Db;
@@ -24,7 +27,11 @@ export interface AgenticRoutesDeps {
  * and the memory BFF (/api/v2/bff/memory). Paths, bodies and error texts match the
  * Python API.
  */
-export function agenticRoutes(_deps: AgenticRoutesDeps) {
+export function agenticRoutes(deps: AgenticRoutesDeps) {
   const app = new Hono<Env>();
+  app.route("/", runRoutes(deps));
+  app.route("/", dataRoutes(deps));
+  app.route("/", canvasRoutes(deps));
+  app.route("/", memoryBffRoutes(deps));
   return app;
 }
