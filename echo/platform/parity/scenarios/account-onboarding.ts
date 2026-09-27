@@ -96,6 +96,8 @@ export default scenarios([
     method: "POST",
     path: answers,
     body: { version: "17-jun-26", data: [{ q1: "with clients" }, { q2: "Yes" }, { q3: "no" }] },
+    differs:
+      "py-staff-audience: the old audience read users.admin_access, which Directus 11 no longer returns, so staff never got the inbox row",
   },
   {
     name: "onboarding: plain answers are stored without follow-up",

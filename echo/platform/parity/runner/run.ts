@@ -43,6 +43,12 @@ async function side(
   return { ...res, changes };
 }
 
+async function dump(name: string, a: string, b: string) {
+  const base = `${here}.parity-out/${name.replace(/[^a-z0-9]+/gi, "_")}`;
+  await Bun.write(`${base}.old.json`, a);
+  await Bun.write(`${base}.new.json`, b);
+}
+
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
 const seedIds = await collectSeedIds();
 const files = [...new Glob("scenarios/**/*.ts").scanSync(here)].sort();
@@ -72,13 +78,14 @@ for (const file of files) {
     if (ok) {
       pass++;
       out(`  ok    ${s.name}${s.differs ? `  (differs on purpose: ${s.differs})` : ""}`);
+      // A deliberate difference is only as good as its review: keep both sides to read.
+      if (s.differs) await dump(s.name, a, b);
     } else {
       fail++;
       failures.push(s.name);
       out(`  FAIL  ${s.name}`);
       if (!same) {
-        await Bun.write(`${here}.parity-out/${s.name.replace(/[^a-z0-9]+/gi, "_")}.old.json`, a);
-        await Bun.write(`${here}.parity-out/${s.name.replace(/[^a-z0-9]+/gi, "_")}.new.json`, b);
+        await dump(s.name, a, b);
         out(`        old ${o.status}, new ${n.status}; full captures in parity/.parity-out/`);
       } else out("        marked as differing, but both sides now match: remove the note");
     }

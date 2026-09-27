@@ -84,7 +84,7 @@ export function settingsRoutes(deps: AccountDeps) {
     const who = requireUser(c);
     const current = await store.directusFileRef(who.directusUserId, field);
     await store.updateDirectusUser(who.directusUserId, { [field]: null });
-    if (field === "avatar") await deps.identity.setImage(who.directusUserId, null);
+    if (current && field === "avatar") await deps.identity.setImage(who.directusUserId, null);
     if (current) {
       try {
         const disk = await store.deleteFile(current);

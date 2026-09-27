@@ -70,6 +70,7 @@ export default scenarios([
     method: "PATCH",
     path: `${s}/name`,
     body: { first_name: "Alicia\r\n" },
+    ignoreFields: ["last_access"],
   },
   {
     name: "settings: rename before onboarding writes only Directus",
@@ -77,6 +78,7 @@ export default scenarios([
     method: "PATCH",
     path: `${s}/name`,
     body: { first_name: "David" },
+    ignoreFields: ["last_access"],
   },
   {
     name: "settings: rename is validated",
@@ -209,6 +211,8 @@ export default scenarios([
     method: "POST",
     path: `${s}/whitelabel-logo`,
     form: { file: { filename: "logo.png", type: "image/png", base64: PNG } },
+    differs:
+      "uploaded_by: the file records the user who uploaded it, not the owner of the service token",
     ignoreFields: [
       "filename_disk",
       "uploaded_on",
@@ -248,12 +252,24 @@ export default scenarios([
     path: `${s}/whitelabel-logo`,
   },
 
+  {
+    name: "settings: remove an avatar that is set",
+    as: "alice",
+    method: "DELETE",
+    path: `${s}/avatar`,
+    setup: `insert into directus_files (id, storage, filename_disk, filename_download, type, uploaded_on, created_on) values ('${id("af", 70)}', 'local', 'gone.png', 'gone.png', 'image/png', now(), now());
+update directus_users set avatar = '${id("af", 70)}' where id = '${users.alice.directus}';
+update auth_user set image = '${id("af", 70)}' where id = '${users.alice.directus}';`,
+    ignoreFields: ["last_access"],
+    differs: "identity: the avatar is also cleared on Better Auth's user (auth_user.image)",
+  },
   // ── deletion ──
   {
     name: "settings: account deletion suspends the user",
     as: "bob",
     method: "DELETE",
     path: `${s}/account`,
+    ignoreFields: ["last_access"],
   },
   {
     name: "settings: account deletion, anonymous",
