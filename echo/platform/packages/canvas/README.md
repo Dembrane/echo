@@ -48,7 +48,9 @@ idempotent at their side effects.
   preview body does not have, so every preview that reached the model answered 500.
 - Migration `0005_canvas_ledgers` adds the eight `agent_loop.canvas_*` columns and
   `canvas_config_revision.tabs` that echo main's code reads and writes (its Directus
-  migration `add_smart_loop_wave28_canvas_ledgers.py` was never applied). Without them the
-  Python answers 500 on every route that reads a loop or a config.
+  migration `add_smart_loop_wave28_canvas_ledgers.py` was never applied). Without them
+  Directus drops the tabs on write and returns no row for any read that names the
+  columns, so the Python sees no loop and no config: config and loop read as null, loop
+  routes answer 404 and host items 500. Parity marks exactly those scenarios.
 - The unused full-document path of the tick (`skill.md`, taken only when no ledger state is
   passed) is not ported: every caller passes ledger state.

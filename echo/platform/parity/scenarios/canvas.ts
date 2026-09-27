@@ -65,11 +65,13 @@ const createBody =
     ...extra,
   });
 
-// Directus wrote the ledger columns and config tabs the Python reads and writes into no
-// column the deployed schema has, so every route that reads a loop or config answered 500
-// on the old side. The port adds the columns (migration 0005) and answers normally.
+// echo main reads and writes canvas ledger columns and config tabs the deployed schema
+// never got. Directus drops the unknown tabs on write and a read naming them returns no
+// row, so on the old side every canvas has no config and no loop: config and loop come
+// back null, loop routes answer 404 "Canvas loop not found" and host items 500. The port
+// adds the columns (migration 0005) and differs only there; every other field matches.
 const LEDGERS =
-  "canvas ledger columns missing from the deployed schema: the Python route answers 500";
+  "canvas ledger columns missing from the deployed schema: the Python sees no loop or config";
 
 export default scenarios([
   // ── list ────────────────────────────────────────────────────────────
@@ -384,7 +386,7 @@ export default scenarios([
     path: `${base}/50/refresh`,
     setup: P1_CANVAS,
     differs:
-      "the Python ran the whole tick inside the request (and, missing the ledger columns, wrote an error generation); the port starts it on the worker and answers at once",
+      "the Python saw no loop (ledger columns missing) and ran any tick inside the request; the port starts it on the worker and answers 202 at once",
   },
   {
     name: "canvas refresh: observer cannot",
@@ -399,7 +401,6 @@ export default scenarios([
     method: "POST",
     path: `${base}/50/refresh`,
     setup: [...P1_CANVAS, P1_NO_LOOP],
-    differs: LEDGERS,
   },
 
   // ── host items ──────────────────────────────────────────────────────
