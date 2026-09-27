@@ -24,6 +24,11 @@ export type WorkspaceRow = typeof workspace.$inferSelect;
 export type AppUser = typeof app_user.$inferSelect;
 type MembershipTable = typeof org_membership | typeof workspace_membership;
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Ids from paths and bodies: anything that is not a UUID cannot name a row. */
+export const isUuid = (v: string) => UUID.test(v);
+
 /** Postgres unique violation: a concurrent request already wrote the active membership. */
 function isUniqueViolation(err: unknown): boolean {
   const code =
@@ -116,6 +121,7 @@ export function inviteStorage(db: Db) {
     // ── invites ──
 
     async workspaceInvite(id: string, opts: { liveOnly: boolean }) {
+      if (!isUuid(id)) return null;
       const [row] = await db
         .select()
         .from(workspace_invite)
@@ -130,6 +136,7 @@ export function inviteStorage(db: Db) {
     },
 
     async orgInvite(id: string, opts: { liveOnly: boolean }) {
+      if (!isUuid(id)) return null;
       const [row] = await db
         .select()
         .from(org_invite)
@@ -263,6 +270,7 @@ export function inviteStorage(db: Db) {
     // ── workspaces and orgs ──
 
     async workspace(id: string) {
+      if (!isUuid(id)) return null;
       const [row] = await db.select().from(workspace).where(eq(workspace.id, id)).limit(1);
       return row ?? null;
     },
@@ -542,6 +550,7 @@ export function inviteStorage(db: Db) {
     // ── projects ──
 
     async project(id: string) {
+      if (!isUuid(id)) return null;
       const [row] = await db
         .select({
           id: project.id,

@@ -1,5 +1,5 @@
 import { ForbiddenError, NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { directusTime, type Signed } from "@echo/http";
 import type { NotificationStorage } from "./storage";
 
 /** The old API's answer for a signed-in user who never onboarded (no app_user row). */
@@ -38,8 +38,8 @@ export async function listNotifications(
       message: r.message,
       scope: r.scope,
       params: r.params ?? null,
-      created_at: r.created_at,
-      expires_at: r.expires_at,
+      created_at: directusTime(r.created_at),
+      expires_at: directusTime(r.expires_at),
       read: Boolean(r.read_at),
       actor_user_id: r.actor_user_id,
       actor_name: actor?.name ?? null,

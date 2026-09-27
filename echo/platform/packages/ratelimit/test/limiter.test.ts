@@ -18,3 +18,14 @@ test("an empty identifier is never limited", async () => {
   const limit = { name: "t", capacity: 1, windowSeconds: 60 };
   for (let i = 0; i < 3; i++) await limiter.check(limit, "");
 });
+
+test("a failing counter store fails open and reports it", async () => {
+  const seen: string[] = [];
+  const limiter = new RateLimiter(
+    { hit: () => Promise.reject(new Error("down")) },
+    () => new Date(),
+    (_e, l) => seen.push(l.name),
+  );
+  await limiter.check({ name: "t", capacity: 1, windowSeconds: 60 }, "u");
+  expect(seen).toEqual(["t"]);
+});

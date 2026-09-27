@@ -1,3 +1,4 @@
+import { directusTime } from "@echo/http";
 import type { InviteCtx } from "./invites/accept";
 import { hashMatches, urlencode } from "./invites/hash";
 import { sendEmail } from "./jobs";
@@ -57,8 +58,8 @@ export async function publicInviteStatus(
     const base = { type: "org" as const, org_name: org.name || "", role: orgTarget.role };
     if (orgTarget.accepted_at) return status({ status: "accepted", ...base });
     if (expired(orgTarget.expires_at))
-      return status({ status: "expired", ...base, expires_at: orgTarget.expires_at });
-    return status({ status: "pending", ...base, expires_at: orgTarget.expires_at });
+      return status({ status: "expired", ...base, expires_at: directusTime(orgTarget.expires_at) });
+    return status({ status: "pending", ...base, expires_at: directusTime(orgTarget.expires_at) });
   }
   const ws = await store.workspace(target.workspace_id);
   if (!ws || ws.deleted_at)
@@ -70,8 +71,8 @@ export async function publicInviteStatus(
   const base = { type: "workspace" as const, workspace_name: ws.name || "", role: target.role };
   if (target.accepted_at) return status({ status: "accepted", ...base });
   if (expired(target.expires_at))
-    return status({ status: "expired", ...base, expires_at: target.expires_at });
-  return status({ status: "pending", ...base, expires_at: target.expires_at });
+    return status({ status: "expired", ...base, expires_at: directusTime(target.expires_at) });
+  return status({ status: "pending", ...base, expires_at: directusTime(target.expires_at) });
 }
 
 /**

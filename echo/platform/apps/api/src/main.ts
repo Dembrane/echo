@@ -80,7 +80,22 @@ const queue = new Queue(config.database.url, logger, tracing.tracer, {
   producerOnly: true,
   maxConnections: 2,
 });
-await queue.start([sendEmail, reconcileAccountSeats]);
+// Boot does not wait on the queue: a database that is briefly unreachable must not keep
+// the API from serving. Enqueues wait for it instead.
+const queueReady = (async () => {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await queue.start([sendEmail, reconcileAccountSeats]);
+      return;
+    } catch (err) {
+      logger.warn(
+        { err: { message: (err as Error).message }, attempt },
+        "queue not ready, retrying",
+      );
+      await Bun.sleep(Math.min(attempt, 10) * 1000);
+    }
+  }
+})();
 
 const files = config.files.s3Bucket
   ? new S3Storage({
@@ -104,8 +119,22 @@ const app = buildApp({
   db: database.db,
   identity: identityAccount(auth, database.db),
   notifier: new Notifier(database.db, logger),
-  limiter: new RateLimiter(new PostgresRateCounter(database.db)),
-  jobs: queue,
+  limiter: new RateLimiter(new PostgresRateCounter(database.db), undefined, (err, limit) =>
+    logger.error(
+      {
+        err: { message: (err as Error).message },
+        limit: limit.name,
+        signal: "ratelimit.store_failed",
+      },
+      "rate limit store failed; request not limited",
+    ),
+  ),
+  jobs: {
+    enqueue: async (def, payload, opts) => {
+      await queueReady;
+      return queue.enqueue(def, payload, opts);
+    },
+  },
   files,
 });
 

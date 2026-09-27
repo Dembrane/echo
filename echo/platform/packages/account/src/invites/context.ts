@@ -10,6 +10,7 @@ import {
 import { ForbiddenError, NotFoundError } from "@echo/core";
 import type { Db } from "@echo/db";
 import type { Signed } from "@echo/http";
+import { isUuid } from "./storage";
 
 /**
  * The workspace a route acts on and the caller's role there, from the access resolver.
@@ -25,6 +26,7 @@ export async function workspaceAccess(
   now: Date,
 ): Promise<WorkspaceAccess & { appUserId: string }> {
   if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (!isUuid(workspaceId)) throw new NotFoundError("Workspace not found");
   const access = await resolveWorkspace(new DrizzleAccessStore(db), workspaceId, who, now);
   if (!access) throw new NotFoundError("Workspace not found");
   return { ...access, appUserId: who.appUserId };

@@ -1,5 +1,5 @@
 import { BadRequestError, ForbiddenError, NotFoundError, TamperedRequestError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { directusTime, type Signed } from "@echo/http";
 import type { Audiences } from "@echo/notifications";
 import type { AccountDeps } from "../deps";
 import { requestSeatReconcile } from "../seats";
@@ -85,8 +85,8 @@ export async function listMyInvites(ctx: InviteCtx, who: Signed) {
       org_name: (ws.orgId && orgNames.get(ws.orgId)) || "",
       role: inv.role,
       invited_by_name: (inv.invited_by && inviters.get(inv.invited_by)) || null,
-      created_at: inv.created_at,
-      expires_at: inv.expires_at,
+      created_at: directusTime(inv.created_at),
+      expires_at: directusTime(inv.expires_at),
     });
   }
   for (const inv of orgInvites) {
@@ -100,8 +100,8 @@ export async function listMyInvites(ctx: InviteCtx, who: Signed) {
       org_name: orgNames.get(inv.org_id) ?? "",
       role: inv.role,
       invited_by_name: (inv.invited_by && inviters.get(inv.invited_by)) || null,
-      created_at: inv.created_at,
-      expires_at: inv.expires_at,
+      created_at: directusTime(inv.created_at),
+      expires_at: directusTime(inv.expires_at),
     });
   }
   // Stable, newest first across both kinds, as Python's sort did.
@@ -322,8 +322,8 @@ export async function inspectByHash(ctx: InviteCtx, who: Signed, h: string) {
     if (!org || org.deleted_at) return state({ status: "org_deleted", ...base });
     if (orgTarget.accepted_at) return state({ status: "accepted", ...base });
     if (expired(orgTarget.expires_at, now))
-      return state({ status: "expired", ...base, expires_at: orgTarget.expires_at });
-    return state({ status: "pending", ...base, expires_at: orgTarget.expires_at });
+      return state({ status: "expired", ...base, expires_at: directusTime(orgTarget.expires_at) });
+    return state({ status: "pending", ...base, expires_at: directusTime(orgTarget.expires_at) });
   }
 
   const ws = await store.workspace(target.workspace_id);
@@ -343,8 +343,13 @@ export async function inspectByHash(ctx: InviteCtx, who: Signed, h: string) {
   };
   if (target.accepted_at) return state({ status: "accepted", ...base, is_member: isMember });
   if (expired(target.expires_at, now))
-    return state({ status: "expired", ...base, expires_at: target.expires_at });
-  return state({ status: "pending", ...base, is_member: isMember, expires_at: target.expires_at });
+    return state({ status: "expired", ...base, expires_at: directusTime(target.expires_at) });
+  return state({
+    status: "pending",
+    ...base,
+    is_member: isMember,
+    expires_at: directusTime(target.expires_at),
+  });
 }
 
 /**

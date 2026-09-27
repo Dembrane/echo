@@ -26,20 +26,31 @@ export class RateLimiter {
   constructor(
     private readonly counter: RateCounter,
     private readonly clock: () => Date = () => new Date(),
+    /** Told when the counter store fails; the request then proceeds unlimited. */
+    private readonly onError: (err: unknown, limit: Limit) => void = () => {},
   ) {}
 
   async check(limit: Limit, identifier: string): Promise<void> {
     if (!(await this.allow(limit, identifier))) throw new RateLimitedError(TOO_MANY);
   }
 
-  /** False when over capacity. An empty identifier is never limited. */
+  /**
+   * False when over capacity. An empty identifier is never limited. A failing counter
+   * store fails open: limits guard against abuse, and an outage of their table must not
+   * take sign-up, invites and onboarding down with it.
+   */
   async allow(limit: Limit, identifier: string): Promise<boolean> {
     if (!identifier) return true;
-    const count = await this.counter.hit(
-      `${limit.name}:${identifier}`,
-      limit.windowSeconds,
-      this.clock(),
-    );
-    return count <= limit.capacity;
+    try {
+      const count = await this.counter.hit(
+        `${limit.name}:${identifier}`,
+        limit.windowSeconds,
+        this.clock(),
+      );
+      return count <= limit.capacity;
+    } catch (err) {
+      this.onError(err, limit);
+      return true;
+    }
   }
 }
