@@ -1,4 +1,5 @@
 import { accountRoutes } from "@echo/account";
+import { notificationRoutes } from "@echo/notifications";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
@@ -25,6 +26,7 @@ export function buildApp(deps: Deps) {
   app.use("/api/*", session(deps));
   app.route("/", systemRoutes(deps));
   app.route("/", accountRoutes(deps));
+  app.route("/", notificationRoutes(deps));
   app.onError(onError);
   app.notFound(notFound);
   return app;

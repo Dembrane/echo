@@ -77,6 +77,36 @@ export const schema = defineSchema({
       secret: true,
     }),
   },
+  mail: {
+    sendgridApiKey: key("SENDGRID_API_KEY", z.string().optional(), {
+      description: "SendGrid key. Unset logs each email instead of sending it (local, test).",
+      secret: true,
+    }),
+    sendgridRegion: key("SENDGRID_REGION", z.enum(["global", "eu"]).default("eu"), {
+      description: "SendGrid data residency. eu keeps recipient data in the EU; needs an EU key.",
+    }),
+    fromEmail: key("EMAIL_FROM", z.email().default("do-not-reply@dembrane.com"), {
+      description: "Sender address of every transactional email.",
+    }),
+    fromName: key("EMAIL_FROM_NAME", z.string().default("dembrane"), {
+      description: "Sender name of every transactional email.",
+    }),
+  },
+  account: {
+    inviteHashSecret: key("INVITE_HASH_SECRET", z.string().min(16), {
+      description:
+        "Signs invite links. Must equal Directus's SECRET until cutover, or every link already sent stops working.",
+      secret: true,
+    }),
+    onboardingFollowupInbox: key(
+      "ONBOARDING_FOLLOWUP_INBOX",
+      z.email().default("training@dembrane.com"),
+      {
+        description:
+          "Who hears about onboarding answers that need a partner or training follow-up.",
+      },
+    ),
+  },
 });
 
 export type Schema = typeof schema;

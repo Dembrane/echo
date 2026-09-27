@@ -20,7 +20,10 @@
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/http": "workspace:*",
+        "@echo/mail": "workspace:*",
+        "@echo/notifications": "workspace:*",
         "@echo/observability": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
         "@hono/zod-openapi": "^1.1.0",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
@@ -105,6 +108,20 @@
         "hono": "^4.9.0",
       },
     },
+    "packages/mail": {
+      "name": "@echo/mail",
+    },
+    "packages/notifications": {
+      "name": "@echo/notifications",
+      "dependencies": {
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+      },
+    },
     "packages/observability": {
       "name": "@echo/observability",
       "dependencies": {
@@ -124,6 +141,14 @@
         "pg-boss": "^12.5.0",
         "postgres": "^3.4.9",
         "zod": "^4.1.0",
+      },
+    },
+    "packages/ratelimit": {
+      "name": "@echo/ratelimit",
+      "dependencies": {
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "drizzle-orm": "^0.45.3",
       },
     },
     "packages/storage": {
@@ -193,13 +218,19 @@
 
     "@echo/http": ["@echo/http@workspace:packages/http"],
 
+    "@echo/mail": ["@echo/mail@workspace:packages/mail"],
+
     "@echo/migrate": ["@echo/migrate@workspace:apps/migrate"],
+
+    "@echo/notifications": ["@echo/notifications@workspace:packages/notifications"],
 
     "@echo/observability": ["@echo/observability@workspace:packages/observability"],
 
     "@echo/parity": ["@echo/parity@workspace:parity"],
 
     "@echo/queue": ["@echo/queue@workspace:packages/queue"],
+
+    "@echo/ratelimit": ["@echo/ratelimit@workspace:packages/ratelimit"],
 
     "@echo/storage": ["@echo/storage@workspace:packages/storage"],
 

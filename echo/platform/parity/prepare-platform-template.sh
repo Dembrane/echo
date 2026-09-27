@@ -5,6 +5,8 @@
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 psql_() { docker exec -i parity-db-1 psql -U dembrane -d postgres -v ON_ERROR_STOP=1 -q "$@"; }
+# A template database cannot be dropped until it stops being one.
+psql_ -c "update pg_database set datistemplate = false where datname = 'parity_template_platform'"
 psql_ -c "drop database if exists parity_template_platform with (force)"
 psql_ -c "create database parity_template_platform template parity_template"
 url=postgres://dembrane:dembrane@localhost:5440/parity_template_platform

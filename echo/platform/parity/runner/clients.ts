@@ -44,13 +44,25 @@ export interface Captured {
 export async function call(base: string, token: string | null, s: Scenario): Promise<Captured> {
   const url = new URL(s.path, base);
   for (const [k, v] of Object.entries(s.query ?? {})) url.searchParams.set(k, v);
+  const json = typeof s.body === "function" ? (s.body as () => unknown)() : s.body;
+  let payload: BodyInit | undefined;
+  if (s.form) {
+    const form = new FormData();
+    for (const [k, v] of Object.entries(s.form)) {
+      if (typeof v === "string") form.append(k, v);
+      else
+        form.append(k, new Blob([Buffer.from(v.base64, "base64")], { type: v.type }), v.filename);
+    }
+    payload = form;
+  } else if (json !== undefined) payload = JSON.stringify(json);
   const res = await fetch(url, {
     method: s.method,
     headers: {
+      ...s.headers,
       ...(token && { authorization: `Bearer ${token}` }),
-      ...(s.body !== undefined && { "content-type": "application/json" }),
+      ...(json !== undefined && !s.form && { "content-type": "application/json" }),
     },
-    ...(s.body !== undefined && { body: JSON.stringify(s.body) }),
+    ...(payload !== undefined && { body: payload }),
   });
   const text = await res.text();
   let body: unknown = text;

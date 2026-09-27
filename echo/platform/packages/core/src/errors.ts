@@ -8,8 +8,8 @@ export abstract class PlatformError extends Error {
   abstract readonly code: string;
   constructor(
     message: string,
-    /** Structured detail when the old API returned an object instead of a string. */
-    readonly details?: Record<string, unknown>,
+    /** Structured detail when the old API returned an object or a list instead of a string. */
+    readonly details?: Record<string, unknown> | readonly unknown[],
   ) {
     super(message);
     this.name = new.target.name;
@@ -28,6 +28,10 @@ export class UnauthenticatedError extends PlatformError {
   readonly status = 401;
   readonly code = "unauthenticated";
 }
+export class PaymentRequiredError extends PlatformError {
+  readonly status = 402;
+  readonly code = "payment_required";
+}
 export class ForbiddenError extends PlatformError {
   readonly status = 403;
   readonly code = "forbidden";
@@ -39,6 +43,11 @@ export class NotFoundError extends PlatformError {
 export class ConflictError extends PlatformError {
   readonly status = 409;
   readonly code = "conflict";
+}
+/** 418: the old API answers a tampered invite link with it, and the frontend shows the text. */
+export class TamperedRequestError extends PlatformError {
+  readonly status = 418;
+  readonly code = "tampered";
 }
 export class RateLimitedError extends PlatformError {
   readonly status = 429;

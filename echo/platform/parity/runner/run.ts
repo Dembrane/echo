@@ -8,7 +8,7 @@
  */
 import { Glob } from "bun";
 import { call, NEW, newToken, OLD, oldToken } from "./clients";
-import { diff, reset, snapshot } from "./db";
+import { diff, reset, runSetup, snapshot } from "./db";
 import { normalize } from "./normalize";
 import type { Scenario } from "./scenario";
 
@@ -32,6 +32,7 @@ async function side(
   s: Scenario,
 ) {
   await reset();
+  if (s.setup) await runSetup(s.setup);
   await Bun.sleep(50);
   const t = await token(s.as);
   const before = await snapshot();
@@ -40,6 +41,7 @@ async function side(
   return { ...res, changes };
 }
 
+const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
 const seedIds = await collectSeedIds();
 const files = [...new Glob("scenarios/**/*.ts").scanSync(here)].sort();
 let pass = 0;
@@ -50,14 +52,16 @@ for (const file of files) {
   for (const s of list) {
     if (filter && !file.includes(filter) && !s.name.includes(filter)) continue;
     const ignore = new Set(s.ignoreFields ?? []);
+    const ids = new Set(seedIds);
+    for (const m of s.setup?.match(UUID_RE) ?? []) ids.add(m.toLowerCase());
     const [o, n] = [await side(OLD, oldToken, s), await side(NEW, newToken, s)];
     const a = JSON.stringify(
-      normalize({ status: o.status, body: o.body, changes: o.changes }, seedIds, ignore),
+      normalize({ status: o.status, body: o.body, changes: o.changes }, ids, ignore),
       null,
       1,
     );
     const b = JSON.stringify(
-      normalize({ status: n.status, body: n.body, changes: n.changes }, seedIds, ignore),
+      normalize({ status: n.status, body: n.body, changes: n.changes }, ids, ignore),
       null,
       1,
     );

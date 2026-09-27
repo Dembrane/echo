@@ -11,6 +11,7 @@ const loaded = loadConfig({
   APP_ENV: "test",
   DATABASE_URL: "postgres://u@h/d",
   AUTH_SECRET: "s".repeat(48),
+  INVITE_HASH_SECRET: "i".repeat(32),
 });
 const lines: Record<string, unknown>[] = [];
 const sink = new Writable({

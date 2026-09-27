@@ -21,3 +21,5 @@ export function requireUser(c: Ctx): Signed {
   if (!p) throw new UnauthenticatedError("Invalid session");
   return p;
 }
+
+export * as v from "./validate";
