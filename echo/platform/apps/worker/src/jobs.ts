@@ -1,5 +1,6 @@
 import { emailHandler, reconcileAccountSeats, reconcileHandler, sendEmail } from "@echo/account";
 import type { Config } from "@echo/config";
+import { conversationWorker, type PipelineDeps } from "@echo/conversations";
 import type { Db } from "@echo/db";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
@@ -44,6 +45,8 @@ export function registrations(deps: {
   jobs: JobSink;
   /** Where email buttons point. */
   dashboardUrl: string;
+  /** The conversation pipeline: storage, media, transcription and models. */
+  conversations: PipelineDeps;
 }): Registration[] {
   const { logger, db, config } = deps;
   return [
@@ -91,5 +94,6 @@ export function registrations(deps: {
       },
     },
     tenancyWorker(deps),
+    conversationWorker(deps.conversations),
   ];
 }

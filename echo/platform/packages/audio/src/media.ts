@@ -19,7 +19,7 @@ export interface MediaSource {
   readonly url: string;
   readonly format: AudioFormat;
   /** The stored name, for error messages (merge reports failures per chunk). */
-  readonly name?: string;
+  readonly name?: string | undefined;
 }
 
 /** An object to write: a presigned PUT URL signed for this content type. */
