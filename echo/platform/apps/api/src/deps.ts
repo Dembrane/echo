@@ -4,6 +4,8 @@ import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
 import type { Env, Signed } from "@echo/http";
 import type { Logger, Tracer } from "@echo/observability";
+import type { Queue } from "@echo/queue";
+import type { Deliver } from "@echo/webhooks";
 
 /** Everything the HTTP app needs, built whole in main.ts and replaced with fakes in tests. */
 export interface Deps {
@@ -18,6 +20,10 @@ export interface Deps {
   readonly principalFor: (userId: string) => Promise<Signed | null>;
   readonly access: Access;
   readonly db: Db;
+  /** Enqueues jobs; pass a transaction in the options so a job commits with its cause. */
+  readonly queue: Pick<Queue, "enqueue">;
+  /** Sends outbound webhooks for the test button; a fake in tests. */
+  readonly deliverWebhook: Deliver;
 }
 
 export type { Env, Signed };

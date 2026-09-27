@@ -7,4 +7,5 @@ export default {
     portalUrl: "http://portal.test",
   },
   observability: { logLevel: "warn", traceSampleRatio: 0 },
+  webhooks: { allowPrivateTargets: true },
 } satisfies Environment;

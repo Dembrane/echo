@@ -34,6 +34,8 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     principalFor: async () => null,
     access: new Access(new MemoryAccessStore()),
     db: {} as Deps["db"],
+    queue: { enqueue: async () => null },
+    deliverWebhook: async () => ({ status: 200, text: "" }),
     ...overrides,
   };
 }

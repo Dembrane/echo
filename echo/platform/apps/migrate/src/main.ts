@@ -1,6 +1,9 @@
 import { syncIdentitiesFromDirectus } from "@echo/auth/sync";
 import { connect, grantRuntimeRole, migrate } from "@echo/db";
-import { installQueueSchema } from "@echo/queue";
+import { createLogger, initTracing } from "@echo/observability";
+import { projectJobs } from "@echo/projects";
+import { installQueueSchema, Queue } from "@echo/queue";
+import { webhookJobs } from "@echo/webhooks";
 
 /**
  * The Cloud Run job that runs before every rollout, with the owner login: schema
@@ -20,6 +23,16 @@ const started = performance.now();
 const result = await migrate(url);
 log("schema migrated", result);
 await installQueueSchema(url);
+// Queues are schema too: creating them here lets the API send a job before any worker of
+// a new release has started, and every database copied from this one already has them.
+const queues = new Queue(
+  url,
+  createLogger({ service: "echo-migrate", release: "migrate", env: "prod", level: "warn" }),
+  initTracing({ service: "echo-migrate", release: "migrate", env: "prod", sampleRatio: 0 }).tracer,
+  { maxConnections: 1 },
+);
+await queues.start([...projectJobs, ...webhookJobs]);
+await queues.stop();
 log("queue schema ready");
 // Until cutover, users keep being created through Directus; copying them on every deploy
 // lets each one sign in to the new stack with the same password or Google account.

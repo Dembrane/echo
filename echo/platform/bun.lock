@@ -21,6 +21,9 @@
         "@echo/db": "workspace:*",
         "@echo/http": "workspace:*",
         "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/webhooks": "workspace:*",
         "@hono/zod-openapi": "^1.1.0",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
@@ -32,7 +35,10 @@
       "dependencies": {
         "@echo/auth": "workspace:*",
         "@echo/db": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
         "@echo/queue": "workspace:*",
+        "@echo/webhooks": "workspace:*",
       },
     },
     "apps/worker": {
@@ -40,8 +46,11 @@
       "dependencies": {
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
         "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
         "@echo/queue": "workspace:*",
+        "@echo/webhooks": "workspace:*",
         "zod": "^4.1.0",
       },
     },
@@ -105,6 +114,12 @@
         "hono": "^4.9.0",
       },
     },
+    "packages/legacy-shape": {
+      "name": "@echo/legacy-shape",
+      "dependencies": {
+        "@echo/core": "workspace:*",
+      },
+    },
     "packages/observability": {
       "name": "@echo/observability",
       "dependencies": {
@@ -115,6 +130,22 @@
         "@opentelemetry/sdk-trace-base": "^2.0.0",
         "@opentelemetry/semantic-conventions": "^1.37.0",
         "pino": "^10.0.0",
+      },
+    },
+    "packages/projects": {
+      "name": "@echo/projects",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
       },
     },
     "packages/queue": {
@@ -128,6 +159,22 @@
     },
     "packages/storage": {
       "name": "@echo/storage",
+    },
+    "packages/webhooks": {
+      "name": "@echo/webhooks",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "zod": "^4.1.0",
+      },
     },
     "parity": {
       "name": "@echo/parity",
@@ -193,15 +240,21 @@
 
     "@echo/http": ["@echo/http@workspace:packages/http"],
 
+    "@echo/legacy-shape": ["@echo/legacy-shape@workspace:packages/legacy-shape"],
+
     "@echo/migrate": ["@echo/migrate@workspace:apps/migrate"],
 
     "@echo/observability": ["@echo/observability@workspace:packages/observability"],
 
     "@echo/parity": ["@echo/parity@workspace:parity"],
 
+    "@echo/projects": ["@echo/projects@workspace:packages/projects"],
+
     "@echo/queue": ["@echo/queue@workspace:packages/queue"],
 
     "@echo/storage": ["@echo/storage@workspace:packages/storage"],
+
+    "@echo/webhooks": ["@echo/webhooks@workspace:packages/webhooks"],
 
     "@echo/worker": ["@echo/worker@workspace:apps/worker"],
 

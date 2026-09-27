@@ -60,6 +60,12 @@ export const schema = defineSchema({
       description: "Share of requests traced end to end.",
     }),
   },
+  webhooks: {
+    allowPrivateTargets: key("WEBHOOKS_ALLOW_PRIVATE_TARGETS", bool.default(false), {
+      description:
+        "Lets webhook URLs resolve to loopback and private addresses. Local development only.",
+    }),
+  },
   auth: {
     secret: key("AUTH_SECRET", z.string().min(32), {
       description: "Signs sessions and tokens. Rotating it signs everyone out.",

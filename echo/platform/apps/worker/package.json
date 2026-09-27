@@ -12,6 +12,9 @@
     "@echo/core": "workspace:*",
     "@echo/observability": "workspace:*",
     "@echo/queue": "workspace:*",
+    "@echo/db": "workspace:*",
+    "@echo/projects": "workspace:*",
+    "@echo/webhooks": "workspace:*",
     "zod": "^4.1.0"
   }
 }
