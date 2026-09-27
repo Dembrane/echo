@@ -8,6 +8,7 @@ import { Hono } from "hono";
 import { conversationForV1 } from "../access";
 import type { ConversationsDeps } from "../deps";
 import { InternalError } from "../errors";
+import { liveServices } from "../live/routes";
 import { type MergeDeps, mergeConversationAudio } from "../merge";
 import { processChunk } from "../pipeline/defs";
 import { conversationStore, transaction } from "../storage";
@@ -104,7 +105,7 @@ export function conversationAudioRoutes(d: ConversationsDeps) {
   app.delete("/api/conversations/:conversation_id", async (c) => {
     const who = requireUser(c);
     const cid = c.req.param("conversation_id");
-    await conversationForV1(d, who, cid, "conversation:delete");
+    const { conversation: conv } = await conversationForV1(d, who, cid, "conversation:delete");
     try {
       const now = d.now().toISOString();
       // Soft delete: audio stays for the grace period; every read filters deleted_at.
@@ -115,6 +116,8 @@ export function conversationAudioRoutes(d: ConversationsDeps) {
     } catch (err) {
       throw new InternalError(`Failed to delete conversation: ${(err as Error).message}`);
     }
+    // A deleted conversation stops counting as a live recording.
+    await liveServices(d).meter.meter(conv.project_id, cid, "close", d.now());
     return c.json({ status: "success", message: "Conversation deleted successfully" });
   });
 

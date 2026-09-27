@@ -2,7 +2,9 @@ import type { Env } from "@echo/http";
 import { p } from "@echo/legacy-shape";
 import { Hono } from "hono";
 import type { ConversationsDeps } from "../deps";
+import { liveServices } from "../live/routes";
 import { PARTICIPANT_TOKEN_HEADER } from "../participant-token";
+import { conversationStore } from "../storage";
 import {
   addChunk,
   initiate,
@@ -62,13 +64,22 @@ export function portalRoutes(d: ConversationsDeps) {
   app.post("/api/participant/projects/:project_id/conversations/initiate", async (c) => {
     const { body } = await p.validate(c.req, { body: InitiateBody });
     const b = body.data;
-    const out = await initiate(d, c.req.param("project_id"), {
+    const projectId = c.req.param("project_id");
+    const out = await initiate(d, projectId, {
       name: b.name,
       email: b.email,
       userAgent: b.user_agent,
       tagIds: b.tag_id_list ?? [],
       source: b.source,
     });
+    const live = liveServices(d);
+    // The funnel dot this conversation grew out of leaves the monitor's lanes at once.
+    await live.presence
+      .linkVisitorConversation(b.visitor_id, out.conversation.id, d.now())
+      .catch(() => {});
+    // After the response, as the Python's background task: metering never slows a start.
+    if (b.source !== "PORTAL_TEXT")
+      setTimeout(() => void live.meter.meter(projectId, out.conversation.id, "open", d.now()), 0);
     // Issued here and kept by the portal; the body stays what the portal already reads.
     c.header(PARTICIPANT_TOKEN_HEADER, out.token);
     return c.json(publicConversation(out.conversation));
@@ -126,6 +137,8 @@ export function portalRoutes(d: ConversationsDeps) {
       source: form.source,
       file: form.chunk,
     });
+    // Keeps the live entry warm; never creates one, initiate owns that.
+    await liveServices(d).meter.meterUpload(cid, d.now());
     return c.json(publicChunk(chunk));
   });
 
@@ -146,22 +159,25 @@ export function portalRoutes(d: ConversationsDeps) {
     const cid = c.req.param("conversation_id");
     d.tokens.check(token(c), cid);
     const { body } = await p.validate(c.req, { body: ConfirmBody });
-    return c.json(
-      publicChunk(
-        await confirmUpload(d, cid, {
-          chunkId: body.data.chunk_id,
-          fileUrl: body.data.file_url,
-          timestamp: body.data.timestamp,
-          source: body.data.source,
-        }),
-      ),
-    );
+    const chunk = await confirmUpload(d, cid, {
+      chunkId: body.data.chunk_id,
+      fileUrl: body.data.file_url,
+      timestamp: body.data.timestamp,
+      source: body.data.source,
+    });
+    await liveServices(d).meter.meterUpload(cid, d.now());
+    return c.json(publicChunk(chunk));
   });
 
   app.post("/api/participant/conversations/:conversation_id/finish", async (c) => {
     const cid = c.req.param("conversation_id");
     d.tokens.check(token(c), cid);
     await requestFinish(d, cid);
+    // The recording stops counting against concurrent recordings.
+    const conv = await conversationStore(d.db)
+      .conversation(cid)
+      .catch(() => null);
+    if (conv) await liveServices(d).meter.meter(conv.project_id, cid, "close", d.now());
     return c.json("OK");
   });
 
