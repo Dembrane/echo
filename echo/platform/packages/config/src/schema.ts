@@ -2,6 +2,9 @@ import { z } from "zod";
 import { defineSchema, key } from "./define";
 
 const int = z.coerce.number().int();
+const bool = z
+  .union([z.boolean(), z.enum(["true", "false", "1", "0"])])
+  .transform((v) => v === true || v === "true" || v === "1");
 /** A list from an environment file, or comma-separated from an environment variable. */
 const list = z.union([
   z.array(z.string()).min(1),
@@ -122,6 +125,12 @@ export const schema = defineSchema({
     }),
     embeddingDimensions: key("EMBEDDING_DIMENSIONS", int.min(1).default(768), {
       description: "Vector size the embedding model returns and map_embedding.dims records.",
+    }),
+  },
+  webhooks: {
+    allowPrivateTargets: key("WEBHOOKS_ALLOW_PRIVATE_TARGETS", bool.default(false), {
+      description:
+        "Lets webhook URLs resolve to loopback and private addresses. Local development only.",
     }),
   },
   auth: {

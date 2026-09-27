@@ -1,4 +1,6 @@
 import { accountRoutes } from "@echo/account";
+import { projectRoutes } from "@echo/projects";
+import { webhookRoutes } from "@echo/webhooks";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
@@ -25,6 +27,16 @@ export function buildApp(deps: Deps) {
   app.use("/api/*", session(deps));
   app.route("/", systemRoutes(deps));
   app.route("/", accountRoutes(deps));
+  app.route("/", projectRoutes(deps));
+  app.route(
+    "/",
+    webhookRoutes({
+      ...deps,
+      deliver: deps.deliverWebhook,
+      allowPrivateTargets: deps.config.webhooks.allowPrivateTargets,
+      dashboardUrl: deps.config.http.dashboardUrl,
+    }),
+  );
   app.onError(onError);
   app.notFound(notFound);
   return app;

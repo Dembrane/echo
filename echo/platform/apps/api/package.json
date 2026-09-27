@@ -20,6 +20,9 @@
     "drizzle-orm": "^0.45.3",
     "@echo/http": "workspace:*",
     "@echo/account": "workspace:*",
-    "@echo/llm": "workspace:*"
+    "@echo/llm": "workspace:*",
+    "@echo/projects": "workspace:*",
+    "@echo/queue": "workspace:*",
+    "@echo/webhooks": "workspace:*"
   }
 }

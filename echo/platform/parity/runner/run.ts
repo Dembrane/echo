@@ -8,7 +8,7 @@
  */
 import { Glob } from "bun";
 import { call, NEW, newToken, OLD, oldToken } from "./clients";
-import { diff, reset, snapshot } from "./db";
+import { applySetup, diff, reset, snapshot } from "./db";
 import { normalize } from "./normalize";
 import type { Scenario } from "./scenario";
 
@@ -32,6 +32,7 @@ async function side(
   s: Scenario,
 ) {
   await reset();
+  await applySetup(s.setup ?? []);
   await Bun.sleep(50);
   const t = await token(s.as);
   const before = await snapshot();

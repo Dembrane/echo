@@ -35,6 +35,8 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     access: new Access(new MemoryAccessStore()),
     db: {} as Deps["db"],
     models: {} as Deps["models"],
+    queue: { enqueue: async () => null },
+    deliverWebhook: async () => ({ status: 200, text: "" }),
     ...overrides,
   };
 }

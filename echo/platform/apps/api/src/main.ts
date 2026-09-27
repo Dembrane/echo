@@ -4,6 +4,9 @@ import { describe, loadConfig, publicValues } from "@echo/config";
 import { createDb } from "@echo/db";
 import { createModels } from "@echo/llm";
 import { createLogger, initTracing } from "@echo/observability";
+import { projectJobs } from "@echo/projects";
+import { Queue } from "@echo/queue";
+import { httpDeliver, webhookJobs } from "@echo/webhooks";
 import { buildApp } from "./app";
 import { principalLookup } from "./principals";
 
@@ -47,6 +50,10 @@ const auth = createAuth({
   defaultDirectusRoleId: null,
 });
 
+// The API only sends jobs; creating their queues up front lets it send before a worker ran.
+const queue = new Queue(config.database.url, logger, tracing.tracer, { maxConnections: 2 });
+await queue.start([...projectJobs, ...webhookJobs]);
+
 const app = buildApp({
   config,
   publicConfig: publicValues(loaded),
@@ -69,6 +76,8 @@ const app = buildApp({
     embeddingLocation: config.llm.embeddingLocation,
     embeddingDimensions: config.llm.embeddingDimensions,
   }),
+  queue,
+  deliverWebhook: httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets }),
 });
 
 const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 255 });
@@ -81,7 +90,7 @@ async function shutdown(signal: string) {
   stopping = true;
   logger.info({ signal }, "shutting down");
   await server.stop();
-  await Promise.allSettled([database.close(), tracing.shutdown()]);
+  await Promise.allSettled([queue.stop(), database.close(), tracing.shutdown()]);
   process.exit(0);
 }
 process.on("SIGTERM", () => void shutdown("SIGTERM"));

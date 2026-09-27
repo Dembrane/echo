@@ -1,10 +1,11 @@
 import { describe, loadSections } from "@echo/config";
+import { createDb } from "@echo/db";
 import { createLogger, initTracing } from "@echo/observability";
 import { Queue } from "@echo/queue";
 import { registrations } from "./jobs";
 
 // Only what the worker reads: it never serves sign-in, so it is not given the auth secret.
-const loaded = loadSections(["app", "database", "observability", "llm"]);
+const loaded = loadSections(["app", "database", "observability", "llm", "webhooks"]);
 const config = loaded.values;
 const service = "echo-worker";
 const logger = createLogger({
@@ -25,7 +26,8 @@ const tracing = initTracing({
 const queue = new Queue(config.database.url, logger, tracing.tracer, {
   maxConnections: config.database.poolMax,
 });
-const regs = registrations(logger);
+const database = createDb({ url: config.database.url, poolMax: config.database.poolMax });
+const regs = registrations({ logger, db: database.db, config });
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);
 await queue.run();
@@ -51,6 +53,7 @@ async function shutdown(signal: string) {
   logger.info({ signal }, "worker stopping");
   clearInterval(signals);
   await queue.stop();
+  await database.close();
   await tracing.shutdown();
   process.exit(0);
 }
