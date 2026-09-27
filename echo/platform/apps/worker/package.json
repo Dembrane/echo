@@ -1,0 +1,17 @@
+{
+  "name": "@echo/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/main.ts",
+    "start": "bun src/main.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@echo/config": "workspace:*",
+    "@echo/core": "workspace:*",
+    "@echo/observability": "workspace:*",
+    "@echo/queue": "workspace:*",
+    "zod": "^4.1.0"
+  }
+}

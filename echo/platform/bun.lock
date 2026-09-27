@@ -22,6 +22,16 @@
         "zod": "^4.1.0",
       },
     },
+    "apps/worker": {
+      "name": "@echo/worker",
+      "dependencies": {
+        "@echo/config": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "zod": "^4.1.0",
+      },
+    },
     "packages/config": {
       "name": "@echo/config",
       "bin": {
@@ -65,6 +75,9 @@
         "zod": "^4.1.0",
       },
     },
+    "packages/storage": {
+      "name": "@echo/storage",
+    },
   },
   "packages": {
     "@asteasolutions/zod-to-openapi": ["@asteasolutions/zod-to-openapi@9.1.0", "", { "dependencies": { "openapi3-ts": "^4.6.0" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-pLMeRgRYS7/vZIgAAkOe2P6+XGTifR1MT9pqDoxZ11EmcJJ+DPmdPqLN8ZZF4U8R9KHCCQCS9c2wtuE8wSrfkw=="],
@@ -100,6 +113,10 @@
     "@echo/observability": ["@echo/observability@workspace:packages/observability"],
 
     "@echo/queue": ["@echo/queue@workspace:packages/queue"],
+
+    "@echo/storage": ["@echo/storage@workspace:packages/storage"],
+
+    "@echo/worker": ["@echo/worker@workspace:apps/worker"],
 
     "@esbuild-kit/core-utils": ["@esbuild-kit/core-utils@3.3.2", "", { "dependencies": { "esbuild": "~0.18.20", "source-map-support": "^0.5.21" } }, "sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ=="],
 
