@@ -20,7 +20,7 @@ async function login(email: string): Promise<string> {
     body: JSON.stringify({ email, password: env.PARITY_USER_PASSWORD }),
   });
   if (!res.ok) throw new Error(`login ${email}: ${res.status}`);
-  return (await res.json()).data.access_token;
+  return ((await res.json()) as { data: { access_token: string } }).data.access_token;
 }
 
 async function check(

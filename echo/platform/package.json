@@ -12,16 +12,17 @@
     "check": "bun run lint && bun run typecheck && bun test",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "typecheck": "tsc -b --noEmit false --emitDeclarationOnly",
+    "typecheck": "tsc -p tsconfig.json",
     "db:generate": "bun --filter @echo/db generate",
     "db:migrate": "bun --env-file=.env.local packages/db/src/migrate.ts",
     "setup": "scripts/setup.sh",
     "config": "bun packages/config/src/cli.ts",
-    "test": "bun test"
+    "test": "bun test --parallel",
+    "test:changed": "bun test --parallel --changed=origin/feat/bun-migration"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.0",
     "@types/bun": "^1.3.0",
-    "typescript": "^5.9.0"
+    "typescript": "^7.0.2"
   }
 }

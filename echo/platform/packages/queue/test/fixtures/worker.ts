@@ -27,7 +27,8 @@ const pipeline = workflow("test.pipeline", async (id: string) => {
 
 const queue = new Queue(url, logger, tracer, {
   executorId: process.env.EXECUTOR as string,
-  recovery: { beatMs: 500, deadAfterS: 2 },
+  recovery: { beatMs: 200, deadAfterS: 1 },
+  pollingIntervalMs: 50,
 });
 await queue.start([defineJob("test.pipeline", z.any())]);
 await queue.work(defineJob("test.noop", z.object({})), { concurrency: 1 }, async () => {});

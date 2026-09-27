@@ -45,7 +45,7 @@ export async function call(base: string, token: string | null, s: Scenario): Pro
   const url = new URL(s.path, base);
   for (const [k, v] of Object.entries(s.query ?? {})) url.searchParams.set(k, v);
   const json = typeof s.body === "function" ? await (s.body as () => unknown)() : s.body;
-  let payload: BodyInit | undefined;
+  let payload: RequestInit["body"] | undefined;
   if (s.form) {
     const form = new FormData();
     for (const [k, v] of Object.entries(s.form)) {

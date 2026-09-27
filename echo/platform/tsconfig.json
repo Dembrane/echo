@@ -1,74 +1,16 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "packages/config"
-    },
-    {
-      "path": "packages/observability"
-    },
-    {
-      "path": "packages/db"
-    },
-    {
-      "path": "packages/core"
-    },
-    {
-      "path": "packages/queue"
-    },
-    {
-      "path": "packages/storage"
-    },
-    {
-      "path": "packages/access"
-    },
-    {
-      "path": "packages/auth"
-    },
-    {
-      "path": "packages/http"
-    },
-    {
-      "path": "packages/account"
-    },
-    {
-      "path": "packages/llm"
-    },
-    {
-      "path": "packages/realtime"
-    },
-    {
-      "path": "packages/legacy-shape"
-    },
-    {
-      "path": "packages/projects"
-    },
-    {
-      "path": "packages/webhooks"
-    },
-    {
-      "path": "packages/notifications"
-    },
-    {
-      "path": "packages/ratelimit"
-    },
-    {
-      "path": "packages/mail"
-    },
-    {
-      "path": "packages/tenancy"
-    },
-    {
-      "path": "apps/api"
-    },
-    {
-      "path": "apps/worker"
-    },
-    {
-      "path": "apps/migrate"
-    },
-    {
-      "path": "apps/web"
-    }
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": ".cache/tsc.tsbuildinfo"
+  },
+  "include": [
+    "apps/*/src",
+    "apps/*/test",
+    "packages/*/src",
+    "packages/*/test",
+    "packages/*/environments",
+    "packages/db/*.ts",
+    "parity"
   ]
 }

@@ -5,9 +5,11 @@ FROM node:24-slim AS frontend
 WORKDIR /f
 RUN corepack enable && corepack prepare pnpm@10 --activate
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+# The pnpm store survives between builds, so only changed packages are downloaded.
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
 COPY frontend/ ./
-RUN pnpm build
+# Types are checked in CI's frontend job; the image only bundles.
+RUN pnpm exec vite build
 
 FROM oven/bun:1.4 AS server
 WORKDIR /src

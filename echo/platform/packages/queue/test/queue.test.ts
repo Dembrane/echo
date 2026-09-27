@@ -62,7 +62,7 @@ run("queue on DBOS", () => {
     await migrate(url);
     await installQueueSchema(url);
     sql = postgres(url, { max: 2, onnotice: () => {} });
-    queue = new Queue(url, logger, tracer);
+    queue = new Queue(url, logger, tracer, { pollingIntervalMs: 50 });
     await queue.start([greet, committed, flaky, once, tick]);
     await queue.work(greet, { concurrency: 2 }, async (p) => {
       greeted.push(p.name);
@@ -109,7 +109,7 @@ run("queue on DBOS", () => {
         throw new Error("rollback");
       })
       .catch(() => {});
-    await Bun.sleep(1500);
+    await Bun.sleep(400);
     expect(greeted).not.toContain("ghost");
     const rows =
       await sql`select 1 from dbos.workflow_status where name = 'test.greet' and inputs like '%ghost%'`;
@@ -133,7 +133,7 @@ run("queue on DBOS", () => {
     const b = await queue.enqueue(once, { k: "x" }, { singletonKey: "x" });
     expect(b).toBe(a);
     await until(() => onceRuns.length >= 1);
-    await Bun.sleep(800);
+    await Bun.sleep(400);
     expect(onceRuns).toEqual(["x"]);
   });
 

@@ -1,6 +1,8 @@
 name: platform
 
-# Checks for echo/platform, the Bun rewrite. Every job runs from echo/platform.
+# Checks, images and the preview deploy for echo/platform (the Bun rewrite) and the
+# frontend it serves. Checks and image builds run in parallel; images are built once and
+# pushed, and the deploy only migrates, rolls out and verifies.
 on:
   pull_request:
     paths: ["echo/platform/**", "echo/frontend/**", ".github/workflows/platform.yml"]
@@ -16,23 +18,42 @@ defaults:
   run:
     working-directory: echo/platform
 
+env:
+  PROJECT: dembrane-echo
+  REGION: europe-west4
+  REGISTRY: europe-west4-docker.pkg.dev/dembrane-echo/echo-preview
+  TAG: ${{ github.sha }}
+  # Push images only for the branch that deploys; PRs build them to prove they build.
+  PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feat/bun-migration' }}
+
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 8
     services:
       postgres:
         image: pgvector/pgvector:0.8.1-pg16
         env: { POSTGRES_USER: echo, POSTGRES_PASSWORD: echo, POSTGRES_DB: postgres }
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U echo" --health-interval 2s --health-retries 30
+          --health-cmd "pg_isready -U echo" --health-interval 1s --health-retries 60
     env:
       TEST_DATABASE_ADMIN_URL: postgres://echo:echo@localhost:5432/postgres
     steps:
       - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
         with: { bun-version-file: echo/platform/.bun-version }
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('echo/platform/bun.lock') }}
+          restore-keys: bun-
+      # The incremental type-check state: a run after a small change re-checks only it.
+      - uses: actions/cache@v4
+        with:
+          path: echo/platform/.cache
+          key: tsc-${{ github.sha }}
+          restore-keys: tsc-
       - run: bun install --frozen-lockfile
       - name: Lint and format
         run: bunx biome ci .
@@ -42,74 +63,86 @@ jobs:
         run: bun run config check
       - name: Schema and migrations agree
         working-directory: echo/platform/packages/db
-        run: |
-          out=$(bunx drizzle-kit generate < /dev/null)
-          echo "$out"
-          echo "$out" | grep -q "No schema changes"
-      - name: Tests
-        run: bun test
+        run: bunx drizzle-kit generate < /dev/null | tee /dev/stderr | grep -q "No schema changes"
+      - name: Tests (files in parallel, each database test on its own database)
+        run: bun test --parallel
 
-  image:
+  frontend:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: check
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: echo/frontend
     steps:
       - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .tool-versions
+          cache: pnpm
+          cache-dependency-path: echo/frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Types
+        run: pnpm exec tsc
+
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - if: env.PUSH == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/86405194907/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: echo-preview-deployer@dembrane-echo.iam.gserviceaccount.com
+      - if: env.PUSH == 'true'
+        run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
       - uses: docker/setup-buildx-action@v3
-      - name: Build images
+      - name: Build (and on the deploy branch, push) the four images
         run: |
-          for app in api worker migrate; do
-            docker buildx build --load --provenance=false \
-              --cache-from type=gha,scope=$app --cache-to type=gha,mode=max,scope=$app \
-              -f apps/$app/Dockerfile --build-arg RELEASE=${{ github.sha }} \
-              -t echo-$app:${{ github.sha }} .
-          done
-          # The web image builds the frontend too, from the echo/ context.
-          docker buildx build --load --provenance=false \
-            --cache-from type=gha,scope=web --cache-to type=gha,mode=max,scope=web \
-            -f apps/web/Dockerfile --build-arg RELEASE=${{ github.sha }} -t echo-web:${{ github.sha }} ..
-      - name: Container starts and answers
+          out=$([ "$PUSH" = true ] && echo --push || echo --load)
+          build() {
+            docker buildx build $out --provenance=false \
+              --cache-from type=gha,scope=$1 --cache-to type=gha,mode=max,scope=$1 \
+              -f apps/$1/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/$1:$TAG $2
+          }
+          build api . & build worker . & build migrate . & build web .. &
+          wait -n; wait -n; wait -n; wait -n
+      - name: The API container starts and answers
+        if: env.PUSH != 'true'
         run: |
-          docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d -e AUTH_SECRET=smoke-test-secret-that-is-long-enough-000 -e INVITE_HASH_SECRET=smoke-test-invite-secret-000 echo-api:${{ github.sha }}
+          docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d \
+            -e AUTH_SECRET=smoke-test-secret-that-is-long-enough-000 -e INVITE_HASH_SECRET=smoke-test-invite-secret-000 \
+            $REGISTRY/api:$TAG
           for i in $(seq 1 25); do curl -sf localhost:8080/health && exit 0; sleep 0.2; done
           docker logs api; exit 1
 
   deploy-preview:
     # Migrations run as a job first; a failure stops the rollout before new code takes traffic.
     if: github.event_name == 'push' && github.ref == 'refs/heads/feat/bun-migration'
-    needs: [check, image]
+    needs: [check, frontend, images]
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 12
     environment: preview
     permissions:
       contents: read
       id-token: write
     env:
-      PROJECT: dembrane-echo
-      REGION: europe-west4
-      REGISTRY: europe-west4-docker.pkg.dev/dembrane-echo/echo-preview
       SQL: dembrane-echo:europe-west4:echo-preview
-      TAG: ${{ github.sha }}
     steps:
-      - uses: actions/checkout@v5
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/86405194907/locations/global/workloadIdentityPools/echo-preview-github/providers/github
           service_account: echo-preview-deployer@dembrane-echo.iam.gserviceaccount.com
+      # The runner ships gcloud; installing it again cost half a minute.
       - uses: google-github-actions/setup-gcloud@v2
-        with: { install_components: beta }
-      - run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
-      - uses: docker/setup-buildx-action@v3
-      - name: Build and push images
-        run: |
-          for app in api worker migrate; do
-            docker buildx build --push --provenance=false \
-              --cache-from type=gha,scope=$app --cache-to type=gha,mode=max,scope=$app \
-              -f apps/$app/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/$app:$TAG .
-          done
-          docker buildx build --push --provenance=false \
-            --cache-from type=gha,scope=web --cache-to type=gha,mode=max,scope=web \
-            -f apps/web/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/web:$TAG ..
+        with: { skip_install: true }
       - name: Migrate
         run: |
           gcloud run jobs deploy echo-preview-migrate --project $PROJECT --region $REGION \
@@ -119,7 +152,7 @@ jobs:
             --set-secrets MIGRATION_DATABASE_URL=echo-preview-migration-database-url:latest \
             --set-env-vars APP_DB_ROLE=echo_app --task-timeout 600 --max-retries 0 \
             --execute-now --wait
-      - name: Deploy API
+      - name: Deploy API, worker, dashboard and portal
         run: |
           gcloud run deploy echo-preview-api --project $PROJECT --region $REGION \
             --image $REGISTRY/api:$TAG \
@@ -128,26 +161,23 @@ jobs:
             --set-secrets DATABASE_URL=echo-preview-database-url:latest,AUTH_SECRET=echo-preview-auth-secret:latest,INVITE_HASH_SECRET=echo-preview-invite-hash-secret:latest,FILES_S3_ACCESS_KEY_ID=echo-preview-s3-access-key-id:latest,FILES_S3_SECRET_ACCESS_KEY=echo-preview-s3-secret-access-key:latest \
             --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG,FILES_S3_ENDPOINT=https://storage.googleapis.com,FILES_S3_BUCKET=dembrane-echo-echo-preview-uploads \
             --cpu 1 --memory 512Mi --concurrency 80 --min-instances 0 --max-instances 4 \
-            --timeout 3600 --cpu-boost --allow-unauthenticated --quiet
-      - name: Deploy worker
-        run: |
+            --timeout 3600 --cpu-boost --allow-unauthenticated --quiet &
           gcloud beta run worker-pools deploy echo-preview-worker --project $PROJECT --region $REGION \
             --image $REGISTRY/worker:$TAG \
             --service-account echo-preview-worker@$PROJECT.iam.gserviceaccount.com \
             --add-cloudsql-instances $SQL \
             --set-secrets DATABASE_URL=echo-preview-database-url:latest \
             --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG \
-            --cpu 1 --memory 512Mi --instances 1 --quiet
-      - name: Deploy dashboard and portal
-        run: |
+            --cpu 1 --memory 512Mi --instances 1 --quiet &
           for role in dashboard portal; do
             gcloud run deploy echo-preview-$role --project $PROJECT --region $REGION \
               --image $REGISTRY/web:$TAG \
               --service-account echo-preview-web@$PROJECT.iam.gserviceaccount.com \
               --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG,WEB_ROLE=$role \
               --cpu 1 --memory 256Mi --concurrency 200 --min-instances 0 --max-instances 3 \
-              --allow-unauthenticated --quiet
+              --allow-unauthenticated --quiet &
           done
+          fail=0; for j in $(jobs -p); do wait $j || fail=1; done; exit $fail
       - name: Live smoke test
         run: |
           url=$(gcloud run services describe echo-preview-api --project $PROJECT --region $REGION --format 'value(status.url)')

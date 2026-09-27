@@ -76,6 +76,8 @@ export class Queue {
       readonly executorId?: string;
       /** Tests shorten these; production uses the defaults in recovery.ts. */
       readonly recovery?: { readonly beatMs: number; readonly deadAfterS: number };
+      /** How often an idle worker checks each queue; lower in tests, DBOS's default in production. */
+      readonly pollingIntervalMs?: number;
     } = {},
   ) {}
 
@@ -202,7 +204,12 @@ export class Queue {
     await DBOS.launch();
     this.running = true;
     for (const [name, workerConcurrency] of this.concurrency) {
-      await DBOS.registerQueue(name, { workerConcurrency });
+      await DBOS.registerQueue(name, {
+        workerConcurrency,
+        ...(this.opts.pollingIntervalMs !== undefined && {
+          minPollingIntervalMs: this.opts.pollingIntervalMs,
+        }),
+      });
     }
     await DBOS.applySchedules(
       scheduled.map(({ s, fn }) => ({
