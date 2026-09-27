@@ -150,7 +150,22 @@ const media = config.media.url
 // One LISTEN connection per instance feeds every open live stream.
 const listener = postgres(config.database.url, { max: 1, onnotice: () => {} });
 const hub = new Hub(listener, logger);
-void hub.start().catch((err) => logger.warn({ err }, "live events not listening"));
+// postgres.js re-listens after a dropped connection; the first connect is retried here so a
+// database that is briefly away at boot does not leave live streams silent until a restart.
+void (async () => {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await hub.start();
+      return;
+    } catch (err) {
+      logger.warn(
+        { err: { message: (err as Error).message }, attempt },
+        "live events not listening, retrying",
+      );
+      await Bun.sleep(Math.min(attempt, 10) * 1000);
+    }
+  }
+})();
 
 const models = createModels({
   vertexProject: config.llm.vertexProject,
