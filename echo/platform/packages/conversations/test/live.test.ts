@@ -172,5 +172,10 @@ test("the funnel drops graduated visitors and maps retired stages", () => {
     ]),
     new Set(["v3"]),
   );
-  expect(f.summary as Record<string, number>).toEqual({ scanned: 1, terms: 1, profile: 0, total: 2 });
+  expect(f.summary as Record<string, number>).toEqual({
+    scanned: 1,
+    terms: 1,
+    profile: 0,
+    total: 2,
+  });
 });

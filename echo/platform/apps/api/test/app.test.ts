@@ -5,7 +5,6 @@ import { loadConfig, publicValues } from "@echo/config";
 import { NotFoundError } from "@echo/core";
 import { createLogger, initTracing } from "@echo/observability";
 import { MemoryRateCounter, RateLimiter } from "@echo/ratelimit";
-import { MemoryJobSink } from "@echo/tenancy";
 import { buildApp } from "../src/app";
 import type { Deps } from "../src/deps";
 
