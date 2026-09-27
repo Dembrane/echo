@@ -6,6 +6,7 @@ export {
   type Embedder,
   vertexCompleter,
   vertexEmbedder,
+  vertexName,
 } from "./complete";
 export { type FakeAnswer, FakeCompleter, FakeEmbedder } from "./fake";
 export { type Deployment, FallbackModel, type FallbackOptions, isRetryable } from "./fallback";

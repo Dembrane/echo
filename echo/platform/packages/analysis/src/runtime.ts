@@ -1,5 +1,5 @@
 import type { Db } from "@echo/db";
-import type { Completer, Embedder } from "@echo/llm";
+import { type Completer, type Embedder, vertexName } from "@echo/llm";
 import type { Logger } from "@echo/observability";
 import { defineJob, type EnqueueOptions, type JobDefinition, type Payload } from "@echo/queue";
 import { publish } from "@echo/realtime";
@@ -101,7 +101,7 @@ export function analysisRuntime(d: RuntimeDeps): AnalysisRuntime {
         embedder: d.embedder,
         // The identity strings the Python settings carried, so pinned inputs and stored
         // vectors keep matching across the cutover.
-        embeddingModel: `vertex_ai/${d.config.embeddingModel}`,
+        embeddingModel: vertexName(d.config.embeddingModel),
         embeddingBaseUrl: `https://${d.config.embeddingLocation}-aiplatform.googleapis.com`,
       }),
       // A popcorn run requested outside a tick reads its session from the popcorn report.

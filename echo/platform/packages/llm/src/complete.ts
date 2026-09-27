@@ -142,7 +142,7 @@ export interface VertexCompleterConfig {
 export function vertexCompleter(models: Models, cfg: VertexCompleterConfig): Completer {
   return {
     complete: (request) => completeWith(models.model(request.group), request),
-    modelIdentity: (group) => `vertex_ai/${cfg.groups[group][0] ?? group}`,
+    modelIdentity: (group) => vertexName(cfg.groups[group][0] ?? group),
   };
 }
 
@@ -158,7 +158,7 @@ export interface VertexEmbedderConfig {
  */
 export function vertexEmbedder(models: Models, cfg: VertexEmbedderConfig): Embedder {
   return {
-    model: `vertex_ai/${cfg.model}`,
+    model: vertexName(cfg.model),
     endpoint: `vertex:${cfg.project}:${cfg.location}`,
     get dimensions() {
       return models.embedding().dimensions;
@@ -174,3 +174,6 @@ export function vertexEmbedder(models: Models, cfg: VertexEmbedderConfig): Embed
     },
   };
 }
+
+/** A model name as the Python settings wrote it: "vertex_ai/<model>", whether or not config already carries the prefix. */
+export const vertexName = (model: string) => `vertex_ai/${model.replace(/^vertex_ai\//, "")}`;
