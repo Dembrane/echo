@@ -2,8 +2,10 @@ import { emailHandler, sendEmail } from "@echo/account";
 import { type Billing, billingRegistration, noLiveRecordings } from "@echo/billing";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
+import type { Completer } from "@echo/llm";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
+import { popcornFlags, popcornWorker } from "@echo/popcorn";
 import { environmentName, httpForwarder, pricingRegistration, pricingStorage } from "@echo/pricing";
 import {
   createLibrary,
@@ -46,6 +48,8 @@ export function registrations(deps: {
   dashboardUrl: string;
   /** Mollie, the billing store and its notifier, shared by the billing jobs. */
   billing: Billing;
+  /** The popcorn tick's model calls and where it enqueues its workflows. */
+  popcorn: { completer: Completer; databaseUrl: string; portalUrl: string };
 }): Registration[] {
   const { logger, db, config } = deps;
   // Pricing bookings and overage notices share the team's webhook.
@@ -107,6 +111,15 @@ export function registrations(deps: {
         forwarder: teamWebhook,
         environment: environmentName(deps.dashboardUrl),
       },
+    }),
+    popcornWorker({
+      db,
+      logger,
+      completer: deps.popcorn.completer,
+      flags: popcornFlags(config),
+      participantBaseUrl: deps.popcorn.portalUrl,
+      adminBaseUrl: deps.dashboardUrl,
+      databaseUrl: deps.popcorn.databaseUrl,
     }),
     pricingRegistration({
       store: pricingStorage(db),

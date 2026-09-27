@@ -1,0 +1,1938 @@
+{
+  "fingerprint": [
+    {
+      "in": "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.",
+      "out": "82e91e4fa29cec00"
+    },
+    {
+      "in": "Thanks Pieter, you're right.\nHello Jan! Welcome, Éva.\nMy name is Okay.\nWhat Anna was saying matters. To Bram's point, yes.",
+      "out": "a6711641521d5aae"
+    },
+    {
+      "in": "short",
+      "out": "a0f4ea7d91495df9"
+    },
+    {
+      "in": "line one\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n",
+      "out": "2f12a81e57d1fc95"
+    },
+    {
+      "in": "Ünïcödé text with ñ and 😀 emoji.\nSecond line here.",
+      "out": "e6e30c22b12d45c2"
+    }
+  ],
+  "introduced_names": [
+    {
+      "in": "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.",
+      "out": ["Maria"]
+    },
+    {
+      "in": "Thanks Pieter, you're right.\nHello Jan! Welcome, Éva.\nMy name is Okay.\nWhat Anna was saying matters. To Bram's point, yes.",
+      "out": ["Anna", "Bram", "Jan", "Pieter", "Éva"]
+    },
+    {
+      "in": "short",
+      "out": []
+    },
+    {
+      "in": "line one\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n",
+      "out": []
+    },
+    {
+      "in": "Ünïcödé text with ñ and 😀 emoji.\nSecond line here.",
+      "out": []
+    }
+  ],
+  "model_window": [
+    {
+      "in": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 40],
+      "out": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "in": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", 40],
+      "out": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "in": [
+        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nyyyyyyyyyy",
+        100
+      ],
+      "out": "yyyyyyyyyy"
+    },
+    {
+      "in": ["short", 10],
+      "out": "short"
+    },
+    {
+      "in": ["éééééééééééééééééééééééééééééééééééééééééééééééééé", 40],
+      "out": "éééééééééééééééééééééééééééééééééééééééé"
+    }
+  ],
+  "labels_for": [
+    {
+      "in": ["Resident 1", 1],
+      "out": ["Resident 1", "Resident 1"]
+    },
+    {
+      "in": ["", 3],
+      "out": ["Conversation 3", "Conversation 3"]
+    },
+    {
+      "in": ["   ", 2],
+      "out": ["Conversation 2", "Conversation 2"]
+    },
+    {
+      "in": ["A very long participant name that goes on", 1],
+      "out": ["A very long participant name that goes on", "A very long participant…"]
+    },
+    {
+      "in": [null, 4],
+      "out": ["Conversation 4", "Conversation 4"]
+    },
+    {
+      "in": ["😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀", 1],
+      "out": [
+        "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀…"
+      ]
+    }
+  ],
+  "shape_popcorn_items": [
+    {
+      "in": [
+        {
+          "items": [
+            {
+              "phrase": "  More   charging points.  "
+            },
+            {
+              "phrase": "\"Quoted phrase\""
+            },
+            {
+              "phrase": "Why do buses stop?"
+            },
+            {
+              "phrase": "more charging points"
+            },
+            {
+              "phrase": "has a \"quote\" inside"
+            },
+            {
+              "phrase": ""
+            },
+            {
+              "phrase": "one two three four five six seven eight nine ten eleven twelve thirteen fourteen"
+            },
+            {
+              "phrase": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            },
+            "junk",
+            {
+              "phrase": "Trailing marks;:!"
+            },
+            {
+              "phrase": "‘curly’"
+            }
+          ]
+        },
+        "c1"
+      ],
+      "out": [
+        {
+          "id": "p-c1-d045f263",
+          "phrase": "More charging points"
+        },
+        {
+          "id": "p-c1-1525f4a4",
+          "phrase": "Quoted phrase"
+        },
+        {
+          "id": "p-c1-36f38ec2",
+          "phrase": "Why do buses stop",
+          "question": true
+        },
+        {
+          "id": "p-c1-9d53c406",
+          "phrase": "Trailing marks"
+        },
+        {
+          "id": "p-c1-e122d28c",
+          "phrase": "curly"
+        }
+      ]
+    },
+    {
+      "in": [
+        {
+          "items": [
+            {
+              "phrase": "phrase number 0"
+            },
+            {
+              "phrase": "phrase number 1"
+            },
+            {
+              "phrase": "phrase number 2"
+            },
+            {
+              "phrase": "phrase number 3"
+            },
+            {
+              "phrase": "phrase number 4"
+            },
+            {
+              "phrase": "phrase number 5"
+            },
+            {
+              "phrase": "phrase number 6"
+            },
+            {
+              "phrase": "phrase number 7"
+            },
+            {
+              "phrase": "phrase number 8"
+            },
+            {
+              "phrase": "phrase number 9"
+            },
+            {
+              "phrase": "phrase number 10"
+            },
+            {
+              "phrase": "phrase number 11"
+            }
+          ]
+        },
+        "c1"
+      ],
+      "out": [
+        {
+          "id": "p-c1-0e42a74a",
+          "phrase": "phrase number 0"
+        },
+        {
+          "id": "p-c1-31b9ce26",
+          "phrase": "phrase number 1"
+        },
+        {
+          "id": "p-c1-493c8f76",
+          "phrase": "phrase number 2"
+        },
+        {
+          "id": "p-c1-9cc8bc98",
+          "phrase": "phrase number 3"
+        },
+        {
+          "id": "p-c1-42a9189f",
+          "phrase": "phrase number 4"
+        },
+        {
+          "id": "p-c1-aa22c424",
+          "phrase": "phrase number 5"
+        },
+        {
+          "id": "p-c1-db06502b",
+          "phrase": "phrase number 6"
+        },
+        {
+          "id": "p-c1-3e69606d",
+          "phrase": "phrase number 7"
+        }
+      ]
+    },
+    {
+      "in": [null, "c1"],
+      "out": []
+    },
+    {
+      "in": [
+        {
+          "items": null
+        },
+        "c1"
+      ],
+      "out": []
+    }
+  ],
+  "name_hits": [
+    {
+      "in": ["Maria said hi", ["Jan", "Maria", "Éva"]],
+      "out": ["Maria"]
+    },
+    {
+      "in": ["maria said hi", ["Jan", "Maria", "Éva"]],
+      "out": []
+    },
+    {
+      "in": ["Jan's idea", ["Jan", "Maria", "Éva"]],
+      "out": ["Jan"]
+    },
+    {
+      "in": ["Éva and Jan", ["Jan", "Maria", "Éva"]],
+      "out": ["Jan", "Éva"]
+    },
+    {
+      "in": ["nothing", ["Jan", "Maria", "Éva"]],
+      "out": []
+    },
+    {
+      "in": ["Mariana is here", ["Jan", "Maria", "Éva"]],
+      "out": []
+    }
+  ],
+  "scrub_names": [
+    {
+      "in": ["Maria said hi", ["Jan", "Maria", "Éva"]],
+      "out": "a participant said hi"
+    },
+    {
+      "in": ["maria said hi", ["Jan", "Maria", "Éva"]],
+      "out": "maria said hi"
+    },
+    {
+      "in": ["Jan's idea", ["Jan", "Maria", "Éva"]],
+      "out": "a participant idea"
+    },
+    {
+      "in": ["Éva and Jan", ["Jan", "Maria", "Éva"]],
+      "out": "a participant and a participant"
+    },
+    {
+      "in": ["nothing", ["Jan", "Maria", "Éva"]],
+      "out": "nothing"
+    },
+    {
+      "in": ["Mariana is here", ["Jan", "Maria", "Éva"]],
+      "out": "Mariana is here"
+    }
+  ],
+  "jaccard": [
+    {
+      "in": ["more charging points near flats", "charging points near the flats"],
+      "out": 0.8
+    },
+    {
+      "in": ["buses stop at eleven", "buses do not stop at eleven"],
+      "out": 1.0
+    },
+    {
+      "in": ["the", "a"],
+      "out": 0.0
+    },
+    {
+      "in": ["", "x"],
+      "out": 0.0
+    }
+  ],
+  "negated": [
+    {
+      "in": "more charging points near flats",
+      "out": false
+    },
+    {
+      "in": "buses stop at eleven",
+      "out": false
+    },
+    {
+      "in": "the",
+      "out": false
+    },
+    {
+      "in": "",
+      "out": false
+    }
+  ],
+  "known_shingles": [
+    {
+      "in": [
+        {
+          "conversations": {
+            "c1": {
+              "items": [
+                {
+                  "phrase": "we need more charging points near the flats today"
+                }
+              ]
+            },
+            "c2": {
+              "items": [
+                {
+                  "phrase": "buses stop running at eleven so people drive"
+                }
+              ]
+            }
+          },
+          "analysis": {
+            "tensions": {
+              "tensions": [
+                {
+                  "id": "x1",
+                  "poleA": "drive cars into the city center every day",
+                  "url": "one two three four five six seven",
+                  "quoteIds": ["q1"]
+                }
+              ]
+            }
+          }
+        },
+        null
+      ],
+      "out": [
+        "buses\u0001stop\u0001running\u0001at\u0001eleven\u0001so",
+        "cars\u0001into\u0001the\u0001city\u0001center\u0001every",
+        "charging\u0001points\u0001near\u0001the\u0001flats\u0001today",
+        "drive\u0001cars\u0001into\u0001the\u0001city\u0001center",
+        "into\u0001the\u0001city\u0001center\u0001every\u0001day",
+        "more\u0001charging\u0001points\u0001near\u0001the\u0001flats",
+        "need\u0001more\u0001charging\u0001points\u0001near\u0001the",
+        "running\u0001at\u0001eleven\u0001so\u0001people\u0001drive",
+        "stop\u0001running\u0001at\u0001eleven\u0001so\u0001people",
+        "we\u0001need\u0001more\u0001charging\u0001points\u0001near"
+      ]
+    },
+    {
+      "in": [
+        {
+          "conversations": {
+            "c1": {
+              "items": [
+                {
+                  "phrase": "we need more charging points near the flats today"
+                }
+              ]
+            },
+            "c2": {
+              "items": [
+                {
+                  "phrase": "buses stop running at eleven so people drive"
+                }
+              ]
+            }
+          },
+          "analysis": {
+            "tensions": {
+              "tensions": [
+                {
+                  "id": "x1",
+                  "poleA": "drive cars into the city center every day",
+                  "url": "one two three four five six seven",
+                  "quoteIds": ["q1"]
+                }
+              ]
+            }
+          }
+        },
+        "c1"
+      ],
+      "out": [
+        "buses\u0001stop\u0001running\u0001at\u0001eleven\u0001so",
+        "cars\u0001into\u0001the\u0001city\u0001center\u0001every",
+        "drive\u0001cars\u0001into\u0001the\u0001city\u0001center",
+        "into\u0001the\u0001city\u0001center\u0001every\u0001day",
+        "running\u0001at\u0001eleven\u0001so\u0001people\u0001drive",
+        "stop\u0001running\u0001at\u0001eleven\u0001so\u0001people"
+      ]
+    }
+  ],
+  "gate_items": [
+    {
+      "in": [
+        [
+          {
+            "id": "p1",
+            "phrase": "Maria wants chargers"
+          },
+          {
+            "id": "p2",
+            "phrase": "buses stop running at eleven so people drive home"
+          },
+          {
+            "id": "p3",
+            "phrase": "more charging points near flats"
+          },
+          {
+            "id": "p4",
+            "phrase": "charging points near the flats"
+          },
+          {
+            "id": "p5",
+            "phrase": "no charging points near the flats"
+          }
+        ],
+        ["Jan", "Maria", "Éva"],
+        [
+          "buses\u0001stop\u0001running\u0001at\u0001eleven\u0001so",
+          "cars\u0001into\u0001the\u0001city\u0001center\u0001every",
+          "drive\u0001cars\u0001into\u0001the\u0001city\u0001center",
+          "into\u0001the\u0001city\u0001center\u0001every\u0001day",
+          "running\u0001at\u0001eleven\u0001so\u0001people\u0001drive",
+          "stop\u0001running\u0001at\u0001eleven\u0001so\u0001people"
+        ]
+      ],
+      "out": [
+        [
+          {
+            "id": "p3",
+            "phrase": "more charging points near flats"
+          },
+          {
+            "id": "p5",
+            "phrase": "no charging points near the flats"
+          }
+        ],
+        [
+          {
+            "id": "p1",
+            "phrase": "Maria wants chargers",
+            "reason": "carries a name from the introductions (Maria)"
+          },
+          {
+            "id": "p2",
+            "phrase": "buses stop running at eleven so people drive home",
+            "reason": "shares 6 words with text the room was shown ('stop running at eleven so people')"
+          },
+          {
+            "id": "p4",
+            "phrase": "charging points near the flats",
+            "reason": "says what 'more charging points near flats' says"
+          }
+        ]
+      ]
+    }
+  ],
+  "name_flags": [
+    {
+      "in": {
+        "stakeholders": [
+          {
+            "id": "s1",
+            "name": "Staff and Volunteers"
+          },
+          {
+            "id": "s2",
+            "name": "Residents, aged 65+"
+          },
+          {
+            "id": "s3",
+            "name": "Staff, Volunteers"
+          },
+          {
+            "id": "s4",
+            "name": "The AI"
+          },
+          {
+            "id": "s5",
+            "name": "Users of the recording"
+          },
+          {
+            "id": "s6",
+            "name": "Market pressure"
+          },
+          {
+            "id": "s7",
+            "name": "Café's owner"
+          }
+        ],
+        "relations": [
+          {
+            "between": ["s1", "s2"]
+          },
+          {
+            "between": ["s4", "s5"]
+          }
+        ]
+      },
+      "out": [
+        "s1: 'Staff and Volunteers' joins two groups on one card; one group, one name",
+        "s3: 'Staff, Volunteers' joins two groups on one card; one group, one name",
+        "s4: 'The AI' names a thing, not people; name the people who make or run it",
+        "s6: 'Market pressure' names a thing, not people; name the people who make or run it"
+      ]
+    },
+    {
+      "in": {
+        "stakeholders": [
+          {
+            "id": "s1",
+            "name": "A"
+          },
+          {
+            "id": "s2",
+            "name": "B"
+          }
+        ],
+        "relations": [
+          {
+            "between": ["s1", "s2"]
+          }
+        ]
+      },
+      "out": []
+    },
+    {
+      "in": {
+        "stakeholders": [
+          {
+            "id": "s1",
+            "name": "It's"
+          },
+          {
+            "id": "s2"
+          }
+        ],
+        "relations": []
+      },
+      "out": []
+    }
+  ],
+  "island_flags": [
+    {
+      "in": {
+        "stakeholders": [
+          {
+            "id": "s1",
+            "name": "Staff and Volunteers"
+          },
+          {
+            "id": "s2",
+            "name": "Residents, aged 65+"
+          },
+          {
+            "id": "s3",
+            "name": "Staff, Volunteers"
+          },
+          {
+            "id": "s4",
+            "name": "The AI"
+          },
+          {
+            "id": "s5",
+            "name": "Users of the recording"
+          },
+          {
+            "id": "s6",
+            "name": "Market pressure"
+          },
+          {
+            "id": "s7",
+            "name": "Café's owner"
+          }
+        ],
+        "relations": [
+          {
+            "between": ["s1", "s2"]
+          },
+          {
+            "between": ["s4", "s5"]
+          }
+        ]
+      },
+      "out": [
+        "island: s4 'The AI', s5 'Users of the recording' connect only to each other; add the relation that joins them to the rest, or drop them",
+        "s3: 'Staff, Volunteers' has no relation to any other group; add the relation the transcripts support, or drop the group",
+        "s6: 'Market pressure' has no relation to any other group; add the relation the transcripts support, or drop the group",
+        "s7: \"Café's owner\" has no relation to any other group; add the relation the transcripts support, or drop the group"
+      ]
+    },
+    {
+      "in": {
+        "stakeholders": [
+          {
+            "id": "s1",
+            "name": "A"
+          },
+          {
+            "id": "s2",
+            "name": "B"
+          }
+        ],
+        "relations": [
+          {
+            "between": ["s1", "s2"]
+          }
+        ]
+      },
+      "out": []
+    },
+    {
+      "in": {
+        "stakeholders": [
+          {
+            "id": "s1",
+            "name": "It's"
+          },
+          {
+            "id": "s2"
+          }
+        ],
+        "relations": []
+      },
+      "out": [
+        "s2: 's2' has no relation to any other group; add the relation the transcripts support, or drop the group"
+      ]
+    }
+  ],
+  "screen_flags": [
+    {
+      "in": {
+        "tensions": [
+          {
+            "id": "x1",
+            "poleA": "one two",
+            "poleB": "one two three four five six seven eight",
+            "knot": "It is one. It is two.",
+            "toResolve": ""
+          },
+          {
+            "id": "x2",
+            "poleA": "one two three",
+            "poleB": "a b c",
+            "knot": "w w w w w w w w w w w w w w w w w w w",
+            "toResolve": "q q q q q q q q q q q q q q q q q q q q q q q"
+          },
+          {
+            "id": "x3",
+            "poleA": "one two three",
+            "poleB": "a b c",
+            "knot": "Participants discussed the thing.",
+            "toResolve": "How do we feel that it works?"
+          },
+          {
+            "poleA": "it's here now",
+            "poleB": "a \"b\" c",
+            "knot": null,
+            "toResolve": "They acknowledged it"
+          }
+        ]
+      },
+      "out": [
+        "x1 poleA: 2 words, at least 3: 'one two'",
+        "x1 poleB: 8 words, at most 7: 'one two three four five six seven eight'",
+        "x1 knot: more than one sentence: 'It is one. It is two.'",
+        "x1 toResolve: missing",
+        "x2 knot: 19 words, at most 18: 'w w w w w w w w w w w w w w w w w w w'",
+        "x2 toResolve: 23 words, at most 22: 'q q q q q q q q q q q q q q q q q q q q q q q'",
+        "x3 knot: reports the meeting ('Participants'): 'Participants discussed the thing.'",
+        "x3 toResolve: reports the meeting ('feel that'): 'How do we feel that it works?'",
+        "? knot: missing",
+        "? toResolve: reports the meeting ('acknowledged'): 'They acknowledged it'"
+      ]
+    }
+  ],
+  "ground_items": [
+    {
+      "in": [
+        "charging points near the flats",
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.\n\nParking spaces are rare near the flats, and charging points even more so.\nNobody likes waiting lists."
+      ],
+      "out": [
+        {
+          "phrase": "charging points near the flats",
+          "verbatim": true,
+          "source": {
+            "text": "We need more charging points near the flats, the waiting list is months long.",
+            "score": 2.0,
+            "matched": 4
+          }
+        }
+      ]
+    },
+    {
+      "in": [
+        "waiting list months",
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.\n\nParking spaces are rare near the flats, and charging points even more so.\nNobody likes waiting lists."
+      ],
+      "out": [
+        {
+          "phrase": "waiting list months",
+          "verbatim": false,
+          "source": {
+            "text": "We need more charging points near the flats, the waiting list is months long.",
+            "score": 2.0,
+            "matched": 3
+          }
+        }
+      ]
+    },
+    {
+      "in": [
+        "unrelated words entirely",
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.\n\nParking spaces are rare near the flats, and charging points even more so.\nNobody likes waiting lists."
+      ],
+      "out": [
+        {
+          "phrase": "unrelated words entirely",
+          "verbatim": false,
+          "source": null
+        }
+      ]
+    },
+    {
+      "in": [
+        "",
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.\n\nParking spaces are rare near the flats, and charging points even more so.\nNobody likes waiting lists."
+      ],
+      "out": [
+        {
+          "phrase": "",
+          "verbatim": false,
+          "source": null
+        }
+      ]
+    },
+    {
+      "in": [
+        "buses stop running",
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.\n\nParking spaces are rare near the flats, and charging points even more so.\nNobody likes waiting lists."
+      ],
+      "out": [
+        {
+          "phrase": "buses stop running",
+          "verbatim": true,
+          "source": {
+            "text": "Buses stop running at eleven, so people drive.",
+            "score": 3.0,
+            "matched": 3
+          }
+        }
+      ]
+    },
+    {
+      "in": [
+        "the and of",
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.\n\nParking spaces are rare near the flats, and charging points even more so.\nNobody likes waiting lists."
+      ],
+      "out": [
+        {
+          "phrase": "the and of",
+          "verbatim": false,
+          "source": null
+        }
+      ]
+    },
+    {
+      "in": [
+        "charging points word",
+        "charging points word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word "
+      ],
+      "out": [
+        {
+          "phrase": "charging points word",
+          "verbatim": true,
+          "source": {
+            "text": "charging points word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word wor…",
+            "score": 3.0,
+            "matched": 3
+          }
+        }
+      ]
+    }
+  ],
+  "quote_book": [
+    {
+      "in": [
+        {
+          "c1": "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.",
+          "c2": "Thanks Pieter, you're right.\nHello Jan! Welcome, Éva.\nMy name is Okay.\nWhat Anna was saying matters. To Bram's point, yes."
+        },
+        ["Maria"],
+        [
+          {
+            "id": "q3",
+            "transcript": "c1",
+            "text": "We need more charging points near the flats",
+            "context": "Early on"
+          },
+          {
+            "id": "q9",
+            "transcript": "c2",
+            "text": "gone quote text here"
+          },
+          {
+            "id": "bad",
+            "transcript": "c1",
+            "text": "Buses stop running"
+          },
+          {
+            "id": "q4",
+            "transcript": "c1",
+            "text": "Buses stop running at eleven",
+            "context": "When Maria spoke"
+          }
+        ],
+        [
+          {
+            "transcript": "c1",
+            "text": "Buses stop running at eleven"
+          },
+          {
+            "transcript": "c2",
+            "text": "we need more charging points"
+          },
+          {
+            "transcript": "c1",
+            "text": "not in any transcript"
+          },
+          {
+            "transcript": "c1",
+            "text": "the waiting list is months long",
+            "context": "a moment about Maria"
+          },
+          {
+            "transcript": "c2",
+            "text": "What Anna was saying matters",
+            "context": "Late in the conversation"
+          },
+          {
+            "text": ""
+          }
+        ]
+      ],
+      "out": {
+        "ids": ["q4", "q5", null, "q6", "q7", null],
+        "quotes": [
+          {
+            "id": "q3",
+            "transcript": "c1",
+            "text": "We need more charging points near the flats",
+            "context": "Early on"
+          },
+          {
+            "id": "q4",
+            "transcript": "c1",
+            "text": "Buses stop running at eleven"
+          },
+          {
+            "id": "q5",
+            "transcript": "c1",
+            "text": "we need more charging points"
+          },
+          {
+            "id": "q6",
+            "transcript": "c1",
+            "text": "the waiting list is months long"
+          },
+          {
+            "id": "q7",
+            "transcript": "c2",
+            "text": "What Anna was saying matters",
+            "context": "Late in the conversation"
+          }
+        ],
+        "rejected": 1,
+        "reattributed": 1
+      }
+    }
+  ],
+  "shape_stakeholders": [
+    {
+      "in": [
+        {
+          "c1": "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.",
+          "c2": "Thanks Pieter, you're right.\nHello Jan! Welcome, Éva.\nMy name is Okay.\nWhat Anna was saying matters. To Bram's point, yes."
+        },
+        {
+          "stakeholders": [
+            {
+              "name": "Residents",
+              "role": "live near",
+              "stake": "charging",
+              "rung": "voiced",
+              "stakeWeight": 0.855,
+              "mentionsWeight": 1,
+              "quotes": [
+                {
+                  "transcript": "c1",
+                  "text": "We need more charging points"
+                },
+                {
+                  "transcript": "c1",
+                  "text": "nope nope nope"
+                }
+              ]
+            },
+            {
+              "name": "Bus company",
+              "role": "runs buses",
+              "stake": "routes",
+              "rung": "named",
+              "invokedBy": "Residents",
+              "stakeWeight": 0.125,
+              "mentionsWeight": 0.5,
+              "quotes": []
+            },
+            {
+              "name": "residents",
+              "role": "dup",
+              "stake": "dup",
+              "rung": "inferred",
+              "stakeWeight": 0.3,
+              "mentionsWeight": 0.2
+            }
+          ],
+          "relations": [
+            {
+              "between": ["Residents", "Bus company"],
+              "label": "depend",
+              "intensity": 0.675,
+              "sentiment": -0.5,
+              "unowned": false,
+              "detail": "d",
+              "aspects": [
+                {
+                  "kind": "risk",
+                  "note": "n",
+                  "quotes": [
+                    {
+                      "transcript": "c1",
+                      "text": "Buses stop running at eleven"
+                    }
+                  ]
+                },
+                {
+                  "kind": "power",
+                  "note": "n2",
+                  "quotes": [
+                    {
+                      "transcript": "c1",
+                      "text": "zzz not there"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "between": ["Bus company", "Residents"],
+              "label": "dup",
+              "intensity": 0.1,
+              "sentiment": 0,
+              "unowned": true,
+              "detail": "d",
+              "aspects": []
+            },
+            {
+              "between": ["Residents", "Nobody"],
+              "label": "x",
+              "intensity": 0.1,
+              "sentiment": 0,
+              "unowned": true,
+              "detail": "d",
+              "aspects": []
+            },
+            {
+              "between": ["Residents"],
+              "label": "x",
+              "intensity": 0.1,
+              "sentiment": 0,
+              "unowned": true,
+              "detail": "d",
+              "aspects": []
+            }
+          ]
+        }
+      ],
+      "out": {
+        "slide": {
+          "stakeholders": [
+            {
+              "id": "s1",
+              "name": "Residents",
+              "role": "live near",
+              "stake": "charging",
+              "quoteIds": ["q1"],
+              "evidence": {
+                "rung": "voiced"
+              },
+              "weight": {
+                "stake": 0.85,
+                "mentions": 1.0
+              }
+            },
+            {
+              "id": "s2",
+              "name": "Bus company",
+              "role": "runs buses",
+              "stake": "routes",
+              "quoteIds": [],
+              "evidence": {
+                "rung": "named",
+                "invokedBy": "Residents"
+              },
+              "weight": {
+                "stake": 0.12,
+                "mentions": 0.5
+              }
+            },
+            {
+              "id": "s3",
+              "name": "residents",
+              "role": "dup",
+              "stake": "dup",
+              "quoteIds": [],
+              "evidence": {
+                "rung": "inferred"
+              },
+              "weight": {
+                "stake": 0.3,
+                "mentions": 0.2
+              }
+            }
+          ],
+          "relations": [
+            {
+              "id": "r1",
+              "between": ["s3", "s2"],
+              "label": "depend",
+              "intensity": 0.68,
+              "sentiment": -0.5,
+              "unowned": false,
+              "detail": "d",
+              "aspects": [
+                {
+                  "kind": "risk",
+                  "note": "n",
+                  "quoteIds": ["q2"]
+                }
+              ]
+            }
+          ]
+        },
+        "quotes": [
+          {
+            "id": "q1",
+            "transcript": "c1",
+            "text": "We need more charging points"
+          },
+          {
+            "id": "q2",
+            "transcript": "c1",
+            "text": "Buses stop running at eleven"
+          }
+        ]
+      }
+    }
+  ],
+  "allocate_chars": [
+    {
+      "in": [
+        {
+          "a": 10,
+          "b": 20
+        },
+        100
+      ],
+      "out": {
+        "a": 10,
+        "b": 20
+      }
+    },
+    {
+      "in": [
+        {
+          "a": 10,
+          "b": 200,
+          "c": 200
+        },
+        110
+      ],
+      "out": {
+        "a": 10,
+        "b": 50,
+        "c": 50
+      }
+    },
+    {
+      "in": [
+        {
+          "a": 50,
+          "b": 50,
+          "c": 5
+        },
+        60
+      ],
+      "out": {
+        "c": 5,
+        "a": 27,
+        "b": 27
+      }
+    }
+  ],
+  "evidence_from": [
+    {
+      "in": [
+        {
+          "grounded": true,
+          "quote": " We need more charging points ",
+          "reason": " ok "
+        },
+        "We can get more charging points",
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive."
+      ],
+      "out": {
+        "grounded": true,
+        "quote": "We need more charging points",
+        "hedge_added": ["can"],
+        "reason": "ok",
+        "for": "We can get more charging points"
+      }
+    },
+    {
+      "in": [
+        {
+          "grounded": true,
+          "quote": "short",
+          "reason": ""
+        },
+        "x",
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive."
+      ],
+      "out": {
+        "grounded": false,
+        "quote": "",
+        "hedge_added": [],
+        "reason": "",
+        "for": "x"
+      }
+    },
+    {
+      "in": [
+        {
+          "grounded": false,
+          "quote": "We need more charging points",
+          "reason": "no"
+        },
+        "x",
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive."
+      ],
+      "out": {
+        "grounded": false,
+        "quote": "",
+        "hedge_added": [],
+        "reason": "no",
+        "for": "x"
+      }
+    },
+    {
+      "in": [
+        {
+          "grounded": true,
+          "quote": "not there at all really",
+          "reason": ""
+        },
+        "x",
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive."
+      ],
+      "out": {
+        "grounded": false,
+        "quote": "",
+        "hedge_added": [],
+        "reason": "",
+        "for": "x"
+      }
+    }
+  ],
+  "kind_from": [
+    {
+      "in": [
+        {
+          "kind": "need",
+          "qualifiers": ["tentative", "bogus"],
+          "question_form": 1,
+          "target": "Maria's plan",
+          "reason": "Maria said so"
+        },
+        ["Maria"]
+      ],
+      "out": {
+        "kind": "need",
+        "qualifiers": ["tentative"],
+        "question": true,
+        "target": "a participant plan",
+        "reason": "a participant said so"
+      }
+    },
+    {
+      "in": [
+        {
+          "kind": "question",
+          "qualifiers": null
+        },
+        ["Maria"]
+      ],
+      "out": {
+        "kind": "question",
+        "qualifiers": [],
+        "question": false,
+        "target": "",
+        "reason": ""
+      }
+    }
+  ],
+  "kind_from_error": [
+    {
+      "in": "nope",
+      "out": "unknown popcorn kind 'nope'"
+    }
+  ],
+  "hedge_added": [
+    {
+      "in": ["It might often happen", "It happens sometimes"],
+      "out": ["might", "often"]
+    },
+    {
+      "in": ["Can we", "We could"],
+      "out": ["can"]
+    }
+  ],
+  "question_ok": [
+    {
+      "in": "Why do buses stop?",
+      "out": true
+    },
+    {
+      "in": "Why?",
+      "out": true
+    },
+    {
+      "in": "no mark",
+      "out": false
+    },
+    {
+      "in": "a \"q\"?",
+      "out": false
+    },
+    {
+      "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx?",
+      "out": false
+    }
+  ],
+  "apply_results": [
+    {
+      "in": [
+        [
+          {
+            "id": "p1",
+            "phrase": "more charging points"
+          },
+          {
+            "id": "p2",
+            "phrase": "buses stop",
+            "quoteId": "q1",
+            "review": {
+              "errors": ["old"]
+            }
+          },
+          {
+            "id": "p3",
+            "phrase": "why buses stop"
+          },
+          {
+            "id": "p4",
+            "phrase": "changed"
+          },
+          {
+            "id": "p5",
+            "phrase": "untouched"
+          }
+        ],
+        [
+          {
+            "id": "p1",
+            "phrase": "more charging points",
+            "errors": [],
+            "evidence": {
+              "grounded": true,
+              "quote": "We need more charging points",
+              "hedge_added": ["can"],
+              "reason": "r1",
+              "for": "x"
+            },
+            "kind": {
+              "kind": "need",
+              "qualifiers": [],
+              "question": false,
+              "target": "t",
+              "reason": "k1"
+            }
+          },
+          {
+            "id": "p2",
+            "phrase": "buses stop",
+            "errors": [],
+            "evidence": {
+              "grounded": false,
+              "quote": "",
+              "hedge_added": [],
+              "reason": "r2",
+              "for": "x"
+            }
+          },
+          {
+            "id": "p3",
+            "phrase": "why buses stop",
+            "errors": ["evidence: boom"],
+            "kind": {
+              "kind": "question",
+              "qualifiers": ["tentative"],
+              "question": true,
+              "target": "",
+              "reason": "k3"
+            },
+            "rewritten": "Why do buses stop"
+          },
+          {
+            "id": "p4",
+            "phrase": "not the same",
+            "errors": []
+          }
+        ],
+        {
+          "We need more charging points": "q7"
+        }
+      ],
+      "out": {
+        "items": [
+          {
+            "id": "p1",
+            "phrase": "more charging points",
+            "quoteId": "q7",
+            "rooted": true,
+            "kind": "need",
+            "question": false,
+            "qualifiers": [],
+            "review": {
+              "evidence": "r1",
+              "hedge_added": ["can"],
+              "kind": "k1",
+              "target": "t"
+            }
+          },
+          {
+            "id": "p2",
+            "phrase": "buses stop",
+            "review": {
+              "evidence": "r2"
+            },
+            "rooted": false
+          },
+          {
+            "id": "p3",
+            "phrase": "Why do buses stop",
+            "kind": "question",
+            "question": true,
+            "qualifiers": ["tentative"],
+            "review": {
+              "kind": "k3",
+              "was": "why buses stop",
+              "errors": ["evidence: boom"]
+            }
+          },
+          {
+            "id": "p4",
+            "phrase": "changed"
+          },
+          {
+            "id": "p5",
+            "phrase": "untouched"
+          }
+        ],
+        "stats": {
+          "rooted": 1,
+          "classified": 2,
+          "rewritten": 1
+        }
+      }
+    }
+  ],
+  "carry_forward": [
+    {
+      "in": [
+        [
+          {
+            "id": "p-a",
+            "phrase": "fresh a"
+          },
+          {
+            "id": "p-b",
+            "phrase": "fresh b"
+          },
+          {
+            "id": "p-c",
+            "phrase": "fresh c"
+          },
+          {
+            "id": "p-d",
+            "phrase": "fresh d"
+          },
+          {
+            "id": "p-e",
+            "phrase": "new e"
+          }
+        ],
+        {
+          "fingerprint": "fp1",
+          "items": [
+            {
+              "id": "p-a",
+              "phrase": "Reviewed wording",
+              "kind": "need",
+              "question": false,
+              "qualifiers": [],
+              "review": {
+                "kind": "k"
+              },
+              "quoteId": "q1",
+              "rooted": true
+            },
+            {
+              "id": "p-b",
+              "phrase": "old b",
+              "quoteId": "q2",
+              "rooted": true
+            },
+            {
+              "id": "p-c",
+              "phrase": "c",
+              "kind": "idea",
+              "rooted": false
+            }
+          ],
+          "review": {
+            "dropped": [
+              {
+                "id": "p-d",
+                "phrase": "d"
+              }
+            ]
+          }
+        },
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.",
+        [
+          {
+            "id": "q1",
+            "transcript": "c1",
+            "text": "We need more charging points"
+          },
+          {
+            "id": "q2",
+            "transcript": "c1",
+            "text": "gone from transcript"
+          }
+        ],
+        "fp1"
+      ],
+      "out": [
+        [
+          {
+            "id": "p-a",
+            "phrase": "Reviewed wording",
+            "kind": "need",
+            "question": false,
+            "qualifiers": [],
+            "review": {
+              "kind": "k"
+            },
+            "quoteId": "q1",
+            "rooted": true
+          },
+          {
+            "id": "p-b",
+            "phrase": "old b"
+          },
+          {
+            "id": "p-c",
+            "phrase": "c",
+            "kind": "idea"
+          },
+          {
+            "id": "p-e",
+            "phrase": "new e"
+          }
+        ],
+        1,
+        1
+      ]
+    },
+    {
+      "in": [
+        [
+          {
+            "id": "p-a",
+            "phrase": "fresh a"
+          },
+          {
+            "id": "p-b",
+            "phrase": "fresh b"
+          },
+          {
+            "id": "p-c",
+            "phrase": "fresh c"
+          },
+          {
+            "id": "p-d",
+            "phrase": "fresh d"
+          },
+          {
+            "id": "p-e",
+            "phrase": "new e"
+          }
+        ],
+        {
+          "fingerprint": "fp1",
+          "items": [
+            {
+              "id": "p-a",
+              "phrase": "Reviewed wording",
+              "kind": "need",
+              "question": false,
+              "qualifiers": [],
+              "review": {
+                "kind": "k"
+              },
+              "quoteId": "q1",
+              "rooted": true
+            },
+            {
+              "id": "p-b",
+              "phrase": "old b",
+              "quoteId": "q2",
+              "rooted": true
+            },
+            {
+              "id": "p-c",
+              "phrase": "c",
+              "kind": "idea",
+              "rooted": false
+            }
+          ],
+          "review": {
+            "dropped": [
+              {
+                "id": "p-d",
+                "phrase": "d"
+              }
+            ]
+          }
+        },
+        "Hi, I'm Maria and I run the café.\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive.",
+        [
+          {
+            "id": "q1",
+            "transcript": "c1",
+            "text": "We need more charging points"
+          },
+          {
+            "id": "q2",
+            "transcript": "c1",
+            "text": "gone from transcript"
+          }
+        ],
+        "fp2"
+      ],
+      "out": [
+        [
+          {
+            "id": "p-a",
+            "phrase": "Reviewed wording",
+            "kind": "need",
+            "question": false,
+            "qualifiers": [],
+            "review": {
+              "kind": "k"
+            },
+            "quoteId": "q1",
+            "rooted": true
+          },
+          {
+            "id": "p-b",
+            "phrase": "old b"
+          },
+          {
+            "id": "p-c",
+            "phrase": "c",
+            "kind": "idea"
+          },
+          {
+            "id": "p-d",
+            "phrase": "fresh d"
+          },
+          {
+            "id": "p-e",
+            "phrase": "new e"
+          }
+        ],
+        1,
+        0
+      ]
+    }
+  ],
+  "commit_views": [
+    {
+      "in": [
+        {
+          "fingerprints": {
+            "tensions": "old",
+            "stakeholders": "old"
+          },
+          "updated": {
+            "tensions": "2026-01-01T00:00:00+00:00",
+            "stakeholders": "2026-01-02T00:00:00+00:00"
+          },
+          "tensions": {
+            "tensions": [
+              {
+                "quoteIds": ["q1"]
+              }
+            ]
+          },
+          "stakeholders": {
+            "stakeholders": [
+              {
+                "quoteIds": ["q9"]
+              }
+            ]
+          }
+        },
+        {
+          "tensions": null,
+          "stakeholders": null
+        },
+        ["q1"]
+      ],
+      "out": {
+        "analysis": {
+          "fingerprints": {
+            "tensions": "old"
+          },
+          "updated": {
+            "tensions": "2026-01-01T00:00:00+00:00"
+          },
+          "tensions": {
+            "tensions": [
+              {
+                "quoteIds": ["q1"]
+              }
+            ]
+          },
+          "stakeholders": null,
+          "updated_at": "2026-01-01T00:00:00+00:00"
+        },
+        "outcomes": ["stakeholders: previous slide dropped, it cited a conversation that is gone"]
+      }
+    },
+    {
+      "in": [
+        {
+          "fingerprints": {
+            "tensions": "old",
+            "stakeholders": "old"
+          },
+          "updated": {
+            "tensions": "2026-01-01T00:00:00+00:00",
+            "stakeholders": "2026-01-02T00:00:00+00:00"
+          },
+          "tensions": {
+            "tensions": [
+              {
+                "quoteIds": ["q1"]
+              }
+            ]
+          },
+          "stakeholders": {
+            "stakeholders": [
+              {
+                "quoteIds": ["q9"]
+              }
+            ]
+          }
+        },
+        {
+          "tensions": {
+            "tensions": []
+          },
+          "stakeholders": null
+        },
+        ["q1"]
+      ],
+      "out": {
+        "analysis": {
+          "fingerprints": {
+            "tensions": "new"
+          },
+          "updated": {
+            "tensions": "2026-09-27T22:30:04.744419+00:00"
+          },
+          "tensions": {
+            "tensions": []
+          },
+          "stakeholders": null,
+          "updated_at": "2026-09-27T22:30:04.744419+00:00"
+        },
+        "outcomes": ["stakeholders: previous slide dropped, it cited a conversation that is gone"]
+      }
+    },
+    {
+      "in": [
+        {
+          "fingerprints": {
+            "tensions": "old",
+            "stakeholders": "old"
+          },
+          "updated": {
+            "tensions": "2026-01-01T00:00:00+00:00",
+            "stakeholders": "2026-01-02T00:00:00+00:00"
+          },
+          "tensions": {
+            "tensions": [
+              {
+                "quoteIds": ["q1"]
+              }
+            ]
+          },
+          "stakeholders": {
+            "stakeholders": [
+              {
+                "quoteIds": ["q9"]
+              }
+            ]
+          }
+        },
+        {
+          "tensions": null,
+          "stakeholders": {
+            "stakeholders": [
+              {
+                "quoteIds": ["q1"]
+              }
+            ]
+          }
+        },
+        ["q1"]
+      ],
+      "out": {
+        "analysis": {
+          "fingerprints": {
+            "tensions": "old",
+            "stakeholders": "new"
+          },
+          "updated": {
+            "tensions": "2026-01-01T00:00:00+00:00",
+            "stakeholders": "2026-09-27T22:30:04.744446+00:00"
+          },
+          "tensions": {
+            "tensions": [
+              {
+                "quoteIds": ["q1"]
+              }
+            ]
+          },
+          "stakeholders": {
+            "stakeholders": [
+              {
+                "quoteIds": ["q1"]
+              }
+            ]
+          },
+          "updated_at": "2026-09-27T22:30:04.744446+00:00"
+        },
+        "outcomes": []
+      }
+    },
+    {
+      "in": [
+        null,
+        {
+          "tensions": null,
+          "stakeholders": null
+        },
+        []
+      ],
+      "out": {
+        "analysis": null,
+        "outcomes": []
+      }
+    }
+  ],
+  "stale_views": [
+    {
+      "in": [
+        {
+          "fingerprints": {
+            "tensions": "old",
+            "stakeholders": "old"
+          },
+          "updated": {
+            "tensions": "2026-01-01T00:00:00+00:00",
+            "stakeholders": "2026-01-02T00:00:00+00:00"
+          },
+          "tensions": {
+            "tensions": [
+              {
+                "quoteIds": ["q1"]
+              }
+            ]
+          },
+          "stakeholders": {
+            "stakeholders": [
+              {
+                "quoteIds": ["q9"]
+              }
+            ]
+          }
+        },
+        "old"
+      ],
+      "out": []
+    },
+    {
+      "in": [
+        {
+          "fingerprints": {
+            "tensions": "old",
+            "stakeholders": "old"
+          },
+          "updated": {
+            "tensions": "2026-01-01T00:00:00+00:00",
+            "stakeholders": "2026-01-02T00:00:00+00:00"
+          },
+          "tensions": {
+            "tensions": [
+              {
+                "quoteIds": ["q1"]
+              }
+            ]
+          },
+          "stakeholders": {
+            "stakeholders": [
+              {
+                "quoteIds": ["q9"]
+              }
+            ]
+          }
+        },
+        "new"
+      ],
+      "out": ["tensions"]
+    }
+  ],
+  "selected_views": [
+    {
+      "in": {},
+      "out": ["tensions", "stakeholders"]
+    },
+    {
+      "in": {
+        "presentation": {
+          "blocks": ["popcorn", "stakeholders"]
+        }
+      },
+      "out": ["stakeholders"]
+    },
+    {
+      "in": {
+        "presentation": {}
+      },
+      "out": []
+    }
+  ]
+}

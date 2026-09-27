@@ -1,6 +1,7 @@
 import { createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
 import { describe, loadSections } from "@echo/config";
 import { createDb } from "@echo/db";
+import { createModels, vertexCompleter } from "@echo/llm";
 import { type Mailer, SendGridMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
 import { Queue } from "@echo/queue";
@@ -65,6 +66,19 @@ const billing = createBilling({
     dashboardUrl: config.http.dashboardUrl,
   },
 });
+const groups = {
+  text_fast: config.llm.textFast,
+  multi_modal_fast: config.llm.multiModalFast,
+  multi_modal_pro: config.llm.multiModalPro,
+};
+const models = createModels({
+  vertexProject: config.llm.vertexProject,
+  vertexLocation: config.llm.vertexLocation,
+  groups,
+  embeddingModel: config.llm.embeddingModel,
+  embeddingLocation: config.llm.embeddingLocation,
+  embeddingDimensions: config.llm.embeddingDimensions,
+});
 const regs = registrations({
   logger,
   db: database.db,
@@ -73,6 +87,11 @@ const regs = registrations({
   jobs: queueSink(queue),
   dashboardUrl: config.http.dashboardUrl,
   billing,
+  popcorn: {
+    completer: vertexCompleter(models, { groups }),
+    databaseUrl: config.database.url,
+    portalUrl: config.http.portalUrl,
+  },
 });
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);
