@@ -1,8 +1,9 @@
 import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { connect } from "./connection";
 import * as schema from "./schema";
 import * as relations from "./schema/relations";
 
+export { connect } from "./connection";
 export { grantRuntimeRole, type MigrateResult, migrate } from "./migrate";
 export { schema };
 export type Db = ReturnType<typeof createDb>["db"];
@@ -15,7 +16,7 @@ export interface DbOptions {
 }
 
 export function createDb(opts: DbOptions) {
-  const client = postgres(opts.url, {
+  const client = connect(opts.url, {
     max: opts.poolMax,
     idle_timeout: 30,
     connect_timeout: 10,

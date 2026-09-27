@@ -1,7 +1,8 @@
 import { readMigrationFiles } from "drizzle-orm/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate as drizzleMigrate } from "drizzle-orm/postgres-js/migrator";
-import postgres from "postgres";
+import type postgres from "postgres";
+import { connect } from "./connection";
 
 // A compiled binary carries no source tree, so the image ships the folder and points here.
 const MIGRATIONS = process.env.MIGRATIONS_DIR ?? new URL("../migrations", import.meta.url).pathname;
@@ -23,7 +24,7 @@ export interface MigrateResult {
  * later migrations run normally. An advisory lock keeps two jobs from racing.
  */
 export async function migrate(url: string): Promise<MigrateResult> {
-  const sql = postgres(url, { max: 1, onnotice: () => {} });
+  const sql = connect(url, { max: 1, onnotice: () => {} });
   try {
     await sql`select pg_advisory_lock(${LOCK_KEY})`;
     const adoptedBaseline = await adoptBaseline(sql);
@@ -84,7 +85,7 @@ export async function grantRuntimeRole(
   schemas: readonly string[],
 ): Promise<void> {
   if (!/^[a-z_][a-z0-9_]*$/.test(role)) throw new Error(`invalid role name ${role}`);
-  const sql = postgres(url, { max: 1, onnotice: () => {} });
+  const sql = connect(url, { max: 1, onnotice: () => {} });
   try {
     for (const schema of schemas) {
       if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error(`invalid schema name ${schema}`);
