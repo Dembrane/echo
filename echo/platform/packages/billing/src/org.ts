@@ -2,6 +2,7 @@ import type { Db } from "@echo/db";
 import { schema } from "@echo/db";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import type { BillingStore } from "./store";
+import { isUuid } from "./uuid";
 
 const { workspace, billing_account } = schema;
 
@@ -11,6 +12,7 @@ const { workspace, billing_account } = schema;
  * on their own account and are managed from that workspace instead.
  */
 export async function orgBillingSnapshot(db: Db, store: BillingStore, orgId: string) {
+  if (!isUuid(orgId)) return { account_id: null, tier: "free", separate_workspaces: [] };
   const accountId = await store.orgAccountId(orgId);
   let tier = "free";
   if (accountId) tier = (await store.account(accountId))?.tier || "free";

@@ -62,7 +62,7 @@ export function billingRoutes(deps: BillingRouteDeps) {
     const who = requireUser(c);
     if (await staffPass(c, who, action, target[0], target[1])) return who;
     if (!who.appUserId) throw new ForbiddenError("Not allowed");
-    if (!orgId || !(await store.hasOrgRole(orgId, who.appUserId, BILLING_ROLES)))
+    if (!isUuid(orgId) || !(await store.hasOrgRole(orgId, who.appUserId, BILLING_ROLES)))
       throw new ForbiddenError("You must be an organisation owner, admin, or billing role.");
     return who;
   }
@@ -76,11 +76,19 @@ export function billingRoutes(deps: BillingRouteDeps) {
     if (!acct || acct.deleted_at) throw new NotFoundError("Billing account not found");
     if (!acct.org_id && acct.workspace_id) {
       if (await staffPass(c, who, action, "billing_account", acct.id)) return acct;
-      await deps.access.workspace(
-        who,
-        acct.workspace_id,
-        mode === "view" ? "workspace:view_invoices" : "workspace:update_payment",
-      );
+      if (!who.appUserId) throw new ForbiddenError("Not allowed");
+      try {
+        await deps.access.workspace(
+          who,
+          acct.workspace_id,
+          mode === "view" ? "workspace:view_invoices" : "workspace:update_payment",
+        );
+      } catch (e) {
+        // The account exists either way; answer as the org path does, not with a 404.
+        if (e instanceof NotFoundError || e instanceof ForbiddenError)
+          throw new ForbiddenError("You must be an organisation owner, admin, or billing role.");
+        throw e;
+      }
       return acct;
     }
     await requireOrgBilling(c, acct.org_id, action, ["billing_account", acct.id]);
