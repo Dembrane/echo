@@ -1,8 +1,9 @@
 export { Access } from "./authorize";
-export { DrizzleAccessStore } from "./drizzle";
+export { DrizzleAccessStore, stickyRemovedIds } from "./drizzle";
 export { MemoryAccessStore } from "./memory";
 export * from "./policies";
 export {
+  deriveWorkspaceRole,
   type Principal,
   type ProjectAccess,
   resolveProject,
