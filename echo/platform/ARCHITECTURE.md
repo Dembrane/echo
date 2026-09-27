@@ -12,7 +12,7 @@ Bun + Cloud Run system; each choice and deviation is a decision record in
 |---|---|---|
 | `apps/api` | HTTP: dashboard, portal, iOS app, MCP, webhooks in | requests (Cloud Run service) |
 | `apps/worker` | DBOS jobs and durable workflows that wait on the network, agent runs, ticks, schedules | always on, small (Cloud Run worker pool) |
-| `apps/media` | ffmpeg work handed over by the worker, one job per instance | requests, 0 to N (internal Cloud Run service) |
+| `apps/media` | ffmpeg work handed over by the worker, one job per instance | requests, 0 to N (private Cloud Run service: IAM invoker only) |
 | `apps/web` | the React frontend, served as static files | requests |
 | migrations | `packages/db/src/migrate.ts` before every rollout | Cloud Run job |
 

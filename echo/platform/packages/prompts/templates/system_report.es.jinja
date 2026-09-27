@@ -1,0 +1,66 @@
+<transcripts>
+{% if conversations|length == 0 %}
+No se encontraron transcripciones de conversaciones.
+{% else %}
+   {% for conversation in conversations %}
+			<transcript>
+				<name>{{ conversation.name }}</name>
+				<tags>{{ conversation.tags }}</tags>
+				<content>
+				{{ conversation.transcript }}
+				</content>
+			</transcript>
+   {% endfor %}
+{% endif %}
+</transcripts>
+{% if user_instructions %}
+
+<user_instructions>
+The report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:
+
+{{ user_instructions | replace("</user_instructions>", "") | replace("<user_instructions>", "") }}
+</user_instructions>
+{% endif %}
+
+Su tarea es crear un artículo dinámico estilo entrevista en formato de preguntas y respuestas basado en las transcripciones de conversaciones proporcionadas anteriormente. Este artículo debe analizar críticamente el contenido mientras mantiene una clara conexión con el material fuente. El resultado final debe ser un documento profesional y legible, adecuado para compartir inmediatamente en línea.
+
+Primero, lea y analice cuidadosamente las transcripciones y su contexto.
+
+Comience analizando críticamente las transcripciones. Considere lo siguiente:
+1. Temas e ideas principales
+2. Perspectivas o ideas únicas
+3. Posibles controversias o puntos de vista conflictivos
+4. Relevancia con el tema principal
+
+Estructure su artículo de preguntas y respuestas de la siguiente manera:
+1. Introducción: Explique brevemente el contexto y la importancia del tema.
+2. Cuerpo principal: Cree un número apropiado (entre 2 y 15) de pares de preguntas y respuestas que cubran los aspectos más significativos de las transcripciones.
+3. Conclusión: Resuma los puntos clave y sus implicaciones.
+
+Al elaborar sus preguntas y respuestas:
+* Asegúrese de que cada pregunta sea clara, concisa y estimulante.
+* Proporcione respuestas completas que se basen directamente en las transcripciones.
+* Mantenga una perspectiva crítica, abordando cualquier contradicción o incertidumbre en el material fuente.
+* Use citas directas con moderación y cuando lo haga, atribúyalas adecuadamente.
+
+Para mantener la integridad del material fuente:
+* Represente con precisión las opiniones e información presentadas en las transcripciones.
+* No introduzca información u opiniones que no se encuentren en el contenido original.
+* Si hay vacíos en la información, reconózcalos en lugar de especular.
+* Haga referencia a nombres propios cuando sea relevante. Ignore los nombres compartidos durante las transcripciones a menos que sea obvio que la persona es una figura pública.
+
+Formatee su resultado final de la siguiente manera:
+* Título: Cree un título atractivo como encabezado H1 (#).
+* Introducción: 2-3 oraciones estableciendo el contexto.
+* Pares de preguntas y respuestas: Presente cada pregunta como un encabezado H3 (###), seguida de una respuesta completa como párrafo, separados por dos saltos de línea.
+* Conclusión: 2-3 oraciones resumiendo los puntos clave y su significado.
+
+IMPORTANTE: Escriba el artículo completo en español, independientemente del idioma de las transcripciones. Si las transcripciones están en otro idioma, traduzca el contenido al español.
+
+Mantenga un tono profesional y periodístico a lo largo del artículo. El lenguaje debe ser claro, conciso y fácilmente comprensible para una audiencia general. Evite el lenguaje coloquial, la jerga o términos excesivamente técnicos a menos que sean esenciales y estén explicados.
+
+Al referirse a la plataforma por su nombre, escriba siempre "dembrane" en minúsculas, incluso al inicio de una oración. Nunca lo escriba como "Dembrane".
+
+No inserte ningún tag <br> en la salida. Use saltos de línea en su lugar.
+
+Presente su artículo final dentro de etiquetas <article> con texto formateado en markdown. 

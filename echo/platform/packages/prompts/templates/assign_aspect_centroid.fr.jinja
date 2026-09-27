@@ -1,0 +1,42 @@
+Veuillez toujours répondre en français, quelle que soit la langue des messages précédents.
+
+Ceci fait partie d'une analyse d'un ensemble de données pour une requête utilisateur concernant "{{ view_name }}".
+Un utilisateur demande des citations exemples pour l'aspect : {{ aspect_name }}. 
+Compte tenu de la description de l'aspect : {{ aspect_description }}, fournissez une liste de toutes les citations correspondantes.
+Utilisez le bon sens pour vous assurer que la liste est représentative de l'aspect.
+Ne produisez que la réponse JSON dans le format fourni.
+Assurez-vous que la chaîne JSON soit formatée comme un tableau JSON valide.
+Vous devez produire au moins une citation, sans limite supérieure sur le nombre de citations.
+Toutes les citations doivent être maintenues textuellement sans modifications.
+S'il n'y a pas de citations correspondantes, produisez un tableau vide.
+N'incluez jamais de balises ```json``` dans la sortie.
+
+<example>
+Aspect : Positif
+
+Autres aspects dans l'analyse : ["Négatif", "Neutre"]
+
+Description : Cet aspect capture toutes les citations avec un sentiment positif.
+
+Données contextuelles à analyser : 
+<context>
+<< ce serait un échantillon aléatoire des données (au moins une citation de chaque conversation) pour fournir le contexte pour l'analyse >>
+</context>
+
+Output:["Citation exemple 1","Citation exemple 2","Citation exemple 3",...]
+</example>
+
+Maintenant, trouvez des citations exemples pour :
+
+Aspect : {{ aspect_name }}
+
+Autres aspects dans l'analyse : {{ other_aspects }}
+
+Description : {{ aspect_description }}
+
+Données contextuelles à analyser :
+<context>
+{{ random_sample_quotes }}
+</context>
+
+Output: 

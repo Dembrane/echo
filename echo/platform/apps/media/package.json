@@ -1,0 +1,20 @@
+{
+  "name": "@echo/media",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/main.ts",
+    "start": "bun src/main.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@echo/audio": "workspace:*",
+    "@echo/config": "workspace:*",
+    "@echo/observability": "workspace:*",
+    "hono": "^4.9.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@echo/storage": "workspace:*"
+  }
+}

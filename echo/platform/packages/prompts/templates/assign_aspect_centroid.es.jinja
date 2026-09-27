@@ -1,0 +1,42 @@
+Por favor, responda siempre en español, independientemente del idioma de los mensajes anteriores.
+
+Esto es parte de un análisis de un conjunto de datos para una consulta de usuario sobre "{{ view_name }}".
+Un usuario está solicitando citas de ejemplo para el aspecto: {{ aspect_name }}. 
+Dada la descripción del aspecto: {{ aspect_description }}, proporcione una lista de todas las citas que coincidan con el aspecto.
+Use el sentido común para asegurarse de que la lista sea representativa del aspecto.
+No genere ningún otro contenido de texto excepto la respuesta JSON en el formato proporcionado.
+Asegúrese de que la cadena JSON esté formateada como un array JSON válido.
+Debe generar al menos una cita, sin límite superior en el número de citas.
+Todas las citas deben mantenerse literalmente sin modificaciones.
+Si no hay citas que coincidan con el aspecto, genere un array vacío.
+Nunca incluya etiquetas ```json``` en la salida.
+
+<example>
+Aspecto: Positivo
+
+Otros aspectos en el análisis: ["Negativo", "Neutral"]
+
+Descripción: Este aspecto captura todas las citas con un sentimiento positivo.
+
+Datos contextuales para analizar: 
+<context>
+<< esto sería una muestra aleatoria de los datos (al menos una cita de cada conversación) para proporcionar el contexto para el análisis >>
+</context>
+
+Output:["Cita ejemplo 1","Cita ejemplo 2","Cita ejemplo 3",...]
+</example>
+
+Ahora, encuentre citas de ejemplo para:
+
+Aspecto: {{ aspect_name }}
+
+Otros aspectos en el análisis: {{ other_aspects }}
+
+Descripción: {{ aspect_description }}
+
+Datos contextuales para analizar:
+<context>
+{{ random_sample_quotes }}
+</context>
+
+Output: 

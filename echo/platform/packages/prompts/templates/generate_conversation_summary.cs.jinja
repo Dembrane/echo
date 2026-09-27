@@ -1,0 +1,93 @@
+Dostáváš sérii citací z přepisu rozhovoru v chronologickém pořadí.
+
+{% if conversation_title %}
+<conversation_title>
+Uživatel nebo účastníci výslovně nastavili název tohoto rozhovoru na:
+{{ conversation_title }}
+</conversation_title>
+{% endif %}
+
+<quotes>
+{{ quote_text_joined }}
+</quotes>
+
+{% if project_context %}
+<project_context>
+Organizátor poskytl pro tento rozhovor následující kontext a klíčové pojmy:
+{{ project_context }}
+</project_context>
+{% endif %}
+
+{% if verified_artifacts %}
+<verified_artifacts>
+Během tohoto rozhovoru účastníci společně vytvořili a ověřili tyto konkrétní výstupy:
+{% for artifact in verified_artifacts %}
+
+---
+{{ artifact }}
+---
+{% endfor %}
+</verified_artifacts>
+{% endif %}
+
+Vytvoř shrnutí, které zachytí podstatu a smysl toho, co se odehrálo, a dá se přečíst na jeden pohled.
+
+## Základní principy
+
+1. **Podstata místo úplnosti**: Zachyť to hlavní, tedy smysluplný výsledek, rozhodnutí nebo poznatek, ne popis krok za krokem
+
+2. **Důsledná stručnost**: Většina rozhovorů se dá shrnout do 2 až 4 vět. Složitější diskuse si zaslouží 1 až 2 krátké odstavce. Shrnutí musí být vždy výrazně kratší než originál.
+
+3. **Smysluplná komprese**: Ptej se „co by potřeboval vědět někdo, kdo u toho nebyl?", ne „o čem se mluvilo?"
+
+4. **Přirozený jazyk**: Piš plynulou prózou, ne v odrážkách nebo strukturovaných sekcích. Vyhni se nadpisům, seznamům a formátování, pokud obsah není opravdu složitý a mnohovrstevnatý.
+
+5. **Zapojení kontextu**:
+   - Kontext projektu vplétej přirozeně tam, kde přidává smysl
+   - Ověřené výstupy uveď jako konkrétní výsledky bez popisu procesu
+   - Nevnucuj kontext, který se nehodí
+
+6. **Skóre rychlého čtení**: Než začneš psát, vnitřně si vyhodnoť na škále 1 až 10, jak dobře půjde shrnutí přečíst na jeden pohled:
+   - 10 = okamžité pochopení (jednoduché, jedna jasná pointa)
+   - 7 až 9 = velmi rychlé přečtení (2 až 3 jasné poznatky)
+   - 4 až 6 = vyžaduje soustředěné čtení (více bodů nebo střední složitost)
+   - 1 až 3 = vyžaduje pozorné čtení (hutné, složité nebo jemně odstíněné)
+
+   Kdykoli to jde, miř na 7 a výš. Pokud má tvůj koncept méně než 7, zjednoduš ho.
+
+## Co zachytit
+
+Soustřeď se na to nejdůležitější. Tyto prvky zahrň, pokud jsou pro rozhovor zásadní:
+
+- Učiněná rozhodnutí a jejich zdůvodnění
+- Pojmenované problémy a dohodnutá řešení
+- Klíčové poznatky nebo uvědomění
+- Konkrétní další kroky nebo výstupy
+- Zásadní dynamiku, pokud utvářela výsledek: argumenty nebo úvahy, které ovlivnily rozhodnutí, napětí mezi konkurujícími si prioritami, konflikty, které bylo třeba vyřešit, nebo shodu nalezenou ve sporných bodech
+- Podstatné neshody nebo probírané kompromisy
+
+## Co vynechat
+
+- Podrobný popis diskuse krok za krokem
+- Detaily provedení, pokud nejsou hlavní pointou
+- Mechaniku procesu (kdo co řekl, jak se dospělo k rozhodnutím)
+- Zřejmý kontext nebo pozadí
+- Drobné neshody, které neovlivnily výsledek
+
+## Pokyny ke stylu
+
+- Místo pomlček používej čárky, závorky nebo „ale"
+- Piš přímou, konverzační prózou
+- Dávej přednost kratším větám před složitou interpunkcí
+- Kontrast vyjádři pomocí „ale" nebo „nicméně"
+- Závorky používej pro vsuvky nebo upřesnění
+- Nikdy nepoužívej tučné písmo, kurzívu ani jiné formátování textu
+
+## Formát
+
+- 2 až 4 věty u jednoduchých rozhovorů
+- 1 až 2 stručné odstavce u střední složitosti
+- Přirozená próza bez odrážek, nadpisů, seznamů a formátování
+- Strukturu použij, jen pokud je u mnohovrstevnaté diskuse opravdu nezbytná
+
+Piš tak, jako bys kolegovi za 30 sekund vysvětloval, co se stalo.

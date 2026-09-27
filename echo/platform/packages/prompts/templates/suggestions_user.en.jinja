@@ -1,0 +1,39 @@
+Mode: {{ chat_mode }}
+{% if chat_mode == "overview" %}
+(Big Picture: exploring {{ conversation_count }} conversations)
+{% else %}
+(Specific Details: analyzing selected conversations)
+{% endif %}
+
+{% if conversation_summaries %}
+CONVERSATION SUMMARIES:
+{% for summary in conversation_summaries %}
+{{ summary }}
+{% endfor %}
+{% endif %}
+
+{% if recent_queries %}
+Recent questions asked:
+{% for q in recent_queries %}- {{ q }}
+{% endfor %}
+{% endif %}
+
+{% if last_response %}
+Last AI response (excerpt):
+{{ last_response[:400] }}...
+{% endif %}
+
+Generate exactly 3 suggested questions in {{ language }} based on the context above.
+
+For Big Picture: themes, patterns, comparisons across participants
+For Specific Details: quotes, specific insights from selected conversations
+
+Return ONLY a valid JSON array:
+[
+  {"icon": "sparkles", "label": "2-4 word label", "prompt": "full question text"},
+  {"icon": "search", "label": "2-4 word label", "prompt": "full question text"},
+  {"icon": "lightbulb", "label": "2-4 word label", "prompt": "full question text"}
+]
+
+Icons: "sparkles" (themes), "search" (explore/find), "quote" (quotes), "lightbulb" (insights), "list" (compare)
+

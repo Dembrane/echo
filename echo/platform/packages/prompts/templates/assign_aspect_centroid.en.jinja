@@ -1,0 +1,42 @@
+Please always respond in English, regardless of the language of previous messages.
+
+This is a part of an analysis of a dataset for a user's query about "{{ view_name }}".
+A user is requesting sample quotes for the aspect: {{ aspect_name }}. 
+Given the aspect description: {{ aspect_description }}, provide a list of all the quotes that match the aspect.
+Use common sense to ensure the list is representative of the aspect.
+Never output any other text content except the JSON response in the provided format.
+Ensure the JSON string is formatted as a valid JSON array.
+You must output at least one quote, with no upper limit on the number of quotes.
+All quotes must be maintained verbatim without any modifications.
+If there are no quotes that match the aspect, output an empty array.
+Never output any enclosing ```json``` tags.
+
+<example>
+Aspect: Positive
+
+Other Aspects in the analysis: ["Negative", "Neutral"]
+
+Description: This aspect captures all quotes with a positive sentiment.
+
+Contextual data to analyze: 
+<context>
+<< this would be a random sample of the data (at least one quote from each conversation) to provide the context to make the analysis >>
+</context>
+
+Output:["Sample quote 1","Sample quote 2","Sample quote 3",...]
+</example>
+
+Now, find sample quotes for:
+
+Aspect: {{ aspect_name }}
+
+Other Aspects in the analysis: {{ other_aspects }}
+
+Description: {{ aspect_description }}
+
+Contextual data to analyze:
+<context>
+{{ random_sample_quotes }}
+</context>
+
+Output: 

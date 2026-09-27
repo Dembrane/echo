@@ -23,7 +23,7 @@ export interface LiveRecordings {
   countActive(accountId: string): Promise<number>;
 }
 
-/** Until the portal's presence store moves over, nothing counts as live. */
+/** Counts nothing as live: for tests and callers without a presence store. */
 export const noLiveRecordings: LiveRecordings = { countActive: async () => 0 };
 
 /** The team's webhook (the one support requests use); answers the receiver's status. */

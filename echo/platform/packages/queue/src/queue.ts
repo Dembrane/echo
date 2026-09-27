@@ -33,6 +33,12 @@ export interface EnqueueOptions {
   readonly singletonKey?: string;
   readonly startAfter?: Date | number;
   readonly priority?: number;
+  /**
+   * The run's id. A second enqueue with the same id returns the first run instead of
+   * starting another, for as long as DBOS keeps the run; durable workflows use it so a
+   * repeated trigger (a retried request, a second finish) is a no-op.
+   */
+  readonly workflowId?: string;
 }
 
 export interface WorkOptions {
@@ -128,6 +134,7 @@ export class Queue {
       }),
       ...(opts.priority !== undefined && { priority: opts.priority }),
       ...(delay && { delaySeconds: delay }),
+      ...(opts.workflowId && { workflowID: opts.workflowId }),
     };
     const handle = opts.tx
       ? await this.client.enqueueInTransaction(adaptTx(opts.tx) as never, options, envelope)
@@ -161,6 +168,27 @@ export class Queue {
       },
       { name: def.name },
     );
+  }
+
+  /**
+   * Registers a durable workflow on the job's queue. Unlike work(), the handler is not one
+   * step: it calls step() for each side effect, DBOS checkpoints each result, and a crash
+   * resumes at the first unfinished step. Retries belong to the steps; the def's
+   * expireInSeconds bounds the whole run.
+   */
+  async workflow<J extends JobDefinition>(
+    def: J,
+    opts: WorkOptions,
+    handler: (
+      payload: Parsed<J>,
+      job: { id: string; attempt: number; signal: AbortSignal },
+    ) => Promise<void>,
+  ): Promise<void> {
+    if (this.running) throw new Error(`register ${def.name} before run()`);
+    this.defs.set(def.name, def);
+    this.concurrency.set(def.name, opts.concurrency);
+    const run = this.wrap(def, handler as Handler);
+    DBOS.registerWorkflow(async (envelope: Envelope) => run(envelope, 0), { name: def.name });
   }
 
   /** A cron schedule in a named timezone; each tick runs once across all instances. */
