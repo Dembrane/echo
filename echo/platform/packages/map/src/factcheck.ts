@@ -95,7 +95,7 @@ export async function runFactCheck(
     "load",
     async () => {
       const row = await d.store.getFactCheck(job.factCheckId);
-      if (!row || row.status !== "processing" || Number(row.attempt) !== job.attempt)
+      if (row?.status !== "processing" || Number(row.attempt) !== job.attempt)
         return { stale: true as const };
       const projectId = String(row.project_id);
       const claim = await claimToCheck(d, projectId, job.resultId, job.nodeId);
