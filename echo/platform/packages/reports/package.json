@@ -15,10 +15,13 @@
     "@echo/http": "workspace:*",
     "@echo/legacy-shape": "workspace:*",
     "@echo/llm": "workspace:*",
+    "@echo/notifications": "workspace:*",
     "@echo/observability": "workspace:*",
+    "@echo/projects": "workspace:*",
     "@echo/queue": "workspace:*",
     "@echo/ratelimit": "workspace:*",
     "@echo/realtime": "workspace:*",
+    "@echo/webhooks": "workspace:*",
     "hono": "^4.9.0",
     "postgres": "^3.4.9",
     "zod": "^4.1.0"
