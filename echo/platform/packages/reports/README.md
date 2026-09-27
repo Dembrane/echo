@@ -57,3 +57,7 @@ row gets one.
 
 `fields` on `GET /reports` is hole M-7: only the report's own columns (or `*`) are served;
 a relational path is a 400. `POST /report-metrics` keeps needing only `report:view` (L-5).
+
+The metric insert records a row now. The old route handed Directus a uuid for the bigint
+metric id and answered 500, so no metric was ever written through it; the parity
+scenarios mark that difference.

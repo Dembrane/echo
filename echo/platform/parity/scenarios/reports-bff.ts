@@ -208,7 +208,13 @@ export default scenarios([
     setup: [CANVAS],
   },
   { name: "bff report: missing", as: "alice", method: "GET", path: `${R}/99` },
-  { name: "bff report: id not a number", as: "alice", method: "GET", path: `${R}/abc` },
+  {
+    name: "bff report: id not a number",
+    as: "alice",
+    method: "GET",
+    path: `${R}/abc`,
+    differs: "old API 500s on a non-integer id; it names no report, so 404 Report not found",
+  },
   {
     name: "bff report: deleted",
     as: "alice",
@@ -305,6 +311,8 @@ export default scenarios([
     method: "POST",
     path: M,
     body: { project_report_id: "1", type: "view" },
+    differs:
+      "old API 500s: it gave Directus a uuid for the bigint metric id, so no metric was ever recorded; the insert now works",
   },
   {
     name: "bff metric create: with ip",
@@ -312,6 +320,8 @@ export default scenarios([
     method: "POST",
     path: M,
     body: { project_report_id: "1", type: "view", ip: "10.0.0.1" },
+    differs:
+      "old API 500s: it gave Directus a uuid for the bigint metric id, so no metric was ever recorded; the insert now works",
   },
   {
     name: "bff metric create: observer",
@@ -320,6 +330,8 @@ export default scenarios([
     path: M,
     body: { project_report_id: "2", type: "view" },
     setup: [P2_OPEN, P2_REPORT],
+    differs:
+      "old API 500s: it gave Directus a uuid for the bigint metric id, so no metric was ever recorded; the insert now works",
   },
   {
     name: "bff metric create: other tenant",

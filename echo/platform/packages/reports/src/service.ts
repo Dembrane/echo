@@ -50,12 +50,9 @@ export function parseFields(raw: string | null): readonly string[] {
   return out;
 }
 
-/** A report row as Directus served it: ISO timestamps, bigint ids as numbers. */
+/** A report row as Directus served it: ISO timestamps, bigint ids as strings. */
 export function reportView(row: Row): Row {
-  const out = directusRow(row);
-  for (const k of ["id", "project_report_id"] as const)
-    if (typeof out[k] === "string" && /^\d+$/.test(out[k] as string)) out[k] = Number(out[k]);
-  return out;
+  return directusRow(row);
 }
 
 export async function listReports(
