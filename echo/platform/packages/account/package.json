@@ -9,10 +9,20 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@echo/access": "workspace:*",
+    "@echo/auth": "workspace:*",
+    "@echo/config": "workspace:*",
     "@echo/core": "workspace:*",
     "@echo/db": "workspace:*",
     "@echo/http": "workspace:*",
+    "@echo/mail": "workspace:*",
+    "@echo/notifications": "workspace:*",
+    "@echo/observability": "workspace:*",
+    "@echo/queue": "workspace:*",
+    "@echo/ratelimit": "workspace:*",
+    "@echo/storage": "workspace:*",
     "drizzle-orm": "^0.45.3",
-    "hono": "^4.9.0"
+    "hono": "^4.9.0",
+    "zod": "^4.1.0"
   }
 }

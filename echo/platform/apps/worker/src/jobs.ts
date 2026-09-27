@@ -1,3 +1,6 @@
+import { emailHandler, reconcileAccountSeats, reconcileHandler, sendEmail } from "@echo/account";
+import type { Db } from "@echo/db";
+import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
 import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
 import { z } from "zod";
@@ -18,8 +21,14 @@ export interface Registration {
   register(queue: Queue): Promise<void>;
 }
 
+/** What job handlers may use; built once in main.ts. */
+export interface WorkerDeps {
+  readonly db: Db;
+  readonly mailer: Mailer;
+}
+
 /** Every job this worker runs. Namespaces add their registration here as they move over. */
-export function registrations(logger: Logger): Registration[] {
+export function registrations(logger: Logger, deps: WorkerDeps): Registration[] {
   return [
     {
       jobs: [heartbeat],
@@ -28,6 +37,17 @@ export function registrations(logger: Logger): Registration[] {
           logger.info({ signal: "worker.heartbeat" }, "heartbeat");
         });
         await queue.schedule(heartbeat, "* * * * *", {});
+      },
+    },
+    {
+      jobs: [sendEmail, reconcileAccountSeats],
+      async register(queue) {
+        await queue.work(sendEmail, { concurrency: 10 }, emailHandler(deps.mailer, logger));
+        await queue.work(
+          reconcileAccountSeats,
+          { concurrency: 2 },
+          reconcileHandler(deps.db, logger),
+        );
       },
     },
   ];

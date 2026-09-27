@@ -32,9 +32,11 @@ async function side(
   s: Scenario,
 ) {
   await reset();
-  if (s.setup) await runSetup(s.setup);
   await Bun.sleep(50);
+  // Sign in before the setup runs, so a setup that turns on two-factor or suspends the
+  // user still leaves the scenario a session to act with.
   const t = await token(s.as);
+  if (s.setup) await runSetup(s.setup);
   const before = await snapshot();
   const res = await call(base, t, s);
   const changes = diff(before, await snapshot());

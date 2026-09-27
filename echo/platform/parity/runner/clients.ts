@@ -44,7 +44,7 @@ export interface Captured {
 export async function call(base: string, token: string | null, s: Scenario): Promise<Captured> {
   const url = new URL(s.path, base);
   for (const [k, v] of Object.entries(s.query ?? {})) url.searchParams.set(k, v);
-  const json = typeof s.body === "function" ? (s.body as () => unknown)() : s.body;
+  const json = typeof s.body === "function" ? await (s.body as () => unknown)() : s.body;
   let payload: BodyInit | undefined;
   if (s.form) {
     const form = new FormData();

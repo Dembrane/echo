@@ -92,6 +92,32 @@ export const schema = defineSchema({
       description: "Sender name of every transactional email.",
     }),
   },
+  files: {
+    directusLocation: key("FILES_DIRECTUS_LOCATION", z.string().default("s3"), {
+      description:
+        "Directus storage location name written on uploaded avatars and logos, so Directus keeps serving them until cutover.",
+    }),
+    localRoot: key("FILES_LOCAL_ROOT", z.string().default(".data/files"), {
+      description: "Where uploads land when no bucket is configured (local, test).",
+    }),
+    s3Endpoint: key("FILES_S3_ENDPOINT", z.url().optional(), {
+      description: "S3 endpoint of the bucket Directus stores files in. Unset uses localRoot.",
+    }),
+    s3Bucket: key("FILES_S3_BUCKET", z.string().optional(), {
+      description: "Bucket Directus stores files in (its storage root).",
+    }),
+    s3Region: key("FILES_S3_REGION", z.string().default("auto"), {
+      description: "Region of that bucket.",
+    }),
+    s3AccessKeyId: key("FILES_S3_ACCESS_KEY_ID", z.string().optional(), {
+      description: "Access key for that bucket.",
+      secret: true,
+    }),
+    s3SecretAccessKey: key("FILES_S3_SECRET_ACCESS_KEY", z.string().optional(), {
+      description: "Secret key for that bucket.",
+      secret: true,
+    }),
+  },
   account: {
     inviteHashSecret: key("INVITE_HASH_SECRET", z.string().min(16), {
       description:

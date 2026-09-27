@@ -69,6 +69,11 @@ export class Queue {
       readonly maxConnections?: number;
       /** Local and tests only. In deployed environments the migration job owns the schema and the app login has no DDL rights. */
       readonly manageSchema?: boolean;
+      /**
+       * The API only enqueues: no maintenance and no cron election there, so web instances
+       * never do background work and schedules run on the worker alone.
+       */
+      readonly producerOnly?: boolean;
     } = {},
   ) {
     const manage = opts.manageSchema ?? false;
@@ -79,25 +84,35 @@ export class Queue {
       application_name: "echo-queue",
       migrate: manage,
       createSchema: manage,
+      ...(opts.producerOnly && { supervise: false, schedule: false }),
     });
-    this.boss.on("error", (err) => this.logger.error({ err }, "queue error"));
+    // pg errors carry the whole client (pool state, connection parameters); log what helps.
+    this.boss.on("error", (err) =>
+      this.logger.error(
+        { err: { message: err.message, code: (err as { code?: string }).code, stack: err.stack } },
+        "queue error",
+      ),
+    );
   }
 
   async start(defs: readonly JobDefinition[]): Promise<void> {
     await this.boss.start();
-    for (const def of defs) {
-      this.defs.set(def.name, def);
-      const deadLetter = `${def.name}.dead`;
-      await this.boss.createQueue(deadLetter, { policy: "standard", retentionSeconds: 14 * 86400 });
-      await this.boss.createQueue(def.name, {
-        policy: def.policy,
-        retryLimit: def.retryLimit,
-        retryDelay: def.retryDelaySeconds,
-        retryBackoff: def.retryBackoff,
-        expireInSeconds: def.expireInSeconds,
-        deadLetter,
-      });
-    }
+    for (const def of defs) await this.declare(def);
+  }
+
+  /** Creates the queue and its dead-letter queue; idempotent. */
+  private async declare(def: JobDefinition): Promise<void> {
+    this.defs.set(def.name, def);
+    const deadLetter = `${def.name}.dead`;
+    await this.boss.createQueue(deadLetter, { policy: "standard", retentionSeconds: 14 * 86400 });
+    await this.boss.createQueue(def.name, {
+      policy: def.policy,
+      retryLimit: def.retryLimit,
+      retryDelay: def.retryDelaySeconds,
+      retryBackoff: def.retryBackoff,
+      expireInSeconds: def.expireInSeconds,
+      deadLetter,
+    });
   }
 
   async enqueue<J extends JobDefinition>(
@@ -113,14 +128,24 @@ export class Queue {
       payload: parsed,
       meta: { ...(c?.requestId && { causedByRequestId: c.requestId }), carrier },
     };
-    return this.boss.send(def.name, envelope, {
-      ...(opts.singletonKey && { singletonKey: opts.singletonKey }),
-      ...(opts.startAfter !== undefined && {
-        startAfter: opts.startAfter instanceof Date ? opts.startAfter : opts.startAfter,
-      }),
-      ...(opts.priority !== undefined && { priority: opts.priority }),
-      ...(opts.tx && { db: adapt(opts.tx) }),
-    });
+    const send = () =>
+      this.boss.send(def.name, envelope, {
+        ...(opts.singletonKey && { singletonKey: opts.singletonKey }),
+        ...(opts.startAfter !== undefined && {
+          startAfter: opts.startAfter instanceof Date ? opts.startAfter : opts.startAfter,
+        }),
+        ...(opts.priority !== undefined && { priority: opts.priority }),
+        ...(opts.tx && { db: adapt(opts.tx) }),
+      });
+    try {
+      return await send();
+    } catch (err) {
+      // The queue row is missing: a job type enqueued before any process declared it, or a
+      // database restored without it. Declaring is idempotent, so declare and send once more.
+      if (opts.tx || !/does not exist|foreign key/i.test(String((err as Error).message))) throw err;
+      await this.declare(def);
+      return send();
+    }
   }
 
   /** Runs handler for each job of def. Correlation, span, logging and payload checks are done here, once. */

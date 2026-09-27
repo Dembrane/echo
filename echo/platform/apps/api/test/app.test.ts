@@ -4,6 +4,7 @@ import { Access, MemoryAccessStore } from "@echo/access";
 import { loadConfig, publicValues } from "@echo/config";
 import { NotFoundError } from "@echo/core";
 import { createLogger, initTracing } from "@echo/observability";
+import { MemoryRateCounter, RateLimiter } from "@echo/ratelimit";
 import { buildApp } from "../src/app";
 import type { Deps } from "../src/deps";
 
@@ -35,6 +36,11 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     principalFor: async () => null,
     access: new Access(new MemoryAccessStore()),
     db: {} as Deps["db"],
+    identity: {} as Deps["identity"],
+    notifier: {} as Deps["notifier"],
+    limiter: new RateLimiter(new MemoryRateCounter()),
+    jobs: { enqueue: async () => null },
+    files: {} as Deps["files"],
     ...overrides,
   };
 }

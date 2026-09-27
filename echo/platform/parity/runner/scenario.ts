@@ -13,7 +13,7 @@ export interface Scenario {
   readonly as: As;
   readonly method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   readonly path: string;
-  /** JSON body; a function is evaluated per side at call time (for time-based codes). */
+  /** JSON body; a function (sync or async) is evaluated per side at call time, for time-based codes. */
   readonly body?: unknown;
   /** Multipart form fields instead of a JSON body; a file is { filename, type, base64 }. */
   readonly form?: Record<string, string | FormFile>;
