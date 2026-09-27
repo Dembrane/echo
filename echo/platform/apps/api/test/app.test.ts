@@ -34,6 +34,7 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     principalFor: async () => null,
     access: new Access(new MemoryAccessStore()),
     db: {} as Deps["db"],
+    models: {} as Deps["models"],
     ...overrides,
   };
 }

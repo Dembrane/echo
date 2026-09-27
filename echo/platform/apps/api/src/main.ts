@@ -2,6 +2,7 @@ import { Access, DrizzleAccessStore } from "@echo/access";
 import { createAuth } from "@echo/auth";
 import { describe, loadConfig, publicValues } from "@echo/config";
 import { createDb } from "@echo/db";
+import { createModels } from "@echo/llm";
 import { createLogger, initTracing } from "@echo/observability";
 import { buildApp } from "./app";
 import { principalLookup } from "./principals";
@@ -55,6 +56,18 @@ const app = buildApp({
   principalFor: principalLookup(database.db),
   access: new Access(new DrizzleAccessStore(database.db)),
   db: database.db,
+  models: createModels({
+    vertexProject: config.llm.vertexProject,
+    vertexLocation: config.llm.vertexLocation,
+    groups: {
+      text_fast: config.llm.textFast,
+      multi_modal_fast: config.llm.multiModalFast,
+      multi_modal_pro: config.llm.multiModalPro,
+    },
+    embeddingModel: config.llm.embeddingModel,
+    embeddingLocation: config.llm.embeddingLocation,
+    embeddingDimensions: config.llm.embeddingDimensions,
+  }),
 });
 
 const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 255 });

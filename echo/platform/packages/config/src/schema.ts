@@ -5,6 +5,16 @@ const bool = z
   .union([z.boolean(), z.enum(["true", "false", "1", "0"])])
   .transform((v) => v === true || v === "true" || v === "1");
 const int = z.coerce.number().int();
+/** A list from an environment file, or comma-separated from an environment variable. */
+const list = z.union([
+  z.array(z.string()).min(1),
+  z.string().transform((v) =>
+    v
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean),
+  ),
+]);
 
 /**
  * Every setting echo reads, declared once. A namespace adds its section here when it
@@ -58,6 +68,45 @@ export const schema = defineSchema({
     }),
     traceSampleRatio: key("TRACE_SAMPLE_RATIO", z.coerce.number().min(0).max(1).default(0.1), {
       description: "Share of requests traced end to end.",
+    }),
+  },
+  llm: {
+    vertexProject: key("LLM_VERTEX_PROJECT", z.string().default("dembrane-echo"), {
+      description: "GCP project billed for language model calls.",
+    }),
+    vertexLocation: key("LLM_VERTEX_LOCATION", z.string().default("eu"), {
+      description: "Vertex location. eu uses the EU data residency endpoint.",
+    }),
+    textFast: key(
+      "LLM_TEXT_FAST",
+      list.default(["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash"]),
+      {
+        description:
+          "text_fast group, in fallback order. Falls back to multi_modal_pro after these.",
+      },
+    ),
+    multiModalFast: key(
+      "LLM_MULTI_MODAL_FAST",
+      list.default(["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash"]),
+      {
+        description: "multi_modal_fast group (audio and images), in fallback order.",
+      },
+    ),
+    multiModalPro: key(
+      "LLM_MULTI_MODAL_PRO",
+      list.default(["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash"]),
+      {
+        description: "multi_modal_pro group, in fallback order.",
+      },
+    ),
+    embeddingModel: key("EMBEDDING_MODEL", z.string().default("text-embedding-004"), {
+      description: "Vertex embedding model.",
+    }),
+    embeddingLocation: key("EMBEDDING_LOCATION", z.string().default("europe-west4"), {
+      description: "Embeddings are regional on Vertex; the eu multi-region does not serve them.",
+    }),
+    embeddingDimensions: key("EMBEDDING_DIMENSIONS", int.min(1).default(768), {
+      description: "Vector size the embedding model returns and map_embedding.dims records.",
     }),
   },
   auth: {

@@ -3,6 +3,7 @@ import type { Auth } from "@echo/auth";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
 import type { Env, Signed } from "@echo/http";
+import type { Models } from "@echo/llm";
 import type { Logger, Tracer } from "@echo/observability";
 
 /** Everything the HTTP app needs, built whole in main.ts and replaced with fakes in tests. */
@@ -18,6 +19,7 @@ export interface Deps {
   readonly principalFor: (userId: string) => Promise<Signed | null>;
   readonly access: Access;
   readonly db: Db;
+  readonly models: Models;
 }
 
 export type { Env, Signed };

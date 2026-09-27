@@ -1,0 +1,17 @@
+{
+  "name": "@echo/llm",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@ai-sdk/google-vertex": "^5.0.95",
+    "@ai-sdk/provider": "*",
+    "ai": "^7.0.118",
+    "@echo/observability": "workspace:*"
+  }
+}
