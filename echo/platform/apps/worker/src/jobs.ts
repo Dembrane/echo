@@ -1,5 +1,6 @@
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
+import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
 import {
   createLibrary,
@@ -9,6 +10,7 @@ import {
   runCreateView,
 } from "@echo/projects";
 import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
+import { type JobSink, tenancyWorker } from "@echo/tenancy";
 import { dispatchWebhook, httpDeliver, runDispatch, webhooksStorage } from "@echo/webhooks";
 import { z } from "zod";
 
@@ -33,6 +35,12 @@ export function registrations(deps: {
   logger: Logger;
   db: Db;
   config: Pick<Config, "webhooks">;
+  /** Sends the email jobs enqueue. */
+  mailer: Mailer;
+  /** Lets a job enqueue follow-up jobs (the support timers send email). */
+  jobs: JobSink;
+  /** Where email buttons point. */
+  dashboardUrl: string;
 }): Registration[] {
   const { logger, db, config } = deps;
   return [
@@ -68,5 +76,6 @@ export function registrations(deps: {
         );
       },
     },
+    tenancyWorker(deps),
   ];
 }

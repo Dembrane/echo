@@ -1,5 +1,7 @@
+import { DrizzleAccessStore } from "@echo/access";
 import { accountRoutes } from "@echo/account";
 import { projectRoutes } from "@echo/projects";
+import { queueSink, tenancyRoutes } from "@echo/tenancy";
 import { webhookRoutes } from "@echo/webhooks";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -35,6 +37,16 @@ export function buildApp(deps: Deps) {
       deliver: deps.deliverWebhook,
       allowPrivateTargets: deps.config.webhooks.allowPrivateTargets,
       dashboardUrl: deps.config.http.dashboardUrl,
+    }),
+  );
+  app.route(
+    "/",
+    tenancyRoutes({
+      db: deps.db,
+      accessStore: new DrizzleAccessStore(deps.db),
+      jobs: queueSink(deps.queue),
+      dashboardUrl: deps.config.http.dashboardUrl,
+      inviteSecret: deps.config.tenancy.inviteLinkSecret,
     }),
   );
   app.onError(onError);

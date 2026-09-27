@@ -6,6 +6,7 @@ import { createModels } from "@echo/llm";
 import { createLogger, initTracing } from "@echo/observability";
 import { projectJobs } from "@echo/projects";
 import { Queue } from "@echo/queue";
+import { tenancyApiJobs } from "@echo/tenancy";
 import { httpDeliver, webhookJobs } from "@echo/webhooks";
 import { buildApp } from "./app";
 import { principalLookup } from "./principals";
@@ -52,7 +53,7 @@ const auth = createAuth({
 
 // The API only sends jobs; creating their queues up front lets it send before a worker ran.
 const queue = new Queue(config.database.url, logger, tracing.tracer, { maxConnections: 2 });
-await queue.start([...projectJobs, ...webhookJobs]);
+await queue.start([...projectJobs, ...webhookJobs, ...tenancyApiJobs]);
 
 const app = buildApp({
   config,

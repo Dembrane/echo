@@ -150,6 +150,30 @@ export const schema = defineSchema({
       secret: true,
     }),
   },
+  mail: {
+    sendgridApiKey: key("SENDGRID_API_KEY", z.string().optional(), {
+      description:
+        "SendGrid key for transactional email. Unset records mail in the log instead of sending it.",
+      secret: true,
+    }),
+    sendgridRegion: key("SENDGRID_REGION", z.enum(["eu", "global"]).default("eu"), {
+      description:
+        "eu keeps recipient data in EU data centres; the key must belong to that region.",
+    }),
+    fromEmail: key("EMAIL_FROM", z.string().default("do-not-reply@dembrane.com"), {
+      description: "Sender address of every transactional email.",
+    }),
+    fromName: key("EMAIL_FROM_NAME", z.string().default("dembrane"), {
+      description: "Sender name of every transactional email.",
+    }),
+  },
+  tenancy: {
+    inviteLinkSecret: key("INVITE_LINK_SECRET", z.string().min(16), {
+      description:
+        "Signs the hash in invite links. Must equal the old API's DIRECTUS_SECRET until links sent before cutover expire.",
+      secret: true,
+    }),
+  },
 });
 
 export type Schema = typeof schema;
