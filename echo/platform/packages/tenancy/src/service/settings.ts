@@ -1,7 +1,7 @@
 import { POLICIES, type Policy, ROLE_POLICIES, ROLE_RANK, type WorkspaceRole } from "@echo/access";
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from "@echo/core";
 import type { schema } from "@echo/db";
-import { isoTimestamp } from "@echo/legacy-shape";
+import { isoTimestamp, pythonIso } from "@echo/legacy-shape";
 import {
   blocksNewWorkspace,
   commercial,
@@ -512,7 +512,8 @@ export function settingsService(deps: TenancyDeps) {
           if (!already) {
             tombstones.push({
               user_id: m.user_id,
-              removed_at: iso(now),
+              // Inside settings JSON, so stored as text: Python wrote isoformat(), and readers compare it.
+              removed_at: pythonIso(now),
               removed_by: ctx.who.appUserId,
             });
             await updateWorkspace(tx, ws.id, {
