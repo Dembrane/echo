@@ -1,6 +1,6 @@
 import { PARTICIPANT_TOKEN_HEADER } from "@echo/conversations";
 import { type Env, requireUser } from "@echo/http";
-import { type Issue, p, type Type } from "@echo/legacy-shape";
+import { p, type Type } from "@echo/legacy-shape";
 import { Hono } from "hono";
 import {
   createCustomTopic,
@@ -38,38 +38,17 @@ function strDict(): Type<Record<string, string>> {
   };
 }
 
-/**
- * pydantic models with aliases and populate_by_name: the camelCase alias or the field
- * name is accepted, and errors are reported at the alias.
- */
-function aliased<T>(inner: Type<T>, aliases: Record<string, string>): Type<T> {
-  return {
-    parse(v, loc, issues: Issue[]) {
-      if (v && typeof v === "object" && !Array.isArray(v)) {
-        const src = v as Record<string, unknown>;
-        const out: Record<string, unknown> = { ...src };
-        for (const [alias, name] of Object.entries(aliases))
-          if (!(alias in src) && name in src) out[alias] = src[name];
-        return inner.parse(out, loc, issues);
-      }
-      return inner.parse(v, loc, issues);
-    },
-  };
-}
-
-const useConversation = aliased(
-  nested(model({ conversationId: required(str()), timestamp: required(datetime()) })),
-  { conversationId: "conversation_id" },
+const useConversation = nested(
+  model({ conversationId: required(str()), timestamp: required(datetime()) }),
 );
 
-const updateArtifactBody = aliased(
-  model({
-    useConversation: optional(nullable(useConversation), null),
-    content: optional(nullable(str()), null),
-    approvedAt: optional(nullable(str()), null),
-  }),
-  { useConversation: "use_conversation", approvedAt: "approved_at" },
-);
+// Only the camelCase aliases bind: the models' v1-style allow_population_by_field_name is
+// ignored by pydantic 2, so approved_at and use_conversation were silently dropped.
+const updateArtifactBody = model({
+  useConversation: optional(nullable(useConversation), null),
+  content: optional(nullable(str()), null),
+  approvedAt: optional(nullable(str()), null),
+});
 
 /**
  * Verification topics and artifacts (v1 /api/verify). Topic reads and artifact routes

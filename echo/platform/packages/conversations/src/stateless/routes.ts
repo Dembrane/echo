@@ -42,11 +42,36 @@ const formShape = {
   prompt_override: nullable(str()),
 };
 
+/**
+ * The declared Content-Type of a multipart part. Bun's form parser replaces it with a
+ * type guessed from the file name; the content-type check reads what the client sent,
+ * as Starlette's UploadFile.content_type did.
+ */
+function partType(raw: Uint8Array, contentType: string, field: string): string | null {
+  const boundary = /boundary="?([^";]+)"?/i.exec(contentType)?.[1];
+  if (!boundary) return null;
+  // Part headers are ASCII; latin1 keeps byte offsets and never throws on binary bodies.
+  const text = Buffer.from(raw).toString("latin1");
+  for (const part of text.split(`--${boundary}`)) {
+    const head = part.slice(0, part.indexOf("\r\n\r\n"));
+    if (new RegExp(`name="${field}"`, "i").test(head))
+      return /content-type:\s*([^\r\n]+)/i.exec(head)?.[1]?.trim() ?? null;
+  }
+  return null;
+}
+
 /** The form fields, checked as FastAPI checked Form(...) parameters (422 at ["body", name]). */
 async function readForm(req: Request) {
   let form: FormData | null = null;
-  if ((req.headers.get("content-type") ?? "").match(/multipart\/form-data|x-www-form-urlencoded/))
-    form = (await req.formData().catch(() => null)) as FormData | null;
+  let fileType: string | null = null;
+  const ct = req.headers.get("content-type") ?? "";
+  if (/multipart\/form-data|x-www-form-urlencoded/.test(ct)) {
+    const raw = new Uint8Array(await req.arrayBuffer());
+    form = (await new Response(raw, { headers: { "content-type": ct } })
+      .formData()
+      .catch(() => null)) as FormData | null;
+    fileType = partType(raw, ct, "file");
+  }
   const issues: Issue[] = [];
   const values: Record<string, unknown> = {};
   let file: File | null = null;
@@ -58,7 +83,7 @@ async function readForm(req: Request) {
     if (typeof r !== "symbol") values[key] = r;
   }
   const f = form?.get("file");
-  if (f instanceof File) file = f;
+  if (f instanceof File) file = new File([f], f.name, { type: fileType ?? f.type });
   if (issues.length) throw new ValidationError("Request validation failed", issues as never);
   return {
     file,

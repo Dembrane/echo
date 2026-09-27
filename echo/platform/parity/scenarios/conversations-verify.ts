@@ -112,6 +112,8 @@ export default scenarios([
     body: { label: "Other", prompt: "P" },
     setup: [P1_NO_SELECTION],
     ignoreFields: randomKey,
+    differs:
+      "M-1: custom topics need project:update; the Python gate passed a partial project row, so only its creator got through",
   },
   {
     name: "verify custom create: validation",
@@ -156,6 +158,8 @@ export default scenarios([
     body: { label: "Ext", prompt: "b" },
     setup: [P2_OPEN],
     ignoreFields: randomKey,
+    differs:
+      "M-1: custom topics need project:update; the Python gate passed a partial project row, so only its creator got through",
   },
   {
     name: "verify custom create: observer refused",
@@ -165,7 +169,6 @@ export default scenarios([
     body: { label: "Obs", prompt: "b" },
     setup: [P2_OPEN],
     ignoreFields: randomKey,
-    differs: "M-1: custom topics need project:update, which observers do not hold",
   },
   {
     name: "verify custom create: staff on another tenant",
@@ -240,6 +243,8 @@ export default scenarios([
     method: "DELETE",
     path: T(p1, `/custom/${verificationTopicKey}`),
     setup: [P1_NO_SELECTION],
+    differs:
+      "M-1: custom topics need project:update; the Python gate passed a partial project row, so only its creator got through",
   },
   {
     name: "verify custom delete: topic of another project",
@@ -334,7 +339,7 @@ export default scenarios([
     ignoreFields: who,
   },
   {
-    name: "verify artifact update: field names accepted too",
+    name: "verify artifact update: snake_case names are not bound",
     as: "anonymous",
     method: "PUT",
     path: `/api/verify/artifact/${draft}`,

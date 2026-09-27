@@ -33,7 +33,7 @@ export function searchStorage(db: Db) {
           workspace_id: project.workspace_id,
           updated_at: project.updated_at,
           // Directus's count(conversations) counted every related row, deleted ones too.
-          conversations_count: sql<number>`(select count(*)::int from conversation c where c.project_id = ${project.id})`,
+          conversations_count: sql<number>`(select count(*)::int from conversation c where c.project_id = "project"."id")`,
         })
         .from(project)
         .where(and(allTokens([project.name], term), isNull(project.deleted_at)))
@@ -56,7 +56,7 @@ export function searchStorage(db: Db) {
           workspace_id: project.workspace_id,
           last_chunk: sql<{ timestamp: string | null; created_at: string | null } | null>`(
             select json_build_object('timestamp', ch.timestamp, 'created_at', ch.created_at)
-            from conversation_chunk ch where ch.conversation_id = ${conversation.id}
+            from conversation_chunk ch where ch.conversation_id = "conversation"."id"
             order by ch.timestamp desc, ch.id limit 1)`,
         })
         .from(conversation)
