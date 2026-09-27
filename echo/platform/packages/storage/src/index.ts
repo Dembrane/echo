@@ -1,3 +1,4 @@
-export { FilesystemStorage } from "./filesystem";
+export { FilesystemStorage, LOCAL_STORAGE_PATH, localStorageHandler } from "./filesystem";
 export { type S3Options, S3Storage } from "./s3";
-export { checkKey, type ObjectStorage } from "./storage";
+export { postPolicyFields, signingKey } from "./sigv4";
+export { checkKey, type ObjectStorage, type PresignedPost } from "./storage";

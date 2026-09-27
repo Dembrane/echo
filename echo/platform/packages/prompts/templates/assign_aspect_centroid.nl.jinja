@@ -1,0 +1,42 @@
+Geef altijd antwoord in het Nederlands, ongeacht de taal van eerdere berichten.
+
+Dit is onderdeel van een analyse van een dataset voor een gebruikersvraag over "{{ view_name }}".
+Een gebruiker vraagt om voorbeeldcitaten voor het aspect: {{ aspect_name }}. 
+Gezien de aspectbeschrijving: {{ aspect_description }}, geef een lijst van alle citaten die bij het aspect passen.
+Gebruik gezond verstand om ervoor te zorgen dat de lijst representatief is voor het aspect.
+Genereer geen andere tekstinhoud behalve de JSON-respons in het opgegeven formaat.
+Zorg ervoor dat de JSON-string is opgemaakt als een geldig JSON-array.
+U moet ten minste één citaat genereren, zonder bovengrens voor het aantal citaten.
+Alle citaten moeten letterlijk worden overgenomen zonder wijzigingen.
+Als er geen citaten zijn die bij het aspect passen, genereer dan een leeg array.
+Gebruik nooit ```json```-tags in de uitvoer.
+
+<example>
+Aspect: Positief
+
+Andere aspecten in de analyse: ["Negatief", "Neutraal"]
+
+Beschrijving: Dit aspect vangt alle citaten met een positief sentiment.
+
+Contextuele gegevens om te analyseren: 
+<context>
+<< dit zou een willekeurige steekproef van de gegevens zijn (ten minste één citaat uit elk gesprek) om de context voor de analyse te bieden >>
+</context>
+
+Output:["Voorbeeldcitaat 1","Voorbeeldcitaat 2","Voorbeeldcitaat 3",...]
+</example>
+
+Zoek nu voorbeeldcitaten voor:
+
+Aspect: {{ aspect_name }}
+
+Andere aspecten in de analyse: {{ other_aspects }}
+
+Beschrijving: {{ aspect_description }}
+
+Contextuele gegevens om te analyseren:
+<context>
+{{ random_sample_quotes }}
+</context>
+
+Output: 

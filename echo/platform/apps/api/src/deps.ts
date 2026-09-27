@@ -1,5 +1,6 @@
 import type { Access } from "@echo/access";
 import type { Jobs } from "@echo/account";
+import type { Media } from "@echo/audio";
 import type { Auth, IdentityAccount } from "@echo/auth";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
@@ -9,7 +10,9 @@ import type { Notifier } from "@echo/notifications";
 import type { Logger, Tracer } from "@echo/observability";
 import type { Queue } from "@echo/queue";
 import type { RateLimiter } from "@echo/ratelimit";
+import type { Hub } from "@echo/realtime";
 import type { ObjectStorage } from "@echo/storage";
+import type { Transcriber } from "@echo/transcription";
 import type { Deliver } from "@echo/webhooks";
 
 /** Everything the HTTP app needs, built whole in main.ts and replaced with fakes in tests. */
@@ -38,6 +41,13 @@ export interface Deps {
   readonly jobs: Jobs;
   /** Uploaded files (avatars, logos) in the bucket Directus serves from until cutover. */
   readonly files: ObjectStorage;
+  /** Participant audio, merged audio and split chunks (the Python API's STORAGE_S3 bucket). */
+  readonly audio: ObjectStorage;
+  /** ffmpeg work the API waits on (merge on read, duration probes). */
+  readonly media: Media;
+  readonly transcriber: Transcriber;
+  /** Live events from Postgres NOTIFY; null where nothing listens (tests). */
+  readonly hub: Hub | null;
 }
 
 export type { Env, Signed };

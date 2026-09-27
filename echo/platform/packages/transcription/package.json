@@ -1,0 +1,17 @@
+{
+  "name": "@echo/transcription",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@ai-sdk/provider": "*",
+    "@echo/llm": "workspace:*",
+    "@echo/observability": "workspace:*",
+    "@echo/prompts": "workspace:*"
+  }
+}

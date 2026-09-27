@@ -9,15 +9,21 @@
   },
   "dependencies": {
     "@echo/account": "workspace:*",
+    "@echo/audio": "workspace:*",
     "@echo/config": "workspace:*",
+    "@echo/conversations": "workspace:*",
     "@echo/core": "workspace:*",
     "@echo/db": "workspace:*",
     "@echo/llm": "workspace:*",
     "@echo/mail": "workspace:*",
     "@echo/observability": "workspace:*",
     "@echo/projects": "workspace:*",
+    "@echo/prompts": "workspace:*",
     "@echo/queue": "workspace:*",
+    "@echo/realtime": "workspace:*",
+    "@echo/storage": "workspace:*",
     "@echo/tenancy": "workspace:*",
+    "@echo/transcription": "workspace:*",
     "@echo/webhooks": "workspace:*",
     "zod": "^4.1.0"
   }

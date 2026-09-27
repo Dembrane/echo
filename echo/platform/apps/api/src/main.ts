@@ -1,7 +1,9 @@
 import { Access, DrizzleAccessStore } from "@echo/access";
 import { reconcileAccountSeats, render, sendEmail } from "@echo/account";
+import { HttpMedia, LocalMedia, metadataIdToken } from "@echo/audio";
 import { createAuth, identityAccount } from "@echo/auth";
 import { describe, loadConfig, publicValues } from "@echo/config";
+import { conversationApiJobs } from "@echo/conversations";
 import { createDb } from "@echo/db";
 import { createModels } from "@echo/llm";
 import { type Mailer, MemoryMailer, SendGridMailer } from "@echo/mail";
@@ -10,9 +12,12 @@ import { createLogger, initTracing } from "@echo/observability";
 import { projectJobs } from "@echo/projects";
 import { Queue } from "@echo/queue";
 import { PostgresRateCounter, RateLimiter } from "@echo/ratelimit";
+import { Hub } from "@echo/realtime";
 import { FilesystemStorage, S3Storage } from "@echo/storage";
 import { tenancyApiJobs } from "@echo/tenancy";
+import { GeminiTranscriber } from "@echo/transcription";
 import { httpDeliver, webhookJobs } from "@echo/webhooks";
+import postgres from "postgres";
 import { buildApp } from "./app";
 import { principalLookup } from "./principals";
 
@@ -91,6 +96,7 @@ const queueReady = (async () => {
         ...projectJobs,
         ...webhookJobs,
         ...tenancyApiJobs,
+        ...conversationApiJobs,
         sendEmail,
         reconcileAccountSeats,
       ]);
@@ -121,6 +127,44 @@ const files = config.files.s3Bucket
     })
   : new FilesystemStorage(config.files.localRoot, config.http.publicUrl);
 
+// Participant audio: the Python API's STORAGE_S3 bucket; a local directory without one.
+const audio = config.audio.s3Bucket
+  ? new S3Storage({
+      endpoint: config.audio.s3Endpoint ?? "",
+      bucket: config.audio.s3Bucket,
+      region: config.audio.s3Region,
+      accessKeyId: config.audio.s3AccessKeyId ?? "",
+      secretAccessKey: config.audio.s3SecretAccessKey ?? "",
+    })
+  : new FilesystemStorage(config.audio.localRoot, config.http.publicUrl, "/_local-audio");
+
+// The media service in the cloud (identity token for its URL); ffmpeg in-process locally.
+const media = config.media.url
+  ? new HttpMedia(config.media.url, {
+      timeoutMs: config.media.timeoutSeconds * 1000,
+      ...(config.app.env !== "local" &&
+        config.app.env !== "test" && { idToken: metadataIdToken(config.media.url) }),
+    })
+  : new LocalMedia();
+
+// One LISTEN connection per instance feeds every open live stream.
+const listener = postgres(config.database.url, { max: 1, onnotice: () => {} });
+const hub = new Hub(listener, logger);
+void hub.start().catch((err) => logger.warn({ err }, "live events not listening"));
+
+const models = createModels({
+  vertexProject: config.llm.vertexProject,
+  vertexLocation: config.llm.vertexLocation,
+  groups: {
+    text_fast: config.llm.textFast,
+    multi_modal_fast: config.llm.multiModalFast,
+    multi_modal_pro: config.llm.multiModalPro,
+  },
+  embeddingModel: config.llm.embeddingModel,
+  embeddingLocation: config.llm.embeddingLocation,
+  embeddingDimensions: config.llm.embeddingDimensions,
+});
+
 const app = buildApp({
   config,
   publicConfig: publicValues(loaded),
@@ -131,18 +175,7 @@ const app = buildApp({
   principalFor: principalLookup(database.db),
   access: new Access(new DrizzleAccessStore(database.db)),
   db: database.db,
-  models: createModels({
-    vertexProject: config.llm.vertexProject,
-    vertexLocation: config.llm.vertexLocation,
-    groups: {
-      text_fast: config.llm.textFast,
-      multi_modal_fast: config.llm.multiModalFast,
-      multi_modal_pro: config.llm.multiModalPro,
-    },
-    embeddingModel: config.llm.embeddingModel,
-    embeddingLocation: config.llm.embeddingLocation,
-    embeddingDimensions: config.llm.embeddingDimensions,
-  }),
+  models,
   queue: enqueuer,
   deliverWebhook: httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets }),
   identity: identityAccount(auth, database.db),
@@ -159,6 +192,10 @@ const app = buildApp({
   ),
   jobs: enqueuer,
   files,
+  audio,
+  media,
+  transcriber: new GeminiTranscriber(models, logger),
+  hub,
 });
 
 const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 255 });
@@ -171,7 +208,13 @@ async function shutdown(signal: string) {
   stopping = true;
   logger.info({ signal }, "shutting down");
   await server.stop();
-  await Promise.allSettled([queue.stop(), database.close(), tracing.shutdown()]);
+  await Promise.allSettled([
+    queue.stop(),
+    hub.stop(),
+    listener.end(),
+    database.close(),
+    tracing.shutdown(),
+  ]);
   process.exit(0);
 }
 process.on("SIGTERM", () => void shutdown("SIGTERM"));

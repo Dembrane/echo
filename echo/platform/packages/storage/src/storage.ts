@@ -18,6 +18,20 @@ export interface ObjectStorage {
   presignUpload(key: string, opts: { contentType: string; expiresInSeconds: number }): string;
   /** A time-limited URL a browser can GET. */
   presignDownload(key: string, opts: { expiresInSeconds: number }): string;
+  /**
+   * A browser form upload (S3 POST policy): the page posts `fields` plus the file to
+   * `url`. The portal uploads audio this way today; the policy pins the key, the
+   * content type and a size ceiling, so the URL cannot be reused for anything else.
+   */
+  presignPost(
+    key: string,
+    opts: { contentType: string; maxBytes: number; expiresInSeconds: number },
+  ): PresignedPost;
+}
+
+export interface PresignedPost {
+  readonly url: string;
+  readonly fields: Readonly<Record<string, string>>;
 }
 
 /** Keys are relative, forward-slash paths; anything that could escape the bucket or a directory is refused. */

@@ -1,7 +1,14 @@
 import { DrizzleAccessStore } from "@echo/access";
 import { accountRoutes } from "@echo/account";
+import {
+  AudioUrls,
+  conversationRoutes,
+  PARTICIPANT_TOKEN_HEADER,
+  ParticipantTokens,
+} from "@echo/conversations";
 import { notificationRoutes } from "@echo/notifications";
 import { projectRoutes } from "@echo/projects";
+import { FilesystemStorage, localStorageHandler } from "@echo/storage";
 import { queueSink, tenancyRoutes } from "@echo/tenancy";
 import { webhookRoutes } from "@echo/webhooks";
 import { Hono } from "hono";
@@ -23,7 +30,8 @@ export function buildApp(deps: Deps) {
     cors({
       origin: [deps.config.http.dashboardUrl, deps.config.http.portalUrl],
       credentials: true,
-      exposeHeaders: ["x-request-id"],
+      // The portal reads its participant token from initiate's response.
+      exposeHeaders: ["x-request-id", PARTICIPANT_TOKEN_HEADER],
     }),
   );
   app.on(["GET", "POST"], "/api/auth/*", (c) => deps.auth.handler(c.req.raw));
@@ -51,6 +59,44 @@ export function buildApp(deps: Deps) {
       inviteSecret: deps.config.account.inviteHashSecret,
     }),
   );
+  app.route(
+    "/",
+    conversationRoutes({
+      db: deps.db,
+      access: deps.access,
+      audio: deps.audio,
+      audioUrls: new AudioUrls(
+        deps.config.audio.s3Endpoint ?? `${deps.config.http.publicUrl}/_local-audio`,
+        deps.config.audio.s3Bucket ?? "local",
+      ),
+      jobs: deps.queue,
+      models: deps.models,
+      media: deps.media,
+      transcriber: deps.transcriber,
+      hub: deps.hub,
+      limiter: deps.limiter,
+      logger: deps.logger,
+      tokens: new ParticipantTokens(
+        deps.config.auth.secret,
+        deps.config.conversations.participantTokenRequired,
+      ),
+      settings: {
+        participantTokenRequired: deps.config.conversations.participantTokenRequired,
+        monitorEnabled: deps.config.conversations.monitorEnabled,
+        webhooksEnabled: deps.config.webhooks.enabled,
+        dashboardUrl: deps.config.http.dashboardUrl,
+      },
+      now: () => new Date(),
+    }),
+  );
+  // Local and test only: the stand-in for the buckets' presigned URLs.
+  const local = deps.config.app.env === "local" || deps.config.app.env === "test";
+  for (const store of [deps.files, deps.audio])
+    if (local && store instanceof FilesystemStorage) {
+      const handle = localStorageHandler(store, store.routePath);
+      app.all(store.routePath, (c) => handle(c.req.raw));
+      app.all(`${store.routePath}/*`, (c) => handle(c.req.raw));
+    }
   app.onError(onError);
   app.notFound(notFound);
   return app;

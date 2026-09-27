@@ -45,6 +45,10 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     limiter: new RateLimiter(new MemoryRateCounter()),
     jobs: { enqueue: async () => null },
     files: {} as Deps["files"],
+    audio: {} as Deps["audio"],
+    media: {} as Deps["media"],
+    transcriber: {} as Deps["transcriber"],
+    hub: null,
     ...overrides,
   };
 }
