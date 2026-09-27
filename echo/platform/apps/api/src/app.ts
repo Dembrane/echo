@@ -1,6 +1,9 @@
 import { accountRoutes } from "@echo/account";
 import { billingRoutes, mollieWebhookRoutes } from "@echo/billing";
+import { reportRoutes, responseRoutes } from "@echo/feedback";
+import { pricingRoutes } from "@echo/pricing";
 import { staffRoutes } from "@echo/staff";
+import { statsRoutes } from "@echo/stats";
 import { trainingRoutes } from "@echo/training";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -32,6 +35,10 @@ export function buildApp(deps: Deps) {
   app.route("/", mollieWebhookRoutes(deps));
   app.route("/", staffRoutes(deps));
   app.route("/", trainingRoutes(deps));
+  app.route("/", reportRoutes({ ...deps, apiBaseUrl: deps.config.http.publicUrl }));
+  app.route("/", responseRoutes(deps));
+  app.route("/", pricingRoutes(deps));
+  app.route("/", statsRoutes(deps));
   app.onError(onError);
   app.notFound(notFound);
   return app;

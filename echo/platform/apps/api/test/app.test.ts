@@ -39,6 +39,8 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     staffAudit: new MemoryStaffAudit(),
     mailer: new MemoryMailer(),
     billing: { service: {}, store: {}, notifier: {}, mollie: {} } as unknown as Billing,
+    storage: {} as Deps["storage"],
+    siteToken: null,
     ...overrides,
   };
 }

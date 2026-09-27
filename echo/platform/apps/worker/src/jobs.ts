@@ -3,6 +3,7 @@ import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
+import { environmentName, httpForwarder, pricingRegistration, pricingStorage } from "@echo/pricing";
 import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
 import { staffRegistration } from "@echo/staff";
 import { z } from "zod";
@@ -35,6 +36,14 @@ export interface WorkerDeps {
 /** Every job this worker runs. Namespaces add their registration here as they move over. */
 export function registrations(deps: WorkerDeps): Registration[] {
   const { logger } = deps;
+  // Support requests, pricing bookings and overage notices share the team's webhook.
+  const teamWebhook =
+    deps.config.support.forwardWebhookUrl && deps.config.support.forwardWebhookToken
+      ? httpForwarder(
+          deps.config.support.forwardWebhookUrl,
+          deps.config.support.forwardWebhookToken,
+        )
+      : null;
   return [
     {
       jobs: [heartbeat],
@@ -56,8 +65,8 @@ export function registrations(deps: WorkerDeps): Registration[] {
         // The portal's presence store has not moved over; every tier's cap is unset, so no
         // episode can open meanwhile.
         live: noLiveRecordings,
-        forwarder: null,
-        environment: deps.config.app.env,
+        forwarder: teamWebhook,
+        environment: environmentName(deps.config.http.dashboardUrl),
       },
     }),
     staffRegistration({
@@ -66,6 +75,12 @@ export function registrations(deps: WorkerDeps): Registration[] {
       mailer: deps.mailer,
       logger,
       dashboardUrl: deps.config.http.dashboardUrl,
+    }),
+    pricingRegistration({
+      store: pricingStorage(deps.db),
+      forwarder: teamWebhook,
+      environment: environmentName(deps.config.http.dashboardUrl),
+      logger,
     }),
   ];
 }
