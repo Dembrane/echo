@@ -317,7 +317,8 @@ export default scenarios([
     as: "bob",
     method: "GET",
     path: `${B}/monitor`,
-    query: q(p3),
+    // Its own window: the 3 second snapshot cache outlives the database reset between scenarios.
+    query: q(p3, { window_seconds: "46" }),
     setup: [
       RECENT_P3,
       `update billing_account set tier = 'free' where id = (select billing_account_id from workspace where id = (select workspace_id from project where id = '${p3}'))`,
