@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import type { Deps, Env } from "../deps";
 
-/** Liveness, readiness and the public config the frontend reads at startup. */
+/** Liveness at /health, readiness at /ready (not /healthz: Cloud Run's front end reserves it). Plus the public config. */
 export function systemRoutes(deps: Deps) {
   return new Hono<Env>()
-    .get("/healthz", (c) => c.json({ status: "ok", release: deps.config.app.release }))
-    .get("/readyz", async (c) => {
+    .get("/health", (c) => c.json({ status: "ok", release: deps.config.app.release }))
+    .get("/ready", async (c) => {
       try {
         await withTimeout(deps.pingDb(), 2000);
         return c.json({ status: "ready" });

@@ -69,5 +69,73 @@ jobs:
       - name: Container starts and answers
         run: |
           docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d echo-api:${{ github.sha }}
-          for i in $(seq 1 25); do curl -sf localhost:8080/healthz && exit 0; sleep 0.2; done
+          for i in $(seq 1 25); do curl -sf localhost:8080/health && exit 0; sleep 0.2; done
           docker logs api; exit 1
+
+  deploy-preview:
+    # Migrations run as a job first; a failure stops the rollout before new code takes traffic.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/bun-migration'
+    needs: [check, image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: preview
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT: dembrane-echo
+      REGION: europe-west4
+      REGISTRY: europe-west4-docker.pkg.dev/dembrane-echo/echo-preview
+      SQL: dembrane-echo:europe-west4:echo-preview
+      TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/86405194907/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: echo-preview-deployer@dembrane-echo.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+        with: { install_components: beta }
+      - run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and push images
+        run: |
+          for app in api worker migrate; do
+            docker buildx build --push --provenance=false \
+              --cache-from type=gha,scope=$app --cache-to type=gha,mode=max,scope=$app \
+              -f apps/$app/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/$app:$TAG .
+          done
+      - name: Migrate
+        run: |
+          gcloud run jobs deploy echo-preview-migrate --project $PROJECT --region $REGION \
+            --image $REGISTRY/migrate:$TAG \
+            --service-account echo-preview-migrate@$PROJECT.iam.gserviceaccount.com \
+            --set-cloudsql-instances $SQL \
+            --set-secrets MIGRATION_DATABASE_URL=echo-preview-migration-database-url:latest \
+            --set-env-vars APP_DB_ROLE=echo_app --task-timeout 600 --max-retries 0 \
+            --execute-now --wait
+      - name: Deploy API
+        run: |
+          gcloud run deploy echo-preview-api --project $PROJECT --region $REGION \
+            --image $REGISTRY/api:$TAG \
+            --service-account echo-preview-api@$PROJECT.iam.gserviceaccount.com \
+            --add-cloudsql-instances $SQL \
+            --set-secrets DATABASE_URL=echo-preview-database-url:latest \
+            --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG \
+            --cpu 1 --memory 512Mi --concurrency 80 --min-instances 0 --max-instances 4 \
+            --timeout 3600 --cpu-boost --allow-unauthenticated --quiet
+      - name: Deploy worker
+        run: |
+          gcloud beta run worker-pools deploy echo-preview-worker --project $PROJECT --region $REGION \
+            --image $REGISTRY/worker:$TAG \
+            --service-account echo-preview-worker@$PROJECT.iam.gserviceaccount.com \
+            --add-cloudsql-instances $SQL \
+            --set-secrets DATABASE_URL=echo-preview-database-url:latest \
+            --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG \
+            --cpu 1 --memory 512Mi --instances 1 --quiet
+      - name: Live smoke test
+        run: |
+          url=$(gcloud run services describe echo-preview-api --project $PROJECT --region $REGION --format 'value(status.url)')
+          curl -sf "$url/ready"
+          release=$(curl -sf "$url/health" | jq -r .release)
+          test "$release" = "$TAG" || { echo "serving $release, expected $TAG"; exit 1; }

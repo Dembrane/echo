@@ -29,15 +29,15 @@ function deps(overrides: Partial<Deps> = {}): Deps {
   };
 }
 
-test("healthz answers with the release", async () => {
-  const res = await buildApp(deps()).request("/healthz");
+test("health answers with the release", async () => {
+  const res = await buildApp(deps()).request("/health");
   expect(res.status).toBe(200);
   expect(await res.json()).toEqual({ status: "ok", release: "dev" });
 });
 
-test("readyz fails when the database does not answer", async () => {
+test("ready fails when the database does not answer", async () => {
   const res = await buildApp(deps({ pingDb: () => Promise.reject(new Error("down")) })).request(
-    "/readyz",
+    "/ready",
   );
   expect(res.status).toBe(503);
   expect(await res.json()).toEqual({ status: "unavailable", failing: ["database"] });
@@ -55,14 +55,14 @@ test("config.json serves only public keys", async () => {
 
 test("every response carries a request id, and the access log line has it", async () => {
   lines.length = 0;
-  const res = await buildApp(deps()).request("/healthz", {
+  const res = await buildApp(deps()).request("/health", {
     headers: { "x-request-id": "req-123" },
   });
   expect(res.headers.get("x-request-id")).toBe("req-123");
   expect(lines.at(-1)).toMatchObject({
     message: "request",
     request_id: "req-123",
-    route: "/healthz",
+    route: "/health",
   });
 });
 
