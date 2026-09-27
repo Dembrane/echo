@@ -4,7 +4,15 @@ import { newId } from "@echo/core";
 import { createChunk } from "../src/chunks";
 import { finishConversation } from "../src/pipeline/defs";
 import { pieceId } from "../src/pipeline/steps";
-import { admin, freshDatabase, type Harness, seed, startWorker, tone, until } from "./pipeline-harness";
+import {
+  admin,
+  freshDatabase,
+  type Harness,
+  seed,
+  startWorker,
+  tone,
+  until,
+} from "./pipeline-harness";
 
 // Upload to transcript to merged audio to summary, through the real workflows on DBOS,
 // the filesystem bucket served over HTTP and real ffmpeg. Needs Postgres and ffmpeg.
@@ -29,7 +37,12 @@ run("conversation pipeline", () => {
     await h.deps.audio.put(key, file);
     return createChunk(
       { ...h.deps, jobs: h.queue },
-      { conversationId, timestamp: new Date(), source: "PORTAL_AUDIO", fileUrl: h.deps.audioUrls.fileUrl(key) },
+      {
+        conversationId,
+        timestamp: new Date(),
+        source: "PORTAL_AUDIO",
+        fileUrl: h.deps.audioUrls.fileUrl(key),
+      },
       { chunkId },
     );
   }
@@ -51,7 +64,9 @@ run("conversation pipeline", () => {
       return rows[0]?.transcript ? rows : null;
     });
     expect(done?.id).toBe(chunk.id);
-    expect(done?.path).toBe(h.deps.audioUrls.fileUrl(`conversation/${cid}/chunks/${chunk.id}-rec.mp3`));
+    expect(done?.path).toBe(
+      h.deps.audioUrls.fileUrl(`conversation/${cid}/chunks/${chunk.id}-rec.mp3`),
+    );
     expect(String(done?.transcript)).toStartWith("transcript of ");
     expect(done?.diarization).toMatchObject({ schema: "Dembrane-26-07-gemini" });
     expect((await conversation(cid)).recording_started_at).not.toBeNull();
@@ -66,7 +81,8 @@ run("conversation pipeline", () => {
     expect(final.summary).toBe("A short summary.");
     expect(Number(final.duration)).toBeGreaterThan(2);
     expect(String(final.merged_audio_path)).toContain(`audio-conversations/merged-${cid}-`);
-    const statuses = await h.sql`select event from processing_status where conversation_id = ${cid}`;
+    const statuses =
+      await h.sql`select event from processing_status where conversation_id = ${cid}`;
     expect(statuses.map((s) => s.event)).toEqual(
       expect.arrayContaining([
         "task_process_conversation_chunk.split_audio_chunk.completed",
@@ -80,7 +96,12 @@ run("conversation pipeline", () => {
   test("a file above the split size becomes pieces with derived ids, and the original goes", async () => {
     const cid = newId();
     await seed(h.sql, cid);
-    const file = await tone(join(h.bucket.root, "long.mp3"), 12, ["-c:a", "libmp3lame", "-b:a", "128k"]);
+    const file = await tone(join(h.bucket.root, "long.mp3"), 12, [
+      "-c:a",
+      "libmp3lame",
+      "-b:a",
+      "128k",
+    ]);
     expect(file.size).toBeGreaterThan(120_000);
     const chunk = await upload(cid, file, "long.mp3");
     const rows = await until(async () => {
@@ -89,7 +110,9 @@ run("conversation pipeline", () => {
     });
     const n = rows.length;
     expect(n).toBe(Math.ceil(file.size / 60_000));
-    expect(rows.map((r) => r.id)).toEqual(Array.from({ length: n }, (_, i) => pieceId(chunk.id, i)));
+    expect(rows.map((r) => r.id)).toEqual(
+      Array.from({ length: n }, (_, i) => pieceId(chunk.id, i)),
+    );
     expect(rows.some((r) => r.id === chunk.id)).toBe(false);
     expect(String(rows[1]?.path)).toContain(`chunks/${cid}/${pieceId(chunk.id, 1)}_1-of-${n}.mp3`);
     // Pieces are timestamped where they start in the recording.
@@ -118,7 +141,11 @@ run("conversation pipeline", () => {
   test("a transcription that keeps failing saves its error and does not block finalize", async () => {
     const cid = newId();
     await seed(h.sql, cid);
-    h.transcriber.failNext(new Error("vertex 503"), new Error("vertex 503"), new Error("vertex 503"));
+    h.transcriber.failNext(
+      new Error("vertex 503"),
+      new Error("vertex 503"),
+      new Error("vertex 503"),
+    );
     await upload(cid, await tone(join(h.bucket.root, "f.webm"), 2), "f.webm");
     await h.queue.enqueue(finishConversation, { conversationId: cid }, { singletonKey: cid });
     const c = await until(async () => {

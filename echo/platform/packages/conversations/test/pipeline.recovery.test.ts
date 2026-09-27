@@ -29,7 +29,14 @@ run("pipeline crash recovery", () => {
     const lines = () => readFileSync(trace, "utf8").trim().split("\n").filter(Boolean);
     const spawn = (executor: string, env: Record<string, string> = {}) => {
       const p = Bun.spawn(["bun", fixture], {
-        env: { ...process.env, QUEUE_URL: url, TRACE_FILE: trace, EXECUTOR: executor, BUCKET_ROOT: root, ...env },
+        env: {
+          ...process.env,
+          QUEUE_URL: url,
+          TRACE_FILE: trace,
+          EXECUTOR: executor,
+          BUCKET_ROOT: root,
+          ...env,
+        },
         stdout: "ignore",
         stderr: "ignore",
       });
@@ -53,13 +60,18 @@ run("pipeline crash recovery", () => {
 
     const first = spawn("worker-a", { HANG: "1" });
     await until(async () => lines().includes("worker-a ready"));
-    await client.enqueue(processChunk, { chunkId, usePiiRedaction: false }, { workflowId: `conversations.chunk:${chunkId}` });
+    await client.enqueue(
+      processChunk,
+      { chunkId, usePiiRedaction: false },
+      { workflowId: `conversations.chunk:${chunkId}` },
+    );
     await until(async () => lines().includes("worker-a transcribe start"));
     first.kill(9);
 
     spawn("worker-b");
     await until(async () => {
-      const [row] = await sql`select transcript from conversation_chunk where conversation_id = ${cid}`;
+      const [row] =
+        await sql`select transcript from conversation_chunk where conversation_id = ${cid}`;
       return row?.transcript;
     });
     expect(lines().filter((l) => !l.endsWith("ready"))).toEqual([
@@ -71,7 +83,8 @@ run("pipeline crash recovery", () => {
 
     await client.enqueue(finishConversation, { conversationId: cid }, { singletonKey: cid });
     const [c] = await until(async () => {
-      const rows = await sql`select * from conversation where id = ${cid} and summary is not null and merged_audio_path is not null`;
+      const rows =
+        await sql`select * from conversation where id = ${cid} and summary is not null and merged_audio_path is not null`;
       return rows.length ? rows : null;
     });
     expect(c?.is_all_chunks_transcribed).toBe(true);

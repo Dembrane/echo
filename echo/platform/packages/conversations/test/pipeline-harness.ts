@@ -50,7 +50,11 @@ export async function freshDatabase(name: string): Promise<string> {
 export const PROJECT = "f7000000-0000-4000-8000-000000000001";
 
 /** A project open for participation and one conversation in it. */
-export async function seed(sql: postgres.Sql, conversationId: string, opts: { anonymise?: boolean } = {}) {
+export async function seed(
+  sql: postgres.Sql,
+  conversationId: string,
+  opts: { anonymise?: boolean } = {},
+) {
   await sql`insert into project (id, name, language, is_conversation_allowed, anonymize_transcripts)
     values (${PROJECT}, 'Pipeline', 'en', true, false) on conflict do nothing`;
   await sql`insert into conversation (id, project_id, participant_name, source, is_anonymized, created_at, updated_at)
@@ -73,7 +77,19 @@ export function localBucket(root = mkdtempSync(join(tmpdir(), "echo-pipeline-"))
 /** A few seconds of tone, encoded by ffmpeg in the given container. */
 export async function tone(path: string, seconds: number, codec: string[] = ["-c:a", "libopus"]) {
   const p = Bun.spawn(
-    ["ffmpeg", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", `sine=frequency=440:duration=${seconds}`, ...codec, "-y", path],
+    [
+      "ffmpeg",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-f",
+      "lavfi",
+      "-i",
+      `sine=frequency=440:duration=${seconds}`,
+      ...codec,
+      "-y",
+      path,
+    ],
     { stdout: "ignore", stderr: "pipe" },
   );
   if ((await p.exited) !== 0) throw new Error(await new Response(p.stderr).text());
@@ -173,7 +189,10 @@ export async function startWorker(
   };
 }
 
-export async function until<T>(check: () => Promise<T | null | undefined | false>, ms = 60_000): Promise<T> {
+export async function until<T>(
+  check: () => Promise<T | null | undefined | false>,
+  ms = 60_000,
+): Promise<T> {
   const end = Date.now() + ms;
   for (;;) {
     const v = await check();

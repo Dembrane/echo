@@ -40,3 +40,9 @@ variable "browser_origins" {
   type        = list(string)
   description = "Origins allowed to upload to and read from the bucket directly."
 }
+
+variable "run_subnet_cidr" {
+  type        = string
+  description = "Range of the subnet Cloud Run services egress through (Direct VPC egress needs a /26 or larger)."
+  default     = "10.20.0.0/24"
+}

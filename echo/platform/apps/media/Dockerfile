@@ -10,8 +10,9 @@ RUN bun build apps/media/src/main.ts --compile --minify --sourcemap --target=bun
 # error texts the pipeline classifies (bad bytes versus retryable) and the codecs
 # (libmp3lame, libvorbis) stay identical across the migration. Static binaries need no
 # shared libraries, so the runtime stays distroless like the other images: no shell, no
-# package manager, only the binaries it runs. Debian slim plus apt's ffmpeg would add
-# about 300 MB of libraries and a different ffmpeg build for nothing this service uses.
+# package manager, only the binaries it runs. Debian slim plus apt's ffmpeg weighs about
+# the same (ffmpeg's shared libraries instead of static ones) but brings a shell, apt and
+# a different ffmpeg build whose messages and codec defaults would drift from the old one.
 FROM mwader/static-ffmpeg:7.1.1 AS ffmpeg
 
 FROM gcr.io/distroless/cc-debian12:nonroot

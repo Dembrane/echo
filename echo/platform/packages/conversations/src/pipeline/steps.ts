@@ -433,7 +433,10 @@ export async function handOver(d: PipelineDeps, conversationId: string): Promise
     const [set] = await tx.sql<{ ids: string | null }[]>`
       select string_agg(id::text, ',' order by id) as ids from conversation_chunk
       where conversation_id = ${conversationId}`;
-    const state = new Bun.CryptoHasher("sha256").update(set?.ids ?? "").digest("hex").slice(0, 16);
+    const state = new Bun.CryptoHasher("sha256")
+      .update(set?.ids ?? "")
+      .digest("hex")
+      .slice(0, 16);
     await d.jobs.enqueue(
       finalizeConversation,
       { conversationId },
