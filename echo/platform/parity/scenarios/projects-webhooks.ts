@@ -1,4 +1,4 @@
-import { projects, webhooks } from "../fixtures";
+import { id, projects, webhooks } from "../fixtures";
 import { extra, P2_WEBHOOK } from "../projects-setup";
 import { scenarios } from "../runner/scenario";
 
@@ -8,10 +8,25 @@ const hook = webhooks.p1;
 // Directus stamped the service account into user_created and user_updated; the platform
 // records the person who acted. Those two columns are the only intended difference.
 const who = ["user_created", "user_updated"];
+// Erin is an org admin; a direct member row in the default workspace outranks that.
+const ERIN_MEMBER = `update workspace_membership set role = 'member' where id = '${id("e1", 2)}'`;
 
 export default scenarios([
   { name: "webhooks list: owner", as: "alice", method: "GET", path: W(p1) },
-  { name: "webhooks list: member refused", as: "admin", method: "GET", path: W(p1) },
+  {
+    name: "webhooks list: member refused",
+    as: "erin",
+    method: "GET",
+    path: W(p1),
+    setup: [ERIN_MEMBER],
+  },
+  {
+    name: "webhooks list: staff member",
+    as: "admin",
+    method: "GET",
+    path: W(p1),
+    differs: "H-14: staff act on webhooks only through their own workspace role (member here)",
+  },
   { name: "webhooks list: free tier names the tier", as: "bob", method: "GET", path: W(p3) },
   { name: "webhooks list: other tenant", as: "bob", method: "GET", path: W(p1) },
   { name: "webhooks list: anonymous", as: "anonymous", method: "GET", path: W(p1) },
@@ -81,10 +96,20 @@ export default scenarios([
   },
   {
     name: "webhooks create: member refused",
+    as: "erin",
+    method: "POST",
+    path: W(p1),
+    body: { name: "x", url: "https://example.com", events: [] },
+    setup: [ERIN_MEMBER],
+  },
+  {
+    name: "webhooks create: staff member",
     as: "admin",
     method: "POST",
     path: W(p1),
     body: { name: "x", url: "https://example.com", events: [] },
+    ignoreFields: who,
+    differs: "H-14: staff act on webhooks only through their own workspace role (member here)",
   },
   {
     name: "webhooks update: rename and pause",
@@ -145,9 +170,18 @@ export default scenarios([
   },
   {
     name: "webhooks delete: member refused",
+    as: "erin",
+    method: "DELETE",
+    path: W(p1, `/${hook}`),
+    setup: [ERIN_MEMBER],
+  },
+  {
+    name: "webhooks delete: staff member",
     as: "admin",
     method: "DELETE",
     path: W(p1, `/${hook}`),
+    ignoreFields: who,
+    differs: "H-14: staff act on webhooks only through their own workspace role (member here)",
   },
   // The seeded URL refuses connections; each stack words the network error its own way.
   {

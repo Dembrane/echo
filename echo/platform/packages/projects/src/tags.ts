@@ -57,7 +57,7 @@ export async function updateTag(
 }
 
 async function tagLinks(d: ProjectDeps, tagId: string) {
-  return (await d.store.tagLinkIds(tagId)).map(String);
+  return d.store.tagLinkIds(tagId);
 }
 
 /** Hard delete with its conversation links; tags carry no billing weight. */
@@ -129,7 +129,7 @@ async function runFor(d: ProjectDeps, who: Signed, runId: string) {
 
 export async function getAnalysisRun(d: ProjectDeps, who: Signed, runId: string) {
   const run = await runFor(d, who, runId);
-  return { ...directusRow(run), processing_status: await d.store.runStatusIds(runId) };
+  return { ...directusRow(run), ...(await d.store.runAliases(runId)) };
 }
 
 /** Chunks recorded in the run's project since the run: the "new since last library" banner. */

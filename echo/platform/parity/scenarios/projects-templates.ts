@@ -176,6 +176,8 @@ export default scenarios([
       { type: "user", id: extra.workspaceTemplate },
     ],
     setup: TEMPLATES,
+    // The old stack's Directus login stamps last_access on the user row these routes update.
+    ignoreFields: ["last_access"],
   },
   {
     name: "quick access: read back",
@@ -240,6 +242,8 @@ export default scenarios([
     method: "PATCH",
     path: "/api/templates/ai-suggestions",
     body: { hide_ai_suggestions: true },
+    // The old stack's Directus login stamps last_access on the user row these routes update.
+    ignoreFields: ["last_access"],
   },
   {
     name: "ai suggestions: validation",

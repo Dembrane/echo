@@ -46,6 +46,8 @@ const {
   methodology,
   methodology_version,
   prompt_template,
+  insight,
+  view,
 } = schema;
 
 export type Row = Record<string, unknown>;
@@ -353,6 +355,27 @@ export function projectsStorage(db: Db) {
       for (const r of rows)
         out.push({ ...directusRow(r), processing_status: await self.runStatusIds(r.id) });
       return out;
+    },
+
+    /** A run's relation id lists as Directus returned them with the row. */
+    async runAliases(runId: string) {
+      const [insights, views] = await Promise.all([
+        db
+          .select({ id: insight.id })
+          .from(insight)
+          .where(eq(insight.project_analysis_run_id, runId))
+          .orderBy(asc(insight.id)),
+        db
+          .select({ id: view.id })
+          .from(view)
+          .where(eq(view.project_analysis_run_id, runId))
+          .orderBy(asc(view.id)),
+      ]);
+      return {
+        processing_status: await self.runStatusIds(runId),
+        insights: insights.map((r) => String(r.id)),
+        views: views.map((r) => String(r.id)),
+      };
     },
 
     async runStatusIds(runId: string) {
