@@ -1,3 +1,4 @@
+import type { Db } from "@echo/db";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
 import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
@@ -6,6 +7,12 @@ import type { Billing } from "./create";
 import { previewDowngrade } from "./downgrade";
 import { tierExpiredEmail, tierExpiringSoonEmail } from "./emails";
 import { emailsOf, workspaceAdminsAndBilling } from "./notify";
+import {
+  closeFinishedEpisodes,
+  type Forwarder,
+  filePendingNotifications,
+  type LiveRecordings,
+} from "./overage";
 import { pyIso } from "./tiers";
 import { parseTime } from "./time";
 
@@ -21,12 +28,17 @@ export const reconcilePendingBilling = defineJob("billing.reconcile-pending", ti
 export const reconcileSubscriptionSeats = defineJob("billing.reconcile-seats", tick, opts);
 export const expireTiers = defineJob("billing.expire-tiers", tick, opts);
 export const tierExpiryPrewarning = defineJob("billing.tier-prewarning", tick, opts);
+export const closeOverageEpisodes = defineJob("billing.overage-close", tick, opts);
+export const notifyRecordingOverage = defineJob("billing.overage-notify", tick, opts);
 
 export const BILLING_SCHEDULES: readonly [JobDefinition, string][] = [
   [reconcilePendingBilling, "*/5 * * * *"],
   [reconcileSubscriptionSeats, "*/15 * * * *"],
   [expireTiers, "0 * * * *"],
   [tierExpiryPrewarning, "0 * * * *"],
+  [closeOverageEpisodes, "*/2 * * * *"],
+  // Odd minutes, one after each close run.
+  [notifyRecordingOverage, "1-59/2 * * * *"],
 ];
 
 export interface BillingJobDeps {
@@ -40,6 +52,13 @@ export interface BillingJobDeps {
    */
   readonly customerJobs: boolean;
   readonly dashboardUrl: string;
+  /** Recording overage: episodes, the live count and the team's webhook (null turns notices off). */
+  readonly overage: {
+    readonly db: Db;
+    readonly live: LiveRecordings;
+    readonly forwarder: Forwarder | null;
+    readonly environment: string;
+  };
   readonly clock?: () => Date;
 }
 
@@ -232,6 +251,32 @@ export async function runTierPrewarning(d: BillingJobDeps): Promise<void> {
   }
 }
 
+const quietSince = new Map<string, Date>();
+
+/** Ends overage episodes that stayed at or below their cap for the quiet window. */
+export async function runCloseOverage(d: BillingJobDeps): Promise<void> {
+  const n = await closeFinishedEpisodes(
+    d.overage.db,
+    d.overage.live,
+    quietSince,
+    (d.clock ?? (() => new Date()))(),
+    d.logger,
+  );
+  if (n) d.logger.info({ closed: n }, "closed overage episodes");
+}
+
+/** Tells the team about overage openings and closings; internal only, so not behind the customer switch. */
+export async function runNotifyOverage(d: BillingJobDeps): Promise<void> {
+  const n = await filePendingNotifications(
+    d.overage.db,
+    d.overage.forwarder,
+    { environment: d.overage.environment, dashboardUrl: d.dashboardUrl },
+    (d.clock ?? (() => new Date()))(),
+    d.logger,
+  );
+  if (n) d.logger.info({ filed: n }, "filed overage notifications");
+}
+
 /** The worker's registration: handlers plus their schedules. */
 export function billingRegistration(d: BillingJobDeps) {
   const handlers: [JobDefinition, () => Promise<void>][] = [
@@ -239,6 +284,8 @@ export function billingRegistration(d: BillingJobDeps) {
     [reconcileSubscriptionSeats, () => runReconcileSeats(d)],
     [expireTiers, () => runExpireTiers(d)],
     [tierExpiryPrewarning, () => runTierPrewarning(d)],
+    [closeOverageEpisodes, () => runCloseOverage(d)],
+    [notifyRecordingOverage, () => runNotifyOverage(d)],
   ];
   return {
     jobs: handlers.map(([j]) => j),

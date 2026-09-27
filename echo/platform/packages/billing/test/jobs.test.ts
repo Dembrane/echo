@@ -3,6 +3,7 @@ import {
   BILLING_SCHEDULES,
   type Billing,
   formatExpiryDate,
+  noLiveRecordings,
   runExpireTiers,
   runReconcilePending,
   runReconcileSeats,
@@ -23,6 +24,7 @@ function deps(w: ReturnType<typeof world>, customerJobs = true) {
     logger,
     customerJobs,
     dashboardUrl: "https://dash.test",
+    overage: { db: {} as never, live: noLiveRecordings, forwarder: null, environment: "test" },
     clock: () => NOW,
   };
 }
@@ -33,6 +35,8 @@ test("schedules keep the old cadence", () => {
     ["billing.reconcile-seats", "*/15 * * * *", "singleton"],
     ["billing.expire-tiers", "0 * * * *", "singleton"],
     ["billing.tier-prewarning", "0 * * * *", "singleton"],
+    ["billing.overage-close", "*/2 * * * *", "singleton"],
+    ["billing.overage-notify", "1-59/2 * * * *", "singleton"],
   ]);
 });
 

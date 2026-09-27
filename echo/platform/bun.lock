@@ -97,6 +97,9 @@
         "hono": "^4.9.0",
         "zod": "^4.1.0",
       },
+      "devDependencies": {
+        "postgres": "^3.4.9",
+      },
     },
     "packages/config": {
       "name": "@echo/config",

@@ -1,4 +1,4 @@
-import { type Billing, billingRegistration } from "@echo/billing";
+import { type Billing, billingRegistration, noLiveRecordings } from "@echo/billing";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
 import type { Mailer } from "@echo/mail";
@@ -51,6 +51,14 @@ export function registrations(deps: WorkerDeps): Registration[] {
       logger,
       customerJobs: deps.config.billing.customerJobs === "on",
       dashboardUrl: deps.config.http.dashboardUrl,
+      overage: {
+        db: deps.db,
+        // The portal's presence store has not moved over; every tier's cap is unset, so no
+        // episode can open meanwhile.
+        live: noLiveRecordings,
+        forwarder: null,
+        environment: deps.config.app.env,
+      },
     }),
     staffRegistration({
       db: deps.db,
