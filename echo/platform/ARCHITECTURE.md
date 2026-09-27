@@ -3,14 +3,16 @@
 The Bun/TypeScript replacement for echo's Python server, Directus and agent service. One
 codebase, a few processes, Postgres as the only stateful dependency. It follows
 [baristaze/swe_guidelines](https://github.com/baristaze/swe_guidelines) where they fit a
-Bun + Cloud Run system; each deviation is a decision record in `docs/decisions/`.
+Bun + Cloud Run system; each choice and deviation is a decision record in
+`docs/decisions/`.
 
 ## Processes
 
 | App | Runs | Scales on |
 |---|---|---|
 | `apps/api` | HTTP: dashboard, portal, iOS app, MCP, webhooks in | requests (Cloud Run service) |
-| `apps/worker` | pg-boss consumers, schedules, agent runs, sweeps | always on, CPU allocated (Cloud Run worker pool) |
+| `apps/worker` | pg-boss jobs that wait on the network, agent runs, ticks, schedules | always on, small (Cloud Run worker pool) |
+| `apps/media` | ffmpeg work handed over by the worker, one job per instance | requests, 0 to N (internal Cloud Run service) |
 | `apps/web` | the React frontend, served as static files | requests |
 | migrations | `packages/db/src/migrate.ts` before every rollout | Cloud Run job |
 
@@ -23,7 +25,7 @@ capabilities, capabilities use nothing above them.
 
 **Capabilities** (no business rules): `config`, `observability`, `db`, `core` (errors,
 ids, operation context), `auth` (Better Auth), `access` (roles and policies, one resolver),
-`queue` (pg-boss), `mail`, `storage` (object storage), `llm` (model groups with fallback),
+`queue` (pg-boss), `mail`, `storage` (S3 API: GCS, Spaces, MinIO), `llm` (model groups with fallback),
 `transcription`, `audio` (ffmpeg), `billing` (Mollie), `analytics` (PostHog), `webhooks`,
 `flags`, `realtime` (LISTEN/NOTIFY to SSE).
 

@@ -1,0 +1,17 @@
+{
+  "name": "@echo/queue",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "pg-boss": "^12.5.0",
+    "zod": "^4.1.0",
+    "@echo/observability": "workspace:*",
+    "postgres": "^3.4.9"
+  }
+}
