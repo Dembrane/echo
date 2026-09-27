@@ -26,10 +26,12 @@
         "@echo/mail": "workspace:*",
         "@echo/notifications": "workspace:*",
         "@echo/observability": "workspace:*",
+        "@echo/popcorn": "workspace:*",
         "@echo/pricing": "workspace:*",
         "@echo/projects": "workspace:*",
         "@echo/queue": "workspace:*",
         "@echo/ratelimit": "workspace:*",
+        "@echo/realtime": "workspace:*",
         "@echo/staff": "workspace:*",
         "@echo/stats": "workspace:*",
         "@echo/storage": "workspace:*",
@@ -223,6 +225,24 @@
         "@opentelemetry/sdk-trace-base": "^2.0.0",
         "@opentelemetry/semantic-conventions": "^1.37.0",
         "pino": "^10.0.0",
+      },
+    },
+    "packages/popcorn": {
+      "name": "@echo/popcorn",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
       },
     },
     "packages/pricing": {
@@ -480,6 +500,8 @@
     "@echo/observability": ["@echo/observability@workspace:packages/observability"],
 
     "@echo/parity": ["@echo/parity@workspace:parity"],
+
+    "@echo/popcorn": ["@echo/popcorn@workspace:packages/popcorn"],
 
     "@echo/pricing": ["@echo/pricing@workspace:packages/pricing"],
 

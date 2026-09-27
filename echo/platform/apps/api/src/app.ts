@@ -3,8 +3,20 @@ import { accountRoutes } from "@echo/account";
 import { billingRoutes, mollieWebhookRoutes } from "@echo/billing";
 import { reportRoutes, responseRoutes } from "@echo/feedback";
 import { notificationRoutes } from "@echo/notifications";
+import {
+  mapNotReady,
+  noCapture,
+  popcornDeps,
+  popcornFlags,
+  popcornRoutes,
+  posthogCapture,
+  publicRoutes,
+  queueDispatch,
+  sqlDeckAnalysis,
+} from "@echo/popcorn";
 import { pricingRoutes } from "@echo/pricing";
 import { projectRoutes } from "@echo/projects";
+import { sharedHub } from "@echo/realtime";
 import { staffRoutes } from "@echo/staff";
 import { statsRoutes } from "@echo/stats";
 import { queueSink, tenancyRoutes } from "@echo/tenancy";
@@ -68,6 +80,25 @@ export function buildApp(deps: Deps) {
   app.route("/", responseRoutes(deps));
   app.route("/", pricingRoutes({ ...deps, storage: deps.files }));
   app.route("/", statsRoutes(deps));
+  const sql = (deps.db as unknown as { $client: Parameters<typeof sharedHub>[0] }).$client;
+  const popcorn = popcornDeps({
+    db: deps.db,
+    deck: sqlDeckAnalysis(sql),
+    flags: popcornFlags(deps.config),
+    participantBaseUrl: deps.config.http.portalUrl,
+    adminBaseUrl: deps.config.http.dashboardUrl,
+    showFlow: deps.config.popcorn.showFlow,
+    dispatchTick: queueDispatch(deps.queue),
+    limiter: deps.limiter,
+    logger: deps.logger,
+  });
+  const hub = () => sharedHub(sql, deps.logger);
+  const capture =
+    deps.config.app.env === "test"
+      ? noCapture
+      : posthogCapture(deps.config.http.dashboardUrl, deps.logger);
+  app.route("/", popcornRoutes({ ...popcorn, access: deps.access, hub, capture }));
+  app.route("/", publicRoutes({ ...popcorn, hub, audienceMap: mapNotReady }));
   app.onError(onError);
   app.notFound(notFound);
   return app;

@@ -8,6 +8,7 @@ import { createModels } from "@echo/llm";
 import { type Mailer, MemoryMailer, SendGridMailer } from "@echo/mail";
 import { Notifier } from "@echo/notifications";
 import { createLogger, initTracing } from "@echo/observability";
+import { popcornApiJobs } from "@echo/popcorn";
 import { projectJobs } from "@echo/projects";
 import { Queue } from "@echo/queue";
 import { PostgresRateCounter, RateLimiter } from "@echo/ratelimit";
@@ -93,6 +94,7 @@ const queueReady = (async () => {
         ...webhookJobs,
         ...tenancyApiJobs,
         ...billingApiJobs,
+        ...popcornApiJobs,
         sendEmail,
       ]);
       return;

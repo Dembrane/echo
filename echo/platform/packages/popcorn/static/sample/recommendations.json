@@ -1,0 +1,218 @@
+{
+  "themes": [
+    {
+      "id": "th1",
+      "title": "welcome & belonging",
+      "actions": [
+        {
+          "id": "a1",
+          "action": "Replace the key-fob onboarding with a hosted first week, pairing every new member with an existing one.",
+          "why": "Multiple tables described joining as an administrative event rather than a social one.",
+          "tension": "Asks existing members for unpaid hosting time, which the most active members already say is stretched.",
+          "quoteIds": [
+            "q1",
+            "q2"
+          ]
+        },
+        {
+          "id": "a2",
+          "action": "Run one cross-day gathering each month so the Tuesday and Thursday communities actually meet.",
+          "why": "Weekday tribes have formed that never overlap, splitting the membership into parallel communities.",
+          "tension": "Another recurring commitment in the calendar the programme team says is already too full.",
+          "conflictsWith": [
+            "a20"
+          ],
+          "quoteIds": [
+            "q12"
+          ]
+        },
+        {
+          "id": "a3",
+          "action": "Create a member wall of faces and first names at the entrance so regulars can learn who's who."
+        },
+        {
+          "id": "a4",
+          "action": "Host a monthly newcomers' lunch, cooked and hosted by a rotating table of long-standing members."
+        },
+        {
+          "id": "a5",
+          "action": "Hold an exit conversation with every leaving member and share the anonymised reasons with the membership."
+        }
+      ]
+    },
+    {
+      "id": "th2",
+      "title": "the building",
+      "actions": [
+        {
+          "id": "a6",
+          "action": "Open the ground floor and café to the public on weekdays.",
+          "why": "The street-facing floor was repeatedly described as the building's front door to new members and neighbours.",
+          "tension": "Trades away the quiet that a paying segment of the membership explicitly values.",
+          "conflictsWith": [
+            "a7"
+          ],
+          "quoteIds": [
+            "q3",
+            "q4"
+          ]
+        },
+        {
+          "id": "a7",
+          "action": "Designate the second floor as a protected quiet floor with enforced norms.",
+          "why": "A distinct group pays precisely for calm and predictability, and feels it eroding.",
+          "tension": "Requires enforcement nobody currently owns, and shrinks bookable event space.",
+          "conflictsWith": [
+            "a6"
+          ],
+          "quoteIds": [
+            "q4"
+          ]
+        },
+        {
+          "id": "a8",
+          "action": "Fix the lift before any new cosmetic work, and publish a repair date the members can hold the board to."
+        },
+        {
+          "id": "a9",
+          "action": "Redesign the entrance so the café, not the key-fob gate, is the first thing a visitor meets."
+        },
+        {
+          "id": "a10",
+          "action": "Audit which doors are locked by default and unlock every one that doesn't genuinely need to be."
+        }
+      ]
+    },
+    {
+      "id": "th3",
+      "title": "café & food",
+      "actions": [
+        {
+          "id": "a11",
+          "action": "Treat the café's deficit as a marketing budget with a cap, not a problem to eliminate.",
+          "why": "The money table agreed the café is what makes the place worth paying for.",
+          "tension": "A named, capped subsidy must come from somewhere, most likely the events surplus.",
+          "conflictsWith": [
+            "a15"
+          ],
+          "quoteIds": [
+            "q7"
+          ]
+        },
+        {
+          "id": "a12",
+          "action": "Open the café hatch to the street on market days with a short pavement menu."
+        },
+        {
+          "id": "a13",
+          "action": "Move the Monday deep-clean to after hours so the week doesn't start smelling of disinfectant."
+        },
+        {
+          "id": "a14",
+          "action": "Let members run the café one Saturday a month as a pay-what-you-can community kitchen."
+        }
+      ]
+    },
+    {
+      "id": "th4",
+      "title": "money & pricing",
+      "actions": [
+        {
+          "id": "a15",
+          "action": "Rebuild the pricing tiers around ability to pay, ending legacy discounts for funded organisations.",
+          "why": "The current tiers were described as subsidising the members who need it least.",
+          "tension": "Risks losing anchor organisations whose block bookings underwrite the winter months.",
+          "quoteIds": [
+            "q5"
+          ],
+          "conflictsWith": [
+            "a11"
+          ]
+        },
+        {
+          "id": "a16",
+          "action": "Publish a plain-language annual budget on one page, income and costs side by side."
+        },
+        {
+          "id": "a17",
+          "action": "Set up a solidarity fund so members can round up their fee to cover a place for someone who can't pay."
+        },
+        {
+          "id": "a18",
+          "action": "Consolidate the three legacy grant reports into one shared quarterly narrative and reclaim the programme manager's time."
+        },
+        {
+          "id": "a19",
+          "action": "Trial a day-pass priced so that three visits cost more than a month of membership."
+        }
+      ]
+    },
+    {
+      "id": "th5",
+      "title": "programme & events",
+      "actions": [
+        {
+          "id": "a20",
+          "action": "Hand members the keys: a self-serve process to host their own events with the space's kit.",
+          "why": "Members repeatedly said they want to host rather than attend, and the best moments were unprogrammed.",
+          "tension": "Less curatorial control over quality and brand, and more wear on the building.",
+          "conflictsWith": [
+            "a2"
+          ],
+          "quoteIds": [
+            "q8",
+            "q9"
+          ]
+        },
+        {
+          "id": "a21",
+          "action": "Cancel the two lowest-attended recurring events and leave the slots deliberately empty for member use."
+        },
+        {
+          "id": "a22",
+          "action": "Schedule staff-hosted noticeboard hours that pick up whatever conversation is already happening in the room."
+        },
+        {
+          "id": "a23",
+          "action": "Publish a one-page how-to-host guide covering booking, kit, cleanup, and who to call."
+        },
+        {
+          "id": "a24",
+          "action": "Livestream one flagship event per season for members who can't be in the building."
+        }
+      ]
+    },
+    {
+      "id": "th6",
+      "title": "governance & decisions",
+      "actions": [
+        {
+          "id": "a25",
+          "action": "Name which decisions no longer need everyone: delegate day-to-day calls to staff and reserve member votes for direction.",
+          "why": "Consensus was named as the way the group avoids deciding; small things get votes, big things get postponed.",
+          "tension": "Someone must be trusted to decide without everyone, which is exactly what currently feels uncomfortable.",
+          "quoteIds": [
+            "q10",
+            "q11"
+          ]
+        },
+        {
+          "id": "a26",
+          "action": "Publish board minutes within a week, with decisions and owners highlighted."
+        },
+        {
+          "id": "a27",
+          "action": "Hold a quarterly open-books session where the board walks members through the accounts."
+        },
+        {
+          "id": "a28",
+          "action": "Put the floor-zoning plan to a full membership vote, framed as a six-month experiment with a named review date."
+        },
+        {
+          "id": "a29",
+          "action": "Report back annually on which member proposals were actioned, and by whom."
+        }
+      ]
+    }
+  ]
+}
