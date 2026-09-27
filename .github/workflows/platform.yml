@@ -130,6 +130,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment: preview
+    # No checkout: the deploy only talks to GCP.
+    defaults:
+      run:
+        working-directory: .
     permissions:
       contents: read
       id-token: write
