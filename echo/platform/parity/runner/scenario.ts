@@ -16,6 +16,11 @@ export interface Scenario {
   readonly body?: unknown;
   readonly query?: Record<string, string>;
   readonly differs?: string;
+  /**
+   * SQL run on the fresh database before the request, on both sides, for states the seed
+   * does not hold (an observer's visible project, a scheduled report). Not part of the diff.
+   */
+  readonly setup?: readonly string[];
   /** Response fields whose values legitimately change per run (besides timestamps and new ids). */
   readonly ignoreFields?: readonly string[];
 }

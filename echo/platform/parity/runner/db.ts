@@ -25,6 +25,17 @@ export async function reset(template = "parity_template_platform"): Promise<void
   await Bun.$`docker exec parity-valkey-1 valkey-cli flushall`.quiet();
 }
 
+/** Applies a scenario's setup statements to the scenario database. */
+export async function applySetup(statements: readonly string[]): Promise<void> {
+  if (!statements.length) return;
+  const sql = postgres(DB_URL, { max: 1, onnotice: () => {} });
+  try {
+    for (const s of statements) await sql.unsafe(s);
+  } finally {
+    await sql.end();
+  }
+}
+
 export type Snapshot = Map<string, Map<string, Record<string, unknown>>>;
 
 /** Every row of every table, keyed by primary key, so two snapshots can be diffed row by row. */
