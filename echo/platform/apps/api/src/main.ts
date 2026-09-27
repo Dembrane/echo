@@ -233,7 +233,12 @@ const app = buildApp({
 });
 
 // reusePort lets several processes share the port when one instance has more than one core.
-const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 255, reusePort: true });
+const server = Bun.serve({
+  port: config.http.port,
+  fetch: app.fetch,
+  idleTimeout: 255,
+  reusePort: true,
+});
 logger.info({ port: server.port, config: describe(loaded) }, "api started");
 
 // Cloud Run sends SIGTERM and allows 10s: stop taking requests, finish in-flight ones, flush.
