@@ -60,6 +60,13 @@ export {
 } from "./notify";
 export { type BillingRouteDeps, billingRoutes, mollieWebhookRoutes } from "./routes";
 export {
+  accountBlocksSeatAdd,
+  billingAccountBlocksNewWorkspace,
+  billingContextKey,
+  hasLiveMollieSubscription,
+  sameBillingContext,
+} from "./rules";
+export {
   BILLING_DETAIL_FIELDS,
   type BillingConfig,
   type BillingDeps,
