@@ -23,3 +23,13 @@ export class MemoryMailer implements Mailer {
     this.sent.push(msg);
   }
 }
+
+/** Escapes text for HTML bodies, the way the old Jinja templates autoescaped every value. */
+export function escapeHtml(s: string): string {
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&#34;")
+    .replaceAll("'", "&#39;");
+}

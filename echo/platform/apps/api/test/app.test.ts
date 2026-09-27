@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test";
 import { Writable } from "node:stream";
-import { Access, MemoryAccessStore } from "@echo/access";
+import { Access, MemoryAccessStore, MemoryStaffAudit } from "@echo/access";
+import type { Billing } from "@echo/billing";
 import { loadConfig, publicValues } from "@echo/config";
 import { NotFoundError } from "@echo/core";
+import { MemoryMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
 import { MemoryRateCounter, RateLimiter } from "@echo/ratelimit";
 import { MemoryJobSink } from "@echo/tenancy";
@@ -45,6 +47,10 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     limiter: new RateLimiter(new MemoryRateCounter()),
     jobs: { enqueue: async () => null },
     files: {} as Deps["files"],
+    staffAudit: new MemoryStaffAudit(),
+    mailer: new MemoryMailer(),
+    billing: { service: {}, store: {}, notifier: {}, mollie: {} } as unknown as Billing,
+    siteToken: null,
     ...overrides,
   };
 }

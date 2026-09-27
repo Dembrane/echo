@@ -20,17 +20,6 @@ export const emailJob = defineJob(
   { retryLimit: 3, retryDelaySeconds: 15 },
 );
 
-/**
- * A workspace's seats changed, so its billing account must be re-priced. Billing owns the
- * handler (Mollie re-price and proration); this namespace only produces the job, in the
- * transaction that changed the seats, so no seat change goes unbilled.
- */
-export const reconcileSeatsJob = defineJob(
-  "billing.reconcile-account-seats",
-  z.object({ accountId: z.string() }),
-  { retryLimit: 5 },
-);
-
 /** Every minute: run the due one-shot rows of scheduled_task this namespace owns. */
 export const scheduledTasksJob = defineJob("tenancy.scheduled-tasks", z.object({}), {
   policy: "singleton",
@@ -46,7 +35,7 @@ export const expireSupportJob = defineJob("tenancy.expire-staff-support", z.obje
 });
 
 /** The jobs the API enqueues; its queue client creates exactly these. */
-export const tenancyApiJobs: readonly JobDefinition[] = [emailJob, reconcileSeatsJob];
+export const tenancyApiJobs: readonly JobDefinition[] = [emailJob];
 
 /**
  * Enqueues a job inside the caller's transaction, so a job exists only if the write that

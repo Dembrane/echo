@@ -1,10 +1,12 @@
-import type { Access } from "@echo/access";
+import type { Access, StaffAudit } from "@echo/access";
 import type { Jobs } from "@echo/account";
 import type { Auth, IdentityAccount } from "@echo/auth";
+import type { Billing } from "@echo/billing";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
 import type { Env, Signed } from "@echo/http";
 import type { Models } from "@echo/llm";
+import type { Mailer } from "@echo/mail";
 import type { Notifier } from "@echo/notifications";
 import type { Logger, Tracer } from "@echo/observability";
 import type { Queue } from "@echo/queue";
@@ -36,8 +38,14 @@ export interface Deps {
   readonly limiter: RateLimiter;
   /** Producer side of the queue: the API enqueues, the worker runs. */
   readonly jobs: Jobs;
-  /** Uploaded files (avatars, logos) in the bucket Directus serves from until cutover. */
+  /** The object store (the bucket Directus serves from until cutover) for every upload. */
   readonly files: ObjectStorage;
+  /** Durable trail of every staff permission use. */
+  readonly staffAudit: StaffAudit;
+  readonly mailer: Mailer;
+  readonly billing: Billing;
+  /** The website's pricing token; null closes the site route. */
+  readonly siteToken: string | null;
 }
 
 export type { Env, Signed };

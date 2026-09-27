@@ -1,4 +1,4 @@
-import { RateLimitedError } from "@echo/core";
+import { ForbiddenError, RateLimitedError } from "@echo/core";
 
 /**
  * Counts hits per key in fixed windows. `hit` returns the count after this hit; the
@@ -32,6 +32,12 @@ export class RateLimiter {
 
   async check(limit: Limit, identifier: string): Promise<void> {
     if (!(await this.allow(limit, identifier))) throw new RateLimitedError(TOO_MANY);
+  }
+
+  /** Per signed-in user; an empty user id is refused, as the old user limiter did. */
+  async checkUser(limit: Limit, userId: string): Promise<void> {
+    if (!userId) throw new ForbiddenError("Authenticated user required.");
+    await this.check(limit, userId);
   }
 
   /**

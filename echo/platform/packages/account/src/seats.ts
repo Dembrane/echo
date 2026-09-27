@@ -1,10 +1,10 @@
+import { reconcileAccountSeats } from "@echo/billing";
 import { UnavailableError } from "@echo/core";
 import type { Db } from "@echo/db";
 import { schema } from "@echo/db";
 import type { Logger } from "@echo/observability";
 import { and, eq, gt, inArray, isNull, ne } from "drizzle-orm";
 import type { Jobs } from "./deps";
-import { reconcileAccountSeats } from "./jobs";
 
 const { billing_account, workspace, workspace_membership, workspace_invite, app_user } = schema;
 
@@ -105,8 +105,8 @@ export async function countNetNewSeats(
 /**
  * The invite dialog's cost preview. Accounts without a running paid subscription charge
  * nothing and answer here; pricing a live Mollie subscription needs its next payment date
- * from Mollie, which the billing namespace owns, so that branch answers 503 until billing
- * is merged in.
+ * from Mollie through the billing service (BillingService.estimateSeatAddition), which the
+ * account routes are not yet given, so that branch answers 503 until they are.
  */
 export async function estimateSeatAddition(
   db: Db,
@@ -156,33 +156,5 @@ export async function requestSeatReconcile(
   } catch (err) {
     // Billing never blocks collaboration; the periodic reconcile is the backstop.
     logger?.error({ err, workspaceId }, "seat reconcile could not be queued");
-  }
-}
-
-/**
- * Managed accounts (payment_mode offline) record the live seat count for staff to invoice;
- * nothing is charged. Accounts on a Mollie subscription are re-priced and prorated by the
- * billing namespace's handler for this job, which replaces this one when it lands.
- */
-export async function reconcileSeats(db: Db, accountId: string, logger: Logger): Promise<void> {
-  const [account] = await db
-    .select()
-    .from(billing_account)
-    .where(eq(billing_account.id, accountId))
-    .limit(1);
-  if (account?.status !== "active" || !account.tier || account.tier === "free") return;
-  if (account.payment_mode === "offline") {
-    const current = Math.max(await countAccountSeats(db, accountId), 1);
-    await db
-      .update(billing_account)
-      .set({ provisioned_seats: current, updated_at: new Date().toISOString() })
-      .where(eq(billing_account.id, accountId));
-    return;
-  }
-  if (account.mollie_subscription_id) {
-    logger.warn(
-      { signal: "billing.reconcile_pending", accountId },
-      "seat reconcile for a Mollie subscription waits for the billing namespace",
-    );
   }
 }

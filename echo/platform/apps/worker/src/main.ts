@@ -1,3 +1,4 @@
+import { createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
 import { describe, loadSections } from "@echo/config";
 import { createDb } from "@echo/db";
 import { type Mailer, SendGridMailer } from "@echo/mail";
@@ -15,6 +16,8 @@ const loaded = loadSections([
   "webhooks",
   "http",
   "mail",
+  "billing",
+  "support",
 ]);
 const config = loaded.values;
 const service = "echo-worker";
@@ -49,6 +52,19 @@ const mailer: Mailer = config.mail.sendgridApiKey
       send: async (msg) =>
         logger.warn({ subject: msg.subject, tags: msg.tags }, "mail not sent: no SendGrid key"),
     };
+const billing = createBilling({
+  db: database.db,
+  mollie: config.billing.mollieApiKey
+    ? new HttpMollie(config.billing.mollieApiKey)
+    : new UnconfiguredMollie(),
+  mailer,
+  logger,
+  billingConfig: {
+    webhookUrl: config.billing.mollieWebhookUrl ?? null,
+    forceReconcileFailure: config.billing.forceReconcileFailure,
+    dashboardUrl: config.http.dashboardUrl,
+  },
+});
 const regs = registrations({
   logger,
   db: database.db,
@@ -56,6 +72,7 @@ const regs = registrations({
   mailer,
   jobs: queueSink(queue),
   dashboardUrl: config.http.dashboardUrl,
+  billing,
 });
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);
