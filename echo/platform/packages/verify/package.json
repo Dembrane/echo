@@ -1,0 +1,31 @@
+{
+  "name": "@echo/verify",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@echo/access": "workspace:*",
+    "@echo/conversations": "workspace:*",
+    "@echo/core": "workspace:*",
+    "@echo/db": "workspace:*",
+    "@echo/http": "workspace:*",
+    "@echo/legacy-shape": "workspace:*",
+    "@echo/llm": "workspace:*",
+    "@echo/projects": "workspace:*",
+    "@echo/prompts": "workspace:*",
+    "ai": "^7.0.118",
+    "drizzle-orm": "^0.45.3",
+    "hono": "^4.9.0"
+  },
+  "devDependencies": {
+    "@echo/observability": "workspace:*",
+    "@echo/storage": "workspace:*",
+    "postgres": "^3.4.9",
+    "hono": "^4.9.0"
+  }
+}

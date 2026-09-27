@@ -33,6 +33,7 @@
         "@echo/storage": "workspace:*",
         "@echo/tenancy": "workspace:*",
         "@echo/transcription": "workspace:*",
+        "@echo/verify": "workspace:*",
         "@echo/webhooks": "workspace:*",
         "@hono/zod-openapi": "^1.1.0",
         "drizzle-orm": "^0.45.3",
@@ -49,6 +50,9 @@
         "@echo/observability": "workspace:*",
         "hono": "^4.9.0",
         "zod": "^4.1.0",
+      },
+      "devDependencies": {
+        "@echo/storage": "workspace:*",
       },
     },
     "apps/migrate": {
@@ -327,6 +331,29 @@
         "@echo/prompts": "workspace:*",
       },
     },
+    "packages/verify": {
+      "name": "@echo/verify",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/conversations": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/prompts": "workspace:*",
+        "ai": "^7.0.118",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+      },
+      "devDependencies": {
+        "@echo/observability": "workspace:*",
+        "@echo/storage": "workspace:*",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+      },
+    },
     "packages/webhooks": {
       "name": "@echo/webhooks",
       "dependencies": {
@@ -464,6 +491,8 @@
     "@echo/tenancy": ["@echo/tenancy@workspace:packages/tenancy"],
 
     "@echo/transcription": ["@echo/transcription@workspace:packages/transcription"],
+
+    "@echo/verify": ["@echo/verify@workspace:packages/verify"],
 
     "@echo/web": ["@echo/web@workspace:apps/web"],
 
