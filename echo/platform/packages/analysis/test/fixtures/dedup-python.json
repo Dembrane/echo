@@ -1,0 +1,1765 @@
+{
+  "promptFingerprint": "6035025b7b969330cc240572b3198fa8d94cb0b48968edcd9bcd9efb89c919a2",
+  "sources": [
+    {
+      "revision_id": "r01",
+      "object_id": "o-r01",
+      "statement": "Rents are  too high.",
+      "epistemic_kind": "claim",
+      "valence": "negative",
+      "evidence": [
+        {
+          "conversation_id": "c1",
+          "quote": "rent is crazy",
+          "location": null
+        },
+        {
+          "conversation_id": "c1",
+          "quote": "Rent is crazy",
+          "location": null
+        }
+      ],
+      "embedding": [1, 0, 0, 0.1],
+      "embedding_config_key": "cfg-1"
+    },
+    {
+      "revision_id": "r02",
+      "object_id": "o-r02",
+      "statement": "rents are too high.",
+      "epistemic_kind": "claim",
+      "valence": "negative",
+      "evidence": [
+        {
+          "conversation_id": "c2",
+          "quote": "we pay half our income",
+          "location": null
+        }
+      ],
+      "embedding": [1, 0, 0, 0.1],
+      "embedding_config_key": "cfg-1"
+    },
+    {
+      "revision_id": "r03",
+      "object_id": "o-r03",
+      "statement": "More buses at night.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [
+        {
+          "conversation_id": "c1",
+          "quote": "buses stop at eleven",
+          "location": null
+        }
+      ],
+      "embedding": [0, 1, 0.05, 0],
+      "embedding_config_key": "cfg-1"
+    },
+    {
+      "revision_id": "r04",
+      "object_id": "o-r04",
+      "statement": "Night buses should run later.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [
+        {
+          "conversation_id": "c2",
+          "quote": "last bus is too early",
+          "location": null
+        },
+        {
+          "conversation_id": "c3",
+          "quote": "q3a",
+          "location": null
+        },
+        {
+          "conversation_id": "c3",
+          "quote": "q3b",
+          "location": null
+        }
+      ],
+      "embedding": [0, 1, 0.1, 0.02],
+      "embedding_config_key": "cfg-1"
+    },
+    {
+      "revision_id": "r05",
+      "object_id": "o-r05",
+      "statement": "Buses should be free.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [
+        {
+          "conversation_id": "c3",
+          "quote": "make buses free",
+          "location": null
+        }
+      ],
+      "embedding": [0, 0.9, 0.3, 0],
+      "embedding_config_key": "cfg-1"
+    },
+    {
+      "revision_id": "r06",
+      "object_id": "o-r06",
+      "statement": "Parks need lights.",
+      "epistemic_kind": "argument",
+      "valence": "negative",
+      "evidence": [
+        {
+          "conversation_id": "c1",
+          "quote": "the park is dark",
+          "location": null
+        }
+      ],
+      "embedding": [0, 0, 1, 0],
+      "embedding_config_key": "cfg-1"
+    },
+    {
+      "revision_id": "r07",
+      "object_id": "o-r07",
+      "statement": "Lighting in parks is poor.",
+      "epistemic_kind": "argument",
+      "valence": "negative",
+      "evidence": [
+        {
+          "conversation_id": "c2",
+          "quote": "cannot see a thing",
+          "location": null
+        }
+      ],
+      "embedding": [0, 0.05, 1, 0.01],
+      "embedding_config_key": "cfg-1"
+    },
+    {
+      "revision_id": "r08",
+      "object_id": "o-r08",
+      "statement": "The market is fine.",
+      "epistemic_kind": "argument",
+      "valence": "neutral",
+      "evidence": [
+        {
+          "conversation_id": "c4",
+          "quote": "it is ok",
+          "location": null
+        }
+      ],
+      "embedding": [0.3, 0.3, 0.3, 0.3],
+      "embedding_config_key": "cfg-1"
+    },
+    {
+      "revision_id": "r09",
+      "object_id": "o-r09",
+      "statement": "Crime went up.",
+      "epistemic_kind": "claim",
+      "valence": "positive",
+      "evidence": [
+        {
+          "conversation_id": "c1",
+          "quote": "more thefts",
+          "location": null
+        }
+      ],
+      "embedding": [0.5, 0.5, 0, 1],
+      "embedding_config_key": "cfg-1"
+    },
+    {
+      "revision_id": "r10",
+      "object_id": "o-r10",
+      "statement": "Crime has risen.",
+      "epistemic_kind": "claim",
+      "valence": "positive",
+      "evidence": [
+        {
+          "conversation_id": "c2",
+          "quote": "thefts doubled",
+          "location": null
+        }
+      ],
+      "embedding": [0.5, 0.52, 0, 1],
+      "embedding_config_key": "cfg-1"
+    }
+  ],
+  "cases": [
+    {
+      "name": "calibrated",
+      "params": {
+        "embedding_model": "vertex_ai/text-embedding-004",
+        "similarity_threshold": null,
+        "max_group_size": 8,
+        "max_candidate_groups": 250,
+        "concurrency": 4
+      },
+      "answers": {
+        "cg-d5a98f886c745c82": null,
+        "cg-44666b752be62cf2": {
+          "groups": [
+            {
+              "members": ["m1"],
+              "proposed_statement": "x",
+              "checks": [],
+              "verdict": "uncertain",
+              "rationale": "r"
+            }
+          ]
+        },
+        "cg-7975a84de483b3b5": {
+          "groups": [
+            {
+              "members": ["m1", "m2"],
+              "proposed_statement": " Night buses should   run later. ",
+              "checks": [
+                {
+                  "member": "m1",
+                  "judgement": "equivalent",
+                  "note": "same  ask"
+                },
+                {
+                  "member": "m2",
+                  "judgement": "equivalent",
+                  "note": "same"
+                }
+              ],
+              "verdict": "equivalent",
+              "rationale": "Both ask for later buses."
+            },
+            {
+              "members": ["m3"],
+              "proposed_statement": "Buses should be free.",
+              "checks": [],
+              "verdict": "not_equivalent",
+              "rationale": "Different ask."
+            }
+          ]
+        }
+      },
+      "userTexts": {
+        "cg-d5a98f886c745c82": "A candidate group of 2 members: m1, m2.\n\nARGUMENTS START\nm1\nkind: claim\nvalence: positive\nstatement: Crime went up.\nquotes:\n- \"more thefts\"\n\nm2\nkind: claim\nvalence: positive\nstatement: Crime has risen.\nquotes:\n- \"thefts doubled\"\nARGUMENTS END\n\nSplit the members into sub-groups, account for every member exactly once, and check each proposed statement against every member of its sub-group.",
+        "cg-44666b752be62cf2": "A candidate group of 2 members: m1, m2.\n\nARGUMENTS START\nm1\nkind: argument\nvalence: negative\nstatement: Parks need lights.\nquotes:\n- \"the park is dark\"\n\nm2\nkind: argument\nvalence: negative\nstatement: Lighting in parks is poor.\nquotes:\n- \"cannot see a thing\"\nARGUMENTS END\n\nSplit the members into sub-groups, account for every member exactly once, and check each proposed statement against every member of its sub-group.",
+        "cg-7975a84de483b3b5": "A candidate group of 3 members: m1, m2, m3.\n\nARGUMENTS START\nm1\nkind: argument\nvalence: positive\nstatement: More buses at night.\nquotes:\n- \"buses stop at eleven\"\n\nm2\nkind: argument\nvalence: positive\nstatement: Night buses should run later.\nquotes:\n- \"last bus is too early\"\n- \"q3a\"\n- \"q3b\"\n\nm3\nkind: argument\nvalence: positive\nstatement: Buses should be free.\nquotes:\n- \"make buses free\"\nARGUMENTS END\n\nSplit the members into sub-groups, account for every member exactly once, and check each proposed statement against every member of its sub-group."
+      },
+      "discovery": {
+        "units": [
+          ["r01", "r02"],
+          ["r03"],
+          ["r04"],
+          ["r05"],
+          ["r06"],
+          ["r07"],
+          ["r08"],
+          ["r09"],
+          ["r10"]
+        ],
+        "groups": [
+          {
+            "group_id": "cg-d5a98f886c745c82",
+            "epistemic_kind": "claim",
+            "valence": "positive",
+            "units": [["r09"], ["r10"]],
+            "min_similarity": 0.99989
+          },
+          {
+            "group_id": "cg-44666b752be62cf2",
+            "epistemic_kind": "argument",
+            "valence": "negative",
+            "units": [["r06"], ["r07"]],
+            "min_similarity": 0.998703
+          },
+          {
+            "group_id": "cg-7975a84de483b3b5",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "units": [["r03"], ["r04"], ["r05"]],
+            "min_similarity": 0.963291
+          }
+        ],
+        "skipped": [],
+        "coverage": {
+          "strategy": "emb-complete-linkage-v1",
+          "strategy_version": 1,
+          "embedding_model": "vertex_ai/text-embedding-004",
+          "embedding_config_key": "cfg-1",
+          "threshold": 0.8,
+          "threshold_source": "calibrated",
+          "semantic_discovery": true,
+          "max_group_size": 8,
+          "max_candidate_groups": 250,
+          "inputs": 10,
+          "exact_match_groups": 1,
+          "exact_match_members": 2,
+          "clusters_found": 3,
+          "clusters_split": 0,
+          "groups_found": 3,
+          "groups_considered": 3,
+          "groups_skipped": 0,
+          "members_covered": 9,
+          "members_skipped": 0,
+          "truncated": false,
+          "truncation_reasons": []
+        }
+      },
+      "discoveryHash": "a94e4b0389ff0a13f10f59434b661f044b6c7aa3539866d6333390d57212df2d",
+      "result": {
+        "recipe_id": "deduplicated_arguments",
+        "recipe_version": "dedup-v2",
+        "prompt_id": "dedup-verify-v2",
+        "consolidated": [
+          {
+            "statement": "Rents are too high.",
+            "epistemic_kind": "claim",
+            "valence": "negative",
+            "member_revision_ids": ["r01", "r02"],
+            "member_object_ids": ["o-r01", "o-r02"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "rent is crazy",
+                "location": null
+              },
+              {
+                "conversation_id": "c2",
+                "quote": "we pay half our income",
+                "location": null
+              }
+            ],
+            "support_count": 2,
+            "statement_revision_id": "r01",
+            "verification": {
+              "method": "exact_match",
+              "outcome": "exact_match",
+              "verdict": "equivalent",
+              "rationale": "Identical statement text, epistemic kind and valence.",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Night buses should run later.",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "member_revision_ids": ["r03", "r04"],
+            "member_object_ids": ["o-r03", "o-r04"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "buses stop at eleven",
+                "location": null
+              },
+              {
+                "conversation_id": "c2",
+                "quote": "last bus is too early",
+                "location": null
+              },
+              {
+                "conversation_id": "c3",
+                "quote": "q3a",
+                "location": null
+              },
+              {
+                "conversation_id": "c3",
+                "quote": "q3b",
+                "location": null
+              }
+            ],
+            "support_count": 2,
+            "statement_revision_id": "r04",
+            "verification": {
+              "method": "model",
+              "outcome": "merged",
+              "verdict": "equivalent",
+              "rationale": "Both ask for later buses.",
+              "group_id": "cg-7975a84de483b3b5",
+              "checks": [
+                {
+                  "label": "m1",
+                  "revision_ids": ["r03"],
+                  "judgement": "equivalent",
+                  "note": "same ask"
+                },
+                {
+                  "label": "m2",
+                  "revision_ids": ["r04"],
+                  "judgement": "equivalent",
+                  "note": "same"
+                }
+              ]
+            }
+          }
+        ],
+        "singletons": [
+          {
+            "statement": "Buses should be free.",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "member_revision_ids": ["r05"],
+            "member_object_ids": ["o-r05"],
+            "evidence": [
+              {
+                "conversation_id": "c3",
+                "quote": "make buses free",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r05",
+            "verification": {
+              "method": "model",
+              "outcome": "single_member",
+              "verdict": "not_equivalent",
+              "rationale": "Different ask.",
+              "group_id": "cg-7975a84de483b3b5",
+              "checks": []
+            }
+          },
+          {
+            "statement": "Parks need lights.",
+            "epistemic_kind": "argument",
+            "valence": "negative",
+            "member_revision_ids": ["r06"],
+            "member_object_ids": ["o-r06"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "the park is dark",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r06",
+            "verification": {
+              "method": "model",
+              "outcome": "malformed",
+              "verdict": null,
+              "rationale": "members not accounted for: m2",
+              "group_id": "cg-44666b752be62cf2",
+              "checks": []
+            }
+          },
+          {
+            "statement": "Lighting in parks is poor.",
+            "epistemic_kind": "argument",
+            "valence": "negative",
+            "member_revision_ids": ["r07"],
+            "member_object_ids": ["o-r07"],
+            "evidence": [
+              {
+                "conversation_id": "c2",
+                "quote": "cannot see a thing",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r07",
+            "verification": {
+              "method": "model",
+              "outcome": "malformed",
+              "verdict": null,
+              "rationale": "members not accounted for: m2",
+              "group_id": "cg-44666b752be62cf2",
+              "checks": []
+            }
+          },
+          {
+            "statement": "The market is fine.",
+            "epistemic_kind": "argument",
+            "valence": "neutral",
+            "member_revision_ids": ["r08"],
+            "member_object_ids": ["o-r08"],
+            "evidence": [
+              {
+                "conversation_id": "c4",
+                "quote": "it is ok",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r08",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Crime went up.",
+            "epistemic_kind": "claim",
+            "valence": "positive",
+            "member_revision_ids": ["r09"],
+            "member_object_ids": ["o-r09"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "more thefts",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r09",
+            "verification": {
+              "method": "model",
+              "outcome": "call_failed",
+              "verdict": null,
+              "rationale": "RuntimeError: boom",
+              "group_id": "cg-d5a98f886c745c82",
+              "checks": []
+            }
+          },
+          {
+            "statement": "Crime has risen.",
+            "epistemic_kind": "claim",
+            "valence": "positive",
+            "member_revision_ids": ["r10"],
+            "member_object_ids": ["o-r10"],
+            "evidence": [
+              {
+                "conversation_id": "c2",
+                "quote": "thefts doubled",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r10",
+            "verification": {
+              "method": "model",
+              "outcome": "call_failed",
+              "verdict": null,
+              "rationale": "RuntimeError: boom",
+              "group_id": "cg-d5a98f886c745c82",
+              "checks": []
+            }
+          }
+        ],
+        "checks": [
+          {
+            "group_id": "cg-d5a98f886c745c82",
+            "revision_ids": ["r09", "r10"],
+            "min_similarity": 0.99989,
+            "status": "call_failed",
+            "error": "RuntimeError: boom",
+            "sub_groups": [],
+            "usage": {}
+          },
+          {
+            "group_id": "cg-44666b752be62cf2",
+            "revision_ids": ["r06", "r07"],
+            "min_similarity": 0.998703,
+            "status": "malformed",
+            "error": "members not accounted for: m2",
+            "sub_groups": [],
+            "usage": {
+              "prompt_tokens": 10,
+              "completion_tokens": 5,
+              "total_tokens": 15,
+              "attempts": 1
+            }
+          },
+          {
+            "group_id": "cg-7975a84de483b3b5",
+            "revision_ids": ["r03", "r04", "r05"],
+            "min_similarity": 0.963291,
+            "status": "verified",
+            "error": null,
+            "sub_groups": [
+              {
+                "labels": ["m1", "m2"],
+                "revision_ids": ["r03", "r04"],
+                "verdict": "equivalent",
+                "proposed_statement": "Night buses should run later.",
+                "rationale": "Both ask for later buses.",
+                "checks": [
+                  {
+                    "label": "m1",
+                    "revision_ids": ["r03"],
+                    "judgement": "equivalent",
+                    "note": "same ask"
+                  },
+                  {
+                    "label": "m2",
+                    "revision_ids": ["r04"],
+                    "judgement": "equivalent",
+                    "note": "same"
+                  }
+                ],
+                "merged": true,
+                "outcome": "merged"
+              },
+              {
+                "labels": ["m3"],
+                "revision_ids": ["r05"],
+                "verdict": "not_equivalent",
+                "proposed_statement": "Buses should be free.",
+                "rationale": "Different ask.",
+                "checks": [],
+                "merged": false,
+                "outcome": "single_member"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 10,
+              "completion_tokens": 5,
+              "total_tokens": 15,
+              "attempts": 1
+            }
+          }
+        ],
+        "coverage": {
+          "strategy": "emb-complete-linkage-v1",
+          "strategy_version": 1,
+          "embedding_model": "vertex_ai/text-embedding-004",
+          "embedding_config_key": "cfg-1",
+          "threshold": 0.8,
+          "threshold_source": "calibrated",
+          "semantic_discovery": true,
+          "max_group_size": 8,
+          "max_candidate_groups": 250,
+          "inputs": 10,
+          "exact_match_groups": 1,
+          "exact_match_members": 2,
+          "clusters_found": 3,
+          "clusters_split": 0,
+          "groups_found": 3,
+          "groups_considered": 3,
+          "groups_skipped": 0,
+          "members_covered": 9,
+          "members_skipped": 0,
+          "truncated": false,
+          "truncation_reasons": []
+        },
+        "usage": {
+          "calls": 3,
+          "failed_calls": 1,
+          "malformed_answers": 1,
+          "prompt_tokens": 20,
+          "completion_tokens": 10,
+          "total_tokens": 30,
+          "model_attempts": 2
+        }
+      },
+      "resultHash": "2fb4b5e68892f8409bb289d591adac580b5a4cc94f070a1259a434c17e2449e9",
+      "lineageKeys": [
+        "members:ca7cd50afad7c2c77c2fa76d323b44054778cfd1",
+        "members:a035146e93b3757b36e5e38ce6e05be23e840590",
+        "members:50feff79fa1c5a8a20951c3596621b50d130c0a5",
+        "members:bd50f088cf13d8ac9fa36579995124ea225bc749",
+        "members:7b9fd3e723db9864fd6cfe2e37519eb882f48bbb",
+        "members:762562a106c3c34dbdaa957d6b1444dfbdf0a775",
+        "members:c7880199dbd45e1b2d4878deca7b30de438dd0c1",
+        "members:2b54500b545ae0b35a996d6d690e4d809f9df453"
+      ],
+      "statuses": [
+        "verified",
+        "verified",
+        "singleton",
+        "uncertain",
+        "uncertain",
+        "singleton",
+        "uncertain",
+        "uncertain"
+      ]
+    },
+    {
+      "name": "limits",
+      "params": {
+        "embedding_model": "text-embedding-004",
+        "similarity_threshold": null,
+        "max_group_size": 2,
+        "max_candidate_groups": 2,
+        "concurrency": 4
+      },
+      "answers": {
+        "cg-d5a98f886c745c82": null,
+        "cg-44666b752be62cf2": {
+          "groups": [
+            {
+              "members": ["m1"],
+              "proposed_statement": "x",
+              "checks": [],
+              "verdict": "uncertain",
+              "rationale": "r"
+            }
+          ]
+        }
+      },
+      "userTexts": {
+        "cg-d5a98f886c745c82": "A candidate group of 2 members: m1, m2.\n\nARGUMENTS START\nm1\nkind: claim\nvalence: positive\nstatement: Crime went up.\nquotes:\n- \"more thefts\"\n\nm2\nkind: claim\nvalence: positive\nstatement: Crime has risen.\nquotes:\n- \"thefts doubled\"\nARGUMENTS END\n\nSplit the members into sub-groups, account for every member exactly once, and check each proposed statement against every member of its sub-group.",
+        "cg-44666b752be62cf2": "A candidate group of 2 members: m1, m2.\n\nARGUMENTS START\nm1\nkind: argument\nvalence: negative\nstatement: Parks need lights.\nquotes:\n- \"the park is dark\"\n\nm2\nkind: argument\nvalence: negative\nstatement: Lighting in parks is poor.\nquotes:\n- \"cannot see a thing\"\nARGUMENTS END\n\nSplit the members into sub-groups, account for every member exactly once, and check each proposed statement against every member of its sub-group."
+      },
+      "discovery": {
+        "units": [
+          ["r01", "r02"],
+          ["r03"],
+          ["r04"],
+          ["r05"],
+          ["r06"],
+          ["r07"],
+          ["r08"],
+          ["r09"],
+          ["r10"]
+        ],
+        "groups": [
+          {
+            "group_id": "cg-d5a98f886c745c82",
+            "epistemic_kind": "claim",
+            "valence": "positive",
+            "units": [["r09"], ["r10"]],
+            "min_similarity": 0.99989
+          },
+          {
+            "group_id": "cg-44666b752be62cf2",
+            "epistemic_kind": "argument",
+            "valence": "negative",
+            "units": [["r06"], ["r07"]],
+            "min_similarity": 0.998703
+          }
+        ],
+        "skipped": [
+          {
+            "group_id": "cg-024370026fcd897d",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "units": [["r03"], ["r04"]],
+            "min_similarity": 0.998567
+          }
+        ],
+        "coverage": {
+          "strategy": "emb-complete-linkage-v1",
+          "strategy_version": 1,
+          "embedding_model": "text-embedding-004",
+          "embedding_config_key": "cfg-1",
+          "threshold": 0.8,
+          "threshold_source": "calibrated",
+          "semantic_discovery": true,
+          "max_group_size": 2,
+          "max_candidate_groups": 2,
+          "inputs": 10,
+          "exact_match_groups": 1,
+          "exact_match_members": 2,
+          "clusters_found": 3,
+          "clusters_split": 1,
+          "groups_found": 3,
+          "groups_considered": 2,
+          "groups_skipped": 1,
+          "members_covered": 6,
+          "members_skipped": 2,
+          "truncated": true,
+          "truncation_reasons": ["max_group_size", "max_candidate_groups"]
+        }
+      },
+      "discoveryHash": "bb6cd5db7906394fea2aa9a908d153cadf1064c26ac8538d4d4b414d59025a14",
+      "result": {
+        "recipe_id": "deduplicated_arguments",
+        "recipe_version": "dedup-v2",
+        "prompt_id": "dedup-verify-v2",
+        "consolidated": [
+          {
+            "statement": "Rents are too high.",
+            "epistemic_kind": "claim",
+            "valence": "negative",
+            "member_revision_ids": ["r01", "r02"],
+            "member_object_ids": ["o-r01", "o-r02"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "rent is crazy",
+                "location": null
+              },
+              {
+                "conversation_id": "c2",
+                "quote": "we pay half our income",
+                "location": null
+              }
+            ],
+            "support_count": 2,
+            "statement_revision_id": "r01",
+            "verification": {
+              "method": "exact_match",
+              "outcome": "exact_match",
+              "verdict": "equivalent",
+              "rationale": "Identical statement text, epistemic kind and valence.",
+              "group_id": null,
+              "checks": []
+            }
+          }
+        ],
+        "singletons": [
+          {
+            "statement": "More buses at night.",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "member_revision_ids": ["r03"],
+            "member_object_ids": ["o-r03"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "buses stop at eleven",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r03",
+            "verification": {
+              "method": "none",
+              "outcome": "candidate_limit",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Night buses should run later.",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "member_revision_ids": ["r04"],
+            "member_object_ids": ["o-r04"],
+            "evidence": [
+              {
+                "conversation_id": "c2",
+                "quote": "last bus is too early",
+                "location": null
+              },
+              {
+                "conversation_id": "c3",
+                "quote": "q3a",
+                "location": null
+              },
+              {
+                "conversation_id": "c3",
+                "quote": "q3b",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r04",
+            "verification": {
+              "method": "none",
+              "outcome": "candidate_limit",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Buses should be free.",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "member_revision_ids": ["r05"],
+            "member_object_ids": ["o-r05"],
+            "evidence": [
+              {
+                "conversation_id": "c3",
+                "quote": "make buses free",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r05",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Parks need lights.",
+            "epistemic_kind": "argument",
+            "valence": "negative",
+            "member_revision_ids": ["r06"],
+            "member_object_ids": ["o-r06"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "the park is dark",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r06",
+            "verification": {
+              "method": "model",
+              "outcome": "malformed",
+              "verdict": null,
+              "rationale": "members not accounted for: m2",
+              "group_id": "cg-44666b752be62cf2",
+              "checks": []
+            }
+          },
+          {
+            "statement": "Lighting in parks is poor.",
+            "epistemic_kind": "argument",
+            "valence": "negative",
+            "member_revision_ids": ["r07"],
+            "member_object_ids": ["o-r07"],
+            "evidence": [
+              {
+                "conversation_id": "c2",
+                "quote": "cannot see a thing",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r07",
+            "verification": {
+              "method": "model",
+              "outcome": "malformed",
+              "verdict": null,
+              "rationale": "members not accounted for: m2",
+              "group_id": "cg-44666b752be62cf2",
+              "checks": []
+            }
+          },
+          {
+            "statement": "The market is fine.",
+            "epistemic_kind": "argument",
+            "valence": "neutral",
+            "member_revision_ids": ["r08"],
+            "member_object_ids": ["o-r08"],
+            "evidence": [
+              {
+                "conversation_id": "c4",
+                "quote": "it is ok",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r08",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Crime went up.",
+            "epistemic_kind": "claim",
+            "valence": "positive",
+            "member_revision_ids": ["r09"],
+            "member_object_ids": ["o-r09"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "more thefts",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r09",
+            "verification": {
+              "method": "model",
+              "outcome": "call_failed",
+              "verdict": null,
+              "rationale": "RuntimeError: boom",
+              "group_id": "cg-d5a98f886c745c82",
+              "checks": []
+            }
+          },
+          {
+            "statement": "Crime has risen.",
+            "epistemic_kind": "claim",
+            "valence": "positive",
+            "member_revision_ids": ["r10"],
+            "member_object_ids": ["o-r10"],
+            "evidence": [
+              {
+                "conversation_id": "c2",
+                "quote": "thefts doubled",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r10",
+            "verification": {
+              "method": "model",
+              "outcome": "call_failed",
+              "verdict": null,
+              "rationale": "RuntimeError: boom",
+              "group_id": "cg-d5a98f886c745c82",
+              "checks": []
+            }
+          }
+        ],
+        "checks": [
+          {
+            "group_id": "cg-d5a98f886c745c82",
+            "revision_ids": ["r09", "r10"],
+            "min_similarity": 0.99989,
+            "status": "call_failed",
+            "error": "RuntimeError: boom",
+            "sub_groups": [],
+            "usage": {}
+          },
+          {
+            "group_id": "cg-44666b752be62cf2",
+            "revision_ids": ["r06", "r07"],
+            "min_similarity": 0.998703,
+            "status": "malformed",
+            "error": "members not accounted for: m2",
+            "sub_groups": [],
+            "usage": {
+              "prompt_tokens": 10,
+              "completion_tokens": 5,
+              "total_tokens": 15,
+              "attempts": 1
+            }
+          }
+        ],
+        "coverage": {
+          "strategy": "emb-complete-linkage-v1",
+          "strategy_version": 1,
+          "embedding_model": "text-embedding-004",
+          "embedding_config_key": "cfg-1",
+          "threshold": 0.8,
+          "threshold_source": "calibrated",
+          "semantic_discovery": true,
+          "max_group_size": 2,
+          "max_candidate_groups": 2,
+          "inputs": 10,
+          "exact_match_groups": 1,
+          "exact_match_members": 2,
+          "clusters_found": 3,
+          "clusters_split": 1,
+          "groups_found": 3,
+          "groups_considered": 2,
+          "groups_skipped": 1,
+          "members_covered": 6,
+          "members_skipped": 2,
+          "truncated": true,
+          "truncation_reasons": ["max_group_size", "max_candidate_groups"]
+        },
+        "usage": {
+          "calls": 2,
+          "failed_calls": 1,
+          "malformed_answers": 1,
+          "prompt_tokens": 10,
+          "completion_tokens": 5,
+          "total_tokens": 15,
+          "model_attempts": 1
+        }
+      },
+      "resultHash": "43efa9b3cf798aff366a11b7e94d13a5edf48f4a2d8e9a7410d88360ece34a57",
+      "lineageKeys": [
+        "members:ca7cd50afad7c2c77c2fa76d323b44054778cfd1",
+        "members:2575c0a0cbaac46077b1e3f62640b2783647d9a7",
+        "members:1439098deb2f65f1bdf95a3b3f79986f7aff5272",
+        "members:50feff79fa1c5a8a20951c3596621b50d130c0a5",
+        "members:bd50f088cf13d8ac9fa36579995124ea225bc749",
+        "members:7b9fd3e723db9864fd6cfe2e37519eb882f48bbb",
+        "members:762562a106c3c34dbdaa957d6b1444dfbdf0a775",
+        "members:c7880199dbd45e1b2d4878deca7b30de438dd0c1",
+        "members:2b54500b545ae0b35a996d6d690e4d809f9df453"
+      ],
+      "statuses": [
+        "verified",
+        "uncertain",
+        "uncertain",
+        "singleton",
+        "uncertain",
+        "uncertain",
+        "singleton",
+        "uncertain",
+        "uncertain"
+      ]
+    },
+    {
+      "name": "override",
+      "params": {
+        "embedding_model": "unknown",
+        "similarity_threshold": 1.0,
+        "max_group_size": 8,
+        "max_candidate_groups": 250,
+        "concurrency": 4
+      },
+      "answers": {},
+      "userTexts": {},
+      "discovery": {
+        "units": [
+          ["r01", "r02"],
+          ["r03"],
+          ["r04"],
+          ["r05"],
+          ["r06"],
+          ["r07"],
+          ["r08"],
+          ["r09"],
+          ["r10"]
+        ],
+        "groups": [],
+        "skipped": [],
+        "coverage": {
+          "strategy": "emb-complete-linkage-v1",
+          "strategy_version": 1,
+          "embedding_model": "unknown",
+          "embedding_config_key": "cfg-1",
+          "threshold": 1.0,
+          "threshold_source": "override",
+          "semantic_discovery": true,
+          "max_group_size": 8,
+          "max_candidate_groups": 250,
+          "inputs": 10,
+          "exact_match_groups": 1,
+          "exact_match_members": 2,
+          "clusters_found": 0,
+          "clusters_split": 0,
+          "groups_found": 0,
+          "groups_considered": 0,
+          "groups_skipped": 0,
+          "members_covered": 2,
+          "members_skipped": 0,
+          "truncated": false,
+          "truncation_reasons": []
+        }
+      },
+      "discoveryHash": "cfef0a6a28575593948f68edabf80e1982160f2625702aef59001fed900bf6a7",
+      "result": {
+        "recipe_id": "deduplicated_arguments",
+        "recipe_version": "dedup-v2",
+        "prompt_id": "dedup-verify-v2",
+        "consolidated": [
+          {
+            "statement": "Rents are too high.",
+            "epistemic_kind": "claim",
+            "valence": "negative",
+            "member_revision_ids": ["r01", "r02"],
+            "member_object_ids": ["o-r01", "o-r02"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "rent is crazy",
+                "location": null
+              },
+              {
+                "conversation_id": "c2",
+                "quote": "we pay half our income",
+                "location": null
+              }
+            ],
+            "support_count": 2,
+            "statement_revision_id": "r01",
+            "verification": {
+              "method": "exact_match",
+              "outcome": "exact_match",
+              "verdict": "equivalent",
+              "rationale": "Identical statement text, epistemic kind and valence.",
+              "group_id": null,
+              "checks": []
+            }
+          }
+        ],
+        "singletons": [
+          {
+            "statement": "More buses at night.",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "member_revision_ids": ["r03"],
+            "member_object_ids": ["o-r03"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "buses stop at eleven",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r03",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Night buses should run later.",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "member_revision_ids": ["r04"],
+            "member_object_ids": ["o-r04"],
+            "evidence": [
+              {
+                "conversation_id": "c2",
+                "quote": "last bus is too early",
+                "location": null
+              },
+              {
+                "conversation_id": "c3",
+                "quote": "q3a",
+                "location": null
+              },
+              {
+                "conversation_id": "c3",
+                "quote": "q3b",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r04",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Buses should be free.",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "member_revision_ids": ["r05"],
+            "member_object_ids": ["o-r05"],
+            "evidence": [
+              {
+                "conversation_id": "c3",
+                "quote": "make buses free",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r05",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Parks need lights.",
+            "epistemic_kind": "argument",
+            "valence": "negative",
+            "member_revision_ids": ["r06"],
+            "member_object_ids": ["o-r06"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "the park is dark",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r06",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Lighting in parks is poor.",
+            "epistemic_kind": "argument",
+            "valence": "negative",
+            "member_revision_ids": ["r07"],
+            "member_object_ids": ["o-r07"],
+            "evidence": [
+              {
+                "conversation_id": "c2",
+                "quote": "cannot see a thing",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r07",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "The market is fine.",
+            "epistemic_kind": "argument",
+            "valence": "neutral",
+            "member_revision_ids": ["r08"],
+            "member_object_ids": ["o-r08"],
+            "evidence": [
+              {
+                "conversation_id": "c4",
+                "quote": "it is ok",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r08",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Crime went up.",
+            "epistemic_kind": "claim",
+            "valence": "positive",
+            "member_revision_ids": ["r09"],
+            "member_object_ids": ["o-r09"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "more thefts",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r09",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Crime has risen.",
+            "epistemic_kind": "claim",
+            "valence": "positive",
+            "member_revision_ids": ["r10"],
+            "member_object_ids": ["o-r10"],
+            "evidence": [
+              {
+                "conversation_id": "c2",
+                "quote": "thefts doubled",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r10",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          }
+        ],
+        "checks": [],
+        "coverage": {
+          "strategy": "emb-complete-linkage-v1",
+          "strategy_version": 1,
+          "embedding_model": "unknown",
+          "embedding_config_key": "cfg-1",
+          "threshold": 1.0,
+          "threshold_source": "override",
+          "semantic_discovery": true,
+          "max_group_size": 8,
+          "max_candidate_groups": 250,
+          "inputs": 10,
+          "exact_match_groups": 1,
+          "exact_match_members": 2,
+          "clusters_found": 0,
+          "clusters_split": 0,
+          "groups_found": 0,
+          "groups_considered": 0,
+          "groups_skipped": 0,
+          "members_covered": 2,
+          "members_skipped": 0,
+          "truncated": false,
+          "truncation_reasons": []
+        },
+        "usage": {
+          "calls": 0,
+          "failed_calls": 0,
+          "malformed_answers": 0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "model_attempts": 0
+        }
+      },
+      "resultHash": "c1215fea858873c43c4dd523daf13f7d2141a3229fb8e5f8772df9bad72ee07b",
+      "lineageKeys": [
+        "members:ca7cd50afad7c2c77c2fa76d323b44054778cfd1",
+        "members:2575c0a0cbaac46077b1e3f62640b2783647d9a7",
+        "members:1439098deb2f65f1bdf95a3b3f79986f7aff5272",
+        "members:50feff79fa1c5a8a20951c3596621b50d130c0a5",
+        "members:bd50f088cf13d8ac9fa36579995124ea225bc749",
+        "members:7b9fd3e723db9864fd6cfe2e37519eb882f48bbb",
+        "members:762562a106c3c34dbdaa957d6b1444dfbdf0a775",
+        "members:c7880199dbd45e1b2d4878deca7b30de438dd0c1",
+        "members:2b54500b545ae0b35a996d6d690e4d809f9df453"
+      ],
+      "statuses": [
+        "verified",
+        "singleton",
+        "singleton",
+        "singleton",
+        "singleton",
+        "singleton",
+        "singleton",
+        "singleton",
+        "singleton"
+      ]
+    },
+    {
+      "name": "uncalibrated",
+      "params": {
+        "embedding_model": "other-model",
+        "similarity_threshold": null,
+        "max_group_size": 8,
+        "max_candidate_groups": 250,
+        "concurrency": 4
+      },
+      "answers": {},
+      "userTexts": {},
+      "discovery": {
+        "units": [
+          ["r01", "r02"],
+          ["r03"],
+          ["r04"],
+          ["r05"],
+          ["r06"],
+          ["r07"],
+          ["r08"],
+          ["r09"],
+          ["r10"]
+        ],
+        "groups": [],
+        "skipped": [],
+        "coverage": {
+          "strategy": "emb-complete-linkage-v1",
+          "strategy_version": 1,
+          "embedding_model": "other-model",
+          "embedding_config_key": "cfg-1",
+          "threshold": null,
+          "threshold_source": "uncalibrated",
+          "semantic_discovery": false,
+          "max_group_size": 8,
+          "max_candidate_groups": 250,
+          "inputs": 10,
+          "exact_match_groups": 1,
+          "exact_match_members": 2,
+          "clusters_found": 0,
+          "clusters_split": 0,
+          "groups_found": 0,
+          "groups_considered": 0,
+          "groups_skipped": 0,
+          "members_covered": 2,
+          "members_skipped": 0,
+          "truncated": false,
+          "truncation_reasons": []
+        }
+      },
+      "discoveryHash": "1724b6cc99061bfe169655e71fa0ea2307d22af65ac1232db05cb325a13d6f5a",
+      "result": {
+        "recipe_id": "deduplicated_arguments",
+        "recipe_version": "dedup-v2",
+        "prompt_id": "dedup-verify-v2",
+        "consolidated": [
+          {
+            "statement": "Rents are too high.",
+            "epistemic_kind": "claim",
+            "valence": "negative",
+            "member_revision_ids": ["r01", "r02"],
+            "member_object_ids": ["o-r01", "o-r02"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "rent is crazy",
+                "location": null
+              },
+              {
+                "conversation_id": "c2",
+                "quote": "we pay half our income",
+                "location": null
+              }
+            ],
+            "support_count": 2,
+            "statement_revision_id": "r01",
+            "verification": {
+              "method": "exact_match",
+              "outcome": "exact_match",
+              "verdict": "equivalent",
+              "rationale": "Identical statement text, epistemic kind and valence.",
+              "group_id": null,
+              "checks": []
+            }
+          }
+        ],
+        "singletons": [
+          {
+            "statement": "More buses at night.",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "member_revision_ids": ["r03"],
+            "member_object_ids": ["o-r03"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "buses stop at eleven",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r03",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Night buses should run later.",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "member_revision_ids": ["r04"],
+            "member_object_ids": ["o-r04"],
+            "evidence": [
+              {
+                "conversation_id": "c2",
+                "quote": "last bus is too early",
+                "location": null
+              },
+              {
+                "conversation_id": "c3",
+                "quote": "q3a",
+                "location": null
+              },
+              {
+                "conversation_id": "c3",
+                "quote": "q3b",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r04",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Buses should be free.",
+            "epistemic_kind": "argument",
+            "valence": "positive",
+            "member_revision_ids": ["r05"],
+            "member_object_ids": ["o-r05"],
+            "evidence": [
+              {
+                "conversation_id": "c3",
+                "quote": "make buses free",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r05",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Parks need lights.",
+            "epistemic_kind": "argument",
+            "valence": "negative",
+            "member_revision_ids": ["r06"],
+            "member_object_ids": ["o-r06"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "the park is dark",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r06",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Lighting in parks is poor.",
+            "epistemic_kind": "argument",
+            "valence": "negative",
+            "member_revision_ids": ["r07"],
+            "member_object_ids": ["o-r07"],
+            "evidence": [
+              {
+                "conversation_id": "c2",
+                "quote": "cannot see a thing",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r07",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "The market is fine.",
+            "epistemic_kind": "argument",
+            "valence": "neutral",
+            "member_revision_ids": ["r08"],
+            "member_object_ids": ["o-r08"],
+            "evidence": [
+              {
+                "conversation_id": "c4",
+                "quote": "it is ok",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r08",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Crime went up.",
+            "epistemic_kind": "claim",
+            "valence": "positive",
+            "member_revision_ids": ["r09"],
+            "member_object_ids": ["o-r09"],
+            "evidence": [
+              {
+                "conversation_id": "c1",
+                "quote": "more thefts",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r09",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          },
+          {
+            "statement": "Crime has risen.",
+            "epistemic_kind": "claim",
+            "valence": "positive",
+            "member_revision_ids": ["r10"],
+            "member_object_ids": ["o-r10"],
+            "evidence": [
+              {
+                "conversation_id": "c2",
+                "quote": "thefts doubled",
+                "location": null
+              }
+            ],
+            "support_count": 1,
+            "statement_revision_id": "r10",
+            "verification": {
+              "method": "none",
+              "outcome": "no_candidate",
+              "verdict": null,
+              "rationale": "",
+              "group_id": null,
+              "checks": []
+            }
+          }
+        ],
+        "checks": [],
+        "coverage": {
+          "strategy": "emb-complete-linkage-v1",
+          "strategy_version": 1,
+          "embedding_model": "other-model",
+          "embedding_config_key": "cfg-1",
+          "threshold": null,
+          "threshold_source": "uncalibrated",
+          "semantic_discovery": false,
+          "max_group_size": 8,
+          "max_candidate_groups": 250,
+          "inputs": 10,
+          "exact_match_groups": 1,
+          "exact_match_members": 2,
+          "clusters_found": 0,
+          "clusters_split": 0,
+          "groups_found": 0,
+          "groups_considered": 0,
+          "groups_skipped": 0,
+          "members_covered": 2,
+          "members_skipped": 0,
+          "truncated": false,
+          "truncation_reasons": []
+        },
+        "usage": {
+          "calls": 0,
+          "failed_calls": 0,
+          "malformed_answers": 0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "model_attempts": 0
+        }
+      },
+      "resultHash": "baf7030c995a1eead750c16dd6eb7086af0264dfb07a935fd54b9e5fd0664760",
+      "lineageKeys": [
+        "members:ca7cd50afad7c2c77c2fa76d323b44054778cfd1",
+        "members:2575c0a0cbaac46077b1e3f62640b2783647d9a7",
+        "members:1439098deb2f65f1bdf95a3b3f79986f7aff5272",
+        "members:50feff79fa1c5a8a20951c3596621b50d130c0a5",
+        "members:bd50f088cf13d8ac9fa36579995124ea225bc749",
+        "members:7b9fd3e723db9864fd6cfe2e37519eb882f48bbb",
+        "members:762562a106c3c34dbdaa957d6b1444dfbdf0a775",
+        "members:c7880199dbd45e1b2d4878deca7b30de438dd0c1",
+        "members:2b54500b545ae0b35a996d6d690e4d809f9df453"
+      ],
+      "statuses": [
+        "verified",
+        "singleton",
+        "singleton",
+        "singleton",
+        "singleton",
+        "singleton",
+        "singleton",
+        "singleton",
+        "singleton"
+      ]
+    }
+  ]
+}
