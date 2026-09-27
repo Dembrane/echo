@@ -1,0 +1,938 @@
+{
+  "payloadSchemas": {
+    "argument": {
+      "$defs": {
+        "Evidence": {
+          "additionalProperties": false,
+          "description": "Quotes from one conversation, as the Map manifest records them.",
+          "properties": {
+            "conversationId": {
+              "minLength": 1,
+              "title": "Conversationid",
+              "type": "string"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Label"
+            },
+            "createdAt": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Createdat"
+            },
+            "quotes": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Quotes",
+              "type": "array"
+            }
+          },
+          "required": ["conversationId"],
+          "title": "Evidence",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "epistemicKind": {
+          "enum": ["argument", "claim"],
+          "title": "Epistemickind",
+          "type": "string"
+        },
+        "valence": {
+          "anyOf": [
+            {
+              "enum": ["positive", "negative", "neutral"],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valence"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": ["statement", "epistemicKind"],
+      "title": "ArgumentPayload",
+      "type": "object"
+    },
+    "deduplicated_argument": {
+      "$defs": {
+        "Consolidation": {
+          "additionalProperties": false,
+          "description": "How a deduplicated argument came to be: its members are `derived_from`\nrelations; this records the strategy, coverage and verification.",
+          "properties": {
+            "strategy": {
+              "minLength": 1,
+              "title": "Strategy",
+              "type": "string"
+            },
+            "memberCount": {
+              "minimum": 1,
+              "title": "Membercount",
+              "type": "integer"
+            },
+            "verification": {
+              "enum": ["verified", "singleton", "uncertain"],
+              "title": "Verification",
+              "type": "string"
+            },
+            "rationale": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Rationale"
+            },
+            "coverage": {
+              "additionalProperties": true,
+              "title": "Coverage",
+              "type": "object"
+            }
+          },
+          "required": ["strategy", "memberCount", "verification"],
+          "title": "Consolidation",
+          "type": "object"
+        },
+        "Evidence": {
+          "additionalProperties": false,
+          "description": "Quotes from one conversation, as the Map manifest records them.",
+          "properties": {
+            "conversationId": {
+              "minLength": 1,
+              "title": "Conversationid",
+              "type": "string"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Label"
+            },
+            "createdAt": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Createdat"
+            },
+            "quotes": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Quotes",
+              "type": "array"
+            }
+          },
+          "required": ["conversationId"],
+          "title": "Evidence",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "epistemicKind": {
+          "enum": ["argument", "claim"],
+          "title": "Epistemickind",
+          "type": "string"
+        },
+        "valence": {
+          "anyOf": [
+            {
+              "enum": ["positive", "negative", "neutral"],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valence"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "consolidation": {
+          "$ref": "#/$defs/Consolidation"
+        }
+      },
+      "required": ["statement", "epistemicKind", "consolidation"],
+      "title": "DeduplicatedArgumentPayload",
+      "type": "object"
+    },
+    "fact_check_assessment": {
+      "$defs": {
+        "AssessmentSource": {
+          "additionalProperties": false,
+          "properties": {
+            "url": {
+              "minLength": 1,
+              "title": "Url",
+              "type": "string"
+            },
+            "title": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Title"
+            }
+          },
+          "required": ["url"],
+          "title": "AssessmentSource",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "verdict": {
+          "minLength": 1,
+          "title": "Verdict",
+          "type": "string"
+        },
+        "justification": {
+          "default": "",
+          "title": "Justification",
+          "type": "string"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/AssessmentSource"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "claimKey": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Claimkey"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        },
+        "promptVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Promptversion"
+        }
+      },
+      "required": ["verdict", "statement"],
+      "title": "FactCheckAssessmentPayload",
+      "type": "object"
+    },
+    "integration.delivery_payload": {
+      "$defs": {
+        "DeliveryBody": {
+          "additionalProperties": false,
+          "description": "Shaped like the request body of an external API, not sent by this recipe.",
+          "properties": {
+            "destination": {
+              "minLength": 1,
+              "title": "Destination",
+              "type": "string"
+            },
+            "schemaVersion": {
+              "minimum": 1,
+              "title": "Schemaversion",
+              "type": "integer"
+            },
+            "idempotencyKey": {
+              "minLength": 1,
+              "title": "Idempotencykey",
+              "type": "string"
+            },
+            "projectId": {
+              "minLength": 1,
+              "title": "Projectid",
+              "type": "string"
+            },
+            "counts": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "title": "Counts",
+              "type": "object"
+            },
+            "items": {
+              "items": {
+                "$ref": "#/$defs/DeliveryItem"
+              },
+              "title": "Items",
+              "type": "array"
+            }
+          },
+          "required": ["destination", "schemaVersion", "idempotencyKey", "projectId"],
+          "title": "DeliveryBody",
+          "type": "object"
+        },
+        "DeliveryItem": {
+          "additionalProperties": false,
+          "properties": {
+            "externalId": {
+              "minLength": 1,
+              "title": "Externalid",
+              "type": "string"
+            },
+            "type": {
+              "enum": ["argument", "deduplicated_argument", "tension"],
+              "title": "Type",
+              "type": "string"
+            },
+            "title": {
+              "minLength": 1,
+              "title": "Title",
+              "type": "string"
+            },
+            "body": {
+              "minLength": 1,
+              "title": "Body",
+              "type": "string"
+            },
+            "question": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Question"
+            },
+            "sources": {
+              "items": {
+                "$ref": "#/$defs/DeliverySource"
+              },
+              "title": "Sources",
+              "type": "array"
+            },
+            "revision": {
+              "$ref": "#/$defs/DeliveryRevision"
+            }
+          },
+          "required": ["externalId", "type", "title", "body", "revision"],
+          "title": "DeliveryItem",
+          "type": "object"
+        },
+        "DeliveryRevision": {
+          "additionalProperties": false,
+          "description": "What the receiver needs to cite the exact content it was sent.",
+          "properties": {
+            "objectId": {
+              "minLength": 1,
+              "title": "Objectid",
+              "type": "string"
+            },
+            "revisionId": {
+              "minLength": 1,
+              "title": "Revisionid",
+              "type": "string"
+            },
+            "recipeId": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Recipeid"
+            },
+            "recipeVersion": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Recipeversion"
+            }
+          },
+          "required": ["objectId", "revisionId"],
+          "title": "DeliveryRevision",
+          "type": "object"
+        },
+        "DeliverySource": {
+          "additionalProperties": false,
+          "properties": {
+            "conversationId": {
+              "minLength": 1,
+              "title": "Conversationid",
+              "type": "string"
+            },
+            "quote": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Quote"
+            }
+          },
+          "required": ["conversationId"],
+          "title": "DeliverySource",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "endpoint": {
+          "minLength": 1,
+          "title": "Endpoint",
+          "type": "string"
+        },
+        "method": {
+          "const": "POST",
+          "title": "Method",
+          "type": "string"
+        },
+        "contentType": {
+          "const": "application/json",
+          "title": "Contenttype",
+          "type": "string"
+        },
+        "body": {
+          "$ref": "#/$defs/DeliveryBody"
+        }
+      },
+      "required": ["endpoint", "method", "contentType", "body"],
+      "title": "DeliveryPayload",
+      "type": "object"
+    },
+    "popcorn": {
+      "$defs": {
+        "Evidence": {
+          "additionalProperties": false,
+          "description": "Quotes from one conversation, as the Map manifest records them.",
+          "properties": {
+            "conversationId": {
+              "minLength": 1,
+              "title": "Conversationid",
+              "type": "string"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Label"
+            },
+            "createdAt": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Createdat"
+            },
+            "quotes": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Quotes",
+              "type": "array"
+            }
+          },
+          "required": ["conversationId"],
+          "title": "Evidence",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "phrase": {
+          "maxLength": 90,
+          "minLength": 1,
+          "title": "Phrase",
+          "type": "string"
+        },
+        "question": {
+          "default": false,
+          "title": "Question",
+          "type": "boolean"
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Language"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": ["phrase"],
+      "title": "PopcornPayload",
+      "type": "object"
+    },
+    "stakeholder": {
+      "$defs": {
+        "QuoteRef": {
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "minLength": 1,
+              "title": "Text",
+              "type": "string"
+            },
+            "conversationId": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Conversationid"
+            },
+            "location": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Location"
+            }
+          },
+          "required": ["text"],
+          "title": "QuoteRef",
+          "type": "object"
+        },
+        "StakeholderWeight": {
+          "additionalProperties": false,
+          "properties": {
+            "stake": {
+              "maximum": 1,
+              "minimum": 0,
+              "title": "Stake",
+              "type": "number"
+            },
+            "mentions": {
+              "maximum": 1,
+              "minimum": 0,
+              "title": "Mentions",
+              "type": "number"
+            }
+          },
+          "required": ["stake", "mentions"],
+          "title": "StakeholderWeight",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "role": {
+          "minLength": 1,
+          "title": "Role",
+          "type": "string"
+        },
+        "stake": {
+          "minLength": 1,
+          "title": "Stake",
+          "type": "string"
+        },
+        "rung": {
+          "enum": ["voiced", "named", "inferred"],
+          "title": "Rung",
+          "type": "string"
+        },
+        "invokedBy": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Invokedby"
+        },
+        "weight": {
+          "$ref": "#/$defs/StakeholderWeight"
+        },
+        "quotes": {
+          "items": {
+            "$ref": "#/$defs/QuoteRef"
+          },
+          "title": "Quotes",
+          "type": "array"
+        }
+      },
+      "required": ["name", "role", "stake", "rung", "weight"],
+      "title": "StakeholderPayload",
+      "type": "object"
+    },
+    "tension": {
+      "$defs": {
+        "TensionQuote": {
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "minLength": 1,
+              "title": "Text",
+              "type": "string"
+            },
+            "conversationId": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Conversationid"
+            },
+            "location": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Location"
+            },
+            "pole": {
+              "anyOf": [
+                {
+                  "enum": ["A", "B"],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Pole"
+            }
+          },
+          "required": ["text"],
+          "title": "TensionQuote",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The deck's contract: `knot` is the narrative the Map inspector shows.",
+      "properties": {
+        "poleA": {
+          "minLength": 1,
+          "title": "Polea",
+          "type": "string"
+        },
+        "poleB": {
+          "minLength": 1,
+          "title": "Poleb",
+          "type": "string"
+        },
+        "knot": {
+          "minLength": 1,
+          "title": "Knot",
+          "type": "string"
+        },
+        "toResolve": {
+          "minLength": 1,
+          "title": "Toresolve",
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "$ref": "#/$defs/TensionQuote"
+          },
+          "title": "Quotes",
+          "type": "array"
+        }
+      },
+      "required": ["poleA", "poleB", "knot", "toResolve"],
+      "title": "TensionPayload",
+      "type": "object"
+    }
+  },
+  "parameterSchemas": {
+    "arguments": null,
+    "deduplicated_arguments": {
+      "additionalProperties": false,
+      "properties": {
+        "similarity_threshold": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Similarity Threshold"
+        },
+        "max_group_size": {
+          "default": 8,
+          "maximum": 64,
+          "minimum": 2,
+          "title": "Max Group Size",
+          "type": "integer"
+        },
+        "max_candidate_groups": {
+          "default": 250,
+          "maximum": 5000,
+          "minimum": 0,
+          "title": "Max Candidate Groups",
+          "type": "integer"
+        }
+      },
+      "title": "DeduplicationParameters",
+      "type": "object"
+    },
+    "integration.fixture_delivery": {
+      "additionalProperties": false,
+      "properties": {
+        "max_items": {
+          "default": 100,
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Max Items",
+          "type": "integer"
+        }
+      },
+      "title": "DeliveryParameters",
+      "type": "object"
+    },
+    "map.fact_check_assessment": {
+      "$defs": {
+        "AssessmentSource": {
+          "additionalProperties": false,
+          "properties": {
+            "url": {
+              "minLength": 1,
+              "title": "Url",
+              "type": "string"
+            },
+            "title": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Title"
+            }
+          },
+          "required": ["url"],
+          "title": "AssessmentSource",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "What the fact-check worker found, recorded as it was answered.",
+      "properties": {
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "claimKey": {
+          "minLength": 1,
+          "title": "Claimkey",
+          "type": "string"
+        },
+        "verdict": {
+          "minLength": 1,
+          "title": "Verdict",
+          "type": "string"
+        },
+        "justification": {
+          "default": "",
+          "title": "Justification",
+          "type": "string"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/AssessmentSource"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        },
+        "promptVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Promptversion"
+        }
+      },
+      "required": ["statement", "claimKey", "verdict"],
+      "title": "AssessmentParameters",
+      "type": "object"
+    },
+    "popcorn": null,
+    "stakeholders": null,
+    "tensions": {
+      "additionalProperties": false,
+      "properties": {
+        "input_set": {
+          "enum": ["arguments", "deduplicated_arguments"],
+          "title": "Input Set",
+          "type": "string"
+        }
+      },
+      "required": ["input_set"],
+      "title": "TensionsParameters",
+      "type": "object"
+    }
+  }
+}
