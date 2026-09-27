@@ -36,7 +36,7 @@ export type StepEvent =
       readonly model: string;
       readonly usage?: { readonly input: number; readonly output: number };
     }
-  /** A tool is about to run (or is answered from the repetition guard). */
+  /** A tool is about to run. Calls the repetition guard answers emit no events. */
   | {
       readonly type: "tool-start";
       readonly runId: string;
