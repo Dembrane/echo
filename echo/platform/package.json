@@ -4,7 +4,8 @@
   "type": "module",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "parity"
   ],
   "scripts": {
     "dev": "bun --env-file=.env.local --filter @echo/api dev",

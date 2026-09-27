@@ -1,13 +1,14 @@
 /**
  * The only errors services throw on purpose. One HTTP handler maps them to the response
- * envelope `{ error: { code, message, details? } }`; anything else becomes a 500 whose
- * details stay in the logs.
+ * body; anything else becomes a 500 whose details stay in the logs. While the frontend
+ * reads FastAPI's `{ detail }` shape, the body is `{ detail: details ?? message }`.
  */
 export abstract class PlatformError extends Error {
   abstract readonly status: number;
   abstract readonly code: string;
   constructor(
     message: string,
+    /** Structured detail when the old API returned an object instead of a string. */
     readonly details?: Record<string, unknown>,
   ) {
     super(message);
@@ -15,6 +16,10 @@ export abstract class PlatformError extends Error {
   }
 }
 
+export class BadRequestError extends PlatformError {
+  readonly status = 400;
+  readonly code = "bad_request";
+}
 export class ValidationError extends PlatformError {
   readonly status = 422;
   readonly code = "validation_failed";

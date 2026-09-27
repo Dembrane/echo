@@ -1,0 +1,18 @@
+{
+  "name": "@echo/account",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@echo/core": "workspace:*",
+    "@echo/db": "workspace:*",
+    "@echo/http": "workspace:*",
+    "drizzle-orm": "^0.45.3",
+    "hono": "^4.9.0"
+  }
+}

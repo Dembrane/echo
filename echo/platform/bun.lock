@@ -14,10 +14,12 @@
       "name": "@echo/api",
       "dependencies": {
         "@echo/access": "workspace:*",
+        "@echo/account": "workspace:*",
         "@echo/auth": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
         "@echo/observability": "workspace:*",
         "@hono/zod-openapi": "^1.1.0",
         "drizzle-orm": "^0.45.3",
@@ -49,6 +51,16 @@
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "drizzle-orm": "^0.45.3",
+      },
+    },
+    "packages/account": {
+      "name": "@echo/account",
+      "dependencies": {
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
       },
     },
     "packages/auth": {
@@ -84,6 +96,15 @@
         "drizzle-kit": "^0.31.11",
       },
     },
+    "packages/http": {
+      "name": "@echo/http",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "hono": "^4.9.0",
+      },
+    },
     "packages/observability": {
       "name": "@echo/observability",
       "dependencies": {
@@ -107,6 +128,12 @@
     },
     "packages/storage": {
       "name": "@echo/storage",
+    },
+    "parity": {
+      "name": "@echo/parity",
+      "dependencies": {
+        "postgres": "^3.4.9",
+      },
     },
   },
   "packages": {
@@ -152,6 +179,8 @@
 
     "@echo/access": ["@echo/access@workspace:packages/access"],
 
+    "@echo/account": ["@echo/account@workspace:packages/account"],
+
     "@echo/api": ["@echo/api@workspace:apps/api"],
 
     "@echo/auth": ["@echo/auth@workspace:packages/auth"],
@@ -162,9 +191,13 @@
 
     "@echo/db": ["@echo/db@workspace:packages/db"],
 
+    "@echo/http": ["@echo/http@workspace:packages/http"],
+
     "@echo/migrate": ["@echo/migrate@workspace:apps/migrate"],
 
     "@echo/observability": ["@echo/observability@workspace:packages/observability"],
+
+    "@echo/parity": ["@echo/parity@workspace:parity"],
 
     "@echo/queue": ["@echo/queue@workspace:packages/queue"],
 

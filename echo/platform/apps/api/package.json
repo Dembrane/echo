@@ -17,6 +17,8 @@
     "zod": "^4.1.0",
     "@echo/auth": "workspace:*",
     "@echo/access": "workspace:*",
-    "drizzle-orm": "^0.45.3"
+    "drizzle-orm": "^0.45.3",
+    "@echo/http": "workspace:*",
+    "@echo/account": "workspace:*"
   }
 }

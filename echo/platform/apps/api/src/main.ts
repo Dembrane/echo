@@ -54,6 +54,7 @@ const app = buildApp({
   auth,
   principalFor: principalLookup(database.db),
   access: new Access(new DrizzleAccessStore(database.db)),
+  db: database.db,
 });
 
 const server = Bun.serve({ port: config.http.port, fetch: app.fetch, idleTimeout: 255 });

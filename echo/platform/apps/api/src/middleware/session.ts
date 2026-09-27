@@ -1,10 +1,9 @@
-import { UnauthenticatedError } from "@echo/core";
-import type { Context, MiddlewareHandler } from "hono";
+import type { MiddlewareHandler } from "hono";
 import type { Deps, Env, Signed } from "../deps";
 
 /**
  * Reads the session (cookie or bearer token) once per request and exposes the principal.
- * It never rejects: routes that need a user call requireUser, public routes do not.
+ * It never rejects: routes that need a user call requireUser from @echo/http.
  */
 export function session(deps: Deps): MiddlewareHandler<Env> {
   return async (c, next) => {
@@ -14,10 +13,4 @@ export function session(deps: Deps): MiddlewareHandler<Env> {
     c.set("principal", principal);
     await next();
   };
-}
-
-export function requireUser(c: Context<Env>): Signed {
-  const p = c.get("principal");
-  if (!p) throw new UnauthenticatedError("Sign in to continue");
-  return p;
 }

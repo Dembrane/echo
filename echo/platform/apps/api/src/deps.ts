@@ -1,6 +1,8 @@
-import type { Access, Principal } from "@echo/access";
+import type { Access } from "@echo/access";
 import type { Auth } from "@echo/auth";
 import type { Config } from "@echo/config";
+import type { Db } from "@echo/db";
+import type { Env, Signed } from "@echo/http";
 import type { Logger, Tracer } from "@echo/observability";
 
 /** Everything the HTTP app needs, built whole in main.ts and replaced with fakes in tests. */
@@ -15,12 +17,7 @@ export interface Deps {
   /** Maps a signed-in user to the ids memberships use; null when the user has no app_user row. */
   readonly principalFor: (userId: string) => Promise<Signed | null>;
   readonly access: Access;
+  readonly db: Db;
 }
 
-export interface Signed extends Principal {
-  readonly isStaff: boolean;
-}
-
-export type Env = {
-  Variables: { requestId: string; logger: Logger; principal: Signed | null };
-};
+export type { Env, Signed };

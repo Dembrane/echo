@@ -33,6 +33,7 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     } as unknown as Deps["auth"],
     principalFor: async () => null,
     access: new Access(new MemoryAccessStore()),
+    db: {} as Deps["db"],
     ...overrides,
   };
 }
@@ -74,7 +75,7 @@ test("every response carries a request id, and the access log line has it", asyn
   });
 });
 
-test("platform errors become the error envelope, unknown errors a 500 without details", async () => {
+test("platform errors keep FastAPI's detail shape, unknown errors a 500 without details", async () => {
   const app = buildApp(deps());
   app.get("/boom/known", () => {
     throw new NotFoundError("project not found", { projectId: "p1" });
@@ -84,9 +85,7 @@ test("platform errors become the error envelope, unknown errors a 500 without de
   });
   const known = await app.request("/boom/known");
   expect(known.status).toBe(404);
-  expect(await known.json()).toEqual({
-    error: { code: "not_found", message: "project not found", details: { projectId: "p1" } },
-  });
+  expect(await known.json()).toEqual({ detail: { projectId: "p1" } });
   const unknown = await app.request("/boom/unknown");
   expect(unknown.status).toBe(500);
   expect(JSON.stringify(await unknown.json())).not.toContain("hunter2");
@@ -95,5 +94,5 @@ test("platform errors become the error envelope, unknown errors a 500 without de
 test("unknown routes get the same envelope", async () => {
   const res = await buildApp(deps()).request("/nope");
   expect(res.status).toBe(404);
-  expect(((await res.json()) as { error: { code: string } }).error.code).toBe("not_found");
+  expect(await res.json()).toEqual({ detail: "Not Found" });
 });

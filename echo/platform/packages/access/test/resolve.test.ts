@@ -9,7 +9,7 @@ import {
 } from "../src";
 
 const now = new Date("2026-09-27T12:00:00Z");
-const ada: Principal = { appUserId: "u-ada", directusUserId: "d-ada" };
+const ada = { appUserId: "u-ada", directusUserId: "d-ada" } satisfies Principal;
 
 let store: MemoryAccessStore;
 function ws(id: string, over: Partial<Parameters<MemoryAccessStore["workspaces"]["set"]>[1]> = {}) {

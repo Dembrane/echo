@@ -8,7 +8,8 @@ import {
 import type { AccessStore, ProjectRow, WorkspaceRow } from "./store";
 
 export interface Principal {
-  readonly appUserId: string;
+  /** Null until onboarding creates the app_user row; such users reach only legacy projects. */
+  readonly appUserId: string | null;
   readonly directusUserId: string;
 }
 
@@ -40,6 +41,7 @@ export async function resolveWorkspace(
   who: Principal,
   now: Date,
 ): Promise<WorkspaceAccess | null> {
+  if (!who.appUserId) return null;
   const workspace = await store.workspace(workspaceId);
   if (!workspace || workspace.deleted) return null;
 
@@ -104,7 +106,6 @@ export async function resolveProject(
   const base = { project, role: ws.role, extra: ws.extra, tier: ws.workspace.tier };
   if (project.visibility === "workspace") return { ...base, source: "workspace" };
   if (ws.role === "admin" || ws.role === "owner") return { ...base, source: "workspace" };
-  return (await store.hasProjectShare(projectId, who.appUserId))
-    ? { ...base, source: "project_share" }
-    : null;
+  const shared = who.appUserId !== null && (await store.hasProjectShare(projectId, who.appUserId));
+  return shared ? { ...base, source: "project_share" } : null;
 }
