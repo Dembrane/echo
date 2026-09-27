@@ -38,3 +38,16 @@ export function nowIso(now: Date): string {
 export function pythonIso(now: Date): string {
   return now.toISOString().replace(/\.(\d{3})Z$/, ".$1000+00:00");
 }
+
+/**
+ * A datetime as pydantic v2 serialises it in a response model: UTC as "Z", microseconds
+ * only when non-zero ("2026-09-01T09:00:00Z", "2026-09-01T09:00:00.120000Z").
+ */
+export function pydanticIso(v: string | Date | null | undefined): string | null {
+  if (v === null || v === undefined) return null;
+  const d = typeof v === "string" ? new Date(isoTimestamp(v) ?? v) : v;
+  if (Number.isNaN(d.getTime())) return typeof v === "string" ? v : null;
+  const base = d.toISOString();
+  const ms = d.getUTCMilliseconds();
+  return ms ? base.replace(/\.(\d{3})Z$/, ".$1000Z") : base.replace(/\.\d{3}Z$/, "Z");
+}

@@ -7,9 +7,10 @@ resource "google_storage_bucket" "uploads" {
   public_access_prevention    = "enforced"
   versioning { enabled = var.env == "prod" }
   soft_delete_policy { retention_duration_seconds = 604800 }
+  # POST: the portal uploads audio with a presigned form (S3 POST policy).
   cors {
     origin          = var.browser_origins
-    method          = ["GET", "PUT", "HEAD"]
+    method          = ["GET", "PUT", "POST", "HEAD"]
     response_header = ["Content-Type", "Content-Length", "ETag"]
     max_age_seconds = 3600
   }

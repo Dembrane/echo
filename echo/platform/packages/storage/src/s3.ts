@@ -1,5 +1,6 @@
 import { S3Client } from "bun";
-import { checkKey, type ObjectStorage } from "./storage";
+import { postPolicyFields } from "./sigv4";
+import { checkKey, type ObjectStorage, type PresignedPost } from "./storage";
 
 export interface S3Options {
   readonly endpoint: string;
@@ -12,7 +13,7 @@ export interface S3Options {
 /** Bun's built-in S3 client: no SDK, streams bodies, signs presigned URLs locally. */
 export class S3Storage implements ObjectStorage {
   private readonly client: S3Client;
-  constructor(opts: S3Options) {
+  constructor(private readonly opts: S3Options) {
     this.client = new S3Client({
       endpoint: opts.endpoint,
       bucket: opts.bucket,
@@ -47,5 +48,25 @@ export class S3Storage implements ObjectStorage {
   }
   presignDownload(key: string, opts: { expiresInSeconds: number }) {
     return this.client.presign(checkKey(key), { method: "GET", expiresIn: opts.expiresInSeconds });
+  }
+  /** Path-style (endpoint/bucket), which every S3-compatible provider accepts. */
+  presignPost(
+    key: string,
+    opts: { contentType: string; maxBytes: number; expiresInSeconds: number },
+  ): PresignedPost {
+    return {
+      url: `${this.opts.endpoint.replace(/\/$/, "")}/${this.opts.bucket}`,
+      fields: postPolicyFields({
+        bucket: this.opts.bucket,
+        key: checkKey(key),
+        contentType: opts.contentType,
+        maxBytes: opts.maxBytes,
+        expiresInSeconds: opts.expiresInSeconds,
+        region: this.opts.region,
+        accessKeyId: this.opts.accessKeyId,
+        secretAccessKey: this.opts.secretAccessKey,
+        now: new Date(),
+      }),
+    };
   }
 }

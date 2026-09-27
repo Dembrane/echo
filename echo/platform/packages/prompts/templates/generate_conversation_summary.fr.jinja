@@ -1,0 +1,93 @@
+Vous recevez une série de citations d'une transcription de conversation dans l'ordre chronologique.
+
+{% if conversation_title %}
+<conversation_title>
+L'utilisateur/les participants ont explicitement défini le titre de cette conversation sur :
+{{ conversation_title }}
+</conversation_title>
+{% endif %}
+
+<quotes>
+{{ quote_text_joined }}
+</quotes>
+
+{% if project_context %}
+<project_context>
+L'hôte a fourni le contexte et les termes clés suivants pour cette conversation :
+{{ project_context }}
+</project_context>
+{% endif %}
+
+{% if verified_artifacts %}
+<verified_artifacts>
+Au cours de cette conversation, les participants ont créé et vérifié ensemble les résultats concrets suivants :
+{% for artifact in verified_artifacts %}
+
+---
+{{ artifact }}
+---
+{% endfor %}
+</verified_artifacts>
+{% endif %}
+
+Créez un résumé qui capture l'essence et la signification de ce qui s'est passé, optimisé pour une lecture rapide.
+
+## Principes Fondamentaux
+
+1. **L'essentiel plutôt que l'exhaustivité** : Capturez le "et alors ?" - le résultat significatif, la décision ou l'insight - pas un compte-rendu détaillé
+
+2. **Concision radicale** : La plupart des conversations devraient se résumer en 2-4 phrases. Les discussions complexes peuvent justifier 1-2 courts paragraphes. Le résumé doit toujours être considérablement plus court que l'original.
+
+3. **Compression significative** : Demandez-vous "que devrait savoir quelqu'un qui a manqué cela ?" et non "qu'est-ce qui a été discuté ?"
+
+4. **Langage naturel** : Écrivez en prose fluide, pas en points ou sections structurées. Évitez les en-têtes, listes et formatage à moins que le contenu soit véritablement complexe et multifacette.
+
+5. **Intégration du contexte** : 
+   - Intégrez naturellement le contexte du projet quand il ajoute du sens
+   - Notez les artefacts vérifiés comme résultats concrets sans détails de processus
+   - N'imposez pas un contexte non pertinent
+
+6. **Score de lecture rapide** : Avant d'écrire, évaluez intérieurement la facilité de lecture de ce résumé sur une échelle de 1-10 :
+   - 10 = Compréhension instantanée (simple, un point clair unique)
+   - 7-9 = Scan très rapide (2-3 points clés clairs)
+   - 4-6 = Nécessite une lecture concentrée (plusieurs points ou complexité modérée)
+   - 1-3 = Nécessite une lecture attentive (dense, complexe ou nuancé)
+   
+   Visez 7+ autant que possible. Si votre brouillon obtient moins de 7, simplifiez davantage.
+
+## Ce Qu'il Faut Capturer
+
+Concentrez-vous sur ce qui compte le plus. Incluez ces éléments quand ils sont centraux à la conversation :
+
+- Décisions prises et leur justification
+- Problèmes identifiés et solutions convenues
+- Insights ou réalisations clés
+- Prochaines étapes concrètes ou résultats
+- Dynamiques centrales quand elles ont façonné le résultat : arguments ou raisonnements qui ont influencé les décisions, tensions entre priorités concurrentes, conflits qui nécessitaient une résolution, ou accords atteints sur des points litigieux
+- Désaccords significatifs ou compromis discutés
+
+## Ce Qu'il Faut Omettre
+
+- Compte-rendu détaillé de la discussion
+- Spécificités d'implémentation sauf si elles sont le point principal
+- Mécaniques de processus (qui a dit quoi, comment les décisions ont été prises)
+- Contexte ou arrière-plan évidents
+- Désaccords mineurs qui n'ont pas impacté les résultats
+
+## Directives de Style
+
+- Utilisez des virgules, parenthèses ou "mais" au lieu de tirets
+- Écrivez en prose directe et conversationnelle
+- Préférez les phrases courtes à la ponctuation complexe
+- Utilisez "mais" ou "cependant" pour montrer le contraste
+- Utilisez les parenthèses pour les apartés ou clarifications
+- N'utilisez jamais le gras, l'italique ou autre formatage de texte
+
+## Format
+
+- 2-4 phrases pour les conversations simples
+- 1-2 paragraphes concis pour une complexité modérée
+- Prose naturelle sans puces, en-têtes, listes ou formatage
+- N'utilisez la structure que si vraiment nécessaire pour une discussion multifacette
+
+Écrivez comme si vous expliquiez à un collègue ce qui s'est passé en 30 secondes.

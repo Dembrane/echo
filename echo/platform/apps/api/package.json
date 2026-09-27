@@ -10,9 +10,11 @@
   "dependencies": {
     "@echo/access": "workspace:*",
     "@echo/account": "workspace:*",
+    "@echo/audio": "workspace:*",
     "@echo/auth": "workspace:*",
     "@echo/billing": "workspace:*",
     "@echo/config": "workspace:*",
+    "@echo/conversations": "workspace:*",
     "@echo/core": "workspace:*",
     "@echo/db": "workspace:*",
     "@echo/feedback": "workspace:*",
@@ -25,15 +27,19 @@
     "@echo/projects": "workspace:*",
     "@echo/queue": "workspace:*",
     "@echo/ratelimit": "workspace:*",
+    "@echo/realtime": "workspace:*",
     "@echo/staff": "workspace:*",
     "@echo/stats": "workspace:*",
     "@echo/storage": "workspace:*",
     "@echo/tenancy": "workspace:*",
     "@echo/training": "workspace:*",
+    "@echo/transcription": "workspace:*",
+    "@echo/verify": "workspace:*",
     "@echo/webhooks": "workspace:*",
     "@hono/zod-openapi": "^1.1.0",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.9.0",
+    "postgres": "^3.4.9",
     "zod": "^4.1.0"
   }
 }

@@ -54,6 +54,21 @@ jobs:
           path: echo/platform/.cache
           key: tsc-${{ github.sha }}
           restore-keys: tsc-
+      # The pipeline and media tests run real ffmpeg: the same static build the media image
+      # ships, copied out of its image once and cached.
+      - uses: actions/cache@v4
+        id: ffmpeg
+        with:
+          path: ~/ffmpeg
+          key: ffmpeg-static-7.1.1
+      - if: steps.ffmpeg.outputs.cache-hit != 'true'
+        name: ffmpeg
+        run: |
+          mkdir -p ~/ffmpeg
+          id=$(docker create mwader/static-ffmpeg:7.1.1)
+          docker cp $id:/ffmpeg ~/ffmpeg/ffmpeg && docker cp $id:/ffprobe ~/ffmpeg/ffprobe
+          docker rm $id >/dev/null
+      - run: echo ~/ffmpeg >> "$GITHUB_PATH"
       - run: bun install --frozen-lockfile
       - name: Lint and format
         run: bunx biome ci .
@@ -104,7 +119,7 @@ jobs:
       - if: env.PUSH == 'true'
         run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
       - uses: docker/setup-buildx-action@v3
-      - name: Build (and on the deploy branch, push) the four images
+      - name: Build (and on the deploy branch, push) the five images
         run: |
           out=$([ "$PUSH" = true ] && echo --push || echo --load)
           build() {
@@ -112,16 +127,22 @@ jobs:
               --cache-from type=gha,scope=$1 --cache-to type=gha,mode=max,scope=$1 \
               -f apps/$1/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/$1:$TAG $2
           }
-          build api . & build worker . & build migrate . & build web .. &
-          wait -n; wait -n; wait -n; wait -n
-      - name: The API container starts and answers
+          build api . & build worker . & build migrate . & build media . & build web .. &
+          fail=0; for j in $(jobs -p); do wait $j || fail=1; done; exit $fail
+      - name: The API and media containers start and answer
         if: env.PUSH != 'true'
         run: |
           docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d \
             -e AUTH_SECRET=smoke-test-secret-that-is-long-enough-000 -e INVITE_HASH_SECRET=smoke-test-invite-secret-000 \
             $REGISTRY/api:$TAG
-          for i in $(seq 1 25); do curl -sf localhost:8080/health && exit 0; sleep 0.2; done
-          docker logs api; exit 1
+          docker run -d --name media -p 8081:8080 -e APP_ENV=test $REGISTRY/media:$TAG
+          ok=
+          for i in $(seq 1 25); do curl -sf localhost:8080/health && ok=1 && break; sleep 0.2; done
+          [ -n "$ok" ] || { docker logs api; exit 1; }
+          # The media image must ship the ffmpeg it runs, not only answer HTTP.
+          for i in $(seq 1 25); do curl -sf localhost:8081/health && break; sleep 0.2; done
+          curl -sf -X POST localhost:8081/probe-url -H 'content-type: application/json' -d '{"url":"http://127.0.0.1:9/x.mp3"}' -o /dev/null -w '%{http_code}' | grep -q 422 \
+            || { docker logs media; exit 1; }
 
   deploy-preview:
     # Migrations run as a job first; a failure stops the rollout before new code takes traffic.
@@ -139,6 +160,12 @@ jobs:
       id-token: write
     env:
       SQL: dembrane-echo:europe-west4:echo-preview
+      # The media service's deterministic URL (service name, project number, region), known
+      # before it is deployed so all services roll out together. Callers use it as the
+      # audience of the Google ID token they present.
+      MEDIA_URL: https://echo-preview-media-86405194907.europe-west4.run.app
+      AUDIO_BUCKET: STORAGE_S3_ENDPOINT=https://storage.googleapis.com,STORAGE_S3_BUCKET=dembrane-echo-echo-preview-uploads
+      AUDIO_KEYS: STORAGE_S3_KEY=echo-preview-s3-access-key-id:latest,STORAGE_S3_SECRET=echo-preview-s3-secret-access-key:latest
     steps:
       - uses: google-github-actions/auth@v2
         with:
@@ -156,22 +183,37 @@ jobs:
             --set-secrets MIGRATION_DATABASE_URL=echo-preview-migration-database-url:latest \
             --set-env-vars APP_DB_ROLE=echo_app --task-timeout 600 --max-retries 0 \
             --execute-now --wait
-      - name: Deploy API, worker, dashboard and portal
+      - name: Deploy media, API, worker, dashboard and portal
         run: |
+          # Media: public ingress, IAM required. Only the worker and API identities hold
+          # run.invoker; they call it with an ID token. One ffmpeg job per instance.
+          (
+            gcloud run deploy echo-preview-media --project $PROJECT --region $REGION \
+              --image $REGISTRY/media:$TAG \
+              --service-account echo-preview-media@$PROJECT.iam.gserviceaccount.com \
+              --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG \
+              --cpu 2 --memory 4Gi --concurrency 1 --min-instances 0 --max-instances 10 \
+              --timeout 3600 --ingress all --no-allow-unauthenticated --quiet
+            for sa in worker api; do
+              gcloud run services add-iam-policy-binding echo-preview-media --project $PROJECT --region $REGION \
+                --member serviceAccount:echo-preview-$sa@$PROJECT.iam.gserviceaccount.com \
+                --role roles/run.invoker --quiet >/dev/null
+            done
+          ) &
           gcloud run deploy echo-preview-api --project $PROJECT --region $REGION \
             --image $REGISTRY/api:$TAG \
             --service-account echo-preview-api@$PROJECT.iam.gserviceaccount.com \
             --add-cloudsql-instances $SQL \
-            --set-secrets DATABASE_URL=echo-preview-database-url:latest,AUTH_SECRET=echo-preview-auth-secret:latest,INVITE_HASH_SECRET=echo-preview-invite-hash-secret:latest,FILES_S3_ACCESS_KEY_ID=echo-preview-s3-access-key-id:latest,FILES_S3_SECRET_ACCESS_KEY=echo-preview-s3-secret-access-key:latest \
-            --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG,FILES_S3_ENDPOINT=https://storage.googleapis.com,FILES_S3_BUCKET=dembrane-echo-echo-preview-uploads \
+            --set-secrets DATABASE_URL=echo-preview-database-url:latest,AUTH_SECRET=echo-preview-auth-secret:latest,INVITE_HASH_SECRET=echo-preview-invite-hash-secret:latest,FILES_S3_ACCESS_KEY_ID=echo-preview-s3-access-key-id:latest,FILES_S3_SECRET_ACCESS_KEY=echo-preview-s3-secret-access-key:latest,$AUDIO_KEYS \
+            --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG,FILES_S3_ENDPOINT=https://storage.googleapis.com,FILES_S3_BUCKET=dembrane-echo-echo-preview-uploads,$AUDIO_BUCKET,MEDIA_URL=$MEDIA_URL \
             --cpu 1 --memory 512Mi --concurrency 80 --min-instances 0 --max-instances 4 \
             --timeout 3600 --cpu-boost --allow-unauthenticated --quiet &
           gcloud beta run worker-pools deploy echo-preview-worker --project $PROJECT --region $REGION \
             --image $REGISTRY/worker:$TAG \
             --service-account echo-preview-worker@$PROJECT.iam.gserviceaccount.com \
             --add-cloudsql-instances $SQL \
-            --set-secrets DATABASE_URL=echo-preview-database-url:latest \
-            --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG \
+            --set-secrets DATABASE_URL=echo-preview-database-url:latest,$AUDIO_KEYS \
+            --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG,$AUDIO_BUCKET,MEDIA_URL=$MEDIA_URL \
             --cpu 1 --memory 512Mi --instances 1 --quiet &
           for role in dashboard portal; do
             gcloud run deploy echo-preview-$role --project $PROJECT --region $REGION \
@@ -188,6 +230,9 @@ jobs:
           curl -sf "$url/ready"
           release=$(curl -sf "$url/health" | jq -r .release)
           test "$release" = "$TAG" || { echo "serving $release, expected $TAG"; exit 1; }
+          # Media refuses callers without an invoker identity.
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$MEDIA_URL/health")
+          test "$code" = 403 || { echo "media answered $code without a token, expected 403"; exit 1; }
           for role in dashboard portal; do
             web=$(gcloud run services describe echo-preview-$role --project $PROJECT --region $REGION --format 'value(status.url)')
             curl -sf "$web/runtime-config.js" | grep -q "\"role\":\"$role\""

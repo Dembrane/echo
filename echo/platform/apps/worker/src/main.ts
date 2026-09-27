@@ -1,10 +1,15 @@
+import { HttpMedia, LocalMedia, metadataIdToken } from "@echo/audio";
 import { createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
 import { describe, loadSections } from "@echo/config";
+import { AudioUrls } from "@echo/conversations";
 import { createDb } from "@echo/db";
+import { createModels } from "@echo/llm";
 import { type Mailer, SendGridMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
 import { Queue } from "@echo/queue";
+import { FilesystemStorage, S3Storage } from "@echo/storage";
 import { queueSink } from "@echo/tenancy";
+import { GeminiTranscriber } from "@echo/transcription";
 import { registrations } from "./jobs";
 
 // Only what the worker reads: it never serves sign-in, so it is not given the auth secret.
@@ -16,6 +21,8 @@ const loaded = loadSections([
   "webhooks",
   "http",
   "mail",
+  "audio",
+  "media",
   "billing",
   "support",
 ]);
@@ -65,6 +72,37 @@ const billing = createBilling({
     dashboardUrl: config.http.dashboardUrl,
   },
 });
+// The conversation pipeline's capabilities: the audio bucket, ffmpeg (the media service in
+// the cloud, in-process locally), Gemini transcription and the model groups.
+const models = createModels({
+  vertexProject: config.llm.vertexProject,
+  vertexLocation: config.llm.vertexLocation,
+  groups: {
+    text_fast: config.llm.textFast,
+    multi_modal_fast: config.llm.multiModalFast,
+    multi_modal_pro: config.llm.multiModalPro,
+  },
+  embeddingModel: config.llm.embeddingModel,
+  embeddingLocation: config.llm.embeddingLocation,
+  embeddingDimensions: config.llm.embeddingDimensions,
+});
+const audio = config.audio.s3Bucket
+  ? new S3Storage({
+      endpoint: config.audio.s3Endpoint ?? "",
+      bucket: config.audio.s3Bucket,
+      region: config.audio.s3Region,
+      accessKeyId: config.audio.s3AccessKeyId ?? "",
+      secretAccessKey: config.audio.s3SecretAccessKey ?? "",
+    })
+  : new FilesystemStorage(config.audio.localRoot, config.http.publicUrl, "/_local-audio");
+const local = config.app.env === "local" || config.app.env === "test";
+const media = config.media.url
+  ? new HttpMedia(config.media.url, {
+      timeoutMs: config.media.timeoutSeconds * 1000,
+      ...(!local && { idToken: metadataIdToken(config.media.url) }),
+    })
+  : new LocalMedia();
+
 const regs = registrations({
   logger,
   db: database.db,
@@ -73,6 +111,21 @@ const regs = registrations({
   jobs: queueSink(queue),
   dashboardUrl: config.http.dashboardUrl,
   billing,
+  conversations: {
+    db: database.db,
+    audio,
+    audioUrls: new AudioUrls(
+      config.audio.s3Endpoint ?? `${config.http.publicUrl}/_local-audio`,
+      config.audio.s3Bucket ?? "local",
+    ),
+    media,
+    transcriber: new GeminiTranscriber(models, logger),
+    models,
+    jobs: queue,
+    logger,
+    now: () => new Date(),
+    webhooks: { enabled: config.webhooks.enabled, dashboardUrl: config.http.dashboardUrl },
+  },
 });
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);

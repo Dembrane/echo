@@ -1,3 +1,4 @@
+export type { StepConfig } from "@dbos-inc/dbos-sdk";
 export { defineJob, type JobDefinition, type Parsed, type Payload } from "./define";
 export {
   type EnqueueOptions,

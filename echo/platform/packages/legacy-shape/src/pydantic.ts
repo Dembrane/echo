@@ -140,6 +140,95 @@ export function int(opts: { ge?: number; le?: number } = {}): Type<number> {
   };
 }
 
+/** pydantic's lax float: numbers, numeric strings and booleans. */
+export function float(): Type<number> {
+  return {
+    parse(v, loc, issues) {
+      if (typeof v === "boolean") return v ? 1 : 0;
+      if (typeof v === "number") return v;
+      if (typeof v === "string") {
+        const t = v.trim().toLowerCase().replaceAll("_", "");
+        if (/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/.test(t)) return Number(t);
+        if (/^[+-]?(inf|infinity)$/.test(t)) return t.startsWith("-") ? -Infinity : Infinity;
+        if (t === "nan") return Number.NaN;
+        issues.push(
+          issue(
+            "float_parsing",
+            loc,
+            "Input should be a valid number, unable to parse string as a number",
+            v,
+          ),
+        );
+        return FAIL;
+      }
+      issues.push(issue("float_type", loc, "Input should be a valid number", v));
+      return FAIL;
+    },
+  };
+}
+
+const ISO_DATETIME =
+  /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:[.,](\d{1,6})\d*)?)?)?(Z|z|[+-]\d{2}(?::?\d{2})?)?$/;
+
+/**
+ * pydantic's lax datetime: ISO 8601 text (a bare date is midnight), or unix seconds
+ * (milliseconds above 2e10). A value without an offset is taken as UTC, which is how
+ * Directus stored the naive isoformat() the Python API sent it.
+ */
+export function datetime(): Type<Date> {
+  return {
+    parse(v, loc, issues) {
+      if (typeof v === "number" || (typeof v === "string" && /^[+-]?\d+(\.\d+)?$/.test(v.trim()))) {
+        const n = Number(v);
+        return new Date(Math.abs(n) > 2e10 ? n : n * 1000);
+      }
+      if (typeof v !== "string") {
+        issues.push(issue("datetime_type", loc, "Input should be a valid datetime", v));
+        return FAIL;
+      }
+      const m = ISO_DATETIME.exec(v.trim());
+      const d = m ? isoToDate(m) : null;
+      if (!d) {
+        const why =
+          v.length < 10
+            ? "input is too short"
+            : /^\d{4}/.test(v)
+              ? "invalid date separator, expected `-`"
+              : "invalid character in year";
+        issues.push(
+          issue(
+            "datetime_from_date_parsing",
+            loc,
+            `Input should be a valid datetime or date, ${why}`,
+            v,
+            {
+              error: why,
+            },
+          ),
+        );
+        return FAIL;
+      }
+      return d;
+    },
+  };
+}
+
+function isoToDate(m: RegExpExecArray): Date | null {
+  const [, y, mo, da, h = "00", mi = "00", s = "00", frac = "", tz] = m;
+  const ms = Number(frac.padEnd(3, "0").slice(0, 3));
+  let offset = 0;
+  if (tz && tz.toUpperCase() !== "Z") {
+    const sign = tz.startsWith("-") ? -1 : 1;
+    const digits = tz.slice(1).replace(":", "");
+    offset = sign * (Number(digits.slice(0, 2)) * 60 + Number(digits.slice(2, 4) || "0"));
+  }
+  const t = Date.UTC(Number(y), Number(mo) - 1, Number(da), Number(h), Number(mi), Number(s), ms);
+  const d = new Date(t - offset * 60_000);
+  if (Number.isNaN(d.getTime()) || Number(mo) > 12 || Number(da) > 31 || Number(h) > 23)
+    return null;
+  return d;
+}
+
 const TRUE = new Set(["1", "on", "t", "true", "y", "yes"]);
 const FALSE = new Set(["0", "off", "f", "false", "n", "no"]);
 

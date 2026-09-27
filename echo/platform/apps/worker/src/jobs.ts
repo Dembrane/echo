@@ -1,6 +1,7 @@
 import { emailHandler, sendEmail } from "@echo/account";
-import { type Billing, billingRegistration, noLiveRecordings } from "@echo/billing";
+import { type Billing, billingRegistration } from "@echo/billing";
 import type { Config } from "@echo/config";
+import { conversationWorker, liveRecordings, type PipelineDeps } from "@echo/conversations";
 import type { Db } from "@echo/db";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
@@ -46,6 +47,8 @@ export function registrations(deps: {
   dashboardUrl: string;
   /** Mollie, the billing store and its notifier, shared by the billing jobs. */
   billing: Billing;
+  /** The conversation pipeline: storage, media, transcription and models. */
+  conversations: PipelineDeps;
 }): Registration[] {
   const { logger, db, config } = deps;
   // Pricing bookings and overage notices share the team's webhook.
@@ -101,9 +104,8 @@ export function registrations(deps: {
       dashboardUrl: deps.dashboardUrl,
       overage: {
         db,
-        // The portal's presence store has not moved over; every tier's cap is unset, so no
-        // episode can open meanwhile.
-        live: noLiveRecordings,
+        // Live portal recordings from the presence store the portal's pings write.
+        live: liveRecordings({ db, logger }),
         forwarder: teamWebhook,
         environment: environmentName(deps.dashboardUrl),
       },
@@ -114,5 +116,6 @@ export function registrations(deps: {
       environment: environmentName(deps.dashboardUrl),
       logger,
     }),
+    conversationWorker(deps.conversations),
   ];
 }

@@ -7,7 +7,6 @@ import { NotFoundError } from "@echo/core";
 import { MemoryMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
 import { MemoryRateCounter, RateLimiter } from "@echo/ratelimit";
-import { MemoryJobSink } from "@echo/tenancy";
 import { buildApp } from "../src/app";
 import type { Deps } from "../src/deps";
 
@@ -51,6 +50,10 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     mailer: new MemoryMailer(),
     billing: { service: {}, store: {}, notifier: {}, mollie: {} } as unknown as Billing,
     siteToken: null,
+    audio: {} as Deps["audio"],
+    media: {} as Deps["media"],
+    transcriber: {} as Deps["transcriber"],
+    hub: null,
     ...overrides,
   };
 }

@@ -128,6 +128,10 @@ export const schema = defineSchema({
     }),
   },
   webhooks: {
+    enabled: key("ENABLE_WEBHOOKS", bool.default(false), {
+      description:
+        "Global switch for outbound project webhooks. Off means conversation and report events enqueue nothing.",
+    }),
     allowPrivateTargets: key("WEBHOOKS_ALLOW_PRIVATE_TARGETS", bool.default(false), {
       description:
         "Lets webhook URLs resolve to loopback and private addresses. Local development only.",
@@ -189,6 +193,47 @@ export const schema = defineSchema({
     s3SecretAccessKey: key("FILES_S3_SECRET_ACCESS_KEY", z.string().optional(), {
       description: "Secret key for that bucket.",
       secret: true,
+    }),
+  },
+  audio: {
+    s3Endpoint: key("STORAGE_S3_ENDPOINT", z.url().optional(), {
+      description:
+        "S3 endpoint of the audio bucket. Stored chunk paths are <endpoint>/<bucket>/<key>, as the Python API wrote them. Unset stores audio on the local disk.",
+    }),
+    s3Bucket: key("STORAGE_S3_BUCKET", z.string().optional(), {
+      description: "Bucket that holds participant audio, merged audio and split chunks.",
+    }),
+    s3Region: key("STORAGE_S3_REGION", z.string().default("auto"), {
+      description: "Region of the audio bucket, used in request signatures.",
+    }),
+    s3AccessKeyId: key("STORAGE_S3_KEY", z.string().optional(), {
+      description: "Access key for the audio bucket (a GCS HMAC key in Cloud Run).",
+      secret: true,
+    }),
+    s3SecretAccessKey: key("STORAGE_S3_SECRET", z.string().optional(), {
+      description: "Secret for the audio bucket key.",
+      secret: true,
+    }),
+    localRoot: key("AUDIO_LOCAL_ROOT", z.string().default(".data/audio"), {
+      description: "Where audio lands when no bucket is configured (local, test).",
+    }),
+  },
+  media: {
+    url: key("MEDIA_URL", z.url().optional(), {
+      description:
+        "URL of the media service that runs ffmpeg; callers present a Google ID token for it. Unset runs ffmpeg in-process (local development).",
+    }),
+    timeoutSeconds: key("MEDIA_TIMEOUT_SECONDS", int.min(10).default(3600), {
+      description: "How long one media request may take before the step fails and is retried.",
+    }),
+  },
+  conversations: {
+    participantTokenRequired: key("PARTICIPANT_TOKEN_REQUIRED", bool.default(false), {
+      description:
+        "Portal calls must carry the participant token issued at initiate. Off keeps the conversation id working as the capability while the portal and iOS app move over.",
+    }),
+    monitorEnabled: key("ENABLE_MONITOR", bool.default(true), {
+      description: "Live participant monitor: pings are stored and host streams are fed.",
     }),
   },
   account: {

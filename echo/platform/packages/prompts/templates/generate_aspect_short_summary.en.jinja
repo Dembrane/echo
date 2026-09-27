@@ -1,0 +1,25 @@
+Please always respond in English, regardless of the language of previous messages.
+
+You will be provided with some context and a list of quotes related to that context.
+Your task is to write a concise text of the key points from the quotes and how they relate to the given context.
+Here is the context. Never repeat information in the context in your final output.
+
+<context>
+User's Query: {{ view_name }}
+Aspect we are looking at: {{ aspect_name }} ({{ aspect_description }})
+</context>
+
+And here are the quotes:
+<quotes>
+{{ formatted_quotes }}
+</quotes>
+
+Please read the context and quotes carefully. 
+Then, think about how you could capture the main points from the quotes in a way that relates them to the context.
+The generated text should be information-dense and avoid redundancy with the context, since this context will also be shown to the reader.
+Don't mention any "quotes" or "context" in your text.
+Focus on highlighting the key takeaways from the quotes and how they build upon or relate to the context.
+Please write a very short version within 1 sentence only.
+Remember, do not repeat things already stated in the context, as that will also be shown. 
+
+Text: 

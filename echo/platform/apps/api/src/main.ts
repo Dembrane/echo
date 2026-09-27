@@ -1,8 +1,10 @@
 import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@echo/access";
 import { render, sendEmail } from "@echo/account";
+import { HttpMedia, LocalMedia, metadataIdToken } from "@echo/audio";
 import { createAuth, identityAccount } from "@echo/auth";
 import { billingApiJobs, createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
 import { describe, loadConfig, publicValues } from "@echo/config";
+import { conversationApiJobs } from "@echo/conversations";
 import { createDb } from "@echo/db";
 import { createModels } from "@echo/llm";
 import { type Mailer, MemoryMailer, SendGridMailer } from "@echo/mail";
@@ -11,9 +13,12 @@ import { createLogger, initTracing } from "@echo/observability";
 import { projectJobs } from "@echo/projects";
 import { Queue } from "@echo/queue";
 import { PostgresRateCounter, RateLimiter } from "@echo/ratelimit";
+import { Hub } from "@echo/realtime";
 import { FilesystemStorage, S3Storage } from "@echo/storage";
 import { tenancyApiJobs } from "@echo/tenancy";
+import { GeminiTranscriber } from "@echo/transcription";
 import { httpDeliver, webhookJobs } from "@echo/webhooks";
+import postgres from "postgres";
 import { buildApp } from "./app";
 import { principalLookup } from "./principals";
 
@@ -93,6 +98,7 @@ const queueReady = (async () => {
         ...webhookJobs,
         ...tenancyApiJobs,
         ...billingApiJobs,
+        ...conversationApiJobs,
         sendEmail,
       ]);
       return;
@@ -136,6 +142,59 @@ const billing = createBilling({
   },
 });
 
+// Participant audio: the Python API's STORAGE_S3 bucket; a local directory without one.
+const audio = config.audio.s3Bucket
+  ? new S3Storage({
+      endpoint: config.audio.s3Endpoint ?? "",
+      bucket: config.audio.s3Bucket,
+      region: config.audio.s3Region,
+      accessKeyId: config.audio.s3AccessKeyId ?? "",
+      secretAccessKey: config.audio.s3SecretAccessKey ?? "",
+    })
+  : new FilesystemStorage(config.audio.localRoot, config.http.publicUrl, "/_local-audio");
+
+// The media service in the cloud (identity token for its URL); ffmpeg in-process locally.
+const media = config.media.url
+  ? new HttpMedia(config.media.url, {
+      timeoutMs: config.media.timeoutSeconds * 1000,
+      ...(config.app.env !== "local" &&
+        config.app.env !== "test" && { idToken: metadataIdToken(config.media.url) }),
+    })
+  : new LocalMedia();
+
+// One LISTEN connection per instance feeds every open live stream.
+const listener = postgres(config.database.url, { max: 1, onnotice: () => {} });
+const hub = new Hub(listener, logger);
+// postgres.js re-listens after a dropped connection; the first connect is retried here so a
+// database that is briefly away at boot does not leave live streams silent until a restart.
+void (async () => {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await hub.start();
+      return;
+    } catch (err) {
+      logger.warn(
+        { err: { message: (err as Error).message }, attempt },
+        "live events not listening, retrying",
+      );
+      await Bun.sleep(Math.min(attempt, 10) * 1000);
+    }
+  }
+})();
+
+const models = createModels({
+  vertexProject: config.llm.vertexProject,
+  vertexLocation: config.llm.vertexLocation,
+  groups: {
+    text_fast: config.llm.textFast,
+    multi_modal_fast: config.llm.multiModalFast,
+    multi_modal_pro: config.llm.multiModalPro,
+  },
+  embeddingModel: config.llm.embeddingModel,
+  embeddingLocation: config.llm.embeddingLocation,
+  embeddingDimensions: config.llm.embeddingDimensions,
+});
+
 const app = buildApp({
   config,
   publicConfig: publicValues(loaded),
@@ -146,18 +205,7 @@ const app = buildApp({
   principalFor: principalLookup(database.db),
   access: new Access(new DrizzleAccessStore(database.db)),
   db: database.db,
-  models: createModels({
-    vertexProject: config.llm.vertexProject,
-    vertexLocation: config.llm.vertexLocation,
-    groups: {
-      text_fast: config.llm.textFast,
-      multi_modal_fast: config.llm.multiModalFast,
-      multi_modal_pro: config.llm.multiModalPro,
-    },
-    embeddingModel: config.llm.embeddingModel,
-    embeddingLocation: config.llm.embeddingLocation,
-    embeddingDimensions: config.llm.embeddingDimensions,
-  }),
+  models,
   queue: enqueuer,
   deliverWebhook: httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets }),
   identity: identityAccount(auth, database.db),
@@ -178,6 +226,10 @@ const app = buildApp({
   mailer,
   billing,
   siteToken: config.site.apiToken ?? config.support.forwardWebhookToken ?? null,
+  audio,
+  media,
+  transcriber: new GeminiTranscriber(models, logger),
+  hub,
 });
 
 // reusePort lets several processes share the port when one instance has more than one core.
@@ -191,7 +243,13 @@ async function shutdown(signal: string) {
   stopping = true;
   logger.info({ signal }, "shutting down");
   await server.stop();
-  await Promise.allSettled([queue.stop(), database.close(), tracing.shutdown()]);
+  await Promise.allSettled([
+    queue.stop(),
+    hub.stop(),
+    listener.end(),
+    database.close(),
+    tracing.shutdown(),
+  ]);
   process.exit(0);
 }
 process.on("SIGTERM", () => void shutdown("SIGTERM"));

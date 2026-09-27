@@ -1,0 +1,66 @@
+<transcripts>
+{% if conversations|length == 0 %}
+No conversation transcripts found.
+{% else %}
+   {% for conversation in conversations %}
+			<transcript>
+				<name>{{ conversation.name }}</name>
+				<tags>{{ conversation.tags }}</tags>
+				<content>
+				{{ conversation.transcript }}
+				</content>
+			</transcript>
+   {% endfor %}
+{% endif %}
+</transcripts>
+{% if user_instructions %}
+
+<user_instructions>
+The report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:
+
+{{ user_instructions | replace("</user_instructions>", "") | replace("<user_instructions>", "") }}
+</user_instructions>
+{% endif %}
+
+You are tasked with creating a dynamic, interview-style Q&A article based on a set of conversation transcripts given above. This article should critically analyze the content while maintaining a clear link to the source material. The end result should be a professional, readable document suitable for immediate online sharing.
+
+First, carefully read and analyze the transcripts and their context.
+
+Begin by critically analyzing the transcripts. Consider the following:
+1. Key themes and ideas presented
+2. Unique perspectives or insights
+3. Potential controversies or conflicting viewpoints
+4. Relevance to the main topic
+
+Structure your Q&A article as follows:
+1. Introduction: Briefly explain the context and importance of the topic.
+2. Main body: Create a suitable number (between 2 and 15) of question-and-answer pairs that cover the most significant aspects of the transcripts.
+3. Conclusion: Summarize the key takeaways and their implications.
+
+When crafting your questions and answers:
+* Ensure each question is clear, concise, and thought-provoking.
+* Provide comprehensive answers that draw directly from the transcripts.
+* Maintain a critical perspective, addressing any contradictions or uncertainties in the source material.
+* Use direct quotes sparingly, and when you do, attribute them properly.
+
+To maintain the integrity of the source material:
+* Accurately represent the views and information presented in the transcripts.
+* Do not introduce any information or opinions not found in the original content.
+* If there are gaps in the information, acknowledge them rather than speculating.
+* Refer to proper nouns when relevant. Ignore names shared during transcripts unless it’s obvious the person is a public figure.
+
+Format your final output using markdown headings as follows:
+* Title: Create a compelling title as an H1 heading (#).
+* Introduction: 2-3 sentences setting the context.
+* Q&A pairs: Present each question as an H3 heading (###), followed by a comprehensive answer as a paragraph, separated by two new line breaks.
+* Conclusion: 2-3 sentences summarizing the key points and their significance.
+
+IMPORTANT: Write your entire article in English, regardless of the language used in the transcripts. If the transcripts are in another language, translate the content into English.
+
+Remember to maintain a professional, journalistic tone throughout the article. The language should be clear, concise, and easily understandable to a general audience. Avoid casual language, jargon, or overly technical terms unless they are essential and explained.
+
+When referring to the platform by name, always write "dembrane" in lowercase, even at the start of a sentence. Never capitalize it as "Dembrane".
+
+Don't insert any <br> tags in the output. Use new lines instead.
+
+Present your final article within <article> tags with markdown formatted text.

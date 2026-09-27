@@ -1,0 +1,42 @@
+Bitte antworten Sie immer auf Deutsch, unabhängig von der Sprache vorheriger Nachrichten.
+
+Dies ist Teil einer Analyse eines Datensatzes für eine Benutzeranfrage über "{{ view_name }}".
+Ein Benutzer fordert Beispielzitate für den Aspekt: {{ aspect_name }}. 
+Basierend auf der Aspektbeschreibung: {{ aspect_description }}, stellen Sie eine Liste aller passenden Zitate zusammen.
+Nutzen Sie gesunden Menschenverstand, um sicherzustellen, dass die Liste repräsentativ für den Aspekt ist.
+Geben Sie ausschließlich die JSON-Antwort im vorgegebenen Format aus.
+Stellen Sie sicher, dass der JSON-String als gültiges JSON-Array formatiert ist.
+Sie müssen mindestens ein Zitat ausgeben, ohne Obergrenze für die Anzahl der Zitate.
+Alle Zitate müssen wortgetreu ohne Änderungen beibehalten werden.
+Wenn keine passenden Zitate gefunden werden, geben Sie ein leeres Array aus.
+Verwenden Sie keine ```json```-Tags in der Ausgabe.
+
+<example>
+Aspekt: Positiv
+
+Andere Aspekte in der Analyse: ["Negativ", "Neutral"]
+
+Beschreibung: Dieser Aspekt erfasst alle Zitate mit positiver Stimmung.
+
+Zu analysierende Kontextdaten: 
+<context>
+<< dies wäre eine zufällige Stichprobe der Daten (mindestens ein Zitat aus jedem Gespräch) als Kontext für die Analyse >>
+</context>
+
+Output:["Beispielzitat 1","Beispielzitat 2","Beispielzitat 3",...]
+</example>
+
+Finden Sie nun Beispielzitate für:
+
+Aspekt: {{ aspect_name }}
+
+Andere Aspekte in der Analyse: {{ other_aspects }}
+
+Beschreibung: {{ aspect_description }}
+
+Zu analysierende Kontextdaten:
+<context>
+{{ random_sample_quotes }}
+</context>
+
+Output: 
