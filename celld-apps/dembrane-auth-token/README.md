@@ -28,7 +28,7 @@ It needs a Directus to log in to. The quickest is [`directus`](https://github.co
 ## Run it
 
 ```sh
-../../echo/scripts/remote-dev/tunnel.sh   # in another terminal, for the VM's Directus on :8055
+../../echo/scripts/remote-dev.sh tunnel   # in another terminal, for the VM's Directus on :8055
 
 pnpm install
 cp .dev.vars.example .dev.vars
@@ -39,7 +39,7 @@ Open <http://localhost:9877> (not 127.0.0.1: Directus allows `localhost` origins
 
 ## Run it on the remote dev VM
 
-With celld on and `./tunnel.sh` open (see [../counter/README.md](../counter/README.md)):
+With celld on and `remote-dev.sh tunnel` open (see [../counter/README.md](../counter/README.md)):
 
 ```sh
 pnpm run deploy

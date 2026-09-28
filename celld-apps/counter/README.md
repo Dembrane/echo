@@ -4,10 +4,10 @@ A minimal [celld](https://celld.dev) app: a Durable Object counter and an R2
 file store. It runs on the remote dev VM's celld, which keeps its state in
 minio's `celld` bucket.
 
-Turn celld on with `echo/scripts/remote-dev/init.sh` (answer `y` to "Run
-celld?"), then `./up.sh --skip-setup`. Install `celld` itself with
+Turn celld on with `echo/scripts/remote-dev.sh init` (answer `y` to "Run
+celld?"), then `remote-dev.sh up --skip-setup`. Install `celld` itself with
 `curl -fsSL https://celld.dev/install.sh | sh`; esbuild comes from
-`pnpm install`. Then, with `./tunnel.sh` open:
+`pnpm install`. Then, with `remote-dev.sh tunnel` open:
 
 ```sh
 pnpm install

@@ -6,7 +6,7 @@
     "build": "esbuild src/client/index.tsx --bundle --splitting --format=esm --platform=browser --outdir=public/dist",
     "check": "tsc --project src/client && tsc --project src/server",
     "dev": "pnpm run build && celld dev",
-    "deploy": "pnpm run build && ../../echo/scripts/remote-dev/celld-deploy.sh ."
+    "deploy": "pnpm run build && ../../echo/scripts/remote-dev.sh celld-deploy ."
   },
   "dependencies": {
     "nanoid": "5.1.5",

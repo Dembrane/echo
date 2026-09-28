@@ -25,7 +25,7 @@ Everything else is the same as `dembrane-auth-cookie`: the Worker reads Directus
 ## Run it
 
 ```sh
-../../echo/scripts/remote-dev/tunnel.sh   # in another terminal, for the VM's Directus on :8055
+../../echo/scripts/remote-dev.sh tunnel   # in another terminal, for the VM's Directus on :8055
 
 pnpm install
 cp .dev.vars.example .dev.vars
@@ -45,7 +45,7 @@ Each example has its own port (`dembrane-auth-token` uses 9877, `dembrane-auth-c
 
 ## Run it on the remote dev VM
 
-With celld on and `./tunnel.sh` open (see [../counter/README.md](../counter/README.md)):
+With celld on and `remote-dev.sh tunnel` open (see [../counter/README.md](../counter/README.md)):
 
 ```sh
 pnpm run deploy

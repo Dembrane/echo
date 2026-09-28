@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "celld dev",
-    "deploy": "../../echo/scripts/remote-dev/celld-deploy.sh ."
+    "deploy": "../../echo/scripts/remote-dev.sh celld-deploy ."
   },
   "devDependencies": {
     "esbuild": "^0.28.2"

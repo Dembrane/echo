@@ -14,7 +14,7 @@ Changes from upstream, for celld:
 - pnpm instead of npm, and no wrangler.
 
 Set up celld as in [../counter/README.md](../counter/README.md), then, with
-`./tunnel.sh` open:
+`remote-dev.sh tunnel` open:
 
 ```sh
 pnpm install
