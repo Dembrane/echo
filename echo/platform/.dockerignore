@@ -6,5 +6,5 @@ packages/db/introspected
 packages/db/.roundtrip*
 parity/.parity-out
 **/*.local.ts
-infra/.terraform
-infra/*.plan
+infra/**/.terraform
+infra/**/*.plan

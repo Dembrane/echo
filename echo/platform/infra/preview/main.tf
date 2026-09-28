@@ -32,6 +32,7 @@ module "platform" {
   db_environments        = lookup(local.settings, "db_environments", 1)
   services               = local.settings.services
   alert_email            = lookup(local.settings, "alert_email", null)
+  slack_channel          = "C0C4HBZNSNT" # #alerts-ci
   pr_preview_environment = local.settings.pr_preview_environment
 }
 

@@ -22,7 +22,7 @@ resource "google_monitoring_notification_channel" "email" {
 
 locals {
   run_filter     = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${local.name}-api\""
-  alert_channels = concat(var.alert_channels, google_monitoring_notification_channel.email[*].id)
+  alert_channels = concat(var.alert_channels, google_monitoring_notification_channel.email[*].id, google_monitoring_notification_channel.slack[*].id)
   # The environment's worker pools. Preview's PR previews run their own pools
   # (echo-pr-<n>-worker) on the same identities; they count as preview's.
   worker_pools = var.env == "preview" ? "^echo-(preview|pr-[0-9]+)-worker$" : "^${local.name}-worker$"
@@ -255,6 +255,120 @@ resource "google_monitoring_alert_policy" "api_unready" {
   }
   documentation {
     content   = "The API answers but cannot reach its database, or does not answer. /ready names what is failing."
+    mime_type = "text/markdown"
+  }
+  notification_channels = local.alert_channels
+}
+
+# ── Service level: error ratio, latency, queue age, database CPU ───────────────────────
+locals {
+  api_series = "monitored_resource=\"cloud_run_revision\",service_name=\"${local.name}-api\""
+}
+
+resource "google_monitoring_alert_policy" "api_error_ratio" {
+  display_name = "${local.name}: API 5xx ratio"
+  combiner     = "OR"
+  conditions {
+    display_name = "more than 2% of API responses are 5xx over 5 minutes"
+    condition_prometheus_query_language {
+      query               = "sum(rate(run_googleapis_com:request_count{${local.api_series},response_code_class=\"5xx\"}[5m])) / sum(rate(run_googleapis_com:request_count{${local.api_series}}[5m])) > 0.02"
+      duration            = "300s"
+      evaluation_interval = "60s"
+    }
+  }
+  documentation {
+    content   = "Search the API logs for severity=ERROR; every line carries request_id. A deploy in the last hour is the first suspect."
+    mime_type = "text/markdown"
+  }
+  notification_channels = local.alert_channels
+}
+
+resource "google_monitoring_alert_policy" "api_latency" {
+  display_name = "${local.name}: API p95 latency"
+  combiner     = "OR"
+  conditions {
+    display_name = "API p95 latency above 2 s over 10 minutes"
+    condition_prometheus_query_language {
+      query               = "histogram_quantile(0.95, sum by (le) (rate(run_googleapis_com:request_latencies_bucket{${local.api_series}}[10m]))) > 2000"
+      duration            = "600s"
+      evaluation_interval = "60s"
+    }
+  }
+  documentation {
+    content   = "Streams and uploads are long by design; check which routes are slow in the request logs before scaling. Then Cloud SQL CPU and connections."
+    mime_type = "text/markdown"
+  }
+  notification_channels = local.alert_channels
+}
+
+resource "google_logging_metric" "queue_oldest_ready" {
+  name            = "${local.name}/queue_oldest_ready_s"
+  filter          = "jsonPayload.signal=\"queue.depth\" AND jsonPayload.env=\"${var.env}\" AND jsonPayload.oldestReadyS>=0"
+  value_extractor = "EXTRACT(jsonPayload.oldestReadyS)"
+  label_extractors = {
+    queue = "EXTRACT(jsonPayload.name)"
+  }
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type  = "DISTRIBUTION"
+    unit        = "s"
+    labels {
+      key        = "queue"
+      value_type = "STRING"
+    }
+  }
+  bucket_options {
+    exponential_buckets {
+      num_finite_buckets = 20
+      growth_factor      = 2
+      scale              = 1
+    }
+  }
+}
+
+resource "google_monitoring_alert_policy" "queue_age" {
+  display_name = "${local.name}: job waiting too long"
+  combiner     = "OR"
+  conditions {
+    display_name = "a queue's oldest ready job has waited more than 10 minutes"
+    condition_threshold {
+      filter          = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.queue_oldest_ready.name}\" AND resource.type=\"cloud_run_worker_pool\""
+      comparison      = "COMPARISON_GT"
+      threshold_value = 600
+      duration        = "0s"
+      aggregations {
+        alignment_period     = "300s"
+        per_series_aligner   = "ALIGN_PERCENTILE_99"
+        cross_series_reducer = "REDUCE_MAX"
+        group_by_fields      = ["metric.label.queue"]
+      }
+    }
+  }
+  documentation {
+    content   = "Jobs sit in the queue unclaimed: the worker is down, saturated, or the queue's concurrency is too low. Check the worker-down alert and the job backlog first."
+    mime_type = "text/markdown"
+  }
+  notification_channels = local.alert_channels
+}
+
+resource "google_monitoring_alert_policy" "db_cpu" {
+  display_name = "${local.name}: Cloud SQL CPU"
+  combiner     = "OR"
+  conditions {
+    display_name = "Cloud SQL CPU above 80% for 10 minutes"
+    condition_threshold {
+      filter          = "metric.type=\"cloudsql.googleapis.com/database/cpu/utilization\" AND resource.type=\"cloudsql_database\" AND resource.label.database_id=\"${var.project}:${google_sql_database_instance.db.name}\""
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0.8
+      duration        = "600s"
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_MEAN"
+      }
+    }
+  }
+  documentation {
+    content   = "Query Insights on the instance names the expensive queries. A restore or index build during a cutover explains a spike."
     mime_type = "text/markdown"
   }
   notification_channels = local.alert_channels

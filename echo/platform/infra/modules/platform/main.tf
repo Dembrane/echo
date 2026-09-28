@@ -12,13 +12,15 @@ locals {
     "sts.googleapis.com",
     "storage.googleapis.com",
     "aiplatform.googleapis.com",
+    "pubsub.googleapis.com",
     "logging.googleapis.com",
     "monitoring.googleapis.com",
   ]
 }
 
 resource "google_project_service" "apis" {
-  for_each           = toset(local.apis)
+  # The load balancer brings Compute Engine (its front end) and Certificate Manager.
+  for_each           = toset(concat(local.apis, var.domains == null ? [] : ["compute.googleapis.com", "certificatemanager.googleapis.com"]))
   service            = each.value
   disable_on_destroy = false
 }
@@ -97,6 +99,13 @@ resource "google_sql_database_instance" "db" {
     database_flags {
       name  = "max_connections"
       value = tostring(var.db_max_connections)
+    }
+    dynamic "database_flags" {
+      for_each = var.db_flags
+      content {
+        name  = database_flags.key
+        value = database_flags.value
+      }
     }
     ip_configuration {
       ipv4_enabled = true # reached only through the Cloud Run connector, which authenticates with IAM

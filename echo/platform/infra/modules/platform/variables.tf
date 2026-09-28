@@ -28,6 +28,12 @@ variable "db_max_connections" {
   description = "Set explicitly so the connection budget check reads the number the server enforces."
 }
 
+variable "db_flags" {
+  type        = map(string)
+  description = "Further Cloud SQL flags, e.g. maintenance_work_mem (in kB) for a restore's index builds."
+  default     = {}
+}
+
 variable "db_environments" {
   type        = number
   description = "Deployments sharing the instance (preview: the branch preview plus the PR preview slots). Read by the connection budget check."
