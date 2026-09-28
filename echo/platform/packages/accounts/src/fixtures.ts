@@ -401,6 +401,8 @@ export const signTask: Out<typeof Task> = {
   kind: "sign",
   status: "open",
   locked: false,
+  locked_until_document_id: null,
+  locked_until_title: null,
   document_id: OFFER,
   due_on: null,
   opened_at: "2026-09-28T09:00:00.000Z",
@@ -422,6 +424,8 @@ export const billingTask: Out<typeof Task> = {
   kind: "billing_details",
   status: "locked",
   locked: true,
+  locked_until_document_id: OFFER,
+  locked_until_title: "Gemeente Voorbeeldstad x dembrane",
   document_id: null,
   opened_at: null,
   next_reminder_at: null,
@@ -491,6 +495,18 @@ const emptyBilling = {
   postal_code: null,
   city: null,
   country: null,
+};
+
+/** The billing details task once the customer saved the details: done at once, no review. */
+export const billingTaskDone: Out<typeof Task> = {
+  ...billingTask,
+  status: "done",
+  locked: false,
+  locked_until_document_id: null,
+  locked_until_title: null,
+  opened_at: "2026-09-29T08:00:00.000Z",
+  submitted_at: "2026-09-29T08:04:00.000Z",
+  next_reminder_at: null,
 };
 
 /** GET /api/v2/orgs/:orgId/account */

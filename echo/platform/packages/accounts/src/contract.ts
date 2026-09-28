@@ -263,6 +263,13 @@ export const Task = z.object({
   status: TaskStatus,
   /** Greyed out until the document it waits for is signed. */
   locked: z.boolean(),
+  /**
+   * The document whose signature opens this task, and its title ("Opens after you sign
+   * <title>"). A locked billing details task waits for the first signed offer: both are
+   * null until an offer exists, then they name the newest offer waiting for a signature.
+   */
+  locked_until_document_id: Uuid.nullable(),
+  locked_until_title: z.string().nullable(),
   document_id: Uuid.nullable(),
   due_on: IsoDate.nullable(),
   opened_at: IsoTime.nullable(),
@@ -375,6 +382,10 @@ export const NameSignerRequest = z.object({
 });
 export const NameSignerResponse = z.object({ signer: Signer });
 
+/**
+ * Saving the billing details completes the billing details task at once (status `done`, no
+ * review by us); we hear about it through the event and the Slack post.
+ */
 export const BillingUpdateRequest = z.object({
   legal_name: text(255),
   billing_email: z.email().max(255),
@@ -631,7 +642,12 @@ export const StaffReplyRequest = z.object({
 
 // ── the signed-in person's tasks across organisations ───────────────────
 
-/** GET /api/v2/account/tasks-summary: for the "Tasks 1/2" entry and the org picker. */
+/**
+ * GET /api/v2/account/tasks-summary: for the "Tasks 1/2" entry, the org picker, and whether
+ * an organisation shows "Account" in the sidebar. It lists only organisations with account
+ * content (a stage set, or any task or document) where the caller is an owner, admin or
+ * billing member; a self-serve organisation with nothing in it is absent.
+ */
 export const TasksSummary = z.array(
   z.object({
     org_id: Uuid,
