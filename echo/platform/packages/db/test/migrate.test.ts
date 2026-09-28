@@ -25,7 +25,8 @@ run("migrate", () => {
       await sql.unsafe(`drop database if exists ${db}`);
       await sql.unsafe(`create database ${db}`);
     }
-  });
+    // Other test files create and drop databases on the same server at the same time.
+  }, 30_000);
   afterAll(() => sql.end());
 
   test("builds an empty database from the chain, then does nothing on a second run", async () => {

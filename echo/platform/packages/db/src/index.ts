@@ -5,6 +5,12 @@ import * as relations from "./schema/relations";
 
 export { connect } from "./connection";
 export {
+  dropPreviewDatabase,
+  ensurePreviewDatabase,
+  PREVIEW_DATABASE,
+  withDatabase,
+} from "./database-name";
+export {
   ARCHIVE_EXEMPT_ENVS,
   ARCHIVE_SCRIPT,
   ContractArchiveMissing,

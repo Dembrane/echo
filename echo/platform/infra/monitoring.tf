@@ -126,6 +126,9 @@ resource "google_monitoring_uptime_check_config" "api_ready" {
   display_name = "${local.name}: API ready"
   timeout      = "10s"
   period       = "300s"
+  # Checkers cannot be limited to Europe (the API needs at least three locations and Europe
+  # is one); USA adds three and keeps South America and Asia out. A probe carries no data.
+  selected_regions = ["EUROPE", "USA"]
   http_check {
     path         = "/ready"
     port         = 443

@@ -6,8 +6,8 @@ export default {
     dashboardUrl: "https://dashboard.echo-next.dembrane.com",
     portalUrl: "https://portal.echo-next.dembrane.com",
   },
-  database: { poolMax: 5 },
-  observability: { gcpProject: "dembrane-echo", traceSampleRatio: 1 },
+  database: { poolMax: 5, queuePoolMax: 3 },
+  observability: { gcpProject: "dembrane-echo", traceSampleRatio: 0 },
   auth: { cookieDomain: "echo-next.dembrane.com" },
   // echo-next serves the popcorn flow page today (the Python stack gates it on
   // SERVE_API_DOCS=1 there, 0 on prod); keeping it on keeps that page for the team.

@@ -13,6 +13,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@dembrane/db": "workspace:*",
     "zod": "^4.1.0",
     "@dembrane/observability": "workspace:*",
     "postgres": "^3.4.9",

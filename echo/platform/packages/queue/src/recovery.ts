@@ -1,6 +1,7 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
+import { connect } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
-import postgres from "postgres";
+import type postgres from "postgres";
 
 const BEAT_MS = 10_000;
 /** An executor silent this long is presumed dead and its unfinished workflows are resumed elsewhere. */
@@ -28,7 +29,9 @@ export class ExecutorHeartbeat {
       deadAfterS: DEAD_AFTER_S,
     },
   ) {
-    this.sql = postgres(url, { max: 2, onnotice: () => {} });
+    // connect() reads the Cloud SQL socket form of the URL; bare postgres() would dial
+    // localhost:5432 and crash the worker at its first heartbeat.
+    this.sql = connect(url, { max: 2, onnotice: () => {} });
   }
 
   async start(): Promise<void> {

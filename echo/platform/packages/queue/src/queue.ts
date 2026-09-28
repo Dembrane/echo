@@ -78,7 +78,10 @@ export class Queue {
     private readonly logger: Logger,
     private readonly tracer: Tracer,
     private readonly opts: {
+      /** The executor's pool (worker). */
       readonly maxConnections?: number;
+      /** The enqueue-only client's pool; defaults to maxConnections. */
+      readonly clientConnections?: number;
       readonly executorId?: string;
       /** Tests shorten these; production uses the defaults in recovery.ts. */
       readonly recovery?: { readonly beatMs: number; readonly deadAfterS: number };
@@ -93,7 +96,7 @@ export class Queue {
     this.client = await DBOSClient.create({
       systemDatabaseUrl: this.connectionString,
       systemDatabaseSchemaName: SCHEMA,
-      systemDatabasePoolSize: this.opts.maxConnections ?? 4,
+      systemDatabasePoolSize: this.opts.clientConnections ?? this.opts.maxConnections ?? 4,
       applicationName: "echo",
     });
   }
@@ -348,6 +351,8 @@ export async function installQueueSchema(connectionString: string): Promise<void
     systemDatabaseSchemaName: SCHEMA,
     applicationVersion: WORKFLOW_VERSION,
     executorID: "migrate",
+    // Counted in the migration job's share of the connection budget (config capacity.ts).
+    systemDatabasePoolSize: 2,
     runAdminServer: false,
     logLevel: "warn",
   });

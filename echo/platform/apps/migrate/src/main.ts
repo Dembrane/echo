@@ -2,7 +2,16 @@ import { seedLegalTexts } from "@dembrane/accounts";
 import { syncIdentitiesFromDirectus } from "@dembrane/auth/sync";
 import { loadSections } from "@dembrane/config";
 import { bootAssets } from "@dembrane/core";
-import { connect, createDb, grantRuntimeRole, MIGRATE_ASSETS, migrate } from "@dembrane/db";
+import {
+  connect,
+  createDb,
+  dropPreviewDatabase,
+  ensurePreviewDatabase,
+  grantRuntimeRole,
+  MIGRATE_ASSETS,
+  migrate,
+  withDatabase,
+} from "@dembrane/db";
 import { installQueueSchema } from "@dembrane/queue";
 
 /**
@@ -12,14 +21,28 @@ import { installQueueSchema } from "@dembrane/queue";
  */
 bootAssets("echo-migrate", loadSections(["assets"]).values.assets.root, MIGRATE_ASSETS);
 
-const url = process.env.MIGRATION_DATABASE_URL;
+const ownerUrl = process.env.MIGRATION_DATABASE_URL;
 const role = process.env.APP_DB_ROLE;
-if (!url) throw new Error("MIGRATION_DATABASE_URL is required");
+if (!ownerUrl) throw new Error("MIGRATION_DATABASE_URL is required");
+// PR previews: DATABASE_NAME picks the preview's own database on the shared instance.
+const databaseName = process.env.DATABASE_NAME;
 
 const log = (message: string, fields: object = {}) =>
   process.stdout.write(
     `${JSON.stringify({ severity: "INFO", message, service: "echo-migrate", ...fields })}\n`,
   );
+
+if (databaseName) {
+  // Teardown of a closed PR's preview runs this job once more with the drop switch.
+  if (process.env.MIGRATE_DROP_DATABASE === "1") {
+    await dropPreviewDatabase(ownerUrl, databaseName);
+    log("preview database dropped", { database: databaseName });
+    process.exit(0);
+  }
+  const created = await ensurePreviewDatabase(ownerUrl, databaseName);
+  log("preview database ready", { database: databaseName, created });
+}
+const url = withDatabase(ownerUrl, databaseName);
 
 const started = performance.now();
 // Set only where the old stack shares the database (the parity template): contract

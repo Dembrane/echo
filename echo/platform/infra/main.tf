@@ -7,7 +7,6 @@ locals {
     "secretmanager.googleapis.com",
     "iamcredentials.googleapis.com",
     "sts.googleapis.com",
-    "cloudtrace.googleapis.com",
     "logging.googleapis.com",
     "monitoring.googleapis.com",
   ]
@@ -17,6 +16,30 @@ resource "google_project_service" "apis" {
   for_each           = toset(local.apis)
   service            = each.value
   disable_on_destroy = false
+}
+
+# ── Scaling rules ─────────────────────────────────────────────────────────
+# The deploy workflow reads var.services from the same tfvars file; these hold each
+# environment to its shape at plan time.
+resource "terraform_data" "scaling_rules" {
+  lifecycle {
+    precondition {
+      condition     = var.env != "preview" || alltrue([for s in values(var.services) : s.max <= 1])
+      error_message = "preview runs at most one instance of every service."
+    }
+    precondition {
+      condition     = var.env != "preview" || alltrue([for k, s in var.services : s.min == 0 if k != "worker"])
+      error_message = "preview keeps no warm instances."
+    }
+    precondition {
+      condition     = var.env != "next" || alltrue([for k in ["api", "dashboard", "portal", "worker"] : var.services[k].min == 2 && var.services[k].max == 2])
+      error_message = "next runs exactly two instances of the API, dashboard, portal and worker."
+    }
+    precondition {
+      condition     = var.env != "prod" || (var.services["api"].min >= 2 && var.services["portal"].min >= 2)
+      error_message = "prod keeps at least two warm API and portal instances."
+    }
+  }
 }
 
 # ── Images ────────────────────────────────────────────────────────────────
@@ -60,6 +83,12 @@ resource "google_sql_database_instance" "db" {
     database_flags {
       name  = "cloudsql.iam_authentication"
       value = "on"
+    }
+    # Explicit, so the connection budget check (packages/config capacity.ts) reads the limit
+    # the server enforces rather than a default that moves with the tier.
+    database_flags {
+      name  = "max_connections"
+      value = tostring(var.db_max_connections)
     }
     ip_configuration {
       ipv4_enabled = true # reached only through the Cloud Run connector, which authenticates with IAM
@@ -139,13 +168,13 @@ resource "google_service_account" "deployer" {
 }
 
 resource "google_project_iam_member" "api" {
-  for_each = toset(["roles/cloudsql.client", "roles/cloudtrace.agent", "roles/aiplatform.user", "roles/monitoring.metricWriter"])
+  for_each = toset(["roles/cloudsql.client", "roles/aiplatform.user", "roles/monitoring.metricWriter"])
   project  = var.project
   role     = each.value
   member   = google_service_account.api.member
 }
 resource "google_project_iam_member" "worker" {
-  for_each = toset(["roles/cloudsql.client", "roles/cloudtrace.agent", "roles/aiplatform.user", "roles/monitoring.metricWriter"])
+  for_each = toset(["roles/cloudsql.client", "roles/aiplatform.user", "roles/monitoring.metricWriter"])
   project  = var.project
   role     = each.value
   member   = google_service_account.worker.member
@@ -202,11 +231,15 @@ resource "google_iam_workload_identity_pool_provider" "github" {
   workload_identity_pool_id          = google_iam_workload_identity_pool.github.workload_identity_pool_id
   workload_identity_pool_provider_id = "github"
   attribute_mapping = {
-    "google.subject"       = "assertion.sub"
-    "attribute.repository" = "assertion.repository"
-    "attribute.ref"        = "assertion.ref"
+    "google.subject"        = "assertion.sub"
+    "attribute.repository"  = "assertion.repository"
+    "attribute.ref"         = "assertion.ref"
+    "attribute.environment" = "assertion.environment"
   }
-  attribute_condition = "assertion.repository == '${var.github_repo}' && assertion.ref == '${var.deploy_ref}'"
+  # The environment's branch deploys, and on preview also jobs in the PR preview GitHub
+  # environment, which run from PR refs. Fork PRs get no OIDC token, so only branches in
+  # this repository can reach it; the environment's protection rules gate who may.
+  attribute_condition = var.pr_preview_environment == null ? "assertion.repository == '${var.github_repo}' && assertion.ref == '${var.deploy_ref}'" : "assertion.repository == '${var.github_repo}' && (assertion.ref == '${var.deploy_ref}' || assertion.environment == '${var.pr_preview_environment}')"
   oidc { issuer_uri = "https://token.actions.githubusercontent.com" }
 }
 resource "google_service_account_iam_member" "deployer_wif" {

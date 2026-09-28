@@ -56,9 +56,24 @@ export const schema = defineSchema({
       description: "Runtime Postgres login. Least privilege: no DDL.",
       secret: true,
     }),
+    name: key(
+      "DATABASE_NAME",
+      z
+        .string()
+        .regex(/^[a-z_][a-z0-9_]*$/)
+        .optional(),
+      {
+        description:
+          "Replaces the database in DATABASE_URL. PR previews share one instance and login, each on its own database.",
+      },
+    ),
     poolMax: key("DATABASE_POOL_MAX", int.min(1).default(10), {
       description:
-        "Connections per instance. Times max instances must stay under the server limit.",
+        "Application pool per API or worker instance. The budget in capacity.ts must fit max_connections.",
+    }),
+    queuePoolMax: key("DATABASE_QUEUE_POOL_MAX", int.min(2).default(4), {
+      description:
+        "DBOS executor pool per worker: half polls the queues, half checkpoints workflow steps.",
     }),
   },
   observability: {
@@ -70,14 +85,15 @@ export const schema = defineSchema({
       },
     ),
     otlpEndpoint: key("OTEL_EXPORTER_OTLP_ENDPOINT", z.url().optional(), {
-      description: "Where traces and metrics go. Unset disables export; logs still go to stdout.",
+      description:
+        "OTLP collector for traces. Unset disables export. Deployed environments leave it unset: spans would leave the EU.",
     }),
     gcpProject: key("GCP_PROJECT", z.string().optional(), {
       description:
-        "Project that owns traces; set in GCP so each log line links to its trace in Cloud Trace.",
+        "Project whose Cloud Logging groups each request's log lines by trace id; set in GCP.",
     }),
     traceSampleRatio: key("TRACE_SAMPLE_RATIO", z.coerce.number().min(0).max(1).default(0.1), {
-      description: "Share of requests traced end to end.",
+      description: "Share of requests recorded as spans. Only matters with an OTLP collector.",
     }),
   },
   web: {
