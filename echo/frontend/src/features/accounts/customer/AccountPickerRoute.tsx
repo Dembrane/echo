@@ -15,6 +15,7 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { nextTaskText } from "../format";
 import { summarise, useTasksSummary } from "../help/tasksSummary";
 import { AccountsI18n } from "../i18n";
 
@@ -84,11 +85,11 @@ function Picker() {
 									/>
 									<Text
 										size="sm"
-										c={org.next_task_title ? undefined : "dimmed"}
+										c={nextTaskText(org) ? undefined : "dimmed"}
 										lineClamp={2}
 									>
-										{org.next_task_title ? (
-											<Trans>Next: {org.next_task_title}</Trans>
+										{nextTaskText(org) ? (
+											<Trans>Next: {nextTaskText(org)}</Trans>
 										) : (
 											<Trans>Waiting on dembrane</Trans>
 										)}

@@ -329,7 +329,8 @@ describe("the fixture backend, through the client", () => {
 		vi.unstubAllGlobals();
 		expect(summary).toEqual([
 			expect.objectContaining({
-				next_task_title: "Offerte bekijken en ondertekenen",
+				next_task_code: "sign_offer",
+				next_task_title: null,
 				org_id: org,
 				tasks_done: 0,
 				tasks_total: 4,

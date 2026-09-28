@@ -46,6 +46,7 @@ import {
 	formatMoney,
 	stageLabel,
 	taskStatusLabel,
+	taskText,
 } from "../format";
 import { AccountsI18n } from "../i18n";
 import { Section } from "../ui";
@@ -380,7 +381,7 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 							>
 								<Table.Td>
 									<Text size="sm" truncate>
-										{task.title}
+										{taskText(task).title}
 									</Text>
 									<Text size="xs" c="dimmed" truncate>
 										{task.status === "submitted"
@@ -717,7 +718,10 @@ function Timeline({ card }: { card: AccountCardT }) {
 	const events = all ? card.timeline : card.timeline.slice(0, 8);
 	const title = (id: string | null) =>
 		card.documents.find((d) => d.id === id)?.title ??
-		card.tasks.find((x) => x.id === id)?.title;
+		(() => {
+			const x = card.tasks.find((y) => y.id === id);
+			return x ? taskText(x).title : undefined;
+		})();
 	return (
 		<Section title={<Trans>Timeline</Trans>} testId="timeline">
 			<Paper withBorder radius="md" p="sm">

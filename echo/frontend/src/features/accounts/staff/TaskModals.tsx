@@ -14,6 +14,7 @@ import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { useAccountsMutation } from "../api/hooks";
 import type { DocumentSummaryT, TaskT } from "../contract/contract.gen";
+import { taskText } from "../format";
 
 /** Staff: an ad hoc task ("send us your PO number"), optionally held until a document is signed. */
 export function NewTaskModal({
@@ -134,7 +135,7 @@ export function SendBackModal({
 			centered
 		>
 			<Stack gap="sm">
-				<Text size="sm">{task?.title}</Text>
+				<Text size="sm">{task ? taskText(task).title : ""}</Text>
 				<Textarea
 					label={t`What to change`}
 					autosize

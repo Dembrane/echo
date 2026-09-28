@@ -87,7 +87,6 @@ const AccountPage = () => {
 				<NextSteps
 					orgId={organisationId}
 					tasks={data.tasks}
-					documents={data.documents}
 					onBilling={() =>
 						billingRef.current?.scrollIntoView({
 							behavior: "smooth",

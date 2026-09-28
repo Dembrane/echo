@@ -600,6 +600,8 @@ function openTask(
 	s: Store,
 	t: Omit<
 		StoredTask,
+		| "code"
+		| "params"
 		| "locked_until_document_id"
 		| "locked_until_title"
 		| "id"
@@ -611,12 +613,19 @@ function openTask(
 		| "submitted_at"
 		| "review_note"
 		| "reviewed_at"
-	> & { locked_until: string | null },
+	> & {
+		locked_until: string | null;
+		/** Tasks echo makes itself carry a code and params instead of text. */
+		code?: TaskT["code"];
+		params?: Record<string, string> | null;
+	},
 ): StoredTask {
 	const opened = t.locked ? null : now();
-	const { locked_until, ...rest } = t;
+	const { locked_until, code = null, params = null, ...rest } = t;
 	const task: StoredTask = {
 		...rest,
+		body: code ? null : rest.body,
+		code,
 		id: uuid(),
 		locked_until_document_id: t.locked ? locked_until : null,
 		locked_until_title: t.locked
@@ -626,12 +635,14 @@ function openTask(
 			? addDays(opened, t.reminder_interval_days ?? 7)
 			: null,
 		opened_at: opened,
+		params,
 		reminders_sent: 0,
 		response_file_name: null,
 		response_text: null,
 		review_note: null,
 		reviewed_at: null,
 		submitted_at: null,
+		title: code ? null : rest.title,
 	};
 	s.tasks.push(task);
 	return task;
@@ -643,13 +654,22 @@ function signTaskFor(
 	title: string,
 	body: string | null,
 ) {
+	// Offers and DPAs get the coded task echo makes; other documents keep the staff text.
+	const code =
+		doc.kind === "offer"
+			? "sign_offer"
+			: doc.kind === "dpa"
+				? "sign_dpa"
+				: null;
 	return openTask(s, {
 		body,
+		code,
 		document_id: doc.id,
 		due_on: null,
 		kind: "sign",
 		locked: false,
 		locked_until: null,
+		params: code ? { document_title: doc.title } : null,
 		reminder_interval_days: null,
 		status: "open",
 		title,
@@ -802,6 +822,7 @@ export async function handle(
 							body.language === "en"
 								? "Who we invoice."
 								: "Aan wie we factureren.",
+						code: "billing_details",
 						document_id: null,
 						due_on: null,
 						kind: "billing_details",
@@ -833,10 +854,16 @@ export async function handle(
 						account_stage: x.stage,
 						logo_url: null,
 						name,
-						next_task_title:
-							live.find(
+						...(() => {
+							const next = live.find(
 								(t) => t.status === "open" || t.status === "changes_requested",
-							)?.title ?? null,
+							);
+							return {
+								next_task_code: next?.code ?? null,
+								next_task_params: next?.params ?? null,
+								next_task_title: next && !next.code ? next.title : null,
+							};
+						})(),
 						org_id: id,
 						tasks_done: live.filter((t) => t.status === "done").length,
 						tasks_total: live.length,
@@ -1311,6 +1338,7 @@ export async function handle(
 							language === "nl"
 								? "Aan wie we factureren. Deze stap opent zodra de offerte is ondertekend."
 								: "Who we invoice. This step opens once the offer is signed.",
+						code: "billing_details",
 						document_id: null,
 						due_on: null,
 						kind: "billing_details",

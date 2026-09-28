@@ -20,7 +20,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { call, submitTaskWithFile } from "../api/client";
 import { accountKeys } from "../api/hooks";
-import type { DocumentSummaryT, TaskT } from "../contract/contract.gen";
+import type { TaskT } from "../contract/contract.gen";
 import { taskText } from "../format";
 import { Section } from "../ui";
 
@@ -44,12 +44,10 @@ const RANK: Record<TaskT["status"], number> = {
 export function NextSteps({
 	orgId,
 	tasks,
-	documents,
 	onBilling,
 }: {
 	orgId: string;
 	tasks: TaskT[];
-	documents: DocumentSummaryT[];
 	onBilling: () => void;
 }) {
 	const [responding, setResponding] = useState<TaskT | null>(null);
@@ -75,7 +73,6 @@ export function NextSteps({
 							n={index + 1}
 							last={index === steps.length - 1}
 							task={task}
-							documents={documents}
 							current={task.id === currentId}
 							orgId={orgId}
 							onBilling={onBilling}
@@ -86,7 +83,6 @@ export function NextSteps({
 			)}
 			<TaskResponseModal
 				task={responding}
-				documents={documents}
 				orgId={orgId}
 				onClose={() => setResponding(null)}
 			/>
@@ -98,7 +94,6 @@ function Step({
 	n,
 	last,
 	task,
-	documents,
 	current,
 	orgId,
 	onBilling,
@@ -107,13 +102,12 @@ function Step({
 	n: number;
 	last: boolean;
 	task: TaskT;
-	documents: DocumentSummaryT[];
 	current: boolean;
 	orgId: string;
 	onBilling: () => void;
 	onRespond: () => void;
 }) {
-	const { title, body } = taskText(task, documents);
+	const { title, body } = taskText(task);
 	const locked = task.locked || task.status === "locked";
 	const done = task.status === "done";
 	const withUs = task.status === "submitted";
@@ -255,16 +249,14 @@ function Step({
 
 function TaskResponseModal({
 	task,
-	documents,
 	orgId,
 	onClose,
 }: {
 	task: TaskT | null;
-	documents: DocumentSummaryT[];
 	orgId: string;
 	onClose: () => void;
 }) {
-	const copy = task ? taskText(task, documents) : null;
+	const copy = task ? taskText(task) : null;
 	const [text, setText] = useState("");
 	const [file, setFile] = useState<File | null>(null);
 	const [pending, setPending] = useState(false);

@@ -110,38 +110,50 @@ export const stageLabel = (stage: string | null): string =>
 				: t`No account`;
 
 /**
- * A task's title and body in the viewer's language. The tasks the system makes (signing
- * and billing details) are rendered from these strings whatever was stored; only tasks
- * staff wrote by hand show their stored text.
+ * The words for a task echo made itself, from its code, in the viewer's language. Such
+ * tasks carry a code and params and no text; `params.document_title` names the document.
  */
-export const taskText = (
-	task: TaskT,
-	documents: DocumentSummaryT[],
-): { title: string; body: string | null } => {
-	if (task.kind === "billing_details") {
-		return {
-			body: t`Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number.`,
-			title: t`Billing details`,
-		};
-	}
-	if (task.kind === "sign") {
-		const doc = documents.find((d) => d.id === task.document_id);
-		if (!doc || doc.kind === "offer") {
+export const codedTaskText = (
+	code: NonNullable<TaskT["code"]>,
+	params: Record<string, string> | null,
+): { title: string; body: string } => {
+	const doc = params?.document_title ?? "";
+	switch (code) {
+		case "sign_offer":
 			return {
 				body: t`Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link.`,
-				title: t`Review and sign the offer`,
+				title: doc ? t`Review and sign ${doc}` : t`Review and sign the offer`,
 			};
-		}
-		if (doc.kind === "dpa") {
+		case "sign_dpa":
 			return {
-				body: t`Someone who may agree to data processing for your organisation signs the data processing agreement.`,
-				title: t`Sign the data processing agreement`,
+				body: t`Someone who may agree to data processing for your organisation signs it.`,
+				title: doc ? t`Sign ${doc}` : t`Sign the data processing agreement`,
 			};
-		}
-		return { body: null, title: t`Sign ${doc.title}` };
+		case "billing_details":
+			return {
+				body: t`Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number.`,
+				title: t`Billing details`,
+			};
 	}
-	return { body: task.body, title: task.title };
 };
+
+/** A task's title and body: worded from its code when echo made it, else as staff wrote it. */
+export const taskText = (
+	task: TaskT,
+): { title: string; body: string | null } =>
+	task.code
+		? codedTaskText(task.code, task.params)
+		: { body: task.body, title: task.title ?? "" };
+
+/** The next task line of a tasks-summary row, worded the same way. */
+export const nextTaskText = (row: {
+	next_task_title: string | null;
+	next_task_code: TaskT["code"];
+	next_task_params: Record<string, string> | null;
+}): string | null =>
+	row.next_task_code
+		? codedTaskText(row.next_task_code, row.next_task_params).title
+		: row.next_task_title;
 
 /** A document's title in the viewer's language where it is made by the system. */
 export const documentTitle = (doc: DocumentSummaryT): string =>
