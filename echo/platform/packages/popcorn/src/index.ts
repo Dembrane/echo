@@ -86,6 +86,7 @@ export {
   type Row,
   type Sql,
 } from "./storage";
+export { runPopcornTick } from "./tick/run";
 export { missingTexts, popcornTexts, translatableTexts } from "./translate";
 export { continueSnippet, renderPopcornPage } from "./view";
 export {
@@ -95,4 +96,5 @@ export {
   popcornWorker,
   runtimeAnalysis,
   type TickAnalysis,
+  tickDeps,
 } from "./worker";

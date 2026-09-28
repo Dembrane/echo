@@ -140,6 +140,10 @@ export type EmailTemplate =
       readonly template: "account_task_reminder";
       readonly data: { org_name: string; task_title: string; task_url: string };
     }
+  | {
+      readonly template: "account_invite";
+      readonly data: { org_name: string; sign_in_url: string };
+    }
   | { readonly template: "plain"; readonly data: { text: string } };
 
 /** Renders the body of an email; the subject is chosen by the caller, as it was before. */
@@ -294,6 +298,26 @@ export function render(t: EmailTemplate): { html: string; text: string } {
           fallback: fallback(d.task_url),
         }),
         text: `${d.task_title} is still waiting for ${d.org_name} on dembrane. It takes a minute, and it keeps things moving on our side.\n\nOpen the step:\n${d.task_url}\n\nThe dembrane team`,
+      };
+    }
+    case "account_invite": {
+      // The contact of a demo made in echo, invited when staff publish it.
+      const d = t.data;
+      return {
+        html: layout({
+          title: `Your dembrane account for ${esc(d.org_name)}`,
+          preview: `Your dembrane account for ${esc(d.org_name)} is ready.`,
+          heading: "Your account is ready.",
+          body: P(
+            17,
+            "0 0 28px",
+            `We set up ${em(d.org_name)} on dembrane for you. Sign in with a code we send to this address: no password needed.`,
+          ),
+          cta: cta("Sign in", d.sign_in_url),
+          fallback: fallback(d.sign_in_url),
+          disclaim: P(15, "0 0 28px", IGNORE),
+        }),
+        text: `We set up ${d.org_name} on dembrane for you. Sign in with a code we send to this address: no password needed.\n\nSign in:\n${d.sign_in_url}\n\nDidn't expect this? Ignore this email. Nothing will happen.\n\nThe dembrane team`,
       };
     }
     case "plain":

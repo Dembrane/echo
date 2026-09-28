@@ -3,9 +3,11 @@ import { newId } from "@echo/core";
 import type { Db } from "@echo/db";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
-import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
+import { defineJob, type JobDefinition, type Queue, step } from "@echo/queue";
 import type { Deliver } from "@echo/webhooks";
 import { z } from "zod";
+import { buildDemo, type DemoBuildDeps } from "./demo/build";
+import { demoBuild } from "./demo/job";
 import { refreshLegalTexts } from "./legal/store";
 import type { AccountsJobs } from "./sink";
 import { store } from "./storage";
@@ -51,7 +53,7 @@ export const legalRefresh = defineJob("accounts.legal-refresh", z.object({}), {
 });
 
 /** The jobs the API enqueues; its queue client creates exactly these. */
-export const accountsApiJobs: readonly JobDefinition[] = [deliverEvent, notifySlack];
+export const accountsApiJobs: readonly JobDefinition[] = [deliverEvent, notifySlack, demoBuild];
 
 const DAY_MS = 86_400_000;
 
@@ -199,6 +201,11 @@ export interface AccountsWorkerDeps {
   readonly fetchText: (url: string) => Promise<string>;
   readonly post?: PostJson;
   readonly now?: () => Date;
+  /**
+   * Demos made in echo: everything the build workflow needs, made once the queue exists
+   * (the popcorn read enqueues through it). Absent, the worker does not build demos.
+   */
+  readonly demos?: (queue: Queue) => DemoBuildDeps;
 }
 
 /** The worker's registration: handlers and the two schedules. */
@@ -257,6 +264,14 @@ export function accountsWorker(deps: AccountsWorkerDeps) {
           now,
         });
       });
+      if (deps.demos) {
+        const demoDeps = deps.demos(queue);
+        // A durable workflow: each step is checkpointed, and the demo row records which are
+        // done, so a crash resumes mid-way and a retry starts at the failed step.
+        await queue.workflow(demoBuild, { concurrency: 2 }, async (p) => {
+          await buildDemo(demoDeps, p.demoId, p.attempt, (name, fn) => step(name, fn));
+        });
+      }
       await queue.schedule(remindersTick, "*/15 * * * *", {});
       await queue.schedule(legalRefresh, "17 5 * * *", {});
     },
