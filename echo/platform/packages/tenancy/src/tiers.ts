@@ -2,7 +2,7 @@ import { meetsTier, type Policy, TIER_REQUIRED, TIERS, type Tier } from "@dembra
 import { pyRound } from "./numbers";
 
 /**
- * The tier by capacity and price matrix (ADR 0005), as the old API serves it. Paid tiers bill
+ * The tier by capacity and price matrix, as the old API serves it. Paid tiers bill
  * per seat with unlimited hours; only free keeps a one hour cap. When pricing changes, this
  * is the one place to edit.
  */

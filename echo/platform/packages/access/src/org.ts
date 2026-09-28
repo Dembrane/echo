@@ -1,5 +1,5 @@
 /**
- * What an organisation role may do on the organisation's customer account (docs/accounts.md):
+ * What an organisation role may do on the organisation's customer account:
  * agreements, billing details, tasks, support and invoices. Org admins and owners run the
  * account; the billing role handles it too, since signing and paying is their job. Plain
  * members see nothing of it: contracts and invoices are not every member's business.

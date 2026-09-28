@@ -9,7 +9,7 @@ import type { DocumentDetailT } from "../contract/contract.gen";
 
 /**
  * PDFs for fixture mode, laid out like the offer templates in
- * platform/docs/accounts-reference so the signing screen shows a realistic document with
+ * platform/packages/accounts/reference so the signing screen shows a realistic document with
  * the fields where the fixtures place them. The backend renders the real ones; nothing
  * here ships in a normal build (the fixture backend is only imported in fixture mode).
  */

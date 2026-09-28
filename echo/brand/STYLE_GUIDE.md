@@ -8,11 +8,10 @@ When in doubt, ask: Does this feel approachable, grounded, and human? Does it in
 
 ### Which guide wins
 
-Three files carry brand rules. When they disagree:
+Two files carry brand rules. When they disagree:
 
 1. `skills/brand-guidelines.md` (repo root) is the broader brand authority: the name, voice, claims and positioning, palette, type.
-2. `docs/_authoring/STYLE.md` (repo root) is the authority for pages in the published docs corpus.
-3. This file is the older, narrower one. It goes deepest on UI copy, components, and localisation. Where it contradicts either file above, they win, and this file should be corrected.
+2. This file is the older, narrower one. It goes deepest on UI copy, components, and localisation. Where it contradicts the file above, that file wins, and this file should be corrected.
 
 ---
 

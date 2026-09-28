@@ -1,4 +1,4 @@
-// The published legal pages as first captured (docs/accounts-reference), before the daily
+// The published legal pages as first captured (packages/accounts/reference), before the daily
 // refresh took over. They seed an empty legal_text table so the first offer can pin
 // something even when dembrane.com cannot be reached. Generated; do not edit by hand.
 

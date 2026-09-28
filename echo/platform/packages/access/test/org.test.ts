@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { ForbiddenError, NotFoundError } from "@dembrane/core";
 import { Access, MemoryAccessStore, ORG_POLICIES, orgRoleHas, STAFF_POLICIES } from "../src";
 
-// Who may use an organisation's customer account (docs/accounts.md): owners, admins and
+// Who may use an organisation's customer account: owners, admins and
 // the billing role; plain members see nothing of it; outsiders do not see it exists.
 describe("org account policies", () => {
   const store = new MemoryAccessStore();

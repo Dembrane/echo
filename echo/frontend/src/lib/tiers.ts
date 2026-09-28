@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 
 /**
- * Tier copy + helpers (ADR 0005, per-seat tiers).
+ * Tier copy + helpers (per-seat tiers).
  *
  * Kept in sync with server/dembrane/tier_capacity.py.
  *

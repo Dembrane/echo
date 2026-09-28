@@ -48,7 +48,7 @@ async function insertParsed(c: Conn, kind: LegalKind, p: ParsedLegal, url: strin
 }
 
 /**
- * The first rows, from the captures in docs/accounts-reference, for any kind with none yet.
+ * The first rows, from the captures in packages/accounts/reference, for any kind with none yet.
  * Runs with every migration job, so an environment that cannot reach dembrane.com still
  * has texts to pin. Never adds a second row once a kind has one.
  */

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { assetPath } from "@dembrane/core";
 import { PDFDocument } from "pdf-lib";
 import { walkOrder } from "../src/documents";
 import { runDeliverEvent, runNotifySlack } from "../src/jobs";
@@ -206,6 +207,14 @@ describe("legal pages", () => {
       expect([page.version, page.effectiveOn]).toEqual([capture.version, capture.effectiveOn]);
     }
     expect(parseLegalDump(REFERENCE_DPA).version).toBe("3.0.1");
+  });
+  test("the embedded first rows are the captures in reference/", async () => {
+    for (const [file, text] of [
+      ["legal-terms.txt", REFERENCE_TERMS],
+      ["legal-sla.txt", REFERENCE_SLA],
+      ["legal-dpa.txt", REFERENCE_DPA],
+    ] as const)
+      expect(await Bun.file(assetPath("accounts", "reference", file)).text()).toBe(text);
   });
   test("whitespace is layout, words are text", () => {
     expect(legalSha256("a b\n c")).toBe(legalSha256("a  b c"));

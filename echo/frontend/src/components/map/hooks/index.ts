@@ -78,7 +78,7 @@ export type MapResult = {
 	missing_embeddings: string[];
 };
 
-// Map payload v2 (docs/superpowers/plans/2026-09-15-recipes-mixed-map-plan.md).
+// Map payload v2.
 
 export type MapStaleRef = {
 	revisionId: string;

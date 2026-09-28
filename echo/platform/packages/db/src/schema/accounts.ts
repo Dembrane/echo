@@ -19,7 +19,7 @@ import {
 // only after both modules have loaded.
 import { org } from "./index";
 
-// Customer accounts (docs/accounts.md): everything between dembrane and one customer
+// Customer accounts: everything between dembrane and one customer
 // organisation. Echo owns these rows; sam reads and writes them through the staff API.
 // Money is integer cents everywhere, so no total is ever a float.
 
@@ -415,7 +415,7 @@ export const account_event = pgTable(
 );
 
 /**
- * A synthetic demo staff asked echo to make (docs/accounts.md): the input, each step's
+ * A synthetic demo staff asked echo to make: the input, each step's
  * progress and output, so a retry resumes at the failed step and the status page shows
  * where it is. The research and corpus are kept for review; website text is stored only as
  * the few pages fetched, as evidence.

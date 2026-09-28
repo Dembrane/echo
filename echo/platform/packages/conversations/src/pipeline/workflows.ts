@@ -40,7 +40,7 @@ export const RETRIES: RetryPolicy = {
 const RUN_NAMESPACE = "2f7c6b1e-3d4a-4e8f-9b0c-1a2b3c4d5e6f";
 
 /**
- * The conversation pipeline as durable workflows (ADR 0007), replacing the five-phase
+ * The conversation pipeline as durable workflows, replacing the five-phase
  * Dramatiq saga and the crons that repaired it. Each side effect is a step whose result
  * DBOS checkpoints; after a crash a run resumes at its first unfinished step on any
  * worker. The steps and why each is safe to run twice are in README.md.

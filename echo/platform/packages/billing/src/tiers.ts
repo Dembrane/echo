@@ -1,7 +1,7 @@
 import { pyRound } from "./money";
 
 /**
- * Per-tier price and the Free hour cap (ADR 0005). The single source for every price the
+ * Per-tier price and the Free hour cap. The single source for every price the
  * product shows or charges. Prices are per seat per month in EUR on annual billing;
  * monthly billing adds MONTHLY_BILLING_PREMIUM_PCT.
  */

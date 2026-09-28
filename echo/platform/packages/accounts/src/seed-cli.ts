@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * bun run seed:accounts-demo: rebuilds the accounts demo (docs/accounts.md, "Demo") on the
+ * bun run seed:accounts-demo: rebuilds the accounts demo on the
  * database in DATABASE_URL. The two demo logins get the password in DEMO_PASSWORD, which is
  * read from the environment only. DEMO_LANGUAGE (en, the default, or nl) sets the language
  * of the offer, tasks, question and corpus. APP_ENV picks the environment's URLs; prod is

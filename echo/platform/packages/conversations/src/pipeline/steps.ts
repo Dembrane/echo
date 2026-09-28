@@ -471,7 +471,7 @@ export async function claimFinish(d: PipelineDeps, conversationId: string): Prom
 }
 
 /**
- * _stamp_over_cap (ADR 0001): the soft-edge formula over the workspace's lifetime audio
+ * _stamp_over_cap: the soft-edge formula over the workspace's lifetime audio
  * hours, deleted conversations included, since deleting keeps billable duration.
  * Deterministic in the database's state, so a retry writes the same value.
  */
