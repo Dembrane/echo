@@ -32,6 +32,10 @@
           "style": { "noNonNullAssertion": "off" }
         }
       }
+    },
+    {
+      "includes": ["ops/**"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
     }
   ]
 }

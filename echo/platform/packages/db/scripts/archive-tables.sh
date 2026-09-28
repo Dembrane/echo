@@ -17,12 +17,16 @@
 #               Objects land under <dest>/<database>/<UTC stamp>/.
 # PG_DUMP, PSQL override the binaries, e.g. "docker exec -i parity-db-1 pg_dump" for a
 #               local run. pg_dump must be at least the server's major version.
+# SOURCE_DATABASE_URL  read the tables from this database instead, opened read-only: the
+#               frozen old database at cutover, whose dead tables are not copied across. The
+#               ledger row still goes to DATABASE_URL, which may be left unset when no row is
+#               written (ARCHIVE_FOR empty), e.g. an archive taken before the window.
 # ARCHIVE_FOR   the contract migration this archive clears. Defaults to
 #               0012_contract_dead_features for the default set; a named table list clears
 #               nothing unless ARCHIVE_FOR is given, so a partial archive cannot unblock it.
 set -euo pipefail
 
-: "${DATABASE_URL:?URL of the database to archive from}"
+src_url="${SOURCE_DATABASE_URL:-${DATABASE_URL:?URL of the database to archive from}}"
 dest_root="${ARCHIVE_DEST:-gs://dembrane-echo-archive}"
 pg_dump_cmd=(${PG_DUMP:-pg_dump})
 psql_cmd=(${PSQL:-psql})
@@ -42,7 +46,13 @@ if [[ ${#tables[@]} -eq 0 ]]; then
   archive_for="${ARCHIVE_FOR:-0012_contract_dead_features}"
 fi
 
-q() { "${psql_cmd[@]}" "$DATABASE_URL" -At -v ON_ERROR_STOP=1 -c "$1"; }
+if [[ -n "${SOURCE_DATABASE_URL:-}" ]]; then
+  export PGOPTIONS="${PGOPTIONS:-} -c default_transaction_read_only=on"
+fi
+if [[ -n "$archive_for" && -z "${DATABASE_URL:-}" ]]; then
+  echo "ARCHIVE_FOR=$archive_for needs DATABASE_URL, the database whose ledger records it" >&2; exit 2
+fi
+q() { "${psql_cmd[@]}" "$src_url" -At -v ON_ERROR_STOP=1 -c "$1"; }
 
 db="$(q 'select current_database()')"
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -70,7 +80,7 @@ for t in "${tables[@]}"; do
   rows="$(q "select count(*) from public.\"$t\"")"
   bytes="$(q "select pg_total_relation_size('public.\"$t\"')")"
   "${pg_dump_cmd[@]}" --format=custom --no-owner --no-privileges --table="public.\"$t\"" \
-    "$DATABASE_URL" | put "$t.dump"
+    "$src_url" | put "$t.dump"
   size="$(size_of "$t.dump")"
   [[ -n "$size" && "$size" -gt 0 ]] || { echo "$t: empty archive object" >&2; exit 1; }
   printf '%s\t%s\t%s\t%s\n' "$t" "$rows" "$bytes" "$t.dump" >> "$manifest"
@@ -82,7 +92,7 @@ echo "archived to $dest"
 
 if [[ -n "$archive_for" ]]; then
   # Same table as ARCHIVE_LEDGER_DDL in packages/db/src/migrate.ts.
-  "${psql_cmd[@]}" "$DATABASE_URL" -q -v ON_ERROR_STOP=1 -v tag="$archive_for" -v dest="$dest" \
+  PGOPTIONS= "${psql_cmd[@]}" "$DATABASE_URL" -q -v ON_ERROR_STOP=1 -v tag="$archive_for" -v dest="$dest" \
     -v manifest="$(cat "$manifest")" <<'SQL'
 set client_min_messages = warning;
 create schema if not exists drizzle;
