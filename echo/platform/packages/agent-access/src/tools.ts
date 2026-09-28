@@ -526,7 +526,8 @@ export async function readDoc(d: ToolDeps, path: string, offset: number, limit: 
 /** With a pattern, matching lines; without, the page index. */
 export async function searchDocs(d: ToolDeps, pattern: string | null, maxResults: number) {
   const pages = await d.docs.list();
-  if (!pages.length) return { pattern: (pattern ?? "").trim() ? pattern : null, results: [], note: NO_DOCS };
+  if (!pages.length)
+    return { pattern: (pattern ?? "").trim() ? pattern : null, results: [], note: NO_DOCS };
   if (!(pattern ?? "").trim())
     return {
       pattern: null,

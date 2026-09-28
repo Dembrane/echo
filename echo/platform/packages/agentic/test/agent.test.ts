@@ -549,8 +549,7 @@ describe("tool results", () => {
     [
       "grepDocs",
       { patterns: ["portal"] },
-      (o) =>
-        expect(o).toEqual({ results: [{ pattern: "portal", matches: [] }], note: NO_DOCS }),
+      (o) => expect(o).toEqual({ results: [{ pattern: "portal", matches: [] }], note: NO_DOCS }),
     ],
     ["readSkill", { path: "interviewing.md" }, (o) => expect(o.text).toStartWith("---")],
     [
