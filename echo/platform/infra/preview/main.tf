@@ -31,6 +31,7 @@ module "platform" {
   db_max_connections     = local.settings.db_max_connections
   db_environments        = lookup(local.settings, "db_environments", 1)
   services               = local.settings.services
+  alert_email            = lookup(local.settings, "alert_email", null)
   pr_preview_environment = local.settings.pr_preview_environment
 }
 

@@ -84,6 +84,7 @@ resource "google_logging_metric" "worker_exits" {
 # Answers 200 only while the newest executor heartbeat (written every 10 s once the queue
 # runs) is under 90 s old; see apps/api/src/routes/system.ts.
 resource "google_monitoring_uptime_check_config" "worker_ready" {
+  count            = var.monitor_worker_ready ? 1 : 0
   display_name     = "${local.name}: worker heartbeat fresh"
   timeout          = "10s"
   period           = "300s"
@@ -98,7 +99,7 @@ resource "google_monitoring_uptime_check_config" "worker_ready" {
     type = "uptime_url"
     labels = {
       project_id = var.project
-      host       = "${local.name}-api-86405194907.${var.region}.run.app"
+      host       = "${local.name}-api-${data.google_project.this.number}.${var.region}.run.app"
     }
   }
 }
@@ -124,18 +125,21 @@ resource "google_monitoring_alert_policy" "worker_down" {
       }
     }
   }
-  conditions {
-    display_name = "executor heartbeat stale for 10 minutes (/ready/worker failing)"
-    condition_threshold {
-      filter          = "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.type=\"uptime_url\" AND metric.label.check_id=\"${google_monitoring_uptime_check_config.worker_ready.uptime_check_id}\""
-      comparison      = "COMPARISON_GT"
-      threshold_value = 1
-      duration        = "600s"
-      aggregations {
-        alignment_period     = "300s"
-        per_series_aligner   = "ALIGN_NEXT_OLDER"
-        cross_series_reducer = "REDUCE_COUNT_FALSE"
-        group_by_fields      = ["resource.label.host"]
+  dynamic "conditions" {
+    for_each = google_monitoring_uptime_check_config.worker_ready
+    content {
+      display_name = "executor heartbeat stale for 10 minutes (/ready/worker failing)"
+      condition_threshold {
+        filter          = "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.type=\"uptime_url\" AND metric.label.check_id=\"${conditions.value.uptime_check_id}\""
+        comparison      = "COMPARISON_GT"
+        threshold_value = 1
+        duration        = "600s"
+        aggregations {
+          alignment_period     = "300s"
+          per_series_aligner   = "ALIGN_NEXT_OLDER"
+          cross_series_reducer = "REDUCE_COUNT_FALSE"
+          group_by_fields      = ["resource.label.host"]
+        }
       }
     }
   }

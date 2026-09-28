@@ -42,9 +42,11 @@ module "platform" {
   db_max_connections          = local.settings.db_max_connections
   db_environments             = lookup(local.settings, "db_environments", 1)
   services                    = local.settings.services
+  alert_email                 = lookup(local.settings, "alert_email", null)
   generate_invite_hash_secret = false
   pending_secrets             = local.pending_secrets
   monitor_api_ready           = false # until the first deploy
+  monitor_worker_ready        = false # until the first deploy
 }
 
 # A new project already has a _Default sink; the module repoints it at the EU bucket.

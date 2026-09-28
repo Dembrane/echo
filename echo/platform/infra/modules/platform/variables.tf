@@ -113,6 +113,12 @@ variable "monitor_api_ready" {
   default     = true
 }
 
+variable "monitor_worker_ready" {
+  type        = bool
+  description = "Probe the API's /ready/worker (executor heartbeat age). Off until the environment serves a build that answers it, so the probe does not raise a false worker-down alert."
+  default     = true
+}
+
 variable "pr_preview_environment" {
   type        = string
   description = "GitHub environment whose jobs may deploy PR previews from any ref. Null outside preview."
