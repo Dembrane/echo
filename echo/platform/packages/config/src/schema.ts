@@ -56,6 +56,10 @@ export const schema = defineSchema({
       description: "Runtime Postgres login. Least privilege: no DDL.",
       secret: true,
     }),
+    name: key("DATABASE_NAME", z.string().regex(/^[a-z_][a-z0-9_]*$/).optional(), {
+      description:
+        "Replaces the database in DATABASE_URL. PR previews share one instance and login, each on its own database.",
+    }),
     poolMax: key("DATABASE_POOL_MAX", int.min(1).default(10), {
       description:
         "Connections per instance. Times max instances must stay under the server limit.",

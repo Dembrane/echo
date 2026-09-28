@@ -9,7 +9,7 @@ import { canvasApiJobs } from "@dembrane/canvas";
 import { describe, loadConfig, loadSections, publicValues } from "@dembrane/config";
 import { conversationApiJobs } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
-import { createDb } from "@dembrane/db";
+import { createDb, withDatabase } from "@dembrane/db";
 import { createModels } from "@dembrane/llm";
 import { type Mailer, MemoryMailer, SendGridMailer } from "@dembrane/mail";
 import { mapJobs } from "@dembrane/map";
@@ -50,7 +50,8 @@ const tracing = initTracing({
   otlpEndpoint: config.observability.otlpEndpoint,
   sampleRatio: config.observability.traceSampleRatio,
 });
-const database = createDb({ url: config.database.url, poolMax: config.database.poolMax });
+const databaseUrl = withDatabase(config.database.url, config.database.name);
+const database = createDb({ url: databaseUrl, poolMax: config.database.poolMax });
 
 // Auth emails go out inside the request: the person is waiting for the code or the link.
 const mailer: Mailer = config.mail.sendgridApiKey
@@ -103,7 +104,7 @@ const auth = createAuth({
 
 // The API only enqueues: a DBOS client, no executor. Boot does not wait on it, so a
 // database that is briefly unreachable does not keep the API from serving; enqueues wait.
-const queue = new Queue(config.database.url, logger, tracing.tracer, { maxConnections: 2 });
+const queue = new Queue(databaseUrl, logger, tracing.tracer, { maxConnections: 2 });
 const queueReady = (async () => {
   for (let attempt = 1; ; attempt++) {
     try {
@@ -186,7 +187,7 @@ const media = config.media.url
   : new LocalMedia();
 
 // One LISTEN connection per instance feeds every open live stream.
-const listener = postgres(config.database.url, { max: 1, onnotice: () => {} });
+const listener = postgres(databaseUrl, { max: 1, onnotice: () => {} });
 const hub = new Hub(listener, logger);
 // postgres.js re-listens after a dropped connection; the first connect is retried here so a
 // database that is briefly away at boot does not leave live streams silent until a restart.

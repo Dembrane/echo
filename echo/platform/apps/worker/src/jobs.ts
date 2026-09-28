@@ -96,6 +96,8 @@ export function registrations(deps: {
   models: Models;
   /** Offer PDFs of demos made in echo. */
   files: ObjectStorage;
+  /** Runtime database URL with DATABASE_NAME applied, for jobs that open their own connections. */
+  databaseUrl: string;
   /** Where the popcorn tick enqueues its workflows and where participant links point. */
   popcorn: { databaseUrl: string; portalUrl: string };
 }): Registration[] {
@@ -277,7 +279,7 @@ export function registrations(deps: {
       db,
       logger,
       config,
-      databaseUrl: config.database.url,
+      databaseUrl: deps.databaseUrl,
       models: deps.models,
     }),
   ];

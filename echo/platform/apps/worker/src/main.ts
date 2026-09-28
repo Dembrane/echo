@@ -4,7 +4,7 @@ import { createBilling, HttpMollie, UnconfiguredMollie } from "@dembrane/billing
 import { describe, loadSections } from "@dembrane/config";
 import { AudioUrls } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
-import { createDb } from "@dembrane/db";
+import { createDb, withDatabase } from "@dembrane/db";
 import { createModels, vertexCompleter, vertexEmbedder } from "@dembrane/llm";
 import { type Mailer, SendGridMailer } from "@dembrane/mail";
 import { createLogger, initTracing } from "@dembrane/observability";
@@ -57,10 +57,11 @@ const tracing = initTracing({
   sampleRatio: config.observability.traceSampleRatio,
 });
 
-const queue = new Queue(config.database.url, logger, tracing.tracer, {
+const databaseUrl = withDatabase(config.database.url, config.database.name);
+const queue = new Queue(databaseUrl, logger, tracing.tracer, {
   maxConnections: config.database.poolMax,
 });
-const database = createDb({ url: config.database.url, poolMax: config.database.poolMax });
+const database = createDb({ url: databaseUrl, poolMax: config.database.poolMax });
 // Without a SendGrid key (local, preview) mail is logged, never sent.
 const mailer: Mailer = config.mail.sendgridApiKey
   ? new SendGridMailer({
@@ -171,7 +172,8 @@ const regs = registrations({
   completer,
   embedder,
   models,
-  popcorn: { databaseUrl: config.database.url, portalUrl: config.http.portalUrl },
+  databaseUrl,
+  popcorn: { databaseUrl, portalUrl: config.http.portalUrl },
 });
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);
