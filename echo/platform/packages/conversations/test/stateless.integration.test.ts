@@ -25,7 +25,7 @@ import { statelessRoutes } from "../src/stateless/routes";
  * object store nor model credentials, so parity only compares the gates.
  */
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
-const TEMPLATE = "parity_template_platform";
+const TEMPLATE = process.env.PARITY_TEMPLATE ?? "parity_template_platform";
 const DB = "conv_verify_stateless_test";
 const base = admin ? admin.slice(0, admin.lastIndexOf("/")) : "";
 const hasTemplate = admin

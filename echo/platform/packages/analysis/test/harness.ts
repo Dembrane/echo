@@ -16,7 +16,7 @@ import { AnalysisStore } from "../src/store";
  */
 
 export const admin = process.env.TEST_DATABASE_ADMIN_URL;
-export const TEMPLATE = "parity_template_platform";
+export const TEMPLATE = process.env.PARITY_TEMPLATE ?? "parity_template_platform";
 
 export async function hasTemplate(): Promise<boolean> {
   if (!admin) return false;

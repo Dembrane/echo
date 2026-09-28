@@ -20,7 +20,7 @@ import { verifyRoutes } from "../src";
  * anything, so these paths are proven here.
  */
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
-const TEMPLATE = "parity_template_platform";
+const TEMPLATE = process.env.PARITY_TEMPLATE ?? "parity_template_platform";
 const DB = "conv_verify_test";
 const base = admin ? admin.slice(0, admin.lastIndexOf("/")) : "";
 const hasTemplate = admin

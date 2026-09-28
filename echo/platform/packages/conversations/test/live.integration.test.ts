@@ -18,7 +18,7 @@ import { ParticipantTokens } from "../src/participant-token";
  * kept in Redis on the old side, the recording meter), end to end through the routes.
  */
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
-const TEMPLATE = "parity_template_platform";
+const TEMPLATE = process.env.PARITY_TEMPLATE ?? "parity_template_platform";
 const base = admin ? admin.slice(0, admin.lastIndexOf("/")) : "";
 const hasTemplate = admin
   ? await (async () => {

@@ -22,7 +22,7 @@ import { MapStore } from "../src/store";
  * a selection title, all on a fake model with the answers the Python stack produced.
  */
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
-const TEMPLATE = "parity_template_platform";
+const TEMPLATE = process.env.PARITY_TEMPLATE ?? "parity_template_platform";
 const DB = `map_it_${process.pid}`;
 const hasTemplate = admin
   ? await (async () => {

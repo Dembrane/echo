@@ -14,7 +14,7 @@ import { unzip } from "../src/zip";
  * producer, which the Python ran in a worker the parity stack does not start.
  */
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
-const TEMPLATE = "parity_template_platform";
+const TEMPLATE = process.env.PARITY_TEMPLATE ?? "parity_template_platform";
 const base = admin ? admin.slice(0, admin.lastIndexOf("/")) : "";
 const hasTemplate = admin
   ? await (async () => {
