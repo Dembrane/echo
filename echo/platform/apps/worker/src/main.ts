@@ -31,6 +31,7 @@ const loaded = loadSections([
   "reports",
   "agentic",
   "accounts",
+  "files",
 ]);
 const config = loaded.values;
 const service = "echo-worker";
@@ -102,6 +103,16 @@ const audio = config.audio.s3Bucket
       secretAccessKey: config.audio.s3SecretAccessKey ?? "",
     })
   : new FilesystemStorage(config.audio.localRoot, config.http.publicUrl, "/_local-audio");
+// The API's file bucket: offer PDFs of demos made in echo are written here and served by the API.
+const files = config.files.s3Bucket
+  ? new S3Storage({
+      endpoint: config.files.s3Endpoint ?? "",
+      bucket: config.files.s3Bucket,
+      region: config.files.s3Region,
+      accessKeyId: config.files.s3AccessKeyId ?? "",
+      secretAccessKey: config.files.s3SecretAccessKey ?? "",
+    })
+  : new FilesystemStorage(config.files.localRoot, config.http.publicUrl);
 const local = config.app.env === "local" || config.app.env === "test";
 const media = config.media.url
   ? new HttpMedia(config.media.url, {
@@ -129,6 +140,7 @@ const regs = registrations({
   mailer,
   jobs: queueSink(queue),
   accountsJobs: queueJobs(queue),
+  files,
   dashboardUrl: config.http.dashboardUrl,
   billing,
   conversations: {

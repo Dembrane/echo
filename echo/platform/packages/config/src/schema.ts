@@ -380,6 +380,10 @@ export const schema = defineSchema({
         "Slack incoming webhook that hears about signatures, submitted billing details and new questions. Unset is off.",
       secret: true,
     }),
+    demoWorkspaceId: key("ACCOUNTS_DEMO_WORKSPACE_ID", z.uuid().optional(), {
+      description:
+        "Staff's workspace for demos made in echo, so staff can review them in the dashboard. Unset puts each demo in a workspace of the prospect's organisation.",
+    }),
     eventsUrl: key("ACCOUNTS_EVENTS_URL", z.url().optional(), {
       description:
         "Where account events (document signed, billing details updated, ...) are posted for sam. Unset keeps them on the timeline only.",

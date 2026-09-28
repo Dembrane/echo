@@ -29,11 +29,12 @@ basis points (2100 = 21%), dates `YYYY-MM-DD`.
 
 | Method and path | What it does |
 |---|---|
-| `GET /?stage=&limit=&offset=` | Accounts with open tasks, tasks waiting on us, unsigned documents, overdue invoices, open questions |
+| `GET /?stage=&q=&limit=&offset=` | Every organisation with open tasks, tasks waiting on us, unsigned documents, overdue invoices, open questions. `stage`: `prospect`, `customer`, `churned` or `none`; `q`: part of the name or of a member's email |
+| `POST /:orgId/enable` | Make any organisation an account (a free-tier signup): `stage` (default `customer`), `language`; adds its billing account and billing details task |
 | `POST /` | Create an account: `organisation_name`, `contact_email` (becomes admin, signs in with a code), `pricing_configuration_reference`, `stage`, `language` |
 | `GET /:orgId` | The card: stage, manager, billing, needs form, demo links, members, invites, usage, documents, tasks, questions, timeline |
 | `PATCH /:orgId` | `account_stage`, `account_manager_id` (an @dembrane.com user) |
-| `POST /:orgId/offers` | Push an offer from lines: `template` (`subscription`, `event`), `language` (`en`, `nl`), `offer_name`, `person_name`, `attention`, `items[]` (`description`, `bullets[]`, `quantity`, `unit_price_cents`, `vat_rate_bps`), `external_ref` (the Attio deal), `supersedes_id`. Pins the newest terms, SLA and DPA, renders the PDF with its fields, creates "Review and sign the offer" and the locked billing details task |
+| `POST /:orgId/offers` | Push an offer from lines: `template` (`subscription`, `event`), `language` (`en`, `nl`), `offer_name`, `person_name`, `attention`, `items[]` (`description`, `bullets[]`, `quantity`, `unit_price_cents`, `vat_rate_bps`), `external_ref` (the Attio deal), `supersedes_id`, `send` (false keeps a draft; `POST .../send` sends it later and re-pins newer legal texts). Pins the newest terms, SLA and DPA, renders the PDF with its fields, creates "Review and sign the offer" and the locked billing details task |
 | `POST /:orgId/documents` | Push any document: `kind` (`dpa`, `other`), `title`, `body` (markdown, rendered to a PDF with a signing block when `requires_signature`) or `pdf_base64`, `fields[]` for an uploaded PDF, `task`, `send` |
 | `GET /:orgId/documents/:docId` | A document with its fields, pinned legal texts and signature |
 | `GET /:orgId/documents/:docId/file`, `/signed.pdf` | The unsigned and the signed PDF |
@@ -44,6 +45,29 @@ basis points (2100 = 21%), dates `YYYY-MM-DD`.
 | `POST /:orgId/tasks` | Create a task: `title`, `body`, `kind`, `document_id`, `due_on`, `locked_until_document_id`, `reminder_interval_days` |
 | `POST /:orgId/tasks/:taskId/review` | `decision`: `approve`, `send_back` (with `note`), `withdraw` |
 | `POST /:orgId/tickets`, `/:ticketId/messages`, `/:ticketId/close` | Questions: open one, answer (`close: true` to close), close |
+
+## Demos made in echo
+
+`POST /api/v2/admin/accounts/demos` starts one: `organisation_name`, `website_url`, `brief`,
+`language`, `example`, `contact_name`, `contact_email`, `sign_in` (default false), and
+`offer` (template, language, lines) for an offer draft. The worker runs it as a durable
+workflow (`accounts.demo-build`) of six steps: fetch (a few same-site pages, public
+addresses only, byte caps; evidence, never instructions), research (facts with their
+source, unknowns, invented themes kept apart; the brief stays out of it), author (four to
+eight fictional conversations with generic roles and synthetic labels, and the disclosure
+copy), seed (the prospect organisation, its contact as admin held back from signing in,
+the synthetic project, the offer draft), extract (the normal popcorn read), review (a
+draft). `GET .../demos/:demoId` shows each step; `POST .../retry` resumes a failed demo at
+its failed step; `POST .../publish` makes the public link live and, with sign-in on,
+releases the contact, adds "Continue in dembrane" and sends the invitation. Refused
+towards production hosts. `ACCOUNTS_DEMO_WORKSPACE_ID` names staff's workspace for demo
+projects so staff can review them; unset, each demo gets a workspace in its organisation.
+
+## The signed-in person's tasks
+
+`GET /api/v2/account/tasks-summary`: for each organisation with account content where the
+caller is owner, admin or billing, the tasks done and in total (locked in, withdrawn out)
+and the next open task. One query on indexes, for the sidebar and the org picker.
 
 A prospect's demo is seeded with `POST /api/v2/admin/popcorn/demos` plus a `prospect` block
 (`organisation_name`, `contact_email`, `contact_name`, `pricing_configuration_reference`,

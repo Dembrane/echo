@@ -548,7 +548,7 @@ run("accounts routes against Postgres", () => {
   });
 
   // ── billing details ─────────────────────────────────────────────────
-  test("billing details: validated, saved, the task handed to us, the event and Slack", async () => {
+  test("billing details: validated, saved, the task done at once, the event and Slack", async () => {
     const good = {
       legal_name: "Gemeente Testdorp",
       billing_email: "Facturen@Testdorp.example",
@@ -578,7 +578,8 @@ run("accounts routes against Postgres", () => {
       K.BillingDetails.parse((await call(w, "GET", `${C()}/billing`, "admin")).data).kvk_number,
     ).toBe("12345678");
     const task = (await store.tasks(w.db, w.orgId)).find((t) => t.kind === "billing_details");
-    expect(task?.status).toBe("submitted");
+    // Saving completes the task at once: no review by staff.
+    expect(task?.status).toBe("done");
     expect(task?.nextReminderAt).toBeNull();
     expect(w.jobs.of("accounts.deliver-event")[0]?.payload).toMatchObject({
       event: "account.billing_details.updated",
@@ -588,7 +589,7 @@ run("accounts routes against Postgres", () => {
     const review = await call(w, "POST", `${S()}/tasks/${task?.id}/review`, "staff", {
       decision: "approve",
     });
-    expect(K.Task.parse(review.data).status).toBe("done");
+    expect(review.status).toBe(409);
   });
 
   // ── tasks ───────────────────────────────────────────────────────────

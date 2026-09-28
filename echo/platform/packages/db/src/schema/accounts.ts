@@ -302,6 +302,8 @@ export const account_task = pgTable(
   },
   (t) => [
     index("account_task_org_id_index").on(t.orgId),
+    // The tasks summary counts per organisation by status on every dashboard load.
+    index("account_task_org_id_status_index").on(t.orgId, t.status),
     index("account_task_next_reminder_at_index").on(t.nextReminderAt),
     foreignKey({
       columns: [t.orgId],
@@ -401,5 +403,51 @@ export const account_event = pgTable(
       foreignColumns: [org.id],
       name: "account_event_org_id_foreign",
     }).onDelete("cascade"),
+  ],
+);
+
+/**
+ * A synthetic demo staff asked echo to make (docs/accounts.md): the input, each step's
+ * progress and output, so a retry resumes at the failed step and the status page shows
+ * where it is. The research and corpus are kept for review; website text is stored only as
+ * the few pages fetched, as evidence.
+ */
+export const account_demo = pgTable(
+  "account_demo",
+  {
+    id: uuid("id").primaryKey(),
+    /** Set by the seed step. */
+    orgId: uuid("org_id"),
+    status: text("status").notNull().default("queued"),
+    input: json("input").notNull(),
+    slug: text("slug"),
+    /** Per step: status, started and finished times, error. */
+    steps: json("steps").notNull(),
+    /** Step outputs: pages, research, corpus, seed result, extraction outcome. */
+    pages: json("pages"),
+    research: json("research"),
+    researchMarkdown: text("research_markdown"),
+    corpus: json("corpus"),
+    seed: json("seed"),
+    offerDocumentId: uuid("offer_document_id"),
+    /** Increases with each retry; part of the workflow id, so a retry is a new run. */
+    attempt: integer("attempt").notNull().default(1),
+    invitedAt: timestamp("invited_at", { withTimezone: true }),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdBy: uuid("created_by").notNull(),
+    createdAt: created(),
+    updatedAt: updated(),
+  },
+  (t) => [
+    index("account_demo_created_at_index").on(t.createdAt),
+    foreignKey({
+      columns: [t.orgId],
+      foreignColumns: [org.id],
+      name: "account_demo_org_id_foreign",
+    }).onDelete("set null"),
+    check(
+      "account_demo_status_check",
+      sql`${t.status} in ('queued', 'running', 'draft', 'failed', 'published')`,
+    ),
   ],
 );

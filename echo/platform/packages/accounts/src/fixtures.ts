@@ -396,8 +396,10 @@ const invoiceSummary: Out<typeof DocumentSummary> = {
 
 export const signTask: Out<typeof Task> = {
   id: SIGN_TASK,
-  title: "Offerte bekijken en ondertekenen",
-  body: "Lees de offerte en onderteken hem hier. Tekent iemand anders voor jullie organisatie? Wijs diegene aan op de offerte; die krijgt een eigen link.",
+  code: "sign_offer",
+  params: { document_title: "Gemeente Voorbeeldstad x dembrane" },
+  title: null,
+  body: null,
   kind: "sign",
   status: "open",
   locked: false,
@@ -419,8 +421,10 @@ export const signTask: Out<typeof Task> = {
 export const billingTask: Out<typeof Task> = {
   ...signTask,
   id: BILLING_TASK,
-  title: "Factuurgegevens",
-  body: "Aan wie we factureren: juridische naam, adres, btw- of KvK-nummer, factuur-e-mail en, als jullie die gebruiken, het PO-nummer. Deze stap opent zodra de offerte is ondertekend.",
+  code: "billing_details",
+  params: {},
+  title: null,
+  body: null,
   kind: "billing_details",
   status: "locked",
   locked: true,
@@ -434,6 +438,8 @@ export const billingTask: Out<typeof Task> = {
 const poTask: Out<typeof Task> = {
   ...signTask,
   id: PO_TASK,
+  code: null,
+  params: null,
   title: "Stuur ons jullie PO-nummer",
   body: "Werken jullie met inkoopordernummers? Stuur het nummer, dan zetten we het op de factuur.",
   kind: "generic",
@@ -443,6 +449,8 @@ const poTask: Out<typeof Task> = {
 const logoTask: Out<typeof Task> = {
   ...signTask,
   id: LOGO_TASK,
+  code: null,
+  params: null,
   title: "Upload jullie logo",
   body: "Voor de presentatie en het rapport: een logo als SVG of PNG.",
   kind: "upload",
@@ -674,7 +682,9 @@ export const tasksSummary: Out<typeof TasksSummary> = [
     account_stage: "customer",
     tasks_done: 0,
     tasks_total: 4,
-    next_task_title: "Offerte bekijken en ondertekenen",
+    next_task_title: null,
+    next_task_code: "sign_offer",
+    next_task_params: { document_title: "Gemeente Voorbeeldstad x dembrane" },
   },
 ];
 

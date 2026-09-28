@@ -1,3 +1,4 @@
+import { ORG_ROLE_POLICIES, type OrgRole } from "@echo/access";
 import { sendEmail } from "@echo/account";
 import { ConflictError, ForbiddenError, NotFoundError, newId, ValidationError } from "@echo/core";
 import type { Signed } from "@echo/http";
@@ -46,7 +47,7 @@ export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
     tasks: tasks
       .filter((t) => t.status !== "withdrawn")
       .sort((a, b) => taskOrder(a.status) - taskOrder(b.status))
-      .map(taskView),
+      .map((t) => taskView(t, docs)),
     documents: docs
       .filter((x) => x.status !== "draft" && x.status !== "void")
       .map((x) =>
@@ -322,7 +323,7 @@ export async function readBilling(d: AccountsDeps, who: Signed, orgId: string) {
 
 /**
  * Saves what Exact needs to invoice, on the organisation's own billing account (made if it
- * has none yet), and hands the billing details task to us for a look.
+ * has none yet), and completes the billing details task: no review by us.
  */
 export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string, b: BillingInput) {
   const org = await customerOrg(d, who, orgId, "account:billing");
@@ -357,12 +358,13 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
         created_at: now.toISOString(),
         ...patch,
       });
+    // Saving the details completes the task; we hear about it, we do not review it.
     for (const t of await store.tasks(tx, org.id))
       if (
         t.kind === "billing_details" &&
-        ["locked", "open", "changes_requested"].includes(t.status)
+        ["locked", "open", "changes_requested", "submitted"].includes(t.status)
       )
-        await settleTask(d, tx, t.id, "submitted", {
+        await settleTask(d, tx, t.id, "done", {
           submittedAt: now,
           submittedBy: who.directusUserId,
         });
@@ -445,6 +447,7 @@ export async function submitTask(
     (await store.task(d.db, org.id, task.id)) as NonNullable<
       Awaited<ReturnType<typeof store.task>>
     >,
+    await store.documents(d.db, org.id),
   );
 }
 
@@ -557,4 +560,22 @@ export async function recordBooking(
     });
   });
   return { recorded: true };
+}
+
+/** The roles whose holders run an account, straight from the access policies. */
+const ACCOUNT_ROLES = (Object.keys(ORG_ROLE_POLICIES) as OrgRole[]).filter((r) =>
+  ORG_ROLE_POLICIES[r].has("account:read"),
+);
+
+/**
+ * Every organisation whose account the caller runs, with task counts and the next task:
+ * the "Tasks 1/2" entry and the org picker. One indexed query; cheap on every page load.
+ */
+export async function tasksSummary(d: AccountsDeps, who: Signed) {
+  if (!who.appUserId) return [];
+  const rows = await store.tasksSummary(d.db, who.appUserId, ACCOUNT_ROLES);
+  return rows.map((r) => ({
+    ...r,
+    account_stage: r.account_stage as "prospect" | "customer" | "churned" | null,
+  }));
 }

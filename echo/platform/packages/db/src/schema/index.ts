@@ -2252,6 +2252,8 @@ export const org_membership = pgTable(
     user_id: uuid().notNull(),
   },
   (table): PgTableExtraConfigValue[] => [
+    // Who belongs where, read on every dashboard load (the accounts tasks summary).
+    index("org_membership_user_id_index").using("btree", table.user_id.asc().nullsLast()),
     foreignKey({
       columns: [table.org_id],
       foreignColumns: [org.id],
