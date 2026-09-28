@@ -184,6 +184,12 @@ export function buildApp(deps: Deps) {
   for (const store of [deps.files, deps.audio])
     if (local && store instanceof FilesystemStorage) {
       const handle = localStorageHandler(store, store.routePath);
+      // Browsers upload to the presigned URL straight from the dashboard or portal origin.
+      const storeCors = cors({
+        origin: [deps.config.http.dashboardUrl, deps.config.http.portalUrl],
+      });
+      app.use(store.routePath, storeCors);
+      app.use(`${store.routePath}/*`, storeCors);
       app.all(store.routePath, (c) => handle(c.req.raw));
       app.all(`${store.routePath}/*`, (c) => handle(c.req.raw));
     }
