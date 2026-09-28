@@ -5,12 +5,12 @@ import { describe, expect, it, vi } from "vitest";
 // Exercise the vendored receiver itself. Repeated reconnect acknowledgements
 // previously rebuilt Popcorn each second, preventing its language transition.
 const source = readFileSync(
-	new URL("../../../../server/dembrane/popcorn/static/app.js", import.meta.url),
+	new URL("../../../../platform/packages/popcorn/static/app.js", import.meta.url),
 	"utf8",
 );
 const styles = readFileSync(
 	new URL(
-		"../../../../server/dembrane/popcorn/static/styles.css",
+		"../../../../platform/packages/popcorn/static/styles.css",
 		import.meta.url,
 	),
 	"utf8",

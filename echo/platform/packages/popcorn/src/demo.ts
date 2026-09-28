@@ -5,7 +5,7 @@ import { tokenUrlsafe, uuid5Url } from "./service";
 import { client, isUuid, j, type Row, type Sql } from "./storage";
 
 /**
- * Synthetic demos, seeded by staff: the write echo/demos/seed_demo.py made through
+ * Synthetic demos, seeded by staff: the write the Python seed_demo.py made through
  * Directus /items, made here once Directus is gone. One synthetic project per language in
  * the demo's session, each with the invented conversations, a popcorn session in manual
  * mode carrying the reviewed read and the synthetic marking, plus the sales portal

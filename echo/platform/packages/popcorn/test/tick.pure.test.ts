@@ -32,7 +32,7 @@ import {
 import { allocateChars, QuoteBook, shapePopcornItems, shapeStakeholders } from "../src/tick/shapes";
 
 // Every case was produced by the Python functions the tick ports (fixtures/tick/gen/
-// tick_pure.py, run with this worktree's echo/server); each must come out the same here.
+// tick_pure.py, run with echo main's server); each must come out the same here.
 type Case = { in: unknown; out: unknown };
 const fixtures = JSON.parse(
   readFileSync(join(import.meta.dir, "fixtures", "tick", "pure.json"), "utf8"),

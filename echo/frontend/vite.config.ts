@@ -121,7 +121,7 @@ export default defineConfig(({ mode }) => {
 	const isDev = mode === "development";
 	const buildId = resolveBuildId();
 	const devApiProxyTarget =
-		process.env.VITE_DEV_API_PROXY || "http://localhost:8000/";
+		process.env.VITE_DEV_API_PROXY || "http://localhost:8080/";
 	// On by default in every build so no per-deploy env var is needed: whether
 	// the agentation overlay actually renders is decided at runtime by
 	// ENABLE_AGENTATION in src/config.ts (off in production). The cost of

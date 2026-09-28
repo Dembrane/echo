@@ -6,7 +6,7 @@ const fixture: unknown = JSON.parse(
   readFileSync(new URL("./prompts.fixture.json", import.meta.url), "utf8"),
 );
 
-// Rendered by Jinja2 from the same templates (scratch script over echo/server/prompt_templates);
+// Rendered by Jinja2 from the same templates (the Python API's prompt_templates);
 // the TypeScript renderer must produce the identical text.
 describe("prompt templates render as Jinja2 did", () => {
   for (const c of fixture as {
