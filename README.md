@@ -10,7 +10,7 @@ record conversations, and the API and workers behind them.
 - `echo/brand`: logos and style assets.
 - `echo/demos`: the example synthetic demos the accounts seed reads.
 - `dembrane-go`: the iOS app.
-- `skills`: operating guides for agents working on dembrane.
+- `skills`: the brand guidelines agents follow when writing for dembrane.
 
 ## Run the platform
 
