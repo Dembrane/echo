@@ -16,6 +16,7 @@ import { useParams } from "react-router";
 import { QRCode } from "@/components/common/QRCode";
 import type { PopcornSettingsPatch } from "@/components/popcorn/hooks";
 import { SUPPORTED_LANGUAGES } from "@/config";
+import { activateLanguage } from "@/hooks/useLanguage";
 import { useServerEvents } from "@/hooks/useServerEvents";
 import { cn } from "@/lib/utils";
 import { AudienceMapAdapter } from "./AudienceMapAdapter";
@@ -1150,7 +1151,7 @@ export const AudienceScreenRoute = () => {
 		const locale = SUPPORTED_LANGUAGES.find(
 			(entry) => entry.split("-")[0] === code,
 		);
-		if (locale && i18n.locale !== locale) i18n.activate(locale);
+		if (locale && i18n.locale !== locale) void activateLanguage(locale);
 	}, []);
 	// The room screen is for showing, not for writing: the opening slides are
 	// reworded in the dashboard's preview on the Present page, never on the
