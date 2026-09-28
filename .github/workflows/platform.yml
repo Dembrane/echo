@@ -203,7 +203,7 @@ jobs:
             --service-account echo-preview-migrate@$PROJECT.iam.gserviceaccount.com \
             --set-cloudsql-instances $SQL \
             --set-secrets MIGRATION_DATABASE_URL=echo-preview-migration-database-url:latest \
-            --set-env-vars APP_DB_ROLE=echo_app --task-timeout 600 --max-retries 0 \
+            --set-env-vars APP_ENV=preview,APP_DB_ROLE=echo_app --task-timeout 600 --max-retries 0 \
             --execute-now --wait
       - name: Deploy media, API, worker, dashboard and portal
         run: |

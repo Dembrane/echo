@@ -123,7 +123,7 @@ run("popcorn tick against Postgres", () => {
 
   beforeAll(async () => {
     const url = await freshDatabase(admin as string, "popcorn_tick_test");
-    await migrate(url);
+    await migrate(url, { appEnv: "test" });
     database = createDb({ url, poolMax: 6 });
     raw = postgres(url, { max: 2, onnotice: () => {} });
     await seed(raw);

@@ -25,7 +25,9 @@ const started = performance.now();
 // Set only where the old stack shares the database (the parity template): contract
 // migrations drop tables it still reads, so they wait for cutover.
 const holdContract = process.env.MIGRATE_HOLD_CONTRACT === "1";
-const result = await migrate(url, { holdContract });
+// Outside local, test and preview, a pending contract migration without a recorded archive
+// stops the job here, before anything is applied, and names the archive script to run.
+const result = await migrate(url, { holdContract, appEnv: process.env.APP_ENV });
 log("schema migrated", { ...result, holdContract });
 await installQueueSchema(url);
 log("queue schema ready");

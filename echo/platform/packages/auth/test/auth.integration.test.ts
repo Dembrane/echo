@@ -28,7 +28,7 @@ run("auth on Directus-created users", () => {
     : (undefined as never);
 
   beforeAll(async () => {
-    await migrate(url as string);
+    await migrate(url as string, { appEnv: "test" });
   });
   afterAll(() => database.close());
 

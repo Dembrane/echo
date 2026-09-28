@@ -23,6 +23,51 @@ const LOCK_KEY = 72_1405_2026;
  */
 export interface MigrateOptions {
   readonly holdContract?: boolean;
+  /**
+   * APP_ENV of the database being migrated. Required so no caller can forget it: outside
+   * ARCHIVE_EXEMPT_ENVS, a contract migration runs only once its archive is recorded, and
+   * an unset value counts as not exempt.
+   */
+  readonly appEnv: string | undefined;
+}
+
+/**
+ * Environments whose data is disposable (built from seeds or a template), so a contract
+ * migration may drop tables there without an archive. Every other environment holds data
+ * someone may need back (echo-next, prod), and 0011 alone drops about 21 GB of it.
+ */
+export const ARCHIVE_EXEMPT_ENVS: readonly string[] = ["local", "test", "preview"];
+export const ARCHIVE_SCRIPT = "packages/db/scripts/archive-tables.sh";
+
+/**
+ * The archive ledger. archive-tables.sh writes one row per contract migration after every
+ * table is dumped and the manifest uploaded; migrate reads it. It sits in the drizzle schema
+ * beside the migration history because it is migration bookkeeping, not app data, and it
+ * lives in the database it vouches for, so an archive of another database never counts.
+ * The script creates the same table; keep the two definitions identical.
+ */
+export const ARCHIVE_LEDGER_DDL = `create schema if not exists drizzle;
+create table if not exists drizzle.contract_archive (
+  migration text primary key,
+  archived_at timestamptz not null default now(),
+  destination text not null,
+  manifest text not null
+)`;
+
+export class ContractArchiveMissing extends Error {
+  constructor(
+    readonly migrations: readonly string[],
+    readonly appEnv: string | undefined,
+  ) {
+    super(
+      `Refusing to apply contract migration ${migrations.join(", ")} on APP_ENV=${appEnv ?? "<unset>"}: ` +
+        "no archive of the tables it drops is recorded in this database. Nothing was migrated. " +
+        `Run DATABASE_URL=<owner URL of this database> ${ARCHIVE_SCRIPT} first: it dumps each ` +
+        "table to gs://dembrane-echo-archive and records the archive in drizzle.contract_archive. " +
+        "Then run the migrate job again.",
+    );
+    this.name = "ContractArchiveMissing";
+  }
 }
 
 export interface MigrateResult {
@@ -38,12 +83,16 @@ export interface MigrateResult {
  * history. It is adopted: the baseline is recorded as applied, never executed, and
  * later migrations run normally. An advisory lock keeps two jobs from racing.
  */
-export async function migrate(url: string, opts: MigrateOptions = {}): Promise<MigrateResult> {
+export async function migrate(url: string, opts: MigrateOptions): Promise<MigrateResult> {
   const sql = connect(url, { max: 1, onnotice: () => {} });
   const folder = opts.holdContract ? withoutContract() : null;
   try {
     await sql`select pg_advisory_lock(${LOCK_KEY})`;
     const adoptedBaseline = await adoptBaseline(sql);
+    if (!opts.holdContract && !ARCHIVE_EXEMPT_ENVS.includes(opts.appEnv ?? "")) {
+      const unarchived = await unarchivedContracts(sql);
+      if (unarchived.length) throw new ContractArchiveMissing(unarchived, opts.appEnv);
+    }
     const before = await countApplied(sql);
     await drizzleMigrate(drizzle(sql), { migrationsFolder: folder ?? migrations() });
     const applied = (await countApplied(sql)) - before;
@@ -88,6 +137,59 @@ async function adoptBaseline(sql: postgres.Sql): Promise<boolean> {
     await sql`insert into drizzle.__drizzle_migrations (hash, created_at) values (${m.hash}, ${m.folderMillis})`;
   }
   return true;
+}
+
+/**
+ * Contract migrations this run would apply that have no archive row. Pending is decided the
+ * way drizzle's migrator decides it: every migration newer than the latest applied one.
+ */
+async function unarchivedContracts(sql: postgres.Sql): Promise<string[]> {
+  const files = readMigrationFiles({ migrationsFolder: migrations() });
+  const journal = (await Bun.file(
+    assetPath("db", "migrations", "meta", "_journal.json"),
+  ).json()) as { entries: { tag: string }[] };
+  const hasHistory = await one<boolean>(
+    sql`select to_regclass('drizzle.__drizzle_migrations') is not null as v`,
+  );
+  const [last] = hasHistory
+    ? await sql`select created_at from drizzle.__drizzle_migrations order by created_at desc limit 1`
+    : [];
+  const pending = journal.entries
+    .filter(
+      (e, i) =>
+        e.tag.includes("_contract_") &&
+        (!last || Number(last.created_at) < (files[i]?.folderMillis ?? 0)),
+    )
+    .map((e) => e.tag);
+  if (!pending.length) return [];
+  const hasLedger = await one<boolean>(
+    sql`select to_regclass('drizzle.contract_archive') is not null as v`,
+  );
+  const archived = hasLedger
+    ? new Set(
+        (await sql`select migration from drizzle.contract_archive`).map(
+          (r) => r.migration as string,
+        ),
+      )
+    : new Set<string>();
+  return pending.filter((tag) => !archived.has(tag));
+}
+
+/** Records an archive as archive-tables.sh does; for tests and for recovery by hand. */
+export async function recordContractArchive(
+  url: string,
+  row: { migration: string; destination: string; manifest: string },
+): Promise<void> {
+  const sql = connect(url, { max: 1, onnotice: () => {} });
+  try {
+    await sql.unsafe(ARCHIVE_LEDGER_DDL);
+    await sql`insert into drizzle.contract_archive (migration, destination, manifest)
+      values (${row.migration}, ${row.destination}, ${row.manifest})
+      on conflict (migration) do update set archived_at = now(),
+        destination = excluded.destination, manifest = excluded.manifest`;
+  } finally {
+    await sql.end();
+  }
 }
 
 async function countApplied(sql: postgres.Sql): Promise<number> {
@@ -147,7 +249,10 @@ export async function grantRuntimeRole(
 if (import.meta.main) {
   const url = process.env.MIGRATION_DATABASE_URL;
   if (!url) throw new Error("MIGRATION_DATABASE_URL is required");
-  const r = await migrate(url, { holdContract: process.env.MIGRATE_HOLD_CONTRACT === "1" });
+  const r = await migrate(url, {
+    holdContract: process.env.MIGRATE_HOLD_CONTRACT === "1",
+    appEnv: process.env.APP_ENV,
+  });
   process.stdout.write(
     `${JSON.stringify({ severity: "INFO", message: "migrations complete", ...r })}\n`,
   );

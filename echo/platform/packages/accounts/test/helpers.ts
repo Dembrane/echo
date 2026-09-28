@@ -24,7 +24,7 @@ export async function freshDatabase(name: string): Promise<string> {
   await a.unsafe(`create database ${name}`);
   await a.end();
   const url = `${(admin as string).slice(0, (admin as string).lastIndexOf("/"))}/${name}`;
-  await migrate(url);
+  await migrate(url, { appEnv: "test" });
   return url;
 }
 

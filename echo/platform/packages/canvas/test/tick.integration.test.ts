@@ -47,7 +47,7 @@ run("canvas tick against Postgres", () => {
 
   beforeAll(async () => {
     url = await freshDatabase(admin as string, "canvas_tick_test");
-    await migrate(url);
+    await migrate(url, { appEnv: "test" });
     database = createDb({ url, poolMax: 4 });
     raw = postgres(url, { max: 2, onnotice: () => {} });
     await seed(raw);
@@ -179,7 +179,7 @@ run("canvas tick recovery", () => {
 
   test("a tick on a killed worker resumes at the model call, not re-running prepare or gather", async () => {
     const url = await freshDatabase(admin as string, "canvas_recovery_test");
-    await migrate(url);
+    await migrate(url, { appEnv: "test" });
     await installQueueSchema(url);
     const sql = postgres(url, { max: 1, onnotice: () => {} });
     await seed(sql);

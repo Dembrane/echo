@@ -84,7 +84,7 @@ run("live presence, monitor and streams", () => {
     await a.unsafe(`drop database if exists ${DB} with (force)`);
     await a.unsafe(`create database ${DB} template ${TEMPLATE}`);
     await a.end();
-    await migrate(`${base}/${DB}`);
+    await migrate(`${base}/${DB}`, { appEnv: "test" });
     database = createDb({ url: `${base}/${DB}`, poolMax: 4 });
     sql = postgres(`${base}/${DB}`, { max: 1, onnotice: () => {} });
     listener = postgres(`${base}/${DB}`, { max: 1, onnotice: () => {} });

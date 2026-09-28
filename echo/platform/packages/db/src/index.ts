@@ -4,7 +4,17 @@ import * as schema from "./schema";
 import * as relations from "./schema/relations";
 
 export { connect } from "./connection";
-export { grantRuntimeRole, MIGRATE_ASSETS, type MigrateResult, migrate } from "./migrate";
+export {
+  ARCHIVE_EXEMPT_ENVS,
+  ARCHIVE_SCRIPT,
+  ContractArchiveMissing,
+  grantRuntimeRole,
+  MIGRATE_ASSETS,
+  type MigrateOptions,
+  type MigrateResult,
+  migrate,
+  recordContractArchive,
+} from "./migrate";
 export { schema };
 export type Db = ReturnType<typeof createDb>["db"];
 

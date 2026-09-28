@@ -52,7 +52,7 @@ run("report generation survives a killed worker", () => {
     await a.unsafe("drop database if exists reports_recovery_test with (force)");
     await a.unsafe("create database reports_recovery_test");
     await a.end();
-    await migrate(url);
+    await migrate(url, { appEnv: "test" });
     await installQueueSchema(url);
     const sql = postgres(url, { max: 1, onnotice: () => {} });
     await sql`insert into project (id, name, language, is_conversation_allowed, created_at, updated_at)

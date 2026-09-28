@@ -40,7 +40,7 @@ run("dead worker recovery", () => {
     await a.unsafe("drop database if exists queue_recovery_test with (force)");
     await a.unsafe("create database queue_recovery_test");
     await a.end();
-    await migrate(url);
+    await migrate(url, { appEnv: "test" });
     await installQueueSchema(url);
     writeFileSync(trace, "");
 

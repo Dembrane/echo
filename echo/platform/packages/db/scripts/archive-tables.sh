@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Copies tables to cold storage before a contract migration drops them. Runs once at
 # cutover, against the database about to be migrated, before the migration job; the
-# migration header names the tables. Reads only: pg_dump and count(*), no writes.
+# migration header names the tables. Reads the tables with pg_dump and count(*); its one
+# write is the row in drizzle.contract_archive that lets the migrate job apply the
+# contract migration outside local, test and preview. The row is written last, so a run
+# that fails on any table leaves the migration blocked.
 #
 # One custom-format dump per table (restore with pg_restore -t), plus manifest.tsv with
 # each table's exact row count and size at dump time. A table that does not exist is
@@ -14,6 +17,9 @@
 #               Objects land under <dest>/<database>/<UTC stamp>/.
 # PG_DUMP, PSQL override the binaries, e.g. "docker exec -i parity-db-1 pg_dump" for a
 #               local run. pg_dump must be at least the server's major version.
+# ARCHIVE_FOR   the contract migration this archive clears. Defaults to
+#               0011_contract_dead_features for the default set; a named table list clears
+#               nothing unless ARCHIVE_FOR is given, so a partial archive cannot unblock it.
 set -euo pipefail
 
 : "${DATABASE_URL:?URL of the database to archive from}"
@@ -30,7 +36,11 @@ default_tables=(
   workspace_request
 )
 tables=("$@")
-[[ ${#tables[@]} -gt 0 ]] || tables=("${default_tables[@]}")
+archive_for="${ARCHIVE_FOR:-}"
+if [[ ${#tables[@]} -eq 0 ]]; then
+  tables=("${default_tables[@]}")
+  archive_for="${ARCHIVE_FOR:-0011_contract_dead_features}"
+fi
 
 q() { "${psql_cmd[@]}" "$DATABASE_URL" -At -v ON_ERROR_STOP=1 -c "$1"; }
 
@@ -69,3 +79,23 @@ done
 
 put manifest.tsv < "$manifest"
 echo "archived to $dest"
+
+if [[ -n "$archive_for" ]]; then
+  # Same table as ARCHIVE_LEDGER_DDL in packages/db/src/migrate.ts.
+  "${psql_cmd[@]}" "$DATABASE_URL" -q -v ON_ERROR_STOP=1 -v tag="$archive_for" -v dest="$dest" \
+    -v manifest="$(cat "$manifest")" <<'SQL'
+set client_min_messages = warning;
+create schema if not exists drizzle;
+create table if not exists drizzle.contract_archive (
+  migration text primary key,
+  archived_at timestamptz not null default now(),
+  destination text not null,
+  manifest text not null
+);
+insert into drizzle.contract_archive (migration, destination, manifest)
+  values (:'tag', :'dest', :'manifest')
+  on conflict (migration) do update set archived_at = now(),
+    destination = excluded.destination, manifest = excluded.manifest;
+SQL
+  echo "recorded the archive for $archive_for in drizzle.contract_archive"
+fi

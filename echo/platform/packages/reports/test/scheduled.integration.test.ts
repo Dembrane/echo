@@ -19,7 +19,7 @@ run("the scheduled report runner", () => {
     await a.unsafe("drop database if exists reports_scheduled_test with (force)");
     await a.unsafe("create database reports_scheduled_test");
     await a.end();
-    await migrate(url);
+    await migrate(url, { appEnv: "test" });
     sql = postgres(url, { max: 1, onnotice: () => {} });
     database = createDb({ url, poolMax: 2 });
     await sql`insert into project (id, name, language, is_conversation_allowed, created_at, updated_at)

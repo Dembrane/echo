@@ -59,7 +59,7 @@ run("queue on DBOS", () => {
     await a.unsafe("drop database if exists queue_test with (force)");
     await a.unsafe("create database queue_test");
     await a.end();
-    await migrate(url);
+    await migrate(url, { appEnv: "test" });
     await installQueueSchema(url);
     sql = postgres(url, { max: 2, onnotice: () => {} });
     queue = new Queue(url, logger, tracer, { pollingIntervalMs: 50 });

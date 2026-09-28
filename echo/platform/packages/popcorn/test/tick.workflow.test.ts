@@ -42,7 +42,7 @@ run("popcorn tick workflow on DBOS", () => {
 
   beforeAll(async () => {
     url = await freshDatabase(admin as string, "popcorn_workflow_test");
-    await migrate(url);
+    await migrate(url, { appEnv: "test" });
     await installQueueSchema(url);
     raw = postgres(url, { max: 2, onnotice: () => {} });
     await seed(raw);

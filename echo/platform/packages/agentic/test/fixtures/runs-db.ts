@@ -22,7 +22,7 @@ export async function prepareDb(admin: string, name: string, opts: { queue?: boo
   await a.unsafe(`create database ${name}`);
   await a.end();
   const url = scratchUrl(admin, name);
-  await migrate(url);
+  await migrate(url, { appEnv: "test" });
   if (opts.queue) await installQueueSchema(url);
   return url;
 }
