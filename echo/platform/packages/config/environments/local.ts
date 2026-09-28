@@ -1,6 +1,6 @@
 import type { Environment } from "../src";
 
-// Matches .devcontainer/compose.yml. Secrets come from .env.local, never from here.
+// Matches compose.yml. Secrets come from .env.local, never from here.
 export default {
   http: {
     publicUrl: "http://localhost:8080",
