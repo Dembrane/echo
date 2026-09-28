@@ -250,6 +250,9 @@ export function buildBundle(a: BuildArgs): Json {
       synthetic: true,
       public_sources_only: demo.public_sources_only === true,
       language: demo.language === "nl" ? "nl" : "en",
+      // A prospect's demo leads on to their own organisation; only a web link is shown.
+      ...(typeof demo.continue_url === "string" &&
+        /^https?:\/\//.test(demo.continue_url) && { continue_url: demo.continue_url }),
     };
   Object.assign(session, openingScreens(settings, demo));
   session.language = screenLanguage(settings, demo, project);

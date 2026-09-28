@@ -11,8 +11,16 @@ export {
 } from "./access";
 export { buildBundle } from "./bundle";
 export { analysisDeck, type DeckAnalysis } from "./deck";
-export { demoIdentity, PRODUCTION_HOSTS, seedDemo } from "./demo";
-export { type DemoRoutesDeps, popcornDemoRoutes } from "./demo-routes";
+export {
+  type DemoInput,
+  type DemoResult,
+  demoIdentity,
+  PRODUCTION_HOSTS,
+  refuseProduction,
+  seedDemo,
+} from "./demo";
+export { demoFromFixture, type FixtureInputs } from "./demo-fixture";
+export { type DemoRoutesDeps, type ProspectHook, popcornDemoRoutes } from "./demo-routes";
 export { publishNudge, updateStream } from "./events";
 export { popcornApiJobs, popcornTick, queueDispatch } from "./jobs";
 export {
@@ -79,7 +87,7 @@ export {
   type Sql,
 } from "./storage";
 export { missingTexts, popcornTexts, translatableTexts } from "./translate";
-export { renderPopcornPage } from "./view";
+export { continueSnippet, renderPopcornPage } from "./view";
 export {
   type Adoption,
   type PopcornWorkerDeps,
