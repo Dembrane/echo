@@ -41,8 +41,6 @@ import {
 	ProjectUploadRoute,
 	ProjectUsageRoute,
 } from "./routes/project/ProjectRoutes";
-import { SidebarPreviewLayout } from "./routes/sidebar-preview/SidebarPreviewLayout";
-import { SidebarPreviewRoute } from "./routes/sidebar-preview/SidebarPreviewRoute";
 
 // Lazy-loaded route components
 const ProjectsHomeRoute = createLazyNamedRoute(
@@ -614,47 +612,6 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "admin",
-			},
-			{
-				// Sidebar preview — feature/sidebar work-in-progress. No auth gate
-				// so the design can be poked at without sign-in friction. Remove
-				// or fold into real layouts once the sidebar replaces production
-				// chrome.
-				children: [
-					{ element: <SidebarPreviewRoute />, index: true },
-					{ element: <SidebarPreviewRoute />, path: "settings/:section" },
-					{ element: <SidebarPreviewRoute />, path: "o/:orgId" },
-					{
-						element: <SidebarPreviewRoute />,
-						path: "o/:orgId/settings/:section",
-					},
-					{
-						element: <SidebarPreviewRoute />,
-						path: "w/:workspaceId/home",
-					},
-					{
-						element: <SidebarPreviewRoute />,
-						path: "w/:workspaceId/projects",
-					},
-					{
-						element: <SidebarPreviewRoute />,
-						path: "w/:workspaceId/settings/:section",
-					},
-					{
-						element: <SidebarPreviewRoute />,
-						path: "w/:workspaceId/projects/:projectId/home",
-					},
-					{
-						element: <SidebarPreviewRoute />,
-						path: "w/:workspaceId/projects/:projectId/conversations",
-					},
-					{
-						element: <SidebarPreviewRoute />,
-						path: "w/:workspaceId/projects/:projectId/settings/:section",
-					},
-				],
-				element: <SidebarPreviewLayout />,
-				path: "sidebar-preview",
 			},
 			{
 				element: <ErrorPage />,
