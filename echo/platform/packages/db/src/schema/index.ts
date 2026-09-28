@@ -3081,62 +3081,6 @@ export const workspace_membership = pgTable(
   ],
 );
 
-export const workspace_request = pgTable(
-  "workspace_request",
-  {
-    approved_billing_period: varchar({ length: 255 }).default(sql`NULL`),
-    created_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-    decided_at: timestamp({ withTimezone: true, mode: "string" }),
-    decided_by: uuid(),
-    denial_reason: text(),
-    granted_percent_discount: integer(),
-    granted_tier: varchar({ length: 255 }).default(sql`NULL`),
-    granted_tier_expires_at: timestamp({ withTimezone: true, mode: "string" }),
-    granted_type_discount: varchar({ length: 255 }).default(sql`NULL`),
-    id: uuid().primaryKey().notNull(),
-    kind: varchar({ length: 255 }).default(sql`NULL`).notNull(),
-    org_id: uuid().notNull(),
-    proposed_billing_period: varchar({ length: 255 }).default(sql`NULL`),
-    proposed_name: varchar({ length: 100 }).default(sql`NULL`),
-    proposed_tier: varchar({ length: 255 }).default("innovator").notNull(),
-    proposed_visibility: varchar({ length: 255 }).default("open_to_organisation").notNull(),
-    requested_by: uuid().notNull(),
-    requester_message: text(),
-    resulting_workspace_id: uuid(),
-    staff_notes: text(),
-    status: varchar({ length: 255 }).default("pending").notNull(),
-    updated_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-    workspace_id: uuid(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    foreignKey({
-      columns: [table.decided_by],
-      foreignColumns: [app_user.id],
-      name: "workspace_request_decided_by_foreign",
-    }).onDelete("set null"),
-    foreignKey({
-      columns: [table.org_id],
-      foreignColumns: [org.id],
-      name: "workspace_request_org_id_foreign",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.requested_by],
-      foreignColumns: [app_user.id],
-      name: "workspace_request_requested_by_foreign",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.resulting_workspace_id],
-      foreignColumns: [workspace.id],
-      name: "workspace_request_resulting_workspace_id_foreign",
-    }).onDelete("set null"),
-    foreignKey({
-      columns: [table.workspace_id],
-      foreignColumns: [workspace.id],
-      name: "workspace_request_workspace_id_foreign",
-    }).onDelete("set null"),
-  ],
-);
-
 export const workspace_invite = pgTable(
   "workspace_invite",
   {

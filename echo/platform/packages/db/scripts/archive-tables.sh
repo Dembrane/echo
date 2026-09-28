@@ -27,6 +27,7 @@ default_tables=(
   conversation_segment conversation_segment_conversation_chunk
   lightrag_chunk_graph_map lightrag_doc_chunks lightrag_doc_full lightrag_doc_status
   lightrag_llm_cache lightrag_vdb_entity lightrag_vdb_relation lightrag_vdb_transcript
+  workspace_request
 )
 tables=("$@")
 [[ ${#tables[@]} -gt 0 ]] || tables=("${default_tables[@]}")

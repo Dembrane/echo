@@ -88,7 +88,6 @@ import {
   workspace,
   workspace_invite,
   workspace_membership,
-  workspace_request,
 } from "./index";
 
 export const analysis_last_openedRelations = relations(analysis_last_opened, ({ one }) => ({
@@ -418,12 +417,6 @@ export const app_userRelations = relations(app_user, ({ many }) => ({
   referral_ledgers: many(referral_ledger),
   trainings: many(training),
   workspace_memberships: many(workspace_membership),
-  workspace_requests_decided_by: many(workspace_request, {
-    relationName: "workspace_request_decided_by_app_user_id",
-  }),
-  workspace_requests_requested_by: many(workspace_request, {
-    relationName: "workspace_request_requested_by_app_user_id",
-  }),
   workspace_invites: many(workspace_invite),
   workspaces: many(workspace),
 }));
@@ -441,12 +434,6 @@ export const workspaceRelations = relations(workspace, ({ one, many }) => ({
   support_access_requests: many(support_access_request),
   referral_ledgers: many(referral_ledger),
   workspace_memberships: many(workspace_membership),
-  workspace_requests_resulting_workspace_id: many(workspace_request, {
-    relationName: "workspace_request_resulting_workspace_id_workspace_id",
-  }),
-  workspace_requests_workspace_id: many(workspace_request, {
-    relationName: "workspace_request_workspace_id_workspace_id",
-  }),
   workspace_invites: many(workspace_invite),
   org_billed_to_team_id: one(org, {
     fields: [workspace.billed_to_team_id],
@@ -734,7 +721,6 @@ export const orgRelations = relations(org, ({ one, many }) => ({
   training_licenses: many(training_license),
   referral_ledgers: many(referral_ledger),
   trainings: many(training),
-  workspace_requests: many(workspace_request),
   workspaces_billed_to_team_id: many(workspace, {
     relationName: "workspace_billed_to_team_id_org_id",
   }),
@@ -1561,33 +1547,6 @@ export const referral_ledgerRelations = relations(referral_ledger, ({ one }) => 
   workspace: one(workspace, {
     fields: [referral_ledger.workspace_id],
     references: [workspace.id],
-  }),
-}));
-
-export const workspace_requestRelations = relations(workspace_request, ({ one }) => ({
-  app_user_decided_by: one(app_user, {
-    fields: [workspace_request.decided_by],
-    references: [app_user.id],
-    relationName: "workspace_request_decided_by_app_user_id",
-  }),
-  org: one(org, {
-    fields: [workspace_request.org_id],
-    references: [org.id],
-  }),
-  app_user_requested_by: one(app_user, {
-    fields: [workspace_request.requested_by],
-    references: [app_user.id],
-    relationName: "workspace_request_requested_by_app_user_id",
-  }),
-  workspace_resulting_workspace_id: one(workspace, {
-    fields: [workspace_request.resulting_workspace_id],
-    references: [workspace.id],
-    relationName: "workspace_request_resulting_workspace_id_workspace_id",
-  }),
-  workspace_workspace_id: one(workspace, {
-    fields: [workspace_request.workspace_id],
-    references: [workspace.id],
-    relationName: "workspace_request_workspace_id_workspace_id",
   }),
 }));
 

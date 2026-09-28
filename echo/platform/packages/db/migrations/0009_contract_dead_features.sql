@@ -1,5 +1,5 @@
--- Contract: drops the old library, its segment tables, the LightRAG store and the Celery
--- sequences. None has a reader in this stack; the old stack still reads some of them, so
+-- Contract: drops the old library, its segment tables, the LightRAG store, the retired
+-- workspace request flow and the Celery sequences. None has a reader in this stack; the old stack still reads some of them, so
 -- this runs at cutover only (MIGRATE_HOLD_CONTRACT=1 holds it back where the old stack
 -- shares the database).
 --
@@ -25,6 +25,7 @@
 --   lightrag_vdb_entity                      62,424 rows  1.40 GB   LightRAG, prod only
 --   lightrag_vdb_relation                   185,065 rows  3.32 GB   LightRAG, prod only
 --   lightrag_vdb_transcript                 830,111 rows 11.86 GB   LightRAG, prod only
+--   workspace_request                             0 rows  16 kB   retired request flow, empty
 -- Also dropped: processing_status.project_analysis_run_id (links statuses to the archived
 -- runs) and the sequences task_id_sequence, taskset_id_sequence (Celery, prod only, no data).
 -- Directus's metadata rows for these collections go with the directus_* tables at cutover.
@@ -37,6 +38,7 @@ ALTER TABLE "processing_status" DROP COLUMN IF EXISTS "project_analysis_run_id";
 DROP TABLE IF EXISTS "project_analysis_run" CASCADE;--> statement-breakpoint
 DROP TABLE IF EXISTS "conversation_segment_conversation_chunk" CASCADE;--> statement-breakpoint
 DROP TABLE IF EXISTS "conversation_segment" CASCADE;--> statement-breakpoint
+DROP TABLE IF EXISTS "workspace_request" CASCADE;--> statement-breakpoint
 DROP TABLE IF EXISTS "lightrag_chunk_graph_map";--> statement-breakpoint
 DROP TABLE IF EXISTS "lightrag_doc_chunks";--> statement-breakpoint
 DROP TABLE IF EXISTS "lightrag_doc_full";--> statement-breakpoint
