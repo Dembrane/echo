@@ -1,5 +1,5 @@
 import { conversations, projects, tags, workspaces } from "../fixtures";
-import { EMPTY_PROJECT, extra, P1_RUN, P2_OPEN, P2_TAG, UNTRANSCRIBED } from "../projects-setup";
+import { EMPTY_PROJECT, extra, P2_OPEN, P2_TAG, UNTRANSCRIBED } from "../projects-setup";
 import { scenarios } from "../runner/scenario";
 
 const { p1, p2, p3, legacy } = projects;
@@ -202,74 +202,57 @@ export default scenarios([
     path: v1(p1, "/transcripts"),
   },
 
-  // ── POST /api/projects/{id}/create-library ────────────────────────
+  // ── The old library, pruned ───────────────────────────────────────
   {
-    name: "projects create-library: owner",
+    name: "projects create-library: removed",
     as: "alice",
     method: "POST",
     path: v1(p1, "/create-library"),
     body: { language: "nl" },
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
   {
-    name: "projects create-library: missing body",
-    as: "alice",
-    method: "POST",
-    path: v1(p1, "/create-library"),
-  },
-  {
-    name: "projects create-library: other tenant",
-    as: "bob",
-    method: "POST",
-    path: v1(p1, "/create-library"),
-    body: {},
-  },
-  {
-    name: "projects create-library: observer refused",
-    as: "rita",
-    method: "POST",
-    path: v1(p2, "/create-library"),
-    body: {},
-    setup: [P2_OPEN],
-    differs: "H-8: regenerating the library needs project:update, any role could before",
-  },
-
-  // ── POST /api/projects/{id}/create-view ───────────────────────────
-  {
-    name: "projects create-view: no analysis yet",
+    name: "projects create-view: removed",
     as: "alice",
     method: "POST",
     path: v1(p1, "/create-view"),
     body: { query: "mobility" },
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
   {
-    name: "projects create-view: queued",
+    name: "library views list: removed",
     as: "alice",
-    method: "POST",
-    path: v1(p1, "/create-view"),
-    body: { query: "mobility" },
-    setup: [P1_RUN],
+    method: "GET",
+    path: "/api/v2/bff/views",
+    query: { project_id: p1 },
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
   {
-    name: "projects create-view: query required",
+    name: "library view get: removed",
     as: "alice",
-    method: "POST",
-    path: v1(p1, "/create-view"),
-    body: {},
+    method: "GET",
+    path: `/api/v2/bff/views/${extra.run}`,
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
   {
-    name: "projects create-view: observer refused",
-    as: "rita",
-    method: "POST",
-    path: v1(p2, "/create-view"),
-    body: { query: "x" },
-    setup: [P2_OPEN],
+    name: "library aspect get: removed",
+    as: "alice",
+    method: "GET",
+    path: `/api/v2/bff/aspects/${extra.run}`,
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
   {
-    name: "projects create-view: other tenant",
-    as: "bob",
-    method: "POST",
-    path: v1(p1, "/create-view"),
-    body: { query: "x" },
+    name: "library quote get: removed",
+    as: "alice",
+    method: "GET",
+    path: `/api/v2/bff/aspect-segments/${extra.run}`,
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
 
   // ── POST /api/projects/{id}/clone ─────────────────────────────────

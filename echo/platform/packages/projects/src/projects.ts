@@ -3,7 +3,7 @@ import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@echo/cor
 import type { Signed } from "@echo/http";
 import { directusRow, pythonIso } from "@echo/legacy-shape";
 import { projectAllows, projectFor, projectSource } from "./access";
-import { createLibrary, createView, type JobSink } from "./jobs";
+import type { JobSink } from "./jobs";
 import { isExternalClient, legalBlock, legalWrite } from "./legal";
 import type { ProjectsStorage, Row } from "./storage";
 import { zip } from "./zip";
@@ -147,34 +147,6 @@ export async function exportTranscripts(d: ProjectDeps, who: Signed, projectId: 
   if (!files.length) throw new NotFoundError("No transcripts available for this project");
   const label = (project.name ?? projectId).replace(/[/\\ ]/g, "_");
   return { filename: `${label}_transcripts.zip`, body: zip(files, d.now()) };
-}
-
-/** Queues a library regeneration. Creating analysis runs is contributing to the project. */
-export async function requestLibrary(
-  d: ProjectDeps,
-  who: Signed,
-  projectId: string,
-  language: string,
-) {
-  await projectFor(d.access, who, projectId, "project:update", "v1");
-  await d.jobs.enqueue(createLibrary, { projectId, runId: newId(), language });
-}
-
-export async function requestView(
-  d: ProjectDeps,
-  who: Signed,
-  projectId: string,
-  body: { query: string; additional_context: string; language: string },
-) {
-  await projectFor(d.access, who, projectId, "project:update");
-  const run = await d.store.latestAnalysisRun(projectId);
-  if (!run) throw new NotFoundError("No analysis found for this project");
-  await d.jobs.enqueue(createView, {
-    analysisRunId: run.id,
-    query: body.query,
-    context: body.additional_context,
-    language: body.language,
-  });
 }
 
 // ── v2 /api/v2/projects ─────────────────────────────────────────────────

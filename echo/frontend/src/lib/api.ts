@@ -108,21 +108,6 @@ api.interceptors.response.use(
 	},
 );
 
-export const getLatestProjectAnalysisRunByProjectId = async (
-	projectId: string,
-) => {
-	const runs = await bff.get<ProjectAnalysisRun[]>("/analysis-runs", {
-		limit: 1,
-		project_id: projectId,
-	});
-	return runs[0] ?? null;
-};
-
-/** Views of the latest analysis run, newest first, each with its aspects. */
-export const getProjectViews = async (projectId: string) => {
-	return bff.get<View[]>("/views", { project_id: projectId });
-};
-
 export const getProjectTranscriptsLink = (projectId: string) =>
 	`${apiCommonConfig.baseURL}/projects/${projectId}/transcripts`;
 
@@ -987,28 +972,6 @@ export const getConversationChunkContentLink = (
 	returnUrl = false,
 ) =>
 	`${apiCommonConfig.baseURL}/conversations/${conversationId}/chunks/${chunkId}/content${returnUrl ? "?return_url=true" : ""}`;
-
-export const generateProjectLibrary = async (payload: {
-	projectId: string;
-	language: string;
-}) => {
-	return api.post<unknown>(`/projects/${payload.projectId}/create-library`, {
-		language: payload.language,
-	});
-};
-
-export const generateProjectView = async (payload: {
-	projectId: string;
-	query: string;
-	language: string;
-	additionalContext?: string;
-}) => {
-	return api.post<unknown>(`/projects/${payload.projectId}/create-view`, {
-		additional_context: payload.additionalContext,
-		language: payload.language,
-		query: payload.query,
-	});
-};
 
 export const getConversationTranscriptString = async (
 	conversationId: string,

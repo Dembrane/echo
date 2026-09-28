@@ -55,14 +55,6 @@ const LibraryRoute = createLazyNamedRoute(
 	"LibraryRoute",
 );
 
-const ProjectLibraryView = createLazyNamedRoute(
-	() => import("./routes/project/library/ProjectLibraryView"),
-	"ProjectLibraryView",
-);
-const ProjectLibraryAspect = createLazyNamedRoute(
-	() => import("./routes/project/library/ProjectLibraryAspect"),
-	"ProjectLibraryAspect",
-);
 const LoginRoute = createLazyNamedRoute(
 	() => import("./routes/auth/Login"),
 	"LoginRoute",
@@ -321,14 +313,6 @@ const projectRouteChildren = [
 												<PopcornRoute />
 											),
 											path: "popcorn",
-										},
-										{
-											element: <ProjectLibraryAspect />,
-											path: "views/:viewId/aspects/:aspectId",
-										},
-										{
-											element: <ProjectLibraryView />,
-											path: "views/:viewId",
 										},
 										{
 											element: <LibraryRoute />,

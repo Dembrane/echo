@@ -5,8 +5,6 @@ import { p } from "@echo/legacy-shape";
 import { Hono } from "hono";
 import * as goals from "./goals";
 import type { JobSink } from "./jobs";
-import * as library from "./library";
-import { libraryStorage } from "./library-storage";
 import { progressStream } from "./progress";
 import * as projects from "./projects";
 import { PROJECT_UPDATE_FIELDS, type ProjectDeps } from "./projects";
@@ -46,8 +44,8 @@ const updateShape = Object.fromEntries(
 
 /**
  * Projects, reports, tags, goals, methodologies and prompt templates: the v1 /api/projects
- * and /api/templates routes, v2 /api/v2/projects, and the BFF tag, analysis-run, project,
- * goal and methodology routes, plus the library reads the dashboard took from Directus.
+ * and /api/templates routes, v2 /api/v2/projects, and the BFF tag, project, goal and
+ * methodology routes.
  * Paths, bodies and error texts of ported routes match the Python API.
  */
 export function projectRoutes(deps: ProjectRoutesDeps) {
@@ -105,32 +103,6 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
       "content-type": "application/zip",
       "content-disposition": `attachment; filename="${out.filename}"`,
     });
-  });
-
-  app.post("/api/projects/:project_id/create-library", async (c) => {
-    const who = requireUser(c);
-    const { body } = await p.validate(c.req, {
-      body: model({ language: optional(nullable(str()), "en") }),
-    });
-    await projects.requestLibrary(d, who, c.req.param("project_id"), body.data.language || "en");
-    return c.json(null, 202);
-  });
-
-  app.post("/api/projects/:project_id/create-view", async (c) => {
-    const who = requireUser(c);
-    const { body } = await p.validate(c.req, {
-      body: model({
-        query: required(str()),
-        additional_context: optional(nullable(str()), ""),
-        language: optional(nullable(str()), "en"),
-      }),
-    });
-    await projects.requestView(d, who, c.req.param("project_id"), {
-      query: body.data.query,
-      additional_context: body.data.additional_context ?? "",
-      language: body.data.language || "en",
-    });
-    return c.json(null, 202);
   });
 
   app.post("/api/projects/:project_id/create-report", async (c) => {
@@ -292,7 +264,7 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
     return c.json(await projects.conversationUsage(d, who, c.req.param("project_id")));
   });
 
-  // ── BFF tags, analysis runs, projects ─────────────────────────────
+  // ── BFF tags and projects ─────────────────────────────────────────
 
   app.get("/api/v2/bff/tags", async (c) => {
     const who = requireUser(c);
@@ -326,49 +298,6 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
   app.delete("/api/v2/bff/tags/:tag_id", async (c) => {
     const who = requireUser(c);
     return c.json(await tags.deleteTag(d, who, c.req.param("tag_id")));
-  });
-
-  app.get("/api/v2/bff/analysis-runs", async (c) => {
-    const who = requireUser(c);
-    const { query } = await p.validate(c.req, {
-      query: { project_id: required(str()), limit: optional(int({ ge: 1, le: 200 }), 20) },
-    });
-    return c.json(await tags.listAnalysisRuns(d, who, query.project_id, query.limit));
-  });
-
-  app.get("/api/v2/bff/analysis-runs/:run_id", async (c) => {
-    const who = requireUser(c);
-    return c.json(await tags.getAnalysisRun(d, who, c.req.param("run_id")));
-  });
-
-  app.get("/api/v2/bff/analysis-runs/:run_id/new-chunks-count", async (c) => {
-    const who = requireUser(c);
-    return c.json(await tags.newChunksSince(d, who, c.req.param("run_id")));
-  });
-
-  // ── BFF library reads: views, aspects and quotes ────────────────────
-
-  const lib: library.LibraryDeps = { library: libraryStorage(deps.db), access: deps.access };
-
-  app.get("/api/v2/bff/views", async (c) => {
-    const who = requireUser(c);
-    const { query } = await p.validate(c.req, { query: { project_id: required(str()) } });
-    return c.json(await library.projectViews(lib, who, query.project_id));
-  });
-
-  app.get("/api/v2/bff/views/:view_id", async (c) => {
-    const who = requireUser(c);
-    return c.json(await library.getView(lib, who, c.req.param("view_id")));
-  });
-
-  app.get("/api/v2/bff/aspects/:aspect_id", async (c) => {
-    const who = requireUser(c);
-    return c.json(await library.getAspect(lib, who, c.req.param("aspect_id")));
-  });
-
-  app.get("/api/v2/bff/aspect-segments/:segment_id", async (c) => {
-    const who = requireUser(c);
-    return c.json(await library.getAspectSegment(lib, who, c.req.param("segment_id")));
   });
 
   app.get("/api/v2/bff/projects", async (c) => {

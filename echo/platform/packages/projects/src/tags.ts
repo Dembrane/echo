@@ -106,35 +106,3 @@ export async function deleteConversationTags(
   const deleted = await d.store.deleteConversationTagLinks(projectId, conversationId, linkIds);
   return { status: "success", deleted };
 }
-
-// ── BFF /api/v2/bff/analysis-runs ───────────────────────────────────────
-
-export async function listAnalysisRuns(
-  d: ProjectDeps,
-  who: Signed,
-  projectId: string,
-  limit: number,
-) {
-  await projectFor(d.access, who, projectId, "project:read");
-  return d.store.analysisRuns(projectId, limit);
-}
-
-/** A run is reached through its project; reading it needs project:read (spec L-4). */
-async function runFor(d: ProjectDeps, who: Signed, runId: string) {
-  const run = await d.store.analysisRun(runId);
-  if (!run?.project_id) throw new NotFoundError("Analysis run not found");
-  await projectFor(d.access, who, run.project_id, "project:read");
-  return run;
-}
-
-export async function getAnalysisRun(d: ProjectDeps, who: Signed, runId: string) {
-  const run = await runFor(d, who, runId);
-  return { ...directusRow(run), ...(await d.store.runAliases(runId)) };
-}
-
-/** Chunks recorded in the run's project since the run: the "new since last library" banner. */
-export async function newChunksSince(d: ProjectDeps, who: Signed, runId: string) {
-  const run = await runFor(d, who, runId);
-  if (!run.project_id || !run.created_at) return { count: 0 };
-  return { count: await d.store.chunksSince(run.project_id, run.created_at) };
-}

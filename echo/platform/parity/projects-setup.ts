@@ -28,9 +28,6 @@ export const UNTRANSCRIBED = `insert into conversation (id, project_id, particip
 export const P2_TAG = `insert into project_tag (id, project_id, text, sort, created_at, updated_at)
   values ('${extra.tag}', '${projects.p2}', 'research', 1, now(), now())`;
 
-export const P1_RUN = `insert into project_analysis_run (id, project_id, created_at, updated_at)
-  values ('${extra.run}', '${projects.p1}', '2026-09-01T09:25:00Z', '2026-09-01T09:25:00Z')`;
-
 export const P1_DRAFT = `insert into project_report (project_id, status, language, kind, content, date_created)
   values ('${projects.p1}', 'draft', 'en', 'report', '', now())`;
 

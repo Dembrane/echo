@@ -1,5 +1,5 @@
 import { projects, tags } from "../fixtures";
-import { extra, P1_RUN, P2_OPEN, P2_TAG } from "../projects-setup";
+import { extra, P2_OPEN, P2_TAG } from "../projects-setup";
 import { scenarios } from "../runner/scenario";
 
 const { p1, p2 } = projects;
@@ -112,62 +112,27 @@ export default scenarios([
   },
   { name: "tags delete: bad id", as: "alice", method: "DELETE", path: `${T}/not-a-uuid` },
 
-  // ── /api/v2/bff/analysis-runs ─────────────────────────────────────
+  // ── /api/v2/bff/analysis-runs, pruned with the old library ────────
   {
-    name: "analysis runs list: none",
+    name: "analysis runs list: removed",
     as: "alice",
     method: "GET",
     path: R,
     query: { project_id: p1 },
+    removed: "the old library's analysis runs, pruned with it",
   },
   {
-    name: "analysis runs list: one",
-    as: "alice",
-    method: "GET",
-    path: R,
-    query: { project_id: p1, limit: "5" },
-    setup: [P1_RUN],
-  },
-  {
-    name: "analysis runs list: bad limit",
-    as: "alice",
-    method: "GET",
-    path: R,
-    query: { project_id: p1, limit: "500" },
-  },
-  {
-    name: "analysis runs list: other tenant",
-    as: "bob",
-    method: "GET",
-    path: R,
-    query: { project_id: p1 },
-  },
-  {
-    name: "analysis runs get: owner",
+    name: "analysis runs get: removed",
     as: "alice",
     method: "GET",
     path: `${R}/${extra.run}`,
-    setup: [P1_RUN],
-  },
-  { name: "analysis runs get: missing", as: "alice", method: "GET", path: `${R}/${extra.run}` },
-  {
-    name: "analysis runs get: other tenant",
-    as: "bob",
-    method: "GET",
-    path: `${R}/${extra.run}`,
-    setup: [P1_RUN],
+    removed: "the old library's analysis runs, pruned with it",
   },
   {
-    name: "analysis runs new chunks: counted since the run",
+    name: "analysis runs new chunks: removed",
     as: "alice",
     method: "GET",
     path: `${R}/${extra.run}/new-chunks-count`,
-    setup: [P1_RUN],
-  },
-  {
-    name: "analysis runs new chunks: missing run",
-    as: "alice",
-    method: "GET",
-    path: `${R}/${extra.run}/new-chunks-count`,
+    removed: "the old library's analysis runs, pruned with it",
   },
 ]);

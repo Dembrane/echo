@@ -18,7 +18,6 @@ import {
 	deleteCustomVerificationTopic,
 	deleteProjectById,
 	deleteTagById,
-	getLatestProjectAnalysisRunByProjectId,
 	getVerificationTopics,
 	type UpdateCustomTopicPayload,
 	updateCustomVerificationTopic,
@@ -461,14 +460,6 @@ export const useAttachChatConversationsMutation = () => {
 				}),
 			);
 		},
-	});
-};
-
-export const useLatestProjectAnalysisRunByProjectId = (projectId: string) => {
-	return useQuery({
-		queryFn: () => getLatestProjectAnalysisRunByProjectId(projectId),
-		queryKey: ["projects", projectId, "latest_analysis"],
-		refetchInterval: 10000,
 	});
 };
 

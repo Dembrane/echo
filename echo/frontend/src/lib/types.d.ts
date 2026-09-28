@@ -34,52 +34,6 @@ type TConversation = {
 	chunks?: TConversationChunk[];
 };
 
-type TProcessingStatus = "PENDING" | "PROCESSING" | "ERROR" | "DONE";
-
-type TQuote = {
-	id: string;
-	created_at: Date;
-	updated_at: Date;
-	project_analysis_run_id: string;
-	conversation_id: string;
-	conversation_chunks: TConversationChunk[];
-	text: string;
-};
-
-type TInsight = {
-	id: string;
-	created_at: Date;
-	updated_at: Date;
-	project_analysis_run_id: string;
-	title: string;
-	summary: string;
-	quotes: TQuote[];
-};
-
-type TAspect = {
-	id: string;
-	created_at: Date;
-	updated_at: Date;
-	project_analysis_run_id: string;
-	name: string;
-	description?: string;
-	short_summary?: string;
-	long_summary?: string;
-	image_url?: string;
-	view_id?: string;
-	quotes?: TQuote[];
-};
-
-type TView = {
-	id: string;
-	created_at: Date;
-	updated_at: Date;
-	project_analysis_run_id: string;
-	name: string;
-	summary?: string;
-	aspects?: TAspect[];
-};
-
 type TConversationChunk = {
 	id: string;
 	created_at: Date;
@@ -105,20 +59,6 @@ type TProject = {
 	default_conversation_context?: string;
 	default_conversation_finish_text?: string;
 	tags: TProjectTag[];
-};
-
-type TProjectAnalysisRun = {
-	id: string;
-	created_at: Date;
-	updated_at: Date;
-	project_id: string;
-	views: TView[];
-	aspects: TAspect[];
-	insights: TInsight[];
-	quotes: TQuote[];
-	processing_status?: TProcessingStatus;
-	processing_error?: string;
-	processing_started_at?: Date;
 };
 
 type TSession = {

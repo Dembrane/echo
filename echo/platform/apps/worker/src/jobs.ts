@@ -13,13 +13,6 @@ import type { Logger } from "@echo/observability";
 import { popcornDeckHook, popcornFlags, popcornWorker, runtimeAnalysis } from "@echo/popcorn";
 import { presentAdoption } from "@echo/present";
 import { environmentName, httpForwarder, pricingRegistration, pricingStorage } from "@echo/pricing";
-import {
-  createLibrary,
-  createView,
-  projectsStorage,
-  runCreateLibrary,
-  runCreateView,
-} from "@echo/projects";
 import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
 import { reportsWorker } from "@echo/reports";
 import { type JobSink, tenancyWorker } from "@echo/tenancy";
@@ -102,18 +95,6 @@ export function registrations(deps: {
           logger.info({ signal: "worker.heartbeat" }, "heartbeat");
         });
         await queue.schedule(heartbeat, "* * * * *", {});
-      },
-    },
-    {
-      jobs: [createLibrary, createView],
-      async register(queue) {
-        const store = projectsStorage(db);
-        await queue.work(createLibrary, { concurrency: 4 }, (p) =>
-          runCreateLibrary({ store, logger }, p),
-        );
-        await queue.work(createView, { concurrency: 4 }, (p) =>
-          runCreateView({ store, logger }, p),
-        );
       },
     },
     {
