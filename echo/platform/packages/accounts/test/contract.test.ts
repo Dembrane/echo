@@ -11,6 +11,7 @@ const cases: [string, z.ZodType, unknown][] = [
   ["signedDpaDetail", C.DocumentDetail, F.signedDpaDetail],
   ["signTask", C.Task, F.signTask],
   ["billingTask", C.Task, F.billingTask],
+  ["billingTaskDone", C.Task, F.billingTaskDone],
   ["ticket", C.Ticket, F.ticket],
   ["signRequest", C.SignRequest, F.signRequest],
   ["signResponse", C.SignResponse, F.signResponse],
