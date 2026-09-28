@@ -1,6 +1,6 @@
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
-import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, eq, gt, isNotNull, isNull, ne, not } from "drizzle-orm";
 
 const { pricing_configuration: pc, directus_users } = schema;
 
@@ -44,6 +44,25 @@ export function pricingStorage(db: Db) {
         .where(and(isNotNull(pc.booking_uid), isNull(pc.booking_notified_at)))
         .orderBy(asc(pc.created_at), asc(pc.id))
         .limit(limit);
+    },
+
+    /**
+     * External enquiries with an email that changed after `since`, oldest first: what sam's
+     * daily pricing digest reads. Internal (dembrane.com) rows are left out.
+     */
+    async recentEnquiries(since: Date): Promise<PricingRow[]> {
+      return db
+        .select()
+        .from(pc)
+        .where(
+          and(
+            not(pc.is_internal),
+            isNotNull(pc.email),
+            ne(pc.email, ""),
+            gt(pc.updated_at, since.toISOString()),
+          ),
+        )
+        .orderBy(asc(pc.created_at), asc(pc.id));
     },
   };
 }

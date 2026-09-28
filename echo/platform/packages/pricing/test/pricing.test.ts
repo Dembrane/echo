@@ -3,9 +3,10 @@ import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Writable } from "node:stream";
+import { MemoryStaffAudit } from "@dembrane/access";
 import { PlatformError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
-import type { Env } from "@dembrane/http";
+import type { Env, Signed } from "@dembrane/http";
 import { createLogger } from "@dembrane/observability";
 import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { FilesystemStorage } from "@dembrane/storage";
@@ -56,6 +57,10 @@ function memStore() {
     },
     unforwardedBookings: async () =>
       [...rows.values()].filter((r) => r.booking_uid && !r.booking_notified_at),
+    recentEnquiries: async (since) =>
+      [...rows.values()].filter(
+        (r) => !r.is_internal && r.email && r.updated_at && new Date(r.updated_at) > since,
+      ),
   };
   return { store, rows };
 }
@@ -202,11 +207,13 @@ test("summary reads like the old one", () => {
   expect(configWithBooking({ a: 1 }, { config: { booking: {} } }, null)).toEqual({ a: 1 });
 });
 
-function siteApp(token: string | null) {
+function siteApp(token: string | null, principal: Signed | null = null) {
   const { store, rows } = memStore();
+  const staffAudit = new MemoryStaffAudit();
   const a = new Hono<Env>();
   a.use(async (c, next) => {
-    c.set("principal", null);
+    c.set("principal", principal);
+    c.set("requestId", "r1");
     await next();
   });
   a.route(
@@ -217,6 +224,7 @@ function siteApp(token: string | null) {
       logger,
       siteToken: token,
       limiter: new RateLimiter(new MemoryRateCounter()),
+      staffAudit,
       store,
     }),
   );
@@ -225,7 +233,7 @@ function siteApp(token: string | null) {
       ? c.json({ detail: err.details ?? err.message }, err.status as 400)
       : c.json({}, 500),
   );
-  return { a, rows };
+  return { a, rows, staffAudit };
 }
 
 test("the site route: closed without a token, 401 on a wrong one, a WEB- row on the right one", async () => {
@@ -259,4 +267,55 @@ test("the site route: closed without a token, 401 on a wrong one, a WEB- row on 
       { type: "string_type", loc: ["email"], msg: "Input should be a valid string", input: 5 },
     ],
   });
+});
+
+test("the staff enquiry list: staff only, audited, external rows that moved in the window", async () => {
+  const get = (a: Hono<Env>, q = "") => a.request(`/api/v2/admin/pricing-configurations${q}`);
+  expect((await get(siteApp("tok").a)).status).toBe(401);
+  const host = { appUserId: null, directusUserId: "u1", isStaff: false };
+  expect((await get(siteApp("tok", host).a)).status).toBe(403);
+
+  const { a, rows, staffAudit } = siteApp("tok", { ...host, directusUserId: "s1", isStaff: true });
+  const now = Date.now();
+  const row = (id: string, over: Partial<PricingRow>) =>
+    rows.set(id, {
+      id,
+      reference: `WEB-${id}`,
+      email: `${id}@example.com`,
+      status: "submitted",
+      booking_uid: null,
+      booking_status: "none",
+      config: { booking: {} },
+      answers_raw: { volume: "under_50" },
+      is_internal: false,
+      created_at: new Date(now - 3_600_000).toISOString(),
+      updated_at: new Date(now - 3_600_000).toISOString(),
+      ...over,
+    } as PricingRow);
+  row("fresh", {});
+  row("internal", { is_internal: true });
+  row("old", { updated_at: new Date(now - 10 * 86_400_000).toISOString() });
+  row("noemail", { email: null });
+
+  const res = await get(a);
+  expect(res.status).toBe(200);
+  const body = (await res.json()) as Record<string, unknown>[];
+  expect(body.map((r) => r.reference)).toEqual(["WEB-fresh"]);
+  expect(Object.keys(body[0] as object)).toEqual([
+    "reference",
+    "email",
+    "status",
+    "booking_uid",
+    "booking_status",
+    "config",
+    "answers_raw",
+    "created_at",
+    "updated_at",
+  ]);
+  expect(((await (await get(a, "?days=14")).json()) as unknown[]).length).toBe(2);
+  expect((await get(a, "?days=0")).status).toBe(422);
+  expect(staffAudit.entries.map((e) => [e.permission, e.action, e.staffUserId])).toEqual([
+    ["staff:accounts", "admin.pricing_configurations.read", "s1"],
+    ["staff:accounts", "admin.pricing_configurations.read", "s1"],
+  ]);
 });
