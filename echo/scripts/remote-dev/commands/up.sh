@@ -120,6 +120,9 @@ vm_compose "up -d --build" || { stale_hint echo/.devcontainer; die "docker compo
 if ! minio_enabled; then
     vm_compose_project "rm --stop --force minio" >/dev/null 2>&1 || true
 fi
+if ! celld_enabled; then
+    vm_compose_project "rm --stop --force celld" >/dev/null 2>&1 || true
+fi
 
 log_step "Container state"
 # Project-wide, so a container the configured compose files no longer define
@@ -190,3 +193,8 @@ Start the dev processes from inside the container with mprocs:
   ./scripts/remote-dev.sh ssh
   cd /workspaces/echo && mprocs
 EOF
+if celld_enabled; then
+    echo
+    echo "celld is on. Deploy an app from your laptop, with the tunnel open:"
+    echo "  ./scripts/remote-dev.sh celld-deploy ../celld-apps/counter"
+fi

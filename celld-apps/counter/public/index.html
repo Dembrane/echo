@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>counter</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 36rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+    code { background: #f0f0f0; padding: 0 0.25rem; border-radius: 3px; }
+    button { font: inherit; padding: 0.25rem 0.75rem; }
+  </style>
+</head>
+<body>
+  <h1>counter</h1>
+  <p>A <a href="https://celld.dev">celld</a> demo. This page is a static asset; the routes below are the Worker.</p>
+
+  <p>
+    <button id="increment">Increment</button>
+    count: <strong id="count">?</strong>
+  </p>
+
+  <p>
+    <input type="file" id="file">
+    <button id="upload">Upload</button>
+  </p>
+  <p>Stored files:</p>
+  <ul id="files"></ul>
+
+  <h2>Routes</h2>
+  <ul>
+    <li><code>GET /count?name=NAME</code> returns the counter NAME</li>
+    <li><code>POST /count?name=NAME</code> increments it and returns the new value</li>
+    <li><code>GET /files</code> lists stored files</li>
+    <li><code>PUT /files/KEY</code> stores the request body as KEY</li>
+    <li><code>GET /files/KEY</code> reads KEY back</li>
+    <li><code>DELETE /files/KEY</code> deletes KEY</li>
+  </ul>
+
+  <script>
+    async function count(method) {
+      const { n } = await (await fetch("/count?name=default", { method })).json();
+      document.getElementById("count").textContent = n;
+    }
+    document.getElementById("increment").addEventListener("click", () => count("POST"));
+    count("GET");
+
+    async function listFiles() {
+      const files = await (await fetch("/files")).json();
+      document.getElementById("files").replaceChildren(...files.map(({ key, size }) => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = "/files/" + encodeURIComponent(key);
+        a.textContent = key;
+        const remove = document.createElement("button");
+        remove.textContent = "×";
+        remove.title = "Delete " + key;
+        remove.addEventListener("click", async () => {
+          await fetch(a.href, { method: "DELETE" });
+          listFiles();
+        });
+        li.append(a, ` (${size} bytes) `, remove);
+        return li;
+      }));
+    }
+    document.getElementById("upload").addEventListener("click", async () => {
+      const file = document.getElementById("file").files[0];
+      if (!file) return;
+      // R2 list() mangles non-ASCII and % in keys, so the file links would
+      // 404: https://github.com/denoland/celld/issues/232
+      const key = file.name.replace(/[^A-Za-z0-9._\- ]/g, "_");
+      await fetch("/files/" + encodeURIComponent(key), { method: "PUT", body: file });
+      listFiles();
+    });
+    listFiles();
+  </script>
+</body>
+</html>

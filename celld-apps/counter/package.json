@@ -1,0 +1,15 @@
+{
+  "name": "counter",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "celld dev",
+    "deploy": "../../echo/scripts/remote-dev.sh celld-deploy ."
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": ["esbuild"]
+  }
+}

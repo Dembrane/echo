@@ -7,7 +7,7 @@ set -euo pipefail
 RD_COMMANDS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/remote-dev/commands"
 
 # The order you actually run them in, not alphabetical.
-RD_COMMAND_NAMES="init vertex create up tunnel seed ssh status sync-code sync-env down start stop resize ssh-config destroy"
+RD_COMMAND_NAMES="init vertex create up tunnel seed ssh status sync-code sync-env celld-deploy down start stop resize ssh-config destroy"
 
 usage() {
     cat <<'EOF'
@@ -23,7 +23,7 @@ EOF
         # Each script's second line is its one-line summary. Keeping the help
         # text in the scripts means it cannot drift from what they do.
         desc="$(sed -n '2p' "$RD_COMMANDS_DIR/$v.sh" | sed 's/^# \{0,1\}//')"
-        printf '  %-11s %s\n' "$v" "$desc"
+        printf '  %-13s %s\n' "$v" "$desc"
     done
     cat <<'EOF'
 

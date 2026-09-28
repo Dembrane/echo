@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signing in…</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Usually gone before you see it; it stays up if the link is bad. -->
+  <div class="banner">Placeholder: pretend this is <strong>demo-token.example.com/auth/</strong>, on a different domain from the dembrane dashboard.</div>
+
+  <main class="centered">
+    <div class="panel" id="status">Signing you in…</div>
+  </main>
+
+  <script type="module">
+    // The link from the dashboard looks like /auth/?return=/demo-token/#token=<jwt>.
+    // The token is in the #fragment, which browsers never send to servers,
+    // so it stays out of logs and Referer headers.
+    const token = new URLSearchParams(location.hash.slice(1)).get("token");
+    const ret = new URLSearchParams(location.search).get("return");
+    // Only paths on this host, so the link can't bounce people somewhere else.
+    const next = ret && ret.startsWith("/") && !ret.startsWith("//") ? ret : "/demo-token/";
+
+    // Take the token out of the address bar (and browser history) right away.
+    history.replaceState(null, "", location.pathname + location.search);
+
+    const status = document.getElementById("status");
+    const res = token
+      ? await fetch("/api/session", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ token }),
+        })
+      : null;
+
+    if (res?.ok) {
+      // Following a link counts as logging in again after a logout (see /demo-token/).
+      try { localStorage.removeItem("demo:loggedOut"); } catch {}
+      location.replace(next);
+    } else {
+      status.innerHTML =
+        '<p class="error">This link is invalid or has expired.</p>' +
+        '<a class="button" href="/dembrane-dashboard/">Go back to the dashboard</a>';
+    }
+  </script>
+</body>
+</html>

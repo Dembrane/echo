@@ -1,0 +1,38 @@
+{
+  "name": "dembrane-auth-token",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-23",
+
+  // Static pages in ./public. Only /api/* runs the Worker first; everything
+  // else is served straight from the assets (and falls through to the Worker
+  // if no file matches, e.g. `/`).
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
+    // celld serves no index.html for /dir/, so the Worker does (see the end
+    // of src/index.ts). "none" stops celld redirecting /dir/index.html there.
+    "html_handling": "none"
+  },
+
+  // One User Durable Object per dembrane user, addressed by user id, and a
+  // single Directory for state shared by everyone (the user list, settings).
+  "durable_objects": {
+    "bindings": [
+      { "name": "USER", "class_name": "User" },
+      { "name": "DIRECTORY", "class_name": "Directory" }
+    ]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["User", "Directory"] }],
+
+  // Values for the remote dev VM, where `pnpm run deploy` puts this. They are
+  // the dev stack's own (echo/.devcontainer/docker-compose.yml), not real
+  // secrets. `pnpm dev` overrides them from .dev.vars.
+  "vars": {
+    // The Directus the pages log in to (through ./tunnel.sh)...
+    "DIRECTUS_PUBLIC_URL": "http://localhost:8055",
+    // ...and the same one as the Worker reaches it, from the celld container.
+    "DIRECTUS_URL": "http://directus:8055",
+    "DIRECTUS_SECRET": "secret"
+  }
+}

@@ -1,0 +1,16 @@
+// Upstream's wrangler.json, minus the keys celld deploy rejects: build (now
+// `pnpm run build`), observability and upload_source_maps.
+{
+  "name": "durable-chat",
+  "main": "src/server/index.ts",
+  "compatibility_date": "2025-10-08",
+  "durable_objects": {
+    "bindings": [{ "name": "Chat", "class_name": "Chat" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Chat"] }],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  }
+}

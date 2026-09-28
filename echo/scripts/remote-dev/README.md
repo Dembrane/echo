@@ -83,6 +83,7 @@ Each command is a script in `commands/`, and
 | `seed` | Seeds the demo project from `demos/example/` (five finished conversations) into your workspace, for trying the Map. Run after your first login. `--workspace <id>` when there are several. |
 | `sync-env` | Re-copies the gitignored `.env` files up. |
 | `sync-code` | Pushes your laptop's tracked files up. `--dry-run` to preview. |
+| `celld-deploy` | `celld-deploy DIR` deploys a celld app through the tunnel. |
 | `destroy` | Deletes the VM and disk. Asks you to type the name. |
 
 ## Editing code
@@ -187,6 +188,20 @@ sudo sh -c 'echo "127.0.0.1 minio  # dembrane remote-dev" >> /etc/hosts'
 Answering `n` later turns it back off, and the next `./scripts/remote-dev.sh up`
 removes the container. Its `minio_data` directory on the VM is left alone, so
 turning it on again keeps whatever was uploaded.
+
+[celld](https://celld.dev) (self-hosted Workers and Durable Objects) is opt-in
+the same way: answer `y` to "Run celld?" in `init`, which adds
+`docker-compose-celld.yml` and turns minio on too, since celld keeps its state
+in minio's `celld` bucket. The tunnel then forwards 8787 to the node. Deploy
+from your laptop, with `celld` and `esbuild` on your PATH and the tunnel open:
+
+```sh
+./scripts/remote-dev.sh celld-deploy ../celld-apps/counter
+```
+
+`celld deploy` only writes to the bucket, so it needs no address for the node,
+which picks the new version up within five seconds. See
+`celld-apps/counter/README.md` for what to curl.
 
 ## Troubleshooting
 

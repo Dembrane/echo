@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Realtime Demo</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .badge { background: var(--accent); color: var(--accent-text); border-radius: 999px; padding: 1px 8px; font-size: 0.75rem; margin-left: 6px; vertical-align: middle; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 10px 6px; border-top: 1px solid var(--border); vertical-align: middle; }
+    td.count { font-size: 1.4rem; font-variant-numeric: tabular-nums; text-align: right; width: 4ch; }
+    td.action { text-align: right; width: 1%; white-space: nowrap; }
+    tr.me td:first-child { font-weight: 600; }
+    .msg { font-size: 0.8rem; display: block; }
+    .admin { display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; margin: 16px 0; padding: 12px 14px; border: 1px dashed var(--border); border-radius: 8px; }
+    .admin[hidden] { display: none; } /* otherwise display: flex above overrides `hidden` */
+    /* Undo style.css's form-field styles, meant for the login page's text inputs. */
+    .admin label { display: flex; align-items: center; gap: 8px; margin: 0; font-size: inherit; color: inherit; cursor: pointer; }
+    .admin input[type="checkbox"] { width: auto; margin: 0; padding: 0; }
+    #updated, #list-error { margin: 0 0 12px; }
+    #updated:empty, #list-error:empty { display: none; }
+    .source { margin-top: 20px; }
+    .source h2 { font-size: 0.9rem; margin: 0 0 4px; }
+    .source pre { margin: 6px 0 0; padding: 8px 10px; background: var(--code-bg); border-radius: 6px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="banner">Placeholder: pretend this is <strong>demo-token.example.com</strong>, on a different domain from the dembrane dashboard.</div>
+
+  <main class="centered">
+    <header>
+      <h1>Realtime demo</h1>
+      <span class="muted">session expires in <span id="expires" class="mono">–</span> <span class="hint" id="refresh-hint"></span></span>
+    </header>
+
+    <div class="panel">
+      <p id="whoami">Loading…</p>
+      <p class="muted">Each counter lives in that user's own Durable Object. You can only increment your own; platform admins can increment anyone's. The list of users is saved in one shared Directory Durable Object: platform admins always see it, and refresh it from Directus with <em>Update</em>. Everyone else sees it only while a platform admin allows everyone to see other users.</p>
+      <div class="admin" id="admin" hidden>
+        <label><input type="checkbox" id="see-each-other"> Allow everyone to see other users</label>
+        <button id="refresh">Update</button>
+      </div>
+      <p class="muted hint" id="updated"></p>
+      <p class="error" id="list-error"></p>
+      <table><tbody id="rows"></tbody></table>
+
+      <section class="source">
+        <h2>Where "you" comes from: <code>GET /api/me</code></h2>
+        <p class="muted hint">
+          <code>id</code>, <code>isAdmin</code> and <code>exp</code> come from the verified token in the session cookie.
+          <code>name</code> and <code>email</code> come from your Directus profile, which the Worker fetched when you logged in.
+        </p>
+        <pre class="mono" id="me-json">…</pre>
+      </section>
+    </div>
+
+    <p>
+      <a href="/dembrane-dashboard/">← Back to the dashboard</a>
+      <span id="logout-item">· <a href="#" id="logout">Log out of the demo</a></span>
+    </p>
+  </main>
+
+  <script type="module">
+    // This page only ever uses the demo's own session cookie (set by /auth/).
+    // It deliberately never reads the dashboard's localStorage: the link is
+    // the only way in, just as it would be across two real domains.
+    // For the same reason it shares no code with the dashboard, so a couple of
+    // small helpers (esc, formatLeft) appear in both.
+
+    // Near expiry (or on any 401), bounce through the dashboard, which holds
+    // the refresh token, mints a fresh link and sends us straight back here.
+    // Except after an explicit logout: the dashboard is still logged in, so a
+    // handoff would silently log us straight back in. Until you follow a fresh
+    // link from the dashboard (which /auth/ treats as logging in again), show a
+    // logged-out message instead.
+    const LOGGED_OUT = "demo:loggedOut";
+    const loggedOut = () => { try { return localStorage.getItem(LOGGED_OUT) === "1"; } catch { return false; } };
+
+    let handingOff = false;
+    function handoff() {
+      if (handingOff) return;
+      handingOff = true;
+      if (loggedOut()) {
+        document.querySelector(".panel").innerHTML =
+          '<p>You\'re logged out of the demo.</p>' +
+          '<a class="button" href="/dembrane-dashboard/">Open it again from the dashboard</a>';
+        document.getElementById("logout-item").hidden = true;
+        return;
+      }
+      location.replace("/dembrane-dashboard/?handoff=1&return=" + encodeURIComponent("/demo-token/"));
+    }
+
+    async function api(path, init) {
+      const res = await fetch(path, init);
+      if (res.status === 401) { handoff(); throw new Error("session expired"); }
+      return res;
+    }
+
+    const me = await (await api("/api/me")).json();
+    document.getElementById("me-json").textContent = JSON.stringify(me, null, 2);
+
+    // Your name comes from your Directus profile, which the Worker fetched at
+    // login (it can be missing, e.g. if Directus was down).
+    const esc = (text) => String(text).replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+    const nameOf = (user) => user.name ?? user.email ?? "Directus user";
+    document.getElementById("whoami").innerHTML =
+      `You are <strong>${esc(nameOf(me))}</strong> <code>${esc(me.id)}</code>` +
+      (me.isAdmin ? '<span class="badge">platform admin</span>' : "");
+
+    // The saved list of users (GET /api/users). Admins can always read it;
+    // everyone else only while an admin allows non-admins to see other users (the
+    // Worker answers them with a 403 otherwise), and sees just themselves.
+    const settings = await (await api("/api/settings")).json();
+    const listError = document.getElementById("list-error");
+    const showError = async (what, res) => {
+      listError.textContent = `Couldn't ${what}: ${res.status} ${(await res.json()).error}`;
+    };
+
+    let snapshot = { users: [], updatedAt: null };
+    if (me.isAdmin || settings.usersCanSeeEachOther) {
+      const res = await api("/api/users");
+      if (res.ok) snapshot = await res.json();
+      else await showError("list users", res);
+    }
+
+    // Admins only: fetch the users from Directus again (POST /api/users/refresh)
+    // and save them for everyone.
+    async function refresh() {
+      const res = await api("/api/users/refresh", { method: "POST" });
+      if (!res.ok) return showError("update the list of users", res);
+      listError.textContent = "";
+      snapshot = await res.json();
+      render();
+    }
+
+    if (me.isAdmin) {
+      document.getElementById("admin").hidden = false;
+      const refreshButton = document.getElementById("refresh");
+      refreshButton.addEventListener("click", async () => {
+        refreshButton.disabled = true;
+        await refresh();
+        refreshButton.disabled = false;
+      });
+
+      // Changes what everyone else sees on their next page load.
+      const toggle = document.getElementById("see-each-other");
+      toggle.checked = settings.usersCanSeeEachOther;
+      toggle.addEventListener("change", async () => {
+        toggle.disabled = true;
+        const res = await api("/api/settings", {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ usersCanSeeEachOther: toggle.checked }),
+        });
+        if (res.ok) listError.textContent = "";
+        else { toggle.checked = !toggle.checked; await showError("change the setting", res); }
+        toggle.disabled = false;
+      });
+    }
+
+    const rows = document.getElementById("rows");
+    function render() {
+      document.getElementById("updated").textContent = snapshot.updatedAt
+        ? `List of users last updated ${new Date(snapshot.updatedAt).toLocaleString()}`
+        : "";
+      // The list is a snapshot, so you may not be in it yet.
+      const users = snapshot.users.some((user) => user.id === me.id) ? snapshot.users : [me, ...snapshot.users];
+      rows.replaceChildren();
+      for (const user of users) addRow(user);
+    }
+
+    async function addRow(user) {
+      const tr = document.createElement("tr");
+      if (user.id === me.id) tr.className = "me";
+      tr.innerHTML = `
+        <td>${esc(nameOf(user))}${user.id === me.id ? " (you)" : ""}<span class="msg"></span></td>
+        <td class="count">…</td>
+        <td class="action"><button>Increment</button></td>`;
+      rows.append(tr);
+
+      const count = tr.querySelector(".count");
+      const msg = tr.querySelector(".msg");
+      const button = tr.querySelector("button");
+      // The server enforces this too; disabling just saves a pointless 403.
+      const canIncrement = me.isAdmin || user.id === me.id;
+      button.disabled = !canIncrement;
+      if (!canIncrement) button.title = "You can only increment your own counter";
+
+      const { count: initial } = await (await api(`/api/users/${user.id}`)).json();
+      count.textContent = initial;
+
+      button.addEventListener("click", async () => {
+        button.disabled = true;
+        const res = await api(`/api/users/${user.id}/increment`, { method: "POST" });
+        const body = await res.json();
+        if (res.ok) {
+          count.textContent = body.count;
+          msg.textContent = "";
+        } else {
+          msg.textContent = `${res.status}: ${body.error}`;
+          msg.className = "msg error";
+        }
+        button.disabled = false;
+      });
+    }
+
+    // An admin's first visit: nothing saved yet, so fetch the users now.
+    if (me.isAdmin && snapshot.updatedAt === null) await refresh();
+    else render();
+
+    // Session countdown, and the automatic refresh (a handoff) at REFRESH_AT
+    // seconds left. It must stay below the dashboard's 60s: every handoff then
+    // brings back a token with more time than this, so it can't loop.
+    const REFRESH_AT = 30;
+    const formatLeft = (s) => `${Math.floor(s / 60)}:${String(Math.max(s % 60, 0)).padStart(2, "0")}`;
+    document.getElementById("refresh-hint").textContent = `(auto-refreshes at ${formatLeft(REFRESH_AT)})`;
+    const expires = document.getElementById("expires");
+    setInterval(() => {
+      const left = me.exp - Math.floor(Date.now() / 1000);
+      expires.textContent = formatLeft(left);
+      if (left <= REFRESH_AT) handoff();
+    }, 1000);
+
+    document.getElementById("logout").addEventListener("click", async (e) => {
+      e.preventDefault();
+      try { localStorage.setItem(LOGGED_OUT, "1"); } catch {}
+      await fetch("/api/session", { method: "DELETE" });
+      location.href = "/dembrane-dashboard/";
+    });
+  </script>
+</body>
+</html>

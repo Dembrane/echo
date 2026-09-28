@@ -103,6 +103,7 @@ and stays in the foreground. Leave it in its own terminal tab.
 | 8055 | directus (`admin@dembrane.com` / `admin`) |
 | 5432 | postgres (`dembrane` / `dembrane`) |
 | 9000, 9001 | minio S3 API and console, if enabled (`dembrane` / `dembrane`) |
+| 8787 | celld workers, if enabled (deploy with `./scripts/remote-dev.sh celld-deploy`) |
 
 The mapping is 1:1 on purpose. `docker-compose.yml` hardcodes localhost origins:
 

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dembrane Login Stand-in</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .panel + .panel { margin-top: 16px; }
+    form .row { display: flex; gap: 8px; margin-top: 12px; }
+    .test-accounts { display: flex; gap: 8px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div class="banner">Placeholder: pretend this is <strong>dashboard.dembrane.com/login</strong>, in the same cookie domain as the demo (demo-ownership.dembrane.com).</div>
+
+  <main class="centered">
+    <section class="panel">
+      <h1>Log in to dembrane</h1>
+      <p class="muted">
+        Like the dashboard: <code>POST /auth/login</code> with <code>mode: "session"</code>, straight from the browser.
+        Directus answers by setting its session cookie, which the browser then also sends to the demo.
+        The page never sees the token.
+      </p>
+      <form id="login-form">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" required>
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+        <div class="row"><button class="primary">Log in</button></div>
+        <p class="error" id="login-error"></p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Fill in a test account</h2>
+      <p class="muted">These accounts exist in the local <code>../directus</code> example.</p>
+      <div class="test-accounts" id="test-accounts"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const { directusUrl } = await (await fetch("/api/config")).json();
+
+    // Only paths on this host, so a ?next= can't bounce people somewhere else.
+    const nextParam = new URLSearchParams(location.search).get("next");
+    const next = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/demo-ownership/";
+
+    // The users in the local ../directus example (its .env.example admin, and
+    // scripts/seed-users.mjs).
+    const TEST_ACCOUNTS = [
+      { label: "Alice", email: "alice@example.com", password: "password" },
+      { label: "Bob", email: "bob@example.com", password: "password" },
+      { label: "Admin", email: "admin@dembrane.com", password: "admin", admin: true },
+    ];
+
+    $("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      $("login-error").textContent = "";
+      // `credentials: "include"` lets the browser keep the cookie Directus sets.
+      const res = await fetch(`${directusUrl}/auth/login`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: $("email").value, password: $("password").value, mode: "session" }),
+      }).catch((err) => ({ ok: false, json: async () => ({ errors: [{ message: err.message }] }) }));
+      if (res.ok) return location.replace(next);
+      const body = await res.json().catch(() => ({}));
+      $("login-error").textContent = `Login failed: ${body.errors?.[0]?.message ?? `HTTP ${res.status}`}`;
+    });
+
+    for (const account of TEST_ACCOUNTS) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = account.admin ? `${account.label} (platform admin)` : account.label;
+      b.title = account.email;
+      b.addEventListener("click", () => {
+        $("email").value = account.email;
+        $("password").value = account.password;
+        $("login-error").textContent = "";
+        $("email").focus();
+      });
+      $("test-accounts").append(b);
+    }
+  </script>
+</body>
+</html>

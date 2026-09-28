@@ -99,7 +99,7 @@ RD_USER_SLUG="$(whoami | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed '
 # Compose files, relative to echo/.devcontainer/.
 # Add docker-compose-s3.yml here if you need minio; the server is configured
 # to talk to it (STORAGE_S3_ENDPOINT=http://minio:9000) but it is not in the
-# base compose file.
+# base compose file. docker-compose-celld.yml adds celld, which needs minio.
 : "${RD_COMPOSE_FILES:=docker-compose.yml}"
 
 # Ports forwarded to your laptop by tunnel.sh. These are deliberately
@@ -107,10 +107,13 @@ RD_USER_SLUG="$(whoami | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed '
 # (CORS_ORIGIN=http://localhost:5173, PUBLIC_URL=http://localhost:8055), so
 # keeping the same numbers locally means none of that config needs to change.
 # minio's ports are only published by docker-compose-s3.yml, so they are only
-# forwarded when that file is enabled.
+# forwarded when that file is enabled. The same goes for celld's 8787.
 RD_DEFAULT_PORTS="5173 5174 8000 8055 5432"
 case " $RD_COMPOSE_FILES " in
     *" docker-compose-s3.yml "*) RD_DEFAULT_PORTS="$RD_DEFAULT_PORTS 9000 9001" ;;
+esac
+case " $RD_COMPOSE_FILES " in
+    *" docker-compose-celld.yml "*) RD_DEFAULT_PORTS="$RD_DEFAULT_PORTS 8787" ;;
 esac
 : "${RD_FORWARD_PORTS:=$RD_DEFAULT_PORTS}"
 

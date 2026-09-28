@@ -1,0 +1,91 @@
+:root {
+  --bg: #f7f7f5;
+  --panel: #ffffff;
+  --text: #1d1d1b;
+  --muted: #6b6b66;
+  --border: #e3e3de;
+  --accent: #4169e1;
+  --accent-text: #ffffff;
+  --warn-bg: #fff6dd;
+  --warn-text: #7a5a00;
+  --error: #c0392b;
+  --ok: #2e7d32;
+  --code-bg: #f0f0ec;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161615;
+    --panel: #1f1f1d;
+    --text: #ececea;
+    --muted: #9a9a94;
+    --border: #33332f;
+    --accent: #7b9cff;
+    --accent-text: #0d0d0c;
+    --warn-bg: #3a300f;
+    --warn-text: #f3d77a;
+    --error: #ff7a6b;
+    --ok: #7fd18a;
+    --code-bg: #2a2a27;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+h1, h2 { line-height: 1.2; margin: 0 0 0.5em; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.1rem; }
+a { color: var(--accent); }
+code, .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.85em; }
+.muted { color: var(--muted); }
+.hint { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 0.8rem; }
+.error { color: var(--error); }
+.ok { color: var(--ok); }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+.banner {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+button, .button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  padding: 6px 12px;
+  text-decoration: none;
+  display: inline-block;
+}
+button.primary, .button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+button:disabled { opacity: 0.5; cursor: default; }
+input {
+  font: inherit;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+label { display: block; font-size: 0.85rem; margin: 8px 0 2px; color: var(--muted); }
+.centered { max-width: 640px; margin: 40px auto; padding: 0 16px; }

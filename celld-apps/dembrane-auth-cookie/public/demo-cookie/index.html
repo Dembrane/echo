@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Realtime Demo</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .badge { background: var(--accent); color: var(--accent-text); border-radius: 999px; padding: 1px 8px; font-size: 0.75rem; margin-left: 6px; vertical-align: middle; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 10px 6px; border-top: 1px solid var(--border); vertical-align: middle; }
+    td.count { font-size: 1.4rem; font-variant-numeric: tabular-nums; text-align: right; width: 4ch; }
+    td.action { text-align: right; width: 1%; white-space: nowrap; }
+    tr.me td:first-child { font-weight: 600; }
+    .msg { font-size: 0.8rem; display: block; }
+    .admin { display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; margin: 16px 0; padding: 12px 14px; border: 1px dashed var(--border); border-radius: 8px; }
+    .admin[hidden] { display: none; } /* otherwise display: flex above overrides `hidden` */
+    /* Undo style.css's form-field styles, meant for the login page's text inputs. */
+    .admin label { display: flex; align-items: center; gap: 8px; margin: 0; font-size: inherit; color: inherit; cursor: pointer; }
+    .admin input[type="checkbox"] { width: auto; margin: 0; padding: 0; }
+    #updated, #list-error { margin: 0 0 12px; }
+    #updated:empty, #list-error:empty { display: none; }
+    .source { margin-top: 20px; }
+    .source h2 { font-size: 0.9rem; margin: 0 0 4px; }
+    .source pre { margin: 6px 0 0; padding: 8px 10px; background: var(--code-bg); border-radius: 6px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="banner">Placeholder: pretend this is <strong>demo-cookie.dembrane.com</strong>, in the same cookie domain as the dembrane dashboard.</div>
+
+  <main class="centered">
+    <header>
+      <h1>Realtime demo</h1>
+      <span class="muted">session expires in <span id="expires" class="mono">–</span> <span class="hint" id="refresh-hint"></span></span>
+    </header>
+
+    <div class="panel">
+      <p id="whoami">Loading…</p>
+      <p class="muted">Each counter lives in that user's own Durable Object. You can only increment your own; platform admins can increment anyone's. The list of users is saved in one shared Directory Durable Object: platform admins always see it, and refresh it from Directus with <em>Update</em>. Everyone else sees it only while a platform admin allows everyone to see other users.</p>
+      <div class="admin" id="admin" hidden>
+        <label><input type="checkbox" id="see-each-other"> Allow everyone to see other users</label>
+        <button id="refresh">Update</button>
+      </div>
+      <p class="muted hint" id="updated"></p>
+      <p class="error" id="list-error"></p>
+      <table><tbody id="rows"></tbody></table>
+
+      <section class="source">
+        <h2>Where "you" comes from: <code>GET /api/me</code></h2>
+        <p class="muted hint">
+          <code>id</code>, <code>isAdmin</code> and <code>exp</code> come from the verified token in Directus's session cookie.
+          <code>name</code> and <code>email</code> come from your Directus profile, which the Worker fetched the first time it saw you.
+        </p>
+        <pre class="mono" id="me-json">…</pre>
+      </section>
+    </div>
+
+    <p><a href="#" id="logout">Log out of dembrane</a> <span class="muted hint">(one session, so this logs you out everywhere)</span></p>
+  </main>
+
+  <script type="module">
+    // This page never sees a token. The browser sends Directus's session cookie
+    // with every request, to the Worker (which checks it) and to Directus.
+    const { directusUrl } = await (await fetch("/api/config")).json();
+    const toLogin = () => location.replace("/login/?next=" + encodeURIComponent("/demo-cookie/"));
+
+    // Directus's session endpoints, called from the browser so the cookie goes along.
+    const directusSession = (action) =>
+      fetch(`${directusUrl}/auth/${action}`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ mode: "session" }),
+      });
+
+    // Ask Directus for a fresh session cookie, once even if several requests
+    // ask at the same time. false if there's no session left to refresh.
+    let refreshing = null;
+    function refreshSession() {
+      refreshing ??= directusSession("refresh")
+        .then((res) => res.ok, () => false)
+        .finally(() => (refreshing = null));
+      return refreshing;
+    }
+
+    // On a 401, refresh and try once more; if that fails, log in again.
+    async function api(path, init) {
+      let res = await fetch(path, init);
+      if (res.status === 401 && (await refreshSession())) res = await fetch(path, init);
+      if (res.status === 401) { toLogin(); throw new Error("not logged in"); }
+      return res;
+    }
+
+    let me = await (await api("/api/me")).json();
+    const showMe = () => (document.getElementById("me-json").textContent = JSON.stringify(me, null, 2));
+    showMe();
+
+    // Your name comes from your Directus profile, which the Worker fetched the
+    // first time it saw you (it can be missing, e.g. if Directus was down).
+    const esc = (text) => String(text).replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+    const nameOf = (user) => user.name ?? user.email ?? "Directus user";
+    document.getElementById("whoami").innerHTML =
+      `You are <strong>${esc(nameOf(me))}</strong> <code>${esc(me.id)}</code>` +
+      (me.isAdmin ? '<span class="badge">platform admin</span>' : "");
+
+    // The saved list of users (GET /api/users). Admins can always read it;
+    // everyone else only while an admin allows non-admins to see other users (the
+    // Worker answers them with a 403 otherwise), and sees just themselves.
+    const settings = await (await api("/api/settings")).json();
+    const listError = document.getElementById("list-error");
+    const showError = async (what, res) => {
+      listError.textContent = `Couldn't ${what}: ${res.status} ${(await res.json()).error}`;
+    };
+
+    let snapshot = { users: [], updatedAt: null };
+    if (me.isAdmin || settings.usersCanSeeEachOther) {
+      const res = await api("/api/users");
+      if (res.ok) snapshot = await res.json();
+      else await showError("list users", res);
+    }
+
+    // Admins only: fetch the users from Directus again (POST /api/users/refresh)
+    // and save them for everyone.
+    async function refresh() {
+      const res = await api("/api/users/refresh", { method: "POST" });
+      if (!res.ok) return showError("update the list of users", res);
+      listError.textContent = "";
+      snapshot = await res.json();
+      render();
+    }
+
+    if (me.isAdmin) {
+      document.getElementById("admin").hidden = false;
+      const refreshButton = document.getElementById("refresh");
+      refreshButton.addEventListener("click", async () => {
+        refreshButton.disabled = true;
+        await refresh();
+        refreshButton.disabled = false;
+      });
+
+      // Changes what everyone else sees on their next page load.
+      const toggle = document.getElementById("see-each-other");
+      toggle.checked = settings.usersCanSeeEachOther;
+      toggle.addEventListener("change", async () => {
+        toggle.disabled = true;
+        const res = await api("/api/settings", {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ usersCanSeeEachOther: toggle.checked }),
+        });
+        if (res.ok) listError.textContent = "";
+        else { toggle.checked = !toggle.checked; await showError("change the setting", res); }
+        toggle.disabled = false;
+      });
+    }
+
+    const rows = document.getElementById("rows");
+    function render() {
+      document.getElementById("updated").textContent = snapshot.updatedAt
+        ? `List of users last updated ${new Date(snapshot.updatedAt).toLocaleString()}`
+        : "";
+      // The list is a snapshot, so you may not be in it yet.
+      const users = snapshot.users.some((user) => user.id === me.id) ? snapshot.users : [me, ...snapshot.users];
+      rows.replaceChildren();
+      for (const user of users) addRow(user);
+    }
+
+    async function addRow(user) {
+      const tr = document.createElement("tr");
+      if (user.id === me.id) tr.className = "me";
+      tr.innerHTML = `
+        <td>${esc(nameOf(user))}${user.id === me.id ? " (you)" : ""}<span class="msg"></span></td>
+        <td class="count">…</td>
+        <td class="action"><button>Increment</button></td>`;
+      rows.append(tr);
+
+      const count = tr.querySelector(".count");
+      const msg = tr.querySelector(".msg");
+      const button = tr.querySelector("button");
+      // The server enforces this too; disabling just saves a pointless 403.
+      const canIncrement = me.isAdmin || user.id === me.id;
+      button.disabled = !canIncrement;
+      if (!canIncrement) button.title = "You can only increment your own counter";
+
+      const { count: initial } = await (await api(`/api/users/${user.id}`)).json();
+      count.textContent = initial;
+
+      button.addEventListener("click", async () => {
+        button.disabled = true;
+        const res = await api(`/api/users/${user.id}/increment`, { method: "POST" });
+        const body = await res.json();
+        if (res.ok) {
+          count.textContent = body.count;
+          msg.textContent = "";
+        } else {
+          msg.textContent = `${res.status}: ${body.error}`;
+          msg.className = "msg error";
+        }
+        button.disabled = false;
+      });
+    }
+
+    // An admin's first visit: nothing saved yet, so fetch the users now.
+    if (me.isAdmin && snapshot.updatedAt === null) await refresh();
+    else render();
+
+    // Session countdown, and the automatic refresh at REFRESH_AT seconds left.
+    // Another tab (or Directus's own app) may refresh the cookie first; asking
+    // /api/me again afterwards picks up whichever token the browser now holds.
+    const REFRESH_AT = 60;
+    const pad = (n) => String(n).padStart(2, "0");
+    const formatLeft = (s) => {
+      s = Math.max(s, 0);
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+      return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`;
+    };
+    document.getElementById("refresh-hint").textContent = `(auto-refreshes at ${formatLeft(REFRESH_AT)})`;
+    const expires = document.getElementById("expires");
+    let renewing = false;
+    setInterval(async () => {
+      const left = me.exp - Math.floor(Date.now() / 1000);
+      expires.textContent = formatLeft(left);
+      if (left > REFRESH_AT || renewing) return;
+      renewing = true;
+      if (!(await refreshSession())) return toLogin();
+      me = await (await api("/api/me")).json();
+      showMe();
+      renewing = false;
+    }, 1000);
+
+    // Directus deletes its cookie, which ends the session for the dashboard too.
+    document.getElementById("logout").addEventListener("click", async (e) => {
+      e.preventDefault();
+      await directusSession("logout");
+      location.href = "/login/";
+    });
+  </script>
+</body>
+</html>
