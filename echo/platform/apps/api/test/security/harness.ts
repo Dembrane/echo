@@ -141,6 +141,7 @@ export async function startHarness(
     logger,
     tracer: initTracing({ service: "t", release: "r", env: "test", sampleRatio: 0 }).tracer,
     pingDb: database.ping,
+    workerFreshness: async () => ({ ageS: 1, jobAgeS: 1 }),
     auth,
     principalFor: principalLookup(database.db),
     access: new Access(new DrizzleAccessStore(database.db)),
