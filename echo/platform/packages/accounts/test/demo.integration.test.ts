@@ -332,6 +332,37 @@ run("bun run seed:accounts-demo", () => {
     expect(staffRole?.name).toBe("Administrator");
   });
 
+  test("DEMO_LANGUAGE: English by default; a Dutch run rewords the demo and replaces the offer", async () => {
+    const tasks = async () =>
+      await database.db
+        .select()
+        .from(schema.account_task)
+        .where(eq(schema.account_task.id, DEMO_IDS.poTask));
+    expect((await tasks())[0]?.title).toBe("Send us your PO number");
+    const [english] = await database.db
+      .select()
+      .from(schema.account_document)
+      .where(eq(schema.account_document.kind, "offer"));
+    expect(english?.language).toBe("en");
+    const nl = await seedAccountsDemo({ ...(await options()), language: "nl" });
+    expect(nl.offer_created).toBe(true);
+    expect((await tasks())[0]?.title).toBe("Stuur ons jullie PO-nummer");
+    const offers = await database.db
+      .select()
+      .from(schema.account_document)
+      .where(eq(schema.account_document.kind, "offer"));
+    expect(offers.find((o) => o.id === english?.id)?.status).toBe("void");
+    expect(offers.find((o) => o.id === nl.offer_id)?.language).toBe("nl");
+    const [ticket] = await database.db
+      .select()
+      .from(schema.account_ticket)
+      .where(eq(schema.account_ticket.id, DEMO_IDS.ticket));
+    expect(ticket?.subject).toBe("Kunnen we per kwartaal betalen?");
+    // Back to English for the tests after this one.
+    await seedAccountsDemo(await options());
+    expect((await tasks())[0]?.title).toBe("Send us your PO number");
+  });
+
   test("after the demo offer is signed or withdrawn, the next run pushes a fresh one", async () => {
     const [offer] = await database.db
       .select()

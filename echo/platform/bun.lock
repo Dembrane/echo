@@ -77,6 +77,8 @@
       "dependencies": {
         "@echo/accounts": "workspace:*",
         "@echo/auth": "workspace:*",
+        "@echo/config": "workspace:*",
+        "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/observability": "workspace:*",
         "@echo/projects": "workspace:*",
@@ -374,6 +376,7 @@
     "packages/db": {
       "name": "@echo/db",
       "dependencies": {
+        "@echo/core": "workspace:*",
         "drizzle-orm": "^0.45.3",
         "postgres": "^3.4.9",
       },

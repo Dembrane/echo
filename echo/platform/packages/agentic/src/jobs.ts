@@ -79,13 +79,7 @@ export function agenticWorker(deps: AgenticWorkerDeps): {
     logger: deps.logger,
     models: deps.models,
     config: deps.config,
-    agent:
-      deps.agent ??
-      createAgent({
-        docsDir: deps.config.agentic.docsDir,
-        ...(deps.config.agentic.skillsDir && { skillsDir: deps.config.agentic.skillsDir }),
-        logger: deps.logger,
-      }),
+    agent: deps.agent ?? createAgent({ logger: deps.logger }),
     bindData:
       deps.bindData ??
       ((who, ctx) =>

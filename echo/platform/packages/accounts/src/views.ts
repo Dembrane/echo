@@ -11,6 +11,7 @@ import type {
   TaskRow,
   TicketRow,
 } from "./storage";
+import { isTaskCode, type TaskCode } from "./task-text";
 
 /** Response shapes: snake_case JSON, ISO timestamps, integer cents. */
 
@@ -201,8 +202,10 @@ export function taskView(t: TaskRow, docs: readonly DocumentRow[] = []) {
   const waitsFor = lockedUntil(t, docs);
   return {
     id: t.id,
-    title: t.title,
-    body: t.body,
+    code: (isTaskCode(t.code) ? t.code : null) as TaskCode | null,
+    params: (t.code ? (t.params ?? {}) : null) as Record<string, string> | null,
+    title: t.code ? null : t.title,
+    body: t.code ? null : t.body,
     kind: t.kind,
     status: t.status,
     /** Greyed out on the page until the document it waits for is signed. */

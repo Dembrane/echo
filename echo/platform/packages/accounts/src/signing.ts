@@ -47,17 +47,6 @@ export function pngBytes(b64: string, what: string): Uint8Array {
   return bytes;
 }
 
-const DPA_TASK = {
-  en: {
-    title: "Have the data processing agreement signed",
-    body: "The person who signed the offer may not agree to data processing for your organisation. Someone authorised to (article 3.6 of the terms) signs the data processing agreement here; you can name them on the document.",
-  },
-  nl: {
-    title: "Laat de verwerkersovereenkomst ondertekenen",
-    body: "Wie de offerte tekende mag geen verwerkingsafspraken maken voor jullie organisatie. Iemand die dat wel mag (artikel 3.6 van de voorwaarden) ondertekent hier de verwerkersovereenkomst; je kunt diegene op het document aanwijzen.",
-  },
-};
-
 /** Reads the signer's name, role, organisation, address and VAT number from the fields. */
 export function signerFacts(
   fields: readonly FieldRow[],
@@ -340,8 +329,9 @@ async function afterSigned(
   await store.updateDocument(tx, id, { status: "sent", sentAt: now, updatedAt: now });
   await createTask(d, tx, {
     orgId: org.id,
-    title: DPA_TASK[lang].title,
-    body: DPA_TASK[lang].body,
+    code: "sign_dpa",
+    params: { document_title: title },
+    title: null,
     kind: "sign",
     documentId: id,
     createdBy: who.directusUserId,

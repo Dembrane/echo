@@ -128,5 +128,18 @@ and falls back to the stored texts when the fetch fails.
 
 ## Demo
 
-`DATABASE_URL=... DEMO_PASSWORD=... APP_ENV=preview bun run seed:accounts-demo` rebuilds
-Gemeente Voorbeeldstad (see `src/seed.ts`); it refuses `APP_ENV=prod` and production hosts.
+`DATABASE_URL=... DEMO_PASSWORD=... APP_ENV=preview FILES_S3_BUCKET=... bun run seed:accounts-demo`
+rebuilds Gemeente Voorbeeldstad (see `src/seed.ts`). `DEMO_LANGUAGE` is `en` (default) or
+`nl`: the offer, the demo's own tasks, the question and the corpus follow it, and a run in
+the other language rewords them and replaces an unsigned offer. It refuses `APP_ENV=prod`,
+production hosts, and any environment but local or test without the file bucket
+(`FILES_S3_*`), since files on this machine's disk are never served.
+
+## Tasks echo creates
+
+Tasks for signing an offer (`sign_offer`), billing details (`billing_details`) and signing
+a separate DPA (`sign_dpa`) are stored and returned as a code with params
+(`document_title`), without title or body: the UI words them in the viewer's language.
+Reminder emails word them in each recipient's dashboard language, else the organisation's
+(its newest document), else English. Events for sam carry the code, the params and an
+English title.

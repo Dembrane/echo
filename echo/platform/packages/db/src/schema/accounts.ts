@@ -272,7 +272,14 @@ export const account_task = pgTable(
   {
     id: uuid("id").primaryKey(),
     orgId: uuid("org_id").notNull(),
-    title: text("title").notNull(),
+    /**
+     * Tasks echo creates carry a code (`sign_offer`, `billing_details`, `sign_dpa`) and its
+     * params instead of text, so each reader gets them in their own language. Staff tasks
+     * have no code and their own title.
+     */
+    code: text("code"),
+    params: json("params"),
+    title: text("title"),
     body: text("body"),
     kind: text("kind").notNull().default("generic"),
     documentId: uuid("document_id"),
@@ -320,6 +327,7 @@ export const account_task = pgTable(
       foreignColumns: [account_document.id],
       name: "account_task_unlock_on_document_id_foreign",
     }).onDelete("set null"),
+    check("account_task_code_or_title_check", sql`${t.code} is not null or ${t.title} is not null`),
     check(
       "account_task_kind_check",
       sql`${t.kind} in ('sign', 'billing_details', 'upload', 'generic')`,

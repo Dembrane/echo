@@ -2,13 +2,15 @@
 /**
  * bun run seed:accounts-demo: rebuilds the accounts demo (docs/accounts.md, "Demo") on the
  * database in DATABASE_URL. The two demo logins get the password in DEMO_PASSWORD, which is
- * read from the environment only. APP_ENV picks the environment's URLs; prod is refused.
+ * read from the environment only. DEMO_LANGUAGE (en, the default, or nl) sets the language
+ * of the offer, tasks, question and corpus. APP_ENV picks the environment's URLs; prod is
+ * refused, and so is any environment without the file bucket.
  */
 import { Access, DrizzleAccessStore } from "@echo/access";
 import { environments } from "@echo/config";
 import { createDb } from "@echo/db";
 import { createLogger } from "@echo/observability";
-import { FilesystemStorage, S3Storage } from "@echo/storage";
+import { FilesystemStorage, requireBucket, S3Storage } from "@echo/storage";
 import { httpFetchText } from "./deps";
 import { seedAccountsDemo } from "./seed";
 
@@ -16,6 +18,8 @@ const env = process.env.APP_ENV ?? "local";
 if (env === "prod") throw new Error("The accounts demo is never seeded on production.");
 const url = process.env.DATABASE_URL;
 const password = process.env.DEMO_PASSWORD;
+const language = (process.env.DEMO_LANGUAGE ?? "en").toLowerCase();
+if (language !== "en" && language !== "nl") throw new Error("DEMO_LANGUAGE is en or nl");
 if (!url) throw new Error("DATABASE_URL is required");
 if (!password) throw new Error("DEMO_PASSWORD is required");
 const http = (environments as Record<string, { http?: Record<string, string> }>)[env]?.http ?? {};
@@ -31,6 +35,8 @@ const files = process.env.FILES_S3_BUCKET
       secretAccessKey: process.env.FILES_S3_SECRET_ACCESS_KEY ?? "",
     })
   : new FilesystemStorage(process.env.FILES_LOCAL_ROOT ?? ".data/files", apiUrl);
+// A demo on preview or next writes its PDFs and logo to the bucket the API serves from.
+requireBucket(env, files, "The demo's PDFs and logo", "FILES_S3_BUCKET");
 const logger = createLogger({ service: "seed-accounts-demo", release: "dev", env, level: "info" });
 const database = createDb({ url, poolMax: 2 });
 try {
@@ -55,6 +61,7 @@ try {
       accountName: process.env.ACCOUNTS_BANK_ACCOUNT_NAME ?? "Dembrane B.V.",
     },
     demosDir: new URL("../../../../demos", import.meta.url).pathname,
+    language,
     fetchText: httpFetchText,
   });
   process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);

@@ -10,6 +10,8 @@ export const LOCAL_STORAGE_PATH = "/_local-storage";
  * only exists when APP_ENV is local or test.
  */
 export class FilesystemStorage implements ObjectStorage {
+  /** Lets requireBucket tell a local store from a bucket without importing this class. */
+  readonly kind = "filesystem";
   constructor(
     private readonly root: string,
     private readonly publicBase: string,

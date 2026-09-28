@@ -281,7 +281,6 @@ export function buildApp(deps: Deps) {
       buildVersion: deps.config.app.release,
       clientSecretKey:
         deps.config.agentAccess.clientSecretKey ?? deps.config.account.inviteHashSecret,
-      docsDir: deps.config.agentic.docsDir,
     }),
   );
   app.onError(onError);

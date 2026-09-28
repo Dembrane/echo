@@ -6,8 +6,9 @@ import { HttpMedia, LocalMedia, metadataIdToken } from "@echo/audio";
 import { createAuth, identityAccount } from "@echo/auth";
 import { billingApiJobs, createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
 import { canvasApiJobs } from "@echo/canvas";
-import { describe, loadConfig, publicValues } from "@echo/config";
+import { describe, loadConfig, loadSections, publicValues } from "@echo/config";
 import { conversationApiJobs } from "@echo/conversations";
+import { bootAssets } from "@echo/core";
 import { createDb } from "@echo/db";
 import { createModels } from "@echo/llm";
 import { type Mailer, MemoryMailer, SendGridMailer } from "@echo/mail";
@@ -19,13 +20,18 @@ import { projectJobs } from "@echo/projects";
 import { Queue } from "@echo/queue";
 import { PostgresRateCounter, RateLimiter } from "@echo/ratelimit";
 import { Hub } from "@echo/realtime";
-import { FilesystemStorage, S3Storage } from "@echo/storage";
+import { FilesystemStorage, requireBucket, S3Storage } from "@echo/storage";
 import { tenancyApiJobs } from "@echo/tenancy";
 import { GeminiTranscriber } from "@echo/transcription";
 import { httpDeliver, webhookJobs } from "@echo/webhooks";
 import postgres from "postgres";
 import { buildApp } from "./app";
+import { API_ASSETS } from "./assets";
 import { principalLookup } from "./principals";
+
+// Before anything else, and before the configuration that needs secrets: an image that
+// lacks a file the API reads exits here instead of serving 500s.
+bootAssets("echo-api", loadSections(["assets"]).values.assets.root, API_ASSETS);
 
 const loaded = loadConfig();
 const config = loaded.values;
@@ -141,6 +147,8 @@ const files = config.files.s3Bucket
     })
   : new FilesystemStorage(config.files.localRoot, config.http.publicUrl);
 
+// Deployed environments keep files and audio in their buckets; refuse to start otherwise.
+requireBucket(config.app.env, files, "Uploads and signed documents", "FILES_S3_BUCKET");
 const billing = createBilling({
   db: database.db,
   mollie: config.billing.mollieApiKey
@@ -165,6 +173,8 @@ const audio = config.audio.s3Bucket
       secretAccessKey: config.audio.s3SecretAccessKey ?? "",
     })
   : new FilesystemStorage(config.audio.localRoot, config.http.publicUrl, "/_local-audio");
+
+requireBucket(config.app.env, audio, "Participant audio", "STORAGE_S3_BUCKET");
 
 // The media service in the cloud (identity token for its URL); ffmpeg in-process locally.
 const media = config.media.url

@@ -1,8 +1,10 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { newId } from "@echo/core";
 import { schema } from "@echo/db";
-import { sql } from "drizzle-orm";
+import { MemoryMailer } from "@echo/mail";
+import { eq, sql } from "drizzle-orm";
 import * as K from "../src/contract";
+import { runTaskReminder } from "../src/jobs";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
 import { admin, call, dropDatabase, type World, world } from "./helpers";
@@ -88,7 +90,7 @@ run("accounts for any organisation, and the tasks summary", () => {
     );
     expect(card.organisation.account_stage).toBe("customer");
     expect(card.tasks.map((t) => [t.kind, t.status, t.title])).toEqual([
-      ["billing_details", "locked", "Billing details"],
+      ["billing_details", "locked", null],
     ]);
     expect(await store.billing(w.db, selfServe)).not.toBeNull();
     // Twice is the same.
@@ -194,13 +196,54 @@ run("accounts for any organisation, and the tasks summary", () => {
       tasks_done: 1,
       tasks_total: 3,
     });
-    expect(mine?.next_task_title).toBe("Review and sign the offer");
+    // A task echo created comes as a code for the UI to word; no text.
+    expect(mine?.next_task_title).toBeNull();
+    expect(mine?.next_task_code).toBe("sign_offer");
+    expect(mine?.next_task_params).toEqual({ document_title: "Self Serve Co x dembrane" });
     // The billing role sees Gemeente Testdorp but not the self-serve org, where it has no role.
     expect(
       K.TasksSummary.parse(
         (await call(w, "GET", "/api/v2/account/tasks-summary", "billing")).data,
       ).map((s) => s.name),
     ).toEqual(["Gemeente Testdorp"]);
+  });
+
+  test("a reminder of a system task is worded in each person's language, else the organisation's", async () => {
+    // The owner reads Dutch; a billing member has no setting and gets the org's language
+    // (its newest document, the English offer).
+    await w.db
+      .update(schema.directus_users)
+      .set({ language: "nl-NL" })
+      .where(eq(schema.directus_users.id, w.people.admin.directusUserId));
+    await w.db.insert(schema.org_membership).values({
+      id: newId(),
+      org_id: selfServe,
+      user_id: w.people.billing.appUserId as string,
+      role: "billing",
+    });
+    const sign = (await store.tasks(w.db, selfServe)).find((t) => t.code === "sign_offer");
+    const mailer = new MemoryMailer();
+    const deps = {
+      db: w.db,
+      mailer,
+      logger: w.deps.logger,
+      dashboardUrl: "https://dash.test",
+      now: () => w.clock.now,
+    };
+    expect(
+      await runTaskReminder(deps, {
+        taskId: sign?.id as string,
+        dueAt: "2026-10-05T09:00:00.000Z",
+      }),
+    ).toBe("sent");
+    const nl = mailer.sent.find((m) => (m.to as string[]).includes("admin@example.test"));
+    const en = mailer.sent.find((m) => (m.to as string[]).includes("billing@example.test"));
+    expect(nl?.subject).toBe(
+      "Nog open: Offerte bekijken en ondertekenen: Self Serve Co x dembrane",
+    );
+    expect(nl?.text).toContain("staat nog open voor Self Serve Co");
+    expect(en?.subject).toBe("Still open: Review and sign the offer: Self Serve Co x dembrane");
+    expect(en?.text).toContain("is still waiting for Self Serve Co");
   });
 
   test("the summary's query has its indexes", async () => {

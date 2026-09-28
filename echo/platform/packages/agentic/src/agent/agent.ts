@@ -48,9 +48,6 @@ import {
 import type { Agent, StepEvent, StepInput, StepResult } from "./types";
 
 export interface AgentOptions {
-  /** Docs corpus; empty uses the repository's docs/ folder. */
-  readonly docsDir?: string;
-  readonly skillsDir?: string;
   readonly now?: () => Date;
   readonly logger?: { warn(obj: unknown, msg?: string): void };
 }
@@ -239,10 +236,7 @@ interface ModelCall {
 }
 
 export function createAgent(opts: AgentOptions = {}): Agent {
-  const knowledge: Knowledge = createKnowledge({
-    ...(opts.docsDir !== undefined && { docsDir: opts.docsDir }),
-    ...(opts.skillsDir !== undefined && { skillsDir: opts.skillsDir }),
-  });
+  const knowledge: Knowledge = createKnowledge();
   const now = opts.now ?? (() => new Date());
   // Memory and canvas activity load once per turn; a replayed step reloads them.
   const sections = new Map<string, Promise<string>>();

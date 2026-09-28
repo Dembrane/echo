@@ -163,7 +163,7 @@ export async function enableAccount(
         created_at: nowIso,
         updated_at: nowIso,
       });
-    await ensureBillingTask(d, tx, org.id, input.language, who.directusUserId);
+    await ensureBillingTask(d, tx, org.id, who.directusUserId);
     await emit(d, tx, {
       orgId: org.id,
       actor: actorOf(who),
@@ -234,17 +234,6 @@ export interface PushOfferInput {
   /** False keeps a draft; staff send it later. */
   readonly send?: boolean;
 }
-
-const SIGN_TASK: Record<Language, { title: string; body: string }> = {
-  en: {
-    title: "Review and sign the offer",
-    body: "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer and they get their own link.",
-  },
-  nl: {
-    title: "Offerte bekijken en ondertekenen",
-    body: "Lees de offerte en onderteken hem hier. Tekent iemand anders voor jullie organisatie? Wijs diegene aan op de offerte; die krijgt een eigen link.",
-  },
-};
 
 const pin = (row: LegalRow) => ({
   version: row.version,
@@ -368,7 +357,7 @@ export async function pushOffer(
     });
     // Fields go in while it is a draft; sending freezes them with the PDF.
     await writeFields(tx, id, rendered.fields);
-    await ensureBillingTask(d, tx, org.id, input.language, who.directusUserId);
+    await ensureBillingTask(d, tx, org.id, who.directusUserId);
     if (input.send === false)
       await emit(d, tx, {
         orgId: org.id,
@@ -401,18 +390,18 @@ async function sendOfferIn(
 ): Promise<string> {
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
-  const language = (doc.language === "nl" ? "nl" : "en") as Language;
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
   const task = await createTask(d, tx, {
     ...(taskId && { id: taskId }),
     orgId,
-    title: SIGN_TASK[language].title,
-    body: SIGN_TASK[language].body,
+    code: "sign_offer",
+    params: { document_title: doc.title },
+    title: null,
     kind: "sign",
     documentId: docId,
     createdBy: who.directusUserId,
   });
-  await ensureBillingTask(d, tx, orgId, language, who.directusUserId);
+  await ensureBillingTask(d, tx, orgId, who.directusUserId);
   const content = doc.content as OfferContent | null;
   await emit(d, tx, {
     orgId,
