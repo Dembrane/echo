@@ -1,7 +1,7 @@
 import type { Policy, ProjectAccess } from "@dembrane/access";
 import { NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
-import { projectFor } from "@dembrane/projects";
+import { projectFor } from "@dembrane/http";
 import type { ConversationsDeps } from "./deps";
 import { type ConversationRow, conversationStore, isUuid } from "./storage";
 

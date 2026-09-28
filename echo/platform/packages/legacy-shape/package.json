@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/legacy-shape",
+  "description": "Response shapes and number and time formats the Python API and Directus produced, kept byte for byte.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

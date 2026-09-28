@@ -1,7 +1,14 @@
 {
   "name": "@dembrane/verify",
+  "description": "Verification topics and artifacts participants see in the portal.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "conversations": "A portal feature: reuses conversations' participant token and dependencies."
+    }
+  },
   "exports": {
     ".": "./src/index.ts"
   },

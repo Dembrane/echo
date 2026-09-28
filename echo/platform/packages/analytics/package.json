@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/analytics",
+  "description": "Product analytics capture (PostHog).",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

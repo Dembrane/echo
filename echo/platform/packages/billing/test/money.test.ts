@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
+import { pyRound } from "@dembrane/legacy-shape";
 import {
   applyDiscount,
   computeMonthlyBillingPrice,
   money2,
   perIntervalAmount,
   planDescription,
-  pyRound,
   subscriptionStartDate,
 } from "../src";
 

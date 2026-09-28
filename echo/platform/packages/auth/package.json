@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/auth",
+  "description": "Sign-in and sessions (Better Auth) and the identity sync from Directus.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./sync": "./src/sync.ts"

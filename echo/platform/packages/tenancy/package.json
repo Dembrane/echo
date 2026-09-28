@@ -1,7 +1,14 @@
 {
   "name": "@dembrane/tenancy",
+  "description": "Orgs and workspaces: members, settings, access requests, support access, project shares.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "billing": "Membership changes reconcile the org's paid seats."
+    }
+  },
   "exports": {
     ".": "./src/index.ts"
   },

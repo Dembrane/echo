@@ -3,6 +3,14 @@ import { UnauthenticatedError } from "@dembrane/core";
 import type { Logger } from "@dembrane/observability";
 import type { Context } from "hono";
 
+export {
+  projectAllows,
+  projectFor,
+  projectSource,
+  type Surface,
+  workspaceFor,
+} from "./project";
+
 /** A signed-in caller as routes see it. */
 export interface Signed extends Principal {
   readonly isStaff: boolean;

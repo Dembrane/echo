@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/projects",
+  "description": "Projects, tags, goals, methodologies, prompt templates and the report request.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

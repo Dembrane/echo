@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/audio",
+  "description": "ffmpeg and ffprobe wrappers, audio formats, and the client for the media app.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

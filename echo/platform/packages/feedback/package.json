@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/feedback",
+  "description": "Bug reports, feedback responses and the forward to support.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
@@ -10,10 +14,10 @@
   },
   "dependencies": {
     "@dembrane/access": "workspace:*",
-    "@dembrane/billing": "workspace:*",
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
     "@dembrane/observability": "workspace:*",
     "@dembrane/queue": "workspace:*",
     "@dembrane/ratelimit": "workspace:*",

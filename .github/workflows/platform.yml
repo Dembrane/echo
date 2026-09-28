@@ -76,6 +76,8 @@ jobs:
         run: bun run typecheck
       - name: Config is declared, valid in every environment, and read
         run: bun run config check
+      - name: Packages import down the layers, and README.md's package map is current
+        run: bun run packages check
       - name: Schema and migrations agree
         working-directory: echo/platform/packages/db
         run: bunx drizzle-kit generate < /dev/null | tee /dev/stderr | grep -q "No schema changes"

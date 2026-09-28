@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/stats",
+  "description": "Public usage numbers the website shows.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
@@ -9,10 +13,10 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@dembrane/billing": "workspace:*",
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
     "@dembrane/ratelimit": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.9.0"

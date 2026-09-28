@@ -1,7 +1,16 @@
 {
   "name": "@dembrane/agentic",
+  "description": "The assistant: agent runs, their event streams, memory, and its own canvas tools.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "chats": "Agent runs live inside chats and name them.",
+      "notifications": "Notifies the user when a run needs them or finishes.",
+      "projects": "The assistant reads and edits project fields through projects' storage."
+    }
+  },
   "exports": {
     ".": "./src/index.ts"
   },

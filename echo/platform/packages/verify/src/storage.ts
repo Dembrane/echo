@@ -1,4 +1,4 @@
-import { isUuid } from "@dembrane/conversations";
+import { isUuid } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";

@@ -1,7 +1,7 @@
 import { BadRequestError, NotFoundError, newId } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { projectFor } from "@dembrane/http";
 import { directusRow } from "@dembrane/legacy-shape";
-import { projectFor } from "./access";
 import type { ProjectDeps } from "./projects";
 
 // ── BFF /api/v2/bff/tags ────────────────────────────────────────────────

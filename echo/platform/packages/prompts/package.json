@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/prompts",
+  "description": "The Jinja prompt templates carried over from Python, rendered the same way.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

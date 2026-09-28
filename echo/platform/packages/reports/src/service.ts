@@ -1,8 +1,8 @@
 import type { Access, ProjectAccess } from "@dembrane/access";
 import { NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { projectFor } from "@dembrane/http";
 import { directusRow } from "@dembrane/legacy-shape";
-import { projectFor } from "@dembrane/projects";
 import type { ReportsStorage, Row } from "./storage";
 
 export interface ReportDeps {

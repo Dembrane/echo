@@ -28,11 +28,10 @@ import {
 } from "@dembrane/analysis";
 import { NotFoundError, PlatformError, UnavailableError, ValidationError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
-import { type Env, requireUser, type Signed } from "@dembrane/http";
+import { type Env, projectFor, requireUser, type Signed } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
 import type { Completer, Embedder } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
-import { projectFor } from "@dembrane/projects";
 import type { RateLimiter } from "@dembrane/ratelimit";
 import { sharedHub, sseResponse } from "@dembrane/realtime";
 import { type Context, Hono } from "hono";

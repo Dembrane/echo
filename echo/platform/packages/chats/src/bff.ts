@@ -1,6 +1,6 @@
 import { BadRequestError, NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
-import { projectFor } from "@dembrane/projects";
+import { projectFor } from "@dembrane/http";
 import { chatFor } from "./access";
 import type { ChatDeps } from "./deps";
 import { FREE_TIER_MAX_CHATS, freeTierLimit, isFreeTier } from "./tiers";

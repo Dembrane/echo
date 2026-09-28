@@ -1,6 +1,7 @@
 import { NotFoundError, newId } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
-import { PROJECT_UPDATE_FIELDS, projectFor, projectsStorage } from "@dembrane/projects";
+import { projectFor } from "@dembrane/http";
+import { PROJECT_UPDATE_FIELDS, projectsStorage } from "@dembrane/projects";
 import { agentProject } from "../access";
 import {
   type DataDeps,

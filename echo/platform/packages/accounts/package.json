@@ -1,7 +1,16 @@
 {
   "name": "@dembrane/accounts",
+  "description": "Customer accounts as sales runs them: offers, contracts, signing, demos, reminders.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "account": "Sends its emails through account's email job and templates.",
+      "popcorn": "A prospect's demo is a seeded popcorn deck.",
+      "webhooks": "Delivers account events with the webhook sender and its private-address guard."
+    }
+  },
   "exports": {
     ".": "./src/index.ts"
   },

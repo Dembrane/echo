@@ -1,3 +1,4 @@
+import { directusTime, parseTime, pyRound } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
 import { paymentFailedEmail } from "./emails";
@@ -11,7 +12,7 @@ import {
   meta,
   str,
 } from "./mollie";
-import { applyDiscount, money2, pyRound } from "./money";
+import { applyDiscount, money2 } from "./money";
 import { billingAccountAdmins, emailsOf, type Notifier } from "./notify";
 import type { AccountPatch, AccountRow, BillingStore } from "./store";
 import {
@@ -27,7 +28,6 @@ import {
   pyIso,
   subscriptionStartDate,
 } from "./tiers";
-import { directusTime, parseTime } from "./time";
 
 /** Product analytics (PostHog). Events are fire-and-forget. */
 export type Capture = (

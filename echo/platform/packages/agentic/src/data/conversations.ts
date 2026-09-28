@@ -2,7 +2,7 @@ import type { ProjectAccess } from "@dembrane/access";
 import { chatsStorage } from "@dembrane/chats";
 import { BadRequestError, NotFoundError, UnavailableError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
-import { projectFor } from "@dembrane/projects";
+import { projectFor } from "@dembrane/http";
 import { agentProject } from "../access";
 import { type DataDeps, isUuid, projectRow, type Row, row, sqlOf, text } from "./deps";
 import { conversationLocked, stampLocked, workspaceOverCapActive } from "./locks";

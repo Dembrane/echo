@@ -2,12 +2,12 @@ import {
   type BillingStore,
   emailsOf,
   type Notifier,
-  parseTime,
   pyIso,
   workspaceAdmins,
 } from "@dembrane/billing";
 import { ConflictError, newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
+import { parseTime } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
 import { supportEmail } from "./emails";

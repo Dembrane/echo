@@ -1,7 +1,15 @@
 {
   "name": "@dembrane/account",
+  "description": "The signed-in user's own account: profile, onboarding, settings, invites, transactional email.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "billing": "Accepting an invite or removing a member reconciles the org's paid seats.",
+      "notifications": "Tells staff and admins about sign-ups and accepted invites."
+    }
+  },
   "exports": {
     ".": "./src/index.ts"
   },

@@ -1,7 +1,14 @@
 {
   "name": "@dembrane/staff",
+  "description": "The staff console: support tools, billing rollups, privacy exports and erasure.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "billing": "Staff rollups and support tools read and change billing state, and reuse its email frame."
+    }
+  },
   "exports": {
     ".": "./src/index.ts"
   },
@@ -14,6 +21,7 @@
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
     "@dembrane/mail": "workspace:*",
     "@dembrane/observability": "workspace:*",
     "@dembrane/queue": "workspace:*",

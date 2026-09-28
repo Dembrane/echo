@@ -1,5 +1,6 @@
 {
   "name": "@dembrane/migrate",
+  "description": "The job that runs before every rollout: schema migrations, the queue schema, database grants.",
   "private": true,
   "type": "module",
   "scripts": {

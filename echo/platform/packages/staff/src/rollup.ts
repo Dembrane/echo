@@ -1,15 +1,13 @@
 import {
   applyDiscount,
-  directusTime,
   effectiveMembersFromRows,
   getCapacity,
-  parseTime,
   perIntervalAmount,
   pyIso,
-  pyRound,
   seatState,
   seatUserIds,
 } from "@dembrane/billing";
+import { directusTime, parseTime, pyRound } from "@dembrane/legacy-shape";
 import type { StaffStorage } from "./storage";
 
 /** Legacy per-tier sticker prices the staff forecast still shows as the base. */

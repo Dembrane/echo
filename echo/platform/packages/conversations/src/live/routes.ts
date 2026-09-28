@@ -1,8 +1,7 @@
 import { BadRequestError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
-import { type Ctx, type Env, requireUser } from "@dembrane/http";
+import { type Ctx, type Env, projectFor, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
-import { projectFor } from "@dembrane/projects";
 import { publish } from "@dembrane/realtime";
 import { pythonJson } from "@dembrane/webhooks";
 import { Hono } from "hono";

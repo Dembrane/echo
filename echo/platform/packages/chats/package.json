@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/chats",
+  "description": "Chat with a project's conversations (the v1 chats and the chat BFF).",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
@@ -18,7 +22,6 @@
     "@dembrane/legacy-shape": "workspace:*",
     "@dembrane/llm": "workspace:*",
     "@dembrane/observability": "workspace:*",
-    "@dembrane/projects": "workspace:*",
     "@dembrane/ratelimit": "workspace:*",
     "ai": "^7.0.118",
     "drizzle-orm": "^0.45.3",

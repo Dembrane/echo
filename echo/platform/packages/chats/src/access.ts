@@ -1,7 +1,7 @@
 import type { Access, Policy, ProjectAccess } from "@dembrane/access";
 import { NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
-import { projectFor } from "@dembrane/projects";
+import { projectFor } from "@dembrane/http";
 import type { ChatRow, ChatsStorage } from "./storage";
 
 export interface ChatAccessDeps {

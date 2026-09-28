@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/queue",
+  "description": "Durable background jobs and workflows on Postgres (DBOS): define, enqueue, run.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

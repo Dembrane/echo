@@ -1,6 +1,6 @@
 import { UnavailableError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
-import { projectAllows } from "@dembrane/projects";
+import { projectAllows } from "@dembrane/http";
 import type { ChatDeps } from "./deps";
 import type { ChatRow } from "./storage";
 import { countMessageTokens, MAX_CHAT_CONTEXT_LENGTH } from "./tokens";

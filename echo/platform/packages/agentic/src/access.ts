@@ -1,6 +1,6 @@
 import type { Access, ProjectAccess } from "@dembrane/access";
 import type { Signed } from "@dembrane/http";
-import { projectFor } from "@dembrane/projects";
+import { projectFor } from "@dembrane/http";
 
 /**
  * The gate every agentic route shares with the chat BFF (_assert_project_access): any

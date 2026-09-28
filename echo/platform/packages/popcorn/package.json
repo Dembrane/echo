@@ -1,7 +1,14 @@
 {
   "name": "@dembrane/popcorn",
+  "description": "Popcorn: one live deck per project, refreshed on a tick, with demos and translations.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "analysis": "A deck is an analysis snapshot; popcorn's shared tick helpers still live in analysis."
+    }
+  },
   "exports": {
     ".": "./src/index.ts"
   },

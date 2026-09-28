@@ -1,14 +1,5 @@
-import { defineJob, type EnqueueOptions, type JobDefinition, type Payload } from "@dembrane/queue";
+import { defineJob, type JobDefinition } from "@dembrane/queue";
 import { z } from "zod";
-
-/** What services need from the queue; the real Queue satisfies it and tests pass a recorder. */
-export interface JobSink {
-  enqueue<J extends JobDefinition>(
-    def: J,
-    payload: Payload<J>,
-    opts?: EnqueueOptions,
-  ): Promise<string | null>;
-}
 
 /**
  * Report generation, phase one. The producer is the create-report route; the handler is

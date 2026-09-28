@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import type { EnqueueOptions } from "./queue";
 
 /**
  * A job type: its queue name, the payload schema checked on enqueue and on receipt, and
@@ -37,3 +38,12 @@ export function defineJob<S extends z.ZodType>(
 
 export type Payload<J> = J extends JobDefinition<infer S> ? z.input<S> : never;
 export type Parsed<J> = J extends JobDefinition<infer S> ? z.output<S> : never;
+
+/** What services need from the queue; the real Queue satisfies it and tests pass a recorder. */
+export interface JobSink {
+  enqueue<J extends JobDefinition>(
+    def: J,
+    payload: Payload<J>,
+    opts?: EnqueueOptions,
+  ): Promise<string | null>;
+}

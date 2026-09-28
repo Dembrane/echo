@@ -1,10 +1,10 @@
 import { newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
+import { parseTime } from "@dembrane/legacy-shape";
 import type { Logger } from "@dembrane/observability";
 import { and, asc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 import { pyIso } from "./tiers";
-import { parseTime } from "./time";
 
 const { recording_overage, billing_account } = schema;
 

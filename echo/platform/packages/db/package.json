@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/db",
+  "description": "The Drizzle schema for every table, migrations and the database connection.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema/index.ts"

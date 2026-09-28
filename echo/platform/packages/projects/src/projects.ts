@@ -1,9 +1,9 @@
 import type { Access } from "@dembrane/access";
 import { BadRequestError, ForbiddenError, NotFoundError, newId, zip } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { projectAllows, projectFor, projectSource } from "@dembrane/http";
 import { directusRow, pythonIso } from "@dembrane/legacy-shape";
-import { projectAllows, projectFor, projectSource } from "./access";
-import type { JobSink } from "./jobs";
+import type { JobSink } from "@dembrane/queue";
 import { isExternalClient, legalBlock, legalWrite } from "./legal";
 import type { ProjectsStorage, Row } from "./storage";
 

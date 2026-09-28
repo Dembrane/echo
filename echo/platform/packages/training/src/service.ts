@@ -1,6 +1,6 @@
 import type { Notifier } from "@dembrane/billing";
-import { directusTime } from "@dembrane/billing";
 import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import { directusTime } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
 import { escapeHtml } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";

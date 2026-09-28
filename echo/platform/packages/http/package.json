@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/http",
+  "description": "What every route shares: the signed-in caller, body validation, project and workspace guards.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

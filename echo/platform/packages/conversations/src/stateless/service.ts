@@ -2,7 +2,7 @@ import { durationOf } from "@dembrane/audio";
 import { newId, type PlatformError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
-import { projectFor } from "@dembrane/projects";
+import { projectFor } from "@dembrane/http";
 import { TranscriptionError } from "@dembrane/transcription";
 import { and, eq } from "drizzle-orm";
 import type { ConversationsDeps } from "../deps";

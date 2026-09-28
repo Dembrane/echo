@@ -6,9 +6,8 @@ import {
   TIER_REQUIRED,
   type WorkspaceAccess,
 } from "@dembrane/access";
-import { ForbiddenError, NotFoundError } from "@dembrane/core";
-import type { Signed } from "@dembrane/http";
-import { isUuid } from "./storage";
+import { ForbiddenError, isUuid, NotFoundError } from "@dembrane/core";
+import type { Signed } from "./index";
 
 /**
  * How a route reports refusals. The decision always comes from @dembrane/access; only the

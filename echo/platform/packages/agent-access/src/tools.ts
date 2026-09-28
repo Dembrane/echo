@@ -1,8 +1,8 @@
 import { type ProjectAccess, resolveProject, resolveWorkspace } from "@dembrane/access";
 import { conversationForBff, enrich } from "@dembrane/conversations";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@dembrane/core";
+import { projectFor } from "@dembrane/http";
 import { directusRow } from "@dembrane/legacy-shape";
-import { projectFor } from "@dembrane/projects";
 import { type AgentContext, type AgentDeps, orgAgentAccessEnabled } from "./context";
 import { type DocsCorpus, NO_DOCS } from "./knowledge";
 import type { Row } from "./storage";

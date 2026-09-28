@@ -1,6 +1,6 @@
 import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
-import { projectFor, workspaceFor } from "./access";
+import { projectFor, workspaceFor } from "@dembrane/http";
 import type { ProjectDeps } from "./projects";
 import type { Row } from "./storage";
 

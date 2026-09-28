@@ -1,4 +1,5 @@
 import type { Db } from "@dembrane/db";
+import { parseTime } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
 import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
@@ -14,7 +15,6 @@ import {
   type LiveRecordings,
 } from "./overage";
 import { pyIso } from "./tiers";
-import { parseTime } from "./time";
 
 /**
  * Billing schedules, one job each, same cadence as the old APScheduler jobs (UTC).

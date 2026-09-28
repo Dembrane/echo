@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/observability",
+  "description": "Structured logging and tracing.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

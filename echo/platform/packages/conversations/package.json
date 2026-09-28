@@ -1,7 +1,15 @@
 {
   "name": "@dembrane/conversations",
+  "description": "Conversations, the participant portal, the audio pipeline, live monitoring and search.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "projects": "The portal applies the project's legal basis and external-client rules.",
+      "webhooks": "Conversation events fire the project's webhooks."
+    }
+  },
   "exports": {
     ".": "./src/index.ts"
   },

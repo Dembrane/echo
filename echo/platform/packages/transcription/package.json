@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/transcription",
+  "description": "Speech to text with Gemini, plus PII redaction and a fake for tests.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

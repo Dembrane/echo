@@ -1,7 +1,14 @@
 {
   "name": "@dembrane/training",
+  "description": "Training as its own product: catalog, rosters, licences, staff provisioning.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "billing": "Licence changes notify org admins through billing's own Notifier."
+    }
+  },
   "exports": {
     ".": "./src/index.ts"
   },
@@ -14,6 +21,7 @@
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
     "@dembrane/mail": "workspace:*",
     "@dembrane/observability": "workspace:*",
     "drizzle-orm": "^0.45.3",

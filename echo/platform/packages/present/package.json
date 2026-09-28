@@ -1,7 +1,16 @@
 {
   "name": "@dembrane/present",
+  "description": "Present: the published, audience-facing view of a popcorn deck and a map.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "analysis": "Reads map snapshots and budgets from the analysis engine.",
+      "map": "Shows a map's assessments and fact-checks to an audience.",
+      "popcorn": "Shows a popcorn deck to an audience: its settings, bundle and pages."
+    }
+  },
   "exports": {
     ".": "./src/index.ts"
   },

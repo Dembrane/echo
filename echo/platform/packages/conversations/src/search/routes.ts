@@ -1,6 +1,5 @@
-import { type Env, requireUser } from "@dembrane/http";
+import { type Env, projectAllows, requireUser } from "@dembrane/http";
 import { isoTimestamp, p, pydanticIso } from "@dembrane/legacy-shape";
-import { projectAllows } from "@dembrane/projects";
 import { Hono } from "hono";
 import type { ConversationsDeps } from "../deps";
 import { searchStorage } from "./storage";

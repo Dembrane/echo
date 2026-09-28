@@ -1,4 +1,4 @@
-import { pyRound } from "@dembrane/billing";
+import { pyRound } from "@dembrane/legacy-shape";
 import type { StatsStore } from "./storage";
 
 export interface PublicStats {

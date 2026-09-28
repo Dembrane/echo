@@ -6,8 +6,8 @@ import {
   ValidationError,
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { projectFor } from "@dembrane/http";
 import { directusRow, PaymentRequiredError, pythonIso } from "@dembrane/legacy-shape";
-import { projectFor } from "./access";
 import { generateReport } from "./jobs";
 import type { ProjectDeps } from "./projects";
 

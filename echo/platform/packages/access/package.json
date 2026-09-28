@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/access",
+  "description": "Who may do what: roles, policies and tiers resolved for an org, workspace or project.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

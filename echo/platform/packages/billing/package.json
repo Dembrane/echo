@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/billing",
+  "description": "Plans, seats, Mollie payments, invoices and overage.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
@@ -14,6 +18,7 @@
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
     "@dembrane/mail": "workspace:*",
     "@dembrane/observability": "workspace:*",
     "@dembrane/queue": "workspace:*",

@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/pricing",
+  "description": "The pricing configurator and the bookings it forwards.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

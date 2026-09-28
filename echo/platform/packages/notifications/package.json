@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/notifications",
+  "description": "In-app notifications and announcements, and the Notifier other namespaces emit through.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

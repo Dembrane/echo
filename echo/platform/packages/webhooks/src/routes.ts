@@ -2,7 +2,7 @@ import type { Access } from "@dembrane/access";
 import type { Db } from "@dembrane/db";
 import { type Env, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
-import type { JobSink } from "@dembrane/projects";
+import type { JobSink } from "@dembrane/queue";
 import { Hono } from "hono";
 import type { Deliver } from "./deliver";
 import * as svc from "./service";

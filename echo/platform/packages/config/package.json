@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/config",
+  "description": "Typed configuration per environment, and the `bun run config` checks.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

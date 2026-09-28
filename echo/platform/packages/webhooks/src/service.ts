@@ -1,9 +1,9 @@
 import type { Access } from "@dembrane/access";
 import { BadRequestError, NotFoundError, newId } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { projectAllows, projectFor } from "@dembrane/http";
 import { directusRow, pythonIso } from "@dembrane/legacy-shape";
-import { type JobSink, projectAllows, projectFor } from "@dembrane/projects";
-import type { EnqueueOptions } from "@dembrane/queue";
+import type { EnqueueOptions, JobSink } from "@dembrane/queue";
 import { assertPublicTarget, type Deliver, DeliveryError } from "./deliver";
 import { dispatchWebhook } from "./jobs";
 import {

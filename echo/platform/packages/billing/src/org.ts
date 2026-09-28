@@ -1,8 +1,8 @@
+import { isUuid } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import type { BillingStore } from "./store";
-import { isUuid } from "./uuid";
 
 const { workspace, billing_account } = schema;
 

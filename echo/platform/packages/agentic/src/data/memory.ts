@@ -1,6 +1,6 @@
 import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
-import { projectFor } from "@dembrane/projects";
+import { projectFor } from "@dembrane/http";
 import { agentProject } from "../access";
 import {
   type DataDeps,

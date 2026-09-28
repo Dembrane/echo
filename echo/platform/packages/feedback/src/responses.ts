@@ -1,8 +1,8 @@
 import { type Access, requireStaff, type StaffAudit } from "@dembrane/access";
-import { directusTime } from "@dembrane/billing";
 import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { type Env, requireUser, type Signed, v } from "@dembrane/http";
+import { directusTime } from "@dembrane/legacy-shape";
 import type { Limit, RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import { safeReplayUrl } from "./report";

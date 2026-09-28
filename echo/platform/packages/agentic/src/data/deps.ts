@@ -2,8 +2,8 @@ import type { Access, Policy, WorkspaceAccess } from "@dembrane/access";
 import { PlatformError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
+import { workspaceFor } from "@dembrane/http";
 import { directusRow } from "@dembrane/legacy-shape";
-import { workspaceFor } from "@dembrane/projects";
 import type postgres from "postgres";
 
 export type Row = Record<string, unknown>;

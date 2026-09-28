@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/ratelimit",
+  "description": "Rate limits counted in Postgres or memory.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

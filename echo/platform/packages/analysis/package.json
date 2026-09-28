@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/analysis",
+  "description": "The analysis engine: recipes, runs, snapshots and revisions that maps and popcorn build on.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
@@ -16,7 +20,6 @@
     "@dembrane/legacy-shape": "workspace:*",
     "@dembrane/llm": "workspace:*",
     "@dembrane/observability": "workspace:*",
-    "@dembrane/projects": "workspace:*",
     "@dembrane/queue": "workspace:*",
     "@dembrane/ratelimit": "workspace:*",
     "@dembrane/realtime": "workspace:*",

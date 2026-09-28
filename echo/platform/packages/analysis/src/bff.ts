@@ -7,7 +7,7 @@ import {
   ValidationError,
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
-import { projectAllows, projectFor } from "@dembrane/projects";
+import { projectAllows, projectFor } from "@dembrane/http";
 import type { RateLimiter } from "@dembrane/ratelimit";
 import {
   AnalysisStoreError,

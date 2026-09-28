@@ -1,4 +1,4 @@
-import { pyRound } from "./money";
+import { pyRound } from "@dembrane/legacy-shape";
 
 /**
  * Per-tier price and the Free hour cap. The single source for every price the

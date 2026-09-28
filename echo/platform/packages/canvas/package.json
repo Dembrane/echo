@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/canvas",
+  "description": "Dynamic canvases: a live wall built from recent transcript, redrawn on a tick.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "namespace"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

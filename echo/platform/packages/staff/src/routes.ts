@@ -2,8 +2,6 @@ import { requireStaff, type StaffAudit, type StaffPolicy } from "@dembrane/acces
 import {
   type Billing,
   BillingError,
-  directusTime,
-  isUuid,
   dashboardUrl as molliePaymentDashboardUrl,
   pyIso,
   str,
@@ -13,11 +11,13 @@ import {
   BadRequestError,
   ConflictError,
   ForbiddenError,
+  isUuid,
   NotFoundError,
   newId,
 } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
+import { directusTime } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
 import { Hono } from "hono";

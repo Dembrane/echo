@@ -2,6 +2,7 @@ import { type Access, hasStaffPolicy, type StaffAudit } from "@dembrane/access";
 import {
   BadRequestError,
   ForbiddenError,
+  isUuid,
   NotFoundError,
   UnauthenticatedError,
   ValidationError,
@@ -13,7 +14,6 @@ import type { Billing } from "./create";
 import { orgBillingSnapshot } from "./org";
 import { BillingError, billingDetailsFromAccount } from "./service";
 import type { AccountRow } from "./store";
-import { isUuid } from "./uuid";
 
 const BILLING_ROLES = ["owner", "admin", "billing"] as const;
 

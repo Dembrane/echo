@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "bun --env-file=.env.local --filter @dembrane/api dev",
-    "check": "bun run lint && bun run typecheck && bun test",
+    "check": "bun run lint && bun run typecheck && bun run packages check && bun test",
     "lint": "biome check .",
     "format": "biome check --write .",
     "typecheck": "tsc -p tsconfig.json",
@@ -17,6 +17,7 @@
     "db:migrate": "bun --env-file=.env.local packages/db/src/migrate.ts",
     "setup": "scripts/setup.sh",
     "config": "bun packages/config/src/cli.ts",
+    "packages": "bun scripts/package-map.ts",
     "test": "bun test --parallel",
     "test:changed": "bun test --parallel --changed=origin/feat/bun-migration",
     "seed:accounts-demo": "bun --env-file=.env.local packages/accounts/src/seed-cli.ts",

@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/llm",
+  "description": "Language model and embedding calls on Vertex, with fallbacks and fakes for tests.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

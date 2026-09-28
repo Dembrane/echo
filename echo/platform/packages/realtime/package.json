@@ -1,7 +1,11 @@
 {
   "name": "@dembrane/realtime",
+  "description": "Live updates: Postgres LISTEN fanned out to server-sent event streams.",
   "private": true,
   "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
