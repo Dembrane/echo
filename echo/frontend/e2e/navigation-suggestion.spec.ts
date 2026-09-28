@@ -1,8 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 
-const screenshotPath =
-	"../docs/plans/smart-loop-briefs/wave10-shots/navigation-card.png";
+const screenshotPath = "test-results/navigation-card.png";
 
 test("navigateTo card uses client-side navigation and preserves back state", async ({
 	page,
@@ -14,9 +13,7 @@ test("navigateTo card uses client-side navigation and preserves back state", asy
 	);
 
 	const historyBefore = await page.evaluate(() => window.history.length);
-	mkdirSync("../docs/plans/smart-loop-briefs/wave10-shots", {
-		recursive: true,
-	});
+	mkdirSync("test-results", { recursive: true });
 	await page
 		.getByTestId("agentic-navigation-suggestion")
 		.screenshot({ path: screenshotPath });

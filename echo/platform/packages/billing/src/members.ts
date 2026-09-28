@@ -88,7 +88,7 @@ export const SEAT_ROLES: ReadonlySet<string> = new Set([
   "external",
 ]);
 
-/** Distinct direct users holding a seat. Derived org access never takes a seat (ADR 0004). */
+/** Distinct direct users holding a seat. Derived org access never takes a seat. */
 export function seatUserIds(members: readonly EffectiveMember[]): Set<string> {
   const ids = new Set<string>();
   for (const m of members)

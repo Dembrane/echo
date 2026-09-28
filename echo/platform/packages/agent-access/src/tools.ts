@@ -4,7 +4,7 @@ import { BadRequestError, ForbiddenError, NotFoundError } from "@dembrane/core";
 import { directusRow } from "@dembrane/legacy-shape";
 import { projectFor } from "@dembrane/projects";
 import { type AgentContext, type AgentDeps, orgAgentAccessEnabled } from "./context";
-import type { DocsCorpus } from "./knowledge";
+import { type DocsCorpus, NO_DOCS } from "./knowledge";
 import type { Row } from "./storage";
 import {
   type ConversationSort,
@@ -526,6 +526,8 @@ export async function readDoc(d: ToolDeps, path: string, offset: number, limit: 
 /** With a pattern, matching lines; without, the page index. */
 export async function searchDocs(d: ToolDeps, pattern: string | null, maxResults: number) {
   const pages = await d.docs.list();
+  if (!pages.length)
+    return { pattern: (pattern ?? "").trim() ? pattern : null, results: [], note: NO_DOCS };
   if (!(pattern ?? "").trim())
     return {
       pattern: null,

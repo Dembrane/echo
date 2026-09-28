@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { Glob } from "bun";
 import { assetPath, isCompiled, missingAssets } from "../src";
@@ -36,7 +35,6 @@ test("from source, assets resolve to the package's own folder and docs to the re
     join(PLATFORM, "packages", "popcorn", "static", "index.html"),
   );
   expect(assetPath("docs")).toBe(resolve(PLATFORM, "..", "..", "docs"));
-  expect(existsSync(assetPath("docs", "README.md"))).toBe(true);
 });
 
 test("missingAssets names each absent file and passes present files and folders", () => {

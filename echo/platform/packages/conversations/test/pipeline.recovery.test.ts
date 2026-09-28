@@ -8,7 +8,7 @@ import postgres from "postgres";
 import { finishConversation, processChunk } from "../src/pipeline/defs";
 import { admin, freshDatabase, quiet, seed, tone, tracer, until } from "./pipeline-harness";
 
-// The crash test ADR 0007 promises for the pipeline: a worker killed with SIGKILL in the
+// The crash test the pipeline's durability promises: a worker killed with SIGKILL in the
 // middle of transcribing resumes on another worker at that step, without converting the
 // audio again, and the conversation still finalizes.
 const run = admin && Bun.which("ffmpeg") ? describe : describe.skip;

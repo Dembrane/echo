@@ -34,7 +34,7 @@ export const schema = defineSchema({
   assets: {
     root: key("ASSETS_ROOT", z.string().min(1).default("/app/assets"), {
       description:
-        "Where a compiled binary finds the files packages read at run time (<package>/... and docs/). Run from source, each package reads its own folder and this is ignored.",
+        "Where a compiled binary finds the files packages read at run time (<package>/...). Run from source, each package reads its own folder and this is ignored.",
     }),
   },
   http: {

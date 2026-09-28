@@ -24,9 +24,10 @@ services:
     ports: ["127.0.0.1:6395:6379"]
 
   directus:
-    # Same Dockerfile and Directus version (11.13.4) as echo main's devcontainer.
+    # Same Dockerfile and Directus version (11.13.4) as echo main's devcontainer, from the
+    # main checkout in OLD_ECHO_DIR (parity/old-echo.sh).
     build:
-      context: ../../directus
+      context: ${OLD_ECHO_DIR:-${HOME}/orca/workspaces/echo-parity-main}/echo/directus
       dockerfile: Dockerfile
     image: parity-directus:11.13.4
     ports: ["127.0.0.1:8065:8055"]

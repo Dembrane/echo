@@ -7,7 +7,8 @@
 #   SKIP_SCHEMA_CHECK=1 ...        skip the echo-next comparison
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
-echo_root="$(cd "$here/../.." && pwd)"
+source "$here/old-echo.sh"
+echo_root="$OLD_ECHO_DIR/echo"
 cd "$here"
 start=$(date +%s)
 
@@ -42,7 +43,7 @@ echo "== fresh stack"
 dc down -v --remove-orphans >/dev/null 2>&1 || true
 dc build -q directus
 dc up -d --wait db valkey
-# echo main enables pgvector by hand before the push (docs/database_migrations.md step 3).
+# echo main enables pgvector by hand before the push (main's echo/docs/database_migrations.md step 3).
 psql_db dembrane -c "create extension if not exists vector"
 dc up -d --wait directus
 
@@ -55,7 +56,7 @@ sync() {
 sync diff > "$here/.last-sync-diff.log" 2>&1 || { tail -30 "$here/.last-sync-diff.log"; exit 1; }
 sync push > "$here/.last-sync-push.log" 2>&1 || { tail -30 "$here/.last-sync-push.log"; exit 1; }
 
-echo "== SQL-only migrations (docs/database_migrations.md steps 5-7)"
+echo "== SQL-only migrations (main's echo/docs/database_migrations.md steps 5-7)"
 # Step 4 (the partial unique indexes on org_membership and workspace_membership) is
 # skipped on purpose: neither echo-next nor prod has them, and parity follows what runs.
 psql_db dembrane < "$echo_root/directus/migrations/add_map_vectors.sql"

@@ -2,7 +2,7 @@ import { dutchDate } from "./legal/parse";
 import { type OfferLine, type PricedLine, priceLines, type Totals } from "./money";
 
 /**
- * The offer as today's Google Doc templates lay it out (docs/accounts-reference: subscription
+ * The offer as today's Google Doc templates lay it out (packages/accounts/reference: subscription
  * and event, English and Dutch): letterhead, "<Name> x dembrane", date and offer id, a
  * greeting, the lines table, the total excluding VAT, the closing, the acceptance block and
  * the incorporation clause naming the pinned terms, SLA and DPA, then the validity line.

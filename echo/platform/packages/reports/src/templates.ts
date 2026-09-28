@@ -1,4 +1,4 @@
-// The prompt templates of echo/server/prompt_templates, embedded verbatim so the worker
+// The Python API's prompt templates, embedded verbatim so the worker
 // binary carries them. A prompt change is an edit here, reviewed like code.
 
 export const TEMPLATES: Readonly<Record<string, string>> = {

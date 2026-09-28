@@ -104,7 +104,7 @@ export function parseLegalPage(html: string): ParsedLegal {
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /**
- * A text dump of a legal page (docs/accounts-reference): the header lines after "Download
+ * A text dump of a legal page (packages/accounts/reference): the header lines after "Download
  * as PDF" carry the date ("Jun 21, 2026") and version; the text runs to the page's
  * "Previous" link. Inline elements were split onto their own lines in the dump; they are
  * joined back so the stored body reads as prose.

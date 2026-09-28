@@ -3,8 +3,7 @@ import { z } from "zod";
 import type { FetchedPage } from "./fetch";
 
 /**
- * The two model steps of a demo, following the popcorn-demo skill
- * (skills/popcorn-demo/SKILL.md, references/demo-content.md): research the public
+ * The two model steps of a demo: research the public
  * website into verified facts, unknowns and clearly invented themes; then author a small
  * fictional corpus of conversations with generic role labels, contrasting perspectives
  * and unresolved tensions, plus the disclosure copy that makes the demo plainly synthetic.
@@ -150,7 +149,7 @@ export async function author(
   return withDisclosure(Authored.parse(JSON.parse(out.text)), brief.language);
 }
 
-/** references/demo-content.md: the standard first screen and invitation. */
+/** The standard first screen and invitation. */
 export const STANDARD_COPY = {
   nl: {
     disclosure:

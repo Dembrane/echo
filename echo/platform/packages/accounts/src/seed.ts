@@ -25,7 +25,7 @@ import { store } from "./storage";
 import { createTask, settleTask } from "./tasks";
 
 /**
- * The accounts demo on a non-production database (docs/accounts.md, "Demo"): a fictional
+ * The accounts demo on a non-production database: a fictional
  * customer, Gemeente Voorbeeldstad, with the example synthetic demo, a sent subscription
  * offer and its signing task, the locked billing task, a PO task (open), a logo task
  * (submitted, waiting for our review), an open invoice, a question answered once, and the

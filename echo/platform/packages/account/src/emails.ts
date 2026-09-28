@@ -1,6 +1,6 @@
 /**
  * Transactional emails of the account area, ported from the Jinja templates in
- * echo/server/email_templates with the same copy and layout. HTML values are escaped the
+ * the Python API's email_templates with the same copy and layout. HTML values are escaped the
  * way Jinja's autoescape did; the text part is sent alongside every HTML part.
  */
 

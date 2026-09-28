@@ -83,7 +83,7 @@ export const OnboardingRoute = () => {
 			pendingInvites &&
 			pendingInvites.length > 0 &&
 			pendingInvites.every((i) => isOutsiderRole(i.role));
-	// The designer's onboarding split (docs/workspaces/designer-return.html):
+	// The designer's onboarding split:
 	// users with projects from before workspaces existed see the "migration"
 	// copy; users with no legacy projects see the fresh-setup copy. hasInvites
 	// takes precedence over both (they're here to join a organisation, not set one up).

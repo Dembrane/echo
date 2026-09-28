@@ -2128,7 +2128,7 @@ function SimpleDataTable<T extends object>({
 	initialSorting?: SortingState;
 	emptyLabel: string;
 }) {
-	// See BillingTable / frontend/AGENTS.md for the rationale.
+	// See BillingTable for the rationale.
 	"use no memo";
 	const [sorting, setSorting] = useState<SortingState>(initialSorting ?? []);
 	const table = useReactTable<T>({

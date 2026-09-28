@@ -6,7 +6,7 @@ import { isUuid } from "./storage";
 const { project, workspace, billing_account } = schema;
 
 /**
- * The hour-cap rules of tier_capacity.py (ADR 0001) that conversations need: paid tiers
+ * The hour-cap rules of tier_capacity.py that conversations need: paid tiers
  * have unlimited hours and never lock; free has a one hour lifetime cap. Unknown tiers
  * (legacy pilot, pioneer) have no capacity row and are never capped.
  */

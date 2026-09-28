@@ -19,14 +19,21 @@ const MAX_PATTERN_LENGTH = 200;
 const MAX_LINE_SCAN = 2_000;
 const NESTED_QUANTIFIER = /\((?:[^()\\]|\\.)*[+*}](?:[^()\\]|\\.)*\)\s*[+*{?]/;
 
-/** What the worker's boot check requires: the docs tree and every skill the catalog lists. */
+/**
+ * What the worker's boot check requires: every skill the catalog lists. The docs corpus is
+ * optional; without it the docs tools answer empty with NO_DOCS and the prompt leaves out
+ * the docs guidance.
+ */
 export const AGENTIC_ASSETS: readonly string[] = [
-  "docs/README.md",
   "agentic/skills/interviewing.md",
   "agentic/skills/project-onboarding.md",
 ];
 
+/** What the docs tools tell the model when this environment carries no docs corpus. */
+export const NO_DOCS = "No documentation corpus is available in this environment.";
+
 export interface Knowledge {
+  hasDocs(): boolean;
   listDocs(): string[];
   readDoc(path: string, offset?: number, limit?: number): string;
   grepDocs(pattern: string): { path: string; line: number; text: string }[];
@@ -148,6 +155,10 @@ export function createKnowledge(): Knowledge {
   };
 
   return {
+    hasDocs() {
+      return docsRoot() !== null;
+    },
+
     listDocs() {
       const root = docsRoot();
       return root ? markdownFiles(root) : [];
@@ -155,7 +166,7 @@ export function createKnowledge(): Knowledge {
 
     readDoc(path, offset = 1, limit = MAX_READ_LINES) {
       const root = docsRoot();
-      if (!root) return "No documentation corpus is available in this environment.";
+      if (!root) return NO_DOCS;
       const target = resolveInside(root, path);
       if (!existsSync(target) || !statSync(target).isFile() || !target.endsWith(".md"))
         return `Not found: ${path}. Use listDocs to see available paths.`;

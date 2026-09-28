@@ -1,4 +1,4 @@
-// Generated from echo/agent/agent.py so the model-facing text stays verbatim: the system
+// Carried over from the Python agent's agent.py so the model-facing text stays verbatim: the system
 // prompt sections, the runtime notes and each tool's description (its docstring).
 
 export const SYSTEM_PROMPT_HEAD =

@@ -4,7 +4,7 @@ import type { ModelMessage } from "ai";
 import { convertArrayToReadableStream, MockLanguageModelV4 } from "ai/test";
 import { createAgent, stepMessageId } from "../src/agent/agent";
 import type { AgentData, Json, TurnContext } from "../src/agent/data";
-import { safePattern } from "../src/agent/knowledge";
+import { NO_DOCS, safePattern } from "../src/agent/knowledge";
 import { systemPromptFor } from "../src/agent/prompt";
 import { REPEATED_CALL_MESSAGE, REPEATED_CALL_STOP_MESSAGE } from "../src/agent/text";
 import { CANVAS_TOOL_NAMES, TOOLS, toolsFor } from "../src/agent/tools";
@@ -540,12 +540,16 @@ describe("tool results", () => {
       { conversation_id: "c1", query: "bus" },
       (o) => expect(o).toMatchObject({ query: "bus", count: 1 }),
     ],
-    ["listDocs", {}, (o) => expect((o.docs as string[]).length).toBeGreaterThan(10)],
-    ["readDoc", { paths: ["../../etc/passwd"] }, () => {}],
+    ["listDocs", {}, (o) => expect(o).toEqual({ docs: [], note: NO_DOCS })],
+    [
+      "readDoc",
+      { paths: ["../../etc/passwd"] },
+      (o) => expect(o).toEqual({ docs: [{ path: "../../etc/passwd", content: NO_DOCS }] }),
+    ],
     [
       "grepDocs",
       { patterns: ["portal"] },
-      (o) => expect((o.results as Json[])[0]?.pattern).toBe("portal"),
+      (o) => expect(o).toEqual({ results: [{ pattern: "portal", matches: [] }], note: NO_DOCS }),
     ],
     ["readSkill", { path: "interviewing.md" }, (o) => expect(o.text).toStartWith("---")],
     [
@@ -856,15 +860,18 @@ describe("tool results", () => {
     test(`${name} ${JSON.stringify(args)}`, async () => {
       const { events } = await runStep({ model: model(turn(call("a", name, args))) });
       const end = outputOf(events, name);
-      if (name === "readDoc") {
-        const err = events.find((e) => e.type === "tool-error") as { error: string } | undefined;
-        expect(err?.error).toContain("escapes the knowledge root");
-        return;
-      }
       expect(events.find((e) => e.type === "tool-error")).toBeUndefined();
       check((typeof end === "string" ? { text: end } : end) as Json);
     });
   }
+
+  test("a path that leaves the knowledge root is refused", async () => {
+    const { events } = await runStep({
+      model: model(turn(call("a", "readSkill", { path: "../../../etc/passwd" }))),
+    });
+    const err = events.find((e) => e.type === "tool-error") as { error: string } | undefined;
+    expect(err?.error).toContain("escapes the knowledge root");
+  });
 
   test("a failed support request is reported honestly, never as sent", async () => {
     const calls: Calls = [];

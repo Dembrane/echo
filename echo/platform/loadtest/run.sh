@@ -29,7 +29,8 @@ docker update --cpus 2 --memory 2g --memory-swap 2g parity-db-1 >/dev/null
 if [ "$stack" = old ]; then
   if [ "$budget" = A ]; then api_cpu=150% api_mem=1536M dx_cpu=0.5 dx_mem=512m; else api_cpu=200% api_mem=2G dx_cpu=1 dx_mem=1g; fi
   docker update --cpus $dx_cpu --memory $dx_mem --memory-swap $dx_mem parity-directus-1 >/dev/null
-  server="$(cd "$root/../server" && pwd)"
+  source "$root/parity/old-echo.sh"
+  server="$OLD_ECHO_DIR/echo/server"
   systemd-run --user --scope --unit "echo-load-old" -p CPUQuota=$api_cpu -p MemoryMax=$api_mem \
     env DIRECTUS_BASE_URL=http://localhost:8065 DATABASE_URL=postgresql+psycopg://dembrane:dembrane@localhost:5440/dembrane \
       REDIS_URL=redis://localhost:6395 API_BASE_URL=http://localhost:$port DISABLE_SENTRY=1 \

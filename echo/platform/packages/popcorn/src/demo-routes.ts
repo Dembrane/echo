@@ -50,8 +50,8 @@ const demoBody = model({
 
 /**
  * POST /api/v2/admin/popcorn/demos: staff seed a reviewed synthetic demo into this
- * environment and get its public links back, the same rows and links seed_demo.py made
- * through Directus. sam's popcorn-demo skill calls it through `seed_demo.py --platform`.
+ * environment and get its public links back, the same rows and links the Python
+ * seed_demo.py made through Directus. sam calls it with a staff token.
  * Staff only (staff:workspaces, audited), never on production.
  */
 export function popcornDemoRoutes(deps: DemoRoutesDeps) {

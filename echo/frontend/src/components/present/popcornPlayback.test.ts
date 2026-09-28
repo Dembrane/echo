@@ -3,7 +3,7 @@ import { runInNewContext } from "node:vm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const source = readFileSync(
-	new URL("../../../../server/dembrane/popcorn/static/app.js", import.meta.url),
+	new URL("../../../../platform/packages/popcorn/static/app.js", import.meta.url),
 	"utf8",
 );
 const playbackSource = source.slice(

@@ -6,6 +6,15 @@ directus-sync push, `add_map_vectors.sql`, `add_analysis_constraints.sql`) and c
 echo-next's dump. The fixed seed (`fixtures.ts`) is frozen as `parity_template`, so every scenario
 starts from the same rows. Logins and tokens live in `.env.parity` (generated, gitignored).
 
+The old side (Python API, Directus, the demo scripts) comes from a checkout of echo main at
+`OLD_ECHO_DIR`, by default `~/orca/workspaces/echo-parity-main`:
+
+```sh
+git fetch origin
+git worktree add ~/orca/workspaces/echo-parity-main origin/main --detach
+OLD_ECHO_DIR=~/orca/workspaces/echo-parity-main ./run-old-api.sh
+```
+
 - `./bootstrap.sh`: rebuild everything from nothing, including the schema check and the template.
 - `./reset.sh [db]`: recreate `db` (default `dembrane`, the one Directus and the API use) from the
   template and flush Valkey. About 0.2s.
@@ -22,5 +31,5 @@ Known gaps:
 - directus-sync gives roles and policies fresh ids on every bootstrap; the seed resolves them by name.
 - Directus-managed timestamps (`date_created`) and startup-seeded rows are frozen by the template but
   differ between bootstraps. Logins write `directus_sessions`: ignore it when diffing rows.
-- The membership unique indexes from `docs/database_migrations.md` step 4 are left out: neither
+- The membership unique indexes from main's `echo/docs/database_migrations.md` step 4 are left out: neither
   echo-next nor prod has them.

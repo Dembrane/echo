@@ -1,5 +1,5 @@
 # ── Media service (ffmpeg) ────────────────────────────────────────────────
-# apps/media runs as a private Cloud Run service (ADR 0002): public ingress with IAM
+# apps/media runs as a private Cloud Run service: public ingress with IAM
 # required, so only identities granted run.invoker get through. The worker (pipeline) and
 # the API (merge on first play, duration probes) hold that grant and call it with a
 # Google ID token for its URL; no VPC, subnet or NAT is needed. It reads and writes audio

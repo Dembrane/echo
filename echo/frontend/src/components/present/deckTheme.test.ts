@@ -3,11 +3,11 @@ import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
 
 const styles = readFileSync(
-	new URL("../../../../server/dembrane/popcorn/static/styles.css", import.meta.url),
+	new URL("../../../../platform/packages/popcorn/static/styles.css", import.meta.url),
 	"utf8",
 );
 const source = readFileSync(
-	new URL("../../../../server/dembrane/popcorn/static/app.js", import.meta.url),
+	new URL("../../../../platform/packages/popcorn/static/app.js", import.meta.url),
 	"utf8",
 );
 
