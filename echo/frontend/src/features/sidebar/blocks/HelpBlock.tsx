@@ -14,7 +14,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Fragment, type ReactNode, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { ReleaseVideoModal } from "@/components/release/ReleaseVideoModal";
-import { ENABLE_RELEASE_VIDEO_MODAL, getDocumentationUrl } from "@/config";
+import { getDocumentationUrl } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { cn } from "@/lib/utils";
 import { useHelpModals } from "../hooks/useHelpModals";
@@ -35,12 +35,12 @@ export const HelpBlock = () => {
 	const reduced = useReducedMotion();
 	const helpButton = useRef<HTMLButtonElement>(null);
 
-	const releaseModal = ENABLE_RELEASE_VIDEO_MODAL ? (
+	const releaseModal = (
 		<ReleaseVideoModal
 			requested={releaseRequested}
 			onRequestedClose={release.close}
 		/>
-	) : null;
+	);
 
 	const items: { key: string; node: ReactNode }[] = [
 		{
@@ -78,20 +78,16 @@ export const HelpBlock = () => {
 				/>
 			),
 		},
-		...(ENABLE_RELEASE_VIDEO_MODAL
-			? [
-					{
-						key: "whats-new",
-						node: (
-							<NavButton
-								label={<Trans>What's new</Trans>}
-								icon={Sparkle}
-								onClick={release.open}
-							/>
-						),
-					},
-				]
-			: []),
+		{
+			key: "whats-new",
+			node: (
+				<NavButton
+					label={<Trans>What's new</Trans>}
+					icon={Sparkle}
+					onClick={release.open}
+				/>
+			),
+		},
 		{
 			key: "docs",
 			node: (

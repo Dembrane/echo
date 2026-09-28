@@ -181,9 +181,6 @@ export const getDocumentationUrl = (locale = "en-US") =>
 
 export const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "1";
 
-export const ENABLE_CONVERSATION_HEALTH = true;
-export const ENABLE_ANNOUNCEMENTS = true;
-export const ENABLE_DISPLAY_CONVERSATION_LINKS = true;
 export const ENABLE_WEBHOOKS = true;
 // Availability of agentic chat: on in every environment, production included.
 //
@@ -215,8 +212,6 @@ export const ENABLE_PRESENT = true;
 // Map fixture mode: `?fixture=50|150|200` on the Map page renders synthetic
 // data with no network requests, for performance checks. Local only.
 export const ENABLE_MAP_FIXTURES = byEnv({ local: true }, false);
-// The release-video modal. On everywhere now that the video is recorded.
-export const ENABLE_RELEASE_VIDEO_MODAL = true;
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
 	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;
