@@ -11,6 +11,9 @@ starts from the same rows. Logins and tokens live in `.env.parity` (generated, g
   template and flush Valkey. About 0.2s.
 - `./run-old-api.sh`: the Python API on :8100. `bun verify-old-api.ts` logs in as every seeded user
   and reads their data back, including the MCP grant.
+- `PARITY_API_PORT=8212 ./run-new-api.sh`: this worktree's Bun API with the env that makes it answer
+  like the old one (public URL, storage, Vertex, secrets from `.env.parity`). Point the runner at it
+  with `PARITY_NEW_URL`.
 
 Known gaps:
 - No object store: audio upload, download and transcription paths fail.
