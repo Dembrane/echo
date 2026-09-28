@@ -27,10 +27,13 @@ export function Questions({
 	orgId,
 	tickets,
 	side = "customer",
+	extraAction,
 }: {
 	orgId: string;
 	tickets: TicketT[];
 	side?: "customer" | "staff";
+	/** Sits next to "Ask a question": the customer page puts "Book a call" here. */
+	extraAction?: React.ReactNode;
 }) {
 	const [asking, setAsking] = useState(false);
 	return (
@@ -38,20 +41,23 @@ export function Questions({
 			title={<Trans>Questions</Trans>}
 			testId="questions"
 			action={
-				!asking && (
-					<Button
-						size="xs"
-						variant="light"
-						onClick={() => setAsking(true)}
-						data-testid="ask-question"
-					>
-						{side === "customer" ? (
-							<Trans>Ask a question</Trans>
-						) : (
-							<Trans>New message</Trans>
-						)}
-					</Button>
-				)
+				<Group gap="xs">
+					{extraAction}
+					{!asking && (
+						<Button
+							size="xs"
+							variant="light"
+							onClick={() => setAsking(true)}
+							data-testid="ask-question"
+						>
+							{side === "customer" ? (
+								<Trans>Ask a question</Trans>
+							) : (
+								<Trans>New message</Trans>
+							)}
+						</Button>
+					)}
+				</Group>
 			}
 		>
 			<Stack gap="xs">

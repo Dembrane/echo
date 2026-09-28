@@ -70,7 +70,7 @@ const USER_SETTINGS_LABELS: Record<string, string> = {
 };
 
 const ORG_SECTION_LABELS: Record<string, string> = {
-	account: "Account",
+	account: "Tasks",
 	billing: "Billing",
 	members: "Members",
 	overview: "Overview",

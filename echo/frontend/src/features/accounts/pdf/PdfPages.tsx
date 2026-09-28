@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Box, Loader, Stack, Text } from "@mantine/core";
+import { Alert, Box, Button, Group, Loader, Stack, Text } from "@mantine/core";
 import {
 	GlobalWorkerOptions,
 	getDocument,
@@ -28,15 +28,20 @@ export function PdfPages({
 	data,
 	overlay,
 	gap = 16,
+	fileHref,
 }: {
 	data: Uint8Array;
 	overlay?: (box: PageBox) => ReactNode;
 	gap?: number;
+	/** Offered as a way out when the browser cannot draw the file. */
+	fileHref?: string | null;
 }) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [width, setWidth] = useState(0);
 	const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
 	const [failed, setFailed] = useState(false);
+	// Bumped by "Try again" to parse the same bytes once more.
+	const [attempt, setAttempt] = useState(0);
 
 	useEffect(() => {
 		const el = containerRef.current;
@@ -50,6 +55,9 @@ export function PdfPages({
 
 	useEffect(() => {
 		let live = true;
+		setFailed(false);
+		setPdf(null);
+		void attempt;
 		// pdf.js takes ownership of the buffer it is given; hand it a copy.
 		const task = getDocument({ data: data.slice() });
 		task.promise.then(
@@ -64,16 +72,42 @@ export function PdfPages({
 			live = false;
 			void task.destroy();
 		};
-	}, [data]);
+	}, [data, attempt]);
 
 	return (
 		<Box ref={containerRef} w="100%">
 			{failed && (
-				<Text c="red" size="sm">
-					<Trans>
-						This document could not be shown. Reload the page to try again.
-					</Trans>
-				</Text>
+				<Alert color="orange" data-testid="pdf-render-failed">
+					<Stack gap="xs">
+						<Text size="sm">
+							<Trans>
+								Your browser could not display this document. Try again, or open
+								the PDF on its own.
+							</Trans>
+						</Text>
+						<Group gap="xs">
+							<Button
+								size="xs"
+								variant="light"
+								onClick={() => setAttempt((n) => n + 1)}
+							>
+								<Trans>Try again</Trans>
+							</Button>
+							{fileHref && (
+								<Button
+									size="xs"
+									variant="subtle"
+									component="a"
+									href={fileHref}
+									target="_blank"
+									rel="noreferrer"
+								>
+									<Trans>Open the PDF</Trans>
+								</Button>
+							)}
+						</Group>
+					</Stack>
+				</Alert>
 			)}
 			{!pdf && !failed && (
 				<Stack align="center" py="xl">

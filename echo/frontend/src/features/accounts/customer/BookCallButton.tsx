@@ -19,6 +19,7 @@ export function BookCallButton({
 	return (
 		<>
 			<Button
+				size="xs"
 				variant="default"
 				onClick={() => setOpen(true)}
 				data-testid="book-call"

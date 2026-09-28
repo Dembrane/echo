@@ -5,7 +5,7 @@ import {
 	Folders,
 	GearIcon,
 	GraduationCapIcon,
-	HandshakeIcon,
+	ListChecksIcon,
 	UsersIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
@@ -107,6 +107,7 @@ export const OrgHomeView = () => {
 	// The same cached request feeds the Help menu's "Tasks" entry.
 	const { data: tasksSummary } = useTasksSummary();
 	const seesAccount = orgId ? hasAccount(tasksSummary, orgId) : false;
+	const accountRow = tasksSummary?.find((o) => o.org_id === orgId);
 
 	if (!orgId) return null;
 	const base = `/o/${orgId}`;
@@ -138,8 +139,14 @@ export const OrgHomeView = () => {
 					{seesAccount && (
 						<NavItem
 							to={`${base}/account`}
-							label={<Trans>Account</Trans>}
-							icon={HandshakeIcon}
+							label={<Trans>Tasks</Trans>}
+							icon={ListChecksIcon}
+							badge={
+								accountRow && accountRow.tasks_total > 0
+									? `${accountRow.tasks_done}/${accountRow.tasks_total}`
+									: undefined
+							}
+							badgeTone="muted"
 						/>
 					)}
 					{/* Settings is the last clickable item under the org title,

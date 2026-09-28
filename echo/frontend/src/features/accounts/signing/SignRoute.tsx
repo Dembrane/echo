@@ -183,6 +183,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const { i18n } = useLingui();
 	const { data: me } = useV2Me();
 	const pdf = usePdfData(doc.file_url);
+	const fileHref = usePdfHref(pdf.data ? doc.file_url : null);
 	const fields = useMemo(() => orderFields(doc.fields), [doc.fields]);
 
 	const [values, setValues] = useState<Values>(() => {
@@ -330,13 +331,17 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			</Header>
 			<Box maw={860} mx="auto" px={{ base: 8, sm: "md" }} pt="md" pb={360}>
 				{pdf.data ? (
-					<PdfPages data={pdf.data} overlay={overlay} />
+					<PdfPages data={pdf.data} overlay={overlay} fileHref={fileHref} />
 				) : pdf.isError ? (
-					<Alert color="red">
-						<Trans>
-							This document could not be shown. Reload the page to try again.
-						</Trans>
-					</Alert>
+					<FileError
+						missing={
+							pdf.error instanceof AccountsApiError && pdf.error.status === 404
+						}
+						orgId={orgId}
+						retrying={pdf.isFetching}
+						onRetry={() => void pdf.refetch()}
+						access={doc.access}
+					/>
 				) : (
 					<Stack align="center" py="xl">
 						<Loader size="sm" />
@@ -900,5 +905,69 @@ function NameSignerModal({
 				</Group>
 			</Stack>
 		</Modal>
+	);
+}
+
+/**
+ * The file behind the document did not arrive. A 404 means it is missing on our side,
+ * which the signer cannot fix, so the next step is telling us; anything else may be the
+ * connection, so the next step is trying again.
+ */
+function FileError({
+	missing,
+	orgId,
+	retrying,
+	onRetry,
+	access,
+}: {
+	missing: boolean;
+	orgId: string;
+	retrying: boolean;
+	onRetry: () => void;
+	access: DocumentDetailT["access"];
+}) {
+	return (
+		<Alert
+			color={missing ? "orange" : "red"}
+			data-testid={missing ? "pdf-missing" : "pdf-load-failed"}
+		>
+			<Stack gap="xs">
+				<Text size="sm">
+					{missing ? (
+						<Trans>
+							The file for this document is missing on our side, so it cannot be
+							signed yet. Tell us with a question on your account page and we
+							will send it again.
+						</Trans>
+					) : (
+						<Trans>
+							The document could not be loaded. Check your connection and try
+							again.
+						</Trans>
+					)}
+				</Text>
+				<Group gap="xs">
+					<Button
+						size="xs"
+						variant="light"
+						loading={retrying}
+						onClick={onRetry}
+						data-testid="pdf-retry"
+					>
+						<Trans>Try again</Trans>
+					</Button>
+					{missing && access !== "signer" && (
+						<Button
+							size="xs"
+							variant="subtle"
+							component={I18nLink}
+							to={`/o/${orgId}/account`}
+						>
+							<Trans>Go to the account page</Trans>
+						</Button>
+					)}
+				</Group>
+			</Stack>
+		</Alert>
 	);
 }

@@ -1594,6 +1594,22 @@ export async function handle(
 
 /** The PDF behind a file_url or signed_pdf_url, built on first use. */
 export async function pdfFor(url: string): Promise<Uint8Array> {
+	// `?fixtures_missing=1` makes unsigned files answer 404, to walk the missing-file state.
+	try {
+		const flag = new URLSearchParams(window.location.search).get(
+			"fixtures_missing",
+		);
+		if (flag !== null)
+			sessionStorage.setItem("echo.accounts.fixtures.missing", flag);
+		if (
+			sessionStorage.getItem("echo.accounts.fixtures.missing") === "1" &&
+			url.endsWith("/file")
+		) {
+			throw new AccountsApiError(404, "Not found");
+		}
+	} catch (e) {
+		if (e instanceof AccountsApiError) throw e;
+	}
 	const match = url.match(/documents\/([0-9a-f-]{36})\/(file|signed\.pdf)/);
 	if (!match) throw notFound();
 	const [, id, which] = match;

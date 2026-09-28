@@ -108,3 +108,43 @@ export const stageLabel = (stage: string | null): string =>
 			: stage === "churned"
 				? t`Churned`
 				: t`No account`;
+
+/**
+ * A task's title and body in the viewer's language. The tasks the system makes (signing
+ * and billing details) are rendered from these strings whatever was stored; only tasks
+ * staff wrote by hand show their stored text.
+ */
+export const taskText = (
+	task: TaskT,
+	documents: DocumentSummaryT[],
+): { title: string; body: string | null } => {
+	if (task.kind === "billing_details") {
+		return {
+			body: t`Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number.`,
+			title: t`Billing details`,
+		};
+	}
+	if (task.kind === "sign") {
+		const doc = documents.find((d) => d.id === task.document_id);
+		if (!doc || doc.kind === "offer") {
+			return {
+				body: t`Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link.`,
+				title: t`Review and sign the offer`,
+			};
+		}
+		if (doc.kind === "dpa") {
+			return {
+				body: t`Someone who may agree to data processing for your organisation signs the data processing agreement.`,
+				title: t`Sign the data processing agreement`,
+			};
+		}
+		return { body: null, title: t`Sign ${doc.title}` };
+	}
+	return { body: task.body, title: task.title };
+};
+
+/** A document's title in the viewer's language where it is made by the system. */
+export const documentTitle = (doc: DocumentSummaryT): string =>
+	doc.kind === "invoice" && doc.invoice?.number
+		? t`Invoice ${doc.invoice.number}`
+		: doc.title;

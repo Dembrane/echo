@@ -36,7 +36,9 @@ const AccountPage = () => {
 	const { organisationId } = useParams<{ organisationId: string }>();
 	const { data, isLoading, error } = useAccountPage(organisationId);
 	const billingRef = useRef<HTMLDivElement>(null);
-	useDocumentTitle(t`Account | dembrane`);
+	useDocumentTitle(
+		data ? `${data.organisation.name} | dembrane` : t`Tasks | dembrane`,
+	);
 
 	if (isLoading) {
 		return (
@@ -78,25 +80,14 @@ const AccountPage = () => {
 	return (
 		<Container size="md" px={{ base: "md", sm: "lg" }} py="xl">
 			<Stack gap={36}>
-				<Group justify="space-between" align="flex-end" gap="sm">
-					<Stack gap={2}>
-						<Title order={3} fw={400}>
-							<Trans>Account</Trans>
-						</Title>
-						<Text size="sm" c="dimmed">
-							{data.organisation.name}
-						</Text>
-					</Stack>
-					<BookCallButton
-						orgId={organisationId}
-						reference={data.needs_form_reference}
-						orgName={data.organisation.name}
-					/>
-				</Group>
+				<Title order={3} fw={400}>
+					{data.organisation.name}
+				</Title>
 
 				<NextSteps
 					orgId={organisationId}
 					tasks={data.tasks}
+					documents={data.documents}
 					onBilling={() =>
 						billingRef.current?.scrollIntoView({
 							behavior: "smooth",
@@ -113,7 +104,17 @@ const AccountPage = () => {
 					</div>
 				)}
 
-				<Questions orgId={organisationId} tickets={data.tickets} />
+				<Questions
+					orgId={organisationId}
+					tickets={data.tickets}
+					extraAction={
+						<BookCallButton
+							orgId={organisationId}
+							reference={data.needs_form_reference}
+							orgName={data.organisation.name}
+						/>
+					}
+				/>
 			</Stack>
 		</Container>
 	);

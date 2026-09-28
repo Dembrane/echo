@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { RouteName } from "../contract/contract.gen";
 import {
+	AccountsApiError,
 	apiUrl,
 	type CallOptions,
 	call,
@@ -124,5 +125,8 @@ export const usePdfData = (url: string | null | undefined) =>
 		queryFn: () => fetchPdf(url as string),
 		// Outside the ["accounts"] prefix, so a write does not refetch and re-render the pages.
 		queryKey: ["accounts-pdf", url ?? ""],
+		// A missing file (404) will not appear by asking again; other failures get one retry.
+		retry: (count, error) =>
+			!(error instanceof AccountsApiError && error.status === 404) && count < 1,
 		staleTime: Number.POSITIVE_INFINITY,
 	});

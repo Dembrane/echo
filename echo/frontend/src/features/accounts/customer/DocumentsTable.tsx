@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -7,11 +8,12 @@ import {
 	Button,
 	CopyButton,
 	Group,
+	Modal,
 	Stack,
 	Table,
 	Text,
 } from "@mantine/core";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { usePdfHref } from "../api/hooks";
 import type { DocumentSummaryT } from "../contract/contract.gen";
@@ -19,6 +21,7 @@ import {
 	documentKindLabel,
 	documentStatusColor,
 	documentStatusLabel,
+	documentTitle,
 	formatDate,
 	formatMoney,
 } from "../format";
@@ -53,12 +56,12 @@ export function DocumentsTable({
 							>
 								<Group
 									justify="space-between"
-									wrap="nowrap"
+									wrap={doc.invoice ? "wrap" : "nowrap"}
 									align="flex-start"
 									gap="xs"
 								>
 									<Stack gap={2} style={{ minWidth: 0 }}>
-										<Text size="sm">{doc.title}</Text>
+										<Text size="sm">{documentTitle(doc)}</Text>
 										<Group gap={6}>
 											<Badge
 												variant="light"
@@ -78,13 +81,6 @@ export function DocumentsTable({
 									</Stack>
 									<DocumentAction orgId={orgId} doc={doc} />
 								</Group>
-								{doc.invoice &&
-									doc.invoice.status !== "paid" &&
-									doc.invoice.status !== "void" && (
-										<Box mt={4}>
-											<BankTransfer doc={doc} />
-										</Box>
-									)}
 							</Box>
 						))}
 					</Stack>
@@ -105,7 +101,7 @@ export function DocumentsTable({
 								<Table.Th w={120} ta="right" visibleFrom="sm">
 									<Trans>Amount</Trans>
 								</Table.Th>
-								<Table.Th w={{ base: 100, sm: 150 }} />
+								<Table.Th w={{ base: 100, sm: 290 }} />
 							</Table.Tr>
 						</Table.Thead>
 						<Table.Tbody>
@@ -114,7 +110,7 @@ export function DocumentsTable({
 									<Table.Tr data-testid={`doc-${doc.kind}`}>
 										<Table.Td>
 											<Text size="sm" lineClamp={2}>
-												{doc.title}
+												{documentTitle(doc)}
 											</Text>
 											{/* On a phone the status sits under the title: two columns fit. */}
 											<Badge
@@ -162,15 +158,6 @@ export function DocumentsTable({
 											<DocumentAction orgId={orgId} doc={doc} />
 										</Table.Td>
 									</Table.Tr>
-									{doc.invoice &&
-										doc.invoice.status !== "paid" &&
-										doc.invoice.status !== "void" && (
-											<Table.Tr>
-												<Table.Td colSpan={4} pt={0} style={{ borderTop: 0 }}>
-													<BankTransfer doc={doc} />
-												</Table.Td>
-											</Table.Tr>
-										)}
 								</Fragment>
 							))}
 						</Table.Tbody>
@@ -193,6 +180,12 @@ function DocumentAction({
 		(doc.status === "sent" || doc.status === "viewed");
 	const pdfUrl = doc.status === "signed" ? doc.signed_pdf_url : doc.file_url;
 	const href = usePdfHref(signable ? null : pdfUrl);
+	const [details, setDetails] = useState(false);
+	const unpaid = Boolean(
+		doc.invoice &&
+			doc.invoice.status !== "paid" &&
+			doc.invoice.status !== "void",
+	);
 	if (signable) {
 		return (
 			<Button
@@ -206,8 +199,8 @@ function DocumentAction({
 		);
 	}
 	return (
-		<Group gap={6} justify="flex-end" wrap="nowrap">
-			{doc.invoice?.payment_url && doc.invoice.status !== "paid" && (
+		<Group gap={6} justify="flex-end" wrap="wrap">
+			{unpaid && doc.invoice?.payment_url && (
 				<Button
 					size="xs"
 					component="a"
@@ -216,8 +209,25 @@ function DocumentAction({
 					rel="noreferrer"
 					data-testid="invoice-pay"
 				>
-					<Trans>Pay</Trans>
+					<Trans>Pay online</Trans>
 				</Button>
+			)}
+			{unpaid && (
+				<Button
+					size="xs"
+					variant="light"
+					onClick={() => setDetails(true)}
+					data-testid="invoice-details"
+				>
+					<Trans>View payment details</Trans>
+				</Button>
+			)}
+			{unpaid && (
+				<PaymentDetails
+					doc={doc}
+					opened={details}
+					onClose={() => setDetails(false)}
+				/>
 			)}
 			{pdfUrl && (
 				<Anchor
@@ -234,40 +244,74 @@ function DocumentAction({
 	);
 }
 
-function BankTransfer({ doc }: { doc: DocumentSummaryT }) {
+/**
+ * How to pay by bank transfer: every value on its own row with a copy button, so it can
+ * be pasted into a banking app without retyping.
+ */
+function PaymentDetails({
+	doc,
+	opened,
+	onClose,
+}: {
+	doc: DocumentSummaryT;
+	opened: boolean;
+	onClose: () => void;
+}) {
 	const { i18n } = useLingui();
 	const invoice = doc.invoice;
 	if (!invoice) return null;
 	const bt = invoice.bank_transfer;
-	const amount = formatMoney(doc.total_cents, doc.currency, i18n.locale);
-	const due = formatDate(invoice.due_on, i18n.locale);
+	const rows: [string, string][] = [
+		[t`Amount`, formatMoney(doc.total_cents, doc.currency, i18n.locale)],
+		[t`Account name`, bt.account_name],
+		["IBAN", bt.iban],
+		["BIC", bt.bic],
+		...(bt.reference
+			? ([[t`Reference`, bt.reference]] as [string, string][])
+			: []),
+		...(invoice.due_on
+			? ([[t`Due`, formatDate(invoice.due_on, i18n.locale)]] as [
+					string,
+					string,
+				][])
+			: []),
+	];
 	return (
-		<Group gap={6} wrap="wrap" data-testid="bank-transfer">
-			<Text size="xs" c="dimmed">
-				<Trans>
-					Transfer {amount} to {bt.account_name}, IBAN {bt.iban}, BIC {bt.bic}
-				</Trans>
-				{bt.reference && (
-					<>
-						{", "}
-						<Trans>reference {bt.reference}</Trans>
-					</>
-				)}
-				{due && (
-					<>
-						{", "}
-						<Trans>by {due}</Trans>
-					</>
-				)}
-				.
-			</Text>
-			<CopyButton value={bt.iban.replace(/\s/g, "")}>
-				{({ copied, copy }) => (
-					<Anchor component="button" size="xs" onClick={copy}>
-						{copied ? <Trans>Copied</Trans> : <Trans>Copy IBAN</Trans>}
-					</Anchor>
-				)}
-			</CopyButton>
-		</Group>
+		<Modal
+			opened={opened}
+			onClose={onClose}
+			title={t`Payment details`}
+			centered
+			size="sm"
+		>
+			<Stack gap={10} data-testid="payment-details">
+				{rows.map(([label, value]) => (
+					<Group key={label} justify="space-between" wrap="nowrap" gap="xs">
+						<Stack gap={0} style={{ minWidth: 0 }}>
+							<Text size="xs" c="dimmed">
+								{label}
+							</Text>
+							<Text size="sm" style={{ overflowWrap: "anywhere" }}>
+								{value}
+							</Text>
+						</Stack>
+						<CopyButton
+							value={label === "IBAN" ? value.replace(/\s/g, "") : value}
+						>
+							{({ copied, copy }) => (
+								<Button
+									size="compact-xs"
+									variant="subtle"
+									onClick={copy}
+									aria-label={t`Copy ${label}`}
+								>
+									{copied ? <Trans>Copied</Trans> : <Trans>Copy</Trans>}
+								</Button>
+							)}
+						</CopyButton>
+					</Group>
+				))}
+			</Stack>
+		</Modal>
 	);
 }
