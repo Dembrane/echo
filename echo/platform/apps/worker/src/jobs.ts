@@ -29,7 +29,12 @@ import {
   tickDeps,
 } from "@dembrane/popcorn";
 import { presentAdoption } from "@dembrane/present";
-import { environmentName, httpForwarder, pricingRegistration, pricingStorage } from "@dembrane/pricing";
+import {
+  environmentName,
+  httpForwarder,
+  pricingRegistration,
+  pricingStorage,
+} from "@dembrane/pricing";
 import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
 import { reportsWorker } from "@dembrane/reports";
 import type { ObjectStorage } from "@dembrane/storage";

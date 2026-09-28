@@ -1,4 +1,10 @@
-import { BadRequestError, NotFoundError, newId, PlatformError, ValidationError } from "@dembrane/core";
+import {
+  BadRequestError,
+  NotFoundError,
+  newId,
+  PlatformError,
+  ValidationError,
+} from "@dembrane/core";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
 import { Hono } from "hono";
 import type { AccountDeps } from "./deps";

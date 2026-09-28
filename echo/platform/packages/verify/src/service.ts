@@ -1,6 +1,12 @@
 import type { Policy } from "@dembrane/access";
 import { type ConversationsDeps, PARTICIPANT_TOKEN_HEADER } from "@dembrane/conversations";
-import { BadRequestError, ForbiddenError, NotFoundError, newId, PlatformError } from "@dembrane/core";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+  newId,
+  PlatformError,
+} from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
 import { renderPrompt } from "@dembrane/prompts";
