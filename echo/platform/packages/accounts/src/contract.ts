@@ -255,9 +255,19 @@ export const DocumentDetail = DocumentSummary.extend({
   access: z.enum(["member", "signer", "staff"]),
 });
 
+/**
+ * Tasks echo creates itself carry a code and its params, never text: the UI words them in
+ * the viewer's language. `sign_offer` and `sign_dpa` have `document_title`; `billing_details`
+ * has none. Tasks staff or sam write have no code and carry their own title and body.
+ */
+export const TaskCode = z.enum(["sign_offer", "billing_details", "sign_dpa"]);
+
 export const Task = z.object({
   id: Uuid,
-  title: z.string(),
+  /** Set for tasks echo creates; title and body are null then. */
+  code: TaskCode.nullable(),
+  params: z.record(z.string(), z.string()).nullable(),
+  title: z.string().nullable(),
   body: z.string().nullable(),
   kind: TaskKind,
   status: TaskStatus,
@@ -657,8 +667,10 @@ export const TasksSummary = z.array(
     tasks_done: z.number().int(),
     /** Every task but the withdrawn ones; locked tasks count. */
     tasks_total: z.number().int(),
-    /** The oldest task waiting on the customer, if any. */
+    /** The oldest task waiting on the customer: its title, or its code and params. */
     next_task_title: z.string().nullable(),
+    next_task_code: TaskCode.nullable(),
+    next_task_params: z.record(z.string(), z.string()).nullable(),
   }),
 );
 
