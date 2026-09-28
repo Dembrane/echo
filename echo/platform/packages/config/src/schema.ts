@@ -134,7 +134,10 @@ export const schema = defineSchema({
     }),
   },
   webhooks: {
-    enabled: key("ENABLE_WEBHOOKS", bool.default(false), {
+    // On by default because prod and echo-next deliver webhooks today (the Python stack
+    // reads FEATURE_FLAGS__ENABLE_WEBHOOKS=1, a name this stack does not read). Off by
+    // default would silently stop every customer's webhooks at cutover.
+    enabled: key("ENABLE_WEBHOOKS", bool.default(true), {
       description:
         "Global switch for outbound project webhooks. Off means conversation and report events enqueue nothing.",
     }),
@@ -344,7 +347,7 @@ export const schema = defineSchema({
   popcorn: {
     showFlow: key("POPCORN_SHOW_FLOW", bool.default(false), {
       description:
-        "Serves the page that shows what a popcorn read does to a session's words, and links the host deck to it. Local development only.",
+        "Serves the page that shows what a popcorn read does to a session's words, and links the host deck to it. On in local and echo-next, off on prod.",
     }),
   },
   accounts: {

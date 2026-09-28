@@ -10,4 +10,7 @@ export default {
   database: { poolMax: 5 },
   observability: { gcpProject: "dembrane-echo", traceSampleRatio: 1 },
   web: { apiOrigin: "https://echo-preview-api-86405194907.europe-west4.run.app" },
+  // Preview has never delivered project webhooks. The default turned on to match prod;
+  // turning preview on too is a separate decision about whose endpoints it may reach.
+  webhooks: { enabled: false },
 } satisfies Environment;
