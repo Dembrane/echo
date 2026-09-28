@@ -125,9 +125,11 @@ jobs:
           build() {
             docker buildx build $out --provenance=false \
               --cache-from type=gha,scope=$1 --cache-to type=gha,mode=max,scope=$1 \
-              -f apps/$1/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/$1:$TAG $2
+              -f apps/$1/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/$1:$TAG "${@:2}"
           }
-          build api . & build worker . & build migrate . & build media . & build web .. &
+          # The worker also takes the repository's docs/ for the chat assistant.
+          build api . & build worker . --build-context docs=../../docs & build migrate . &
+          build media . & build web .. &
           fail=0; for j in $(jobs -p); do wait $j || fail=1; done; exit $fail
       - name: The API and media containers start and answer
         if: env.PUSH != 'true'

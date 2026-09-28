@@ -1,13 +1,16 @@
 import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@echo/access";
 import { render, sendEmail } from "@echo/account";
+import { analysisJobs } from "@echo/analysis";
 import { HttpMedia, LocalMedia, metadataIdToken } from "@echo/audio";
 import { createAuth, identityAccount } from "@echo/auth";
 import { billingApiJobs, createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
+import { canvasApiJobs } from "@echo/canvas";
 import { describe, loadConfig, publicValues } from "@echo/config";
 import { conversationApiJobs } from "@echo/conversations";
 import { createDb } from "@echo/db";
 import { createModels } from "@echo/llm";
 import { type Mailer, MemoryMailer, SendGridMailer } from "@echo/mail";
+import { mapJobs } from "@echo/map";
 import { Notifier } from "@echo/notifications";
 import { createLogger, initTracing } from "@echo/observability";
 import { projectJobs } from "@echo/projects";
@@ -99,6 +102,9 @@ const queueReady = (async () => {
         ...tenancyApiJobs,
         ...billingApiJobs,
         ...conversationApiJobs,
+        ...analysisJobs,
+        ...mapJobs,
+        ...canvasApiJobs,
         sendEmail,
       ]);
       return;

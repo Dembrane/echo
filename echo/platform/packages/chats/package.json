@@ -1,0 +1,29 @@
+{
+  "name": "@echo/chats",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@ai-sdk/provider": "*",
+    "@echo/access": "workspace:*",
+    "@echo/core": "workspace:*",
+    "@echo/db": "workspace:*",
+    "@echo/http": "workspace:*",
+    "@echo/legacy-shape": "workspace:*",
+    "@echo/llm": "workspace:*",
+    "@echo/observability": "workspace:*",
+    "@echo/projects": "workspace:*",
+    "@echo/ratelimit": "workspace:*",
+    "ai": "^7.0.118",
+    "drizzle-orm": "^0.45.3",
+    "hono": "^4.9.0",
+    "js-tiktoken": "^1.0.21",
+    "postgres": "^3.4.9",
+    "zod": "^4.1.0"
+  }
+}

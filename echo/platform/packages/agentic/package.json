@@ -1,0 +1,33 @@
+{
+  "name": "@echo/agentic",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@ai-sdk/provider": "*",
+    "@dbos-inc/dbos-sdk": "^5.1.10",
+    "@echo/access": "workspace:*",
+    "@echo/chats": "workspace:*",
+    "@echo/config": "workspace:*",
+    "@echo/core": "workspace:*",
+    "@echo/db": "workspace:*",
+    "@echo/http": "workspace:*",
+    "@echo/legacy-shape": "workspace:*",
+    "@echo/llm": "workspace:*",
+    "@echo/notifications": "workspace:*",
+    "@echo/observability": "workspace:*",
+    "@echo/projects": "workspace:*",
+    "@echo/queue": "workspace:*",
+    "@echo/realtime": "workspace:*",
+    "ai": "^7.0.118",
+    "drizzle-orm": "^0.45.3",
+    "hono": "^4.9.0",
+    "postgres": "^3.4.9",
+    "zod": "^4.1.0"
+  }
+}

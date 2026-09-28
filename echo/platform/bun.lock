@@ -15,9 +15,13 @@
       "dependencies": {
         "@echo/access": "workspace:*",
         "@echo/account": "workspace:*",
+        "@echo/agentic": "workspace:*",
+        "@echo/analysis": "workspace:*",
         "@echo/audio": "workspace:*",
         "@echo/auth": "workspace:*",
         "@echo/billing": "workspace:*",
+        "@echo/canvas": "workspace:*",
+        "@echo/chats": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/conversations": "workspace:*",
         "@echo/core": "workspace:*",
@@ -26,6 +30,7 @@
         "@echo/http": "workspace:*",
         "@echo/llm": "workspace:*",
         "@echo/mail": "workspace:*",
+        "@echo/map": "workspace:*",
         "@echo/notifications": "workspace:*",
         "@echo/observability": "workspace:*",
         "@echo/pricing": "workspace:*",
@@ -33,6 +38,7 @@
         "@echo/queue": "workspace:*",
         "@echo/ratelimit": "workspace:*",
         "@echo/realtime": "workspace:*",
+        "@echo/reports": "workspace:*",
         "@echo/staff": "workspace:*",
         "@echo/stats": "workspace:*",
         "@echo/storage": "workspace:*",
@@ -83,20 +89,25 @@
       "name": "@echo/worker",
       "dependencies": {
         "@echo/account": "workspace:*",
+        "@echo/agentic": "workspace:*",
+        "@echo/analysis": "workspace:*",
         "@echo/audio": "workspace:*",
         "@echo/billing": "workspace:*",
+        "@echo/canvas": "workspace:*",
         "@echo/config": "workspace:*",
         "@echo/conversations": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/llm": "workspace:*",
         "@echo/mail": "workspace:*",
+        "@echo/map": "workspace:*",
         "@echo/observability": "workspace:*",
         "@echo/pricing": "workspace:*",
         "@echo/projects": "workspace:*",
         "@echo/prompts": "workspace:*",
         "@echo/queue": "workspace:*",
         "@echo/realtime": "workspace:*",
+        "@echo/reports": "workspace:*",
         "@echo/storage": "workspace:*",
         "@echo/tenancy": "workspace:*",
         "@echo/transcription": "workspace:*",
@@ -133,6 +144,50 @@
         "zod": "^4.1.0",
       },
     },
+    "packages/agentic": {
+      "name": "@echo/agentic",
+      "dependencies": {
+        "@ai-sdk/provider": "*",
+        "@dbos-inc/dbos-sdk": "^5.1.10",
+        "@echo/access": "workspace:*",
+        "@echo/chats": "workspace:*",
+        "@echo/config": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/notifications": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "ai": "^7.0.118",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
+      },
+    },
+    "packages/analysis": {
+      "name": "@echo/analysis",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
+      },
+    },
     "packages/audio": {
       "name": "@echo/audio",
     },
@@ -165,6 +220,49 @@
       },
       "devDependencies": {
         "postgres": "^3.4.9",
+      },
+    },
+    "packages/canvas": {
+      "name": "@echo/canvas",
+      "dependencies": {
+        "@dbos-inc/dbos-sdk": "^5.1.10",
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
+      },
+      "devDependencies": {
+        "@echo/config": "workspace:*",
+      },
+    },
+    "packages/chats": {
+      "name": "@echo/chats",
+      "dependencies": {
+        "@ai-sdk/provider": "*",
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "ai": "^7.0.118",
+        "drizzle-orm": "^0.45.3",
+        "hono": "^4.9.0",
+        "js-tiktoken": "^1.0.21",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
       },
     },
     "packages/config": {
@@ -259,6 +357,26 @@
     },
     "packages/mail": {
       "name": "@echo/mail",
+    },
+    "packages/map": {
+      "name": "@echo/map",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/analysis": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
+      },
     },
     "packages/notifications": {
       "name": "@echo/notifications",
@@ -359,6 +477,27 @@
         "@echo/observability": "workspace:*",
         "hono": "^4.9.0",
         "postgres": "^3.4.9",
+      },
+    },
+    "packages/reports": {
+      "name": "@echo/reports",
+      "dependencies": {
+        "@echo/access": "workspace:*",
+        "@echo/core": "workspace:*",
+        "@echo/db": "workspace:*",
+        "@echo/http": "workspace:*",
+        "@echo/legacy-shape": "workspace:*",
+        "@echo/llm": "workspace:*",
+        "@echo/notifications": "workspace:*",
+        "@echo/observability": "workspace:*",
+        "@echo/projects": "workspace:*",
+        "@echo/queue": "workspace:*",
+        "@echo/ratelimit": "workspace:*",
+        "@echo/realtime": "workspace:*",
+        "@echo/webhooks": "workspace:*",
+        "hono": "^4.9.0",
+        "postgres": "^3.4.9",
+        "zod": "^4.1.0",
       },
     },
     "packages/staff": {
@@ -550,6 +689,10 @@
 
     "@echo/account": ["@echo/account@workspace:packages/account"],
 
+    "@echo/agentic": ["@echo/agentic@workspace:packages/agentic"],
+
+    "@echo/analysis": ["@echo/analysis@workspace:packages/analysis"],
+
     "@echo/api": ["@echo/api@workspace:apps/api"],
 
     "@echo/audio": ["@echo/audio@workspace:packages/audio"],
@@ -557,6 +700,10 @@
     "@echo/auth": ["@echo/auth@workspace:packages/auth"],
 
     "@echo/billing": ["@echo/billing@workspace:packages/billing"],
+
+    "@echo/canvas": ["@echo/canvas@workspace:packages/canvas"],
+
+    "@echo/chats": ["@echo/chats@workspace:packages/chats"],
 
     "@echo/config": ["@echo/config@workspace:packages/config"],
 
@@ -575,6 +722,8 @@
     "@echo/llm": ["@echo/llm@workspace:packages/llm"],
 
     "@echo/mail": ["@echo/mail@workspace:packages/mail"],
+
+    "@echo/map": ["@echo/map@workspace:packages/map"],
 
     "@echo/media": ["@echo/media@workspace:apps/media"],
 
@@ -597,6 +746,8 @@
     "@echo/ratelimit": ["@echo/ratelimit@workspace:packages/ratelimit"],
 
     "@echo/realtime": ["@echo/realtime@workspace:packages/realtime"],
+
+    "@echo/reports": ["@echo/reports@workspace:packages/reports"],
 
     "@echo/staff": ["@echo/staff@workspace:packages/staff"],
 
@@ -822,7 +973,7 @@
 
     "color-string": ["color-string@2.1.4", "", { "dependencies": { "color-name": "^2.0.0" } }, "sha512-Bb6Cq8oq0IjDOe8wJmi4JeNn763Xs9cfrBcaylK1tPypWzyoy2G3l90v9k64kjphl/ZJjPIShFztenRomi8WTg=="],
 
-    "commander": ["commander@5.1.0", "", {}, "sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg=="],
+    "commander": ["commander@12.1.0", "", {}, "sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA=="],
 
     "copy-anything": ["copy-anything@3.0.5", "", { "dependencies": { "is-what": "^4.1.8" } }, "sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w=="],
 
@@ -1012,8 +1163,6 @@
 
     "zod": ["zod@4.6.5", "", {}, "sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q=="],
 
-    "@dbos-inc/dbos-sdk/commander": ["commander@12.1.0", "", {}, "sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA=="],
-
     "@esbuild-kit/core-utils/esbuild": ["esbuild@0.18.20", "", { "optionalDependencies": { "@esbuild/android-arm": "0.18.20", "@esbuild/android-arm64": "0.18.20", "@esbuild/android-x64": "0.18.20", "@esbuild/darwin-arm64": "0.18.20", "@esbuild/darwin-x64": "0.18.20", "@esbuild/freebsd-arm64": "0.18.20", "@esbuild/freebsd-x64": "0.18.20", "@esbuild/linux-arm": "0.18.20", "@esbuild/linux-arm64": "0.18.20", "@esbuild/linux-ia32": "0.18.20", "@esbuild/linux-loong64": "0.18.20", "@esbuild/linux-mips64el": "0.18.20", "@esbuild/linux-ppc64": "0.18.20", "@esbuild/linux-riscv64": "0.18.20", "@esbuild/linux-s390x": "0.18.20", "@esbuild/linux-x64": "0.18.20", "@esbuild/netbsd-x64": "0.18.20", "@esbuild/openbsd-x64": "0.18.20", "@esbuild/sunos-x64": "0.18.20", "@esbuild/win32-arm64": "0.18.20", "@esbuild/win32-ia32": "0.18.20", "@esbuild/win32-x64": "0.18.20" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-ceqxoedUrcayh7Y7ZX6NdbbDzGROiyVBgC4PriJThBKSVPWnnFHZAkfI1lJT8QFkOwH4qOS2SJkS4wvpGl8BpA=="],
 
     "@opentelemetry/exporter-logs-otlp-proto/@opentelemetry/otlp-exporter-base": ["@opentelemetry/otlp-exporter-base@0.222.0", "", { "dependencies": { "@opentelemetry/core": "2.11.0", "@opentelemetry/otlp-transformer": "0.222.0" }, "peerDependencies": { "@opentelemetry/api": "^1.3.0" } }, "sha512-YbywG3veEm2Fb6TbdxRkuquWob6eVWXuA8/Ba1tXz9jHfUqpdE3keilOHEtPboC4CvS1bjeeVfNkWGOOrLj+lw=="],
@@ -1049,6 +1198,8 @@
     "better-call/@better-auth/utils": ["@better-auth/utils@0.5.0", "", { "dependencies": { "@noble/hashes": "^2.0.1" } }, "sha512-BL8W4EfIZFwlu0r54m3v1ztjDhu6dDe/amLTm0xybmbZaNgYUqhD3SjpAsnq0q8YD6/ki4iwIgxJNLP/N3TxiA=="],
 
     "logform/@colors/colors": ["@colors/colors@1.6.0", "", {}, "sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA=="],
+
+    "nunjucks/commander": ["commander@5.1.0", "", {}, "sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg=="],
 
     "thread-stream/real-require": ["real-require@1.0.0", "", {}, "sha512-P4nbQYQfePJxRSmY+v/KINxVucm4NF3p3s7pJveMTtom52FR4YGltUQLB8idDXwDDWW+eYrWDFbuzUnjoWHF7g=="],
 

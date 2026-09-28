@@ -527,6 +527,10 @@ export async function listMyProjects(
   return out;
 }
 
+/**
+ * The fields the BFF project PATCH accepts (bff/tags.py ProjectUpdate). The assistant's
+ * project settings and proposed updates read the same list, so both agree on what exists.
+ */
 export const PROJECT_UPDATE_FIELDS = [
   "name",
   "context",
