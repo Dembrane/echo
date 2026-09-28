@@ -556,6 +556,7 @@
       "name": "@dembrane/queue",
       "dependencies": {
         "@dbos-inc/dbos-sdk": "^5.1.10",
+        "@dembrane/db": "workspace:*",
         "@dembrane/observability": "workspace:*",
         "@opentelemetry/api-logs": "*",
         "@opentelemetry/context-async-hooks": "^2.0.0",
@@ -794,8 +795,6 @@
 
     "@dbos-inc/dbos-sdk": ["@dbos-inc/dbos-sdk@5.1.10", "", { "dependencies": { "commander": "^12.0.0", "pg": "^8.11.3", "serialize-error": "^8.1.0", "superjson": "^1.13.3", "ws": "^8.18.1", "yaml": "^2.8.3" }, "bin": { "dbos": "dist/src/cli/cli.js", "dbos-sdk": "dist/src/cli/cli.js" } }, "sha512-esQ3IUPoxQBloqLmhnpwDJIHTzrT/tbOvTYeNuPCKpWFU6j/zhO1/H8N2IbWa+jNOEISDDwGhJqGTQQQ4mHhgg=="],
 
-    "@drizzle-team/brocli": ["@drizzle-team/brocli@0.10.2", "", {}, "sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w=="],
-
     "@dembrane/access": ["@dembrane/access@workspace:packages/access"],
 
     "@dembrane/account": ["@dembrane/account@workspace:packages/account"],
@@ -889,6 +888,8 @@
     "@dembrane/webhooks": ["@dembrane/webhooks@workspace:packages/webhooks"],
 
     "@dembrane/worker": ["@dembrane/worker@workspace:apps/worker"],
+
+    "@drizzle-team/brocli": ["@drizzle-team/brocli@0.10.2", "", {}, "sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w=="],
 
     "@esbuild-kit/core-utils": ["@esbuild-kit/core-utils@3.3.2", "", { "dependencies": { "esbuild": "~0.18.20", "source-map-support": "^0.5.21" } }, "sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ=="],
 

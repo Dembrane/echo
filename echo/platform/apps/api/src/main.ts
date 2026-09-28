@@ -15,7 +15,7 @@ import {
 } from "@dembrane/config";
 import { conversationApiJobs } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
-import { createDb, withDatabase } from "@dembrane/db";
+import { connect, createDb, withDatabase } from "@dembrane/db";
 import { createModels } from "@dembrane/llm";
 import { type Mailer, MemoryMailer, SendGridMailer } from "@dembrane/mail";
 import { mapJobs } from "@dembrane/map";
@@ -30,7 +30,6 @@ import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { tenancyApiJobs } from "@dembrane/tenancy";
 import { GeminiTranscriber } from "@dembrane/transcription";
 import { httpDeliver, webhookJobs } from "@dembrane/webhooks";
-import postgres from "postgres";
 import { buildApp } from "./app";
 import { API_ASSETS } from "./assets";
 import { principalLookup } from "./principals";
@@ -195,7 +194,7 @@ const media = config.media.url
   : new LocalMedia();
 
 // One LISTEN connection per instance feeds every open live stream.
-const listener = postgres(databaseUrl, { max: FIXED_CONNECTIONS.apiListener, onnotice: () => {} });
+const listener = connect(databaseUrl, { max: FIXED_CONNECTIONS.apiListener, onnotice: () => {} });
 const hub = new Hub(listener, logger);
 // postgres.js re-listens after a dropped connection; the first connect is retried here so a
 // database that is briefly away at boot does not leave live streams silent until a restart.
