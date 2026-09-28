@@ -7,10 +7,10 @@
  * new API on :8200 (both on database "dembrane"), parity/.env.parity loaded.
  */
 import { Glob } from "bun";
-import { call, NEW, newToken, OLD, oldToken } from "./clients";
+import { call, NEW, newToken, OLD, oldToken, sideOf } from "./clients";
 import { diff, reset, runSetup, snapshot } from "./db";
 import { normalize } from "./normalize";
-import type { Scenario } from "./scenario";
+import type { Scenario, Vars } from "./scenario";
 
 const filter = process.argv[2] ?? "";
 const here = new URL("..", import.meta.url).pathname;
@@ -37,10 +37,13 @@ async function side(
   // user still leaves the scenario a session to act with.
   const t = await token(s.as);
   if (s.setup) await runSetup(s.setup);
+  let vars: Vars = {};
   const before = await snapshot();
-  const res = await call(base, t, s);
+  if (s.prepare) vars = await s.prepare(sideOf(base, token), { old: sideOf(OLD, oldToken) });
+  const res = await call(base, t, s, vars);
   const changes = diff(before, await snapshot());
-  return { ...res, changes };
+  const prepared = Object.fromEntries(Object.entries(vars).filter(([k]) => !k.startsWith("_")));
+  return { ...res, changes, ...(s.prepare && { prepared }) };
 }
 
 async function dump(name: string, a: string, b: string) {
@@ -65,12 +68,32 @@ for (const file of files) {
     for (const m of setupText.match(UUID_RE) ?? []) ids.add(m.toLowerCase());
     const [o, n] = [await side(OLD, oldToken, s), await side(NEW, newToken, s)];
     const a = JSON.stringify(
-      normalize({ status: o.status, body: o.body, changes: o.changes }, ids, ignore),
+      normalize(
+        {
+          status: o.status,
+          body: o.body,
+          headers: o.headers,
+          prepared: o.prepared,
+          changes: o.changes,
+        },
+        ids,
+        ignore,
+      ),
       null,
       1,
     );
     const b = JSON.stringify(
-      normalize({ status: n.status, body: n.body, changes: n.changes }, ids, ignore),
+      normalize(
+        {
+          status: n.status,
+          body: n.body,
+          headers: n.headers,
+          prepared: n.prepared,
+          changes: n.changes,
+        },
+        ids,
+        ignore,
+      ),
       null,
       1,
     );

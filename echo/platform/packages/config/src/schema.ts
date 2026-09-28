@@ -301,6 +301,13 @@ export const schema = defineSchema({
       },
     ),
   },
+  agentAccess: {
+    clientSecretKey: key("AGENT_CLIENT_SECRET_KEY", z.string().min(16).optional(), {
+      description:
+        "Key the stored secrets of registered MCP clients are encrypted under. Must equal Directus's SECRET until every client registered before cutover has re-registered; unset uses INVITE_HASH_SECRET, which holds the same value.",
+      secret: true,
+    }),
+  },
   billing: {
     mollieApiKey: key("MOLLIE_API_KEY", z.string().optional(), {
       description: "Mollie key. test_ keys use Mollie test mode; unset turns paid checkout off.",

@@ -1,5 +1,7 @@
 export { type ConversationAccess, conversationForBff, conversationForV1 } from "./access";
 export { AudioUrls, sanitizeFilenameComponent } from "./audio-urls";
+export { enrich, overCapActive, scrubChunk } from "./bff/lock";
+export { type BffStore, bffStore } from "./bff/storage";
 export type { ConversationSettings, ConversationsDeps, JobSink } from "./deps";
 export {
   catchUpSummaries,

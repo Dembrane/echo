@@ -72,6 +72,31 @@ export async function snapshot(): Promise<Snapshot> {
   }
 }
 
+/**
+ * A Directus sign-in stamps last_access on the user row; a scenario that signs in during
+ * `prepare` would otherwise show it as a change on the old side only.
+ */
+function withoutSignIn(table: string, row: Record<string, unknown>) {
+  if (table !== "directus_users") return row;
+  const { last_access: _a, last_page: _p, ...rest } = row;
+  return rest;
+}
+
+const UUID_ANY = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+/**
+ * Changed rows sort by their content with ids, hashes and times blanked, then by key:
+ * rows minted during a scenario have random keys on each side, and Postgres returns rows
+ * in heap order, which an UPDATE reshuffles, so both must still line up (a token pair's
+ * access and refresh rows, say).
+ */
+function sortKey(key: string, row: Record<string, unknown>): string {
+  const stable = JSON.stringify(row)
+    .replace(UUID_ANY, "")
+    .replace(/[0-9a-f]{32,}/gi, "")
+    .replace(/\d{4}-\d{2}-\d{2}T[\d:.]+Z/g, "");
+  return `${stable}|${key}`;
+}
+
 export interface RowChange {
   readonly table: string;
   readonly kind: "insert" | "update" | "delete";
@@ -79,9 +104,9 @@ export interface RowChange {
 }
 
 /**
- * Changed rows by table and kind. Updates and deletes touch rows that existed before, so
- * they sort by primary key; physical order after an UPDATE says nothing about behaviour.
- * Inserts keep their order, since their keys are minted per run.
+ * Changed rows by table and kind, in the order sortKey gives: physical order after an
+ * UPDATE says nothing about behaviour, and keys minted per run differ between the sides.
+ * Rows that tie keep the order Postgres returned them in.
  */
 export function diff(before: Snapshot, after: Snapshot): RowChange[] {
   const changes: (RowChange & { key: string; seq: number })[] = [];
@@ -90,9 +115,11 @@ export function diff(before: Snapshot, after: Snapshot): RowChange[] {
     const old = before.get(table) ?? new Map();
     for (const [k, row] of rows) {
       const prev = old.get(k);
-      if (!prev) changes.push({ table, kind: "insert", row, key: "", seq: seq++ });
-      else if (JSON.stringify(prev) !== JSON.stringify(row))
-        changes.push({ table, kind: "update", row, key: k, seq: seq++ });
+      if (!prev) changes.push({ table, kind: "insert", row, key: sortKey("", row), seq: seq++ });
+      else if (
+        JSON.stringify(withoutSignIn(table, prev)) !== JSON.stringify(withoutSignIn(table, row))
+      )
+        changes.push({ table, kind: "update", row, key: sortKey(k, row), seq: seq++ });
     }
     for (const [k, row] of old)
       if (!rows.has(k)) changes.push({ table, kind: "delete", row, key: k, seq: seq++ });

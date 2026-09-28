@@ -31,7 +31,9 @@ run("migrate", () => {
     expect(first).toEqual({ adoptedBaseline: false, applied: TOTAL });
     const second = await migrate(`${base}/mig_fresh`);
     expect(second).toEqual({ adoptedBaseline: false, applied: 0 });
-  });
+    // The whole chain on an empty database takes about half a second alone, and several
+    // seconds while the rest of the suite runs in parallel against the same server.
+  }, 30_000);
 
   test("adopts a database that already has the schema without re-running the baseline", async () => {
     const db = postgres(`${base}/mig_adopt`, { max: 1, onnotice: () => {} });

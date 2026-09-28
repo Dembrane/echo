@@ -1,5 +1,6 @@
 import { DrizzleAccessStore } from "@echo/access";
 import { accountRoutes } from "@echo/account";
+import { agentAccessRoutes } from "@echo/agent-access";
 import { agenticRoutes } from "@echo/agentic";
 import { analysisRoutes, analysisRuntime, clientOf } from "@echo/analysis";
 import { posthogCapture } from "@echo/analytics";
@@ -228,6 +229,20 @@ export function buildApp(deps: Deps) {
         deps.config.http.dashboardUrl,
         deps.config.http.portalUrl,
       ],
+    }),
+  );
+  app.route(
+    "/",
+    agentAccessRoutes({
+      ...deps,
+      accessStore: new DrizzleAccessStore(deps.db),
+      capture,
+      publicUrl: deps.config.http.publicUrl,
+      dashboardUrl: deps.config.http.dashboardUrl,
+      buildVersion: deps.config.app.release,
+      clientSecretKey:
+        deps.config.agentAccess.clientSecretKey ?? deps.config.account.inviteHashSecret,
+      docsDir: deps.config.agentic.docsDir,
     }),
   );
   app.onError(onError);
