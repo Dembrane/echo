@@ -14,31 +14,6 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
-#: src/lib/directus.ts:35
-msgid "You are not authenticated"
-msgstr "You are not authenticated"
-
-#. js-lingui-explicit-id
-#: src/lib/directus.ts:41
-msgid "You don't have permission to access this."
-msgstr "You don't have permission to access this."
-
-#. js-lingui-explicit-id
-#: src/lib/directus.ts:46
-msgid "Resource not found"
-msgstr "Resource not found"
-
-#. js-lingui-explicit-id
-#: src/lib/directus.ts:50
-msgid "Server error"
-msgstr "Server error"
-
-#. js-lingui-explicit-id
-#: src/lib/directus.ts:53
-msgid "Something went wrong"
-msgstr "Something went wrong"
-
-#. js-lingui-explicit-id
 #: src/components/layout/TransitionCurtainProvider.tsx:156
 msgid "We're preparing your workspace."
 msgstr "We're preparing your workspace."
@@ -52,6 +27,31 @@ msgstr "Preparing your dashboard"
 #: src/components/layout/TransitionCurtainProvider.tsx:197
 msgid "Welcome back"
 msgstr "Welcome back"
+
+#. js-lingui-explicit-id
+#: src/lib/directus.ts:35
+#~ msgid "You are not authenticated"
+#~ msgstr "You are not authenticated"
+
+#. js-lingui-explicit-id
+#: src/lib/directus.ts:41
+#~ msgid "You don't have permission to access this."
+#~ msgstr "You don't have permission to access this."
+
+#. js-lingui-explicit-id
+#: src/lib/directus.ts:46
+#~ msgid "Resource not found"
+#~ msgstr "Resource not found"
+
+#. js-lingui-explicit-id
+#: src/lib/directus.ts:50
+#~ msgid "Server error"
+#~ msgstr "Server error"
+
+#. js-lingui-explicit-id
+#: src/lib/directus.ts:53
+#~ msgid "Something went wrong"
+#~ msgstr "Something went wrong"
 
 #: src/components/popcorn/PopcornStatus.tsx:45
 msgid " · {heldBack} held back"
@@ -119,7 +119,7 @@ msgstr "(Partner)"
 msgid "(unknown)"
 msgstr "(unknown)"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:913
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:911
 #: src/components/project/ProjectUsageAndSharing.tsx:313
 msgid "(You)"
 msgstr "(You)"
@@ -626,7 +626,7 @@ msgstr "{invalidCount} addresses need attention"
 msgid "{inviterName} invited you to join {resolvedWorkspaceName}"
 msgstr "{inviterName} invited you to join {resolvedWorkspaceName}"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1238
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1236
 msgid "{liveProjectCount, plural, one {Delete the # project in this workspace before deleting the workspace itself.} other {Delete the # projects in this workspace before deleting the workspace itself.}}"
 msgstr "{liveProjectCount, plural, one {Delete the # project in this workspace before deleting the workspace itself.} other {Delete the # projects in this workspace before deleting the workspace itself.}}"
 
@@ -1024,7 +1024,7 @@ msgstr "Accept and join"
 msgid "Accepted terms"
 msgstr "Accepted terms"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1876
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1874
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:591
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:736
 #: src/routes/project/CreateProjectRoute.tsx:260
@@ -1080,6 +1080,7 @@ msgstr "Access requests"
 #: src/routes/admin/AdminSettingsRoute.tsx:1578
 #: src/routes/admin/AdminSettingsRoute.tsx:2644
 #: src/routes/admin/AdminSettingsRoute.tsx:3087
+#: src/features/sidebar/views/org/OrgHomeView.tsx:137
 #: src/features/sidebar/shell/UserMenu.tsx:80
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:132
@@ -1427,10 +1428,10 @@ msgstr "Address line 2"
 msgid "Adjust the base font size for the interface"
 msgstr "Adjust the base font size for the interface"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:970
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:986
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1027
-#: src/routes/admin/AdminSettingsRoute.tsx:3256
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:968
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:984
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1025
+#: src/routes/admin/AdminSettingsRoute.tsx:3263
 #: src/lib/roles.ts:9
 #: src/components/invite/RoleSelect.tsx:53
 msgid "Admin"
@@ -1444,7 +1445,7 @@ msgstr "Admin dashboard"
 msgid "Admin here via organisation role"
 msgstr "Admin here via organisation role"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3224
+#: src/routes/admin/AdminSettingsRoute.tsx:3231
 msgid "Admin, dembrane"
 msgstr "Admin, dembrane"
 
@@ -1601,7 +1602,7 @@ msgstr "All workspaces"
 msgid "Allow"
 msgstr "Allow"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1970
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1968
 msgid "Allow dembrane staff to access this workspace for support"
 msgstr "Allow dembrane staff to access this workspace for support"
 
@@ -1826,7 +1827,7 @@ msgstr "Anonymous participant"
 msgid "Anonymous visitor"
 msgstr "Anonymous visitor"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1057
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1055
 msgid "Another admin or owner will need to restore you."
 msgstr "Another admin or owner will need to restore you."
 
@@ -1838,7 +1839,7 @@ msgstr "another reason"
 msgid "Any tag"
 msgstr "Any tag"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1895
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1893
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 
@@ -1981,7 +1982,7 @@ msgstr "Are you sure you want to regenerate the summary? You will lose the curre
 msgid "Are you sure you want to remove your avatar?"
 msgstr "Are you sure you want to remove your avatar?"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:184
+#: src/components/settings/WhitelabelLogoCard.tsx:183
 msgid "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 msgstr "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 
@@ -2105,7 +2106,7 @@ msgstr "Assign"
 msgid "Assistant"
 msgstr "Assistant"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1583
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1581
 msgid "Assistant context"
 msgstr "Assistant context"
 
@@ -2210,7 +2211,7 @@ msgstr "Audit logs exported to CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Audit logs exported to JSON"
 
-#: src/routes/auth/Login.tsx:277
+#: src/routes/auth/Login.tsx:403
 #: src/components/settings/TwoFactorSettingsCard.tsx:231
 #: src/components/settings/TwoFactorSettingsCard.tsx:381
 msgid "Authenticator code"
@@ -2443,7 +2444,7 @@ msgid "Billed under your organisation's plan, alongside your other workspaces."
 msgstr "Billed under your organisation's plan, alongside your other workspaces."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:817
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1026
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1024
 #: src/routes/organisation/OrganisationRoute.tsx:837
 #: src/routes/organisation/OrganisationRoute.tsx:887
 #: src/lib/roles.ts:13
@@ -2538,11 +2539,11 @@ msgstr "C_Med: {0}"
 msgid "Can you tell us more?"
 msgstr "Can you tell us more?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1066
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1115
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1149
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1323
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1952
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1064
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1113
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1147
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1321
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1950
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:769
 #: src/routes/project/ProjectsHome.tsx:443
 #: src/routes/project/CreateProjectRoute.tsx:404
@@ -2724,7 +2725,7 @@ msgstr "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 msgid "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1067
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1065
 msgid "Change anyway"
 msgstr "Change anyway"
 
@@ -2773,7 +2774,7 @@ msgstr "Change tier"
 msgid "Change workspace role?"
 msgstr "Change workspace role?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1074
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1072
 msgid "Change your own role?"
 msgstr "Change your own role?"
 
@@ -2948,7 +2949,7 @@ msgstr "Checks"
 msgid "Choose a conversation"
 msgstr "Choose a conversation"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:172
+#: src/components/settings/WhitelabelLogoCard.tsx:171
 msgid "Choose a logo file"
 msgstr "Choose a logo file"
 
@@ -3907,7 +3908,7 @@ msgid "Create account"
 msgstr "Create account"
 
 #: src/routes/auth/Register.tsx:126
-#: src/routes/auth/Login.tsx:386
+#: src/routes/auth/Login.tsx:529
 msgid "Create an account"
 msgstr "Create an account"
 
@@ -4018,16 +4019,16 @@ msgstr "Crop Avatar"
 msgid "Crop Image"
 msgstr "Crop Image"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1774
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1772
 msgid "Crop logo"
 msgstr "Crop logo"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:204
+#: src/components/settings/WhitelabelLogoCard.tsx:203
 msgid "Crop Logo"
 msgstr "Crop Logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1776
-#: src/components/settings/WhitelabelLogoCard.tsx:206
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1774
+#: src/components/settings/WhitelabelLogoCard.tsx:205
 msgid "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×200px)."
 msgstr "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×200px)."
 
@@ -4035,7 +4036,7 @@ msgstr "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×2
 msgid "Current"
 msgstr "Current"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:131
+#: src/components/settings/WhitelabelLogoCard.tsx:130
 msgid "Current logo"
 msgstr "Current logo"
 
@@ -4066,7 +4067,7 @@ msgstr "Custom chat templates save and share correctly again."
 msgid "Custom Filename"
 msgstr "Custom Filename"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:117
+#: src/components/settings/WhitelabelLogoCard.tsx:116
 msgid "Custom Logo"
 msgstr "Custom Logo"
 
@@ -4074,11 +4075,11 @@ msgstr "Custom Logo"
 msgid "Custom title prompt"
 msgstr "Custom title prompt"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1693
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1691
 msgid "Custom workspace logo shown to participants."
 msgstr "Custom workspace logo shown to participants."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1623
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1621
 msgid "Custom workspace logo shown to participants. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr "Custom workspace logo shown to participants. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 
@@ -4295,11 +4296,11 @@ msgstr "Delete template"
 msgid "Delete this project in {0}? All conversations and data are permanently removed."
 msgstr "Delete this project in {0}? All conversations and data are permanently removed."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1210
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1208
 msgid "Delete this workspace"
 msgstr "Delete this workspace"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1213
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1211
 msgid "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 msgstr "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 
@@ -4307,7 +4308,7 @@ msgstr "Delete this workspace. Members lose access immediately and all conversat
 msgid "Delete Webhook"
 msgstr "Delete Webhook"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1278
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1276
 msgid "Delete workspace"
 msgstr "Delete workspace"
 
@@ -4407,7 +4408,7 @@ msgstr "Describe the issue"
 msgid "Describe what the language model should extract or summarize from the conversation..."
 msgstr "Describe what the language model should extract or summarize from the conversation..."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1560
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1558
 #: src/routes/organisation/OrganisationRoute.tsx:1136
 #: src/routes/admin/AdminSettingsRoute.tsx:2717
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:261
@@ -4703,7 +4704,7 @@ msgstr "e.g. \"Focus on sustainability themes\" or \"What do participants think 
 msgid "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 msgstr "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1535
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1533
 msgid "e.g. Client Alpha"
 msgstr "e.g. Client Alpha"
 
@@ -4711,7 +4712,7 @@ msgstr "e.g. Client Alpha"
 msgid "e.g. Client Alpha, Q1 Research"
 msgstr "e.g. Client Alpha, Q1 Research"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1562
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1560
 msgid "e.g. Client onboarding interviews, Q1 product research"
 msgstr "e.g. Client onboarding interviews, Q1 product research"
 
@@ -4723,7 +4724,7 @@ msgstr "e.g. Climate Listening, Q1 Research"
 msgid "e.g. investigating the report issue you emailed about"
 msgstr "e.g. investigating the report issue you emailed about"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1585
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1583
 msgid "e.g. We are a research agency. Reports go to municipal clients, so keep summaries formal and in Dutch."
 msgstr "e.g. We are a research agency. Reports go to municipal clients, so keep summaries formal and in Dutch."
 
@@ -4875,8 +4876,9 @@ msgstr "Edited by {editedBy}, {editedOn}"
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr "Editing a conversation no longer triggers the affected save error."
 
-#: src/routes/auth/Login.tsx:318
-#: src/routes/auth/Login.tsx:322
+#: src/routes/auth/Login.tsx:328
+#: src/routes/auth/Login.tsx:444
+#: src/routes/auth/Login.tsx:448
 #: src/components/settings/AccountSettingsCard.tsx:186
 #: src/components/participant/ParticipantShareModal.tsx:136
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:365
@@ -4887,6 +4889,14 @@ msgstr "Email"
 #: src/routes/auth/Register.tsx:166
 msgid "Email address"
 msgstr "Email address"
+
+#: src/routes/auth/Login.tsx:344
+msgid "Email me a code"
+msgstr "Email me a code"
+
+#: src/routes/auth/Login.tsx:516
+msgid "Email me a sign-in code instead"
+msgstr "Email me a sign-in code instead"
 
 #: src/routes/auth/VerifyEmail.tsx:73
 msgid "Email verification"
@@ -5044,7 +5054,7 @@ msgstr "Enter filename (without extension)"
 msgid "Enter new password"
 msgstr "Enter new password"
 
-#: src/routes/auth/Login.tsx:104
+#: src/routes/auth/Login.tsx:198
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Enter the 6-digit code from your authenticator app."
 
@@ -5087,10 +5097,10 @@ msgstr "Error cloning project"
 msgid "Error creating report"
 msgstr "Error creating report"
 
-#: src/routes/project/ProjectRoutes.tsx:108
-#: src/routes/project/ProjectRoutes.tsx:228
-#: src/routes/project/ProjectRoutes.tsx:307
-#: src/routes/project/ProjectRoutes.tsx:346
+#: src/routes/project/ProjectRoutes.tsx:107
+#: src/routes/project/ProjectRoutes.tsx:227
+#: src/routes/project/ProjectRoutes.tsx:305
+#: src/routes/project/ProjectRoutes.tsx:343
 msgid "Error loading project"
 msgstr "Error loading project"
 
@@ -5166,7 +5176,7 @@ msgstr "Everyone can find it. Admins join directly; members can ask."
 msgid "Everyone in {0} can find and open this project."
 msgstr "Everyone in {0} can find and open this project."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1892
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1890
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:386
 #: src/components/workspace/DiscoverableWorkspaces.tsx:304
 msgid "Everyone in your organisation"
@@ -5281,15 +5291,15 @@ msgstr "Export CSV"
 msgid "Extend 24h"
 msgstr "Extend 24h"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:919
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1001
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1300
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:917
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:999
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1298
 #: src/routes/organisation/OrganisationRoute.tsx:1389
 #: src/routes/organisation/OrganisationRoute.tsx:1888
 #: src/routes/organisation/OrganisationExternalView.tsx:63
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:115
-#: src/features/sidebar/views/org/OrgHomeView.tsx:149
+#: src/features/sidebar/views/org/OrgHomeView.tsx:163
 #: src/components/project/ProjectUsageAndSharing.tsx:319
 #: src/components/invite/RoleSelect.tsx:60
 msgid "External"
@@ -5432,18 +5442,18 @@ msgstr "Failed to generate the summary. Please try again later."
 msgid "Failed to load webhooks"
 msgstr "Failed to load webhooks"
 
-#: src/components/announcement/hooks/index.ts:449
-#: src/components/announcement/hooks/index.ts:463
+#: src/components/announcement/hooks/index.ts:355
+#: src/components/announcement/hooks/index.ts:369
 msgid "Failed to mark all announcements as read"
 msgstr "Failed to mark all announcements as read"
 
-#: src/components/announcement/hooks/index.ts:176
-#: src/components/announcement/hooks/index.ts:196
+#: src/components/announcement/hooks/index.ts:141
+#: src/components/announcement/hooks/index.ts:161
 msgid "Failed to mark announcement as read"
 msgstr "Failed to mark announcement as read"
 
-#: src/components/announcement/hooks/index.ts:297
-#: src/components/announcement/hooks/index.ts:316
+#: src/components/announcement/hooks/index.ts:257
+#: src/components/announcement/hooks/index.ts:276
 msgid "Failed to mark announcement as unread"
 msgstr "Failed to mark announcement as unread"
 
@@ -5482,7 +5492,7 @@ msgstr "Failed to remove conversation from chat"
 msgid "Failed to remove conversation from chat{0}"
 msgstr "Failed to remove conversation from chat{0}"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:86
+#: src/components/settings/WhitelabelLogoCard.tsx:85
 msgid "Failed to remove logo"
 msgstr "Failed to remove logo"
 
@@ -5536,7 +5546,7 @@ msgstr "Failed to update settings"
 msgid "Failed to upload avatar"
 msgstr "Failed to upload avatar"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:63
+#: src/components/settings/WhitelabelLogoCard.tsx:62
 msgid "Failed to upload logo"
 msgstr "Failed to upload logo"
 
@@ -5791,7 +5801,7 @@ msgstr "Forecast"
 msgid "Forgetting a saved memory"
 msgstr "Forgetting a saved memory"
 
-#: src/routes/auth/Login.tsx:354
+#: src/routes/auth/Login.tsx:480
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -6176,8 +6186,8 @@ msgstr "Hidden"
 msgid "Hidden by the Objects filter"
 msgstr "Hidden by the Objects filter"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1914
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1934
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1912
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1932
 msgid "Hidden from organisation members. Organisation admins can still find and join."
 msgstr "Hidden from organisation members. Organisation admins can still find and join."
 
@@ -6526,8 +6536,8 @@ msgstr "Incorrect or made up"
 msgid "Inferred"
 msgstr "Inferred"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:935
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:949
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:933
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:947
 msgid "inherited from organisation"
 msgstr "inherited from organisation"
 
@@ -6605,7 +6615,7 @@ msgstr "Introduction title"
 msgid "Invalid code. Please request a new one."
 msgstr "Invalid code. Please request a new one."
 
-#: src/routes/auth/Login.tsx:229
+#: src/routes/auth/Login.tsx:282
 msgid "Invalid credentials."
 msgstr "Invalid credentials."
 
@@ -6617,7 +6627,7 @@ msgstr "Invalid email"
 msgid "Invalid invite link"
 msgstr "Invalid invite link"
 
-#: src/components/participant/hooks/index.ts:329
+#: src/components/participant/hooks/index.ts:294
 msgid "Invalid PIN or email. Please try again."
 msgstr "Invalid PIN or email. Please try again."
 
@@ -6646,7 +6656,7 @@ msgstr "Invite external collaborators and observers with their own access roles.
 msgid "Invite members to collaborate on projects and conversations in this workspace."
 msgstr "Invite members to collaborate on projects and conversations in this workspace."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1911
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1909
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:392
 #: src/components/workspace/DiscoverableWorkspaces.tsx:306
 msgid "Invite only"
@@ -7116,13 +7126,13 @@ msgstr "Leave feedback"
 msgid "Leave now"
 msgstr "Leave now"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1096
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1116
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1120
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1123
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1324
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1328
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1332
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1094
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1114
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1118
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1121
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1322
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1326
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1330
 msgid "Leave workspace"
 msgstr "Leave workspace"
 
@@ -7512,26 +7522,26 @@ msgstr "Log out and use the invited email"
 msgid "Logging this with the dembrane team"
 msgstr "Logging this with the dembrane team"
 
-#: src/routes/auth/Login.tsx:370
+#: src/routes/auth/Login.tsx:496
 msgid "Login"
 msgstr "Login"
 
-#: src/routes/auth/Login.tsx:58
+#: src/routes/auth/Login.tsx:64
 msgid "Login | dembrane"
 msgstr "Login | dembrane"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1620
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1690
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1618
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1688
 msgid "Logo"
 msgstr "Logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1505
-#: src/components/settings/WhitelabelLogoCard.tsx:90
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1503
+#: src/components/settings/WhitelabelLogoCard.tsx:89
 msgid "Logo removed"
 msgstr "Logo removed"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1495
-#: src/components/settings/WhitelabelLogoCard.tsx:67
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1493
+#: src/components/settings/WhitelabelLogoCard.tsx:66
 msgid "Logo updated"
 msgstr "Logo updated"
 
@@ -7761,7 +7771,7 @@ msgstr "Meeting Notes"
 msgid "member"
 msgstr "member"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1025
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1023
 #: src/lib/roles.ts:11
 #: src/components/training/TrainingRoster.tsx:44
 #: src/components/training/TrainingRoster.tsx:56
@@ -7783,7 +7793,7 @@ msgstr "members"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:819
 #: src/routes/organisation/OrganisationRoute.tsx:889
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
-#: src/features/sidebar/views/org/OrgHomeView.tsx:119
+#: src/features/sidebar/views/org/OrgHomeView.tsx:126
 #: src/components/workspace/UsageCard.tsx:213
 #: src/components/project/ProjectUsageAndSharing.tsx:228
 #: src/components/project/ProjectUsageAndSharing.tsx:259
@@ -7999,7 +8009,7 @@ msgstr "My access"
 msgid "My templates"
 msgstr "My templates"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1533
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1531
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:452
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:708
 #: src/routes/project/CreateProjectRoute.tsx:211
@@ -8434,8 +8444,8 @@ msgstr "No invites went out. Check the list below."
 msgid "No linked arguments."
 msgstr "No linked arguments."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1652
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1727
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1650
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1725
 msgid "No logo set. dembrane default will be used."
 msgstr "No logo set. dembrane default will be used."
 
@@ -8501,7 +8511,7 @@ msgstr "No one here yet."
 msgid "No one is auto-blocked for non-payment. Watch failed charges here and follow up."
 msgstr "No one is auto-blocked for non-payment. Watch failed charges here and follow up."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1171
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1169
 #: src/routes/organisation/OrganisationRoute.tsx:1002
 #: src/components/project/ProjectUsageAndSharing.tsx:353
 msgid "No one matches that filter."
@@ -8911,7 +8921,7 @@ msgstr "Objects"
 msgid "Objects ({visibleCount})"
 msgstr "Objects ({visibleCount})"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1014
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1012
 #: src/lib/roles.ts:17
 #: src/components/invite/RoleSelect.tsx:65
 msgid "Observer"
@@ -8925,7 +8935,7 @@ msgstr "Observers (free)"
 msgid "Observers are free and read-only, and only for external-client workspaces. They can view the workspace but cannot chat, generate reports, or edit. To let them do more, change their role to External."
 msgstr "Observers are free and read-only, and only for external-client workspaces. They can view the workspace but cannot chat, generate reports, or edit. To let them do more, change their role to External."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1009
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1007
 msgid "Observers are free, read-only guests. To give edit access, remove them and re-invite as a member."
 msgstr "Observers are free, read-only guests. To give edit access, remove them and re-invite as a member."
 
@@ -9091,7 +9101,7 @@ msgstr "Only workspace admins can change the legal basis."
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Only workspace admins can change these settings. Ask an admin if something needs updating."
 
-#: src/routes/project/ProjectRoutes.tsx:195
+#: src/routes/project/ProjectRoutes.tsx:194
 msgid "Only workspace admins can manage project automation."
 msgstr "Only workspace admins can manage project automation."
 
@@ -9254,7 +9264,7 @@ msgstr "Open workspace"
 msgid "Open workspace actions"
 msgstr "Open workspace actions"
 
-#: src/routes/auth/Login.tsx:309
+#: src/routes/auth/Login.tsx:435
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open your authenticator app and enter the current six-digit code."
 
@@ -9296,7 +9306,7 @@ msgstr "Optional field on the start page"
 msgid "Optional field on the thank you page"
 msgstr "Optional field on the thank you page"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1561
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1559
 msgid "Optional. What this workspace is for."
 msgstr "Optional. What this workspace is for."
 
@@ -9306,7 +9316,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:292
-#: src/routes/auth/Login.tsx:377
+#: src/routes/auth/Login.tsx:520
 msgid "or"
 msgstr "or"
 
@@ -9330,7 +9340,7 @@ msgstr "Org only"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:474
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:716
 #: src/routes/onboarding/OnboardingRoute.tsx:122
-#: src/features/sidebar/views/org/OrgHomeView.tsx:77
+#: src/features/sidebar/views/org/OrgHomeView.tsx:78
 #: src/features/sidebar/hooks/useSearchHits.ts:134
 #: src/components/training/StaffTrainingPanel.tsx:139
 #: src/components/organisation/CreateOrganisationModal.tsx:174
@@ -9471,7 +9481,7 @@ msgstr "Override for this project"
 
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:62
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:80
-#: src/features/sidebar/views/org/OrgHomeView.tsx:113
+#: src/features/sidebar/views/org/OrgHomeView.tsx:120
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:47
 #: src/components/chat/ChatModeBanner.tsx:47
 msgid "Overview"
@@ -9486,7 +9496,7 @@ msgstr "Overview - Themes & patterns"
 msgid "Ownership"
 msgstr "Ownership"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:963
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:961
 msgid "Ownership is locked. Contact support to transfer."
 msgstr "Ownership is locked. Contact support to transfer."
 
@@ -9613,8 +9623,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr "Partner workspace, billed separately from the organisation."
 
 #: src/routes/auth/Register.tsx:222
-#: src/routes/auth/Login.tsx:332
-#: src/routes/auth/Login.tsx:336
+#: src/routes/auth/Login.tsx:458
+#: src/routes/auth/Login.tsx:462
 msgid "Password"
 msgstr "Password"
 
@@ -9910,7 +9920,7 @@ msgstr "Please enable participation to enable sharing"
 msgid "Please enter a valid email."
 msgstr "Please enter a valid email."
 
-#: src/routes/auth/Login.tsx:265
+#: src/routes/auth/Login.tsx:318
 msgid "Please log in to continue."
 msgstr "Please log in to continue."
 
@@ -10173,7 +10183,7 @@ msgstr "Privacy"
 msgid "Privacy Policy URL"
 msgstr "Privacy Policy URL"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1931
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1929
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:398
 #: src/routes/project/CreateProjectRoute.tsx:294
 #: src/routes/project/CreateProjectRoute.tsx:366
@@ -10908,13 +10918,13 @@ msgstr "Remind users to verify before finishing"
 msgid "Reminder sent: support access still on"
 msgstr "Reminder sent: support access still on"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1150
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1647
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1715
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1796
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1148
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1645
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1713
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1794
 #: src/routes/organisation/OrganisationRoute.tsx:1850
-#: src/components/settings/WhitelabelLogoCard.tsx:150
-#: src/components/settings/WhitelabelLogoCard.tsx:185
+#: src/components/settings/WhitelabelLogoCard.tsx:149
+#: src/components/settings/WhitelabelLogoCard.tsx:184
 #: src/components/settings/AccountSettingsCard.tsx:167
 #: src/components/settings/AccountSettingsCard.tsx:208
 #: src/components/organisation/InviteEmailList.tsx:58
@@ -10934,7 +10944,7 @@ msgid "Remove {0}"
 msgstr "Remove {0}"
 
 #. placeholder {0}: member.display_name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1140
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1138
 msgid "Remove {0} from this workspace? They'll lose access to all projects inside it."
 msgstr "Remove {0} from this workspace? They'll lose access to all projects inside it."
 
@@ -10971,14 +10981,14 @@ msgstr "Remove from organisation?"
 msgid "Remove from this chat"
 msgstr "Remove from this chat"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1790
-#: src/components/settings/WhitelabelLogoCard.tsx:182
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1788
+#: src/components/settings/WhitelabelLogoCard.tsx:181
 msgid "Remove logo"
 msgstr "Remove logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1130
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1154
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1157
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1128
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1152
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1155
 msgid "Remove member"
 msgstr "Remove member"
 
@@ -10988,7 +10998,7 @@ msgstr "Remove member"
 msgid "Remove override"
 msgstr "Remove override"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1792
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1790
 msgid "Remove the custom logo? The dembrane default will be used instead."
 msgstr "Remove the custom logo? The dembrane default will be used instead."
 
@@ -11636,7 +11646,7 @@ msgstr "Save"
 msgid "participant.concrete.action.button.save"
 msgstr "Save"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1958
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1956
 msgid "Save access"
 msgstr "Save access"
 
@@ -11664,10 +11674,10 @@ msgstr "Save Error!"
 msgid "Save template"
 msgstr "Save template"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1404
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1423
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1455
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1475
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1402
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1421
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1453
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1473
 #: src/routes/organisation/OrganisationRoute.tsx:1103
 #: src/routes/admin/AdminSettingsRoute.tsx:461
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:109
@@ -12183,6 +12193,10 @@ msgstr "Send"
 msgid "Send {0} invites"
 msgstr "Send {0} invites"
 
+#: src/routes/auth/Login.tsx:378
+msgid "Send a new code"
+msgstr "Send a new code"
+
 #: src/components/results/curate/RowTools.tsx:145
 msgid "Send feedback"
 msgstr "Send feedback"
@@ -12320,7 +12334,7 @@ msgstr "Setting up"
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:83
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
-#: src/features/sidebar/views/org/OrgHomeView.tsx:131
+#: src/features/sidebar/views/org/OrgHomeView.tsx:145
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
 #: src/components/layout/ParticipantHeader.tsx:124
 #: src/components/layout/ParticipantHeader.tsx:125
@@ -12637,6 +12651,10 @@ msgstr "Shown at the top of the screen. Change it any time."
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Shown in the organisation header and in email subject lines."
 
+#: src/routes/auth/Login.tsx:370
+msgid "Sign in"
+msgstr "Sign in"
+
 #: src/components/release/releaseHistory.ts:29
 msgid "Sign-in links check your access before opening an organisation or project."
 msgstr "Sign-in links check your access before opening an organisation or project."
@@ -12730,7 +12748,9 @@ msgstr "Something is blocking your connection. Your audio will not be saved unle
 #: src/routes/project/report/ProjectReportRoute.tsx:933
 #: src/routes/project/report/ProjectReportRoute.tsx:1404
 #: src/routes/onboarding/OnboardingRoute.tsx:189
-#: src/routes/auth/Login.tsx:220
+#: src/routes/auth/Login.tsx:245
+#: src/routes/auth/Login.tsx:260
+#: src/routes/auth/Login.tsx:275
 #: src/components/project/ProjectAccessGuard.tsx:87
 #: src/components/participant/ParticipantInitiateForm.tsx:49
 #: src/components/error/ErrorPage.tsx:55
@@ -12875,12 +12895,12 @@ msgstr "Specific Details chat respects manual conversation selection."
 msgid "Spotlight"
 msgstr "Spotlight"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3259
+#: src/routes/admin/AdminSettingsRoute.tsx:3266
 #: src/features/sidebar/shell/UserMenu.tsx:152
 msgid "Staff"
 msgstr "Staff"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3234
+#: src/routes/admin/AdminSettingsRoute.tsx:3241
 msgid "Staff only"
 msgstr "Staff only"
 
@@ -12916,7 +12936,7 @@ msgstr "Stance"
 msgid "Standard access. Collaborates in the workspaces they're added to."
 msgstr "Standard access. Collaborates in the workspaces they're added to."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1584
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1582
 msgid "Standing guidance the assistant gets in every project chat in this workspace. Saves automatically."
 msgstr "Standing guidance the assistant gets in every project chat in this workspace. Saves automatically."
 
@@ -13429,7 +13449,7 @@ msgstr "Thanks for filling this in. Check your mail for the confirmation of the 
 msgid "Thanks! That helps a lot."
 msgstr "Thanks! That helps a lot."
 
-#: src/routes/auth/Login.tsx:203
+#: src/routes/auth/Login.tsx:228
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "That code didn't work. Try again with a fresh code from your authenticator app."
 
@@ -13902,7 +13922,7 @@ msgstr "This account has a live Mollie subscription. Cancel it first."
 msgid "This account has an active subscription. Ask the customer to cancel it from their billing page before you change the tier."
 msgstr "This account has an active subscription. Ask the customer to cancel it from their billing page before you change the tier."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3237
+#: src/routes/admin/AdminSettingsRoute.tsx:3244
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 msgstr "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 
@@ -14409,7 +14429,7 @@ msgstr "to"
 msgid "To assign a new tag, please create it first in the portal settings."
 msgstr "To assign a new tag, please create it first in the portal settings."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:996
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:994
 msgid "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 msgstr "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 
@@ -14506,7 +14526,7 @@ msgid "Trained until {until}"
 msgstr "Trained until {until}"
 
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:46
-#: src/features/sidebar/views/org/OrgHomeView.tsx:124
+#: src/features/sidebar/views/org/OrgHomeView.tsx:131
 #: src/components/training/WorkspaceTrainingPanel.tsx:37
 #: src/components/training/TrainingRoster.tsx:47
 #: src/components/training/OrgTrainingPanel.tsx:68
@@ -14786,7 +14806,7 @@ msgid "Type"
 msgstr "Type"
 
 #. placeholder {0}: settings.name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1250
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1248
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Type <0>{0}</0> to confirm."
 
@@ -14856,7 +14876,7 @@ msgstr "Unknown"
 msgid "Unknown date"
 msgstr "Unknown date"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:909
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:907
 #: src/routes/organisation/OrganisationRoute.tsx:1866
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:99
 #: src/components/agent-access/AgentGrantsCard.tsx:128
@@ -15077,7 +15097,7 @@ msgstr "Upgrade your workspace to view transcripts for new conversations."
 msgid "Upload"
 msgstr "Upload"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:121
+#: src/components/settings/WhitelabelLogoCard.tsx:120
 msgid "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 
@@ -15114,8 +15134,8 @@ msgstr "Upload limit reached"
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Upload limit reached. Upgrade your workspace."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1672
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1756
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1670
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1754
 msgid "Upload logo"
 msgstr "Upload logo"
 
@@ -15173,7 +15193,7 @@ msgstr "Usage and billing"
 msgid "Usage and billing, {cycleLabel}"
 msgstr "Usage and billing, {cycleLabel}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3263
+#: src/routes/admin/AdminSettingsRoute.tsx:3270
 msgid "Usage and billing, payments, partner ledger. Any Directus admin has access."
 msgstr "Usage and billing, payments, partner ledger. Any Directus admin has access."
 
@@ -15204,6 +15224,10 @@ msgstr "Use Italian for chat, reports, transcription and participant onboarding 
 #: src/routes/project/present/PresentRoute.tsx:794
 msgid "Use latest results"
 msgstr "Use latest results"
+
+#: src/routes/auth/Login.tsx:391
+msgid "Use my password instead"
+msgstr "Use my password instead"
 
 #: src/components/release/releaseHistory.ts:64
 msgid "Use pinned and saved question templates, including the / shortcut, from Ask."
@@ -15255,7 +15279,7 @@ msgstr "Username"
 msgid "Uses eligible conversations across this project."
 msgstr "Uses eligible conversations across this project."
 
-#: src/components/settings/WhitelabelLogoCard.tsx:156
+#: src/components/settings/WhitelabelLogoCard.tsx:155
 msgid "Using default dembrane logo"
 msgstr "Using default dembrane logo"
 
@@ -15356,7 +15380,7 @@ msgstr "Verify"
 msgid "participant.echo.verify"
 msgstr "Verify"
 
-#: src/routes/auth/Login.tsx:368
+#: src/routes/auth/Login.tsx:494
 msgid "Verify code"
 msgstr "Verify code"
 
@@ -15578,6 +15602,10 @@ msgstr "We couldn't update your payment method. Your old one is still active. Pl
 msgid "participant.modal.echo.info.reason"
 msgstr "We need a bit more context to help you use ECHO effectively. Please continue recording so we can provide better suggestions."
 
+#: src/routes/auth/Login.tsx:350
+msgid "We sent a six-digit code to {codeEmail}."
+msgstr "We sent a six-digit code to {codeEmail}."
+
 #: src/routes/auth/CheckYourEmail.tsx:23
 msgid "We sent a verification link to <0>{email}</0>. Click it to finish setting up your account."
 msgstr "We sent a verification link to <0>{email}</0>. Click it to finish setting up your account."
@@ -15637,7 +15665,7 @@ msgstr "Webhook"
 msgid "Webhook URL"
 msgstr "Webhook URL"
 
-#: src/routes/project/ProjectRoutes.tsx:202
+#: src/routes/project/ProjectRoutes.tsx:201
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:938
 msgid "Webhooks"
 msgstr "Webhooks"
@@ -15646,7 +15674,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 
-#: src/routes/project/ProjectRoutes.tsx:190
+#: src/routes/project/ProjectRoutes.tsx:189
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks are not enabled for this environment."
 
@@ -15659,7 +15687,7 @@ msgstr "Webhooks come with a paid plan."
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/routes/auth/Login.tsx:122
+#: src/routes/auth/Login.tsx:114
 msgid "Welcome back"
 msgstr "Welcome back"
 
@@ -15668,7 +15696,7 @@ msgid "Welcome back, {displayName}"
 msgstr "Welcome back, {displayName}"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:585
-#: src/routes/auth/Login.tsx:122
+#: src/routes/auth/Login.tsx:114
 msgid "Welcome to dembrane"
 msgstr "Welcome to dembrane"
 
@@ -15689,7 +15717,7 @@ msgstr "Welcome to Overview Mode! I have summaries of all your conversations loa
 msgid "Welcome, {displayName}"
 msgstr "Welcome, {displayName}"
 
-#: src/routes/auth/Login.tsx:253
+#: src/routes/auth/Login.tsx:306
 msgid "Welcome!"
 msgstr "Welcome!"
 
@@ -15830,7 +15858,7 @@ msgstr "When enabled, all new transcripts will have personal information (names,
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1975
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1973
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 msgstr "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 
@@ -16026,8 +16054,8 @@ msgstr "Workspace deleted"
 msgid "Workspace is full"
 msgstr "Workspace is full"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1632
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1700
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1630
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1698
 msgid "Workspace logo"
 msgstr "Workspace logo"
 
@@ -16035,7 +16063,7 @@ msgstr "Workspace logo"
 msgid "Workspace name"
 msgstr "Workspace name"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1534
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1532
 msgid "Workspace name. Saves automatically."
 msgstr "Workspace name. Saves automatically."
 
@@ -16043,7 +16071,7 @@ msgstr "Workspace name. Saves automatically."
 msgid "Workspace permissions, member counts and account-specific data loading are corrected."
 msgstr "Workspace permissions, member counts and account-specific data loading are corrected."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1438
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1436
 msgid "Workspace renamed"
 msgstr "Workspace renamed"
 
@@ -16065,7 +16093,7 @@ msgstr "workspaces"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1439
 #: src/routes/admin/AdminSettingsRoute.tsx:1688
-#: src/features/sidebar/views/org/OrgHomeView.tsx:141
+#: src/features/sidebar/views/org/OrgHomeView.tsx:155
 msgid "Workspaces"
 msgstr "Workspaces"
 
@@ -16303,7 +16331,7 @@ msgstr "You haven't verified any outcomes yet. Would you like to verify before f
 msgid "You left the workspace"
 msgstr "You left the workspace"
 
-#: src/routes/auth/Login.tsx:234
+#: src/routes/auth/Login.tsx:287
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 
@@ -16340,11 +16368,11 @@ msgstr "You'll find all your projects waiting for you."
 msgid "You'll land in a chat where dembrane helps shape the project before you collect conversations."
 msgstr "You'll land in a chat where dembrane helps shape the project before you collect conversations."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1316
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1314
 msgid "You'll lose access to this workspace."
 msgstr "You'll lose access to this workspace."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1106
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1104
 msgid "You'll lose access to this workspace. Projects you created stay; your role here is removed."
 msgstr "You'll lose access to this workspace. Projects you created stay; your role here is removed."
 
@@ -16358,7 +16386,7 @@ msgid "You'll verify your new payment method on the next screen. You won't be ch
 msgstr "You'll verify your new payment method on the next screen. You won't be charged, it just confirms the new card."
 
 #. placeholder {0}: displayRole(v)
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1048
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1046
 msgid "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 msgstr "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 
@@ -16399,7 +16427,7 @@ msgstr "You're not part of any organisation right now."
 msgid "You're reusing seats you already paid for this period (someone left), so there's no charge now for those. The renewal reflects them."
 msgstr "You're reusing seats you already paid for this period (someone left), so there's no charge now for those. The renewal reflects them."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:979
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:977
 msgid "You're the only admin. Promote someone else before changing your role."
 msgstr "You're the only admin. Promote someone else before changing your role."
 
@@ -16439,7 +16467,7 @@ msgstr "You've reached your transcript limit"
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1296
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1294
 msgid "Your access"
 msgstr "Your access"
 
@@ -16487,7 +16515,7 @@ msgstr "Your draft won't be saved."
 msgid "Your email is already verified"
 msgstr "Your email is already verified"
 
-#: src/routes/auth/Login.tsx:258
+#: src/routes/auth/Login.tsx:311
 msgid "Your email is verified. Log in to continue."
 msgstr "Your email is verified. Log in to continue."
 
@@ -16529,7 +16557,7 @@ msgstr "Your last payment didn't go through. Your plan stays active. Update your
 msgid "Your latest report generation was cancelled. Showing your most recent completed report."
 msgstr "Your latest report generation was cancelled. Showing your most recent completed report."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1719
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1717
 msgid "Your logo is still active but can't be changed on this tier."
 msgstr "Your logo is still active but can't be changed on this tier."
 

@@ -19,7 +19,13 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
-import { resolveNextPath } from "@/components/auth/utils/nextPath";
+import { sendSignInCode } from "@/lib/auth";
+import { isAuthPath } from "@/components/auth/utils/authPaths";
+import {
+	isAccountPath,
+	isSafeNextPath,
+	resolveNextPath,
+} from "@/components/auth/utils/nextPath";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
@@ -83,10 +89,98 @@ export const LoginRoute = () => {
 	const [error, setError] = useState("");
 	const [otpRequired, setOtpRequired] = useState(false);
 	const [otpValue, setOtpValue] = useState("");
+	// Sign-in with an emailed one-time code: how contacts created by staff or sam sign in.
+	const [codeMode, setCodeMode] = useState(false);
+	const [codeEmail, setCodeEmail] = useState("");
+	const [codeSent, setCodeSent] = useState(false);
+	const [code, setCode] = useState("");
+	const [codeSending, setCodeSending] = useState(false);
 	const [formParent] = useAutoAnimate();
 	const pinInputRef = useRef<HTMLDivElement | null>(null);
 	const loginMutation = useLoginMutation();
 	const posthog = usePostHog();
+
+	// Where a signed-in person goes: onboarding if unfinished, else ?next when it is safe,
+	// else the home list. Shared by the password and the emailed-code sign-in.
+	const afterSignIn = async (email: string) => {
+		posthog?.identify(email);
+		posthog?.capture("user_logged_in", { email: email });
+
+		const isNewUser = searchParams.get("new") === "true";
+		const next = searchParams.get("next");
+
+		// Start transition immediately — user sees smooth curtain right away
+		const transitionPromise = runTransition({
+			message: isNewUser ? t`Welcome to dembrane` : t`Welcome back`,
+		});
+
+		// Check onboarding in parallel with the transition. Small delay
+		// ensures the session cookie from login is available. Routing is
+		// deliberately simple now (ISSUE-015 / Founder decision D3):
+		// everyone lands on the general home /o, with ?next as the only
+		// exception. The old single-workspace / last-used auto-redirects
+		// were removed — /o is the canonical landing.
+		let needsOnboarding = false;
+		let onboardingIncomplete = false;
+		let wsList: { id: string; org_id?: string }[] = [];
+		try {
+			await new Promise((r) => setTimeout(r, 300));
+			const meResponse = await fetch(`${API_BASE_URL}/v2/me`, {
+				credentials: "include",
+			});
+			if (meResponse.ok) {
+				const meData = await meResponse.json();
+				needsOnboarding = meData.onboarding_completed === false;
+				// Required-but-non-blocking questionnaire (ISSUE-012): if the
+				// user is onboarded but never answered, route through the
+				// stepper first so they get nudged. The stepper still lets
+				// them skip on to /o.
+				onboardingIncomplete =
+					meData.onboarding_completed === true &&
+					!meData.onboarding_answer_json;
+			}
+
+			// Workspace list still needed to validate a ?next deep-link
+			// target (block cross-user leaks).
+			if (!needsOnboarding) {
+				const wsResponse = await fetch(`${API_BASE_URL}/v2/workspaces`, {
+					credentials: "include",
+				});
+				if (wsResponse.ok) {
+					const wsData = await wsResponse.json();
+					wsList = wsData.workspaces ?? [];
+				}
+			}
+		} catch {
+			// Swallow — never block login for onboarding check
+		}
+
+		await transitionPromise;
+
+		// A signing or account link goes straight to its page: the person may be a named
+		// signer with no workspace to set up, and onboarding would drop the link.
+		if (isSafeNextPath(next) && !isAuthPath(next) && isAccountPath(next)) {
+			navigate(next);
+			return;
+		}
+
+		if (needsOnboarding || onboardingIncomplete) {
+			navigate("/onboarding");
+			return;
+		}
+
+		// Deep-link priority — but block cross-user leaks: a stale ?next from
+		// the previous session can point at a workspace or organisation this
+		// account can't see ("Organisation not found"). Fails closed to /o.
+		const resolvedNext = resolveNextPath(next, wsList);
+		if (resolvedNext) {
+			navigate(resolvedNext);
+			return;
+		}
+
+		// Everyone else: the general home.
+		navigate("/o");
+	};
 
 	const submitLogin = async (data: {
 		email: string;
@@ -111,76 +205,7 @@ export const LoginRoute = () => {
 				password: data.password,
 			});
 
-			posthog?.identify(data.email);
-			posthog?.capture("user_logged_in", { email: data.email });
-
-			const isNewUser = searchParams.get("new") === "true";
-			const next = searchParams.get("next");
-
-			// Start transition immediately — user sees smooth curtain right away
-			const transitionPromise = runTransition({
-				message: isNewUser ? t`Welcome to dembrane` : t`Welcome back`,
-			});
-
-			// Check onboarding in parallel with the transition. Small delay
-			// ensures the session cookie from login is available. Routing is
-			// deliberately simple now (ISSUE-015 / Founder decision D3):
-			// everyone lands on the general home /o, with ?next as the only
-			// exception. The old single-workspace / last-used auto-redirects
-			// were removed — /o is the canonical landing.
-			let needsOnboarding = false;
-			let onboardingIncomplete = false;
-			let wsList: { id: string; org_id?: string }[] = [];
-			try {
-				await new Promise((r) => setTimeout(r, 300));
-				const meResponse = await fetch(`${API_BASE_URL}/v2/me`, {
-					credentials: "include",
-				});
-				if (meResponse.ok) {
-					const meData = await meResponse.json();
-					needsOnboarding = meData.onboarding_completed === false;
-					// Required-but-non-blocking questionnaire (ISSUE-012): if the
-					// user is onboarded but never answered, route through the
-					// stepper first so they get nudged. The stepper still lets
-					// them skip on to /o.
-					onboardingIncomplete =
-						meData.onboarding_completed === true &&
-						!meData.onboarding_answer_json;
-				}
-
-				// Workspace list still needed to validate a ?next deep-link
-				// target (block cross-user leaks).
-				if (!needsOnboarding) {
-					const wsResponse = await fetch(`${API_BASE_URL}/v2/workspaces`, {
-						credentials: "include",
-					});
-					if (wsResponse.ok) {
-						const wsData = await wsResponse.json();
-						wsList = wsData.workspaces ?? [];
-					}
-				}
-			} catch {
-				// Swallow — never block login for onboarding check
-			}
-
-			await transitionPromise;
-
-			if (needsOnboarding || onboardingIncomplete) {
-				navigate("/onboarding");
-				return;
-			}
-
-			// Deep-link priority — but block cross-user leaks: a stale ?next from
-			// the previous session can point at a workspace or organisation this
-			// account can't see ("Organisation not found"). Fails closed to /o.
-			const resolvedNext = resolveNextPath(next, wsList);
-			if (resolvedNext) {
-				navigate(resolvedNext);
-				return;
-			}
-
-			// Everyone else: the general home.
-			navigate("/o");
+			await afterSignIn(data.email);
 		} catch (error) {
 			// biome-ignore lint/suspicious/noExplicitAny: <todo>
 			const errors = (error as any)?.errors;
@@ -224,6 +249,34 @@ export const LoginRoute = () => {
 
 	const onSubmit = handleSubmit((formData) => submitLogin(formData));
 
+	const requestCode = async () => {
+		setError("");
+		setCodeSending(true);
+		try {
+			await sendSignInCode(codeEmail.trim());
+			setCodeSent(true);
+			setCode("");
+		} catch (e) {
+			setError(e instanceof Error ? e.message : t`Something went wrong`);
+		} finally {
+			setCodeSending(false);
+		}
+	};
+
+	const submitCode = async (value: string) => {
+		if (loginMutation.isPending || value.length < 6) return;
+		setError("");
+		try {
+			await loginMutation.mutateAsync({ code: value, email: codeEmail.trim() });
+			await afterSignIn(codeEmail.trim());
+		} catch (e) {
+			// biome-ignore lint/suspicious/noExplicitAny: AuthError carries errors[]
+			const message = (e as any)?.errors?.[0]?.message;
+			setError(message || t`Something went wrong`);
+			setCode("");
+		}
+	};
+
 	useEffect(() => {
 		if (searchParams.get("reason") === "INVALID_CREDENTIALS") {
 			setError(t`Invalid credentials.`);
@@ -266,113 +319,203 @@ export const LoginRoute = () => {
 						</Text>
 					)}
 
-					<form onSubmit={onSubmit}>
-						<Stack gap="sm" ref={formParent}>
-							<input type="hidden" {...register("otp")} />
-							{error && !otpRequired && <Alert color="red">{error}</Alert>}
-
-							{otpRequired ? (
+					{codeMode ? (
+						<Stack gap="sm">
+							{error && <Alert color="red">{error}</Alert>}
+							{!codeSent ? (
+								<>
+									<TextInput
+										label={<Trans>Email</Trans>}
+										size="lg"
+										type="email"
+										autoComplete="email"
+										value={codeEmail}
+										onChange={(e) => setCodeEmail(e.currentTarget.value)}
+										{...testId("auth-login-code-email-input")}
+									/>
+									<Button
+										size="lg"
+										fullWidth
+										loading={codeSending}
+										disabled={!codeEmail.includes("@")}
+										onClick={requestCode}
+										{...testId("auth-login-code-send")}
+									>
+										<Trans>Email me a code</Trans>
+									</Button>
+								</>
+							) : (
 								<Stack gap="xs">
-									<Text fw={500} size="sm">
-										<Trans>Authenticator code</Trans>
+									<Text size="sm">
+										<Trans>We sent a six-digit code to {codeEmail}.</Trans>
 									</Text>
 									<PinInput
 										length={6}
 										type="number"
 										size="md"
 										oneTimeCode
-										value={otpValue}
-										rootRef={pinInputRef}
-										onChange={(value) => {
-											setOtpValue(value);
-											setValue("otp", value);
-										}}
-										onComplete={(value) => {
-											setOtpValue(value);
-											setValue("otp", value);
-											const { email, password } = getValues();
-											void submitLogin({
-												email,
-												otp: value,
-												password,
-											});
-										}}
 										inputMode="numeric"
-										name="otp"
+										value={code}
+										onChange={setCode}
+										onComplete={submitCode}
+										{...testId("auth-login-code-input")}
 									/>
-									{error && (
-										<Text size="sm" c="red">
-											{error}
-										</Text>
-									)}
-									<Text size="sm" c="dimmed">
-										<Trans>
-											Open your authenticator app and enter the current
-											six-digit code.
-										</Trans>
-									</Text>
+									<Button
+										size="lg"
+										fullWidth
+										loading={loginMutation.isPending}
+										disabled={code.length < 6}
+										onClick={() => submitCode(code)}
+									>
+										<Trans>Sign in</Trans>
+									</Button>
+									<Anchor
+										component="button"
+										size="sm"
+										onClick={requestCode}
+										ta="left"
+									>
+										<Trans>Send a new code</Trans>
+									</Anchor>
 								</Stack>
-							) : (
-								<>
-									<TextInput
-										label={<Trans>Email</Trans>}
-										size="lg"
-										{...register("email")}
-										{...testId("auth-login-email-input")}
-										placeholder={t`Email`}
-										required
-										type="email"
-										// When arriving from /register, the email is
-										// locked. Defends against password-manager
-										// autofill swapping in a different account.
-										readOnly={Boolean(lockedEmail)}
-										autoComplete={lockedEmail ? "off" : "email"}
-									/>
-									<PasswordInput
-										label={<Trans>Password</Trans>}
-										size="lg"
-										{...register("password")}
-										{...testId("auth-login-password-input")}
-										placeholder={t`Password`}
-										required
-										// new-password is the standard escape hatch to
-										// stop Chrome/Firefox auto-filling a saved
-										// password into this form.
-										autoComplete={
-											lockedEmail ? "new-password" : "current-password"
-										}
-									/>
-								</>
 							)}
-							{!otpRequired && (
-								<div className="w-full text-right">
-									<I18nLink to="/request-password-reset">
-										<Anchor
-											variant="outline"
-											{...testId("auth-login-forgot-password-link")}
-										>
-											<Trans>Forgot your password?</Trans>
-										</Anchor>
-									</I18nLink>
-								</div>
-							)}
-							<div>
-								<Button
-									size="lg"
-									type="submit"
-									fullWidth
-									loading={loginMutation.isPending}
-									{...testId("auth-login-submit-button")}
-								>
-									{otpRequired ? (
-										<Trans>Verify code</Trans>
-									) : (
-										<Trans>Login</Trans>
-									)}
-								</Button>
-							</div>
+							<Anchor
+								component="button"
+								size="sm"
+								ta="left"
+								onClick={() => {
+									setCodeMode(false);
+									setError("");
+								}}
+							>
+								<Trans>Use my password instead</Trans>
+							</Anchor>
 						</Stack>
-					</form>
+					) : (
+						<form onSubmit={onSubmit}>
+							<Stack gap="sm" ref={formParent}>
+								<input type="hidden" {...register("otp")} />
+								{error && !otpRequired && <Alert color="red">{error}</Alert>}
+
+								{otpRequired ? (
+									<Stack gap="xs">
+										<Text fw={500} size="sm">
+											<Trans>Authenticator code</Trans>
+										</Text>
+										<PinInput
+											length={6}
+											type="number"
+											size="md"
+											oneTimeCode
+											value={otpValue}
+											rootRef={pinInputRef}
+											onChange={(value) => {
+												setOtpValue(value);
+												setValue("otp", value);
+											}}
+											onComplete={(value) => {
+												setOtpValue(value);
+												setValue("otp", value);
+												const { email, password } = getValues();
+												void submitLogin({
+													email,
+													otp: value,
+													password,
+												});
+											}}
+											inputMode="numeric"
+											name="otp"
+										/>
+										{error && (
+											<Text size="sm" c="red">
+												{error}
+											</Text>
+										)}
+										<Text size="sm" c="dimmed">
+											<Trans>
+												Open your authenticator app and enter the current
+												six-digit code.
+											</Trans>
+										</Text>
+									</Stack>
+								) : (
+									<>
+										<TextInput
+											label={<Trans>Email</Trans>}
+											size="lg"
+											{...register("email")}
+											{...testId("auth-login-email-input")}
+											placeholder={t`Email`}
+											required
+											type="email"
+											// When arriving from /register, the email is
+											// locked. Defends against password-manager
+											// autofill swapping in a different account.
+											readOnly={Boolean(lockedEmail)}
+											autoComplete={lockedEmail ? "off" : "email"}
+										/>
+										<PasswordInput
+											label={<Trans>Password</Trans>}
+											size="lg"
+											{...register("password")}
+											{...testId("auth-login-password-input")}
+											placeholder={t`Password`}
+											required
+											// new-password is the standard escape hatch to
+											// stop Chrome/Firefox auto-filling a saved
+											// password into this form.
+											autoComplete={
+												lockedEmail ? "new-password" : "current-password"
+											}
+										/>
+									</>
+								)}
+								{!otpRequired && (
+									<div className="w-full text-right">
+										<I18nLink to="/request-password-reset">
+											<Anchor
+												variant="outline"
+												{...testId("auth-login-forgot-password-link")}
+											>
+												<Trans>Forgot your password?</Trans>
+											</Anchor>
+										</I18nLink>
+									</div>
+								)}
+								<div>
+									<Button
+										size="lg"
+										type="submit"
+										fullWidth
+										loading={loginMutation.isPending}
+										{...testId("auth-login-submit-button")}
+									>
+										{otpRequired ? (
+											<Trans>Verify code</Trans>
+										) : (
+											<Trans>Login</Trans>
+										)}
+									</Button>
+								</div>
+							</Stack>
+						</form>
+					)}
+					{!codeMode && !otpRequired && (
+						<Anchor
+							component="button"
+							size="sm"
+							ta="left"
+							onClick={() => {
+								setCodeEmail(getValues("email") || lockedEmail || "");
+								setCodeMode(true);
+								setCodeSent(false);
+								setError("");
+							}}
+							{...testId("auth-login-code-mode")}
+						>
+							<Trans>Email me a sign-in code instead</Trans>
+						</Anchor>
+					)}
 
 					<Divider variant="dashed" label={t`or`} labelPosition="center" />
 

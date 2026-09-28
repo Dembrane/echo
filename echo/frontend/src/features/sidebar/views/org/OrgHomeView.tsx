@@ -5,6 +5,7 @@ import {
 	Folders,
 	GearIcon,
 	GraduationCapIcon,
+	HandshakeIcon,
 	UsersIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
@@ -97,6 +98,12 @@ export const OrgHomeView = () => {
 	// managers that is the full org list, for everyone else their direct rows.
 	const showWorkspaces = displayList.length > 0;
 
+	// The account page (documents, signing, billing, questions with dembrane) is for the
+	// people the accounts API admits: owners, admins and the billing role.
+	const orgRole = me?.orgs.find((o) => o.id === orgId)?.role;
+	const seesAccount =
+		orgRole === "owner" || orgRole === "admin" || orgRole === "billing";
+
 	if (!orgId) return null;
 	const base = `/o/${orgId}`;
 
@@ -124,6 +131,13 @@ export const OrgHomeView = () => {
 						label={<Trans>Training</Trans>}
 						icon={GraduationCapIcon}
 					/>
+					{seesAccount && (
+						<NavItem
+							to={`${base}/account`}
+							label={<Trans>Account</Trans>}
+							icon={HandshakeIcon}
+						/>
+					)}
 					{/* Settings is the last clickable item under the org title,
 						    directly below Overview and above the Workspaces section. */}
 					<NavItem

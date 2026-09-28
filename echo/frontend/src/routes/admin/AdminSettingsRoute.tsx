@@ -55,7 +55,7 @@ import {
 	type SortingState,
 	useReactTable,
 } from "@tanstack/react-table";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, lazy, Suspense, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -3220,6 +3220,13 @@ function ManagedBillingPanel() {
 	);
 }
 
+// Its own chunk: the accounts screens carry their own catalog and contract parsing.
+const AccountsPanel = lazy(() =>
+	import("@/features/accounts/staff/AccountsPanel").then((m) => ({
+		default: m.AccountsPanel,
+	})),
+);
+
 export const AdminSettingsRoute = () => {
 	useDocumentTitle(t`Admin, dembrane`);
 	const { data: me } = useV2Me();
@@ -3279,6 +3286,11 @@ export const AdminSettingsRoute = () => {
 					</Tabs.Panel>
 					<Tabs.Panel value="payments" pt="md">
 						<PaymentsPanel />
+					</Tabs.Panel>
+					<Tabs.Panel value="accounts" pt="md">
+						<Suspense fallback={<Loader size="sm" />}>
+							<AccountsPanel />
+						</Suspense>
 					</Tabs.Panel>
 					<Tabs.Panel value="partners" pt="md">
 						<PartnersPanel />
