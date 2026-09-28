@@ -1,10 +1,5 @@
-import {
-	type DirectusActivity,
-	type Query,
-	readActivities,
-} from "@directus/sdk";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
-import { directus } from "@/lib/directus";
+import { API_BASE_URL } from "@/config";
 
 export interface AuditLogUser {
 	email?: string | null;
@@ -69,238 +64,64 @@ export interface AuditLogExportResult {
 	filename: string;
 }
 
-const AUDIT_LOG_FIELDS = [
-	"id",
-	"action",
-	"collection",
-	"item",
-	"timestamp",
-	"ip",
-	"user_agent",
-	{
-		revisions: ["delta"],
-	},
-	{
-		user: ["id", "email", "first_name", "last_name"],
-	},
-] as const;
-
 const AGGREGATE_BATCH_SIZE = 500;
 
-type ActivityResponse<T> = T[] & {
-	meta?: {
-		filter_count?: number | string | null;
-	};
-};
-type ActivitiesQuery = Query<
-	CustomDirectusTypes,
-	DirectusActivity<CustomDirectusTypes>
->;
-
-const buildFilter = (
-	filters?: AuditLogFilters,
-): ActivitiesQuery["filter"] | undefined => {
-	if (!filters) return undefined;
-
-	const filter: Record<string, unknown> = {};
-
-	if (filters.actions && filters.actions.length > 0) {
-		filter.action = {
-			_in: filters.actions,
-		};
-	}
-
-	if (filters.collections && filters.collections.length > 0) {
-		filter.collection = {
-			_in: filters.collections,
-		};
-	}
-
-	return Object.keys(filter).length > 0
-		? (filter as ActivitiesQuery["filter"])
-		: undefined;
+/**
+ * /user-settings/audit-logs answers with the rows the caller may see: staff all activity,
+ * everyone else the rows by or about themselves, the scope Directus applied.
+ */
+const getJson = async <T>(
+	path: string,
+	params: Record<string, string | number | undefined> = {},
+): Promise<T> => {
+	const url = new URL(
+		`${API_BASE_URL}/user-settings/audit-logs${path}`,
+		window.location.origin,
+	);
+	for (const [k, v] of Object.entries(params))
+		if (v !== undefined && v !== "") url.searchParams.set(k, String(v));
+	const res = await fetch(url, { credentials: "include" });
+	if (!res.ok) throw new Error(`Audit log request failed: ${res.status}`);
+	return res.json();
 };
 
-const normalizeCount = (value: unknown): number => {
-	if (typeof value === "number") return value;
-	if (typeof value === "string") {
-		const parsed = Number.parseInt(value, 10);
-		return Number.isNaN(parsed) ? 0 : parsed;
-	}
-	if (typeof value === "object" && value !== null) {
-		const firstValue = Object.values(value)[0];
-		if (typeof firstValue === "number") return firstValue;
-		if (typeof firstValue === "string") {
-			const parsed = Number.parseInt(firstValue, 10);
-			return Number.isNaN(parsed) ? 0 : parsed;
-		}
-	}
-	return 0;
-};
-
-const fetchAuditLogsTotal = async ({
-	filters,
-}: {
-	filters?: AuditLogFilters;
-}) => {
-	const filter = buildFilter(filters);
-
-	try {
-		const [aggregate] = await directus.request<
-			Array<{
-				count?: unknown;
-			}>
-		>(
-			readActivities<CustomDirectusTypes, ActivitiesQuery>({
-				aggregate: {
-					count: "*",
-				},
-				filter,
-				limit: 1,
-			} as unknown as ActivitiesQuery),
-		);
-
-		return normalizeCount(aggregate?.count);
-	} catch (aggregateError) {
-		console.warn("Failed to aggregate audit log count", aggregateError);
-		return 0;
-	}
-};
+const filterParams = (filters?: AuditLogFilters) => ({
+	actions: filters?.actions?.join(","),
+	collections: filters?.collections?.join(","),
+});
 
 const fetchAuditLogsPage = async ({
 	filters,
 	page,
 	pageSize,
 	sortDirection,
-}: AuditLogQueryArgs): Promise<AuditLogQueryResult> => {
-	const filter = buildFilter(filters);
-	const sort = sortDirection === "asc" ? ["timestamp"] : ["-timestamp"];
+}: AuditLogQueryArgs): Promise<AuditLogQueryResult> =>
+	getJson<AuditLogQueryResult>("", {
+		...filterParams(filters),
+		page,
+		page_size: pageSize,
+		sort: sortDirection === "asc" ? "asc" : "desc",
+	});
 
-	const response = await directus.request<ActivityResponse<AuditLogEntry>>(
-		readActivities<CustomDirectusTypes, ActivitiesQuery>({
-			fields: AUDIT_LOG_FIELDS as unknown as ActivitiesQuery["fields"],
-			filter,
-			limit: pageSize,
-			meta: "filter_count",
-			offset: page * pageSize,
-			sort: sort as ActivitiesQuery["sort"],
-		} as unknown as ActivitiesQuery),
-	);
-
-	const items = [...response];
-	const metaTotal = response.meta?.filter_count;
-	const normalizedTotal =
-		metaTotal === null || metaTotal === undefined
-			? null
-			: normalizeCount(metaTotal);
-
-	const fallbackTotal = await fetchAuditLogsTotal({ filters });
-	const total =
-		normalizedTotal !== null
-			? normalizedTotal
-			: fallbackTotal > 0
-				? fallbackTotal
-				: page * pageSize + items.length;
-
-	return {
-		items,
-		total,
-	};
-};
-
-const fetchAuditLogOptions = async (): Promise<AuditLogMetadata> => {
-	const [actions, collections] = await Promise.all([
-		directus.request<
-			Array<{
-				action: string | null;
-				count: number;
-			}>
-		>(
-			readActivities<CustomDirectusTypes, ActivitiesQuery>({
-				aggregate: {
-					count: "*",
-				},
-				groupBy: ["action"],
-				sort: ["action"],
-				// Directus caps grouped rows at its default limit (100).
-				limit: -1,
-			} as unknown as ActivitiesQuery),
-		),
-		directus.request<
-			Array<{
-				collection: string | null;
-				count: number;
-			}>
-		>(
-			readActivities<CustomDirectusTypes, ActivitiesQuery>({
-				aggregate: {
-					count: "*",
-				},
-				groupBy: ["collection"],
-				sort: ["collection"],
-				// Directus caps grouped rows at its default limit (100).
-				limit: -1,
-			} as unknown as ActivitiesQuery),
-		),
-	]);
-
-	const toOptions = <T extends { count: number }>(
-		items: Array<T & Record<string, unknown>>,
-		key: string,
-	): AuditLogOption[] => {
-		return items
-			.map((item) => {
-				const rawValue = item[key];
-				if (typeof rawValue !== "string" || rawValue.trim().length === 0) {
-					return null;
-				}
-
-				return {
-					count: normalizeCount(item.count),
-					label: rawValue,
-					value: rawValue,
-				};
-			})
-			.filter(
-				(option): option is AuditLogOption => option !== null && !!option.value,
-			);
-	};
-
-	return {
-		actions: toOptions(actions, "action"),
-		collections: toOptions(collections, "collection"),
-	};
-};
+const fetchAuditLogOptions = async (): Promise<AuditLogMetadata> =>
+	getJson<AuditLogMetadata>("/options");
 
 const fetchAuditLogsForExport = async ({
 	filters,
 }: {
 	filters?: AuditLogFilters;
 }) => {
-	const filter = buildFilter(filters);
-
-	let offset = 0;
 	const records: AuditLogEntry[] = [];
 
-	// eslint-disable-next-line no-constant-condition
-	while (true) {
-		const batch = await directus.request<ActivityResponse<AuditLogEntry>>(
-			readActivities<CustomDirectusTypes, ActivitiesQuery>({
-				fields: AUDIT_LOG_FIELDS as unknown as ActivitiesQuery["fields"],
-				filter,
-				limit: AGGREGATE_BATCH_SIZE,
-				offset,
-				sort: ["-timestamp"],
-			} as unknown as ActivitiesQuery),
-		);
-
-		records.push(...batch);
-
-		if (batch.length < AGGREGATE_BATCH_SIZE) {
-			break;
-		}
-
-		offset += AGGREGATE_BATCH_SIZE;
+	for (let page = 0; ; page++) {
+		const { items } = await getJson<AuditLogQueryResult>("", {
+			...filterParams(filters),
+			page,
+			page_size: AGGREGATE_BATCH_SIZE,
+			sort: "desc",
+		});
+		records.push(...items);
+		if (items.length < AGGREGATE_BATCH_SIZE) break;
 	}
 
 	return records;
@@ -375,7 +196,7 @@ export const useAuditLogsQuery = (args: AuditLogQueryArgs) => {
 
 	return useQuery<AuditLogQueryResult>({
 		meta: {
-			description: "Fetches paginated Directus audit logs",
+			description: "Fetches paginated audit logs",
 		},
 		placeholderData: keepPreviousData,
 		queryFn: () => fetchAuditLogsPage(args),

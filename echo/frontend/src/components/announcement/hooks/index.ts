@@ -1,10 +1,3 @@
-import {
-	createItems,
-	type Query,
-	readItems,
-	updateItem,
-	updateItems,
-} from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import {
 	useInfiniteQuery,
@@ -17,8 +10,44 @@ import { useEffect } from "react";
 import useSessionStorageState from "use-session-storage-state";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
-import { directus } from "@/lib/directus";
-import { isUnreadByMe, notExpiredFilter } from "../announcementFilters";
+import { API_BASE_URL } from "@/config";
+import type { ListQuery } from "@/lib/listQuery";
+import { isUnreadByMe } from "../announcementFilters";
+
+/**
+ * The caller's announcements from /v2/me/announcements: newest first, each with its
+ * translations and only the caller's own read marks as `activity`. Unexpired only, unless
+ * `include_expired` (honoured for staff, as Directus's permissions were).
+ */
+type ApiAnnouncement = Omit<Announcement, "activity" | "translations"> & {
+	activity: AnnouncementActivity[];
+	translations: AnnouncementTranslation[];
+};
+
+async function fetchAnnouncements(params: {
+	limit?: number;
+	offset?: number;
+	include_expired?: boolean;
+}): Promise<ApiAnnouncement[]> {
+	const url = new URL(
+		`${API_BASE_URL}/v2/me/announcements`,
+		window.location.origin,
+	);
+	for (const [k, v] of Object.entries(params))
+		if (v !== undefined) url.searchParams.set(k, String(v));
+	const res = await fetch(url, { credentials: "include" });
+	if (!res.ok) throw new Error(`Announcements request failed: ${res.status}`);
+	return res.json();
+}
+
+async function postAnnouncements(path: string) {
+	const res = await fetch(`${API_BASE_URL}/v2/me/announcements${path}`, {
+		credentials: "include",
+		method: "POST",
+	});
+	if (!res.ok) throw new Error(`Announcements update failed: ${res.status}`);
+	return res.json();
+}
 
 export const useLatestAnnouncement = () => {
 	const { data: currentUser } = useCurrentUser();
@@ -28,34 +57,7 @@ export const useLatestAnnouncement = () => {
 		enabled: !!currentUser?.id,
 		queryFn: async () => {
 			try {
-				const response = await directus.request(
-					readItems("announcement", {
-						deep: {
-							activity: {
-								_filter: {
-									user_id: {
-										_eq: currentUser?.id,
-									},
-								},
-							},
-						},
-						fields: [
-							"id",
-							"created_at",
-							"expires_at",
-							"level",
-							{
-								translations: ["id", "languages_code", "title", "message"],
-							},
-							{
-								activity: ["id", "user_id", "announcement_activity", "read"],
-							},
-						],
-						filter: notExpiredFilter(),
-						limit: 1,
-						sort: ["-created_at"],
-					}),
-				);
+				const response = await fetchAnnouncements({ limit: 1 });
 
 				return response.length > 0 ? response[0] : null;
 			} catch (error) {
@@ -77,7 +79,7 @@ export const useInfiniteAnnouncements = ({
 	},
 	enabled = true,
 }: {
-	query?: Partial<Query<CustomDirectusTypes, Announcement>>;
+	query?: Partial<ListQuery<Announcement>>;
 	options?: {
 		initialLimit?: number;
 	};
@@ -96,36 +98,11 @@ export const useInfiniteAnnouncements = ({
 		initialPageParam: 0,
 		queryFn: async ({ pageParam = 0 }) => {
 			try {
-				const response: Announcement[] = await directus.request<Announcement[]>(
-					readItems("announcement", {
-						deep: {
-							activity: {
-								_filter: {
-									user_id: {
-										_eq: currentUser?.id,
-									},
-								},
-							},
-						},
-						fields: [
-							"id",
-							"created_at",
-							"expires_at",
-							"level",
-							{
-								translations: ["id", "languages_code", "title", "message"],
-							},
-							{
-								activity: ["id", "user_id", "announcement_activity", "read"],
-							},
-						],
-						filter: notExpiredFilter(),
-						limit: initialLimit,
-						offset: pageParam * initialLimit,
-						sort: ["-created_at"],
-						...query,
-					}),
-				);
+				void query; // no caller narrows the list; kept for the query key
+				const response = await fetchAnnouncements({
+					limit: initialLimit,
+					offset: pageParam * initialLimit,
+				});
 
 				return {
 					announcements: response,
@@ -156,22 +133,10 @@ export const useMarkAsReadMutation = () => {
 			userId?: string;
 		}) => {
 			try {
-				// Update in place; a second row would pile up on every toggle.
-				if (activityIds && activityIds.length > 0) {
-					return await directus.request(
-						updateItems("announcement_activity", activityIds, {
-							read: true,
-						} as any),
-					);
-				}
-
-				return await directus.request(
-					createItems("announcement_activity", {
-						announcement_activity: announcementId,
-						read: true,
-						...(userId ? { user_id: userId } : {}),
-					} as any),
-				);
+				// The API updates the caller's existing marks in place, or adds the first.
+				void activityIds;
+				void userId;
+				return await postAnnouncements(`/${announcementId}/read`);
 			} catch (error) {
 				toast.error(t`Failed to mark announcement as read`);
 				posthog.captureException(error);
@@ -281,18 +246,13 @@ export const useMarkAsUnreadMutation = () => {
 
 	return useMutation({
 		mutationFn: async ({
-			activityIds,
+			announcementId,
 		}: {
 			announcementId: string;
 			activityIds: string[];
 		}) => {
 			try {
-				const updates = activityIds.map((id) =>
-					directus.request(
-						updateItem("announcement_activity", id, { read: false } as any),
-					),
-				);
-				return await Promise.all(updates);
+				return await postAnnouncements(`/${announcementId}/unread`);
 			} catch (error) {
 				toast.error(t`Failed to mark announcement as unread`);
 				posthog.captureException(error);
@@ -389,62 +349,8 @@ export const useMarkAllAsReadMutation = () => {
 	return useMutation({
 		mutationFn: async () => {
 			try {
-				// `deep._filter` scopes the rows to me and, unlike a permission, holds
-				// for admins too, who would otherwise overwrite other people's rows.
-				const liveAnnouncements = (await directus.request(
-					readItems("announcement", {
-						deep: {
-							activity: { _filter: { user_id: { _eq: currentUser?.id } } },
-						},
-						fields: ["id", { activity: ["id", "read"] }],
-						filter: notExpiredFilter(),
-						limit: -1,
-					}),
-				)) as {
-					id: string;
-					activity?: { id: string; read?: boolean | null }[];
-				}[];
-
-				const unreadAnnouncements = liveAnnouncements.filter((announcement) =>
-					isUnreadByMe(announcement.activity),
-				);
-
-				const activityIdsToUpdate = unreadAnnouncements.flatMap(
-					(announcement) =>
-						(announcement.activity ?? []).map((activity) => activity.id),
-				);
-				const announcementsToCreate = unreadAnnouncements.filter(
-					(announcement) => (announcement.activity ?? []).length === 0,
-				);
-
-				const results = [];
-
-				if (activityIdsToUpdate.length > 0) {
-					results.push(
-						await directus.request(
-							updateItems("announcement_activity", activityIdsToUpdate, {
-								read: true,
-							} as any),
-						),
-					);
-				}
-
-				if (announcementsToCreate.length > 0) {
-					results.push(
-						await directus.request(
-							createItems(
-								"announcement_activity",
-								announcementsToCreate.map((announcement) => ({
-									announcement_activity: announcement.id,
-									read: true,
-									...(currentUser?.id ? { user_id: currentUser.id } : {}),
-								})) as any,
-							),
-						),
-					);
-				}
-
-				return results;
+				// The API marks only the caller's own rows, admins included.
+				return await postAnnouncements("/read-all");
 			} catch (error) {
 				toast.error(t`Failed to mark all announcements as read`);
 				posthog.captureException(error);
@@ -553,23 +459,7 @@ const useAnnouncementSummary = <T>(select: (rows: SummaryRow[]) => T) => {
 					return [] as SummaryRow[];
 				}
 
-				return (await directus.request(
-					readItems("announcement", {
-						deep: {
-							activity: { _filter: { user_id: { _eq: currentUser.id } } },
-						},
-						fields: [
-							"id",
-							"created_at",
-							"level",
-							{ translations: ["id", "languages_code", "title"] },
-							{ activity: ["read"] },
-						],
-						filter: notExpiredFilter(),
-						limit: -1,
-						sort: ["-created_at"],
-					}),
-				)) as SummaryRow[];
+				return (await fetchAnnouncements({})) as SummaryRow[];
 			} catch (error) {
 				posthog.captureException(error);
 				console.error("Error fetching announcement summary:", error);
@@ -603,39 +493,16 @@ export const useWhatsNewAnnouncements = ({
 }: {
 	enabled?: boolean;
 } = {}) => {
-	const { data: currentUser } = useCurrentUser();
-
 	return useQuery({
 		enabled,
 		queryFn: async () => {
 			try {
-				const response: Announcement[] = await directus.request<Announcement[]>(
-					readItems("announcement", {
-						deep: {
-							activity: {
-								_filter: {
-									user_id: {
-										_eq: currentUser?.id,
-									},
-								},
-							},
-						},
-						fields: [
-							"id",
-							"created_at",
-							"expires_at",
-							"level",
-							{
-								translations: ["id", "languages_code", "title", "message"],
-							},
-							{
-								activity: ["id", "user_id", "announcement_activity", "read"],
-							},
-						],
-						limit: 50,
-						sort: ["-created_at"],
-					}),
-				);
+				// Directus let admins see expired announcements here and scoped everyone
+				// else to unexpired ones; the API applies the same rule.
+				const response = await fetchAnnouncements({
+					include_expired: true,
+					limit: 50,
+				});
 
 				return response;
 			} catch (error) {

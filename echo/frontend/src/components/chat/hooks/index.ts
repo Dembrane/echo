@@ -1,4 +1,3 @@
-import type { Query } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import {
 	keepPreviousData,
@@ -20,6 +19,7 @@ import {
 	lockConversations,
 } from "@/lib/api";
 import { bff } from "@/lib/bff";
+import type { ListQuery } from "@/lib/listQuery";
 
 export const useChatHistory = (chatId: string) => {
 	return useQuery({
@@ -166,7 +166,7 @@ export const useChat = (chatId: string) => {
 
 export const useProjectChats = (
 	projectId: string,
-	query?: Partial<Query<CustomDirectusTypes, ProjectChat>>,
+	query?: Partial<ListQuery<ProjectChat>>,
 ) => {
 	return useSuspenseQuery({
 		queryFn: async () => {
@@ -183,7 +183,7 @@ export const useProjectChats = (
 
 export const useInfiniteProjectChats = (
 	projectId: string,
-	query?: Partial<Query<CustomDirectusTypes, ProjectChat>>,
+	query?: Partial<ListQuery<ProjectChat>>,
 	options?: {
 		initialLimit?: number;
 		hasMessages?: boolean;
@@ -225,7 +225,7 @@ export const useInfiniteProjectChats = (
 
 const projectChatsCountQueryOptions = (
 	projectId: string,
-	query: Partial<Query<CustomDirectusTypes, ProjectChat>> | undefined,
+	query: Partial<ListQuery<ProjectChat>> | undefined,
 	hasMessages: boolean,
 ) => ({
 	queryFn: async () => {
@@ -251,7 +251,7 @@ const projectChatsCountQueryOptions = (
 
 export const useProjectChatsCount = (
 	projectId: string,
-	query?: Partial<Query<CustomDirectusTypes, ProjectChat>>,
+	query?: Partial<ListQuery<ProjectChat>>,
 	options?: { hasMessages?: boolean },
 ) => {
 	const { hasMessages = false } = options ?? {};

@@ -1,4 +1,3 @@
-import type { Query } from "@directus/sdk";
 import { plural, t } from "@lingui/core/macro";
 import {
 	useInfiniteQuery,
@@ -25,6 +24,7 @@ import {
 	updateCustomVerificationTopic,
 	type VerificationTopicsResponse,
 } from "@/lib/api";
+import type { ListQuery } from "@/lib/listQuery";
 
 export const useTogglePinMutation = () => {
 	const queryClient = useQueryClient();
@@ -543,7 +543,7 @@ export const useInfiniteProjects = ({
 		initialLimit: 15,
 	},
 }: {
-	query: Partial<Query<CustomDirectusTypes, Project>>;
+	query: Partial<ListQuery<Project>>;
 	options?: {
 		initialLimit?: number;
 	};
@@ -590,7 +590,7 @@ export const useProjectById = ({
 	},
 }: {
 	projectId: string;
-	query?: Partial<Query<CustomDirectusTypes, Project>>;
+	query?: Partial<ListQuery<Project>>;
 }) => {
 	return useQuery({
 		// Skip the fetch when projectId hasn't resolved yet — otherwise we

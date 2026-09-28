@@ -1,4 +1,3 @@
-import type { Query, QueryFields } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import {
 	type UseQueryOptions,
@@ -24,6 +23,7 @@ import {
 	selectAllContext,
 } from "@/lib/api";
 import { bff } from "@/lib/bff";
+import type { ListQuery } from "@/lib/listQuery";
 
 type ConversationBffListParams = {
 	search_text?: string;
@@ -60,7 +60,7 @@ type ConversationQueryFilter = {
 };
 
 const conversationQueryToBffParams = (
-	query?: Partial<Query<CustomDirectusTypes, Conversation>>,
+	query?: Partial<ListQuery<Conversation>>,
 ): ConversationBffListParams => {
 	const params: ConversationBffListParams = {};
 	const rawQuery = query as
@@ -686,7 +686,7 @@ export const useConversationsByProjectId = (
 	loadChunks?: boolean,
 	// unused
 	loadWhereTranscriptExists?: boolean,
-	query?: Partial<Query<CustomDirectusTypes, Conversation>>,
+	query?: Partial<ListQuery<Conversation>>,
 	filterBySource?: string[],
 ) => {
 	const TIME_INTERVAL_SECONDS = 30;
@@ -741,9 +741,8 @@ export const useConversationsByProjectId = (
 	});
 };
 
-export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: QueryFields<
-	CustomDirectusTypes,
-	Conversation
+export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: NonNullable<
+	ListQuery<Conversation>["fields"]
 > = [
 	"id",
 	"created_at",
@@ -775,7 +774,7 @@ export const useConversationById = ({
 	conversationId: string;
 	loadConversationChunks?: boolean;
 	// query overrides the default query and loadChunks
-	query?: Partial<Query<CustomDirectusTypes, Conversation>>;
+	query?: Partial<ListQuery<Conversation>>;
 	useQueryOpts?: Partial<UseQueryOptions<Conversation>>;
 }) => {
 	return useQuery({
@@ -796,7 +795,7 @@ export const useInfiniteConversationsByProjectId = (
 	loadChunks?: boolean,
 	// unused
 	loadWhereTranscriptExists?: boolean,
-	query?: Partial<Query<CustomDirectusTypes, Conversation>>,
+	query?: Partial<ListQuery<Conversation>>,
 	filterBySource?: string[],
 	options?: {
 		initialLimit?: number;
@@ -873,7 +872,7 @@ export const useInfiniteConversationsByProjectId = (
 
 export const useConversationsCountByProjectId = (
 	projectId: string,
-	query?: Partial<Query<CustomDirectusTypes, Conversation>>,
+	query?: Partial<ListQuery<Conversation>>,
 ) => {
 	return useQuery({
 		queryFn: async () => {

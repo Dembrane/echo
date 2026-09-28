@@ -43,7 +43,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
 import { Icons } from "@/icons";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
-import { getDirectusErrorString } from "@/lib/directus";
+import { getApiErrorString } from "@/lib/errors";
 import { isOutsiderRole, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
@@ -387,7 +387,7 @@ export const ProjectsHomeRoute = () => {
 
 							{isError && (
 								<Alert color="red" title="Error">
-									{getDirectusErrorString(error)}
+									{getApiErrorString(error)}
 								</Alert>
 							)}
 

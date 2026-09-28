@@ -1,8 +1,7 @@
-import { readItem } from "@directus/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 import { generateProjectLibrary, getProjectViews } from "@/lib/api";
-import { directus } from "@/lib/directus";
+import { bff } from "@/lib/bff";
 
 export const useProjectViews = (projectId: string) => {
 	return useQuery({
@@ -12,68 +11,18 @@ export const useProjectViews = (projectId: string) => {
 	});
 };
 
+/** A view with its aspects, the ones with most quotes first. */
 export const useViewById = (projectId: string, viewId: string) => {
 	return useQuery({
-		queryFn: () =>
-			directus.request<View>(
-				readItem("view", viewId, {
-					deep: {
-						// get the aspects that have at least one aspect segment
-						aspects: {
-							_sort: "-count(aspect_segment)",
-						} as any,
-					},
-					fields: [
-						"id",
-						"name",
-						"summary",
-						"created_at",
-						{
-							aspects: [
-								"id",
-								"name",
-								"short_summary",
-								"description",
-								"image_url",
-								"view_id",
-							],
-						},
-					],
-				}),
-			),
+		queryFn: () => bff.get<View>(`/views/${viewId}`),
 		queryKey: ["projects", projectId, "views", viewId],
 	});
 };
 
+/** An aspect with its quotes, each quote with the conversation it came from. */
 export const useAspectById = (projectId: string, aspectId: string) => {
 	return useQuery({
-		queryFn: () =>
-			directus.request<Aspect>(
-				readItem("aspect", aspectId, {
-					fields: [
-						"id",
-						"name",
-						"image_url",
-						"long_summary",
-						{
-							aspect_segment: [
-								"id",
-								"description",
-								"verbatim_transcript",
-								"relevant_index",
-								{
-									segment: [
-										"id",
-										{
-											conversation_id: ["id", "participant_name"],
-										},
-									],
-								},
-							],
-						},
-					],
-				}),
-			),
+		queryFn: () => bff.get<Aspect>(`/aspects/${aspectId}`),
 		queryKey: ["projects", projectId, "aspects", aspectId],
 	});
 };

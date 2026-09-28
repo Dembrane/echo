@@ -1,6 +1,6 @@
 import { Avatar } from "@mantine/core";
 import { useCurrentUser } from "@/components/auth/hooks";
-import { DIRECTUS_PUBLIC_URL } from "@/config";
+import { avatarUrl as avatarSrc } from "@/lib/avatar";
 
 type UserAvatarProps = {
 	size?: number;
@@ -37,9 +37,7 @@ export const UserAvatar = ({ size = 32 }: UserAvatarProps) => {
 	const { data: user } = useCurrentUser();
 
 	const avatarFileId = user?.avatar as string | null;
-	const avatarUrl = avatarFileId
-		? `${DIRECTUS_PUBLIC_URL}/assets/${avatarFileId}?width=${size * 2}&height=${size * 2}&fit=cover`
-		: null;
+	const avatarUrl = avatarSrc(avatarFileId, size * 2) ?? null;
 	const initials = deriveInitials(
 		user?.first_name as string | null | undefined,
 		(user as { last_name?: string | null } | undefined)?.last_name,

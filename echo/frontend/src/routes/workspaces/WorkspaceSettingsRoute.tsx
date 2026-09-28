@@ -59,13 +59,13 @@ import { TierBadge } from "@/components/workspace/TierBadge";
 import { UsageCard } from "@/components/workspace/UsageCard";
 import { WorkspaceDataOwnershipSection } from "@/components/workspace/WorkspaceDataOwnershipSection";
 import { WorkspaceLegalBasisSection } from "@/components/workspace/WorkspaceLegalBasisSection";
-import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
+import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
-import { logoUrl, memberInitials } from "@/lib/avatar";
+import { assetUrl, logoUrl, memberInitials } from "@/lib/avatar";
 import { displayRole, isOutsiderRole } from "@/lib/roles";
 import type { BillingPeriod, Tier } from "@/lib/tiers";
 
@@ -890,9 +890,7 @@ export const WorkspaceSettingsRoute = () => {
 															size={32}
 															radius="xl"
 															src={
-																member.avatar
-																	? `${DIRECTUS_PUBLIC_URL}/assets/${member.avatar}`
-																	: null
+																member.avatar ? assetUrl(member.avatar) : null
 															}
 															color="primary"
 														>

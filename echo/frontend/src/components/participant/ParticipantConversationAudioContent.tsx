@@ -64,7 +64,7 @@ export const ParticipantConversationAudioContent = () => {
 
 	const hasEchoParam = searchParams.get("echo") === "1";
 
-	const repliesQuery = useConversationRepliesQuery(conversationId);
+	const repliesQuery = useConversationRepliesQuery(projectId, conversationId);
 
 	const {
 		messages: echoMessages,

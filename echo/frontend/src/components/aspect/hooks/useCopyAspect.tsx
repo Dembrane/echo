@@ -1,7 +1,6 @@
-import { readItem } from "@directus/sdk";
 import { useParams } from "react-router";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
-import { directus } from "@/lib/directus";
+import { bff } from "@/lib/bff";
 
 export const useCopyAspect = () => {
 	const { language, workspaceId, projectId } = useParams();
@@ -10,32 +9,7 @@ export const useCopyAspect = () => {
 	const copyAspect = (aspectId: string) => {
 		const fetchAndFormat = async () => {
 			const stringBuilder: string[] = [];
-			const aspect = await directus.request(
-				readItem("aspect", aspectId, {
-					fields: [
-						"id",
-						"name",
-						"short_summary",
-						"long_summary",
-						"image_url",
-						"view_id",
-						{
-							aspect_segment: [
-								{
-									segment: [
-										{
-											conversation_id: ["id", "participant_name"],
-											description: true,
-											relevant_index: true,
-											verbatim_transcript: true,
-										},
-									],
-								},
-							],
-						},
-					],
-				}),
-			);
+			const aspect = await bff.get<Aspect>(`/aspects/${aspectId}`);
 
 			stringBuilder.push(
 				`# Aspect: [${aspect.name}](${window.location.origin}/${language}/w/${workspaceId}/projects/${projectId}/library/views/${aspect.view_id}/aspects/${aspectId})`,
@@ -64,11 +38,10 @@ export const useCopyAspect = () => {
 				for (const quote of quotes) {
 					if (!quote.segment) continue;
 
-					const conversationId = (quote.segment as ConversationSegment)
-						.conversation_id as string;
-					const description = quote.description ?? "No description available";
 					const conversation = (quote.segment as ConversationSegment)
 						?.conversation_id as Conversation;
+					const conversationId = conversation?.id;
+					const description = quote.description ?? "No description available";
 					const participantName = conversation?.participant_name ?? "Unknown";
 
 					const conversationUrl =

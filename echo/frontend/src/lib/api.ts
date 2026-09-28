@@ -1,6 +1,5 @@
 // @FIXME: this file must be decomposed into @/components/xxx/api/index.ts
 
-import { readItems } from "@directus/sdk";
 import axios, {
 	type AxiosError,
 	type AxiosRequestConfig,
@@ -10,7 +9,6 @@ import { toast } from "@/components/common/Toaster";
 import { VOICE_TRANSCRIBE_TIMEOUT_MS } from "@/components/voice/voiceInput";
 import { API_BASE_URL, USE_PARTICIPANT_ROUTER } from "@/config";
 import { bff } from "./bff";
-import { directus } from "./directus";
 
 export const apiCommonConfig: CreateAxiosDefaults = {
 	baseURL: API_BASE_URL,
@@ -57,6 +55,20 @@ export const getParticipantConversationChunks = async (
 	);
 };
 
+export type ParticipantConversationReply = Pick<
+	ConversationReply,
+	"id" | "content_text" | "date_created" | "type"
+>;
+
+export const getParticipantConversationReplies = async (
+	projectId: string,
+	conversationId: string,
+) => {
+	return apiNoAuth.get<unknown, ParticipantConversationReply[]>(
+		`/participant/projects/${projectId}/conversations/${conversationId}/replies`,
+	);
+};
+
 export const deleteParticipantConversationChunk = async (
 	projectId: string,
 	conversationId: string,
@@ -99,56 +111,16 @@ api.interceptors.response.use(
 export const getLatestProjectAnalysisRunByProjectId = async (
 	projectId: string,
 ) => {
-	const data = await directus.request<ProjectAnalysisRun[]>(
-		readItems("project_analysis_run", {
-			filter: {
-				project_id: projectId,
-			},
-			sort: "-created_at",
-		}),
-	);
-
-	if (!data || data.length === 0) {
-		return null;
-	}
-
-	return data[0];
+	const runs = await bff.get<ProjectAnalysisRun[]>("/analysis-runs", {
+		limit: 1,
+		project_id: projectId,
+	});
+	return runs[0] ?? null;
 };
 
+/** Views of the latest analysis run, newest first, each with its aspects. */
 export const getProjectViews = async (projectId: string) => {
-	const project_analysis_run =
-		await getLatestProjectAnalysisRunByProjectId(projectId);
-
-	if (!project_analysis_run) {
-		return [];
-	}
-
-	return directus.request<View[]>(
-		readItems("view", {
-			fields: [
-				"id",
-				"name",
-				"description",
-				"created_at",
-				"user_input",
-				"user_input_description",
-				{
-					aspects: [
-						"id",
-						"name",
-						"short_summary",
-						"description",
-						"image_url",
-						"view_id",
-					],
-				},
-			],
-			filter: {
-				project_analysis_run_id: project_analysis_run?.id,
-			},
-			sort: "-created_at",
-		}),
-	);
+	return bff.get<View[]>("/views", { project_id: projectId });
 };
 
 export const getProjectTranscriptsLink = (projectId: string) =>

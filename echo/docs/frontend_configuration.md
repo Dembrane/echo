@@ -17,11 +17,6 @@ This document provides an overview of the environment variables used in the fron
 - **Description**: Base URL for the admin interface.
 - **Default Value**: `window.location.origin`
 
-### VITE_DIRECTUS_PUBLIC_URL
-
-- **Description**: Base URL for the Directus instance.
-- **Default Value**: `http://localhost:8055`
-
 ## Optional Environment Variables
 
 ### VITE_USE_PARTICIPANT_ROUTER
@@ -35,11 +30,6 @@ This document provides an overview of the environment variables used in the fron
 
 - **Description**: Base URL for the participant interface.
 - **Default Value**: `window.location.origin`
-
-### VITE_DIRECTUS_CONTENT_PUBLIC_URL
-
-- **Description**: Base URL for the Directus content.
-- **Default Value**: `https://admin-dembrane.azurewebsites.net`
 
 ### VITE_DISABLE_SENTRY
 

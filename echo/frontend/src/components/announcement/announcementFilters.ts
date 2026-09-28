@@ -1,14 +1,5 @@
-// Read state is decided here, not by a Directus `_none` filter: multi-condition
-// `_none` matches nothing, and permission-based scoping breaks for admins.
-
-export function notExpiredFilter(now: string = new Date().toISOString()) {
-	return {
-		_or: [
-			{ expires_at: { _gte: now } },
-			{ expires_at: { _null: true } },
-		] as const,
-	};
-}
+// Read state is decided here from the caller's own read marks, which the API returns
+// as `activity`; expiry is filtered by the API.
 
 export interface ActivityReadState {
 	read?: boolean | null;

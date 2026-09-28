@@ -1,7 +1,6 @@
-import { readItem } from "@directus/sdk";
 import { useParams } from "react-router";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
-import { directus } from "@/lib/directus";
+import { bff } from "@/lib/bff";
 
 export const useCopyView = () => {
 	const { language, workspaceId, projectId } = useParams();
@@ -10,23 +9,7 @@ export const useCopyView = () => {
 	const copyView = (viewId: string) => {
 		const fetchAndFormat = async () => {
 			const stringBuilder: string[] = [];
-			const view = await directus.request(
-				readItem("view", viewId, {
-					fields: [
-						"name",
-						"summary",
-						{
-							aspects: [
-								"id",
-								"name",
-								"short_summary",
-								"long_summary",
-								"image_url",
-							],
-						},
-					],
-				}),
-			);
+			const view = await bff.get<View>(`/views/${viewId}`);
 
 			// http://localhost:5173/en-US/w/<workspaceId>/projects/f65cd477-9f4c-4067-80e5-43634bb1dcb4/library/views/3af65db5-53b9-4641-b482-3982bbc6b9be
 			stringBuilder.push(

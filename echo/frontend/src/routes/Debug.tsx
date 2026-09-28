@@ -20,7 +20,6 @@ import {
 	ADMIN_BASE_URL,
 	API_BASE_URL,
 	APP_ENVIRONMENT,
-	DIRECTUS_PUBLIC_URL,
 	PARTICIPANT_BASE_URL,
 	SUPPORTED_LANGUAGES,
 } from "@/config";
@@ -245,7 +244,6 @@ export default function DebugPage() {
 		urls: {
 			ADMIN_BASE_URL,
 			API_BASE_URL,
-			DIRECTUS_PUBLIC_URL,
 			PARTICIPANT_BASE_URL,
 		},
 	};
