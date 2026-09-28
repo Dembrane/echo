@@ -218,28 +218,6 @@ export function projectsStorage(db: Db) {
         .where(eq(conversation_project_tag.project_tag_id, tagId));
     },
 
-    /** Deletes only links that join this conversation to a tag of this project. */
-    async deleteConversationTagLinks(projectId: string, conversationId: string, linkIds: number[]) {
-      if (!linkIds.length) return 0;
-      const rows = await db
-        .delete(conversation_project_tag)
-        .where(
-          and(
-            inArray(conversation_project_tag.id, linkIds),
-            eq(conversation_project_tag.conversation_id, conversationId),
-            inArray(
-              conversation_project_tag.project_tag_id,
-              db
-                .select({ id: project_tag.id })
-                .from(project_tag)
-                .where(eq(project_tag.project_id, projectId)),
-            ),
-          ),
-        )
-        .returning({ id: conversation_project_tag.id });
-      return rows.length;
-    },
-
     // ── conversations ─────────────────────────────────────────────────
 
     /** Live conversations with their chunks in timestamp order, as the transcript export reads them. */
@@ -285,16 +263,6 @@ export function projectsStorage(db: Db) {
         .from(conversation)
         .where(eq(conversation.project_id, projectId))
         .orderBy(asc(conversation.id));
-    },
-
-    async conversationInProject(conversationId: string, projectId: string) {
-      if (!isUuid(conversationId)) return false;
-      const [row] = await db
-        .select({ id: conversation.id })
-        .from(conversation)
-        .where(and(eq(conversation.id, conversationId), eq(conversation.project_id, projectId)))
-        .limit(1);
-      return Boolean(row);
     },
 
     async latestConversationCreatedAt(projectId: string) {

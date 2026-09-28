@@ -47,48 +47,12 @@ export default scenarios([
   { name: "verify topics: not a uuid", as: "anonymous", method: "GET", path: T("abc") },
   // ── PUT topics ──
   {
-    name: "verify select: owner",
+    name: "verify select: removed",
     as: "alice",
-    method: "PUT",
-    path: T(p1),
-    body: { topic_list: ["gems", " truths ", "gems", "nope"] },
-  },
-  {
-    name: "verify select: empty list clears",
-    as: "alice",
-    method: "PUT",
-    path: T(p1),
-    body: {},
-  },
-  {
-    name: "verify select: validation",
-    as: "alice",
-    method: "PUT",
-    path: T(p1),
-    body: { topic_list: "gems" },
-  },
-  {
-    name: "verify select: anonymous",
-    as: "anonymous",
     method: "PUT",
     path: T(p1),
     body: { topic_list: ["gems"] },
-    differs: "H-1: selecting topics needs a signed-in host with project:update",
-  },
-  {
-    name: "verify select: other tenant",
-    as: "bob",
-    method: "PUT",
-    path: T(p1),
-    body: { topic_list: ["gems"] },
-    differs: "H-1: selecting topics needs a signed-in host with project:update",
-  },
-  {
-    name: "verify select: missing project",
-    as: "alice",
-    method: "PUT",
-    path: T(id("f0", 99)),
-    body: { topic_list: ["gems"] },
+    removed: "no client calls it; the dashboard saves selected topics with the project",
   },
   // ── custom topics ──
   {

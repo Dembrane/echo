@@ -99,18 +99,13 @@ export default scenarios([
     setup: [P2_OPEN, P2_TAG],
   },
   {
-    name: "tags delete: owner, links go too",
+    name: "tags delete: removed",
     as: "alice",
     method: "DELETE",
-    path: `${T}/${tags.p1Energy}`,
-  },
-  {
-    name: "tags delete: other tenant",
-    as: "bob",
-    method: "DELETE",
     path: `${T}/${tags.p1Mobility}`,
+    removed:
+      "no client calls it; the dashboard deletes through DELETE /api/projects/{id}/tags/{tag_id}",
   },
-  { name: "tags delete: bad id", as: "alice", method: "DELETE", path: `${T}/not-a-uuid` },
 
   // ── /api/v2/bff/analysis-runs, pruned with the old library ────────
   {

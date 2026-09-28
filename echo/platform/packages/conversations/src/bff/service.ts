@@ -1,5 +1,5 @@
 import type { ProjectAccess } from "@echo/access";
-import { BadRequestError, NotFoundError } from "@echo/core";
+import { BadRequestError } from "@echo/core";
 import type { Signed } from "@echo/http";
 import { directusRow, pythonIso } from "@echo/legacy-shape";
 import { projectFor } from "@echo/projects";
@@ -297,50 +297,6 @@ export async function moveConversation(
   return (await store.conversationStar(conversationId)) ?? {};
 }
 
-/** All or nothing: every permission is checked before any conversation moves. */
-export async function bulkMove(
-  d: Deps,
-  who: Signed,
-  body: { conversation_ids: string[]; target_project_id: string },
-) {
-  if (!body.conversation_ids.length) throw new BadRequestError("No conversations selected");
-  const ids = [...new Set(body.conversation_ids)];
-  if (ids.length > 500) throw new BadRequestError("Too many conversations (max 500)");
-  await projectFor(d.access, who, body.target_project_id, "project:update");
-  const store = bffStore(d.db);
-  const toLabel = await store.projectName(body.target_project_id);
-  const byLabel = await store.appUserLabel(who.directusUserId);
-  const resolved = [];
-  for (const id of ids) {
-    const a = await conversationForBff(d, who, id, "project:update");
-    resolved.push({
-      conv: a.conversation,
-      fromLabel: await store.projectName(a.conversation.project_id),
-    });
-  }
-  const moved: string[] = [];
-  for (const r of resolved) {
-    await store.updateConversation(
-      r.conv.id,
-      {
-        project_id: body.target_project_id,
-        move_history: appendMove(r.conv.move_history, {
-          from: r.conv.project_id,
-          fromLabel: r.fromLabel,
-          to: body.target_project_id,
-          toLabel,
-          by: who.appUserId,
-          byLabel,
-          at: d.now(),
-        }),
-      },
-      d.now(),
-    );
-    moved.push(r.conv.id);
-  }
-  return { moved, count: moved.length };
-}
-
 export async function listChunks(
   d: Deps,
   who: Signed,
@@ -369,20 +325,6 @@ export async function countChunks(
 ) {
   await conversationForBff(d, who, conversationId);
   return { count: await bffStore(d.db).chunkCount(conversationId, transcriptRequired) };
-}
-
-export async function getChunk(d: Deps, who: Signed, chunkId: string): Promise<Row> {
-  const store = bffStore(d.db);
-  const chunk = await store.chunk(chunkId);
-  if (!chunk) throw new NotFoundError("Chunk not found");
-  const a = await conversationForBff(d, who, String(chunk.conversation_id));
-  const { locked } = conversationLock(
-    a.conversation as unknown as Row,
-    a.project.tier,
-    await activeFor(store, a.project),
-  );
-  if (locked) scrubChunk(chunk);
-  return chunk;
 }
 
 export async function listTags(d: Deps, who: Signed, conversationId: string): Promise<Row[]> {

@@ -9,7 +9,6 @@ import {
   getArtifact,
   getTopics,
   listArtifacts,
-  putTopics,
   updateArtifact,
   updateCustomTopic,
   type VerifyDeps,
@@ -63,15 +62,6 @@ export function verifyRoutes(d: VerifyDeps) {
   app.get("/api/verify/topics/:project_id", async (c) =>
     c.json(await getTopics(ctx, c.req.param("project_id"))),
   );
-
-  // H-1: the Python route took no session at all; the portal never calls it.
-  app.put("/api/verify/topics/:project_id", async (c) => {
-    const who = requireUser(c);
-    const { body } = await p.validate(c.req, {
-      body: model({ topic_list: optional(list(str()), [] as string[]) }),
-    });
-    return c.json(await putTopics(ctx, who, c.req.param("project_id"), body.data.topic_list));
-  });
 
   app.post("/api/verify/topics/:project_id/custom", async (c) => {
     const who = requireUser(c);

@@ -476,19 +476,6 @@ export function bffStore(db: Db) {
       return row?.n ?? 0;
     },
 
-    /** One chunk with every column and its `*` aliases. */
-    async chunk(chunkId: string): Promise<Row | null> {
-      if (!isUuid(chunkId)) return null;
-      const [row] = await db
-        .select()
-        .from(conversation_chunk)
-        .where(eq(conversation_chunk.id, chunkId))
-        .limit(1);
-      if (!row) return null;
-      const aliases = await chunkAliases([row.id]);
-      return { ...directusRow(row), ...(aliases.get(row.id) ?? {}) };
-    },
-
     /** A conversation row read with `*`, aliases included, soft-deleted or not. */
     async conversationStar(id: string): Promise<Row | null> {
       const [row] = await db.select().from(conversation).where(eq(conversation.id, id)).limit(1);

@@ -1,6 +1,5 @@
 import { createHmac } from "node:crypto";
 import { conversations, id, projects } from "../fixtures";
-import { P2_OPEN } from "../projects-setup";
 import { scenarios } from "../runner/scenario";
 
 const { p1, p2, p3, legacy } = projects;
@@ -177,85 +176,12 @@ export default scenarios([
 
   // ── live-count ────────────────────────────────────────────────────
   {
-    name: "live-count: owner",
+    name: "live-count: removed",
     as: "alice",
     method: "GET",
     path: `${B}/live-count`,
-    query: q(p1, { window_seconds: "60" }),
-    setup: RECENT,
-  },
-  {
-    name: "live-count: default window",
-    as: "erin",
-    method: "GET",
-    path: `${B}/live-count`,
-    query: q(p1),
-    setup: RECENT,
-  },
-  {
-    name: "live-count: staff member",
-    as: "admin",
-    method: "GET",
-    path: `${B}/live-count`,
-    query: q(p1),
-  },
-  {
-    name: "live-count: observer on an open project",
-    as: "rita",
-    method: "GET",
-    path: `${B}/live-count`,
-    query: q(p2),
-    setup: [P2_OPEN],
-  },
-  {
-    name: "live-count: observer on a private project",
-    as: "rita",
-    method: "GET",
-    path: `${B}/live-count`,
-    query: q(p2),
-  },
-  {
-    name: "live-count: other tenant",
-    as: "bob",
-    method: "GET",
-    path: `${B}/live-count`,
-    query: q(p1),
-  },
-  {
-    name: "live-count: not onboarded",
-    as: "dave",
-    method: "GET",
-    path: `${B}/live-count`,
-    query: q(legacy),
-  },
-  {
-    name: "live-count: anonymous",
-    as: "anonymous",
-    method: "GET",
-    path: `${B}/live-count`,
-    query: q(p1),
-  },
-  { name: "live-count: project required", as: "alice", method: "GET", path: `${B}/live-count` },
-  {
-    name: "live-count: window out of range",
-    as: "alice",
-    method: "GET",
-    path: `${B}/live-count`,
-    query: q(p1, { window_seconds: "3" }),
-  },
-  {
-    name: "live-count: window not a number",
-    as: "alice",
-    method: "GET",
-    path: `${B}/live-count`,
-    query: q(p1, { window_seconds: "soon" }),
-  },
-  {
-    name: "live-count: unknown project",
-    as: "alice",
-    method: "GET",
-    path: `${B}/live-count`,
-    query: q("f0000000-0000-4000-8000-000000009999"),
+    query: { project_id: p1 },
+    removed: "its only caller, a dashboard card, was never mounted",
   },
 
   // ── live ──────────────────────────────────────────────────────────

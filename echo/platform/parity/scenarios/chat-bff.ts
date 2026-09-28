@@ -266,18 +266,12 @@ export default scenarios([
     path: MSG,
     body: { project_chat_id: chats.p1, message_from: "user" },
   },
-  { name: "bff messages: delete", as: "alice", method: "DELETE", path: `${MSG}/${SEED_MESSAGE}` },
   {
-    name: "bff messages: delete missing",
+    name: "bff messages: delete removed",
     as: "alice",
     method: "DELETE",
-    path: `${MSG}/${MISSING}`,
-  },
-  {
-    name: "bff messages: delete other tenant",
-    as: "bob",
-    method: "DELETE",
     path: `${MSG}/${SEED_MESSAGE}`,
+    removed: "no client deletes a chat message",
   },
   {
     name: "bff messages: anonymous",

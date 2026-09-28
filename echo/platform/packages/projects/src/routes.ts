@@ -80,22 +80,6 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
     );
   });
 
-  app.post("/api/projects/:project_id/conversations/:conversation_id/tags/delete", async (c) => {
-    const who = requireUser(c);
-    const { body } = await p.validate(c.req, {
-      body: model({ tag_ids: required(list(int())) }),
-    });
-    return c.json(
-      await tags.deleteConversationTags(
-        d,
-        who,
-        c.req.param("project_id"),
-        c.req.param("conversation_id"),
-        body.data.tag_ids,
-      ),
-    );
-  });
-
   app.get("/api/projects/:project_id/transcripts", async (c) => {
     const who = requireUser(c);
     const out = await projects.exportTranscripts(d, who, c.req.param("project_id"));
@@ -295,11 +279,6 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
     return c.json(await tags.updateTag(d, who, c.req.param("tag_id"), body.data));
   });
 
-  app.delete("/api/v2/bff/tags/:tag_id", async (c) => {
-    const who = requireUser(c);
-    return c.json(await tags.deleteTag(d, who, c.req.param("tag_id")));
-  });
-
   app.get("/api/v2/bff/projects", async (c) => {
     const who = requireUser(c);
     const { query } = await p.validate(c.req, {
@@ -318,11 +297,6 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
     return c.json(
       await projects.updateProject(d, who, c.req.param("project_id"), body.data, body.fieldsSet),
     );
-  });
-
-  app.delete("/api/v2/bff/projects/:project_id", async (c) => {
-    const who = requireUser(c);
-    return c.json(await projects.deleteProjectBff(d, who, c.req.param("project_id")));
   });
 
   // ── BFF goals and methodologies ───────────────────────────────────

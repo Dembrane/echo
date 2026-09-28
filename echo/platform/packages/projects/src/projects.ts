@@ -585,11 +585,3 @@ export async function updateProject(
   await d.store.updateProject(projectId, { ...payload, updated_at: d.now().toISOString() });
   return (await d.store.projectItem(projectId)) ?? {};
 }
-
-/** Soft delete behind project:delete. */
-export async function deleteProjectBff(d: ProjectDeps, who: Signed, projectId: string) {
-  await projectFor(d.access, who, projectId, "project:delete");
-  const now = d.now().toISOString();
-  await d.store.updateProject(projectId, { deleted_at: now, updated_at: now });
-  return { status: "deleted" };
-}

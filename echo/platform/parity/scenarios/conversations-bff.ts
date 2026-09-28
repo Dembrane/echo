@@ -8,7 +8,6 @@ const B = "/api/v2/bff/conversations";
 const CH = "/api/v2/bff/conversation-chunks";
 const TG = "/api/v2/bff/conversation-project-tags";
 const chunk1 = id("c2", 1);
-const chunk5 = id("c2", 5);
 const cP2 = id("c1", 20);
 const cRes = id("c1", 21);
 const artifact = id("ca", 1);
@@ -439,51 +438,12 @@ export default scenarios([
 
   // ── POST /bulk-move ───────────────────────────────────────────────
   {
-    name: "bff conversations bulk move: owner",
+    name: "bff conversations bulk move: removed",
     as: "alice",
     method: "POST",
     path: `${B}/bulk-move`,
-    body: { conversation_ids: [c1, c2, c1], target_project_id: extra.project },
-    setup: [EMPTY_PROJECT],
-  },
-  {
-    name: "bff conversations bulk move: one foreign id moves nothing",
-    as: "alice",
-    method: "POST",
-    path: `${B}/bulk-move`,
-    body: { conversation_ids: [c1, c3], target_project_id: extra.project },
-    setup: [EMPTY_PROJECT],
-  },
-  {
-    name: "bff conversations bulk move: empty",
-    as: "alice",
-    method: "POST",
-    path: `${B}/bulk-move`,
-    body: { conversation_ids: [], target_project_id: p1 },
-  },
-  {
-    name: "bff conversations bulk move: too many",
-    as: "alice",
-    method: "POST",
-    path: `${B}/bulk-move`,
-    body: {
-      conversation_ids: Array.from({ length: 501 }, (_, i) => id("c9", i + 1)),
-      target_project_id: p1,
-    },
-  },
-  {
-    name: "bff conversations bulk move: target refused",
-    as: "bob",
-    method: "POST",
-    path: `${B}/bulk-move`,
-    body: { conversation_ids: [c3], target_project_id: p1 },
-  },
-  {
-    name: "bff conversations bulk move: validation",
-    as: "alice",
-    method: "POST",
-    path: `${B}/bulk-move`,
-    body: { conversation_ids: "all" },
+    body: { conversation_ids: [c1], target_project_id: p2 },
+    removed: "no client calls it; the dashboard and iOS move one conversation at a time",
   },
 
   // ── GET /{conversation_id}/chunks ─────────────────────────────────
@@ -551,18 +511,13 @@ export default scenarios([
   },
 
   // ── GET /api/v2/bff/conversation-chunks/{chunk_id} ────────────────
-  { name: "bff chunk: owner", as: "alice", method: "GET", path: `${CH}/${chunk1}` },
-  { name: "bff chunk: other tenant", as: "alice", method: "GET", path: `${CH}/${chunk5}` },
-  { name: "bff chunk: missing", as: "alice", method: "GET", path: `${CH}/${id("c2", 99)}` },
-  { name: "bff chunk: not a uuid", as: "alice", method: "GET", path: `${CH}/x` },
   {
-    name: "bff chunk: locked",
-    as: "bob",
+    name: "bff chunk: removed",
+    as: "alice",
     method: "GET",
-    path: `${CH}/${chunk5}`,
-    setup: [C3_LOCKED],
+    path: `${CH}/${chunk1}`,
+    removed: "no client reads one chunk by id; chunks come through the conversation's chunk list",
   },
-  { name: "bff chunk: anonymous", as: "anonymous", method: "GET", path: `${CH}/${chunk1}` },
 
   // ── /api/v2/bff/conversation-project-tags ─────────────────────────
   {

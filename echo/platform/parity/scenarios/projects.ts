@@ -144,33 +144,12 @@ export default scenarios([
 
   // ── POST /api/projects/{id}/conversations/{cid}/tags/delete ───────
   {
-    name: "projects conversation tags delete: owner",
+    name: "projects conversation tags delete: removed",
     as: "alice",
     method: "POST",
     path: v1(p1, `/conversations/${conversations.c1}/tags/delete`),
     body: { tag_ids: [1] },
-  },
-  {
-    name: "projects conversation tags delete: ids must be integers",
-    as: "alice",
-    method: "POST",
-    path: v1(p1, `/conversations/${conversations.c1}/tags/delete`),
-    body: { tag_ids: ["x"] },
-  },
-  {
-    name: "projects conversation tags delete: other tenant's project",
-    as: "bob",
-    method: "POST",
-    path: v1(p1, `/conversations/${conversations.c1}/tags/delete`),
-    body: { tag_ids: [1] },
-  },
-  {
-    name: "projects conversation tags delete: link of another tenant",
-    as: "bob",
-    method: "POST",
-    path: v1(p3, `/conversations/${conversations.c3}/tags/delete`),
-    body: { tag_ids: [1] },
-    differs: "C-4: only links of this conversation in this project are deleted",
+    removed: "no client calls it; tags are unlinked through conversation-project-tags/replace",
   },
 
   // ── GET /api/projects/{id}/transcripts ────────────────────────────
@@ -678,8 +657,11 @@ export default scenarios([
   },
 
   // ── DELETE /api/v2/bff/projects/{id} ──────────────────────────────
-  { name: "projects bff delete: owner", as: "alice", method: "DELETE", path: bff(p1) },
-  { name: "projects bff delete: member refused", as: "admin", method: "DELETE", path: bff(p1) },
-  { name: "projects bff delete: other tenant", as: "bob", method: "DELETE", path: bff(p1) },
-  { name: "projects bff delete: anonymous", as: "anonymous", method: "DELETE", path: bff(p1) },
+  {
+    name: "projects bff delete: removed",
+    as: "alice",
+    method: "DELETE",
+    path: bff(p1),
+    removed: "no client calls it; the dashboard deletes through DELETE /api/projects/{id}",
+  },
 ]);
