@@ -1,5 +1,5 @@
-import type { Db } from "@echo/db";
-import { type Env, requireUser, v } from "@echo/http";
+import type { Db } from "@dembrane/db";
+import { type Env, requireUser, v } from "@dembrane/http";
 import { Hono } from "hono";
 import {
   listAnnouncements,

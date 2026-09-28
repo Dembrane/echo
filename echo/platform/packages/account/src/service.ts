@@ -1,4 +1,4 @@
-import { BadRequestError, ForbiddenError } from "@echo/core";
+import { BadRequestError, ForbiddenError } from "@dembrane/core";
 import type { AccountStorage } from "./storage";
 
 const EXPIRING_SOON_DAYS = 30;

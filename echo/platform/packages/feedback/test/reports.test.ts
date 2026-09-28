@@ -2,12 +2,12 @@ import { afterAll, expect, test } from "bun:test";
 import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Access, MemoryAccessStore, MemoryStaffAudit } from "@echo/access";
-import { PlatformError } from "@echo/core";
-import type { Db } from "@echo/db";
-import type { Env, Signed } from "@echo/http";
-import { MemoryRateCounter, RateLimiter } from "@echo/ratelimit";
-import { FilesystemStorage } from "@echo/storage";
+import { Access, MemoryAccessStore, MemoryStaffAudit } from "@dembrane/access";
+import { PlatformError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import type { Env, Signed } from "@dembrane/http";
+import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
+import { FilesystemStorage } from "@dembrane/storage";
 import { Hono } from "hono";
 import { buildReportMessage, buildReportPageContext, reportRoutes, safeFilename } from "../src";
 

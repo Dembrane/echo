@@ -1,6 +1,6 @@
 import { describe, expect, setDefaultTimeout, test } from "bun:test";
 import type { LanguageModelV4 } from "@ai-sdk/provider";
-import { createModels } from "@echo/llm";
+import { createModels } from "@dembrane/llm";
 import { jsonSchema, type ModelMessage, streamText } from "ai";
 import { createAgent } from "../src/agent/agent";
 import type { AgentData, TurnContext } from "../src/agent/data";

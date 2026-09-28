@@ -1,6 +1,6 @@
-import { LocalMedia } from "@echo/audio";
-import { describe, loadSections } from "@echo/config";
-import { createLogger, initTracing } from "@echo/observability";
+import { LocalMedia } from "@dembrane/audio";
+import { describe, loadSections } from "@dembrane/config";
+import { createLogger, initTracing } from "@dembrane/observability";
 import { mediaApp } from "./app";
 
 // The media service reads only what it serves with: no database, no bucket, no secrets.

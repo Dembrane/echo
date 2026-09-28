@@ -1,12 +1,12 @@
-import type { Policy, ProjectAccess } from "@echo/access";
-import { NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { projectFor } from "@echo/projects";
+import type { Policy, ProjectAccess } from "@dembrane/access";
+import { NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { projectFor } from "@dembrane/projects";
 import type { ConversationsDeps } from "./deps";
 import { type ConversationRow, conversationStore, isUuid } from "./storage";
 
 /**
- * The conversation access checks of the Python API, decided by @echo/access. Two
+ * The conversation access checks of the Python API, decided by @dembrane/access. Two
  * surfaces word them differently and the dashboard shows the words:
  *   BFF (resolve_conversation_access): the conversation must exist and not be deleted
  *     (404 "Conversation not found"), then project access with conversation:read, then

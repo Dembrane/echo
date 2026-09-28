@@ -1,9 +1,9 @@
-import type { Access, Policy, WorkspaceAccess } from "@echo/access";
-import { PlatformError } from "@echo/core";
-import type { Db } from "@echo/db";
-import type { Signed } from "@echo/http";
-import { directusRow } from "@echo/legacy-shape";
-import { workspaceFor } from "@echo/projects";
+import type { Access, Policy, WorkspaceAccess } from "@dembrane/access";
+import { PlatformError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
+import { directusRow } from "@dembrane/legacy-shape";
+import { workspaceFor } from "@dembrane/projects";
 import type postgres from "postgres";
 
 export type Row = Record<string, unknown>;
@@ -47,7 +47,7 @@ export async function projectWorkspaceId(d: DataDeps, projectId: string): Promis
 
 /**
  * The v2 workspace middleware in its own words (403 before onboarding, 404 for a gone
- * workspace, 403 without a role or the policy), as @echo/projects answers it.
+ * workspace, 403 without a role or the policy), as @dembrane/projects answers it.
  */
 export function workspaceGate(
   d: DataDeps,

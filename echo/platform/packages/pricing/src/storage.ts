@@ -1,5 +1,5 @@
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
 import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
 
 const { pricing_configuration: pc, directus_users } = schema;

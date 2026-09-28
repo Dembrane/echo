@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { ForbiddenError, UnauthenticatedError } from "@echo/core";
+import { ForbiddenError, UnauthenticatedError } from "@dembrane/core";
 
 /**
  * The portal's credential for one conversation (CTO decision Q7): an HMAC over the

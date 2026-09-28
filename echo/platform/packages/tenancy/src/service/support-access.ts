@@ -1,5 +1,5 @@
-import { ConflictError, NotFoundError } from "@echo/core";
-import { isoTimestamp, pythonIso } from "@echo/legacy-shape";
+import { ConflictError, NotFoundError } from "@dembrane/core";
+import { isoTimestamp, pythonIso } from "@dembrane/legacy-shape";
 import type { WorkspaceContext } from "../context";
 import { iso } from "../db";
 import { clock, type TenancyDeps } from "../deps";

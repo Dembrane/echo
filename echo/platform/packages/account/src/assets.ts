@@ -1,8 +1,8 @@
-import { NotFoundError } from "@echo/core";
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
-import type { Env, Signed } from "@echo/http";
-import type { ObjectStorage } from "@echo/storage";
+import { NotFoundError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
+import type { Env, Signed } from "@dembrane/http";
+import type { ObjectStorage } from "@dembrane/storage";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 

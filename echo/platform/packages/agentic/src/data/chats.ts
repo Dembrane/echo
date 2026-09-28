@@ -1,7 +1,7 @@
-import { chatsStorage } from "@echo/chats";
-import { NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { projectFor } from "@echo/projects";
+import { chatsStorage } from "@dembrane/chats";
+import { NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { projectFor } from "@dembrane/projects";
 import { agentProject } from "../access";
 import { type DataDeps, isUuid, projectRow, type Row, row, sqlOf, text } from "./deps";
 

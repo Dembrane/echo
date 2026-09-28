@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { type ExecutorDeps, PRODUCERS_KEY, type ProducerServices } from "@echo/analysis";
-import { FakeCompleter } from "@echo/llm";
+import { type ExecutorDeps, PRODUCERS_KEY, type ProducerServices } from "@dembrane/analysis";
+import { FakeCompleter } from "@dembrane/llm";
 import type postgres from "postgres";
 // The analysis package's own harness and recorded Python answers: the tick publishes
 // through the same recipes, so it is checked against the same fixtures.

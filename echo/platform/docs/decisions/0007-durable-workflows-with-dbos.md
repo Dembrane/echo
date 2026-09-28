@@ -4,7 +4,7 @@
 workflow step in our Postgres and resumes a crashed workflow at its first unfinished
 step. It replaces pg-boss (plain jobs) and is chosen over Temporal (durable workflows).
 Multi-step flows (the conversation pipeline, analysis runs, agent runs) are one function
-of steps; plain jobs keep the `@echo/queue` interface.
+of steps; plain jobs keep the `@dembrane/queue` interface.
 
 **Why.** The Python pipeline is a five-phase saga repaired by crons, and jobs have no
 terminal state (root cause 2 of the rewrite discovery). Temporal solves that but needs a

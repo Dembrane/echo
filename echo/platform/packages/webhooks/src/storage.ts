@@ -1,6 +1,6 @@
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
-import { directusRow } from "@echo/legacy-shape";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
+import { directusRow } from "@dembrane/legacy-shape";
 import { and, asc, desc, eq, isNull, ne, sql } from "drizzle-orm";
 
 const { project_webhook, project, conversation, conversation_chunk, conversation_project_tag } =

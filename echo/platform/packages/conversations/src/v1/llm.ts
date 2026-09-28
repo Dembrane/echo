@@ -1,5 +1,5 @@
-import type { Models } from "@echo/llm";
-import { renderPrompt } from "@echo/prompts";
+import type { Models } from "@dembrane/llm";
+import { renderPrompt } from "@dembrane/prompts";
 import { generateText } from "ai";
 
 /**

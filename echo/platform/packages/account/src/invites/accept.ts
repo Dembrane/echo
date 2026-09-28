@@ -1,6 +1,6 @@
-import { BadRequestError, ForbiddenError, NotFoundError, TamperedRequestError } from "@echo/core";
-import { directusTime, type Signed } from "@echo/http";
-import type { Audiences } from "@echo/notifications";
+import { BadRequestError, ForbiddenError, NotFoundError, TamperedRequestError } from "@dembrane/core";
+import { directusTime, type Signed } from "@dembrane/http";
+import type { Audiences } from "@dembrane/notifications";
 import type { AccountDeps } from "../deps";
 import { requestSeatReconcile } from "../seats";
 import { hashMatches } from "./hash";

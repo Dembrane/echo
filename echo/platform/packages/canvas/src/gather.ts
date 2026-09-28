@@ -1,4 +1,4 @@
-import { type AccessStore, resolveProject } from "@echo/access";
+import { type AccessStore, resolveProject } from "@dembrane/access";
 import { directusTime, isRecord, type Json, orStr, pyStr, truthy, utcNowIso } from "./py";
 import type { CanvasStore } from "./storage";
 

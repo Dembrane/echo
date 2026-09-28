@@ -1,5 +1,5 @@
-import { PaymentRequiredError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { PaymentRequiredError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import type postgres from "postgres";
 import { isUuid } from "./storage";
 

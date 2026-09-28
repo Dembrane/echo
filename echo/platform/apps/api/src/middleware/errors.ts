@@ -1,4 +1,4 @@
-import { PlatformError } from "@echo/core";
+import { PlatformError } from "@dembrane/core";
 import type { ErrorHandler, NotFoundHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { Env } from "../deps";

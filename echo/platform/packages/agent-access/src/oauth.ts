@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { newId } from "@echo/core";
+import { newId } from "@dembrane/core";
 import {
   ACCESS_TOKEN_TTL_SECONDS,
   AUTH_CODE_TTL_SECONDS,

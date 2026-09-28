@@ -1,4 +1,4 @@
-# @echo/canvas
+# @dembrane/canvas
 
 Dynamic canvases: a living wall per canvas report that a background loop redraws from what
 participants say. `/api/v2/bff/canvases` (12 routes) and the canvas tick.
@@ -33,7 +33,7 @@ How the Python mechanisms map:
 | `task_reconcile_canvas_tick_tasks` every 5 minutes, rescuing stale `processing` rows | `canvas.reconcile-ticks` every 5 minutes, same rules | a loop that lost its next row still gets one |
 | 60-minute actor time limit, no retries | step timeouts of 60 minutes, no step retries; a failed tick records an error generation and run, exactly as before | the loop's failure count and auto-pause depend on those rows |
 | Redis `SET NX` for preview (10 s per project) and refresh (30 s per canvas) | `RateLimiter` over `platform_rate_limit`, capacity 1, 429 with the Python detail | Postgres is the only stateful dependency |
-| Redis pub/sub nudge on `canvas:generation:{report}` | `pg_notify` through `@echo/realtime`; the stream reads the latest generation id when it forwards a nudge | same frames, one LISTEN connection per process |
+| Redis pub/sub nudge on `canvas:generation:{report}` | `pg_notify` through `@dembrane/realtime`; the stream reads the latest generation id when it forwards a nudge | same frames, one LISTEN connection per process |
 
 Every row a tick writes (runs, generations, the next schedule row) has an id derived from
 the workflow id and the phase, and is inserted with `on conflict do nothing`, so steps are

@@ -1,6 +1,6 @@
-import { newId } from "@echo/core";
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
+import { newId } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { isUuid } from "../storage";
 

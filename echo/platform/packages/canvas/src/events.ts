@@ -1,5 +1,5 @@
-import type { Logger } from "@echo/observability";
-import { publish, sharedHub } from "@echo/realtime";
+import type { Logger } from "@dembrane/observability";
+import { publish, sharedHub } from "@dembrane/realtime";
 import type { Context } from "hono";
 import { stream } from "hono/streaming";
 import type postgres from "postgres";

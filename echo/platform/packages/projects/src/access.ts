@@ -5,13 +5,13 @@ import {
   type ProjectAccess,
   TIER_REQUIRED,
   type WorkspaceAccess,
-} from "@echo/access";
-import { ForbiddenError, NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
+} from "@dembrane/access";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { isUuid } from "./storage";
 
 /**
- * How a route reports refusals. The decision always comes from @echo/access; only the
+ * How a route reports refusals. The decision always comes from @dembrane/access; only the
  * wording differs, because the dashboard shows these texts and they differ per surface.
  *   bff: onboarding is required first (403 "User not onboarded"), a missing policy is
  *        403 "Not allowed", a tier gate names the current tier.

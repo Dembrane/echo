@@ -1,5 +1,5 @@
-import { type Env, requireUser } from "@echo/http";
-import { p } from "@echo/legacy-shape";
+import { type Env, requireUser } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
 import type { AgenticRoutesDeps } from "../routes";
 import * as chats from "./chats";

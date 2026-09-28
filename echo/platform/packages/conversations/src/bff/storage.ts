@@ -1,6 +1,6 @@
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
-import { directusRow } from "@echo/legacy-shape";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
+import { directusRow } from "@dembrane/legacy-shape";
 import {
   and,
   asc,

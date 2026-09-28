@@ -1,4 +1,4 @@
-import { ValidationError } from "@echo/core";
+import { ValidationError } from "@dembrane/core";
 
 /**
  * Offer lines and their totals, in integer cents so no amount is ever a float. VAT is a

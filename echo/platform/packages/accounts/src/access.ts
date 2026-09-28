@@ -1,11 +1,11 @@
-import { type OrgPolicy, requireStaff } from "@echo/access";
-import { ForbiddenError, NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { type OrgPolicy, requireStaff } from "@dembrane/access";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { type AccountsDeps, isUuid } from "./deps";
 import { type DocumentRow, type OrgRow, store } from "./storage";
 
 /**
- * Every access decision of the accounts routes, in one place, on top of @echo/access:
+ * Every access decision of the accounts routes, in one place, on top of @dembrane/access:
  * org roles for the customer side (Access.org with an account policy), the named staff
  * permission for the admin side, and one narrow grant for a person named to sign a single
  * document without being a member.

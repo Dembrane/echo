@@ -1,4 +1,4 @@
-import type { Logger } from "@echo/observability";
+import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
 import { Hub } from "./hub";
 

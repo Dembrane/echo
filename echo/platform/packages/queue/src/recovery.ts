@@ -1,5 +1,5 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import type { Logger } from "@echo/observability";
+import type { Logger } from "@dembrane/observability";
 import postgres from "postgres";
 
 const BEAT_MS = 10_000;

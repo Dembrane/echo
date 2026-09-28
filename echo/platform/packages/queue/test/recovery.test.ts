@@ -2,7 +2,7 @@ import { afterAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { migrate } from "@echo/db";
+import { migrate } from "@dembrane/db";
 import postgres from "postgres";
 import { installQueueSchema } from "../src";
 

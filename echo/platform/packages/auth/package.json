@@ -1,5 +1,5 @@
 {
-  "name": "@echo/auth",
+  "name": "@dembrane/auth",
   "private": true,
   "type": "module",
   "exports": {
@@ -10,8 +10,8 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@echo/core": "workspace:*",
-    "@echo/db": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
     "better-auth": "^1.7.6",
     "drizzle-orm": "^0.45.3",
     "postgres": "^3.4.9",

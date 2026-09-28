@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { Writable } from "node:stream";
-import { createLogger } from "@echo/observability";
+import { createLogger } from "@dembrane/observability";
 import { Hono } from "hono";
 import postgres from "postgres";
 import { formatSse, Hub, OpenStreams, publish, sseResponse } from "../src";

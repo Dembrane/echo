@@ -2,9 +2,9 @@
 // the scripted agent. With HANG=1 it stalls inside the lookup of step 2 until killed.
 import { appendFileSync } from "node:fs";
 import { Writable } from "node:stream";
-import { createDb } from "@echo/db";
-import { createLogger, initTracing } from "@echo/observability";
-import { Queue } from "@echo/queue";
+import { createDb } from "@dembrane/db";
+import { createLogger, initTracing } from "@dembrane/observability";
+import { Queue } from "@dembrane/queue";
 import { agenticWorker } from "../../src/jobs";
 import { fakeAgent } from "./fake-agent";
 

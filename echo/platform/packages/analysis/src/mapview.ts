@@ -1,4 +1,4 @@
-import { newId } from "@echo/core";
+import { newId } from "@dembrane/core";
 import { budgetsPayload, type ResolvedBudgets } from "./budgets";
 import {
   extraOf,

@@ -1,4 +1,4 @@
-import type { Signed } from "@echo/http";
+import type { Signed } from "@dembrane/http";
 import { agentProject } from "../access";
 import { type DataDeps, isUuid, type Row, row, sqlOf, text } from "./deps";
 import { conversationLocked, workspaceOverCapActive } from "./locks";

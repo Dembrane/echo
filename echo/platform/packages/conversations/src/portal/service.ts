@@ -1,9 +1,9 @@
-import { ForbiddenError, NotFoundError, newId } from "@echo/core";
-import { schema } from "@echo/db";
-import { directusTime } from "@echo/http";
-import { pydanticIso } from "@echo/legacy-shape";
-import { effectiveLegalBasis, isExternalClient } from "@echo/projects";
-import { enqueueConversationEvent, webhooksStorage } from "@echo/webhooks";
+import { ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import { schema } from "@dembrane/db";
+import { directusTime } from "@dembrane/http";
+import { pydanticIso } from "@dembrane/legacy-shape";
+import { effectiveLegalBasis, isExternalClient } from "@dembrane/projects";
+import { enqueueConversationEvent, webhooksStorage } from "@dembrane/webhooks";
 import { and, eq, inArray } from "drizzle-orm";
 import { createChunk, deleteChunk, type NewChunk, NOT_OPEN } from "../chunks";
 import type { ConversationsDeps } from "../deps";

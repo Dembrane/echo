@@ -1,5 +1,5 @@
-import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { projectFor, workspaceFor } from "./access";
 import type { ProjectDeps } from "./projects";
 import type { Row } from "./storage";

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { ForbiddenError, UnauthenticatedError } from "@echo/core";
+import { ForbiddenError, UnauthenticatedError } from "@dembrane/core";
 import { AudioUrls, sanitizeFilenameComponent } from "../src/audio-urls";
 import { ParticipantTokens } from "../src/participant-token";
 

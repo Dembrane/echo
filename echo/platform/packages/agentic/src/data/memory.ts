@@ -1,6 +1,6 @@
-import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { projectFor } from "@echo/projects";
+import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { projectFor } from "@dembrane/projects";
 import { agentProject } from "../access";
 import {
   type DataDeps,

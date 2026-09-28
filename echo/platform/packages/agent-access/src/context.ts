@@ -1,14 +1,14 @@
-import type { Access, AccessStore } from "@echo/access";
+import type { Access, AccessStore } from "@dembrane/access";
 import {
   ForbiddenError,
   NotFoundError,
   PlatformError,
   RateLimitedError,
   UnauthenticatedError,
-} from "@echo/core";
-import type { Db } from "@echo/db";
-import type { Signed } from "@echo/http";
-import type { Logger } from "@echo/observability";
+} from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
+import type { Logger } from "@dembrane/observability";
 import { FREE_TIER_MONTHLY_CALLS, SCOPE_WRITE } from "./constants";
 import type { AgentStorage, Row } from "./storage";
 

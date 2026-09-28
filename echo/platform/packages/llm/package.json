@@ -1,5 +1,5 @@
 {
-  "name": "@echo/llm",
+  "name": "@dembrane/llm",
   "private": true,
   "type": "module",
   "exports": {
@@ -12,6 +12,6 @@
     "@ai-sdk/google-vertex": "^5.0.95",
     "@ai-sdk/provider": "*",
     "ai": "^7.0.118",
-    "@echo/observability": "workspace:*"
+    "@dembrane/observability": "workspace:*"
   }
 }

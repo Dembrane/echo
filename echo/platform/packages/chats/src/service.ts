@@ -1,5 +1,5 @@
-import { BadRequestError, NotFoundError, PaymentRequiredError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { BadRequestError, NotFoundError, PaymentRequiredError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { chatFor, chatProjectId } from "./access";
 import {
   type ChatContext,

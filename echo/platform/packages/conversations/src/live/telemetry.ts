@@ -1,4 +1,4 @@
-import { p } from "@echo/legacy-shape";
+import { p } from "@dembrane/legacy-shape";
 
 /**
  * The ping bodies and their sanitising (participant.py _build_ping_telemetry and

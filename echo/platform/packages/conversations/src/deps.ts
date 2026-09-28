@@ -1,13 +1,13 @@
-import type { Access } from "@echo/access";
-import type { Media } from "@echo/audio";
-import type { Db } from "@echo/db";
-import type { Models } from "@echo/llm";
-import type { Logger } from "@echo/observability";
-import type { EnqueueOptions, JobDefinition, Payload } from "@echo/queue";
-import type { RateLimiter } from "@echo/ratelimit";
-import type { Hub } from "@echo/realtime";
-import type { ObjectStorage } from "@echo/storage";
-import type { Transcriber } from "@echo/transcription";
+import type { Access } from "@dembrane/access";
+import type { Media } from "@dembrane/audio";
+import type { Db } from "@dembrane/db";
+import type { Models } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
+import type { EnqueueOptions, JobDefinition, Payload } from "@dembrane/queue";
+import type { RateLimiter } from "@dembrane/ratelimit";
+import type { Hub } from "@dembrane/realtime";
+import type { ObjectStorage } from "@dembrane/storage";
+import type { Transcriber } from "@dembrane/transcription";
 import type { AudioUrls } from "./audio-urls";
 import type { ParticipantTokens } from "./participant-token";
 

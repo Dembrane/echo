@@ -3,7 +3,7 @@ import type { Deps, Env, Signed } from "../deps";
 
 /**
  * Reads the session (cookie or bearer token) once per request and exposes the principal.
- * It never rejects: routes that need a user call requireUser from @echo/http.
+ * It never rejects: routes that need a user call requireUser from @dembrane/http.
  */
 export function session(deps: Deps): MiddlewareHandler<Env> {
   return async (c, next) => {

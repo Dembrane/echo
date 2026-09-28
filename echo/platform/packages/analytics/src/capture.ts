@@ -1,4 +1,4 @@
-import type { Logger } from "@echo/observability";
+import type { Logger } from "@dembrane/observability";
 
 /** Product analytics (PostHog). Fire and forget: a failed capture never fails the caller. */
 export type Capture = (

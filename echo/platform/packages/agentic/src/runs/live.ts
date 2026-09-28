@@ -1,12 +1,12 @@
-import type { Logger } from "@echo/observability";
-import { Hub, publish } from "@echo/realtime";
+import type { Logger } from "@dembrane/observability";
+import { Hub, publish } from "@dembrane/realtime";
 import postgres from "postgres";
 import type { Row } from "./storage";
 
 /** The realtime channel of one run; carried inside the shared echo_live notification. */
 export const runChannel = (runId: string) => `agentic:run:${runId}`;
 
-// NOTIFY payloads cap near 8000 bytes, measured by @echo/realtime in UTF-16 units. A text
+// NOTIFY payloads cap near 8000 bytes, measured by @dembrane/realtime in UTF-16 units. A text
 // chunk of this many units stays under the cap even when every unit is a 3-byte character.
 const DRAFT_CHUNK = 2_000;
 const EVENT_INLINE_LIMIT = 7_000;

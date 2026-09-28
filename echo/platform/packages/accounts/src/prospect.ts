@@ -1,6 +1,6 @@
-import { NotFoundError, newId, ValidationError } from "@echo/core";
-import { schema } from "@echo/db";
-import type { Signed } from "@echo/http";
+import { NotFoundError, newId, ValidationError } from "@dembrane/core";
+import { schema } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
 import { and, eq, isNull } from "drizzle-orm";
 import type { AccountsDeps, Conn } from "./deps";
 import { emit } from "./events";

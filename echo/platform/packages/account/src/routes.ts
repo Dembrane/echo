@@ -1,6 +1,6 @@
-import type { Config } from "@echo/config";
-import { type Env, requireUser, v } from "@echo/http";
-import { audiences } from "@echo/notifications";
+import type { Config } from "@dembrane/config";
+import { type Env, requireUser, v } from "@dembrane/http";
+import { audiences } from "@dembrane/notifications";
 import { Hono } from "hono";
 import { assetRoutes } from "./assets";
 import { auditRoutes } from "./audit";

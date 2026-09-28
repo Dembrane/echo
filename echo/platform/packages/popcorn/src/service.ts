@@ -1,8 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
-import { LockUnavailableError, NotFoundError, newId, RateLimitedError } from "@echo/core";
-import type { Db } from "@echo/db";
-import type { Logger } from "@echo/observability";
-import type { RateLimiter } from "@echo/ratelimit";
+import { LockUnavailableError, NotFoundError, newId, RateLimitedError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import type { Logger } from "@dembrane/observability";
+import type { RateLimiter } from "@dembrane/ratelimit";
 import { buildBundle, DEFAULT_LEGAL_BASIS } from "./bundle";
 import {
   applyPublishedObjects,

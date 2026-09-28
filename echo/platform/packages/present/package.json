@@ -1,5 +1,5 @@
 {
-  "name": "@echo/present",
+  "name": "@dembrane/present",
   "private": true,
   "type": "module",
   "exports": {
@@ -9,17 +9,17 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@echo/access": "workspace:*",
-    "@echo/analysis": "workspace:*",
-    "@echo/core": "workspace:*",
-    "@echo/db": "workspace:*",
-    "@echo/http": "workspace:*",
-    "@echo/legacy-shape": "workspace:*",
-    "@echo/map": "workspace:*",
-    "@echo/observability": "workspace:*",
-    "@echo/popcorn": "workspace:*",
-    "@echo/ratelimit": "workspace:*",
-    "@echo/realtime": "workspace:*",
+    "@dembrane/access": "workspace:*",
+    "@dembrane/analysis": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
+    "@dembrane/map": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/popcorn": "workspace:*",
+    "@dembrane/ratelimit": "workspace:*",
+    "@dembrane/realtime": "workspace:*",
     "hono": "^4.9.0"
   }
 }

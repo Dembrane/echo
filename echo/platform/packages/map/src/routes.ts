@@ -1,4 +1,4 @@
-import type { Access } from "@echo/access";
+import type { Access } from "@dembrane/access";
 import {
   AnalysisStoreError,
   ARGUMENTS_RECIPE_ID,
@@ -25,16 +25,16 @@ import {
   UnknownMapType,
   UnknownResultScope,
   VIEW_SCOPE_KEY,
-} from "@echo/analysis";
-import { NotFoundError, PlatformError, UnavailableError, ValidationError } from "@echo/core";
-import type { Db } from "@echo/db";
-import { type Env, requireUser, type Signed } from "@echo/http";
-import { p } from "@echo/legacy-shape";
-import type { Completer, Embedder } from "@echo/llm";
-import type { Logger } from "@echo/observability";
-import { projectFor } from "@echo/projects";
-import type { RateLimiter } from "@echo/ratelimit";
-import { sharedHub, sseResponse } from "@echo/realtime";
+} from "@dembrane/analysis";
+import { NotFoundError, PlatformError, UnavailableError, ValidationError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { type Env, requireUser, type Signed } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
+import type { Completer, Embedder } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
+import { projectFor } from "@dembrane/projects";
+import type { RateLimiter } from "@dembrane/ratelimit";
+import { sharedHub, sseResponse } from "@dembrane/realtime";
 import { type Context, Hono } from "hono";
 import { mapFactCheck } from "./factcheck";
 import { titleSelection } from "./model";

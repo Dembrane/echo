@@ -1,5 +1,5 @@
-import { AnalysisStoreError } from "@echo/analysis";
-import { ConflictError } from "@echo/core";
+import { AnalysisStoreError } from "@dembrane/analysis";
+import { ConflictError } from "@dembrane/core";
 import {
   buildBundle,
   createLock,
@@ -36,7 +36,7 @@ import {
   truthy,
   updateSettingsUnlocked,
   writeSettings,
-} from "@echo/popcorn";
+} from "@dembrane/popcorn";
 import type { MapStore } from "./map";
 
 /**

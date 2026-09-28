@@ -1,4 +1,4 @@
-import { RateLimitedError } from "@echo/core";
+import { RateLimitedError } from "@dembrane/core";
 import type { Context } from "hono";
 import { stream } from "hono/streaming";
 import { encode, type Hub, type LiveEvent } from "./hub";

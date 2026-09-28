@@ -1,9 +1,9 @@
-import type { Db } from "@echo/db";
-import type { Completer } from "@echo/llm";
-import { Notifier } from "@echo/notifications";
-import type { Logger } from "@echo/observability";
-import type { Queue } from "@echo/queue";
-import { enqueueConversationEvent, enqueueReportEvent, webhooksStorage } from "@echo/webhooks";
+import type { Db } from "@dembrane/db";
+import type { Completer } from "@dembrane/llm";
+import { Notifier } from "@dembrane/notifications";
+import type { Logger } from "@dembrane/observability";
+import type { Queue } from "@dembrane/queue";
+import { enqueueConversationEvent, enqueueReportEvent, webhooksStorage } from "@dembrane/webhooks";
 import type postgres from "postgres";
 import { registerReportJobs, reportWorkerJobs } from "./jobs";
 import { reportsStorage } from "./storage";

@@ -1,8 +1,8 @@
-import { reconcileAccountSeats } from "@echo/billing";
-import { UnavailableError } from "@echo/core";
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
-import type { Logger } from "@echo/observability";
+import { reconcileAccountSeats } from "@dembrane/billing";
+import { UnavailableError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
+import type { Logger } from "@dembrane/observability";
 import { and, eq, gt, inArray, isNull, ne } from "drizzle-orm";
 import type { Jobs } from "./deps";
 

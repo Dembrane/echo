@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
-import { newId } from "@echo/core";
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
+import { newId } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
 import { and, eq, like, sql } from "drizzle-orm";
 
 /** The label prefix that marks a session as a staff API key. */

@@ -1,8 +1,8 @@
-import type { Access, ProjectAccess } from "@echo/access";
-import { NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { directusRow } from "@echo/legacy-shape";
-import { projectFor } from "@echo/projects";
+import type { Access, ProjectAccess } from "@dembrane/access";
+import { NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { directusRow } from "@dembrane/legacy-shape";
+import { projectFor } from "@dembrane/projects";
 import type { ReportsStorage, Row } from "./storage";
 
 export interface ReportDeps {

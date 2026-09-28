@@ -1,7 +1,7 @@
-import type { ProjectAccess } from "@echo/access";
-import { bffStore, enrich, overCapActive, scrubChunk } from "@echo/conversations";
-import { BadRequestError } from "@echo/core";
-import { directusRow } from "@echo/legacy-shape";
+import type { ProjectAccess } from "@dembrane/access";
+import { bffStore, enrich, overCapActive, scrubChunk } from "@dembrane/conversations";
+import { BadRequestError } from "@dembrane/core";
+import { directusRow } from "@dembrane/legacy-shape";
 import type postgres from "postgres";
 import type { AgentDeps } from "./context";
 import type { Row } from "./storage";

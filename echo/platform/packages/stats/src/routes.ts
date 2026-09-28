@@ -1,6 +1,6 @@
-import type { Db } from "@echo/db";
-import type { Env } from "@echo/http";
-import type { Limit, RateLimiter } from "@echo/ratelimit";
+import type { Db } from "@dembrane/db";
+import type { Env } from "@dembrane/http";
+import type { Limit, RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import { getConnInfo } from "hono/bun";
 import { computeStats, StatsCache } from "./service";

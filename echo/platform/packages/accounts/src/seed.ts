@@ -1,18 +1,18 @@
 import { join } from "node:path";
-import type { Access } from "@echo/access";
-import { MemoryStaffAudit } from "@echo/access";
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
-import type { Signed } from "@echo/http";
-import type { Logger } from "@echo/observability";
+import type { Access } from "@dembrane/access";
+import { MemoryStaffAudit } from "@dembrane/access";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
+import type { Logger } from "@dembrane/observability";
 import {
   demoFromFixture,
   demoIdentity,
   type Json,
   refuseProduction,
   seedDemo,
-} from "@echo/popcorn";
-import type { ObjectStorage } from "@echo/storage";
+} from "@dembrane/popcorn";
+import type { ObjectStorage } from "@dembrane/storage";
 import { and, eq } from "drizzle-orm";
 import type { AccountsDeps, Company } from "./deps";
 import { emit } from "./events";

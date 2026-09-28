@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { join } from "node:path";
-import { newId } from "@echo/core";
+import { newId } from "@dembrane/core";
 import { createChunk } from "../src/chunks";
 import { finishConversation } from "../src/pipeline/defs";
 import { pieceId } from "../src/pipeline/steps";

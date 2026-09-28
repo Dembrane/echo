@@ -1,7 +1,7 @@
-import { type AccessStore, resolveProject } from "@echo/access";
-import type { ExecutorDeps } from "@echo/analysis";
-import { newId } from "@echo/core";
-import type { Logger } from "@echo/observability";
+import { type AccessStore, resolveProject } from "@dembrane/access";
+import type { ExecutorDeps } from "@dembrane/analysis";
+import { newId } from "@dembrane/core";
+import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
 import { buildBundle } from "../bundle";
 import { applyPublishedObjects, type DeckAnalysis } from "../deck";

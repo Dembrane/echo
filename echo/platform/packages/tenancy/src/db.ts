@@ -1,4 +1,4 @@
-import type { Db } from "@echo/db";
+import type { Db } from "@dembrane/db";
 
 /** A transaction handle; every storage function accepts it or the pool. */
 export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];

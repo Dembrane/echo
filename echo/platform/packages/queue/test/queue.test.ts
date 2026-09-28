@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { Writable } from "node:stream";
-import { migrate } from "@echo/db";
-import { createLogger, initTracing, withCorrelation } from "@echo/observability";
+import { migrate } from "@dembrane/db";
+import { createLogger, initTracing, withCorrelation } from "@dembrane/observability";
 import postgres from "postgres";
 import { z } from "zod";
 import { defineJob, installQueueSchema, Queue } from "../src";

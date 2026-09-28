@@ -1,8 +1,8 @@
-import type { Access } from "@echo/access";
-import type { Capture } from "@echo/analytics";
-import type { Models } from "@echo/llm";
-import type { Logger } from "@echo/observability";
-import type { RateLimiter } from "@echo/ratelimit";
+import type { Access } from "@dembrane/access";
+import type { Capture } from "@dembrane/analytics";
+import type { Models } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
+import type { RateLimiter } from "@dembrane/ratelimit";
 import type { ChatReads } from "./conversations";
 import type { ChatsStorage } from "./storage";
 

@@ -1,6 +1,6 @@
-import type { Access } from "@echo/access";
-import type { Db } from "@echo/db";
-import { type Env, requireUser } from "@echo/http";
+import type { Access } from "@dembrane/access";
+import type { Db } from "@dembrane/db";
+import { type Env, requireUser } from "@dembrane/http";
 import { Hono } from "hono";
 import * as reports from "./service";
 import { reportsStorage } from "./storage";

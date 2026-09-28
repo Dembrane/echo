@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
-import type { Access } from "@echo/access";
-import type { Capture } from "@echo/analytics";
-import { NotFoundError, ValidationError } from "@echo/core";
-import { type Env, requireUser } from "@echo/http";
-import { p } from "@echo/legacy-shape";
-import type { Hub } from "@echo/realtime";
+import type { Access } from "@dembrane/access";
+import type { Capture } from "@dembrane/analytics";
+import { NotFoundError, ValidationError } from "@dembrane/core";
+import { type Env, requireUser } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
+import type { Hub } from "@dembrane/realtime";
 import { Hono } from "hono";
 import {
   type AccessDeps,

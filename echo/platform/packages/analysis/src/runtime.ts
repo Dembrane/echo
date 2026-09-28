@@ -1,8 +1,8 @@
-import type { Db } from "@echo/db";
-import { type Completer, type Embedder, vertexName } from "@echo/llm";
-import type { Logger } from "@echo/observability";
-import { defineJob, type EnqueueOptions, type JobDefinition, type Payload } from "@echo/queue";
-import { publish } from "@echo/realtime";
+import type { Db } from "@dembrane/db";
+import { type Completer, type Embedder, vertexName } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
+import { defineJob, type EnqueueOptions, type JobDefinition, type Payload } from "@dembrane/queue";
+import { publish } from "@dembrane/realtime";
 import { z } from "zod";
 import type { Json } from "./contracts";
 import { clientOf } from "./db";

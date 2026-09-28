@@ -2,10 +2,10 @@
 // fake model that traces each call, and can hang inside one conversation's extraction.
 import { appendFileSync } from "node:fs";
 import { Writable } from "node:stream";
-import { createDb } from "@echo/db";
-import { FakeCompleter, FakeEmbedder } from "@echo/llm";
-import { createLogger, initTracing } from "@echo/observability";
-import { Queue } from "@echo/queue";
+import { createDb } from "@dembrane/db";
+import { FakeCompleter, FakeEmbedder } from "@dembrane/llm";
+import { createLogger, initTracing } from "@dembrane/observability";
+import { Queue } from "@dembrane/queue";
 import { analysisWorker } from "../../src/jobs";
 import { P1_ANSWERS } from "../harness";
 

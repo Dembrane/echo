@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { Writable } from "node:stream";
-import { createDb, schema } from "@echo/db";
-import { createLogger } from "@echo/observability";
+import { createDb, schema } from "@dembrane/db";
+import { createLogger } from "@dembrane/observability";
 import { inArray } from "drizzle-orm";
 import postgres from "postgres";
 import { runForwardSupport, type SupportForwarder, supportOutbox } from "../src";

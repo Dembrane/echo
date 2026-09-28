@@ -1,5 +1,5 @@
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
 import { and, asc, count, desc, eq, gt, gte, inArray, lte, type SQL } from "drizzle-orm";
 
 const {

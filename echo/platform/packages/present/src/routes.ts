@@ -1,7 +1,7 @@
-import type { Access } from "@echo/access";
-import { NotFoundError, RateLimitedError, ValidationError } from "@echo/core";
-import { type Env, requireUser } from "@echo/http";
-import { p } from "@echo/legacy-shape";
+import type { Access } from "@dembrane/access";
+import { NotFoundError, RateLimitedError, ValidationError } from "@dembrane/core";
+import { type Env, requireUser } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
 import {
   type AccessDeps,
   type AudienceMap,
@@ -40,8 +40,8 @@ import {
   truthy,
   updateStream,
   webpName,
-} from "@echo/popcorn";
-import type { Hub } from "@echo/realtime";
+} from "@dembrane/popcorn";
+import type { Hub } from "@dembrane/realtime";
 import { type Context, Hono } from "hono";
 import { audienceMap, type MapStore } from "./map";
 import {

@@ -1,5 +1,5 @@
-import { newId } from "@echo/core";
-import type { Logger } from "@echo/observability";
+import { newId } from "@dembrane/core";
+import type { Logger } from "@dembrane/observability";
 import { derivingOrgRoles, effectiveMembersFromRows } from "./members";
 import type { BillingStore } from "./store";
 

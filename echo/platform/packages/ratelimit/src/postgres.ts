@@ -1,5 +1,5 @@
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
 import { sql } from "drizzle-orm";
 import type { RateCounter } from "./limiter";
 

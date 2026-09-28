@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { Writable } from "node:stream";
-import { createLogger } from "@echo/observability";
+import { createLogger } from "@dembrane/observability";
 import {
   bookingPayload,
   environmentName,

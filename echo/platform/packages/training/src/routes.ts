@@ -1,10 +1,10 @@
-import { requireStaff, type StaffAudit } from "@echo/access";
-import { type Billing, isUuid } from "@echo/billing";
-import { ForbiddenError } from "@echo/core";
-import type { Db } from "@echo/db";
-import { type Ctx, type Env, requireUser, v } from "@echo/http";
-import type { Mailer } from "@echo/mail";
-import type { Logger } from "@echo/observability";
+import { requireStaff, type StaffAudit } from "@dembrane/access";
+import { type Billing, isUuid } from "@dembrane/billing";
+import { ForbiddenError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
+import type { Mailer } from "@dembrane/mail";
+import type { Logger } from "@dembrane/observability";
 import { Hono } from "hono";
 import {
   catalog,

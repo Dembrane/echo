@@ -1,16 +1,16 @@
-import { AudioError, fileFormatOf, MAX_CHUNK_BYTES } from "@echo/audio";
-import { PaymentRequiredError } from "@echo/core";
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
-import type { Models } from "@echo/llm";
-import type { Logger } from "@echo/observability";
-import type { ObjectStorage } from "@echo/storage";
+import { AudioError, fileFormatOf, MAX_CHUNK_BYTES } from "@dembrane/audio";
+import { PaymentRequiredError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
+import type { Models } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
+import type { ObjectStorage } from "@dembrane/storage";
 import {
   isRecoverableTranscriptionError,
   type Transcriber,
   transcriptionFailureReason,
-} from "@echo/transcription";
-import { enqueueConversationEvent, type WebhookEvent, webhooksStorage } from "@echo/webhooks";
+} from "@dembrane/transcription";
+import { enqueueConversationEvent, type WebhookEvent, webhooksStorage } from "@dembrane/webhooks";
 import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { AudioUrls } from "../audio-urls";
 import type { ConversationsDeps, JobSink } from "../deps";

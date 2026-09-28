@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { schema } from "@echo/db";
-import { FakeCompleter } from "@echo/llm";
+import { schema } from "@dembrane/db";
+import { FakeCompleter } from "@dembrane/llm";
 import { eq } from "drizzle-orm";
 import * as K from "../src/contract";
 import { buildDemo, type DemoBuildDeps, demoSlug } from "../src/demo/build";

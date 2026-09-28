@@ -1,4 +1,4 @@
-import { ValidationError } from "@echo/core";
+import { ValidationError } from "@dembrane/core";
 
 /**
  * Request validation that answers exactly like FastAPI with pydantic 2.12 in lax mode:

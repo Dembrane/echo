@@ -1,6 +1,6 @@
-import { AudioError, fileFormatOf, type MediaSource } from "@echo/audio";
-import { BadRequestError, NotFoundError } from "@echo/core";
-import { schema } from "@echo/db";
+import { AudioError, fileFormatOf, type MediaSource } from "@dembrane/audio";
+import { BadRequestError, NotFoundError } from "@dembrane/core";
+import { schema } from "@dembrane/db";
 import { asc, eq } from "drizzle-orm";
 import { sanitizeFilenameComponent } from "./audio-urls";
 import type { ConversationsDeps } from "./deps";

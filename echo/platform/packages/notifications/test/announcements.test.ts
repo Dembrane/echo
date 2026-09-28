@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import {
   isReadByMe,
   listAnnouncements,

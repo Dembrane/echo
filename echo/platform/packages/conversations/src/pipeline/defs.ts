@@ -1,4 +1,4 @@
-import { defineJob } from "@echo/queue";
+import { defineJob } from "@dembrane/queue";
 import { z } from "zod";
 
 /**

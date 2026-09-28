@@ -18,9 +18,9 @@ the same package.
 
 ```
 packages/<ns>/src/routes.ts    Hono sub-app. Parse and validate input, call the service, shape output. No SQL, no access rules.
-packages/<ns>/src/service.ts   Operations. Take the caller (Signed from @echo/http) first. Pure where possible.
+packages/<ns>/src/service.ts   Operations. Take the caller (Signed from @dembrane/http) first. Pure where possible.
 packages/<ns>/src/storage.ts   Drizzle queries only.
-packages/<ns>/src/jobs.ts      Jobs (defineJob + queue.work) and durable workflows (workflow + step from @echo/queue).
+packages/<ns>/src/jobs.ts      Jobs (defineJob + queue.work) and durable workflows (workflow + step from @dembrane/queue).
 packages/<ns>/test/            Unit tests for rules and services.
 parity/scenarios/<ns>.ts       Parity scenarios for every route.
 ```
@@ -32,11 +32,11 @@ are the only shared files you touch.
 
 ## Rules
 
-- Access only through `@echo/access` (`deps.access.project/workspace(who, id, policy)`).
+- Access only through `@dembrane/access` (`deps.access.project/workspace(who, id, policy)`).
   Never check roles by hand. If the Python's effective check differs from the preset
   intent (a hole in spec section 7), implement the intent and mark that scenario
   `differs: "<hole id>: <one line>"`.
-- Errors: throw `@echo/core` errors with the exact `detail` the Python raises
+- Errors: throw `@dembrane/core` errors with the exact `detail` the Python raises
   (`new ForbiddenError("...")`, structured details via the second argument).
 - Directus semantics the Python relied on must be reproduced explicitly: default sort is
   by primary key; `limit: -1` means all rows; soft-deleted rows are filtered by the query,
@@ -44,7 +44,7 @@ are the only shared files you touch.
   `echo/directus/sync/snapshot/fields/<collection>/<field>.json`: `date-created`,
   `date-updated`, `user-created`, `user-updated`, `uuid`) were filled by Directus and must
   now be set in code with the same values.
-- New ids: `newId()` from `@echo/core` (the runner maps minted ids, so v7 vs v4 is fine).
+- New ids: `newId()` from `@dembrane/core` (the runner maps minted ids, so v7 vs v4 is fine).
 - Money, time and randomness come in as arguments or dependencies so tests control them.
 - External systems (language models, Mollie, email, object storage, PostHog) go through a
   capability package with an interface and a fake. Create the capability package if it

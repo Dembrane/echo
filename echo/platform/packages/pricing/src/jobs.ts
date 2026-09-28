@@ -1,5 +1,5 @@
-import type { Logger } from "@echo/observability";
-import { defineJob, type Queue } from "@echo/queue";
+import type { Logger } from "@dembrane/observability";
+import { defineJob, type Queue } from "@dembrane/queue";
 import { z } from "zod";
 import type { PricingRow, PricingStore } from "./storage";
 import { buildAnswersSummary } from "./summary";

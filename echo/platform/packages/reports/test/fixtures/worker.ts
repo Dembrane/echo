@@ -2,11 +2,11 @@
 // model, and with HANG=1 stops inside the generate step so the test can kill it there.
 import { appendFileSync } from "node:fs";
 import { Writable } from "node:stream";
-import { createDb } from "@echo/db";
-import { FakeCompleter } from "@echo/llm";
-import { createLogger, initTracing } from "@echo/observability";
-import { generateReport } from "@echo/projects";
-import { Queue } from "@echo/queue";
+import { createDb } from "@dembrane/db";
+import { FakeCompleter } from "@dembrane/llm";
+import { createLogger, initTracing } from "@dembrane/observability";
+import { generateReport } from "@dembrane/projects";
+import { Queue } from "@dembrane/queue";
 import { generateReportWorkflow } from "../../src/jobs";
 import { reportsStorage } from "../../src/storage";
 import { summarizeConversation } from "../../src/summarize";

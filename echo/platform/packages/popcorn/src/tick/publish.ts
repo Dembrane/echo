@@ -10,8 +10,8 @@ import {
   phraseRecords,
   popcornScopeKey,
   type Transcript,
-} from "@echo/analysis";
-import type { Logger } from "@echo/observability";
+} from "@dembrane/analysis";
+import type { Logger } from "@dembrane/observability";
 import { type DeckAnalysis, stakeholdersSlide } from "../deck";
 import { dict, isRecord, type Json, list, orStr, truthy } from "../py";
 import { POPCORN_PROMPT, VALIDATE_PROMPT } from "./model";

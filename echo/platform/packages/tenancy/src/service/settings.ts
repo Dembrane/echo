@@ -1,7 +1,7 @@
-import { POLICIES, type Policy, ROLE_POLICIES, ROLE_RANK, type WorkspaceRole } from "@echo/access";
-import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from "@echo/core";
-import type { schema } from "@echo/db";
-import { isoTimestamp, pythonIso } from "@echo/legacy-shape";
+import { POLICIES, type Policy, ROLE_POLICIES, ROLE_RANK, type WorkspaceRole } from "@dembrane/access";
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from "@dembrane/core";
+import type { schema } from "@dembrane/db";
+import { isoTimestamp, pythonIso } from "@dembrane/legacy-shape";
 import {
   blocksNewWorkspace,
   commercial,

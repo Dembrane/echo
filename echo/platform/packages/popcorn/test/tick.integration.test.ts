@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { createDb, migrate } from "@echo/db";
-import { type CompletionRequest, FakeCompleter } from "@echo/llm";
+import { createDb, migrate } from "@dembrane/db";
+import { type CompletionRequest, FakeCompleter } from "@dembrane/llm";
 import postgres from "postgres";
 import type { Json } from "../src/py";
 import { reconcileMissingTicks, runPopcornTick, type TickDeps } from "../src/tick/run";

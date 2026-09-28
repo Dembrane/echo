@@ -1,10 +1,10 @@
-import type { Access, AccessStore } from "@echo/access";
-import type { Capture } from "@echo/analytics";
-import { UnauthenticatedError } from "@echo/core";
-import type { Db } from "@echo/db";
-import { type Ctx, type Env, v } from "@echo/http";
-import type { Logger } from "@echo/observability";
-import type { RateLimiter } from "@echo/ratelimit";
+import type { Access, AccessStore } from "@dembrane/access";
+import type { Capture } from "@dembrane/analytics";
+import { UnauthenticatedError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { type Ctx, type Env, v } from "@dembrane/http";
+import type { Logger } from "@dembrane/observability";
+import type { RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import { MCP_PATH, SCOPE_READ } from "./constants";
 import { type AgentContext, auditStatus, contextForGrant } from "./context";

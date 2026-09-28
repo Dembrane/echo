@@ -1,21 +1,21 @@
-import type { Access, StaffAudit } from "@echo/access";
-import type { Jobs } from "@echo/account";
-import type { Media } from "@echo/audio";
-import type { Auth, IdentityAccount } from "@echo/auth";
-import type { Billing } from "@echo/billing";
-import type { Config } from "@echo/config";
-import type { Db } from "@echo/db";
-import type { Env, Signed } from "@echo/http";
-import type { Models } from "@echo/llm";
-import type { Mailer } from "@echo/mail";
-import type { Notifier } from "@echo/notifications";
-import type { Logger, Tracer } from "@echo/observability";
-import type { Queue } from "@echo/queue";
-import type { RateLimiter } from "@echo/ratelimit";
-import type { Hub } from "@echo/realtime";
-import type { ObjectStorage } from "@echo/storage";
-import type { Transcriber } from "@echo/transcription";
-import type { Deliver } from "@echo/webhooks";
+import type { Access, StaffAudit } from "@dembrane/access";
+import type { Jobs } from "@dembrane/account";
+import type { Media } from "@dembrane/audio";
+import type { Auth, IdentityAccount } from "@dembrane/auth";
+import type { Billing } from "@dembrane/billing";
+import type { Config } from "@dembrane/config";
+import type { Db } from "@dembrane/db";
+import type { Env, Signed } from "@dembrane/http";
+import type { Models } from "@dembrane/llm";
+import type { Mailer } from "@dembrane/mail";
+import type { Notifier } from "@dembrane/notifications";
+import type { Logger, Tracer } from "@dembrane/observability";
+import type { Queue } from "@dembrane/queue";
+import type { RateLimiter } from "@dembrane/ratelimit";
+import type { Hub } from "@dembrane/realtime";
+import type { ObjectStorage } from "@dembrane/storage";
+import type { Transcriber } from "@dembrane/transcription";
+import type { Deliver } from "@dembrane/webhooks";
 
 /** Everything the HTTP app needs, built whole in main.ts and replaced with fakes in tests. */
 export interface Deps {

@@ -3,9 +3,9 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Writable } from "node:stream";
-import { AudioError, HttpMedia, LocalMedia, type Media } from "@echo/audio";
-import { createLogger } from "@echo/observability";
-import { FilesystemStorage, localStorageHandler } from "@echo/storage";
+import { AudioError, HttpMedia, LocalMedia, type Media } from "@dembrane/audio";
+import { createLogger } from "@dembrane/observability";
+import { FilesystemStorage, localStorageHandler } from "@dembrane/storage";
 import { mediaApp } from "../src/app";
 
 const logger = createLogger(

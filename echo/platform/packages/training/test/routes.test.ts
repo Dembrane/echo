@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { Writable } from "node:stream";
-import { MemoryStaffAudit } from "@echo/access";
-import type { Billing } from "@echo/billing";
-import { PlatformError } from "@echo/core";
-import type { Db } from "@echo/db";
-import type { Env, Signed } from "@echo/http";
-import { MemoryMailer } from "@echo/mail";
-import { createLogger } from "@echo/observability";
+import { MemoryStaffAudit } from "@dembrane/access";
+import type { Billing } from "@dembrane/billing";
+import { PlatformError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import type { Env, Signed } from "@dembrane/http";
+import { MemoryMailer } from "@dembrane/mail";
+import { createLogger } from "@dembrane/observability";
 import { Hono } from "hono";
 import { trainingRoutes } from "../src";
 

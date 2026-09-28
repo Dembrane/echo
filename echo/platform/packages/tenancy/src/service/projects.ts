@@ -1,5 +1,5 @@
-import { newId } from "@echo/core";
-import { isoTimestamp } from "@echo/legacy-shape";
+import { newId } from "@dembrane/core";
+import { isoTimestamp } from "@dembrane/legacy-shape";
 import type { WorkspaceContext } from "../context";
 import { iso } from "../db";
 import { clock, type TenancyDeps } from "../deps";
@@ -58,7 +58,7 @@ export function projectService(deps: TenancyDeps) {
     /** A workspace's projects, pinned first, paginated, with previews and hours. */
     async list(ctx: WorkspaceContext, q: { search: string | null; offset: number; limit: number }) {
       ctx.require("project:read");
-      // Admins and owners see private projects anyway, as @echo/access resolves project
+      // Admins and owners see private projects anyway, as @dembrane/access resolves project
       // access; everyone else only those shared with them. The legacy creator clause is gone:
       // inside a workspace, creating a project grants nothing by itself (spec L-12).
       const privateVisible =

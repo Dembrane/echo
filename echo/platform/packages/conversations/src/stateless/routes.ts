@@ -1,13 +1,13 @@
-import { ForbiddenError, PlatformError, ValidationError } from "@echo/core";
-import { type Env, requireUser } from "@echo/http";
-import { type Issue, p } from "@echo/legacy-shape";
+import { ForbiddenError, PlatformError, ValidationError } from "@dembrane/core";
+import { type Env, requireUser } from "@dembrane/http";
+import { type Issue, p } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
 import type { ConversationsDeps } from "../deps";
 import { type StatelessInput, transcribeStateless } from "./service";
 
 const { str, bool, nullable } = p;
 
-/** A status with the Python API's detail text, for the few codes @echo/core does not name. */
+/** A status with the Python API's detail text, for the few codes @dembrane/core does not name. */
 class StatusError extends PlatformError {
   readonly code = "stateless";
   constructor(

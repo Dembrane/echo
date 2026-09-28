@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError, PaymentRequiredError } from "@echo/core";
+import { BadRequestError, NotFoundError, PaymentRequiredError } from "@dembrane/core";
 import type { ConversationsDeps } from "../deps";
 import { isConversationLocked, resolveProjectTier } from "../tiers";
 import { generateConversationTagIds, generateConversationTitle, generateSummary } from "./llm";

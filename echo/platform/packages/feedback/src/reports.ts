@@ -6,12 +6,12 @@ import {
   resolveProject,
   resolveWorkspace,
   type StaffAudit,
-} from "@echo/access";
-import { BadRequestError, NotFoundError, newId, PlatformError, ValidationError } from "@echo/core";
-import type { Db } from "@echo/db";
-import { type Env, requireUser } from "@echo/http";
-import type { Limit, RateLimiter } from "@echo/ratelimit";
-import type { ObjectStorage } from "@echo/storage";
+} from "@dembrane/access";
+import { BadRequestError, NotFoundError, newId, PlatformError, ValidationError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { type Env, requireUser } from "@dembrane/http";
+import type { Limit, RateLimiter } from "@dembrane/ratelimit";
+import type { ObjectStorage } from "@dembrane/storage";
 import { Hono } from "hono";
 import {
   ALLOWED_IMAGE_TYPES,

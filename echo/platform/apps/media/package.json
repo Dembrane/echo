@@ -1,5 +1,5 @@
 {
-  "name": "@echo/media",
+  "name": "@dembrane/media",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,13 +8,13 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@echo/audio": "workspace:*",
-    "@echo/config": "workspace:*",
-    "@echo/observability": "workspace:*",
+    "@dembrane/audio": "workspace:*",
+    "@dembrane/config": "workspace:*",
+    "@dembrane/observability": "workspace:*",
     "hono": "^4.9.0",
     "zod": "^4.1.0"
   },
   "devDependencies": {
-    "@echo/storage": "workspace:*"
+    "@dembrane/storage": "workspace:*"
   }
 }

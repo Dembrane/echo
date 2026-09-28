@@ -1,15 +1,15 @@
-import { type AnalysisRuntime, type Ceilings, clientOf, type JobSink } from "@echo/analysis";
-import type { Db } from "@echo/db";
-import { MapStore } from "@echo/map";
-import type { Logger } from "@echo/observability";
+import { type AnalysisRuntime, type Ceilings, clientOf, type JobSink } from "@dembrane/analysis";
+import type { Db } from "@dembrane/db";
+import { MapStore } from "@dembrane/map";
+import type { Logger } from "@dembrane/observability";
 import {
   type Adoption,
   type DeckAnalysis,
   type PopcornFlags,
   popcornDeps,
   queueDispatch,
-} from "@echo/popcorn";
-import { PostgresRateCounter, RateLimiter } from "@echo/ratelimit";
+} from "@dembrane/popcorn";
+import { PostgresRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { analysisMapStore } from "./map";
 import { adoptResults } from "./service";
 
@@ -29,7 +29,7 @@ export interface AdoptionDeps {
  * The adoption a popcorn read ends with (ticks.py calling adopt_results with
  * initial_only): the presentation takes the first deck, saved run and map it can show,
  * and never replaces a binding the host already chose. Composed in the worker, since the
- * tick lives in @echo/popcorn and adoption reads the map through Present.
+ * tick lives in @dembrane/popcorn and adoption reads the map through Present.
  */
 export function presentAdoption(o: AdoptionDeps): Adoption {
   const d = popcornDeps({

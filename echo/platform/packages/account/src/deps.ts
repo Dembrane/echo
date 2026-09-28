@@ -1,11 +1,11 @@
-import type { Access } from "@echo/access";
-import type { Auth, IdentityAccount } from "@echo/auth";
-import type { Db } from "@echo/db";
-import type { Notifier } from "@echo/notifications";
-import type { Logger } from "@echo/observability";
-import type { JobDefinition, Payload } from "@echo/queue";
-import type { RateLimiter } from "@echo/ratelimit";
-import type { ObjectStorage } from "@echo/storage";
+import type { Access } from "@dembrane/access";
+import type { Auth, IdentityAccount } from "@dembrane/auth";
+import type { Db } from "@dembrane/db";
+import type { Notifier } from "@dembrane/notifications";
+import type { Logger } from "@dembrane/observability";
+import type { JobDefinition, Payload } from "@dembrane/queue";
+import type { RateLimiter } from "@dembrane/ratelimit";
+import type { ObjectStorage } from "@dembrane/storage";
 
 /** Enqueues a job; the API's queue is producer-only, the worker runs the handlers. */
 export interface Jobs {

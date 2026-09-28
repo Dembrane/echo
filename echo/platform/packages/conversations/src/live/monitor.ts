@@ -1,6 +1,6 @@
-import type { Db } from "@echo/db";
-import { isoTimestamp } from "@echo/legacy-shape";
-import type { Logger } from "@echo/observability";
+import type { Db } from "@dembrane/db";
+import { isoTimestamp } from "@dembrane/legacy-shape";
+import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
 import { type Presence, pyIsoformat, type Telemetry } from "./presence";
 import { VALID_PARTICIPANT_STATES, VALID_VISITOR_STAGES } from "./telemetry";

@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError } from "@echo/core";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
 import { type OrgPolicy, orgRoleHas } from "./org";
 import { meetsTier, type Policy, roleHas, TIER_REQUIRED } from "./policies";
 import {

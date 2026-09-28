@@ -1,8 +1,8 @@
-import type { ProjectAccess } from "@echo/access";
-import { BadRequestError } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { directusRow, pythonIso } from "@echo/legacy-shape";
-import { projectFor } from "@echo/projects";
+import type { ProjectAccess } from "@dembrane/access";
+import { BadRequestError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { directusRow, pythonIso } from "@dembrane/legacy-shape";
+import { projectFor } from "@dembrane/projects";
 import { conversationForBff } from "../access";
 import type { ConversationsDeps } from "../deps";
 import type { Row } from "../storage";

@@ -1,5 +1,5 @@
-import { UnavailableError, ValidationError } from "@echo/core";
-import { type Ctx, type Env, requireUser } from "@echo/http";
+import { UnavailableError, ValidationError } from "@dembrane/core";
+import { type Ctx, type Env, requireUser } from "@dembrane/http";
 import { Hono } from "hono";
 import { staffCan } from "./access";
 import * as K from "./contract";

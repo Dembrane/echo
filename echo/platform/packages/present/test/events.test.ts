@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { updateStream } from "@echo/popcorn";
-import type { Hub } from "@echo/realtime";
+import { updateStream } from "@dembrane/popcorn";
+import type { Hub } from "@dembrane/realtime";
 import { Hono } from "hono";
 
 // The deck's /events routes cannot be captured by the parity runner (the stream never

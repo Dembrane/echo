@@ -1,19 +1,19 @@
 {
-  "name": "@echo/migrate",
+  "name": "@dembrane/migrate",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "bun src/main.ts"
   },
   "dependencies": {
-    "@echo/accounts": "workspace:*",
-    "@echo/auth": "workspace:*",
-    "@echo/config": "workspace:*",
-    "@echo/core": "workspace:*",
-    "@echo/db": "workspace:*",
-    "@echo/observability": "workspace:*",
-    "@echo/projects": "workspace:*",
-    "@echo/queue": "workspace:*",
-    "@echo/webhooks": "workspace:*"
+    "@dembrane/accounts": "workspace:*",
+    "@dembrane/auth": "workspace:*",
+    "@dembrane/config": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/projects": "workspace:*",
+    "@dembrane/queue": "workspace:*",
+    "@dembrane/webhooks": "workspace:*"
   }
 }

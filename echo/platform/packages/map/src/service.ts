@@ -26,7 +26,7 @@ import {
   titleLines,
   titleSelectionKey,
   VIEW_SCOPE_KEY,
-} from "@echo/analysis";
+} from "@dembrane/analysis";
 import { ACTIVE_STATUSES, type MapStore, type Row } from "./store";
 
 /**

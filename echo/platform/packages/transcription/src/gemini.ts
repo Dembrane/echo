@@ -1,7 +1,7 @@
 import type { LanguageModelV4, LanguageModelV4Prompt } from "@ai-sdk/provider";
-import { isRetryable, type Models } from "@echo/llm";
-import type { Logger } from "@echo/observability";
-import { renderPrompt } from "@echo/prompts";
+import { isRetryable, type Models } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
+import { renderPrompt } from "@dembrane/prompts";
 import { TranscriptParseError } from "./errors";
 import { regexRedactPii } from "./pii";
 import type { TranscribeInput, TranscribeResult, Transcriber } from "./transcriber";

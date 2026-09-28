@@ -1,5 +1,5 @@
-import { AGENTIC_ASSETS } from "@echo/agentic";
-import { POPCORN_TICK_ASSETS } from "@echo/popcorn";
+import { AGENTIC_ASSETS } from "@dembrane/agentic";
+import { POPCORN_TICK_ASSETS } from "@dembrane/popcorn";
 
 /**
  * Files the worker reads at run time, checked at boot. apps/worker/Dockerfile copies the

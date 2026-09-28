@@ -1,5 +1,5 @@
-import type { Completer } from "@echo/llm";
-import type { Logger } from "@echo/observability";
+import type { Completer } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
 import { renderPrompt } from "./prompts";
 

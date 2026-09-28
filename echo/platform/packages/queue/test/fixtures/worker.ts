@@ -2,7 +2,7 @@
 // starts one run (and hangs in step two) or just serves the queue.
 import { appendFileSync } from "node:fs";
 import { Writable } from "node:stream";
-import { createLogger, initTracing } from "@echo/observability";
+import { createLogger, initTracing } from "@dembrane/observability";
 import { z } from "zod";
 import { defineJob, Queue, step, workflow } from "../../src";
 

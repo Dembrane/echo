@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
-import { assetPath } from "@echo/core";
+import { assetPath } from "@dembrane/core";
 
 /**
  * The assistant's read-only knowledge: the product docs corpus and the skill files shipped

@@ -1,4 +1,4 @@
-import { p } from "@echo/legacy-shape";
+import { p } from "@dembrane/legacy-shape";
 
 /**
  * The request models of the tenancy routes, field for field as the old API's pydantic

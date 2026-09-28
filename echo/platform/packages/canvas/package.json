@@ -1,5 +1,5 @@
 {
-  "name": "@echo/canvas",
+  "name": "@dembrane/canvas",
   "private": true,
   "type": "module",
   "exports": {
@@ -9,22 +9,22 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@echo/access": "workspace:*",
-    "@echo/core": "workspace:*",
-    "@echo/db": "workspace:*",
-    "@echo/http": "workspace:*",
-    "@echo/legacy-shape": "workspace:*",
-    "@echo/llm": "workspace:*",
-    "@echo/observability": "workspace:*",
-    "@echo/queue": "workspace:*",
-    "@echo/ratelimit": "workspace:*",
-    "@echo/realtime": "workspace:*",
+    "@dembrane/access": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
+    "@dembrane/llm": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/queue": "workspace:*",
+    "@dembrane/ratelimit": "workspace:*",
+    "@dembrane/realtime": "workspace:*",
     "hono": "^4.9.0",
     "postgres": "^3.4.9",
     "zod": "^4.1.0",
     "@dbos-inc/dbos-sdk": "^5.1.10"
   },
   "devDependencies": {
-    "@echo/config": "workspace:*"
+    "@dembrane/config": "workspace:*"
   }
 }

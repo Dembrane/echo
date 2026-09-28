@@ -1,8 +1,8 @@
-import { hasStaffPolicy, requireStaff, type StaffAudit } from "@echo/access";
-import { ForbiddenError } from "@echo/core";
-import type { Db } from "@echo/db";
-import { type Env, requireUser, type Signed } from "@echo/http";
-import { p } from "@echo/legacy-shape";
+import { hasStaffPolicy, requireStaff, type StaffAudit } from "@dembrane/access";
+import { ForbiddenError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { type Env, requireUser, type Signed } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
 import { corpusFrom, refuseProduction, seedDemo } from "./demo";
 import { dict, type Json } from "./py";
@@ -15,7 +15,7 @@ export interface DemoRoutesDeps {
   readonly now?: () => Date;
   /**
    * Creates the prospect's organisation when the request carries a `prospect` block
-   * (@echo/accounts provides it). Returns what the response reports and where the public
+   * (@dembrane/accounts provides it). Returns what the response reports and where the public
    * page's "Continue in dembrane" leads. Absent, a prospect block is refused.
    */
   readonly prospect?: ProspectHook;

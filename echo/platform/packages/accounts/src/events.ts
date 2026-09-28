@@ -1,4 +1,4 @@
-import { newId } from "@echo/core";
+import { newId } from "@dembrane/core";
 import type { AccountsDeps, Conn } from "./deps";
 import { deliverEvent, notifySlack } from "./jobs";
 import type { BillingRow, DocumentRow, OrgRow, SignatureRow, TaskRow, TicketRow } from "./storage";

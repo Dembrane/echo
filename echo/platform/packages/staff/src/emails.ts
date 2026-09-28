@@ -1,5 +1,5 @@
-import { emailLayout, emailStyles, type RenderedEmail } from "@echo/billing";
-import { escapeHtml } from "@echo/mail";
+import { emailLayout, emailStyles, type RenderedEmail } from "@dembrane/billing";
+import { escapeHtml } from "@dembrane/mail";
 
 type Kind =
   | "support_access_request"

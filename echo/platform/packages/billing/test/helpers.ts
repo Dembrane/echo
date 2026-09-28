@@ -1,6 +1,6 @@
 import { Writable } from "node:stream";
-import { MemoryMailer } from "@echo/mail";
-import { createLogger, type Logger } from "@echo/observability";
+import { MemoryMailer } from "@dembrane/mail";
+import { createLogger, type Logger } from "@dembrane/observability";
 import {
   accountRow,
   BillingService,

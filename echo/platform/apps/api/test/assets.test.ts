@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { assetPath, missingAssets } from "@echo/core";
+import { assetPath, missingAssets } from "@dembrane/core";
 import { API_ASSETS } from "../src/assets";
 
 test("every file the API's boot check requires is in the source tree", () => {

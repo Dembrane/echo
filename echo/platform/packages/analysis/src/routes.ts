@@ -1,10 +1,10 @@
-import type { Access } from "@echo/access";
-import type { Db } from "@echo/db";
-import { type Env, requireUser } from "@echo/http";
-import { p } from "@echo/legacy-shape";
-import type { Completer, Embedder } from "@echo/llm";
-import type { Logger } from "@echo/observability";
-import type { RateLimiter } from "@echo/ratelimit";
+import type { Access } from "@dembrane/access";
+import type { Db } from "@dembrane/db";
+import { type Env, requireUser } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
+import type { Completer, Embedder } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
+import type { RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import * as bff from "./bff";
 import { analysisRuntime, type JobSink } from "./runtime";

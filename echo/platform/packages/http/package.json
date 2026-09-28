@@ -1,14 +1,14 @@
 {
-  "name": "@echo/http",
+  "name": "@dembrane/http",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@echo/access": "workspace:*",
-    "@echo/core": "workspace:*",
-    "@echo/observability": "workspace:*",
+    "@dembrane/access": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/observability": "workspace:*",
     "hono": "^4.9.0"
   }
 }

@@ -1,5 +1,5 @@
-import { dataBlock, jsonFromText } from "@echo/analysis";
-import type { Completer } from "@echo/llm";
+import { dataBlock, jsonFromText } from "@dembrane/analysis";
+import type { Completer } from "@dembrane/llm";
 import classifyPrompt from "./prompts/map-factcheck-classify-v2.md" with { type: "text" };
 import investigatePrompt from "./prompts/map-factcheck-investigate-v2.md" with { type: "text" };
 import titlePrompt from "./prompts/map-title-v2.md" with { type: "text" };

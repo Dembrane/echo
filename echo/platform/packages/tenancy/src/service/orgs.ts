@@ -1,7 +1,7 @@
-import { deriveWorkspaceRole, ROLE_RANK, resolveWorkspace, type WorkspaceRole } from "@echo/access";
-import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, newId } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { isoTimestamp } from "@echo/legacy-shape";
+import { deriveWorkspaceRole, ROLE_RANK, resolveWorkspace, type WorkspaceRole } from "@dembrane/access";
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { isoTimestamp } from "@dembrane/legacy-shape";
 import { commercial, orgAccountForNewWorkspace, reconcileSeats } from "../billing";
 import { type Member, requireOnboarded } from "../context";
 import { iso, isUuid } from "../db";

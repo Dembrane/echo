@@ -1,4 +1,4 @@
-import { BadRequestError } from "@echo/core";
+import { BadRequestError } from "@dembrane/core";
 import type { ProjectsStorage } from "./storage";
 
 /**

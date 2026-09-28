@@ -1,7 +1,7 @@
 // Scratch databases for the run tests: the full schema from the migrations plus the few
 // rows a turn reads (a user, a project, a chat, a run with one user turn).
-import { migrate } from "@echo/db";
-import { installQueueSchema } from "@echo/queue";
+import { migrate } from "@dembrane/db";
+import { installQueueSchema } from "@dembrane/queue";
 import postgres from "postgres";
 
 export const ids = {

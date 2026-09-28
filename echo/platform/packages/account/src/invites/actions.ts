@@ -1,6 +1,6 @@
-import { DrizzleAccessStore, resolveWorkspace } from "@echo/access";
-import { BadRequestError, ForbiddenError, NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { DrizzleAccessStore, resolveWorkspace } from "@dembrane/access";
+import { BadRequestError, ForbiddenError, NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { sendEmail } from "../jobs";
 import { type InviteCtx, onboardedUser } from "./accept";
 import { inviteHash, resendAcceptUrl } from "./hash";

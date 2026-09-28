@@ -1,5 +1,5 @@
 {
-  "name": "@echo/analytics",
+  "name": "@dembrane/analytics",
   "private": true,
   "type": "module",
   "exports": {
@@ -9,6 +9,6 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@echo/observability": "workspace:*"
+    "@dembrane/observability": "workspace:*"
   }
 }

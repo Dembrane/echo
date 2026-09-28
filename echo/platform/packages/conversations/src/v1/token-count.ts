@@ -1,4 +1,4 @@
-import type { Db } from "@echo/db";
+import type { Db } from "@dembrane/db";
 import { Tiktoken } from "js-tiktoken/lite";
 import cl100k from "js-tiktoken/ranks/cl100k_base";
 import type { ConversationsDeps } from "../deps";

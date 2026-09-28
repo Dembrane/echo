@@ -1,4 +1,4 @@
-import { newId } from "@echo/core";
+import { newId } from "@dembrane/core";
 import type { Json } from "../py";
 import { type Row, type Sql, TASK_POPCORN_TICK } from "../storage";
 

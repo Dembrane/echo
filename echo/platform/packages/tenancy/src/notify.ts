@@ -1,4 +1,4 @@
-import { newId } from "@echo/core";
+import { newId } from "@dembrane/core";
 import { type Conn, iso } from "./db";
 import {
   insertNotification,

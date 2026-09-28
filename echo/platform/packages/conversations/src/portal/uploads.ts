@@ -1,4 +1,4 @@
-import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@echo/core";
+import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
 
 import { ChunkError, NOT_OPEN } from "../chunks";
 import type { ConversationsDeps } from "../deps";

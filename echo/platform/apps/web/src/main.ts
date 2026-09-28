@@ -1,5 +1,5 @@
-import { loadSections } from "@echo/config";
-import { createLogger } from "@echo/observability";
+import { loadSections } from "@dembrane/config";
+import { createLogger } from "@dembrane/observability";
 import { securityHeaders } from "./headers";
 import { createHandler } from "./server";
 

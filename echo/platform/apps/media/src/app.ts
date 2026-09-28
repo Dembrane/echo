@@ -1,5 +1,5 @@
-import { ACCEPTED_AUDIO_FORMATS, AudioError, type Media } from "@echo/audio";
-import type { Logger } from "@echo/observability";
+import { ACCEPTED_AUDIO_FORMATS, AudioError, type Media } from "@dembrane/audio";
+import type { Logger } from "@dembrane/observability";
 import { Hono } from "hono";
 import { z } from "zod";
 

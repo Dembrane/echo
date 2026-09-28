@@ -1,5 +1,5 @@
 {
-  "name": "@echo/transcription",
+  "name": "@dembrane/transcription",
   "private": true,
   "type": "module",
   "exports": {
@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@ai-sdk/provider": "*",
-    "@echo/llm": "workspace:*",
-    "@echo/observability": "workspace:*",
-    "@echo/prompts": "workspace:*"
+    "@dembrane/llm": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/prompts": "workspace:*"
   }
 }

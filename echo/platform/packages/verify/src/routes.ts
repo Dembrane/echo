@@ -1,6 +1,6 @@
-import { PARTICIPANT_TOKEN_HEADER } from "@echo/conversations";
-import { type Env, requireUser } from "@echo/http";
-import { p, type Type } from "@echo/legacy-shape";
+import { PARTICIPANT_TOKEN_HEADER } from "@dembrane/conversations";
+import { type Env, requireUser } from "@dembrane/http";
+import { p, type Type } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
 import {
   createCustomTopic,

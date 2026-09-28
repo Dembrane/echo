@@ -1,8 +1,8 @@
-# @echo/reports
+# @dembrane/reports
 
 The dashboard's report reads and metric writes under `/api/v2/bff` (list, detail, timeline
 bundle, metric list, metric insert) and report generation: the handler of the
-`reports.generate` job that `@echo/projects` enqueues inside the transaction that creates
+`reports.generate` job that `@dembrane/projects` enqueues inside the transaction that creates
 the report, plus the runner that fires scheduled reports.
 
 ## Generation: Python to DBOS
@@ -17,7 +17,7 @@ Python generated a report in two Dramatiq actors glued by Redis:
 | `task_report_summarization_done` reading the key and sending phase 2 | the next step, reached when the summary steps return |
 | `task_create_report_continue` (phase 2): draft guard, prompt, model call, save | step `generate` (guard, prompt building, model call with three tries on rate limits and outages) and step `save` (re-checks draft, then `archived`, content, `date_created`) |
 | notification, webhook and PostHog calls after the save | steps `notify` and `webhook`; the PostHog capture is a structured log line (`signal: analytics`) because the platform has no analytics capability yet |
-| Redis pub/sub `report:<id>:progress` | `pg_notify` on `REPORT_PROGRESS_CHANNEL`, which `@echo/projects` streams to the report page |
+| Redis pub/sub `report:<id>:progress` | `pg_notify` on `REPORT_PROGRESS_CHANNEL`, which `@dembrane/projects` streams to the report page |
 | `ProcessingStatusContext` rows `task_create_report.*`, `task_create_report_continue.*` | the same rows, written when each phase ends |
 | dramatiq `time_limit` and `REPORT_GENERATION_TIMEOUT` | step timeouts: 2 minutes for the guard, 10 minutes per summary, 20 minutes for generate (a model call itself is capped at 5 minutes) |
 

@@ -1,4 +1,4 @@
-# @echo/analysis
+# @dembrane/analysis
 
 Typed, revisioned analysis objects produced by recipes, ported from
 `dembrane/analysis`: the store, revisions, planner, registry, executor, snapshots, the
@@ -31,7 +31,7 @@ gets a new one.
 **Crash recovery moved to DBOS.** Python recovered a dead worker's run by letting its
 lease expire (20 minutes), failing it in the sweep, and waiting for a host to retry.
 Now the workflow's `execute` step is resumed by another worker within about a minute
-(dead-executor detection in `@echo/queue`), with the same lease, and the recipe's own
+(dead-executor detection in `@dembrane/queue`), with the same lease, and the recipe's own
 completed steps (`analysis_step` rows, keyed by cache key) are reused instead of
 recomputed: no model call is paid twice. `test/recovery.test.ts` kills a worker with
 `kill -9` inside an extraction and proves it.

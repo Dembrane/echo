@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { newId } from "@echo/core";
-import { schema } from "@echo/db";
-import { MemoryMailer } from "@echo/mail";
+import { newId } from "@dembrane/core";
+import { schema } from "@dembrane/db";
+import { MemoryMailer } from "@dembrane/mail";
 import { eq, sql } from "drizzle-orm";
 import * as K from "../src/contract";
 import { runTaskReminder } from "../src/jobs";

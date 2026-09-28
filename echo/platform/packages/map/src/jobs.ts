@@ -1,8 +1,8 @@
-import { analysisRuntime, clientOf, type RuntimeConfig } from "@echo/analysis";
-import type { Db } from "@echo/db";
-import type { Completer, Embedder } from "@echo/llm";
-import type { Logger } from "@echo/observability";
-import type { JobDefinition, Queue } from "@echo/queue";
+import { analysisRuntime, clientOf, type RuntimeConfig } from "@dembrane/analysis";
+import type { Db } from "@dembrane/db";
+import type { Completer, Embedder } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
+import type { JobDefinition, Queue } from "@dembrane/queue";
 import { factCheckWorkflow, mapFactCheck } from "./factcheck";
 import { MapStore } from "./store";
 

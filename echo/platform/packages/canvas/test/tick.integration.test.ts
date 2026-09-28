@@ -2,11 +2,11 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Access, DrizzleAccessStore } from "@echo/access";
-import { createDb, migrate } from "@echo/db";
-import { FakeCompleter } from "@echo/llm";
-import { installQueueSchema } from "@echo/queue";
-import { MemoryRateCounter, RateLimiter } from "@echo/ratelimit";
+import { Access, DrizzleAccessStore } from "@dembrane/access";
+import { createDb, migrate } from "@dembrane/db";
+import { FakeCompleter } from "@dembrane/llm";
+import { installQueueSchema } from "@dembrane/queue";
+import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import postgres from "postgres";
 import { canvasEventStream, publishGenerationNudge } from "../src/events";

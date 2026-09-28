@@ -1,5 +1,5 @@
 {
-  "name": "@echo/training",
+  "name": "@dembrane/training",
   "private": true,
   "type": "module",
   "exports": {
@@ -9,13 +9,13 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@echo/access": "workspace:*",
-    "@echo/billing": "workspace:*",
-    "@echo/core": "workspace:*",
-    "@echo/db": "workspace:*",
-    "@echo/http": "workspace:*",
-    "@echo/mail": "workspace:*",
-    "@echo/observability": "workspace:*",
+    "@dembrane/access": "workspace:*",
+    "@dembrane/billing": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/http": "workspace:*",
+    "@dembrane/mail": "workspace:*",
+    "@dembrane/observability": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.9.0"
   }

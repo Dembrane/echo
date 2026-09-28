@@ -1,7 +1,7 @@
-import { resolveWorkspace } from "@echo/access";
-import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, newId } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { isoTimestamp } from "@echo/legacy-shape";
+import { resolveWorkspace } from "@dembrane/access";
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { isoTimestamp } from "@dembrane/legacy-shape";
 import { requireOnboarded, WorkspaceContext } from "../context";
 import { type Conn, iso } from "../db";
 import { clock, type TenancyDeps } from "../deps";
@@ -66,7 +66,7 @@ export function accessRequestService(deps: TenancyDeps) {
   }
 
   /**
-   * Approving is for whoever manages the workspace's members (resolved by @echo/access, so an
+   * Approving is for whoever manages the workspace's members (resolved by @dembrane/access, so an
    * expired support grant no longer counts, spec L-9) or an org admin or owner. A staff
    * support session never decides who joins (CTO Q4).
    */

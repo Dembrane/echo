@@ -5,8 +5,8 @@ import {
   type Principal,
   type ProjectAccess,
   resolveProject,
-} from "@echo/access";
-import { ForbiddenError, NotFoundError } from "@echo/core";
+} from "@dembrane/access";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
 import type { CanvasStore, Row } from "./storage";
 import { isUuid } from "./storage";
 
@@ -14,7 +14,7 @@ import { isUuid } from "./storage";
  * Canvas access in the order the BFF checked it: the caller must be onboarded and reach the
  * project (404 otherwise, never confirming it exists), the canvas feature must be on
  * globally and for this project (404 "Not found", hiding the beta), and only then is the
- * policy checked (403 "Not allowed"). The decision itself always comes from @echo/access.
+ * policy checked (403 "Not allowed"). The decision itself always comes from @dembrane/access.
  */
 export interface AccessDeps {
   readonly access: Access;

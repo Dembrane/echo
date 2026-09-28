@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
-import { popcornShared } from "@echo/analysis";
-import { assetPath } from "@echo/core";
-import type { Completer, Completion } from "@echo/llm";
+import { popcornShared } from "@dembrane/analysis";
+import { assetPath } from "@dembrane/core";
+import type { Completer, Completion } from "@dembrane/llm";
 import { type Json, pyJson } from "../py";
 import { KIND_SCHEMA, QUESTION_SCHEMA, VALIDATE_SCHEMA } from "./enrichment";
 import { POPCORN_SCHEMA, STAKEHOLDERS_SCHEMA } from "./shapes";

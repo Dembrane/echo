@@ -1,6 +1,6 @@
-import { BadRequestError, ForbiddenError, NotFoundError } from "@echo/core";
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
+import { BadRequestError, ForbiddenError, NotFoundError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
 import { and, eq, gt, isNull, ne, or } from "drizzle-orm";
 import type { ConversationsDeps } from "./deps";
 import { processChunk } from "./pipeline/defs";

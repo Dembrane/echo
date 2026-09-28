@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { ForbiddenError } from "@echo/core";
+import { ForbiddenError } from "@dembrane/core";
 import { MemoryStaffAudit, requireStaff, STAFF_POLICIES, staffPoliciesOf } from "../src";
 
 const staff = { directusUserId: "d1", isStaff: true };

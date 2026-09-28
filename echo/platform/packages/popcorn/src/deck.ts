@@ -7,7 +7,7 @@ import {
   readSnapshot,
   resolveSnapshot,
   type SnapshotHook,
-} from "@echo/analysis";
+} from "@dembrane/analysis";
 import { conversationUrl, markSyntheticFiles, roomFiles } from "./bundle";
 import { dict, isRecord, type Json, list, pyRound, pyStr, truthy } from "./py";
 import { TOGGLEABLE_TABS } from "./settings";

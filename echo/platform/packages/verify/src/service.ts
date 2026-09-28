@@ -1,9 +1,9 @@
-import type { Policy } from "@echo/access";
-import { type ConversationsDeps, PARTICIPANT_TOKEN_HEADER } from "@echo/conversations";
-import { BadRequestError, ForbiddenError, NotFoundError, newId, PlatformError } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { directusRow, isoTimestamp } from "@echo/legacy-shape";
-import { renderPrompt } from "@echo/prompts";
+import type { Policy } from "@dembrane/access";
+import { type ConversationsDeps, PARTICIPANT_TOKEN_HEADER } from "@dembrane/conversations";
+import { BadRequestError, ForbiddenError, NotFoundError, newId, PlatformError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
+import { renderPrompt } from "@dembrane/prompts";
 import { type FilePart, generateText, type TextPart } from "ai";
 import { type ArtifactRow, type VerifyStorage, verifyStorage } from "./storage";
 

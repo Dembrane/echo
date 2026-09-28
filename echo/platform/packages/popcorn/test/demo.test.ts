@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ForbiddenError } from "@echo/core";
+import { ForbiddenError } from "@dembrane/core";
 import { chunkTimestamp, demoIdentity, refuseProduction } from "../src/demo";
 
 describe("synthetic demo seed", () => {

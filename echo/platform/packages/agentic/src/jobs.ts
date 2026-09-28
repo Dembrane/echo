@@ -1,12 +1,12 @@
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
-import { Access, DrizzleAccessStore } from "@echo/access";
-import { type Capture, posthogCapture } from "@echo/analytics";
-import type { Config } from "@echo/config";
-import type { Db } from "@echo/db";
-import type { Signed } from "@echo/http";
-import type { Models } from "@echo/llm";
-import { Notifier } from "@echo/notifications";
-import type { Logger } from "@echo/observability";
+import { Access, DrizzleAccessStore } from "@dembrane/access";
+import { type Capture, posthogCapture } from "@dembrane/analytics";
+import type { Config } from "@dembrane/config";
+import type { Db } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
+import type { Models } from "@dembrane/llm";
+import { Notifier } from "@dembrane/notifications";
+import type { Logger } from "@dembrane/observability";
 import {
   defineJob,
   type JobDefinition,
@@ -14,7 +14,7 @@ import {
   step,
   WORKFLOW_VERSION,
   workflow,
-} from "@echo/queue";
+} from "@dembrane/queue";
 import { z } from "zod";
 import { createAgent } from "./agent";
 import type { AgentData, TurnContext } from "./agent/data";

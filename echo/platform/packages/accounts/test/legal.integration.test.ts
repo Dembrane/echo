@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { schema } from "@echo/db";
+import { schema } from "@dembrane/db";
 import { eq } from "drizzle-orm";
 import * as K from "../src/contract";
 import {

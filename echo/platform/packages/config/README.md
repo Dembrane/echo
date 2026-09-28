@@ -1,4 +1,4 @@
-# @echo/config
+# @dembrane/config
 
 Every setting echo reads is declared once in `src/schema.ts`. A value comes from, in rising
 precedence: the schema default, the environment file in `environments/<APP_ENV>.ts`, the process

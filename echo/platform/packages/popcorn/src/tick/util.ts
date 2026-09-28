@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { popcornShared } from "@echo/analysis";
+import { popcornShared } from "@dembrane/analysis";
 import { PyFloat } from "../py";
 
 /**

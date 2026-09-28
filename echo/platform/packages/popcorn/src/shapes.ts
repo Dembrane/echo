@@ -1,9 +1,9 @@
-import { type Issue, p, type Type } from "@echo/legacy-shape";
+import { type Issue, p, type Type } from "@dembrane/legacy-shape";
 
 /**
  * The request shapes the popcorn and present routes validate, as pydantic 2.12 declared
  * them in the Python API: the same field order, coercions and 422 entries, because the
- * dashboard shows these messages. The few pydantic types @echo/legacy-shape does not carry
+ * dashboard shows these messages. The few pydantic types @dembrane/legacy-shape does not carry
  * (unions of literals, dict[str, bool], datetime) are built here.
  */
 

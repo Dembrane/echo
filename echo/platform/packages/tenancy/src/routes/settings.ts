@@ -1,6 +1,6 @@
-import { ValidationError } from "@echo/core";
-import type { Env } from "@echo/http";
-import { p } from "@echo/legacy-shape";
+import { ValidationError } from "@dembrane/core";
+import type { Env } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
 import type { TenancyDeps } from "../deps";
 import { projectService } from "../service/projects";

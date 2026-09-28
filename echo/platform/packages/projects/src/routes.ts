@@ -1,7 +1,7 @@
-import type { Access } from "@echo/access";
-import type { Db } from "@echo/db";
-import { type Env, requireUser } from "@echo/http";
-import { p } from "@echo/legacy-shape";
+import type { Access } from "@dembrane/access";
+import type { Db } from "@dembrane/db";
+import { type Env, requireUser } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
 import * as goals from "./goals";
 import type { JobSink } from "./jobs";

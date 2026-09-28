@@ -1,4 +1,4 @@
-import type { Models } from "@echo/llm";
+import type { Models } from "@dembrane/llm";
 import { generateText } from "ai";
 import { renderPrompt } from "./prompts/render";
 

@@ -1,4 +1,4 @@
-import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
+import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
 import { z } from "zod";
 import type { TickRequest } from "./service";
 import type { Sql } from "./storage";

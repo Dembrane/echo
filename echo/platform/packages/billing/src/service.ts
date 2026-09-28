@@ -1,5 +1,5 @@
-import type { Mailer } from "@echo/mail";
-import type { Logger } from "@echo/observability";
+import type { Mailer } from "@dembrane/mail";
+import type { Logger } from "@dembrane/observability";
 import { paymentFailedEmail } from "./emails";
 import { SEAT_ROLES } from "./members";
 import {

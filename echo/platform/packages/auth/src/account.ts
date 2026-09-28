@@ -1,8 +1,8 @@
 import { base32 } from "@better-auth/utils/base32";
 import { createOTP } from "@better-auth/utils/otp";
-import { newId } from "@echo/core";
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
+import { newId } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
 import { generateRandomString, symmetricDecrypt, symmetricEncrypt } from "better-auth/crypto";
 import { and, eq } from "drizzle-orm";
 import type { Auth } from "./auth";

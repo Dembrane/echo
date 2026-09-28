@@ -1,5 +1,5 @@
-import { meetsTier } from "@echo/access";
-import { ConflictError, ForbiddenError } from "@echo/core";
+import { meetsTier } from "@dembrane/access";
+import { ConflictError, ForbiddenError } from "@dembrane/core";
 import {
   cpSlice,
   dict,

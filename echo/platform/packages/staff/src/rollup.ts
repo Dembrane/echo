@@ -9,7 +9,7 @@ import {
   pyRound,
   seatState,
   seatUserIds,
-} from "@echo/billing";
+} from "@dembrane/billing";
 import type { StaffStorage } from "./storage";
 
 /** Legacy per-tier sticker prices the staff forecast still shows as the base. */

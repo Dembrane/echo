@@ -1,6 +1,6 @@
-import type { Mailer } from "@echo/mail";
-import type { Logger } from "@echo/observability";
-import { defineJob } from "@echo/queue";
+import type { Mailer } from "@dembrane/mail";
+import type { Logger } from "@dembrane/observability";
+import { defineJob } from "@dembrane/queue";
 import { z } from "zod";
 import { type EmailTemplate, render } from "./emails";
 

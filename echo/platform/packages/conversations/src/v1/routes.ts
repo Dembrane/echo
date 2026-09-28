@@ -1,7 +1,7 @@
-import { ForbiddenError, NotFoundError } from "@echo/core";
-import { type Env, requireUser } from "@echo/http";
-import { p } from "@echo/legacy-shape";
-import { TOO_MANY } from "@echo/ratelimit";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
+import { type Env, requireUser } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
+import { TOO_MANY } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import { conversationForV1 } from "../access";
 import type { ConversationsDeps } from "../deps";

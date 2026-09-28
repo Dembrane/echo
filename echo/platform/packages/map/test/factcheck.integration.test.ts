@@ -7,10 +7,10 @@ import {
   execute,
   type Json,
   MapViewReads,
-} from "@echo/analysis";
-import { createDb } from "@echo/db";
-import { FakeCompleter, FakeEmbedder } from "@echo/llm";
-import { createLogger } from "@echo/observability";
+} from "@dembrane/analysis";
+import { createDb } from "@dembrane/db";
+import { FakeCompleter, FakeEmbedder } from "@dembrane/llm";
+import { createLogger } from "@dembrane/observability";
 import postgres from "postgres";
 import { runFactCheck } from "../src/factcheck";
 import * as service from "../src/service";

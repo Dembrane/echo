@@ -3,10 +3,10 @@
 // model call) or only serves the queue.
 import { appendFileSync } from "node:fs";
 import { Writable } from "node:stream";
-import { createDb } from "@echo/db";
-import { FakeCompleter } from "@echo/llm";
-import { createLogger, initTracing } from "@echo/observability";
-import { Queue } from "@echo/queue";
+import { createDb } from "@dembrane/db";
+import { FakeCompleter } from "@dembrane/llm";
+import { createLogger, initTracing } from "@dembrane/observability";
+import { Queue } from "@dembrane/queue";
 import { canvasTick, tickDeps, tickWorkflow } from "../../src/jobs";
 import { EXTRACTION, GUIDE, ids } from "./seed";
 

@@ -1,5 +1,5 @@
-import type { Db } from "@echo/db";
-import { directusRow } from "@echo/legacy-shape";
+import type { Db } from "@dembrane/db";
+import { directusRow } from "@dembrane/legacy-shape";
 import type postgres from "postgres";
 
 export type Row = Record<string, unknown>;

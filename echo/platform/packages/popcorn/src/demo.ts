@@ -1,5 +1,5 @@
-import { ForbiddenError, NotFoundError, ValidationError } from "@echo/core";
-import type { Db } from "@echo/db";
+import { ForbiddenError, NotFoundError, ValidationError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
 import { dict, isRecord, type Json, list, pyIso, pyStr, strip } from "./py";
 import { tokenUrlsafe, uuid5Url } from "./service";
 import { client, isUuid, j, type Row, type Sql } from "./storage";

@@ -5,10 +5,10 @@ import {
   PlatformError,
   RateLimitedError,
   ValidationError,
-} from "@echo/core";
-import type { Signed } from "@echo/http";
-import type { Completer } from "@echo/llm";
-import type { RateLimiter } from "@echo/ratelimit";
+} from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import type { Completer } from "@dembrane/llm";
+import type { RateLimiter } from "@dembrane/ratelimit";
 import { type AccessDeps, canvasProject, canvasReport } from "./access";
 import { executeGatherSpec, gatherHasTranscript } from "./gather";
 import { applyModelExtraction, freshCanvasState, normalizeCanvasTabs, tabsEqual } from "./ledgers";

@@ -1,5 +1,5 @@
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";

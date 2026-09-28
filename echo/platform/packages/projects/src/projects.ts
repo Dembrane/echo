@@ -1,7 +1,7 @@
-import type { Access } from "@echo/access";
-import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { directusRow, pythonIso } from "@echo/legacy-shape";
+import type { Access } from "@dembrane/access";
+import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { directusRow, pythonIso } from "@dembrane/legacy-shape";
 import { projectAllows, projectFor, projectSource } from "./access";
 import type { JobSink } from "./jobs";
 import { isExternalClient, legalBlock, legalWrite } from "./legal";

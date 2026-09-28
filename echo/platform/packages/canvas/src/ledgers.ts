@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { newId } from "@echo/core";
+import { newId } from "@dembrane/core";
 import { CANVAS_CSS } from "./canvas-css";
 import {
   dict,

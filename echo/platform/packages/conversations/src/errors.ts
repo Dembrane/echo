@@ -1,4 +1,4 @@
-import { PlatformError } from "@echo/core";
+import { PlatformError } from "@dembrane/core";
 
 /**
  * A 500 the Python API raised on purpose (HTTPException(500, detail)), whose detail the

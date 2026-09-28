@@ -1,5 +1,5 @@
-import { newId } from "@echo/core";
-import { pythonIso } from "@echo/legacy-shape";
+import { newId } from "@dembrane/core";
+import { pythonIso } from "@dembrane/legacy-shape";
 
 /**
  * The additive canvas state kept on agent_loop (tabs, ledgers, host items), in the shape

@@ -1,4 +1,4 @@
-import { defineJob, type EnqueueOptions, type JobDefinition, type Payload } from "@echo/queue";
+import { defineJob, type EnqueueOptions, type JobDefinition, type Payload } from "@dembrane/queue";
 import { z } from "zod";
 
 /** What services need from the queue; the real Queue satisfies it and tests pass a recorder. */

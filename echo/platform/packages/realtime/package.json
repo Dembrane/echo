@@ -1,5 +1,5 @@
 {
-  "name": "@echo/realtime",
+  "name": "@dembrane/realtime",
   "private": true,
   "type": "module",
   "exports": {
@@ -9,9 +9,9 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@echo/core": "workspace:*",
-    "@echo/db": "workspace:*",
-    "@echo/observability": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/observability": "workspace:*",
     "hono": "^4.9.0",
     "postgres": "^3.4.9"
   }

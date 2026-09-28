@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { BadRequestError, ValidationError } from "@echo/core";
+import { BadRequestError, ValidationError } from "@dembrane/core";
 import { effectiveLegalBasis, isExternalClient, legalWrite } from "../src/legal";
 import { round2, safeForFilename } from "../src/projects";
 import { parseSchedule, reportTitle } from "../src/reports";

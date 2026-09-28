@@ -1,8 +1,8 @@
-# @echo/map
+# @dembrane/map
 
 The 8 routes of `dembrane.api.v2.bff.map` (project state, the bounded graph, generation,
 the live stream, selection titles, fact-checks) and the fact-check workflow. The map
-itself is an analysis view (`@echo/analysis` mapview.ts): its snapshots, v2 result rows
+itself is an analysis view (`@dembrane/analysis` mapview.ts): its snapshots, v2 result rows
 and the graph payload live there.
 
 ## Generation
@@ -46,4 +46,4 @@ the same selection; it never answers differently for one key.
 
 `/events` streams the `map:project:<id>` channel, plus the project's analysis channel
 when `runs=1` or once the project has an arguments scope, over Postgres LISTEN/NOTIFY
-(`@echo/realtime`), with the frames the Python sent.
+(`@dembrane/realtime`), with the frames the Python sent.

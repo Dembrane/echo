@@ -1,5 +1,5 @@
 /**
- * The popcorn pieces the live tick (@echo/popcorn) shares with the popcorn, stakeholders
+ * The popcorn pieces the live tick (@dembrane/popcorn) shares with the popcorn, stakeholders
  * and tensions recipes, as ticks.py and the recipes share dembrane/popcorn. A change here
  * changes both, and the recipes hash these prompts and schemas into their step keys, so a
  * change is a new recipe version as well as a new tick.

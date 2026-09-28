@@ -1,9 +1,9 @@
 import { APICallError } from "@ai-sdk/provider";
-import type { Capture } from "@echo/analytics";
-import type { Signed } from "@echo/http";
-import type { Models } from "@echo/llm";
-import type { Emit } from "@echo/notifications";
-import type { Logger } from "@echo/observability";
+import type { Capture } from "@dembrane/analytics";
+import type { Signed } from "@dembrane/http";
+import type { Models } from "@dembrane/llm";
+import type { Emit } from "@dembrane/notifications";
+import type { Logger } from "@dembrane/observability";
 import type { ModelMessage } from "ai";
 import type { AgentData, TurnContext } from "../agent/data";
 import { chatModelEnd, toolEnd, toolError, toolStart } from "../agent/events";

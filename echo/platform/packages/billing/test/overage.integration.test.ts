@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { createDb, schema } from "@echo/db";
+import { createDb, schema } from "@dembrane/db";
 import { eq } from "drizzle-orm";
 import postgres from "postgres";
 import {

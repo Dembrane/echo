@@ -1,4 +1,4 @@
-import { popcornShared } from "@echo/analysis";
+import { popcornShared } from "@dembrane/analysis";
 import { dict, type Json, list, orStr, pyStr } from "../py";
 import { pySplit, pyStrip } from "../text";
 import { pyRepr, W, WB_END, WB_START } from "./util";

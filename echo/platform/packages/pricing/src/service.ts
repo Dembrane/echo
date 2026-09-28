@@ -1,6 +1,6 @@
-import { ForbiddenError, newId, PlatformError } from "@echo/core";
-import type { Logger } from "@echo/observability";
-import type { ObjectStorage } from "@echo/storage";
+import { ForbiddenError, newId, PlatformError } from "@dembrane/core";
+import type { Logger } from "@dembrane/observability";
+import type { ObjectStorage } from "@dembrane/storage";
 import type { PricingInsert, PricingRow, PricingStore } from "./storage";
 
 /**

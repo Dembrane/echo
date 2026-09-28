@@ -1,4 +1,4 @@
-import { type Ctx, requireUser } from "@echo/http";
+import { type Ctx, requireUser } from "@dembrane/http";
 import { workspaceContext } from "../context";
 import { clock, type TenancyDeps } from "../deps";
 

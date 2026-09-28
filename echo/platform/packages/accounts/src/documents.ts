@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { newId } from "@echo/core";
+import { newId } from "@dembrane/core";
 import type { AccountsDeps, Conn } from "./deps";
 import type { PlacedField, RenderedPdf } from "./pdf";
 import { type FieldRow, store } from "./storage";

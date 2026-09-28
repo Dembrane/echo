@@ -1,9 +1,9 @@
-import { DrizzleAccessStore } from "@echo/access";
-import type { Db } from "@echo/db";
-import type { Completer } from "@echo/llm";
-import type { Logger } from "@echo/observability";
-import { defineJob, type JobDefinition, type Queue, step } from "@echo/queue";
-import { PostgresRateCounter, RateLimiter } from "@echo/ratelimit";
+import { DrizzleAccessStore } from "@dembrane/access";
+import type { Db } from "@dembrane/db";
+import type { Completer } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
+import { defineJob, type JobDefinition, type Queue, step } from "@dembrane/queue";
+import { PostgresRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { z } from "zod";
 import { publishGenerationNudge } from "./events";
 import { dict, orStr, utcNowIso } from "./py";

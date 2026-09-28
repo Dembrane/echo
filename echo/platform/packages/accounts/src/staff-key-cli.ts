@@ -5,7 +5,7 @@
  *   DATABASE_URL=... bun run accounts:staff-key revoke <label>
  * The key is printed once, to stdout; store it in Secret Manager straight away.
  */
-import { createDb } from "@echo/db";
+import { createDb } from "@dembrane/db";
 import { mintStaffKey, revokeStaffKeys } from "./staff-key";
 
 const url = process.env.DATABASE_URL;

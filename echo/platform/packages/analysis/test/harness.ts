@@ -1,7 +1,7 @@
 import { Writable } from "node:stream";
-import { createDb } from "@echo/db";
-import { FakeCompleter, FakeEmbedder } from "@echo/llm";
-import { createLogger, type Logger } from "@echo/observability";
+import { createDb } from "@dembrane/db";
+import { FakeCompleter, FakeEmbedder } from "@dembrane/llm";
+import { createLogger, type Logger } from "@dembrane/observability";
 import postgres from "postgres";
 import type { Json } from "../src/contracts";
 import { clientOf } from "../src/db";

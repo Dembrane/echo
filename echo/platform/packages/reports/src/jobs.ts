@@ -1,8 +1,8 @@
-import { newId } from "@echo/core";
-import { type Completer, isRetryable } from "@echo/llm";
-import type { Logger } from "@echo/observability";
-import { generateReport, REPORT_PROGRESS_CHANNEL } from "@echo/projects";
-import { defineJob, type JobDefinition, type Parsed, type Queue, step } from "@echo/queue";
+import { newId } from "@dembrane/core";
+import { type Completer, isRetryable } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
+import { generateReport, REPORT_PROGRESS_CHANNEL } from "@dembrane/projects";
+import { defineJob, type JobDefinition, type Parsed, type Queue, step } from "@dembrane/queue";
 import { z } from "zod";
 import {
   buildReportPrompt,

@@ -1,4 +1,4 @@
-import type { Env } from "@echo/http";
+import type { Env } from "@dembrane/http";
 import { Hono } from "hono";
 import { bffConversationRoutes } from "./bff/routes";
 import type { ConversationsDeps } from "./deps";

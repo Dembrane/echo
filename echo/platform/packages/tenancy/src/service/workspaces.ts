@@ -1,6 +1,6 @@
-import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, newId } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { isoTimestamp } from "@echo/legacy-shape";
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { isoTimestamp } from "@dembrane/legacy-shape";
 import {
   blocksNewWorkspace,
   commercial,

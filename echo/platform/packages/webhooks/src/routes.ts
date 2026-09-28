@@ -1,8 +1,8 @@
-import type { Access } from "@echo/access";
-import type { Db } from "@echo/db";
-import { type Env, requireUser } from "@echo/http";
-import { p } from "@echo/legacy-shape";
-import type { JobSink } from "@echo/projects";
+import type { Access } from "@dembrane/access";
+import type { Db } from "@dembrane/db";
+import { type Env, requireUser } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
+import type { JobSink } from "@dembrane/projects";
 import { Hono } from "hono";
 import type { Deliver } from "./deliver";
 import * as svc from "./service";

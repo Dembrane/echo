@@ -1,4 +1,4 @@
-import { type StepConfig, step } from "@echo/queue";
+import { type StepConfig, step } from "@dembrane/queue";
 import {
   claimFinalize,
   claimFinish,

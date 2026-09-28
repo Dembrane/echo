@@ -1,6 +1,6 @@
-import { reconcileAccountSeats } from "@echo/billing";
-import { newId } from "@echo/core";
-import type { schema } from "@echo/db";
+import { reconcileAccountSeats } from "@dembrane/billing";
+import { newId } from "@dembrane/core";
+import type { schema } from "@dembrane/db";
 import { type Conn, iso } from "./db";
 import type { JobSink } from "./jobs";
 import {

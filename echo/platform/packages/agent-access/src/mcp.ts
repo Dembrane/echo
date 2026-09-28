@@ -1,4 +1,4 @@
-import { PlatformError } from "@echo/core";
+import { PlatformError } from "@dembrane/core";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import {

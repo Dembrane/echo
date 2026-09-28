@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { createAuth } from "@echo/auth";
+import { createAuth } from "@dembrane/auth";
 import { codeSignInGate } from "../src/prospect";
 import { accountsRoutes } from "../src/routes";
 import { mintStaffKey, revokeStaffKeys } from "../src/staff-key";

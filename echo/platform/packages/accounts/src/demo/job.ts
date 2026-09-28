@@ -1,4 +1,4 @@
-import { defineJob } from "@echo/queue";
+import { defineJob } from "@dembrane/queue";
 import { z } from "zod";
 
 // The demo build's job, apart from its code: the API enqueues it and must not load the

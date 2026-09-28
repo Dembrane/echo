@@ -2,8 +2,8 @@
 // bucket directory, tracing each media and transcription call. With HANG=1 it stops
 // forever inside transcription, so the test can kill it mid-step.
 import { appendFileSync } from "node:fs";
-import { LocalMedia, type Media } from "@echo/audio";
-import { FakeTranscriber } from "@echo/transcription";
+import { LocalMedia, type Media } from "@dembrane/audio";
+import { FakeTranscriber } from "@dembrane/transcription";
 import { startWorker } from "../pipeline-harness";
 
 const who = process.env.EXECUTOR as string;

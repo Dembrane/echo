@@ -1,4 +1,4 @@
-import { ConflictError, newId } from "@echo/core";
+import { ConflictError, newId } from "@dembrane/core";
 import { type Conn, iso } from "./db";
 import { supportAccessEmail } from "./emails";
 import { emailJob, type JobSink } from "./jobs";

@@ -1,4 +1,4 @@
-import type { schema } from "@echo/db";
+import type { schema } from "@dembrane/db";
 
 export type TrainingRow = typeof schema.training.$inferSelect;
 export type LicenseRow = typeof schema.training_license.$inferSelect;

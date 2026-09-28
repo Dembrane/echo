@@ -1,5 +1,5 @@
 {
-  "name": "@echo/web",
+  "name": "@dembrane/web",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@echo/config": "workspace:*",
-    "@echo/observability": "workspace:*"
+    "@dembrane/config": "workspace:*",
+    "@dembrane/observability": "workspace:*"
   }
 }

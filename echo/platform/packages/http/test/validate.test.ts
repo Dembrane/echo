@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { ValidationError } from "@echo/core";
+import { ValidationError } from "@dembrane/core";
 import { Hono } from "hono";
 import * as v from "../src/validate";
 

@@ -2,8 +2,8 @@ import { afterAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { migrate } from "@echo/db";
-import { installQueueSchema } from "@echo/queue";
+import { migrate } from "@dembrane/db";
+import { installQueueSchema } from "@dembrane/queue";
 import postgres from "postgres";
 
 // Runs against its own database on the Postgres named by TEST_DATABASE_ADMIN_URL, never
@@ -98,5 +98,8 @@ run("report generation survives a killed worker", () => {
       "task_create_report_continue.completed",
     ]);
     await sql.end();
-  });
+    // Two worker processes, a kill and a DBOS recovery sweep: seconds alone, far longer while
+    // the whole suite runs in parallel. The explicit limit holds under --parallel, where the
+    // describe-level default was not applied and the test failed at 15 s.
+  }, 90_000);
 });

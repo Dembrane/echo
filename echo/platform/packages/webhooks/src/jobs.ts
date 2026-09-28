@@ -1,5 +1,5 @@
-import type { Logger } from "@echo/observability";
-import { defineJob, type JobDefinition } from "@echo/queue";
+import type { Logger } from "@dembrane/observability";
+import { defineJob, type JobDefinition } from "@dembrane/queue";
 import { z } from "zod";
 import type { Deliver } from "./deliver";
 import type { WebhooksStorage } from "./storage";

@@ -1,4 +1,4 @@
-import type { Completion } from "@echo/llm";
+import type { Completion } from "@dembrane/llm";
 import type { Json } from "../contracts";
 import extractionPrompt from "../prompts/map-arguments-v2.md" with { type: "text" };
 import type { ProducerServices } from "./services";

@@ -1,5 +1,5 @@
-import { ConflictError, ForbiddenError, newId, ValidationError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { ConflictError, ForbiddenError, newId, ValidationError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { assertMaySign, documentFor } from "./access";
 import type { AccountsDeps, Conn } from "./deps";
 import { sha256Hex, storeRendered, writeFields } from "./documents";

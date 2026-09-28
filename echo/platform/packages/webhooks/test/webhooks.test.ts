@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { createHmac } from "node:crypto";
 import { Writable } from "node:stream";
-import { createLogger } from "@echo/observability";
+import { createLogger } from "@dembrane/observability";
 import {
   httpDeliver,
   isPrivateAddress,

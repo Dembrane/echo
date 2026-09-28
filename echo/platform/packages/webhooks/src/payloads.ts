@@ -1,4 +1,4 @@
-import { directusRow, pythonIso } from "@echo/legacy-shape";
+import { directusRow, pythonIso } from "@dembrane/legacy-shape";
 
 /** Events a project webhook can subscribe to. */
 export const WEBHOOK_EVENTS = [

@@ -1,5 +1,5 @@
-import type { Db } from "@echo/db";
-import type { Logger } from "@echo/observability";
+import type { Db } from "@dembrane/db";
+import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
 import { isUuid } from "../storage";
 import { NEGATIVE_MARKER, type Presence } from "./presence";

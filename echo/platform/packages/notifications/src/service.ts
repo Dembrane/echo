@@ -1,5 +1,5 @@
-import { ForbiddenError, NotFoundError } from "@echo/core";
-import { directusTime, type Signed } from "@echo/http";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
+import { directusTime, type Signed } from "@dembrane/http";
 import type { NotificationStorage } from "./storage";
 
 /** The old API's answer for a signed-in user who never onboarded (no app_user row). */

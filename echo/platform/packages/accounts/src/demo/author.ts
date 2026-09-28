@@ -1,4 +1,4 @@
-import type { Completer } from "@echo/llm";
+import type { Completer } from "@dembrane/llm";
 import { z } from "zod";
 import type { FetchedPage } from "./fetch";
 

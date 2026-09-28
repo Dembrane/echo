@@ -1,6 +1,6 @@
-import { RateLimitedError } from "@echo/core";
-import type { Logger } from "@echo/observability";
-import { type Hub, openStreams, publish } from "@echo/realtime";
+import { RateLimitedError } from "@dembrane/core";
+import type { Logger } from "@dembrane/observability";
+import { type Hub, openStreams, publish } from "@dembrane/realtime";
 import type { Context } from "hono";
 import { stream } from "hono/streaming";
 import type postgres from "postgres";

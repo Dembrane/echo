@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { createDb, migrate } from "@echo/db";
+import { createDb, migrate } from "@dembrane/db";
 import postgres from "postgres";
 import { backfillScheduled, runScheduledReports } from "../src/jobs";
 import { reportsStorage } from "../src/storage";

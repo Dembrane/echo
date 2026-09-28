@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { Writable } from "node:stream";
-import { Access, MemoryAccessStore, MemoryStaffAudit } from "@echo/access";
-import type { Billing } from "@echo/billing";
-import { loadConfig, publicValues } from "@echo/config";
-import { NotFoundError } from "@echo/core";
-import { MemoryMailer } from "@echo/mail";
-import { createLogger, initTracing } from "@echo/observability";
-import { MemoryRateCounter, RateLimiter } from "@echo/ratelimit";
+import { Access, MemoryAccessStore, MemoryStaffAudit } from "@dembrane/access";
+import type { Billing } from "@dembrane/billing";
+import { loadConfig, publicValues } from "@dembrane/config";
+import { NotFoundError } from "@dembrane/core";
+import { MemoryMailer } from "@dembrane/mail";
+import { createLogger, initTracing } from "@dembrane/observability";
+import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { buildApp } from "../src/app";
 import type { Deps } from "../src/deps";
 

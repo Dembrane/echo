@@ -1,7 +1,7 @@
-import type { Db } from "@echo/db";
-import type { Mailer } from "@echo/mail";
-import type { Logger } from "@echo/observability";
-import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
+import type { Db } from "@dembrane/db";
+import type { Mailer } from "@dembrane/mail";
+import type { Logger } from "@dembrane/observability";
+import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
 import { z } from "zod";
 import type { Billing } from "./create";
 import { previewDowngrade } from "./downgrade";

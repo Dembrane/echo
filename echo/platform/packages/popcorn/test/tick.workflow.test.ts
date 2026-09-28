@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { createDb, migrate } from "@echo/db";
-import { FakeCompleter } from "@echo/llm";
-import { createLogger, initTracing } from "@echo/observability";
-import { installQueueSchema, Queue } from "@echo/queue";
+import { createDb, migrate } from "@dembrane/db";
+import { FakeCompleter } from "@dembrane/llm";
+import { createLogger, initTracing } from "@dembrane/observability";
+import { installQueueSchema, Queue } from "@dembrane/queue";
 import postgres from "postgres";
 import { popcornTick } from "../src/jobs";
 import {

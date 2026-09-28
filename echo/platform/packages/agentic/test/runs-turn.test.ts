@@ -9,9 +9,9 @@ import {
 } from "bun:test";
 import { Writable } from "node:stream";
 import { APICallError } from "@ai-sdk/provider";
-import { createDb } from "@echo/db";
-import type { Emit } from "@echo/notifications";
-import { createLogger } from "@echo/observability";
+import { createDb } from "@dembrane/db";
+import type { Emit } from "@dembrane/notifications";
+import { createLogger } from "@dembrane/observability";
 import type { AgentData } from "../src/agent/data";
 import type { Agent } from "../src/agent/types";
 import { watchers, watchRun } from "../src/runs/live";

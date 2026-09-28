@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { Writable } from "node:stream";
 import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provider";
-import { createLogger } from "@echo/observability";
+import { createLogger } from "@dembrane/observability";
 import {
   GeminiTranscriber,
   isRecoverableTranscriptionError,

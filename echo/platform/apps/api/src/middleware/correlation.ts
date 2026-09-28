@@ -1,4 +1,4 @@
-import { newId } from "@echo/core";
+import { newId } from "@dembrane/core";
 import {
   context,
   propagation,
@@ -6,7 +6,7 @@ import {
   SpanStatusCode,
   trace,
   withCorrelation,
-} from "@echo/observability";
+} from "@dembrane/observability";
 import type { MiddlewareHandler } from "hono";
 import { routePath } from "hono/route";
 import type { Deps, Env } from "../deps";

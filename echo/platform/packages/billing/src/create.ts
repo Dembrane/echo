@@ -1,6 +1,6 @@
-import type { Db } from "@echo/db";
-import type { Mailer } from "@echo/mail";
-import type { Logger } from "@echo/observability";
+import type { Db } from "@dembrane/db";
+import type { Mailer } from "@dembrane/mail";
+import type { Logger } from "@dembrane/observability";
 import type { Mollie } from "./mollie";
 import { Notifier } from "./notify";
 import { type BillingConfig, BillingService, type Capture, RepriceMemo } from "./service";

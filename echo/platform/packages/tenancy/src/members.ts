@@ -1,4 +1,4 @@
-import { deriveWorkspaceRole, stickyRemovedIds } from "@echo/access";
+import { deriveWorkspaceRole, stickyRemovedIds } from "@dembrane/access";
 import type { Conn } from "./db";
 import {
   orgMembers,
@@ -17,7 +17,7 @@ export interface EffectiveMember {
 
 type Visibility = "open_to_organisation" | "invite_only" | "private";
 
-/** The workspace fields derivation reads, in the shape @echo/access decides on. */
+/** The workspace fields derivation reads, in the shape @dembrane/access decides on. */
 export function derivationView(ws: Pick<WorkspaceRowFull, "visibility" | "settings">) {
   const settings = (ws.settings ?? {}) as {
     inherit_organisation_members?: unknown;

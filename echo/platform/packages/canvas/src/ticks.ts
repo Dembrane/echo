@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import type { AccessStore } from "@echo/access";
-import type { Completer } from "@echo/llm";
+import type { AccessStore } from "@dembrane/access";
+import type { Completer } from "@dembrane/llm";
 import { executeGatherSpec, gatherHasTranscript } from "./gather";
 import { buildCanvasHistory } from "./history";
 import {

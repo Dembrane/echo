@@ -8,9 +8,9 @@ import {
   type ObjectRevision,
   recordAssessment,
   snapshotRevision,
-} from "@echo/analysis";
-import type { Completer } from "@echo/llm";
-import { defineJob, step } from "@echo/queue";
+} from "@dembrane/analysis";
+import type { Completer } from "@dembrane/llm";
+import { defineJob, step } from "@dembrane/queue";
 import { z } from "zod";
 import { FACTCHECK_PROMPT_VERSION, type FactCheckOutcome, factcheckClaim } from "./model";
 import type { MapStore } from "./store";

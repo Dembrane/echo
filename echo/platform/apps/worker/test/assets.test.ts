@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { missingAssets } from "@echo/core";
+import { missingAssets } from "@dembrane/core";
 import { WORKER_ASSETS } from "../src/assets";
 
 test("every file the worker's boot check requires is in the source tree", () => {

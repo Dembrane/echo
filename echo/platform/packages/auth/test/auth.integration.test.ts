@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { connect, createDb, migrate, schema } from "@echo/db";
+import { connect, createDb, migrate, schema } from "@dembrane/db";
 import { eq } from "drizzle-orm";
 import { createAuth, syncIdentitiesFromDirectus } from "../src";
 

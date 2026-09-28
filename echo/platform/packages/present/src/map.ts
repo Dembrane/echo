@@ -12,20 +12,20 @@ import {
   type ResultLink,
   resolveBudgets,
   type Snapshot,
-} from "@echo/analysis";
-import { NotFoundError, UnavailableError, ValidationError } from "@echo/core";
+} from "@dembrane/analysis";
+import { NotFoundError, UnavailableError, ValidationError } from "@dembrane/core";
 import {
   assessmentState,
   factCheckStates,
   type MapStore as MapRows,
   MapStoreError,
   requestGeneration,
-} from "@echo/map";
-import { dict, isRecord, type Json, list, pyStr, type Row } from "@echo/popcorn";
+} from "@dembrane/map";
+import { dict, isRecord, type Json, list, pyStr, type Row } from "@dembrane/popcorn";
 
 /**
  * The map a presentation shows the room: the audience projection (sanitize_map and the
- * rules around it) over the graph @echo/analysis draws, and the seam to the stores.
+ * rules around it) over the graph @dembrane/analysis draws, and the seam to the stores.
  * `MapStore` is everything Present needs from them; `analysisMapStore` answers it from the
  * analysis runtime and Map's own rows, as present.py did from SqlAnalysisStore and
  * SqlMapStore. A store failure answers 503, as the host's graph endpoint does.

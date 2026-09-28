@@ -1,5 +1,5 @@
-import { BadRequestError, ValidationError } from "@echo/core";
-import type { Ctx } from "@echo/http";
+import { BadRequestError, ValidationError } from "@dembrane/core";
+import type { Ctx } from "@dembrane/http";
 import type { z } from "zod";
 
 /**

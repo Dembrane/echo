@@ -1,8 +1,8 @@
-import type { Access } from "@echo/access";
-import { ConflictError, NotFoundError, newId, UnavailableError, ValidationError } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { projectAllows, projectFor } from "@echo/projects";
-import type { RateLimiter } from "@echo/ratelimit";
+import type { Access } from "@dembrane/access";
+import { ConflictError, NotFoundError, newId, UnavailableError, ValidationError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { projectAllows, projectFor } from "@dembrane/projects";
+import type { RateLimiter } from "@dembrane/ratelimit";
 import {
   AnalysisStoreError,
   AnalysisValidationError,

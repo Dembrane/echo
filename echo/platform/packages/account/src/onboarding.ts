@@ -1,5 +1,5 @@
-import { BadRequestError, NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { BadRequestError, NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { type InviteCtx, notifyWorkspaceJoin, onboardedUser } from "./invites/accept";
 import { grantInviteProjectShare, isOutsider } from "./invites/membership";
 import { sendEmail } from "./jobs";

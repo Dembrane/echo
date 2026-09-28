@@ -1,6 +1,6 @@
-import type { Access } from "@echo/access";
-import { BadRequestError, ConflictError, NotFoundError, newId } from "@echo/core";
-import type { Signed } from "@echo/http";
+import type { Access } from "@dembrane/access";
+import { BadRequestError, ConflictError, NotFoundError, newId } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { agentProject } from "../access";
 import { buildCanvasHistory } from "./history";
 import {

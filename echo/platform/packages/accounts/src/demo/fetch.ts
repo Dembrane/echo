@@ -1,4 +1,4 @@
-import { assertPublicTarget } from "@echo/webhooks";
+import { assertPublicTarget } from "@dembrane/webhooks";
 import { decodeEntities } from "../legal/parse";
 
 /**

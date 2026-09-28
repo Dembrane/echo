@@ -1,5 +1,5 @@
-import { isoTimestamp } from "@echo/legacy-shape";
-import type { Completer, CompletionRequest, Embedder } from "@echo/llm";
+import { isoTimestamp } from "@dembrane/legacy-shape";
+import type { Completer, CompletionRequest, Embedder } from "@dembrane/llm";
 import type { Json } from "../contracts";
 import { q } from "../db";
 import {

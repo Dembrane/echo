@@ -1,5 +1,5 @@
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
 import { and, asc, desc, eq, gte, inArray, isNull, or } from "drizzle-orm";
 
 const { announcement, announcement_activity, announcement_translations } = schema;

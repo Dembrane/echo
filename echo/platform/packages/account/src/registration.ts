@@ -1,4 +1,4 @@
-import { directusTime } from "@echo/http";
+import { directusTime } from "@dembrane/http";
 import type { InviteCtx } from "./invites/accept";
 import { hashMatches, urlencode } from "./invites/hash";
 import { sendEmail } from "./jobs";

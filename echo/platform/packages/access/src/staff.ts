@@ -1,6 +1,6 @@
-import { ForbiddenError, newId } from "@echo/core";
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
+import { ForbiddenError, newId } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
 
 /**
  * Named staff permissions (CTO decision 8.5): each staff capability is granted on its

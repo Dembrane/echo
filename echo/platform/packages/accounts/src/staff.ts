@@ -1,6 +1,6 @@
-import { BadRequestError, ConflictError, NotFoundError, newId, ValidationError } from "@echo/core";
-import { schema } from "@echo/db";
-import type { Signed } from "@echo/http";
+import { BadRequestError, ConflictError, NotFoundError, newId, ValidationError } from "@dembrane/core";
+import { schema } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { staffOrg } from "./access";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";

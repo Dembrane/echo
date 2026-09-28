@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { FakeCompleter } from "@echo/llm";
+import { FakeCompleter } from "@dembrane/llm";
 import type postgres from "postgres";
 import type { Json } from "../src/contracts";
 import { type ExecutorDeps, execute, requestRun } from "../src/executor";

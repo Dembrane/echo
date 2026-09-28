@@ -1,4 +1,4 @@
-import { ForbiddenError, RateLimitedError } from "@echo/core";
+import { ForbiddenError, RateLimitedError } from "@dembrane/core";
 
 /**
  * Counts hits per key in fixed windows. `hit` returns the count after this hit; the

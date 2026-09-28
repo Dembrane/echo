@@ -1,9 +1,9 @@
-import { seedLegalTexts } from "@echo/accounts";
-import { syncIdentitiesFromDirectus } from "@echo/auth/sync";
-import { loadSections } from "@echo/config";
-import { bootAssets } from "@echo/core";
-import { connect, createDb, grantRuntimeRole, MIGRATE_ASSETS, migrate } from "@echo/db";
-import { installQueueSchema } from "@echo/queue";
+import { seedLegalTexts } from "@dembrane/accounts";
+import { syncIdentitiesFromDirectus } from "@dembrane/auth/sync";
+import { loadSections } from "@dembrane/config";
+import { bootAssets } from "@dembrane/core";
+import { connect, createDb, grantRuntimeRole, MIGRATE_ASSETS, migrate } from "@dembrane/db";
+import { installQueueSchema } from "@dembrane/queue";
 
 /**
  * The Cloud Run job that runs before every rollout, with the owner login: schema

@@ -1,5 +1,5 @@
 {
-  "name": "@echo/platform",
+  "name": "@dembrane/platform",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -8,12 +8,12 @@
     "parity"
   ],
   "scripts": {
-    "dev": "bun --env-file=.env.local --filter @echo/api dev",
+    "dev": "bun --env-file=.env.local --filter @dembrane/api dev",
     "check": "bun run lint && bun run typecheck && bun test",
     "lint": "biome check .",
     "format": "biome check --write .",
     "typecheck": "tsc -p tsconfig.json",
-    "db:generate": "bun --filter @echo/db generate",
+    "db:generate": "bun --filter @dembrane/db generate",
     "db:migrate": "bun --env-file=.env.local packages/db/src/migrate.ts",
     "setup": "scripts/setup.sh",
     "config": "bun packages/config/src/cli.ts",

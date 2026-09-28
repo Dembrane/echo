@@ -1,4 +1,4 @@
-import type { Db } from "@echo/db";
+import type { Db } from "@dembrane/db";
 import { iso } from "./db";
 import {
   claimDueTasks,

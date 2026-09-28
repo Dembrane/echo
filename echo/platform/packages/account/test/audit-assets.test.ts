@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { Signed } from "@echo/http";
+import type { Signed } from "@dembrane/http";
 import { mayRead } from "../src/assets";
 import { auditOptions, auditPage, auditScope, csv } from "../src/audit";
 import type { AuditScope, AuditStorage } from "../src/audit-storage";

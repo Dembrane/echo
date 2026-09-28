@@ -1,4 +1,4 @@
-import type { Env } from "@echo/http";
+import type { Env } from "@dembrane/http";
 import { Hono } from "hono";
 import type { TenancyDeps } from "./deps";
 import { accessRoutes } from "./routes/access";

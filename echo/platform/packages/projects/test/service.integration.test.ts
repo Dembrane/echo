@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { Access, DrizzleAccessStore } from "@echo/access";
-import { createDb } from "@echo/db";
-import type { Signed } from "@echo/http";
+import { Access, DrizzleAccessStore } from "@dembrane/access";
+import { createDb } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
 import postgres from "postgres";
 import { exportTranscripts, type ProjectDeps } from "../src/projects";
 import { createReport } from "../src/reports";

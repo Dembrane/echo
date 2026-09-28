@@ -1,4 +1,4 @@
-import { pyRound } from "@echo/billing";
+import { pyRound } from "@dembrane/billing";
 import type { StatsStore } from "./storage";
 
 export interface PublicStats {

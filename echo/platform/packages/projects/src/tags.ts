@@ -1,6 +1,6 @@
-import { BadRequestError, NotFoundError, newId } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { directusRow } from "@echo/legacy-shape";
+import { BadRequestError, NotFoundError, newId } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { directusRow } from "@dembrane/legacy-shape";
 import { projectFor } from "./access";
 import type { ProjectDeps } from "./projects";
 

@@ -1,5 +1,5 @@
-import { BadRequestError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { BadRequestError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { streamText } from "ai";
 import { chatFor, chatProjectId } from "./access";
 import { chatContext } from "./context";

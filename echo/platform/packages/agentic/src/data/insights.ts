@@ -1,5 +1,5 @@
-import { BadRequestError, NotFoundError, newId } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { BadRequestError, NotFoundError, newId } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { agentProject } from "../access";
 import { type DataDeps, isUuid, projectRow, type Row, row, sqlOf, text } from "./deps";
 

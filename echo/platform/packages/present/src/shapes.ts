@@ -1,5 +1,5 @@
-import { type Issue, p, type Type } from "@echo/legacy-shape";
-import { settingsBody } from "@echo/popcorn";
+import { type Issue, p, type Type } from "@dembrane/legacy-shape";
+import { settingsBody } from "@dembrane/popcorn";
 
 /**
  * Present's request shapes, as pydantic declared them. The opening models forbid extra

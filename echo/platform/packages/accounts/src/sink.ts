@@ -1,4 +1,4 @@
-import type { JobDefinition, Payload, Queue } from "@echo/queue";
+import type { JobDefinition, Payload, Queue } from "@dembrane/queue";
 import type postgres from "postgres";
 import type { Conn } from "./deps";
 

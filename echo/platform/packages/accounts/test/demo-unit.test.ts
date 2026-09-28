@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createModels, FakeCompleter, vertexCompleter } from "@echo/llm";
+import { createModels, FakeCompleter, vertexCompleter } from "@dembrane/llm";
 import { author, research, researchMarkdown, withDisclosure } from "../src/demo/author";
 import { demoSlug } from "../src/demo/build";
 import { fetchSite, type HttpGet, httpGet, pageText, siteLinks } from "../src/demo/fetch";

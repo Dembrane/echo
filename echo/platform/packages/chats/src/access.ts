@@ -1,7 +1,7 @@
-import type { Access, Policy, ProjectAccess } from "@echo/access";
-import { NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { projectFor } from "@echo/projects";
+import type { Access, Policy, ProjectAccess } from "@dembrane/access";
+import { NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { projectFor } from "@dembrane/projects";
 import type { ChatRow, ChatsStorage } from "./storage";
 
 export interface ChatAccessDeps {

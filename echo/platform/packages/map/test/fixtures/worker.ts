@@ -2,11 +2,11 @@
 // model that traces its calls and can hang in the search-grounded investigation.
 import { appendFileSync } from "node:fs";
 import { Writable } from "node:stream";
-import { analysisRuntime, clientOf } from "@echo/analysis";
-import { createDb } from "@echo/db";
-import { FakeCompleter, FakeEmbedder } from "@echo/llm";
-import { createLogger, initTracing } from "@echo/observability";
-import { Queue } from "@echo/queue";
+import { analysisRuntime, clientOf } from "@dembrane/analysis";
+import { createDb } from "@dembrane/db";
+import { FakeCompleter, FakeEmbedder } from "@dembrane/llm";
+import { createLogger, initTracing } from "@dembrane/observability";
+import { Queue } from "@dembrane/queue";
 import { factCheckWorkflow, mapFactCheck } from "../../src/factcheck";
 import { MapStore } from "../../src/store";
 

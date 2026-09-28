@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import { ForbiddenError, NotFoundError } from "@echo/core";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
 import {
   Access,
   MemoryAccessStore,

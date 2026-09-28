@@ -1,4 +1,4 @@
-// What @echo/present reads and writes through, on the same rows and under the same lock.
+// What @dembrane/present reads and writes through, on the same rows and under the same lock.
 export {
   type AccessDeps,
   allows,

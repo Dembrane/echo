@@ -1,6 +1,6 @@
-import type { Capture } from "@echo/analytics";
-import { BadRequestError, ForbiddenError, NotFoundError } from "@echo/core";
-import { type Ctx, type Env, requireUser, type Signed, v } from "@echo/http";
+import type { Capture } from "@dembrane/analytics";
+import { BadRequestError, ForbiddenError, NotFoundError } from "@dembrane/core";
+import { type Ctx, type Env, requireUser, type Signed, v } from "@dembrane/http";
 import { Hono } from "hono";
 import {
   CONSENT_VERSION,

@@ -1,4 +1,4 @@
-import { p } from "@echo/legacy-shape";
+import { p } from "@dembrane/legacy-shape";
 
 type Loc = readonly (string | number)[];
 type IssueList = Parameters<p.Type<unknown>["parse"]>[2];

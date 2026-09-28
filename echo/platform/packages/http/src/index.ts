@@ -1,6 +1,6 @@
-import type { Principal } from "@echo/access";
-import { UnauthenticatedError } from "@echo/core";
-import type { Logger } from "@echo/observability";
+import type { Principal } from "@dembrane/access";
+import { UnauthenticatedError } from "@dembrane/core";
+import type { Logger } from "@dembrane/observability";
 import type { Context } from "hono";
 
 /** A signed-in caller as routes see it. */

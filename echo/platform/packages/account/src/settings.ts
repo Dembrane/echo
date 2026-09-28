@@ -1,5 +1,5 @@
-import { BadRequestError, NotFoundError, newId, PlatformError, ValidationError } from "@echo/core";
-import { type Ctx, type Env, requireUser, v } from "@echo/http";
+import { BadRequestError, NotFoundError, newId, PlatformError, ValidationError } from "@dembrane/core";
+import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
 import { Hono } from "hono";
 import type { AccountDeps } from "./deps";
 import { passwordProblems } from "./password";

@@ -7,7 +7,7 @@ import {
   propagation,
   type Tracer,
   withCorrelation,
-} from "@echo/observability";
+} from "@dembrane/observability";
 import type postgres from "postgres";
 import type { JobDefinition, Parsed, Payload } from "./define";
 import { ExecutorHeartbeat } from "./recovery";

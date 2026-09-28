@@ -1,6 +1,6 @@
-import { ROLE_RANK } from "@echo/access";
-import { BadRequestError } from "@echo/core";
-import type { Logger } from "@echo/observability";
+import { ROLE_RANK } from "@dembrane/access";
+import { BadRequestError } from "@dembrane/core";
+import type { Logger } from "@dembrane/observability";
 import type { InviteStorage } from "./storage";
 
 /**

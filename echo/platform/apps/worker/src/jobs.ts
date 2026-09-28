@@ -1,24 +1,24 @@
-import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@echo/access";
-import { emailHandler, sendEmail } from "@echo/account";
+import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@dembrane/access";
+import { emailHandler, sendEmail } from "@dembrane/account";
 import {
   type AccountsJobs,
   accountsWorker,
   demoHttpGet,
   httpFetchText,
   queueJobs,
-} from "@echo/accounts";
-import { agenticWorker } from "@echo/agentic";
-import { analysisWorker } from "@echo/analysis";
-import { type Billing, billingRegistration } from "@echo/billing";
-import { canvasWorker } from "@echo/canvas";
-import type { Config } from "@echo/config";
-import { conversationWorker, liveRecordings, type PipelineDeps } from "@echo/conversations";
-import type { Db } from "@echo/db";
-import { supportForwardRegistration, supportOutbox } from "@echo/feedback";
-import type { Completer, Embedder, Models } from "@echo/llm";
-import type { Mailer } from "@echo/mail";
-import { mapWorker } from "@echo/map";
-import type { Logger } from "@echo/observability";
+} from "@dembrane/accounts";
+import { agenticWorker } from "@dembrane/agentic";
+import { analysisWorker } from "@dembrane/analysis";
+import { type Billing, billingRegistration } from "@dembrane/billing";
+import { canvasWorker } from "@dembrane/canvas";
+import type { Config } from "@dembrane/config";
+import { conversationWorker, liveRecordings, type PipelineDeps } from "@dembrane/conversations";
+import type { Db } from "@dembrane/db";
+import { supportForwardRegistration, supportOutbox } from "@dembrane/feedback";
+import type { Completer, Embedder, Models } from "@dembrane/llm";
+import type { Mailer } from "@dembrane/mail";
+import { mapWorker } from "@dembrane/map";
+import type { Logger } from "@dembrane/observability";
 import {
   type PopcornWorkerDeps,
   popcornDeckHook,
@@ -27,14 +27,14 @@ import {
   runPopcornTick,
   runtimeAnalysis,
   tickDeps,
-} from "@echo/popcorn";
-import { presentAdoption } from "@echo/present";
-import { environmentName, httpForwarder, pricingRegistration, pricingStorage } from "@echo/pricing";
-import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
-import { reportsWorker } from "@echo/reports";
-import type { ObjectStorage } from "@echo/storage";
-import { type JobSink, tenancyWorker } from "@echo/tenancy";
-import { dispatchWebhook, httpDeliver, runDispatch, webhooksStorage } from "@echo/webhooks";
+} from "@dembrane/popcorn";
+import { presentAdoption } from "@dembrane/present";
+import { environmentName, httpForwarder, pricingRegistration, pricingStorage } from "@dembrane/pricing";
+import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
+import { reportsWorker } from "@dembrane/reports";
+import type { ObjectStorage } from "@dembrane/storage";
+import { type JobSink, tenancyWorker } from "@dembrane/tenancy";
+import { dispatchWebhook, httpDeliver, runDispatch, webhooksStorage } from "@dembrane/webhooks";
 import { z } from "zod";
 
 /**

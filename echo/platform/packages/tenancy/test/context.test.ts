@@ -1,7 +1,7 @@
 import { beforeEach, expect, test } from "bun:test";
-import { MemoryAccessStore } from "@echo/access";
-import { ForbiddenError, NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { MemoryAccessStore } from "@dembrane/access";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { workspaceContext } from "../src/context";
 
 const W = "c0000000-0000-4000-8000-000000000001";

@@ -1,5 +1,5 @@
-import { NotFoundError, newId } from "@echo/core";
-import { directusTime, type Signed } from "@echo/http";
+import { NotFoundError, newId } from "@dembrane/core";
+import { directusTime, type Signed } from "@dembrane/http";
 import type { ActivityRow, AnnouncementStorage } from "./announcements-storage";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

@@ -1,7 +1,7 @@
-import { newId } from "@echo/core";
-import type { Db } from "@echo/db";
-import { directusRow } from "@echo/legacy-shape";
-import { PostgresRateCounter } from "@echo/ratelimit";
+import { newId } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { directusRow } from "@dembrane/legacy-shape";
+import { PostgresRateCounter } from "@dembrane/ratelimit";
 import type postgres from "postgres";
 import {
   ACCESS_TOKEN_TTL_SECONDS,

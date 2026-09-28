@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import { Writable } from "node:stream";
-import { accountRow, MemoryBillingStore, Notifier } from "@echo/billing";
-import { ForbiddenError } from "@echo/core";
-import { MemoryMailer } from "@echo/mail";
-import { createLogger } from "@echo/observability";
+import { accountRow, MemoryBillingStore, Notifier } from "@dembrane/billing";
+import { ForbiddenError } from "@dembrane/core";
+import { MemoryMailer } from "@dembrane/mail";
+import { createLogger } from "@dembrane/observability";
 import {
   completeTraining,
   listTrainings,

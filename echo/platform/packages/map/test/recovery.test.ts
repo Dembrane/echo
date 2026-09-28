@@ -11,11 +11,11 @@ import {
   type Json,
   MapViewReads,
   requestRun,
-} from "@echo/analysis";
-import { createDb } from "@echo/db";
-import { FakeCompleter, FakeEmbedder } from "@echo/llm";
-import { createLogger, initTracing } from "@echo/observability";
-import { Queue } from "@echo/queue";
+} from "@dembrane/analysis";
+import { createDb } from "@dembrane/db";
+import { FakeCompleter, FakeEmbedder } from "@dembrane/llm";
+import { createLogger, initTracing } from "@dembrane/observability";
+import { Queue } from "@dembrane/queue";
 import postgres from "postgres";
 import { mapFactCheck } from "../src/factcheck";
 import * as service from "../src/service";

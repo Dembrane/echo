@@ -1,4 +1,4 @@
-import type { schema } from "@echo/db";
+import type { schema } from "@dembrane/db";
 import type { DirectRow, OrgRow, WorkspaceForMembers } from "./members";
 
 export type AccountRow = typeof schema.billing_account.$inferSelect;

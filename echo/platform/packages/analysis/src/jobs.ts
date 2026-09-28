@@ -5,7 +5,7 @@ import {
   type JobDefinition,
   type Queue,
   step,
-} from "@echo/queue";
+} from "@dembrane/queue";
 import { z } from "zod";
 import { BUSY_RETRY_SECONDS, execute, type WorkerOutcome } from "./executor";
 import { sha256Hex } from "./hashing";

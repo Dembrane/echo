@@ -1,4 +1,4 @@
-import { meetsTier, type Policy, TIER_REQUIRED, TIERS, type Tier } from "@echo/access";
+import { meetsTier, type Policy, TIER_REQUIRED, TIERS, type Tier } from "@dembrane/access";
 import { pyRound } from "./numbers";
 
 /**

@@ -1,5 +1,5 @@
-import type { Json, ProspectHook } from "@echo/popcorn";
-import { demoIdentity } from "@echo/popcorn";
+import type { Json, ProspectHook } from "@dembrane/popcorn";
+import { demoIdentity } from "@dembrane/popcorn";
 import { ProspectBlock } from "./contract";
 import type { AccountsDeps } from "./deps";
 import { emit } from "./events";

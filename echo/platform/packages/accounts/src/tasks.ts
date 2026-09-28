@@ -1,4 +1,4 @@
-import { newId } from "@echo/core";
+import { newId } from "@dembrane/core";
 import type { AccountsDeps, Conn } from "./deps";
 import { store, type TaskRow } from "./storage";
 import type { TaskCode } from "./task-text";

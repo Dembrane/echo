@@ -1,4 +1,4 @@
-import { popcornShared } from "@echo/analysis";
+import { popcornShared } from "@dembrane/analysis";
 import { isRecord, type Json, list, orStr, pyStr, truthy } from "../py";
 import { norm, pyStrip } from "../text";
 import { screenFlags } from "./gates";

@@ -86,7 +86,7 @@ customer; staff see it on the card instead. The interval is config, per task ove
 - `billing_account` gains `kvk_number`, `kbo_number`, `billing_email`, `po_number`,
   `peppol_id`. `organisation` gains `account_stage` and `origin_pricing_configuration_id`.
 
-## API (package `@echo/accounts`)
+## API (package `@dembrane/accounts`)
 
 Customer (org admins and billing role), `/api/v2/orgs/:orgId/account`: the page in one read
 (tasks, documents, billing details, tickets), document read, viewed, sign, decline, PDF;

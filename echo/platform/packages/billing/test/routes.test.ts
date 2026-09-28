@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
-import { Access, MemoryAccessStore, MemoryStaffAudit } from "@echo/access";
-import { PlatformError } from "@echo/core";
-import type { Env, Signed } from "@echo/http";
+import { Access, MemoryAccessStore, MemoryStaffAudit } from "@dembrane/access";
+import { PlatformError } from "@dembrane/core";
+import type { Env, Signed } from "@dembrane/http";
 import { Hono } from "hono";
 import { type Billing, billingRoutes } from "../src";
 import { ACC, ORG, U, WS1, world } from "./helpers";

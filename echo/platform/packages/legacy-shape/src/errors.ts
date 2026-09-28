@@ -1,4 +1,4 @@
-import { PlatformError } from "@echo/core";
+import { PlatformError } from "@dembrane/core";
 
 /** 402 with a structured detail: the free-tier limit contract the dashboard keys on. */
 export class PaymentRequiredError extends PlatformError {

@@ -1,8 +1,8 @@
-import { ValidationError } from "@echo/core";
-import { schema } from "@echo/db";
-import type { Signed } from "@echo/http";
-import type { Completer } from "@echo/llm";
-import { defaultSettings, demoIdentity, freshState, type Json, seedDemo } from "@echo/popcorn";
+import { ValidationError } from "@dembrane/core";
+import { schema } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
+import type { Completer } from "@dembrane/llm";
+import { defaultSettings, demoIdentity, freshState, type Json, seedDemo } from "@dembrane/popcorn";
 import { eq } from "drizzle-orm";
 import type { AccountsDeps } from "../deps";
 import { emit } from "../events";

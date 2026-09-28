@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { schema } from "@echo/db";
-import { MemoryMailer } from "@echo/mail";
+import { schema } from "@dembrane/db";
+import { MemoryMailer } from "@dembrane/mail";
 import { and, eq, sql } from "drizzle-orm";
 import { PDFDocument } from "pdf-lib";
 import postgres from "postgres";

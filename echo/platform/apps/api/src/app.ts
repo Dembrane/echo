@@ -1,24 +1,24 @@
-import { DrizzleAccessStore } from "@echo/access";
-import { accountRoutes } from "@echo/account";
-import { accountsRoutes, demoProspectHook, httpFetchText, queueJobs } from "@echo/accounts";
-import { agentAccessRoutes } from "@echo/agent-access";
-import { agenticRoutes } from "@echo/agentic";
-import { analysisRoutes, analysisRuntime, clientOf } from "@echo/analysis";
-import { posthogCapture } from "@echo/analytics";
-import { billingRoutes, mollieWebhookRoutes } from "@echo/billing";
-import { canvasRoutes } from "@echo/canvas";
-import { chatRoutes } from "@echo/chats";
+import { DrizzleAccessStore } from "@dembrane/access";
+import { accountRoutes } from "@dembrane/account";
+import { accountsRoutes, demoProspectHook, httpFetchText, queueJobs } from "@dembrane/accounts";
+import { agentAccessRoutes } from "@dembrane/agent-access";
+import { agenticRoutes } from "@dembrane/agentic";
+import { analysisRoutes, analysisRuntime, clientOf } from "@dembrane/analysis";
+import { posthogCapture } from "@dembrane/analytics";
+import { billingRoutes, mollieWebhookRoutes } from "@dembrane/billing";
+import { canvasRoutes } from "@dembrane/canvas";
+import { chatRoutes } from "@dembrane/chats";
 import {
   AudioUrls,
   type ConversationsDeps,
   conversationRoutes,
   PARTICIPANT_TOKEN_HEADER,
   ParticipantTokens,
-} from "@echo/conversations";
-import { reportRoutes as feedbackReportRoutes, responseRoutes } from "@echo/feedback";
-import { vertexCompleter, vertexEmbedder } from "@echo/llm";
-import { MapStore, mapRoutes } from "@echo/map";
-import { notificationRoutes } from "@echo/notifications";
+} from "@dembrane/conversations";
+import { reportRoutes as feedbackReportRoutes, responseRoutes } from "@dembrane/feedback";
+import { vertexCompleter, vertexEmbedder } from "@dembrane/llm";
+import { MapStore, mapRoutes } from "@dembrane/map";
+import { notificationRoutes } from "@dembrane/notifications";
 import {
   analysisDeck,
   popcornDemoRoutes,
@@ -27,19 +27,19 @@ import {
   popcornRoutes,
   publicRoutes,
   queueDispatch,
-} from "@echo/popcorn";
-import { analysisMapStore, presentRoutes, publicAudienceMap } from "@echo/present";
-import { pricingRoutes } from "@echo/pricing";
-import { projectRoutes } from "@echo/projects";
-import { sharedHub } from "@echo/realtime";
-import { reportRoutes } from "@echo/reports";
-import { staffRoutes } from "@echo/staff";
-import { statsRoutes } from "@echo/stats";
-import { FilesystemStorage, localStorageHandler } from "@echo/storage";
-import { queueSink, tenancyRoutes } from "@echo/tenancy";
-import { trainingRoutes } from "@echo/training";
-import { verifyRoutes } from "@echo/verify";
-import { webhookRoutes } from "@echo/webhooks";
+} from "@dembrane/popcorn";
+import { analysisMapStore, presentRoutes, publicAudienceMap } from "@dembrane/present";
+import { pricingRoutes } from "@dembrane/pricing";
+import { projectRoutes } from "@dembrane/projects";
+import { sharedHub } from "@dembrane/realtime";
+import { reportRoutes } from "@dembrane/reports";
+import { staffRoutes } from "@dembrane/staff";
+import { statsRoutes } from "@dembrane/stats";
+import { FilesystemStorage, localStorageHandler } from "@dembrane/storage";
+import { queueSink, tenancyRoutes } from "@dembrane/tenancy";
+import { trainingRoutes } from "@dembrane/training";
+import { verifyRoutes } from "@dembrane/verify";
+import { webhookRoutes } from "@dembrane/webhooks";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";

@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Access, DrizzleAccessStore } from "@echo/access";
-import { newId } from "@echo/core";
-import { createDb, schema } from "@echo/db";
+import { Access, DrizzleAccessStore } from "@dembrane/access";
+import { newId } from "@dembrane/core";
+import { createDb, schema } from "@dembrane/db";
 import {
   buildBundle,
   continueSnippet,
@@ -13,8 +13,8 @@ import {
   type Json,
   popcornDemoRoutes,
   renderPopcornPage,
-} from "@echo/popcorn";
-import { FilesystemStorage } from "@echo/storage";
+} from "@dembrane/popcorn";
+import { FilesystemStorage } from "@dembrane/storage";
 import { count, eq } from "drizzle-orm";
 import { demoProspectHook } from "../src/demo-hook";
 import { accountsRoutes } from "../src/routes";

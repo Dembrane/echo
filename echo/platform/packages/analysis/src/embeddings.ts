@@ -1,4 +1,4 @@
-import type { Embedder } from "@echo/llm";
+import type { Embedder } from "@dembrane/llm";
 import { AnalysisStoreError, type Json, type ObjectRevision } from "./contracts";
 import { sha256Hex } from "./hashing";
 import { sortedStrings } from "./registry";

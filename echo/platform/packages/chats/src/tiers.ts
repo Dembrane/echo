@@ -1,4 +1,4 @@
-import { PaymentRequiredError } from "@echo/core";
+import { PaymentRequiredError } from "@dembrane/core";
 
 /**
  * Free-tier gates the chat routes enforce. The Pilot hard block the Python routes also

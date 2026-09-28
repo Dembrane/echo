@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { type ObjectRevision, titleLines, titleSelectionKey } from "@echo/analysis";
-import { FakeCompleter } from "@echo/llm";
+import { type ObjectRevision, titleLines, titleSelectionKey } from "@dembrane/analysis";
+import { FakeCompleter } from "@dembrane/llm";
 import { titleSelection } from "../src/model";
 import { TitleCache, typedTitleLines } from "../src/service";
 import python from "./python-titles.json" with { type: "json" };

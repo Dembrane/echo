@@ -1,5 +1,5 @@
-import { newId } from "@echo/core";
-import type { Logger } from "@echo/observability";
+import { newId } from "@dembrane/core";
+import type { Logger } from "@dembrane/observability";
 import type { Conn } from "../deps";
 import { type LegalRow, store } from "../storage";
 import {

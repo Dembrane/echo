@@ -1,9 +1,9 @@
-import { durationOf } from "@echo/audio";
-import { newId, type PlatformError } from "@echo/core";
-import { schema } from "@echo/db";
-import type { Signed } from "@echo/http";
-import { projectFor } from "@echo/projects";
-import { TranscriptionError } from "@echo/transcription";
+import { durationOf } from "@dembrane/audio";
+import { newId, type PlatformError } from "@dembrane/core";
+import { schema } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
+import { projectFor } from "@dembrane/projects";
+import { TranscriptionError } from "@dembrane/transcription";
 import { and, eq } from "drizzle-orm";
 import type { ConversationsDeps } from "../deps";
 import { isUuid } from "../storage";

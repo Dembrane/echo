@@ -1,7 +1,7 @@
-import { pyIso } from "@echo/billing";
-import { newId } from "@echo/core";
-import type { Db } from "@echo/db";
-import { schema } from "@echo/db";
+import { pyIso } from "@dembrane/billing";
+import { newId } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import { schema } from "@dembrane/db";
 import { and, asc, eq, inArray, lt, lte, sql } from "drizzle-orm";
 
 const { scheduled_task } = schema;

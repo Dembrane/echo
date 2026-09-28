@@ -1,4 +1,4 @@
-import type { Logger } from "@echo/observability";
+import type { Logger } from "@dembrane/observability";
 import { pyJson } from "../agent/events";
 import { DraftAssembler, runChannel, sharedHub, watchRun } from "./live";
 import { type Row, type RunsStorage, TERMINAL_RUN_STATUSES } from "./storage";

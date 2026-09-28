@@ -1,4 +1,4 @@
-import { ValidationError } from "@echo/core";
+import { ValidationError } from "@dembrane/core";
 import type { DemoCorpusEntry } from "./demo";
 import { demoIdentity } from "./demo";
 import { dict, type Json, list, pyStr } from "./py";

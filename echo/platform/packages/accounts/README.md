@@ -1,4 +1,4 @@
-# @echo/accounts
+# @dembrane/accounts
 
 Customer accounts (docs/accounts.md): the organisation's page with its tasks, documents,
 billing details and questions; offers and other documents signed in echo; invoice mirrors
@@ -77,7 +77,7 @@ contact its admin, and puts "Continue in dembrane" on the public page.
 ## Customer routes
 
 Under `/api/v2/orgs/:orgId/account`, for the organisation's owners, admins and billing role
-(`account:*` in @echo/access). Someone named to sign a document reaches that one document
+(`account:*` in @dembrane/access). Someone named to sign a document reaches that one document
 (read, file, sign, decline, signed PDF) and nothing else.
 
 `GET /` is the whole page in one read. Documents: `GET /documents/:docId`, `POST .../view`,

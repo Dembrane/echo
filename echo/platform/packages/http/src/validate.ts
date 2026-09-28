@@ -1,4 +1,4 @@
-import { ValidationError } from "@echo/core";
+import { ValidationError } from "@dembrane/core";
 import type { Context } from "hono";
 
 /**

@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { assetPath } from "@echo/core";
+import { assetPath } from "@dembrane/core";
 
 /**
  * The popcorn presentation as one self-contained HTML document: the upstream page

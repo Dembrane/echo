@@ -1,8 +1,8 @@
-import { sendEmail } from "@echo/account";
-import { ConflictError, NotFoundError, newId, ValidationError } from "@echo/core";
-import { schema } from "@echo/db";
-import type { Signed } from "@echo/http";
-import { refuseProduction } from "@echo/popcorn";
+import { sendEmail } from "@dembrane/account";
+import { ConflictError, NotFoundError, newId, ValidationError } from "@dembrane/core";
+import { schema } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
+import { refuseProduction } from "@dembrane/popcorn";
 import { desc, eq } from "drizzle-orm";
 import type { AccountsDeps } from "../deps";
 import { isUuid } from "../deps";

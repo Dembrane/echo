@@ -1,9 +1,9 @@
-import { NotFoundError, RateLimitedError } from "@echo/core";
-import type { Env } from "@echo/http";
-import { p } from "@echo/legacy-shape";
-import type { Limit } from "@echo/ratelimit";
-import { TOO_MANY } from "@echo/ratelimit";
-import type { Hub } from "@echo/realtime";
+import { NotFoundError, RateLimitedError } from "@dembrane/core";
+import type { Env } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
+import type { Limit } from "@dembrane/ratelimit";
+import { TOO_MANY } from "@dembrane/ratelimit";
+import type { Hub } from "@dembrane/realtime";
 import { type Context, Hono } from "hono";
 import { getConnInfo } from "hono/bun";
 import {

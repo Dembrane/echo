@@ -4,10 +4,10 @@ import {
   roleHas,
   TIER_REQUIRED,
   type WorkspaceAccess,
-} from "@echo/access";
-import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@echo/core";
-import type { Signed } from "@echo/http";
-import { isoTimestamp } from "@echo/legacy-shape";
+} from "@dembrane/access";
+import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import { isoTimestamp } from "@dembrane/legacy-shape";
 import { type Member, requireOnboarded } from "../context";
 import { iso } from "../db";
 import { clock, type TenancyDeps } from "../deps";

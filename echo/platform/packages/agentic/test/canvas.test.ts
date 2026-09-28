@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { Access, MemoryAccessStore } from "@echo/access";
-import { BadRequestError, ConflictError, NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
+import { Access, MemoryAccessStore } from "@dembrane/access";
+import { BadRequestError, ConflictError, NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { buildCanvasHistory } from "../src/canvas/history";
 import {
   appendHostItem,

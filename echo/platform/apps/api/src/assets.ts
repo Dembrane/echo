@@ -1,5 +1,5 @@
-import { AGENT_ACCESS_ASSETS } from "@echo/agent-access";
-import { POPCORN_PAGE_ASSETS } from "@echo/popcorn";
+import { AGENT_ACCESS_ASSETS } from "@dembrane/agent-access";
+import { POPCORN_PAGE_ASSETS } from "@dembrane/popcorn";
 
 /**
  * Files the API reads at run time, checked at boot. apps/api/Dockerfile copies the trees

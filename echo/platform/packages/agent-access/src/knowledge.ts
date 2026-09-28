@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { assetPath } from "@echo/core";
-import type { Logger } from "@echo/observability";
+import { assetPath } from "@dembrane/core";
+import type { Logger } from "@dembrane/observability";
 
 /**
  * The product documentation as a small read-only file system for agents: list, a

@@ -1,6 +1,6 @@
-import { PlatformError } from "@echo/core";
+import { PlatformError } from "@dembrane/core";
 
-export { PaymentRequiredError } from "@echo/legacy-shape";
+export { PaymentRequiredError } from "@dembrane/legacy-shape";
 
 /** 500 with the old API's text, for states the data should never be in. */
 export class InternalError extends PlatformError {

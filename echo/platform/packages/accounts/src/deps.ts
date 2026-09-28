@@ -1,7 +1,7 @@
-import type { Access, StaffAudit } from "@echo/access";
-import type { Db } from "@echo/db";
-import type { Logger } from "@echo/observability";
-import type { ObjectStorage } from "@echo/storage";
+import type { Access, StaffAudit } from "@dembrane/access";
+import type { Db } from "@dembrane/db";
+import type { Logger } from "@dembrane/observability";
+import type { ObjectStorage } from "@dembrane/storage";
 import type { AccountsJobs } from "./sink";
 
 /** A Drizzle transaction handle; storage functions accept it or the pool. */

@@ -5,8 +5,8 @@ import {
   type Principal,
   type ProjectAccess,
   TIER_REQUIRED,
-} from "@echo/access";
-import { ForbiddenError, NotFoundError } from "@echo/core";
+} from "@dembrane/access";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
 import type { PopcornFlags } from "./service";
 import { REPORT_KIND } from "./settings";
 import { isUuid, type PopcornStore, type Row } from "./storage";
@@ -15,7 +15,7 @@ import { isUuid, type PopcornStore, type Row } from "./storage";
  * Popcorn access in the order the BFF checked it: the report must exist, the caller must be
  * onboarded and reach its project (404 otherwise, never confirming it exists), report:view,
  * then the feature flags (404 "Not found", hiding the beta), then project:read and the
- * report's kind. Every decision comes from @echo/access; only the wording is local.
+ * report's kind. Every decision comes from @dembrane/access; only the wording is local.
  */
 
 export interface AccessDeps {

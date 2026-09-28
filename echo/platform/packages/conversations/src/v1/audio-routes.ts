@@ -1,8 +1,8 @@
-import { AudioError } from "@echo/audio";
-import { BadRequestError, NotFoundError, newId, PlatformError } from "@echo/core";
-import { schema } from "@echo/db";
-import { type Env, requireUser, type Signed } from "@echo/http";
-import { p } from "@echo/legacy-shape";
+import { AudioError } from "@dembrane/audio";
+import { BadRequestError, NotFoundError, newId, PlatformError } from "@dembrane/core";
+import { schema } from "@dembrane/db";
+import { type Env, requireUser, type Signed } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
 import { and, eq, isNotNull } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversationForV1 } from "../access";

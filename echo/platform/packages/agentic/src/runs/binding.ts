@@ -1,8 +1,8 @@
-import type { Access } from "@echo/access";
-import type { Db } from "@echo/db";
-import type { Signed } from "@echo/http";
-import type { Logger } from "@echo/observability";
-import { publish } from "@echo/realtime";
+import type { Access } from "@dembrane/access";
+import type { Db } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
+import type { Logger } from "@dembrane/observability";
+import { publish } from "@dembrane/realtime";
 import type { AgentData, TurnContext } from "../agent/data";
 import * as canvas from "../canvas/service";
 import { canvasStorage } from "../canvas/storage";

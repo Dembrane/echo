@@ -1,4 +1,4 @@
-import type { JobDefinition, Queue } from "@echo/queue";
+import type { JobDefinition, Queue } from "@dembrane/queue";
 import {
   catchUpSummaries,
   finalizeConversation,

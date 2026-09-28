@@ -1,6 +1,6 @@
-import type { Mailer } from "@echo/mail";
-import type { Logger } from "@echo/observability";
-import { defineJob, type JobDefinition, type Payload, type Queue } from "@echo/queue";
+import type { Mailer } from "@dembrane/mail";
+import type { Logger } from "@dembrane/observability";
+import { defineJob, type JobDefinition, type Payload, type Queue } from "@dembrane/queue";
 import type postgres from "postgres";
 import { z } from "zod";
 import type { Conn } from "./db";

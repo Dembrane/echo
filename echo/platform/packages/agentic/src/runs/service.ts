@@ -1,5 +1,5 @@
-import type { Access } from "@echo/access";
-import type { ChatsStorage } from "@echo/chats";
+import type { Access } from "@dembrane/access";
+import type { ChatsStorage } from "@dembrane/chats";
 import {
   BadRequestError,
   ConflictError,
@@ -8,10 +8,10 @@ import {
   newId,
   PlatformError,
   UnavailableError,
-} from "@echo/core";
-import type { Signed } from "@echo/http";
-import type { Logger } from "@echo/observability";
-import type { Queue } from "@echo/queue";
+} from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
+import type { Logger } from "@dembrane/observability";
+import type { Queue } from "@dembrane/queue";
 import { agentProject } from "../access";
 import { startTurn } from "../jobs";
 import {

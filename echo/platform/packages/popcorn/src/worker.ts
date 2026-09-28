@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
-import { DrizzleAccessStore } from "@echo/access";
+import { DrizzleAccessStore } from "@dembrane/access";
 import {
   type AnalysisRuntime,
   analysisRuntime,
@@ -8,10 +8,10 @@ import {
   type JobSink,
   type RuntimeDeps,
   type SnapshotHook,
-} from "@echo/analysis";
-import type { Db } from "@echo/db";
-import type { Completer } from "@echo/llm";
-import type { Logger } from "@echo/observability";
+} from "@dembrane/analysis";
+import type { Db } from "@dembrane/db";
+import type { Completer } from "@dembrane/llm";
+import type { Logger } from "@dembrane/observability";
 import {
   defineJob,
   type JobDefinition,
@@ -19,7 +19,7 @@ import {
   step,
   WORKFLOW_VERSION,
   workflow,
-} from "@echo/queue";
+} from "@dembrane/queue";
 import { z } from "zod";
 import { analysisDeck, type DeckAnalysis, deckViewHook } from "./deck";
 import { publishNudge } from "./events";

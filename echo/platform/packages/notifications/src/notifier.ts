@@ -1,6 +1,6 @@
-import { newId } from "@echo/core";
-import type { Db } from "@echo/db";
-import type { Logger } from "@echo/observability";
+import { newId } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import type { Logger } from "@dembrane/observability";
 import { type NotificationAction, type NotificationSeverity, severityFor } from "./events";
 import { type NotificationStorage, notificationStorage } from "./storage";
 

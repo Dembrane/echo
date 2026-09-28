@@ -1,9 +1,9 @@
-import type { Notifier } from "@echo/billing";
-import { directusTime } from "@echo/billing";
-import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@echo/core";
-import type { Mailer } from "@echo/mail";
-import { escapeHtml } from "@echo/mail";
-import type { Logger } from "@echo/observability";
+import type { Notifier } from "@dembrane/billing";
+import { directusTime } from "@dembrane/billing";
+import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import type { Mailer } from "@dembrane/mail";
+import { escapeHtml } from "@dembrane/mail";
+import type { Logger } from "@dembrane/observability";
 import {
   CATALOG,
   computeExpiresAt,

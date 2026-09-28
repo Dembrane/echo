@@ -6,11 +6,11 @@
  * of the offer, tasks, question and corpus. APP_ENV picks the environment's URLs; prod is
  * refused, and so is any environment without the file bucket.
  */
-import { Access, DrizzleAccessStore } from "@echo/access";
-import { environments } from "@echo/config";
-import { createDb } from "@echo/db";
-import { createLogger } from "@echo/observability";
-import { FilesystemStorage, requireBucket, S3Storage } from "@echo/storage";
+import { Access, DrizzleAccessStore } from "@dembrane/access";
+import { environments } from "@dembrane/config";
+import { createDb } from "@dembrane/db";
+import { createLogger } from "@dembrane/observability";
+import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { httpFetchText } from "./deps";
 import { seedAccountsDemo } from "./seed";
 

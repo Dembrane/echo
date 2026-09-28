@@ -6,10 +6,10 @@ import {
   roleHas,
   TIER_REQUIRED,
   type WorkspaceAccess,
-} from "@echo/access";
-import { ForbiddenError, NotFoundError } from "@echo/core";
-import type { Db } from "@echo/db";
-import type { Signed } from "@echo/http";
+} from "@dembrane/access";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
+import type { Signed } from "@dembrane/http";
 import { isUuid } from "./storage";
 
 /**

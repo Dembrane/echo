@@ -1,5 +1,5 @@
-import { BadRequestError, newId, UnavailableError } from "@echo/core";
-import type { ObjectStorage } from "@echo/storage";
+import { BadRequestError, newId, UnavailableError } from "@dembrane/core";
+import type { ObjectStorage } from "@dembrane/storage";
 import { type Conn, iso, isUuid } from "./db";
 import { deleteFile, fileDiskName, folderByName, insertFile, insertFolder } from "./storage/files";
 

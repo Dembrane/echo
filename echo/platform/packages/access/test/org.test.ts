@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ForbiddenError, NotFoundError } from "@echo/core";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
 import { Access, MemoryAccessStore, ORG_POLICIES, orgRoleHas, STAFF_POLICIES } from "../src";
 
 // Who may use an organisation's customer account (docs/accounts.md): owners, admins and

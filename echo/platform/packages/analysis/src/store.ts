@@ -1,4 +1,4 @@
-import { newId } from "@echo/core";
+import { newId } from "@dembrane/core";
 import type postgres from "postgres";
 import {
   ACTIVE_RUN_STATUSES,

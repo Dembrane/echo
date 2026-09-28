@@ -1,4 +1,4 @@
-import { escapeHtml } from "@echo/mail";
+import { escapeHtml } from "@dembrane/mail";
 
 /**
  * The transactional email frame (the old _layout.html): a letter-style card, heading,

@@ -1,5 +1,5 @@
-import type { AccessStore } from "@echo/access";
-import type { Db } from "@echo/db";
+import type { AccessStore } from "@dembrane/access";
+import type { Db } from "@dembrane/db";
 import type { JobSink } from "./jobs";
 import type { LogoStore } from "./logos";
 

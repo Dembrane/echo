@@ -1,4 +1,4 @@
-import { schema } from "@echo/db";
+import { schema } from "@dembrane/db";
 import { and, asc, eq, gte, inArray, isNull, lt, type SQL, sql } from "drizzle-orm";
 import type { Conn } from "../db";
 

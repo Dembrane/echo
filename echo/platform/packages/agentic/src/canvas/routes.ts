@@ -1,6 +1,6 @@
-import { type Env, requireUser } from "@echo/http";
-import { p } from "@echo/legacy-shape";
-import { publish } from "@echo/realtime";
+import { type Env, requireUser } from "@dembrane/http";
+import { p } from "@dembrane/legacy-shape";
+import { publish } from "@dembrane/realtime";
 import { type Context, Hono } from "hono";
 import type { AgenticRoutesDeps } from "../routes";
 import * as svc from "./service";

@@ -1,6 +1,6 @@
 import { Writable } from "node:stream";
 import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provider";
-import { createLogger, type Logger } from "@echo/observability";
+import { createLogger, type Logger } from "@dembrane/observability";
 import type { ChatDeps } from "../src/deps";
 
 const usage = {

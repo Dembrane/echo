@@ -6,9 +6,9 @@ import {
   roleHas,
   TIER_REQUIRED,
   type WorkspaceAccess,
-} from "@echo/access";
-import { ForbiddenError, NotFoundError } from "@echo/core";
-import type { Signed } from "@echo/http";
+} from "@dembrane/access";
+import { ForbiddenError, NotFoundError } from "@dembrane/core";
+import type { Signed } from "@dembrane/http";
 import { isUuid } from "./db";
 
 /** A signed-in caller who has an app_user row. */
@@ -24,7 +24,7 @@ export function requireOnboarded(who: Signed): Member {
 
 /**
  * What the old API's `get_workspace_context` hands a route: the caller's resolved role on
- * the workspace. Resolution and every policy decision come from @echo/access; this only
+ * the workspace. Resolution and every policy decision come from @dembrane/access; this only
  * keeps the old status codes and texts (404 missing, 403 no access, 403 "Access denied").
  */
 export class WorkspaceContext {

@@ -1,6 +1,6 @@
-import { isoTimestamp } from "@echo/legacy-shape";
-import { renderPrompt } from "@echo/prompts";
-import { pythonJson } from "@echo/webhooks";
+import { isoTimestamp } from "@dembrane/legacy-shape";
+import { renderPrompt } from "@dembrane/prompts";
+import { pythonJson } from "@dembrane/webhooks";
 import { type FilePart, streamText, type TextPart } from "ai";
 import type { ConversationsDeps } from "../deps";
 import { type V1Store, v1Store } from "./storage";
