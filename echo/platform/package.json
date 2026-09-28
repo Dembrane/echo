@@ -18,7 +18,9 @@
     "setup": "scripts/setup.sh",
     "config": "bun packages/config/src/cli.ts",
     "test": "bun test --parallel",
-    "test:changed": "bun test --parallel --changed=origin/feat/bun-migration"
+    "test:changed": "bun test --parallel --changed=origin/feat/bun-migration",
+    "seed:accounts-demo": "bun --env-file=.env.local packages/accounts/src/seed-cli.ts",
+    "accounts:staff-key": "bun --env-file=.env.local packages/accounts/src/staff-key-cli.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.0",

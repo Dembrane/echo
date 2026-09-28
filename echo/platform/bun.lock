@@ -158,6 +158,7 @@
       "dependencies": {
         "@echo/access": "workspace:*",
         "@echo/account": "workspace:*",
+        "@echo/config": "workspace:*",
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/http": "workspace:*",
@@ -172,6 +173,9 @@
         "pdf-lib": "^1.17.1",
         "postgres": "^3.4.9",
         "zod": "^4.1.0",
+      },
+      "devDependencies": {
+        "@echo/auth": "workspace:*",
       },
     },
     "packages/agent-access": {
