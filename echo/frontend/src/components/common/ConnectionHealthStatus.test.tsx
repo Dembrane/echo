@@ -35,20 +35,20 @@ const wrap = (props: Parameters<typeof ConnectionHealthStatus>[0]) =>
 	);
 
 it("says nothing while the connection is fine", () => {
-	wrap({ isOnline: true, sseConnectionHealthy: true });
+	wrap({ connectionHealthy: true, isOnline: true });
 
 	// Not "Connection healthy" in a quieter colour: nothing at all.
 	expect(screen.queryByText(/Connection/)).toBeNull();
 });
 
-it("speaks up when the stream is unhealthy", () => {
-	wrap({ isOnline: true, sseConnectionHealthy: false });
+it("speaks up when the connection is unhealthy", () => {
+	wrap({ connectionHealthy: false, isOnline: true });
 
 	expect(screen.getByText("Connection unhealthy")).toBeTruthy();
 });
 
 it("speaks up when the device is offline", () => {
-	wrap({ isOnline: false, sseConnectionHealthy: true });
+	wrap({ connectionHealthy: true, isOnline: false });
 
 	expect(screen.getByText("Connection unhealthy")).toBeTruthy();
 });

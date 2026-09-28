@@ -383,24 +383,31 @@ export const pingVisitor = async (
 	}
 };
 
+/** A ping that has not answered by now counts as failed, so a hung request reads as trouble. */
+export const PING_TIMEOUT_MS = 8000;
+
 /**
  * Participant liveness + telemetry beacon. Called every few seconds while the
  * participant is in a conversation so the host monitor can tell what they are
  * doing (recording, paused, verifying, ...) between audio chunks. Telemetry is
- * optional and best-effort: failures are swallowed so a blip never disrupts
- * recording.
+ * optional and best-effort: failures never throw, so a blip never disrupts
+ * recording. Resolves to whether the API answered, which is how the portal
+ * knows its connection holds.
  */
 export const pingConversation = async (
 	conversationId: string,
 	telemetry?: ParticipantPingTelemetry,
-): Promise<void> => {
+): Promise<boolean> => {
 	try {
 		await apiNoAuth.post(
 			`/participant/conversations/${conversationId}/ping`,
 			telemetry ?? undefined,
+			{ timeout: PING_TIMEOUT_MS },
 		);
+		return true;
 	} catch {
-		// Non-critical; the next ping (or a chunk upload) re-establishes liveness.
+		// The next ping (or a chunk upload) re-establishes liveness.
+		return false;
 	}
 };
 

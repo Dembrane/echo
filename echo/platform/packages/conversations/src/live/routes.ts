@@ -2,7 +2,7 @@ import { BadRequestError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { type Ctx, type Env, projectFor, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
-import { publish } from "@dembrane/realtime";
+import { boundedEventResponse, publish } from "@dembrane/realtime";
 import { pythonJson } from "@dembrane/webhooks";
 import { Hono } from "hono";
 import { stream } from "hono/streaming";
@@ -42,7 +42,6 @@ const TERMINAL_PING_STATES = new Set(["left", "finished"]);
 // Winding down: keep the entry warm but never re-add; the finish endpoint owns the close.
 const WINDING_DOWN_PING_STATE = "finishing";
 const MONITOR_STREAM_POLL_MS = 2000;
-const MONITOR_STREAM_HEARTBEAT_MS = 15_000;
 const HEALTH_INTERVAL_MS = 45_000;
 const SSE_HEADERS = {
   "Cache-Control": "no-cache",
@@ -288,62 +287,65 @@ export function liveRoutes(d: ConversationsDeps) {
     const pa = await projectFor(d.access, who, query.project_id, "conversation:read");
     for (const [k, v] of Object.entries(SSE_HEADERS)) c.header(k, v);
     const gate = { workspaceId: pa.project.workspaceId, tier: pa.tier };
-    return stream(c, async (s) => {
-      let closed = false;
-      let wake: (() => void) | null = null;
-      s.onAbort(() => {
-        closed = true;
-        wake?.();
-      });
-      const sleep = (ms: number) =>
-        new Promise<void>((r) => {
-          wake = r;
-          setTimeout(r, ms);
-        }).then(() => {
-          wake = null;
+    return boundedEventResponse(
+      stream(c, async (s) => {
+        let closed = false;
+        let wake: (() => void) | null = null;
+        s.onAbort(() => {
+          closed = true;
+          wake?.();
         });
-      if (!d.settings.monitorEnabled) {
-        // Keep the connection stable (no EventSource reconnect loop) but do no work.
-        await s.write(
-          `event: snapshot\ndata: ${pythonJson(emptyMonitorPayload(query.window_seconds), { sortKeys: true })}\n\n`,
-        );
-        while (!closed) {
-          await sleep(MONITOR_STREAM_HEARTBEAT_MS);
-          if (!closed) await s.write(": keep-alive\n\n");
+        const sleep = (ms?: number) =>
+          new Promise<void>((r) => {
+            wake = r;
+            if (ms !== undefined) setTimeout(r, ms);
+          }).then(() => {
+            wake = null;
+          });
+        if (!d.settings.monitorEnabled) {
+          // Keep the connection stable (no EventSource reconnect loop) but do no work.
+          await s.write(
+            `event: snapshot\ndata: ${pythonJson(emptyMonitorPayload(query.window_seconds), { sortKeys: true })}\n\n`,
+          );
+          while (!closed) await sleep();
+          return;
         }
-        return;
-      }
-      // A nudge (ping, transcription, finish) wakes the stream; the poll timeout is the safety net.
-      const unsubscribe =
-        d.hub?.subscribe([monitorChannel(query.project_id)], () => wake?.()) ?? (() => {});
-      let last: string | null = null;
-      let lastEmit = Date.now();
-      try {
-        while (!closed) {
-          let serialized: string | null = null;
-          try {
-            serialized = pythonJson(await snapshot(query.project_id, query.window_seconds, gate), {
-              sortKeys: true,
-            });
-          } catch (err) {
-            d.logger.warn({ err: (err as Error).message }, "monitor stream snapshot failed");
+        // A nudge (ping, transcription, finish) wakes the stream; the poll timeout is the safety net.
+        const unsubscribe =
+          d.hub?.subscribe([monitorChannel(query.project_id)], () => wake?.()) ?? (() => {});
+        let last: string | null = null;
+        try {
+          while (!closed) {
+            let serialized: string | null = null;
+            try {
+              serialized = pythonJson(
+                await snapshot(query.project_id, query.window_seconds, gate),
+                { sortKeys: true },
+              );
+            } catch (err) {
+              d.logger.warn({ err: (err as Error).message }, "monitor stream snapshot failed");
+            }
+            if (serialized !== null && serialized !== last) {
+              last = serialized;
+              await s.write(`event: snapshot\ndata: ${serialized}\n\n`);
+            }
+            await sleep(MONITOR_STREAM_POLL_MS);
           }
-          if (serialized !== null && serialized !== last) {
-            last = serialized;
-            lastEmit = Date.now();
-            await s.write(`event: snapshot\ndata: ${serialized}\n\n`);
-          } else if (Date.now() - lastEmit >= MONITOR_STREAM_HEARTBEAT_MS) {
-            lastEmit = Date.now();
-            await s.write(": keep-alive\n\n");
-          }
-          await sleep(MONITOR_STREAM_POLL_MS);
+        } finally {
+          unsubscribe();
         }
-      } finally {
-        unsubscribe();
-      }
-    });
+      }),
+      { signal: c.req.raw.signal },
+    );
   });
 
+  /**
+   * Kept only for portal builds from before the portal stopped opening it, still open in
+   * browsers during the rollout: it computes nothing, and every open one holds a request
+   * slot. Bounded like every stream, so such a tab reconnects at most once per lifetime.
+   * Remove it (with its parity scenarios and integration test) once request logs show no
+   * hits on this path for seven days after the release without the stream.
+   */
   app.get("/api/conversations/health/stream", async (c) => {
     const clean = (v: string | undefined) =>
       (v ?? "")
@@ -358,37 +360,40 @@ export function liveRoutes(d: ConversationsDeps) {
     if (total > 20)
       throw new BadRequestError(`Too many IDs provided (${total}). Maximum allowed is 20.`);
     for (const [k, v] of Object.entries(SSE_HEADERS)) c.header(k, v);
-    return stream(c, async (s) => {
-      let closed = false;
-      let wake: (() => void) | null = null;
-      s.onAbort(() => {
-        closed = true;
-        wake?.();
-      });
-      let pings = 0;
-      let lastHealth: string | null = null;
-      while (!closed) {
-        pings++;
-        await s.write(`event: ping\ndata: ${pings}\n\n`);
-        if (conversationIds.length !== 1) {
-          // Python raised inside its generator, caught it, and sent this before closing.
-          await s.write(
-            `event: error\ndata: ${pythonJson({ error: "Internal server error", timestamp: performance.now() / 1000 })}\n\n`,
-          );
-          return;
-        }
-        // No health signal is computed any more; the stream only proves the connection lives.
-        const health = pythonJson({ conversation_issue: null });
-        if (health !== lastHealth) {
-          await s.write(`event: health_update\ndata: ${health}\n\n`);
-          lastHealth = health;
-        }
-        await new Promise<void>((r) => {
-          wake = r;
-          setTimeout(r, HEALTH_INTERVAL_MS);
+    return boundedEventResponse(
+      stream(c, async (s) => {
+        let closed = false;
+        let wake: (() => void) | null = null;
+        s.onAbort(() => {
+          closed = true;
+          wake?.();
         });
-      }
-    });
+        let pings = 0;
+        let lastHealth: string | null = null;
+        while (!closed) {
+          pings++;
+          await s.write(`event: ping\ndata: ${pings}\n\n`);
+          if (conversationIds.length !== 1) {
+            // Python raised inside its generator, caught it, and sent this before closing.
+            await s.write(
+              `event: error\ndata: ${pythonJson({ error: "Internal server error", timestamp: performance.now() / 1000 })}\n\n`,
+            );
+            return;
+          }
+          // No health signal is computed any more; the stream only proves the connection lives.
+          const health = pythonJson({ conversation_issue: null });
+          if (health !== lastHealth) {
+            await s.write(`event: health_update\ndata: ${health}\n\n`);
+            lastHealth = health;
+          }
+          await new Promise<void>((r) => {
+            wake = r;
+            setTimeout(r, HEALTH_INTERVAL_MS);
+          });
+        }
+      }),
+      { signal: c.req.raw.signal },
+    );
   });
 
   return app;

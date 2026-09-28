@@ -458,6 +458,7 @@ export const CanvasRoute = () => {
 		let reconnectTimer: number | null = null;
 		let retryMs = 1000;
 		let closed = false;
+		let everConnected = false;
 
 		const connect = () => {
 			if (closed) return;
@@ -467,6 +468,10 @@ export const CanvasRoute = () => {
 			source = new EventSource(url, { withCredentials: true });
 			source.addEventListener("connected", () => {
 				retryMs = 1000;
+				// The server ends every stream after a while; a nudge sent in the gap
+				// before this reconnect is only caught by rereading.
+				if (everConnected) invalidateCanvasQueries();
+				everConnected = true;
 			});
 			source.addEventListener("generation", () => {
 				retryMs = 1000;

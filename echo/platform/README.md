@@ -86,7 +86,7 @@ Most namespaces use core, observability, db, access, http, legacy-shape, queue, 
 - **webhooks** (in 5, out 7): A project's outbound webhooks: settings, signed delivery, retries. Used by conversations, accounts, reports, api and 1 more. Uses only the common ones.
 - **analysis** (in 5, out 10): The analysis engine: recipes, runs, snapshots and revisions that maps and popcorn build on. Used by popcorn, map, present, api and 1 more. Uses realtime, llm.
 - **notifications** (in 4, out 5): In-app notifications and announcements, and the Notifier other namespaces emit through. Used by account, agentic, reports, api. Uses only the common ones.
-- **projects** (in 4, out 6): Projects, tags, goals, methodologies, prompt templates and the report request. Used by conversations, agentic, reports, api. Uses only the common ones.
+- **projects** (in 4, out 7): Projects, tags, goals, methodologies, prompt templates and the report request. Used by conversations, agentic, reports, api. Uses realtime.
 - **popcorn** (in 4, out 12): Popcorn: one live deck per project, refreshed on a tick, with demos and translations. Used by accounts, present, api, worker. Uses analysis, analytics, realtime, llm.
 - **conversations** (in 4, out 16): Conversations, the participant portal, the audio pipeline, live monitoring and search. Used by agent-access, verify, api, worker. Uses projects, webhooks, prompts, transcription, audio and 3 more.
 - **account** (in 3, out 13): The signed-in user's own account: profile, onboarding, settings, invites, transactional email. Used by accounts, api, worker. Uses notifications, billing, auth, config, mail and 1 more.
@@ -100,7 +100,7 @@ Most namespaces use core, observability, db, access, http, legacy-shape, queue, 
 - **pricing** (in 2, out 7): The pricing configurator and the bookings it forwards. Used by api, worker. Uses storage.
 - **reports** (in 2, out 11): Report generation and the report timeline. Used by api, worker. Uses notifications, projects, webhooks, llm.
 - **tenancy** (in 2, out 10): Orgs and workspaces: members, settings, access requests, support access, project shares. Used by api, worker. Uses billing, mail, storage.
-- **agent-access** (in 1, out 9): Outside AI agents reaching dembrane: the MCP server, OAuth, and the tools it exposes. Used by api. Uses conversations, analytics.
+- **agent-access** (in 1, out 10): Outside AI agents reaching dembrane: the MCP server, OAuth, and the tools it exposes. Used by api. Uses conversations, analytics, realtime.
 - **staff** (in 1, out 10): The staff console: support tools, billing rollups, privacy exports and erasure. Used by api. Uses billing, mail, storage.
 - **stats** (in 1, out 4): Public usage numbers the website shows. Used by api. Uses only the common ones.
 - **training** (in 1, out 8): Training as its own product: catalog, rosters, licences, staff provisioning. Used by api. Uses billing, mail.
@@ -117,8 +117,8 @@ Most namespaces use core, observability, db, access, http, legacy-shape, queue, 
 - **queue** (in 19, out 1): Durable background jobs and workflows on Postgres (DBOS): define, enqueue, run. Used by billing, webhooks, analysis, projects and 15 more. Uses observability.
 - **ratelimit** (in 13, out 2): Rate limits counted in Postgres or memory. Used by analysis, popcorn, conversations, account and 9 more. Uses db, core.
 - **llm** (in 12, out 0): Language model and embedding calls on Vertex, with fallbacks and fakes for tests. Used by transcription, analysis, popcorn, conversations and 8 more. Uses nothing.
+- **realtime** (in 10, out 2): Live updates: Postgres LISTEN fanned out to server-sent event streams. Used by analysis, projects, popcorn, conversations and 6 more. Uses observability, core.
 - **storage** (in 9, out 0): Object storage (S3 or local disk) and presigned uploads. Used by conversations, account, accounts, feedback and 5 more. Uses nothing.
-- **realtime** (in 8, out 2): Live updates: Postgres LISTEN fanned out to server-sent event streams. Used by analysis, popcorn, conversations, map and 4 more. Uses observability, core.
 - **mail** (in 8, out 0): Sending email (SendGrid, or memory in tests). Used by billing, account, accounts, tenancy and 4 more. Uses nothing.
 - **config** (in 8, out 0): Typed configuration per environment, and the `bun run config` checks. Used by account, accounts, agentic, api and 4 more. Uses nothing.
 - **analytics** (in 5, out 1): Product analytics capture (PostHog). Used by popcorn, chats, agentic, agent-access and 1 more. Uses observability.

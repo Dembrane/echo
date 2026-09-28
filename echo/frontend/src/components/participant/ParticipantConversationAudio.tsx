@@ -54,7 +54,7 @@ import {
 	useUploadConversationChunk,
 } from "./hooks";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
-import { useConversationsHealthStream } from "./hooks/useConversationsHealthStream";
+import { usePingConnectionHealth } from "./hooks/usePingConnectionHealth";
 import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
 import type { RecordingMeterStatus } from "./ParticipantRecordingWaveform";
 import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
@@ -132,12 +132,11 @@ export const ParticipantConversationAudio = () => {
 		{ open: openRefineInfoModal, close: closeRefineInfoModal },
 	] = useDisclosure(false);
 
-	// One health stream for this screen. The meter reads it here, and the body
-	// below reads it through the outlet context rather than opening a second
-	// EventSource of its own.
+	// Connection state comes from the liveness ping below, not a stream of its
+	// own. The meter reads it here, and the body reads it through the outlet
+	// context.
 	const isOnline = useOnlineStatus();
-	const { conversationIssue, sseConnectionHealthy } =
-		useConversationsHealthStream(conversationId ? [conversationId] : undefined);
+	const { connectionHealthy, reportPing } = usePingConnectionHealth();
 
 	const [
 		forcedSettingsOpened,
@@ -210,7 +209,7 @@ export const ParticipantConversationAudio = () => {
 	// The meter escalates to `problem` on its own when no sound arrives at all.
 	const meterStatus: RecordingMeterStatus = audioRecorder.hadInterruption
 		? "problem"
-		: !isOnline || !sseConnectionHealthy
+		: !isOnline || !connectionHealthy
 			? "unhealthy"
 			: "healthy";
 
@@ -380,7 +379,7 @@ export const ParticipantConversationAudio = () => {
 			const segment_seconds = live.isRecording
 				? round1(Math.max(0, live.recordingTime - segmentBaselineRef.current))
 				: undefined;
-			void pingConversation(conversationId, {
+			const answered = await pingConversation(conversationId, {
 				audio_level,
 				battery,
 				client_ts,
@@ -392,6 +391,7 @@ export const ParticipantConversationAudio = () => {
 				state: participantState,
 				visitor_id: projectId ? getVisitorId(projectId) : undefined,
 			});
+			reportPing(answered);
 		};
 		void sendPing();
 		// A snappier beacon while on the recording screen so the host sees state
@@ -401,7 +401,7 @@ export const ParticipantConversationAudio = () => {
 			cancelled = true;
 			clearInterval(interval);
 		};
-	}, [conversationId, projectId, participantState]);
+	}, [conversationId, projectId, participantState, reportPing]);
 
 	// Terminal "left" beacon on tab close (fires on real unload, not SPA
 	// navigation), so a graceful exit shows as "left" on the host monitor
@@ -953,10 +953,9 @@ export const ParticipantConversationAudio = () => {
 			<Box className={clsx("relative flex-grow p-4 transition-all")}>
 				<Outlet
 					context={{
-						conversationIssue,
+						connectionHealthy,
 						isRecording,
 						recordingTime,
-						sseConnectionHealthy,
 					}}
 				/>
 				<div ref={scrollTargetRef} />

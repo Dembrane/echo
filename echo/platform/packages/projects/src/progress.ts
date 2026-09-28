@@ -25,7 +25,12 @@ export function progressStream(
   const enc = new TextEncoder();
   return new ReadableStream<Uint8Array>({
     async start(controller) {
-      const send = (s: string) => controller.enqueue(enc.encode(s));
+      // A notification can land after the stream was cancelled; drop it.
+      const send = (s: string) => {
+        try {
+          controller.enqueue(enc.encode(s));
+        } catch {}
+      };
       if (start === "completed") {
         send(frame("completed", "Report ready"));
         controller.close();
@@ -63,7 +68,8 @@ export function progressStream(
         });
         send(frame("connected", "Connected"));
         heartbeat = setInterval(() => send("event: heartbeat\ndata: {}\n\n"), HEARTBEAT_MS);
-        signal.addEventListener("abort", () => void finish());
+        if (signal.aborted) void finish();
+        else signal.addEventListener("abort", () => void finish());
       } catch {
         send(frame("failed", "Stream error"));
         await finish();

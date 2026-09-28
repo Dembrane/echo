@@ -115,7 +115,6 @@ run("canvas tick against Postgres", () => {
         logger: quiet,
         reportId: ids.report,
         latestGenerationId: async () => "gen-1",
-        heartbeatMs: 60_000,
       }),
     );
     const res = await app.request("/events");

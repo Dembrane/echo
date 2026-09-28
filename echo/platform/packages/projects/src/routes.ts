@@ -3,6 +3,7 @@ import type { Db } from "@dembrane/db";
 import { type Env, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
 import type { JobSink } from "@dembrane/queue";
+import { boundedEventStream } from "@dembrane/realtime";
 import { Hono } from "hono";
 import * as goals from "./goals";
 import { progressStream } from "./progress";
@@ -164,7 +165,11 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
     const who = requireUser(c);
     const { path } = await p.validate(c.req, { path: reportPath });
     const start = await reports.reportProgressStart(d, who, path.project_id, path.report_id);
-    return new Response(progressStream(deps.db, path.report_id, start, c.req.raw.signal), {
+    const body = boundedEventStream(
+      (signal) => progressStream(deps.db, path.report_id, start, signal),
+      { signal: c.req.raw.signal },
+    );
+    return new Response(body, {
       headers: {
         "content-type": "text/event-stream; charset=utf-8",
         "cache-control": "no-cache",
