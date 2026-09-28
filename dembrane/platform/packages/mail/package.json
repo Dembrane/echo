@@ -1,0 +1,15 @@
+{
+  "name": "@dembrane/mail",
+  "description": "Sending email (SendGrid, or memory in tests).",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}

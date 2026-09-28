@@ -1,0 +1,15 @@
+{
+  "name": "@dembrane/storage",
+  "description": "Object storage (S3 or local disk) and presigned uploads.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}

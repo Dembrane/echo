@@ -1,0 +1,15 @@
+{
+  "name": "@dembrane/core",
+  "description": "Errors, ids, the operation context and asset paths every package shares.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}

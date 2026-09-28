@@ -1,0 +1,21 @@
+{
+  "name": "@dembrane/llm",
+  "description": "Language model and embedding calls on Vertex, with fallbacks and fakes for tests.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@ai-sdk/google-vertex": "^5.0.95",
+    "@ai-sdk/provider": "*",
+    "ai": "^7.0.118",
+    "@dembrane/observability": "workspace:*"
+  }
+}

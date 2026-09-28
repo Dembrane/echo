@@ -28,7 +28,7 @@ Write `announcement-draft.md` with level, expiry, and the English and Dutch titl
 - Level: `info` for features, notices and degradations with a roadmap; `urgent` only for a same-day outage.
 - Expiry: 2 to 4 weeks for `info`; 1 to 2 days after the fix for an outage.
 - Title is plain text in sentence case. Message is markdown: bold, bullets, links; a blank line between paragraphs.
-- Use the product's exact words: check `echo/frontend/src/locales/*.po` ("Select all", not "Select all conversations").
+- Use the product's exact words: check `dembrane/frontend/src/locales/*.po` ("Select all", not "Select all conversations").
 - Voice (`skills/brand-guidelines.md`): lowercase dembrane, never "ECHO"; short, warm, direct. No "We are pleased to inform you", "Please be advised", "successfully" or apologies for inconvenience.
 - Dutch: je/jij, never u; natural phrasing, not word for word (Gesprek, Instellingen, audiobestand).
 

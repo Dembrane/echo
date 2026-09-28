@@ -1,0 +1,46 @@
+{
+  "name": "@dembrane/conversations",
+  "description": "Conversations, the participant portal, the audio pipeline, live monitoring and search.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "projects": "The portal applies the project's legal basis and external-client rules.",
+      "webhooks": "Conversation events fire the project's webhooks."
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dembrane/access": "workspace:*",
+    "@dembrane/audio": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
+    "@dembrane/llm": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/projects": "workspace:*",
+    "@dembrane/prompts": "workspace:*",
+    "@dembrane/queue": "workspace:*",
+    "@dembrane/ratelimit": "workspace:*",
+    "@dembrane/realtime": "workspace:*",
+    "@dembrane/storage": "workspace:*",
+    "@dembrane/transcription": "workspace:*",
+    "@dembrane/webhooks": "workspace:*",
+    "ai": "^7.0.118",
+    "drizzle-orm": "^0.45.3",
+    "hono": "^4.9.0",
+    "js-tiktoken": "^1.0.21",
+    "postgres": "^3.4.9",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@ai-sdk/provider": "*"
+  }
+}

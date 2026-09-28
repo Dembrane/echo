@@ -50,5 +50,5 @@ What goes into the package is a product decision: the Notion Decisions entry of 
 A long-lived session of a staff user, minted once by someone with the database login and kept in Secret Manager:
 
 ```sh
-cd echo/platform && DATABASE_URL=... bun run accounts:staff-key mint <staff-email> <label> [days]
+cd dembrane/platform && DATABASE_URL=... bun run accounts:staff-key mint <staff-email> <label> [days]
 ```

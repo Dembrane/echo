@@ -1,0 +1,20 @@
+{
+  "name": "@dembrane/migrate",
+  "description": "The job that runs before every rollout: schema migrations, the queue schema, database grants.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/main.ts"
+  },
+  "dependencies": {
+    "@dembrane/accounts": "workspace:*",
+    "@dembrane/auth": "workspace:*",
+    "@dembrane/config": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/projects": "workspace:*",
+    "@dembrane/queue": "workspace:*",
+    "@dembrane/webhooks": "workspace:*"
+  }
+}

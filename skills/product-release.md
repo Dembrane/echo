@@ -1,6 +1,6 @@
 ---
 name: product-release
-description: Ship a release of the dembrane platform (echo/platform, the Bun API, worker, media service and the frontend it serves). The order to do things in, the checks that catch problems, and the decisions only a person makes.
+description: Ship a release of the dembrane platform (dembrane/platform, the Bun API, worker, media service and the frontend it serves). The order to do things in, the checks that catch problems, and the decisions only a person makes.
 ---
 
 # Product release
@@ -38,14 +38,14 @@ Read the diff, not the description. Trace every claim ("opt-in", "no data change
 A string never extracted renders as its raw id in production.
 
 ```sh
-cd echo/frontend && pnpm messages:extract && pnpm messages:compile && git diff --stat src/locales/
+cd dembrane/frontend && pnpm messages:extract && pnpm messages:compile && git diff --stat src/locales/
 ```
 
 Commit any diff. English gaps block; other languages fall back to English.
 
 ## 4. Local checks
 
-From `echo/platform`, against the parity Postgres (`parity/README.md`):
+From `dembrane/platform`, against the parity Postgres (`parity/README.md`):
 
 ```sh
 rm -rf .cache && TEST_DATABASE_ADMIN_URL=postgres://dembrane:dembrane@127.0.0.1:5440/postgres bun run check
@@ -64,8 +64,8 @@ Migrations:
 Merge in the order you tested. Admin-merging past branch protection needs a person's explicit yes. Then:
 
 ```sh
-curl -sf https://echo-preview-api-86405194907.europe-west4.run.app/health | jq .release
-gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="echo-preview-api" AND severity>=ERROR' --project dembrane-echo --limit 50
+curl -sf https://echo-preview-api-218237812097.europe-west4.run.app/health | jq .release
+gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="echo-preview-api" AND severity>=ERROR' --project dembrane-web-previews --limit 50
 ```
 
 Walk the flows the release touches as a host and as a participant, and the screens next to them. Recording needs a real phone on a real network; no agent can do that part. A defect found here goes back to step 2.

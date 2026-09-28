@@ -1,33 +1,116 @@
 name: platform
 
-# Checks, images and the preview deploy for echo/platform (the Bun rewrite) and the
-# frontend it serves. Checks and image builds run in parallel; images are built once and
-# pushed, and the deploy only migrates, rolls out and verifies.
+# Checks, images and deploys for dembrane/platform (the Bun rewrite) and the frontend it
+# serves. Checks and image builds run in parallel; images are built once and pushed, and a
+# deploy only migrates, rolls out and verifies.
+#
+# Each environment is its own GCP project, reached through its own keyless GitHub trust, and
+# pushes images to its own registry: a preview identity has no role in next or prod.
+#
+# Previews (dembrane-web-previews): the branch preview (echo-preview-*) follows
+# feat/bun-migration until cutover. A PR gets its own preview (echo-pr-<n>-*, database
+# echo_pr_<n>) only on request: the "preview" label, or running this workflow by hand with
+# target pr and the PR number. At most three PR previews exist; a fourth tears down the
+# oldest. Closing or merging a PR removes its preview.
+#
+# next (dembrane-web-next) and prod (dembrane-web-prod) deploy only when run by hand until
+# cutover: next from main, prod from main or a tag and after the prod environment's approval.
 on:
   pull_request:
-    paths: ["echo/platform/**", "echo/frontend/**", ".github/workflows/platform.yml"]
+    types: [opened, synchronize, reopened, labeled, closed]
+    paths: ["dembrane/platform/**", "dembrane/frontend/**", ".github/workflows/platform.yml"]
   push:
     branches: [feat/bun-migration]
-    paths: ["echo/platform/**", "echo/frontend/**", ".github/workflows/platform.yml"]
+    paths: ["dembrane/platform/**", "dembrane/frontend/**", ".github/workflows/platform.yml"]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: What to deploy
+        type: choice
+        options: [pr, next, prod]
+        default: pr
+      pr:
+        description: PR number to deploy a preview for (target pr)
+        required: false
+        type: number
+      hold_data:
+        description: "next or prod: deploy the migrate job without running it and keep the workers at 0 (before the cutover's data move)"
+        type: boolean
+        default: true
 
 concurrency:
-  group: platform-${{ github.ref }}
-  cancel-in-progress: true
+  group: platform-${{ github.event.pull_request.number || (inputs.target == 'pr' && inputs.pr) || inputs.target || github.ref }}
+  # A newer push replaces a running check or preview; a next or prod rollout runs to the end.
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'pr' }}
 
 defaults:
   run:
-    working-directory: echo/platform
+    working-directory: dembrane/platform
 
 env:
-  PROJECT: dembrane-echo
   REGION: europe-west4
-  REGISTRY: europe-west4-docker.pkg.dev/dembrane-echo/echo-preview
+  REGISTRY: europe-west4-docker.pkg.dev/dembrane-web-previews/echo-preview
   TAG: ${{ github.sha }}
   # Push images only for the branch that deploys; PRs build them to prove they build.
   PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feat/bun-migration' }}
 
 jobs:
+  # Decides what this run does: checks only, a branch preview deploy, a PR preview deploy,
+  # a PR preview teardown, or a next or prod deploy.
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    defaults:
+      run:
+        working-directory: .
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      sha: ${{ steps.plan.outputs.sha }}
+      pr: ${{ steps.plan.outputs.pr }}
+      deploy_pr: ${{ steps.plan.outputs.deploy_pr }}
+      deploy_env: ${{ steps.plan.outputs.deploy_env }}
+      teardown: ${{ steps.plan.outputs.teardown }}
+    steps:
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          PR_EVENT: ${{ github.event.pull_request.number }}
+          TARGET: ${{ inputs.target }}
+          PR_INPUT: ${{ inputs.pr }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+          HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'preview') }}
+          ADDED_LABEL: ${{ github.event.label.name }}
+        run: |
+          sha=$GITHUB_SHA pr='' deploy_pr=false deploy_env='' teardown=false
+          if [ "$EVENT" = workflow_dispatch ] && [ "$TARGET" != pr ]; then
+            # The GCP trust enforces the same refs; failing here says why before any build.
+            case "$TARGET:$GITHUB_REF" in
+              next:refs/heads/main | prod:refs/heads/main | prod:refs/tags/*) deploy_env=$TARGET ;;
+              *) echo "$TARGET does not deploy from $GITHUB_REF (next: main; prod: main or a tag)"; exit 1 ;;
+            esac
+          elif [ "$EVENT" = workflow_dispatch ]; then
+            pr=$PR_INPUT
+            [ -n "$pr" ] || { echo "target pr needs a PR number"; exit 1; }
+            read -r state sha < <(gh pr view "$pr" --repo "$GITHUB_REPOSITORY" --json state,headRefOid -q '.state + " " + .headRefOid')
+            [ "$state" = OPEN ] || { echo "PR $pr is $state; previews are for open PRs"; exit 1; }
+            deploy_pr=true
+          elif [ "$EVENT" = pull_request ]; then
+            pr=$PR_EVENT sha=$PR_SHA
+            if [ "$ACTION" = closed ]; then teardown=true
+            # Adding some other label to a preview PR is not a reason to redeploy it.
+            elif [ "$ACTION" = labeled ] && [ "$ADDED_LABEL" != preview ]; then :
+            elif [ "$HAS_LABEL" = true ]; then deploy_pr=true; fi
+          fi
+          echo "sha=$sha pr=$pr deploy_pr=$deploy_pr deploy_env=$deploy_env teardown=$teardown"
+          { echo "sha=$sha"; echo "pr=$pr"; echo "deploy_pr=$deploy_pr"; echo "deploy_env=$deploy_env"; echo "teardown=$teardown"; } >> "$GITHUB_OUTPUT"
+
   check:
+    needs: plan
+    if: needs.plan.outputs.teardown != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     services:
@@ -36,22 +119,23 @@ jobs:
         env: { POSTGRES_USER: echo, POSTGRES_PASSWORD: echo, POSTGRES_DB: postgres }
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U echo" --health-interval 1s --health-retries 60
+          --health-cmd "pg_isready -U echo -d postgres" --health-interval 1s --health-retries 60
     env:
       TEST_DATABASE_ADMIN_URL: postgres://echo:echo@localhost:5432/postgres
     steps:
       - uses: actions/checkout@v5
+        with: { ref: "${{ needs.plan.outputs.sha }}" }
       - uses: oven-sh/setup-bun@v2
-        with: { bun-version-file: echo/platform/.bun-version }
+        with: { bun-version-file: dembrane/platform/.bun-version }
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('echo/platform/bun.lock') }}
+          key: bun-${{ hashFiles('dembrane/platform/bun.lock') }}
           restore-keys: bun-
       # The incremental type-check state: a run after a small change re-checks only it.
       - uses: actions/cache@v4
         with:
-          path: echo/platform/.cache
+          path: dembrane/platform/.cache
           key: tsc-${{ github.sha }}
           restore-keys: tsc-
       # The pipeline and media tests run real ffmpeg: the same static build the media image
@@ -76,70 +160,88 @@ jobs:
         run: bun run typecheck
       - name: Config is declared, valid in every environment, and read
         run: bun run config check
+      - name: Packages import down the layers, and README.md's package map is current
+        run: bun run packages check
       - name: Schema and migrations agree
-        working-directory: echo/platform/packages/db
+        working-directory: dembrane/platform/packages/db
         run: bunx drizzle-kit generate < /dev/null | tee /dev/stderr | grep -q "No schema changes"
       - name: Tests (files in parallel, each database test on its own database)
         run: bun test --parallel
 
   frontend:
+    needs: plan
+    if: needs.plan.outputs.teardown != 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 15
     defaults:
       run:
-        working-directory: echo/frontend
+        working-directory: dembrane/frontend
     steps:
       - uses: actions/checkout@v5
+        with: { ref: "${{ needs.plan.outputs.sha }}" }
       - uses: pnpm/action-setup@v4
         with: { version: 10 }
       - uses: actions/setup-node@v5
         with:
           node-version-file: .tool-versions
           cache: pnpm
-          cache-dependency-path: echo/frontend/pnpm-lock.yaml
+          cache-dependency-path: dembrane/frontend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      # Vitest's prebundled dependencies and its timing file, which orders slow files first.
+      - uses: actions/cache@v4
+        with:
+          path: dembrane/frontend/node_modules/.vite/vitest
+          key: vitest-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml', 'dembrane/frontend/vite.config.ts') }}-${{ github.sha }}
+          restore-keys: |
+            vitest-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml', 'dembrane/frontend/vite.config.ts') }}-
+            vitest-${{ runner.os }}-
       - name: Lint
         run: pnpm lint
       - name: Types
         run: pnpm exec tsc
-      # The accounts screens build against a copy of platform/packages/accounts' contract.
-      - name: Accounts contract matches the platform
+      # Every vitest file under src; the Playwright specs in e2e/ are excluded in vite.config.ts.
+      - name: Tests
+        run: pnpm exec vitest run
+      # Fails when extract or compile changes a catalog. Lists messages English has that a
+      # locale leaves empty.
+      # TODO(main): once feat/error-codes lands its translation fill script, run it before
+      # the check and pass --strict, so a missing translation fails instead of warning.
+      - name: Translations
+        run: |
+          pnpm messages:extract
+          pnpm messages:compile
+          node scripts/check-translations.mjs
+      # The frontend builds against a copy of the platform's API contract.
+      - name: Contract
         run: node scripts/sync-accounts-contract.mjs --check
-      - name: Accounts tests
-        run: pnpm exec vitest run src/features/accounts src/components/auth/utils
       # The participant portal's first load must not grow: builds and compares with the
       # baseline recorded in the script.
-      - name: Portal first-load size
+      - name: Portal size
         run: node scripts/check-portal-bundle.mjs
 
   images:
+    needs: plan
+    if: needs.plan.outputs.teardown != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     permissions:
       contents: read
       id-token: write
+    env:
+      TAG: ${{ needs.plan.outputs.sha }}
     steps:
       - uses: actions/checkout@v5
+        with: { ref: "${{ needs.plan.outputs.sha }}" }
       - if: env.PUSH == 'true'
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/86405194907/locations/global/workloadIdentityPools/echo-preview-github/providers/github
-          service_account: echo-preview-deployer@dembrane-echo.iam.gserviceaccount.com
+          workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
       - if: env.PUSH == 'true'
         run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
       - uses: docker/setup-buildx-action@v3
       - name: Build (and on the deploy branch, push) the five images
-        run: |
-          out=$([ "$PUSH" = true ] && echo --push || echo --load)
-          build() {
-            docker buildx build $out --provenance=false \
-              --cache-from type=gha,scope=$1 --cache-to type=gha,mode=max,scope=$1 \
-              -f apps/$1/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/$1:$TAG "${@:2}"
-          }
-          build api . & build worker . &
-          build migrate . &
-          build media . & build web .. &
-          fail=0; for j in $(jobs -p); do wait $j || fail=1; done; exit $fail
+        run: scripts/build-images.sh "$([ "$PUSH" = true ] && echo --push || echo --load)" --cache-to
       - name: The API, worker, migrate and media containers start and answer
         if: env.PUSH != 'true'
         run: |
@@ -168,95 +270,184 @@ jobs:
   deploy-preview:
     # Migrations run as a job first; a failure stops the rollout before new code takes traffic.
     if: github.event_name == 'push' && github.ref == 'refs/heads/feat/bun-migration'
-    needs: [check, frontend, images]
+    needs: [plan, check, frontend, images]
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment: preview
-    # No checkout: the deploy only talks to GCP.
-    defaults:
-      run:
-        working-directory: .
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            dembrane/platform/scripts
+            dembrane/platform/infra
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
+      # The runner ships gcloud; installing it again cost half a minute.
+      - uses: google-github-actions/setup-gcloud@v2
+        with: { skip_install: true }
+      - name: Migrate, deploy media, API, worker, dashboard and portal, and verify
+        run: scripts/deploy-env.sh deploy preview "$TAG"
+
+  # A PR preview: its own services and database, built from the PR's head. Serialized
+  # across PRs so two new previews cannot both take the last slot.
+  deploy-pr:
+    if: needs.plan.outputs.deploy_pr == 'true'
+    needs: [plan, check, frontend, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: pr-preview
+    concurrency:
+      group: preview-slots
+      cancel-in-progress: false
     permissions:
       contents: read
       id-token: write
     env:
-      SQL: dembrane-echo:europe-west4:echo-preview
-      # The media service's deterministic URL (service name, project number, region), known
-      # before it is deployed so all services roll out together. Callers use it as the
-      # audience of the Google ID token they present.
-      MEDIA_URL: https://echo-preview-media-86405194907.europe-west4.run.app
-      AUDIO_BUCKET: STORAGE_S3_ENDPOINT=https://storage.googleapis.com,STORAGE_S3_BUCKET=dembrane-echo-echo-preview-uploads
-      AUDIO_KEYS: STORAGE_S3_KEY=echo-preview-s3-access-key-id:latest,STORAGE_S3_SECRET=echo-preview-s3-secret-access-key:latest
+      TAG: ${{ needs.plan.outputs.sha }}
+      PR: ${{ needs.plan.outputs.pr }}
     steps:
+      - uses: actions/checkout@v5
+        with: { ref: "${{ needs.plan.outputs.sha }}" }
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/86405194907/locations/global/workloadIdentityPools/echo-preview-github/providers/github
-          service_account: echo-preview-deployer@dembrane-echo.iam.gserviceaccount.com
-      # The runner ships gcloud; installing it again cost half a minute.
+          workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
       - uses: google-github-actions/setup-gcloud@v2
         with: { skip_install: true }
-      - name: Migrate
+      - run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+      - uses: docker/setup-buildx-action@v3
+      # The images job built these moments ago; its layer cache makes this a push.
+      - name: Push the five images
+        run: scripts/build-images.sh --push
+      - name: Make room (at most three PR previews)
+        run: scripts/deploy-env.sh make-room "$PR"
+      - name: Deploy and verify
         run: |
-          gcloud run jobs deploy echo-preview-migrate --project $PROJECT --region $REGION \
-            --image $REGISTRY/migrate:$TAG \
-            --service-account echo-preview-migrate@$PROJECT.iam.gserviceaccount.com \
-            --set-cloudsql-instances $SQL \
-            --set-secrets MIGRATION_DATABASE_URL=echo-preview-migration-database-url:latest \
-            --set-env-vars APP_ENV=preview,APP_DB_ROLE=echo_app --task-timeout 600 --max-retries 0 \
-            --execute-now --wait
-      - name: Deploy media, API, worker, dashboard and portal
+          out=$(scripts/deploy-env.sh deploy "pr-$PR" "$TAG" | tail -n 1)
+          echo "$out"
+          echo "Preview for #$PR: ${out// /  }" >> "$GITHUB_STEP_SUMMARY"
+
+  teardown-pr:
+    if: needs.plan.outputs.teardown == 'true'
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: pr-preview
+    concurrency:
+      group: preview-slots
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            dembrane/platform/scripts
+            dembrane/platform/infra
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+        with: { skip_install: true }
+      - name: Remove the preview's services and drop its database
+        run: scripts/deploy-env.sh teardown "${{ needs.plan.outputs.pr }}"
+
+  # next and prod: each pushes the images into its own project's registry (the layer cache
+  # makes that an upload) and deploys with its own identity. Run by hand until cutover.
+  deploy-next:
+    if: needs.plan.outputs.deploy_env == 'next'
+    needs: [plan, check, frontend, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: deploy-next
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TAG: ${{ needs.plan.outputs.sha }}
+      REGISTRY: europe-west4-docker.pkg.dev/dembrane-web-next/echo-next
+    steps:
+      - uses: actions/checkout@v5
+        with: { ref: "${{ needs.plan.outputs.sha }}" }
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/488580804029/locations/global/workloadIdentityPools/echo-next-github/providers/github
+          service_account: echo-next-deployer@dembrane-web-next.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+        with: { skip_install: true }
+      - run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+      - uses: docker/setup-buildx-action@v3
+      - name: Push the five images
+        run: scripts/build-images.sh --push
+      - name: Migrate, deploy media, API, worker, dashboard and portal, and verify
+        env:
+          HOLD_DATA: ${{ inputs.hold_data && '1' || '0' }}
+        run: scripts/deploy-env.sh deploy next "$TAG"
+
+  deploy-prod:
+    if: needs.plan.outputs.deploy_env == 'prod'
+    needs: [plan, check, frontend, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # The prod trust accepts only jobs in this environment; its required reviewers approve
+    # each deploy before the job gets a token.
+    environment: prod
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TAG: ${{ needs.plan.outputs.sha }}
+      REGISTRY: europe-west4-docker.pkg.dev/dembrane-web-prod/echo-prod
+    steps:
+      - uses: actions/checkout@v5
+        with: { ref: "${{ needs.plan.outputs.sha }}" }
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/740075346439/locations/global/workloadIdentityPools/echo-prod-github/providers/github
+          service_account: echo-prod-deployer@dembrane-web-prod.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+        with: { skip_install: true }
+      - run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+      - uses: docker/setup-buildx-action@v3
+      - name: Push the five images
+        run: scripts/build-images.sh --push
+      - name: Migrate, deploy media, API, worker, dashboard and portal, and verify
+        env:
+          HOLD_DATA: ${{ inputs.hold_data && '1' || '0' }}
+        run: scripts/deploy-env.sh deploy prod "$TAG"
+
+  # A failed deploy (branch preview, PR preview, next, prod) or a failed build or check on
+  # the way to one posts to #alerts-ci. Checks on PRs without a preview stay in the PR.
+  notify-failure:
+    if: failure() && (github.event_name != 'pull_request' || needs.plan.outputs.deploy_pr == 'true' || needs.plan.outputs.teardown == 'true')
+    needs: [plan, check, frontend, images, deploy-preview, deploy-pr, teardown-pr, deploy-next, deploy-prod]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Post to #alerts-ci
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          WHAT: "${{ needs.plan.outputs.deploy_env || (needs.plan.outputs.pr && format('PR #{0} preview', needs.plan.outputs.pr)) || 'branch preview' }}"
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SHA: ${{ needs.plan.outputs.sha || github.sha }}
         run: |
-          # Media: public ingress, IAM required. Only the worker and API identities hold
-          # run.invoker; they call it with an ID token. One ffmpeg job per instance.
-          (
-            gcloud run deploy echo-preview-media --project $PROJECT --region $REGION \
-              --image $REGISTRY/media:$TAG \
-              --service-account echo-preview-media@$PROJECT.iam.gserviceaccount.com \
-              --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG \
-              --cpu 2 --memory 4Gi --concurrency 1 --min-instances 0 --max-instances 10 \
-              --timeout 3600 --ingress all --no-allow-unauthenticated --quiet
-            for sa in worker api; do
-              gcloud run services add-iam-policy-binding echo-preview-media --project $PROJECT --region $REGION \
-                --member serviceAccount:echo-preview-$sa@$PROJECT.iam.gserviceaccount.com \
-                --role roles/run.invoker --quiet >/dev/null
-            done
-          ) &
-          gcloud run deploy echo-preview-api --project $PROJECT --region $REGION \
-            --image $REGISTRY/api:$TAG \
-            --service-account echo-preview-api@$PROJECT.iam.gserviceaccount.com \
-            --add-cloudsql-instances $SQL \
-            --set-secrets DATABASE_URL=echo-preview-database-url:latest,AUTH_SECRET=echo-preview-auth-secret:latest,INVITE_HASH_SECRET=echo-preview-invite-hash-secret:latest,FILES_S3_ACCESS_KEY_ID=echo-preview-s3-access-key-id:latest,FILES_S3_SECRET_ACCESS_KEY=echo-preview-s3-secret-access-key:latest,$AUDIO_KEYS \
-            --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG,FILES_S3_ENDPOINT=https://storage.googleapis.com,FILES_S3_BUCKET=dembrane-echo-echo-preview-uploads,$AUDIO_BUCKET,MEDIA_URL=$MEDIA_URL \
-            --cpu 1 --memory 512Mi --concurrency 80 --min-instances 0 --max-instances 4 \
-            --timeout 3600 --cpu-boost --allow-unauthenticated --quiet &
-          gcloud beta run worker-pools deploy echo-preview-worker --project $PROJECT --region $REGION \
-            --image $REGISTRY/worker:$TAG \
-            --service-account echo-preview-worker@$PROJECT.iam.gserviceaccount.com \
-            --add-cloudsql-instances $SQL \
-            --set-secrets DATABASE_URL=echo-preview-database-url:latest,FILES_S3_ACCESS_KEY_ID=echo-preview-s3-access-key-id:latest,FILES_S3_SECRET_ACCESS_KEY=echo-preview-s3-secret-access-key:latest,$AUDIO_KEYS \
-            --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG,FILES_S3_ENDPOINT=https://storage.googleapis.com,FILES_S3_BUCKET=dembrane-echo-echo-preview-uploads,$AUDIO_BUCKET,MEDIA_URL=$MEDIA_URL \
-            --cpu 1 --memory 512Mi --instances 1 --quiet &
-          for role in dashboard portal; do
-            gcloud run deploy echo-preview-$role --project $PROJECT --region $REGION \
-              --image $REGISTRY/web:$TAG \
-              --service-account echo-preview-web@$PROJECT.iam.gserviceaccount.com \
-              --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG,WEB_ROLE=$role \
-              --cpu 1 --memory 256Mi --concurrency 200 --min-instances 0 --max-instances 3 \
-              --allow-unauthenticated --quiet &
-          done
-          fail=0; for j in $(jobs -p); do wait $j || fail=1; done; exit $fail
-      - name: Live smoke test
-        run: |
-          url=$(gcloud run services describe echo-preview-api --project $PROJECT --region $REGION --format 'value(status.url)')
-          curl -sf "$url/ready"
-          release=$(curl -sf "$url/health" | jq -r .release)
-          test "$release" = "$TAG" || { echo "serving $release, expected $TAG"; exit 1; }
-          # Media refuses callers without an invoker identity.
-          code=$(curl -s -o /dev/null -w '%{http_code}' "$MEDIA_URL/health")
-          test "$code" = 403 || { echo "media answered $code without a token, expected 403"; exit 1; }
-          for role in dashboard portal; do
-            web=$(gcloud run services describe echo-preview-$role --project $PROJECT --region $REGION --format 'value(status.url)')
-            curl -sf "$web/runtime-config.js" | grep -q "\"role\":\"$role\""
-            code=$(curl -s -o /dev/null -w '%{http_code}' "$web/api/v2/me")
-            test "$code" = 401 || { echo "$role /api proxy answered $code, expected 401"; exit 1; }
-          done
+          jq -n --arg c C0C4HBZNSNT --arg t ":x: *platform* · $WHAT failed on \`${GITHUB_REF_NAME}\` (${SHA:0:7}) · <$RUN|run>" \
+            '{channel: $c, text: $t, unfurl_links: false}' |
+            curl -sf -X POST https://slack.com/api/chat.postMessage \
+              -H "Authorization: Bearer $SLACK_TOKEN" -H 'content-type: application/json; charset=utf-8' --data @- |
+            jq -e .ok >/dev/null

@@ -1,0 +1,27 @@
+{
+  "name": "@dembrane/db",
+  "description": "The Drizzle schema for every table, migrations and the database connection.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts"
+  },
+  "scripts": {
+    "introspect": "drizzle-kit pull --config drizzle.introspect.config.ts",
+    "generate": "drizzle-kit generate",
+    "migrate": "bun src/migrate.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dembrane/core": "workspace:*",
+    "drizzle-orm": "^0.45.3",
+    "postgres": "^3.4.9"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.11"
+  }
+}
