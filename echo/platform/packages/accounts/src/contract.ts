@@ -489,6 +489,16 @@ export const AccountCard = z.object({
   timeline: z.array(TimelineEvent),
 });
 
+/** The `prospect` block of POST /api/v2/admin/popcorn/demos. */
+export const ProspectBlock = z.object({
+  organisation_name: text(255),
+  /** Required: every demo names the person it is for; they become the admin. */
+  contact_email: z.email().max(255),
+  contact_name: optText(255),
+  pricing_configuration_reference: optText(255),
+  language: Language.default("nl"),
+});
+
 export const UpdateAccountRequest = z.object({
   account_stage: AccountStage.optional(),
   /** An @dembrane.com app user, or null to clear. */
@@ -529,7 +539,7 @@ export const PushDocumentRequest = z.object({
   reference: optText(64),
   external_ref: optText(255),
   supersedes_id: nullish(Uuid),
-  /** Also create a task pointing at it (a signing task when it needs a signature). */
+  /** A task pointing at it, created when it is sent (a signing task when it needs a signature). */
   task: nullish(z.object({ title: text(255), body: optText(4000) })),
   /**
    * Fields for an uploaded PDF that needs a signature. Without them the document stays a
@@ -552,6 +562,13 @@ export const DocumentFields = z.object({
 });
 /** Replaces all fields of a draft document; a sent document's fields are fixed. */
 export const SetFieldsRequest = z.object({ fields: z.array(DocumentFieldInput).max(100) });
+/** Sends a draft; `task` also creates its task (a signing task when it needs a signature). */
+export const SendDocumentRequest = z.object({
+  task: nullish(z.object({ title: text(255), body: optText(4000) })),
+});
+
+/** The Exact invoice id in the path of PUT .../invoices/:exactId. */
+export const ExactId = text(128);
 
 export const InvoiceUpsertRequest = z.object({
   number: text(64),
@@ -613,7 +630,8 @@ export type Permission =
   | "account:tasks"
   | "account:support"
   | "signed-in"
-  | "staff:accounts";
+  | "staff:accounts"
+  | "staff:workspaces";
 
 export interface RouteSpec {
   readonly method: "GET" | "POST" | "PUT" | "PATCH";
@@ -814,6 +832,7 @@ export const ROUTES = {
     method: "POST",
     path: `${S}/:orgId/documents/:docId/send`,
     permission: "staff:accounts",
+    request: SendDocumentRequest,
     response: DocumentDetail,
   },
   voidDocument: {
@@ -865,6 +884,13 @@ export const ROUTES = {
     path: `${S}/:orgId/tickets/:ticketId/close`,
     permission: "staff:accounts",
     response: Ticket,
+  },
+  /** The demo seed route's optional block; creates the prospect's organisation. */
+  demoSeed: {
+    method: "POST",
+    path: "/api/v2/admin/popcorn/demos",
+    permission: "staff:workspaces",
+    request: z.looseObject({ prospect: ProspectBlock.nullish() }),
   },
 } as const satisfies Record<string, RouteSpec>;
 
