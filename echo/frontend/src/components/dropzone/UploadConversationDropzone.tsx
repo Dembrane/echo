@@ -582,7 +582,7 @@ export const UploadConversationDropzone = (
 										);
 									} else {
 										toast.error(
-											t`Error uploading "${errorFile.file.name}": ${error.message}`,
+											t`File "${errorFile.file.name}" could not be added. Try another file.`,
 										);
 									}
 								}}

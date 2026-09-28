@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 // workspace_id/workspace_name present only when type === "workspace".
 export interface PendingInvite {
@@ -35,11 +36,7 @@ async function fetchPendingInvites(
 	const res = await fetch(url, { credentials: "include" });
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: `Failed to load pending invites (${res.status})`,
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -79,9 +76,7 @@ export const useResendInvite = ({
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				const err = new Error(
-					data.detail || `Failed to resend invite (${res.status})`,
-				);
+				const err = new ApiRequestError(res.status, data);
 				(err as Error & { status?: number }).status = res.status;
 				throw err;
 			}
@@ -120,9 +115,7 @@ export const useRevokeInvite = ({
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				const err = new Error(
-					data.detail || `Failed to revoke invite (${res.status})`,
-				);
+				const err = new ApiRequestError(res.status, data);
 				(err as Error & { status?: number }).status = res.status;
 				throw err;
 			}
@@ -185,7 +178,7 @@ export const useRevokeInvite = ({
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "orgs", orgId, "workspaces"],
 			});
-			queryClient.invalidateQueries({ queryKey: ["v2", "me", "invites"] });  // invitee's own list
+			queryClient.invalidateQueries({ queryKey: ["v2", "me", "invites"] }); // invitee's own list
 		},
 	});
 };

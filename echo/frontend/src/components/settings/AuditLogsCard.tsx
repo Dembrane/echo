@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Alert,
 	Badge,
 	Button,
 	Group,
@@ -40,6 +39,8 @@ import {
 } from "@tanstack/react-table";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { notifyError } from "@/components/error/notifyError";
 import {
 	type AuditLogEntry,
 	type AuditLogExportFormat,
@@ -373,11 +374,7 @@ export const AuditLogsCard = () => {
 					: t`Audit logs exported to JSON`,
 			);
 		} catch (exportError) {
-			const message =
-				exportError instanceof Error
-					? exportError.message
-					: t`Something went wrong while exporting audit logs.`;
-			toast.error(message);
+			void notifyError(exportError);
 		}
 	};
 
@@ -503,15 +500,7 @@ export const AuditLogsCard = () => {
 					</Group>
 				</Stack>
 
-				{isError ? (
-					<Alert color="red" variant="light">
-						<Text size="sm">
-							{error instanceof Error
-								? error.message
-								: t`Unable to load audit logs.`}
-						</Text>
-					</Alert>
-				) : null}
+				{isError ? <ErrorNotice error={error} /> : null}
 
 				<ScrollArea className="rounded-md border">
 					<Table striped highlightOnHover>

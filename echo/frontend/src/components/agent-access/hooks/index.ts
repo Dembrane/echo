@@ -1,7 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 // Agent access: the dashboard side of connecting an AI agent over MCP + OAuth.
 // Every call here is session-authenticated (cookie) against /v2/agent-access.
@@ -81,13 +83,8 @@ export interface AgentAuthorizeRequest {
 	expiry_choices_days: number[];
 }
 
-export class AgentAccessError extends Error {
-	status: number;
-	constructor(status: number, message: string) {
-		super(message);
-		this.status = status;
-	}
-}
+/** A failed agent-access call; the error presenter reads its code from the body. */
+export class AgentAccessError extends ApiRequestError {}
 
 const request = async <TResponse>(
 	path: string,
@@ -103,10 +100,7 @@ const request = async <TResponse>(
 	});
 	if (!response.ok) {
 		const data = await response.json().catch(() => ({}));
-		throw new AgentAccessError(
-			response.status,
-			typeof data.detail === "string" ? data.detail : t`Request failed`,
-		);
+		throw new AgentAccessError(response.status, data);
 	}
 	const text = await response.text();
 	return text ? JSON.parse(text) : ({} as TResponse);
@@ -186,7 +180,7 @@ export const useSetOrgAgentAccessMutation = () => {
 				method: "PATCH",
 			}),
 		onError: (error: Error) => {
-			toast.error(error.message);
+			void notifyError(error);
 		},
 		onSuccess: (org) => {
 			queryClient.invalidateQueries({ queryKey: agentAccessKeys.all });
@@ -210,7 +204,7 @@ export const useRevokeAgentGrantMutation = () => {
 				{ method: "DELETE" },
 			),
 		onError: (error: Error) => {
-			toast.error(error.message);
+			void notifyError(error);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: agentAccessKeys.all });
@@ -245,7 +239,7 @@ export const useApproveAuthorizeRequestMutation = () =>
 				},
 			),
 		onError: (error: Error) => {
-			toast.error(error.message);
+			void notifyError(error);
 		},
 	});
 
@@ -257,6 +251,6 @@ export const useDenyAuthorizeRequestMutation = () =>
 				{ method: "POST" },
 			),
 		onError: (error: Error) => {
-			toast.error(error.message);
+			void notifyError(error);
 		},
 	});

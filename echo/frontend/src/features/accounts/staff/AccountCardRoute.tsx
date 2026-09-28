@@ -27,6 +27,7 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
 import { openPdf } from "../api/client";
@@ -185,7 +186,7 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 							send.mutate(
 								{ params: { docId: doc.id } },
 								{
-									onError: (e) => toast.error(e.message),
+									onError: (e) => void notifyError(e),
 									onSuccess: () => toast.success(t`Sent`),
 								},
 							)
@@ -335,7 +336,7 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 	const decide = (task: TaskT, decision: "approve" | "withdraw") =>
 		review.mutate(
 			{ body: { decision, note: null }, params: { taskId: task.id } },
-			{ onError: (e) => toast.error(e.message) },
+			{ onError: (e) => void notifyError(e) },
 		);
 
 	return (

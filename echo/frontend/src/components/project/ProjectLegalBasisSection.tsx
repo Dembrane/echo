@@ -23,6 +23,7 @@ import { useParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import {
 	type InheritedLegalBasis,
 	LEGAL_BASIS_LABELS,
@@ -31,6 +32,7 @@ import {
 } from "@/components/settings/LegalBasisCard";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { ApiRequestError } from "@/lib/errors/read";
 
 type LegalSource = "project" | "workspace" | "legacy_user" | "default";
 
@@ -89,7 +91,7 @@ async function fetchProjectLegal(projectId: string): Promise<ProjectLegal> {
 	const res = await fetch(url.toString(), { credentials: "include" });
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to load legal basis");
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -109,11 +111,7 @@ async function saveProjectLegal(
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: "Failed to update legal basis",
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 }
 
@@ -150,7 +148,7 @@ export const ProjectLegalBasisSection = ({
 			privacy_policy_url: string | null;
 		}) => saveProjectLegal(projectId, payload),
 		onError: (err: Error) => {
-			toast.error(err.message || t`Failed to update legal basis`);
+			void notifyError(err);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["projects", projectId] });

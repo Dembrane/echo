@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 /**
  * Hooks for the in-app notification inbox.
@@ -100,7 +101,7 @@ export const useMarkNotificationRead = () => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || "Couldn't mark as read");
+				throw new ApiRequestError(res.status, data);
 			}
 			return res.json();
 		},

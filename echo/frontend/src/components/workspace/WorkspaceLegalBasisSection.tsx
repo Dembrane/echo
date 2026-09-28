@@ -1,12 +1,14 @@
 import { t } from "@lingui/core/macro";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import {
 	type InheritedLegalBasis,
 	LegalBasisCard,
 	type LegalBasisValue,
 } from "@/components/settings/LegalBasisCard";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 async function updateWorkspaceLegalBasis(
 	workspaceId: string,
@@ -26,11 +28,7 @@ async function updateWorkspaceLegalBasis(
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: "Failed to update legal basis",
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 }
 
@@ -57,7 +55,7 @@ export const WorkspaceLegalBasisSection = ({
 			privacy_policy_url: string | null;
 		}) => updateWorkspaceLegalBasis(workspaceId, payload),
 		onError: (err: Error) => {
-			toast.error(err.message || t`Failed to update legal basis`);
+			void notifyError(err);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });

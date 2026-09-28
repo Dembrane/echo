@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -26,6 +27,7 @@ import {
 	useInviteByHash,
 	usePublicInviteStatus,
 } from "@/hooks/useMyInvites";
+import { presentError } from "@/lib/errors/present";
 
 // Link: /invite/accept?h=...&iss=...&(ws|org)=...&email=...&role=...; hash is the lookup key, inspect-on-mount drives UI state.
 export const AcceptInviteRoute = () => {
@@ -44,8 +46,7 @@ export const AcceptInviteRoute = () => {
 	const inviterName = searchParams.get("iss") || t`Someone`;
 	const workspaceNameParam = searchParams.get("ws") || "";
 	const orgNameParam = searchParams.get("org") || "";
-	const subjectFromUrl =
-		orgNameParam || workspaceNameParam || t`a workspace`;
+	const subjectFromUrl = orgNameParam || workspaceNameParam || t`a workspace`;
 	const role = searchParams.get("role") || "member";
 	// Carried in URL so /register can pre-fill + lock the email field —
 	// prevents stray personal-org signups from typo'd addresses.
@@ -115,7 +116,7 @@ export const AcceptInviteRoute = () => {
 				}
 			}, 800);
 		} catch (err) {
-			const msg = err instanceof Error ? err.message : "Failed to accept";
+			const msg = (await presentError(err, i18n)).message;
 			const status =
 				err instanceof Error
 					? ((err as Error & { status?: number }).status ?? null)

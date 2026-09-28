@@ -18,6 +18,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { call, submitTaskWithFile } from "../api/client";
 import { accountKeys } from "../api/hooks";
 import type { TaskT } from "../contract/contract.gen";
@@ -285,9 +286,7 @@ function TaskResponseModal({
 			setFile(null);
 			onClose();
 		} catch (e) {
-			toast.error(
-				e instanceof Error ? e.message : t`That did not go through. Try again.`,
-			);
+			void notifyError(e);
 		} finally {
 			setPending(false);
 		}

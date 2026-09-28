@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Alert,
 	Anchor,
 	Button,
 	CopyButton,
@@ -23,6 +22,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconCheck, IconCopy, IconLock } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { QRCode } from "@/components/common/QRCode";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import {
 	type GenerateTwoFactorResponse,
 	useDisableTwoFactorMutation,
@@ -159,10 +159,7 @@ export const TwoFactorSettingsCard = ({
 			return (
 				<Stack gap="lg">
 					{generateSecretMutation.isError && (
-						<Alert color="red" variant="light">
-							{generateSecretMutation.error?.message ??
-								t`Something went wrong while generating the secret.`}
-						</Alert>
+						<ErrorNotice error={generateSecretMutation.error} />
 					)}
 
 					<Text>
@@ -201,11 +198,7 @@ export const TwoFactorSettingsCard = ({
 		return (
 			<Stack gap="lg">
 				{enableTwoFactorMutation.isError && (
-					<Alert color="red" variant="light">
-						{getEnableTwoFactorErrorMessage(
-							enableTwoFactorMutation.error?.message,
-						)}
-					</Alert>
+					<ErrorNotice error={enableTwoFactorMutation.error} />
 				)}
 
 				<Text>
@@ -270,28 +263,6 @@ export const TwoFactorSettingsCard = ({
 		);
 	};
 
-	const getEnableTwoFactorErrorMessage = (message?: string) => {
-		if (!message) {
-			return t`We couldn’t enable two-factor authentication. Double-check your code and try again.`;
-		}
-
-		if (message.includes('Invalid payload. "otp" is invalid')) {
-			return t`The code didn't work, please try again.`;
-		}
-
-		return message;
-	};
-	const getDisableTwoFactorErrorMessage = (message?: string) => {
-		if (!message) {
-			return t`We couldn’t disable two-factor authentication. Try again with a fresh code.`;
-		}
-
-		if (message.includes('Invalid payload. "otp" is invalid')) {
-			return t`The code didn't work, please try again.`;
-		}
-
-		return message;
-	};
 	return (
 		<>
 			<Paper withBorder p="lg" radius="lg">
@@ -394,11 +365,7 @@ export const TwoFactorSettingsCard = ({
 					</Stack>
 
 					{disableTwoFactorMutation.isError && (
-						<Alert color="red" variant="light">
-							{getDisableTwoFactorErrorMessage(
-								disableTwoFactorMutation.error?.message,
-							)}
-						</Alert>
+						<ErrorNotice error={disableTwoFactorMutation.error} />
 					)}
 
 					<Group justify="flex-end">

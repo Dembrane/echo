@@ -1,9 +1,13 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { t } from "@lingui/core/macro";
-import { toast } from "@/components/common/Toaster";
+import {
+	useInfiniteQuery,
+	useMutation,
+	useQueryClient,
+} from "@tanstack/react-query";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
+import { ApiRequestError } from "@/lib/errors/read";
 
 export interface ProjectAccessPreview {
 	display_name: string;
@@ -50,7 +54,13 @@ async function fetchWorkspaceProjects(
 		throw new WorkspaceAccessDeniedError(res.status);
 	}
 	if (!res.ok) {
-		return { pinned: [], projects: [], total_count: 0, has_more: false, is_admin: false };
+		return {
+			has_more: false,
+			is_admin: false,
+			pinned: [],
+			projects: [],
+			total_count: 0,
+		};
 	}
 	return res.json();
 }
@@ -63,7 +73,7 @@ async function createWorkspaceProject(
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/projects`,
 		{
-			body: JSON.stringify({ name, language }),
+			body: JSON.stringify({ language, name }),
 			credentials: "include",
 			headers: { "Content-Type": "application/json" },
 			method: "POST",
@@ -71,7 +81,7 @@ async function createWorkspaceProject(
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to create project");
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -86,15 +96,30 @@ export const useWorkspaceProjects = ({
 	const { workspaceId } = useWorkspace();
 
 	return useInfiniteQuery({
-		queryKey: ["v2", "workspace-projects", workspaceId, search],
 		enabled: !!workspaceId,
+		getNextPageParam: (
+			lastPage: V2ProjectsResponse,
+			_allPages,
+			lastPageParam,
+		) => (lastPage.has_more ? lastPageParam + 1 : undefined),
 		initialPageParam: 0,
-		getNextPageParam: (lastPage: V2ProjectsResponse, _allPages, lastPageParam) =>
-			lastPage.has_more ? lastPageParam + 1 : undefined,
 		queryFn: async ({ pageParam = 0 }) => {
-			if (!workspaceId) return { pinned: [], projects: [], total_count: 0, has_more: false, is_admin: false };
-			return fetchWorkspaceProjects(workspaceId, pageParam * limit, limit, search);
+			if (!workspaceId)
+				return {
+					has_more: false,
+					is_admin: false,
+					pinned: [],
+					projects: [],
+					total_count: 0,
+				};
+			return fetchWorkspaceProjects(
+				workspaceId,
+				pageParam * limit,
+				limit,
+				search,
+			);
 		},
+		queryKey: ["v2", "workspace-projects", workspaceId, search],
 		// Other members' creates/deletes show up within 30s without
 		// needing a manual refresh. Idle tabs skip the poll.
 		refetchInterval: 30_000,
@@ -110,16 +135,22 @@ export const useCreateWorkspaceProject = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async ({ name, language }: { name: string; language: string }) => {
+		mutationFn: async ({
+			name,
+			language,
+		}: {
+			name: string;
+			language: string;
+		}) => {
 			if (!workspaceId) throw new Error("No workspace selected");
 			return createWorkspaceProject(workspaceId, name, language);
+		},
+		onError: (error: Error) => {
+			void notifyError(error);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
-		},
-		onError: (error: Error) => {
-			toast.error(error.message || t`Failed to create project`);
 		},
 	});
 };

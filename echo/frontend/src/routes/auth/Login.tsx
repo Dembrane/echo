@@ -19,8 +19,11 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
-import { sendSignInCode } from "@/lib/auth";
 import { isAuthPath } from "@/components/auth/utils/authPaths";
+import {
+	authErrorCode,
+	describeAuthError,
+} from "@/components/auth/utils/errorUtils";
 import {
 	isAccountPath,
 	isSafeNextPath,
@@ -30,6 +33,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { sendSignInCode } from "@/lib/auth";
 import { testId } from "@/lib/testUtils";
 
 // const LoginWithProvider = ({
@@ -207,14 +211,7 @@ export const LoginRoute = () => {
 
 			await afterSignIn(data.email);
 		} catch (error) {
-			// biome-ignore lint/suspicious/noExplicitAny: <todo>
-			const errors = (error as any)?.errors;
-			const firstError = Array.isArray(errors) ? errors[0] : undefined;
-			const code = firstError?.extensions?.code;
-			const message =
-				firstError?.message && firstError.message !== ""
-					? firstError.message
-					: undefined;
+			const code = authErrorCode(error);
 
 			posthog?.capture("user_login_failed", {
 				email: data.email,
@@ -239,11 +236,7 @@ export const LoginRoute = () => {
 			setValue("otp", "");
 			setOtpValue("");
 
-			if (message) {
-				setError(message);
-			} else {
-				setError(t`Something went wrong`);
-			}
+			setError(describeAuthError(error));
 		}
 	};
 
@@ -257,7 +250,7 @@ export const LoginRoute = () => {
 			setCodeSent(true);
 			setCode("");
 		} catch (e) {
-			setError(e instanceof Error ? e.message : t`Something went wrong`);
+			setError(describeAuthError(e));
 		} finally {
 			setCodeSending(false);
 		}
@@ -270,9 +263,7 @@ export const LoginRoute = () => {
 			await loginMutation.mutateAsync({ code: value, email: codeEmail.trim() });
 			await afterSignIn(codeEmail.trim());
 		} catch (e) {
-			// biome-ignore lint/suspicious/noExplicitAny: AuthError carries errors[]
-			const message = (e as any)?.errors?.[0]?.message;
-			setError(message || t`Something went wrong`);
+			setError(describeAuthError(e));
 			setCode("");
 		}
 	};

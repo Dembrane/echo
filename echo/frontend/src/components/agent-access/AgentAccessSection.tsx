@@ -17,7 +17,7 @@ import {
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type React from "react";
-import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -80,7 +80,7 @@ export const AgentNoticeModal = () => {
 	const accept = useMutation({
 		mutationFn: acceptNotice,
 		onError: (error: Error) => {
-			toast.error(error.message);
+			void notifyError(error);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });

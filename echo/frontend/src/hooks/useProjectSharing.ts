@@ -7,6 +7,7 @@ import {
 } from "@/components/invite/api";
 import type { InviteRole } from "@/components/invite/RoleSelect";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 // Mirrors ProjectShareResponse in server/dembrane/api/v2/project_sharing.py
 export interface ProjectShare {
@@ -42,7 +43,7 @@ export const useProjectPendingInvites = (
 	enabled = true,
 ) =>
 	useQuery({
-		queryKey: projectInvitesKey(projectId ?? ""),
+		enabled: Boolean(projectId) && enabled,
 		queryFn: async (): Promise<ProjectPendingInvite[]> => {
 			const res = await fetch(
 				`${API_BASE_URL}/v2/projects/${projectId}/invites`,
@@ -51,7 +52,7 @@ export const useProjectPendingInvites = (
 			if (!res.ok) throw new Error(await res.text());
 			return res.json();
 		},
-		enabled: Boolean(projectId) && enabled,
+		queryKey: projectInvitesKey(projectId ?? ""),
 		staleTime: 30_000,
 	});
 
@@ -81,13 +82,13 @@ export function summarizeInviteResults(
 	results: InviteBatchResult,
 ): InviteOutcomes {
 	const s: InviteOutcomes = {
-		granted: 0,
-		sent: 0,
+		allClean: false,
 		alreadyPending: 0,
-		otherProject: [],
 		emailNotSent: [],
 		failed: [],
-		allClean: false,
+		granted: 0,
+		otherProject: [],
+		sent: 0,
 	};
 	for (const { email, outcome } of results) {
 		if (outcome.status === "rejected") {
@@ -146,7 +147,7 @@ export const useInviteToWorkspaceWithProject = (
 export interface ShareBatchResult {
 	shared: string[];
 	needsInvite: string[];
-	failed: { email: string; message: string }[];
+	failed: { email: string; error: unknown }[];
 }
 
 // Share a project with several emails in one go. People already on the
@@ -158,7 +159,7 @@ export async function shareWithEmails(
 	emails: string[],
 	add: (vars: { email: string }) => Promise<unknown>,
 ): Promise<ShareBatchResult> {
-	const result: ShareBatchResult = { shared: [], needsInvite: [], failed: [] };
+	const result: ShareBatchResult = { failed: [], needsInvite: [], shared: [] };
 	for (const email of emails) {
 		try {
 			await add({ email });
@@ -167,10 +168,7 @@ export async function shareWithEmails(
 			if (err instanceof ApiError && err.code === NOT_A_MEMBER) {
 				result.needsInvite.push(email);
 			} else {
-				result.failed.push({
-					email,
-					message: err instanceof Error ? err.message : String(err),
-				});
+				result.failed.push({ email, error: err });
 			}
 		}
 	}
@@ -187,9 +185,9 @@ async function fetchShares(projectId: string): Promise<ProjectShare[]> {
 
 export const useProjectShares = (projectId: string | undefined) =>
 	useQuery({
-		queryKey: ["v2", "project-shares", projectId],
-		queryFn: () => fetchShares(projectId as string),
 		enabled: Boolean(projectId),
+		queryFn: () => fetchShares(projectId as string),
+		queryKey: ["v2", "project-shares", projectId],
 		staleTime: 30_000,
 	});
 
@@ -257,7 +255,7 @@ export const useRevokeProjectShare = (projectId: string) => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || "Couldn't revoke");
+				throw new ApiRequestError(res.status, data);
 			}
 			return res.json();
 		},
@@ -289,7 +287,7 @@ export const useSetProjectVisibility = (projectId: string) => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || "Couldn't change visibility");
+				throw new ApiRequestError(res.status, data);
 			}
 			return res.json() as Promise<{ status: string; visibility: string }>;
 		},

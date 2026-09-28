@@ -24,6 +24,7 @@ import { useSearchParams } from "react-router";
 import { useRegisterMutation } from "@/components/auth/hooks";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { I18nLink } from "@/components/common/i18nLink";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { ADMIN_BASE_URL, LEGAL_TERMS_URL } from "@/config";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { testId } from "@/lib/testUtils";
@@ -140,7 +141,7 @@ export const RegisterRoute = () => {
 					<Stack gap="md">
 						{error && <Alert color="red">{error}</Alert>}
 						{registerMutation.error && (
-							<Alert color="red">{registerMutation.error.message}</Alert>
+							<ErrorNotice error={registerMutation.error} />
 						)}
 
 						{step === 0 && (

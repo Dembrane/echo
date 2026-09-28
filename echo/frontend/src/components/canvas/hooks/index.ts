@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { APP_ENVIRONMENT } from "@/config";
 import { bff } from "@/lib/bff";
 import {
@@ -267,7 +268,7 @@ export function useRefreshCanvasMutation(canvasId: string) {
 				toast.message(t`Refresh will work when the canvas service is ready.`);
 				return;
 			}
-			toast.error(error.message || t`Could not refresh this canvas`);
+			void notifyError(error);
 		},
 		onSuccess: () => {
 			toast.success(t`Refresh started`);
@@ -283,8 +284,8 @@ export function usePreviewCanvasMutation() {
 				return await bff.post<{ content_html: string }>("/canvases/preview", {
 					brief: proposal.brief,
 					gather_spec: proposal.gather_spec ?? undefined,
-					tabs: proposal.tabs ?? undefined,
 					project_id: proposal.projectId,
+					tabs: proposal.tabs ?? undefined,
 				});
 			} catch (error) {
 				if (isFixtureEligibleMiss(error)) {
@@ -307,12 +308,12 @@ export function useCreateCanvasMutation() {
 				created_from_chat_id: proposal.created_from_chat_id ?? undefined,
 				expires_at: proposal.expires_at,
 				gather_spec: proposal.gather_spec ?? undefined,
-				tabs: proposal.tabs ?? undefined,
 				name: proposal.name,
 				project_id: proposal.projectId,
+				tabs: proposal.tabs ?? undefined,
 			}),
 		onError: (error: BffError) => {
-			toast.error(error.message || t`Could not create this canvas`);
+			void notifyError(error);
 		},
 		onSuccess: (canvas, proposal) => {
 			queryClient.invalidateQueries({
@@ -333,11 +334,11 @@ export function useUpdateCanvasMutation() {
 				cadence_minutes: proposal.cadence_minutes ?? undefined,
 				created_from_chat_id: proposal.created_from_chat_id ?? undefined,
 				gather_spec: proposal.gather_spec ?? undefined,
-				tabs: proposal.tabs ?? undefined,
 				name: proposal.name,
+				tabs: proposal.tabs ?? undefined,
 			}),
 		onError: (error: BffError) => {
-			toast.error(error.message || t`Could not update this canvas`);
+			void notifyError(error);
 		},
 		onSuccess: (canvas, proposal) => {
 			queryClient.invalidateQueries({
@@ -358,7 +359,7 @@ export function useCanvasLifecycleMutation(canvasId: string) {
 		mutationFn: (action: "pause" | "resume" | "stop") =>
 			bff.post<CanvasLoop>(`/canvases/${canvasId}/loop/${action}`),
 		onError: (error: BffError) => {
-			toast.error(error.message || t`Could not update this canvas`);
+			void notifyError(error);
 		},
 		onSuccess: (loop) => {
 			queryClient.setQueryData<CanvasDetail | undefined>(
@@ -377,7 +378,7 @@ export function useCanvasLoopSettingsMutation(canvasId: string) {
 		mutationFn: (payload: { cadence_minutes: number; expires_at: string }) =>
 			bff.patch<CanvasLoop>(`/canvases/${canvasId}/loop`, payload),
 		onError: (error: BffError) => {
-			toast.error(error.message || t`Could not update this canvas`);
+			void notifyError(error);
 		},
 		onSuccess: (loop) => {
 			queryClient.setQueryData<CanvasDetail | undefined>(

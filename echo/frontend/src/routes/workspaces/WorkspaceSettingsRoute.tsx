@@ -40,6 +40,7 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { InviteModal } from "@/components/invite/InviteModal";
 import {
 	InviteMemberCard,
@@ -66,6 +67,7 @@ import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { assetUrl, logoUrl, memberInitials } from "@/lib/avatar";
+import { ApiRequestError } from "@/lib/errors/read";
 import { displayRole, isOutsiderRole } from "@/lib/roles";
 import type { BillingPeriod, Tier } from "@/lib/tiers";
 
@@ -129,11 +131,7 @@ async function deleteWorkspace(workspaceId: string) {
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: "Couldn't delete workspace",
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json().catch(() => ({}));
 }
@@ -153,11 +151,7 @@ async function fetchSettings(
 	// Throw rather than null — null falls into the loader branch and spins forever.
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: t`Couldn't load workspace settings (${res.status})`,
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -169,7 +163,7 @@ async function removeMember(workspaceId: string, membershipId: string) {
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to remove member");
+		throw new ApiRequestError(res.status, data);
 	}
 }
 
@@ -189,7 +183,7 @@ async function changeRole(
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to change role");
+		throw new ApiRequestError(res.status, data);
 	}
 }
 
@@ -207,9 +201,7 @@ async function uploadWorkspaceLogo(
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string" ? data.detail : "Failed to upload logo",
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	const data = await res.json();
 	return data.file_id as string;
@@ -222,9 +214,7 @@ async function removeWorkspaceLogo(workspaceId: string): Promise<void> {
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string" ? data.detail : "Failed to remove logo",
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 }
 
@@ -251,7 +241,7 @@ async function updateWorkspace(
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to update workspace");
+		throw new ApiRequestError(res.status, data);
 	}
 }
 
@@ -381,7 +371,7 @@ export const WorkspaceSettingsRoute = () => {
 			if (!workspaceId) throw new Error("No workspace");
 			return changeRole(workspaceId, membershipId, role);
 		},
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
@@ -394,7 +384,7 @@ export const WorkspaceSettingsRoute = () => {
 			if (!workspaceId) throw new Error("No workspace");
 			return removeMember(workspaceId, membershipId);
 		},
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			// Frees a seat — re-enable invite button.
@@ -408,7 +398,7 @@ export const WorkspaceSettingsRoute = () => {
 			if (!workspaceId) throw new Error("No workspace");
 			return deleteWorkspace(workspaceId);
 		},
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "organisation"] });
@@ -424,7 +414,7 @@ export const WorkspaceSettingsRoute = () => {
 			if (!workspaceId) throw new Error("No workspace");
 			return removeMember(workspaceId, membershipId);
 		},
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
@@ -1394,7 +1384,7 @@ function PrivacyAndDefaultsSection({
 		onError: (err: Error) => {
 			// Roll back local state on failure.
 			setDescription(settings.description ?? "");
-			toast.error(err.message);
+			void notifyError(err);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
@@ -1414,7 +1404,7 @@ function PrivacyAndDefaultsSection({
 			updateWorkspace(workspaceId, { context: value }),
 		onError: (err: Error) => {
 			setContext(settings.context ?? "");
-			toast.error(err.message);
+			void notifyError(err);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
@@ -1427,7 +1417,7 @@ function PrivacyAndDefaultsSection({
 			updateWorkspace(workspaceId, { name: value }),
 		onError: (err: Error) => {
 			setName(settings.name ?? "");
-			toast.error(err.message);
+			void notifyError(err);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
@@ -1442,7 +1432,7 @@ function PrivacyAndDefaultsSection({
 			if (visibility === null) return;
 			await updateWorkspace(workspaceId, { visibility });
 		},
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
@@ -1464,7 +1454,7 @@ function PrivacyAndDefaultsSection({
 			updateWorkspace(workspaceId, { allow_support_access: value }),
 		onError: (err: Error) => {
 			setAllowSupportAccess(settings.allow_support_access ?? false);
-			toast.error(err.message);
+			void notifyError(err);
 		},
 		onMutate: (value: boolean) => setAllowSupportAccess(value),
 		onSuccess: () => {
@@ -1485,7 +1475,7 @@ function PrivacyAndDefaultsSection({
 	const uploadLogoMutation = useMutation({
 		mutationFn: (blob: Blob) =>
 			uploadWorkspaceLogo(workspaceId, blob, "logo.png"),
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
@@ -1495,7 +1485,7 @@ function PrivacyAndDefaultsSection({
 	});
 	const removeLogoMutation = useMutation({
 		mutationFn: () => removeWorkspaceLogo(workspaceId),
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });

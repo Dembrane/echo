@@ -9,13 +9,14 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
+import { PopcornIcon } from "@phosphor-icons/react";
 import { format, formatDistanceToNow } from "date-fns";
 import { ChevronRight } from "lucide-react";
-import { PopcornIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
-import { useProjectCanvases } from "@/components/canvas/hooks";
 import type { CanvasListItem, CanvasLoop } from "@/components/canvas/hooks";
+import { useProjectCanvases } from "@/components/canvas/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectPopcorn } from "@/components/popcorn/hooks";
 import { testId } from "@/lib/testUtils";
@@ -201,11 +202,10 @@ export const LibraryRoute = () => {
 						<Text fw={600}>
 							<Trans>Could not load the library.</Trans>
 						</Text>
-						<Text size="sm">
-							{canvasesQuery.error instanceof Error
-								? canvasesQuery.error.message
-								: t`Try again in a moment.`}
-						</Text>
+						<ErrorNotice
+							error={canvasesQuery.error}
+							onRetry={() => canvasesQuery.refetch()}
+						/>
 					</Paper>
 				) : canvases.length > 0 ? (
 					<Stack gap="xs" {...testId("library-canvas-list")}>

@@ -105,12 +105,61 @@ jobs:
       # The accounts screens build against a copy of platform/packages/accounts' contract.
       - name: Accounts contract matches the platform
         run: node scripts/sync-accounts-contract.mjs --check
-      - name: Accounts tests
-        run: pnpm exec vitest run src/features/accounts src/components/auth/utils
+      # The error presenter is typed against a copy of platform/packages/core's catalog;
+      # tsc above fails when a code the API can send has no friendly message.
+      - name: Error codes match the platform
+        run: node scripts/sync-error-codes.mjs --check
+      - name: Accounts and error presenter tests
+        run: pnpm exec vitest run src/features/accounts src/components/auth/utils src/lib/errors src/components/error
       # The participant portal's first load must not grow: builds and compares with the
       # baseline recorded in the script.
       - name: Portal first-load size
         run: node scripts/check-portal-bundle.mjs
+
+  # Fills catalog entries missing in any locale with Gemini on the EU Vertex endpoint,
+  # flagged fuzzy for review, and commits them back to the branch. Runs only where a
+  # service account for it is configured (repository variable TRANSLATE_SERVICE_ACCOUNT)
+  # and the branch is this repository's; everywhere else it reports the missing count
+  # and passes.
+  translations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      CAN_FILL: ${{ vars.TRANSLATE_SERVICE_ACCOUNT != '' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) }}
+      LLM_VERTEX_PROJECT: ${{ vars.TRANSLATE_VERTEX_PROJECT || 'dembrane-echo' }}
+      LLM_VERTEX_LOCATION: eu
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version-file: echo/platform/.bun-version }
+      - run: bun install --frozen-lockfile
+      - if: env.CAN_FILL == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/86405194907/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: ${{ vars.TRANSLATE_SERVICE_ACCOUNT }}
+      - name: Missing translations (filled when credentials exist)
+        run: bun packages/i18n/src/cli.ts ${{ env.CAN_FILL == 'true' && '--write' || '' }}
+      - if: env.CAN_FILL == 'true'
+        uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - if: env.CAN_FILL == 'true'
+        name: Compile and commit what was filled
+        working-directory: echo/frontend
+        run: |
+          git diff --quiet -- src ../platform/packages/i18n/locales && exit 0
+          pnpm install --frozen-lockfile
+          pnpm run messages:compile
+          git config user.name "dembrane-translations"
+          git config user.email "translations@dembrane.com"
+          git add src ../platform/packages/i18n/locales
+          git commit -m "Fill missing translations (machine translated, flagged for review)"
+          git push
 
   images:
     runs-on: ubuntu-latest

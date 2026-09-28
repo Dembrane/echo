@@ -1,5 +1,7 @@
+import { i18n } from "@lingui/core";
 import type { z } from "zod4";
 import { API_BASE_URL } from "@/config";
+import { presentError } from "@/lib/errors/present";
 import { ErrorBody, ROUTES, type RouteName } from "../contract/contract.gen";
 
 /**
@@ -38,15 +40,19 @@ export interface CallOptions<N extends RouteName> {
 export class AccountsApiError extends Error {
 	readonly status: number;
 	/** Field-level problems from a 422, keyed by the field name. */
-	readonly fields: Record<string, string>;
+	fields: Record<string, string>;
+	/** The response body; the error presenter (lib/errors) reads its code. */
+	readonly body: unknown;
 	constructor(
 		status: number,
 		message: string,
 		fields: Record<string, string> = {},
+		body: unknown = null,
 	) {
 		super(message);
 		this.status = status;
 		this.fields = fields;
+		this.body = body;
 	}
 }
 
@@ -68,21 +74,32 @@ export const loadFixtures = (): Promise<FixtureModule> => {
 	return fixtures;
 };
 
-const toApiError = (status: number, raw: unknown): AccountsApiError => {
+const toApiError = async (
+	status: number,
+	raw: unknown,
+): Promise<AccountsApiError> => {
 	const parsed = ErrorBody.safeParse(raw);
-	if (!parsed.success) return new AccountsApiError(status, `HTTP ${status}`);
+	if (!parsed.success)
+		return new AccountsApiError(status, `HTTP ${status}`, {}, raw);
 	const { detail } = parsed.data;
-	if (typeof detail === "string") return new AccountsApiError(status, detail);
+	if (typeof detail === "string")
+		return new AccountsApiError(status, detail, {}, raw);
 	const fields: Record<string, string> = {};
 	for (const issue of detail) {
 		const key = issue.loc.filter((l) => l !== "body").join(".");
 		fields[key] ??= issue.msg;
 	}
-	return new AccountsApiError(
+	const error = new AccountsApiError(
 		status,
 		detail[0]?.msg ?? `HTTP ${status}`,
 		fields,
+		raw,
 	);
+	// Field messages by field code in the person's language, where the API sent codes.
+	const presented = await presentError(error, i18n);
+	if (Object.keys(presented.fields).length)
+		error.fields = { ...presented.fields };
+	return error;
 };
 
 /** Turns a zod failure on our own request into the same error a 422 would give. */
@@ -137,7 +154,7 @@ export async function call<N extends RouteName>(
 			method: spec.method,
 		});
 		const raw = await res.json().catch(() => null);
-		if (!res.ok) throw toApiError(res.status, raw);
+		if (!res.ok) throw await toApiError(res.status, raw);
 		json = raw;
 	}
 	if (!spec.response) return json as ResponseOf<N>;
@@ -175,7 +192,7 @@ export async function submitTaskWithFile(
 			method: "POST",
 		});
 		const raw = await res.json().catch(() => null);
-		if (!res.ok) throw toApiError(res.status, raw);
+		if (!res.ok) throw await toApiError(res.status, raw);
 		json = raw;
 	}
 	return spec.response.parse(json);

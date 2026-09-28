@@ -18,6 +18,8 @@ import { RouterProvider } from "react-router/dom";
 import { I18nProvider } from "./components/layout/I18nProvider";
 import { ENABLE_AGENTATION, USE_PARTICIPANT_ROUTER } from "./config";
 import { watchForNewVersion } from "./lib/appVersion";
+import { notifyError } from "./components/error/notifyError";
+import { errorCode } from "./lib/errors/read";
 import { detectAndEmitPilotBlock } from "./lib/pilotBlock";
 
 // Gated at runtime by ENABLE_AGENTATION (config.ts), not at build time, so no
@@ -48,15 +50,23 @@ import { theme } from "./theme";
 // host-side mutations and fan out a level-3 modal. Detection is
 // copy-substring since we control both the backend body and the frontend
 // match — see lib/pilotBlock.ts.
+// The query layer's side of the error presenter (lib/errors): a mutation that handles
+// none of its own errors gets the friendly toast with its action, and a query whose
+// session ran out says so once, with a sign-in button. Screens that show an error inline
+// (ErrorNotice) pass `meta: { errorToast: false }` or their own onError.
 const queryClient = new QueryClient({
 	mutationCache: new MutationCache({
-		onError: (error) => {
-			detectAndEmitPilotBlock(error);
+		onError: (error, _variables, _context, mutation) => {
+			if (detectAndEmitPilotBlock(error)) return;
+			if (mutation.options.onError) return;
+			if (mutation.meta?.errorToast === false) return;
+			void notifyError(error);
 		},
 	}),
 	queryCache: new QueryCache({
 		onError: (error) => {
 			detectAndEmitPilotBlock(error);
+			if (errorCode(error) === "auth.session_expired") void notifyError(error);
 		},
 	}),
 });

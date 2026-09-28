@@ -2,7 +2,9 @@ import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -140,16 +142,12 @@ export const useRequestTraining = (orgId?: string) => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(
-					typeof data.detail === "string"
-						? data.detail
-						: `Couldn't request training (${res.status})`,
-				);
+				throw new ApiRequestError(res.status, data);
 			}
 			return res.json();
 		},
 		onError: (err: Error) => {
-			toast.error(err.message || t`Couldn't request training`);
+			void notifyError(err);
 		},
 		onSuccess: (_result, variables) => {
 			// Funnel pair: training_request_started -> training_request_submitted.

@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -15,6 +16,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
+import {
+	inviteToOrg,
+	inviteToWorkspace,
+	type WorkspaceInvitePayload,
+} from "@/components/invite/api";
 import {
 	type EmailChip,
 	EmailChipsInput,
@@ -25,11 +32,6 @@ import {
 	type InviteResultState,
 	InviteResultsList,
 } from "@/components/invite/InviteResultsList";
-import {
-	inviteToOrg,
-	inviteToWorkspace,
-	type WorkspaceInvitePayload,
-} from "@/components/invite/api";
 import { type InviteRole, RoleSelect } from "@/components/invite/RoleSelect";
 import {
 	type InviteableWorkspace,
@@ -38,6 +40,8 @@ import {
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { loadErrorMessages, presentErrorNow } from "@/lib/errors/present";
+import { errorCode } from "@/lib/errors/read";
 import {
 	invalidateOrgMembersEverywhere,
 	invalidateOrgWorkspacesEverywhere,
@@ -135,10 +139,13 @@ async function fetchSeatEstimate(
 function mapHttpStatusToState(
 	status: number | undefined,
 	detail?: string,
+	code?: string | null,
 ): InviteResultState {
-	// Both seat-cap and "billing inactive" return 402; the detail disambiguates.
+	// Both seat-cap and "billing inactive" return 402; the code (or, from the Python API,
+	// the detail) disambiguates.
 	if (status === 402) {
-		return detail?.toLowerCase().includes("reactivate")
+		return code === "billing.plan_inactive" ||
+			detail?.toLowerCase().includes("reactivate")
 			? "reactivate_required"
 			: "seat_cap";
 	}
@@ -373,6 +380,7 @@ export function InviteModal({
 				},
 			);
 			await Promise.all(workers);
+			await loadErrorMessages(i18n);
 
 			const rows = settled.map((res, i) => {
 				const call = calls[i];
@@ -395,9 +403,13 @@ export function InviteModal({
 					};
 				}
 				const err = res.reason as Error & { status?: number };
-				const state = mapHttpStatusToState(err.status, err.message);
+				const state = mapHttpStatusToState(
+					err.status,
+					err.message,
+					errorCode(err),
+				);
 				return {
-					detail: err.message,
+					detail: presentErrorNow(err, i18n).message,
 					email: call.email,
 					state,
 					workspaceId: call.workspaceId,
@@ -412,15 +424,15 @@ export function InviteModal({
 				workspaceIds,
 			};
 		},
-		onError: (e: Error) => toast.error(e.message),
+		onError: (e: Error) => void notifyError(e),
 		onSuccess: ({ rows, emailCount, workspaceIds, role: submittedRole }) => {
 			setResults(rows);
 			// Telemetry on input intent, not result counts (429s still count as attempts).
 			posthog?.capture("invite_sent", {
 				count: emailCount,
 				role: submittedRole,
-				workspace_count: workspaceIds.length,
 				source: "invite_modal",
+				workspace_count: workspaceIds.length,
 			});
 			// Centralised helpers fan out to both query namespaces during the migration window.
 			invalidateOrgMembersEverywhere(queryClient, orgId);

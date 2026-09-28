@@ -4,6 +4,7 @@ import { IconCheck } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useCheckUnsubscribeStatus } from "@/components/unsubscribe/hooks";
 import { unsubscribeParticipant } from "@/lib/api";
 
@@ -55,7 +56,7 @@ export const ProjectUnsubscribe = () => {
 					</Title>
 
 					{isLoading && <Loader size="sm" />}
-					{error && <Text c="red">{error.message}</Text>}
+					{error && <ErrorNotice error={error} />}
 					{success && (
 						<Text c="green" size="md" className="flex items-center gap-2">
 							<span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white">

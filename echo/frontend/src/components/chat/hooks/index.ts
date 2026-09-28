@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import {
 	type ChatMode,
 	deleteChatById,
@@ -72,7 +73,7 @@ export const useDeleteChatMutation = () => {
 		}) => deleteChatById(payload.chatId),
 		onError: (error: Error, vars) => {
 			if (vars.silent) return;
-			toast.error(error.message || t`Failed to delete chat`);
+			void notifyError(error);
 		},
 		onSuccess: (_, vars) => {
 			queryClient.invalidateQueries({
@@ -142,7 +143,7 @@ export const useInitializeChatModeMutation = () => {
 		}) => initializeChatMode(payload.chatId, payload.mode, payload.projectId),
 		onError: (error) => {
 			console.error("Failed to initialize chat mode:", error);
-			toast.error("Failed to initialize chat mode. Please try again.");
+			void notifyError(error);
 		},
 		onSuccess: (_data, vars) => {
 			queryClient.invalidateQueries({

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 import type { ReasonKey } from "../reasons";
 
 export interface SubmitIssueReportInput {
@@ -122,11 +123,7 @@ export const responseFeedbackQueryKey = (
 
 const parseError = async (res: Response): Promise<Error> => {
 	const data = await res.json().catch(() => ({}));
-	const detail =
-		typeof data?.detail === "string" ? data.detail : `HTTP ${res.status}`;
-	const error = new Error(detail) as Error & { status?: number };
-	error.status = res.status;
-	return error;
+	return new ApiRequestError(res.status, data);
 };
 
 const FEEDBACK_IDS_PER_REQUEST = 200;

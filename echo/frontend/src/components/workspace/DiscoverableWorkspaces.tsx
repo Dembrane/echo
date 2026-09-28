@@ -17,7 +17,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 interface DiscoverableWorkspace {
 	id: string;
@@ -47,7 +49,7 @@ async function postJoin(workspaceId: string) {
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Couldn't join");
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -59,7 +61,7 @@ async function postRequestAccess(workspaceId: string) {
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Couldn't send request");
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -109,7 +111,8 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 		() => joinRows.filter((w) => selected.has(w.id)).map((w) => w.id),
 		[joinRows, selected],
 	);
-	const allSelected = joinRows.length > 0 && selectedIds.length === joinRows.length;
+	const allSelected =
+		joinRows.length > 0 && selectedIds.length === joinRows.length;
 	const someSelected = selectedIds.length > 0 && !allSelected;
 
 	const toggle = (id: string) =>
@@ -143,16 +146,20 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 			const results = await Promise.allSettled(ids.map(postJoin));
 			const okCount = results.filter((r) => r.status === "fulfilled").length;
 			const failedIds = ids.filter((_, i) => results[i].status === "rejected");
-			return { okCount, failedIds };
+			return { failedIds, okCount };
+		},
+		onError: (error: Error) => {
+			confirm.close();
+			void notifyError(error);
 		},
 		onSuccess: ({ okCount, failedIds }) => {
 			invalidate();
 			confirm.close();
 			setSelected(new Set(failedIds));
 			posthog?.capture("workspace_join_completed", {
-				org_id: orgId,
 				count: okCount,
 				failed_count: failedIds.length,
+				org_id: orgId,
 			});
 			if (failedIds.length === 0) {
 				toast.success(
@@ -162,17 +169,13 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 				);
 			} else {
 				posthog?.capture("workspace_join_failed", {
-					org_id: orgId,
 					failed_count: failedIds.length,
+					org_id: orgId,
 				});
 				toast.error(
 					t`Added you to ${okCount}. ${failedIds.length} couldn't be added, try again.`,
 				);
 			}
-		},
-		onError: (error: Error) => {
-			confirm.close();
-			toast.error(error.message);
 		},
 	});
 
@@ -190,7 +193,7 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 					ctx.previous,
 				);
 			}
-			toast.error(error.message);
+			void notifyError(error);
 		},
 		onMutate: async (workspaceId) => {
 			const key = ["v2", "discoverable-workspaces", orgId] as const;
@@ -331,8 +334,8 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 											size="compact-sm"
 											onClick={() => {
 												posthog?.capture("workspace_join_started", {
-													org_id: orgId,
 													count: selectedIds.length,
+													org_id: orgId,
 												});
 												confirm.open();
 											}}

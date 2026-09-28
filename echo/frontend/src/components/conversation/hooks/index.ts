@@ -6,10 +6,10 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
-import { AxiosError } from "axios";
 import posthog from "posthog-js";
 import { useProjectChatContext } from "@/components/chat/hooks";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import {
 	addChatContext,
 	apiNoAuth,
@@ -220,7 +220,7 @@ export const useDeleteConversationByIdMutation = () => {
 	return useMutation({
 		mutationFn: deleteConversationById,
 		onError: (error: Error) => {
-			toast.error(error.message);
+			void notifyError(error);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -248,16 +248,12 @@ export const useMoveConversationMutation = () => {
 			conversationId: string;
 			targetProjectId: string;
 		}) => {
-			try {
-				await bff.post(`/conversations/${conversationId}/move`, {
-					target_project_id: targetProjectId,
-				});
-			} catch (_error) {
-				toast.error("Failed to move conversation.");
-			}
+			await bff.post(`/conversations/${conversationId}/move`, {
+				target_project_id: targetProjectId,
+			});
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to move conversation: ${error.message}`);
+			void notifyError(error);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["conversations"] });
@@ -304,15 +300,7 @@ export const useAddChatContextMutation = () => {
 					mutationContext.previousChatContext,
 				);
 			}
-			if (error instanceof AxiosError) {
-				const errorMessage = t`Failed to add conversation to chat${
-					error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-				}`;
-				toast.error(errorMessage);
-			} else {
-				const errorMessage = t`Failed to add conversation to chat`;
-				toast.error(errorMessage);
-			}
+			void notifyError(error);
 		},
 		onMutate: async (variables) => {
 			// Cancel any outgoing refetches
@@ -430,15 +418,7 @@ export const useDeleteChatContextMutation = () => {
 				);
 			}
 
-			if (error instanceof AxiosError) {
-				const errorMessage = t`Failed to remove conversation from chat${
-					error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-				}`;
-				toast.error(errorMessage);
-			} else {
-				const errorMessage = t`Failed to remove conversation from chat`;
-				toast.error(errorMessage);
-			}
+			void notifyError(error);
 		},
 		onMutate: async (variables) => {
 			// Cancel any outgoing refetches

@@ -2,16 +2,19 @@ import type { InviteRole } from "@/components/invite/RoleSelect";
 import { API_BASE_URL } from "@/config";
 
 // Error from an invite/sharing endpoint. `code` is set when the server sends a
-// structured `detail` ({ code, message }) the UI branches on.
+// structured `detail` ({ code, message }) the UI branches on; `body` is the whole
+// response, which the error presenter (lib/errors) reads the catalog code from.
 export class ApiError extends Error {
 	status: number;
 	code?: string;
+	body?: unknown;
 
-	constructor(message: string, status: number, code?: string) {
+	constructor(message: string, status: number, code?: string, body?: unknown) {
 		super(message);
 		this.name = "ApiError";
 		this.status = status;
 		this.code = code;
+		this.body = body;
 	}
 }
 
@@ -23,13 +26,13 @@ export function parseApiError(
 ): ApiError {
 	const detail = (data as { detail?: unknown } | null)?.detail;
 	if (typeof detail === "string" && detail) {
-		return new ApiError(detail, status);
+		return new ApiError(detail, status, undefined, data);
 	}
 	if (detail && typeof detail === "object") {
 		const { code, message } = detail as { code?: string; message?: string };
-		return new ApiError(message || fallback, status, code);
+		return new ApiError(message || fallback, status, code, data);
 	}
-	return new ApiError(fallback, status);
+	return new ApiError(fallback, status, undefined, data);
 }
 
 export type ProjectShareOutcome =

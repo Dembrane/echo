@@ -2,8 +2,8 @@ import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Anchor,
 	Alert,
+	Anchor,
 	Badge,
 	Box,
 	Button,
@@ -32,8 +32,8 @@ import {
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
-import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { DatePickerInput } from "@mantine/dates";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import {
 	IconArrowsSort,
 	IconChevronDown,
@@ -61,12 +61,13 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
+import { notifyError } from "@/components/error/notifyError";
 import { AdminResponseFeedbackPanel } from "@/components/feedback/AdminResponseFeedbackPanel";
 import { StaffTrainingPanel } from "@/components/training";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { isOutsiderRole } from "@/lib/roles";
+import { ApiRequestError } from "@/lib/errors/read";
 import {
 	type BillingPeriod,
 	PURCHASABLE_TIERS,
@@ -410,7 +411,7 @@ function DiscountEditor({
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			return res.json();
 		},
@@ -514,7 +515,7 @@ function OrgPartnerToggle({
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			return res.json();
 		},
@@ -579,7 +580,7 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			const json = await res.json();
 			// Awaited here (not in onSuccess) so isPending stays true until the
@@ -591,7 +592,7 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 		},
 		onError: (e) => {
 			closeConfirm();
-			toast.error((e as Error).message);
+			void notifyError(e);
 		},
 		onSuccess: () => {
 			closeConfirm();
@@ -744,7 +745,7 @@ function BillingModeControl({
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			const json = await res.json();
 			await queryClient.invalidateQueries({
@@ -754,7 +755,7 @@ function BillingModeControl({
 		},
 		onError: (e) => {
 			closeConfirm();
-			toast.error((e as Error).message);
+			void notifyError(e);
 		},
 		onSuccess: () => {
 			closeConfirm();
@@ -912,7 +913,6 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 	// Reflect the caller's current session so a reopened modal shows "active
 	// until <time>" + Extend instead of always offering a fresh join.
 	const { data: status, isLoading } = useQuery({
-		queryKey: statusKey,
 		queryFn: async () => {
 			const res = await fetch(
 				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/join-support`,
@@ -924,11 +924,11 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 				expires_at: string | null;
 			}>;
 		},
+		queryKey: statusKey,
 	});
 
 	const requestKey = ["v2", "admin", "support-request", row.workspace_id];
 	const { data: reqStatus } = useQuery({
-		queryKey: requestKey,
 		queryFn: async () => {
 			const res = await fetch(
 				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/support-access/request`,
@@ -944,6 +944,7 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 				} | null;
 			}>;
 		},
+		queryKey: requestKey,
 	});
 
 	const [
@@ -957,19 +958,19 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 			const res = await fetch(
 				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/support-access/request`,
 				{
+					body: JSON.stringify({ message }),
 					credentials: "include",
 					headers: { "Content-Type": "application/json" },
 					method: "POST",
-					body: JSON.stringify({ message }),
 				},
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			return res.json();
 		},
-		onError: (e) => toast.error((e as Error).message),
+		onError: (e) => void notifyError(e),
 		onSuccess: () => {
 			closeRequestModal();
 			setRequestNote("");
@@ -986,11 +987,11 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			return res.json();
 		},
-		onError: (e) => toast.error((e as Error).message),
+		onError: (e) => void notifyError(e),
 		onSuccess: () => {
 			toast.success(t`Request withdrawn.`);
 			queryClient.invalidateQueries({ queryKey: requestKey });
@@ -1009,14 +1010,14 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			return res.json() as Promise<{
 				status: "joined" | "extended" | "already_member";
 				expires_at: string | null;
 			}>;
 		},
-		onError: (e) => toast.error((e as Error).message),
+		onError: (e) => void notifyError(e),
 		onSuccess: (data) => {
 			if (data.status === "already_member") {
 				toast.success(t`You already have access to this workspace.`);
@@ -1044,11 +1045,11 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			return res.json();
 		},
-		onError: (e) => toast.error((e as Error).message),
+		onError: (e) => void notifyError(e),
 		onSuccess: () => {
 			toast.success(t`Support access ended.`);
 			queryClient.invalidateQueries({ queryKey: statusKey });
@@ -2996,7 +2997,7 @@ function ManagedBillingPanel() {
 			);
 			if (!res.ok) {
 				const detail = await res.json().catch(() => null);
-				toast.error(detail?.detail ?? t`Could not complete that action.`);
+				void notifyError(new ApiRequestError(res.status, detail));
 				return null;
 			}
 			toast.success(successMessage);

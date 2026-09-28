@@ -25,7 +25,8 @@
 			"!**/package-lock.json",
 			"!**/package.json",
 			"!**/locales",
-			"!**/features/accounts/contract"
+			"!**/features/accounts/contract",
+			"!**/lib/errors/catalog"
 		]
 	},
 	"formatter": {

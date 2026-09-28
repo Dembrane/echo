@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { type AgentMemory, useDeleteMemoryMutation } from "./hooks";
 
 type MemoryListProps = {
@@ -58,8 +59,7 @@ export const MemoryList = ({
 	const handleConfirm = () => {
 		if (!toRemove) return;
 		deleteMutation.mutate(toRemove.id, {
-			onError: (error: Error) =>
-				toast.error(error.message || t`Couldn't remove this memory`),
+			onError: (error: Error) => void notifyError(error),
 			onSettled: () => setToRemove(null),
 			onSuccess: () => toast.success(t`Memory removed`),
 		});

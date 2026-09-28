@@ -1,0 +1,1604 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-09-28 13:40+0200\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: es-ES\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:5
+msgid "error.request.field_empty"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:58
+msgid "error.document.image_too_large"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:53
+msgid "error.document.image_not_png"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:68
+msgid "error.workspace.handoff_pending"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:10
+msgid "error.popcorn.creation_busy"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:27
+msgid "error.canvas.just_previewed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:91
+msgid "error.project.pin_order_invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/report.ts:5
+msgid "error.report.already_generating"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent_access.ts:24
+msgid "error.agent_access.risk_not_accepted"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:115
+msgid "error.workspace.partner_agreement_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:100
+msgid "error.project.privacy_policy_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:29
+msgid "error.task.reply_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:17
+msgid "error.agent.insight_reason_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:38
+msgid "error.field.too_few_items"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:44
+msgid "error.workspace.external_needs_owner"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:27
+msgid "error.workspace.data_owner_org_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:13
+msgid "error.workspace.admin_joins_directly"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:133
+msgid "error.project.share_role_cannot_access"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:49
+msgid "error.invite.role_cannot_access_projects"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:18
+msgid "error.canvas.feature_off"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:5
+msgid "error.field.invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:27
+msgid "error.document.dpa_not_authorised"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/internal.ts:5
+msgid "error.internal.busy"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:5
+msgid "error.analysis.feature_disabled"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:95
+msgid "error.project.privacy_policy_invalid_url"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:13
+msgid "error.field.invalid_date"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:17
+msgid "error.field.invalid_email"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:14
+msgid "error.webhook.invalid_url"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:30
+msgid "error.field.invalid_url"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+msgid "error.billing.tax_id_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:40
+msgid "error.document.field_text_invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:119
+msgid "error.project.share_needs_private"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:9
+msgid "error.request.field_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:36
+msgid "error.document.field_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:34
+msgid "error.field.required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/access.ts:9
+msgid "error.access.not_onboarded"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:28
+msgid "error.organisation.name_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:5
+msgid "error.project.event_invite_paid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:137
+msgid "error.workspace.visibility_requires_tier"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:23
+msgid "error.conversation.no_summary"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent_access.ts:14
+msgid "error.agent_access.no_enabled_organisation"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:24
+msgid "error.invite.observer_internal_workspace"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:5
+msgid "error.webhook.invalid_event"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:18
+msgid "error.template.quick_access_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:26
+msgid "error.billing.payments_unavailable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:19
+msgid "error.document.decline_signer_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:98
+msgid "error.document.signer_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:36
+msgid "error.workspace.delete_admin_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:54
+msgid "error.workspace.handoff_admin_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:59
+msgid "error.workspace.handoff_cancel_initiator_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:49
+msgid "error.workspace.handoff_accept_target_admin_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:31
+msgid "error.workspace.data_ownership_admin_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:49
+msgid "error.organisation.owner_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:50
+msgid "error.member.owner_changes_owner"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:55
+msgid "error.member.owner_removes_owner"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:17
+msgid "error.map.not_a_claim"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:18
+msgid "error.workspace.create_admin_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:5
+msgid "error.organisation.admin_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:14
+msgid "error.organisation.billing_role_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:40
+msgid "error.billing.role_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:87
+msgid "error.project.not_owner"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:44
+msgid "error.invite.revoke_forbidden"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:39
+msgid "error.invite.resend_forbidden"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:14
+msgid "error.project.legal_basis_admin_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:143
+msgid "error.project.visibility_admin_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:115
+msgid "error.project.share_admin_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:29
+msgid "error.map.selection_not_in_map"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:10
+msgid "error.webhook.invalid_status"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/report.ts:23
+msgid "error.report.schedule_too_soon"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:5
+msgid "error.canvas.expiry_in_past"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:9
+msgid "error.canvas.expiry_too_far"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:19
+msgid "error.project.legal_basis_invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:19
+msgid "error.popcorn.invalid_live_hours"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent_access.ts:5
+msgid "error.agent_access.expiry_unsupported"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:9
+msgid "error.field.invalid_choice"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/memory.ts:9
+msgid "error.memory.invalid_scope"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:110
+msgid "error.project.private_requires_tier"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:32
+msgid "error.project.move_context_mismatch"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:23
+msgid "error.template.quick_access_too_many"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:5
+msgid "error.popcorn.branding_tier"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:43
+msgid "error.map.selection_too_small"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:19
+msgid "error.chat.conversation_ids_empty"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:46
+msgid "error.project.move_none_selected"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:138
+msgid "error.project.sharing_tier_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/validation.ts:5
+msgid "error.validation.invalid_input"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:22
+msgid "error.canvas.invalid_value"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:13
+msgid "error.analysis.invalid_request"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:5
+msgid "error.workspace.access_request_actioned"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:9
+msgid "error.member.changed_concurrently"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:27
+msgid "error.analysis.revision_conflict"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:40
+msgid "error.popcorn.settings_busy"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:21
+msgid "error.field.invalid_json"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:13
+msgid "error.request.invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:18
+msgid "error.request.invalid_json"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/internal.ts:14
+msgid "error.internal.unexpected"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:22
+msgid "error.account.otp_invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:5
+msgid "error.training.completed_at_invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/report.ts:19
+msgid "error.report.schedule_invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:5
+msgid "error.account.credentials_invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:13
+msgid "error.member.invalid_role"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/rate_limit.ts:5
+msgid "error.rate_limit.exceeded"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:14
+msgid "error.document.confirmation_mismatch"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:27
+msgid "error.project.methodology_read_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:45
+msgid "error.popcorn.synthetic_frame_locked"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:5
+msgid "error.agent.insight_content_blank"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/present.ts:23
+msgid "error.present.map_results_unavailable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/present.ts:19
+msgid "error.present.map_results_not_ready"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:25
+msgid "error.map.not_ready"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:34
+msgid "error.map.selection_other_snapshot"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:63
+msgid "error.document.no_pdf"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:17
+msgid "error.billing.invoice_pdf_missing"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:13
+msgid "error.upload.failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:23
+msgid "error.request.nothing_to_update"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:21
+msgid "error.agent.insight_update_empty"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:25
+msgid "error.agent.no_active_turn"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:64
+msgid "error.workspace.handoff_none_pending"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:22
+msgid "error.billing.no_payment_profile"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:9
+msgid "error.billing.already_subscribed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/present.ts:5
+msgid "error.present.activity_not_in_presentation"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/announcement.ts:5
+msgid "error.announcement.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:41
+msgid "error.canvas.loop_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:36
+msgid "error.canvas.loop_ended"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:31
+msgid "error.canvas.just_refreshed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:31
+msgid "error.chat.mode_already_set"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:5
+msgid "error.chat.context_full"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/pricing.ts:5
+msgid "error.pricing.configuration_not_owned"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent_access.ts:19
+msgid "error.agent_access.request_expired"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:19
+msgid "error.conversation.no_content"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:15
+msgid "error.chat.conversation_already_added"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:9
+msgid "error.conversation.locked"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:23
+msgid "error.chat.conversation_not_in_chat"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:31
+msgid "error.conversation.not_open"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:27
+msgid "error.chat.conversation_too_long"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:22
+msgid "error.workspace.data_owner_is_member"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:76
+msgid "error.document.not_declinable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:103
+msgid "error.document.signing_unavailable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:9
+msgid "error.document.changed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:48
+msgid "error.document.field_unknown"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:68
+msgid "error.document.no_signature_needed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:5
+msgid "error.document.already_signed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:84
+msgid "error.document.not_signed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:72
+msgid "error.document.not_awaiting_signature"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:23
+msgid "error.document.declined"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:112
+msgid "error.document.withdrawn"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:15
+msgid "error.popcorn.feature_disabled"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:9
+msgid "error.upload.empty"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:25
+msgid "error.upload.too_large"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:14
+msgid "error.account.image_too_large"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:5
+msgid "error.invite.already_accepted"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:9
+msgid "error.invite.expired"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:14
+msgid "error.invite.not_for_you"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:22
+msgid "error.member.last_admin_remove"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:17
+msgid "error.member.last_admin"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:27
+msgid "error.member.last_owner"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:31
+msgid "error.member.last_owner_demote"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:27
+msgid "error.request.too_large"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:23
+msgid "error.analysis.read_only_type"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:13
+msgid "error.participant.token_invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:97
+msgid "error.workspace.logo_url_too_long"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:63
+msgid "error.billing.tier_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:89
+msgid "error.document.offer_expired"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:73
+msgid "error.workspace.handoff_same_org"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:19
+msgid "error.organisation.deleted"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:9
+msgid "error.analysis.field_not_editable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:31
+msgid "error.account.password_weak"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:29
+msgid "error.invite.outsider_is_admin"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:34
+msgid "error.invite.outsider_is_member"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:23
+msgid "error.organisation.external_cannot_manage"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:35
+msgid "error.member.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:40
+msgid "error.member.not_in_workspace"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:128
+msgid "error.project.share_not_member"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:5
+msgid "error.member.already_removed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:59
+msgid "error.billing.tier_not_purchasable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/present.ts:15
+msgid "error.present.map_not_in_presentation"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:27
+msgid "error.popcorn.loop_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:35
+msgid "error.popcorn.public_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/present.ts:10
+msgid "error.present.draft_conflict"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:105
+msgid "error.project.privacy_policy_too_long"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:64
+msgid "error.project.no_conversations"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:13
+msgid "error.map.no_map_yet"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:68
+msgid "error.project.no_transcripts"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:124
+msgid "error.project.share_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:82
+msgid "error.project.not_in_workspace"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:72
+msgid "error.project.no_workspace"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:5
+msgid "error.participant.report_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/report.ts:14
+msgid "error.report.not_scheduled"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:10
+msgid "error.project.events_dembrane_only"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:23
+msgid "error.verify.not_enabled"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:128
+msgid "error.workspace.support_request_expired"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:133
+msgid "error.workspace.support_request_handled"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:21
+msgid "error.task.not_open"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:25
+msgid "error.task.not_waiting"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:13
+msgid "error.task.file_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:14
+msgid "error.template.quick_access_duplicate"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:13
+msgid "error.training.no_license"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:17
+msgid "error.training.not_available"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:33
+msgid "error.upload.unsupported_type"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:22
+msgid "error.participant.unsubscribe_link_invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:26
+msgid "error.field.invalid_type"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:32
+msgid "error.analysis.revision_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:23
+msgid "error.popcorn.just_refreshed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:110
+msgid "error.workspace.paid_rescope"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:78
+msgid "error.workspace.handoff_shared_plan"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:119
+msgid "error.workspace.private"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:40
+msgid "error.workspace.deleted"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:88
+msgid "error.workspace.has_projects"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:32
+msgid "error.document.field_must_tick"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:44
+msgid "error.document.field_tick_invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:37
+msgid "error.project.move_needs_admin"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:108
+msgid "error.document.verified_email_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:36
+msgid "error.account.tfa_already_enabled"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:40
+msgid "error.account.tfa_not_enabled"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:18
+msgid "error.account.image_type"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:93
+msgid "error.workspace.logo_url_invalid"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:54
+msgid "error.field.too_small"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:42
+msgid "error.field.too_large"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:50
+msgid "error.field.too_short"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:46
+msgid "error.field.too_long"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:22
+msgid "error.webhook.target_not_allowed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:13
+msgid "error.canvas.extraction_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:45
+msgid "error.chat.verify_unavailable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:21
+msgid "error.upload.probe_url_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:35
+msgid "error.billing.request_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:51
+msgid "error.map.title_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:5
+msgid "error.conversation.delete_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:83
+msgid "error.workspace.handoff_target_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:50
+msgid "error.project.move_target_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:41
+msgid "error.analysis.snapshot_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent_access.ts:9
+msgid "error.agent_access.grant_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:37
+msgid "error.analysis.run_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:5
+msgid "error.billing.account_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:46
+msgid "error.canvas.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:33
+msgid "error.agent.run_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:36
+msgid "error.chat.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:27
+msgid "error.conversation.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:80
+msgid "error.document.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:17
+msgid "error.upload.file_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:13
+msgid "error.agent.insight_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:19
+msgid "error.invite.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:9
+msgid "error.training.license_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:21
+msgid "error.map.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/memory.ts:13
+msgid "error.memory.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/feedback.ts:5
+msgid "error.feedback.message_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:23
+msgid "error.project.methodology_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/notification.ts:5
+msgid "error.notification.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:41
+msgid "error.organisation.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:31
+msgid "error.popcorn.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:77
+msgid "error.project.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/question.ts:5
+msgid "error.question.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/report.ts:10
+msgid "error.report.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:9
+msgid "error.workspace.access_request_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:18
+msgid "error.analysis.object_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:27
+msgid "error.participant.unsubscribe_link_unknown"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/tag.ts:5
+msgid "error.tag.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:17
+msgid "error.task.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:10
+msgid "error.template.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:32
+msgid "error.verify.topic_unknown"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:28
+msgid "error.verify.topic_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:21
+msgid "error.training.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:50
+msgid "error.popcorn.version_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:18
+msgid "error.webhook.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:105
+msgid "error.workspace.not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:5
+msgid "error.verify.artifact_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:46
+msgid "error.analysis.storage_unavailable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:47
+msgid "error.map.storage_unavailable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:45
+msgid "error.account.user_not_found"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:13
+msgid "error.billing.checkout_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:14
+msgid "error.conversation.merge_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/internal.ts:9
+msgid "error.internal.unavailable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:93
+msgid "error.document.signature_unreadable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/pricing.ts:9
+msgid "error.pricing.reference_unavailable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/feedback.ts:17
+msgid "error.feedback.save_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:9
+msgid "error.participant.subscribe_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:9
+msgid "error.map.generation_not_started"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:5
+msgid "error.map.fact_check_not_started"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:37
+msgid "error.upload.url_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:29
+msgid "error.upload.transcription_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:10
+msgid "error.chat.context_size_unavailable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:45
+msgid "error.billing.seat_pricing_unavailable"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:9
+msgid "error.verify.generation_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:25
+msgid "error.training.unknown_type"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:18
+msgid "error.participant.token_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/feedback.ts:9
+msgid "error.feedback.message_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:9
+msgid "error.agent.insight_content_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/memory.ts:5
+msgid "error.memory.content_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:32
+msgid "error.organisation.no_access"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:45
+msgid "error.organisation.not_member"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:101
+msgid "error.workspace.no_access"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:63
+msgid "error.member.sole_admin_leave"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/feedback.ts:21
+msgid "error.feedback.too_many_attachments"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:40
+msgid "error.chat.too_many_conversations"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:55
+msgid "error.project.move_too_many"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:5
+msgid "error.template.not_allowed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:27
+msgid "error.template.read_only_collaborator"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:59
+msgid "error.member.role_above_own"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:54
+msgid "error.invite.self"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:45
+msgid "error.member.outsider_role_switch"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:5
+msgid "error.task.done_by_billing_details"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:9
+msgid "error.task.done_by_signing"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:42
+msgid "error.project.move_no_workspace_access"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:29
+msgid "error.agent.run_forbidden"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:60
+msgid "error.project.no_access"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/access.ts:5
+msgid "error.access.forbidden"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:18
+msgid "error.verify.no_new_feedback"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:54
+msgid "error.billing.tier_limit"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/rate_limit.ts:10
+msgid "error.rate_limit.too_many_streams"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/auth.ts:9
+msgid "error.auth.user_required"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:39
+msgid "error.map.selection_too_large"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:123
+msgid "error.workspace.removed_from"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:9
+msgid "error.account.email_missing"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:27
+msgid "error.account.password_incorrect"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:5
+msgid "error.upload.confirm_failed"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/feedback.ts:13
+msgid "error.feedback.message_too_long"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:36
+msgid "error.organisation.no_billing_account"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:9
+msgid "error.organisation.billing_canceled"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:31
+msgid "error.billing.plan_inactive"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:13
+msgid "error.verify.no_chunks"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/auth.ts:5
+msgid "error.auth.session_expired"
+msgstr ""

@@ -1,3 +1,5 @@
+import { readApiError } from "./errors/read";
+
 // Detects the shared free-tier 402 contract raised by the backend
 // (dembrane/free_tier.py free_tier_limit_error). Frontend gates and the
 // UpgradeModal key on this.
@@ -17,6 +19,10 @@ const FREE_TIER_LIMIT_ERROR = "FREE_TIER_LIMIT";
  * and a plain fetch path where the parsed JSON detail was attached.
  */
 export function isFreeTierLimitError(err: unknown): FreeTierLimit | null {
+	// The platform's code for it; the details shape below covers the Python API.
+	const coded = readApiError(err);
+	if (coded.code === "billing.tier_limit" && isLimit(coded.params.limit))
+		return coded.params.limit;
 	const detail = extractDetail(err);
 	if (
 		detail &&
@@ -39,10 +45,17 @@ export function isFreeTierLimitError(err: unknown): FreeTierLimit | null {
 function extractDetail(err: unknown): unknown {
 	if (!err || typeof err !== "object") return null;
 	// axios-style: err.response.data.detail
-	const response = (err as { response?: { data?: { detail?: unknown } } }).response;
+	const response = (err as { response?: { data?: { detail?: unknown } } })
+		.response;
 	if (response?.data?.detail !== undefined) return response.data.detail;
 	// plain object with a detail field
 	const detail = (err as { detail?: unknown }).detail;
 	if (detail !== undefined) return detail;
 	return null;
+}
+
+function isLimit(v: unknown): v is FreeTierLimit {
+	return (
+		v === "chats" || v === "chat_turns" || v === "report" || v === "workspaces"
+	);
 }

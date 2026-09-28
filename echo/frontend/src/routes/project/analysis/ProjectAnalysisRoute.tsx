@@ -38,6 +38,7 @@ import {
 } from "@/components/analysis/hooks";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { I18nLink } from "@/components/common/i18nLink";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
 	type PopcornDetail,
@@ -541,11 +542,7 @@ function RecipeCard({
 						canEdit={canRun}
 					/>
 				)}
-				{request.isError && (
-					<Alert color="red" variant="outline">
-						{request.error.message}
-					</Alert>
-				)}
+				{request.isError && <ErrorNotice error={request.error} />}
 				<Group>
 					{canRun && (
 						<Button

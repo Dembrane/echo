@@ -42,6 +42,7 @@ import { OrgAgentAccessPanel } from "@/components/agent-access/OrgAgentAccessPan
 import { OrgBillingTab } from "@/components/billing/BillingManager";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { InviteModal } from "@/components/invite/InviteModal";
 import {
 	InviteMemberCard,
@@ -62,6 +63,7 @@ import {
 	memberInitials,
 	logoUrl as resolveLogoUrl,
 } from "@/lib/avatar";
+import { ApiRequestError } from "@/lib/errors/read";
 import { displayRole, isOutsiderRole, roleColor } from "@/lib/roles";
 import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import { OrganisationExternalView } from "./OrganisationExternalView";
@@ -145,11 +147,7 @@ async function fetchOrganisation(
 	}
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: t`Couldn't load organisation (${res.status})`,
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -169,11 +167,7 @@ async function fetchOrganisationMembers(
 	}
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: `Members request failed (${res.status})`,
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -194,11 +188,7 @@ async function fetchOrganisationWorkspaces(
 	}
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: `Workspaces request failed (${res.status})`,
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -281,9 +271,7 @@ async function changeOrganisationRole(
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string" ? data.detail : "Couldn't change role",
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 }
 
@@ -303,9 +291,7 @@ async function changeWorkspaceMemberRole(
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string" ? data.detail : "Couldn't change role",
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 }
 
@@ -458,7 +444,7 @@ export const OrganisationRoute = () => {
 			if (!organisationId) throw new Error("No organisation");
 			return changeOrganisationRole(organisationId, userId, role);
 		},
-		onError: (e: Error) => toast.error(e.message),
+		onError: (e: Error) => void notifyError(e),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
@@ -484,7 +470,7 @@ export const OrganisationRoute = () => {
 			membershipId: string;
 			role: string;
 		}) => changeWorkspaceMemberRole(workspaceId, membershipId, role),
-		onError: (e: Error) => toast.error(e.message),
+		onError: (e: Error) => void notifyError(e),
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
@@ -505,14 +491,10 @@ export const OrganisationRoute = () => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(
-					typeof data.detail === "string"
-						? data.detail
-						: "Couldn't remove member",
-				);
+				throw new ApiRequestError(res.status, data);
 			}
 		},
-		onError: (e: Error) => toast.error(e.message),
+		onError: (e: Error) => void notifyError(e),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
@@ -553,15 +535,11 @@ export const OrganisationRoute = () => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(
-					typeof data.detail === "string"
-						? data.detail
-						: "Couldn't add to workspace",
-				);
+				throw new ApiRequestError(res.status, data);
 			}
 			return res.json();
 		},
-		onError: (e: Error) => toast.error(e.message),
+		onError: (e: Error) => void notifyError(e),
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
@@ -587,15 +565,11 @@ export const OrganisationRoute = () => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(
-					typeof data.detail === "string"
-						? data.detail
-						: "Couldn't join workspace",
-				);
+				throw new ApiRequestError(res.status, data);
 			}
 			return res.json();
 		},
-		onError: (e: Error) => toast.error(e.message),
+		onError: (e: Error) => void notifyError(e),
 		onSuccess: (_data, workspaceId) => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
@@ -1055,9 +1029,7 @@ async function updateOrganisationFromOverview(
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string" ? data.detail : "Couldn't save",
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -1096,7 +1068,7 @@ function OverviewPanel({
 			// what's actually stored.
 			setName(organisation.name);
 			setDescription(organisation.description ?? "");
-			toast.error(err.message);
+			void notifyError(err);
 		},
 		onSuccess: () => {
 			invalidate();

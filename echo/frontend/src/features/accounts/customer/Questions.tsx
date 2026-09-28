@@ -14,6 +14,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useState } from "react";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useAccountsMutation } from "../api/hooks";
 import type { TicketT } from "../contract/contract.gen";
 import { formatDateTime, ticketStatusLabel } from "../format";
@@ -237,11 +238,7 @@ function AskForm({
 					onChange={(e) => setBody(e.currentTarget.value)}
 					data-testid="question-body"
 				/>
-				{mutation.error && (
-					<Text size="sm" c="red">
-						{mutation.error.message}
-					</Text>
-				)}
+				{mutation.error && <ErrorNotice error={mutation.error} />}
 				<Group justify="flex-end" gap="xs">
 					<Button variant="default" onClick={onDone}>
 						<Trans>Cancel</Trans>

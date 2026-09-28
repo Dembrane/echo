@@ -13,6 +13,7 @@ import {
 } from "@mantine/core";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useAccountsMutation } from "../api/hooks";
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -164,11 +165,7 @@ export function UploadPdfModal({
 					checked={sign}
 					onChange={(e) => setSign(e.currentTarget.checked)}
 				/>
-				{push.error && (
-					<Text size="sm" c="red">
-						{push.error.message}
-					</Text>
-				)}
+				{push.error && <ErrorNotice error={push.error} />}
 				<Group justify="flex-end">
 					<Button
 						disabled={!file || !title.trim()}
