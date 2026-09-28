@@ -101,17 +101,10 @@ async function readForm(req: Request) {
 
 /**
  * POST /api/stateless/transcribe: one audio input transcribed synchronously, nothing but
- * a metering row kept. POST /api/stateless/webhook/transcribe: the retired provider's
- * callback, accepted and ignored.
+ * a metering row kept.
  */
 export function statelessRoutes(d: ConversationsDeps) {
   const app = new Hono<Env>();
-
-  app.post("/api/stateless/webhook/transcribe", async (c) => {
-    await p.validate(c.req, { body: p.dict() });
-    d.logger.info("transcription webhook received but integration is disabled; ignoring payload");
-    return c.json(null);
-  });
 
   app.post("/api/stateless/transcribe", async (c) => {
     const who = requireUser(c);

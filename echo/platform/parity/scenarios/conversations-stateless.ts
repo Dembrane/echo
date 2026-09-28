@@ -15,24 +15,12 @@ const audio = (type = "audio/webm", base64 = Buffer.from("audio-bytes").toString
 
 export default scenarios([
   {
-    name: "stateless webhook: accepted and ignored",
+    name: "stateless webhook: removed",
     as: "anonymous",
     method: "POST",
     path: "/api/stateless/webhook/transcribe",
     body: { event: "done" },
-  },
-  {
-    name: "stateless webhook: body required",
-    as: "anonymous",
-    method: "POST",
-    path: "/api/stateless/webhook/transcribe",
-  },
-  {
-    name: "stateless webhook: not an object",
-    as: "anonymous",
-    method: "POST",
-    path: "/api/stateless/webhook/transcribe",
-    body: [1],
+    removed: "the retired transcription provider's callback, which only logged and ignored",
   },
   {
     name: "stateless: anonymous",
