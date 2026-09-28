@@ -2,7 +2,7 @@ import {
   BadRequestError,
   NotFoundError,
   newId,
-  PlatformError,
+  UnauthenticatedError,
   ValidationError,
 } from "@dembrane/core";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
@@ -11,15 +11,6 @@ import type { AccountDeps } from "./deps";
 import { passwordProblems } from "./password";
 import { cleanName } from "./service";
 import { accountStorage } from "./storage";
-
-/** Directus's 401 for a wrong password, which the settings page shows as is. */
-class InvalidCredentialsError extends PlatformError {
-  readonly status = 401;
-  readonly code = "invalid_credentials";
-}
-
-const INVALID_OTP = 'Invalid payload. "otp" is invalid.';
-const TFA_ALREADY_SET = "Invalid payload. TFA Secret is already set for this user.";
 
 /**
  * Uploads that land in a public folder must be images a browser renders inertly: raster
@@ -47,7 +38,7 @@ export function settingsRoutes(deps: AccountDeps) {
     const form = await c.req.parseBody().catch(() => ({}) as Record<string, unknown>);
     const file = form.file;
     if (!(file instanceof File)) {
-      throw new ValidationError("Request validation failed", [
+      const issues = [
         {
           type: "missing",
           loc: ["body", "file"],
@@ -55,12 +46,17 @@ export function settingsRoutes(deps: AccountDeps) {
           input: null,
           url: "https://errors.pydantic.dev/2.12/v/missing",
         },
-      ]);
+      ];
+      throw new ValidationError("validation.invalid_input", {
+        details: issues,
+        params: { fields: v.fieldProblems(issues) },
+      });
     }
     const type = file.type || "image/png";
     const ext = IMAGE_TYPES[type];
-    if (!ext) throw new BadRequestError("Upload a PNG, JPEG, WebP or GIF image");
-    if (file.size > MAX_UPLOAD_BYTES) throw new BadRequestError("Images can be at most 5 MB");
+    if (!ext) throw new BadRequestError("account.image_type");
+    if (file.size > MAX_UPLOAD_BYTES)
+      throw new BadRequestError("account.image_too_large", { params: { max_mb: 5 } });
 
     const now = new Date();
     const folderId = (await store.folderId(folderName)) ?? (await store.createFolder(folderName));
@@ -106,7 +102,7 @@ export function settingsRoutes(deps: AccountDeps) {
     .get(`${base}/me`, async (c) => {
       const who = requireUser(c);
       const p = await store.settingsProfile(who.directusUserId);
-      if (!p) throw new NotFoundError("User not found");
+      if (!p) throw new NotFoundError("account.user_not_found");
       return c.json({ ...p, tfa_enabled: await deps.identity.totpEnabled(who.directusUserId) });
     })
     .patch(`${base}/password`, async (c) => {
@@ -115,30 +111,33 @@ export function settingsRoutes(deps: AccountDeps) {
         body: { current_password: v.str(), new_password: v.str() },
       });
       const problems = passwordProblems(body.new_password);
-      if (problems.length) throw new BadRequestError(problems.join("; "));
+      if (problems.length)
+        throw new BadRequestError("account.password_weak", {
+          params: { problems: problems.join("; ") },
+        });
       const r = await deps.identity.changePassword(
         who.directusUserId,
         body.current_password,
         body.new_password,
       );
-      if (r === "wrong_current") throw new BadRequestError("Current password is incorrect");
+      if (r === "wrong_current") throw new BadRequestError("account.password_incorrect");
       return c.json({ status: "ok" });
     })
     .post(`${base}/tfa/generate`, async (c) => {
       const who = requireUser(c);
       const { body } = await v.validate(c, { body: { password: v.str() } });
       const r = await deps.identity.generateTotp(who.directusUserId, body.password, "dembrane");
-      if (r === "wrong_password") throw new InvalidCredentialsError("Invalid user credentials.");
-      if (r === "already_enabled") throw new BadRequestError(TFA_ALREADY_SET);
+      if (r === "wrong_password") throw new UnauthenticatedError("account.credentials_invalid");
+      if (r === "already_enabled") throw new BadRequestError("account.tfa_already_enabled");
       return c.json(r);
     })
     .post(`${base}/tfa/enable`, async (c) => {
       const who = requireUser(c);
       const { body } = await v.validate(c, { body: { otp: v.str(), secret: v.str() } });
       if (await deps.identity.totpEnabled(who.directusUserId))
-        throw new BadRequestError(TFA_ALREADY_SET);
+        throw new BadRequestError("account.tfa_already_enabled");
       const r = await deps.identity.enableTotp(who.directusUserId, body.otp);
-      if (r !== "ok") throw new BadRequestError(INVALID_OTP);
+      if (r !== "ok") throw new BadRequestError("account.otp_invalid");
       return c.json({ status: "ok" });
     })
     .post(`${base}/tfa/disable`, async (c) => {
@@ -146,10 +145,10 @@ export function settingsRoutes(deps: AccountDeps) {
       const { body } = await v.validate(c, { body: { otp: v.str() } });
       const r = await deps.identity.disableTotp(who.directusUserId, body.otp);
       if (r === "not_enabled")
-        throw new BadRequestError(
-          `Invalid payload. User "${who.directusUserId}" doesn't have TFA enabled.`,
-        );
-      if (r === "invalid") throw new BadRequestError(INVALID_OTP);
+        throw new BadRequestError("account.tfa_not_enabled", {
+          params: { user_id: who.directusUserId },
+        });
+      if (r === "invalid") throw new BadRequestError("account.otp_invalid");
       return c.json({ status: "ok" });
     })
     .post(`${base}/whitelabel-logo`, (c) => upload(c, "custom_logos", "whitelabel_logo"))

@@ -32,7 +32,7 @@ export interface WebhookDeps {
 async function requireWebhooks(d: WebhookDeps, who: Signed, projectId: string) {
   await projectFor(d.access, who, projectId, "workspace:webhooks");
   const project = await d.store.project(projectId);
-  if (!project) throw new NotFoundError("Project not found");
+  if (!project) throw new NotFoundError("project.not_found");
   return project;
 }
 
@@ -64,16 +64,18 @@ function view(w: WebhookRow) {
 function checkEvents(events: string[]) {
   for (const e of events)
     if (!isWebhookEvent(e))
-      throw new BadRequestError(`Invalid event type: ${e}. Valid types: ${EVENTS_REPR}`);
+      throw new BadRequestError("webhook.invalid_event", {
+        params: { event: e, valid: EVENTS_REPR },
+      });
 }
 
 async function checkUrl(d: WebhookDeps, url: string) {
-  if (!/^https?:\/\//.test(url))
-    throw new BadRequestError("URL must start with http:// or https://");
+  if (!/^https?:\/\//.test(url)) throw new BadRequestError("webhook.invalid_url");
   try {
     await assertPublicTarget(url, d.allowPrivateTargets);
   } catch (err) {
-    if (err instanceof DeliveryError) throw new BadRequestError(err.message);
+    if (err instanceof DeliveryError)
+      throw new BadRequestError("webhook.target_not_allowed", { message: err.message });
     throw err;
   }
 }
@@ -147,9 +149,9 @@ export async function updateWebhook(
   if (body.events !== null) checkEvents(body.events);
   if (body.url !== null) await checkUrl(d, body.url);
   if (body.status !== null && !["published", "draft", "archived"].includes(body.status))
-    throw new BadRequestError("Status must be one of: published, draft, archived");
+    throw new BadRequestError("webhook.invalid_status");
   const existing = await d.store.inProject(webhookId, projectId);
-  if (!existing) throw new NotFoundError("Webhook not found");
+  if (!existing) throw new NotFoundError("webhook.not_found");
   const values = {
     ...(body.name !== null && { name: body.name }),
     ...(body.url !== null && { url: body.url }),
@@ -176,7 +178,7 @@ export async function deleteWebhook(
 ) {
   await requireWebhooks(d, who, projectId);
   if (!(await d.store.inProject(webhookId, projectId)))
-    throw new NotFoundError("Webhook not found");
+    throw new NotFoundError("webhook.not_found");
   const now = d.now().toISOString();
   await d.store.update(webhookId, {
     deleted_at: now,
@@ -198,7 +200,7 @@ export async function testWebhook(
 ) {
   const project = await requireWebhooks(d, who, projectId);
   const hook = await d.store.inProject(webhookId, projectId);
-  if (!hook) throw new NotFoundError("Webhook not found");
+  if (!hook) throw new NotFoundError("webhook.not_found");
   const now = d.now();
   const iso = pythonIso(now);
   const payload = conversationPayload(

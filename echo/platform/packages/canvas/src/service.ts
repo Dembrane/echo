@@ -2,8 +2,8 @@ import {
   BadRequestError,
   ConflictError,
   NotFoundError,
-  PlatformError,
   RateLimitedError,
+  StatusError,
   ValidationError,
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
@@ -160,10 +160,9 @@ export async function latestGenerationId(d: CanvasDeps, reportId: string): Promi
 // ── writes ────────────────────────────────────────────────────────────
 
 function checkExpiry(expiresAt: Date, now: Date) {
-  if (expiresAt.getTime() <= now.getTime())
-    throw new ValidationError("expires_at must be in the future");
+  if (expiresAt.getTime() <= now.getTime()) throw new ValidationError("canvas.expiry_in_past");
   if (expiresAt.getTime() > now.getTime() + 7 * 24 * 3600_000)
-    throw new ValidationError("expires_at must be within 7 days");
+    throw new ValidationError("canvas.expiry_too_far");
 }
 
 async function storeAppliedPreview(
@@ -335,7 +334,7 @@ export async function updateCanvas(d: CanvasDeps, who: Signed, canvasId: string,
 
 async function loopOf(d: CanvasDeps, reportId: string): Promise<Row> {
   const loop = await d.store.loopForReport(reportId);
-  if (!loop) throw new NotFoundError("Canvas loop not found");
+  if (!loop) throw new NotFoundError("canvas.loop_not_found");
   return loop;
 }
 
@@ -343,7 +342,7 @@ export async function refreshCanvas(d: CanvasDeps, who: Signed, canvasId: string
   const { report } = await canvasReport(d, who, canvasId, "project:update");
   const loop = await loopOf(d, String(report.id));
   if (!(await d.limiter.allow(REFRESH_LIMIT, canvasId)))
-    throw new RateLimitedError("Just refreshed");
+    throw new RateLimitedError("canvas.just_refreshed");
   await d.startTick(String(loop.id), "manual");
   return { generation: "pending" };
 }
@@ -366,14 +365,14 @@ export async function loopAction(d: CanvasDeps, who: Signed, canvasId: string, a
       loop.status === "stopped" ||
       (expires !== null && expires.getTime() <= d.now().getTime())
     )
-      throw new ConflictError("This loop has ended");
+      throw new ConflictError("canvas.loop_ended");
     updated = await d.store.updateLoop(loopId, { status: "active", failure_count: 0 }, now());
     await d.store.scheduleTick({ loopId, tickKind: "scheduled", scheduledAt: now(), now: now() });
   } else if (action === "stop") {
     await d.store.cancelPendingTicks(loopId, now());
     updated = await d.store.updateLoop(loopId, { status: "stopped" }, now());
   } else {
-    throw new BadRequestError(`Unsupported loop action: ${action}`);
+    throw new BadRequestError("canvas.loop_action_unsupported", { params: { action } });
   }
   return loopSettingsDoc(updated ?? loop);
 }
@@ -388,7 +387,7 @@ export async function patchLoop(
   const loop = await loopOf(d, String(report.id));
   checkExpiry(body.expires_at, d.now());
   if (["expired", "stopped", "ended"].includes(pyStr(loop.status ?? null)))
-    throw new ConflictError("This loop has ended");
+    throw new ConflictError("canvas.loop_ended");
   const loopId = String(loop.id);
   const updated = await d.store.updateLoop(
     loopId,
@@ -413,7 +412,7 @@ export async function previewCanvas(
 ) {
   await canvasProject(d, who, body.project_id, "project:update");
   if (!(await d.limiter.allow(PREVIEW_LIMIT, body.project_id)))
-    throw new RateLimitedError("Just previewed");
+    throw new RateLimitedError("canvas.just_previewed");
   const bundle = await executeGatherSpec(d, {
     projectId: body.project_id,
     actingUser: who.directusUserId,
@@ -436,9 +435,9 @@ export async function previewCanvas(
         brief: body.brief,
       });
     } catch (err) {
-      throw new BadGatewayDetail(
-        `Canvas extraction failed: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      throw new StatusError(502, "canvas.extraction_failed", {
+        params: { reason: err instanceof Error ? err.message : String(err) },
+      });
     }
     const [next, detail] = applyModelExtraction(state, bundle, extraction);
     state = next;
@@ -456,10 +455,4 @@ export async function previewCanvas(
   }
   const raw = await renderWall(d.store, { state, bundle, reportName: name, reportId: null });
   return { content_html: sanitizeCanvasHtml(raw, MAX_HTML_BYTES).html };
-}
-
-/** A 502 with the Python's detail text: the model behind the preview failed. */
-export class BadGatewayDetail extends PlatformError {
-  readonly status = 502;
-  readonly code = "bad_gateway";
 }

@@ -50,7 +50,7 @@ export class ParticipantTokens {
    */
   check(header: string | undefined, conversationId: string, projectId?: string): boolean {
     if (!header) {
-      if (this.required) throw new UnauthenticatedError("Participant token required");
+      if (this.required) throw new UnauthenticatedError("participant.token_required");
       return false;
     }
     const claims = this.read(header);
@@ -59,7 +59,7 @@ export class ParticipantTokens {
       claims.conversationId !== conversationId ||
       (projectId !== undefined && claims.projectId !== projectId)
     )
-      throw new ForbiddenError("Invalid participant token");
+      throw new ForbiddenError("participant.token_invalid");
     return true;
   }
 

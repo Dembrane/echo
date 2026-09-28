@@ -37,7 +37,7 @@ export function sharingService(deps: TenancyDeps) {
 
   async function loadProject(id: string) {
     const p = await projectById(db, id);
-    if (!p || p.deleted_at) throw new NotFoundError("Project not found");
+    if (!p || p.deleted_at) throw new NotFoundError("project.not_found");
     return p;
   }
 
@@ -45,9 +45,9 @@ export function sharingService(deps: TenancyDeps) {
     member: Member,
     workspaceId: string | null,
   ): Promise<WorkspaceAccess> {
-    if (!workspaceId) throw new BadRequestError("Project is not attached to a workspace");
+    if (!workspaceId) throw new BadRequestError("project.no_workspace");
     const access = await resolveWorkspace(deps.accessStore, workspaceId, member, clock(deps));
-    if (!access) throw new ForbiddenError("No access to this project");
+    if (!access) throw new ForbiddenError("project.no_access");
     return access;
   }
 
@@ -55,18 +55,19 @@ export function sharingService(deps: TenancyDeps) {
   async function shareAdmin(member: Member, workspaceId: string | null) {
     const access = await workspaceAccess(member, workspaceId);
     if (!roleHas(access.role, "project:share", access.extra))
-      throw new ForbiddenError("Only workspace admins can share projects");
+      throw new ForbiddenError("project.share_admin_only");
     const ws = await workspaceById(db, access.workspace.id);
-    if (!ws) throw new NotFoundError("Workspace not found");
+    if (!ws) throw new NotFoundError("workspace.not_found");
     return { access, ws, tierOk: meetsTier(access.workspace.tier ?? "pioneer", SHARE_TIER) };
   }
 
   async function requireShareAdmin(member: Member, workspaceId: string | null) {
     const r = await shareAdmin(member, workspaceId);
     if (!r.tierOk)
-      throw new ForbiddenError(`Private project sharing requires the ${SHARE_TIER} plan or above.`);
+      throw new ForbiddenError("project.sharing_tier_required", { params: { tier: SHARE_TIER } });
     // A staff support session reads; it never changes who can see customer data (CTO Q4).
-    if (r.access.source === "staff_support") throw new ForbiddenError("Access denied");
+    if (r.access.source === "staff_support")
+      throw new ForbiddenError("access.support_session_limited", { message: "Access denied" });
     return r;
   }
 
@@ -99,7 +100,7 @@ export function sharingService(deps: TenancyDeps) {
       const p = await loadProject(projectId);
       const access = await workspaceAccess(member, p.workspace_id);
       if (!roleHas(access.role, "project:read", access.extra))
-        throw new ForbiddenError("No access to this project");
+        throw new ForbiddenError("project.no_access");
       const readerIsAdmin = access.role === "admin" || access.role === "owner";
       const isPrivate = p.visibility === "private";
       const rows = await sharesOfProject(db, p.id);
@@ -160,17 +161,16 @@ export function sharingService(deps: TenancyDeps) {
     async add(who: Signed, projectId: string, rawEmail: string) {
       const member = requireOnboarded(who);
       const p = await loadProject(projectId);
-      if (p.visibility !== "private")
-        throw new BadRequestError(
-          "This project is visible to the whole workspace. Mark it private before adding individual shares.",
-        );
+      if (p.visibility !== "private") throw new BadRequestError("project.share_needs_private");
       const { ws } = await requireShareAdmin(member, p.workspace_id);
       const email = rawEmail.trim().toLowerCase();
       const invitee = await appUserByEmail(db, email);
       if (!invitee)
-        throw new NotFoundError("not a member", {
-          code: NOT_A_MEMBER,
-          message: "That email isn't on this workspace. Invite them to the workspace first.",
+        throw new NotFoundError("project.share_not_member", {
+          details: {
+            code: NOT_A_MEMBER,
+            message: "That email isn't on this workspace. Invite them to the workspace first.",
+          },
         });
       const inviteeAccess = await resolveWorkspace(
         deps.accessStore,
@@ -179,14 +179,18 @@ export function sharingService(deps: TenancyDeps) {
         clock(deps),
       );
       if (!inviteeAccess)
-        throw new NotFoundError("not a member", {
-          code: NOT_A_MEMBER,
-          message: "That person isn't in this workspace. Invite them first.",
+        throw new NotFoundError("project.share_not_member", {
+          details: {
+            code: NOT_A_MEMBER,
+            message: "That person isn't in this workspace. Invite them first.",
+          },
         });
       if (!roleHas(inviteeAccess.role, "project:read"))
-        throw new BadRequestError("role cannot access projects", {
-          code: "role_cannot_access_projects",
-          message: "Billing members can't open projects. Give them another role first.",
+        throw new BadRequestError("project.share_role_cannot_access", {
+          details: {
+            code: "role_cannot_access_projects",
+            message: "Billing members can't open projects. Give them another role first.",
+          },
         });
       const now = clock(deps);
       await db.transaction(async (tx) => {
@@ -221,7 +225,7 @@ export function sharingService(deps: TenancyDeps) {
       const p = await loadProject(projectId);
       await requireShareAdmin(member, p.workspace_id);
       const ids = await shareRowIds(db, p.id, userId);
-      if (!ids.length) throw new NotFoundError("Share not found");
+      if (!ids.length) throw new NotFoundError("project.share_not_found");
       const now = clock(deps);
       await db.transaction(async (tx) => {
         await deleteShares(tx, ids);

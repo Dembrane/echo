@@ -1,5 +1,5 @@
 import { ValidationError } from "@dembrane/core";
-import type { Env } from "@dembrane/http";
+import { type Env, v } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
 import type { TenancyDeps } from "../deps";
@@ -21,7 +21,7 @@ export async function uploadedFile(c: {
   const type = c.req.header("content-type") ?? "";
   const body = type.includes("multipart/form-data") ? await c.req.parseBody() : {};
   if (body.file instanceof File) return body.file;
-  const issues: p.Issue[] = [
+  const issues: v.Issue[] = [
     {
       type: "missing",
       loc: ["body", "file"],
@@ -30,10 +30,10 @@ export async function uploadedFile(c: {
       url: "https://errors.pydantic.dev/2.12/v/missing",
     },
   ];
-  throw new ValidationError(
-    "Request validation failed",
-    issues as unknown as Record<string, unknown>,
-  );
+  throw new ValidationError("validation.invalid_input", {
+    details: issues,
+    params: { fields: v.fieldProblems(issues) },
+  });
 }
 
 /** /api/v2/workspaces/:id settings, members, logo and the workspace's project list. */

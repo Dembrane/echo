@@ -1,5 +1,5 @@
 import { AudioError, fileFormatOf, type MediaSource } from "@dembrane/audio";
-import { BadRequestError, NotFoundError } from "@dembrane/core";
+import { BadRequestError, type ErrorCode, NotFoundError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { asc, eq } from "drizzle-orm";
 import { sanitizeFilenameComponent } from "./audio-urls";
@@ -11,9 +11,9 @@ const { conversation, conversation_chunk } = schema;
 const URL_EXPIRES_S = 3 * 3600;
 
 /** Every chunk failed to probe: a retry reads the same bytes, so callers stop (NoMergeableChunksException). */
-export class NoMergeableChunks extends BadRequestError {}
+export class NoMergeableChunks<C extends ErrorCode = ErrorCode> extends BadRequestError<C> {}
 /** No chunk has audio (NoContentFoundException). */
-export class NoContent extends NotFoundError {}
+export class NoContent<C extends ErrorCode = ErrorCode> extends NotFoundError<C> {}
 
 export type MergeDeps = Pick<
   ConversationsDeps,
@@ -42,11 +42,11 @@ export async function mergeConversationAudio(
     .where(eq(conversation_chunk.conversation_id, conversationId))
     .orderBy(asc(conversation_chunk.timestamp), asc(conversation_chunk.id))
     .limit(1000);
-  if (!chunks.length) throw new NotFoundError("Conversation not found");
+  if (!chunks.length) throw new NotFoundError("conversation.not_found");
   const paths = chunks
     .map((c) => c.path)
     .filter((p): p is string => Boolean(p?.startsWith("http")));
-  if (!paths.length) throw new NoContent("No content found");
+  if (!paths.length) throw new NoContent("conversation.no_content");
 
   const key = `audio-conversations/merged-${sanitizeFilenameComponent(conversationId)}-${run}.mp3`;
   let merged: { duration: number };
@@ -73,9 +73,9 @@ export async function mergeConversationAudio(
   } catch (err) {
     const msg = (err as Error).message;
     if (err instanceof AudioError && err.kind === "no_mergeable_chunks")
-      throw new NoMergeableChunks(`Failed to merge audio files: ${msg}`);
+      throw new NoMergeableChunks("conversation.merge_failed", { params: { reason: msg } });
     if (err instanceof AudioError && err.kind === "transient") throw err;
-    throw new BadRequestError(`Failed to merge audio files: ${msg}`);
+    throw new BadRequestError("conversation.merge_failed", { params: { reason: msg } });
   }
   const path = d.audioUrls.fileUrl(key);
   await d.db

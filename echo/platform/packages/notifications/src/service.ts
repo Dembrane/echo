@@ -4,7 +4,7 @@ import type { NotificationStorage } from "./storage";
 
 /** The old API's answer for a signed-in user who never onboarded (no app_user row). */
 function onboarded(who: Signed): string {
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
   return who.appUserId;
 }
 
@@ -65,7 +65,7 @@ export async function unreadCount(store: NotificationStorage, who: Signed, now: 
 export async function markRead(store: NotificationStorage, who: Signed, id: string, now: Date) {
   const me = onboarded(who);
   const row = UUID.test(id) ? await store.byId(id) : null;
-  if (!row || row.audience !== me) throw new NotFoundError("Notification not found");
+  if (!row || row.audience !== me) throw new NotFoundError("notification.not_found");
   if (!row.readAt) await store.markRead([id], now);
   return { status: "read" };
 }

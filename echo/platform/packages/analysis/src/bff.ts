@@ -80,8 +80,15 @@ export const EDITABLE_FIELDS: Record<string, ReadonlySet<string>> = {
   tension: new Set(["poleA", "poleB", "knot", "toResolve"]),
 };
 
-const unavailable = () => new UnavailableError("Analysis storage is unavailable.");
-const notFound = (what: string) => new NotFoundError(`${what} not found`);
+const unavailable = () => new UnavailableError("analysis.storage_unavailable");
+const NOT_FOUND = {
+  Host: "analysis.host_not_found",
+  Object: "analysis.object_not_found",
+  Revision: "analysis.revision_not_found",
+  Run: "analysis.run_not_found",
+  Snapshot: "analysis.snapshot_not_found",
+} as const;
+const notFound = (what: keyof typeof NOT_FOUND) => new NotFoundError(NOT_FOUND[what]);
 
 /** Maps store failures to the 503 the Python raised; everything else passes through. */
 async function guarded<T>(fn: () => Promise<T>): Promise<T> {
@@ -217,8 +224,7 @@ export async function requestAnalysisRun(
 ) {
   await readable(d, who, projectId);
   await requireUpdate(d, who, projectId);
-  if (INTERNAL_RECIPES.has(body.recipe_id))
-    throw new ValidationError("This recipe runs only from its own feature.");
+  if (INTERNAL_RECIPES.has(body.recipe_id)) throw new ValidationError("analysis.recipe_internal");
   await d.limiter.check(RUN_LIMIT, who.directusUserId);
   try {
     const outcome = await requestRun(
@@ -242,7 +248,8 @@ export async function requestAnalysisRun(
       dependencies: outcome.dependencies.map((r) => runDoc(r)),
     };
   } catch (err) {
-    if (err instanceof AnalysisValidationError) throw new ValidationError(err.message);
+    if (err instanceof AnalysisValidationError)
+      throw new ValidationError("analysis.invalid_request", { message: err.message });
     if (err instanceof AnalysisStoreError) throw unavailable();
     throw err;
   }
@@ -463,7 +470,9 @@ export async function listAnalysisObjects(
 ) {
   await readable(d, who, projectId);
   if (query.type !== null && !MAP_TYPES.includes(query.type))
-    throw new ValidationError(`unknown object type ${pyRepr(query.type)}`);
+    throw new ValidationError("analysis.unknown_object_type", {
+      params: { type: pyRepr(query.type) },
+    });
   const store = d.rt.store;
   const reads = new MapViewReads(store);
   let snapshot: Awaited<ReturnType<typeof store.getSnapshot>> = null;
@@ -563,7 +572,8 @@ export async function listAnalysisObjects(
       verdictsBy = await verdicts(d, projectId, [...revisions.values()]);
     }
   } catch (err) {
-    if (err instanceof UnknownResultScope) throw new ValidationError(err.message);
+    if (err instanceof UnknownResultScope)
+      throw new ValidationError("analysis.unknown_scope", { message: err.message });
     if (err instanceof AnalysisStoreError) throw unavailable();
     throw err;
   }
@@ -661,7 +671,7 @@ export async function getObjectHistory(
 }
 
 function requirePresent(d: BffDeps) {
-  if (!d.enablePresent) throw new NotFoundError("Not found");
+  if (!d.enablePresent) throw new NotFoundError("analysis.feature_disabled");
 }
 
 async function editableObject(d: BffDeps, who: Signed, projectId: string, objectId: string) {
@@ -671,7 +681,7 @@ async function editableObject(d: BffDeps, who: Signed, projectId: string, object
     isUuid(objectId) ? d.rt.store.getObject(objectId) : null,
   );
   if (!record || record.projectId !== projectId) throw notFound("Object");
-  if (!EDITABLE_TYPES.has(record.type)) throw new ValidationError("This result type is read-only.");
+  if (!EDITABLE_TYPES.has(record.type)) throw new ValidationError("analysis.read_only_type");
   return record;
 }
 
@@ -709,7 +719,7 @@ async function editedPayload(
 ) {
   const allowed = EDITABLE_FIELDS[type] ?? new Set<string>();
   if ((body.payload === null) === (body.patch === null))
-    throw new ValidationError("Send either the payload or a patch of fields to change.");
+    throw new ValidationError("analysis.payload_or_patch");
   const base = await guarded(async () =>
     (await d.rt.store.getRevisions(projectId, [body.expected_revision_id])).get(
       body.expected_revision_id,
@@ -718,14 +728,18 @@ async function editedPayload(
   if (!base || base.objectId !== recordId) throw notFound("Revision");
   if (body.patch !== null) {
     const refused = sortedStrings(Object.keys(body.patch).filter((k) => !allowed.has(k)));
-    if (refused.length) throw new ValidationError(`${refused[0]} cannot be edited here.`);
+    if (refused.length)
+      throw new ValidationError("analysis.field_not_editable", {
+        params: { field: refused[0] as string },
+      });
     return { ...base.payload, ...body.patch };
   }
   let wanted: Json;
   try {
     wanted = validatePayload(type, body.payload);
   } catch (err) {
-    if (err instanceof AnalysisValidationError) throw new ValidationError(err.message);
+    if (err instanceof AnalysisValidationError)
+      throw new ValidationError("analysis.invalid_request", { message: err.message });
     throw err;
   }
   const changed = sortedStrings(
@@ -736,16 +750,21 @@ async function editedPayload(
     ),
   );
   const refused = changed.filter((k) => !allowed.has(k));
-  if (refused.length) throw new ValidationError(`${refused[0]} cannot be edited here.`);
+  if (refused.length)
+    throw new ValidationError("analysis.field_not_editable", {
+      params: { field: refused[0] as string },
+    });
   return wanted;
 }
 
 function revisionConflict(err: RevisionConflict): ConflictError {
-  return new ConflictError("This result changed while you were reviewing it.", {
-    message: "This result changed while you were reviewing it.",
-    objectId: err.objectId,
-    expectedRevisionId: err.expectedRevisionId,
-    current: err.current ? revisionDoc(err.current) : null,
+  return new ConflictError("analysis.revision_conflict", {
+    details: {
+      message: "This result changed while you were reviewing it.",
+      objectId: err.objectId,
+      expectedRevisionId: err.expectedRevisionId,
+      current: err.current ? revisionDoc(err.current) : null,
+    },
   });
 }
 
@@ -756,7 +775,8 @@ async function authored(write: () => Promise<ObjectRevision>) {
   } catch (err) {
     if (err instanceof RevisionConflict) throw revisionConflict(err);
     if (err instanceof ReferenceViolation) throw notFound("Revision");
-    if (err instanceof AnalysisValidationError) throw new ValidationError(err.message);
+    if (err instanceof AnalysisValidationError)
+      throw new ValidationError("analysis.invalid_request", { message: err.message });
     if (err instanceof AnalysisStoreError) throw unavailable();
     throw err;
   }
@@ -938,7 +958,9 @@ function checkedFeedback(body: FeedbackWrite): [string[], string | null] {
   const tags: string[] = [];
   for (const tag of body.tags) {
     if (!allowed.includes(tag))
-      throw new ValidationError(`${pyRepr(tag)} is not a reason for a thumbs ${body.rating}.`);
+      throw new ValidationError("analysis.feedback_tag_mismatch", {
+        params: { tag: pyRepr(tag), rating: body.rating },
+      });
     if (!tags.includes(tag)) tags.push(tag);
   }
   const note = (body.note || "").trim();

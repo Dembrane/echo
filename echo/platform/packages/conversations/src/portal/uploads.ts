@@ -1,8 +1,7 @@
-import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import { BadRequestError, ForbiddenError, NotFoundError, newId, StatusError } from "@dembrane/core";
 
-import { ChunkError, NOT_OPEN } from "../chunks";
+import { ChunkError } from "../chunks";
 import type { ConversationsDeps } from "../deps";
-import { InternalError } from "../errors";
 import { conversationStore } from "../storage";
 import { addChunk } from "./service";
 
@@ -20,7 +19,7 @@ const MIN_AUDIO_BYTES = 1024;
 async function openConversation(d: Pick<ConversationsDeps, "db">, conversationId: string) {
   const store = conversationStore(d.db);
   const conv = await store.conversation(conversationId);
-  if (!conv) throw new NotFoundError("Conversation not found");
+  if (!conv) throw new NotFoundError("conversation.not_found");
   const project = await store.project(conv.project_id);
   // project_service raised ProjectNotFoundException, which these routes turned into 500s.
   if (!project) throw new Error(`project ${conv.project_id} not found`);
@@ -30,7 +29,7 @@ async function openConversation(d: Pick<ConversationsDeps, "db">, conversationId
 /** check-s3: a presigned PUT the portal tries before recording, to learn the bucket is reachable. */
 export async function probeUrl(d: ConversationsDeps, conversationId: string): Promise<string> {
   const { open } = await openConversation(d, conversationId);
-  if (!open) throw new ForbiddenError(NOT_OPEN);
+  if (!open) throw new ForbiddenError("conversation.not_open");
   try {
     return d.audio.presignUpload(`conversation/${conversationId}/probe`, {
       contentType: "text/plain",
@@ -38,7 +37,7 @@ export async function probeUrl(d: ConversationsDeps, conversationId: string): Pr
     });
   } catch (err) {
     d.logger.error({ err }, "presigning the S3 probe failed");
-    throw new InternalError("Failed to generate S3 probe URL");
+    throw new StatusError(500, "upload.probe_url_failed");
   }
 }
 
@@ -56,10 +55,10 @@ export async function uploadUrl(
   try {
     if (!(await d.limiter.allow(UPLOAD_URL_LIMIT, conversationId))) {
       d.logger.warn({ conversationId }, "upload URL rate limit exceeded");
-      throw new InternalError("Failed to generate upload URL");
+      throw new StatusError(500, "upload.url_failed");
     }
     const { open } = await openConversation(d, conversationId);
-    if (!open) throw new InternalError("Failed to generate upload URL");
+    if (!open) throw new StatusError(500, "upload.url_failed");
     const chunkId = newId();
     const safe = d.audioUrls.keyOf(filename);
     const key = `conversation/${conversationId}/chunks/${chunkId}-${safe}`;
@@ -76,8 +75,8 @@ export async function uploadUrl(
     };
   } catch (err) {
     if (err instanceof NotFoundError) throw err;
-    if (!(err instanceof InternalError)) d.logger.error({ err }, "generating an upload URL failed");
-    throw new InternalError("Failed to generate upload URL");
+    if (!(err instanceof StatusError)) d.logger.error({ err }, "generating an upload URL failed");
+    throw new StatusError(500, "upload.url_failed");
   }
 }
 
@@ -97,10 +96,10 @@ export async function confirmUpload(
     key = d.audioUrls.keyOf(input.fileUrl);
   } catch (err) {
     d.logger.error({ err }, "confirm-upload got an unusable file_url");
-    throw new InternalError("Failed to confirm upload");
+    throw new StatusError(500, "upload.confirm_failed");
   }
   if (!key.startsWith(`conversation/${conversationId}/chunks/${input.chunkId}-`))
-    throw new BadRequestError("File does not belong to this conversation");
+    throw new BadRequestError("upload.wrong_conversation");
 
   let size: number | null = null;
   for (const [attempt, delay] of CONFIRM_RETRY_DELAYS_MS.entries()) {
@@ -113,7 +112,9 @@ export async function confirmUpload(
       { conversationId, chunkId: input.chunkId, signal: "chunk.missing_in_s3" },
       "uploaded chunk not found",
     );
-    throw new BadRequestError("File not found in S3. Upload may have failed. Please try again.");
+    throw new BadRequestError("upload.failed", {
+      message: "File not found in S3. Upload may have failed. Please try again.",
+    });
   }
   const tooSmall = size < MIN_AUDIO_BYTES;
   try {
@@ -140,6 +141,6 @@ export async function confirmUpload(
     )
       throw err;
     d.logger.error({ err }, "confirming an upload failed");
-    throw new InternalError("Failed to confirm upload");
+    throw new StatusError(500, "upload.confirm_failed");
   }
 }

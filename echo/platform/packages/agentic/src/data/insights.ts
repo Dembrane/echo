@@ -19,7 +19,7 @@ export async function requireProjectChat(d: DataDeps, projectId: string, chatId:
         select id from project_chat
         where id = ${chatId} and project_id = ${projectId} and deleted_at is null`
     : [];
-  if (!c) throw new NotFoundError("Chat not found");
+  if (!c) throw new NotFoundError("chat.not_found");
 }
 
 /** POST /agentic/projects/{p}/support-request: an outbox row the support forwarder sends on. */
@@ -63,7 +63,7 @@ export async function noteInsight(
 ) {
   await agentProject(d.access, who, projectId);
   const content = body.content.trim();
-  if (!content) throw new BadRequestError("content is required");
+  if (!content) throw new BadRequestError("agent.insight_content_required");
   const suggested = text(body.suggested_capability);
   const project = await projectRow(d, projectId);
   const chatId = body.chat_id ?? null;
@@ -79,9 +79,9 @@ export async function noteInsight(
 }
 
 async function insightOr404(d: DataDeps, id: string): Promise<Row> {
-  if (!isUuid(id)) throw new NotFoundError("Insight not found");
+  if (!isUuid(id)) throw new NotFoundError("agent.insight_not_found");
   const [r] = await sqlOf(d)`select * from agent_insight where id = ${id}`;
-  if (!r) throw new NotFoundError("Insight not found");
+  if (!r) throw new NotFoundError("agent.insight_not_found");
   return row(r as Row);
 }
 
@@ -89,7 +89,7 @@ async function insightOr404(d: DataDeps, id: string): Promise<Row> {
 async function ownedInsight(d: DataDeps, who: Signed, id: string) {
   const insight = await insightOr404(d, id);
   const projectId = text(insight.project_id);
-  if (!projectId) throw new NotFoundError("Insight not found");
+  if (!projectId) throw new NotFoundError("agent.insight_not_found");
   await agentProject(d.access, who, projectId);
   return insight;
 }
@@ -114,14 +114,13 @@ export async function editInsight(
   const updates: Record<string, string | null> = {};
   if (body.content !== null && body.content !== undefined) {
     const content = body.content.trim();
-    if (!content) throw new BadRequestError("content cannot be blank");
+    if (!content) throw new BadRequestError("agent.insight_content_blank");
     updates.content = content;
   }
   if (body.kind !== null && body.kind !== undefined) updates.kind = body.kind;
   if (body.suggested_capability !== null && body.suggested_capability !== undefined)
     updates.suggested_capability = text(body.suggested_capability);
-  if (!Object.keys(updates).length)
-    throw new BadRequestError("Provide at least one of content, kind, or suggested_capability.");
+  if (!Object.keys(updates).length) throw new BadRequestError("agent.insight_update_empty");
   const sql = sqlOf(d);
   await sql`update agent_insight set ${sql(updates)} where id = ${insightId}`;
   return payload(await insightOr404(d, insightId));
@@ -134,7 +133,7 @@ export async function editInsight(
 export async function retractInsight(d: DataDeps, who: Signed, insightId: string, reason: string) {
   await ownedInsight(d, who, insightId);
   const trimmed = reason.trim();
-  if (!trimmed) throw new BadRequestError("reason is required");
+  if (!trimmed) throw new BadRequestError("agent.insight_reason_required");
   // agent_insight has no retracted_reason column: Directus dropped the reason, so only the
   // status moves. The reason stays in the tool call the chat already shows.
   await sqlOf(d)`update agent_insight set status = 'retracted' where id = ${insightId}`;

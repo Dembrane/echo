@@ -137,38 +137,34 @@ export async function inviteToWorkspace(
   const outsider = isOutsider(role);
 
   if (observer && !isExternalClient(ws)) {
-    throw new BadRequestError(
-      "Observers are only available in workspaces for an external client. This workspace is for internal use.",
-    );
+    throw new BadRequestError("invite.observer_internal_workspace");
   }
   // A paid seat needs an active plan; observers are free and always allowed.
   const account = observer ? null : await accountForWorkspace(deps.db, workspaceId);
   if (!observer && accountBlocksSeatAdd(account) === "reactivate_required")
-    throw new PaymentRequiredError("Reactivate your plan to add members.");
-  if (rank(role) > rank(access.role))
-    throw new ForbiddenError("Cannot grant a role higher than your own");
+    throw new PaymentRequiredError("billing.plan_inactive");
+  if (rank(role) > rank(access.role)) throw new ForbiddenError("member.role_above_own");
 
   let shareProject: { id: string } | null = null;
   if (body.project_id) {
     requirePolicy(access, "project:share");
     const p = await store.project(body.project_id);
     if (!p || p.deletedAt || p.workspaceId !== workspaceId)
-      throw new NotFoundError("Project not found in this workspace");
-    if (p.visibility !== "private")
-      throw new BadRequestError(
-        "This project is visible to the whole workspace. Mark it private before adding individual shares.",
-      );
+      throw new NotFoundError("project.not_in_workspace");
+    if (p.visibility !== "private") throw new BadRequestError("project.share_needs_private");
     if (!roleHas(role, "project:read"))
-      throw new BadRequestError("role_cannot_access_projects", {
-        code: "role_cannot_access_projects",
-        message: "Billing members can't open projects. Give them another role first.",
+      throw new BadRequestError("invite.role_cannot_access_projects", {
+        details: {
+          code: "role_cannot_access_projects",
+          message: "Billing members can't open projects. Give them another role first.",
+        },
       });
     shareProject = { id: p.id };
   }
 
   const inviter = await store.appUser(me);
   if (inviter && (inviter.email ?? "").toLowerCase() === email)
-    throw new BadRequestError("Cannot invite yourself");
+    throw new BadRequestError("invite.self");
   await deps.limiter.check(INVITE_LIMIT, me);
 
   const wsName = ws.name;

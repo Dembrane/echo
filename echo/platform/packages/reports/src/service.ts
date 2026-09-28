@@ -24,7 +24,7 @@ async function reportFor(
 ): Promise<{ report: Row; access: ProjectAccess }> {
   const report = await d.store.report(reportId);
   if (!report || report.deleted_at || !report.project_id)
-    throw new NotFoundError("Report not found");
+    throw new NotFoundError("report.not_found");
   const access = await projectFor(d.access, who, String(report.project_id), "report:view");
   return { report, access };
 }

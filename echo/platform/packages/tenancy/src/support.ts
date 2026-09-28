@@ -295,7 +295,7 @@ export async function grantSupportMembership(
     });
     status = "joined";
   }
-  if (!membershipId) throw new ConflictError("Membership changed concurrently, please retry.");
+  if (!membershipId) throw new ConflictError("member.changed_concurrently");
   await cancelPendingTasks(tx, iso(now), "revoke_staff_support", { membership_id: membershipId });
   await scheduleTask(tx, iso(now), "revoke_staff_support", expires, {
     workspace_id: o.workspaceId,

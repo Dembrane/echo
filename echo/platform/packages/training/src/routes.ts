@@ -59,7 +59,7 @@ export function trainingRoutes(deps: TrainingRouteDeps) {
   /** The old get_app_user_or_raise: v2 routes need an onboarded user. */
   function onboarded(c: Ctx) {
     const who = requireUser(c);
-    if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+    if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
     return { ...who, appUserId: who.appUserId };
   }
 
@@ -85,7 +85,7 @@ export function trainingRoutes(deps: TrainingRouteDeps) {
     .get("/api/v2/training/orgs/:org_id/roster", async (c) => {
       const who = onboarded(c);
       const orgId = c.req.param("org_id");
-      if (!isUuid(orgId)) throw new ForbiddenError("No access to this organisation");
+      if (!isUuid(orgId)) throw new ForbiddenError("organisation.no_access");
       return c.json(await orgRoster(d, orgId, who.appUserId));
     })
     .post("/api/v2/training/orgs/:org_id/request", async (c) => {
@@ -100,7 +100,7 @@ export function trainingRoutes(deps: TrainingRouteDeps) {
       });
       const who = onboarded(c);
       const orgId = c.req.param("org_id");
-      if (!isUuid(orgId)) throw new ForbiddenError("No access to this organisation");
+      if (!isUuid(orgId)) throw new ForbiddenError("organisation.no_access");
       return c.json(await requestTraining(d, orgId, { id: who.appUserId }, body));
     })
     .get("/api/v2/training/licenses/me", async (c) => {
@@ -137,7 +137,7 @@ export function trainingRoutes(deps: TrainingRouteDeps) {
         },
       });
       const who = await staff(c, "training.create", "org", body.org_id);
-      if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+      if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
       return c.json(await createTraining(d, body, isUuid(body.org_id)));
     })
     .patch("/api/v2/admin/trainings/:training_id", async (c) => {
@@ -176,7 +176,7 @@ export function trainingRoutes(deps: TrainingRouteDeps) {
       });
       const id = c.req.param("training_id");
       const who = await staff(c, "training.complete", "training", id);
-      if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+      if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
       return c.json(await completeTraining(d, idOrNull(id), who.appUserId, body));
     })
     .patch("/api/v2/admin/licenses/:license_id", async (c) => {

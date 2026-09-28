@@ -60,7 +60,7 @@ export async function markAnnouncementRead(
   now: Date,
 ) {
   if (!UUID.test(announcementId) || !(await store.exists(announcementId)))
-    throw new NotFoundError("Announcement not found");
+    throw new NotFoundError("announcement.not_found");
   const mine = await store.activity(who.directusUserId, [announcementId]);
   const iso = now.toISOString();
   if (mine.length)
@@ -80,7 +80,7 @@ export async function markAnnouncementUnread(
   announcementId: string,
   now: Date,
 ) {
-  if (!UUID.test(announcementId)) throw new NotFoundError("Announcement not found");
+  if (!UUID.test(announcementId)) throw new NotFoundError("announcement.not_found");
   const mine = await store.activity(who.directusUserId, [announcementId]);
   await store.setRead(
     who.directusUserId,
@@ -128,8 +128,8 @@ export const ANNOUNCEMENT_LANGUAGES = [
 /** Directus's form for the zoneless expires_at column: UTC, to the second, no zone. */
 function expiry(value: string, now: Date, future: boolean): string {
   const at = new Date(value);
-  if (Number.isNaN(at.getTime())) throw new BadRequestError("expires_at is not a date");
-  if (future && at <= now) throw new BadRequestError("expires_at must be in the future");
+  if (Number.isNaN(at.getTime())) throw new BadRequestError("announcement.expiry_invalid");
+  if (future && at <= now) throw new BadRequestError("announcement.expiry_past");
   return at.toISOString().slice(0, 19);
 }
 
@@ -155,19 +155,19 @@ export async function publishAnnouncement(
     const title = typeof t.title === "string" ? t.title.trim() : "";
     const message = typeof t.message === "string" ? t.message.trim() : "";
     if (typeof code !== "string" || !(ANNOUNCEMENT_LANGUAGES as readonly string[]).includes(code))
-      throw new BadRequestError(
-        `translations[${i}].languages_code must be one of ${ANNOUNCEMENT_LANGUAGES.join(", ")}`,
-      );
+      throw new BadRequestError("announcement.language_invalid", {
+        params: { index: i, languages: ANNOUNCEMENT_LANGUAGES.join(", ") },
+      });
     if (!title || title.length > 200)
-      throw new BadRequestError(`translations[${i}].title: 1 to 200 characters`);
+      throw new BadRequestError("announcement.title_length", { params: { index: i } });
     if (!message || message.length > 10_000)
-      throw new BadRequestError(`translations[${i}].message: 1 to 10000 characters`);
+      throw new BadRequestError("announcement.message_length", { params: { index: i } });
     return { languages_code: code, title, message };
   });
   const codes = texts.map((t) => t.languages_code);
   if (new Set(codes).size !== codes.length)
-    throw new BadRequestError("One translation per language");
-  if (!codes.includes("en-US")) throw new BadRequestError("An en-US translation is required");
+    throw new BadRequestError("announcement.duplicate_language");
+  if (!codes.includes("en-US")) throw new BadRequestError("announcement.english_required");
   const id = newId();
   const expiresAt = expiry(input.expires_at, now, true);
   await store.create(
@@ -189,6 +189,6 @@ export async function setAnnouncementExpiry(
   const found =
     UUID.test(announcementId) &&
     (await store.setExpiry(announcementId, at, who.directusUserId, now.toISOString()));
-  if (!found) throw new NotFoundError("Announcement not found");
+  if (!found) throw new NotFoundError("announcement.not_found");
   return { id: announcementId, expires_at: at };
 }

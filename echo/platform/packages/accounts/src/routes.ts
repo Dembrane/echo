@@ -53,7 +53,7 @@ function pdfBytes(b64: string | null): Uint8Array | null {
   if (!b64) return null;
   const bytes = Buffer.from(b64, "base64");
   if (bytes.subarray(0, 5).toString("latin1") !== "%PDF-")
-    throw new ValidationError("pdf_base64 is not a PDF");
+    throw new ValidationError("document.pdf_invalid");
   return new Uint8Array(bytes);
 }
 
@@ -84,7 +84,8 @@ async function taskSubmission(c: Ctx): Promise<{ text: string | null; file: Task
   let file: TaskFile | null = null;
   if (f && typeof f !== "string") {
     const blob = f as unknown as File;
-    if (blob.size > MAX_TASK_FILE_BYTES) throw new ValidationError("The file is larger than 20 MB");
+    if (blob.size > MAX_TASK_FILE_BYTES)
+      throw new ValidationError("upload.too_large", { params: { max_mb: 20 } });
     file = {
       name: blob.name || "file",
       type: blob.type,
@@ -182,7 +183,7 @@ export function accountsRoutes(d: AccountsDeps) {
 
   // Demos first: their paths would otherwise match /:orgId.
   const demoSettings = () => {
-    if (!d.settings.demo) throw new UnavailableError("Demos are not configured here");
+    if (!d.settings.demo) throw new UnavailableError("demo.not_configured");
     return d.settings.demo;
   };
   const demo = (c: Ctx) => ({ type: "demo", id: p(c, "demoId") });

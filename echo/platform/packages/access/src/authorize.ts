@@ -10,6 +10,9 @@ import {
 } from "./resolve";
 import type { AccessStore } from "./store";
 
+/** The old API's text for a role that lacks the policy. */
+const NO_PERMISSION = "You do not have permission to do this";
+
 /**
  * The only way a service obtains access to a workspace or project. No access answers 404,
  * so the existence of a resource is never revealed; a missing policy answers 403; a tier
@@ -25,7 +28,7 @@ export class Access {
     now = new Date(),
   ): Promise<ProjectAccess> {
     const access = await resolveProject(this.store, projectId, who, now);
-    if (!access) throw new NotFoundError("Project not found");
+    if (!access) throw new NotFoundError("project.not_found");
     check(access.role, policy, access.extra, access.tier, access.limitedTo);
     return access;
   }
@@ -36,9 +39,9 @@ export class Access {
    */
   async org(who: Principal, orgId: string, policy: OrgPolicy): Promise<{ role: string }> {
     const role = who.appUserId ? await this.store.orgRole(orgId, who.appUserId) : null;
-    if (!role) throw new NotFoundError("Organisation not found");
+    if (!role) throw new NotFoundError("organisation.not_found");
     if (!orgRoleHas(role, policy))
-      throw new ForbiddenError("You do not have permission to do this");
+      throw new ForbiddenError("access.forbidden", { message: NO_PERMISSION });
     return { role };
   }
 
@@ -49,7 +52,7 @@ export class Access {
     now = new Date(),
   ): Promise<WorkspaceAccess> {
     const access = await resolveWorkspace(this.store, workspaceId, who, now);
-    if (!access) throw new NotFoundError("Workspace not found");
+    if (!access) throw new NotFoundError("workspace.not_found");
     check(access.role, policy, access.extra, access.workspace.tier, access.limitedTo);
     return access;
   }
@@ -63,13 +66,15 @@ function check(
   limitedTo?: ReadonlySet<Policy>,
 ) {
   if (limitedTo && !limitedTo.has(policy))
-    throw new ForbiddenError("A staff support session cannot do this");
+    throw new ForbiddenError("access.support_session_limited");
   if (!roleHas(role, policy, extra))
-    throw new ForbiddenError("You do not have permission to do this");
+    throw new ForbiddenError("access.forbidden", { message: NO_PERMISSION });
   const required = TIER_REQUIRED[policy];
   if (required && !meetsTier(tier, required)) {
-    throw new ForbiddenError(`This action requires the ${required} tier`, {
-      requiredTier: required,
+    throw new ForbiddenError("billing.tier_required", {
+      params: { required, tier },
+      message: `This action requires the ${required} tier`,
+      details: { requiredTier: required },
     });
   }
 }

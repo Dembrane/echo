@@ -101,13 +101,11 @@ export function legalBasisWrite(
   const basis = basisSent ? body.legal_basis : stored.legal_basis;
   let url = urlSent ? body.privacy_policy_url : stored.privacy_policy_url;
   if (basis === "consent") {
-    if (!url?.trim())
-      throw new BadRequestError("A privacy policy link is required for consent-based processing");
+    if (!url?.trim()) throw new BadRequestError("project.privacy_policy_required");
     const cleaned = url.trim();
-    if (cleaned.length > 255)
-      throw new BadRequestError("Privacy policy URL must be 255 characters or fewer");
+    if (cleaned.length > 255) throw new BadRequestError("project.privacy_policy_too_long");
     if (!/^https?:\/\//i.test(cleaned))
-      throw new BadRequestError("Privacy policy URL must start with http:// or https://");
+      throw new BadRequestError("project.privacy_policy_invalid_url");
     url = cleaned;
   } else {
     url = null;
@@ -125,9 +123,8 @@ export { LEGAL_BASIS };
 export function validLogoUrl(value: string): string {
   const cleaned = value.trim();
   if (!cleaned) return "";
-  if (cleaned.length > 2048) throw new BadRequestError("Logo URL is too long");
-  if (!/^https?:\/\//i.test(cleaned))
-    throw new BadRequestError("Logo URL must start with http:// or https://");
+  if (cleaned.length > 2048) throw new BadRequestError("workspace.logo_url_too_long");
+  if (!/^https?:\/\//i.test(cleaned)) throw new BadRequestError("workspace.logo_url_invalid");
   return cleaned;
 }
 
@@ -149,9 +146,6 @@ export interface DataOwnershipInput {
   partner_agreement_accepted: boolean | null;
 }
 
-const PAID_RESCOPE =
-  "This workspace has active or paid billing attached, so its internal/external classification can't be changed automatically. Reach out to your account manager to move the billing first.";
-
 const OUTSIDERS = new Set(["external", "observer"]);
 
 export function settingsService(deps: TenancyDeps) {
@@ -161,22 +155,24 @@ export function settingsService(deps: TenancyDeps) {
   async function loadMembership(ctx: WorkspaceContext, membershipId: string) {
     const m = await membershipById(db, membershipId);
     if (!m || m.workspace_id !== ctx.workspaceId)
-      throw new NotFoundError("Membership not found in this workspace");
-    if (m.deleted_at) throw new NotFoundError("Membership already removed");
+      throw new NotFoundError("member.not_in_workspace");
+    if (m.deleted_at) throw new NotFoundError("member.already_removed");
     return m;
   }
 
   /** Only an owner touches an owner (spec H-12). */
   function guardOwnerTarget(ctx: WorkspaceContext, targetRole: string) {
     if (targetRole === "owner" && ctx.role !== "owner")
-      throw new ForbiddenError("Only an owner can change or remove an owner");
+      throw new ForbiddenError("member.owner_changes_owner", {
+        message: "Only an owner can change or remove an owner",
+      });
   }
 
   return {
     /** Workspace detail and members; emails and pending invites only for member managers. */
     async get(ctx: WorkspaceContext) {
       const ws = await workspaceById(db, ctx.workspaceId);
-      if (!ws) throw new NotFoundError("Workspace not found");
+      if (!ws) throw new NotFoundError("workspace.not_found");
       const canManage = ctx.allows("member:manage");
       const org = await orgById(db, ws.org_id);
       const rows = await workspaceMembers(db, ws.id);
@@ -267,7 +263,7 @@ export function settingsService(deps: TenancyDeps) {
       ctx.require("settings:manage");
       const now = clock(deps);
       const ws = await workspaceById(db, ctx.workspaceId);
-      if (!ws) throw new NotFoundError("Workspace not found");
+      if (!ws) throw new NotFoundError("workspace.not_found");
       const payload: WorkspacePatch = {};
       if (body.name !== null) payload.name = oneLine(body.name);
       if (body.description !== null) payload.description = body.description.trim();
@@ -295,11 +291,12 @@ export function settingsService(deps: TenancyDeps) {
         if (legal.needsDembraneEmail) {
           const me = await appUser(db, ctx.who.appUserId);
           if (!(me?.email ?? "").toLowerCase().endsWith("@dembrane.com"))
-            throw new ForbiddenError("dembrane-events is only available for dembrane accounts");
+            throw new ForbiddenError("project.events_dembrane_only");
         }
         Object.assign(payload, legal.payload);
       }
-      if (!Object.keys(payload).length) throw new BadRequestError("Nothing to update");
+      if (!Object.keys(payload).length)
+        throw new BadRequestError("request.nothing_to_update", { message: "Nothing to update" });
 
       await db.transaction(async (tx) => {
         await updateWorkspace(tx, ws.id, { ...payload, updated_at: iso(now) });
@@ -352,10 +349,10 @@ export function settingsService(deps: TenancyDeps) {
       ctx.require("settings:manage");
       const now = clock(deps);
       const ws = await workspaceById(db, ctx.workspaceId);
-      if (!ws) throw new NotFoundError("Workspace not found");
+      if (!ws) throw new NotFoundError("workspace.not_found");
       const orgRow = await activeOrgMembership(db, ws.org_id, ctx.who.appUserId);
       if (!orgRow || !["admin", "owner"].includes(orgRow.role))
-        throw new ForbiddenError("Only an organisation admin can change data ownership");
+        throw new ForbiddenError("workspace.data_ownership_admin_only");
       const currentlyExternal = isExternalClient(ws);
       const targetExternal =
         body.usage_context !== null ? body.usage_context === "external" : currentlyExternal;
@@ -370,18 +367,11 @@ export function settingsService(deps: TenancyDeps) {
         ).trim() || null;
 
       if (targetExternal) {
-        if (!email || !orgName)
-          throw new BadRequestError(
-            "An external workspace needs an owning organisation name and a data owner email.",
-          );
+        if (!email || !orgName) throw new BadRequestError("workspace.external_needs_owner");
         if (!currentlyExternal && !body.partner_agreement_accepted)
-          throw new BadRequestError(
-            "You must accept the partner agreement to mark this workspace as external.",
-          );
+          throw new BadRequestError("workspace.partner_agreement_required");
         if (await workspaces.isOrgMemberByEmail(ws.org_id, email))
-          throw new BadRequestError(
-            "That data owner is already a member of your organisation. External-client workspaces need a data owner outside your organisation.",
-          );
+          throw new BadRequestError("workspace.data_owner_is_member");
       }
 
       await db.transaction(async (tx) => {
@@ -390,7 +380,7 @@ export function settingsService(deps: TenancyDeps) {
         if (targetExternal) {
           if (!currentlyExternal) {
             if (hasActiveBilling(await billingAccountById(tx, oldId)))
-              throw new ConflictError(PAID_RESCOPE);
+              throw new ConflictError("workspace.paid_rescope");
             const newAccount = await createWorkspaceAccount(tx, now, {
               createdBy: ctx.who.appUserId,
               label: `${ws.name || "Workspace"} billing`,
@@ -406,7 +396,7 @@ export function settingsService(deps: TenancyDeps) {
         } else {
           if (currentlyExternal) {
             if (hasActiveBilling(await billingAccountById(tx, oldId)))
-              throw new ConflictError(PAID_RESCOPE);
+              throw new ConflictError("workspace.paid_rescope");
             const pooled = await orgAccountForNewWorkspace(tx, now, ws.org_id, ctx.who.appUserId);
             const blocked = blocksNewWorkspace(await billingAccountById(tx, pooled));
             if (blocked) throw new PaymentRequiredError(blocked);
@@ -482,16 +472,16 @@ export function settingsService(deps: TenancyDeps) {
         m.role === "owner" &&
         (await countManagers(db, ctx.workspaceId, ["owner"])) <= 1
       )
-        throw new BadRequestError("Cannot remove the last owner. Transfer ownership first.");
+        throw new BadRequestError("member.last_owner", {
+          message: "Cannot remove the last owner. Transfer ownership first.",
+        });
       if (
         realManager &&
         m.role === "admin" &&
         (await countManagers(db, ctx.workspaceId, ["admin", "owner"])) <= 1
       )
         throw new BadRequestError(
-          selfLeave
-            ? "You're the only admin. Promote someone else before leaving."
-            : "Can't remove the last admin. Promote someone else first.",
+          selfLeave ? "member.sole_admin_leave" : "member.last_admin_remove",
         );
       const now = clock(deps);
       const ws = await workspaceById(db, ctx.workspaceId);
@@ -536,28 +526,28 @@ export function settingsService(deps: TenancyDeps) {
     async changeRole(ctx: WorkspaceContext, membershipId: string, role: string) {
       ctx.require("member:manage");
       if (!["member", "billing", "admin", "owner"].includes(role))
-        throw new BadRequestError("Invalid role");
+        throw new BadRequestError("member.invalid_role");
       if (ROLE_RANK[role as WorkspaceRole] > ROLE_RANK[ctx.role])
-        throw new ForbiddenError("Cannot grant a role higher than your own");
+        throw new ForbiddenError("member.role_above_own");
       const m = await loadMembership(ctx, membershipId);
       ctx.requireCustomer();
       guardOwnerTarget(ctx, m.role);
       if (OUTSIDERS.has(m.role) !== OUTSIDERS.has(role))
-        throw new BadRequestError(
-          "Cannot change an outside collaborator (external or observer) into a member, or vice versa, from this dropdown. Re-invite the user to the workspace with the new role instead.",
-        );
+        throw new BadRequestError("member.outsider_role_switch");
       if (
         m.role === "owner" &&
         role !== "owner" &&
         (await countManagers(db, ctx.workspaceId, ["owner"])) <= 1
       )
-        throw new BadRequestError("Cannot demote the last owner. Promote someone else first.");
+        throw new BadRequestError("member.last_owner_demote");
       if (
         m.role === "admin" &&
         !["admin", "owner"].includes(role) &&
         (await countManagers(db, ctx.workspaceId, ["admin", "owner"])) <= 1
       )
-        throw new BadRequestError("Cannot demote the last admin. Promote someone else first.");
+        throw new BadRequestError("member.last_admin", {
+          message: "Cannot demote the last admin. Promote someone else first.",
+        });
       const now = clock(deps);
       const ws = await workspaceById(db, ctx.workspaceId);
       await db.transaction(async (tx) => {

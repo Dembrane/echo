@@ -104,6 +104,7 @@ export async function requireStaff(
   entry: StaffAuditEntry,
   denied = "Staff-only",
 ): Promise<void> {
-  if (!who || !hasStaffPolicy(who, entry.permission)) throw new ForbiddenError(denied);
+  if (!who || !hasStaffPolicy(who, entry.permission))
+    throw new ForbiddenError("access.staff_only", { message: denied });
   await audit.record(who, entry);
 }

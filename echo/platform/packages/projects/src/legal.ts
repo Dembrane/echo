@@ -69,17 +69,14 @@ export function legalWrite(input: {
     input.legalBasis !== null &&
     !(LEGAL_BASIS_VALUES as readonly string[]).includes(input.legalBasis)
   )
-    throw new BadRequestError("Invalid legal basis");
+    throw new BadRequestError("project.legal_basis_invalid");
   const basis = basisSent ? input.legalBasis : input.storedLegalBasis;
   let url = urlSent ? input.privacyPolicyUrl : input.storedPrivacyPolicyUrl;
   if (basis === "consent") {
-    if (!url?.trim())
-      throw new BadRequestError("A privacy policy link is required for consent-based processing");
+    if (!url?.trim()) throw new BadRequestError("project.privacy_policy_required");
     url = url.trim();
-    if (url.length > 255)
-      throw new BadRequestError("Privacy policy URL must be 255 characters or fewer");
-    if (!/^https?:\/\//i.test(url))
-      throw new BadRequestError("Privacy policy URL must start with http:// or https://");
+    if (url.length > 255) throw new BadRequestError("project.privacy_policy_too_long");
+    if (!/^https?:\/\//i.test(url)) throw new BadRequestError("project.privacy_policy_invalid_url");
   } else url = null;
   return {
     payload: { legal_basis: basis, privacy_policy_url: url },

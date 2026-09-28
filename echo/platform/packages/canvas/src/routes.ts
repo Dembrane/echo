@@ -1,4 +1,5 @@
 import { type Access, DrizzleAccessStore } from "@dembrane/access";
+import { NotFoundError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { type Env, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
@@ -157,7 +158,7 @@ export function canvasRoutes(deps: CanvasRoutesDeps) {
     const who = requireUser(c);
     const action = c.req.param("action");
     if (!["pause", "resume", "stop"].includes(action))
-      return c.json({ detail: "Canvas loop action not found" }, 404);
+      throw new NotFoundError("canvas.loop_action_not_found");
     return c.json(await svc.loopAction(d, who, c.req.param("canvas_id"), action));
   });
 

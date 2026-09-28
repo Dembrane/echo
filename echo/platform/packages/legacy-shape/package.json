@@ -9,6 +9,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@dembrane/core": "workspace:*"
+    "@dembrane/core": "workspace:*",
+    "@dembrane/http": "workspace:*"
   }
 }

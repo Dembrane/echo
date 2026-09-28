@@ -95,16 +95,17 @@ export function orgService(deps: TenancyDeps) {
   ) {
     const row = await activeOrgMembership(db, orgId, member.appUserId);
     const org = row ? await orgById(db, orgId) : null;
-    if (!row || !org || org.deleted_at) throw new ForbiddenError("No access to this organisation");
-    if (minimum === "owner" && row.role !== "owner") throw new ForbiddenError("Owner-only action");
+    if (!row || !org || org.deleted_at) throw new ForbiddenError("organisation.no_access");
+    if (minimum === "owner" && row.role !== "owner")
+      throw new ForbiddenError("organisation.owner_only");
     if (minimum === "admin" && !MANAGERS.includes(row.role))
-      throw new ForbiddenError("Organisation admins or owners only");
+      throw new ForbiddenError("organisation.admin_only");
     return row.role;
   }
 
   async function detail(orgId: string, role: string) {
     const org = await orgById(db, orgId);
-    if (!org || org.deleted_at) throw new NotFoundError("Organisation not found");
+    if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
     return {
       id: orgId,
       name: org.name ?? "",
@@ -121,10 +122,7 @@ export function orgService(deps: TenancyDeps) {
   async function requireNotExternal(orgId: string, userId: string) {
     const ids = (await orgWorkspaces(db, orgId)).map((w) => w.id);
     const ext = await membershipsOfUser(db, userId, { workspaceIds: ids, role: "external" });
-    if (ext.length)
-      throw new BadRequestError(
-        "This person is an external on one of the organisation's workspaces. Clear that first — they can't hold organisation admin/owner while marked as external.",
-      );
+    if (ext.length) throw new BadRequestError("organisation.external_cannot_manage");
   }
 
   /** How many of the org's workspaces each user reaches: a direct row, or derived from their org role. */
@@ -209,7 +207,7 @@ export function orgService(deps: TenancyDeps) {
     async create(who: Signed, rawName: string) {
       const member = requireOnboarded(who);
       const name = oneLine(rawName);
-      if (!name) throw new BadRequestError("Organisation name is required");
+      if (!name) throw new BadRequestError("organisation.name_required");
       const now = clock(deps);
       const orgId = newId();
       const wsId = newId();
@@ -282,7 +280,8 @@ export function orgService(deps: TenancyDeps) {
       if (body.name !== null) patch.name = oneLine(body.name);
       if (body.description !== null) patch.description = body.description.trim() || null;
       if (body.logo_url !== null) patch.logo_url = validLogoUrl(body.logo_url) || null;
-      if (!Object.keys(patch).length) throw new BadRequestError("Nothing to update");
+      if (!Object.keys(patch).length)
+        throw new BadRequestError("request.nothing_to_update", { message: "Nothing to update" });
       await updateOrg(db, orgId, { ...patch, updated_at: iso(clock(deps)) });
       return detail(orgId, role);
     },
@@ -457,12 +456,11 @@ export function orgService(deps: TenancyDeps) {
       const email = body.email.trim().toLowerCase();
       const role = body.role;
       if ((ROLE_RANK[role as WorkspaceRole] ?? 0) > (ROLE_RANK[callerRole as WorkspaceRole] ?? 0))
-        throw new ForbiddenError("Cannot grant a role higher than your own");
+        throw new ForbiddenError("member.role_above_own");
       const me = await appUser(db, member.appUserId);
-      if (me?.email && me.email.toLowerCase() === email)
-        throw new BadRequestError("Cannot invite yourself");
+      if (me?.email && me.email.toLowerCase() === email) throw new BadRequestError("invite.self");
       const org = await orgById(db, orgId);
-      if (!org || org.deleted_at) throw new NotFoundError("Organisation not found");
+      if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
       const orgName = org.name || "your organisation";
       const inviterName = me?.display_name || "An admin";
       const now = clock(deps);
@@ -591,7 +589,7 @@ export function orgService(deps: TenancyDeps) {
       let accessible: string[] | null = null;
       if (!isMember) {
         accessible = (await membershipsOfUser(db, member.appUserId)).map((m) => m.workspace_id);
-        if (!accessible.length) throw new ForbiddenError("No access to this organisation");
+        if (!accessible.length) throw new ForbiddenError("organisation.no_access");
       }
       const rows = await orgWorkspacesForCards(db, orgId, accessible);
       if (!rows.length) return [];
@@ -640,19 +638,16 @@ export function orgService(deps: TenancyDeps) {
 
     /** Changes an org role. Only an owner makes or unmakes an owner; the last manager stays. */
     async changeRole(who: Signed, orgId: string, userId: string, role: string) {
-      if (!ORG_ROLES.has(role)) throw new BadRequestError("Invalid role");
+      if (!ORG_ROLES.has(role)) throw new BadRequestError("member.invalid_role");
       const member = requireOnboarded(who);
       const callerRole = await requireOrgRole(orgId, member, "admin");
       const target = isUuid(userId) ? await activeOrgMembership(db, orgId, userId) : null;
-      if (!target) throw new NotFoundError("Member not found");
+      if (!target) throw new NotFoundError("member.not_found");
       if ((role === "owner" || target.role === "owner") && callerRole !== "owner")
-        throw new ForbiddenError("Only an owner can promote to owner or demote another owner");
+        throw new ForbiddenError("member.owner_changes_owner");
       if (MANAGERS.includes(target.role) && !MANAGERS.includes(role)) {
         const others = (await orgMembers(db, orgId, MANAGERS)).filter((m) => m.user_id !== userId);
-        if (!others.length)
-          throw new BadRequestError(
-            "Can't demote the last admin. Promote someone else to admin or owner first.",
-          );
+        if (!others.length) throw new BadRequestError("member.last_admin");
       }
       if (MANAGERS.includes(role)) await requireNotExternal(orgId, userId);
       const now = clock(deps);
@@ -688,13 +683,13 @@ export function orgService(deps: TenancyDeps) {
               softDeleteMembershipsInOrg(tx, orgId, userId, iso(now), ["external", "observer"]),
             )
           : [];
-        if (!removed.length) throw new NotFoundError("Member not found");
+        if (!removed.length) throw new NotFoundError("member.not_found");
         return { status: "removed", workspace_memberships_deleted: removed.length };
       }
       if (target.role === "owner") {
-        if (callerRole !== "owner") throw new ForbiddenError("Only an owner can remove an owner");
+        if (callerRole !== "owner") throw new ForbiddenError("member.owner_removes_owner");
         if ((await countOrgMembers(db, orgId, "owner")) <= 1)
-          throw new ConflictError("Can't remove the last owner. Transfer ownership first.");
+          throw new ConflictError("member.last_owner");
       }
       const affected = await db.transaction(async (tx) => {
         await updateOrgMembership(tx, target.id, { deleted_at: iso(now), updated_at: iso(now) });
@@ -726,7 +721,7 @@ export function orgService(deps: TenancyDeps) {
       const member = requireOnboarded(who);
       const role = await requireOrgRole(orgId, member, "member");
       if (monthOffset < 0 || monthOffset > 12)
-        throw new BadRequestError("month_offset must be 0–12");
+        throw new BadRequestError("request.month_offset_out_of_range");
       const now = clock(deps);
       const [start, end] = monthBounds(now, monthOffset);
       let workspaces = await orgWorkspaces(db, orgId);
@@ -870,7 +865,7 @@ export function orgService(deps: TenancyDeps) {
       const member = requireOnboarded(who);
       const role = await requireOrgRole(orgId, member, "member");
       if (!["admin", "owner", "billing"].includes(role))
-        throw new ForbiddenError("Organisation admin or billing role only");
+        throw new ForbiddenError("organisation.billing_role_only");
       const rows = await referralLedger(db, orgId);
       if (!rows.length) return [];
       const names = await workspaceNames(db, [...new Set(rows.map((r) => r.workspace_id))]);

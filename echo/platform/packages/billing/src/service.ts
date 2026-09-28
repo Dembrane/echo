@@ -431,17 +431,25 @@ export class BillingService {
     accountId: string,
     p: { tier: string; billingPeriod: string; redirectUrl: string },
   ): Promise<string> {
-    if (!this.mollie.enabled) throw new BillingError("Mollie is not configured");
+    if (!this.mollie.enabled)
+      throw new BillingError("Mollie is not configured", "billing.payments_unavailable");
     if (!PURCHASABLE_TIERS.has(p.tier))
-      throw new BillingError(`tier ${p.tier} is not available for checkout`);
+      throw new BillingError(
+        `tier ${p.tier} is not available for checkout`,
+        "billing.tier_not_purchasable",
+        { tier: p.tier },
+      );
     if (!this.d.config.webhookUrl)
       this.d.logger.warn(
         "MOLLIE_WEBHOOK_URL is not set: Mollie cannot push payment updates; relying on /sync and the reconcile schedule",
       );
     const account = await this.store.account(accountId);
-    if (!account) throw new BillingError("billing account not found");
+    if (!account) throw new BillingError("billing account not found", "billing.account_not_found");
     if (account.mollie_subscription_id && ["active", "past_due"].includes(account.status ?? ""))
-      throw new BillingError("this account already has an active subscription");
+      throw new BillingError(
+        "this account already has an active subscription",
+        "billing.already_subscribed",
+      );
 
     const seats = await this.countAccountSeats(accountId);
     const { amount: full, interval } = perIntervalAmount(p.tier, seats, p.billingPeriod);
@@ -485,17 +493,22 @@ export class BillingService {
     });
     await this.update(accountId, { status: "pending" });
     const url = checkoutUrl(payment);
-    if (!url) throw new BillingError("Mollie did not return a checkout URL");
+    if (!url)
+      throw new BillingError("Mollie did not return a checkout URL", "billing.checkout_failed");
     return url;
   }
 
   /** A EUR 0 consent payment that captures a new mandate; never creates a subscription. */
   async startUpdatePaymentMethod(accountId: string, redirectUrl: string): Promise<string> {
-    if (!this.mollie.enabled) throw new BillingError("Mollie is not configured");
+    if (!this.mollie.enabled)
+      throw new BillingError("Mollie is not configured", "billing.payments_unavailable");
     const account = await this.store.account(accountId);
-    if (!account) throw new BillingError("billing account not found");
+    if (!account) throw new BillingError("billing account not found", "billing.account_not_found");
     if (!account.mollie_customer_id)
-      throw new BillingError("no payment profile to update; subscribe first");
+      throw new BillingError(
+        "no payment profile to update; subscribe first",
+        "billing.no_payment_profile",
+      );
     const payment = await this.mollie.createFirstPayment({
       customerId: account.mollie_customer_id,
       amountEur: 0,
@@ -505,7 +518,8 @@ export class BillingService {
       metadata: { billing_account_id: accountId, intent: "update_payment_method" },
     });
     const url = checkoutUrl(payment);
-    if (!url) throw new BillingError("Mollie did not return a checkout URL");
+    if (!url)
+      throw new BillingError("Mollie did not return a checkout URL", "billing.checkout_failed");
     return url;
   }
 
@@ -866,7 +880,7 @@ export class BillingService {
   /** Stops renewal but keeps the paid tier until the period ends; the expiry schedule reverts it. */
   async cancelSubscription(accountId: string, reason: string | null, feedback: string | null) {
     const account = await this.store.account(accountId);
-    if (!account) throw new BillingError("billing account not found");
+    if (!account) throw new BillingError("billing account not found", "billing.account_not_found");
     const subId = account.mollie_subscription_id;
     const customerId = account.mollie_customer_id;
     if (!subId || !customerId) return account.status || "free";
@@ -899,9 +913,10 @@ export class BillingService {
 
   /** Resumes a canceled plan inside its paid period without charging it again. */
   async resumeSubscription(accountId: string): Promise<{ resumed: boolean; status: string }> {
-    if (!this.mollie.enabled) throw new BillingError("Mollie is not configured");
+    if (!this.mollie.enabled)
+      throw new BillingError("Mollie is not configured", "billing.payments_unavailable");
     const account = await this.store.account(accountId);
-    if (!account) throw new BillingError("billing account not found");
+    if (!account) throw new BillingError("billing account not found", "billing.account_not_found");
     const status = account.status;
     const tier = account.tier;
     const customerId = account.mollie_customer_id;
@@ -1148,13 +1163,14 @@ export class BillingService {
     accountId: string,
     p: { amountEur: number | null; description: string | null; redirectUrl: string | null },
   ) {
-    if (!this.mollie.enabled) throw new BillingError("Mollie is not configured");
+    if (!this.mollie.enabled)
+      throw new BillingError("Mollie is not configured", "billing.payments_unavailable");
     const account = await this.store.account(accountId);
-    if (!account) throw new BillingError("billing account not found");
+    if (!account) throw new BillingError("billing account not found", "billing.account_not_found");
     const seats = Math.max(await this.countAccountSeats(accountId), 1);
     const amount = p.amountEur ?? managedNextInvoiceAmount(account, seats);
     if (amount === null || amount < 0.01)
-      throw new BillingError("no invoice amount for this account");
+      throw new BillingError("no invoice amount for this account", "billing.no_invoice_amount");
     const tier = account.tier || "managed";
     const link = await this.mollie.createPaymentLink({
       amountEur: amount,
@@ -1165,7 +1181,11 @@ export class BillingService {
       metadata: { billing_account_id: accountId, intent: "offline_invoice", tier, seats },
     });
     const url = linkUrl(link);
-    if (!url) throw new BillingError("Mollie did not return a payment link URL");
+    if (!url)
+      throw new BillingError(
+        "Mollie did not return a payment link URL",
+        "billing.payment_link_failed",
+      );
     return { payment_link_id: link.id ?? null, url, amount_eur: amount };
   }
 
@@ -1179,13 +1199,14 @@ export class BillingService {
       paymentDetails?: Record<string, unknown> | null;
     },
   ) {
-    if (!this.mollie.enabled) throw new BillingError("Mollie is not configured");
+    if (!this.mollie.enabled)
+      throw new BillingError("Mollie is not configured", "billing.payments_unavailable");
     const account = await this.store.account(accountId);
-    if (!account) throw new BillingError("billing account not found");
+    if (!account) throw new BillingError("billing account not found", "billing.account_not_found");
     const seats = p.seats ?? Math.max(await this.countAccountSeats(accountId), 1);
     const amount = p.amountEur ?? managedNextInvoiceAmount(account, seats);
     if (amount === null || amount < 0.01)
-      throw new BillingError("no invoice amount for this account");
+      throw new BillingError("no invoice amount for this account", "billing.no_invoice_amount");
     const tier = account.tier || "managed";
     const status = p.markPaid ? "paid" : "issued";
     const invoice = await this.mollie.createSalesInvoice({

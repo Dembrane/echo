@@ -135,7 +135,7 @@ export async function estimateSeatAddition(
   if (account?.status !== "active") return result;
   if (!account.tier || account.tier === "free" || !account.mollie_subscription_id) return result;
   if (added < 1) return { ...result, active: true };
-  throw new UnavailableError("Seat pricing is temporarily unavailable");
+  throw new UnavailableError("billing.seat_pricing_unavailable");
 }
 
 /** After a seat is taken: queue a reconcile when the account bills per seat. */

@@ -37,8 +37,9 @@ function checkFields(fields: readonly string[], allowed: readonly string[]): voi
   for (const f of fields) {
     if (f === "*") continue;
     if (f.includes(".") || f.includes("*"))
-      throw new BadRequestError(`Relational fields are not allowed: ${f}`);
-    if (!allowed.includes(f)) throw new BadRequestError(`Unknown field: ${f}`);
+      throw new BadRequestError("conversation.field_relational", { params: { field: f } });
+    if (!allowed.includes(f))
+      throw new BadRequestError("conversation.field_unknown", { params: { field: f } });
   }
 }
 
@@ -232,7 +233,7 @@ export async function updateConversation(
 ): Promise<Row> {
   await conversationForBff(d, who, conversationId, "project:update");
   const payload = Object.fromEntries(Object.entries(body).filter(([, v]) => v !== null));
-  if (!Object.keys(payload).length) throw new BadRequestError("No fields to update");
+  if (!Object.keys(payload).length) throw new BadRequestError("request.nothing_to_update");
   const store = bffStore(d.db);
   await store.updateConversation(conversationId, payload, d.now());
   return (await store.conversationStar(conversationId)) ?? {};

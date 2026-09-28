@@ -82,10 +82,10 @@ export async function chats(
  */
 export async function chatMessages(d: DataDeps, who: Signed, chatId: string, limit: number) {
   const chat = await chatsStorage(d.db).chat(chatId);
-  if (!chat || chat.deleted_at || !chat.project_id) throw new NotFoundError("Chat not found");
+  if (!chat || chat.deleted_at || !chat.project_id) throw new NotFoundError("chat.not_found");
   await projectFor(d.access, who, chat.project_id.id, "chat:use");
   if (!who.isStaff && chat.is_private && chat.user_created !== who.directusUserId)
-    throw new NotFoundError("Chat not found");
+    throw new NotFoundError("chat.not_found");
   const rows = await sqlOf(d)`
     select message_from, text, date_created from project_chat_message
     where project_chat_id = ${chatId} order by date_created asc limit ${limit}`;

@@ -237,12 +237,10 @@ export function expandSettingsPatch(patch: Json, presentationExists = true): Jso
 
 export function requireBrandingTier(tier: string, removesBranding: boolean): void {
   if (removesBranding && !meetsTier(tier, "changemaker"))
-    throw new ForbiddenError("Removing the dembrane mark requires the changemaker tier.");
+    throw new ForbiddenError("popcorn.branding_tier");
 }
 
-export const SYNTHETIC_FRAME_LOCKED =
-  "A synthetic demo's disclosure and frame are set with the demo.";
-export const syntheticFrameLocked = () => new ConflictError(SYNTHETIC_FRAME_LOCKED);
+export const syntheticFrameLocked = () => new ConflictError("popcorn.synthetic_frame_locked");
 
 /** Apply the shared partial-settings semantics and normalise the result. */
 export function mergeSettings(current: Json, patch: Json, fallbackTitle: string): Json {

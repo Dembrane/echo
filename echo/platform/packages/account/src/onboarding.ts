@@ -19,12 +19,15 @@ export async function completeOnboarding(ctx: InviteCtx, who: Signed, body: { or
   const { store, now, deps } = ctx;
   await deps.limiter.check(ONBOARDING_LIMIT, who.directusUserId);
   const orgName = body.org_name.trim();
-  if (!orgName) throw new BadRequestError("Organization name is required");
+  if (!orgName)
+    throw new BadRequestError("organisation.name_required", {
+      message: "Organization name is required",
+    });
 
   const profile = await store.directusProfile(who.directusUserId);
   let me = await store.appUserByDirectusId(who.directusUserId);
   if (!me) {
-    if (!profile) throw new NotFoundError("Directus user not found");
+    if (!profile) throw new NotFoundError("account.identity_missing");
     try {
       me = await store.createAppUser(
         {

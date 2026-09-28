@@ -21,9 +21,13 @@ export interface FixtureInputs {
 export function demoFromFixture(fixture: Json, portalUrl: string): FixtureInputs {
   const slug = pyStr(fixture.slug);
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))
-    throw new ValidationError("The demo slug must be lowercase words separated by hyphens");
+    throw new ValidationError("popcorn.demo_fixture_invalid", {
+      message: "The demo slug must be lowercase words separated by hyphens",
+    });
   if (fixture.synthetic !== true)
-    throw new ValidationError("Only explicitly synthetic fixtures can be exported");
+    throw new ValidationError("popcorn.demo_fixture_invalid", {
+      message: "Only explicitly synthetic fixtures can be exported",
+    });
   const language = pyStr(fixture.language);
   const tagged = `${portalUrl}${portalUrl.includes("?") ? "&" : "?"}utm_source=popcorn_demo&utm_campaign=${encodeURIComponent(slug)}`;
   const state = freshState();
@@ -59,7 +63,9 @@ export function demoFromFixture(fixture: Json, portalUrl: string): FixtureInputs
       const item = dict(itemRaw);
       const sentence = lines.find((l) => l.includes(pyStr(item.phrase)));
       if (sentence === undefined)
-        throw new ValidationError(`Phrase ${pyStr(item.id)} is not in its transcript`);
+        throw new ValidationError("popcorn.demo_fixture_invalid", {
+          message: `Phrase ${pyStr(item.id)} is not in its transcript`,
+        });
       const quoteId = `q${quotes.length + 1}`;
       quoteIds[pyStr(item.id)] = quoteId;
       quotes.push({ id: quoteId, transcript: cid, text: sentence });

@@ -31,7 +31,7 @@ export function reportTitle(content: string | null): string | null {
  * dashboard sends; a naive time is UTC. Must be at least ten minutes out.
  */
 export function parseSchedule(raw: string, now: Date): Date {
-  const bad = () => new ValidationError(`Invalid scheduled_at datetime format: ${raw}`);
+  const bad = () => new ValidationError("report.schedule_invalid", { params: { value: raw } });
   const m = ISO_FORMS.exec(raw);
   if (!m) throw bad();
   const [, date, h = "00", mi = "00", s = "00", frac = "", tz] = m;
@@ -41,7 +41,7 @@ export function parseSchedule(raw: string, now: Date): Date {
   const d = new Date(`${date}T${h}:${mi}:${s}.${frac.padEnd(3, "0").slice(0, 3)}${zone}`);
   if (Number.isNaN(d.getTime())) throw bad();
   if (d.getTime() <= now.getTime() + MIN_LEAD_MS)
-    throw new BadRequestError("Scheduled time must be at least 10 minutes in the future");
+    throw new BadRequestError("report.schedule_too_soon");
   return d;
 }
 
@@ -62,17 +62,16 @@ export async function createReport(
   const pa = await projectFor(d.access, who, projectId, "report:generate");
   if (pa.tier === "free" && pa.project.workspaceId) {
     if ((await d.store.countWorkspaceReports(pa.project.workspaceId)) >= 1)
-      throw new PaymentRequiredError("Free tier limit", {
-        error: "FREE_TIER_LIMIT",
-        limit: "report",
-        upgrade_cta_tier: "changemaker",
+      throw new PaymentRequiredError("billing.tier_limit", {
+        params: { limit: "report" },
+        details: { error: "FREE_TIER_LIMIT", limit: "report", upgrade_cta_tier: "changemaker" },
       });
   }
   const language = body.language || "en";
   const now = d.now();
   const scheduled = body.scheduled_at ? parseSchedule(body.scheduled_at, now) : null;
   if (!scheduled && (await d.store.hasDraftReport(projectId)))
-    throw new ConflictError("A report is already being generated for this project");
+    throw new ConflictError("report.already_generating");
 
   return d.store.transaction(async ({ store, sql }) => {
     const created = await store.insertReport({
@@ -150,7 +149,7 @@ export async function latestReport(d: ProjectDeps, who: Signed, projectId: strin
 
 async function boundReport(d: ProjectDeps, projectId: string, rid: number) {
   const r = await d.store.reportInProject(reportId(rid), projectId);
-  if (!r) throw new NotFoundError("Report not found");
+  if (!r) throw new NotFoundError("report.not_found");
   return r;
 }
 
@@ -192,7 +191,7 @@ export async function updateReport(
     scheduled = parseSchedule(body.scheduled_at, now);
     payload.scheduled_at = scheduled.toISOString();
   }
-  if (!Object.keys(payload).length) throw new BadRequestError("No fields to update");
+  if (!Object.keys(payload).length) throw new BadRequestError("request.nothing_to_update");
 
   return d.store.transaction(async ({ store }) => {
     const stamp = now.toISOString();
@@ -200,7 +199,7 @@ export async function updateReport(
       for (const other of await store.otherPublishedReports(projectId, reportId(rid)))
         await store.updateReport(other, { status: "archived", date_updated: stamp });
     const updated = await store.updateReport(reportId(rid), { ...payload, date_updated: stamp });
-    if (!updated) throw new NotFoundError("Report not found");
+    if (!updated) throw new NotFoundError("report.not_found");
     if (scheduled && updated.status === "scheduled") {
       await store.cancelScheduledTasks(TASK_GENERATE_REPORT, { report_id: rid }, pythonIso(now));
       await store.scheduleTask({
@@ -242,7 +241,7 @@ export async function deleteReport(d: ProjectDeps, who: Signed, projectId: strin
 export async function cancelSchedule(d: ProjectDeps, who: Signed, projectId: string, rid: number) {
   await projectFor(d.access, who, projectId, "report:publish", "v1");
   const r = await boundReport(d, projectId, rid);
-  if (r.status !== "scheduled") throw new BadRequestError("Report is not scheduled");
+  if (r.status !== "scheduled") throw new BadRequestError("report.not_scheduled");
   const now = d.now();
   await d.store.transaction(async ({ store }) => {
     await store.updateReport(reportId(rid), {

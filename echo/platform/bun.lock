@@ -418,6 +418,7 @@
       "name": "@dembrane/legacy-shape",
       "dependencies": {
         "@dembrane/core": "workspace:*",
+        "@dembrane/http": "workspace:*",
       },
     },
     "packages/llm": {

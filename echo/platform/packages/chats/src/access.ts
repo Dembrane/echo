@@ -23,15 +23,15 @@ export async function chatFor(
   opts: { withUsed?: boolean; require?: Policy; staffBypass?: boolean } = {},
 ): Promise<{ chat: ChatRow; access: ProjectAccess | null }> {
   const chat = await d.store.chat(chatId, opts.withUsed ?? false);
-  if (!chat || chat.deleted_at) throw new NotFoundError("Chat not found");
+  if (!chat || chat.deleted_at) throw new NotFoundError("chat.not_found");
   if (who.isStaff && opts.staffBypass !== false) return { chat, access: null };
-  if (!chat.project_id) throw new NotFoundError("Chat not found");
+  if (!chat.project_id) throw new NotFoundError("chat.not_found");
   const access = await projectFor(d.access, who, chat.project_id.id, "chat:use");
   // Spec M-10: a private chat is its creator's. The old v1 and BFF routes let any member
   // read and post into it; the agentic routes already hid it. Hidden means 404, so its
   // existence is not confirmed.
   if (chat.is_private && chat.user_created !== who.directusUserId)
-    throw new NotFoundError("Chat not found");
+    throw new NotFoundError("chat.not_found");
   if (opts.require) await projectFor(d.access, who, chat.project_id.id, opts.require);
   return { chat, access };
 }

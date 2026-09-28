@@ -43,9 +43,9 @@ export async function requireOrgRole(
   minimum: "member" | "admin",
 ): Promise<string> {
   const role = await store.orgRole(orgId, appUserId);
-  if (role === null) throw new ForbiddenError("No access to this organisation");
+  if (role === null) throw new ForbiddenError("organisation.no_access");
   if (minimum === "admin" && role !== "admin" && role !== "owner")
-    throw new ForbiddenError("Organisation admins or owners only");
+    throw new ForbiddenError("organisation.admin_only");
   return role;
 }
 
@@ -139,9 +139,9 @@ export async function requestTraining(
   body: { type: string; extra_participants: number; notes: string | null },
 ) {
   await requireOrgRole(d.store, orgId, requester.id, "admin");
-  if (!isRequestable(body.type)) throw new BadRequestError("This training is not available yet");
+  if (!isRequestable(body.type)) throw new BadRequestError("training.not_available");
   const product = getProduct(body.type);
-  if (!product) throw new BadRequestError("Unknown training type");
+  if (!product) throw new BadRequestError("training.unknown_type");
   const extra = product.extra_price_eur;
   const estimated = product.price_eur + (extra ?? 0) * body.extra_participants;
   const now = d.clock();
@@ -299,9 +299,9 @@ export async function createTraining(
   orgExists: boolean,
 ) {
   const product = getProduct(body.type);
-  if (!product) throw new BadRequestError("Unknown training type");
+  if (!product) throw new BadRequestError("training.unknown_type");
   const org = orgExists ? await d.store.org(body.org_id) : null;
-  if (!org || org.deleted_at) throw new NotFoundError("Organisation not found");
+  if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
   const base = body.base_price_eur ?? product.price_eur;
   const nowIso = pyIsoformat(d.clock());
   const id = newId();
@@ -357,11 +357,11 @@ export async function updateTraining(
   },
 ) {
   const existing = id ? await d.store.training(id) : null;
-  if (!existing) throw new NotFoundError("Training not found");
+  if (!existing) throw new NotFoundError("training.not_found");
   const patch: TrainingPatch = { updated_at: pyIsoformat(d.clock()) };
   if (body.type != null) {
     const product = getProduct(body.type);
-    if (!product) throw new BadRequestError("Unknown training type");
+    if (!product) throw new BadRequestError("training.unknown_type");
     patch.type = body.type;
     patch.grants_license = product.grants_license;
     patch.included_participants = product.included_participants;
@@ -406,8 +406,8 @@ export async function completeTraining(
   body: { app_user_ids: string[]; completed_at: string | null },
 ) {
   const t = trainingId ? await d.store.training(trainingId) : null;
-  if (!t) throw new NotFoundError("Training not found");
-  if (!t.grants_license) throw new BadRequestError("This training type does not grant a license");
+  if (!t) throw new NotFoundError("training.not_found");
+  if (!t.grants_license) throw new BadRequestError("training.no_license");
   const completed = parseIso(body.completed_at) ?? d.clock();
   const ids: string[] = [];
   for (const uid of body.app_user_ids) {
@@ -448,16 +448,17 @@ export async function updateLicense(
   body: { completed_at?: string | null; status?: string | null },
 ) {
   const existing = id ? await d.store.license(id) : null;
-  if (!existing) throw new NotFoundError("License not found");
+  if (!existing) throw new NotFoundError("training.license_not_found");
   const patch: LicensePatch = {};
   if (body.completed_at != null) {
     const completed = parseIso(body.completed_at);
-    if (!completed) throw new BadRequestError("Invalid completed_at");
+    if (!completed) throw new BadRequestError("training.completed_at_invalid");
     patch.completed_at = pyIsoformat(completed);
     patch.expires_at = pyIsoformat(computeExpiresAt(completed));
   }
   if (body.status != null) patch.status = body.status;
-  if (!Object.keys(patch).length) throw new BadRequestError("Nothing to update");
+  if (!Object.keys(patch).length)
+    throw new BadRequestError("request.nothing_to_update", { message: "Nothing to update" });
   await d.store.updateLicense(existing.id, patch);
   const merged: LicenseRow = { ...existing, ...patch };
   return {
@@ -478,7 +479,7 @@ export async function updateLicense(
  */
 export async function revokeLicense(d: TrainingDeps, id: string | null) {
   const existing = id ? await d.store.license(id) : null;
-  if (!existing) throw new NotFoundError("License not found");
+  if (!existing) throw new NotFoundError("training.license_not_found");
   await d.store.updateLicense(existing.id, { status: "revoked" });
   if (existing.training_id) {
     const left = (await d.store.activeLicenseCounts([existing.training_id])).get(

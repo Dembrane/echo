@@ -60,10 +60,12 @@ export function isExternalClient(
 }
 
 /** Why an account cannot take another workspace, or null when it can. */
-export function blocksNewWorkspace(account: BillingAccountRow | null): string | null {
-  if (!account || account.deleted_at) return "organisation has no valid billing account";
-  if (account.status === "canceled")
-    return "organisation billing is canceled; reactivate it to add workspaces";
+/** Why the pooled account cannot take another workspace, as an error code; null when it can. */
+export function blocksNewWorkspace(
+  account: BillingAccountRow | null,
+): "organisation.no_billing_account" | "organisation.billing_canceled" | null {
+  if (!account || account.deleted_at) return "organisation.no_billing_account";
+  if (account.status === "canceled") return "organisation.billing_canceled";
   return null;
 }
 

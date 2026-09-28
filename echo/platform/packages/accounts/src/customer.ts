@@ -164,9 +164,11 @@ export async function declineDocument(
 ) {
   const a = await documentFor(d, who, orgId, docId, "account:sign");
   if (!a.doc.requiresSignature || !["sent", "viewed"].includes(a.doc.status))
-    throw new ConflictError("This document cannot be declined now");
+    throw new ConflictError("document.not_declinable");
   if (a.doc.signerEmail && a.doc.signerEmail.toLowerCase() !== a.email)
-    throw new ForbiddenError(`Only ${a.doc.signerEmail} can decline this document`);
+    throw new ForbiddenError("document.decline_signer_only", {
+      params: { signer_email: a.doc.signerEmail },
+    });
   const now = d.now();
   await d.db.transaction(async (tx) => {
     await store.updateDocument(tx, a.doc.id, {
@@ -219,9 +221,9 @@ export async function nameSigner(
 ) {
   const org = await customerOrg(d, who, orgId, "account:sign");
   const doc = await store.document(d.db, org.id, docId);
-  if (!doc || doc.status === "draft") throw new NotFoundError("Document not found");
+  if (!doc || doc.status === "draft") throw new NotFoundError("document.not_found");
   if (!doc.requiresSignature || !["sent", "viewed"].includes(doc.status))
-    throw new ConflictError("This document is not waiting for a signature");
+    throw new ConflictError("document.not_awaiting_signature");
   const email = signer.email.trim().toLowerCase();
   const now = d.now();
   const me = await store.identity(d.db, who.directusUserId);
@@ -280,7 +282,7 @@ export async function mySigningRequests(d: AccountsDeps, who: Signed) {
 /** The unsigned PDF: what the viewer renders and the fields overlay. */
 export async function fileBytes(d: AccountsDeps, doc: DocumentRow): Promise<Uint8Array> {
   const blob = doc.fileKey ? await d.files.get(doc.fileKey) : null;
-  if (!blob) throw new NotFoundError("This document has no PDF");
+  if (!blob) throw new NotFoundError("document.no_pdf");
   return new Uint8Array(await blob.arrayBuffer());
 }
 
@@ -288,7 +290,7 @@ export async function fileBytes(d: AccountsDeps, doc: DocumentRow): Promise<Uint
 export async function signedBytes(d: AccountsDeps, doc: DocumentRow): Promise<Uint8Array> {
   const sig = await store.signatureOf(d.db, doc.id);
   const blob = sig ? await d.files.get(sig.signedPdfKey) : null;
-  if (!blob) throw new NotFoundError("This document is not signed");
+  if (!blob) throw new NotFoundError("document.not_signed");
   return new Uint8Array(await blob.arrayBuffer());
 }
 
@@ -335,7 +337,7 @@ export async function readBilling(d: AccountsDeps, who: Signed, orgId: string) {
 export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string, b: BillingInput) {
   const org = await customerOrg(d, who, orgId, "account:billing");
   if (!b.vat_id && !b.kvk_number && !b.kbo_number)
-    throw new ValidationError("Give at least one of the VAT, KvK or KBO number");
+    throw new ValidationError("billing.tax_id_required");
   const now = d.now();
   const me = await store.identity(d.db, who.directusUserId);
   await d.db.transaction(async (tx) => {
@@ -413,18 +415,15 @@ export async function submitTask(
 ) {
   const org = await customerOrg(d, who, orgId, "account:tasks");
   const task = await store.task(d.db, org.id, taskId);
-  if (!task) throw new NotFoundError("Task not found");
-  if (task.kind === "sign") throw new ConflictError("This task is done by signing the document");
-  if (task.kind === "billing_details")
-    throw new ConflictError("This task is done by saving the billing details");
+  if (!task) throw new NotFoundError("task.not_found");
+  if (task.kind === "sign") throw new ConflictError("task.done_by_signing");
+  if (task.kind === "billing_details") throw new ConflictError("task.done_by_billing_details");
   if (!["open", "changes_requested"].includes(task.status))
-    throw new ConflictError(
-      task.status === "locked" ? "This task is not open yet" : "This task is not waiting for you",
-    );
-  if (task.kind === "upload" && !input.file) throw new ValidationError("This task needs a file");
-  if (!input.text && !input.file) throw new ValidationError("Add a reply or a file");
+    throw new ConflictError(task.status === "locked" ? "task.not_open" : "task.not_waiting");
+  if (task.kind === "upload" && !input.file) throw new ValidationError("task.file_required");
+  if (!input.text && !input.file) throw new ValidationError("task.reply_required");
   if (input.file && input.file.bytes.byteLength > MAX_TASK_FILE_BYTES)
-    throw new ValidationError("The file is larger than 20 MB");
+    throw new ValidationError("upload.too_large", { params: { max_mb: 20 } });
   const now = d.now();
   let key: string | null = null;
   if (input.file) {
@@ -517,7 +516,7 @@ export async function customerReply(
 ) {
   const org = await customerOrg(d, who, orgId, "account:support");
   const ticket = await store.ticket(d.db, org.id, ticketId);
-  if (!ticket) throw new NotFoundError("Question not found");
+  if (!ticket) throw new NotFoundError("question.not_found");
   const now = d.now();
   await d.db.transaction(async (tx) => {
     await store.insertMessage(tx, {
@@ -545,7 +544,7 @@ export async function customerReply(
 
 export async function ticketOf(d: AccountsDeps, orgId: string, ticketId: string) {
   const ticket = await store.ticket(d.db, orgId, ticketId);
-  if (!ticket) throw new NotFoundError("Question not found");
+  if (!ticket) throw new NotFoundError("question.not_found");
   return ticketView(ticket, await store.messages(d.db, [ticket.id]));
 }
 

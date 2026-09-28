@@ -26,7 +26,14 @@ import {
   UnknownResultScope,
   VIEW_SCOPE_KEY,
 } from "@dembrane/analysis";
-import { NotFoundError, PlatformError, UnavailableError, ValidationError } from "@dembrane/core";
+import {
+  ConflictError,
+  NotFoundError,
+  PlatformError,
+  StatusError,
+  UnavailableError,
+  ValidationError,
+} from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { type Env, requireUser, type Signed } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
@@ -60,17 +67,7 @@ const TITLE_LIMIT = { name: "map_title", capacity: 60, windowSeconds: 60 };
 const FACT_CHECK_LIMIT = { name: "map_fact_check", capacity: 120, windowSeconds: 60 };
 const BASE = "/api/v2/bff/map";
 
-class HttpError extends PlatformError {
-  constructor(
-    readonly status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-  readonly code = "http";
-}
-
-const unavailable = () => new UnavailableError("Map storage is unavailable.");
+const unavailable = () => new UnavailableError("map.storage_unavailable");
 
 /** Python json.dumps(value, sort_keys=True) with its default separators, for ETag inputs. */
 function pyDumps(v: unknown): string {
@@ -166,7 +163,7 @@ export function mapRoutes(deps: MapRoutesDeps) {
 
   const target = async (who: Signed, resultId: string) => {
     const t = await guarded(() => service.resolveTarget(d, resultId));
-    if (!t) throw new NotFoundError("Map not found");
+    if (!t) throw new NotFoundError("map.not_found");
     await readable(who, service.targetProject(t));
     return t;
   };
@@ -214,7 +211,7 @@ export function mapRoutes(deps: MapRoutesDeps) {
       };
     } catch (err) {
       if (err instanceof UnknownMapType || err instanceof BudgetError)
-        throw new ValidationError(err.message);
+        throw new ValidationError("map.invalid_request", { message: err.message });
       throw err;
     }
     const reads = new MapViewReads(rt.store);
@@ -237,7 +234,7 @@ export function mapRoutes(deps: MapRoutesDeps) {
       if (legacyRow)
         etag = graphEtag("legacy", String(legacyRow.id), pyStr(legacyRow.completed_at), query);
       else if (snapshot) etag = graphEtag("snapshot", snapshot.id, "", query);
-      else throw new HttpError(404, "This project has no map yet.");
+      else throw new NotFoundError("map.no_map_yet");
       const headers = { ETag: etag, "Cache-Control": "private, no-cache" };
       if (etagMatches(c.req.header("if-none-match"), etag)) return c.body(null, 304, headers);
       let payload: Json;
@@ -245,10 +242,11 @@ export function mapRoutes(deps: MapRoutesDeps) {
       else if (snapshot) {
         const resultId = await reads.ensureV2Result(snapshot);
         payload = await graphPayload(snapshot, query, rt.store, resultId);
-      } else throw new HttpError(404, "This project has no map yet.");
+      } else throw new NotFoundError("map.no_map_yet");
       return c.json(payload, 200, headers);
     } catch (err) {
-      if (err instanceof UnknownResultScope) throw new ValidationError(err.message);
+      if (err instanceof UnknownResultScope)
+        throw new ValidationError("analysis.unknown_scope", { message: err.message });
       if (err instanceof MapStoreError || err instanceof AnalysisStoreError) throw unavailable();
       throw err;
     }
@@ -269,7 +267,7 @@ export function mapRoutes(deps: MapRoutesDeps) {
         { project_id: projectId, err: { name: (err as Error)?.name } },
         "map generation not started",
       );
-      throw new UnavailableError("The map generation could not be started.");
+      throw new UnavailableError("map.generation_not_started");
     }
     return c.json({ attempt: service.attemptPayload(row) }, 202);
   });
@@ -318,23 +316,26 @@ export function mapRoutes(deps: MapRoutesDeps) {
     try {
       if (t.kind === "snapshot") {
         if (body.data.snapshot_id && body.data.snapshot_id !== t.snapshot.id)
-          throw new HttpError(409, "The selection belongs to another snapshot.");
+          throw new ConflictError("map.selection_other_snapshot");
         const ids = body.data.revision_ids?.length ? body.data.revision_ids : body.data.node_ids;
         return c.json(await service.snapshotSelectionTitle(d, t, ids, project));
       }
       return c.json(await service.selectionTitle(d, t.row, body.data.node_ids, project));
     } catch (err) {
       if (err instanceof PlatformError) throw err;
-      if (err instanceof service.NotReady) throw new HttpError(409, "This map is not ready.");
-      if (err instanceof service.UnknownArguments || err instanceof SelectionTooSmall)
-        throw new ValidationError(err.message);
-      if (err instanceof SelectionTooLarge) throw new HttpError(413, err.message);
+      if (err instanceof service.NotReady) throw new ConflictError("map.not_ready");
+      if (err instanceof service.UnknownArguments)
+        throw new ValidationError("map.selection_not_in_map", { message: err.message });
+      if (err instanceof SelectionTooSmall)
+        throw new ValidationError("map.selection_too_small", { message: err.message });
+      if (err instanceof SelectionTooLarge)
+        throw new StatusError(413, "map.selection_too_large", { message: err.message });
       if (err instanceof MapStoreError || err instanceof AnalysisStoreError) throw unavailable();
       deps.logger.warn(
         { result_id: c.req.param("result_id"), err: { name: (err as Error)?.name } },
         "map title failed",
       );
-      throw new HttpError(502, "The title could not be generated.");
+      throw new StatusError(502, "map.title_failed");
     }
   });
 
@@ -348,7 +349,7 @@ export function mapRoutes(deps: MapRoutesDeps) {
           : await service.factCheckStates(d, t.row);
       return c.json({ fact_checks: states });
     } catch (err) {
-      if (err instanceof service.NotReady) throw new HttpError(409, "This map is not ready.");
+      if (err instanceof service.NotReady) throw new ConflictError("map.not_ready");
       if (err instanceof MapStoreError || err instanceof AnalysisStoreError) throw unavailable();
       throw err;
     }
@@ -374,12 +375,14 @@ export function mapRoutes(deps: MapRoutesDeps) {
       );
     } catch (err) {
       if (err instanceof PlatformError) throw err;
-      if (err instanceof service.NotReady) throw new HttpError(409, "This map is not ready.");
-      if (err instanceof service.UnknownArguments || err instanceof service.NotAClaim)
-        throw new ValidationError(err.message);
+      if (err instanceof service.NotReady) throw new ConflictError("map.not_ready");
+      if (err instanceof service.UnknownArguments)
+        throw new ValidationError("map.selection_not_in_map", { message: err.message });
+      if (err instanceof service.NotAClaim)
+        throw new ValidationError("map.not_a_claim", { message: err.message });
       if (err instanceof MapStoreError || err instanceof AnalysisStoreError) throw unavailable();
       deps.logger.error({ err: { name: (err as Error)?.name } }, "map fact-check not started");
-      throw new UnavailableError("The fact-check could not be started.");
+      throw new UnavailableError("map.fact_check_not_started");
     }
   });
 
@@ -390,9 +393,11 @@ export function mapRoutes(deps: MapRoutesDeps) {
     try {
       return c.json(await service.cancelFactCheck(d, t, c.req.param("node_id")));
     } catch (err) {
-      if (err instanceof service.NotReady) throw new HttpError(409, "This map is not ready.");
-      if (err instanceof service.UnknownArguments || err instanceof service.NotAClaim)
-        throw new ValidationError(err.message);
+      if (err instanceof service.NotReady) throw new ConflictError("map.not_ready");
+      if (err instanceof service.UnknownArguments)
+        throw new ValidationError("map.selection_not_in_map", { message: err.message });
+      if (err instanceof service.NotAClaim)
+        throw new ValidationError("map.not_a_claim", { message: err.message });
       if (err instanceof MapStoreError || err instanceof AnalysisStoreError) throw unavailable();
       throw err;
     }

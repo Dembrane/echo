@@ -1,4 +1,4 @@
-import { ValidationError } from "@dembrane/core";
+import { type FieldErrorCode, type ParamValue, ValidationError } from "@dembrane/core";
 import type { Context } from "hono";
 
 /**
@@ -420,8 +420,80 @@ function parseFields<S extends Shape>(
   return { value: out as Parsed<S>, set };
 }
 
+/** The field code for a pydantic error type; the frontend keys its inline message on it. */
+export function fieldCode(issue: Pick<Issue, "type" | "msg">): FieldErrorCode {
+  switch (issue.type) {
+    case "missing":
+      return "field.required";
+    case "string_too_short":
+      return "field.too_short";
+    case "string_too_long":
+      return "field.too_long";
+    case "too_short":
+      return "field.too_few_items";
+    case "greater_than":
+    case "greater_than_equal":
+      return "field.too_small";
+    case "less_than":
+    case "less_than_equal":
+      return "field.too_large";
+    case "literal_error":
+    case "enum":
+      return "field.invalid_choice";
+    case "json_invalid":
+      return "field.invalid_json";
+    case "value_error":
+      return issue.msg.includes("email address") ? "field.invalid_email" : "field.invalid";
+    default:
+      return issue.type.endsWith("_type") ||
+        issue.type.endsWith("_parsing") ||
+        issue.type === "int_from_float"
+        ? "field.invalid_type"
+        : "field.invalid";
+  }
+}
+
+/** A failing field as clients read it: its path, its code and the params its message needs. */
+export interface FieldProblem {
+  readonly [key: string]: ParamValue;
+  /** The path without its "body" or "query" root, dotted: "name", "items.0.title". */
+  readonly field: string;
+  readonly loc: readonly (string | number)[];
+  readonly code: FieldErrorCode;
+  readonly params: { readonly [key: string]: ParamValue };
+}
+
+function fieldParams(issue: Issue): Record<string, ParamValue> {
+  const ctx = (issue.ctx ?? {}) as Record<string, unknown>;
+  const out: Record<string, ParamValue> = {};
+  const pick = (from: string, to = from) => {
+    const v = ctx[from];
+    if (typeof v === "string" || typeof v === "number") out[to] = v;
+  };
+  pick("min_length");
+  pick("max_length");
+  pick("ge", "min");
+  pick("gt", "min");
+  pick("le", "max");
+  pick("lt", "max");
+  pick("expected");
+  return out;
+}
+
+export function fieldProblems(issues: readonly Issue[]): FieldProblem[] {
+  return issues.map((i) => ({
+    field: i.loc.filter((part, n) => !(n === 0 && (part === "body" || part === "query"))).join("."),
+    loc: i.loc,
+    code: fieldCode(i),
+    params: fieldParams(i),
+  }));
+}
+
 function fail(issues: Issue[]): never {
-  throw new ValidationError("Request validation failed", issues);
+  throw new ValidationError("validation.invalid_input", {
+    details: issues,
+    params: { fields: fieldProblems(issues) },
+  });
 }
 
 /** The request parts validation reads: query parameters and the raw body text. */

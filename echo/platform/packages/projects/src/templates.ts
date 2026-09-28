@@ -108,12 +108,11 @@ export async function createTemplate(
   },
 ) {
   if (body.scope === "workspace") {
-    if (!body.workspace_id)
-      throw new BadRequestError("workspace_id is required for scope='workspace'");
+    if (!body.workspace_id) throw new BadRequestError("template.workspace_required");
     const rights = await workspaceRights(d, who, body.workspace_id);
-    if (!rights.read) throw new ForbiddenError("Not a workspace member");
-    if (!rights.write)
-      throw new ForbiddenError("Read-only collaborators cannot create workspace templates");
+    if (!rights.read)
+      throw new ForbiddenError("workspace.no_access", { message: "Not a workspace member" });
+    if (!rights.write) throw new ForbiddenError("template.read_only_collaborator");
   }
   const now = d.now().toISOString();
   const created = await d.store.insertTemplate({
@@ -138,14 +137,15 @@ export async function createTemplate(
 /** Loads a template the caller may change: their own, or a workspace one they can write. */
 async function editable(d: TemplateDeps, who: Signed, id: string, verb: "edit" | "delete") {
   const t = await d.store.template(id);
-  if (!t) throw new NotFoundError("Template not found");
+  if (!t) throw new NotFoundError("template.not_found");
   const scope = t.scope || "user";
   if (scope === "workspace") {
-    if (!t.workspace_id) throw new NotFoundError("Template not found");
-    if (!who.appUserId) throw new ForbiddenError("Not a workspace member");
+    if (!t.workspace_id) throw new NotFoundError("template.not_found");
+    if (!who.appUserId)
+      throw new ForbiddenError("workspace.no_access", { message: "Not a workspace member" });
     const rights = await workspaceRights(d, who, t.workspace_id);
-    if (!rights.write) throw new ForbiddenError(`Not allowed to ${verb} this template`);
-  } else if (t.user_created !== who.directusUserId) throw new NotFoundError("Template not found");
+    if (!rights.write) throw new ForbiddenError("template.not_allowed", { params: { verb } });
+  } else if (t.user_created !== who.directusUserId) throw new NotFoundError("template.not_found");
   return { t, scope };
 }
 
@@ -161,12 +161,12 @@ export async function updateTemplate(
     ...(body.content !== null && { content: body.content }),
     ...(body.icon !== null && { icon: body.icon }),
   };
-  if (!Object.keys(values).length) throw new BadRequestError("No fields to update");
+  if (!Object.keys(values).length) throw new BadRequestError("request.nothing_to_update");
   const updated = await d.store.updateTemplate(id, {
     ...values,
     date_updated: d.now().toISOString(),
   });
-  if (!updated) throw new NotFoundError("Template not found");
+  if (!updated) throw new NotFoundError("template.not_found");
   return out(updated, { author: null, scope, canEdit: true });
 }
 
@@ -190,16 +190,20 @@ export async function saveQuickAccess(
   who: Signed,
   items: { type: "static" | "user"; id: string }[],
 ) {
-  if (items.length > 5) throw new BadRequestError("Maximum 5 quick access items");
+  if (items.length > 5)
+    throw new BadRequestError("template.quick_access_too_many", { params: { max: 5 } });
   const seen = new Set<string>();
   for (const i of items) {
     const key = `${i.type}:${i.id}`;
-    if (seen.has(key)) throw new BadRequestError(`Duplicate item: ${key}`);
+    if (seen.has(key))
+      throw new BadRequestError("template.quick_access_duplicate", { params: { item: key } });
     seen.add(key);
   }
   for (const i of items) {
     if (i.type !== "user") continue;
-    const missing = new BadRequestError(`Template not found: ${i.id}`);
+    const missing = new BadRequestError("template.quick_access_not_found", {
+      params: { template_id: i.id },
+    });
     const t = await d.store.template(i.id);
     if (!t) throw missing;
     if ((t.scope || "user") === "workspace") {

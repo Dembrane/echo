@@ -46,7 +46,7 @@ const relatedId = (v: unknown) => s(v && typeof v === "object" ? (v as Obj).id :
  */
 export async function requireCanvasEnabled(d: CanvasDeps, projectId: string) {
   if (!d.enableCanvas || !(await d.store.projectFlag(projectId)))
-    throw new NotFoundError("Not found");
+    throw new NotFoundError("canvas.feature_off");
 }
 
 async function gate(d: CanvasDeps, who: Signed, projectId: string) {
@@ -61,16 +61,16 @@ async function canvasOr404(d: CanvasDeps, projectId: string, canvasId: string): 
     relatedId(report.project_id) !== projectId ||
     (report.deleted_at ?? null) !== null
   )
-    throw new NotFoundError("Canvas not found");
+    throw new NotFoundError("canvas.not_found");
   return report;
 }
 
 async function chatOr404(d: CanvasDeps, who: Signed, projectId: string, chatId: string) {
   const chat = await d.store.chat(chatId);
   if (!chat || relatedId(chat.project_id) !== projectId || (chat.deleted_at ?? null) !== null)
-    throw new NotFoundError("Chat not found");
+    throw new NotFoundError("chat.not_found");
   if (!who.isStaff && chat.is_private && chat.user_created !== who.directusUserId)
-    throw new NotFoundError("Chat not found");
+    throw new NotFoundError("chat.not_found");
 }
 
 const loopPayload = (loop: Obj) => ({
@@ -98,7 +98,8 @@ async function asBadRequest<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (err) {
-    if (err instanceof CanvasValueError) throw new BadRequestError(err.message);
+    if (err instanceof CanvasValueError)
+      throw new BadRequestError("canvas.invalid_value", { message: err.message });
     throw err;
   }
 }
@@ -381,10 +382,10 @@ export async function canvasLoop(
 ) {
   await gate(d, who, projectId);
   if (!(LOOP_ACTIONS as readonly string[]).includes(action))
-    throw new NotFoundError("Canvas loop action not found");
+    throw new NotFoundError("canvas.loop_action_not_found");
   await canvasOr404(d, projectId, canvasId);
   const loop = await d.store.loopForReport(canvasId);
-  if (!loop) throw new NotFoundError("Canvas loop not found");
+  if (!loop) throw new NotFoundError("canvas.loop_not_found");
   const loopId = String(loop.id);
   const nowIso = d.now().toISOString();
   let updated: Obj;
@@ -395,7 +396,7 @@ export async function canvasLoop(
   } else if (action === "resume") {
     const expires = parseTime(loop.expires_at);
     if (loop.status === "expired" || loop.status === "stopped" || (expires && expires <= d.now()))
-      throw new ConflictError("This loop has ended");
+      throw new ConflictError("canvas.loop_ended");
     updated = await d.store.updateLoop(loopId, { status: "active", failure_count: 0 }, d.now());
     await enqueueTick(d, loopId);
   } else {

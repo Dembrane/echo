@@ -136,9 +136,9 @@ export function agentAccessRoutes(api: AgentAccessRoutesDeps) {
   const agent = async (c: Ctx): Promise<AgentContext> => {
     const header = c.req.header("authorization") ?? "";
     if (!header.toLowerCase().startsWith("bearer "))
-      throw new UnauthenticatedError("Bearer token required");
+      throw new UnauthenticatedError("auth.token_required");
     const verified = await verifyAccessToken(d, header.slice(7).trim());
-    if (!verified) throw new UnauthenticatedError("Invalid or expired token");
+    if (!verified) throw new UnauthenticatedError("auth.token_invalid");
     return contextForGrant(d, verified.grantId);
   };
 

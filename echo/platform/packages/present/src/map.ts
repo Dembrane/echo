@@ -105,7 +105,8 @@ export function audienceBudgets(
   try {
     return resolveBudgets(nodeLimit, edgeLimit, ceilings);
   } catch (err) {
-    if (err instanceof BudgetError) throw new ValidationError(err.message);
+    if (err instanceof BudgetError)
+      throw new ValidationError("map.invalid_request", { message: err.message });
     throw err;
   }
 }
@@ -316,7 +317,7 @@ export async function audienceMap(store: MapStore, a: AudienceMapArgs): Promise<
       ? await store.snapshot(pyStr(bound))
       : await store.currentSnapshot(a.projectId);
     if (snapshot && snapshot.projectId !== a.projectId)
-      throw new NotFoundError("Map results are not available.");
+      throw new NotFoundError("present.map_results_unavailable");
     const legacy = (await store.legacyResults(a.projectId)).filter((l) => !l.snapshotId);
     const newest = legacy.at(-1);
     const project = async ({ payload, factChecks }: GraphAndChecks) => {
@@ -340,10 +341,10 @@ export async function audienceMap(store: MapStore, a: AudienceMapArgs): Promise<
     // The host's graph endpoint answers a store failure with 503; the room gets the same,
     // and keeps what it shows until the store is back.
     if (err instanceof MapStoreError || err instanceof AnalysisStoreError)
-      throw new UnavailableError("Map storage is unavailable.");
+      throw new UnavailableError("map.storage_unavailable");
     throw err;
   }
-  throw new NotFoundError("Map results are not ready.");
+  throw new NotFoundError("present.map_results_not_ready");
 }
 
 export type { Row };

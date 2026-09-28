@@ -1,4 +1,4 @@
-import { ForbiddenError, newId, PlatformError } from "@dembrane/core";
+import { ForbiddenError, newId, StatusError } from "@dembrane/core";
 import type { Logger } from "@dembrane/observability";
 import type { ObjectStorage } from "@dembrane/storage";
 import type { PricingInsert, PricingRow, PricingStore } from "./storage";
@@ -38,11 +38,6 @@ export interface Attachment {
   readonly contentType: string;
   readonly durationMs: number | null;
   readonly content: Uint8Array;
-}
-
-class ServerError extends PlatformError {
-  readonly status = 500;
-  readonly code = "internal";
 }
 
 export function newReference(prefix: string, random: () => number = Math.random): string {
@@ -152,7 +147,7 @@ export async function upsertConfiguration(
   const sessionId = payload.config_session_id.trim();
   const existing = await d.store.bySession(sessionId);
   if (existing?.user_id && existing.user_id !== identity.userId)
-    throw new ForbiddenError("This configuration belongs to another user");
+    throw new ForbiddenError("pricing.configuration_not_owned");
 
   const booking = bookingFrom(payload);
   // A finished configuration never falls back to in progress, and a booking only raises it.
@@ -277,5 +272,5 @@ async function insertWithReference(
       d.logger.warn({ err }, "pricing configuration insert retry");
     }
   }
-  throw new ServerError("Could not allocate a reference");
+  throw new StatusError(500, "pricing.reference_unavailable");
 }

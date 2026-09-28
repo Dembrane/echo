@@ -119,7 +119,7 @@ export class SupportAccess {
         const winner = (await this.s.userMemberships(workspaceId, appUserId)).find(
           (r) => r.deleted_at === null,
         );
-        if (!winner) throw new ConflictError("Membership changed concurrently, please retry.");
+        if (!winner) throw new ConflictError("member.changed_concurrently");
         if (winner.source !== "staff_support")
           return { status: "already_member", membershipId: winner.id, expiresIso: null };
         membershipId = winner.id;

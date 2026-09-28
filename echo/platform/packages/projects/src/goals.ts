@@ -27,9 +27,10 @@ export async function setGoal(
 ) {
   await projectFor(d.access, who, projectId, "project:update");
   const content = body.content.trim();
-  if (!content) throw new BadRequestError("content is required");
+  if (!content)
+    throw new BadRequestError("request.field_required", { params: { field: "content" } });
   if (body.chat_id !== null && !(await d.store.chatInProject(body.chat_id, projectId)))
-    throw new NotFoundError("Chat not found");
+    throw new NotFoundError("chat.not_found");
   const row = await d.store.insertGoalRevision({
     id: newId(),
     project_id: projectId,
@@ -61,14 +62,14 @@ function card(row: Row, versions: Row[]) {
 
 function trimRequired(v: string, field: string) {
   const t = v.trim();
-  if (!t) throw new BadRequestError(`${field} is required`);
+  if (!t) throw new BadRequestError("request.field_required", { params: { field } });
   return t;
 }
 
 function trimOptional(v: string | null, field: string) {
   if (v === null) return null;
   const t = v.trim();
-  if (!t) throw new BadRequestError(`${field} cannot be empty`);
+  if (!t) throw new BadRequestError("request.field_empty", { params: { field } });
   return t;
 }
 
@@ -133,12 +134,12 @@ async function requireVisible(d: ProjectDeps, who: Signed, row: Row) {
     await workspaceFor(d.access, who, row.workspace_id, "project:read", wsExists(d));
     return;
   }
-  throw new NotFoundError("Methodology not found");
+  throw new NotFoundError("project.methodology_not_found");
 }
 
 async function methodologyOr404(d: ProjectDeps, id: string) {
   const row = await d.store.methodology(id);
-  if (!row) throw new NotFoundError("Methodology not found");
+  if (!row) throw new NotFoundError("project.methodology_not_found");
   return row;
 }
 
@@ -167,10 +168,10 @@ export async function editMethodology(
   fieldsSet: ReadonlySet<string>,
 ) {
   let row: Row = await methodologyOr404(d, id);
-  if (row.is_seeded) throw new ForbiddenError("The dembrane methodology is read-only");
+  if (row.is_seeded) throw new ForbiddenError("project.methodology_read_only");
   if (row.owner_directus_user_id !== who.directusUserId) {
     if (!(row.visibility === "workspace" && typeof row.workspace_id === "string"))
-      throw new ForbiddenError("Not allowed");
+      throw new ForbiddenError("access.forbidden");
     await workspaceFor(
       d.access,
       who,

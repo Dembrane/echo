@@ -29,7 +29,7 @@ export interface CanvasAccess {
 }
 
 function notFound(): NotFoundError {
-  return new NotFoundError("Not found");
+  return new NotFoundError("canvas.feature_off");
 }
 
 export function requireCanvasEnabled(d: AccessDeps): void {
@@ -37,11 +37,11 @@ export function requireCanvasEnabled(d: AccessDeps): void {
 }
 
 async function reach(d: AccessDeps, who: Principal, projectId: string) {
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
   const project = isUuid(projectId) ? await d.store.project(projectId) : null;
-  if (!project || project.deleted_at) throw new NotFoundError("Project not found");
+  if (!project || project.deleted_at) throw new NotFoundError("project.not_found");
   const pa = await resolveProject(d.accessStore, projectId, who, new Date());
-  if (!pa) throw new NotFoundError("Project not found");
+  if (!pa) throw new NotFoundError("project.not_found");
   return { project, pa };
 }
 
@@ -49,7 +49,7 @@ async function requirePolicy(d: AccessDeps, who: Principal, projectId: string, p
   try {
     return await d.access.project(who, projectId, policy);
   } catch (err) {
-    if (err instanceof ForbiddenError) throw new ForbiddenError("Not allowed");
+    if (err instanceof ForbiddenError) throw new ForbiddenError("access.forbidden");
     throw err;
   }
 }
@@ -81,13 +81,13 @@ export async function canvasReport(
 ): Promise<CanvasAccess & { report: Row }> {
   const report = await d.store.report(reportId);
   if (!report || report.deleted_at || !report.project_id)
-    throw new NotFoundError("Report not found");
+    throw new NotFoundError("report.not_found");
   const projectId = String(report.project_id);
   const { project } = await reach(d, who, projectId);
   await requirePolicy(d, who, projectId, "report:view");
   if (!d.canvasEnabled || !project.is_canvas_enabled) throw notFound();
   let access = await requirePolicy(d, who, projectId, "project:read");
-  if (report.kind !== "canvas") throw new NotFoundError("Canvas not found");
+  if (report.kind !== "canvas") throw new NotFoundError("canvas.not_found");
   for (const p of policies) access = await requirePolicy(d, who, projectId, p);
   return { project, access, report };
 }

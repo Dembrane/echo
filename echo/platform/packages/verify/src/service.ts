@@ -1,12 +1,6 @@
 import type { Policy } from "@dembrane/access";
 import { type ConversationsDeps, PARTICIPANT_TOKEN_HEADER } from "@dembrane/conversations";
-import {
-  BadRequestError,
-  ForbiddenError,
-  NotFoundError,
-  newId,
-  PlatformError,
-} from "@dembrane/core";
+import { BadRequestError, ForbiddenError, NotFoundError, newId, StatusError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
 import { renderPrompt } from "@dembrane/prompts";
@@ -17,12 +11,6 @@ export type VerifyDeps = Pick<
   ConversationsDeps,
   "db" | "access" | "audio" | "audioUrls" | "models" | "tokens" | "logger" | "now"
 >;
-
-/** 500 with the text the old API sent when the model call failed. */
-class GenerationError extends PlatformError {
-  readonly status = 500;
-  readonly code = "generation_failed";
-}
 
 export interface TopicView {
   key: string;
@@ -86,7 +74,7 @@ function selected(raw: string | null, topics: TopicView[]): string[] {
 
 async function projectOr404(ctx: Ctx, projectId: string) {
   const project = await ctx.store.project(projectId);
-  if (!project) throw new NotFoundError("Project not found");
+  if (!project) throw new NotFoundError("project.not_found");
   return project;
 }
 
@@ -109,13 +97,14 @@ export function getTopics(ctx: Ctx, projectId: string) {
  * keep the old text. Staff act through their own workspace role (H-14).
  */
 async function requireUpdate(ctx: Ctx, who: Signed, projectId: string) {
-  if (!who.appUserId) throw new ForbiddenError("Not authorized for this project");
+  if (!who.appUserId)
+    throw new ForbiddenError("project.no_access", { message: "Not authorized for this project" });
   const policy: Policy = "project:update";
   try {
     await ctx.d.access.project(who, projectId, policy);
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError)
-      throw new ForbiddenError("Not authorized for this project");
+      throw new ForbiddenError("project.no_access", { message: "Not authorized for this project" });
     throw err;
   }
 }
@@ -182,7 +171,7 @@ export async function updateCustomTopic(
   await projectOr404(ctx, projectId);
   await requireUpdate(ctx, who, projectId);
   const found = await ctx.store.customTopic(projectId, key);
-  if (!found) throw new NotFoundError("Custom topic not found for this project");
+  if (!found) throw new NotFoundError("verify.topic_not_found");
   const fields: { prompt?: string; icon?: string | null } = {};
   if (body.prompt !== null) fields.prompt = body.prompt;
   if (body.icon !== null) fields.icon = body.icon || null;
@@ -210,7 +199,7 @@ export async function deleteCustomTopic(ctx: Ctx, who: Signed, projectId: string
   const project = await projectOr404(ctx, projectId);
   await requireUpdate(ctx, who, projectId);
   if (!(await ctx.store.customTopic(projectId, key)))
-    throw new NotFoundError("Custom topic not found for this project");
+    throw new NotFoundError("verify.topic_not_found");
   await ctx.store.deleteTopic(key);
   const existing = project.selected_verification_key_list ?? "";
   const list = existing
@@ -247,7 +236,7 @@ function checkToken(ctx: Ctx, header: string | undefined, conversationId: string
 
 export async function listArtifacts(ctx: Ctx, conversationId: string, token: string | undefined) {
   const row = await ctx.store.conversation(conversationId);
-  if (!row) throw new NotFoundError("Conversation not found");
+  if (!row) throw new NotFoundError("conversation.not_found");
   checkToken(ctx, token, conversationId);
   const approved = (await ctx.store.artifacts(conversationId)).filter((a) => a.approved_at);
   // Newest approval first, compared as the timestamps Directus printed.
@@ -260,9 +249,9 @@ export async function listArtifacts(ctx: Ctx, conversationId: string, token: str
 }
 
 export async function getArtifact(ctx: Ctx, artifactId: string, token: string | undefined) {
-  if (!artifactId.trim()) throw new BadRequestError("The artifact_id field is required.");
+  if (!artifactId.trim()) throw new BadRequestError("verify.artifact_id_required");
   const a = await ctx.store.artifact(artifactId);
-  if (!a) throw new NotFoundError("Artifact not found");
+  if (!a) throw new NotFoundError("verify.artifact_not_found");
   if (a.conversation_id) checkToken(ctx, token, a.conversation_id);
   const v = artifactView(a, "");
   return {
@@ -284,10 +273,9 @@ export async function getArtifact(ctx: Ctx, artifactId: string, token: string | 
 async function verifiableConversation(ctx: Ctx, conversationId: string, token: string | undefined) {
   const row = await ctx.store.conversation(conversationId);
   if (!row || row.conversation.deleted_at || !row.project || row.project.deleted_at)
-    throw new NotFoundError("Conversation not found");
+    throw new NotFoundError("conversation.not_found");
   checkToken(ctx, token, conversationId);
-  if (!row.project.is_verify_enabled)
-    throw new ForbiddenError("Verify is not enabled for this project");
+  if (!row.project.is_verify_enabled) throw new ForbiddenError("verify.not_enabled");
   return row;
 }
 
@@ -358,7 +346,8 @@ async function complete(
     return text;
   } catch (err) {
     ctx.d.logger.error({ err }, "verify completion failed");
-    throw new GenerationError(failure);
+    // A 500 with the text the old API sent when the model call failed.
+    throw new StatusError(500, "verify.generation_failed", { message: failure });
   }
 }
 
@@ -374,7 +363,8 @@ export async function generateArtifact(
   const topics = await topicsFor(ctx, project.id);
   const targetKey = body.topic_list[0] ?? "";
   const target = topics.find((t) => t.key === targetKey);
-  if (!target?.prompt) throw new BadRequestError(`Verification topic '${targetKey}' not found`);
+  if (!target?.prompt)
+    throw new BadRequestError("verify.topic_unknown", { params: { topic: targetKey } });
 
   const artifacts = await ctx.store.artifacts(conv.id);
   const last = artifacts.at(-1);
@@ -382,9 +372,8 @@ export async function generateArtifact(
   const chunks = await ctx.store.chunks(conv.id);
   if (!chunks.length) {
     ctx.d.logger.error({ conversation: conv.id }, "verify blocked: conversation has no chunks yet");
-    throw new BadRequestError("Conversation has no chunks yet", {
-      code: "NO_CHUNKS",
-      message: "Conversation has no chunks yet",
+    throw new BadRequestError("verify.no_chunks", {
+      details: { code: "NO_CHUNKS", message: "Conversation has no chunks yet" },
     });
   }
   const audio = audioChunks(chunks, lastTime);
@@ -449,20 +438,20 @@ export async function updateArtifact(
   token: string | undefined,
 ) {
   if (!body.useConversation && body.content === null)
-    throw new BadRequestError("No updates provided");
+    throw new BadRequestError("request.nothing_to_update", { message: "No updates provided" });
   if (body.useConversation && body.content !== null)
-    throw new BadRequestError("Provide either useConversation or content, not both");
+    throw new BadRequestError("verify.content_conflict");
   const artifact = await ctx.store.artifact(artifactId);
-  if (!artifact) throw new NotFoundError("Artifact not found");
+  if (!artifact) throw new NotFoundError("verify.artifact_not_found");
   // H-2: the artifact's own conversation is the one that must be open for verify.
-  if (!artifact.conversation_id) throw new NotFoundError("Conversation not found");
+  if (!artifact.conversation_id) throw new NotFoundError("conversation.not_found");
   const row = await verifiableConversation(ctx, artifact.conversation_id, token);
   const updates: { content?: string; approved_at?: string } = {};
   if (body.approvedAt !== null) updates.approved_at = body.approvedAt;
   if (body.useConversation) {
     // H-2: revising could pull another conversation's transcript into this artifact.
     if (body.useConversation.conversationId !== artifact.conversation_id)
-      throw new BadRequestError("The artifact does not belong to this conversation");
+      throw new BadRequestError("verify.artifact_wrong_conversation");
     const project = row.project as NonNullable<typeof row.project>;
     const anonymized = Boolean(project.anonymize_transcripts);
     const chunks = await ctx.store.chunks(artifact.conversation_id);
@@ -476,9 +465,11 @@ export async function updateArtifact(
       .join("\n");
     const audio = audioChunks(chunks, ref);
     if (!feedback && !audio.length)
-      throw new BadRequestError("No new feedback found since provided timestamp", {
-        code: "NO_NEW_FEEDBACK",
-        message: "No new feedback found since provided timestamp",
+      throw new BadRequestError("verify.no_new_feedback", {
+        details: {
+          code: "NO_NEW_FEEDBACK",
+          message: "No new feedback found since provided timestamp",
+        },
       });
     const system = renderPrompt("revise_artifact", "en", {
       transcript: transcriptText(chunks) || "No transcript available.",
@@ -500,7 +491,10 @@ export async function updateArtifact(
       "Failed to revise verification artifact",
     );
   } else if (body.content !== null) updates.content = body.content;
-  if (!Object.keys(updates).length) throw new BadRequestError("No valid fields to update");
+  if (!Object.keys(updates).length)
+    throw new BadRequestError("request.nothing_to_update", {
+      message: "No valid fields to update",
+    });
   const updated = (await ctx.store.updateArtifact(artifactId, updates)) ?? artifact;
   const v = artifactView(updated, artifact.conversation_id);
   return {

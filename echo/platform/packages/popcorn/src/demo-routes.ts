@@ -59,7 +59,7 @@ export function popcornDemoRoutes(deps: DemoRoutesDeps) {
   return new Hono<Env>().post("/api/v2/admin/popcorn/demos", async (c) => {
     const who = requireUser(c);
     // Refused before the body is read: nothing about the request reaches a non-staff caller.
-    if (!hasStaffPolicy(who, "staff:workspaces")) throw new ForbiddenError("Staff-only");
+    if (!hasStaffPolicy(who, "staff:workspaces")) throw new ForbiddenError("access.staff_only");
     const { body } = await p.validate(c.req, { body: demoBody });
     const b = body.data;
     refuseProduction([...deps.ownUrls, b.portal_base_url, b.api_base_url]);
@@ -73,7 +73,7 @@ export function popcornDemoRoutes(deps: DemoRoutesDeps) {
     });
     let prospect: Awaited<ReturnType<ProspectHook>> | null = null;
     if (b.prospect) {
-      if (!deps.prospect) throw new ForbiddenError("Prospect seeding is not available here");
+      if (!deps.prospect) throw new ForbiddenError("popcorn.demo_prospect_unavailable");
       prospect = await deps.prospect(who, b.prospect, {
         slug: String(dict(b.session).slug ?? ""),
         requestId: c.get("requestId"),

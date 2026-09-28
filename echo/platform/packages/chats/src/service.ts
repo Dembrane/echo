@@ -22,7 +22,7 @@ const SUGGESTIONS_LIMIT = { name: "chat_suggestions", capacity: 10, windowSecond
 /** A caller-supplied project_id must be the chat's own (reads below are not tenant-scoped). */
 function assertProjectMatches(chat: ChatRow, projectId: string | null) {
   if (projectId !== null && projectId !== chatProjectId(chat))
-    throw new BadRequestError("project_id does not match this chat");
+    throw new BadRequestError("chat.project_mismatch");
 }
 
 const gate = (d: ChatDeps) => ({ access: d.access, store: d.store });
@@ -194,15 +194,11 @@ export async function addContext(d: ChatDeps, who: Signed, chatId: string, body:
   const given = [body.conversation_id, body.conversation_ids, body.select_all].filter(
     (v) => v !== null,
   ).length;
-  if (given === 0)
-    throw new BadRequestError("One of conversation_id, conversation_ids or select_all is required");
-  if (given > 1)
-    throw new BadRequestError(
-      "Only one of conversation_id, conversation_ids or select_all can be provided",
-    );
+  if (given === 0) throw new BadRequestError("chat.context_target_required");
+  if (given > 1) throw new BadRequestError("chat.context_target_ambiguous");
 
   if (body.select_all === true) {
-    if (!projectId) throw new BadRequestError("project_id is required when select_all is True");
+    if (!projectId) throw new BadRequestError("chat.select_all_needs_project");
     const all = await d.reads.listWithFilters({
       projectId,
       tagIds: body.tag_ids,
@@ -214,15 +210,14 @@ export async function addContext(d: ChatDeps, who: Signed, chatId: string, body:
   }
 
   if (body.conversation_ids !== null) {
-    if (!projectId)
-      throw new BadRequestError("project_id is required when conversation_ids is provided");
+    if (!projectId) throw new BadRequestError("chat.conversation_ids_need_project");
     const requested: string[] = [];
     for (const id of body.conversation_ids) if (id && !requested.includes(id)) requested.push(id);
-    if (!requested.length) throw new BadRequestError("conversation_ids cannot be empty");
+    if (!requested.length) throw new BadRequestError("chat.conversation_ids_empty");
     if (requested.length > MAX_ADD_CONTEXT_CONVERSATIONS)
-      throw new BadRequestError(
-        `Cannot add more than ${MAX_ADD_CONTEXT_CONVERSATIONS} conversations at once`,
-      );
+      throw new BadRequestError("chat.too_many_conversations", {
+        params: { max: MAX_ADD_CONTEXT_CONVERSATIONS },
+      });
     const found = await d.reads.listWithFilters({
       projectId,
       ids: requested,
@@ -241,27 +236,27 @@ export async function addContext(d: ChatDeps, who: Signed, chatId: string, body:
     // Spec H-4: the conversation must belong to the chat's project in every mode, or a
     // foreign conversation's row and participant name leak into the chat and its prompt.
     if (!conv || conv.project_id !== chatProjectId(chat))
-      throw new NotFoundError("Conversation not found");
+      throw new NotFoundError("conversation.not_found");
     if (projectId && conv.is_over_cap) {
       const tier = await d.reads.projectTier(projectId);
       if (conversationIsLocked(conv, tier))
-        throw new PaymentRequiredError("Conversation is locked", {
-          error: "conversation_locked",
-          message: "Conversation is locked, upgrade to add it to a chat.",
+        throw new PaymentRequiredError("conversation.locked", {
+          details: {
+            error: "conversation_locked",
+            message: "Conversation is locked, upgrade to add it to a chat.",
+          },
         });
     }
     const existing = new Set((chat.used_conversations ?? []).map((l) => l.conversation_id?.id));
     if (existing.has(body.conversation_id))
-      throw new BadRequestError("Conversation already in the chat");
+      throw new BadRequestError("chat.conversation_already_added");
     if (chat.chat_mode !== "agentic") {
       const tokens = await conversationTokenCount(d, body.conversation_id);
-      if (tokens > MAX_CHAT_CONTEXT_LENGTH) throw new BadRequestError("Conversation is too long");
+      if (tokens > MAX_CHAT_CONTEXT_LENGTH) throw new BadRequestError("chat.conversation_too_long");
       const ctx = await chatContext(d, who, chat);
       const usage = ctx.conversations.reduce((a, c) => a + c.token_usage, 0);
       if (usage + tokens / MAX_CHAT_CONTEXT_LENGTH > 1)
-        throw new BadRequestError(
-          "Chat context is too long. Remove other conversations to proceed.",
-        );
+        throw new BadRequestError("chat.context_full");
     }
     await d.store.attachConversations(chat.id, [body.conversation_id]);
   }
@@ -277,8 +272,8 @@ export async function deleteContext(
   await chatFor(gate(d), who, chatId);
   const ctx = await getContext(d, who, chatId);
   const entry = ctx.conversations.find((c) => c.conversation_id === conversationId);
-  if (!entry) throw new NotFoundError("Conversation not found in the chat");
-  if (entry.locked) throw new BadRequestError("Conversation is locked");
+  if (!entry) throw new NotFoundError("chat.conversation_not_in_chat");
+  if (entry.locked) throw new BadRequestError("conversation.locked");
   await d.store.detachConversation(chatId, conversationId);
   return null;
 }
@@ -340,9 +335,9 @@ export async function initializeMode(
   const { chat } = await chatFor(gate(d), who, chatId, { withUsed: true });
   assertProjectMatches(chat, body.project_id);
   if (chat.chat_mode !== null)
-    throw new BadRequestError(
-      `Chat mode is already set to '${chat.chat_mode}'. Start a new chat to use a different mode.`,
-    );
+    throw new BadRequestError("chat.mode_already_set", {
+      params: { mode: String(chat.chat_mode) },
+    });
   if (body.mode === "deep_dive") {
     await d.store.setChatMode(chatId, "deep_dive", d.now(), who.directusUserId);
     return {

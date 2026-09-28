@@ -26,7 +26,7 @@ const omit = <T extends object>(row: T | undefined, keys: readonly string[]) =>
 
 export async function findPerson(store: PrivacyStorage, email: string): Promise<Person> {
   const p = await store.person(email);
-  if (!p) throw new NotFoundError("No user with that email");
+  if (!p) throw new NotFoundError("privacy.person_not_found");
   return p;
 }
 
@@ -220,11 +220,14 @@ export async function erasePerson(
   opts: { allowOrphanOrgs: boolean },
 ) {
   const plan = await erasurePlan(d.store, p);
-  if (plan.blockers.length) throw new ConflictError(plan.blockers.join("; "));
+  if (plan.blockers.length)
+    throw new ConflictError("privacy.erase_blocked", {
+      params: { blockers: plan.blockers.join("; ") },
+    });
   if (plan.sole_admin_orgs.length && !opts.allowOrphanOrgs)
-    throw new ConflictError(
-      `Last owner or admin of ${plan.sole_admin_orgs.map((o) => o.name ?? o.id).join(", ")}: hand the organisation over, or pass allow_orphan_orgs`,
-    );
+    throw new ConflictError("privacy.sole_admin", {
+      params: { organisations: plan.sole_admin_orgs.map((o) => o.name ?? o.id).join(", ") },
+    });
   const exports = await d.store.exportKeys(p.id);
   const { files } = await d.store.erase(p);
   let filesDeleted = 0;

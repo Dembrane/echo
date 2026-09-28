@@ -50,13 +50,15 @@ export async function resendInvite(ctx: InviteCtx, who: Signed, inviteId: string
   const { store, now, deps } = ctx;
   const me = await onboardedUser(store, who);
   const l = await load(store, inviteId, false);
-  if (!l) throw new NotFoundError("Invite not found");
-  if (l.invite.accepted_at) throw new BadRequestError("Invite has already been accepted");
+  if (!l) throw new NotFoundError("invite.not_found");
+  if (l.invite.accepted_at)
+    throw new BadRequestError("invite.already_accepted", {
+      message: "Invite has already been accepted",
+    });
   const orgId = await orgOf(store, l);
-  if (!orgId) throw new NotFoundError("Invite not found");
+  if (!orgId) throw new NotFoundError("invite.not_found");
   const { orgAdmin, inviter } = await inviterOrOrgAdmin(store, orgId, l.invite.invited_by, me.id);
-  if (!(inviter || orgAdmin))
-    throw new ForbiddenError("Only the inviter or an org admin can resend");
+  if (!(inviter || orgAdmin)) throw new ForbiddenError("invite.resend_forbidden");
   await deps.limiter.check(RESEND_LIMIT, me.id);
 
   const expires = new Date(now.getTime() + 7 * 86_400_000).toISOString();
@@ -109,10 +111,13 @@ export async function revokeInvite(ctx: InviteCtx, who: Signed, inviteId: string
   const { store, now, deps } = ctx;
   const me = await onboardedUser(store, who);
   const l = await load(store, inviteId, true);
-  if (!l) throw new NotFoundError("Invite not found");
-  if (l.invite.accepted_at) throw new BadRequestError("Invite has already been accepted");
+  if (!l) throw new NotFoundError("invite.not_found");
+  if (l.invite.accepted_at)
+    throw new BadRequestError("invite.already_accepted", {
+      message: "Invite has already been accepted",
+    });
   const orgId = await orgOf(store, l);
-  if (!orgId) throw new NotFoundError("Invite not found");
+  if (!orgId) throw new NotFoundError("invite.not_found");
   const { orgAdmin, inviter } = await inviterOrOrgAdmin(store, orgId, l.invite.invited_by, me.id);
   let wsAdmin = false;
   if (l.type === "workspace" && !(inviter || orgAdmin)) {
@@ -124,8 +129,7 @@ export async function revokeInvite(ctx: InviteCtx, who: Signed, inviteId: string
     );
     wsAdmin = access?.role === "admin" || access?.role === "owner";
   }
-  if (!(inviter || orgAdmin || wsAdmin))
-    throw new ForbiddenError("Only the inviter or a workspace or org admin can revoke");
+  if (!(inviter || orgAdmin || wsAdmin)) throw new ForbiddenError("invite.revoke_forbidden");
   if (l.invite.deleted_at) return { status: "already_revoked", type: l.type };
   const patch = { deleted_at: now.toISOString() };
   if (l.type === "org") await store.updateOrgInvite(inviteId, patch);

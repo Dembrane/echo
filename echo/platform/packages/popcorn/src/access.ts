@@ -29,7 +29,7 @@ export interface Reached {
   readonly access: ProjectAccess;
 }
 
-const notFound = () => new NotFoundError("Not found");
+const notFound = () => new NotFoundError("popcorn.feature_disabled");
 
 /** require_popcorn_enabled: legacy decks stay while Present rolls out on its own switch. */
 export function requirePopcornEnabled(flags: PopcornFlags): void {
@@ -60,9 +60,9 @@ async function requirePolicy(d: AccessDeps, who: Principal, projectId: string, p
         () => null,
       );
       if (tier !== null && !meetsTier(tier, required))
-        throw new ForbiddenError(`This action requires the ${required} tier (currently ${tier}).`);
+        throw new ForbiddenError("billing.tier_required", { params: { required, tier } });
     }
-    throw new ForbiddenError("Not allowed");
+    throw new ForbiddenError("access.forbidden");
   }
 }
 
@@ -72,15 +72,15 @@ export async function reachProject(
   who: Principal,
   projectId: string,
 ): Promise<Reached> {
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
   const project = isUuid(projectId) ? await d.store.project(projectId) : null;
-  if (!project || project.deleted_at) throw new NotFoundError("Project not found");
+  if (!project || project.deleted_at) throw new NotFoundError("project.not_found");
   const access = await d.access.project(who, projectId, "project:read").catch((err) => {
     if (err instanceof ForbiddenError) return null;
     throw err;
   });
   // A role without project:read reaches nothing (spec 8.2): the same 404 as no role.
-  if (!access) throw new NotFoundError("Project not found");
+  if (!access) throw new NotFoundError("project.not_found");
   return { project, access };
 }
 
@@ -128,13 +128,13 @@ export async function popcornReport(
 ): Promise<Reached & { report: Row }> {
   const report = await d.store.report(reportId);
   if (!report || report.deleted_at || !report.project_id)
-    throw new NotFoundError("Report not found");
+    throw new NotFoundError("report.not_found");
   const projectId = String(report.project_id);
   const { project } = await reachProject(d, who, projectId);
   await requirePolicy(d, who, projectId, "report:view");
   requireProjectPopcornEnabled(d.flags, project);
   let access = await requirePolicy(d, who, projectId, "project:read");
-  if (report.kind !== REPORT_KIND) throw new NotFoundError("Popcorn not found");
+  if (report.kind !== REPORT_KIND) throw new NotFoundError("popcorn.not_found");
   for (const p of policies) access = await requirePolicy(d, who, projectId, p);
   return { project, access, report };
 }

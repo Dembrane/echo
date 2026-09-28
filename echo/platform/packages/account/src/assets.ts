@@ -49,7 +49,7 @@ async function folderChain(db: Db, folderId: string | null): Promise<string[]> {
 export function assetRoutes(deps: { db: Db; files: ObjectStorage }) {
   return new Hono<Env>().get("/api/assets/:file_id", async (c) => {
     const id = c.req.param("file_id");
-    const missing = new NotFoundError("File not found");
+    const missing = new NotFoundError("upload.file_not_found");
     if (!UUID.test(id)) throw missing;
     const [file] = await deps.db
       .select({

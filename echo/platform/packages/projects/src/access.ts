@@ -31,10 +31,10 @@ export async function projectFor(
 ): Promise<ProjectAccess> {
   if (!who.appUserId && surface !== "any") {
     throw surface === "bff"
-      ? new ForbiddenError("User not onboarded")
-      : new NotFoundError("Project not found");
+      ? new ForbiddenError("access.not_onboarded")
+      : new NotFoundError("project.not_found");
   }
-  if (!isUuid(projectId)) throw new NotFoundError("Project not found");
+  if (!isUuid(projectId)) throw new NotFoundError("project.not_found");
   try {
     return await access.project(who, projectId, policy);
   } catch (err) {
@@ -74,13 +74,14 @@ export async function workspaceFor(
   exists: (id: string) => Promise<boolean>,
   denied = "Access denied",
 ): Promise<WorkspaceAccess> {
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
-  if (!(await exists(workspaceId))) throw new NotFoundError("Workspace not found");
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
+  if (!(await exists(workspaceId))) throw new NotFoundError("workspace.not_found");
   try {
     return await access.workspace(who, workspaceId, policy);
   } catch (err) {
-    if (err instanceof NotFoundError) throw new ForbiddenError("No access to this workspace");
-    if (err instanceof ForbiddenError) throw new ForbiddenError(denied);
+    if (err instanceof NotFoundError) throw new ForbiddenError("workspace.no_access");
+    if (err instanceof ForbiddenError)
+      throw new ForbiddenError("access.forbidden", { message: denied });
     throw err;
   }
 }
@@ -99,9 +100,9 @@ async function refusal(
   if (required) {
     const tier = await tierOf();
     if (tier !== null && !meetsTier(tier, required))
-      return new ForbiddenError(`This action requires the ${required} tier (currently ${tier}).`);
+      return new ForbiddenError("billing.tier_required", { params: { required, tier } });
   }
-  return new ForbiddenError(denied);
+  return new ForbiddenError("access.forbidden", { message: denied });
 }
 
 /**

@@ -1,0 +1,53 @@
+import type { Codes } from "./types";
+
+/** Problems with the request itself rather than with what it asks for. */
+export const request = {
+  "request.invalid": {
+    action: "fix_input",
+    detail: "Bad Request",
+    description: "A malformed request no more specific code describes.",
+  },
+  "request.invalid_json": {
+    action: "fix_input",
+    detail: "Body is not valid JSON",
+    description: "The body could not be parsed as JSON.",
+  },
+  "request.nothing_to_update": {
+    action: "fix_input",
+    detail: "No fields to update",
+    description: "An update named no field to change.",
+  },
+  "request.field_required": {
+    action: "fix_input",
+    detail: "{field} is required",
+    description: "A service-level check found a required field missing or blank.",
+  },
+  "request.field_empty": {
+    action: "fix_input",
+    detail: "{field} cannot be empty",
+    description: "An optional field was sent, but blank.",
+  },
+  "request.route_not_found": {
+    action: "none",
+    detail: "Not Found",
+    audience: "developer",
+    description: "No route matches the method and path.",
+  },
+  "request.too_large": {
+    action: "fix_input",
+    detail: "Payload Too Large",
+    description: "The request body is larger than the server accepts.",
+  },
+  "request.tampered": {
+    action: "none",
+    detail: "Invalid request",
+    audience: "developer",
+    description: "A bot trap was filled in or a signed link was altered.",
+  },
+  "request.month_offset_out_of_range": {
+    action: "fix_input",
+    detail: "month_offset must be 0–12",
+    audience: "developer",
+    description: "A usage query asked for a month further back than 12 or in the future.",
+  },
+} as const satisfies Codes<"request">;
