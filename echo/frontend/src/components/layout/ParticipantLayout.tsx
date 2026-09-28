@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
-import { DIRECTUS_PUBLIC_URL } from "@/config";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
+import { logoUrl } from "@/lib/avatar";
 import { useParticipantProjectById } from "../participant/hooks";
 import { I18nProvider } from "./I18nProvider";
 import { ParticipantHeader } from "./ParticipantHeader";
@@ -17,12 +17,8 @@ export const ParticipantLayout = () => {
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 
 	useEffect(() => {
-		const logoFileId = projectQuery.data?.whitelabel_logo_url;
-		if (logoFileId) {
-			setLogoUrl(`${DIRECTUS_PUBLIC_URL}/assets/${logoFileId}`);
-		} else {
-			setLogoUrl(null);
-		}
+		// A file id, or an absolute URL on older workspace rows.
+		setLogoUrl(logoUrl(projectQuery.data?.whitelabel_logo_url) ?? null);
 	}, [projectQuery.data, setLogoUrl]);
 
 	if (isReportPage) {

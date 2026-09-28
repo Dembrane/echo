@@ -1,4 +1,3 @@
-import type { Query } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -53,6 +52,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { getConversationContentLink } from "@/lib/api";
+import type { ListQuery } from "@/lib/listQuery";
 import { testId } from "@/lib/testUtils";
 import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import { ConversationStatusIndicators } from "./ConversationAccordion";
@@ -597,7 +597,7 @@ export const ProjectConversationsPanel = ({
 				},
 				search: debouncedSearch,
 				sort: sortBy,
-			}) as Partial<Query<CustomDirectusTypes, Conversation>>,
+			}) as Partial<ListQuery<Conversation>>,
 		[projectId, selectedTagIds, showOnlyVerified, debouncedSearch, sortBy],
 	);
 

@@ -1,7 +1,15 @@
-import { DIRECTUS_PUBLIC_URL } from "@/config";
+import { API_BASE_URL } from "@/config";
 
 /**
- * Resolve a Directus file id → asset URL for <Avatar src={...}>.
+ * The URL of an uploaded file (avatar or logo) by its file id. The API serves the original
+ * image; the browser scales it to the box it is shown in.
+ */
+export function assetUrl(fileId: string): string {
+	return `${API_BASE_URL}/assets/${fileId}`;
+}
+
+/**
+ * Resolve a file id → asset URL for <Avatar src={...}>.
  *
  * The backend hands us the raw `directus_users.avatar` column, which is
  * a file UUID, not a URL. Passing the UUID directly to <img src> silently
@@ -14,14 +22,15 @@ export function avatarUrl(
 	size = 64,
 ): string | undefined {
 	if (!fileId) return undefined;
-	return `${DIRECTUS_PUBLIC_URL}/assets/${fileId}?width=${size}&height=${size}&fit=cover`;
+	void size; // the API serves one size; kept so call sites stay unchanged
+	return assetUrl(fileId);
 }
 
 /**
  * Resolve a workspace/organisation `logo_url` value → displayable URL.
  *
  * The column can hold two shapes:
- *   - Bare Directus file_id (new upload endpoint writes this)
+ *   - Bare file_id (the upload endpoint writes this)
  *   - Absolute http(s) URL (legacy rows, or pasted-in external logos)
  *
  * Return undefined for empty values so callers can fall through to an
@@ -36,7 +45,7 @@ export function logoUrl(
 	if (trimmed.toLowerCase().startsWith("http://") || trimmed.toLowerCase().startsWith("https://")) {
 		return trimmed;
 	}
-	return `${DIRECTUS_PUBLIC_URL}/assets/${trimmed}`;
+	return assetUrl(trimmed);
 }
 
 /**

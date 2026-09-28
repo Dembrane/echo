@@ -122,8 +122,6 @@ export default defineConfig(({ mode }) => {
 	const buildId = resolveBuildId();
 	const devApiProxyTarget =
 		process.env.VITE_DEV_API_PROXY || "http://localhost:8000/";
-	const devDirectusProxyTarget =
-		process.env.VITE_DEV_DIRECTUS_PROXY || "http://directus:8055";
 	// On by default in every build so no per-deploy env var is needed: whether
 	// the agentation overlay actually renders is decided at runtime by
 	// ENABLE_AGENTATION in src/config.ts (off in production). The cost of
@@ -188,15 +186,6 @@ export default defineConfig(({ mode }) => {
 						return path;
 					},
 					target: devApiProxyTarget,
-				},
-				"/directus": {
-					changeOrigin: true,
-					rewrite: (path) => {
-						const newPath = path.replace(/^\/directus/, "/");
-						console.log("Proxying request to", newPath);
-						return newPath;
-					},
-					target: devDirectusProxyTarget,
 				},
 			},
 		},

@@ -17,7 +17,8 @@ import { useRef, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
-import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
+import { API_BASE_URL } from "@/config";
+import { assetUrl } from "@/lib/avatar";
 import { toast } from "../common/Toaster";
 
 export const WhitelabelLogoCard = () => {
@@ -25,9 +26,7 @@ export const WhitelabelLogoCard = () => {
 	const queryClient = useQueryClient();
 
 	const logoFileId = user?.whitelabel_logo as string | null;
-	const logoUrl = logoFileId
-		? `${DIRECTUS_PUBLIC_URL}/assets/${logoFileId}`
-		: null;
+	const logoUrl = logoFileId ? assetUrl(logoFileId) : null;
 
 	const resetFileInputRef = useRef<() => void>(null);
 	const [cropSrc, setCropSrc] = useState<string | null>(null);

@@ -104,12 +104,6 @@ export const PARTICIPANT_BASE_URL =
 export const API_BASE_URL =
 	RUNTIME?.apiBase ?? byEnv({ local: "/api" }, `${dembraneHost("api")}/api`);
 
-export const DIRECTUS_PUBLIC_URL = byEnv(
-	// Local dev goes through the Vite proxy so cookies stay same-origin.
-	{ local: `${globalThis.window?.location.origin ?? ""}/directus` },
-	dembraneHost("directus"),
-);
-
 // ---------------------------------------------------------------------------
 // PostHog (analytics)
 //

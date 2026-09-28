@@ -1,24 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	isReadByMe,
-	isUnreadByMe,
-	notExpiredFilter,
-} from "./announcementFilters";
-
-const NOW = "2026-08-12T00:00:00.000Z";
-
-describe("notExpiredFilter", () => {
-	it("accepts a future expiry or no expiry at all", () => {
-		expect(notExpiredFilter(NOW)).toEqual({
-			_or: [{ expires_at: { _gte: NOW } }, { expires_at: { _null: true } }],
-		});
-	});
-
-	it("defaults to the current time when none is given", () => {
-		const gte = notExpiredFilter()._or[0].expires_at._gte;
-		expect(Number.isNaN(Date.parse(gte))).toBe(false);
-	});
-});
+import { isReadByMe, isUnreadByMe } from "./announcementFilters";
 
 describe("isReadByMe / isUnreadByMe", () => {
 	it("treats no activity row as unread", () => {

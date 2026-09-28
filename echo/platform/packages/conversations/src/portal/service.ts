@@ -1,5 +1,6 @@
 import { ForbiddenError, NotFoundError, newId } from "@echo/core";
 import { schema } from "@echo/db";
+import { directusTime } from "@echo/http";
 import { pydanticIso } from "@echo/legacy-shape";
 import { effectiveLegalBasis, isExternalClient } from "@echo/projects";
 import { enqueueConversationEvent, webhooksStorage } from "@echo/webhooks";
@@ -197,6 +198,18 @@ export async function participantChunks(d: PortalDeps, projectId: string, id: st
   await ownConversation(d, projectId, id);
   const chunks = await conversationStore(d.db).chunksNewestFirst(id, 1200);
   return chunks.map(publicChunk);
+}
+
+/**
+ * The replies under a conversation, for the portal. Directus served these to anyone by id
+ * (spec C-6); here the conversation must belong to the project and the participant token,
+ * once required, must name it. A project closed to new conversations still shows replies.
+ */
+export async function participantReplies(d: PortalDeps, projectId: string, id: string) {
+  const conv = await conversationStore(d.db).conversation(id);
+  if (!conv || conv.project_id !== projectId) throw new NotFoundError("Conversation not found");
+  const rows = await portalStore(d.db).replies(conv.id);
+  return rows.map((r) => ({ ...r, date_created: directusTime(r.date_created) }));
 }
 
 /**

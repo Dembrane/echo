@@ -1,7 +1,6 @@
-import { readItem } from "@directus/sdk";
 import { useParams } from "react-router";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
-import { directus } from "@/lib/directus";
+import { bff } from "@/lib/bff";
 
 export const useCopyQuote = () => {
 	const { language, workspaceId, projectId } = useParams<{
@@ -16,24 +15,7 @@ export const useCopyQuote = () => {
 		const fetchAndFormat = async () => {
 			const stringBuilder: string[] = [];
 
-			// @ts-expect-error - Directus SDK has incorrect types for nested fields
-			const quote: AspectSegment = await directus.request(
-				readItem("aspect_segment", quoteId, {
-					fields: [
-						"id",
-						"description",
-						"verbatim_transcript",
-						"relevant_index",
-						{
-							segment: [
-								{
-									conversation_id: ["id", "participant_name", "created_at"],
-								},
-							],
-						},
-					],
-				}),
-			);
+			const quote = await bff.get<AspectSegment>(`/aspect-segments/${quoteId}`);
 
 			const conversation = (quote.segment as ConversationSegment)
 				?.conversation_id as Conversation;

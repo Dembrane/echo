@@ -15,9 +15,6 @@ importers:
       '@ai-sdk/react':
         specifier: ^1.2.12
         version: 1.2.12(react@19.0.0)(zod@3.24.2)
-      '@directus/sdk':
-        specifier: ^20.1.1
-        version: 20.1.1
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -831,10 +828,6 @@ packages:
   '@csstools/css-tokenizer@4.0.0':
     resolution: {integrity: sha512-QxULHAm7cNu72w97JUNCBFODFaXpbDg+dP8b/oWFAZ2MTRppA3U00Y2L1HqaS4J6yBqxwa/Y3nMBaxVKbB/NsA==}
     engines: {node: '>=20.19.0'}
-
-  '@directus/sdk@20.1.1':
-    resolution: {integrity: sha512-cCWvxDRKOygVHBkKA7l1I4O4niomK8SKR/+Ul1L9NFF1K2zAf3jRqhjc7JavCECOiiAWME/s2wYatNFqFFh0gQ==}
-    engines: {node: '>=22'}
 
   '@dnd-kit/accessibility@3.1.1':
     resolution: {integrity: sha512-2P+YgaXF+gRsIihwwY1gCsQSYnu9Zyj2py8kY5fFvUM1qm2WA2u639R6YNVfU4GWr+ZM5mqEsfHZZLoRONbemw==}
@@ -6287,8 +6280,6 @@ snapshots:
       css-tree: 3.2.1
 
   '@csstools/css-tokenizer@4.0.0': {}
-
-  '@directus/sdk@20.1.1': {}
 
   '@dnd-kit/accessibility@3.1.1(react@19.0.0)':
     dependencies:

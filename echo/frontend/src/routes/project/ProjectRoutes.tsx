@@ -92,7 +92,6 @@ export const ProjectSettingsRoute = () => {
 	);
 	const projectQuery = useProjectById({
 		projectId: projectId ?? "",
-		// @ts-expect-error tags field structure not properly typed in Directus SDK
 		query,
 	});
 	return (
@@ -279,7 +278,6 @@ export const ProjectPortalSettingsRoute = () => {
 	);
 	const projectQuery = useProjectById({
 		projectId: projectId ?? "",
-		// @ts-expect-error tags field structure not properly typed in Directus SDK
 		query,
 	});
 	const verificationTopicsQuery = useVerificationTopicsQuery(projectId);
@@ -329,7 +327,6 @@ export const ProjectAccessRoute = () => {
 	);
 	const projectQuery = useProjectById({
 		projectId: projectId ?? "",
-		// @ts-expect-error tags field structure not properly typed in Directus SDK
 		query,
 	});
 

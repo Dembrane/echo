@@ -10,6 +10,7 @@ import {
   initiate,
   participantChunks,
   participantConversation,
+  participantReplies,
   publicChunk,
   publicConversation,
   publicProject,
@@ -101,6 +102,15 @@ export function portalRoutes(d: ConversationsDeps) {
       const [pid, cid] = [c.req.param("project_id"), c.req.param("conversation_id")];
       d.tokens.check(token(c), cid, pid);
       return c.json(await participantChunks(d, pid, cid));
+    },
+  );
+
+  app.get(
+    "/api/participant/projects/:project_id/conversations/:conversation_id/replies",
+    async (c) => {
+      const [pid, cid] = [c.req.param("project_id"), c.req.param("conversation_id")];
+      d.tokens.check(token(c), cid, pid);
+      return c.json(await participantReplies(d, pid, cid));
     },
   );
 

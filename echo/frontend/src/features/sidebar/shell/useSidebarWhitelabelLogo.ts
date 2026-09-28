@@ -1,10 +1,9 @@
 import { useEffect } from "react";
 import { useAuthenticated, useCurrentUser } from "@/components/auth/hooks";
-import { DIRECTUS_PUBLIC_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { logoUrl as resolveLogoUrl } from "@/lib/avatar";
+import { assetUrl, logoUrl as resolveLogoUrl } from "@/lib/avatar";
 import { useSidebarView } from "../hooks/useSidebarView";
 
 // Mirrors the resolver effect that used to live in Header.tsx. Picks
@@ -34,9 +33,7 @@ export function useSidebarWhitelabelLogo(): void {
 			: undefined;
 		const resolved =
 			workspaceLogo ??
-			(user?.whitelabel_logo
-				? `${DIRECTUS_PUBLIC_URL}/assets/${user.whitelabel_logo}`
-				: null);
+			(user?.whitelabel_logo ? assetUrl(user.whitelabel_logo) : null);
 		setLogoUrl(resolved ?? null);
 	}, [
 		isAuthenticated,

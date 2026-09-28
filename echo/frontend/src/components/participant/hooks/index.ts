@@ -1,4 +1,3 @@
-import { createItem, readItems } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -8,13 +7,13 @@ import {
 	confirmConversationChunkUpload,
 	getParticipantConversationById,
 	getParticipantConversationChunks,
+	getParticipantConversationReplies,
 	getParticipantProjectById,
 	initiateConversation,
 	submitNotificationParticipant,
 	uploadConversationChunk,
 	uploadConversationText,
 } from "@/lib/api";
-import { directus } from "@/lib/directus";
 
 const uploadFailureStage = (
 	message: string,
@@ -22,40 +21,6 @@ const uploadFailureStage = (
 	if (message.includes("upload URL")) return "presigned_url";
 	if (message.includes("S3")) return "s3_put";
 	return "confirm";
-};
-
-export const useCreateProjectReportMetricOncePerDayMutation = () => {
-	return useMutation({
-		mutationFn: ({ payload }: { payload: Partial<ProjectReportMetric> }) => {
-			const key = `rm_${payload.project_report_id}_updated`;
-			let shouldUpdate = false;
-
-			try {
-				const lastUpdated = localStorage.getItem(key);
-				if (!lastUpdated) {
-					shouldUpdate = true;
-				} else {
-					const lastUpdateTime = new Date(lastUpdated).getTime();
-					const currentTime = Date.now();
-					const hoursDiff = (currentTime - lastUpdateTime) / (1000 * 60 * 60);
-					shouldUpdate = hoursDiff >= 24;
-				}
-
-				if (shouldUpdate) {
-					localStorage.setItem(key, new Date().toISOString());
-				}
-			} catch (_e) {
-				// Ignore localStorage errors
-				shouldUpdate = true;
-			}
-
-			if (!shouldUpdate) {
-				return Promise.resolve(null);
-			}
-
-			return directus.request(createItem("project_report_metric", payload));
-		},
-	});
 };
 
 export const useConfirmConversationChunkUpload = () => {
@@ -376,18 +341,13 @@ export const combineUserChunks = (
 };
 
 export const useConversationRepliesQuery = (
+	projectId: string | undefined,
 	conversationId: string | undefined,
 ) => {
 	return useQuery({
-		enabled: !!conversationId,
+		enabled: !!conversationId && !!projectId,
 		queryFn: () =>
-			directus.request(
-				readItems("conversation_reply", {
-					fields: ["id", "content_text", "date_created", "type"],
-					filter: { conversation_id: { _eq: conversationId } },
-					sort: ["date_created"],
-				}),
-			),
+			getParticipantConversationReplies(projectId ?? "", conversationId ?? ""),
 		queryKey: ["participant", "conversation_replies", conversationId],
 		// refetchInterval: 15000,
 	});

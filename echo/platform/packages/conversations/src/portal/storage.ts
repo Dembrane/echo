@@ -3,11 +3,28 @@ import { schema } from "@echo/db";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { isUuid } from "../storage";
 
-const { project_tag, workspace, org, directus_users, billing_account } = schema;
+const { project_tag, workspace, org, directus_users, billing_account, conversation_reply } = schema;
 
 /** The rows the portal's project page reads besides the project itself. */
 export function portalStore(db: Db) {
   return {
+    /**
+     * The replies the portal shows under a conversation, oldest first. They are written with
+     * `conversation_id` (the text column), not the `reply` relation, so that is the key.
+     */
+    async replies(conversationId: string) {
+      return db
+        .select({
+          id: conversation_reply.id,
+          content_text: conversation_reply.content_text,
+          date_created: conversation_reply.date_created,
+          type: conversation_reply.type,
+        })
+        .from(conversation_reply)
+        .where(eq(conversation_reply.conversation_id, conversationId))
+        .orderBy(asc(conversation_reply.date_created), asc(conversation_reply.id));
+    },
+
     /** `tags.id, tags.created_at, tags.text` with Directus's default o2m order (by id). */
     async projectTags(projectId: string) {
       if (!isUuid(projectId)) return [];
