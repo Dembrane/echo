@@ -78,9 +78,10 @@ export class ExecutorHeartbeat {
   async queueHealth(names: readonly string[]) {
     if (!names.length) return [];
     const rows = await this.sql<
-      { queue_name: string; status: string; delayed: boolean; n: number }[]
+      { queue_name: string; status: string; delayed: boolean; n: number; oldest_s: number | null }[]
     >`
-      select queue_name, status, (status = 'DELAYED') as delayed, count(*)::int as n
+      select queue_name, status, (status = 'DELAYED') as delayed, count(*)::int as n,
+        (extract(epoch from now()) - min(created_at) / 1000.0)::float8 as oldest_s
       from dbos.workflow_status
       where queue_name = any(${names as string[]}) and status in ('ENQUEUED', 'DELAYED', 'PENDING', 'ERROR')
         and (status <> 'ERROR' or updated_at > (extract(epoch from now() - interval '1 day') * 1000))
@@ -88,12 +89,17 @@ export class ExecutorHeartbeat {
     return names.map((name) => {
       const of = (s: string) =>
         rows.filter((r) => r.queue_name === name && r.status === s).reduce((a, r) => a + r.n, 0);
+      const oldest = (q: string) => {
+        const r = rows.find((r) => r.queue_name === q && r.status === "ENQUEUED");
+        return r?.oldest_s == null ? null : Math.round(r.oldest_s);
+      };
       return {
         name,
         ready: of("ENQUEUED"),
         active: of("PENDING"),
         failed: of("ERROR"),
         deferred: of("DELAYED"),
+        oldestReadyS: oldest(name),
       };
     });
   }
