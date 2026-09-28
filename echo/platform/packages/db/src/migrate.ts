@@ -34,7 +34,7 @@ export interface MigrateOptions {
 /**
  * Environments whose data is disposable (built from seeds or a template), so a contract
  * migration may drop tables there without an archive. Every other environment holds data
- * someone may need back (echo-next, prod), and 0011 alone drops about 21 GB of it.
+ * someone may need back (echo-next, prod), and 0012 alone drops about 21 GB of it.
  */
 export const ARCHIVE_EXEMPT_ENVS: readonly string[] = ["local", "test", "preview"];
 export const ARCHIVE_SCRIPT = "packages/db/scripts/archive-tables.sh";

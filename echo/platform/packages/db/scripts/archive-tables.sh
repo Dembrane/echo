@@ -18,7 +18,7 @@
 # PG_DUMP, PSQL override the binaries, e.g. "docker exec -i parity-db-1 pg_dump" for a
 #               local run. pg_dump must be at least the server's major version.
 # ARCHIVE_FOR   the contract migration this archive clears. Defaults to
-#               0011_contract_dead_features for the default set; a named table list clears
+#               0012_contract_dead_features for the default set; a named table list clears
 #               nothing unless ARCHIVE_FOR is given, so a partial archive cannot unblock it.
 set -euo pipefail
 
@@ -27,7 +27,7 @@ dest_root="${ARCHIVE_DEST:-gs://dembrane-echo-archive}"
 pg_dump_cmd=(${PG_DUMP:-pg_dump})
 psql_cmd=(${PSQL:-psql})
 
-# The contract migration 0011_contract_dead_features drops these.
+# The contract migration 0012_contract_dead_features drops these.
 default_tables=(
   view aspect aspect_segment insight project_analysis_run
   conversation_segment conversation_segment_conversation_chunk
@@ -39,7 +39,7 @@ tables=("$@")
 archive_for="${ARCHIVE_FOR:-}"
 if [[ ${#tables[@]} -eq 0 ]]; then
   tables=("${default_tables[@]}")
-  archive_for="${ARCHIVE_FOR:-0011_contract_dead_features}"
+  archive_for="${ARCHIVE_FOR:-0012_contract_dead_features}"
 fi
 
 q() { "${psql_cmd[@]}" "$DATABASE_URL" -At -v ON_ERROR_STOP=1 -c "$1"; }

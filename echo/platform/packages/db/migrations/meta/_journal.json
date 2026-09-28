@@ -82,8 +82,15 @@
     {
       "idx": 11,
       "version": "7",
+      "when": 1790586540500,
+      "tag": "0011_expand_prod_catchup",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
       "when": 1790586541043,
-      "tag": "0011_contract_dead_features",
+      "tag": "0012_contract_dead_features",
       "breakpoints": true
     }
   ]
