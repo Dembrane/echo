@@ -13,7 +13,6 @@ import {
 	useConversationRepliesQuery,
 	useParticipantProjectById,
 } from "@/components/participant/hooks";
-import { useConversationIssueBanner } from "@/components/participant/hooks/useConversationIssueBanner";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { testId } from "@/lib/testUtils";
 import { ConnectionHealthStatus } from "../common/ConnectionHealthStatus";
@@ -30,8 +29,7 @@ export const ParticipantBody = ({
 	interleaveMessages = true,
 	isRecording = false,
 	isAnonymized = false,
-	conversationIssue,
-	sseConnectionHealthy = true,
+	connectionHealthy = true,
 }: PropsWithChildren<{
 	projectId: string;
 	conversationId: string;
@@ -39,9 +37,8 @@ export const ParticipantBody = ({
 	interleaveMessages?: boolean;
 	isRecording?: boolean;
 	isAnonymized?: boolean;
-	/** From the one health stream, owned by the recording screen above. */
-	conversationIssue?: string | null;
-	sseConnectionHealthy?: boolean;
+	/** From the recording screen's liveness ping. */
+	connectionHealthy?: boolean;
 }>) => {
 	const [ref] = useAutoAnimate();
 	const [chatRef] = useAutoAnimate();
@@ -109,10 +106,6 @@ export const ParticipantBody = ({
 		}
 	}, [interleaveMessages]);
 
-	const conversationIssueBanner = useConversationIssueBanner(
-		conversationIssue ?? "NONE",
-	);
-
 	return (
 		<Stack ref={ref} className="max-h-full">
 			<Toaster position="top-center" richColors />
@@ -130,7 +123,7 @@ export const ParticipantBody = ({
 				<div className="flex justify-center transition-opacity duration-500 ease-in-out">
 					<ConnectionHealthStatus
 						isOnline={isOnline}
-						sseConnectionHealthy={sseConnectionHealthy}
+						connectionHealthy={connectionHealthy}
 					/>
 				</div>
 			)}
@@ -144,20 +137,11 @@ export const ParticipantBody = ({
 				/>
 			)}
 
-			{!sseConnectionHealthy && (
+			{!connectionHealthy && (
 				<TipBanner
 					icon={IconExclamationCircle}
 					message={t`Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists`}
 					color="yellow"
-				/>
-			)}
-
-			{conversationIssueBanner && (
-				<TipBanner
-					icon={conversationIssueBanner.icon}
-					message={conversationIssueBanner.message}
-					tipLabel={conversationIssueBanner.tipLabel}
-					color={conversationIssueBanner.color}
 				/>
 			)}
 

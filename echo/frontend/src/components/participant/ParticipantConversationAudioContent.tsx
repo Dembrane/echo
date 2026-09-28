@@ -26,11 +26,10 @@ import { VerifiedArtefactsList } from "./verify/VerifiedArtefactsList";
 const VERIFICATION_BANNER_THRESHOLD_SECONDS = 60;
 
 type OutletContextType = {
-	/** The one health stream, owned by the recording screen above. */
-	conversationIssue?: string | null;
+	/** From the recording screen's liveness ping. */
+	connectionHealthy?: boolean;
 	isRecording: boolean;
 	recordingTime: number;
-	sseConnectionHealthy?: boolean;
 };
 
 export const ParticipantConversationAudioContent = () => {
@@ -40,12 +39,8 @@ export const ParticipantConversationAudioContent = () => {
 
 	const { projectId, conversationId } = useParams();
 	const [searchParams, setSearchParams] = useSearchParams();
-	const {
-		conversationIssue,
-		isRecording,
-		recordingTime,
-		sseConnectionHealthy,
-	} = useOutletContext<OutletContextType>();
+	const { connectionHealthy, isRecording, recordingTime } =
+		useOutletContext<OutletContextType>();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const conversationQuery = useConversationQuery(projectId, conversationId);
 	const [_isRefineDisabled, _setIsRefineDisabled, removeValue] =
@@ -147,8 +142,7 @@ export const ParticipantConversationAudioContent = () => {
 					conversationId={conversationId ?? ""}
 					isRecording={isRecording}
 					isAnonymized={conversationQuery.data?.is_anonymized ?? false}
-					conversationIssue={conversationIssue}
-					sseConnectionHealthy={sseConnectionHealthy}
+					connectionHealthy={connectionHealthy}
 				/>
 			)}
 

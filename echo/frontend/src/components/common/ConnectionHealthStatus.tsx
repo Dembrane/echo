@@ -3,14 +3,14 @@ import { Group, Text } from "@mantine/core";
 
 type Props = {
 	isOnline: boolean;
-	sseConnectionHealthy: boolean;
+	connectionHealthy: boolean;
 };
 
 export const ConnectionHealthStatus = ({
 	isOnline,
-	sseConnectionHealthy,
+	connectionHealthy,
 }: Props) => {
-	const isHealthy = isOnline && sseConnectionHealthy;
+	const isHealthy = isOnline && connectionHealthy;
 
 	// A healthy connection is the expected case and says nothing a participant
 	// can act on. Only trouble earns a line on the screen.
