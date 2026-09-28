@@ -49,50 +49,10 @@ export interface AgentAccessRoutesDeps {
 /** Open registration is limited per address (spec L-18): enough for any real client. */
 const REGISTER_LIMIT = { name: "agent_register", capacity: 20, windowSeconds: 3600 };
 
-/** Paths answered for OAuth clients from any origin (they carry their own CORS rules). */
-export function isAgentOAuthPath(path: string): boolean {
-  return (
-    path.startsWith("/.well-known/oauth-") ||
-    path === `${MCP_PATH}/.well-known/oauth-authorization-server` ||
-    path === `${MCP_PATH}/token` ||
-    path === `${MCP_PATH}/register` ||
-    path === `${MCP_PATH}/revoke`
-  );
-}
-
 const reply = (r: { status: number; body: unknown; headers?: Record<string, string> }) =>
   r.body === null
     ? new Response(null, { status: r.status, ...(r.headers && { headers: r.headers }) })
     : json(r.status, r.body, r.headers);
-
-/**
- * CORS as the SDK's Starlette middleware applied it to the OAuth endpoints: any origin,
- * the route's methods, and the MCP protocol version header, so browser-based clients such
- * as the MCP Inspector can register and trade codes.
- */
-function cors(methods: string, handler: (c: Ctx) => Promise<Response> | Response) {
-  return async (c: Ctx) => {
-    const origin = c.req.header("origin");
-    if (c.req.method === "OPTIONS" && origin && c.req.header("access-control-request-method")) {
-      return new Response("OK", {
-        status: 200,
-        headers: {
-          "access-control-allow-origin": "*",
-          "access-control-allow-methods": methods,
-          "access-control-allow-headers": "mcp-protocol-version",
-          "access-control-max-age": "600",
-          vary: "Origin",
-          "content-type": "text/plain; charset=utf-8",
-        },
-      });
-    }
-    const res = await handler(c);
-    if (!origin) return res;
-    const out = new Response(res.body, res);
-    out.headers.set("access-control-allow-origin", "*");
-    return out;
-  };
-}
 
 async function formOf(c: Ctx): Promise<Params> {
   const body = await c.req.parseBody().catch(() => ({}));
@@ -125,45 +85,29 @@ export function agentAccessRoutes(api: AgentAccessRoutesDeps) {
 
   // ── OAuth metadata and endpoints ─────────────────────────────────────
 
-  const metadata = cors("GET, OPTIONS", () =>
-    json(200, authorizationServerMetadata(d), { "cache-control": "public, max-age=3600" }),
-  );
+  // Browser preflights go through the app-wide CORS policy, as they went through the
+  // Python app's; the metadata routes also answer a bare OPTIONS, as the SDK's did.
+  const cached = { "cache-control": "public, max-age=3600" };
+  const metadata = () => json(200, authorizationServerMetadata(d), cached);
   app.on(["GET", "OPTIONS"], `/.well-known/oauth-authorization-server${MCP_PATH}`, metadata);
   app.on(["GET", "OPTIONS"], `${MCP_PATH}/.well-known/oauth-authorization-server`, metadata);
-  app.on(
-    ["GET", "OPTIONS"],
-    `/.well-known/oauth-protected-resource${MCP_PATH}`,
-    cors("GET, OPTIONS", () =>
-      json(200, protectedResourceMetadata(d), { "cache-control": "public, max-age=3600" }),
-    ),
+  app.on(["GET", "OPTIONS"], `/.well-known/oauth-protected-resource${MCP_PATH}`, () =>
+    json(200, protectedResourceMetadata(d), cached),
   );
-  // No CORS on authorize: clients redirect browsers to it.
   app.on(["GET", "POST"], `${MCP_PATH}/authorize`, async (c) => {
     const params: Params = c.req.method === "GET" ? c.req.query() : await formOf(c);
     return reply(await authorize(d, params));
   });
-  app.on(
-    ["POST", "OPTIONS"],
-    `${MCP_PATH}/token`,
-    cors("POST, OPTIONS", async (c) =>
-      reply(await token(d, await formOf(c), c.req.header("authorization") ?? null)),
-    ),
+  app.post(`${MCP_PATH}/token`, async (c) =>
+    reply(await token(d, await formOf(c), c.req.header("authorization") ?? null)),
   );
-  app.on(
-    ["POST", "OPTIONS"],
-    `${MCP_PATH}/register`,
-    cors("POST, OPTIONS", async (c) => {
-      const ip = (c.req.header("x-forwarded-for") ?? "").split(",")[0]?.trim() ?? "";
-      await api.limiter.check(REGISTER_LIMIT, ip);
-      return reply(await register(d, await c.req.text()));
-    }),
-  );
-  app.on(
-    ["POST", "OPTIONS"],
-    `${MCP_PATH}/revoke`,
-    cors("POST, OPTIONS", async (c) =>
-      reply(await revoke(d, await formOf(c), c.req.header("authorization") ?? null)),
-    ),
+  app.post(`${MCP_PATH}/register`, async (c) => {
+    const ip = (c.req.header("x-forwarded-for") ?? "").split(",")[0]?.trim() ?? "";
+    await api.limiter.check(REGISTER_LIMIT, ip);
+    return reply(await register(d, await c.req.text()));
+  });
+  app.post(`${MCP_PATH}/revoke`, async (c) =>
+    reply(await revoke(d, await formOf(c), c.req.header("authorization") ?? null)),
   );
 
   // ── MCP endpoint ─────────────────────────────────────────────────────

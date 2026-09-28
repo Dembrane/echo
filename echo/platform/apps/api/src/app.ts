@@ -1,6 +1,6 @@
 import { DrizzleAccessStore } from "@echo/access";
 import { accountRoutes } from "@echo/account";
-import { agentAccessRoutes, isAgentOAuthPath } from "@echo/agent-access";
+import { agentAccessRoutes } from "@echo/agent-access";
 import { agenticRoutes } from "@echo/agentic";
 import { analysisRoutes } from "@echo/analysis";
 import { billingRoutes, mollieWebhookRoutes } from "@echo/billing";
@@ -41,15 +41,15 @@ export function buildApp(deps: Deps) {
   const app = new Hono<Env>();
   app.use(correlation(deps));
   app.use(secureHeaders());
-  const appCors = cors({
-    origin: [deps.config.http.dashboardUrl, deps.config.http.portalUrl],
-    credentials: true,
-    // The portal reads its participant token from initiate's response.
-    exposeHeaders: ["x-request-id", PARTICIPANT_TOKEN_HEADER],
-  });
-  // OAuth clients (the MCP Inspector in a browser) call the MCP OAuth endpoints from any
-  // origin; those routes answer CORS themselves.
-  app.use("/api/*", (c, next) => (isAgentOAuthPath(c.req.path) ? next() : appCors(c, next)));
+  app.use(
+    "/api/*",
+    cors({
+      origin: [deps.config.http.dashboardUrl, deps.config.http.portalUrl],
+      credentials: true,
+      // The portal reads its participant token from initiate's response.
+      exposeHeaders: ["x-request-id", PARTICIPANT_TOKEN_HEADER],
+    }),
+  );
   app.on(["GET", "POST"], "/api/auth/*", (c) => deps.auth.handler(c.req.raw));
   app.use("/api/*", session(deps));
   app.route("/", systemRoutes(deps));

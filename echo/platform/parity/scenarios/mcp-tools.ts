@@ -195,12 +195,22 @@ export default scenarios([
   tool("get project not a uuid", "alice", "dembrane_get_project", { project_id: "abc" }),
   tool("get project org not in grant", "aliceOrgB", "dembrane_get_project", { project_id: p1 }),
   tool("get project org off", "bob", "dembrane_get_project", { project_id: p3 }),
-  tool("update project", "alice", "dembrane_update_project", {
-    project_id: p1,
-    name: "Renamed over MCP",
-    context: null,
-    is_conversation_allowed: "false",
-  }),
+  tool(
+    "update project",
+    "alice",
+    "dembrane_update_project",
+    {
+      project_id: p1,
+      name: "Renamed over MCP",
+      context: null,
+      is_conversation_allowed: "false",
+    },
+    {
+      // The answer's text carries the new updated_at, which differs per run; the structured
+      // copy of the same answer is compared with times normalised.
+      ignoreFields: ["duration_ms", "text"],
+    },
+  ),
   tool("update project nothing", "alice", "dembrane_update_project", {
     project_id: p1,
     name: null,

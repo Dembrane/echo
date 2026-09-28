@@ -1,1 +1,1 @@
-export { type AgentAccessRoutesDeps, agentAccessRoutes, isAgentOAuthPath } from "./routes";
+export { type AgentAccessRoutesDeps, agentAccessRoutes } from "./routes";

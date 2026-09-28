@@ -64,18 +64,22 @@ export default scenarios([
     responseHeaders: ["cache-control"],
   }),
   oauth({
-    name: "metadata preflight",
+    name: "token preflight from the dashboard",
+    method: "OPTIONS",
+    path: "/api/mcp/token",
+    headers: { origin: "http://localhost:5173", "access-control-request-method": "POST" },
+    responseHeaders: ["access-control-allow-origin"],
+    differs:
+      "preflights follow the app-wide CORS policy on both sides (same origins); the platform answers 204 with no body where Starlette answered 200 OK",
+  }),
+  oauth({
+    name: "metadata preflight from elsewhere",
     method: "OPTIONS",
     path: "/.well-known/oauth-authorization-server/api/mcp",
     headers: { origin: "http://inspector.test", "access-control-request-method": "GET" },
-    responseHeaders: ["access-control-allow-origin", "access-control-allow-methods"],
-  }),
-  oauth({
-    name: "token preflight",
-    method: "OPTIONS",
-    path: "/api/mcp/token",
-    headers: { origin: "http://inspector.test", "access-control-request-method": "POST" },
-    responseHeaders: ["access-control-allow-origin", "access-control-allow-methods"],
+    responseHeaders: ["access-control-allow-origin"],
+    differs:
+      "the platform's CORS policy covers /api/* only, so a preflight on the root metadata path gets the public document instead of 400 Disallowed CORS origin",
   }),
 
   // ── registration ─────────────────────────────────────────────────────

@@ -17,6 +17,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** A malformed id names nothing; Directus answered such lookups as not found. */
 export const isUuid = (v: unknown): v is string => typeof v === "string" && UUID.test(v);
 
+// JSON values are sent as text with an explicit cast: the shared pool's serialisers do not
+// take postgres.js json helpers.
 const sqlOf = (db: Db): postgres.Sql => (db as unknown as { $client: postgres.Sql }).$client;
 
 /** Rows as Directus served them: ISO timestamps, parsed JSON. */
@@ -67,7 +69,7 @@ export function agentStorage(db: Db) {
       await sql`insert into agent_client
         (id, client_name, token_endpoint_auth_method, client_secret_encrypted, redirect_uris, metadata, created_at)
         values (${c.id}, ${c.clientName}, ${c.authMethod}, ${c.secretEncrypted},
-          ${sql.json(c.redirectUris)}, ${sql.json(c.metadata as postgres.JSONValue)}, ${c.now.toISOString()})`;
+          ${JSON.stringify(c.redirectUris)}::json, ${JSON.stringify(c.metadata)}::json, ${c.now.toISOString()})`;
     },
 
     /** Bookkeeping only: never fails the token exchange that triggers it. */
@@ -96,7 +98,7 @@ export function agentStorage(db: Db) {
         (id, app_user_id, directus_user_id, client_id, client_name, org_ids, scopes,
          consent_accepted_at, consent_version, expires_at, revoked_at, last_used_at, created_at)
         values (${id}, ${g.appUserId}, ${g.directusUserId}, ${g.clientId}, ${g.clientName},
-          ${sql.json(g.orgIds)}, ${sql.json(g.scopes)}, ${now}, ${g.consentVersion},
+          ${JSON.stringify(g.orgIds)}::json, ${JSON.stringify(g.scopes)}::json, ${now}, ${g.consentVersion},
           ${g.expiresAt.toISOString()}, null, null, ${now})`;
       return id;
     },
@@ -110,14 +112,14 @@ export function agentStorage(db: Db) {
     async grantsOfUser(appUserId: string): Promise<Row[]> {
       return shapeAll(
         await sql`select * from agent_grant where app_user_id = ${appUserId}
-          order by created_at desc, id desc`,
+          order by created_at desc`,
       );
     },
 
     /** Live-or-expired, unrevoked grants naming this org; org_ids is JSON, filtered here. */
     async grantsOfOrg(orgId: string): Promise<Row[]> {
       const rows = shapeAll(
-        await sql`select * from agent_grant where revoked_at is null order by created_at desc, id desc`,
+        await sql`select * from agent_grant where revoked_at is null order by created_at desc`,
       );
       return rows.filter((g) => Array.isArray(g.org_ids) && g.org_ids.map(String).includes(orgId));
     },
@@ -184,7 +186,7 @@ export function agentStorage(db: Db) {
       const k = kind === "authz" ? AUTHZ : CODE;
       const expires = new Date(now.getTime() + ttlSeconds * 1000).toISOString();
       await sql`insert into platform_presence (kind, key, scope, data, seen_at, expires_at)
-        values (${k}, ${key}, '', ${sql.json(data as postgres.JSONValue)}, ${now.toISOString()}, ${expires})
+        values (${k}, ${key}, '', ${JSON.stringify(data)}::json, ${now.toISOString()}, ${expires})
         on conflict (kind, key) do update set data = excluded.data, seen_at = excluded.seen_at,
           expires_at = excluded.expires_at`;
     },
@@ -233,7 +235,7 @@ export function agentStorage(db: Db) {
       await sql`insert into agent_audit_event
         (id, grant_id, app_user_id, client_id, org_id, tool, params, status, duration_ms, created_at)
         values (${newId()}, ${e.grantId}, ${e.appUserId}, ${e.clientId}, ${e.orgId}, ${e.tool},
-          ${sql.json(e.params as postgres.JSONValue)}, ${e.status}, ${e.durationMs}, ${e.now.toISOString()})`;
+          ${JSON.stringify(e.params)}::json, ${e.status}, ${e.durationMs}, ${e.now.toISOString()})`;
     },
 
     async audit(
@@ -244,9 +246,9 @@ export function agentStorage(db: Db) {
       const rows =
         "orgId" in by
           ? await sql`select * from agent_audit_event where org_id = ${by.orgId}
-              order by created_at desc, id desc limit ${limit} offset ${offset}`
+              order by created_at desc limit ${limit} offset ${offset}`
           : await sql`select * from agent_audit_event where app_user_id = ${by.appUserId}
-              order by created_at desc, id desc limit ${limit} offset ${offset}`;
+              order by created_at desc limit ${limit} offset ${offset}`;
       return shapeAll(rows);
     },
 
