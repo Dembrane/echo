@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
+import { requireStaff, type StaffAudit } from "@dembrane/access";
 import { BadRequestError, PlatformError, ValidationError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
@@ -27,6 +28,8 @@ export interface PricingRouteDeps {
   /** The website's shared token; unset closes the site route. */
   readonly siteToken: string | null;
   readonly limiter: RateLimiter;
+  /** Records each staff read of the enquiry list. */
+  readonly staffAudit: StaffAudit;
   /** Test seam; defaults to Postgres. */
   readonly store?: PricingStore;
 }
@@ -146,52 +149,88 @@ export const PRICING_LIMITS: { readonly app: Limit; readonly site: Limit } = {
   site: { name: "pricing.site", capacity: 120, windowSeconds: 3600 },
 };
 
+/** The columns sam's pricing digest reads, as it read them from the database. */
+const ENQUIRY_FIELDS = [
+  "reference",
+  "email",
+  "status",
+  "booking_uid",
+  "booking_status",
+  "config",
+  "answers_raw",
+  "created_at",
+  "updated_at",
+] as const;
+
 export function pricingRoutes(deps: PricingRouteDeps) {
   const store = deps.store ?? pricingStorage(deps.db);
   const upsertDeps = { store, storage: deps.storage, logger: deps.logger };
-  return new Hono<Env>()
-    .post("/api/v2/pricing-configurations", async (c) => {
-      const who = requireUser(c);
-      await deps.limiter.checkUser(PRICING_LIMITS.app, who.directusUserId);
-      const [body, attachments] = await readBody(c, deps.logger);
-      const payload = validatePayload(body, {});
-      const email =
-        ((await store.directusEmail(who.directusUserId)) ?? "").trim().toLowerCase() || null;
-      if (!email) deps.logger.warn("pricing configuration: no email on the directus user");
-      return c.json(
-        await upsertConfiguration(upsertDeps, payload as PricingPayload, attachments, {
-          email,
-          userId: who.directusUserId,
-          isInternal: Boolean(email?.endsWith(INTERNAL_EMAIL_DOMAIN)),
-          prefix: APP_PREFIX,
-        }),
-      );
-    })
-    .post("/api/v2/pricing-configurations/site", async (c) => {
-      if (!deps.siteToken) throw new Unconfigured("Site writes are not configured");
-      if (!tokenMatches(c.req.header("x-site-token") ?? "", deps.siteToken))
-        throw new InvalidToken("Invalid site token");
-      // Per visitor as the site's function reports it (spec 7 L-20 keeps trusting it).
-      await deps.limiter.check(
-        PRICING_LIMITS.site,
-        (c.req.header("x-site-visitor-ip") ?? "").trim() || "unknown",
-      );
-      const [body] = await readBody(c, deps.logger);
-      const payload = validatePayload(body, { email: v.optional(s255()) });
-      // Whatever the body said, this row came from the site.
-      const email = cleanEmail(payload.email as string | null);
-      return c.json(
-        await upsertConfiguration(
-          upsertDeps,
-          { ...(payload as PricingPayload), mount: "site" },
-          [],
-          {
+  return (
+    new Hono<Env>()
+      /**
+       * External enquiries that moved in the last `days` (default 7): the source of sam's daily
+       * pricing digest, which read pricing_configuration straight from the old database.
+       * sam calls it with its staff key; each read is audited.
+       */
+      .get("/api/v2/admin/pricing-configurations", async (c) => {
+        const who = requireUser(c);
+        const raw = await v.rawRequest(c.req);
+        const { query } = v.validateRaw(raw, {
+          query: { days: v.withDefault(v.int({ ge: 1, le: 31 }), 7) },
+        });
+        await requireStaff(deps.staffAudit, who, {
+          permission: "staff:accounts",
+          action: "admin.pricing_configurations.read",
+          detail: { days: query.days },
+          requestId: c.get("requestId"),
+        });
+        const since = new Date(Date.now() - query.days * 86_400_000);
+        const rows = await store.recentEnquiries(since);
+        return c.json(rows.map((r) => Object.fromEntries(ENQUIRY_FIELDS.map((k) => [k, r[k]]))));
+      })
+      .post("/api/v2/pricing-configurations", async (c) => {
+        const who = requireUser(c);
+        await deps.limiter.checkUser(PRICING_LIMITS.app, who.directusUserId);
+        const [body, attachments] = await readBody(c, deps.logger);
+        const payload = validatePayload(body, {});
+        const email =
+          ((await store.directusEmail(who.directusUserId)) ?? "").trim().toLowerCase() || null;
+        if (!email) deps.logger.warn("pricing configuration: no email on the directus user");
+        return c.json(
+          await upsertConfiguration(upsertDeps, payload as PricingPayload, attachments, {
             email,
-            userId: null,
+            userId: who.directusUserId,
             isInternal: Boolean(email?.endsWith(INTERNAL_EMAIL_DOMAIN)),
-            prefix: SITE_PREFIX,
-          },
-        ),
-      );
-    });
+            prefix: APP_PREFIX,
+          }),
+        );
+      })
+      .post("/api/v2/pricing-configurations/site", async (c) => {
+        if (!deps.siteToken) throw new Unconfigured("Site writes are not configured");
+        if (!tokenMatches(c.req.header("x-site-token") ?? "", deps.siteToken))
+          throw new InvalidToken("Invalid site token");
+        // Per visitor as the site's function reports it (spec 7 L-20 keeps trusting it).
+        await deps.limiter.check(
+          PRICING_LIMITS.site,
+          (c.req.header("x-site-visitor-ip") ?? "").trim() || "unknown",
+        );
+        const [body] = await readBody(c, deps.logger);
+        const payload = validatePayload(body, { email: v.optional(s255()) });
+        // Whatever the body said, this row came from the site.
+        const email = cleanEmail(payload.email as string | null);
+        return c.json(
+          await upsertConfiguration(
+            upsertDeps,
+            { ...(payload as PricingPayload), mount: "site" },
+            [],
+            {
+              email,
+              userId: null,
+              isInternal: Boolean(email?.endsWith(INTERNAL_EMAIL_DOMAIN)),
+              prefix: SITE_PREFIX,
+            },
+          ),
+        );
+      })
+  );
 }
