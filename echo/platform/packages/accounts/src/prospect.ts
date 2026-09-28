@@ -131,7 +131,7 @@ export async function createAccount(
         .set({ deleted_at: null, role: "admin", updated_at: nowIso })
         .where(eq(schema.org_membership.id, membership.id));
 
-    await ensureBillingTask(d, tx, orgId, input.language, actor?.directusUserId ?? null);
+    await ensureBillingTask(d, tx, orgId, actor?.directusUserId ?? null);
     if (!existing)
       await emit(d, tx, {
         orgId,
