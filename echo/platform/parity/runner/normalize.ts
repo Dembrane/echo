@@ -45,3 +45,23 @@ export function normalize(
 function timeShape(v: string): string {
   return `<time:${v.replace(/\d/g, "d")}>`;
 }
+
+/** Fields the new API adds to every error body; the Python API never sent them. */
+const ADDITIVE_ERROR_FIELDS = ["code", "params", "action"] as const;
+
+/**
+ * The new API's error bodies carry `code`, `params` and `action` beside FastAPI's
+ * `detail`. They are new fields, not differences: dropped from the new side when the old
+ * side's body lacks them, so `detail` and everything else still compare strictly.
+ */
+export function withoutAdditiveErrorFields(
+  status: number,
+  body: unknown,
+  oldBody: unknown,
+): unknown {
+  if (status < 400 || !body || typeof body !== "object" || Array.isArray(body)) return body;
+  const old = oldBody && typeof oldBody === "object" ? (oldBody as Record<string, unknown>) : {};
+  const out = { ...(body as Record<string, unknown>) };
+  for (const key of ADDITIVE_ERROR_FIELDS) if (!(key in old)) delete out[key];
+  return out;
+}

@@ -9,7 +9,7 @@
 import { Glob } from "bun";
 import { call, NEW, newToken, OLD, oldToken, sideOf } from "./clients";
 import { diff, reset, runSetup, snapshot } from "./db";
-import { normalize } from "./normalize";
+import { normalize, withoutAdditiveErrorFields } from "./normalize";
 import type { Scenario, Vars } from "./scenario";
 
 const filter = process.argv[2] ?? "";
@@ -98,7 +98,7 @@ for (const file of files) {
       normalize(
         {
           status: n.status,
-          body: n.body,
+          body: withoutAdditiveErrorFields(n.status, n.body, o.body),
           headers: n.headers,
           prepared: n.prepared,
           changes: n.changes,
