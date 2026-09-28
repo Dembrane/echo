@@ -47,3 +47,21 @@ export function checkKey(key: string): string {
   }
   return key;
 }
+
+/**
+ * Outside local development and tests, files must go to a bucket. The filesystem store
+ * writes to the disk of whichever machine runs the process, where no other instance, and
+ * no later deploy, can read them back. Fails at startup, naming the setting that is missing.
+ */
+export function requireBucket(
+  env: string,
+  store: ObjectStorage,
+  what: string,
+  setting: string,
+): void {
+  if (env === "local" || env === "test") return;
+  if ((store as { kind?: string }).kind === "filesystem")
+    throw new Error(
+      `${what} would be written to this machine's disk on ${env}: set ${setting} (and its endpoint and keys) so they go to the bucket`,
+    );
+}
