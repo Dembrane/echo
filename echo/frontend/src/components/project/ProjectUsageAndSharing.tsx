@@ -15,15 +15,17 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
 import { API_BASE_URL } from "@/config";
-import { useWorkspace } from "@/hooks/useWorkspace";
-import { useV2Me } from "@/hooks/useV2Me";
 import {
 	useProjectPendingInvites,
 	useProjectShares,
 } from "@/hooks/useProjectSharing";
+import { useV2Me } from "@/hooks/useV2Me";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { avatarUrl, memberInitials } from "@/lib/avatar";
+import { ensureOk } from "@/lib/errors/read";
 import { displayRole, isAdminRole } from "@/lib/roles";
 import { formatDurationFromHours } from "@/lib/time";
 import { ProjectSharingModal } from "./ProjectSharingModal";
@@ -59,11 +61,12 @@ interface WorkspaceSettingsResponse {
 async function fetchWorkspaceUsage(
 	workspaceId: string,
 ): Promise<WorkspaceUsageResponse | null> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/workspaces/${workspaceId}/usage`,
-		{ credentials: "include" },
+	// A failed read is an error the card shows, never an empty cycle.
+	const res = await ensureOk(
+		await fetch(`${API_BASE_URL}/v2/workspaces/${workspaceId}/usage`, {
+			credentials: "include",
+		}),
 	);
-	if (!res.ok) return null;
 	return res.json();
 }
 
@@ -85,11 +88,11 @@ interface ConversationUsageResponse {
 async function fetchConversationUsage(
 	projectId: string,
 ): Promise<ConversationUsageResponse | null> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/projects/${projectId}/conversation-usage`,
-		{ credentials: "include" },
+	const res = await ensureOk(
+		await fetch(`${API_BASE_URL}/v2/projects/${projectId}/conversation-usage`, {
+			credentials: "include",
+		}),
 	);
-	if (!res.ok) return null;
 	return res.json();
 }
 
@@ -129,9 +132,9 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 	);
 
 	const { data: wsSettings, isLoading: membersLoading } = useQuery({
-		queryKey: ["v2", "workspace-settings", workspaceId],
-		queryFn: () => (workspaceId ? fetchWorkspaceSettings(workspaceId) : null),
 		enabled: Boolean(workspaceId && isWorkspaceVisible),
+		queryFn: () => (workspaceId ? fetchWorkspaceSettings(workspaceId) : null),
+		queryKey: ["v2", "workspace-settings", workspaceId],
 		staleTime: 60_000,
 	});
 
@@ -149,33 +152,33 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 	const accessRows: AccessRow[] = isWorkspaceVisible
 		? ROLE_SORT(
 				(wsSettings?.members ?? []).map((m) => ({
-					key: m.id,
-					user_id: m.user_id,
+					avatar: m.avatar,
 					display_name: m.display_name,
 					email: m.email,
-					avatar: m.avatar,
-					role: m.role,
 					is_external: m.role === "external",
+					key: m.id,
+					role: m.role,
+					user_id: m.user_id,
 				})),
 			)
 		: [
 				...(shares ?? []).map((s) => ({
-					key: s.user_id,
-					user_id: s.user_id,
+					avatar: s.avatar,
 					display_name: s.display_name,
 					email: s.email,
-					avatar: s.avatar,
+					key: s.user_id,
 					role: s.workspace_role ?? "",
+					user_id: s.user_id,
 				})),
 				...(pendingInvites ?? []).map((inv) => ({
-					key: `invite-${inv.id}`,
-					user_id: "",
+					avatar: null,
 					display_name: inv.email,
 					email: inv.email,
-					avatar: null,
-					role: inv.role,
 					is_external: inv.role === "external",
 					is_pending: true,
+					key: `invite-${inv.id}`,
+					role: inv.role,
+					user_id: "",
 				})),
 			];
 
@@ -251,16 +254,16 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 					search={memberSearch}
 					onSearchChange={setMemberSearch}
 					filter={{
-						value: memberFilter,
 						onChange: (v) => setMemberFilter(v as typeof memberFilter),
 						options: [
-							{ value: "all", label: t`All` },
-							{ value: "admins", label: t`Admins` },
-							{ value: "members", label: t`Members` },
+							{ label: t`All`, value: "all" },
+							{ label: t`Admins`, value: "admins" },
+							{ label: t`Members`, value: "members" },
 							...(hasGuestRows
-								? [{ value: "externals", label: t`Externals` }]
+								? [{ label: t`Externals`, value: "externals" }]
 								: []),
 						],
+						value: memberFilter,
 					}}
 					count={{
 						shown: filteredAccessRows.length,
@@ -372,13 +375,14 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 
 	const {
 		data: usage,
+		error: usageError,
 		isLoading: usageLoading,
 		dataUpdatedAt: usageUpdatedAt,
 		refetch: refetchUsage,
 	} = useQuery({
-		queryKey: ["v2", "workspace-usage", workspaceId, 0],
-		queryFn: () => (workspaceId ? fetchWorkspaceUsage(workspaceId) : null),
 		enabled: Boolean(workspaceId),
+		queryFn: () => (workspaceId ? fetchWorkspaceUsage(workspaceId) : null),
+		queryKey: ["v2", "workspace-usage", workspaceId, 0],
 		staleTime: 60_000,
 	});
 
@@ -387,9 +391,9 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 		dataUpdatedAt: convUsageUpdatedAt,
 		refetch: refetchConvUsage,
 	} = useQuery({
-		queryKey: ["v2", "project-conv-usage", projectId],
-		queryFn: () => fetchConversationUsage(projectId),
 		enabled: Boolean(projectId),
+		queryFn: () => fetchConversationUsage(projectId),
+		queryKey: ["v2", "project-conv-usage", projectId],
 		staleTime: 60_000,
 	});
 
@@ -458,7 +462,11 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 						</Group>
 					)}
 
-					{!usageLoading && !projectUsage && (
+					{usageError && (
+						<ErrorNotice error={usageError} onRetry={handleUsageRefresh} />
+					)}
+
+					{!usageLoading && !usageError && !projectUsage && (
 						<Text size="sm" c="dimmed">
 							<Trans>No usage yet this cycle.</Trans>
 						</Text>
@@ -477,11 +485,11 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 							</Text>
 							<Box
 								style={{
+									background: "var(--mantine-color-gray-1)",
+									borderRadius: 4,
 									display: "flex",
 									height: 10,
-									borderRadius: 4,
 									overflow: "hidden",
-									background: "var(--mantine-color-gray-1)",
 								}}
 							>
 								{convUsage.active.map((row) => {
@@ -504,9 +512,9 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 										>
 											<Box
 												style={{
-													width: `${pct}%`,
 													background: "var(--mantine-color-blue-5)",
 													borderRight: "1px solid white",
+													width: `${pct}%`,
 												}}
 											/>
 										</Tooltip>
@@ -544,8 +552,8 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 									>
 										<Box
 											style={{
-												width: `${(convUsage.deleted_hours / convUsage.total_hours) * 100}%`,
 												background: "var(--mantine-color-gray-5)",
+												width: `${(convUsage.deleted_hours / convUsage.total_hours) * 100}%`,
 											}}
 										/>
 									</Tooltip>
@@ -555,10 +563,10 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 								<Group gap={6} wrap="nowrap">
 									<Box
 										style={{
-											width: 8,
-											height: 8,
-											borderRadius: 2,
 											background: "var(--mantine-color-blue-5)",
+											borderRadius: 2,
+											height: 8,
+											width: 8,
 										}}
 									/>
 									<Text size="xs" c="dimmed">
@@ -571,10 +579,10 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 									<Group gap={6} wrap="nowrap">
 										<Box
 											style={{
-												width: 8,
-												height: 8,
-												borderRadius: 2,
 												background: "var(--mantine-color-gray-5)",
+												borderRadius: 2,
+												height: 8,
+												width: 8,
 											}}
 										/>
 										<Text size="xs" c="dimmed">
@@ -600,12 +608,12 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 }
 
 const ROLE_WEIGHT: Record<string, number> = {
-	owner: 0,
 	admin: 1,
 	billing: 2,
-	member: 3,
 	external: 4,
+	member: 3,
 	observer: 5,
+	owner: 0,
 };
 function ROLE_SORT<
 	T extends {

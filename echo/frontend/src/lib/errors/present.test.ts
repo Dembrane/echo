@@ -59,7 +59,9 @@ describe("readApiError", () => {
 	});
 });
 
-describe("presentError", () => {
+// The first presentation imports the message table and a locale catalog, which the
+// transform makes slow when the whole suite runs at once.
+describe("presentError", { timeout: 30_000 }, () => {
 	it("says a known code in friendly words with the API's action", async () => {
 		const p = await presentError(
 			axiosError(413, {

@@ -1,8 +1,13 @@
 // @vitest-environment jsdom
+import { i18n } from "@lingui/core";
 import { PDFDocument } from "pdf-lib";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import * as contract from "../contract/contract.gen";
 import * as fx from "../contract/fixtures.gen";
+
+// The client words field errors through the error presenter, which needs a locale.
+i18n.load("en-US", {});
+i18n.activate("en-US");
 
 /**
  * Fixture mode stands in for the backend until its handlers land, so its answers must be
@@ -96,7 +101,8 @@ describe("the fixture backend, through the client", () => {
 		).rejects.toMatchObject({ status: 422 });
 	});
 
-	it("validates a request before it leaves", async () => {
+	// Words its field errors through the presenter, whose first use imports the messages.
+	it("validates a request before it leaves", { timeout: 30_000 }, async () => {
 		await expect(
 			client.call("openTicket", {
 				body: { body: "", subject: "Hi" },
