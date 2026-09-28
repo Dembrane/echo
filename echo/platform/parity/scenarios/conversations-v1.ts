@@ -50,6 +50,7 @@ export default scenarios([
     as: "admin",
     method: "GET",
     path: C(c3, "counts"),
+    differs: "H-14: staff reach a tenant's conversations only through a support session",
   },
   { name: "conv v1 counts: other tenant", as: "bob", method: "GET", path: C(c1, "counts") },
   {
@@ -233,6 +234,7 @@ export default scenarios([
     method: "POST",
     path: C(c3, "summarize"),
     setup: C3_LOCKED,
+    differs: "H-14: staff reach a tenant's conversations only through a support session",
   },
 
   // ── generate-title ───────────────────────────────────────────────

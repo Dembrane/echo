@@ -8,8 +8,8 @@ const me = "d0000000-0000-4000-8000-000000000002";
 const user: Signed = { appUserId: "x", directusUserId: me, isStaff: false };
 const staff: Signed = { ...user, isStaff: true };
 
-test("audit scope: staff see everything, others the rows by or about themselves", () => {
-  expect(auditScope(staff)).toEqual({ all: true });
+test("audit scope: everyone, staff included, sees the rows by or about themselves (H-14)", () => {
+  expect(auditScope(staff)).toEqual({ all: false, userId: me });
   expect(auditScope(user)).toEqual({ all: false, userId: me });
 });
 
@@ -74,7 +74,10 @@ test("audit page: the page the settings card renders, deltas for staff only", as
   });
   const all = await auditPage(fakeStore(scopes), staff, f, q);
   expect(all.items[0]?.revisions).toEqual([{ delta: { first_name: "A" } }]);
-  expect(scopes).toEqual([{ all: false, userId: me }, { all: true }]);
+  expect(scopes).toEqual([
+    { all: false, userId: me },
+    { all: false, userId: me },
+  ]);
 });
 
 test("audit options skip blank values", async () => {
@@ -91,5 +94,6 @@ test("file reads follow Directus's rules: logos and Public for anyone, avatars s
   expect(mayRead(user, ["avatars"])).toBe(true);
   expect(mayRead(user, ["reports"])).toBe(false);
   expect(mayRead(user, [])).toBe(false);
-  expect(mayRead(staff, ["reports"])).toBe(true);
+  // H-14: staff get no blanket read of every file.
+  expect(mayRead(staff, ["reports"])).toBe(false);
 });

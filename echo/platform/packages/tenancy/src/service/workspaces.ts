@@ -1,3 +1,4 @@
+import { DrizzleStaffAudit, requireStaff } from "@dembrane/access";
 import {
   BadRequestError,
   ConflictError,
@@ -92,6 +93,7 @@ export function oneLine(s: string): string {
 
 export function workspaceService(deps: TenancyDeps) {
   const { db } = deps;
+  const staffAudit = new DrizzleStaffAudit(db);
 
   async function memberPreviews(workspaceId: string) {
     const ids = (await effectiveMembers(db, workspaceId)).slice(0, 4).map((m) => m.user_id);
@@ -340,11 +342,20 @@ export function workspaceService(deps: TenancyDeps) {
         const first = await firstManagedOrg(db, member.appUserId);
         if (!first) throw new ForbiddenError("No organisation found. Complete onboarding first.");
         orgId = first;
-      } else if (!who.isStaff) {
-        if (!(await adminsOrg(orgId, member.appUserId)))
-          throw new ForbiddenError(
-            "You must be an organisation admin or owner to create a workspace here.",
-          );
+      } else if (!(await adminsOrg(orgId, member.appUserId))) {
+        // Staff creating inside a customer's organisation is a named, audited staff action
+        // (spec H-14); everyone else gets the old refusal.
+        await requireStaff(
+          staffAudit,
+          who,
+          {
+            permission: "staff:workspaces",
+            action: "workspace.create",
+            targetType: "org",
+            targetId: orgId,
+          },
+          "You must be an organisation admin or owner to create a workspace here.",
+        );
       }
       const name = body.name.trim();
       const dataOwnerEmail = (body.data_owner_email ?? "").trim().toLowerCase() || null;
@@ -474,7 +485,19 @@ export function workspaceService(deps: TenancyDeps) {
 
     /** Staff-only tier change; a downgrade applies its revert effects first (PATCH .../tier). */
     async setTier(who: Signed, workspaceId: string, body: { tier: string; reason: string }) {
-      if (!who.isStaff) throw new ForbiddenError("Staff-only action");
+      // A named, audited staff permission (spec H-14).
+      await requireStaff(
+        staffAudit,
+        who,
+        {
+          permission: "staff:set_tier",
+          action: "workspace.tier.update",
+          targetType: "workspace",
+          targetId: workspaceId,
+          detail: { tier: body.tier, reason: body.reason },
+        },
+        "Staff-only action",
+      );
       const now = clock(deps);
       const ws = await workspaceById(db, workspaceId);
       if (!ws || ws.deleted_at) throw new NotFoundError("Workspace not found");

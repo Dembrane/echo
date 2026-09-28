@@ -46,12 +46,10 @@ export async function conversationTokenCounts(
     await Promise.all(
       rest.slice(i, i + 10).map(async (id) => {
         try {
-          if (!who.isStaff) {
-            const conv = await d.reads.liveConversation(id);
-            const pid = typeof conv?.project_id === "string" ? conv.project_id : null;
-            if (!pid || !(await projectAllows(d.access, who, pid, "conversation:read")))
-              throw new Error("not readable");
-          }
+          const conv = await d.reads.liveConversation(id);
+          const pid = typeof conv?.project_id === "string" ? conv.project_id : null;
+          if (!pid || !(await projectAllows(d.access, who, pid, "conversation:read")))
+            throw new Error("not readable");
           out.set(id, await conversationTokenCount(d, id));
         } catch (err) {
           d.logger.warn({ err, conversationId: id }, "token count failed");

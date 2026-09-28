@@ -35,4 +35,10 @@ export { codeSignInGate, continueUrl, createAccount, ensureUser } from "./prospe
 export { accountsRoutes } from "./routes";
 export { DEMO_IDS, seedAccountsDemo } from "./seed";
 export { type AccountsJobs, MemoryJobs, queueJobs } from "./sink";
-export { mintStaffKey, revokeStaffKeys } from "./staff-key";
+export {
+  KEY_DEFAULT_SCOPE,
+  mintStaffKey,
+  revokeStaffKeys,
+  type StaffKeyClaims,
+  staffKeyClaims,
+} from "./staff-key";

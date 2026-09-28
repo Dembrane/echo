@@ -7,18 +7,18 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 
 const { directus_files, directus_folders } = schema;
+const INLINE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** A file's folder and up to two parents, nearest first: the depth Directus's rules looked at. */
 export type FolderChain = readonly string[];
 
 /**
- * Directus's file read rules, kept as they were. Anyone may read logos and anything under a
- * "Public" folder (the portal shows the owner's logo before sign-in); signed-in users may
- * also read avatars; staff may read any file.
+ * Directus's file read rules. Anyone may read logos and anything under a "Public" folder
+ * (the portal shows the owner's logo before sign-in); signed-in users may also read
+ * avatars. Directus let staff read any file; that blanket read is gone (spec H-14).
  */
 export function mayRead(who: Signed | null, chain: FolderChain): boolean {
-  if (who?.isStaff) return true;
   const [own] = chain;
   if (own?.includes("custom_logos")) return true;
   if (chain.some((name) => name.includes("Public"))) return true;
@@ -65,11 +65,19 @@ export function assetRoutes(deps: { db: Db; files: ObjectStorage }) {
     if (!mayRead(who, await folderChain(deps.db, file.folder))) throw missing;
     const body = await deps.files.get(file.disk);
     if (!body) throw missing;
+    const type = file.type ?? (body.type || "application/octet-stream");
     return c.body(body.stream(), 200, {
-      "content-type": file.type ?? (body.type || "application/octet-stream"),
+      "content-type": type,
       // Uploads get a fresh id, so a given id always names the same bytes.
       "cache-control": who ? "private, max-age=86400" : "public, max-age=86400",
       "x-content-type-options": "nosniff",
+      // Older Directus uploads in Public folders may be HTML or SVG: served from the API's
+      // origin they would run script next to the session cookie. Only raster images render
+      // inline, and nothing served here may run script.
+      "content-security-policy": "default-src 'none'; sandbox",
+      ...(!INLINE_TYPES.has(type.split(";")[0]?.trim().toLowerCase() ?? "") && {
+        "content-disposition": "attachment",
+      }),
     });
   });
 }

@@ -252,7 +252,7 @@ export async function focusedConversations(
 
 /**
  * GET /api/conversations/{id}/transcript as the assistant read it: transcribed chunks in
- * speaking order joined by newlines. Staff skip the ladder but not the existence check.
+ * speaking order joined by newlines.
  */
 export async function transcript(d: DataDeps, who: Signed, conversationId: string) {
   const sql = sqlOf(d);
@@ -261,7 +261,7 @@ export async function transcript(d: DataDeps, who: Signed, conversationId: strin
     : [];
   if (!conv || conv.deleted_at || !conv.project_id)
     throw new NotFoundError("Conversation not found");
-  if (!who.isStaff) await projectFor(d.access, who, String(conv.project_id), "conversation:read");
+  await projectFor(d.access, who, String(conv.project_id), "conversation:read");
   const chunks = await sql`
     select transcript from conversation_chunk where conversation_id = ${conversationId}
     order by timestamp asc limit 1500`;

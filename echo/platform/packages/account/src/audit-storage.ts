@@ -4,7 +4,7 @@ import { and, asc, count, desc, eq, inArray, or, type SQL } from "drizzle-orm";
 
 const { directus_activity, directus_revisions, directus_users } = schema;
 
-/** Who may see which rows: staff see all activity, everyone else their own. */
+/** Who may see which rows; the settings route always passes the caller's own scope. */
 export type AuditScope = { readonly all: true } | { readonly all: false; readonly userId: string };
 
 export interface AuditFilter {

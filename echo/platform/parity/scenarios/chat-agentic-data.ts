@@ -17,10 +17,19 @@ const A = "/api/agentic";
 const proj = (p: string, rest: string) => `${A}/projects/${p}/${rest}`;
 const MISSING = "f0000000-0000-4000-8000-000000000999";
 
+const H14 =
+  "H-14: staff reach a tenant's data only through a support session, never a blanket bypass";
+
 export default scenarios([
   // ── settings ──────────────────────────────────────────────────────
   { name: "agentic settings: owner", as: "alice", method: "GET", path: proj(p1, "settings") },
-  { name: "agentic settings: staff", as: "admin", method: "GET", path: proj(p3, "settings") },
+  {
+    name: "agentic settings: staff",
+    as: "admin",
+    method: "GET",
+    path: proj(p3, "settings"),
+    differs: H14,
+  },
   { name: "agentic settings: other tenant", as: "bob", method: "GET", path: proj(p1, "settings") },
   {
     name: "agentic settings: missing",
@@ -139,6 +148,7 @@ export default scenarios([
     method: "GET",
     path: proj(p3, "conversations"),
     setup: P3_OVER_CAP,
+    differs: H14,
   },
   {
     name: "agentic convs: limit zero",
@@ -231,6 +241,8 @@ export default scenarios([
     method: "GET",
     path: proj(p1, "chats"),
     setup: MORE_CHATS,
+    differs:
+      "H-14, M-10: staff as a workspace member see their own and shared chats, not others' private ones",
   },
   {
     name: "agentic chats: workspace wide",
@@ -614,5 +626,6 @@ export default scenarios([
     as: "admin",
     method: "GET",
     path: proj(legacy, "methodologies"),
+    differs: H14,
   },
 ]);

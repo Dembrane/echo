@@ -427,10 +427,16 @@ export function inviteStorage(db: Db) {
       now: Date,
     ): Promise<boolean> {
       const t: MembershipTable = table === "org" ? org_membership : workspace_membership;
+      // A revived row starts clean (spec L-14): an old support expiry would lock the person
+      // out silently, and old custom policies would come back with it.
+      const revive =
+        patch.deleted_at === null
+          ? { custom_policies: [], ...(table === "workspace" && { expires_at: null }) }
+          : {};
       try {
         await db
           .update(t)
-          .set({ ...patch, updated_at: now.toISOString() })
+          .set({ ...patch, ...revive, updated_at: now.toISOString() })
           .where(eq(t.id, id));
         return true;
       } catch (err) {

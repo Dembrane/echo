@@ -109,7 +109,6 @@ async function memoryOr404(d: DataDeps, memoryId: string): Promise<Row> {
  * included, could rewrite or delete it). Unreachable memories answer 404.
  */
 async function requireMemoryAccess(d: DataDeps, who: Signed, mem: Row, intent: "amend" | "forget") {
-  if (who.isStaff) return;
   const scope = String(mem.scope ?? "");
   if (scope === "user") {
     if (text(mem.directus_user_id) !== who.directusUserId)

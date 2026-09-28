@@ -38,7 +38,9 @@ run("portal uploads and audio routes", () => {
   let d: ConversationsDeps;
   const bucket = localBucket();
   const enqueued: { job: string; payload: unknown; opts?: EnqueueOptions }[] = [];
-  const staff: Signed = { appUserId: null, directusUserId: newId(), isStaff: true };
+  // The dashboard side (audio routes) acts as the project's owner: the seeded project has
+  // no workspace, so its creator reaches it through the legacy path.
+  const owner: Signed = { appUserId: newId(), directusUserId: newId(), isStaff: false };
 
   beforeAll(async () => {
     const url = await freshDatabase("conv_portal_test");
@@ -73,7 +75,7 @@ run("portal uploads and audio routes", () => {
     };
     app = new Hono<Env>();
     app.use(async (c, next) => {
-      c.set("principal", staff);
+      c.set("principal", owner);
       await next();
     });
     app.route("/", portalRoutes(d));
@@ -201,6 +203,9 @@ run("portal uploads and audio routes", () => {
   test("the first play merges the chunks; later plays reuse the merged file; retranscribe clones it", async () => {
     const cid = newId();
     await seed(sql, cid);
+    await sql`insert into directus_users (id, email, status) values (${owner.directusUserId}, 'owner@example.test', 'active')
+      on conflict do nothing`;
+    await sql`update project set directus_user_id = ${owner.directusUserId} where id = ${PROJECT}`;
     for (const [i, name] of ["a.webm", "b.mp3"].entries()) {
       const key = `conversation/${cid}/chunks/${newId()}-${name}`;
       const codec = name.endsWith("mp3") ? ["-c:a", "libmp3lame"] : ["-c:a", "libopus"];

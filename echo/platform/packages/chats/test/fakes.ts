@@ -1,5 +1,6 @@
 import { Writable } from "node:stream";
 import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provider";
+import { Access, MemoryAccessStore } from "@dembrane/access";
 import { createLogger, type Logger } from "@dembrane/observability";
 import type { ChatDeps } from "../src/deps";
 
@@ -73,7 +74,7 @@ export function fakeDeps(parts: {
   return {
     store: parts.store as never,
     reads: parts.reads as never,
-    access: {} as never,
+    access: hostAccess(),
     models: {
       model: (g: string) => (parts.models?.[g] ?? parts.model ?? fakeModel({})) as never,
     },
@@ -89,4 +90,40 @@ export function fakeDeps(parts: {
   };
 }
 
-export const staff = { appUserId: null, directusUserId: "d-staff", isStaff: true };
+/** The project every fake chat belongs to. */
+export const P1 = "f0000000-0000-4000-8000-000000000001";
+
+/** Its owner: the tests act as a host with every policy on P1, never through a staff bypass. */
+export const host = {
+  appUserId: "a0000000-0000-4000-8000-00000000000a",
+  directusUserId: "d-host",
+  isStaff: false,
+};
+
+function hostAccess(): Access {
+  const store = new MemoryAccessStore();
+  store.workspaces.set("w1", {
+    id: "w1",
+    orgId: "org",
+    visibility: "open_to_organisation",
+    deleted: false,
+    stickyRemoved: [],
+    inheritOrgMembers: false,
+    tier: "guardian",
+  });
+  store.projects.set(P1, {
+    id: P1,
+    workspaceId: "w1",
+    visibility: "workspace",
+    deleted: false,
+    legacyOwnerDirectusUserId: null,
+  });
+  store.memberships.push({
+    workspaceId: "w1",
+    appUserId: host.appUserId,
+    role: "owner",
+    customPolicies: null,
+    source: "direct",
+  });
+  return new Access(store);
+}

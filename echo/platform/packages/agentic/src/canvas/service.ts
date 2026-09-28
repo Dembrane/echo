@@ -69,7 +69,7 @@ async function chatOr404(d: CanvasDeps, who: Signed, projectId: string, chatId: 
   const chat = await d.store.chat(chatId);
   if (!chat || relatedId(chat.project_id) !== projectId || (chat.deleted_at ?? null) !== null)
     throw new NotFoundError("Chat not found");
-  if (!who.isStaff && chat.is_private && chat.user_created !== who.directusUserId)
+  if (chat.is_private && chat.user_created !== who.directusUserId)
     throw new NotFoundError("Chat not found");
 }
 

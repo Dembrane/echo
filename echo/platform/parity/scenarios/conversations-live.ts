@@ -253,6 +253,24 @@ export default scenarios([
   },
   { name: "monitor: other tenant", as: "bob", method: "GET", path: `${B}/monitor`, query: q(p1) },
   {
+    name: "monitor: a foreign conversation pinged under this project stays out",
+    as: "alice",
+    method: "GET",
+    path: `${B}/monitor`,
+    // Its own window, clear of the snapshot cache of the scenarios above.
+    query: q(p1, { window_seconds: "47" }),
+    prepare: async (side) => {
+      const res = await side.fetch(PING(c3), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ project_id: p1, state: "recording" }),
+      });
+      return { _ping: res.status };
+    },
+    differs:
+      "M-3: the active index is a hint; a conversation shows only in its own project's monitor",
+  },
+  {
     name: "monitor: observer on a private project",
     as: "rita",
     method: "GET",

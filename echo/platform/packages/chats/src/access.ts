@@ -12,19 +12,18 @@ export interface ChatAccessDeps {
 /**
  * The chat gate shared by the v1 chat routes, the chat BFF and the agentic reads: the chat
  * must exist and be live, and the caller needs chat:use on its project (plus `require`
- * when given). Staff bypass the ladder, as the old API's admin bypass did, and get no
- * ProjectAccess back (the BFF passes staffBypass: false: it never had the bypass). A
- * missing chat, a colleague's private chat and a chat the caller cannot reach answer 404.
+ * when given). The old v1 routes let staff bypass the ladder (spec H-14); staff now reach a
+ * tenant's chats only through a support session. A missing chat, a colleague's private
+ * chat and a chat the caller cannot reach answer 404.
  */
 export async function chatFor(
   d: ChatAccessDeps,
   who: Signed,
   chatId: string,
-  opts: { withUsed?: boolean; require?: Policy; staffBypass?: boolean } = {},
-): Promise<{ chat: ChatRow; access: ProjectAccess | null }> {
+  opts: { withUsed?: boolean; require?: Policy } = {},
+): Promise<{ chat: ChatRow; access: ProjectAccess }> {
   const chat = await d.store.chat(chatId, opts.withUsed ?? false);
   if (!chat || chat.deleted_at) throw new NotFoundError("Chat not found");
-  if (who.isStaff && opts.staffBypass !== false) return { chat, access: null };
   if (!chat.project_id) throw new NotFoundError("Chat not found");
   const access = await projectFor(d.access, who, chat.project_id.id, "chat:use");
   // Spec M-10: a private chat is its creator's. The old v1 and BFF routes let any member
