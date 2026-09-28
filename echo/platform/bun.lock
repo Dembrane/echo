@@ -414,6 +414,13 @@
         "hono": "^4.9.0",
       },
     },
+    "packages/i18n": {
+      "name": "@dembrane/i18n",
+      "dependencies": {
+        "@dembrane/config": "workspace:*",
+        "@dembrane/llm": "workspace:*",
+      },
+    },
     "packages/legacy-shape": {
       "name": "@dembrane/legacy-shape",
       "dependencies": {
@@ -837,6 +844,8 @@
     "@dembrane/feedback": ["@dembrane/feedback@workspace:packages/feedback"],
 
     "@dembrane/http": ["@dembrane/http@workspace:packages/http"],
+
+    "@dembrane/i18n": ["@dembrane/i18n@workspace:packages/i18n"],
 
     "@dembrane/legacy-shape": ["@dembrane/legacy-shape@workspace:packages/legacy-shape"],
 

@@ -1,0 +1,16 @@
+{
+  "name": "@dembrane/i18n",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "translate": "bun src/cli.ts"
+  },
+  "dependencies": {
+    "@dembrane/config": "workspace:*",
+    "@dembrane/llm": "workspace:*"
+  }
+}
