@@ -6,11 +6,12 @@
     "start": "bun src/main.ts"
   },
   "dependencies": {
-    "@echo/db": "workspace:*",
-    "@echo/queue": "workspace:*",
+    "@echo/accounts": "workspace:*",
     "@echo/auth": "workspace:*",
+    "@echo/db": "workspace:*",
     "@echo/observability": "workspace:*",
     "@echo/projects": "workspace:*",
+    "@echo/queue": "workspace:*",
     "@echo/webhooks": "workspace:*"
   }
 }
