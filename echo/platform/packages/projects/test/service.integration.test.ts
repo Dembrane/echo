@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { Access, DrizzleAccessStore } from "@dembrane/access";
+import { unzip } from "@dembrane/core";
 import { createDb } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import postgres from "postgres";
 import { exportTranscripts, type ProjectDeps } from "../src/projects";
 import { createReport } from "../src/reports";
 import { projectsStorage } from "../src/storage";
-import { unzip } from "../src/zip";
 
 /**
  * Runs against a copy of the parity seed (parity/prepare-platform-template.sh builds it):

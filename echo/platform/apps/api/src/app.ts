@@ -33,7 +33,7 @@ import { pricingRoutes } from "@dembrane/pricing";
 import { projectRoutes } from "@dembrane/projects";
 import { sharedHub } from "@dembrane/realtime";
 import { reportRoutes } from "@dembrane/reports";
-import { staffRoutes } from "@dembrane/staff";
+import { privacyRoutes, staffRoutes } from "@dembrane/staff";
 import { statsRoutes } from "@dembrane/stats";
 import { FilesystemStorage, localStorageHandler } from "@dembrane/storage";
 import { queueSink, tenancyRoutes } from "@dembrane/tenancy";
@@ -175,6 +175,10 @@ export function buildApp(deps: Deps) {
   };
   app.route("/", conversationRoutes(conversations));
   app.route("/", verifyRoutes(conversations));
+  app.route(
+    "/",
+    privacyRoutes({ ...deps, audioKeyOf: (path) => conversations.audioUrls.keyOf(path) }),
+  );
   // Local and test only: the stand-in for the buckets' presigned URLs.
   const local = deps.config.app.env === "local" || deps.config.app.env === "test";
   for (const store of [deps.files, deps.audio])

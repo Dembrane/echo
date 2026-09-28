@@ -1,12 +1,11 @@
 import type { Access } from "@dembrane/access";
-import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import { BadRequestError, ForbiddenError, NotFoundError, newId, zip } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { directusRow, pythonIso } from "@dembrane/legacy-shape";
 import { projectAllows, projectFor, projectSource } from "./access";
 import type { JobSink } from "./jobs";
 import { isExternalClient, legalBlock, legalWrite } from "./legal";
 import type { ProjectsStorage, Row } from "./storage";
-import { zip } from "./zip";
 
 export interface ProjectDeps {
   readonly store: ProjectsStorage;

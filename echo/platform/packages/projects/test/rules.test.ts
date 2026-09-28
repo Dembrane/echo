@@ -1,9 +1,8 @@
 import { expect, test } from "bun:test";
-import { BadRequestError, ValidationError } from "@dembrane/core";
+import { BadRequestError, unzip, ValidationError, zip } from "@dembrane/core";
 import { effectiveLegalBasis, isExternalClient, legalWrite } from "../src/legal";
 import { round2, safeForFilename } from "../src/projects";
 import { parseSchedule, reportTitle } from "../src/reports";
-import { unzip, zip } from "../src/zip";
 
 const now = new Date("2026-09-27T12:00:00Z");
 

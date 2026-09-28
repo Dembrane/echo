@@ -115,6 +115,36 @@ export function announcementStorage(db: Db) {
         );
     },
 
+    /** A new announcement and its translations, in one transaction. */
+    async create(
+      row: { id: string; level: string; expiresAt: string; userId: string; nowIso: string },
+      texts: readonly { languages_code: string; title: string; message: string }[],
+    ) {
+      await db.transaction(async (tx) => {
+        await tx.insert(announcement).values({
+          id: row.id,
+          level: row.level,
+          expires_at: row.expiresAt,
+          created_at: row.nowIso,
+          updated_at: row.nowIso,
+          user_created: row.userId,
+        });
+        await tx
+          .insert(announcement_translations)
+          .values(texts.map((t) => ({ announcement_id: row.id, ...t })));
+      });
+    },
+
+    /** Moves the end: now to take it down, later to keep it up. False when there is no such row. */
+    async setExpiry(id: string, expiresAt: string, userId: string, nowIso: string) {
+      const rows = await db
+        .update(announcement)
+        .set({ expires_at: expiresAt, updated_at: nowIso, user_updated: userId })
+        .where(eq(announcement.id, id))
+        .returning({ id: announcement.id });
+      return rows.length > 0;
+    },
+
     async insertRead(
       userId: string,
       rows: readonly { id: string; announcementId: string }[],

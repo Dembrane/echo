@@ -1,3 +1,4 @@
+export { GrantError, STAFF_ROLE, staffGrants } from "./grant";
 export {
   runExpireSupport,
   runSupportTimers,
@@ -5,6 +6,9 @@ export {
   type StaffJobDeps,
   staffRegistration,
 } from "./jobs";
+export { EXPORT_LINK_SECONDS, erasePerson, erasurePlan, exportPerson } from "./privacy";
+export { type PrivacyRouteDeps, privacyRoutes } from "./privacy-routes";
+export { AUTHOR_COLUMNS, type PrivacyStorage, privacyStorage } from "./privacy-storage";
 export {
   accountMonthlyForecast,
   atRisk,

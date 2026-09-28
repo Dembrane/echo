@@ -2,3 +2,4 @@ export { assetPath, bootAssets, configureAssets, isCompiled, missingAssets } fro
 export { type Actor, type OperationContext, userId } from "./context";
 export * from "./errors";
 export { newId } from "./ids";
+export { unzip, type ZipEntry, zip } from "./zip";

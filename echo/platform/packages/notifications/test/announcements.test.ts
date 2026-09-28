@@ -65,6 +65,11 @@ function memory(rows: AnnouncementRow[], marks: Mark[]) {
           read: true,
         });
     },
+    // Publishing is proven against Postgres in staff-announcements.integration.test.ts.
+    async create() {},
+    async setExpiry() {
+      return false;
+    },
   } as AnnouncementStorage;
   return { store, marks, liveAsked };
 }

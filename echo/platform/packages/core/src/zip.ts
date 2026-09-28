@@ -1,6 +1,7 @@
 /**
- * A minimal zip writer (deflate, no zip64) for the transcript export: a few text files of
- * modest size, so a dependency is not worth it. Readers only need names and contents.
+ * A minimal zip writer (deflate, no zip64) for exports (a project's transcripts, a person's
+ * data): text files of modest size, so a dependency is not worth it. Readers only need names
+ * and contents.
  */
 
 export interface ZipEntry {

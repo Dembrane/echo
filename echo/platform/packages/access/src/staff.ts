@@ -23,6 +23,12 @@ export const STAFF_POLICIES = [
   "staff:feedback",
   /** Customer accounts: documents, tasks, tickets, invoice mirrors, stage (sam's staff key). */
   "staff:accounts",
+  /** Publish and end the in-app announcements every user sees. */
+  "staff:announcements",
+  /** Export everything tied to one person, and erase it (data subject requests). */
+  "staff:privacy",
+  /** Grant or revoke staff. Only the database CLI uses it; no route can grant staff. */
+  "staff:grant",
 ] as const;
 
 export type StaffPolicy = (typeof STAFF_POLICIES)[number];

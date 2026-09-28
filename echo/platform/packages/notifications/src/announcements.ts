@@ -1,4 +1,4 @@
-import { NotFoundError, newId } from "@dembrane/core";
+import { BadRequestError, NotFoundError, newId } from "@dembrane/core";
 import { directusTime, type Signed } from "@dembrane/http";
 import type { ActivityRow, AnnouncementStorage } from "./announcements-storage";
 
@@ -111,4 +111,84 @@ export async function markAllAnnouncementsRead(store: AnnouncementStorage, who: 
   await store.setRead(who.directusUserId, toUpdate, true, iso);
   await store.insertRead(who.directusUserId, toCreate, iso);
   return { status: "ok", updated: toUpdate.length, created: toCreate.length };
+}
+
+/** The dashboard's languages (the languages table); a translation in any other is refused. */
+export const ANNOUNCEMENT_LANGUAGES = [
+  "en-US",
+  "nl-NL",
+  "de-DE",
+  "es-ES",
+  "fr-FR",
+  "it-IT",
+  "uk-UA",
+  "cs-CZ",
+] as const;
+
+/** Directus's form for the zoneless expires_at column: UTC, to the second, no zone. */
+function expiry(value: string, now: Date, future: boolean): string {
+  const at = new Date(value);
+  if (Number.isNaN(at.getTime())) throw new BadRequestError("expires_at is not a date");
+  if (future && at <= now) throw new BadRequestError("expires_at must be in the future");
+  return at.toISOString().slice(0, 19);
+}
+
+export interface NewAnnouncement {
+  readonly level: "info" | "urgent";
+  readonly expires_at: string;
+  readonly translations: readonly Record<string, unknown>[];
+}
+
+/**
+ * Staff publish an announcement: live for every user as soon as it is written, until
+ * expires_at. English is required, since the dashboard falls back to it; the title is plain
+ * text and the message markdown, as the bell renders them.
+ */
+export async function publishAnnouncement(
+  store: AnnouncementStorage,
+  who: Signed,
+  input: NewAnnouncement,
+  now: Date,
+) {
+  const texts = input.translations.map((t, i) => {
+    const code = t.languages_code;
+    const title = typeof t.title === "string" ? t.title.trim() : "";
+    const message = typeof t.message === "string" ? t.message.trim() : "";
+    if (typeof code !== "string" || !(ANNOUNCEMENT_LANGUAGES as readonly string[]).includes(code))
+      throw new BadRequestError(
+        `translations[${i}].languages_code must be one of ${ANNOUNCEMENT_LANGUAGES.join(", ")}`,
+      );
+    if (!title || title.length > 200)
+      throw new BadRequestError(`translations[${i}].title: 1 to 200 characters`);
+    if (!message || message.length > 10_000)
+      throw new BadRequestError(`translations[${i}].message: 1 to 10000 characters`);
+    return { languages_code: code, title, message };
+  });
+  const codes = texts.map((t) => t.languages_code);
+  if (new Set(codes).size !== codes.length)
+    throw new BadRequestError("One translation per language");
+  if (!codes.includes("en-US")) throw new BadRequestError("An en-US translation is required");
+  const id = newId();
+  const expiresAt = expiry(input.expires_at, now, true);
+  await store.create(
+    { id, level: input.level, expiresAt, userId: who.directusUserId, nowIso: now.toISOString() },
+    texts,
+  );
+  return { id, level: input.level, expires_at: expiresAt, translations: texts };
+}
+
+/** Moves an announcement's end; a time in the past takes it down now. */
+export async function setAnnouncementExpiry(
+  store: AnnouncementStorage,
+  who: Signed,
+  announcementId: string,
+  expiresAt: string,
+  now: Date,
+) {
+  const at = expiry(expiresAt, now, false);
+  const found =
+    UUID.test(announcementId) &&
+    (await store.setExpiry(announcementId, at, who.directusUserId, now.toISOString()));
+  if (!found) throw new NotFoundError("Announcement not found");
+  return { id: announcementId, expires_at: at };
 }

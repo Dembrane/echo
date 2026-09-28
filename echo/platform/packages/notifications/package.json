@@ -9,11 +9,15 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@dembrane/access": "workspace:*",
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",
     "@dembrane/observability": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.9.0"
+  },
+  "devDependencies": {
+    "postgres": "^3.4.9"
   }
 }

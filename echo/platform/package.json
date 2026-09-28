@@ -20,7 +20,8 @@
     "test": "bun test --parallel",
     "test:changed": "bun test --parallel --changed=origin/feat/bun-migration",
     "seed:accounts-demo": "bun --env-file=.env.local packages/accounts/src/seed-cli.ts",
-    "accounts:staff-key": "bun --env-file=.env.local packages/accounts/src/staff-key-cli.ts"
+    "accounts:staff-key": "bun --env-file=.env.local packages/accounts/src/staff-key-cli.ts",
+    "staff:access": "bun --env-file=.env.local packages/staff/src/grant-cli.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.0",
