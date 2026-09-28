@@ -62,6 +62,18 @@ for (const file of files) {
   const list: Scenario[] = (await import(`${here}${file}`)).default;
   for (const s of list) {
     if (filter && !file.includes(filter) && !s.name.includes(filter)) continue;
+    if (s.removed) {
+      const n = await side(NEW, newToken, s);
+      if (n.status === 404) {
+        pass++;
+        out(`  ok    ${s.name}  (removed: ${s.removed})`);
+      } else {
+        fail++;
+        failures.push(s.name);
+        out(`  FAIL  ${s.name}\n        marked as removed, but the new API answered ${n.status}`);
+      }
+      continue;
+    }
     const ignore = new Set(s.ignoreFields ?? []);
     const ids = new Set(seedIds);
     const setupText = typeof s.setup === "string" ? s.setup : (s.setup ?? []).join("\n");
