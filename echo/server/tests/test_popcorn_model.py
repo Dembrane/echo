@@ -66,3 +66,81 @@ def test_a_cut_off_answer_says_why(monkeypatch) -> None:
             )
         )
     assert seen["max_tokens"] == 65536
+
+
+def test_translation_dispatch_has_bounded_waves(monkeypatch) -> None:
+    active = 0
+    peak = 0
+    calls = 0
+    completed: list[tuple[list[str], list[str | None]]] = []
+
+    async def _answer(**kwargs: Any) -> dict[str, Any]:
+        nonlocal active, peak, calls
+        active += 1
+        peak = max(peak, active)
+        calls += 1
+        await asyncio.sleep(0.01)
+        active -= 1
+        import json
+
+        payload = json.loads(kwargs["user_text"])
+        return {
+            "translations": [
+                {"i": entry["i"], "text": f"EN {entry['text']}"}
+                for entry in payload["texts"]
+            ]
+        }
+
+    monkeypatch.setattr(model, "_structured_completion", _answer)
+    monkeypatch.setattr(model, "TRANSLATE_BATCH", 2)
+    monkeypatch.setattr(model, "TRANSLATE_PARALLEL", 2)
+
+    async def on_batch(texts: list[str], answers: list[str | None]) -> None:
+        completed.append((texts, answers))
+
+    out = asyncio.run(
+        model.translate_texts([str(i) for i in range(9)], "en", on_batch=on_batch)
+    )
+    assert out == [f"EN {i}" for i in range(9)]
+    assert calls == 5
+    assert peak == 2
+    assert sorted(completed) == sorted(
+        [
+            (["0", "1"], ["EN 0", "EN 1"]),
+            (["2", "3"], ["EN 2", "EN 3"]),
+            (["4", "5"], ["EN 4", "EN 5"]),
+            (["6", "7"], ["EN 6", "EN 7"]),
+            (["8"], ["EN 8"]),
+        ]
+    )
+
+
+def test_translation_batch_callback_keeps_completed_work_when_a_later_batch_fails(
+    monkeypatch,
+) -> None:
+    completed: list[tuple[list[str], list[str | None]]] = []
+
+    async def _answer(**kwargs: Any) -> dict[str, Any]:
+        import json
+
+        payload = json.loads(kwargs["user_text"])
+        if payload["texts"][0]["text"] == "2":
+            raise RuntimeError("provider unavailable")
+        return {
+            "translations": [
+                {"i": entry["i"], "text": f"EN {entry['text']}"}
+                for entry in payload["texts"]
+            ]
+        }
+
+    async def on_batch(texts: list[str], answers: list[str | None]) -> None:
+        completed.append((texts, answers))
+
+    monkeypatch.setattr(model, "_structured_completion", _answer)
+    monkeypatch.setattr(model, "TRANSLATE_BATCH", 2)
+    monkeypatch.setattr(model, "TRANSLATE_PARALLEL", 1)
+    out = asyncio.run(
+        model.translate_texts(["0", "1", "2", "3"], "en", on_batch=on_batch)
+    )
+    assert out == ["EN 0", "EN 1", None, None]
+    assert completed == [(["0", "1"], ["EN 0", "EN 1"])]

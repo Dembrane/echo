@@ -118,13 +118,14 @@ export function resolveSidebarView(
 		// /w/:wsId/projects/:projectId/...
 		if (segs[2] === "projects" && segs[3] && segs[3] !== "new") {
 			const projectId = segs[3];
-			// Settings context: explicit /settings/<section> or the legacy
-			// /overview and /integrations pages which ARE the
-			// settings panels.
+			// Manage keeps the established deep links while presenting them as
+			// one project-administration group in the sidebar.
 			if (
 				segs[4] === "settings" ||
 				segs[4] === "overview" ||
-				segs[4] === "integrations"
+				segs[4] === "access" ||
+				segs[4] === "usage" ||
+				segs[4] === "export"
 			) {
 				return {
 					backTo: `/w/${workspaceId}/projects/${projectId}/home`,

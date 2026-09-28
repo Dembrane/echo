@@ -23,8 +23,10 @@ meta() {
 REPO_URL="$(meta dembrane-repo-url)"
 REPO_DIR="$(meta dembrane-repo-dir)"
 TARGET_USER="$(meta dembrane-user)"
+# Empty means the remote's default branch.
+REPO_BRANCH="$(meta dembrane-repo-branch)"
 
-echo "repo-url=$REPO_URL repo-dir=$REPO_DIR user=$TARGET_USER"
+echo "repo-url=$REPO_URL repo-dir=$REPO_DIR repo-branch=${REPO_BRANCH:-default} user=$TARGET_USER"
 
 if [ -f "$DONE_MARKER" ]; then
     echo "Bootstrap already completed. Nothing to do."
@@ -66,7 +68,7 @@ if [ -n "$REPO_URL" ] && [ -n "$REPO_DIR" ] && [ -n "$TARGET_USER" ]; then
         # A public clone needs no credentials. If the repo is private the clone
         # fails here and create.sh tells you to push a deploy key or use
         # `gh auth setup-git` over SSH; the rest of the bootstrap still stands.
-        sudo -u "$TARGET_USER" git clone --filter=blob:none "$REPO_URL" "$REPO_DIR" \
+        sudo -u "$TARGET_USER" git clone --filter=blob:none ${REPO_BRANCH:+--branch "$REPO_BRANCH"} "$REPO_URL" "$REPO_DIR" \
             || echo "WARNING: clone failed. Authenticate on the VM and clone manually into $REPO_DIR"
     fi
 fi

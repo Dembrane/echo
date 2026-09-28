@@ -7,7 +7,7 @@ import nest_asyncio
 from fastapi import FastAPI, Request, HTTPException
 from starlette.types import Scope
 from fastapi.staticfiles import StaticFiles
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware import Middleware
 from fastapi.openapi.utils import get_openapi
@@ -19,6 +19,7 @@ from dembrane.sentry import init_sentry
 from dembrane.api.api import api
 from dembrane.settings import get_settings
 from dembrane.gzip_middleware import SSEAwareGZipMiddleware
+from dembrane.popcorn.service import LockUnavailable
 from dembrane.agent_access.mcp_server import routes as mcp_routes
 
 # Enable nested event loops for Dramatiq workers calling async handlers
@@ -53,6 +54,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     # Warn loudly if email is not configured — workspace invites depend on it
     try:
         from dembrane.settings import get_settings
+
         if not get_settings().email.sendgrid_api_key:
             logger.error(
                 "SENDGRID_API_KEY is not configured — workspace invite emails "
@@ -71,6 +73,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("shutting down server")
     try:
         from dembrane.directus_async import async_directus
+
         await async_directus.close()
     except Exception:
         logger.exception("Failed to close async Directus client")
@@ -115,6 +118,15 @@ async def add_process_time_header(
 
 
 logger.info("mounting api on /api")
+
+
+@app.exception_handler(LockUnavailable)
+async def lock_unavailable(_request: Request, exc: LockUnavailable) -> JSONResponse:
+    # A settings or creation lock was busy, or Redis was away. Nothing was
+    # written; the dashboard's autosave and buttons try again.
+    return JSONResponse({"detail": str(exc)}, status_code=503, headers={"Retry-After": "1"})
+
+
 app.include_router(api, prefix="/api")
 
 logger.info("mounting v2 api on /api/v2")

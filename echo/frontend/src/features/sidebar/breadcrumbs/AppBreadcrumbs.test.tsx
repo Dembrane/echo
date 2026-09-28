@@ -19,9 +19,6 @@ vi.mock("@/hooks/useWorkspace", () => ({
 vi.mock("@/hooks/useLanguage", () => ({
 	useLanguage: () => ({ language: "en-US" }),
 }));
-vi.mock("../hooks/useSidebarState", () => ({
-	useSidebarState: () => ({ collapsed: false }),
-}));
 
 i18n.load("en-US", {});
 i18n.activate("en-US");

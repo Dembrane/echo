@@ -1,0 +1,87 @@
+{
+  "id": "parts-and-contrasts",
+  "description": "A member that counts something as one part of a whole never merges with a member that sets that same thing apart ('distinct from merely', 'not just'). Taken from a real deduplication run on a local project, which folded the two together; the quotes are written for the corpus, not copied from participants.",
+  "embedding_model": "text-embedding-004",
+  "inputs": [
+    {
+      "id": "pc1",
+      "statement": "Collective intelligence has two components: the existing, often unsourced knowledge held by individuals in an organisation that needs to be surfaced, and the new, emergent intelligence created when people collaborate and combine their ideas.",
+      "epistemic_kind": "argument",
+      "valence": "neutral",
+      "evidence": [
+        {
+          "conversation_id": "conv-1",
+          "quote": "there are two bits to it: what the organisation already knows and never surfaces, and what comes out when people build on each other"
+        }
+      ],
+      "embedding": [1, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "pc2",
+      "statement": "How organisations access collective intelligence should be reframed as how they create it, because collective intelligence emerges when individual knowledge is combined into something new and greater than the sum of its parts.",
+      "epistemic_kind": "argument",
+      "valence": "neutral",
+      "evidence": [
+        {
+          "conversation_id": "conv-2",
+          "quote": "it is more about creating collective intelligence than accessing it, because it is the greater than the sum of its parts thing"
+        }
+      ],
+      "embedding": [0.98, 0.2, 0, 0, 0, 0]
+    },
+    {
+      "id": "pc3",
+      "statement": "Organisations do not so much access collective intelligence as create it: it appears when individual knowledge is combined into something new and greater than the sum of its parts.",
+      "epistemic_kind": "argument",
+      "valence": "neutral",
+      "evidence": [
+        {
+          "conversation_id": "conv-3",
+          "quote": "you do not access it, you make it, and it shows up when you put what people know together"
+        }
+      ],
+      "embedding": [0.97, 0.24, 0, 0, 0, 0]
+    },
+    {
+      "id": "pc4",
+      "statement": "Surfacing the knowledge individuals already hold is the part of collective intelligence organisations most often get wrong.",
+      "epistemic_kind": "argument",
+      "valence": "neutral",
+      "evidence": [
+        {
+          "conversation_id": "conv-4",
+          "quote": "the bit we are worst at is getting out what people already know"
+        }
+      ],
+      "embedding": [0.95, 0.31, 0, 0, 0, 0]
+    }
+  ],
+  "should_merge": [["pc2", "pc3"]],
+  "must_not_merge": [
+    {
+      "pair": ["pc1", "pc2"],
+      "guard": "model",
+      "why": "pc1 counts surfacing existing knowledge as one of two components; pc2 sets creation apart from it. A consolidated statement that calls the emergent part distinct from merely surfacing existing knowledge contradicts pc1."
+    },
+    {
+      "pair": ["pc1", "pc3"],
+      "guard": "model",
+      "why": "Same contrast as pc2, worded the other way round: a part of a whole against that part set aside."
+    },
+    {
+      "pair": ["pc2", "pc4"],
+      "guard": "model",
+      "why": "pc4 is about the surfacing part being done badly; pc2 is about creation being the right frame."
+    },
+    {
+      "pair": ["pc1", "pc4"],
+      "guard": "model",
+      "why": "A part is not the whole: naming two components is not the claim that one of them is what organisations get wrong."
+    },
+    {
+      "pair": ["pc3", "pc4"],
+      "guard": "model",
+      "why": "Creation as the right frame is not a claim about surfacing being done badly."
+    }
+  ]
+}

@@ -18,13 +18,11 @@
 #   ./scripts/remote-dev.sh sync-code                copy every tracked file
 #   ./scripts/remote-dev.sh sync-code --dry-run      list what would be copied, change nothing
 #   ./scripts/remote-dev.sh sync-code echo/frontend  copy only what is tracked under this path
+#   ./scripts/remote-dev.sh sync-code --check        print the tracked files whose content differs, change nothing
 
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib.sh"
 handle_help "${1:-}" "$0"
-
-require_gcloud
-require_running
 
 # scripts/remote-dev -> scripts -> echo -> repo root. The git root is one level
 # above echo/, and remote paths are relative to it, so both ends agree.
@@ -35,13 +33,24 @@ RD_REPO_ROOT="$(cd "$RD_ECHO_ROOT/.." && pwd)"
 # the use sites below.
 DRY_RUN=()
 PATHSPEC=()
+CHECK=false
 for arg in "$@"; do
     case "$arg" in
         --dry-run) DRY_RUN=(--dry-run --itemize-changes) ;;
+        --check) CHECK=true ;;
         -*) die "Unknown option: $arg" ;;
         *) PATHSPEC+=("$arg") ;;
     esac
 done
+
+# --check output is read by up.sh, so the log lines go to stderr and only the
+# file list to stdout.
+if [ "$CHECK" = true ]; then
+    exec 3>&1 1>&2
+fi
+
+require_gcloud
+require_running
 
 command -v rsync >/dev/null 2>&1 || die "rsync not found. Install it: brew install rsync"
 
@@ -56,6 +65,19 @@ ALIAS_IP="$(ssh -G "$RD_SSH_HOST" 2>/dev/null | awk '$1 == "hostname" { print $2
 VM_IP="$(instance_ip)"
 [ "$ALIAS_IP" = "$VM_IP" ] \
     || die "'$RD_SSH_HOST' in ~/.ssh/config points at $ALIAS_IP, but the VM is at $VM_IP. Refresh it with: ./scripts/remote-dev.sh ssh-config"
+
+# For up.sh: file names only, one per line. --checksum because a fresh clone
+# and your checkout never share mtimes, so rsync's usual size-and-mtime test
+# would list every file. Directory entries are just their mtimes.
+if [ "$CHECK" = true ]; then
+    CHANGED="$(git -C "$RD_REPO_ROOT" ls-files -z -- ${PATHSPEC[@]+"${PATHSPEC[@]}"} \
+        | rsync --archive --dry-run --checksum --out-format='%n' \
+            --files-from=- --from0 \
+            --rsh=ssh \
+            "$RD_REPO_ROOT/" "$RD_SSH_HOST:$RD_REPO_DIR/")"
+    echo "$CHANGED" | grep -v -e '/$' -e '^$' >&3 || true
+    exit 0
+fi
 
 # The VM's own uncommitted edits are about to be overwritten wherever they
 # overlap with yours, and unlike a git merge nothing will say so afterwards.

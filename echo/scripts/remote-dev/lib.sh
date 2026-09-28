@@ -4,6 +4,10 @@
 
 set -euo pipefail
 
+# gcloud catches ctrl-c and exits 1 instead of dying from the signal, so bash
+# would treat it as an ordinary failure and carry on with the next step.
+trap 'exit 130' INT
+
 RD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RD_COMMANDS_DIR="$RD_SCRIPT_DIR/commands"
 # scripts/remote-dev -> scripts -> echo
@@ -34,6 +38,25 @@ log_error() { echo -e "\033[0;31m[remote-dev]\033[0m $1" >&2; }
 log_step()  { echo -e "\n\033[1;36m==>\033[0m \033[1m$1\033[0m"; }
 
 die() { log_error "$1"; exit 1; }
+
+# Prompt with a default. Reads from the terminal rather than stdin so this
+# still behaves if the script is piped.
+ask() {
+    local prompt="$1" default="${2:-}" answer
+    if [ -n "$default" ]; then
+        read -r -p "$(echo -e "\033[1;36m?\033[0m $prompt [\033[1m$default\033[0m]: ")" answer </dev/tty
+        echo "${answer:-$default}"
+    else
+        read -r -p "$(echo -e "\033[1;36m?\033[0m $prompt: ")" answer </dev/tty
+        echo "$answer"
+    fi
+}
+
+confirm() {
+    local answer
+    answer="$(ask "$1 (y/n)" "${2:-y}")"
+    [[ "$answer" =~ ^[Yy] ]]
+}
 
 # Every gcloud call goes through these wrappers so the pinned project and zone
 # can never be forgotten at a call site.
@@ -142,15 +165,37 @@ GCP keeps it for 30 days, so it can be brought back:
     fi
 }
 
-# Compute is not enabled on a fresh project. Enabling is idempotent and takes
-# up to a minute the first time, so only call the API when it is actually off.
-require_compute_api() {
-    if gc services list --enabled --format='value(config.name)' 2>/dev/null | grep -qx 'compute.googleapis.com'; then
+# APIs are not enabled on a fresh project. Enabling is idempotent and takes up
+# to a minute the first time, so only call the API when it is actually off.
+require_api() {
+    local service="$1" label="$2" enabled
+    # A failed listing is not proof the API is off, so do not enable on one.
+    enabled="$(gc services list --enabled --format='value(config.name)')" \
+        || die "Could not list the enabled APIs on '$RD_PROJECT'."
+    if echo "$enabled" | grep -qx "$service"; then
         return 0
     fi
-    log_warn "compute.googleapis.com is not enabled on '$RD_PROJECT'. Enabling now (this can take a minute)."
-    gc services enable compute.googleapis.com
-    log_info "Compute Engine API enabled"
+    log_warn "$service is not enabled on '$RD_PROJECT'. Enabling now (this can take a minute)."
+    gc services enable "$service"
+    log_info "$label API enabled"
+}
+
+require_compute_api() { require_api compute.googleapis.com "Compute Engine"; }
+
+# Every API the commands above enable, so status can report on each one.
+RD_APIS="compute.googleapis.com aiplatform.googleapis.com"
+
+api_metrics_url() {
+    echo "https://console.cloud.google.com/apis/api/$1/metrics?project=$RD_PROJECT"
+}
+
+# A Cloud Monitoring dashboard for an API, where there is a more useful one than
+# the metrics page. Vertex AI's breaks usage down by model.
+api_dashboard_url() {
+    case "$1" in
+        aiplatform.googleapis.com)
+            echo "https://console.cloud.google.com/monitoring/dashboards/integration/vertex_ai.vertex-ai-model-garden?project=$RD_PROJECT" ;;
+    esac
 }
 
 instance_exists() {
@@ -272,6 +317,58 @@ minio_host_resolves() {
 # has installed psql.
 vm_psql() {
     vm_compose "exec -T postgres psql -U dembrane -d dembrane -v ON_ERROR_STOP=1 -tAc $(printf '%q' "$1")"
+}
+
+# Run one of the repo's SQL files in the postgres container. The file is read
+# from the VM's checkout and piped in, since the postgres container does not
+# mount the repo. PGOPTIONS hides the "already exists, skipping" notices an
+# idempotent re-run prints for every object.
+vm_psql_file() {
+    vm_ssh "cd '$RD_REPO_DIR/echo/.devcontainer' && docker compose $(compose_file_args) exec -T --env PGOPTIONS='-c client_min_messages=warning' postgres psql -U dembrane -d dembrane -v ON_ERROR_STOP=1 --quiet --file - < '$RD_REPO_DIR/echo/$1'"
+}
+
+# The SQL-only halves of the Map and analysis schemas, in the order
+# docs/database_migrations.md gives (steps 5 and 6). Directus sync cannot create
+# the pgvector column or the unique keys, and without them every Map read fails
+# with a 503. Both are idempotent.
+RD_SQL_MIGRATIONS="directus/migrations/add_map_vectors.sql directus/migrations/add_analysis_constraints.sql"
+
+# Dev servers and workers left behind by an mprocs that died with its SSH
+# session. They are reparented to init and keep serving ports and taking jobs
+# from the queues with whatever .env they started with. Everything mprocs.yaml
+# starts runs under mprocs, so PPID 1 is the tell. Prints
+# "pid<TAB>start time<TAB>command".
+read -r -d '' RD_ORPHANS_LIST <<'EOF' || true
+ps -eo pid=,ppid=,lstart=,args= | awk '$2 == 1 && / (uv run (uvicorn|dramatiq|python -m dembrane)|pnpm run) / {
+    cmd = $8; for (i = 9; i <= NF; i++) cmd = cmd " " $i
+    print $1 "\t" $4 " " $5 " " $6 "\t" cmd
+}'
+EOF
+
+container_orphans() {
+    container_exec "$RD_ORPHANS_LIST" 2>/dev/null
+}
+
+# Stops each orphan with the processes under it, since uv run and pnpm do not
+# always take their children down with them. SIGKILL whatever is left after
+# 10 seconds.
+read -r -d '' RD_ORPHANS_STOP <<'EOF' || true
+tree() { echo "$1"; for c in $(ps -o pid= --ppid "$1"); do tree "$c"; done; }
+pids=""
+for p in $(orphans | cut -f1); do pids="$pids $(tree "$p")"; done
+[ -n "${pids// }" ] || exit 0
+kill -TERM $pids 2>/dev/null
+for _ in $(seq 10); do
+    left=""; for p in $pids; do [ -d "/proc/$p" ] && left="$left $p"; done
+    [ -z "$left" ] && exit 0
+    sleep 1
+done
+kill -KILL $left 2>/dev/null
+EOF
+
+stop_container_orphans() {
+    container_exec "orphans() { $RD_ORPHANS_LIST; }
+$RD_ORPHANS_STOP"
 }
 
 # Partial unique indexes from docs/database_migrations.md. directus-sync does

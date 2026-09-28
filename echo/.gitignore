@@ -12,6 +12,7 @@ redis_data
 directus/uploads
 directus/.env
 *.sql
+!directus/migrations/*.sql
 node_modules
 .next
 cypress/test-suites/.cypress-cache/

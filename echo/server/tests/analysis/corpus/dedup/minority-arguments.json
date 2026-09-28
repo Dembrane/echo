@@ -1,0 +1,81 @@
+{
+  "id": "minority-arguments",
+  "description": "Four people ask for more trams to the east side and merge. A minority keeps a condition and stays on its own, as does an opposing view and a unique idea.",
+  "embedding_model": "text-embedding-004",
+  "inputs": [
+    {
+      "id": "mi1",
+      "statement": "More trams should run to the east side of the city.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-1", "quote": "we need more trams to the east side"}],
+      "embedding": [1, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "mi2",
+      "statement": "The east side of the city needs more frequent trams.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-2", "quote": "the east side needs trams more often"}],
+      "embedding": [1, 0.1, 0, 0, 0, 0]
+    },
+    {
+      "id": "mi3",
+      "statement": "There should be more trams going to the east of the city.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-3", "quote": "put on more trams going east"}],
+      "embedding": [1, 0, 0.1, 0, 0, 0]
+    },
+    {
+      "id": "mi4",
+      "statement": "Trams to the east side should run more often.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-4", "quote": "trams to the east should just run more often"}],
+      "embedding": [1, 0, 0, 0.1, 0, 0]
+    },
+    {
+      "id": "mi5",
+      "statement": "More trams should run to the east side, but only if the existing bus lines are kept.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-5", "quote": "more trams is fine, but only if they keep our bus lines"}],
+      "embedding": [1, 0, 0, 0, 0.3, 0]
+    },
+    {
+      "id": "mi6",
+      "statement": "The old tram depot should become a public market hall.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-2", "quote": "turn the old depot into a market hall"}],
+      "embedding": [0, 0, 0, 0, 0, 1]
+    },
+    {
+      "id": "mi7",
+      "statement": "More trams are the wrong answer for the east side; it needs a metro line.",
+      "epistemic_kind": "argument",
+      "valence": "negative",
+      "evidence": [{"conversation_id": "conv-6", "quote": "trams are the wrong answer, the east needs a metro"}],
+      "embedding": [1, 0, 0, 0, 0, 0.2]
+    }
+  ],
+  "should_merge": [
+    {
+      "any_of": [
+        [["mi1", "mi2", "mi3", "mi4"]],
+        [["mi1", "mi3"], ["mi2", "mi4"]]
+      ],
+      "why": "All four ask for more trams to the east side. mi2 and mi4 ask for trams more often, mi1 and mi3 for more trams; keeping quantity apart from frequency is also acceptable."
+    }
+  ],
+  "must_not_merge": [
+    {"pair": ["mi1", "mi5"], "guard": "model", "why": "The minority adds a condition: only if bus lines stay."},
+    {"pair": ["mi2", "mi5"], "guard": "model", "why": "The minority adds a condition: only if bus lines stay."},
+    {"pair": ["mi3", "mi5"], "guard": "model", "why": "The minority adds a condition: only if bus lines stay."},
+    {"pair": ["mi4", "mi5"], "guard": "model", "why": "The minority adds a condition: only if bus lines stay."},
+    {"pair": ["mi1", "mi7"], "guard": "code", "why": "For versus against."},
+    {"pair": ["mi5", "mi7"], "guard": "code", "why": "For versus against."},
+    {"pair": ["mi1", "mi6"], "guard": "code", "why": "A unique idea, far apart."}
+  ]
+}

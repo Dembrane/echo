@@ -108,7 +108,9 @@ const TemplatePill = ({
 	chatMode?: ChatMode | null;
 	testIdSuffix: string;
 }) => {
-	const colors = chatMode ? MODE_COLORS[chatMode] : null;
+	// Agentic chips stay neutral; the mode's green lives in its mark.
+	const colors =
+		chatMode && chatMode !== "agentic" ? MODE_COLORS[chatMode] : null;
 
 	return (
 		<Tooltip label={label} openDelay={500} disabled={label.length < 25}>

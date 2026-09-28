@@ -1,0 +1,84 @@
+.editor {
+	display: grid;
+	gap: var(--mantine-spacing-lg);
+	align-items: start;
+}
+
+.preview {
+	min-width: 0;
+	overflow: hidden;
+	border: 1px solid var(--mantine-color-default-border);
+	border-radius: var(--mantine-radius-lg);
+	background: var(--app-background);
+}
+
+/* The preview's height comes from the screen's shape, never from the
+   unscaled stage inside it. */
+.viewport {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+}
+
+.stage {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform-origin: top left;
+}
+
+.screen {
+	width: 100%;
+	height: 100%;
+}
+
+.settings {
+	min-width: 0;
+	border: 1px solid var(--mantine-color-default-border);
+	border-radius: var(--mantine-radius-lg);
+	padding: var(--mantine-spacing-lg);
+}
+
+/* The results review is a row of its own under the preview and the editor, as
+   wide as the page. */
+.results {
+	min-width: 0;
+	border: 1px solid var(--mantine-color-default-border);
+	border-radius: var(--mantine-radius-lg);
+	padding: var(--mantine-spacing-lg);
+}
+
+@media (min-width: 1440px) {
+	.editor {
+		grid-template-columns: minmax(0, 1fr) 360px;
+	}
+
+	.settings {
+		max-height: calc(100dvh - 13rem);
+		overflow-y: auto;
+	}
+
+	.preview {
+		position: sticky;
+		top: var(--mantine-spacing-md);
+	}
+}
+
+.hostActions {
+	padding: var(--mantine-spacing-xs);
+	border: 1px solid
+		color-mix(in srgb, var(--mantine-color-primary-6) 25%, transparent);
+	border-radius: var(--mantine-radius-lg);
+	background: linear-gradient(
+		120deg,
+		color-mix(
+			in srgb,
+			var(--mantine-color-primary-6) 8%,
+			var(--app-background)
+		),
+		var(--app-background)
+	);
+	box-shadow: 0 4px 18px
+		color-mix(in srgb, var(--mantine-color-primary-6) 10%, transparent);
+}

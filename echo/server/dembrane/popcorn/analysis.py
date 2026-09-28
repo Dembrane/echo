@@ -191,6 +191,36 @@ def build_corpus(transcripts: list[tuple[str, str]]) -> str:
     return "\n\n".join(parts)
 
 
+# The cross-conversation corpus is every transcript at once. Above this the
+# budget is shared so that short transcripts keep every character and the long
+# ones split what is left evenly, so a slow call stays inside one context.
+MAX_ANALYSIS_CHARS = 600_000
+
+
+def allocate_chars(lengths: dict[str, int], budget: int) -> dict[str, int]:
+    """Share a character budget across transcripts: a transcript short enough
+    to fit its equal share keeps every character, and what it leaves goes to
+    the longer ones in equal measure. The largest total that fits, with no
+    transcript cut while a longer one is whole."""
+    if sum(lengths.values()) <= budget:
+        return dict(lengths)
+    quota: dict[str, int] = {}
+    remaining = budget
+    pending = sorted(lengths.items(), key=lambda kv: kv[1])
+    while pending:
+        share = remaining // len(pending)
+        tid, n = pending[0]
+        if n <= share:
+            quota[tid] = n
+            remaining -= n
+            pending.pop(0)
+        else:
+            for tid, _n in pending:
+                quota[tid] = share
+            pending = []
+    return quota
+
+
 def shape_popcorn_items(raw: dict[str, Any] | None, transcript_id: str) -> list[dict[str, Any]]:
     """Apply the deterministic first-run gates to one extractor response.
 

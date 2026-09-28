@@ -2,19 +2,16 @@ import { Trans } from "@lingui/react/macro";
 import { Button, Stack } from "@mantine/core";
 import { IconDownload } from "@tabler/icons-react";
 import { testId } from "@/lib/testUtils";
-import { HostGuideDownload } from "./HostGuideDownload";
 import { ProjectSettingsSection } from "./ProjectSettingsSection";
 
 type ProjectExportSectionProps = {
 	exportLink: string;
 	projectName?: string | null;
-	project?: Project;
 };
 
 export const ProjectExportSection = ({
 	exportLink,
 	projectName,
-	project,
 }: ProjectExportSectionProps) => {
 	return (
 		<ProjectSettingsSection
@@ -38,8 +35,6 @@ export const ProjectExportSection = ({
 				>
 					<Trans>Download all transcripts</Trans>
 				</Button>
-
-				{project && <HostGuideDownload project={project} />}
 			</Stack>
 		</ProjectSettingsSection>
 	);

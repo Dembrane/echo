@@ -184,6 +184,12 @@ the same; two tensions that share a pole and pull on the same thing from two
 angles are."""
 
 Generate = Callable[..., Awaitable[dict[str, Any]]]
+# The pole quotes of one verified pair: the verifier's answer and the two
+# positions in, the quotes that hold pole A and pole B out.
+PoleQuotes = Callable[
+    [dict[str, Any], dict[str, Any], dict[str, Any]],
+    tuple[list[dict[str, str]], list[dict[str, str]]],
+]
 
 
 async def _all(coros: list[Coroutine[Any, Any, Any]]) -> list[Any]:
@@ -209,6 +215,13 @@ def locate(quote: str, transcripts: dict[str, str], order: list[str]) -> str | N
         if tid in transcripts and key in norm(transcripts[tid]):
             return tid
     return None
+
+
+def tables_of(position: dict[str, Any]) -> list[str]:
+    """The tables a position was held at. A position read from one transcript
+    has one; a position built from a consolidated argument may have several,
+    its own (first) table leading."""
+    return list(position.get("tables") or [position["transcript"]])
 
 
 def trim_positions(
@@ -249,34 +262,30 @@ def trim_positions(
     }
 
 
-async def run_pipeline(
-    transcripts: dict[str, str],
-    book: QuoteBook,
-    *,
-    generate: Generate,
-    prompts: dict[str, str],
-    concurrency: int = 8,
-    max_tensions: int = MAX_TENSIONS,
-) -> dict[str, Any]:
-    """`generate(system_prompt=, user_text=, schema=, thinking=)` is one model
-    call returning the structured answer. Returns the tensions block, the
-    screen flags left after the retry, and the stage counts for the run log."""
-    tids = list(transcripts)
-    sem = asyncio.Semaphore(concurrency)
+class Judge:
+    """The model, one bounded judgement at a time per slot. Shared by every
+    stage of one run, so the stages count their calls in one place and the
+    run log says how long the run had been going when each stage ended."""
 
-    calls = {"n": 0}
-    started = time.monotonic()
+    def __init__(self, generate: Generate, concurrency: int = 8) -> None:
+        self._generate = generate
+        self._sem = asyncio.Semaphore(concurrency)
+        self.calls = 0
+        self.retries = 0
+        self.by_label: dict[str, int] = {}
+        self.started = time.monotonic()
 
-    def stage(name: str, **counts: Any) -> None:
+    def stage(self, name: str, **counts: Any) -> None:
         logger.info(
             "tensions pipeline %s after %d s and %d calls: %s",
             name,
-            int(time.monotonic() - started),
-            calls["n"],
+            int(time.monotonic() - self.started),
+            self.calls,
             ", ".join(f"{k}={v}" for k, v in counts.items()),
         )
 
-    async def gen(
+    async def __call__(
+        self,
         system: str,
         user: str,
         schema: dict[str, Any],
@@ -287,18 +296,20 @@ async def run_pipeline(
         broken JSON is asked once more (the lab's runner retries too), and a
         second failure names the call in its error so the tick's outcome line
         says which stage died, not just that a task group did."""
-        async with sem:
+        async with self._sem:
             for attempt in (1, 2):
-                calls["n"] += 1
+                self.calls += 1
+                self.by_label[label] = self.by_label.get(label, 0) + 1
                 try:
                     return await asyncio.wait_for(
-                        generate(
+                        self._generate(
                             system_prompt=system, user_text=user, schema=schema, thinking=thinking
                         ),
                         timeout=CALL_TIMEOUT_SECONDS,
                     )
                 except (TimeoutError, ValueError) as exc:
                     if attempt == 1:
+                        self.retries += 1
                         logger.warning("popcorn %s call failed once, asking again: %s", label, exc)
                         continue
                     if isinstance(exc, TimeoutError):
@@ -308,50 +319,31 @@ async def run_pipeline(
                     raise ValueError(f"{label} call answered badly twice: {exc}") from exc
             raise AssertionError("unreachable")
 
-    # 0. what the rooms were handed, over the whole corpus. Its quotes are
-    # checked like every other: an item whose quote is nowhere in the
-    # transcripts still reaches the verifier, marked as unverified, so the
-    # framing it describes cannot reject a tension on the same footing as a
-    # framing the rooms can be heard reading.
-    async def handed_list() -> list[dict[str, Any]]:
-        out = await gen(
-            prompts["tensions-handed"], _corpus(transcripts, tids), HANDED_SCHEMA, label="handed"
-        )
-        items = []
-        for h in out.get("handed") or []:
-            if not isinstance(h, dict):
-                continue
-            quote = str(h.get("quote") or "").strip()
-            claimed = str(h.get("transcript") or "")
-            where = locate(quote, transcripts, [claimed] + tids) if quote else None
-            items.append({**h, "transcript": where or claimed, "verified": where is not None})
-        return items
 
-    # 1. positions per transcript, beside the handed call: neither reads the other
-    async def positions_for(tid: str) -> list[dict[str, Any]]:
-        out = await gen(
-            prompts["positions"],
-            f"TRANSCRIPT id: {tid}\n{transcripts[tid]}\nEND TRANSCRIPT",
-            POSITIONS_SCHEMA,
-            label="positions",
-        )
-        found = []
-        for p in (out.get("positions") or [])[:MAX_POSITIONS_PER_TRANSCRIPT]:
-            if not isinstance(p, dict) or not p.get("position"):
-                continue
-            quote = str(p.get("quote") or "").strip()
-            found.append(
-                {
-                    **p,
-                    "transcript": tid,
-                    "verbatim": bool(quote) and norm(quote) in norm(transcripts[tid]),
-                }
-            )
-        return found
+# 0. what the rooms were handed, over the whole corpus. Its quotes are checked
+# like every other: an item whose quote is nowhere in the transcripts still
+# reaches the verifier, marked as unverified, so the framing it describes
+# cannot reject a tension on the same footing as a framing the rooms can be
+# heard reading.
+async def find_handed(
+    judge: Judge, transcripts: dict[str, str], *, prompt: str
+) -> list[dict[str, Any]]:
+    tids = list(transcripts)
+    out = await judge(prompt, _corpus(transcripts, tids), HANDED_SCHEMA, label="handed")
+    items = []
+    for h in out.get("handed") or []:
+        if not isinstance(h, dict):
+            continue
+        quote = str(h.get("quote") or "").strip()
+        claimed = str(h.get("transcript") or "")
+        where = locate(quote, transcripts, [claimed] + tids) if quote else None
+        items.append({**h, "transcript": where or claimed, "verified": where is not None})
+    return items
 
-    first, *rest = await _all([handed_list()] + [positions_for(t) for t in tids])
-    handed: list[dict[str, Any]] = first
-    handed_text = (
+
+def handed_listing(handed: list[dict[str, Any]]) -> str:
+    """The handed list as the verifier reads it."""
+    return (
         "\n".join(
             f"- [{h.get('status')}] {h.get('text')}\n  what the rooms did: {h.get('response')}"
             + ("" if h["verified"] else "\n  (its quote was not found in the transcripts)")
@@ -359,33 +351,37 @@ async def run_pipeline(
         )
         or "- nothing was handed to the rooms"
     )
-    stage("handed", handed=len(handed), verified=sum(1 for h in handed if h["verified"]))
 
-    found_by_tid = dict(zip(tids, rest, strict=True))
-    found_total = sum(len(v) for v in found_by_tid.values())
-    found_by_tid = trim_positions(found_by_tid)
-    positions: list[dict[str, Any]] = []
-    for tid in tids:
-        for p in found_by_tid[tid]:
-            positions.append({"id": f"P{len(positions) + 1}", **p})
+
+# 2. collisions per position, across all tables
+async def find_collisions(
+    judge: Judge,
+    positions: list[dict[str, Any]],
+    *,
+    prompt: str,
+    tables: list[str] | None = None,
+    focal: list[dict[str, Any]] | None = None,
+) -> tuple[list[dict[str, Any]], int]:
+    """One call per focal position (every position unless told otherwise)
+    against the listing of all of them. `tables` numbers the tables in the
+    listing; by default in the order the positions first name them. Returns
+    the candidates to verify, ranked and capped, and how many pairs were found
+    before the cap."""
     by_id = {p["id"]: p for p in positions}
-
-    stage(
-        "positions",
-        positions=len(positions),
-        found=found_total,
-        verbatim=sum(1 for p in positions if p["verbatim"]),
-    )
-    # 2. collisions per position, across all tables
-    key = {t: f"T{i + 1}" for i, t in enumerate(tids)}
+    order = list(tables or [])
+    for p in positions:
+        for tid in tables_of(p):
+            if tid not in order:
+                order.append(tid)
+    key = {t: f"T{i + 1}" for i, t in enumerate(order)}
     listing = "\n".join(
         f"{p['id']} [{key[p['transcript']]} · {p.get('holder')} · {p.get('kind')}{' · hedged' if p.get('hedged') else ''}] {p['position']}"
         for p in positions
     )
 
     async def collisions_for(p: dict[str, Any]) -> tuple[str, list[dict[str, Any]]]:
-        out = await gen(
-            prompts["collisions"],
+        out = await judge(
+            prompt,
             f"ALL POSITIONS:\n{listing}\n\nFOCAL POSITION: {p['id']}",
             COLLISIONS_SCHEMA,
             label="collisions",
@@ -393,7 +389,8 @@ async def run_pipeline(
         return p["id"], [c for c in (out.get("collides") or []) if isinstance(c, dict)]
 
     pair: dict[tuple[str, str], dict[str, Any]] = {}
-    for pid, cols in await _all([collisions_for(p) for p in positions]):
+    asked = positions if focal is None else focal
+    for pid, cols in await _all([collisions_for(p) for p in asked]):
         for c in cols:
             other = str(c.get("id") or "").strip()
             try:
@@ -410,7 +407,7 @@ async def run_pipeline(
                     "b": k[1],
                     "zero_sum": score,
                     "why": str(c.get("why") or ""),
-                    "cross_table": by_id[k[0]]["transcript"] != by_id[k[1]]["transcript"],
+                    "cross_table": set(tables_of(by_id[k[0]])) != set(tables_of(by_id[k[1]])),
                     "named_by": (prev["named_by"] if prev else []) + [pid],
                 }
             else:
@@ -424,7 +421,7 @@ async def run_pipeline(
     reserved: list[dict[str, Any]] = []
     seen_tids: set[str] = set()
     for c in candidates:
-        for tid in (by_id[c["a"]]["transcript"], by_id[c["b"]]["transcript"]):
+        for tid in tables_of(by_id[c["a"]]) + tables_of(by_id[c["b"]]):
             if tid not in seen_tids:
                 seen_tids.add(tid)
                 if c not in reserved:
@@ -432,25 +429,36 @@ async def run_pipeline(
     rest = [c for c in candidates if c not in reserved]
     candidates = (reserved + rest)[: max(MAX_CANDIDATES, len(reserved))]
     candidates.sort(key=lambda c: (not c["cross_table"], -c["zero_sum"], -len(c["named_by"])))
+    return candidates, found_pairs
 
-    stage(
-        "collisions",
-        candidates=len(candidates),
-        found=found_pairs,
-        cross_table=sum(1 for c in candidates if c["cross_table"]),
-    )
 
-    # 3. verify each candidate against its transcripts
+# 3. verify each candidate against its transcripts
+async def verify_candidates(
+    judge: Judge,
+    candidates: list[dict[str, Any]],
+    by_id: dict[str, dict[str, Any]],
+    *,
+    prompt: str,
+    transcripts: dict[str, str],
+    handed_text: str,
+    pole_quotes: PoleQuotes | None = None,
+) -> list[dict[str, Any]]:
+    """One call per candidate pair, with the transcripts the pair came from.
+    Pole A is the pair's `a` position, pole B its `b`. The pole quotes are the
+    verifier's, kept only where they are word for word in one of those
+    transcripts; `pole_quotes` replaces that rule for a caller whose evidence
+    comes with the positions."""
+
     async def verify(c: dict[str, Any]) -> dict[str, Any]:
         a, b = by_id[c["a"]], by_id[c["b"]]
-        ts = sorted({a["transcript"], b["transcript"]})
+        ts = sorted(set(tables_of(a)) | set(tables_of(b)))
         user = (
             f"{_corpus(transcripts, ts)}\n\nWHAT THE ROOMS WERE HANDED:\n{handed_text}\n\n"
             f'THE PAIR:\nA ({a.get("holder")}, {a.get("kind")}): {a["position"]}\n   said: "{a.get("quote")}"\n'
             f'B ({b.get("holder")}, {b.get("kind")}): {b["position"]}\n   said: "{b.get("quote")}"\n'
             f"Flagged because: {c['why']}"
         )
-        out = await gen(prompts["tension-verify"], user, VERIFY_SCHEMA, label="verify")
+        out = await judge(prompt, user, VERIFY_SCHEMA, label="verify")
 
         def located(raw: Any, own: str, other: str) -> list[dict[str, str]]:
             """The pole's quotes that are word for word in one of the two
@@ -463,20 +471,29 @@ async def run_pipeline(
                     found.append({"transcript": where, "text": q})
             return found[:2]
 
+        if pole_quotes is None:
+            quotes_a = located(out.get("quotesA"), a["transcript"], b["transcript"])
+            quotes_b = located(out.get("quotesB"), b["transcript"], a["transcript"])
+        else:
+            quotes_a, quotes_b = pole_quotes(out, a, b)
         return {
             **c,
             "valid": bool(out.get("valid")),
             "verify_why": str(out.get("why") or ""),
             "poleA": str(out.get("poleA") or "").strip(),
             "poleB": str(out.get("poleB") or "").strip(),
-            "quotesA": located(out.get("quotesA"), a["transcript"], b["transcript"]),
-            "quotesB": located(out.get("quotesB"), b["transcript"], a["transcript"]),
+            "quotesA": quotes_a,
+            "quotesB": quotes_b,
             "transcripts": ts,
         }
 
-    verified = list(await _all([verify(c) for c in candidates]))
-    # A tension is a claim about two poles; each needs a passage that holds
-    # it. The verifier's yes without a quote on a pole is unsupported.
+    return list(await _all([verify(c) for c in candidates]))
+
+
+def supported(verified: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], int]:
+    """A tension is a claim about two poles; each needs a passage that holds
+    it. The verifier's yes without a quote on a pole is unsupported. Returns
+    the supported pairs and how many valid pairs were unsupported."""
     valid = [
         v
         for v in verified
@@ -487,16 +504,44 @@ async def run_pipeline(
         for v in verified
         if v["valid"] and v["poleA"] and v["poleB"] and not (v["quotesA"] and v["quotesB"])
     )
+    return valid, unsupported
 
-    stage("verify", verified=len(valid), of=len(verified), unsupported=unsupported)
-    # 4. dedupe in rank order, one call per pair against what is kept
+
+def _support(v: dict[str, Any], position: str, via: str, **extra: Any) -> dict[str, Any]:
+    return {
+        "position": position,
+        "pair": [v["a"], v["b"]],
+        "via": via,
+        "verify_why": v["verify_why"],
+        **extra,
+    }
+
+
+# 4. dedupe in rank order, one call per pair against what is kept
+async def dedupe_tensions(
+    judge: Judge, valid: list[dict[str, Any]], *, max_tensions: int = MAX_TENSIONS
+) -> list[dict[str, Any]]:
+    """Every kept tension carries `supportA` and `supportB`: the positions
+    holding each pole, starting with its own pair and growing with every facet
+    folded into it, each on the pole its quotes went to."""
     kept: list[dict[str, Any]] = []
+
+    def keep(v: dict[str, Any]) -> None:
+        kept.append(
+            {
+                **v,
+                "id": f"x{len(kept) + 1}",
+                "supportA": [_support(v, v["a"], "pair")],
+                "supportB": [_support(v, v["b"], "pair")],
+            }
+        )
+
     for v in valid:
         if not kept:
-            kept.append({**v, "id": f"x{len(kept) + 1}"})
+            keep(v)
             continue
         listing_kept = "\n".join(f"{k['id']}: {k['poleA']} / {k['poleB']}" for k in kept)
-        out = await gen(
+        out = await judge(
             DEDUPE_SYSTEM,
             f"KEPT:\n{listing_kept}\n\nNEW: {v['poleA']} / {v['poleB']}\n  (from: {v['why']})",
             DEDUPE_SCHEMA,
@@ -506,12 +551,13 @@ async def run_pipeline(
         same = str(out.get("same_as") or "").strip()
         target = next((k for k in kept if k["id"] == same), None) if same else None
         if target is not None:
+            swapped = bool(out.get("swapped"))
+            why = str(out.get("why") or "")
             target.setdefault("merged", []).append(
-                {"a": v["a"], "b": v["b"], "why": str(out.get("why") or "")}
+                {"a": v["a"], "b": v["b"], "why": why, "swapped": swapped}
             )
             # A facet's quotes stay with the pole they held, which is the kept
             # tension's other pole when the facet arrived the other way round.
-            swapped = bool(out.get("swapped"))
             for side, into in (
                 ("quotesA", "quotesB" if swapped else "quotesA"),
                 ("quotesB", "quotesA" if swapped else "quotesB"),
@@ -520,22 +566,55 @@ async def run_pipeline(
                     held = [x["text"] for x in target["quotesA"] + target["quotesB"]]
                     if q["text"] not in held and len(held) < MAX_QUOTES_PER_TENSION:
                         target[into].append(q)
+            # ...and so do the positions holding it. A position already holding
+            # a pole stays where it first arrived; one the facet would move to
+            # the other pole is recorded under `both_poles`, never dropped silently.
+            for pid, into in (
+                (v["a"], "supportB" if swapped else "supportA"),
+                (v["b"], "supportA" if swapped else "supportB"),
+            ):
+                other = "supportA" if into == "supportB" else "supportB"
+                if any(s["position"] == pid for s in target[into]):
+                    continue
+                if any(s["position"] == pid for s in target[other]):
+                    target.setdefault("both_poles", []).append(pid)
+                    continue
+                target[into].append(
+                    _support(v, pid, "facet", dedupe_why=why, swapped=swapped, into=target["id"])
+                )
             continue
         if len(kept) >= max_tensions:
             continue  # full: later pairs can still fold into a kept tension as facets
-        kept.append({**v, "id": f"x{len(kept) + 1}"})
+        keep(v)
+    return kept
 
-    stage("dedupe", kept=len(kept))
 
-    # 5. write each, then the screen gate with one retry
+# 5. write each, then the screen gate with one retry
+async def write_tensions(
+    judge: Judge,
+    kept: list[dict[str, Any]],
+    by_id: dict[str, dict[str, Any]],
+    *,
+    prompt: str,
+    host_note: str = "",
+) -> list[tuple[dict[str, Any], list[str]]]:
+    """The knot and the question of every kept tension, with the screen flags
+    left after one retry. A host note on voice reaches this stage alone: it
+    shapes how a tension is written, never whether it was found."""
+
     async def write(k: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
         facets = [
             f"- {by_id[m['a']]['position']}  /  {by_id[m['b']]['position']}"
             for m in k.get("merged", [])
             if m.get("a") in by_id and m.get("b") in by_id
         ]
+        note = (
+            f"HOST NOTE ON VOICE (from the facilitator; every rule above still holds):\n{host_note}\n\n"
+            if host_note
+            else ""
+        )
         user = (
-            f"POLE A: {k['poleA']}\nPOLE B: {k['poleB']}\n"
+            f"{note}POLE A: {k['poleA']}\nPOLE B: {k['poleB']}\n"
             "HOLDING A: " + " | ".join(f'"{q["text"]}"' for q in k["quotesA"]) + "\n"
             "HOLDING B: " + " | ".join(f'"{q["text"]}"' for q in k["quotesB"]) + "\n"
             f"WHAT COLLIDES: {k['why']}"
@@ -560,28 +639,115 @@ async def run_pipeline(
                 "toResolve": str(out.get("toResolve") or "").strip(),
             }
 
-        t = shaped(await gen(prompts["tension-write"], user, WRITE_SCHEMA, label="write"))
+        t = shaped(await judge(prompt, user, WRITE_SCHEMA, label="write"))
         flags = screen_flags({"tensions": [t]})
         if flags:
             retry_prompt = (
-                prompts["tension-write"]
+                prompt
                 + "\n\n## Your previous answer failed these checks\n\n"
                 + "\n".join(f"- {f}" for f in flags)
                 + "\n\nFix every one of them."
             )
-            t = shaped(await gen(retry_prompt, user, WRITE_SCHEMA, label="write"))
+            t = shaped(await judge(retry_prompt, user, WRITE_SCHEMA, label="write"))
             flags = screen_flags({"tensions": [t]})
         return t, flags
 
+    return list(await _all([write(item) for item in kept]))
+
+
+async def run_pipeline(
+    transcripts: dict[str, str],
+    book: QuoteBook,
+    *,
+    generate: Generate,
+    prompts: dict[str, str],
+    concurrency: int = 8,
+    max_tensions: int = MAX_TENSIONS,
+) -> dict[str, Any]:
+    """`generate(system_prompt=, user_text=, schema=, thinking=)` is one model
+    call returning the structured answer. Returns the tensions block, the
+    screen flags left after the retry, and the stage counts for the run log."""
+    tids = list(transcripts)
+    judge = Judge(generate, concurrency)
+
+    # 1. positions per transcript, beside the handed call: neither reads the other
+    async def positions_for(tid: str) -> list[dict[str, Any]]:
+        out = await judge(
+            prompts["positions"],
+            f"TRANSCRIPT id: {tid}\n{transcripts[tid]}\nEND TRANSCRIPT",
+            POSITIONS_SCHEMA,
+            label="positions",
+        )
+        found = []
+        for p in (out.get("positions") or [])[:MAX_POSITIONS_PER_TRANSCRIPT]:
+            if not isinstance(p, dict) or not p.get("position"):
+                continue
+            quote = str(p.get("quote") or "").strip()
+            found.append(
+                {
+                    **p,
+                    "transcript": tid,
+                    "verbatim": bool(quote) and norm(quote) in norm(transcripts[tid]),
+                }
+            )
+        return found
+
+    first, *rest = await _all(
+        [find_handed(judge, transcripts, prompt=prompts["tensions-handed"])]
+        + [positions_for(t) for t in tids]
+    )
+    handed: list[dict[str, Any]] = first
+    handed_text = handed_listing(handed)
+    judge.stage("handed", handed=len(handed), verified=sum(1 for h in handed if h["verified"]))
+
+    found_by_tid = dict(zip(tids, rest, strict=True))
+    found_total = sum(len(v) for v in found_by_tid.values())
+    found_by_tid = trim_positions(found_by_tid)
+    positions: list[dict[str, Any]] = []
+    for tid in tids:
+        for p in found_by_tid[tid]:
+            positions.append({"id": f"P{len(positions) + 1}", **p})
+    by_id = {p["id"]: p for p in positions}
+
+    judge.stage(
+        "positions",
+        positions=len(positions),
+        found=found_total,
+        verbatim=sum(1 for p in positions if p["verbatim"]),
+    )
+    candidates, found_pairs = await find_collisions(
+        judge, positions, prompt=prompts["collisions"], tables=tids
+    )
+    judge.stage(
+        "collisions",
+        candidates=len(candidates),
+        found=found_pairs,
+        cross_table=sum(1 for c in candidates if c["cross_table"]),
+    )
+
+    verified = await verify_candidates(
+        judge,
+        candidates,
+        by_id,
+        prompt=prompts["tension-verify"],
+        transcripts=transcripts,
+        handed_text=handed_text,
+    )
+    valid, unsupported = supported(verified)
+    judge.stage("verify", verified=len(valid), of=len(verified), unsupported=unsupported)
+
+    kept = await dedupe_tensions(judge, valid, max_tensions=max_tensions)
+    judge.stage("dedupe", kept=len(kept))
+
     tensions: list[dict[str, Any]] = []
     gate_flags: list[str] = []
-    written = await _all([write(item) for item in kept])
+    written = await write_tensions(judge, kept, by_id, prompt=prompts["tension-write"])
     for (tension, flags), item in zip(written, kept, strict=True):
         # Every quote arrives with the table that said it; the book only confirms.
         tension["quoteIds"] = book.add_all(item["quotesA"] + item["quotesB"])
         tensions.append(tension)
         gate_flags += flags
-    stage("write", tensions=len(tensions), flags_left=len(gate_flags))
+    judge.stage("write", tensions=len(tensions), flags_left=len(gate_flags))
     return {
         "tensions": {"tensions": tensions},
         "gate_flags": gate_flags,

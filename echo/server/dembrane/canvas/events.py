@@ -18,7 +18,11 @@ def generation_channel(report_id: str) -> str:
 
 
 async def publish_generation_nudge(report_id: str) -> None:
-    """Best-effort publish for future live canvas refresh consumers."""
+    """Best effort, and a failure is not harmless: pub/sub keeps nothing and no
+    later nudge is promised, so a page following the session can stay stale.
+    What recovers is the reader's safety read: the deck re-reads once a minute
+    while its stream is open, and a page refetches whenever its stream
+    (re)connects."""
     if not report_id:
         return
     try:

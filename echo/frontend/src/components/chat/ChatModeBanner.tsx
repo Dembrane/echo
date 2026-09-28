@@ -1,6 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Group, Text } from "@mantine/core";
 import { IconMessageCircle, IconSparkles } from "@tabler/icons-react";
+import { AgenticMark } from "./AgenticMark";
 import { MODE_COLORS } from "./ChatModeSelector";
 
 type ChatModeBannerProps = {
@@ -19,14 +20,24 @@ export const ChatModeBanner = ({
 	return (
 		<Box
 			className="rounded-lg px-4 py-2.5"
-			style={{
-				backgroundColor: colors.lighter,
-				border: `1px solid ${colors.border}`,
-			}}
+			data-testid="chat-mode-banner"
+			style={
+				isAgentic
+					? {
+							backgroundColor: "var(--app-background)",
+							border: "1px solid var(--mantine-color-gray-3)",
+						}
+					: {
+							backgroundColor: colors.lighter,
+							border: `1px solid ${colors.border}`,
+						}
+			}
 		>
 			<Group justify="space-between" wrap="nowrap">
 				<Group gap="sm" wrap="nowrap">
-					{isOverview || isAgentic ? (
+					{isAgentic ? (
+						<AgenticMark size={20} />
+					) : isOverview ? (
 						<IconSparkles size={16} stroke={1.8} color={colors.primary} />
 					) : (
 						<IconMessageCircle size={16} stroke={1.8} color={colors.primary} />

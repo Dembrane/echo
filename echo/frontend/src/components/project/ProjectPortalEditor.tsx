@@ -61,9 +61,14 @@ import {
 	useUpdateCustomTopicMutation,
 	useUpdateProjectByIdMutation,
 } from "./hooks";
+import { ProjectHostGuideLink } from "./ProjectHostGuideLink";
 import { KeyTermsInput } from "./KeyTermsInput";
 import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
+import {
+	projectLanguageForForm,
+	projectLanguageForUpdate,
+} from "./projectLanguage";
 
 const FormSchema = z.object({
 	anonymize_transcripts: z.boolean(),
@@ -165,12 +170,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const [previewHeight, setPreviewHeight] = useState(300);
 	const savedTopicsRef = useRef<string | null>(null);
 
-	const projectLanguageCode = (project.language ?? "en") as
-		| "en"
-		| "nl"
-		| "de"
-		| "fr"
-		| "es";
+	const projectLanguageCode = projectLanguageForForm(project.language);
 	const { iso639_1: uiLanguageIso } = useLanguage();
 	const translationLocale =
 		localeFromIso(uiLanguageIso) ??
@@ -402,7 +402,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 	const onSave = useCallback(
 		async (values: ProjectPortalFormValues) => {
-			const { verification_topics, ...projectPayload } = values;
+			const { verification_topics, language, ...projectPayload } = values;
+			const languageUpdate = projectLanguageForUpdate(
+				language,
+				!!formState.dirtyFields.language,
+			);
 			const normalizedTopics = normalizeTopicList(verification_topics);
 			const serializedTopics =
 				normalizedTopics.length > 0 ? normalizedTopics.join(",") : null;
@@ -411,6 +415,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 				id: project.id,
 				payload: {
 					...(projectPayload as Partial<Project>),
+					...(languageUpdate ? { language: languageUpdate } : {}),
 					selected_verification_key_list: serializedTopics,
 				},
 			});
@@ -433,7 +438,13 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 				},
 			);
 		},
-		[project.id, updateProjectMutation, reset, queryClient],
+		[
+			project.id,
+			updateProjectMutation,
+			reset,
+			queryClient,
+			formState.dirtyFields.language,
+		],
 	);
 
 	const {
@@ -538,16 +549,19 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 							isError={isError}
 						/>
 					</Group>
-					<Button
-						variant="subtle"
-						onClick={() => setShowPreview(!showPreview)}
-						rightSection={
-							showPreview ? <IconEyeOff size={16} /> : <IconEye size={16} />
-						}
-						{...testId("portal-editor-preview-toggle")}
-					>
-						<Trans>{showPreview ? "Hide Preview" : "Show Preview"}</Trans>
-					</Button>
+					<Group gap="xs">
+						<ProjectHostGuideLink projectId={project.id} />
+						<Button
+							variant="subtle"
+							onClick={() => setShowPreview(!showPreview)}
+							rightSection={
+								showPreview ? <IconEyeOff size={16} /> : <IconEye size={16} />
+							}
+							{...testId("portal-editor-preview-toggle")}
+						>
+							<Trans>{showPreview ? "Hide Preview" : "Show Preview"}</Trans>
+						</Button>
+					</Group>
 				</Group>
 
 				<div className="relative flex h-auto flex-col gap-8 lg:flex-row lg:justify-start">

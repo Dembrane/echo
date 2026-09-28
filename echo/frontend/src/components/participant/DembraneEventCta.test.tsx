@@ -70,17 +70,17 @@ it("shows the illustration and one button, and asks nothing itself", () => {
 	expect(
 		screen.getByTestId("portal-finish-event-cta").textContent,
 	).not.toContain("run an event");
-	// No form of its own: the website's needs form is the form.
+	// No form of its own: the card links out to the website.
 	expect(screen.queryByTestId("pricing-configurator-modal")).toBeNull();
 	expect(capture).not.toHaveBeenCalled();
 });
 
-it("links to the email step of the website's needs form in a new tab, carrying the project", () => {
+it("links to the website's participants page in a new tab, carrying the project", () => {
 	wrap(<DembraneEventCta projectId="p1" />);
 
 	const button = screen.getByTestId("portal-finish-event-cta-button");
 	expect(button.getAttribute("href")).toBe(
-		"https://www.dembrane.com/pricing?project=p1&step=2#needs",
+		"https://www.dembrane.com/participants?project=p1#share",
 	);
 	expect(button.getAttribute("target")).toBe("_blank");
 	expect(button.getAttribute("rel")).toContain("noopener");
@@ -91,10 +91,10 @@ it("links to the email step of the website's needs form in a new tab, carrying t
 	});
 });
 
-it("sends a Dutch participant to the Dutch form", () => {
+it("sends a Dutch participant to the Dutch page", () => {
 	wrap(<DembraneEventCta projectId="p1" />, "/nl-NL/p1/conversation/c1/finish");
 
 	expect(
 		screen.getByTestId("portal-finish-event-cta-button").getAttribute("href"),
-	).toBe("https://www.dembrane.com/nl/pricing?project=p1&step=2#needs");
+	).toBe("https://www.dembrane.com/nl/deelnemers?project=p1#share");
 });

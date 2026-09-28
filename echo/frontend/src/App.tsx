@@ -62,6 +62,9 @@ const queryClient = new QueryClient({
 });
 
 const router = USE_PARTICIPANT_ROUTER ? participantRouter : mainRouter;
+const audienceEntry = /^\/present\/(screen|public)\//.test(
+	window.location.pathname,
+);
 
 export const App = () => {
 	// Pageviews (including SPA history changes) are captured by PostHog via
@@ -70,6 +73,7 @@ export const App = () => {
 	useEffect(() => watchForNewVersion(router), []);
 
 	useEffect(() => {
+		if (audienceEntry) return;
 		const preloadRoutes = () => {
 			const loaders = [
 				() => import("./routes/project/ProjectsHome"),
@@ -116,6 +120,18 @@ export const App = () => {
 			}
 		};
 	}, []);
+
+	if (audienceEntry) {
+		return (
+			<QueryClientProvider client={queryClient}>
+				<MantineProvider theme={theme}>
+					<I18nProvider>
+						<RouterProvider router={router} />
+					</I18nProvider>
+				</MantineProvider>
+			</QueryClientProvider>
+		);
+	}
 
 	return (
 		<QueryClientProvider client={queryClient}>

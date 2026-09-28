@@ -15,7 +15,7 @@ def test_settings_reads_env(monkeypatch):
     assert settings.echo_api_url == "http://example.test/api"
     assert settings.gcp_sa_json == {"type": "service_account", "project_id": "proj-1"}
     assert settings.vertex_location == "europe-west4"
-    assert settings.vertex_api_endpoint == "aiplatform.googleapis.com"
+    assert settings.vertex_api_endpoint == "aiplatform.eu.rep.googleapis.com"
     assert settings.llm_model == "gemini-test"
     assert settings.agent_graph_recursion_limit == 64
     assert settings.agent_cors_origins == "http://localhost:1111,http://localhost:2222"

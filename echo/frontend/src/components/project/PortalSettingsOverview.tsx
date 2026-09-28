@@ -14,6 +14,7 @@ import {
 } from "@mantine/core";
 import { PaintBrushIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
+import { languageOptionsByIso639_1 } from "@/components/language/LanguagePicker";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { ProjectQRCode } from "./ProjectQRCode";
 
@@ -44,17 +45,14 @@ const SECTIONS = [
 	},
 ] as const;
 
+// The names come from the language picker so every supported language has a
+// label here the moment it is added there. `multi` is the legacy stored value.
 const languageLabel = (language: Project["language"]): string => {
-	switch (language) {
-		case "en":
-			return t`English`;
-		case "nl":
-			return t`Dutch`;
-		case "multi":
-			return t`Multiple languages`;
-		default:
-			return t`Not set`;
-	}
+	if (language === "multi") return t`Multiple languages`;
+	const option = languageOptionsByIso639_1.find(
+		(entry) => entry.value === language,
+	);
+	return option?.label ?? t`Not set`;
 };
 
 const StatusBadge = ({ on }: { on: boolean }) =>

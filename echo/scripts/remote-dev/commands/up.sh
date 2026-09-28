@@ -2,7 +2,8 @@
 # Brings the whole stack up on the VM and installs dependencies.
 #
 # In order:
-#   1. copies .env files up
+#   0. offers to copy your working tree up, if the VM's differs
+#   1. offers to add the devcontainer defaults to server/.env, copies .env files up
 #   2. docker compose up -d (postgres, valkey, directus, agent, devcontainer)
 #   3. runs the devcontainer's own setup.sh (node, pnpm, uv, deps, sshd)
 #   4. pushes the directus schema and the membership indexes
@@ -22,13 +23,87 @@ SKIP_SETUP=false
 require_gcloud
 require_running
 
+# The VM runs its own checkout, which nothing keeps in step with yours, so up
+# would otherwise start whatever compose files and code the VM last had.
+log_step "Comparing your working tree with the VM's"
+# What is left differing after this, for stale_hint below.
+STALE=""
+if CHANGED="$("$RD_COMMANDS_DIR/sync-code.sh" --check)"; then
+    if [ -z "$CHANGED" ]; then
+        log_info "The VM has the same tracked files as you"
+    else
+        log_warn "$(echo "$CHANGED" | wc -l | tr -d ' ') tracked file(s) differ from the VM's:"
+        echo "$CHANGED" | head -15 | sed 's/^/    /'
+        if [ "$(echo "$CHANGED" | wc -l)" -gt 15 ]; then echo "    ..."; fi
+        # A differing file the VM has edited is probably work done there, in
+        # Zed, which a copy would overwrite.
+        VM_EDITED="$(vm_ssh "cd '$RD_REPO_DIR' && git diff --name-only HEAD" 2>/dev/null || true)"
+        OVERLAP="$(comm -12 <(echo "$CHANGED" | sort) <(echo "$VM_EDITED" | sort))"
+        DEFAULT="y"
+        if [ -n "$OVERLAP" ]; then
+            log_warn "The VM has uncommitted edits of its own to $(echo "$OVERLAP" | wc -l | tr -d ' ') of them, which copying would overwrite:"
+            echo "$OVERLAP" | head -15 | sed 's/^/    /'
+            DEFAULT="n"
+        fi
+        # Opening /dev/tty, not testing it: the node exists even with no terminal.
+        if { : </dev/tty; } 2>/dev/null && confirm "Copy your working tree to the VM first?" "$DEFAULT"; then
+            "$RD_COMMANDS_DIR/sync-code.sh"
+        else
+            STALE="$CHANGED"
+            log_info "Leaving the VM's files as they are. Copy yours later with: ./scripts/remote-dev.sh sync-code"
+        fi
+    fi
+else
+    log_warn "Could not compare with the VM, so starting it with whatever it has."
+fi
+
+# When a step fails, say which of the files it reads differ on the VM, since
+# the fix may be on your laptop only. $1 is a path from the repo root.
+stale_hint() {
+    local files
+    files="$(echo "$STALE" | grep "^$1/" || true)"
+    [ -n "$files" ] || return 0
+    log_warn "The VM's copy of $1 differs from yours in:"
+    echo "$files" | head -15 | sed 's/^/    /'
+    log_warn "If yours has the fix: ./scripts/remote-dev.sh sync-code $1, then re-run up"
+}
+
 # The VM has its own checkout, so a compose file that exists only on your
 # branch is missing there, and docker's "no such file" does not say why.
 MISSING="$(vm_ssh "cd '$RD_REPO_DIR/echo/.devcontainer' && for f in $RD_COMPOSE_FILES; do [ -f \"\$f\" ] || echo \"\$f\"; done" || true)"
 if [ -n "$MISSING" ]; then
     VM_BRANCH="$(vm_ssh "git -C '$RD_REPO_DIR' rev-parse --abbrev-ref HEAD" 2>/dev/null || echo unknown)"
     die "The VM's checkout (on $VM_BRANCH) has no $(echo "$MISSING" | paste -sd, - | sed 's/,/, /g'), which your local.env asks for.
-Copy your working tree up with ./scripts/remote-dev.sh sync-code, or push your branch and check it out on the VM."
+Copy it up with ./scripts/remote-dev.sh sync-code echo/.devcontainer, or push your branch and check it out on the VM."
+fi
+
+log_step "Checking server/.env for the devcontainer's defaults"
+# The compose `environment:` block only reaches `docker exec` sessions, and Zed
+# connects over SSH, so its terminals need the same values in server/.env.
+COMPOSE_FILE="$RD_ECHO_ROOT/.devcontainer/docker-compose.yml"
+SERVER_ENV="$RD_ECHO_ROOT/server/.env"
+COMPOSE_ENV="$(awk '
+    /^  devcontainer:/ { in_svc = 1; next }
+    in_svc && /^  [a-z]/ { exit }
+    in_svc && /^    environment:/ { in_env = 1; next }
+    in_env && /^      - / { sub(/^      - /, ""); print; next }
+    in_env && /^    [a-z]/ { exit }
+' "$COMPOSE_FILE")"
+MISSING_ENV=""
+while IFS= read -r line; do
+    grep -q "^${line%%=*}=" "$SERVER_ENV" 2>/dev/null || MISSING_ENV+="$line"$'\n'
+done <<<"$COMPOSE_ENV"
+if [ -z "$MISSING_ENV" ]; then
+    log_info "server/.env has every variable docker-compose.yml gives the devcontainer"
+else
+    log_warn "server/.env lacks these, which SSH sessions (Zed's included) would then run without:"
+    printf '%s' "$MISSING_ENV" | sed 's/^/    /'
+    if { : </dev/tty; } 2>/dev/null && confirm "Add them to server/.env?" "y"; then
+        printf '\n# devcontainer defaults from .devcontainer/docker-compose.yml\n%s' "$MISSING_ENV" >>"$SERVER_ENV"
+        log_info "Added $(printf '%s' "$MISSING_ENV" | wc -l | tr -d ' ') line(s) to server/.env"
+    else
+        log_warn "Leaving server/.env as it is. The server will fail to start from an SSH terminal."
+    fi
 fi
 
 log_step "Syncing env files"
@@ -36,7 +111,7 @@ log_step "Syncing env files"
 
 log_step "Starting containers"
 log_info "The first run builds the directus, agent and server images. Expect 5 to 15 minutes."
-vm_compose "up -d --build"
+vm_compose "up -d --build" || { stale_hint echo/.devcontainer; die "docker compose up failed."; }
 
 # Turning minio off only drops docker-compose-s3.yml from RD_COMPOSE_FILES, and
 # a service compose no longer knows about is an orphan it leaves running. Remove
@@ -60,7 +135,8 @@ if [ "$SKIP_SETUP" = false ]; then
     log_info "This is the slow part on a first run. Ten minutes or so is normal."
     # devcontainer.json runs this as postCreateCommand, but compose alone does
     # not honour devcontainer lifecycle hooks, so invoke it explicitly.
-    container_exec "cd /workspaces/echo && chmod +x ./.devcontainer/setup.sh && ./.devcontainer/setup.sh"
+    container_exec "cd /workspaces/echo && chmod +x ./.devcontainer/setup.sh && ./.devcontainer/setup.sh" \
+        || { stale_hint echo/.devcontainer; die "setup.sh failed."; }
 else
     log_warn "Skipping setup.sh (--skip-setup)"
 fi
@@ -76,9 +152,12 @@ container_exec "for _ in \$(seq 60); do curl -sf http://directus:8055/server/pin
 # Retried because a busy directus answers 503 now and then, and a push is
 # idempotent.
 container_exec "cd /workspaces/echo/directus && for n in 1 2 3; do ./sync.sh -u http://directus:8055 -e admin@dembrane.com -p admin push >/tmp/directus-sync.log 2>&1 && exit 0; echo \"Push attempt \$n failed.\"; sleep 5; done; tail -40 /tmp/directus-sync.log; exit 1" \
-    || die "Schema push failed. Full log in the devcontainer at /tmp/directus-sync.log"
+    || { stale_hint echo/directus; die "Schema push failed. Full log in the devcontainer at /tmp/directus-sync.log"; }
 vm_psql "$RD_MEMBERSHIP_INDEXES_SQL" >/dev/null \
     || die "Could not create the membership indexes."
+for f in $RD_SQL_MIGRATIONS; do
+    vm_psql_file "$f" >/dev/null || die "Could not apply $f. psql's error is above."
+done
 log_info "Schema and indexes are current. Restart the server in mprocs if it is already running."
 
 log_step "Installing your SSH key into the devcontainer"

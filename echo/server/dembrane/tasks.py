@@ -2001,6 +2001,54 @@ def task_popcorn_tick_now(
     run_async_in_new_loop(lambda: run_popcorn_tick(loop_id, tick_kind, request_id=request_id))
 
 
+@dramatiq.actor(queue_name=TICK_QUEUE, priority=30, max_retries=0, time_limit=TICK_TIME_LIMIT_MS)
+def task_map_generate(result_id: str) -> None:
+    """Generate a Map revision: extraction, embeddings, publish. Minutes of
+    async work, so it rides the ticks worker for the reason given above. A
+    failed attempt resumes from its saved work when it is requested again."""
+    from dembrane.map.generate import run_generation
+
+    run_async_in_new_loop(lambda: run_generation(result_id))
+
+
+@dramatiq.actor(queue_name=TICK_QUEUE, priority=30, max_retries=0, time_limit=TICK_TIME_LIMIT_MS)
+def task_analysis_run(run_id: str) -> None:
+    """Run one analysis recipe run: claim it under a fresh lease, execute its
+    steps, validate and publish. Minutes of async work, so it rides the ticks
+    worker for the reason given above. A run whose worker dies is failed by the
+    minute sweep and resumes from its saved steps when it is retried."""
+    from dembrane.analysis.executor import run_worker
+
+    run_async_in_new_loop(lambda: run_worker(run_id))
+
+
+@dramatiq.actor(queue_name=TICK_QUEUE, priority=10, max_retries=0, time_limit=5 * 60 * 1000)
+def task_analysis_outbox_dispatch(event_id: str | None = None) -> None:
+    """Dispatch one committed analysis publication event (sent after commit),
+    or, without an id, sweep every due event, dead run and waiting run (the
+    minute job). The event row is the record: a lost message is found by the
+    next sweep, and consumers skip what an earlier dispatch already did."""
+    from dembrane.analysis.outbox import run_dispatch
+
+    run_async_in_new_loop(lambda: run_dispatch(event_id))
+
+
+@dramatiq.actor(queue_name=TICK_QUEUE, priority=40, max_retries=0, time_limit=10 * 60 * 1000)
+def task_map_fact_check(fact_check_id: str, attempt: int, result_id: str, node_id: str) -> None:
+    """Fact-check one Map claim: a search-grounded investigation and a
+    classification, each allowed three minutes. Async work that outlasts a
+    minute, so it rides the ticks worker for the reason given above, below
+    transcription's priority. A check that dies is written as an error the
+    analyst can retry, never left processing."""
+    from dembrane.map.fact_check import run_fact_check, mark_interrupted
+
+    try:
+        run_async_in_new_loop(lambda: run_fact_check(fact_check_id, attempt, result_id, node_id))
+    except BaseException:
+        run_async_in_new_loop(lambda: mark_interrupted(fact_check_id, attempt))
+        raise
+
+
 @dramatiq.actor(queue_name=TICK_QUEUE, priority=20, max_retries=0, time_limit=TICK_TIME_LIMIT_MS)
 def task_canvas_tick(loop_id: str, tick_kind: str = "scheduled") -> None:
     """Run a canvas tick, sent by the scheduled_task runner."""

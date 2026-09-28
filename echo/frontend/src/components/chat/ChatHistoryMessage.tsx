@@ -7,6 +7,7 @@ import {
 	Divider,
 	Group,
 	Modal,
+	Popover,
 	SimpleGrid,
 	Stack,
 	Text,
@@ -31,11 +32,12 @@ import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButt
 import { Markdown } from "@/components/common/Markdown";
 import { QRCode } from "@/components/common/QRCode";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
-import { ResponseFeedbackControls } from "@/components/feedback/ResponseFeedbackControls";
 import type { ResponseFeedback } from "@/components/feedback/hooks";
+import { ResponseFeedbackControls } from "@/components/feedback/ResponseFeedbackControls";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { cn } from "@/lib/utils";
 import { ReferencesIconButton } from "../common/ReferencesIconButton";
+import { type CitationData, decodeCitationHref } from "./agenticCitations";
 import { References } from "./References";
 import { Sources } from "./Sources";
 import SourcesSearched from "./SourcesSearched";
@@ -119,9 +121,7 @@ function ownPortalStartLink(
 			) {
 				return candidate.toString();
 			}
-		} catch {
-			continue;
-		}
+		} catch {}
 	}
 	return null;
 }
@@ -154,6 +154,53 @@ const DocsChoiceCard = ({
 			<Text size="sm">{description}</Text>
 		</Stack>
 	</a>
+);
+
+/** A conversation citation: a small superscript number that opens a popover
+ * saying who the source is, why it was cited, and a link to open the
+ * conversation at the cited excerpt. Replaces the sources list under the
+ * answer. */
+const AgenticCitation = ({
+	children,
+	citation,
+}: {
+	children: React.ReactNode;
+	citation: CitationData;
+}) => (
+	<Popover position="top" withArrow shadow="md" width={300} withinPortal>
+		<Popover.Target>
+			<button
+				type="button"
+				className="not-prose mx-[1px] inline-flex -translate-y-[0.4em] cursor-pointer items-center rounded-sm border-0 bg-[var(--mantine-color-primary-0)] px-1 align-baseline text-xs leading-tight text-[var(--mantine-color-primary-7)] transition-colors hover:bg-[var(--mantine-color-primary-1)]"
+				aria-label={t`Source ${getLinkLabel(children)}`}
+				data-testid="agentic-citation"
+			>
+				{children}
+			</button>
+		</Popover.Target>
+		<Popover.Dropdown data-testid="agentic-citation-popover">
+			<Stack gap={6}>
+				<Text size="sm" fw={600}>
+					{citation.name ? (
+						<Trans>{citation.name}'s conversation</Trans>
+					) : (
+						<Trans>Conversation</Trans>
+					)}
+				</Text>
+				{citation.reason && <Text size="sm">{citation.reason}</Text>}
+				<a
+					href={citation.href}
+					className={cn(AGENTIC_LINK_CLASSES, "text-sm")}
+					data-testid="agentic-citation-open"
+				>
+					<span>
+						<Trans>Open conversation</Trans>
+					</span>
+					<IconArrowUpRight size={12} stroke={1.9} className="self-center" />
+				</a>
+			</Stack>
+		</Popover.Dropdown>
+	</Popover>
 );
 
 /** A documentation citation. Clicking opens a small chooser: the cited page,
@@ -253,6 +300,13 @@ export const ChatHistoryMessage = ({
 				// highlight scroll. One icon per source, so these go.
 				if (className?.includes("data-footnote-backref")) {
 					return null;
+				}
+
+				const citation = decodeCitationHref(href);
+				if (citation) {
+					return (
+						<AgenticCitation citation={citation}>{children}</AgenticCitation>
+					);
 				}
 
 				// Footnote hops (superscript -> definition) stay inside this

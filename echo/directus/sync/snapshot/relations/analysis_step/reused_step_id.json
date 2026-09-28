@@ -1,0 +1,25 @@
+{
+  "collection": "analysis_step",
+  "field": "reused_step_id",
+  "related_collection": "analysis_step",
+  "meta": {
+    "junction_field": null,
+    "many_collection": "analysis_step",
+    "many_field": "reused_step_id",
+    "one_allowed_collections": null,
+    "one_collection": "analysis_step",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": null,
+    "sort_field": null
+  },
+  "schema": {
+    "table": "analysis_step",
+    "column": "reused_step_id",
+    "foreign_key_table": "analysis_step",
+    "foreign_key_column": "id",
+    "constraint_name": "analysis_step_reused_step_id_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "SET NULL"
+  }
+}

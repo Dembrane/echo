@@ -12,11 +12,11 @@ type Props = {
 	chatMode?: ChatMode;
 };
 
-// Get border color based on chat mode
+// Get border color based on chat mode. Agentic bubbles stay neutral: its
+// green lives in the mode's mark, not on every message.
 const getBorderColor = (chatMode: ChatMode | undefined): string | undefined => {
 	if (chatMode === "deep_dive") return MODE_COLORS.deep_dive.border;
 	if (chatMode === "overview") return MODE_COLORS.overview.border;
-	if (chatMode === "agentic") return MODE_COLORS.agentic.border;
 	return undefined;
 };
 

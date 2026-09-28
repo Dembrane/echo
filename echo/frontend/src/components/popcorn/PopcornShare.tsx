@@ -33,28 +33,45 @@ import { testId } from "@/lib/testUtils";
 export function PopcornShare({
 	projectId,
 	popcorn,
+	embedded = false,
+	presentation = false,
 }: {
 	projectId: string;
 	popcorn: PopcornDetail;
+	embedded?: boolean;
+	presentation?: boolean;
 }) {
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
 	const [showEmbed, setShowEmbed] = useState(false);
 	const token = popcorn.public_token;
-	const publicUrl = token ? popcornPublicUrl(token) : null;
+	const publicUrl = token
+		? presentation
+			? new URL(
+					`/present/public/${encodeURIComponent(token)}`,
+					window.location.origin,
+				).toString()
+			: popcornPublicUrl(token)
+		: null;
 	const isPublic = popcorn.settings.public && !!publicUrl;
-	const embed = token ? popcornEmbedSnippet(token) : "";
+	const embed = token
+		? presentation && publicUrl
+			? `<iframe src="${publicUrl}" title="Presentation" width="100%" height="720" style="border:0" allowfullscreen></iframe>`
+			: popcornEmbedSnippet(token)
+		: "";
 
 	return (
 		<Paper
-			withBorder
+			withBorder={!embedded}
 			className="rounded-md"
-			p="lg"
+			p={embedded ? 0 : "lg"}
 			{...testId("popcorn-share")}
 		>
 			<Stack gap="md">
-				<Title order={4}>
-					<Trans>Share</Trans>
-				</Title>
+				{!embedded && (
+					<Title order={4}>
+						<Trans>Share</Trans>
+					</Title>
+				)}
 				<Switch
 					size={FIELD_SIZE}
 					label={t`Public page`}

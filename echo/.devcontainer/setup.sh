@@ -81,6 +81,7 @@ install_fnm() {
 
     # --shell bash: fnm's shell inference walks the process tree and fails in
     # some container exec contexts.
+    # See: https://github.com/Schniz/fnm/tree/master#bash
     ensure_line_in_file "$BASHRC" 'eval "$(fnm env --use-on-cd --shell bash)"'
     log_info "fnm installed"
 }
@@ -217,10 +218,12 @@ pin_uv_python() {
     ensure_uv_python
 
     if safe_pushd "$target_dir"; then
-        if uv python pin "${PYTHON_VERSION}" 2>/dev/null; then
+        # Checked first because the pin is committed, and `uv python pin 3.11`
+        # would rewrite it to the newest 3.11 patch uv happens to have.
+        if [ -f .python-version ]; then
+            log_info "Python already pinned to $(cat .python-version) for $(basename "$target_dir")"
+        elif uv python pin "${PYTHON_VERSION}" 2>/dev/null; then
             log_info "Pinned Python ${PYTHON_VERSION} for $(basename "$target_dir")"
-        elif [ -f .python-version ]; then
-            log_info "Python already pinned for $(basename "$target_dir")"
         else
             log_warn "Failed to pin Python for $(basename "$target_dir")"
         fi
@@ -310,11 +313,6 @@ UsePAM yes
 AcceptEnv LANG LC_*
 Subsystem sftp /usr/lib/openssh/sftp-server
 CONF
-
-    # SSH sessions start with a clean environment, so the compose
-    # `environment:` block (DIRECTUS_TOKEN, DATABASE_URL, ...) would never
-    # reach them. PAM loads /etc/environment into each session.
-    tr '\0' '\n' < /proc/1/environ | grep -v -E '^(PATH|HOME|HOSTNAME)=' > /etc/environment
 
     # Set a default root password so initial SSH works
     # (override in your own setup with ssh-copy-id to switch to key auth)

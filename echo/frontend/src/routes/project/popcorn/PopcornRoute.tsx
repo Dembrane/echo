@@ -10,8 +10,8 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { useEffect } from "react";
 import { useParams } from "react-router";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
@@ -22,6 +22,8 @@ import {
 import { PopcornActions } from "@/components/popcorn/PopcornActions";
 import { PopcornHistory } from "@/components/popcorn/PopcornHistory";
 import { PopcornIntroModal } from "@/components/popcorn/PopcornIntroModal";
+import { PopcornLanguageSettings } from "@/components/popcorn/PopcornLanguageSettings";
+import { PopcornOpeningSettings } from "@/components/popcorn/PopcornOpeningSettings";
 import { PopcornScreenSettings } from "@/components/popcorn/PopcornScreenSettings";
 import { PopcornShare } from "@/components/popcorn/PopcornShare";
 import { PopcornStart } from "@/components/popcorn/PopcornStart";
@@ -30,6 +32,7 @@ import { PopcornVoiceSection } from "@/components/popcorn/PopcornVoiceSection";
 import { useProjectById } from "@/components/project/hooks";
 import { API_BASE_URL, ENABLE_CANVAS } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useServerEvents } from "@/hooks/useServerEvents";
 import { testId } from "@/lib/testUtils";
 
 function statusLine(popcorn: PopcornDetail): string {
@@ -65,42 +68,23 @@ function PopcornSession({
 	popcorn: PopcornDetail;
 }) {
 	const invalidate = useInvalidatePopcorn(projectId);
+	const queryClient = useQueryClient();
 	useDocumentTitle(`${popcorn.name} | dembrane`);
 
-	// The deck polls its own data; this stream keeps the counts and the status
-	// line in step with the tick.
-	useEffect(() => {
-		let source: EventSource | null = null;
-		let closed = false;
-		let reconnectTimer: number | null = null;
-		let retryMs = 1000;
-		const connect = () => {
-			if (closed) return;
-			source = new EventSource(
-				`${API_BASE_URL}/v2/bff/popcorn/${encodeURIComponent(popcorn.id)}/events`,
-				{ withCredentials: true },
-			);
-			source.addEventListener("connected", () => {
-				retryMs = 1000;
+	// The deck follows the same events on its own. This stream keeps the
+	// counts, the status line and the saved runs in step with the tick; nothing
+	// on this page polls. `connected` lands here too, also after a reconnect,
+	// so whatever an event lost while the stream was down is refetched then.
+	useServerEvents(
+		`${API_BASE_URL}/v2/bff/popcorn/${encodeURIComponent(popcorn.id)}/events`,
+		["update"],
+		() => {
+			invalidate();
+			queryClient.invalidateQueries({
+				queryKey: ["popcorn", popcorn.id, "versions"],
 			});
-			source.addEventListener("update", () => {
-				invalidate();
-			});
-			source.onerror = () => {
-				source?.close();
-				source = null;
-				if (closed) return;
-				reconnectTimer = window.setTimeout(connect, retryMs);
-				retryMs = Math.min(retryMs * 2, 15000);
-			};
-		};
-		connect();
-		return () => {
-			closed = true;
-			if (reconnectTimer) window.clearTimeout(reconnectTimer);
-			source?.close();
-		};
-	}, [popcorn.id, invalidate]);
+		},
+	);
 
 	return (
 		<PageContainer width="full" density="tight">
@@ -122,6 +106,8 @@ function PopcornSession({
 				<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
 					<PopcornStatus popcorn={popcorn} />
 					<PopcornScreenSettings projectId={projectId} popcorn={popcorn} />
+					<PopcornLanguageSettings projectId={projectId} popcorn={popcorn} />
+					<PopcornOpeningSettings projectId={projectId} popcorn={popcorn} />
 					<PopcornVoiceSection projectId={projectId} popcorn={popcorn} />
 					<PopcornShare projectId={projectId} popcorn={popcorn} />
 					<PopcornHistory popcorn={popcorn} />

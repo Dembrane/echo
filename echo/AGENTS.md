@@ -147,13 +147,16 @@ Filters, search queries, and selected tabs live in URL search params (not React 
 
 ### Real-Time Progress (SSE)
 
-Long-running progress streams via Server-Sent Events backed by Redis pub/sub (report generation, health). Don't poll for progress that has an SSE channel.
+Long-running progress streams via Server-Sent Events backed by Redis pub/sub (report generation, health, popcorn, Map). Don't poll for progress that has an SSE channel, and give new live pages a channel instead of a `refetchInterval`.
+
+- Server: publish with `dembrane.live_events.publish` (or `publish_sync` outside a loop) from any process; serve with `live_events.sse_response(request, channels)` after the access check. It works across API pods and workers because each connection subscribes to Redis itself
+- Browser: `useServerEvents(url, types, onEvent)` in `frontend/src/hooks/useServerEvents.ts`. Pub/sub keeps nothing, so every stream opens with `connected` (also after a reconnect): reload what the page shows then. An event says what changed; the rows stay the truth
 
 ### Dramatiq & Async Rules
 
 - **No `asyncio` in Dramatiq actors**. Recurring event-loop corruption bugs led to this. Use `gevent` pools + `dramatiq.group()` instead. Report generation is fully synchronous
 - `gevent.pool.Pool` is only safe on the `network` queue (uses `dramatiq-gevent`); the CPU queue runs standard dramatiq
-- Popcorn and canvas ticks run on the `ticks` queue (`prod-worker-ticks.sh`, standard dramatiq, no gevent). A tick runs for minutes; on the gevent worker the shared async loop is reset whenever any actor trips an async error, and a reset destroys every coroutine in flight. Any new job that runs longer than a minute of async work belongs on `ticks`, not `network`
+- Popcorn and canvas ticks, Map generation and Map fact-checks run on the `ticks` queue (`prod-worker-ticks.sh`, standard dramatiq, no gevent). A tick runs for minutes; on the gevent worker the shared async loop is reset whenever any actor trips an async error, and a reset destroys every coroutine in flight. Any new job that runs longer than a minute of async work belongs on `ticks`, not `network`
 - Use `gevent.sleep()` (not `time.sleep()`) in network-queue actors
 - Restart workers after changing actor signatures; positional args are serialized
 - `SkipRetryOnUnrecoverableError` middleware skips retries for `TypeError`, `SyntaxError`, `AttributeError`, `ImportError`, `NotImplementedError`

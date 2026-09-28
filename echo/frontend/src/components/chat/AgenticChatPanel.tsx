@@ -77,8 +77,8 @@ import type {
 } from "@/lib/api";
 import {
 	appendAgenticRunMessage,
-	createAgenticRun,
 	createAgentInsight,
+	createAgenticRun,
 	dismissAgentInsight,
 	getAgentInsights,
 	getAgenticRun,
@@ -97,7 +97,10 @@ import { testId } from "@/lib/testUtils";
 import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
 import { toast } from "../common/Toaster";
+import { AgenticPlanCard } from "./AgenticPlanCard";
+import { citationsToPopoverLinks } from "./agenticCitations";
 import { focusedConversationIdsFromPayload } from "./agenticFocus";
+import { type AgenticPlan, derivePlans } from "./agenticPlan";
 import {
 	extractTopLevelToolActivity,
 	parseCanvasSuggestion,
@@ -147,6 +150,9 @@ type TimelineItem =
 	  })
 	| (ToolActivity & {
 			kind: "tool";
+	  })
+	| (AgenticPlan & {
+			kind: "plan";
 	  });
 
 type HistoryLikeMessage = ChatHistory[number] & {
@@ -280,7 +286,21 @@ export const enrichAgenticContent = ({
 		})})`;
 	};
 
-	return content
+	const withCitationPopovers = citationsToPopoverLinks(
+		content,
+		(conversationId, chunkId) => ({
+			href: buildTranscriptLink({
+				chunkId,
+				conversationId,
+				language,
+				projectId,
+				workspaceId,
+			}),
+			name: conversationNames?.get(conversationId) ?? null,
+		}),
+	);
+
+	return withCitationPopovers
 		.replace(
 			AGENTIC_REFERENCE_PATTERN,
 			(_match, conversationIdRaw: string, chunkIdRaw?: string) =>
@@ -726,7 +746,7 @@ const LiveRunIndicator = ({
 					size="compact-xs"
 					radius="xl"
 					variant="subtle"
-					color="red"
+					color="gray"
 					className="shrink-0"
 					aria-label={t`Cancel current run`}
 					onPointerDown={onArmStop}
@@ -777,8 +797,8 @@ export const AgenticChatPanel = ({
 	// Insight cards replay from run events, which carry no current status, so
 	// the dismissed ids come from the project.
 	const dismissedInsightsQuery = useQuery({
-		queryKey: ["agentic", "dismissed-insights", projectId],
 		queryFn: () => getDismissedAgentInsightIds(projectId),
+		queryKey: ["agentic", "dismissed-insights", projectId],
 	});
 	const dismissInsightMutation = useMutation({
 		mutationFn: (insightId: string) => dismissAgentInsight(insightId),
@@ -794,8 +814,8 @@ export const AgenticChatPanel = ({
 	// The assistant only drafts an insight; the host sends it. A replayed draft
 	// card cannot know whether it was already sent, so it checks the live list.
 	const sentInsightsQuery = useQuery({
-		queryKey: ["agentic", "insights", projectId],
 		queryFn: () => getAgentInsights(projectId),
+		queryKey: ["agentic", "insights", projectId],
 	});
 	const sendInsightMutation = useMutation({
 		// chat_id and message_id are what let the team see which conversation
@@ -1008,9 +1028,14 @@ export const AgenticChatPanel = ({
 			});
 		}
 
+		for (const plan of derivePlans(sorted, runStatus)) {
+			items.push({ ...plan, kind: "plan" });
+		}
+
 		return items.sort((left, right) => left.sortSeq - right.sortSeq);
 	}, [
 		events,
+		runStatus,
 		language,
 		projectId,
 		workspaceId,
@@ -1064,6 +1089,11 @@ export const AgenticChatPanel = ({
 					item: Extract<TimelineItem, { kind: "tool" }>;
 			  }
 			| {
+					kind: "plan";
+					id: string;
+					item: Extract<TimelineItem, { kind: "plan" }>;
+			  }
+			| {
 					kind: "tool_group";
 					id: string;
 					items: Extract<TimelineItem, { kind: "tool" }>[];
@@ -1072,6 +1102,10 @@ export const AgenticChatPanel = ({
 		for (const item of timeline) {
 			if (item.kind === "message") {
 				nodes.push({ id: item.id, item, kind: "message" });
+				continue;
+			}
+			if (item.kind === "plan") {
+				nodes.push({ id: item.id, item, kind: "plan" });
 				continue;
 			}
 			const suggestions = tryParseTimelineSuggestion(item);
@@ -1159,7 +1193,9 @@ export const AgenticChatPanel = ({
 	const feedbackTargetIds = useMemo(
 		() =>
 			timeline.flatMap((item) =>
-				item.kind === "message" && item.role === "assistant" && item.feedbackTargetId
+				item.kind === "message" &&
+				item.role === "assistant" &&
+				item.feedbackTargetId
 					? [item.feedbackTargetId]
 					: [],
 			),
@@ -1512,7 +1548,9 @@ export const AgenticChatPanel = ({
 			? ""
 			: tail.kind === "message"
 				? `m:${tail.id}:${tail.content.length}`
-				: `t:${tail.id}:${tail.status}`;
+				: tail.kind === "plan"
+					? `p:${tail.id}:${tail.steps.map((step) => step.status).join(",")}`
+					: `t:${tail.id}:${tail.status}`;
 	// The draft renders outside the timeline, so it needs its own growth key.
 	const draftKey = liveDraftMessage
 		? `d:${liveDraftMessage.timestamp}:${liveDraftMessage.content.length}`
@@ -1556,18 +1594,18 @@ export const AgenticChatPanel = ({
 		});
 	}, [chatId, projectId, queryClient]);
 
-		const handleSubmit = async (overrideMessage?: string) => {
-			const message = (overrideMessage ?? input).trim();
-			if (!message || !projectId || !chatId) return;
+	const handleSubmit = async (overrideMessage?: string) => {
+		const message = (overrideMessage ?? input).trim();
+		if (!message || !projectId || !chatId) return;
 
-			if (message.length > MAX_AGENTIC_MESSAGE_LENGTH) {
-				return;
-			}
+		if (message.length > MAX_AGENTIC_MESSAGE_LENGTH) {
+			return;
+		}
 
-			if (atTurnLimit) {
-				upgradeHandlers.open();
-				return;
-			}
+		if (atTurnLimit) {
+			upgradeHandlers.open();
+			return;
+		}
 
 		setError(null);
 		setIsSubmitting(true);
@@ -1915,6 +1953,14 @@ export const AgenticChatPanel = ({
 							);
 						}
 
+						if (node.kind === "plan") {
+							return (
+								<div key={node.id}>
+									<AgenticPlanCard plan={node.item} />
+								</div>
+							);
+						}
+
 						if (node.kind === "suggestion") {
 							const suggestion = parseProjectUpdateSuggestion(node.item);
 							return suggestion ? (
@@ -2010,11 +2056,11 @@ export const AgenticChatPanel = ({
 										isSending={sendInsightMutation.isPending}
 										onSend={(content, suggestedCapability) =>
 											sendInsightMutation.mutate({
-												kind: note.kind,
-												content,
-												suggested_capability: suggestedCapability,
 												chat_id: chatId ?? null,
+												content,
+												kind: note.kind,
 												message_id: node.id ?? null,
+												suggested_capability: suggestedCapability,
 											})
 										}
 										dismissed={
@@ -2223,25 +2269,25 @@ export const AgenticChatPanel = ({
 													: undefined
 											}
 										/>
-											<Button
-												type="submit"
-												size="md"
-												radius="md"
-												rightSection={
-													isSubmitting ? (
-														<Loader size={18} />
-													) : (
-														<IconSend size={18} />
-													)
-												}
-												disabled={
-													isSubmitting ||
-													input.trim().length === 0 ||
-													input.length > MAX_AGENTIC_MESSAGE_LENGTH ||
-													atTurnLimit
-												}
-												{...testId("chat-send-button")}
-											>
+										<Button
+											type="submit"
+											size="md"
+											radius="md"
+											rightSection={
+												isSubmitting ? (
+													<Loader size={18} />
+												) : (
+													<IconSend size={18} />
+												)
+											}
+											disabled={
+												isSubmitting ||
+												input.trim().length === 0 ||
+												input.length > MAX_AGENTIC_MESSAGE_LENGTH ||
+												atTurnLimit
+											}
+											{...testId("chat-send-button")}
+										>
 											<Trans>Send</Trans>
 										</Button>
 									</>
@@ -2279,26 +2325,33 @@ export const AgenticChatPanel = ({
 									{...testId("chat-input-textarea")}
 								/>
 							)}
-							</ChatComposerShell>
-							{input.length > 25000 && (
-								<Text size="xs" c={input.length > MAX_AGENTIC_MESSAGE_LENGTH ? "red" : "orange"} fw={500} className="mt-1">
-									{input.length > MAX_AGENTIC_MESSAGE_LENGTH ? (
-										<Trans>
-											Message is too long (maximum 32,000 characters). Please attach conversations or shorten your message.
-										</Trans>
-									) : (
-										<Trans>
-											Approaching limit: {input.length.toLocaleString()} / 32,000 characters
-										</Trans>
-									)}
-								</Text>
-							)}
-							<Group
-								justify="space-between"
-								gap="sm"
-								wrap="wrap"
+						</ChatComposerShell>
+						{input.length > 25000 && (
+							<Text
+								size="xs"
+								c={input.length > MAX_AGENTIC_MESSAGE_LENGTH ? "red" : "orange"}
+								fw={500}
 								className="mt-1"
 							>
+								{input.length > MAX_AGENTIC_MESSAGE_LENGTH ? (
+									<Trans>
+										Message is too long (maximum 32,000 characters). Please
+										attach conversations or shorten your message.
+									</Trans>
+								) : (
+									<Trans>
+										Approaching limit: {input.length.toLocaleString()} / 32,000
+										characters
+									</Trans>
+								)}
+							</Text>
+						)}
+						<Group
+							justify="space-between"
+							gap="sm"
+							wrap="wrap"
+							className="mt-1"
+						>
 							{!isVoiceActive && (
 								<Text size="xs" className="hidden italic md:block">
 									<Trans>Use Shift + Enter to add a new line</Trans>

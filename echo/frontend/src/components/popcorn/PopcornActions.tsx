@@ -17,7 +17,7 @@ import {
 	CaretDownIcon,
 	ProjectorScreenIcon,
 } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
 	type LiveHours,
 	type PopcornDetail,
@@ -65,11 +65,18 @@ function LiveChip({
 	const seconds = next ? Math.ceil((next - now) / 1000) : null;
 	const overdue = seconds !== null && seconds <= 0;
 	const delayed = seconds !== null && seconds <= -DELAYED_AFTER_SECONDS;
+	// The session's event stream brings a finished read. Reload once when the
+	// countdown runs out and once more when the read is late, never on a timer.
+	const onStaleRef = useRef(onStale);
 	useEffect(() => {
-		if (!overdue) return;
-		const timer = window.setInterval(onStale, 4000);
-		return () => window.clearInterval(timer);
-	}, [overdue, onStale]);
+		onStaleRef.current = onStale;
+	}, [onStale]);
+	useEffect(() => {
+		if (overdue) onStaleRef.current();
+	}, [overdue]);
+	useEffect(() => {
+		if (delayed) onStaleRef.current();
+	}, [delayed]);
 
 	const reading = counts.reading ?? 0;
 	let label: string;

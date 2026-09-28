@@ -1,0 +1,63 @@
+{
+  "id": "similarity-chain",
+  "description": "Two chains A close to B close to C where A and C differ. Complete linkage never proposes A with C. In the first chain every step changes meaning; in the second A and B are paraphrases and C widens the population.",
+  "embedding_model": "text-embedding-004",
+  "inputs": [
+    {
+      "id": "ch1",
+      "statement": "Speed bumps should be added on Main Street.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-1", "quote": "just put speed bumps on Main Street"}],
+      "embedding": [1, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "ch2",
+      "statement": "Traffic calming measures should be added on Main Street.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-2", "quote": "Main Street needs something to calm the traffic"}],
+      "embedding": [0.85, 0.5268, 0, 0, 0, 0]
+    },
+    {
+      "id": "ch3",
+      "statement": "Traffic calming measures should be added across the whole district.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-3", "quote": "calm the traffic in the whole district, not one street"}],
+      "embedding": [0.41, 0.9121, 0, 0, 0, 0]
+    },
+    {
+      "id": "ch4",
+      "statement": "Bus travel should be free for people over 65.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-1", "quote": "the bus should be free once you are over 65"}],
+      "embedding": [0, 0, 1, 0, 0, 0]
+    },
+    {
+      "id": "ch5",
+      "statement": "People over 65 should be able to ride the bus for free.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-4", "quote": "let the over 65s ride the bus for free"}],
+      "embedding": [0, 0, 0.9, 0.4359, 0, 0]
+    },
+    {
+      "id": "ch6",
+      "statement": "Bus travel should be free for everyone.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-5", "quote": "make the bus free for everybody"}],
+      "embedding": [0, 0, 0.5009, 0.8655, 0, 0]
+    }
+  ],
+  "should_merge": [["ch4", "ch5"]],
+  "must_not_merge": [
+    {"pair": ["ch1", "ch3"], "guard": "code", "why": "The chain's ends: one street and one measure versus the whole district."},
+    {"pair": ["ch1", "ch2"], "guard": "model", "why": "One specific measure versus traffic calming in general."},
+    {"pair": ["ch2", "ch3"], "guard": "model", "why": "One street versus the whole district."},
+    {"pair": ["ch4", "ch6"], "guard": "code", "why": "The chain's ends: over 65 versus everyone."},
+    {"pair": ["ch5", "ch6"], "guard": "model", "why": "Population: over 65 versus everyone."}
+  ]
+}

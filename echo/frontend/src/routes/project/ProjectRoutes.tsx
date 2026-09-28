@@ -172,17 +172,6 @@ export const ProjectUploadRoute = () => {
 export const ProjectIntegrationsRoute = () => {
 	const { projectId } = useParams();
 	const { workspace, workspaceId } = useWorkspace();
-	const query = useMemo(
-		() => ({
-			fields: ["id", "name", "is_conversation_allowed"],
-		}),
-		[],
-	);
-	const projectQuery = useProjectById({
-		projectId: projectId ?? "",
-		// @ts-expect-error narrowed fields are enough for this route
-		query,
-	});
 
 	if (!projectId) return null;
 
@@ -195,6 +184,43 @@ export const ProjectIntegrationsRoute = () => {
 
 	return (
 		<PageContainer>
+			<Stack gap="3rem">
+				{!ENABLE_WEBHOOKS && (
+					<Alert variant="outline">
+						<Trans>Webhooks are not enabled for this environment.</Trans>
+					</Alert>
+				)}
+				{ENABLE_WEBHOOKS && !isWorkspaceAdmin && (
+					<Alert variant="outline">
+						<Trans>Only workspace admins can manage project automation.</Trans>
+					</Alert>
+				)}
+				{ENABLE_WEBHOOKS && isWorkspaceAdmin && workspace && workspaceId && (
+					<FeatureGate
+						currentTier={workspace.tier as Tier}
+						requiredTier="changemaker"
+						featureName={t`Webhooks`}
+						canRequestUpgrade={isWorkspaceAdmin}
+						workspaceId={workspaceId}
+						wallKey="webhooks"
+					>
+						<WebhookSection projectId={projectId} />
+					</FeatureGate>
+				)}
+			</Stack>
+		</PageContainer>
+	);
+};
+
+export const ProjectExportRoute = () => {
+	const { projectId } = useParams();
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		query: { fields: ["id", "name"] },
+	});
+
+	return (
+		<PageContainer>
 			<Stack gap="3rem" className="relative">
 				{projectQuery.isLoading && <LoadingOverlay visible />}
 				{projectQuery.isError && (
@@ -202,35 +228,11 @@ export const ProjectIntegrationsRoute = () => {
 						<Trans>Error loading project</Trans>
 					</Alert>
 				)}
-				{projectQuery.data && (
+				{projectQuery.data && projectId && (
 					<ProjectExportSection
 						exportLink={getProjectTranscriptsLink(projectId)}
 						projectName={projectQuery.data.name}
-						project={projectQuery.data}
 					/>
-				)}
-				{!ENABLE_WEBHOOKS && (
-					<>
-						<Divider />
-						<Alert variant="light">
-							<Trans>Webhooks are not enabled for this environment.</Trans>
-						</Alert>
-					</>
-				)}
-				{ENABLE_WEBHOOKS && isWorkspaceAdmin && workspace && workspaceId && (
-					<>
-						<Divider />
-						<FeatureGate
-							currentTier={workspace.tier as Tier}
-							requiredTier="changemaker"
-							featureName={t`Webhooks`}
-							canRequestUpgrade={isWorkspaceAdmin}
-							workspaceId={workspaceId}
-							wallKey="webhooks"
-						>
-							<WebhookSection projectId={projectId} />
-						</FeatureGate>
-					</>
 				)}
 			</Stack>
 		</PageContainer>

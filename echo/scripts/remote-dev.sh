@@ -7,7 +7,7 @@ set -euo pipefail
 RD_COMMANDS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/remote-dev/commands"
 
 # The order you actually run them in, not alphabetical.
-RD_COMMAND_NAMES="init create up tunnel ssh status sync-code sync-env celld-deploy down start stop resize ssh-config destroy"
+RD_COMMAND_NAMES="init vertex create up tunnel seed ssh status sync-code sync-env celld-deploy down start stop resize ssh-config destroy"
 
 usage() {
     cat <<'EOF'
@@ -61,5 +61,12 @@ if [ ! -f "$RD_TARGET" ]; then
     usage >&2
     exit 1
 fi
+
+# A full-width rule naming the command, so runs chained with && are easy to
+# tell apart. On stderr, so `ssh --vm cat ... > file` output stays clean.
+RD_BANNER="━━ remote-dev $RD_COMMAND${*:+ $*} "
+RD_COLS="$(tput cols 2>/dev/null || echo 80)"
+while [ "${#RD_BANNER}" -lt "$RD_COLS" ]; do RD_BANNER="${RD_BANNER}━"; done
+echo -e "\n\033[1;35m$RD_BANNER\033[0m" >&2
 
 exec "$RD_TARGET" "$@"

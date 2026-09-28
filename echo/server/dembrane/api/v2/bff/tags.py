@@ -462,9 +462,33 @@ async def update_project(
         payload.update(legal_write.payload)
 
     updated = await async_directus.update_item("project", project_id, payload)
-    if isinstance(updated, dict) and "data" in updated:
-        return updated["data"]
-    return updated or {}
+    updated_project = updated.get("data") if isinstance(updated, dict) and "data" in updated else updated
+    updated_project = updated_project if isinstance(updated_project, dict) else {}
+
+    # A presentation that follows the project language treats this field as a
+    # live policy. Only a real effective-target change wakes it; unrelated
+    # project autosaves and presentations with an explicit target stay quiet.
+    if "language" in payload and payload.get("language") != access.project.get("language"):
+        from dembrane.popcorn import service as popcorn_service
+
+        report = await popcorn_service.get_popcorn_report(project_id)
+        if report:
+            settings = await popcorn_service.load_settings_for(report)
+            presentation = settings.get("presentation") or {}
+            if presentation.get("language_policy") == "project":
+                # The same settings read against the project before and after
+                # the save; a presentation with its own target stays quiet.
+                await popcorn_service.retarget_translation(
+                    report,
+                    before=settings,
+                    after=settings,
+                    project=access.project,
+                    project_after=updated_project,
+                    nudge=True,
+                    require_loop=False,
+                )
+
+    return updated_project
 
 
 @project_router.delete("/{project_id}")

@@ -42,7 +42,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useProjectChatContext } from "@/components/chat/hooks";
-import { I18nLink } from "@/components/common/i18nLink";
+import { EntityListRow } from "@/components/common/EntityListRow";
 import { toast } from "@/components/common/Toaster";
 import { SelectAllConfirmationModal } from "@/components/conversation/SelectAllConfirmationModal";
 import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
@@ -460,35 +460,19 @@ const ConversationRow = ({
 		</Group>
 	);
 
-	const cardStyle = {
-		background: isSelected ? "rgba(65, 105, 225, 0.06)" : "white",
-		borderColor: isActive || isSelected ? "#4169e1" : undefined,
-	} as const;
-
 	// Locked (gated) rows stay visible but route to the upgrade path on click
 	// instead of opening the conversation.
 	if (!selectionMode && isLocked) {
 		return (
-			<Paper
-				withBorder
-				radius="sm"
-				p="md"
-				className="cursor-pointer transition-colors hover:!border-primary-400"
-				style={cardStyle}
-				role="button"
-				tabIndex={0}
-				aria-label={t`Locked conversation, upgrade to view`}
-				onClick={() => onLockedClick?.(conversation)}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-						onLockedClick?.(conversation);
-					}
-				}}
-				{...testId(`project-conversation-row-${conversation.id}`)}
+			<EntityListRow
+				active={isActive}
+				selected={isSelected}
+				ariaLabel={t`Locked conversation, upgrade to view`}
+				onActivate={() => onLockedClick?.(conversation)}
+				testId={`project-conversation-row-${conversation.id}`}
 			>
 				{body}
-			</Paper>
+			</EntityListRow>
 		);
 	}
 
@@ -497,36 +481,25 @@ const ConversationRow = ({
 	// workspace home page. Selection mode keeps the plain card + checkbox.
 	if (!selectionMode && href) {
 		return (
-			<I18nLink
-				to={href}
-				className="no-underline block"
-				style={{ color: "inherit" }}
+			<EntityListRow
+				active={isActive}
+				selected={isSelected}
+				href={href}
+				testId={`project-conversation-row-${conversation.id}`}
 			>
-				<Paper
-					component="a"
-					withBorder
-					radius="sm"
-					p="md"
-					className="cursor-pointer transition-colors hover:!border-primary-400"
-					style={cardStyle}
-					{...testId(`project-conversation-row-${conversation.id}`)}
-				>
-					{body}
-				</Paper>
-			</I18nLink>
+				{body}
+			</EntityListRow>
 		);
 	}
 
 	return (
-		<Paper
-			withBorder
-			radius="sm"
-			p="md"
-			style={cardStyle}
-			{...testId(`project-conversation-row-${conversation.id}`)}
+		<EntityListRow
+			active={isActive}
+			selected={isSelected}
+			testId={`project-conversation-row-${conversation.id}`}
 		>
 			{body}
-		</Paper>
+		</EntityListRow>
 	);
 };
 
@@ -704,8 +677,7 @@ export const ProjectConversationsPanel = ({
 		{
 			// New chats have no chat_mode until the first message lands, so gate
 			// on the one mode that must not multi-select instead of a whitelist.
-			enabled:
-				selectionMode && chatMode !== "overview" && !!selectionChatId,
+			enabled: selectionMode && chatMode !== "overview" && !!selectionChatId,
 		},
 	);
 	const remainingCount =

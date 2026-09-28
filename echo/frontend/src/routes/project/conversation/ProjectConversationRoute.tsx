@@ -41,12 +41,14 @@ import {
 	useConversationHasTranscript,
 } from "@/components/conversation/hooks";
 import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
+import { getConversationStartTime } from "@/components/conversation/utils";
 import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArtefactsSection";
 import { useProjectById } from "@/components/project/hooks";
 import {
 	ENABLE_DISPLAY_CONVERSATION_LINKS,
 	TRANSCRIPT_TROUBLESHOOTING_DOCS_URL,
 } from "@/config";
+import { useLanguage } from "@/hooks/useLanguage";
 import { generateConversationSummary } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 
@@ -98,6 +100,16 @@ export const ProjectConversationRoute = () => {
 		t`Untitled conversation`;
 	const tags =
 		(conversation?.tags as ConversationProjectTag[] | undefined) ?? [];
+	const { language } = useLanguage();
+	const startedAt = conversation
+		? getConversationStartTime(conversation)
+		: null;
+	const startedAtLabel = startedAt
+		? new Intl.DateTimeFormat(language, {
+				dateStyle: "medium",
+				timeStyle: "short",
+			}).format(new Date(startedAt))
+		: null;
 
 	const useHandleGenerateSummaryManually = useMutation({
 		mutationFn: async (isRegeneration: boolean) => {
@@ -163,7 +175,7 @@ export const ProjectConversationRoute = () => {
 		<Stack gap="2rem" className="relative px-8 py-4">
 			<LoadingOverlay visible={conversationQuery.isLoading} />
 
-			{/* Header: name, title, tags. Created-on and duration live on the list page only. */}
+			{/* Header: name, title, when it was recorded, tags. Duration lives on the list page only. */}
 			<Stack gap="xs" {...testId("conversation-detail-header")}>
 				<Group gap="sm" align="center" wrap="wrap">
 					<Title order={1}>{primary}</Title>
@@ -209,6 +221,11 @@ export const ProjectConversationRoute = () => {
 				{conversation?.title && conversation?.participant_name && (
 					<Text size="sm" c="dimmed">
 						{conversation.participant_name}
+					</Text>
+				)}
+				{startedAtLabel && (
+					<Text size="sm" {...testId("conversation-detail-started-at")}>
+						{startedAtLabel}
 					</Text>
 				)}
 				{tags.length > 0 && (

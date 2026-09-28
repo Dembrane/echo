@@ -1,12 +1,13 @@
 # Contributing Guide
 
-Thank you for your interest in contributing. dembrane is an open source project. If you are interested in making it better, there are many ways you can contribute. For example, you can:
+Thank you for your interest in contributing. dembrane is a source-available project under the [Business Source License 1.1](LICENSE). If you are interested in making it better, there are many ways you can contribute. For example, you can:
 
 - Submit a bug report
 - Suggest a new feature
 - Provide feedback by commenting on feature requests/proposals
 - Propose a patch by submitting a pull request
 - Suggest or submit documentation improvements
+- [Translate the dashboard and participant portal](TRANSLATING.md), or review existing translations
 - Review outstanding pull requests
 - Answer questions from other users
 - Share the software with other users who are interested

@@ -51,13 +51,13 @@ export const BookingHost: BookingHostInfo | null = {
 };
 
 /**
- * The website's needs form, for a participant who wants dembrane at their own
- * event. Dutch participants get the Dutch page; every other language falls
- * back to English, which is what the site has. `project` is the project the
- * participant was in: the site writes it onto the enquiry row as
- * `project_id`, so the lead is a website lead like any other and still says
- * which event it came from. `step=2` lands on the email step: the opening's
- * pitch is what the portal card already made, so the form starts at the ask.
+ * The website's page for participants, for one who might want dembrane at an
+ * event of their own. Dutch participants get the Dutch page; every other
+ * language falls back to English, which is what the site has. `project` is
+ * the project the participant was in: the site reads it to show the page as
+ * seen from an event (its own opening, then an introduction to Eve or Pauline
+ * to send to someone), tags its events and forwarded links with it, and
+ * `#share` lands on that introduction.
  */
 export const eventEnquiryUrl = ({
 	language,
@@ -67,11 +67,10 @@ export const eventEnquiryUrl = ({
 	projectId: string;
 }): string => {
 	const path = language.toLowerCase().startsWith("nl")
-		? "/nl/pricing"
-		: "/pricing";
+		? "/nl/deelnemers"
+		: "/participants";
 	const url = new URL(path, "https://www.dembrane.com");
 	if (projectId) url.searchParams.set("project", projectId);
-	url.searchParams.set("step", "2");
-	url.hash = "needs";
+	url.hash = "share";
 	return url.toString();
 };

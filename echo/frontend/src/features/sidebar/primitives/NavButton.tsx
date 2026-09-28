@@ -4,6 +4,8 @@ import {
 	type Icon,
 } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
+import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
 import { BADGE_TONES } from "./NavItem";
 
 interface NavButtonProps {
@@ -35,6 +37,35 @@ export const NavButton = ({
 	disabled,
 	external,
 }: NavButtonProps) => {
+	const inRail = useInRail();
+
+	if (inRail) {
+		if (!Icon) return null;
+		const name = (
+			<>
+				{label}
+				{badge != null ? <> {badge}</> : null}
+			</>
+		);
+		return (
+			<RailTip label={name}>
+				<button
+					type="button"
+					onClick={onClick}
+					disabled={disabled}
+					className={cn(
+						RAIL_ITEM_CLASS,
+						"hover:bg-black/[0.04] disabled:cursor-not-allowed disabled:opacity-50",
+					)}
+					style={{ color: destructive ? "#c0392b" : "#2d2d2c" }}
+				>
+					<Icon size={18} color={iconColor} aria-hidden="true" />
+					<span className="sr-only">{name}</span>
+				</button>
+			</RailTip>
+		);
+	}
+
 	return (
 		<button
 			type="button"

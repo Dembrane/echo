@@ -2,7 +2,9 @@
 LiteLLM Router for distributed load balancing and failover.
 
 This module provides a centralized router that:
-- Load balances across multiple LLM deployments per model group
+- Sends each model group to its primary deployment; numbered deployments
+  (LLM__<GROUP>_1__*, _2, ...) take traffic only when the ones before them fail
+  or are cooling down, in suffix order
 - Handles automatic failover when deployments fail or hit rate limits
 - Uses Redis for distributed cooldown and usage tracking
 - Supports weighted routing based on deployment priority
@@ -51,6 +53,17 @@ def _infer_weight(suffix: Optional[int]) -> int:
     if suffix is None:
         return 10  # Primary deployment
     return max(1, 10 - suffix)
+
+
+def _infer_order(suffix: Optional[int]) -> int:
+    """
+    Priority tier for a deployment: the primary is 1, _1 is 2, _2 is 3.
+
+    LiteLLM routes only to the lowest healthy order and moves to the next one
+    after retries fail, so a numbered deployment is a fallback rather than a
+    share of the traffic.
+    """
+    return 1 if suffix is None else suffix + 1
 
 
 def _build_litellm_params(config: LLMProviderConfig) -> Dict[str, Any]:
@@ -102,6 +115,7 @@ def _build_model_list() -> List[Dict[str, Any]]:
 
             # Add weight to litellm_params for weighted routing
             litellm_params["weight"] = weight
+            litellm_params["order"] = _infer_order(suffix)
 
             model_list.append(
                 {
@@ -132,9 +146,9 @@ def _log_deployment_summary(model_list: List[Dict[str, Any]]) -> None:
             params = entry["litellm_params"]
             model = params.get("model", "unknown")
             location = params.get("vertex_location") or params.get("api_base", "default")
-            weight = params.get("weight", "?")
-            label = "primary" if i == 0 else "fallback"
-            logger.info(f"    [{i}] {model} @ {location} ({label}, weight={weight})")
+            order = params.get("order", "?")
+            label = "primary" if order == 1 else "fallback"
+            logger.info(f"    [{i}] {model} @ {location} ({label}, order={order})")
 
     if not model_list:
         logger.warning("  No LLM deployments configured!")

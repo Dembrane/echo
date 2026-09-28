@@ -18,6 +18,7 @@ import { useSidebarView } from "../../hooks/useSidebarView";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
+import { FullOnly } from "../../shell/rail";
 
 interface OrgWorkspaceRow {
 	id: string;
@@ -135,7 +136,7 @@ export const OrgHomeView = () => {
 			)}
 
 			{showWorkspaces && (
-				<>
+				<FullOnly>
 					<SectionLabel>
 						<Trans>Workspaces</Trans>
 					</SectionLabel>
@@ -149,7 +150,7 @@ export const OrgHomeView = () => {
 							pushes
 						/>
 					))}
-				</>
+				</FullOnly>
 			)}
 		</nav>
 	);

@@ -1,11 +1,8 @@
-import { ActionIcon } from "@mantine/core";
-import { SidebarSimple } from "@phosphor-icons/react";
 import type { PropsWithChildren } from "react";
 import { Outlet } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { AppSidebar, useSidebarView } from "@/features/sidebar";
 import { AppBreadcrumbs } from "@/features/sidebar/breadcrumbs/AppBreadcrumbs";
-import { useSidebarState } from "@/features/sidebar/hooks/useSidebarState";
 import { InboxView } from "@/features/sidebar/views/InboxView";
 import { Toaster } from "../common/Toaster";
 import { ErrorBoundary } from "../error/ErrorBoundary";
@@ -34,7 +31,6 @@ const SidebarFailure = () => (
 export const BaseLayout = ({ children }: PropsWithChildren) => {
 	const { isAuthenticated } = useAuthenticated();
 	const { overlay } = useSidebarView();
-	const { collapsed, setCollapsed } = useSidebarState();
 
 	return (
 		<TransitionCurtainProvider>
@@ -46,19 +42,6 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 				) : null}
 				<ErrorBoundary>
 					<main className="relative flex flex-1 flex-col overflow-hidden">
-						{isAuthenticated && collapsed && (
-							<div className="absolute left-3 top-[12.5px] z-40">
-								<ActionIcon
-									variant="subtle"
-									color="gray"
-									onClick={() => setCollapsed(false)}
-									aria-label="Expand sidebar"
-									size={32}
-								>
-									<SidebarSimple size={20} />
-								</ActionIcon>
-							</div>
-						)}
 						{isAuthenticated ? <AppBreadcrumbs /> : null}
 						<div className="flex-1 overflow-auto" data-app-scroll-root>
 							<Outlet />

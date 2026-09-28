@@ -12,25 +12,6 @@ handle_help "${1:-}" "$0"
 
 LOCAL_ENV="$RD_SCRIPT_DIR/local.env"
 
-# Prompt with a default. Reads from the terminal rather than stdin so this
-# still behaves if the script is piped.
-ask() {
-    local prompt="$1" default="${2:-}" answer
-    if [ -n "$default" ]; then
-        read -r -p "$(echo -e "\033[1;36m?\033[0m $prompt [\033[1m$default\033[0m]: ")" answer </dev/tty
-        echo "${answer:-$default}"
-    else
-        read -r -p "$(echo -e "\033[1;36m?\033[0m $prompt: ")" answer </dev/tty
-        echo "$answer"
-    fi
-}
-
-confirm() {
-    local answer
-    answer="$(ask "$1 (y/n)" "${2:-y}")"
-    [[ "$answer" =~ ^[Yy] ]]
-}
-
 # The zone that matters is the one nearest you, since SSH latency dominates
 # how a remote editor feels. Guess from the machine's timezone, which is a
 # decent proxy and always overridable.
@@ -285,6 +266,17 @@ EOF
 log_info "Wrote $LOCAL_ENV"
 echo
 cat "$LOCAL_ENV" | grep -v '^#' | grep -v '^$' | sed 's/^/  /'
+
+log_step "Vertex AI credentials (optional)"
+echo "Chat, reports and transcription call Vertex AI. This can set up a service"
+echo "account in '$PROJECT' and write its key to server/.env and agent/.env."
+echo "Skip it if you already have credentials, or run it later with:"
+echo "  ./scripts/remote-dev.sh vertex"
+# Offer yes only while there is nothing to overwrite.
+if grep -q '^GCP_SA_JSON=..' "$RD_ECHO_ROOT/server/.env" 2>/dev/null; then VERTEX_DEFAULT=n; else VERTEX_DEFAULT=y; fi
+if confirm "Set up Vertex AI now?" "$VERTEX_DEFAULT"; then
+    "$RD_COMMANDS_DIR/vertex.sh"
+fi
 
 log_step "Next"
 cat <<EOF

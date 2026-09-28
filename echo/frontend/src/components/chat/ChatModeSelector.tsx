@@ -25,12 +25,14 @@ import { useInitializeChatModeMutation } from "./hooks";
 
 // Color palette from design spec - shared across chat components
 export const MODE_COLORS = {
+	// Brand Spring Green. Used as a fill (the mark, the selected card's
+	// disc), never as text; the chat itself stays neutral.
 	agentic: {
-		badge: "orange",
-		border: "#FF8A4C",
-		lighter: "rgba(255, 138, 76, 0.1)",
-		primary: "#FF8A4C",
-		shadow: "rgba(255, 138, 76, 0.12)",
+		badge: "springGreen",
+		border: "#1EFFA1",
+		lighter: "rgba(30, 255, 161, 0.1)",
+		primary: "#1EFFA1",
+		shadow: "rgba(30, 255, 161, 0.12)",
 	},
 	deep_dive: {
 		badge: "cyan",

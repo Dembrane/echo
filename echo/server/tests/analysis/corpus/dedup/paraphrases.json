@@ -1,0 +1,62 @@
+{
+  "id": "paraphrases",
+  "description": "Paraphrases, including one in Dutch, merge. A different argument about the same cycle lanes sits close in embedding space and stays apart.",
+  "embedding_model": "text-embedding-004",
+  "inputs": [
+    {
+      "id": "pa1",
+      "statement": "The city should build more cycle lanes because cycling in town feels unsafe.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-1", "quote": "more cycle lanes, because honestly cycling here feels unsafe"}],
+      "embedding": [1, 0.1, 0, 0, 0, 0]
+    },
+    {
+      "id": "pa2",
+      "statement": "We need more bike lanes, since riding a bike through the city is dangerous right now.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-2", "quote": "riding a bike through the city is dangerous right now, we need lanes"}],
+      "embedding": [1, 0, 0.1, 0, 0, 0]
+    },
+    {
+      "id": "pa3",
+      "statement": "De gemeente moet meer fietspaden aanleggen, want fietsen in de stad voelt onveilig.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-3", "quote": "meer fietspaden, want fietsen in de stad voelt gewoon onveilig"}],
+      "embedding": [1, 0.05, 0.05, 0, 0, 0]
+    },
+    {
+      "id": "pa4",
+      "statement": "Community centres should stay open in the evenings so young people have somewhere to go.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-1", "quote": "keep the centres open in the evening so the kids have somewhere to go"}],
+      "embedding": [0, 0, 0, 1, 0, 0]
+    },
+    {
+      "id": "pa5",
+      "statement": "Keep the community centres open at night, so teenagers have a place to spend their evenings.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-4", "quote": "teenagers need a place to spend their evenings, so open the community centres at night"}],
+      "embedding": [0, 0, 0, 1, 0.1, 0]
+    },
+    {
+      "id": "pa6",
+      "statement": "Cycle lanes should be separated from car traffic by a physical barrier.",
+      "epistemic_kind": "argument",
+      "valence": "positive",
+      "evidence": [{"conversation_id": "conv-2", "quote": "paint is not enough, put a real barrier between the bikes and the cars"}],
+      "embedding": [1, 0, 0, 0, 0, 0.5]
+    }
+  ],
+  "should_merge": [["pa1", "pa2", "pa3"], ["pa4", "pa5"]],
+  "must_not_merge": [
+    {"pair": ["pa1", "pa6"], "guard": "model", "why": "More lanes versus how lanes are separated."},
+    {"pair": ["pa2", "pa6"], "guard": "model", "why": "More lanes versus how lanes are separated."},
+    {"pair": ["pa3", "pa6"], "guard": "model", "why": "More lanes versus how lanes are separated."},
+    {"pair": ["pa1", "pa4"], "guard": "code", "why": "Unrelated statements, far apart."}
+  ]
+}

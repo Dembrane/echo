@@ -15,6 +15,7 @@ Everything goes through one entry point, run from `echo/`:
 cd echo
 
 ./scripts/remote-dev.sh init    # asks which GCP project and zone; writes local.env
+                                # and offers to set up Vertex AI credentials
 ./scripts/remote-dev.sh create  # creates the VM, installs docker, clones the repo,
                                 # and adds the SSH hosts Zed connects through
 ./scripts/remote-dev.sh up      # copies .env files up, starts the stack, installs deps
@@ -69,15 +70,17 @@ Each command is a script in `commands/`, and
 | Command | What it does |
 |---|---|
 | `init` | First-run setup. Prompts for project, zone, size. Writes `local.env`. |
+| `vertex` | Sets up a Vertex AI service account in your project and writes its key to `server/.env` and `agent/.env`. `--new-key` replaces the key. |
 | `create` | Creates the VM, installs docker, clones the repo. Idempotent. |
-| `up` | Syncs `.env` files, `docker compose up -d --build`, runs `setup.sh`, installs your SSH key. |
+| `up` | Offers to add the devcontainer defaults to `server/.env`, syncs `.env` files, `docker compose up -d --build`, runs `setup.sh`, pushes the Directus schema and applies the SQL-only migrations, installs your SSH key. |
 | `down` | Stops containers, leaves the VM up. |
 | `start` / `stop` | VM power. `stop` shuts containers down cleanly first. |
-| `status` | VM state, container state, memory, disk, load, tunnel check. |
+| `status` | Enabled APIs with links to their usage metrics, VM state, container state, processes left over from an earlier mprocs, memory, disk, load, tunnel check. |
 | `resize` | `resize e2-standard-8` or `resize --disk 200GB`. |
-| `ssh` | Shell in the devcontainer. `--vm` for the host instead. |
+| `ssh` | Shell in the devcontainer, after offering to stop processes left over from an earlier mprocs. `--vm` for the host instead. |
 | `ssh-config` | Writes the `~/.ssh/config` block. `--remove` to clean up. |
 | `tunnel` | Port forwards. Foreground, ctrl-c to close. |
+| `seed` | Seeds the demo project from `demos/example/` (five finished conversations) into your workspace, for trying the Map. Run after your first login. `--workspace <id>` when there are several. |
 | `sync-env` | Re-copies the gitignored `.env` files up. |
 | `sync-code` | Pushes your laptop's tracked files up. `--dry-run` to preview. |
 | `celld-deploy` | `celld-deploy DIR` deploys a celld app through the tunnel. |

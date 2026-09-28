@@ -20,9 +20,13 @@ function meetsTier(tier: string | null | undefined, minimum: Tier): boolean {
 export function PopcornScreenSettings({
 	projectId,
 	popcorn,
+	embedded = false,
+	showToolToggles = true,
 }: {
 	projectId: string;
 	popcorn: PopcornDetail;
+	embedded?: boolean;
+	showToolToggles?: boolean;
 }) {
 	const { workspace } = useWorkspace();
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
@@ -32,39 +36,47 @@ export function PopcornScreenSettings({
 
 	return (
 		<Paper
-			withBorder
+			withBorder={!embedded}
 			className="rounded-md"
-			p="lg"
+			p={embedded ? 0 : "lg"}
 			{...testId("popcorn-screen")}
 		>
 			<Stack gap="md">
-				<Title order={4}>
-					<Trans>Screen</Trans>
-				</Title>
-				<Switch
-					size={FIELD_SIZE}
-					label={t`Tensions tab`}
-					description={t`The pulls between what people want, verified against the conversations.`}
-					checked={tabs.tensions}
-					disabled={busy}
-					onChange={(event) =>
-						settings.mutate({ tabs: { tensions: event.currentTarget.checked } })
-					}
-					{...testId("popcorn-tab-tensions")}
-				/>
-				<Switch
-					size={FIELD_SIZE}
-					label={t`Stakeholders tab`}
-					description={t`Who holds a stake, and how they relate.`}
-					checked={tabs.stakeholders}
-					disabled={busy}
-					onChange={(event) =>
-						settings.mutate({
-							tabs: { stakeholders: event.currentTarget.checked },
-						})
-					}
-					{...testId("popcorn-tab-stakeholders")}
-				/>
+				{!embedded && (
+					<Title order={4}>
+						<Trans>Screen</Trans>
+					</Title>
+				)}
+				{showToolToggles && (
+					<>
+						<Switch
+							size={FIELD_SIZE}
+							label={t`Tensions tab`}
+							description={t`The pulls between what people want, verified against the conversations.`}
+							checked={tabs.tensions}
+							disabled={busy}
+							onChange={(event) =>
+								settings.mutate({
+									tabs: { tensions: event.currentTarget.checked },
+								})
+							}
+							{...testId("popcorn-tab-tensions")}
+						/>
+						<Switch
+							size={FIELD_SIZE}
+							label={t`Stakeholders tab`}
+							description={t`Who holds a stake, and how they relate.`}
+							checked={tabs.stakeholders}
+							disabled={busy}
+							onChange={(event) =>
+								settings.mutate({
+									tabs: { stakeholders: event.currentTarget.checked },
+								})
+							}
+							{...testId("popcorn-tab-stakeholders")}
+						/>
+					</>
+				)}
 				<Switch
 					size={FIELD_SIZE}
 					label={t`QR code`}
