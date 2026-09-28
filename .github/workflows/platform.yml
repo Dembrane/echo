@@ -1,13 +1,20 @@
 name: platform
 
-# Checks, images and preview deploys for echo/platform (the Bun rewrite) and the
-# frontend it serves. Checks and image builds run in parallel; images are built once and
-# pushed, and a deploy only migrates, rolls out and verifies.
+# Checks, images and deploys for echo/platform (the Bun rewrite) and the frontend it
+# serves. Checks and image builds run in parallel; images are built once and pushed, and a
+# deploy only migrates, rolls out and verifies.
 #
-# Previews: the branch preview (echo-preview-*) follows feat/bun-migration until cutover.
-# A PR gets its own preview (echo-pr-<n>-*, database echo_pr_<n>) only on request: the
-# "preview" label, or running this workflow by hand with the PR number. At most three PR
-# previews exist; a fourth tears down the oldest. Closing or merging a PR removes its preview.
+# Each environment is its own GCP project, reached through its own keyless GitHub trust, and
+# pushes images to its own registry: a preview identity has no role in next or prod.
+#
+# Previews (dembrane-web-previews): the branch preview (echo-preview-*) follows
+# feat/bun-migration until cutover. A PR gets its own preview (echo-pr-<n>-*, database
+# echo_pr_<n>) only on request: the "preview" label, or running this workflow by hand with
+# target pr and the PR number. At most three PR previews exist; a fourth tears down the
+# oldest. Closing or merging a PR removes its preview.
+#
+# next (dembrane-web-next) and prod (dembrane-web-prod) deploy only when run by hand until
+# cutover: next from main, prod from main or a tag and after the prod environment's approval.
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, closed]
@@ -17,30 +24,35 @@ on:
     paths: ["echo/platform/**", "echo/frontend/**", ".github/workflows/platform.yml"]
   workflow_dispatch:
     inputs:
+      target:
+        description: What to deploy
+        type: choice
+        options: [pr, next, prod]
+        default: pr
       pr:
-        description: PR number to deploy a preview for
-        required: true
+        description: PR number to deploy a preview for (target pr)
+        required: false
         type: number
 
 concurrency:
-  group: platform-${{ github.event.pull_request.number || inputs.pr || github.ref }}
-  cancel-in-progress: true
+  group: platform-${{ github.event.pull_request.number || (inputs.target == 'pr' && inputs.pr) || inputs.target || github.ref }}
+  # A newer push replaces a running check or preview; a next or prod rollout runs to the end.
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'pr' }}
 
 defaults:
   run:
     working-directory: echo/platform
 
 env:
-  PROJECT: dembrane-echo
   REGION: europe-west4
-  REGISTRY: europe-west4-docker.pkg.dev/dembrane-echo/echo-preview
+  REGISTRY: europe-west4-docker.pkg.dev/dembrane-web-previews/echo-preview
   TAG: ${{ github.sha }}
   # Push images only for the branch that deploys; PRs build them to prove they build.
   PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feat/bun-migration' }}
 
 jobs:
   # Decides what this run does: checks only, a branch preview deploy, a PR preview deploy,
-  # or a PR preview teardown.
+  # a PR preview teardown, or a next or prod deploy.
   plan:
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -54,6 +66,7 @@ jobs:
       sha: ${{ steps.plan.outputs.sha }}
       pr: ${{ steps.plan.outputs.pr }}
       deploy_pr: ${{ steps.plan.outputs.deploy_pr }}
+      deploy_env: ${{ steps.plan.outputs.deploy_env }}
       teardown: ${{ steps.plan.outputs.teardown }}
     steps:
       - id: plan
@@ -62,14 +75,22 @@ jobs:
           EVENT: ${{ github.event_name }}
           ACTION: ${{ github.event.action }}
           PR_EVENT: ${{ github.event.pull_request.number }}
+          TARGET: ${{ inputs.target }}
           PR_INPUT: ${{ inputs.pr }}
           PR_SHA: ${{ github.event.pull_request.head.sha }}
           HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'preview') }}
           ADDED_LABEL: ${{ github.event.label.name }}
         run: |
-          sha=$GITHUB_SHA pr='' deploy_pr=false teardown=false
-          if [ "$EVENT" = workflow_dispatch ]; then
+          sha=$GITHUB_SHA pr='' deploy_pr=false deploy_env='' teardown=false
+          if [ "$EVENT" = workflow_dispatch ] && [ "$TARGET" != pr ]; then
+            # The GCP trust enforces the same refs; failing here says why before any build.
+            case "$TARGET:$GITHUB_REF" in
+              next:refs/heads/main | prod:refs/heads/main | prod:refs/tags/*) deploy_env=$TARGET ;;
+              *) echo "$TARGET does not deploy from $GITHUB_REF (next: main; prod: main or a tag)"; exit 1 ;;
+            esac
+          elif [ "$EVENT" = workflow_dispatch ]; then
             pr=$PR_INPUT
+            [ -n "$pr" ] || { echo "target pr needs a PR number"; exit 1; }
             read -r state sha < <(gh pr view "$pr" --repo "$GITHUB_REPOSITORY" --json state,headRefOid -q '.state + " " + .headRefOid')
             [ "$state" = OPEN ] || { echo "PR $pr is $state; previews are for open PRs"; exit 1; }
             deploy_pr=true
@@ -80,8 +101,8 @@ jobs:
             elif [ "$ACTION" = labeled ] && [ "$ADDED_LABEL" != preview ]; then :
             elif [ "$HAS_LABEL" = true ]; then deploy_pr=true; fi
           fi
-          echo "sha=$sha pr=$pr deploy_pr=$deploy_pr teardown=$teardown"
-          { echo "sha=$sha"; echo "pr=$pr"; echo "deploy_pr=$deploy_pr"; echo "teardown=$teardown"; } >> "$GITHUB_OUTPUT"
+          echo "sha=$sha pr=$pr deploy_pr=$deploy_pr deploy_env=$deploy_env teardown=$teardown"
+          { echo "sha=$sha"; echo "pr=$pr"; echo "deploy_pr=$deploy_pr"; echo "deploy_env=$deploy_env"; echo "teardown=$teardown"; } >> "$GITHUB_OUTPUT"
 
   check:
     needs: plan
@@ -192,23 +213,13 @@ jobs:
       - if: env.PUSH == 'true'
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/86405194907/locations/global/workloadIdentityPools/echo-preview-github/providers/github
-          service_account: echo-preview-deployer@dembrane-echo.iam.gserviceaccount.com
+          workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
       - if: env.PUSH == 'true'
         run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
       - uses: docker/setup-buildx-action@v3
       - name: Build (and on the deploy branch, push) the five images
-        run: |
-          out=$([ "$PUSH" = true ] && echo --push || echo --load)
-          build() {
-            docker buildx build $out --provenance=false \
-              --cache-from type=gha,scope=$1 --cache-to type=gha,mode=max,scope=$1 \
-              -f apps/$1/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/$1:$TAG "${@:2}"
-          }
-          build api . & build worker . &
-          build migrate . &
-          build media . & build web .. &
-          fail=0; for j in $(jobs -p); do wait $j || fail=1; done; exit $fail
+        run: scripts/build-images.sh "$([ "$PUSH" = true ] && echo --push || echo --load)" --cache-to
       - name: The API, worker, migrate and media containers start and answer
         if: env.PUSH != 'true'
         run: |
@@ -252,8 +263,8 @@ jobs:
             echo/platform/infra
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/86405194907/locations/global/workloadIdentityPools/echo-preview-github/providers/github
-          service_account: echo-preview-deployer@dembrane-echo.iam.gserviceaccount.com
+          workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
       # The runner ships gcloud; installing it again cost half a minute.
       - uses: google-github-actions/setup-gcloud@v2
         with: { skip_install: true }
@@ -282,24 +293,15 @@ jobs:
         with: { ref: "${{ needs.plan.outputs.sha }}" }
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/86405194907/locations/global/workloadIdentityPools/echo-preview-github/providers/github
-          service_account: echo-preview-deployer@dembrane-echo.iam.gserviceaccount.com
+          workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
       - uses: google-github-actions/setup-gcloud@v2
         with: { skip_install: true }
       - run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
       - uses: docker/setup-buildx-action@v3
       # The images job built these moments ago; its layer cache makes this a push.
       - name: Push the five images
-        run: |
-          build() {
-            docker buildx build --push --provenance=false \
-              --cache-from type=gha,scope=$1 \
-              -f apps/$1/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/$1:$TAG "${@:2}"
-          }
-          build api . & build worker . &
-          build migrate . &
-          build media . & build web .. &
-          fail=0; for j in $(jobs -p); do wait $j || fail=1; done; exit $fail
+        run: scripts/build-images.sh --push
       - name: Make room (at most three PR previews)
         run: scripts/deploy-env.sh make-room "$PR"
       - name: Deploy and verify
@@ -328,9 +330,74 @@ jobs:
             echo/platform/infra
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/86405194907/locations/global/workloadIdentityPools/echo-preview-github/providers/github
-          service_account: echo-preview-deployer@dembrane-echo.iam.gserviceaccount.com
+          workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
       - uses: google-github-actions/setup-gcloud@v2
         with: { skip_install: true }
       - name: Remove the preview's services and drop its database
         run: scripts/deploy-env.sh teardown "${{ needs.plan.outputs.pr }}"
+
+  # next and prod: each pushes the images into its own project's registry (the layer cache
+  # makes that an upload) and deploys with its own identity. Run by hand until cutover.
+  deploy-next:
+    if: needs.plan.outputs.deploy_env == 'next'
+    needs: [plan, check, frontend, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: deploy-next
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TAG: ${{ needs.plan.outputs.sha }}
+      REGISTRY: europe-west4-docker.pkg.dev/dembrane-web-next/echo-next
+    steps:
+      - uses: actions/checkout@v5
+        with: { ref: "${{ needs.plan.outputs.sha }}" }
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/488580804029/locations/global/workloadIdentityPools/echo-next-github/providers/github
+          service_account: echo-next-deployer@dembrane-web-next.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+        with: { skip_install: true }
+      - run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+      - uses: docker/setup-buildx-action@v3
+      - name: Push the five images
+        run: scripts/build-images.sh --push
+      - name: Migrate, deploy media, API, worker, dashboard and portal, and verify
+        run: scripts/deploy-env.sh deploy next "$TAG"
+
+  deploy-prod:
+    if: needs.plan.outputs.deploy_env == 'prod'
+    needs: [plan, check, frontend, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # The prod trust accepts only jobs in this environment; its required reviewers approve
+    # each deploy before the job gets a token.
+    environment: prod
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TAG: ${{ needs.plan.outputs.sha }}
+      REGISTRY: europe-west4-docker.pkg.dev/dembrane-web-prod/echo-prod
+    steps:
+      - uses: actions/checkout@v5
+        with: { ref: "${{ needs.plan.outputs.sha }}" }
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/740075346439/locations/global/workloadIdentityPools/echo-prod-github/providers/github
+          service_account: echo-prod-deployer@dembrane-web-prod.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+        with: { skip_install: true }
+      - run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+      - uses: docker/setup-buildx-action@v3
+      - name: Push the five images
+        run: scripts/build-images.sh --push
+      - name: Migrate, deploy media, API, worker, dashboard and portal, and verify
+        run: scripts/deploy-env.sh deploy prod "$TAG"
