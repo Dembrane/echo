@@ -107,3 +107,42 @@ export class ExecutorHeartbeat {
     await this.sql.end();
   }
 }
+
+/**
+ * An executor id that starts with the build it runs, so a deploy can find its own worker's
+ * heartbeat. The release rides in the id, not in a column: a migration ordered after the
+ * held contract migration would make drizzle skip that contract at cutover.
+ */
+export function executorIdFor(release: string | undefined, instance: string): string {
+  return release ? `${release}/${instance}` : instance;
+}
+
+export interface WorkerFreshness {
+  /** Seconds since the newest executor heartbeat (of the given release); null when there is none. */
+  readonly ageS: number | null;
+  /** Seconds since a job last finished, looking back 15 minutes; null when none did. */
+  readonly jobAgeS: number | null;
+}
+
+/**
+ * How recently a worker proved it is alive: its executor heartbeat, written every 10
+ * seconds once the queue runs, and the last finished job (the scheduled heartbeat job
+ * finishes every minute). With a release, only executors running that build count, so a
+ * deploy can tell the new worker from one left over. The job lookup is bounded by
+ * created_at, which DBOS indexes.
+ */
+export async function workerFreshness(
+  sql: postgres.Sql,
+  release?: string,
+): Promise<WorkerFreshness> {
+  const [beat] = await sql<{ age_s: number | null }[]>`
+    select extract(epoch from now() - max(last_seen))::float8 as age_s
+    from dbos_executor_heartbeat
+    where ${release ?? null}::text is null or starts_with(executor_id, ${release ? `${release}/` : null})`;
+  const [job] = await sql<{ age_s: number | null }[]>`
+    select (extract(epoch from now()) - max(updated_at) / 1000.0)::float8 as age_s
+    from dbos.workflow_status
+    where status = 'SUCCESS'
+      and created_at > (extract(epoch from now() - interval '15 minutes') * 1000)::bigint`;
+  return { ageS: beat?.age_s ?? null, jobAgeS: job?.age_s ?? null };
+}

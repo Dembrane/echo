@@ -4,7 +4,7 @@ import { createBilling, HttpMollie, UnconfiguredMollie } from "@dembrane/billing
 import { describe, FIXED_CONNECTIONS, loadSections } from "@dembrane/config";
 import { AudioUrls } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
-import { createDb, withDatabase } from "@dembrane/db";
+import { createDb, describeDbFailure, withDatabase } from "@dembrane/db";
 import { createModels, vertexCompleter, vertexEmbedder } from "@dembrane/llm";
 import { type Mailer, SendGridMailer } from "@dembrane/mail";
 import { createLogger, initTracing } from "@dembrane/observability";
@@ -61,6 +61,7 @@ const databaseUrl = withDatabase(config.database.url, config.database.name);
 const queue = new Queue(databaseUrl, logger, tracing.tracer, {
   maxConnections: config.database.queuePoolMax,
   clientConnections: FIXED_CONNECTIONS.workerQueueClient,
+  release: config.app.release,
 });
 const database = createDb({ url: databaseUrl, poolMax: config.database.poolMax });
 // Without a SendGrid key (local, preview) mail is logged, never sent.
@@ -176,9 +177,26 @@ const regs = registrations({
   databaseUrl,
   popcorn: { databaseUrl, portalUrl: config.http.portalUrl },
 });
-await queue.start(regs.flatMap((r) => r.jobs));
-for (const r of regs) await r.register(queue);
-await queue.run();
+// A worker that cannot start says why in one line before it exits: Cloud Run restarts it
+// either way, and the line (signal worker.boot_failed) is what the person on call reads.
+try {
+  // The database first, through the same connect() every pool uses, so an unreachable
+  // server is named before DBOS's own retries fill the log.
+  await database.ping();
+  await queue.start(regs.flatMap((r) => r.jobs));
+  for (const r of regs) await r.register(queue);
+  await queue.run();
+} catch (err) {
+  const db = describeDbFailure(err, databaseUrl);
+  if (db)
+    logger.fatal(
+      { signal: "worker.boot_failed", cause: db.cause, target: db.target, detail: db.detail },
+      db.message,
+    );
+  else logger.fatal({ signal: "worker.boot_failed", err }, "worker failed to start");
+  logger.flush();
+  process.exit(1);
+}
 logger.info(
   { jobs: regs.flatMap((r) => r.jobs.map((j) => j.name)), config: describe(loaded) },
   "worker started",

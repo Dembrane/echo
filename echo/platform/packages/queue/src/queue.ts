@@ -10,7 +10,7 @@ import {
 } from "@dembrane/observability";
 import type postgres from "postgres";
 import type { JobDefinition, Parsed, Payload } from "./define";
-import { ExecutorHeartbeat } from "./recovery";
+import { ExecutorHeartbeat, executorIdFor } from "./recovery";
 
 /**
  * Bumped by hand when a workflow's sequence of steps changes. DBOS resumes a crashed
@@ -83,6 +83,8 @@ export class Queue {
       /** The enqueue-only client's pool; defaults to maxConnections. */
       readonly clientConnections?: number;
       readonly executorId?: string;
+      /** The build this process runs (APP_RELEASE); it prefixes the generated executor id. */
+      readonly release?: string;
       /** Tests shorten these; production uses the defaults in recovery.ts. */
       readonly recovery?: { readonly beatMs: number; readonly deadAfterS: number };
       /** How often an idle worker checks each queue; lower in tests, DBOS's default in production. */
@@ -209,7 +211,10 @@ export class Queue {
   async run(): Promise<void> {
     const executorId =
       this.opts.executorId ??
-      `${process.env.HOSTNAME ?? "worker"}-${crypto.randomUUID().slice(0, 8)}`;
+      executorIdFor(
+        this.opts.release,
+        `${process.env.HOSTNAME ?? "worker"}-${crypto.randomUUID().slice(0, 8)}`,
+      );
     const scheduled = this.schedules.map((s) => {
       const fn = DBOS.registerWorkflow(
         async (_at: Date, _ctx: unknown) => {

@@ -31,6 +31,7 @@ function deps(overrides: Partial<Deps> = {}): Deps {
     logger: createLogger({ service: "t", release: "r", env: "test", level: "info" }, sink),
     tracer: initTracing({ service: "t", release: "r", env: "test", sampleRatio: 1 }).tracer,
     pingDb: async () => 1,
+    workerFreshness: async () => ({ ageS: 4, jobAgeS: 30 }),
     auth: {
       handler: async () => new Response("auth"),
       api: { getSession: async () => null },
@@ -70,6 +71,62 @@ test("ready fails when the database does not answer", async () => {
   );
   expect(res.status).toBe(503);
   expect(await res.json()).toEqual({ status: "unavailable", failing: ["database"] });
+});
+
+test("ready/worker is fresh while a heartbeat is recent", async () => {
+  const res = await buildApp(deps()).request("/ready/worker");
+  expect(res.status).toBe(200);
+  expect(await res.json()).toEqual({ status: "fresh", ageS: 4, jobAgeS: 30 });
+});
+
+test("ready/worker is 503 once the newest heartbeat is older than the threshold", async () => {
+  const res = await buildApp(
+    deps({ workerFreshness: async () => ({ ageS: 91.4, jobAgeS: null }) }),
+  ).request("/ready/worker");
+  expect(res.status).toBe(503);
+  expect(await res.json()).toEqual({ status: "stale", ageS: 91, jobAgeS: null });
+});
+
+test("ready/worker is 503 when no worker ever wrote a heartbeat", async () => {
+  const res = await buildApp(
+    deps({ workerFreshness: async () => ({ ageS: null, jobAgeS: null }) }),
+  ).request("/ready/worker");
+  expect(res.status).toBe(503);
+  expect(await res.json()).toEqual({ status: "missing", ageS: null, jobAgeS: null });
+});
+
+test("ready/worker?release counts only that build: a fresh old release is missing", async () => {
+  // The fake keeps a fresh heartbeat for the old build only, as the table would after a
+  // deploy whose new worker never started.
+  const beats: Record<string, number> = { old: 3 };
+  const asked: (string | undefined)[] = [];
+  const app = buildApp(
+    deps({
+      workerFreshness: async (release) => {
+        asked.push(release);
+        const ageS = release === undefined ? 3 : (beats[release] ?? null);
+        return { ageS, jobAgeS: 10 };
+      },
+    }),
+  );
+  const res = await app.request("/ready/worker?release=new");
+  expect(res.status).toBe(503);
+  expect(await res.json()).toEqual({ status: "missing", ageS: null, jobAgeS: 10 });
+  expect((await app.request("/ready/worker?release=old")).status).toBe(200);
+  expect(asked).toEqual(["new", "old"]);
+});
+
+test("ready/worker is 503 without details when the database does not answer", async () => {
+  const res = await buildApp(
+    deps({ workerFreshness: () => Promise.reject(new Error("password is hunter2")) }),
+  ).request("/ready/worker");
+  expect(res.status).toBe(503);
+  expect(await res.json()).toEqual({ status: "unavailable", failing: ["database"] });
+});
+
+test("ready/worker refuses a release that is not a tag", async () => {
+  const res = await buildApp(deps()).request("/ready/worker?release=a'%20or%201=1");
+  expect(res.status).toBe(400);
 });
 
 test("config.json serves only public keys", async () => {

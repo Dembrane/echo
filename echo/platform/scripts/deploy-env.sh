@@ -123,6 +123,25 @@ smoke() {
     code=$(curl -s -o /dev/null -w '%{http_code}' "$web/api/v2/me")
     [ "$code" = 401 ] || { echo "$role /api proxy answered $code, expected 401" >&2; exit 1; }
   done
+  wait_worker "$prefix" "$tag"
+}
+
+# The worker pool's rollout returns once the revision exists, not once it runs: a worker
+# that exits at boot looks deployed. Wait until the API sees a fresh executor heartbeat
+# written by this build, and fail the deploy otherwise.
+wait_worker() {
+  local prefix=$1 tag=$2 api body="" end
+  api=$(url "$prefix-api")
+  end=$((SECONDS + ${WORKER_WAIT_S:-180}))
+  while [ "$SECONDS" -lt "$end" ]; do
+    body=$(curl -s -w ' %{http_code}' "$api/ready/worker?release=$tag") || true
+    [[ $body == *" 200" ]] && { echo "worker $tag: ${body% *}"; return 0; }
+    sleep 5
+  done
+  echo "worker $tag never wrote a fresh heartbeat within ${WORKER_WAIT_S:-180}s; last answer: $body" >&2
+  g logging read "resource.type=\"cloud_run_worker_pool\" AND resource.labels.worker_pool_name=\"$prefix-worker\" AND jsonPayload.signal=\"worker.boot_failed\"" \
+    --freshness 15m --limit 1 --format 'value(jsonPayload.message)' >&2 2>/dev/null || true
+  exit 1
 }
 
 teardown() {
