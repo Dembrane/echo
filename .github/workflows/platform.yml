@@ -168,7 +168,7 @@ jobs:
     needs: plan
     if: needs.plan.outputs.teardown != 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: echo/frontend
@@ -183,18 +183,36 @@ jobs:
           cache: pnpm
           cache-dependency-path: echo/frontend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      # Vitest's prebundled dependencies and its timing file, which orders slow files first.
+      - uses: actions/cache@v4
+        with:
+          path: echo/frontend/node_modules/.vite/vitest
+          key: vitest-${{ runner.os }}-${{ hashFiles('echo/frontend/pnpm-lock.yaml', 'echo/frontend/vite.config.ts') }}-${{ github.sha }}
+          restore-keys: |
+            vitest-${{ runner.os }}-${{ hashFiles('echo/frontend/pnpm-lock.yaml', 'echo/frontend/vite.config.ts') }}-
+            vitest-${{ runner.os }}-
       - name: Lint
         run: pnpm lint
       - name: Types
         run: pnpm exec tsc
-      # The accounts screens build against a copy of platform/packages/accounts' contract.
-      - name: Accounts contract matches the platform
+      # Every vitest file under src; the Playwright specs in e2e/ are excluded in vite.config.ts.
+      - name: Tests
+        run: pnpm exec vitest run
+      # Fails when extract or compile changes a catalog. Lists messages English has that a
+      # locale leaves empty.
+      # TODO(main): once feat/error-codes lands its translation fill script, run it before
+      # the check and pass --strict, so a missing translation fails instead of warning.
+      - name: Translations
+        run: |
+          pnpm messages:extract
+          pnpm messages:compile
+          node scripts/check-translations.mjs
+      # The frontend builds against a copy of the platform's API contract.
+      - name: Contract
         run: node scripts/sync-accounts-contract.mjs --check
-      - name: Accounts tests
-        run: pnpm exec vitest run src/features/accounts src/components/auth/utils
       # The participant portal's first load must not grow: builds and compares with the
       # baseline recorded in the script.
-      - name: Portal first-load size
+      - name: Portal size
         run: node scripts/check-portal-bundle.mjs
 
   images:

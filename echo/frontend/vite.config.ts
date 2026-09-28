@@ -1,8 +1,10 @@
+/// <reference types="vitest/config" />
 import { execSync } from "node:child_process";
 import path from "node:path";
 import { lingui } from "@lingui/vite-plugin";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type PluginOption } from "vite";
+import { configDefaults } from "vitest/config";
 
 // Babel plugin: inject __source into the props object of _jsx/_jsxs calls so
 // Agentation can resolve element-to-source paths in production-mode builds.
@@ -175,6 +177,26 @@ export default defineConfig(({ mode }) => {
 				"@": path.resolve(__dirname, "./src"),
 				// reddit fix lol: https://www.reddit.com/r/reactjs/comments/1g3tsiy/trouble_with_vite_tablericons_5600_requests/
 				"@tabler/icons-react": "@tabler/icons-react/dist/esm/icons/index.mjs",
+			},
+		},
+		test: {
+			// e2e/ holds Playwright specs; they run against a live app, not in vitest.
+			exclude: [...configDefaults.exclude, "e2e/**"],
+			pool: "threads",
+			// These barrels resolve thousands of modules, and every isolated test file
+			// imports them again; prebundling them cuts the suite's CPU by about a third.
+			// React stays external to the bundle, so their hooks share the tests' React.
+			deps: {
+				optimizer: {
+					client: {
+						enabled: true,
+						include: [
+							"@phosphor-icons/react",
+							"@tabler/icons-react",
+							"date-fns",
+						],
+					},
+				},
 			},
 		},
 		server: {
