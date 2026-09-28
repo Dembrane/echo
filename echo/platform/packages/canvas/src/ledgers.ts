@@ -50,7 +50,6 @@ const TAB_LABELS: Record<TabKind, string> = {
   trace: "Trace",
   audit: "Audit log",
 };
-const HOST_TARGET_TABS = new Set(["crux", "concept_cloud", "story"]);
 
 export interface Tab {
   kind: TabKind;
@@ -206,61 +205,6 @@ export function seedBoardCardsFromQuotes(state: CanvasState, now?: string): bool
 }
 
 export class CanvasValueError extends Error {}
-
-export function hostItem(args: {
-  text: string;
-  targetTab: string;
-  person: string | null;
-  chatId: string | null;
-  messageId: string | null;
-}): Json {
-  return {
-    id: newId(),
-    text: args.text.trim(),
-    person: args.person ? args.person.trim() : null,
-    target_tab: normalizeTargetTab(args.targetTab),
-    source: { chat_id: args.chatId, message_id: args.messageId },
-    added_at: utcNowIso(),
-    removed_at: null,
-  };
-}
-
-export function normalizeTargetTab(target: string | null): string {
-  let n = (target || "story").trim().toLowerCase().replaceAll("-", "_").replaceAll(" ", "_");
-  n =
-    (
-      { cloud: "concept_cloud", concept: "concept_cloud", concepts: "concept_cloud" } as Record<
-        string,
-        string
-      >
-    )[n] ?? n;
-  if (!HOST_TARGET_TABS.has(n))
-    throw new CanvasValueError("target_tab must be one of crux, concept_cloud, or story");
-  return n;
-}
-
-export function appendHostItem(state: CanvasState, item: Json): CanvasState {
-  const s = freshCanvasState(state);
-  s.host_items = [...s.host_items, item];
-  return s;
-}
-
-export function removeHostItem(state: CanvasState, needleRaw: string): [CanvasState, boolean] {
-  const s = freshCanvasState(state);
-  const needle = needleRaw.trim().toLowerCase();
-  let removed = false;
-  s.host_items = s.host_items.map((item) => {
-    if (truthy(item.removed_at)) return item;
-    const matchesId = orStr(item.id).toLowerCase() === needle;
-    const matchesText = needle !== "" && orStr(item.text).toLowerCase().includes(needle);
-    if (matchesId || matchesText) {
-      removed = true;
-      return { ...item, removed_at: utcNowIso() };
-    }
-    return item;
-  });
-  return [s, removed];
-}
 
 export interface ExtractionDetail {
   quotes_added: number;

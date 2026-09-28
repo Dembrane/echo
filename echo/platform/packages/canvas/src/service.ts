@@ -11,17 +11,7 @@ import type { Completer } from "@echo/llm";
 import type { RateLimiter } from "@echo/ratelimit";
 import { type AccessDeps, canvasProject, canvasReport } from "./access";
 import { executeGatherSpec, gatherHasTranscript } from "./gather";
-import {
-  appendHostItem,
-  applyModelExtraction,
-  CanvasValueError,
-  freshCanvasState,
-  hostItem,
-  normalizeCanvasTabs,
-  removeHostItem,
-  statePatch,
-  tabsEqual,
-} from "./ledgers";
+import { applyModelExtraction, freshCanvasState, normalizeCanvasTabs, tabsEqual } from "./ledgers";
 import { directusTime, isRecord, type Json, orStr, parseDt, pyStr, truthy, utcNowIso } from "./py";
 import { MAX_HTML_BYTES, sanitizeCanvasHtml } from "./sanitize";
 import type { Row } from "./storage";
@@ -74,15 +64,6 @@ function loopDoc(loop: Row, run: Row | null): Json {
     last_run_status: run?.status ?? null,
     last_run_detail: run?.detail ?? null,
   };
-}
-
-/** A loop row as Directus returned it from an update (every column). */
-function loopRow(loop: Row): Json {
-  const out: Json = {};
-  for (const [k, v] of Object.entries(loop))
-    out[k] = ["created_at", "updated_at", "expires_at"].includes(k) ? t(v) : (v ?? null);
-  if (out.report_id !== null && out.report_id !== undefined) out.report_id = String(out.report_id);
-  return out;
 }
 
 function loopSettingsDoc(loop: Row): Json {
@@ -365,74 +346,6 @@ export async function refreshCanvas(d: CanvasDeps, who: Signed, canvasId: string
     throw new RateLimitedError("Just refreshed");
   await d.startTick(String(loop.id), "manual");
   return { generation: "pending" };
-}
-
-export async function addHostItem(
-  d: CanvasDeps,
-  who: Signed,
-  canvasId: string,
-  body: {
-    text: string;
-    target_tab: string;
-    person: string | null;
-    chat_id: string | null;
-    message_id: string | null;
-  },
-) {
-  const { report } = await canvasReport(d, who, canvasId, "project:update");
-  const projectId = truthy(report.project_id) ? String(report.project_id) : null;
-  const chatId = await liveChatId(d, body.chat_id, projectId);
-  const text = body.text.trim();
-  if (!text) throw new CanvasValueError("text is required");
-  const loop = await d.store.loopForReport(String(report.id));
-  if (!loop) throw new CanvasValueError("Canvas loop not found");
-  const item = hostItem({
-    text,
-    targetTab: body.target_tab,
-    person: body.person,
-    chatId,
-    messageId: body.message_id,
-  });
-  const state = appendHostItem(freshCanvasState(loop), item);
-  const updated = await d.store.updateLoop(String(loop.id), statePatch(state), iso(d.now()));
-  await d.store.scheduleTick({
-    loopId: String(loop.id),
-    tickKind: "manual",
-    scheduledAt: iso(d.now()),
-    now: iso(d.now()),
-  });
-  return { status: "added", host_item: item, loop: updated ? loopRow(updated) : null };
-}
-
-export async function removeHostItemRoute(
-  d: CanvasDeps,
-  who: Signed,
-  canvasId: string,
-  body: { item: string; chat_id: string | null; message_id: string | null },
-) {
-  const { report } = await canvasReport(d, who, canvasId, "project:update");
-  const projectId = truthy(report.project_id) ? String(report.project_id) : null;
-  const chatId = await liveChatId(d, body.chat_id, projectId);
-  const needle = body.item.trim();
-  if (!needle) throw new CanvasValueError("item is required");
-  const loop = await d.store.loopForReport(String(report.id));
-  if (!loop) throw new CanvasValueError("Canvas loop not found");
-  const [state, removed] = removeHostItem(freshCanvasState(loop), needle);
-  const updated = await d.store.updateLoop(String(loop.id), statePatch(state), iso(d.now()));
-  if (removed)
-    await d.store.scheduleTick({
-      loopId: String(loop.id),
-      tickKind: "manual",
-      scheduledAt: iso(d.now()),
-      now: iso(d.now()),
-    });
-  return {
-    status: removed ? "removed" : "not_found",
-    item: needle,
-    chat_id: chatId,
-    message_id: body.message_id,
-    loop: updated ? loopRow(updated) : null,
-  };
 }
 
 export async function loopAction(d: CanvasDeps, who: Signed, canvasId: string, action: string) {

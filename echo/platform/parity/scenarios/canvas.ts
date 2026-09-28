@@ -9,7 +9,6 @@ const loop = id("ca", 1);
 const cfg = id("ca", 2);
 const gen = id("ca", 3);
 const run = id("ca", 4);
-const chat = id("ca", 5);
 
 const ENABLE_P1 = `update project set is_canvas_enabled = true where id = '${p1}'`;
 const ENABLE_P2 = `update project set is_canvas_enabled = true where id = '${p2}'`;
@@ -45,12 +44,10 @@ const P1_CANVAS = [
     values ('${run}', '${loop}', 'ok', 'first draw', '${gen}', '2026-09-01T10:04:00Z', '2026-09-01T10:05:00Z')`,
 ];
 const P2_CANVAS = [P2_OPEN, ENABLE_P2, ...canvasOn(p2, 60, 2)];
-const P1_CHAT = `insert into project_chat (id, project_id, name, date_created) values ('${chat}', '${p1}', 'Planning', now())`;
 const P1_STOPPED = `update agent_loop set status = 'stopped' where id = '${loop}'`;
 const P1_NO_LOOP = `delete from agent_loop_run where loop_id = '${loop}'; delete from agent_loop where id = '${loop}'`;
 const P1_PENDING_TICK = `insert into scheduled_task (id, task_type, payload, scheduled_at, status, attempts, created_at, updated_at)
   values ('${id("ca", 6)}', 'canvas_tick', '{"loop_id": "${loop}", "tick_kind": "scheduled"}', now() + interval '5 minutes', 'scheduled', 0, now(), now())`;
-const P1_HOST_ITEM = `update agent_loop set canvas_host_items = '[{"id": "${id("ca", 7)}", "text": "Ask about buses", "person": null, "target_tab": "story", "source": {"chat_id": null, "message_id": null}, "added_at": "2026-09-01T10:10:00.000000+00:00", "removed_at": null}]' where id = '${loop}'`;
 
 const base = "/api/v2/bff/canvases";
 const inDays = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString();
@@ -405,52 +402,20 @@ export default scenarios([
 
   // ── host items ──────────────────────────────────────────────────────
   {
-    name: "canvas host item: add",
+    name: "canvas host item add: removed",
     as: "alice",
     method: "POST",
     path: `${base}/50/host-items`,
-    body: {
-      text: "Ask about buses",
-      target_tab: "cloud",
-      person: "Host",
-      chat_id: chat,
-      message_id: "m1",
-    },
-    setup: [...P1_CANVAS, P1_CHAT],
-    differs: LEDGERS,
+    body: { text: "Ask about buses" },
+    removed: "no client calls it; the assistant adds and removes host items through /api/agentic",
   },
   {
-    name: "canvas host item: validation",
-    as: "alice",
-    method: "POST",
-    path: `${base}/50/host-items`,
-    body: { text: "" },
-    setup: P1_CANVAS,
-  },
-  {
-    name: "canvas host item: observer cannot",
-    as: "rita",
-    method: "POST",
-    path: `${base}/60/host-items`,
-    body: { text: "Hi" },
-    setup: P2_CANVAS,
-  },
-  {
-    name: "canvas host item: remove",
+    name: "canvas host item remove: removed",
     as: "alice",
     method: "POST",
     path: `${base}/50/host-items/remove`,
     body: { item: "buses" },
-    setup: [...P1_CANVAS, P1_HOST_ITEM],
-    differs: LEDGERS,
-  },
-  {
-    name: "canvas host item: remove validation",
-    as: "alice",
-    method: "POST",
-    path: `${base}/50/host-items/remove`,
-    body: {},
-    setup: P1_CANVAS,
+    removed: "no client calls it; the assistant adds and removes host items through /api/agentic",
   },
 
   // ── loop actions ────────────────────────────────────────────────────
