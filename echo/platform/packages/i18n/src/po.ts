@@ -116,32 +116,16 @@ export function missingEntries(file: PoFile): PoEntry[] {
 }
 
 /**
- * Sets an entry's translation and flags it fuzzy: filled by a machine, waiting for a
- * person. lingui keeps the flag through extract and compiles the text as usual, so the
- * screen shows it while the flag tells a reviewer it has not been read.
+ * Sets an entry's translation. The review mark lives in the catalog's ledger
+ * (./ledger.ts), not in the entry: lingui's extract rewrites every entry and drops
+ * flags and translator comments, so a mark in the .po would not survive the next run.
  */
 export function fillEntry(entry: PoEntry, translation: string): void {
   const out: string[] = [];
-  let flagged = false;
   let inMsgstr = false;
   for (const line of entry.lines) {
     if (inMsgstr && line.startsWith('"')) continue;
     inMsgstr = false;
-    if (line.startsWith("#,")) {
-      const flags = line
-        .slice(2)
-        .split(",")
-        .map((f) => f.trim())
-        .filter(Boolean);
-      if (!flags.includes("fuzzy")) flags.push("fuzzy");
-      out.push(`#, ${flags.join(", ")}`);
-      flagged = true;
-      continue;
-    }
-    if (!flagged && (line.startsWith("msgctxt ") || line.startsWith("msgid "))) {
-      out.push("#, fuzzy");
-      flagged = true;
-    }
     if (line.startsWith("msgstr ")) {
       out.push(`msgstr "${escapePo(translation)}"`);
       inMsgstr = true;

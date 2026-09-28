@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { FakeCompleter } from "@dembrane/llm";
 import { fillCatalog, placeholdersOf } from "../src/fill";
+import { readLedger } from "../src/ledger";
 import { fillEntry, missingEntries, parsePo, serializePo } from "../src/po";
 
 const HEADER = `msgid ""
@@ -55,17 +56,14 @@ test("an untouched catalog is written back byte for byte", () => {
   expect(serializePo(parsePo(nl))).toBe(nl);
 });
 
-test("only empty, live entries are owed; filling flags them fuzzy", () => {
+test("only empty, live entries are owed; filling sets the text and nothing else", () => {
   const po = parsePo(nl);
   const owed = missingEntries(po);
   expect(owed.map((e) => e.msgid)).toEqual(["error.project.not_found", "Go <0>home</0>"]);
   fillEntry(owed[0]!, 'We konden dit "project" niet vinden.');
   const text = serializePo(po);
   expect(text).toContain(
-    '#. js-lingui-explicit-id\n#: src/lib/errors/messages/project.ts:6\n#, fuzzy\nmsgid "error.project.not_found"\nmsgstr "We konden dit \\"project\\" niet vinden."',
-  );
-  expect(parsePo(text).entries.find((e) => e.msgid === "error.project.not_found")?.flags).toEqual(
-    new Set(["fuzzy"]),
+    '#. js-lingui-explicit-id\n#: src/lib/errors/messages/project.ts:6\nmsgid "error.project.not_found"\nmsgstr "We konden dit \\"project\\" niet vinden."',
   );
 });
 
@@ -75,6 +73,10 @@ test("placeholders and tags must survive translation", () => {
   );
   expect(placeholdersOf("{count, plural, one {# item} other {# items}}")).toBe("{count");
   expect(placeholdersOf("Hi {name}")).not.toBe(placeholdersOf("Hoi {naam}"));
+  // Select branches are text: translating them keeps the placeholders the same.
+  expect(placeholdersOf("{what, select, initials {Your initials} other {Signature}} is big")).toBe(
+    placeholdersOf("{what, select, initials {Je initialen} other {Handtekening}} is groot"),
+  );
 });
 
 test("fillCatalog fills from the source texts, keeps reviewed ones, drops broken placeholders", async () => {
@@ -103,7 +105,22 @@ test("fillCatalog fills from the source texts, keeps reviewed ones, drops broken
   expect(after).toContain('msgstr "We konden dit project niet vinden."');
   expect(after).toContain('msgid "Machine done"\nmsgstr "Machine klaar"');
   expect(after).toContain('msgid "Go <0>home</0>"\nmsgstr ""');
+  // The machine text waits for review in the ledger, beside the catalog.
+  expect(readLedger(dir)).toEqual({
+    "nl-NL": { "error.project.not_found": "We konden dit project niet vinden." },
+  });
   // Without a completer it only counts.
   const [counted] = await fillCatalog(dir, null);
-  expect(counted).toMatchObject({ missing: 1, filled: 0 });
+  expect(counted).toMatchObject({ missing: 1, filled: 0, unreviewed: 1 });
+  // A person edits the text: it counts as reviewed, and a later run never touches it.
+  writeFileSync(
+    path.join(dir, "nl-NL.po"),
+    readFileSync(path.join(dir, "nl-NL.po"), "utf8").replace(
+      "We konden dit project niet vinden.",
+      "Dit project bestaat niet meer.",
+    ),
+  );
+  const [reviewed] = await fillCatalog(dir, null);
+  expect(reviewed).toMatchObject({ unreviewed: 0 });
+  expect(readLedger(dir)).toEqual({});
 });

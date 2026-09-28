@@ -16,1589 +16,1589 @@ msgstr ""
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
-msgstr ""
+msgstr "Поле «{field}» не може бути порожнім. Заповніть його або видаліть."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_too_large"
-msgstr ""
+msgstr "{what, select, initials {Зображення ваших ініціалів} other {Зображення вашого підпису}} завелике. Розмір має бути менше 512 КБ."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:53
 msgid "error.document.image_not_png"
-msgstr ""
+msgstr "{what, select, initials {Ваші ініціали мають} other {Ваш підпис має}} бути зображенням у форматі PNG."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:68
 msgid "error.workspace.handoff_pending"
-msgstr ""
+msgstr "Для цього робочого простору вже очікується передача. Скасуйте її, перш ніж починати нову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:10
 msgid "error.popcorn.creation_busy"
-msgstr ""
+msgstr "Для цього проєкту вже створюється презентація. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:27
 msgid "error.canvas.just_previewed"
-msgstr ""
+msgstr "Попередній перегляд щойно створено. Зачекайте хвилинку, перш ніж спробувати знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:91
 msgid "error.project.pin_order_invalid"
-msgstr ""
+msgstr "Проєкт можна закріпити на 1-му, 2-му або 3-му місці."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:5
 msgid "error.report.already_generating"
-msgstr ""
+msgstr "Звіт для цього проєкту вже створюється. Зачекайте на завершення і спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:24
 msgid "error.agent_access.risk_not_accepted"
-msgstr ""
+msgstr "Прийміть повідомлення про ризики обробки даних, щоб підключити свого агента."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:115
 msgid "error.workspace.partner_agreement_required"
-msgstr ""
+msgstr "Прийміть партнерську угоду, щоб продовжити."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:100
 msgid "error.project.privacy_policy_required"
-msgstr ""
+msgstr "Додайте посилання на вашу політику конфіденційності, щоб використовувати згоду як правову основу."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:29
 msgid "error.task.reply_required"
-msgstr ""
+msgstr "Додайте відповідь або файл перед надсиланням."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:17
 msgid "error.agent.insight_reason_required"
-msgstr ""
+msgstr "Вкажіть коротку причину, перш ніж відхилити цей інсайт."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:38
 msgid "error.field.too_few_items"
-msgstr ""
+msgstr "Додайте щонайменше {min_length}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:44
 msgid "error.workspace.external_needs_owner"
-msgstr ""
+msgstr "Вкажіть назву організації клієнта та електронну пошту власника даних, щоб позначити цей робочий простір як зовнішній."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:27
 msgid "error.workspace.data_owner_org_required"
-msgstr ""
+msgstr "Додайте назву організації, якій належать дані."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:13
 msgid "error.workspace.admin_joins_directly"
-msgstr ""
+msgstr "Як адміністратор організації ви можете приєднатися до цього робочого простору напряму, без запиту."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:133
 msgid "error.project.share_role_cannot_access"
-msgstr ""
+msgstr "Учасники з доступом до білінгу не можуть відкривати проєкти. Спочатку призначте їм іншу роль."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:49
 msgid "error.invite.role_cannot_access_projects"
-msgstr ""
+msgstr "Учасники з доступом до білінгу не можуть відкривати проєкти. Оберіть іншу роль, щоб поділитися цим проєктом."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:18
 msgid "error.canvas.feature_off"
-msgstr ""
+msgstr "Полотна не ввімкнено для цього проєкту."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:5
 msgid "error.field.invalid"
-msgstr ""
+msgstr "Перевірте це поле та спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
-msgstr ""
+msgstr "Підтвердьте, що ви маєте право погоджувати обробку даних для вашої організації."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
-msgstr ""
+msgstr "dembrane зараз цим зайнятий. Спробуйте ще раз за секунду."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:5
 msgid "error.analysis.feature_disabled"
-msgstr ""
+msgstr "Редагування результатів тут недоступне."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:95
 msgid "error.project.privacy_policy_invalid_url"
-msgstr ""
+msgstr "Введіть посилання на політику конфіденційності, що починається з http:// або https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:13
 msgid "error.field.invalid_date"
-msgstr ""
+msgstr "Введіть дійсну дату."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:17
 msgid "error.field.invalid_email"
-msgstr ""
+msgstr "Введіть дійсну адресу електронної пошти."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:14
 msgid "error.webhook.invalid_url"
-msgstr ""
+msgstr "Введіть веб-адресу, що починається з http:// або https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:30
 msgid "error.field.invalid_url"
-msgstr ""
+msgstr "Введіть веб-адресу, що починається з http:// або https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tax_id_required"
-msgstr ""
+msgstr "Введіть принаймні один із номерів: VAT, KvK або KBO."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:40
 msgid "error.document.field_text_invalid"
-msgstr ""
+msgstr "Введіть текст для «{label}»."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:119
 msgid "error.project.share_needs_private"
-msgstr ""
+msgstr "Усі в робочому просторі вже бачать цей проєкт. Зробіть його приватним, щоб поділитися з окремими людьми."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:9
 msgid "error.request.field_required"
-msgstr ""
+msgstr "Заповніть {field}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:36
 msgid "error.document.field_required"
-msgstr ""
+msgstr "Заповніть «{label}», щоб продовжити."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:34
 msgid "error.field.required"
-msgstr ""
+msgstr "Заповніть це поле."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/access.ts:9
 msgid "error.access.not_onboarded"
-msgstr ""
+msgstr "Завершіть налаштування облікового запису, щоб продовжити."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:28
 msgid "error.organisation.name_required"
-msgstr ""
+msgstr "Вкажіть назву вашої організації."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:5
 msgid "error.project.event_invite_paid"
-msgstr ""
+msgstr "Приховування запрошення на подію dembrane доступне у платному тарифі. Оновіть тариф, щоб приховати його."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:137
 msgid "error.workspace.visibility_requires_tier"
-msgstr ""
+msgstr "Робочі простори з доступом за запрошенням і приватні простори потребують тарифу Innovator або вище. Створіть його поки відкритим або спочатку оновіть тариф."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:23
 msgid "error.conversation.no_summary"
-msgstr ""
+msgstr "Спочатку створіть підсумок цієї розмови, а потім спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:14
 msgid "error.agent_access.no_enabled_organisation"
-msgstr ""
+msgstr "Жодна з вибраних організацій не дозволяє доступ агентам. Виберіть іншу або попросіть адміністратора ввімкнути доступ для агентів."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:24
 msgid "error.invite.observer_internal_workspace"
-msgstr ""
+msgstr "Спостерігачі можуть приєднуватися лише до робочих просторів для зовнішніх клієнтів. Виберіть іншу роль."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:5
 msgid "error.webhook.invalid_event"
-msgstr ""
+msgstr "Одна з вибраних подій недоступна. Виберіть події ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:18
 msgid "error.template.quick_access_not_found"
-msgstr ""
+msgstr "Один із цих шаблонів більше недоступний. Вилучіть його зі швидкого доступу та збережіть знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:26
 msgid "error.billing.payments_unavailable"
-msgstr ""
+msgstr "Онлайн-оплата зараз недоступна. Зв'яжіться з нами, щоб змінити тариф."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:19
 msgid "error.document.decline_signer_only"
-msgstr ""
+msgstr "Лише {signer_email} може відхилити цей документ."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:98
 msgid "error.document.signer_only"
-msgstr ""
+msgstr "Лише {signer_email} може підписати цей документ. Попросіть підписати його або зверніться до нас, щоб змінити підписанта."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:36
 msgid "error.workspace.delete_admin_only"
-msgstr ""
+msgstr "Лише адміністратор або власник робочого простору може видалити його."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:54
 msgid "error.workspace.handoff_admin_only"
-msgstr ""
+msgstr "Лише адміністратори організації, яка оплачує цей робочий простір, можуть передати його."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:59
 msgid "error.workspace.handoff_cancel_initiator_only"
-msgstr ""
+msgstr "Лише адміністратори організації, яка ініціювала передачу, можуть її скасувати."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:49
 msgid "error.workspace.handoff_accept_target_admin_only"
-msgstr ""
+msgstr "Лише адміністратори організації-отримувача можуть прийняти цю передачу."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:31
 msgid "error.workspace.data_ownership_admin_only"
-msgstr ""
+msgstr "Лише адміністратор організації може змінювати власника даних цього робочого простору."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:49
 msgid "error.organisation.owner_only"
-msgstr ""
+msgstr "Це може зробити лише власник організації."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:50
 msgid "error.member.owner_changes_owner"
-msgstr ""
+msgstr "Лише власник може призначити іншого власника або змінити його роль."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:55
 msgid "error.member.owner_removes_owner"
-msgstr ""
+msgstr "Лише власник може видалити іншого власника."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:17
 msgid "error.map.not_a_claim"
-msgstr ""
+msgstr "Перевіряти на факти можна лише твердження. Виберіть твердження та спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:18
 msgid "error.workspace.create_admin_only"
-msgstr ""
+msgstr "Створювати робочі простори тут можуть лише адміністратори та власники організації."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:5
 msgid "error.organisation.admin_only"
-msgstr ""
+msgstr "Це можуть зробити лише адміністратори та власники організації."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:14
 msgid "error.organisation.billing_role_only"
-msgstr ""
+msgstr "Це бачать лише адміністратори, власники та учасники організації, відповідальні за білінг."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:40
 msgid "error.billing.role_required"
-msgstr ""
+msgstr "Керувати білінгом можуть лише власники, адміністратори та відповідальні за білінг в організації."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:87
 msgid "error.project.not_owner"
-msgstr ""
+msgstr "Це може зробити лише власник цього проєкту."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
 msgid "error.invite.revoke_forbidden"
-msgstr ""
+msgstr "Скасувати запрошення може лише особа, яка його надіслала, або адміністратор."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:39
 msgid "error.invite.resend_forbidden"
-msgstr ""
+msgstr "Надіслати запрошення повторно може лише особа, яка його надіслала, або адміністратор організації."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:14
 msgid "error.project.legal_basis_admin_only"
-msgstr ""
+msgstr "Лише адміністратори робочого простору можуть змінювати правову основу цього проєкту."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:143
 msgid "error.project.visibility_admin_only"
-msgstr ""
+msgstr "Лише адміністратори робочого простору можуть змінювати видимість цього проєкту."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:115
 msgid "error.project.share_admin_only"
-msgstr ""
+msgstr "Лише адміністратори робочого простору можуть ділитися проєктами."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:29
 msgid "error.map.selection_not_in_map"
-msgstr ""
+msgstr "Частина вибраного більше не відображається на мапі. Оновіть мапу та виберіть знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:10
 msgid "error.webhook.invalid_status"
-msgstr ""
+msgstr "Виберіть статус для цього вебхука: опублікований, чернетка або в архіві."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:23
 msgid "error.report.schedule_too_soon"
-msgstr ""
+msgstr "Виберіть час щонайменше через 10 хвилин відтепер."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:5
 msgid "error.canvas.expiry_in_past"
-msgstr ""
+msgstr "Виберіть дату завершення в майбутньому."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:9
 msgid "error.canvas.expiry_too_far"
-msgstr ""
+msgstr "Виберіть дату завершення протягом наступних 7 днів."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:19
 msgid "error.project.legal_basis_invalid"
-msgstr ""
+msgstr "Виберіть один із варіантів правової основи."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:19
 msgid "error.popcorn.invalid_live_hours"
-msgstr ""
+msgstr "Виберіть один із запропонованих варіантів тривалості: {hours} год."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:5
 msgid "error.agent_access.expiry_unsupported"
-msgstr ""
+msgstr "Виберіть один із запропонованих варіантів терміну дії."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:9
 msgid "error.field.invalid_choice"
-msgstr ""
+msgstr "Виберіть один із варіантів."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/memory.ts:9
 msgid "error.memory.invalid_scope"
-msgstr ""
+msgstr "Виберіть зі списку, для кого призначений цей спогад."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:110
 msgid "error.project.private_requires_tier"
-msgstr ""
+msgstr "Приватні проєкти доступні на тарифі Innovator і вище. Оновіть тариф, щоб зробити цей проєкт приватним."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:32
 msgid "error.project.move_context_mismatch"
-msgstr ""
+msgstr "Проєкти можна переміщувати лише між робочими просторами з однаковим білінгом і власником даних. Виберіть інший робочий простір."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:23
 msgid "error.template.quick_access_too_many"
-msgstr ""
+msgstr "Швидкий доступ може містити щонайбільше {max} шаблонів. Спочатку вилучіть один із них."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
-msgstr ""
+msgstr "Видалення логотипа dembrane доступне в тарифі Changemaker. Оновіть тариф, щоб скористатися цією можливістю."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_too_small"
-msgstr ""
+msgstr "Виберіть ще кілька елементів, щоб створити назву."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:19
 msgid "error.chat.conversation_ids_empty"
-msgstr ""
+msgstr "Виберіть принаймні одну розмову для додавання."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:46
 msgid "error.project.move_none_selected"
-msgstr ""
+msgstr "Виберіть принаймні один проєкт для переміщення."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:138
 msgid "error.project.sharing_tier_required"
-msgstr ""
+msgstr "Для надання доступу до приватного проєкту потрібен тариф {tier} або вище."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/validation.ts:5
 msgid "error.validation.invalid_input"
-msgstr ""
+msgstr "Деякі поля потребують виправлення. Перевірте виділені поля та спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:22
 msgid "error.canvas.invalid_value"
-msgstr ""
+msgstr "Частину введених даних не вдалося використати на полотні. Перевірте їх і спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:13
 msgid "error.analysis.invalid_request"
-msgstr ""
+msgstr "Частину введених даних не вдалося використати. Перевірте їх і спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:5
 msgid "error.workspace.access_request_actioned"
-msgstr ""
+msgstr "Хтось уже відповів на цей запит."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:9
 msgid "error.member.changed_concurrently"
-msgstr ""
+msgstr "Хтось одночасно змінив це членство. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:27
 msgid "error.analysis.revision_conflict"
-msgstr ""
+msgstr "Хтось змінив цей результат, поки ви його переглядали. Оновіть сторінку, щоб побачити нову версію, а потім внесіть свої зміни знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:40
 msgid "error.popcorn.settings_busy"
-msgstr ""
+msgstr "Хтось інший просто зараз зберігає ці налаштування. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:21
 msgid "error.field.invalid_json"
-msgstr ""
+msgstr "Не вдалося зчитати дані в цій формі. Оновіть сторінку та спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:13
 msgid "error.request.invalid"
-msgstr ""
+msgstr "У цьому запиті щось пішло не так. Оновіть сторінку та спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:18
 msgid "error.request.invalid_json"
-msgstr ""
+msgstr "У цьому запиті щось пішло не так. Оновіть сторінку та спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:14
 msgid "error.internal.unexpected"
-msgstr ""
+msgstr "Щось пішло не так із нашого боку. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:22
 msgid "error.account.otp_invalid"
-msgstr ""
+msgstr "Цей код не підійшов. Введіть актуальний код із додатка-автентифікатора."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:5
 msgid "error.training.completed_at_invalid"
-msgstr ""
+msgstr "Не вдалося розпізнати цю дату завершення. Введіть її знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:19
 msgid "error.report.schedule_invalid"
-msgstr ""
+msgstr "Не вдалося розпізнати цю дату й час. Виберіть час знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
-msgstr ""
+msgstr "Цей пароль неправильний. Перевірте його та спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13
 msgid "error.member.invalid_role"
-msgstr ""
+msgstr "Ця роль тут недоступна. Виберіть роль зі списку."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/rate_limit.ts:5
 msgid "error.rate_limit.exceeded"
-msgstr ""
+msgstr "Забагато запитів за короткий час. Зачекайте мить і спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:14
 msgid "error.document.confirmation_mismatch"
-msgstr ""
+msgstr "Текст підтвердження не збігається. Введіть його точно так, як показано: {expected}"
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:27
 msgid "error.project.methodology_read_only"
-msgstr ""
+msgstr "Методологію dembrane не можна змінювати. Зробіть копію, щоб відредагувати її."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:45
 msgid "error.popcorn.synthetic_frame_locked"
-msgstr ""
+msgstr "Кадр демопрезентації задано разом із демоверсією, його не можна змінити тут."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:5
 msgid "error.agent.insight_content_blank"
-msgstr ""
+msgstr "Інсайт не може бути порожнім. Напишіть щось або видаліть його."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:23
 msgid "error.present.map_results_unavailable"
-msgstr ""
+msgstr "Карта для цієї презентації недоступна."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:19
 msgid "error.present.map_results_not_ready"
-msgstr ""
+msgstr "Карта ще не готова. Вона з'явиться тут, щойно буде сформована."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:25
 msgid "error.map.not_ready"
-msgstr ""
+msgstr "Карта все ще створюється. Зачекайте хвилинку та спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:34
 msgid "error.map.selection_other_snapshot"
-msgstr ""
+msgstr "Карту було оновлено після вашого вибору. Оновіть карту та зробіть вибір знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:63
 msgid "error.document.no_pdf"
-msgstr ""
+msgstr "PDF цього документа недоступний. Зв'яжіться з нами, і ми надішлемо його знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
-msgstr ""
+msgstr "PDF цього рахунка ще не готовий. Спробуйте трохи пізніше."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
 msgid "error.upload.failed"
-msgstr ""
+msgstr "Завантаження не завершилося. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:23
 msgid "error.request.nothing_to_update"
-msgstr ""
+msgstr "Немає змін для збереження."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:21
 msgid "error.agent.insight_update_empty"
-msgstr ""
+msgstr "Немає змін для збереження."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:25
 msgid "error.agent.no_active_turn"
-msgstr ""
+msgstr "Немає активної відповіді для зупинення."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:64
 msgid "error.workspace.handoff_none_pending"
-msgstr ""
+msgstr "Для цього робочого простору немає очікуваних передач."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:22
 msgid "error.billing.no_payment_profile"
-msgstr ""
+msgstr "Ще немає способу оплати для оновлення. Спочатку виберіть тариф."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
 msgid "error.billing.already_subscribed"
-msgstr ""
+msgstr "Цей акаунт уже має активну підписку."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:5
 msgid "error.present.activity_not_in_presentation"
-msgstr ""
+msgstr "Ця дія більше не є частиною презентації. Оновіть сторінку."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/announcement.ts:5
 msgid "error.announcement.not_found"
-msgstr ""
+msgstr "Це оголошення більше недоступне."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:41
 msgid "error.canvas.loop_not_found"
-msgstr ""
+msgstr "Це полотно не оновлюється автоматично, тому тут нічого змінювати."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:36
 msgid "error.canvas.loop_ended"
-msgstr ""
+msgstr "Це полотно більше не оновлюється. Створіть нове полотно, щоб воно залишалося актуальним."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:31
 msgid "error.canvas.just_refreshed"
-msgstr ""
+msgstr "Це полотно щойно оновилося. Зачекайте хвилинку, перш ніж оновлювати його знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:31
 msgid "error.chat.mode_already_set"
-msgstr ""
+msgstr "У цього чату вже є режим. Почніть новий чат, щоб обрати інший."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:5
 msgid "error.chat.context_full"
-msgstr ""
+msgstr "Цей чат заповнений. Вилучіть кілька розмов, щоб звільнити місце для цієї."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/pricing.ts:5
 msgid "error.pricing.configuration_not_owned"
-msgstr ""
+msgstr "Ця конфігурація належить комусь іншому. Створіть нову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:19
 msgid "error.agent_access.request_expired"
-msgstr ""
+msgstr "Термін дії запиту на підключення минув. Почніть знову зі свого агента."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:19
 msgid "error.conversation.no_content"
-msgstr ""
+msgstr "У цій розмові ще немає аудіо."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:15
 msgid "error.chat.conversation_already_added"
-msgstr ""
+msgstr "Ця розмова вже є в чаті."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:9
 msgid "error.conversation.locked"
-msgstr ""
+msgstr "Ця розмова заблокована на вашому поточному тарифі. Оновіть тариф, щоб відкрити її."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:23
 msgid "error.chat.conversation_not_in_chat"
-msgstr ""
+msgstr "Цієї розмови більше немає в чаті."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:31
 msgid "error.conversation.not_open"
-msgstr ""
+msgstr "Ця розмова зараз закрита. Попросіть організатора надіслати нове посилання."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:27
 msgid "error.chat.conversation_too_long"
-msgstr ""
+msgstr "Ця розмова занадто довга, щоб додати її до чату."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:22
 msgid "error.workspace.data_owner_is_member"
-msgstr ""
+msgstr "Цей власник даних уже є у вашій організації. Для зовнішнього клієнта вкажіть когось за її межами або натомість створіть внутрішній робочий простір."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:76
 msgid "error.document.not_declinable"
-msgstr ""
+msgstr "Цей документ більше не можна відхилити."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:103
 msgid "error.document.signing_unavailable"
-msgstr ""
+msgstr "Цей документ зараз не можна підписати. Ми вже знаємо про проблему та виправляємо її."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:9
 msgid "error.document.changed"
-msgstr ""
+msgstr "Цей документ змінився після того, як ви його відкрили. Оновіть сторінку та прочитайте його знову перед підписанням."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:48
 msgid "error.document.field_unknown"
-msgstr ""
+msgstr "Цей документ змінився після того, як ви його відкрили. Оновіть сторінку та спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:68
 msgid "error.document.no_signature_needed"
-msgstr ""
+msgstr "Цей документ не потребує підпису."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:5
 msgid "error.document.already_signed"
-msgstr ""
+msgstr "Цей документ уже підписано. Більше нічого робити не потрібно."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:84
 msgid "error.document.not_signed"
-msgstr ""
+msgstr "Цей документ ще не підписано, тому підписаної копії для завантаження немає."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:72
 msgid "error.document.not_awaiting_signature"
-msgstr ""
+msgstr "Цей документ більше не очікує на підпис."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:23
 msgid "error.document.declined"
-msgstr ""
+msgstr "Цей документ було відхилено, тому його більше не можна підписати."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:112
 msgid "error.document.withdrawn"
-msgstr ""
+msgstr "Цей документ було відкликано, тому його більше не можна підписати."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:15
 msgid "error.popcorn.feature_disabled"
-msgstr ""
+msgstr "Ця функція недоступна для цього проєкту."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:9
 msgid "error.upload.empty"
-msgstr ""
+msgstr "Цей файл порожній. Виберіть інший файл."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:25
 msgid "error.upload.too_large"
-msgstr ""
+msgstr "Цей файл завеликий. Розмір файлу не може перевищувати {max_mb} МБ."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:14
 msgid "error.account.image_too_large"
-msgstr ""
+msgstr "Це зображення завелике. Розмір зображення не може перевищувати {max_mb} МБ."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:5
 msgid "error.invite.already_accepted"
-msgstr ""
+msgstr "Це запрошення вже прийнято."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:9
 msgid "error.invite.expired"
-msgstr ""
+msgstr "Термін дії запрошення минув. Попросіть людину, яка вас запросила, надіслати нове."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:14
 msgid "error.invite.not_for_you"
-msgstr ""
+msgstr "Це запрошення було надіслано на іншу адресу електронної пошти. Увійдіть під цією адресою, щоб прийняти його."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:22
 msgid "error.member.last_admin_remove"
-msgstr ""
+msgstr "Це останній адміністратор. Спочатку призначте іншого адміністратора, а потім видаліть цього."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:17
 msgid "error.member.last_admin"
-msgstr ""
+msgstr "Це останній адміністратор. Спочатку призначте когось іншого адміністратором або власником."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:27
 msgid "error.member.last_owner"
-msgstr ""
+msgstr "Це останній власник. Спочатку передайте права власності комусь іншому."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:31
 msgid "error.member.last_owner_demote"
-msgstr ""
+msgstr "Це останній власник. Спочатку призначте іншого власника."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:27
 msgid "error.request.too_large"
-msgstr ""
+msgstr "Ці дані завеликі для надсилання. Спробуйте передати менше даних."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:23
 msgid "error.analysis.read_only_type"
-msgstr ""
+msgstr "Цей тип результату не можна редагувати."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:13
 msgid "error.participant.token_invalid"
-msgstr ""
+msgstr "Це посилання не відповідає цій розмові. Відкрийте надане вам посилання знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:97
 msgid "error.workspace.logo_url_too_long"
-msgstr ""
+msgstr "Це посилання на логотип задовге. Скористайтеся коротшим посиланням."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:63
 msgid "error.billing.tier_required"
-msgstr ""
+msgstr "Для цього потрібен тариф {required}. Оновіть тариф, щоб скористатися цією можливістю."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:89
 msgid "error.document.offer_expired"
-msgstr ""
+msgstr "Термін дії цієї пропозиції закінчився {valid_until}. Зв’яжіться з нами, щоб отримати нову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:73
 msgid "error.workspace.handoff_same_org"
-msgstr ""
+msgstr "Ця організація вже сплачує за цей робочий простір. Оберіть іншу."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:19
 msgid "error.organisation.deleted"
-msgstr ""
+msgstr "Цієї організації більше не існує."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:9
 msgid "error.analysis.field_not_editable"
-msgstr ""
+msgstr "Цю частину результату не можна редагувати тут."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:31
 msgid "error.account.password_weak"
-msgstr ""
+msgstr "Цей пароль недостатньо надійний. Спробуйте довший, поєднуючи літери, цифри та символи."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:29
 msgid "error.invite.outsider_is_admin"
-msgstr ""
+msgstr "Ця людина має роль адміністратора, власника або білінгу у вашій організації, тому не може приєднатися як зовнішній співавтор. Спочатку змініть її роль."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:34
 msgid "error.invite.outsider_is_member"
-msgstr ""
+msgstr "Ця людина вже є учасником вашої організації, тому не може приєднатися як зовнішній співавтор."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:23
 msgid "error.organisation.external_cannot_manage"
-msgstr ""
+msgstr "Ця людина має роль зовнішнього користувача в одному з ваших робочих просторів. Спочатку зніміть цю роль, а потім призначте її адміністратором або власником."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
 msgid "error.member.not_found"
-msgstr ""
+msgstr "Ця людина більше не є учасником. Оновіть сторінку, щоб переглянути актуальний список."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:40
 msgid "error.member.not_in_workspace"
-msgstr ""
+msgstr "Ця людина не є учасником цього робочого простору. Оновіть сторінку, щоб переглянути актуальний список."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:128
 msgid "error.project.share_not_member"
-msgstr ""
+msgstr "Цієї людини ще немає в робочому просторі. Спочатку запросіть її до нього."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:5
 msgid "error.member.already_removed"
-msgstr ""
+msgstr "Цю людину вже вилучено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_not_purchasable"
-msgstr ""
+msgstr "Цей тариф не можна придбати онлайн. Зв’яжіться з нами, щоб отримати його."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:15
 msgid "error.present.map_not_in_presentation"
-msgstr ""
+msgstr "У цій презентації немає мапи."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:27
 msgid "error.popcorn.loop_not_found"
-msgstr ""
+msgstr "Ця презентація не запущена. Запустіть її знову, щоб продовжити."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:35
 msgid "error.popcorn.public_not_found"
-msgstr ""
+msgstr "Це посилання на презентацію більше не діє. Попросіть ведучого надіслати нове посилання."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:10
 msgid "error.present.draft_conflict"
-msgstr ""
+msgstr "Цю презентацію було змінено в іншому місці. Оновіть сторінку, щоб побачити останню версію, і внесіть зміни знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:105
 msgid "error.project.privacy_policy_too_long"
-msgstr ""
+msgstr "Посилання на політику конфіденційності задовге. Використовуйте посилання до 255 символів."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:64
 msgid "error.project.no_conversations"
-msgstr ""
+msgstr "У цьому проєкті ще немає розмов."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:13
 msgid "error.map.no_map_yet"
-msgstr ""
+msgstr "У цьому проєкті ще немає мапи. Створіть її, щоб переглянути тут."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:68
 msgid "error.project.no_transcripts"
-msgstr ""
+msgstr "У цьому проєкті ще немає транскриптів."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:124
 msgid "error.project.share_not_found"
-msgstr ""
+msgstr "Цей проєкт більше не надано у спільний доступ цій людині."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:82
 msgid "error.project.not_in_workspace"
-msgstr ""
+msgstr "Цього проєкту немає в цьому робочому просторі. Оберіть проєкт із цього робочого простору."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:72
 msgid "error.project.no_workspace"
-msgstr ""
+msgstr "Цей проєкт не належить до жодного робочого простору, тому це налаштування недоступне. Зверніться до підтримки, щоб перемістити його."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:5
 msgid "error.participant.report_not_found"
-msgstr ""
+msgstr "Цей звіт недоступний. Можливо, його ще не опубліковано."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:14
 msgid "error.report.not_scheduled"
-msgstr ""
+msgstr "Цей звіт не заплановано, тому публікувати достроково нічого."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:10
 msgid "error.project.events_dembrane_only"
-msgstr ""
+msgstr "Це налаштування доступне лише для власних акаунтів dembrane."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:23
 msgid "error.verify.not_enabled"
-msgstr ""
+msgstr "Цей крок вимкнено для цього проєкту. Попросіть адміністратора проєкту ввімкнути його."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:128
 msgid "error.workspace.support_request_expired"
-msgstr ""
+msgstr "Термін дії цього запиту на підтримку минув. Попросіть підтримку dembrane надіслати новий, якщо вам усе ще потрібна допомога."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:133
 msgid "error.workspace.support_request_handled"
-msgstr ""
+msgstr "На цей запит до підтримки вже надали відповідь."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:21
 msgid "error.task.not_open"
-msgstr ""
+msgstr "Це завдання ще не відкрите. Спочатку завершіть попередній крок."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:25
 msgid "error.task.not_waiting"
-msgstr ""
+msgstr "Це завдання зараз не очікує на вас."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:13
 msgid "error.task.file_required"
-msgstr ""
+msgstr "Для цього завдання потрібен файл. Додайте його та надішліть знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:14
 msgid "error.template.quick_access_duplicate"
-msgstr ""
+msgstr "Цей шаблон уже є у швидкому доступі."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:13
 msgid "error.training.no_license"
-msgstr ""
+msgstr "Цей тренінг не передбачає ліцензії."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:17
 msgid "error.training.not_available"
-msgstr ""
+msgstr "Бронювання цього тренінгу ще не відкрите."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:33
 msgid "error.upload.unsupported_type"
-msgstr ""
+msgstr "Цей тип файлів не підтримується."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:22
 msgid "error.participant.unsubscribe_link_invalid"
-msgstr ""
+msgstr "Це посилання для скасування підписки неповне. Відкрийте посилання з листа знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:26
 msgid "error.field.invalid_type"
-msgstr ""
+msgstr "Це значення неправильного типу. Перевірте його та спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:32
 msgid "error.analysis.revision_not_found"
-msgstr ""
+msgstr "Ця версія результату більше не існує. Оновіть сторінку, щоб побачити останню."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:23
 msgid "error.popcorn.just_refreshed"
-msgstr ""
+msgstr "Це щойно оновилося. Зачекайте кілька секунд, перш ніж спробувати знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:110
 msgid "error.workspace.paid_rescope"
-msgstr ""
+msgstr "Цей робочий простір має платну тарифікацію, тому ми не можемо перемкнути його між внутрішнім і зовнішнім. Зверніться до служби підтримки, щоб спочатку перенести тарифікацію."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:78
 msgid "error.workspace.handoff_shared_plan"
-msgstr ""
+msgstr "Цей робочий простір використовує спільний тариф вашої організації, тому його не можна передати. Переміщувати можна лише робочі простори з власною тарифікацією."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:119
 msgid "error.workspace.private"
-msgstr ""
+msgstr "Цей робочий простір приватний. Попросіть адміністратора робочого простору надіслати вам запрошення."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:40
 msgid "error.workspace.deleted"
-msgstr ""
+msgstr "Цей робочий простір більше не існує."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:88
 msgid "error.workspace.has_projects"
-msgstr ""
+msgstr "У цьому робочому просторі все ще є {count, plural, one {# проєкт} few {# проєкти} other {# проєктів}}. Спочатку видаліть або перемістіть їх зі сторінки «Проєкти» вашої організації."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:32
 msgid "error.document.field_must_tick"
-msgstr ""
+msgstr "Позначте {label}, щоб продовжити."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:44
 msgid "error.document.field_tick_invalid"
-msgstr ""
+msgstr "Позначте або зніміть позначку з {label}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:37
 msgid "error.project.move_needs_admin"
-msgstr ""
+msgstr "Щоб переміщувати проєкти, ви маєте бути адміністратором або власником {side} робочого простору."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:108
 msgid "error.document.verified_email_required"
-msgstr ""
+msgstr "Щоб підписати, увійдіть із підтвердженою електронною адресою."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:36
 msgid "error.account.tfa_already_enabled"
-msgstr ""
+msgstr "Двоетапну перевірку вже ввімкнено для вашого облікового запису."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:40
 msgid "error.account.tfa_not_enabled"
-msgstr ""
+msgstr "Двоетапну перевірку не ввімкнено для вашого облікового запису, тому вимикати нічого."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:18
 msgid "error.account.image_type"
-msgstr ""
+msgstr "Завантажте зображення у форматі PNG, JPEG, WebP або GIF."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:93
 msgid "error.workspace.logo_url_invalid"
-msgstr ""
+msgstr "Використовуйте посилання на логотип, яке починається з http:// або https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:54
 msgid "error.field.too_small"
-msgstr ""
+msgstr "Укажіть число не менше ніж {min}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:42
 msgid "error.field.too_large"
-msgstr ""
+msgstr "Укажіть число не більше ніж {max}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:50
 msgid "error.field.too_short"
-msgstr ""
+msgstr "Використовуйте щонайменше {min_length} символів."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:46
 msgid "error.field.too_long"
-msgstr ""
+msgstr "Використовуйте щонайбільше {max_length} символів."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:22
 msgid "error.webhook.target_not_allowed"
-msgstr ""
+msgstr "Ми не можемо надсилати вебхуки на цю адресу. Використовуйте загальнодоступну вебадресу."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:13
 msgid "error.canvas.extraction_failed"
-msgstr ""
+msgstr "Не вдалося створити попередній перегляд полотна просто зараз. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:45
 msgid "error.chat.verify_unavailable"
-msgstr ""
+msgstr "Не вдалося перевірити цей чат просто зараз. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:21
 msgid "error.upload.probe_url_failed"
-msgstr ""
+msgstr "Не вдалося перевірити ваше з'єднання. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:35
 msgid "error.billing.request_failed"
-msgstr ""
+msgstr "Не вдалося завершити цю зміну тарифікації. Зв'яжіться з нами, і ми все владнаємо."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:51
 msgid "error.map.title_failed"
-msgstr ""
+msgstr "Не вдалося створити назву просто зараз. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:5
 msgid "error.conversation.delete_failed"
-msgstr ""
+msgstr "Не вдалося видалити цю розмову. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:83
 msgid "error.workspace.handoff_target_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цю організацію. Перевірте назву та спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:50
 msgid "error.project.move_target_not_found"
-msgstr ""
+msgstr "Не вдалося знайти вибраний робочий простір. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:41
 msgid "error.analysis.snapshot_not_found"
-msgstr ""
+msgstr "Не вдалося знайти ці результати аналізу. Оновіть сторінку, щоб переглянути найновіші."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:9
 msgid "error.agent_access.grant_not_found"
-msgstr ""
+msgstr "Не вдалося знайти це підключення агента. Можливо, його вже вилучено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:37
 msgid "error.analysis.run_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей запуск аналізу."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:5
 msgid "error.billing.account_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей платіжний акаунт."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:46
 msgid "error.canvas.not_found"
-msgstr ""
+msgstr "Не вдалося знайти це полотно. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:33
 msgid "error.agent.run_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей запуск чату. Оновіть сторінку та спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:36
 msgid "error.chat.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей чат. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:27
 msgid "error.conversation.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цю розмову. Можливо, її було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:80
 msgid "error.document.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей документ. Можливо, його було відкликано."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:17
 msgid "error.upload.file_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей файл. Можливо, його було вилучено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:13
 msgid "error.agent.insight_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей інсайт. Можливо, його було вилучено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:19
 msgid "error.invite.not_found"
-msgstr ""
+msgstr "Не вдалося знайти це запрошення. Можливо, його було відкликано або вже використано."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:9
 msgid "error.training.license_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цю ліцензію."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:21
 msgid "error.map.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цю мапу."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/memory.ts:13
 msgid "error.memory.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей спогад. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:5
 msgid "error.feedback.message_not_found"
-msgstr ""
+msgstr "Не вдалося знайти це повідомлення. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:23
 msgid "error.project.methodology_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цю методологію. Можливо, її було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/notification.ts:5
 msgid "error.notification.not_found"
-msgstr ""
+msgstr "Не вдалося знайти це сповіщення. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:41
 msgid "error.organisation.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цю організацію."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:31
 msgid "error.popcorn.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цю презентацію."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:77
 msgid "error.project.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей проєкт. Можливо, його було видалено або ви не маєте доступу."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/question.ts:5
 msgid "error.question.not_found"
-msgstr ""
+msgstr "Не вдалося знайти це запитання. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:10
 msgid "error.report.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей звіт. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:9
 msgid "error.workspace.access_request_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей запит. Можливо, його було скасовано."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:18
 msgid "error.analysis.object_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей результат. Можливо, його було видалено під час повторного аналізу."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:27
 msgid "error.participant.unsubscribe_link_unknown"
-msgstr ""
+msgstr "Не вдалося знайти цю підписку. Можливо, ви вже відписалися."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/tag.ts:5
 msgid "error.tag.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей тег. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:17
 msgid "error.task.not_found"
-msgstr ""
+msgstr "Не вдалося знайти це завдання. Можливо, його було скасовано."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:10
 msgid "error.template.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей шаблон. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:32
 msgid "error.verify.topic_unknown"
-msgstr ""
+msgstr "Не вдалося знайти цю тему. Поверніться назад і виберіть іншу."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:28
 msgid "error.verify.topic_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цю тему. Можливо, її було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:21
 msgid "error.training.not_found"
-msgstr ""
+msgstr "Не вдалося знайти це навчання."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:50
 msgid "error.popcorn.version_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цю версію презентації."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:18
 msgid "error.webhook.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей вебхук. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:105
 msgid "error.workspace.not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей робочий простір. Можливо, його було видалено або ви не маєте доступу."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:5
 msgid "error.verify.artifact_not_found"
-msgstr ""
+msgstr "Не вдалося знайти цей елемент. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:46
 msgid "error.analysis.storage_unavailable"
-msgstr ""
+msgstr "Не вдалося завантажити аналіз. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:47
 msgid "error.map.storage_unavailable"
-msgstr ""
+msgstr "Не вдалося завантажити мапу. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:45
 msgid "error.account.user_not_found"
-msgstr ""
+msgstr "Не вдалося завантажити ваш обліковий запис. Зверніться до підтримки, і ми допоможемо."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:13
 msgid "error.billing.checkout_failed"
-msgstr ""
+msgstr "Не вдалося відкрити сторінку оплати. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:14
 msgid "error.conversation.merge_failed"
-msgstr ""
+msgstr "Не вдалося об'єднати аудіо цієї розмови. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:9
 msgid "error.internal.unavailable"
-msgstr ""
+msgstr "Не вдалося зв'язатися з частиною сервісів dembrane. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:93
 msgid "error.document.signature_unreadable"
-msgstr ""
+msgstr "Не вдалося розпізнати ваш підпис. Намалюйте його ще раз і повторіть спробу."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/pricing.ts:9
 msgid "error.pricing.reference_unavailable"
-msgstr ""
+msgstr "Не вдалося зберегти ваші відповіді. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:17
 msgid "error.feedback.save_failed"
-msgstr ""
+msgstr "Не вдалося надіслати ваш звіт. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:9
 msgid "error.participant.subscribe_failed"
-msgstr ""
+msgstr "Не вдалося зареєструвати всі адреси електронної пошти. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:9
 msgid "error.map.generation_not_started"
-msgstr ""
+msgstr "Не вдалося почати створення мапи. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:5
 msgid "error.map.fact_check_not_started"
-msgstr ""
+msgstr "Не вдалося почати перевірку фактів. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:37
 msgid "error.upload.url_failed"
-msgstr ""
+msgstr "Не вдалося почати завантаження. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:29
 msgid "error.upload.transcription_failed"
-msgstr ""
+msgstr "Не вдалося перетворити це аудіо на текст. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:10
 msgid "error.chat.context_size_unavailable"
-msgstr ""
+msgstr "Не вдалося визначити обсяг цього чату. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:45
 msgid "error.billing.seat_pricing_unavailable"
-msgstr ""
+msgstr "Не вдалося визначити вартість місця. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:9
 msgid "error.verify.generation_failed"
-msgstr ""
+msgstr "Не вдалося згенерувати це просто зараз. Спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:25
 msgid "error.training.unknown_type"
-msgstr ""
+msgstr "Ми не знаємо такого типу навчання. Оновіть сторінку та виберіть ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:18
 msgid "error.participant.token_required"
-msgstr ""
+msgstr "Ми втратили зв'язок із вашою розмовою. Оновіть сторінку, щоб продовжити."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:9
 msgid "error.feedback.message_required"
-msgstr ""
+msgstr "Опишіть проблему в короткому повідомленні."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:9
 msgid "error.agent.insight_content_required"
-msgstr ""
+msgstr "Напишіть щось для інсайту."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
-msgstr ""
+msgstr "Напишіть щось, щоб зберегти у пам'яті."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32
 msgid "error.organisation.no_access"
-msgstr ""
+msgstr "Ви не є учасником цієї організації."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:45
 msgid "error.organisation.not_member"
-msgstr ""
+msgstr "Ви не є учасником цієї організації."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:101
 msgid "error.workspace.no_access"
-msgstr ""
+msgstr "Ви не є учасником цього робочого простору."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:63
 msgid "error.member.sole_admin_leave"
-msgstr ""
+msgstr "Ви єдиний адміністратор. Призначте іншого адміністратора перед тим, як вийти."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:21
 msgid "error.feedback.too_many_attachments"
-msgstr ""
+msgstr "Можна додати щонайбільше {max} знімків екрана."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:40
 msgid "error.chat.too_many_conversations"
-msgstr ""
+msgstr "Можна додати щонайбільше {max} розмов за раз. Виберіть менше та спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:55
 msgid "error.project.move_too_many"
-msgstr ""
+msgstr "Можна перемістити щонайбільше {max} проєктів за раз. Виберіть менше та спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:5
 msgid "error.template.not_allowed"
-msgstr ""
+msgstr "Ви можете використовувати цей шаблон, але не змінювати його. Зверніться до адміністратора робочого простору, якщо це необхідно."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:27
 msgid "error.template.read_only_collaborator"
-msgstr ""
+msgstr "Ви можете переглядати цей робочий простір, але не додавати шаблони. Попросіть адміністратора робочого простору надати права на редагування."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:59
 msgid "error.member.role_above_own"
-msgstr ""
+msgstr "Ви не можете надати комусь роль, вищу за вашу власну."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:54
 msgid "error.invite.self"
-msgstr ""
+msgstr "Ви не можете запросити себе."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:45
 msgid "error.member.outsider_role_switch"
-msgstr ""
+msgstr "Тут не можна змінювати статус між зовнішнім співавтором і учасником. Запросіть людину знову з новою роллю."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:5
 msgid "error.task.done_by_billing_details"
-msgstr ""
+msgstr "Це завдання завершується збереженням платіжних даних."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:9
 msgid "error.task.done_by_signing"
-msgstr ""
+msgstr "Це завдання завершується підписанням документа."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:42
 msgid "error.project.move_no_workspace_access"
-msgstr ""
+msgstr "У вас немає доступу до робочого простору {side}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:29
 msgid "error.agent.run_forbidden"
-msgstr ""
+msgstr "У вас немає доступу до цього чату."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:60
 msgid "error.project.no_access"
-msgstr ""
+msgstr "У вас немає доступу до цього проєкту."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/access.ts:5
 msgid "error.access.forbidden"
-msgstr ""
+msgstr "У вас немає дозволу на цю дію."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:18
 msgid "error.verify.no_new_feedback"
-msgstr ""
+msgstr "Ви ще не додали нічого нового. Вкажіть, що ви б змінили, і спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:54
 msgid "error.billing.tier_limit"
-msgstr ""
+msgstr "Ви досягли ліміту тарифу Free. Оновіть тариф, щоб продовжити."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/rate_limit.ts:10
 msgid "error.rate_limit.too_many_streams"
-msgstr ""
+msgstr "У вас відкрито забагато переглядів наживо. Закрийте кілька вкладок і спробуйте знову за мить."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/auth.ts:9
 msgid "error.auth.user_required"
-msgstr ""
+msgstr "Для цього потрібно увійти. Увійдіть і спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:39
 msgid "error.map.selection_too_large"
-msgstr ""
+msgstr "Ви вибрали забагато елементів. Виберіть менше та спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:123
 msgid "error.workspace.removed_from"
-msgstr ""
+msgstr "Вас видалили з цього робочого простору. Попросіть адміністратора робочого простору запросити вас знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:9
 msgid "error.account.email_missing"
-msgstr ""
+msgstr "У вашому акаунті ще немає адреси електронної пошти. Зверніться до підтримки, щоб додати її."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:27
 msgid "error.account.password_incorrect"
-msgstr ""
+msgstr "Поточний пароль неправильний. Перевірте його та спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:5
 msgid "error.upload.confirm_failed"
-msgstr ""
+msgstr "Ваш файл надійшов, але нам не вдалося його зберегти. Спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:13
 msgid "error.feedback.message_too_long"
-msgstr ""
+msgstr "Ваше повідомлення задовге. Скоротіть його та надішліть знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:36
 msgid "error.organisation.no_billing_account"
-msgstr ""
+msgstr "У вашої організації не налаштовано оплату, тому ви поки не можете додати робочий простір. Зверніться до підтримки, і ми все владнаємо."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:9
 msgid "error.organisation.billing_canceled"
-msgstr ""
+msgstr "Тариф вашої організації скасовано. Відновіть його, щоб додавати робочі простори."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:31
 msgid "error.billing.plan_inactive"
-msgstr ""
+msgstr "Ваш тариф неактивний. Відновіть його, щоб додавати учасників."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:13
 msgid "error.verify.no_chunks"
-msgstr ""
+msgstr "Ваш запис ще не дійшов до нас. Зачекайте хвильку та спробуйте знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/auth.ts:5
 msgid "error.auth.session_expired"
-msgstr ""
+msgstr "Ваш сеанс завершився. Увійдіть знову, щоб продовжити."

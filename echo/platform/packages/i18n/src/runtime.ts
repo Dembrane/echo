@@ -6,8 +6,8 @@ import { parsePo } from "./po";
  * The texts the server writes to people itself (emails, task titles), by id, in the
  * recipient's language. The catalogs are packages/i18n/locales/{locale}.po, lingui-style:
  * en-US holds the source text, the other locales translations, filled by the catalog
- * translator (src/cli.ts) and flagged fuzzy until a person reviews them. A missing
- * translation falls back to English, so a new text never blocks a send.
+ * translator (src/cli.ts) and listed in machine-translations.json until a person reviews
+ * them. A missing translation falls back to English, so a new text never blocks a send.
  */
 
 /** The languages the product speaks, the same eight the frontend ships. */

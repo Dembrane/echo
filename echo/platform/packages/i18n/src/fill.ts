@@ -1,17 +1,21 @@
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { type Completer, LANGUAGE_NAMES, translateTexts } from "@dembrane/llm";
 import glossaryFile from "../glossary.json";
+import { LEDGER_FILE, pruneLedger, readLedger, writeLedger } from "./ledger";
 import { fillEntry, missingEntries, type PoEntry, parsePo, serializePo } from "./po";
 
 /**
  * Fills the translations a catalog still owes with the model, the way the analysis
- * features translate (translateTexts in @dembrane/llm), and flags each one fuzzy for a
- * person to review. Only empty entries are filled: a translation someone wrote or
+ * features translate (translateTexts in @dembrane/llm), and records each one in the
+ * catalog's review ledger (./ledger.ts). Only empty entries are filled: a translation someone wrote or
  * reviewed, or an earlier machine one still waiting for review, is never replaced.
  */
 
 export const SOURCE_LOCALE = "en-US";
+
+/** Product copy never uses the em dash; an answer that adds one is asked for again. */
+const EM_DASH = String.fromCharCode(0x2014);
 
 const SYSTEM = `You translate the interface texts of dembrane, a product for facilitated group conversations: hosts run projects, participants speak through a portal on their phone, and dembrane turns what was said into transcripts, reports and insights.
 
@@ -22,6 +26,7 @@ How to translate:
 - Keep every placeholder exactly as written: {name}, {0}, and ICU structures such as {count, plural, one {...} other {...}}, where only the words inside the branches are translated. Keep numbered tags such as <0>...</0> around the matching words.
 - Use the glossary's terms and register. Keep the words in "keep" as they are. "dembrane" is always lowercase.
 - Keep leading and trailing spaces and punctuation as in the original.
+- Never use an em dash; where the language would, use a colon, a comma or a new sentence.
 - Never leave a text out, never merge texts, never add explanations.`;
 
 interface Glossary {
@@ -33,14 +38,61 @@ interface Glossary {
 }
 const glossary = glossaryFile as Glossary;
 
-/** The placeholders and tags a translation must keep: {name} openers and <0> tags. */
-export function placeholdersOf(text: string): string {
-  const names = [...text.matchAll(/\{\s*([A-Za-z0-9_]+)/g)].map((m) => `{${m[1]}`);
-  const tags = [...text.matchAll(/<\/?\d+\s*\/?>/g)].map((m) => m[0].replace(/\s/g, ""));
-  return [...names, ...tags].sort().join(" ");
+/** The text between the brace at `open` and its match, and the index after the match. */
+function braced(text: string, open: number): [string, number] {
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    if (text[i] === "{") depth++;
+    else if (text[i] === "}" && --depth === 0) return [text.slice(open + 1, i), i + 1];
+  }
+  return [text.slice(open + 1), text.length];
 }
 
-const keyOf = (e: Pick<PoEntry, "msgid" | "msgctxt">) => `${e.msgctxt ?? ""}\u0004${e.msgid}`;
+/** ICU argument names in `text`, walking into plural and select branches. */
+function argumentNames(text: string, out: string[]): void {
+  for (let i = 0; i < text.length; ) {
+    if (text[i] !== "{") {
+      i++;
+      continue;
+    }
+    const [inner, next] = braced(text, i);
+    i = next;
+    const simple = inner.match(/^\s*([A-Za-z0-9_]+)\s*$/);
+    if (simple) {
+      out.push(simple[1] as string);
+      continue;
+    }
+    const arg = inner.match(/^\s*([A-Za-z0-9_]+)\s*,\s*(\w+)\s*(?:,([\s\S]*))?$/);
+    if (!arg) continue;
+    out.push(arg[1] as string);
+    if (!["plural", "select", "selectordinal"].includes(arg[2] as string) || !arg[3]) continue;
+    // Branches: `key {body}` pairs; each body is text again.
+    const branches = arg[3];
+    for (let j = 0; j < branches.length; ) {
+      if (branches[j] !== "{") {
+        j++;
+        continue;
+      }
+      const [body, after] = braced(branches, j);
+      argumentNames(body, out);
+      j = after;
+    }
+  }
+}
+
+/**
+ * The placeholders and tags a translation must keep: ICU argument names (walking into
+ * plural and select branches, whose words are translated freely) and <0> tags.
+ */
+export function placeholdersOf(text: string): string {
+  const names: string[] = [];
+  argumentNames(text, names);
+  const tags = [...text.matchAll(/<\/?\d+\s*\/?>/g)].map((m) => m[0].replace(/\s/g, ""));
+  return [...new Set(names.map((n) => `{${n}`)), ...tags].sort().join(" ");
+}
+
+export const keyOf = (e: Pick<PoEntry, "msgid" | "msgctxt">) =>
+  e.msgctxt ? `${e.msgctxt}\u0004${e.msgid}` : e.msgid;
 
 /** The language code the platform names prompts by: "nl-NL" reads as "nl". */
 export const languageOf = (locale: string) => locale.split("-")[0]?.toLowerCase() ?? locale;
@@ -50,8 +102,10 @@ export interface CatalogReport {
   readonly locale: string;
   readonly missing: number;
   readonly filled: number;
-  /** Answers dropped because they lost or invented a placeholder. */
+  /** Answers dropped because they lost or invented a placeholder, or added an em dash. */
   readonly rejected: number;
+  /** Machine translations in this locale still waiting for a person. */
+  readonly unreviewed: number;
 }
 
 /** The locale files of one catalog directory, source first. */
@@ -92,15 +146,25 @@ export async function fillCatalog(
   log: (line: string) => void = () => {},
 ): Promise<CatalogReport[]> {
   const sources = sourceTexts(dir);
+  const ledger = readLedger(dir);
   const reports: CatalogReport[] = [];
   for (const { locale, file } of catalogFiles(dir)) {
     if (locale === SOURCE_LOCALE) continue;
     const po = parsePo(readFileSync(file, "utf8"));
+    const current = new Map(po.entries.filter((e) => e.msgstr).map((e) => [keyOf(e), e.msgstr]));
+    const waiting = pruneLedger(ledger, locale, current);
     const owed = missingEntries(po).filter((e) => sources.has(keyOf(e)));
     const lang = languageOf(locale);
     const target = LANGUAGE_NAMES[lang];
     if (!completer || !owed.length || !target) {
-      reports.push({ file, locale, missing: owed.length, filled: 0, rejected: 0 });
+      reports.push({
+        file,
+        locale,
+        missing: owed.length,
+        filled: 0,
+        rejected: 0,
+        unreviewed: waiting,
+      });
       continue;
     }
     const texts = owed.map((e) => sources.get(keyOf(e)) as string);
@@ -123,15 +187,33 @@ export async function fillCatalog(
     owed.forEach((entry, i) => {
       const answer = answers[i];
       if (!answer) return;
-      if (placeholdersOf(answer) !== placeholdersOf(texts[i] as string)) {
+      const source = texts[i] as string;
+      const dashAdded = answer.includes(EM_DASH) && !source.includes(EM_DASH);
+      if (dashAdded || placeholdersOf(answer) !== placeholdersOf(source)) {
         rejected++;
         return;
       }
       fillEntry(entry, answer);
+      const waitingHere = ledger[locale] ?? {};
+      waitingHere[keyOf(entry)] = answer;
+      ledger[locale] = waitingHere;
       filled++;
     });
     if (filled) writeFileSync(file, serializePo(po));
-    reports.push({ file, locale, missing: owed.length, filled, rejected });
+    reports.push({
+      file,
+      locale,
+      missing: owed.length,
+      filled,
+      rejected,
+      unreviewed: Object.keys(ledger[locale] ?? {}).length,
+    });
   }
+  // Written when there is something to record, or when reviews shrank an existing ledger.
+  if (
+    Object.values(ledger).some((l) => Object.keys(l).length) ||
+    existsSync(path.join(dir, LEDGER_FILE))
+  )
+    writeLedger(dir, ledger);
   return reports;
 }

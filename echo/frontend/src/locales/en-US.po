@@ -195,7 +195,7 @@ msgid "(unknown)"
 msgstr "(unknown)"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:901
-#: src/components/project/ProjectUsageAndSharing.tsx:313
+#: src/components/project/ProjectUsageAndSharing.tsx:316
 msgid "(You)"
 msgstr "(You)"
 
@@ -426,7 +426,7 @@ msgstr "{0} conversations · {phrases} phrases · {validated} validated"
 #~ msgstr "{0} Conversations • Edited {1}"
 
 #. placeholder {0}: convUsage.deleted.length
-#: src/components/project/ProjectUsageAndSharing.tsx:474
+#: src/components/project/ProjectUsageAndSharing.tsx:482
 msgid "{0} deleted"
 msgstr "{0} deleted"
 
@@ -593,12 +593,12 @@ msgstr "{0}, workspace id {1}"
 msgid "{0}'s conversation"
 msgstr "{0}'s conversation"
 
-#: src/components/project/ProjectUsageAndSharing.tsx:242
+#: src/components/project/ProjectUsageAndSharing.tsx:245
 msgid "{accessCount, plural, one {# person} other {# people}}"
 msgstr "{accessCount, plural, one {# person} other {# people}}"
 
 #. placeholder {0}: workspace?.name ?? t`this workspace`
-#: src/components/project/ProjectUsageAndSharing.tsx:234
+#: src/components/project/ProjectUsageAndSharing.tsx:237
 msgid "{accessCount, plural, one {# person} other {# people}} in {0}"
 msgstr "{accessCount, plural, one {# person} other {# people}} in {0}"
 
@@ -819,7 +819,7 @@ msgstr "/seat/mo · billed monthly"
 
 #. placeholder {0}: convUsage.deleted.length - 8
 #. placeholder {0}: shareCount - 3
-#: src/components/project/ProjectUsageAndSharing.tsx:537
+#: src/components/project/ProjectUsageAndSharing.tsx:545
 #: src/components/project/ProjectSharingStrip.tsx:86
 msgid "+{0} more"
 msgstr "+{0} more"
@@ -1097,7 +1097,7 @@ msgstr "Accepted terms"
 #: src/routes/project/CreateProjectRoute.tsx:262
 #: src/routes/project/CreateProjectRoute.tsx:362
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:31
-#: src/components/project/ProjectUsageAndSharing.tsx:212
+#: src/components/project/ProjectUsageAndSharing.tsx:215
 #: src/components/layout/ProjectOverviewLayout.tsx:52
 msgid "Access"
 msgstr "Access"
@@ -1222,7 +1222,7 @@ msgid "Active"
 msgstr "Active"
 
 #. placeholder {0}: formatDurationFromHours(convUsage.active_hours)
-#: src/components/project/ProjectUsageAndSharing.tsx:565
+#: src/components/project/ProjectUsageAndSharing.tsx:573
 msgid "Active · {0}"
 msgstr "Active · {0}"
 
@@ -1259,7 +1259,7 @@ msgstr "Add {0} to {1} as <0>{2}</0>?"
 msgid "Add a conversation directly to chat context."
 msgstr "Add a conversation directly to chat context."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:275
+#: src/components/project/ProjectUsageAndSharing.tsx:278
 msgid "Add a member and pick their access."
 msgstr "Add a member and pick their access."
 
@@ -1517,7 +1517,7 @@ msgstr "Admin, dembrane"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:805
 #: src/routes/organisation/OrganisationRoute.tsx:859
-#: src/components/project/ProjectUsageAndSharing.tsx:258
+#: src/components/project/ProjectUsageAndSharing.tsx:260
 msgid "Admins"
 msgstr "Admins"
 
@@ -1586,7 +1586,7 @@ msgstr "Agentic chat"
 #: src/components/workspace/OrganisationUsageRollup.tsx:557
 #: src/components/training/StaffTrainingPanel.tsx:117
 #: src/components/results/curate/ArgumentsTab.tsx:226
-#: src/components/project/ProjectUsageAndSharing.tsx:257
+#: src/components/project/ProjectUsageAndSharing.tsx:259
 msgid "All"
 msgstr "All"
 
@@ -2218,7 +2218,7 @@ msgid "Audience preview"
 msgstr "Audience preview"
 
 #: src/components/workspace/UsageCard.tsx:164
-#: src/components/project/ProjectUsageAndSharing.tsx:444
+#: src/components/project/ProjectUsageAndSharing.tsx:448
 msgid "Audio"
 msgstr "Audio"
 
@@ -2558,7 +2558,7 @@ msgid "Brainstorm Ideas"
 msgstr "Brainstorm Ideas"
 
 #. placeholder {0}: convUsage.active.length
-#: src/components/project/ProjectUsageAndSharing.tsx:470
+#: src/components/project/ProjectUsageAndSharing.tsx:478
 msgid "Breakdown · {0} active"
 msgstr "Breakdown · {0} active"
 
@@ -3434,14 +3434,14 @@ msgstr "Consent-based processing is active without a privacy policy link. Add on
 msgid "Consolidated arguments"
 msgstr "Consolidated arguments"
 
-#. js-lingui-explicit-id
-#: src/components/error/actions.ts:23
-msgid "error.action.contact_support"
-msgstr "Contact support"
-
 #: src/features/sidebar/views/HelpView.tsx:27
 #: src/features/sidebar/blocks/HelpBlock.tsx:143
 msgid "Contact support"
+msgstr "Contact support"
+
+#. js-lingui-explicit-id
+#: src/components/error/actions.ts:23
+msgid "error.action.contact_support"
 msgstr "Contact support"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:374
@@ -3582,7 +3582,7 @@ msgstr "conversations"
 
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:93
 #: src/components/workspace/OrganisationProjectsTable.tsx:219
-#: src/components/project/ProjectUsageAndSharing.tsx:452
+#: src/components/project/ProjectUsageAndSharing.tsx:456
 #: src/components/conversation/ProjectConversationsPanel.tsx:741
 #: src/components/conversation/ConversationAccordion.tsx:1104
 msgid "Conversations"
@@ -4372,8 +4372,8 @@ msgid "Delete…"
 msgstr "Delete…"
 
 #. placeholder {0}: formatDurationFromHours(convUsage.deleted_hours)
-#: src/components/project/ProjectUsageAndSharing.tsx:523
-#: src/components/project/ProjectUsageAndSharing.tsx:581
+#: src/components/project/ProjectUsageAndSharing.tsx:531
+#: src/components/project/ProjectUsageAndSharing.tsx:589
 msgid "Deleted · {0}"
 msgstr "Deleted · {0}"
 
@@ -5363,7 +5363,7 @@ msgstr "Extend 24h"
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:115
 #: src/features/sidebar/views/org/OrgHomeView.tsx:174
-#: src/components/project/ProjectUsageAndSharing.tsx:319
+#: src/components/project/ProjectUsageAndSharing.tsx:322
 #: src/components/invite/RoleSelect.tsx:60
 msgid "External"
 msgstr "External"
@@ -5380,7 +5380,7 @@ msgstr "External of partner"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:811
 #: src/routes/organisation/OrganisationRoute.tsx:865
 #: src/components/workspace/UsageCard.tsx:215
-#: src/components/project/ProjectUsageAndSharing.tsx:261
+#: src/components/project/ProjectUsageAndSharing.tsx:263
 msgid "Externals"
 msgstr "Externals"
 
@@ -6093,7 +6093,7 @@ msgstr "Go back"
 msgid "Go Fullscreen"
 msgstr "Go Fullscreen"
 
-#: src/components/project/ProjectAccessGuard.tsx:105
+#: src/components/project/ProjectAccessGuard.tsx:125
 msgid "Go home"
 msgstr "Go home"
 
@@ -7009,7 +7009,7 @@ msgstr "Just started"
 msgid "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 msgstr "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:239
+#: src/components/project/ProjectUsageAndSharing.tsx:242
 msgid "Just you — plus workspace admins."
 msgstr "Just you — plus workspace admins."
 
@@ -7516,7 +7516,7 @@ msgstr "loading..."
 msgid "Loading..."
 msgstr "Loading..."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:232
+#: src/components/project/ProjectUsageAndSharing.tsx:235
 msgid "Loading…"
 msgstr "Loading…"
 
@@ -7844,8 +7844,8 @@ msgstr "members"
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/org/OrgHomeView.tsx:131
 #: src/components/workspace/UsageCard.tsx:205
-#: src/components/project/ProjectUsageAndSharing.tsx:228
-#: src/components/project/ProjectUsageAndSharing.tsx:259
+#: src/components/project/ProjectUsageAndSharing.tsx:231
+#: src/components/project/ProjectUsageAndSharing.tsx:261
 msgid "Members"
 msgstr "Members"
 
@@ -8446,7 +8446,7 @@ msgstr "No evidenced connections."
 msgid "no expiry"
 msgstr "no expiry"
 
-#: src/components/project/ProjectUsageAndSharing.tsx:288
+#: src/components/project/ProjectUsageAndSharing.tsx:291
 msgid "No explicit shares. Workspace admins still have access."
 msgstr "No explicit shares. Workspace admins still have access."
 
@@ -8552,7 +8552,7 @@ msgstr "No one is auto-blocked for non-payment. Watch failed charges here and fo
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1159
 #: src/routes/organisation/OrganisationRoute.tsx:976
-#: src/components/project/ProjectUsageAndSharing.tsx:353
+#: src/components/project/ProjectUsageAndSharing.tsx:356
 msgid "No one matches that filter."
 msgstr "No one matches that filter."
 
@@ -8570,7 +8570,7 @@ msgstr "No one on this organisation yet."
 msgid "No one shared yet"
 msgstr "No one shared yet"
 
-#: src/components/project/ProjectUsageAndSharing.tsx:286
+#: src/components/project/ProjectUsageAndSharing.tsx:289
 msgid "No one's on the workspace yet."
 msgstr "No one's on the workspace yet."
 
@@ -8721,7 +8721,7 @@ msgstr "No transcript exists for this conversation yet. Please check back later.
 msgid "No transcripts yet. You can run popcorn now; the screen fills as conversations land."
 msgstr "No transcripts yet. You can run popcorn now; the screen fills as conversations land."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:463
+#: src/components/project/ProjectUsageAndSharing.tsx:471
 msgid "No usage yet this cycle."
 msgstr "No usage yet this cycle."
 
@@ -9752,7 +9752,7 @@ msgstr "pending"
 #: src/routes/admin/AdminSettingsRoute.tsx:2846
 #: src/components/workspace/AccessRequestsList.tsx:164
 #: src/components/report/ConversationStatusTable.tsx:86
-#: src/components/project/ProjectUsageAndSharing.tsx:333
+#: src/components/project/ProjectUsageAndSharing.tsx:336
 #: src/components/project/ProjectSharingModal.tsx:403
 #: src/components/members/PendingInvitesSection.tsx:161
 #: src/components/billing/BillingManager.tsx:225
@@ -9985,7 +9985,7 @@ msgstr ""
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
 msgstr "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:244
+#: src/components/project/ProjectUsageAndSharing.tsx:247
 msgid "plus workspace admins"
 msgstr "plus workspace admins"
 
@@ -12420,7 +12420,7 @@ msgstr "Share the project, watch live activity, and jump into the main tools fro
 msgid "Share with {0} people"
 msgstr "Share with {0} people"
 
-#: src/components/project/ProjectUsageAndSharing.tsx:274
+#: src/components/project/ProjectUsageAndSharing.tsx:277
 msgid "Share with someone"
 msgstr "Share with someone"
 
@@ -12774,7 +12774,7 @@ msgstr "Something is blocking your connection. Your audio will not be saved unle
 #: src/routes/project/report/ProjectReportRoute.tsx:852
 #: src/routes/project/report/ProjectReportRoute.tsx:933
 #: src/routes/project/report/ProjectReportRoute.tsx:1404
-#: src/components/project/ProjectAccessGuard.tsx:87
+#: src/components/project/ProjectAccessGuard.tsx:113
 #: src/components/error/ErrorPage.tsx:55
 #: src/components/error/ErrorBoundary.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:298
@@ -13677,8 +13677,8 @@ msgid "The Library gains clearer views of recurring themes, available on request
 msgstr "The Library gains clearer views of recurring themes, available on request."
 
 #: src/components/project/ProjectAccessGuard.tsx:92
-msgid "The link may be private, or it may have moved. Ask the person who shared it to check."
-msgstr "The link may be private, or it may have moved. Ask the person who shared it to check."
+#~ msgid "The link may be private, or it may have moved. Ask the person who shared it to check."
+#~ msgstr "The link may be private, or it may have moved. Ask the person who shared it to check."
 
 #: src/routes/invite/AcceptInviteRoute.tsx:383
 msgid "The link may have been removed, or it was sent to a different email address. Ask the inviter to send a new one."
@@ -14126,7 +14126,7 @@ msgstr "This is urgent"
 #~ msgid "This is wrong"
 #~ msgstr "This is wrong"
 
-#: src/components/project/ProjectAccessGuard.tsx:85
+#: src/components/project/ProjectAccessGuard.tsx:111
 msgid "This isn't available to you"
 msgstr "This isn't available to you"
 
@@ -14353,7 +14353,7 @@ msgstr "This will just take a few moments"
 msgid "participant.concrete.loading.artefact.description"
 msgstr "This will just take a moment"
 
-#: src/components/project/ProjectUsageAndSharing.tsx:236
+#: src/components/project/ProjectUsageAndSharing.tsx:239
 msgid "this workspace"
 msgstr "this workspace"
 
@@ -14767,21 +14767,20 @@ msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Trouble logging in? Contact support@dembrane.com."
 
-#. js-lingui-explicit-id
-#: src/components/error/actions.ts:27
-msgid "error.action.retry"
-msgstr "Try again"
-
 #: src/routes/project/present/PresentRoute.tsx:878
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:414
 #: src/routes/invite/MyInvitesRoute.tsx:225
 #: src/routes/invite/AcceptInviteRoute.tsx:558
 #: src/components/results/resultEditing.tsx:554
-#: src/components/project/ProjectAccessGuard.tsx:109
 #: src/components/pricing/PricingTextInput.tsx:330
 #: src/components/present/TranslationStatus.tsx:143
 #: src/components/map/MapPage.tsx:123
 msgid "Try again"
+msgstr "Try again"
+
+#. js-lingui-explicit-id
+#: src/components/error/actions.ts:27
+msgid "error.action.retry"
 msgstr "Try again"
 
 #: src/routes/project/library/LibraryRoute.tsx:207
@@ -15020,8 +15019,8 @@ msgstr "Untitled canvas"
 
 #: src/routes/project/ProjectHomeRoute.tsx:68
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:97
-#: src/components/project/ProjectUsageAndSharing.tsx:496
-#: src/components/project/ProjectUsageAndSharing.tsx:530
+#: src/components/project/ProjectUsageAndSharing.tsx:504
+#: src/components/project/ProjectUsageAndSharing.tsx:538
 #: src/components/conversation/ProjectConversationsPanel.tsx:255
 msgid "Untitled conversation"
 msgstr "Untitled conversation"
@@ -15249,7 +15248,7 @@ msgstr "URL must start with http:// or https://"
 
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:36
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:42
-#: src/components/project/ProjectUsageAndSharing.tsx:416
+#: src/components/project/ProjectUsageAndSharing.tsx:420
 #: src/components/layout/ProjectOverviewLayout.tsx:53
 msgid "Usage"
 msgstr "Usage"
@@ -15275,7 +15274,7 @@ msgstr "Usage and billing, payments, partner ledger. Any Directus admin has acce
 msgid "Usage is tracked for your organisation. View it in organisation settings."
 msgstr "Usage is tracked for your organisation. View it in organisation settings."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:427
+#: src/components/project/ProjectUsageAndSharing.tsx:431
 msgid "Usage this cycle"
 msgstr "Usage this cycle"
 
@@ -15654,8 +15653,8 @@ msgid "We couldn't load this organisation's workspaces. Some controls may be mis
 msgstr "We couldn't load this organisation's workspaces. Some controls may be missing. Try refreshing."
 
 #: src/components/project/ProjectAccessGuard.tsx:97
-msgid "We couldn't load this project. Check your connection and try again."
-msgstr "We couldn't load this project. Check your connection and try again."
+#~ msgid "We couldn't load this project. Check your connection and try again."
+#~ msgstr "We couldn't load this project. Check your connection and try again."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:588
 msgid "We couldn't load this workspace. Try again in a moment."
@@ -15867,7 +15866,7 @@ msgstr "What themes came up?"
 msgid "What this project is about and what you want to learn. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question."
 msgstr "What this project is about and what you want to learn. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:419
+#: src/components/project/ProjectUsageAndSharing.tsx:423
 msgid "What this project is consuming this cycle."
 msgstr "What this project is consuming this cycle."
 
@@ -15977,7 +15976,7 @@ msgstr "Which organisation does this workspace belong to?"
 msgid "Which organisation owns this workspace's data? This sets the data and compliance context."
 msgstr "Which organisation owns this workspace's data? This sets the data and compliance context."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:215
+#: src/components/project/ProjectUsageAndSharing.tsx:218
 msgid "Who can see and collaborate on this project."
 msgstr "Who can see and collaborate on this project."
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 /**
  * Finds lingui catalog entries missing in any locale and, when Vertex credentials are
- * present, fills them with the model (flagged fuzzy for review). Without credentials it
+ * present, fills them with the model and records each in the catalog's review ledger
+ * (machine-translations.json beside the .po files). Without credentials it
  * reports the missing count and exits 0, so CI stays green on forks and local checkouts.
  *
  *   bun packages/i18n/src/cli.ts                 report only
@@ -22,11 +23,12 @@ import { fillCatalog } from "./fill";
 const here = path.dirname(new URL(import.meta.url).pathname);
 const platform = path.resolve(here, "../../..");
 const frontend = path.resolve(platform, "../frontend");
+// Smallest and most user-facing first, so a run cut short has filled what matters most.
 const DIRS = [
-  path.join(frontend, "src/locales"),
-  path.join(frontend, "src/features/accounts/locales"),
   path.join(frontend, "src/lib/errors/locales"),
   path.join(platform, "packages/i18n/locales"),
+  path.join(frontend, "src/features/accounts/locales"),
+  path.join(frontend, "src/locales"),
 ].filter((d) => existsSync(path.join(d, "en-US.po")));
 
 const write = process.argv.includes("--write");
@@ -79,12 +81,14 @@ if (write && hasCredentials()) {
 let missing = 0;
 let filled = 0;
 let rejected = 0;
+let unreviewed = 0;
 for (const dir of DIRS) {
   const reports = await fillCatalog(dir, completer, out);
   for (const r of reports) {
     missing += r.missing;
     filled += r.filled;
     rejected += r.rejected;
+    unreviewed += r.unreviewed;
     if (r.missing)
       out(
         `${path.relative(path.resolve(platform, ".."), r.file)}: ${r.missing} missing${completer ? `, ${r.filled} filled${r.rejected ? `, ${r.rejected} rejected` : ""}` : ""}`,
@@ -93,6 +97,9 @@ for (const dir of DIRS) {
 }
 out(
   completer
-    ? `${filled} of ${missing} missing entries filled and flagged fuzzy for review${rejected ? `; ${rejected} answers dropped for changed placeholders` : ""}`
+    ? `${filled} of ${missing} missing entries filled${rejected ? `; ${rejected} answers dropped for changed placeholders or an em dash` : ""}`
     : `${missing} entries missing a translation`,
+);
+out(
+  `${unreviewed} machine translations waiting for review (machine-translations.json per catalog)`,
 );

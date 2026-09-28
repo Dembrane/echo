@@ -16,1589 +16,1589 @@ msgstr ""
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
-msgstr ""
+msgstr "Pole {field} nesmí být prázdné. Vyplňte ho nebo smažte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_too_large"
-msgstr ""
+msgstr "{what, select, initials {Obrázek s vašimi iniciálami} other {Obrázek s vaším podpisem}} je příliš velký. Zmenšete jej pod 512 KB."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:53
 msgid "error.document.image_not_png"
-msgstr ""
+msgstr "{what, select, initials {Vaše iniciály} other {Váš podpis}} musí být obrázek ve formátu PNG."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:68
 msgid "error.workspace.handoff_pending"
-msgstr ""
+msgstr "Předání tohoto pracovního prostoru už čeká na vyřízení. Než začnete nové, zrušte to stávající."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:10
 msgid "error.popcorn.creation_busy"
-msgstr ""
+msgstr "Pro tento projekt se už vytváří prezentace. Zkuste to za chvilku znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:27
 msgid "error.canvas.just_previewed"
-msgstr ""
+msgstr "Náhled byl právě vytvořen. Než to zkusíte znovu, chvíli počkejte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:91
 msgid "error.project.pin_order_invalid"
-msgstr ""
+msgstr "Projekt lze připnout na pozici 1, 2 nebo 3."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:5
 msgid "error.report.already_generating"
-msgstr ""
+msgstr "Zpráva pro tento projekt se už vytváří. Počkejte na dokončení a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:24
 msgid "error.agent_access.risk_not_accepted"
-msgstr ""
+msgstr "Pro připojení agenta potvrďte upozornění na datová rizika."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:115
 msgid "error.workspace.partner_agreement_required"
-msgstr ""
+msgstr "Chcete-li pokračovat, potvrďte partnerskou smlouvu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:100
 msgid "error.project.privacy_policy_required"
-msgstr ""
+msgstr "Chcete-li jako právní základ použít souhlas, přidejte odkaz na své zásady ochrany osobních údajů."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:29
 msgid "error.task.reply_required"
-msgstr ""
+msgstr "Před odesláním přidejte odpověď nebo soubor."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:17
 msgid "error.agent.insight_reason_required"
-msgstr ""
+msgstr "Před zamítnutím tohoto postřehu uveďte stručný důvod."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:38
 msgid "error.field.too_few_items"
-msgstr ""
+msgstr "Přidejte alespoň {min_length}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:44
 msgid "error.workspace.external_needs_owner"
-msgstr ""
+msgstr "Chcete-li tento pracovní prostor označit jako externí, přidejte název klientské organizace a e-mail vlastníka dat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:27
 msgid "error.workspace.data_owner_org_required"
-msgstr ""
+msgstr "Přidejte název organizace, která data vlastní."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:13
 msgid "error.workspace.admin_joins_directly"
-msgstr ""
+msgstr "Jako správce organizace se můžete k tomuto pracovnímu prostoru připojit přímo, bez žádosti."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:133
 msgid "error.project.share_role_cannot_access"
-msgstr ""
+msgstr "Členové s rolí pro fakturaci nemohou otevírat projekty. Nejprve jim přiřaďte jinou roli."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:49
 msgid "error.invite.role_cannot_access_projects"
-msgstr ""
+msgstr "Členové s rolí pro fakturaci nemohou otevírat projekty. Pro sdílení tohoto projektu vyberte jinou roli."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:18
 msgid "error.canvas.feature_off"
-msgstr ""
+msgstr "Plátna nejsou pro tento projekt zapnutá."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:5
 msgid "error.field.invalid"
-msgstr ""
+msgstr "Zkontrolujte toto pole a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
-msgstr ""
+msgstr "Potvrďte, že jste oprávněni schválit zpracování osobních údajů za svou organizaci."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
-msgstr ""
+msgstr "dembrane právě zpracovává jiný požadavek. Zkuste to za sekundu znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:5
 msgid "error.analysis.feature_disabled"
-msgstr ""
+msgstr "Úprava výsledků zde není dostupná."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:95
 msgid "error.project.privacy_policy_invalid_url"
-msgstr ""
+msgstr "Zadejte odkaz na zásady ochrany osobních údajů začínající na http:// nebo https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:13
 msgid "error.field.invalid_date"
-msgstr ""
+msgstr "Zadejte platné datum."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:17
 msgid "error.field.invalid_email"
-msgstr ""
+msgstr "Zadejte platnou e-mailovou adresu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:14
 msgid "error.webhook.invalid_url"
-msgstr ""
+msgstr "Zadejte webovou adresu začínající na http:// nebo https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:30
 msgid "error.field.invalid_url"
-msgstr ""
+msgstr "Zadejte webovou adresu začínající na http:// nebo https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tax_id_required"
-msgstr ""
+msgstr "Zadejte alespoň jedno z čísel VAT, KvK nebo KBO."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:40
 msgid "error.document.field_text_invalid"
-msgstr ""
+msgstr "Zadejte text pro pole {label}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:119
 msgid "error.project.share_needs_private"
-msgstr ""
+msgstr "Tento projekt už vidí všichni v pracovním prostoru. Chcete-li ho sdílet jen s konkrétními lidmi, nastavte ho nejprve jako soukromý."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:9
 msgid "error.request.field_required"
-msgstr ""
+msgstr "Vyplňte pole {field}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:36
 msgid "error.document.field_required"
-msgstr ""
+msgstr "Chcete-li pokračovat, vyplňte pole {label}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:34
 msgid "error.field.required"
-msgstr ""
+msgstr "Vyplňte toto pole."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/access.ts:9
 msgid "error.access.not_onboarded"
-msgstr ""
+msgstr "Chcete-li pokračovat, dokončete nastavení svého účtu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:28
 msgid "error.organisation.name_required"
-msgstr ""
+msgstr "Pojmenujte svou organizaci."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:5
 msgid "error.project.event_invite_paid"
-msgstr ""
+msgstr "Skrytí pozvánky na událost dembrane je součástí placeného tarifu. Pro její skrytí přejděte na vyšší tarif."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:137
 msgid "error.workspace.visibility_requires_tier"
-msgstr ""
+msgstr "Pracovní prostory na pozvánku a soukromé prostory vyžadují tarif Innovator nebo vyšší. Vytvořte ho zatím jako otevřený, nebo nejprve přejděte na vyšší tarif."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:23
 msgid "error.conversation.no_summary"
-msgstr ""
+msgstr "Nejprve vytvořte shrnutí tohoto rozhovoru a pak to zkuste znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:14
 msgid "error.agent_access.no_enabled_organisation"
-msgstr ""
+msgstr "Žádná z vybraných organizací nepovoluje přístup agentů. Vyberte jinou nebo požádejte správce, aby přístup agentů zapnul."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:24
 msgid "error.invite.observer_internal_workspace"
-msgstr ""
+msgstr "Pozorovatelé se mohou připojit pouze k pracovním prostorům pro externí klienty. Vyberte jinou roli."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:5
 msgid "error.webhook.invalid_event"
-msgstr ""
+msgstr "Jedna z vybraných událostí není dostupná. Vyberte události znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:18
 msgid "error.template.quick_access_not_found"
-msgstr ""
+msgstr "Jedna z těchto šablon již není dostupná. Odeberte ji z rychlého přístupu a uložte znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:26
 msgid "error.billing.payments_unavailable"
-msgstr ""
+msgstr "Online platby momentálně nejsou dostupné. Pro změnu tarifu nás kontaktujte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:19
 msgid "error.document.decline_signer_only"
-msgstr ""
+msgstr "Tento dokument může odmítnout pouze {signer_email}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:98
 msgid "error.document.signer_only"
-msgstr ""
+msgstr "Tento dokument může podepsat pouze {signer_email}. Požádejte dotyčného o podpis, nebo nás požádejte o změnu podepisující osoby."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:36
 msgid "error.workspace.delete_admin_only"
-msgstr ""
+msgstr "Tento pracovní prostor může smazat pouze jeho správce nebo vlastník."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:54
 msgid "error.workspace.handoff_admin_only"
-msgstr ""
+msgstr "Tento pracovní prostor mohou předat pouze správci organizace, která za něj platí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:59
 msgid "error.workspace.handoff_cancel_initiator_only"
-msgstr ""
+msgstr "Toto předání mohou zrušit pouze správci organizace, která jej zahájila."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:49
 msgid "error.workspace.handoff_accept_target_admin_only"
-msgstr ""
+msgstr "Toto předání mohou přijmout pouze správci přijímající organizace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:31
 msgid "error.workspace.data_ownership_admin_only"
-msgstr ""
+msgstr "Změnit vlastníka dat tohoto pracovního prostoru může pouze správce organizace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:49
 msgid "error.organisation.owner_only"
-msgstr ""
+msgstr "Toto může provést pouze vlastník organizace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:50
 msgid "error.member.owner_changes_owner"
-msgstr ""
+msgstr "Jmenovat někoho vlastníkem nebo změnit roli jiného vlastníka může pouze vlastník."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:55
 msgid "error.member.owner_removes_owner"
-msgstr ""
+msgstr "Odebrat jiného vlastníka může pouze vlastník."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:17
 msgid "error.map.not_a_claim"
-msgstr ""
+msgstr "Ověřovat lze pouze tvrzení. Vyberte tvrzení a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:18
 msgid "error.workspace.create_admin_only"
-msgstr ""
+msgstr "Pracovní prostory zde mohou vytvářet pouze správci a vlastníci organizace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:5
 msgid "error.organisation.admin_only"
-msgstr ""
+msgstr "Toto mohou provést pouze správci a vlastníci organizace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:14
 msgid "error.organisation.billing_role_only"
-msgstr ""
+msgstr "Toto mohou vidět pouze správci, vlastníci a členové pro fakturaci v organizaci."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:40
 msgid "error.billing.role_required"
-msgstr ""
+msgstr "Fakturaci mohou spravovat pouze vlastníci, správci a členové pro fakturaci v organizaci."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:87
 msgid "error.project.not_owner"
-msgstr ""
+msgstr "Toto může provést pouze vlastník tohoto projektu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
 msgid "error.invite.revoke_forbidden"
-msgstr ""
+msgstr "Tuto pozvánku může stáhnout pouze ten, kdo ji odeslal, nebo správce."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:39
 msgid "error.invite.resend_forbidden"
-msgstr ""
+msgstr "Tuto pozvánku může znovu odeslat pouze ten, kdo ji odeslal, nebo správce organizace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:14
 msgid "error.project.legal_basis_admin_only"
-msgstr ""
+msgstr "Právní základ tohoto projektu mohou změnit pouze správci pracovního prostoru."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:143
 msgid "error.project.visibility_admin_only"
-msgstr ""
+msgstr "To, kdo tento projekt uvidí, mohou změnit pouze správci pracovního prostoru."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:115
 msgid "error.project.share_admin_only"
-msgstr ""
+msgstr "Sdílet projekty mohou pouze správci pracovního prostoru."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:29
 msgid "error.map.selection_not_in_map"
-msgstr ""
+msgstr "Část vašeho výběru už na mapě není. Načtěte mapu znovu a proveďte výběr."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:10
 msgid "error.webhook.invalid_status"
-msgstr ""
+msgstr "Vyberte pro tento webhook stav: publikováno, koncept nebo archivováno."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:23
 msgid "error.report.schedule_too_soon"
-msgstr ""
+msgstr "Zvolte čas alespoň 10 minut od této chvíle."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:5
 msgid "error.canvas.expiry_in_past"
-msgstr ""
+msgstr "Vyberte datum ukončení v budoucnosti."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:9
 msgid "error.canvas.expiry_too_far"
-msgstr ""
+msgstr "Vyberte datum ukončení během následujících 7 dnů."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:19
 msgid "error.project.legal_basis_invalid"
-msgstr ""
+msgstr "Vyberte jednu z možností právního základu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:19
 msgid "error.popcorn.invalid_live_hours"
-msgstr ""
+msgstr "Vyberte jednu z nabízených délek: {hours} hod."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:5
 msgid "error.agent_access.expiry_unsupported"
-msgstr ""
+msgstr "Vyberte jednu z nabízených možností vypršení platnosti."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:9
 msgid "error.field.invalid_choice"
-msgstr ""
+msgstr "Vyberte jednu z možností."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/memory.ts:9
 msgid "error.memory.invalid_scope"
-msgstr ""
+msgstr "Vyberte ze seznamu, pro koho je tato vzpomínka určena."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:110
 msgid "error.project.private_requires_tier"
-msgstr ""
+msgstr "Soukromé projekty jsou dostupné od tarifu Innovator výše. Pro přepnutí projektu na soukromý přejděte na vyšší tarif."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:32
 msgid "error.project.move_context_mismatch"
-msgstr ""
+msgstr "Projekty lze přesouvat pouze mezi pracovními prostory se stejným plátcem a vlastníkem dat. Vyberte jiný pracovní prostor."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:23
 msgid "error.template.quick_access_too_many"
-msgstr ""
+msgstr "Rychlý přístup pojme maximálně {max} šablon. Nejprve jednu odeberte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
-msgstr ""
+msgstr "Odstranění značky dembrane je součástí tarifu Changemaker. Pro využití této možnosti přejděte na vyšší tarif."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_too_small"
-msgstr ""
+msgstr "Vyberte ještě několik položek a vytvořte název."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:19
 msgid "error.chat.conversation_ids_empty"
-msgstr ""
+msgstr "Vyberte alespoň jeden rozhovor k přidání."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:46
 msgid "error.project.move_none_selected"
-msgstr ""
+msgstr "Vyberte alespoň jeden projekt k přesunutí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:138
 msgid "error.project.sharing_tier_required"
-msgstr ""
+msgstr "Sdílení soukromého projektu s lidmi vyžaduje tarif {tier} nebo vyšší."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/validation.ts:5
 msgid "error.validation.invalid_input"
-msgstr ""
+msgstr "Některá pole potřebují opravit. Zkontrolujte zvýrazněná pole a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:22
 msgid "error.canvas.invalid_value"
-msgstr ""
+msgstr "Některé zadané údaje nelze na plátně použít. Zkontrolujte je a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:13
 msgid "error.analysis.invalid_request"
-msgstr ""
+msgstr "Některé ze zadaných údajů nelze použít. Zkontrolujte je a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:5
 msgid "error.workspace.access_request_actioned"
-msgstr ""
+msgstr "Na tuto žádost už někdo odpověděl."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:9
 msgid "error.member.changed_concurrently"
-msgstr ""
+msgstr "Někdo změnil toto členství ve stejnou chvíli. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:27
 msgid "error.analysis.revision_conflict"
-msgstr ""
+msgstr "Někdo tento výsledek změnil, zatímco jste si ho prohlíželi. Obnovte stránku, abyste viděli jeho verzi, a pak úpravu proveďte znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:40
 msgid "error.popcorn.settings_busy"
-msgstr ""
+msgstr "Někdo jiný právě toto nastavení ukládá. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:21
 msgid "error.field.invalid_json"
-msgstr ""
+msgstr "Něco v tomto formuláři se nepodařilo načíst. Obnovte stránku a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:13
 msgid "error.request.invalid"
-msgstr ""
+msgstr "V tomto požadavku bylo něco špatně. Obnovte stránku a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:18
 msgid "error.request.invalid_json"
-msgstr ""
+msgstr "V tomto požadavku bylo něco špatně. Obnovte stránku a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:14
 msgid "error.internal.unexpected"
-msgstr ""
+msgstr "Na naší straně došlo k chybě. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:22
 msgid "error.account.otp_invalid"
-msgstr ""
+msgstr "Tento kód nefungoval. Zadejte aktuální kód z vaší ověřovací aplikace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:5
 msgid "error.training.completed_at_invalid"
-msgstr ""
+msgstr "Toto datum dokončení se nepodařilo načíst. Zadejte ho znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:19
 msgid "error.report.schedule_invalid"
-msgstr ""
+msgstr "Toto datum a čas se nepodařilo načíst. Zvolte čas znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
-msgstr ""
+msgstr "Toto heslo není správné. Zkontrolujte ho a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13
 msgid "error.member.invalid_role"
-msgstr ""
+msgstr "Tato role zde není k dispozici. Vyberte jednu ze seznamu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/rate_limit.ts:5
 msgid "error.rate_limit.exceeded"
-msgstr ""
+msgstr "Příliš mnoho požadavků za krátký čas. Chvíli počkejte a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:14
 msgid "error.document.confirmation_mismatch"
-msgstr ""
+msgstr "Potvrzovací text se neshoduje. Napište ho přesně tak, jak je zobrazen: {expected}"
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:27
 msgid "error.project.methodology_read_only"
-msgstr ""
+msgstr "Metodiku dembrane nelze měnit. Chcete-li ji upravit, vytvořte si kopii."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:45
 msgid "error.popcorn.synthetic_frame_locked"
-msgstr ""
+msgstr "Rámec ukázkové prezentace je nastaven s ukázkou a nelze ho zde měnit."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:5
 msgid "error.agent.insight_content_blank"
-msgstr ""
+msgstr "Postřeh nemůže být prázdný. Něco napište, nebo ho smažte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:23
 msgid "error.present.map_results_unavailable"
-msgstr ""
+msgstr "Mapa pro tuto prezentaci není k dispozici."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:19
 msgid "error.present.map_results_not_ready"
-msgstr ""
+msgstr "Mapa ještě není připravena. Jakmile bude, zobrazí se zde."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:25
 msgid "error.map.not_ready"
-msgstr ""
+msgstr "Mapa se stále vytváří. Chvíli počkejte a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:34
 msgid "error.map.selection_other_snapshot"
-msgstr ""
+msgstr "Mapa byla od vašeho výběru aktualizována. Obnovte mapu a vyberte položky znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:63
 msgid "error.document.no_pdf"
-msgstr ""
+msgstr "PDF tohoto dokumentu není k dispozici. Kontaktujte nás a my vám ho pošleme znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
-msgstr ""
+msgstr "PDF této faktury ještě není připraveno. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
 msgid "error.upload.failed"
-msgstr ""
+msgstr "Nahrávání se nedokončilo. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:23
 msgid "error.request.nothing_to_update"
-msgstr ""
+msgstr "Nejsou žádné změny k uložení."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:21
 msgid "error.agent.insight_update_empty"
-msgstr ""
+msgstr "Nejsou žádné změny k uložení."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:25
 msgid "error.agent.no_active_turn"
-msgstr ""
+msgstr "Neprobíhá žádná odpověď, kterou by bylo možné zastavit."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:64
 msgid "error.workspace.handoff_none_pending"
-msgstr ""
+msgstr "Pro tento pracovní prostor nečeká žádné předání."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:22
 msgid "error.billing.no_payment_profile"
-msgstr ""
+msgstr "Zatím nelze aktualizovat žádnou platební metodu. Nejprve si vyberte tarif."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
 msgid "error.billing.already_subscribed"
-msgstr ""
+msgstr "Tento účet již má aktivní předplatné."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:5
 msgid "error.present.activity_not_in_presentation"
-msgstr ""
+msgstr "Tato aktivita už není součástí prezentace. Obnovte stránku."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/announcement.ts:5
 msgid "error.announcement.not_found"
-msgstr ""
+msgstr "Toto oznámení již není k dispozici."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:41
 msgid "error.canvas.loop_not_found"
-msgstr ""
+msgstr "Toto plátno se samo neobnovuje, takže zde není co měnit."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:36
 msgid "error.canvas.loop_ended"
-msgstr ""
+msgstr "Toto plátno se přestalo obnovovat. Vytvořte nové plátno, aby zůstalo aktuální."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:31
 msgid "error.canvas.just_refreshed"
-msgstr ""
+msgstr "Toto plátno bylo právě obnoveno. Chvíli počkejte, než ho obnovíte znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:31
 msgid "error.chat.mode_already_set"
-msgstr ""
+msgstr "Tento chat už má nastavený režim. Chcete-li použít jiný, začněte nový chat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:5
 msgid "error.chat.context_full"
-msgstr ""
+msgstr "Tento chat je plný. Chcete-li udělat místo pro tento rozhovor, některé rozhovory odeberte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/pricing.ts:5
 msgid "error.pricing.configuration_not_owned"
-msgstr ""
+msgstr "Tato konfigurace patří někomu jinému. Vytvořte novou."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:19
 msgid "error.agent_access.request_expired"
-msgstr ""
+msgstr "Platnost této žádosti o připojení vypršela. Začněte znovu ze svého agenta."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:19
 msgid "error.conversation.no_content"
-msgstr ""
+msgstr "Tento rozhovor zatím nemá žádný zvukový záznam."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:15
 msgid "error.chat.conversation_already_added"
-msgstr ""
+msgstr "Tento rozhovor už v chatu je."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:9
 msgid "error.conversation.locked"
-msgstr ""
+msgstr "Ve vašem současném tarifu je tento rozhovor uzamčený. Chcete-li ho otevřít, přejděte na vyšší tarif."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:23
 msgid "error.chat.conversation_not_in_chat"
-msgstr ""
+msgstr "Tento rozhovor už v chatu není."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:31
 msgid "error.conversation.not_open"
-msgstr ""
+msgstr "Tento rozhovor právě není otevřený. Požádejte organizátora o nový odkaz."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:27
 msgid "error.chat.conversation_too_long"
-msgstr ""
+msgstr "Tento rozhovor je příliš dlouhý na to, aby ho bylo možné přidat do chatu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:22
 msgid "error.workspace.data_owner_is_member"
-msgstr ""
+msgstr "Tento vlastník dat už je ve vaší organizaci. Pro externího klienta vyberte někoho mimo ni, nebo místo toho vytvořte interní pracovní prostor."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:76
 msgid "error.document.not_declinable"
-msgstr ""
+msgstr "Tento dokument už nelze odmítnout."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:103
 msgid "error.document.signing_unavailable"
-msgstr ""
+msgstr "Tento dokument právě nelze podepsat. Víme o tom a pracujeme na nápravě."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:9
 msgid "error.document.changed"
-msgstr ""
+msgstr "Tento dokument se od vašeho otevření změnil. Před podpisem stránku znovu načtěte a dokument si ještě jednou přečtěte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:48
 msgid "error.document.field_unknown"
-msgstr ""
+msgstr "Tento dokument se od vašeho otevření změnil. Načtěte stránku znovu a zkuste to ještě jednou."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:68
 msgid "error.document.no_signature_needed"
-msgstr ""
+msgstr "Tento dokument nevyžaduje podpis."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:5
 msgid "error.document.already_signed"
-msgstr ""
+msgstr "Tento dokument je již podepsán. Není potřeba nic dalšího dělat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:84
 msgid "error.document.not_signed"
-msgstr ""
+msgstr "Tento dokument ještě není podepsán, takže podepsanou kopii nelze stáhnout."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:72
 msgid "error.document.not_awaiting_signature"
-msgstr ""
+msgstr "Tento dokument už nečeká na podpis."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:23
 msgid "error.document.declined"
-msgstr ""
+msgstr "Tento dokument byl odmítnut, takže ho již nelze podepsat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:112
 msgid "error.document.withdrawn"
-msgstr ""
+msgstr "Tento dokument byl stažen, takže ho již nelze podepsat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:15
 msgid "error.popcorn.feature_disabled"
-msgstr ""
+msgstr "Tato funkce není pro tento projekt k dispozici."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:9
 msgid "error.upload.empty"
-msgstr ""
+msgstr "Tento soubor je prázdný. Zvolte jiný soubor."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:25
 msgid "error.upload.too_large"
-msgstr ""
+msgstr "Tento soubor je příliš velký. Soubory mohou mít maximálně {max_mb} MB."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:14
 msgid "error.account.image_too_large"
-msgstr ""
+msgstr "Tento obrázek je příliš velký. Obrázky mohou mít maximálně {max_mb} MB."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:5
 msgid "error.invite.already_accepted"
-msgstr ""
+msgstr "Tato pozvánka již byla přijata."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:9
 msgid "error.invite.expired"
-msgstr ""
+msgstr "Platnost této pozvánky vypršela. Požádejte toho, kdo vás pozval, o zaslání nové."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:14
 msgid "error.invite.not_for_you"
-msgstr ""
+msgstr "Tato pozvánka byla odeslána na jinou e-mailovou adresu. Chcete-li ji přijmout, přihlaste se pod touto adresou."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:22
 msgid "error.member.last_admin_remove"
-msgstr ""
+msgstr "Toto je poslední správce. Nejprve jmenujte správcem někoho jiného, a pak tohoto uživatele odeberte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:17
 msgid "error.member.last_admin"
-msgstr ""
+msgstr "Toto je poslední správce. Nejprve udělejte správce nebo vlastníka z někoho jiného."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:27
 msgid "error.member.last_owner"
-msgstr ""
+msgstr "Toto je poslední vlastník. Nejprve předejte vlastnictví někomu jinému."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:31
 msgid "error.member.last_owner_demote"
-msgstr ""
+msgstr "Toto je poslední vlastník. Nejprve udělejte vlastníka z někoho jiného."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:27
 msgid "error.request.too_large"
-msgstr ""
+msgstr "Tato položka je k odeslání příliš velká. Zkuste něco menšího."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:23
 msgid "error.analysis.read_only_type"
-msgstr ""
+msgstr "Tento typ výsledku nelze upravovat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:13
 msgid "error.participant.token_invalid"
-msgstr ""
+msgstr "Tento odkaz neodpovídá tomuto rozhovoru. Otevřete odkaz, který jste obdrželi, znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:97
 msgid "error.workspace.logo_url_too_long"
-msgstr ""
+msgstr "Tento odkaz na logo je příliš dlouhý. Použijte kratší odkaz."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:63
 msgid "error.billing.tier_required"
-msgstr ""
+msgstr "Tato funkce vyžaduje tarif {required}. Chcete-li ji využívat, přejděte na vyšší tarif."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:89
 msgid "error.document.offer_expired"
-msgstr ""
+msgstr "Platnost této nabídky vypršela {valid_until}. Kontaktujte nás a my vám vystavíme novou."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:73
 msgid "error.workspace.handoff_same_org"
-msgstr ""
+msgstr "Tato organizace už za tento pracovní prostor platí. Vyberte jinou."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:19
 msgid "error.organisation.deleted"
-msgstr ""
+msgstr "Tato organizace již neexistuje."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:9
 msgid "error.analysis.field_not_editable"
-msgstr ""
+msgstr "Tuto část výsledku zde nelze upravit."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:31
 msgid "error.account.password_weak"
-msgstr ""
+msgstr "Heslo není dostatečně silné. Zkuste delší heslo a zkombinujte písmena, čísla a symboly."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:29
 msgid "error.invite.outsider_is_admin"
-msgstr ""
+msgstr "Tato osoba má ve vaší organizaci roli správce, vlastníka nebo fakturace, takže se nemůže připojit jako externí spolupracovník. Nejprve změňte její roli."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:34
 msgid "error.invite.outsider_is_member"
-msgstr ""
+msgstr "Tato osoba už je členem vaší organizace, takže se nemůže připojit jako externí spolupracovník."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:23
 msgid "error.organisation.external_cannot_manage"
-msgstr ""
+msgstr "Tato osoba je externistou v jednom z vašich pracovních prostorů. Nejprve tuto roli odeberte a pak ji nastavte jako správce nebo vlastníka."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
 msgid "error.member.not_found"
-msgstr ""
+msgstr "Tato osoba již není členem. Obnovte stránku a zobrazí se aktuální seznam."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:40
 msgid "error.member.not_in_workspace"
-msgstr ""
+msgstr "Tato osoba není členem tohoto pracovního prostoru. Obnovte stránku a zobrazí se aktuální seznam."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:128
 msgid "error.project.share_not_member"
-msgstr ""
+msgstr "Tato osoba v pracovním prostoru ještě není. Nejprve ji do něj pozvěte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:5
 msgid "error.member.already_removed"
-msgstr ""
+msgstr "Tato osoba už byla odebrána."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_not_purchasable"
-msgstr ""
+msgstr "Tento tarif nelze zakoupit online. Kontaktujte nás a domluvíme se."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:15
 msgid "error.present.map_not_in_presentation"
-msgstr ""
+msgstr "Tato prezentace neobsahuje mapu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:27
 msgid "error.popcorn.loop_not_found"
-msgstr ""
+msgstr "Tato prezentace neběží. Pokračujte jejím opětovným spuštěním."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:35
 msgid "error.popcorn.public_not_found"
-msgstr ""
+msgstr "Tento odkaz na prezentaci již nefunguje. Požádejte hostitele o nový odkaz."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:10
 msgid "error.present.draft_conflict"
-msgstr ""
+msgstr "Tato prezentace byla upravena jinde. Načtěte stránku znovu, abyste viděli nejnovější verzi, a pak úpravu zopakujte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:105
 msgid "error.project.privacy_policy_too_long"
-msgstr ""
+msgstr "Tento odkaz na zásady ochrany soukromí je příliš dlouhý. Použijte odkaz o maximální délce 255 znaků."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:64
 msgid "error.project.no_conversations"
-msgstr ""
+msgstr "Tento projekt zatím nemá žádné rozhovory."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:13
 msgid "error.map.no_map_yet"
-msgstr ""
+msgstr "Tento projekt zatím nemá mapu. Jakmile ji vytvoříte, uvidíte ji zde."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:68
 msgid "error.project.no_transcripts"
-msgstr ""
+msgstr "Tento projekt zatím nemá žádné přepisy."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:124
 msgid "error.project.share_not_found"
-msgstr ""
+msgstr "Tento projekt už s touto osobou není sdílen."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:82
 msgid "error.project.not_in_workspace"
-msgstr ""
+msgstr "Tento projekt není v tomto pracovním prostoru. Vyberte projekt z tohoto pracovního prostoru."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:72
 msgid "error.project.no_workspace"
-msgstr ""
+msgstr "Tento projekt není součástí pracovního prostoru, takže toto nastavení není k dispozici. Chcete-li jej přesunout, kontaktujte podporu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:5
 msgid "error.participant.report_not_found"
-msgstr ""
+msgstr "Tato zpráva není k dispozici. Je možné, že ještě nebyla zveřejněna."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:14
 msgid "error.report.not_scheduled"
-msgstr ""
+msgstr "Tato zpráva není naplánována, takže není co předčasně zveřejnit."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:10
 msgid "error.project.events_dembrane_only"
-msgstr ""
+msgstr "Toto nastavení je určeno pouze pro interní účty dembrane."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:23
 msgid "error.verify.not_enabled"
-msgstr ""
+msgstr "Tento krok je pro tento projekt vypnutý. Požádejte správce projektu o jeho zapnutí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:128
 msgid "error.workspace.support_request_expired"
-msgstr ""
+msgstr "Platnost této žádosti o podporu vypršela. Pokud stále potřebujete pomoc, požádejte podporu dembrane o novou."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:133
 msgid "error.workspace.support_request_handled"
-msgstr ""
+msgstr "Tato žádost o podporu již byla vyřízena."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:21
 msgid "error.task.not_open"
-msgstr ""
+msgstr "Tento úkol zatím není otevřen. Nejprve dokončete předchozí krok."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:25
 msgid "error.task.not_waiting"
-msgstr ""
+msgstr "Tento úkol na vás v tuto chvíli nečeká."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:13
 msgid "error.task.file_required"
-msgstr ""
+msgstr "K tomuto úkolu je potřeba přiložit soubor. Přidejte soubor a odešlete jej znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:14
 msgid "error.template.quick_access_duplicate"
-msgstr ""
+msgstr "Tato šablona už v rychlém přístupu je."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:13
 msgid "error.training.no_license"
-msgstr ""
+msgstr "Součástí tohoto školení není licence."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:17
 msgid "error.training.not_available"
-msgstr ""
+msgstr "Toto školení zatím nelze rezervovat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:33
 msgid "error.upload.unsupported_type"
-msgstr ""
+msgstr "Tento typ souboru není podporován."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:22
 msgid "error.participant.unsubscribe_link_invalid"
-msgstr ""
+msgstr "Tento odkaz pro odhlášení odběru není úplný. Otevřete odkaz z e-mailu znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:26
 msgid "error.field.invalid_type"
-msgstr ""
+msgstr "Tato hodnota nemá správný formát. Zkontrolujte ji a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:32
 msgid "error.analysis.revision_not_found"
-msgstr ""
+msgstr "Tato verze výsledku již neexistuje. Načtěte stránku znovu a uvidíte tu nejnovější."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:23
 msgid "error.popcorn.just_refreshed"
-msgstr ""
+msgstr "Tento obsah byl právě aktualizován. Před dalším pokusem počkejte několik sekund."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:110
 msgid "error.workspace.paid_rescope"
-msgstr ""
+msgstr "Tento pracovní prostor má placenou fakturaci, proto ho za vás nemůžeme přepnout mezi interním a externím. Nejprve kontaktujte podporu a převeďte fakturaci."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:78
 msgid "error.workspace.handoff_shared_plan"
-msgstr ""
+msgstr "Tento pracovní prostor využívá sdílený tarif vaší organizace, takže jej nelze předat. Převést lze pouze pracovní prostory s vlastní fakturací."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:119
 msgid "error.workspace.private"
-msgstr ""
+msgstr "Tento pracovní prostor je soukromý. Požádejte správce pracovního prostoru o pozvánku."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:40
 msgid "error.workspace.deleted"
-msgstr ""
+msgstr "Tento pracovní prostor již neexistuje."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:88
 msgid "error.workspace.has_projects"
-msgstr ""
+msgstr "Tento pracovní prostor stále obsahuje {count, plural, one {# projekt} few {# projekty} other {# projektů}}. Nejprve je smažte nebo přesuňte na stránce Projekty vaší organizace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:32
 msgid "error.document.field_must_tick"
-msgstr ""
+msgstr "Pro pokračování zaškrtněte pole {label}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:44
 msgid "error.document.field_tick_invalid"
-msgstr ""
+msgstr "Zaškrtněte nebo zrušte zaškrtnutí pole {label}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:37
 msgid "error.project.move_needs_admin"
-msgstr ""
+msgstr "Pro přesun projektů musíte být správcem nebo vlastníkem pracovního prostoru ({side})."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:108
 msgid "error.document.verified_email_required"
-msgstr ""
+msgstr "Pro podepsání se přihlaste pomocí ověřené e-mailové adresy."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:36
 msgid "error.account.tfa_already_enabled"
-msgstr ""
+msgstr "Dvoufázové ověření je již pro váš účet zapnuté."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:40
 msgid "error.account.tfa_not_enabled"
-msgstr ""
+msgstr "Dvoufázové ověření není pro váš účet zapnuté, takže není co vypínat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:18
 msgid "error.account.image_type"
-msgstr ""
+msgstr "Nahrajte obrázek ve formátu PNG, JPEG, WebP nebo GIF."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:93
 msgid "error.workspace.logo_url_invalid"
-msgstr ""
+msgstr "Použijte odkaz na logo, který začíná na http:// nebo https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:54
 msgid "error.field.too_small"
-msgstr ""
+msgstr "Použijte číslo alespoň {min}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:42
 msgid "error.field.too_large"
-msgstr ""
+msgstr "Použijte číslo maximálně {max}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:50
 msgid "error.field.too_short"
-msgstr ""
+msgstr "Použijte alespoň {min_length} znaků."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:46
 msgid "error.field.too_long"
-msgstr ""
+msgstr "Použijte maximálně {max_length} znaků."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:22
 msgid "error.webhook.target_not_allowed"
-msgstr ""
+msgstr "Na tuto adresu nemůžeme odesílat webhooky. Použijte veřejnou webovou adresu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:13
 msgid "error.canvas.extraction_failed"
-msgstr ""
+msgstr "Náhled plátna se právě nepodařilo vytvořit. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:45
 msgid "error.chat.verify_unavailable"
-msgstr ""
+msgstr "Tento chat se právě nepodařilo zkontrolovat. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:21
 msgid "error.upload.probe_url_failed"
-msgstr ""
+msgstr "Nepodařilo se ověřit vaše připojení. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:35
 msgid "error.billing.request_failed"
-msgstr ""
+msgstr "Tuto změnu fakturace se nepodařilo dokončit. Kontaktujte nás a my to vyřešíme."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:51
 msgid "error.map.title_failed"
-msgstr ""
+msgstr "Název se právě nepodařilo vytvořit. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:5
 msgid "error.conversation.delete_failed"
-msgstr ""
+msgstr "Tento rozhovor se nepodařilo smazat. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:83
 msgid "error.workspace.handoff_target_not_found"
-msgstr ""
+msgstr "Tuto organizaci se nepodařilo najít. Zkontrolujte název a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:50
 msgid "error.project.move_target_not_found"
-msgstr ""
+msgstr "Vybraný pracovní prostor se nepodařilo najít. Možná byl smazán."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:41
 msgid "error.analysis.snapshot_not_found"
-msgstr ""
+msgstr "Tyto výsledky analýzy se nepodařilo najít. Chcete-li zobrazit nejnovější, obnovte stránku."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:9
 msgid "error.agent_access.grant_not_found"
-msgstr ""
+msgstr "Toto propojení s agentem se nepodařilo najít. Možná již bylo odebráno."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:37
 msgid "error.analysis.run_not_found"
-msgstr ""
+msgstr "Tento běh analýzy se nepodařilo najít."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:5
 msgid "error.billing.account_not_found"
-msgstr ""
+msgstr "Tento fakturační účet se nepodařilo najít."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:46
 msgid "error.canvas.not_found"
-msgstr ""
+msgstr "Toto plátno se nepodařilo najít. Možná bylo smazáno."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:33
 msgid "error.agent.run_not_found"
-msgstr ""
+msgstr "Tento běh chatu se nepodařilo najít. Obnovte stránku a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:36
 msgid "error.chat.not_found"
-msgstr ""
+msgstr "Tento chat se nepodařilo najít. Možná byl smazán."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:27
 msgid "error.conversation.not_found"
-msgstr ""
+msgstr "Tento rozhovor se nepodařilo najít. Možná byl smazán."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:80
 msgid "error.document.not_found"
-msgstr ""
+msgstr "Tento dokument se nepodařilo najít. Možná byl stažen."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:17
 msgid "error.upload.file_not_found"
-msgstr ""
+msgstr "Tento soubor se nepodařilo najít. Možná byl odstraněn."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:13
 msgid "error.agent.insight_not_found"
-msgstr ""
+msgstr "Tento poznatek se nepodařilo najít. Možná byl odstraněn."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:19
 msgid "error.invite.not_found"
-msgstr ""
+msgstr "Tuto pozvánku se nepodařilo najít. Možná byla zrušena nebo již využita."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:9
 msgid "error.training.license_not_found"
-msgstr ""
+msgstr "Tuto licenci se nepodařilo najít."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:21
 msgid "error.map.not_found"
-msgstr ""
+msgstr "Tuto mapu se nám nepodařilo najít."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/memory.ts:13
 msgid "error.memory.not_found"
-msgstr ""
+msgstr "Tuto vzpomínku se nám nepodařilo najít. Možná byla smazána."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:5
 msgid "error.feedback.message_not_found"
-msgstr ""
+msgstr "Tuto zprávu se nám nepodařilo najít. Možná byla smazána."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:23
 msgid "error.project.methodology_not_found"
-msgstr ""
+msgstr "Tuto metodologii se nám nepodařilo najít. Možná byla smazána."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/notification.ts:5
 msgid "error.notification.not_found"
-msgstr ""
+msgstr "Toto oznámení se nám nepodařilo najít. Možná bylo odstraněno."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:41
 msgid "error.organisation.not_found"
-msgstr ""
+msgstr "Tuto organizaci se nám nepodařilo najít."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:31
 msgid "error.popcorn.not_found"
-msgstr ""
+msgstr "Tuto prezentaci se nám nepodařilo najít."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:77
 msgid "error.project.not_found"
-msgstr ""
+msgstr "Tento projekt se nám nepodařilo najít. Možná byl smazán nebo k němu nemáte přístup."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/question.ts:5
 msgid "error.question.not_found"
-msgstr ""
+msgstr "Tuto otázku se nám nepodařilo najít. Možná byla odstraněna."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:10
 msgid "error.report.not_found"
-msgstr ""
+msgstr "Tuto zprávu se nám nepodařilo najít. Možná byla smazána."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:9
 msgid "error.workspace.access_request_not_found"
-msgstr ""
+msgstr "Tuto žádost se nám nepodařilo najít. Možná byla stažena."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:18
 msgid "error.analysis.object_not_found"
-msgstr ""
+msgstr "Tento výsledek se nám nepodařilo najít. Možná byl při opakování analýzy odstraněn."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:27
 msgid "error.participant.unsubscribe_link_unknown"
-msgstr ""
+msgstr "Tento odběr se nám nepodařilo najít. Možná už jste odhlášeni."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/tag.ts:5
 msgid "error.tag.not_found"
-msgstr ""
+msgstr "Tento štítek se nám nepodařilo najít. Možná byl smazán."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:17
 msgid "error.task.not_found"
-msgstr ""
+msgstr "Tento úkol se nám nepodařilo najít. Možná byl stažen."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:10
 msgid "error.template.not_found"
-msgstr ""
+msgstr "Tuto šablonu se nám nepodařilo najít. Možná byla smazána."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:32
 msgid "error.verify.topic_unknown"
-msgstr ""
+msgstr "Toto téma se nám nepodařilo najít. Vraťte se a vyberte jiné."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:28
 msgid "error.verify.topic_not_found"
-msgstr ""
+msgstr "Toto téma se nám nepodařilo najít. Možná bylo odstraněno."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:21
 msgid "error.training.not_found"
-msgstr ""
+msgstr "Toto školení se nám nepodařilo najít."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:50
 msgid "error.popcorn.version_not_found"
-msgstr ""
+msgstr "Tuto verzi prezentace se nám nepodařilo najít."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:18
 msgid "error.webhook.not_found"
-msgstr ""
+msgstr "Tento webhook se nám nepodařilo najít. Možná byl smazán."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:105
 msgid "error.workspace.not_found"
-msgstr ""
+msgstr "Tento pracovní prostor se nám nepodařilo najít. Možná byl smazán nebo k němu nemáte přístup."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:5
 msgid "error.verify.artifact_not_found"
-msgstr ""
+msgstr "Toto se nám nepodařilo najít. Možná to bylo odstraněno."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:46
 msgid "error.analysis.storage_unavailable"
-msgstr ""
+msgstr "Analýzu se právě nepodařilo načíst. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:47
 msgid "error.map.storage_unavailable"
-msgstr ""
+msgstr "Mapu se právě nepodařilo načíst. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:45
 msgid "error.account.user_not_found"
-msgstr ""
+msgstr "Váš účet se nepodařilo načíst. Kontaktujte podporu a my to vyřešíme."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:13
 msgid "error.billing.checkout_failed"
-msgstr ""
+msgstr "Platební stránku se nepodařilo otevřít. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:14
 msgid "error.conversation.merge_failed"
-msgstr ""
+msgstr "Zvuk z tohoto rozhovoru se nepodařilo spojit. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:9
 msgid "error.internal.unavailable"
-msgstr ""
+msgstr "Část služby dembrane je právě nedostupná. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:93
 msgid "error.document.signature_unreadable"
-msgstr ""
+msgstr "Váš podpis se nepodařilo přečíst. Nakreslete ho znovu a zkuste to ještě jednou."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/pricing.ts:9
 msgid "error.pricing.reference_unavailable"
-msgstr ""
+msgstr "Vaše odpovědi se právě nepodařilo uložit. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:17
 msgid "error.feedback.save_failed"
-msgstr ""
+msgstr "Vaši zprávu se nepodařilo odeslat. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:9
 msgid "error.participant.subscribe_failed"
-msgstr ""
+msgstr "Nepodařilo se přihlásit všechny e-mailové adresy. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:9
 msgid "error.map.generation_not_started"
-msgstr ""
+msgstr "Vytváření mapy se nepodařilo spustit. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:5
 msgid "error.map.fact_check_not_started"
-msgstr ""
+msgstr "Ověření faktů se nepodařilo spustit. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:37
 msgid "error.upload.url_failed"
-msgstr ""
+msgstr "Nahrávání se nepodařilo spustit. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:29
 msgid "error.upload.transcription_failed"
-msgstr ""
+msgstr "Tento zvuk se nepodařilo převést na text. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:10
 msgid "error.chat.context_size_unavailable"
-msgstr ""
+msgstr "Kapacitu tohoto chatu se právě nepodařilo zjistit. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:45
 msgid "error.billing.seat_pricing_unavailable"
-msgstr ""
+msgstr "Cenu za uživatele se právě nepodařilo zjistit. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:9
 msgid "error.verify.generation_failed"
-msgstr ""
+msgstr "Toto se právě nepodařilo sepsat. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:25
 msgid "error.training.unknown_type"
-msgstr ""
+msgstr "Tento typ trénování neznáme. Obnovte stránku a vyberte jej znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:18
 msgid "error.participant.token_required"
-msgstr ""
+msgstr "Ztratili jsme spojení s vaším rozhovorem. Chcete-li pokračovat, obnovte stránku."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:9
 msgid "error.feedback.message_required"
-msgstr ""
+msgstr "Napište krátkou zprávu o problému."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:9
 msgid "error.agent.insight_content_required"
-msgstr ""
+msgstr "Napište k postřehu nějaký text."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
-msgstr ""
+msgstr "Napište, co si má paměť uchovat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32
 msgid "error.organisation.no_access"
-msgstr ""
+msgstr "Nejste členem této organizace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:45
 msgid "error.organisation.not_member"
-msgstr ""
+msgstr "Nejste členem této organizace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:101
 msgid "error.workspace.no_access"
-msgstr ""
+msgstr "Nejste členem tohoto pracovního prostoru."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:63
 msgid "error.member.sole_admin_leave"
-msgstr ""
+msgstr "Jste jediným správcem. Než odejdete, jmenujte správcem někoho jiného."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:21
 msgid "error.feedback.too_many_attachments"
-msgstr ""
+msgstr "Můžete přidat nejvýše {max} snímků obrazovky."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:40
 msgid "error.chat.too_many_conversations"
-msgstr ""
+msgstr "Najednou můžete přidat maximálně {max} rozhovorů. Vyberte jich méně a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:55
 msgid "error.project.move_too_many"
-msgstr ""
+msgstr "Najednou můžete přesunout maximálně {max} projektů. Vyberte jich méně a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:5
 msgid "error.template.not_allowed"
-msgstr ""
+msgstr "Tuto šablonu můžete použít, ale nemůžete ji měnit. Pokud to potřebujete, obraťte se na správce pracovního prostoru."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:27
 msgid "error.template.read_only_collaborator"
-msgstr ""
+msgstr "Tento pracovní prostor si můžete prohlížet, ale nemůžete do něj přidávat šablony. Požádejte správce pracovního prostoru o přístup k úpravám."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:59
 msgid "error.member.role_above_own"
-msgstr ""
+msgstr "Nemůžete nikomu udělit vyšší roli, než máte sami."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:54
 msgid "error.invite.self"
-msgstr ""
+msgstr "Nemůžete pozvat sami sebe."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:45
 msgid "error.member.outsider_role_switch"
-msgstr ""
+msgstr "Zde nelze přepínat mezi externím spolupracovníkem a členem. Pozvěte dotyčného znovu s novou rolí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:5
 msgid "error.task.done_by_billing_details"
-msgstr ""
+msgstr "Tento úkol dokončíte uložením fakturačních údajů."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:9
 msgid "error.task.done_by_signing"
-msgstr ""
+msgstr "Tento úkol dokončíte podepsáním dokumentu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:42
 msgid "error.project.move_no_workspace_access"
-msgstr ""
+msgstr "K pracovnímu prostoru na straně {side} nemáte přístup."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:29
 msgid "error.agent.run_forbidden"
-msgstr ""
+msgstr "K tomuto chatu nemáte přístup."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:60
 msgid "error.project.no_access"
-msgstr ""
+msgstr "K tomuto projektu nemáte přístup."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/access.ts:5
 msgid "error.access.forbidden"
-msgstr ""
+msgstr "K této akci nemáte oprávnění."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:18
 msgid "error.verify.no_new_feedback"
-msgstr ""
+msgstr "Zatím jste nepřidali nic nového. Popište, co byste změnili, a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:54
 msgid "error.billing.tier_limit"
-msgstr ""
+msgstr "Dosáhli jste limitu tarifu Free. Chcete-li pokračovat, přejděte na vyšší tarif."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/rate_limit.ts:10
 msgid "error.rate_limit.too_many_streams"
-msgstr ""
+msgstr "Máte otevřeno příliš mnoho živých zobrazení. Zavřete několik záložek a zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/auth.ts:9
 msgid "error.auth.user_required"
-msgstr ""
+msgstr "K tomu musíte být přihlášeni. Přihlaste se a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:39
 msgid "error.map.selection_too_large"
-msgstr ""
+msgstr "Vybrali jste příliš mnoho položek. Vyberte jich méně a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:123
 msgid "error.workspace.removed_from"
-msgstr ""
+msgstr "Byli jste odebráni z tohoto pracovního prostoru. Požádejte správce pracovního prostoru o opětovné pozvání."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:9
 msgid "error.account.email_missing"
-msgstr ""
+msgstr "Váš účet zatím nemá e-mailovou adresu. Chcete-li ji přidat, kontaktujte podporu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:27
 msgid "error.account.password_incorrect"
-msgstr ""
+msgstr "Vaše současné heslo není správné. Zkontrolujte ho a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:5
 msgid "error.upload.confirm_failed"
-msgstr ""
+msgstr "Váš soubor dorazil, ale nepodařilo se nám ho uložit. Zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:13
 msgid "error.feedback.message_too_long"
-msgstr ""
+msgstr "Vaše zpráva je příliš dlouhá. Zkraťte ji a odešlete znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:36
 msgid "error.organisation.no_billing_account"
-msgstr ""
+msgstr "Vaše organizace nemá nastavenou fakturaci, takže zatím nemůžete přidat pracovní prostor. Kontaktujte podporu a my to vyřešíme."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:9
 msgid "error.organisation.billing_canceled"
-msgstr ""
+msgstr "Tarif vaší organizace je zrušený. Chcete-li přidávat pracovní prostory, znovu jej aktivujte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:31
 msgid "error.billing.plan_inactive"
-msgstr ""
+msgstr "Váš tarif není aktivní. Chcete-li přidávat členy, znovu jej aktivujte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:13
 msgid "error.verify.no_chunks"
-msgstr ""
+msgstr "Vaše nahrávka k nám ještě nedorazila. Počkejte chvilku a zkuste to znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/auth.ts:5
 msgid "error.auth.session_expired"
-msgstr ""
+msgstr "Vaše relace vypršela. Chcete-li pokračovat, znovu se přihlaste."

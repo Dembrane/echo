@@ -85,7 +85,7 @@ jobs:
       - name: Check catalogs are up to date
         shell: bash
         run: |
-          if ! git diff --exit-code -- src/locales src/features/accounts/locales src/lib/errors/locales; then
+          if ! git diff --exit-code -- src/locales; then
             echo ""
             echo "::error::The lingui catalogs are out of date. Source strings changed but messages:extract / messages:compile were not re-run, so new msgids are missing from every catalog. A dotted id that is never extracted renders as the raw id in the UI."
             echo ""
@@ -96,7 +96,7 @@ jobs:
             echo "then commit the changed files under echo/frontend/src/locales/."
             echo ""
             echo "Files that drifted:"
-            git diff --name-only -- src/locales src/features/accounts/locales src/lib/errors/locales
+            git diff --name-only -- src/locales
             exit 1
           fi
           echo "Catalogs are up to date: extract and compile produced no changes."

@@ -16,1589 +16,1589 @@ msgstr ""
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
-msgstr ""
+msgstr "{field} no puede estar vacío. Rellénalo o elimínalo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_too_large"
-msgstr ""
+msgstr "{what, select, initials {La imagen de tus iniciales} other {La imagen de tu firma}} es demasiado grande. Procura que pese menos de 512 KB."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:53
 msgid "error.document.image_not_png"
-msgstr ""
+msgstr "{what, select, initials {Tus iniciales deben} other {Tu firma debe}} ser una imagen PNG."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:68
 msgid "error.workspace.handoff_pending"
-msgstr ""
+msgstr "Ya hay un traspaso pendiente para este espacio de trabajo. Cancélalo antes de iniciar uno nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:10
 msgid "error.popcorn.creation_busy"
-msgstr ""
+msgstr "Ya se está creando una presentación para este proyecto. Inténtalo de nuevo en un momento."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:27
 msgid "error.canvas.just_previewed"
-msgstr ""
+msgstr "Se acaba de generar una vista previa. Espera un momento antes de volver a intentarlo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:91
 msgid "error.project.pin_order_invalid"
-msgstr ""
+msgstr "Un proyecto se puede fijar en la posición 1, 2 o 3."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:5
 msgid "error.report.already_generating"
-msgstr ""
+msgstr "Ya se está creando un informe para este proyecto. Espera a que termine e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:24
 msgid "error.agent_access.risk_not_accepted"
-msgstr ""
+msgstr "Acepta el aviso de riesgos de datos para conectar tu agente."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:115
 msgid "error.workspace.partner_agreement_required"
-msgstr ""
+msgstr "Acepta el acuerdo de colaboración para continuar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:100
 msgid "error.project.privacy_policy_required"
-msgstr ""
+msgstr "Añade un enlace a tu política de privacidad para usar el consentimiento como base legal."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:29
 msgid "error.task.reply_required"
-msgstr ""
+msgstr "Añade una respuesta o un archivo antes de enviar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:17
 msgid "error.agent.insight_reason_required"
-msgstr ""
+msgstr "Añade un breve motivo antes de descartar este insight."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:38
 msgid "error.field.too_few_items"
-msgstr ""
+msgstr "Añade al menos {min_length}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:44
 msgid "error.workspace.external_needs_owner"
-msgstr ""
+msgstr "Añade el nombre de la organización del cliente y el correo del propietario de los datos para marcar este espacio de trabajo como externo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:27
 msgid "error.workspace.data_owner_org_required"
-msgstr ""
+msgstr "Añade el nombre de la organización propietaria de los datos."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:13
 msgid "error.workspace.admin_joins_directly"
-msgstr ""
+msgstr "Como administrador de la organización puedes unirte directamente a este espacio de trabajo, sin necesidad de solicitarlo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:133
 msgid "error.project.share_role_cannot_access"
-msgstr ""
+msgstr "Los miembros de facturación no pueden abrir proyectos. Asígnales otro rol primero."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:49
 msgid "error.invite.role_cannot_access_projects"
-msgstr ""
+msgstr "Los miembros de facturación no pueden abrir proyectos. Elige otro rol para compartir este proyecto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:18
 msgid "error.canvas.feature_off"
-msgstr ""
+msgstr "Los lienzos no están activados para este proyecto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:5
 msgid "error.field.invalid"
-msgstr ""
+msgstr "Revisa este campo e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
-msgstr ""
+msgstr "Confirma que tienes autorización para aceptar el tratamiento de datos en nombre de tu organización."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
-msgstr ""
+msgstr "dembrane está ocupado con esto ahora mismo. Inténtalo de nuevo en un segundo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:5
 msgid "error.analysis.feature_disabled"
-msgstr ""
+msgstr "La edición de resultados no está disponible aquí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:95
 msgid "error.project.privacy_policy_invalid_url"
-msgstr ""
+msgstr "Introduce un enlace a la política de privacidad que empiece por http:// o https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:13
 msgid "error.field.invalid_date"
-msgstr ""
+msgstr "Introduce una fecha válida."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:17
 msgid "error.field.invalid_email"
-msgstr ""
+msgstr "Introduce una dirección de correo válida."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:14
 msgid "error.webhook.invalid_url"
-msgstr ""
+msgstr "Introduce una dirección web que empiece por http:// o https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:30
 msgid "error.field.invalid_url"
-msgstr ""
+msgstr "Introduce una dirección web que empiece por http:// o https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tax_id_required"
-msgstr ""
+msgstr "Introduce al menos uno de tus números de VAT, KvK o KBO."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:40
 msgid "error.document.field_text_invalid"
-msgstr ""
+msgstr "Introduce un texto para {label}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:119
 msgid "error.project.share_needs_private"
-msgstr ""
+msgstr "Todos los miembros del espacio de trabajo ya pueden ver este proyecto. Hazlo privado primero para compartirlo con personas concretas."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:9
 msgid "error.request.field_required"
-msgstr ""
+msgstr "Rellena {field}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:36
 msgid "error.document.field_required"
-msgstr ""
+msgstr "Rellena {label} para continuar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:34
 msgid "error.field.required"
-msgstr ""
+msgstr "Rellena este campo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/access.ts:9
 msgid "error.access.not_onboarded"
-msgstr ""
+msgstr "Termina de configurar tu cuenta para continuar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:28
 msgid "error.organisation.name_required"
-msgstr ""
+msgstr "Ponle un nombre a tu organización."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:5
 msgid "error.project.event_invite_paid"
-msgstr ""
+msgstr "Ocultar la invitación a eventos de dembrane requiere un plan de pago. Mejora tu plan para ocultarla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:137
 msgid "error.workspace.visibility_requires_tier"
-msgstr ""
+msgstr "Los espacios de trabajo privados o solo por invitación requieren el plan Innovator o superior. Créalo como abierto por ahora o mejora tu plan primero."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:23
 msgid "error.conversation.no_summary"
-msgstr ""
+msgstr "Crea primero un resumen de esta conversación y luego inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:14
 msgid "error.agent_access.no_enabled_organisation"
-msgstr ""
+msgstr "Ninguna de las organizaciones que elegiste permite el acceso de agentes. Elige otra o pídele a tu administrador que lo active."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:24
 msgid "error.invite.observer_internal_workspace"
-msgstr ""
+msgstr "Los observadores solo pueden unirse a espacios de trabajo para un cliente externo. Elige otro rol."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:5
 msgid "error.webhook.invalid_event"
-msgstr ""
+msgstr "Uno de los eventos elegidos no está disponible. Vuelve a seleccionar los eventos."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:18
 msgid "error.template.quick_access_not_found"
-msgstr ""
+msgstr "Una de estas plantillas ya no está disponible. Quítala del acceso rápido y vuelve a guardar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:26
 msgid "error.billing.payments_unavailable"
-msgstr ""
+msgstr "Los pagos en línea no están disponibles ahora mismo. Contáctanos para cambiar de plan."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:19
 msgid "error.document.decline_signer_only"
-msgstr ""
+msgstr "Solo {signer_email} puede rechazar este documento."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:98
 msgid "error.document.signer_only"
-msgstr ""
+msgstr "Solo {signer_email} puede firmar este documento. Pídele que lo firme o pídenos cambiar de firmante."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:36
 msgid "error.workspace.delete_admin_only"
-msgstr ""
+msgstr "Solo un administrador o propietario del espacio de trabajo puede eliminarlo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:54
 msgid "error.workspace.handoff_admin_only"
-msgstr ""
+msgstr "Solo los administradores de la organización que paga por este espacio de trabajo pueden transferirlo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:59
 msgid "error.workspace.handoff_cancel_initiator_only"
-msgstr ""
+msgstr "Solo los administradores de la organización que inició esta transferencia pueden cancelarla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:49
 msgid "error.workspace.handoff_accept_target_admin_only"
-msgstr ""
+msgstr "Solo los administradores de la organización receptora pueden aceptar esta transferencia."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:31
 msgid "error.workspace.data_ownership_admin_only"
-msgstr ""
+msgstr "Solo un administrador de la organización puede cambiar quién posee los datos de este espacio de trabajo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:49
 msgid "error.organisation.owner_only"
-msgstr ""
+msgstr "Solo un propietario de la organización puede hacer esto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:50
 msgid "error.member.owner_changes_owner"
-msgstr ""
+msgstr "Solo un propietario puede nombrar a otro propietario o cambiar el rol de un propietario."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:55
 msgid "error.member.owner_removes_owner"
-msgstr ""
+msgstr "Solo un propietario puede eliminar a otro propietario."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:17
 msgid "error.map.not_a_claim"
-msgstr ""
+msgstr "Solo se pueden verificar afirmaciones. Elige una afirmación e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:18
 msgid "error.workspace.create_admin_only"
-msgstr ""
+msgstr "Solo los administradores y propietarios de la organización pueden crear espacios de trabajo aquí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:5
 msgid "error.organisation.admin_only"
-msgstr ""
+msgstr "Solo los administradores y propietarios de la organización pueden hacer esto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:14
 msgid "error.organisation.billing_role_only"
-msgstr ""
+msgstr "Solo los administradores, propietarios y miembros de facturación de la organización pueden ver esto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:40
 msgid "error.billing.role_required"
-msgstr ""
+msgstr "Solo los propietarios, administradores y miembros de facturación de la organización pueden gestionar la facturación."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:87
 msgid "error.project.not_owner"
-msgstr ""
+msgstr "Solo el propietario de este proyecto puede hacer esto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
 msgid "error.invite.revoke_forbidden"
-msgstr ""
+msgstr "Solo la persona que envió esta invitación o un administrador puede cancelarla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:39
 msgid "error.invite.resend_forbidden"
-msgstr ""
+msgstr "Solo la persona que envió esta invitación o un administrador de la organización puede reenviarla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:14
 msgid "error.project.legal_basis_admin_only"
-msgstr ""
+msgstr "Solo los administradores del espacio de trabajo pueden cambiar la base legal de este proyecto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:143
 msgid "error.project.visibility_admin_only"
-msgstr ""
+msgstr "Solo los administradores del espacio de trabajo pueden cambiar quién ve este proyecto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:115
 msgid "error.project.share_admin_only"
-msgstr ""
+msgstr "Solo los administradores del espacio de trabajo pueden compartir proyectos."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:29
 msgid "error.map.selection_not_in_map"
-msgstr ""
+msgstr "Parte de tu selección ya no está en el mapa. Recarga el mapa y vuelve a seleccionar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:10
 msgid "error.webhook.invalid_status"
-msgstr ""
+msgstr "Elige un estado para este webhook: publicado, borrador o archivado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:23
 msgid "error.report.schedule_too_soon"
-msgstr ""
+msgstr "Elige una hora al menos 10 minutos más tarde que la actual."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:5
 msgid "error.canvas.expiry_in_past"
-msgstr ""
+msgstr "Elige una fecha de finalización en el futuro."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:9
 msgid "error.canvas.expiry_too_far"
-msgstr ""
+msgstr "Elige una fecha de finalización dentro de los próximos 7 días."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:19
 msgid "error.project.legal_basis_invalid"
-msgstr ""
+msgstr "Elige una de las opciones de base legal."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:19
 msgid "error.popcorn.invalid_live_hours"
-msgstr ""
+msgstr "Elige una de las duraciones disponibles: {hours} horas."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:5
 msgid "error.agent_access.expiry_unsupported"
-msgstr ""
+msgstr "Elige una de las opciones de caducidad disponibles."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:9
 msgid "error.field.invalid_choice"
-msgstr ""
+msgstr "Elige una de las opciones."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/memory.ts:9
 msgid "error.memory.invalid_scope"
-msgstr ""
+msgstr "Elige de la lista para quién es este recuerdo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:110
 msgid "error.project.private_requires_tier"
-msgstr ""
+msgstr "Los proyectos privados están incluidos en el plan Innovator y superiores. Actualiza tu plan para hacer este proyecto privado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:32
 msgid "error.project.move_context_mismatch"
-msgstr ""
+msgstr "Los proyectos solo pueden moverse entre espacios de trabajo con el mismo responsable de facturación y datos. Elige otro espacio de trabajo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:23
 msgid "error.template.quick_access_too_many"
-msgstr ""
+msgstr "El acceso rápido admite hasta {max} plantillas. Quita una primero."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
-msgstr ""
+msgstr "Quitar la marca de dembrane está incluido en el plan Changemaker. Actualiza tu plan para usarlo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_too_small"
-msgstr ""
+msgstr "Selecciona algunos elementos más para crear un título."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:19
 msgid "error.chat.conversation_ids_empty"
-msgstr ""
+msgstr "Selecciona al menos una conversación para añadirla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:46
 msgid "error.project.move_none_selected"
-msgstr ""
+msgstr "Selecciona al menos un proyecto para moverlo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:138
 msgid "error.project.sharing_tier_required"
-msgstr ""
+msgstr "Compartir un proyecto privado con otras personas requiere el plan {tier} o superior."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/validation.ts:5
 msgid "error.validation.invalid_input"
-msgstr ""
+msgstr "Hay campos que corregir. Revisa los campos resaltados e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:22
 msgid "error.canvas.invalid_value"
-msgstr ""
+msgstr "Parte de lo que has introducido no se ha podido usar en el lienzo. Compruébalo e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:13
 msgid "error.analysis.invalid_request"
-msgstr ""
+msgstr "Parte de lo que has introducido no se ha podido usar. Compruébalo e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:5
 msgid "error.workspace.access_request_actioned"
-msgstr ""
+msgstr "Alguien ya ha respondido a esta solicitud."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:9
 msgid "error.member.changed_concurrently"
-msgstr ""
+msgstr "Alguien ha modificado esta membresía al mismo tiempo. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:27
 msgid "error.analysis.revision_conflict"
-msgstr ""
+msgstr "Alguien ha cambiado este resultado mientras lo mirabas. Recarga para ver su versión y vuelve a hacer tu cambio."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:40
 msgid "error.popcorn.settings_busy"
-msgstr ""
+msgstr "Alguien está guardando estos ajustes ahora mismo. Inténtalo de nuevo en un momento."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:21
 msgid "error.field.invalid_json"
-msgstr ""
+msgstr "No se ha podido leer algo de este formulario. Recarga la página e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:13
 msgid "error.request.invalid"
-msgstr ""
+msgstr "Algo en esta solicitud no era correcto. Recarga la página e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:18
 msgid "error.request.invalid_json"
-msgstr ""
+msgstr "Algo en esta solicitud no era correcto. Recarga la página e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:14
 msgid "error.internal.unexpected"
-msgstr ""
+msgstr "Algo ha fallado por nuestra parte. Inténtalo de nuevo en un momento."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:22
 msgid "error.account.otp_invalid"
-msgstr ""
+msgstr "Ese código no ha funcionado. Introduce el código actual de tu aplicación de autenticación."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:5
 msgid "error.training.completed_at_invalid"
-msgstr ""
+msgstr "No se ha podido leer esa fecha de finalización. Introdúcela de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:19
 msgid "error.report.schedule_invalid"
-msgstr ""
+msgstr "No se ha podido leer esa fecha y hora. Elige la hora de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
-msgstr ""
+msgstr "Esa contraseña no es correcta. Compruébala e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13
 msgid "error.member.invalid_role"
-msgstr ""
+msgstr "Ese rol no está disponible aquí. Elige uno de la lista."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/rate_limit.ts:5
 msgid "error.rate_limit.exceeded"
-msgstr ""
+msgstr "Han sido demasiadas solicitudes en poco tiempo. Espera un momento e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:14
 msgid "error.document.confirmation_mismatch"
-msgstr ""
+msgstr "El texto de confirmación no coincide. Escríbelo exactamente como se muestra: {expected}"
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:27
 msgid "error.project.methodology_read_only"
-msgstr ""
+msgstr "La metodología de dembrane no se puede cambiar. Haz una copia para editarla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:45
 msgid "error.popcorn.synthetic_frame_locked"
-msgstr ""
+msgstr "El marco de una presentación de demostración se define con la demo y no se puede cambiar aquí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:5
 msgid "error.agent.insight_content_blank"
-msgstr ""
+msgstr "La conclusión no puede estar vacía. Escribe algo o elimínala."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:23
 msgid "error.present.map_results_unavailable"
-msgstr ""
+msgstr "El mapa de esta presentación no está disponible."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:19
 msgid "error.present.map_results_not_ready"
-msgstr ""
+msgstr "El mapa aún no está listo. Aparecerá aquí en cuanto lo esté."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:25
 msgid "error.map.not_ready"
-msgstr ""
+msgstr "El mapa aún se está creando. Espera un momento e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:34
 msgid "error.map.selection_other_snapshot"
-msgstr ""
+msgstr "El mapa se ha actualizado desde que hiciste esta selección. Recarga el mapa y vuelve a seleccionar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:63
 msgid "error.document.no_pdf"
-msgstr ""
+msgstr "El PDF de este documento no está disponible. Contacta con nosotros y te lo volveremos a enviar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
-msgstr ""
+msgstr "El PDF de esta factura aún no está listo. Inténtalo de nuevo en un momento."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
 msgid "error.upload.failed"
-msgstr ""
+msgstr "La subida no ha terminado. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:23
 msgid "error.request.nothing_to_update"
-msgstr ""
+msgstr "No hay cambios que guardar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:21
 msgid "error.agent.insight_update_empty"
-msgstr ""
+msgstr "No hay cambios que guardar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:25
 msgid "error.agent.no_active_turn"
-msgstr ""
+msgstr "No hay ninguna respuesta en curso para detener."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:64
 msgid "error.workspace.handoff_none_pending"
-msgstr ""
+msgstr "No hay ningún traspaso pendiente para este espacio de trabajo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:22
 msgid "error.billing.no_payment_profile"
-msgstr ""
+msgstr "Aún no hay ningún método de pago que actualizar. Elige un plan primero."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
 msgid "error.billing.already_subscribed"
-msgstr ""
+msgstr "Esta cuenta ya tiene una suscripción activa."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:5
 msgid "error.present.activity_not_in_presentation"
-msgstr ""
+msgstr "Esta actividad ya no forma parte de la presentación. Recarga la página."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/announcement.ts:5
 msgid "error.announcement.not_found"
-msgstr ""
+msgstr "Este anuncio ya no está disponible."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:41
 msgid "error.canvas.loop_not_found"
-msgstr ""
+msgstr "Este lienzo no se actualiza por sí solo, así que no hay nada que cambiar aquí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:36
 msgid "error.canvas.loop_ended"
-msgstr ""
+msgstr "Este lienzo ha dejado de actualizarse. Crea un nuevo lienzo para mantenerlo al día."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:31
 msgid "error.canvas.just_refreshed"
-msgstr ""
+msgstr "Este lienzo se acaba de actualizar. Espera un momento antes de actualizarlo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:31
 msgid "error.chat.mode_already_set"
-msgstr ""
+msgstr "Este chat ya tiene un modo asignado. Inicia un nuevo chat para usar uno diferente."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:5
 msgid "error.chat.context_full"
-msgstr ""
+msgstr "Este chat está lleno. Elimina algunas conversaciones para hacer espacio para esta."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/pricing.ts:5
 msgid "error.pricing.configuration_not_owned"
-msgstr ""
+msgstr "Esta configuración pertenece a otra persona. Empieza una nueva."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:19
 msgid "error.agent_access.request_expired"
-msgstr ""
+msgstr "Esta solicitud de conexión ha caducado. Vuelve a empezar desde tu agente."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:19
 msgid "error.conversation.no_content"
-msgstr ""
+msgstr "Esta conversación aún no tiene audio."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:15
 msgid "error.chat.conversation_already_added"
-msgstr ""
+msgstr "Esta conversación ya está en el chat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:9
 msgid "error.conversation.locked"
-msgstr ""
+msgstr "Esta conversación está bloqueada en tu plan actual. Mejora tu plan para abrirla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:23
 msgid "error.chat.conversation_not_in_chat"
-msgstr ""
+msgstr "Esta conversación ya no está en el chat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:31
 msgid "error.conversation.not_open"
-msgstr ""
+msgstr "Esta conversación no está abierta ahora mismo. Pide un nuevo enlace a la persona que organiza."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:27
 msgid "error.chat.conversation_too_long"
-msgstr ""
+msgstr "Esta conversación es demasiado larga para añadirla a un chat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:22
 msgid "error.workspace.data_owner_is_member"
-msgstr ""
+msgstr "Esta persona titular de los datos ya está en tu organización. Para un cliente externo, indica a alguien fuera de ella, o bien crea un espacio de trabajo interno."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:76
 msgid "error.document.not_declinable"
-msgstr ""
+msgstr "Este documento ya no se puede rechazar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:103
 msgid "error.document.signing_unavailable"
-msgstr ""
+msgstr "Este documento no se puede firmar ahora mismo. Ya estamos al tanto y lo solucionaremos."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:9
 msgid "error.document.changed"
-msgstr ""
+msgstr "Este documento ha cambiado desde que lo abriste. Recarga la página y léelo de nuevo antes de firmar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:48
 msgid "error.document.field_unknown"
-msgstr ""
+msgstr "Este documento ha cambiado desde que lo abriste. Recarga la página e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:68
 msgid "error.document.no_signature_needed"
-msgstr ""
+msgstr "Este documento no necesita firma."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:5
 msgid "error.document.already_signed"
-msgstr ""
+msgstr "Este documento ya está firmado. No hay nada más que hacer."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:84
 msgid "error.document.not_signed"
-msgstr ""
+msgstr "Este documento aún no está firmado, por lo que no hay ninguna copia firmada para descargar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:72
 msgid "error.document.not_awaiting_signature"
-msgstr ""
+msgstr "Este documento ya no está esperando firma."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:23
 msgid "error.document.declined"
-msgstr ""
+msgstr "Este documento fue rechazado, por lo que ya no se puede firmar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:112
 msgid "error.document.withdrawn"
-msgstr ""
+msgstr "Este documento fue retirado, por lo que ya no se puede firmar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:15
 msgid "error.popcorn.feature_disabled"
-msgstr ""
+msgstr "Esta función no está disponible para este proyecto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:9
 msgid "error.upload.empty"
-msgstr ""
+msgstr "Este archivo está vacío. Elige otro archivo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:25
 msgid "error.upload.too_large"
-msgstr ""
+msgstr "Este archivo es demasiado grande. Los archivos pueden tener como máximo {max_mb} MB."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:14
 msgid "error.account.image_too_large"
-msgstr ""
+msgstr "Esta imagen es demasiado grande. Las imágenes pueden tener como máximo {max_mb} MB."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:5
 msgid "error.invite.already_accepted"
-msgstr ""
+msgstr "Esta invitación ya ha sido aceptada."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:9
 msgid "error.invite.expired"
-msgstr ""
+msgstr "Esta invitación ha caducado. Pide a la persona que te invitó que te envíe una nueva."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:14
 msgid "error.invite.not_for_you"
-msgstr ""
+msgstr "Esta invitación se envió a otra dirección de correo electrónico. Inicia sesión con esa dirección para aceptarla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:22
 msgid "error.member.last_admin_remove"
-msgstr ""
+msgstr "Es el último administrador. Asigna el rol de administrador a otra persona antes de eliminarla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:17
 msgid "error.member.last_admin"
-msgstr ""
+msgstr "Es el último administrador. Asigna primero el rol de administrador o propietario a otra persona."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:27
 msgid "error.member.last_owner"
-msgstr ""
+msgstr "Es el último propietario. Traspasa primero la propiedad a otra persona."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:31
 msgid "error.member.last_owner_demote"
-msgstr ""
+msgstr "Es el último propietario. Asigna primero el rol de propietario a otra persona."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:27
 msgid "error.request.too_large"
-msgstr ""
+msgstr "Esto es demasiado grande para enviarlo. Prueba con algo más pequeño."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:23
 msgid "error.analysis.read_only_type"
-msgstr ""
+msgstr "Este tipo de resultado no se puede editar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:13
 msgid "error.participant.token_invalid"
-msgstr ""
+msgstr "Este enlace no coincide con esta conversación. Vuelve a abrir el enlace que recibiste."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:97
 msgid "error.workspace.logo_url_too_long"
-msgstr ""
+msgstr "El enlace de este logo es demasiado largo. Usa un enlace más corto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:63
 msgid "error.billing.tier_required"
-msgstr ""
+msgstr "Para esto se necesita el plan {required}. Mejora tu plan para usarlo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:89
 msgid "error.document.offer_expired"
-msgstr ""
+msgstr "Esta oferta caducó el {valid_until}. Contáctanos para recibir una nueva."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:73
 msgid "error.workspace.handoff_same_org"
-msgstr ""
+msgstr "Esta organización ya paga por este espacio de trabajo. Elige otra."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:19
 msgid "error.organisation.deleted"
-msgstr ""
+msgstr "Esta organización ya no existe."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:9
 msgid "error.analysis.field_not_editable"
-msgstr ""
+msgstr "Esta parte del resultado no se puede editar aquí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:31
 msgid "error.account.password_weak"
-msgstr ""
+msgstr "Esta contraseña no es lo bastante segura. Prueba con una más larga combinando letras, números y símbolos."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:29
 msgid "error.invite.outsider_is_admin"
-msgstr ""
+msgstr "Esta persona tiene un rol de administrador, propietario o facturación en tu organización, por lo que no puede unirse como colaborador externo. Cambia su rol primero."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:34
 msgid "error.invite.outsider_is_member"
-msgstr ""
+msgstr "Esta persona ya es miembro de tu organización, por lo que no puede unirse como colaborador externo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:23
 msgid "error.organisation.external_cannot_manage"
-msgstr ""
+msgstr "Esta persona es externa en uno de tus espacios de trabajo. Quítale ese rol primero y luego asígnale el de administrador o propietario."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
 msgid "error.member.not_found"
-msgstr ""
+msgstr "Esta persona ya no es miembro. Recarga la página para ver la lista actualizada."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:40
 msgid "error.member.not_in_workspace"
-msgstr ""
+msgstr "Esta persona no es miembro de este espacio de trabajo. Recarga la página para ver la lista actualizada."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:128
 msgid "error.project.share_not_member"
-msgstr ""
+msgstr "Esta persona todavía no está en el espacio de trabajo. Invítala primero al espacio de trabajo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:5
 msgid "error.member.already_removed"
-msgstr ""
+msgstr "Esta persona ya fue eliminada."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_not_purchasable"
-msgstr ""
+msgstr "Este plan no se puede comprar por internet. Contáctanos para conseguirlo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:15
 msgid "error.present.map_not_in_presentation"
-msgstr ""
+msgstr "Esta presentación no muestra ningún mapa."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:27
 msgid "error.popcorn.loop_not_found"
-msgstr ""
+msgstr "Esta presentación no está en curso. Iníciala de nuevo para continuar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:35
 msgid "error.popcorn.public_not_found"
-msgstr ""
+msgstr "Este enlace a la presentación ya no funciona. Pide al anfitrión un nuevo enlace."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/present.ts:10
 msgid "error.present.draft_conflict"
-msgstr ""
+msgstr "Esta presentación se modificó en otro lugar. Recarga para ver la última versión y vuelve a hacer el cambio."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:105
 msgid "error.project.privacy_policy_too_long"
-msgstr ""
+msgstr "Este enlace a la política de privacidad es demasiado largo. Usa un enlace de 255 caracteres como máximo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:64
 msgid "error.project.no_conversations"
-msgstr ""
+msgstr "Este proyecto aún no tiene conversaciones."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:13
 msgid "error.map.no_map_yet"
-msgstr ""
+msgstr "Este proyecto aún no tiene mapa. Crea uno para verlo aquí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:68
 msgid "error.project.no_transcripts"
-msgstr ""
+msgstr "Este proyecto aún no tiene transcripciones."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:124
 msgid "error.project.share_not_found"
-msgstr ""
+msgstr "Este proyecto ya no está compartido con esa persona."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:82
 msgid "error.project.not_in_workspace"
-msgstr ""
+msgstr "Este proyecto no está en este espacio de trabajo. Elige un proyecto de este espacio de trabajo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:72
 msgid "error.project.no_workspace"
-msgstr ""
+msgstr "Este proyecto no forma parte de un espacio de trabajo, por lo que este ajuste no está disponible. Contacta con soporte para moverlo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:5
 msgid "error.participant.report_not_found"
-msgstr ""
+msgstr "Este informe no está disponible. Puede que aún no se haya publicado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:14
 msgid "error.report.not_scheduled"
-msgstr ""
+msgstr "Este informe no está programado, así que no hay nada que publicar antes de tiempo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:10
 msgid "error.project.events_dembrane_only"
-msgstr ""
+msgstr "Este ajuste solo está disponible para cuentas propias de dembrane."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:23
 msgid "error.verify.not_enabled"
-msgstr ""
+msgstr "Este paso está desactivado para este proyecto. Pide al administrador del proyecto que lo active."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:128
 msgid "error.workspace.support_request_expired"
-msgstr ""
+msgstr "Esta solicitud de soporte ha caducado. Pide al equipo de soporte de dembrane que te envíe una nueva si aún necesitas ayuda."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:133
 msgid "error.workspace.support_request_handled"
-msgstr ""
+msgstr "Esta solicitud de soporte ya fue respondida."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:21
 msgid "error.task.not_open"
-msgstr ""
+msgstr "Esta tarea aún no está abierta. Completa primero el paso anterior."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:25
 msgid "error.task.not_waiting"
-msgstr ""
+msgstr "Esta tarea no está esperando tu respuesta en este momento."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:13
 msgid "error.task.file_required"
-msgstr ""
+msgstr "Esta tarea necesita un archivo. Añade uno y vuelve a enviarla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:14
 msgid "error.template.quick_access_duplicate"
-msgstr ""
+msgstr "Esta plantilla ya está en el acceso rápido."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:13
 msgid "error.training.no_license"
-msgstr ""
+msgstr "Esta formación no incluye licencia."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:17
 msgid "error.training.not_available"
-msgstr ""
+msgstr "Esta formación aún no se puede reservar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:33
 msgid "error.upload.unsupported_type"
-msgstr ""
+msgstr "Este tipo de archivo no es compatible."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:22
 msgid "error.participant.unsubscribe_link_invalid"
-msgstr ""
+msgstr "Este enlace para darse de baja está incompleto. Abre de nuevo el enlace de tu correo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:26
 msgid "error.field.invalid_type"
-msgstr ""
+msgstr "Este valor no es del tipo correcto. Revísalo e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:32
 msgid "error.analysis.revision_not_found"
-msgstr ""
+msgstr "Esta versión del resultado ya no existe. Recarga la página para ver la más reciente."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:23
 msgid "error.popcorn.just_refreshed"
-msgstr ""
+msgstr "Esto se acaba de actualizar. Espera unos segundos antes de intentarlo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:110
 msgid "error.workspace.paid_rescope"
-msgstr ""
+msgstr "Este espacio de trabajo tiene facturación de pago, así que no podemos cambiarlo entre interno y externo por ti. Contacta con el equipo de soporte para trasladar la facturación primero."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:78
 msgid "error.workspace.handoff_shared_plan"
-msgstr ""
+msgstr "Este espacio de trabajo está en el plan compartido de tu organización, por lo que no se puede transferir. Solo los espacios de trabajo con su propia facturación se pueden mover."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:119
 msgid "error.workspace.private"
-msgstr ""
+msgstr "Este espacio de trabajo es privado. Pídele a un administrador del espacio de trabajo que te invite."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:40
 msgid "error.workspace.deleted"
-msgstr ""
+msgstr "Este espacio de trabajo ya no existe."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:88
 msgid "error.workspace.has_projects"
-msgstr ""
+msgstr "Este espacio de trabajo aún tiene {count, plural, one {# proyecto} other {# proyectos}}. Elimínalos o muévelos primero desde la página de Proyectos de tu organización."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:32
 msgid "error.document.field_must_tick"
-msgstr ""
+msgstr "Marca {label} para continuar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:44
 msgid "error.document.field_tick_invalid"
-msgstr ""
+msgstr "Marca o desmarca {label}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:37
 msgid "error.project.move_needs_admin"
-msgstr ""
+msgstr "Para mover proyectos, necesitas ser administrador o propietario del espacio de trabajo {side}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:108
 msgid "error.document.verified_email_required"
-msgstr ""
+msgstr "Para firmar, inicia sesión con una dirección de correo electrónico verificada."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:36
 msgid "error.account.tfa_already_enabled"
-msgstr ""
+msgstr "La autenticación en dos pasos ya está activada en tu cuenta."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:40
 msgid "error.account.tfa_not_enabled"
-msgstr ""
+msgstr "La autenticación en dos pasos no está activada en tu cuenta, así que no hay nada que desactivar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:18
 msgid "error.account.image_type"
-msgstr ""
+msgstr "Sube una imagen PNG, JPEG, WebP o GIF."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:93
 msgid "error.workspace.logo_url_invalid"
-msgstr ""
+msgstr "Usa un enlace al logo que empiece por http:// o https://."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:54
 msgid "error.field.too_small"
-msgstr ""
+msgstr "Usa un número de al menos {min}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:42
 msgid "error.field.too_large"
-msgstr ""
+msgstr "Usa un número de {max} como máximo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:50
 msgid "error.field.too_short"
-msgstr ""
+msgstr "Usa al menos {min_length} caracteres."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/field.ts:46
 msgid "error.field.too_long"
-msgstr ""
+msgstr "Usa {max_length} caracteres como máximo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:22
 msgid "error.webhook.target_not_allowed"
-msgstr ""
+msgstr "No podemos enviar webhooks a esta dirección. Usa una dirección web pública."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:13
 msgid "error.canvas.extraction_failed"
-msgstr ""
+msgstr "No pudimos generar la vista previa del canvas en este momento. Inténtalo de nuevo en unos instantes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:45
 msgid "error.chat.verify_unavailable"
-msgstr ""
+msgstr "No pudimos comprobar este chat en este momento. Inténtalo de nuevo en unos instantes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:21
 msgid "error.upload.probe_url_failed"
-msgstr ""
+msgstr "No pudimos comprobar tu conexión. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:35
 msgid "error.billing.request_failed"
-msgstr ""
+msgstr "No pudimos completar este cambio de facturación. Contáctanos y lo solucionaremos."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:51
 msgid "error.map.title_failed"
-msgstr ""
+msgstr "No pudimos crear un título en este momento. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:5
 msgid "error.conversation.delete_failed"
-msgstr ""
+msgstr "No pudimos eliminar esta conversación. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:83
 msgid "error.workspace.handoff_target_not_found"
-msgstr ""
+msgstr "No pudimos encontrar esa organización. Comprueba el nombre e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:50
 msgid "error.project.move_target_not_found"
-msgstr ""
+msgstr "No pudimos encontrar el espacio de trabajo que elegiste. Puede que haya sido eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:41
 msgid "error.analysis.snapshot_not_found"
-msgstr ""
+msgstr "No pudimos encontrar estos resultados de análisis. Recarga la página para ver los más recientes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent_access.ts:9
 msgid "error.agent_access.grant_not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta conexión de agente. Puede que ya haya sido eliminada."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:37
 msgid "error.analysis.run_not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta ejecución de análisis."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:5
 msgid "error.billing.account_not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta cuenta de facturación."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:46
 msgid "error.canvas.not_found"
-msgstr ""
+msgstr "No pudimos encontrar este canvas. Puede que haya sido eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:33
 msgid "error.agent.run_not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta ejecución de chat. Recarga la página e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:36
 msgid "error.chat.not_found"
-msgstr ""
+msgstr "No pudimos encontrar este chat. Puede que haya sido eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:27
 msgid "error.conversation.not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta conversación. Puede que haya sido eliminada."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:80
 msgid "error.document.not_found"
-msgstr ""
+msgstr "No pudimos encontrar este documento. Puede que haya sido retirado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:17
 msgid "error.upload.file_not_found"
-msgstr ""
+msgstr "No pudimos encontrar este archivo. Puede que haya sido eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:13
 msgid "error.agent.insight_not_found"
-msgstr ""
+msgstr "No pudimos encontrar este insight. Puede que haya sido eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:19
 msgid "error.invite.not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta invitación. Puede que haya sido retirada o ya se haya utilizado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:9
 msgid "error.training.license_not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta licencia."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:21
 msgid "error.map.not_found"
-msgstr ""
+msgstr "No pudimos encontrar este mapa."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/memory.ts:13
 msgid "error.memory.not_found"
-msgstr ""
+msgstr "No pudimos encontrar este recuerdo. Puede que se haya eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:5
 msgid "error.feedback.message_not_found"
-msgstr ""
+msgstr "No pudimos encontrar este mensaje. Puede que se haya eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:23
 msgid "error.project.methodology_not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta metodología. Puede que se haya eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/notification.ts:5
 msgid "error.notification.not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta notificación. Puede que se haya eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:41
 msgid "error.organisation.not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta organización."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:31
 msgid "error.popcorn.not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta presentación."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:77
 msgid "error.project.not_found"
-msgstr ""
+msgstr "No pudimos encontrar este proyecto. Puede que se haya eliminado o que no tengas acceso."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/question.ts:5
 msgid "error.question.not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta pregunta. Puede que se haya eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/report.ts:10
 msgid "error.report.not_found"
-msgstr ""
+msgstr "No pudimos encontrar este informe. Puede que se haya eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:9
 msgid "error.workspace.access_request_not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta solicitud. Puede que se haya retirado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:18
 msgid "error.analysis.object_not_found"
-msgstr ""
+msgstr "No pudimos encontrar este resultado. Puede que se haya eliminado al volver a ejecutar el análisis."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:27
 msgid "error.participant.unsubscribe_link_unknown"
-msgstr ""
+msgstr "No pudimos encontrar esta suscripción. Puede que ya te hayas dado de baja."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/tag.ts:5
 msgid "error.tag.not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta etiqueta. Puede que se haya eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:17
 msgid "error.task.not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta tarea. Puede que se haya retirado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:10
 msgid "error.template.not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta plantilla. Puede que se haya eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:32
 msgid "error.verify.topic_unknown"
-msgstr ""
+msgstr "No pudimos encontrar este tema. Vuelve atrás y elige otro."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:28
 msgid "error.verify.topic_not_found"
-msgstr ""
+msgstr "No pudimos encontrar este tema. Puede que se haya eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:21
 msgid "error.training.not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta formación."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/popcorn.ts:50
 msgid "error.popcorn.version_not_found"
-msgstr ""
+msgstr "No pudimos encontrar esta versión de la presentación."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/webhook.ts:18
 msgid "error.webhook.not_found"
-msgstr ""
+msgstr "No pudimos encontrar este webhook. Puede que se haya eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:105
 msgid "error.workspace.not_found"
-msgstr ""
+msgstr "No pudimos encontrar este espacio de trabajo. Puede que se haya eliminado o que no tengas acceso."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:5
 msgid "error.verify.artifact_not_found"
-msgstr ""
+msgstr "No pudimos encontrar esto. Puede que se haya eliminado."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:46
 msgid "error.analysis.storage_unavailable"
-msgstr ""
+msgstr "No pudimos cargar el análisis en este momento. Inténtalo de nuevo en unos instantes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:47
 msgid "error.map.storage_unavailable"
-msgstr ""
+msgstr "No pudimos cargar el mapa en este momento. Inténtalo de nuevo en unos instantes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:45
 msgid "error.account.user_not_found"
-msgstr ""
+msgstr "No pudimos cargar tu cuenta. Contacta con soporte y lo solucionaremos."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:13
 msgid "error.billing.checkout_failed"
-msgstr ""
+msgstr "No pudimos abrir la página de pago. Inténtalo de nuevo en unos instantes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:14
 msgid "error.conversation.merge_failed"
-msgstr ""
+msgstr "No pudimos unir el audio de esta conversación. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:9
 msgid "error.internal.unavailable"
-msgstr ""
+msgstr "No pudimos conectar con una parte de dembrane en este momento. Inténtalo de nuevo en unos instantes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:93
 msgid "error.document.signature_unreadable"
-msgstr ""
+msgstr "No pudimos leer tu firma. Dibújala de nuevo e inténtalo otra vez."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/pricing.ts:9
 msgid "error.pricing.reference_unavailable"
-msgstr ""
+msgstr "No pudimos guardar tus respuestas en este momento. Inténtalo de nuevo en unos instantes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:17
 msgid "error.feedback.save_failed"
-msgstr ""
+msgstr "No pudimos enviar tu informe. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:9
 msgid "error.participant.subscribe_failed"
-msgstr ""
+msgstr "No pudimos registrar todas las direcciones de correo. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:9
 msgid "error.map.generation_not_started"
-msgstr ""
+msgstr "No pudimos empezar a crear el mapa. Inténtalo de nuevo en unos instantes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:5
 msgid "error.map.fact_check_not_started"
-msgstr ""
+msgstr "No pudimos iniciar la verificación de datos. Inténtalo de nuevo en unos instantes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:37
 msgid "error.upload.url_failed"
-msgstr ""
+msgstr "No pudimos iniciar la subida. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:29
 msgid "error.upload.transcription_failed"
-msgstr ""
+msgstr "No pudimos transcribir este audio a texto. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:10
 msgid "error.chat.context_size_unavailable"
-msgstr ""
+msgstr "No pudimos calcular la capacidad de este chat en este momento. Inténtalo de nuevo en unos instantes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:45
 msgid "error.billing.seat_pricing_unavailable"
-msgstr ""
+msgstr "No pudimos calcular el precio por plaza en este momento. Inténtalo de nuevo en unos instantes."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:9
 msgid "error.verify.generation_failed"
-msgstr ""
+msgstr "No pudimos redactar esto en este momento. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/training.ts:25
 msgid "error.training.unknown_type"
-msgstr ""
+msgstr "No reconocemos este tipo de formación. Recarga la página y elige uno de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:18
 msgid "error.participant.token_required"
-msgstr ""
+msgstr "Hemos perdido el rastro de tu conversación. Recarga la página para continuar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:9
 msgid "error.feedback.message_required"
-msgstr ""
+msgstr "Escribe un mensaje breve sobre el problema."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:9
 msgid "error.agent.insight_content_required"
-msgstr ""
+msgstr "Escribe algo para el insight."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
-msgstr ""
+msgstr "Escribe algo para que la memoria lo guarde."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32
 msgid "error.organisation.no_access"
-msgstr ""
+msgstr "No eres miembro de esta organización."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:45
 msgid "error.organisation.not_member"
-msgstr ""
+msgstr "No eres miembro de esta organización."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:101
 msgid "error.workspace.no_access"
-msgstr ""
+msgstr "No eres miembro de este espacio de trabajo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:63
 msgid "error.member.sole_admin_leave"
-msgstr ""
+msgstr "Eres el único administrador. Nombra a otro administrador antes de salir."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:21
 msgid "error.feedback.too_many_attachments"
-msgstr ""
+msgstr "Puedes añadir como máximo {max} capturas de pantalla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/chat.ts:40
 msgid "error.chat.too_many_conversations"
-msgstr ""
+msgstr "Puedes añadir hasta {max} conversaciones a la vez. Selecciona menos e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:55
 msgid "error.project.move_too_many"
-msgstr ""
+msgstr "Puedes mover hasta {max} proyectos a la vez. Selecciona menos e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:5
 msgid "error.template.not_allowed"
-msgstr ""
+msgstr "Puedes usar esta plantilla, pero no modificarla. Pídeselo a un administrador del espacio de trabajo si lo necesitas."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/template.ts:27
 msgid "error.template.read_only_collaborator"
-msgstr ""
+msgstr "Puedes ver este espacio de trabajo, pero no añadir plantillas. Pide permisos de edición a un administrador del espacio de trabajo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:59
 msgid "error.member.role_above_own"
-msgstr ""
+msgstr "No puedes asignar a nadie un rol superior al tuyo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:54
 msgid "error.invite.self"
-msgstr ""
+msgstr "No puedes invitarte a ti mismo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:45
 msgid "error.member.outsider_role_switch"
-msgstr ""
+msgstr "No puedes cambiar aquí entre colaborador externo y miembro. Envíale una nueva invitación con el nuevo rol."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:5
 msgid "error.task.done_by_billing_details"
-msgstr ""
+msgstr "Completas esta tarea guardando tus datos de facturación."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/task.ts:9
 msgid "error.task.done_by_signing"
-msgstr ""
+msgstr "Completas esta tarea firmando el documento."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:42
 msgid "error.project.move_no_workspace_access"
-msgstr ""
+msgstr "No tienes acceso al espacio de trabajo de {side}."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/agent.ts:29
 msgid "error.agent.run_forbidden"
-msgstr ""
+msgstr "No tienes acceso a este chat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:60
 msgid "error.project.no_access"
-msgstr ""
+msgstr "No tienes acceso a este proyecto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/access.ts:5
 msgid "error.access.forbidden"
-msgstr ""
+msgstr "No tienes permiso para hacer esto."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:18
 msgid "error.verify.no_new_feedback"
-msgstr ""
+msgstr "Aún no has añadido nada nuevo. Indica qué cambiarías e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:54
 msgid "error.billing.tier_limit"
-msgstr ""
+msgstr "Has alcanzado el límite del plan gratuito. Actualiza tu plan para continuar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/rate_limit.ts:10
 msgid "error.rate_limit.too_many_streams"
-msgstr ""
+msgstr "Tienes demasiadas vistas en directo abiertas. Cierra algunas pestañas e inténtalo de nuevo en un momento."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/auth.ts:9
 msgid "error.auth.user_required"
-msgstr ""
+msgstr "Tienes que haber iniciado sesión para esto. Inicia sesión e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:39
 msgid "error.map.selection_too_large"
-msgstr ""
+msgstr "Has seleccionado demasiados elementos. Selecciona menos e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/workspace.ts:123
 msgid "error.workspace.removed_from"
-msgstr ""
+msgstr "Te han eliminado de este espacio de trabajo. Pide a un administrador del espacio de trabajo que te vuelva a invitar."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:9
 msgid "error.account.email_missing"
-msgstr ""
+msgstr "Tu cuenta aún no tiene dirección de correo electrónico. Contacta con el equipo de soporte para añadir una."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:27
 msgid "error.account.password_incorrect"
-msgstr ""
+msgstr "Tu contraseña actual no es correcta. Compruébala e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:5
 msgid "error.upload.confirm_failed"
-msgstr ""
+msgstr "Tu archivo ha llegado, pero no pudimos guardarlo. Inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/feedback.ts:13
 msgid "error.feedback.message_too_long"
-msgstr ""
+msgstr "Tu mensaje es demasiado largo. Hazlo más corto y envíalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:36
 msgid "error.organisation.no_billing_account"
-msgstr ""
+msgstr "Tu organización no tiene la facturación configurada, así que todavía no puedes añadir un espacio de trabajo. Contacta con el equipo de soporte y lo solucionaremos."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:9
 msgid "error.organisation.billing_canceled"
-msgstr ""
+msgstr "El plan de tu organización está cancelado. Reactívalo para añadir espacios de trabajo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:31
 msgid "error.billing.plan_inactive"
-msgstr ""
+msgstr "Tu plan no está activo. Reactívalo para añadir miembros."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/verify.ts:13
 msgid "error.verify.no_chunks"
-msgstr ""
+msgstr "Tu grabación aún no nos ha llegado. Espera un momento e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/auth.ts:5
 msgid "error.auth.session_expired"
-msgstr ""
+msgstr "Tu sesión ha terminado. Inicia sesión de nuevo para continuar."
