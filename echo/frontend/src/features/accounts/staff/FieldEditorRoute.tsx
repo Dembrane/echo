@@ -136,7 +136,11 @@ function Editor() {
 	const editable = doc.data.status === "draft";
 	const pageCount = saved.data?.page_count ?? doc.data.page_count ?? 1;
 	const current = fields.find((f) => f.uid === selected) ?? null;
+	// The backend refuses to send a document to sign without both: the name goes into the
+	// signature record and the confirmation sentence.
 	const hasSignature = fields.some((f) => f.kind === "signature");
+	const hasName = fields.some((f) => f.kind === "name");
+	const readyToSend = hasSignature && hasName;
 
 	const change = (uid: string, patch: Partial<DraftField>) => {
 		setFields((fs) =>
@@ -232,7 +236,15 @@ function Editor() {
 	return (
 		<Box px={{ base: "md", sm: "lg" }} py="lg">
 			<Stack gap="md">
-				<Group justify="space-between" gap="sm">
+				{/* Sticky, so Save and Send stay in reach while placing fields on a later page. */}
+				<Group
+					justify="space-between"
+					gap="sm"
+					pos="sticky"
+					top={0}
+					py="xs"
+					style={{ background: "var(--app-background)", zIndex: 5 }}
+				>
 					<Stack gap={2} style={{ minWidth: 0 }}>
 						<Anchor
 							component={I18nLink}
@@ -271,7 +283,7 @@ function Editor() {
 							</Button>
 							<Button
 								onClick={send}
-								disabled={dirty || !hasSignature}
+								disabled={dirty || !readyToSend}
 								loading={busy === "send"}
 								data-testid="fields-send"
 							>
@@ -312,7 +324,7 @@ function Editor() {
 							p="sm"
 							w={280}
 							pos="sticky"
-							top={16}
+							top={88}
 							style={{ flexShrink: 0 }}
 							data-testid="field-panel"
 						>
@@ -432,14 +444,28 @@ function Editor() {
 										</Trans>
 									</Text>
 								)}
-								<Text size="xs" c={hasSignature ? "dimmed" : "orange.8"}>
+								<Text size="xs" c="dimmed">
 									<Plural
 										value={fields.length}
 										one="# field"
 										other="# fields"
 									/>
-									{hasSignature ? "" : ` · ${t`add a signature field to send`}`}
 								</Text>
+								{!readyToSend && (
+									<Text size="xs" c="orange.8" data-testid="send-blocked">
+										{!hasName && !hasSignature ? (
+											<Trans>
+												To send, add a name field and a signature field.
+											</Trans>
+										) : !hasName ? (
+											<Trans>
+												To send, add a name field: it names the signer.
+											</Trans>
+										) : (
+											<Trans>To send, add a signature field.</Trans>
+										)}
+									</Text>
+								)}
 							</Stack>
 						</Paper>
 					)}

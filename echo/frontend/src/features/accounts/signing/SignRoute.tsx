@@ -396,10 +396,31 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 							signature={signature}
 							initials={initials}
 							nameForSignature={nameValue}
+							// Adopting a signature is the step's decision, so it also moves on.
 							onSignature={(img) => {
 								setSignature(img);
+								goTo(
+									nextStop(
+										fields,
+										values,
+										{ ...images, signature: true },
+										current,
+										visited,
+									),
+								);
 							}}
-							onInitials={setInitials}
+							onInitials={(img) => {
+								setInitials(img);
+								goTo(
+									nextStop(
+										fields,
+										values,
+										{ ...images, initials: true },
+										current,
+										visited,
+									),
+								);
+							}}
 							canGoBack={previousField(fields, current) !== null}
 							onBack={back}
 							onNext={next}
@@ -466,7 +487,11 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 							)}
 							{confirmation && (!asksDpa || dpa) && (
 								<Paper withBorder p="xs" radius="sm" bg="gray.0">
-									<Text size="sm" data-testid="sign-confirmation">
+									<Text
+										size="sm"
+										data-testid="sign-confirmation"
+										style={{ overflowWrap: "anywhere" }}
+									>
 										{confirmation}
 									</Text>
 								</Paper>
@@ -697,7 +722,15 @@ function FieldPanel({
 						</Trans>
 					</Text>
 				)}
-				{nav}
+				{shown && !redo ? (
+					nav
+				) : (
+					<Group mt="xs">
+						<Button variant="default" onClick={onBack} disabled={!canGoBack}>
+							<Trans>Back</Trans>
+						</Button>
+					</Group>
+				)}
 			</Stack>
 		);
 	}

@@ -355,10 +355,10 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 							<Table.Th>
 								<Trans>Task</Trans>
 							</Table.Th>
-							<Table.Th w={150}>
+							<Table.Th w={150} visibleFrom="sm">
 								<Trans>Status</Trans>
 							</Table.Th>
-							<Table.Th w={{ base: 110, sm: 190 }} />
+							<Table.Th w={{ base: 120, sm: 190 }} />
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>
@@ -381,8 +381,18 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 												? t`Next reminder ${formatDate(task.next_reminder_at, i18n.locale)}`
 												: (task.review_note ?? "")}
 									</Text>
+									{/* On a phone the status sits under the title. */}
+									<Badge
+										hiddenFrom="sm"
+										size="xs"
+										variant="light"
+										color={task.status === "submitted" ? "blue" : "gray"}
+										mt={2}
+									>
+										{taskStatusLabel(task.status)}
+									</Badge>
 								</Table.Td>
-								<Table.Td>
+								<Table.Td visibleFrom="sm">
 									<Badge
 										size="sm"
 										variant="light"
@@ -398,7 +408,7 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 									</Badge>
 								</Table.Td>
 								<Table.Td>
-									<Group gap={4} justify="flex-end" wrap="nowrap">
+									<Group gap={4} justify="flex-end">
 										{task.status === "submitted" && (
 											<>
 												<Button

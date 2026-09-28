@@ -155,10 +155,10 @@ function TaskRow({
 			}
 		>
 			<Flex
-				direction={{ base: "column", xs: "row" }}
+				direction={{ base: "column", sm: "row" }}
 				gap="sm"
 				justify="space-between"
-				align={{ base: "stretch", xs: "center" }}
+				align={{ base: "stretch", sm: "center" }}
 			>
 				<Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
 					<Group gap={6} wrap="nowrap">

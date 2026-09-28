@@ -3,9 +3,11 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Anchor,
 	Badge,
+	Box,
 	Button,
 	CopyButton,
 	Group,
+	Stack,
 	Table,
 	Text,
 } from "@mantine/core";
@@ -38,72 +40,142 @@ export function DocumentsTable({
 					<Trans>No documents yet.</Trans>
 				</Text>
 			) : (
-				<Table verticalSpacing="xs" horizontalSpacing="xs" layout="fixed">
-					<Table.Thead>
-						<Table.Tr>
-							<Table.Th>
-								<Trans>Document</Trans>
-							</Table.Th>
-							<Table.Th w={110}>
-								<Trans>Status</Trans>
-							</Table.Th>
-							<Table.Th w={120} ta="right" visibleFrom="sm">
-								<Trans>Amount</Trans>
-							</Table.Th>
-							<Table.Th w={{ base: 92, sm: 150 }} />
-						</Table.Tr>
-					</Table.Thead>
-					<Table.Tbody>
+				<>
+					{/* A phone gets a list: a four-column table does not fit next to the rail. */}
+					<Stack gap={0} hiddenFrom="sm" data-testid="documents-list">
 						{documents.map((doc) => (
-							<Fragment key={doc.id}>
-								<Table.Tr data-testid={`doc-${doc.kind}`}>
-									<Table.Td>
-										<Text size="sm" truncate>
-											{doc.title}
-										</Text>
-										<Text size="xs" c="dimmed" truncate>
-											{documentKindLabel(doc.kind)} ·{" "}
-											{formatDate(
-												doc.signed_at ?? doc.invoice?.issued_on ?? doc.sent_at,
-												i18n.locale,
-											)}
-											<Text span hiddenFrom="sm">
-												{doc.total_cents != null &&
-													` · ${formatMoney(doc.total_cents, doc.currency, i18n.locale)}`}
+							<Box
+								key={doc.id}
+								py="xs"
+								style={{
+									borderBottom: "1px solid var(--mantine-color-gray-3)",
+								}}
+							>
+								<Group
+									justify="space-between"
+									wrap="nowrap"
+									align="flex-start"
+									gap="xs"
+								>
+									<Stack gap={2} style={{ minWidth: 0 }}>
+										<Text size="sm">{doc.title}</Text>
+										<Group gap={6}>
+											<Badge
+												variant="light"
+												color={documentStatusColor(doc)}
+												size="xs"
+											>
+												{documentStatusLabel(doc)}
+											</Badge>
+											<Text size="xs" c="dimmed">
+												{formatMoney(
+													doc.total_cents,
+													doc.currency,
+													i18n.locale,
+												)}
 											</Text>
-										</Text>
-									</Table.Td>
-									<Table.Td>
-										<Badge
-											variant="light"
-											color={documentStatusColor(doc)}
-											size="sm"
-										>
-											{documentStatusLabel(doc)}
-										</Badge>
-									</Table.Td>
-									<Table.Td ta="right" visibleFrom="sm">
-										<Text size="sm">
-											{formatMoney(doc.total_cents, doc.currency, i18n.locale)}
-										</Text>
-									</Table.Td>
-									<Table.Td ta="right">
-										<DocumentAction orgId={orgId} doc={doc} />
-									</Table.Td>
-								</Table.Tr>
+										</Group>
+									</Stack>
+									<DocumentAction orgId={orgId} doc={doc} />
+								</Group>
 								{doc.invoice &&
 									doc.invoice.status !== "paid" &&
 									doc.invoice.status !== "void" && (
-										<Table.Tr>
-											<Table.Td colSpan={4} pt={0}>
-												<BankTransfer doc={doc} />
-											</Table.Td>
-										</Table.Tr>
+										<Box mt={4}>
+											<BankTransfer doc={doc} />
+										</Box>
 									)}
-							</Fragment>
+							</Box>
 						))}
-					</Table.Tbody>
-				</Table>
+					</Stack>
+					<Table
+						verticalSpacing="xs"
+						horizontalSpacing="xs"
+						layout="fixed"
+						visibleFrom="sm"
+					>
+						<Table.Thead>
+							<Table.Tr>
+								<Table.Th>
+									<Trans>Document</Trans>
+								</Table.Th>
+								<Table.Th w={110} visibleFrom="sm">
+									<Trans>Status</Trans>
+								</Table.Th>
+								<Table.Th w={120} ta="right" visibleFrom="sm">
+									<Trans>Amount</Trans>
+								</Table.Th>
+								<Table.Th w={{ base: 100, sm: 150 }} />
+							</Table.Tr>
+						</Table.Thead>
+						<Table.Tbody>
+							{documents.map((doc) => (
+								<Fragment key={doc.id}>
+									<Table.Tr data-testid={`doc-${doc.kind}`}>
+										<Table.Td>
+											<Text size="sm" lineClamp={2}>
+												{doc.title}
+											</Text>
+											{/* On a phone the status sits under the title: two columns fit. */}
+											<Badge
+												hiddenFrom="sm"
+												variant="light"
+												color={documentStatusColor(doc)}
+												size="xs"
+												my={2}
+											>
+												{documentStatusLabel(doc)}
+											</Badge>
+											<Text size="xs" c="dimmed" truncate>
+												{documentKindLabel(doc.kind)} ·{" "}
+												{formatDate(
+													doc.signed_at ??
+														doc.invoice?.issued_on ??
+														doc.sent_at,
+													i18n.locale,
+												)}
+												<Text span hiddenFrom="sm">
+													{doc.total_cents != null &&
+														` · ${formatMoney(doc.total_cents, doc.currency, i18n.locale)}`}
+												</Text>
+											</Text>
+										</Table.Td>
+										<Table.Td visibleFrom="sm">
+											<Badge
+												variant="light"
+												color={documentStatusColor(doc)}
+												size="sm"
+											>
+												{documentStatusLabel(doc)}
+											</Badge>
+										</Table.Td>
+										<Table.Td ta="right" visibleFrom="sm">
+											<Text size="sm">
+												{formatMoney(
+													doc.total_cents,
+													doc.currency,
+													i18n.locale,
+												)}
+											</Text>
+										</Table.Td>
+										<Table.Td ta="right">
+											<DocumentAction orgId={orgId} doc={doc} />
+										</Table.Td>
+									</Table.Tr>
+									{doc.invoice &&
+										doc.invoice.status !== "paid" &&
+										doc.invoice.status !== "void" && (
+											<Table.Tr>
+												<Table.Td colSpan={4} pt={0} style={{ borderTop: 0 }}>
+													<BankTransfer doc={doc} />
+												</Table.Td>
+											</Table.Tr>
+										)}
+								</Fragment>
+							))}
+						</Table.Tbody>
+					</Table>
+				</>
 			)}
 		</Section>
 	);
@@ -125,6 +197,7 @@ function DocumentAction({
 		return (
 			<Button
 				size="xs"
+				variant="light"
 				component={I18nLink}
 				to={`/o/${orgId}/account/documents/${doc.id}/sign`}
 			>

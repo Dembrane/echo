@@ -1,14 +1,16 @@
+import { Trans } from "@lingui/react/macro";
 import { useCallback, useMemo } from "react";
 import { BOOKING_REFERENCE_METADATA_KEY } from "@/components/pricing/bookingPrefill";
 import {
 	type BookingSignal,
+	bookingHostName,
 	PricingBookingStep,
 } from "@/components/pricing/PricingBookingStep";
 import { useV2Me } from "@/hooks/useV2Me";
 import { call } from "../api/client";
 
 /**
- * The needs form's cal.com step, reused as is. The booking is recorded on the account so
+ * The needs form's cal.com step, reused with its own intro line. The booking is recorded on the account so
  * staff see it on the card; the reference ties it to the needs form the account came from.
  */
 export default function BookCall({
@@ -42,9 +44,13 @@ export default function BookCall({
 		[orgId],
 	);
 	const noop = useCallback(() => {}, []);
+	const host = bookingHostName();
 
 	return (
 		<PricingBookingStep
+			intro={
+				<Trans>Pick a time. {host} reads your account before the call.</Trans>
+			}
 			reference={reference}
 			prefill={prefill}
 			onBooked={onBooked}

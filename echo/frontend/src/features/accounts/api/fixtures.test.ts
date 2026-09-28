@@ -137,6 +137,7 @@ describe("the fixture backend, through the client", () => {
 				pdf_base64: b64,
 				requires_signature: true,
 				send: false,
+				task: { body: null, title: "Teken de inkooporder" },
 				title: "Inkooporder",
 			},
 			params: { orgId: org },
@@ -149,6 +150,23 @@ describe("the fixture backend, through the client", () => {
 		).rejects.toMatchObject({
 			status: 422,
 		});
+		const signatureOnly = {
+			height: 0.06,
+			kind: "signature" as const,
+			label: "Handtekening",
+			page: 2,
+			width: 0.3,
+			x: 0.1,
+			y: 0.8,
+		};
+		await client.call("setDocumentFields", {
+			body: { fields: [signatureOnly] },
+			params: { docId, orgId: org },
+		});
+		// A document to sign needs a name field as well as a signature field.
+		await expect(
+			client.call("sendDocument", { params: { docId, orgId: org } }),
+		).rejects.toMatchObject({ status: 422 });
 		const set = await client.call("setDocumentFields", {
 			body: {
 				fields: [
@@ -179,9 +197,21 @@ describe("the fixture backend, through the client", () => {
 			params: { docId, orgId: org },
 		});
 		expect(sent.status).toBe("sent");
+		// No role field and no organisation field: {role} is left out and the
+		// organisation's own name is written in, as the server builds it.
+		const template = sent.confirmation?.dpa_authorised ?? "";
+		expect(template).toContain("{name}");
+		expect(template).not.toContain("{role}");
+		expect(template).toContain("Gemeente Voorbeeldstad");
 		const card = await client.call("accountCard", { params: { orgId: org } });
+		// The task given with the draft is created on send.
 		expect(
-			card.tasks.some((t) => t.document_id === docId && t.kind === "sign"),
+			card.tasks.some(
+				(t) =>
+					t.document_id === docId &&
+					t.kind === "sign" &&
+					t.title === "Teken de inkooporder",
+			),
 		).toBe(true);
 	});
 

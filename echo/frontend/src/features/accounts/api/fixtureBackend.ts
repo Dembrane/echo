@@ -52,11 +52,13 @@ interface Store {
 	needs_form_reference: string | null;
 	/** Uploaded PDFs, base64. */
 	uploads: Record<string, string>;
+	/** Tasks given with a draft, created when it is sent. */
+	pendingTasks: Record<string, { title: string; body: string | null }>;
 	/** Signature images and confirmation texts, for stamping the signed PDF. */
 	signatures: Record<string, { png: string; confirmation: string }>;
 }
 
-const KEY = "echo.accounts.fixtures.v1";
+const KEY = "echo.accounts.fixtures.v2";
 const DEMO = fx.accountPage.organisation.id;
 const now = () => new Date().toISOString();
 const uuid = () => crypto.randomUUID();
@@ -100,6 +102,7 @@ function demoStore(): Store {
 		name: fx.accountPage.organisation.name,
 		needs_form: clone(fx.accountCard.needs_form),
 		needs_form_reference: fx.accountPage.needs_form_reference,
+		pendingTasks: {},
 		signatures: {},
 		stage: fx.accountPage.organisation.account_stage,
 		tasks,
@@ -141,6 +144,7 @@ function otherStores(): Store[] {
 		name,
 		needs_form: null,
 		needs_form_reference: null,
+		pendingTasks: {},
 		signatures: {},
 		stage,
 		tasks: [],
@@ -378,15 +382,26 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
 	).join("");
 }
 
+/**
+ * The confirmation sentence as the server builds it: {role} only when the document has a
+ * role field, {organisation} only when a text field is keyed "organisation" (otherwise the
+ * organisation's own name is written in), {name} always.
+ */
 function confirmationFor(
 	language: "en" | "nl",
 	title: string,
 	reference: string,
 	sha: string,
 	withDpa: boolean,
+	fields: readonly { kind: string; key: string | null }[],
+	orgName: string,
 ) {
+	const role = fields.some((f) => f.kind === "role") ? ", {role}" : "";
+	const org = fields.some((f) => f.kind === "text" && f.key === "organisation")
+		? "{organisation}"
+		: orgName;
 	if (language === "nl") {
-		const base = `Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "${title}" (${reference}) zoals aan mij getoond, SHA-256 ${sha}.`;
+		const base = `Ik, {name}${role}, bevestig dat ik namens ${org} mag tekenen, en ik onderteken "${title}" (${reference}) zoals aan mij getoond, SHA-256 ${sha}.`;
 		return withDpa
 			? {
 					dpa_authorised: `${base} Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan.`,
@@ -394,7 +409,7 @@ function confirmationFor(
 				}
 			: { dpa_authorised: base, dpa_not_authorised: null };
 	}
-	const base = `I, {name}, {role}, confirm that I may sign on behalf of {organisation}, and I sign "${title}" (${reference}) as shown to me, SHA-256 ${sha}.`;
+	const base = `I, {name}${role}, confirm that I may sign on behalf of ${org}, and I sign "${title}" (${reference}) as shown to me, SHA-256 ${sha}.`;
 	return withDpa
 		? {
 				dpa_authorised: `${base} I am also authorised to enter into data processing arrangements on behalf of this organisation.`,
@@ -475,6 +490,23 @@ function signTaskFor(
 		status: "open",
 		title,
 	});
+}
+
+/** A document ready to sign gets its confirmation from the fields it was sent with. */
+function seal(s: Store, d: DocumentDetailT) {
+	d.confirmation = confirmationFor(
+		d.language,
+		d.title,
+		d.reference ?? d.id.slice(0, 8),
+		d.sha256 ?? "",
+		false,
+		d.fields,
+		s.name,
+	);
+	d.signing_note ??=
+		d.language === "nl"
+			? "Met je handtekening wordt dit document deel van de overeenkomst."
+			: "Your signature makes this document part of the agreement.";
 }
 
 type Body = Record<string, unknown>;
@@ -661,6 +693,8 @@ export async function handle(
 						dpa.reference ?? "",
 						dpa.sha256 ?? "",
 						false,
+						dpa.fields,
+						s.name,
 					);
 					s.docs.unshift(dpa);
 					signTaskFor(
@@ -857,7 +891,15 @@ export async function handle(
 				}
 				const d: DocumentDetailT = {
 					...clone(fx.offerDetail),
-					confirmation: confirmationFor(language, title, reference, sha, true),
+					confirmation: confirmationFor(
+						language,
+						title,
+						reference,
+						sha,
+						true,
+						offerFields(language),
+						s.name,
+					),
 					content: {
 						...clone(
 							fx.offerDetail.content as NonNullable<DocumentDetailT["content"]>,
@@ -968,9 +1010,7 @@ export async function handle(
 					signed_at: null,
 					signed_pdf_url: null,
 					signer: null,
-					signing_note: requires
-						? "Your signature makes this document part of the agreement."
-						: null,
+					signing_note: null,
 					status: sendNow ? "sent" : "draft",
 					subtotal_cents: null,
 					title: (body.title as string | null) ?? "Document",
@@ -981,14 +1021,6 @@ export async function handle(
 					viewed_at: null,
 					voided_at: null,
 				};
-				if (requires)
-					d.confirmation = confirmationFor(
-						d.language,
-						d.title,
-						d.reference ?? d.id.slice(0, 8),
-						d.sha256 ?? "",
-						false,
-					);
 				if (fields)
 					d.fields = fields.map((f, i) => ({
 						...f,
@@ -1004,6 +1036,8 @@ export async function handle(
 					title: string;
 					body: string | null;
 				} | null;
+				if (taskSpec && !sendNow) s.pendingTasks[d.id] = taskSpec;
+				if (sendNow && requires) seal(s, d);
 				const t =
 					taskSpec && sendNow
 						? requires
@@ -1073,20 +1107,45 @@ export async function handle(
 					throw new AccountsApiError(409, "Only a draft can be sent.");
 				if (
 					d.requires_signature &&
-					!d.fields.some((f) => f.kind === "signature")
+					!(
+						d.fields.some((f) => f.kind === "signature") &&
+						d.fields.some((f) => f.kind === "name")
+					)
 				) {
 					throw new AccountsApiError(
 						422,
-						"Place a signature field before sending.",
+						"A document to sign needs a name field and a signature field.",
 					);
 				}
 				d.status = "sent";
 				d.sent_at = now();
-				if (
-					d.requires_signature &&
-					!s.tasks.some((t) => t.document_id === d.id)
-				) {
-					signTaskFor(s, d, `Sign: ${d.title}`, null);
+				if (d.requires_signature) seal(s, d);
+				const taskSpec =
+					(body.task as { title: string; body: string | null } | null) ??
+					s.pendingTasks[d.id] ??
+					null;
+				delete s.pendingTasks[d.id];
+				if (!s.tasks.some((t) => t.document_id === d.id)) {
+					if (d.requires_signature) {
+						signTaskFor(
+							s,
+							d,
+							taskSpec?.title ?? `Sign: ${d.title}`,
+							taskSpec?.body ?? null,
+						);
+					} else if (taskSpec) {
+						openTask(s, {
+							body: taskSpec.body,
+							document_id: d.id,
+							due_on: null,
+							kind: "generic",
+							locked: false,
+							locked_until: null,
+							reminder_interval_days: null,
+							status: "open",
+							title: taskSpec.title,
+						});
+					}
 				}
 				event(
 					s,

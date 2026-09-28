@@ -152,7 +152,7 @@ export function PushOfferModal({
 						data-testid="offer-name"
 					/>
 					<TextInput
-						label={t`Greeting names`}
+						label={t`Name in the greeting`}
 						description={t`Optional`}
 						value={personName}
 						onChange={(e) => setPersonName(e.currentTarget.value)}
