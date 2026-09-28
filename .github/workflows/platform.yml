@@ -202,18 +202,19 @@ jobs:
       # Every vitest file under src; the Playwright specs in e2e/ are excluded in vite.config.ts.
       - name: Tests
         run: pnpm exec vitest run
-      # Fails when extract or compile changes a catalog. Lists messages English has that a
-      # locale leaves empty.
-      # TODO(main): once feat/error-codes lands its translation fill script, run it before
-      # the check and pass --strict, so a missing translation fails instead of warning.
+      # Fails when extract or compile changes a catalog, or when a locale lacks a message
+      # English has. Fill gaps locally with `pnpm translations:fill` (Gemini EU; entries land
+      # in each catalog's machine-translations.json for review) and commit the result.
       - name: Translations
         run: |
           pnpm messages:extract
           pnpm messages:compile
-          node scripts/check-translations.mjs
-      # The frontend builds against a copy of the platform's API contract.
+          node scripts/check-translations.mjs --strict
+      # The frontend builds against copies of the platform's API contract and error codes.
       - name: Contract
-        run: node scripts/sync-accounts-contract.mjs --check
+        run: |
+          node scripts/sync-accounts-contract.mjs --check
+          node scripts/sync-error-codes.mjs --check
       # The participant portal's first load must not grow: builds and compares with the
       # baseline recorded in the script.
       - name: Portal size
