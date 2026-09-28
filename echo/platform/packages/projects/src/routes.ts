@@ -5,6 +5,8 @@ import { p } from "@echo/legacy-shape";
 import { Hono } from "hono";
 import * as goals from "./goals";
 import type { JobSink } from "./jobs";
+import * as library from "./library";
+import { libraryStorage } from "./library-storage";
 import { progressStream } from "./progress";
 import * as projects from "./projects";
 import { PROJECT_UPDATE_FIELDS, type ProjectDeps } from "./projects";
@@ -45,7 +47,8 @@ const updateShape = Object.fromEntries(
 /**
  * Projects, reports, tags, goals, methodologies and prompt templates: the v1 /api/projects
  * and /api/templates routes, v2 /api/v2/projects, and the BFF tag, analysis-run, project,
- * goal and methodology routes. Paths, bodies and error texts match the Python API.
+ * goal and methodology routes, plus the library reads the dashboard took from Directus.
+ * Paths, bodies and error texts of ported routes match the Python API.
  */
 export function projectRoutes(deps: ProjectRoutesDeps) {
   const d: ProjectDeps = {
@@ -341,6 +344,31 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
   app.get("/api/v2/bff/analysis-runs/:run_id/new-chunks-count", async (c) => {
     const who = requireUser(c);
     return c.json(await tags.newChunksSince(d, who, c.req.param("run_id")));
+  });
+
+  // ── BFF library reads: views, aspects and quotes ────────────────────
+
+  const lib: library.LibraryDeps = { library: libraryStorage(deps.db), access: deps.access };
+
+  app.get("/api/v2/bff/views", async (c) => {
+    const who = requireUser(c);
+    const { query } = await p.validate(c.req, { query: { project_id: required(str()) } });
+    return c.json(await library.projectViews(lib, who, query.project_id));
+  });
+
+  app.get("/api/v2/bff/views/:view_id", async (c) => {
+    const who = requireUser(c);
+    return c.json(await library.getView(lib, who, c.req.param("view_id")));
+  });
+
+  app.get("/api/v2/bff/aspects/:aspect_id", async (c) => {
+    const who = requireUser(c);
+    return c.json(await library.getAspect(lib, who, c.req.param("aspect_id")));
+  });
+
+  app.get("/api/v2/bff/aspect-segments/:segment_id", async (c) => {
+    const who = requireUser(c);
+    return c.json(await library.getAspectSegment(lib, who, c.req.param("segment_id")));
   });
 
   app.get("/api/v2/bff/projects", async (c) => {

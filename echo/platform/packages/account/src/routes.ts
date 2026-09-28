@@ -2,6 +2,8 @@ import type { Config } from "@echo/config";
 import { type Env, requireUser, v } from "@echo/http";
 import { audiences } from "@echo/notifications";
 import { Hono } from "hono";
+import { assetRoutes } from "./assets";
+import { auditRoutes } from "./audit";
 import type { AccountDeps } from "./deps";
 import {
   acceptByHash,
@@ -38,7 +40,8 @@ export function accountDeps(d: AccountApiDeps): AccountDeps {
 
 /**
  * The signed-in user's own account (/api/v2/me, onboarding, user settings), invites in
- * both directions, and public registration.
+ * both directions, public registration, the caller's audit log, and the avatar and logo
+ * files Directus used to serve.
  */
 export function accountRoutes(api: AccountApiDeps) {
   const deps = accountDeps(api);
@@ -127,7 +130,9 @@ export function accountRoutes(api: AccountApiDeps) {
       await register(ctx(), clientIp(c), body);
       return c.body(null, 204);
     })
-    .route("/", settingsRoutes(deps));
+    .route("/", settingsRoutes(deps))
+    .route("/", auditRoutes(deps))
+    .route("/", assetRoutes(deps));
 }
 
 /** First X-Forwarded-For hop, as the old API took it (spec hole L-20: trusts the header). */

@@ -117,6 +117,25 @@ run("portal uploads and audio routes", () => {
     expect(forged.status).toBe(403);
   });
 
+  test("replies: oldest first, only through the conversation's own project", async () => {
+    const conv = newId();
+    await seed(sql, conv);
+    await sql`insert into conversation_reply (id, conversation_id, content_text, type, date_created)
+      values (${newId()}, ${conv}, 'second', 'assistant_reply', '2026-09-27T10:05:00Z'),
+             (${newId()}, ${conv}, 'first', 'assistant_reply', '2026-09-27T10:00:00Z')`;
+    const res = await app.request(
+      `/api/participant/projects/${PROJECT}/conversations/${conv}/replies`,
+    );
+    expect(res.status).toBe(200);
+    const rows = (await res.json()) as { content_text: string; date_created: string }[];
+    expect(rows.map((r) => r.content_text)).toEqual(["first", "second"]);
+    expect(rows[0]?.date_created).toBe("2026-09-27T10:00:00.000Z");
+    const elsewhere = await app.request(
+      `/api/participant/projects/${newId()}/conversations/${conv}/replies`,
+    );
+    expect(elsewhere.status).toBe(404);
+  });
+
   test("the legacy upload stores the file under the chunk's key and starts its run", async () => {
     const cid = newId();
     await seed(sql, cid);
