@@ -11,7 +11,7 @@ resource "google_service_account" "media" {
   display_name = "echo ${var.env} media service (ffmpeg)"
 }
 resource "google_project_iam_member" "media" {
-  for_each = toset(["roles/cloudtrace.agent", "roles/monitoring.metricWriter"])
+  for_each = toset(["roles/monitoring.metricWriter"])
   project  = var.project
   role     = each.value
   member   = google_service_account.media.member

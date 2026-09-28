@@ -7,7 +7,7 @@ export default {
     portalUrl: "https://portal.dembrane.com",
   },
   database: { poolMax: 10 },
-  observability: { gcpProject: "dembrane-echo", traceSampleRatio: 0.1 },
+  observability: { gcpProject: "dembrane-echo", traceSampleRatio: 0 },
   auth: { cookieDomain: "dembrane.com" },
   billing: { customerJobs: "on" },
 } satisfies Environment;

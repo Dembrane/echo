@@ -8,12 +8,13 @@ export interface LoggerOptions {
   readonly release: string;
   readonly env: string;
   readonly level: string;
-  /** GCP project that owns the traces, so Cloud Logging links a log line to its trace. */
+  /** GCP project whose Cloud Logging groups a request's log lines by its trace id. */
   readonly gcpProject?: string;
 }
 
-// Cloud Logging reads `severity` and `message`, and links `logging.googleapis.com/trace`
-// to Cloud Trace. Anything else in the line lands in jsonPayload and stays queryable.
+// Cloud Logging reads `severity` and `message`, and groups lines that share
+// `logging.googleapis.com/trace`. Cloud Trace is off (it has no EU storage), so the id only
+// correlates log lines. Anything else in the line lands in jsonPayload and stays queryable.
 const SEVERITY: Record<string, string> = {
   trace: "DEBUG",
   debug: "DEBUG",

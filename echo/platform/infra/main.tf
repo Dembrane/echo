@@ -7,7 +7,6 @@ locals {
     "secretmanager.googleapis.com",
     "iamcredentials.googleapis.com",
     "sts.googleapis.com",
-    "cloudtrace.googleapis.com",
     "logging.googleapis.com",
     "monitoring.googleapis.com",
   ]
@@ -139,13 +138,13 @@ resource "google_service_account" "deployer" {
 }
 
 resource "google_project_iam_member" "api" {
-  for_each = toset(["roles/cloudsql.client", "roles/cloudtrace.agent", "roles/aiplatform.user", "roles/monitoring.metricWriter"])
+  for_each = toset(["roles/cloudsql.client", "roles/aiplatform.user", "roles/monitoring.metricWriter"])
   project  = var.project
   role     = each.value
   member   = google_service_account.api.member
 }
 resource "google_project_iam_member" "worker" {
-  for_each = toset(["roles/cloudsql.client", "roles/cloudtrace.agent", "roles/aiplatform.user", "roles/monitoring.metricWriter"])
+  for_each = toset(["roles/cloudsql.client", "roles/aiplatform.user", "roles/monitoring.metricWriter"])
   project  = var.project
   role     = each.value
   member   = google_service_account.worker.member
