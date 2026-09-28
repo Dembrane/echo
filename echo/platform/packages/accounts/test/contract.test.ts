@@ -11,6 +11,7 @@ const cases: [string, z.ZodType, unknown][] = [
   ["signedDpaDetail", C.DocumentDetail, F.signedDpaDetail],
   ["signTask", C.Task, F.signTask],
   ["billingTask", C.Task, F.billingTask],
+  ["billingTaskDone", C.Task, F.billingTaskDone],
   ["ticket", C.Ticket, F.ticket],
   ["signRequest", C.SignRequest, F.signRequest],
   ["signResponse", C.SignResponse, F.signResponse],
@@ -21,6 +22,12 @@ const cases: [string, z.ZodType, unknown][] = [
   ["pushOfferResponse", C.PushOfferResponse, F.pushOfferResponse],
   ["createAccountResponse", C.CreateAccountResponse, F.createAccountResponse],
   ["offerFieldsResponse", C.DocumentFields, F.offerFieldsResponse],
+  ["tasksSummary", C.TasksSummary, F.tasksSummary],
+  ["demoCreateRequest", C.DemoCreateRequest, F.demoCreateRequest],
+  ["demoRunning", C.DemoStatus, F.demoRunning],
+  ["demoFailed", C.DemoStatus, F.demoFailed],
+  ["demoDraft", C.DemoStatus, F.demoDraft],
+  ["demoPublished", C.DemoStatus, F.demoPublished],
 ];
 
 describe("contract fixtures", () => {

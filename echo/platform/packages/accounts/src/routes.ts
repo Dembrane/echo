@@ -1,4 +1,4 @@
-import { ValidationError } from "@echo/core";
+import { UnavailableError, ValidationError } from "@echo/core";
 import { type Ctx, type Env, requireUser } from "@echo/http";
 import { Hono } from "hono";
 import { staffCan } from "./access";
@@ -19,8 +19,10 @@ import {
   recordBooking,
   submitTask,
   type TaskFile,
+  tasksSummary,
   updateBilling,
 } from "./customer";
+import { createDemo, demoStatus, listDemos, publishDemo, retryDemo } from "./demo/service";
 import type { AccountsDeps } from "./deps";
 import { createAccount } from "./prospect";
 import { signDocument } from "./signing";
@@ -28,6 +30,7 @@ import {
   accountCard,
   closeTicket,
   documentFields,
+  enableAccount,
   listAccounts,
   pushDocument,
   pushOffer,
@@ -166,6 +169,7 @@ export function accountsRoutes(d: AccountsDeps) {
     return c.json(await recordBooking(d, who, p(c, "orgId"), await body(c, K.BookingRequest)));
   });
   app.get(R.signingRequests.path, async (c) => c.json(await mySigningRequests(d, requireUser(c))));
+  app.get(R.tasksSummary.path, async (c) => c.json(await tasksSummary(d, requireUser(c))));
 
   // ── staff and sam ───────────────────────────────────────────────────
   /** staff:accounts, with its audit row written before the body is read. */
@@ -176,6 +180,37 @@ export function accountsRoutes(d: AccountsDeps) {
     return who;
   };
 
+  // Demos first: their paths would otherwise match /:orgId.
+  const demoSettings = () => {
+    if (!d.settings.demo) throw new UnavailableError("Demos are not configured here");
+    return d.settings.demo;
+  };
+  const demo = (c: Ctx) => ({ type: "demo", id: p(c, "demoId") });
+  app.get(R.listDemos.path, async (c) => {
+    await staff(c, "accounts.demo.list", false);
+    return c.json(await listDemos(d));
+  });
+  app.post(R.createDemo.path, async (c) => {
+    const who = requireUser(c);
+    await staffCan(d, who, "accounts.demo.create", undefined, c.get("requestId"));
+    const b = await body(c, K.DemoCreateRequest);
+    return c.json(await createDemo(d, demoSettings(), who, b), 201);
+  });
+  app.get(R.demoStatus.path, async (c) => {
+    await staffCan(d, requireUser(c), "accounts.demo.read", demo(c), c.get("requestId"));
+    return c.json(await demoStatus(d, p(c, "demoId")));
+  });
+  app.post(R.publishDemo.path, async (c) => {
+    const who = requireUser(c);
+    await staffCan(d, who, "accounts.demo.publish", demo(c), c.get("requestId"));
+    const b = await body(c, K.DemoPublishRequest);
+    return c.json(await publishDemo(d, who, p(c, "demoId"), { sign_in: b.sign_in ?? null }));
+  });
+  app.post(R.retryDemo.path, async (c) => {
+    await staffCan(d, requireUser(c), "accounts.demo.retry", demo(c), c.get("requestId"));
+    return c.json(await retryDemo(d, p(c, "demoId")));
+  });
+
   app.get(R.listAccounts.path, async (c) => {
     await staff(c, "accounts.list", false);
     return c.json(await listAccounts(d, parse(K.AccountListQuery, c.req.query())));
@@ -183,6 +218,12 @@ export function accountsRoutes(d: AccountsDeps) {
   app.post(R.createAccount.path, async (c) => {
     const who = await staff(c, "accounts.create", false);
     return c.json(await createAccount(d, who, await body(c, K.CreateAccountRequest)), 201);
+  });
+  app.post(R.enableAccount.path, async (c) => {
+    const who = await staff(c, "accounts.enable");
+    return c.json(
+      await enableAccount(d, who, p(c, "orgId"), await body(c, K.EnableAccountRequest)),
+    );
   });
   app.get(R.accountCard.path, async (c) => {
     await staff(c, "accounts.card");

@@ -9,7 +9,7 @@ import { createModels, vertexCompleter, vertexEmbedder } from "@echo/llm";
 import { type Mailer, SendGridMailer } from "@echo/mail";
 import { createLogger, initTracing } from "@echo/observability";
 import { Queue } from "@echo/queue";
-import { FilesystemStorage, S3Storage } from "@echo/storage";
+import { FilesystemStorage, requireBucket, S3Storage } from "@echo/storage";
 import { queueSink } from "@echo/tenancy";
 import { GeminiTranscriber } from "@echo/transcription";
 import { WORKER_ASSETS } from "./assets";
@@ -38,6 +38,7 @@ const loaded = loadSections([
   "reports",
   "agentic",
   "accounts",
+  "files",
 ]);
 const config = loaded.values;
 const service = "echo-worker";
@@ -109,6 +110,19 @@ const audio = config.audio.s3Bucket
       secretAccessKey: config.audio.s3SecretAccessKey ?? "",
     })
   : new FilesystemStorage(config.audio.localRoot, config.http.publicUrl, "/_local-audio");
+// The API's file bucket: offer PDFs of demos made in echo are written here and served by the API.
+const files = config.files.s3Bucket
+  ? new S3Storage({
+      endpoint: config.files.s3Endpoint ?? "",
+      bucket: config.files.s3Bucket,
+      region: config.files.s3Region,
+      accessKeyId: config.files.s3AccessKeyId ?? "",
+      secretAccessKey: config.files.s3SecretAccessKey ?? "",
+    })
+  : new FilesystemStorage(config.files.localRoot, config.http.publicUrl);
+// Deployed environments keep files and audio in their buckets; refuse to start otherwise.
+requireBucket(config.app.env, files, "Offer PDFs of demos", "FILES_S3_BUCKET");
+requireBucket(config.app.env, audio, "Participant audio", "STORAGE_S3_BUCKET");
 const local = config.app.env === "local" || config.app.env === "test";
 const media = config.media.url
   ? new HttpMedia(config.media.url, {
@@ -136,6 +150,7 @@ const regs = registrations({
   mailer,
   jobs: queueSink(queue),
   accountsJobs: queueJobs(queue),
+  files,
   dashboardUrl: config.http.dashboardUrl,
   billing,
   conversations: {

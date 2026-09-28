@@ -163,6 +163,12 @@ export async function world(name: string, routes: (d: AccountsDeps) => Hono<Env>
       slackEnabled: true,
       reminderIntervalDays: 7,
       inviteSecret: "x".repeat(32),
+      demo: {
+        portalUrl: "https://portal.example.test",
+        apiUrl: "https://api.example.test",
+        ownUrls: ["https://api.example.test"],
+        workspaceId: null,
+      },
     },
   };
   const nowIso = clock.now.toISOString();

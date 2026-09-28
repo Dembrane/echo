@@ -68,15 +68,22 @@
     {
       "idx": 9,
       "version": "7",
-      "when": 1790584834834,
-      "tag": "0009_expand_missing_indexes",
+      "when": 1790584668933,
+      "tag": "0009_accounts_demos",
       "breakpoints": true
     },
     {
       "idx": 10,
       "version": "7",
-      "when": 1790584841291,
-      "tag": "0010_contract_dead_features",
+      "when": 1790586539991,
+      "tag": "0010_expand_missing_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790586541043,
+      "tag": "0011_contract_dead_features",
       "breakpoints": true
     }
   ]

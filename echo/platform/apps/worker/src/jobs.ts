@@ -1,5 +1,12 @@
+import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@echo/access";
 import { emailHandler, sendEmail } from "@echo/account";
-import { type AccountsJobs, accountsWorker, httpFetchText } from "@echo/accounts";
+import {
+  type AccountsJobs,
+  accountsWorker,
+  demoHttpGet,
+  httpFetchText,
+  queueJobs,
+} from "@echo/accounts";
 import { agenticWorker } from "@echo/agentic";
 import { analysisWorker } from "@echo/analysis";
 import { type Billing, billingRegistration } from "@echo/billing";
@@ -11,11 +18,20 @@ import type { Completer, Embedder, Models } from "@echo/llm";
 import type { Mailer } from "@echo/mail";
 import { mapWorker } from "@echo/map";
 import type { Logger } from "@echo/observability";
-import { popcornDeckHook, popcornFlags, popcornWorker, runtimeAnalysis } from "@echo/popcorn";
+import {
+  type PopcornWorkerDeps,
+  popcornDeckHook,
+  popcornFlags,
+  popcornWorker,
+  runPopcornTick,
+  runtimeAnalysis,
+  tickDeps,
+} from "@echo/popcorn";
 import { presentAdoption } from "@echo/present";
 import { environmentName, httpForwarder, pricingRegistration, pricingStorage } from "@echo/pricing";
 import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
 import { reportsWorker } from "@echo/reports";
+import type { ObjectStorage } from "@echo/storage";
 import { type JobSink, tenancyWorker } from "@echo/tenancy";
 import { dispatchWebhook, httpDeliver, runDispatch, webhooksStorage } from "@echo/webhooks";
 import { z } from "zod";
@@ -72,6 +88,8 @@ export function registrations(deps: {
   embedder: Embedder;
   /** The model groups the chat assistant runs on. */
   models: Models;
+  /** Offer PDFs of demos made in echo. */
+  files: ObjectStorage;
   /** Where the popcorn tick enqueues its workflows and where participant links point. */
   popcorn: { databaseUrl: string; portalUrl: string };
 }): Registration[] {
@@ -90,6 +108,40 @@ export function registrations(deps: {
       embeddingModel: config.llm.embeddingModel,
       embeddingLocation: config.llm.embeddingLocation,
     },
+  };
+  const popcornDeps: PopcornWorkerDeps = {
+    db,
+    logger,
+    completer: deps.completer,
+    flags: popcornFlags(config),
+    participantBaseUrl: deps.popcorn.portalUrl,
+    adminBaseUrl: deps.dashboardUrl,
+    databaseUrl: deps.popcorn.databaseUrl,
+    analysis: runtimeAnalysis(analysisDeps, (rt, deck, jobs) =>
+      presentAdoption({
+        rt,
+        deck,
+        jobs,
+        db,
+        logger,
+        flags: popcornFlags(config),
+        participantBaseUrl: deps.popcorn.portalUrl,
+        adminBaseUrl: deps.dashboardUrl,
+        ceilings: {
+          nodeLimit: config.analysis.nodeLimitCeiling ?? null,
+          edgeLimit: config.analysis.edgeLimitCeiling ?? null,
+        },
+      }),
+    ),
+  };
+  const company = {
+    name: "dembrane B.V.",
+    address: config.accounts.companyAddress,
+    vat: config.accounts.companyVat,
+    kvk: config.accounts.companyKvk,
+    iban: config.accounts.bankIban,
+    bic: config.accounts.bankBic,
+    accountName: config.accounts.bankAccountName,
   };
   return [
     {
@@ -133,31 +185,7 @@ export function registrations(deps: {
         environment: environmentName(deps.dashboardUrl),
       },
     }),
-    popcornWorker({
-      db,
-      logger,
-      completer: deps.completer,
-      flags: popcornFlags(config),
-      participantBaseUrl: deps.popcorn.portalUrl,
-      adminBaseUrl: deps.dashboardUrl,
-      databaseUrl: deps.popcorn.databaseUrl,
-      analysis: runtimeAnalysis(analysisDeps, (rt, deck, jobs) =>
-        presentAdoption({
-          rt,
-          deck,
-          jobs,
-          db,
-          logger,
-          flags: popcornFlags(config),
-          participantBaseUrl: deps.popcorn.portalUrl,
-          adminBaseUrl: deps.dashboardUrl,
-          ceilings: {
-            nodeLimit: config.analysis.nodeLimitCeiling ?? null,
-            edgeLimit: config.analysis.edgeLimitCeiling ?? null,
-          },
-        }),
-      ),
-    }),
+    popcornWorker(popcornDeps),
     pricingRegistration({
       store: pricingStorage(db),
       forwarder: teamWebhook,
@@ -196,6 +224,41 @@ export function registrations(deps: {
       slackWebhookUrl: config.accounts.slackWebhookUrl ?? null,
       reminderIntervalDays: config.accounts.reminderIntervalDays,
       fetchText: httpFetchText,
+      // Demos made in echo: research and authoring on the model groups, the popcorn read
+      // run the way an on-request tick runs it.
+      demos: (queue) => {
+        const analysis = popcornDeps.analysis(queue);
+        return {
+          db,
+          access: new Access(new DrizzleAccessStore(db)),
+          staffAudit: new DrizzleStaffAudit(db),
+          jobs: queueJobs(queue),
+          files: deps.files,
+          logger,
+          now: () => new Date(),
+          fetchText: httpFetchText,
+          settings: {
+            dashboardUrl: deps.dashboardUrl,
+            company,
+            eventsEnabled: Boolean(config.accounts.eventsUrl),
+            slackEnabled: Boolean(config.accounts.slackWebhookUrl),
+            reminderIntervalDays: config.accounts.reminderIntervalDays,
+            // Demo builds send no invite links; publishing (in the API) does.
+            inviteSecret: "",
+          },
+          completer: deps.completer,
+          get: demoHttpGet(config.webhooks.allowPrivateTargets),
+          extract: async (loopId, runId) =>
+            (await runPopcornTick(tickDeps(popcornDeps, runId, analysis), loopId, "manual", runId))
+              .status,
+          demo: {
+            portalUrl: deps.popcorn.portalUrl,
+            apiUrl: config.http.publicUrl,
+            ownUrls: [config.http.publicUrl, deps.dashboardUrl, deps.popcorn.portalUrl],
+            workspaceId: config.accounts.demoWorkspaceId ?? null,
+          },
+        };
+      },
     }),
     agenticWorker({
       db,

@@ -139,7 +139,7 @@ export const store = {
     return row ?? null;
   },
 
-  /** Members who run the account (owner, admin, billing) and their addresses. */
+  /** Members who run the account (owner, admin, billing), their addresses and languages. */
   async accountPeople(c: Conn, orgId: string) {
     return c
       .select({
@@ -147,10 +147,12 @@ export const store = {
         email: sql<string | null>`coalesce(${auth_user.email}, ${app_user.email})`,
         name: app_user.display_name,
         role: org_membership.role,
+        language: schema.directus_users.language,
       })
       .from(org_membership)
       .innerJoin(app_user, eq(app_user.id, org_membership.user_id))
       .leftJoin(auth_user, eq(auth_user.id, app_user.directus_user_id))
+      .leftJoin(schema.directus_users, eq(schema.directus_users.id, app_user.directus_user_id))
       .where(
         and(
           eq(org_membership.org_id, orgId),
@@ -197,11 +199,13 @@ export const store = {
     const e = email.trim().toLowerCase();
     const at = now.toISOString();
     const [user] = await c
-      .select({ id: auth_user.id })
+      .select({ id: auth_user.id, status: schema.directus_users.status })
       .from(auth_user)
+      .leftJoin(schema.directus_users, eq(schema.directus_users.id, auth_user.id))
       .where(sql`lower(${auth_user.email}) = ${e}`)
       .limit(1);
-    if (user) return true;
+    // A contact held back (a demo not yet published) or a suspended user gets no code.
+    if (user) return !["draft", "suspended", "archived"].includes(user.status ?? "active");
     const [orgInvite] = await c
       .select({ id: org_invite.id })
       .from(org_invite)
@@ -482,10 +486,64 @@ export const store = {
       });
   },
 
+  // ── the signed-in person's summary ────────────────────────────────────
+
+  /**
+   * One query, on the org_membership user and account_task org and status indexes: every
+   * organisation with account content where the person holds one of `roles`, with task
+   * counts (withdrawn tasks left out, locked ones in) and the oldest task waiting on them.
+   */
+  async tasksSummary(c: Conn, appUserId: string, roles: readonly string[]) {
+    return (
+      c
+        .select({
+          org_id: org.id,
+          name: org.name,
+          logo_url: org.logo_url,
+          account_stage: org.account_stage,
+          tasks_done: sql<number>`count(${task.id}) filter (where ${task.status} = 'done')::int`,
+          tasks_total: sql<number>`count(${task.id}) filter (where ${task.status} <> 'withdrawn')::int`,
+          // The oldest task waiting on the person: its title, or its code and params.
+          next_task: sql<{
+            title: string | null;
+            code: string | null;
+            params: unknown;
+          } | null>`(select json_build_object('title', t2.title, 'code', t2.code, 'params', t2.params) from account_task t2
+          where t2.org_id = ${org.id} and t2.status in ('open', 'changes_requested')
+          order by t2.created_at, t2.id limit 1)`,
+        })
+        .from(org_membership)
+        .innerJoin(org, eq(org.id, org_membership.org_id))
+        .leftJoin(task, eq(task.orgId, org.id))
+        .where(
+          and(
+            eq(org_membership.user_id, appUserId),
+            isNull(org_membership.deleted_at),
+            inArray(org_membership.role, [...roles]),
+            isNull(org.deleted_at),
+          ),
+        )
+        .groupBy(org.id)
+        // Only organisations with account content: a stage, a task, or a document.
+        .having(
+          sql`${org.account_stage} is not null or count(${task.id}) > 0 or exists (select 1 from account_document d where d.org_id = ${org.id})`,
+        )
+        .orderBy(asc(org.name))
+    );
+  },
+
   // ── staff list ────────────────────────────────────────────────────────
 
-  /** Managed organisations with what needs attention, newest first, bounded. */
-  async accountList(c: Conn, opts: { stage: string | null; limit: number; offset: number }) {
+  /**
+   * Every live organisation with what needs attention, newest first, bounded. `stage`
+   * narrows to one stage (`none`: not an account yet); `q` matches the name or a member's
+   * email address.
+   */
+  async accountList(
+    c: Conn,
+    opts: { stage: string | null; q: string | null; limit: number; offset: number },
+  ) {
+    const like = opts.q ? `%${opts.q.replace(/[\\%_]/g, (m) => `\\${m}`)}%` : null;
     return c
       .select({
         id: org.id,
@@ -502,7 +560,20 @@ export const store = {
       .where(
         and(
           isNull(org.deleted_at),
-          opts.stage ? eq(org.account_stage, opts.stage) : isNotNull(org.account_stage),
+          opts.stage === "none"
+            ? isNull(org.account_stage)
+            : opts.stage
+              ? eq(org.account_stage, opts.stage)
+              : undefined,
+          like
+            ? or(
+                sql`${org.name} ilike ${like}`,
+                sql`exists (select 1 from org_membership m join app_user u on u.id = m.user_id
+                  left join auth_user a on a.id = u.directus_user_id
+                  where m.org_id = ${org.id} and m.deleted_at is null
+                  and (u.email ilike ${like} or a.email ilike ${like}))`,
+              )
+            : undefined,
         ),
       )
       .orderBy(desc(org.created_at), desc(org.id))

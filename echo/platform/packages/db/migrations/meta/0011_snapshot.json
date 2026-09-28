@@ -1,6 +1,6 @@
 {
-  "id": "b19a4220-b143-4122-8d37-d99571cb4c7c",
-  "prevId": "ad782fe0-fffc-4fea-9ae0-f0c7d3ccb885",
+  "id": "9d95a4ec-525b-49d0-8a9f-9b61c3e18d6d",
+  "prevId": "e710447e-326b-4a70-8774-b0fd2d7fd54a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3878,167 +3878,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.aspect": {
-      "name": "aspect",
-      "schema": "",
-      "columns": {
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "image_url": {
-          "name": "image_url",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "NULL"
-        },
-        "long_summary": {
-          "name": "long_summary",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "NULL"
-        },
-        "short_summary": {
-          "name": "short_summary",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "view_id": {
-          "name": "view_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "aspect_view_id_foreign": {
-          "name": "aspect_view_id_foreign",
-          "tableFrom": "aspect",
-          "tableTo": "view",
-          "columnsFrom": [
-            "view_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.aspect_segment": {
-      "name": "aspect_segment",
-      "schema": "",
-      "columns": {
-        "aspect": {
-          "name": "aspect",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "relevant_index": {
-          "name": "relevant_index",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "segment": {
-          "name": "segment",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "verbatim_transcript": {
-          "name": "verbatim_transcript",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "aspect_segment_aspect_foreign": {
-          "name": "aspect_segment_aspect_foreign",
-          "tableFrom": "aspect_segment",
-          "tableTo": "aspect",
-          "columnsFrom": [
-            "aspect"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "aspect_segment_segment_foreign": {
-          "name": "aspect_segment_segment_foreign",
-          "tableFrom": "aspect_segment",
-          "tableTo": "conversation_segment",
-          "columnsFrom": [
-            "segment"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.billing_account": {
       "name": "billing_account",
       "schema": "",
@@ -5226,141 +5065,6 @@
             "id"
           ],
           "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.conversation_segment": {
-      "name": "conversation_segment",
-      "schema": "",
-      "columns": {
-        "config_id": {
-          "name": "config_id",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "NULL"
-        },
-        "contextual_transcript": {
-          "name": "contextual_transcript",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "conversation_id": {
-          "name": "conversation_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "counter": {
-          "name": "counter",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "lightrag_flag": {
-          "name": "lightrag_flag",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "path": {
-          "name": "path",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "transcript": {
-          "name": "transcript",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "conversation_segment_conversation_id_foreign": {
-          "name": "conversation_segment_conversation_id_foreign",
-          "tableFrom": "conversation_segment",
-          "tableTo": "conversation",
-          "columnsFrom": [
-            "conversation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.conversation_segment_conversation_chunk": {
-      "name": "conversation_segment_conversation_chunk",
-      "schema": "",
-      "columns": {
-        "conversation_chunk_id": {
-          "name": "conversation_chunk_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "conversation_segment_id": {
-          "name": "conversation_segment_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "conversation_segment_conversation_chunk_co__1f8deab8_foreign": {
-          "name": "conversation_segment_conversation_chunk_co__1f8deab8_foreign",
-          "tableFrom": "conversation_segment_conversation_chunk",
-          "tableTo": "conversation_chunk",
-          "columnsFrom": [
-            "conversation_chunk_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "conversation_segment_conversation_chunk_co__4f4b4f4e_foreign": {
-          "name": "conversation_segment_conversation_chunk_co__4f4b4f4e_foreign",
-          "tableFrom": "conversation_segment_conversation_chunk",
-          "tableTo": "conversation_segment",
-          "columnsFrom": [
-            "conversation_segment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -8482,71 +8186,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.insight": {
-      "name": "insight",
-      "schema": "",
-      "columns": {
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "project_analysis_run_id": {
-          "name": "project_analysis_run_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "summary": {
-          "name": "summary",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "insight_project_analysis_run_id_foreign": {
-          "name": "insight_project_analysis_run_id_foreign",
-          "tableFrom": "insight",
-          "tableTo": "project_analysis_run",
-          "columnsFrom": [
-            "project_analysis_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.languages": {
       "name": "languages",
       "schema": "",
@@ -10234,12 +9873,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "project_analysis_run_id": {
-          "name": "project_analysis_run_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "project_id": {
           "name": "project_id",
           "type": "uuid",
@@ -10269,11 +9902,32 @@
           "method": "btree",
           "with": {}
         },
-        "processing_status_conversation_id_index": {
-          "name": "processing_status_conversation_id_index",
+        "idx_processing_status_conversation_id_id": {
+          "name": "idx_processing_status_conversation_id_id",
           "columns": [
             {
               "expression": "conversation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "processing_status_parent_index": {
+          "name": "processing_status_parent_index",
+          "columns": [
+            {
+              "expression": "parent",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -10338,19 +9992,6 @@
             "id"
           ],
           "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "processing_status_project_analysis_run_id_foreign": {
-          "name": "processing_status_project_analysis_run_id_foreign",
-          "tableFrom": "processing_status",
-          "tableTo": "project_analysis_run",
-          "columnsFrom": [
-            "project_analysis_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
           "onUpdate": "no action"
         },
         "processing_status_project_id_foreign": {
@@ -10855,7 +10496,29 @@
           "default": "CURRENT_TIMESTAMP"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "project_agentic_run_event_run_seq_index": {
+          "name": "project_agentic_run_event_run_seq_index",
+          "columns": [
+            {
+              "expression": "project_agentic_run_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "seq",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "project_agentic_run_event_project_agentic_run_id_foreign": {
           "name": "project_agentic_run_event_project_agentic_run_id_foreign",
@@ -10863,59 +10526,6 @@
           "tableTo": "project_agentic_run",
           "columnsFrom": [
             "project_agentic_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.project_analysis_run": {
-      "name": "project_analysis_run",
-      "schema": "",
-      "columns": {
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "project_id": {
-          "name": "project_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "project_analysis_run_project_id_foreign": {
-          "name": "project_analysis_run_project_id_foreign",
-          "tableFrom": "project_analysis_run",
-          "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
           ],
           "columnsTo": [
             "id"
@@ -11005,7 +10615,23 @@
           "default": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "project_chat_project_id_index": {
+          "name": "project_chat_project_id_index",
+          "columns": [
+            {
+              "expression": "project_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "project_chat_project_id_foreign": {
           "name": "project_chat_project_id_foreign",
@@ -11166,7 +10792,23 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "project_chat_message_project_chat_id_index": {
+          "name": "project_chat_message_project_chat_id_index",
+          "columns": [
+            {
+              "expression": "project_chat_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "project_chat_message_project_chat_id_foreign": {
           "name": "project_chat_message_project_chat_id_foreign",
@@ -13285,97 +12927,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.view": {
-      "name": "view",
-      "schema": "",
-      "columns": {
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "language": {
-          "name": "language",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "NULL"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "NULL"
-        },
-        "project_analysis_run_id": {
-          "name": "project_analysis_run_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "summary": {
-          "name": "summary",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "user_input": {
-          "name": "user_input",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "user_input_description": {
-          "name": "user_input_description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "view_project_analysis_run_id_foreign": {
-          "name": "view_project_analysis_run_id_foreign",
-          "tableFrom": "view",
-          "tableTo": "project_analysis_run",
-          "columnsFrom": [
-            "project_analysis_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.workspace": {
       "name": "workspace",
       "schema": "",
@@ -13895,234 +13446,6 @@
             "id"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.workspace_request": {
-      "name": "workspace_request",
-      "schema": "",
-      "columns": {
-        "approved_billing_period": {
-          "name": "approved_billing_period",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "NULL"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "decided_at": {
-          "name": "decided_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "decided_by": {
-          "name": "decided_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "denial_reason": {
-          "name": "denial_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "granted_percent_discount": {
-          "name": "granted_percent_discount",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "granted_tier": {
-          "name": "granted_tier",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "NULL"
-        },
-        "granted_tier_expires_at": {
-          "name": "granted_tier_expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "granted_type_discount": {
-          "name": "granted_type_discount",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "NULL"
-        },
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "kind": {
-          "name": "kind",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "NULL"
-        },
-        "org_id": {
-          "name": "org_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "proposed_billing_period": {
-          "name": "proposed_billing_period",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "NULL"
-        },
-        "proposed_name": {
-          "name": "proposed_name",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "NULL"
-        },
-        "proposed_tier": {
-          "name": "proposed_tier",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'innovator'"
-        },
-        "proposed_visibility": {
-          "name": "proposed_visibility",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'open_to_organisation'"
-        },
-        "requested_by": {
-          "name": "requested_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "requester_message": {
-          "name": "requester_message",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "resulting_workspace_id": {
-          "name": "resulting_workspace_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "staff_notes": {
-          "name": "staff_notes",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "workspace_id": {
-          "name": "workspace_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "workspace_request_decided_by_foreign": {
-          "name": "workspace_request_decided_by_foreign",
-          "tableFrom": "workspace_request",
-          "tableTo": "app_user",
-          "columnsFrom": [
-            "decided_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "workspace_request_org_id_foreign": {
-          "name": "workspace_request_org_id_foreign",
-          "tableFrom": "workspace_request",
-          "tableTo": "org",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "workspace_request_requested_by_foreign": {
-          "name": "workspace_request_requested_by_foreign",
-          "tableFrom": "workspace_request",
-          "tableTo": "app_user",
-          "columnsFrom": [
-            "requested_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "workspace_request_resulting_workspace_id_foreign": {
-          "name": "workspace_request_resulting_workspace_id_foreign",
-          "tableFrom": "workspace_request",
-          "tableTo": "workspace",
-          "columnsFrom": [
-            "resulting_workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "workspace_request_workspace_id_foreign": {
-          "name": "workspace_request_workspace_id_foreign",
-          "tableFrom": "workspace_request",
-          "tableTo": "workspace",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },

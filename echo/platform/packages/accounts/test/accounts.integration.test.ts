@@ -193,7 +193,7 @@ run("accounts routes against Postgres", () => {
     expect(r.status).toBe(201);
     const pushed = K.PushOfferResponse.parse(r.data);
     offerId = pushed.document.id;
-    signTaskId = pushed.task.id;
+    signTaskId = pushed.task?.id as string;
     expect(pushed.document.status).toBe("sent");
     expect(pushed.document.subtotal_cents).toBe(641000);
     expect(pushed.document.vat_cents).toBe(134610);
@@ -214,9 +214,11 @@ run("accounts routes against Postgres", () => {
       "date",
       "signature",
     ]);
-    expect(pushed.task.title).toBe("Offerte bekijken en ondertekenen");
-    expect(pushed.task.status).toBe("open");
-    expect(pushed.task.next_reminder_at).toBe("2026-10-05T09:00:00.000Z");
+    expect(pushed.task?.code).toBe("sign_offer");
+    expect(pushed.task?.params).toEqual({ document_title: pushed.document.title });
+    expect([pushed.task?.title, pushed.task?.body]).toEqual([null, null]);
+    expect(pushed.task?.status).toBe("open");
+    expect(pushed.task?.next_reminder_at).toBe("2026-10-05T09:00:00.000Z");
     const tasks = await store.tasks(w.db, w.orgId);
     expect(tasks.filter((t) => t.kind === "billing_details").map((t) => t.status)).toEqual([
       "locked",
@@ -228,7 +230,7 @@ run("accounts routes against Postgres", () => {
       const r = await call(w, "GET", C(), as);
       expect(r.status).toBe(200);
       const page = K.AccountPage.parse(r.data);
-      expect(page.tasks[0]?.title).toBe("Offerte bekijken en ondertekenen");
+      expect(page.tasks[0]?.code).toBe("sign_offer");
       expect(page.tasks.find((t) => t.kind === "billing_details")?.locked).toBe(true);
       expect(page.documents.find((d) => d.id === offerId)?.file_url).toBe(
         `${C()}/documents/${offerId}/file`,
@@ -516,7 +518,7 @@ run("accounts routes against Postgres", () => {
       reason: "Te duur",
       declined_by: "admin@example.test",
     });
-    expect((await store.task(w.db, w.orgId, pushed.task.id))?.status).toBe("withdrawn");
+    expect((await store.task(w.db, w.orgId, pushed.task?.id as string))?.status).toBe("withdrawn");
     expect((await call(w, "POST", `${C()}/documents/${id}/decline`, "admin", {})).status).toBe(409);
   });
 
@@ -537,7 +539,7 @@ run("accounts routes against Postgres", () => {
     );
     expect(second.document.version).toBe(first.document.version + 1);
     expect((await store.document(w.db, w.orgId, first.document.id))?.status).toBe("void");
-    expect((await store.task(w.db, w.orgId, first.task.id))?.status).toBe("withdrawn");
+    expect((await store.task(w.db, w.orgId, first.task?.id as string))?.status).toBe("withdrawn");
     const voided = await call(w, "POST", `${S()}/documents/${second.document.id}/void`, "staff", {
       reason: "wrong seats",
     });
@@ -548,7 +550,7 @@ run("accounts routes against Postgres", () => {
   });
 
   // ── billing details ─────────────────────────────────────────────────
-  test("billing details: validated, saved, the task handed to us, the event and Slack", async () => {
+  test("billing details: validated, saved, the task done at once, the event and Slack", async () => {
     const good = {
       legal_name: "Gemeente Testdorp",
       billing_email: "Facturen@Testdorp.example",
@@ -578,7 +580,8 @@ run("accounts routes against Postgres", () => {
       K.BillingDetails.parse((await call(w, "GET", `${C()}/billing`, "admin")).data).kvk_number,
     ).toBe("12345678");
     const task = (await store.tasks(w.db, w.orgId)).find((t) => t.kind === "billing_details");
-    expect(task?.status).toBe("submitted");
+    // Saving completes the task at once: no review by staff.
+    expect(task?.status).toBe("done");
     expect(task?.nextReminderAt).toBeNull();
     expect(w.jobs.of("accounts.deliver-event")[0]?.payload).toMatchObject({
       event: "account.billing_details.updated",
@@ -588,7 +591,7 @@ run("accounts routes against Postgres", () => {
     const review = await call(w, "POST", `${S()}/tasks/${task?.id}/review`, "staff", {
       decision: "approve",
     });
-    expect(K.Task.parse(review.data).status).toBe("done");
+    expect(review.status).toBe(409);
   });
 
   // ── tasks ───────────────────────────────────────────────────────────

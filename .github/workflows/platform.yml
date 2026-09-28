@@ -234,8 +234,8 @@ jobs:
             --image $REGISTRY/worker:$TAG \
             --service-account echo-preview-worker@$PROJECT.iam.gserviceaccount.com \
             --add-cloudsql-instances $SQL \
-            --set-secrets DATABASE_URL=echo-preview-database-url:latest,$AUDIO_KEYS \
-            --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG,$AUDIO_BUCKET,MEDIA_URL=$MEDIA_URL \
+            --set-secrets DATABASE_URL=echo-preview-database-url:latest,FILES_S3_ACCESS_KEY_ID=echo-preview-s3-access-key-id:latest,FILES_S3_SECRET_ACCESS_KEY=echo-preview-s3-secret-access-key:latest,$AUDIO_KEYS \
+            --set-env-vars APP_ENV=preview,APP_RELEASE=$TAG,FILES_S3_ENDPOINT=https://storage.googleapis.com,FILES_S3_BUCKET=dembrane-echo-echo-preview-uploads,$AUDIO_BUCKET,MEDIA_URL=$MEDIA_URL \
             --cpu 1 --memory 512Mi --instances 1 --quiet &
           for role in dashboard portal; do
             gcloud run deploy echo-preview-$role --project $PROJECT --region $REGION \

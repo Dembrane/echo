@@ -1,7 +1,7 @@
 import { newId } from "@echo/core";
 import type { AccountsDeps, Conn } from "./deps";
-import type { Language } from "./offer";
 import { store, type TaskRow } from "./storage";
+import type { TaskCode } from "./task-text";
 
 const DAY_MS = 86_400_000;
 
@@ -15,7 +15,10 @@ export interface NewTask {
   /** A fixed id (demo seeds); otherwise a new one. */
   readonly id?: string;
   readonly orgId: string;
-  readonly title: string;
+  /** Tasks echo creates carry a code and params; staff tasks a title and body. */
+  readonly code?: TaskCode | null;
+  readonly params?: Record<string, string> | null;
+  readonly title: string | null;
   readonly body?: string | null;
   readonly kind: TaskKind;
   readonly documentId?: string | null;
@@ -38,8 +41,10 @@ export async function createTask(d: AccountsDeps, tx: Conn, t: NewTask): Promise
   await store.insertTask(tx, {
     id,
     orgId: t.orgId,
-    title: t.title,
-    body: t.body ?? null,
+    code: t.code ?? null,
+    params: t.params ?? null,
+    title: t.code ? null : t.title,
+    body: t.code ? null : (t.body ?? null),
     kind: t.kind,
     documentId: t.documentId ?? null,
     unlockOnDocumentId: t.unlockOnDocumentId ?? null,
@@ -82,12 +87,6 @@ export async function settleTask(
   });
 }
 
-const BILLING_TITLE: Record<Language, string> = { en: "Billing details", nl: "Factuurgegevens" };
-const BILLING_BODY: Record<Language, string> = {
-  en: "Who we invoice: legal name, address, VAT or KvK number, billing email and, if you use one, your PO number. It opens once the offer is signed.",
-  nl: "Aan wie we factureren: juridische naam, adres, btw- of KvK-nummer, factuur-e-mail en, als jullie die gebruiken, het PO-nummer. Deze stap opent zodra de offerte is ondertekend.",
-};
-
 /**
  * The billing details task exists from the start, locked until an offer is signed. Only
  * one is kept per organisation while it is not done or withdrawn.
@@ -96,7 +95,6 @@ export async function ensureBillingTask(
   d: AccountsDeps,
   tx: Conn,
   orgId: string,
-  language: Language,
   createdBy: string | null,
 ): Promise<void> {
   const live = (await store.tasks(tx, orgId)).some(
@@ -105,8 +103,9 @@ export async function ensureBillingTask(
   if (live) return;
   await createTask(d, tx, {
     orgId,
-    title: BILLING_TITLE[language],
-    body: BILLING_BODY[language],
+    code: "billing_details",
+    params: {},
+    title: null,
     kind: "billing_details",
     locked: true,
     createdBy,
