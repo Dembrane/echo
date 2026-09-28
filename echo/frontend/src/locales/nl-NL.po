@@ -2376,7 +2376,7 @@ msgstr ""
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:138
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:149
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:161
-#: src/features/sidebar/blocks/HelpBlock.tsx:76
+#: src/features/sidebar/blocks/HelpBlock.tsx:101
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:248
 #: src/components/project/ProjectPortalEditor.tsx:1474
@@ -3316,7 +3316,7 @@ msgstr "Bevestig je wachtwoord om een nieuw geheim voor je authenticator-app te 
 msgid "Connect"
 msgstr ""
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:74
+#: src/features/sidebar/blocks/HelpBlock.tsx:99
 #: src/components/agent-access/AgentAccessSection.tsx:147
 msgid "Connect your agent"
 msgstr ""
@@ -3365,7 +3365,7 @@ msgid "Consolidated arguments"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:27
-#: src/features/sidebar/blocks/HelpBlock.tsx:122
+#: src/features/sidebar/blocks/HelpBlock.tsx:147
 msgid "Contact support"
 msgstr "Contact met support"
 
@@ -4555,7 +4555,7 @@ msgid "Do you want to stay in the loop?"
 msgstr "Wil je op de hoogte blijven?"
 
 #: src/features/sidebar/views/HelpView.tsx:35
-#: src/features/sidebar/blocks/HelpBlock.tsx:99
+#: src/features/sidebar/blocks/HelpBlock.tsx:124
 #: src/components/chat/ChatHistoryMessage.tsx:244
 msgid "Documentation"
 msgstr "Documentatie"
@@ -5563,7 +5563,7 @@ msgid "participant.modal.echo.info.title"
 msgstr "Functie binnenkort beschikbaar"
 
 #: src/features/sidebar/views/HelpView.tsx:65
-#: src/features/sidebar/blocks/HelpBlock.tsx:62
+#: src/features/sidebar/blocks/HelpBlock.tsx:87
 msgid "Feedback"
 msgstr "Feedback"
 
@@ -6154,9 +6154,9 @@ msgid "have your recordings transcribed"
 msgstr "je opnames te laten transcriberen"
 
 #: src/features/sidebar/views/HelpView.tsx:25
-#: src/features/sidebar/blocks/HelpBlock.tsx:188
-#: src/features/sidebar/blocks/HelpBlock.tsx:203
-#: src/features/sidebar/blocks/HelpBlock.tsx:217
+#: src/features/sidebar/blocks/HelpBlock.tsx:213
+#: src/features/sidebar/blocks/HelpBlock.tsx:228
+#: src/features/sidebar/blocks/HelpBlock.tsx:245
 msgid "Help"
 msgstr "Help"
 
@@ -9877,7 +9877,7 @@ msgid "Plan ends"
 msgstr "Plan eindigt"
 
 #: src/features/sidebar/views/HelpView.tsx:52
-#: src/features/sidebar/blocks/HelpBlock.tsx:113
+#: src/features/sidebar/blocks/HelpBlock.tsx:138
 msgid "Planned"
 msgstr "Gepland"
 
@@ -11084,7 +11084,7 @@ msgid "Report already generating"
 msgstr "Rapport wordt al gegenereerd"
 
 #: src/features/sidebar/views/HelpView.tsx:58
-#: src/features/sidebar/blocks/HelpBlock.tsx:50
+#: src/features/sidebar/blocks/HelpBlock.tsx:75
 #: src/components/feedback/ReportIssueModal.tsx:180
 msgid "Report an issue"
 msgstr "Probleem melden"
@@ -13281,7 +13281,7 @@ msgid "System default"
 msgstr "Systeemstandaard"
 
 #: src/features/sidebar/views/HelpView.tsx:49
-#: src/features/sidebar/blocks/HelpBlock.tsx:110
+#: src/features/sidebar/blocks/HelpBlock.tsx:135
 msgid "System status"
 msgstr "Systeemstatus"
 
@@ -13336,6 +13336,10 @@ msgstr "Kijk of de uitkomst klopt, en pas aan waar nodig."
 #: src/components/release/releaseHistory.ts:44
 msgid "Tapping Record twice no longer creates duplicate conversations."
 msgstr "Twee keer op Opnemen tikken maakt geen dubbele gesprekken meer aan."
+
+#: src/features/sidebar/blocks/HelpTasksItem.tsx:33
+msgid "Tasks"
+msgstr "Taken"
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:559
 #~ msgid "Technical lineage"
@@ -15809,7 +15813,7 @@ msgstr "Wat deze spanning zou oplossen"
 msgid "What would you like to explore?"
 msgstr "Wat wil je verkennen?"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:87
+#: src/features/sidebar/blocks/HelpBlock.tsx:112
 #: src/components/release/ReleaseVideoModal.tsx:310
 msgid "What's new"
 msgstr "Wat is er nieuw"

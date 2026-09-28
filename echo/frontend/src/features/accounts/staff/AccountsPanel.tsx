@@ -5,13 +5,17 @@ import {
 	Alert,
 	Anchor,
 	Badge,
+	Button,
 	Group,
 	Loader,
 	SegmentedControl,
 	Stack,
 	Table,
 	Text,
+	TextInput,
 } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -43,31 +47,46 @@ const Count = ({ n, tone }: { n: number; tone?: "red" | "blue" }) =>
 function AccountsTable() {
 	const { i18n } = useLingui();
 	const [stage, setStage] = useState<string>("all");
+	const [search, setSearch] = useState("");
+	const [q] = useDebouncedValue(search.trim(), 250);
 	const { data, isLoading, error } = useAccountList(
 		stage === "all" ? null : stage,
+		q,
 	);
 	const navigate = useI18nNavigate();
 
 	return (
 		<Stack gap="sm" data-testid="accounts-panel">
 			<Group justify="space-between" gap="sm">
-				<Text size="sm" c="dimmed">
-					<Trans>
-						Customer accounts: what each one still has to do, and what waits on
-						us.
-					</Trans>
-				</Text>
-				<SegmentedControl
+				<Group gap="sm" style={{ flex: 1, minWidth: 260 }}>
+					<TextInput
+						aria-label={t`Search organisations`}
+						placeholder={t`Search by name or member email`}
+						leftSection={<MagnifyingGlassIcon size={14} />}
+						value={search}
+						onChange={(e) => setSearch(e.currentTarget.value)}
+						style={{ flex: 1, maxWidth: 340 }}
+						data-testid="accounts-search"
+					/>
+					<SegmentedControl
+						size="xs"
+						value={stage}
+						onChange={setStage}
+						data={[
+							{ label: t`All`, value: "all" },
+							{ label: t`Prospects`, value: "prospect" },
+							{ label: t`Customers`, value: "customer" },
+							{ label: t`Churned`, value: "churned" },
+						]}
+					/>
+				</Group>
+				<Button
 					size="xs"
-					value={stage}
-					onChange={setStage}
-					data={[
-						{ label: t`All`, value: "all" },
-						{ label: t`Prospects`, value: "prospect" },
-						{ label: t`Customers`, value: "customer" },
-						{ label: t`Churned`, value: "churned" },
-					]}
-				/>
+					onClick={() => navigate("/admin/accounts/new-demo")}
+					data-testid="new-demo"
+				>
+					<Trans>New demo</Trans>
+				</Button>
 			</Group>
 			{isLoading && <Loader size="sm" />}
 			{error && (
@@ -77,7 +96,7 @@ function AccountsTable() {
 			)}
 			{data && data.accounts.length === 0 && (
 				<Text size="sm" c="dimmed">
-					<Trans>No accounts in this stage.</Trans>
+					<Trans>No organisations match.</Trans>
 				</Text>
 			)}
 			{data && data.accounts.length > 0 && (

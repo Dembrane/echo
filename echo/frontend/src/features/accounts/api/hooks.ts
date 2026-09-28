@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import type { RouteName } from "../contract/contract.gen";
 import {
 	apiUrl,
 	type CallOptions,
@@ -10,6 +9,7 @@ import {
 	type RequestOf,
 	type ResponseOf,
 } from "./client";
+import type { ApiRouteName as RouteName } from "./routes";
 
 /**
  * React Query over the accounts client. One key space: a customer write refreshes the
@@ -48,13 +48,16 @@ export const useDocument = (
 		queryKey: accountKeys.doc(orgId ?? "", docId ?? "", staff),
 	});
 
-export const useAccountList = (stage: string | null) =>
+export const useAccountList = (stage: string | null, q = "") =>
 	useQuery({
+		// Keeps the rows while a new search loads, so the table does not flash empty.
+		placeholderData: (previous) => previous,
 		queryFn: () =>
 			call("listAccounts", {
-				query: { limit: 200, stage: stage ?? undefined },
+				// PROVISIONAL: `q` (name or member email) is not in AccountListQuery yet.
+				query: { limit: 200, q: q || undefined, stage: stage ?? undefined },
 			}),
-		queryKey: accountKeys.list(stage),
+		queryKey: [...accountKeys.list(stage), q],
 	});
 
 export const useAccountCard = (orgId: string | undefined) =>

@@ -11,7 +11,14 @@ import {
 	Sparkle,
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Fragment, type ReactNode, useRef, useState } from "react";
+import {
+	Fragment,
+	lazy,
+	type ReactNode,
+	Suspense,
+	useRef,
+	useState,
+} from "react";
 import { useParams } from "react-router";
 import { ReleaseVideoModal } from "@/components/release/ReleaseVideoModal";
 import { ENABLE_RELEASE_VIDEO_MODAL, getDocumentationUrl } from "@/config";
@@ -21,6 +28,9 @@ import { useHelpModals } from "../hooks/useHelpModals";
 import { NavButton } from "../primitives/NavButton";
 import { SectionLabel } from "../primitives/SectionLabel";
 import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
+
+// Its own chunk: it fetches the account tasks summary, which the portal never needs.
+const HelpTasksItem = lazy(() => import("./HelpTasksItem"));
 
 export const HelpBlock = () => {
 	const { language } = useParams();
@@ -34,6 +44,9 @@ export const HelpBlock = () => {
 	const [bubbled, setBubbled] = useState(false);
 	const reduced = useReducedMotion();
 	const helpButton = useRef<HTMLButtonElement>(null);
+	// The Tasks entry joins the list only when the caller has account tasks, so the
+	// rail's bubble layout never holds an empty row.
+	const [hasTasks, setHasTasks] = useState(false);
 
 	const releaseModal = ENABLE_RELEASE_VIDEO_MODAL ? (
 		<ReleaseVideoModal
@@ -43,6 +56,18 @@ export const HelpBlock = () => {
 	) : null;
 
 	const items: { key: string; node: ReactNode }[] = [
+		...(hasTasks
+			? [
+					{
+						key: "tasks",
+						node: (
+							<Suspense fallback={null}>
+								<HelpTasksItem />
+							</Suspense>
+						),
+					},
+				]
+			: []),
 		{
 			key: "report",
 			node: (
@@ -206,6 +231,9 @@ export const HelpBlock = () => {
 					</RailTip>
 				</div>
 				{releaseModal}
+				<Suspense fallback={null}>
+					<HelpTasksItem onPresence={setHasTasks} />
+				</Suspense>
 			</>
 		);
 	}
@@ -221,6 +249,9 @@ export const HelpBlock = () => {
 				))}
 			</div>
 			{releaseModal}
+			<Suspense fallback={null}>
+				<HelpTasksItem onPresence={setHasTasks} />
+			</Suspense>
 		</>
 	);
 };

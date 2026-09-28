@@ -1,4 +1,5 @@
 import type { z } from "zod4";
+import { API_BASE_URL } from "@/config";
 import type {
 	AccountCard,
 	AccountListItem,
@@ -6,7 +7,6 @@ import type {
 	DocumentDetailT,
 	DocumentFieldInput,
 	DocumentSummaryT,
-	RouteName,
 	TaskT,
 	TicketT,
 	TimelineEvent,
@@ -14,6 +14,8 @@ import type {
 import * as fx from "../contract/fixtures.gen";
 import { AccountsApiError, type Params } from "./client";
 import { pageCountOf, renderSigned, renderUnsigned } from "./fixturePdf";
+import type { DemoT } from "./provisional";
+import type { ApiRouteName as RouteName } from "./routes";
 
 /**
  * The accounts API answered in the page, for fixture mode. It starts from the Gemeente
@@ -190,9 +192,93 @@ function load(): Record<string, Store> {
 function save() {
 	try {
 		sessionStorage.setItem(KEY, JSON.stringify(stores));
+		sessionStorage.setItem(DEMOS_KEY, JSON.stringify(demos ?? {}));
 	} catch {
 		// Private windows and full storage: the state then lasts until the next reload.
 	}
+}
+
+// ── demos (provisional routes) ──────────────────────────────────────────
+
+const DEMOS_KEY = "echo.accounts.fixtures.demos.v1";
+/** `?fixtures_orgs=2` makes the signed-in customer belong to two orgs with tasks. */
+const ORGS_KEY = "echo.accounts.fixtures.orgs";
+const STEP_MS = 1400;
+const STEPS = [
+	"website",
+	"research",
+	"corpus",
+	"seeding",
+	"extraction",
+	"draft",
+] as const;
+
+interface FixtureDemo extends DemoT {
+	/** A website URL with "fail" in it fails the research step once, to show a retry. */
+	failOnce: boolean;
+	offer: {
+		template: "subscription" | "event";
+		language: "en" | "nl";
+		items: unknown[];
+	} | null;
+}
+let demos: Record<string, FixtureDemo> | null = null;
+
+function loadDemos(): Record<string, FixtureDemo> {
+	if (demos) return demos;
+	try {
+		if (
+			new URLSearchParams(window.location.search).get("fixtures") === "reset"
+		) {
+			sessionStorage.removeItem(DEMOS_KEY);
+		}
+		demos = JSON.parse(sessionStorage.getItem(DEMOS_KEY) ?? "{}");
+	} catch {
+		demos = {};
+	}
+	return demos ?? {};
+}
+
+function twoOrgs(): boolean {
+	try {
+		const flag = new URLSearchParams(window.location.search).get(
+			"fixtures_orgs",
+		);
+		if (flag) sessionStorage.setItem(ORGS_KEY, flag);
+		return sessionStorage.getItem(ORGS_KEY) === "2";
+	} catch {
+		return false;
+	}
+}
+
+/** Moves a running demo on by the time passed, one step every STEP_MS. */
+function advance(d: FixtureDemo) {
+	if (d.status !== "running") return;
+	const t = Date.now();
+	for (const step of d.steps) {
+		if (step.status === "done") continue;
+		if (step.status === "failed") return;
+		if (step.status === "pending") {
+			step.status = "running";
+			step.started_at = new Date(t).toISOString();
+			return;
+		}
+		if (t - new Date(step.started_at ?? t).getTime() < STEP_MS) return;
+		if (step.key === "research" && d.failOnce) {
+			d.failOnce = false;
+			step.status = "failed";
+			step.error =
+				"The website did not answer (timeout after 30 s). Check the URL, or retry.";
+			step.finished_at = new Date(t).toISOString();
+			d.status = "failed";
+			return;
+		}
+		step.status = "done";
+		step.finished_at = new Date(t).toISOString();
+	}
+	d.status = "draft_ready";
+	d.public_url = `https://portal.echo.example/nl-NL/demo-${d.id.slice(0, 8)}/start`;
+	d.project_url = `/w/${d.id}/projects/${d.id}/home`;
 }
 
 /** Unknown org ids are the signed-in customer's own org in the dev shell: the demo. */
@@ -543,6 +629,168 @@ export async function handle(
 	const sBase = staffBase(s.id);
 	const result = await (async (): Promise<unknown> => {
 		switch (name) {
+			case "startDemo": {
+				const id = uuid();
+				const org = uuid();
+				const created = now();
+				load()[org] = {
+					...otherStores()[0],
+					created_at: created,
+					id: org,
+					members: [
+						{
+							app_user_id: uuid(),
+							email: String(body.contact_email),
+							name: (body.contact_name as string | null) ?? null,
+							role: "admin",
+							since: created,
+						},
+					],
+					name: String(body.organisation_name),
+					stage: "prospect",
+					timeline: [],
+				} as Store;
+				event(
+					load()[org] as Store,
+					"account.created",
+					"staff",
+					{},
+					{ stage: "prospect" },
+				);
+				const d: FixtureDemo = {
+					contact_email: String(body.contact_email),
+					email_code_sign_in: body.email_code_sign_in === true,
+					failOnce: String(body.website_url).includes("fail"),
+					id,
+					invitation_sent_at: null,
+					offer: (body.offer as FixtureDemo["offer"]) ?? null,
+					org_id: org,
+					organisation_name: String(body.organisation_name),
+					project_url: null,
+					public_url: null,
+					published_at: null,
+					status: "running",
+					steps: STEPS.map((key) => ({
+						error: null,
+						finished_at: null,
+						key,
+						started_at: null,
+						status: "pending" as const,
+					})),
+				};
+				loadDemos()[id] = d;
+				advance(d);
+				return d;
+			}
+			case "readDemo":
+			case "retryDemo":
+			case "publishDemo": {
+				const d = loadDemos()[params.demoId ?? ""];
+				if (!d) throw notFound();
+				if (name === "retryDemo") {
+					const step = d.steps.find((x) => x.key === body.step);
+					if (!step || step.status !== "failed")
+						throw new AccountsApiError(
+							409,
+							"Only a failed step can be retried.",
+						);
+					step.status = "running";
+					step.error = null;
+					step.started_at = now();
+					step.finished_at = null;
+					d.status = "running";
+				}
+				advance(d);
+				if (name === "publishDemo") {
+					if (d.status !== "draft_ready")
+						throw new AccountsApiError(409, "The draft is not ready yet.");
+					d.status = "published";
+					d.published_at = now();
+					const target = load()[d.org_id] as Store;
+					if (d.email_code_sign_in) d.invitation_sent_at = now();
+					target.demo = {
+						links: { public_link: d.public_url },
+						project: d.project_url,
+					};
+					event(
+						target,
+						"demo.seeded",
+						"staff",
+						{},
+						{ invited: d.email_code_sign_in, published: true },
+					);
+					if (d.offer) {
+						save();
+						await handle(
+							"pushOffer",
+							{ orgId: d.org_id },
+							{
+								...d.offer,
+								currency: "EUR",
+								offer_name: d.organisation_name,
+								person_name: null,
+							},
+						);
+					}
+				}
+				const { failOnce: _f, offer: _o, ...out } = d;
+				return out;
+			}
+			case "tasksSummary": {
+				// The customer's own org (whatever id the dev shell gives it) carries the demo's tasks.
+				const me = await fetch(`${API_BASE_URL}/v2/me`, {
+					credentials: "include",
+				})
+					.then((r) => (r.ok ? r.json() : null))
+					.catch(() => null);
+				const own = (me?.orgs?.[0] ?? null) as {
+					id: string;
+					name: string;
+				} | null;
+				const summarise = (id: string, name: string, x: Store) => {
+					const live = x.tasks.filter((t) => t.status !== "withdrawn");
+					return {
+						done: live.filter((t) => t.status === "done").length,
+						id,
+						logo_url: null,
+						name,
+						next_task_title:
+							live.find(
+								(t) => t.status === "open" || t.status === "changes_requested",
+							)?.title ?? null,
+						stage: x.stage,
+						total: live.length,
+					};
+				};
+				const orgs = [];
+				if (own) orgs.push(summarise(own.id, own.name, load()[DEMO] as Store));
+				if (twoOrgs()) {
+					const second = load()[
+						"0199a2c0-0000-7000-8000-000000000001"
+					] as Store;
+					if (!second.tasks.length) {
+						openTask(second, {
+							body: null,
+							document_id: null,
+							due_on: null,
+							kind: "generic",
+							locked: false,
+							locked_until: null,
+							reminder_interval_days: null,
+							status: "open",
+							title: "Stuur ons de datum van de bewonersavond",
+						});
+						second.tasks.push({
+							...(second.tasks[0] as StoredTask),
+							id: uuid(),
+							status: "done",
+							title: "Plan een kennismaking",
+						});
+					}
+					orgs.push(summarise(second.id, second.name, second));
+				}
+				return { orgs: orgs.filter((o) => o.total > 0) };
+			}
 			case "accountPage":
 				return {
 					billing: s.billing,
@@ -837,8 +1085,18 @@ export async function handle(
 			case "listAccounts": {
 				const all = Object.values(load());
 				const stage = query?.stage;
+				// PROVISIONAL: `q` matches the name or a member's email, as the backend will.
+				const q = String(query?.q ?? "")
+					.trim()
+					.toLowerCase();
 				const rows = all
 					.filter((x) => !stage || x.stage === stage)
+					.filter(
+						(x) =>
+							!q ||
+							x.name.toLowerCase().includes(q) ||
+							x.members.some((m) => (m.email ?? "").toLowerCase().includes(q)),
+					)
 					.map(listItem);
 				return {
 					accounts: rows,
@@ -1249,6 +1507,7 @@ export async function pdfFor(url: string): Promise<Uint8Array> {
 /** For tests: drop the in-memory copy. */
 export function resetFixtures() {
 	stores = null;
+	demos = null;
 	try {
 		sessionStorage.removeItem(KEY);
 	} catch {}

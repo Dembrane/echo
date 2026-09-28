@@ -2379,7 +2379,7 @@ msgstr ""
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:138
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:149
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:161
-#: src/features/sidebar/blocks/HelpBlock.tsx:76
+#: src/features/sidebar/blocks/HelpBlock.tsx:101
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:248
 #: src/components/project/ProjectPortalEditor.tsx:1474
@@ -3319,7 +3319,7 @@ msgstr "Confirmez votre mot de passe pour générer un nouveau secret pour votre
 msgid "Connect"
 msgstr ""
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:74
+#: src/features/sidebar/blocks/HelpBlock.tsx:99
 #: src/components/agent-access/AgentAccessSection.tsx:147
 msgid "Connect your agent"
 msgstr "Connecter votre agent"
@@ -3368,7 +3368,7 @@ msgid "Consolidated arguments"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:27
-#: src/features/sidebar/blocks/HelpBlock.tsx:122
+#: src/features/sidebar/blocks/HelpBlock.tsx:147
 msgid "Contact support"
 msgstr "Contacter le support"
 
@@ -4558,7 +4558,7 @@ msgid "Do you want to stay in the loop?"
 msgstr "Voulez-vous rester dans la boucle ?"
 
 #: src/features/sidebar/views/HelpView.tsx:35
-#: src/features/sidebar/blocks/HelpBlock.tsx:99
+#: src/features/sidebar/blocks/HelpBlock.tsx:124
 #: src/components/chat/ChatHistoryMessage.tsx:244
 msgid "Documentation"
 msgstr "Documentation"
@@ -5566,7 +5566,7 @@ msgid "participant.modal.echo.info.title"
 msgstr "Fonctionnalité bientôt disponible"
 
 #: src/features/sidebar/views/HelpView.tsx:65
-#: src/features/sidebar/blocks/HelpBlock.tsx:62
+#: src/features/sidebar/blocks/HelpBlock.tsx:87
 msgid "Feedback"
 msgstr "Commentaires"
 
@@ -6157,9 +6157,9 @@ msgid "have your recordings transcribed"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:25
-#: src/features/sidebar/blocks/HelpBlock.tsx:188
-#: src/features/sidebar/blocks/HelpBlock.tsx:203
-#: src/features/sidebar/blocks/HelpBlock.tsx:217
+#: src/features/sidebar/blocks/HelpBlock.tsx:213
+#: src/features/sidebar/blocks/HelpBlock.tsx:228
+#: src/features/sidebar/blocks/HelpBlock.tsx:245
 msgid "Help"
 msgstr "Aide"
 
@@ -9880,7 +9880,7 @@ msgid "Plan ends"
 msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:52
-#: src/features/sidebar/blocks/HelpBlock.tsx:113
+#: src/features/sidebar/blocks/HelpBlock.tsx:138
 msgid "Planned"
 msgstr "Prévu"
 
@@ -11087,7 +11087,7 @@ msgid "Report already generating"
 msgstr "Rapport déjà en cours de génération"
 
 #: src/features/sidebar/views/HelpView.tsx:58
-#: src/features/sidebar/blocks/HelpBlock.tsx:50
+#: src/features/sidebar/blocks/HelpBlock.tsx:75
 #: src/components/feedback/ReportIssueModal.tsx:180
 msgid "Report an issue"
 msgstr "Signaler un problème"
@@ -13284,7 +13284,7 @@ msgid "System default"
 msgstr "Valeur par défaut du système"
 
 #: src/features/sidebar/views/HelpView.tsx:49
-#: src/features/sidebar/blocks/HelpBlock.tsx:110
+#: src/features/sidebar/blocks/HelpBlock.tsx:135
 msgid "System status"
 msgstr "État du système"
 
@@ -13338,6 +13338,10 @@ msgstr "Take some time to create an outcome that makes your contribution concret
 
 #: src/components/release/releaseHistory.ts:44
 msgid "Tapping Record twice no longer creates duplicate conversations."
+msgstr ""
+
+#: src/features/sidebar/blocks/HelpTasksItem.tsx:33
+msgid "Tasks"
 msgstr ""
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:559
@@ -15811,7 +15815,7 @@ msgstr "Ce qui résoudrait cette tension"
 msgid "What would you like to explore?"
 msgstr "Qu’est-ce que tu veux explorer ?"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:87
+#: src/features/sidebar/blocks/HelpBlock.tsx:112
 #: src/components/release/ReleaseVideoModal.tsx:310
 msgid "What's new"
 msgstr "Nouveautés"

@@ -22,24 +22,13 @@ import { toast } from "@/components/common/Toaster";
 import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
 import { formatMoney } from "../format";
-
-interface Line {
-	id: string;
-	description: string;
-	bullets: string;
-	quantity: number;
-	unitPrice: number;
-	vatPercent: number;
-}
-
-const emptyLine = (): Line => ({
-	bullets: "",
-	description: "",
-	id: crypto.randomUUID(),
-	quantity: 1,
-	unitPrice: 0,
-	vatPercent: 21,
-});
+import {
+	cents,
+	emptyLine,
+	type Line,
+	LinesEditor,
+	toItems,
+} from "./LinesEditor";
 
 /**
  * Staff: an offer from lines, a template and a language. The backend lays it out as the
@@ -70,15 +59,12 @@ export function PushOfferModal({
 	const fields =
 		push.error instanceof AccountsApiError ? push.error.fields : {};
 
-	const cents = (euros: number) => Math.round(euros * 100);
 	const net = lines.reduce((a, l) => a + l.quantity * cents(l.unitPrice), 0);
 	const vat = lines.reduce(
 		(a, l) =>
 			a + Math.round((l.quantity * cents(l.unitPrice) * l.vatPercent) / 100),
 		0,
 	);
-	const update = (i: number, patch: Partial<Line>) =>
-		setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
 
 	const submit = () =>
 		push.mutate(
@@ -86,16 +72,7 @@ export function PushOfferModal({
 				body: {
 					attention: template === "event" ? attention : null,
 					currency: "EUR",
-					items: lines.map((l) => ({
-						bullets: l.bullets
-							.split("\n")
-							.map((b) => b.trim())
-							.filter(Boolean),
-						description: l.description,
-						quantity: l.quantity,
-						unit_price_cents: cents(l.unitPrice),
-						vat_rate_bps: Math.round(l.vatPercent * 100),
-					})),
+					items: toItems(lines),
 					language,
 					offer_name: offerName,
 					person_name: personName,
@@ -169,99 +146,7 @@ export function PushOfferModal({
 				</SimpleGrid>
 
 				<Divider label={t`Lines`} labelPosition="left" />
-				<Stack gap="sm">
-					{lines.map((line, i) => (
-						<Paper
-							key={line.id}
-							withBorder
-							p="sm"
-							radius="md"
-							data-testid="offer-line"
-						>
-							<Stack gap="xs">
-								<Group align="flex-end" gap="xs" wrap="nowrap">
-									<TextInput
-										label={t`Description`}
-										style={{ flex: 1 }}
-										value={line.description}
-										onChange={(e) =>
-											update(i, { description: e.currentTarget.value })
-										}
-										error={fields[`items.${i}.description`]}
-										data-testid="line-description"
-									/>
-									{lines.length > 1 && (
-										<ActionIcon
-											variant="subtle"
-											color="gray"
-											aria-label={t`Remove line`}
-											onClick={() =>
-												setLines((ls) => ls.filter((_, j) => j !== i))
-											}
-											mb={4}
-										>
-											<TrashIcon size={16} />
-										</ActionIcon>
-									)}
-								</Group>
-								<Textarea
-									label={t`Bullets`}
-									description={t`One per line`}
-									autosize
-									minRows={2}
-									value={line.bullets}
-									onChange={(e) =>
-										update(i, { bullets: e.currentTarget.value })
-									}
-								/>
-								<SimpleGrid cols={{ base: 2, sm: 4 }} spacing="xs">
-									<NumberInput
-										label={t`Quantity`}
-										min={1}
-										value={line.quantity}
-										onChange={(v) => update(i, { quantity: Number(v) || 1 })}
-										data-testid="line-quantity"
-									/>
-									<NumberInput
-										label={t`Unit price (EUR)`}
-										min={0}
-										decimalScale={2}
-										value={line.unitPrice}
-										onChange={(v) => update(i, { unitPrice: Number(v) || 0 })}
-										data-testid="line-price"
-									/>
-									<NumberInput
-										label={t`VAT %`}
-										min={0}
-										max={100}
-										value={line.vatPercent}
-										onChange={(v) => update(i, { vatPercent: Number(v) || 0 })}
-									/>
-									<Stack gap={2} justify="flex-end">
-										<Text size="xs" c="dimmed">
-											<Trans>Line total</Trans>
-										</Text>
-										<Text size="sm">
-											{formatMoney(
-												line.quantity * cents(line.unitPrice),
-												"EUR",
-												i18n.locale,
-											)}
-										</Text>
-									</Stack>
-								</SimpleGrid>
-							</Stack>
-						</Paper>
-					))}
-					<Button
-						variant="subtle"
-						size="xs"
-						onClick={() => setLines((ls) => [...ls, emptyLine()])}
-						style={{ alignSelf: "flex-start" }}
-					>
-						<Trans>Add a line</Trans>
-					</Button>
-				</Stack>
+				<LinesEditor lines={lines} onChange={setLines} errors={fields} />
 
 				<Group justify="space-between" align="flex-end">
 					<Stack gap={0}>

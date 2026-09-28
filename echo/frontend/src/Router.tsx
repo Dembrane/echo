@@ -210,6 +210,18 @@ const AccountCardRoute = createLazyNamedRoute(
 	() => import("./features/accounts/staff/AccountCardRoute"),
 	"AccountCardRoute",
 );
+const NewDemoRoute = createLazyNamedRoute(
+	() => import("./features/accounts/staff/NewDemoRoute"),
+	"NewDemoRoute",
+);
+const DemoRoute = createLazyNamedRoute(
+	() => import("./features/accounts/staff/DemoRoute"),
+	"DemoRoute",
+);
+const AccountPickerRoute = createLazyNamedRoute(
+	() => import("./features/accounts/customer/AccountPickerRoute"),
+	"AccountPickerRoute",
+);
 const FieldEditorRoute = createLazyNamedRoute(
 	() => import("./features/accounts/staff/FieldEditorRoute"),
 	"FieldEditorRoute",
@@ -626,6 +638,16 @@ export const mainRouter = createBrowserRouter([
 				path: "release-notes",
 			},
 			{
+				// "Tasks" in the Help menu, when the caller has account tasks in several orgs.
+				children: [{ element: <AccountPickerRoute />, index: true }],
+				element: (
+					<Protected>
+						<BaseLayout />
+					</Protected>
+				),
+				path: "account",
+			},
+			{
 				children: [{ element: <ConnectAgentRoute />, index: true }],
 				element: (
 					<Protected>
@@ -659,6 +681,8 @@ export const mainRouter = createBrowserRouter([
 				children: [
 					{ element: <Navigate to="usage-and-billing" replace />, index: true },
 					{ element: <AdminSettingsRoute />, path: ":tab" },
+					{ element: <NewDemoRoute />, path: "accounts/new-demo" },
+					{ element: <DemoRoute />, path: "accounts/demos/:demoId" },
 					{ element: <AccountCardRoute />, path: "accounts/:orgId" },
 					{
 						element: <FieldEditorRoute />,
