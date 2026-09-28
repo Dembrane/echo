@@ -64,8 +64,8 @@ Migrations:
 Merge in the order you tested. Admin-merging past branch protection needs a person's explicit yes. Then:
 
 ```sh
-curl -sf https://echo-preview-api-86405194907.europe-west4.run.app/health | jq .release
-gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="echo-preview-api" AND severity>=ERROR' --project dembrane-echo --limit 50
+curl -sf https://echo-preview-api-218237812097.europe-west4.run.app/health | jq .release
+gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="echo-preview-api" AND severity>=ERROR' --project dembrane-web-previews --limit 50
 ```
 
 Walk the flows the release touches as a host and as a participant, and the screens next to them. Recording needs a real phone on a real network; no agent can do that part. A defect found here goes back to step 2.

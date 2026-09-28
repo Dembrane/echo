@@ -1,14 +1,40 @@
 # Infrastructure
 
-One Terraform state per environment in `gs://dbr-gcp-echo-tf-state/platform/<env>`, plus
-`platform/project` for settings the three environments share (they live in one GCP project).
+Each environment is its own GCP project, directly under the dembrane.com organization, with
+its own Terraform root, state and identities. No identity of one environment holds a role
+in another's project, so a preview (which any PR branch can deploy) cannot reach next or prod.
+
+| Environment | Project | Number | Root | State |
+|---|---|---|---|---|
+| preview | `dembrane-web-previews` | 218237812097 | `preview/` | `gs://dembrane-web-previews-tf-state` |
+| next | `dembrane-web-next` | 488580804029 | `next/` | `gs://dembrane-web-next-tf-state` |
+| prod | `dembrane-web-prod` | 740075346439 | `prod/` | `gs://dembrane-web-prod-tf-state` |
+
+The roots are thin: each calls `modules/platform` with its `<env>.tfvars.json`. Once per
+project, `bootstrap.sh <env>` makes the state bucket (versioned, europe-west4) and turns off
+Trace, Telemetry and the default APIs the platform never calls. Then:
 
 ```
-terraform init -reconfigure -backend-config="prefix=platform/<env>"
-GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token) terraform apply -var-file=<env>.tfvars.json
-
-cd project && terraform init -backend-config="prefix=platform/project" && terraform apply
+cd <env>
+terraform init
+GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token) terraform apply
 ```
+
+Per project: the APIs the platform uses (Cloud Run, Cloud SQL, Artifact Registry, Secret
+Manager, IAM, STS, Storage, Vertex AI, Logging, Monitoring), a registry `echo-<env>`, a Cloud
+SQL instance `echo-<env>`, the uploads bucket with its HMAC key, secrets replicated in
+europe-west4 only, the runtime and deployer service accounts, the GitHub trust, the EU log
+bucket with the `_Default` sink pointed at it, log metrics, alerts and the readiness check.
+
+Images: each environment has its own registry and only its own deployer pushes to it. A
+shared registry would let the preview deployer, which runs for any PR branch, overwrite a
+tag that prod then pulls.
+
+GitHub trust (the workload identity provider's condition), all in `Dembrane/echo`:
+- preview: `refs/heads/feat/bun-migration`, or jobs in the `pr-preview` environment;
+- next: `refs/heads/main`;
+- prod: protected `refs/heads/main` or a tag, and only jobs in the `prod` environment,
+  whose required reviewers approve each deploy.
 
 Services and jobs are rolled out by `.github/workflows/platform.yml` through
 `scripts/deploy-env.sh`, with the image built from the commit; Terraform owns everything
@@ -20,7 +46,7 @@ sizes an environment.
 
 | | preview | next | prod |
 |---|---|---|---|
-| Deploys | branch preview from feat/bun-migration; PR previews on request | main, after cutover | main, after cutover |
+| Deploys | branch preview from feat/bun-migration; PR previews on request | main, by hand until cutover | main or a tag, by hand after approval |
 | API | 0 to 1, concurrency 1000 | 2 to 2 | 2 to 10 |
 | Dashboard, portal | 0 to 1 each | 2 to 2 each | 2 to 4 each |
 | Media (ffmpeg, one job per instance) | 0 to 1 | 0 to 4 | 1 to 20 |
@@ -84,17 +110,32 @@ headroom   = 10% of max_connections, at least 5
 | Vertex AI generation | EU multi-region endpoint (`aiplatform.eu.rep.googleapis.com`) | `LLM_VERTEX_LOCATION=eu`, config residency test | |
 | Vertex embeddings | europe-west4 | `EMBEDDING_LOCATION`, config residency test | |
 | SendGrid | EU data residency | `SENDGRID_REGION=eu`, config residency test | |
-| Cloud Logging | bucket `eu-default` in europe-west4, 30 days | `_Default` sink in `project/` | `_Required` (admin activity and system event audit logs, 400 days) stays global: Google does not allow moving it |
-| Cloud Trace | nothing stored | API disabled; no spans recorded or exported (config residency test) | |
+| Cloud Logging | bucket `eu-default` in europe-west4, 30 days | `_Default` sink in `modules/platform/logging.tf` | `_Required` (admin activity and system event audit logs, 400 days) stays global: Google does not allow moving it |
+| Cloud Trace | nothing stored | Trace and Telemetry APIs disabled by `bootstrap.sh`; no spans recorded or exported (config residency test) | |
 | Cloud Monitoring | metrics and alert history are stored globally | | no location setting; the platform's metrics carry queue names and counts, no customer data |
 | Uptime checks | probes from Europe and the US | `selected_regions` | at least three locations are required and Europe is one, so US checkers stay; a probe reads `/ready` only |
 | Cloud Build | not used by the platform (images build in GitHub Actions) | | |
 
-Also in the project and outside the platform, left alone: the `dembrane-echo_cloudbuild`
-bucket (US) and `cloud-run-source-deploy` registry (europe-west1) used by
-`dbr-internal-usage-tracker`, its three secrets with automatic replication, the eu-harness
-VM's `phoenix-tailscale-authkey` (automatic), and the `gcp_billing` BigQuery dataset (US).
-The project default log storage location is an organization or folder setting
+The three projects hold nothing but the platform. The default log storage location for new
+projects is an organization setting
 (`gcloud logging settings update --organization=535152468605 --storage-location=europe-west4`)
 and needs an organization admin; an organization policy on `gcp.resourceLocations`
 (`in:eu-locations`) would enforce all of the above for new resources.
+
+## First deploy of next and prod
+
+Terraform has made everything around the services; the services themselves come from the
+first `platform` workflow run with target next or prod. Before it:
+
+- Add a value to each empty secret with `gcloud secrets versions add echo-<env>-<name>
+  --data-file=-`. `invite-hash-secret` must hold Directus's SECRET while Directus-era invite
+  links are in inboxes. The others (`sendgrid-api-key`, `auth-google-client-secret`,
+  `mollie-api-key`, `echo-support-webhook-token`, `site-api-token`,
+  `accounts-slack-webhook-url`, `accounts-events-secret`, `agent-client-secret-key`) switch
+  their feature on; the deploy wires each one that has a value and leaves the rest off.
+- Create the `prod` GitHub environment with required reviewers and a deployment rule for
+  main and tags. A job naming an environment that does not exist creates it unprotected.
+- Point the domains in `environments/<env>.ts` at the services (a load balancer or Cloud
+  Run domain mappings, and DNS), then set `monitor_api_ready = true` in the root so the
+  readiness check and its alert start.
+- Set `alert_channels` so alerts reach Slack or email, not only the console.
