@@ -14,6 +14,7 @@ import { canvasWorker } from "@echo/canvas";
 import type { Config } from "@echo/config";
 import { conversationWorker, liveRecordings, type PipelineDeps } from "@echo/conversations";
 import type { Db } from "@echo/db";
+import { supportForwardRegistration, supportOutbox } from "@echo/feedback";
 import type { Completer, Embedder, Models } from "@echo/llm";
 import type { Mailer } from "@echo/mail";
 import { mapWorker } from "@echo/map";
@@ -94,7 +95,7 @@ export function registrations(deps: {
   popcorn: { databaseUrl: string; portalUrl: string };
 }): Registration[] {
   const { logger, db, config } = deps;
-  // Pricing bookings and overage notices share the team's webhook.
+  // Support requests, pricing bookings and overage notices share the team's webhook.
   const teamWebhook =
     config.support.forwardWebhookUrl && config.support.forwardWebhookToken
       ? httpForwarder(config.support.forwardWebhookUrl, config.support.forwardWebhookToken)
@@ -186,6 +187,13 @@ export function registrations(deps: {
       },
     }),
     popcornWorker(popcornDeps),
+    supportForwardRegistration({
+      outbox: supportOutbox(db),
+      forwarder: teamWebhook,
+      environment: environmentName(deps.dashboardUrl),
+      dashboardUrl: deps.dashboardUrl,
+      logger,
+    }),
     pricingRegistration({
       store: pricingStorage(db),
       forwarder: teamWebhook,

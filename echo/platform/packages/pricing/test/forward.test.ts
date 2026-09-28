@@ -5,6 +5,7 @@ import {
   bookingPayload,
   environmentName,
   type Forwarder,
+  httpForwarder,
   type PricingRow,
   runForwardBookings,
 } from "../src";
@@ -88,4 +89,17 @@ test("payload shape: kind, always is_internal, absent fields omitted", () => {
   expect(environmentName("https://dashboard.dembrane.com")).toBe("production");
   expect(environmentName("https://dashboard.echo-next.dembrane.com/")).toBe("echo-next");
   expect(environmentName("http://localhost:5173")).toBe("localhost");
+});
+
+test("httpForwarder posts JSON with the shared token header", async () => {
+  const calls: { url: string; init: RequestInit }[] = [];
+  const fetchStub = (async (url: string, init: RequestInit) => {
+    calls.push({ url, init });
+    return new Response("ok", { status: 202 });
+  }) as unknown as typeof fetch;
+  const res = await httpForwarder("https://sam.example/hook", "tok", fetchStub).post({ id: "1" });
+  expect(res).toEqual({ status: 202, text: "ok" });
+  expect(calls[0]?.url).toBe("https://sam.example/hook");
+  expect(calls[0]?.init.headers).toMatchObject({ "x-echo-support-token": "tok" });
+  expect(calls[0]?.init.body).toBe('{"id":"1"}');
 });

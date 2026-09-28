@@ -1,4 +1,16 @@
 export {
+  forwardSupportRequests,
+  runForwardSupport,
+  SUPPORT_FORWARD_CRON,
+  type SupportForwardDeps,
+  type SupportForwarder,
+  type SupportOutbox,
+  type SupportRow,
+  supportForwardRegistration,
+  supportOutbox,
+  supportPayload,
+} from "./forward";
+export {
   attachmentLinkBase,
   buildReportMessage,
   buildReportPageContext,
