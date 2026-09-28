@@ -13,6 +13,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@dembrane/access": "workspace:*",
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",

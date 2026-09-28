@@ -97,7 +97,7 @@ Most namespaces use core, db, observability, access, http, legacy-shape, queue, 
 - **canvas** (in 2, out 10): Dynamic canvases: a live wall built from recent transcript, redrawn on a tick. Used by api, worker. Uses realtime, llm.
 - **feedback** (in 2, out 9): Bug reports, feedback responses and the forward to support. Used by api, worker. Uses storage.
 - **present** (in 2, out 11): Present: the published, audience-facing view of a popcorn deck and a map. Used by api, worker. Uses map, popcorn, analysis, realtime.
-- **pricing** (in 2, out 7): The pricing configurator and the bookings it forwards. Used by api, worker. Uses storage.
+- **pricing** (in 2, out 8): The pricing configurator and the bookings it forwards. Used by api, worker. Uses storage.
 - **reports** (in 2, out 11): Report generation and the report timeline. Used by api, worker. Uses notifications, projects, webhooks, llm.
 - **tenancy** (in 2, out 10): Orgs and workspaces: members, settings, access requests, support access, project shares. Used by api, worker. Uses billing, mail, storage.
 - **agent-access** (in 1, out 10): Outside AI agents reaching dembrane: the MCP server, OAuth, and the tools it exposes. Used by api. Uses conversations, analytics, realtime.
@@ -111,7 +111,7 @@ Most namespaces use core, db, observability, access, http, legacy-shape, queue, 
 - **core** (in 32, out 0): Errors, ids, the operation context and asset paths every package shares. Used by db, access, http, legacy-shape and 28 more. Uses nothing.
 - **db** (in 30, out 1): The Drizzle schema for every table, migrations and the database connection. Used by access, queue, ratelimit, auth and 26 more. Uses core.
 - **observability** (in 29, out 0): Structured logging and tracing. Used by http, queue, realtime, analytics and 25 more. Uses nothing.
-- **access** (in 24, out 2): Who may do what: roles, policies and tiers resolved for an org, workspace or project. Used by http, billing, webhooks, analysis and 20 more. Uses db, core.
+- **access** (in 25, out 2): Who may do what: roles, policies and tiers resolved for an org, workspace or project. Used by http, billing, webhooks, analysis and 21 more. Uses db, core.
 - **http** (in 24, out 3): What every route shares: the signed-in caller, body validation, project and workspace guards. Used by billing, webhooks, analysis, notifications and 20 more. Uses access, observability, core.
 - **legacy-shape** (in 19, out 1): Response shapes and number and time formats the Python API and Directus produced, kept byte for byte. Used by billing, webhooks, analysis, projects and 15 more. Uses core.
 - **queue** (in 19, out 2): Durable background jobs and workflows on Postgres (DBOS): define, enqueue, run. Used by billing, webhooks, analysis, projects and 15 more. Uses observability, db.

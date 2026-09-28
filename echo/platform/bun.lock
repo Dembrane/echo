@@ -128,6 +128,12 @@
         "zod": "^4.1.0",
       },
     },
+    "ops": {
+      "name": "@dembrane/ops",
+      "dependencies": {
+        "postgres": "^3.4.9",
+      },
+    },
     "packages/access": {
       "name": "@dembrane/access",
       "dependencies": {
@@ -518,6 +524,7 @@
     "packages/pricing": {
       "name": "@dembrane/pricing",
       "dependencies": {
+        "@dembrane/access": "workspace:*",
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
@@ -853,6 +860,8 @@
     "@dembrane/notifications": ["@dembrane/notifications@workspace:packages/notifications"],
 
     "@dembrane/observability": ["@dembrane/observability@workspace:packages/observability"],
+
+    "@dembrane/ops": ["@dembrane/ops@workspace:ops"],
 
     "@dembrane/parity": ["@dembrane/parity@workspace:parity"],
 
