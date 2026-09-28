@@ -23,7 +23,7 @@ import { Notifier } from "@dembrane/notifications";
 import { createLogger, initTracing } from "@dembrane/observability";
 import { popcornApiJobs } from "@dembrane/popcorn";
 import { projectJobs } from "@dembrane/projects";
-import { Queue } from "@dembrane/queue";
+import { Queue, workerFreshness } from "@dembrane/queue";
 import { PostgresRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { Hub } from "@dembrane/realtime";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
@@ -232,6 +232,7 @@ const app = buildApp({
   logger,
   tracer: tracing.tracer,
   pingDb: database.ping,
+  workerFreshness: (release) => workerFreshness(database.client, release),
   auth,
   principalFor: principalLookup(database.db),
   access: new Access(new DrizzleAccessStore(database.db)),

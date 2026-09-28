@@ -10,7 +10,7 @@ import type { Models } from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
 import type { Notifier } from "@dembrane/notifications";
 import type { Logger, Tracer } from "@dembrane/observability";
-import type { Queue } from "@dembrane/queue";
+import type { Queue, WorkerFreshness } from "@dembrane/queue";
 import type { RateLimiter } from "@dembrane/ratelimit";
 import type { Hub } from "@dembrane/realtime";
 import type { ObjectStorage } from "@dembrane/storage";
@@ -25,6 +25,8 @@ export interface Deps {
   readonly tracer: Tracer;
   /** Resolves when the database answers; readiness fails while it does not. */
   readonly pingDb: () => Promise<unknown>;
+  /** How recently a worker (of the given release) heartbeat and finished a job; /ready/worker. */
+  readonly workerFreshness: (release?: string) => Promise<WorkerFreshness>;
   readonly auth: Pick<Auth, "handler" | "api">;
   /** Maps a signed-in user to the ids memberships use; null when the user has no app_user row. */
   readonly principalFor: (userId: string) => Promise<Signed | null>;

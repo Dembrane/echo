@@ -14,5 +14,10 @@ export {
   WORKFLOW_VERSION,
   type WorkOptions,
 } from "./queue";
-export { ExecutorHeartbeat } from "./recovery";
+export {
+  ExecutorHeartbeat,
+  executorIdFor,
+  type WorkerFreshness,
+  workerFreshness,
+} from "./recovery";
 export { currentWorkflowId, durableSleep, startWorkflow, step, workflow } from "./workflow";

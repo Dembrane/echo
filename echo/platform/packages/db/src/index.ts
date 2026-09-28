@@ -3,7 +3,7 @@ import { connect } from "./connection";
 import * as schema from "./schema";
 import * as relations from "./schema/relations";
 
-export { connect } from "./connection";
+export { connect, type DbFailure, describeDbFailure } from "./connection";
 export {
   dropPreviewDatabase,
   ensurePreviewDatabase,
@@ -40,5 +40,5 @@ export function createDb(opts: DbOptions) {
     connection: { statement_timeout: opts.statementTimeoutMs ?? 30_000, application_name: "echo" },
   });
   const db = drizzle(client, { schema: { ...schema, ...relations } });
-  return { db, close: () => client.end({ timeout: 5 }), ping: () => client`select 1` };
+  return { db, client, close: () => client.end({ timeout: 5 }), ping: () => client`select 1` };
 }

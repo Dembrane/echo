@@ -7,8 +7,25 @@ variable "alert_channels" {
   default     = []
 }
 
+variable "alert_email" {
+  type        = string
+  description = "Address every alert in this environment emails. Null sends nothing beyond alert_channels."
+  default     = null
+}
+
+resource "google_monitoring_notification_channel" "email" {
+  count        = var.alert_email == null ? 0 : 1
+  display_name = "${local.name}: alerts by email"
+  type         = "email"
+  labels       = { email_address = var.alert_email }
+}
+
 locals {
-  run_filter = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${local.name}-api\""
+  run_filter     = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${local.name}-api\""
+  alert_channels = concat(var.alert_channels, google_monitoring_notification_channel.email[*].id)
+  # The environment's worker pools. Preview's PR previews run their own pools
+  # (echo-pr-<n>-worker) on the same identities; they count as preview's.
+  worker_pools = var.env == "preview" ? "^echo-(preview|pr-[0-9]+)-worker$" : "^${local.name}-worker$"
 }
 
 resource "google_logging_metric" "worker_heartbeat" {
@@ -53,25 +70,93 @@ resource "google_logging_metric" "queue_ready" {
   }
 }
 
+# Cloud Run logs "Container called exit(<code>)." each time a worker process ends. Exit 0 is
+# a rollout or scale-in; anything else is a crash, and a crash loop logs several a minute.
+resource "google_logging_metric" "worker_exits" {
+  name   = "${local.name}/worker_exits"
+  filter = "resource.type=\"cloud_run_worker_pool\" AND resource.labels.worker_pool_name=~\"${local.worker_pools}\" AND textPayload:\"Container called exit(\" AND NOT textPayload:\"exit(0)\""
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type  = "INT64"
+  }
+}
+
+# Answers 200 only while the newest executor heartbeat (written every 10 s once the queue
+# runs) is under 90 s old; see apps/api/src/routes/system.ts.
+resource "google_monitoring_uptime_check_config" "worker_ready" {
+  display_name     = "${local.name}: worker heartbeat fresh"
+  timeout          = "10s"
+  period           = "300s"
+  selected_regions = ["EUROPE", "USA"]
+  http_check {
+    path         = "/ready/worker"
+    port         = 443
+    use_ssl      = true
+    validate_ssl = true
+  }
+  monitored_resource {
+    type = "uptime_url"
+    labels = {
+      project_id = var.project
+      host       = "${local.name}-api-86405194907.${var.region}.run.app"
+    }
+  }
+}
+
+# Three views of one failure: the worker process keeps exiting, its executor heartbeat row
+# goes stale, or the per-minute heartbeat job stops logging. Series are summed per pool,
+# so a rollout (a new revision taking over) does not read as a missing heartbeat.
 resource "google_monitoring_alert_policy" "worker_down" {
-  display_name = "${local.name}: worker heartbeat missing"
+  display_name = "${local.name}: worker down"
   combiner     = "OR"
   conditions {
-    display_name = "no heartbeat for 5 minutes"
+    display_name = "worker container exits more than 3 times in 10 minutes"
+    condition_threshold {
+      filter          = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.worker_exits.name}\" AND resource.type=\"cloud_run_worker_pool\""
+      comparison      = "COMPARISON_GT"
+      threshold_value = 3
+      duration        = "0s"
+      aggregations {
+        alignment_period     = "600s"
+        per_series_aligner   = "ALIGN_SUM"
+        cross_series_reducer = "REDUCE_SUM"
+        group_by_fields      = ["resource.label.worker_pool_name"]
+      }
+    }
+  }
+  conditions {
+    display_name = "executor heartbeat stale for 10 minutes (/ready/worker failing)"
+    condition_threshold {
+      filter          = "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.type=\"uptime_url\" AND metric.label.check_id=\"${google_monitoring_uptime_check_config.worker_ready.uptime_check_id}\""
+      comparison      = "COMPARISON_GT"
+      threshold_value = 1
+      duration        = "600s"
+      aggregations {
+        alignment_period     = "300s"
+        per_series_aligner   = "ALIGN_NEXT_OLDER"
+        cross_series_reducer = "REDUCE_COUNT_FALSE"
+        group_by_fields      = ["resource.label.host"]
+      }
+    }
+  }
+  conditions {
+    display_name = "no heartbeat job for 5 minutes"
     condition_absent {
-      filter   = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.worker_heartbeat.name}\" AND resource.type=\"cloud_run_worker_pool\""
+      filter   = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.worker_heartbeat.name}\" AND resource.type=\"cloud_run_worker_pool\" AND resource.label.worker_pool_name=\"${local.name}-worker\""
       duration = "300s"
       aggregations {
-        alignment_period   = "60s"
-        per_series_aligner = "ALIGN_SUM"
+        alignment_period     = "60s"
+        per_series_aligner   = "ALIGN_SUM"
+        cross_series_reducer = "REDUCE_SUM"
+        group_by_fields      = ["resource.label.worker_pool_name"]
       }
     }
   }
   documentation {
-    content   = "Schedules and background jobs are not running. Check the worker pool's logs for a crash loop, then the database connection."
+    content   = "Schedules and background jobs are not running. Search the worker pool's logs for jsonPayload.signal=\"worker.boot_failed\": that line names the cause (socket, host, auth, database, capacity). /ready/worker on the API gives the heartbeat age."
     mime_type = "text/markdown"
   }
-  notification_channels = var.alert_channels
+  notification_channels = local.alert_channels
 }
 
 resource "google_monitoring_alert_policy" "api_errors" {
@@ -94,7 +179,7 @@ resource "google_monitoring_alert_policy" "api_errors" {
     content   = "Search the API logs for severity=ERROR; every line carries request_id and a trace link."
     mime_type = "text/markdown"
   }
-  notification_channels = var.alert_channels
+  notification_channels = local.alert_channels
 }
 
 resource "google_monitoring_alert_policy" "queue_backlog" {
@@ -119,7 +204,7 @@ resource "google_monitoring_alert_policy" "queue_backlog" {
     content   = "Jobs arrive faster than the worker finishes them. Check for a failing handler (job failed lines) before adding worker instances."
     mime_type = "text/markdown"
   }
-  notification_channels = var.alert_channels
+  notification_channels = local.alert_channels
 }
 
 resource "google_monitoring_uptime_check_config" "api_ready" {
@@ -168,5 +253,5 @@ resource "google_monitoring_alert_policy" "api_unready" {
     content   = "The API answers but cannot reach its database, or does not answer. /ready names what is failing."
     mime_type = "text/markdown"
   }
-  notification_channels = var.alert_channels
+  notification_channels = local.alert_channels
 }
