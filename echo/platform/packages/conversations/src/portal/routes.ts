@@ -17,7 +17,7 @@ import {
   removeChunk,
   requestFinish,
 } from "./service";
-import { confirmUpload, probeUrl, uploadForm, uploadUrl } from "./uploads";
+import { confirmUpload, probeUrl, uploadUrl } from "./uploads";
 
 const { model, optional, required, nullable, str, list, datetime } = p;
 
@@ -134,21 +134,6 @@ export function portalRoutes(d: ConversationsDeps) {
       transcript: body.data.content,
       source: body.data.source || "PORTAL_TEXT",
     });
-    return c.json(publicChunk(chunk));
-  });
-
-  app.post("/api/participant/conversations/:conversation_id/upload-chunk", async (c) => {
-    const cid = c.req.param("conversation_id");
-    d.tokens.check(token(c), cid);
-    const form = await uploadForm(c);
-    const chunk = await addChunk(d, {
-      conversationId: cid,
-      timestamp: form.timestamp,
-      source: form.source,
-      file: form.chunk,
-    });
-    // Keeps the live entry warm; never creates one, initiate owns that.
-    await liveServices(d).meter.meterUpload(cid, d.now());
     return c.json(publicChunk(chunk));
   });
 

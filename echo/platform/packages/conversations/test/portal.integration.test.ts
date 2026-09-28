@@ -136,34 +136,6 @@ run("portal uploads and audio routes", () => {
     expect(elsewhere.status).toBe(404);
   });
 
-  test("the legacy upload stores the file under the chunk's key and starts its run", async () => {
-    const cid = newId();
-    await seed(sql, cid);
-    const form = new FormData();
-    form.append(
-      "chunk",
-      new Blob([await tone(join(bucket.root, "u.webm"), 1).then((f) => f.arrayBuffer())], {
-        type: "audio/webm",
-      }),
-      "u.webm",
-    );
-    form.append("timestamp", new Date().toISOString());
-    const res = await app.request(`/api/participant/conversations/${cid}/upload-chunk`, {
-      method: "POST",
-      body: form,
-    });
-    expect(res.status).toBe(200);
-    const chunk = (await res.json()) as { id: string; path: string; source: string };
-    expect(chunk.source).toBe("PORTAL_AUDIO");
-    const key = `conversation/${cid}/chunks/${chunk.id}-u.webm`;
-    expect(chunk.path).toBe(bucket.urls.fileUrl(key));
-    expect(await bucket.storage.exists(key)).toBe(true);
-    const job = enqueued.find((e) => (e.payload as { chunkId?: string }).chunkId === chunk.id);
-    expect(job?.job).toBe("conversations.chunk");
-    expect(job?.opts?.workflowId).toBe(`conversations.chunk:${chunk.id}`);
-    expect(job?.opts?.tx).toBeDefined();
-  });
-
   test("a presigned form upload is confirmed into a chunk; one under 1 KB is marked unplayable", async () => {
     const cid = newId();
     await seed(sql, cid);

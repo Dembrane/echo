@@ -1,6 +1,4 @@
-import { BadRequestError, ForbiddenError, NotFoundError, newId, ValidationError } from "@echo/core";
-
-import { p } from "@echo/legacy-shape";
+import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@echo/core";
 
 import { ChunkError, NOT_OPEN } from "../chunks";
 import type { ConversationsDeps } from "../deps";
@@ -144,56 +142,4 @@ export async function confirmUpload(
     d.logger.error({ err }, "confirming an upload failed");
     throw new InternalError("Failed to confirm upload");
   }
-}
-
-/** The multipart form of upload-chunk, validated as FastAPI did (chunk, timestamp, source). */
-export async function uploadForm(c: {
-  req: { header(n: string): string | undefined; parseBody(): Promise<Record<string, unknown>> };
-}): Promise<{ chunk: File; timestamp: Date; source: string }> {
-  const type = c.req.header("content-type") ?? "";
-  const body =
-    type.includes("multipart/form-data") || type.includes("application/x-www-form-urlencoded")
-      ? await c.req.parseBody().catch(() => ({}) as Record<string, unknown>)
-      : {};
-  const issues: p.Issue[] = [];
-  const url = (t: string) => `https://errors.pydantic.dev/2.12/v/${t}`;
-  let chunk: File | null = null;
-  if (body.chunk === undefined)
-    issues.push({
-      type: "missing",
-      loc: ["body", "chunk"],
-      msg: "Field required",
-      input: null,
-      url: url("missing"),
-    });
-  else if (body.chunk instanceof File) chunk = body.chunk;
-  else
-    issues.push({
-      type: "value_error",
-      loc: ["body", "chunk"],
-      msg: "Value error, Expected UploadFile, received: <class 'str'>",
-      input: body.chunk,
-      ctx: { error: {} },
-      url: url("value_error"),
-    });
-  let timestamp: Date | null = null;
-  if (body.timestamp === undefined)
-    issues.push({
-      type: "missing",
-      loc: ["body", "timestamp"],
-      msg: "Field required",
-      input: null,
-      url: url("missing"),
-    });
-  else {
-    const r = p.datetime().parse(body.timestamp, ["body", "timestamp"], issues);
-    if (r instanceof Date) timestamp = r;
-  }
-  const source = typeof body.source === "string" ? body.source : "PORTAL_AUDIO";
-  if (issues.length || !chunk || !timestamp)
-    throw new ValidationError(
-      "Request validation failed",
-      issues as unknown as Record<string, unknown>,
-    );
-  return { chunk, timestamp, source };
 }
