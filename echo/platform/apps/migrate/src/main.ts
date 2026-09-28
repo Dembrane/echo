@@ -17,8 +17,11 @@ const log = (message: string, fields: object = {}) =>
   );
 
 const started = performance.now();
-const result = await migrate(url);
-log("schema migrated", result);
+// Set only where the old stack shares the database (the parity template): contract
+// migrations drop tables it still reads, so they wait for cutover.
+const holdContract = process.env.MIGRATE_HOLD_CONTRACT === "1";
+const result = await migrate(url, { holdContract });
+log("schema migrated", { ...result, holdContract });
 await installQueueSchema(url);
 log("queue schema ready");
 // Until cutover, users keep being created through Directus; copying them on every deploy

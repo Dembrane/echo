@@ -11,6 +11,7 @@ psql_ -c "drop database if exists parity_template_platform with (force)"
 psql_ -c "create database parity_template_platform template parity_template"
 url=postgres://dembrane:dembrane@localhost:5440/parity_template_platform
 cd "$here/.."
-MIGRATION_DATABASE_URL=$url bun apps/migrate/src/main.ts >/dev/null
+# The Python API reads the tables contract migrations drop, so they are held back here.
+MIGRATE_HOLD_CONTRACT=1 MIGRATION_DATABASE_URL=$url bun apps/migrate/src/main.ts >/dev/null
 psql_ -c "update pg_database set datistemplate = true where datname = 'parity_template_platform'"
 echo "parity_template_platform ready"
