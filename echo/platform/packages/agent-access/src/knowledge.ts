@@ -7,12 +7,14 @@ import type { Logger } from "@dembrane/observability";
  * The product documentation as a small read-only file system for agents: list, a
  * line-numbered read and a regex grep. Deployed environments on dembrane.com read the
  * published site (docs.dembrane.com lists every page in llms.txt and serves a markdown twin
- * per page); others read the docs shipped with the build. The corpus is kept for an hour per
- * instance; the Python API also shared it through Redis, which only saved cold fetches.
+ * per page); others read the repository's docs/ when run from source. Images ship no docs,
+ * and with no corpus every docs tool answers empty with NO_DOCS. The corpus is kept for an
+ * hour per instance; the Python API also shared it through Redis, which only saved cold
+ * fetches.
  */
 
-/** What the API's boot check requires: the docs tree read when no published site applies. */
-export const AGENT_ACCESS_ASSETS: readonly string[] = ["docs/README.md"];
+/** What the docs tools say when the corpus is empty: no docs shipped, or the site unreachable. */
+export const NO_DOCS = "No documentation is available in this environment.";
 
 const MAX_READ_LINES = 400;
 const MAX_GREP_RESULTS = 50;
@@ -113,9 +115,8 @@ export interface DocsCorpus {
 }
 
 /**
- * The docs agents read. `docsBaseUrl` empty reads the docs shipped with the build (the
- * repository's docs/ from source, `docs/` under the assets root in an image); set, it reads
- * the published site. A failed fetch degrades to an empty corpus and is retried after the
+ * The docs agents read. `docsBaseUrl` empty reads the repository's docs/ if there is one;
+ * set, it reads the published site. A failed fetch degrades to an empty corpus and is retried after the
  * hour, never raised to the agent.
  */
 export function docsCorpus(opts: {
@@ -156,7 +157,9 @@ export function docsCorpus(opts: {
     },
 
     async read(path, offset, limit) {
-      const text = new Map(await corpus()).get(path.trim().replace(/^\/+/, ""));
+      const pages = await corpus();
+      if (!pages.length) return NO_DOCS;
+      const text = new Map(pages).get(path.trim().replace(/^\/+/, ""));
       if (text === undefined)
         return `Not found: ${path}. Call dembrane_search_docs without a pattern to see every available path.`;
       const lines = splitLines(text);

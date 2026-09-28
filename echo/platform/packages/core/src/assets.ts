@@ -8,7 +8,8 @@ import { join, resolve } from "node:path";
  * single binaries built with `bun build --compile`, whose modules live in `/$bunfs` with no
  * files beside them, so a path built from `import.meta.dir` finds nothing there. In a binary
  * every asset resolves under one root instead (ASSETS_ROOT, /app/assets in the images),
- * which the Dockerfiles fill with the same `<package>/...` layout plus `docs/`.
+ * which the Dockerfiles fill with the same `<package>/...` layout. `docs` is the one
+ * optional entry: the repository's docs/ from source, absent in the images.
  *
  * This is the only module that may locate a file relative to its own source; the guard in
  * packages/core/test/assets.test.ts fails any other package that does.

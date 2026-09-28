@@ -1,6 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Build context: echo/platform, plus a named context "docs" for the repository's docs/
-# folder, which sits outside it: docker buildx build --build-context docs=../../docs ...
+# Build context: echo/platform.
 # One static binary and the files it reads at run time; no node_modules, no source.
 FROM oven/bun:1.4 AS build
 WORKDIR /src
@@ -10,14 +9,12 @@ COPY . .
 RUN bun install --frozen-lockfile --production --ignore-scripts
 RUN bun build apps/worker/src/main.ts --compile --minify --sourcemap --target=bun-linux-x64 --outfile /out/worker
 # A compiled binary has no source tree beside it, so the files it reads are laid out under
-# /app/assets as <package>/... and docs/ (packages/core/src/assets.ts), and the binary
+# /app/assets as <package>/... (packages/core/src/assets.ts), and the binary
 # checks them at boot against apps/worker/src/assets.ts. Popcorn's prompts drive the ticks;
-# the chat assistant reads the docs (markdown only) and its skill files.
-RUN --mount=type=bind,from=docs,target=/docs \
-    mkdir -p /assets/popcorn /assets/agentic /assets/docs \
+# the chat assistant reads its skill files.
+RUN mkdir -p /assets/popcorn /assets/agentic \
     && cp -r packages/popcorn/prompts /assets/popcorn/prompts \
-    && cp -r packages/agentic/skills /assets/agentic/skills \
-    && cd /docs && find . -name '*.md' -exec cp --parents {} /assets/docs/ \;
+    && cp -r packages/agentic/skills /assets/agentic/skills
 
 FROM gcr.io/distroless/cc-debian12:nonroot
 COPY --from=build /out/worker /app/worker

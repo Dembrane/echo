@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { AgentData, Json, TurnContext } from "./data";
-import { type Knowledge, ValueError } from "./knowledge";
+import { type Knowledge, NO_DOCS, ValueError } from "./knowledge";
 import { TOOL_DESCRIPTIONS } from "./text";
 
 /**
@@ -437,7 +437,9 @@ export const TOOLS: readonly ToolDef[] = [
     },
   ),
 
-  def("listDocs", "read", empty, async (_a, env) => ({ docs: env.knowledge.listDocs() })),
+  def("listDocs", "read", empty, async (_a, env) =>
+    env.knowledge.hasDocs() ? { docs: env.knowledge.listDocs() } : { docs: [], note: NO_DOCS },
+  ),
 
   def(
     "readDoc",
@@ -462,9 +464,11 @@ export const TOOLS: readonly ToolDef[] = [
       (x): x is string => typeof x === "string" && Boolean(x.trim()),
     );
     if (!patterns.length) throw new ValueError("Provide at least one pattern in `patterns`.");
-    return {
-      results: patterns.map((pattern) => ({ pattern, matches: env.knowledge.grepDocs(pattern) })),
-    };
+    const results = patterns.map((pattern) => ({
+      pattern,
+      matches: env.knowledge.grepDocs(pattern),
+    }));
+    return env.knowledge.hasDocs() ? { results } : { results, note: NO_DOCS };
   }),
 
   def("readSkill", "read", z.object({ path: z.string() }), async (args, env) =>
