@@ -2515,7 +2515,14 @@ export const processing_status = pgTable(
   },
   (table): PgTableExtraConfigValue[] => [
     index().using("btree", table.conversation_chunk_id.asc().nullsLast()),
-    index().using("btree", table.conversation_id.asc().nullsLast()),
+    // Serves lookups by conversation and the newest-first status reads; replaces the
+    // single-column conversation_id index, which it covers.
+    index("idx_processing_status_conversation_id_id").using(
+      "btree",
+      table.conversation_id.asc().nullsLast(),
+      table.id.asc().nullsLast(),
+    ),
+    index().using("btree", table.parent.asc().nullsLast()),
     index().using("btree", table.project_id.asc().nullsLast()),
     foreignKey({
       columns: [table.conversation_chunk_id],
@@ -2710,6 +2717,7 @@ export const project_chat = pgTable(
     is_private: boolean().default(false),
   },
   (table): PgTableExtraConfigValue[] => [
+    index().using("btree", table.project_id.asc().nullsLast()),
     foreignKey({
       columns: [table.project_id],
       foreignColumns: [project.id],
@@ -2741,6 +2749,7 @@ export const project_chat_message = pgTable(
     tokens_count: integer(),
   },
   (table): PgTableExtraConfigValue[] => [
+    index().using("btree", table.project_chat_id.asc().nullsLast()),
     foreignKey({
       columns: [table.project_chat_id],
       foreignColumns: [project_chat.id],
@@ -3526,6 +3535,12 @@ export const project_agentic_run_event = pgTable(
     timestamp: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
   },
   (table): PgTableExtraConfigValue[] => [
+    // Run events are always read per run in seq order; the pair serves that and the FK.
+    index("project_agentic_run_event_run_seq_index").using(
+      "btree",
+      table.project_agentic_run_id.asc().nullsLast(),
+      table.seq.asc().nullsLast(),
+    ),
     foreignKey({
       columns: [table.project_agentic_run_id],
       foreignColumns: [project_agentic_run.id],
