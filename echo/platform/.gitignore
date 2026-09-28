@@ -12,7 +12,7 @@ introspected
 .terraform/
 *.tfstate*
 *.local.ts
-infra/*.plan
+infra/**/*.plan
 .cache/
 loadtest/results/
 .data/

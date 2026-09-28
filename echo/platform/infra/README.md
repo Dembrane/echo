@@ -25,6 +25,24 @@ Manager, IAM, STS, Storage, Vertex AI, Logging, Monitoring), a registry `echo-<e
 SQL instance `echo-<env>`, the uploads bucket with its HMAC key, secrets replicated in
 europe-west4 only, the runtime and deployer service accounts, the GitHub trust, the EU log
 bucket with the `_Default` sink pointed at it, log metrics, alerts and the readiness check.
+prod also has the load balancer (`api`, `dashboard`, `portal` and the old `directus` host)
+and, in `prod/cutover.tf`, what the cutover needs: the archive bucket and Storage Transfer.
+
+Alerts go to email (`alert_email`) and to Slack #alerts-ci. Monitoring publishes each
+incident to a Pub/Sub topic; a push subscription hands it to `alert-relay/`, a Cloud Run
+service apart from the platform API, which posts one message per incident and replies in its
+thread when the incident closes. A new project needs the relay's token and image before its
+first full apply:
+
+```
+terraform apply -target=module.platform.google_secret_manager_secret.slack_token
+../alert-relay.sh <env>    # pushes the image, puts sam's Slack bot token in the secret
+terraform apply
+```
+
+A change to `alert-relay/` changes the image tag Terraform expects: run `alert-relay.sh` for
+each environment before the next apply. Deploy failures in CI post to the same channel with
+the repository secret `SLACK_ALERTS_BOT_TOKEN`.
 
 Images: each environment has its own registry and only its own deployer pushes to it. A
 shared registry would let the preview deployer, which runs for any PR branch, overwrite a
@@ -135,7 +153,11 @@ first `platform` workflow run with target next or prod. Before it:
   their feature on; the deploy wires each one that has a value and leaves the rest off.
 - Create the `prod` GitHub environment with required reviewers and a deployment rule for
   main and tags. A job naming an environment that does not exist creates it unprotected.
-- Point the domains in `environments/<env>.ts` at the services (a load balancer or Cloud
-  Run domain mappings, and DNS), then set `monitor_api_ready = true` in the root so the
-  readiness check and its alert start.
-- Set `alert_channels` so alerts reach Slack or email, not only the console.
+- prod: add the four `_acme-challenge` CNAMEs from `terraform output platform`
+  (`dns_authorizations`) in Cloudflare, so the certificates are ACTIVE before the switch.
+  next has no load balancer yet: give it `domains` the same way before its DNS moves.
+- Run the workflow with target next or prod. `hold_data` (on by default) deploys the migrate
+  job without running it and keeps the worker pool at 0, for a database that a restore fills
+  first; run with it off once the data is in.
+- After the first deploy set `monitor_api_ready` and `monitor_worker_ready` to true in the
+  root; on prod set `monitor_domains` once DNS points at the load balancer.

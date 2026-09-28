@@ -33,6 +33,10 @@ on:
         description: PR number to deploy a preview for (target pr)
         required: false
         type: number
+      hold_data:
+        description: "next or prod: deploy the migrate job without running it and keep the workers at 0 (before the cutover's data move)"
+        type: boolean
+        default: true
 
 concurrency:
   group: platform-${{ github.event.pull_request.number || (inputs.target == 'pr' && inputs.pr) || inputs.target || github.ref }}
@@ -385,6 +389,8 @@ jobs:
       - name: Push the five images
         run: scripts/build-images.sh --push
       - name: Migrate, deploy media, API, worker, dashboard and portal, and verify
+        env:
+          HOLD_DATA: ${{ inputs.hold_data && '1' || '0' }}
         run: scripts/deploy-env.sh deploy next "$TAG"
 
   deploy-prod:
@@ -418,4 +424,30 @@ jobs:
       - name: Push the five images
         run: scripts/build-images.sh --push
       - name: Migrate, deploy media, API, worker, dashboard and portal, and verify
+        env:
+          HOLD_DATA: ${{ inputs.hold_data && '1' || '0' }}
         run: scripts/deploy-env.sh deploy prod "$TAG"
+
+  # A failed deploy (branch preview, PR preview, next, prod) or a failed build or check on
+  # the way to one posts to #alerts-ci. Checks on PRs without a preview stay in the PR.
+  notify-failure:
+    if: failure() && (github.event_name != 'pull_request' || needs.plan.outputs.deploy_pr == 'true' || needs.plan.outputs.teardown == 'true')
+    needs: [plan, check, frontend, images, deploy-preview, deploy-pr, teardown-pr, deploy-next, deploy-prod]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Post to #alerts-ci
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          WHAT: "${{ needs.plan.outputs.deploy_env || (needs.plan.outputs.pr && format('PR #{0} preview', needs.plan.outputs.pr)) || 'branch preview' }}"
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SHA: ${{ needs.plan.outputs.sha || github.sha }}
+        run: |
+          jq -n --arg c C0C4HBZNSNT --arg t ":x: *platform* · $WHAT failed on \`${GITHUB_REF_NAME}\` (${SHA:0:7}) · <$RUN|run>" \
+            '{channel: $c, text: $t, unfurl_links: false}' |
+            curl -sf -X POST https://slack.com/api/chat.postMessage \
+              -H "Authorization: Bearer $SLACK_TOKEN" -H 'content-type: application/json; charset=utf-8' --data @- |
+            jq -e .ok >/dev/null

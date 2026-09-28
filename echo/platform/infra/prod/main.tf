@@ -14,14 +14,17 @@ terraform {
 locals {
   project  = "dembrane-web-prod"
   settings = jsondecode(file("${path.module}/../prod.tfvars.json"))
-  # Filled by hand before the first deploy; see infra/README.md.
+  # Values copied from the old environment, filled by hand before the first deploy (see
+  # infra/README.md). INVITE_HASH_SECRET is created empty too: it must equal Directus's SECRET.
+  # SITE_API_TOKEN stays unset on prod (CUTOVER.md P1).
   pending_secrets = [
     "AGENT_CLIENT_SECRET_KEY",
+    "AUTH_GOOGLE_CLIENT_ID",
     "AUTH_GOOGLE_CLIENT_SECRET",
     "SENDGRID_API_KEY",
     "MOLLIE_API_KEY",
     "ECHO_SUPPORT_WEBHOOK_TOKEN",
-    "SITE_API_TOKEN",
+    "SUPPORT_WEBHOOK_URL",
     "ACCOUNTS_SLACK_WEBHOOK_URL",
     "ACCOUNTS_EVENTS_SECRET",
   ]
@@ -43,6 +46,8 @@ module "platform" {
   db_environments             = lookup(local.settings, "db_environments", 1)
   services                    = local.settings.services
   alert_email                 = lookup(local.settings, "alert_email", null)
+  slack_channel               = "C0C4HBZNSNT" # #alerts-ci
+  db_flags                    = try(local.settings.db_flags, {})
   deploy_ref_protected        = true
   deploy_tags                 = true
   deploy_environment          = "prod"
@@ -50,6 +55,13 @@ module "platform" {
   pending_secrets             = local.pending_secrets
   monitor_api_ready           = false # until the first deploy
   monitor_worker_ready        = false # until the first deploy
+  domains = {
+    api       = "api.dembrane.com"
+    dashboard = "dashboard.dembrane.com"
+    portal    = "portal.dembrane.com"
+  }
+  legacy_directus_host = "directus.dembrane.com"
+  monitor_domains      = false # until DNS points the names here (CUTOVER.md W9)
 }
 
 # A new project already has a _Default sink; the module repoints it at the EU bucket.
@@ -68,5 +80,7 @@ output "platform" {
     uploads_bucket             = module.platform.uploads_bucket
     secrets                    = module.platform.secrets
     log_bucket                 = module.platform.log_bucket
+    lb_ip                      = module.platform.lb_ip
+    dns_authorizations         = module.platform.dns_authorizations
   }
 }

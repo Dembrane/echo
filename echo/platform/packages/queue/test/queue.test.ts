@@ -150,5 +150,6 @@ run("queue on DBOS", () => {
       "test.once",
       "test.tick",
     ]);
+    for (const q of h) expect(q.oldestReadyS === null || q.oldestReadyS >= 0).toBe(true);
   });
 });

@@ -52,6 +52,8 @@ export interface QueueHealth {
   readonly active: number;
   readonly failed: number;
   readonly deferred: number;
+  /** Seconds the oldest ready job has waited; null when none is ready. Alerts read it. */
+  readonly oldestReadyS: number | null;
 }
 
 type Handler = (
