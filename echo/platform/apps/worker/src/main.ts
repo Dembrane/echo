@@ -1,3 +1,4 @@
+import { queueJobs } from "@echo/accounts";
 import { HttpMedia, LocalMedia, metadataIdToken } from "@echo/audio";
 import { createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
 import { describe, loadSections } from "@echo/config";
@@ -29,6 +30,7 @@ const loaded = loadSections([
   "canvas",
   "reports",
   "agentic",
+  "accounts",
 ]);
 const config = loaded.values;
 const service = "echo-worker";
@@ -126,6 +128,7 @@ const regs = registrations({
   config,
   mailer,
   jobs: queueSink(queue),
+  accountsJobs: queueJobs(queue),
   dashboardUrl: config.http.dashboardUrl,
   billing,
   conversations: {

@@ -56,6 +56,8 @@ export interface Deps {
   readonly transcriber: Transcriber;
   /** Live events from Postgres NOTIFY; null where nothing listens (tests). */
   readonly hub: Hub | null;
+  /** GETs dembrane.com's legal pages when an offer is pushed; a fake in tests. */
+  readonly fetchText?: (url: string) => Promise<string>;
 }
 
 export type { Env, Signed };

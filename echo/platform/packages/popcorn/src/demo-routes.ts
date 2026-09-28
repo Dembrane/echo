@@ -1,7 +1,7 @@
 import { hasStaffPolicy, requireStaff, type StaffAudit } from "@echo/access";
 import { ForbiddenError } from "@echo/core";
 import type { Db } from "@echo/db";
-import { type Env, requireUser } from "@echo/http";
+import { type Env, requireUser, type Signed } from "@echo/http";
 import { p } from "@echo/legacy-shape";
 import { Hono } from "hono";
 import { corpusFrom, refuseProduction, seedDemo } from "./demo";
@@ -13,9 +13,26 @@ export interface DemoRoutesDeps {
   /** This deployment's own addresses, refused like the seed's arguments when they are production. */
   readonly ownUrls: readonly string[];
   readonly now?: () => Date;
+  /**
+   * Creates the prospect's organisation when the request carries a `prospect` block
+   * (@echo/accounts provides it). Returns what the response reports and where the public
+   * page's "Continue in dembrane" leads. Absent, a prospect block is refused.
+   */
+  readonly prospect?: ProspectHook;
 }
 
-const { model, required, optional, str, bool, dict: dictType, list, any } = p;
+export type ProspectHook = (
+  who: Signed,
+  block: Json,
+  opts: { slug: string; requestId: string; dryRun: boolean },
+) => Promise<{
+  continueUrl: string | null;
+  result: Json;
+  /** Runs after the demo is seeded, with the links it printed (the account's timeline). */
+  afterSeed?: (seeded: Json) => Promise<void>;
+}>;
+
+const { model, required, optional, nullable, str, bool, dict: dictType, list, any } = p;
 
 const demoBody = model({
   session: required(dictType()),
@@ -28,6 +45,7 @@ const demoBody = model({
   portal_base_url: required(str()),
   api_base_url: required(str()),
   dry_run: optional(bool(), false),
+  prospect: optional(nullable(dictType()), null),
 });
 
 /**
@@ -53,6 +71,15 @@ export function popcornDemoRoutes(deps: DemoRoutesDeps) {
       detail: { slug: dict(b.session).slug ?? null, dry_run: b.dry_run },
       requestId: c.get("requestId"),
     });
+    let prospect: Awaited<ReturnType<ProspectHook>> | null = null;
+    if (b.prospect) {
+      if (!deps.prospect) throw new ForbiddenError("Prospect seeding is not available here");
+      prospect = await deps.prospect(who, b.prospect, {
+        slug: String(dict(b.session).slug ?? ""),
+        requestId: c.get("requestId"),
+        dryRun: b.dry_run,
+      });
+    }
     const out: Record<string, { state: Json; settings: Json }> = {};
     for (const [language, files] of Object.entries(b.out)) {
       const f = dict(files);
@@ -73,11 +100,12 @@ export function popcornDemoRoutes(deps: DemoRoutesDeps) {
         portalBaseUrl: b.portal_base_url,
         apiBaseUrl: b.api_base_url,
         dryRun: b.dry_run,
+        ...(prospect?.continueUrl && { continueUrl: prospect.continueUrl }),
       },
       now(),
     );
-    return c.json(
-      b.dry_run ? { ...seeded.result, dry_run: true, plan: seeded.plan } : seeded.result,
-    );
+    if (prospect?.afterSeed && !b.dry_run) await prospect.afterSeed(seeded.result);
+    const result = prospect ? { ...seeded.result, prospect: prospect.result } : seeded.result;
+    return c.json(b.dry_run ? { ...result, dry_run: true, plan: seeded.plan } : result);
   });
 }

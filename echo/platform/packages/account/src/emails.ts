@@ -127,6 +127,19 @@ export type EmailTemplate =
     }
   | { readonly template: "verify_email"; readonly data: { verify_url: string } }
   | { readonly template: "sign_in_code"; readonly data: { code: string } }
+  | {
+      readonly template: "account_signer_invite";
+      readonly data: {
+        inviter_name: string;
+        org_name: string;
+        document_title: string;
+        sign_url: string;
+      };
+    }
+  | {
+      readonly template: "account_task_reminder";
+      readonly data: { org_name: string; task_title: string; task_url: string };
+    }
   | { readonly template: "plain"; readonly data: { text: string } };
 
 /** Renders the body of an email; the subject is chosen by the caller, as it was before. */
@@ -241,6 +254,46 @@ export function render(t: EmailTemplate): { html: string; text: string } {
           ),
         }),
         text: `Your sign-in code is ${d.code}. It expires in 10 minutes.\n\nIf you didn't try to sign in, you can safely ignore this email.\n\nThe dembrane team`,
+      };
+    }
+    case "account_signer_invite": {
+      // Someone named as the signer of one document: the link signs them in with a
+      // one-time code and opens only that document.
+      const d = t.data;
+      return {
+        html: layout({
+          title: `${esc(d.inviter_name)} asked you to sign for ${esc(d.org_name)}`,
+          preview: `${esc(d.inviter_name)} asked you to sign ${esc(d.document_title)} on dembrane.`,
+          heading: "You've been asked to sign.",
+          body: P(
+            17,
+            "0 0 28px",
+            `${esc(d.inviter_name)} named you as the person who signs ${em(d.document_title)} for ${em(d.org_name)}. Sign in with a code sent to this address to read and sign it.`,
+          ),
+          cta: cta("Read and sign", d.sign_url),
+          fallback: fallback(d.sign_url),
+          disclaim: P(15, "0 0 28px", IGNORE),
+        }),
+        text: `${d.inviter_name} named you as the person who signs ${d.document_title} for ${d.org_name}. Sign in with a code sent to this address to read and sign it.\n\nRead and sign:\n${d.sign_url}\n\nDidn't expect this? Ignore this email. Nothing will happen.\n\nThe dembrane team`,
+      };
+    }
+    case "account_task_reminder": {
+      // Sent every few days while a task waits on the customer; stops when it is done.
+      const d = t.data;
+      return {
+        html: layout({
+          title: `A step is waiting for ${esc(d.org_name)}`,
+          preview: `${esc(d.task_title)} is still open on dembrane.`,
+          heading: "One step is still open.",
+          body: P(
+            17,
+            "0 0 28px",
+            `${em(d.task_title)} is still waiting for ${esc(d.org_name)} on dembrane. It takes a minute, and it keeps things moving on our side.`,
+          ),
+          cta: cta("Open the step", d.task_url),
+          fallback: fallback(d.task_url),
+        }),
+        text: `${d.task_title} is still waiting for ${d.org_name} on dembrane. It takes a minute, and it keeps things moving on our side.\n\nOpen the step:\n${d.task_url}\n\nThe dembrane team`,
       };
     }
     case "plain":

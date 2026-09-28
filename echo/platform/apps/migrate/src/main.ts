@@ -1,5 +1,6 @@
+import { seedLegalTexts } from "@echo/accounts";
 import { syncIdentitiesFromDirectus } from "@echo/auth/sync";
-import { connect, grantRuntimeRole, migrate } from "@echo/db";
+import { connect, createDb, grantRuntimeRole, migrate } from "@echo/db";
 import { installQueueSchema } from "@echo/queue";
 
 /**
@@ -26,6 +27,11 @@ log("queue schema ready");
 const sql = connect(url, { max: 1, onnotice: () => {} });
 log("identities synced", await syncIdentitiesFromDirectus(sql));
 await sql.end();
+// The first legal texts (terms, SLA, DPA) an offer can pin, for an environment whose daily
+// refresh has not reached dembrane.com yet. A kind that has rows is left alone.
+const legalDb = createDb({ url, poolMax: 1 });
+log("legal texts seeded", { added: await seedLegalTexts(legalDb.db, new Date()) });
+await legalDb.close();
 if (role) {
   await grantRuntimeRole(url, role, ["public", "dbos"]);
   log("runtime role granted", { role });

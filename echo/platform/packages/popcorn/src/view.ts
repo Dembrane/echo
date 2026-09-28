@@ -37,12 +37,27 @@ function embedJson(embed: Record<string, unknown>): string {
 }
 
 /** The page with its embed config injected ahead of the app script. */
-export function renderPopcornPage(embed: Record<string, unknown>): string {
+/**
+ * "Continue in dembrane" on a prospect's demo: a link to the dashboard sign-in, fixed in
+ * the page's corner and opened in a new tab so the room keeps the deck. Added only to a
+ * page whose demo carries the link, so every other page stays byte for byte the same.
+ */
+export function continueSnippet(url: string, language: string): string {
+  const label = language === "nl" ? "Verder in dembrane" : "Continue in dembrane";
+  const href = url.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  return `<style>.popcorn-continue{position:fixed;right:clamp(12px,2vw,28px);bottom:clamp(12px,2vw,28px);z-index:50;padding:.6em 1.1em;border-radius:9999px;background:#4169E1;color:#fff;font:500 .9em "DM Sans",system-ui,sans-serif;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.15)}</style>
+<a class="popcorn-continue" href="${href}" target="_blank" rel="noopener">${label}</a>
+`;
+}
+
+export function renderPopcornPage(embed: Record<string, unknown>, continueHtml = ""): string {
   const script = `<script>window.POPCORN_EMBED = ${embedJson(embed)};</script>\n`;
   const html = pageTemplate();
   const marker = "<script>\n/* popcorn";
-  if (html.includes(marker)) return html.replace(marker, () => script + marker);
-  return html.replace("</head>", () => `${script}</head>`);
+  const page = html.includes(marker)
+    ? html.replace(marker, () => script + marker)
+    : html.replace("</head>", () => `${script}</head>`);
+  return continueHtml ? page.replace("</body>", () => `${continueHtml}</body>`) : page;
 }
 
 export const LOGO_PATH = join(STATIC_DIR, "dembrane-logomark-cropped.png");

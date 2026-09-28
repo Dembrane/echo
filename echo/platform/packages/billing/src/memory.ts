@@ -56,6 +56,11 @@ export function accountRow(p: Partial<AccountRow> & { id: string }): AccountRow 
     billing_vat_region: null,
     payment_failed_notified: false,
     reconcile_failed_at: null,
+    kvk_number: null,
+    kbo_number: null,
+    billing_email: null,
+    po_number: null,
+    peppol_id: null,
     ...p,
   };
 }

@@ -1,5 +1,6 @@
 import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@echo/access";
 import { render, sendEmail } from "@echo/account";
+import { accountsApiJobs, codeSignInGate } from "@echo/accounts";
 import { analysisJobs } from "@echo/analysis";
 import { HttpMedia, LocalMedia, metadataIdToken } from "@echo/audio";
 import { createAuth, identityAccount } from "@echo/auth";
@@ -68,6 +69,9 @@ const auth = createAuth({
     config.auth.googleClientId && config.auth.googleClientSecret
       ? { clientId: config.auth.googleClientId, clientSecret: config.auth.googleClientSecret }
       : undefined,
+  // Codes go only to people with an account or a pending invitation (org, workspace, or
+  // named to sign a document); anyone else gets the same answer and no email.
+  codeSignInAllowed: codeSignInGate({ db: database.db, now: () => new Date() }),
   sendCode: async (email, code, purpose) => {
     await mailer.send({
       to: email,
@@ -107,6 +111,7 @@ const queueReady = (async () => {
         ...mapJobs,
         ...canvasApiJobs,
         ...popcornApiJobs,
+        ...accountsApiJobs,
         sendEmail,
       ]);
       return;
