@@ -12,11 +12,26 @@ writeFileSync(join(dist, "assets", "app-abc.js"), "console.log(1)");
 writeFileSync(join(dist, "version.json"), '{"v":1}');
 
 let upstream: ReturnType<typeof Bun.serve>;
+let openStreamAborted: Promise<void> = Promise.resolve();
 beforeAll(() => {
   upstream = Bun.serve({
     port: 0,
     fetch: async (req) => {
       const u = new URL(req.url);
+      if (u.pathname === "/api/open-stream") {
+        // A stream that never ends by itself, like the health and monitor streams.
+        openStreamAborted = new Promise<void>((resolve) =>
+          req.signal.addEventListener("abort", () => resolve()),
+        );
+        return new Response(
+          new ReadableStream({
+            start(c) {
+              c.enqueue(new TextEncoder().encode("event: ping\n\n"));
+            },
+          }),
+          { headers: { "content-type": "text/event-stream" } },
+        );
+      }
       if (u.pathname === "/api/stream") {
         return new Response(
           new ReadableStream({
@@ -103,4 +118,19 @@ test("event streams pass through the proxy", async () => {
   const res = await handler()(new Request("https://dash.example/api/stream"));
   expect(res.headers.get("content-type")).toBe("text/event-stream");
   expect(await res.text()).toBe("event: connected\n\n");
+});
+
+test("a browser that goes away cancels the upstream stream", async () => {
+  const browser = new AbortController();
+  const res = await handler()(
+    new Request("https://dash.example/api/open-stream", { signal: browser.signal }),
+  );
+  const reader = res.body?.getReader();
+  await reader?.read();
+  browser.abort();
+  const cancelled = await Promise.race([
+    openStreamAborted.then(() => true),
+    Bun.sleep(2000).then(() => false),
+  ]);
+  expect(cancelled).toBe(true);
 });

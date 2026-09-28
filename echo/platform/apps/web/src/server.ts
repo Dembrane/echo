@@ -85,11 +85,15 @@ async function proxy(req: Request, url: URL, origin: string): Promise<Response> 
   headers.set("x-forwarded-host", url.host);
   headers.set("x-forwarded-proto", url.protocol.replace(":", ""));
   headers.delete("host");
+  // The browser's signal cancels the upstream request when the browser goes away. Without it
+  // a closed tab left its event stream open on the API until Cloud Run's request timeout, and
+  // enough of those filled every API slot, so the portal's pings got 429s.
   const upstream = await fetch(target, {
     method: req.method,
     headers,
     body: req.method === "GET" || req.method === "HEAD" ? null : req.body,
     redirect: "manual",
+    signal: req.signal,
   });
   const out = new Headers(upstream.headers);
   for (const h of HOP_BY_HOP) out.delete(h);
