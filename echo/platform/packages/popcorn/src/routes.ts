@@ -43,7 +43,7 @@ import {
 import { expandSettingsPatch, LIVE_HOURS, requireBrandingTier } from "./settings";
 import { createBody, excludeNone, liveBody, loopSettingsBody, settingsBody } from "./shapes";
 import type { Row } from "./storage";
-import { ILLUSTRATIONS, LOGO_PATH, renderFlowPage, renderPopcornPage } from "./view";
+import { illustrationPath, logoPath, renderFlowPage, renderPopcornPage } from "./view";
 
 export interface PopcornRoutesDeps extends PopcornDeps {
   readonly access: Access;
@@ -64,13 +64,13 @@ function versionId(value: string | undefined): string | null {
 
 let logo: Uint8Array | null = null;
 export function logoBytes(): Uint8Array {
-  logo ??= readFileSync(LOGO_PATH);
+  logo ??= readFileSync(logoPath());
   return logo;
 }
 
 const illustrations = new Map<string, Uint8Array>();
 export function illustrationBytes(name: string): Uint8Array | null {
-  const path = ILLUSTRATIONS.get(name);
+  const path = illustrationPath(name);
   if (!path) return null;
   let bytes = illustrations.get(name);
   if (!bytes) {

@@ -1,5 +1,6 @@
 import { DrizzleAccessStore } from "@echo/access";
 import { accountRoutes } from "@echo/account";
+import { accountsRoutes, demoProspectHook, httpFetchText, queueJobs } from "@echo/accounts";
 import { agentAccessRoutes } from "@echo/agent-access";
 import { agenticRoutes } from "@echo/agentic";
 import { analysisRoutes, analysisRuntime, clientOf } from "@echo/analysis";
@@ -219,11 +220,39 @@ export function buildApp(deps: Deps) {
   const presentDeps = { ...popcorn, access: deps.access, hub, map };
   app.route("/", presentRoutes(presentDeps));
   app.route("/", publicRoutes({ ...popcorn, hub, audienceMap: publicAudienceMap(presentDeps) }));
+  const accounts = {
+    db: deps.db,
+    access: deps.access,
+    staffAudit: deps.staffAudit,
+    jobs: queueJobs(deps.queue),
+    files: deps.files,
+    logger: deps.logger,
+    now: () => new Date(),
+    fetchText: deps.fetchText ?? httpFetchText,
+    settings: {
+      dashboardUrl: deps.config.http.dashboardUrl,
+      company: {
+        name: "dembrane B.V.",
+        address: deps.config.accounts.companyAddress,
+        vat: deps.config.accounts.companyVat,
+        kvk: deps.config.accounts.companyKvk,
+        iban: deps.config.accounts.bankIban,
+        bic: deps.config.accounts.bankBic,
+        accountName: deps.config.accounts.bankAccountName,
+      },
+      eventsEnabled: Boolean(deps.config.accounts.eventsUrl),
+      slackEnabled: Boolean(deps.config.accounts.slackWebhookUrl),
+      reminderIntervalDays: deps.config.accounts.reminderIntervalDays,
+      inviteSecret: deps.config.account.inviteHashSecret,
+    },
+  };
+  app.route("/", accountsRoutes(accounts));
   app.route(
     "/",
     popcornDemoRoutes({
       db: deps.db,
       staffAudit: deps.staffAudit,
+      prospect: demoProspectHook(accounts),
       ownUrls: [
         deps.config.http.publicUrl,
         deps.config.http.dashboardUrl,
@@ -242,7 +271,6 @@ export function buildApp(deps: Deps) {
       buildVersion: deps.config.app.release,
       clientSecretKey:
         deps.config.agentAccess.clientSecretKey ?? deps.config.account.inviteHashSecret,
-      docsDir: deps.config.agentic.docsDir,
     }),
   );
   app.onError(onError);

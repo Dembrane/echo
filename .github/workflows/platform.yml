@@ -102,6 +102,15 @@ jobs:
         run: pnpm lint
       - name: Types
         run: pnpm exec tsc
+      # The accounts screens build against a copy of platform/packages/accounts' contract.
+      - name: Accounts contract matches the platform
+        run: node scripts/sync-accounts-contract.mjs --check
+      - name: Accounts tests
+        run: pnpm exec vitest run src/features/accounts src/components/auth/utils
+      # The participant portal's first load must not grow: builds and compares with the
+      # baseline recorded in the script.
+      - name: Portal first-load size
+        run: node scripts/check-portal-bundle.mjs
 
   images:
     runs-on: ubuntu-latest
@@ -127,13 +136,19 @@ jobs:
               --cache-from type=gha,scope=$1 --cache-to type=gha,mode=max,scope=$1 \
               -f apps/$1/Dockerfile --build-arg RELEASE=$TAG -t $REGISTRY/$1:$TAG "${@:2}"
           }
-          # The worker also takes the repository's docs/ for the chat assistant.
-          build api . & build worker . --build-context docs=../../docs & build migrate . &
+          # The API and worker also take the repository's docs/ (MCP knowledge, chat assistant).
+          build api . --build-context docs=../../docs & build worker . --build-context docs=../../docs &
+          build migrate . &
           build media . & build web .. &
           fail=0; for j in $(jobs -p); do wait $j || fail=1; done; exit $fail
-      - name: The API and media containers start and answer
+      - name: The API, worker, migrate and media containers start and answer
         if: env.PUSH != 'true'
         run: |
+          # Each binary checks at boot that its image carries the files it reads and exits
+          # non-zero naming any that are missing. The worker and migrate job need a database
+          # to go further, so they stop after the check.
+          docker run --rm $REGISTRY/worker:$TAG --check-assets
+          docker run --rm $REGISTRY/migrate:$TAG --check-assets
           docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d \
             -e AUTH_SECRET=smoke-test-secret-that-is-long-enough-000 -e INVITE_HASH_SECRET=smoke-test-invite-secret-000 \
             $REGISTRY/api:$TAG
@@ -141,6 +156,11 @@ jobs:
           ok=
           for i in $(seq 1 25); do curl -sf localhost:8080/health && ok=1 && break; sleep 0.2; done
           [ -n "$ok" ] || { docker logs api; exit 1; }
+          # Asset-backed routes that need no database: popcorn's logo and a drawing read from
+          # /app/assets, the same tree the deck page template comes from.
+          for f in logo.png illustrations/scan.webp; do
+            curl -sf localhost:8080/api/v2/popcorn/public/smoke/$f -o /dev/null || { docker logs api; exit 1; }
+          done
           # The media image must ship the ffmpeg it runs, not only answer HTTP.
           for i in $(seq 1 25); do curl -sf localhost:8081/health && break; sleep 0.2; done
           curl -sf -X POST localhost:8081/probe-url -H 'content-type: application/json' -d '{"url":"http://127.0.0.1:9/x.mp3"}' -o /dev/null -w '%{http_code}' | grep -q 422 \

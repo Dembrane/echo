@@ -21,7 +21,7 @@ dest_root="${ARCHIVE_DEST:-gs://dembrane-echo-archive}"
 pg_dump_cmd=(${PG_DUMP:-pg_dump})
 psql_cmd=(${PSQL:-psql})
 
-# The contract migration 0009_contract_dead_features drops these.
+# The contract migration 0010_contract_dead_features drops these.
 default_tables=(
   view aspect aspect_segment insight project_analysis_run
   conversation_segment conversation_segment_conversation_chunk

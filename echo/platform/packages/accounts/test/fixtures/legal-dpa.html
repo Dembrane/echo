@@ -1,0 +1,777 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>dembrane</title><meta name="description" content="Event services and software that make it simple to make sense of big conversations. "><link rel="preload" href="/fonts/dm-sans-variable.woff2" as="font" type="font/woff2" crossorigin="anonymous"><link rel="preconnect" href="https://r.dembrane.com" crossorigin><link rel="icon" href="/favicon-light.png" media="(prefers-color-scheme: light)"><link rel="icon" href="/favicon-dark.png" media="(prefers-color-scheme: dark)"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="canonical" href="https://www.dembrane.com/legal/dpa"><link rel="alternate" href="https://www.dembrane.com/legal/dpa" hreflang="en"><link rel="alternate" href="https://www.dembrane.com/nl/legal/dpa" hreflang="nl-NL"><link rel="alternate" href="https://www.dembrane.com/legal/dpa" hreflang="x-default"><meta property="og:type" content="website"><meta property="og:title" content="dembrane"><meta property="og:description" content="Event services and software that make it simple to make sense of big conversations. "><meta property="og:image" content="https://www.dembrane.com/og/default.png"><meta property="og:url" content="https://www.dembrane.com/legal/dpa"><meta property="og:locale" content="en_US"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="dembrane"><meta name="twitter:description" content="Event services and software that make it simple to make sense of big conversations. "><meta name="twitter:image" content="https://www.dembrane.com/og/default.png"><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://www.dembrane.com/#organization","name":"dembrane","legalName":"Dembrane B.V.","url":"https://www.dembrane.com","logo":"https://www.dembrane.com/brand/dembrane-mark.svg","description":"dembrane records every conversation in a room at once. Participants scan a QR code, their phones become recording portals, and every table is transcribed live in 150+ languages. Live overview during the session, and a report afterwards in which every insight links back to the quote it came from. For assemblies, breakout sessions, workshops, consultations and street interviews. EU hosted.","foundingDate":"2023","address":{"@type":"PostalAddress","addressLocality":"Eindhoven","addressCountry":"NL"},"sameAs":["https://www.linkedin.com/company/dembrane/","https://github.com/dembrane/echo"],"contactPoint":{"@type":"ContactPoint","contactType":"sales","url":"https://forms.dembrane.com/contact","availableLanguage":["en","nl"]}},{"@type":"SoftwareApplication","@id":"https://www.dembrane.com/#platform","name":"dembrane","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://www.dembrane.com/platform/features","description":"dembrane records every conversation in a room at once. Participants scan a QR code, their phones become recording portals, and every table is transcribed live in 150+ languages. Live overview during the session, and a report afterwards in which every insight links back to the quote it came from. For assemblies, breakout sessions, workshops, consultations and street interviews. EU hosted.","publisher":{"@id":"https://www.dembrane.com/#organization"},"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR","description":"Free account with the first hour of transcription","url":"https://www.dembrane.com/pricing"},"featureList":["Scan a QR code to record, no app","Every table at once, live transcription","150+ languages and dialects","Report with a source for every insight","Unlimited participants","EU hosted"]}]}</script><script>(function(){const POSTHOG_HOST = "https://r.dembrane.com";
+const POSTHOG_UI_HOST = "https://eu.posthog.com";
+const POSTHOG_KEY = "phc_o9ZqNqaop7cwLvbbEU2gwvaY5CczpavbNfCxrnu2Ca4a";
+const CONSENT_KEY = "dembrane_cookie_consent";
+const DENIED_TTL_DAYS = 30;
+const isStaging = false;
+
+  // Standard PostHog array.js snippet, pointed at the first-party proxy.
+  !(function (t, e) {
+    var o, n, p, r;
+    e.__SV ||
+      ((window.posthog = e),
+      (e._i = []),
+      (e.init = function (i, s, a) {
+        function g(t, o) {
+          var e = o.split('.');
+          2 == e.length && ((t = t[e[0]]), (o = e[1]));
+          t[o] = function () {
+            t.push([o].concat(Array.prototype.slice.call(arguments, 0)));
+          };
+        }
+        ((p = t.createElement('script')).type = 'text/javascript'),
+          (p.crossOrigin = 'anonymous'),
+          (p.async = !0),
+          (p.src = s.api_host + '/static/array.js'),
+          (r = t.getElementsByTagName('script')[0]).parentNode.insertBefore(p, r);
+        var u = e;
+        for (
+          void 0 !== a ? (u = e[a] = []) : (a = 'posthog'),
+            u.people = u.people || [],
+            u.toString = function (t) {
+              var e = 'posthog';
+              return 'posthog' !== a && (e += '.' + a), t || (e += ' (stub)'), e;
+            },
+            u.people.toString = function () {
+              return u.toString(1) + '.people (stub)';
+            },
+            o =
+              'init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on updateEarlyAccessFeatureEnrollment set_config startSessionRecording stopSessionRecording is_capturing has_opted_in_capturing has_opted_out_capturing group identify setPersonProperties createPersonProfile opt_in_capturing opt_out_capturing reset get_session_id'.split(
+                ' '
+              ),
+            n = 0;
+          n < o.length;
+          n++
+        )
+          g(u, o[n]);
+        e._i.push([i, s, a]);
+      }),
+      (e.__SV = 1));
+  })(document, window.posthog || []);
+
+  /* Where a visitor who has not accepted is held. Not 'memory': memory is scoped to
+   * one page load, and this site does a full document load on every internal link,
+   * so the id and the session id were both reissued on every navigation. One person
+   * reading three pages arrived as three people, three sessions and three bounces —
+   * visitor and session counts inflated, bounce rate pushed toward 100%, session
+   * duration toward zero, and no journey through the site legible at all.
+   *
+   * sessionStorage is the smallest thing that fixes it. It is per tab and per origin,
+   * it is dropped when the tab closes, and it is never sent to a server, so a visit
+   * holds together while nothing follows anyone between visits. The substantive
+   * promises are untouched: no cookie, no session recording, no person profile, and
+   * no identifier that outlives the visit. Accepting is still what buys recognition
+   * across visits.
+   *
+   * The cookie policy's "nothing saved to your device" no longer describes this and
+   * has to be corrected before it ships. */
+  var COOKIELESS_PERSISTENCE = 'sessionStorage';
+
+  // ---- consent, read before init so no cookie is written before a choice ----
+  var DEMBRANE_CONSENT = (function () {
+    function read() {
+      var raw;
+      try { raw = localStorage.getItem(CONSENT_KEY); } catch (e) { return null; }
+      if (!raw) return null;
+      if (raw === 'granted' || raw === 'denied') return { choice: raw, ts: 0 };
+      try {
+        var o = JSON.parse(raw);
+        if (o && (o.choice === 'granted' || o.choice === 'denied')) return { choice: o.choice, ts: o.ts || 0 };
+      } catch (e) { /* corrupt value reads as no choice */ }
+      return null;
+    }
+
+    function write(grant) {
+      try {
+        localStorage.setItem(CONSENT_KEY, JSON.stringify({
+          v: 1, choice: grant ? 'granted' : 'denied', ts: Date.now(),
+        }));
+      } catch (e) { /* private mode: the choice holds for this page only */ }
+    }
+
+    function clearCookies() {
+      var host = location.hostname;
+      var apex = host.replace(/^www\./, '');
+      var domains = ['', host, '.' + apex];
+      document.cookie.split(';').forEach(function (raw) {
+        var name = raw.split('=')[0].trim();
+        if (name.indexOf('ph_') !== 0) return;
+        if (name.lastIndexOf('_posthog') !== name.length - 8) return;
+        domains.forEach(function (domain) {
+          var d = domain ? '; domain=' + domain : '';
+          document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + d;
+        });
+      });
+    }
+
+    function apply(grant) {
+      if (!window.posthog || !window.posthog.set_config) return;
+      if (grant) {
+        posthog.set_config({ persistence: 'localStorage+cookie' });
+        if (posthog.startSessionRecording) posthog.startSessionRecording();
+      } else {
+        if (posthog.stopSessionRecording) posthog.stopSessionRecording();
+        posthog.set_config({ persistence: COOKIELESS_PERSISTENCE });
+        clearCookies();
+      }
+    }
+
+    var stored = read();
+    return {
+      granted: !!stored && stored.choice === 'granted',
+      needsAsk: !stored || (stored.choice === 'denied' && Date.now() - stored.ts >= DENIED_TTL_DAYS * 86400000),
+      read: read, write: write, apply: apply,
+    };
+  })();
+  window.__dembraneConsent = DEMBRANE_CONSENT;
+
+  // A dev server and the live site share this one file, so `npm run dev` on
+  // localhost captured into the live project: it inflated web analytics and every
+  // crash in half-written local code minted a fresh production error issue. The
+  // localhost hostname is the tell (the polluting events carry a localhost
+  // $current_url), so init is skipped there. The stub above keeps window.posthog
+  // present, so capture calls and consent stay no-ops instead of breaking.
+  var isLocalHost = (function () {
+    var h = location.hostname;
+    return h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]' || /\.local$/i.test(h);
+  })();
+
+  if (!isLocalHost) posthog.init(POSTHOG_KEY, {
+    api_host: POSTHOG_HOST,
+    // ui_host stays the real PostHog host so the toolbar and in-app links resolve
+    // while api_host is proxied.
+    ui_host: POSTHOG_UI_HOST,
+    defaults: '2026-05-30',
+    // Identifying features only after the visitor accepts. Capturing itself is
+    // never switched off: a decliner is counted, just not recognised.
+    persistence: DEMBRANE_CONSENT.granted ? 'localStorage+cookie' : COOKIELESS_PERSISTENCE,
+    disable_session_recording: !DEMBRANE_CONSENT.granted,
+    person_profiles: DEMBRANE_CONSENT.granted ? 'always' : 'identified_only',
+    // Cookie on .dembrane.com so the product subdomains (same project key) see the
+    // same distinct_id. localStorage-only persistence cannot cross subdomains.
+    cross_subdomain_cookie: true,
+    // Core Web Vitals (LCP, CLS, FCP, INP) from every visit as $web_vitals events,
+    // whatever the project setting says. Timings only, nothing about the person, so
+    // they follow the same capture-for-everyone rule as the rest. They are the field
+    // side of the lab measurements in the jank review of September 23rd 2026; read
+    // them in PostHog under Web analytics, Web vitals, split by device type.
+    capture_performance: { web_vitals: true },
+    loaded: function (ph) {
+      if (isStaging) ph.register({ environment: 'staging' });
+      // Heal a stale opt-out. The previous build called opt_out_capturing() on
+      // decline, which persists __ph_opt_in_out_<token>="0" in localStorage and is
+      // never cleared by simply removing the call — those visitors would stay
+      // silent forever. The Framer site sets neither flag, so parity is neither.
+      if (ph.has_opted_out_capturing?.() || ph.has_opted_in_capturing?.()) {
+        ph.clear_opt_in_out_capturing?.();
+      }
+      // Both branches, as the Framer snippet does. Applying only the decline half
+      // left accepted visitors without a ph_ cookie: init's persistence setting is
+      // honoured lazily, and set_config is what forces the write.
+      DEMBRANE_CONSENT.apply(DEMBRANE_CONSENT.granted);
+    },
+  });
+})();</script><script>
+  (() => {
+    const root = document.documentElement;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const readNumber = (name, fallback) => {
+      const raw = getComputedStyle(root).getPropertyValue(name).trim();
+      const n = parseFloat(raw);
+      return Number.isFinite(n) ? n : fallback;
+    };
+    const MIN_FRACTION = 0.6;
+
+    let targets = [];
+    let raf = 0;
+    let idleTimer = 0;
+    let settings = {
+      idle: 130,
+      proximity: 22,
+      durationBase: 620,
+      durationPerPx: 1.1,
+      durationMax: 1250,
+    };
+
+    function readSettings() {
+      settings = {
+        idle: readNumber('--snap-idle', 130),
+        proximity: readNumber('--snap-proximity', 22),
+        durationBase: readNumber('--snap-duration-base', 620),
+        durationPerPx: readNumber('--snap-duration-per-100px', 110) / 100,
+        durationMax: readNumber('--snap-duration-max', 1250),
+      };
+    }
+
+    function measureNavHeight() {
+      const nav = document.querySelector('header');
+      const h = nav ? Math.round(nav.getBoundingClientRect().height) : 0;
+      if (h) root.style.setProperty('--nav-h', h + 'px');
+      return h;
+    }
+
+    function measure() {
+      readSettings();
+      const navHeight = measureNavHeight();
+      const usable = window.innerHeight - navHeight;
+      targets = [];
+      document.querySelectorAll('main section, main > div > section').forEach((section) => {
+        if (section.hasAttribute('data-no-snap')) return;
+        // A page that declares its own snapping owns it outright. Two snappers
+        // on one page fight each other: this one pulls toward any section about
+        // a screen tall, which on /platform/features means the statements and
+        // band heads as well as the stories.
+        if (section.closest('[data-own-snap]')) return;
+        const rect = section.getBoundingClientRect();
+        const height = rect.height;
+        if (height > usable || height < window.innerHeight * MIN_FRACTION) return;
+
+        // Only pay for descendant style reads after the cheap height test. Tall
+        // sections (notably the case collage) can never be snap targets anyway.
+        const hasSticky = Array.prototype.some.call(section.querySelectorAll('*'), (el) =>
+          getComputedStyle(el).position === 'sticky'
+        );
+        if (!hasSticky) targets.push(Math.round(rect.top + window.scrollY - navHeight));
+      });
+    }
+
+    function cancel() {
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+        root.style.scrollBehavior = '';
+      }
+    }
+    const ease = (t) => (t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2);
+
+    function glideTo(to) {
+      const from = window.scrollY;
+      const distance = to - from;
+      if (!distance) return;
+      const duration = Math.min(
+        settings.durationMax,
+        settings.durationBase + Math.abs(distance) * settings.durationPerPx
+      );
+      root.style.scrollBehavior = 'auto';
+
+      const start = performance.now();
+      const step = (now) => {
+        const t = Math.min(1, (now - start) / duration);
+        window.scrollTo(0, from + distance * ease(t));
+        if (t < 1) {
+          raf = requestAnimationFrame(step);
+        } else {
+          raf = 0;
+          root.style.scrollBehavior = '';
+        }
+      };
+      raf = requestAnimationFrame(step);
+    }
+
+    function settle() {
+      if (reduce.matches || !targets.length || raf) return;
+
+      const y = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (y <= 2 || y >= maxScroll - 2) return;
+      const band = window.innerHeight * (settings.proximity / 100);
+
+      let nearest = null;
+      let best = Infinity;
+      for (const target of targets) {
+        const gap = Math.abs(target - y);
+        if (gap < best) {
+          best = gap;
+          nearest = target;
+        }
+      }
+      if (nearest !== null && best <= band && best > 1) glideTo(nearest);
+    }
+
+    function onScroll() {
+      // Programmatic glide frames already know where they are going. Scheduling
+      // and cancelling an idle timer for every generated scroll event only adds
+      // main-thread work during the animation.
+      if (raf) return;
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(settle, settings.idle);
+    }
+    const opts = { passive: true };
+    ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach((type) =>
+      window.addEventListener(type, cancel, opts)
+    );
+
+    window.addEventListener('scroll', onScroll, opts);
+
+    const remeasure = () => {
+      cancel();
+      measure();
+    };
+    const debouncedRemeasure = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(remeasure, 150);
+    };
+    requestAnimationFrame(measure);
+    window.addEventListener('load', measure);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    window.addEventListener('resize', debouncedRemeasure);
+    reduce.addEventListener('change', remeasure);
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(debouncedRemeasure);
+      const main = document.querySelector('main');
+      const header = document.querySelector('header');
+      if (main) ro.observe(main);
+      if (header) ro.observe(header);
+    }
+  })();
+</script><link rel="stylesheet" href="/_astro/base.CsEs_ST7.css"><link rel="stylesheet" href="/_astro/prose.CLq6HvyB.css"><link rel="stylesheet" href="/_astro/_LegalPage.CKQW2WN7.css"><link rel="stylesheet" href="/_astro/SiteLayout.CEXghx-Y.css"></head><body><a class="skip-link" href="#main">Skip to content</a><header class="d-nav-bar"><nav class="d-nav" aria-label="Main" data-nav data-open="false"><div class="d-nav__name"><a class="d-nav__logo" href="/"><img class="d-nav__mark" src="/brand/dembrane-mark.svg" alt="" width="36" height="36"><img class="d-nav__word" src="/brand/dembrane-wordmark.svg" alt="dembrane" width="113" height="36"></a><button class="d-nav__burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="d-nav-menu" data-burger><span class="d-nav__bar" aria-hidden="true"></span><span class="d-nav__bar" aria-hidden="true"></span></button></div><div class="d-nav__menu" id="d-nav-menu"><ul class="d-nav__links"><li><details class="d-nav__group" data-nav-group name="d-nav-group"><summary class="d-nav__trigger"><span class="d-nav__label">Platform</span><span class="d-nav__caret" aria-hidden="true"></span><span class="d-nav__rule" aria-hidden="true"></span></summary><div class="d-nav__panel"><ul><li><a class="d-nav__row" href="/platform/features"><span class="d-nav__dash" aria-hidden="true"></span><span class="d-nav__chip"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224,128a8,8,0,0,1-8,8H128a8,8,0,0,1,0-16h88A8,8,0,0,1,224,128ZM128,72h88a8,8,0,0,0,0-16H128a8,8,0,0,0,0,16Zm88,112H128a8,8,0,0,0,0,16h88a8,8,0,0,0,0-16ZM82.34,42.34,56,68.69,45.66,58.34A8,8,0,0,0,34.34,69.66l16,16a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,82.34,42.34Zm0,64L56,132.69,45.66,122.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Zm0,64L56,196.69,45.66,186.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Z"/></svg></span><span class="d-nav__rowlabel">Features</span></a></li><li><a class="d-nav__row" href="/platform/use-cases"><span class="d-nav__dash" aria-hidden="true"></span><span class="d-nav__chip"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M200,152a31.84,31.84,0,0,0-19.53,6.68l-23.11-18A31.65,31.65,0,0,0,160,128c0-.74,0-1.48-.08-2.21l13.23-4.41A32,32,0,1,0,168,104c0,.74,0,1.48.08,2.21l-13.23,4.41A32,32,0,0,0,128,96a32.59,32.59,0,0,0-5.27.44L115.89,81A32,32,0,1,0,96,88a32.59,32.59,0,0,0,5.27-.44l6.84,15.4a31.92,31.92,0,0,0-8.57,39.64L73.83,165.44a32.06,32.06,0,1,0,10.63,12l25.71-22.84a31.91,31.91,0,0,0,37.36-1.24l23.11,18A31.65,31.65,0,0,0,168,184a32,32,0,1,0,32-32Zm0-64a16,16,0,1,1-16,16A16,16,0,0,1,200,88ZM80,56A16,16,0,1,1,96,72,16,16,0,0,1,80,56ZM56,208a16,16,0,1,1,16-16A16,16,0,0,1,56,208Zm56-80a16,16,0,1,1,16,16A16,16,0,0,1,112,128Zm88,72a16,16,0,1,1,16-16A16,16,0,0,1,200,200Z"/></svg></span><span class="d-nav__rowlabel">Use Cases</span></a></li></ul></div></details></li><li><details class="d-nav__group" data-nav-group name="d-nav-group"><summary class="d-nav__trigger"><span class="d-nav__label">Pricing</span><span class="d-nav__caret" aria-hidden="true"></span><span class="d-nav__rule" aria-hidden="true"></span></summary><div class="d-nav__panel"><ul><li><a class="d-nav__row" href="/pricing#events"><span class="d-nav__dash" aria-hidden="true"></span><span class="d-nav__chip"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M168,16A72.07,72.07,0,0,0,96,88a73.29,73.29,0,0,0,.63,9.42L27.12,192.22A15.93,15.93,0,0,0,28.71,213L43,227.29a15.93,15.93,0,0,0,20.78,1.59l94.81-69.53A73.29,73.29,0,0,0,168,160a72,72,0,1,0,0-144Zm56,72a55.72,55.72,0,0,1-11.16,33.52L134.49,43.16A56,56,0,0,1,224,88ZM54.32,216,40,201.68,102.14,117A72.37,72.37,0,0,0,139,153.86ZM112,88a55.67,55.67,0,0,1,11.16-33.51l78.34,78.34A56,56,0,0,1,112,88Zm-2.35,58.34a8,8,0,0,1,0,11.31l-8,8a8,8,0,1,1-11.31-11.31l8-8A8,8,0,0,1,109.67,146.33Z"/></svg></span><span class="d-nav__rowlabel">Events</span></a></li><li><a class="d-nav__row" href="/pricing#training"><span class="d-nav__dash" aria-hidden="true"></span><span class="d-nav__chip"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M251.76,88.94l-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.53,78.51,216,128,216a130,130,0,0,0,48-8.76V240a8,8,0,0,0,16,0V199.51a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12ZM128,200c-43.27,0-68.72-21.14-80-33.71V126.4l76.24,40.66a8,8,0,0,0,7.52,0L176,143.47v46.34C163.4,195.69,147.52,200,128,200Zm80-33.75a97.83,97.83,0,0,1-16,14.25V134.93l16-8.53ZM188,118.94l-.22-.13-56-29.87a8,8,0,0,0-7.52,14.12L171,128l-43,22.93L25,96,128,41.07,231,96Z"/></svg></span><span class="d-nav__rowlabel">Training</span></a></li><li><a class="d-nav__row" href="/pricing#scholarships"><span class="d-nav__dash" aria-hidden="true"></span><span class="d-nav__chip"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40ZM128,214.8C109.74,204.16,32,155.69,32,102A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,155.61,146.24,204.15,128,214.8Z"/></svg></span><span class="d-nav__rowlabel">Scholarships</span></a></li></ul></div></details></li><li><details class="d-nav__group" data-nav-group name="d-nav-group"><summary class="d-nav__trigger"><span class="d-nav__label">Company</span><span class="d-nav__caret" aria-hidden="true"></span><span class="d-nav__rule" aria-hidden="true"></span></summary><div class="d-nav__panel"><ul><li><a class="d-nav__row" href="/about"><span class="d-nav__dash" aria-hidden="true"></span><span class="d-nav__chip"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M232,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H24a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h72a8,8,0,0,0,8-8V56A8,8,0,0,0,232,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64ZM160,88h40a8,8,0,0,1,0,16H160a8,8,0,0,1,0-16Zm48,40a8,8,0,0,1-8,8H160a8,8,0,0,1,0-16h40A8,8,0,0,1,208,128Zm0,32a8,8,0,0,1-8,8H160a8,8,0,0,1,0-16h40A8,8,0,0,1,208,160Z"/></svg></span><span class="d-nav__rowlabel">About</span></a></li><li><a class="d-nav__row" href="/work"><span class="d-nav__dash" aria-hidden="true"></span><span class="d-nav__chip"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M232,112H136V88h8a16,16,0,0,0,16-16V40a16,16,0,0,0-16-16H112A16,16,0,0,0,96,40V72a16,16,0,0,0,16,16h8v24H24a8,8,0,0,0,0,16H56v32H48a16,16,0,0,0-16,16v32a16,16,0,0,0,16,16H80a16,16,0,0,0,16-16V176a16,16,0,0,0-16-16H72V128H184v32h-8a16,16,0,0,0-16,16v32a16,16,0,0,0,16,16h32a16,16,0,0,0,16-16V176a16,16,0,0,0-16-16h-8V128h32a8,8,0,0,0,0-16ZM112,40h32V72H112ZM80,208H48V176H80Zm128,0H176V176h32Z"/></svg></span><span class="d-nav__rowlabel">Work here</span></a></li><li><a class="d-nav__row" href="/trust"><span class="d-nav__dash" aria-hidden="true"></span><span class="d-nav__chip"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M216,40H40A16,16,0,0,0,24,56V216a8,8,0,0,0,11.58,7.15L64,208.94l28.42,14.21a8,8,0,0,0,7.16,0L128,208.94l28.42,14.21a8,8,0,0,0,7.16,0L192,208.94l28.42,14.21A8,8,0,0,0,232,216V56A16,16,0,0,0,216,40Zm0,163.06-20.42-10.22a8,8,0,0,0-7.16,0L160,207.06l-28.42-14.22a8,8,0,0,0-7.16,0L96,207.06,67.58,192.84a8,8,0,0,0-7.16,0L40,203.06V56H216ZM136,112a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H144A8,8,0,0,1,136,112Zm0,32a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H144A8,8,0,0,1,136,144ZM64,168h48a8,8,0,0,0,8-8V96a8,8,0,0,0-8-8H64a8,8,0,0,0-8,8v64A8,8,0,0,0,64,168Zm8-64h32v48H72Z"/></svg></span><span class="d-nav__rowlabel">Trust center</span></a></li><li><a class="d-nav__row" href="/legal"><span class="d-nav__dash" aria-hidden="true"></span><span class="d-nav__chip"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M211,103.43l-70.13,28,49.47,63.61a8,8,0,1,1-12.63,9.82L128,141,78.32,204.91a8,8,0,0,1-12.63-9.82l49.47-63.61L45,103.43A8,8,0,0,1,51,88.57l69,27.61V40a8,8,0,0,1,16,0v76.18l69-27.61A8,8,0,1,1,211,103.43Z"/></svg></span><span class="d-nav__rowlabel">Legal</span></a></li><li><a class="d-nav__row" href="/blog"><span class="d-nav__dash" aria-hidden="true"></span><span class="d-nav__chip"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M128,96H232a8,8,0,0,1,0,16H128a8,8,0,0,1,0-16Zm104,32H128a8,8,0,0,0,0,16H232a8,8,0,0,0,0-16Zm0,32H80a8,8,0,0,0,0,16H232a8,8,0,0,0,0-16Zm0,32H80a8,8,0,0,0,0,16H232a8,8,0,0,0,0-16ZM96,144a8,8,0,0,0,0-16H88V64h32v8a8,8,0,0,0,16,0V56a8,8,0,0,0-8-8H32a8,8,0,0,0-8,8V72a8,8,0,0,0,16,0V64H72v64H64a8,8,0,0,0,0,16Z"/></svg></span><span class="d-nav__rowlabel">Blog</span></a></li><li><a class="d-nav__row" href="https://forms.dembrane.com/contact"><span class="d-nav__dash" aria-hidden="true"></span><span class="d-nav__chip"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48Zm-96,85.15L52.57,64H203.43ZM98.71,128,40,181.81V74.19Zm11.84,10.85,12,11.05a8,8,0,0,0,10.82,0l12-11.05,58,53.15H52.57ZM157.29,128,216,74.18V181.82Z"/></svg></span><span class="d-nav__rowlabel">Contact</span></a></li></ul></div></details></li><li><a class="d-nav__link" href="https://dashboard.dembrane.com"><span class="d-nav__label">Log in</span><span class="d-nav__rule" aria-hidden="true"></span></a></li></ul><div class="d-nav__tools"><button class="d-nav__search" type="button" aria-label="Search" aria-expanded="false" data-search-trigger><svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg></button><div class="d-lang"><label class="visually-hidden" for="lang-select">Select Language</label><select id="lang-select" data-lang-switch><option value="/legal/dpa" selected>English</option><option value="/nl/legal/dpa">Nederlands</option></select><svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M128,24h0A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm88,104a87.61,87.61,0,0,1-3.33,24H174.16a157.44,157.44,0,0,0,0-48h38.51A87.61,87.61,0,0,1,216,128ZM102,168H154a115.11,115.11,0,0,1-26,45A115.27,115.27,0,0,1,102,168Zm-3.9-16a140.84,140.84,0,0,1,0-48h59.88a140.84,140.84,0,0,1,0,48ZM40,128a87.61,87.61,0,0,1,3.33-24H81.84a157.44,157.44,0,0,0,0,48H43.33A87.61,87.61,0,0,1,40,128ZM154,88H102a115.11,115.11,0,0,1,26-45A115.27,115.27,0,0,1,154,88Zm52.33,0H170.71a135.28,135.28,0,0,0-22.3-45.6A88.29,88.29,0,0,1,206.37,88ZM107.59,42.4A135.28,135.28,0,0,0,85.29,88H49.63A88.29,88.29,0,0,1,107.59,42.4ZM49.63,168H85.29a135.28,135.28,0,0,0,22.3,45.6A88.29,88.29,0,0,1,49.63,168Zm98.78,45.6a135.28,135.28,0,0,0,22.3-45.6h35.66A88.29,88.29,0,0,1,148.41,213.6Z"/></svg><span aria-hidden="true">English</span></div><a class="d-btn d-btn--blue d-btn--sm" href="/#plan" data-cta-source="Nav"><span>Plan your event</span><span class="d-btn__icon"><svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"/></svg></span></a><script type="module">document.addEventListener(`click`,e=>{let t=e.target?.closest?.(`[data-cta-source]`);if(!t)return;let n=t.dataset.ctaSource||`unknown`;window.posthog?.capture?.(`registration_cta_clicked`,{source:n})});</script></div></div></nav></header><div class="d-search" data-search hidden><div class="d-search__scrim" data-search-close></div><div class="d-search__panel" role="dialog" aria-modal="true" aria-label="Search"><div class="d-search__field" role="search"><svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg><input type="text" data-search-input spellcheck="false" autocomplete="off" placeholder="Search..." aria-label="Search" aria-controls="d-search-results" aria-expanded="false" aria-autocomplete="list" role="combobox"><button class="d-search__clear" type="button" aria-label="Close search" data-search-close><svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg></button></div><ul class="d-search__results" id="d-search-results" role="listbox" aria-label="Search results" data-search-results></ul><p class="d-search__empty" data-search-empty hidden>No pages match that.</p><p class="visually-hidden" role="status" aria-live="polite" data-search-status></p></div></div><script>(function(){const LOCALE = "en";
+const EMPTY = "No pages match that.";
+
+  (() => {
+    const root = document.querySelector('[data-search]');
+    const trigger = document.querySelector('[data-search-trigger]');
+    if (!root || !trigger) return;
+
+    const input = root.querySelector('[data-search-input]');
+    const list = root.querySelector('[data-search-results]');
+    const empty = root.querySelector('[data-search-empty]');
+    const status = root.querySelector('[data-search-status]');
+    let index = null;
+    let loading = null;
+    let active = -1;
+
+    const load = () => {
+      if (index) return Promise.resolve(index);
+      if (!loading) {
+        loading = fetch('/search-index.json')
+          .then((r) => (r.ok ? r.json() : { pages: [] }))
+          .then((data) => {
+            index = (data.pages || []).filter((p) => p.locale === LOCALE);
+            return index;
+          })
+          .catch(() => {
+            index = [];
+            return index;
+          });
+      }
+      return loading;
+    };
+    const fold = (s) =>
+      String(s)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    const score = (page, words) => {
+      const title = fold(page.title);
+      const heads = fold((page.headings || []).join(' '));
+      const body = fold(page.text || '');
+      let total = 0;
+      for (const w of words) {
+        let best = 0;
+        if (title.includes(w)) best = new RegExp(`\\b${w}`).test(title) ? 12 : 8;
+        else if (heads.includes(w)) best = new RegExp(`\\b${w}`).test(heads) ? 6 : 4;
+        else if (body.includes(w)) best = 2;
+        if (!best) return 0;
+        total += best;
+      }
+      return total;
+    };
+
+    const render = (query) => {
+      const words = fold(query).split(/\s+/).filter(Boolean);
+      list.textContent = '';
+      active = -1;
+
+      if (!words.length || !index) {
+        empty.hidden = true;
+        input.setAttribute('aria-expanded', 'false');
+        status.textContent = '';
+        return;
+      }
+
+      const hits = index
+        .map((page) => ({ page, s: score(page, words) }))
+        .filter((h) => h.s > 0)
+        .sort((a, b) => b.s - a.s || a.page.title.length - b.page.title.length)
+        .slice(0, 8);
+
+      empty.hidden = hits.length > 0;
+      input.setAttribute('aria-expanded', String(hits.length > 0));
+
+      hits.forEach((hit, i) => {
+        const li = document.createElement('li');
+        li.setAttribute('role', 'none');
+        const a = document.createElement('a');
+        a.id = `d-search-hit-${i}`;
+        a.href = hit.page.path;
+        a.setAttribute('role', 'option');
+        a.setAttribute('aria-selected', 'false');
+        const t = document.createElement('span');
+        t.className = 'd-search__title';
+        t.textContent = hit.page.title;
+        const p = document.createElement('span');
+        p.className = 'd-search__path';
+        p.textContent = hit.page.path;
+        a.append(t, p);
+        li.append(a);
+        list.append(li);
+      });
+
+      if (hits.length) select(0);
+      status.textContent = hits.length ? `${hits.length}` : EMPTY;
+    };
+
+    const options = () => [...list.querySelectorAll('[role="option"]')];
+
+    const select = (i) => {
+      const all = options();
+      if (!all.length) return;
+      const next = (i + all.length) % all.length;
+      all.forEach((el, n) => el.setAttribute('aria-selected', String(n === next)));
+      active = next;
+      input.setAttribute('aria-activedescendant', all[next].id);
+      all[next].scrollIntoView({ block: 'nearest' });
+    };
+
+    const open = () => {
+      root.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      document.documentElement.style.overflow = 'hidden';
+      input.focus();
+      load().then(() => render(input.value));
+    };
+
+    const close = () => {
+      root.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      document.documentElement.style.overflow = '';
+      input.value = '';
+      list.textContent = '';
+      empty.hidden = true;
+      status.textContent = '';
+      trigger.focus();
+    };
+
+    trigger.addEventListener('click', () => (root.hidden ? open() : close()));
+    root.querySelectorAll('[data-search-close]').forEach((el) => el.addEventListener('click', close));
+    input.addEventListener('input', () => load().then(() => render(input.value)));
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); select(active + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); select(active - 1); }
+      else if (e.key === 'Enter') {
+        const all = options();
+        if (all[active]) { e.preventDefault(); all[active].click(); }
+      }
+    });
+
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); close(); }
+      if (e.key !== 'Tab') return;
+      const stops = [input, ...root.querySelectorAll('[data-search-close]'), ...options()];
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    document.addEventListener('keydown', (e) => {
+      const t = e.target;
+      const typing = t instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
+      if (e.key === '/' && root.hidden && !typing) { e.preventDefault(); open(); }
+    });
+  })();
+})();</script><script type="module">var e=document.querySelector(`[data-nav]`),t=document.querySelector(`[data-burger]`),n=document.getElementById(`d-nav-menu`),r=[...document.querySelectorAll(`[data-nav-group]`)],i=[document.getElementById(`main`),document.querySelector(`body > footer`)],a=e=>{for(let t of r)t!==e&&(t.open=!1)},o=n=>{if(!(!e||!t)){e.dataset.open=String(n),t.setAttribute(`aria-expanded`,String(n)),document.documentElement.classList.toggle(`d-nav-lock`,n);for(let e of i)e?.toggleAttribute(`inert`,n);if(!n)a();else if(!r.some(e=>e.open)){let e=r.find(e=>e.dataset.current===`true`);e&&(e.open=!0)}}};t?.addEventListener(`click`,()=>o(e?.dataset.open!==`true`)),n?.addEventListener(`click`,t=>{e?.dataset.open===`true`&&t.target?.closest(`a`)&&setTimeout(()=>o(!1),0)}),document.querySelector(`[data-lang-switch]`)?.addEventListener(`change`,e=>{let t=e.currentTarget.value;t&&(window.location.pathname=t)});var s=getComputedStyle(document.documentElement).getPropertyValue(`--bp-nav`).trim()||`900px`,c=window.matchMedia(`(min-width: ${s})`);for(let e of r)e.addEventListener(`pointerenter`,t=>{t.pointerType===`touch`||!c.matches||(e.open=!0,a(e))}),e.addEventListener(`pointerleave`,t=>{t.pointerType===`touch`||!c.matches||(e.open=!1)}),e.addEventListener(`toggle`,()=>{e.open&&a(e)}),e.addEventListener(`focusout`,t=>{if(!c.matches)return;let n=t.relatedTarget;(!n||!e.contains(n))&&(e.open=!1)});document.addEventListener(`keydown`,n=>{let i=n.key,s=r.find(e=>e.open);if(i===`Escape`){if(e?.dataset.open===`true`){o(!1),t?.focus();return}s&&(s.open=!1,s.querySelector(`summary`)?.focus());return}if(i!==`ArrowDown`&&i!==`ArrowUp`)return;let c=document.activeElement,l=r.find(e=>e.contains(c));if(!l)return;let u=[...l.querySelectorAll(`.d-nav__row`)];if(u.length===0)return;if(c?.tagName===`SUMMARY`){if(i===`ArrowUp`)return;n.preventDefault(),l.open=!0,a(l),u[0].focus();return}let d=u.indexOf(c);if(d===-1)return;n.preventDefault();let f=i===`ArrowDown`?d+1:d-1;f<0?l.querySelector(`summary`)?.focus():u[Math.min(f,u.length-1)].focus()}),c.addEventListener(`change`,e=>{e.matches&&o(!1)});</script><main id="main"><section class="legal" data-astro-cid-utsu5ych><div class="legal-head" data-astro-cid-utsu5ych><!-- One h1 per page: the document title on a document page, the section heading on the hub. --><p class="legal-section-label" data-astro-cid-utsu5ych>Legal documents</p><p class="legal-lede" data-astro-cid-utsu5ych>An overview of all our legal documents.<br data-astro-cid-utsu5ych>Contact us for previous versions if needed.</p></div><div class="legal-grid" data-astro-cid-utsu5ych><nav class="legal-index" aria-label="Legal documents" data-astro-cid-utsu5ych><ul data-astro-cid-utsu5ych><li data-astro-cid-utsu5ych><a href="/legal/release-notes" data-astro-cid-utsu5ych>Release notes</a></li><li data-astro-cid-utsu5ych><a href="/legal/participants" data-astro-cid-utsu5ych>Data Policy for Participants</a></li><li data-astro-cid-utsu5ych><a href="/legal/dpa" aria-current="page" data-astro-cid-utsu5ych>Data Processing Agreement (DPA)</a></li><li data-astro-cid-utsu5ych><a href="/legal/terms" data-astro-cid-utsu5ych>General Terms &amp; Conditions</a></li><li data-astro-cid-utsu5ych><a href="/legal/privacy" data-astro-cid-utsu5ych>Privacy Statement</a></li><li data-astro-cid-utsu5ych><a href="/legal/sla" data-astro-cid-utsu5ych>Service Level Agreement (SLA)</a></li><li data-astro-cid-utsu5ych><a href="/legal/cookies" data-astro-cid-utsu5ych>🍪 Cookie policy</a></li></ul></nav><article class="legal-doc" data-astro-cid-utsu5ych><header class="legal-doc-head" data-astro-cid-utsu5ych><h1 data-astro-cid-utsu5ych>Data Processing Agreement (DPA)</h1><p class="legal-meta" data-astro-cid-utsu5ych><a class="legal-download" href="/legal/dpa/print" target="_blank" rel="noopener" data-astro-cid-utsu5ych><svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"/></svg><span data-astro-cid-utsu5ych>Download as PDF</span></a><time datetime="2026-07-17" aria-label="Effective date" data-astro-cid-utsu5ych>Jul 17, 2026</time><span aria-label="Version" data-astro-cid-utsu5ych>3.0.1</span></p></header><div class="prose" data-astro-cid-utsu5ych><p>This Data Processing Agreement (&quot;<strong>Processing Agreement</strong>&quot;) is an annex to the <a href="/legal/terms" target="_blank" rel="noopener noreferrer">General Terms and Conditions</a> and forms part of the agreement (&quot;<strong>Agreement</strong>&quot;) between the customer (&quot;<strong>Controller</strong>&quot;) and dembrane B.V. (&quot;<strong>Processor</strong>&quot;). This Processing Agreement governs the processing of personal data by dembrane on behalf of the Controller. Where the Services are delivered through an external Workspace as described in Article 3.8 of the General Terms and Conditions, the Controller is the Data Owner designated for that Workspace. Capitalised terms have the meaning as defined in the General Terms and Conditions (Article 1), unless otherwise defined in this Processing Agreement.</p>
+<p>For the purposes of Article 28(3) of the GDPR, the Controller and Processor (each a &quot;Party&quot;, together the &quot;Parties&quot;) have agreed on the following terms to ensure the protection of the rights of Data Subjects.</p>
+<h3 id="recitals">Recitals</h3>
+<ul>
+<li>
+<p>As part of the performance of the Agreement, Personal Data will be processed by Processor on behalf of Controller.</p>
+</li>
+<li>
+<p>Pursuant to Article 28 of the GDPR, the arrangements regarding the processing and security of such Personal Data must be laid down in a data processing agreement.</p>
+</li>
+<li>
+<p>The Parties have laid down these arrangements in this Processing Agreement.</p>
+</li>
+</ul>
+<hr />
+<h2 id="article-1-definitions">Article 1. Definitions</h2>
+<p>Terms used in this Processing Agreement written with an initial capital letter shall have the following meanings:</p>
+<ul>
+<li>
+<p><strong>Data Subject</strong>: the person to whom Personal Data relates.</p>
+</li>
+<li>
+<p><strong>Personal Data</strong>: any information about an identified or identifiable natural person processed by Processor in the context of the performance of the Agreement with Controller.</p>
+</li>
+<li>
+<p><strong>Data Owner</strong>: the organisation that is the controller of the Personal Data processed in a Workspace, as described in Article 3.9 of the General Terms and Conditions.</p>
+</li>
+<li>
+<p><strong>GDPR</strong>: the EU General Data Protection Regulation 2016/679.</p>
+</li>
+<li>
+<p><strong>AI Act</strong>: The EU Artificial Intelligence Act, Regulation (EU) 2024/1689.</p>
+</li>
+</ul>
+<hr />
+<h2 id="article-2-processing-of-personal-data">Article 2. Processing of Personal Data</h2>
+<p>2.1. The categories of Data Subjects and types of Personal Data processed by Processor are set out in Annex I.</p>
+<p>2.2. Processor shall process the Personal Data disclosed to it only on the basis of written instructions from Controller and only in the context of the performance of the Agreement, unless a provision of Union or Member State law applicable to Processor obliges it to process. In that case, Processor shall notify Controller of that legal requirement prior to processing, unless that legislation prohibits such notification for important public interest reasons.</p>
+<p>2.3. Processor has no control over the purposes and means of processing Personal Data. Nothing in this Processing Agreement is intended to transfer control over Personal Data to Processor in any way.</p>
+<p>2.4. Processor shall not be permitted to:</p>
+<ul>
+<li>
+<p>use the Personal Data to process for their own purposes;</p>
+</li>
+<li>
+<p>use the Personal Data to process for other or further purposes than reasonably necessary in the context of the performance of the Agreement;</p>
+</li>
+<li>
+<p>provide the Personal Data to third parties to the extent that this is not permitted on the basis of the Agreement and/or the Processing Agreement and/or on the basis of a mandatory legal provision pursuant to which Processor is obliged to disclose Personal Data to (supervisory or investigative) authorities.</p>
+</li>
+</ul>
+<p>2.5. <strong>Workspaces and roles.</strong> The Controller is the Data Owner of the Personal Data processed in a Workspace. Where a party other than the Controller operates an external Workspace on behalf of the Data Owner (for example a partner or consultant), that operating party acts as a separate processor of the Data Owner and is responsible for its own arrangements with the Data Owner. Processor processes the Personal Data as a processor of the Controller in its own right, and not as a sub-processor of the operating party.</p>
+<hr />
+<h2 id="article-3-legal-and-regulatory-compliance">Article 3. Legal and Regulatory Compliance</h2>
+<p>3.1. Parties will conduct themselves in accordance with the provisions of the GDPR, the AI Act and future (European) laws and regulations applicable at any time in the field of processing personal data and artificial intelligence. If future laws and regulations require the Processing Agreement to be amended, Parties will enter into consultations in order to make new arrangements which will maintain the scope of this Processing Agreement as much as possible.</p>
+<p>3.2. Processor shall cooperate with Controller in carrying out a Data Protection Impact Assessment, at least to the extent possible in connection with the information available to it and the nature of the processing. The reasonable costs that this obligation to cooperate entails for Processor shall be borne by Controller.</p>
+<p>3.3. If and to the extent that Controller is required under laws and regulations to provide information to a supervisory authority regarding the processing of Personal Data, Processor shall, at the first request of Controller, provide all reasonably requested cooperation to Controller so that such information becomes available and the supervisory authority can be duly informed.</p>
+<hr />
+<h2 id="article-4-confidentiality">Article 4. Confidentiality</h2>
+<p>4.1. Processor shall be obliged to keep the Personal Data confidential and shall ensure that those authorised to process the Personal Data have undertaken to observe confidentiality.</p>
+<p>4.2. Even after the termination of this Processing Agreement, this confidentiality obligation shall continue to exist, except insofar as it concerns information that has already become publicly known, other than as a result of a breach of the aforementioned confidentiality obligation.</p>
+<hr />
+<h2 id="article-5-security-measures-processor">Article 5. Security Measures Processor</h2>
+<p>5.1. Processor shall take appropriate technical and organisational measures to ensure a level of security appropriate to the risk, which shall include the measures listed in Annex II.</p>
+<p>5.2. In determining the measures, Processor shall take into account the state of the art, the implementation costs, as well as the nature, scope, context and purposes of processing and the risks to the rights and freedoms of individuals that vary in terms of probability and severity.</p>
+<p>5.3. When assessing the appropriate level of security, Processor shall in particular take into account the processing risks, especially those resulting from the destruction, loss, alteration or unauthorised disclosure of, or unauthorised access to, transmitted, stored or otherwise processed data, whether accidental or unlawful.</p>
+<p>5.4. In accordance with Article 32 GDPR, Processor shall also, independently from Controller, evaluate the risks to the rights and freedoms of natural persons inherent in the processing and implement measures to mitigate those risks. To this effect, Controller shall provide Processor with all information necessary to identify and evaluate such risks.</p>
+<p>5.5. Processor shall take measures to ensure that any natural person acting under the authority of the Processor and having access to the Personal Data shall only process it on the instructions of the Controller, unless a provision of Union law or Member State law requires Processor to process it.</p>
+<hr />
+<h2 id="article-6-data-retention">Article 6. Data Retention</h2>
+<p><strong>6.1. During the Agreement.</strong> The following retention periods apply to Personal Data processed by Processor:</p>
+<ul>
+<li>
+<p><strong>Audio recordings</strong>: retained for the duration of the project as defined by Controller in the Platform, and deleted within 30 days after the project is completed or the relevant conversation is deleted by Controller;</p>
+</li>
+<li>
+<p><strong>Transcription, chat and analysis data</strong>: retained for the duration of the Agreement. Controller may delete conversations through the Platform at any time, which cascades to the associated audio recording and transcription. The same process also applies to the chat and analysis data;</p>
+</li>
+<li>
+<p><strong>Client account data (email)</strong>: retained for the duration of the Agreement.</p>
+</li>
+</ul>
+<p>6.2. Controller may export its data through the Platform at any time during the Agreement in a commonly used, machine-readable format.</p>
+<p>6.3. Audio and transcription data transmitted to sub-processors for processing purposes is retained by those sub-processors only for the transient period necessary to complete processing, as specified in Annex III. This data is automatically deleted by the sub-processors within a timeframe which dembrane has set with the sub-processors, as specified in Annex III.</p>
+<p>6.4. After the termination of this Processing Agreement, Processor shall, at the first request and at the choice of the Controller, delete all Personal Data or return it in a commonly used, machine-readable format. Controller shall communicate its choice to Processor no later than two (2) weeks before termination of the Processing Agreement. If Processor does not receive this choice in a timely manner, Processor shall delete the Personal Data within 30 days after termination.</p>
+<p>6.5. Processor retains a copy of the Personal Data beyond the periods specified in this Article only where required to do so under a mandatory legal provision. In such cases, Processor shall inform Controller of the scope and expected duration of the retention.</p>
+<hr />
+<h2 id="article-7-supervision-by-controller">Article 7. Supervision by Controller</h2>
+<p>7.1. Upon request, Processor shall provide Controller with the necessary information enabling Controller to form an opinion on Processor's compliance with the provisions of Articles 2, 4, 5, 6, 8, 9, 11 and 12 of this Processing Agreement.</p>
+<p>7.2. Controller shall have the right to have Processor's compliance with obligations in Articles 2, 4, 5, 6, 8, 9, 11 and 12 of this Processing Agreement audited by an independent expert bound by confidentiality. Processor shall cooperate in the audit and provide all information reasonably relevant to the audit as timely as possible. The costs of audits commissioned by Controller shall be borne by Controller, unless it appears that Processor has not adequately fulfilled its obligations in which case Processor shall bear the costs.</p>
+<p>7.3. If the independent expert's audit report shows that the measures and provisions taken by Processor do not sufficiently comply with this Processing Agreement, Processor shall immediately take the necessary measures to comply with it.</p>
+<hr />
+<h2 id="article-8-data-breach-notification-obligation">Article 8. Data Breach Notification Obligation</h2>
+<p>8.1. Processor shall inform Controller without undue delay, as soon as it discovers that a Personal Data breach has occurred. This provision of information shall be such that Controller is able to fulfil its obligations under Article 33 and Article 34 of the GDPR.</p>
+<p>8.2. Processor shall always keep Controller fully informed about the progress of the recovery and all relevant developments regarding the breach referred to in Article 8.1 and the consequences thereof. Processor shall take all measures that can reasonably be expected of it to mitigate the adverse consequences of the breach referred to in Article 8.1 as the case may be, to remedy or limit as much as possible.</p>
+<p>8.3. In the context of a breach referred to in Article 8.1, Processor shall not communicate with Data Subject(s) and/or supervisory authority(ies) other than on the instructions of Controller, or with its express and explicit consent.</p>
+<hr />
+<h2 id="article-9-sub-processing">Article 9. Sub-processing</h2>
+<p>9.1. Processor hereby obtains general consent to outsource parts of the processing of Personal Data to sub-processors listed in <strong>Annex III</strong> during the term of the Agreement.</p>
+<p>9.2. Processor shall inform the Controller of any changes regarding the addition or replacement of sub-processors. Controller may object to such changes in writing within 30 days of notification, stating reasonable grounds. If Processor cannot reasonably accommodate the objection, Controller may terminate the affected processing (or the Agreement) in accordance with the termination provisions of the Agreement.</p>
+<p>9.3. Processor shall agree a third-party beneficiary clause with each sub-processor whereby, in the event of bankruptcy of the Processor, Controller shall be a third-party beneficiary to the sub-processor agreement and shall have the right to enforce the agreement against the sub-processor, including the right to instruct the sub-processor to delete or return the Personal Data.</p>
+<p>9.4. Processor shall ensure that all sub-processors engaged by it that play a role in the performance of the Agreement will comply with the obligations contained in this Processing Agreement, in particular the obligation to provide adequate guarantees regarding the application of appropriate technical and organisational measures in order to ensure an equivalent level of protection of Personal Data.</p>
+<p>9.5. The sub-processors actually engaged depend on the tier and deployment configuration agreed with Controller, as further described in Annex III. Where Controller uses its own LLM (the bring-your-own-model configuration of the Innovator tier), the provider of that model is not a sub-processor of Processor, and Controller is responsible for its own arrangements with that provider. The Guardian tier provides additional compliance support and controls for high-compliance environments and, unless otherwise agreed in writing with Controller, uses the same sub-processors set out in Annex III.</p>
+<hr />
+<h2 id="article-10-requests-from-data-subject">Article 10. Requests from Data Subject</h2>
+<p>10.1. Controller has obligations towards Data Subjects under the GDPR, such as with regard to providing information, giving access to, rectifying and deleting Personal Data. Processor shall, if possible, cooperate with the obligations to be fulfilled by Controller. Processor reserves the right to charge its regular hourly rate to Controller for its cooperation.</p>
+<p>10.2. If a Data Subject contacts Processor directly in relation to the performance of their rights under the GDPR, Processor will not address this (in substance), but will notify Controller without delay.</p>
+<hr />
+<h2 id="article-11-international-transfers">Article 11. International Transfers</h2>
+<p>11.1. Processor shall ensure that any processing of Personal Data carried out by or on behalf of Controller including the third parties engaged by it in connection with the performance of the Agreement shall take place within the European Economic Area (EEA) or to or from countries that provide a guaranteed level of protection in accordance with the GDPR.</p>
+<p>11.2. Therefore, without the prior written consent of Controller, Processor shall not transfer Personal Data to or store Personal Data in a country or organisation outside the EEA or make Personal Data accessible from a non-EEA country, unless that country or organisation provides a guaranteed level of protection or a provision of Union or Member State law applicable to Processor obliges it to process. In that case, the Processor shall notify the Controller, prior to processing, of that legal requirement, unless that legislation prohibits such notification for important public interest reasons.</p>
+<p>11.3. Where the processing of Personal Data involves a transfer to a country outside the EEA that does not benefit from an adequacy decision under Article 45 GDPR, Processor shall ensure that appropriate safeguards are in place in accordance with Article 46 GDPR, including but not limited to Standard Contractual Clauses adopted by the European Commission. Processor shall inform Controller of any such transfers and the safeguards applied. As of the effective date, Processor maintains data residency within the EEA for all primary processing activities. This article applies in the event that circumstances require transfer outside the EEA.</p>
+<hr />
+<h2 id="article-12-ai-act-compliance">Article 12. AI Act Compliance</h2>
+<p>12.1. Processor has classified the Platform's AI functions under the AI Act as follows: (a) the transcription function as minimal risk (Article 50(2) of the AI Act); (b) the chat and reporting functions as limited risk, subject to the transparency obligations under Article 50 of the AI Act. Processor provides transparency disclosures to Data Subjects within the Platform accordingly.</p>
+<p>12.2. Processor maintains documentation of its AI Act compliance, including risk classifications, transparency measures, and guidance on the respective obligations of provider and deployer, in its compliance documentation.</p>
+<hr />
+<h2 id="article-13-warranty-and-indemnity">Article 13. Warranty and Indemnity</h2>
+<p>13.1. Controller guarantees that data processing takes place in accordance with applicable laws and regulations. This means in any case that Controller guarantees that it has the right to collect the data (or have it collected) and that it is entitled to process the data (or have it processed).</p>
+<p>13.2. Controller shall indemnify Processor against damages and costs resulting from any claims by third parties, expressly including Data Subjects and supervisory authorities (such as the Personal Data Authority), related to or arising from any unlawful processing and/or other violation of the GDPR and/or the Processing Agreement attributable to Controller.</p>
+<hr />
+<h2 id="article-14-liability">Article 14. Liability</h2>
+<p>14.1. Controller guarantees correct compliance with the obligations under the Processing Agreement. This Processing Agreement forms an integral part of the Agreement between Controller and Processor and the (total) liability of Processor is (thereby) limited in accordance with the provisions of the Agreement.</p>
+<hr />
+<h2 id="article-15-term-of-processing-agreement">Article 15. Term of Processing Agreement</h2>
+<p>15.1. This Processing Agreement enters into force at the time the Agreement takes effect and is entered into for the duration of the Agreement.</p>
+<p>15.2. Once the Agreement is terminated or ends, for whatever reason, this Processing Agreement shall remain in force for as long as Personal Data is processed by Processor, after which this Processing Agreement shall terminate by operation of law.</p>
+<p>15.3. The post-termination retention and deletion obligations are governed by Article 6.4 and 6.5 of this Processing Agreement.</p>
+<hr />
+<h2 id="article-16-final-provision">Article 16. Final Provision</h2>
+<p>16.1. Amendments and supplements to this Processing Agreement shall only be valid if agreed in writing between the Parties. The amendment regime of the General Terms and Conditions (Article 15) does not apply to this Processing Agreement.</p>
+<p>16.2. This Processing Agreement is exclusively governed by Dutch law.</p>
+<p>16.3. The competent court in 's-Hertogenbosch, the Netherlands, shall have exclusive jurisdiction to adjudicate any disputes arising out of or in connection with this Processing Agreement.</p>
+<p>16.4. This Processing Agreement is <strong>version 3.0.1, dated 17/07/2026</strong>. Previous versions are superseded in their entirety.</p>
+<hr />
+<h2 id="annex-i-categories-of-data-subjects-and-personal-data">Annex I. Categories of Data Subjects and Personal Data</h2>
+<div class="prose-table-wrap" role="region" tabindex="0">
+<table class="prose-table" data-cols="3">
+<thead>
+<tr>
+<th scope="col">Data Subject</th>
+<th scope="col">Type of Personal Data</th>
+<th scope="col">Purpose of Processing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Participants</td>
+<td>Audio recording</td>
+<td>Transcribe participant contributions to gather insights from dialogue.</td>
+</tr>
+<tr>
+<td>Participants</td>
+<td>Transcription text</td>
+<td>To act as a basis for analysis to gather insights from dialogue.</td>
+</tr>
+<tr>
+<td>Participants</td>
+<td>Analysis data</td>
+<td>Analysis of participant-shared information to gather insights from dialogue.</td>
+</tr>
+<tr>
+<td>Users (Dashboard Users, including external collaborators and read-only observers)</td>
+<td>E-mail address, name, role and Workspace membership</td>
+<td>To maintain user accounts, manage roles and collaboration, and provide access to the Platform.</td>
+</tr>
+<tr>
+<td>Data Owner contacts</td>
+<td>E-mail address, name</td>
+<td>To notify the Data Owner of the creation of an external Workspace and to invite the Data Owner to observe the project.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr />
+<h2 id="annex-ii-security-measures">Annex II. Security Measures</h2>
+<h3 id="standards-system">Standards System</h3>
+<p>Processor maintains a certified Information Security Management System (ISMS) in accordance with <strong>ISO 27001:2022</strong>. The ISMS scope covers the design, development, and operation of the dembrane platform, including the processing of personal data on behalf of Controllers.</p>
+<ul>
+<li>
+<p><strong>Certification</strong>: ISO 27001:2022, issued by an accredited certification body. A copy of the current certificate is available in the Processor's compliance data room.</p>
+</li>
+<li>
+<p><strong>Statement of Applicability</strong>: The applicable controls from ISO 27001:2022 Annex A are documented in the Statement of Applicability and are available in the Processor's compliance data room.</p>
+</li>
+<li>
+<p><strong>BIO2 alignment</strong>: Processor is implementing controls aligned with the BIO2 (Baseline Informatiebeveiliging Overheid) framework for Dutch public sector clients.</p>
+</li>
+</ul>
+<h3 id="technical-measures">Technical Measures</h3>
+<ul>
+<li>
+<p><strong>Encryption in transit</strong>: All data in transit is encrypted using TLS 1.2 or higher.</p>
+</li>
+<li>
+<p><strong>Encryption at rest</strong>: All stored personal data is encrypted at rest using AES-256 or equivalent industry-standard encryption provided by the infrastructure provider.</p>
+</li>
+<li>
+<p><strong>Access control</strong>: Access to personal data is restricted on a role-based-access-control (RBAC). All access to production systems and data stores requires multi-factor authentication (MFA).</p>
+</li>
+<li>
+<p><strong>Secure connections</strong>: Personal data is only transmitted via secure connections (HTTPS, IPSEC, FTPS).</p>
+</li>
+<li>
+<p><strong>Infrastructure</strong>: Processor uses industry-standard cloud infrastructure (DigitalOcean) for data storage and compute, all hosted within the European Economic Area. See Annex III for details.</p>
+</li>
+<li>
+<p><strong>Backups</strong>: Backups of personal data are transmitted and stored via secure, encrypted connections. Backup procedures are documented within the ISMS.</p>
+</li>
+<li>
+<p><strong>Logging and monitoring</strong>: Access to personal data is logged. Logs are reviewed as part of the ISMS operational procedures.</p>
+</li>
+<li>
+<p><strong>Vulnerability management</strong>: Processor maintains a vulnerability management process including regular security assessments. Penetration tests, if conducted, can be found in the compliance data room.</p>
+</li>
+</ul>
+<h3 id="organisational-measures">Organisational Measures</h3>
+<ul>
+<li>
+<p><strong>Data minimisation</strong>: Processor separates personal data from research insights as soon as technically feasible and stores only the data necessary to provide the contracted services.</p>
+</li>
+<li>
+<p><strong>Staff awareness</strong>: All employees receive information security awareness training and have signed confidentiality agreements. Compliance is tracked within the ISMS.</p>
+</li>
+<li>
+<p><strong>Retention discipline</strong>: Personal data is retained only for the periods specified in Article 6 of this Processing Agreement.</p>
+</li>
+<li>
+<p><strong>Deletion cascading</strong>: When Controller deletes a conversation and/or chat through the Platform, the associated audio recording, transcription, chat data, and analysis data are deleted from Processor's systems. Deletion regarding sub-processors happens within their respective transient retention windows (see Annex III).</p>
+</li>
+<li>
+<p><strong>Data subject deletion requests</strong>: If a Data Subject requests deletion of their data, Processor will cooperate with Controller and work with sub-processors to ensure data is deleted throughout the processing chain.</p>
+</li>
+<li>
+<p><strong>Incident response</strong>: Processor maintains a documented incident response procedure, including the ability to inform Controller within the timeframe specified in Article 8.1 of this Processing Agreement.</p>
+</li>
+<li>
+<p><strong>Access on instruction only</strong>: Stored personal data is only accessed by Processor staff at Controller's request or after notification for maintenance purposes.</p>
+</li>
+</ul>
+<h3 id="adequacy-and-audits">Adequacy and Audits</h3>
+<p>Information security adequacy is demonstrated through:</p>
+<ul>
+<li>
+<p>ISO 27001:2022 certification (externally audited);</p>
+</li>
+<li>
+<p>Controls aligned with the BIO2* framework (implementation in progress);</p>
+</li>
+<li>
+<p>Periodic internal audits and management reviews as required by the ISMS;</p>
+</li>
+<li>
+<p>Controller may verify these measures through the audit rights described in Article 7 of this Processing Agreement.</p>
+</li>
+</ul>
+<blockquote>
+<p>* External service providers are not part of the government and are therefore not themselves directly bound by the BIO or the delivery of an ICV. However, they must comply with the client's requirements. Conditions for the purpose of information security must therefore be laid down in the contract.</p>
+</blockquote>
+<hr />
+<h2 id="annex-iii-sub-processors">Annex III. Sub-processors</h2>
+<p>The sub-processors actually engaged depend on the tier and deployment configuration agreed with Controller (see Article 9.5). For the bring-your-own-LLM configuration of the Innovator tier, the Controller's own LLM provider is not a sub-processor of Processor. The Guardian tier uses the same sub-processors listed below, with additional compliance support and controls for high-compliance environments.</p>
+<div class="prose-table-wrap" role="region" tabindex="0">
+<table class="prose-table" data-cols="4">
+<thead>
+<tr>
+<th scope="col">Sub-processor (location)</th>
+<th scope="col">Website</th>
+<th scope="col">Outsourced Processing</th>
+<th scope="col">Retention Periods</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DigitalOcean (North-west EU, AMS3)</td>
+<td><a href="https://www.digitalocean.com/trust/certification-reports" target="_blank" rel="noopener noreferrer">https://www.digitalocean.com/trust/certification-reports</a></td>
+<td>Data storage and cloud compute (platform hosting)</td>
+<td>Duration of Agreement (primary storage and compute)</td>
+</tr>
+<tr>
+<td>Google Cloud Vertex AI (EU, Amsterdam)</td>
+<td><a href="https://cloud.google.com/vertex-ai/docs/general/locations" target="_blank" rel="noopener noreferrer">https://cloud.google.com/vertex-ai/docs/general/locations</a></td>
+<td>LLM inference for analysis features; speech-to-text</td>
+<td>Transient; max 24 hours</td>
+</tr>
+<tr>
+<td>Twilio SendGrid (EU data residency)</td>
+<td><a href="https://www.twilio.com/en-us/legal/sub-processors" target="_blank" rel="noopener noreferrer">https://www.twilio.com/en-us/legal/sub-processors</a></td>
+<td>Transactional and account email delivery (email address, message content)</td>
+<td>Per SendGrid delivery-log retention</td>
+</tr>
+</tbody>
+</table>
+</div></div><nav class="legal-pager" aria-label="Legal documents" data-astro-cid-utsu5ych><a class="legal-pager-prev" href="/legal/participants" rel="prev" data-astro-cid-utsu5ych><span class="legal-pager-label" data-astro-cid-utsu5ych>Previous</span><span data-astro-cid-utsu5ych>Data Policy for Participants</span></a><a class="legal-pager-next" href="/legal/terms" rel="next" data-astro-cid-utsu5ych><span class="legal-pager-label" data-astro-cid-utsu5ych>Next</span><span data-astro-cid-utsu5ych>General Terms &amp; Conditions</span></a></nav></article></div></section></main><footer class="d-footer"><div class="d-shell d-footer__top"><div class="d-footer__brand"><img src="/img/ca9GoBp8aVvTI95pe6IULy7SAyI.svg" alt="dembrane" width="400" height="76"><p class="d-p21">The stakeholder engagement platform built for the real world. Together, we make sense.</p><a class="d-footer__social" href="https://www.linkedin.com/company/dembrane/" aria-label="dembrane on LinkedIn" rel="noopener"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M216,24H40A16,16,0,0,0,24,40V216a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V40A16,16,0,0,0,216,24Zm0,192H40V40H216V216ZM96,112v64a8,8,0,0,1-16,0V112a8,8,0,0,1,16,0Zm88,28v36a8,8,0,0,1-16,0V140a20,20,0,0,0-40,0v36a8,8,0,0,1-16,0V112a8,8,0,0,1,15.79-1.78A36,36,0,0,1,184,140ZM100,84A12,12,0,1,1,88,72,12,12,0,0,1,100,84Z"/></svg></a></div><div class="d-footer__cols"><div class="d-footer__col"><h2 class="d-p28">Platform</h2><ul><li class="d-p21"><a href="/platform/features">Features</a></li><li class="d-p21"><a href="/platform/use-cases">Use Cases</a></li><li class="d-p21"><a href="https://dashboard.dembrane.com">Log in</a></li></ul></div><div class="d-footer__col"><h2 class="d-p28">Pricing</h2><ul><li class="d-p21"><a href="/pricing">Events</a></li><li class="d-p21"><a href="/pricing#training">Trainings</a></li><li class="d-p21"><a href="/pricing#scholarships">Scholarships</a></li></ul></div><div class="d-footer__col"><h2 class="d-p28">Company</h2><ul><li class="d-p21"><a href="/about">About</a></li><li class="d-p21"><a href="/legal">Trust</a></li><li class="d-p21"><a href="https://forms.dembrane.com/contact">Contact</a></li><li class="d-p21"><a href="/work">Work</a></li><li class="d-p21"><a href="/legal">Legal</a></li><li class="d-p21"><a href="/blog">Blog</a></li></ul></div></div></div><div class="d-shell d-footer__bottom"><p class="d-p16">dembrane B.V. · KVK 89391438 · Sint Janssingel 88, 5211DA</p><p class="d-p16">Support: +31 6 35625130  ·  <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="681b1d1818071a1c280c0d050a1a09060d460b0705">[email&#160;protected]</a></p><p class="d-p16"><a href="#cookie-settings">Change cookie settings</a></p></div></footer><aside class="d-cookie" id="cookie-settings" data-cookie hidden aria-label="Cookie settings"><p class="d-cookie__title d-p16">🍪 Free cookie?</p><p class="d-cookie__body d-t14">We keep dembrane cookie-free by default and only measure basic site usage. With your okay, we&#39;ll remember you between visits and understand how you use the site so we can keep improving it. <a href="/legal/cookies">Check out our cookie policy</a></p><div class="d-cookie__actions"><button class="d-cookie__btn" type="button" data-cookie-choice="declined">Decline</button><button class="d-cookie__btn d-cookie__btn--accept" type="button" data-cookie-choice="accepted">Accept</button></div></aside><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">var e=window.__dembraneConsent,t=document.querySelector(`[data-cookie]`);if(t&&e){let n=()=>{t.hidden=!1};t.hidden=!e.needsAsk,t.querySelectorAll(`[data-cookie-choice]`).forEach(n=>{n.addEventListener(`click`,()=>{let r=n.dataset.cookieChoice===`accepted`;e.write(r),e.apply(r),t.hidden=!0})}),document.querySelectorAll(`a[href$="#cookie-settings"]`).forEach(e=>{e.addEventListener(`click`,e=>{e.preventDefault(),n(),t.querySelector(`[data-cookie-choice]`)?.focus()})}),window.dembraneOpenCookieSettings=n}</script></body></html><script type="module">var e=[...document.querySelectorAll(`[data-continuous-motion]`)];if(e.length){let t=window.matchMedia(`(prefers-reduced-motion: reduce)`),n=new Map(e.map(e=>[e,!1])),r=e=>{e.dataset.motionActive=String(!t.matches&&!document.hidden&&n.get(e)===!0)},i=()=>e.forEach(r);if(`IntersectionObserver`in window){let t=new IntersectionObserver(e=>{for(let t of e){let e=t.target;n.set(e,t.isIntersecting),r(e)}},{rootMargin:`160px 0px`});e.forEach(e=>t.observe(e))}else e.forEach(e=>n.set(e,!0)),i();document.addEventListener(`visibilitychange`,i),t.addEventListener(`change`,i),i()}(()=>{let e=window.matchMedia(`(max-width: 809px)`),t=null,n=0,r=e=>{e!==t&&(t?.classList.remove(`is-center-active`),e?.classList.add(`is-center-active`),t=e)},i=()=>{if(n=0,!e.matches){r(null);return}let t=window.innerHeight/2,i=Math.max(24,window.innerHeight*.08),a=null,o=1/0;document.querySelectorAll(`.d-card, .d-case`).forEach(e=>{let n=e.getBoundingClientRect();if(n.width<=0||n.height<=0||n.bottom<t-i||n.top>t+i)return;let r=(t<n.top?n.top-t:t>n.bottom?t-n.bottom:0)+Math.abs(n.top+n.height/2-t)/1e4;r<o&&(o=r,a=e)}),r(a)},a=()=>{n||=requestAnimationFrame(i)};window.addEventListener(`scroll`,a,{passive:!0}),window.addEventListener(`resize`,a),e.addEventListener(`change`,a),window.addEventListener(`load`,a,{once:!0}),document.fonts?.ready&&document.fonts.ready.then(a),window.MutationObserver&&document.body&&new MutationObserver(a).observe(document.body,{attributes:!0,attributeFilter:[`data-case-page`,`hidden`],childList:!0,subtree:!0}),a()})();</script>

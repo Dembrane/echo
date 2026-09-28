@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { assetPath } from "@echo/core";
 
 /**
  * The popcorn presentation as one self-contained HTML document: the upstream page
@@ -8,9 +8,9 @@ import { join } from "node:path";
  * public variants differ only in the embed config injected ahead of the app script.
  */
 
-const STATIC_DIR = join(import.meta.dir, "..", "static");
+const staticPath = (...parts: string[]) => assetPath("popcorn", "static", ...parts);
 
-const read = (name: string) => readFileSync(join(STATIC_DIR, name), "utf8");
+const read = (name: string) => readFileSync(staticPath(name), "utf8");
 
 let template: string | null = null;
 
@@ -37,25 +37,52 @@ function embedJson(embed: Record<string, unknown>): string {
 }
 
 /** The page with its embed config injected ahead of the app script. */
-export function renderPopcornPage(embed: Record<string, unknown>): string {
+/**
+ * "Continue in dembrane" on a prospect's demo: a link to the dashboard sign-in, fixed in
+ * the page's corner and opened in a new tab so the room keeps the deck. Added only to a
+ * page whose demo carries the link, so every other page stays byte for byte the same.
+ */
+export function continueSnippet(url: string, language: string): string {
+  const label = language === "nl" ? "Verder in dembrane" : "Continue in dembrane";
+  const href = url.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  return `<style>.popcorn-continue{position:fixed;right:clamp(12px,2vw,28px);bottom:clamp(12px,2vw,28px);z-index:50;padding:.6em 1.1em;border-radius:9999px;background:#4169E1;color:#fff;font:500 .9em "DM Sans",system-ui,sans-serif;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.15)}</style>
+<a class="popcorn-continue" href="${href}" target="_blank" rel="noopener">${label}</a>
+`;
+}
+
+export function renderPopcornPage(embed: Record<string, unknown>, continueHtml = ""): string {
   const script = `<script>window.POPCORN_EMBED = ${embedJson(embed)};</script>\n`;
   const html = pageTemplate();
   const marker = "<script>\n/* popcorn";
-  if (html.includes(marker)) return html.replace(marker, () => script + marker);
-  return html.replace("</head>", () => `${script}</head>`);
+  const page = html.includes(marker)
+    ? html.replace(marker, () => script + marker)
+    : html.replace("</head>", () => `${script}</head>`);
+  return continueHtml ? page.replace("</body>", () => `${continueHtml}</body>`) : page;
 }
 
-export const LOGO_PATH = join(STATIC_DIR, "dembrane-logomark-cropped.png");
+const LOGO = "dembrane-logomark-cropped.png";
+export const logoPath = () => staticPath(LOGO);
 
 /** The data screen's drawings, each with a twin for the dark screen. */
-export const ILLUSTRATIONS: ReadonlyMap<string, string> = new Map(
-  ["scan", "talk-anon", "talk-public", "understand"].flatMap((name) =>
-    ["", "-dark"].map((twin) => [
-      `${name}${twin}`,
-      join(STATIC_DIR, "illustrations", `${name}${twin}.webp`),
-    ]),
-  ),
-);
+export const ILLUSTRATIONS: readonly string[] = [
+  "scan",
+  "talk-anon",
+  "talk-public",
+  "understand",
+].flatMap((name) => ["", "-dark"].map((twin) => `${name}${twin}`));
+
+/** The file of one drawing, or null for a name that is not one. */
+export const illustrationPath = (name: string): string | null =>
+  ILLUSTRATIONS.includes(name) ? staticPath("illustrations", `${name}.webp`) : null;
+
+/** The scripts index.html loads, inlined into the page. */
+const PAGE_SCRIPTS = ["planar.js", "audience-i18n.js", "app.js"];
+
+/** Everything above reads, for the boot check of an app that serves popcorn pages. */
+export const POPCORN_PAGE_ASSETS: readonly string[] = [
+  ...["index.html", "styles.css", ...PAGE_SCRIPTS, "flow.html", LOGO, "sample"],
+  ...ILLUSTRATIONS.map((name) => `illustrations/${name}.webp`),
+].map((file) => `popcorn/static/${file}`);
 
 export const NOT_LIVE_PAGE = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -87,8 +114,10 @@ export function renderFlowPage(): string {
 
 /** The fictional sample deck's files, keyed by path under static/sample, sorted. */
 export function sampleFiles(): Record<string, unknown> {
-  const root = join(STATIC_DIR, "sample");
+  const root = staticPath("sample");
   const glob = new Bun.Glob("**/*.json");
   const paths = [...glob.scanSync({ cwd: root })].map((p) => p.replaceAll("\\", "/")).sort();
-  return Object.fromEntries(paths.map((p) => [p, JSON.parse(readFileSync(join(root, p), "utf8"))]));
+  return Object.fromEntries(
+    paths.map((p) => [p, JSON.parse(readFileSync(staticPath("sample", p), "utf8"))]),
+  );
 }

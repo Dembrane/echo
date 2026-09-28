@@ -1029,6 +1029,12 @@ export const billing_account = pgTable(
     billing_vat_region: varchar({ length: 255 }).default(sql`NULL`),
     payment_failed_notified: boolean().default(false).notNull(),
     reconcile_failed_at: timestamp({ withTimezone: true, mode: "string" }),
+    // What Exact needs to invoice, confirmed by the customer when accepting an offer.
+    kvk_number: varchar({ length: 255 }),
+    kbo_number: varchar({ length: 255 }),
+    billing_email: varchar({ length: 255 }),
+    po_number: varchar({ length: 255 }),
+    peppol_id: varchar({ length: 255 }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -1933,6 +1939,9 @@ export const org = pgTable(
     agent_access_enabled: boolean().default(false).notNull(),
     agent_access_updated_at: timestamp({ withTimezone: true, mode: "string" }),
     agent_access_updated_by: uuid(),
+    // Customer accounts: null for organisations dembrane does not manage as an account.
+    account_stage: varchar({ length: 32 }),
+    origin_pricing_configuration_id: uuid(),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -1940,6 +1949,15 @@ export const org = pgTable(
       foreignColumns: [app_user.id],
       name: "org_created_by_foreign",
     }).onDelete("set null"),
+    foreignKey({
+      columns: [table.origin_pricing_configuration_id],
+      foreignColumns: [pricing_configuration.id],
+      name: "org_origin_pricing_configuration_id_foreign",
+    }).onDelete("set null"),
+    check(
+      "org_account_stage_check",
+      sql`${table.account_stage} is null or ${table.account_stage} in ('prospect', 'customer', 'churned')`,
+    ),
   ],
 );
 
@@ -3371,6 +3389,7 @@ export const verification_topic = pgTable(
     }),
   ],
 );
+export * from "./accounts";
 export * from "./auth";
 export * from "./platform";
 export * from "./staff";

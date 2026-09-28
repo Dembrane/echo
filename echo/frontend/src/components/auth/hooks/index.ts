@@ -11,6 +11,7 @@ import {
 	requestPasswordReset,
 	resetPassword,
 	signIn,
+	signInWithCode,
 	signOut,
 	verifyEmail,
 } from "@/lib/auth";
@@ -180,12 +181,16 @@ export const useLoginMutation = () => {
 			email,
 			password,
 			otp,
+			code,
 		}: {
 			email: string;
-			password: string;
+			password?: string;
 			otp?: string;
+			/** A one-time code from the email, instead of a password. */
+			code?: string;
 		}) => {
-			return signIn(email, password, otp || undefined);
+			if (code) return signInWithCode(email, code);
+			return signIn(email, password ?? "", otp || undefined);
 		},
 		onSuccess: async () => {
 			// Clear everything, not an allowlist: a targeted list silently leaks

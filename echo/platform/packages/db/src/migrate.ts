@@ -1,14 +1,16 @@
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { assetPath } from "@echo/core";
 import { readMigrationFiles } from "drizzle-orm/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate as drizzleMigrate } from "drizzle-orm/postgres-js/migrator";
 import type postgres from "postgres";
 import { connect } from "./connection";
 
-// A compiled binary carries no source tree, so the image ships the folder and points here.
-const MIGRATIONS = process.env.MIGRATIONS_DIR ?? new URL("../migrations", import.meta.url).pathname;
+/** What the migrate job's boot check requires. */
+export const MIGRATE_ASSETS: readonly string[] = ["db/migrations/meta/_journal.json"];
+const migrations = () => assetPath("db", "migrations");
 const BASELINE_TAGS = ["0000_baseline", "0001_baseline_guards"];
 // Any fixed number works; every migrating process must use the same one.
 const LOCK_KEY = 72_1405_2026;
@@ -43,7 +45,7 @@ export async function migrate(url: string, opts: MigrateOptions = {}): Promise<M
     await sql`select pg_advisory_lock(${LOCK_KEY})`;
     const adoptedBaseline = await adoptBaseline(sql);
     const before = await countApplied(sql);
-    await drizzleMigrate(drizzle(sql), { migrationsFolder: folder ?? MIGRATIONS });
+    await drizzleMigrate(drizzle(sql), { migrationsFolder: folder ?? migrations() });
     const applied = (await countApplied(sql)) - before;
     return { adoptedBaseline, applied };
   } finally {
@@ -56,7 +58,7 @@ export async function migrate(url: string, opts: MigrateOptions = {}): Promise<M
 /** A copy of the migrations folder whose journal leaves out the contract migrations. */
 function withoutContract(): string {
   const dir = mkdtempSync(join(tmpdir(), "echo-migrations-"));
-  cpSync(MIGRATIONS, dir, { recursive: true });
+  cpSync(migrations(), dir, { recursive: true });
   const path = join(dir, "meta", "_journal.json");
   const journal = JSON.parse(readFileSync(path, "utf8")) as {
     entries: { tag: string }[];
@@ -73,8 +75,10 @@ async function adoptBaseline(sql: postgres.Sql): Promise<boolean> {
   await sql`create table if not exists drizzle.__drizzle_migrations (id serial primary key, hash text not null, created_at bigint)`;
   if ((await one<number>(sql`select count(*)::int as v from drizzle.__drizzle_migrations`)) > 0)
     return false;
-  const files = readMigrationFiles({ migrationsFolder: MIGRATIONS });
-  const journal = (await Bun.file(`${MIGRATIONS}/meta/_journal.json`).json()) as {
+  const files = readMigrationFiles({ migrationsFolder: migrations() });
+  const journal = (await Bun.file(
+    assetPath("db", "migrations", "meta", "_journal.json"),
+  ).json()) as {
     entries: { tag: string }[];
   };
   for (const [i, entry] of journal.entries.entries()) {

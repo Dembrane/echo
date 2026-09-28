@@ -1,4 +1,5 @@
 import { emailHandler, sendEmail } from "@echo/account";
+import { type AccountsJobs, accountsWorker, httpFetchText } from "@echo/accounts";
 import { agenticWorker } from "@echo/agentic";
 import { analysisWorker } from "@echo/analysis";
 import { type Billing, billingRegistration } from "@echo/billing";
@@ -51,11 +52,14 @@ export function registrations(deps: {
     | "agentic"
     | "http"
     | "database"
+    | "accounts"
   >;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
   /** Lets a job enqueue follow-up jobs (the support timers send email). */
   jobs: JobSink;
+  /** The same, with run ids: account reminders are sent once per task and due time. */
+  accountsJobs: AccountsJobs;
   /** Where email buttons point. */
   dashboardUrl: string;
   /** Mollie, the billing store and its notifier, shared by the billing jobs. */
@@ -179,6 +183,19 @@ export function registrations(deps: {
         embeddingModel: config.llm.embeddingModel,
         embeddingLocation: config.llm.embeddingLocation,
       },
+    }),
+    accountsWorker({
+      db,
+      mailer: deps.mailer,
+      logger,
+      jobs: deps.accountsJobs,
+      deliver: httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets }),
+      dashboardUrl: deps.dashboardUrl,
+      eventsUrl: config.accounts.eventsUrl ?? null,
+      eventsSecret: config.accounts.eventsSecret ?? null,
+      slackWebhookUrl: config.accounts.slackWebhookUrl ?? null,
+      reminderIntervalDays: config.accounts.reminderIntervalDays,
+      fetchText: httpFetchText,
     }),
     agenticWorker({
       db,

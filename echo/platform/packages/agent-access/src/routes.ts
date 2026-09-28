@@ -41,8 +41,6 @@ export interface AgentAccessRoutesDeps {
   readonly buildVersion: string;
   /** Directus's SECRET: the key stored client secrets are encrypted under. */
   readonly clientSecretKey: string;
-  /** The docs folder for local runs; deployed dashboards on dembrane.com read the published site. */
-  readonly docsDir: string;
   readonly now?: () => Date;
 }
 
@@ -76,7 +74,6 @@ export function agentAccessRoutes(api: AgentAccessRoutesDeps) {
     secrets: new ClientSecretBox(api.clientSecretKey),
     docs: docsCorpus({
       docsBaseUrl: docsBaseUrlFor(api.dashboardUrl),
-      docsDir: api.docsDir,
       logger: api.logger,
     }),
   };

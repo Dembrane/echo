@@ -31,6 +31,12 @@ export const schema = defineSchema({
       public: true,
     }),
   },
+  assets: {
+    root: key("ASSETS_ROOT", z.string().min(1).default("/app/assets"), {
+      description:
+        "Where a compiled binary finds the files packages read at run time (<package>/... and docs/). Run from source, each package reads its own folder and this is ignored.",
+    }),
+  },
   http: {
     port: key("PORT", int.min(1).max(65535).default(8080), {
       description: "Port the API listens on. Cloud Run sets it.",
@@ -277,14 +283,6 @@ export const schema = defineSchema({
     turnConcurrency: key("AGENTIC_TURN_CONCURRENCY", int.min(1).default(8), {
       description: "Assistant turns one worker instance runs at once.",
     }),
-    docsDir: key("AGENTIC_DOCS_DIR", z.string().default(""), {
-      description:
-        "Product docs the assistant reads and cites. Empty uses the repository's docs/ folder.",
-    }),
-    skillsDir: key("AGENTIC_SKILLS_DIR", z.string().default(""), {
-      description:
-        "Skill files the assistant can read. Empty uses packages/agentic/skills from the source tree.",
-    }),
   },
   account: {
     inviteHashSecret: key("INVITE_HASH_SECRET", z.string().min(16), {
@@ -347,6 +345,46 @@ export const schema = defineSchema({
     showFlow: key("POPCORN_SHOW_FLOW", bool.default(false), {
       description:
         "Serves the page that shows what a popcorn read does to a session's words, and links the host deck to it. Local development only.",
+    }),
+  },
+  accounts: {
+    bankIban: key("ACCOUNTS_BANK_IBAN", z.string().default("NL49 RABO 0318910535"), {
+      description:
+        "dembrane's IBAN: on the offer letterhead and with every invoice, for bank transfer.",
+    }),
+    bankBic: key("ACCOUNTS_BANK_BIC", z.string().default("RABONL2U"), {
+      description: "BIC of that account, shown beside the IBAN.",
+    }),
+    bankAccountName: key("ACCOUNTS_BANK_ACCOUNT_NAME", z.string().default("Dembrane B.V."), {
+      description: "Name the bank account is held in, shown beside the IBAN.",
+    }),
+    companyAddress: key(
+      "ACCOUNTS_COMPANY_ADDRESS",
+      z.string().default("Sint Janssingel 88, \u2018s-Hertogenbosch, NL"),
+      { description: "dembrane's address on the offer letterhead." },
+    ),
+    companyVat: key("ACCOUNTS_COMPANY_VAT", z.string().default("NL864967433B01"), {
+      description: "dembrane's VAT number on the offer letterhead.",
+    }),
+    companyKvk: key("ACCOUNTS_COMPANY_KVK", z.string().default("89391438"), {
+      description: "dembrane's KvK (Chamber of Commerce) number on the offer letterhead.",
+    }),
+    reminderIntervalDays: key("ACCOUNTS_REMINDER_INTERVAL_DAYS", int.min(1).max(365).default(7), {
+      description:
+        "Days between reminder emails for an open customer task; a task can set its own interval.",
+    }),
+    slackWebhookUrl: key("ACCOUNTS_SLACK_WEBHOOK_URL", z.url().optional(), {
+      description:
+        "Slack incoming webhook that hears about signatures, submitted billing details and new questions. Unset is off.",
+      secret: true,
+    }),
+    eventsUrl: key("ACCOUNTS_EVENTS_URL", z.url().optional(), {
+      description:
+        "Where account events (document signed, billing details updated, ...) are posted for sam. Unset keeps them on the timeline only.",
+    }),
+    eventsSecret: key("ACCOUNTS_EVENTS_SECRET", z.string().optional(), {
+      description: "Signs every account event (X-Webhook-Signature, HMAC-SHA256).",
+      secret: true,
     }),
   },
 });

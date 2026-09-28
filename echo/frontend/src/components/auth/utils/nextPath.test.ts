@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveNextPath } from "./nextPath";
+import { isAccountPath, resolveNextPath } from "./nextPath";
 
 const ORG_A = "3dab35ac-47ff-47c6-b48f-0e366b0f8555";
 const ORG_B = "9c1f2e10-1111-4222-8333-444455556666";
@@ -79,5 +79,33 @@ describe("resolveNextPath", () => {
 	it("rejects org/workspace paths when the workspace list is empty", () => {
 		expect(resolveNextPath(`/o/${ORG_A}/overview`, [])).toBeNull();
 		expect(resolveNextPath(`/w/${WS_A}/home`, [])).toBeNull();
+	});
+
+	describe("account and signing links", () => {
+		const DOC = "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b";
+		const account = `/o/${ORG_B}/account`;
+		const sign = `/o/${ORG_B}/account/documents/${DOC}/sign`;
+
+		it("lands a signer on the document without a workspace in the org", () => {
+			expect(resolveNextPath(sign, [])).toBe(sign);
+			expect(resolveNextPath(`/nl-NL${sign}`, workspaces)).toBe(`/nl-NL${sign}`);
+			expect(resolveNextPath(account, [])).toBe(account);
+		});
+
+		it("still refuses anything that is not a same-origin path", () => {
+			expect(resolveNextPath(`//evil.com${sign}`, [])).toBeNull();
+			expect(resolveNextPath(`https://evil.com${sign}`, [])).toBeNull();
+			expect(resolveNextPath(`/\\evil.com${sign}`, [])).toBeNull();
+		});
+
+		it("only exempts the exact account shapes", () => {
+			expect(isAccountPath(sign)).toBe(true);
+			expect(isAccountPath(`${sign}?x=1#top`)).toBe(true);
+			expect(isAccountPath(`/o/${ORG_B}/account/documents/${DOC}`)).toBe(false);
+			expect(isAccountPath(`/o/${ORG_B}/account/documents/not-a-uuid/sign`)).toBe(false);
+			expect(isAccountPath("/o/not-a-uuid/account")).toBe(false);
+			expect(isAccountPath(`/o/${ORG_B}/members`)).toBe(false);
+			expect(resolveNextPath(`/o/${ORG_B}/account/documents/${DOC}`, [])).toBeNull();
+		});
 	});
 });

@@ -1,7 +1,14 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Button, Stack, Text } from "@mantine/core";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { BookingHost, BookingLinks } from "@/lib/links";
 import { testId } from "@/lib/testUtils";
 import { bookingLinkWithPrefill } from "./bookingPrefill";
@@ -152,12 +159,15 @@ export const bookingHostName = (): string =>
 	BookingHost?.name ?? t`the dembrane team`;
 
 export const PricingBookingStep = ({
+	intro,
 	onBooked,
 	onOpened,
 	onUnavailable,
 	prefill,
 	reference,
 }: {
+	/** Replaces the line above the calendar; the account page's call is not about a needs form. */
+	intro?: ReactNode;
 	onBooked: (booking: BookingSignal) => void;
 	/** Which route the person actually got. */
 	onOpened: (route: "embed" | "fallback_link") => void;
@@ -347,10 +357,12 @@ export const PricingBookingStep = ({
 	return (
 		<Stack gap="lg" {...testId("pricing-configurator-booking")}>
 			<Text size="sm">
-				<Trans>
-					{host} will read your answers before the call and brings a draft
-					offer.
-				</Trans>
+				{intro ?? (
+					<Trans>
+						{host} will read your answers before the call and brings a draft
+						offer.
+					</Trans>
+				)}
 			</Text>
 			<Box id={EMBED_ELEMENT_ID} mih={480} />
 			<Text size="xs">

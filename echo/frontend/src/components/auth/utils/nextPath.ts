@@ -38,6 +38,19 @@ export const extractWorkspaceIdFromPath = (path: string): string | null =>
 export const extractOrgIdFromPath = (path: string): string | null =>
 	scopedId(path, "o");
 
+/** /o/:orgId/account, and /o/:orgId/account/documents/:docId/sign. */
+export const isAccountPath = (path: string): boolean => {
+	const s = pathSegments(path);
+	if (s[0] !== "o" || !UUID_RE.test(s[1] ?? "") || s[2] !== "account") return false;
+	if (s.length === 3) return true;
+	return (
+		s.length === 6 &&
+		s[3] === "documents" &&
+		UUID_RE.test(s[4] ?? "") &&
+		s[5] === "sign"
+	);
+};
+
 interface AccessibleWorkspace {
 	id: string;
 	org_id?: string;
@@ -54,6 +67,11 @@ export const resolveNextPath = (
 
 	const wsId = extractWorkspaceIdFromPath(next);
 	if (wsId && !workspaces.some((w) => w.id === wsId)) return null;
+
+	// The account page and a signing link are authorised by the accounts API itself: a
+	// person named to sign is not a member of the organisation, and an org's billing
+	// contact may have no workspace in it. The page shows its own "not shared with you".
+	if (isAccountPath(next)) return next;
 
 	const orgId = extractOrgIdFromPath(next);
 	if (orgId && !workspaces.some((w) => w.org_id === orgId)) return null;

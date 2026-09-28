@@ -56,6 +56,11 @@ export interface DemoInput {
   readonly portalBaseUrl: string;
   readonly apiBaseUrl: string;
   readonly dryRun: boolean;
+  /**
+   * For a prospect's demo: where "Continue in dembrane" on the public page leads (the
+   * dashboard sign-in). Absent, the deck is exactly what the seed made before.
+   */
+  readonly continueUrl?: string;
 }
 
 /** The seed's identity(): the namespace the local helper shares, so sales portals converge. */
@@ -262,6 +267,7 @@ export async function seedDemo(db: Db, input: DemoInput, now: Date): Promise<Dem
         const demo = dict(state.demo);
         demo.portal_url = portals[language];
         demo.portal_urls = portals;
+        if (input.continueUrl) demo.continue_url = input.continueUrl;
         state.demo = demo;
         const title = pyStr(dict(session.title)[language]);
         const pid = demoIdentity(slug, `project-${language}`);

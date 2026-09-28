@@ -1,4 +1,5 @@
 import { ForbiddenError, NotFoundError } from "@echo/core";
+import { type OrgPolicy, orgRoleHas } from "./org";
 import { meetsTier, type Policy, roleHas, TIER_REQUIRED } from "./policies";
 import {
   type Principal,
@@ -27,6 +28,18 @@ export class Access {
     if (!access) throw new NotFoundError("Project not found");
     check(access.role, policy, access.extra, access.tier, access.limitedTo);
     return access;
+  }
+
+  /**
+   * Org-level access for the customer account. Not a member (or no app_user yet): 404, as
+   * for workspaces. A member whose role lacks the policy: 403.
+   */
+  async org(who: Principal, orgId: string, policy: OrgPolicy): Promise<{ role: string }> {
+    const role = who.appUserId ? await this.store.orgRole(orgId, who.appUserId) : null;
+    if (!role) throw new NotFoundError("Organisation not found");
+    if (!orgRoleHas(role, policy))
+      throw new ForbiddenError("You do not have permission to do this");
+    return { role };
   }
 
   async workspace(

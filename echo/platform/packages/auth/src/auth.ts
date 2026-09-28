@@ -18,6 +18,13 @@ export interface AuthOptions {
   /** Delivers the one-time sign-in code. */
   readonly sendCode: (email: string, code: string, purpose: string) => Promise<void>;
   /**
+   * Whether a sign-in code may go to this address: people who have an account or a pending
+   * invitation (org, workspace, or to sign one document). Anyone else gets no email, and
+   * the response is the same, so the endpoint does not reveal who has an account. Unset
+   * sends to every address, which is how sign-up by code worked before.
+   */
+  readonly codeSignInAllowed?: (email: string) => Promise<boolean>;
+  /**
    * Delivers the email-verification link of a new signup. `url` is Better Auth's own
    * verify URL; `token` lets the caller build the dashboard link the email should carry.
    */
@@ -100,7 +107,15 @@ export function createAuth(opts: AuthOptions) {
       emailOTP({
         otpLength: 6,
         expiresIn: 600,
-        sendVerificationOTP: async ({ email, otp, type }) => opts.sendCode(email, otp, type),
+        sendVerificationOTP: async ({ email, otp, type }) => {
+          if (
+            type === "sign-in" &&
+            opts.codeSignInAllowed &&
+            !(await opts.codeSignInAllowed(email))
+          )
+            return;
+          await opts.sendCode(email, otp, type);
+        },
       }),
       twoFactor({ issuer: "dembrane" }),
       bearer(),

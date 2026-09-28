@@ -39,6 +39,11 @@ function messageFor(code: string, fallback?: string): string {
 			return "Invalid user OTP.";
 		case "EMAIL_NOT_VERIFIED":
 			return "Your email is not verified yet. Check your inbox for the verification link.";
+		case "INVALID_OTP":
+		case "OTP_EXPIRED":
+			return "That code is not right or has expired. Request a new one.";
+		case "TOO_MANY_ATTEMPTS":
+			return "Too many tries. Request a new code.";
 		case "INVALID_TOKEN":
 			return "Invalid or expired link. Request a new one.";
 		default:
@@ -62,6 +67,18 @@ export async function signIn(email: string, password: string, otp?: string): Pro
 	} catch {
 		throw new AuthError("Invalid user OTP.", "INVALID_OTP");
 	}
+}
+
+/**
+ * Emails a one-time sign-in code (Better Auth's email OTP). Contacts that staff or sam
+ * create sign in this way; they may never set a password.
+ */
+export async function sendSignInCode(email: string): Promise<void> {
+	await post("/email-otp/send-verification-otp", { email, type: "sign-in" });
+}
+
+export async function signInWithCode(email: string, otp: string): Promise<void> {
+	await post("/sign-in/email-otp", { email, otp });
 }
 
 export async function signOut(): Promise<void> {

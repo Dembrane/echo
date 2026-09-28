@@ -1,14 +1,18 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative, resolve, sep } from "node:path";
+import { join, relative, sep } from "node:path";
+import { assetPath } from "@echo/core";
 import type { Logger } from "@echo/observability";
 
 /**
  * The product documentation as a small read-only file system for agents: list, a
- * line-numbered read and a regex grep. Deployed environments read the published site
- * (docs.dembrane.com lists every page in llms.txt and serves a markdown twin per page);
- * local runs read the repository's docs/ folder. The corpus is kept for an hour per
+ * line-numbered read and a regex grep. Deployed environments on dembrane.com read the
+ * published site (docs.dembrane.com lists every page in llms.txt and serves a markdown twin
+ * per page); others read the docs shipped with the build. The corpus is kept for an hour per
  * instance; the Python API also shared it through Redis, which only saved cold fetches.
  */
+
+/** What the API's boot check requires: the docs tree read when no published site applies. */
+export const AGENT_ACCESS_ASSETS: readonly string[] = ["docs/README.md"];
 
 const MAX_READ_LINES = 400;
 const MAX_GREP_RESULTS = 50;
@@ -20,10 +24,6 @@ const FETCH_CONCURRENCY = 8;
 const MAX_PATTERN_LENGTH = 200;
 const MAX_LINE_SCAN = 2_000;
 const NESTED_QUANTIFIER = /\((?:[^()\\]|\\.)*[+*}](?:[^()\\]|\\.)*\)\s*[+*{?]/;
-
-const here = new URL(".", import.meta.url).pathname;
-/** packages/agent-access/src -> the repository's docs/ folder. */
-const REPO_DOCS = resolve(here, "../../../../../docs");
 
 // \n \v \f \r, the three information separators, NEL, LINE and PARAGRAPH SEPARATOR.
 const LINE_BREAKS = new Set([10, 11, 12, 13, 28, 29, 30, 133, 0x2028, 0x2029]);
@@ -113,13 +113,13 @@ export interface DocsCorpus {
 }
 
 /**
- * The docs agents read. `docsBaseUrl` empty reads `docsDir` (or the repository's docs/);
- * set, it reads the published site. A failed fetch degrades to an empty corpus and is
- * retried after the hour, never raised to the agent.
+ * The docs agents read. `docsBaseUrl` empty reads the docs shipped with the build (the
+ * repository's docs/ from source, `docs/` under the assets root in an image); set, it reads
+ * the published site. A failed fetch degrades to an empty corpus and is retried after the
+ * hour, never raised to the agent.
  */
 export function docsCorpus(opts: {
   docsBaseUrl: string;
-  docsDir?: string;
   logger: Logger;
   fetchFn?: typeof fetch;
 }): DocsCorpus {
@@ -129,7 +129,7 @@ export function docsCorpus(opts: {
 
   async function load(): Promise<Map<string, string>> {
     if (!base) {
-      const root = opts.docsDir || REPO_DOCS;
+      const root = assetPath("docs");
       return existsSync(root) && statSync(root).isDirectory() ? diskCorpus(root) : new Map();
     }
     try {

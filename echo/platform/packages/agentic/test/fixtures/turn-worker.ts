@@ -29,8 +29,6 @@ const reg = agenticWorker({
       runTimeoutSeconds: 600,
       sseHeartbeatSeconds: 10,
       turnConcurrency: 2,
-      docsDir: "",
-      skillsDir: "",
     },
     http: {
       port: 8080,

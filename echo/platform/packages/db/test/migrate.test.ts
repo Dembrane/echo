@@ -12,16 +12,6 @@ const TOTAL = journal.entries.length;
 const BASELINE = 2;
 const CONTRACT = journal.entries.filter((e) => e.tag.includes("_contract_")).length;
 
-/** The baseline's statements, the schema a Directus-created database already has. */
-async function baselineStatements(): Promise<string[]> {
-  const out: string[] = [];
-  for (const tag of ["0000_baseline", "0001_baseline_guards"]) {
-    const text = await Bun.file(new URL(`../migrations/${tag}.sql`, import.meta.url)).text();
-    out.push(...text.split("--> statement-breakpoint").filter((s) => s.trim()));
-  }
-  return out;
-}
-
 // Needs a scratch Postgres with pgvector: TEST_DATABASE_ADMIN_URL=postgres://u:p@host:5432/postgres
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const base = admin?.slice(0, admin.lastIndexOf("/"));
@@ -48,8 +38,13 @@ run("migrate", () => {
 
   test("adopts a database that already has the schema without re-running the baseline", async () => {
     const db = postgres(`${base}/mig_adopt`, { max: 1, onnotice: () => {} });
-    // The schema without migration history: executing the baseline again would fail on it.
-    for (const statement of await baselineStatements()) await db.unsafe(statement);
+    // The schema Directus made, without migration history: running the baseline again
+    // would fail on its existing tables, and later migrations need the tables it made.
+    for (const tag of ["0000_baseline", "0001_baseline_guards"]) {
+      const file = await Bun.file(new URL(`../migrations/${tag}.sql`, import.meta.url)).text();
+      for (const statement of file.split("--> statement-breakpoint"))
+        if (statement.trim()) await db.unsafe(statement);
+    }
     await db.end();
     const r = await migrate(`${base}/mig_adopt`);
     expect(r.adoptedBaseline).toBe(true);

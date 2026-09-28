@@ -1,7 +1,9 @@
+import { queueJobs } from "@echo/accounts";
 import { HttpMedia, LocalMedia, metadataIdToken } from "@echo/audio";
 import { createBilling, HttpMollie, UnconfiguredMollie } from "@echo/billing";
 import { describe, loadSections } from "@echo/config";
 import { AudioUrls } from "@echo/conversations";
+import { bootAssets } from "@echo/core";
 import { createDb } from "@echo/db";
 import { createModels, vertexCompleter, vertexEmbedder } from "@echo/llm";
 import { type Mailer, SendGridMailer } from "@echo/mail";
@@ -10,7 +12,13 @@ import { Queue } from "@echo/queue";
 import { FilesystemStorage, S3Storage } from "@echo/storage";
 import { queueSink } from "@echo/tenancy";
 import { GeminiTranscriber } from "@echo/transcription";
+import { WORKER_ASSETS } from "./assets";
 import { registrations } from "./jobs";
+
+// Before anything else, and before the configuration that needs secrets: an image that
+// lacks a file the worker reads exits here instead of failing jobs. `--check-assets` stops
+// after this check, which is how CI proves the image without a database.
+bootAssets("echo-worker", loadSections(["assets"]).values.assets.root, WORKER_ASSETS);
 
 // Only what the worker reads: it never serves sign-in, so it is not given the auth secret.
 const loaded = loadSections([
@@ -29,6 +37,7 @@ const loaded = loadSections([
   "canvas",
   "reports",
   "agentic",
+  "accounts",
 ]);
 const config = loaded.values;
 const service = "echo-worker";
@@ -126,6 +135,7 @@ const regs = registrations({
   config,
   mailer,
   jobs: queueSink(queue),
+  accountsJobs: queueJobs(queue),
   dashboardUrl: config.http.dashboardUrl,
   billing,
   conversations: {

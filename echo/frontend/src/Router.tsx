@@ -185,6 +185,25 @@ const AdminSettingsRoute = createLazyNamedRoute(
 	() => import("./routes/admin/AdminSettingsRoute"),
 	"AdminSettingsRoute",
 );
+// Customer accounts (src/features/accounts). Dashboard only and lazy: pdf.js, the
+// signature pad and the cal.com step load with these screens, never with the shell or the
+// portal.
+const AccountRoute = createLazyNamedRoute(
+	() => import("./features/accounts/customer/AccountRoute"),
+	"AccountRoute",
+);
+const SignRoute = createLazyNamedRoute(
+	() => import("./features/accounts/signing/SignRoute"),
+	"SignRoute",
+);
+const AccountCardRoute = createLazyNamedRoute(
+	() => import("./features/accounts/staff/AccountCardRoute"),
+	"AccountCardRoute",
+);
+const FieldEditorRoute = createLazyNamedRoute(
+	() => import("./features/accounts/staff/FieldEditorRoute"),
+	"FieldEditorRoute",
+);
 // Project route children — shared between /projects and /w/:workspaceId/projects
 const projectRouteChildren = [
 	{
@@ -489,6 +508,11 @@ export const mainRouter = createBrowserRouter([
 						index: true,
 					},
 					{
+						// The customer's account page; ranked above the splat below.
+						element: <AccountRoute />,
+						path: ":organisationId/account",
+					},
+					{
 						// Splat so tab state lives in the path
 						// (/o/:organisationId/:tab) — matches the project-tab pattern.
 						// The component parses the trailing segment itself.
@@ -549,6 +573,18 @@ export const mainRouter = createBrowserRouter([
 				path: "w/:workspaceId",
 			},
 			{
+				// Signing is one focused screen without the dashboard chrome: a person
+				// named to sign may not be a member of the organisation, and it has to
+				// work on a phone. Protected sends a signed-out signer to
+				// /login?next=..., which lands them back here.
+				element: (
+					<Protected>
+						<SignRoute />
+					</Protected>
+				),
+				path: "o/:organisationId/account/documents/:docId/sign",
+			},
+			{
 				// OAuth consent step for agent access. The backend redirects the
 				// agent's browser here with ?request=<id>, without a language
 				// prefix, so this must resolve with :language unset. No sidebar:
@@ -605,6 +641,11 @@ export const mainRouter = createBrowserRouter([
 				children: [
 					{ element: <Navigate to="usage-and-billing" replace />, index: true },
 					{ element: <AdminSettingsRoute />, path: ":tab" },
+					{ element: <AccountCardRoute />, path: "accounts/:orgId" },
+					{
+						element: <FieldEditorRoute />,
+						path: "accounts/:orgId/documents/:docId/fields",
+					},
 				],
 				element: (
 					<Protected>
