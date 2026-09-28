@@ -1,5 +1,5 @@
 {
-  "id": "6380d921-bcd1-4ff5-be7c-81bb11b48996",
+  "id": "b19a4220-b143-4122-8d37-d99571cb4c7c",
   "prevId": "ad782fe0-fffc-4fea-9ae0-f0c7d3ccb885",
   "version": "7",
   "dialect": "postgresql",
@@ -15166,11 +15166,23 @@
           "primaryKey": false,
           "notNull": true
         },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "params": {
+          "name": "params",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
         "title": {
           "name": "title",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "body": {
           "name": "body",
@@ -15402,6 +15414,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "account_task_code_or_title_check": {
+          "name": "account_task_code_or_title_check",
+          "value": "\"account_task\".\"code\" is not null or \"account_task\".\"title\" is not null"
+        },
         "account_task_kind_check": {
           "name": "account_task_kind_check",
           "value": "\"account_task\".\"kind\" in ('sign', 'billing_details', 'upload', 'generic')"

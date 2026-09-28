@@ -214,7 +214,9 @@ run("accounts routes against Postgres", () => {
       "date",
       "signature",
     ]);
-    expect(pushed.task?.title).toBe("Offerte bekijken en ondertekenen");
+    expect(pushed.task?.code).toBe("sign_offer");
+    expect(pushed.task?.params).toEqual({ document_title: pushed.document.title });
+    expect([pushed.task?.title, pushed.task?.body]).toEqual([null, null]);
     expect(pushed.task?.status).toBe("open");
     expect(pushed.task?.next_reminder_at).toBe("2026-10-05T09:00:00.000Z");
     const tasks = await store.tasks(w.db, w.orgId);
@@ -228,7 +230,7 @@ run("accounts routes against Postgres", () => {
       const r = await call(w, "GET", C(), as);
       expect(r.status).toBe(200);
       const page = K.AccountPage.parse(r.data);
-      expect(page.tasks[0]?.title).toBe("Offerte bekijken en ondertekenen");
+      expect(page.tasks[0]?.code).toBe("sign_offer");
       expect(page.tasks.find((t) => t.kind === "billing_details")?.locked).toBe(true);
       expect(page.documents.find((d) => d.id === offerId)?.file_url).toBe(
         `${C()}/documents/${offerId}/file`,

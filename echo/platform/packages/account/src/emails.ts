@@ -138,7 +138,7 @@ export type EmailTemplate =
     }
   | {
       readonly template: "account_task_reminder";
-      readonly data: { org_name: string; task_title: string; task_url: string };
+      readonly data: { org_name: string; task_title: string; task_url: string; language?: string };
     }
   | {
       readonly template: "account_invite";
@@ -283,21 +283,29 @@ export function render(t: EmailTemplate): { html: string; text: string } {
     }
     case "account_task_reminder": {
       // Sent every few days while a task waits on the customer; stops when it is done.
+      // In the recipient's language: Dutch or English.
       const d = t.data;
+      const nl = d.language === "nl";
+      const line = nl
+        ? `${em(d.task_title)} staat nog open voor ${esc(d.org_name)} op dembrane. Het kost een minuut, en het houdt de zaken bij ons in beweging.`
+        : `${em(d.task_title)} is still waiting for ${esc(d.org_name)} on dembrane. It takes a minute, and it keeps things moving on our side.`;
+      const plain = nl
+        ? `${d.task_title} staat nog open voor ${d.org_name} op dembrane. Het kost een minuut, en het houdt de zaken bij ons in beweging.\n\nOpen de stap:\n${d.task_url}\n\nHet dembrane-team`
+        : `${d.task_title} is still waiting for ${d.org_name} on dembrane. It takes a minute, and it keeps things moving on our side.\n\nOpen the step:\n${d.task_url}\n\nThe dembrane team`;
       return {
         html: layout({
-          title: `A step is waiting for ${esc(d.org_name)}`,
-          preview: `${esc(d.task_title)} is still open on dembrane.`,
-          heading: "One step is still open.",
-          body: P(
-            17,
-            "0 0 28px",
-            `${em(d.task_title)} is still waiting for ${esc(d.org_name)} on dembrane. It takes a minute, and it keeps things moving on our side.`,
-          ),
-          cta: cta("Open the step", d.task_url),
+          title: nl
+            ? `Een stap wacht op ${esc(d.org_name)}`
+            : `A step is waiting for ${esc(d.org_name)}`,
+          preview: nl
+            ? `${esc(d.task_title)} staat nog open.`
+            : `${esc(d.task_title)} is still open on dembrane.`,
+          heading: nl ? "Er staat nog een stap open." : "One step is still open.",
+          body: P(17, "0 0 28px", line),
+          cta: cta(nl ? "Open de stap" : "Open the step", d.task_url),
           fallback: fallback(d.task_url),
         }),
-        text: `${d.task_title} is still waiting for ${d.org_name} on dembrane. It takes a minute, and it keeps things moving on our side.\n\nOpen the step:\n${d.task_url}\n\nThe dembrane team`,
+        text: plain,
       };
     }
     case "account_invite": {

@@ -139,7 +139,7 @@ export const store = {
     return row ?? null;
   },
 
-  /** Members who run the account (owner, admin, billing) and their addresses. */
+  /** Members who run the account (owner, admin, billing), their addresses and languages. */
   async accountPeople(c: Conn, orgId: string) {
     return c
       .select({
@@ -147,10 +147,12 @@ export const store = {
         email: sql<string | null>`coalesce(${auth_user.email}, ${app_user.email})`,
         name: app_user.display_name,
         role: org_membership.role,
+        language: schema.directus_users.language,
       })
       .from(org_membership)
       .innerJoin(app_user, eq(app_user.id, org_membership.user_id))
       .leftJoin(auth_user, eq(auth_user.id, app_user.directus_user_id))
+      .leftJoin(schema.directus_users, eq(schema.directus_users.id, app_user.directus_user_id))
       .where(
         and(
           eq(org_membership.org_id, orgId),
@@ -501,7 +503,12 @@ export const store = {
           account_stage: org.account_stage,
           tasks_done: sql<number>`count(${task.id}) filter (where ${task.status} = 'done')::int`,
           tasks_total: sql<number>`count(${task.id}) filter (where ${task.status} <> 'withdrawn')::int`,
-          next_task_title: sql<string | null>`(select t2.title from account_task t2
+          // The oldest task waiting on the person: its title, or its code and params.
+          next_task: sql<{
+            title: string | null;
+            code: string | null;
+            params: unknown;
+          } | null>`(select json_build_object('title', t2.title, 'code', t2.code, 'params', t2.params) from account_task t2
           where t2.org_id = ${org.id} and t2.status in ('open', 'changes_requested')
           order by t2.created_at, t2.id limit 1)`,
         })

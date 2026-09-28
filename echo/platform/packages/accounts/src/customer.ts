@@ -9,6 +9,7 @@ import { accountPageUrl } from "./jobs";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
 import { type DocumentRow, store } from "./storage";
+import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
 import {
   billingView,
@@ -574,8 +575,11 @@ const ACCOUNT_ROLES = (Object.keys(ORG_ROLE_POLICIES) as OrgRole[]).filter((r) =
 export async function tasksSummary(d: AccountsDeps, who: Signed) {
   if (!who.appUserId) return [];
   const rows = await store.tasksSummary(d.db, who.appUserId, ACCOUNT_ROLES);
-  return rows.map((r) => ({
+  return rows.map(({ next_task, ...r }) => ({
     ...r,
     account_stage: r.account_stage as "prospect" | "customer" | "churned" | null,
+    next_task_title: next_task?.code ? null : (next_task?.title ?? null),
+    next_task_code: isTaskCode(next_task?.code) ? next_task.code : null,
+    next_task_params: next_task?.code ? ((next_task.params ?? {}) as Record<string, string>) : null,
   }));
 }
