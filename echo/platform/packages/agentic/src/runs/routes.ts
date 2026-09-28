@@ -1,6 +1,7 @@
 import { chatsStorage, generateTitle } from "@dembrane/chats";
 import { type Env, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
+import { boundedEventStream } from "@dembrane/realtime";
 import { Hono } from "hono";
 import type { AgenticRoutesDeps } from "../routes";
 import * as runs from "./service";
@@ -69,9 +70,13 @@ export function runRoutes(deps: AgenticRoutesDeps) {
     const { query } = await p.validate(c.req, { query: afterSeq });
     const runId = c.req.param("run_id");
     await runs.claimTurn(d, who, runId);
-    return new Response(liveEventStream(stream, runId, query.after_seq, c.req.raw.signal), {
-      headers: { ...SSE_HEADERS, "X-Accel-Buffering": "no" },
-    });
+    // A lifetime end looks like any other close: the panel re-reads the run and, while it
+    // is still in flight, reopens the stream from its last seq.
+    const body = boundedEventStream(
+      (signal) => liveEventStream(stream, runId, query.after_seq, signal),
+      { signal: c.req.raw.signal },
+    );
+    return new Response(body, { headers: { ...SSE_HEADERS, "X-Accel-Buffering": "no" } });
   });
 
   app.post("/api/agentic/runs/:run_id/stop", async (c) => {
@@ -95,9 +100,11 @@ export function runRoutes(deps: AgenticRoutesDeps) {
     const runId = c.req.param("run_id");
     if ((c.req.header("accept") ?? "").includes("text/event-stream")) {
       await runs.authorizedRun(d, who, runId);
-      return new Response(pollingEventStream(stream, runId, query.after_seq, c.req.raw.signal), {
-        headers: SSE_HEADERS,
-      });
+      const body = boundedEventStream(
+        (signal) => pollingEventStream(stream, runId, query.after_seq, signal),
+        { signal: c.req.raw.signal },
+      );
+      return new Response(body, { headers: SSE_HEADERS });
     }
     return c.json(await runs.runEvents(d, who, runId, query.after_seq));
   });

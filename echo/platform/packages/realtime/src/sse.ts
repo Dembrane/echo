@@ -1,9 +1,11 @@
 import { RateLimitedError } from "@dembrane/core";
 import type { Context } from "hono";
 import { stream } from "hono/streaming";
+import { boundedEventResponse, type StreamBounds } from "./bounded";
 import { encode, type Hub, type LiveEvent } from "./hub";
 
-export const HEARTBEAT_MS = 15_000;
+/** How often an open stream asks `stillAllowed` again. */
+export const RECHECK_MS = 15_000;
 const HEADERS = {
   "Cache-Control": "no-cache",
   Connection: "keep-alive",
@@ -40,18 +42,21 @@ export const openStreams = new OpenStreams();
 export interface SseOptions {
   /** Rename, filter (return null) or reshape an event, e.g. strip fields a public page must not see. */
   readonly transform?: (event: LiveEvent) => LiveEvent | null;
-  readonly heartbeatMs?: number;
+  readonly recheckMs?: number;
   readonly maxStreams?: number;
   readonly key?: string;
   readonly maxStreamsPerKey?: number;
-  /** Asked at every heartbeat; the stream ends once access is withdrawn. Errors count as no. */
+  /** Asked every `recheckMs`; the stream ends once access is withdrawn. Errors count as no. */
   readonly stillAllowed?: () => Promise<boolean>;
+  /** Lifetime and keepalive; the shared defaults unless a test shortens them. */
+  readonly bounds?: Omit<StreamBounds, "signal">;
 }
 
 /**
  * One server-sent event stream fed by channels, closed when the client leaves. Access is
  * checked by the caller before this; `stillAllowed` re-checks it while the stream lives.
  * Subscribes before sending `connected`, because pages reload their state on `connected`.
+ * Bounded like every stream: it ends after its lifetime and the page reconnects.
  */
 export function sseResponse(
   c: Context,
@@ -64,45 +69,47 @@ export function sseResponse(
   }
   for (const [k, v] of Object.entries(HEADERS)) c.header(k, v);
   c.header("Content-Type", "text/event-stream");
-  return stream(c, async (s) => {
-    const queue: string[] = [];
-    let wake: (() => void) | null = null;
-    const unsubscribe = hub.subscribe(channels, (event) => {
-      const shaped = opts.transform ? opts.transform(event) : event;
-      if (shaped) {
-        queue.push(formatSse(shaped));
+  return boundedEventResponse(
+    stream(c, async (s) => {
+      const queue: string[] = [];
+      let wake: (() => void) | null = null;
+      const unsubscribe = hub.subscribe(channels, (event) => {
+        const shaped = opts.transform ? opts.transform(event) : event;
+        if (shaped) {
+          queue.push(formatSse(shaped));
+          wake?.();
+        }
+      });
+      let closed = false;
+      s.onAbort(() => {
+        closed = true;
         wake?.();
-      }
-    });
-    let closed = false;
-    s.onAbort(() => {
-      closed = true;
-      wake?.();
-    });
-    try {
-      await s.write(formatSse({ type: "connected" }));
-      let lastBeat = Date.now();
-      const beat = opts.heartbeatMs ?? HEARTBEAT_MS;
-      while (!closed) {
-        if (queue.length) {
-          await s.write(queue.shift() as string);
-          continue;
+      });
+      try {
+        await s.write(formatSse({ type: "connected" }));
+        let lastCheck = Date.now();
+        const every = opts.recheckMs ?? RECHECK_MS;
+        while (!closed) {
+          if (queue.length) {
+            await s.write(queue.shift() as string);
+            continue;
+          }
+          await new Promise<void>((r) => {
+            wake = r;
+            if (opts.stillAllowed) setTimeout(r, Math.max(0, every - (Date.now() - lastCheck)));
+          });
+          wake = null;
+          if (closed || queue.length) continue;
+          if (opts.stillAllowed && Date.now() - lastCheck >= every) {
+            if (!(await opts.stillAllowed().catch(() => false))) break;
+            lastCheck = Date.now();
+          }
         }
-        await new Promise<void>((r) => {
-          wake = r;
-          setTimeout(r, Math.max(0, beat - (Date.now() - lastBeat)));
-        });
-        wake = null;
-        if (closed || queue.length) continue;
-        if (Date.now() - lastBeat >= beat) {
-          if (opts.stillAllowed && !(await opts.stillAllowed().catch(() => false))) break;
-          await s.write(": keep-alive\n\n");
-          lastBeat = Date.now();
-        }
+      } finally {
+        unsubscribe();
+        openStreams.giveBack(opts.key);
       }
-    } finally {
-      unsubscribe();
-      openStreams.giveBack(opts.key);
-    }
-  });
+    }),
+    { ...opts.bounds, signal: c.req.raw.signal },
+  );
 }

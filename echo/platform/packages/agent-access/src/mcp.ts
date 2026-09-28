@@ -1,4 +1,5 @@
 import { PlatformError } from "@dembrane/core";
+import { boundedEventStream, silentStream } from "@dembrane/realtime";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import {
@@ -379,40 +380,15 @@ export async function handleMcpPost(
   }
 }
 
-/** Python's str(datetime) for an aware UTC instant, as sse-starlette stamped its pings. */
-function pingStamp(d: Date): string {
-  return `${d
-    .toISOString()
-    .replace("T", " ")
-    .replace(/\.(\d{3})Z$/, ".$1000")}+00:00`;
-}
-
-const PING_MS = 15_000;
-
 /**
  * GET /api/mcp: the server-to-client event stream. Stateless, so nothing is ever sent on
- * it but the comment pings every 15 seconds that keep proxies from closing it.
+ * it but the shared keepalive comments; it ends after the shared lifetime and clients
+ * reopen it, as the protocol allows.
  */
 export function handleMcpGet(req: Request): Response {
   if (!accepts(req.headers.get("accept")).sse)
     return rpcFailure(406, -32600, "Not Acceptable: Client must accept text/event-stream");
-  const encoder = new TextEncoder();
-  let timer: ReturnType<typeof setInterval> | undefined;
-  const stream = new ReadableStream({
-    start(controller) {
-      timer = setInterval(() => {
-        try {
-          controller.enqueue(encoder.encode(`: ping - ${pingStamp(new Date())}\r\n\r\n`));
-        } catch {
-          clearInterval(timer);
-        }
-      }, PING_MS);
-      req.signal.addEventListener("abort", () => clearInterval(timer));
-    },
-    cancel() {
-      clearInterval(timer);
-    },
-  });
+  const stream = boundedEventStream(silentStream, { signal: req.signal });
   return new Response(stream, {
     status: 200,
     headers: {

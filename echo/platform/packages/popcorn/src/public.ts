@@ -55,7 +55,7 @@ const DATA_LIMIT: Limit = { name: "popcorn_public_data", capacity: 6000, windowS
 // Open streams per API process: a room's screens and phones share a token and an address.
 const MAX_EVENT_STREAMS = 1000;
 const MAX_EVENT_STREAMS_PER_VIEWER = 100;
-// An open stream asks at every heartbeat whether the deck is still published; screens
+// An open stream asks every 15 seconds whether the deck is still published; screens
 // following one token share the answer for a moment.
 const PUBLISHED_CHECK_MS = 10_000;
 const publishedChecks = new Map<string, { at: number; published: boolean }>();

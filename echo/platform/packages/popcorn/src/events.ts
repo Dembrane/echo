@@ -1,6 +1,13 @@
 import { RateLimitedError } from "@dembrane/core";
 import type { Logger } from "@dembrane/observability";
-import { type Hub, openStreams, publish } from "@dembrane/realtime";
+import {
+  boundedEventResponse,
+  type Hub,
+  openStreams,
+  publish,
+  RECHECK_MS,
+  type StreamBounds,
+} from "@dembrane/realtime";
 import type { Context } from "hono";
 import { stream } from "hono/streaming";
 import type postgres from "postgres";
@@ -25,8 +32,6 @@ export async function publishNudge(
   await publish(sql, generationChannel(reportId), { type: "generation" }, logger);
 }
 
-export const HEARTBEAT_MS = 15_000;
-
 const HEADERS = {
   "Cache-Control": "no-cache",
   Connection: "keep-alive",
@@ -40,14 +45,16 @@ export interface UpdateStreamOptions {
   readonly maxStreams?: number;
   readonly key?: string;
   readonly maxStreamsPerKey?: number;
-  /** Asked at every heartbeat; the stream ends once it answers no. */
+  /** Asked every `recheckMs`; the stream ends once it answers no. */
   readonly stillAllowed?: () => Promise<boolean>;
-  readonly heartbeatMs?: number;
+  readonly recheckMs?: number;
+  readonly bounds?: Omit<StreamBounds, "signal">;
 }
 
 /**
- * `connected`, then a bare `update` per nudge on the session's channel, and a comment every
- * fifteen seconds. Subscribed before `connected`, because pages reload on `connected`.
+ * `connected`, then a bare `update` per nudge on the session's channel. Subscribed before
+ * `connected`, because pages reload on `connected`. Keepalives and the lifetime come from
+ * the shared stream bounds.
  */
 export function updateStream(
   c: Context,
@@ -59,45 +66,47 @@ export function updateStream(
     throw new RateLimitedError("Too many open streams. Try again later.");
   for (const [k, v] of Object.entries(HEADERS)) c.header(k, v);
   c.header("Content-Type", "text/event-stream; charset=utf-8");
-  return stream(c, async (s) => {
-    let pending = 0;
-    let wake: (() => void) | null = null;
-    let unsubscribe = () => {};
-    let closed = false;
-    s.onAbort(() => {
-      closed = true;
-      wake?.();
-    });
-    try {
-      const live = await hub();
-      unsubscribe = live.subscribe([generationChannel(reportId)], () => {
-        pending++;
+  return boundedEventResponse(
+    stream(c, async (s) => {
+      let pending = 0;
+      let wake: (() => void) | null = null;
+      let unsubscribe = () => {};
+      let closed = false;
+      s.onAbort(() => {
+        closed = true;
         wake?.();
       });
-      await s.write(frame("connected"));
-      const beat = opts.heartbeatMs ?? HEARTBEAT_MS;
-      let last = Date.now();
-      while (!closed) {
-        if (pending > 0) {
-          pending--;
-          await s.write(frame("update"));
-          continue;
-        }
-        await new Promise<void>((r) => {
-          wake = r;
-          setTimeout(r, Math.max(0, beat - (Date.now() - last)));
+      try {
+        const live = await hub();
+        unsubscribe = live.subscribe([generationChannel(reportId)], () => {
+          pending++;
+          wake?.();
         });
-        wake = null;
-        if (closed || pending > 0) continue;
-        if (Date.now() - last >= beat) {
-          if (opts.stillAllowed && !(await opts.stillAllowed().catch(() => false))) break;
-          await s.write(": keep-alive\n\n");
-          last = Date.now();
+        await s.write(frame("connected"));
+        const every = opts.recheckMs ?? RECHECK_MS;
+        let lastCheck = Date.now();
+        while (!closed) {
+          if (pending > 0) {
+            pending--;
+            await s.write(frame("update"));
+            continue;
+          }
+          await new Promise<void>((r) => {
+            wake = r;
+            if (opts.stillAllowed) setTimeout(r, Math.max(0, every - (Date.now() - lastCheck)));
+          });
+          wake = null;
+          if (closed || pending > 0) continue;
+          if (opts.stillAllowed && Date.now() - lastCheck >= every) {
+            if (!(await opts.stillAllowed().catch(() => false))) break;
+            lastCheck = Date.now();
+          }
         }
+      } finally {
+        unsubscribe();
+        openStreams.giveBack(opts.key);
       }
-    } finally {
-      unsubscribe();
-      openStreams.giveBack(opts.key);
-    }
-  });
+    }),
+    { ...opts.bounds, signal: c.req.raw.signal },
+  );
 }

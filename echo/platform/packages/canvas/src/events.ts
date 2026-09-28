@@ -1,5 +1,5 @@
 import type { Logger } from "@dembrane/observability";
-import { publish, sharedHub } from "@dembrane/realtime";
+import { boundedEventResponse, publish, type StreamBounds, sharedHub } from "@dembrane/realtime";
 import type { Context } from "hono";
 import { stream } from "hono/streaming";
 import type postgres from "postgres";
@@ -22,8 +22,6 @@ export async function publishGenerationNudge(
   await publish(sql, generationChannel(reportId), { type: "generation" }, logger);
 }
 
-export const HEARTBEAT_MS = 15_000;
-
 /** Python's json.dumps with default separators, which the frontend has always parsed. */
 function pyJson(obj: Record<string, unknown>): string {
   const parts = Object.entries(obj).map(
@@ -35,7 +33,8 @@ function pyJson(obj: Record<string, unknown>): string {
 
 /**
  * The stream the canvas page follows: `connected`, then one `generation` frame per nudge
- * with the latest generation id read at that moment, and a comment every 15 seconds.
+ * with the latest generation id read at that moment. Keepalives and the lifetime come from
+ * the shared stream bounds; the page rereads on every `connected`.
  */
 export function canvasEventStream(
   c: Context,
@@ -44,52 +43,47 @@ export function canvasEventStream(
     logger: Logger;
     reportId: string;
     latestGenerationId: () => Promise<unknown>;
-    heartbeatMs?: number;
+    bounds?: Omit<StreamBounds, "signal">;
   },
 ) {
   c.header("Cache-Control", "no-cache");
   c.header("Connection", "keep-alive");
   c.header("X-Accel-Buffering", "no");
   c.header("Content-Type", "text/event-stream; charset=utf-8");
-  return stream(c, async (s) => {
-    const hub = await sharedHub(args.sql, args.logger);
-    let pending = 0;
-    let wake: (() => void) | null = null;
-    const unsubscribe = hub.subscribe([generationChannel(args.reportId)], () => {
-      pending++;
-      wake?.();
-    });
-    let closed = false;
-    s.onAbort(() => {
-      closed = true;
-      wake?.();
-    });
-    const beat = args.heartbeatMs ?? HEARTBEAT_MS;
-    try {
-      await s.write(`event: connected\ndata: ${pyJson({ type: "connected" })}\n\n`);
-      let last = Date.now();
-      while (!closed) {
-        if (pending > 0) {
-          pending--;
-          const id = await args.latestGenerationId();
-          await s.write(
-            `event: generation\ndata: ${pyJson({ type: "generation", generation_id: id ?? null })}\n\n`,
-          );
-          continue;
+  return boundedEventResponse(
+    stream(c, async (s) => {
+      const hub = await sharedHub(args.sql, args.logger);
+      let pending = 0;
+      let wake: (() => void) | null = null;
+      const unsubscribe = hub.subscribe([generationChannel(args.reportId)], () => {
+        pending++;
+        wake?.();
+      });
+      let closed = false;
+      s.onAbort(() => {
+        closed = true;
+        wake?.();
+      });
+      try {
+        await s.write(`event: connected\ndata: ${pyJson({ type: "connected" })}\n\n`);
+        while (!closed) {
+          if (pending > 0) {
+            pending--;
+            const id = await args.latestGenerationId();
+            await s.write(
+              `event: generation\ndata: ${pyJson({ type: "generation", generation_id: id ?? null })}\n\n`,
+            );
+            continue;
+          }
+          await new Promise<void>((r) => {
+            wake = r;
+          });
+          wake = null;
         }
-        await new Promise<void>((r) => {
-          wake = r;
-          setTimeout(r, Math.max(0, beat - (Date.now() - last)));
-        });
-        wake = null;
-        if (closed || pending > 0) continue;
-        if (Date.now() - last >= beat) {
-          await s.write(": keep-alive\n\n");
-          last = Date.now();
-        }
+      } finally {
+        unsubscribe();
       }
-    } finally {
-      unsubscribe();
-    }
-  });
+    }),
+    { ...args.bounds, signal: c.req.raw.signal },
+  );
 }
