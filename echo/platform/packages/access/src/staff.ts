@@ -21,6 +21,8 @@ export const STAFF_POLICIES = [
   "staff:training",
   /** Read every user's feedback and the attachments of any report. */
   "staff:feedback",
+  /** Customer accounts: documents, tasks, tickets, invoice mirrors, stage (sam's staff key). */
+  "staff:accounts",
 ] as const;
 
 export type StaffPolicy = (typeof STAFF_POLICIES)[number];

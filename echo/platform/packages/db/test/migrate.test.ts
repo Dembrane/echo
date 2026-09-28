@@ -37,8 +37,13 @@ run("migrate", () => {
 
   test("adopts a database that already has the schema without re-running the baseline", async () => {
     const db = postgres(`${base}/mig_adopt`, { max: 1, onnotice: () => {} });
-    // A table the baseline would create: executing the baseline would fail on it.
-    await db`create table project (id uuid primary key)`;
+    // The schema Directus made, without migration history: running the baseline again
+    // would fail on its existing tables, and later migrations need the tables it made.
+    for (const tag of ["0000_baseline", "0001_baseline_guards"]) {
+      const file = await Bun.file(new URL(`../migrations/${tag}.sql`, import.meta.url)).text();
+      for (const statement of file.split("--> statement-breakpoint"))
+        if (statement.trim()) await db.unsafe(statement);
+    }
     await db.end();
     const r = await migrate(`${base}/mig_adopt`);
     expect(r.adoptedBaseline).toBe(true);
