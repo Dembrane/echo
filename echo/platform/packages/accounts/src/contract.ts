@@ -255,14 +255,31 @@ export const DocumentDetail = DocumentSummary.extend({
   access: z.enum(["member", "signer", "staff"]),
 });
 
+/**
+ * Tasks echo creates itself carry a code and its params, never text: the UI words them in
+ * the viewer's language. `sign_offer` and `sign_dpa` have `document_title`; `billing_details`
+ * has none. Tasks staff or sam write have no code and carry their own title and body.
+ */
+export const TaskCode = z.enum(["sign_offer", "billing_details", "sign_dpa"]);
+
 export const Task = z.object({
   id: Uuid,
-  title: z.string(),
+  /** Set for tasks echo creates; title and body are null then. */
+  code: TaskCode.nullable(),
+  params: z.record(z.string(), z.string()).nullable(),
+  title: z.string().nullable(),
   body: z.string().nullable(),
   kind: TaskKind,
   status: TaskStatus,
   /** Greyed out until the document it waits for is signed. */
   locked: z.boolean(),
+  /**
+   * The document whose signature opens this task, and its title ("Opens after you sign
+   * <title>"). A locked billing details task waits for the first signed offer: both are
+   * null until an offer exists, then they name the newest offer waiting for a signature.
+   */
+  locked_until_document_id: Uuid.nullable(),
+  locked_until_title: z.string().nullable(),
   document_id: Uuid.nullable(),
   due_on: IsoDate.nullable(),
   opened_at: IsoTime.nullable(),
@@ -375,6 +392,10 @@ export const NameSignerRequest = z.object({
 });
 export const NameSignerResponse = z.object({ signer: Signer });
 
+/**
+ * Saving the billing details completes the billing details task at once (status `done`, no
+ * review by us); we hear about it through the event and the Slack post.
+ */
 export const BillingUpdateRequest = z.object({
   legal_name: text(255),
   billing_email: z.email().max(255),
@@ -410,7 +431,10 @@ export const SigningRequests = z.array(
 // ── staff and sam ───────────────────────────────────────────────────────
 
 export const AccountListQuery = z.object({
-  stage: nullish(AccountStage),
+  /** A stage, or `none` for organisations that are not managed as accounts yet. */
+  stage: nullish(z.enum(["prospect", "customer", "churned", "none"])),
+  /** Part of the organisation's name or of a member's email address. */
+  q: optText(200),
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
 });
@@ -499,6 +523,15 @@ export const ProspectBlock = z.object({
   language: Language.default("nl"),
 });
 
+/**
+ * Makes any existing organisation an account (a free-tier signup, a customer who never had
+ * a demo): sets its stage, and makes sure it has a billing account and the billing task.
+ */
+export const EnableAccountRequest = z.object({
+  stage: AccountStage.default("customer"),
+  language: Language.default("nl"),
+});
+
 export const UpdateAccountRequest = z.object({
   account_stage: AccountStage.optional(),
   /** An @dembrane.com app user, or null to clear. */
@@ -525,8 +558,14 @@ export const PushOfferRequest = z.object({
   external_ref: optText(255),
   /** An unsigned offer this one replaces; it is voided. */
   supersedes_id: nullish(Uuid),
+  /**
+   * Send now (default), or keep a draft that staff send later with POST .../send. A draft
+   * re-pins the newest legal texts when it is sent.
+   */
+  send: z.boolean().default(true),
 });
-export const PushOfferResponse = z.object({ document: DocumentDetail, task: Task });
+/** `task` is null for a draft: "Review and sign the offer" is created when it is sent. */
+export const PushOfferResponse = z.object({ document: DocumentDetail, task: Task.nullable() });
 
 export const PushDocumentRequest = z.object({
   kind: z.enum(["dpa", "other"]),
@@ -610,6 +649,109 @@ export const StaffReplyRequest = z.object({
   body: text(8000),
   close: z.boolean().default(false),
 });
+
+// ── the signed-in person's tasks across organisations ───────────────────
+
+/**
+ * GET /api/v2/account/tasks-summary: for the "Tasks 1/2" entry, the org picker, and whether
+ * an organisation shows "Account" in the sidebar. It lists only organisations with account
+ * content (a stage set, or any task or document) where the caller is an owner, admin or
+ * billing member; a self-serve organisation with nothing in it is absent.
+ */
+export const TasksSummary = z.array(
+  z.object({
+    org_id: Uuid,
+    name: z.string(),
+    logo_url: z.string().nullable(),
+    account_stage: AccountStage.nullable(),
+    tasks_done: z.number().int(),
+    /** Every task but the withdrawn ones; locked tasks count. */
+    tasks_total: z.number().int(),
+    /** The oldest task waiting on the customer: its title, or its code and params. */
+    next_task_title: z.string().nullable(),
+    next_task_code: TaskCode.nullable(),
+    next_task_params: z.record(z.string(), z.string()).nullable(),
+  }),
+);
+
+// ── synthetic demos made in echo ────────────────────────────────────────
+
+export const DemoStepName = z.enum(["fetch", "research", "author", "seed", "extract", "review"]);
+export const DemoStepStatus = z.enum(["pending", "running", "done", "failed"]);
+export const DemoStatusName = z.enum(["queued", "running", "draft", "failed", "published"]);
+
+export const DemoCreateRequest = z.object({
+  organisation_name: text(255),
+  /** The public website the research reads (a few pages, as evidence only). */
+  website_url: z.url().max(2000),
+  /** What the demo should show: the sales brief in a few sentences. */
+  brief: text(4000),
+  language: Language,
+  /** An event or customer situation to set the demo in, if there is one. */
+  example: optText(2000),
+  contact_name: text(255),
+  /** Becomes the organisation's admin. */
+  contact_email: z.email().max(255),
+  /** Invite the contact to sign in with an email code when the demo is published. */
+  sign_in: z.boolean().default(false),
+  /** Prepare an offer draft on the organisation; staff send it later. */
+  offer: nullish(
+    z.object({
+      template: OfferTemplate,
+      language: Language,
+      person_name: optText(200),
+      attention: optText(200),
+      items: z.array(OfferItem).min(1).max(50),
+      external_ref: optText(255),
+    }),
+  ),
+});
+
+export const DemoStep = z.object({
+  name: DemoStepName,
+  status: DemoStepStatus,
+  started_at: IsoTime.nullable(),
+  finished_at: IsoTime.nullable(),
+  error: z.string().nullable(),
+});
+
+export const DemoStatus = z.object({
+  id: Uuid,
+  status: DemoStatusName,
+  organisation_name: z.string(),
+  website_url: z.string(),
+  language: Language,
+  contact_email: z.string(),
+  sign_in: z.boolean(),
+  /** Set by the seed step, when the organisation and its contact are created. */
+  org_id: Uuid.nullable(),
+  slug: z.string().nullable(),
+  steps: z.array(DemoStep),
+  links: z.object({
+    /** The public presentation, live only after publishing. */
+    public: z.array(z.object({ language: Language, url: z.string(), live: z.boolean() })),
+    /** The demo projects in the dashboard, for review before publishing. */
+    projects: z.array(z.object({ language: Language, project_id: Uuid, url: z.string() })),
+    /** The organisation's card in the staff console. */
+    account: z.string().nullable(),
+    /** Where the contact lands after signing in. */
+    continue_url: z.string().nullable(),
+  }),
+  /** The research report (sources, facts, unknowns, invented themes), once written. */
+  research: z.string().nullable(),
+  /** How many fictional conversations were authored. */
+  conversations: z.number().int().nullable(),
+  offer_document_id: Uuid.nullable(),
+  invited_at: IsoTime.nullable(),
+  published_at: IsoTime.nullable(),
+  created_at: IsoTime,
+  updated_at: IsoTime,
+});
+
+export const DemoList = z.object({ demos: z.array(DemoStatus) });
+
+/** Publishing makes the public link live; `sign_in` overrides the choice made at the start. */
+export const DemoPublishRequest = z.object({ sign_in: z.boolean().nullish() });
 
 // ── events out (POSTed to ACCOUNTS_EVENTS_URL, signed like project webhooks) ──
 
@@ -885,6 +1027,52 @@ export const ROUTES = {
     permission: "staff:accounts",
     response: Ticket,
   },
+  tasksSummary: {
+    method: "GET",
+    path: "/api/v2/account/tasks-summary",
+    permission: "signed-in",
+    response: TasksSummary,
+  },
+  listDemos: {
+    method: "GET",
+    path: `${S}/demos`,
+    permission: "staff:accounts",
+    response: DemoList,
+  },
+  createDemo: {
+    method: "POST",
+    path: `${S}/demos`,
+    permission: "staff:accounts",
+    request: DemoCreateRequest,
+    response: DemoStatus,
+    status: 201,
+  },
+  demoStatus: {
+    method: "GET",
+    path: `${S}/demos/:demoId`,
+    permission: "staff:accounts",
+    response: DemoStatus,
+  },
+  publishDemo: {
+    method: "POST",
+    path: `${S}/demos/:demoId/publish`,
+    permission: "staff:accounts",
+    request: DemoPublishRequest,
+    response: DemoStatus,
+  },
+  retryDemo: {
+    method: "POST",
+    path: `${S}/demos/:demoId/retry`,
+    permission: "staff:accounts",
+    response: DemoStatus,
+  },
+  enableAccount: {
+    method: "POST",
+    path: `${S}/:orgId/enable`,
+    permission: "staff:accounts",
+    request: EnableAccountRequest,
+    response: AccountCard,
+  },
   /** The demo seed route's optional block; creates the prospect's organisation. */
   demoSeed: {
     method: "POST",
@@ -906,3 +1094,5 @@ export type AccountListT = z.output<typeof AccountList>;
 export type OfferContentT = z.output<typeof OfferContent>;
 export type DocumentFieldT = z.output<typeof DocumentField>;
 export type SignRequestT = z.output<typeof SignRequest>;
+export type DemoStatusT = z.output<typeof DemoStatus>;
+export type TasksSummaryT = z.output<typeof TasksSummary>;

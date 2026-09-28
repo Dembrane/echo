@@ -43,7 +43,11 @@ export async function createAccount(
   d: AccountsDeps,
   actor: Signed | null,
   input: CreateAccountInput,
-  opts: { password?: string } = {},
+  /**
+   * `holdSignIn`: a contact created here cannot sign in until released (a demo made in
+   * echo invites its contact when it is published, never before).
+   */
+  opts: { password?: string; holdSignIn?: boolean } = {},
 ): Promise<CreateAccountResult> {
   const email = input.contact_email.trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
@@ -109,6 +113,7 @@ export async function createAccount(
       name: input.contact_name,
       passwordHash,
       nowIso,
+      holdSignIn: opts.holdSignIn === true,
     });
     const membership = await store.orgMembership(tx, orgId, contact.appUserId);
     if (!membership)
@@ -126,7 +131,7 @@ export async function createAccount(
         .set({ deleted_at: null, role: "admin", updated_at: nowIso })
         .where(eq(schema.org_membership.id, membership.id));
 
-    await ensureBillingTask(d, tx, orgId, input.language, actor?.directusUserId ?? null);
+    await ensureBillingTask(d, tx, orgId, actor?.directusUserId ?? null);
     if (!existing)
       await emit(d, tx, {
         orgId,
@@ -161,6 +166,8 @@ export async function ensureUser(
     passwordHash: string | null;
     nowIso: string;
     directusRoleId?: string | null;
+    /** A new user starts as a Directus draft: no sign-in code until released. */
+    holdSignIn?: boolean;
   },
 ): Promise<{ userId: string; appUserId: string; created: boolean }> {
   const found = await store.identityByEmail(tx, u.email);
@@ -200,7 +207,7 @@ export async function ensureUser(
       email: u.email,
       first_name: first || null,
       last_name: rest.join(" ") || null,
-      status: "active",
+      status: u.holdSignIn ? "draft" : "active",
       role,
       provider: "default",
       ...(u.passwordHash && { password: u.passwordHash }),
@@ -261,4 +268,17 @@ export async function ensureUser(
 /** Whether a sign-in code may go to this address (Better Auth's email OTP gate). */
 export function codeSignInGate(d: Pick<AccountsDeps, "db" | "now">) {
   return (email: string) => store.mayReceiveCode(d.db, email, d.now());
+}
+
+/**
+ * Lets a contact created with `holdSignIn` sign in: their Directus row becomes active. A
+ * user who was already active is left as they are. Returns whether anything changed.
+ */
+export async function releaseSignIn(c: Conn, userId: string): Promise<boolean> {
+  const out = await c
+    .update(schema.directus_users)
+    .set({ status: "active" })
+    .where(and(eq(schema.directus_users.id, userId), eq(schema.directus_users.status, "draft")))
+    .returning({ id: schema.directus_users.id });
+  return out.length > 0;
 }

@@ -3,12 +3,16 @@ import { newId } from "@echo/core";
 import type { Db } from "@echo/db";
 import type { Mailer } from "@echo/mail";
 import type { Logger } from "@echo/observability";
-import { defineJob, type JobDefinition, type Queue } from "@echo/queue";
+import { defineJob, type JobDefinition, type Queue, step } from "@echo/queue";
 import type { Deliver } from "@echo/webhooks";
 import { z } from "zod";
+import { buildDemo, type DemoBuildDeps } from "./demo/build";
+import { demoBuild } from "./demo/job";
 import { refreshLegalTexts } from "./legal/store";
+import type { Language } from "./offer";
 import type { AccountsJobs } from "./sink";
 import { store } from "./storage";
+import { languageOf, taskTitle } from "./task-text";
 
 /**
  * One account event to sam. The payload is built when the event happens, so a retry sends
@@ -51,7 +55,7 @@ export const legalRefresh = defineJob("accounts.legal-refresh", z.object({}), {
 });
 
 /** The jobs the API enqueues; its queue client creates exactly these. */
-export const accountsApiJobs: readonly JobDefinition[] = [deliverEvent, notifySlack];
+export const accountsApiJobs: readonly JobDefinition[] = [deliverEvent, notifySlack, demoBuild];
 
 const DAY_MS = 86_400_000;
 
@@ -105,28 +109,40 @@ export async function runTaskReminder(
   if (!task || !["open", "changes_requested"].includes(task.status)) return "skipped";
   const org = await store.org(d.db, task.orgId);
   if (!org || org.deleted_at) return "skipped";
-  const to = [
-    ...new Set((await store.accountPeople(d.db, task.orgId)).map((p) => p.email).filter(Boolean)),
-  ] as string[];
-  if (!to.length) {
+  // Each person gets it in their own language (their dashboard setting), else in the
+  // organisation's (the language of its newest document), else in English.
+  const people = (await store.accountPeople(d.db, task.orgId)).filter((p) => p.email);
+  if (!people.length) {
     d.logger.warn({ task_id: task.id, org_id: org.id }, "task reminder has nobody to go to");
     return "skipped";
   }
-  const { html, text } = render({
-    template: "account_task_reminder",
-    data: {
-      org_name: org.name,
-      task_title: task.title,
-      task_url: accountPageUrl(d.dashboardUrl, org.id),
-    },
-  });
-  await d.mailer.send({
-    to,
-    subject: `Still open: ${task.title}`,
-    html,
-    text,
-    tags: ["account_task_reminder"],
-  });
+  const [newest] = await store.documents(d.db, org.id);
+  const orgLanguage = languageOf(newest?.language);
+  const byLanguage = new Map<Language, Set<string>>();
+  for (const p of people) {
+    const lang = p.language ? languageOf(p.language) : orgLanguage;
+    byLanguage.set(lang, (byLanguage.get(lang) ?? new Set()).add(p.email as string));
+  }
+  const to = [...byLanguage.values()].flatMap((set) => [...set]);
+  for (const [language, emails] of byLanguage) {
+    const title = taskTitle(task, language);
+    const { html, text } = render({
+      template: "account_task_reminder",
+      data: {
+        org_name: org.name,
+        task_title: title,
+        task_url: accountPageUrl(d.dashboardUrl, org.id),
+        language,
+      },
+    });
+    await d.mailer.send({
+      to: [...emails],
+      subject: language === "nl" ? `Nog open: ${title}` : `Still open: ${title}`,
+      html,
+      text,
+      tags: ["account_task_reminder"],
+    });
+  }
   await d.db.transaction(async (tx) => {
     await store.updateTask(tx, task.id, { remindersSent: task.remindersSent + 1 });
     await store.insertEvent(tx, {
@@ -199,6 +215,11 @@ export interface AccountsWorkerDeps {
   readonly fetchText: (url: string) => Promise<string>;
   readonly post?: PostJson;
   readonly now?: () => Date;
+  /**
+   * Demos made in echo: everything the build workflow needs, made once the queue exists
+   * (the popcorn read enqueues through it). Absent, the worker does not build demos.
+   */
+  readonly demos?: (queue: Queue) => DemoBuildDeps;
 }
 
 /** The worker's registration: handlers and the two schedules. */
@@ -257,6 +278,14 @@ export function accountsWorker(deps: AccountsWorkerDeps) {
           now,
         });
       });
+      if (deps.demos) {
+        const demoDeps = deps.demos(queue);
+        // A durable workflow: each step is checkpointed, and the demo row records which are
+        // done, so a crash resumes mid-way and a retry starts at the failed step.
+        await queue.workflow(demoBuild, { concurrency: 2 }, async (p) => {
+          await buildDemo(demoDeps, p.demoId, p.attempt, (name, fn) => step(name, fn));
+        });
+      }
       await queue.schedule(remindersTick, "*/15 * * * *", {});
       await queue.schedule(legalRefresh, "17 5 * * *", {});
     },

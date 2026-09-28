@@ -64,9 +64,79 @@ export interface SeedOptions {
   readonly company: Company;
   /** echo/demos, for the example fixture and the sales portal words. */
   readonly demosDir: string;
+  /** The demo's language (DEMO_LANGUAGE): the offer, tasks, question and corpus follow it. */
+  readonly language?: "en" | "nl";
   /** Offers pin texts from dembrane.com; the seed passes a fetcher that fails fast offline. */
   readonly fetchText: (url: string) => Promise<string>;
 }
+
+/** Everything the demo writes in words, per language. */
+const WORDS = {
+  en: {
+    contact: "Sameer (customer demo)",
+    workspace: "Example town",
+    example: "example-en",
+    portal: "en-US",
+    offer: {
+      licence: "dembrane changemaker, annual licence",
+      licenceBullets: [
+        "5 seats, 12 months (60 seat-months)",
+        "Start date 01-11-2026",
+        "End date 31-10-2027",
+        "Unlimited recording hours",
+      ],
+      workshop: "Onboarding workshop",
+      workshopBullets: ["Half a day on site, up to 15 participants", "Preparation included"],
+    },
+    po: {
+      title: "Send us your PO number",
+      body: "Do you work with purchase order numbers? Send us the number and we put it on the invoice.",
+    },
+    logo: {
+      title: "Upload your logo",
+      body: "For the presentation and the report: a logo as SVG or PNG.",
+      reply: "Here is our logo.",
+    },
+    ticket: {
+      subject: "Can we pay per quarter?",
+      ask: "Our finance team asks whether the annual licence can also be invoiced per quarter.",
+      answer:
+        "Yes. Once it is signed we invoice in four quarterly invoices; the total stays the same.",
+    },
+  },
+  nl: {
+    contact: "Sameer (klant demo)",
+    workspace: "Voorbeeldstad",
+    example: "example",
+    portal: "nl-NL",
+    offer: {
+      licence: "dembrane changemaker, jaarlicentie",
+      licenceBullets: [
+        "5 seats, 12 maanden (60 seat-maanden)",
+        "Startdatum 01-11-2026",
+        "Einddatum 31-10-2027",
+        "Onbeperkt aantal uren opnames",
+      ],
+      workshop: "Onboarding workshop",
+      workshopBullets: ["Halve dag op locatie, tot 15 deelnemers", "Inclusief voorbereiding"],
+    },
+    po: {
+      title: "Stuur ons jullie PO-nummer",
+      body: "Werken jullie met inkoopordernummers? Stuur het nummer, dan zetten we het op de factuur.",
+    },
+    logo: {
+      title: "Upload jullie logo",
+      body: "Voor de presentatie en het rapport: een logo als SVG of PNG.",
+      reply: "Hierbij ons logo.",
+    },
+    ticket: {
+      subject: "Kunnen we per kwartaal betalen?",
+      ask: "Onze afdeling financien vraagt of de jaarlicentie ook per kwartaal gefactureerd kan worden.",
+      answer:
+        "Dat kan. Na ondertekening zetten we de facturatie op vier kwartaalfacturen; het totaal blijft gelijk.",
+    },
+  },
+} as const;
 
 export const PRODUCTION_REFUSAL =
   "The accounts demo is for staging environments, never production.";
@@ -99,6 +169,8 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
   if (o.env === "prod") throw new Error(PRODUCTION_REFUSAL);
   refuseProduction([o.dashboardUrl, o.portalUrl, o.apiUrl]);
   if (o.password.length < 12) throw new Error("DEMO_PASSWORD must be at least 12 characters");
+  const lang = o.language ?? "en";
+  const w = WORDS[lang];
 
   const jobs = new MemoryJobs();
   const d: AccountsDeps = {
@@ -146,10 +218,10 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
     {
       organisation_name: ORG_NAME,
       contact_email: CUSTOMER_EMAIL,
-      contact_name: "Sameer (klant demo)",
+      contact_name: w.contact,
       pricing_configuration_reference: null,
       stage: "customer",
-      language: "nl",
+      language: lang,
       org_id: DEMO_IDS.org,
     },
     { password: o.password },
@@ -167,7 +239,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
     .values({
       id: DEMO_IDS.workspace,
       org_id: account.org_id,
-      name: "Voorbeeldstad",
+      name: w.workspace,
       billing_account_id: billing.id,
       visibility: "open_to_organisation",
       is_default: true,
@@ -177,13 +249,16 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
     })
     .onConflictDoNothing();
 
-  const fixture = (await Bun.file(join(o.demosDir, "example/fixture.json")).json()) as Json;
-  const research = await Bun.file(join(o.demosDir, "example/research.md")).text();
+  const fixture = (await Bun.file(join(o.demosDir, `${w.example}/fixture.json`)).json()) as Json;
+  const research = await Bun.file(join(o.demosDir, `${w.example}/research.md`)).text();
   const salesPortal = (await Bun.file(join(o.demosDir, "sales-portal.json")).json()) as Record<
     string,
     Json
   >;
-  const inputs = demoFromFixture(fixture, `${o.portalUrl.replace(/\/+$/, "")}/nl-NL/sales/start`);
+  const inputs = demoFromFixture(
+    fixture,
+    `${o.portalUrl.replace(/\/+$/, "")}/${w.portal}/sales/start`,
+  );
   const seeded = await seedDemo(
     o.db,
     {
@@ -200,7 +275,11 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
     o.now,
   );
   const events = await store.events(o.db, account.org_id, 500);
-  if (!events.some((e) => e.type === "demo.seeded"))
+  if (
+    !events.some(
+      (e) => e.type === "demo.seeded" && (e.detail as { slug?: string })?.slug === fixture.slug,
+    )
+  )
     await o.db.transaction((tx) =>
       emit(d, tx, {
         orgId: account.org_id,
@@ -213,7 +292,23 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
   // The offer: a year licence and an onboarding workshop, in euros, 21% VAT. A fresh one
   // is pushed only when no demo offer is still waiting for a signature.
   const docs = await store.documents(o.db, account.org_id);
-  const waiting = docs.find((x) => x.kind === "offer" && ["sent", "viewed"].includes(x.status));
+  let waiting = docs.find((x) => x.kind === "offer" && ["sent", "viewed"].includes(x.status));
+  // A demo rebuilt in the other language withdraws the offer in the old one.
+  if (waiting && waiting.language !== lang) {
+    await store.updateDocument(o.db, waiting.id, {
+      status: "void",
+      voidedAt: o.now,
+      updatedAt: o.now,
+    });
+    for (const t of await store.tasks(o.db, account.org_id))
+      if (t.documentId === waiting.id && !["done", "withdrawn"].includes(t.status))
+        await store.updateTask(o.db, t.id, {
+          status: "withdrawn",
+          nextReminderAt: null,
+          updatedAt: o.now,
+        });
+    waiting = undefined;
+  }
   let offerId = waiting?.id ?? "";
   let offerCreated = false;
   if (!waiting) {
@@ -224,7 +319,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
       account.org_id,
       {
         template: "subscription",
-        language: "nl",
+        language: lang,
         offer_name: ORG_NAME,
         person_name: "Sameer",
         attention: null,
@@ -234,20 +329,15 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         date: nowIso.slice(0, 10),
         items: [
           {
-            description: "dembrane changemaker, jaarlicentie",
-            bullets: [
-              "5 seats, 12 maanden (60 seat-maanden)",
-              "Startdatum 01-11-2026",
-              "Einddatum 31-10-2027",
-              "Onbeperkt aantal uren opnames",
-            ],
+            description: w.offer.licence,
+            bullets: [...w.offer.licenceBullets],
             quantity: 60,
             unit_price_cents: 8600,
             vat_rate_bps: 2100,
           },
           {
-            description: "Onboarding workshop",
-            bullets: ["Halve dag op locatie, tot 15 deelnemers", "Inclusief voorbereiding"],
+            description: w.offer.workshop,
+            bullets: [...w.offer.workshopBullets],
             quantity: 1,
             unit_price_cents: 125000,
             vat_rate_bps: 2100,
@@ -264,12 +354,32 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
 
   await o.db.transaction(async (tx) => {
     const tasks = await store.tasks(tx, account.org_id);
+    // The demo's own words follow DEMO_LANGUAGE on every run.
+    if (tasks.some((t) => t.id === DEMO_IDS.poTask))
+      await store.updateTask(tx, DEMO_IDS.poTask, { title: w.po.title, body: w.po.body });
+    if (tasks.some((t) => t.id === DEMO_IDS.logoTask))
+      await store.updateTask(tx, DEMO_IDS.logoTask, {
+        title: w.logo.title,
+        body: w.logo.body,
+        responseText: w.logo.reply,
+      });
+    if (await store.ticket(tx, account.org_id, DEMO_IDS.ticket)) {
+      await store.updateTicket(tx, DEMO_IDS.ticket, { subject: w.ticket.subject });
+      await tx
+        .update(schema.account_ticket_message)
+        .set({ body: w.ticket.ask })
+        .where(eq(schema.account_ticket_message.id, id("ticket-message-1")));
+      await tx
+        .update(schema.account_ticket_message)
+        .set({ body: w.ticket.answer })
+        .where(eq(schema.account_ticket_message.id, id("ticket-message-2")));
+    }
     if (!tasks.some((t) => t.id === DEMO_IDS.poTask))
       await createTask(d, tx, {
         id: DEMO_IDS.poTask,
         orgId: account.org_id,
-        title: "Stuur ons jullie PO-nummer",
-        body: "Werken jullie met inkoopordernummers? Stuur het nummer, dan zetten we het op de factuur.",
+        title: w.po.title,
+        body: w.po.body,
         kind: "generic",
         createdBy: staff.directusUserId,
       });
@@ -277,8 +387,8 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
       await createTask(d, tx, {
         id: DEMO_IDS.logoTask,
         orgId: account.org_id,
-        title: "Upload jullie logo",
-        body: "Voor de presentatie en het rapport: een logo als SVG of PNG.",
+        title: w.logo.title,
+        body: w.logo.body,
         kind: "upload",
         createdBy: staff.directusUserId,
       });
@@ -289,7 +399,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         "image/svg+xml",
       );
       await settleTask(d, tx, DEMO_IDS.logoTask, "submitted", {
-        responseText: "Hierbij ons logo.",
+        responseText: w.logo.reply,
         responseFileKey: key,
         responseFileName: "voorbeeldstad-logo.svg",
         submittedAt: o.now,
@@ -300,7 +410,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
       await store.insertTicket(tx, {
         id: DEMO_IDS.ticket,
         orgId: account.org_id,
-        subject: "Kunnen we per kwartaal betalen?",
+        subject: w.ticket.subject,
         status: "waiting_on_customer",
         openedBy: customer.id,
         createdAt: o.now,
@@ -311,7 +421,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         ticketId: DEMO_IDS.ticket,
         authorUserId: customer.id,
         fromStaff: false,
-        body: "Onze afdeling financien vraagt of de jaarlicentie ook per kwartaal gefactureerd kan worden.",
+        body: w.ticket.ask,
         createdAt: o.now,
       });
       await store.insertMessage(tx, {
@@ -319,7 +429,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         ticketId: DEMO_IDS.ticket,
         authorUserId: staff.directusUserId,
         fromStaff: true,
-        body: "Dat kan. Na ondertekening zetten we de facturatie op vier kwartaalfacturen; het totaal blijft gelijk.",
+        body: w.ticket.answer,
         createdAt: new Date(o.now.getTime() + 60_000),
       });
       await emit(d, tx, {
@@ -340,7 +450,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         orgId: account.org_id,
         kind: "invoice",
         title: "Invoice 2026-0421",
-        language: "nl",
+        language: lang,
         reference: "2026-0421",
         body,
         sha256: sha256Hex(body),

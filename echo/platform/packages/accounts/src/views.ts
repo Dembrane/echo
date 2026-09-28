@@ -11,6 +11,7 @@ import type {
   TaskRow,
   TicketRow,
 } from "./storage";
+import { isTaskCode, type TaskCode } from "./task-text";
 
 /** Response shapes: snake_case JSON, ISO timestamps, integer cents. */
 
@@ -30,7 +31,11 @@ export function paymentView(doc: DocumentRow, company: Company) {
   };
 }
 
-/** Where a document's files are served: the customer's account path or the staff path. */
+/**
+ * Where a document's files are served: the customer's account path or the staff path.
+ * Relative on purpose: the dashboard reaches /api through its same-origin proxy, so the
+ * browser sends the session cookie and no CORS rule is involved.
+ */
 export const customerBase = (orgId: string) => `/api/v2/orgs/${orgId}/account`;
 export const staffBase = (orgId: string) => `/api/v2/admin/accounts/${orgId}`;
 
@@ -178,15 +183,35 @@ export function fieldView(f: FieldRow) {
   };
 }
 
-export function taskView(t: TaskRow) {
+/**
+ * What a locked task waits for: its own document, or, for the billing details task that
+ * opens on the first signed offer, the newest offer waiting for a signature.
+ */
+function lockedUntil(t: TaskRow, docs: readonly DocumentRow[]) {
+  if (t.status !== "locked") return null;
+  if (t.unlockOnDocumentId) return docs.find((x) => x.id === t.unlockOnDocumentId) ?? null;
+  return (
+    docs
+      .filter((x) => x.kind === "offer" && ["sent", "viewed"].includes(x.status))
+      .sort((a, b) => (b.sentAt?.getTime() ?? 0) - (a.sentAt?.getTime() ?? 0))[0] ?? null
+  );
+}
+
+/** A task as the API returns it; `docs` are the organisation's documents, for lock titles. */
+export function taskView(t: TaskRow, docs: readonly DocumentRow[] = []) {
+  const waitsFor = lockedUntil(t, docs);
   return {
     id: t.id,
-    title: t.title,
-    body: t.body,
+    code: (isTaskCode(t.code) ? t.code : null) as TaskCode | null,
+    params: (t.code ? (t.params ?? {}) : null) as Record<string, string> | null,
+    title: t.code ? null : t.title,
+    body: t.code ? null : t.body,
     kind: t.kind,
     status: t.status,
     /** Greyed out on the page until the document it waits for is signed. */
     locked: t.status === "locked",
+    locked_until_document_id: waitsFor?.id ?? null,
+    locked_until_title: waitsFor?.title ?? null,
     document_id: t.documentId,
     due_on: t.dueOn,
     opened_at: iso(t.openedAt),

@@ -3,6 +3,7 @@ import type { AccountsDeps, Conn } from "./deps";
 import { deliverEvent, notifySlack } from "./jobs";
 import type { BillingRow, DocumentRow, OrgRow, SignatureRow, TaskRow, TicketRow } from "./storage";
 import { store } from "./storage";
+import { taskTitle } from "./task-text";
 
 /**
  * What leaves echo when something happens on an account: a timeline row always, the
@@ -122,7 +123,10 @@ export function signaturePayload(s: SignatureRow, signedPdfPath: string) {
 export function taskPayload(t: TaskRow) {
   return {
     id: t.id,
-    title: t.title,
+    // Worded in English for sam; the code and params are what a program should read.
+    title: taskTitle(t, "en"),
+    code: t.code,
+    params: t.params ?? null,
     kind: t.kind,
     document_id: t.documentId,
     response_text: t.responseText,

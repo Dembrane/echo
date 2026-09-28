@@ -8,6 +8,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@echo/access": "workspace:*",
     "@echo/account": "workspace:*",
     "@echo/accounts": "workspace:*",
     "@echo/agentic": "workspace:*",

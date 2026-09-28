@@ -35,7 +35,7 @@ const actorOf = (who: Signed): Actor => ({ kind: "staff", userId: who.directusUs
 
 export async function listAccounts(
   d: AccountsDeps,
-  q: { stage: string | null; limit: number; offset: number },
+  q: { stage: string | null; q: string | null; limit: number; offset: number },
 ) {
   const rows = await store.accountList(d.db, q);
   return {
@@ -132,10 +132,46 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
         staffBase(org.id),
       ),
     ),
-    tasks: tasks.map(taskView),
+    tasks: tasks.map((t) => taskView(t, docs)),
     tickets: tickets.map((t) => ticketView(t, messages)),
     timeline: events.map(eventView),
   };
+}
+
+/**
+ * The account side for any organisation (a free-tier signup, a customer who never had a
+ * demo): its stage, its own billing account, and the billing details task, so offers and
+ * tasks can be pushed to it like to any prospect.
+ */
+export async function enableAccount(
+  d: AccountsDeps,
+  who: Signed,
+  orgId: string,
+  input: { stage: "prospect" | "customer" | "churned"; language: Language },
+) {
+  const org = await staffOrg(d, orgId);
+  const nowIso = d.now().toISOString();
+  await d.db.transaction(async (tx) => {
+    await store.updateOrg(tx, org.id, { account_stage: input.stage, updated_at: nowIso });
+    if (!(await store.billing(tx, org.id)))
+      await store.insertBilling(tx, {
+        id: newId(),
+        org_id: org.id,
+        tier: "free",
+        payment_mode: "none",
+        created_by: who.appUserId,
+        created_at: nowIso,
+        updated_at: nowIso,
+      });
+    await ensureBillingTask(d, tx, org.id, who.directusUserId);
+    await emit(d, tx, {
+      orgId: org.id,
+      actor: actorOf(who),
+      type: "account.enabled",
+      detail: { stage: input.stage, previous: org.account_stage },
+    });
+  });
+  return accountCard(d, org.id);
 }
 
 export async function updateAccount(
@@ -195,18 +231,9 @@ export interface PushOfferInput {
   readonly items: readonly OfferItem[];
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
+  /** False keeps a draft; staff send it later. */
+  readonly send?: boolean;
 }
-
-const SIGN_TASK: Record<Language, { title: string; body: string }> = {
-  en: {
-    title: "Review and sign the offer",
-    body: "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer and they get their own link.",
-  },
-  nl: {
-    title: "Offerte bekijken en ondertekenen",
-    body: "Lees de offerte en onderteken hem hier. Tekent iemand anders voor jullie organisatie? Wijs diegene aan op de offerte; die krijgt een eigen link.",
-  },
-};
 
 const pin = (row: LegalRow) => ({
   version: row.version,
@@ -330,44 +357,108 @@ export async function pushOffer(
     });
     // Fields go in while it is a draft; sending freezes them with the PDF.
     await writeFields(tx, id, rendered.fields);
-    await store.updateDocument(tx, id, { status: "sent", sentAt: now, updatedAt: now });
-    const task = await createTask(d, tx, {
-      ...(ids.task && { id: ids.task }),
-      orgId: org.id,
-      title: SIGN_TASK[input.language].title,
-      body: SIGN_TASK[input.language].body,
-      kind: "sign",
-      documentId: id,
-      createdBy: who.directusUserId,
-    });
-    taskId = task.id;
-    await ensureBillingTask(d, tx, org.id, input.language, who.directusUserId);
-    await emit(d, tx, {
-      orgId: org.id,
-      actor: actorOf(who),
-      type: "document.sent",
-      subject: { type: "document", id },
-      detail: {
-        kind: "offer",
-        title: input.title ?? `${input.offer_name} x dembrane`,
-        total_cents: totals.total_cents,
-        pinned: {
-          terms: pinned.terms.version,
-          sla: pinned.sla.version,
-          dpa: pinned.dpa.version,
-        },
-      },
-    });
+    await ensureBillingTask(d, tx, org.id, who.directusUserId);
+    if (input.send === false)
+      await emit(d, tx, {
+        orgId: org.id,
+        actor: actorOf(who),
+        type: "document.drafted",
+        subject: { type: "document", id },
+        detail: { kind: "offer", total_cents: totals.total_cents },
+      });
+    else taskId = await sendOfferIn(d, tx, who, org.id, id, ids.task);
   });
   const doc = (await store.document(d.db, org.id, id)) as DocumentRow;
+  const task = taskId ? await store.task(d.db, org.id, taskId) : null;
   return {
     document: await documentDetail(d, doc, "staff"),
-    task: taskView(
-      (await store.task(d.db, org.id, taskId)) as NonNullable<
-        Awaited<ReturnType<typeof store.task>>
-      >,
-    ),
+    task: task ? taskView(task, await store.documents(d.db, org.id)) : null,
   };
+}
+
+/**
+ * Sends an offer that is still a draft: its PDF and fields freeze, "Review and sign the
+ * offer" opens, and the timeline notes the legal versions it carries.
+ */
+async function sendOfferIn(
+  d: AccountsDeps,
+  tx: Conn,
+  who: Signed,
+  orgId: string,
+  docId: string,
+  taskId?: string,
+): Promise<string> {
+  const now = d.now();
+  const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
+  await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
+  const task = await createTask(d, tx, {
+    ...(taskId && { id: taskId }),
+    orgId,
+    code: "sign_offer",
+    params: { document_title: doc.title },
+    title: null,
+    kind: "sign",
+    documentId: docId,
+    createdBy: who.directusUserId,
+  });
+  await ensureBillingTask(d, tx, orgId, who.directusUserId);
+  const content = doc.content as OfferContent | null;
+  await emit(d, tx, {
+    orgId,
+    actor: actorOf(who),
+    type: "document.sent",
+    subject: { type: "document", id: docId },
+    detail: {
+      kind: "offer",
+      title: doc.title,
+      total_cents: doc.totalCents,
+      pinned: content
+        ? {
+            terms: content.legal.terms.version,
+            sla: content.legal.sla.version,
+            dpa: content.legal.dpa.version,
+          }
+        : null,
+    },
+  });
+  return task.id;
+}
+
+/**
+ * A draft offer sent later pins the texts that are newest then: when any changed since it
+ * was drafted, its PDF, text and fields are rendered again before it freezes.
+ */
+async function repinDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<void> {
+  const pinned = await legalForPush({
+    db: d.db,
+    fetchText: d.fetchText,
+    logger: d.logger,
+    now: d.now,
+  });
+  if (
+    doc.termsTextId === pinned.terms.id &&
+    doc.slaTextId === pinned.sla.id &&
+    doc.dpaTextId === pinned.dpa.id
+  )
+    return;
+  const content: OfferContent = {
+    ...(doc.content as OfferContent),
+    legal: { terms: pin(pinned.terms), sla: pin(pinned.sla), dpa: pin(pinned.dpa) },
+  };
+  const rendered = await offerPdf(content);
+  const file = await storeRendered(d, doc.orgId, doc.id, rendered);
+  await d.db.transaction(async (tx) => {
+    await store.updateDocument(tx, doc.id, {
+      content,
+      body: offerText(content),
+      ...file,
+      termsTextId: pinned.terms.id,
+      slaTextId: pinned.sla.id,
+      dpaTextId: pinned.dpa.id,
+      updatedAt: d.now(),
+    });
+    await writeFields(tx, doc.id, rendered.fields);
+  });
 }
 
 export interface PushDocumentInput {
@@ -473,7 +564,10 @@ export async function pushDocument(
   });
   const doc = (await store.document(d.db, org.id, id)) as DocumentRow;
   const task = taskId ? await store.task(d.db, org.id, taskId) : null;
-  return { document: await documentDetail(d, doc, "staff"), task: task ? taskView(task) : null };
+  return {
+    document: await documentDetail(d, doc, "staff"),
+    task: task ? taskView(task, await store.documents(d.db, org.id)) : null,
+  };
 }
 
 /** Draft to sent: the PDF and fields freeze, the timeline notes it, and its task opens. */
@@ -552,8 +646,18 @@ export async function sendDocument(
   docId: string,
   task: { title: string; body: string | null } | null,
 ) {
-  const doc = await staffDocument(d, orgId, docId);
+  let doc = await staffDocument(d, orgId, docId);
   if (doc.status !== "draft") throw new ConflictError("This document was already sent");
+  if (doc.kind === "offer") {
+    await repinDraftOffer(d, doc);
+    doc = await staffDocument(d, orgId, docId);
+    await d.db.transaction((tx) => sendOfferIn(d, tx, who, doc.orgId, doc.id));
+    return documentDetail(
+      d,
+      (await store.document(d.db, doc.orgId, doc.id)) as DocumentRow,
+      "staff",
+    );
+  }
   const fields = await store.fields(d.db, doc.id);
   const problem = fieldProblems(fields, doc.pageCount, doc.requiresSignature);
   if (problem) throw new ValidationError(problem);
@@ -755,6 +859,7 @@ export async function staffCreateTask(
   });
   return taskView(
     (await store.task(d.db, org.id, id)) as NonNullable<Awaited<ReturnType<typeof store.task>>>,
+    await store.documents(d.db, org.id),
   );
 }
 
@@ -802,6 +907,7 @@ export async function reviewTask(
     (await store.task(d.db, org.id, task.id)) as NonNullable<
       Awaited<ReturnType<typeof store.task>>
     >,
+    await store.documents(d.db, org.id),
   );
 }
 

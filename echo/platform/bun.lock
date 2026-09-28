@@ -96,6 +96,7 @@
     "apps/worker": {
       "name": "@echo/worker",
       "dependencies": {
+        "@echo/access": "workspace:*",
         "@echo/account": "workspace:*",
         "@echo/accounts": "workspace:*",
         "@echo/agentic": "workspace:*",
@@ -164,6 +165,7 @@
         "@echo/core": "workspace:*",
         "@echo/db": "workspace:*",
         "@echo/http": "workspace:*",
+        "@echo/llm": "workspace:*",
         "@echo/mail": "workspace:*",
         "@echo/observability": "workspace:*",
         "@echo/popcorn": "workspace:*",
