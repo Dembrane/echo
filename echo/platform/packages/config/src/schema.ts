@@ -31,6 +31,12 @@ export const schema = defineSchema({
       public: true,
     }),
   },
+  assets: {
+    root: key("ASSETS_ROOT", z.string().min(1).default("/app/assets"), {
+      description:
+        "Where a compiled binary finds the files packages read at run time (<package>/... and docs/). Run from source, each package reads its own folder and this is ignored.",
+    }),
+  },
   http: {
     port: key("PORT", int.min(1).max(65535).default(8080), {
       description: "Port the API listens on. Cloud Run sets it.",
@@ -276,14 +282,6 @@ export const schema = defineSchema({
     }),
     turnConcurrency: key("AGENTIC_TURN_CONCURRENCY", int.min(1).default(8), {
       description: "Assistant turns one worker instance runs at once.",
-    }),
-    docsDir: key("AGENTIC_DOCS_DIR", z.string().default(""), {
-      description:
-        "Product docs the assistant reads and cites. Empty uses the repository's docs/ folder.",
-    }),
-    skillsDir: key("AGENTIC_SKILLS_DIR", z.string().default(""), {
-      description:
-        "Skill files the assistant can read. Empty uses packages/agentic/skills from the source tree.",
     }),
   },
   account: {

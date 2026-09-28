@@ -1,10 +1,11 @@
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
+import { assetPath } from "@echo/core";
 
 /**
- * The assistant's read-only knowledge: the product docs corpus (the repository's docs/
- * folder, or AGENTIC_DOCS_DIR in an image that copies it elsewhere) and the skill files
- * shipped with this package. Nothing here writes. Paths the model passes are resolved
+ * The assistant's read-only knowledge: the product docs corpus and the skill files shipped
+ * with this package, both found through assetPath so a compiled worker reads the copies
+ * its image carries. Nothing here writes. Paths the model passes are resolved
  * inside their root, so a `../` never leaves it.
  */
 
@@ -18,10 +19,12 @@ const MAX_PATTERN_LENGTH = 200;
 const MAX_LINE_SCAN = 2_000;
 const NESTED_QUANTIFIER = /\((?:[^()\\]|\\.)*[+*}](?:[^()\\]|\\.)*\)\s*[+*{?]/;
 
-const here = new URL(".", import.meta.url).pathname;
-/** packages/agentic/src/agent -> repository root (echo/platform/packages/agentic/src/agent). */
-const repoDocs = resolve(here, "../../../../../../docs");
-const packageSkills = resolve(here, "../../skills");
+/** What the worker's boot check requires: the docs tree and every skill the catalog lists. */
+export const AGENTIC_ASSETS: readonly string[] = [
+  "docs/README.md",
+  "agentic/skills/interviewing.md",
+  "agentic/skills/project-onboarding.md",
+];
 
 export interface Knowledge {
   listDocs(): string[];
@@ -123,13 +126,13 @@ export function safePattern(pattern: string): RegExp {
   return new RegExp(escapeRegex(pattern.slice(0, MAX_PATTERN_LENGTH)), "i");
 }
 
-export function createKnowledge(opts: { docsDir?: string; skillsDir?: string } = {}): Knowledge {
+export function createKnowledge(): Knowledge {
   const docsRoot = (): string | null => {
-    const dir = opts.docsDir ? opts.docsDir : repoDocs;
+    const dir = assetPath("docs");
     return isDir(dir) ? dir : null;
   };
   const skillsRoot = (): string | null => {
-    const dir = opts.skillsDir ?? packageSkills;
+    const dir = assetPath("agentic", "skills");
     return isDir(dir) ? dir : null;
   };
 

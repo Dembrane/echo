@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { popcornShared } from "@echo/analysis";
+import { assetPath } from "@echo/core";
 import type { Completer, Completion } from "@echo/llm";
 import { type Json, pyJson } from "../py";
 import { KIND_SCHEMA, QUESTION_SCHEMA, VALIDATE_SCHEMA } from "./enrichment";
 import { POPCORN_SCHEMA, STAKEHOLDERS_SCHEMA } from "./shapes";
-import { AnswerError } from "./tensions";
+import { AnswerError, PROMPT_NAMES as TENSION_PROMPTS } from "./tensions";
 import { Semaphore, withTimeout } from "./util";
 
 /**
@@ -21,6 +21,17 @@ const KIND_PROMPT = "popcorn-kind";
 const QUESTION_PROMPT = "popcorn-question";
 const STAKEHOLDERS_PROMPT = "stakeholders-v0.9";
 const TRANSLATE_PROMPT = "popcorn-translate";
+
+/** Every prompt file a tick reads, for the boot check of the app that runs ticks. */
+export const POPCORN_TICK_ASSETS: readonly string[] = [
+  POPCORN_PROMPT,
+  VALIDATE_PROMPT,
+  KIND_PROMPT,
+  QUESTION_PROMPT,
+  STAKEHOLDERS_PROMPT,
+  TRANSLATE_PROMPT,
+  ...TENSION_PROMPTS,
+].map((name) => `popcorn/prompts/${name}.md`);
 
 // Gemini counts thinking against maxOutputTokens; 65,536 is the model's own ceiling.
 const ANALYSIS_MAX_TOKENS = 65536;
@@ -60,13 +71,12 @@ const TRANSLATE_SCHEMA: Json = {
   required: ["translations"],
 };
 
-const PROMPTS_DIR = join(import.meta.dir, "..", "..", "prompts");
 const prompts = new Map<string, string>();
 
 export function promptText(name: string): string {
   let text = prompts.get(name);
   if (text === undefined) {
-    text = readFileSync(join(PROMPTS_DIR, `${name}.md`), "utf8");
+    text = readFileSync(assetPath("popcorn", "prompts", `${name}.md`), "utf8");
     prompts.set(name, text);
   }
   return text;

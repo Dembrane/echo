@@ -10,7 +10,8 @@ RUN bun build apps/migrate/src/main.ts --compile --minify --target=bun-linux-x64
 
 FROM gcr.io/distroless/cc-debian12:nonroot
 COPY --from=build /out/migrate /app/migrate
-COPY --from=build /src/packages/db/migrations /app/migrations
-ENV MIGRATIONS_DIR=/app/migrations
+# The binary reads the migration chain from /app/assets/db/migrations (packages/core/src/
+# assets.ts) and checks it at boot, so a job without it fails before touching the database.
+COPY --from=build /src/packages/db/migrations /app/assets/db/migrations
 USER nonroot
 ENTRYPOINT ["/app/migrate"]

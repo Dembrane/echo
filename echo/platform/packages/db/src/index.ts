@@ -4,7 +4,7 @@ import * as schema from "./schema";
 import * as relations from "./schema/relations";
 
 export { connect } from "./connection";
-export { grantRuntimeRole, type MigrateResult, migrate } from "./migrate";
+export { grantRuntimeRole, MIGRATE_ASSETS, type MigrateResult, migrate } from "./migrate";
 export { schema };
 export type Db = ReturnType<typeof createDb>["db"];
 

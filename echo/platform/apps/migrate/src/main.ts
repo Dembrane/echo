@@ -1,6 +1,8 @@
 import { seedLegalTexts } from "@echo/accounts";
 import { syncIdentitiesFromDirectus } from "@echo/auth/sync";
-import { connect, createDb, grantRuntimeRole, migrate } from "@echo/db";
+import { loadSections } from "@echo/config";
+import { bootAssets } from "@echo/core";
+import { connect, createDb, grantRuntimeRole, MIGRATE_ASSETS, migrate } from "@echo/db";
 import { installQueueSchema } from "@echo/queue";
 
 /**
@@ -8,6 +10,8 @@ import { installQueueSchema } from "@echo/queue";
  * migrations, then the DBOS queue schema, then data rights for the runtime login. A failure
  * stops the deploy before any new revision takes traffic.
  */
+bootAssets("echo-migrate", loadSections(["assets"]).values.assets.root, MIGRATE_ASSETS);
+
 const url = process.env.MIGRATION_DATABASE_URL;
 const role = process.env.APP_DB_ROLE;
 if (!url) throw new Error("MIGRATION_DATABASE_URL is required");
