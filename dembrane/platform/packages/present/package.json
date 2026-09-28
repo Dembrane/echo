@@ -1,0 +1,34 @@
+{
+  "name": "@dembrane/present",
+  "description": "Present: the published, audience-facing view of a popcorn deck and a map.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "analysis": "Reads map snapshots and budgets from the analysis engine.",
+      "map": "Shows a map's assessments and fact-checks to an audience.",
+      "popcorn": "Shows a popcorn deck to an audience: its settings, bundle and pages."
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dembrane/access": "workspace:*",
+    "@dembrane/analysis": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
+    "@dembrane/map": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/popcorn": "workspace:*",
+    "@dembrane/ratelimit": "workspace:*",
+    "@dembrane/realtime": "workspace:*",
+    "hono": "^4.9.0"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "@dembrane/map",
+  "description": "Argument maps: saved maps, the graph, generation, titles and fact-checks.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "analysis": "A map is an analysis run and snapshot; the engine lives in analysis."
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dembrane/access": "workspace:*",
+    "@dembrane/analysis": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
+    "@dembrane/llm": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/queue": "workspace:*",
+    "@dembrane/ratelimit": "workspace:*",
+    "@dembrane/realtime": "workspace:*",
+    "hono": "^4.9.0",
+    "postgres": "^3.4.9",
+    "zod": "^4.1.0"
+  }
+}

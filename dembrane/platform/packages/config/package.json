@@ -1,0 +1,21 @@
+{
+  "name": "@dembrane/config",
+  "description": "Typed configuration per environment, and the `bun run config` checks.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "echo-config": "./src/cli.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "zod": "^4.1.0"
+  }
+}

@@ -1,0 +1,58 @@
+import type { Codes } from "./types";
+
+/** Tasks in a customer account: what the customer still has to do, and staff review of it. */
+export const task = {
+  "task.not_found": {
+    action: "none",
+    detail: "Task not found",
+    description: "The task does not exist or belongs to another organisation.",
+  },
+  "task.done_by_signing": {
+    action: "none",
+    detail: "This task is done by signing the document",
+    description: "A reply was sent to a signing task; signing the document completes it.",
+  },
+  "task.done_by_billing_details": {
+    action: "none",
+    detail: "This task is done by saving the billing details",
+    description: "A reply was sent to the billing-details task; saving the details completes it.",
+  },
+  "task.not_open": {
+    action: "none",
+    detail: "This task is not open yet",
+    description: "The task is locked until an earlier step (usually signing) is done.",
+  },
+  "task.not_waiting": {
+    action: "none",
+    detail: "This task is not waiting for you",
+    description: "The task is submitted, done or withdrawn, so it takes no reply now.",
+  },
+  "task.file_required": {
+    action: "fix_input",
+    detail: "This task needs a file",
+    description: "An upload task was answered without a file.",
+  },
+  "task.reply_required": {
+    action: "fix_input",
+    detail: "Add a reply or a file",
+    description: "A task was answered with neither text nor a file.",
+  },
+  "task.already_closed": {
+    action: "none",
+    detail: "This task is already closed",
+    audience: "staff",
+    description: "Staff tried to review a task that is done or withdrawn.",
+  },
+  "task.not_submitted": {
+    action: "none",
+    detail: "Only a submitted task can be approved or sent back",
+    audience: "staff",
+    description: "Approve and send back need the customer to have submitted the task.",
+  },
+  "task.note_required": {
+    action: "fix_input",
+    detail: "Say what to change in `note`",
+    audience: "staff",
+    description: "Sending a task back needs a note saying what to change.",
+  },
+} as const satisfies Codes<"task">;

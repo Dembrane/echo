@@ -1,0 +1,43 @@
+import type { Codes } from "./types";
+
+/** Chat prompt templates and the quick access bar that pins them. */
+export const template = {
+  "template.not_found": {
+    action: "none",
+    detail: "Template not found",
+    description: "The template does not exist, was deleted, or the caller cannot see it.",
+  },
+  "template.workspace_required": {
+    action: "fix_input",
+    detail: "workspace_id is required for scope='workspace'",
+    audience: "developer",
+    description: "A workspace-scoped template was created without naming the workspace.",
+  },
+  "template.read_only_collaborator": {
+    action: "contact_admin",
+    detail: "Read-only collaborators cannot create workspace templates",
+    params: ["admin_name", "admin_email"],
+    description: "A read-only collaborator tried to share a template with the workspace.",
+  },
+  "template.not_allowed": {
+    action: "contact_admin",
+    detail: "Not allowed to {verb} this template",
+    params: ["admin_name", "admin_email"],
+    description: "The caller may read the workspace template but not edit or delete it (verb).",
+  },
+  "template.quick_access_too_many": {
+    action: "fix_input",
+    detail: "Maximum {max} quick access items",
+    description: "The quick access bar holds at most five items.",
+  },
+  "template.quick_access_duplicate": {
+    action: "fix_input",
+    detail: "Duplicate item: {item}",
+    description: "The same template appears twice in the quick access list.",
+  },
+  "template.quick_access_not_found": {
+    action: "fix_input",
+    detail: "Template not found: {template_id}",
+    description: "A quick access item names a template the caller cannot see.",
+  },
+} as const satisfies Codes<"template">;

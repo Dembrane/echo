@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+**/.env*
+packages/db/introspected
+packages/db/.roundtrip*
+parity/.parity-out
+**/*.local.ts
+infra/**/.terraform
+infra/**/*.plan

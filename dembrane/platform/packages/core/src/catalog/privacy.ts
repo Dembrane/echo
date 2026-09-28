@@ -1,0 +1,30 @@
+import type { Codes } from "./types";
+
+/** Data subject requests handled by staff: export and erasure of a person. */
+export const privacy = {
+  "privacy.person_not_found": {
+    action: "fix_input",
+    detail: "No user with that email",
+    audience: "staff",
+    description: "No account has the email address a data subject request names.",
+  },
+  "privacy.confirm_email_mismatch": {
+    action: "fix_input",
+    detail: "confirm_email must repeat the email to erase",
+    audience: "staff",
+    description: "An erasure was sent without repeating the person's email as confirmation.",
+  },
+  "privacy.erase_blocked": {
+    action: "none",
+    detail: "{blockers}",
+    audience: "staff",
+    description: "The erasure plan has blockers (open billing and the like), joined by '; '.",
+  },
+  "privacy.sole_admin": {
+    action: "fix_input",
+    detail:
+      "Last owner or admin of {organisations}: hand the organisation over, or pass allow_orphan_orgs",
+    audience: "staff",
+    description: "The person is the last owner or admin of organisations that would be orphaned.",
+  },
+} as const satisfies Codes<"privacy">;

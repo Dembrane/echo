@@ -1,0 +1,30 @@
+import type { Codes } from "./types";
+
+export const webhook = {
+  "webhook.not_found": {
+    action: "none",
+    detail: "Webhook not found",
+    description: "The webhook does not exist or belongs to another project.",
+  },
+  "webhook.invalid_event": {
+    action: "fix_input",
+    detail: "Invalid event type: {event}. Valid types: {valid}",
+    description: "A webhook subscribed to an event name that does not exist.",
+  },
+  "webhook.invalid_url": {
+    action: "fix_input",
+    detail: "URL must start with http:// or https://",
+    description: "The webhook URL is not an http or https address.",
+  },
+  "webhook.target_not_allowed": {
+    action: "fix_input",
+    detail: "Webhook URL points to a private or internal address",
+    description:
+      "The webhook URL is invalid, does not resolve, or points at a private address; detail says which.",
+  },
+  "webhook.invalid_status": {
+    action: "fix_input",
+    detail: "Status must be one of: published, draft, archived",
+    description: "A webhook status outside published, draft and archived.",
+  },
+} as const satisfies Codes<"webhook">;

@@ -1,0 +1,643 @@
+msgid ""
+msgstr ""
+"Language: it-IT\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @dembrane/i18n\n"
+
+#. js-lingui-explicit-id
+msgid "email.common.signoff"
+msgstr "Il team di dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.common.fallback"
+msgstr "Oppure incolla questo link nel browser:"
+
+#. js-lingui-explicit-id
+msgid "email.common.ignore"
+msgstr "Non te lo aspettavi? Puoi ignorare questa email. Non succederà nulla."
+
+#. js-lingui-explicit-id
+msgid "email.common.ignore_text"
+msgstr "Non te lo aspettavi? Ignora questa email. Non succederà nulla."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.subject"
+msgstr "{inviter_name} ti ha invitato a collaborare su dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.title"
+msgstr "Hai un invito a collaborare su dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.preview"
+msgstr "{inviter_name} ti ha invitato a unirti a {workspace_name} su dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.heading"
+msgstr "Hai un invito a collaborare."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.body"
+msgstr "{inviter_name} ti ha invitato a unirti a {workspace_name} su dembrane. L'invito scade tra 7 giorni."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.cta"
+msgstr "Accetta l'invito"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.text_cta"
+msgstr "Accetta l'invito:"
+
+#. js-lingui-explicit-id
+msgid "email.data_owner_invite.subject"
+msgstr "Sei il data owner per {workspace_name} su dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.subject"
+msgstr "Sei stato aggiunto a {workspace_name}"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.preview"
+msgstr "{inviter_name} ti ha aggiunto a {workspace_name} su dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.heading"
+msgstr "Ci sei."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.body"
+msgstr "{inviter_name} ti ha aggiunto a {workspace_name} su dembrane. Puoi iniziare a collaborare subito."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.cta"
+msgstr "Apri spazio di lavoro"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.text_cta"
+msgstr "Apri lo spazio di lavoro:"
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.subject"
+msgstr "{inviter_name} ti ha invitato su {org_name} su dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.preview"
+msgstr "{inviter_name} ti ha invitato a unirti a {org_name} su dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.heading"
+msgstr "Hai un invito a unirti a {org_name}."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.body"
+msgstr "{inviter_name} ti ha invitato a unirti a {org_name} su dembrane. L'invito scade tra 7 giorni."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.body_role"
+msgstr "{inviter_name} ti ha invitato a unirti a {org_name} su dembrane come {role}. L'invito scade tra 7 giorni."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.next"
+msgstr "Una volta accettato l'invito, potrai scoprire e richiedere l'accesso agli spazi di lavoro usati dal tuo team."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.cta"
+msgstr "Accetta l'invito"
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.text_cta"
+msgstr "Accetta l'invito:"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.subject"
+msgstr "Sei stato aggiunto a {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.subject_again"
+msgstr "Sei di nuovo in {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.preview"
+msgstr "{inviter_name} ti ha aggiunto a {org_name} su dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.heading"
+msgstr "Ci sei."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.body"
+msgstr "{inviter_name} ti ha aggiunto a {org_name} su dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.body_role"
+msgstr "{inviter_name} ti ha aggiunto a {org_name} su dembrane come {role}."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.next"
+msgstr "Puoi scoprire e richiedere l'accesso agli spazi di lavoro usati dal tuo team."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.cta"
+msgstr "Apri dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.text_cta"
+msgstr "Apri dembrane:"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.subject"
+msgstr "Hai già un account dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.preview"
+msgstr "Hai già un account dembrane. Accedi per continuare."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.heading"
+msgstr "Hai già un account."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.body"
+msgstr "Sembra che esista già un account con questa email. Puoi accedere usando le tue credenziali abituali."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.cta"
+msgstr "Accedi"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.text_cta"
+msgstr "Accedi:"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.reset"
+msgstr "Se hai dimenticato la password, puoi {reset_link}."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.reset_link"
+msgstr "reimpostarla qui"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.reset_text"
+msgstr "Se hai dimenticato la password, puoi reimpostarla qui:"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.ignore"
+msgstr "Se non hai provato a registrarti, puoi tranquillamente ignorare questa email. Non è stata apportata alcuna modifica al tuo account."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.subject"
+msgstr "Verifica la tua email"
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.preview"
+msgstr "Conferma la tua email per completare la configurazione del tuo account dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.heading"
+msgstr "Verifica la tua email."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.body"
+msgstr "Conferma che questo è il tuo indirizzo email per completare la configurazione del tuo account dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.text_cta"
+msgstr "Conferma che questo è il tuo indirizzo email per completare la configurazione del tuo account dembrane:"
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.cta"
+msgstr "Verifica email"
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.ignore"
+msgstr "Se non ti sei registrato, puoi tranquillamente ignorare questa email."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.subject"
+msgstr "Il tuo codice di accesso dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.preview"
+msgstr "Il tuo codice di accesso è {code}."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.heading"
+msgstr "Il tuo codice di accesso."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.body"
+msgstr "Inserisci questo codice per continuare: {code}. Scade tra 10 minuti."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.text_body"
+msgstr "Il tuo codice di accesso è {code}. Scade tra 10 minuti."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.ignore"
+msgstr "Se non hai provato ad accedere, puoi tranquillamente ignorare questa email."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.subject"
+msgstr "Firma {document_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.title"
+msgstr "{inviter_name} ti ha chiesto di firmare per {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.preview"
+msgstr "{inviter_name} ti ha chiesto di firmare {document_title} su dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.heading"
+msgstr "Ti è stato chiesto di firmare."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.body"
+msgstr "{inviter_name} ti ha indicato come persona incaricata di firmare {document_title} per {org_name}. Accedi con un codice inviato a questo indirizzo per leggerlo e firmarlo."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.cta"
+msgstr "Leggi e firma"
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.text_cta"
+msgstr "Leggi e firma:"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.subject"
+msgstr "Ancora in sospeso: {task_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.title"
+msgstr "Un passaggio è in attesa per {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.preview"
+msgstr "{task_title} è ancora in sospeso su dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.heading"
+msgstr "Un passaggio è ancora in sospeso."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.body"
+msgstr "{task_title} è ancora in attesa per {org_name} su dembrane. Ci vuole solo un minuto e ci permette di andare avanti."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.cta"
+msgstr "Apri il passaggio"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.text_cta"
+msgstr "Apri il passaggio:"
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.subject"
+msgstr "Il tuo account dembrane per {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.preview"
+msgstr "Il tuo account dembrane per {org_name} è pronto."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.heading"
+msgstr "Il tuo account è pronto."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.body"
+msgstr "Abbiamo configurato {org_name} su dembrane per te. Accedi con il codice che inviamo a questo indirizzo: nessuna password necessaria."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.cta"
+msgstr "Accedi"
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.text_cta"
+msgstr "Accedi:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.subject"
+msgstr "{workspace_name} è passato a {to_tier}"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.preview"
+msgstr "{workspace_name} ora usa il piano {to_tier}. Alcune funzionalità sono limitate."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.heading"
+msgstr "{workspace_name} è ora su {to_tier}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.body"
+msgstr "A partire dal {date}, {workspace_name} è passato da {from_tier} a {to_tier}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.text_body"
+msgstr "{workspace_name} è passato da {from_tier} a {to_tier} in data {date}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.frozen"
+msgstr "Queste funzionalità sono bloccate. Lo stato attuale rimane invariato, senza nuovi utilizzi fino all'upgrade:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.frozen_text"
+msgstr "Bloccate. Lo stato attuale rimane invariato, senza nuovi utilizzi fino all'upgrade:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.reverted"
+msgstr "Queste funzionalità sono state ripristinate:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.reverted_text"
+msgstr "Ripristinate:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.rest"
+msgstr "Tutto il resto continua a funzionare come prima. Apri lo spazio di lavoro per verificare le opzioni o richiedere un piano diverso."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.rest_text"
+msgstr "Tutto il resto continua a funzionare come prima."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.cta"
+msgstr "Apri lo spazio di lavoro"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.text_cta"
+msgstr "Apri lo spazio di lavoro:"
+
+#. js-lingui-explicit-id
+msgid "email.support_request.subject"
+msgstr "Il team di dembrane ha richiesto l'accesso a {workspace_name}"
+
+#. js-lingui-explicit-id
+msgid "email.support_request.preview"
+msgstr "{staff_name} ha chiesto di accedere a {workspace_name} per fornire supporto."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.heading"
+msgstr "Richiesta di accesso da parte del team"
+
+#. js-lingui-explicit-id
+msgid "email.support_request.body"
+msgstr "{staff_name} di dembrane ha chiesto di accedere a {workspace_name} per aiutarti con l'assistenza."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.note"
+msgstr "La sua nota: {note}."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.end"
+msgstr "Se approvi, l'accesso terminerà automaticamente dopo 24 ore."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.cta"
+msgstr "Esamina la richiesta"
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.subject"
+msgstr "Un membro del team di dembrane è entrato in {workspace_name} per fornire supporto"
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.preview"
+msgstr "{staff_name} è entrato in {workspace_name} per aiutarti con l'assistenza."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.heading"
+msgstr "Membro del team entrato per supporto"
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.body"
+msgstr "{staff_name} di dembrane è entrato in {workspace_name} per aiutarti con l'assistenza."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.end"
+msgstr "L'accesso terminerà automaticamente dopo 24 ore. Puoi seguire l'attività nella cronologia degli accessi nelle impostazioni dello spazio di lavoro."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.end_text"
+msgstr "L'accesso terminerà automaticamente dopo 24 ore."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.cta"
+msgstr "Visualizza la cronologia degli accessi"
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.subject"
+msgstr "Accesso di supporto a {workspace_name} disattivato"
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.preview"
+msgstr "La sessione di supporto in {workspace_name} è terminata e l'accesso per il team è stato disattivato."
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.heading"
+msgstr "Sessione di supporto terminata"
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.body"
+msgstr "La sessione di supporto in {workspace_name} è terminata e l'accesso per il team è stato disattivato."
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.end"
+msgstr "Riattivalo nelle impostazioni dello spazio di lavoro se ti serve ulteriore aiuto."
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.cta"
+msgstr "Apri le impostazioni dello spazio di lavoro"
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.subject"
+msgstr "L'accesso di supporto a {workspace_name} è ancora attivo"
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.preview"
+msgstr "Nessun membro del team è entrato in {workspace_name} negli ultimi 7 giorni."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.heading"
+msgstr "L'accesso di supporto è ancora attivo"
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.body"
+msgstr "L'accesso di supporto per {workspace_name} è ancora attivo e nessun membro del team è entrato negli ultimi 7 giorni."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.end"
+msgstr "Disattivalo nelle impostazioni dello spazio di lavoro se non hai più bisogno di aiuto. Puoi riattivarlo in qualsiasi momento."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.end_text"
+msgstr "Disattivalo nelle impostazioni dello spazio di lavoro se non hai più bisogno di aiuto."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.cta"
+msgstr "Apri le impostazioni dello spazio di lavoro"
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.subject"
+msgstr "Richiesta di accesso per {workspace_name} approvata"
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.preview"
+msgstr "La tua richiesta di accesso per {workspace_name} è stata approvata."
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.heading"
+msgstr "Richiesta approvata"
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.body"
+msgstr "La tua richiesta di accesso per {workspace_name} è stata approvata."
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.subject"
+msgstr "Richiesta di accesso per {workspace_name} rifiutata"
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.preview"
+msgstr "La tua richiesta di accesso per {workspace_name} è stata rifiutata."
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.heading"
+msgstr "Richiesta rifiutata"
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.body"
+msgstr "La tua richiesta di accesso per {workspace_name} è stata rifiutata."
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.end"
+msgstr "Hai accesso come amministratore per 24 ore."
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.cta"
+msgstr "Apri lo spazio di lavoro"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.subject"
+msgstr "Azione richiesta: aggiorna il tuo metodo di pagamento"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.title"
+msgstr "Aggiorna il tuo metodo di pagamento"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.preview"
+msgstr "Un pagamento recente non è andato a buon fine. Aggiorna il tuo metodo per mantenere il tuo piano."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.heading"
+msgstr "Non siamo riusciti ad addebitare l'importo sul tuo metodo di pagamento."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.body"
+msgstr "Un pagamento recente per il tuo piano dembrane non è andato a buon fine. Di solito significa che una carta è scaduta o che una banca ha rifiutato l'addebito."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.next"
+msgstr "Il tuo piano rimane del tutto attivo mentre risolvi il problema. Aggiorna il metodo di pagamento per saldare il conto e continuare senza interruzioni."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.cta"
+msgstr "Aggiorna metodo di pagamento"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.text_cta"
+msgstr "Aggiorna il tuo metodo di pagamento:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.subject"
+msgstr "{workspace_name} è passato a Free"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.title"
+msgstr "Il piano di {workspace_name} è scaduto"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.preview"
+msgstr "{workspace_name} è passato a Free. Alcune funzionalità sono limitate."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.heading"
+msgstr "{workspace_name} ora è sul piano Free."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.body"
+msgstr "Il tuo piano {from_tier} su {workspace_name} è scaduto. Lo spazio di lavoro è ora sul piano Free."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.text_body"
+msgstr "{workspace_name}: il tuo piano {from_tier} è scaduto. Lo spazio di lavoro è ora su Free."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.rest"
+msgstr "I tuoi contenuti esistenti rimangono accessibili. Richiedi un upgrade per ripristinare tutte le funzionalità."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.cta"
+msgstr "Apri lo spazio di lavoro"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.subject"
+msgstr "Il piano di {workspace_name} scade il {date}"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.title"
+msgstr "Il piano di {workspace_name} scadrà a breve"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.preview"
+msgstr "{workspace_name} passa a Free il {date}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.heading"
+msgstr "Il piano di {workspace_name} scade il {date}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.body"
+msgstr "Il tuo piano {tier} su {workspace_name} scade il {date}. Dopodiché, lo spazio di lavoro passerà a Free e alcune funzionalità saranno limitate."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.text_body"
+msgstr "{workspace_name}: il tuo piano {tier} scade il {date}. Dopodiché, lo spazio di lavoro passerà a Free e alcune funzionalità saranno limitate."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.rest"
+msgstr "I tuoi contenuti esistenti rimangono accessibili. Richiedi un upgrade per mantenere tutte le funzionalità."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.cta"
+msgstr "Richiedi l'upgrade"
+
+#. js-lingui-explicit-id
+msgid "task.sign_offer.title"
+msgstr "Controlla e firma l'offerta"
+
+#. js-lingui-explicit-id
+msgid "task.sign_offer.title_document"
+msgstr "Controlla e firma l'offerta: {document_title}"
+
+#. js-lingui-explicit-id
+msgid "task.sign_offer.body"
+msgstr "Leggi l'offerta e firmala qui. Firma qualcun altro per la tua organizzazione? Indica il suo nome nell'offerta e riceverà un link dedicato."
+
+#. js-lingui-explicit-id
+msgid "task.billing_details.title"
+msgstr "Dati di fatturazione"
+
+#. js-lingui-explicit-id
+msgid "task.billing_details.body"
+msgstr "A chi intestare la fattura: ragione sociale, indirizzo, partita VAT o numero KvK, email di fatturazione e, se lo usi, il numero d'ordine (PO). Si aprirà dopo la firma dell'offerta."
+
+#. js-lingui-explicit-id
+msgid "task.sign_dpa.title"
+msgstr "Fai firmare l'accordo sul trattamento dei dati"
+
+#. js-lingui-explicit-id
+msgid "task.sign_dpa.body"
+msgstr "Chi ha firmato l'offerta potrebbe non avere l'autorizzazione per il trattamento dei dati della tua organizzazione. Una persona autorizzata (articolo 3.6 dei termini) può firmare qui l'accordo sul trattamento dei dati; puoi indicare il suo nome direttamente sul documento."

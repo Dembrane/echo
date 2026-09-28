@@ -1,0 +1,643 @@
+msgid ""
+msgstr ""
+"Language: cs-CZ\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @dembrane/i18n\n"
+
+#. js-lingui-explicit-id
+msgid "email.common.signoff"
+msgstr "Tým dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.common.fallback"
+msgstr "Nebo vložte tento odkaz do prohlížeče:"
+
+#. js-lingui-explicit-id
+msgid "email.common.ignore"
+msgstr "Nečekali jste tuto zprávu? Můžete ji ignorovat. Nic se nestane."
+
+#. js-lingui-explicit-id
+msgid "email.common.ignore_text"
+msgstr "Nečekali jste tuto zprávu? Ignorujte ji. Nic se nestane."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.subject"
+msgstr "{inviter_name} vás zve ke spolupráci na dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.title"
+msgstr "Máte pozvánku ke spolupráci na dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.preview"
+msgstr "{inviter_name} vás zve do pracovního prostoru {workspace_name} na dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.heading"
+msgstr "Byli jste pozváni ke spolupráci."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.body"
+msgstr "{inviter_name} vás zve do pracovního prostoru {workspace_name} na dembrane. Platnost pozvánky vyprší za 7 dní."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.cta"
+msgstr "Přijmout pozvánku"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.text_cta"
+msgstr "Přijměte pozvánku:"
+
+#. js-lingui-explicit-id
+msgid "email.data_owner_invite.subject"
+msgstr "Jste vlastníkem dat pro {workspace_name} na dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.subject"
+msgstr "Byli jste přidáni do {workspace_name}"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.preview"
+msgstr "{inviter_name} vás přidal(a) do pracovního prostoru {workspace_name} na dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.heading"
+msgstr "Jste uvnitř."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.body"
+msgstr "{inviter_name} vás přidal(a) do pracovního prostoru {workspace_name} na dembrane. Můžete rovnou začít spolupracovat."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.cta"
+msgstr "Otevřít pracovní prostor"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.text_cta"
+msgstr "Otevřete pracovní prostor:"
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.subject"
+msgstr "{inviter_name} vás zve do organizace {org_name} na dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.preview"
+msgstr "{inviter_name} vás zve do organizace {org_name} na dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.heading"
+msgstr "Byli jste pozváni do organizace {org_name}."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.body"
+msgstr "{inviter_name} vás zve do organizace {org_name} na dembrane. Platnost pozvánky vyprší za 7 dní."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.body_role"
+msgstr "{inviter_name} vás zve do organizace {org_name} na dembrane jako {role}. Platnost pozvánky vyprší za 7 dní."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.next"
+msgstr "Jakmile pozvánku přijmete, můžete objevovat pracovní prostory vašeho týmu a žádat o přístup k nim."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.cta"
+msgstr "Přijmout pozvánku"
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.text_cta"
+msgstr "Přijměte pozvánku:"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.subject"
+msgstr "Byli jste přidáni do organizace {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.subject_again"
+msgstr "Byli jste znovu přidáni do organizace {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.preview"
+msgstr "{inviter_name} vás přidal(a) do organizace {org_name} na dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.heading"
+msgstr "Jste uvnitř."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.body"
+msgstr "{inviter_name} vás přidal(a) do organizace {org_name} na dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.body_role"
+msgstr "{inviter_name} vás přidal(a) do organizace {org_name} na dembrane jako {role}."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.next"
+msgstr "Můžete objevovat pracovní prostory vašeho týmu a žádat o přístup k nim."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.cta"
+msgstr "Otevřít dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.text_cta"
+msgstr "Otevřete dembrane:"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.subject"
+msgstr "Už máte účet na dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.preview"
+msgstr "Už máte účet na dembrane. Pokračujte přihlášením."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.heading"
+msgstr "Účet již máte vytvořený."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.body"
+msgstr "Vypadá to, že účet s tímto e-mailem už existuje. Můžete se přihlásit pomocí svých stávajících údajů."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.cta"
+msgstr "Přihlásit se"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.text_cta"
+msgstr "Přihlaste se:"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.reset"
+msgstr "Pokud jste zapomněli heslo, můžete si ho {reset_link}."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.reset_link"
+msgstr "obnovit zde"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.reset_text"
+msgstr "Pokud jste zapomněli heslo, můžete si ho obnovit zde:"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.ignore"
+msgstr "Pokud jste se nepokoušeli zaregistrovat, můžete tento e-mail bez obav ignorovat. Na vašem účtu nedošlo k žádným změnám."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.subject"
+msgstr "Ověřte svůj e-mail"
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.preview"
+msgstr "Potvrďte svůj e-mail a dokončete nastavení svého dembrane účtu."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.heading"
+msgstr "Ověřte svůj e-mail."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.body"
+msgstr "Potvrďte, že jde o vaši e-mailovou adresu, a dokončete nastavení svého dembrane účtu."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.text_cta"
+msgstr "Potvrďte, že jde o vaši e-mailovou adresu, a dokončete nastavení svého dembrane účtu:"
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.cta"
+msgstr "Ověřit e-mail"
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.ignore"
+msgstr "Pokud jste se neregistrovali, můžete tento e-mail bez obav ignorovat."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.subject"
+msgstr "Váš kód pro přihlášení do dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.preview"
+msgstr "Váš kód pro přihlášení je {code}."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.heading"
+msgstr "Váš kód pro přihlášení."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.body"
+msgstr "Pro pokračování zadejte tento kód: {code}. Platí 10 minut."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.text_body"
+msgstr "Váš kód pro přihlášení je {code}. Platí 10 minut."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.ignore"
+msgstr "Pokud jste se nepokoušeli přihlásit, můžete tento e-mail bez obav ignorovat."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.subject"
+msgstr "Podepište prosím: {document_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.title"
+msgstr "{inviter_name} vás žádá o podpis za {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.preview"
+msgstr "{inviter_name} vás na platformě dembrane žádá o podpis: {document_title}."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.heading"
+msgstr "Máte novou žádost o podpis."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.body"
+msgstr "{inviter_name} vás označil(a) jako osobu, která za organizaci {org_name} podepisuje {document_title}. Přihlaste se kódem zaslaným na tuto adresu, abyste si dokument přečetli a podepsali ho."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.cta"
+msgstr "Přečíst a podepsat"
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.text_cta"
+msgstr "Přečíst a podepsat:"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.subject"
+msgstr "Stále čeká: {task_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.title"
+msgstr "Organizaci {org_name} čeká další krok"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.preview"
+msgstr "{task_title} v dembrane stále čeká na dokončení."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.heading"
+msgstr "Jeden krok stále čeká na dokončení."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.body"
+msgstr "{task_title} v dembrane stále čeká na organizaci {org_name}. Zabere to jen minutku a nám to pomůže pokračovat dál."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.cta"
+msgstr "Otevřít krok"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.text_cta"
+msgstr "Otevřít krok:"
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.subject"
+msgstr "Váš dembrane účet pro organizaci {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.preview"
+msgstr "Váš dembrane účet pro organizaci {org_name} je připraven."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.heading"
+msgstr "Váš účet je připraven."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.body"
+msgstr "Připravili jsme pro vás organizaci {org_name} v dembrane. Přihlaste se kódem, který vám pošleme na tuto adresu – heslo není potřeba."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.cta"
+msgstr "Přihlásit se"
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.text_cta"
+msgstr "Přihlásit se:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.subject"
+msgstr "Pracovní prostor {workspace_name} byl převeden na tarif {to_tier}"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.preview"
+msgstr "Pracovní prostor {workspace_name} má nyní tarif {to_tier}. Některé funkce jsou omezeny."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.heading"
+msgstr "{workspace_name} má nyní tarif {to_tier}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.body"
+msgstr "K datu {date} přešel pracovní prostor {workspace_name} z tarifu {from_tier} na {to_tier}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.text_body"
+msgstr "{workspace_name} přešel z tarifu {from_tier} na {to_tier} dne {date}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.frozen"
+msgstr "Tyto funkce jsou pozastaveny. Stávající stav zůstává zachován, nové použití je možné až po upgradu:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.frozen_text"
+msgstr "Pozastaveno. Stávající stav zůstává zachován, nové použití je možné až po upgradu:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.reverted"
+msgstr "Tyto funkce byly vráceny do původního stavu:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.reverted_text"
+msgstr "Vráceno do původního stavu:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.rest"
+msgstr "Vše ostatní funguje dál jako doposud. Otevřete pracovní prostor a prohlédněte si své možnosti nebo požádejte o jiný tarif."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.rest_text"
+msgstr "Vše ostatní funguje dál jako doposud."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.cta"
+msgstr "Otevřít pracovní prostor"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.text_cta"
+msgstr "Otevřete pracovní prostor:"
+
+#. js-lingui-explicit-id
+msgid "email.support_request.subject"
+msgstr "Tým dembrane požádal o přístup k {workspace_name}"
+
+#. js-lingui-explicit-id
+msgid "email.support_request.preview"
+msgstr "{staff_name} žádá o přístup k {workspace_name} z důvodu podpory."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.heading"
+msgstr "Žádost týmu o přístup"
+
+#. js-lingui-explicit-id
+msgid "email.support_request.body"
+msgstr "{staff_name} z dembrane žádá o přístup k pracovnímu prostoru {workspace_name}, aby vám mohl pomoci v rámci podpory."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.note"
+msgstr "Poznámka: {note}."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.end"
+msgstr "Pokud žádost schválíte, přístup automaticky vyprší po 24 hodinách."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.cta"
+msgstr "Zkontrolovat žádost"
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.subject"
+msgstr "Člen týmu dembrane se připojil k {workspace_name} pro podporu"
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.preview"
+msgstr "{staff_name} se připojil(a) k {workspace_name}, aby vám pomohl(a) v rámci podpory."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.heading"
+msgstr "Člen týmu se připojil k podpoře"
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.body"
+msgstr "{staff_name} z dembrane se připojil(a) k pracovnímu prostoru {workspace_name}, aby pomohl(a) s podporou."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.end"
+msgstr "Přístup automaticky vyprší po 24 hodinách. Průběh můžete sledovat v historii přístupů v nastavení pracovního prostoru."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.end_text"
+msgstr "Přístup automaticky vyprší po 24 hodinách."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.cta"
+msgstr "Zobrazit historii přístupů"
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.subject"
+msgstr "Přístup podpory k {workspace_name} byl vypnut"
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.preview"
+msgstr "Relace podpory v {workspace_name} skončila a přístup týmu byl vypnut."
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.heading"
+msgstr "Relace podpory skončila"
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.body"
+msgstr "Relace podpory v {workspace_name} skončila a přístup týmu byl vypnut."
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.end"
+msgstr "Pokud potřebujete další pomoc, můžete přístup znovu zapnout v nastavení pracovního prostoru."
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.cta"
+msgstr "Otevřít nastavení pracovního prostoru"
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.subject"
+msgstr "Přístup podpory k {workspace_name} je stále aktivní"
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.preview"
+msgstr "V posledních 7 dnech se k {workspace_name} nepřipojil nikdo z týmu."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.heading"
+msgstr "Přístup podpory je stále aktivní"
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.body"
+msgstr "Přístup podpory k pracovnímu prostoru {workspace_name} je stále zapnutý a v posledních 7 dnech se nepřipojil nikdo z týmu."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.end"
+msgstr "Pokud již pomoc nepotřebujete, vypněte jej v nastavení pracovního prostoru. Kdykoliv jej můžete znovu zapnout."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.end_text"
+msgstr "Pokud již pomoc nepotřebujete, vypněte jej v nastavení pracovního prostoru."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.cta"
+msgstr "Otevřít nastavení pracovního prostoru"
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.subject"
+msgstr "Žádost o přístup k {workspace_name} byla schválena"
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.preview"
+msgstr "Vaše žádost o přístup k {workspace_name} byla schválena."
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.heading"
+msgstr "Žádost schválena"
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.body"
+msgstr "Vaše žádost o přístup k pracovnímu prostoru {workspace_name} byla schválena."
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.subject"
+msgstr "Žádost o přístup k pracovnímu prostoru {workspace_name} byla zamítnuta"
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.preview"
+msgstr "Vaše žádost o přístup k pracovnímu prostoru {workspace_name} byla zamítnuta."
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.heading"
+msgstr "Žádost zamítnuta"
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.body"
+msgstr "Vaše žádost o přístup k pracovnímu prostoru {workspace_name} byla zamítnuta."
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.end"
+msgstr "Máte přístup správce na 24 hodin."
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.cta"
+msgstr "Otevřít pracovní prostor"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.subject"
+msgstr "Nutná akce: aktualizujte platební metodu"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.title"
+msgstr "Aktualizujte platební metodu"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.preview"
+msgstr "Nedávná platba neproběhla. Aktualizujte metodu, abyste si tarif udrželi."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.heading"
+msgstr "Z vaší platební metody se nepodařilo strhnout platbu."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.body"
+msgstr "Nedávná platba za váš tarif dembrane neproběhla. Obvykle to znamená, že vypršela platnost karty nebo banka platbu odmítla."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.next"
+msgstr "Během řešení zůstává váš tarif plně aktivní. Aktualizujte platební metodu pro doplacení částky, ať vše běží dál."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.cta"
+msgstr "Aktualizovat platební metodu"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.text_cta"
+msgstr "Aktualizujte svoji platební metodu:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.subject"
+msgstr "Pracovní prostor {workspace_name} přešel na verzi zdarma"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.title"
+msgstr "Platnost tarifu pro {workspace_name} vypršela"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.preview"
+msgstr "Pracovní prostor {workspace_name} přešel na verzi zdarma. Některé funkce jsou omezené."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.heading"
+msgstr "{workspace_name} je nyní ve verzi zdarma."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.body"
+msgstr "Platnost vašeho tarifu {from_tier} pro {workspace_name} vypršela. Pracovní prostor je nyní na bezplatném tarifu."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.text_body"
+msgstr "{workspace_name}: platnost vašeho tarifu {from_tier} vypršela. Pracovní prostor je nyní ve verzi zdarma."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.rest"
+msgstr "Váš stávající obsah zůstává přístupný. Požádejte o upgrade pro obnovení všech funkcí."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.cta"
+msgstr "Otevřít pracovní prostor"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.subject"
+msgstr "Tarif pro {workspace_name} vyprší {date}"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.title"
+msgstr "Platnost tarifu pro {workspace_name} brzy vyprší"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.preview"
+msgstr "{workspace_name} přejde {date} na verzi zdarma."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.heading"
+msgstr "Tarif pro {workspace_name} vyprší {date}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.body"
+msgstr "Váš tarif {tier} pro {workspace_name} vyprší dne {date}. Poté pracovní prostor přejde na verzi zdarma a některé funkce budou omezeny."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.text_body"
+msgstr "{workspace_name}: váš tarif {tier} vyprší dne {date}. Poté pracovní prostor přejde na verzi zdarma a některé funkce budou omezeny."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.rest"
+msgstr "Váš stávající obsah zůstává přístupný. Požádejte o upgrade, abyste si zachovali všechny funkce."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.cta"
+msgstr "Požádat o upgrade"
+
+#. js-lingui-explicit-id
+msgid "task.sign_offer.title"
+msgstr "Zkontrolovat a podepsat nabídku"
+
+#. js-lingui-explicit-id
+msgid "task.sign_offer.title_document"
+msgstr "Zkontrolovat a podepsat nabídku: {document_title}"
+
+#. js-lingui-explicit-id
+msgid "task.sign_offer.body"
+msgstr "Přečtěte si nabídku a podepište ji zde. Podepisuje za vaši organizaci někdo jiný? Uveďte ho v nabídce a dostane vlastní odkaz."
+
+#. js-lingui-explicit-id
+msgid "task.billing_details.title"
+msgstr "Fakturační údaje"
+
+#. js-lingui-explicit-id
+msgid "task.billing_details.body"
+msgstr "Komu fakturujeme: oficiální název, adresa, DIČ (VAT) nebo číslo KvK, fakturační e-mail a případně číslo objednávky. Zpřístupní se po podpisu nabídky."
+
+#. js-lingui-explicit-id
+msgid "task.sign_dpa.title"
+msgstr "Zajistit podpis smlouvy o zpracování osobních údajů"
+
+#. js-lingui-explicit-id
+msgid "task.sign_dpa.body"
+msgstr "Osoba, která podepsala nabídku, nemusí mít oprávnění ke zpracování osobních údajů za vaši organizaci. Smlouvu o zpracování osobních údajů zde podepisuje pověřená osoba (článek 3.6 podmínek); můžete ji uvést v dokumentu."

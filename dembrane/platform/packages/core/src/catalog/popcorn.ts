@@ -1,0 +1,106 @@
+import type { Codes } from "./types";
+
+/** Popcorn decks (Present rooms), their live loop, public links and synthetic demos. */
+export const popcorn = {
+  "popcorn.feature_disabled": {
+    action: "none",
+    detail: "Not found",
+    description:
+      "Popcorn, Present or the flow page is switched off for this deployment or project; answered as a 404 like the Python.",
+  },
+  "popcorn.not_found": {
+    action: "none",
+    detail: "Popcorn not found",
+    description: "The report exists but is not a popcorn deck.",
+  },
+  "popcorn.public_not_found": {
+    action: "none",
+    detail: "Not found",
+    description:
+      "The public link's token is malformed, unknown, its project is gone, or the deck is no longer public.",
+  },
+  "popcorn.illustration_not_found": {
+    action: "none",
+    detail: "Not found",
+    audience: "developer",
+    description: "No bundled illustration has that file name.",
+  },
+  "popcorn.version_not_found": {
+    action: "none",
+    detail: "Version not found",
+    description: "The version id is malformed or names no saved version of the deck.",
+  },
+  "popcorn.loop_not_found": {
+    action: "none",
+    detail: "Popcorn loop not found",
+    description: "The deck has no popcorn loop (it was never started or was removed).",
+  },
+  "popcorn.loop_action_not_found": {
+    action: "none",
+    detail: "Popcorn loop action not found",
+    audience: "developer",
+    description: "The loop action is not one of pause, resume, stop or go-live.",
+  },
+  "popcorn.invalid_live_hours": {
+    action: "fix_input",
+    detail: "hours must be one of ({hours})",
+    description: "Going live was asked for a duration outside the allowed choices.",
+  },
+  "popcorn.settings_busy": {
+    action: "retry",
+    detail: "Settings are busy; try again",
+    description: "Another write holds the deck's settings lock; nothing was written.",
+  },
+  "popcorn.creation_busy": {
+    action: "retry",
+    detail: "Presentation creation is busy; try again",
+    description: "Another presentation is being created for the project; nothing was written.",
+  },
+  "popcorn.just_refreshed": {
+    action: "wait",
+    detail: "Just read",
+    description: "The same deck action ran in the last twenty seconds; the queued tick covers it.",
+  },
+  "popcorn.branding_tier": {
+    action: "upgrade",
+    detail: "Removing the dembrane mark requires the changemaker tier.",
+    params: ["organisation_id"],
+    description: "Hiding the dembrane mark on a deck needs the changemaker plan.",
+  },
+  "popcorn.synthetic_frame_locked": {
+    action: "none",
+    detail: "A synthetic demo's disclosure and frame are set with the demo.",
+    description: "A synthetic demo deck's disclosure and frame cannot be edited in its settings.",
+  },
+  "popcorn.demo_prospect_unavailable": {
+    action: "contact_support",
+    detail: "Prospect seeding is not available here",
+    audience: "staff",
+    description: "A demo asked to seed a prospect account on a deployment without the hook.",
+  },
+  "popcorn.demo_production_refused": {
+    action: "none",
+    detail: "This seed is for a staging environment; production waits for the MCP upsert.",
+    audience: "developer",
+    description: "The demo seed refuses to write into production.",
+  },
+  "popcorn.demo_workspace_not_found": {
+    action: "fix_input",
+    detail: "Workspace not found",
+    audience: "developer",
+    description: "The demo's target workspace id is malformed or unknown.",
+  },
+  "popcorn.demo_owner_not_found": {
+    action: "fix_input",
+    detail: "Owner not found",
+    audience: "developer",
+    description: "The demo's owner user does not exist.",
+  },
+  "popcorn.demo_fixture_invalid": {
+    action: "fix_input",
+    detail: "Invalid demo fixture",
+    audience: "developer",
+    description:
+      "A demo fixture or seed input is malformed (slug, synthetic flag, phrases, languages, corpus, timestamps); the detail says what.",
+  },
+} as const satisfies Codes<"popcorn">;
