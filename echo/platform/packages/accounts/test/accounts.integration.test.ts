@@ -193,7 +193,7 @@ run("accounts routes against Postgres", () => {
     expect(r.status).toBe(201);
     const pushed = K.PushOfferResponse.parse(r.data);
     offerId = pushed.document.id;
-    signTaskId = pushed.task.id;
+    signTaskId = pushed.task?.id as string;
     expect(pushed.document.status).toBe("sent");
     expect(pushed.document.subtotal_cents).toBe(641000);
     expect(pushed.document.vat_cents).toBe(134610);
@@ -214,9 +214,9 @@ run("accounts routes against Postgres", () => {
       "date",
       "signature",
     ]);
-    expect(pushed.task.title).toBe("Offerte bekijken en ondertekenen");
-    expect(pushed.task.status).toBe("open");
-    expect(pushed.task.next_reminder_at).toBe("2026-10-05T09:00:00.000Z");
+    expect(pushed.task?.title).toBe("Offerte bekijken en ondertekenen");
+    expect(pushed.task?.status).toBe("open");
+    expect(pushed.task?.next_reminder_at).toBe("2026-10-05T09:00:00.000Z");
     const tasks = await store.tasks(w.db, w.orgId);
     expect(tasks.filter((t) => t.kind === "billing_details").map((t) => t.status)).toEqual([
       "locked",
@@ -516,7 +516,7 @@ run("accounts routes against Postgres", () => {
       reason: "Te duur",
       declined_by: "admin@example.test",
     });
-    expect((await store.task(w.db, w.orgId, pushed.task.id))?.status).toBe("withdrawn");
+    expect((await store.task(w.db, w.orgId, pushed.task?.id as string))?.status).toBe("withdrawn");
     expect((await call(w, "POST", `${C()}/documents/${id}/decline`, "admin", {})).status).toBe(409);
   });
 
@@ -537,7 +537,7 @@ run("accounts routes against Postgres", () => {
     );
     expect(second.document.version).toBe(first.document.version + 1);
     expect((await store.document(w.db, w.orgId, first.document.id))?.status).toBe("void");
-    expect((await store.task(w.db, w.orgId, first.task.id))?.status).toBe("withdrawn");
+    expect((await store.task(w.db, w.orgId, first.task?.id as string))?.status).toBe("withdrawn");
     const voided = await call(w, "POST", `${S()}/documents/${second.document.id}/void`, "staff", {
       reason: "wrong seats",
     });
