@@ -115,7 +115,7 @@ jobs:
         env: { POSTGRES_USER: echo, POSTGRES_PASSWORD: echo, POSTGRES_DB: postgres }
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U echo" --health-interval 1s --health-retries 60
+          --health-cmd "pg_isready -U echo -d postgres" --health-interval 1s --health-retries 60
     env:
       TEST_DATABASE_ADMIN_URL: postgres://echo:echo@localhost:5432/postgres
     steps:
