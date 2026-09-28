@@ -15,4 +15,6 @@ introspected
 infra/*.plan
 .cache/
 loadtest/results/
+loadtest/.fixtures/
 .data/
+loadtest/**/__pycache__/
