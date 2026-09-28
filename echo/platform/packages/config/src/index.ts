@@ -7,6 +7,15 @@ import type { EnvironmentValues, Values } from "./define";
 import { type Loaded, load } from "./load";
 import { type Schema, schema } from "./schema";
 
+export {
+  connectionBudget,
+  FIXED_CONNECTIONS,
+  headroom,
+  type Pools,
+  perApi,
+  perWorker,
+  type Scale,
+} from "./capacity";
 export { ConfigError, describe, publicValues } from "./load";
 export { schema } from "./schema";
 

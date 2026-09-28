@@ -22,7 +22,45 @@ variable "env" {
 variable "db_tier" {
   type        = string
   description = "Cloud SQL machine tier."
-  default     = "db-g1-small"
+}
+
+variable "db_max_connections" {
+  type        = number
+  description = "Set explicitly so the connection budget check reads the number the server enforces."
+}
+
+variable "db_environments" {
+  type        = number
+  description = "Deployments sharing the instance (preview: the branch preview plus the PR preview slots). Read by the connection budget check."
+  default     = 1
+}
+
+variable "services" {
+  description = <<-EOT
+    Scaling per service, read by the deploy workflow and the connection budget check.
+    cpu_always keeps CPU allocated outside requests (instance-based billing). The worker
+    pool has no autoscaling: its min and max are both the instance count.
+  EOT
+  type = map(object({
+    min         = number
+    max         = number
+    concurrency = optional(number, 1)
+    cpu         = string
+    memory      = string
+    cpu_always  = optional(bool, false)
+  }))
+  validation {
+    condition     = alltrue([for k in ["api", "dashboard", "portal", "media", "worker"] : contains(keys(var.services), k)])
+    error_message = "services needs api, dashboard, portal, media and worker."
+  }
+  validation {
+    condition     = alltrue([for s in values(var.services) : s.min <= s.max])
+    error_message = "min instances must not exceed max instances."
+  }
+  validation {
+    condition     = var.services["worker"].min == var.services["worker"].max
+    error_message = "the worker pool runs a fixed number of instances: min must equal max."
+  }
 }
 
 variable "github_repo" {
@@ -34,6 +72,12 @@ variable "github_repo" {
 variable "deploy_ref" {
   type        = string
   description = "Git ref allowed to deploy this environment."
+}
+
+variable "pr_preview_environment" {
+  type        = string
+  description = "GitHub environment whose jobs may deploy PR previews from any ref. Null outside preview."
+  default     = null
 }
 
 variable "browser_origins" {

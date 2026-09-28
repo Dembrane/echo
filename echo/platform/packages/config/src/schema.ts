@@ -56,13 +56,24 @@ export const schema = defineSchema({
       description: "Runtime Postgres login. Least privilege: no DDL.",
       secret: true,
     }),
-    name: key("DATABASE_NAME", z.string().regex(/^[a-z_][a-z0-9_]*$/).optional(), {
-      description:
-        "Replaces the database in DATABASE_URL. PR previews share one instance and login, each on its own database.",
-    }),
+    name: key(
+      "DATABASE_NAME",
+      z
+        .string()
+        .regex(/^[a-z_][a-z0-9_]*$/)
+        .optional(),
+      {
+        description:
+          "Replaces the database in DATABASE_URL. PR previews share one instance and login, each on its own database.",
+      },
+    ),
     poolMax: key("DATABASE_POOL_MAX", int.min(1).default(10), {
       description:
-        "Connections per instance. Times max instances must stay under the server limit.",
+        "Application pool per API or worker instance. The budget in capacity.ts must fit max_connections.",
+    }),
+    queuePoolMax: key("DATABASE_QUEUE_POOL_MAX", int.min(2).default(4), {
+      description:
+        "DBOS executor pool per worker: half polls the queues, half checkpoints workflow steps.",
     }),
   },
   observability: {

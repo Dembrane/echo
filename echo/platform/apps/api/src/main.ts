@@ -6,7 +6,13 @@ import { HttpMedia, LocalMedia, metadataIdToken } from "@dembrane/audio";
 import { createAuth, identityAccount } from "@dembrane/auth";
 import { billingApiJobs, createBilling, HttpMollie, UnconfiguredMollie } from "@dembrane/billing";
 import { canvasApiJobs } from "@dembrane/canvas";
-import { describe, loadConfig, loadSections, publicValues } from "@dembrane/config";
+import {
+  describe,
+  FIXED_CONNECTIONS,
+  loadConfig,
+  loadSections,
+  publicValues,
+} from "@dembrane/config";
 import { conversationApiJobs } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
 import { createDb, withDatabase } from "@dembrane/db";
@@ -104,7 +110,9 @@ const auth = createAuth({
 
 // The API only enqueues: a DBOS client, no executor. Boot does not wait on it, so a
 // database that is briefly unreachable does not keep the API from serving; enqueues wait.
-const queue = new Queue(databaseUrl, logger, tracing.tracer, { maxConnections: 2 });
+const queue = new Queue(databaseUrl, logger, tracing.tracer, {
+  maxConnections: FIXED_CONNECTIONS.apiQueueClient,
+});
 const queueReady = (async () => {
   for (let attempt = 1; ; attempt++) {
     try {
@@ -187,7 +195,7 @@ const media = config.media.url
   : new LocalMedia();
 
 // One LISTEN connection per instance feeds every open live stream.
-const listener = postgres(databaseUrl, { max: 1, onnotice: () => {} });
+const listener = postgres(databaseUrl, { max: FIXED_CONNECTIONS.apiListener, onnotice: () => {} });
 const hub = new Hub(listener, logger);
 // postgres.js re-listens after a dropped connection; the first connect is retried here so a
 // database that is briefly away at boot does not leave live streams silent until a restart.

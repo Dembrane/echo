@@ -7,7 +7,7 @@ export default {
     dashboardUrl: "https://echo-preview-dashboard-86405194907.europe-west4.run.app",
     portalUrl: "https://echo-preview-portal-86405194907.europe-west4.run.app",
   },
-  database: { poolMax: 5 },
+  database: { poolMax: 3, queuePoolMax: 2 },
   observability: { gcpProject: "dembrane-echo", traceSampleRatio: 0 },
   web: { apiOrigin: "https://echo-preview-api-86405194907.europe-west4.run.app" },
   // Preview has never delivered project webhooks. The default turned on to match prod;

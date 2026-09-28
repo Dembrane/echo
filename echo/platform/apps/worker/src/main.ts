@@ -1,7 +1,7 @@
 import { queueJobs } from "@dembrane/accounts";
 import { HttpMedia, LocalMedia, metadataIdToken } from "@dembrane/audio";
 import { createBilling, HttpMollie, UnconfiguredMollie } from "@dembrane/billing";
-import { describe, loadSections } from "@dembrane/config";
+import { describe, FIXED_CONNECTIONS, loadSections } from "@dembrane/config";
 import { AudioUrls } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
 import { createDb, withDatabase } from "@dembrane/db";
@@ -59,7 +59,8 @@ const tracing = initTracing({
 
 const databaseUrl = withDatabase(config.database.url, config.database.name);
 const queue = new Queue(databaseUrl, logger, tracing.tracer, {
-  maxConnections: config.database.poolMax,
+  maxConnections: config.database.queuePoolMax,
+  clientConnections: FIXED_CONNECTIONS.workerQueueClient,
 });
 const database = createDb({ url: databaseUrl, poolMax: config.database.poolMax });
 // Without a SendGrid key (local, preview) mail is logged, never sent.
