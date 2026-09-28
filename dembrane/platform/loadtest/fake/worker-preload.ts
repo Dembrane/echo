@@ -9,18 +9,23 @@ import { GeminiTranscriber } from "../../packages/transcription/src/index.ts";
 const base = Number(process.env.FAKE_TRANSCRIBE_MS ?? 8000);
 const jitter = Number(process.env.FAKE_TRANSCRIBE_JITTER_MS ?? 4000);
 
-GeminiTranscriber.prototype.transcribe = async function (input) {
+GeminiTranscriber.prototype.transcribe = async (input) => {
   // The real transcriber base64-encodes the audio into the request; keep that cost.
   Buffer.from(input.audio).toString("base64");
   await Bun.sleep(base + Math.random() * jitter);
-  return { transcript: `fake transcript of ${input.audio.byteLength} bytes`, note: "", models: ["fake"] };
+  return {
+    transcript: `fake transcript of ${input.audio.byteLength} bytes`,
+    note: "",
+    models: ["fake"],
+  };
 };
 
 const chunkConcurrency = Number(process.env.LOADTEST_CHUNK_CONCURRENCY ?? 0);
 if (chunkConcurrency > 0) {
   const workflow = Queue.prototype.workflow;
   Queue.prototype.workflow = function (def, opts, handler) {
-    const o = def.name === "conversations.chunk" ? { ...opts, concurrency: chunkConcurrency } : opts;
+    const o =
+      def.name === "conversations.chunk" ? { ...opts, concurrency: chunkConcurrency } : opts;
     return workflow.call(this, def, o, handler);
   } as typeof workflow;
 }

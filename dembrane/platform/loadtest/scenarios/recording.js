@@ -73,7 +73,8 @@ function multipart(fields, fileName) {
   const body = new Uint8Array(head.length + AUDIO.byteLength + tail.length);
   for (let i = 0; i < head.length; i++) body[i] = head.charCodeAt(i);
   body.set(new Uint8Array(AUDIO), head.length);
-  for (let i = 0; i < tail.length; i++) body[head.length + AUDIO.byteLength + i] = tail.charCodeAt(i);
+  for (let i = 0; i < tail.length; i++)
+    body[head.length + AUDIO.byteLength + i] = tail.charCodeAt(i);
   return { body: body.buffer, type: `multipart/form-data; boundary=${boundary}` };
 }
 
@@ -88,7 +89,10 @@ export default async function () {
   const get = { headers: { "x-forwarded-for": ip } };
 
   const t0 = Date.now();
-  const project = http.get(`${BASE}/participant/projects/${PROJECT}`, { ...get, tags: { name: "project" } });
+  const project = http.get(`${BASE}/participant/projects/${PROJECT}`, {
+    ...get,
+    tags: { name: "project" },
+  });
   const init = ok(project)
     ? http.post(
         `${BASE}/participant/projects/${PROJECT}/conversations/initiate`,
@@ -193,7 +197,9 @@ export default async function () {
       ["conversation", `participant/projects/${PROJECT}/conversations/${cid}`],
       ["chunks", `participant/projects/${PROJECT}/conversations/${cid}/chunks`],
     ])
-      http.asyncRequest("GET", `${BASE}/${path}`, null, { ...get, tags: { name } }).then((r) => pollOk.add(ok(r)));
+      http
+        .asyncRequest("GET", `${BASE}/${path}`, null, { ...get, tags: { name } })
+        .then((r) => pollOk.add(ok(r)));
   };
   timers.push(setInterval(poll, POLL_S * 1000));
 
@@ -202,9 +208,14 @@ export default async function () {
   // The recorder stops: the last partial chunk goes up, then the conversation finishes.
   await upload();
   await Promise.all(pending);
-  const fin = await http.asyncRequest("POST", `${BASE}/participant/conversations/${cid}/finish`, null, {
-    ...get,
-    tags: { name: "finish" },
-  });
+  const fin = await http.asyncRequest(
+    "POST",
+    `${BASE}/participant/conversations/${cid}/finish`,
+    null,
+    {
+      ...get,
+      tags: { name: "finish" },
+    },
+  );
   finishOk.add(ok(fin));
 }

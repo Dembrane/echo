@@ -13,7 +13,7 @@ import {
   str,
 } from "./mollie";
 import { applyDiscount, money2 } from "./money";
-import { billingAccountAdmins, emailsOf, type Notifier, recipientsOf } from "./notify";
+import { billingAccountAdmins, type Notifier, recipientsOf } from "./notify";
 import type { AccountPatch, AccountRow, BillingStore } from "./store";
 import {
   BillingError,

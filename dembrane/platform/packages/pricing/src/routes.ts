@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { requireStaff, type StaffAudit } from "@dembrane/access";
-import { BadRequestError, PlatformError, StatusError, ValidationError } from "@dembrane/core";
+import { BadRequestError, StatusError, ValidationError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
 import type { Logger } from "@dembrane/observability";
