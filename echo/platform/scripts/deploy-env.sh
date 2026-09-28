@@ -13,6 +13,10 @@
 # Each environment lives in its own GCP project (infra/<env>). Scaling comes from
 # infra/<env>.tfvars.json, the file the connection budget check reads. PR previews reuse
 # the preview identities, secrets, bucket and Cloud SQL instance.
+#
+# HOLD_DATA=1 deploys everything but leaves the data alone: the migrate job is deployed and
+# not run, and the worker pool gets 0 instances. For prod before the cutover (CUTOVER.md),
+# whose database stays empty until the restore; W4 runs the job and W6 scales the workers.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 
@@ -84,12 +88,15 @@ deploy() {
   local hosts=""
   [ "$ENV" = preview ] && hosts=",API_PUBLIC_URL=$api,DASHBOARD_URL=$web_dash,PORTAL_URL=$web_portal,WEB_API_ORIGIN=$api"
   local files="FILES_S3_ENDPOINT=https://storage.googleapis.com,FILES_S3_BUCKET=$BUCKET,STORAGE_S3_ENDPOINT=https://storage.googleapis.com,STORAGE_S3_BUCKET=$BUCKET"
-  local keys="FILES_S3_ACCESS_KEY_ID=$(secret s3-access-key-id),FILES_S3_SECRET_ACCESS_KEY=$(secret s3-secret-access-key),STORAGE_S3_KEY=$(secret s3-access-key-id),STORAGE_S3_SECRET=$(secret s3-secret-access-key)"
+  local keys
+  keys="FILES_S3_ACCESS_KEY_ID=$(secret s3-access-key-id),FILES_S3_SECRET_ACCESS_KEY=$(secret s3-secret-access-key),STORAGE_S3_KEY=$(secret s3-access-key-id),STORAGE_S3_SECRET=$(secret s3-secret-access-key)"
   local filled
   filled=$(filled_secrets)
   # Logs, and Vertex calls, stay in the environment's own project.
   local common="APP_ENV=$ENV,APP_RELEASE=$tag,GCP_PROJECT=$PROJECT,LLM_VERTEX_PROJECT=$PROJECT$hosts$db_env"
 
+  local hold=${HOLD_DATA:-0} run_now="--execute-now --wait"
+  [ "$hold" = 1 ] && run_now="" && echo "HOLD_DATA: migrate job deployed, not run; worker pool at 0"
   # Migrations first: a failure stops the rollout before new code takes traffic. On a PR
   # preview's first deploy this also creates its database.
   # shellcheck disable=SC2086
@@ -97,7 +104,7 @@ deploy() {
     --service-account "$(SA migrate)" --set-cloudsql-instances "$SQL" \
     --set-secrets "MIGRATION_DATABASE_URL=$(secret migration-database-url)" \
     --set-env-vars "APP_ENV=$ENV,APP_DB_ROLE=echo_app$db_env" \
-    --task-timeout 600 --max-retries 0 $job_labels --execute-now --wait
+    --task-timeout 600 --max-retries 0 $job_labels $run_now
 
   local fail=0 pids=()
   # Media: public ingress, IAM required; only the worker and API identities may invoke it.
@@ -119,6 +126,7 @@ deploy() {
     $(scale api) --timeout 3600 --cpu-boost --allow-unauthenticated $labels --quiet & pids+=($!)
   local wmin
   wmin=$(jq -r '.services.worker.min' "$TFVARS")
+  [ "$hold" = 1 ] && wmin=0
   # shellcheck disable=SC2086
   g beta run worker-pools deploy "$prefix-worker" --region "$REGION" --image "$REGISTRY/worker:$tag" \
     --service-account "$(SA worker)" --add-cloudsql-instances "$SQL" \
@@ -135,7 +143,7 @@ deploy() {
   for p in "${pids[@]}"; do wait "$p" || fail=1; done
   [ "$fail" = 0 ] || exit 1
 
-  smoke "$prefix" "$tag"
+  smoke "$prefix" "$tag" "$hold"
   echo "api=$api dashboard=$web_dash portal=$web_portal"
 }
 
@@ -154,7 +162,7 @@ smoke() {
     code=$(curl -s -o /dev/null -w '%{http_code}' "$web/api/v2/me")
     [ "$code" = 401 ] || { echo "$role /api proxy answered $code, expected 401" >&2; exit 1; }
   done
-  wait_worker "$prefix" "$tag"
+  [ "${3:-0}" = 1 ] || wait_worker "$prefix" "$tag"
 }
 
 # The worker pool's rollout returns once the revision exists, not once it runs: a worker
