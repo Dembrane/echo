@@ -1,6 +1,6 @@
 name: platform
 
-# Checks, images and deploys for echo/platform (the Bun rewrite) and the frontend it
+# Checks, images and deploys for dembrane/platform (the Bun rewrite) and the frontend it
 # serves. Checks and image builds run in parallel; images are built once and pushed, and a
 # deploy only migrates, rolls out and verifies.
 #
@@ -18,10 +18,10 @@ name: platform
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, closed]
-    paths: ["echo/platform/**", "echo/frontend/**", ".github/workflows/platform.yml"]
+    paths: ["dembrane/platform/**", "dembrane/frontend/**", ".github/workflows/platform.yml"]
   push:
     branches: [feat/bun-migration]
-    paths: ["echo/platform/**", "echo/frontend/**", ".github/workflows/platform.yml"]
+    paths: ["dembrane/platform/**", "dembrane/frontend/**", ".github/workflows/platform.yml"]
   workflow_dispatch:
     inputs:
       target:
@@ -45,7 +45,7 @@ concurrency:
 
 defaults:
   run:
-    working-directory: echo/platform
+    working-directory: dembrane/platform
 
 env:
   REGION: europe-west4
@@ -126,16 +126,16 @@ jobs:
       - uses: actions/checkout@v5
         with: { ref: "${{ needs.plan.outputs.sha }}" }
       - uses: oven-sh/setup-bun@v2
-        with: { bun-version-file: echo/platform/.bun-version }
+        with: { bun-version-file: dembrane/platform/.bun-version }
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('echo/platform/bun.lock') }}
+          key: bun-${{ hashFiles('dembrane/platform/bun.lock') }}
           restore-keys: bun-
       # The incremental type-check state: a run after a small change re-checks only it.
       - uses: actions/cache@v4
         with:
-          path: echo/platform/.cache
+          path: dembrane/platform/.cache
           key: tsc-${{ github.sha }}
           restore-keys: tsc-
       # The pipeline and media tests run real ffmpeg: the same static build the media image
@@ -163,7 +163,7 @@ jobs:
       - name: Packages import down the layers, and README.md's package map is current
         run: bun run packages check
       - name: Schema and migrations agree
-        working-directory: echo/platform/packages/db
+        working-directory: dembrane/platform/packages/db
         run: bunx drizzle-kit generate < /dev/null | tee /dev/stderr | grep -q "No schema changes"
       - name: Tests (files in parallel, each database test on its own database)
         run: bun test --parallel
@@ -175,7 +175,7 @@ jobs:
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: echo/frontend
+        working-directory: dembrane/frontend
     steps:
       - uses: actions/checkout@v5
         with: { ref: "${{ needs.plan.outputs.sha }}" }
@@ -185,15 +185,15 @@ jobs:
         with:
           node-version-file: .tool-versions
           cache: pnpm
-          cache-dependency-path: echo/frontend/pnpm-lock.yaml
+          cache-dependency-path: dembrane/frontend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       # Vitest's prebundled dependencies and its timing file, which orders slow files first.
       - uses: actions/cache@v4
         with:
-          path: echo/frontend/node_modules/.vite/vitest
-          key: vitest-${{ runner.os }}-${{ hashFiles('echo/frontend/pnpm-lock.yaml', 'echo/frontend/vite.config.ts') }}-${{ github.sha }}
+          path: dembrane/frontend/node_modules/.vite/vitest
+          key: vitest-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml', 'dembrane/frontend/vite.config.ts') }}-${{ github.sha }}
           restore-keys: |
-            vitest-${{ runner.os }}-${{ hashFiles('echo/frontend/pnpm-lock.yaml', 'echo/frontend/vite.config.ts') }}-
+            vitest-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml', 'dembrane/frontend/vite.config.ts') }}-
             vitest-${{ runner.os }}-
       - name: Lint
         run: pnpm lint
@@ -281,8 +281,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           sparse-checkout: |
-            echo/platform/scripts
-            echo/platform/infra
+            dembrane/platform/scripts
+            dembrane/platform/infra
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
@@ -348,8 +348,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           sparse-checkout: |
-            echo/platform/scripts
-            echo/platform/infra
+            dembrane/platform/scripts
+            dembrane/platform/infra
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github

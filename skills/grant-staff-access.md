@@ -7,13 +7,13 @@ description: Give a dembrane team member staff access (the Staff console and eve
 
 ## What it grants
 
-Staff are the users whose role is Administrator. That role holds every named staff permission (`echo/platform/packages/access/src/staff.ts`): billing, tiers, workspaces, support access, training, feedback, customer accounts, announcements, privacy (export and erase any person) and minting staff API keys. Every use is recorded in `staff_audit_event`. It is broad: confirm with Sameer before granting anyone new.
+Staff are the users whose role is Administrator. That role holds every named staff permission (`dembrane/platform/packages/access/src/staff.ts`): billing, tiers, workspaces, support access, training, feedback, customer accounts, announcements, privacy (export and erase any person) and minting staff API keys. Every use is recorded in `staff_audit_event`. It is broad: confirm with Sameer before granting anyone new.
 
 No route can make someone staff. It needs the database login of the environment.
 
 ## Commands
 
-From `echo/platform`, with `DATABASE_URL` for the target environment:
+From `dembrane/platform`, with `DATABASE_URL` for the target environment:
 
 ```sh
 bun run staff:access list

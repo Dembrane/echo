@@ -10,14 +10,14 @@ The interface currently has these translation files:
 
 | Language | File |
 | --- | --- |
-| English (source text) | [en-US.po](echo/frontend/src/locales/en-US.po) |
-| Dutch | [nl-NL.po](echo/frontend/src/locales/nl-NL.po) |
-| German | [de-DE.po](echo/frontend/src/locales/de-DE.po) |
-| French | [fr-FR.po](echo/frontend/src/locales/fr-FR.po) |
-| Spanish | [es-ES.po](echo/frontend/src/locales/es-ES.po) |
-| Italian | [it-IT.po](echo/frontend/src/locales/it-IT.po) |
-| Ukrainian | [uk-UA.po](echo/frontend/src/locales/uk-UA.po) |
-| Czech | [cs-CZ.po](echo/frontend/src/locales/cs-CZ.po) |
+| English (source text) | [en-US.po](dembrane/frontend/src/locales/en-US.po) |
+| Dutch | [nl-NL.po](dembrane/frontend/src/locales/nl-NL.po) |
+| German | [de-DE.po](dembrane/frontend/src/locales/de-DE.po) |
+| French | [fr-FR.po](dembrane/frontend/src/locales/fr-FR.po) |
+| Spanish | [es-ES.po](dembrane/frontend/src/locales/es-ES.po) |
+| Italian | [it-IT.po](dembrane/frontend/src/locales/it-IT.po) |
+| Ukrainian | [uk-UA.po](dembrane/frontend/src/locales/uk-UA.po) |
+| Czech | [cs-CZ.po](dembrane/frontend/src/locales/cs-CZ.po) |
 
 The language picker currently marks Italian, Ukrainian, and Czech as partial. Existing languages also benefit from proofreading and missing translations.
 
@@ -40,7 +40,7 @@ For example: “Dutch, recording screen: change [current text] to [suggestion], 
 
 1. Sign in to GitHub and open the [repository](https://github.com/Dembrane/echo).
 2. Fork it to create your own copy. Start from its up-to-date `main` branch and create a branch for your changes, for example `translations/fr-recording`.
-3. In your fork, open `echo/frontend/src/locales/` and select your language's `.po` file. Use GitHub's file editor to change the translations using the rules below.
+3. In your fork, open `dembrane/frontend/src/locales/` and select your language's `.po` file. Use GitHub's file editor to change the translations using the rules below.
 4. Save your changes with a short description, such as “Improve French recording instructions”. Keep subsequent edits on the same branch.
 5. For your first contribution, read the [Contributor License Agreement](CLA.md). If you agree, add your GitHub username as a new line in [contributors.yml](contributors.yml) on that same branch, following the existing `- username` format.
 6. Open a pull request from your branch to `Dembrane/echo` → `main`. A pull request is a proposal for the maintainers to review and merge your changes.
@@ -56,7 +56,7 @@ Use Git, Node.js 22, and pnpm 10, matching the translation checks in the reposit
 git clone https://github.com/YOUR-USERNAME/echo.git
 cd echo
 git switch -c translations/fr-recording
-cd echo/frontend
+cd dembrane/frontend
 pnpm install --frozen-lockfile
 pnpm messages:extract
 ```
@@ -71,11 +71,11 @@ git diff -- src/locales/fr-FR.po
 
 Extraction synchronizes the catalogs with the current source text; compilation creates the `.ts` files used by the application. Review all changed catalogs. If extraction produces a large unrelated change, ask maintainers before including it. Do not hand-edit generated files or change dependency versions for a translation contribution.
 
-For your first contribution, read [CLA.md](CLA.md) and, if you agree, add your GitHub username to [contributors.yml](contributors.yml). From `echo/frontend`, return to the repository root to commit and push:
+For your first contribution, read [CLA.md](CLA.md) and, if you agree, add your GitHub username to [contributors.yml](contributors.yml). From `dembrane/frontend`, return to the repository root to commit and push:
 
 ```bash
 cd ../..
-git add echo/frontend/src/locales/
+git add dembrane/frontend/src/locales/
 # First contribution only, after reading and agreeing to the CLA:
 git add contributors.yml
 git diff --cached --stat
@@ -83,7 +83,7 @@ git commit -m "Improve French recording instructions"
 git push -u origin translations/fr-recording
 ```
 
-Open a pull request to `Dembrane/echo` → `main`. Include both the edited `.po` files and the generated `.ts` changes. After committing, rerunning extraction and compilation should leave `git diff --exit-code -- src/locales` clean when run from `echo/frontend`. This is what the translation check verifies.
+Open a pull request to `Dembrane/echo` → `main`. Include both the edited `.po` files and the generated `.ts` changes. After committing, rerunning extraction and compilation should leave `git diff --exit-code -- src/locales` clean when run from `dembrane/frontend`. This is what the translation check verifies.
 
 ## 3. Translate the wording, preserve the structure
 
@@ -113,7 +113,7 @@ Translate the wording inside each branch, preserving the variable, braces, `plur
 
 ## 4. Keep the text clear and natural
 
-Follow the [writing and language guidelines](echo/brand/STYLE_GUIDE.md):
+Follow the [writing and language guidelines](dembrane/brand/STYLE_GUIDE.md):
 
 - Translate the meaning naturally, with short sentences and familiar words.
 - Keep button labels short and terminology consistent across screens.
@@ -134,7 +134,7 @@ Before requesting review, check that:
 - Generated catalogs are included, or you have explicitly requested help generating them.
 - You have completed the first-contribution CLA step if applicable.
 
-If you already have a working local development environment, run `pnpm dev` for the dashboard or `pnpm participant:dev` for the portal from `echo/frontend`. Select your language and check the affected screens for clipped labels, incorrect substitutions, and awkward wording. Full application testing requires backend services and appropriate access; you do not need to set that up just to contribute wording. Ask maintainers to help with an interface review, and state clearly if you have not tested in the application.
+If you already have a working local development environment, run `pnpm dev` for the dashboard or `pnpm participant:dev` for the portal from `dembrane/frontend`. Select your language and check the affected screens for clipped labels, incorrect substitutions, and awkward wording. Full application testing requires backend services and appropriate access; you do not need to set that up just to contribute wording. Ask maintainers to help with an interface review, and state clearly if you have not tested in the application.
 
 Maintainers review the language changes and technical checks, may request revisions, and merge accepted contributions. Merging to `main` makes the changes available through the staging deployment; the public production application updates with a subsequent release.
 
