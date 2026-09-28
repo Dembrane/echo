@@ -130,6 +130,7 @@ export default scenarios([
   },
   {
     name: "bff conversations list: full rows with embeds",
+    differs: "the old library is pruned: rows no longer list conversation_segments",
     as: "alice",
     method: "GET",
     path: B,
@@ -187,6 +188,7 @@ export default scenarios([
   },
   {
     name: "bff conversations list: locked on free",
+    differs: "the old library is pruned: rows no longer list conversation_segments",
     as: "bob",
     method: "GET",
     path: B,
@@ -278,9 +280,16 @@ export default scenarios([
   },
 
   // ── GET /{conversation_id} ────────────────────────────────────────
-  { name: "bff conversation detail: owner", as: "alice", method: "GET", path: `${B}/${c1}` },
+  {
+    name: "bff conversation detail: owner",
+    as: "alice",
+    method: "GET",
+    path: `${B}/${c1}`,
+    differs: "the old library is pruned: rows no longer list conversation_segments",
+  },
   {
     name: "bff conversation detail: embeds",
+    differs: "the old library is pruned: rows no longer list conversation_segments",
     as: "erin",
     method: "GET",
     path: `${B}/${c1}`,
@@ -310,6 +319,7 @@ export default scenarios([
   },
   {
     name: "bff conversation detail: observer",
+    differs: "the old library is pruned: rows no longer list conversation_segments",
     as: "rita",
     method: "GET",
     path: `${B}/${cRes}`,
@@ -317,6 +327,7 @@ export default scenarios([
   },
   {
     name: "bff conversation detail: locked",
+    differs: "the old library is pruned: rows no longer list conversation_segments",
     as: "bob",
     method: "GET",
     path: `${B}/${c3}`,
@@ -327,6 +338,7 @@ export default scenarios([
   // ── PATCH /{conversation_id} ──────────────────────────────────────
   {
     name: "bff conversation update: owner",
+    differs: "the old library is pruned: rows no longer list conversation_segments",
     as: "alice",
     method: "PATCH",
     path: `${B}/${c2}`,
@@ -339,6 +351,7 @@ export default scenarios([
   },
   {
     name: "bff conversation update: external may edit",
+    differs: "the old library is pruned: rows no longer list conversation_segments",
     as: "bob",
     method: "PATCH",
     path: `${B}/${cRes}`,
@@ -393,6 +406,7 @@ export default scenarios([
   // ── POST /{conversation_id}/move ──────────────────────────────────
   {
     name: "bff conversation move: owner",
+    differs: "the old library is pruned: rows no longer list conversation_segments",
     as: "alice",
     method: "POST",
     path: `${B}/${c1}/move`,
@@ -401,6 +415,7 @@ export default scenarios([
   },
   {
     name: "bff conversation move: into another workspace",
+    differs: "the old library is pruned: rows no longer list conversation_segments",
     as: "erin",
     method: "POST",
     path: `${B}/${c2}/move`,

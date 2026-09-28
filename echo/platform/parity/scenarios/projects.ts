@@ -300,9 +300,16 @@ export default scenarios([
   { name: "projects v2 detail: anonymous", as: "anonymous", method: "GET", path: v2(p1) },
 
   // ── GET /api/v2/projects/{id}/bff ─────────────────────────────────
-  { name: "projects v2 bff: owner, whole row", as: "alice", method: "GET", path: v2(p1, "/bff") },
+  {
+    name: "projects v2 bff: owner, whole row",
+    as: "alice",
+    method: "GET",
+    path: v2(p1, "/bff"),
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
+  },
   {
     name: "projects v2 bff: legal block",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "alice",
     method: "GET",
     path: v2(p1, "/bff"),
@@ -324,6 +331,7 @@ export default scenarios([
   },
   {
     name: "projects v2 bff: private project owner",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "erin",
     method: "GET",
     path: v2(p2, "/bff"),
@@ -565,6 +573,7 @@ export default scenarios([
   // ── PATCH /api/v2/bff/projects/{id} ───────────────────────────────
   {
     name: "projects bff update: rename",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "alice",
     method: "PATCH",
     path: bff(p1),
@@ -593,6 +602,7 @@ export default scenarios([
   },
   {
     name: "projects bff update: paid tier hides the event invitation",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "alice",
     method: "PATCH",
     path: bff(p1),
@@ -607,6 +617,7 @@ export default scenarios([
   },
   {
     name: "projects bff update: consent with a link",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "alice",
     method: "PATCH",
     path: bff(p1),
@@ -635,6 +646,7 @@ export default scenarios([
   },
   {
     name: "projects bff update: member edits",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "admin",
     method: "PATCH",
     path: bff(p1),
