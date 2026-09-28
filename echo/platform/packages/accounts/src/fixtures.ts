@@ -4,6 +4,8 @@ import type {
   AccountList,
   AccountPage,
   CreateAccountResponse,
+  DemoCreateRequest,
+  DemoStatus,
   DocumentDetail,
   DocumentFields,
   DocumentSummary,
@@ -13,6 +15,7 @@ import type {
   SignRequest,
   SignResponse,
   Task,
+  TasksSummary,
   Ticket,
 } from "./contract";
 
@@ -93,6 +96,7 @@ export const pushOfferRequest: Out<typeof PushOfferRequest> = {
   items,
   external_ref: "attio-deal-8f2c",
   supersedes_id: null,
+  send: true,
 };
 
 const offerFields = [
@@ -644,3 +648,127 @@ export const offerFieldsResponse: Out<typeof DocumentFields> = {
 };
 
 export { signedDpaDetail as signedDocument };
+
+/** GET /api/v2/account/tasks-summary: "Tasks 1/4" under Help, and the org picker. */
+export const tasksSummary: Out<typeof TasksSummary> = [
+  {
+    org_id: ORG,
+    name: "Gemeente Voorbeeldstad",
+    logo_url: null,
+    account_stage: "customer",
+    tasks_done: 0,
+    tasks_total: 4,
+    next_task_title: "Offerte bekijken en ondertekenen",
+  },
+];
+
+const DEMO = "0199a1bd-0000-7000-8000-000000000001";
+
+/** POST /api/v2/admin/accounts/demos */
+export const demoCreateRequest: Out<typeof DemoCreateRequest> = {
+  organisation_name: "Gemeente Voorbeeldstad",
+  website_url: "https://www.voorbeeldstad.example/",
+  brief:
+    "Participatie bij de nieuwe omgevingsvisie: bewoners, ondernemers en jongeren denken mee over wonen en groen in de binnenstad.",
+  language: "nl",
+  example: "Een avond in de bibliotheek met zestig bewoners, in maart.",
+  contact_name: "Anna de Vries",
+  contact_email: "anna@voorbeeldstad.example",
+  sign_in: true,
+  offer: {
+    template: "subscription",
+    language: "nl",
+    person_name: "Anna",
+    attention: null,
+    items,
+    external_ref: null,
+  },
+};
+
+const steps = (done: number, failed?: number) =>
+  (["fetch", "research", "author", "seed", "extract", "review"] as const).map((name, i) => ({
+    name,
+    status:
+      i < done
+        ? ("done" as const)
+        : i === failed
+          ? ("failed" as const)
+          : i === done
+            ? ("running" as const)
+            : ("pending" as const),
+    started_at: i <= done ? `2026-09-28T09:0${i}:00.000Z` : null,
+    finished_at: i < done ? `2026-09-28T09:0${i}:40.000Z` : null,
+    error: i === failed ? "The model did not answer in time" : null,
+  }));
+
+/** GET .../demos/:demoId while it is authoring. */
+export const demoRunning: Out<typeof DemoStatus> = {
+  id: DEMO,
+  status: "running",
+  organisation_name: "Gemeente Voorbeeldstad",
+  website_url: "https://www.voorbeeldstad.example/",
+  language: "nl",
+  contact_email: "anna@voorbeeldstad.example",
+  sign_in: true,
+  org_id: null,
+  slug: null,
+  steps: steps(2),
+  links: { public: [], projects: [], account: null, continue_url: null },
+  research: null,
+  conversations: null,
+  offer_document_id: null,
+  invited_at: null,
+  published_at: null,
+  created_at: "2026-09-28T09:00:00.000Z",
+  updated_at: "2026-09-28T09:02:00.000Z",
+};
+
+/** A step that failed: POST .../retry resumes from it. */
+export const demoFailed: Out<typeof DemoStatus> = {
+  ...demoRunning,
+  status: "failed",
+  steps: steps(2, 2),
+};
+
+/** The reviewable draft: links work for staff, the public link is not live yet. */
+export const demoDraft: Out<typeof DemoStatus> = {
+  ...demoRunning,
+  status: "draft",
+  org_id: ORG,
+  slug: "gemeente-voorbeeldstad",
+  steps: steps(6),
+  links: {
+    public: [
+      {
+        language: "nl",
+        url: "https://api.example.test/api/v2/popcorn/public/k2Jd8fQx0aLm3PzR7tVw1yB5/",
+        live: false,
+      },
+    ],
+    projects: [
+      {
+        language: "nl",
+        project_id: "0199a1be-0000-7000-8000-000000000001",
+        url: "https://dashboard.example.test/projects/0199a1be-0000-7000-8000-000000000001/overview",
+      },
+    ],
+    account: `/api/v2/admin/accounts/${ORG}`,
+    continue_url: `https://dashboard.example.test/login?next=${encodeURIComponent(`/o/${ORG}/account`)}`,
+  },
+  research:
+    "# Gemeente Voorbeeldstad: research\n\nRetrieved 28-09-2026 from https://www.voorbeeldstad.example/ ...\n\n## Verified facts\n- ...\n\n## Unknowns\n- ...\n\n## Invented themes (fiction)\n- ...",
+  conversations: 6,
+  offer_document_id: OFFER,
+};
+
+/** After POST .../publish with sign-in on: live, and the contact invited. */
+export const demoPublished: Out<typeof DemoStatus> = {
+  ...demoDraft,
+  status: "published",
+  links: {
+    ...demoDraft.links,
+    public: demoDraft.links.public.map((p) => ({ ...p, live: true })),
+  },
+  invited_at: "2026-09-28T10:00:00.000Z",
+  published_at: "2026-09-28T10:00:00.000Z",
+};
