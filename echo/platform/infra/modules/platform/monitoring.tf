@@ -283,19 +283,48 @@ resource "google_monitoring_alert_policy" "api_error_ratio" {
   notification_channels = local.alert_channels
 }
 
+# From the API's request lines rather than Cloud Run's request_latencies: those count a
+# live stream (SSE) as one request lasting minutes, which would hold p95 above any threshold.
+# The request line is written when the handler returns, so a stream counts its time to
+# first byte.
+resource "google_logging_metric" "api_latency" {
+  name            = "${local.name}/api_latency"
+  filter          = "${local.run_filter} AND jsonPayload.message=\"request\""
+  value_extractor = "REGEXP_EXTRACT(jsonPayload.httpRequest.latency, \"([0-9.]+)s\")"
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type  = "DISTRIBUTION"
+    unit        = "s"
+  }
+  bucket_options {
+    exponential_buckets {
+      num_finite_buckets = 30
+      growth_factor      = 1.5
+      scale              = 0.005
+    }
+  }
+}
+
 resource "google_monitoring_alert_policy" "api_latency" {
   display_name = "${local.name}: API p95 latency"
   combiner     = "OR"
   conditions {
-    display_name = "API p95 latency above 2 s over 10 minutes"
-    condition_prometheus_query_language {
-      query               = "histogram_quantile(0.95, sum by (le) (rate(run_googleapis_com:request_latencies_bucket{${local.api_series}}[10m]))) > 2000"
-      duration            = "600s"
-      evaluation_interval = "60s"
+    display_name = "API p95 latency above 2 s for 10 minutes"
+    condition_threshold {
+      filter          = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.api_latency.name}\" AND resource.type=\"cloud_run_revision\""
+      comparison      = "COMPARISON_GT"
+      threshold_value = 2
+      duration        = "600s"
+      aggregations {
+        alignment_period     = "300s"
+        per_series_aligner   = "ALIGN_PERCENTILE_95"
+        cross_series_reducer = "REDUCE_MAX"
+        group_by_fields      = ["resource.label.service_name"]
+      }
     }
   }
   documentation {
-    content   = "Streams and uploads are long by design; check which routes are slow in the request logs before scaling. Then Cloud SQL CPU and connections."
+    content   = "Search the API's request lines for the slow routes (jsonPayload.route, httpRequest.latency) before scaling. Then Cloud SQL CPU and connections."
     mime_type = "text/markdown"
   }
   notification_channels = local.alert_channels
