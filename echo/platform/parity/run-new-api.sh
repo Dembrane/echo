@@ -10,7 +10,7 @@ set -a; source "$here/.env.parity"; set +a
 export APP_ENV=local
 export PORT="${PARITY_API_PORT:-8200}"
 export DATABASE_URL="postgres://dembrane:dembrane@localhost:5440/${PARITY_DB:-dembrane}"
-# The fixed secret docs/porting.md gives every port; parity signs nothing that outlives a run.
+# A fixed secret; parity signs nothing that outlives a run.
 export AUTH_SECRET=parity-secret-parity-secret-parity-secret-00
 # Invite links and stored MCP client secrets are keyed on Directus's SECRET until cutover.
 export INVITE_HASH_SECRET="$DIRECTUS_SECRET"

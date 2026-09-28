@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
 /**
- * Synthetic demo parity: seeds echo/demos/example the old way (seed_demo.py through
- * Directus) and the new way (seed_demo.py --platform through the staff route), each from
- * a fresh copy of the same template, then compares the rows written, the links printed,
- * and what each public link serves (page and bundle) after the runner's normalisers.
+ * Synthetic demo parity: seeds echo/demos/example the old way (main's seed_demo.py through
+ * Directus) and the new way (the same inputs posted to the staff route), each from a fresh
+ * copy of the same template, then compares the rows written, the links printed, and what
+ * each public link serves (page and bundle) after the runner's normalisers.
  *   flock /tmp/echo-parity.lock bun parity/popcorn-demo.ts      (with parity/.env.parity loaded)
- * Needs the old API on :8100 and this worktree's API on PARITY_NEW_URL.
+ * Needs the old API on :8100, this worktree's API on PARITY_NEW_URL, and echo main checked
+ * out at OLD_ECHO_DIR (parity/old-echo.sh).
  */
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { users, workspaces } from "./fixtures";
@@ -16,8 +17,12 @@ import { diff, reset, snapshot } from "./runner/db";
 import { normalize } from "./runner/normalize";
 
 const here = new URL(".", import.meta.url).pathname;
-const server = join(here, "../../server");
-const demos = join(here, "../../demos");
+const oldEcho = join(
+  process.env.OLD_ECHO_DIR ?? join(process.env.HOME ?? "", "orca/workspaces/echo-parity-main"),
+  "echo",
+);
+const server = join(oldEcho, "server");
+const demos = join(oldEcho, "demos");
 const out = (s: string) => process.stdout.write(`${s}\n`);
 
 /** The example's seed inputs, made from its fixture by the local helper's own prepare(). */
@@ -84,6 +89,43 @@ function seed(args: string[], env: Record<string, string>): unknown {
   return JSON.parse(text.slice(text.indexOf("{")));
 }
 
+/** What seed_demo.py --platform posted: the folder's inputs, read the same way. */
+async function seedPlatform(folder: string, token: string): Promise<unknown> {
+  const json = (path: string) => JSON.parse(readFileSync(join(folder, path), "utf8"));
+  const session = json("session.json") as { title: Record<string, string> };
+  const corpus = readdirSync(join(folder, "corpus"))
+    .filter((f) => /^[0-9]{2}-.*\.json$/.test(f))
+    .sort()
+    .map((f) => json(`corpus/${f}`));
+  const out = Object.fromEntries(
+    Object.keys(session.title).map((language) => [
+      language,
+      {
+        state: json(`out/state-${language}.json`),
+        settings: json(`out/settings-${language}.json`),
+      },
+    ]),
+  );
+  const res = await fetch(`${NEW}/api/v2/admin/popcorn/demos`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: JSON.stringify({
+      session,
+      research: readFileSync(join(folder, "research.md"), "utf8"),
+      corpus,
+      out,
+      sales_portal: JSON.parse(readFileSync(join(demos, "sales-portal.json"), "utf8")),
+      workspace_id: workspaces.aDefault,
+      owner_id: users.alice.directus,
+      portal_base_url: "http://localhost:5174",
+      api_base_url: NEW,
+      dry_run: false,
+    }),
+  });
+  if (!res.ok) throw new Error(`the platform refused the demo: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
 const common = (folder: string, api: string) => [
   `--demo ${folder}`,
   "--portal-base-url http://localhost:5174",
@@ -138,11 +180,11 @@ await reset();
 await Bun.sleep(50);
 const token = (await newToken("admin")) ?? "";
 before = await snapshot();
-const newResult = seed([...common(folder, NEW), "--platform"], { DEMO_API_TOKEN: token });
+const newResult = await seedPlatform(folder, token);
 const newRows = diff(before, await snapshot());
 const newServed = await served(newResult as Record<string, unknown>);
 before = await snapshot();
-const newAgain = seed([...common(folder, NEW), "--platform"], { DEMO_API_TOKEN: token });
+const newAgain = await seedPlatform(folder, token);
 const newRerun = diff(before, await snapshot());
 
 const seedIds = new Set<string>();

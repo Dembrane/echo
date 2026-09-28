@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Runs echo main's Python API (this worktree's echo/server) against the parity stack on
+# Runs echo main's Python API (OLD_ECHO_DIR's echo/server) against the parity stack on
 # :8100. Settings come from .env.parity; addresses are fixed here. Extra args go to uvicorn.
 #   parity/run-old-api.sh            foreground
 #   PARITY_DB=scenario_1 parity/run-old-api.sh   point at another database from reset.sh
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
-server="$(cd "$here/../../server" && pwd)"
+source "$here/old-echo.sh"
+server="$OLD_ECHO_DIR/echo/server"
 # settings.py loads server/.env with override=True, which would silently beat this env.
 [[ -f "$server/.env" ]] && { echo "refusing: $server/.env exists and would override parity settings" >&2; exit 1; }
 set -a; source "$here/.env.parity"; set +a

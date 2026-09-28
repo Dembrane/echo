@@ -10,7 +10,7 @@ import { hash } from "./account-invites-mine";
 // as directus_users, so their row diffs differ by design; the scenarios still check the
 // status, the body and that Directus's own row changes the same way.
 
-/** The parity API's AUTH_SECRET (see parity/README and the start command in docs/porting.md). */
+/** The parity API's AUTH_SECRET (parity/run-new-api.sh). */
 const AUTH_SECRET = "parity-secret-parity-secret-parity-secret-00";
 const TOTP_RAW = "parity-totp-secret-parity-totp-s";
 const TOTP_B32 = base32.encode(TOTP_RAW, { padding: false });
