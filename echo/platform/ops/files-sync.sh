@@ -9,10 +9,10 @@
 #   ops/files-sync.sh run      start a pass and wait for it; prints the counters
 #   ops/files-sync.sh status   the latest pass's counters
 #
-# PROJECT       GCP project (default dembrane-echo)
+# PROJECT       GCP project (default dembrane-web-prod)
 # JOB           job name, e.g. transferJobs/echo-cutover-prod
 # SOURCE_BUCKET Spaces bucket, e.g. dbr-echo-prod-uploads
-# SINK_BUCKET   GCS bucket, e.g. dembrane-echo-echo-prod-uploads
+# SINK_BUCKET   GCS bucket, e.g. dembrane-web-prod-echo-prod-uploads
 # AGENT_POOL    agent pool whose agents hold the Spaces keys (S3-compatible sources need agents)
 # SOURCE_ENDPOINT  default ams3.digitaloceanspaces.com
 # INCLUDE_PREFIXES comma-separated key prefixes, for a partial copy (rehearsal samples)
@@ -26,7 +26,7 @@
 # option that would. Objects deleted on Spaces after a pass stay in the sink; nothing reads them.
 source "$(dirname "$0")/lib.sh"
 
-PROJECT="${PROJECT:-dembrane-echo}"
+PROJECT="${PROJECT:-dembrane-web-prod}"
 : "${JOB:?}" "${SOURCE_BUCKET:?}" "${SINK_BUCKET:?}" "${AGENT_POOL:?}"
 SOURCE_ENDPOINT="${SOURCE_ENDPOINT:-ams3.digitaloceanspaces.com}"
 refuse_old_stack "$SINK_BUCKET" "files"

@@ -5,7 +5,7 @@
 # objects, 10+ minutes) runs after the switch instead, while Spaces stays frozen.
 #
 #   TARGET_URL=postgres://... SINCE=2026-10-03T06:00:00Z \
-#   MANIFEST=gs://dembrane-echo-archive/manifests/prod-delta.csv ops/files-manifest.sh
+#   MANIFEST=gs://dembrane-web-prod-echo-archive/manifests/prod-delta.csv ops/files-manifest.sh
 #
 # TARGET_URL  the restored new database (read-only here; it holds the same rows as the frozen source)
 # SINCE       start time of the last completed full pass, minus a margin (UTC, ISO 8601)

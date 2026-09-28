@@ -4,7 +4,7 @@
  * sides; writes nothing. Exits non-zero when anything in the source is missing or differs.
  *
  *   SPACES_KEY=... SPACES_SECRET=... SOURCE_BUCKET=dbr-echo-prod-uploads \
- *   SINK_BUCKET=dembrane-echo-echo-prod-uploads GCS_TOKEN="$(gcloud auth print-access-token)" \
+ *   SINK_BUCKET=dembrane-web-prod-echo-prod-uploads GCS_TOKEN="$(gcloud auth print-access-token)" \
  *   bun ops/verify-files.ts [--sample 50] [--prefix audio-chunks/] [--json out.json]
  *
  * The checksum sample compares the Spaces ETag with the GCS MD5 when the ETag is an MD5

@@ -111,7 +111,7 @@ export const schema = defineSchema({
     }),
   },
   llm: {
-    vertexProject: key("LLM_VERTEX_PROJECT", z.string().default("dembrane-echo"), {
+    vertexProject: key("LLM_VERTEX_PROJECT", z.string().default("dembrane-web-previews"), {
       description: "GCP project billed for language model calls.",
     }),
     vertexLocation: key("LLM_VERTEX_LOCATION", z.string().default("eu"), {

@@ -80,8 +80,8 @@ cutover needs, in the prod project:
   empty database.
 - Bucket `dembrane-web-prod-echo-prod-uploads`, versioned, EU, with the dashboard and portal CORS.
 - Bucket `dembrane-web-prod-echo-archive` (EU, no public access, retention lock 1 year) for the
-  contract archive, the Directus audit archive and the transfer manifests. Pass it as
-  `ARCHIVE_DEST`; the script default (`gs://dembrane-echo-archive`) does not exist.
+  contract archive, the Directus audit archive and the transfer manifests. It is the scripts'
+  default `ARCHIVE_DEST`.
 - Storage Transfer: API `storagetransfer.googleapis.com` enabled, agent pool `echo-cutover`,
   service account `echo-cutover-transfer` with `roles/storagetransfer.transferAgent` on the
   project, `roles/storage.objectAdmin` on the uploads bucket and `roles/storage.objectViewer` on
@@ -101,8 +101,6 @@ cutover needs, in the prod project:
   URL map for `directus.dembrane.com`: `/assets/*` rewritten to `/api/assets/*` on the API (old
   email images and stored avatar links keep working), everything else a 301 to
   `https://dashboard.dembrane.com/login`.
-- `packages/config/environments/prod.ts` names `gcpProject: "dembrane-echo"` for observability;
-  it must be `dembrane-web-prod`.
 - A prod deploy path (workflow or `scripts/deploy-env.sh prod`) that deploys the migrate job
   **without executing it**, and the worker pool at 0 instances until W5 is done. The preview
   flow's `--execute-now` against an empty prod database would build a fresh schema that the

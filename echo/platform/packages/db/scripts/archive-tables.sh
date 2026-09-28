@@ -13,7 +13,7 @@
 #   DATABASE_URL=postgres://... packages/db/scripts/archive-tables.sh            the default set
 #   DATABASE_URL=postgres://... packages/db/scripts/archive-tables.sh view aspect  named tables
 #
-# ARCHIVE_DEST  gs:// prefix or a local directory (default gs://dembrane-echo-archive).
+# ARCHIVE_DEST  gs:// prefix or a local directory (default gs://dembrane-web-prod-echo-archive).
 #               Objects land under <dest>/<database>/<UTC stamp>/.
 # PG_DUMP, PSQL override the binaries, e.g. "docker exec -i parity-db-1 pg_dump" for a
 #               local run. pg_dump must be at least the server's major version.
@@ -27,7 +27,7 @@
 set -euo pipefail
 
 src_url="${SOURCE_DATABASE_URL:-${DATABASE_URL:?URL of the database to archive from}}"
-dest_root="${ARCHIVE_DEST:-gs://dembrane-echo-archive}"
+dest_root="${ARCHIVE_DEST:-gs://dembrane-web-prod-echo-archive}"
 pg_dump_cmd=(${PG_DUMP:-pg_dump})
 psql_cmd=(${PSQL:-psql})
 

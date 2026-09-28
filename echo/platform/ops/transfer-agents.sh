@@ -4,12 +4,12 @@
 #   ops/transfer-agents.sh up      create the VM (no-op when it exists); agents start at boot
 #   ops/transfer-agents.sh down    delete the VM once the last pass is done
 #
-# PROJECT (dembrane-echo), ZONE (europe-west4-a), VM (echo-cutover-transfer),
+# PROJECT (dembrane-web-prod), ZONE (europe-west4-a), VM (echo-cutover-transfer),
 # MACHINE (n2-standard-8: 16 Gbps egress cap, enough CPU for 8 agents), AGENTS (8),
 # AGENT_POOL, SPACES_SECRET (secret with the Spaces keys), SA (the agents' identity: needs
 # roles/storagetransfer.transferAgent, objectAdmin on the sink bucket, and accessor on the secret).
 source "$(dirname "$0")/lib.sh"
-PROJECT="${PROJECT:-dembrane-echo}"
+PROJECT="${PROJECT:-dembrane-web-prod}"
 ZONE="${ZONE:-europe-west4-a}"
 VM="${VM:-echo-cutover-transfer}"
 g() { gcloud --project "$PROJECT" "$@"; }

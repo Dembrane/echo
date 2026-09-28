@@ -11,7 +11,7 @@
 #
 # SOURCE_URL    the old database (read-only).
 # TARGET_URL    the new database as its owner (record only).
-# ARCHIVE_DEST  gs:// prefix (default gs://dembrane-echo-archive).
+# ARCHIVE_DEST  gs:// prefix (default gs://dembrane-web-prod-echo-archive).
 #
 # The tables have had no writer since the old library and LightRAG were retired, so a count
 # that moved between `pre` and `record` means something still writes them: `record` refuses,
@@ -19,7 +19,7 @@
 source "$(dirname "$0")/lib.sh"
 : "${SOURCE_URL:?}"
 here="$OPS_DIR/../packages/db/scripts"
-dest="${ARCHIVE_DEST:-gs://dembrane-echo-archive}"
+dest="${ARCHIVE_DEST:-gs://dembrane-web-prod-echo-archive}"
 tag=0012_contract_dead_features
 
 pgcmd() { # the archive script takes whole commands
