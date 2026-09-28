@@ -48,6 +48,9 @@ services:
       - DB_DATABASE=dembrane
       - DB_EXCLUDE_TABLES=lightrag_chunk_graph_map,lightrag_doc_chunks,lightrag_doc_full,lightrag_doc_status,lightrag_llm_cache,lightrag_vdb_entity,lightrag_vdb_relation,lightrag_vdb_transcript
       - WEBSOCKETS_ENABLED=true
+      # A schema push into an empty database sends the whole snapshot in one
+      # request, which outgrew the 1mb default in September 2026.
+      - MAX_PAYLOAD_SIZE=10mb
       - CORS_ENABLED=true
       - CORS_ORIGIN=http://localhost:5173,http://localhost:5174
       - CORS_CREDENTIALS=true
@@ -92,6 +95,9 @@ services:
       - 5173:5173
       - 5174:5174
       - 2222:22
+    # Only processes started through `docker exec` see these (VS Code's
+    # Dev Containers, `docker compose exec`). SSH sessions on 2222 start with a
+    # clean environment and miss them. server/.env overrides any of them.
     environment:
       - DIRECTUS_SECRET=secret
       - DIRECTUS_TOKEN=admin
@@ -101,6 +107,7 @@ services:
       - ADMIN_BASE_URL=http://localhost:5173
       - PARTICIPANT_BASE_URL=http://localhost:5174
       - DIRECTUS_BASE_URL=http://directus:8055
+      - AGENT_SERVICE_URL=http://agent:8001
       - DISABLE_SENTRY=1
       - SERVE_API_DOCS=1
       - DISABLE_REDACTION=1

@@ -16,7 +16,6 @@ import {
 	apiNoAuth,
 	deleteChatContext,
 	deleteConversationById,
-	getConversationChunkContentLink,
 	getConversationContentLink,
 	getConversationEmails,
 	getConversationTranscriptString,
@@ -584,11 +583,9 @@ export const useConversationChunkContentUrl = (
 		enabled,
 		gcTime: 1000 * 60 * 60, // 1 hour
 		queryFn: async () => {
-			const url = getConversationChunkContentLink(
-				conversationId,
-				chunkId,
-				true,
-			);
+			// Relative to the axios baseURL: the link helper prefixes it too,
+			// which doubles to /api/api locally where the base is relative.
+			const url = `/conversations/${conversationId}/chunks/${chunkId}/content?return_url=true`;
 			return apiNoAuth.get<unknown, string>(url);
 		},
 		queryKey: ["conversation", conversationId, "chunk", chunkId, "audio-url"],
