@@ -12,7 +12,7 @@ import {
   str,
 } from "./mollie";
 import { applyDiscount, money2, pyRound } from "./money";
-import { billingAccountAdmins, emailsOf, type Notifier } from "./notify";
+import { billingAccountAdmins, type Notifier, recipientsOf } from "./notify";
 import type { AccountPatch, AccountRow, BillingStore } from "./store";
 import {
   BillingError,
@@ -998,15 +998,19 @@ export class BillingService {
         now,
       );
     try {
-      const emails = await emailsOf(this.store, audience);
+      const recipients = await recipientsOf(this.store, audience);
       const base = this.d.config.dashboardUrl.replace(/\/+$/, "");
       const url = account.workspace_id
         ? `${base}/w/${account.workspace_id}/settings/billing`
         : account.org_id
           ? `${base}/o/${account.org_id}/settings/billing`
           : base || "/";
-      const mail = paymentFailedEmail(url);
-      for (const to of emails) await this.d.mailer.send({ to, ...mail, tags: ["payment_failed"] });
+      for (const r of recipients)
+        await this.d.mailer.send({
+          to: r.email,
+          ...paymentFailedEmail(url, r.locale),
+          tags: ["payment_failed"],
+        });
     } catch (err) {
       this.d.logger.warn({ err, accountId: account.id }, "payment-failed email failed");
     }

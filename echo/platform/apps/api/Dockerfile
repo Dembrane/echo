@@ -11,8 +11,10 @@ ARG RELEASE=dev
 RUN bun build apps/api/src/main.ts --compile --minify --sourcemap --target=bun-linux-x64 --outfile /out/api
 # A compiled binary has no source tree beside it, so the files it reads are laid out under
 # /app/assets as <package>/... (packages/core/src/assets.ts), and the binary
-# checks them at boot against apps/api/src/assets.ts. Popcorn's page files serve the decks.
-RUN mkdir -p /assets/popcorn && cp -r packages/popcorn/static /assets/popcorn/static
+# checks them at boot against apps/api/src/assets.ts. Popcorn's page files serve the decks;
+# the i18n catalogs word the emails the API sends itself (sign-in codes, verification).
+RUN mkdir -p /assets/popcorn /assets/i18n && cp -r packages/popcorn/static /assets/popcorn/static \
+    && cp -r packages/i18n/locales /assets/i18n/locales
 
 FROM gcr.io/distroless/cc-debian12:nonroot
 COPY --from=build /out/api /app/api

@@ -12,6 +12,7 @@ import {
   newId,
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { localeOfEmail, localesOfAppUsers } from "@dembrane/i18n";
 import { isoTimestamp } from "@dembrane/legacy-shape";
 import { commercial, orgAccountForNewWorkspace, reconcileSeats } from "../billing";
 import { type Member, requireOnboarded } from "../context";
@@ -507,15 +508,12 @@ export function orgService(deps: TenancyDeps) {
               orgId,
             });
           }
-          const mail = orgAddedEmail({
-            subject: existing
-              ? `You've been re-added to ${orgName}`
-              : `You've been added to ${orgName}`,
-            inviterName,
-            orgName,
-            role,
-            inviteUrl: orgUrl,
-          });
+          // They have an account: their own language, else the inviter's.
+          const langs = await localesOfAppUsers(tx, [invitee.id, member.appUserId]);
+          const mail = orgAddedEmail(
+            { readded: Boolean(existing), inviterName, orgName, role, inviteUrl: orgUrl },
+            langs.get(invitee.id) ?? langs.get(member.appUserId),
+          );
           await deps.jobs.enqueue(emailJob, { to: email, ...mail, tags: ["org_added"] }, { tx });
           return {
             status: existing ? "reactivated" : "added",
@@ -558,7 +556,11 @@ export function orgService(deps: TenancyDeps) {
           expires_at: iso(new Date(now.getTime() + 7 * 86_400_000)),
           created_at: iso(now),
         });
-        const mail = orgInviteEmail({ inviterName, orgName, role, inviteUrl: url });
+        // No account yet, or one we can match by email: theirs, else the inviter's.
+        const language =
+          (await localeOfEmail(tx, email)) ??
+          (await localesOfAppUsers(tx, [member.appUserId])).get(member.appUserId);
+        const mail = orgInviteEmail({ inviterName, orgName, role, inviteUrl: url }, language);
         await deps.jobs.enqueue(emailJob, { to: email, ...mail, tags: ["org_invite"] }, { tx });
       });
       return {

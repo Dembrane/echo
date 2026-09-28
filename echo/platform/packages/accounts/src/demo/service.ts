@@ -2,6 +2,7 @@ import { sendEmail } from "@dembrane/account";
 import { ConflictError, NotFoundError, newId, ValidationError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
+import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { refuseProduction } from "@dembrane/popcorn";
 import { desc, eq } from "drizzle-orm";
 import type { AccountsDeps } from "../deps";
@@ -194,9 +195,13 @@ export async function publishDemo(
     }
     if (signIn) {
       await releaseSignIn(tx, seed.contact_user_id);
+      // The contact's own language when they already had an account, else the demo's.
+      const language =
+        (await localeOfEmail(tx, input.contact_email)) ?? resolveLocale(input.language);
       await d.jobs.enqueue(
         sendEmail,
         {
+          language,
           to: input.contact_email,
           subject: `Your dembrane account for ${input.organisation_name}`,
           template: "account_invite",

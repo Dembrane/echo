@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./fill": "./src/fill.ts"
   },
   "scripts": {
     "test": "bun test",
@@ -11,6 +12,9 @@
   },
   "dependencies": {
     "@dembrane/config": "workspace:*",
-    "@dembrane/llm": "workspace:*"
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/llm": "workspace:*",
+    "drizzle-orm": "^0.45.3"
   }
 }

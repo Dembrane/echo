@@ -8,6 +8,7 @@ import {
   ValidationError,
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { customerOrg, documentFor } from "./access";
 import type { AccountsDeps } from "./deps";
 import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
@@ -227,6 +228,9 @@ export async function nameSigner(
   const email = signer.email.trim().toLowerCase();
   const now = d.now();
   const me = await store.identity(d.db, who.directusUserId);
+  // The signer's own language when they have an account, else the document's.
+  const language =
+    (await localeOfEmail(d.db, email).catch(() => null)) ?? resolveLocale(doc.language);
   await d.db.transaction(async (tx) => {
     await store.updateDocument(tx, doc.id, {
       signerEmail: email,
@@ -238,6 +242,7 @@ export async function nameSigner(
     await d.jobs.enqueue(
       sendEmail,
       {
+        language,
         to: email,
         subject: `Please sign ${doc.title}`,
         template: "account_signer_invite",

@@ -1,4 +1,5 @@
 import { ConflictError, newId } from "@dembrane/core";
+import { localesOfAppUsers } from "@dembrane/i18n";
 import { type Conn, iso } from "./db";
 import { supportAccessEmail } from "./emails";
 import { emailJob, type JobSink } from "./jobs";
@@ -73,22 +74,34 @@ export async function recordSupportEvent(d: SupportDeps, tx: Conn, now: Date, e:
   return id;
 }
 
-async function emailsOf(tx: Conn, userIds: readonly string[]) {
-  const rows = await appUsersByIds(tx, userIds);
-  return [...new Set(rows.map((r) => (r.email ?? "").trim()).filter(Boolean))].sort();
-}
-
+/**
+ * Emails the support notice to `userIds`, one email per language: each person reads it in
+ * the language their dashboard is set to, English when they never chose one.
+ */
 async function mail(
   d: SupportDeps,
   tx: Conn,
-  to: readonly string[],
-  subject: string,
+  userIds: readonly string[],
   wsName: string,
-  t: Parameters<typeof supportAccessEmail>[2],
+  t: Parameters<typeof supportAccessEmail>[1],
 ) {
-  if (!to.length) return;
-  const rendered = supportAccessEmail(wsName, subject, t);
-  await d.jobs.enqueue(emailJob, { to: [...to], ...rendered, tags: ["support_access"] }, { tx });
+  const rows = await appUsersByIds(tx, userIds);
+  const langs = await localesOfAppUsers(tx, userIds);
+  const byLocale = new Map<string, Set<string>>();
+  for (const r of rows) {
+    const email = (r.email ?? "").trim();
+    if (!email) continue;
+    const l = langs.get(r.id) ?? "en-US";
+    byLocale.set(l, (byLocale.get(l) ?? new Set()).add(email));
+  }
+  for (const [locale, to] of [...byLocale].sort(([a], [b]) => (a < b ? -1 : 1))) {
+    const rendered = supportAccessEmail(wsName, t, locale);
+    await d.jobs.enqueue(
+      emailJob,
+      { to: [...to].sort(), ...rendered, tags: ["support_access"] },
+      { tx },
+    );
+  }
 }
 
 /** The notice and email for one lifecycle event; the customer's own toggle flips are audit only. */
@@ -124,7 +137,7 @@ export async function sendSupportNotice(d: SupportDeps, tx: Conn, now: Date, e: 
         actor: e.staff ?? null,
         params: { request_id: p.request_id ?? null },
       });
-      await mail(d, tx, await emailsOf(tx, admins), title, wsName, {
+      await mail(d, tx, admins, wsName, {
         kind: "request",
         staffName: name,
         note,
@@ -143,7 +156,7 @@ export async function sendSupportNotice(d: SupportDeps, tx: Conn, now: Date, e: 
         message: "Access ends automatically after 24 hours.",
         actor: e.staff ?? null,
       });
-      await mail(d, tx, await emailsOf(tx, admins), title, wsName, {
+      await mail(d, tx, admins, wsName, {
         kind: "joined",
         staffName: name,
         settingsUrl,
@@ -178,7 +191,7 @@ export async function sendSupportNotice(d: SupportDeps, tx: Conn, now: Date, e: 
         message:
           "The support session ended and staff access was turned off. Turn it back on in workspace settings if you need more help.",
       });
-      await mail(d, tx, await emailsOf(tx, admins), title, wsName, {
+      await mail(d, tx, admins, wsName, {
         kind: "ended",
         settingsUrl,
       });
@@ -194,7 +207,7 @@ export async function sendSupportNotice(d: SupportDeps, tx: Conn, now: Date, e: 
         message:
           "No staff joined in the last 7 days. Turn it off in workspace settings if you no longer need help.",
       });
-      await mail(d, tx, await emailsOf(tx, admins), title, wsName, {
+      await mail(d, tx, admins, wsName, {
         kind: "reminder",
         settingsUrl,
       });
@@ -214,7 +227,7 @@ export async function sendSupportNotice(d: SupportDeps, tx: Conn, now: Date, e: 
         workspaceId: e.workspaceId,
         params: { request_id: p.request_id ?? null },
       });
-      await mail(d, tx, await emailsOf(tx, [e.staff]), title, wsName, {
+      await mail(d, tx, [e.staff], wsName, {
         kind: "resolved",
         decision,
         workspaceUrl: dashboardPath(d.dashboardUrl, `/w/${e.workspaceId}/home`),

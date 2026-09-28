@@ -124,7 +124,7 @@ export function taskPayload(t: TaskRow) {
   return {
     id: t.id,
     // Worded in English for sam; the code and params are what a program should read.
-    title: taskTitle(t, "en"),
+    title: taskTitle(t, "en-US"),
     code: t.code,
     params: t.params ?? null,
     kind: t.kind,

@@ -1,6 +1,7 @@
-import { render } from "@dembrane/account";
+import { render, subjectOf } from "@dembrane/account";
 import { newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
+import type { Locale } from "@dembrane/i18n";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
 import { defineJob, type JobDefinition, type Queue, step } from "@dembrane/queue";
@@ -9,7 +10,6 @@ import { z } from "zod";
 import { buildDemo, type DemoBuildDeps } from "./demo/build";
 import { demoBuild } from "./demo/job";
 import { refreshLegalTexts } from "./legal/store";
-import type { Language } from "./offer";
 import type { AccountsJobs } from "./sink";
 import { store } from "./storage";
 import { languageOf, taskTitle } from "./task-text";
@@ -118,28 +118,25 @@ export async function runTaskReminder(
   }
   const [newest] = await store.documents(d.db, org.id);
   const orgLanguage = languageOf(newest?.language);
-  const byLanguage = new Map<Language, Set<string>>();
+  const byLanguage = new Map<Locale, Set<string>>();
   for (const p of people) {
     const lang = p.language ? languageOf(p.language) : orgLanguage;
     byLanguage.set(lang, (byLanguage.get(lang) ?? new Set()).add(p.email as string));
   }
   const to = [...byLanguage.values()].flatMap((set) => [...set]);
   for (const [language, emails] of byLanguage) {
-    const title = taskTitle(task, language);
-    const { html, text } = render({
+    const email = {
       template: "account_task_reminder",
       data: {
         org_name: org.name,
-        task_title: title,
+        task_title: taskTitle(task, language),
         task_url: accountPageUrl(d.dashboardUrl, org.id),
-        language,
       },
-    });
+    } as const;
     await d.mailer.send({
       to: [...emails],
-      subject: language === "nl" ? `Nog open: ${title}` : `Still open: ${title}`,
-      html,
-      text,
+      subject: subjectOf(email, language) as string,
+      ...render(email, language),
       tags: ["account_task_reminder"],
     });
   }

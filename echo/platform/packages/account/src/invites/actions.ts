@@ -4,6 +4,7 @@ import type { Signed } from "@dembrane/http";
 import { sendEmail } from "../jobs";
 import { type InviteCtx, onboardedUser } from "./accept";
 import { inviteHash, resendAcceptUrl } from "./hash";
+import { recipientLocale } from "./locale";
 import type { InviteStorage, OrgInvite, WorkspaceInvite } from "./storage";
 
 /** Resends are an amplification vector, so tighter than invite creation. */
@@ -73,11 +74,14 @@ export async function resendInvite(ctx: InviteCtx, who: Signed, inviteId: string
   const hash = inviteHash(deps.settings.inviteHashSecret, inviteId);
   const base = { dashboardUrl: deps.settings.dashboardUrl, hash, inviterName, role, email };
 
+  const language = await recipientLocale(deps.db, email, me.id);
+  const lang = language ? { language } : {};
   let queued = true;
   try {
     if (l.type === "org") {
       const url = resendAcceptUrl({ ...base, type: "org", subjectName: orgName });
       await deps.jobs.enqueue(sendEmail, {
+        ...lang,
         to: email,
         subject: `${inviterName} invited you to ${orgName} on dembrane`,
         template: "org_invite",
@@ -89,6 +93,7 @@ export async function resendInvite(ctx: InviteCtx, who: Signed, inviteId: string
       const wsName = ws?.name || "a workspace";
       const url = resendAcceptUrl({ ...base, type: "workspace", subjectName: wsName });
       await deps.jobs.enqueue(sendEmail, {
+        ...lang,
         to: email,
         subject: `${inviterName} invited you to collaborate on dembrane`,
         template: "workspace_invite",

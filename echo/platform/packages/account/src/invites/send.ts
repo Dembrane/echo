@@ -7,6 +7,7 @@ import {
   PaymentRequiredError,
 } from "@dembrane/core";
 import { type Signed, v } from "@dembrane/http";
+import { localesOfAppUsers } from "@dembrane/i18n";
 import type { Context } from "hono";
 import type { Jobs } from "../deps";
 import { sendEmail } from "../jobs";
@@ -19,6 +20,7 @@ import {
 import type { InviteCtx } from "./accept";
 import { requirePolicy, workspaceAccess } from "./context";
 import { inviteAcceptUrl, inviteHash } from "./hash";
+import { recipientLocale } from "./locale";
 import { grantInviteProjectShare, isOutsider, rank, reconcileOutsider } from "./membership";
 import type { WorkspaceRow } from "./storage";
 
@@ -261,7 +263,11 @@ export async function inviteToWorkspace(
         refOrgId: ws.org_id,
       });
     }
+    const language = (
+      await localesOfAppUsers(deps.db, [invitee.id]).catch(() => new Map<string, string>())
+    ).get(invitee.id);
     const sent = await queueEmail(deps.jobs, {
+      ...(language && { language }),
       to: email,
       subject: `You've been added to ${wsName ?? "a workspace"}`,
       template: "workspace_added",
@@ -320,7 +326,9 @@ export async function inviteToWorkspace(
     ...(shareProject && { project_id: shareProject.id }),
   });
   const inviteUrl = url(inviteId);
+  const language = await recipientLocale(deps.db, email, me);
   const sent = await queueEmail(deps.jobs, {
+    ...(language && { language }),
     to: email,
     subject: `${inviterName} invited you to collaborate on dembrane`,
     template: "workspace_invite",

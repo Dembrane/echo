@@ -7,6 +7,7 @@ import {
   StatusError,
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { localeOfEmail, localesOfAppUsers } from "@dembrane/i18n";
 import { isoTimestamp } from "@dembrane/legacy-shape";
 import {
   blocksNewWorkspace,
@@ -146,12 +147,14 @@ export function workspaceService(deps: TenancyDeps) {
       role: "observer",
       email: o.email,
     });
-    const mail = workspaceInviteEmail({
-      subject: `You're the data owner for ${o.workspaceName} on dembrane`,
-      inviterName,
-      workspaceName: o.workspaceName,
-      inviteUrl: url,
-    });
+    // The data owner's own language when they have an account, else the inviter's.
+    const language =
+      (await localeOfEmail(tx, o.email)) ??
+      (await localesOfAppUsers(tx, [o.invitedBy])).get(o.invitedBy);
+    const mail = workspaceInviteEmail(
+      { inviterName, workspaceName: o.workspaceName, inviteUrl: url },
+      language,
+    );
     await deps.jobs.enqueue(emailJob, { to: o.email, ...mail, tags: ["workspace_invite"] }, { tx });
   }
 
@@ -529,23 +532,35 @@ export function workspaceService(deps: TenancyDeps) {
           workspaceId,
         });
         if (direction === "downgrade" && audience.length) {
+          // One email per language, each recipient in the one their dashboard is set to.
           const users = await appUsersByIds(tx, audience);
-          const emails = [
-            ...new Set(users.map((u) => (u.email ?? "").trim()).filter(Boolean)),
-          ].sort();
-          if (emails.length) {
-            const mail = tierDowngradedEmail({
-              workspaceName: wsName,
-              fromTier,
-              toTier,
-              downgradedAtHuman: humanDate(now),
-              freezeItems: effects.filter((e) => e.effect === "freeze").map((e) => e.human),
-              revertItems: effects.filter((e) => e.effect === "revert").map((e) => e.human),
-              workspaceUrl: dashboardPath(deps.dashboardUrl, `/w/${workspaceId}/settings/billing`),
-            });
+          const langs = await localesOfAppUsers(tx, audience);
+          const byLocale = new Map<string, Set<string>>();
+          for (const u of users) {
+            const email = (u.email ?? "").trim();
+            if (!email) continue;
+            const l = langs.get(u.id) ?? "en-US";
+            byLocale.set(l, (byLocale.get(l) ?? new Set()).add(email));
+          }
+          for (const [locale, set] of [...byLocale].sort(([a], [b]) => (a < b ? -1 : 1))) {
+            const mail = tierDowngradedEmail(
+              {
+                workspaceName: wsName,
+                fromTier,
+                toTier,
+                downgradedAtHuman: humanDate(now),
+                freezeItems: effects.filter((e) => e.effect === "freeze").map((e) => e.human),
+                revertItems: effects.filter((e) => e.effect === "revert").map((e) => e.human),
+                workspaceUrl: dashboardPath(
+                  deps.dashboardUrl,
+                  `/w/${workspaceId}/settings/billing`,
+                ),
+              },
+              locale,
+            );
             await deps.jobs.enqueue(
               emailJob,
-              { to: emails, ...mail, tags: ["tier_downgraded"] },
+              { to: [...set].sort(), ...mail, tags: ["tier_downgraded"] },
               { tx },
             );
           }

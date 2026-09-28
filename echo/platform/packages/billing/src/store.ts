@@ -15,6 +15,8 @@ export interface AppUserRow {
   readonly id: string;
   readonly email: string | null;
   readonly display_name: string | null;
+  /** The language their dashboard is set to, when the store knows it. */
+  readonly language?: string | null;
 }
 
 export interface NotificationRow {

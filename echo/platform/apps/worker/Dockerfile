@@ -11,10 +11,11 @@ RUN bun build apps/worker/src/main.ts --compile --minify --sourcemap --target=bu
 # A compiled binary has no source tree beside it, so the files it reads are laid out under
 # /app/assets as <package>/... (packages/core/src/assets.ts), and the binary
 # checks them at boot against apps/worker/src/assets.ts. Popcorn's prompts drive the ticks;
-# the chat assistant reads its skill files.
-RUN mkdir -p /assets/popcorn /assets/agentic \
+# the chat assistant reads its skill files; the i18n catalogs word the emails.
+RUN mkdir -p /assets/popcorn /assets/agentic /assets/i18n \
     && cp -r packages/popcorn/prompts /assets/popcorn/prompts \
-    && cp -r packages/agentic/skills /assets/agentic/skills
+    && cp -r packages/agentic/skills /assets/agentic/skills \
+    && cp -r packages/i18n/locales /assets/i18n/locales
 
 FROM gcr.io/distroless/cc-debian12:nonroot
 COPY --from=build /out/worker /app/worker

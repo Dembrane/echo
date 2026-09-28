@@ -61,6 +61,7 @@ export {
   emailsOf,
   Notifier,
   orgAdmins,
+  recipientsOf,
   severityFor,
   workspaceAdmins,
   workspaceAdminsAndBilling,
