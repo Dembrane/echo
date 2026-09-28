@@ -10,15 +10,6 @@ function stripLocale(segments: string[]): string[] {
 	return segments;
 }
 
-// Temporary: sidebar lives under /sidebar-preview during development.
-// Remove once the sidebar replaces production layouts.
-const PREVIEW_PREFIX = "sidebar-preview";
-
-function stripPreview(segments: string[]): string[] {
-	if (segments[0] === PREVIEW_PREFIX) return segments.slice(1);
-	return segments;
-}
-
 const OVERLAY_VIEWS = new Set(["inbox", "help"]);
 
 function withoutSidebarSearch(search: string): string {
@@ -35,7 +26,7 @@ export function resolveSidebarView(
 	search = "",
 ): ResolvedSidebarView {
 	const raw = pathname.split("/").filter(Boolean);
-	const segs = stripPreview(stripLocale(raw));
+	const segs = stripLocale(raw);
 
 	const overlay = new URLSearchParams(search).get("sidebar");
 	if (overlay && OVERLAY_VIEWS.has(overlay)) {

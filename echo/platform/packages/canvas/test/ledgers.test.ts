@@ -1,11 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
-  appendHostItem,
   applyModelExtraction,
   freshCanvasState,
-  hostItem,
   normalizeCanvasTabs,
-  removeHostItem,
   renderTabbedCanvas,
   seedBoardCardsFromQuotes,
   statePatch,
@@ -120,25 +117,7 @@ describe("model extraction", () => {
   });
 });
 
-describe("host items", () => {
-  test("added exactly, removed by id or text", () => {
-    const item = hostItem({
-      text: " Say hi ",
-      targetTab: "cloud",
-      person: null,
-      chatId: "c",
-      messageId: null,
-    });
-    expect(item).toMatchObject({ text: "Say hi", target_tab: "concept_cloud", removed_at: null });
-    const state = appendHostItem(freshCanvasState(), item);
-    const [after, removed] = removeHostItem(state, "say");
-    expect(removed).toBe(true);
-    expect(after.host_items[0]?.removed_at).toBeTruthy();
-    expect(() =>
-      hostItem({ text: "x", targetTab: "board", person: null, chatId: null, messageId: null }),
-    ).toThrow("target_tab must be one of crux, concept_cloud, or story");
-  });
-
+describe("ledger columns", () => {
   test("state patch writes every ledger column", () => {
     expect(Object.keys(statePatch(freshCanvasState()))).toEqual([
       "canvas_tabs",

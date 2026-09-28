@@ -4,26 +4,6 @@ import type postgres from "postgres";
 export type Row = Record<string, unknown>;
 type Sql = postgres.Sql | postgres.TransactionSql;
 
-/** Every column of project_report, in table order: the only names `fields` may ask for. */
-export const REPORT_COLUMNS = [
-  "content",
-  "date_created",
-  "date_updated",
-  "deleted_at",
-  "error_code",
-  "error_message",
-  "id",
-  "language",
-  "project_id",
-  "scheduled_at",
-  "show_portal_link",
-  "status",
-  "user_instructions",
-  "user_created",
-  "kind",
-  "public_token",
-] as const;
-
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isUuid = (v: string) => UUID.test(v);
 /** Report ids are bigserial; anything else names no row, like a missing one. */
@@ -102,21 +82,6 @@ function queries(sql: Sql) {
         where r.project_id = ${projectId} order by m.date_created nulls last, m.id limit 1000` as Promise<
         Row[]
       >;
-    },
-
-    async reportMetrics(reportId: string) {
-      return sql`select id, date_created, project_report_id, type from project_report_metric
-        where project_report_id = ${reportId} order by date_created nulls last, id limit 1000` as Promise<
-        Row[]
-      >;
-    },
-
-    async insertMetric(row: { project_report_id: string; type: string; ip?: string; now: string }) {
-      const [created] = await sql`insert into project_report_metric
-          (project_report_id, type, ip, date_created)
-        values (${row.project_report_id}, ${row.type}, ${row.ip ?? null}, ${row.now})
-        returning *`;
-      return created as Row;
     },
 
     // ── generation reads ──────────────────────────────────────────────

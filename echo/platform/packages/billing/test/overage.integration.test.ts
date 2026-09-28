@@ -26,7 +26,9 @@ run("recording overage episodes", () => {
     await a.unsafe(`drop database if exists ${dbName} with (force)`);
     for (let i = 0; ; i++) {
       try {
-        await a.unsafe(`create database ${dbName} template parity_template_platform`);
+        await a.unsafe(
+          `create database ${dbName} template ${process.env.PARITY_TEMPLATE ?? "parity_template_platform"}`,
+        );
         break;
       } catch (e) {
         if (i > 20) throw e;

@@ -44,10 +44,7 @@ import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscr
 import { getConversationStartTime } from "@/components/conversation/utils";
 import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArtefactsSection";
 import { useProjectById } from "@/components/project/hooks";
-import {
-	ENABLE_DISPLAY_CONVERSATION_LINKS,
-	TRANSCRIPT_TROUBLESHOOTING_DOCS_URL,
-} from "@/config";
+import { TRANSCRIPT_TROUBLESHOOTING_DOCS_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { generateConversationSummary } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
@@ -376,18 +373,14 @@ export const ProjectConversationRoute = () => {
 				<Stack gap="3rem" className="min-w-0">
 					{conversation && (
 						<>
-							{ENABLE_DISPLAY_CONVERSATION_LINKS && (
-								<>
-									<ConversationLink
-										conversation={conversation}
-										projectId={projectId ?? ""}
-									/>
-									{conversation?.linked_conversations?.length ||
-									conversation?.linking_conversations?.length ? (
-										<Divider />
-									) : null}
-								</>
-							)}
+							<ConversationLink
+								conversation={conversation}
+								projectId={projectId ?? ""}
+							/>
+							{conversation?.linked_conversations?.length ||
+							conversation?.linking_conversations?.length ? (
+								<Divider />
+							) : null}
 
 							<Stack gap="1.5rem">
 								<ConversationDangerZone

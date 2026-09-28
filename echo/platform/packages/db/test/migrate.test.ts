@@ -6,10 +6,11 @@ import { migrate } from "../src/migrate";
 const journal = (await Bun.file(
   new URL("../migrations/meta/_journal.json", import.meta.url),
 ).json()) as {
-  entries: unknown[];
+  entries: { tag: string }[];
 };
 const TOTAL = journal.entries.length;
 const BASELINE = 2;
+const CONTRACT = journal.entries.filter((e) => e.tag.includes("_contract_")).length;
 
 // Needs a scratch Postgres with pgvector: TEST_DATABASE_ADMIN_URL=postgres://u:p@host:5432/postgres
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
@@ -19,7 +20,7 @@ const run = admin ? describe : describe.skip;
 run("migrate", () => {
   const sql = admin ? postgres(admin, { max: 1, onnotice: () => {} }) : (undefined as never);
   beforeAll(async () => {
-    for (const db of ["mig_fresh", "mig_adopt"]) {
+    for (const db of ["mig_fresh", "mig_adopt", "mig_hold"]) {
       await sql.unsafe(`drop database if exists ${db}`);
       await sql.unsafe(`create database ${db}`);
     }
@@ -49,5 +50,15 @@ run("migrate", () => {
     expect(r.adoptedBaseline).toBe(true);
     // The baseline is recorded, not run; later migrations run normally.
     expect(r.applied).toBe(TOTAL - BASELINE);
-  });
+  }, 30_000);
+
+  test("holds contract migrations back for a database the old stack shares", async () => {
+    const r = await migrate(`${base}/mig_hold`, { holdContract: true });
+    expect(r).toEqual({ adoptedBaseline: false, applied: TOTAL - CONTRACT });
+    const db = postgres(`${base}/mig_hold`, { max: 1, onnotice: () => {} });
+    // A table the contract migration drops is still there for the old stack.
+    const [row] = await db`select to_regclass('public.project_analysis_run') is not null as kept`;
+    await db.end();
+    expect(row?.kept).toBe(true);
+  }, 30_000);
 });

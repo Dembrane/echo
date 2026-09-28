@@ -118,12 +118,3 @@ export async function createMessage(
   });
   return (await d.store.messageItem(id)) ?? {};
 }
-
-export async function deleteMessage(d: ChatDeps, who: Signed, messageId: string) {
-  const msg = await d.store.message(messageId);
-  if (!msg?.project_chat_id) throw new NotFoundError("Message not found");
-  const { chat } = await bffChat(d, who, (msg as { project_chat_id: string }).project_chat_id);
-  await projectFor(d.access, who, chat.project_id?.id ?? "", "project:update");
-  await d.store.deleteMessage(messageId);
-  return { status: "deleted" };
-}

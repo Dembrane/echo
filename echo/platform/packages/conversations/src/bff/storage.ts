@@ -24,8 +24,6 @@ const {
   conversation_artifact,
   conversation_link,
   conversation_reply,
-  conversation_segment,
-  conversation_segment_conversation_chunk,
   project_chat_conversation,
   project_chat_message_conversation,
   processing_status,
@@ -73,7 +71,6 @@ export const CHUNK_COLUMNS = Object.keys(conversation_chunk) as readonly string[
 export const CONVERSATION_ALIASES = [
   "chunks",
   "conversation_artifacts",
-  "conversation_segments",
   "linked_conversations",
   "linking_conversations",
   "processing_status",
@@ -82,7 +79,7 @@ export const CONVERSATION_ALIASES = [
   "replies",
   "tags",
 ] as const;
-export const CHUNK_ALIASES = ["conversation_segments", "processing_status"] as const;
+export const CHUNK_ALIASES = ["processing_status"] as const;
 
 /** Search is over these; `id` is left out because Directus rejects _icontains on uuids. */
 const SEARCH_COLUMNS = [
@@ -165,7 +162,7 @@ export function bffStore(db: Db) {
     const out = new Map<string, Row>(ids.map((i) => [i, {}]));
     if (!ids.length) return out;
     const list = [...ids];
-    const [chunks, artifacts, segments, linked, linking, statuses, messages, chats, replies, tags] =
+    const [chunks, artifacts, linked, linking, statuses, messages, chats, replies, tags] =
       await Promise.all([
         db
           .select({ owner: conversation_chunk.conversation_id, id: conversation_chunk.id })
@@ -177,11 +174,6 @@ export function bffStore(db: Db) {
           .from(conversation_artifact)
           .where(inArray(conversation_artifact.conversation_id, list))
           .orderBy(asc(conversation_artifact.id)),
-        db
-          .select({ owner: conversation_segment.conversation_id, id: conversation_segment.id })
-          .from(conversation_segment)
-          .where(inArray(conversation_segment.conversation_id, list))
-          .orderBy(asc(conversation_segment.id)),
         db
           .select({ owner: conversation_link.source_conversation_id, id: conversation_link.id })
           .from(conversation_link)
@@ -230,7 +222,6 @@ export function bffStore(db: Db) {
     const groups: [string, Map<string, unknown[]>][] = [
       ["chunks", byOwner(chunks, list)],
       ["conversation_artifacts", byOwner(artifacts, list)],
-      ["conversation_segments", byOwner(segments, list, true)],
       ["linked_conversations", byOwner(linked, list)],
       ["linking_conversations", byOwner(linking, list)],
       ["processing_status", byOwner(statuses, list)],
@@ -250,25 +241,13 @@ export function bffStore(db: Db) {
     const out = new Map<string, Row>(ids.map((i) => [i, {}]));
     if (!ids.length) return out;
     const list = [...ids];
-    const [segs, statuses] = await Promise.all([
-      db
-        .select({
-          owner: conversation_segment_conversation_chunk.conversation_chunk_id,
-          id: conversation_segment_conversation_chunk.id,
-        })
-        .from(conversation_segment_conversation_chunk)
-        .where(inArray(conversation_segment_conversation_chunk.conversation_chunk_id, list))
-        .orderBy(asc(conversation_segment_conversation_chunk.id)),
-      db
-        .select({ owner: processing_status.conversation_chunk_id, id: processing_status.id })
-        .from(processing_status)
-        .where(inArray(processing_status.conversation_chunk_id, list))
-        .orderBy(asc(processing_status.id)),
-    ]);
-    const s = byOwner(segs, list, true);
+    const statuses = await db
+      .select({ owner: processing_status.conversation_chunk_id, id: processing_status.id })
+      .from(processing_status)
+      .where(inArray(processing_status.conversation_chunk_id, list))
+      .orderBy(asc(processing_status.id));
     const p = byOwner(statuses, list);
-    for (const id of list)
-      out.set(id, { conversation_segments: s.get(id) ?? [], processing_status: p.get(id) ?? [] });
+    for (const id of list) out.set(id, { processing_status: p.get(id) ?? [] });
     return out;
   }
 
@@ -495,19 +474,6 @@ export function bffStore(db: Db) {
           ),
         );
       return row?.n ?? 0;
-    },
-
-    /** One chunk with every column and its `*` aliases. */
-    async chunk(chunkId: string): Promise<Row | null> {
-      if (!isUuid(chunkId)) return null;
-      const [row] = await db
-        .select()
-        .from(conversation_chunk)
-        .where(eq(conversation_chunk.id, chunkId))
-        .limit(1);
-      if (!row) return null;
-      const aliases = await chunkAliases([row.id]);
-      return { ...directusRow(row), ...(aliases.get(row.id) ?? {}) };
     },
 
     /** A conversation row read with `*`, aliases included, soft-deleted or not. */

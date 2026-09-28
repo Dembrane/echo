@@ -308,42 +308,14 @@ export default scenarios([
     body: { timestamp: "yesterday", content: 3 },
   },
 
-  // ── audio through the API (refusals; success needs a bucket: integration tests) ──
+  // ── audio through the API, pruned: the portal uploads with presigned URLs ──
   {
-    name: "portal upload chunk: missing form fields",
+    name: "portal upload chunk: removed",
     as: "anonymous",
     method: "POST",
     path: `${P}/conversations/${c2}/upload-chunk`,
     form: { source: "PORTAL_AUDIO" },
-  },
-  {
-    name: "portal upload chunk: unknown conversation",
-    as: "anonymous",
-    method: "POST",
-    path: `${P}/conversations/${id("c1", 99)}/upload-chunk`,
-    form: {
-      timestamp: AT,
-      chunk: {
-        filename: "a.webm",
-        type: "audio/webm",
-        base64: Buffer.from("abc").toString("base64"),
-      },
-    },
-  },
-  {
-    name: "portal upload chunk: closed project",
-    as: "anonymous",
-    method: "POST",
-    path: `${P}/conversations/${c2}/upload-chunk`,
-    form: {
-      timestamp: AT,
-      chunk: {
-        filename: "a.webm",
-        type: "audio/webm",
-        base64: Buffer.from("abc").toString("base64"),
-      },
-    },
-    setup: CLOSE_P1,
+    removed: "the legacy upload through the API; the portal and iOS use presigned uploads",
   },
 
   // ── presigned uploads ────────────────────────────────────────────

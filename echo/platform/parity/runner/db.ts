@@ -19,7 +19,9 @@ const IGNORED_TABLES = new Set([
   "platform_presence",
 ]);
 
-export async function reset(template = "parity_template_platform"): Promise<void> {
+export async function reset(
+  template = process.env.PARITY_TEMPLATE ?? "parity_template_platform",
+): Promise<void> {
   const sql = postgres(ADMIN, { max: 1, onnotice: () => {} });
   try {
     await sql`select pg_terminate_backend(pid) from pg_stat_activity where datname = ${DB_NAME} and pid <> pg_backend_pid()`;

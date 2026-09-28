@@ -1,5 +1,5 @@
 import { conversations, projects, tags, workspaces } from "../fixtures";
-import { EMPTY_PROJECT, extra, P1_RUN, P2_OPEN, P2_TAG, UNTRANSCRIBED } from "../projects-setup";
+import { EMPTY_PROJECT, extra, P2_OPEN, P2_TAG, UNTRANSCRIBED } from "../projects-setup";
 import { scenarios } from "../runner/scenario";
 
 const { p1, p2, p3, legacy } = projects;
@@ -144,33 +144,12 @@ export default scenarios([
 
   // ── POST /api/projects/{id}/conversations/{cid}/tags/delete ───────
   {
-    name: "projects conversation tags delete: owner",
+    name: "projects conversation tags delete: removed",
     as: "alice",
     method: "POST",
     path: v1(p1, `/conversations/${conversations.c1}/tags/delete`),
     body: { tag_ids: [1] },
-  },
-  {
-    name: "projects conversation tags delete: ids must be integers",
-    as: "alice",
-    method: "POST",
-    path: v1(p1, `/conversations/${conversations.c1}/tags/delete`),
-    body: { tag_ids: ["x"] },
-  },
-  {
-    name: "projects conversation tags delete: other tenant's project",
-    as: "bob",
-    method: "POST",
-    path: v1(p1, `/conversations/${conversations.c1}/tags/delete`),
-    body: { tag_ids: [1] },
-  },
-  {
-    name: "projects conversation tags delete: link of another tenant",
-    as: "bob",
-    method: "POST",
-    path: v1(p3, `/conversations/${conversations.c3}/tags/delete`),
-    body: { tag_ids: [1] },
-    differs: "C-4: only links of this conversation in this project are deleted",
+    removed: "no client calls it; tags are unlinked through conversation-project-tags/replace",
   },
 
   // ── GET /api/projects/{id}/transcripts ────────────────────────────
@@ -202,74 +181,57 @@ export default scenarios([
     path: v1(p1, "/transcripts"),
   },
 
-  // ── POST /api/projects/{id}/create-library ────────────────────────
+  // ── The old library, pruned ───────────────────────────────────────
   {
-    name: "projects create-library: owner",
+    name: "projects create-library: removed",
     as: "alice",
     method: "POST",
     path: v1(p1, "/create-library"),
     body: { language: "nl" },
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
   {
-    name: "projects create-library: missing body",
-    as: "alice",
-    method: "POST",
-    path: v1(p1, "/create-library"),
-  },
-  {
-    name: "projects create-library: other tenant",
-    as: "bob",
-    method: "POST",
-    path: v1(p1, "/create-library"),
-    body: {},
-  },
-  {
-    name: "projects create-library: observer refused",
-    as: "rita",
-    method: "POST",
-    path: v1(p2, "/create-library"),
-    body: {},
-    setup: [P2_OPEN],
-    differs: "H-8: regenerating the library needs project:update, any role could before",
-  },
-
-  // ── POST /api/projects/{id}/create-view ───────────────────────────
-  {
-    name: "projects create-view: no analysis yet",
+    name: "projects create-view: removed",
     as: "alice",
     method: "POST",
     path: v1(p1, "/create-view"),
     body: { query: "mobility" },
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
   {
-    name: "projects create-view: queued",
+    name: "library views list: removed",
     as: "alice",
-    method: "POST",
-    path: v1(p1, "/create-view"),
-    body: { query: "mobility" },
-    setup: [P1_RUN],
+    method: "GET",
+    path: "/api/v2/bff/views",
+    query: { project_id: p1 },
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
   {
-    name: "projects create-view: query required",
+    name: "library view get: removed",
     as: "alice",
-    method: "POST",
-    path: v1(p1, "/create-view"),
-    body: {},
+    method: "GET",
+    path: `/api/v2/bff/views/${extra.run}`,
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
   {
-    name: "projects create-view: observer refused",
-    as: "rita",
-    method: "POST",
-    path: v1(p2, "/create-view"),
-    body: { query: "x" },
-    setup: [P2_OPEN],
+    name: "library aspect get: removed",
+    as: "alice",
+    method: "GET",
+    path: `/api/v2/bff/aspects/${extra.run}`,
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
   {
-    name: "projects create-view: other tenant",
-    as: "bob",
-    method: "POST",
-    path: v1(p1, "/create-view"),
-    body: { query: "x" },
+    name: "library quote get: removed",
+    as: "alice",
+    method: "GET",
+    path: `/api/v2/bff/aspect-segments/${extra.run}`,
+    removed:
+      "the old library (views, aspects, quotes) had no entry point in the app and no prod traffic",
   },
 
   // ── POST /api/projects/{id}/clone ─────────────────────────────────
@@ -338,9 +300,16 @@ export default scenarios([
   { name: "projects v2 detail: anonymous", as: "anonymous", method: "GET", path: v2(p1) },
 
   // ── GET /api/v2/projects/{id}/bff ─────────────────────────────────
-  { name: "projects v2 bff: owner, whole row", as: "alice", method: "GET", path: v2(p1, "/bff") },
+  {
+    name: "projects v2 bff: owner, whole row",
+    as: "alice",
+    method: "GET",
+    path: v2(p1, "/bff"),
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
+  },
   {
     name: "projects v2 bff: legal block",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "alice",
     method: "GET",
     path: v2(p1, "/bff"),
@@ -362,6 +331,7 @@ export default scenarios([
   },
   {
     name: "projects v2 bff: private project owner",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "erin",
     method: "GET",
     path: v2(p2, "/bff"),
@@ -603,6 +573,7 @@ export default scenarios([
   // ── PATCH /api/v2/bff/projects/{id} ───────────────────────────────
   {
     name: "projects bff update: rename",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "alice",
     method: "PATCH",
     path: bff(p1),
@@ -631,6 +602,7 @@ export default scenarios([
   },
   {
     name: "projects bff update: paid tier hides the event invitation",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "alice",
     method: "PATCH",
     path: bff(p1),
@@ -645,6 +617,7 @@ export default scenarios([
   },
   {
     name: "projects bff update: consent with a link",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "alice",
     method: "PATCH",
     path: bff(p1),
@@ -673,6 +646,7 @@ export default scenarios([
   },
   {
     name: "projects bff update: member edits",
+    differs: "the old library is pruned: rows no longer list project_analysis_runs",
     as: "admin",
     method: "PATCH",
     path: bff(p1),
@@ -695,8 +669,11 @@ export default scenarios([
   },
 
   // ── DELETE /api/v2/bff/projects/{id} ──────────────────────────────
-  { name: "projects bff delete: owner", as: "alice", method: "DELETE", path: bff(p1) },
-  { name: "projects bff delete: member refused", as: "admin", method: "DELETE", path: bff(p1) },
-  { name: "projects bff delete: other tenant", as: "bob", method: "DELETE", path: bff(p1) },
-  { name: "projects bff delete: anonymous", as: "anonymous", method: "DELETE", path: bff(p1) },
+  {
+    name: "projects bff delete: removed",
+    as: "alice",
+    method: "DELETE",
+    path: bff(p1),
+    removed: "no client calls it; the dashboard deletes through DELETE /api/projects/{id}",
+  },
 ]);

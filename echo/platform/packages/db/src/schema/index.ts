@@ -1152,28 +1152,6 @@ export const conversation_artifact = pgTable(
   ],
 );
 
-export const aspect = pgTable(
-  "aspect",
-  {
-    created_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-    description: text(),
-    id: uuid().primaryKey().notNull(),
-    image_url: varchar({ length: 255 }).default(sql`NULL`),
-    long_summary: text(),
-    name: varchar({ length: 255 }).default(sql`NULL`),
-    short_summary: text(),
-    updated_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-    view_id: uuid(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    foreignKey({
-      columns: [table.view_id],
-      foreignColumns: [view.id],
-      name: "aspect_view_id_foreign",
-    }).onDelete("set null"),
-  ],
-);
-
 export const conversation_chunk = pgTable(
   "conversation_chunk",
   {
@@ -1362,48 +1340,6 @@ export const directus_extensions = pgTable("directus_extensions", {
   source: varchar({ length: 255 }).notNull(),
   bundle: uuid(),
 });
-
-export const conversation_segment = pgTable(
-  "conversation_segment",
-  {
-    config_id: varchar({ length: 255 }).default(sql`NULL`),
-    contextual_transcript: text(),
-    conversation_id: uuid(),
-    counter: real(),
-    id: serial().primaryKey().notNull(),
-    lightrag_flag: boolean().default(false),
-    path: text(),
-    transcript: text(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    foreignKey({
-      columns: [table.conversation_id],
-      foreignColumns: [conversation.id],
-      name: "conversation_segment_conversation_id_foreign",
-    }).onDelete("cascade"),
-  ],
-);
-
-export const conversation_segment_conversation_chunk = pgTable(
-  "conversation_segment_conversation_chunk",
-  {
-    conversation_chunk_id: uuid(),
-    conversation_segment_id: integer(),
-    id: serial().primaryKey().notNull(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    foreignKey({
-      columns: [table.conversation_chunk_id],
-      foreignColumns: [conversation_chunk.id],
-      name: "conversation_segment_conversation_chunk_co__1f8deab8_foreign",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.conversation_segment_id],
-      foreignColumns: [conversation_segment.id],
-      name: "conversation_segment_conversation_chunk_co__4f4b4f4e_foreign",
-    }).onDelete("cascade"),
-  ],
-);
 
 export const directus_access = pgTable(
   "directus_access",
@@ -1959,25 +1895,6 @@ export const directus_permissions = pgTable(
   ],
 );
 
-export const insight = pgTable(
-  "insight",
-  {
-    created_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-    id: uuid().primaryKey().notNull(),
-    project_analysis_run_id: uuid(),
-    summary: text(),
-    title: text(),
-    updated_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    foreignKey({
-      columns: [table.project_analysis_run_id],
-      foreignColumns: [project_analysis_run.id],
-      name: "insight_project_analysis_run_id_foreign",
-    }).onDelete("set null"),
-  ],
-);
-
 export const map_embedding = pgTable(
   "map_embedding",
   {
@@ -2529,13 +2446,19 @@ export const processing_status = pgTable(
     message: text(),
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
     parent: bigint({ mode: "number" }),
-    project_analysis_run_id: uuid(),
     project_id: uuid(),
     timestamp: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     index().using("btree", table.conversation_chunk_id.asc().nullsLast()),
-    index().using("btree", table.conversation_id.asc().nullsLast()),
+    // Serves lookups by conversation and the newest-first status reads; replaces the
+    // single-column conversation_id index, which it covers.
+    index("idx_processing_status_conversation_id_id").using(
+      "btree",
+      table.conversation_id.asc().nullsLast(),
+      table.id.asc().nullsLast(),
+    ),
+    index().using("btree", table.parent.asc().nullsLast()),
     index().using("btree", table.project_id.asc().nullsLast()),
     foreignKey({
       columns: [table.conversation_chunk_id],
@@ -2552,11 +2475,6 @@ export const processing_status = pgTable(
       foreignColumns: [table.id],
       name: "processing_status_parent_foreign",
     }),
-    foreignKey({
-      columns: [table.project_analysis_run_id],
-      foreignColumns: [project_analysis_run.id],
-      name: "processing_status_project_analysis_run_id_foreign",
-    }).onDelete("set null"),
     foreignKey({
       columns: [table.project_id],
       foreignColumns: [project.id],
@@ -2632,23 +2550,6 @@ export const project_report_metric = pgTable(
       foreignColumns: [project_report.id],
       name: "project_report_metric_project_report_id_foreign",
     }).onDelete("set null"),
-  ],
-);
-
-export const project_analysis_run = pgTable(
-  "project_analysis_run",
-  {
-    created_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-    id: uuid().primaryKey().notNull(),
-    project_id: uuid(),
-    updated_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    foreignKey({
-      columns: [table.project_id],
-      foreignColumns: [project.id],
-      name: "project_analysis_run_project_id_foreign",
-    }).onDelete("cascade"),
   ],
 );
 
@@ -2730,6 +2631,7 @@ export const project_chat = pgTable(
     is_private: boolean().default(false),
   },
   (table): PgTableExtraConfigValue[] => [
+    index().using("btree", table.project_id.asc().nullsLast()),
     foreignKey({
       columns: [table.project_id],
       foreignColumns: [project.id],
@@ -2761,6 +2663,7 @@ export const project_chat_message = pgTable(
     tokens_count: integer(),
   },
   (table): PgTableExtraConfigValue[] => [
+    index().using("btree", table.project_chat_id.asc().nullsLast()),
     foreignKey({
       columns: [table.project_chat_id],
       foreignColumns: [project_chat.id],
@@ -3046,29 +2949,6 @@ export const project_tag = pgTable(
   ],
 );
 
-export const view = pgTable(
-  "view",
-  {
-    created_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-    description: text(),
-    id: uuid().primaryKey().notNull(),
-    language: varchar({ length: 255 }).default(sql`NULL`),
-    name: varchar({ length: 255 }).default(sql`NULL`),
-    project_analysis_run_id: uuid(),
-    summary: text(),
-    updated_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-    user_input: text(),
-    user_input_description: text(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    foreignKey({
-      columns: [table.project_analysis_run_id],
-      foreignColumns: [project_analysis_run.id],
-      name: "view_project_analysis_run_id_foreign",
-    }).onDelete("set null"),
-  ],
-);
-
 export const project_report_notification_participants = pgTable(
   "project_report_notification_participants",
   {
@@ -3221,62 +3101,6 @@ export const workspace_membership = pgTable(
   ],
 );
 
-export const workspace_request = pgTable(
-  "workspace_request",
-  {
-    approved_billing_period: varchar({ length: 255 }).default(sql`NULL`),
-    created_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-    decided_at: timestamp({ withTimezone: true, mode: "string" }),
-    decided_by: uuid(),
-    denial_reason: text(),
-    granted_percent_discount: integer(),
-    granted_tier: varchar({ length: 255 }).default(sql`NULL`),
-    granted_tier_expires_at: timestamp({ withTimezone: true, mode: "string" }),
-    granted_type_discount: varchar({ length: 255 }).default(sql`NULL`),
-    id: uuid().primaryKey().notNull(),
-    kind: varchar({ length: 255 }).default(sql`NULL`).notNull(),
-    org_id: uuid().notNull(),
-    proposed_billing_period: varchar({ length: 255 }).default(sql`NULL`),
-    proposed_name: varchar({ length: 100 }).default(sql`NULL`),
-    proposed_tier: varchar({ length: 255 }).default("innovator").notNull(),
-    proposed_visibility: varchar({ length: 255 }).default("open_to_organisation").notNull(),
-    requested_by: uuid().notNull(),
-    requester_message: text(),
-    resulting_workspace_id: uuid(),
-    staff_notes: text(),
-    status: varchar({ length: 255 }).default("pending").notNull(),
-    updated_at: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
-    workspace_id: uuid(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    foreignKey({
-      columns: [table.decided_by],
-      foreignColumns: [app_user.id],
-      name: "workspace_request_decided_by_foreign",
-    }).onDelete("set null"),
-    foreignKey({
-      columns: [table.org_id],
-      foreignColumns: [org.id],
-      name: "workspace_request_org_id_foreign",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.requested_by],
-      foreignColumns: [app_user.id],
-      name: "workspace_request_requested_by_foreign",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.resulting_workspace_id],
-      foreignColumns: [workspace.id],
-      name: "workspace_request_resulting_workspace_id_foreign",
-    }).onDelete("set null"),
-    foreignKey({
-      columns: [table.workspace_id],
-      foreignColumns: [workspace.id],
-      name: "workspace_request_workspace_id_foreign",
-    }).onDelete("set null"),
-  ],
-);
-
 export const workspace_invite = pgTable(
   "workspace_invite",
   {
@@ -3412,30 +3236,6 @@ export const announcement_activity = pgTable(
   ],
 );
 
-export const aspect_segment = pgTable(
-  "aspect_segment",
-  {
-    aspect: uuid(),
-    description: text(),
-    id: uuid().primaryKey().notNull(),
-    relevant_index: text(),
-    segment: integer(),
-    verbatim_transcript: text(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    foreignKey({
-      columns: [table.aspect],
-      foreignColumns: [aspect.id],
-      name: "aspect_segment_aspect_foreign",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.segment],
-      foreignColumns: [conversation_segment.id],
-      name: "aspect_segment_segment_foreign",
-    }).onDelete("set null"),
-  ],
-);
-
 export const directus_files = pgTable(
   "directus_files",
   {
@@ -3546,6 +3346,12 @@ export const project_agentic_run_event = pgTable(
     timestamp: timestamp({ withTimezone: true, mode: "string" }).default(sql`CURRENT_TIMESTAMP`),
   },
   (table): PgTableExtraConfigValue[] => [
+    // Run events are always read per run in seq order; the pair serves that and the FK.
+    index("project_agentic_run_event_run_seq_index").using(
+      "btree",
+      table.project_agentic_run_id.asc().nullsLast(),
+      table.seq.asc().nullsLast(),
+    ),
     foreignKey({
       columns: [table.project_agentic_run_id],
       foreignColumns: [project_agentic_run.id],

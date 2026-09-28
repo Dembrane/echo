@@ -231,19 +231,6 @@ export function liveRoutes(d: ConversationsDeps) {
     return { sql, cutoff };
   };
 
-  app.get("/api/v2/bff/conversations/live-count", async (c) => {
-    const who = requireUser(c);
-    const { query } = await p.validate(c.req, { query: windowQuery(30) });
-    await projectFor(d.access, who, query.project_id, "conversation:read");
-    const { sql, cutoff } = await recentChunkConversations(query.window_seconds);
-    const [row] = await sql<{ n: number }[]>`
-      select count(distinct ch.conversation_id)::int as n
-      from conversation_chunk ch join conversation c on c.id = ch.conversation_id
-      where c.project_id = ${query.project_id}
-        and ch.source not in ('DASHBOARD_UPLOAD', 'CLONE') and ch.timestamp > ${cutoff}`;
-    return c.json({ count: row?.n ?? 0 });
-  });
-
   app.get("/api/v2/bff/conversations/live", async (c) => {
     const who = requireUser(c);
     const { query } = await p.validate(c.req, { query: windowQuery(30) });

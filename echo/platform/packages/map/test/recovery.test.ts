@@ -27,7 +27,7 @@ import { MapStore } from "../src/store";
  * verdict for the same attempt.
  */
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
-const TEMPLATE = "parity_template_platform";
+const TEMPLATE = process.env.PARITY_TEMPLATE ?? "parity_template_platform";
 const DB = `map_recovery_${process.pid}`;
 const hasTemplate = admin
   ? await (async () => {

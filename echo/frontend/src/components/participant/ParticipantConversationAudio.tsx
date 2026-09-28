@@ -24,7 +24,7 @@ import Cookies from "js-cookie";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
-import { ENABLE_CONVERSATION_HEALTH, ENABLE_MONITOR } from "@/config";
+import { ENABLE_MONITOR } from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
@@ -137,11 +137,7 @@ export const ParticipantConversationAudio = () => {
 	// EventSource of its own.
 	const isOnline = useOnlineStatus();
 	const { conversationIssue, sseConnectionHealthy } =
-		useConversationsHealthStream(
-			ENABLE_CONVERSATION_HEALTH && conversationId
-				? [conversationId]
-				: undefined,
-		);
+		useConversationsHealthStream(conversationId ? [conversationId] : undefined);
 
 	const [
 		forcedSettingsOpened,
@@ -214,7 +210,7 @@ export const ParticipantConversationAudio = () => {
 	// The meter escalates to `problem` on its own when no sound arrives at all.
 	const meterStatus: RecordingMeterStatus = audioRecorder.hadInterruption
 		? "problem"
-		: !isOnline || (ENABLE_CONVERSATION_HEALTH && !sseConnectionHealthy)
+		: !isOnline || !sseConnectionHealthy
 			? "unhealthy"
 			: "healthy";
 

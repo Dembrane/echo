@@ -66,17 +66,6 @@ export function bffConversationRoutes(d: ConversationsDeps) {
     return c.json(await svc.countRemaining(d, who, query));
   });
 
-  app.post(`${base}/bulk-move`, async (c) => {
-    const who = requireUser(c);
-    const { body } = await p.validate(c.req, {
-      body: model({
-        conversation_ids: required(list(str())),
-        target_project_id: required(str()),
-      }),
-    });
-    return c.json(await svc.bulkMove(d, who, body.data));
-  });
-
   app.get(`${base}/:conversation_id`, async (c) => {
     const who = requireUser(c);
     const { query } = await p.validate(c.req, {
@@ -140,11 +129,6 @@ export function bffConversationRoutes(d: ConversationsDeps) {
     return c.json(
       await svc.countChunks(d, who, c.req.param("conversation_id"), query.transcript_required),
     );
-  });
-
-  app.get("/api/v2/bff/conversation-chunks/:chunk_id", async (c) => {
-    const who = requireUser(c);
-    return c.json(await svc.getChunk(d, who, c.req.param("chunk_id")));
   });
 
   app.get("/api/v2/bff/conversation-project-tags", async (c) => {

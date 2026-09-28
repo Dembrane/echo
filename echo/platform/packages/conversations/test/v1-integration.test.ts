@@ -21,7 +21,7 @@ import { computeTokenCount } from "../src/v1/token-count";
  * conversation_reply), with a scripted model standing in for Vertex.
  */
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
-const TEMPLATE = "parity_template_platform";
+const TEMPLATE = process.env.PARITY_TEMPLATE ?? "parity_template_platform";
 const base = admin ? admin.slice(0, admin.lastIndexOf("/")) : "";
 const hasTemplate = admin
   ? await (async () => {

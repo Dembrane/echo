@@ -14,7 +14,6 @@ import {
 	useParticipantProjectById,
 } from "@/components/participant/hooks";
 import { useConversationIssueBanner } from "@/components/participant/hooks/useConversationIssueBanner";
-import { ENABLE_CONVERSATION_HEALTH } from "@/config";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { testId } from "@/lib/testUtils";
 import { ConnectionHealthStatus } from "../common/ConnectionHealthStatus";
@@ -111,7 +110,7 @@ export const ParticipantBody = ({
 	}, [interleaveMessages]);
 
 	const conversationIssueBanner = useConversationIssueBanner(
-		ENABLE_CONVERSATION_HEALTH ? (conversationIssue ?? "NONE") : "NONE",
+		conversationIssue ?? "NONE",
 	);
 
 	return (
@@ -127,7 +126,7 @@ export const ParticipantBody = ({
 				</h2>
 			)}
 
-			{isRecording && ENABLE_CONVERSATION_HEALTH && (
+			{isRecording && (
 				<div className="flex justify-center transition-opacity duration-500 ease-in-out">
 					<ConnectionHealthStatus
 						isOnline={isOnline}
@@ -145,7 +144,7 @@ export const ParticipantBody = ({
 				/>
 			)}
 
-			{ENABLE_CONVERSATION_HEALTH && !sseConnectionHealthy && (
+			{!sseConnectionHealthy && (
 				<TipBanner
 					icon={IconExclamationCircle}
 					message={t`Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists`}
@@ -153,7 +152,7 @@ export const ParticipantBody = ({
 				/>
 			)}
 
-			{ENABLE_CONVERSATION_HEALTH && conversationIssueBanner && (
+			{conversationIssueBanner && (
 				<TipBanner
 					icon={conversationIssueBanner.icon}
 					message={conversationIssueBanner.message}

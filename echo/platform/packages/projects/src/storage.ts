@@ -7,7 +7,6 @@ import {
   count,
   desc,
   eq,
-  gt,
   gte,
   ilike,
   inArray,
@@ -29,7 +28,6 @@ const {
   project_report,
   project_report_metric,
   project_report_notification_participants,
-  project_analysis_run,
   processing_status,
   project_chat,
   verification_topic,
@@ -46,8 +44,6 @@ const {
   methodology,
   methodology_version,
   prompt_template,
-  insight,
-  view,
 } = schema;
 
 export type Row = Record<string, unknown>;
@@ -58,7 +54,7 @@ export const isUuid = (id: string) => UUID.test(id);
 
 /** Directus rows carried their one-to-many relations as id lists, sorted by the related key. */
 async function projectAliases(db: Db, id: string): Promise<Row> {
-  const [convs, topics, statuses, reports, chats, runs, tags] = await Promise.all([
+  const [convs, topics, statuses, reports, chats, tags] = await Promise.all([
     db
       .select({ id: conversation.id })
       .from(conversation)
@@ -85,11 +81,6 @@ async function projectAliases(db: Db, id: string): Promise<Row> {
       .where(eq(project_chat.project_id, id))
       .orderBy(asc(project_chat.id)),
     db
-      .select({ id: project_analysis_run.id })
-      .from(project_analysis_run)
-      .where(eq(project_analysis_run.project_id, id))
-      .orderBy(asc(project_analysis_run.id)),
-    db
       .select({ id: project_tag.id })
       .from(project_tag)
       .where(eq(project_tag.project_id, id))
@@ -102,7 +93,6 @@ async function projectAliases(db: Db, id: string): Promise<Row> {
     processing_status: ids(statuses),
     project_reports: ids(reports),
     project_chats: ids(chats),
-    project_analysis_runs: ids(runs),
     tags: ids(tags),
   };
 }
@@ -228,28 +218,6 @@ export function projectsStorage(db: Db) {
         .where(eq(conversation_project_tag.project_tag_id, tagId));
     },
 
-    /** Deletes only links that join this conversation to a tag of this project. */
-    async deleteConversationTagLinks(projectId: string, conversationId: string, linkIds: number[]) {
-      if (!linkIds.length) return 0;
-      const rows = await db
-        .delete(conversation_project_tag)
-        .where(
-          and(
-            inArray(conversation_project_tag.id, linkIds),
-            eq(conversation_project_tag.conversation_id, conversationId),
-            inArray(
-              conversation_project_tag.project_tag_id,
-              db
-                .select({ id: project_tag.id })
-                .from(project_tag)
-                .where(eq(project_tag.project_id, projectId)),
-            ),
-          ),
-        )
-        .returning({ id: conversation_project_tag.id });
-      return rows.length;
-    },
-
     // ── conversations ─────────────────────────────────────────────────
 
     /** Live conversations with their chunks in timestamp order, as the transcript export reads them. */
@@ -297,16 +265,6 @@ export function projectsStorage(db: Db) {
         .orderBy(asc(conversation.id));
     },
 
-    async conversationInProject(conversationId: string, projectId: string) {
-      if (!isUuid(conversationId)) return false;
-      const [row] = await db
-        .select({ id: conversation.id })
-        .from(conversation)
-        .where(and(eq(conversation.id, conversationId), eq(conversation.project_id, projectId)))
-        .limit(1);
-      return Boolean(row);
-    },
-
     async latestConversationCreatedAt(projectId: string) {
       const [row] = await db
         .select({ created_at: conversation.created_at })
@@ -315,94 +273,6 @@ export function projectsStorage(db: Db) {
         .orderBy(desc(conversation.created_at))
         .limit(1);
       return row ? row.created_at : undefined;
-    },
-
-    async chunksSince(projectId: string, cutoff: string) {
-      const [row] = await db
-        .select({ n: count(conversation_chunk.id) })
-        .from(conversation_chunk)
-        .innerJoin(conversation, eq(conversation.id, conversation_chunk.conversation_id))
-        .where(
-          and(eq(conversation.project_id, projectId), gt(conversation_chunk.timestamp, cutoff)),
-        );
-      return row?.n ?? 0;
-    },
-
-    // ── analysis runs and processing status ──────────────────────────
-
-    async latestAnalysisRun(projectId: string) {
-      const [row] = await db
-        .select()
-        .from(project_analysis_run)
-        .where(eq(project_analysis_run.project_id, projectId))
-        .orderBy(desc(project_analysis_run.created_at))
-        .limit(1);
-      return row ?? null;
-    },
-
-    async analysisRuns(projectId: string, limit: number) {
-      const rows = await db
-        .select({
-          id: project_analysis_run.id,
-          created_at: project_analysis_run.created_at,
-          updated_at: project_analysis_run.updated_at,
-        })
-        .from(project_analysis_run)
-        .where(eq(project_analysis_run.project_id, projectId))
-        .orderBy(desc(project_analysis_run.created_at))
-        .limit(limit);
-      const out: Row[] = [];
-      for (const r of rows)
-        out.push({ ...directusRow(r), processing_status: await self.runStatusIds(r.id) });
-      return out;
-    },
-
-    /** A run's relation id lists as Directus returned them with the row. */
-    async runAliases(runId: string) {
-      const [insights, views] = await Promise.all([
-        db
-          .select({ id: insight.id })
-          .from(insight)
-          .where(eq(insight.project_analysis_run_id, runId))
-          .orderBy(asc(insight.id)),
-        db
-          .select({ id: view.id })
-          .from(view)
-          .where(eq(view.project_analysis_run_id, runId))
-          .orderBy(asc(view.id)),
-      ]);
-      return {
-        processing_status: await self.runStatusIds(runId),
-        insights: insights.map((r) => String(r.id)),
-        views: views.map((r) => String(r.id)),
-      };
-    },
-
-    async runStatusIds(runId: string) {
-      const rows = await db
-        .select({ id: processing_status.id })
-        .from(processing_status)
-        .where(eq(processing_status.project_analysis_run_id, runId))
-        .orderBy(asc(processing_status.id));
-      return rows.map((r) => String(r.id));
-    },
-
-    async analysisRun(id: string) {
-      if (!isUuid(id)) return null;
-      const [row] = await db
-        .select()
-        .from(project_analysis_run)
-        .where(eq(project_analysis_run.id, id))
-        .limit(1);
-      return row ?? null;
-    },
-
-    async insertAnalysisRun(values: typeof project_analysis_run.$inferInsert) {
-      await db.insert(project_analysis_run).values(values);
-    },
-
-    async insertProcessingStatus(values: typeof processing_status.$inferInsert) {
-      await db.insert(processing_status).values(values);
     },
 
     // ── reports ───────────────────────────────────────────────────────

@@ -1,3 +1,6 @@
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { assetPath } from "@echo/core";
 import { readMigrationFiles } from "drizzle-orm/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -12,6 +15,16 @@ const BASELINE_TAGS = ["0000_baseline", "0001_baseline_guards"];
 // Any fixed number works; every migrating process must use the same one.
 const LOCK_KEY = 72_1405_2026;
 
+/**
+ * Contract migrations (tag contains "_contract_") drop what the old stack still reads.
+ * They run at cutover. A database the old stack also serves (the parity template) is built
+ * with them held back; it is rebuilt from scratch, never migrated forward, because drizzle
+ * applies only migrations newer than the last applied one and would skip a held contract.
+ */
+export interface MigrateOptions {
+  readonly holdContract?: boolean;
+}
+
 export interface MigrateResult {
   readonly adoptedBaseline: boolean;
   readonly applied: number;
@@ -25,19 +38,34 @@ export interface MigrateResult {
  * history. It is adopted: the baseline is recorded as applied, never executed, and
  * later migrations run normally. An advisory lock keeps two jobs from racing.
  */
-export async function migrate(url: string): Promise<MigrateResult> {
+export async function migrate(url: string, opts: MigrateOptions = {}): Promise<MigrateResult> {
   const sql = connect(url, { max: 1, onnotice: () => {} });
+  const folder = opts.holdContract ? withoutContract() : null;
   try {
     await sql`select pg_advisory_lock(${LOCK_KEY})`;
     const adoptedBaseline = await adoptBaseline(sql);
     const before = await countApplied(sql);
-    await drizzleMigrate(drizzle(sql), { migrationsFolder: migrations() });
+    await drizzleMigrate(drizzle(sql), { migrationsFolder: folder ?? migrations() });
     const applied = (await countApplied(sql)) - before;
     return { adoptedBaseline, applied };
   } finally {
     await sql`select pg_advisory_unlock(${LOCK_KEY})`.catch(() => {});
     await sql.end();
+    if (folder) rmSync(folder, { recursive: true, force: true });
   }
+}
+
+/** A copy of the migrations folder whose journal leaves out the contract migrations. */
+function withoutContract(): string {
+  const dir = mkdtempSync(join(tmpdir(), "echo-migrations-"));
+  cpSync(migrations(), dir, { recursive: true });
+  const path = join(dir, "meta", "_journal.json");
+  const journal = JSON.parse(readFileSync(path, "utf8")) as {
+    entries: { tag: string }[];
+  };
+  journal.entries = journal.entries.filter((e) => !e.tag.includes("_contract_"));
+  writeFileSync(path, JSON.stringify(journal, null, 2));
+  return dir;
 }
 
 async function adoptBaseline(sql: postgres.Sql): Promise<boolean> {
@@ -119,7 +147,7 @@ export async function grantRuntimeRole(
 if (import.meta.main) {
   const url = process.env.MIGRATION_DATABASE_URL;
   if (!url) throw new Error("MIGRATION_DATABASE_URL is required");
-  const r = await migrate(url);
+  const r = await migrate(url, { holdContract: process.env.MIGRATE_HOLD_CONTRACT === "1" });
   process.stdout.write(
     `${JSON.stringify({ severity: "INFO", message: "migrations complete", ...r })}\n`,
   );

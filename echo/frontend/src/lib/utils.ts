@@ -32,11 +32,3 @@ export const checkPermissionError = async () => {
 		return "error" as const;
 	}
 };
-
-export const sanitizeImageUrl = (url: string) => {
-	// interim solution to fix image urls for local development
-	if (url.startsWith("http://minio:9000")) {
-		return url.replace("http://minio:9000", "http://localhost:9000");
-	}
-	return url;
-};

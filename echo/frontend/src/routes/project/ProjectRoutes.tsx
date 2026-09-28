@@ -117,14 +117,6 @@ export const ProjectSettingsRoute = () => {
 
 			{projectQuery.data && (
 				<>
-					{/*
-          {projectId && (
-            <>
-              <Divider />
-              <ProjectConversationStatusSection projectId={projectId} />
-            </>
-          )} */}
-
 					{projectId && (
 						<>
 							<Divider />

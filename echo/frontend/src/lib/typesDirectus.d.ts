@@ -4,24 +4,18 @@ interface CustomDirectusTypes {
 	announcement: Announcement[];
 	announcement_activity: AnnouncementActivity[];
 	announcement_translations: AnnouncementTranslation[];
-	aspect: Aspect[];
-	aspect_segment: AspectSegment[];
 	conversation: Conversation[];
 	conversation_artifact: ConversationArtifact[];
 	conversation_chunk: ConversationChunk[];
 	conversation_link: ConversationLink[];
 	conversation_project_tag: ConversationProjectTag[];
 	conversation_reply: ConversationReply[];
-	conversation_segment: ConversationSegment[];
-	conversation_segment_conversation_chunk: ConversationSegmentConversationChunk[];
 	directus_sync_id_map: DirectusSyncIdMap[];
-	insight: Insight[];
 	languages: Language[];
 	processing_status: ProcessingStatus[];
 	project: Project[];
 	project_agentic_run: ProjectAgenticRun[];
 	project_agentic_run_event: ProjectAgenticRunEvent[];
-	project_analysis_run: ProjectAnalysisRun[];
 	project_chat: ProjectChat[];
 	project_chat_conversation: ProjectChatConversation[];
 	project_chat_message: ProjectChatMessage[];
@@ -37,7 +31,6 @@ interface CustomDirectusTypes {
 	prompt_template_rating: PromptTemplateRating[];
 	verification_topic: VerificationTopic[];
 	verification_topic_translations: VerificationTopicTranslation[];
-	view: View[];
 	directus_users: CustomDirectusUser;
 }
 
@@ -74,28 +67,6 @@ interface AnnouncementTranslation {
 	title: string | null;
 }
 
-interface Aspect {
-	created_at: string | null;
-	description: string | null;
-	id: string;
-	image_url: string | null;
-	long_summary: string | null;
-	name: string | null;
-	short_summary: string | null;
-	updated_at: string | null;
-	view_id: string | View | null;
-	aspect_segment: string[] | AspectSegment[];
-}
-
-interface AspectSegment {
-	aspect: string | Aspect | null;
-	description: string | null;
-	id: string;
-	relevant_index: string | null;
-	segment: number | ConversationSegment | null;
-	verbatim_transcript: string | null;
-}
-
 interface Conversation {
 	created_at: string | null;
 	duration: number | null;
@@ -123,7 +94,6 @@ interface Conversation {
 	title: string | null;
 	updated_at: string | null;
 	chunks: string[] | ConversationChunk[];
-	conversation_segments: string[] | ConversationSegment[];
 	linked_conversations: string[] | ConversationLink[];
 	linking_conversations: string[] | ConversationLink[];
 	processing_status: string[] | ProcessingStatus[];
@@ -182,7 +152,6 @@ interface ConversationChunk {
 	transcript_locked: boolean | null;
 	translation_error: string | null;
 	updated_at: string | null;
-	conversation_segments: string[] | ConversationSegmentConversationChunk[];
 	processing_status: string[] | ProcessingStatus[];
 }
 
@@ -211,39 +180,12 @@ interface ConversationReply {
 	type: string | null;
 }
 
-interface ConversationSegment {
-	config_id: string | null;
-	contextual_transcript: string | null;
-	conversation_id: string | Conversation | null;
-	counter: number | null;
-	id: number;
-	lightrag_flag: boolean | null;
-	path: string | null;
-	transcript: string | null;
-	chunks: number[] | ConversationSegmentConversationChunk[];
-}
-
-interface ConversationSegmentConversationChunk {
-	conversation_chunk_id: string | ConversationChunk | null;
-	conversation_segment_id: number | ConversationSegment | null;
-	id: number;
-}
-
 interface DirectusSyncIdMap {
 	id: number;
 	table: string;
 	sync_id: string;
 	local_id: string;
 	created_at: string | null;
-}
-
-interface Insight {
-	created_at: string | null;
-	id: string;
-	project_analysis_run_id: string | ProjectAnalysisRun | null;
-	summary: string | null;
-	title: string | null;
-	updated_at: string | null;
 }
 
 interface Language {
@@ -260,7 +202,6 @@ interface ProcessingStatus {
 	id: number;
 	message: string | null;
 	parent: number | ProcessingStatus | null;
-	project_analysis_run_id: string | ProjectAnalysisRun | null;
 	project_id: string | Project | null;
 	timestamp: string | null;
 }
@@ -317,7 +258,6 @@ interface Project {
 	selected_verification_key_list: string | null;
 	conversations: string[] | Conversation[];
 	tags: string[] | ProjectTag[];
-	project_analysis_runs: string[] | ProjectAnalysisRun[];
 	project_chats: string[] | ProjectChat[];
 	project_reports: string[] | ProjectReport[];
 	processing_status: string[] | ProcessingStatus[];
@@ -336,16 +276,6 @@ interface ParticipantProject extends Project {
 	privacy_policy_url: string | null;
 	// consent-card name; null renders "The organiser"
 	organiser_name: string | null;
-}
-
-interface ProjectAnalysisRun {
-	created_at: string | null;
-	id: string;
-	project_id: string | Project | null;
-	updated_at: string | null;
-	insights: string[] | Insight[];
-	processing_status: string[] | ProcessingStatus[];
-	views: string[] | View[];
 }
 
 interface ProjectAgenticRun {
@@ -501,20 +431,6 @@ interface VerificationTopicTranslation {
 	verification_topic_key: string | VerificationTopic | null;
 	languages_code: string | Language | null;
 	label: string | null;
-}
-
-interface View {
-	created_at: string | null;
-	description: string | null;
-	id: string;
-	language: string | null;
-	name: string | null;
-	project_analysis_run_id: string | ProjectAnalysisRun | null;
-	summary: string | null;
-	updated_at: string | null;
-	user_input: string | null;
-	user_input_description: string | null;
-	aspects: string[] | Aspect[];
 }
 
 interface PromptTemplate {

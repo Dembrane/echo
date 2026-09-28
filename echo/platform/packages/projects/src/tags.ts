@@ -60,16 +60,6 @@ async function tagLinks(d: ProjectDeps, tagId: string) {
   return d.store.tagLinkIds(tagId);
 }
 
-/** Hard delete with its conversation links; tags carry no billing weight. */
-export async function deleteTag(d: ProjectDeps, who: Signed, tagId: string) {
-  await tagFor(d, who, tagId);
-  await d.store.transaction(async ({ store }) => {
-    await store.deleteTagLinks(tagId);
-    await store.deleteTag(tagId);
-  });
-  return { status: "deleted" };
-}
-
 // ── v1 /api/projects/{id}/tags ─────────────────────────────────────────
 
 /** Deletes a tag of this project (spec H-3: any tag of any tenant, by id, for any role). */
@@ -87,54 +77,4 @@ export async function deleteProjectTag(
     await store.deleteTag(tagId);
   });
   return { status: "success" };
-}
-
-/**
- * Removes tag links from one conversation of this project (spec C-4: any link platform
- * wide, by integer id, for any role). Links elsewhere are left alone and not counted.
- */
-export async function deleteConversationTags(
-  d: ProjectDeps,
-  who: Signed,
-  projectId: string,
-  conversationId: string,
-  linkIds: number[],
-) {
-  await projectFor(d.access, who, projectId, "project:update", "v1");
-  if (!(await d.store.conversationInProject(conversationId, projectId)))
-    throw new NotFoundError("Conversation not found");
-  const deleted = await d.store.deleteConversationTagLinks(projectId, conversationId, linkIds);
-  return { status: "success", deleted };
-}
-
-// ── BFF /api/v2/bff/analysis-runs ───────────────────────────────────────
-
-export async function listAnalysisRuns(
-  d: ProjectDeps,
-  who: Signed,
-  projectId: string,
-  limit: number,
-) {
-  await projectFor(d.access, who, projectId, "project:read");
-  return d.store.analysisRuns(projectId, limit);
-}
-
-/** A run is reached through its project; reading it needs project:read (spec L-4). */
-async function runFor(d: ProjectDeps, who: Signed, runId: string) {
-  const run = await d.store.analysisRun(runId);
-  if (!run?.project_id) throw new NotFoundError("Analysis run not found");
-  await projectFor(d.access, who, run.project_id, "project:read");
-  return run;
-}
-
-export async function getAnalysisRun(d: ProjectDeps, who: Signed, runId: string) {
-  const run = await runFor(d, who, runId);
-  return { ...directusRow(run), ...(await d.store.runAliases(runId)) };
-}
-
-/** Chunks recorded in the run's project since the run: the "new since last library" banner. */
-export async function newChunksSince(d: ProjectDeps, who: Signed, runId: string) {
-  const run = await runFor(d, who, runId);
-  if (!run.project_id || !run.created_at) return { count: 0 };
-  return { count: await d.store.chunksSince(run.project_id, run.created_at) };
 }

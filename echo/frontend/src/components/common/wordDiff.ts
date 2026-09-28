@@ -3,11 +3,8 @@ import { diffWords } from "diff";
 /**
  * Word-level diffing for host-facing "here is what would change" views.
  *
- * The side-by-side `DiffViewer` in this folder is built for a full-height
- * modal: four columns, line numbers, its own scroll container, English-only
- * chrome. None of that fits inside a chat card that is at most 80% of the
- * column width, so this module keeps only the part worth sharing, the diff
- * computation, and leaves rendering to the caller.
+ * Only the diff computation lives here; rendering is left to the caller, since
+ * a chat card is at most 80% of the column width and needs its own layout.
  */
 
 export type WordDiffChunk = {

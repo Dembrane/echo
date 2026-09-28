@@ -44,7 +44,7 @@ export function scrubChunk(chunk: Row): Row {
 
 /**
  * _enrich_conversation: derived `locked` and `lock_reason`, gated text removed from a
- * locked row (summary, merged transcript, embedded chunk and segment transcripts), and
+ * locked row (summary, merged transcript, embedded chunk transcripts), and
  * the raw stamp dropped so clients read the decision, not its input.
  */
 export function enrich(conv: Row, tier: string | null, active: boolean): Row {
@@ -57,13 +57,6 @@ export function enrich(conv: Row, tier: string | null, active: boolean): Row {
     if ("merged_transcript" in conv) conv.merged_transcript = null;
     if (Array.isArray(conv.chunks))
       for (const ch of conv.chunks) if (ch && typeof ch === "object") scrubChunk(ch as Row);
-    if (Array.isArray(conv.conversation_segments))
-      for (const seg of conv.conversation_segments)
-        if (seg && typeof seg === "object") {
-          const s = seg as Row;
-          if ("transcript" in s) s.transcript = null;
-          if ("contextual_transcript" in s) s.contextual_transcript = null;
-        }
   }
   delete conv.is_over_cap;
   return conv;

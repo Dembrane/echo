@@ -153,34 +153,6 @@ export function canvasRoutes(deps: CanvasRoutesDeps) {
     return c.json(await svc.refreshCanvas(d, who, c.req.param("canvas_id")), 202);
   });
 
-  app.post(`${base}/:canvas_id/host-items`, async (c) => {
-    const who = requireUser(c);
-    const { path, body } = await p.validate(c.req, {
-      path: canvasPath,
-      body: model({
-        text: required(str({ min: 1, max: 2000 })),
-        target_tab: optional(str({ min: 1, max: 80 }), "story"),
-        person: optional(nullable(str({ max: 160 })), null),
-        chat_id: optional(nullable(str()), null),
-        message_id: optional(nullable(str()), null),
-      }),
-    });
-    return c.json(await svc.addHostItem(d, who, path.canvas_id, body.data));
-  });
-
-  app.post(`${base}/:canvas_id/host-items/remove`, async (c) => {
-    const who = requireUser(c);
-    const { path, body } = await p.validate(c.req, {
-      path: canvasPath,
-      body: model({
-        item: required(str({ min: 1, max: 2000 })),
-        chat_id: optional(nullable(str()), null),
-        message_id: optional(nullable(str()), null),
-      }),
-    });
-    return c.json(await svc.removeHostItemRoute(d, who, path.canvas_id, body.data));
-  });
-
   app.post(`${base}/:canvas_id/loop/:action`, async (c) => {
     const who = requireUser(c);
     const action = c.req.param("action");

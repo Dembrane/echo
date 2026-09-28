@@ -114,21 +114,6 @@ async function requireUpdate(ctx: Ctx, who: Signed, projectId: string) {
   }
 }
 
-export async function putTopics(ctx: Ctx, who: Signed, projectId: string, list: string[]) {
-  await projectOr404(ctx, projectId);
-  await requireUpdate(ctx, who, projectId);
-  const available = (await topicsFor(ctx, projectId)).map((t) => t.key);
-  const keys: string[] = [];
-  for (const raw of list) {
-    const k = raw.trim();
-    if (k && available.includes(k) && !keys.includes(k)) keys.push(k);
-  }
-  const serialized = keys.join(",");
-  await ctx.store.setSelected(projectId, serialized || null, ctx.d.now());
-  const topics = await topicsFor(ctx, projectId);
-  return { selected_topics: selected(serialized, topics), available_topics: topics };
-}
-
 /** _slugify: word characters, spaces and dashes; runs of space or underscore become one dash. */
 export function slugify(text: string): string {
   const s = text

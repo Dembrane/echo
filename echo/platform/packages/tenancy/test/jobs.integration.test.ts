@@ -32,7 +32,9 @@ run("tenancy jobs on a parity copy", () => {
   beforeAll(async () => {
     const root = postgres(admin as string, { max: 1, onnotice: () => {} });
     await root.unsafe(`drop database if exists ${DB} with (force)`);
-    await root.unsafe(`create database ${DB} template parity_template_platform`);
+    await root.unsafe(
+      `create database ${DB} template ${process.env.PARITY_TEMPLATE ?? "parity_template_platform"}`,
+    );
     await root.end();
     sql = postgres(url, { max: 1, onnotice: () => {} });
   });

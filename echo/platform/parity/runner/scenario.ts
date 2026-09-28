@@ -57,6 +57,12 @@ export interface Scenario {
    */
   readonly setup?: string | readonly string[];
   readonly differs?: string;
+  /**
+   * The route was pruned from the new API on purpose, with the reason. The runner skips the
+   * old side and checks that the new one answers 404, so a route that comes back unnoticed
+   * fails here. Drop the scenario once the old API is retired.
+   */
+  readonly removed?: string;
   /** Response fields whose values legitimately change per run (besides timestamps and new ids). */
   readonly ignoreFields?: readonly string[];
 }

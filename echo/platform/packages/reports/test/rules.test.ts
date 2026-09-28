@@ -9,7 +9,6 @@ import {
 } from "../src/generation";
 import { pyRepr } from "../src/jinja";
 import { renderPrompt } from "../src/prompts";
-import { parseFields } from "../src/service";
 import { cleanGeneratedTitle, projectContext, selectTagIds } from "../src/summarize";
 import recorded from "./recorded/prompts.json";
 
@@ -163,16 +162,5 @@ describe("summaries", () => {
       "project context: name: P\ncontext: C",
     );
     expect(projectContext({})).toBeNull();
-  });
-});
-
-describe("fields (M-7)", () => {
-  test("the lean default, flat columns and * are served", () => {
-    expect(parseFields(null)).toContain("error_message");
-    expect(parseFields("id, status")).toEqual(["id", "status"]);
-    expect(parseFields("*")).toContain("public_token");
-  });
-  test("a relational path is refused", () => {
-    expect(() => parseFields("id,project_id.name")).toThrow("Unknown field: project_id.name");
   });
 });

@@ -18,8 +18,6 @@ import {
   announcement_activity,
   announcement_translations,
   app_user,
-  aspect,
-  aspect_segment,
   billing_account,
   canvas_config_revision,
   canvas_generation,
@@ -29,8 +27,6 @@ import {
   conversation_link,
   conversation_project_tag,
   conversation_reply,
-  conversation_segment,
-  conversation_segment_conversation_chunk,
   directus_access,
   directus_activity,
   directus_collections,
@@ -53,7 +49,6 @@ import {
   directus_users,
   directus_versions,
   directus_webhooks,
-  insight,
   languages,
   map_embedding,
   map_fact_check,
@@ -69,7 +64,6 @@ import {
   project,
   project_agentic_run,
   project_agentic_run_event,
-  project_analysis_run,
   project_chat,
   project_chat_conversation,
   project_chat_message,
@@ -91,11 +85,9 @@ import {
   training_license,
   verification_topic,
   verification_topic_translations,
-  view,
   workspace,
   workspace_invite,
   workspace_membership,
-  workspace_request,
 } from "./index";
 
 export const analysis_last_openedRelations = relations(analysis_last_opened, ({ one }) => ({
@@ -128,7 +120,6 @@ export const projectRelations = relations(project, ({ one, many }) => ({
   project_reports: many(project_report),
   processing_statuses: many(processing_status),
   project_memberships: many(project_membership),
-  project_analysis_runs: many(project_analysis_run),
   directus_user: one(directus_users, {
     fields: [project.directus_user_id],
     references: [directus_users.id],
@@ -426,12 +417,6 @@ export const app_userRelations = relations(app_user, ({ many }) => ({
   referral_ledgers: many(referral_ledger),
   trainings: many(training),
   workspace_memberships: many(workspace_membership),
-  workspace_requests_decided_by: many(workspace_request, {
-    relationName: "workspace_request_decided_by_app_user_id",
-  }),
-  workspace_requests_requested_by: many(workspace_request, {
-    relationName: "workspace_request_requested_by_app_user_id",
-  }),
   workspace_invites: many(workspace_invite),
   workspaces: many(workspace),
 }));
@@ -449,12 +434,6 @@ export const workspaceRelations = relations(workspace, ({ one, many }) => ({
   support_access_requests: many(support_access_request),
   referral_ledgers: many(referral_ledger),
   workspace_memberships: many(workspace_membership),
-  workspace_requests_resulting_workspace_id: many(workspace_request, {
-    relationName: "workspace_request_resulting_workspace_id_workspace_id",
-  }),
-  workspace_requests_workspace_id: many(workspace_request, {
-    relationName: "workspace_request_workspace_id_workspace_id",
-  }),
   workspace_invites: many(workspace_invite),
   org_billed_to_team_id: one(org, {
     fields: [workspace.billed_to_team_id],
@@ -742,7 +721,6 @@ export const orgRelations = relations(org, ({ one, many }) => ({
   training_licenses: many(training_license),
   referral_ledgers: many(referral_ledger),
   trainings: many(training),
-  workspace_requests: many(workspace_request),
   workspaces_billed_to_team_id: many(workspace, {
     relationName: "workspace_billed_to_team_id_org_id",
   }),
@@ -772,7 +750,6 @@ export const conversationRelations = relations(conversation, ({ one, many }) => 
   }),
   conversation_project_tags: many(conversation_project_tag),
   conversation_replies: many(conversation_reply),
-  conversation_segments: many(conversation_segment),
   notifications: many(notification),
   project_chat_conversations: many(project_chat_conversation),
   project_chat_message_conversation_1s: many(project_chat_message_conversation_1),
@@ -798,28 +775,11 @@ export const conversation_artifactRelations = relations(conversation_artifact, (
   }),
 }));
 
-export const aspectRelations = relations(aspect, ({ one, many }) => ({
-  view: one(view, {
-    fields: [aspect.view_id],
-    references: [view.id],
-  }),
-  aspect_segments: many(aspect_segment),
-}));
-
-export const viewRelations = relations(view, ({ one, many }) => ({
-  aspects: many(aspect),
-  project_analysis_run: one(project_analysis_run, {
-    fields: [view.project_analysis_run_id],
-    references: [project_analysis_run.id],
-  }),
-}));
-
 export const conversation_chunkRelations = relations(conversation_chunk, ({ one, many }) => ({
   conversation: one(conversation, {
     fields: [conversation_chunk.conversation_id],
     references: [conversation.id],
   }),
-  conversation_segment_conversation_chunks: many(conversation_segment_conversation_chunk),
   processing_statuses: many(processing_status),
 }));
 
@@ -882,29 +842,6 @@ export const directus_dashboardsRelations = relations(directus_dashboards, ({ on
   }),
   directus_panels: many(directus_panels),
 }));
-
-export const conversation_segmentRelations = relations(conversation_segment, ({ one, many }) => ({
-  conversation: one(conversation, {
-    fields: [conversation_segment.conversation_id],
-    references: [conversation.id],
-  }),
-  conversation_segment_conversation_chunks: many(conversation_segment_conversation_chunk),
-  aspect_segments: many(aspect_segment),
-}));
-
-export const conversation_segment_conversation_chunkRelations = relations(
-  conversation_segment_conversation_chunk,
-  ({ one }) => ({
-    conversation_chunk: one(conversation_chunk, {
-      fields: [conversation_segment_conversation_chunk.conversation_chunk_id],
-      references: [conversation_chunk.id],
-    }),
-    conversation_segment: one(conversation_segment, {
-      fields: [conversation_segment_conversation_chunk.conversation_segment_id],
-      references: [conversation_segment.id],
-    }),
-  }),
-);
 
 export const directus_accessRelations = relations(directus_access, ({ one }) => ({
   directus_policy: one(directus_policies, {
@@ -1166,23 +1103,6 @@ export const directus_permissionsRelations = relations(directus_permissions, ({ 
   }),
 }));
 
-export const insightRelations = relations(insight, ({ one }) => ({
-  project_analysis_run: one(project_analysis_run, {
-    fields: [insight.project_analysis_run_id],
-    references: [project_analysis_run.id],
-  }),
-}));
-
-export const project_analysis_runRelations = relations(project_analysis_run, ({ one, many }) => ({
-  insights: many(insight),
-  processing_statuses: many(processing_status),
-  project: one(project, {
-    fields: [project_analysis_run.project_id],
-    references: [project.id],
-  }),
-  views: many(view),
-}));
-
 export const map_embeddingRelations = relations(map_embedding, ({ one }) => ({
   project: one(project, {
     fields: [map_embedding.project_id],
@@ -1395,10 +1315,6 @@ export const processing_statusRelations = relations(processing_status, ({ one, m
   }),
   processing_statuses: many(processing_status, {
     relationName: "processing_status_parent_processing_status_id",
-  }),
-  project_analysis_run: one(project_analysis_run, {
-    fields: [processing_status.project_analysis_run_id],
-    references: [project_analysis_run.id],
   }),
   project: one(project, {
     fields: [processing_status.project_id],
@@ -1634,33 +1550,6 @@ export const referral_ledgerRelations = relations(referral_ledger, ({ one }) => 
   }),
 }));
 
-export const workspace_requestRelations = relations(workspace_request, ({ one }) => ({
-  app_user_decided_by: one(app_user, {
-    fields: [workspace_request.decided_by],
-    references: [app_user.id],
-    relationName: "workspace_request_decided_by_app_user_id",
-  }),
-  org: one(org, {
-    fields: [workspace_request.org_id],
-    references: [org.id],
-  }),
-  app_user_requested_by: one(app_user, {
-    fields: [workspace_request.requested_by],
-    references: [app_user.id],
-    relationName: "workspace_request_requested_by_app_user_id",
-  }),
-  workspace_resulting_workspace_id: one(workspace, {
-    fields: [workspace_request.resulting_workspace_id],
-    references: [workspace.id],
-    relationName: "workspace_request_resulting_workspace_id_workspace_id",
-  }),
-  workspace_workspace_id: one(workspace, {
-    fields: [workspace_request.workspace_id],
-    references: [workspace.id],
-    relationName: "workspace_request_workspace_id_workspace_id",
-  }),
-}));
-
 export const announcement_activityRelations = relations(announcement_activity, ({ one }) => ({
   announcement: one(announcement, {
     fields: [announcement_activity.announcement_activity],
@@ -1675,17 +1564,6 @@ export const announcement_activityRelations = relations(announcement_activity, (
     fields: [announcement_activity.user_updated],
     references: [directus_users.id],
     relationName: "announcement_activity_user_updated_directus_users_id",
-  }),
-}));
-
-export const aspect_segmentRelations = relations(aspect_segment, ({ one }) => ({
-  aspect: one(aspect, {
-    fields: [aspect_segment.aspect],
-    references: [aspect.id],
-  }),
-  conversation_segment: one(conversation_segment, {
-    fields: [aspect_segment.segment],
-    references: [conversation_segment.id],
   }),
 }));
 

@@ -24,15 +24,7 @@ export interface NewChunk {
   readonly transcript?: string | null;
   /** Set on the row in the same commit, for audio the API already knows is unusable. */
   readonly error?: string | null;
-  /**
-   * Audio sent through the API (the legacy upload): stored at
-   * conversation/<id>/chunks/<chunk id>-<file name> once the conversation checks pass.
-   */
-  readonly file?: File | null;
 }
-
-/** save_to_s3_from_file_like's ceiling for uploads through the API. */
-const UPLOAD_LIMIT_BYTES = 2048 * 1024 * 1024;
 
 /**
  * conversation_service.create_chunk: the chunk row, its side effects on the conversation,
@@ -41,7 +33,7 @@ const UPLOAD_LIMIT_BYTES = 2048 * 1024 * 1024;
  * orphan chunk the repair crons had to find).
  */
 export async function createChunk(
-  d: Pick<ConversationsDeps, "db" | "jobs" | "now" | "audio" | "audioUrls">,
+  d: Pick<ConversationsDeps, "db" | "jobs" | "now">,
   input: NewChunk,
   opts: { chunkId: string; usePiiRedaction?: boolean } = { chunkId: "" },
 ): Promise<ChunkRow> {
@@ -71,15 +63,7 @@ export async function createChunk(
   if (!project) throw new Error(`project ${conv.project_id} of conversation ${conv.id} not found`);
   if (project.is_conversation_allowed !== true) throw new ForbiddenError(NOT_OPEN);
 
-  let fileUrl = input.fileUrl ?? null;
-  if (input.file && !fileUrl) {
-    const key = d.audioUrls.keyOf(
-      `conversation/${conv.id}/chunks/${opts.chunkId}-${input.file.name}`,
-    );
-    if (input.file.size > UPLOAD_LIMIT_BYTES) throw new Error("File size exceeds 2048MB limit");
-    await d.audio.put(key, input.file, input.file.type || undefined);
-    fileUrl = d.audioUrls.fileUrl(key);
-  }
+  const fileUrl = input.fileUrl ?? null;
   const hasFile = Boolean(fileUrl?.trim());
   const hasTranscript = Boolean(input.transcript?.trim());
   if (!hasFile && !hasTranscript)

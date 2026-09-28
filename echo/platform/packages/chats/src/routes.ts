@@ -197,10 +197,5 @@ export function chatRoutes(deps: ChatRoutesDeps) {
     return c.json(await bff.createMessage(d, who, body.data));
   });
 
-  app.delete("/api/v2/bff/chat-messages/:message_id", async (c) => {
-    const who = requireUser(c);
-    return c.json(await bff.deleteMessage(d, who, c.req.param("message_id")));
-  });
-
   return app;
 }
