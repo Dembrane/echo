@@ -1,4 +1,4 @@
-import type { Principal } from "@dembrane/access";
+import type { Principal, StaffPolicy } from "@dembrane/access";
 import { UnauthenticatedError } from "@dembrane/core";
 import type { Logger } from "@dembrane/observability";
 import type { Context } from "hono";
@@ -6,6 +6,8 @@ import type { Context } from "hono";
 /** A signed-in caller as routes see it. */
 export interface Signed extends Principal {
   readonly isStaff: boolean;
+  /** Set for a staff API key: exactly the staff permissions it holds, instead of all of them. */
+  readonly staffPolicies?: readonly StaffPolicy[];
 }
 
 /** Per-request values every route can read; set by the API's middleware. */

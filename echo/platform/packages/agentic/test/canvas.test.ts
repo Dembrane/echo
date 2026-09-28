@@ -17,7 +17,40 @@ import * as svc from "../src/canvas/service";
 const P = "f0000000-0000-4000-8000-000000000001";
 const LOOP = "ca000000-0000-4000-8000-000000000001";
 const NOW = new Date("2026-09-27T12:00:00.000Z");
-const staff: Signed = { appUserId: null, directusUserId: "d-staff", isStaff: true };
+/** The project's owner: the service is driven through the access resolver, never a staff bypass. */
+const host: Signed = {
+  appUserId: "a0000000-0000-4000-8000-00000000000a",
+  directusUserId: "d-host",
+  isStaff: false,
+};
+
+function hostAccess(): Access {
+  const store = new MemoryAccessStore();
+  store.workspaces.set("w1", {
+    id: "w1",
+    orgId: "org",
+    visibility: "open_to_organisation",
+    deleted: false,
+    stickyRemoved: [],
+    inheritOrgMembers: false,
+    tier: "guardian",
+  });
+  store.projects.set(P, {
+    id: P,
+    workspaceId: "w1",
+    visibility: "workspace",
+    deleted: false,
+    legacyOwnerDirectusUserId: null,
+  });
+  store.memberships.push({
+    workspaceId: "w1",
+    appUserId: host.appUserId as string,
+    role: "owner",
+    customPolicies: null,
+    source: "direct",
+  });
+  return new Access(store);
+}
 
 type Row = Record<string, unknown>;
 
@@ -88,7 +121,7 @@ function memoryStore(o: { ledger?: boolean; loop?: Row | null } = {}) {
 function deps(store: CanvasStore, enableCanvas = true): CanvasDeps {
   return {
     store,
-    access: new Access(new MemoryAccessStore()),
+    access: hostAccess(),
     enableCanvas,
     now: () => NOW,
     publishGeneration: async () => {},
@@ -154,14 +187,14 @@ describe("canvas html", () => {
 describe("canvas service", () => {
   test("the beta gate answers 404 Not found when canvas is off globally", async () => {
     const { store } = memoryStore();
-    await expect(svc.canvases(deps(store, false), staff, P, null)).rejects.toThrow(NotFoundError);
+    await expect(svc.canvases(deps(store, false), host, P, null)).rejects.toThrow(NotFoundError);
   });
 
   test("a direct edit keeps a standing edit once, stores the generation and clears failures", async () => {
     const { store, writes } = memoryStore();
     const out = await svc.editCanvas(
       deps(store),
-      staff,
+      host,
       P,
       "chat-1",
       "7",
@@ -180,13 +213,13 @@ describe("canvas service", () => {
 
   test("without the ledger columns the config and loop read as missing, as in Python", async () => {
     const { store, writes } = memoryStore({ ledger: false });
-    await expect(svc.editCanvas(deps(store), staff, P, null, "7", "x", "<p>x</p>")).rejects.toThrow(
+    await expect(svc.editCanvas(deps(store), host, P, null, "7", "x", "<p>x</p>")).rejects.toThrow(
       "Canvas config not found",
     );
     await expect(
-      svc.addCanvasHostItem(deps(store), staff, P, null, "7", { text: "x", target_tab: "story" }),
+      svc.addCanvasHostItem(deps(store), host, P, null, "7", { text: "x", target_tab: "story" }),
     ).rejects.toThrow(BadRequestError);
-    await expect(svc.canvasLoop(deps(store), staff, P, null, "7", "pause")).rejects.toThrow(
+    await expect(svc.canvasLoop(deps(store), host, P, null, "7", "pause")).rejects.toThrow(
       "Canvas loop not found",
     );
     expect(writes).toEqual([]);
@@ -194,7 +227,7 @@ describe("canvas service", () => {
 
   test("a host item lands on the loop and asks for a manual tick", async () => {
     const { store, writes } = memoryStore();
-    const out = await svc.addCanvasHostItem(deps(store), staff, P, "chat-1", "7", {
+    const out = await svc.addCanvasHostItem(deps(store), host, P, "chat-1", "7", {
       text: " Night buses ",
       target_tab: "Concepts",
       person: " Ana ",
@@ -212,9 +245,9 @@ describe("canvas service", () => {
       tick_kind: "manual",
     });
     await expect(
-      svc.addCanvasHostItem(deps(store), staff, P, null, "7", { text: "x", target_tab: "trace" }),
+      svc.addCanvasHostItem(deps(store), host, P, null, "7", { text: "x", target_tab: "trace" }),
     ).rejects.toThrow("target_tab must be one of crux, concept_cloud, or story");
-    const removed = await svc.removeCanvasHostItem(deps(store), staff, P, null, "7", {
+    const removed = await svc.removeCanvasHostItem(deps(store), host, P, null, "7", {
       item: "night",
     });
     expect(removed.status).toBe("removed");
@@ -222,22 +255,20 @@ describe("canvas service", () => {
 
   test("loop actions: pause cancels ticks, resume refuses an ended loop with 409, bad actions 404", async () => {
     const { store, writes } = memoryStore();
-    expect(await svc.canvasLoop(deps(store), staff, P, null, "7", "pause")).toEqual({
+    expect(await svc.canvasLoop(deps(store), host, P, null, "7", "pause")).toEqual({
       status: "paused",
       expires_at: "2099-01-01T00:00:00.000Z",
       cadence_minutes: 5,
     });
     expect(writes[0]).toEqual({ kind: "cancel", value: { loop_id: LOOP } });
-    expect((await svc.canvasLoop(deps(store), staff, P, null, "7", "resume")).status).toBe(
-      "active",
-    );
+    expect((await svc.canvasLoop(deps(store), host, P, null, "7", "resume")).status).toBe("active");
     const ended = memoryStore({
       loop: { id: LOOP, status: "active", expires_at: "2026-01-01T00:00:00.000Z" },
     });
-    await expect(svc.canvasLoop(deps(ended.store), staff, P, null, "7", "resume")).rejects.toThrow(
+    await expect(svc.canvasLoop(deps(ended.store), host, P, null, "7", "resume")).rejects.toThrow(
       ConflictError,
     );
-    await expect(svc.canvasLoop(deps(store), staff, P, null, "7", "explode")).rejects.toThrow(
+    await expect(svc.canvasLoop(deps(store), host, P, null, "7", "explode")).rejects.toThrow(
       "Canvas loop action not found",
     );
   });

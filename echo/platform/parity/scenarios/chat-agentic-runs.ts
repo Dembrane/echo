@@ -124,7 +124,14 @@ export default scenarios([
 
   // ── reads ─────────────────────────────────────────────────────────
   { name: "runs get: owner", as: "alice", method: "GET", path: `${R}/${RUN}`, setup: RUNS },
-  { name: "runs get: staff", as: "admin", method: "GET", path: `${R}/${RUN}`, setup: RUNS },
+  {
+    name: "runs get: staff",
+    as: "admin",
+    method: "GET",
+    path: `${R}/${RUN}`,
+    setup: RUNS,
+    differs: "H-14: a run is its creator's; staff read it only as its creator",
+  },
   {
     name: "runs get: someone else's run",
     as: "bob",

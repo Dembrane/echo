@@ -9,11 +9,12 @@ import {
 } from "./audit-storage";
 
 /**
- * Directus let staff read all activity and everyone else the rows by or about themselves.
+ * Everyone reads the rows by or about themselves. Directus let staff read every tenant's
+ * activity here, unaudited (spec H-14); this is a settings card, not a staff tool.
  * Revisions were withdrawn from Basic Users on 2026-09-14, so only staff get the field deltas.
  */
 export function auditScope(who: Signed): AuditScope {
-  return who.isStaff ? { all: true } : { all: false, userId: who.directusUserId };
+  return { all: false, userId: who.directusUserId };
 }
 
 /** "a,b" or repeated values; blanks dropped. */

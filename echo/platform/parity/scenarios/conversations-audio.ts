@@ -24,7 +24,13 @@ export default scenarios([
     method: "GET",
     path: `${C}/${c1}/content`,
   },
-  { name: "audio content: staff", as: "admin", method: "GET", path: `${C}/${c3}/content` },
+  {
+    name: "audio content: staff",
+    as: "admin",
+    method: "GET",
+    path: `${C}/${c3}/content`,
+    differs: "H-14: staff reach a tenant's conversations only through a support session",
+  },
   {
     name: "audio content: stored merged file as a plain url",
     as: "alice",
@@ -172,6 +178,7 @@ export default scenarios([
     as: "admin",
     method: "DELETE",
     path: `${C}/${c3}`,
+    differs: "H-14: staff no longer delete another tenant's conversation without a support session",
   },
   {
     name: "delete conversation: observer refused",

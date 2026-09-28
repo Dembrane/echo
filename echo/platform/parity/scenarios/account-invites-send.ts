@@ -257,6 +257,14 @@ export default scenarios([
     setup: pending(32, NEW, workspaces.aDefault),
   },
   {
+    name: "resend: an inviter without member:invite is refused",
+    as: "admin",
+    method: "POST",
+    path: `/api/v2/invites/${inv(90)}/resend`,
+    setup: pending(90, NEW, workspaces.aDefault, { by: users.admin.app }),
+    differs: "L-16: a resend needs member:invite now; a plain member cannot keep an invite alive",
+  },
+  {
     name: "resend: an accepted invite is 400",
     as: "alice",
     method: "POST",

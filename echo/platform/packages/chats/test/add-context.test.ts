@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { addContext } from "../src/service";
 import { MAX_CHAT_CONTEXT_LENGTH } from "../src/tokens";
-import { fakeDeps, staff } from "./fakes";
+import { fakeDeps, host, P1 } from "./fakes";
 
 const CHAT = "c3000000-0000-4000-8000-000000000009";
 
@@ -15,7 +15,7 @@ function setup(mode: string, counts: Record<string, number>, rows: Record<string
       deleted_at: null,
       is_private: false,
       user_created: null,
-      project_id: { id: "p1", directus_user_id: null },
+      project_id: { id: P1, directus_user_id: null },
       used_conversations: [
         { id: 1, conversation_id: { id: "in", participant_name: "In", deleted_at: null } },
       ],
@@ -63,7 +63,7 @@ describe("add-context budget", () => {
         { id: "gone", participant_name: "G" },
       ],
     );
-    const res = await addContext(d, staff, CHAT, body);
+    const res = await addContext(d, host, CHAT, body);
     expect(attached).toEqual([["a", "b"]]);
     expect(res.added?.map((r) => r.conversation_id)).toEqual(["a", "b"]);
     expect(res.skipped?.map((r) => [r.conversation_id, r.reason])).toEqual([
@@ -86,24 +86,24 @@ describe("add-context budget", () => {
       { id: "a", participant_name: "A" },
       { id: "b", participant_name: "B" },
     ]);
-    const res = await addContext(d, staff, CHAT, body);
+    const res = await addContext(d, host, CHAT, body);
     expect(attached).toEqual([["a", "b"]]);
     expect(res.context_limit_reached).toBe(false);
   });
 
   test("option rules", async () => {
     const { d } = setup("deep_dive", {}, []);
-    await expect(addContext(d, staff, CHAT, { ...body, select_all: null })).rejects.toThrow(
+    await expect(addContext(d, host, CHAT, { ...body, select_all: null })).rejects.toThrow(
       "One of conversation_id, conversation_ids or select_all is required",
     );
-    await expect(addContext(d, staff, CHAT, { ...body, conversation_ids: [] })).rejects.toThrow(
+    await expect(addContext(d, host, CHAT, { ...body, conversation_ids: [] })).rejects.toThrow(
       "Only one of conversation_id, conversation_ids or select_all can be provided",
     );
-    await expect(addContext(d, staff, CHAT, { ...body, project_id: "p2" })).rejects.toThrow(
+    await expect(addContext(d, host, CHAT, { ...body, project_id: "p2" })).rejects.toThrow(
       "project_id does not match this chat",
     );
     await expect(
-      addContext(d, staff, CHAT, { ...body, select_all: null, conversation_id: "x" }),
+      addContext(d, host, CHAT, { ...body, select_all: null, conversation_id: "x" }),
     ).rejects.toThrow("Conversation not found");
   });
 });

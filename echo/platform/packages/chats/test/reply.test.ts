@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { LanguageModelV4CallOptions } from "@ai-sdk/provider";
 import { reply } from "../src/reply";
-import { fakeDeps, fakeModel, staff } from "./fakes";
+import { fakeDeps, fakeModel, host, P1 } from "./fakes";
 
 const CHAT = "c3000000-0000-4000-8000-000000000001";
 const CONV = "c1000000-0000-4000-8000-000000000001";
@@ -21,7 +21,7 @@ function world(
       deleted_at: null,
       is_private: false,
       user_created: null,
-      project_id: { id: "p1", directus_user_id: null },
+      project_id: { id: P1, directus_user_id: null },
       used_conversations: [
         { id: 1, conversation_id: { id: CONV, participant_name: "Resident 1", deleted_at: null } },
       ],
@@ -114,7 +114,7 @@ describe("chat reply stream", () => {
     });
     const res = await reply(
       d,
-      staff,
+      host,
       CHAT,
       { messages: [{ role: "user", content: "What now?" }], template_key: "t1" },
       "data",
@@ -137,7 +137,7 @@ describe("chat reply stream", () => {
     expect(captured[0]).toEqual([
       "alice@example.com",
       "server_chat_response_received",
-      { chat_id: CHAT, project_id: "p1", mode: "context" },
+      { chat_id: CHAT, project_id: P1, mode: "context" },
     ]);
   });
 
@@ -150,7 +150,7 @@ describe("chat reply stream", () => {
     });
     const res = await reply(
       d,
-      staff,
+      host,
       CHAT,
       { messages: [{ role: "user", content: "Hi" }], template_key: null },
       "text",
@@ -172,7 +172,7 @@ describe("chat reply stream", () => {
     });
     const res = await reply(
       d,
-      staff,
+      host,
       CHAT,
       { messages: [{ role: "user", content: "Hi" }], template_key: null },
       "data",
@@ -183,7 +183,7 @@ describe("chat reply stream", () => {
     expect((captured[0] as unknown[])[1]).toBe("server_chat_error");
     const textRes = await reply(
       d,
-      staff,
+      host,
       CHAT,
       { messages: [{ role: "user", content: "Hi" }], template_key: null },
       "text",
@@ -205,7 +205,7 @@ describe("chat reply stream", () => {
     const d = { ...fakeDeps({ store: w.store, reads: w.reads, model: slow }), highLoadDelayMs: 10 };
     const res = await reply(
       d,
-      staff,
+      host,
       CHAT,
       { messages: [{ role: "user", content: "Hi" }], template_key: null },
       "data",
@@ -221,7 +221,7 @@ describe("chat reply stream", () => {
     await expect(
       reply(
         fakeDeps({ store: agentic.store, reads: agentic.reads }),
-        staff,
+        host,
         CHAT,
         { messages: [{ role: "user", content: "x" }], template_key: null },
         "data",
@@ -232,7 +232,7 @@ describe("chat reply stream", () => {
     await expect(
       reply(
         fakeDeps({ store: free.store, reads: free.reads }),
-        staff,
+        host,
         CHAT,
         { messages: [{ role: "user", content: "x" }], template_key: null },
         "data",

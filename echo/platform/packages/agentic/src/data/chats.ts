@@ -8,13 +8,12 @@ import { type DataDeps, isUuid, projectRow, type Row, row, sqlOf, text } from ".
 /**
  * Projects of a workspace the caller may read, for the workspace-wide chat listing: the
  * same ladder every project read uses, so a private project the caller is not on never
- * contributes chats. Staff see every live project of the workspace.
+ * contributes chats.
  */
 async function visibleProjectIds(d: DataDeps, who: Signed, workspaceId: string) {
   const rows = await sqlOf(d)`
     select id from project where workspace_id = ${workspaceId} and deleted_at is null order by id`;
   const ids = rows.map((r) => String(r.id));
-  if (who.isStaff) return ids;
   const out: string[] = [];
   for (const id of ids)
     if (
@@ -29,7 +28,7 @@ async function visibleProjectIds(d: DataDeps, who: Signed, workspaceId: string) 
 
 /**
  * GET /agentic/projects/{p}/chats: earlier chats the assistant may build on, newest
- * activity first. Private chats of other people are left out in both modes (staff see all).
+ * activity first. Private chats of other people are left out in both modes.
  */
 export async function chats(
   d: DataDeps,
@@ -55,11 +54,7 @@ export async function chats(
     select id, name, chat_mode, is_private, user_created, date_updated, project_id
     from project_chat
     where project_id = any(${valid}) and deleted_at is null
-      ${
-        who.isStaff
-          ? sql``
-          : sql`and (is_private is distinct from true or user_created = ${who.directusUserId})`
-      }
+      and (is_private is distinct from true or user_created = ${who.directusUserId})
     order by date_updated desc
     limit ${limit}`;
   return rows.map((raw) => {
@@ -84,7 +79,7 @@ export async function chatMessages(d: DataDeps, who: Signed, chatId: string, lim
   const chat = await chatsStorage(d.db).chat(chatId);
   if (!chat || chat.deleted_at || !chat.project_id) throw new NotFoundError("Chat not found");
   await projectFor(d.access, who, chat.project_id.id, "chat:use");
-  if (!who.isStaff && chat.is_private && chat.user_created !== who.directusUserId)
+  if (chat.is_private && chat.user_created !== who.directusUserId)
     throw new NotFoundError("Chat not found");
   const rows = await sqlOf(d)`
     select message_from, text, date_created from project_chat_message

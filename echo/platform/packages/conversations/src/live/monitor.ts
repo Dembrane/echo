@@ -433,6 +433,9 @@ export async function gatherProjectMonitor(
     }
 
   // Sessions pinging before their first chunk live in the active index, not the chunk read.
+  // A ping names its project in the body, so the index is only a hint: a row counts only
+  // when the conversation really belongs to this project (spec M-3: a foreign conversation
+  // pinged under this project id showed its participant name here).
   let extra: ExtraConversation[] = [];
   try {
     const pingOnly = (await presence.activeConversationIds(projectId, since, nowDate)).filter(
@@ -441,7 +444,8 @@ export async function gatherProjectMonitor(
     if (pingOnly.length) {
       const rows = await sql<Record<string, unknown>[]>`
         select id, participant_name, is_finished, created_at, duration, is_over_cap
-        from conversation where id = any(${pingOnly}) and deleted_at is null
+        from conversation
+        where id = any(${pingOnly}) and project_id = ${projectId} and deleted_at is null
         order by id`;
       extra = rows.map((r) => ({
         id: String(r.id),

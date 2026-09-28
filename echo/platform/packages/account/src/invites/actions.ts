@@ -1,4 +1,4 @@
-import { DrizzleAccessStore, resolveWorkspace } from "@dembrane/access";
+import { DrizzleAccessStore, resolveWorkspace, roleHas } from "@dembrane/access";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { sendEmail } from "../jobs";
@@ -55,7 +55,20 @@ export async function resendInvite(ctx: InviteCtx, who: Signed, inviteId: string
   const orgId = await orgOf(store, l);
   if (!orgId) throw new NotFoundError("Invite not found");
   const { orgAdmin, inviter } = await inviterOrOrgAdmin(store, orgId, l.invite.invited_by, me.id);
-  if (!(inviter || orgAdmin))
+  // Spec L-16: a resend extends the invite, so the inviter must still be allowed to send
+  // it: member:invite on the workspace, or org admin for an org invite. An inviter since
+  // demoted no longer keeps their old invites alive.
+  let stillMayInvite = false;
+  if (inviter && l.type === "workspace") {
+    const access = await resolveWorkspace(
+      new DrizzleAccessStore(deps.db),
+      l.invite.workspace_id,
+      { appUserId: me.id, directusUserId: who.directusUserId },
+      now,
+    );
+    stillMayInvite = Boolean(access && roleHas(access.role, "member:invite", access.extra));
+  }
+  if (!(stillMayInvite || orgAdmin))
     throw new ForbiddenError("Only the inviter or an org admin can resend");
   await deps.limiter.check(RESEND_LIMIT, me.id);
 

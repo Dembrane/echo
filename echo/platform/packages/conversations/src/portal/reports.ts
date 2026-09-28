@@ -97,7 +97,8 @@ export function publicReportRoutes(d: ConversationsDeps) {
   app.post("/api/participant/report/subscribe", async (c) => {
     const { body } = await p.validate(c.req, {
       body: model({
-        emails: required(list(str())),
+        // M-19: one portal enrols a handful of addresses; an unbounded list was a mailer.
+        emails: required(list(str({ max: 320 }), { max: 20 })),
         project_id: required(str()),
         conversation_id: required(str()),
       }),

@@ -7,11 +7,10 @@ import { FREE_TIER_MAX_CHATS, freeTierLimit, isFreeTier } from "./tiers";
 
 /**
  * The chat BFF (/api/v2/bff/chats, /api/v2/bff/chat-messages). chat:use gates every route,
- * writes that change a chat or remove a message also need project:update. The BFF never
- * had the staff bypass the v1 routes have.
+ * writes that change a chat or remove a message also need project:update.
  */
 const bffChat = (d: ChatDeps, who: Signed, chatId: string) =>
-  chatFor({ access: d.access, store: d.store }, who, chatId, { staffBypass: false });
+  chatFor({ access: d.access, store: d.store }, who, chatId);
 
 export async function createChat(
   d: ChatDeps,

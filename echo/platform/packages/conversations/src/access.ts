@@ -11,12 +11,12 @@ import { type ConversationRow, conversationStore, isUuid } from "./storage";
  *   BFF (resolve_conversation_access): the conversation must exist and not be deleted
  *     (404 "Conversation not found"), then project access with conversation:read, then
  *     the route's policy (403 "Not allowed", or the tier message).
- *   v1 (raise_if_conversation_not_found_or_not_authorized): the same, except staff skip
- *     the project check and only need the conversation to exist.
+ *   v1 (raise_if_conversation_not_found_or_not_authorized): the same checks. The Python
+ *     let staff skip the project check (spec H-14); staff now reach a tenant's
+ *     conversations only through a support session, like every other project read.
  */
 export interface ConversationAccess {
   readonly conversation: ConversationRow;
-  /** Null for staff on a v1 route: they passed without a project role. */
   readonly project: ProjectAccess | null;
 }
 
@@ -40,11 +40,6 @@ export async function conversationForV1(
   conversationId: string,
   policy?: Policy,
 ): Promise<ConversationAccess> {
-  if (who.isStaff) {
-    const conv = await conversationStore(d.db).conversation(conversationId);
-    if (!conv) throw new NotFoundError("Conversation not found");
-    return { conversation: conv, project: null };
-  }
   return conversationForBff(d, who, conversationId, policy);
 }
 

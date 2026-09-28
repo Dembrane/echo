@@ -68,8 +68,36 @@ describe("private targets", () => {
       "::ffff:10.0.0.1",
     ])
       expect(isPrivateAddress(ip)).toBe(true);
-    for (const ip of ["8.8.8.8", "172.32.0.1", "2a00:1450::1"])
+    for (const ip of ["8.8.8.8", "172.32.0.1", "2a00:1450::1", "::ffff:8.8.8.8", "2002:808:808::1"])
       expect(isPrivateAddress(ip)).toBe(false);
+  });
+
+  test("M-22: an IPv4 address carried inside IPv6 is judged as the IPv4 address it reaches", async () => {
+    // The URL parser rewrites [::ffff:127.0.0.1] to [::ffff:7f00:1] before any check runs.
+    expect(new URL("http://[::ffff:127.0.0.1]/").hostname).toBe("[::ffff:7f00:1]");
+    for (const ip of [
+      "::ffff:7f00:1",
+      "::ffff:a9fe:a9fe",
+      "::7f00:1",
+      "64:ff9b::a9fe:a9fe",
+      "64:ff9b::10.0.0.1",
+      "2002:a00:1::1",
+      "::ffff:0:7f00:1",
+      "fec0::1",
+      "198.18.0.1",
+      "192.0.0.1",
+      "not-an-ip",
+    ])
+      expect([ip, isPrivateAddress(ip)]).toEqual([ip, true]);
+    const deliver = httpDeliver({ allowPrivate: false });
+    for (const url of [
+      "http://[::ffff:127.0.0.1]:9/x",
+      "http://[::ffff:169.254.169.254]/",
+      "http://[64:ff9b::a9fe:a9fe]/",
+    ])
+      await expect(deliver({ id: "w", name: "n", url, secret: null }, {})).rejects.toThrow(
+        "private or internal address",
+      );
   });
 
   test("delivery refuses internal targets unless allowed", async () => {

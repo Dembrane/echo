@@ -23,7 +23,7 @@ export class DeliveryError extends Error {}
 const TIMEOUT_MS = 40_000; // 10s to connect plus 30s to answer, as before
 
 function v4Private(ip: string): boolean {
-  const [a = 0, b = 0] = ip.split(".").map(Number);
+  const [a = 0, b = 0, c = 0] = ip.split(".").map(Number);
   return (
     a === 0 ||
     a === 10 ||
@@ -31,27 +31,66 @@ function v4Private(ip: string): boolean {
     (a === 100 && b >= 64 && b <= 127) ||
     (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 0 && (c === 0 || c === 2)) ||
     (a === 192 && b === 168) ||
+    (a === 198 && (b === 18 || b === 19)) ||
+    (a === 198 && b === 51 && c === 100) ||
+    (a === 203 && b === 0 && c === 113) ||
     a >= 224
   );
 }
 
-/** Loopback, private, link-local, carrier-grade NAT, multicast and reserved addresses. */
+/** The eight 16-bit groups of an IPv6 address, an embedded dotted IPv4 tail included. */
+function v6Groups(ip: string): number[] | null {
+  let text = ip.toLowerCase().replace(/%.*$/, "");
+  const tail = /(\d+\.\d+\.\d+\.\d+)$/.exec(text);
+  if (tail?.[1]) {
+    if (isIP(tail[1]) !== 4) return null;
+    const [a = 0, b = 0, c = 0, d = 0] = tail[1].split(".").map(Number);
+    text = `${text.slice(0, -tail[1].length)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+  }
+  const halves = text.split("::");
+  if (halves.length > 2) return null;
+  const head = halves[0] ? halves[0].split(":") : [];
+  const rest = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+  const fill = halves.length === 2 ? 8 - head.length - rest.length : 0;
+  const all = [...head, ...Array(fill).fill("0"), ...rest];
+  if (all.length !== 8) return null;
+  const groups = all.map((g) => (/^[0-9a-f]{1,4}$/.test(g) ? Number.parseInt(g, 16) : Number.NaN));
+  return groups.some(Number.isNaN) ? null : groups;
+}
+
+const v4Of = (hi: number, lo: number) => `${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`;
+
+/**
+ * Loopback, private, link-local, carrier-grade NAT, multicast and reserved addresses. An
+ * IPv6 address that carries an IPv4 one (mapped, compatible, NAT64, 6to4) is judged by
+ * the IPv4 address it reaches: the URL parser rewrites [::ffff:127.0.0.1] to
+ * [::ffff:7f00:1], which a textual match would let through.
+ */
 export function isPrivateAddress(ip: string): boolean {
   if (isIP(ip) === 4) return v4Private(ip);
-  const low = ip.toLowerCase();
-  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(low);
-  if (mapped?.[1]) return v4Private(mapped[1]);
+  const g = v6Groups(ip);
+  if (!g) return true;
+  const [g0 = 0, g1 = 0, g2 = 0, g3 = 0, g4 = 0, g5 = 0, g6 = 0, g7 = 0] = g;
+  const zeroTo = (n: number) => g.slice(0, n).every((x) => x === 0);
+  // ::, ::1 and IPv4-compatible ::a.b.c.d
+  if (zeroTo(6)) return g6 === 0 || v4Private(v4Of(g6, g7));
+  // IPv4-mapped ::ffff:a.b.c.d and IPv4-translated ::ffff:0:a.b.c.d
+  if (zeroTo(5) && g5 === 0xffff) return v4Private(v4Of(g6, g7));
+  if (zeroTo(4) && g4 === 0xffff && g5 === 0) return v4Private(v4Of(g6, g7));
+  // NAT64 64:ff9b::/96 and 64:ff9b:1::/48
+  if (g0 === 0x64 && g1 === 0xff9b) return g2 !== 0 || v4Private(v4Of(g6, g7));
+  // 6to4 2002::/16 carries its IPv4 address in the next two groups.
+  if (g0 === 0x2002) return v4Private(v4Of(g1, g2));
   return (
-    low === "::" ||
-    low === "::1" ||
-    low.startsWith("fc") ||
-    low.startsWith("fd") ||
-    low.startsWith("fe8") ||
-    low.startsWith("fe9") ||
-    low.startsWith("fea") ||
-    low.startsWith("feb") ||
-    low.startsWith("ff")
+    (g0 & 0xfe00) === 0xfc00 || // unique local fc00::/7
+    (g0 & 0xffc0) === 0xfe80 || // link-local fe80::/10
+    (g0 & 0xffc0) === 0xfec0 || // site-local fec0::/10
+    (g0 & 0xff00) === 0xff00 || // multicast ff00::/8
+    (g0 === 0x100 && g1 === 0 && g2 === 0 && g3 === 0) || // discard 100::/64
+    (g0 === 0x2001 && g1 === 0xdb8) || // documentation 2001:db8::/32
+    (g0 === 0x2001 && g1 < 0x200) // Teredo and other IETF special use 2001::/23
   );
 }
 

@@ -157,7 +157,6 @@ async function runOr404(d: RunsDeps, runId: string): Promise<Row> {
  * appending to their runs; the project gate now applies as well.
  */
 async function authorizeRun(d: RunsDeps, who: Signed, run: Row) {
-  if (who.isStaff) return;
   if (run.directus_user_id !== who.directusUserId)
     throw new ForbiddenError("Not authorized for this run");
   const projectId = relatedId(run.project_id);
