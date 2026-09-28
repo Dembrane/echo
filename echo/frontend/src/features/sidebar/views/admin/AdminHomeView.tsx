@@ -1,4 +1,5 @@
 import {
+	Buildings,
 	ChartBar,
 	CreditCard,
 	GraduationCap,
@@ -18,6 +19,7 @@ export const AdminHomeView = () => {
 				icon={ChartBar}
 			/>
 			<NavItem to="/admin/payments" label="Payments" icon={CreditCard} />
+			<NavItem to="/admin/accounts" label="Accounts" icon={Buildings} />
 			<NavItem to="/admin/training" label="Training" icon={GraduationCap} />
 			<NavItem
 				to="/admin/response-feedback"

@@ -102,6 +102,15 @@ jobs:
         run: pnpm lint
       - name: Types
         run: pnpm exec tsc
+      # The accounts screens build against a copy of platform/packages/accounts' contract.
+      - name: Accounts contract matches the platform
+        run: node scripts/sync-accounts-contract.mjs --check
+      - name: Accounts tests
+        run: pnpm exec vitest run src/features/accounts src/components/auth/utils
+      # The participant portal's first load must not grow: builds and compares with the
+      # baseline recorded in the script.
+      - name: Portal first-load size
+        run: node scripts/check-portal-bundle.mjs
 
   images:
     runs-on: ubuntu-latest

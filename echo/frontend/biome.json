@@ -24,7 +24,8 @@
 			"!**/node_modules",
 			"!**/package-lock.json",
 			"!**/package.json",
-			"!**/locales"
+			"!**/locales",
+			"!**/features/accounts/contract"
 		]
 	},
 	"formatter": {
