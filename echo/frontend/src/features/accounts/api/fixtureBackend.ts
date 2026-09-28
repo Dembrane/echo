@@ -4,9 +4,11 @@ import type {
 	AccountCard,
 	AccountListItem,
 	BillingDetails,
+	DemoStatusT,
 	DocumentDetailT,
 	DocumentFieldInput,
 	DocumentSummaryT,
+	RouteName,
 	TaskT,
 	TicketT,
 	TimelineEvent,
@@ -14,8 +16,6 @@ import type {
 import * as fx from "../contract/fixtures.gen";
 import { AccountsApiError, type Params } from "./client";
 import { pageCountOf, renderSigned, renderUnsigned } from "./fixturePdf";
-import type { DemoT } from "./provisional";
-import type { ApiRouteName as RouteName } from "./routes";
 
 /**
  * The accounts API answered in the page, for fixture mode. It starts from the Gemeente
@@ -34,9 +34,7 @@ type Billing = Out<typeof BillingDetails>;
 type Event = Out<typeof TimelineEvent>;
 type FieldInput = z.input<typeof DocumentFieldInput>;
 
-interface StoredTask extends TaskT {
-	locked_until: string | null;
-}
+type StoredTask = TaskT;
 
 interface Store {
 	id: string;
@@ -90,10 +88,7 @@ function demoStore(): Store {
 		signature: null,
 		signing_note: null,
 	};
-	const tasks: StoredTask[] = fx.accountPage.tasks.map((t) => ({
-		...clone(t),
-		locked_until: t.kind === "billing_details" ? offer.id : null,
-	}));
+	const tasks: StoredTask[] = fx.accountPage.tasks.map((t) => clone(t));
 	return {
 		billing: clone(fx.accountPage.billing),
 		created_at: fx.accountCard.organisation.created_at ?? now(),
@@ -135,6 +130,13 @@ function otherStores(): Store[] {
 			"churned",
 			"2025-11-12T14:00:00.000Z",
 		],
+		// A free tier signup: an organisation with no account side yet.
+		[
+			"0199a2c0-0000-7000-8000-000000000004",
+			"Stichting Vrije Proef",
+			null,
+			"2026-08-30T12:00:00.000Z",
+		],
 	];
 	return rows.map(([id, name, stage, created]) => ({
 		billing: { ...clone(fx.accountPage.billing), billing_email: null },
@@ -142,7 +144,18 @@ function otherStores(): Store[] {
 		demo: null,
 		docs: [],
 		id,
-		members: [],
+		members:
+			stage === null
+				? [
+						{
+							app_user_id: uuid(),
+							email: "info@vrijeproef.example",
+							name: "Joost",
+							role: "owner",
+							since: created,
+						},
+					]
+				: [],
 		name,
 		needs_form: null,
 		needs_form_reference: null,
@@ -198,29 +211,25 @@ function save() {
 	}
 }
 
-// ── demos (provisional routes) ──────────────────────────────────────────
+// ── demos ──────────────────────────────────────────────────────────────
 
-const DEMOS_KEY = "echo.accounts.fixtures.demos.v1";
-/** `?fixtures_orgs=2` makes the signed-in customer belong to two orgs with tasks. */
+const DEMOS_KEY = "echo.accounts.fixtures.demos.v2";
+/** `?fixtures_orgs=2` makes the signed-in customer an admin of two orgs with tasks. */
 const ORGS_KEY = "echo.accounts.fixtures.orgs";
 const STEP_MS = 1400;
 const STEPS = [
-	"website",
+	"fetch",
 	"research",
-	"corpus",
-	"seeding",
-	"extraction",
-	"draft",
+	"author",
+	"seed",
+	"extract",
+	"review",
 ] as const;
 
-interface FixtureDemo extends DemoT {
-	/** A website URL with "fail" in it fails the research step once, to show a retry. */
+interface FixtureDemo extends DemoStatusT {
+	/** A website URL with "fail" in it fails the author step once, to show a retry. */
 	failOnce: boolean;
-	offer: {
-		template: "subscription" | "event";
-		language: "en" | "nl";
-		items: unknown[];
-	} | null;
+	offer: Record<string, unknown> | null;
 }
 let demos: Record<string, FixtureDemo> | null = null;
 
@@ -251,9 +260,14 @@ function twoOrgs(): boolean {
 	}
 }
 
-/** Moves a running demo on by the time passed, one step every STEP_MS. */
-function advance(d: FixtureDemo) {
-	if (d.status !== "running") return;
+/**
+ * Moves a queued or running demo on by the time passed, one step every STEP_MS. The seed
+ * step creates the organisation (a prospect with the contact as admin) and, when asked,
+ * the offer as a draft, as the backend does.
+ */
+async function advance(d: FixtureDemo) {
+	if (d.status !== "running" && d.status !== "queued") return;
+	d.status = "running";
 	const t = Date.now();
 	for (const step of d.steps) {
 		if (step.status === "done") continue;
@@ -264,21 +278,78 @@ function advance(d: FixtureDemo) {
 			return;
 		}
 		if (t - new Date(step.started_at ?? t).getTime() < STEP_MS) return;
-		if (step.key === "research" && d.failOnce) {
+		if (step.name === "author" && d.failOnce) {
 			d.failOnce = false;
 			step.status = "failed";
 			step.error =
-				"The website did not answer (timeout after 30 s). Check the URL, or retry.";
+				fx.demoFailed.steps.find((x) => x.status === "failed")?.error ??
+				"Failed";
 			step.finished_at = new Date(t).toISOString();
 			d.status = "failed";
 			return;
 		}
 		step.status = "done";
 		step.finished_at = new Date(t).toISOString();
+		if (step.name === "author") d.conversations = 6;
+		if (step.name === "research") d.research = fx.demoDraft.research;
+		if (step.name === "seed") await seedOrg(d);
 	}
-	d.status = "draft_ready";
-	d.public_url = `https://portal.echo.example/nl-NL/demo-${d.id.slice(0, 8)}/start`;
-	d.project_url = `/w/${d.id}/projects/${d.id}/home`;
+	d.status = "draft";
+	d.links = {
+		...fx.demoDraft.links,
+		account: `/api/v2/admin/accounts/${d.org_id}`,
+		continue_url: `/login?next=${encodeURIComponent(`/o/${d.org_id}/account`)}`,
+		projects: fx.demoDraft.links.projects.map((l) => ({
+			...l,
+			language: d.language,
+		})),
+		public: fx.demoDraft.links.public.map((l) => ({
+			...l,
+			language: d.language,
+			live: false,
+		})),
+	};
+}
+
+async function seedOrg(d: FixtureDemo) {
+	const org = uuid();
+	const created = now();
+	const base = otherStores()[0] as Store;
+	const store: Store = {
+		...base,
+		created_at: created,
+		demo: { slug: d.slug },
+		id: org,
+		members: [
+			{
+				app_user_id: uuid(),
+				email: d.contact_email,
+				name: null,
+				role: "admin",
+				since: created,
+			},
+		],
+		name: d.organisation_name,
+		stage: "prospect",
+		timeline: [],
+	};
+	load()[org] = store;
+	event(store, "account.created", "staff", {}, { stage: "prospect" });
+	event(store, "demo.seeded", "staff", {}, { slug: d.slug });
+	d.org_id = org;
+	if (d.offer) {
+		const res = (await handle(
+			"pushOffer",
+			{ orgId: org },
+			{
+				...d.offer,
+				currency: "EUR",
+				offer_name: d.organisation_name,
+				send: false,
+			},
+		)) as { document: { id: string } };
+		d.offer_document_id = res.document.id;
+	}
 }
 
 /** Unknown org ids are the signed-in customer's own org in the dev shell: the demo. */
@@ -333,7 +404,7 @@ const TASK_ORDER: Record<TaskT["status"], number> = {
 	withdrawn: 5,
 };
 
-const publicTask = ({ locked_until: _, ...t }: StoredTask): TaskT => t;
+const publicTask = (t: StoredTask): TaskT => t;
 
 const event = (
 	s: Store,
@@ -529,6 +600,8 @@ function openTask(
 	s: Store,
 	t: Omit<
 		StoredTask,
+		| "locked_until_document_id"
+		| "locked_until_title"
 		| "id"
 		| "opened_at"
 		| "next_reminder_at"
@@ -538,12 +611,17 @@ function openTask(
 		| "submitted_at"
 		| "review_note"
 		| "reviewed_at"
-	>,
+	> & { locked_until: string | null },
 ): StoredTask {
 	const opened = t.locked ? null : now();
+	const { locked_until, ...rest } = t;
 	const task: StoredTask = {
-		...t,
+		...rest,
 		id: uuid(),
+		locked_until_document_id: t.locked ? locked_until : null,
+		locked_until_title: t.locked
+			? (s.docs.find((d) => d.id === locked_until)?.title ?? null)
+			: null,
 		next_reminder_at: opened
 			? addDays(opened, t.reminder_interval_days ?? 7)
 			: null,
@@ -595,6 +673,12 @@ function seal(s: Store, d: DocumentDetailT) {
 			: "Your signature makes this document part of the agreement.";
 }
 
+const publicDemo = ({
+	failOnce: _f,
+	offer: _o,
+	...d
+}: FixtureDemo): DemoStatusT => d;
+
 type Body = Record<string, unknown>;
 
 /** One handler per contract route; the client parses whatever this returns. */
@@ -629,112 +713,108 @@ export async function handle(
 	const sBase = staffBase(s.id);
 	const result = await (async (): Promise<unknown> => {
 		switch (name) {
-			case "startDemo": {
-				const id = uuid();
-				const org = uuid();
+			case "createDemo": {
 				const created = now();
-				load()[org] = {
-					...otherStores()[0],
-					created_at: created,
-					id: org,
-					members: [
-						{
-							app_user_id: uuid(),
-							email: String(body.contact_email),
-							name: (body.contact_name as string | null) ?? null,
-							role: "admin",
-							since: created,
-						},
-					],
-					name: String(body.organisation_name),
-					stage: "prospect",
-					timeline: [],
-				} as Store;
-				event(
-					load()[org] as Store,
-					"account.created",
-					"staff",
-					{},
-					{ stage: "prospect" },
-				);
 				const d: FixtureDemo = {
 					contact_email: String(body.contact_email),
-					email_code_sign_in: body.email_code_sign_in === true,
+					conversations: null,
+					created_at: created,
 					failOnce: String(body.website_url).includes("fail"),
-					id,
-					invitation_sent_at: null,
-					offer: (body.offer as FixtureDemo["offer"]) ?? null,
-					org_id: org,
+					id: uuid(),
+					invited_at: null,
+					language: body.language as "en" | "nl",
+					links: {
+						account: null,
+						continue_url: null,
+						projects: [],
+						public: [],
+					},
+					offer: (body.offer as Record<string, unknown> | null) ?? null,
+					offer_document_id: null,
+					org_id: null,
 					organisation_name: String(body.organisation_name),
-					project_url: null,
-					public_url: null,
 					published_at: null,
-					status: "running",
-					steps: STEPS.map((key) => ({
+					research: null,
+					sign_in: body.sign_in === true,
+					slug: String(body.organisation_name)
+						.toLowerCase()
+						.replace(/[^a-z0-9]+/g, "-"),
+					status: "queued",
+					steps: STEPS.map((name) => ({
 						error: null,
 						finished_at: null,
-						key,
+						name,
 						started_at: null,
 						status: "pending" as const,
 					})),
+					updated_at: created,
+					website_url: String(body.website_url),
 				};
-				loadDemos()[id] = d;
-				advance(d);
-				return d;
+				loadDemos()[d.id] = d;
+				await advance(d);
+				return publicDemo(d);
 			}
-			case "readDemo":
+			case "listDemos": {
+				for (const d of Object.values(loadDemos())) await advance(d);
+				return {
+					demos: Object.values(loadDemos())
+						.sort((a, b) => b.created_at.localeCompare(a.created_at))
+						.map(publicDemo),
+				};
+			}
+			case "demoStatus":
 			case "retryDemo":
 			case "publishDemo": {
 				const d = loadDemos()[params.demoId ?? ""];
 				if (!d) throw notFound();
 				if (name === "retryDemo") {
-					const step = d.steps.find((x) => x.key === body.step);
-					if (!step || step.status !== "failed")
-						throw new AccountsApiError(
-							409,
-							"Only a failed step can be retried.",
-						);
+					const step = d.steps.find((x) => x.status === "failed");
+					if (!step) throw new AccountsApiError(409, "No step failed.");
 					step.status = "running";
 					step.error = null;
 					step.started_at = now();
 					step.finished_at = null;
 					d.status = "running";
 				}
-				advance(d);
+				await advance(d);
 				if (name === "publishDemo") {
-					if (d.status !== "draft_ready")
+					if (d.status !== "draft")
 						throw new AccountsApiError(409, "The draft is not ready yet.");
+					const signIn =
+						typeof body.sign_in === "boolean" ? body.sign_in : d.sign_in;
+					d.sign_in = signIn;
 					d.status = "published";
 					d.published_at = now();
-					const target = load()[d.org_id] as Store;
-					if (d.email_code_sign_in) d.invitation_sent_at = now();
-					target.demo = {
-						links: { public_link: d.public_url },
-						project: d.project_url,
-					};
-					event(
-						target,
-						"demo.seeded",
-						"staff",
-						{},
-						{ invited: d.email_code_sign_in, published: true },
-					);
-					if (d.offer) {
-						save();
-						await handle(
-							"pushOffer",
-							{ orgId: d.org_id },
-							{
-								...d.offer,
-								currency: "EUR",
-								offer_name: d.organisation_name,
-								person_name: null,
-							},
-						);
-					}
+					d.invited_at = signIn ? now() : null;
+					d.links.public = d.links.public.map((l) => ({ ...l, live: true }));
+					const target = load()[d.org_id ?? ""];
+					if (target)
+						event(target, "demo.published", "staff", {}, { invited: signIn });
 				}
-				const { failOnce: _f, offer: _o, ...out } = d;
-				return out;
+				d.updated_at = now();
+				return publicDemo(d);
+			}
+			case "enableAccount": {
+				s.stage = (body.stage as Store["stage"]) ?? "customer";
+				if (!s.tasks.some((x) => x.kind === "billing_details")) {
+					openTask(s, {
+						body:
+							body.language === "en"
+								? "Who we invoice."
+								: "Aan wie we factureren.",
+						document_id: null,
+						due_on: null,
+						kind: "billing_details",
+						locked: false,
+						locked_until: null,
+						reminder_interval_days: null,
+						status: "open",
+						title:
+							body.language === "en" ? "Billing details" : "Factuurgegevens",
+					});
+				}
+				event(s, "account.enabled", "staff", {}, { stage: s.stage });
+				return card(s);
 			}
 			case "tasksSummary": {
 				// The customer's own org (whatever id the dev shell gives it) carries the demo's tasks.
@@ -750,20 +830,20 @@ export async function handle(
 				const summarise = (id: string, name: string, x: Store) => {
 					const live = x.tasks.filter((t) => t.status !== "withdrawn");
 					return {
-						done: live.filter((t) => t.status === "done").length,
-						id,
+						account_stage: x.stage,
 						logo_url: null,
 						name,
 						next_task_title:
 							live.find(
 								(t) => t.status === "open" || t.status === "changes_requested",
 							)?.title ?? null,
-						stage: x.stage,
-						total: live.length,
+						org_id: id,
+						tasks_done: live.filter((t) => t.status === "done").length,
+						tasks_total: live.length,
 					};
 				};
-				const orgs = [];
-				if (own) orgs.push(summarise(own.id, own.name, load()[DEMO] as Store));
+				const rows = [];
+				if (own) rows.push(summarise(own.id, own.name, load()[DEMO] as Store));
 				if (twoOrgs()) {
 					const second = load()[
 						"0199a2c0-0000-7000-8000-000000000001"
@@ -780,16 +860,22 @@ export async function handle(
 							status: "open",
 							title: "Stuur ons de datum van de bewonersavond",
 						});
-						second.tasks.push({
-							...(second.tasks[0] as StoredTask),
-							id: uuid(),
-							status: "done",
+						const done = openTask(second, {
+							body: null,
+							document_id: null,
+							due_on: null,
+							kind: "generic",
+							locked: false,
+							locked_until: null,
+							reminder_interval_days: null,
+							status: "open",
 							title: "Plan een kennismaking",
 						});
+						done.status = "done";
 					}
-					orgs.push(summarise(second.id, second.name, second));
+					rows.push(summarise(second.id, second.name, second));
 				}
-				return { orgs: orgs.filter((o) => o.total > 0) };
+				return rows;
 			}
 			case "accountPage":
 				return {
@@ -901,8 +987,10 @@ export async function handle(
 						t.status = "done";
 						t.next_reminder_at = null;
 					}
-					if (t.locked_until === d.id && t.locked) {
+					if (t.locked_until_document_id === d.id && t.locked) {
 						t.locked = false;
+						t.locked_until_document_id = null;
+						t.locked_until_title = null;
 						t.status = "open";
 						t.opened_at = signedAt;
 						t.next_reminder_at = addDays(
@@ -1003,7 +1091,8 @@ export async function handle(
 						t.kind === "billing_details" &&
 						(t.status === "open" || t.status === "changes_requested")
 					) {
-						t.status = "submitted";
+						// Saving the details completes the task: no staff review (CTO decision).
+						t.status = "done";
 						t.submitted_at = now();
 						t.next_reminder_at = null;
 					}
@@ -1084,13 +1173,13 @@ export async function handle(
 					}));
 			case "listAccounts": {
 				const all = Object.values(load());
-				const stage = query?.stage;
+				const stage = query?.stage === "none" ? null : query?.stage;
 				// PROVISIONAL: `q` matches the name or a member's email, as the backend will.
 				const q = String(query?.q ?? "")
 					.trim()
 					.toLowerCase();
 				const rows = all
-					.filter((x) => !stage || x.stage === stage)
+					.filter((x) => stage === undefined || x.stage === stage)
 					.filter(
 						(x) =>
 							!q ||
@@ -1177,7 +1266,7 @@ export async function handle(
 					language,
 					lines,
 					reference,
-					sent_at: now(),
+					sent_at: body.send === false ? null : now(),
 					sha256: sha,
 					signature: null,
 					signed_at: null,
@@ -1185,7 +1274,7 @@ export async function handle(
 						language === "nl"
 							? "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en verwerkersovereenkomst gelden."
 							: "Your signature completes the agreement: we can invoice, and the terms, SLA and data processing agreement apply.",
-					status: "sent",
+					status: body.send === false ? "draft" : "sent",
 					subtotal_cents: subtotal,
 					title,
 					total_cents: subtotal + vat,
@@ -1196,21 +1285,27 @@ export async function handle(
 					viewed_at: null,
 				};
 				s.docs.unshift(d);
-				const t = signTaskFor(
-					s,
-					d,
-					language === "nl"
-						? "Offerte bekijken en ondertekenen"
-						: "Review and sign the offer",
-					language === "nl"
-						? "Lees de offerte en onderteken hem hier."
-						: "Read the offer and sign it here.",
-				);
+				// A draft offer gets its task when it is sent.
+				const t =
+					body.send === false
+						? null
+						: signTaskFor(
+								s,
+								d,
+								language === "nl"
+									? "Offerte bekijken en ondertekenen"
+									: "Review and sign the offer",
+								language === "nl"
+									? "Lees de offerte en onderteken hem hier."
+									: "Read the offer and sign it here.",
+							);
 				const billing = s.tasks.find(
 					(x) => x.kind === "billing_details" && x.status === "locked",
 				);
-				if (billing) billing.locked_until = d.id;
-				else if (!s.tasks.some((x) => x.kind === "billing_details")) {
+				if (billing) {
+					billing.locked_until_document_id = d.id;
+					billing.locked_until_title = d.title;
+				} else if (!s.tasks.some((x) => x.kind === "billing_details")) {
 					openTask(s, {
 						body:
 							language === "nl"
@@ -1233,7 +1328,10 @@ export async function handle(
 					{ id: d.id, type: "document" },
 					{ kind: "offer", total_cents: d.total_cents },
 				);
-				return { document: withUrls(d, sBase, "staff"), task: publicTask(t) };
+				return {
+					document: withUrls(d, sBase, "staff"),
+					task: t ? publicTask(t) : null,
+				};
 			}
 			case "pushDocument": {
 				const pdf = body.pdf_base64 as string | null;
@@ -1377,11 +1475,25 @@ export async function handle(
 				}
 				d.status = "sent";
 				d.sent_at = now();
-				if (d.requires_signature) seal(s, d);
+				// An offer keeps the confirmation its template gave it; other documents get
+				// theirs from the fields they were sent with.
+				if (d.requires_signature && d.kind !== "offer") seal(s, d);
+				const offerTask =
+					d.kind === "offer"
+						? d.language === "nl"
+							? {
+									body: "Lees de offerte en onderteken hem hier.",
+									title: "Offerte bekijken en ondertekenen",
+								}
+							: {
+									body: "Read the offer and sign it here.",
+									title: "Review and sign the offer",
+								}
+						: null;
 				const taskSpec =
 					(body.task as { title: string; body: string | null } | null) ??
 					s.pendingTasks[d.id] ??
-					null;
+					offerTask;
 				delete s.pendingTasks[d.id];
 				if (!s.tasks.some((t) => t.document_id === d.id)) {
 					if (d.requires_signature) {

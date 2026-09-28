@@ -175,7 +175,11 @@ function TaskRow({
 					</Group>
 					{locked ? (
 						<Text size="sm" c="dimmed">
-							<Trans>Opens after signing.</Trans>
+							{task.locked_until_title ? (
+								<Trans>Opens after you sign {task.locked_until_title}.</Trans>
+							) : (
+								<Trans>Opens after signing.</Trans>
+							)}
 						</Text>
 					) : task.status === "changes_requested" && task.review_note ? (
 						<Text size="sm" c="orange.8">

@@ -19,6 +19,13 @@ describe("the demo fixtures parse against the contract", () => {
 		["signResponse", fx.signResponse, contract.SignResponse],
 		["signingRequests", fx.signingRequests, contract.SigningRequests],
 		["accountList", fx.accountList, contract.AccountList],
+		["tasksSummary", fx.tasksSummary, contract.TasksSummary],
+		["billingTaskDone", fx.billingTaskDone, contract.Task],
+		["demoCreateRequest", fx.demoCreateRequest, contract.DemoCreateRequest],
+		["demoRunning", fx.demoRunning, contract.DemoStatus],
+		["demoFailed", fx.demoFailed, contract.DemoStatus],
+		["demoDraft", fx.demoDraft, contract.DemoStatus],
+		["demoPublished", fx.demoPublished, contract.DemoStatus],
 		["accountCard", fx.accountCard, contract.AccountCard],
 		["pushOfferRequest", fx.pushOfferRequest, contract.PushOfferRequest],
 		["pushOfferResponse", fx.pushOfferResponse, contract.PushOfferResponse],
@@ -230,5 +237,147 @@ describe("the fixture backend, through the client", () => {
 			params: { orgId: org, taskId: submitted.id },
 		});
 		expect(approved.status).toBe("done");
+	});
+
+	it("saving billing details completes the billing task at once", async () => {
+		await client.call("signDocument", {
+			body: fx.signRequest,
+			params: { docId: fx.offerDetail.id, orgId: org },
+		});
+		await client.call("updateBilling", {
+			body: {
+				address_line1: "Stadhuisplein 1",
+				billing_email: "crediteuren@voorbeeldstad.example",
+				city: "Voorbeeldstad",
+				country: "Nederland",
+				kvk_number: "12345678",
+				legal_name: "Gemeente Voorbeeldstad",
+				postal_code: "1234 AB",
+			},
+			params: { orgId: org },
+		});
+		const page = await client.call("accountPage", { params: { orgId: org } });
+		expect(page.tasks.find((t) => t.kind === "billing_details")?.status).toBe(
+			"done",
+		);
+	});
+
+	it("names the document a locked task waits for", async () => {
+		const page = await client.call("accountPage", { params: { orgId: org } });
+		const billing = page.tasks.find((t) => t.kind === "billing_details");
+		expect(billing?.locked_until_title).toBe(fx.offerDetail.title);
+	});
+
+	it("keeps a draft offer without a task until it is sent", async () => {
+		const res = await client.call("pushOffer", {
+			body: { ...fx.pushOfferRequest, send: false },
+			params: { orgId: org },
+		});
+		expect(res.document.status).toBe("draft");
+		expect(res.task).toBeNull();
+		await client.call("sendDocument", {
+			params: { docId: res.document.id, orgId: org },
+		});
+		const card = await client.call("accountCard", { params: { orgId: org } });
+		expect(
+			card.tasks.some(
+				(t) => t.document_id === res.document.id && t.kind === "sign",
+			),
+		).toBe(true);
+	});
+
+	it("lists organisations by search and by stage, including none", async () => {
+		const none = await client.call("listAccounts", {
+			query: { stage: "none" },
+		});
+		expect(none.accounts.map((a) => a.name)).toEqual(["Stichting Vrije Proef"]);
+		const byEmail = await client.call("listAccounts", {
+			query: { q: "vrijeproef" },
+		});
+		expect(byEmail.accounts.map((a) => a.name)).toEqual([
+			"Stichting Vrije Proef",
+		]);
+		const byName = await client.call("listAccounts", {
+			query: { q: "voorbeeld" },
+		});
+		expect(byName.accounts.length).toBe(2);
+	});
+
+	it("enables the account side on any organisation", async () => {
+		const id = "0199a2c0-0000-7000-8000-000000000004";
+		const card = await client.call("enableAccount", {
+			body: { language: "nl", stage: "customer" },
+			params: { orgId: id },
+		});
+		expect(card.organisation.account_stage).toBe("customer");
+		expect(card.tasks.map((t) => t.kind)).toEqual(["billing_details"]);
+	});
+
+	it("summarises tasks for the caller's orgs", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						JSON.stringify({
+							orgs: [{ id: org, name: "Gemeente Voorbeeldstad" }],
+						}),
+					),
+			),
+		);
+		const summary = await client.call("tasksSummary");
+		vi.unstubAllGlobals();
+		expect(summary).toEqual([
+			expect.objectContaining({
+				org_id: org,
+				tasks_done: 0,
+				tasks_total: 4,
+				next_task_title: "Offerte bekijken en ondertekenen",
+			}),
+		]);
+	});
+
+	it("runs a demo: steps advance, a failure retries, publishing invites", async () => {
+		vi.useFakeTimers({ toFake: ["Date"] });
+		let t = Date.parse("2026-09-28T09:00:00.000Z");
+		vi.setSystemTime(t);
+		const tick = async (id: string) => {
+			t += 1500;
+			vi.setSystemTime(t);
+			return client.call("demoStatus", { params: { demoId: id } });
+		};
+		const started = await client.call("createDemo", {
+			body: {
+				...fx.demoCreateRequest,
+				website_url: "https://fail.voorbeeldstad.example/",
+			},
+		});
+		expect(started.steps[0]?.status).toBe("running");
+		let d = started;
+		for (let i = 0; i < 10 && d.status !== "failed"; i++)
+			d = await tick(started.id);
+		expect(d.status).toBe("failed");
+		expect(d.steps.find((x) => x.status === "failed")?.name).toBe("author");
+		d = await client.call("retryDemo", { params: { demoId: d.id } });
+		for (let i = 0; i < 10 && d.status !== "draft"; i++)
+			d = await tick(started.id);
+		expect(d.status).toBe("draft");
+		expect(d.org_id).not.toBeNull();
+		expect(d.offer_document_id).not.toBeNull();
+		expect(d.links.public.every((l) => !l.live)).toBe(true);
+		const published = await client.call("publishDemo", {
+			body: { sign_in: true },
+			params: { demoId: d.id },
+		});
+		expect(published.status).toBe("published");
+		expect(published.invited_at).not.toBeNull();
+		expect(published.links.public.every((l) => l.live)).toBe(true);
+		const card = await client.call("accountCard", {
+			params: { orgId: d.org_id as string },
+		});
+		expect(
+			card.documents.find((x) => x.id === d.offer_document_id)?.status,
+		).toBe("draft");
+		vi.useRealTimers();
 	});
 });

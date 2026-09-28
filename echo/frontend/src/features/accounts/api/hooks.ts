@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import type { RouteName } from "../contract/contract.gen";
 import {
 	apiUrl,
 	type CallOptions,
@@ -9,7 +10,6 @@ import {
 	type RequestOf,
 	type ResponseOf,
 } from "./client";
-import type { ApiRouteName as RouteName } from "./routes";
 
 /**
  * React Query over the accounts client. One key space: a customer write refreshes the

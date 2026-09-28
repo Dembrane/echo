@@ -107,4 +107,4 @@ export const stageLabel = (stage: string | null): string =>
 			? t`Customer`
 			: stage === "churned"
 				? t`Churned`
-				: t`No stage`;
+				: t`No account`;

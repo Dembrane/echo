@@ -9,7 +9,9 @@ import {
 	Group,
 	Loader,
 	Paper,
+	Spoiler,
 	Stack,
+	Switch,
 	Text,
 	ThemeIcon,
 	Title,
@@ -27,14 +29,16 @@ import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { call } from "../api/client";
 import { accountKeys } from "../api/hooks";
-import type { DemoStepT, DemoT } from "../api/provisional";
+import type { DemoStatusT } from "../contract/contract.gen";
 import { formatDateTime } from "../format";
 import { AccountsI18n } from "../i18n";
 import { StaffOnly } from "./AccountCardRoute";
 
+type Step = DemoStatusT["steps"][number];
+
 /**
  * Staff: a demo being built, then its draft and the one decision left, Publish. Polls
- * while a step runs; a failed step shows why and retries on its own.
+ * while it is queued or running; a failed step shows why and retries from itself.
  */
 export const DemoRoute = () => (
 	<AccountsI18n>
@@ -44,46 +48,49 @@ export const DemoRoute = () => (
 	</AccountsI18n>
 );
 
-const stepLabel = (key: DemoStepT["key"]): string =>
+const stepLabel = (name: Step["name"]): string =>
 	({
-		corpus: t`Corpus`,
-		draft: t`Draft ready`,
-		extraction: t`Extraction`,
+		author: t`Corpus`,
+		extract: t`Extraction`,
+		fetch: t`Website`,
 		research: t`Research`,
-		seeding: t`Seeding`,
-		website: t`Website`,
-	})[key];
+		review: t`Draft ready`,
+		seed: t`Seeding`,
+	})[name];
 
-const demoKey = (id: string) => ["accounts", "demo", id] as const;
+export const demoKey = (id: string) => ["accounts", "demo", id] as const;
 
 function Demo() {
 	const { demoId } = useParams<{ demoId: string }>();
 	const queryClient = useQueryClient();
 	const { i18n } = useLingui();
-	const [busy, setBusy] = useState<string | null>(null);
+	const [busy, setBusy] = useState<"retry" | "publish" | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const { data: demo, isLoading } = useQuery({
 		enabled: Boolean(demoId),
-		queryFn: () => call("readDemo", { params: { demoId: demoId as string } }),
+		queryFn: () => call("demoStatus", { params: { demoId: demoId as string } }),
 		queryKey: demoKey(demoId ?? ""),
-		refetchInterval: (q) => (q.state.data?.status === "running" ? 1500 : false),
+		refetchInterval: (q) =>
+			q.state.data?.status === "running" || q.state.data?.status === "queued"
+				? 1500
+				: false,
 	});
 	useDocumentTitle(
 		demo ? `${demo.organisation_name} | ${t`Demo`}` : t`Demo | dembrane`,
 	);
 
-	const act = async (what: "retry" | "publish", step?: DemoStepT["key"]) => {
+	const act = async (what: "retry" | "publish", signIn?: boolean) => {
 		if (!demoId) return;
 		setBusy(what);
 		setError(null);
 		try {
 			const next =
 				what === "retry"
-					? await call("retryDemo", {
-							body: { step: step as DemoStepT["key"] },
+					? await call("retryDemo", { params: { demoId } })
+					: await call("publishDemo", {
+							body: { sign_in: signIn },
 							params: { demoId },
-						})
-					: await call("publishDemo", { params: { demoId } });
+						});
 			queryClient.setQueryData(demoKey(demoId), next);
 			await queryClient.invalidateQueries({ queryKey: accountKeys.all });
 		} catch (e) {
@@ -118,7 +125,7 @@ function Demo() {
 							<Trans>
 								Published {formatDateTime(demo.published_at, i18n.locale)}.
 							</Trans>
-						) : demo.status === "draft_ready" ? (
+						) : demo.status === "draft" ? (
 							<Trans>The draft is ready. Check it, then publish.</Trans>
 						) : demo.status === "failed" ? (
 							<Trans>A step failed. Retry it once the cause is fixed.</Trans>
@@ -131,21 +138,21 @@ function Demo() {
 				<Paper withBorder radius="md" p="sm">
 					<Stack gap={10}>
 						{demo.steps.map((step) => (
-							<Step
-								key={step.key}
+							<StepRow
+								key={step.name}
 								step={step}
 								busy={busy === "retry"}
-								onRetry={() => act("retry", step.key)}
+								onRetry={() => act("retry")}
 							/>
 						))}
 					</Stack>
 				</Paper>
 
-				{(demo.status === "draft_ready" || demo.status === "published") && (
+				{(demo.status === "draft" || demo.status === "published") && (
 					<Draft
 						demo={demo}
 						busy={busy === "publish"}
-						onPublish={() => act("publish")}
+						onPublish={(signIn) => act("publish", signIn)}
 					/>
 				)}
 				{error && (
@@ -158,19 +165,19 @@ function Demo() {
 	);
 }
 
-function Step({
+function StepRow({
 	step,
 	busy,
 	onRetry,
 }: {
-	step: DemoStepT;
+	step: Step;
 	busy: boolean;
 	onRetry: () => void;
 }) {
 	return (
 		<Stack
 			gap={4}
-			data-testid={`demo-step-${step.key}`}
+			data-testid={`demo-step-${step.name}`}
 			data-status={step.status}
 		>
 			<Group gap="sm" wrap="nowrap">
@@ -196,7 +203,7 @@ function Step({
 					c={step.status === "pending" ? "dimmed" : undefined}
 					style={{ flex: 1 }}
 				>
-					{stepLabel(step.key)}
+					{stepLabel(step.name)}
 				</Text>
 				{step.status === "failed" && (
 					<Button
@@ -225,46 +232,83 @@ function Draft({
 	busy,
 	onPublish,
 }: {
-	demo: DemoT;
+	demo: DemoStatusT;
 	busy: boolean;
-	onPublish: () => void;
+	onPublish: (signIn: boolean) => void;
 }) {
+	const [signIn, setSignIn] = useState(demo.sign_in);
 	const published = demo.status === "published";
 	return (
-		<Stack gap="sm" data-testid="demo-draft">
-			<Group gap="lg">
-				{demo.public_url && (
+		<Stack gap="md" data-testid="demo-draft">
+			<Stack gap={6}>
+				{demo.links.public.map((l) => (
+					<Group key={l.url} gap="xs">
+						<Anchor
+							href={l.url}
+							target="_blank"
+							rel="noreferrer"
+							size="sm"
+							data-testid="demo-public-link"
+						>
+							<Trans>Public demo ({l.language.toUpperCase()})</Trans>
+						</Anchor>
+						<Text size="xs" c="dimmed">
+							{l.live ? (
+								<Trans>live</Trans>
+							) : (
+								<Trans>not live until you publish</Trans>
+							)}
+						</Text>
+					</Group>
+				))}
+				{demo.links.projects.map((p) => (
 					<Anchor
-						href={demo.public_url}
+						key={p.project_id}
+						href={p.url}
 						target="_blank"
 						rel="noreferrer"
 						size="sm"
-						data-testid="demo-public-link"
-					>
-						<Trans>Open the public demo</Trans>
-					</Anchor>
-				)}
-				{demo.project_url && (
-					<Anchor
-						component={I18nLink}
-						to={demo.project_url}
-						size="sm"
 						data-testid="demo-project-link"
 					>
-						<Trans>Open the project</Trans>
+						<Trans>Project in the dashboard ({p.language.toUpperCase()})</Trans>
+					</Anchor>
+				))}
+				{demo.org_id && (
+					<Anchor
+						component={I18nLink}
+						to={`/admin/accounts/${demo.org_id}`}
+						size="sm"
+					>
+						<Trans>The account</Trans>
 					</Anchor>
 				)}
-				<Anchor
-					component={I18nLink}
-					to={`/admin/accounts/${demo.org_id}`}
-					size="sm"
-				>
-					<Trans>Open the account</Trans>
-				</Anchor>
-			</Group>
+				{demo.conversations != null && (
+					<Text size="xs" c="dimmed">
+						<Trans>
+							{demo.conversations} fictional conversations authored.
+						</Trans>
+					</Text>
+				)}
+			</Stack>
+			{demo.research && (
+				<Paper withBorder radius="md" p="sm">
+					<Text size="sm" fw={500} mb={4}>
+						<Trans>Research</Trans>
+					</Text>
+					<Spoiler
+						maxHeight={90}
+						showLabel={t`Show all`}
+						hideLabel={t`Show less`}
+					>
+						<Text size="xs" style={{ whiteSpace: "pre-wrap" }}>
+							{demo.research}
+						</Text>
+					</Spoiler>
+				</Paper>
+			)}
 			{published ? (
 				<Alert color="green" variant="light" data-testid="demo-published">
-					{demo.invitation_sent_at ? (
+					{demo.invited_at ? (
 						<Trans>
 							Published. {demo.contact_email} has the sign-in invitation.
 						</Trans>
@@ -275,26 +319,29 @@ function Draft({
 					)}
 				</Alert>
 			) : (
-				<Group gap="sm" align="center">
-					<Button
-						size="md"
-						onClick={onPublish}
-						loading={busy}
-						data-testid="demo-publish"
-					>
-						<Trans>Publish</Trans>
-					</Button>
-					<Text size="sm" c="dimmed" style={{ flex: 1, minWidth: 200 }}>
-						{demo.email_code_sign_in ? (
-							<Trans>
-								Publishing sends {demo.contact_email} a sign-in invitation with
-								an email code.
-							</Trans>
-						) : (
-							<Trans>Publishing makes the demo live. No email goes out.</Trans>
-						)}
-					</Text>
-				</Group>
+				<Stack gap="sm">
+					<Switch
+						checked={signIn}
+						onChange={(e) => setSignIn(e.currentTarget.checked)}
+						label={t`Send the sign-in invitation`}
+						description={
+							signIn
+								? t`Publishing emails ${demo.contact_email} a sign-in code.`
+								: t`Publishing makes the demo live. No email goes out.`
+						}
+						data-testid="demo-publish-sign-in"
+					/>
+					<Group>
+						<Button
+							size="md"
+							onClick={() => onPublish(signIn)}
+							loading={busy}
+							data-testid="demo-publish"
+						>
+							<Trans>Publish</Trans>
+						</Button>
+					</Group>
+				</Stack>
 			)}
 		</Stack>
 	);

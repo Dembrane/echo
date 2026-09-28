@@ -33,7 +33,9 @@ export default function HelpTasksItem({
 				label={<Trans>Tasks</Trans>}
 				icon={ListChecks}
 				badge={`${done}/${total}`}
-				onClick={() => navigate(only ? `/o/${only.id}/account` : "/account")}
+				onClick={() =>
+					navigate(only ? `/o/${only.org_id}/account` : "/account")
+				}
 			/>
 		</span>
 	);

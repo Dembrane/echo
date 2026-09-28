@@ -56,8 +56,8 @@ function Picker() {
 				<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
 					{orgs.map((org) => (
 						<UnstyledButton
-							key={org.id}
-							onClick={() => navigate(`/o/${org.id}/account`)}
+							key={org.org_id}
+							onClick={() => navigate(`/o/${org.org_id}/account`)}
 							data-testid="picker-org"
 						>
 							<Paper withBorder radius="md" p="md" h="100%">
@@ -72,13 +72,13 @@ function Picker() {
 											</Text>
 											<Text size="xs" c="dimmed">
 												<Trans>
-													{org.done} of {org.total} done
+													{org.tasks_done} of {org.tasks_total} done
 												</Trans>
 											</Text>
 										</Stack>
 									</Group>
 									<Progress
-										value={(org.done / org.total) * 100}
+										value={(org.tasks_done / org.tasks_total) * 100}
 										size="sm"
 										aria-label={t`Progress`}
 									/>

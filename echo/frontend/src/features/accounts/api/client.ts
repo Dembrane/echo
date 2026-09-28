@@ -1,7 +1,6 @@
 import type { z } from "zod4";
 import { API_BASE_URL } from "@/config";
-import { ErrorBody } from "../contract/contract.gen";
-import { API_ROUTES, type ApiRouteName as RouteName } from "./routes";
+import { ErrorBody, ROUTES, type RouteName } from "../contract/contract.gen";
 
 /**
  * The accounts API as the screens see it: one call per contract route, the request
@@ -14,7 +13,7 @@ import { API_ROUTES, type ApiRouteName as RouteName } from "./routes";
  */
 export const FIXTURE_MODE = import.meta.env.VITE_ACCOUNTS_FIXTURES === "1";
 
-type Routes = typeof API_ROUTES;
+type Routes = typeof ROUTES;
 type Spec<N extends RouteName> = Routes[N];
 
 export type ResponseOf<N extends RouteName> = Spec<N> extends {
@@ -103,7 +102,7 @@ export async function call<N extends RouteName>(
 	name: N,
 	options: CallOptions<N> = {},
 ): Promise<ResponseOf<N>> {
-	const spec = API_ROUTES[name] as {
+	const spec = ROUTES[name] as {
 		method: string;
 		path: string;
 		request?: z.ZodType;
@@ -154,7 +153,7 @@ export async function submitTaskWithFile(
 	responseText: string | null,
 	file: File,
 ): Promise<ResponseOf<"submitTask">> {
-	const spec = API_ROUTES.submitTask;
+	const spec = ROUTES.submitTask;
 	const path = fillPath(spec.path, params);
 	let json: unknown;
 	if (FIXTURE_MODE) {

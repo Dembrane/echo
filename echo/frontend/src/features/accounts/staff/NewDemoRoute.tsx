@@ -52,7 +52,7 @@ function NewDemo() {
 		website_url: "",
 	});
 	const [language, setLanguage] = useState<"nl" | "en">("nl");
-	const [emailCode, setEmailCode] = useState(false);
+	const [signIn, setSignIn] = useState(false);
 	const [withOffer, setWithOffer] = useState(false);
 	const [template, setTemplate] = useState<"subscription" | "event">(
 		"subscription",
@@ -85,14 +85,19 @@ function NewDemo() {
 		setPending(true);
 		setError(null);
 		try {
-			const demo = await call("startDemo", {
+			const demo = await call("createDemo", {
 				body: {
 					...form,
-					email_code_sign_in: emailCode,
 					language,
 					offer: withOffer
-						? { items: toItems(lines), language: offerLanguage, template }
+						? {
+								items: toItems(lines),
+								language: offerLanguage,
+								person_name: form.contact_name,
+								template,
+							}
 						: null,
+					sign_in: signIn,
 				},
 			});
 			navigate(`/admin/accounts/demos/${demo.id}`);
@@ -179,18 +184,18 @@ function NewDemo() {
 
 				<Divider label={t`Contact`} labelPosition="left" />
 				<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-					{input("contact_name", t`Contact name`)}
+					{input("contact_name", t`Contact name`, { required: true })}
 					{input("contact_email", t`Contact email`, {
 						required: true,
 						type: "email",
 					})}
 				</SimpleGrid>
 				<Switch
-					checked={emailCode}
-					onChange={(e) => setEmailCode(e.currentTarget.checked)}
+					checked={signIn}
+					onChange={(e) => setSignIn(e.currentTarget.checked)}
 					label={t`Let them sign in with an email code`}
 					description={t`Publishing sends them the sign-in invitation. Off: no email goes out.`}
-					data-testid="demo-email-code"
+					data-testid="demo-sign-in"
 				/>
 
 				<Divider label={t`Offer`} labelPosition="left" />
@@ -198,7 +203,7 @@ function NewDemo() {
 					checked={withOffer}
 					onChange={(e) => setWithOffer(e.currentTarget.checked)}
 					label={t`Prepare an offer`}
-					description={t`Sent with the demo when you publish.`}
+					description={t`A draft on their account, for you to send after the demo.`}
 					data-testid="demo-with-offer"
 				/>
 				{withOffer && (
@@ -253,6 +258,7 @@ function NewDemo() {
 							!form.organisation_name.trim() ||
 							!form.website_url.trim() ||
 							!form.brief.trim() ||
+							!form.contact_name.trim() ||
 							!form.contact_email.trim()
 						}
 						data-testid="demo-submit"

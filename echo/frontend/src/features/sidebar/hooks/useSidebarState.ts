@@ -101,51 +101,51 @@ function useLocalState<T>(
 	return [value, set];
 }
 
-	export function useSidebarState(): SidebarState {
-		const [width, setWidthRaw] = useLocalState<number>(
-			WIDTH_KEY,
-			SIDEBAR_WIDTH_DEFAULT,
-		);
-		const [collapsed, setCollapsedRaw] = useLocalState<boolean>(
-			COLLAPSED_KEY,
-			false,
-		);
-		const [expandedNodes, setExpandedNodes] = useLocalState<
-			Record<string, boolean>
-		>(EXPANDED_KEY, {});
+export function useSidebarState(): SidebarState {
+	const [width, setWidthRaw] = useLocalState<number>(
+		WIDTH_KEY,
+		SIDEBAR_WIDTH_DEFAULT,
+	);
+	const [collapsed, setCollapsedRaw] = useLocalState<boolean>(
+		COLLAPSED_KEY,
+		false,
+	);
+	const [expandedNodes, setExpandedNodes] = useLocalState<
+		Record<string, boolean>
+	>(EXPANDED_KEY, {});
 
-		const setWidth = useCallback(
-			(n: number) => setWidthRaw(clamp(n, SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX)),
-			[setWidthRaw],
-		);
+	const setWidth = useCallback(
+		(n: number) => setWidthRaw(clamp(n, SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX)),
+		[setWidthRaw],
+	);
 
-		const isNodeExpanded = useCallback(
-			(id: string) => expandedNodes[id] === true,
-			[expandedNodes],
-		);
+	const isNodeExpanded = useCallback(
+		(id: string) => expandedNodes[id] === true,
+		[expandedNodes],
+	);
 
-		const setNodeExpanded = useCallback(
-			(id: string, open: boolean) => {
-				setExpandedNodes((prev) => ({ ...prev, [id]: open }));
-			},
-			[setExpandedNodes],
-		);
+	const setNodeExpanded = useCallback(
+		(id: string, open: boolean) => {
+			setExpandedNodes((prev) => ({ ...prev, [id]: open }));
+		},
+		[setExpandedNodes],
+	);
 
-		const toggleNode = useCallback(
-			(id: string) => {
-				setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
-			},
-			[setExpandedNodes],
-		);
+	const toggleNode = useCallback(
+		(id: string) => {
+			setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
+		},
+		[setExpandedNodes],
+	);
 
-		return {
-			expandedNodes,
-			isNodeExpanded,
-			setNodeExpanded,
-			setWidth,
-			toggleNode,
-			width: collapsed ? 0 : width,
-			collapsed,
-			setCollapsed: setCollapsedRaw,
-		};
-	}
+	return {
+		collapsed,
+		expandedNodes,
+		isNodeExpanded,
+		setCollapsed: setCollapsedRaw,
+		setNodeExpanded,
+		setWidth,
+		toggleNode,
+		width: collapsed ? 0 : width,
+	};
+}

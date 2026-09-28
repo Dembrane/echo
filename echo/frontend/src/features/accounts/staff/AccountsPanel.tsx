@@ -16,9 +16,11 @@ import {
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { call } from "../api/client";
 import { useAccountList } from "../api/hooks";
 import { formatDate, stageLabel } from "../format";
 import { AccountsI18n } from "../i18n";
@@ -77,6 +79,7 @@ function AccountsTable() {
 							{ label: t`Prospects`, value: "prospect" },
 							{ label: t`Customers`, value: "customer" },
 							{ label: t`Churned`, value: "churned" },
+							{ label: t`No account`, value: "none" },
 						]}
 					/>
 				</Group>
@@ -88,6 +91,7 @@ function AccountsTable() {
 					<Trans>New demo</Trans>
 				</Button>
 			</Group>
+			<OpenDemos />
 			{isLoading && <Loader size="sm" />}
 			{error && (
 				<Alert color="red">
@@ -175,5 +179,53 @@ function AccountsTable() {
 				</Table.ScrollContainer>
 			)}
 		</Stack>
+	);
+}
+
+/** Demos still building, failed or waiting to be published: the ones that need staff. */
+function OpenDemos() {
+	const { data } = useQuery({
+		queryFn: () => call("listDemos"),
+		queryKey: ["accounts", "demos"],
+		refetchInterval: 5000,
+	});
+	const open = (data?.demos ?? [])
+		.filter((d) => d.status !== "published")
+		.slice(0, 5);
+	if (open.length === 0) return null;
+	return (
+		<Group gap="xs" data-testid="open-demos">
+			<Text size="xs" c="dimmed">
+				<Trans>Demos</Trans>
+			</Text>
+			{open.map((d) => (
+				<Anchor
+					key={d.id}
+					component={I18nLink}
+					to={`/admin/accounts/demos/${d.id}`}
+					size="xs"
+				>
+					<Badge
+						variant="light"
+						size="sm"
+						color={
+							d.status === "failed"
+								? "red"
+								: d.status === "draft"
+									? "blue"
+									: "gray"
+						}
+						style={{ cursor: "pointer", textTransform: "none" }}
+					>
+						{d.organisation_name} ·{" "}
+						{d.status === "failed"
+							? t`failed`
+							: d.status === "draft"
+								? t`ready to publish`
+								: t`building`}
+					</Badge>
+				</Anchor>
+			))}
+		</Group>
 	);
 }

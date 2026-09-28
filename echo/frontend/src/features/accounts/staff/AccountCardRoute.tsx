@@ -13,6 +13,7 @@ import {
 	Loader,
 	Menu,
 	Paper,
+	SegmentedControl,
 	Select,
 	Stack,
 	Table,
@@ -114,6 +115,9 @@ function Card() {
 						{data.organisation.name}
 					</Title>
 				</Stack>
+				{data.organisation.account_stage === null && (
+					<EnableAccount orgId={orgId} />
+				)}
 				{/* Flex, not Grid: Grid would join the shared Mantine chunk the portal loads. */}
 				<Flex
 					direction={{ base: "column", md: "row" }}
@@ -135,7 +139,9 @@ function Card() {
 						style={{ flex: 1, minWidth: 0 }}
 					>
 						<Stack gap={28}>
-							<Stage orgId={orgId} card={data} />
+							{data.organisation.account_stage !== null && (
+								<Stage orgId={orgId} card={data} />
+							)}
 							<NeedsForm card={data} />
 							<Billing card={data} />
 							<Timeline card={data} />
@@ -221,23 +227,25 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 			title={<Trans>Documents</Trans>}
 			testId="staff-documents"
 			action={
-				<Group gap="xs">
-					<Button
-						size="xs"
-						variant="default"
-						onClick={() => setUploadOpen(true)}
-						data-testid="upload-pdf"
-					>
-						<Trans>Upload PDF</Trans>
-					</Button>
-					<Button
-						size="xs"
-						onClick={() => setOfferOpen(true)}
-						data-testid="push-offer"
-					>
-						<Trans>Push offer</Trans>
-					</Button>
-				</Group>
+				card.organisation.account_stage !== null && (
+					<Group gap="xs">
+						<Button
+							size="xs"
+							variant="default"
+							onClick={() => setUploadOpen(true)}
+							data-testid="upload-pdf"
+						>
+							<Trans>Upload PDF</Trans>
+						</Button>
+						<Button
+							size="xs"
+							onClick={() => setOfferOpen(true)}
+							data-testid="push-offer"
+						>
+							<Trans>Push offer</Trans>
+						</Button>
+					</Group>
+				)
 			}
 		>
 			{card.documents.length === 0 ? (
@@ -334,14 +342,16 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 			title={<Trans>Tasks</Trans>}
 			testId="staff-tasks"
 			action={
-				<Button
-					size="xs"
-					variant="default"
-					onClick={() => setNewOpen(true)}
-					data-testid="new-task"
-				>
-					<Trans>New task</Trans>
-				</Button>
+				card.organisation.account_stage !== null && (
+					<Button
+						size="xs"
+						variant="default"
+						onClick={() => setNewOpen(true)}
+						data-testid="new-task"
+					>
+						<Trans>New task</Trans>
+					</Button>
+				)
 			}
 		>
 			{card.tasks.length === 0 ? (
@@ -458,6 +468,73 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 				orgId={orgId}
 			/>
 		</Section>
+	);
+}
+
+/**
+ * An organisation that is not an account yet (a free tier signup, a customer who never had
+ * a demo): one decision, turning the account side on. Offers and tasks come after.
+ */
+function EnableAccount({ orgId }: { orgId: string }) {
+	const [stage, setStage] = useState<"prospect" | "customer">("customer");
+	const [language, setLanguage] = useState<"nl" | "en">("nl");
+	const enable = useAccountsMutation("enableAccount", { orgId });
+	return (
+		<Paper withBorder radius="md" p="md" data-testid="enable-account">
+			<Stack gap="sm">
+				<Stack gap={2}>
+					<Text fw={500}>
+						<Trans>This organisation has no account yet</Trans>
+					</Text>
+					<Text size="sm" c="dimmed">
+						<Trans>
+							Enable it to push offers and tasks. They get an Account page with
+							a billing details step.
+						</Trans>
+					</Text>
+				</Stack>
+				<Group gap="lg" align="flex-end">
+					<Stack gap={4}>
+						<Text size="sm" fw={500}>
+							<Trans>Stage</Trans>
+						</Text>
+						<SegmentedControl
+							value={stage}
+							onChange={(v) => setStage(v as typeof stage)}
+							data={[
+								{ label: stageLabel("customer"), value: "customer" },
+								{ label: stageLabel("prospect"), value: "prospect" },
+							]}
+						/>
+					</Stack>
+					<Stack gap={4}>
+						<Text size="sm" fw={500}>
+							<Trans>Language</Trans>
+						</Text>
+						<SegmentedControl
+							value={language}
+							onChange={(v) => setLanguage(v as typeof language)}
+							data={[
+								{ label: "Nederlands", value: "nl" },
+								{ label: "English", value: "en" },
+							]}
+						/>
+					</Stack>
+					<Button
+						loading={enable.isPending}
+						onClick={() =>
+							enable.mutate(
+								{ body: { language, stage } },
+								{ onSuccess: () => toast.success(t`Account enabled`) },
+							)
+						}
+						data-testid="enable-account-submit"
+					>
+						<Trans>Enable account</Trans>
+					</Button>
+				</Group>
+			</Stack>
+		</Paper>
 	);
 }
 

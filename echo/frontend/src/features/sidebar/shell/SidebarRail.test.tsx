@@ -293,7 +293,9 @@ describe("help in the rail", () => {
 		fireEvent.click(help);
 		expect(help.getAttribute("aria-expanded")).toBe("true");
 		expect(screen.getByRole("button", { name: "Feedback" })).toBeTruthy();
-		expect(screen.getByRole("button", { name: "Report an issue" })).toBeTruthy();
+		expect(
+			screen.getByRole("button", { name: "Report an issue" }),
+		).toBeTruthy();
 		// It opens in place: nothing navigates.
 		expect(screen.queryByRole("link")).toBeNull();
 		expect(location()).toBe("/en-US/o");

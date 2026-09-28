@@ -12,6 +12,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { API_BASE_URL } from "@/config";
+import {
+	hasAccount,
+	useTasksSummary,
+} from "@/features/accounts/help/tasksSummary";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isOutsiderRole } from "@/lib/roles";
@@ -98,11 +102,11 @@ export const OrgHomeView = () => {
 	// managers that is the full org list, for everyone else their direct rows.
 	const showWorkspaces = displayList.length > 0;
 
-	// The account page (documents, signing, billing, questions with dembrane) is for the
-	// people the accounts API admits: owners, admins and the billing role.
-	const orgRole = me?.orgs.find((o) => o.id === orgId)?.role;
-	const seesAccount =
-		orgRole === "owner" || orgRole === "admin" || orgRole === "billing";
+	// "Account" shows only for orgs in the tasks summary: the backend lists an org there
+	// when it has account content and the caller is an owner, admin or billing member.
+	// The same cached request feeds the Help menu's "Tasks" entry.
+	const { data: tasksSummary } = useTasksSummary();
+	const seesAccount = orgId ? hasAccount(tasksSummary, orgId) : false;
 
 	if (!orgId) return null;
 	const base = `/o/${orgId}`;
