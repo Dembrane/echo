@@ -1,26 +1,5 @@
-# Settings that belong to the GCP project, not to one environment: preview, next and prod
-# share dembrane-echo, so these live in one state of their own.
-#   terraform init -backend-config="prefix=platform/project" && terraform apply
-terraform {
-  required_version = ">= 1.9"
-  required_providers {
-    google = { source = "hashicorp/google", version = "~> 7.0" }
-  }
-  backend "gcs" {
-    bucket = "dbr-gcp-echo-tf-state"
-  }
-}
-
-variable "project" {
-  type    = string
-  default = "dembrane-echo"
-}
-
-variable "log_location" {
-  type        = string
-  description = "Where application and request logs are stored. Same region as the services."
-  default     = "europe-west4"
-}
+# Every log except the admin audit trail lands in an EU bucket instead of the global
+# _Default bucket. Each environment's root imports the project's existing _Default sink.
 
 variable "log_retention_days" {
   type        = number
@@ -28,22 +7,17 @@ variable "log_retention_days" {
   default     = 30
 }
 
-provider "google" {
-  project = var.project
-}
-
-# Every log except the admin audit trail lands here instead of the global _Default bucket.
 resource "google_logging_project_bucket_config" "eu" {
   project        = var.project
-  location       = var.log_location
+  location       = var.region
   bucket_id      = "eu-default"
   retention_days = var.log_retention_days
   description    = "Application, request and data access logs, stored in the EU."
+  depends_on     = [google_project_service.apis]
 }
 
-# The project's _Default sink keeps its filter (everything the _Required sink does not take)
-# and points at the EU bucket. The global _Default bucket keeps what it already holds until
-# its 30 day retention runs out, then stays empty.
+# The _Default sink keeps its filter (everything the _Required sink does not take) and
+# points at the EU bucket.
 resource "google_logging_project_sink" "default" {
   name                   = "_Default"
   project                = var.project

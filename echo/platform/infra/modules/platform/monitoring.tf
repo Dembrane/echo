@@ -123,6 +123,7 @@ resource "google_monitoring_alert_policy" "queue_backlog" {
 }
 
 resource "google_monitoring_uptime_check_config" "api_ready" {
+  count        = var.monitor_api_ready ? 1 : 0
   display_name = "${local.name}: API ready"
   timeout      = "10s"
   period       = "300s"
@@ -139,18 +140,19 @@ resource "google_monitoring_uptime_check_config" "api_ready" {
     type = "uptime_url"
     labels = {
       project_id = var.project
-      host       = "${local.name}-api-86405194907.${var.region}.run.app"
+      host       = "${local.name}-api-${data.google_project.this.number}.${var.region}.run.app"
     }
   }
 }
 
 resource "google_monitoring_alert_policy" "api_unready" {
+  count        = var.monitor_api_ready ? 1 : 0
   display_name = "${local.name}: API not ready"
   combiner     = "OR"
   conditions {
     display_name = "readiness check failing"
     condition_threshold {
-      filter          = "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.type=\"uptime_url\" AND metric.label.check_id=\"${google_monitoring_uptime_check_config.api_ready.uptime_check_id}\""
+      filter          = "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.type=\"uptime_url\" AND metric.label.check_id=\"${google_monitoring_uptime_check_config.api_ready[0].uptime_check_id}\""
       comparison      = "COMPARISON_GT"
       threshold_value = 1
       duration        = "600s"

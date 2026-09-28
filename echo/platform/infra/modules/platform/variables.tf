@@ -1,7 +1,6 @@
 variable "project" {
   type        = string
-  description = "GCP project that hosts the platform."
-  default     = "dembrane-echo"
+  description = "GCP project that hosts this environment and nothing else."
 }
 
 variable "region" {
@@ -72,6 +71,46 @@ variable "github_repo" {
 variable "deploy_ref" {
   type        = string
   description = "Git ref allowed to deploy this environment."
+}
+
+variable "deploy_tags" {
+  type        = bool
+  description = "Also accept tag refs (refs/tags/*)."
+  default     = false
+}
+
+variable "deploy_ref_protected" {
+  type        = bool
+  description = "Accept deploy_ref only while GitHub reports it protected."
+  default     = false
+}
+
+variable "deploy_environment" {
+  type        = string
+  description = "GitHub environment every deploying job must run in, so its protection rules (required reviewers) gate the deploy. Null accepts any job on the allowed refs."
+  default     = null
+}
+
+variable "generate_invite_hash_secret" {
+  type        = bool
+  description = "Generate INVITE_HASH_SECRET. Off where it must equal Directus's SECRET (next, prod): the secret is created empty and its value added by hand."
+  default     = true
+}
+
+variable "pending_secrets" {
+  type        = list(string)
+  description = <<-EOT
+    Environment variables whose secrets are created empty and filled by hand
+    (gcloud secrets versions add). The API and worker may read them; the deploy wires
+    each one that has a version, found by its env-var label.
+  EOT
+  default     = []
+}
+
+variable "monitor_api_ready" {
+  type        = bool
+  description = "Probe the API's /ready. Off until the environment's first deploy, so an absent service does not show as down."
+  default     = true
 }
 
 variable "pr_preview_environment" {

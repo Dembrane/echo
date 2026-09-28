@@ -1,12 +1,17 @@
 locals {
   name = "echo-${var.env}"
+  # Only what the platform uses. infra/bootstrap.sh turns off Trace, Telemetry and the
+  # defaults a new project comes with that nothing here calls.
   apis = [
     "run.googleapis.com",
     "sqladmin.googleapis.com",
     "artifactregistry.googleapis.com",
     "secretmanager.googleapis.com",
+    "iam.googleapis.com",
     "iamcredentials.googleapis.com",
     "sts.googleapis.com",
+    "storage.googleapis.com",
+    "aiplatform.googleapis.com",
     "logging.googleapis.com",
     "monitoring.googleapis.com",
   ]
@@ -72,6 +77,9 @@ resource "google_sql_database_instance" "db" {
     edition           = "ENTERPRISE"
     availability_type = var.env == "prod" ? "REGIONAL" : "ZONAL"
     disk_autoresize   = true
+    # Google-side protection as well, so deleting the instance takes a deliberate change
+    # outside Terraform too. The preview instance holds nothing that cannot be reseeded.
+    deletion_protection_enabled = var.env != "preview"
     backup_configuration {
       enabled                        = true
       point_in_time_recovery_enabled = true
@@ -153,18 +161,22 @@ resource "google_secret_manager_secret_version" "db" {
 resource "google_service_account" "api" {
   account_id   = "${local.name}-api"
   display_name = "echo ${var.env} API runtime"
+  depends_on   = [google_project_service.apis]
 }
 resource "google_service_account" "worker" {
   account_id   = "${local.name}-worker"
   display_name = "echo ${var.env} worker runtime"
+  depends_on   = [google_project_service.apis]
 }
 resource "google_service_account" "migrate" {
   account_id   = "${local.name}-migrate"
   display_name = "echo ${var.env} migration job"
+  depends_on   = [google_project_service.apis]
 }
 resource "google_service_account" "deployer" {
   account_id   = "${local.name}-deployer"
   display_name = "echo ${var.env} deploys from GitHub Actions"
+  depends_on   = [google_project_service.apis]
 }
 
 resource "google_project_iam_member" "api" {
@@ -203,7 +215,8 @@ resource "google_secret_manager_secret_iam_member" "migrate_db" {
 # The deployer pushes images and rolls out services and jobs as the runtime identities.
 resource "google_project_iam_member" "deployer" {
   # run.admin, not run.developer: making the API reachable sets its IAM policy.
-  for_each = toset(["roles/run.admin"])
+  # secretmanager.viewer reads which hand-filled secrets have a value (metadata, never values).
+  for_each = toset(["roles/run.admin", "roles/secretmanager.viewer"])
   project  = var.project
   role     = each.value
   member   = google_service_account.deployer.member
@@ -236,11 +249,24 @@ resource "google_iam_workload_identity_pool_provider" "github" {
     "attribute.ref"         = "assertion.ref"
     "attribute.environment" = "assertion.environment"
   }
-  # The environment's branch deploys, and on preview also jobs in the PR preview GitHub
-  # environment, which run from PR refs. Fork PRs get no OIDC token, so only branches in
-  # this repository can reach it; the environment's protection rules gate who may.
-  attribute_condition = var.pr_preview_environment == null ? "assertion.repository == '${var.github_repo}' && assertion.ref == '${var.deploy_ref}'" : "assertion.repository == '${var.github_repo}' && (assertion.ref == '${var.deploy_ref}' || assertion.environment == '${var.pr_preview_environment}')"
+  # Only this repository, and only the environment's refs: on preview the branch plus jobs
+  # in the PR preview GitHub environment (fork PRs get no OIDC token, so only branches in
+  # this repository reach it); on next main; on prod protected main or a tag, and only from
+  # jobs in the prod GitHub environment, whose required reviewers approve each deploy.
+  attribute_condition = local.oidc_condition
   oidc { issuer_uri = "https://token.actions.githubusercontent.com" }
+}
+locals {
+  oidc_ref = join(" || ", compact([
+    var.deploy_ref_protected ? "(assertion.ref == '${var.deploy_ref}' && assertion.ref_protected == 'true')" : "assertion.ref == '${var.deploy_ref}'",
+    var.deploy_tags ? "assertion.ref.startsWith('refs/tags/')" : "",
+    var.pr_preview_environment == null ? "" : "assertion.environment == '${var.pr_preview_environment}'",
+  ]))
+  oidc_condition = join(" && ", compact([
+    "assertion.repository == '${var.github_repo}'",
+    "(${local.oidc_ref})",
+    var.deploy_environment == null ? "" : "assertion.environment == '${var.deploy_environment}'",
+  ]))
 }
 resource "google_service_account_iam_member" "deployer_wif" {
   service_account_id = google_service_account.deployer.name
@@ -261,6 +287,7 @@ resource "google_secret_manager_secret" "auth_secret" {
       replicas { location = var.region }
     }
   }
+  depends_on = [google_project_service.apis]
 }
 resource "google_secret_manager_secret_version" "auth_secret" {
   secret      = google_secret_manager_secret.auth_secret.id
@@ -276,6 +303,7 @@ resource "google_secret_manager_secret_iam_member" "api_auth_secret" {
 resource "google_service_account" "web" {
   account_id   = "${local.name}-web"
   display_name = "echo ${var.env} dashboard and portal"
+  depends_on   = [google_project_service.apis]
 }
 resource "google_service_account_iam_member" "deployer_acts_as_web" {
   service_account_id = google_service_account.web.name
@@ -284,8 +312,10 @@ resource "google_service_account_iam_member" "deployer_acts_as_web" {
 }
 
 # Signs invite links. Must equal Directus's SECRET wherever Directus-era invite links are
-# still in inboxes (next, prod) until cutover; the preview has none, so it is random.
+# still in inboxes (next, prod) until cutover, so there it is added by hand; the preview has
+# none, so it is random.
 resource "random_password" "invite_hash_secret" {
+  count   = var.generate_invite_hash_secret ? 1 : 0
   length  = 64
   special = false
 }
@@ -296,13 +326,38 @@ resource "google_secret_manager_secret" "invite_hash_secret" {
       replicas { location = var.region }
     }
   }
+  depends_on = [google_project_service.apis]
 }
 resource "google_secret_manager_secret_version" "invite_hash_secret" {
+  count       = var.generate_invite_hash_secret ? 1 : 0
   secret      = google_secret_manager_secret.invite_hash_secret.id
-  secret_data = random_password.invite_hash_secret.result
+  secret_data = random_password.invite_hash_secret[0].result
 }
 resource "google_secret_manager_secret_iam_member" "api_invite_hash_secret" {
   secret_id = google_secret_manager_secret.invite_hash_secret.id
   role      = "roles/secretmanager.secretAccessor"
   member    = google_service_account.api.member
+}
+
+# Secrets whose values come from outside (SendGrid, Mollie, Google sign-in, webhooks). Created
+# empty; a value is added with `gcloud secrets versions add`, never by Terraform. The env-var
+# label tells the deploy which variable each one feeds.
+resource "google_secret_manager_secret" "pending" {
+  for_each  = toset(var.pending_secrets)
+  secret_id = "${local.name}-${lower(replace(each.value, "_", "-"))}"
+  labels    = { env-var = lower(each.value) }
+  replication {
+    user_managed {
+      replicas { location = var.region }
+    }
+  }
+  depends_on = [google_project_service.apis]
+}
+resource "google_secret_manager_secret_iam_member" "pending" {
+  for_each = {
+    for pair in setproduct(var.pending_secrets, ["api", "worker"]) : "${pair[0]}-${pair[1]}" => pair
+  }
+  secret_id = google_secret_manager_secret.pending[each.value[0]].id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = each.value[1] == "api" ? google_service_account.api.member : google_service_account.worker.member
 }

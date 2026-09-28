@@ -20,6 +20,7 @@ resource "google_storage_bucket" "uploads" {
 resource "google_service_account" "storage" {
   account_id   = "${local.name}-storage"
   display_name = "echo ${var.env} object storage (S3 interoperability)"
+  depends_on   = [google_project_service.apis]
 }
 resource "google_storage_bucket_iam_member" "storage" {
   bucket = google_storage_bucket.uploads.name
@@ -44,6 +45,7 @@ resource "google_secret_manager_secret" "storage" {
       replicas { location = var.region }
     }
   }
+  depends_on = [google_project_service.apis]
 }
 resource "google_secret_manager_secret_version" "storage" {
   for_each    = local.storage_secrets
