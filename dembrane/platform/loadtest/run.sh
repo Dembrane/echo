@@ -41,8 +41,9 @@ cleanup() {
   systemctl --user stop "${units[@]}" 2>/dev/null || true
   systemctl --user reset-failed "${units[@]}" 2>/dev/null || true
   for p in $(ss -ltnp | grep ":$port " | grep -o "pid=[0-9]*" | cut -d= -f2 | sort -u); do kill "$p" 2>/dev/null || true; done
-  # Lift the limits again: 0 CPUs means no limit, and a generous memory cap stands in for none.
-  docker update --cpus 0 --memory 16g --memory-swap 16g parity-db-1 parity-directus-1 >/dev/null 2>&1 || true
+  # Lift the limits again: docker update keeps a CPU cap it is given 0 for, so the cap goes
+  # back to every core, and a generous memory cap stands in for none.
+  docker update --cpus "$(nproc)" --memory 16g --memory-swap 16g parity-db-1 parity-directus-1 >/dev/null 2>&1 || true
   # The shared parity stack must outlive a run whose cap killed Directus.
   [ "$(docker inspect -f '{{.State.Running}}' parity-directus-1 2>/dev/null)" = true ] || docker start parity-directus-1 >/dev/null 2>&1 || true
 }
