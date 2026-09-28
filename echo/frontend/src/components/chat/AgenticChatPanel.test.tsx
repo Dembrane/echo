@@ -628,8 +628,11 @@ describe("AgenticChatPanel, voice input", () => {
 		).not.toHaveBeenCalled();
 		expect(screen.queryByTestId("chat-voice-recording-bar")).toBeNull();
 		expect(transcribeMock).not.toHaveBeenCalled();
-		// The dead-looking button still has somewhere to send the host.
-		expect(await screen.findByText(/Recording limit reached/)).toBeTruthy();
+		// The dead-looking button still has somewhere to send the host: the needs
+		// form, opened on the attempt the voice cap wall names.
+		expect(
+			await screen.findByText(/You were trying to use your voice in chat/),
+		).toBeTruthy();
 	});
 
 	it("says the microphone is blocked rather than failing quietly", async () => {
